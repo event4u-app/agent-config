@@ -62,6 +62,8 @@
  * 0 ok · 1 not-found / validation-failed / refresh-budget-exceeded ·
  * 2 usage · 3 internal.
  *
+ *   open     [--root P] [--out DIR]           open the drawn map in the browser
+ *                                               without redrawing it
  *   map      [--root P] [--out DIR] [--open]  draw the project map into
  *            [--no-verify] [--diff <rev>]      agents/map/ (ADR-297), or the
  *                                               graph home's map/ (ADR-299); renders it
@@ -1127,6 +1129,28 @@ async function drawMap(argv: string[]): Promise<number> {
 }
 
 /**
+ * `open [--root P] [--out DIR]` — show the map that is already drawn, without
+ * redrawing it. Resolves the page exactly where `map` writes it.
+ */
+export async function openMap(
+    argv: string[],
+    opener: (target: string) => Promise<unknown> = async (target) => (await import('open')).default(target),
+): Promise<number> {
+    const root = resolveRoot(argv);
+    const out = flag(argv, '--out');
+    const page = path.join(out ? path.resolve(out) : graphHome(root).mapDir, 'index.html');
+    const relative = path.relative(process.cwd(), page);
+    const rel = relative && !relative.startsWith('..') ? relative : page;
+    if (!fs.existsSync(page)) {
+        process.stderr.write(`code-graph: no map at ${rel} — draw one with \`agent-config code-graph map\` (add --open to open it right away)\n`);
+        return 1;
+    }
+    await opener(page);
+    process.stdout.write(`opened ${rel}\n`);
+    return 0;
+}
+
+/**
  * `outcome <path> useful|dead-end` — record, locally, that a session found a
  * file useful or a dead end. The map draws the time-decayed result as a ring;
  * nothing leaves the machine and nothing is committed.
@@ -1180,13 +1204,14 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'lineage' || (sub === 'map' && argv.includes('--lineage')))
             return await lineageMain(sub === 'lineage' ? argv.slice(1) : ['map', ...argv.slice(1)]);
         if (sub === 'map') return await cmdMap(argv.slice(1));
+        if (sub === 'open') return await openMap(argv.slice(1));
         if (sub === 'outcome') return cmdOutcome(argv.slice(1));
         if (sub === 'auto-refresh') return cmdAutoRefresh(argv.slice(1));
         if (sub === 'projects') return projectsMain(argv.slice(1));
         if (sub === 'estate') return estateMain(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|tests-for|untested|dead|suggest-verb|map|outcome|auto-refresh|projects|estate|lineage> [options]\n',
+                'impact|tests-for|untested|dead|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
         );
         return 2;
     } catch (e) {

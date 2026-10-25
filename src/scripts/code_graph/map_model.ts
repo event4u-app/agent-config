@@ -17,6 +17,7 @@ import louvain from 'graphology-communities-louvain';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 
 import {
+    BLAST_SCOPE_ROLES as SCOPE_ROLES,
     type BlastRecord,
     blastOf,
     callCounts,
@@ -189,7 +190,11 @@ export interface MapModel {
     analyses: {
         hubs: number[];
         surprises: Array<[number, number, number]>;
+        /** The largest code cycles, each cut to its first 8 files for display. */
         cycles: number[][];
+        /** The true size of each cycle in `cycles`, before the cut. */
+        cycleSizes: number[];
+        /** Code cycles only: a ring of Markdown links is not a dependency cycle. */
         cyclesTotal: number;
         roleCounts: Record<FileRole, number>;
         externals: Array<[string, number]>;
@@ -508,7 +513,9 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
         const pull = new Map<number, number>();
         for (const [s, t, w] of edges) if (s === rf && (areaOf[t] as number) >= 0) pull.set(areaOf[t] as number, (pull.get(areaOf[t] as number) ?? 0) + w);
         const best = [...pull.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0]?.[0];
-        const ai = best ?? drafts.push({ files: [], kind: 'small-parts', hub: rf, name: `small parts · ${topDir(paths[rf] as string)}` }) - 1;
+        const bucket = `small parts · ${topDir(paths[rf] as string)}`;
+        const existing = drafts.findIndex((d) => d.kind === 'small-parts' && d.name === bucket);
+        const ai = best ?? (existing >= 0 ? existing : drafts.push({ files: [], kind: 'small-parts', hub: rf, name: bucket }) - 1);
         const d = drafts[ai] as Draft;
         d.files = [...d.files, rf].sort((a, b) => byPath(paths[a] as string, paths[b] as string));
         areaOf[rf] = ai;
@@ -592,9 +599,12 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
         .slice(0, listCap)
         .map((x) => [x.s, x.t, x.w] as [number, number, number]);
 
-    const allCycles = tarjan(paths.length, edges).filter((c) => c.length > 1);
+    const inScope = (i: number): boolean => SCOPE_ROLES.has(roles[i] as FileRole);
+    const scopeEdges = edges.filter(([s, t]) => inScope(s) && inScope(t));
+    const allCycles = tarjan(paths.length, scopeEdges).filter((c) => c.length > 1);
     allCycles.sort((a, b) => b.length - a.length || (a[0] as number) - (b[0] as number));
     const cycles = allCycles.slice(0, 10).map((c) => c.slice(0, 8));
+    const cycleSizes = allCycles.slice(0, 10).map((c) => c.length);
 
     const roleCounts = {
         code: 0,
@@ -620,6 +630,12 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
 
     const trustedTotal = edges.reduce((n, e) => n + e[2], 0);
     const guessTotal = guessEdges.reduce((n, e) => n + e[2], 0);
+    // The guess share is a statement about code: doc links are all "trusted" and
+    // would dilute it.
+    const scopeWeight = (list: Array<[number, number, number]>): number =>
+        list.reduce((n, [s, t, w]) => (SCOPE_ROLES.has(roles[s] as FileRole) && SCOPE_ROLES.has(roles[t] as FileRole) ? n + w : n), 0);
+    const trustedScope = scopeWeight(edges);
+    const guessScope = scopeWeight(guessEdges);
 
     const linkedBy = new Map<number, Set<string>>();
     const sourceFileOf = new Map(graph.nodes.map((n) => [n.id, n.source_file] as const));
@@ -752,10 +768,11 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
             hubs,
             surprises,
             cycles,
+            cycleSizes,
             cyclesTotal: allCycles.length,
             roleCounts,
             externals: externalsTop,
-            guessShare: trustedTotal + guessTotal === 0 ? 0 : round(guessTotal / (trustedTotal + guessTotal)),
+            guessShare: trustedScope + guessScope === 0 ? 0 : round(guessScope / (trustedScope + guessScope)),
             trustedEdges: trustedTotal,
             guessEdgeCount: guessTotal,
             requestPaths: requestPaths.slice(0, 200),

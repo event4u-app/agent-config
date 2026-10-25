@@ -446,9 +446,9 @@ export function finishAnswers(m: MapModel, rules: LayerRules | null): void {
         .map(([lang, [files, loc]]) => [lang, files, loc] as [string, number, number])
         .sort((a, b) => b[2] - a[2] || b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
 
-    const violations: Violation[] = m.analyses.cycles.map((c) => ({
+    const violations: Violation[] = m.analyses.cycles.map((c, k) => ({
         kind: 'cycle' as const,
-        severity: c.length >= 5 ? ('high' as const) : ('medium' as const),
+        severity: (m.analyses.cycleSizes?.[k] ?? c.length) >= 5 ? ('high' as const) : ('medium' as const),
         files: c,
     }));
     let layerBreaches = 0;

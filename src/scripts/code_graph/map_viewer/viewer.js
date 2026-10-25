@@ -32,7 +32,7 @@
             formula: 'Show formula', hideFormula: 'Hide formula',
             pCycles: 'Cycles (SCC)', pGuesses: 'Guessed edges', pDead: 'Dead code', pHotspots: 'Hotspots',
             missDead: 'dead → not in map.json', missHot: 'churn missing',
-            tFiles: 'Files', tTrusted: 'Trusted edges', tAreas: 'Areas', tRoutes: 'Routes resolved',
+            tFiles: 'Files', tTrusted: 'Trusted links (incl. doc links)', tAreas: 'Areas', tRoutes: 'Routes resolved',
             roles: 'Roles', trust: 'Edges by trust', sure: 'trusted', guessed: 'guessed', other: 'infra/config/…',
             colorBy: 'Colour by', explorer: 'Explorer', scope: 'Scope', all: 'all',
             cBlast: 'Blast', cArea: 'Area', cTests: 'Test share', cRole: 'Role', cFolder: 'Folder', cLayer: 'Layer', cChurn: 'Churn', cComplexity: 'Complexity',
@@ -40,9 +40,9 @@
             lGraph: 'Graph', lLayers: 'Layers', lMatrix: 'Matrix', lKnowledge: 'Knowledge', lTreemap: 'Treemap', lFlow: 'Flow',
             hLayers: 'Depth rings from the selection', hMatrix: 'DSM', hKnowledge: 'Knowledge sources of the selection', hTreemap: 'Area = lines per folder', hTreemapMissing: 'needs loc per file', hFlow: 'Request paths – next design',
             edges: 'Edges:', fTests: 'Tests', fInfra: 'Infra hubs', full: 'Full screen', fullOff: 'Exit full screen',
-            repo: 'Repo', overview: 'Overview', areasOf: function (a, b) { return 'Areas (' + a + ' of ' + b + ')'; }, allAreas: '← All areas',
-            hint2d: 'Drag: move · Wheel: zoom · Click: zoom in', hint3d: 'Drag: turn · Shift+drag: move · Wheel: zoom · Click: zoom in',
-            zoomIn: 'Zoom in', zoomOut: 'Zoom out', fit: 'Fit', d2: '2D', d3: '3D Orb', dimHint: 'Show the map as an orb. Drag to turn it, Shift+drag to move it, arrow keys turn it too.',
+            lgPick: 'Mark a file to see what a change to it reaches', moreFiles: function (n) { return '+ ' + n + ' more'; }, offGraph: function (f, r) { return f + ' is not on the graph (' + r + '): areas hold code, tests and views'; }, noEffectOverview: 'Acts on file edges: open an area to use it', sAllShort: '+ Docs', navBack: '← Back', openLeft: '☰ Repository', openRight: 'Details ☰', pin: 'Pin', unpin: 'Unpin', closePane: 'Close', repo: 'Repo', overview: 'Overview', areasOf: function (a, b) { return 'Areas (' + a + ' of ' + b + ')'; }, allAreas: '← All areas',
+            hint2d: 'Drag: move · Wheel: zoom · Click: mark · Double-click: open', hint3d: 'Drag: turn · Shift+drag: move · Wheel: zoom · Click: mark · Double-click: open',
+            zoomIn: 'Zoom in', zoomOut: 'Zoom out', fit: 'Fit', limTop: 'Top 15', limAll: 'All areas', d2: '2D', d3: '3D Orb', dimHint: 'Show the map as an orb. Drag to turn it, Shift+drag to move it, arrow keys turn it too.',
             showPanels: 'Show panels again', direct: 'direct', transitive: 'transitive', transitive3: 'transitive ≤ 3', score: 'Score',
             legend: 'Legend', sizeOverview: 'Name = hub file of the area · Size = files per area · Line = edges between areas',
             sizeArea: 'Size = incoming edges · Line = edge, orange = points at the selection',
@@ -54,9 +54,9 @@
             affected: function (n, s) { return n + ' affected · ' + s; }, sCode: 'Code', sTests: 'Code + tests', sAll: 'everything',
             layersHead: 'Depth = hops over incoming edges from', depth0: 'Depth 0', depth: function (d) { return 'Depth ' + d; },
             n0: 'the selection', n1: 'import directly', n2: 'through one step', n3: 'edge of the analysis', selectFirst: 'Select a file to see how far it reaches.',
-            matrixHead: 'Dependency structure matrix at area level · cell = edges between two areas · highlighted row/column = selection · red frame = both areas hold files of one cycle',
+            matrixHead: 'Dependency structure matrix at area level · cell = links (symbol references) between two areas · highlighted row/column = selection · red frame = both areas hold files of one cycle',
             matrixNote: function (a, b, n) { return 'Pick a cell to list the edges between two areas. Strongest coupling: ' + a + ' ↔ ' + b + ' with ' + n + ' edges.'; },
-            diag: 'diagonal (inside the area)', edgesN: function (n) { return n + ' edges'; },
+            diag: 'diagonal (inside the area)', edgesN: function (n, p) { return n + ' links across ' + p + ' file pairs'; },
             knowHead: 'The same selection, along the knowledge sources · only files with an edge to the selection',
             kActive: 'active', kPlanned: 'planned', kArchived: 'archived', kDraft: 'draft', kDup: 'duplicate',
             kCode: 'Code', kTests: 'Tests', kContracts: 'Contracts', kRoadmaps: 'Roadmaps', kEvidence: 'Evidence', kDrafts: 'Drafts', kMemory: 'Memory',
@@ -92,7 +92,7 @@
             formula: 'Formel ansehen', hideFormula: 'Formel ausblenden',
             pCycles: 'Zyklen (SCC)', pGuesses: 'Geratene Kanten', pDead: 'Toter Code', pHotspots: 'Hotspots',
             missDead: 'dead → map.json fehlt', missHot: 'churn fehlt',
-            tFiles: 'Dateien', tTrusted: 'Sichere Kanten', tAreas: 'Areas', tRoutes: 'Routen gelöst',
+            tFiles: 'Dateien', tTrusted: 'Sichere Verweise (inkl. Doku-Links)', tAreas: 'Areas', tRoutes: 'Routen gelöst',
             roles: 'Rollen', trust: 'Kanten nach Vertrauen', sure: 'sicher', guessed: 'geraten', other: 'infra/config/…',
             colorBy: 'Färben nach', explorer: 'Explorer', scope: 'Scope', all: 'alles',
             cBlast: 'Blast', cArea: 'Area', cTests: 'Test-Anteil', cRole: 'Rolle', cFolder: 'Ordner', cLayer: 'Layer', cChurn: 'Churn', cComplexity: 'Komplexität',
@@ -100,9 +100,9 @@
             lGraph: 'Graph', lLayers: 'Layers', lMatrix: 'Matrix', lKnowledge: 'Knowledge', lTreemap: 'Treemap', lFlow: 'Flow',
             hLayers: 'Tiefenringe ab Auswahl', hMatrix: 'DSM', hKnowledge: 'Wissensquellen zur Auswahl', hTreemap: 'Fläche = Zeilen je Ordner', hTreemapMissing: 'braucht loc je Datei', hFlow: 'Request-Pfade – nächster Entwurf',
             edges: 'Kanten:', fTests: 'Tests', fInfra: 'Infra-Hubs', full: 'Vollbild', fullOff: 'Vollbild beenden',
-            repo: 'Repo', overview: 'Übersicht', areasOf: function (a, b) { return 'Areas (' + a + ' von ' + b + ')'; }, allAreas: '← Alle Areas',
-            hint2d: 'Ziehen: verschieben · Rad: zoomen · Klick: hineinzoomen', hint3d: 'Ziehen: drehen · Shift+Ziehen: verschieben · Rad: zoomen · Klick: hineinzoomen',
-            zoomIn: 'Hineinzoomen', zoomOut: 'Herauszoomen', fit: 'Einpassen', d2: '2D', d3: '3D Orb', dimHint: 'Karte als Kugel zeigen. Ziehen dreht sie, Shift+Ziehen verschiebt sie, die Pfeiltasten drehen ebenfalls.',
+            lgPick: 'Datei markieren, um zu sehen, was eine Änderung erreicht', moreFiles: function (n) { return '+ ' + n + ' weitere'; }, offGraph: function (f, r) { return f + ' ist nicht im Graph (' + r + '): Areas enthalten Code, Tests und Views'; }, noEffectOverview: 'Wirkt auf Datei-Kanten: Area öffnen, um es zu nutzen', sAllShort: '+ Doku', navBack: '← Zurück', openLeft: '☰ Repository', openRight: 'Details ☰', pin: 'Anheften', unpin: 'Lösen', closePane: 'Schließen', repo: 'Repo', overview: 'Übersicht', areasOf: function (a, b) { return 'Areas (' + a + ' von ' + b + ')'; }, allAreas: '← Alle Areas',
+            hint2d: 'Ziehen: verschieben · Rad: zoomen · Klick: markieren · Doppelklick: öffnen', hint3d: 'Ziehen: drehen · Shift+Ziehen: verschieben · Rad: zoomen · Klick: markieren · Doppelklick: öffnen',
+            zoomIn: 'Hineinzoomen', zoomOut: 'Herauszoomen', fit: 'Einpassen', limTop: 'Top 15', limAll: 'Alle Areas', d2: '2D', d3: '3D Orb', dimHint: 'Karte als Kugel zeigen. Ziehen dreht sie, Shift+Ziehen verschiebt sie, die Pfeiltasten drehen ebenfalls.',
             showPanels: 'Panels wieder einblenden', direct: 'direkt', transitive: 'transitiv', transitive3: 'transitiv ≤ 3', score: 'Score',
             legend: 'Legende', sizeOverview: 'Name = Hub-Datei der Area · Größe = Dateien je Area · Linie = Kanten zwischen Areas',
             sizeArea: 'Größe = eingehende Kanten · Linie = Kante, orange = zeigt auf die Auswahl',
@@ -114,9 +114,9 @@
             affected: function (n, s) { return n + ' betroffen · ' + s; }, sCode: 'Code', sTests: 'Code + Tests', sAll: 'alles',
             layersHead: 'Tiefe = Hops über eingehende Kanten von', depth0: 'Tiefe 0', depth: function (d) { return 'Tiefe ' + d; },
             n0: 'die Auswahl', n1: 'importieren direkt', n2: 'über einen Zwischenschritt', n3: 'Rand der Analyse', selectFirst: 'Wähle eine Datei, um zu sehen, wie weit sie reicht.',
-            matrixHead: 'Dependency-Structure-Matrix auf Area-Ebene · Zelle = Kanten zwischen zwei Areas · hervorgehobene Zeile/Spalte = Auswahl · roter Rahmen = beide Areas enthalten Dateien eines Zyklus',
+            matrixHead: 'Dependency-Structure-Matrix auf Area-Ebene · Zelle = Verweise (Symbol-Referenzen) zwischen zwei Areas · hervorgehobene Zeile/Spalte = Auswahl · roter Rahmen = beide Areas enthalten Dateien eines Zyklus',
             matrixNote: function (a, b, n) { return 'Zelle wählen, um die Kanten zwischen zwei Areas zu listen. Stärkste Kopplung: ' + a + ' ↔ ' + b + ' mit ' + n + ' Kanten.'; },
-            diag: 'Diagonale (innerhalb der Area)', edgesN: function (n) { return n + ' Kanten'; },
+            diag: 'Diagonale (innerhalb der Area)', edgesN: function (n, p) { return n + ' Verweise in ' + p + ' Dateipaaren'; },
             knowHead: 'Dieselbe Auswahl, entlang der Wissensquellen · nur Dateien mit Kante zur Auswahl',
             kActive: 'aktiv', kPlanned: 'geplant', kArchived: 'archiviert', kDraft: 'Entwurf', kDup: 'Dublette',
             kCode: 'Code', kTests: 'Tests', kContracts: 'Verträge', kRoadmaps: 'Roadmaps', kEvidence: 'Evidence', kDrafts: 'Entwürfe', kMemory: 'Memory',
@@ -213,16 +213,69 @@
         level: 'overview', area: -1, file: -1, cell: null,
         showTrusted: true, showGuesses: false, showTests: true, showInfra: false,
         full: false, formula: false, treePath: '', scopeDir: '', open: Object.create(null),
-        view: { scale: 1, x: 0, y: 0 }, orb: false, rot: { yaw: ORB_YAW, pitch: ORB_PITCH }
+        view: { scale: 1, x: 0, y: 0 }, orb: false, rot: { yaw: ORB_YAW, pitch: ORB_PITCH },
+        // Which areas the overview shows. A data choice, so it never depends on 2D / 3D.
+        areaLimit: 'all',
+        // Side panels: `pin` null = the width's default (pinned only on a wide window).
+        pin: { left: null, right: null }, fly: { left: false, right: false }
     };
     var drawn = [];
+    function paneMode() { var w = window.innerWidth; return w <= 720 ? 'phone' : w < 1240 ? 'tablet' : 'wide'; }
+    function isPinned(side) {
+        var mode = paneMode();
+        if (mode === 'phone' || state.full) return false;
+        return state.pin[side] !== null ? state.pin[side] : mode === 'wide';
+    }
+    function paneClasses() {
+        var c = 'wb mode-' + paneMode() + (state.full ? ' full' : '');
+        ['left', 'right'].forEach(function (side) {
+            if (isPinned(side)) c += ' pin-' + side;
+            else if (state.fly[side]) c += ' fly-' + side;
+        });
+        return c;
+    }
+    // A jump out of a flyout lands on the stage, so the flyout makes way.
+    function closeFlyouts() { state.fly.left = false; state.fly.right = false; }
+    function applyPanes(relayout) {
+        $('wb').className = paneClasses();
+        document.body.classList.toggle('full', state.full);
+        var flyOpen = ['left', 'right'].some(function (side) { return !isPinned(side) && state.fly[side]; });
+        $('scrim').hidden = !flyOpen;
+        ['left', 'right'].forEach(function (side) {
+            var pinned = isPinned(side);
+            var pin = $('pin-' + side);
+            pin.setAttribute('aria-pressed', String(pinned));
+            pin.textContent = pinned ? t('unpin') : t('pin');
+        });
+        if (relayout) resize();
+    }
+    // Every step deeper records where it came from, so each lens has a way back.
+    var trail = [];
+    function snapshot() { return { lens: state.lens, level: state.level, area: state.area, file: state.file, tab: state.tab, treePath: state.treePath, cell: state.cell }; }
+    function sameView(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+    function step() {
+        var now = snapshot();
+        if (trail.length && sameView(trail[trail.length - 1], now)) return;
+        trail.push(now);
+        if (trail.length > 50) trail.shift();
+    }
+    function back() {
+        // A step that changed nothing leaves an entry equal to the current view; skip it.
+        var prev = trail.pop();
+        while (prev && sameView(prev, snapshot())) prev = trail.pop();
+        if (!prev) { refresh(); return; }
+        var levelChanged = prev.level !== state.level || prev.area !== state.area;
+        Object.keys(prev).forEach(function (k) { state[k] = prev[k]; });
+        if (levelChanged) resetView();
+        refresh();
+    }
+    function lensHome() { step(); state.treePath = ''; state.cell = null; refresh(); }
+    function exposeView() {
+        window.__mapView = { lens: state.lens, treePath: state.treePath, level: state.level, area: state.area, file: state.file, shownAreas: state.level === 'overview' ? overviewAreas() : [], drawn: drawn.map(function (d) { return { kind: d.kind, idx: d.idx, x: d.x, y: d.y }; }) };
+    }
     window.__mapLabelBoxes = { boxes: [], width: 0, height: 0 };
 
-    // Preselect the most used code file that sits in an area: a held-out hub has no area to open.
-    files.forEach(function (f, i) {
-        if (!f.blast || f.area < 0) return;
-        if (state.file < 0 || f.inFiles > files[state.file].inFiles) state.file = i;
-    });
+    // Nothing is preselected: a mark means the reader chose it.
 
     /** The files a change to `start` reaches over trusted in-edges, by depth, within the scope. */
     var walkCache = Object.create(null);
@@ -361,11 +414,18 @@
     }
     function orbRadius() { var s = size(); return (Math.min(s.w, s.h) / 2 - 48) * state.view.scale; }
 
+    var inDirCache = Object.create(null);
+    function areaInDir(i, dirPath) {
+        var key = i + '|' + dirPath;
+        if (!(key in inDirCache)) inDirCache[key] = areas[i].files.some(function (f) { return files[f].path.indexOf(dirPath + '/') === 0; });
+        return inDirCache[key];
+    }
     function overviewAreas() {
-        var n = state.orb ? areas.length : Math.min(OVERVIEW_AREAS, areas.length);
+        var n = state.areaLimit === 'top' ? Math.min(OVERVIEW_AREAS, areas.length) : areas.length;
         var out = [];
         for (var i = 0; i < n; i++) out.push(i);
-        if (!state.orb && state.file >= 0 && files[state.file].area >= n) out.push(files[state.file].area);
+        var sel = state.file >= 0 ? files[state.file].area : state.area;
+        if (sel >= n) out.push(sel);
         return out;
     }
     function currentNodes() {
@@ -521,6 +581,7 @@
             }
             var alpha = nearness(n);
             if (scopeDim && n.kind === 'file' && files[n.idx].path.indexOf(scopeDim + '/') !== 0) alpha *= 0.35;
+            if (scopeDim && n.kind === 'area' && !areaInDir(n.idx, scopeDim)) alpha *= 0.35;
             ctx.globalAlpha = alpha;
             ctx.beginPath();
             ctx.arc(n.sx, n.sy, n.r, 0, Math.PI * 2);
@@ -622,6 +683,7 @@
             });
         }
         window.__mapLabelBoxes = { boxes: placed, width: s.w, height: s.h };
+        exposeView();
     }
     function roundRect(x, y, w, h, r) {
         ctx.beginPath();
@@ -818,18 +880,27 @@
                 rows += 1;
                 if (openNow) {
                     walkTree(kid, p, depth + 1);
-                    kid.files.slice(0, 60).forEach(function (i) {
-                        var fb = el('button', { type: 'button', class: i === state.file ? 'sel' : '' });
-                        fb.style.paddingLeft = (6 + (depth + 1) * 14) + 'px';
-                        add(fb, el('span', null, (i === state.file ? '● ' : '') + base(files[i].path)), el('span', { class: 'n' }, files[i].role));
-                        fb.addEventListener('click', function () { openFile(i); });
-                        box.appendChild(fb);
-                        rows += 1;
-                    });
+                    listFiles(kid.files, depth + 1);
                 }
             });
         }
+        function listFiles(list, depth) {
+            list.slice(0, 60).forEach(function (i) {
+                var fb = el('button', { type: 'button', class: i === state.file ? 'sel' : '' });
+                fb.style.paddingLeft = (6 + depth * 14) + 'px';
+                add(fb, el('span', null, (i === state.file ? '● ' : '') + base(files[i].path)), el('span', { class: 'n' }, files[i].role));
+                fb.addEventListener('click', function () { openFile(i); });
+                box.appendChild(fb);
+                rows += 1;
+            });
+            if (list.length > 60) {
+                var more = el('div', { class: 'muted' }, t('moreFiles')(num(list.length - 60)));
+                more.style.paddingLeft = (6 + depth * 14) + 'px';
+                box.appendChild(more);
+            }
+        }
         walkTree(tree, '', 0);
+        if (tree.files && tree.files.length) listFiles(tree.files, 0);
         x.appendChild(box);
     }
 
@@ -841,7 +912,7 @@
         [['graph', 'lGraph', ''], ['layers', 'lLayers', 'hLayers'], ['matrix', 'lMatrix', 'hMatrix'], ['knowledge', 'lKnowledge', 'hKnowledge'],
             ['treemap', 'lTreemap', hasLoc ? 'hTreemap' : 'hTreemapMissing', !hasLoc], ['flow', 'lFlow', 'hFlow', true]].forEach(function (o) {
             var b = el('button', { type: 'button', role: 'tab', class: 'lens', 'aria-selected': String(state.lens === o[0]), disabled: !!o[3], title: o[2] ? t(o[2]) : '' }, t(o[1]));
-            b.addEventListener('click', function () { if (!o[3]) { state.lens = o[0]; refresh(); } });
+            b.addEventListener('click', function () { if (!o[3] && state.lens !== o[0]) { step(); state.lens = o[0]; refresh(); } });
             bar.appendChild(b);
         });
     }
@@ -849,22 +920,31 @@
         var c = $('crumbs');
         clear(c);
         function btn(text, fn) { var b = el('button', { type: 'button' }, text); if (fn) b.addEventListener('click', fn); else b.disabled = true; return b; }
+        if (trail.length) {
+            var bk = btn(t('navBack'), back);
+            bk.id = 'nav-back';
+            bk.className = 'nav-back';
+            c.appendChild(bk);
+        }
         c.appendChild(btn(t('repo'), goHome));
         c.appendChild(el('span', { 'aria-hidden': 'true' }, '›'));
         var sel = state.file >= 0 ? base(files[state.file].path) : '';
         if (state.lens === 'graph') {
-            var shown = Math.min(OVERVIEW_AREAS, areas.length);
+            var shown = state.areaLimit === 'top' ? Math.min(OVERVIEW_AREAS, areas.length) : areas.length;
             if (state.level === 'area') {
                 c.appendChild(btn('Areas', goHome));
                 c.appendChild(el('span', { 'aria-hidden': 'true' }, '›'));
                 c.appendChild(btn(areas[state.area].id + ' · ' + t('files')(areas[state.area].files.length)));
             } else {
-                c.appendChild(btn(state.orb ? 'Areas' : t('areasOf')(shown, areas.length)));
+                c.appendChild(btn(t('areasOf')(shown, areas.length)));
                 c.appendChild(el('span', { 'aria-hidden': 'true' }, '›'));
                 c.appendChild(btn(t('overview')));
             }
         } else {
-            c.appendChild(btn(t({ layers: 'lLayers', matrix: 'lMatrix', knowledge: 'lKnowledge', treemap: 'lTreemap' }[state.lens])));
+            var atStart = !state.treePath && !state.cell;
+            var home = btn(t({ layers: 'lLayers', matrix: 'lMatrix', knowledge: 'lKnowledge', treemap: 'lTreemap' }[state.lens]), atStart ? null : lensHome);
+            home.className = 'lens-home';
+            c.appendChild(home);
             if (sel && state.lens !== 'treemap' && state.lens !== 'matrix') { c.appendChild(el('span', { 'aria-hidden': 'true' }, '›')); c.appendChild(btn(sel)); }
             if (state.lens === 'treemap' && state.treePath) {
                 var acc = '';
@@ -872,7 +952,7 @@
                     acc = acc ? acc + '/' + seg : seg;
                     var target = acc;
                     c.appendChild(el('span', { 'aria-hidden': 'true' }, '›'));
-                    c.appendChild(btn(seg, function () { state.treePath = target; refresh(); }));
+                    c.appendChild(btn(seg, function () { step(); state.treePath = target; refresh(); }));
                 });
             }
         }
@@ -882,7 +962,9 @@
         var L = $('legend');
         clear(L);
         add(L, el('b', null, t('legend')), el('span', { class: 'muted' }, state.level === 'area' ? t('sizeArea') : t('sizeOverview')));
-        if (state.colorBy === 'blast') {
+        if (state.colorBy === 'blast' && state.file < 0) {
+            L.appendChild(el('span', { class: 'muted' }, t('lgPick')));
+        } else if (state.colorBy === 'blast') {
             L.appendChild(legendItem(t('lgSel'), dotEl('', 'var(--brand)')));
             if (state.level === 'overview') {
                 L.appendChild(legendItem(t('lgHasHit'), dotEl('', 'var(--amber)')));
@@ -925,10 +1007,13 @@
             model.edges.forEach(function (e) { if (inside[e[0]] && inside[e[1]]) ec += 1; });
             f.appendChild(el('span', null, t('filesIn')(num(a.files.length), a.id)));
             f.appendChild(el('span', null, t('edgesIn')(num(ec), a.id)));
-        } else {
-            var shown = overviewAreas().length;
-            f.appendChild(el('span', null, t('visibleAreas')(num(shown), num(areas.length))));
-            f.appendChild(el('span', null, t('areaEdges')(num(model.areaEdges.length))));
+        } else if (state.lens === 'graph') {
+            var shownList = overviewAreas();
+            var shownSet = Object.create(null);
+            shownList.forEach(function (i) { shownSet[i] = true; });
+            var drawnEdges = model.areaEdges.filter(function (e) { return shownSet[e[0]] && shownSet[e[1]]; }).length;
+            f.appendChild(el('span', null, t('visibleAreas')(num(shownList.length), num(areas.length))));
+            f.appendChild(el('span', null, t('areaEdges')(num(drawnEdges))));
         }
         f.appendChild(el('span', { class: 'hot' }, t('affected')(num(hit), t(state.scope === 'code' ? 'sCode' : state.scope === 'tests' ? 'sTests' : 'sAll'))));
     }
@@ -938,7 +1023,16 @@
         graphWrap.hidden = !graph;
         lensView.hidden = graph;
         $('back').hidden = !(graph && state.level === 'area');
-        $('hint').textContent = state.orb ? t('hint3d') : t('hint2d');
+        var offGraph = graph && state.file >= 0 && files[state.file].area < 0;
+        $('hint').textContent = offGraph ? t('offGraph')(base(files[state.file].path), files[state.file].role) : state.orb ? t('hint3d') : t('hint2d');
+        // The overview draws areas and their links only: these toggles act on file edges.
+        var overview = graph && state.level === 'overview';
+        ['t-guess', 't-tests', 't-infra'].forEach(function (id) {
+            var tb = $(id);
+            tb.disabled = overview;
+            tb.title = overview ? t('noEffectOverview') : '';
+        });
+        $('lim-top').parentNode.hidden = state.level === 'area';
         $('zoomtxt').textContent = 'Zoom ' + state.view.scale.toFixed(1) + '×';
         if (graph) { renderLegend(); return; }
         clear(lensView);
@@ -996,7 +1090,8 @@
         var ids = [];
         for (var i = 0; i < n; i++) ids.push(i);
         var selArea = state.file >= 0 ? files[state.file].area : state.area;
-        if (selArea >= n) ids[n - 1] = selArea;
+        // The marked area joins the matrix; it never displaces one of the fifteen.
+        if (selArea >= n) ids.push(selArea);
         var pos = Object.create(null);
         ids.forEach(function (a, k) { pos[a] = k; });
         var M = ids.map(function () { return ids.map(function () { return 0; }); });
@@ -1037,7 +1132,7 @@
                 var p = v ? Math.round(Math.min(95, 18 + Math.log(v + 1) / Math.log(maxV + 1) * 75)) : 0;
                 cell.style.background = diag ? 'var(--line)' : v ? 'color-mix(in srgb, ' + (cross ? 'var(--amber)' : 'var(--cyan)') + ' ' + p + '%, transparent)' : (cross ? 'var(--brandTint)' : 'var(--rail)');
                 if (p > 55) cell.style.color = '#0d1522';
-                cell.addEventListener('click', function () { state.cell = [a, b]; refresh(); });
+                cell.addEventListener('click', function () { step(); state.cell = [a, b]; refresh(); });
                 row.appendChild(cell);
             });
             grid.appendChild(row);
@@ -1048,12 +1143,12 @@
         if (state.cell) {
             var A = state.cell[0];
             var B = state.cell[1];
+            var pairsAB = model.edges.filter(function (e) { return (files[e[0]].area === A && files[e[1]].area === B) || (files[e[0]].area === B && files[e[1]].area === A); });
             note.appendChild(el('div', null, areas[A].id + ' ' + areaLabel(areas[A]) + ' ↔ ' + areas[B].id + ' ' + areaLabel(areas[B]) + ': ' +
-                (A === B ? t('diag') : t('edgesN')(M[pos[A]][pos[B]]))));
+                (A === B ? t('diag') : t('edgesN')(M[pos[A]][pos[B]], pairsAB.length))));
             if (A !== B) {
                 var ul = el('ul', { class: 'plist' });
-                model.edges.filter(function (e) { return (files[e[0]].area === A && files[e[1]].area === B) || (files[e[0]].area === B && files[e[1]].area === A); })
-                    .slice(0, 20).forEach(function (e) {
+                pairsAB.slice(0, 20).forEach(function (e) {
                         var b2 = el('button', { type: 'button' });
                         add(b2, el('span', { class: 'fname' }, base(files[e[0]].path) + ' → ' + base(files[e[1]].path)));
                         b2.addEventListener('click', function () { openFile(e[0]); });
@@ -1217,7 +1312,7 @@
             if (r[3] > 50 && r[4] > 22) add(b, el('span', null, it.name + (it.dir ? '/' : '')), r[4] > 36 ? el('small', null, num(it.value)) : null);
             b.addEventListener('click', function () {
                 if (it.file !== undefined) openFile(it.file);
-                else { state.treePath = state.treePath ? state.treePath + '/' + it.name : it.name; refresh(); }
+                else { step(); state.treePath = state.treePath ? state.treePath + '/' + it.name : it.name; refresh(); }
             });
             box.appendChild(b);
         });
@@ -1285,7 +1380,7 @@
         if (rec && state.scope === 'code') head.appendChild(el('span', { class: 'level ' + level }, t('levels')[level]));
         bl.appendChild(head);
         var scopes = el('div', { class: 'scopes', role: 'radiogroup', 'aria-label': 'Scope' });
-        [['code', t('sCode')], ['tests', '+ ' + t('fTests')], ['all', '+ Doku']].forEach(function (o) {
+        [['code', t('sCode')], ['tests', '+ ' + t('fTests')], ['all', t('sAllShort')]].forEach(function (o) {
             var b = el('button', { type: 'button', role: 'radio', 'aria-checked': String(state.scope === o[0]) }, o[1]);
             b.addEventListener('click', function () { state.scope = o[0]; refresh(); });
             scopes.appendChild(b);
@@ -1459,8 +1554,9 @@
         var cyc = (model.violations || []).filter(function (v) { return v.kind === 'cycle'; });
         var cycLines = [];
         if (an.cycles && an.cycles[0]) {
-            cycLines.push(el('p', null, t('biggest')(an.cycles[0].length) + ' · ' + an.cycles[0].slice(0, 4).map(function (x) { return base(files[x].path); }).join(' ↔ ') + (an.cycles[0].length > 4 ? ' ↔ …' : '')));
-            an.cycles.slice(1, 3).forEach(function (c) { cycLines.push(el('p', null, c.length + ' · ' + dir(files[c[0]].path))); });
+            var sizeOf = function (k) { return (an.cycleSizes && an.cycleSizes[k]) || an.cycles[k].length; };
+            cycLines.push(el('p', null, t('biggest')(sizeOf(0)) + ' · ' + an.cycles[0].slice(0, 4).map(function (x) { return base(files[x].path); }).join(' ↔ ') + (sizeOf(0) > 4 ? ' ↔ …' : '')));
+            an.cycles.slice(1, 3).forEach(function (c, k) { cycLines.push(el('p', null, sizeOf(k + 1) + ' · ' + dir(files[c[0]].path))); });
         }
         p.appendChild(findCard(t('cycles'), num(an.cyclesTotal), 'var(--amberText)', cycLines));
         p.appendChild(findCard(t('surprises'), num((an.surprises || []).length), 'var(--amberText)',
@@ -1540,9 +1636,9 @@
         renderLens();
         renderTabs();
         renderPanel();
-        $('wb').className = 'wb' + (state.full ? ' full' : '');
+        applyPanes(false);
         renderFull();
-        if (state.lens === 'graph') draw(); else renderFoot();
+        if (state.lens === 'graph') draw(); else { renderFoot(); exposeView(); }
     }
     function renderFull() {
         var fb = $('full');
@@ -1568,9 +1664,11 @@
         card.appendChild(back);
     }
     function resetView() { state.view = { scale: 1, x: 0, y: 0 }; state.rot = { yaw: ORB_YAW, pitch: ORB_PITCH }; }
-    function goHome() { state.level = 'overview'; state.area = -1; state.lens = 'graph'; resetView(); refresh(); }
-    function openArea(i) { state.level = 'area'; state.area = i; state.lens = state.lens === 'graph' ? 'graph' : state.lens; resetView(); refresh(); }
+    function goHome() { step(); state.level = 'overview'; state.lens = 'graph'; resetView(); refresh(); }
+    function openArea(i) { step(); closeFlyouts(); if (state.file >= 0 && files[state.file].area !== i) state.file = -1; state.level = 'area'; state.area = i; state.lens = state.lens === 'graph' ? 'graph' : state.lens; resetView(); refresh(); }
     function openFile(i) {
+        step();
+        closeFlyouts();
         var f = files[i];
         if (state.lens === 'graph' && f.area >= 0 && (state.level !== 'area' || state.area !== f.area)) {
             state.level = 'area';
@@ -1605,11 +1703,30 @@
         drag = null;
         if (wasDrag) return;
         var r = canvas.getBoundingClientRect();
+        select(hitTest(e.clientX - r.left, e.clientY - r.top));
+    });
+    // One click marks the node and what it reaches; a double click goes one level deeper.
+    canvas.addEventListener('dblclick', function (e) {
+        var r = canvas.getBoundingClientRect();
         var hit = hitTest(e.clientX - r.left, e.clientY - r.top);
         if (!hit) return;
         if (hit.kind === 'area') openArea(hit.idx);
         else openFile(hit.idx);
     });
+    function select(hit) {
+        if (!hit) {
+            if (state.level === 'overview') state.area = -1;
+            state.file = -1;
+        } else if (hit.kind === 'area') {
+            state.area = hit.idx;
+            state.file = -1;
+            state.tab = 'area';
+        } else {
+            state.file = hit.idx;
+            state.tab = 'file';
+        }
+        refresh();
+    }
     canvas.addEventListener('wheel', function (e) { e.preventDefault(); zoom(e.deltaY < 0 ? 1.12 : 1 / 1.12); }, { passive: false });
     function zoom(f) { state.view.scale = Math.min(8, Math.max(0.4, state.view.scale * f)); $('zoomtxt').textContent = 'Zoom ' + state.view.scale.toFixed(1) + '×'; draw(); }
     var TURN_KEYS = { ArrowLeft: [-0.15, 0], ArrowRight: [0.15, 0], ArrowUp: [0, 0.15], ArrowDown: [0, -0.15] };
@@ -1618,8 +1735,9 @@
         if (step && state.orb && document.activeElement !== searchInput) { e.preventDefault(); turnTo(state.rot.yaw + step[0], state.rot.pitch + step[1]); return; }
         if (e.key === '/' && document.activeElement !== searchInput) { e.preventDefault(); searchInput.focus(); return; }
         if (e.key === 'Escape') {
+            if (state.fly.left || state.fly.right) { state.fly.left = false; state.fly.right = false; applyPanes(false); return; }
             if (document.activeElement === searchInput && searchInput.value) { searchInput.value = ''; clear(results); return; }
-            if (state.level === 'area') goHome(); else if (state.file >= 0) { state.file = -1; refresh(); }
+            if (state.level === 'area') goHome(); else if (state.file >= 0 || state.area >= 0) { state.file = -1; state.area = -1; refresh(); }
         }
     });
     searchInput.addEventListener('input', function () {
@@ -1653,6 +1771,21 @@
     toggle('t-tests', 'showTests');
     toggle('t-infra', 'showInfra');
     $('full').addEventListener('click', function () { state.full = !state.full; refresh(); resize(); });
+    ['left', 'right'].forEach(function (side) {
+        var other = side === 'left' ? 'right' : 'left';
+        $('open-' + side).addEventListener('click', function () {
+            state.fly[side] = true;
+            if (paneMode() === 'phone') state.fly[other] = false;
+            applyPanes(false);
+        });
+        $('close-' + side).addEventListener('click', function () { state.fly[side] = false; applyPanes(false); });
+        $('pin-' + side).addEventListener('click', function () {
+            state.pin[side] = !isPinned(side);
+            state.fly[side] = false;
+            applyPanes(true);
+        });
+    });
+    $('scrim').addEventListener('click', function () { state.fly.left = false; state.fly.right = false; applyPanes(false); });
     $('z-in').addEventListener('click', function () { zoom(1.4); });
     $('z-out').addEventListener('click', function () { zoom(1 / 1.4); });
     $('z-fit').addEventListener('click', function () { resetView(); zoom(1); });
@@ -1667,6 +1800,17 @@
         refresh();
     }
     dimButton.addEventListener('click', function () { setOrb(!state.orb); });
+    var limTop = $('lim-top');
+    var limAll = $('lim-all');
+    function setLimit(v) {
+        state.areaLimit = v;
+        limTop.setAttribute('aria-pressed', String(v === 'top'));
+        limAll.setAttribute('aria-pressed', String(v === 'all'));
+        resetView();
+        refresh();
+    }
+    limTop.addEventListener('click', function () { setLimit('top'); });
+    limAll.addEventListener('click', function () { setLimit('all'); });
     dim2d.addEventListener('click', function () { setOrb(false); });
     $('export').addEventListener('click', function () {
         var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -1705,6 +1849,11 @@
         $('z-out').setAttribute('aria-label', t('zoomOut'));
         $('z-fit').textContent = t('fit');
         dim2d.textContent = t('d2');
+        $('open-left').textContent = t('openLeft');
+        $('open-right').textContent = t('openRight');
+        ['left', 'right'].forEach(function (side) { $('close-' + side).setAttribute('aria-label', t('closePane')); });
+        limTop.textContent = t('limTop');
+        limAll.textContent = t('limAll');
         dimButton.textContent = t('d3');
         dimButton.setAttribute('title', t('dimHint'));
         $('back').textContent = t('allAreas');
@@ -1713,7 +1862,7 @@
 
     applyStrings();
     renderHeader();
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', function () { applyPanes(false); resize(); if (state.lens === 'treemap') renderLens(); });
     refresh();
     resize();
 })();

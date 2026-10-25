@@ -1178,3 +1178,6 @@ describe('the asset under test is untrusted input (16.5.0 release review)', () =
 // out of the sharded matrix, exactly as it does this file.
 import './ui_render_asset_font_state.test.js';
 import './ui_render_painted_family.test.js';
+// The code-graph map viewer's browser suite, carried into the same job the
+// same way: 2D/3D data parity, click and double click, height, side panels.
+import '../scripts/code_graph_map_area_limit.test.js';
