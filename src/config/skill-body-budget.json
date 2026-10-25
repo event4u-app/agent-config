@@ -303,7 +303,7 @@
     "test-case-discovery": 12862,
     "test-driven-development": 16352,
     "test-performance": 6376,
-    "testing-anti-patterns": 18233,
+    "testing-anti-patterns": 19723,
     "threat-modeling": 11938,
     "throughput-vs-morale-tradeoff": 13242,
     "token-optimizer": 6275,
@@ -597,6 +597,12 @@
       "old": 17818,
       "new": 17970,
       "reason": "One See-also line routing 'the rest of the alphabet' to type-design, which reuses this skill's trace and counter rule. road-to-type-with-a-witness 4.14."
+    },
+    {
+      "skill": "testing-anti-patterns",
+      "old": 18233,
+      "new": 19723,
+      "reason": "Iron Law 8 (test through the entry point), the reviewed text of self-modification step 6.2, landed by the owner's forge act (OQ-7); shrinking it would change what was reviewed."
     },
     {
       "skill": "typography-system",

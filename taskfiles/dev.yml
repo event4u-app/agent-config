@@ -179,6 +179,17 @@ tasks:
         --benefit "..." --challenges 3 [--critical-open 0] [--json]
     cmd: ./scripts-run src/scripts/skill_scout {{.CLI_ARGS}}
 
+  dev:ratification-record:
+    desc: |
+      Render a ratification artifact from a council modification review's
+      session record, so no seat verdict is typed by hand. Prints the record;
+      the maintainer commits it under agents/evidence/ratifications/.
+      Contract: docs/contracts/ratification-artifact.md
+      Usage:
+      task dev:ratification-record -- --session <council-json> --files <f> ... \
+        --proposed-by <who> --implemented-by <who> --summary "..."
+    cmd: ./scripts-run src/scripts/ratification_record {{.CLI_ARGS}}
+
   push-ready:
     desc: |
       The documented pre-push freshness sequence, executed rather than

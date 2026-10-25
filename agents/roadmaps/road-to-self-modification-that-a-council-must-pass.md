@@ -945,7 +945,7 @@ suite in the bundle this time.
       fire first would turn "one reviewer said no" into "not enough reviewers
       answered" — a retryable condition rather than the objection it is.
       `required_providers` is a parameter, not baked in. 7 tests.
-- [ ] **3.4 The record is written from the run, not typed.** One writer, in
+- [x] **3.4 The record is written from the run, not typed.** One writer, in <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/skill-body-budget.json -->
       the module of 2.1, turns the session record of such a review into the
       artifact: `reviewed_by` in one spelling, `providers` from the seats that
       concluded, the derived verdict, `subject` for the tree the bundle was
@@ -1358,7 +1358,7 @@ suite in the bundle this time.
       the availability rule's substitute clause, each gain one sentence: not
       for a modification review.
       verify: `grep -l 'modification review' src/skills/ai-council/SKILL.md src/rules/council-availability.md | wc -l` -> /^2$/
-- [ ] **5.2 The stop has a shape.** In those cases the run ends with the
+- [x] **5.2 The stop has a shape.** In those cases the run ends with the <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/skill-body-budget.json -->
       change open and labelled, the non-passing record in it, and one question
       for the user: the council's recommendation, the dissent, the exact
       change, what it is expected to gain, what it risks, and how it is
@@ -1520,7 +1520,7 @@ suite in the bundle this time.
       and not a reviewer module under condition 4, so it carries no record of its
       own. 14 tests, 10 seen red with the check neutralised.
 
-- [ ] **6.2 A worked example, for real.** One learning from this repository's
+- [x] **6.2 A worked example, for real.** One learning from this repository's <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/skill-body-budget.json -->
       own history is captured, proposed, and passed by a modification review
       as a change to a rule or skill body; its proposal stays under
       `agents/proposals/` naming the record, and the change passes the gate.

@@ -17,20 +17,6 @@ and the run that applies it links its PR.
   observation and states itself "not a question".
 - `four-dated-re-checks-are-calendar-bound` (corpus cadence): waits on calendar dates.
 
-### OQ-7 — Self-modification: how an owner act binds a split council
-
-- **Context:** `road-to-self-modification-that-a-council-must-pass` steps 3.4,
-  4.1, 4.2, 5.2 and 6.2 are built (commits `1f9ab5fca`, `5ecf60b10`,
-  `0e262c5c2`, `ec866ae5b`) but every review split: across ~25 rounds the openai
-  seat refuses because no authenticated owner mechanism exists, which ADR-281 § 5
-  deliberately leaves to the owner's forge act.
-- **Options:** (a) land the four commits through the D11 forge bypass as the
-  owner act; (b) reopen D11 / ADR-281 § 5 and build an in-tree authenticated
-  owner acknowledgment first; (c) park the roadmap.
-- **Recommendation:** (a) — the design already assigns this act to the owner,
-  and more council rounds on unchanged designs would be verdict shopping.
-- **Blocks:** steps 3.4, 4.1, 4.2, 5.2, 6.2 and AC-2, AC-3, AC-5.
-
 ### OQ-8 — The owner-authority register sits outside this list
 
 - **Context:** `agents/roadmaps/stubs/road-to-owner-authority-decisions.md` holds
@@ -104,3 +90,4 @@ and the run that applies it links its PR.
 | OQ-4 | 2026-10-25 | Cancel step-that-costs 1.1? | a — cancelled |
 | OQ-5 | 2026-10-25 | Cancel step-that-costs 1.2? | a — cancelled |
 | OQ-6 | 2026-10-25 | How 4.2 narrows the rule load, and its A/B | a — wait for the flip data |
+| OQ-7 self-modification owner act | 2026-10-25 | Land the split-council self-modification work? | 1 — land through the D11 forge bypass; 3.4, 5.2 and 6.2 ride one PR the owner merges with bypass, 4.1 and 4.2 follow in their own change after the writer is on main |
