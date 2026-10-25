@@ -46,6 +46,7 @@ import {
     run_exec_evidence,
 } from './_lib/exec_evidence.js';
 import { asOf, localIsoDate } from './_lib/as_of.js';
+import { POLICY_REL, checkPolicy, loadPolicy, readSink } from './_lib/dispatch_policy.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 import {
@@ -695,6 +696,19 @@ function main(argv: string[] = process.argv.slice(2)): number {
         }
     }
 
+    // Every dispatch default is bound to its sinks and to the claim behind it
+    // (road-to-a-policy-the-measurements-write 1.2). Absent table, nothing to bind.
+    if (fs.existsSync(path.join(REPO, POLICY_REL))) {
+        const policyFindings = checkPolicy(loadPolicy(REPO), {
+            readSink: (_row, sink) => readSink(REPO, sink),
+            claimStatus: (id) => ledger.get(id)?.status,
+            claimReviewBy: (id) => ledger.get(id)?.review_by,
+        });
+        for (const reason of policyFindings) {
+            findings.push({ id: 'dispatch-policy', file: POLICY_REL, reason });
+        }
+    }
+
     // 1. Every markered claim must map to a backed, resolvable ledger entry.
     for (const { id, file } of markers) {
         const entry = ledger.get(id);
@@ -1211,11 +1225,11 @@ function _isCliEntry(): boolean {
  */
 function selfTest(): number {
     const roots: string[] = [];
-    // Every lib this gate imports, `gate_self_test.ts` and `as_of.ts` included:
+    // Every lib this gate imports, `gate_self_test.ts` included:
     // a missing one fails as a module resolution error in EVERY case at once —
     // which reads as the detection having broken rather than the fixture being
     // incomplete.
-    const libs = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts'];
+    const libs = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts', 'dispatch_policy.ts'];
 
     const fixture = (files: Record<string, string>): number => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'check-claims-selftest-'));
@@ -1367,6 +1381,28 @@ function selfTest(): number {
             name: 'a malformed review_by → reject',
             expect: 'reject',
             run: () => fixture({ 'docs/CLAIMS.md': openClaim('soon'), 'README.md': CLEAN_README }),
+        },
+        {
+            name: 'a dispatch-policy row its sink disagrees with → reject',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    'docs/CLAIMS.md': closed(null),
+                    'README.md': CLEAN_README,
+                    'conf.yml': 'subagents:\n  max_parallel: 4\n',
+                    'src/config/dispatch-policy.json': JSON.stringify({
+                        rows: [
+                            {
+                                id: 'max-parallel',
+                                value: 3,
+                                sink: { kind: 'yaml-file', file: 'conf.yml', key: 'subagents.max_parallel' },
+                                claim: 'unmeasured',
+                                review_by: '2026-12-15',
+                                local: 'learnable',
+                            },
+                        ],
+                    }),
+                }),
         },
         {
             name: 'a review_by on a backed entry → reject',

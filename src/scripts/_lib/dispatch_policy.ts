@@ -13,7 +13,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-import { parse as parseYaml } from 'yaml';
 
 export const POLICY_REL = 'src/config/dispatch-policy.json';
 
@@ -67,53 +66,35 @@ export function parsePolicy(text: string): PolicyTable {
     return { rows: Array.isArray(raw.rows) ? raw.rows : [] };
 }
 
-export interface ClaimRecord {
-    status: string;
-    review_by: string;
+/** A YAML scalar as the sinks write them: number, boolean, or a bare / quoted string. */
+function scalar(raw: string): unknown {
+    const v = raw.replace(/\s+#.*$/, '').trim();
+    if (/^-?\d+$/.test(v)) return Number(v);
+    if (v === 'true' || v === 'false') return v === 'true';
+    return v.replace(/^(['"])(.*)\1$/, '$2');
 }
 
-/** `id → { status, review_by }` for every `### claim:` block of a CLAIMS.md text. */
-export function claimRecords(ledger: string): Map<string, ClaimRecord> {
-    const out = new Map<string, ClaimRecord>();
-    let cur: ClaimRecord | null = null;
-    for (const line of ledger.split('\n')) {
-        const head = /^###\s+claim:\s*([A-Za-z0-9._-]+)\s*$/.exec(line);
-        if (head) {
-            cur = { status: '', review_by: '' };
-            out.set(head[1]!, cur);
+/**
+ * `key` or `section.key` from YAML text — the shape every sink uses: top-level
+ * scalars, or scalars one indent under a top-level section. Read by line on
+ * purpose, so `check_claims` carries no YAML dependency into its self-test.
+ */
+function yamlScalar(text: string, dotted: string): unknown {
+    const parts = dotted.split('.');
+    const key = parts.pop()!;
+    let inSection = parts.length === 0;
+    for (const line of text.split('\n')) {
+        if (parts.length > 0 && /^\S/.test(line)) {
+            inSection = line.startsWith(`${parts[0]}:`);
             continue;
         }
-        if (/^#{1,6}\s/.test(line)) {
-            cur = null;
-            continue;
-        }
-        const field = /^-\s+(status|review_by):\s*(.*)$/.exec(line);
-        if (cur !== null && field && cur[field[1] as keyof ClaimRecord] === '') {
-            cur[field[1] as keyof ClaimRecord] = field[2]!.trim();
+        const indent = parts.length === 0 ? '' : ' +';
+        const m = new RegExp(`^${indent}${key}:\\s*(.+)$`).exec(line);
+        if (inSection && m) {
+            return scalar(m[1]!);
         }
     }
-    return out;
-}
-
-/** `id → status`, the view `checkPolicy` needs. */
-export function claimStatuses(ledger: string): Map<string, string> {
-    return new Map([...claimRecords(ledger)].map(([id, r]) => [id, r.status]));
-}
-
-function frontmatterOf(text: string): Record<string, unknown> {
-    const m = /^---\n([\s\S]*?)\n---/.exec(text);
-    return m ? ((parseYaml(m[1]!) ?? {}) as Record<string, unknown>) : {};
-}
-
-function dig(data: unknown, dotted: string): unknown {
-    let cur: unknown = data;
-    for (const part of dotted.split('.')) {
-        if (cur === null || typeof cur !== 'object') {
-            return undefined;
-        }
-        cur = (cur as Record<string, unknown>)[part];
-    }
-    return cur;
+    return undefined;
 }
 
 /** The value the sink carries in the tree under `root`; `undefined` when absent. */
@@ -124,10 +105,12 @@ export function readSink(root: string, sink: PolicySink): unknown {
     }
     const text = fs.readFileSync(file, 'utf8');
     switch (sink.kind) {
-        case 'subagent-frontmatter':
-            return frontmatterOf(text)[sink.key];
+        case 'subagent-frontmatter': {
+            const m = /^---\n([\s\S]*?)\n---/.exec(text);
+            return m ? yamlScalar(m[1]!, sink.key) : undefined;
+        }
         case 'yaml-file':
-            return dig(parseYaml(text), sink.key);
+            return yamlScalar(text, sink.key);
         case 'council-default': {
             const key = sink.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const m = new RegExp(`_get\\(d, '${key}', (-?\\d+)\\)`).exec(text);

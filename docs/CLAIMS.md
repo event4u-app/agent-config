@@ -87,7 +87,9 @@
 every open entry past its date under `Overdue` without failing the build (also
 under `--quiet`, the mode CI runs), and `check_claims --status` lists
 every open entry with its dates. The dispatch-policy table
-(`src/config/dispatch-policy.json`) dates its unmeasured rows the same way.
+(`src/config/dispatch-policy.json`) dates its unmeasured rows the same way, and
+`check_claims` fails when a row disagrees with the file that carries its value,
+cites a claim that is not closed, or a floor row is learnable.
 
 **`non_inference` — the sentence that stops a number travelling.** A measured
 figure outlives its measurement: it is quoted without the corpus, the arm count,

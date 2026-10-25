@@ -2,15 +2,12 @@
  * The dispatch-policy table binds every dispatch default to its sinks
  * (road-to-a-policy-the-measurements-write 1.2).
  */
-import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import {
     checkPolicy,
-    claimRecords,
-    claimStatuses,
     loadPolicy,
     overdueRows,
     policyDelta,
@@ -19,16 +16,17 @@ import {
     type PolicyRow,
     type PolicyTable,
 } from '../../src/scripts/_lib/dispatch_policy.js';
+import { load_ledger } from '../../src/scripts/check_claims.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const LEDGER = fs.readFileSync(path.join(ROOT, 'docs', 'CLAIMS.md'), 'utf8');
+const LEDGER = load_ledger();
 
 /** `sinks` overrides by sink file first, then by row id; everything else agrees. */
 function check(table: PolicyTable, sinks: Record<string, unknown> = {}): string[] {
     return checkPolicy(table, {
         readSink: (row, sink) => (sink.file in sinks ? sinks[sink.file] : row.id in sinks ? sinks[row.id] : row.value),
-        claimStatus: (id) => claimStatuses(LEDGER).get(id),
-        claimReviewBy: (id) => claimRecords(LEDGER).get(id)?.review_by,
+        claimStatus: (id) => LEDGER.get(id)?.status,
+        claimReviewBy: (id) => LEDGER.get(id)?.review_by,
     });
 }
 
@@ -54,8 +52,8 @@ describe('dispatch-policy table', () => {
         const table = loadPolicy(ROOT);
         const findings = checkPolicy(table, {
             readSink: (_r, sink) => readSink(ROOT, sink),
-            claimStatus: (id) => claimStatuses(LEDGER).get(id),
-            claimReviewBy: (id) => claimRecords(LEDGER).get(id)?.review_by,
+            claimStatus: (id) => LEDGER.get(id)?.status,
+            claimReviewBy: (id) => LEDGER.get(id)?.review_by,
         });
         expect(findings).toEqual([]);
     });
@@ -73,10 +71,6 @@ describe('dispatch-policy table', () => {
         expect(findings.join('\n')).toContain('disagrees with claim `tier-downshift-quality-held`');
     });
 
-    it('stops reading a claim at the next heading', () => {
-        const ledger = '### claim: a\n- claim: x\n\n## Other\n- status: backed\n';
-        expect(claimRecords(ledger).get('a')).toEqual({ status: '', review_by: '' });
-    });
 
     it('seeds every dispatch knob the roadmap names', () => {
         const ids = loadPolicy(ROOT).rows.map((r) => r.id);

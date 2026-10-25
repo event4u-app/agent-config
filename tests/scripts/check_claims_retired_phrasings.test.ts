@@ -30,7 +30,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..');
 const TSX = path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
 const SCRIPT_SRC = path.join(REPO_ROOT, 'src', 'scripts', 'check_claims.ts');
-const LIB_SRCS = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts'].map((n) =>
+const LIB_SRCS = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts', 'dispatch_policy.ts'].map((n) =>
     path.join(REPO_ROOT, 'src', 'scripts', '_lib', n),
 );
 

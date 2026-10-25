@@ -111,7 +111,7 @@ egress (c) and (f) pass (`internal/bench/reports/egress-placeholders-identifier-
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
-| A1 | reversible-technical | agent | Bind defaults with a vitest test, not a new CI gate script | a new gate needs a coverage row and a council ratification (`check_kernel_edit_ratified`); a test runs in the existing CI job | the PR-diff check of the later roadmap lands |
+| A1 | reversible-technical | agent | Bind defaults inside the existing `check_claims` gate plus a vitest test, not a new CI gate script | a new gate needs a coverage row and a council ratification (`check_kernel_edit_ratified`); `check_claims` already runs in CI, and running the binding there is what puts it on the shipped path (`check_step_production_reach`) | the PR-diff check of the later roadmap lands |
 | A2 | reversible-technical | agent | No revert of the two 17.0.0 rows (draft Phase 0) | overtaken: `ac-researcher` is `inherit` again, and the skip came back only after its carrier shipped | the skip-quality claim of the later roadmap reads null |
 | A3 | reversible-technical | agent | `review_by` reports overdue, never fails, for now | an overdue date nobody can satisfy inside a PR would block unrelated work; the release section makes it visible | two releases list the same overdue row |
 
