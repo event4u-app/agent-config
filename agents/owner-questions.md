@@ -75,6 +75,21 @@ and the run that applies it links its PR.
   and more council rounds on unchanged designs would be verdict shopping.
 - **Blocks:** steps 3.4, 4.1, 4.2, 5.2, 6.2 and AC-2, AC-3, AC-5.
 
+### OQ-8 — The owner-authority register sits outside this list
+
+- **Context:** `agents/roadmaps/stubs/road-to-owner-authority-decisions.md` holds
+  owner-reserved decisions 1, 4, 5, 7, 8 and 9-12 plus the open halves of 2 and
+  3, under `## Unresolved decision N` headings that neither this list nor
+  `/roadmap:resolve-blockers` reads. Its `review_by` lapsed on 2026-09-25, and it
+  has now arrived seven times; the seventh arrival found Decision 6 answered
+  (ADR-249) but recorded open, corrected on 2026-10-25.
+- **Options:** (a) the agent lifts each open decision into its own OQ row here,
+  one per decision, and marks the register entries as moved; (b) the owner
+  answers or retires the register in one pass; (c) leave it as a parked record.
+- **Recommendation:** (a) — one list of every owner decision is what this file
+  says it is, and lifting rows decides nothing in the owner's name.
+- **Blocks:** nothing executable; the cost is that the decisions are unseen.
+
 ## Answered
 
 | ID | Date | Question | Answer |
