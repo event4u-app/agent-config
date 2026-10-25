@@ -21,7 +21,10 @@ estate_growth_exempt: >-
 > Each step below was `[~]` there and is restated verbatim as open work, so
 > archiving the parent buried nothing. Blockers the steps name moved with them.
 
-> **Arrivals:** 1 counted — latest `inbox-2026-10-m` (2026-10-12): a 16.4.0
+> **Arrivals:** 2 counted — latest `inbox-2026-10-as` (2026-10-25): six gates
+> still red when run singly at `01bb841cbd`, and no workflow runs `task ci`.
+> Steps 2.2–2.4 below do not wait on the legal blocker; any session with a
+> free slot can run them. Earlier: `inbox-2026-10-m` (2026-10-12): a 16.4.0
 > rescore reads `task ci` as red at a second consecutive cut, naming
 > `audit_user_type_axis` among the causes. Earlier rounds were not counted for
 > this file.
@@ -39,6 +42,21 @@ left to read as finished.
       five legal-review-prep skills' `recommended_for_user_types`, then lower or
       delete the baseline entry in the same change.
       verify: `./scripts-run src/scripts/audit_user_type_axis` -> 0
+
+- [ ] **2.2 Clear the red gates by class.** At `01bb841cbd` these exit 1 when
+      run singly: `check_gate_completeness`, `check_rule_invariants` (the
+      kernel literal — owner, see `stubs/road-to-kernel-clause-1-restore`),
+      `check_trigger_evals`, `lint_rule_enforcement_declaration`,
+      `lint_eval_freshness`, `lint_provenance_vocabulary`. Fix the five an agent
+      may fix; the kernel literal stays with its stub.
+      verify: each gate run singly with `./scripts-run src/scripts/<gate>`, five green.
+- [ ] **2.3 A scheduled `task ci` on main.** No workflow runs it today
+      (`.github/workflows/consistency.yml` says so). A weekly run that writes
+      exactly one classified entry when red.
+      verify: the workflow file exists and its dry run lists the gates it runs.
+- [ ] **2.4 Root instructions match the PR workflow.** `CLAUDE.md` says "green
+      before PR" for a pipeline that is red on main and runs in no workflow.
+      verify: `grep -n "task ci" CLAUDE.md` names what CI actually runs.
 
 ## Blockers
 
