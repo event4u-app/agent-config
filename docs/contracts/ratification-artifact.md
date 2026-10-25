@@ -77,7 +77,8 @@ against.
 from the run instead (`_lib/ratification_record_writer.ts`). Each seat's verdict
 is read from its stance line, never typed; the session must name as its
 artefact a prompt committed under `agents/evidence/council/` at the revision the
-subject is read at, and that prompt must contain the exact `subject`; every
+subject is read at, and that prompt must declare the exact `subject` on exactly
+one line of its own, `subject: <64-hex>` (backticks allowed); every
 reply is kept verbatim in the body; and the output is read back through the
 reader before it is printed. It does not change what is established above: the
 session file is the caller's, so the record is exactly as trustworthy as a typed
@@ -421,7 +422,7 @@ checked and read through that one descriptor; the committed reviews are read
 from one `HEAD` tree listing per run; a record's name and values reach a finding
 with control and line-separator characters replaced.
 
-A record closed by `superseded-by-owner-ruling` is not reported as unrestored; its council review is still owed, cites the record's `subject`, must be committed at or after `time`, and is overdue seven days after `restore_by`. The ruling must be committed at `HEAD`; a missing one, or a path outside `agents/evidence/owner-directives/`, is malformed. A standing actor with `bypass_mode: always` is still an unconditional bypass and still fails the anchor; no ruling closes that.
+A record closed by `superseded-by-owner-ruling` is not reported as unrestored; its council review is still owed, cites the record's `subject`, must be committed at or after `time`, and is overdue seven days after `restore_by`. The ruling must be committed at `HEAD` and must name the record's `ruleset_version_after` on its own line as `<!-- standing-bypass: ruleset_version=<id> -->`; a missing ruling, a path outside `agents/evidence/owner-directives/`, or a ruling that does not name that version is malformed, so a directive about something else closes no record. A standing actor with `bypass_mode: always` is still an unconditional bypass and still fails the anchor; no ruling closes that.
 
 **What that check does not establish.** The records are files in the branch it
 runs on, so a branch can rewrite one to look closed, and the values it checks

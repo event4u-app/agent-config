@@ -683,7 +683,7 @@ function gateInputsFor(
     if (baseRef === null && path.resolve(root) !== REPO) {
         return {
             derived: [...new Set([...derivedPlumbing(), ...verdictsOf(head), ...closureArrivals(head)])],
-            consequence: new Set([...(needed ? consequenceRuleSlugsOfCheckout() : []), ...headClass]),
+            consequence: new Set([...(needed ? consequenceRuleSlugsOfCheckout(root) : []), ...headClass]),
         };
     }
     const baseCommit = resolveRevision(root, resolveBaseRef(baseRef, root));
@@ -1108,9 +1108,11 @@ export function evaluate(
         const problems = reading.problems;
         if (problems.length > 0 && problems.every((p) => p.code === 'diversity-required')) {
             triggers.add('diversity-short');
+            const headerVerdict = readAdrFrontmatter(text)?.scalars['verdict'] ?? null;
+            if (headerVerdict === 'refused' || headerVerdict === 'non-convergent') triggers.add(headerVerdict);
             escalated.push({
                 path: rel,
-                verdict: readAdrFrontmatter(text)?.scalars['verdict'] ?? null,
+                verdict: headerVerdict,
                 seats: seatsOf(text),
             });
         }
