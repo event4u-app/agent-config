@@ -38,3 +38,8 @@ Does this change expand any authority — what an agent may do, a gate that stop
 refusing, a floor that weakens, a ceiling that rises — or not? Give your verdict
 as exactly one of `ratified`, `confirmed-non-expanding`, `refused`,
 `non-convergent`, with your reason.
+
+Close your reply with EXACTLY this line, and nothing after it:
+STANCE: <verdict> | CONFIDENCE: high|med|low | DEALBREAKER: yes|no
+where `<verdict>` is one of `ratified`, `confirmed-non-expanding`, `refused`,
+`non-convergent`.
