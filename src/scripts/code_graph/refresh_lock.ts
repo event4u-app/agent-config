@@ -115,7 +115,7 @@ function readOwner(lock: string): Owner | 'none' | 'unreadable' {
  * vanished, or an owner-less lock is provably older than the threshold. A lock
  * or owner record that cannot be inspected is treated as live.
  */
-export function isStale(lock: string, now: number = Date.now()): boolean {
+export function isStale(lock: string, now: number = Date.now(), goneIsStale = true): boolean {
     const owner = readOwner(lock);
     if (owner === 'unreadable') return false;
     if (owner !== 'none') {
@@ -128,7 +128,7 @@ export function isStale(lock: string, now: number = Date.now()): boolean {
     try {
         return now - fs.statSync(lock).mtimeMs > STALE_LOCK_MS;
     } catch (e) {
-        return errno(e) === 'ENOENT';
+        return goneIsStale && errno(e) === 'ENOENT';
     }
 }
 
@@ -163,9 +163,9 @@ export function heldByThisProcess(root: string): boolean {
  * removes, and removing a successor's would let two reclaimers in (ratification,
  * 2026-10-24). Stale locks then stay held — lost freshness, never lost exclusion
  * — and `code-graph auto-refresh status` names the leftover for a human to remove.
- * `afterStaleCheck` exists for the interleaving test only.
+ * `afterStaleCheck` and `afterReclaimCheck` exist for the interleaving tests only.
  */
-export function acquire(root: string, afterStaleCheck?: () => void): (() => void) | null {
+export function acquire(root: string, afterStaleCheck?: () => void, afterReclaimCheck?: () => void): (() => void) | null {
     const lock = graphHome(root).lockPath;
     fs.mkdirSync(path.dirname(lock), { recursive: true });
     try {
@@ -182,9 +182,16 @@ export function acquire(root: string, afterStaleCheck?: () => void): (() => void
         return null;
     }
     try {
-        if (!isStale(lock)) return null;
-        fs.rmSync(ownerPath(lock), { force: true });
-        fs.rmSync(lock, { recursive: true, force: true });
+        // A lock found gone is never removed: an acquirer outside the mutex may
+        // have created it since the check, and that lock is live.
+        const stale = isStale(lock, Date.now(), false);
+        afterReclaimCheck?.();
+        if (stale) {
+            fs.rmSync(ownerPath(lock), { force: true });
+            fs.rmSync(lock, { recursive: true, force: true });
+        } else if (fs.existsSync(lock)) {
+            return null;
+        }
         try {
             fs.mkdirSync(lock);
         } catch {

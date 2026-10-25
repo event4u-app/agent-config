@@ -157,6 +157,27 @@ describe('refresh lock — single flight', () => {
         expect(fs.existsSync(lock)).toBe(false);
     });
 
+    it('a reclaimer that finds the lock gone never deletes the lock a plain acquirer takes after its check', () => {
+        fs.mkdirSync(lock, { recursive: true });
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: 0, nonce: 'stale', host: os.hostname() }));
+        let releaseC: (() => void) | null = null;
+        const releaseB = acquire(
+            root,
+            // B judged the stale lock; A reclaims it and releases, so B's second check finds no lock at all.
+            () => acquire(root)?.(),
+            // Between B's second check and its removal, C takes the free lock the ordinary way.
+            () => {
+                releaseC = acquire(root);
+            },
+        );
+        expect(releaseC).not.toBeNull();
+        expect(releaseB).toBeNull();
+        expect(fs.existsSync(lock)).toBe(true);
+        expect(fs.existsSync(`${lock}.owner.json`)).toBe(true);
+        (releaseC as unknown as () => void)();
+        expect(fs.existsSync(lock)).toBe(false);
+    });
+
     it('a reclaimed holder releasing late does not delete its successor', () => {
         const releaseOld = acquire(root);
         // The old holder is presumed dead and its lock reclaimed by a successor.
