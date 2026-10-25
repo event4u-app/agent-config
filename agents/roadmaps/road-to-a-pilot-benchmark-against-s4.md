@@ -95,8 +95,8 @@ win, and no headline number is taken from it beyond what it measured.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | Third-party code in the run | security | S4's hooks execute during the neighbour arm | Intake, pinned commit, credential-free throwaway clones | Phase 2 — Bring S4 in without trusting it |
-| 2 | Underpowered pilot read as a verdict | measurement | Small n produces a confident-looking difference | Intervals recorded, pre-registered decision rule, no headline beyond it | Phase 3 — Run within the cap, record both directions |
+| 1 | Third-party code in the run | implementation | S4's hooks execute during the neighbour arm | Intake, pinned commit, credential-free throwaway clones | Phase 2 — Bring S4 in without trusting it |
+| 2 | Underpowered pilot read as a verdict | product | Small n produces a confident-looking difference | Intervals recorded, pre-registered decision rule, no headline beyond it | Phase 3 — Run within the cap, record both directions |
 
 ## Acceptance Criteria
 
