@@ -452,7 +452,7 @@ with that file.
 | D14 | product-owned | owner | AC-1's remaining key `projection.rule_packs` is retired by step 4.9 under the council's conditions, in the next major | owner answer "1" of 2026-10-24 (`agents/evidence/owner-directives/2026-10-24-rule-packs-retirement.md`) to the question the council routed (`agents/evidence/council/setup-rule-packs-key-20261024.md`, 2/2, owner-reserved) | the eight-rule audit finds a rule that applies regardless of its pack |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-24 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-25 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
