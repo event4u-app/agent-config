@@ -126,7 +126,15 @@ describe("mode resolution", () => {
     expect(layerLeavesEgressOff("audit:\n  egress: query\n# egress\n")).toBe(true);
     expect(layerLeavesEgressOff('"egress":\n  placeholders: {mode: observe}\n')).toBe(false);
     // A root this cannot read as a plain block mapping goes to the full parse.
-    for (const shape of ["{egress: {placeholders: {mode: off}}}\n", "base: &b {}\negress: *b\n", "<<: *x\negress: {}\n"]) {
+    for (const shape of [
+      "{egress: {placeholders: {mode: off}}}\n",
+      "base: &b {}\negress: *b\n",
+      "<<: *x\negress: {}\n",
+      // An indentless sequence under the key: the block capture would stop at
+      // `egress:`, so the layer goes to the full parse rather than reading null.
+      "egress:\n- placeholders:\n    mode: protect\n",
+      "egress:\n- mode: strict\n",
+    ]) {
       expect(layerLeavesEgressOff(shape)).toBe(false);
     }
     fs.writeFileSync(path.join(tmp, ".agent-settings.yml"), template.replace(/mode: "off"/, "mode: observe"));

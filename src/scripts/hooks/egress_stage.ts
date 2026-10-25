@@ -117,11 +117,11 @@ export function resolveEgressMode(settings: unknown): EgressMode {
 const EGRESS_WORD = /\begress\b/;
 
 /**
- * A column-0 line that can make the root anything but a plain block mapping:
- * flow collections, complex keys, document markers, merge keys, anchors,
- * aliases, tags, directives.
+ * A column-0 line this reader does not follow: flow collections, complex keys,
+ * document markers, merge keys, anchors, aliases, tags, directives, and an
+ * indentless sequence item, whose value the block capture below would cut off.
  */
-const NON_BLOCK_ROOT = /^(?:[{[?%&*!]|---|\.\.\.|<<)/m;
+const NON_BLOCK_ROOT = /^(?:[-{[?%&*!]|\.\.\.|<<)/m;
 
 /** A top-level `egress:` key, plain or quoted, with its indented, blank and comment lines. */
 const EGRESS_BLOCK = /^["']?egress["']?[ \t]*:.*(?:\r?\n(?:[ \t].*|[ \t]*#.*|[ \t]*))*/gm;
