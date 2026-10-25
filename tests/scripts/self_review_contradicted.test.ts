@@ -236,3 +236,31 @@ describe('contradictedByTree — in-file removal is not a whole-artifact deletio
         expect(why).toContain('present in the tree');
     });
 });
+
+// MEASURED FAILURE at 16.5.0: three security findings (one high) about a
+// ratification record said a seat's entry "was removed from" a probe-state
+// file. The disproof checked the record itself — the finding's `file`, present
+// in the tree — and de-blocked all three, though nobody claimed it was deleted.
+describe('a removal word is a claim only about what its own sentence names', () => {
+    const SEAT_ENTRY: Finding = {
+        severity: 'high',
+        kind: 'security',
+        title: 'Ratification record admits a stale review window',
+        detail:
+            'The record documents seven rounds. The author removed the seat\'s entry from '
+            + 'agents/runtime/state/council-probes.json between rounds so it would be retried. '
+            + 'The prompt is summarised, not committed verbatim.',
+        file: 'agents/evidence/ratifications/inbox-2026-10-g-k-roadmaps.md',
+    };
+
+    it('does not disprove a removal claim by the finding\'s own file when no removal sentence names it', () => {
+        const why = contradictedByTree(SEAT_ENTRY, new Set(), exists([SEAT_ENTRY.file as string]));
+        expect(why).toBeNull();
+        expect(isBlocking({ ...SEAT_ENTRY, contradicted: why ?? undefined })).toBe(true);
+    });
+
+    it('still disproves a removal sentence that names its own file', () => {
+        const named: Finding = { ...SEAT_ENTRY, detail: `The record \`${SEAT_ENTRY.file}\` was deleted.` };
+        expect(contradictedByTree(named, new Set(), exists([SEAT_ENTRY.file as string]))).toContain('present in the tree');
+    });
+});
