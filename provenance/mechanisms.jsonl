@@ -13,6 +13,6 @@
 {"mechanism_id":"unquotable-price-is-a-state","verdict":"adapt","realised_in":["agents/roadmaps/archive/road-to-unknowns-that-say-so.md"],"decided_at":"2026-10-12"}
 {"mechanism_id":"reserve-then-reconcile-spend-ledger","verdict":"adapt","realised_in":["agents/roadmaps/archive/road-to-unknowns-that-say-so.md"],"decided_at":"2026-10-12"}
 {"mechanism_id":"one-durable-lesson-per-retro-run","verdict":"adapt","realised_in":["agents/roadmaps/later/road-to-a-retro-the-merge-runs.md"],"decided_at":"2026-10-12"}
-{"mechanism_id":"cold-resume-replays-the-transcript","verdict":"adapt","realised_in":["agents/roadmaps/road-to-a-cold-start-paid-once.md"],"decided_at":"2026-10-14"}
+{"mechanism_id":"cold-resume-replays-the-transcript","verdict":"adapt","realised_in":["agents/roadmaps/archive/road-to-a-cold-start-paid-once.md"],"decided_at":"2026-10-14"}
 {"mechanism_id":"script-enforced-skill-step-order","verdict":"adapt","realised_in":["agents/roadmaps/archive/road-to-steps-the-skill-cannot-skip.md"],"decided_at":"2026-10-14"}
 {"mechanism_id":"reference-file-table-of-contents","verdict":"adapt","realised_in":["agents/roadmaps/archive/road-to-steps-the-skill-cannot-skip.md"],"decided_at":"2026-10-14"}
