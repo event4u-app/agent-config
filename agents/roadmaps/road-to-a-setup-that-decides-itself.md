@@ -34,6 +34,8 @@ relates:
 > *remove the lean settings, make it default and dynamic — but only if the
 > package does not get worse; it must stay as reliable as it is today.* Verified
 > against `main` @ `d760ecbde` on 2026-10-12.
+>
+> **Arrivals:** 1 — latest `inbox-2026-10-aj` (2026-10-25): external 17.x reviews note ADR-284 still reads `accepted` with `superseded_by: —` although ADR-293 removed both keys it acts on; step 4.10.
 
 ## Goal
 
@@ -322,6 +324,15 @@ with that file.
   verify: mixed-version fixture — removal release, then the previous release —
   lands on `eager-all` / `legacy-all`.
   Landed 2026-10-20: `tests/scripts/projection_key_downgrade.test.ts`. There is no second checkout in the fixture and there does not need to be — the previous release's readers ARE `normalizeLeanProjectionMode` and `projectionModeOf`, and ADR-293 left both untouched precisely so this direction keeps working. So the fixture takes the settings file the REMOVAL release actually writes (through `sparseSettingsValues` / `renderSparseSettings`, not a hand-made stand-in), asserts it carries no projection key for an older reader to find, and feeds it to those readers: `eager-all` and `legacy-all`. The matrix covers every value a prior release could have written, the retired `tiered` included — which maps onto the full surface rather than pruning on a split this reader no longer computes. Sensitivity shown by making the normaliser map `''` onto `delivery`: two of the four cases went red, and the two that did not are the ones that assert on the written file rather than on the reader.
+- [ ] **4.10 Record what ADR-293 did to ADR-284.** ADR-284 (installer honours
+  the host axis on an explicit opt-in) acts on `lean_projection.hosts` and
+  `mode: delivery`, both removed by ADR-293, yet reads `accepted` with
+  `superseded_by: —`, and ADR-293's `supersedes` names only ADR-267 and ADR-278.
+  Either ADR-293 gains a scoped `supersedes: ADR-284` and ADR-284 its
+  `superseded_by`, or ADR-284 states which of its limbs still binds the computed
+  form. Arrived from an external review; not decided here because both records
+  carry owner and council provenance.
+  verify: running `./scripts-run src/scripts/adr_cite_check ADR-284` names ADR-293 as its successor, or ADR-284 carries a dated note naming the limb that still binds.
 
 ## Phase 5 — Prove "not worse" once, then enable
 
@@ -441,7 +452,7 @@ with that file.
 | D14 | product-owned | owner | AC-1's remaining key `projection.rule_packs` is retired by step 4.9 under the council's conditions, in the next major | owner answer "1" of 2026-10-24 (`agents/evidence/owner-directives/2026-10-24-rule-packs-retirement.md`) to the question the council routed (`agents/evidence/council/setup-rule-packs-key-20261024.md`, 2/2, owner-reserved) | the eight-rule audit finds a rule that applies regardless of its pack |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-24 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-25 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|

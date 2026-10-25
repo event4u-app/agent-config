@@ -73,7 +73,7 @@ relates:
 > (`install.ts:2069-2140`, three tests); `rule-inject` cap already lowered to
 > 16,384 on 2026-09-08 with measured truncation (`hook-token-budget.json:35-42`).
 
-> **Arrivals:** 1 — latest `inbox-2026-10-m` (2026-10-12): a plan asks for a two-stage
+> **Arrivals:** 2 — latest `inbox-2026-10-ai` (2026-10-25): the owner adopts a goal of skill-trigger coverage toward 80 % (57.5 % now, `src/config/routing-coverage-seed.json`); no roadmap carried that target. The count before it read: 1 — latest `inbox-2026-10-m` (2026-10-12): a plan asks for a two-stage
 > retriever (lexical BM25 plus alias and negative triggers, embeddings only on a measured
 > lift, a light rerank, an explicit no-skill abstention) with targets of recall at 10 at or
 > above 0.90 and first-place at or above 0.60 on the sealed slice. Ranker lift is this

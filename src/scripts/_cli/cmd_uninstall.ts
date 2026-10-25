@@ -316,8 +316,10 @@ export function _remove_global_content(
     }
 
     let recorded: ReadonlySet<string>;
+    let inventory: global_deploy_inventory.Inventory;
     try {
-        recorded = global_deploy_inventory.recorded_rel_files(tool, target);
+        inventory = global_deploy_inventory.load_inventory();
+        recorded = global_deploy_inventory.recorded_rel_files(tool, target, inventory);
     } catch (exc) {
         return [
             `${tool}: ❌ refusing to purge ${anchor} — deploy inventory unreadable (${_osErr(exc)})`,
@@ -355,6 +357,8 @@ export function _remove_global_content(
         }
     };
     let deleted = 0;
+    let kept_edited = 0;
+    let failed = 0;
     const touched_dirs = new Set<string>();
     for (const rel of recorded) {
         const abs = path.resolve(resolved_anchor, rel);
@@ -373,11 +377,17 @@ export function _remove_global_content(
             // recursed into.
             const st = fs.lstatSync(abs);
             if (st.isDirectory()) continue;
+            // A deployed file the user changed is theirs now; reaping keeps it too.
+            if (global_deploy_inventory.recorded_file_edited(tool, target, rel, inventory)) {
+                kept_edited += 1;
+                continue;
+            }
             fs.unlinkSync(abs);
             deleted += 1;
             touched_dirs.add(path.dirname(abs));
-        } catch {
-            // Already gone is success; anything else is reported by the count.
+        } catch (exc) {
+            // Already gone is success; anything else is counted and reported.
+            if ((exc as NodeJS.ErrnoException).code !== 'ENOENT') failed += 1;
         }
     }
 
@@ -397,7 +407,9 @@ export function _remove_global_content(
         }
     }
 
-    return [`${tool}: purged ${deleted} recorded file(s) under ${anchor}`, deleted > 0];
+    const kept = kept_edited > 0 ? `; kept ${kept_edited} edited since install` : '';
+    const errs = failed > 0 ? `; ${failed} could not be removed` : '';
+    return [`${tool}: purged ${deleted} recorded file(s) under ${anchor}${kept}${errs}`, deleted > 0];
 }
 
 /** Render an OSError-shaped message: Python `str(OSError)` is the strerror. */

@@ -12,7 +12,7 @@ estate_growth_exempt: "Charges +1 later_roadmaps and +1 open_blockers. The later
 
 > **Source:** agents/tmp.old/godmod3/road-to-evidence-calibrated-model-orchestration.md
 
-> **Arrivals:** 1 — latest `inbox-2026-10-i` (2026-10-11): two supplied plans ask for per-phase model roles (scout / planner / executor / critic) and a learned per-reviewer value model; both rest on the outcome ledger this file is parked for.
+> **Arrivals:** 2 — latest `inbox-2026-10-aj` (2026-10-25): the owner asks, twice in one round, that benchmark results decide how the package uses subagents and the council; the 2026-10-23 tier bench (lite 59/60 vs inherit 60/60) read underpowered. The count before it read: 1 — latest `inbox-2026-10-i` (2026-10-11): two supplied plans ask for per-phase model roles (scout / planner / executor / critic) and a learned per-reviewer value model; both rest on the outcome ledger this file is parked for.
 
 > **Parked on arrival, 2026-08-24. Resume when a post-hook orchestration
 > telemetry capture rate has been recorded somewhere citable** — the same
