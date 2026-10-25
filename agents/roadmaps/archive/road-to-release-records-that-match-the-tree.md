@@ -90,6 +90,14 @@ the code has moved past points at the code.
   of `later/road-to-a-stop-that-holds-carried` names the date and both
   outcomes; it is calendar-bound.
 
+## Decisions
+
+| ID | Decision | Rung | Record |
+|---|---|---|---|
+| C1 | Step 1.1's prose verify names the red-then-green tests; no open choice | not a decision | closure scan, 2026-10-25 |
+| C2 | Step 2.3 records an owner ruling from 2026-08-27 (ADR-249); it decides nothing new | not a decision | closure scan, 2026-10-25 |
+| C3 | "`/pr:merge` § 9a" names a command; the failClosed decline is recorded above with its reason | not a decision | closure scan, 2026-10-25 |
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-25 | reviewer: claude/host -->
 

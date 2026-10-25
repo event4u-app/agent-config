@@ -119,6 +119,14 @@ breaking-changes index files as pending is numbered major; and no comment says
   `claude_hook_scope.ts` reports `version_skew` against the source checkout;
   the PATH-binary half has no observed failure behind it in this round.
 
+## Decisions
+
+| ID | Decision | Rung | Record |
+|---|---|---|---|
+| C1 | Step 1.1's prose verify names three passing tests and a suite count; no open choice | not a decision | closure scan, 2026-10-25 |
+| C2 | "merge" in step 3.1 is the settings-cascade merge rule, not a git merge | not a decision | closure scan, 2026-10-25 |
+| C3 | "merge" in the declined CC check counts merge commits; nothing is merged | not a decision | closure scan, 2026-10-25 |
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-25 | reviewer: claude/host -->
 
