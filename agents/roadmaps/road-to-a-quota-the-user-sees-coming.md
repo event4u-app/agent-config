@@ -84,30 +84,30 @@ Cold-start's 4.3, 4.5 and 5.3, which the first plan proposed to take over, are
 
 ## Phase 2 — The quota ledger and the status-line tap (D3, D4)
 
-- [ ] **2.1 `_lib/quota_ledger.ts`, machine-wide, counts only.** Snapshots
+- [x] **2.1 `_lib/quota_ledger.ts`, machine-wide, counts only.** Snapshots
       under the user-global state directory (five parallel sessions share one
       plan, so not per repo): `{ts, session, five_hour, seven_day,
       context_used_pct, context_size, model}`, each window `{pct, resets_at}`
-      or absent. No prompt, path or credential field exists. Atomic append,
-      pruned past eight hours.
+      or absent. No prompt, path or credential field exists. Line-sized
+      appends, rewritten atomically without lines past eight hours.
       verify: `npx vitest run tests/scripts/_lib/quota_ledger.test.ts` -> 0
-- [ ] **2.2 A status-line tap that chains the user's line.**
-      `agent-config statusline:tap [-- <command…>]` reads the host's status-line
-      JSON on stdin, hands the same bytes to the wrapped command, prints its
+- [x] **2.2 A status-line tap that chains the user's line.**
+      `agent-config statusline:tap` reads the host's status-line JSON on stdin,
+      hands the same bytes to the recorded original command, prints its
       output unchanged, then writes one ledger snapshot. Any error of its own is
       swallowed: the wrapped line always prints. Without a wrapped command it
       prints one compact segment only while a band is active.
       verify: `npx vitest run tests/scripts/statusline_tap.test.ts` -> 0
-- [ ] **2.3 Install and uninstall the tap.** `agent-config statusline:install`
+- [x] **2.3 Install and uninstall the tap.** `agent-config statusline:install`
       wraps the existing `statusLine.command` in `~/.claude/settings.json` (or
-      sets the tap alone when none exists) and records the original;
-      `statusline:uninstall` restores it byte-for-byte. Whether `setup` runs it
-      by default is owner question `quota-tap-default`.
+      sets the tap alone when none exists) and records the original value;
+      `statusline:uninstall` puts that value back, or removes the key it added. Whether `setup` runs it
+      by default is owner question OQ-18 (`quota-tap-default`).
       verify: `npx vitest run tests/scripts/statusline_install.test.ts` -> 0
 
 ## Phase 3 — Pressure and the notice the user sees (D2, D3)
 
-- [ ] **3.1 `_lib/pressure.ts`, pure.** Per window: fill, burn rate (slope over
+- [x] **3.1 `_lib/pressure.ts`, pure.** Per window: fill, burn rate (slope over
       the last 15 minutes, only with ≥3 snapshots), projected exhaustion,
       reset, and `state ∈ {ok, warm, hot, exhausted, unknown}`. Stale (no
       snapshot in 10 minutes) is `unknown`, never `ok`. `hot` = projected full
