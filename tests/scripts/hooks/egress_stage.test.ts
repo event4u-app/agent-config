@@ -157,8 +157,9 @@ describe("mode resolution", () => {
     fs.mkdirSync(path.join(home, "settings"), { recursive: true });
     // A user-global egress is filtered out by the cascade; the stage never reads it.
     fs.writeFileSync(path.join(home, "settings", ".agent-settings.yml"), "egress:\n  placeholders:\n    mode: strict\n");
-    for (const sub of [path.join(tmp, "pkg"), path.join(tmp, "agents", "settings")]) {
-    fs.mkdirSync(sub, { recursive: true });
+    try {
+      for (const sub of [path.join(tmp, "pkg"), path.join(tmp, "agents", "settings")]) {
+        fs.mkdirSync(sub, { recursive: true });
     const shapes = [
       undefined,
       "egress:\n  placeholders:\n    mode: protect\n",
@@ -180,11 +181,13 @@ describe("mode resolution", () => {
         expect(readEgressMode(sub), JSON.stringify({ sub, outer, inner })).toBe(viaCascade);
       }
     }
-    for (const dir of [tmp, sub]) fs.rmSync(path.join(dir, ".agent-settings.yml"), { force: true });
+        for (const dir of [tmp, sub]) fs.rmSync(path.join(dir, ".agent-settings.yml"), { force: true });
+      }
+    } finally {
+      if (savedHome === undefined) delete process.env["EVENT4U_CONFIG_HOME"];
+      else process.env["EVENT4U_CONFIG_HOME"] = savedHome;
+      fs.rmSync(home, { recursive: true, force: true });
     }
-    if (savedHome === undefined) delete process.env["EVENT4U_CONFIG_HOME"];
-    else process.env["EVENT4U_CONFIG_HOME"] = savedHome;
-    fs.rmSync(home, { recursive: true, force: true });
   });
 
   it("a thrown kill switch is off whatever the settings say", () => {
