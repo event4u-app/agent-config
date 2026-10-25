@@ -696,7 +696,7 @@
         ".implement-ticket-state.json"
       ],
       "exit_code": 1,
-      "stdout": "[halt] outcome=blocked step=verify\n@agent-directive: review-changes ticket=(no id)\n> Ticket (no id) — running the four-judge review (bugs, security, tests, code quality) before the delivery report is written.\n> 1. Continue — run `review-changes` now\n> 2. Abort — skip review (NOT recommended)\n",
+      "stdout": "[halt] outcome=blocked step=verify\n@agent-directive: review-changes ticket=(no id)\n> Ticket (no id) — running the seven-judge review (bugs, security, tests, quality, architecture, spec, overbuild) before the delivery report is written.\n> 1. Continue — run `review-changes` now\n> 2. Abort — skip review (NOT recommended)\n",
       "stderr": "",
       "state_after": {
         "version": 1,
@@ -894,7 +894,7 @@
         },
         "questions": [
           "@agent-directive: review-changes ticket=(no id)",
-          "> Ticket (no id) — running the four-judge review (bugs, security, tests, code quality) before the delivery report is written.",
+          "> Ticket (no id) — running the seven-judge review (bugs, security, tests, quality, architecture, spec, overbuild) before the delivery report is written.",
           "> 1. Continue — run `review-changes` now",
           "> 2. Abort — skip review (NOT recommended)"
         ],

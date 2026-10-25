@@ -58,8 +58,43 @@ describe('render_report — deterministic output', () => {
         // Tool activity from context-hygiene.
         expect(out).toContain('Tool calls: 17');
         expect(out).not.toContain('Loop detected');
-        // Honest token/cost note — no fabricated numbers.
-        expect(out).toContain('Token/cost: not tracked (no per-session source).');
+        // No cost record handed in → says so, invents nothing.
+        expect(out).toContain('_No `/cost:report` record found');
+        expect(out).toContain('_No turn-end refusals recorded._');
+    });
+
+    it('renders the recorded cost of the latest session', () => {
+        const out = render_report(WORK_STATE, HYGIENE, {
+            sessionId: 'abc123',
+            total_cost_usd: 1.2345,
+            messageCount: 42,
+            endedAt: '2026-10-25T10:00:00Z',
+            rate_missing: false,
+        });
+        expect(out).toContain('Session: `abc123`');
+        expect(out).toContain('Cost: $1.23 over 42 message(s)');
+        expect(out).not.toContain('understated');
+    });
+
+    it('flags an understated cost when a model rate was missing', () => {
+        const out = render_report(WORK_STATE, HYGIENE, {
+            sessionId: 'abc123',
+            total_cost_usd: 0.5,
+            messageCount: 3,
+            endedAt: null,
+            rate_missing: true,
+        });
+        expect(out).toContain('understated');
+    });
+
+    it('renders turn-end refusals with their count and last detector', () => {
+        const out = render_report(WORK_STATE, HYGIENE, null, {
+            total: 3,
+            last_detector: 'language',
+            last_refused_at: '2026-10-25T09:00:00Z',
+        });
+        expect(out).toContain('## Turn-end refusals (3)');
+        expect(out).toContain('Last: detector `language` at 2026-10-25T09:00:00Z');
     });
 
     it('renders a graceful note when context-hygiene is absent', () => {
@@ -108,6 +143,36 @@ describe('_analyze_session — end-to-end against fixtures', () => {
         expect(out).toContain('resources/views/demo/showcase.blade.php');
         expect(out).toContain('`test`: blocked');
         expect(out).toContain('Tool calls: 17');
+    });
+
+    it('reads the latest cost record and the refusal state from disk', () => {
+        const stateFile = path.join(tmp, '.work-state.json');
+        fs.writeFileSync(stateFile, JSON.stringify(WORK_STATE), 'utf-8');
+        const costDir = path.join(tmp, 'agents', 'cost-tracking');
+        fs.mkdirSync(costDir, { recursive: true });
+        const older = { sessionId: 'old', total_cost_usd: 9, messageCount: 1, capturedAt: '2026-10-01T00:00:00Z' };
+        const newer = { sessionId: 'new', total_cost_usd: 2.5, messageCount: 7, capturedAt: '2026-10-25T00:00:00Z' };
+        fs.writeFileSync(
+            path.join(costDir, 'sessions.jsonl'),
+            `${JSON.stringify(newer)}\nnot json\n${JSON.stringify(older)}\n`,
+            'utf-8',
+        );
+        const refusalDir = path.join(tmp, 'agents', 'runtime', 'state', 'turn-end-gate');
+        fs.mkdirSync(refusalDir, { recursive: true });
+        fs.writeFileSync(
+            path.join(refusalDir, 'k1.json'),
+            JSON.stringify({ refused_at: '2026-10-25T08:00:00Z', refused_turn: 4, detector: 'promissory', counts: { promissory: 2 } }),
+            'utf-8',
+        );
+
+        const code = _analyze_session(tmp, stateFile);
+        const out = writes.join('');
+
+        expect(code).toBe(0);
+        expect(out).toContain('Session: `new`');
+        expect(out).toContain('Cost: $2.50 over 7 message(s)');
+        expect(out).toContain('## Turn-end refusals (2)');
+        expect(out).toContain('Last: detector `promissory`');
     });
 
     it('returns exit 1 when the work-state file is missing', () => {

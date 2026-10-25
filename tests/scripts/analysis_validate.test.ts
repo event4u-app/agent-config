@@ -34,7 +34,7 @@ const FINDING: Finding = {
 };
 
 function emitted(findings: Finding[] = [FINDING]): string {
-    const body = emitRound({ roundId: 'run-1', date: '2026-10-17', slug: 'analysis-round-1', readyAtZero: 0, findings }).roadmaps[0]?.body;
+    const body = emitRound({ roundId: 'run-1', date: '2026-10-17', slug: 'analysis-round-1', readyAtZero: 0, treePin: 'a1b2c3d4e5', findings }).roadmaps[0]?.body;
     if (body === undefined) throw new Error('nothing emitted');
     const file = path.join(root, 'agents/roadmaps/road-to-analysis-round-1.md');
     fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -74,6 +74,14 @@ describe('deterministic validation before anything leaves the machine', () => {
         const bad = body.replace('Evidence (read): `src/a.ts:1`', 'Evidence (read): `S1@1:5 #`');
         expect(contentFailures(bad, 'x.md', { councilDissent: false })).toEqual([
             'x.md: claim of "Phase 1 — Doors print their scope" carries a malformed media anchor `S1@1:5 #` (expected S<n>@mm:ss #tile)',
+        ]);
+    });
+
+    it('refuses an emitted roadmap that carries no tree_pin', () => {
+        const body = fs.readFileSync(emitted(), 'utf8');
+        expect(body).toMatch(/^tree_pin: a1b2c3d4e5$/m);
+        expect(contentFailures(body.replace(/^tree_pin: .*\n/m, ''), 'x.md', { councilDissent: false })).toEqual([
+            'x.md: carries no tree_pin — an emitted roadmap names the HEAD it was verified against',
         ]);
     });
 

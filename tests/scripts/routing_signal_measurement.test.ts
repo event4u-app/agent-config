@@ -148,7 +148,12 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // step 6.2b renamed the source door, rewriting two routing-away links in
         // `competitive-positioning`, which owed a corpus. It is 0x21 = 33 and
         // seals. The claim's scope moves to 18 of 37.
-        expect(sealed.length).toBe(37);
+        //
+        // 37 -> 38 on 2026-10-25: road-to-closing-the-gaps-a-comparison-named
+        // 2.1 added behavioural evals to three judges, which then owed a corpus.
+        // `judge-test-coverage` is 0x1a = 26 and seals. The claim's scope moves
+        // to 18 of 38.
+        expect(sealed.length).toBe(38);
     });
 
     it('the loader`s partition agrees with every published holdout row', () => {
@@ -347,8 +352,12 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 172 -> 173 on 2026-10-24: `mcp-builder` gained a corpus for the
         // touched-skill reason and trains, so the seal stays at 37 and the train
         // set moves 135 -> 136; both train-side measurements are re-taken.
-        expect(all.length).toBe(173);
-        expect(all.filter((r) => r.partition === 'holdout').length).toBe(37);
+        // 173 -> 176 on 2026-10-25: three judges gained corpora for the
+        // touched-skill reason; `judge-test-coverage` (0x1a) seals (37 -> 38),
+        // `judge-bug-hunter` (0x77) and `judge-code-quality` (0xd6) train
+        // (136 -> 138); both train-side measurements are re-taken.
+        expect(all.length).toBe(176);
+        expect(all.filter((r) => r.partition === 'holdout').length).toBe(38);
     });
 });
 
@@ -414,7 +423,8 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 131 -> 132 on 2026-10-19: `playwright-testing` (0x61 = 97) trains.
         // 132 -> 135 on 2026-10-21: three train corpora (see the 172 line).
         // 135 -> 136 on 2026-10-24: `mcp-builder` (see the 173 line).
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(136);
+        // 136 -> 138 on 2026-10-25: two judges train (see the 176 line).
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(138);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

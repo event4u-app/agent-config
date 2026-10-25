@@ -50,6 +50,7 @@ import { gitEnv } from './_lib/git_env.js';
 import { read_live_records, register_dir } from './_lib/session_register.js';
 import { other_worktree_branches_detailed } from './sessions_cli.js';
 import { recordContextObservation } from './_lib/context_observation.js';
+import { advancePin, revalidate, type RevalidationReport } from './_lib/roadmap_revalidation.js';
 
 /** One open pull request, with the file set it changes. */
 export interface PullRequestInfo {
@@ -732,7 +733,8 @@ function readOwnedPathsFile(p: string): Map<string, string[]> {
 export function main(argv: string[] = process.argv.slice(2)): number {
     if (argv.includes('--help') || argv.includes('-h')) {
         process.stdout.write(
-            'usage: agent-config roadmap:context [--roadmap <slug>] [--owned-paths <file.json>] [--json] [--relates] [--fingerprint]\n',
+            'usage: agent-config roadmap:context [--roadmap <slug>] [--owned-paths <file.json>] [--json] [--relates] [--fingerprint]\n' +
+                '       agent-config roadmap:context --revalidate <slug|path> [--json] [--advance]\n',
         );
         return 0;
     }
@@ -741,6 +743,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         return i >= 0 && argv[i + 1] !== undefined ? argv[i + 1]! : null;
     };
     const root = at('--root') ?? process.cwd();
+    const target = at('--revalidate');
+    if (target !== null) return revalidateMain(root, target, argv.includes('--json'), argv.includes('--advance'));
     const ownedFile = at('--owned-paths');
     const ctx = probe({
         repoRoot: root,
@@ -781,6 +785,56 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     process.stdout.write(
         argv.includes('--json') ? `${JSON.stringify(ctx, null, 2)}\n` : renderText(ctx),
     );
+    return 0;
+}
+
+/** Where a `--revalidate` argument names a roadmap: a path, or a slug in any roadmap directory. */
+export function resolveRoadmap(root: string, target: string): string | null {
+    if (target.endsWith('.md')) return fs.existsSync(path.join(root, target)) ? target : null;
+    const slug = target.startsWith('road-to-') ? target : `road-to-${target}`;
+    for (const dir of ['', 'later/', 'stubs/']) {
+        const rel = `agents/roadmaps/${dir}${slug}.md`;
+        if (fs.existsSync(path.join(root, rel))) return rel;
+    }
+    return null;
+}
+
+export function renderRevalidation(rel: string, rep: RevalidationReport): string {
+    const out = [`revalidate ${rel} · pin ${rep.pin === null ? 'none' : `${rep.pin.sha} (${rep.pin.form})`} · head ${rep.head ?? 'unknown'}`];
+    out.push(`verdict: ${rep.verdict}${rep.cheap ? ' (cheap path)' : ''}${rep.reason !== undefined ? ` — ${rep.reason}` : ''}`);
+    for (const c of rep.citations) if (c.state !== 'unchanged') out.push(`  ${c.state.padEnd(10)} ${c.path}${c.maxLine !== null ? `:${String(c.maxLine)}` : ''}`);
+    const moved = rep.decisions.filter((d) => d.question !== undefined);
+    const fired = rep.decisions.filter((d) => d.revisit === 'fired');
+    if (moved.length > 0) out.push(`decisions whose evidence moved — one council question each: ${moved.map((d) => d.id).join(', ')}`);
+    if (fired.length > 0) out.push(`revisit-if fired: ${fired.map((d) => d.id).join(', ')}`);
+    if (rep.verdict === 'drifted' || rep.verdict === 'broken') {
+        out.push('next: re-verify each listed statement, label it, correct it in place, then --advance');
+    }
+    return `${out.join('\n')}\n`;
+}
+
+function revalidateMain(root: string, target: string, json: boolean, advance: boolean): number {
+    const rel = resolveRoadmap(root, target);
+    if (rel === null) {
+        process.stderr.write(`roadmap:context --revalidate: no roadmap at ${target}\n`);
+        return 2;
+    }
+    const abs = path.join(root, rel);
+    const text = fs.readFileSync(abs, 'utf-8');
+    const rep = revalidate({ root, roadmapRel: rel, text, absentNow: (ps) => staleArtefactVerdict(root, ps).absent });
+    if (advance) {
+        if (rep.head === null) {
+            process.stderr.write('roadmap:context --revalidate --advance: HEAD does not resolve\n');
+            return 1;
+        }
+        try {
+            fs.writeFileSync(abs, advancePin(text, rep.head, new Date().toISOString().slice(0, 10), rep.verdict), 'utf-8');
+        } catch (err) {
+            process.stderr.write(`roadmap:context --revalidate --advance: ${err instanceof Error ? err.message : String(err)}\n`);
+            return 1;
+        }
+    }
+    process.stdout.write(json ? `${JSON.stringify({ roadmap: rel, ...rep }, null, 2)}\n` : renderRevalidation(rel, rep));
     return 0;
 }
 

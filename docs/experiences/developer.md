@@ -12,7 +12,7 @@ the PR. Stack-aware across Laravel · Symfony · Next.js · React · Node.
 
 1. **Implement a ticket** — `/implement-ticket` refines it, plans, edits, tests, verifies.
 2. **Fix a red build** — `/fix:ci` reads the failure and drives it green.
-3. **Self-review the diff** — `/review-changes` dispatches five judges (bug, security, tests, quality, architecture).
+3. **Self-review the diff** — `/review-changes` dispatches seven judges (bug, security, tests, quality, architecture, spec, overbuild).
 
 ## First commands
 

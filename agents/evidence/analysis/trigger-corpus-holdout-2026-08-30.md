@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  92f138f317212de9eb58ceb70280b83424795ae02bdd0ab6f98d497677ed81c1
+SET-SHA256  11b55380faeaabe40a3aa01d5c68645f8a9a4ec2971e56a0d4d61957eb5da42a
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1059,6 +1059,7 @@ open and which this file does not settle.
 | `image-generation` | `0ed76f9ddca3cd10b73aad8e00dbe643da9c3f0dc44e7e170dbd5e7304235381` |
 | `judge-injection-defense` | `dad5757b5ee71d78b761467d007d18c18fb3d440d1e1f5eb54ca10b4ce6d156f` |
 | `judge-spec-compliance` | `6d7e5525d88e4c4b26c963103f43f7e95d997337ff3d624fea31a757363f653e` |
+| `judge-test-coverage` | `4041e8283172a78e6bc883726855c613d9e03381a948ffd29e8300f66d10c741` |
 | `license-compliance-borrow-check` | `2c23f14c168f6de1f99689e420e29b2b86bbd27e0fdfff68dcdf80b483aa2d0f` |
 | `logo-generation` | `fcf30c295c85f8b24f0ee6cb374229c39dbe87959469d7b04b19660e727e9a08` |
 | `market-entry-analysis` | `9fb6ee850d5eb06e96439505bb5f47835edbc9a025cf97f2ad1a952337fea264` |
@@ -1274,6 +1275,8 @@ open and which this file does not settle.
 | `jira-integration` | `fe9ba2d101335b5446f7efb6fcc22e8db93edf21be00e4cd23774789a01ec28d` |
 | `js-library-packaging` | `8b64d0222ee1228950056004a752b4dc168f8f571e037ec38791258ec305bacd` |
 | `judge-artifact-completeness` | `4b1d517726313827781746169d30009b2b0655bbc0392740ebcd6e712c58cd50` |
+| `judge-bug-hunter` | `67fb699db9b4ee8803a589d747294060957c8bfc00eaa5c3ac5bd7b3e1b5f4be` |
+| `judge-code-quality` | `ee38885bf15f7510e1a483a4e505e69480dc8ba81720942bb0910902eb95ef78` |
 | `judge-security-auditor` | `b1915f90c4e7648f8cca7de9e43c73eb08616382827d69ee359dd3fa33b5f72f` |
 | `judge-synthesis` | `378e0eec013fbf2a96cda58a6ba318884fc141fc0f722fae23a488a8a7ca6155` |
 | `launch-readiness` | `6de2444a376a49d7ac29affc839a1cd8ef157cee0071b17ef64277b744debc34` |
@@ -1806,3 +1809,41 @@ description edit moved it, not the corpus alone).
 `delivery-set-measurement-2026-08-31.json`: recall loss **38.78 pp**, the
 ceiling stays **BREACHED**; context cost **231.0** tokens against the 500
 target, still **MET**. Neither verdict changes in kind.
+
+
+## Growth — 2026-10-25b, three judge corpora; one seals
+
+```
+THREE ROWS ADDED: ONE SEALS, TWO TRAIN. NO PRE-EXISTING CORPUS FILE WAS EDITED.
+BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN AFTER THE CORPORA WERE ON DISK.
+```
+
+**What changed.** `road-to-closing-the-gaps-a-comparison-named` 2.1 added
+behavioural evals to three judges, and `check_routing_coverage` requires every
+touched skill to carry a corpus. Each got eleven cases: six exemplars, one of
+them German, three near-misses (the sibling judges and the neighbouring
+do-the-work commands) and two counterexamples for the axis word in its everyday
+sense. No trigger eval has run on them, so they carry no `last_eval`.
+
+| Row | Partition | `sha256(name)[0:2]` | Bucket |
+|---|---|---|---|
+| `judge-bug-hunter` | train | `0x77` | 119 ≥ 51 |
+| `judge-code-quality` | train | `0xd6` | 214 ≥ 51 |
+| `judge-test-coverage` | holdout | `0x1a` | 26 < 51 |
+
+**One row seals, and nobody chose it.** The sealed set moves **37 -> 38**, the
+train set **136 -> 138**, the set **173 -> 176**. AC-6 still rests on the same
+18 rows, so it is now 18 of 38; a proposer evaluated against this holdout must
+exclude `judge-test-coverage` or say it is using a row whose seal is younger
+than the evaluation. `SET-SHA256` moves because it is computed over every row.
+
+**Both train-side measurements were re-taken on this tree.**
+`routing-body-signal-verdict.json`: still `harmful` on the false-activation
+guard (**+5.17 pp** against +2.0 pp), delta-recall **1.898 pp** (below the 5.0
+pp bar), McNemar p **0.4088**. `delivery-set-measurement-2026-08-31.json`:
+precision@5 **80.651 %**, recall loss **38.54 pp**, the ceiling stays
+**BREACHED**; context cost **231.3** tokens against the 500 target, still
+**MET**. Neither verdict changes in kind.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.

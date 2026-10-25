@@ -1,0 +1,76 @@
+{
+  "skill": "judge-code-quality",
+  "description": "6 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-25 under road-to-closing-the-gaps-a-comparison-named 2.1, which added this judge's behavioural evals and so brought it into check_routing_coverage's touched-skill scope. Exemplars are diffs to review on this judge's axis; near-misses are the sibling judges and the neighbouring do-the-work commands; counterexamples guard the everyday sense of the axis word. Not yet run, so it carries no last_eval.",
+  "queries": [
+    {
+      "id": "jcq-e1",
+      "q": "review the naming and structure of this diff",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jcq-e2",
+      "q": "is there duplicated logic in this change that should be one function?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jcq-e3",
+      "q": "judge this PR for dead code and single responsibility",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jcq-e4",
+      "q": "does this patch match the codebase's conventions?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jcq-e5",
+      "q": "readability pass on these changed files",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jcq-e6",
+      "q": "ist dieser Diff lesbar und sauber strukturiert?",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "jcq-n1",
+      "q": "refactor this class into smaller services",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "refactoring is the work, not the review of a diff"
+    },
+    {
+      "id": "jcq-n2",
+      "q": "review this diff for race conditions",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "judge-bug-hunter owns correctness"
+    },
+    {
+      "id": "jcq-n3",
+      "q": "is this change covered by tests?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "judge-test-coverage owns coverage"
+    },
+    {
+      "id": "jcq-c1",
+      "q": "how do I improve the audio quality of my microphone?",
+      "trigger": false,
+      "class": "counterexample"
+    },
+    {
+      "id": "jcq-c2",
+      "q": "what is a good quality coffee grinder?",
+      "trigger": false,
+      "class": "counterexample"
+    }
+  ]
+}

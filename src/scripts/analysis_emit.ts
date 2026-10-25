@@ -58,6 +58,8 @@ export interface EmitInput {
     slug: string;
     findings: readonly Finding[];
     readyAtZero: number;
+    /** The emit-time HEAD the roadmap was verified against (`docs/contracts/roadmap-revalidation-v1.md`). */
+    treePin?: string;
     intakeLimit?: number;
     /** The phase number an arrival opens in its owner roadmap; needed when any finding has an owner. */
     ownerNextPhase?: (slug: string) => number | null;
@@ -88,6 +90,7 @@ function roadmapBody(input: EmitInput, findings: readonly Finding[], status: 're
         '---',
         'complexity: lightweight',
         `status: ${status}`,
+        ...(input.treePin === undefined ? [] : [`tree_pin: ${input.treePin}`]),
         'execution:',
         '  mode: phase-checkpoints',
         '---',
