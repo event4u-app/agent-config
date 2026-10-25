@@ -9,8 +9,6 @@ and keep the full search — this file only adds candidates to it.
 
 | slug | dir | status | owns |
 |---|---|---|---|
-| road-to-a-finding-that-fails-a-test | active | ready | A user who asks "check my app for security holes before launch" gets one chain instead of one opinion: the … |
-| road-to-a-post-the-analysis-can-watch | active | ready | `/analyze:post <url\|file>` pins a public post or video once, builds an evidence bundle (metadata, transcript by a named ladder rung, … |
 | road-to-a-setup-that-decides-itself | active | ready | A consumer never sets, reads or reasons about how the package loads its rule layer. |
 | road-to-a-step-that-costs-what-it-changes | active | ready | A roadmap step costs in proportion to its change, and nothing a step needs is skipped. |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe | active | ready | A global install stays on a supported, patched release without ever mutating a running session, moving a team's pin, or … |
