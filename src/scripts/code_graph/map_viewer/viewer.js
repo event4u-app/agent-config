@@ -40,9 +40,9 @@
             lGraph: 'Graph', lLayers: 'Layers', lMatrix: 'Matrix', lKnowledge: 'Knowledge', lTreemap: 'Treemap', lFlow: 'Flow',
             hLayers: 'Depth rings from the selection', hMatrix: 'DSM', hKnowledge: 'Knowledge sources of the selection', hTreemap: 'Area = lines per folder', hTreemapMissing: 'needs loc per file', hFlow: 'Request paths – next design',
             edges: 'Edges:', fTests: 'Tests', fInfra: 'Infra hubs', full: 'Full screen', fullOff: 'Exit full screen',
-            repo: 'Repo', overview: 'Overview', areasOf: function (a, b) { return 'Areas (' + a + ' of ' + b + ')'; }, allAreas: '← All areas',
-            hint2d: 'Drag: move · Wheel: zoom · Click: zoom in', hint3d: 'Drag: turn · Shift+drag: move · Wheel: zoom · Click: zoom in',
-            zoomIn: 'Zoom in', zoomOut: 'Zoom out', fit: 'Fit', d2: '2D', d3: '3D Orb', dimHint: 'Show the map as an orb. Drag to turn it, Shift+drag to move it, arrow keys turn it too.',
+            navBack: '← Back', repo: 'Repo', overview: 'Overview', areasOf: function (a, b) { return 'Areas (' + a + ' of ' + b + ')'; }, allAreas: '← All areas',
+            hint2d: 'Drag: move · Wheel: zoom · Click: mark · Double-click: open', hint3d: 'Drag: turn · Shift+drag: move · Wheel: zoom · Click: mark · Double-click: open',
+            zoomIn: 'Zoom in', zoomOut: 'Zoom out', fit: 'Fit', limTop: 'Top 15', limAll: 'All areas', d2: '2D', d3: '3D Orb', dimHint: 'Show the map as an orb. Drag to turn it, Shift+drag to move it, arrow keys turn it too.',
             showPanels: 'Show panels again', direct: 'direct', transitive: 'transitive', transitive3: 'transitive ≤ 3', score: 'Score',
             legend: 'Legend', sizeOverview: 'Name = hub file of the area · Size = files per area · Line = edges between areas',
             sizeArea: 'Size = incoming edges · Line = edge, orange = points at the selection',
@@ -100,9 +100,9 @@
             lGraph: 'Graph', lLayers: 'Layers', lMatrix: 'Matrix', lKnowledge: 'Knowledge', lTreemap: 'Treemap', lFlow: 'Flow',
             hLayers: 'Tiefenringe ab Auswahl', hMatrix: 'DSM', hKnowledge: 'Wissensquellen zur Auswahl', hTreemap: 'Fläche = Zeilen je Ordner', hTreemapMissing: 'braucht loc je Datei', hFlow: 'Request-Pfade – nächster Entwurf',
             edges: 'Kanten:', fTests: 'Tests', fInfra: 'Infra-Hubs', full: 'Vollbild', fullOff: 'Vollbild beenden',
-            repo: 'Repo', overview: 'Übersicht', areasOf: function (a, b) { return 'Areas (' + a + ' von ' + b + ')'; }, allAreas: '← Alle Areas',
-            hint2d: 'Ziehen: verschieben · Rad: zoomen · Klick: hineinzoomen', hint3d: 'Ziehen: drehen · Shift+Ziehen: verschieben · Rad: zoomen · Klick: hineinzoomen',
-            zoomIn: 'Hineinzoomen', zoomOut: 'Herauszoomen', fit: 'Einpassen', d2: '2D', d3: '3D Orb', dimHint: 'Karte als Kugel zeigen. Ziehen dreht sie, Shift+Ziehen verschiebt sie, die Pfeiltasten drehen ebenfalls.',
+            navBack: '← Zurück', repo: 'Repo', overview: 'Übersicht', areasOf: function (a, b) { return 'Areas (' + a + ' von ' + b + ')'; }, allAreas: '← Alle Areas',
+            hint2d: 'Ziehen: verschieben · Rad: zoomen · Klick: markieren · Doppelklick: öffnen', hint3d: 'Ziehen: drehen · Shift+Ziehen: verschieben · Rad: zoomen · Klick: markieren · Doppelklick: öffnen',
+            zoomIn: 'Hineinzoomen', zoomOut: 'Herauszoomen', fit: 'Einpassen', limTop: 'Top 15', limAll: 'Alle Areas', d2: '2D', d3: '3D Orb', dimHint: 'Karte als Kugel zeigen. Ziehen dreht sie, Shift+Ziehen verschiebt sie, die Pfeiltasten drehen ebenfalls.',
             showPanels: 'Panels wieder einblenden', direct: 'direkt', transitive: 'transitiv', transitive3: 'transitiv ≤ 3', score: 'Score',
             legend: 'Legende', sizeOverview: 'Name = Hub-Datei der Area · Größe = Dateien je Area · Linie = Kanten zwischen Areas',
             sizeArea: 'Größe = eingehende Kanten · Linie = Kante, orange = zeigt auf die Auswahl',
@@ -213,9 +213,29 @@
         level: 'overview', area: -1, file: -1, cell: null,
         showTrusted: true, showGuesses: false, showTests: true, showInfra: false,
         full: false, formula: false, treePath: '', scopeDir: '', open: Object.create(null),
-        view: { scale: 1, x: 0, y: 0 }, orb: false, rot: { yaw: ORB_YAW, pitch: ORB_PITCH }
+        view: { scale: 1, x: 0, y: 0 }, orb: false, rot: { yaw: ORB_YAW, pitch: ORB_PITCH },
+        // Which areas the overview shows. A data choice, so it never depends on 2D / 3D.
+        areaLimit: 'all'
     };
     var drawn = [];
+    // Every step deeper records where it came from, so each lens has a way back.
+    var trail = [];
+    function step() {
+        trail.push({ lens: state.lens, level: state.level, area: state.area, file: state.file, tab: state.tab, treePath: state.treePath, cell: state.cell });
+        if (trail.length > 50) trail.shift();
+    }
+    function back() {
+        var prev = trail.pop();
+        if (!prev) return;
+        var levelChanged = prev.level !== state.level || prev.area !== state.area;
+        Object.keys(prev).forEach(function (k) { state[k] = prev[k]; });
+        if (levelChanged) resetView();
+        refresh();
+    }
+    function lensHome() { step(); state.treePath = ''; state.cell = null; refresh(); }
+    function exposeView() {
+        window.__mapView = { lens: state.lens, treePath: state.treePath, level: state.level, area: state.area, file: state.file, shownAreas: state.level === 'overview' ? overviewAreas() : [], drawn: drawn.map(function (d) { return { kind: d.kind, idx: d.idx, x: d.x, y: d.y }; }) };
+    }
     window.__mapLabelBoxes = { boxes: [], width: 0, height: 0 };
 
     // Preselect the most used code file that sits in an area: a held-out hub has no area to open.
@@ -362,10 +382,11 @@
     function orbRadius() { var s = size(); return (Math.min(s.w, s.h) / 2 - 48) * state.view.scale; }
 
     function overviewAreas() {
-        var n = state.orb ? areas.length : Math.min(OVERVIEW_AREAS, areas.length);
+        var n = state.areaLimit === 'top' ? Math.min(OVERVIEW_AREAS, areas.length) : areas.length;
         var out = [];
         for (var i = 0; i < n; i++) out.push(i);
-        if (!state.orb && state.file >= 0 && files[state.file].area >= n) out.push(files[state.file].area);
+        var sel = state.file >= 0 ? files[state.file].area : state.area;
+        if (sel >= n) out.push(sel);
         return out;
     }
     function currentNodes() {
@@ -622,6 +643,7 @@
             });
         }
         window.__mapLabelBoxes = { boxes: placed, width: s.w, height: s.h };
+        exposeView();
     }
     function roundRect(x, y, w, h, r) {
         ctx.beginPath();
@@ -849,22 +871,31 @@
         var c = $('crumbs');
         clear(c);
         function btn(text, fn) { var b = el('button', { type: 'button' }, text); if (fn) b.addEventListener('click', fn); else b.disabled = true; return b; }
+        if (trail.length) {
+            var bk = btn(t('navBack'), back);
+            bk.id = 'nav-back';
+            bk.className = 'nav-back';
+            c.appendChild(bk);
+        }
         c.appendChild(btn(t('repo'), goHome));
         c.appendChild(el('span', { 'aria-hidden': 'true' }, '›'));
         var sel = state.file >= 0 ? base(files[state.file].path) : '';
         if (state.lens === 'graph') {
-            var shown = Math.min(OVERVIEW_AREAS, areas.length);
+            var shown = state.areaLimit === 'top' ? Math.min(OVERVIEW_AREAS, areas.length) : areas.length;
             if (state.level === 'area') {
                 c.appendChild(btn('Areas', goHome));
                 c.appendChild(el('span', { 'aria-hidden': 'true' }, '›'));
                 c.appendChild(btn(areas[state.area].id + ' · ' + t('files')(areas[state.area].files.length)));
             } else {
-                c.appendChild(btn(state.orb ? 'Areas' : t('areasOf')(shown, areas.length)));
+                c.appendChild(btn(t('areasOf')(shown, areas.length)));
                 c.appendChild(el('span', { 'aria-hidden': 'true' }, '›'));
                 c.appendChild(btn(t('overview')));
             }
         } else {
-            c.appendChild(btn(t({ layers: 'lLayers', matrix: 'lMatrix', knowledge: 'lKnowledge', treemap: 'lTreemap' }[state.lens])));
+            var atStart = !state.treePath && !state.cell;
+            var home = btn(t({ layers: 'lLayers', matrix: 'lMatrix', knowledge: 'lKnowledge', treemap: 'lTreemap' }[state.lens]), atStart ? null : lensHome);
+            home.className = 'lens-home';
+            c.appendChild(home);
             if (sel && state.lens !== 'treemap' && state.lens !== 'matrix') { c.appendChild(el('span', { 'aria-hidden': 'true' }, '›')); c.appendChild(btn(sel)); }
             if (state.lens === 'treemap' && state.treePath) {
                 var acc = '';
@@ -872,7 +903,7 @@
                     acc = acc ? acc + '/' + seg : seg;
                     var target = acc;
                     c.appendChild(el('span', { 'aria-hidden': 'true' }, '›'));
-                    c.appendChild(btn(seg, function () { state.treePath = target; refresh(); }));
+                    c.appendChild(btn(seg, function () { step(); state.treePath = target; refresh(); }));
                 });
             }
         }
@@ -1037,7 +1068,7 @@
                 var p = v ? Math.round(Math.min(95, 18 + Math.log(v + 1) / Math.log(maxV + 1) * 75)) : 0;
                 cell.style.background = diag ? 'var(--line)' : v ? 'color-mix(in srgb, ' + (cross ? 'var(--amber)' : 'var(--cyan)') + ' ' + p + '%, transparent)' : (cross ? 'var(--brandTint)' : 'var(--rail)');
                 if (p > 55) cell.style.color = '#0d1522';
-                cell.addEventListener('click', function () { state.cell = [a, b]; refresh(); });
+                cell.addEventListener('click', function () { step(); state.cell = [a, b]; refresh(); });
                 row.appendChild(cell);
             });
             grid.appendChild(row);
@@ -1217,7 +1248,7 @@
             if (r[3] > 50 && r[4] > 22) add(b, el('span', null, it.name + (it.dir ? '/' : '')), r[4] > 36 ? el('small', null, num(it.value)) : null);
             b.addEventListener('click', function () {
                 if (it.file !== undefined) openFile(it.file);
-                else { state.treePath = state.treePath ? state.treePath + '/' + it.name : it.name; refresh(); }
+                else { step(); state.treePath = state.treePath ? state.treePath + '/' + it.name : it.name; refresh(); }
             });
             box.appendChild(b);
         });
@@ -1542,7 +1573,7 @@
         renderPanel();
         $('wb').className = 'wb' + (state.full ? ' full' : '');
         renderFull();
-        if (state.lens === 'graph') draw(); else renderFoot();
+        if (state.lens === 'graph') draw(); else { renderFoot(); exposeView(); }
     }
     function renderFull() {
         var fb = $('full');
@@ -1568,9 +1599,10 @@
         card.appendChild(back);
     }
     function resetView() { state.view = { scale: 1, x: 0, y: 0 }; state.rot = { yaw: ORB_YAW, pitch: ORB_PITCH }; }
-    function goHome() { state.level = 'overview'; state.area = -1; state.lens = 'graph'; resetView(); refresh(); }
-    function openArea(i) { state.level = 'area'; state.area = i; state.lens = state.lens === 'graph' ? 'graph' : state.lens; resetView(); refresh(); }
+    function goHome() { step(); state.level = 'overview'; state.lens = 'graph'; resetView(); refresh(); }
+    function openArea(i) { step(); state.level = 'area'; state.area = i; state.lens = state.lens === 'graph' ? 'graph' : state.lens; resetView(); refresh(); }
     function openFile(i) {
+        step();
         var f = files[i];
         if (state.lens === 'graph' && f.area >= 0 && (state.level !== 'area' || state.area !== f.area)) {
             state.level = 'area';
@@ -1605,11 +1637,30 @@
         drag = null;
         if (wasDrag) return;
         var r = canvas.getBoundingClientRect();
+        select(hitTest(e.clientX - r.left, e.clientY - r.top));
+    });
+    // One click marks the node and what it reaches; a double click goes one level deeper.
+    canvas.addEventListener('dblclick', function (e) {
+        var r = canvas.getBoundingClientRect();
         var hit = hitTest(e.clientX - r.left, e.clientY - r.top);
         if (!hit) return;
         if (hit.kind === 'area') openArea(hit.idx);
         else openFile(hit.idx);
     });
+    function select(hit) {
+        if (!hit) {
+            if (state.level === 'overview') state.area = -1;
+            state.file = -1;
+        } else if (hit.kind === 'area') {
+            state.area = hit.idx;
+            state.file = -1;
+            state.tab = 'area';
+        } else {
+            state.file = hit.idx;
+            state.tab = 'file';
+        }
+        refresh();
+    }
     canvas.addEventListener('wheel', function (e) { e.preventDefault(); zoom(e.deltaY < 0 ? 1.12 : 1 / 1.12); }, { passive: false });
     function zoom(f) { state.view.scale = Math.min(8, Math.max(0.4, state.view.scale * f)); $('zoomtxt').textContent = 'Zoom ' + state.view.scale.toFixed(1) + '×'; draw(); }
     var TURN_KEYS = { ArrowLeft: [-0.15, 0], ArrowRight: [0.15, 0], ArrowUp: [0, 0.15], ArrowDown: [0, -0.15] };
@@ -1619,7 +1670,7 @@
         if (e.key === '/' && document.activeElement !== searchInput) { e.preventDefault(); searchInput.focus(); return; }
         if (e.key === 'Escape') {
             if (document.activeElement === searchInput && searchInput.value) { searchInput.value = ''; clear(results); return; }
-            if (state.level === 'area') goHome(); else if (state.file >= 0) { state.file = -1; refresh(); }
+            if (state.level === 'area') goHome(); else if (state.file >= 0 || state.area >= 0) { state.file = -1; state.area = -1; refresh(); }
         }
     });
     searchInput.addEventListener('input', function () {
@@ -1667,6 +1718,17 @@
         refresh();
     }
     dimButton.addEventListener('click', function () { setOrb(!state.orb); });
+    var limTop = $('lim-top');
+    var limAll = $('lim-all');
+    function setLimit(v) {
+        state.areaLimit = v;
+        limTop.setAttribute('aria-pressed', String(v === 'top'));
+        limAll.setAttribute('aria-pressed', String(v === 'all'));
+        resetView();
+        refresh();
+    }
+    limTop.addEventListener('click', function () { setLimit('top'); });
+    limAll.addEventListener('click', function () { setLimit('all'); });
     dim2d.addEventListener('click', function () { setOrb(false); });
     $('export').addEventListener('click', function () {
         var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -1705,6 +1767,8 @@
         $('z-out').setAttribute('aria-label', t('zoomOut'));
         $('z-fit').textContent = t('fit');
         dim2d.textContent = t('d2');
+        limTop.textContent = t('limTop');
+        limAll.textContent = t('limAll');
         dimButton.textContent = t('d3');
         dimButton.setAttribute('title', t('dimHint'));
         $('back').textContent = t('allAreas');

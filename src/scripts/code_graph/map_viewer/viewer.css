@@ -132,9 +132,25 @@ button:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visibl
 .crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 16px; font-size: 12px; color: var(--muted); font-family: var(--monof); }
 .crumbs button { border: 0; background: none; padding: 0; color: var(--muted); font-family: var(--monof); font-size: 12px; }
 .crumbs button:last-child { color: var(--text); }
+.crumbs .nav-back { padding: 2px 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--text); background: var(--raise); }
+.crumbs button:disabled { cursor: default; }
 .view { flex: 1; position: relative; min-height: 600px; overflow: auto; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px; }
 .stage { position: relative; height: 600px; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background-color: var(--bg); background-image: radial-gradient(circle at 50% 50%, rgba(255, 140, 42, 0.08) 0%, rgba(62, 197, 255, 0.04) 35%, transparent 65%), linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: auto, 32px 32px, 32px 32px; cursor: grab; touch-action: none; }
 .wb.full .stage { height: calc(100vh - 190px); min-height: 520px; }
+/* The map uses the whole height it is given. Wrapped columns: the window height
+   under the chrome. All three columns side by side: the page is one viewport tall,
+   the stage takes what the centre column leaves, and the side columns scroll. */
+.stage { height: max(520px, calc(100dvh - 190px)); }
+@media (min-width: 1240px) {
+    body { height: 100vh; height: 100dvh; }
+    .wb { min-height: 0; flex-wrap: nowrap; }
+    .rail { overflow-y: auto; }
+    .center { min-height: 0; }
+    .view { min-height: 0; }
+    #graphwrap { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+    #graphwrap[hidden] { display: none; }
+    .stage, .wb.full .stage { flex: 1; height: auto; min-height: 360px; }
+}
 .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .overlay { position: absolute; left: 12px; top: 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; z-index: 2; }
 .seg { display: flex; gap: 2px; padding: 3px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); }

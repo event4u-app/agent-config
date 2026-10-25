@@ -1021,7 +1021,8 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         '<div class="stage">',
         '<canvas id="stage" role="img" aria-label="Project map"></canvas>',
         '<div class="overlay">',
-        '<div class="seg" role="group" aria-label="2D / 3D"><button type="button" id="dim2d" aria-pressed="true"></button><button type="button" id="dim" aria-pressed="false"></button></div>',
+        '<div class="seg" role="group" aria-label="Areas"><button type="button" id="lim-top" aria-pressed="false"></button><button type="button" id="lim-all" aria-pressed="true"></button></div>' +
+            '<div class="seg" role="group" aria-label="2D / 3D"><button type="button" id="dim2d" aria-pressed="true"></button><button type="button" id="dim" aria-pressed="false"></button></div>',
         '<div class="seg"><button type="button" class="z" id="z-out">−</button><button type="button" class="z" id="z-in">+</button><button type="button" class="fit" id="z-fit"></button></div>',
         '<button type="button" class="backbtn" id="back" hidden></button>',
         '</div>',
