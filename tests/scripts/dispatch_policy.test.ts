@@ -32,8 +32,9 @@ function check(table: PolicyTable, sinks: Record<string, unknown> = {}): string[
     });
 }
 
-function row(over: Partial<PolicyRow> = {}): PolicyRow {
-    return {
+/** A fixture row; an override set to `undefined` drops that field. */
+function row(over: { [K in keyof PolicyRow]?: PolicyRow[K] | undefined } = {}): PolicyRow {
+    const out: Record<string, unknown> = {
         id: 'fixture-row',
         value: 'inherit',
         sink: { kind: 'subagent-frontmatter', file: 'src/subagents/ac-worker.md', key: 'model_tier' },
@@ -42,6 +43,10 @@ function row(over: Partial<PolicyRow> = {}): PolicyRow {
         local: 'learnable',
         ...over,
     };
+    for (const k of Object.keys(out)) {
+        if (out[k] === undefined) delete out[k];
+    }
+    return out as unknown as PolicyRow;
 }
 
 describe('dispatch-policy table', () => {
