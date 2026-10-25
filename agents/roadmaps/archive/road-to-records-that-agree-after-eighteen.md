@@ -59,7 +59,8 @@ end. Each of these is a test or a lint that can go red.
       installed pre-17 or pre-18 updater is asked rather than notified.
       `corrected-from-reproduction`: re-running the fixed code over
       `16.5.0..17.0.0` showed 17.0.0 carries the same disagreement.
-      verify: `node -p "JSON.stringify(require('./package.json').agentConfig.impact)"` -> /"17\.0\.0":\{"impact":"action"\},"18\.0\.0":\{"impact":"action"\}/; the fixed `release_impact_entry` over
+      verify: `node -p "JSON.stringify(require('./package.json').agentConfig.impact)"` -> /18\.0\.0.:..impact.:.action/
+      The fixed `release_impact_entry` over
       `git log 17.4.0..18.0.0` and `16.5.0..17.0.0` returns `action` for each, and
       `18.0.0..18.1.0`, `18.1.0..18.2.0` return `none`, matching their absence.
       Landed 2026-10-25: all four spans reproduced with the shipped readers.
@@ -71,9 +72,9 @@ end. Each of these is a test or a lint that can go red.
       which are absent BY DESIGN because `with_release_impact` omits a `none`
       span. The defect was the writer producing that absence for an undeclared
       break, which 1.2 closes; this step pins it at the writer instead.
-      verify: `npx vitest run tests/lib/consumer_impact.test.ts` -> 0, including "never
-      omits a span carrying an undeclared break", and neutralising the 1.2 line
-      turns it red.
+      verify: `npx vitest run tests/lib/consumer_impact.test.ts` -> 0
+      It includes "never omits a span carrying an undeclared break", which turns
+      red with the 1.2 line neutralised.
       Landed 2026-10-25: red with the 1.2 line neutralised, green restored; the
       classifier and its 72 cases are unchanged.
 
