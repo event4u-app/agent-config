@@ -649,6 +649,19 @@ concerns:
     fail_closed: false
     severity: advisory
     effect: notification
+  # Asks the user, at most once a month, to star the repository on GitHub,
+  # until they say they have (owner ruling ADR-301, amending ADR-286 § D2).
+  # Text-only, file reads only, no network and no GitHub identity: the stop
+  # condition is the user-global A-class key `star_ask.starred`. Bound on
+  # `claude` alone for the reason `update-notice` gives — its text goes out
+  # through the user channel (`hooks/user_notice.ts`, `systemMessage`).
+  # Kill switches: `AGENT_CONFIG_NO_STAR_ASK=1`, `star_ask.mode: off`.
+  star-ask:
+    script: src/scripts/star_ask_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    effect: notification
   # road-to-install-path-convergence Phase 4 — duplicate-surface probe.
   # Reads src/config/surface-matrix.yml, existence-checks declared duplicate
   # classes, nudges ONCE per day (state: agents/runtime/state/
@@ -1655,7 +1668,7 @@ platforms:
 
   claude:
     ask:              native
-    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, update-notice, surface-probe, session-register, review-baseline, journal-record, rule-inject, code-graph-refresh, layer-promote]
+    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, update-notice, star-ask, surface-probe, session-register, review-baseline, journal-record, rule-inject, code-graph-refresh, layer-promote]
     # `rule-inject` is bound here for ONE source: `compact`
     # (road-to-a-rule-carrier-that-works-outside-the-repo step 1.6). The concern
     # returns before reading anything on `startup`, `resume`, `clear` and

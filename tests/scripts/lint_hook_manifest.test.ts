@@ -369,7 +369,8 @@ describe("effect: — the census's field (Phase 2.2)", () => {
     // and 67 since `update-notice` (road-to-an-update-that-installs-itself 3.1),
     // and 68 since `subagent-constraints` (road-to-a-tick-the-shipped-path-earns 2.4),
     // and 69 since `layer-promote` (road-to-a-setup-that-decides-itself 3.3).
-    expect(names.length).toBe(69);
+    // and 70 since `star-ask` (ADR-301, owner ruling amending ADR-286 § D2).
+    expect(names.length).toBe(70);
     const missing = names.filter((n) => !CONCERN_EFFECTS.has(String(manifest.concerns[n]?.effect)));
     expect(missing).toStrictEqual([]);
     const mismatched = names.filter(
