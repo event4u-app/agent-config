@@ -1041,7 +1041,8 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         '<div class="stage">',
         '<canvas id="stage" role="img" aria-label="Project map"></canvas>',
         '<div class="overlay">',
-        '<div class="seg"><select id="lim" class="lim">' + ['15', '30', '50', '100', 'all'].map((v) => `<option value="${v}"${v === '15' ? ' selected' : ''}>${v}</option>`).join('') + '</select></div>' +
+        '<div class="seg dd"><button type="button" id="lim" class="lim" aria-haspopup="listbox" aria-expanded="false" aria-controls="limlist" data-value="15"><span id="limtxt">15</span><span class="chev" aria-hidden="true"></span></button>' +
+            '<ul id="limlist" class="ddlist" role="listbox" hidden>' + ['15', '30', '50', '100', 'all'].map((v) => `<li role="option" tabindex="-1" data-value="${v}" aria-selected="${v === '15'}">${v}</li>`).join('') + '</ul></div>' +
             '<div class="seg" role="group" aria-label="2D / 3D"><button type="button" id="dim2d" aria-pressed="true"></button><button type="button" id="dim" aria-pressed="false"></button></div>',
         '<div class="seg"><button type="button" class="z" id="z-out">−</button><button type="button" class="z" id="z-in">+</button><button type="button" class="fit" id="z-fit"></button></div>',
         '<button type="button" class="backbtn" id="back" hidden></button>',

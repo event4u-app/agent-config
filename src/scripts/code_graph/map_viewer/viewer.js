@@ -1047,6 +1047,7 @@
             tb.title = overview ? t('noEffectOverview') : '';
         });
         $('lim').parentNode.hidden = state.level === 'area';
+        if (state.level === 'area') { $('limlist').hidden = true; $('lim').setAttribute('aria-expanded', 'false'); }
         $('zoomtxt').textContent = 'Zoom ' + state.view.scale.toFixed(1) + '×';
         if (graph) { renderLegend(); return; }
         clear(lensView);
@@ -1814,11 +1815,56 @@
         refresh();
     }
     dimButton.addEventListener('click', function () { setOrb(!state.orb); });
-    var limSelect = $('lim');
-    limSelect.addEventListener('change', function () {
-        state.areaLimit = limSelect.value === 'all' ? 'all' : Number(limSelect.value);
+    // The area limit is a listbox, not a <select>: a native select opens the system's own list.
+    var limButton = $('lim');
+    var limList = $('limlist');
+    function limOptions() { return Array.prototype.slice.call(limList.querySelectorAll('[role="option"]')); }
+    function limLabel(v) { return v === 'all' ? t('limAll') : t('limTop')(v); }
+    function limOpen(open) {
+        limList.hidden = !open;
+        limButton.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (open) (limList.querySelector('[aria-selected="true"]') || limOptions()[0]).focus();
+    }
+    function limPick(v) {
+        limButton.setAttribute('data-value', v);
+        limOptions().forEach(function (o) { o.setAttribute('aria-selected', o.getAttribute('data-value') === v ? 'true' : 'false'); });
+        $('limtxt').textContent = limLabel(v);
+        limOpen(false);
+        limButton.focus();
+        state.areaLimit = v === 'all' ? 'all' : Number(v);
         resetView();
         refresh();
+    }
+    limButton.addEventListener('click', function () { limOpen(limList.hidden); });
+    limButton.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); limOpen(true); }
+    });
+    limList.addEventListener('click', function (e) {
+        var o = e.target.closest('[role="option"]');
+        if (o) limPick(o.getAttribute('data-value'));
+    });
+    limList.addEventListener('keydown', function (e) {
+        var opts = limOptions();
+        var i = opts.indexOf(document.activeElement);
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            opts[Math.max(0, Math.min(opts.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)))].focus();
+        } else if (e.key === 'Home' || e.key === 'End') {
+            e.preventDefault();
+            opts[e.key === 'Home' ? 0 : opts.length - 1].focus();
+        } else if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (i >= 0) limPick(opts[i].getAttribute('data-value'));
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            limOpen(false);
+            limButton.focus();
+        } else if (e.key === 'Tab') {
+            limOpen(false);
+        }
+    });
+    document.addEventListener('pointerdown', function (e) {
+        if (!limList.hidden && !e.target.closest('.dd')) limOpen(false);
     });
     dim2d.addEventListener('click', function () { setOrb(false); });
     $('export').addEventListener('click', function () {
@@ -1861,8 +1907,10 @@
         $('open-left').textContent = t('openLeft');
         $('open-right').textContent = t('openRight');
         ['left', 'right'].forEach(function (side) { $('close-' + side).setAttribute('aria-label', t('closePane')); });
-        Array.prototype.forEach.call(limSelect.options, function (o) { o.textContent = o.value === 'all' ? t('limAll') : t('limTop')(o.value); });
-        limSelect.setAttribute('aria-label', t('limLabel'));
+        limOptions().forEach(function (o) { o.textContent = limLabel(o.getAttribute('data-value')); });
+        $('limtxt').textContent = limLabel(limButton.getAttribute('data-value'));
+        limButton.setAttribute('aria-label', t('limLabel'));
+        limList.setAttribute('aria-label', t('limLabel'));
         dimButton.textContent = t('d3');
         dimButton.setAttribute('title', t('dimHint'));
         $('back').textContent = t('allAreas');

@@ -173,10 +173,19 @@ body.full .top, body.full .crumbs, body.full .legend, body.full .foot { display:
 .overlay { position: absolute; left: 12px; top: 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; z-index: 2; }
 .seg { display: flex; gap: 2px; padding: 3px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); }
 .seg button { height: 30px; padding: 0 12px; border-radius: 6px; border: 0; font-size: 12px; font-weight: 600; background: transparent; color: var(--soft); }
-.seg button[aria-checked='true'], .seg button[aria-pressed='true'] { background: var(--brand); color: var(--onColor); }
+/* Same active look as the view tabs above, so one state reads one way. */
+.seg button[aria-checked='true'], .seg button[aria-pressed='true'] { background: var(--brandTint); box-shadow: inset 0 0 0 1px var(--brandLine); color: var(--text); }
 .seg .z { width: 32px; padding: 0; font-size: 16px; font-weight: 400; color: var(--text); }
 .seg .fit { font-weight: 400; color: var(--text); }
-.seg .lim { height: 30px; padding: 0 8px; border-radius: 6px; border: 0; font: inherit; font-size: 12px; font-weight: 600; background: transparent; color: var(--text); cursor: pointer; }
+.dd { position: relative; }
+.seg .lim { display: inline-flex; align-items: center; gap: 10px; padding: 0 10px 0 12px; color: var(--text); }
+.seg .lim:hover, .seg .lim[aria-expanded='true'] { background: var(--raise); }
+.chev { width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid var(--muted); transition: transform 0.15s; }
+.lim[aria-expanded='true'] .chev { transform: rotate(180deg); }
+.ddlist { position: absolute; top: calc(100% + 6px); left: 0; z-index: 20; min-width: 100%; margin: 0; padding: 4px; list-style: none; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35); }
+.ddlist [role='option'] { display: flex; align-items: center; height: 30px; padding: 0 12px; border-radius: 6px; font-size: 12px; font-weight: 500; white-space: nowrap; color: var(--soft); cursor: pointer; outline: none; }
+.ddlist [role='option']:hover, .ddlist [role='option']:focus-visible, .ddlist [role='option']:focus { background: var(--raise); color: var(--text); }
+.ddlist [role='option'][aria-selected='true'] { font-weight: 600; background: var(--brandTint); box-shadow: inset 0 0 0 1px var(--brandLine); color: var(--text); }
 .backbtn { height: 36px; padding: 0 12px; border-radius: 9px; border: 1px solid var(--brandLine); background: var(--brandTint); color: var(--text); font-size: 12px; font-weight: 600; }
 .hintbar { position: absolute; left: 12px; bottom: 12px; display: flex; flex-wrap: wrap; gap: 6px; font-size: 11px; color: var(--muted); font-family: var(--monof); z-index: 2; pointer-events: none; }
 .hintbar span { padding: 4px 8px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line); }
