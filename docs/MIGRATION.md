@@ -87,11 +87,33 @@ returns the full layer whenever any of its conditions is missing.
 
 ### Also in 17.0.0 — changes that landed after 16.5.0
 
-The two rows of the `BREAKING_CHANGES.md` pending table ship in this release:
-three `fail_closed` hook guards now run on installs where the hook command
-used to end silently, and `uninstall --global --purge` deletes only what this
-package recorded writing rather than whole host configuration roots. The
-migration for each is in that row.
+Two breaking changes that were pending since 16.5.0 ship in this release. Their
+rows left the `BREAKING_CHANGES.md` pending table once it was clear they had
+shipped, so their migration lives here.
+
+**Three `fail_closed` hook guards run where they were silent** (`3f8c98e74`,
+#2455). `block-no-verify`, `block-kernel-rule-writes` and `block-plumbing-writes`
+now reach a dispatcher staged under `~/.event4u/agent-config/runtime/` and may
+refuse a tool call for the first time.
+
+- **An existing install gets them only on its next global deploy.** The hook
+  command lives in `~/.claude/settings.json` and is rewritten only when the
+  global deploy runs (`ensure_managed_hooks`, `src/scripts/install.ts`). Run
+  `agent-config upgrade` — its second step is `install --global` — or, without a
+  version change, `agent-config refresh --global`. Until then the old command
+  stays in place and ends silently where it did before.
+- A workflow that relied on an agent committing with `--no-verify`, or editing
+  this package's kernel rules or hook plumbing, now meets a refusal: run the
+  hooks, or make that edit by hand. `agent-config doctor` prints the carrier
+  state (`hook-carrier`).
+
+**`uninstall --global --purge` deletes only what this package recorded writing**
+(`b352d9ab8d`, #2399). It used to remove whole host configuration roots
+(`~/.claude/`, `~/.codex/`, `~/.config/zed/`). Anyone who used `--purge` as a
+host-configuration reset must now delete the rest with the host's own tooling;
+anyone who used it to uninstall this package needs to do nothing. A plain
+`uninstall --global` keeps the lockfile while recorded content is still on disk;
+the `--purge` run that follows removes it.
 
 ## 16.2.0 — `doctor --json` reads the forge, and `--no-forge` opts out
 

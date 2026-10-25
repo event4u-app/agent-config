@@ -11,7 +11,7 @@
 |---|---|---|
 | **Security patch** | Anytime — ships as soon as the fix is verified. Carries only the fix (plus its standing gate). | `latest` |
 | **Batched minor** | Batched, at most ~weekly. Feature work accumulates on `main` and ships together. | `latest` |
-| **Breaking release** | Rare, bundled, always with a migration note in [`MIGRATION.md`](../MIGRATION.md). | `latest` |
+| **Breaking release** | Rare, bundled, always with a migration note in [`docs/MIGRATION.md`](MIGRATION.md). | `latest` |
 | **Experiment / preview** | As needed — prerelease versions (`X.Y.Z-next.N`). | `next` |
 
 ## Dist-tag channels
