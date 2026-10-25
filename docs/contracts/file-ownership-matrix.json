@@ -225,6 +225,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/contexts/execution/invocation-plan.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/contexts/execution/mandated-lines.md": {
       "kind": "context",
       "rule_type": null,
@@ -4307,6 +4313,13 @@
     },
     {
       "source": ".agent-src.uncondensed/contexts/execution/auto-dispatch-classification.md",
+      "target": ".agent-src.uncondensed/contexts/execution/invocation-plan.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/auto-dispatch-classification.md",
       "target": ".agent-src.uncondensed/contexts/execution/orchestration-telemetry.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -4826,6 +4839,55 @@
     {
       "source": ".agent-src.uncondensed/contexts/execution/interrupt-examples.md",
       "target": ".agent-src.uncondensed/rules/user-interrupt-priority.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/invocation-plan.md",
+      "target": ".agent-src.uncondensed/contexts/execution/auto-dispatch-classification.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/invocation-plan.md",
+      "target": ".agent-src.uncondensed/contexts/execution/invocation-plan.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/invocation-plan.md",
+      "target": ".agent-src.uncondensed/contexts/execution/mandated-lines.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/invocation-plan.md",
+      "target": ".agent-src.uncondensed/rules/non-destructive-by-default.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/invocation-plan.md",
+      "target": ".agent-src.uncondensed/rules/scope-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/invocation-plan.md",
+      "target": ".agent-src.uncondensed/rules/user-interrupt-priority.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/mandated-lines.md",
+      "target": ".agent-src.uncondensed/contexts/execution/invocation-plan.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1

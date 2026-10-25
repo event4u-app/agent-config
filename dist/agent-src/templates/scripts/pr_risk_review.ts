@@ -57,6 +57,11 @@ export const DEFAULT_CONFIG: Dict = {
             'yarn.lock', 'poetry.lock', 'Gemfile.lock', 'go.sum',
             '**/Dockerfile*', '**/docker-compose*.y*ml',
             '.github/workflows/**',
+            // What an AI agent can do: tool registrations, MCP servers, agent
+            // code and prompts change who can act on whose record.
+            '**/mcp/**', '**/*mcp*', '**/agent/**', '**/bot/**', '**/bots/**',
+            '**/ai-tools/**', '**/agent-tools/**', '**/prompts/**', '**/*.prompt*',
+            '**/agent-actions.y*ml',
         ],
         medium: [
             '**/queue/**', '**/queues/**', '**/jobs/**', '**/listeners/**',

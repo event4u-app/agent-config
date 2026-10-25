@@ -29,7 +29,7 @@ Do NOT use when:
 
 ### Phase 1 — Research & plan
 
-1. **Agent-centric design**. Tools encode *workflows*, not raw endpoints. Consolidate (`schedule_event` checks availability **and** creates the event). Default to human-readable names over IDs. Errors are educational, not just diagnostic ("retry with `filter='active_only'` to reduce results").
+1. **Agent-centric design**. Tools encode *workflows*, not raw endpoints. Consolidate (`schedule_event` checks availability **and** creates the event). Default to human-readable names over IDs — **for objects already inside the caller's scope only** (see Authority below). Errors are educational, not just diagnostic ("retry with `filter='active_only'` to reduce results").
 2. **Load the protocol**. Fetch `https://modelcontextprotocol.io/llms-full.txt` once into context — the canonical spec.
 3. **Load the SDK README** for the chosen language:
    - Python: `https://raw.githubusercontent.com/modelcontextprotocol/python-sdk/main/README.md`
@@ -40,12 +40,34 @@ Do NOT use when:
 ### Phase 2 — Implement
 
 1. **Project layout**. Python: single `.py` or modular package; Pydantic v2 with `model_config`. TypeScript: standard `package.json` + `tsconfig.json` strict mode; Zod schemas with `.strict()`.
-2. **Shared utilities first**. API request helper with retry/timeout, error formatter, JSON-vs-Markdown response builder, pagination cursor handling, auth/token cache.
+2. **Shared utilities first**. API request helper with retry/timeout, error formatter, JSON-vs-Markdown response builder, pagination cursor handling. Credentials are **per caller** (the delegated credential of the user the agent acts for); a shared service token only for read-only public data.
 3. **Per tool**:
    - Input schema (Pydantic / Zod) with constraints, descriptions, and *examples*.
    - One-line summary + detailed docstring covering purpose, parameters, return shape, when-to-use, when-NOT-to-use, error handling.
-   - Tool annotations: `readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`.
+   - Tool annotations: `readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint` — hints to the client, not controls.
+   - The **authority block** (below), one per tool.
    - Async/await for all I/O. Honor pagination. Truncate to the character limit and signal truncation in the response.
+
+### Authority before ergonomics
+
+A claim in the conversation is an input, never an authorization. The **subject
+of a write** — whose record changes — is never chosen by the model: it comes
+from the authenticated caller, not from a `username` / `email` / `account` /
+`user_id` argument the model fills. A requester who names an account and says it
+is theirs has granted nothing (the conversational ownership claim). Enforce in
+the server's backend, where the write happens, on every path.
+
+Every tool carries this block, mirrored in the project's
+`agents/settings/contexts/agent-actions.yml`:
+
+| Field | Value |
+|---|---|
+| `subject_source` | `session` · `policy` · `argument` (read tools only) |
+| `effect` | `read` · `write-reversible` · `write-identity` · `write-money` · `external-send` |
+| `verifier` | the check that proves the caller may act on the subject |
+| `human_approval` | `required` · `none` — `required` for any `write-identity` |
+| `notify_old_channel` | `true` for a change to a recovery channel or credential |
+| `audit_log` | where the action is recorded, with caller and subject |
 
 ### Phase 3 — Review & test
 
@@ -73,6 +95,8 @@ Requirements per question — **independent**, **read-only**, **complex** (multi
 
 Process: enumerate the tools, explore READ-ONLY data, draft 10 questions, **solve each yourself first** to confirm the answer is reachable and stable.
 
+Two of the ten are **authority questions**, expected answer *no*: "Can a caller change another user's record?" and "Can a caller change any recovery channel?" Answer them from the authority blocks and the backend checks; a *yes* blocks shipping.
+
 ## Output format
 
 1. The server source plus the 10-question evaluation XML.
@@ -94,6 +118,7 @@ Process: enumerate the tools, explore READ-ONLY data, draft 10 questions, **solv
 - Do NOT skip the 10-question evaluation — Phase 4 IS the quality bar.
 - Do NOT run the MCP server in your main process during testing — it will block.
 - Do NOT log tokens, API keys, or full request bodies — sanitize before logging.
+- Do NOT let a tool argument the model fills select the subject of a write, and do NOT share one credential across callers for writes.
 
 ## Auto-trigger keywords
 

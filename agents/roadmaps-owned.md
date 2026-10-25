@@ -166,6 +166,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-ci-native-release-live-label-path | stubs | — | road to the live label-path release and its drills |
 | road-to-code-graph-benchmark-rerun | stubs | — | road to a code-graph benchmark re-run on the repaired extractor |
 | road-to-code-graph-benchmark-v2-registration | stubs | — | road to a v2 registration of the in-repo code-graph benchmark |
+| road-to-command-effect-declarations | stubs | — | road to command effect declarations and a deferred-delivery advisory |
 | road-to-command-runtime-requirements | stubs | — | command runtime prerequisites |
 | road-to-compaction-survival-census | stubs | — | road to a compaction-survival census |
 | road-to-consumer-capability-share | stubs | — | the governance-vs-consumer share is measured and has never been acted on |

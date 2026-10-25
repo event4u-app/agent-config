@@ -12,16 +12,19 @@ import {
     PublicationTarget,
     allowedPaths,
     assertRefName,
+    ciSettleArgv,
     gitGhPort,
     prCreateArgs,
     publish,
     recordPublication,
+    resolveWaitForCi,
     settleCi,
     type CiVerdict,
     type PublishInput,
     type PublishPort,
 } from '../../src/scripts/analysis_publish.js';
 import { createRun, legalNext, loadRun, transition, type ForwardState, type RunRecord } from '../../src/scripts/analysis_run.js';
+import { FOREGROUND_CEILING_MIN } from '../../src/scripts/ci_settle.js';
 
 let root: string;
 
@@ -81,7 +84,10 @@ function fakePort(opts: { staged?: string[]; ci?: CiVerdict[]; remoteHead?: stri
             return number;
         },
         prIsDraft: (n) => prs.find((p) => p.number === n)?.draft ?? true,
-        ciSettle: () => ci.shift() ?? { green: false, red: ['unscripted'] },
+        ciSettle: () => {
+            calls.push('settle');
+            return ci.shift() ?? { green: false, red: ['unscripted'] };
+        },
     };
     return {
         port,
@@ -382,6 +388,77 @@ describe('settleCi (step 3.3)', () => {
         const out = settleCi(port, runDir, record, { ...INPUT, pr }, () => EMITTED);
         expect(out.state).toBe('handed-back');
         expect(out.handed_back_reason).toMatch(/expected-head/);
+    });
+});
+
+describe('a composed invocation: the inner stage stops at committed (step 2.2)', () => {
+    it('commits, records committed, and makes no push, no PR and no settle', () => {
+        const { runDir, record } = validatedRun();
+        const f = fakePort();
+        const out = publish(f.port, runDir, record, { ...INPUT, stage: 'inner' });
+        expect(out.record.state).toBe('committed');
+        expect(out.pr).toBeNull();
+        expect(f.calls).toEqual(['commit:docs(roadmaps): analysis round r1']);
+        expect(f.calls.filter((c) => c.startsWith('push:') || c.startsWith('pr-create') || c === 'settle')).toEqual([]);
+        expect(loadRun(runDir).state).toBe('committed');
+    });
+
+    it('a re-run as an inner stage still reaches no remote', () => {
+        const { runDir, record } = validatedRun();
+        const f = fakePort();
+        publish(f.port, runDir, record, { ...INPUT, stage: 'inner' });
+        const again = publish(f.port, runDir, loadRun(runDir), { ...INPUT, stage: 'inner' });
+        expect(again.record.state).toBe('committed');
+        expect(f.calls.filter((c) => c.startsWith('commit:'))).toHaveLength(1);
+        expect(f.remote.size).toBe(0);
+    });
+
+    it('the terminal stage publishes as before', () => {
+        const { runDir, record } = validatedRun();
+        const f = fakePort();
+        expect(publish(f.port, runDir, record, { ...INPUT, stage: 'terminal' }).record.state).toBe('pr-open');
+    });
+});
+
+describe('the publish settle stays inside the foreground ceiling (step 3.1)', () => {
+    it('carries no --timeout-min above FOREGROUND_CEILING_MIN', () => {
+        const argv = ciSettleArgv(12);
+        expect(argv.slice(0, 2)).toEqual(['src/scripts/ci_settle', '12']);
+        const i = argv.indexOf('--timeout-min');
+        if (i >= 0) expect(Number(argv[i + 1])).toBeLessThanOrEqual(FOREGROUND_CEILING_MIN);
+    });
+});
+
+describe('delivery.wait_for_ci gets its reader (step 3.2)', () => {
+    it('false ends at pr-open with a one-line reason and no settle', () => {
+        const { runDir, record } = validatedRun();
+        const f = fakePort();
+        const open = publish(f.port, runDir, record, INPUT);
+        const said: string[] = [];
+        const out = settleCi(f.port, runDir, open.record, { ...INPUT, pr: open.pr as number, waitForCi: false }, () => EMITTED, (l) => said.push(l));
+        expect(out.state).toBe('pr-open');
+        expect(f.calls).not.toContain('settle');
+        expect(said).toHaveLength(1);
+        expect(said[0]).toMatch(/delivery\.wait_for_ci is false/);
+        expect(said[0]).not.toContain('\n');
+    });
+
+    it('true (the default) settles', () => {
+        const { runDir, record } = validatedRun();
+        const f = fakePort();
+        const open = publish(f.port, runDir, record, INPUT);
+        const out = settleCi(f.port, runDir, open.record, { ...INPUT, pr: open.pr as number, waitForCi: true }, () => EMITTED);
+        expect(out.state).toBe('done');
+        expect(f.calls.filter((c) => c === 'settle')).toHaveLength(1);
+    });
+
+    it('resolves the setting from the project layer, defaulting to true', () => {
+        const none = path.join(root, 'no-global.yml');
+        const project = path.join(root, 'proj');
+        fs.mkdirSync(project);
+        expect(resolveWaitForCi(project, { userGlobalPath: none })).toBe(true);
+        fs.writeFileSync(path.join(project, '.agent-settings.yml'), 'delivery:\n  wait_for_ci: false\n');
+        expect(resolveWaitForCi(project, { userGlobalPath: none })).toBe(false);
     });
 });
 

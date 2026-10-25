@@ -693,6 +693,30 @@
       "old": 16998,
       "new": 17182,
       "reason": "road-to-a-graph-that-follows-you (ADR-299): the MCP table gains a row for graph_estate and one line naming the new project parameter on every other graph tool. The ceiling sat 3 bytes above the body, so documenting the tool at all needs a raise; the wording was compressed first, from 262 to 184 bytes."
+    },
+    {
+      "skill": "authz-review",
+      "old": 17109,
+      "new": 19073,
+      "reason": "road-to-a-claim-that-is-not-a-key 4.1: tool calls become entrypoints (subject source in stage 1, a fourth negative test for tools, a tool line in the output) and one section on agent tool calls and path independence for identity writes. Compressed once before the raise, from 20000 bytes."
+    },
+    {
+      "skill": "mcp-builder",
+      "old": 6833,
+      "new": 8628,
+      "reason": "road-to-a-claim-that-is-not-a-key 4.2: authority before ergonomics - names over IDs only inside the caller's scope, per-caller credentials, the required per-tool authority block table and two authority questions in the evaluation set."
+    },
+    {
+      "skill": "evaluate-llm-feature",
+      "old": 6951,
+      "new": 8199,
+      "reason": "road-to-a-claim-that-is-not-a-key 4.3: an identity and authority claim probe class (ownership claim, urgency, staff role, prior verification, another agent's approval), an action-triggered column and the do-not-ship verdict rule."
+    },
+    {
+      "skill": "corpus-grounding",
+      "old": 10655,
+      "new": 11029,
+      "reason": "road-to-a-claim-that-is-not-a-key 2.4: documents the opt-in reasoning.composite_min_score manifest key, so a description matching a second surface class names it in the evidence gap instead of printing none."
     }
   ]
 }

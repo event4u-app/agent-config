@@ -1,0 +1,92 @@
+# Router-coverage corpus — agent-authority family (fixture G1)
+#
+# road-to-a-claim-that-is-not-a-key Phase 3. A request to give an AI agent,
+# bot, support channel or MCP / function tool authority over someone's account
+# — the conversational ownership claim class — must activate the security
+# rules. The first five prompts are the ones measured at 0 security rules
+# before the triggers existed; the rest are variants. The negative half (a CLI
+# tool prompt activating neither rule) cannot be expressed here — this corpus
+# has no negative field — and lives in
+# tests/scripts/router_agent_authority_triggers.test.ts.
+
+version: 1
+corpus_id: router-coverage-agent-authority
+selection_accuracy_target: 0.0  # not a skill-selection corpus; router-only
+
+prompts:
+  - id: agent-authority-01
+    category: router-coverage
+    language: en
+    prompt: "add a tool to our support chatbot that lets it update the customer's email address"
+    expected_skills: [threat-modeling, authz-review]
+    intended_triggers: [security-sensitive-stop, broken-access-control]
+
+  - id: agent-authority-02
+    category: router-coverage
+    language: de
+    prompt: "Unser Support-Bot soll die E-Mail-Adresse eines Kunden ändern können"
+    expected_skills: [threat-modeling]
+    intended_triggers: [security-sensitive-stop]
+
+  - id: agent-authority-03
+    category: router-coverage
+    language: en
+    prompt: "give the AI agent a function to change account settings on behalf of the user"
+    expected_skills: [threat-modeling, authz-review]
+    intended_triggers: [security-sensitive-stop, broken-access-control]
+
+  - id: agent-authority-04
+    category: router-coverage
+    language: en
+    prompt: "implement account recovery so the user can change their email via the assistant"
+    expected_skills: [threat-modeling]
+    intended_triggers: [security-sensitive-stop]
+
+  - id: agent-authority-05
+    category: router-coverage
+    language: en
+    prompt: "build an MCP server tool that resets a user's password"
+    expected_skills: [threat-modeling, authz-review]
+    intended_triggers: [security-sensitive-stop, broken-access-control]
+
+  - id: agent-authority-06
+    category: router-coverage
+    language: en
+    prompt: "let the assistant change the recovery email when the caller asks for it"
+    expected_skills: [threat-modeling]
+    intended_triggers: [security-sensitive-stop]
+
+  - id: agent-authority-07
+    category: router-coverage
+    language: en
+    prompt: "wire a function calling tool that updates a customer's shipping address"
+    expected_skills: [threat-modeling, authz-review]
+    intended_triggers: [security-sensitive-stop, broken-access-control]
+
+  - id: agent-authority-08
+    category: router-coverage
+    language: en
+    prompt: "the tool call should reset the password for whichever user the model names"
+    expected_skills: [threat-modeling, authz-review]
+    intended_triggers: [security-sensitive-stop, broken-access-control]
+
+  - id: agent-authority-09
+    category: router-coverage
+    language: de
+    prompt: "Der Chatbot soll im Namen des Kunden das Konto wiederherstellen"
+    expected_skills: [threat-modeling]
+    intended_triggers: [security-sensitive-stop]
+
+  - id: agent-authority-10
+    category: router-coverage
+    language: en
+    prompt: "design the email change flow for our support bot"
+    expected_skills: [threat-modeling]
+    intended_triggers: [security-sensitive-stop]
+
+  - id: agent-authority-11
+    category: router-coverage
+    language: en
+    prompt: "expose an mcp tool that deletes a user by username"
+    expected_skills: [threat-modeling, authz-review]
+    intended_triggers: [security-sensitive-stop, broken-access-control]
