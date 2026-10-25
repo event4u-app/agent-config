@@ -1,11 +1,11 @@
 # Engineering Memory Data Format
 
-Schema and conventions for the four project-local YAML files that
+Schema and conventions for the three project-local YAML files that
 extend the memory layer beyond `ownership-map` and
 `historical-bug-patterns` (those are covered in
 [`review-routing-data-format`](review-routing-data-format.md)).
 
-All four files are **optional** and live in the consumer repository —
+All three files are **optional** and live in the consumer repository —
 never in package-shipped artifacts. Absence is handled gracefully:
 consulting skills fall through to their generic behaviour.
 
@@ -30,7 +30,7 @@ warns if both exist for the same type.
 
 ## Shared frontmatter fields
 
-Every entry across all four types MUST carry these keys. The gate
+Every entry across all three types MUST carry these keys. The gate
 rejects entries missing any required field.
 
 | Key | Required | Type | Notes |
