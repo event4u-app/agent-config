@@ -59,8 +59,10 @@ or scanner that reads it.
       (`git status`) and `map.ts:224` (`git diff` against the worktree) run
       under `hardenedSpawnEnv()`, which neutralises env-borne git config but not
       the target's own `.git/config` — so `core.fsmonitor` in that file runs.
-      Add `gitSafeArgs()` (`-c core.fsmonitor=false -c core.hooksPath=/dev/null`)
-      and prefix every `execFileSync('git', …)` under `src/scripts/code_graph/`.
+      Route every code-graph git probe through one `gitProbe()` in
+      `_lib/spawn_env.ts` that leads with `-c core.fsmonitor=false -c
+      core.hooksPath=/dev/null` (shape chosen after a two-provider review
+      refused per-call-site spreads; the bundle ends 70 B smaller).
       Severity is low today: the probes run against the session's own checkout,
       whose git already honours that config. It matters for auditing a foreign
       tree.
@@ -154,9 +156,8 @@ or scanner that reads it.
 
 ## Acceptance Criteria
 
-- [x] AC-1 — No `execFileSync('git', …)` under `src/scripts/code_graph/` runs
-      without the safe-args prefix, and a fixture with an fsmonitor marker
-      stays untouched.
+- [x] AC-1 — No file under `src/scripts/code_graph/` spawns git except through `gitProbe()`,
+      and a fixture with an fsmonitor marker stays untouched.
 - [x] AC-2 — Casual whole-app security prompts rank `security-audit` above
       `agent-security-review`, and the skill's casual path ends in a
       checked / not-checked block.
