@@ -16,10 +16,11 @@
  *      `context_hygiene_hook.ts` rather than spelled here — two independent
  *      spellings of this path drifted apart before). Fields read:
  *        - `tool_calls`           (int)
- *
- * There is NO general token/cost data source in this package (only
- * video-specific telemetry), so the report deliberately does NOT report
- * tokens or cost — it prints a single honest "not tracked" line instead.
+ *   3. `agents/cost-tracking/sessions.jsonl`, appended by `/cost:report`
+ *      (`src/scripts/cost/track.mjs`) — the latest record by `capturedAt`.
+ *      Absent → the report says no record exists; it never estimates.
+ *   4. the turn-end gate's refusal state (`_lib/turn_end_refusals.ts`) — the
+ *      most recently refused session, its refusal count and last detector.
  *
  * Exit codes (mirroring `cmd_explain`'s `last` subject):
  *   0  report rendered (even when a source file is absent — graceful note).
@@ -33,6 +34,13 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { ProjectRootError, resolve_project_root } from '../_lib/agent_settings.js';
+import {
+    SHADOW_SUFFIX,
+    countsOf,
+    parseRecord,
+    refusalStateDir,
+    type RefusalRecord,
+} from '../_lib/turn_end_refusals.js';
 import { STATE_FILE as HYGIENE_STATE_FILE } from '../context_hygiene_hook.js';
 import { StateLoadError, load_state } from './explain_last/state_loader.js';
 
@@ -43,6 +51,10 @@ const _HERE = fileURLToPath(import.meta.url);
 // Imported from the hook rather than spelled here — the hook is the writer,
 // so it is the single source of truth for the path it writes to.
 const CONTEXT_HYGIENE_RELATIVE = HYGIENE_STATE_FILE;
+
+// The default store `src/scripts/cost/track.mjs` appends to; that file is plain
+// `.mjs` and cannot be imported here, so the path is spelled once more.
+const COST_STORE_RELATIVE = path.join('agents', 'cost-tracking', 'sessions.jsonl');
 
 /** Python `raise SystemExit(code)` analogue — propagates an explicit code. */
 class SystemExitError extends Error {
@@ -130,8 +142,15 @@ function intOrUnknown(value: unknown): string {
  *
  * @param state    the parsed `.work-state.json` (version 1).
  * @param hygiene  the parsed context-hygiene snapshot, or `null` when absent.
+ * @param cost     the latest `/cost:report` record, or `null` when none exists.
+ * @param refusals the most recently refused session, or `null` when none.
  */
-export function render_report(state: Dict, hygiene: Dict | null): string {
+export function render_report(
+    state: Dict,
+    hygiene: Dict | null,
+    cost: CostSummary | null = null,
+    refusals: RefusalSummary | null = null,
+): string {
     const lines: string[] = [];
     lines.push('# Session analysis');
     lines.push('');
@@ -198,13 +217,105 @@ export function render_report(state: Dict, hygiene: Dict | null): string {
     }
     lines.push('');
 
-    // --- Honest token/cost note (no per-session source in this package) ---
+    // --- Token / cost (latest `/cost:report` record) ---
     lines.push('## Token / cost');
     lines.push('');
-    lines.push('Token/cost: not tracked (no per-session source).');
+    if (cost === null) {
+        lines.push('_No `/cost:report` record found (`agents/cost-tracking/sessions.jsonl`)._');
+    } else {
+        lines.push(`- Session: \`${cost.sessionId}\`${cost.endedAt ? ` (ended ${cost.endedAt})` : ''}`);
+        lines.push(`- Cost: $${cost.total_cost_usd.toFixed(2)} over ${cost.messageCount} message(s)`);
+        if (cost.rate_missing) {
+            lines.push('- ⚠️ Cost is understated: at least one model had no price rate.');
+        }
+    }
+    lines.push('');
+
+    // --- Turn-end refusals (most recent session that was refused) ---
+    if (refusals === null || refusals.total === 0) {
+        lines.push('## Turn-end refusals');
+        lines.push('');
+        lines.push('_No turn-end refusals recorded._');
+    } else {
+        lines.push(`## Turn-end refusals (${refusals.total})`);
+        lines.push('');
+        lines.push(`- Last: detector \`${refusals.last_detector}\` at ${refusals.last_refused_at}`);
+    }
     lines.push('');
 
     return lines.join('\n');
+}
+
+/** The latest record `/cost:report` appended, by `capturedAt`. */
+export interface CostSummary {
+    sessionId: string;
+    total_cost_usd: number;
+    messageCount: number;
+    endedAt: string | null;
+    rate_missing: boolean;
+}
+
+/** Refusals of the most recently refused session. */
+export interface RefusalSummary {
+    total: number;
+    last_detector: string;
+    last_refused_at: string;
+}
+
+function _load_latest_cost(project_root: string): CostSummary | null {
+    const p = path.join(project_root, COST_STORE_RELATIVE);
+    let text: string;
+    try {
+        text = fs.readFileSync(p, 'utf-8');
+    } catch {
+        return null;
+    }
+    let best: { at: string; summary: CostSummary } | null = null;
+    for (const line of text.split('\n')) {
+        let rec: unknown;
+        try {
+            rec = JSON.parse(line);
+        } catch {
+            continue;
+        }
+        if (!isPlainObject(rec) || typeof rec['total_cost_usd'] !== 'number') continue;
+        const at = typeof rec['capturedAt'] === 'string' ? rec['capturedAt'] : '';
+        if (best !== null && at <= best.at) continue;
+        best = {
+            at,
+            summary: {
+                sessionId: typeof rec['sessionId'] === 'string' ? rec['sessionId'] : '(unknown)',
+                total_cost_usd: rec['total_cost_usd'],
+                messageCount: typeof rec['messageCount'] === 'number' ? rec['messageCount'] : 0,
+                endedAt: typeof rec['endedAt'] === 'string' ? rec['endedAt'] : null,
+                rate_missing: rec['rate_missing'] === true,
+            },
+        };
+    }
+    return best?.summary ?? null;
+}
+
+function _load_latest_refusals(project_root: string): RefusalSummary | null {
+    const dir = refusalStateDir(project_root);
+    let names: string[];
+    try {
+        names = fs.readdirSync(dir).filter((n) => n.endsWith('.json') && !n.endsWith(SHADOW_SUFFIX));
+    } catch {
+        return null;
+    }
+    let latest: RefusalRecord | null = null;
+    for (const name of names) {
+        let rec: RefusalRecord | null;
+        try {
+            rec = parseRecord(fs.readFileSync(path.join(dir, name), 'utf-8'));
+        } catch {
+            continue;
+        }
+        if (rec !== null && (latest === null || rec.refused_at > latest.refused_at)) latest = rec;
+    }
+    if (latest === null) return null;
+    const total = Object.values(countsOf(latest)).reduce((a, n) => a + n, 0);
+    return { total, last_detector: latest.detector, last_refused_at: latest.refused_at };
 }
 
 function _analyze_session(project_root: string, state_file: string | null): number {
@@ -224,7 +335,9 @@ function _analyze_session(project_root: string, state_file: string | null): numb
         throw exc;
     }
     const hygiene = _load_context_hygiene(project_root);
-    process.stdout.write(render_report(state, hygiene));
+    process.stdout.write(
+        render_report(state, hygiene, _load_latest_cost(project_root), _load_latest_refusals(project_root)),
+    );
     return 0;
 }
 
@@ -249,9 +362,10 @@ Sources read:
     · halts    — recorded halts
   agents/state/context-hygiene.json
     · tool_calls
-
-Token/cost is NOT reported — this package has no per-session token
-source (only video-specific telemetry).
+  agents/cost-tracking/sessions.jsonl
+    · the latest /cost:report record (absent → said, never estimated)
+  agents/runtime/state/turn-end-gate/
+    · refusals of the most recently refused session
 
 options:
   --project PATH       project root (defaults to anchor walk from cwd)
