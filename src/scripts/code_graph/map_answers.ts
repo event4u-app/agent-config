@@ -17,10 +17,11 @@ import { parse as parseYaml } from 'yaml';
 
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import type { FileRole, MapModel } from './map_model.js';
+import { SCOPE_ROLES } from './map_model.js';
 import { EXT_LANG } from './types.js';
 
 /** Roles a change to code reaches; tests and docs are selected, not broken. */
-export const BLAST_SCOPE_ROLES: ReadonlySet<FileRole> = new Set(['code', 'entry', 'view', 'infra', 'isolated']);
+export const BLAST_SCOPE_ROLES: ReadonlySet<FileRole> = SCOPE_ROLES;
 export const BLAST_DEPTH = 3;
 export const GIT_WINDOW_DAYS = 180;
 /** Bus-factor finding: one author holds more than this share of at least this many commits. */
@@ -446,9 +447,9 @@ export function finishAnswers(m: MapModel, rules: LayerRules | null): void {
         .map(([lang, [files, loc]]) => [lang, files, loc] as [string, number, number])
         .sort((a, b) => b[2] - a[2] || b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
 
-    const violations: Violation[] = m.analyses.cycles.map((c) => ({
+    const violations: Violation[] = m.analyses.cycles.map((c, k) => ({
         kind: 'cycle' as const,
-        severity: c.length >= 5 ? ('high' as const) : ('medium' as const),
+        severity: (m.analyses.cycleSizes?.[k] ?? c.length) >= 5 ? ('high' as const) : ('medium' as const),
         files: c,
     }));
     let layerBreaches = 0;

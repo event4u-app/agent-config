@@ -756,10 +756,13 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
         [
             '## Import cycles',
             '',
-            `${m.analyses.cyclesTotal} file-level cycle(s); the largest ${m.analyses.cycles.length} shown, up to 8 files each.`,
+            `${m.analyses.cyclesTotal} file-level cycle(s) between code files (doc links excluded); the largest ${m.analyses.cycles.length} shown, the first 8 files of each.`,
             '',
             ...(m.analyses.cycles.length
-                ? m.analyses.cycles.map((c) => `- ${c.map((x) => `${code(f[x]?.path ?? '')}`).join(' · ')}`)
+                ? m.analyses.cycles.map((c, k) => {
+                      const size = m.analyses.cycleSizes?.[k] ?? c.length;
+                      return `- ${size} files: ${c.map((x) => `${code(f[x]?.path ?? '')}`).join(' · ')}${size > c.length ? ' · …' : ''}`;
+                  })
                 : ['- none']),
             '',
         ].join('\n'),
