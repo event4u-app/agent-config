@@ -25,7 +25,7 @@ DO NOT MERGE ACROSS THE LINE.
   `authz-review`, `design-review`, `privacy-review`, `receiving-code-review`,
   `requesting-code-review`, `skill-reviewer`.
 - **Dispatched lens** — a specialized reviewer that runs **only** under an
-  orchestrator (`/review-changes` dispatches five, each on the same diff +
+  orchestrator (`/review-changes` dispatches seven, each on the same diff +
   context, independently, then consolidates). Examples: `judge-bug-hunter`,
   `judge-security-auditor`, `judge-test-coverage`, `judge-code-quality`,
   `architecture-review-lens`.
@@ -59,6 +59,6 @@ DO NOT MERGE ACROSS THE LINE.
 
 ## See also
 
-- [`/review-changes`](../../src/domains/engineering-base/review-changes/command.md) — the five-judge dispatcher.
+- [`/review-changes`](../../src/domains/engineering-base/review/changes/command.md) — the seven-judge dispatcher.
 - [`skill-family-map.yml`](skill-family-map.yml) — `family: review-judging` carries these skills; Phase 3 reads `candidate_*` against this contract.
 - [`governance.md`](../governance.md) — the lifecycle + Single-Source-of-Truth rules these skills age under.

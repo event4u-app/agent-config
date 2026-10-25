@@ -62,7 +62,7 @@
   },
   "questions": [
     "@agent-directive: review-changes ticket=GT-3-POW",
-    "> Ticket GT-3-POW — running the four-judge review (bugs, security, tests, code quality) before the delivery report is written.",
+    "> Ticket GT-3-POW — running the seven-judge review (bugs, security, tests, quality, architecture, spec, overbuild) before the delivery report is written.",
     "> 1. Continue — run `review-changes` now",
     "> 2. Abort — skip review (NOT recommended)"
   ],

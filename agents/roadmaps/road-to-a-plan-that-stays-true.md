@@ -152,7 +152,7 @@ Evidence (read): `src/scripts/report_skill_activation.ts:188`
 
 Evidence (executed): `src/scripts/optimize_skill_description.ts:128`
 
-- [ ] **5.1 One judge count.** `/work` delegates to `/review-changes`, which runs
+- [x] **5.1 One judge count.** `/work` delegates to `/review-changes`, which runs
       seven judges; seven surfaces still say four or five, and
       `docs/contracts/review-lens-schema.md:62` links a path that no longer
       exists. Fix the wording and the link; recapture the golden packs that

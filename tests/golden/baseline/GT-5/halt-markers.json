@@ -54,7 +54,7 @@
     "recipe_action": "review-changes",
     "questions": [
       "@agent-directive: review-changes ticket=GT-5-NEG",
-      "> Ticket GT-5-NEG — running the four-judge review (bugs, security, tests, code quality) before the delivery report is written.",
+      "> Ticket GT-5-NEG — running the seven-judge review (bugs, security, tests, quality, architecture, spec, overbuild) before the delivery report is written.",
       "> 1. Continue — run `review-changes` now",
       "> 2. Abort — skip review (NOT recommended)"
     ]
