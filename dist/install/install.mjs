@@ -21292,8 +21292,8 @@ var settingsSchema = object({
     allow_delegate: boolean2().default(false).describe(
       "Second opt-in for the only wrapper that delegates write access (/team:delegate). false (default) = delegate refuses even when /team itself is available. Availability (codex CLI installed + authenticated) is necessary but not sufficient \u2014 this key must ALSO be true before delegation is reachable."
     ),
-    max_calls_per_day: number2().int().min(0).default(50).describe(
-      "Per-day cap on team calls, read against the EXISTING cli_call_budget openai bucket (~/.event4u/agent-config/cli-calls.json, daily UTC reset) \u2014 one subscription, one counter, never a parallel count. 0 = block all team calls."
+    max_calls_per_day: number2().int().min(0).optional().describe(
+      "Optional per-day cap on team calls, read against the EXISTING cli_call_budget openai bucket (~/.event4u/agent-config/cli-calls.json, daily UTC reset) \u2014 one subscription, one counter, never a parallel count. Unset (default) = counted, never refused; the provider quota is the limit. 0 = block all team calls."
     ),
     review_gate: object({
       managed: boolean2().default(false).describe(
@@ -21303,7 +21303,7 @@ var settingsSchema = object({
         "Circuit-breaker bound: after this many CONSECUTIVE BLOCK verdicts in one session, a visible notice is injected exactly once and the managed layer stops re-blocking \u2014 the user decides, never an infinite Claude\u2194Codex loop. An ALLOW verdict resets the counter. Positive integer."
       )
     }).prefault({ managed: false, max_consecutive_blocks: 3 })
-  }).prefault({ model: "auto", allow_delegate: false, max_calls_per_day: 50, review_gate: { managed: false, max_consecutive_blocks: 3 } }),
+  }).prefault({ model: "auto", allow_delegate: false, review_gate: { managed: false, max_consecutive_blocks: 3 } }),
   emergency: object({
     orchestration_halt: boolean2().default(false).describe(
       "The one audited incident switch over the always-on orchestration stack (subagents, council, team). NOT an activation gate: false (default) = the stack runs normally. true = halted; arming requires no ceremony. Disarming (returning to false) requires orchestration_halt_justification to be a non-empty string. Both transitions emit one telemetry line."
@@ -21340,7 +21340,7 @@ var settingsSchema = object({
       "Deterministic continuity-record writer at session end (road-to-continuity-writer-activation Phase 1). on (default since 2026-09-10) = the session-eol concern writes the continuity_record capsule variant on Stop for a substantive session that has claimed a roadmap; every field is computed from on-disk state, with no model spend and no subprocess. off = no automatic record, and only the explicit agent-config session:recycle writes one. The default flipped once the parity evidence landed, so the normal path carries an automatic writer rather than a remembered command; session:recycle is retained because the automatic writer skips a session that claimed no roadmap and omits the git-status anchors."
     ),
     run_checkpoints: _enum(["on", "off"]).default("on").describe(
-      "Deterministic run-checkpoint production at session end (road-to-continuity-writer-activation Phase 1.4). on (default) = a session above the recycle threshold and inside a running roadmap contract leaves agents/runtime/state/checkpoints/<run>.json, so a killed run resumes from a derived checkpoint rather than from bookkeeping. off = no checkpoint; continuity writing, the recycle advisory and the context-fill surface are unaffected. Default ON because it is the behavior the tree already had \u2014 the switch exists to make the three session-end handlers independently disableable, not to change what ships."
+      "Deterministic run-checkpoint production at session end (road-to-continuity-writer-activation Phase 1.4). on (default) = a session above the recycle threshold and inside a running roadmap contract leaves agents/runtime/state/checkpoints/<run>.json, so a killed run resumes from a derived checkpoint rather than from bookkeeping. off = no checkpoint; continuity writing and the context-fill surface are unaffected. Default ON because it is the behavior the tree already had \u2014 the switch exists to make the three session-end handlers independently disableable, not to change what ships."
     )
   }),
   retro: object({

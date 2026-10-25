@@ -10,7 +10,6 @@ and keep the full search — this file only adds candidates to it.
 | slug | dir | status | owns |
 |---|---|---|---|
 | road-to-a-pilot-benchmark-against-s4 | active | ready | One pre-registered, cost-capped pilot answers, in both directions and with intervals, whether this package beats the S4 package or no … |
-| road-to-a-quota-the-user-sees-coming | active | ready | A user of AC on Claude Code is told — in their own terminal, never in the model's context — … |
 | road-to-a-setup-that-decides-itself | active | ready | A consumer never sets, reads or reasons about how the package loads its rule layer. |
 | road-to-a-step-that-costs-what-it-changes | active | ready | A roadmap step costs in proportion to its change, and nothing a step needs is skipped. |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe | active | ready | A global install stays on a supported, patched release without ever mutating a running session, moving a team's pin, or … |
