@@ -7,10 +7,11 @@
  * not probed here.
  */
 
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { BASH_ENTRY, BASH_SHIM, CONSUMER_ROOT, PACKAGE_ROOT } from '../paths.js';
 import { logger } from '../log/logger.js';
 import { detectRtk } from '../../install/rtkDetection.js';
+import { node_engine_satisfied } from '../../scripts/_lib/version_order.js';
 
 interface Check {
     name: string;
@@ -18,16 +19,24 @@ interface Check {
     detail: string;
 }
 
-function checkNode(): Check {
-    const required = 20;
-    const version = process.versions.node;
-    const major = Number.parseInt(version.split('.')[0] ?? '0', 10);
+function enginesNode(): string | null {
+    try {
+        const pkg = JSON.parse(readFileSync(`${PACKAGE_ROOT}/package.json`, 'utf-8')) as { engines?: { node?: unknown } };
+        return typeof pkg.engines?.node === 'string' ? pkg.engines.node : null;
+    } catch {
+        return null;
+    }
+}
+
+/** The floor is the package's own `engines.node`, so it cannot drift from it. */
+export function checkNode(version: string = process.versions.node, range: string | null = enginesNode()): Check {
+    const ok = node_engine_satisfied(range, version) === true;
     return {
         name: 'node',
-        ok: major >= required,
-        detail: major >= required
-            ? `v${version} (>= v${required}.0.0)`
-            : `v${version} — need >= v${required}.11.0`,
+        ok,
+        detail: range === null
+            ? `v${version} — engines.node unreadable in ${PACKAGE_ROOT}/package.json`
+            : ok ? `v${version} (${range})` : `v${version} — need ${range}`,
     };
 }
 

@@ -177,7 +177,7 @@ adding it as a dev dependency or cloning the repo first. Both
 entrypoints are thin wrappers around `src/scripts/install` — same payload,
 same flags, no extra state.
 
-### `npx` (Node ≥ 18)
+### `npx` (Node ≥ 22.6)
 
 ```bash
 # Pick tools interactively (TTY checkbox prompt)
@@ -214,7 +214,7 @@ curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.
   | bash -s -- --ref=v1.39.0 --tools=cursor --yes
 ```
 
-Requires `bash`, `tar`, `curl` (or `wget`), and **Node ≥ 20** on the host
+Requires `bash`, `tar`, `curl` (or `wget`), and **Node ≥ 22.6** on the host
 (`setup.sh` runs `need_cmd node`). Python is **not** required.
 
 This door used to be documented as "no Node required"; that stopped being true
