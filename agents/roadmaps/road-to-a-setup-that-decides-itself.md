@@ -333,7 +333,7 @@ with that file.
   form. Arrived from an external review; not decided here because both records
   carry owner and council provenance.
   verify: running `./scripts-run src/scripts/adr_cite_check ADR-284` names ADR-293 as its successor, or ADR-284 carries a dated note naming the limb that still binds.
-  Landed 2026-10-25, both halves (D15): ADR-293 gains a scoped `supersedes: ADR-284` and an Amendment 1 that reads each ADR-284 limb against the tree — decisions 2, 3, 4 and 6 and the installer-writes-stubs half of decision 1 are superseded (`installerThinsHost` is a constant `false`; the only writer of a thinned layer is 3.3's promotion); decision 5 and the host-outside-the-axis-is-eager-all half of decision 1 still bind. ADR-284 carries `superseded_by: ADR-293` (the bare form ADR-228 uses for the same partial case, because `check_adr_frontmatter` warns that a parenthetical reads as total) and a dated status note naming the limbs that still bind; it stays `accepted`. `./scripts-run src/scripts/adr_cite_check ADR-284` -> `superseded in scope by ADR-293` and `PARTLY SUPERSEDED IN SCOPE by ADR-293`; `check_adr_frontmatter` -> no errors; `docs/decisions/INDEX.md` regenerated.
+  Landed 2026-10-25 (D15): ADR-293 names ADR-284 as a scoped predecessor; its Amendment 1 says which limbs still bind. `adr_cite_check ADR-284` -> `superseded in scope by ADR-293`.
 
 ## Phase 5 — Prove "not worse" once, then enable
 
