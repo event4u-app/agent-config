@@ -10,31 +10,24 @@
 
 <sub>**How these are counted** — one canonical counter, `agent-config` → `update_counts --check`, re-derives all six from the tree and fails CI when one is off by one. Two bases are not what the linked directory shows, so they are stated here rather than left to be inferred: **Commands 211** counts every command file **recursively** (the linked directory holds 62 at its top level) and **Rules 122** counts the **source** rules while the linked projection holds 121 — one rule is dormant and is not projected. **Personas 29** excludes the directory README. Counts are of files and directories: none of them measures quality, activation or adoption. <!-- claim:published-artifact-counts --></sub>
 
-**Try it in 30 seconds** — drop one read-only subagent into any repo and watch it check "done": `@production-validator check this branch is actually done`. No wizard, no lock-in, nothing else installed — the [30-second wedge ↓](#quickstart) is the whole first step. Start at the proof, not the catalog: **[event4u-app.github.io/agent-config/proof/](https://event4u-app.github.io/agent-config/proof/)**.
+**Try it in 30 seconds** — one read-only subagent checks "done" in any repo, nothing else installed: [the wedge ↓](#quickstart). Start at the proof, not the catalog: **[event4u-app.github.io/agent-config/proof/](https://event4u-app.github.io/agent-config/proof/)**.
 
 ![The trust surface running green — every "verify it yourself" command from a real, CI-re-executed run](docs/media/proof-demo.gif)
 
 **Every public claim in this README is machine-checked — [verify it yourself](docs/proof.md).** In a market that runs on unbacked headline numbers, this one binds each claim to resolvable evidence or fails its own build.
 
-### See what a change touches before you make it
+### See what a change touches
 
-`agent-config code-graph map` draws a local, offline map of the repository; `agent-config code-graph open` shows it again. Pick a file and the map lights up every area it reaches, split into direct and transitive dependents, with trusted and guessed edges kept apart.
+`agent-config code-graph map` draws an offline map of the repository. Pick a file and every area it reaches lights up.
 
-<p align="center"><img alt="Code map: blast radius of one file across the repository's areas" src=".github/assets/screenshots/graph-blast.png" width="900"></p>
+![Code map blast radius](.github/assets/screenshots/graph-blast.png)
 
-<details>
-<summary><b>More views</b> — area drill-down, knowledge sources, dependency matrix, treemap</summary>
-<br>
-<table>
-<tr>
-<td width="440"><img alt="Area drill-down" src=".github/assets/screenshots/area.png"><br><sub><b>Area</b> — the files inside one area and how they connect</sub></td>
-<td width="440"><img alt="Knowledge view" src=".github/assets/screenshots/knowledge.png"><br><sub><b>Knowledge</b> — the tests, roadmaps and evidence linked to the selection</sub></td>
-</tr>
-<tr>
-<td width="440"><img alt="Dependency matrix" src=".github/assets/screenshots/matrix.png"><br><sub><b>Matrix</b> — coupling between areas, cycles framed in red</sub></td>
-<td width="440"><img alt="Treemap" src=".github/assets/screenshots/treemap.png"><br><sub><b>Treemap</b> — the repository by size, folder by folder</sub></td>
-</tr>
-</table>
+<details><summary><b>More views</b></summary>
+
+| ![Area](.github/assets/screenshots/area.png) | ![Knowledge](.github/assets/screenshots/knowledge.png) |
+|---|---|
+| ![Matrix](.github/assets/screenshots/matrix.png) | ![Treemap](.github/assets/screenshots/treemap.png) |
+
 </details>
 
 > **Choose your experience — developer · founder · content · agency · finance · ops. Add packs. Get a focused command set, not a 500-artefact dump.** Bring your own AI provider.
@@ -55,8 +48,7 @@ npx -y @event4u/agent-config init
 /work "your first real task"
 ```
 
-**Try one thing in 30 seconds** — before the full suite, drop in a single
-self-contained subagent and see the discipline on your own repo:
+**Or try one subagent first**, on your own repo:
 
 ```bash
 mkdir -p .claude/agents
@@ -65,10 +57,9 @@ curl -fsSL https://raw.githubusercontent.com/event4u-app/agent-config/main/docs/
 # then in Claude Code:  @production-validator check this branch is actually done
 ```
 
-`production-validator` is read-only and installs nothing else — it gates "done"
-by hunting mocks/stubs on the shipped path and demanding real-system evidence
-([what it does](docs/wedge/production-validator/README.md)). Like it? The full
-suite installs in one command — [Quickstart ↓](#quickstart).
+`production-validator` is read-only: it hunts mocks and stubs on the shipped path
+and demands real-system evidence ([what it does](docs/wedge/production-validator/README.md)).
+The full suite is one command — [Quickstart ↓](#quickstart).
 
 ---
 
