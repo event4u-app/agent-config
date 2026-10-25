@@ -25,6 +25,7 @@ import { buildFromRepo, readProjectProbe } from './build.js';
 import { acquire as acquireRefreshLock, heldByThisProcess } from './refresh_lock.js';
 import { computeVerdict, graphState } from './detect.js';
 import { graphHome } from './graph_home.js';
+import { BLAST_SCOPE_ROLES, finishAnswers, layerOf, readFileFacts, readGitHistory, readLayerRules } from './map_answers.js';
 import {
     areaDrift,
     buildMapModel,
@@ -35,7 +36,9 @@ import {
     outcomeScores,
     prOverlap,
 } from './map_model.js';
+import { loadGraph } from './query.js';
 import type { CodeGraph } from './types.js';
+import { dead, repoEntryPoints } from './verbs.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const VIEWER_DIR = path.join(_HERE, 'map_viewer');
@@ -357,6 +360,7 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
         summary: '',
         graph_generation: graphGeneration(cachePath) ?? createHash('sha256').update(JSON.stringify(graph)).digest('hex').slice(0, 16),
     };
+    answerQuestions(root, outDir, cachePath, graph, model, meta);
     meta.summary =
         `${model.files.length} files · ${model.areas.length} areas · ` +
         `${model.analyses.trustedEdges} trusted links · guess share ${pct(model.analyses.guessShare)}`;
@@ -392,6 +396,100 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
         fs.rmSync(next, { recursive: true, force: true });
     }
     return { outDir, model, meta, written, graphBuilt: built };
+}
+
+/**
+ * The per-file and repo-level answers that need the tree, git or the dead verb:
+ * written onto the model before it is serialised, so `map.json`, `MAP.md` and
+ * `index.html` read the same values.
+ */
+function answerQuestions(root: string, outDir: string, cachePath: string, graph: CodeGraph, model: MapModel, meta: MapMeta): void {
+    const paths = model.files.map((f) => f.path);
+    readFileFacts(root, paths).forEach((facts, i) => {
+        const f = model.files[i] as MapModel['files'][number];
+        f.lang = facts.lang;
+        if (facts.loc !== undefined) f.loc = facts.loc;
+    });
+    const history = readGitHistory(root);
+    if (history) {
+        for (const f of model.files) {
+            const h = history.get(f.path);
+            f.churn = h?.churn ?? 0;
+            if (h) {
+                f.owners = h.owners;
+                f.lastChange = h.lastChange;
+            }
+        }
+    }
+    markDead(root, cachePath, graph, model);
+    const rules = readLayerRules(path.join(outDir, 'layers.yaml'));
+    if (rules) {
+        for (const f of model.files) {
+            const layer = layerOf(f.path, rules);
+            if (layer) f.layer = layer;
+        }
+    }
+    finishAnswers(model, rules);
+    model.pin = {
+        commit: meta.commit,
+        date: history ? headDate(root) : '',
+        freshness: meta.state,
+        generation: meta.graph_generation ?? '',
+    };
+}
+
+function headDate(root: string): string {
+    try {
+        return execFileSync('git', ['-C', root, 'log', '-1', '--format=%cs'], {
+            env: hardenedSpawnEnv(),
+            encoding: 'utf-8',
+            stdio: ['ignore', 'pipe', 'ignore'],
+        }).trim();
+    } catch {
+        return '';
+    }
+}
+
+/**
+ * A scope file is dead when the `dead` verb lists every symbol it declares and
+ * no trusted edge enters it. The verb runs with the exports gap accepted — the
+ * extractor records no exportedness — and `deadBasis` says so on the map.
+ */
+function markDead(root: string, cachePath: string, graph: CodeGraph, model: MapModel): void {
+    let g: ReturnType<typeof loadGraph>;
+    try {
+        g = loadGraph(cachePath);
+    } catch {
+        model.analyses.deadBasis = 'no graph cache to run the dead verb on';
+        return;
+    }
+    try {
+        const res = dead(g, repoEntryPoints(root), 'fresh', { acceptMissingExports: true });
+        if (res.refusal !== null) {
+            model.analyses.deadBasis = res.refusal;
+            return;
+        }
+        const deadIds = new Set(res.dead);
+        const symbolsOf = new Map<string, string[]>();
+        for (const n of graph.nodes) {
+            if (n.kind === 'file' || n.kind === 'skipped') continue;
+            const list = symbolsOf.get(n.source_file) ?? [];
+            list.push(n.id);
+            symbolsOf.set(n.source_file, list);
+        }
+        let count = 0;
+        for (const f of model.files) {
+            if (!BLAST_SCOPE_ROLES.has(f.role) || f.inFiles > 0) continue;
+            const syms = symbolsOf.get(f.path) ?? [];
+            if (syms.length === 0 || !syms.every((id) => deadIds.has(id))) continue;
+            f.dead = true;
+            count++;
+        }
+        model.analyses.deadFiles = count;
+        model.analyses.deadBasis = 'exports unchecked: the extractor records no exportedness, so an exported but unimported file counts as dead';
+    } finally {
+        g.close?.();
+    }
 }
 
 /**

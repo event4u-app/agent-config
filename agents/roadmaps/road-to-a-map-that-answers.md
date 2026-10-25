@@ -82,25 +82,25 @@ The two drafted analyses were checked claim by claim against `e85417a02`:
 
 ## Phase 1 — Data the design marks missing
 
-- [ ] **1.1 Size and language per file.** `MapFile` gains `loc` (lines) and
+- [x] **1.1 Size and language per file.** `MapFile` gains `loc` (lines) and
       `lang` (from the graph's extension map, `types.ts`); the model gains
       `languages: Array<[lang, files, loc]>`. Counted at map build from the
       file contents the graph already read; binary or unreadable → field absent.
       verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
-- [ ] **1.2 Git collector, once per map build.** The map writer (IO lives
+- [x] **1.2 Git collector, once per map build.** The map writer (IO lives
       there, beside `drift` and `prOverlap`) runs one `git log --since=180.days
       --name-only` pass and writes per file `churn` (commits in window),
       `owners` (top three `[name, share]`, names only — D5) and `lastChange`
       (ISO date). No git → all three absent, never zero.
       verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
-- [ ] **1.3 Dead flag.** The `dead` verb's result lands on `MapFile.dead` and
+- [x] **1.3 Dead flag.** The `dead` verb's result lands on `MapFile.dead` and
       as `analyses.deadCount`, from the same function, not a second rule.
       verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
-- [ ] **1.4 Call counts per symbol.** `MapSymbol` gains internal and external
+- [x] **1.4 Call counts per symbol.** `MapSymbol` gains internal and external
       call counts from accepted `calls`/`uses` edges (same file versus other
       file); guessed edges are not counted.
       verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
-- [ ] **1.5 Blast numbers per file.** `MapFile.blast = {direct, transitive,
+- [x] **1.5 Blast numbers per file.** `MapFile.blast = {direct, transitive,
       score, share, level}` over trusted in-edges to depth 3, scope code files;
       `score = direct + 0.5 × transitive`, level by share (≥ 50 % critical,
       ≥ 25 % high, ≥ 10 % medium, else low). Membership is not stored (D3).
@@ -108,35 +108,35 @@ The two drafted analyses were checked claim by claim against `e85417a02`:
 
 ## Phase 2 — Findings and health
 
-- [ ] **2.1 Layers from a rule file.** Read `agents/map/layers.yaml` (glob →
+- [x] **2.1 Layers from a rule file.** Read `agents/map/layers.yaml` (glob →
       layer, allowed directions); write `MapFile.layer` and a `layer` entry in
       `violations[]` per forbidden edge. Absent file → neither field (D2).
       verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
-- [ ] **2.2 Violations and hotspots.** `violations[]` carries cycles (from
+- [x] **2.2 Violations and hotspots.** `violations[]` carries cycles (from
       `analyses.cycles`) and layer breaches, each with files and a severity;
       `hotspots[]` ranks code files by `churn × loc`, top 20, both factors in
       the row (D4). No churn → `hotspots` absent.
       verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
-- [ ] **2.3 Health with its formula.** `health = {grade?, score?, parts,
+- [x] **2.3 Health with its formula.** `health = {grade?, score?, parts,
       formula}` with parts dead share, cycles, guessed-edge share, hotspots;
       each part `{value, weight, points}` or absent; `grade` only when every
       part is present (D1).
       verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
-- [ ] **2.4 Legend and pin.** `legend` per colour-by and size option (key,
+- [x] **2.4 Legend and pin.** `legend` per colour-by and size option (key,
       label, scale, unit) and `pin = {commit, date, dirty, freshness,
       generation}`, so the header and every legend read from `map.json`.
       verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
 
 ## Phase 3 — Knowledge per file
 
-- [ ] **3.1 Knowledge list from the artefact layer.** Per file, the artefacts
+- [x] **3.1 Knowledge list from the artefact layer.** Per file, the artefacts
       with an edge to it, grouped as the design groups them — contract,
       roadmap (active, later, archived), evidence, draft (`agents/tmp`,
       `agents/tmp.old`) — with status read from the path and a duplicate mark
       when the same basename sits in a roadmap folder and in an inbox folder.
       Memory is a named absent group, never an empty one.
       verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
-- [ ] **3.2 Knowledge finding.** When drafts outnumber contracts for a file,
+- [x] **3.2 Knowledge finding.** When drafts outnumber contracts for a file,
       the knowledge list carries the design's finding row ("mehr Entwürfe als
       Verträge") with both counts.
       verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
