@@ -208,6 +208,7 @@ function trackedChanges(body: () => void): string[] {
  */
 const REACH_SOURCES = [
     'src/scripts/reach_doctor.ts',
+    'src/scripts/_lib/reach_capability_probe.ts',
     'src/scripts/check_reach_channels.ts',
     'src/scripts/check_reach_staleness.ts',
     'src/scripts/validate_reach_prescriptions.ts',

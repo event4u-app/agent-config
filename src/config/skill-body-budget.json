@@ -158,7 +158,7 @@
     "laravel-scheduling": 5889,
     "laravel-validation": 3325,
     "laravel-websocket": 2519,
-    "launch-readiness": 9501,
+    "launch-readiness": 9661,
     "learning-to-rule-or-skill": 16325,
     "learning-tutor": 10027,
     "legal-intake-triage": 7217,
@@ -274,7 +274,7 @@
     "script-writing": 9324,
     "secrets-management": 12029,
     "security": 6722,
-    "security-audit": 9042,
+    "security-audit": 12620,
     "security-maturity-assessment": 5819,
     "sentry-integration": 5536,
     "sequential-thinking": 6376,
@@ -290,7 +290,7 @@
     "stakeholder-tradeoff": 9443,
     "standards-from-config": 7565,
     "storybook-workshop": 13536,
-    "subagent-orchestration": 19741,
+    "subagent-orchestration": 19978,
     "supply-chain-intake": 10137,
     "svg-authoring": 17970,
     "symfony-workflow": 10329,
@@ -723,6 +723,24 @@
       "old": 10655,
       "new": 11029,
       "reason": "road-to-a-claim-that-is-not-a-key 2.4: documents the opt-in reasoning.composite_min_score manifest key, so a description matching a second surface class names it in the evidence gap instead of printing none."
+    },
+    {
+      "skill": "security-audit",
+      "old": 9042,
+      "new": 12620,
+      "reason": "road-to-a-finding-that-fails-a-test 1.1–2.3: hunters per surface class, a fresh verifier per candidate, the three states, and the red proof test that confirms a finding — the chain the audit named but never produced."
+    },
+    {
+      "skill": "launch-readiness",
+      "old": 9501,
+      "new": 9661,
+      "reason": "road-to-a-finding-that-fails-a-test 3.3: one checklist line pointing at the security ledger, so a launch reads \"not checked\" rather than silence."
+    },
+    {
+      "skill": "subagent-orchestration",
+      "old": 19741,
+      "new": 19978,
+      "reason": "road-to-a-finding-that-fails-a-test 4.2: the dispatch-role marker that lets the independence hook read a field instead of prose."
     }
   ]
 }

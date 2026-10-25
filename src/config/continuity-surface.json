@@ -202,7 +202,7 @@
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
             "locus": "src/scripts/_lib/obligations.ts:57",
-            "reason": "Per-session obligation ledger — instrumentation, not continuity. A later session must not resume from it: the rows record which obligations THIS session was delivered, and attributing them to a successor would be the one claim the ledger is forbidden to make."
+            "reason": "Per-session obligation ledger \u2014 instrumentation, not continuity. A later session must not resume from it: the rows record which obligations THIS session was delivered, and attributing them to a successor would be the one claim the ledger is forbidden to make."
         },
         {
             "id": "design-slop-hook.json",
@@ -265,7 +265,7 @@
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
             "locus": "src/scripts/memory_learn_hook.ts:191",
-            "reason": "One line per session-end learning run — wall time, signals in, lessons out. The two numbers the `memory.learn_on_session_end` flip condition names, recorded so a 30-day window can read a zero rather than a silence. Measurement about a session, never state a successor session reads: deleting it costs the window its history and costs no resume anything."
+            "reason": "One line per session-end learning run \u2014 wall time, signals in, lessons out. The two numbers the `memory.learn_on_session_end` flip condition names, recorded so a 30-day window can read a zero rather than a silence. Measurement about a session, never state a successor session reads: deleting it costs the window its history and costs no resume anything."
         },
         {
             "id": "injection-turn",
@@ -335,7 +335,7 @@
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
             "locus": "src/scripts/hooks/memory_recall_hook.ts:429",
-            "reason": "Per-session once-per-slug latch for the memory-recall advisory, so a delivered memory is not re-injected on the next matching tool call. Slug keys and timestamps only, scoped to one session and never restored into another — a successor session SHOULD be told again."
+            "reason": "Per-session once-per-slug latch for the memory-recall advisory, so a delivered memory is not re-injected on the next matching tool call. Slug keys and timestamps only, scoped to one session and never restored into another \u2014 a successor session SHOULD be told again."
         },
         {
             "id": "review-axis",
@@ -454,7 +454,7 @@
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
             "locus": "src/scripts/_lib/test_red_state.ts:2",
-            "reason": "Last test-run red state. No production code currently writes or reads it — only this module's own unit test exercises the store; the registry row for this instrument (assurance-capability-registry.json, test-red-evidence) was corrected to degraded on 2026-10-06 for the same reason."
+            "reason": "Last test-run red state. No production code currently writes or reads it \u2014 only this module's own unit test exercises the store; the registry row for this instrument (assurance-capability-registry.json, test-red-evidence) was corrected to degraded on 2026-10-06 for the same reason."
         },
         {
             "id": "egress-observations.jsonl",
@@ -581,6 +581,13 @@
             "disposition": "excluded",
             "locus": "src/scripts/code_graph/map.ts:192",
             "reason": "A local usefulness log, not session state. `code-graph outcome` appends which files a session found useful, and the next `code-graph map` build reads it only to weight its ranking. No session restores from it: a successor that finds it learns nothing about where the previous session stood, and deleting it costs nothing but a map drawn without outcome weights. Excluded on the same reasoning as session-index-latch."
+        },
+        {
+            "id": "security",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/code_audit.ts:9",
+            "reason": "The consumer's /audit code ledger, one directory per run. Audit evidence keyed by RUN id and read by `audit:code show` and the next audit run, not by a session resume \u2014 the same lifecycle, consumer and key distinction the D2 ruling drew for schema:run-checkpoint. Deleting it costs a session nothing; it costs the next audit run its gap list. Gitignored because an open finding is an exploit map."
         }
     ]
 }

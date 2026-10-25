@@ -9,6 +9,8 @@ parent_roadmap: road-to-gated-reach
 > The fallback below YouTube captions. Parked behind a blocker that has not been
 > reached, because the layer above it has not even been exercised yet.
 
+> **Arrivals:** 1 — `inbox-2026-10-ao` (2026-10-25): a video task failed at speech recognition (model download refused by a proxy) and was rescued only by burned-in subtitles. That is the resume trigger in its pure form — no caption track, not an install. `road-to-a-post-the-analysis-can-watch` 2.4 builds the ladder this file is rung 2 of.
+
 ## Why this is parked, not open
 
 `youtube-transcripts` is itself **parked, unexercised** — `yt-dlp` is absent and

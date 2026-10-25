@@ -185,6 +185,21 @@ os_baseline:
         source: local PATH on the authoring machine
         observed: "v25.9.0"
 
+  - tool: ffmpeg
+    os_baseline: true
+    rationale: >-
+      Backend of the `video` channel. NOT shipped with the OS — it is under
+      this class because no cross-platform pin was verified for it: Homebrew
+      ships an unversioned `ffmpeg` formula, distros track their own release,
+      and no Windows package version was checked against its registry. The
+      registry therefore carries `os-baseline:` sentinels rather than a pin
+      nobody verified. A real `tools:` entry with registry evidence replaces
+      this one the day a pin is checked.
+    verification:
+      - command: ffmpeg -hide_banner -version | head -1
+        source: local PATH on the authoring machine
+        observed: "ffmpeg version 8.1.1"
+
   - tool: jq
     os_baseline: true
     rationale: >-

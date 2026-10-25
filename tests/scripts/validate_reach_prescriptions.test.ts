@@ -125,6 +125,7 @@ describe('reach prescriptions — the real tree', () => {
         expect(intake.tools.map((tool) => tool.backend).sort()).toEqual(['gh', 'yt-dlp']);
         expect(intake.os_baseline.map((entry) => entry.tool).sort()).toEqual([
             'curl',
+            'ffmpeg',
             'jq',
             'node',
         ]);

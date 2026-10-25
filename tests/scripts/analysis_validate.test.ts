@@ -67,6 +67,16 @@ describe('deterministic validation before anything leaves the machine', () => {
         ]);
     });
 
+    it('accepts a media anchor and names a malformed one', () => {
+        const body = fs.readFileSync(emitted(), 'utf8');
+        const media = body.replace('Evidence (read): `src/a.ts:1`', 'Evidence (read): `S1@01:05 #3`');
+        expect(contentFailures(media, 'x.md', { councilDissent: false })).toEqual([]);
+        const bad = body.replace('Evidence (read): `src/a.ts:1`', 'Evidence (read): `S1@1:5 #`');
+        expect(contentFailures(bad, 'x.md', { councilDissent: false })).toEqual([
+            'x.md: claim of "Phase 1 — Doors print their scope" carries a malformed media anchor `S1@1:5 #` (expected S<n>@mm:ss #tile)',
+        ]);
+    });
+
     it('requires a Dissent section when the council recorded dissent', () => {
         const file = emitted();
         expect(contentFailures(fs.readFileSync(file, 'utf8'), 'x.md', { councilDissent: true })).toEqual([
