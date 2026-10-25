@@ -1713,8 +1713,15 @@ suite in the bundle this time.
       § What this route cannot prove at `:532` (the gate cannot see a forge bypass;
       nothing proves the ask preceded it). Step 5.3's test pins both and carries its
       own sensitivity case.
-- [ ] AC-5 — One proposal under `agents/proposals/` names a change that
-      passes the gate and the record that passed it.
+- [x] AC-5 — One proposal under `agents/proposals/` names a change that
+      passes the gate and the record that passed it — **or, amended by the owner
+      on 2026-10-25 (OQ-12 (b)), a change that landed through the D11 owner route
+      with its refused record and a bypass record.**
+      **Closed 2026-10-25 under the amended text.** The proposal 6.2 ships names its
+      refused record; #2657 landed it as `e54dea5bb8` under the owner's ruleset
+      bypass, recorded in `agents/evidence/bypass-records/2026-10-25-self-modification-2657.md`.
+      What this does NOT show: that a modification review can PASS — no record in
+      this tree has passed one. The amendment is the owner's, not a measurement.
       **MET 2026-10-12, and the claim is scoped to exactly what is true.**
       `agents/proposals/polarity-fixture-repair.md` names
       `agents/evidence/ratifications/drain-self-modification-20261012.md`, the

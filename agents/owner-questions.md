@@ -8,21 +8,6 @@ and the run that applies it links its PR.
 
 ## Open
 
-### OQ-11 — Self-modification AC-5: a proposal that passed, or one that landed
-
-- **Context:** AC-5 of `road-to-self-modification-that-a-council-must-pass` asks
-  for one proposal whose change passes the gate on a passing record. The only
-  proposal, `test-through-the-entry-point`, carries a refused record and landed
-  through the owner's forge act (OQ-7), so the criterion is not met as written.
-  It is the roadmap's last open item once 3.4 to 6.2 and AC-2/AC-3 are on main.
-- **Options:** (a) run one new learning through a two-seat modification review
-  until a record passes, then close AC-5; (b) amend AC-5 to accept a change that
-  landed through the D11 owner route with its refused record; (c) park the
-  roadmap with AC-5 as the entry condition.
-- **Recommendation:** (a) — it is the only option that proves the pipeline can
-  pass, which is what the criterion is for; (b) weakens it and is yours alone.
-- **Blocks:** AC-5 and the archive of the roadmap.
-
 ## Not owner questions — waits, or already settled in the tree
 
 - `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
@@ -126,3 +111,4 @@ and the run that applies it links its PR.
 | OQ-5 | 2026-10-25 | Cancel step-that-costs 1.2? | a — cancelled |
 | OQ-6 | 2026-10-25 | How 4.2 narrows the rule load, and its A/B | a — wait for the flip data |
 | OQ-7 self-modification owner act | 2026-10-25 | Land the split-council self-modification work? | 1 — land through the D11 forge bypass; 3.4, 5.2 and 6.2 ride one PR the owner merges with bypass, 4.1 and 4.2 follow in their own change after the writer is on main |
+| OQ-12 self-modification AC-5 | 2026-10-25 | A proposal that passed, or one that landed? | b — amend AC-5: a change that landed through the D11 owner route with its refused record counts; the roadmap closes |
