@@ -100,8 +100,20 @@ describe('_permission_for — four gates, each sufficient to withhold', () => {
         expect(_permission_for('pre_tool_use', READ, 0, ['allow', 'deny'])).toBeNull();
     });
 
-    it('withholds when a concern asked', () => {
-        expect(_permission_for('pre_tool_use', READ, 0, ['allow', 'ask'])).toBeNull();
+    it('a concern that asked gets the host ask, carrying its own reason', () => {
+        const verdict = _concern_permission_verdict(0, { decision: 'ask', reason: 'this session may bill per token' });
+        const p = _permission_for('pre_tool_use', READ, 0, ['allow', verdict]);
+        expect(p).toEqual({ decision: 'ask', reason: 'this session may bill per token' });
+        // The reason belongs to that dispatch only.
+        expect(_permission_for('pre_tool_use', READ, 0, ['allow', 'ask'])?.reason).toBe("agent-config asked");
+    });
+
+    it('an ask on any event but pre_tool_use is not emitted', () => {
+        expect(_permission_for('post_tool_use', READ, 0, ['ask'])).toBeNull();
+    });
+
+    it('deny beside an ask is still withheld, never turned into an ask', () => {
+        expect(_permission_for('pre_tool_use', READ, 0, ['ask', 'deny'])).toBeNull();
     });
 
     it('withholds when the reduced severity is not allow', () => {

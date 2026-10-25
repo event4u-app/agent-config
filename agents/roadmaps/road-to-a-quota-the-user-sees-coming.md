@@ -14,6 +14,11 @@ estate_offset_exempt: >-
   later/road-to-a-cold-start-paid-once-carried owns only step 3.6. Active count
   3 → 4, inside the WIP cap of five; the operator asked for this round's roadmap
   to be executed in the same invocation.
+estate_growth_exempt: >-
+  concern_count 70 → 72: `quota-notice` and `metered-spawn-ask` are the two
+  concerns the owner's 2026-10-22 directive needs (a notice the user sees, and
+  one ask before a metered fan-out). They share one script and one lazy chunk,
+  so the dispatch bundle carries a single LAZY_CONCERNS row for both.
 ---
 # Road to a quota the user sees coming
 
@@ -116,13 +121,13 @@ Cold-start's 4.3, 4.5 and 5.3, which the first plan proposed to take over, are
       billing class (`plan | metered | free`), so a future free-worker pool
       reads the same state.
       verify: `npx vitest run tests/scripts/_lib/pressure.test.ts` -> 0
-- [ ] **3.2 `quota-notice` concern on `user_prompt_submit`.** A lazy
+- [x] **3.2 `quota-notice` concern on `user_prompt_submit`.** A lazy
       `notification` concern, bound on `claude` only: one `user_notice` per
       `(window, state, resets_at)` across the machine, with numbers the user can
       act on — fill, projected-full clock time, reset clock time. Dedup stamps
       live beside the ledger.
       verify: `npx vitest run tests/scripts/quota_notice_hook.test.ts` -> 0
-- [ ] **3.3 Session size by window, not by token count.** The same concern
+- [x] **3.3 Session size by window, not by token count.** The same concern
       notices once per session when `context_used_pct ≥ 80`, naming `/compact`.
       Window-relative, so a 200k session is served.
       verify: `npx vitest run tests/scripts/quota_notice_hook.test.ts -t "context"` -> 0
@@ -133,7 +138,7 @@ Cold-start's 4.3, 4.5 and 5.3, which the first plan proposed to take over, are
 
 ## Phase 4 — The billing class (D6, D7)
 
-- [ ] **4.1 Detect the session's billing class at `session_start`.** Presence
+- [x] **4.1 Detect the session's billing class at `session_start`.** Presence
       only — `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `apiKeyHelper` in the
       host settings, `CLAUDE_CODE_USE_BEDROCK|VERTEX` — never a value. A
       metered session gets one `user_notice` on its first turn: it bills per
@@ -146,7 +151,7 @@ Cold-start's 4.3, 4.5 and 5.3, which the first plan proposed to take over, are
       "subscription" when a key was present. A user who wants API-billed seats
       keeps them through the grant or `mode: api`.
       verify: `npx vitest run tests/scripts/ai_council/spawn_env.test.ts` -> 0
-- [ ] **4.3 One ask before AC fans out on metered money.** In a session whose
+- [x] **4.3 One ask before AC fans out on metered money.** In a session whose
       billing class is metered and whose run holds no `billing_grant`, the first
       `Agent` spawn returns the host's native ask (`permissionDecision: "ask"`)
       naming the billing class and that the answer covers the session; the

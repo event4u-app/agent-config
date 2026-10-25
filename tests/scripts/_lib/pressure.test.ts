@@ -56,6 +56,11 @@ describe('windowPressure', () => {
         expect(w.eta_full_ms).toBeNull();
     });
 
+    it('a burst of refreshes under five minutes apart gives no burn rate', () => {
+        const w = windowPressure([snap(2, 20), snap(1, 30), snap(0, 40)], 'five_hour', NOW);
+        expect(w.burn_per_min).toBeNull();
+    });
+
     it('fewer than three points give no burn rate', () => {
         const w = windowPressure([snap(5, 40), snap(0, 45)], 'five_hour', NOW);
         expect(w.burn_per_min).toBeNull();

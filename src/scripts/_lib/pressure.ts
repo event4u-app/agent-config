@@ -5,7 +5,7 @@
  * The trigger is a rate, not a fill level: a session that drains a five-hour
  * window in an hour is dangerous at 30 %, and a slow week at 60 % is not. So
  * `hot` means "projected full before the window resets" (from the slope of the
- * last fifteen minutes) at half a window or more, or simply 80 % spent.
+ * last fifteen minutes, spanning at least five) at half a window or more, or simply 80 % spent.
  *
  * Stale is `unknown`, never `ok`. A ledger whose newest snapshot is older than
  * ten minutes says nothing about now — an idle status line, a print-mode
@@ -45,11 +45,15 @@ export interface WindowPressure {
 export const STALE_AFTER_MS = 10 * 60 * 1000;
 const BURN_WINDOW_MS = 15 * 60 * 1000;
 const MIN_BURN_POINTS = 3;
+/** A burst of refreshes seconds apart says nothing about a rate; the points must span this much time. */
+const MIN_BURN_SPAN_MS = 5 * 60 * 1000;
 
 const STATE_RANK: Record<PressureState, number> = { unknown: 0, ok: 1, warm: 2, hot: 3, exhausted: 4 };
 
 function slopePerMs(points: ReadonlyArray<{ t: number; v: number }>): number | null {
     if (points.length < MIN_BURN_POINTS) return null;
+    const span = Math.max(...points.map((p) => p.t)) - Math.min(...points.map((p) => p.t));
+    if (span < MIN_BURN_SPAN_MS) return null;
     const n = points.length;
     const mt = points.reduce((a, p) => a + p.t, 0) / n;
     const mv = points.reduce((a, p) => a + p.v, 0) / n;

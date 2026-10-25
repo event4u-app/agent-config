@@ -147,6 +147,12 @@
             "max_bytes": 21200,
             "registered_at": "2026-10-25",
             "derivation": "Measured 19,308 bytes on 2026-10-25 (the monthly star ask of ADR-301: its cadence, its state file and its per-state claim; no receipt reader since the council's 2026-10-25 refusal moved the count to emission) with `yaml` external (it reads the user-global settings layers with it, as `update_notice` does). The ceiling is that reading plus about 10 %, rounded, with no growth queued. Bound on claude `session_start` alone, so a chunk keeps its body off every other dispatch parse; the bundle carries only its LAZY_CONCERNS row. Like `update_notice` it carries a concern, so a missing chunk falls back to the spawn path and costs latency, never the ask."
+        },
+        {
+            "entry": "src/scripts/quota_notice_hook.ts",
+            "max_bytes": 20500,
+            "registered_at": "2026-10-25",
+            "derivation": "Measured 18,592 bytes on 2026-10-25 (road-to-a-quota-the-user-sees-coming 3.2-4.3: the quota and metered notices, the metered spawn ask, the quota ledger reader, the pressure model, the billing-class reader and the billing-grant check), no `yaml` (it reads JSON only). The ceiling is that reading plus about 10 %, rounded, with no growth queued. Two manifest concerns share the script (`quota-notice` on claude `user_prompt_submit`, `metered-spawn-ask` on claude `pre_tool_use` for Agent/Task), so the bundle carries one LAZY_CONCERNS row for both; the row fits inside the room the compacted LAZY_CONCERNS table freed, so the dispatch ceiling is not raised. A missing chunk falls back to the spawn path and costs latency, never a notice."
         }
     ],
     "chunks_note": "A chunk is loaded only when a caller needs it, so its bytes are not paid by every dispatch; its ceiling exists so that the move out of dispatch.js stays a measured place rather than an unmeasured one. The gate builds each chunk with the exact esbuild segment `build:hook-chunks` uses for its entry.",
