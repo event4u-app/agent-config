@@ -117,52 +117,16 @@ export function resolveEgressMode(settings: unknown): EgressMode {
 const EGRESS_WORD = /\begress\b/;
 
 /**
- * A column-0 content line that is not a plain `key:`. Flow collections, complex
- * keys, document markers, merge keys, anchors, aliases, tags, directives, an
- * indentless sequence item, and a value continued at column 0 (which a full
- * parse rejects as broken) all match, and send the layer to the full parse.
- */
-const NOT_A_PLAIN_KEY = /^(?!["']?[\w.-]+["']?[ \t]*:(?:[ \t]|$))[^\s#]/m;
-
-/** A top-level `egress:` key, plain or quoted, with its indented, blank and comment lines. */
-const EGRESS_BLOCK = /^["']?egress["']?[ \t]*:.*(?:\n(?:[ \t].*|[ \t]*#.*|[ \t]*))*/gm;
-
-/**
- * Does this layer leave the mode at `off`, read without parsing the whole file?
- *
- * The installer writes the full template into every project, and the template
- * opens `egress: {placeholders: {mode: "off"}}` and mentions the word in two
- * comments and one nested key. Only a top-level key can set the mode, so in a
- * plain block-mapping document the top-level `egress:` blocks alone are parsed —
- * a few lines, not the template. `false` means the layer may set another mode or
- * has a shape this cannot decide; the caller then takes the full cascade.
- */
-export function layerLeavesEgressOff(text: string): boolean {
-  // A BOM or any line break but `\n` (CR, NEL, LS, PS) moves the lines the
-  // patterns below anchor on; such a layer takes the full parse.
-  if (/[\r\u0085\u2028\u2029\uFEFF]/.test(text) || NOT_A_PLAIN_KEY.test(text)) return false;
-  // A root mapping may itself be indented; then no key sits at column 0.
-  if (/^(?:[ \t]*(?:#.*)?\n)*[ \t]+[^\s#]/.test(text)) return false;
-  for (const block of text.match(EGRESS_BLOCK) ?? []) {
-    if (/[&*!]|<</.test(block.replace(/#.*$/gm, ""))) return false;
-    try {
-      if (resolveEgressMode(parseYaml(block, { version: "1.1" })) !== "off") return false;
-    } catch {
-      return false;
-    }
-  }
-  return true;
-}
-
-/**
  * Every project settings layer the cascade would read; the user-global layer
- * cannot carry `egress` (it is not on MERGEABLE_KEYS). When no layer can set a
- * mode other than `off` the shipped default holds, and the full cascade — whose
- * template parse measured about 25 ms cold — is skipped. A layer that names the
- * word but whose top-level `egress:` block {@link layerLeavesEgressOff} reads as
- * `off` costs that block's parse, not the template's. `broken` means a layer
- * exists but cannot be read, or names `egress` undecidably and does not parse;
- * the cascade would read either as empty and fall to `off`.
+ * cannot carry `egress` (it is not on MERGEABLE_KEYS). A layer without the word
+ * is skipped unparsed. A layer that names it is parsed, and is skipped too when
+ * its own `egress` resolves to `off` — the installer writes the full template,
+ * which opens `egress:` with mode `off`, so before this every installed project
+ * paid the cascade on top of the parse (template: 26.0 ms cold / 9.9 ms warm,
+ * 13.9 / 6.1 of it the cascade). Only a layer that sets another mode reaches
+ * the cascade, which settles precedence between layers. `broken` means a layer
+ * exists but cannot be read, or names `egress` and does not parse; the cascade
+ * would read either as empty and fall to `off`.
  */
 function egressLayers(workspaceRoot: string, readFile: (p: string) => string): "none" | "named" | "broken" {
   let named = false;
@@ -177,13 +141,12 @@ function egressLayers(workspaceRoot: string, readFile: (p: string) => string): "
       return "broken";
     }
     if (!EGRESS_WORD.test(text)) continue;
-    if (layerLeavesEgressOff(text)) continue;
-    named = true;
     try {
-      parseYaml(text, { version: "1.1" });
+      if (resolveEgressMode(parseYaml(text, { version: "1.1" })) === "off") continue;
     } catch {
       return "broken";
     }
+    named = true;
   }
   return named ? "named" : "none";
 }

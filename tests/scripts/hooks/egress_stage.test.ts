@@ -26,7 +26,6 @@ import {
   EGRESS_STAGE_KILL_SWITCH,
   egressViewFor,
   EXECUTION_VIEW_GRANTS,
-  layerLeavesEgressOff,
   OBSERVATION_FILE,
   publishedEgressState,
   readEgressMode,
@@ -117,39 +116,20 @@ describe("mode resolution", () => {
     expect(readEgressMode(tmp)).toBe("protect");
   });
 
-  it("decides the shipped template's off from its egress block alone, and nothing that could set another mode", () => {
+  it("a layer whose own egress is off skips the cascade, and any other mode still reaches it", () => {
     const template = fs.readFileSync(path.join(REPO_ROOT, "src", "config", "agent-settings.template.yml"), "utf8");
-    expect(template).toMatch(/^egress:/m);
-    expect(layerLeavesEgressOff(template)).toBe(true);
-    expect(layerLeavesEgressOff(template.replace(/mode: "off"/, 'mode: "protect"'))).toBe(false);
-    // A nested key and comments named egress are not the top-level key.
-    expect(layerLeavesEgressOff("audit:\n  egress: query\n# egress\n")).toBe(true);
-    expect(layerLeavesEgressOff('"egress":\n  placeholders: {mode: observe}\n')).toBe(false);
-    // A root this cannot read as a plain block mapping goes to the full parse.
-    for (const shape of [
-      "{egress: {placeholders: {mode: off}}}\n",
-      "base: &b {}\negress: *b\n",
-      "<<: *x\negress: {}\n",
-      // An indentless sequence under the key: the block capture would stop at
-      // `egress:`, so the layer goes to the full parse rather than reading null.
-      "egress:\n- placeholders:\n    mode: protect\n",
-      "egress:\n- mode: strict\n",
-      // Encodings that move the lines the block reader anchors on.
-      "\uFEFFegress:\n  placeholders:\n    mode: protect\n",
-      "egress:\r  placeholders:\r    mode: protect\r",
-      "egress:\r\n  placeholders:\r\n    mode: protect\r\n",
-      "egress:\u2028  placeholders:\u2028    mode: protect\u2028",
-      // A root mapping indented as a whole has no key at column 0.
-      "# settings\n  egress:\n    placeholders:\n      mode: protect\n",
-      // A value continued at column 0: the full parse calls the layer broken.
-      "egress:\n  placeholders:\n    mode:\nprotect\n",
-    ]) {
-      expect(layerLeavesEgressOff(shape)).toBe(false);
-    }
-    fs.writeFileSync(path.join(tmp, ".agent-settings.yml"), template.replace(/mode: "off"/, "mode: observe"));
-    expect(readEgressMode(tmp)).toBe("observe");
-    fs.writeFileSync(path.join(tmp, ".agent-settings.yml"), template);
-    expect(readEgressMode(tmp)).toBe("off");
+    expect(template).toMatch(/^egress:\n  placeholders:\n    mode: "off"$/m);
+    // The disk says protect; the injected reader hands the egress check the
+    // template. "off" can then only come from the cascade never being read.
+    fs.writeFileSync(path.join(tmp, ".agent-settings.yml"), "egress:\n  placeholders:\n    mode: protect\n");
+    const view = (text: string) => (p: string): string => {
+      if (p === path.join(tmp, ".agent-settings.yml")) return text;
+      throw Object.assign(new Error("absent"), { code: "ENOENT" });
+    };
+    expect(readEgressMode(tmp, view(template))).toBe("off");
+    // A layer that sets another mode, or does not parse, is not skipped.
+    expect(readEgressMode(tmp, view(template.replace('mode: "off"', "mode: observe")))).toBe("protect");
+    expect(readEgressMode(tmp, view(template + "\negress: [unclosed\n"))).toBe("protect");
   });
 
   it("a thrown kill switch is off whatever the settings say", () => {
