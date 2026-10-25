@@ -475,7 +475,11 @@
     function draw() {
         if (state.lens !== 'graph') return;
         var s = size();
-        ctx.clearRect(0, 0, s.w, s.h);
+        // Clear the bitmap itself: a CSS-sized clear misses whatever the rounded bitmap holds beyond it.
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
         var nodes = currentNodes();
         var pos = Object.create(null);
         if (state.orb) {
@@ -1868,6 +1872,11 @@
     applyStrings();
     renderHeader();
     window.addEventListener('resize', function () { applyPanes(false); resize(); if (state.lens === 'treemap') renderLens(); });
+    // The stage also changes size without a window resize (controls appearing, panes, full screen).
+    if (window.ResizeObserver) new ResizeObserver(function () {
+        var dpr = window.devicePixelRatio || 1, r = canvas.getBoundingClientRect();
+        if (r.width && (canvas.width !== Math.max(1, Math.round(r.width * dpr)) || canvas.height !== Math.max(1, Math.round(r.height * dpr)))) resize();
+    }).observe(canvas);
     refresh();
     resize();
 })();

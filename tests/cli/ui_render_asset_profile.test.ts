@@ -1182,3 +1182,4 @@ import './ui_render_painted_family.test.js';
 // same way: 2D/3D data parity, click and double click, height, side panels.
 import '../scripts/code_graph_map_area_limit.test.js';
 import '../scripts/code_graph_map_no_data.test.js';
+import '../scripts/code_graph_map_canvas_clear.test.js';
