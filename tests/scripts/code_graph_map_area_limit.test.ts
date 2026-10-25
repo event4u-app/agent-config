@@ -190,3 +190,61 @@ describe('the brand mark', () => {
         await page.close();
     });
 });
+
+describe('side panels: pinned on a wide window, flyouts below it', () => {
+    async function at(width: number, height = 900): Promise<Page> {
+        const page = await browser.newPage({ viewport: { width, height } });
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await page.goto(pathToFileURL(html).href);
+        await page.waitForFunction(() => (window as unknown as { __mapView?: unknown }).__mapView !== undefined);
+        return page;
+    }
+    const pane = (page: Page, id: string) =>
+        page.evaluate((sel) => {
+            const el = document.getElementById(sel) as HTMLElement;
+            const r = el.getBoundingClientRect();
+            const cs = getComputedStyle(el);
+            return { fixed: cs.position === 'fixed', visible: cs.visibility !== 'hidden' && r.right > 1 && r.left < window.innerWidth - 1, width: r.width };
+        }, id);
+    const stageWidth = (page: Page) => page.evaluate(() => (document.querySelector('.stage') as HTMLElement).getBoundingClientRect().width);
+
+    it('wide: both panels are pinned beside the centre; unpinning one widens the centre', async () => {
+        const page = await at(1600);
+        expect(await pane(page, 'pane-left')).toMatchObject({ fixed: false, visible: true });
+        expect(await pane(page, 'pane-right')).toMatchObject({ fixed: false, visible: true });
+        const before = await stageWidth(page);
+        await page.click('#pin-left');
+        expect(await pane(page, 'pane-left')).toMatchObject({ visible: false });
+        expect(await stageWidth(page)).toBeGreaterThan(before + 200);
+        await page.click('#open-left');
+        expect(await pane(page, 'pane-left')).toMatchObject({ fixed: true, visible: true });
+        await page.close();
+    });
+
+    it('tablet: panels start as closed flyouts, open over the centre, and can be pinned', async () => {
+        const page = await at(1000);
+        expect(await pane(page, 'pane-right')).toMatchObject({ visible: false });
+        const full = await stageWidth(page);
+        await page.click('#open-right');
+        expect(await pane(page, 'pane-right')).toMatchObject({ fixed: true, visible: true });
+        expect(await stageWidth(page)).toBe(full);
+        await page.click('#pin-right');
+        expect(await pane(page, 'pane-right')).toMatchObject({ fixed: false, visible: true });
+        expect(await stageWidth(page)).toBeLessThan(full - 200);
+        await page.close();
+    });
+
+    it('phone: flyouts only — no pin, the panel lies over the graph, a tap beside it closes it', async () => {
+        const page = await at(390, 800);
+        expect(await page.locator('#pin-left').isVisible()).toBe(false);
+        await page.click('#open-left');
+        const open = await pane(page, 'pane-left');
+        expect(open).toMatchObject({ fixed: true, visible: true });
+        expect(await page.locator('#pin-left').isVisible()).toBe(false);
+        await page.mouse.click(385, 400);
+        expect(await pane(page, 'pane-left')).toMatchObject({ visible: false });
+        const scroll = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+        expect(scroll).toBe(false);
+        await page.close();
+    });
+});

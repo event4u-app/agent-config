@@ -40,7 +40,7 @@
             lGraph: 'Graph', lLayers: 'Layers', lMatrix: 'Matrix', lKnowledge: 'Knowledge', lTreemap: 'Treemap', lFlow: 'Flow',
             hLayers: 'Depth rings from the selection', hMatrix: 'DSM', hKnowledge: 'Knowledge sources of the selection', hTreemap: 'Area = lines per folder', hTreemapMissing: 'needs loc per file', hFlow: 'Request paths – next design',
             edges: 'Edges:', fTests: 'Tests', fInfra: 'Infra hubs', full: 'Full screen', fullOff: 'Exit full screen',
-            navBack: '← Back', repo: 'Repo', overview: 'Overview', areasOf: function (a, b) { return 'Areas (' + a + ' of ' + b + ')'; }, allAreas: '← All areas',
+            navBack: '← Back', openLeft: '☰ Repository', openRight: 'Details ☰', pin: 'Pin', unpin: 'Unpin', closePane: 'Close', repo: 'Repo', overview: 'Overview', areasOf: function (a, b) { return 'Areas (' + a + ' of ' + b + ')'; }, allAreas: '← All areas',
             hint2d: 'Drag: move · Wheel: zoom · Click: mark · Double-click: open', hint3d: 'Drag: turn · Shift+drag: move · Wheel: zoom · Click: mark · Double-click: open',
             zoomIn: 'Zoom in', zoomOut: 'Zoom out', fit: 'Fit', limTop: 'Top 15', limAll: 'All areas', d2: '2D', d3: '3D Orb', dimHint: 'Show the map as an orb. Drag to turn it, Shift+drag to move it, arrow keys turn it too.',
             showPanels: 'Show panels again', direct: 'direct', transitive: 'transitive', transitive3: 'transitive ≤ 3', score: 'Score',
@@ -100,7 +100,7 @@
             lGraph: 'Graph', lLayers: 'Layers', lMatrix: 'Matrix', lKnowledge: 'Knowledge', lTreemap: 'Treemap', lFlow: 'Flow',
             hLayers: 'Tiefenringe ab Auswahl', hMatrix: 'DSM', hKnowledge: 'Wissensquellen zur Auswahl', hTreemap: 'Fläche = Zeilen je Ordner', hTreemapMissing: 'braucht loc je Datei', hFlow: 'Request-Pfade – nächster Entwurf',
             edges: 'Kanten:', fTests: 'Tests', fInfra: 'Infra-Hubs', full: 'Vollbild', fullOff: 'Vollbild beenden',
-            navBack: '← Zurück', repo: 'Repo', overview: 'Übersicht', areasOf: function (a, b) { return 'Areas (' + a + ' von ' + b + ')'; }, allAreas: '← Alle Areas',
+            navBack: '← Zurück', openLeft: '☰ Repository', openRight: 'Details ☰', pin: 'Anheften', unpin: 'Lösen', closePane: 'Schließen', repo: 'Repo', overview: 'Übersicht', areasOf: function (a, b) { return 'Areas (' + a + ' von ' + b + ')'; }, allAreas: '← Alle Areas',
             hint2d: 'Ziehen: verschieben · Rad: zoomen · Klick: markieren · Doppelklick: öffnen', hint3d: 'Ziehen: drehen · Shift+Ziehen: verschieben · Rad: zoomen · Klick: markieren · Doppelklick: öffnen',
             zoomIn: 'Hineinzoomen', zoomOut: 'Herauszoomen', fit: 'Einpassen', limTop: 'Top 15', limAll: 'Alle Areas', d2: '2D', d3: '3D Orb', dimHint: 'Karte als Kugel zeigen. Ziehen dreht sie, Shift+Ziehen verschiebt sie, die Pfeiltasten drehen ebenfalls.',
             showPanels: 'Panels wieder einblenden', direct: 'direkt', transitive: 'transitiv', transitive3: 'transitiv ≤ 3', score: 'Score',
@@ -215,9 +215,39 @@
         full: false, formula: false, treePath: '', scopeDir: '', open: Object.create(null),
         view: { scale: 1, x: 0, y: 0 }, orb: false, rot: { yaw: ORB_YAW, pitch: ORB_PITCH },
         // Which areas the overview shows. A data choice, so it never depends on 2D / 3D.
-        areaLimit: 'all'
+        areaLimit: 'all',
+        // Side panels: `pin` null = the width's default (pinned only on a wide window).
+        pin: { left: null, right: null }, fly: { left: false, right: false }
     };
     var drawn = [];
+    function paneMode() { var w = window.innerWidth; return w <= 720 ? 'phone' : w < 1240 ? 'tablet' : 'wide'; }
+    function isPinned(side) {
+        var mode = paneMode();
+        if (mode === 'phone' || state.full) return false;
+        return state.pin[side] !== null ? state.pin[side] : mode === 'wide';
+    }
+    function paneClasses() {
+        var c = 'wb mode-' + paneMode() + (state.full ? ' full' : '');
+        ['left', 'right'].forEach(function (side) {
+            if (isPinned(side)) c += ' pin-' + side;
+            else if (state.fly[side]) c += ' fly-' + side;
+        });
+        return c;
+    }
+    // A jump out of a flyout lands on the stage, so the flyout makes way.
+    function closeFlyouts() { state.fly.left = false; state.fly.right = false; }
+    function applyPanes(relayout) {
+        $('wb').className = paneClasses();
+        var flyOpen = ['left', 'right'].some(function (side) { return !isPinned(side) && state.fly[side]; });
+        $('scrim').hidden = !flyOpen;
+        ['left', 'right'].forEach(function (side) {
+            var pinned = isPinned(side);
+            var pin = $('pin-' + side);
+            pin.setAttribute('aria-pressed', String(pinned));
+            pin.textContent = pinned ? t('unpin') : t('pin');
+        });
+        if (relayout) resize();
+    }
     // Every step deeper records where it came from, so each lens has a way back.
     var trail = [];
     function step() {
@@ -1571,7 +1601,7 @@
         renderLens();
         renderTabs();
         renderPanel();
-        $('wb').className = 'wb' + (state.full ? ' full' : '');
+        applyPanes(false);
         renderFull();
         if (state.lens === 'graph') draw(); else { renderFoot(); exposeView(); }
     }
@@ -1600,9 +1630,10 @@
     }
     function resetView() { state.view = { scale: 1, x: 0, y: 0 }; state.rot = { yaw: ORB_YAW, pitch: ORB_PITCH }; }
     function goHome() { step(); state.level = 'overview'; state.lens = 'graph'; resetView(); refresh(); }
-    function openArea(i) { step(); state.level = 'area'; state.area = i; state.lens = state.lens === 'graph' ? 'graph' : state.lens; resetView(); refresh(); }
+    function openArea(i) { step(); closeFlyouts(); state.level = 'area'; state.area = i; state.lens = state.lens === 'graph' ? 'graph' : state.lens; resetView(); refresh(); }
     function openFile(i) {
         step();
+        closeFlyouts();
         var f = files[i];
         if (state.lens === 'graph' && f.area >= 0 && (state.level !== 'area' || state.area !== f.area)) {
             state.level = 'area';
@@ -1669,6 +1700,7 @@
         if (step && state.orb && document.activeElement !== searchInput) { e.preventDefault(); turnTo(state.rot.yaw + step[0], state.rot.pitch + step[1]); return; }
         if (e.key === '/' && document.activeElement !== searchInput) { e.preventDefault(); searchInput.focus(); return; }
         if (e.key === 'Escape') {
+            if (state.fly.left || state.fly.right) { state.fly.left = false; state.fly.right = false; applyPanes(false); return; }
             if (document.activeElement === searchInput && searchInput.value) { searchInput.value = ''; clear(results); return; }
             if (state.level === 'area') goHome(); else if (state.file >= 0 || state.area >= 0) { state.file = -1; state.area = -1; refresh(); }
         }
@@ -1704,6 +1736,21 @@
     toggle('t-tests', 'showTests');
     toggle('t-infra', 'showInfra');
     $('full').addEventListener('click', function () { state.full = !state.full; refresh(); resize(); });
+    ['left', 'right'].forEach(function (side) {
+        var other = side === 'left' ? 'right' : 'left';
+        $('open-' + side).addEventListener('click', function () {
+            state.fly[side] = true;
+            if (paneMode() === 'phone') state.fly[other] = false;
+            applyPanes(false);
+        });
+        $('close-' + side).addEventListener('click', function () { state.fly[side] = false; applyPanes(false); });
+        $('pin-' + side).addEventListener('click', function () {
+            state.pin[side] = !isPinned(side);
+            state.fly[side] = false;
+            applyPanes(true);
+        });
+    });
+    $('scrim').addEventListener('click', function () { state.fly.left = false; state.fly.right = false; applyPanes(false); });
     $('z-in').addEventListener('click', function () { zoom(1.4); });
     $('z-out').addEventListener('click', function () { zoom(1 / 1.4); });
     $('z-fit').addEventListener('click', function () { resetView(); zoom(1); });
@@ -1767,6 +1814,9 @@
         $('z-out').setAttribute('aria-label', t('zoomOut'));
         $('z-fit').textContent = t('fit');
         dim2d.textContent = t('d2');
+        $('open-left').textContent = t('openLeft');
+        $('open-right').textContent = t('openRight');
+        ['left', 'right'].forEach(function (side) { $('close-' + side).setAttribute('aria-label', t('closePane')); });
         limTop.textContent = t('limTop');
         limAll.textContent = t('limAll');
         dimButton.textContent = t('d3');
@@ -1777,7 +1827,7 @@
 
     applyStrings();
     renderHeader();
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', function () { applyPanes(false); resize(); });
     refresh();
     resize();
 })();

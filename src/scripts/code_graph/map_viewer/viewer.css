@@ -68,8 +68,7 @@ button:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visibl
 .btn.icon { width: 44px; padding: 0; display: flex; align-items: center; justify-content: center; }
 
 /* Frame */
-.wb { flex: 1; display: flex; flex-wrap: wrap; align-items: stretch; }
-.wb.full .rail { display: none; }
+.wb { flex: 1; display: flex; flex-wrap: nowrap; align-items: stretch; min-height: 0; }
 .rail { flex: 1 1 280px; max-width: 320px; min-width: 260px; border-right: 1px solid var(--line); background: var(--rail); display: flex; flex-direction: column; }
 .rail section, .side section.sec { padding: 16px 18px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; }
 .rail section:last-child { border-bottom: 0; flex: 1; }
@@ -132,22 +131,41 @@ button:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visibl
 .crumbs button:last-child { color: var(--text); }
 .crumbs .nav-back { padding: 2px 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--text); background: var(--raise); }
 .crumbs button:disabled { cursor: default; }
-.view { flex: 1; position: relative; min-height: 600px; overflow: auto; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+.view { flex: 1; position: relative; min-height: 0; overflow: auto; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px; }
 .stage { position: relative; height: 600px; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background-color: var(--bg); background-image: radial-gradient(circle at 50% 50%, rgba(255, 140, 42, 0.08) 0%, rgba(62, 197, 255, 0.04) 35%, transparent 65%), linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: auto, 32px 32px, 32px 32px; cursor: grab; touch-action: none; }
 .wb.full .stage { height: calc(100vh - 190px); min-height: 520px; }
-/* The map uses the whole height it is given. Wrapped columns: the window height
-   under the chrome. All three columns side by side: the page is one viewport tall,
-   the stage takes what the centre column leaves, and the side columns scroll. */
-.stage { height: max(520px, calc(100dvh - 190px)); }
-@media (min-width: 1240px) {
-    body { height: 100vh; height: 100dvh; }
-    .wb { min-height: 0; flex-wrap: nowrap; }
-    .rail { overflow-y: auto; }
-    .center { min-height: 0; }
-    .view { min-height: 0; }
-    #graphwrap { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
-    #graphwrap[hidden] { display: none; }
-    .stage, .wb.full .stage { flex: 1; height: auto; min-height: 360px; }
+/* The map uses the whole height it is given, at every width: the page is one
+   viewport tall, the stage takes what the centre column leaves. */
+body { height: 100vh; height: 100dvh; }
+.center { min-height: 0; }
+.view { min-height: 0; }
+#graphwrap { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+#graphwrap[hidden] { display: none; }
+.stage, .wb.full .stage { flex: 1; height: auto; min-height: 320px; }
+
+/* Side panels. Pinned: a column beside the centre, which gets narrower.
+   Not pinned: a flyout over the centre, opened by its button. Below 721 px
+   nothing pins (the viewer never sets the class there). */
+.rail { overflow-y: auto; }
+.pane-head { display: flex; justify-content: flex-end; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--line); flex: none; }
+.pane-head button, .pane-open { height: 30px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--soft); font-size: 12px; font-weight: 600; }
+.pane-head .pane-pin[aria-pressed='true'] { background: var(--brandTint); border-color: var(--brandLine); color: var(--text); }
+.pane-close { width: 30px; padding: 0; font-size: 16px; }
+.wb.pin-left #open-left, .wb.pin-right #open-right { display: none; }
+.wb.pin-left #close-left, .wb.pin-right #close-right { display: none; }
+.wb.mode-phone .pane-pin { display: none; }
+.wb:not(.pin-left) #pane-left, .wb:not(.pin-right) #pane-right {
+    position: fixed; top: 0; bottom: 0; z-index: 40; min-width: 0; max-width: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35); visibility: hidden;
+    transition: transform 0.2s ease, visibility 0.2s;
+}
+.wb:not(.pin-left) #pane-left { left: 0; width: min(320px, 88vw); transform: translateX(-105%); }
+.wb:not(.pin-right) #pane-right { right: 0; width: min(440px, 92vw); transform: translateX(105%); border-left: 1px solid var(--line); }
+.wb.fly-left:not(.pin-left) #pane-left, .wb.fly-right:not(.pin-right) #pane-right { transform: none; visibility: visible; }
+.scrim { position: fixed; inset: 0; z-index: 39; background: rgba(5, 10, 20, 0.45); }
+.scrim[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) {
+    .wb:not(.pin-left) #pane-left, .wb:not(.pin-right) #pane-right { transition: none; }
 }
 .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .overlay { position: absolute; left: 12px; top: 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; z-index: 2; }
@@ -292,9 +310,8 @@ button:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visibl
 
 @media (max-width: 720px) {
     .top { padding: 10px 12px; }
-    .rail, .side { max-width: none; min-width: 0; flex-basis: 100%; border-left: 0; border-right: 0; }
     .view { padding: 0 8px 8px; }
-    .stage, .treemap { height: 460px; }
+    .treemap { height: 460px; }
     .bar-top { padding: 10px 8px; }
     .filters { margin-left: 0; }
 }

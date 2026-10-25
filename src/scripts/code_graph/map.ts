@@ -1002,7 +1002,9 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         '</div>',
         '</header>',
         '<div class="wb" id="wb">',
-        '<aside class="rail" aria-label="Repository">',
+        '<div class="scrim" id="scrim" hidden></div>',
+        '<aside class="rail" id="pane-left" aria-label="Repository">',
+        '<div class="pane-head"><button type="button" class="pane-pin" id="pin-left" aria-pressed="false"></button><button type="button" class="pane-close" id="close-left">×</button></div>',
         '<section id="health"></section>',
         '<section id="kpis"></section>',
         '<section id="colorby"></section>',
@@ -1010,6 +1012,7 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         '</aside>',
         '<main class="center">',
         '<div class="bar-top">',
+        '<button type="button" class="pane-open" id="open-left" aria-controls="pane-left"></button>',
         '<div class="lenses" role="tablist" aria-label="View" id="lenses"></div>',
         '<div class="filters"><span id="edges-label"></span>' +
             '<button type="button" class="fbtn" id="t-sure" aria-pressed="true"></button>' +
@@ -1017,6 +1020,7 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
             '<button type="button" class="fbtn" id="t-tests" aria-pressed="true"></button>' +
             '<button type="button" class="fbtn" id="t-infra" aria-pressed="false"></button>' +
             '<button type="button" class="fullbtn" id="full" aria-pressed="false"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M1 5V1h4M13 5V1H9M1 9v4h4M13 9v4H9"></path></svg><span id="full-label"></span></button></div>',
+        '<button type="button" class="pane-open" id="open-right" aria-controls="pane-right"></button>',
         '</div>',
         '<nav class="crumbs" id="crumbs" aria-label="Breadcrumb"></nav>',
         '<div class="view">',
@@ -1038,7 +1042,8 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         '</div>',
         '<footer class="foot" id="foot"></footer>',
         '</main>',
-        '<aside class="rail side" aria-label="Detail">',
+        '<aside class="rail side" id="pane-right" aria-label="Detail">',
+        '<div class="pane-head"><button type="button" class="pane-pin" id="pin-right" aria-pressed="false"></button><button type="button" class="pane-close" id="close-right">×</button></div>',
         '<div class="tabs" role="tablist" aria-label="Detail" id="tabs"></div>',
         '<div id="panel" aria-live="polite"></div>',
         '</aside>',

@@ -22,6 +22,7 @@ interface PwLocator {
     first(): PwLocator;
     count(): Promise<number>;
     click(): Promise<void>;
+    isVisible(): Promise<boolean>;
 }
 interface PwPage {
     on(event: 'pageerror', fn: () => void): void;
@@ -162,6 +163,10 @@ export async function verifyMap(htmlPath: string): Promise<MapRenderCheck> {
                 );
                 return { view, labels: r.boxes.length, ...labelProblems(r.boxes, r.width, r.height), ...(bubbles.length ? { orb: orbSpread(bubbles) } : {}) };
             };
+            // Below a wide window the detail panel is a closed flyout; open it the
+            // way a reader would before reading or clicking anything inside it.
+            const opener = page.locator('#open-right');
+            if ((await opener.count()) > 0 && (await opener.isVisible())) await opener.click();
             const sidebar = await page.evaluate(() => {
                 const entries = [...document.querySelectorAll('#panel .plist button')].filter((b) => b.querySelector('.swatch'));
                 let clipped = 0;
@@ -174,6 +179,8 @@ export async function verifyMap(htmlPath: string): Promise<MapRenderCheck> {
                 }
                 return { entries: entries.length, clipped, orphanedDot };
             });
+            // Close it again: an open flyout lies over the stage the next checks click.
+            await page.evaluate(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })));
             const views = [await read('overview')];
             // The orb, as it opens and turned half a revolution: the far side's labels
             // must stay hidden and the near side's must still fit and not overlap.
@@ -188,6 +195,7 @@ export async function verifyMap(htmlPath: string): Promise<MapRenderCheck> {
                 await orb.click();
             }
             const firstArea = page.locator('#panel .plist button').first();
+            if ((await opener.count()) > 0 && (await opener.isVisible())) await opener.click();
             if ((await firstArea.count()) > 0) {
                 await firstArea.click();
                 views.push(await read('largest-area'));
