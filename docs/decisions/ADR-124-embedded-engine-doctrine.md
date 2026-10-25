@@ -12,7 +12,7 @@ superseded_scope: >-
   else in this record stands: the Class-A adoption path (`:110`), the Class-C
   network/LLM build-path prohibition, the § 6 state-store test, and this
   record's own scoped supersession of ADR-088 and ADR-094.
-amended_by: ADR-297
+amended_by: ADR-297, ADR-302
 phase: road-to-native-code-intelligence
 type: structural
 ---
@@ -114,6 +114,15 @@ ADR-297 amends the Class-A state clause in § 1: a Class-A engine may also write
 **human-facing derived views** of its own index to the registered, gitignored
 `agents/map/`. The index itself stays under `agents/runtime/state/`. Everything
 else in this record stands.
+
+## Amendment (2026-10-25) — Class H, host-owned module
+
+ADR-302 adds **Class H — host-owned module** to § 1: code AC ships that the host
+loads into its own worker for a session (a Claude Code hooks module). AC starts no
+process, so neither A nor B describes it. Admitted only as a reader that decides
+nothing, rewrites nothing, declares only `$.fs.read`, `$.fs.exists` and `$.ui.*`,
+and shows only values also reachable as text on other hosts. Classes A, B and C
+are unchanged.
 
 ## Decision
 

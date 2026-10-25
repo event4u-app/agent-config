@@ -99,6 +99,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-merge-surface-zero | later | later | A correct PR cannot go red or conflicted because someone else merged first. |
 | road-to-mission-catalogue | later | later | Mission catalogue — content + catalogue expansion (mission-mode follow-up) |
 | road-to-mixed-trigger-activation-cost | later | later | Road to mixed-trigger activation cost — the 12.0→12.1 behaviour regression, found and priced |
+| road-to-mod-surfaces-that-read-what-ac-knows | later | later | The one AC module grows surfaces for the state AC already measures, and AC can preview and witness destructive or … |
 | road-to-one-upstream-that-checks-what-leaves-carried | later | later | Every step road-to-one-upstream-that-checks-what-leaves deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-opencode-runtime-probe | later | later | the opencode runtime probe |
 | road-to-originality-gate-and-contributor-funnel | later | later | Every PR that adds or edits skills runs `lint_originality --changed` as a blocking CI gate, contributors can pre-check locally and … |

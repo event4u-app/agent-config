@@ -85,6 +85,10 @@ describe('stageRuntime — what the real bundle reads', () => {
         expect(existsSync(path.join(current, 'src', 'scripts', 'hooks', 'host_lowering.yaml'))).toBe(true);
         expect(existsSync(path.join(current, 'node_modules', 'yaml', 'package.json'))).toBe(true);
         expect(existsSync(path.join(current, 'src', 'scripts', 'install.ts'))).toBe(false);
+        const mod = path.join(current, 'src', 'templates', 'claude-mod');
+        expect(existsSync(path.join(mod, '.claude-plugin', 'plugin.json'))).toBe(true);
+        expect(existsSync(path.join(mod, 'module', 'register.ts'))).toBe(true);
+        expect(existsSync(path.join(mod, 'module', 'register.test.ts'))).toBe(false);
     }, 60_000);
 });
 

@@ -1,0 +1,7 @@
+{
+    "name": "agent-config-status",
+    "version": "0.1.0",
+    "description": "Read-only agent-config status line for Claude Code: shows the context fill agent-config already records. Decides nothing.",
+    "license": "MIT",
+    "hooks": "./module/hooks.json"
+}
