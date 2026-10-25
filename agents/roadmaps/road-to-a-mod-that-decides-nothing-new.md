@@ -82,7 +82,7 @@ same way; a mod only reads and shows what the dispatcher already wrote.
 
 ## Phase 3 — Mods in the neighbour census
 
-- [ ] **3.1 Read installed plugins that ship a hooks module.** `census()` reads
+- [x] **3.1 Read installed plugins that ship a hooks module.** `census()` reads
       `~/.claude/plugins/installed_plugins.json` (version 2: `plugins.<id>[].installPath`)
       and, per install path, `hooks/hooks.json`. A `modules` array marks the plugin
       as a mod. For each module file, a static source scan classifies it:
@@ -94,7 +94,7 @@ same way; a mod only reads and shows what the dispatcher already wrote.
       prompt-capable, one display-only) yields exactly those three classes; a
       fixture with a broken `installed_plugins.json` reports it and lists none;
       tests fail when the classification is neutralised.
-- [ ] **3.2 Show it in `doctor neighbours`.** One section listing each mod with its
+- [x] **3.2 Show it in `doctor neighbours`.** One section listing each mod with its
       class, and one line stating the honest limit: a verdict-capable mod can
       override AC's refusals on an unmanaged account, and the census cannot tell
       load order. Silent when no mod is installed.
