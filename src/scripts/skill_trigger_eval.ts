@@ -28,7 +28,7 @@ import * as user_global_paths from './_lib/user_global_paths.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(_HERE, '..', '..');
-const SKILLS_SOURCE = path.join(PROJECT_ROOT, '.agent-src.uncondensed', 'skills');
+const SKILLS_SOURCE = path.join(PROJECT_ROOT, 'src', 'skills');
 const RESULTS_DIR = path.join(PROJECT_ROOT, 'internal', 'evals', 'results');
 export const DEFAULT_MODEL = 'claude-sonnet-4-5';
 
