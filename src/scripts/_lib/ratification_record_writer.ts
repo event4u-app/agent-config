@@ -117,6 +117,9 @@ export function seatsFromSession(session: unknown): SessionSeat[] {
  */
 export function boundPrompt(input: RecordInput): string {
     if (!SUBJECT_RE.test(input.subject)) refuse('`subject` is not a 64-hex digest');
+    if (input.session === null || typeof input.session !== 'object' || Array.isArray(input.session)) {
+        refuse('the session record is not a JSON object');
+    }
     const artefact = (input.session as { artefact?: unknown }).artefact;
     if (typeof artefact !== 'string' || artefact.trim() === '') {
         refuse('the session record names no `artefact` — it is not bound to any prompt');
@@ -128,8 +131,13 @@ export function boundPrompt(input: RecordInput): string {
     assertContained(rel);
     const bytes = fileAtRevision(input.root, input.commit, rel);
     if (bytes === null) refuse(`the prompt \`${rel}\` is not a committed regular file at ${input.commit}`);
-    if (!bytes.toString('utf8').includes(input.subject)) {
-        refuse(`the prompt \`${rel}\` does not name the subject \`${input.subject}\` — it did not show this content`);
+    // One canonical declaration, on its own line; a digest elsewhere in the prose binds nothing.
+    const declared = [...bytes.toString('utf8').matchAll(/^`?subject: ([0-9a-f]{64})`?\s*$/gmu)].map((m) => m[1]);
+    if (declared.length !== 1 || declared[0] !== input.subject) {
+        refuse(
+            `the prompt \`${rel}\` does not name the subject \`${input.subject}\` on exactly one ` +
+                `\`subject:\` line (found ${String(declared.length)}) — it did not show this content`,
+        );
     }
     return rel;
 }
