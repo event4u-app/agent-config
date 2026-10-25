@@ -69,8 +69,12 @@ switch never silences an update notice.
 ### D2 — Cadence: monthly, after a week
 
 The first ask comes 7 days after the concern first runs on the machine; after
-that at most once per 30 days. An ask counts as made only on the dispatcher's
-delivery receipt naming its session and its id; a dropped notice is said again.
+that at most once per 30 days. An ask counts the moment it is emitted, and the
+state recording it is written before the emission; if that write fails, nothing
+is emitted. A notice the host dropped waits for the next interval. (The first
+draft counted an ask only on the dispatcher's delivery receipt; the AI council
+refused that on 2026-10-25, 2/2, because a lost receipt or an unwritable state
+file then asked on every session.)
 
 ### D3 — Stop condition: the user's word, read locally
 
@@ -85,6 +89,17 @@ This answers ADR-286's objection that "until starred" is uncheckable without
 the user's external identity: the tree does not check GitHub, it believes the
 user. Nothing is fetched, nothing leaves the machine, and the adoption-signal
 floor is untouched.
+
+### D4 — The limit this record sets for any later ask
+
+This record admits exactly one ask, and it is not a precedent an agent may
+extend. Any further in-product ask on behalf of the package needs its own owner
+ruling and its own record, and must keep every property D1–D3 hold: emitted
+through the user channel, never into model context; at most once per 30 days,
+counted on emission and fail-closed; stopped for good by the user's own word,
+read from user-global settings a repository cannot change; no network call and
+no identity read. ADR-286 § D2 keeps refusing ratings, reviews, testimonials
+and referrals.
 
 ## Consequences
 
@@ -112,7 +127,7 @@ switches, which is wrong in both directions.
 The owner directive file holds the order verbatim. ADR-286 holds the refusal
 this record reverses and the three conditions it set; D3 above answers the
 third without touching the adoption-signal floor. The concern and its tests
-show the cadence, the receipt-gated count and every stop condition:
+show the cadence, the fail-closed count and every stop condition:
 `tests/scripts/star_ask_hook.test.ts` (22 cases, including an end-to-end run
 through a claude envelope and the user-global `star_ask.starred` switch). The
 benefit is the owner's stated purpose and is not claimed as a measurement.

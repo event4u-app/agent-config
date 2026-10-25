@@ -4,7 +4,8 @@
  * What is asserted: it is registered like `update-notice` (advisory,
  * fail-open notification, claude session_start only); it never asks before the
  * grace period, never twice inside the interval, never once the user said they
- * starred or switched it off; an ask counts only on the dispatcher's receipt;
+ * starred or switched it off; an ask counts the moment it is emitted, and is
+ * never emitted when that cannot be recorded;
  * and it reads settings from the user-global layers it is handed, nothing else.
  */
 import { spawnSync } from 'node:child_process';
@@ -16,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { parse as parseYaml } from 'yaml';
 
-import { USER_NOTICE_HOSTS, USER_NOTICE_ID_KEY, USER_NOTICE_KEY, type NoticeReceipt } from '../../src/scripts/hooks/user_notice.js';
+import { USER_NOTICE_HOSTS, USER_NOTICE_ID_KEY, USER_NOTICE_KEY } from '../../src/scripts/hooks/user_notice.js';
 import {
     ASK_INTERVAL_DAYS,
     CONCERN,
@@ -44,14 +45,12 @@ afterEach(() => {
 
 interface Harness {
     readonly out: string[];
-    receipt: NoticeReceipt | null;
     run(over?: Partial<StarAskDeps>): ReturnType<typeof runStarAsk>;
 }
 
 function harness(): Harness {
     const h: Harness = {
         out: [],
-        receipt: null,
         run: (over = {}) =>
             runStarAsk({
                 sessionId: 'session-1',
@@ -61,17 +60,10 @@ function harness(): Harness {
                 statePath: path.join(tmp, 'star-ask.json'),
                 now: T0,
                 notice: { write: (t) => void h.out.push(t) },
-                receipt: () => h.receipt,
                 ...over,
             }),
     };
     return h;
-}
-
-/** Simulates the dispatcher delivering the last notice this harness emitted. */
-function deliver(h: Harness, sessionId: string, at: Date): void {
-    const last = JSON.parse(h.out[h.out.length - 1] ?? '{}') as Record<string, string>;
-    h.receipt = { session_id: sessionId, notice_id: last[USER_NOTICE_ID_KEY] ?? '', at: at.toISOString() };
 }
 
 describe('registration', () => {
@@ -132,7 +124,6 @@ describe('cadence', () => {
         h.run();
         const askedAt = new Date(T0.getTime() + FIRST_ASK_GRACE_DAYS * DAY);
         h.run({ now: askedAt });
-        deliver(h, 'session-1', askedAt);
 
         const inside = new Date(askedAt.getTime() + (ASK_INTERVAL_DAYS - 1) * DAY);
         expect(h.run({ sessionId: 'session-2', now: inside })).toEqual({ asked: false, reason: 'asked recently' });
@@ -143,21 +134,42 @@ describe('cadence', () => {
         expect(h.out).toHaveLength(2);
     });
 
-    it('an ask the host dropped (no receipt) is said again next session', () => {
+    it('an emitted ask counts at once: with no delivery receipt it is still not repeated inside the interval', () => {
+        // The council's refusal of 2026-10-25: gating the interval on the receipt
+        // turned a missing receipt into an ask on every session.
         const h = harness();
         h.run();
         const askedAt = new Date(T0.getTime() + FIRST_ASK_GRACE_DAYS * DAY);
         h.run({ now: askedAt });
-        expect(h.run({ sessionId: 'session-2', now: new Date(askedAt.getTime() + 60_000) }).asked).toBe(true);
+        for (let s = 2; s <= 5; s++) {
+            expect(h.run({ sessionId: `session-${s}`, now: new Date(askedAt.getTime() + s * 60_000) })).toEqual({
+                asked: false,
+                reason: 'asked recently',
+            });
+        }
+        expect(h.out).toHaveLength(1);
     });
 
-    it('a receipt for another session or another id confirms nothing', () => {
+    it('a state file that cannot be written means no ask at all', () => {
         const h = harness();
-        h.run();
-        const askedAt = new Date(T0.getTime() + FIRST_ASK_GRACE_DAYS * DAY);
-        h.run({ now: askedAt });
-        h.receipt = { session_id: 'someone-else', notice_id: 'x', at: askedAt.toISOString() };
-        expect(h.run({ sessionId: 'session-2', now: new Date(askedAt.getTime() + 60_000) }).asked).toBe(true);
+        const dir = path.join(tmp, 'ro');
+        fs.mkdirSync(dir);
+        const statePath = path.join(dir, 'star-ask.json');
+        writeStarAskState(statePath, { first_seen_at: T0.toISOString(), last_asked_at: null });
+        fs.chmodSync(dir, 0o500);
+        fs.chmodSync(statePath, 0o400);
+        try {
+            const due = new Date(T0.getTime() + FIRST_ASK_GRACE_DAYS * DAY);
+            for (let s = 1; s <= 3; s++) {
+                expect(h.run({ statePath, sessionId: `session-${s}`, now: due })).toEqual({
+                    asked: false,
+                    reason: 'state not writable',
+                });
+            }
+            expect(h.out).toEqual([]);
+        } finally {
+            fs.chmodSync(dir, 0o700);
+        }
     });
 
     it('an unreadable or foreign-schema state file restarts the grace period instead of asking', () => {
@@ -253,7 +265,7 @@ describe('end to end', () => {
         const viaClaude = run(home, 'claude');
         expect(viaClaude.status).toBe(0);
         expect((JSON.parse(String(viaClaude.stdout)) as Record<string, string>)[USER_NOTICE_KEY]).toContain(REPO_URL);
-        expect(readStarAskState(path.join(home, 'star-ask.json')).pending?.session_id).toBe('s1');
+        expect(readStarAskState(path.join(home, 'star-ask.json')).last_asked_at).not.toBeNull();
     });
 
     it('the user-global setting stops it', () => {

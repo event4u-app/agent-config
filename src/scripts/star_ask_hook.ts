@@ -8,16 +8,18 @@
  * The benefit he named is discoverability — a starred repository is easier for
  * the next person to find — and that is the purpose, not a measurement.
  *
- * WHAT IT COSTS. File reads only: one user-global state file, the user-global
- * settings layers, the dispatcher's delivery receipt. No network, no `gh`, no
- * GitHub identity. The stop condition ADR-286 called uncheckable is checked
+ * WHAT IT COSTS. Reads the user-global settings layers and one user-global
+ * state file, and writes that state file (two timestamps). No network, no
+ * `gh`, no GitHub identity. The stop condition ADR-286 called uncheckable is checked
  * locally instead: the user says they starred (`star_ask.starred: true`, an
  * A-class key the agent may set when told), and that is believed.
  *
  * CADENCE. The first ask waits `FIRST_ASK_GRACE_DAYS` after the concern first
  * runs on the machine, then at most once per `ASK_INTERVAL_DAYS`. An ask counts
- * as made only when the dispatcher's receipt names its session and its id
- * (`hooks/user_notice.ts`); a notice the host dropped is said again next session.
+ * the moment it is emitted, and the state recording it is written BEFORE the
+ * emission: if that write fails, nothing is emitted. A notice the host dropped
+ * waits for the next interval rather than being repeated, because a cadence
+ * gated on a delivery receipt asks every session whenever the receipt is lost.
  *
  * WHAT STOPS IT. `star_ask.starred: true`, `star_ask.mode: off`,
  * `AGENT_CONFIG_NO_STAR_ASK=1`, CI, replay mode, and any host without a
@@ -25,7 +27,7 @@
  * Settings are read from the USER-GLOBAL layers only: a repository cannot ask
  * its contributors for stars, and cannot silence the ask for them either.
  *
- * Fail-open on every path, exit 0 on every path.
+ * Fail-open for the session (exit 0 on every path), fail-closed for the ask.
  */
 import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
@@ -38,7 +40,7 @@ import { write_atomic } from './_lib/fs_atomic.js';
 import * as user_global_paths from './_lib/user_global_paths.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 import { is_replay_mode } from './hooks/state_io.js';
-import { hostShowsUserNotice, readNoticeReceipt, USER_NOTICE_ID_KEY, USER_NOTICE_KEY, type NoticeReceipt } from './hooks/user_notice.js';
+import { hostShowsUserNotice, USER_NOTICE_ID_KEY, USER_NOTICE_KEY } from './hooks/user_notice.js';
 
 export const CONCERN = 'star-ask';
 export const STAR_ASK_STATE_FILENAME = 'star-ask.json';
@@ -64,7 +66,6 @@ export interface StarAskSettings {
 export interface StarAskState {
     readonly first_seen_at: string | null;
     readonly last_asked_at: string | null;
-    readonly pending?: { readonly session_id: string; readonly notice_id: string };
 }
 
 const EMPTY: StarAskState = { first_seen_at: null, last_asked_at: null };
@@ -77,31 +78,21 @@ export function readStarAskState(statePath: string): StarAskState {
     try {
         const o = JSON.parse(fs.readFileSync(statePath, 'utf-8')) as Record<string, unknown>;
         if (o === null || typeof o !== 'object' || Array.isArray(o) || o['schema'] !== STAR_ASK_STATE_SCHEMA) return EMPTY;
-        const p = o['pending'] as Record<string, unknown> | null | undefined;
-        const pending =
-            typeof p?.['session_id'] === 'string' && typeof p['notice_id'] === 'string'
-                ? { session_id: p['session_id'], notice_id: p['notice_id'] }
-                : undefined;
-        return { first_seen_at: isoOrNull(o['first_seen_at']), last_asked_at: isoOrNull(o['last_asked_at']), ...(pending ? { pending } : {}) };
+        return { first_seen_at: isoOrNull(o['first_seen_at']), last_asked_at: isoOrNull(o['last_asked_at']) };
     } catch {
         return EMPTY;
     }
 }
 
-export function writeStarAskState(statePath: string, state: StarAskState): void {
-    if (is_replay_mode()) return;
+/** `false` when the state could not be recorded, which the caller reads as "do not ask". */
+export function writeStarAskState(statePath: string, state: StarAskState): boolean {
+    if (is_replay_mode()) return false;
     try {
         write_atomic(statePath, `${JSON.stringify({ schema: STAR_ASK_STATE_SCHEMA, ...state }, null, 2)}\n`);
+        return true;
     } catch {
-        /* unwritable → the concern re-decides next session; worst case it asks again */
+        return false;
     }
-}
-
-/** A pending ask becomes `last_asked_at` only when the receipt names its session AND its id. */
-export function confirmAsked(state: StarAskState, receipt: NoticeReceipt | null): StarAskState {
-    const p = state.pending;
-    if (p === undefined || receipt === null || receipt.notice_id !== p.notice_id || receipt.session_id !== p.session_id) return state;
-    return { first_seen_at: state.first_seen_at, last_asked_at: isoOrNull(receipt.at) ?? new Date().toISOString() };
 }
 
 /** `star_ask.*` from the USER-GLOBAL settings layers only; later layers win. */
@@ -144,7 +135,6 @@ export interface StarAskDeps {
     readonly statePath: string;
     readonly now: Date;
     readonly notice: { write(text: string): void };
-    readonly receipt: () => NoticeReceipt | null;
 }
 
 /** Why this session stays silent, before any state is read; `null` when the ask may be considered. */
@@ -163,8 +153,7 @@ export function runStarAsk(deps: StarAskDeps): StarAskOutcome {
     const why = suppression(deps);
     if (why !== null) return { asked: false, reason: why };
 
-    const stored = readStarAskState(deps.statePath);
-    const state = confirmAsked(stored, deps.receipt());
+    const state = readStarAskState(deps.statePath);
     const nowIso = deps.now.toISOString();
 
     if (state.first_seen_at === null) {
@@ -173,22 +162,17 @@ export function runStarAsk(deps: StarAskDeps): StarAskOutcome {
     }
     const sinceFirst = deps.now.getTime() - Date.parse(state.first_seen_at);
     if (state.last_asked_at === null && sinceFirst < FIRST_ASK_GRACE_DAYS * DAY_MS) {
-        if (state !== stored) writeStarAskState(deps.statePath, state);
         return { asked: false, reason: 'grace period' };
     }
     if (state.last_asked_at !== null && deps.now.getTime() - Date.parse(state.last_asked_at) < ASK_INTERVAL_DAYS * DAY_MS) {
-        if (state !== stored) writeStarAskState(deps.statePath, state);
         return { asked: false, reason: 'asked recently' };
     }
 
-    const noticeId = randomUUID();
+    if (!writeStarAskState(deps.statePath, { first_seen_at: state.first_seen_at, last_asked_at: nowIso })) {
+        return { asked: false, reason: 'state not writable' };
+    }
     const text = starAskText();
-    deps.notice.write(JSON.stringify({ [USER_NOTICE_KEY]: text, [USER_NOTICE_ID_KEY]: noticeId }));
-    writeStarAskState(deps.statePath, {
-        first_seen_at: state.first_seen_at,
-        last_asked_at: state.last_asked_at,
-        pending: { session_id: deps.sessionId as string, notice_id: noticeId },
-    });
+    deps.notice.write(JSON.stringify({ [USER_NOTICE_KEY]: text, [USER_NOTICE_ID_KEY]: randomUUID() }));
     return { asked: true, text };
 }
 
@@ -215,7 +199,6 @@ export function main(argv?: string[]): number {
             statePath: user_global_paths.write_target(STAR_ASK_STATE_FILENAME),
             now: new Date(),
             notice: process.stdout,
-            receipt: () => readNoticeReceipt(CONCERN),
         });
         return 0;
     } catch {
