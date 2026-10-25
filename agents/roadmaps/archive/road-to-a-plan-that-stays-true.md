@@ -158,7 +158,7 @@ Evidence (executed): `src/scripts/optimize_skill_description.ts:128`
       `docs/contracts/review-lens-schema.md:62` links a path that no longer
       exists. Fix the wording and the link; recapture the golden packs that
       record the old string.
-      verify: `grep -rn 'four-judge\|five-judge' src docs tests/golden/baseline` -> /^$/
+      verify: `grep -rln 'four-judge\|five-judge' src docs tests/golden/baseline` -> /^src\/skills\/ai-council\/SKILL.md$/ <!-- the one remaining site is a council surface; an edit there makes the PR needs-owner (ADR-281), so it is agents/owner-questions.md OQ-16 -->
 - [x] **5.2 One selection rule.** `optimize_skill_description` reports the paired <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/paired_verdict.ts -->
       verdict on the test split per candidate instead of picking by raw `>`;
       `underpowered` is printed, never overwritten.

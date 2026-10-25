@@ -53,6 +53,18 @@ and the run that applies it links its PR.
   bounded run answers whether the package hides its own skills.
 - **Blocks:** every step of `later/road-to-routing-assurance-live-floors`.
 
+### OQ-16 — One stale word in the ai-council skill
+
+- **Context:** `src/skills/ai-council/SKILL.md:91` calls `/review-changes` an
+  "internal four-judge pass"; it dispatches seven. Every other surface was fixed
+  in `road-to-a-plan-that-stays-true` 5.1, but any edit to this file classifies a
+  PR `needs-owner` (council surface, ADR-281), so it was left out of that PR.
+- **Options:** (a) a one-line PR changing "four-judge" to "7-judge" (the body
+  budget allows no longer wording), merged by you; (b) leave it.
+- **Recommendation:** (a) — the drift is the defect `review_changes_judge_count`
+  exists to stop, one file away from its scope.
+- **Blocks:** nothing; one stale cardinal remains.
+
 ## Not owner questions — waits, or already settled in the tree
 
 - `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
