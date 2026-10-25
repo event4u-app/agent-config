@@ -1,8 +1,9 @@
 /**
- * The code-graph's git probes must not run exec config from the TARGET
- * checkout's own `.git/config`. `hardenedSpawnEnv()` strips env-borne config
- * only; `core.fsmonitor` set in the repository still runs on `git status` /
- * `git diff`, so every call carries `-c core.fsmonitor=false`.
+ * The code-graph's git probes must not run the fsmonitor command or the hooks
+ * the TARGET checkout's own `.git/config` names. `hardenedSpawnEnv()` strips
+ * env-borne config only; `core.fsmonitor` set in the repository still runs on
+ * `git status` / `git diff`, so every probe goes through `gitProbe()`, which
+ * leads with `-c core.fsmonitor=false -c core.hooksPath=/dev/null`.
  */
 import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -12,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { GIT_SAFE_ARGS } from '../../src/scripts/_lib/spawn_env.js';
+import { GIT_SAFE_ARGS, gitProbe } from '../../src/scripts/_lib/spawn_env.js';
 import { diffFiles } from '../../src/scripts/code_graph/map.js';
 
 const REPO = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -55,16 +56,25 @@ describe('code-graph git probes ignore repo-local exec config', () => {
         expect(fs.existsSync(marker)).toBe(false);
     });
 
-    it('every execFileSync git call under code_graph/ carries GIT_SAFE_ARGS', () => {
+    it('gitProbe status against a hostile checkout does not run the hook', () => {
+        const { root, marker } = hostileRepo();
+        expect(gitProbe(root, ['status', '--porcelain'])).toContain('a.txt');
+        expect(fs.existsSync(marker)).toBe(false);
+    });
+
+    it('no file under code_graph/ spawns git except through gitProbe', () => {
         expect(GIT_SAFE_ARGS).toContain('core.fsmonitor=false');
-        const bare: string[] = [];
-        for (const f of fs.readdirSync(CODE_GRAPH)) {
-            if (!f.endsWith('.ts')) continue;
-            const lines = fs.readFileSync(path.join(CODE_GRAPH, f), 'utf-8').split('\n');
-            lines.forEach((l, i) => {
-                if (/execFileSync\(\s*['"]git['"]/.test(l) && !l.includes('...GIT_SAFE_ARGS')) bare.push(`${f}:${i + 1}`);
-            });
-        }
+        // Whole-file, whitespace-tolerant, every spawn primitive: a multiline
+        // call or a nested directory cannot slip past a line-by-line scan.
+        const direct = /\b(?:execFileSync|execFile|spawnSync|spawn|execSync|exec)\(\s*['"`]git['"`]/;
+        const walk = (dir: string): string[] =>
+            fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+                e.isDirectory() ? walk(path.join(dir, e.name)) : e.name.endsWith('.ts') ? [path.join(dir, e.name)] : [],
+            );
+        const files = walk(CODE_GRAPH);
+        expect(files.length).toBeGreaterThan(10);
+        const bare = files.filter((f) => direct.test(fs.readFileSync(f, 'utf-8'))).map((f) => path.relative(REPO, f));
         expect(bare).toEqual([]);
+        expect(files.filter((f) => fs.readFileSync(f, 'utf-8').includes('gitProbe(')).length).toBeGreaterThanOrEqual(5);
     });
 });

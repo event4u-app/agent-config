@@ -5,11 +5,10 @@
  * purpose: the index needs package names, not a resolver, and a malformed
  * manifest costs its own rows rather than the refresh.
  */
-import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { GIT_SAFE_ARGS, hardenedSpawnEnv } from '../_lib/spawn_env.js';
+import { gitProbe } from '../_lib/spawn_env.js';
 import { MANIFEST_NAME, readProjectProbe, walkedPath } from './build.js';
 
 export type Ecosystem = 'npm' | 'composer' | 'pypi' | 'go' | 'cargo' | 'rubygems';
@@ -180,12 +179,7 @@ const ROOT_MANIFESTS = ['package.json', 'composer.json', 'pyproject.toml', 'requ
 function manifestPathsFromGit(root: string): string[] | null {
     let out: string;
     try {
-        out = execFileSync('git', [...GIT_SAFE_ARGS, '-C', root, 'ls-files', '-z', '--cached'], {
-            env: hardenedSpawnEnv(),
-            encoding: 'utf-8',
-            stdio: ['ignore', 'pipe', 'ignore'],
-            maxBuffer: 64 * 1024 * 1024,
-        });
+        out = gitProbe(root, ['ls-files', '-z', '--cached'], { maxBuffer: 64 * 1024 * 1024 });
     } catch {
         return null;
     }
