@@ -93,8 +93,8 @@ tracked is written by the learner, and floors never move.
       verify: a fixture session writes `pass` and `none`.
 - [ ] **4.3 Retention:** audit, exposure and spawn-guard streams keep 90 days, pruned on
       write (decision A7).
-      verify: `vitest run` on a fixture stream with one 91-day-old line and one
-      1-day-old line keeps exactly the newer one after the next append.
+      verify: a fixture stream with one 91-day-old line and one 1-day-old line
+      keeps exactly the newer one after the next append.
 
 ## Phase 5 — The local policy: shadow, then apply (owner demand 4)
 

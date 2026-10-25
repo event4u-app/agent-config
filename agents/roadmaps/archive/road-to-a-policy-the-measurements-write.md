@@ -55,7 +55,7 @@ egress (c) and (f) pass (`internal/bench/reports/egress-placeholders-identifier-
 
 ## Phase 1 — One policy table and its binding test (M1)
 
-- [x] **1.1 Add `src/config/dispatch-policy.json`.** One row per dispatch knob:
+- [x] **1.1 Add `src/config/dispatch-policy.json`.** One row per dispatch knob: <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/dispatch-policy.json -->
       `{ id, value, sink: { file, kind, key }, claim, review_by, local, note }` where
       `claim` is a claim id or `"unmeasured"`, and `local` is `fixed` or `learnable`.
       Seed rows: tier and instruction skip of `ac-worker` and `ac-researcher`,
@@ -64,7 +64,7 @@ egress (c) and (f) pass (`internal/bench/reports/egress-placeholders-identifier-
       Every row is `unmeasured` except `adversarial_council: off`, which cites its
       `resolved-null` claim.
       verify: the file parses and the test of 1.2 reads every row.
-- [x] **1.2 One binding test.** `tests/scripts/dispatch_policy.test.ts` reads each
+- [x] **1.2 One binding test.** `tests/scripts/dispatch_policy.test.ts` reads each <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/dispatch_policy.ts -->
       row's sink — subagent frontmatter, settings-template key, council default in
       `config.ts` — and fails when the sink value disagrees with the row. A row citing a
       claim requires that claim to exist and to be closed (`backed` or `resolved-null`);
@@ -75,35 +75,34 @@ egress (c) and (f) pass (`internal/bench/reports/egress-placeholders-identifier-
 
 ## Phase 2 — The ledger says when a measurement is owed (M3)
 
-- [x] **2.1 `check_claims` reads `review_by:`.** Parsed beside `last_verified`; a
+- [x] **2.1 `check_claims` reads `review_by:`.** Parsed beside `last_verified`; a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_claims.ts -->
       malformed date is a finding; an `unbacked` entry past its `review_by` is printed
       under an `Overdue` heading without changing the exit code (report mode, decision
       A3).
       verify: the self-test covers a past-due entry (reported, exit 0) and a malformed
       date (exit 2).
-- [x] **2.2 `check_claims --status`.** Prints every open entry (`unbacked`,
+- [x] **2.2 `check_claims --status`.** Prints every open entry (`unbacked`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_claims.ts -->
       `measured-in-repo`) with status, `last_verified`, `review_by` and an overdue mark,
       one line each — the claim status listing the second reviewer asked for, without a
       new command.
-      verify: `./scripts-run src/scripts/check_claims --status` lists the dispatch claims
-      of 2.3 with their dates.
-- [x] **2.3 Date the open dispatch measurements.** Every open claim a policy row or
+      verify: `./scripts-run src/scripts/check_claims --status` -> /tier-downshift-quality-held +unbacked .*review_by 2026-12-15/
+- [x] **2.3 Date the open dispatch measurements.** Every open claim a policy row or <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `later/road-to-a-learner-the-measurements-gate` waits on gets a `review_by`:
       the two tier claims, `council-vs-solo-baseline`, the four free-hands and
       free-jury claims, `rate-limit-stops-per-drain` and `fresh-spawns-per-drain`.
       (`warm-worker-cold-start-relief` and `resume-non-inferiority` are already
       `backed` on the 2026-10-23 window and need no date.)
-      verify: `check_claims --status` shows a date on each of them.
+      verify: `./scripts-run src/scripts/check_claims --status` -> /fresh-spawns-per-drain +unbacked .*review_by 2026-11-24/
 
 ## Phase 3 — Release notes and PRs carry the measurement (M2)
 
-- [x] **3.1 "Measured in this release" in the generated changelog.** A small module
+- [x] **3.1 "Measured in this release" in the generated changelog.** A small module <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/release.ts -->
       `src/scripts/_lib/dispatch_policy.ts` diffs the table at the previous tag against
       `HEAD` and lists moved rows (`row: old → new, claim`) plus `unmeasured` rows past
       `review_by`; `release.ts` renders it under the curated head when non-empty.
       verify: a unit test renders one moved row and one overdue row from fixtures, and
       renders nothing for an unchanged, dated table.
-- [x] **3.2 PR template gains a "Measurements" section** naming the policy row, the
+- [x] **3.2 PR template gains a "Measurements" section** naming the policy row, the <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       claim and the report a dispatch-default change rests on, with "none — no dispatch
       default changed" as the explicit empty answer.
       verify: the section exists in `.github/pull_request_template.md`.
