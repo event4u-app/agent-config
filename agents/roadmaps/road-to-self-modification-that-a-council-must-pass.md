@@ -896,7 +896,7 @@ and its code reachable at the commit the record names. The open steps are 3.4,
       fire first would turn "one reviewer said no" into "not enough reviewers
       answered" — a retryable condition rather than the objection it is.
       `required_providers` is a parameter, not baked in. 7 tests.
-- [ ] **3.4 The record is written from the run, not typed.** One writer, in
+- [x] **3.4 The record is written from the run, not typed.** One writer, in
       the module of 2.1, turns the session record of such a review into the
       artifact: `reviewed_by` in one spelling, `providers` from the seats that
       concluded, the derived verdict, `subject` for the tree the bundle was
@@ -1023,6 +1023,9 @@ and its code reachable at the commit the record names. The open steps are 3.4,
       seat's other findings (CLI exit 0 on a refused record, policy root,
       unfenced summary, prompt-sequencing) for the next attempt. Run in design
       mode, which is how the seats closed on the stance line.
+      **Landed 2026-10-25 by the owner's forge act (D11, OQ-7 answer 1).** The
+      refused records stay as they are; the merge with bypass is the owner act
+      ADR-281 § 5 assigns, and no further council round was run.
 
 ## Phase 4 — The reviewer and the consequence class are inside the gate
 
@@ -1309,7 +1312,7 @@ and its code reachable at the commit the record names. The open steps are 3.4,
       the availability rule's substitute clause, each gain one sentence: not
       for a modification review.
       verify: `grep -l 'modification review' src/skills/ai-council/SKILL.md src/rules/council-availability.md | wc -l` -> /^2$/
-- [ ] **5.2 The stop has a shape.** In those cases the run ends with the
+- [x] **5.2 The stop has a shape.** In those cases the run ends with the
       change open and labelled, the non-passing record in it, and one question
       for the user: the council's recommendation, the dissent, the exact
       change, what it is expected to gain, what it risks, and how it is
@@ -1359,6 +1362,9 @@ and its code reachable at the commit the record names. The open steps are 3.4,
       the code was taken off the branch (empty net diff per file) and is
       reachable at `0e262c5c2`. No eighth round: on the same design it would be
       verdict shopping.
+      **Landed 2026-10-25 by the owner's forge act (D11, OQ-7 answer 1).** The
+      refused records stay as they are; the merge with bypass is the owner act
+      ADR-281 § 5 assigns, and no further council round was run.
 
 - [x] **5.3 The user's permission takes the route the owner chose.** At the
       pin there is none: only a council record with two providers passes, the
@@ -1471,7 +1477,7 @@ and its code reachable at the commit the record names. The open steps are 3.4,
       and not a reviewer module under condition 4, so it carries no record of its
       own. 14 tests, 10 seen red with the check neutralised.
 
-- [ ] **6.2 A worked example, for real.** One learning from this repository's
+- [x] **6.2 A worked example, for real.** One learning from this repository's
       own history is captured, proposed, and passed by a modification review
       as a change to a rule or skill body; its proposal stays under
       `agents/proposals/` naming the record, and the change passes the gate.
@@ -1526,6 +1532,9 @@ and its code reachable at the commit the record names. The open steps are 3.4,
       stays at `stage: proposed` naming the non-passing record. The `verify:`
       grep above reads 1 — a proposal under `agents/proposals/` names a record
       — but the step asks for a review that PASSED, and that is not met.
+      **Landed 2026-10-25 by the owner's forge act (D11, OQ-7 answer 1).** The
+      refused records stay as they are; the merge with bypass is the owner act
+      ADR-281 § 5 assigns, and no further council round was run.
 
 ## What this roadmap deliberately does not do
 
