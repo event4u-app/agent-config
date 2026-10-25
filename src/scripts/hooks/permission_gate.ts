@@ -95,7 +95,10 @@ export function _concern_permission_verdict(
 
 /**
  * The reasons the `confirmation` concerns of the current dispatch gave with an
- * `ask`, read and cleared by `_permission_for` on every call. Module state rather than a parameter
+ * `ask`, read and cleared by `_permission_for` on every call.
+ * It assumes one dispatch at a time per process, which is how the dispatcher
+ * runs (one process per hook event); `_permission_for` clearing it on every
+ * call, any event, keeps a reason from outliving its dispatch. Module state rather than a parameter
  * because `dispatch_hook.ts` sits at its source-size ceiling: a dispatch calls
  * `_concern_permission_verdict` per concern and `_permission_for` once.
  */

@@ -168,7 +168,7 @@ export function spawnAsk(deps: AskDeps): string | null {
     if (suppression(deps, 'AGENT_CONFIG_NO_SPAWN_ASK') !== null) return null;
     if (deps.billing.billing_class !== 'metered') return null;
     if (hasBillingGrant(deps.repoRoot, deps.env)) return null;
-    if (spawnApproved(deps.sessionId, deps.stateEnv)) return null;
+    if (spawnApproved(deps.sessionId, deps.stateEnv, deps.now)) return null;
     if (deps.toolUseId !== null) {
         try {
             touch(markerPath('pending', `${deps.sessionId ?? ''}|${deps.toolUseId}`, deps.stateEnv), deps.now);
@@ -183,9 +183,24 @@ export function spawnAsk(deps: AskDeps): string | null {
     );
 }
 
-/** Has the user allowed an asked spawn in this session? */
-export function spawnApproved(sessionId: string | null, stateEnv?: EnvMap | null): boolean {
-    return sessionId !== null && fs.existsSync(markerPath('approved', sessionId, stateEnv));
+/**
+ * Has the user allowed an asked spawn in this session, within eight days? The
+ * age is checked here, on read, so an approval cannot outlive its expiry just
+ * because nothing wrote a new marker. A stale, future-dated or unreadable
+ * marker is no approval, and a stale one is removed.
+ */
+export function spawnApproved(sessionId: string | null, stateEnv?: EnvMap | null, now: number = Date.now()): boolean {
+    if (sessionId === null) return false;
+    const p = markerPath('approved', sessionId, stateEnv);
+    try {
+        const age = now - fs.statSync(p).mtimeMs;
+        // A minute of slack: a file's mtime can run a few ms ahead of the clock read.
+        if (age >= -60_000 && age <= CLAIM_MAX_AGE_MS) return true;
+        if (age > CLAIM_MAX_AGE_MS) fs.rmSync(p, { force: true });
+        return false;
+    } catch {
+        return false;
+    }
 }
 
 /**

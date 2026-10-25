@@ -169,10 +169,20 @@ describe('spawn ask', () => {
             const old = (NOW - 9 * 24 * 3600 * 1000) / 1000;
             fs.utimesSync(path.join(approvedDir, f), old, old);
         }
-        spawnAsk(askDeps({ sessionId: 'sess-b', toolUseId: 'call-9' }));
-        recordSpawnRan({ sessionId: 'sess-b', stateEnv, toolName: 'Agent', toolUseId: 'call-9', now: NOW });
-        expect(spawnApproved('sess-a', stateEnv)).toBe(false);
-        expect(spawnApproved('sess-b', stateEnv)).toBe(true);
+        // No write in between: the age is enforced on read.
+        expect(spawnAsk(askDeps({ toolUseId: 'call-2' }))).toMatch(/may bill per token/);
+        expect(fs.readdirSync(approvedDir)).toEqual([]);
+    });
+
+    it('a future-dated approval marker is no approval', () => {
+        spawnAsk(askDeps());
+        ran();
+        const approvedDir = path.join(home, 'state', 'quota', 'approved');
+        for (const f of fs.readdirSync(approvedDir)) {
+            const future = (NOW + 24 * 3600 * 1000) / 1000;
+            fs.utimesSync(path.join(approvedDir, f), future, future);
+        }
+        expect(spawnApproved('sess-a', stateEnv, NOW)).toBe(false);
     });
 });
 

@@ -182,6 +182,11 @@ describe("lint_hook_manifest — red fixtures", () => {
     expect(lint("/nonexistent/hook_manifest.yaml", false)).toBe(2);
   });
 
+  it("returns 1 when a concern outside CONFIRMATION_CONCERNS declares effect: confirmation", () => {
+    const p = fixtureManifest(VALID.replace("    effect: context", "    severity: advisory\n    effect: confirmation"));
+    expect(lint(p, false)).toBe(1);
+  });
+
   it("returns 1 for a wrong schema_version", () => {
     const p = fixtureManifest(VALID.replace("schema_version: 1", "schema_version: 2"));
     expect(lint(p, false)).toBe(1);

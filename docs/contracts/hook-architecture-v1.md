@@ -842,7 +842,10 @@ removed, at most 300 characters, an empty one is dropped, and the joined reasons
 that may bill per token until the user has allowed one. The ask marks that call (by its
 hashed `tool_use_id`) pending, and only that call's own `post_tool_use` approves the
 session, so a "no", a spawn that ran under a billing grant or with its ask suppressed, and
-a call with no id approve nothing. Markers expire after eight days. The rewrite half is
+a call with no id approve nothing. Markers expire after eight days, and the approval's age
+is checked when it is read, not only when a new marker is written. `effect: confirmation`
+is privileged: `lint_hook_manifest` admits it only for the concerns named in
+`CONFIRMATION_CONCERNS`, so adding one is a reviewed edit of the linter. The rewrite half is
 answered separately by ADR-285 (one stage writes, no concern does), and no
 allow-composition result may be read as a rewrite answer.
 
