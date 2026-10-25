@@ -5,8 +5,15 @@ status: later
 
 # Road to guided journeys & router family — dock the journey pattern onto the existing Flow layer (Source C)
 
-> **Arrivals:** 1 — latest `inbox-2026-10-q` (2026-10-14): flow-level conductor asked for
-> again; still held by the resume-when note and ADR-055's schema-v2 condition.
+> **Arrivals:** 2 — latest `inbox-2026-10-an` (2026-10-25): two plans ask for a spec
+> artefact (objective, commands, boundaries in three tiers, success criteria with stable ids)
+> that `/work`, the test and review commands and the judges read when it exists; a plan stage
+> before `work` in the developer view (`src/profiles/developer.yaml`); and `/work` reading a
+> flow's `default_path` as the flow layer's first runtime reader. No new verb (`refine` and
+> `plan` are on the ADR-041 allowlist) and no universal stop after the spec: in an autonomous
+> run the artefact is the execution contract. Before it: `inbox-2026-10-q` (2026-10-14):
+> flow-level conductor asked for again; still held by the resume-when note and ADR-055's
+> schema-v2 condition.
 
 > **FREEZE LIFTED 2026-08-05.** The ADR-211 harvest freeze that parked this
 > roadmap was anchored on external adoption; that anchoring is struck by
