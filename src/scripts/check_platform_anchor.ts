@@ -599,7 +599,9 @@ export function main(argv: readonly string[] = process.argv.slice(2), source = l
 
     const result = evaluateGate(changed, policyText, source, repo);
     const open = [
-        ...evaluateBypassRecords(readBypassRecords(root), asOf(), reviewReader(root, committedEvidence(root))),
+        ...((index) => evaluateBypassRecords(readBypassRecords(root), asOf(), reviewReader(root, index), (rel) => index.has(rel)))(
+            committedEvidence(root),
+        ),
         ...removedBypassRecords(root, resolveBaseRef(baseRef, root)),
     ];
     if (open.length > 0) {

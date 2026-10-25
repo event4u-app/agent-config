@@ -6,7 +6,7 @@ commit: c9a30eb31b00571415eecb126916f0449ae5a0d7
 ruleset_version_before: 51122772
 ruleset_version_after: 54668684
 restore_by: 2026-11-01T11:47:49+01:00
-restored_at: pending
+restored_at: superseded-by-owner-ruling agents/evidence/owner-directives/2026-10-25-standing-pull-request-bypass.md
 council_review: pending
 ---
 <!-- evidence-type: bypass-record -->

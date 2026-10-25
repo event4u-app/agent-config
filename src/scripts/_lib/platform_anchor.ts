@@ -1088,6 +1088,14 @@ export function printable(value: string): string {
 
 const shown = printable;
 
+/**
+ * `restored_at` for a bypass the owner keeps standing: the control is not
+ * coming back, by a committed owner directive, so the restore half closes on
+ * the ruling instead. The council review stays owed, due
+ * {@link BYPASS_REVIEW_DAYS} days after `restore_by`.
+ */
+export const SUPERSEDED_BY_RULING_RE = /^superseded-by-owner-ruling (agents\/evidence\/owner-directives\/[A-Za-z0-9._-]+\.md)$/u;
+
 /** The nine fields every bypass record carries; `restored_at` and `council_review` may read `pending`. */
 export const BYPASS_RECORD_FIELDS = [
     'reason',
@@ -1197,6 +1205,7 @@ export function evaluateBypassRecords(
     records: readonly BypassRecordInput[],
     now: Date,
     reviewCovers: (rel: string, subject: string, restoredAtMs: number) => boolean = () => false,
+    rulingCommitted: (rel: string) => boolean = () => false,
 ): BypassFinding[] {
     const findings: BypassFinding[] = [];
     const t = now.getTime();
@@ -1230,13 +1239,14 @@ export function evaluateBypassRecords(
         const time = bypassInstant(f.get('time'));
         const restoreBy = bypassInstant(f.get('restore_by'));
         const restoredRaw = f.get('restored_at') as string;
-        const restored = restoredRaw === 'pending' ? null : bypassInstant(restoredRaw);
+        const ruling = SUPERSEDED_BY_RULING_RE.exec(restoredRaw)?.[1] ?? null;
+        const restored = restoredRaw === 'pending' || ruling !== null ? null : bypassInstant(restoredRaw);
         const review = f.get('council_review') as string;
         const problem = !/^[0-9a-f]{64}$/u.test(f.get('subject') ?? '')
             ? '`subject` is not a 64-hex digest'
             : !/^[0-9a-f]{40}$/u.test(f.get('commit') ?? '')
               ? '`commit` is not a full 40-hex revision'
-              : time === null || restoreBy === null || (restored === null && restoredRaw !== 'pending')
+              : time === null || restoreBy === null || (restored === null && restoredRaw !== 'pending' && ruling === null)
                 ? 'an instant is not ISO-8601 with a timezone, or names a date the calendar does not have'
                 : time > t
                   ? '`time` is in the future — a bypass not yet taken cannot be recorded'
@@ -1244,13 +1254,27 @@ export function evaluateBypassRecords(
                   ? `\`restore_by\` is before the bypass or more than ${String(BYPASS_MAX_OPEN_DAYS)} days after it`
                   : restored !== null && (restored < time || restored > t)
                     ? '`restored_at` is before the bypass or in the future'
-                    : review !== 'pending' && restored === null
+                    : ruling !== null && !rulingCommitted(ruling)
+                      ? `\`restored_at\` names \`${shown(ruling)}\`, which is not a committed owner directive`
+                    : ruling !== null && review !== 'pending' && !reviewCovers(review, f.get('subject') as string, time)
+                      ? `\`council_review\` names \`${shown(review)}\`, which is not a committed council review citing this record's \`subject\`, first committed at or after the bypass`
+                    : review !== 'pending' && restored === null && ruling === null
                       ? '`council_review` is named while `restored_at` is pending — the review comes after the restore'
                       : review !== 'pending' && restored !== null && !reviewCovers(review, f.get('subject') as string, restored)
                         ? `\`council_review\` names \`${shown(review)}\`, which is not a committed council review citing this record's \`subject\`, first committed at or after \`restored_at\``
                         : null;
         if (problem !== null || time === null || restoreBy === null) {
             malformed(p, problem ?? 'unreadable instant');
+            continue;
+        }
+        if (ruling !== null) {
+            if (review === 'pending' && t >= restoreBy + BYPASS_REVIEW_DAYS * DAY_MS) {
+                findings.push({
+                    code: 'bypass-unreviewed',
+                    path: p,
+                    message: `${p}: kept standing by \`${shown(ruling)}\`, and no council review is recorded ${String(BYPASS_REVIEW_DAYS)} days past \`restore_by\``,
+                });
+            }
             continue;
         }
         if (restored === null) {

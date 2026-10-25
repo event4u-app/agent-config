@@ -78,6 +78,49 @@ describe('evaluateBypassRecords — an open bypass reds', () => {
     });
 });
 
+describe('evaluateBypassRecords — a bypass the owner keeps standing closes on the ruling', () => {
+    const RULING = 'agents/evidence/owner-directives/2026-10-10-standing-bypass.md';
+    const superseded = `superseded-by-owner-ruling ${RULING}`;
+    const judge = (text: string, now = NOW, ruling: (rel: string) => boolean = (rel) => rel === RULING) =>
+        evaluateBypassRecords(
+            [{ path: 'agents/evidence/bypass-records/x.md', text }],
+            now,
+            (rel, subject, sinceMs) => rel === REVIEW && subject === 'a'.repeat(64) && sinceMs === Date.parse('2026-10-10T09:00:00Z'),
+            ruling,
+        ).map((f) => f.code);
+
+    it('a committed owner ruling closes the restore half, past restore_by, with the review still due', () => {
+        expect(judge(record({ restored_at: superseded, council_review: 'pending' }))).toEqual([]);
+    });
+
+    it('the council review stays owed: seven days past restore_by with none is unreviewed', () => {
+        expect(judge(record({ restored_at: superseded, council_review: 'pending' }), new Date('2026-10-18T09:00:00Z'))).toEqual([
+            'bypass-unreviewed',
+        ]);
+        expect(judge(record({ restored_at: superseded }), new Date('2026-10-18T09:00:00Z'))).toEqual([]);
+    });
+
+    it('a ruling that is not committed, or not an owner directive, cannot close it', () => {
+        expect(judge(record({ restored_at: superseded, council_review: 'pending' }), NOW, () => false)).toEqual(['bypass-record-malformed']);
+        for (const bad of [
+            'superseded-by-owner-ruling agents/evidence/council/x.md',
+            'superseded-by-owner-ruling ../owner-directives/x.md',
+            'superseded-by-owner-ruling',
+            'superseded',
+        ]) {
+            expect(judge(record({ restored_at: bad, council_review: 'pending' }), NOW, () => true), bad).toEqual(['bypass-record-malformed']);
+        }
+    });
+
+    it('without a ruling reader the value fails closed', () => {
+        const codes = evaluateBypassRecords(
+            [{ path: 'agents/evidence/bypass-records/x.md', text: record({ restored_at: superseded, council_review: 'pending' }) }],
+            NOW,
+        ).map((f) => f.code);
+        expect(codes).toEqual(['bypass-record-malformed']);
+    });
+});
+
 describe('evaluateBypassRecords — a record that cannot show it closed fails closed', () => {
     it('each of the nine fields is required, the two open ones included', () => {
         for (const key of ['reason', 'subject', 'time', 'commit', 'ruleset_version_before', 'ruleset_version_after', 'restore_by', 'restored_at', 'council_review']) {
