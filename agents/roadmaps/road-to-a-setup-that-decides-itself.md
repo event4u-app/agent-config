@@ -332,7 +332,7 @@ with that file.
   `superseded_by`, or ADR-284 states which of its limbs still binds the computed
   form. Arrived from an external review; not decided here because both records
   carry owner and council provenance.
-  verify: `./scripts-run src/scripts/adr_cite_check ADR-284` names ADR-293 as its successor, or ADR-284 carries a dated note naming the limb that still binds.
+  verify: running `./scripts-run src/scripts/adr_cite_check ADR-284` names ADR-293 as its successor, or ADR-284 carries a dated note naming the limb that still binds.
 
 ## Phase 5 — Prove "not worse" once, then enable
 
