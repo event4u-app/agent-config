@@ -172,6 +172,42 @@ describe('cadence', () => {
         }
     });
 
+    it('a session that finds the ask lock held by another session does not ask', () => {
+        // The council's third refusal: atomic replacement is not mutual exclusion,
+        // so two simultaneous session starts could both read "due" and both ask.
+        const h = harness();
+        h.run();
+        fs.writeFileSync(path.join(tmp, 'star-ask.json.lock'), '');
+        const due = new Date(T0.getTime() + FIRST_ASK_GRACE_DAYS * DAY);
+        expect(h.run({ now: due })).toEqual({ asked: false, reason: 'another session is asking' });
+        expect(h.out).toEqual([]);
+    });
+
+    it('a lock left behind by a crashed session expires, and an ask releases its lock', () => {
+        const h = harness();
+        h.run();
+        const lock = path.join(tmp, 'star-ask.json.lock');
+        fs.writeFileSync(lock, '');
+        const old = new Date(Date.now() - 10 * 60_000);
+        fs.utimesSync(lock, old, old);
+        expect(h.run({ now: new Date(T0.getTime() + FIRST_ASK_GRACE_DAYS * DAY) }).asked).toBe(true);
+        expect(fs.existsSync(lock)).toBe(false);
+    });
+
+    it('under the lock the state is read again, so a session that lost the race sees the ask already made', () => {
+        const h = harness();
+        h.run();
+        const due = new Date(T0.getTime() + FIRST_ASK_GRACE_DAYS * DAY);
+        const statePath = path.join(tmp, 'star-ask.json');
+        // The winner records its ask between this session's first read and its lock.
+        const r = h.run({
+            now: due,
+            beforeLock: () => void writeStarAskState(statePath, { first_seen_at: T0.toISOString(), last_asked_at: due.toISOString() }),
+        });
+        expect(r).toEqual({ asked: false, reason: 'asked recently' });
+        expect(h.out).toEqual([]);
+    });
+
     it('an unreadable or foreign-schema state file restarts the grace period instead of asking', () => {
         const p = path.join(tmp, 'star-ask.json');
         fs.writeFileSync(p, '{"schema": 99, "first_seen_at": "2020-01-01T00:00:00Z"}');

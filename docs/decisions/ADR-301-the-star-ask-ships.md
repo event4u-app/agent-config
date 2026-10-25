@@ -71,7 +71,9 @@ switch never silences an update notice.
 The first ask comes 7 days after the concern first runs on the machine; after
 that at most once per 30 days. An ask counts the moment it is emitted, and the
 state recording it is written before the emission; if that write fails, nothing
-is emitted. A notice the host dropped waits for the next interval. (The first
+is emitted. The read-decide-write-emit step holds an exclusive lock file, so
+two simultaneous session starts cannot both ask. A notice the host dropped
+waits for the next interval. (The first
 draft counted an ask only on the dispatcher's delivery receipt; the AI council
 refused that on 2026-10-25, 2/2, because a lost receipt or an unwritable state
 file then asked on every session.)

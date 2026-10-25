@@ -20,6 +20,8 @@
  * emission: if that write fails, nothing is emitted. A notice the host dropped
  * waits for the next interval rather than being repeated, because a cadence
  * gated on a delivery receipt asks every session whenever the receipt is lost.
+ * The read-decide-write-emit step runs under an exclusive lock file, so two
+ * simultaneous session starts cannot both ask.
  *
  * WHAT STOPS IT. `star_ask.starred: true`, `star_ask.mode: off`, a user-global
  * settings layer that exists but cannot be read (it may hold the opt-out),
@@ -146,6 +148,54 @@ export interface StarAskDeps {
     readonly statePath: string;
     readonly now: Date;
     readonly notice: { write(text: string): void };
+    /** Test seam: runs after the first decision and before the lock is taken. */
+    readonly beforeLock?: () => void;
+}
+
+/** A lock older than this was left by a session that died holding it. */
+export const LOCK_STALE_MS = 60_000;
+
+/**
+ * Mutual exclusion across simultaneous session starts: `write_atomic` keeps the
+ * file whole but does not stop two sessions from both reading "due" and both
+ * asking. `wx` creation is the exclusive step; any other failure denies the ask.
+ */
+function acquireLock(lockPath: string): 'acquired' | 'held' | 'unwritable' {
+    for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+            fs.closeSync(fs.openSync(lockPath, 'wx', 0o600));
+            return 'acquired';
+        } catch (e) {
+            if ((e as NodeJS.ErrnoException).code !== 'EEXIST') return 'unwritable';
+            try {
+                if (Date.now() - fs.statSync(lockPath).mtimeMs <= LOCK_STALE_MS) return 'held';
+                fs.unlinkSync(lockPath);
+            } catch {
+                return 'held';
+            }
+        }
+    }
+    return 'held';
+}
+
+function releaseLock(lockPath: string): void {
+    try {
+        fs.unlinkSync(lockPath);
+    } catch {
+        /* already gone; a leftover lock expires after LOCK_STALE_MS */
+    }
+}
+
+/** Why the ask is not due yet, or `null` when it is. */
+function notDue(state: StarAskState, now: Date): string | null {
+    if (state.first_seen_at === null) return 'first seen';
+    if (state.last_asked_at === null && now.getTime() - Date.parse(state.first_seen_at) < FIRST_ASK_GRACE_DAYS * DAY_MS) {
+        return 'grace period';
+    }
+    if (state.last_asked_at !== null && now.getTime() - Date.parse(state.last_asked_at) < ASK_INTERVAL_DAYS * DAY_MS) {
+        return 'asked recently';
+    }
+    return null;
 }
 
 /** Why this session stays silent, before any state is read; `null` when the ask may be considered. */
@@ -172,20 +222,27 @@ export function runStarAsk(deps: StarAskDeps): StarAskOutcome {
         writeStarAskState(deps.statePath, { first_seen_at: nowIso, last_asked_at: state.last_asked_at });
         return { asked: false, reason: 'first seen' };
     }
-    const sinceFirst = deps.now.getTime() - Date.parse(state.first_seen_at);
-    if (state.last_asked_at === null && sinceFirst < FIRST_ASK_GRACE_DAYS * DAY_MS) {
-        return { asked: false, reason: 'grace period' };
-    }
-    if (state.last_asked_at !== null && deps.now.getTime() - Date.parse(state.last_asked_at) < ASK_INTERVAL_DAYS * DAY_MS) {
-        return { asked: false, reason: 'asked recently' };
-    }
+    const early = notDue(state, deps.now);
+    if (early !== null) return { asked: false, reason: early };
 
-    if (!writeStarAskState(deps.statePath, { first_seen_at: state.first_seen_at, last_asked_at: nowIso })) {
-        return { asked: false, reason: 'state not writable' };
+    deps.beforeLock?.();
+    const lockPath = `${deps.statePath}.lock`;
+    const lock = acquireLock(lockPath);
+    if (lock === 'held') return { asked: false, reason: 'another session is asking' };
+    if (lock === 'unwritable') return { asked: false, reason: 'state not writable' };
+    try {
+        const locked = readStarAskState(deps.statePath);
+        const late = notDue(locked, deps.now);
+        if (late !== null) return { asked: false, reason: late };
+        if (!writeStarAskState(deps.statePath, { first_seen_at: locked.first_seen_at, last_asked_at: nowIso })) {
+            return { asked: false, reason: 'state not writable' };
+        }
+        const text = starAskText();
+        deps.notice.write(JSON.stringify({ [USER_NOTICE_KEY]: text, [USER_NOTICE_ID_KEY]: randomUUID() }));
+        return { asked: true, text };
+    } finally {
+        releaseLock(lockPath);
     }
-    const text = starAskText();
-    deps.notice.write(JSON.stringify({ [USER_NOTICE_KEY]: text, [USER_NOTICE_ID_KEY]: randomUUID() }));
-    return { asked: true, text };
 }
 
 function envelopeField(raw: string, key: string): string | null {
