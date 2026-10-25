@@ -12537,7 +12537,6 @@ var REMOVED_KEYS = /* @__PURE__ */ new Map([
   ["projection.rule_packs", "the active-pack set; install rule scoping honours an explicit value one release window"]
 ]);
 var _warnedRemovedKeys = /* @__PURE__ */ new Set();
-var HONOURED_DURING_WINDOW = /* @__PURE__ */ new Set(["projection.rule_packs"]);
 function _readDotted(root, dotted) {
   let node2 = root;
   for (const part of dotted.split(".")) {
@@ -12557,8 +12556,7 @@ function warnRemovedKeys(merged) {
       continue;
     }
     _warnedRemovedKeys.add(key);
-    const outcome = HONOURED_DURING_WINDOW.has(key) ? "still honoured until its window closes" : "ignored";
-    process.stderr.write(`${key} was removed (${reason}); ${outcome}.
+    process.stderr.write(`${key} was removed (${reason}); ${reason.includes("honours") ? "still honoured" : "ignored"}.
 `);
   }
 }
