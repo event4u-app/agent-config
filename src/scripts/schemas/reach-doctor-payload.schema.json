@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/reach-doctor-payload.schema.json",
-  "x-schemaVersion": "1.0.0",
+  "x-schemaVersion": "1.1.0",
   "title": "reach:doctor --format json payload",
   "$comment": "road-to-internet-reach Phase 2 step 5 — the falsifier for 'the JSON is clean'. Emitted by src/scripts/reach_doctor.ts; real output is validated against this file by tests/scripts/reach_doctor.test.ts (Ajv, the same validator tests/scripts/evals_schema.test.ts uses — full Draft-07, so nullable unions are expressed honestly here rather than being weakened for the frontmatter validator's Draft-07 subset). SCOPE: a health report over operator-chosen backends. It is NOT a routing table and carries no field that ranks, recommends, or routes a channel to an agent — the Phase 0 benchmark returned band: stop. Any future field implying agent-facing preference is a scope violation, not a feature.",
   "type": "object",
