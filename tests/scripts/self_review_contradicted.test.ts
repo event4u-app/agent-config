@@ -256,7 +256,7 @@ describe('a removal word is a claim only about what its own sentence names', () 
     it('does not disprove a removal claim by the finding\'s own file when no removal sentence names it', () => {
         const why = contradictedByTree(SEAT_ENTRY, new Set(), exists([SEAT_ENTRY.file as string]));
         expect(why).toBeNull();
-        expect(isBlocking({ ...SEAT_ENTRY, contradicted: why ?? undefined })).toBe(true);
+        expect(isBlocking(why === null ? SEAT_ENTRY : { ...SEAT_ENTRY, contradicted: why })).toBe(true);
     });
 
     it('still disproves a removal sentence that names its own file', () => {
