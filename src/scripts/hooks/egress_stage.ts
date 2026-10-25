@@ -117,14 +117,15 @@ export function resolveEgressMode(settings: unknown): EgressMode {
 const EGRESS_WORD = /\begress\b/;
 
 /**
- * A column-0 line this reader does not follow: flow collections, complex keys,
- * document markers, merge keys, anchors, aliases, tags, directives, and an
- * indentless sequence item, whose value the block capture below would cut off.
+ * A column-0 content line that is not a plain `key:`. Flow collections, complex
+ * keys, document markers, merge keys, anchors, aliases, tags, directives, an
+ * indentless sequence item, and a value continued at column 0 (which a full
+ * parse rejects as broken) all match, and send the layer to the full parse.
  */
-const NON_BLOCK_ROOT = /^(?:[-{[?%&*!]|\.\.\.|<<)/m;
+const NOT_A_PLAIN_KEY = /^(?!["']?[\w.-]+["']?[ \t]*:(?:[ \t]|$))[^\s#]/m;
 
 /** A top-level `egress:` key, plain or quoted, with its indented, blank and comment lines. */
-const EGRESS_BLOCK = /^["']?egress["']?[ \t]*:.*(?:\r?\n(?:[ \t].*|[ \t]*#.*|[ \t]*))*/gm;
+const EGRESS_BLOCK = /^["']?egress["']?[ \t]*:.*(?:\n(?:[ \t].*|[ \t]*#.*|[ \t]*))*/gm;
 
 /**
  * Does this layer leave the mode at `off`, read without parsing the whole file?
@@ -137,7 +138,11 @@ const EGRESS_BLOCK = /^["']?egress["']?[ \t]*:.*(?:\r?\n(?:[ \t].*|[ \t]*#.*|[ \
  * has a shape this cannot decide; the caller then takes the full cascade.
  */
 export function layerLeavesEgressOff(text: string): boolean {
-  if (NON_BLOCK_ROOT.test(text)) return false;
+  // A BOM or any line break but `\n` (CR, NEL, LS, PS) moves the lines the
+  // patterns below anchor on; such a layer takes the full parse.
+  if (/[\r\u0085\u2028\u2029\uFEFF]/.test(text) || NOT_A_PLAIN_KEY.test(text)) return false;
+  // A root mapping may itself be indented; then no key sits at column 0.
+  if (/^(?:[ \t]*(?:#.*)?\n)*[ \t]+[^\s#]/.test(text)) return false;
   for (const block of text.match(EGRESS_BLOCK) ?? []) {
     if (/[&*!]|<</.test(block.replace(/#.*$/gm, ""))) return false;
     try {

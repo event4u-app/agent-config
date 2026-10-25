@@ -134,6 +134,15 @@ describe("mode resolution", () => {
       // `egress:`, so the layer goes to the full parse rather than reading null.
       "egress:\n- placeholders:\n    mode: protect\n",
       "egress:\n- mode: strict\n",
+      // Encodings that move the lines the block reader anchors on.
+      "\uFEFFegress:\n  placeholders:\n    mode: protect\n",
+      "egress:\r  placeholders:\r    mode: protect\r",
+      "egress:\r\n  placeholders:\r\n    mode: protect\r\n",
+      "egress:\u2028  placeholders:\u2028    mode: protect\u2028",
+      // A root mapping indented as a whole has no key at column 0.
+      "# settings\n  egress:\n    placeholders:\n      mode: protect\n",
+      // A value continued at column 0: the full parse calls the layer broken.
+      "egress:\n  placeholders:\n    mode:\nprotect\n",
     ]) {
       expect(layerLeavesEgressOff(shape)).toBe(false);
     }
