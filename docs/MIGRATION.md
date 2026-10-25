@@ -71,6 +71,18 @@ pack-scoped rules whose packs it lacks: `finance-safety-floor`,
 `media-governance-routing`, `media-sync-ground-truth`,
 `provider-lifecycle-discipline`, `spreadsheet-source-quality`.
 
+What stops firing with them: the contract, NDA and DPA triggers of
+`legal-safety-floor`, the valuation, runway and DCF triggers of
+`finance-safety-floor`, the vision, positioning and moat triggers of
+`strategy-safety-floor`, and the likeness and image-generation triggers of
+`image-likeness-and-rights`. The host can still do that work; only the floor
+around it is gone.
+
+**Corrected after 18.2.0:** a floor that names a skill in its `routes_to`
+(legal, finance, strategy) now ships wherever that skill can ship, because
+claude-code and codex receive every skill without its pack. Only
+`image-likeness-and-rights` and the four non-floor rules stay pack-scoped.
+
 - **Accept the derived scope:** nothing to do.
 - **Want one of those rules:** activate its pack in `runtime.active_packs`.
 - **Set the key:** for one release window an explicitly written value still

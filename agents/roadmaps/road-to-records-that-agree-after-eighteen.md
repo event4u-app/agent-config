@@ -115,7 +115,7 @@ end. Each of these is a test or a lint that can go red.
 
 ## Phase 3 — A floor ships where its skills ship
 
-- [ ] **3.1 Put D14's revisit-if to the council.** On claude-code and codex every
+- [x] **3.1 Put D14's revisit-if to the council.** On claude-code and codex every
       skill ships (`src/install/scoped_projection.ts:480-488`), but
       `legal-safety-floor` (`packs: [legal-review-prep]`) and
       `finance-safety-floor` ship only with their pack, while `contract-review`
@@ -123,16 +123,29 @@ end. Each of these is a test or a lint that can go red.
       ship whenever a skill that names it ships?
       verify: a council record under `agents/evidence/council/` and a row in
       `## Decisions`.
-- [ ] **3.2 Implement the verdict with an install test.** If the council says
+      Landed 2026-10-25: 2/2 seats, option 1 (D3);
+      `agents/evidence/council/safety-floor-with-its-skills-20261025.md`.
+- [x] **3.2 Implement the verdict with an install test.** If the council says
       yes: the rule scope adds a pack-scoped rule tagged a safety floor when any
       projected skill names it. Either way, the test pins the outcome.
       verify: an install test asserts the chosen behaviour for `contract-review`
       on claude-code with no active pack.
-- [ ] **3.3 Name the lost coverage in the 18.0.0 migration.** `docs/MIGRATION.md`
+      `corrected-from-reproduction`: the rule scope is host-blind
+      (`src/install/ruleInScope.ts`), so the floor passes the pack axis whenever
+      its `routes_to` names a skill — over-shipping on hosts without a listing
+      lever, the fail-safe direction the predicate already takes.
+      Landed 2026-10-25: `tests/install/safety_floor_follows_skill.test.ts` (red
+      first) asserts the three floors ship with no pack, `image-likeness-and-rights`
+      stays pack-scoped, every `routes_to` skill exists and every skill that says
+      it obeys a floor is in that floor's `routes_to` (which added
+      `legal-practice-profile`); `rule_packs_auto.test.ts` now pins the floors as kept.
+- [x] **3.3 Name the lost coverage in the 18.0.0 migration.** `docs/MIGRATION.md`
       § 18.0.0 lists the eight rules but not what stops firing (contract, NDA,
       valuation, likeness triggers) or the one-line restore.
       verify: the section names the four floor rules, their trigger class and
       `runtime.active_packs` as the restore.
+      Landed 2026-10-25: `docs/MIGRATION.md` § 18.0.0 names the four, their
+      triggers, the restore, and the correction from 3.2.
 
 ## Phase 4 — Records census and the open window
 
@@ -155,8 +168,8 @@ end. Each of these is a test or a lint that can go red.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | Parser widening reads prose as a trailer | implementation | A body paragraph ending in `Key: value` lines is read as a trailer block | Only the trailing run counts, keys must match the existing pattern, and a test covers a prose paragraph with a colon line | Phase 1 — The impact class agrees with the bump |
-| 2 | Map correction shifts consumer prompts | product | Pre-18 installs see `ask` instead of `notify` for 18.x | That is the recorded class; the classifier change only makes it stricter, never laxer | Phase 1 — The impact class agrees with the bump |
+| 1 | Parser widening reads prose as a trailer | implementation | A body paragraph ending in `Key: value` lines is read as a trailer block | Only a `BREAKING CHANGE:` footer may continue onto unindented lines; the existing quoted-prose cases stay green | Phase 1 — The impact class agrees with the bump |
+| 2 | Map correction shifts consumer prompts | product | Pre-17 and pre-18 installs see `ask` instead of `notify` | That is the class `BREAKING_CHANGES.md` records; the classifier is unchanged | Phase 1 — The impact class agrees with the bump |
 | 3 | Floor shipping grows the standing layer | implementation | Extra rules on lever hosts cost tokens per spawn | The council weighs it in 3.1; the install test pins whichever side wins | Phase 3 — A floor ships where its skills ship |
 
 ## Decisions
@@ -165,13 +178,15 @@ end. Each of these is a test or a lint that can go red.
 |---|---|---|---|---|---|
 | D1 | reversible-technical | agent | A fully encrypted lineage vault and "Evolution Graph 2.0" are not planned here | No observed failure: private views are local, `0600` and refused inside a git tree (`src/scripts/_lib/lineage_ledger.ts:72-76`); field sealing is by design | a private lineage view or ledger is found in a backup, a git tree or a log |
 | D2 | product-owned | owner | Star-ask default stays as shipped | ADR-301 carries `reopen_policy: owner`; `star_ask.mode: off` and `AGENT_CONFIG_NO_STAR_ASK=1` exist | the owner reopens ADR-301 |
+| D3 | contested-technical | council:agents/evidence/council/safety-floor-with-its-skills-20261025.md | Option 1: a consequence-class floor ships wherever a skill in its `routes_to` can ship; `image-likeness-and-rights` stays pack-scoped (deferred, not decided). Both seats prefer a dedicated `requires_rules` field over `routes_to` long-term; this change validates `routes_to` both ways instead and adds no settings key (owner directive 2026-10-12) | 2/2 seats converged on option 1; option 4 rejected as a known missing control | host-matrix evals show the guarded skills fail closed without the floor, or dependency-following projection harms unrelated tasks; for the image rule, an inventory shows image generation reachable without `ai-image` |
 
 ## Acceptance Criteria
 
 - [ ] AC-1 — For every release in the impact map, the class equals what the fixed
       parser computes over its span, and an unrecorded breaking commit yields
       `action`.
-- [ ] AC-2 — No update path returns `auto` across a major without a map entry.
+- [ ] AC-2 — No span carrying an undeclared break is absent from the impact
+      map, so a major's absence means a declared `none` (1.4 as corrected).
 - [ ] AC-3 — The guards in Phase 2 each have a test that was seen red.
 - [ ] AC-4 — Whether a safety floor ships with its skills is decided, recorded,
       and pinned by an install test.
