@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # Roadmap revalidation — v1
 
 A roadmap is written against one tree and executed against another. This
