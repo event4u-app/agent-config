@@ -40,7 +40,7 @@ rebuilt as that design — three panes, the lenses Graph (2D and 3D orb),
 Layers, Matrix, Knowledge and Treemap — with every panel the design greys out
 for missing data now filled, and the panels whose data this roadmap does not
 deliver (Flow, memory) still greyed with the design's own wording. `MAP.md`
-and two MCP tools give an agent the same numbers the page shows.
+and `graph_map_status` give an agent the same numbers the page shows.
 
 ## What verification changed
 
@@ -77,7 +77,7 @@ The two drafted analyses were checked claim by claim against `e85417a02`:
 | D4 | Hotspot without complexity? | churn × loc, named in the formula | delivers the panel now without guessing; complexity is parked work | complexity per symbol ships |
 | D5 | Git window and identity | 180 days; author **names** only, never e-mail; field absent without git | e-mail is identifying and the page needs no address | a consumer commits `agents/map/` and names alone are still too much |
 | D6 | Co-change as a graph relation? | Not here — parked with the Change lens | adds a relation `impact` would then traverse; that is engine work | the Change lens is woken |
-| D7 | New MCP tools or extend `graph_map_status`? | Two new tools `graph_health`, `graph_blast`; `graph_map_status` stays freshness-only | one tool, one question | the tool count becomes a cost a measurement names |
+| D7 | New MCP tools or extend `graph_map_status`? | **Revised during 5.2:** extend `graph_map_status` with health and findings, and an optional `file` that adds that file's blast record and depth lists. First decided as two new tools | the revisit condition fired: `src/config/evaluator-budgets.json` holds the tools/list count at zero headroom by design and `mcp_schemas` is a ratcheted token surface; one optional property costs neither a tool nor a new description | an agent needs the health without reading the map's freshness fields |
 | D8 | Port the design's code or re-derive? | Port its markup, tokens and logic into the existing vanilla viewer; drop only the design runtime (`support.js`, React) | design-fidelity: adopting a stack-compatible handover is the default; the page must stay one offline file | the port cannot keep one self-contained `index.html` |
 
 ## Phase 1 — Data the design marks missing
@@ -176,13 +176,14 @@ The two drafted analyses were checked claim by claim against `e85417a02`:
 
 ## Phase 5 — The same numbers for an agent
 
-- [ ] **5.1 MAP.md health block.** `renderMapMd` writes the health parts with
+- [x] **5.1 MAP.md health block.** `renderMapMd` writes the health parts with
       the formula and the top five findings, inside the existing token budget.
       verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
-- [ ] **5.2 Two MCP tools.** `graph_health` (head and findings) and
-      `graph_blast` (one file's blast record and its depth list) over the
-      same model, with their registrations and docs (D7).
-      verify: `npx vitest run tests/scripts/mcp_server` -> 0
+- [x] **5.2 The same numbers over MCP.** `graph_map_status` returns the
+      health and the top findings, and with `file` that file's blast record
+      and the files it reaches by depth, from the same model (D7, revised);
+      catalogue, inventory and the code-intelligence skill row follow.
+      verify: `npx vitest run tests/scripts/mcp_graph_tools.test.ts` -> 0
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-25 | reviewer: claude/host -->
@@ -196,11 +197,18 @@ The two drafted analyses were checked claim by claim against `e85417a02`:
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A map built of this repository has no panel the design greys out
+- [x] AC-1 — A map built of this repository has no panel the design greys out
       for a field this roadmap names; the remaining greyed panels are exactly
-      Flow, Complexity and Memory, each with the design's hint.
-- [ ] AC-2 — Every figure on the page and in `MAP.md` traces to a `map.json`
+      Flow, Complexity and Memory, each with the design's hint — and Layer while
+      no `agents/map/layers.yaml` exists, which D2 makes the rule's authority.
+      Corrected at closure: the first wording forgot D2. Checked 2026-10-25 by
+      building this repository's map with and without a `layers.yaml`: with it,
+      `legend` marks only `complexity` unavailable (12 breaches, 1,765 layered files).
+- [x] AC-2 — Every figure on the page and in `MAP.md` traces to a `map.json`
       field computed in `src/scripts/code_graph/`; the viewer derives only the
-      blast membership walk (D3).
-- [ ] AC-3 — `graph_health` and `graph_blast` return the numbers the page
-      shows for the same generation.
+      blast membership walk (D3) and sums of shipped per-file values (role and
+      knowledge bars, treemap folder lines). Corrected at closure: the first
+      wording omitted the sums; `tests/scripts/code_graph_map_answers.test.ts`
+      fails if a figure the design hard-coded reaches the page.
+- [x] AC-3 — `graph_map_status` returns the health and, for a file, the blast
+      numbers the page shows for the same generation.

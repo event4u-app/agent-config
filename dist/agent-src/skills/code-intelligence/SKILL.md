@@ -251,7 +251,7 @@ paragraph claiming "the same five answers" directly after a list of four:
 | `graph_query` | `query` |
 | `graph_path` | `path` |
 | `graph_node` | no CLI verb — one symbol's location, in-edges, out-edges and degree |
-| `graph_map_status` | whether `agents/map/` exists, its counts and freshness | <!-- ref-ignore -->
+| `graph_map_status` | whether `agents/map/` exists, its freshness, health and findings; `file` adds its blast radius | <!-- ref-ignore -->
 | `graph_area` | one area of the map: files, hubs, what it depends on |
 | `graph_estate` | `estate` — across registered projects, from the local index (opt-in: `projects index on`) |
 

@@ -602,6 +602,39 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
     const sections: Array<[string, string]> = [];
     const areaLabel = (i: number): string => `${m.areas[i]?.id ?? ''} ${md(m.areas[i]?.name ?? '')}`;
 
+    if (m.health) {
+        const h = m.health;
+        const row = (label: string, v: { value: number; points: number } | undefined, shown: (x: number) => string): string =>
+            v ? `| ${label} | ${shown(v.value)} | ${v.points} / 25 |` : `| ${label} | missing | — |`;
+        const findings = [
+            `${m.analyses.cyclesTotal} file cycles`,
+            m.analyses.layerBreaches !== undefined ? `${m.analyses.layerBreaches} layer breaches` : 'no layers.yaml, so no layer breaches checked',
+            m.analyses.deadFiles !== undefined ? `${m.analyses.deadFiles} dead files (${m.analyses.deadBasis ?? ''})` : `dead files unknown: ${m.analyses.deadBasis ?? 'not computed'}`,
+            ...(m.hotspots ?? []).slice(0, 3).map(([i, c, l]) => `hotspot ${code(f[i]?.path ?? '')}: ${c} commits × ${l} lines`),
+            ...m.analyses.surprises.slice(0, 1).map(([s, t]) => `surprising edge ${code(f[s]?.path ?? '')} → ${code(f[t]?.path ?? '')}`),
+        ].slice(0, 5);
+        sections.push([
+            'Health',
+            [
+                `## Health — ${h.grade ? `${h.grade}, ${h.score} of 100` : 'no grade while a part is missing'}`,
+                '',
+                '| Part | Value | Points |',
+                '|---|---|---|',
+                row('Dead code files', h.parts.dead, pct),
+                row('File cycles', h.parts.cycles, String),
+                row('Guessed edges', h.parts.guesses, pct),
+                row('Hotspot files', h.parts.hotspots, pct),
+                '',
+                `Formula: ${md(h.formula)}`,
+                '',
+                'Top findings:',
+                '',
+                ...findings.map((x) => `- ${x}`),
+                '',
+            ].join('\n'),
+        ]);
+    }
+
     if (m.drift) {
         const d = m.drift;
         sections.push([

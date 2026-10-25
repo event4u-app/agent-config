@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { buildMap } from '../../src/scripts/code_graph/map.js';
 import {
     blastLevel,
+    blastMembers,
     blastOf,
     callCounts,
     duplicateBasenames,
@@ -101,6 +102,17 @@ describe('blast numbers (1.5)', () => {
         const roles: FileRole[] = ['code', 'code', 'code', 'code'];
         const edges: Array<[number, number, number]> = [[1, 0, 1], [2, 0, 1], [3, 1, 1], [3, 2, 1]];
         expect(blastOf(roles, edges)[0]).toMatchObject({ direct: 2, transitive: 1 });
+    });
+
+    it('lists the same files for an agent that the numbers count', () => {
+        const roles: FileRole[] = ['code', 'code', 'code', 'code', 'code', 'test'];
+        const edges: Array<[number, number, number]> = [[1, 0, 1], [2, 1, 1], [3, 2, 1], [4, 3, 1], [5, 0, 1]];
+        const m = model(roles.map((r, i) => file(`f${i}.ts`, r)), edges);
+        const members = blastMembers(m, 0);
+        const rec = blastOf(roles, edges)[0];
+        expect(members).toEqual([[0], [1], [2], [3]]);
+        expect(members[1]?.length).toBe(rec?.direct);
+        expect((members[2]?.length ?? 0) + (members[3]?.length ?? 0)).toBe(rec?.transitive);
     });
 
     it('levels by share of the scope', () => {
@@ -284,6 +296,10 @@ describe('the map writer answers on a real tree', () => {
         expect(m.pin).toMatchObject({ date: '2026-05-01' });
         expect(m.health?.formula).toBe(HEALTH_FORMULA);
         expect(JSON.stringify(doc)).not.toContain('@example.com');
+        const mapMd = fs.readFileSync(path.join(res.outDir, 'MAP.md'), 'utf-8');
+        expect(mapMd).toContain('## Health');
+        expect(mapMd).toContain(`Formula: Score = sum of four parts`);
+        expect(mapMd).toMatch(/- \d+ dead files \(exports unchecked/);
     });
 });
 

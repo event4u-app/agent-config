@@ -308,4 +308,23 @@ describe('5.2 — the map readers over the wire', () => {
         const unknown = await cache.dispatch('graph_area', { area: 'no such area' }, root);
         expect(unknown['status']).toBe('refused');
     });
+
+    it('answers health, findings and one file\'s blast — the numbers the page shows', async () => {
+        const root = await consumerRig();
+        const cache = new ToolCache();
+        await buildMap(root);
+        const doc = JSON.parse(fs.readFileSync(path.join(root, 'agents/map/map.json'), 'utf-8')) as { model: { health: unknown; files: Array<{ path: string; blast?: { direct: number; transitive: number } }> } };
+        const r = await cache.dispatch('graph_map_status', { file: 'src/service.ts' }, root);
+        expect(r['health']).toEqual(doc.model.health);
+        expect((r['findings'] as { cycles: number }).cycles).toBeTypeOf('number');
+        const blast = r['blast'] as { direct: number; transitive: number; by_depth: Array<{ count: number; files: string[] }> };
+        const rec = doc.model.files.find((f) => f.path === 'src/service.ts')?.blast;
+        expect(blast.direct).toBe(rec?.direct);
+        expect(blast.by_depth[0]?.files).toContain('src/main.ts');
+        expect(blast.by_depth[0]?.count).toBe(rec?.direct);
+        const test = await cache.dispatch('graph_map_status', { file: 'tests/service.test.ts' }, root);
+        expect(String((test['blast'] as { refusal: string }).refusal)).toMatch(/outside the blast scope/);
+        const none = await cache.dispatch('graph_map_status', { file: 'nope.ts' }, root);
+        expect(String((none['blast'] as { refusal: string }).refusal)).toMatch(/no file/);
+    });
 });

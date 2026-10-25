@@ -70,6 +70,8 @@ import {
     untested,
 } from '../code_graph/verbs.js';
 import { areaReport, graphGeneration, readMap } from '../code_graph/map.js';
+import { blastMembers, mapHealthReport } from '../code_graph/map_answers.js';
+import type { MapModel } from '../code_graph/map_model.js';
 import type { BuiltinTool } from './tools.js';
 
 /**
@@ -466,9 +468,9 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
     graph_map_status: {
         name: 'graph_map_status',
         side_effect: 'ro',
-        description: 'Is there a code map (agents/map/)? Its freshness, counts and MAP.md path.',
-        input_schema: { type: 'object', properties: {}, additionalProperties: false },
-        handler: async (_args, root) => {
+        description: 'Is there a code map (agents/map/)? Freshness, counts, health and findings; with `file`, its blast radius.',
+        input_schema: { type: 'object', properties: { file: { type: 'string' } }, additionalProperties: false },
+        handler: async (args, root) => {
             const staleness = graphState(root, graphHome(root).cachePath);
             const map = readMap(root);
             if (!map) {
@@ -499,6 +501,8 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
                 largest_areas: m.areas.slice(0, 5).map((a) => `${a.id} ${a.name} (${a.files.length})`),
                 map_md: `${mapRel}/MAP.md`,
                 index_html: `${mapRel}/index.html`,
+                ...mapHealthReport(m),
+                ...blastFor(m, str(args, 'file')),
             };
         },
     },
@@ -557,3 +561,20 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         },
     },
 });
+
+/** One file's blast record and the files it reaches by depth, or a refusal naming why there is none. */
+function blastFor(m: MapModel, file: string): Record<string, unknown> {
+    if (file === '') return {};
+    const i = m.files.findIndex((f) => f.path === file);
+    if (i < 0) return { blast: { refusal: `no file \`${file}\` in the map` } };
+    const f = m.files[i] as MapModel['files'][number];
+    if (!f.blast) return { blast: { file, refusal: `role \`${f.role}\` is outside the blast scope (code files only)` } };
+    const byDepth = blastMembers(m, i);
+    return {
+        blast: {
+            file,
+            ...f.blast,
+            by_depth: byDepth.slice(1).map((list) => ({ count: list.length, files: list.slice(0, 20).map((k) => (m.files[k] as MapModel['files'][number]).path) })),
+        },
+    };
+}

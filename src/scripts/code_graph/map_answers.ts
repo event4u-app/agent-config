@@ -502,3 +502,50 @@ export function finishAnswers(m: MapModel, rules: LayerRules | null): void {
             : { key: 'size', label: 'Lines', scale: 'sequential', unit: 'lines', available: false, reason: 'needs loc per file' },
     ];
 }
+
+/**
+ * Which scope files a change to `start` reaches, by depth, over the model's
+ * trusted edges — the walk the viewer runs, for an agent. Index 0 is `start`.
+ */
+export function blastMembers(m: MapModel, start: number): number[][] {
+    const into = new Map<number, number[]>();
+    for (const [s, t] of m.edges) {
+        const list = into.get(t) ?? [];
+        list.push(s);
+        into.set(t, list);
+    }
+    const inScope = (i: number): boolean => BLAST_SCOPE_ROLES.has((m.files[i] as MapModel['files'][number]).role);
+    const seen = new Set<number>([start]);
+    const byDepth: number[][] = [[start]];
+    let frontier = [start];
+    for (let d = 1; d <= BLAST_DEPTH; d++) {
+        const next: number[] = [];
+        for (const f of frontier) {
+            for (const s of into.get(f) ?? []) {
+                if (seen.has(s) || !inScope(s)) continue;
+                seen.add(s);
+                next.push(s);
+            }
+        }
+        byDepth.push(next.sort((a, b) => a - b));
+        frontier = next;
+    }
+    return byDepth;
+}
+
+/** The repo-level answers in the shape an agent reads them: health, then the top findings. */
+export function mapHealthReport(m: MapModel): Record<string, unknown> {
+    const p = (i: number): string => (m.files[i] as MapModel['files'][number]).path;
+    return {
+        health: m.health ?? null,
+        findings: {
+            cycles: m.analyses.cyclesTotal,
+            largest_cycle: (m.analyses.cycles[0] ?? []).map(p),
+            layer_breaches: m.analyses.layerBreaches ?? null,
+            hotspots: (m.hotspots ?? []).slice(0, 5).map(([i, churn, loc]) => ({ file: p(i), churn, loc })),
+            dead_files: m.analyses.deadFiles ?? null,
+            dead_basis: m.analyses.deadBasis ?? null,
+            surprises: m.analyses.surprises.slice(0, 5).map(([s, t]) => `${p(s)} → ${p(t)}`),
+        },
+    };
+}
