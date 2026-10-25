@@ -402,10 +402,26 @@ interface Extracted {
     png: string;
 }
 
-function extractFrame(ffmpeg: string, file: string, t: number, workDir: string, index: number): Omit<Extracted, 'origin'> {
+/**
+ * One candidate frame, or null when the timestamp yields none. An ffmpeg older
+ * than 7 answers a seek past the last video frame — a container whose duration
+ * outruns its video — with exit 0 and no output, so one earlier try is made
+ * before the candidate is dropped.
+ */
+function extractFrame(ffmpeg: string, file: string, t0: number, workDir: string, index: number): Omit<Extracted, 'origin'> | null {
+    for (const t of [t0, Math.max(0, t0 - 0.5)]) {
+        const got = extractAt(ffmpeg, file, t, workDir, index);
+        if (got !== null) return got;
+        if (t === 0) break;
+    }
+    return null;
+}
+
+function extractAt(ffmpeg: string, file: string, t: number, workDir: string, index: number): Omit<Extracted, 'origin'> | null {
     const png = path.join(workDir, `c${String(index).padStart(4, '0')}.png`);
     const hashRaw = path.join(workDir, `c${index}.hash`);
     const textRaw = path.join(workDir, `c${index}.text`);
+    for (const f of [png, hashRaw, textRaw]) fs.rmSync(f, { force: true });
     runOk(
         ffmpeg,
         [
@@ -419,6 +435,8 @@ function extractFrame(ffmpeg: string, file: string, t: number, workDir: string, 
         `frame extraction at ${t.toFixed(2)}s`,
         120_000,
     );
+    const size = (f: string): number => (fs.existsSync(f) ? fs.statSync(f).size : 0);
+    if (size(png) === 0 || size(hashRaw) !== 72 || size(textRaw) !== TEXT_PROBE_W * TEXT_PROBE_H) return null;
     const hash = dHash(new Uint8Array(fs.readFileSync(hashRaw)));
     const textRatio = textBandRatio(new Uint8Array(fs.readFileSync(textRaw)), TEXT_PROBE_W, TEXT_PROBE_H);
     fs.rmSync(hashRaw);
@@ -479,7 +497,10 @@ export function sampleFrames(
     const scenes = sceneTimes(ffmpeg, file, opts.focus);
     for (const t of evenlyPick(scenes, cap - uniform.length + SCENE_BUFFER)) add(t, 'scene');
     for (const t of uniform) add(t, 'uniform');
-    const extracted: Extracted[] = planned.map((p, i) => ({ ...extractFrame(ffmpeg, file, p.t, workDir, i), origin: p.origin }));
+    const extracted: Extracted[] = planned.flatMap((p, i) => {
+        const got = extractFrame(ffmpeg, file, p.t, workDir, i);
+        return got === null ? [] : [{ ...got, origin: p.origin }];
+    });
     const byKey = new Map(extracted.map((e) => [`${e.origin}:${e.t}`, e]));
     const deduped = opts.dedupe === false ? extracted : dedupeCandidates(extracted);
     const kept = thinToCap(deduped, cap).map((c) => byKey.get(`${c.origin}:${c.t}`) as Extracted);

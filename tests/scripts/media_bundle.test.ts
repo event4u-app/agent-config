@@ -389,6 +389,23 @@ describe.skipIf(!HAVE_FFMPEG || process.platform === 'win32')('media bundle — 
         expect(plan.kept.some((k) => k.t > BURST_END + 1)).toBe(true);
     });
 
+    it('survives a seek past the last frame, which an older ffmpeg answers with exit 0 and no output', () => {
+        // ffmpeg 6.1 (the Linux CI image) produces nothing for -ss beyond the
+        // last video frame of a container whose duration runs longer.
+        const ffmpeg = script(
+            'ffmpeg-oldseek',
+            [
+                'ss=""; prev=""; for a in "$@"; do [ "$prev" = "-ss" ] && ss="$a"; prev="$a"; done',
+                'case "$*" in *split=3*) awk -v t="$ss" \'BEGIN { exit !(t > 3.5) }\' && exit 0;; esac',
+                `exec "${realFfmpeg()}" "$@"`,
+            ].join('\n'),
+        );
+        const r = bundleFile(fx.threeScene, { root: tmp, round: 'old-seek', tools: { ...tools, ffmpeg } });
+        const { frames } = JSON.parse(fs.readFileSync(path.join(r.dir, 'frames.json'), 'utf8')) as FramesJson;
+        expect(frames.length).toBeGreaterThan(0);
+        expect(frames.every((f) => f.t <= 3.5)).toBe(true);
+    });
+
     it('refuses a FIFO named like media instead of blocking on it', () => {
         const fifo = path.join(tmp, 'pipe.mp4');
         expect(spawnSync('mkfifo', [fifo]).status).toBe(0);
