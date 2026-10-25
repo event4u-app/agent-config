@@ -1,27 +1,33 @@
 ---
 proposed_by: road-to-a-cut-the-upgrader-can-take step 3.1 (inbox rounds 2026-10-al/am)
 implemented_by: claude-opus-5.5 session on feat/inbox-2026-10-al-am
-reviewed_by: AI council, 2 seats, provider-diverse (anthropic + openai), round 6 of 2026-10-25
+reviewed_by: AI council, 2 seats, provider-diverse (anthropic + openai), rounds 6 and 8 of 2026-10-25
 providers: [anthropic, openai]
-verdict: ratified
+verdict: confirmed-non-expanding
 seats:
-  anthropic: ratified
-  openai: ratified
+  anthropic: confirmed-non-expanding
+  openai: confirmed-non-expanding
 effective_after: merge
-subject: f51d59d1cb4b3f98eda950e15bb6fefcdc5008a0ff4ced977624bfffb4ee6e81
+subject: c39789bf9e046287cef266d2cad7d872b42c3ef43dca264cacdec34083eec6e6
 ---
 
 <!-- evidence-type: ratification -->
 
 # Ratification — the egress mode from one read of the settings layers
 
-`check_kernel_edit_ratified` gates two hook-plumbing files on this branch:
-`src/scripts/hooks/egress_stage.ts` and `src/config/hook-latency-budget.json`. The
-`subject:` digest covers both, computed with
+`check_kernel_edit_ratified` gates three hook-plumbing files on this branch:
+`src/scripts/hooks/egress_stage.ts`, `src/config/hook-latency-budget.json` and
+`src/config/hook-bundle-budget.json`. The `subject:` digest covers all three, computed
+with
 `./scripts-run src/scripts/ratification_subject --files $(git diff --name-only origin/main...HEAD) --base-ref origin/main`
-at revision `66aeb91039`. The commit after it touched only the test file, closing the
-test-isolation point round 6 raised. The header is the output of
-`ratification_header --seat anthropic=ratified --seat openai=ratified`.
+at revision `723ca5f6ae`. Round 6 ratified the code and the latency row 2/2
+(`anthropic: ratified`, `openai: ratified`, subject `f51d59d1cb4b…` at `66aeb91039`);
+those two files are byte-identical at the recorded subject. Merging `origin/main`
+afterwards left 55 B of bundle headroom against the change's 177 B, so the bundle
+budget joined the gated set; round 8 confirmed that raise non-expanding 2/2. The header
+is the output of `ratification_header --seat anthropic=confirmed-non-expanding
+--seat openai=confirmed-non-expanding` for round 8, the round that saw the whole
+current subject.
 
 ## What was ratified
 
@@ -60,3 +66,11 @@ Rounds 1-5 are summarised here; each refusal changed the design rather than the 
   so the snapshot still read that file twice.
 - **Round 6, ratified 2/2.** One seat asked for `try/finally` around the parity test's
   environment change; done in the following commit.
+- **Round 7, split:** the first raise (to 1,555,200) left 278 B above the change's own
+  bytes without a derivation. The ceiling became the reading plus main's previous 55 B.
+- **Round 8, confirmed-non-expanding 2/2** (prompt committed verbatim:
+  `agents/evidence/council/inbox-al-am-egress-ratification-r8-20261025.question.md`).
+  Both seats noted that the `raise_log` sentence "five ratification rounds removed every
+  cheaper design" sits beside a measured inlining that saves 67 B; the entry says in the
+  same field that inlining stays 55 B over, so it is a cheaper design that does not fit,
+  and the wording is left as written rather than moving the subject again.
