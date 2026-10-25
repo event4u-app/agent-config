@@ -59,7 +59,9 @@ already names is therefore shipping in that version, not still undecided.
 Each row cites the commit that landed it in its `Landed` cell, and
 `lint_breaking_changes_index` refuses a row that cites none. The cut skips a row
 whose commit the previous release tag already contains, so a row nobody deleted
-is not announced a second time. That is the failure this replaced: the hook-guard
+is not announced a second time. A cut whose span carries a row's commit is numbered
+major: the row is the `pending-breaking` surface of `src/scripts/_lib/major_surface.ts`,
+because no commit subject carries its wording and a minor never breaks. That is the failure this replaced: the hook-guard
 and purge rows shipped in 17.0.0 stayed here, and the 17.1.0, 17.2.0, 17.2.1,
 17.3.0 and 17.4.0 release heads re-announced two 17.0.0 breaks they do not carry.
 

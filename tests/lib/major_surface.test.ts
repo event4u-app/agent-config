@@ -9,7 +9,9 @@ import {
     removed_setting_keys,
     settings_key_paths,
     span_surfaces,
+    unshipped_pending_rows,
 } from '../../src/scripts/_lib/major_surface.js';
+import { span_bump } from '../../src/scripts/_lib/impact_bump.js';
 
 describe('parse_name_status', () => {
     it('reads a status letter and a path per record', () => {
@@ -100,6 +102,7 @@ describe('classify_surfaces — the triggers a diff can decide', () => {
                 { status: 'D', path: 'src/domains/meta/gone/command.md' },
             ],
             ['memory.cadence'],
+            1,
         );
         expect([...surfaces].sort()).toEqual([...MAJOR_SURFACES].sort());
     });
@@ -235,7 +238,7 @@ describe('span_surfaces — the span release.ts numbers by (ADR-300)', () => {
             if (args[1] === '--name-status') return 'M\tsrc/config/agent-settings.template.yml\nD\tsrc/domains/meta/gone/command.md\n';
             return '--- a/x\n+++ b/x\n-  memory_cadence: weekly\n';
         };
-        expect([...span_surfaces('16.5.0', git)].sort()).toEqual(['command-removal', 'settings-keys']);
+        expect([...span_surfaces('16.5.0', git, () => '')].sort()).toEqual(['command-removal', 'settings-keys']);
         expect(calls).toEqual([
             ['diff', '--name-status', '16.5.0..HEAD'],
             ['diff', '16.5.0..HEAD', '--', 'src/config/agent-settings.template.yml'],
@@ -248,9 +251,40 @@ describe('span_surfaces — the span release.ts numbers by (ADR-300)', () => {
             calls.push(args);
             return 'M\tREADME.md\n';
         };
-        expect([...span_surfaces('16.5.0', git)]).toEqual([]);
+        expect([...span_surfaces('16.5.0', git, () => '')]).toEqual([]);
         expect(calls.length).toBe(1);
-        expect([...span_surfaces(null, git)]).toEqual([]);
+        expect([...span_surfaces(null, git, () => '')]).toEqual([]);
         expect(calls.length).toBe(1);
+    });
+});
+
+describe('a Pending row in BREAKING_CHANGES.md is a major surface', () => {
+    const index = [
+        '## Pending — landed on `main`, not yet in a released major',
+        '',
+        '| Landed | What changes | Migration |',
+        '|---|---|---|',
+        '| 2026-10-24 (`79cb86c0dd`) | **A key is removed.** | Do X. |',
+        '| 2026-10-01 (`aaaaaaaaaa`) | **Shipped already.** | — |',
+        '',
+        '## Breaking changes by major',
+    ].join('\n');
+
+    it('counts only the rows whose commit the span carries', () => {
+        expect(unshipped_pending_rows(index, ['79cb86c0dd1234', 'ffff'])).toBe(1);
+        expect(unshipped_pending_rows(index, ['ffff'])).toBe(0);
+        expect(unshipped_pending_rows('', ['79cb86c0dd1234'])).toBe(0);
+    });
+
+    it('turns a span that ships a Pending row into a major', () => {
+        const git = (args: string[]): string => (args[0] === 'log' ? '79cb86c0dd1234\nbbbb\n' : 'M\tREADME.md\n');
+        const surfaces = span_surfaces('17.4.0', git, () => index);
+        expect([...surfaces]).toEqual(['pending-breaking']);
+        expect(span_bump({ commits: [], surfaces, has_minor_type: true })).toBe('major');
+    });
+
+    it('leaves a span alone whose Pending rows an earlier tag already shipped', () => {
+        const git = (args: string[]): string => (args[0] === 'log' ? 'cccc\n' : 'M\tREADME.md\n');
+        expect([...span_surfaces('17.4.0', git, () => index)]).toEqual([]);
     });
 });
