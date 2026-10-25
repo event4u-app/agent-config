@@ -188,8 +188,9 @@ export function spawnAsk(deps: AskDeps): string | null {
 /**
  * Is the marker at `p` within its eight days? Checked on every read, so a
  * marker cannot outlive its expiry because nothing wrote a new one. A stale
- * marker is removed; a future-dated or unreadable one counts as absent. One
- * minute of slack: a file's mtime can run a few ms ahead of the clock read.
+ * marker is removed; one dated more than a minute ahead, or unreadable, counts
+ * as absent. The minute is slack for a file's mtime running a few ms ahead of
+ * the clock read.
  */
 function freshMarker(p: string, now: number): boolean {
     try {
