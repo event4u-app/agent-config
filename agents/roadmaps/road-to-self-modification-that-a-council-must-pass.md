@@ -1023,9 +1023,6 @@ and its code reachable at the commit the record names. The open steps are 3.4,
       seat's other findings (CLI exit 0 on a refused record, policy root,
       unfenced summary, prompt-sequencing) for the next attempt. Run in design
       mode, which is how the seats closed on the stance line.
-      **Landed 2026-10-25 by the owner's forge act (D11, OQ-7 answer 1).** The
-      refused records stay as they are; the merge with bypass is the owner act
-      ADR-281 § 5 assigns, and no further council round was run.
 
 ## Phase 4 — The reviewer and the consequence class are inside the gate
 
@@ -1362,9 +1359,6 @@ and its code reachable at the commit the record names. The open steps are 3.4,
       the code was taken off the branch (empty net diff per file) and is
       reachable at `0e262c5c2`. No eighth round: on the same design it would be
       verdict shopping.
-      **Landed 2026-10-25 by the owner's forge act (D11, OQ-7 answer 1).** The
-      refused records stay as they are; the merge with bypass is the owner act
-      ADR-281 § 5 assigns, and no further council round was run.
 
 - [x] **5.3 The user's permission takes the route the owner chose.** At the
       pin there is none: only a council record with two providers passes, the
@@ -1532,9 +1526,6 @@ and its code reachable at the commit the record names. The open steps are 3.4,
       stays at `stage: proposed` naming the non-passing record. The `verify:`
       grep above reads 1 — a proposal under `agents/proposals/` names a record
       — but the step asks for a review that PASSED, and that is not met.
-      **Landed 2026-10-25 by the owner's forge act (D11, OQ-7 answer 1).** The
-      refused records stay as they are; the merge with bypass is the owner act
-      ADR-281 § 5 assigns, and no further council round was run.
 
 ## What this roadmap deliberately does not do
 
