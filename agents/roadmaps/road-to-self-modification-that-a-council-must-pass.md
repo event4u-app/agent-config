@@ -1807,7 +1807,7 @@ and its code reachable at the commit the record names. The open steps are 3.4,
 | K11 | Automated promotion of learnings | `road-to-leading-every-row.md:231`; `later/road-to-ac-deep-capabilities.md:163-192` | The directive is noted there by 1.3 and decided by its owner |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-14 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-25 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
