@@ -77,7 +77,8 @@ against.
 from the run instead (`_lib/ratification_record_writer.ts`). Each seat's verdict
 is read from its stance line, never typed; the session must name as its
 artefact a prompt committed under `agents/evidence/council/` at the revision the
-subject is read at, and that prompt must contain the exact `subject`; every
+subject is read at, and that prompt must declare the exact `subject` on exactly
+one line of its own, `subject: <64-hex>` (backticks allowed); every
 reply is kept verbatim in the body; and the output is read back through the
 reader before it is printed. It does not change what is established above: the
 session file is the caller's, so the record is exactly as trustworthy as a typed
