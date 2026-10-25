@@ -156,7 +156,7 @@ cat /tmp/risk-report.md /tmp/routing-report.md
 
 # Memory Hygiene — installation
 
-Weekly staleness report for the four engineering-memory files under
+Weekly staleness report for the engineering-memory files under
 `agents/memory/`. Opens (or updates) a single tracking issue with the
 `memory-hygiene` label when entries are past their
 `review_after_days` window. Closes the issue automatically once all

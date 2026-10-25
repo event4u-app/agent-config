@@ -411,6 +411,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: internal/bench/reports/second-brain-delta.json
 - status: backed
 - last_verified: 2026-07-09
+- non_inference: Measured against the substrate as it stood on 2026-07-09. Its working-memory half (`hot_context_hook`, continuity across compaction) was retired on 2026-09-09 (docs/second-brain-scope.md), and the memory session index that restores pages at `session_start` is opt-in (`memory.session_index` defaults to `off`). The lift is therefore not a statement about what a default install recalls today.
 
 ### claim: lexical-ranking-lift
 - claim: A hand-rolled, dependency-free BM25 + trigram lexical index resolves the "recalls but does not rank" gap: on the retrieval-precision corpus (9 keyword-overlapping-confuser tasks) it drives the mean top tie-set from 3.333 (the `_score` bucket scorer) to 1.0 — every needed decision uniquely top-ranked — with precision@1 and precision@5 unchanged at 1.0. Method: deterministic, model-free re-ranking of the SAME retrieved entry set; both scorers measured over the identical store via `measure_lexical_ranking.ts`. Cross-artifact note (2026-07-25): this baseline (3.333) is the value in THIS claim's own artifact and is cited correctly, but the retrieval-precision artifact records 4.111 for the same scorer on the same corpus — two bench scripts disagree. The lift direction (ties collapse to 1.0) holds under either baseline; the discrepancy itself is unresolved and recorded rather than smoothed.

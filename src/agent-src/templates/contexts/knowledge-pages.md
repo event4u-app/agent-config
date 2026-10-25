@@ -91,8 +91,9 @@ tiny pages do.
 
 ## What this substrate is — honest framing
 
-A **governed second-brain substrate**: a memory session index restored at
-`session_start` across all 7 platforms, deterministic where safe (dedup, recurrence, index regen,
+A **governed second-brain substrate**: an opt-in memory session index
+(`memory.session_index`, default `off`) restored at `session_start` across
+all 7 platforms when enabled, deterministic where safe (dedup, recurrence, index regen,
 fold rollups, scale tripwires), human-gated where meaning is at stake
 (consolidate gate, promotion, contested flow). It is **not**
 self-organizing intelligence — the substrate is governed files, and the

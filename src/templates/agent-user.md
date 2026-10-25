@@ -33,6 +33,7 @@ Hard cap: 100 lines total, frontmatter + body, enforced by
 Replace this paragraph with anything you want the agent to remember
 about you across sessions — preferred terminology, recurring
 projects, conventions you want enforced. Keep it short; everything
-here loads into every reply.
+here is read on demand by the voice commands (`/post-as me`); no hook
+loads it into a session.
 
 > Schema reference: [`docs/contracts/agent-user-schema.md`](docs/contracts/agent-user-schema.md).

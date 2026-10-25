@@ -94,7 +94,7 @@ reachable by consumers or kept internal by a recorded decision.
       returns one row naming the council record; if that row says the window moved,
       `grep -n "Amendment 2026-10" docs/decisions/ADR-138-global-user-profile-layer.md`
       returns one line.
-- [ ] **1.4 Make the four truth surfaces say what the tree does.**
+- [x] **1.4 Make the four truth surfaces say what the tree does.**
       `knowledge-pages.md` says the session index is opt-in (`memory.session_index`);
       `src/templates/agent-user.md` says the profile is read on demand by the voice
       commands, not loaded into every reply; `second-brain-recall-lift` gains a
