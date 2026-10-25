@@ -677,17 +677,20 @@ concerns:
     fail_closed: false
     severity: advisory
     effect: notification
-  # The one ask before AC fans out on metered money: the first Agent/Task spawn
-  # of a session that may bill per token, with no billing grant, gets the host's
-  # native `ask` (permission_gate emits an `ask` vote as the host ask). Once per
-  # session, never a deny, never an amount — it cannot refuse, so its effect is
-  # `notification`, not `permission`. Same script as `quota-notice`.
+  # The ask before AC fans out on metered money. In a session that may bill per
+  # token, with no billing grant, an Agent/Task spawn gets the host's native
+  # `ask` until one spawn has actually RUN in the session (post_tool_use, same
+  # concern, records it) — so a "no" leaves the next spawn asking again. Never a
+  # deny, never an amount. `effect: confirmation` is the only effect whose `ask`
+  # the dispatcher hands to the host. In a headless session nobody can answer,
+  # so a paid fan-out there does not start without a billing grant — the
+  # conservative outcome. Same script as `quota-notice`.
   metered-spawn-ask:
     script: src/scripts/quota_notice_hook.ts
     args: ['--ask']
     fail_closed: false
     severity: advisory
-    effect: notification
+    effect: confirmation
     tools: [Agent, Task]
   # road-to-install-path-convergence Phase 4 — duplicate-surface probe.
   # Reads src/config/surface-matrix.yml, existence-checks declared duplicate
@@ -1733,7 +1736,7 @@ platforms:
     # `project_thin_rules.path_only_ids`; the receiver is
     # `agents/roadmaps/stubs/road-to-a-path-route-under-delivery.md`.
     pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-plumbing-writes, block-config-weakening, block-speaking-inbox-dir, block-credential-reads, one-question-per-ask, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, metered-spawn-ask, source-first-gate, memory-recall]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, mcp-usage-observation, tool-result-bytes, edit-shape, comment-discipline, language-mirror, design-pass, journal-record, spawn-guard-shadow]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, mcp-usage-observation, tool-result-bytes, edit-shape, comment-discipline, language-mirror, design-pass, journal-record, spawn-guard-shadow, metered-spawn-ask]
     # `language-mirror` — round-5 § 6.1. `pre_compact` sets a pin-lost marker;
     # the `post_tool_use` entry above re-emits the pin exactly once while that
     # marker is set, then clears it. One extra injection per compaction EVENT —

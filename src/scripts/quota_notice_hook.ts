@@ -15,10 +15,12 @@
  *     states warm / hot / exhausted, so five parallel sessions print one line;
  *   - one notice per session when its context reaches 80 % of its window;
  *   - one notice per session when the session may bill per token.
- * `metered-spawn-ask` (pre_tool_use on Agent/Task, `effect: permission`, run
- * with `--ask`) returns the host's native ask on the first subagent spawn of a
- * possibly-metered session without a billing grant. Never a deny, never an
- * amount; every later spawn in that session passes.
+ * `metered-spawn-ask` (Agent/Task, `effect: confirmation`, run with `--ask`)
+ * returns the host's native ask on a subagent spawn of a possibly-metered
+ * session without a billing grant, until one spawn has actually run there: its
+ * post_tool_use records that, and only that. Emitting the ask records nothing,
+ * so a "no" leaves the next spawn asking again, and spawns racing before the
+ * first answer each ask. Never a deny, never an amount.
  *
  * Dedup is a claim file created with `wx`, one per key, so two sessions that
  * race for the same notice cannot both print it. Claims older than eight days
@@ -90,7 +92,7 @@ export function meteredText(b: BillingClassReading): string {
     return (
         `AC: this session may bill per token rather than your plan — ${b.source ?? 'an API credential'} is configured. ` +
         '`/status` shows which auth Claude Code is using; remove the key or helper to stay on your subscription. ' +
-        'AC asks once before its first subagent spawn here.'
+        'AC asks before subagent spawns here until one has run.'
     );
 }
 
@@ -132,12 +134,30 @@ export function spawnAsk(deps: AskDeps): string | null {
     if (suppression(deps) !== null) return null;
     if (deps.billing.billing_class !== 'metered') return null;
     if (hasBillingGrant(deps.repoRoot, deps.env)) return null;
-    if (!claimOnce(`ask|${hashSessionId(deps.sessionId)}`, deps.stateEnv, deps.now)) return null;
+    if (spawnApproved(deps.sessionId, deps.stateEnv)) return null;
     return (
         `agent-config: this session may bill per token (${deps.billing.source ?? 'an API credential'} is configured), ` +
-        'and a subagent spawn starts another paid context. Allow to continue; the answer covers the rest of this session. ' +
+        'and a subagent spawn starts another paid context. Once one spawn has run in this session, AC stops asking. ' +
         'If /status shows your subscription, allowing costs nothing extra.'
     );
+}
+
+function approvalPath(sessionId: string | null, stateEnv?: EnvMap | null): string {
+    return path.join(quotaStateDir(stateEnv), 'approved', hashSessionId(sessionId));
+}
+
+/** Has a spawn run in this metered session — the one observable "yes"? */
+export function spawnApproved(sessionId: string | null, stateEnv?: EnvMap | null): boolean {
+    return sessionId !== null && fs.existsSync(approvalPath(sessionId, stateEnv));
+}
+
+/** Called on post_tool_use: the spawn ran, so the user (or a rule) allowed it. */
+export function recordSpawnRan(deps: Pick<AskDeps, 'sessionId' | 'stateEnv' | 'toolName' | 'billing'>): void {
+    if (deps.sessionId === null || deps.toolName === null || !SPAWN_TOOLS.has(deps.toolName)) return;
+    if (deps.billing.billing_class !== 'metered') return;
+    const p = approvalPath(deps.sessionId, deps.stateEnv);
+    fs.mkdirSync(path.dirname(p), { recursive: true, mode: 0o700 });
+    fs.writeFileSync(p, '', { mode: 0o600 });
 }
 
 function field(o: Record<string, unknown> | null, key: string): string | null {
@@ -161,7 +181,12 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             now: Date.now(),
         };
         if (argv.includes('--ask')) {
-            const reason = spawnAsk({ ...base, toolName: field(payload, 'tool_name'), repoRoot: cwd });
+            const toolName = field(payload, 'tool_name');
+            if (field(envelope, 'event') === 'post_tool_use') {
+                recordSpawnRan({ ...base, toolName });
+                return 0;
+            }
+            const reason = spawnAsk({ ...base, toolName, repoRoot: cwd });
             if (reason !== null) process.stdout.write(JSON.stringify({ decision: 'ask', reason }));
             return 0;
         }

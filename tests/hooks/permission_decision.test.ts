@@ -100,12 +100,30 @@ describe('_permission_for — four gates, each sufficient to withhold', () => {
         expect(_permission_for('pre_tool_use', READ, 0, ['allow', 'deny'])).toBeNull();
     });
 
-    it('a concern that asked gets the host ask, carrying its own reason', () => {
-        const verdict = _concern_permission_verdict(0, { decision: 'ask', reason: 'this session may bill per token' });
+    it('a confirmation concern that asked gets the host ask, carrying its own reason', () => {
+        const verdict = _concern_permission_verdict(0, { decision: 'ask', reason: 'this session may bill per token' }, 'confirmation');
         const p = _permission_for('pre_tool_use', READ, 0, ['allow', verdict]);
         expect(p).toEqual({ decision: 'ask', reason: 'this session may bill per token' });
-        // The reason belongs to that dispatch only.
-        expect(_permission_for('pre_tool_use', READ, 0, ['allow', 'ask'])?.reason).toBe("agent-config asked");
+    });
+
+    it('an ask from any other effect still only withholds the allow', () => {
+        const verdict = _concern_permission_verdict(0, { decision: 'ask', reason: 'please' }, 'notification');
+        expect(verdict).toBe('ask');
+        expect(_permission_for('pre_tool_use', READ, 0, ['allow', verdict])).toBeNull();
+    });
+
+    it('the reason reaches the host as one bounded line without control characters', () => {
+        const hostile = `line one\n\u001b[31mred\u0007\r\n${'x'.repeat(500)}`;
+        const verdict = _concern_permission_verdict(0, { decision: 'ask', reason: hostile }, 'confirmation');
+        const reason = _permission_for('pre_tool_use', READ, 0, [verdict])?.reason ?? '';
+        expect(reason).toMatch(/^line one \[31mred x+$/);
+        expect(reason.length).toBeLessThanOrEqual(300);
+    });
+
+    it('a reason belongs to its dispatch only', () => {
+        _concern_permission_verdict(0, { decision: 'ask', reason: 'first' }, 'confirmation');
+        _permission_for('post_tool_use', READ, 0, ['ask']);
+        expect(_permission_for('pre_tool_use', READ, 0, ['ask'])).toBeNull();
     });
 
     it('an ask on any event but pre_tool_use is not emitted', () => {

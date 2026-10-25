@@ -68,6 +68,9 @@ const DEFAULT_HOST_LOWERING = path.join(HOOKS_DIR, "host_lowering.yaml");
  * - `telemetry`    records state, a ledger, a counter
  * - `memory`       reads or writes the memory layer
  * - `notification` tells the human something and changes nothing else
+ * - `confirmation` asks the human to confirm the call it fires on, through the
+ *                  host's native ask; it never refuses, and it is the only
+ *                  effect whose `ask` vote the dispatcher hands to the host
  * - `formatting`   reshapes a command or a generated file
  * - `execution`    starts a process that outlives the event it fired on
  */
@@ -78,6 +81,7 @@ export const CONCERN_EFFECTS: ReadonlySet<string> = new Set([
   "telemetry",
   "memory",
   "notification",
+  "confirmation",
   "formatting",
   "execution",
 ]);

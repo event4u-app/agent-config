@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { readBillingClass } from '../../src/scripts/_lib/billing_class.js';
 import { appendQuotaSnapshot, hashSessionId } from '../../src/scripts/_lib/quota_ledger.js';
-import { claimOnce, noticeLines, spawnAsk, type QuotaNoticeDeps } from '../../src/scripts/quota_notice_hook.js';
+import { claimOnce, noticeLines, recordSpawnRan, spawnApproved, spawnAsk, type QuotaNoticeDeps } from '../../src/scripts/quota_notice_hook.js';
 
 let home: string;
 let stateEnv: Record<string, string>;
@@ -102,9 +102,22 @@ describe('suppression', () => {
 describe('spawn ask', () => {
     const askDeps = (over: Record<string, unknown> = {}) => ({ ...deps({ billing: METERED }), toolName: 'Agent', repoRoot: home, ...over });
 
-    it('asks on the first spawn of a metered session, then lets later spawns pass', () => {
-        expect(spawnAsk(askDeps())).toMatch(/may bill per token .*covers the rest of this session/);
+    it('a "no" records nothing: the next spawn asks again', () => {
+        expect(spawnAsk(askDeps())).toMatch(/may bill per token .*Once one spawn has run in this session, AC stops asking/);
+        expect(spawnAsk(askDeps())).toMatch(/may bill per token/);
+    });
+
+    it('once a spawn has run in the session, later spawns pass — and only in that session', () => {
+        recordSpawnRan({ sessionId: 'sess-a', stateEnv, toolName: 'Agent', billing: METERED });
+        expect(spawnApproved('sess-a', stateEnv)).toBe(true);
         expect(spawnAsk(askDeps())).toBeNull();
+        expect(spawnAsk(askDeps({ sessionId: 'sess-b' }))).toMatch(/may bill per token/);
+    });
+
+    it('a non-spawn tool or a plan session running records no approval', () => {
+        recordSpawnRan({ sessionId: 'sess-a', stateEnv, toolName: 'Bash', billing: METERED });
+        recordSpawnRan({ sessionId: 'sess-a', stateEnv, toolName: 'Agent', billing: PLAN });
+        expect(spawnApproved('sess-a', stateEnv)).toBe(false);
     });
 
     it('never asks in a plan session, for a non-spawn tool, or under a billing grant', () => {

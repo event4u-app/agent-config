@@ -831,14 +831,15 @@ The composition policy is **one `ask` or `deny` beats every `allow`**
 severity to already be `allow`, so an allow can never travel with a finding. This
 answers the permission half of the composition gap above.
 
-**An `ask` vote is emitted as the host's ask** (2026-10-25,
-`road-to-a-quota-the-user-sees-coming` 4.3). A concern that replies
-`{"decision":"ask","reason":…}` on `pre_tool_use`, with no `deny` beside it and a
-reduced severity of `allow`, now gets `permissionDecision: "ask"` with its reason.
-Before, an `ask` only withheld the allow and the host decided alone, so the question
-was never put. Withholding an allow on its own still adds no question; only a concern
-that asks does, and the one that does is `metered-spawn-ask` — once per session, before
-the first subagent spawn of a session that may bill per token. The rewrite half is
+**A `confirmation` concern's `ask` is emitted as the host's ask** (2026-10-25,
+`road-to-a-quota-the-user-sees-coming` 4.3, narrowed by ratification round 1). A concern
+declared `effect: confirmation` that replies `{"decision":"ask","reason":…}` on
+`pre_tool_use`, with no `deny` beside it and a reduced severity of `allow`, gets
+`permissionDecision: "ask"`; its reason is passed as one line, control characters
+removed, at most 300 characters. An `ask` from any other effect still only withholds the
+allow, as before. The one `confirmation` concern is `metered-spawn-ask`: it asks before a
+subagent spawn in a session that may bill per token until one spawn has actually run there
+(its `post_tool_use` half records that), so a "no" leaves the next spawn asking again. The rewrite half is
 answered separately by ADR-285 (one stage writes, no concern does), and no
 allow-composition result may be read as a rewrite answer.
 
