@@ -199,9 +199,9 @@ Cold-start's 4.3, 4.5 and 5.3, which the first plan proposed to take over, are
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No shipped default caps council or team calls: an unset provider admits its 1,000th successful call, a written cap still refuses.
-- [ ] AC-2 — A ledger fed with a window projected to fill before reset produces exactly one user notice per window state on the machine, never a model-context line.
-- [ ] AC-3 — A session whose context is ≥ 80 % of its window gets one notice, whatever its absolute size.
-- [ ] AC-4 — A session started with an API key in the environment gets a metered notice on its first turn, and its first `Agent` spawn asks once.
-- [ ] AC-5 — No AC-launched unmetered Anthropic CLI child receives an API key without a billing grant.
-- [ ] AC-6 — At `hot`, AC emits no delegation push and refuses nothing.
+- [x] AC-1 — No shipped default caps council or team calls: an unset provider admits its 1,000th successful call, a written cap still refuses.
+- [x] AC-2 — A ledger fed with a window projected to fill before reset produces exactly one user notice per window state on the machine, never a model-context line.
+- [x] AC-3 — A session whose context is ≥ 80 % of its window gets one notice, whatever its absolute size.
+- [x] AC-4 — A session started with an API key in the environment gets a metered notice on its first turn, and its first `Agent` spawn asks once.
+- [x] AC-5 — No AC-launched unmetered Anthropic CLI child receives an API key without a billing grant.
+- [x] AC-6 — At `hot`, AC emits no delegation push and refuses nothing.
