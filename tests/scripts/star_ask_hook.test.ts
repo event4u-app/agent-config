@@ -117,7 +117,10 @@ describe('cadence', () => {
         expect(h.out).toHaveLength(1);
         const reply = JSON.parse(h.out[0] ?? '{}') as Record<string, string>;
         expect(reply[USER_NOTICE_KEY]).toContain(REPO_URL);
-        expect(reply[USER_NOTICE_KEY]).toContain('star_ask.starred true');
+        expect(reply[USER_NOTICE_KEY]).toContain('agent-config settings:set star_ask.starred true');
+        // Both stop paths are complete commands; "rather not be asked" must not
+        // require recording a star that was never given.
+        expect(reply[USER_NOTICE_KEY]).toContain('agent-config settings:set star_ask.mode off');
         expect(typeof reply[USER_NOTICE_ID_KEY]).toBe('string');
     });
 

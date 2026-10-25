@@ -84,7 +84,9 @@ layer read as "no opt-out" and a lock whose expiry let a paused holder ask too.)
 
 `star_ask.starred: true` stops it for good. It is a class-A key, so the agent
 may set it with `agent-config settings:set star_ask.starred true` when the user
-says they starred. `star_ask.mode: off` and `AGENT_CONFIG_NO_STAR_ASK=1` stop it
+says they starred; when the user says they would rather not be asked, the agent
+sets `star_ask.mode off` instead and never records a star that was not given.
+The notice prints both commands in full. `star_ask.mode: off` and `AGENT_CONFIG_NO_STAR_ASK=1` stop it
 too; CI, replay mode and hosts without a user channel never see it. Both keys
 are read from the user-global layers only: a repository can neither ask its
 contributors for stars nor silence the ask for them.

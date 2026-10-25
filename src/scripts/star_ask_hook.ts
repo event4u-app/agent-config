@@ -132,7 +132,7 @@ export function readStarAskSettings(paths: readonly string[] = user_global_setti
 export function starAskText(): string {
     return [
         `⭐ agent-config is free and maintained by one person. If it helps you, a GitHub star is the easiest way to help others find it: ${REPO_URL}`,
-        'Already starred, or rather not be asked? Tell the agent, or run `agent-config settings:set star_ask.starred true` (or `star_ask.mode off`). Otherwise you will see this at most once a month.',
+        'Already starred? Run `agent-config settings:set star_ask.starred true`. Rather not be asked? Run `agent-config settings:set star_ask.mode off`. Telling the agent either works too. Otherwise you will see this at most once a month.',
     ].join('\n');
 }
 
@@ -158,7 +158,10 @@ export interface StarAskDeps {
  * same state compete for the same name and only one creation succeeds. A claim
  * is never expired or deleted — expiry is what let a paused holder and its
  * successor both ask — so at most one ask can follow any one state, however
- * long a session sleeps. Twelve empty files a year is the cost.
+ * long a session sleeps. Twelve empty files a year is the cost, at most. A
+ * session that wins a claim and then cannot write the state leaves the claim
+ * behind, and the ask that state would have led to is never made: a permanent,
+ * deliberate fail-closed outcome rather than a second ask.
  */
 export function claimPathFor(statePath: string, state: StarAskState): string {
     const key = createHash('sha256').update(`${state.first_seen_at ?? ''}|${state.last_asked_at ?? 'never'}`).digest('hex');
