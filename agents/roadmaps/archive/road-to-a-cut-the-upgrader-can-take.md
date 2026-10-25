@@ -74,13 +74,15 @@ breaking-changes index files as pending is numbered major; and no comment says
       unparsed; a broken layer naming it stays `protect`). A path the cascade
       lists twice is read once, at its last position — under last-writer-wins
       merging `A·D·A` equals `D·A`. Measured on the shipped template: 26.0 ms
-      cold / 9.9 ms warm before, 10.6 / 3.2 ms after. The bundle stays under its
-      ceiling (1,554,785 B). The latency budget row
-      that described a key match the code never made is corrected. Five
-      ratification rounds refused earlier designs — a block-only reader
+      cold / 9.9 ms warm before, 10.6 / 3.2 ms after. The change adds 177 B to
+      the hook bundle; after `origin/main`'s own hook work left 55 B of headroom,
+      the ceiling moved by exactly those 177 B with a `raise_log` entry. The latency budget row
+      that described a key match the code never made is corrected. Eight
+      ratification rounds; five refused earlier designs — a block-only reader
       (indentless sequence, BOM, bare CR, a layer broken outside the block), a
       per-layer skip that judged on one read and resolved on another, and a
-      single read that still read the doubly listed canonical layer twice.
+      single read that still read the doubly listed canonical layer twice. Round 6
+      ratified the code 2/2; round 8 confirmed the bundle raise 2/2.
       verify: the cases "detects and resolves from one read", "reads every
       layer at most once" and "merges every layer the way the settings cascade
       does" (64 two-layer combinations at two working directories, with a
