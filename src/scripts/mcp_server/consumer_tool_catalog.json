@@ -348,7 +348,7 @@
     },
     {
       "name": "graph_map_status",
-      "description": "Is there a code map (agents/map/)? Its freshness, counts and MAP.md path.",
+      "description": "Code map: freshness, health, findings; `file` adds blast.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"
@@ -356,6 +356,9 @@
       "input_schema": {
         "type": "object",
         "properties": {
+          "file": {
+            "type": "string"
+          },
           "project": {
             "type": "string"
           }
