@@ -24,6 +24,22 @@ and the run that applies it links its PR.
 - **Blocks:** a green `check_rule_invariants`, and with it the last owner-red in
   `task ci`.
 
+### OQ-14 — Fund or close the outcome benchmark against S4
+
+- **Context:** `agents/roadmaps/stubs/road-to-assurance-benchmark.md` asks for a
+  measured outcome comparison (native / neighbour / native plus neighbour). The
+  demand arrived a fifth time in `inbox-2026-10-au`, a comparison against deny
+  group S4 that ends: no overall winner can be named until a shared benchmark
+  runs. The stub's `review_by` (2026-09-25) is 30 days lapsed. Prior results
+  predict caution: strong-host lift was an honest null (`docs/benchmark.md`).
+- **Options:** (a) fund a pre-registered pilot — two task classes from the
+  stub, one host, a named spend cap — and renew `review_by`; (b) archive the stub
+  with its probe recorded and answer future arrivals with that record; (c) leave
+  it parked with a new `review_by`.
+- **Recommendation:** (a) — five arrivals say the question will keep coming, and
+  a small pre-registered pilot answers it either way for a bounded cost.
+- **Blocks:** every head-to-head KPI in the round's master plan.
+
 ## Not owner questions — waits, or already settled in the tree
 
 - `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
