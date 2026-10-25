@@ -49,7 +49,7 @@ Read at `main@01bb841cb` (2026-10-25).
   `src/scripts/report_memory_pointers.ts:373` (`driftedPaths`), with the right
   stance stated beside it: drift is a re-verification prompt, never a verdict.
 - The phase-boundary refresh compares a fingerprint and re-probes PRs only
-  (`src/agent-src/contexts/execution/roadmap-process-loop-set.md:186-213`); it
+  (`src/agent-src/contexts/execution/roadmap-process-loop-set.md:186-212` <!-- corrected-from-reproduction: the file has 212 lines; the first --revalidate run reported beyond-end -->); it
   never asks whether the roadmap's own citations moved.
 - `/review-changes` dispatches seven judges (`src/domains/engineering-base/review/changes/command.md:6`),
   and none of them sees which skills the run planned or used.
@@ -58,25 +58,25 @@ Read at `main@01bb841cb` (2026-10-25).
 
 Evidence (read): `src/scripts/roadmap_context.ts:470`
 
-- [ ] **1.1 Contract `docs/contracts/roadmap-revalidation-v1.md`.** The moments,
+- [x] **1.1 Contract `docs/contracts/roadmap-revalidation-v1.md`.** The moments,
       the one primitive, the vocabulary: per cited path `unchanged | drifted |
       missing | beyond-end`; per roadmap `fresh | drifted | broken | unpinned`;
       per re-verified statement the intake labels `still-true | already-fixed |
       never-true | unverifiable`. Never blocking (drift is not falsity). Council
       only on decision drift; a degraded council is never consent.
       verify: `grep -c 'still-true' docs/contracts/roadmap-revalidation-v1.md` -> ≥ 1
-- [ ] **1.2 `tree_pin:` on every new roadmap.** `new_roadmap` writes
+- [x] **1.2 `tree_pin:` on every new roadmap.** `new_roadmap` writes
       `tree_pin: <short HEAD>` into the skeleton; the template documents it. A
       reader `readPin` accepts the field and the two older forms
       (`drafted-against:`, a `read at \`main@<sha>\`` context line); no mass
       migration.
       verify: `npx vitest run tests/scripts/roadmap_revalidation.test.ts` covers all three forms and the skeleton
-- [ ] **1.3 Shared drift and citation parsing in `_lib/`.** `driftedPaths` moves
+- [x] **1.3 Shared drift and citation parsing in `_lib/`.** `driftedPaths` moves
       to `src/scripts/_lib/git_drift.ts` and both callers use it; the citation
       parser reads `` `path` `` and `` `path:line` `` / `` `path:a-b` `` and
       reports `beyond-end` when a cited line no longer exists.
       verify: `npx vitest run tests/scripts/roadmap_revalidation.test.ts tests/scripts/report_memory_pointers.test.ts`
-- [ ] **1.4 `roadmap:context --revalidate <slug|path>`.** No new verb. Prints the
+- [x] **1.4 `roadmap:context --revalidate <slug|path>`.** No new verb. Prints the
       roadmap verdict, each non-`unchanged` citation, and each `## Decisions` row
       whose evidence or `revisit if` cell cites a drifted or missing path.
       Cheap path first: pin equals HEAD, or no cited file changed, means `fresh`
