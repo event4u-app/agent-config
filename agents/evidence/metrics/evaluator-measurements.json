@@ -1,19 +1,19 @@
 {
     "schema_version": 1,
     "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit — refresh it from a real run.",
-    "recorded_at": "2026-10-25T09:04:10.562Z",
-    "git_sha": "14d78a8921fa63b1ce6703a57f963651582f5bc2",
-    "run_url": "https://github.com/event4u-app/agent-config/actions/runs/40176551073",
-    "conditions": "Nightly set of run 40176551073 (Linux/x86_64 · node v22.23.2 · npm 10.9.8 · npm install --omit=dev from a LOCAL tarball), merged into PR 2671; cli_help_command_count 114 -> 116 is the registry enumeration on this PR's tree (check_cli_registry_budget_sync): audit:code and media:bundle registered here.",
+    "recorded_at": "2026-10-25T17:57:25.805Z",
+    "git_sha": "09f90e2432b2e5ba815a760dcd207a8854961e86",
+    "run_url": "https://github.com/event4u-app/agent-config/actions/runs/40218366609",
+    "conditions": "Packed-artifact evaluation of release PR 2684 (Linux/x86_64 · node v22.23.2 · npm 10.9.8 · npm install --omit=dev from a LOCAL tarball); node_modules_mb 136 -> 137 accumulated across the PRs merged since 18.1.0, runtime_dep_count unchanged at 204.",
     "measurements": {
         "cli_help_command_count": 116,
-        "cli_version_cold_ms": 345,
+        "cli_version_cold_ms": 291,
         "cold_start_conditions": "Linux/x86_64 · node v22.23.2 · npm 10.9.8 · npm install --omit=dev from a LOCAL tarball (no registry round-trip for the package itself; a real first-touch install adds registry latency)",
-        "cold_start_install_to_doctor_ms": 12241,
-        "mcp_boot_to_initialize_ms": 401,
+        "cold_start_install_to_doctor_ms": 9861,
+        "mcp_boot_to_initialize_ms": 327,
         "mcp_public_tool_count": 29,
-        "node_modules_mb": 136,
+        "node_modules_mb": 137,
         "runtime_dep_count": 204,
-        "unpacked_size_mb": 65.572572
+        "unpacked_size_mb": 65.88463
     }
 }
