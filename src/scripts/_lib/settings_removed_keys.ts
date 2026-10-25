@@ -178,9 +178,6 @@ export const MINOR_REMOVAL_PROOFS: ReadonlyMap<string, string> = new Map<string,
 /** Keys already warned about in THIS process — the "once per run" dedupe. */
 const _warnedRemovedKeys = new Set<string>();
 
-/** Removed keys an explicit value of which install still reads, so "ignored" would be false. */
-const HONOURED_DURING_WINDOW: ReadonlySet<string> = new Set(['projection.rule_packs']);
-
 /** Read one dotted path out of a merged settings tree; `undefined` when absent. */
 function _readDotted(root: SettingsDict, dotted: string): unknown {
     let node: unknown = root;
@@ -207,7 +204,7 @@ export function warnRemovedKeys(merged: SettingsDict): void {
             continue;
         }
         _warnedRemovedKeys.add(key);
-        const outcome = HONOURED_DURING_WINDOW.has(key) ? 'still honoured until its window closes' : 'ignored';
-        process.stderr.write(`${key} was removed (${reason}); ${outcome}.\n`);
+        // A reason that says the key is still honoured must not end in "ignored".
+        process.stderr.write(`${key} was removed (${reason}); ${reason.includes('honours') ? 'still honoured' : 'ignored'}.\n`);
     }
 }
