@@ -249,10 +249,10 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 11 |
 | B — consent | 3 |
-| C — guarded | 102 |
-| **Total** | **116** |
+| C — guarded | 101 |
+| **Total** | **115** |
 
-It rose to 116 on 2026-10-25 when ADR-301 added `star_ask.mode` and `star_ask.starred` — two A, `consent`: the user's own choice whether a monthly star ask reaches them, and their own statement that they starred. It fell to 114 on 2026-10-24 when step 4.7 removed `projection.mode` (owner answer OQ-1), and to 115 the same day when step 4.9 of `road-to-a-setup-that-decides-itself` removed `projection.rule_packs` (owner directive, D14). It rose to 116 on 2026-10-21 when the advisories council round 3 added `advisories.kev` — one C, `policy`: it decides whether a refresh reads the CISA catalog, the independent switch both seats asked for beside the egress key (evidence `advisory-kev-epss-sources-20261021`).
+It fell to 115 on 2026-10-25 when `ai_team.max_calls_per_day` stopped shipping in the template (ADR-279 Amendment 1, owner directive 2026-10-22): it stays an optional integer a user may write, unset means counted and never refused, so it is no longer a template leaf this table classifies. It rose to 116 on 2026-10-25 when ADR-301 added `star_ask.mode` and `star_ask.starred` — two A, `consent`: the user's own choice whether a monthly star ask reaches them, and their own statement that they starred. It fell to 114 on 2026-10-24 when step 4.7 removed `projection.mode` (owner answer OQ-1), and to 115 the same day when step 4.9 of `road-to-a-setup-that-decides-itself` removed `projection.rule_packs` (owner directive, D14). It rose to 116 on 2026-10-21 when the advisories council round 3 added `advisories.kev` — one C, `policy`: it decides whether a refresh reads the CISA catalog, the independent switch both seats asked for beside the egress key (evidence `advisory-kev-epss-sources-20261021`).
 
 It rose to 115 on 2026-10-21 when `road-to-advisories-heard-the-same-day` step 4.3 added `advisories.mode` and `advisories.egress` — two C. `mode` is `consent`: it adds a line to the first session start of every day, which an install that never asked must not have switched on for it by an agent. `egress` is `policy`: it decides which package names leave the machine, the privacy boundary the roadmap's D4 fixes for private names and this key extends to all of them.
 
@@ -409,9 +409,9 @@ the template, which is the drift this contract exists to prevent.
 |---|---|
 | derivable | 33 |
 | un-inferrable | 10 |
-| consent | 54 |
+| consent | 53 |
 | policy | 19 |
-| **Total** | **116** |
+| **Total** | **115** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -579,7 +579,6 @@ Rows follow template order, so a diff against the template reads straight down.
 | `subagents.adversarial_council` | C | `"off"` | governs a paid verification step | consent |
 | `ai_team.model` | C | `auto` | names an external model | un-inferrable |
 | `ai_team.allow_delegate` | C | `false` | grants an external tool write access to the repository | consent |
-| `ai_team.max_calls_per_day` | C | `50` | quota cap on a shared budget | consent |
 | `ai_team.review_gate.managed` | C | `false` | governs an upstream review gate | consent |
 | `ai_team.review_gate.max_consecutive_blocks` | C | `3` | circuit-breaker threshold | derivable — the existing N=3 validation-loop budget in `autonomous-execution`, which already bounds consecutive failed attempts on one target |
 | `emergency.orchestration_halt` | C | `false` | the one audited incident switch over the always-on orchestration stack — see § The one exception above | consent |
