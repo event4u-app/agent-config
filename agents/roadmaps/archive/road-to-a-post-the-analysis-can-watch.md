@@ -133,7 +133,7 @@ not choose to send.
       dispatcher row and signals in `analyze/command.md`, ADR-288 amendment
       ("a media source kind enters the foreign-source door; `analyze:post` is
       its entry, not a fifth door").
-      verify: `./scripts-run src/scripts/lint_no_new_atomic_commands` -> 0,
+      verify: `./scripts-run src/scripts/lint_no_new_atomic_commands` -> 0 and
       `lint_command_routing`, `lint_command_flow_coverage` green.
 
 ## Phase 4 — Fixtures that keep it honest
