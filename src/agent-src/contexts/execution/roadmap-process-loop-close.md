@@ -136,6 +136,10 @@ execution either way.
   phase boundary; `broken` is named in the closing summary with the missing or
   beyond-end citations — the roadmap still archives, the summary says what it no
   longer proves ([`roadmap-revalidation-v1`](../../../../docs/contracts/roadmap-revalidation-v1.md)).
+- **Plan versus use.** `./scripts-run src/scripts/skill_plan_usage <roadmap.md>`
+  goes into the closing summary: each skill a step planned with `uses:` reads
+  applied, waived with its reason, or missing; why a missing one was missed is
+  the retro's question, not the closing run's.
 - **Sampled depth audit.** For every step whose receipt reads `active` (a
   lowered depth), `./scripts-run src/scripts/probe_depth_shadow --audit-sample
   <roadmap.md#step> --class R0|R1` decides whether it gets a full round-1

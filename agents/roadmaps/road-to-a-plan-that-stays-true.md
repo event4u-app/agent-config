@@ -130,19 +130,19 @@ Evidence (read): `src/scripts/ai_council/prompts.ts:58`
 
 Evidence (read): `src/scripts/report_skill_activation.ts:188`
 
-- [ ] **4.1 A step may carry `uses:`.** An indented `uses: <skill>[, <skill>]`
+- [x] **4.1 A step may carry `uses:`.** An indented `uses: <skill>[, <skill>]`
       line under a step, parallel to `verify:`; a waiver is
       `waived: <skill> — <reason>` with reason from the closed set
       `not-applicable-scope | superseded-by:<skill> | unavailable-on-host |
       already-satisfied`. The template documents both.
       verify: `npx vitest run tests/scripts/skill_plan_usage.test.ts` parses both lines and rejects a reason outside the set
-- [ ] **4.2 `skill_plan_usage` reads plan against transcript.** For a roadmap and
+- [x] **4.2 `skill_plan_usage` reads plan against transcript.** For a roadmap and
       one or more session transcripts: per planned skill `applied | waived |
       missing`, plus `unplanned` skills that were applied; applied means a
       `Skill` tool call or a read of that skill's `SKILL.md` — a tool event,
       never transcript prose. Rules report `not-observable` here.
       verify: `npx vitest run tests/scripts/skill_plan_usage.test.ts` — a fixture transcript with one Skill call, one SKILL.md read and one prose mention yields two applied and one missing
-- [ ] **4.3 Review and closure consume it.** `/review-changes` puts the block in
+- [x] **4.3 Review and closure consume it.** `/review-changes` puts the block in
       the input of `judge-synthesis` when it runs inside a roadmap run, and
       `missing` is a process finding; the close procedure prints it before the
       archive.
