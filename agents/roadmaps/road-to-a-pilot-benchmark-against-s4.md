@@ -32,33 +32,34 @@ win, and no headline number is taken from it beyond what it measured.
 
 ## Phase 1 — Pre-register before any spend
 
-- [ ] **1.1 Fix the arms.** `vanilla` (no package), `package` (this package),
+- [x] **1.1 Fix the arms.** `vanilla` (no package), `package` (this package), <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `neighbour` (S4 at a pinned commit), each through `bench_ab_v2_run`.
       verify: the pre-registration file names the three arms and the S4 commit.
-- [ ] **1.2 Fix two task classes from committed corpora.** The Laravel twin in
-      `internal/bench/corpora/ab-trackb-v2.yaml` and the review corpus
-      `defect-finding.yaml`; no new task is written for this pilot.
+- [x] **1.2 Fix two task classes from committed corpora.** Scope discipline and <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+      debugging capability, both in `internal/bench/corpora/ab-trackb-v2.yaml`
+      (D2); no new task is written for this pilot.
       verify: the pre-registration lists the task ids.
-- [ ] **1.3 Fix host, n, metrics and the decision rule.** One host, n pairs per
+- [x] **1.3 Fix host, n, metrics and the decision rule.** One host, n pairs per <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       arm, the existing discipline and defect-recall scorers, tokens per run,
       and a paired direction test (`_lib/paired_verdict.ts`) with its threshold.
       verify: `git log --oneline -1 -- agents/evidence/preregistration/s4-pilot.md` -> /\w+/
-- [ ] **1.4 Estimate the cost from the prior run.** Tokens per run from
+- [x] **1.4 Estimate the cost from the prior run.** Tokens per run from <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `docs/benchmark.md` § Cost-factor sweep times arms × pairs × tasks.
       verify: the estimate sits below the owner's cap, or the plan shrinks n until it does.
 
 ## Phase 2 — Bring S4 in without trusting it
 
-- [ ] **2.1 Supply-chain intake of S4** via the `supply-chain-intake` skill:
+- [x] **2.1 Supply-chain intake of S4** via the `supply-chain-intake` skill: <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       pinned commit, licence, every hook and install script it would execute.
       verify: the intake record names each executable S4 installs.
-- [ ] **2.2 Threat-model the neighbour arm.** It runs third-party hooks inside
-      the benchmark sandbox: no credentials, no network beyond the model API, a
-      throwaway clone per run.
-      verify: the threat-model note lists the controls and each is asserted by `bench_ab_integrity`.
-- [ ] **2.3 Add the `neighbour` arm to `bench_ab_v2_run`.** Installs S4 into the
-      per-run clone instead of this package.
-      verify: a dry-run of one task per arm shows S4's files present only in the neighbour clone.
+- [x] **2.2 Threat-model the neighbour arm.** The intake found its hooks write <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+      into the user's home, carry state between runs and start model calls, so
+      they run OFF, with every data store in a per-run temp directory and no MCP.
+      verify: `agents/evidence/analysis/s4-pilot-intake-2026-10-25.md` names a control and its assertion for each threat.
+- [x] **2.3 Add the `neighbour` arm to `bench_ab_v2_run`.** Loads S4 for one <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_v2_run.ts -->
+      run via `--plugin-dir` — never installed — with the isolation env and
+      `--strict-mcp-config`; refuses to start without its plugin dir or env file.
+      verify: `npx vitest run tests/scripts/bench_ab_v2_run.test.ts tests/scripts/bench_ab_task_runner.test.ts` -> 0
 
 ## Phase 3 — Run within the cap, record both directions
 
@@ -88,6 +89,7 @@ win, and no headline number is taken from it beyond what it measured.
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
+| D2 | reversible-technical | agent | Both task classes come from `ab-trackb-v2.yaml`. Rejected alternative: `defect-finding.yaml` as the second class. | `defect-finding.yaml` runs through `bench_defect_finding.ts`, which has no neighbour arm; one runner keeps every arm on one harness. | A second harness gains a neighbour arm. |
 | D1 | spend-exhaustion | owner | A $150-capped pilot on existing corpora and one host. Rejected alternative: the eight-class corpus the source plans. | OQ-17 answered "1"; the full corpus is owned by `stubs/road-to-assurance-benchmark`. | The pilot shows a lift worth confirming at a larger n. |
 
 ## Risk Register
