@@ -32,7 +32,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { pendingRowCommits } from './_lib/release_highlights.js';
+import { pendingRowCommits } from './_lib/breaking_pending.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);

@@ -27,6 +27,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { pendingRows } from './breaking_pending.js';
 import { assuranceOverrideLimitation } from './release_findings_ingest.js';
 import { CURATED_HEAD_INSTRUCTION } from './release_material.js';
 
@@ -826,6 +827,8 @@ function readIndex(cwd: string): string {
  * hook-carrier guards of #2455, named in an inner bullet of a squash body —
  * reaches no released changelog unless an operator copies it by hand.
  */
+export { pendingRowCommits } from './breaking_pending.js';
+
 export function pendingBreakingLine(index: string, isShipped: (sha: string) => boolean = () => false): string | null {
     // A row an earlier tag already carries was announced by that release; the
     // table is only cleaned by hand, so without this every later cut repeats it.
@@ -834,29 +837,6 @@ export function pendingBreakingLine(index: string, isShipped: (sha: string) => b
         .map((r) => r.changes);
     if (cells.length === 0) return null;
     return `Breaking, pending in \`BREAKING_CHANGES.md\` and shipped by this release: ${cells.join(' ')}`;
-}
-
-/** The commit each Pending row cites in its `Landed` cell, or null for a row citing none. */
-export function pendingRowCommits(index: string): (string | null)[] {
-    return pendingRows(index).map((r) => r.commit);
-}
-
-function pendingRows(index: string): { changes: string; commit: string | null }[] {
-    const rows: { changes: string; commit: string | null }[] = [];
-    let inPending = false;
-    for (const line of index.split('\n')) {
-        if (line.startsWith('## ')) {
-            inPending = line.startsWith('## Pending');
-            continue;
-        }
-        if (!inPending || !line.startsWith('|')) continue;
-        const cols = line.split('|');
-        const changes = (cols[2] ?? '').trim();
-        if (changes === '' || changes === 'What changes' || /^-+$/u.test(changes)) continue;
-        const commit = /`([0-9a-f]{7,40})`/u.exec(cols[1] ?? '')?.[1] ?? null;
-        rows.push({ changes, commit });
-    }
-    return rows;
 }
 
 /** True when `sha` is an ancestor of `tag`; false when either is unknown. */
