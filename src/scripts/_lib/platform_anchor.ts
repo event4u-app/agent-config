@@ -1096,6 +1096,16 @@ const shown = printable;
  */
 export const SUPERSEDED_BY_RULING_RE = /^superseded-by-owner-ruling (agents\/evidence\/owner-directives\/[A-Za-z0-9._-]+\.md)$/u;
 
+/**
+ * The ruleset versions a directive keeps standing, each declared on its own
+ * line as `<!-- standing-bypass: ruleset_version=<id> -->`. A ruling closes
+ * only records whose `ruleset_version_after` it names, so a directive about
+ * something else closes nothing.
+ */
+export function standingBypassVersions(text: string): string[] {
+    return [...text.matchAll(/^<!-- standing-bypass: ruleset_version=(\d+) -->$/gmu)].map((m) => m[1] as string);
+}
+
 /** The nine fields every bypass record carries; `restored_at` and `council_review` may read `pending`. */
 export const BYPASS_RECORD_FIELDS = [
     'reason',
@@ -1205,7 +1215,7 @@ export function evaluateBypassRecords(
     records: readonly BypassRecordInput[],
     now: Date,
     reviewCovers: (rel: string, subject: string, restoredAtMs: number) => boolean = () => false,
-    rulingCommitted: (rel: string) => boolean = () => false,
+    rulingCovers: (rel: string, rulesetVersion: string) => boolean = () => false,
 ): BypassFinding[] {
     const findings: BypassFinding[] = [];
     const t = now.getTime();
@@ -1254,8 +1264,8 @@ export function evaluateBypassRecords(
                   ? `\`restore_by\` is before the bypass or more than ${String(BYPASS_MAX_OPEN_DAYS)} days after it`
                   : restored !== null && (restored < time || restored > t)
                     ? '`restored_at` is before the bypass or in the future'
-                    : ruling !== null && !rulingCommitted(ruling)
-                      ? `\`restored_at\` names \`${shown(ruling)}\`, which is not a committed owner directive`
+                    : ruling !== null && !rulingCovers(ruling, f.get('ruleset_version_after') as string)
+                      ? `\`restored_at\` names \`${shown(ruling)}\`, which is not a committed owner directive keeping ruleset version \`${shown(String(f.get('ruleset_version_after')))}\` standing`
                     : ruling !== null && review !== 'pending' && !reviewCovers(review, f.get('subject') as string, time)
                       ? `\`council_review\` names \`${shown(review)}\`, which is not a committed council review citing this record's \`subject\`, first committed at or after the bypass`
                     : review !== 'pending' && restored === null && ruling === null

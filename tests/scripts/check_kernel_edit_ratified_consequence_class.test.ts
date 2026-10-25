@@ -351,3 +351,20 @@ describe('dealbreaker 2 — membership is read at both commits the subject binds
         expect(red.exitCode).toBe(1);
     });
 });
+
+describe('the residue branch reads the class of the checkout it evaluates', () => {
+    beforeEach(() => {
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'ker-residue-'));
+    });
+    afterEach(() => {
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('an unreadable working-tree list in an alternate root refuses, whatever this checkout holds', () => {
+        write(LIST, listOf('alpha'));
+        write(ALPHA, '# alpha\n');
+        commitAll(root);
+        write(LIST, 'not json\n');
+        expect(() => gate.expectedSubjectFor([ALPHA], root, 'HEAD', null)).toThrow(ConsequenceClassUnreadable);
+    });
+});

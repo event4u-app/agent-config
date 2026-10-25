@@ -5,7 +5,7 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { BYPASS_RECORD_DIR, bypassInstant, evaluateBypassRecords } from '../../src/scripts/_lib/platform_anchor.js';
+import { BYPASS_RECORD_DIR, bypassInstant, evaluateBypassRecords, standingBypassVersions } from '../../src/scripts/_lib/platform_anchor.js';
 import {
     committedEvidence,
     main,
@@ -81,7 +81,7 @@ describe('evaluateBypassRecords — an open bypass reds', () => {
 describe('evaluateBypassRecords — a bypass the owner keeps standing closes on the ruling', () => {
     const RULING = 'agents/evidence/owner-directives/2026-10-10-standing-bypass.md';
     const superseded = `superseded-by-owner-ruling ${RULING}`;
-    const judge = (text: string, now = NOW, ruling: (rel: string) => boolean = (rel) => rel === RULING) =>
+    const judge = (text: string, now = NOW, ruling: (rel: string, version: string) => boolean = (rel, v) => rel === RULING && v === '49500777') =>
         evaluateBypassRecords(
             [{ path: 'agents/evidence/bypass-records/x.md', text }],
             now,
@@ -110,6 +110,18 @@ describe('evaluateBypassRecords — a bypass the owner keeps standing closes on 
         ]) {
             expect(judge(record({ restored_at: bad, council_review: 'pending' }), NOW, () => true), bad).toEqual(['bypass-record-malformed']);
         }
+    });
+
+    it('a ruling for another ruleset version cannot close it — any directive closing any record was the defect', () => {
+        expect(judge(record({ restored_at: superseded, council_review: 'pending', ruleset_version_after: '51122772' }))).toEqual([
+            'bypass-record-malformed',
+        ]);
+    });
+
+    it('a directive declares which standing bypass it keeps, and only in the exact marker form', () => {
+        expect(standingBypassVersions('x\n<!-- standing-bypass: ruleset_version=54668684 -->\ny\n')).toEqual(['54668684']);
+        expect(standingBypassVersions('mentions ruleset_version=54668684 in prose\n')).toEqual([]);
+        expect(standingBypassVersions('<!-- standing-bypass: ruleset_version=abc -->\n')).toEqual([]);
     });
 
     it('without a ruling reader the value fails closed', () => {
