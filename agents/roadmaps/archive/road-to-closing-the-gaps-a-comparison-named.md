@@ -31,51 +31,51 @@ the route it calls, switched off until measured.
 
 ## Phase 1 — Review rows the comparison found missing
 
-- [x] **1.1 Add transaction-boundary and lost-update rows to the database
+- [x] **1.1 Add transaction-boundary and lost-update rows to the database <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       checklist.** `src/skills/code-review/checklists/database.md` has an N+1 row
       and no row for a multi-step write outside a transaction or a check-then-insert
       race (comparison R3).
-      verify: `grep -nE 'Transaction boundary|Lost update' src/skills/code-review/checklists/database.md` returns two rows.
-- [x] **1.2 Add a contract-compatibility row to the backend and frontend
+      verify: `grep -cE 'Transaction boundary|Lost update' src/skills/code-review/checklists/database.md` -> /^2$/
+- [x] **1.2 Add a contract-compatibility row to the backend and frontend <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       checklists.** A removed or renamed response field, a changed status code or
       error shape, or a renamed route has no row today (comparison R4).
-      verify: `grep -n 'Contract compatibility' src/skills/code-review/checklists/backend.md src/skills/code-review/checklists/frontend.md` returns one row per file.
-- [x] **1.3 Add a docs-follow-code row.** The Doc-Impact obligation lives in a
+      verify: `cat src/skills/code-review/checklists/backend.md src/skills/code-review/checklists/frontend.md | grep -c 'Contract compatibility'` -> /^2$/
+- [x] **1.3 Add a docs-follow-code row.** The Doc-Impact obligation lives in a <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       rule only; no review checklist asks it for a code diff (comparison R10).
-      verify: `grep -n 'Docs follow code' src/skills/code-review/checklists/backend.md src/skills/code-review/checklists/frontend.md` returns one row per file.
+      verify: `cat src/skills/code-review/checklists/backend.md src/skills/code-review/checklists/frontend.md | grep -c 'Docs follow code'` -> /^2$/
 
 ## Phase 2 — A seeded defect and a clean control per judge
 
-- [x] **2.1 Author `evals/evals.json` for judge-bug-hunter, judge-test-coverage
+- [x] **2.1 Author `evals/evals.json` for judge-bug-hunter, judge-test-coverage <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: src/skills/judge-bug-hunter/evals/evals.json -->
       and judge-code-quality.** Each carries one planted defect (swallowed
       exception; test without assertion; duplicated block) and one clean control,
       in the existing code-review eval format. Grading stays unrun until the runner
       exists (owned by the skill-uplift stub).
-      verify: `./scripts-run src/scripts/lint_eval_specs` exits 0 and lists the three new files.
+      verify: `./scripts-run src/scripts/lint_eval_specs` -> 0
 
 ## Phase 3 — A dependency cycle fails CI
 
-- [x] **3.1 Detect cycles in `requires_skills`.** `check_skill_requires.ts`
+- [x] **3.1 Detect cycles in `requires_skills`.** `check_skill_requires.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_skill_requires.ts -->
       checks referential integrity and co-availability, never a cycle.
       verify: a test with a two-skill cycle fixture fails before the change and passes after; the real tree still exits 0.
 
 ## Phase 4 — "Why did it stop" names cost and refusals
 
-- [x] **4.1 Read the session cost record in `analyze-session`.** The report prints
+- [x] **4.1 Read the session cost record in `analyze-session`.** The report prints <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/cmd_analyze_session.ts -->
       "not tracked" while `src/scripts/cost/track.mjs` writes a session-keyed
       `agents/cost-tracking/sessions.jsonl`.
       verify: a test with a fixture cost record shows its figures; without one the report says no record exists.
-- [x] **4.2 List turn-end refusals in the same report.** The report omits the
+- [x] **4.2 List turn-end refusals in the same report.** The report omits the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/cmd_analyze_session.ts -->
       refusals `src/scripts/_lib/turn_end_refusals.ts` records.
       verify: a test with a fixture refusal shows its count and last reason.
 
 ## Phase 5 — Contract truth and the cross-stack edge
 
-- [x] **5.1 Make `docs/contracts/trust-and-safety.md` describe existing files.**
+- [x] **5.1 Make `docs/contracts/trust-and-safety.md` describe existing files.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       Its §4 names an installer file under `packages/core/` that does not exist as
       the gate's implementation; other paths are Python-era.
       verify: every repository path the contract names as an implementation resolves (`test -e` per path; the gitignored release manifest and the never-written installer file, named as such, excepted), and §4 states what reads `trust_summary` today.
-- [x] **5.2 Add a default-off `literal-url` convention mechanism.** A JS/TS
+- [x] **5.2 Add a default-off `literal-url` convention mechanism.** A JS/TS <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/conventions_default.ts -->
       `fetch`/`axios` URL literal that matches exactly one route node gets an
       inferred edge to it; the comparison's retrieval null names string-keyed
       consumers as its cause. Off in `DEFAULT_MECHANISMS` until a precision
