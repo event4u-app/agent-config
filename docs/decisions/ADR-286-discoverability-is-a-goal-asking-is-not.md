@@ -5,6 +5,7 @@ date: 2026-10-16
 decision: discoverability-is-a-goal-asking-is-not
 supersedes: ADR-216 (§ Context only)
 superseded_by: —
+amended_by: ADR-301
 phase: round inbox-2026-10-t · owner ruling on the adoption question
 type: structural
 reopen_policy: owner
@@ -118,6 +119,10 @@ Work in this list no longer needs a justification outside itself, and may no
 longer be refused on the grounds that adoption is not a goal.
 
 ### D2 — In-product asking is not, and this is a refusal rather than a deferral
+
+> **Amended 2026-10-25 by [ADR-301](ADR-301-the-star-ask-ships.md):** the owner
+> reopened this section and the monthly star ask ships as the `star-ask`
+> concern. Every other ask named below stays refused.
 
 No surface of this package asks its user for a star, a rating, a review, a
 testimonial, a referral, or any other act of promotion. Not in the CLI, not in
@@ -277,3 +282,8 @@ open forever — the shape this project's own deferral discipline refuses.
 - **2026-10-16** — accepted. Owner ruling, taken in round `inbox-2026-10-t`
   after the round surfaced the ADR-216 collision as an owner-reserved
   transition and offered three resolutions. The owner chose the narrow one.
+- **2026-10-25** — § D2 amended by ADR-301. Correction to the record above: the
+  three options bundled the star ask into option 1 (adoption in full), so the
+  owner's choice was between bundles, never a ruling on the star ask itself.
+  § D2 and the "Closed: the star-prompt question" line attributed a refusal to
+  the owner that he did not give; his ruling on the ask is ADR-301.
