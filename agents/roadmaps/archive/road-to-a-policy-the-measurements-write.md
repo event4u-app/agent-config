@@ -86,7 +86,7 @@ egress (c) and (f) pass (`internal/bench/reports/egress-placeholders-identifier-
       one line each — the claim status listing the second reviewer asked for, without a
       new command.
       verify: `./scripts-run src/scripts/check_claims --status` -> /tier-downshift-quality-held +unbacked .*review_by 2026-12-15/
-- [x] **2.3 Date the open dispatch measurements.** Every open claim a policy row or <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **2.3 Date the open dispatch measurements.** Every open claim a policy row or <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/dispatch-policy.json -->
       `later/road-to-a-learner-the-measurements-gate` waits on gets a `review_by`:
       the two tier claims, `council-vs-solo-baseline`, the four free-hands and
       free-jury claims, `rate-limit-stops-per-drain` and `fresh-spawns-per-drain`.
