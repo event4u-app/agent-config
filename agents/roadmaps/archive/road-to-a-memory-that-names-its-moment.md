@@ -73,54 +73,54 @@ reachable by consumers or kept internal by a recorded decision.
 
 ## Phase 1 — Deadlines and truth
 
-- [x] **1.1 Fire the maintainer's recall rows only in this package.** Each of the
+- [x] **1.1 Fire the maintainer's recall rows only in this package.** Each of the <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/memory_recall_hook.ts -->
       four `RECALL_RULES` rows gets a `requires` predicate that holds only when a
       candidate root's `package.json` names `@event4u/agent-config`. Rows a consumer
       authors later (the parked follow-up) are unaffected; the table stays committed.
-      verify: `npx vitest run tests/scripts/memory_recall_hook.test.ts` — a new case
+      verify: `npx vitest run tests/scripts/memory_recall_hook.test.ts` -> 0 — a new case
       with a consumer root (its own `package.json`, a `docs/adr/ADR-0007-x.md` edit, a
       `src/install/a.ts` edit) stays silent; the existing package-root replays still
       fire.
-- [x] **1.2 Make the ADR-138 gate readable before 2026-10-28.** `renderGlobalMemoryAudit`
+- [x] **1.2 Make the ADR-138 gate readable before 2026-10-28.** `renderGlobalMemoryAudit` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/user_global_memory_audit.ts -->
       adds a gate block: the proposed and accepted counters (the two project counters were cancelled on 2026-07-30), the accept rate (or "no proposals yet"),
       live-since 2026-07-30, day N of 90 and the due date, from `readGateCounters`.
-      verify: `npx vitest run tests/lib/user_global_memory_audit.test.ts` — a counter
+      verify: `npx vitest run tests/lib/user_global_memory_audit.test.ts` -> 0 — a counter
       file with 3 proposed / 1 accepted renders 33 % and the day count; an absent file
       renders zeros without throwing.
-- [x] **1.3 Decide how the gate counts (E1), before it falls due.** The council
+- [x] **1.3 Decide how the gate counts (E1), before it falls due.** The council <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       decides, in one batched question with E2: evaluate on 2026-10-28 as written, or
       restart the 90 days from the day consumers can reach `/agents user accept`.
       The verdict lands in § Decisions and, if the window moves, as a dated amendment
       under the kill criterion in ADR-138.
-      verify: `grep -nE "^\| E1 .*\| council:" agents/roadmaps/archive/road-to-a-memory-that-names-its-moment.md`
+      verify: `grep -nE "^\| E1 .*\| council:" agents/roadmaps/archive/road-to-a-memory-that-names-its-moment.md` -> /E1/
       returns one row naming the council record; if that row says the window moved,
       `grep -n "Amendment 2026-10" docs/decisions/ADR-138-global-user-profile-layer.md`
       returns one line.
-- [x] **1.4 Make the four truth surfaces say what the tree does.**
+- [x] **1.4 Make the four truth surfaces say what the tree does.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: docs/CLAIMS.md -->
       `knowledge-pages.md` says the session index is opt-in (`memory.session_index`);
       `src/templates/agent-user.md` says the profile is read on demand by the voice
       commands, not loaded into every reply; `second-brain-recall-lift` gains a
       `non_inference` naming the retired working-memory half; `memory:add` carries one
       type list and says why `ownership` and `historical-patterns` are not offered.
-      verify: `./scripts-run src/scripts/check_claims` passes; `grep -n "every reply" src/templates/agent-user.md`
+      verify: `./scripts-run src/scripts/check_claims` -> 0; `grep -n "every reply" src/templates/agent-user.md`
       returns nothing; `grep -c "four" src/domains/meta/memory/add/command.md` agrees
       with the menu.
-- [x] **1.5 Name the slot time in the dogfood closing condition (E8).** The closing
+- [x] **1.5 Name the slot time in the dogfood closing condition (E8).** The closing <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       condition gains a second measure: p95 of the whole `session_end` dispatch on
       claude against the 1.5 s shared host budget, measured with
       `bench_hook_latency`, beside the existing `wall_ms` line.
-      verify: `grep -n "1.5 s" agents/evidence/analysis/learning-dogfood-2026-Q4.md`
+      verify: `grep -n "1.5 s" agents/evidence/analysis/learning-dogfood-2026-Q4.md` -> /1\.5 s/
       shows the measure inside § Closing condition, with the command that produces it.
 
 ## Phase 2 — Reachability
 
-- [x] **2.1 Apply the E2 verdict to the profile and knowledge commands.** The first
+- [x] **2.1 Apply the E2 verdict to the profile and knowledge commands.** The first <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       council round opened four sub-commands; flipping them showed that no sub-command
       in the tree is `advanced` and that `command-surface-tiers.md` makes orchestrator
       children internal by contract and reachable by full name. The corrected round
       chose to change nothing. Recorded in ADR-138's amendment; no command file
       changes.
-      verify: `./scripts-run src/scripts/build_discovery_manifest --write --out <tmp>`
+      verify: `./scripts-run src/scripts/build_discovery_manifest --write --out <tmp>` -> 0, and the written manifest
       lists `agents` as `advanced` routing to `agents-user`, and a real global install
       carries `~/.claude/commands/agents/user/{accept,delete,review,show}.md`;
       `git diff origin/main -- src/domains/meta/agents src/domains/meta/team-knowledge | grep '^[-+]visibility'`

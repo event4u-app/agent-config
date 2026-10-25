@@ -100,7 +100,7 @@ what the user is working on and wants to reach.
 - [ ] **4.1 `focus` and `goals` in the person layer.** Two profile fields with
       `valid_from` and a supersession history, learnable through the existing
       observation channel and every capture guard. Needs an ADR-138 amendment.
-      verify: `ALLOWED_OBSERVATION_FIELDS` carries both; a health-flavoured goal is
+      verify: `grep -A9 ALLOWED_OBSERVATION_FIELDS src/scripts/_lib/user_global_observations.ts` -> /goals/ and carries `focus` too; a health-flavoured goal is
       refused by the existing exclusions.
 - [ ] **4.2 Gap-only project interview.** `/team-knowledge bootstrap` asks only for
       `[HUMAN: verify]` gaps after the static pass, at most five questions, one per
@@ -119,7 +119,7 @@ what the user is working on and wants to reach.
 - [ ] **5.1 `valid_from`, `valid_until`, `supersedes`** on pages, memory entries and
       the Phase 4 fields; the lint tells *contested*, *superseded*, *scheduled* and
       *retracted* apart. A retraction leaves a tombstone and clears derived indexes.
-      verify: `npx vitest run tests/scripts/check_knowledge_pages.test.ts` — a fixture
+      verify: `npx vitest run tests/scripts/check_knowledge_pages.test.ts` -> 0 — a fixture
       pair "release branch is main" / "from 03-01 `release/*`" is classified
       *scheduled* before the date and *current* after it, never *contested*.
 - [ ] **5.2 Warn on undated present-tense facts** on `concepts/` only, warn-only while
