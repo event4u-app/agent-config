@@ -38,7 +38,7 @@ Triggers below require explicit user confirmation **on this turn** — not a pre
 
 Standing "just keep going" + next step crosses the floor → STOP, surface it (one numbered-options block per [`user-interaction`](user-interaction.md)), wait.
 
-**Never act while asking.** Ask and action are strictly sequential: surface the confirmation, then WAIT. Never fire the action in the turn you ask — no do-then-ask race, no "I went ahead and…". **The approval names the exact object**, not a category: a download names filename + size + source; a purchase names amount + card-last4 + total; a send names recipient + subject. Shape per [`user-interaction`](user-interaction.md) numbered-options.
+**Never act while asking.** The ask and the action are strictly sequential: surface the confirmation, then WAIT for the answer. Never fire the action in the turn you ask — no do-then-ask race, no "I went ahead and…". **The approval names the exact object**, not a category: download: filename + size + source; purchase: amount + card-last4 + total; send: recipient + subject. Shape per [`user-interaction`](user-interaction.md) numbered-options.
 
 ## Not in scope — deterministic regeneration
 
