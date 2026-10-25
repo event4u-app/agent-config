@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: agent-security-review
-description: "Use for an adversarial red-team / blue-team / auditor review of an AI agent's CONFIG + behaviour (rules, skills, MCP, hooks, permissions) — attack-chain → defensive-gap list, not a code audit."
+description: "Use for an adversarial red-team / blue-team / auditor review of an AI agent's CONFIG + behaviour (rules, skills, MCP, hooks, permissions) — attack-chain → defensive-gaps; the product → security-audit."
 personas:
   - security-engineer
 domain: quality

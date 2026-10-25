@@ -18,30 +18,38 @@
     "token_target": 500
   },
   "metrics": {
-    "precision_at_k": 80.876,
-    "recall_at_k": 60.688,
-    "recall_loss_pp": 39.312,
+    "precision_at_k": 80.784,
+    "recall_at_k": 61.218,
+    "recall_loss_pp": 38.782,
     "ceiling_met": false,
     "recall_curve_pp": {
-      "1": 41.405,
-      "3": 54.41,
-      "5": 60.688,
-      "10": 69.357,
-      "20": 76.084
+      "1": 41.902,
+      "3": 54.532,
+      "5": 61.218,
+      "10": 69.539,
+      "20": 76.077
     },
-    "false_activation_at_k": 14.815,
-    "context_cost_tokens": 231,
+    "false_activation_at_k": 15.123,
+    "context_cost_tokens": 231.3,
     "token_target_met": true,
-    "benefit_unconditional": 60.688,
-    "benefit_conditional_on_activation": 80.876,
-    "adjudicated_deliveries": 502,
-    "unadjudicated_deliveries": 5608,
-    "tie_decided_cut_pp": 81.015
+    "benefit_unconditional": 61.218,
+    "benefit_conditional_on_activation": 80.784,
+    "adjudicated_deliveries": 510,
+    "unadjudicated_deliveries": 5619,
+    "tie_decided_cut_pp": 82.222
   },
   "set_compatibility": {
     "shared_prompts": 15,
-    "jointly_wrong_pairs_delivered_at_k": 0,
-    "pairs_delivered_at_k": [],
+    "jointly_wrong_pairs_delivered_at_k": 1,
+    "pairs_delivered_at_k": [
+      {
+        "prompt": "threat-model this new payments endpoint before I build it",
+        "pair": [
+          "ai-code-blindspots",
+          "security-audit"
+        ]
+      }
+    ],
     "jointly_wrong_pairs_in_corpus": 12,
     "candidates": [
       {
@@ -130,7 +138,7 @@
           "ai-code-blindspots",
           "security-audit"
         ],
-        "jointlyDeliveredAtK": null
+        "jointlyDeliveredAtK": 5
       },
       {
         "prompt": "what chunk size and embedding model should I use for my RAG pipeline?",
@@ -145,7 +153,7 @@
   "corpus": {
     "partition": "train",
     "holdout_sealed": true,
-    "cases": 1317,
-    "prompts": 1301
+    "cases": 1321,
+    "prompts": 1305
   }
 }

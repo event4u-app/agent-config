@@ -1,7 +1,7 @@
 {
   "skill": "security-audit",
   "last_eval": "2026-08-30",
-  "description": "4 exemplars + 4 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1: this skill carries the highest inbound confusion count in the corpus (5 negatives in other skills' corpora name it as the correct destination) while carrying no corpus of its own. Exemplars cover the vulnerability hunt over EXISTING application code. Near-misses are four adjacent skills: the pre-implementation threat pass, the posture scorecard, the agent-config red-team, and host hardening. CORRECTED 2026-08-30 after a completion review: this line said they were \"the four neighbours that named it\". They are not the inbound set — at the base commit threat-modeling did not name this skill (its corpus landed in the same change), and evaluate-llm-feature, which did, is absent from the near-misses. Adjacency and inbound-edge count are separate facts; the original sentence merged them.",
+  "description": "8 exemplars + 4 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1: this skill carries the highest inbound confusion count in the corpus (5 negatives in other skills' corpora name it as the correct destination) while carrying no corpus of its own. Exemplars cover the vulnerability hunt over EXISTING application code. Near-misses are four adjacent skills: the pre-implementation threat pass, the posture scorecard, the agent-config red-team, and host hardening. CORRECTED 2026-08-30 after a completion review: this line said they were \"the four neighbours that named it\". They are not the inbound set — at the base commit threat-modeling did not name this skill (its corpus landed in the same change), and evaluate-llm-feature, which did, is absent from the near-misses. Adjacency and inbound-edge count are separate facts; the original sentence merged them. EXTENDED 2026-10-25 (road-to-security-answer-that-names-what-it-checked 2.1): four casual whole-app exemplars, because the casual question is the most common way the audit is asked for and the corpus carried none of it.",
   "queries": [
     {
       "q": "audit this codebase for injection vulnerabilities — SQLi, XSS, unsafe deserialization",
@@ -20,6 +20,28 @@
     },
     {
       "q": "mach einen Security-Audit dieses Moduls und finde die Schwachstellen im Code",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "q": "is my app secure? check it before we launch",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "check my whole app for security vulnerabilities",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "check meine App auf Sicherheit",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "q": "prüf meine App auf Sicherheitslücken, bevor ich sie veröffentliche",
       "trigger": true,
       "class": "exemplar",
       "language": "de"

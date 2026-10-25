@@ -8,9 +8,9 @@
     "adr-create": 17859,
     "adversarial-review": 7860,
     "agent-docs-writing": 18341,
-    "agent-security-review": 6120,
+    "agent-security-review": 6141,
     "agents-md-thin-root": 13319,
-    "ai-code-blindspots": 13262,
+    "ai-code-blindspots": 14143,
     "ai-council": 21697,
     "alerting-doctrine": 8755,
     "analysis-autonomous-mode": 7380,
@@ -57,7 +57,7 @@
     "conventional-commits-writing": 20372,
     "copilot-agents-optimization": 11335,
     "copilot-config": 8377,
-    "corpus-grounding": 10655,
+    "corpus-grounding": 11336,
     "customer-research": 6731,
     "dashboard-design": 5850,
     "data-flow-mapper": 7207,
@@ -274,7 +274,7 @@
     "script-writing": 9324,
     "secrets-management": 12029,
     "security": 6722,
-    "security-audit": 12620,
+    "security-audit": 14648,
     "security-maturity-assessment": 5819,
     "sentry-integration": 5536,
     "sequential-thinking": 6376,
@@ -291,7 +291,7 @@
     "standards-from-config": 7565,
     "storybook-workshop": 13536,
     "subagent-orchestration": 19978,
-    "supply-chain-intake": 10137,
+    "supply-chain-intake": 10527,
     "svg-authoring": 17970,
     "symfony-workflow": 10329,
     "systematic-debugging": 17024,
@@ -304,7 +304,7 @@
     "test-driven-development": 16352,
     "test-performance": 6376,
     "testing-anti-patterns": 19723,
-    "threat-modeling": 11938,
+    "threat-modeling": 12522,
     "throughput-vs-morale-tradeoff": 13242,
     "token-optimizer": 6275,
     "traefik": 9138,
@@ -741,6 +741,42 @@
       "old": 19741,
       "new": 19978,
       "reason": "road-to-a-finding-that-fails-a-test 4.2: the dispatch-role marker that lets the independence hook read a field instead of prose."
+    },
+    {
+      "skill": "security-audit",
+      "old": 12620,
+      "new": 14648,
+      "reason": "road-to-security-answer-that-names-what-it-checked 2.2-2.3/4.4: the casual-question scope block, the needs_validation exit replacing 'drop it', non-HTTP entry points, the upload attack classes, severity anchored to demonstrated impact; the dependency step shrank to a /audit deps pointer."
+    },
+    {
+      "skill": "agent-security-review",
+      "old": 6120,
+      "new": 6141,
+      "reason": "road-to-security-answer-that-names-what-it-checked 2.1: the description routes the product itself to security-audit instead of saying 'not a code audit', whose tokens drew app-security prompts here."
+    },
+    {
+      "skill": "ai-code-blindspots",
+      "old": 13262,
+      "new": 14143,
+      "reason": "road-to-security-answer-that-names-what-it-checked 4.4: the file-upload surface row and three upload backstop greps (client filename into storage, mimes without extensions, executable sinks)."
+    },
+    {
+      "skill": "corpus-grounding",
+      "old": 10655,
+      "new": 11336,
+      "reason": "road-to-security-answer-that-names-what-it-checked 4.2: documents the opt-in category_floor reasoning key the threat corpus now sets."
+    },
+    {
+      "skill": "supply-chain-intake",
+      "old": 10137,
+      "new": 10527,
+      "reason": "road-to-security-answer-that-names-what-it-checked 4.4: a Dockerfile/system-package file processor is a dependency with an attack surface, checked as a class."
+    },
+    {
+      "skill": "threat-modeling",
+      "old": 11938,
+      "new": 12522,
+      "reason": "road-to-security-answer-that-names-what-it-checked 4.3: cites ASVS 5.0 V5 File Handling and the OWASP upload cheat sheet, and records why the chapter was missed."
     }
   ]
 }
