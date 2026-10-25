@@ -24,6 +24,8 @@ framework specifics to the carve-outs named in the skill body.
 | **Handler shape** | New handlers follow the framework's recommended shape (Laravel single-action `__invoke`, Next.js route handler, Express handler-per-route). See the stack carve-out. |
 | **Input validation** | Validated at the request boundary via the framework's primitive (Laravel `FormRequest`, Zod / class-validator, Pydantic, struct-tag validators). No ad-hoc inline `if` checks. |
 | **Response shaping** | Returns through a transformer / serializer / DTO. Never returns raw ORM entities. |
+| **Contract compatibility** | A removed or renamed response field, a changed status code or error shape, or a renamed route is versioned, deprecated with a window, or flagged Tier-2 — never changed in place for existing consumers. |
+| **Docs follow code** | A changed public surface (route, CLI flag, config key, env var, exported signature) updates its README / OpenAPI / CHANGELOG entry in the same diff. |
 | **DTOs / value objects** | Structured data between layers, not raw associative arrays / `any` / `dict[str, Any]`. |
 | **Dependency injection** | Constructor injection (or framework-idiomatic equivalent). No service-locator calls in business logic. |
 

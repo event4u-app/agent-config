@@ -5,6 +5,7 @@
  *   literal-path    './x' · 'views/a.html'      code --reads-->     the one code or template file it names
  *   literal-dotted  render('a.b')               code --renders-->   the one template at a/b.<template ext>
  *   fs-route        pages/a/[id].tsx            route --routes-to-> the page module
+ *   literal-url     a request call's '/a/7'     code --calls-->     the one route whose path the URL ends with
  *
  * Every edge is INFERRED, drawn only on a single match, and never where an
  * edge between the same two files already exists — an import, a provider's
@@ -37,20 +38,37 @@ function maskComments(src: string, lang: string | undefined): string {
 /** The text right before a JS/TS module specifier: `from`, `import`, `import(`, `require(`. */
 const IMPORT_POSITION = /(?:\bfrom|\bimport|\bimport\s*\(|\brequire\s*\()\s*$/;
 
-export type DefaultMechanism = 'literal-path' | 'literal-dotted' | 'fs-route';
+export type DefaultMechanism = 'literal-path' | 'literal-dotted' | 'fs-route' | 'literal-url';
 
 /**
  * Which mechanisms run. A mechanism under the 90 % precision bar is switched off
  * here, never the pass (readings: `graph-providers-baseline-2026-10-23.md`).
  * `literal-dotted` measured 3 of 6 on Fixture L — a translation key such as
  * `trans('common.sort')` matches a view of the same name — so dotted names are
- * left to providers, which know which call takes a template.
+ * left to providers, which know which call takes a template. `literal-url` has
+ * no measurement yet, so it starts off.
  */
 export const DEFAULT_MECHANISMS: Readonly<Record<DefaultMechanism, boolean>> = {
     'literal-path': true,
     'literal-dotted': false,
     'fs-route': true,
+    'literal-url': false,
 };
+
+/** A whole-argument URL literal handed to a browser or HTTP-client request call. */
+const REQUEST_URL = /\b(?:fetch|axios(?:\.\w+)?|useSWR|ky(?:\.\w+)?|\$http\.\w+)\s*\(\s*(['"])(\/[^'"\s?#]*)(?:[?#][^'"]*)?\1\s*[,)]/g; // network-free: detects calls in scanned source, makes none
+
+/** A route parameter segment in any of the common spellings: `{id}`, `:id`, `[id]`, `<id>`. */
+const PARAM_SEGMENT = /^(?:\{[^}]+\}|:\w+\??|\[[^\]]+\]|<[^>]+>)$/;
+
+/** True when the route's path segments equal the URL's last segments, a parameter matching any one. */
+export function urlEndsWithRoute(url: string, routePath: string): boolean {
+    const u = url.split('/').filter(Boolean);
+    const r = routePath.split('/').filter(Boolean);
+    if (r.length === 0 || r.length > u.length) return false;
+    const tail = u.slice(u.length - r.length);
+    return r.every((seg, i) => PARAM_SEGMENT.test(seg) || seg === tail[i]);
+}
 
 /** Template extensions a dotted name may resolve to; longest first so `.blade.php` wins over `.php`. */
 const TEMPLATE_EXTS = [
@@ -89,6 +107,7 @@ export interface DefaultStats {
     'literal-path': number;
     'literal-dotted': number;
     'fs-route': number;
+    'literal-url': number;
 }
 
 export function templateBase(p: string): string | null {
@@ -141,7 +160,7 @@ function pageDirectories(paths: readonly string[]): Set<string> {
 
 export function conventionsDefault(input: DefaultInput): { nodes: CodeNode[]; edges: CodeEdge[]; stats: DefaultStats } {
     const on = input.mechanisms ?? DEFAULT_MECHANISMS;
-    const stats: DefaultStats = { 'literal-path': 0, 'literal-dotted': 0, 'fs-route': 0 };
+    const stats: DefaultStats = { 'literal-path': 0, 'literal-dotted': 0, 'fs-route': 0, 'literal-url': 0 };
     const nodes: CodeNode[] = [];
     const edges: CodeEdge[] = [];
     const fileNodes = new Set(input.nodes.filter((n) => n.kind === 'file').map((n) => n.id));
@@ -169,6 +188,12 @@ export function conventionsDefault(input: DefaultInput): { nodes: CodeNode[]; ed
         edges.push({ source, target, relation, confidence: 'INFERRED', resolved_via: via, provider: 'native' });
         stats[via] += 1;
     };
+
+    // Route nodes any provider declared, by the path in their `VERB /path` label.
+    const routes = input.nodes
+        .filter((n) => n.kind === 'route')
+        .map((n) => ({ id: n.id, source_file: n.source_file, path: n.label.split(' ').slice(1).join(' ') }))
+        .filter((r) => r.path.startsWith('/'));
 
     // Dotted names: `a/b/c` → the template files whose path ends there.
     const byDotted = new Map<string, string[]>();
@@ -214,6 +239,12 @@ export function conventionsDefault(input: DefaultInput): { nodes: CodeNode[]; ed
                     if (!hasExt) for (const ext of infer) for (const c of [`${b}${ext}`, `${b}/index${ext}`]) if (inventory.has(c)) hits.add(c);
                 }
                 if (hits.size === 1) link(f.path, [...hits][0] as string, 'reads', 'literal-path');
+            }
+        }
+        if (on['literal-url'] && jsLike) {
+            for (const m of maskComments(f.source, lang).matchAll(REQUEST_URL)) {
+                const hits = routes.filter((r) => r.source_file !== f.path && urlEndsWithRoute(m[2] as string, r.path));
+                if (hits.length === 1) link(f.path, (hits[0] as { id: string }).id, 'calls', 'literal-url');
             }
         }
         if (on['literal-dotted']) {

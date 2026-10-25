@@ -1,0 +1,76 @@
+{
+  "skill": "judge-test-coverage",
+  "description": "6 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-25 under road-to-closing-the-gaps-a-comparison-named 2.1, which added this judge's behavioural evals and so brought it into check_routing_coverage's touched-skill scope. Exemplars are diffs to review on this judge's axis; near-misses are the sibling judges and the neighbouring do-the-work commands; counterexamples guard the everyday sense of the axis word. Not yet run, so it carries no last_eval.",
+  "queries": [
+    {
+      "id": "jtc-e1",
+      "q": "does this diff have tests for every new branch?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jtc-e2",
+      "q": "this bug fix has no regression test — judge the coverage",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jtc-e3",
+      "q": "are these tests asserting anything or just running code?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jtc-e4",
+      "q": "check whether the PR over-mocks the repository",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jtc-e5",
+      "q": "judge the test coverage of the changed files",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jtc-e6",
+      "q": "fehlen bei dieser Änderung Tests?",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "jtc-n1",
+      "q": "write the missing tests for this service",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "tests:create writes tests; this judge assesses them"
+    },
+    {
+      "id": "jtc-n2",
+      "q": "review this diff for off-by-one errors",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "judge-bug-hunter owns correctness"
+    },
+    {
+      "id": "jtc-n3",
+      "q": "why is this test flaky on CI?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "debugging a red test is not a coverage review"
+    },
+    {
+      "id": "jtc-c1",
+      "q": "how do I prepare for my driving test next week?",
+      "trigger": false,
+      "class": "counterexample"
+    },
+    {
+      "id": "jtc-c2",
+      "q": "what coverage does my car insurance include?",
+      "trigger": false,
+      "class": "counterexample"
+    }
+  ]
+}

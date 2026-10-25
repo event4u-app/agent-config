@@ -1,0 +1,30 @@
+{
+  "skill": "judge-test-coverage",
+  "_calibration": "One planted defect and one clean control (road-to-closing-the-gaps-a-comparison-named 2.1). Fixture authoring only: no run has graded these yet, so they are not evidence of the judge's recall or precision.",
+  "scenarios": [
+    {
+      "id": "planted-test-without-assertion",
+      "prompt": "Judge the test coverage of this change and list each gap as its own bullet:\n```ts\n// src/discount.ts\nexport function discount(total: number): number {\n  return total > 100 ? total * 0.9 : total;\n}\n\n// tests/discount.test.ts\nit('applies the discount', () => {\n  discount(150);\n});\n```",
+      "assertions": [
+        {
+          "kind": "finding_floor",
+          "n": 1
+        },
+        {
+          "kind": "contains",
+          "value": "assert"
+        }
+      ]
+    },
+    {
+      "id": "clean-control-asserted-boundaries",
+      "prompt": "Judge the test coverage of this change and list each gap as its own bullet. If coverage is adequate, say 'no findings':\n```ts\n// src/discount.ts\nexport function discount(total: number): number {\n  return total > 100 ? total * 0.9 : total;\n}\n\n// tests/discount.test.ts\nit.each([[150, 135], [101, 90.9], [100, 100], [0, 0]])('discount(%d) = %d', (input, expected) => {\n  expect(discount(input)).toBeCloseTo(expected);\n});\n```",
+      "assertions": [
+        {
+          "kind": "finding_floor",
+          "n": 0
+        }
+      ]
+    }
+  ]
+}

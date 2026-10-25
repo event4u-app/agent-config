@@ -10,7 +10,8 @@
  * behaviour changes.
  *
  * Validates the `requires_skills:` skill→skill composition graph for
- * (1) referential integrity and (2) co-availability across packs.
+ * (1) referential integrity, (2) co-availability across packs and
+ * (3) acyclicity.
  */
 
 import * as fs from 'node:fs';
@@ -277,6 +278,12 @@ function main(): number {
         }
     }
 
+    // (3) acyclicity — a skill that transitively requires itself has no load order.
+    for (const cycle of _requires_cycles(skills)) {
+        const head = skills[cycle[0]!]!;
+        errors.push(`${head.path}: requires_skills cycle ${cycle.join(' → ')}.`);
+    }
+
     if (errors.length > 0) {
         process.stdout.write(
             '❌  check_skill_requires: skill-composition graph has unmet edges:\n',
@@ -299,6 +306,34 @@ function main(): number {
             `${n_skills} skill(s) — all sub-skills co-available.\n`,
     );
     return 0;
+}
+
+/** Each distinct `requires_skills` cycle once, as a closed path starting at its smallest id. */
+function _requires_cycles(skills: Readonly<Record<string, SkillInfo>>): string[][] {
+    const cycles = new Map<string, string[]>();
+    const state = new Map<string, 'open' | 'done'>();
+    const stack: string[] = [];
+    const visit = (id: string): void => {
+        state.set(id, 'open');
+        stack.push(id);
+        for (const req of skills[id]?.requires_skills ?? []) {
+            if (skills[req] === undefined) continue;
+            if (state.get(req) === 'open') {
+                const loop = stack.slice(stack.indexOf(req));
+                const start = loop.indexOf([...loop].sort()[0]!);
+                const rotated = [...loop.slice(start), ...loop.slice(0, start)];
+                cycles.set(rotated.join('\0'), [...rotated, rotated[0]!]);
+            } else if (!state.has(req)) {
+                visit(req);
+            }
+        }
+        stack.pop();
+        state.set(id, 'done');
+    };
+    for (const id of Object.keys(skills).sort()) {
+        if (!state.has(id)) visit(id);
+    }
+    return [...cycles.values()];
 }
 
 /**

@@ -127,6 +127,48 @@ describe('literal-dotted (3.2)', () => {
     });
 });
 
+describe('literal-url — a client URL literal to the one route it calls', () => {
+    const file = (p: string): CodeNode => ({ id: p, label: p, kind: 'file', source_file: p, source_location: [] });
+    const route = (label: string, src = 'routes/api.php'): CodeNode => ({
+        id: `${src}#route:${label}`,
+        label,
+        kind: 'route',
+        source_file: src,
+        source_location: [1, 1, 1, 1],
+    });
+    const run = (src: string, routes: CodeNode[], on: boolean) =>
+        conventionsDefault({
+            files: [{ path: 'resources/js/Orders.tsx', source: src }],
+            paths: ['resources/js/Orders.tsx', 'routes/api.php'],
+            nodes: [file('resources/js/Orders.tsx'), file('routes/api.php'), ...routes],
+            edges: [],
+            mechanisms: { ...DEFAULT_MECHANISMS, 'literal-url': on },
+        });
+    const FETCH = "export const load = (id: string) => fetch('/api/orders/' + id);\nfetch('/api/orders/42');";
+
+    it('is off by default — no precision measurement has cleared the bar', () => {
+        expect(DEFAULT_MECHANISMS['literal-url']).toBe(false);
+        expect(run(FETCH, [route('GET /orders/{id}')], false).edges).toEqual([]);
+    });
+
+    it('links a fetch literal to the one route whose path it ends with', () => {
+        const r = run(FETCH, [route('GET /orders/{id}'), route('GET /users/{id}')], true);
+        expect(r.edges.map((e) => [e.source, e.target, e.relation, e.resolved_via, e.confidence])).toEqual([
+            ['resources/js/Orders.tsx', 'routes/api.php#route:GET /orders/{id}', 'calls', 'literal-url', 'INFERRED'],
+        ]);
+    });
+
+    it('refuses a literal two routes match', () => {
+        const r = run("axios.get('/api/orders/42')", [route('GET /orders/{id}'), route('GET /api/orders/{order}', 'routes/web.php')], true);
+        expect(r.edges).toEqual([]);
+    });
+
+    it('ignores an external URL and a literal outside a request call', () => {
+        const r = run("fetch('https://x.test/api/orders/1'); const p = '/api/orders/1';", [route('GET /orders/{id}')], true);
+        expect(r.edges).toEqual([]);
+    });
+});
+
 describe('manifest entries (3.3)', () => {
     it('reads bin, exports and pyproject scripts in every package root', () => {
         const root = tree({

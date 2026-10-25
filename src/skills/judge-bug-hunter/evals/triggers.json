@@ -1,0 +1,76 @@
+{
+  "skill": "judge-bug-hunter",
+  "description": "6 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-25 under road-to-closing-the-gaps-a-comparison-named 2.1, which added this judge's behavioural evals and so brought it into check_routing_coverage's touched-skill scope. Exemplars are diffs to review on this judge's axis; near-misses are the sibling judges and the neighbouring do-the-work commands; counterexamples guard the everyday sense of the axis word. Not yet run, so it carries no last_eval.",
+  "queries": [
+    {
+      "id": "jbh-e1",
+      "q": "review this diff for bugs — null handling, off-by-one, races",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jbh-e2",
+      "q": "is there an edge case this change gets wrong?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jbh-e3",
+      "q": "check the error handling in these changed files",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jbh-e4",
+      "q": "does this patch swallow an exception anywhere?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jbh-e5",
+      "q": "judge the correctness of this PR before I merge",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jbh-e6",
+      "q": "prüfe diesen Diff auf Bugs und Randfälle",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "jbh-n1",
+      "q": "does this change have enough tests for the new branch?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "judge-test-coverage owns missing tests"
+    },
+    {
+      "id": "jbh-n2",
+      "q": "is the naming in this diff clear and consistent?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "judge-code-quality owns readability"
+    },
+    {
+      "id": "jbh-n3",
+      "q": "review this diff for SQL injection and secrets",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "judge-security-auditor owns security risk"
+    },
+    {
+      "id": "jbh-c1",
+      "q": "the bug in my garden is eating the tomato leaves",
+      "trigger": false,
+      "class": "counterexample"
+    },
+    {
+      "id": "jbh-c2",
+      "q": "how do I report a bug to the vendor's support portal?",
+      "trigger": false,
+      "class": "counterexample"
+    }
+  ]
+}

@@ -5,7 +5,10 @@ review_by: 2026-09-25
 
 # Road to an assurance benchmark — stub
 
-> **Arrivals:** 4 (at least) - latest `inbox-2026-10-t` (2026-10-16): two parallel
+> **Arrivals:** 5 (at least) - latest `inbox-2026-10-au` (2026-10-25): a third
+> comparison against deny group S4 closes on "no winner until a shared benchmark
+> runs" and plans its head-to-head KPIs on this stub; put to the owner as OQ-17.
+> The count before it read: 4 (at least) - latest `inbox-2026-10-t` (2026-10-16): two parallel
 > analyses again ask that this package's real effect be measured before further
 > delivery or governance work is prioritised; the `review_by` below (2026-09-25)
 > is now 21 days lapsed and a fourth arrival does not make it less of an owner
