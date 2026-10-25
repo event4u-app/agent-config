@@ -38,6 +38,10 @@ describe('process-full lane brief', () => {
         expect(brief).toMatch(/finish line is count_open == 0 for this roadmap and exactly ONE pull request/);
     });
 
+    it('revalidates a drifted or broken roadmap before the first edit', () => {
+        expect(brief).toMatch(/drifted or broken, run\n`agent-config roadmap:context --revalidate <slug>`/);
+    });
+
     it('forbids intermediate pushes and self-flipped boxes', () => {
         expect(brief).toMatch(/no intermediate push, PR or merge/);
         expect(brief).toMatch(/Do not flip checkboxes/);

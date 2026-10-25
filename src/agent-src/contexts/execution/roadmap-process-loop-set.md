@@ -197,6 +197,27 @@ with the one § 1's probe returned. **Differs → re-probe in full** and apply t
 reaction table in § 5e. **Same → nothing moved; continue without paying for a
 probe.** Cache the new value as the run's baseline either way.
 
+**Differs → also revalidate the roadmap itself.** The fingerprint says the world
+moved; `agent-config roadmap:context --revalidate <slug>` says whether what this
+roadmap cites moved with it ([`roadmap-revalidation-v1`](../../../../docs/contracts/roadmap-revalidation-v1.md)).
+On resume the same check runs before the first mutation. On `drifted` or `broken`:
+
+1. Re-read each listed citation, label the statement that rests on it
+   (`still-true | already-fixed | never-true | unverifiable`) and correct it in
+   place — a moved line number is fixed, a changed fact is rewritten and tagged
+   `corrected-from-reproduction`. A step whose premise is `already-fixed` or
+   `never-true` does not run as written.
+2. Each decision the report lists under "decisions whose evidence moved" carries
+   a rendered question (`--json`, field `question`). Send it through the council
+   in prompt mode and record the answer — `holds | holds-changed | falls` — as a
+   `## Decisions` row `resolved by: council:<date>`, dissent kept separately. **A
+   degraded council — one seat, or seats that split — is never consent:** a
+   technical row is recorded `provisional`, an owner-reserved one becomes an
+   `agents/owner-questions.md` entry with the partial vote. A step whose
+   citations moved produces no question.
+3. `--revalidate <slug> --advance` moves `tree_pin` to HEAD. It refuses on
+   `broken`: resolve the missing citation first.
+
 The fingerprint covers `origin/main` **and the head SHA of every open PR**. The
 second half is the case a `main`-only trigger misses: a peer pushing to their own
 PR branch mid-run can add a file that now overlaps this run's owned paths while

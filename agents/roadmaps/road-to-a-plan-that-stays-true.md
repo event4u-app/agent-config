@@ -94,18 +94,18 @@ Evidence (read): `src/scripts/roadmap_drain_queue.ts:103`
       skips the pin stays in `emitted`; `/analyze:inbox` Phase 6 says the pin is
       the emit-time HEAD.
       verify: `npx vitest run tests/scripts/analysis_validate.test.ts` reds on a fixture without `tree_pin:`
-- [ ] **2.2 Execution start sees freshness.** Each drain-queue entry carries
+- [x] **2.2 Execution start sees freshness.** Each drain-queue entry carries
       `freshness: fresh | drifted | broken | unpinned` from the cheap path; the
       text render shows it; no fifth step class. The process-full lane brief
       gains one sentence: on `drifted` or `broken`, revalidate before the first
       mutation.
       verify: `npx vitest run tests/scripts/roadmap_drain_queue.test.ts tests/scripts/process_full_lane_brief.test.ts`
-- [ ] **2.3 Phase boundary and resume.** The context-refresh subsection of
+- [x] **2.3 Phase boundary and resume.** The context-refresh subsection of
       `roadmap-process-loop-set.md` runs `--revalidate` when the fingerprint
       differs, and the agent re-verifies each drifted statement, labels it and
       corrects it in place (`corrected-from-reproduction`), then `--advance`.
       verify: `grep -n 'revalidate' src/agent-src/contexts/execution/roadmap-process-loop-set.md` -> ≥ 1
-- [ ] **2.4 Closure.** The close procedure runs `--revalidate` before archiving;
+- [x] **2.4 Closure.** The close procedure runs `--revalidate` before archiving;
       a `broken` verdict at closure is named in the closing summary.
       verify: `grep -n 'revalidate' src/agent-src/contexts/execution/roadmap-process-loop-close.md` -> ≥ 1
 
@@ -113,13 +113,13 @@ Evidence (read): `src/scripts/roadmap_drain_queue.ts:103`
 
 Evidence (read): `src/scripts/ai_council/prompts.ts:58`
 
-- [ ] **3.1 Decision drift renders a council question.** `--revalidate --json`
+- [x] **3.1 Decision drift renders a council question.** `--revalidate --json`
       emits, per drifted decision row, a question text in the existing prompt
       mode: the row, its evidence, the diff of its drifted paths since the pin,
       and the closed answer set `holds | holds-changed | falls`. Numbers moving
       never produce a question.
       verify: `npx vitest run tests/scripts/roadmap_revalidation.test.ts` — a decision citing a drifted path yields one question; a step citing it yields none
-- [ ] **3.2 Routing and the degraded case, in the procedure.** The process loop
+- [x] **3.2 Routing and the degraded case, in the procedure.** The process loop
       sends rendered questions through `council_cli` and records the answer as a
       `## Decisions` row `resolved by: council:<date>`; one seat or a split is
       `provisional` for technical classes and an `agents/owner-questions.md`

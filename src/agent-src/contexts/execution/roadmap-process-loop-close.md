@@ -131,6 +131,11 @@ execution either way.
   runs through `/pr:merge` § 9a's danger gate (ADR-282). Without a contract
   (interactive mode), the run ends after the archival check with no
   git delivery beyond explicitly authorized commit steps.
+- **Last revalidation before the archive.** Run `agent-config roadmap:context
+  --revalidate <slug>` once more. `drifted` → re-verify and `--advance` like at a
+  phase boundary; `broken` is named in the closing summary with the missing or
+  beyond-end citations — the roadmap still archives, the summary says what it no
+  longer proves ([`roadmap-revalidation-v1`](../../../../docs/contracts/roadmap-revalidation-v1.md)).
 - **Sampled depth audit.** For every step whose receipt reads `active` (a
   lowered depth), `./scripts-run src/scripts/probe_depth_shadow --audit-sample
   <roadmap.md#step> --class R0|R1` decides whether it gets a full round-1
