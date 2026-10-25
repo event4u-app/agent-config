@@ -1,0 +1,11 @@
+{
+    "name": "agent-config-local",
+    "owner": { "name": "event4u" },
+    "plugins": [
+        {
+            "name": "agent-config-status",
+            "source": "./",
+            "description": "Read-only agent-config status line. Opt-in; decides nothing."
+        }
+    ]
+}

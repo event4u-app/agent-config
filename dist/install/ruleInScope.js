@@ -118,6 +118,12 @@ export function rule_in_scope(source_path, scope, pack_scope = null, role_scope 
         }
         return values.some((v) => configured.includes(v));
     };
-    return axis('workspaces', scope) && axis('packs', pack_scope) && axis('roles', role_scope);
+    // A safety floor follows the skills it guards. A listing-lever host receives
+    // every skill whatever the active packs are, and this predicate does not know
+    // the host, so a floor naming a skill in `routes_to` ships with it rather than
+    // with its pack (council 2026-10-25, D14 of road-to-a-setup-that-decides-itself).
+    const routes = Array.isArray(meta['routes_to']) ? meta['routes_to'] : [];
+    const guardsSkill = typeof meta['consequence_class'] === 'string' && routes.some((r) => String(r).startsWith('skill:'));
+    return axis('workspaces', scope) && (guardsSkill || axis('packs', pack_scope)) && axis('roles', role_scope);
 }
 //# sourceMappingURL=ruleInScope.js.map

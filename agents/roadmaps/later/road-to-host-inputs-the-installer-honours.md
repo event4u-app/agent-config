@@ -24,7 +24,9 @@ relates:
 ---
 # Road to host inputs the installer honours
 
-> **Arrivals:** 1 — `inbox-2026-10-at` (2026-10-25): a plan reproduced H1 at
+> **Arrivals:** 2 — latest `inbox-2026-10-av` (2026-10-25): a mods plan names the same
+> false green for H2 and adds a third key, `allowManagedModsOnly` (0 hits under `src/`
+> and `docs/` at `c073ca2e5a`); taken into 4.1 below. Earlier: `inbox-2026-10-at` (2026-10-25): a plan reproduced H1 at
 > `main@01bb841cb` (45 of 301 skills keep a description, alphabetically up to
 > `composer-packages`; `security-audit`, `threat-modeling`,
 > `test-driven-development` and every `laravel-*` skill go `name-only`) and asks
@@ -115,6 +117,8 @@ Claude Code is talking to a foreign gateway.
 - [ ] **4.1 Read the readable policy sources** — the managed-settings file under
   `/etc/claude-code/` and the Windows program directory. When one of them sets
   `allowManagedHooksOnly` (or `disableAllHooks`), every bound finding carries the cause
+  (`allowManagedModsOnly` is read too and reported beside them: it silences user mods, not
+  hooks, so it is a line in the report, not a `suppressed-by-policy` cause)
   `suppressed-by-policy`. Registry and MDM sources are not file-readable: there the result says
   `policy: unknown`, never "ok". No sixth state.
   verify: 1.2 green; a fixture without a policy is unchanged.

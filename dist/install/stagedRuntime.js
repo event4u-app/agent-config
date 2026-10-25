@@ -49,6 +49,7 @@ export const PACKAGE_STAMP_LINE = 'package: event4u/agent-config';
  * skipped, not an error: a checkout without a built bundle still stages its
  * rule bodies, and the hook command checks for the bundle itself.
  */
+export const CLAUDE_MOD_ENTRY = 'src/templates/claude-mod';
 export const STAGED_ENTRIES = [
     'package.json',
     'dist/hooks',
@@ -56,6 +57,10 @@ export const STAGED_ENTRIES = [
     'dist/router.json',
     'src/scripts',
     'src/config',
+    // Not read by the dispatcher: the opt-in Claude Code module (ADR-302). Staged
+    // so a marketplace registered on `runtime/current` follows the installed
+    // version; the host records that path literally, so it survives a re-stage.
+    CLAUDE_MOD_ENTRY,
 ];
 /**
  * Packages the bundle still resolves at run time (a `createRequire` the bundler
@@ -82,6 +87,9 @@ function stageRuntimeDeps(packageRoot, stage) {
  * schemas), which are a small fraction of the TypeScript's size.
  */
 function stagedFilter(src) {
+    // The host loads the module's TypeScript itself, so its source is the payload.
+    if (src.split(path.sep).join('/').includes(`/${CLAUDE_MOD_ENTRY}/`))
+        return !/\.test\.ts$/.test(src);
     return !/\.m?ts$/.test(src);
 }
 export function runtimeRootFor(env) {

@@ -25,6 +25,7 @@
 
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -38,6 +39,7 @@ import {
     type NeighbourCensus,
 } from '../_lib/neighbour_census.js';
 import { scanNeighbourBody, writeScanCache } from '../_lib/neighbour_scan.js';
+import { contextFillLine, installedMods, renderMods } from '../_lib/host_mod_census.js';
 import {
     RANK_NEIGHBOUR_ALWAYS_ON,
     RANK_NEIGHBOUR_SKILL,
@@ -371,12 +373,15 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return 0;
     }
     const c = runCensus(path.resolve(root), resolvePackageRoot(import.meta.url), home);
+    const mods = installedMods(home ?? os.homedir());
     if (json) {
         // Compact, not pretty-printed: this is the machine contract, and the
         // gate that reads it matches on adjacency rather than on indentation.
-        process.stdout.write(`${JSON.stringify(c)}\n`);
+        process.stdout.write(`${JSON.stringify({ ...c, mods })}\n`);
     } else {
-        for (const line of renderText(c)) process.stdout.write(`${line}\n`);
+        const fill = contextFillLine(path.resolve(root));
+        const lines = [...renderText(c), ...renderMods(mods), ...(fill === null ? [] : ['', fill])];
+        for (const line of lines) process.stdout.write(`${line}\n`);
     }
     return 0;
 }

@@ -30,6 +30,10 @@ const SHARED_EXCLUDE = [
     'dist/agent-src/**',
     '.agent-src.uncondensed/**',
     'tests/golden/sandbox/repo/**',
+    // Host-harness tests of the shipped Claude Code module: they import
+    // `claude-code/testing`, which only `claude plugin test` provides.
+    // tests/scripts/claude_mod_surface.test.ts runs them through that CLI.
+    'src/templates/claude-mod/**',
 ];
 
 // The two suites that drive a REAL browser. They are excluded HERE, in the
