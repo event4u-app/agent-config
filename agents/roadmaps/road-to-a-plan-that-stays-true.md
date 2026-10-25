@@ -89,7 +89,7 @@ Evidence (read): `src/scripts/roadmap_context.ts:470`
 
 Evidence (read): `src/scripts/roadmap_drain_queue.ts:103`
 
-- [ ] **2.1 Emit refuses an unpinned roadmap.** `analysis_validate` reports an
+- [x] **2.1 Emit refuses an unpinned roadmap.** `analysis_validate` reports an
       emitted roadmap without a readable pin as a content failure, so a run that
       skips the pin stays in `emitted`; `/analyze:inbox` Phase 6 says the pin is
       the emit-time HEAD.

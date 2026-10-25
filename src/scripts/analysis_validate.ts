@@ -17,6 +17,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { EVIDENCE_TIERS } from './analysis_ledger.js';
 import { isMediaAnchor } from './_lib/media_anchor.js';
+import { readPin } from './_lib/roadmap_revalidation.js';
 import { RunError, loadRun, transition, type RunRecord } from './analysis_run.js';
 
 export const VALIDATION_GATES = [
@@ -54,6 +55,7 @@ export const scriptGateRunner: GateRunner = (gate, ctx) => {
 /** Content failures of one emitted roadmap, in document order. */
 export function contentFailures(body: string, name: string, opts: { councilDissent: boolean }): string[] {
     const out: string[] = [];
+    if (readPin(body) === null) out.push(`${name}: carries no tree_pin — an emitted roadmap names the HEAD it was verified against`);
     const phases = body.split(/^## /m).slice(1);
     for (const section of phases) {
         const heading = section.split('\n', 1)[0] as string;
