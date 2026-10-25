@@ -94,7 +94,7 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
                 subject,
                 proposed_by: values.get('--proposed-by') as string,
                 implemented_by: values.get('--implemented-by') as string,
-                effective_after: values.get('--effective-after'),
+                effective_after: values.get('--effective-after') ?? 'merge',
                 summary: values.get('--summary') as string,
             },
             required,
