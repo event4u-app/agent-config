@@ -104,7 +104,8 @@ what the user is working on and wants to reach.
       refused by the existing exclusions.
 - [ ] **4.2 Gap-only project interview.** `/team-knowledge bootstrap` asks only for
       `[HUMAN: verify]` gaps after the static pass, at most five questions, one per
-      round; answers land in staging with `source: owner-interview <date>` and the
+      round, by page type — for non-developer profiles that means business context
+      (offer, customers, running work, decisions), never private life; answers land in staging with `source: owner-interview <date>` and the
       verbatim quote, and every number or date on the page must appear in the quote.
       verify: fresh TS and Laravel fixtures with canned answers produce no page with a
       number absent from quote or manifest.
@@ -132,6 +133,11 @@ what the user is working on and wants to reach.
       `road-to-a-knowledge-atlas`.
       verify: a page with `related:` gets a backlink line on the target after
       regeneration.
+- [ ] **6.2 The settings GUI shows the effective profile.** After Phase 1, the user
+      panel (`src/ui/pages/UserMdPanel.tsx`) renders the merged cascade, the
+      observation buffer and the audit text from `renderGlobalMemoryAudit`.
+      verify: a UI test with a fixture HOME shows one accepted observation and the
+      gate block.
 
 ## Phase 7 — Navigation demand, counted (deferred N layer)
 
@@ -159,6 +165,29 @@ what the user is working on and wants to reach.
 | E5 | Encrypt the global layer at rest? | council (security) | open; threat model first, reuse `link_crypto`, no new crypto stack |
 | E7 | ADR-138 amendment for `focus`/`goals`? | council (amends an ADR on personal data) | open, at 4.1 |
 | E9 | New canonical store (SQLite, vector, graph DB)? | run | no — files stay canonical, FTS5 stays derived (ADR-129); a graph store lives behind its own stub's gates |
+| E10 | Flip `memory.session_index` on, with a demotion trigger in the ADR-103 shape? | council (consumer-facing default) | open, after Phase 3 gives the index pages worth loading |
+| E11 | Transaction envelope for knowledge writes (hash precondition, staging, recovery journal)? | run | not now — knowledge writes are human-promoted and git-revisioned, and no lost update has been observed; revisit if Phase 2's ledger or a concurrent session records one |
+
+## Declined from the drafts
+
+- **New verbs** (`memory:capture/review/forget/why/vault/graph/timeline`) — ADR-041;
+  each maps onto `memory:add/propose/promote`, `knowledge:forget`, `/agents user …`
+  or `agent-config explain`.
+- **A global project registry** keyed by remote, worktree and UUID — the council's
+  2026-07-29 cut rejected any global project namespace on the enumeration argument.
+- **Vault sync, team sync, device sync** — the files are the vault, and the global
+  layer is never synchronised by council lock.
+- **An intent router** classifying prompts — the predicate floor stays; Phase 7
+  counts the demand instead.
+- **Outcome-aware routing policy learning** — the learning-dogfood window reads out on
+  2026-10-31; a second learning line before that reading would duplicate it.
+- **A generated store-map contract** — ADR-130's subject axis and
+  `lint_store_boundary.ts` already map the stores.
+- **A context-fill warning** — already shipped as the `session-eol` concern.
+- **A session-start profile pointer** — optional in the master draft; nothing asks
+  for it until Phase 1 settles which file it would point at.
+- **Health, legal, therapy, finance and third parties in any store** — already
+  excluded by the schema, even with consent (`agent-user-schema.md`).
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-25 | reviewer: claude/host -->
