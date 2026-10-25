@@ -81,6 +81,22 @@ and the run that applies it links its PR.
   a small pre-registered pilot answers it either way for a bounded cost.
 - **Blocks:** every head-to-head KPI in the round's master plan.
 
+### OQ-18 — Install the quota status-line tap by default (`quota-tap-default`)
+
+- **Context:** `road-to-a-quota-the-user-sees-coming` Phase 2 ships
+  `agent-config statusline:install`, which wraps the user's existing
+  `statusLine.command` in `~/.claude/settings.json` and restores it
+  byte-for-byte on uninstall. Without the tap AC never sees the plan window, so
+  no quota notice can fire. Default-on writes into a user-global host file at
+  install time; the archived cold-start roadmap had chosen opt-in (its D4).
+- **Options:** (a) `setup`/`init` installs the tap by default, uninstall
+  restores; (b) opt-in only — the user runs `statusline:install`; (c) offer it
+  once during `setup` with default yes.
+- **Recommendation:** (c) — it reaches every new install without writing a
+  host file nobody was told about; existing installs see the command named in
+  the first metered or session-size notice.
+- **Blocks:** nothing executable; until answered the tap is opt-in (b).
+
 ## Not owner questions — waits, or already settled in the tree
 
 - `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
