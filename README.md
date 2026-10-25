@@ -16,6 +16,27 @@
 
 **Every public claim in this README is machine-checked — [verify it yourself](docs/proof.md).** In a market that runs on unbacked headline numbers, this one binds each claim to resolvable evidence or fails its own build.
 
+### See what a change touches before you make it
+
+`agent-config code-graph map` draws a local, offline map of the repository; `agent-config code-graph open` shows it again. Pick a file and the map lights up every area it reaches, split into direct and transitive dependents, with trusted and guessed edges kept apart.
+
+<p align="center"><img alt="Code map: blast radius of one file across the repository's areas" src=".github/assets/screenshots/graph-blast.png" width="900"></p>
+
+<details>
+<summary><b>More views</b> — area drill-down, knowledge sources, dependency matrix, treemap</summary>
+<br>
+<table>
+<tr>
+<td width="440"><img alt="Area drill-down" src=".github/assets/screenshots/area.png"><br><sub><b>Area</b> — the files inside one area and how they connect</sub></td>
+<td width="440"><img alt="Knowledge view" src=".github/assets/screenshots/knowledge.png"><br><sub><b>Knowledge</b> — the tests, roadmaps and evidence linked to the selection</sub></td>
+</tr>
+<tr>
+<td width="440"><img alt="Dependency matrix" src=".github/assets/screenshots/matrix.png"><br><sub><b>Matrix</b> — coupling between areas, cycles framed in red</sub></td>
+<td width="440"><img alt="Treemap" src=".github/assets/screenshots/treemap.png"><br><sub><b>Treemap</b> — the repository by size, folder by folder</sub></td>
+</tr>
+</table>
+</details>
+
 > **Choose your experience — developer · founder · content · agency · finance · ops. Add packs. Get a focused command set, not a 500-artefact dump.** Bring your own AI provider.
 
 **A deep library of skills, commands and governed rules** — plus a capability router that loads the right skill on intent and multi-agent orchestration with consensus review. The whole layer is compiled into **20 host agents** — of 23 detected, 3 being export-only<!-- claim:host-agent-count --> (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini CLI, Codex, Continue, Zed, JetBrains, Aider and more). **Resident processes are permitted only under [the supervision policy](docs/decisions/ADR-249-supervised-resident-process-permitted-under-governance.md) this repository adopted on 2026-08-27** — a rule, not a description of anything running today. Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
