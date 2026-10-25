@@ -187,6 +187,24 @@ describe('spawn ask', () => {
         expect(fs.readdirSync(approvedDir)).toEqual([]);
     });
 
+    it('a stale or future-dated pending mark approves nothing, and a pending mark is spent once', () => {
+        const pendingDir = path.join(home, 'state', 'quota', 'pending');
+        const age = (secs: number) => {
+            for (const f of fs.readdirSync(pendingDir)) fs.utimesSync(path.join(pendingDir, f), secs, secs);
+        };
+        spawnAsk(askDeps());
+        age((NOW - 9 * 24 * 3600 * 1000) / 1000);
+        expect(ran()).toBe(false);
+        spawnAsk(askDeps());
+        age((NOW + 24 * 3600 * 1000) / 1000);
+        expect(ran()).toBe(false);
+        expect(fs.readdirSync(pendingDir)).toEqual([]);
+        spawnAsk(askDeps());
+        expect(ran()).toBe(true);
+        expect(fs.readdirSync(pendingDir)).toEqual([]);
+        expect(ran()).toBe(false);
+    });
+
     it('a future-dated approval marker is no approval', () => {
         spawnAsk(askDeps());
         ran();

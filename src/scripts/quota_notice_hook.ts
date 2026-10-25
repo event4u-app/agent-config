@@ -186,23 +186,25 @@ export function spawnAsk(deps: AskDeps): string | null {
 }
 
 /**
- * Has the user allowed an asked spawn in this session, within eight days? The
- * age is checked here, on read, so an approval cannot outlive its expiry just
- * because nothing wrote a new marker. A stale, future-dated or unreadable
- * marker is no approval, and a stale one is removed.
+ * Is the marker at `p` within its eight days? Checked on every read, so a
+ * marker cannot outlive its expiry because nothing wrote a new one. A stale
+ * marker is removed; a future-dated or unreadable one counts as absent. One
+ * minute of slack: a file's mtime can run a few ms ahead of the clock read.
  */
-export function spawnApproved(sessionId: string | null, stateEnv?: EnvMap | null, now: number = Date.now()): boolean {
-    if (sessionId === null) return false;
-    const p = markerPath('approved', sessionId, stateEnv);
+function freshMarker(p: string, now: number): boolean {
     try {
         const age = now - fs.statSync(p).mtimeMs;
-        // A minute of slack: a file's mtime can run a few ms ahead of the clock read.
         if (age >= -60_000 && age <= CLAIM_MAX_AGE_MS) return true;
         if (age > CLAIM_MAX_AGE_MS) fs.rmSync(p, { force: true });
         return false;
     } catch {
         return false;
     }
+}
+
+/** Has the user allowed an asked spawn in this session, within eight days? */
+export function spawnApproved(sessionId: string | null, stateEnv?: EnvMap | null, now: number = Date.now()): boolean {
+    return sessionId !== null && freshMarker(markerPath('approved', sessionId, stateEnv), now);
 }
 
 /**
@@ -214,9 +216,11 @@ export function recordSpawnRan(deps: Pick<AskDeps, 'sessionId' | 'stateEnv' | 't
     if (deps.sessionId === null || deps.toolUseId === null) return false;
     if (deps.toolName === null || !SPAWN_TOOLS.has(deps.toolName)) return false;
     const pending = markerPath('pending', `${deps.sessionId}|${deps.toolUseId}`, deps.stateEnv);
-    if (!fs.existsSync(pending)) return false;
-    touch(markerPath('approved', deps.sessionId, deps.stateEnv), deps.now);
+    const fresh = freshMarker(pending, deps.now);
+    // One use: the pending mark is spent before any approval is written.
     fs.rmSync(pending, { force: true });
+    if (!fresh) return false;
+    touch(markerPath('approved', deps.sessionId, deps.stateEnv), deps.now);
     return true;
 }
 
