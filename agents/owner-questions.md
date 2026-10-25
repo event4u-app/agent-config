@@ -3,7 +3,12 @@
 One list of every open decision that only the owner can take. Runs do not open a
 pull request whose only content is a question; they add a row here and take the
 next step (`agents/evidence/owner-directives/2026-10-24-throughput-over-ceremony.md`).
-An answered question moves to `### OQ-8 — Self-modification AC-5: a proposal that passed, or one that landed
+An answered question moves to `## Answered` with its date and the answer verbatim,
+and the run that applies it links its PR.
+
+## Open
+
+### OQ-11 — Self-modification AC-5: a proposal that passed, or one that landed
 
 - **Context:** AC-5 of `road-to-self-modification-that-a-council-must-pass` asks
   for one proposal whose change passes the gate on a passing record. The only
@@ -17,11 +22,6 @@ An answered question moves to `### OQ-8 — Self-modification AC-5: a proposal t
 - **Recommendation:** (a) — it is the only option that proves the pipeline can
   pass, which is what the criterion is for; (b) weakens it and is yours alone.
 - **Blocks:** AC-5 and the archive of the roadmap.
-
-## Answered` with its date and the answer verbatim,
-and the run that applies it links its PR.
-
-## Open
 
 ## Not owner questions — waits, or already settled in the tree
 

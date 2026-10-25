@@ -1084,7 +1084,7 @@ suite in the bundle this time.
 > module this phase adds to the watch list is not yet on the merge gate's trust
 > chain unless it is named there too.
 
-- [x] **4.1 The review's own code is a gated surface.** The gate's watch list
+- [x] **4.1 The review's own code is a gated surface.** The gate's watch list <!-- receipt: class=R3 · shadow · would-skip=none · bound=raised to R3 from R2 -->
       gains the modules of Phases 2 and 3 — the digest and the writer, the
       questions, the verdict rule — and the artifact contract. Because they are modules of their
       own, an ordinary change to the council's prompts or transports stays
@@ -1160,7 +1160,7 @@ suite in the bundle this time.
       parser that reads a seat's closing line is in the reviewer's closure and
       belongs in the 4.1 argument, not on the ungated side of it.
 
-- [x] **4.2 Rule law beyond the nine kernel rules.** The gate's path set is
+- [x] **4.2 Rule law beyond the nine kernel rules.** The gate's path set is <!-- receipt: class=R3 · shadow · would-skip=none · bound=raised to R3 from R2 -->
       extended by the members of `src/config/rule-consequence-class.json` —
       28 at the pin, selected by a criterion and not by name. The gate reads
       that list from its own tree, as it reads its policy, and the list and
