@@ -285,6 +285,55 @@ Each refused change is off the branch with its non-passing record in
 and its code reachable at the commit the record names. The open steps are 3.4,
 4.1, 4.2, 5.2 and 6.2; what each needs next is in its own entry.
 
+## The 2026-10-25 screen — 4.1 and 4.2 wait for PR #2657
+
+Both steps stay open. Their notes sit here and not in the steps, because a held step may not grow.
+
+**4.1.**
+The owner answered OQ-7 on 2026-10-25 with option 1: 3.4, 5.2 and 6.2
+land in PR #2657 through the D11 forge act, and "4.1 and 4.2 follow in
+their own change after the writer is on main". The order is not a
+preference. The header of `MECHANISM_IMPORT_PATHS` in the gate keeps the writer and
+its watch-list entry out of one change, and a 4.1 change cut from today's
+`main` would edit `check_kernel_edit_ratified.ts` beside 5.2's edit in
+#2657. Its record's digest would go stale the moment #2657 merges, so the
+council round it needs would be spent twice.
+The dependency evidence owed since 2026-10-19 is now measured, not
+asserted. It is the static relative-import closure of the writer, read
+from Git objects at the #2657 head
+(`origin/owner/self-modification-land-20261025`). That closure has eleven
+modules. Eight are already gated: the gate itself, its reader, the closure
+reader, `kernel_rules.ts` as plumbing, and the four
+`MECHANISM_IMPORT_PATHS`. The three that are not are the writer,
+`ai_council/modification_review.ts` and `ai_council/stance_tally.ts`.
+`stance_tally.ts` imports nothing. The CLI `ratification_record.ts` adds
+no council module beyond those two. `prompts.ts`, `quorum.ts` and
+`chairman.ts` are in neither closure. So they cannot change how a seat's
+text becomes the recorded verdict. They can still change what a seat is
+asked, which is the authority half of the 2026-10-19 objection, and a
+closure argument does not answer it. `modification_review_questions.ts` is
+imported by nothing at the #2657 head either. Gating it would still put a
+record on a question list no run reads, the 2026-10-18 objection. So the
+next 4.1 change, cut after #2657 merges, names the writer,
+`modification_review.ts` and `stance_tally.ts`. It argues
+`modification_review_questions.ts` separately, or leaves it out on that
+ground.
+
+**4.2.**
+The 2026-10-18 objection is answered. The owner's OQ-7 answer of
+2026-10-25 names 4.2 and puts it in "their own change after the writer is
+on main". That is the owner ruling ADR-281's `review_trigger` reserves,
+and it gives the route: the D11 forge act, as for #2657. The sequencing
+is the same as for 4.1. A 4.2 change cut from today's `main` would edit
+`check_kernel_edit_ratified.ts` and `_lib/ratification_subject.ts` while
+#2657 is still open on the first of them. Its record's digest would go
+stale on that merge, and the two records would share one reviewed file,
+which is the bundling D12 refuses from the other side. The next attempt
+starts from `5ecf60b10` with both 2026-10-19 dealbreakers fixed. Round 5's
+remaining point, the back-check from a rule's own `consequence_class`, is
+answered by `tests/scripts/rule_consequence_class.test.ts`. Put that
+suite in the bundle this time.
+
 ## Phase 1 — The directive is a decision on record
 
 - [x] **1.1 One decision record, drafted as proposed.** A new ADR with
@@ -1111,36 +1160,6 @@ and its code reachable at the commit the record names. The open steps are 3.4,
       parser that reads a seat's closing line is in the reviewer's closure and
       belongs in the 4.1 argument, not on the ungated side of it.
 
-      **Re-screened 2026-10-25, still open: it waits for PR #2657 to merge.**
-      The owner answered OQ-7 on 2026-10-25 with option 1: 3.4, 5.2 and 6.2
-      land in PR #2657 through the D11 forge act, and "4.1 and 4.2 follow in
-      their own change after the writer is on main". The order is not a
-      preference. The gate header quoted above keeps the writer and
-      its watch-list entry out of one change, and a 4.1 change cut from today's
-      `main` would edit `check_kernel_edit_ratified.ts` beside 5.2's edit in
-      #2657. Its record's digest would go stale the moment #2657 merges, so the
-      council round it needs would be spent twice.
-      The dependency evidence owed since 2026-10-19 is now measured, not
-      asserted. It is the static relative-import closure of the writer, read
-      from Git objects at the #2657 head
-      (`origin/owner/self-modification-land-20261025`). That closure has eleven
-      modules. Eight are already gated: the gate itself, its reader, the closure
-      reader, `kernel_rules.ts` as plumbing, and the four
-      `MECHANISM_IMPORT_PATHS`. The three that are not are the writer,
-      `ai_council/modification_review.ts` and `ai_council/stance_tally.ts`.
-      `stance_tally.ts` imports nothing. The CLI `ratification_record.ts` adds
-      no council module beyond those two. `prompts.ts`, `quorum.ts` and
-      `chairman.ts` are in neither closure. So they cannot change how a seat's
-      text becomes the recorded verdict. They can still change what a seat is
-      asked, which is the authority half of the 2026-10-19 objection, and a
-      closure argument does not answer it. `modification_review_questions.ts` is
-      imported by nothing at the #2657 head either. Gating it would still put a
-      record on a question list no run reads, the 2026-10-18 objection. So the
-      next 4.1 change, cut after #2657 merges, names the writer,
-      `modification_review.ts` and `stance_tally.ts`. It argues
-      `modification_review_questions.ts` separately, or leaves it out on that
-      ground.
-
 - [ ] **4.2 Rule law beyond the nine kernel rules.** The gate's path set is
       extended by the members of `src/config/rule-consequence-class.json` —
       28 at the pin, selected by a criterion and not by name. The gate reads
@@ -1233,21 +1252,6 @@ and its code reachable at the commit the record names. The open steps are 3.4,
       widening itself an owner ruling. It would also edit the gate, so in the
       same pull request as 5.2 it would have shared 5.2's record — the bundling
       D12 refuses.
-
-      **Re-screened 2026-10-25, still open: it waits for PR #2657 to merge.**
-      The 2026-10-18 objection is answered. The owner's OQ-7 answer of
-      2026-10-25 names 4.2 and puts it in "their own change after the writer is
-      on main". That is the owner ruling ADR-281's `review_trigger` reserves,
-      and it gives the route: the D11 forge act, as for #2657. The sequencing
-      is the same as for 4.1. A 4.2 change cut from today's `main` would edit
-      `check_kernel_edit_ratified.ts` and `_lib/ratification_subject.ts` while
-      #2657 is still open on the first of them. Its record's digest would go
-      stale on that merge, and the two records would share one reviewed file,
-      which is the bundling D12 refuses from the other side. The next attempt
-      starts from `5ecf60b10` with both 2026-10-19 dealbreakers fixed. Round 5's
-      remaining point, the back-check from a rule's own `consequence_class`, is
-      answered by `tests/scripts/rule_consequence_class.test.ts`. Put that
-      suite in the bundle this time.
 
 - [x] **4.3 The comment matches the hooks.** The gate's header stops saying
       that the dispatcher source and the kernel list are denied at tool-call
@@ -1721,7 +1725,7 @@ and its code reachable at the commit the record names. The open steps are 3.4,
       because the code each is measured through is not on `main`. AC-2 needs
       the writer (3.4) and AC-5 the proposal 6.2 ships, and both are in PR
       #2657. AC-3 needs that writer and also 4.1's watch-list entry for it,
-      which can only follow #2657 (see 4.1). Each is re-measured on `main`
+      which can only follow #2657 (see § The 2026-10-25 screen). Each is re-measured on `main`
       after the merge that brings its code. Neither the 2026-10-12 measurement
       nor #2657's own test run is carried over.
 
