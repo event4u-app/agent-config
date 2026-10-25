@@ -295,8 +295,8 @@ invocation merged as a retro unit, in one call:
 ./scripts-run src/scripts/retro enqueue-merged --pr <N> [--pr <M> …]
 ```
 
-Depth row: `retro` in `src/config/step-depth-table.json` (in `shadow` mode it
-runs per merge). The § 9a danger gate has no row: no class lowers it.
+Depth row: `retro` in `src/config/step-depth-table.json` (per merge; per
+drain on `active`). The § 9a danger gate has no row: no class lowers it.
 
 ### Held for you — one block, at the end of the run
 
