@@ -465,7 +465,8 @@ export function finishAnswers(m: MapModel, rules: LayerRules | null): void {
         }
     }
     m.violations = violations;
-    m.analyses.layerBreaches = rules ? layerBreaches : undefined;
+    if (rules) m.analyses.layerBreaches = layerBreaches;
+    else delete m.analyses.layerBreaches;
 
     const hasChurn = m.files.some((f) => f.churn !== undefined);
     if (hasChurn) {
