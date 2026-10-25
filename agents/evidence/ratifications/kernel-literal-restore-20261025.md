@@ -2,7 +2,7 @@
 proposed_by: ai-council/oq-13-2026-10-25
 implemented_by: owner/matze4u
 reviewed_by: ai-council
-subject: 17590a63f064749b2f20761301cf573ff7f74c86666abc0b073de5c828e646e4
+subject: 16f08f46503a0304a5adb5577e0bf962e9f39781c09793d15af769a5d94ae4b3
 providers: [anthropic, openai]
 verdict: ratified
 seats:
@@ -15,9 +15,9 @@ effective_after: merge
 
 # Modification review
 
-Restores the protected never-act-while-asking literal on line 41 of non-destructive-by-default, keeps the same-turn sentence, shortens the three example clauses so the per-spawn payload stays within its ratchet. Owner answer to OQ-13, option 1.
+Restores the protected never-act-while-asking literal on line 41 of non-destructive-by-default, keeps the same-turn sentence, shortens the example clauses and Shape per to Shape: so the rule fits its always-rule allowlist and the per-spawn payload ratchet; re-anchors the kernel prefix. Owner answer to OQ-13, option 1. Round 1 ratified 2/2 before the CI trim; this is round 2.
 
-Verdict `ratified`, derived from each seat's stance line; the prompt every seat answered is `agents/evidence/council/kernel-literal-restore-ratification-20261025.question.md`, committed at `2103e1c41ed531b4bce8886118f90c0b1f971dba` and naming this record's subject.
+Verdict `ratified`, derived from each seat's stance line; the prompt every seat answered is `agents/evidence/council/kernel-literal-restore-ratification-r2-20261025.question.md`, committed at `0628f5c06fd456e53f4f89bdfe61dc54020ad2b7` and naming this record's subject.
 
 What this record does not establish: that a council produced the session it was rendered from. That file is the caller’s and council output is not kept, so on that point this record is exactly as trustworthy as a typed one. What it does establish is that the header says no more than the replies below, and that the prompt showed this content.
 
@@ -26,33 +26,29 @@ What this record does not establish: that a council produced the session it was 
 ### anthropic — `ratified`
 
 ```text
-Matze, reviewing the kernel rule literal restoration in round 2:
+Reviewing the round 2 diff.
 
-## 1. Agreement with prior reviewers
+## Agreement with prior reviewers
 
-**Agree with both A and B:**
-- No defect in the change (both reviewers)
-- Examples compression is acceptable - the governing clause "The approval names the exact object" remains intact (both reviewers)  
-- Nothing needs to change before merge after 24h soak (both reviewers)
-- All checks pass (19/19 invariants, token ceiling maintained)
+**With Reviewer A:** Full agreement. No defect, all guarantees preserved, authority narrowed, no blockers. The "WAIT for the answer" strengthening is particularly important - it closes any possible interpretation that a brief pause suffices rather than awaiting user input.
 
-## 2. Disagreement
+**With Reviewer B:** Agree on ratified verdict and the substantive strengthening. Reviewer B's observation about "Shape per" → "Shape:" being marginally less imperative is stylistically valid, and the "Use:" alternative is clever (equally short, more directive). However, I disagree this rises to a material concern: the reference to `user-interaction` remains normative, the imperative force comes from the Iron Law framing, and reopening for one word would cost another kernel-rule round when the current wording is functionally equivalent. The prefix hash verification point is correct - the change from `5a877e36...` to `8ba51df2...` should be from the reviewed edit only, which the context states was produced by `--update-baseline` after the owner's change.
 
-**Reviewer A's "narrows authority" framing:**
+## New points
 
-I disagree slightly with Reviewer A's characterization that this "narrows" authority. Reviewer B's framing is more accurate: this **restores** an existing constraint, neither expanding nor narrowing.
+**1. The definite articles strengthen the clause.** Round 1 reviewers noted "WAIT for the answer" but didn't explicitly flag that "Ask and action" became "**The** ask and **the** action." This moves from indefinite (any ask/action in general) to definite (the specific ask and action in context), which is a tightening.
 
-**Why:** The literal "WAIT for the answer" was already protected in `invariants.json`. It wasn't newly added — it was temporarily missing and is now restored. The rule's authority level isn't changing; it's being corrected back to its intended state. "Narrowing" would imply making something stricter than before, but the protected literal proves this was always the intended wording.
+**2. Character ceiling headroom: 1 char.** The rule now sits at 9,656/9,657 - technically compliant but at practical capacity. Any future kernel edit to this file will need to cut characters to stay under. Not a blocker, but this rule is now at its size limit.
 
-## 3. New points
+**3. Invariant exact match restored.** The new line 41 matches `tests/golden/invariants.json` word-for-word. The point of this change was to fix a failing invariant check, and it does exactly that.
 
-1. **The protection system validated itself**: The invariant check caught the deviation → council reviewed → restoration applied. This demonstrates the kernel protection mechanism working as designed.
+## Answers to the three questions
 
-2. **Token discipline under constraint**: Restoring the literal AND compressing examples to stay exactly at ceiling (135,864/135,864) shows successful adherence to the zero-growth ratchet while meeting the governance requirement.
+1. **Defect?** No. The new line 41 preserves every guarantee and strengthens two: "WAIT for the answer" is more explicit than bare "WAIT," and "The ask and the action" is more specific than "Ask and action." The approval-names-exact-object requirement is unchanged. The three examples retain all identifiers, just with cleaner colon syntax.
 
-3. **"for the answer" adds specificity without changing meaning**: Both "WAIT" alone and "WAIT for the answer" prohibit the same action (acting while asking), but the latter is more explicit about what the wait accomplishes — receiving the user's response. This is clarification, not substantive change.
+2. **Authority?** Narrowed. "WAIT for the answer" removes any wiggle room - the agent must await user input, not just pause.
 
-4. **Colon format improves scannability**: The change from "a download names X; a purchase names Y" to "download: X; purchase: Y" actually makes the examples easier to scan while preserving their meaning under the governing "exact object" requirement.
+3. **Must change before merge?** Nothing. The 24h soak is procedural (kernel-rule-edits contract), not a change requirement. The diff passes all gates: invariants 19/19, payload 135,863/135,864, prefix byte-stable against the new snapshot.
 
 STANCE: ratified | CONFIDENCE: high | DEALBREAKER: no
 ```
@@ -60,42 +56,38 @@ STANCE: ratified | CONFIDENCE: high | DEALBREAKER: no
 ### openai — `ratified`
 
 ```text
-Matze, my assessment is: agree—ratify.
+Matze, my assessment is **agree: ratify**, with one non-blocking wording concern.
 
-1. Prior points I agree with
+1. **Prior points I agree with**
 
-- Reviewer A correctly finds no defect. The operative guarantees remain intact: strict sequencing, waiting for the answer, prohibition on acting in the asking turn, and exact-object approval.
-- Reviewer B correctly identifies the strongest argument: “**The approval names the exact object**, not a category” still governs all three compressed examples. Changing “a download names …” to `download: …` is grammatical compression, not semantic weakening.
-- I agree with both reviewers that no wording change is required before merge.
+   - **Reviewer A:** Line 41 preserves the operative guarantees: “Never act while asking,” strict sequencing, no same-turn action, and exact-object approval.
+   - **Reviewers A and B:** “WAIT for the answer” is clearer and slightly narrower than “WAIT.”
+   - **Reviewer B:** The shortened examples preserve every identifying field. The lead clause—“The approval names the exact object, not a category”—makes the colon-separated examples object schemas, not weaker suggestions.
+   - **Reviewer B:** The replacement prefix hash should be accepted only if CI proves it was generated from this reviewed source change.
 
-2. Prior points I disagree with
+2. **Point I would qualify**
 
-- I disagree with Reviewer A that the change narrows authority. The old text already required strict sequencing and said `then WAIT`; it also explicitly prohibited firing the action in the asking turn. “For the answer” removes possible ambiguity but imposes no substantively new restriction.
-- I agree instead with Reviewer B: authority is neither expanded nor narrowed. This is a semantic restoration/clarification that makes the written rule match the protected invariant.
+   Reviewer A calls every change semantically neutral or stronger. I agree for the approval boundary, but not entirely for the final instruction. Changing “Shape per … numbered-options” to “Shape: … numbered-options” makes the formatting directive less grammatical and marginally less imperative.
 
-3. New points and refinements
+   I agree with Reviewer B that this is a real editorial regression, but it is not an authority expansion and does not undermine the destructive-action guard. Therefore it is not a dealbreaker.
 
-From first principles, the line contains four independent constraints:
+3. **Strongest argument for ratification**
 
-- Ask and action occur sequentially.
-- The agent must wait for an answer.
-- The action cannot occur in the asking turn.
-- Approval must identify the exact action object through the listed fields.
+   The complete authorization boundary remains explicit and mutually reinforcing in line 41: confirmation must be surfaced, the agent must wait for the answer, action cannot occur in the asking turn, and approval must identify the exact object. The download, purchase, and send schemas retain every field. No substantive guarantee is lost; agent discretion is slightly narrowed by “for the answer.”
 
-Every constraint survives the edit. The label-style examples remain within the scope of the exact-object clause because the colon introduces required fields for each category. There is no plausible reading under which `download: filename + size + source` permits category-level approval.
+4. **Strongest counter-argument**
 
-The only process risk is that the evidence is commit-specific. Any change during the soak would invalidate the cited revision, digest, test result, and payload measurement.
+   Kernel rules benefit from unmistakably normative wording. “Shape:” can be read as a label rather than a command. A similarly short formulation such as “Use: [`user-interaction`](user-interaction.md) numbered-options.” would be more imperative while shrinking the payload further. This is worth considering, but requiring another kernel edit and soak for it would be disproportionate unless numbered-option formatting is itself a protected invariant.
 
-4. Concrete next steps
+5. **New refinements and merge steps**
 
-After the 24-hour soak:
+   - The authority effect is **narrowing**, not expanding.
+   - The compressed examples remain mandatory because they are governed by the unchanged bold exact-object clause.
+   - No source change is required before merge.
+   - Complete the 24-hour soak and require all gated checks to pass at the exact reviewed revision, including invariants, generated projection/sync, payload ceiling, prefix stability, and full CI.
+   - Confirm the baseline hash was mechanically regenerated and that no unrelated prefix input changed.
 
-- Verify the branch head is still revision `7899417e6af973a3ff4df857f1e0959269fbc290`.
-- Recompute and confirm the gated-files digest.
-- Re-run the invariant check and confirm 19/19.
-- Confirm the generated projection matches the source.
-- Recheck the payload ceiling remains at or below 135,864.
-- If any file changes, restart the relevant review/soak evidence rather than relying on this verdict.
+The upside extends beyond fixing CI: restoring the protected literal improves model salience and preserves a stable, machine-checkable safety contract at effectively zero payload cost.
 
 STANCE: ratified | CONFIDENCE: high | DEALBREAKER: no
 ```
