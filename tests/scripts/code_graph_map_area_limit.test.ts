@@ -28,6 +28,7 @@ beforeAll(async () => {
         for (const n of ['b', 'c', 'd'])
             fs.writeFileSync(path.join(dir, `${n}.ts`), `import { a${i} } from './a';\nexport const ${n}${i} = a${i};\n`);
     }
+    fs.writeFileSync(path.join(root, 'README.md'), '# Fixture\n');
     const res = await buildMap(root);
     html = path.join(res.outDir, 'index.html');
     const doc = JSON.parse(fs.readFileSync(path.join(res.outDir, 'map.json'), 'utf-8')) as { model?: { areas?: unknown[] } };
@@ -255,3 +256,82 @@ describe('side panels: pinned on a wide window, flyouts below it', () => {
         await page.close();
     });
 });
+
+describe('audit fixes: what the viewer shows is what the reader chose', () => {
+    async function firstFileInArea(page: Page): Promise<{ idx: number; x: number; y: number }> {
+        const node = (await view(page)).drawn.find((d) => d.kind === 'file');
+        if (!node) throw new Error('no file drawn');
+        const box = await page.locator('#stage').boundingBox();
+        if (!box) throw new Error('no stage');
+        return { idx: node.idx, x: box.x + node.x, y: box.y + node.y };
+    }
+
+    it('nothing is selected when the page opens', async () => {
+        const page = await open();
+        expect((await view(page)).file).toBe(-1);
+        await page.close();
+    });
+
+    it('opening another area drops a file marked in the previous one', async () => {
+        const page = await open();
+        const a = await firstArea(page);
+        await page.mouse.dblclick(a.x, a.y);
+        const f = await firstFileInArea(page);
+        await page.mouse.click(f.x, f.y);
+        expect((await view(page)).file).toBe(f.idx);
+        // Open another area through search, which jumps without a marking click first.
+        const other = await page.evaluate((cur) => {
+            const data = JSON.parse((document.getElementById('map-data') as HTMLElement).textContent as string) as { model: { areas: Array<{ id: string }> } };
+            const k = data.model.areas.findIndex((_, i) => i !== cur);
+            return { idx: k, id: data.model.areas[k]?.id as string };
+        }, a.idx);
+        await page.fill('#search', other.id);
+        await page.locator('#results button').first().click();
+        const v = await view(page);
+        expect(v.area).toBe(other.idx);
+        expect(v.file).toBe(-1);
+        await page.close();
+    });
+
+    it('a double click that changes nothing leaves no dead "back" step', async () => {
+        const page = await open();
+        const a = await firstArea(page);
+        await page.mouse.dblclick(a.x, a.y);
+        const f = await firstFileInArea(page);
+        await page.mouse.dblclick(f.x, f.y);
+        await page.mouse.dblclick(f.x, f.y);
+        // One "back" reaches the overview: the two double clicks changed nothing.
+        await page.click('#nav-back');
+        expect((await view(page)).level).toBe('overview');
+        expect(await page.locator('#nav-back').count()).toBe(0);
+        await page.close();
+    });
+
+    it('on the overview the file-edge toggles are disabled and say why; in an area they work', async () => {
+        const page = await open();
+        expect(await page.locator('#t-guess').isDisabled()).toBe(true);
+        expect(await page.locator('#t-guess').getAttribute('title')).toMatch(/area/i);
+        const a = await firstArea(page);
+        await page.mouse.dblclick(a.x, a.y);
+        expect(await page.locator('#t-guess').isDisabled()).toBe(false);
+        await page.close();
+    });
+
+    it('a file that has no area is named as not on the graph', async () => {
+        const page = await open();
+        await page.fill('#search', 'README');
+        await page.locator('#results button').first().click();
+        expect(await page.locator('#hint').textContent()).toMatch(/README\.md .*not on the graph/);
+        await page.close();
+    });
+
+    it('full screen hides the header, breadcrumb, legend and footer', async () => {
+        const page = await open();
+        await page.click('#full');
+        for (const sel of ['.top', '#crumbs', '#legend', '#foot']) expect(await page.locator(sel).isVisible()).toBe(false);
+        await page.click('#full');
+        expect(await page.locator('.top').isVisible()).toBe(true);
+        await page.close();
+    });
+});
+

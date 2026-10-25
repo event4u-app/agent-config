@@ -162,6 +162,7 @@ body { height: 100vh; height: 100dvh; }
 .wb:not(.pin-left) #pane-left { left: 0; width: min(320px, 88vw); transform: translateX(-105%); }
 .wb:not(.pin-right) #pane-right { right: 0; width: min(440px, 92vw); transform: translateX(105%); border-left: 1px solid var(--line); }
 .wb.fly-left:not(.pin-left) #pane-left, .wb.fly-right:not(.pin-right) #pane-right { transform: none; visibility: visible; }
+body.full .top, body.full .crumbs, body.full .legend, body.full .foot { display: none; }
 .scrim { position: fixed; inset: 0; z-index: 39; background: rgba(5, 10, 20, 0.45); }
 .scrim[hidden] { display: none; }
 @media (prefers-reduced-motion: reduce) {
