@@ -52,14 +52,14 @@ same way; a mod only reads and shows what the dispatcher already wrote.
 
 ## Phase 1 — Two README sentences that are false today
 
-- [x] **1.1 Correct the replay claim (`README.md:168-169`).** It says every hook
+- [x] **1.1 Correct the replay claim (`README.md:168-169`).** It says every hook <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       concern lands in `agents/runtime/state/` "so you can replay it"; the journal
       is off by default (`src/scripts/hook_manifest.yaml:1568`). Say that the
       record is opt-in and name how it is switched on.
       verify: `grep -n "so you can replay it" README.md` returns nothing, and the
       new sentence names the opt-in; `task check-claims` (or the claims gate the
       README is bound to) is green.
-- [x] **1.2 Narrow the non-goal (`README.md:218`).** "Runtime GUI / web dashboard"
+- [x] **1.2 Narrow the non-goal (`README.md:218`).** "Runtime GUI / web dashboard" <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       stays a non-goal, but an opt-in host status surface that only reads existing
       state is not one, and the sentence would block Phase 4 in review.
       verify: the row still lists the web dashboard as a non-goal and names the
@@ -67,7 +67,7 @@ same way; a mod only reads and shows what the dispatcher already wrote.
 
 ## Phase 2 — A recorded class for a host-owned module
 
-- [x] **2.1 Write the ADR amending ADR-124 with Class H "host-owned module".**
+- [x] **2.1 Write the ADR amending ADR-124 with Class H "host-owned module".** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       A module that runs inside the host's worker for the session, started and
       stopped by the host, holding state only in the host's stores and never
       authoritative, is neither Class A (AC process per command) nor Class B
@@ -82,7 +82,7 @@ same way; a mod only reads and shows what the dispatcher already wrote.
 
 ## Phase 3 — Mods in the neighbour census
 
-- [x] **3.1 Read installed plugins that ship a hooks module.** `census()` reads
+- [x] **3.1 Read installed plugins that ship a hooks module.** `census()` reads <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/host_mod_census.ts -->
       `~/.claude/plugins/installed_plugins.json` (version 2: `plugins.<id>[].installPath`)
       and, per install path, `hooks/hooks.json`. A `modules` array marks the plugin
       as a mod. For each module file, a static source scan classifies it:
@@ -94,7 +94,7 @@ same way; a mod only reads and shows what the dispatcher already wrote.
       prompt-capable, one display-only) yields exactly those three classes; a
       fixture with a broken `installed_plugins.json` reports it and lists none;
       tests fail when the classification is neutralised.
-- [x] **3.2 Show it in `doctor neighbours`.** One section listing each mod with its
+- [x] **3.2 Show it in `doctor neighbours`.** One section listing each mod with its <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/cmd_doctor_neighbours.ts -->
       class, and one line stating the honest limit: a verdict-capable mod can
       override AC's refusals on an unmanaged account, and the census cannot tell
       load order. Silent when no mod is installed.
@@ -103,7 +103,7 @@ same way; a mod only reads and shows what the dispatcher already wrote.
 
 ## Phase 4 — One read-only module, opt-in, pinned
 
-- [x] **4.1 Ship the module.** `src/templates/claude-mod/` with
+- [x] **4.1 Ship the module.** `src/templates/claude-mod/` with <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/templates/claude-mod/module/register.ts -->
       `.claude-plugin/plugin.json` (with `"hooks": "./module/hooks.json"`),
       `.claude-plugin/marketplace.json` (source `./`), `module/hooks.json`
       (`{"modules":["./register.ts"]}`), `module/register.ts`, `README.md`, `LICENSE`.
@@ -114,18 +114,18 @@ same way; a mod only reads and shows what the dispatcher already wrote.
       `schema_version: 1`; silent otherwise. No other hook.
       verify: `claude plugin validate src/templates/claude-mod` passes with
       `calls: $.fs.exists, $.fs.read, $.ui.status`.
-- [x] **4.2 Pin the call surface in CI without needing the host.** A vitest test
+- [x] **4.2 Pin the call surface in CI without needing the host.** A vitest test <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: vitest.config.ts -->
       reads `register.ts` and fails on any of `$.process`, `$.http`, `$.model`,
       `$.fs.write`, `engine.create`, and on any hooked event outside
       `turn.complete`. A second test runs `claude plugin validate` and
       `claude plugin test` when `claude` is on `PATH` and is skipped with a stated
       reason otherwise — never reported green.
       verify: adding `$.process.spawn` to a copy of the module reds the first test.
-- [x] **4.3 Host-harness contract tests.** `module/register.test.ts` beside the
+- [x] **4.3 Host-harness contract tests.** `module/register.test.ts` beside the <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       module: file present → status line; file absent → silent; wrong
       `schema_version` → silent.
       verify: `claude plugin test src/templates/claude-mod` → 3 pass.
-- [x] **4.4 Stage it with the runtime and document the opt-in.** Add the module to
+- [x] **4.4 Stage it with the runtime and document the opt-in.** Add the module to <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/install/stagedRuntime.ts -->
       `STAGED_ENTRIES` in `src/install/stagedRuntime.ts`, so it lands under the
       versioned runtime. Document the one opt-in command
       (`claude plugin marketplace add <runtime>/src/templates/claude-mod` then
