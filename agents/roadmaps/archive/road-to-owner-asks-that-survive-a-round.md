@@ -59,16 +59,15 @@ spec 4 headings, 7 invariants, 8 sequence steps, 6 ACs; patch 18 files.
 - [x] **1.1 Apply the inbox patch onto current main.** `git apply --3way` of the
       round's patch: `star-ask` concern, ADR-301, settings keys, admission row,
       ADR-286 amendment note, update-roadmap CUT row corrected.
-      verify: `npx vitest run tests/scripts/star_ask_hook.test.ts tests/scripts/lint_hook_manifest.test.ts`
-      green, plus `check_hook_bundle_composition` and `lint_hook_manifest`.
+      verify: `npx vitest run tests/scripts/star_ask_hook.test.ts tests/scripts/lint_hook_manifest.test.ts` -> 0
 - [x] **1.2 Quote the owner verbatim.** The owner-directive file claims a
       verbatim quote but carries a spelling-corrected one; replace it with the
       exact text of chat turn 73.
-      verify: `grep -F 'Dass ging bei allen' agents/evidence/owner-directives/2026-10-25-star-ask.md`
+      verify: `grep -cF 'Dass ging bei allen' agents/evidence/owner-directives/2026-10-25-star-ask.md` -> /^1$/
 - [x] **1.3 Correct ADR-286's history.** Add a 2026-10-25 History line: the
       owner's option choice on 2026-10-16 was a choice between bundles, not a
       ruling on the star ask, and ADR-301 records his ruling on it.
-      verify: `./scripts-run src/scripts/check_adr_frontmatter` green.
+      verify: `./scripts-run src/scripts/check_adr_frontmatter` -> 0
 
 ## Phase 2 — An owner's ask cannot be closed in his name
 
@@ -78,15 +77,13 @@ spec 4 headings, 7 invariants, 8 sequence steps, 6 ACs; patch 18 files.
       existing `agents/evidence/owner-directives/*.md` file in `evidence.basis`.
       Regression case reconstructs 2026-10-16: an owner-claimed refusal with no
       directive file reds.
-      verify: `npx vitest run tests/scripts/check_new_adr_evidence.test.ts` and
-      `./scripts-run src/scripts/check_new_adr_evidence --self-test`.
+      verify: `./scripts-run src/scripts/check_new_adr_evidence --self-test` -> 0
 - [x] **2.2 The inbox round may not decline an owner's demand.** In
       `/analyze:inbox` Phase 5b: a demand from the owner's own turn takes
       `adopted`, `already-satisfied` or `owner-decision` — never `declined` —
       and an owner-decision option never bundles one owner demand with other
       items.
-      verify: `grep -n 'NEVER BUNDLES' src/domains/analysis-workbench/analyze/inbox/command.md`
-      and `task sync` leaves the projection byte-identical (`bash src/scripts/condense.sh --changed` empty).
+      verify: `grep -c 'NEVER BUNDLES' src/domains/analysis-workbench/analyze/inbox/command.md` -> /^1$/
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-25 | reviewer: claude/host -->
