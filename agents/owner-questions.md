@@ -3,7 +3,22 @@
 One list of every open decision that only the owner can take. Runs do not open a
 pull request whose only content is a question; they add a row here and take the
 next step (`agents/evidence/owner-directives/2026-10-24-throughput-over-ceremony.md`).
-An answered question moves to `## Answered` with its date and the answer verbatim,
+An answered question moves to `### OQ-8 — Self-modification AC-5: a proposal that passed, or one that landed
+
+- **Context:** AC-5 of `road-to-self-modification-that-a-council-must-pass` asks
+  for one proposal whose change passes the gate on a passing record. The only
+  proposal, `test-through-the-entry-point`, carries a refused record and landed
+  through the owner's forge act (OQ-7), so the criterion is not met as written.
+  It is the roadmap's last open item once 3.4 to 6.2 and AC-2/AC-3 are on main.
+- **Options:** (a) run one new learning through a two-seat modification review
+  until a record passes, then close AC-5; (b) amend AC-5 to accept a change that
+  landed through the D11 owner route with its refused record; (c) park the
+  roadmap with AC-5 as the entry condition.
+- **Recommendation:** (a) — it is the only option that proves the pipeline can
+  pass, which is what the criterion is for; (b) weakens it and is yours alone.
+- **Blocks:** AC-5 and the archive of the roadmap.
+
+## Answered` with its date and the answer verbatim,
 and the run that applies it links its PR.
 
 ## Open
