@@ -66,7 +66,8 @@ the route it calls, switched off until measured.
       `agents/cost-tracking/sessions.jsonl`.
       verify: a test with a fixture cost record shows its figures; without one the report says no record exists.
 - [x] **4.2 List turn-end refusals in the same report.** The report omits the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/cmd_analyze_session.ts -->
-      refusals `src/scripts/_lib/turn_end_refusals.ts` records.
+      refusals the turn-end gate records; `src/scripts/_cli/cmd_analyze_session.ts`
+      now reads them through that gate's existing parser.
       verify: a test with a fixture refusal shows its count and last reason.
 
 ## Phase 5 — Contract truth and the cross-stack edge
