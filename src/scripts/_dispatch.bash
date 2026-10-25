@@ -86,6 +86,10 @@ TS-shell native (run via the installed `agent-config` binary):
                              and toolchain: refresh · show · accept · fix · verify ·
                              pr-body · mitigate · track · notice · gaps · issue-body.
                              Only `refresh` touches the network.
+  audit:code <mode>          Security code audit, deterministic half: matrix · validate ·
+                             show. No model, no network.
+  media:bundle <url|file>    Evidence bundle for a post or video: frames, labelled
+                             contact sheets, transcript rung, unavailable evidence.
   worktree:cleanup <mode>    Worktree inventory and removal: inventory · apply · check
                              <path> · register <path>. `apply` removes only the proven
                              set (merged incl. squash, clean, unused), never with force.
@@ -861,6 +865,18 @@ cmd_audit_deps() {
   exec_ts "$PACKAGE_ROOT/src/scripts/advisories.ts" "$@"
 }
 
+# `audit:code <mode>` — the deterministic half of `/audit code`; the ledger
+# lives under the consumer's gitignored agents/runtime/state/security/.
+cmd_audit_code() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/code_audit.ts" "$@"
+}
+
+# `media:bundle <url|file>` — `/analyze:post`'s evidence bundle. A URL is
+# fetched only through a human-installed, pinned yt-dlp.
+cmd_media_bundle() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/media_bundle.ts" "$@"
+}
+
 # `worktree:cleanup <mode>` — the worktree safety gate and the removal of the
 # proven set, through the package's own executable so a consumer with a global
 # install reaches it without a node_modules path (ADR-295).
@@ -1630,6 +1646,8 @@ main() {
     brand:status)            cmd_brand_status "$@" ;;
     ci:settle)               cmd_ci_settle "$@" ;;
     audit:deps)              cmd_audit_deps "$@" ;;
+    audit:code)              cmd_audit_code "$@" ;;
+    media:bundle)            cmd_media_bundle "$@" ;;
     worktree:cleanup)        cmd_worktree_cleanup "$@" ;;
     roadmap:context)         cmd_roadmap_context "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;

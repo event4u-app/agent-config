@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Consumer security-audit ledger",
+  "description": "agents/runtime/state/security/<run>/ledger.json, written by /audit code and read by `agent-config audit:code validate|show`. Validated by src/scripts/_lib/security_ledger.ts::validateLedger, which also enforces the cross-field rules this draft cannot express: needs_validation carries no severity and names its open fact; confirmed carries a severity and a proof; finder = verifier requires review_independence single-member; an unreviewed row names its reason; coverage counts graph|convention rows only.",
+  "type": "object",
+  "required": ["schema_version", "run", "at", "rows", "findings"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "run": { "type": "string", "minLength": 1 },
+    "at": { "type": "string", "minLength": 1 },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["surface", "endpoint", "enumeration", "reviewed"],
+        "properties": {
+          "surface": { "type": "string", "description": "A Surface value of src/skills/threat-modeling/data/surfaces.csv." },
+          "endpoint": { "type": "string" },
+          "enumeration": { "enum": ["graph", "convention", "model"] },
+          "reviewed": { "type": "boolean" },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "status", "title", "location", "finder", "verifier"],
+        "properties": {
+          "id": { "type": "string" },
+          "status": { "enum": ["confirmed", "needs_validation", "rejected"] },
+          "title": { "type": "string" },
+          "location": { "type": "string" },
+          "finder": { "type": "string" },
+          "verifier": { "type": "string" },
+          "review_independence": { "const": "single-member" },
+          "severity": { "enum": ["low", "medium", "high", "critical"] },
+          "proof": { "enum": ["static-trace", "test"] },
+          "proof_test": { "type": "string" },
+          "open_fact": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      }
+    }
+  }
+}

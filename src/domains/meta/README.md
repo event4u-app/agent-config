@@ -7,9 +7,9 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 308
+- **artefacts**: 309
 
-## Commands (161)
+## Commands (162)
 
 - **`agent-design`** — Design orchestrator — routes audit/render/review to the Class-A commands and the six intervention verbs to fe-design with a declared operation
 - **`agent-handoff`** — Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste.
@@ -28,10 +28,11 @@ Artefacts that maintain this package (agent-config itself).
 - **`analyze-and-optimize`** — Analyse and improve this project, repository or module — analysts reading code, exchange, council, ready roadmaps, PR, N refinement loops (default 3). E.g. 'run a deep optimization pass'.
 - **`analyze-conformance`** — Audit recent local sessions for rule violations — deterministic scan plus subagent passes over the transcripts, root-cause each class, and emit a roadmap that mechanises what is mechanisable.
 - **`analyze-inbox`** — Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, reproduce its steps, verify its claims, map survivors onto this suite's artefacts, emit a roadmap each.
+- **`analyze-post`** — Analyze a public post or video (or a media file) — pin it once, turn it into a timestamped evidence bundle, then run the foreign-source analysis on it.
 - **`analyze-pr`** — Run the analysis family's loops and councils on an existing pull request — a read-only verdict by default, `--optimize` to push tested fixes to a writable PR branch.
 - **`analyze-reference`** — Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
 - **`analyze-roadmap-repos`** — Walk the roadmap estate's encrypted reference tokens and feed each unique repository through analyze-reference, one subagent at a time, without producing one roadmap per repository.
-- **`audit`** — Security advisories and agent actions for this project
+- **`audit`** — Security advisories, code and agent actions for this project
 - **`bug`** — Bug orchestrator — routes to investigate (root cause) and fix (plan + implement)
 - **`bug-fix`** — Plan and implement a bug fix — based on investigation, with quality checks and test verification
 - **`bug-investigate`** — Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause

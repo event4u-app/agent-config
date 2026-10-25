@@ -236,6 +236,23 @@ push, no PR, no settle. The order of stages is decided by the invocation plan
 unchanged — an inner stage only spends fewer pushes than it is allowed — and
 D5–D7 are otherwise untouched. Nothing is superseded.
 
+## Amendment 2 (2026-10-25) — media is a source kind, `analyze:post` its entry
+
+On the owner's request (inbox round `inbox-2026-10-ao`, transcript turn 2): a
+command that takes a post or a video link and analyses it under the family's
+rules. D1 is amended, not extended: a post or video is a **source kind** of the
+foreign-source door, and `analyze:post` is that door's media entry — it builds
+the evidence bundle (`agent-config media:bundle`) and continues at
+`analyze:reference` § 1b. There are still four doors.
+
+D7 holds unchanged and is what makes this an amendment rather than a reopening:
+only the named post is fetched, only when public, only through a
+human-installed pinned `yt-dlp`, never with browser cookies or a proxy, and
+nothing is sent to a cloud transcription or video model. A refused download
+ends in one line naming the upload path; a local media file is an equal input.
+The bundle lives under the round (D3), keyed by the media digest. Nothing is
+superseded. Plan: `agents/roadmaps/archive/road-to-a-post-the-analysis-can-watch.md`.
+
 ## Evidence
 
 - `agents/evidence/council/analysis-family-naming.md` — the naming verdict, both

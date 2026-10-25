@@ -53,7 +53,9 @@ frontmatter embedded so the returned file parses:
 
 The user provides a repository URL — a full GitHub URL
 (`https://github.com/owner/repo`), `owner/repo` shorthand, or a raw archive URL
-(zip/tar) for private or mirrored repos.
+(zip/tar) for private or mirrored repos. A post or video URL, or a media file,
+enters this door through [`analyze:post`](../post/command.md), which builds the
+evidence bundle and continues at § 1b.
 
 Optional arguments:
 

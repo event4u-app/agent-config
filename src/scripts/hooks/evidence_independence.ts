@@ -30,8 +30,11 @@
  *   is the literal construct that fabricated the honest-null, and it is
  *   mechanically detectable in the prompt the agent is about to send.
  *
- *   BLOCK · a SECOND evaluation dispatch in the same turn — verdict shopping.
- *   Counted per turn over evaluation-shaped dispatches only.
+ *   WARN · a SECOND evaluation dispatch in the same turn — verdict shopping.
+ *   Counted per turn over evaluation-shaped dispatches only. Read from prose,
+ *   so Tier 3, so it may only warn (see `decide`). A first line
+ *   `<!-- dispatch-role: hunter|reader|implementer -->` declares fan-out and is
+ *   neither counted nor warned; verifier and judge dispatches count as before.
  *
  *   WARN · the first evaluation dispatch, naming the two observed failure
  *   shapes so the author can check its prompt before it goes out.
@@ -241,11 +244,12 @@ export interface Decision {
 }
 
 const WARN_TEXT =
-  "First evaluation dispatch this turn. Two shapes fabricated a binding honest-null " +
-  "in the audited sessions — check your prompt for both before it goes out: " +
-  "(1) a verdict pre-loaded into the prompt, and (2) a scope narrowed to files you " +
-  "chose. A review you commissioned on your own work is admissible as gate evidence " +
-  "only when the prompt is recorded alongside the verdict.";
+  "First evaluation dispatch this turn. Two shapes fabricated a binding honest-null — " +
+  "check your prompt for both: " +
+  "(1) a verdict pre-loaded into the prompt, (2) a scope narrowed to files you chose. " +
+  "A self-review is gate evidence only with its prompt recorded.";
+
+export const FAN_OUT_ROLE = /^\s*<!-- dispatch-role: (?:hunter|reader|implementer) -->/;
 
 export function decide(
   tool: string | null,
@@ -257,6 +261,9 @@ export function decide(
   }
 
   const preloaded = preloadedVerdict(prompt);
+  if (preloaded === null && FAN_OUT_ROLE.test(prompt)) {
+    return { exit: EXIT_ALLOW, stdout: "", stderr: "", evaluations: priorEvaluations };
+  }
   if (preloaded !== null) {
     return {
       exit: EXIT_BLOCK,
@@ -316,9 +323,8 @@ export function decide(
           `Second evaluation dispatch of your own work in this turn. If both passes ` +
           `judge the SAME subject, that is verdict shopping — commissioning another ` +
           `with a different prompt or scope selects the answer instead of measuring ` +
-          `it. Report what the first pass returned, then re-plan. If this is an ` +
-          `implementation fan-out rather than a second review, carry on: this check ` +
-          `reads prose and cannot tell the two apart with certainty.`,
+          `it. Report the first pass, re-plan. Implementation ` +
+          `fan-out: open with <!-- dispatch-role: implementer -->.`,
       })}\n`,
       stderr: "",
       evaluations: priorEvaluations + 1,

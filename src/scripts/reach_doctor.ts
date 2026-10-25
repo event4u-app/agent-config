@@ -81,6 +81,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { hardenedSpawnEnv } from './_lib/spawn_env.js';
 import { probeTool } from './_lib/tool_probe.js';
+import { liveCapabilityRow, type CapabilityProbeFn, type CapabilityRow } from './_lib/reach_capability_probe.js';
 import type { FixPrescription, ToolProbeStatus } from './_lib/tool_probe.js';
 import {
     REGISTRY_PATH,
@@ -183,6 +184,8 @@ export interface BackendRow {
      * value a reader has to interpret.
      */
     readiness?: ReadinessRow;
+    /** Absent unless the backend has a capability probe (`reach_capability_probe`). */
+    capability?: CapabilityRow;
 }
 
 /**
@@ -1017,7 +1020,7 @@ export type ReadinessProbeFn = (
  */
 export function buildChannelRow(
     raw: unknown,
-    options: { deep: boolean; now: Date; readiness?: ReadinessProbeFn },
+    options: { deep: boolean; now: Date; readiness?: ReadinessProbeFn; capability?: CapabilityProbeFn },
 ): ChannelRow {
     const readinessProbe = options.readiness ?? liveReadinessRow;
     // Entry gate — defense in depth behind `collect()`'s schema validation. Each
@@ -1155,6 +1158,7 @@ export function buildChannelRow(
         });
 
         const readiness = readinessProbe(backendId, probed.status);
+        const capability = (options.capability ?? liveCapabilityRow)(backendId, probed.status, probed.path);
 
         backends.push({
             id: backendId,
@@ -1165,9 +1169,9 @@ export function buildChannelRow(
             diagnostic: probed.diagnostic,
             fix: probed.fix,
             deep: options.deep ? runDeepProbe(probeCmd, probed.status) : null,
-            // Omitted entirely (not null) when the backend declares no
-            // requirement — the four other channels gain no field at all.
+            // Omitted (not null) when the backend declares no requirement or probe.
             ...(readiness === null ? {} : { readiness }),
+            ...(capability === null ? {} : { capability }),
         });
     }
 
@@ -1177,8 +1181,7 @@ export function buildChannelRow(
     // readiness layer, and treating it as active would reintroduce the false
     // green (`yt-dlp --version` exits 0, the transcript pull still fails).
     const usable = (backend: BackendRow): boolean =>
-        backend.status === 'ok' &&
-        (backend.readiness === undefined || backend.readiness.status === 'ready');
+        backend.status === 'ok' && [backend.readiness, backend.capability].every((r) => r === undefined || r.status === 'ready');
     const active = backends.find(usable) ?? null;
     // With no healthy candidate the channel takes the FIRST candidate's
     // verdict — that is the one whose fix the operator is expected to run.
@@ -1190,12 +1193,7 @@ export function buildChannelRow(
     // by `backends[].readiness.status` — and because reporting `ok` for an
     // unsettled readiness is exactly the false green this layer closes (see the
     // invariant block: an "installed, unverified" ceiling over a false green).
-    const unready = backends.some(
-        (backend) =>
-            backend.status === 'ok' &&
-            backend.readiness !== undefined &&
-            backend.readiness.status !== 'ready',
-    );
+    const unready = backends.some((b) => b.status === 'ok' && [b.readiness, b.capability].some((r) => r !== undefined && r.status !== 'ready'));
     const status: ChannelStatus =
         active !== null ? 'ok' : unready ? 'not-ready' : first.status;
     // Unchanged meaning: `fix` is the pinned INSTALL prescription. A readiness
@@ -1406,6 +1404,8 @@ export function renderTable(payload: ReachDoctorPayload): string {
             // reading "installed" needs to see that the second question was
             // asked at all, otherwise a silent pass is indistinguishable from
             // a check that never ran.
+            const cap = backend.capability;
+            if (cap !== undefined) lines.push(`       capability (${cap.kind}): ${cap.status} — ${cap.detail}`);
             if (backend.readiness !== undefined) {
                 const readiness = backend.readiness;
                 lines.push(
