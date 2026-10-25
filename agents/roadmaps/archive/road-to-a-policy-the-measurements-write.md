@@ -97,13 +97,13 @@ egress (c) and (f) pass (`internal/bench/reports/egress-placeholders-identifier-
 
 ## Phase 3 — Release notes and PRs carry the measurement (M2)
 
-- [ ] **3.1 "Measured in this release" in the generated changelog.** A small module
+- [x] **3.1 "Measured in this release" in the generated changelog.** A small module
       `src/scripts/_lib/dispatch_policy.ts` diffs the table at the previous tag against
       `HEAD` and lists moved rows (`row: old → new, claim`) plus `unmeasured` rows past
       `review_by`; `release.ts` renders it under the curated head when non-empty.
       verify: a unit test renders one moved row and one overdue row from fixtures, and
       renders nothing for an unchanged, dated table.
-- [ ] **3.2 PR template gains a "Measurements" section** naming the policy row, the
+- [x] **3.2 PR template gains a "Measurements" section** naming the policy row, the
       claim and the report a dispatch-default change rests on, with "none — no dispatch
       default changed" as the explicit empty answer.
       verify: the section exists in `.github/pull_request_template.md`.
@@ -126,6 +126,6 @@ egress (c) and (f) pass (`internal/bench/reports/egress-placeholders-identifier-
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every dispatch default named in M1 is a row of `dispatch-policy.json`, and a disagreeing sink fails a test.
-- [ ] AC-2 — Every open dispatch claim carries a `review_by`, and `check_claims` reports the overdue ones.
-- [ ] AC-3 — The generated changelog lists moved and overdue policy rows; the PR template asks for the measurement.
+- [x] AC-1 — Every dispatch default named in M1 is a row of `dispatch-policy.json`, and a disagreeing sink fails a test.
+- [x] AC-2 — Every open dispatch claim carries a `review_by`, and `check_claims` reports the overdue ones.
+- [x] AC-3 — The generated changelog lists moved and overdue policy rows; the PR template asks for the measurement.
