@@ -17,6 +17,7 @@ import louvain from 'graphology-communities-louvain';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 
 import {
+    BLAST_SCOPE_ROLES as SCOPE_ROLES,
     type BlastRecord,
     blastOf,
     callCounts,
@@ -33,9 +34,6 @@ import {
 import { catalogRow, type CoverageStatus, providerRole } from './providers/index.js';
 import type { ActiveProviderRecord, CodeGraph, ResolvedVia } from './types.js';
 import { isStatedResolution } from './types.js';
-
-/** The roles a blast, a cycle and the guess share are measured over: code, not docs or tests. */
-export const SCOPE_ROLES: ReadonlySet<FileRole> = new Set<FileRole>(['code', 'entry', 'view', 'infra', 'isolated']);
 
 export const MAP_MODEL_VERSION = 1;
 

@@ -17,11 +17,10 @@ import { parse as parseYaml } from 'yaml';
 
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import type { FileRole, MapModel } from './map_model.js';
-import { SCOPE_ROLES } from './map_model.js';
 import { EXT_LANG } from './types.js';
 
 /** Roles a change to code reaches; tests and docs are selected, not broken. */
-export const BLAST_SCOPE_ROLES: ReadonlySet<FileRole> = SCOPE_ROLES;
+export const BLAST_SCOPE_ROLES: ReadonlySet<FileRole> = new Set(['code', 'entry', 'view', 'infra', 'isolated']);
 export const BLAST_DEPTH = 3;
 export const GIT_WINDOW_DAYS = 180;
 /** Bus-factor finding: one author holds more than this share of at least this many commits. */
