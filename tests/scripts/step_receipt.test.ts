@@ -8,13 +8,15 @@ import { isStructurallySafe, lowersSoFar, parseReceipt, rolledBackClasses, sampl
 import { loadAuditSamples, loadDepthTable, receiptFor, wouldSkip, type DepthTable } from '../../src/scripts/step_receipt.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const table = loadDepthTable();
+const real = loadDepthTable();
+// The shadow behaviour is pinned on a shadow copy of the real table, so the owner's flip of the real file does not move it.
+const table: DepthTable = { ...real, mode: 'shadow', flip: { ...real.flip, reading: null } };
 
 describe('step_receipt', () => {
-    it('the depth table is in shadow mode and names a row for every class', () => {
-        expect(table.mode).toBe('shadow');
+    it('the depth table has a known mode and names a row for every class', () => {
+        expect(['shadow', 'active']).toContain(real.mode);
         for (const k of ['R0', 'R1', 'R2', 'R3'] as const) {
-            expect(Object.keys(table.classes[k]).sort()).toEqual(Object.keys(table.full).sort());
+            expect(Object.keys(real.classes[k]).sort()).toEqual(Object.keys(real.full).sort());
         }
     });
 
@@ -49,14 +51,14 @@ describe('depth flip — option (d): structurally safe paths, then the audit', (
     });
 
     it('the real table stays shadow until a committed reading names itself in flip.reading', () => {
-        expect(table.flip.scope).toBe('structurally-safe-paths');
-        expect(table.flip.classes).toEqual(['R0', 'R1']);
-        expect(table.flip.requires).toEqual({ min_steps: 30, max_escaped: 1, max_critical: 0 });
-        if (table.mode === 'active') {
-            expect(table.flip.reading).not.toBeNull();
-            expect(fs.existsSync(path.join(ROOT, table.flip.reading!))).toBe(true);
+        expect(real.flip.scope).toBe('structurally-safe-paths');
+        expect(real.flip.classes).toEqual(['R0', 'R1']);
+        expect(real.flip.requires).toEqual({ min_steps: 30, max_escaped: 1, max_critical: 0 });
+        if (real.mode === 'active') {
+            expect(real.flip.reading).not.toBeNull();
+            expect(fs.existsSync(path.join(ROOT, real.flip.reading!))).toBe(true);
         } else {
-            expect(table.flip.reading).toBeNull();
+            expect(real.flip.reading).toBeNull();
         }
     });
 
