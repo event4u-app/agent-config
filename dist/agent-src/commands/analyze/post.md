@@ -8,7 +8,7 @@ cluster: analyze
 replaces: []
 skills: [project-analyzer, learning-to-rule-or-skill, image-analyser]
 description: Analyze a public post or video (or a media file) — pin it once, turn it into a timestamped evidence bundle, then run the foreign-source analysis on it.
-argument-hint: "<post-or-video-url|media-file>… [--ask \"<question>\"] [--code] [--detail=transcript|efficient|balanced|full] [--focus=mm:ss-mm:ss] [--loops=N] [--mode=plan|execute] [--no-pr]"
+argument-hint: "<url|file>… [--ask \"<q>\"] [--code] [--detail=<level>] [--focus=mm:ss-mm:ss] [--loops=N] [--mode=plan|execute]"
 limits:
   mode_default: plan
   max_iterations: 3

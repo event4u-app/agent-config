@@ -2,13 +2,13 @@
 model_tier: medium
 name: analyze
 disable-model-invocation: true
-argument-hint: "[postmortem|premortem|decision|near-miss|incident|reference|roadmap-repos|inbox|conformance|and-optimize|pr|post] [subject]"
+argument-hint: "[postmortem|premortem|decision|near-miss|incident|reference|roadmap-repos|inbox|conformance|and-optimize|pr|post] [subj]"
 pack: analysis-workbench
 intent: "Analysis dispatcher — classify input by keywords, propose a weighted framework path, let the user pick"
 routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident, analyze-reference, analyze-roadmap-repos, analyze-inbox, analyze-conformance, analyze-and-optimize, analyze-pr, analyze-post]
 replaces: []
 visibility: advanced
-description: Analysis orchestrator — confidence-weighted suggester routing to postmortem, premortem, decision, near-miss, incident, reference repo, roadmap repos, inbox, conformance, this project, a PR or a post/video.
+description: Analysis orchestrator — confidence-weighted suggester routing to postmortem, premortem, decision, near-miss, incident, reference repo, roadmap repos, inbox, conformance, a project, a PR or a post.
 cluster: analyze
 type: orchestrator
 suggestion:

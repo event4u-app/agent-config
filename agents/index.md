@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **753 artefacts** in this package.
+Maintainer-facing index of all **754 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -439,7 +439,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (210)
+## Commands (211)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -460,19 +460,20 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`analytics`](../src/domains/meta/analytics/command.md) | cluster: analytics | Analytics orchestrator — routes to show, prune. Local-only workspace event log under `~/.event4u/agent-config/workspace/analytics/`. |
 | command | [`analytics-prune`](../src/domains/meta/analytics/prune/command.md) | cluster: analytics | Drop events older than the 90-day retention window from the local analytics log. Atomic and idempotent. |
 | command | [`analytics-show`](../src/domains/meta/analytics/show/command.md) | cluster: analytics | Render top prompts, launcher → completion rate per role, average session length, and knowledge-source usage from the local analytics log. |
-| command | [`analyze`](../src/domains/analysis-workbench/analyze/command.md) | cluster: analyze | Analysis orchestrator — confidence-weighted suggester routing to postmortem, premortem, decision, near-miss, incident, reference repo, roadmap repos, inbox, conformance, this project or a PR. |
+| command | [`analyze`](../src/domains/analysis-workbench/analyze/command.md) | cluster: analyze | Analysis orchestrator — confidence-weighted suggester routing to postmortem, premortem, decision, near-miss, incident, reference repo, roadmap repos, inbox, conformance, a project, a PR or a post. |
 | command | [`analyze-and-optimize`](../src/domains/analysis-workbench/analyze/and-optimize/command.md) | cluster: analyze | Analyse and improve this project, repository or module — analysts reading code, exchange, council, ready roadmaps, PR, N refinement loops (default 3). E.g. 'run a deep optimization pass'. |
 | command | [`analyze-conformance`](../src/domains/analysis-workbench/analyze/conformance/command.md) | cluster: analyze | Audit recent local sessions for rule violations — deterministic scan plus subagent passes over the transcripts, root-cause each class, and emit a roadmap that mechanises what is mechanisable. |
 | command | [`analyze-decision`](../src/domains/analysis-workbench/analyze/decision/command.md) | cluster: analyze | Audit a past architectural decision — restate what was chosen and why, compare original assumptions against reality now, produce a verdict (still valid / needs amendment / superseded). |
 | command | [`analyze-inbox`](../src/domains/analysis-workbench/analyze/inbox/command.md) | cluster: analyze | Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, reproduce its steps, verify its claims, map survivors onto this suite's artefacts, emit a roadmap each. |
 | command | [`analyze-incident`](../src/domains/analysis-workbench/analyze/incident/command.md) | cluster: analyze | Full incident flow — incident-commander coordination, then RCA via root-cause-frameworks, then a blame-free write-up via blameless-post-mortem, ending with an incident-learnings candidate. |
 | command | [`analyze-near-miss`](../src/domains/analysis-workbench/analyze/near-miss/command.md) | cluster: analyze | Blame-free near-miss analysis — same post-mortem flow as analyze:postmortem but framed around a close call that did not result in a production incident. |
+| command | [`analyze-post`](../src/domains/analysis-workbench/analyze/post/command.md) | cluster: analyze | Analyze a public post or video (or a media file) — pin it once, turn it into a timestamped evidence bundle, then run the foreign-source analysis on it. |
 | command | [`analyze-postmortem`](../src/domains/analysis-workbench/analyze/postmortem/command.md) | cluster: analyze | Blame-free post-mortem after a resolved incident — consume the incident-commander skeleton, derive root cause, write corrective actions, draft an incident-learnings memory candidate. |
 | command | [`analyze-pr`](../src/domains/analysis-workbench/analyze/pr/command.md) | cluster: analyze | Run the analysis family's loops and councils on an existing pull request — a read-only verdict by default, `--optimize` to push tested fixes to a writable PR branch. |
 | command | [`analyze-premortem`](../src/domains/analysis-workbench/analyze/premortem/command.md) | cluster: analyze | Forward-looking imagined-failure analysis before committing to a heavy or irreversible plan — enumerate failure stories, score each mode, derive early-warning signals and guardrails. |
 | command | [`analyze-reference`](../src/domains/analysis-workbench/analyze/reference/command.md) | cluster: analyze | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`analyze-roadmap-repos`](../src/domains/analysis-workbench/analyze/roadmap-repos/command.md) | cluster: analyze | Walk the roadmap estate's encrypted reference tokens and feed each unique repository through analyze-reference, one subagent at a time, without producing one roadmap per repository. |
-| command | [`audit`](../src/domains/engineering-base/audit/command.md) | cluster: audit | Security advisories and agent actions for this project |
+| command | [`audit`](../src/domains/engineering-base/audit/command.md) | cluster: audit | Security advisories, code and agent actions for this project |
 | command | [`brand`](../src/domains/brand/brand/command.md) | cluster: brand | Brand-as-UX orchestrator — strategy, identity, tokens, review, voice. Routes to the brand-grounding skills that constrain the design layer. |
 | command | [`brand-identity`](../src/domains/brand/brand/identity/command.md) | cluster: brand | Define the brand identity — logo direction, colour story, type story, imagery direction — and the token constraints downstream generation consumes. |
 | command | [`brand-review`](../src/domains/brand/brand/review/command.md) | cluster: brand | Audit emitted UI, copy, and assets against the active brand tokens and voice profile — flag any value not traceable to a brand token or voice rule. |
