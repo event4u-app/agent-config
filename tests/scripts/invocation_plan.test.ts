@@ -6,6 +6,7 @@ import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
+    InvocationPlanError,
     deliveryOnFailure,
     linearize,
     replan,
@@ -228,6 +229,15 @@ describe('invocation plan guards', () => {
         expect(() => linearize({ stages: [{ id: 'a', effects: [] }, { id: 'a', effects: [] }] })).toThrow(/duplicate/);
         expect(() => linearize({ stages: [{ id: 'a', dependsOn: ['z'], effects: [] }] })).toThrow(/unknown stage/);
         expect(() => linearize({ fenceAfter: 'z', stages: [{ id: 'a', effects: [] }] })).toThrow(/unknown stage/);
+    });
+
+    it('refuses a dependency cycle as a plan error, a self-loop included', () => {
+        const self = { stages: [{ id: 'a', dependsOn: ['a'], effects: [] }] };
+        const pair = { stages: [{ id: 'a', dependsOn: ['b'], effects: [] }, { id: 'b', dependsOn: ['a'], effects: [] }] };
+        for (const input of [self, pair]) {
+            expect(() => linearize(input)).toThrow(InvocationPlanError);
+            expect(() => linearize(input)).toThrow(/cycl/);
+        }
     });
 });
 

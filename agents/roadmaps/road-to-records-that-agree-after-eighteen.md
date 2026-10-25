@@ -80,33 +80,38 @@ end. Each of these is a test or a lint that can go red.
 
 ## Phase 2 — Guards that run where they say they run
 
-- [ ] **2.1 Run the shipped-Pending-row check with history in CI.** The
+- [x] **2.1 Run the shipped-Pending-row check with history in CI.** The
       real-index test (`tests/scripts/release_head_prefill.test.ts:253-270`) skips
       in `node-tests`, whose checkout is shallow, and no full-history job runs it.
       Run it in a job with full history and tags, where a skip fails.
       verify: the workflow step exists in a full-history job; locally, forcing
       the skip condition under the require-history switch fails the test.
-- [ ] **2.2 A dependency cycle is a plan error, not a crash.** `orderStages`
+      Landed 2026-10-25: `rule-backstops.yml` step with `RELEASE_PENDING_REQUIRE_HISTORY=1`; probed red with a missing commit and with `79cb86c0dd` (in 18.0.0), green restored.
+- [x] **2.2 A dependency cycle is a plan error, not a crash.** `orderStages`
       (`src/scripts/_lib/invocation_plan.ts:211-215`) takes `ready[0]` unguarded;
       a hard-edge cycle (including `A dependsOn A`) throws a TypeError. Detect it
       in `validate` and throw `InvocationPlanError` naming the cycle.
       verify: red-first case G15 in `tests/scripts/invocation_plan.test.ts`
       (self-loop and two-stage cycle) expects `InvocationPlanError`.
-- [ ] **2.3 A key honoured during a window does not print "ignored".**
+      Landed 2026-10-25: `validate` names the cycle; the guard case was red first, 22/22 green.
+- [x] **2.3 A key honoured during a window does not print "ignored".**
       `warnRemovedKeys` (`src/scripts/_lib/settings_removed_keys.ts:207`) appends
       `; ignored.` to every removed key, including `projection.rule_packs`, whose
       own reason says an explicit value is still honoured. Print the window
       instead of "ignored" for that key.
       verify: a test captures stderr for `projection.rule_packs` and finds no
       "ignored".
-- [ ] **2.4 The star-ask unwritable-state test holds as root.**
+      Landed 2026-10-25: red first, then "still honoured until its window closes".
+- [x] **2.4 The star-ask unwritable-state test holds as root.**
       `tests/scripts/star_ask_hook.test.ts:158-176` relies on `chmod`, which root
       ignores. Skip it when `process.getuid?.() === 0`, as
       `classify_merge_risk_base_revision.test.ts` does.
       verify: the test file contains the guard and passes.
-- [ ] **2.5 Drop the stale "stays on 20" comments.** `.github/workflows/tests.yml:310,645`
+      Landed 2026-10-25: `it.skipIf(process.getuid?.() === 0)`; not probed as root on this host.
+- [x] **2.5 Drop the stale "stays on 20" comments.** `.github/workflows/tests.yml:310,645`
       says other jobs stay on Node 20; `engines.node` is `>=22` and no job pins 20.
       verify: `grep -c 'stays on 20' .github/workflows/tests.yml` is 0.
+      Landed 2026-10-25: three blocks replaced; the count is 0.
 
 ## Phase 3 — A floor ships where its skills ship
 

@@ -104,6 +104,24 @@ describe('the removed keys carry tombstones (step 4.2)', () => {
         expect(hits).toHaveLength(1); // once per process, not once per call
     });
 
+    it('a removed key still honoured during its window is not reported as ignored', () => {
+        const written: string[] = [];
+        const real = process.stderr.write.bind(process.stderr);
+        process.stderr.write = ((chunk: string) => {
+            written.push(String(chunk));
+            return true;
+        }) as typeof process.stderr.write;
+        try {
+            warnRemovedKeys({ projection: { rule_packs: ['legal-review-prep'] } });
+        } finally {
+            process.stderr.write = real;
+        }
+        const hit = written.find((l) => l.startsWith('projection.rule_packs was removed'));
+        expect(hit).toBeDefined();
+        expect(hit).not.toContain('ignored');
+        expect(hit).toContain('still honoured');
+    });
+
     it('the keys the migration reads are exactly the keys that have tombstones', () => {
         expect(Object.keys(LEGACY_FULL_VALUE).every((k) => REMOVED_KEYS.has(k) || k === 'projection.mode')).toBe(true);
     });

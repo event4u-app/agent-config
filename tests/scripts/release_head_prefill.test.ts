@@ -261,7 +261,11 @@ describe('pending breaking-changes rows reach the curated head', () => {
             const known = spawnSync('git', ['cat-file', '-e', `${sha}^{commit}`], { cwd: root });
             const tags = spawnSync('git', ['tag', '--contains', sha, '--list', '[0-9]*.[0-9]*.[0-9]*'], { cwd: root, encoding: 'utf-8' });
             // skip-reason: a shallow clone without the commit or the tags cannot judge; reported as SKIPPED.
+            // The full-history CI step sets RELEASE_PENDING_REQUIRE_HISTORY, where a skip would hide the check.
             if (known.status !== 0 || tags.status !== 0) {
+                if (process.env['RELEASE_PENDING_REQUIRE_HISTORY'] === '1') {
+                    throw new Error(`commit ${sha} or the release tags are missing, and this step requires history`);
+                }
                 t.skip(`commit ${sha} or the release tags are not in this clone`);
                 return;
             }

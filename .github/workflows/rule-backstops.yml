@@ -448,6 +448,14 @@ jobs:
           RELEASE_SURFACE_REQUIRE_HISTORY: '1'
         run: npx vitest run tests/scripts/release_settings_delta.test.ts
 
+      # The same reason for the Pending table of BREAKING_CHANGES.md: the check
+      # that no Pending row's commit is already in a release tag needs the commits
+      # and the tags, so it only skips in the shallow Node Tests checkout.
+      - name: No shipped row left under Pending (full history)
+        env:
+          RELEASE_PENDING_REQUIRE_HISTORY: '1'
+        run: npx vitest run tests/scripts/release_head_prefill.test.ts
+
       # Same step: the precedence table is GENERATED, so a stale committed copy is
       # a silent lie about the tree. Regenerating and diffing is the freshness
       # check; `--write-table` writes in place and the diff is the assertion.
