@@ -10,7 +10,7 @@
     --amber: #ffc14d; --amberText: #ffc14d; --sand: #f5e08a; --d3: #a7c46b;
     --node: #2a3445; --nodeStroke: #3a4760; --edge: rgba(200, 214, 235, 0.17); --grid: rgba(62, 197, 255, 0.055);
     --doc: #6b7280; --violet: #c9a2ff; --onColor: #0d1522; --blastBg: #120d08; --glow: 0.9;
-    --logoBg: #0b1220; --logoText: #f4f7fb; --alert: #ff5d6c; --alertText: #e0414f;
+    --alert: #ff5d6c; --alertText: #e0414f;
     --orb-light: rgba(62, 197, 255, 0.10); --orb-dark: rgba(7, 11, 18, 0);
     color-scheme: dark;
 }
@@ -23,7 +23,6 @@
     --amber: #f5b324; --amberText: #92580a; --sand: #ecd06a; --d3: #86b25a;
     --node: #cdd5e1; --nodeStroke: #aab5c6; --edge: rgba(30, 41, 59, 0.17); --grid: rgba(14, 165, 233, 0.09);
     --doc: #9aa3b2; --violet: #8b5cf6; --onColor: #0d1522; --blastBg: #fff8ef; --glow: 0.35;
-    --logoBg: #0d1522; --logoText: #ffffff;
     --orb-light: rgba(14, 165, 233, 0.12); --orb-dark: rgba(243, 245, 249, 0);
     color-scheme: light;
 }
@@ -46,8 +45,7 @@ button:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visibl
 /* Header */
 .top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 10px 20px; border-bottom: 1px solid var(--line); background: var(--panel); }
 .brand { display: flex; align-items: center; gap: 10px; }
-.brand svg rect { fill: var(--logoBg); stroke: var(--brand); stroke-width: 2px; }
-.brand svg text { font: 400 17px var(--display); fill: var(--logoText); text-anchor: middle; letter-spacing: 0.5px; }
+.brand .logo { display: block; flex: none; border-radius: 9px; }
 .brand-name { display: flex; flex-direction: column; gap: 1px; }
 .brand-name b { font-family: var(--display); font-weight: 400; font-size: 20px; line-height: 1; letter-spacing: 0.02em; }
 .brand-name span { font-size: 10px; font-weight: 600; letter-spacing: 0.32em; color: var(--brandText); }

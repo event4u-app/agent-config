@@ -937,6 +937,11 @@ function readViewer(name: string): string {
     return fs.readFileSync(path.join(VIEWER_DIR, name), 'utf-8');
 }
 
+/** Inline a viewer image: the page loads nothing but itself. */
+function readViewerDataUri(name: string, mime: string): string {
+    return `data:${mime};base64,${fs.readFileSync(path.join(VIEWER_DIR, name)).toString('base64')}`;
+}
+
 /** Escape every `<` so no file or symbol name can close the data block. */
 export function embedJson(value: unknown): string {
     return JSON.stringify(value).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
@@ -963,7 +968,9 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         "default-src 'none'",
         `script-src 'sha256-${sha256(js)}'`,
         `style-src 'sha256-${sha256(css)}'`,
-        "img-src 'none'",
+        // Inline images only (the brand mark): a data: URI is decoded in place and
+        // fetches nothing, so the page still loads nothing but itself.
+        "img-src data:",
         "connect-src 'none'",
         "base-uri 'none'",
         "form-action 'none'",
@@ -981,11 +988,7 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         '<body>',
         '<header class="top">',
         '<div class="brand">',
-        '<svg width="40" height="40" role="img" aria-label="AC"><rect x="1.5" y="1.5" width="37" height="37" rx="9"></rect>' +
-            '<path d="M8 10 L14 7 L21 9 M21 9 L30 7 M30 7 L33 13" fill="none" stroke="#3ec5ff" stroke-width="1" opacity="0.8"></path>' +
-            '<circle cx="8" cy="10" r="1.8" fill="#ff8c2a"></circle><circle cx="21" cy="9" r="1.8" fill="#3ec5ff"></circle>' +
-            '<circle cx="30" cy="7" r="1.8" fill="#3ec5ff"></circle><circle cx="33" cy="13" r="1.8" fill="#ff8c2a"></circle>' +
-            '<text x="20" y="31">AC</text></svg>',
+        `<img class="logo" src="${readViewerDataUri('logo.png', 'image/png')}" width="40" height="40" alt="AC">`,
         '<div class="brand-name"><b>AGENT CONFIG</b><span>CODE MAP</span></div>',
         '</div>',
         '<div class="pins mono"><span class="chip" id="pin-commit"></span><span class="chip fresh" id="pin-fresh"></span><span class="chip gen" id="pin-gen"></span></div>',
