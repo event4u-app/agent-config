@@ -66,7 +66,7 @@ Cold-start's 4.3, 4.5 and 5.3, which the first plan proposed to take over, are
 
 ## Phase 1 — Call caps become counters (D9)
 
-- [x] **1.1 An absent council cap is a counter, not a 50.**
+- [x] **1.1 An absent council cap is a counter, not a 50.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/cli_call_budget.ts -->
       `resolveCliCallCaps` stops seeding `DEFAULT_CLI_CALLS_PER_DAY`; an absent
       or malformed entry yields no cap for that provider, so the gate books and
       never refuses on count. A user-written number keeps its contract exactly.
@@ -75,12 +75,12 @@ Cold-start's 4.3, 4.5 and 5.3, which the first plan proposed to take over, are
       successful call on an unset provider are admitted; a written cap of 3
       still refuses the fourth.
       verify: `npx vitest run tests/scripts/ai_council/config.test.ts tests/scripts/council_cli.test.ts` -> 0
-- [x] **1.2 The team ceiling defaults to unset.** `ai_team.max_calls_per_day`
+- [x] **1.2 The team ceiling defaults to unset.** `ai_team.max_calls_per_day` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
       becomes optional (`null` = no team ceiling); `team_dispatch.ts` admits on
       `null`. Template, `docs/contracts/ai-team-config.md` and the team command
       docs say "unset = counted, never refused".
       verify: `grep -c "max_calls_per_day: 50" src/config/agent-settings.template.yml` -> /^0$/
-- [x] **1.3 ADR-279 records the move.** One addendum: the owner moved the
+- [x] **1.3 ADR-279 records the move.** One addendum: the owner moved the <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       per-day call guards from § What stays to § Supersedes on 2026-10-22, via
       the record's own `review_trigger`. The billing-class half (`api_on_quota:
       false`, `billing_grant`) stays, and the addendum says why that is not an
@@ -89,21 +89,21 @@ Cold-start's 4.3, 4.5 and 5.3, which the first plan proposed to take over, are
 
 ## Phase 2 — The quota ledger and the status-line tap (D3, D4)
 
-- [x] **2.1 `_lib/quota_ledger.ts`, machine-wide, counts only.** Snapshots
+- [x] **2.1 `_lib/quota_ledger.ts`, machine-wide, counts only.** Snapshots <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/quota_ledger.ts -->
       under the user-global state directory (five parallel sessions share one
       plan, so not per repo): `{ts, session, five_hour, seven_day,
       context_used_pct, context_size, model}`, each window `{pct, resets_at}`
       or absent. No prompt, path or credential field exists. Line-sized
       appends, rewritten atomically without lines past eight hours.
       verify: `npx vitest run tests/scripts/_lib/quota_ledger.test.ts` -> 0
-- [x] **2.2 A status-line tap that chains the user's line.**
+- [x] **2.2 A status-line tap that chains the user's line.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/cmd_statusline.ts -->
       `agent-config statusline:tap` reads the host's status-line JSON on stdin,
       hands the same bytes to the recorded original command, prints its
       output unchanged, then writes one ledger snapshot. Any error of its own is
       swallowed: the wrapped line always prints. Without a wrapped command it
       prints one compact segment only while a band is active.
       verify: `npx vitest run tests/scripts/statusline_tap.test.ts` -> 0
-- [x] **2.3 Install and uninstall the tap.** `agent-config statusline:install`
+- [x] **2.3 Install and uninstall the tap.** `agent-config statusline:install` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/cmd_statusline.ts -->
       wraps the existing `statusLine.command` in `~/.claude/settings.json` (or
       sets the tap alone when none exists) and records the original value;
       `statusline:uninstall` puts that value back, or removes the key it added. Whether `setup` runs it
@@ -112,7 +112,7 @@ Cold-start's 4.3, 4.5 and 5.3, which the first plan proposed to take over, are
 
 ## Phase 3 — Pressure and the notice the user sees (D2, D3)
 
-- [x] **3.1 `_lib/pressure.ts`, pure.** Per window: fill, burn rate (slope over
+- [x] **3.1 `_lib/pressure.ts`, pure.** Per window: fill, burn rate (slope over <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/pressure.ts -->
       the last 15 minutes, only with ≥3 snapshots), projected exhaustion,
       reset, and `state ∈ {ok, warm, hot, exhausted, unknown}`. Stale (no
       snapshot in 10 minutes) is `unknown`, never `ok`. `hot` = projected full
@@ -121,37 +121,37 @@ Cold-start's 4.3, 4.5 and 5.3, which the first plan proposed to take over, are
       billing class (`plan | metered | free`), so a future free-worker pool
       reads the same state.
       verify: `npx vitest run tests/scripts/_lib/pressure.test.ts` -> 0
-- [x] **3.2 `quota-notice` concern on `user_prompt_submit`.** A lazy
+- [x] **3.2 `quota-notice` concern on `user_prompt_submit`.** A lazy <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.yaml -->
       `notification` concern, bound on `claude` only: one `user_notice` per
       `(window, state, resets_at)` across the machine, with numbers the user can
       act on — fill, projected-full clock time, reset clock time. Dedup stamps
       live beside the ledger.
       verify: `npx vitest run tests/scripts/quota_notice_hook.test.ts` -> 0
-- [x] **3.3 Session size by window, not by token count.** The same concern
+- [x] **3.3 Session size by window, not by token count.** The same concern <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/quota_notice_hook.ts -->
       notices once per session when `context_used_pct ≥ 80`, naming `/compact`.
       Window-relative, so a 200k session is served.
       verify: `npx vitest run tests/scripts/quota_notice_hook.test.ts -t "context"` -> 0
-- [x] **3.4 Fix the stale description (D12).** `docs/settings-reference.md:88`
+- [x] **3.4 Fix the stale description (D12).** `docs/settings-reference.md:88` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/server/schemas/settings.ts -->
       and its generator source stop naming a recycle advisory that no longer
       exists.
       verify: `grep -c "the recycle advisory" docs/settings-reference.md` -> /^0$/
 
 ## Phase 4 — The billing class (D6, D7)
 
-- [x] **4.1 Detect the session's billing class at `session_start`.** Presence
+- [x] **4.1 Detect the session's billing class at `session_start`.** Presence <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/_lib/billing_class.ts -->
       only — `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `apiKeyHelper` in the
       host settings, `CLAUDE_CODE_USE_BEDROCK|VERTEX` — never a value. A
       metered session gets one `user_notice` on its first turn: it bills per
       token, and `/status` shows the auth source.
       verify: `npx vitest run tests/scripts/quota_notice_hook.test.ts` -> 0
-- [x] **4.2 An unmetered vendor-CLI child cannot bill silently.** For
+- [x] **4.2 An unmetered vendor-CLI child cannot bill silently.** For <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/_lib/billing_grant.ts -->
       Anthropic CLI children booked `billable=false`, `ANTHROPIC_API_KEY` and
       `ANTHROPIC_AUTH_TOKEN` are removed from the spawn env unless the run
       holds a `billing_grant`; the self-review gate's CLI label stops saying
       "subscription" when a key was present. A user who wants API-billed seats
       keeps them through the grant or `mode: api`.
       verify: `npx vitest run tests/scripts/ai_council/spawn_env.test.ts` -> 0
-- [x] **4.3 One ask before AC fans out on metered money.** In a session whose
+- [x] **4.3 One ask before AC fans out on metered money.** In a session whose <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/permission_gate.ts -->
       billing class is metered and whose run holds no `billing_grant`, the first
       `Agent` spawn returns the host's native ask (`permissionDecision: "ask"`)
       naming the billing class and that the answer covers the session; the
@@ -161,16 +161,16 @@ Cold-start's 4.3, 4.5 and 5.3, which the first plan proposed to take over, are
 
 ## Phase 5 — Throttle by choosing differently (D10)
 
-- [x] **5.1 No fan-out push into a hot window.** `delegation-nudge` reads
+- [x] **5.1 No fan-out push into a hot window.** `delegation-nudge` reads <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/delegation_nudge_hook.ts -->
       the verdict the tap leaves in `state/quota/pressure.json` and, at `hot` or `exhausted`, emits no delegation push — it
       says instead, once, that the plan window is nearly spent and in-session
       work or a resume is the cheaper path. Nothing is refused.
       verify: `npx vitest run tests/scripts/delegation_nudge_hook.test.ts` -> 0
-- [x] **5.2 The stricter council bar also fires on projection.** The
+- [x] **5.2 The stricter council bar also fires on projection.** The <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/necessity.ts -->
       window-threshold rule of cold-start 5.3 (`necessity.ts`) reads `hot`
       from `pressure` as well as the after-the-fact host marker.
       verify: `npx vitest run tests/scripts/ai_council/necessity.test.ts` -> 0
-- [x] **5.3 The spawn-guard shadow records `would_wait` from pressure.**
+- [x] **5.3 The spawn-guard shadow records `would_wait` from pressure.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/spawn_guard_shadow_hook.ts -->
       Shadow only: it records, never denies (a deny is a stop).
       verify: `npx vitest run tests/hooks/spawn_guard_shadow.test.ts` -> 0
 

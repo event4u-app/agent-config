@@ -436,6 +436,8 @@ describe('council_cli quota + shadow-report — intent', () => {
                 new RegExp(`council:quota · ${provider} · \\d+/uncapped · counted`),
             );
         }
+        // No provider is reported against a number the gate does not apply.
+        expect(ts.stdout).not.toMatch(/ · \d+\/\d+ · /);
     });
 
     it('quota --reset openai without --confirm → exit 2', () => {

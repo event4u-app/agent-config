@@ -867,9 +867,11 @@ describe('cli_call_budget.max_calls_per_day — no shipped default', () => {
         const tmp = make_tmp();
         const c = cfg.load_council_config(write_yaml(tmp, MINIMAL_VALID));
         const caps = c.cli_call_budget.max_calls_per_day;
-        for (const p of ['anthropic', 'openai', 'gemini', 'xai', 'perplexity']) {
-            expect(caps.get(p), p).toBeUndefined();
-        }
+        expect(caps.get('anthropic')).toBeUndefined();
+        expect(caps.get('openai')).toBeUndefined();
+        expect(caps.get('gemini')).toBeUndefined();
+        expect(caps.get('xai')).toBeUndefined();
+        expect(caps.get('perplexity')).toBeUndefined();
     });
 
     it('an explicit per-provider entry caps just that provider', () => {
@@ -919,9 +921,12 @@ describe('resolve_cli_call_caps — the single cap authority', () => {
     it('an absent block yields no cap — counted, never refused (ADR-279 addendum)', () => {
         for (const raw of [undefined, null, {}, 'nonsense', 42]) {
             const caps = cfg.resolve_cli_call_caps(raw);
-            for (const p of PROVIDERS) {
-                expect(caps[p], `${p} for raw=${JSON.stringify(raw)}`).toBeUndefined();
-            }
+            expect(caps, `raw=${JSON.stringify(raw)}`).toEqual({});
+            expect(caps['anthropic']).toBeUndefined();
+            expect(caps['openai']).toBeUndefined();
+            expect(caps['gemini']).toBeUndefined();
+            expect(caps['xai']).toBeUndefined();
+            expect(caps['perplexity']).toBeUndefined();
         }
     });
 
@@ -948,6 +953,10 @@ describe('resolve_cli_call_caps — the single cap authority', () => {
             xai: 7,
         });
         expect(caps).toEqual({ xai: 7 });
+        expect(caps['anthropic']).toBeUndefined();
+        expect(caps['openai']).toBeUndefined();
+        expect(caps['gemini']).toBeUndefined();
+        expect(caps).not.toHaveProperty('bogus');
     });
 
     it('agrees with the synthesized config for the same YAML — gate and report cannot diverge', () => {
