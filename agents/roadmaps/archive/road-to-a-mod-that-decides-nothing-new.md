@@ -76,7 +76,7 @@ same way; a mod only reads and shows what the dispatcher already wrote.
       prompt (I2, ADR-285), declares only `$.fs.read`, `$.fs.exists`, `$.ui.*` (I3),
       reads only, so a throw is a skip (I4), and every value it shows is also
       reachable as text on other hosts (I5). Add the amendment pointer to ADR-124.
-      verify: `grep -c 'Class H' docs/decisions/ADR-124-embedded-engine-doctrine.md` -> /^[1-9]/; `./scripts-run src/scripts/check_new_adr_evidence` exits 0;
+      verify: `grep -c 'Class H' docs/decisions/ADR-124-embedded-engine-doctrine.md` -> /^[1-9]/ and `./scripts-run src/scripts/check_new_adr_evidence` exits 0;
       the ADR index lists the new record.
 
 ## Phase 3 — Mods in the neighbour census
