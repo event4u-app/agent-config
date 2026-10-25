@@ -946,3 +946,35 @@ null: hook injections land post-prefix and the measured hit ratio is high
 (main 98.8% / subagent 97.3%, host CC 2.1.226), so the prefix-reordering
 phase downgraded to the hygiene lint. Numbers + method:
 `agents/settings/contexts/cache-injection-anatomy.md`.
+
+## Neighbour pilot against S4 (2026-10-25) — UNDERPOWERED, direction favours the package {#s4-pilot}
+
+**Question.** Does this package beat a neighbour agent-config package (deny group
+S4) or no package, on the same tasks, host and budget? Pre-registered before the
+run (`agents/evidence/preregistration/s4-pilot.md`, sha256 `dc592fbf…`); the
+result is `agents/evidence/analysis/s4-pilot-result-2026-10-26.json`.
+
+**Setup.** Host `claude-haiku-4-5`; arms `vanilla` · `package` · `neighbour`
+(S4 at a pinned commit, loaded per run via `--plugin-dir`); 14 tasks from
+`ab-trackb-v2.yaml` × 3 seeds = 126 runs, 0 errored; spend **$4.27** of a $150
+cap. **S4 ran with its hooks OFF** — the intake found they write into the
+user's home, carry state between runs and start model calls — so this measures
+its skills, agents, commands and rules, not its hook layer.
+
+| Class (primary metric) | pairs | vanilla | package | neighbour | package vs neighbour |
+|---|---:|---:|---:|---:|---|
+| Scope discipline (`discipline_score`) | 15 | 0.767 | **1.000** | 0.833 | 3 wins · 0 losses — **underpowered** |
+| Debugging (`capability_pass`) | 27 | 0.889 | **0.963** | 0.889 | 3 wins · 1 loss — **underpowered** |
+
+Secondary, deciding nothing: package vs vanilla is 4–0 (scope) and 3–1 (debug),
+both under the sign test's floor of 5 discordant pairs; neighbour vs vanilla is
+3–2 (scope, no change) and 0–0 (debug). Every arm passed capability on all 15
+scope pairs. **Cost:** median tokens per run — vanilla 76k, neighbour 99k,
+package **1.28M** (≈13× the neighbour).
+
+**Verdict.** No primary comparison can be decided: too few pairs disagree, and
+an underpowered result is an absent measurement, not a null. The direction
+favours this package on both classes, at roughly thirteen times the neighbour's
+context cost. The claim this pilot does NOT support: "the package beats S4".
+What it does support: a confirmation run with more seeds is cheap (this one used
+under 3 % of the cap) and would be pre-registered before it runs.

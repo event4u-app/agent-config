@@ -1,0 +1,93 @@
+{
+  "schema": 1,
+  "roadmap": "road-to-a-pilot-benchmark-against-s4",
+  "preregistration": "agents/evidence/preregistration/s4-pilot.md",
+  "preregistration_sha256": "dc592fbf40edbe1236bb7f18d63926b55132aacf2405e2a2929994a4bd15b070",
+  "measured_at": "2026-10-25",
+  "host": "claude-haiku-4-5",
+  "neighbour_commit": "e49479937753c8aca5a09aa76dbe2eea1b68f187",
+  "neighbour_hooks": "off (intake: agents/evidence/analysis/s4-pilot-intake-2026-10-25.md)",
+  "raw_report": "internal/bench/reports/ab-v2/2026-10-25T23-13-41Z-ab-v2-paired.json (gitignored, local)",
+  "runs": 126,
+  "errored": 0,
+  "spend_usd": 4.27,
+  "cap_usd": 150,
+  "median_tokens_per_run": {
+    "vanilla": 76298,
+    "package": 1276530,
+    "neighbour": 98900
+  },
+  "holm_primary": {
+    "scope": false,
+    "debug": false
+  },
+  "scope": {
+    "pairs": 15,
+    "mean": {
+      "vanilla": 0.767,
+      "package": 1,
+      "neighbour": 0.833
+    },
+    "capability_rate": {
+      "vanilla": 1,
+      "package": 1,
+      "neighbour": 1
+    },
+    "package_vs_neighbour": {
+      "verdict": "underpowered",
+      "wins": 3,
+      "losses": 0,
+      "discordant": 3,
+      "p": 1,
+      "mean_delta": 0.167
+    },
+    "package_vs_vanilla": {
+      "verdict": "underpowered",
+      "wins": 4,
+      "losses": 0,
+      "discordant": 4,
+      "p": 1,
+      "mean_delta": 0.233
+    },
+    "neighbour_vs_vanilla": {
+      "verdict": "no-change",
+      "wins": 3,
+      "losses": 2,
+      "discordant": 5,
+      "p": 0.5,
+      "mean_delta": 0.067
+    }
+  },
+  "debug": {
+    "pairs": 27,
+    "mean": {
+      "vanilla": 0.889,
+      "package": 0.963,
+      "neighbour": 0.889
+    },
+    "package_vs_neighbour": {
+      "verdict": "underpowered",
+      "wins": 3,
+      "losses": 1,
+      "discordant": 4,
+      "p": 1,
+      "mean_delta": 0.074
+    },
+    "package_vs_vanilla": {
+      "verdict": "underpowered",
+      "wins": 3,
+      "losses": 1,
+      "discordant": 4,
+      "p": 1,
+      "mean_delta": 0.074
+    },
+    "neighbour_vs_vanilla": {
+      "verdict": "underpowered",
+      "wins": 0,
+      "losses": 0,
+      "discordant": 0,
+      "p": 1,
+      "mean_delta": 0
+    }
+  }
+}
