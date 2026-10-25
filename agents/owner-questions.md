@@ -90,6 +90,43 @@ and the run that applies it links its PR.
   says it is, and lifting rows decides nothing in the owner's name.
 - **Blocks:** nothing executable; the cost is that the decisions are unseen.
 
+### OQ-9 — Which tree owns "who is the user", and what "profile" and "pack" mean
+
+- **Context:** ADR-010 gives the "who" question to one axis, `profile.id`, and
+  calls duplication across axes a contract violation. Three trees answer it:
+  `src/profiles/*.yaml` (command views), `src/agent-src/profiles/*.yml` (seed
+  identity) — six shared ids, different `packs` vocabularies — and
+  `user-types/` (seven other ids, read only to order MCP prompts). "Profile"
+  also names the install scope, `discipline_profile` and session overlays;
+  "pack" names `src/packs`, `src/domains/*/pack.yaml` and
+  `src/agent-src/packs`. Raised by round `inbox-2026-10-an`; both of its plans
+  recommended the seed tree.
+- **Options:** (a) the seed tree owns the axis, `src/profiles` is generated
+  from it as the command view, `user-types` folds into a seed-profile field
+  with an id mapping, and the extra meanings get prefixed names with aliases
+  for one release; (b) keep three trees and document the split (done in
+  `road-to-a-measured-pointer-gate-and-true-records` 1.3); (c) (a) without the
+  renames.
+- **Recommendation:** (c) first — it removes the duplicated axis without
+  touching public names; the renames can follow once the ids are single.
+- **Blocks:** nothing executable; settings key `personal.user_type` and the
+  profile ids are public surface, so no run changes them unasked.
+
+### OQ-10 — Measure per-skill uplift against a no-skill arm
+
+- **Context:** `agents/roadmaps/stubs/road-to-skill-uplift-against-a-no-skill-arm.md`
+  poses this and has now arrived six times, the latest in round
+  `inbox-2026-10-an`. `run_skill_evals.ts` still throws from
+  `_spawn_subagent` and grades every rubric `pass: null`, so no skill has a
+  measured outcome delta.
+- **Options:** (1) fund a pilot — one host, three skills with a deterministic
+  outcome check, published either way; (2) fold a per-skill outcome column into
+  the tiering live arm; (3) decline and record that per-skill uplift is not
+  measured.
+- **Recommendation:** (1) — the stub's own recommendation, and the only option
+  that answers the question that keeps arriving.
+- **Blocks:** the stub's promotion; nothing active.
+
 ## Answered
 
 | ID | Date | Question | Answer |

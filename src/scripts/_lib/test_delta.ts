@@ -21,7 +21,10 @@ export function isCodePath(p: string): boolean {
     return /^(src|scripts)\//.test(f);
 }
 
-/** A changed path that carries tests. */
+/**
+ * A changed path that carries tests, in THIS repository's layout. Narrower than
+ * `_lib/test_path.ts` on purpose: it scopes this package's own CI gates.
+ */
 export function isTestPath(p: string): boolean {
     const f = p.replace(/\\/g, '/');
     if (/^tests\//.test(f)) return true;

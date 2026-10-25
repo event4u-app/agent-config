@@ -14,3 +14,13 @@ by `agent-config commands ls --profile <id>`, never stored.
 Profiles are an INTERNAL concept: the wizard/CLI asks "What are you doing?"
 (Software Development / Product & Roadmaps / Content Creation / Finance &
 Planning), which maps to a profile id. The README never says "choose a profile".
+
+## Not the seed profiles
+
+`src/agent-src/profiles/*.yml` carries the same six ids as **seed identity
+profiles** — who the user is, default preset, personas, README anchor — under
+[ADR-010](../../docs/decisions/ADR-010-profile-pack-preset-boundary.md). Its
+`packs:` list names capability packs; the `packs:` list here names the packs
+whose commands `--expanded` adds. Same key, different vocabulary, so the two
+lists are not expected to match. Which tree owns the "who" axis is open
+(OQ-9 in `agents/owner-questions.md`).

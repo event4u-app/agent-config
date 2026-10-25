@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-t verified at 5fa963cec that `upgrade` runs only on explicit invocation, that `update_check.enabled` is the only settings key on the whole surface (agent-settings.template.yml:1529), that the notice is emitted solely by the CLI dispatcher and suppressed on non-TTY (update_check.ts:239-255, sole caller check_update_banner.ts:149) while consumption is global-only through hosts (README.md:188), and that SECURITY.md:21-22 backports nothing — so an install that is not current is unsupported and nothing tells its user. No active, parked or stub roadmap owns this: a grep over agents/roadmaps/{*,later,stubs} for cmd_upgrade, update_check, unattended and probe_throttle returns nothing. Archiving or parking costs more because the support consequence is live on every install today; merging into road-to-a-release-that-says-whether-it-needs-you would put an install transaction behind a release-numbering decision the owner has not taken."
-estate_growth_exempt: "THIS CHANGE (2026-10-25) grows concern_count by one: `star-ask`, a monthly GitHub-star ask on claude session_start through the same user channel D16 added for `update-notice`, by owner ruling ADR-301 (amending ADR-286 § D2). The owner asked for it on 2026-10-16 in the round that produced this roadmap, and this roadmap cut it as out of scope; the growth is that cut reversed by its owner, not work the estate acquired unasked. It adds two A-class settings keys (`star_ask.mode`, `star_ask.starred`) and no blocker. EARLIER CLAIM, 2026-10-24 grows concern_count 66 -> 67: `update-notice` is registered again, on claude session_start only, through the user channel D16 adds, ratified 2/2 by the AI council in round 6 (agents/evidence/ratifications/update-notice-user-channel-20261024.md). It is not new work the estate acquired: the concern, its tests and its admission row existed and were unregistered on 2026-10-21 for want of a delivery path, so this is a restoration. open_blockers moves the other way in the same diff (`dsse-trust-root` resolved, D15). EARLIER CLAIM, 2026-10-20: grows concern_count 63 -> 65: `update-notice` and `update-auto-invite`, registered on 2026-10-20 under a council ratification of 2/2 that declared them authority expansions and named the two effect terms they take. They are not new work the estate acquired — they are work it already carried, reverted out of the manifest in the same week by the refusal this ratification lifts, so the growth is a restoration rather than an accretion. open_blockers moves the other way in the same diff (71 -> 70, `concerns-refused-as-authority-expansion` resolved). PRIOR CLAIM, still live for the blockers it covers: Adds three blockers above the open_blockers floor measured at origin/main. Two are owner blockers (`node-floor-raise`, `auto-default-for-existing-installs`) above the open_blockers floor measured at origin/main. Both are consumer-facing commitments — a minimum-runtime raise and a default flip on installs that already exist — which template rule 27 records as structured blockers rather than as decisions the agent takes. Measure the delta with `./scripts-run src/scripts/check_estate_count` on the landed commit rather than reading this sentence. The third, `dsse-trust-root`, is Class 2 and council-decidable: step 2.1 closed the half of the provenance gate that could be closed without a dependency decision, and the half that remains — pinning a sigstore trust root, or shelling out to the npm client, or recording the certificate-bound check as the floor — trades bytes against bandwidth against coverage with no measurement in this tree to separate them. Recording it as a structured blocker is what keeps the gate's real limit readable; the alternative was a docstring nobody greps."
+estate_growth_exempt: "THIS CHANGE (2026-10-25, second claim) grows open_blockers by one: `ring-0-exit-pending`, the gate step 4.3 already sat behind in prose (`ring-0-exit: no` in the committed ring-0 record, no `next` dist-tag on the registry). The wait existed before this change; writing it as a structured blocker is what makes it countable, so this is a correction of an undercount rather than new work. THIS CHANGE (2026-10-25) grows concern_count by one: `star-ask`, a monthly GitHub-star ask on claude session_start through the same user channel D16 added for `update-notice`, by owner ruling ADR-301 (amending ADR-286 § D2). The owner asked for it on 2026-10-16 in the round that produced this roadmap, and this roadmap cut it as out of scope; the growth is that cut reversed by its owner, not work the estate acquired unasked. It adds two A-class settings keys (`star_ask.mode`, `star_ask.starred`) and no blocker. EARLIER CLAIM, 2026-10-24 grows concern_count 66 -> 67: `update-notice` is registered again, on claude session_start only, through the user channel D16 adds, ratified 2/2 by the AI council in round 6 (agents/evidence/ratifications/update-notice-user-channel-20261024.md). It is not new work the estate acquired: the concern, its tests and its admission row existed and were unregistered on 2026-10-21 for want of a delivery path, so this is a restoration. open_blockers moves the other way in the same diff (`dsse-trust-root` resolved, D15). EARLIER CLAIM, 2026-10-20: grows concern_count 63 -> 65: `update-notice` and `update-auto-invite`, registered on 2026-10-20 under a council ratification of 2/2 that declared them authority expansions and named the two effect terms they take. They are not new work the estate acquired — they are work it already carried, reverted out of the manifest in the same week by the refusal this ratification lifts, so the growth is a restoration rather than an accretion. open_blockers moves the other way in the same diff (71 -> 70, `concerns-refused-as-authority-expansion` resolved). PRIOR CLAIM, still live for the blockers it covers: Adds three blockers above the open_blockers floor measured at origin/main. Two are owner blockers (`node-floor-raise`, `auto-default-for-existing-installs`) above the open_blockers floor measured at origin/main. Both are consumer-facing commitments — a minimum-runtime raise and a default flip on installs that already exist — which template rule 27 records as structured blockers rather than as decisions the agent takes. Measure the delta with `./scripts-run src/scripts/check_estate_count` on the landed commit rather than reading this sentence. The third, `dsse-trust-root`, is Class 2 and council-decidable: step 2.1 closed the half of the provenance gate that could be closed without a dependency decision, and the half that remains — pinning a sigstore trust root, or shelling out to the npm client, or recording the certificate-bound check as the floor — trades bytes against bandwidth against coverage with no measurement in this tree to separate them. Recording it as a structured blocker is what keeps the gate's real limit readable; the alternative was a docstring nobody greps."
 relates:
   - slug: road-to-truthful-surfaces
     relation: extends
@@ -113,40 +113,7 @@ None of this is rebuilt here.
       (`publish-npm.yml:62`), a `deprecated` check in the same fetch, and the
       `engines` comparison from the sibling roadmap.
       verify: a fixture per gate shows the refusal and its reason.
-      *Open on one gate (2026-10-18).* The flag, the age, `deprecated`,
-      `engines` and impact-map gates landed with a refusal fixture each. The
-      provenance gate checks that an attestation is present and carries an
-      SLSA provenance predicate; it does **not** verify the attestation's
-      signature or tie it to `publish-npm.yml`. That verification is what
-      keeps this step open. Harmless today: the production wiring swaps
-      nothing until 1.4.
-      *The `running_origin` half is fixed (2026-10-19).* Both of
-      `_is_source_repo`'s positive signals ship in every tarball, so every
-      installed package read as a source checkout; the `.git`-at-package-root
-      test is now the one shared definition. Measured on a real packaged
-      install, before and after:
-      `agents/evidence/analysis/running-origin-source-checkout-2026-10-19.md`.
-      *The signature half landed half-closed (2026-10-20), and the half that
-      did not is now a blocker rather than a sentence.* `provenance_verify`
-      gained `verify_attestation_signature`: the DSSE envelope's signature is
-      verified against the public key of the certificate the bundle carries,
-      over a real pre-authentication encoding, and that certificate's own SAN
-      must name `publish-npm.yml` in this repository — so a payload edited
-      after signing, a signature that does not belong to its own certificate,
-      and a bundle whose payload claims one identity while its certificate
-      carries another are all refused. Fixtures are real: an EC P-256 key and
-      a certificate minted with `openssl`, a genuine signature, both
-      directions asserted
-      (`tests/lib/provenance_signature.test.ts`).
-      **What is NOT closed:** there is no trust root — no Fulcio issuer check,
-      no Rekor inclusion proof — so a self-signed certificate carrying the
-      expected SAN passes, and that is asserted as a known limitation in the
-      same test file rather than left to be discovered. Closing it is a
-      dependency decision, registered as `### blocker: dsse-trust-root`.
-      A sentence this step used to rest on was also false and is retracted
-      rather than quietly dropped: `upgrade_unattended.ts` claimed the
-      signature half was `npm audit signatures` "in the install step", and
-      `install_steps` never ran an audit.
+      Dated notes moved verbatim: `agents/evidence/analysis/update-installs-itself-dated-notes-2026-10-25.md`.
       **Closed 2026-10-24 (D15 implemented):** pinned sigstore roots, both attestations, the tarball sha512 bound to the bytes installed; tested against the real 17.3.0 attestation (`tests/lib/sigstore_provenance.test.ts`), a self-signed certificate refused.
 - [x] **2.2 Single-flight.** A lock with a TTL and an owner PID under
       `~/.event4u/agent-config/`; the previous version read from
@@ -249,12 +216,9 @@ None of this is rebuilt here.
       host-native question in the `stop` slot, after a turn that ended on a
       verified success. It carries a permanent "never". Existing installs are
       **asked**, never flipped.
-      verify: a fixture asserts zero prompts under CI, non-TTY, headless,
-      Since 2026-10-21 the "never" is the setting: any mode but `ask` stops it.
-      **Reopened 2026-10-21:** the registration was withdrawn after rounds 5
-      and 6 refused it — the one global claim is finalised on workspace-written
-      evidence without confirmed delivery. It closes when the claim is.
-      Done note: `agents/evidence/analysis/update-concerns-lifecycle-2026-10-21.md` § 4.3.
+      verify: a fixture asserts zero prompts under CI, non-TTY, headless, `--json` output and a subagent run.
+      Dated notes moved verbatim: `agents/evidence/analysis/update-installs-itself-dated-notes-2026-10-25.md`.
+      Open on `### blocker: ring-0-exit-pending`.
 - [x] **4.4 A pin advisor for teams.** `update --check` in a pinned project
       lists what lies between the pin and latest, read from the impact map.
       It proposes; it never moves the pin.
@@ -448,6 +412,42 @@ None of this is rebuilt here.
 - **If you do nothing:** 4.3 ships the question and the default stays `notify`,
   which is the conservative behaviour and is a complete outcome — this blocker
   exists so that staying there is a choice rather than an omission.
+
+### blocker: ring-0-exit-pending
+
+- **Status:** open — raised 2026-10-25 by a `/roadmap:process-full` run that
+  found 4.3 the only open step and could not close it in a change.
+- **Class:** 3 — human-only, and time-gated rather than a decision: the exit
+  needs four consecutive releases installed unattended, which no single change
+  can produce, and the `ring-0-exit:` line is written by a human after reading
+  the table, by 4.2's own design.
+- **Owner:** repository owner
+- **Ownership:** product-owned — when `auto` reaches anyone beyond maintainer
+  machines is a rollout decision, and ADR-291 already ruled an existing install
+  is asked only after this exit.
+- **Blocks:** step 4.3 only, and through it AC-10's reading on the PR that
+  closes this file. Every other step is closed.
+- **What to do:** in order —
+  1. publish a release on the `next` dist-tag (`.github/workflows/publish-npm.yml:154-168`);
+     the registry carries none today;
+  2. on each maintainer machine set `update.mode: auto` in the user-global
+     settings and let `agent-config upgrade --unattended` install each release;
+  3. append one row per release to
+     `agents/evidence/analysis/ring-0-unattended-record-2026-10-20.md`, and after
+     four consecutive clean rows change its line to `ring-0-exit: yes`;
+  4. re-ratify the `update-auto-invite` registration (the effect term
+     `interaction` and the `stop` binding) in a council round, then register it
+     and close 4.3.
+- **Resolved when:** the ring-0 record reads `ring-0-exit: yes` over four
+  consecutive rows with zero rollbacks and zero swap errors, and
+  `update-auto-invite` is registered in `src/scripts/hook_manifest.yaml` under
+  a recorded ratification.
+- **Recommendation:** none needed beyond the order above — the gate is a count
+  of real releases, and the one way to shorten it would be to lower 4.2's exit
+  condition, which ADR-291 makes an owner question, not an agent one.
+- **If you do nothing:** the invitation never fires and every install stays on
+  `notify` unless a human hand-edits `update.mode` — the conservative outcome
+  ADR-291 already names as complete, so waiting costs only the unasked users.
 
 ## Decisions
 

@@ -915,6 +915,39 @@ before the record is signed.
       handing them one item at a time turns four passes into four round trips. -->
       <!-- verify: npm run test:ts -- tests/scripts/mission_continuity.test.ts -->
 
+## Phase 12 — The floor in a consumer project
+
+> **Arrivals (consumer floor):** 1 — `inbox-2026-10-an` (2026-10-25), re-verified at
+> `ac73481341`. Phases 1-3 built the floor for this package: `check_test_weakening` and
+> `check_test_delta` run in `ci-fast` and `tests.yml` only. A consumer gets none of it —
+> the turn-end gate lets an `Edit` of an existing test pass unread
+> (`turn_end_gate_hook.ts:891-896`), the multi-language detector in
+> `detect_verification_tampering.ts` is reached only through `verify-repair-loop`, a
+> maintainer-workspace skill, and no detector reads production-code suppressions
+> (`@ts-ignore`, `phpstan-ignore*`, `# noqa`, `eslint-disable`). The turn-end transcript
+> carries no edit bodies by design (`_lib/turn_end_transcript.ts`), so the carrier is a
+> `post_tool_use` concern that reads the pre-image from `git diff HEAD`, as
+> `edit_shape_hook.ts` does. The shared test-path predicate this phase needs landed in
+> `road-to-a-measured-pointer-gate-and-true-records` 3.1.
+
+- [ ] **12.1 Count weakening at the edit, in the consumer.** A `post_tool_use` concern on
+      `Edit`/`Write` of a test path diffs it against `HEAD` and runs the tampering detector,
+      storing only counts in session state; the turn-end gate reads them where it now lets an
+      existing-test edit through, and a net assertion loss with no verdict artefact is a
+      finding.
+      verify: fixtures in PHP, TypeScript and Python that delete an assertion or add a skip
+      are red; a Markdown-only diff is green; the concern stays inside the hook latency budget.
+- [ ] **12.2 Production-code suppressions.** The same detector learns a suppression family
+      with a `reason:` escape, warning first; a block needs a measured false-positive rate.
+      verify: a planted `@ts-ignore` without a reason is reported, the same line with
+      `reason:` is not.
+- [ ] **12.3 A quality contract read from the project's own configs.** It names which of the
+      existing CI workflow, static-analysis level, coverage and lint configs are gates, and
+      measures and holds what no config states; lowering a held threshold is a 12.1 finding.
+      Unattended runs take the floor and state the assumption; no new question.
+      verify: three fixture repositories (Laravel, Next.js, Python) are detected without a
+      question, and a planted threshold drop is red.
+
 ## Decisions
 
 | ID | ownership | resolved by | decision | evidence | revisit if |

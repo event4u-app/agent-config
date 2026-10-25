@@ -5,7 +5,7 @@ review_by: 2027-01-11
 
 # Stub: road to skill uplift measured against a no-skill arm
 
-> **Arrivals:** 5 (at least) — latest `inbox-2026-10-m` (2026-10-12), which adds one
+> **Arrivals:** 6 (at least) — latest `inbox-2026-10-an` (2026-10-25): two plans ask again for a model-running behavioural harness (`run_skill_evals.ts` still throws from `_spawn_subagent` and grades rubrics `pass: null`) and for pressure cases before any rationalization table; the posed question below is unchanged. Before it: `inbox-2026-10-m` (2026-10-12), which adds one
 > fact: an external first-party evaluation of a single skill used a with/without arm and a
 > deterministic failure check (use of a superseded API surface), so skills whose job is to
 > beat stale model knowledge are the cheapest pilot set for this stub's option (1);
@@ -55,7 +55,7 @@ and choosing which skills to spend on is a priority call. ADR-263 already
 frames skills as explicitly invoked reference material, which is the setting a
 no-skill arm measures, so the question is not contested — only unfunded.
 
-## The posed owner question — 5 arrivals
+## The posed owner question — 6 arrivals
 
 Exactly one of:
 
