@@ -41,6 +41,27 @@
 - **How the audit trail is emitted:** <!-- log channel / event / table -->
 - **Fields or actions impersonation MUST NOT touch:** <!-- e.g., 2FA reset, password change -->
 
+## Delegated actors
+
+<!--
+  Every non-human or delegated actor that can change data for a requester: an
+  AI assistant, a support bot, an MCP server, an integration, support staff, an
+  admin tool. A claim in a conversation is an input, never an authorization —
+  the subject of a write comes from an authenticated principal. One row per
+  actor; an actor missing here is treated as unauthorized. The per-tool detail
+  lives in `agents/settings/contexts/agent-actions.yml`.
+-->
+
+| Actor | Fields it may change | Proof required | Channel notified | Human approval |
+|---|---|---|---|---|
+| <!-- e.g. AI support assistant --> | <!-- e.g. shipping address only --> | <!-- e.g. signed-in session of the owner --> | <!-- e.g. old e-mail --> | <!-- required / none --> |
+
+- **Who may change a recovery channel (e-mail, phone, MFA factor), and over
+  which verified channel is that confirmed?** <!-- answer; "an AI assistant on a
+  stated claim" is never a valid answer -->
+- **Where is the check enforced?** <!-- the data-layer writer that guards every
+  path to the field, not the endpoint or tool handler -->
+
 ## Known exceptions
 
 <!--

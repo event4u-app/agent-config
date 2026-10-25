@@ -40,6 +40,8 @@ triggers:
 
 * A change adds or modifies permission checks, roles, or ownership rules
 * A change exposes a new route, action, or admin-only capability
+* A change adds or modifies something an AI agent can *do* — an MCP tool, a
+  function-calling tool, a bot action
 * A query fetches tenant-scoped or user-scoped records and you must confirm scope
 * A bug report mentions "user A saw user B's data" or "non-admin accessed admin page"
 * `security-sensitive-stop-rule` fires on an auth/tenant/ownership code path
@@ -65,9 +67,12 @@ Do NOT use when:
 
 ### 1. Pick the entrypoints under review
 
-Collect the route(s), action(s), or job(s) in scope for this review. Read the
-task description, open ticket, or user request — do not invent scope. If the
-entrypoint list is unclear, stop and ask.
+Collect the route(s), action(s), job(s), or agent tool(s) in scope for this
+review. Read the task description, open ticket, or user request — do not invent
+scope. If the entrypoint list is unclear, stop and ask.
+
+**A tool call is an entrypoint** (MCP tool, function-calling tool, bot action):
+record name, schema, where its **subject** comes from, and its effect.
 
 ### 2. Inspect each path end-to-end
 
@@ -75,12 +80,12 @@ For every entrypoint, analyze the authorization chain and record what you find:
 
 | Stage | What to confirm |
 |---|---|
-| Route / binding | HTTP method, URL, controller/handler, middleware chain |
+| Route / binding | HTTP method, URL, controller/handler, middleware chain — or, for a tool: registration, schema, and the subject source: **session, policy system, or the model's argument?** A model-filled argument is request-supplied |
 | Authentication gate | Is login enforced? By which middleware / guard? |
 | Authorization layer | Which policy, gate, voter, or check? Which action/ability? |
 | Data scope | Does the query filter by current user / tenant / owner? |
 | Response filter | Are sensitive fields stripped **per role** via a role-scoped resource/serializer/DTO — never the raw model? (a driver role must not receive `price`) |
-| Tests | Are the three negative tests present — unauthenticated → 401, non-owner → 403/404, cross-tenant → 403/404 (404 hides existence)? |
+| Tests | Are the three negative tests present — unauthenticated → 401, non-owner → 403/404, cross-tenant → 403/404 (404 hides existence)? For a tool, a fourth: a call naming another subject's identifier → no effect, verified by re-reading the record |
 
 Record **what is there**, not what should be there. Use file:line citations.
 
@@ -132,6 +137,24 @@ Object-ownership (above) is *horizontal* (may this principal touch this record).
 - **Nested / GraphQL.** Field-level checks propagate to nested selections; a low-role token selecting a restricted field gets null/error, not data.
 - **Negative tests, per (role × sensitive field), both directions:** lower-role token → the field is **absent from the raw response body** (assert the body, not the UI); lower-role setting the field on input → rejected/ignored, **verified by re-reading the persisted record**; every privileged verb → 403 for lower roles (403/404 on sensitive object reads).
 
+### Agent tool calls and path independence
+
+- **A claim is an input, never an authorization.** The subject of a write comes
+  from the authenticated principal, never from the conversation or a tool
+  argument the model fills — a requester who names an account and says it is
+  theirs (a conversational ownership claim) has granted nothing. Names or IDs in
+  a tool schema may only pick objects already inside the caller's scope.
+- **Identity-critical writes** (recovery e-mail or phone, password, MFA factor,
+  owner) need a verified grant, a notice to the *old* channel and a human
+  escalation path.
+- **The check holds on every path.** A guard where the request arrives covers
+  that path alone; a support tool, admin script or second bot action reaches the
+  same sink unchecked. Look for: the guard at the data/domain layer that writes
+  the field · one writer per identity field · an architecture test (import or
+  call-graph rule, or a grep in the suite) that fails when any other module
+  writes it. Finding: "`<field>` has `<n>` writers (file:line each), `<k>`
+  guarded" — 🔴 when `n > 1` and no architecture test exists.
+
 ### Defense-in-depth (so one miss can't leak)
 
 Stack ≥2 independent layers on sensitive data — query-level ownership scoping, a centralized default-deny policy layer (a route with no policy is denied, not silently open), and DB row-level security as the backstop for a forgotten `WHERE tenant_id`. (Merged with the pre-existing Gotcha bullet "Defense-in-depth so one miss can't leak" below, which carries the concrete RLS configuration — that bullet is the stronger, operative statement.)
@@ -168,7 +191,7 @@ Before finalizing the report, confirm:
 
 ```
 Skill:   authz-review
-Targets: <routes / actions / jobs, one per line>
+Targets: <routes / actions / jobs / agent tools, one per line>
 
 Per-entrypoint walk:
   <METHOD /route> — <controller@action>  (file:line)
@@ -177,6 +200,11 @@ Per-entrypoint walk:
     Data scope:          <scope/where>        ✅/⚠️/❌   (file:line)
     Response filter:     <resource/serializer> ✅/⚠️/❌  (file:line)
     Negative test:       <test path or "—">   ✅/⚠️/❌
+
+  <tool name> — <registration>  (file:line)
+    Subject source:      <session / policy / model argument>  ✅/⚠️/❌
+    Effect:              <read / write / identity / money / send>
+    (then the stages above, plus the fourth negative test)
 
 Findings (prioritized):
   🔴  <name> — entrypoint · stage · actor

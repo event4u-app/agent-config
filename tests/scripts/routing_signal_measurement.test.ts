@@ -344,7 +344,10 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // `docker` gained corpora for the touched-skill reason; all three train
         // (0x53, 0x5a, 0xd5), so the seal stays at 37 and the train set moves
         // 132 -> 135, and both train-side measurements are re-taken.
-        expect(all.length).toBe(172);
+        // 172 -> 173 on 2026-10-24: `mcp-builder` gained a corpus for the
+        // touched-skill reason and trains, so the seal stays at 37 and the train
+        // set moves 135 -> 136; both train-side measurements are re-taken.
+        expect(all.length).toBe(173);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(37);
     });
 });
@@ -410,7 +413,8 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // `condense-memory` seals and is absent here.
         // 131 -> 132 on 2026-10-19: `playwright-testing` (0x61 = 97) trains.
         // 132 -> 135 on 2026-10-21: three train corpora (see the 172 line).
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(135);
+        // 135 -> 136 on 2026-10-24: `mcp-builder` (see the 173 line).
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(136);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

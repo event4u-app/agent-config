@@ -177,6 +177,11 @@ Each domain ships `data/manifest.json` beside its CSVs — declaring its
   out — a module exposing `evaluate(rules, query, context)`; a legacy
   `.py` name in a manifest is remapped to its `.ts`/`.js` twin) must live
   beside the manifest — absolute paths and `..` are refused.
+- `composite_min_score` (optional number in `reasoning`): with it set, every
+  other category whose row in `category_domain` scores at least this much is
+  named in the evidence gap as dropped, so a description spanning two
+  categories never reports `none`. The manifest sets it because only the
+  corpus knows which score separates a second real match from a shared word.
 - Decision rules are surfaced as `matched` **and** `unmatched` — the full
   rule space stays auditable, never a hidden gate.
 

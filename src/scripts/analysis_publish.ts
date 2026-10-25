@@ -16,7 +16,9 @@ import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { load_agent_settings } from './_lib/agent_settings.js';
 import { handBack, publicationKey, publishOnce, reached, transition, type RunRecord } from './analysis_run.js';
+import { getSettingsLeaf } from '../shared/settingsClasses.js';
 
 export const MAX_CI_FIX_ROUNDS = 3;
 export const DASHBOARD_REL = 'agents/roadmaps-progress.md';
@@ -101,6 +103,12 @@ export interface PublishInput {
     baseSha: string;
     title: string;
     message: string;
+    /**
+     * `inner` when a later stage of the same invocation writes this branch
+     * (ADR-288 Amendment 1): commit and stop at `committed`, the terminal stage
+     * publishes. Absent means `terminal`.
+     */
+    stage?: 'terminal' | 'inner';
 }
 
 function assertPublishable(paths: readonly unknown[]): string[] {
@@ -214,6 +222,7 @@ export function publish(
         port.commit(input.message);
         rec = transition(runDir, rec, 'committed');
     }
+    if (input.stage === 'inner') return { record: rec, pr: null };
     if (!reached(rec, 'pushed')) {
         const remote = port.remoteHead(r.target);
         if (remote !== null && remote !== port.localHead()) {
@@ -239,17 +248,32 @@ export function publish(
 }
 
 /**
+ * `delivery.wait_for_ci` as the settings cascade resolves it from `cwd`.
+ * Only an explicit `false` turns the settle off; anything else is the default.
+ */
+export function resolveWaitForCi(cwd: string, opts: { userGlobalPath?: string } = {}): boolean {
+    const merged = load_agent_settings({ cwd, user_global_path: opts.userGlobalPath ?? null });
+    return getSettingsLeaf(merged, 'delivery.wait_for_ci') !== false;
+}
+
+/**
  * pr-open → ci-settled → done, or `handed-back` naming the red after the third
  * fix round. Every fix push carries the expected-head check and the same
- * allowed path set as the publication.
+ * allowed path set as the publication. `waitForCi: false` (the resolved
+ * `delivery.wait_for_ci`) leaves the run at `pr-open` and says so in one line.
  */
 export function settleCi(
     port: PublishPort,
     runDir: string,
     record: RunRecord,
-    input: PublishInput & { pr: number },
+    input: PublishInput & { pr: number; waitForCi?: boolean },
     fix: (red: string[]) => unknown,
+    say: (line: string) => void = (line) => process.stderr.write(`${line}\n`),
 ): RunRecord {
+    if (input.waitForCi === false) {
+        say(`delivery.wait_for_ci is false — the run ends at pr-open on PR #${String(input.pr)}; CI is left to be read later.`);
+        return record;
+    }
     let rec = record;
     let r: Resolved;
     try {
@@ -283,6 +307,15 @@ export function settleCi(
         if (refused !== null) return handBack(runDir, rec, refused);
         pushed = port.localHead();
     }
+}
+
+/**
+ * What the port hands `scripts-run` to settle CI on `pr`. No deadline of its
+ * own: `ci_settle`'s default is the foreground ceiling, and a call above it is
+ * killed at 600 s and reports nothing.
+ */
+export function ciSettleArgv(pr: number): string[] {
+    return ['src/scripts/ci_settle', String(pr)];
 }
 
 /**
@@ -342,7 +375,7 @@ export function gitGhPort(cwd: string): PublishPort {
         prIsDraft: (pr) => (JSON.parse(run('gh', ['pr', 'view', String(pr), '--json', 'isDraft'])) as { isDraft: boolean }).isDraft,
         ciSettle: (pr) => {
             try {
-                run('./scripts-run', ['src/scripts/ci_settle', String(pr), '--timeout-min', '28']);
+                run('./scripts-run', ciSettleArgv(pr));
                 return { green: true, red: [] };
             } catch (err) {
                 // Exit 2 is "not a verdict" (timed out, merged, head diverged) — never read as red or green.
