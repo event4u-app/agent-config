@@ -7,7 +7,7 @@ ruleset_version_before: 51122772
 ruleset_version_after: 54668684
 restore_by: 2026-11-01T11:47:49+01:00
 restored_at: superseded-by-owner-ruling agents/evidence/owner-directives/2026-10-25-standing-pull-request-bypass.md
-council_review: pending
+council_review: agents/evidence/council/2026-10-25-bypass-review-2678.md
 ---
 <!-- evidence-type: bypass-record -->
 
