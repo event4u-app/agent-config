@@ -66,7 +66,8 @@ not choose to send.
 - [x] **1.3 Media anchor grammar.** `S1@01:05 #3` (source, timestamp, tile) documented in <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/media_anchor.ts -->
       `analysis-loop` and accepted by a helper `isMediaAnchor()`; quotes ≤ 15
       words (`MAX_QUOTE_WORDS`).
-      verify: unit test for valid/invalid anchors.
+      verify: `npx vitest run tests/scripts/media_anchor.test.ts tests/scripts/analysis_validate.test.ts` -> 0
+      production entry: src/scripts/analysis_validate.ts — the engine's validate stage, which now names a malformed media anchor.
 
 ## Phase 2 — The evidence bundle (deterministic, terminates)
 
