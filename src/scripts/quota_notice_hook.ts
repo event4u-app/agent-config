@@ -17,16 +17,18 @@
  *   - one notice per session when the session may bill per token.
  * `metered-spawn-ask` (Agent/Task, `effect: confirmation`, run with `--ask`)
  * returns the host's native ask on a subagent spawn of a possibly-metered
- * session without a billing grant, until one spawn has actually run there: its
- * post_tool_use records that, and only that. Emitting the ask records nothing,
- * so a "no" leaves the next spawn asking again, and spawns racing before the
- * first answer each ask. Never a deny, never an amount.
+ * session without a billing grant, until the user has allowed one: asking marks
+ * that one call (by its hashed `tool_use_id`) pending, and only its own
+ * post_tool_use turns the mark into a session approval. A "no", a spawn that
+ * ran without an ask, or a call with no id approves nothing; racing spawns each
+ * ask. Markers expire after eight days. Never a deny, never an amount.
  *
  * Dedup is a claim file created with `wx`, one per key, so two sessions that
  * race for the same notice cannot both print it. Claims older than eight days
  * are removed when a new one is taken.
  *
- * WHAT STOPS IT. `AGENT_CONFIG_NO_QUOTA_NOTICE=1`, CI, replay mode, and any host
+ * WHAT STOPS IT. `AGENT_CONFIG_NO_QUOTA_NOTICE=1` (notices) or
+ * `AGENT_CONFIG_NO_SPAWN_ASK=1` (the ask), CI, replay mode, and any host
  * without a verified user channel. Fail-open on every path: exit 0.
  */
 import { createHash } from 'node:crypto';
@@ -59,11 +61,9 @@ function claimDir(stateEnv?: EnvMap | null): string {
     return path.join(quotaStateDir(stateEnv), 'claims');
 }
 
-/** `true` exactly once per key on this machine; `false` when taken or unwritable (fail-closed for the notice). */
-export function claimOnce(key: string, stateEnv?: EnvMap | null, now: number = Date.now()): boolean {
-    const dir = claimDir(stateEnv);
+/** Remove marker files older than eight days from one state directory. */
+function prune(dir: string, now: number): void {
     try {
-        fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
         for (const name of fs.readdirSync(dir)) {
             const p = path.join(dir, name);
             try {
@@ -72,6 +72,21 @@ export function claimOnce(key: string, stateEnv?: EnvMap | null, now: number = D
                 // a concurrent prune got there first
             }
         }
+    } catch {
+        // no directory yet
+    }
+}
+
+function digest(key: string): string {
+    return createHash('sha256').update(key).digest('hex').slice(0, 20);
+}
+
+/** `true` exactly once per key on this machine; `false` when taken or unwritable (fail-closed for the notice). */
+export function claimOnce(key: string, stateEnv?: EnvMap | null, now: number = Date.now()): boolean {
+    const dir = claimDir(stateEnv);
+    try {
+        fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+        prune(dir, now);
         const name = createHash('sha256').update(key).digest('hex').slice(0, 20);
         fs.closeSync(fs.openSync(path.join(dir, name), 'wx', 0o600));
         return true;
@@ -80,10 +95,13 @@ export function claimOnce(key: string, stateEnv?: EnvMap | null, now: number = D
     }
 }
 
-export function suppression(deps: Pick<QuotaNoticeDeps, 'sessionId' | 'viaHost' | 'env'>): string | null {
+export function suppression(
+    deps: Pick<QuotaNoticeDeps, 'sessionId' | 'viaHost' | 'env'>,
+    killSwitch = 'AGENT_CONFIG_NO_QUOTA_NOTICE',
+): string | null {
     const ci = ['1', 'true'].includes((deps.env['CI'] ?? '').trim().toLowerCase()) || deps.env['GITHUB_ACTIONS'] === 'true';
     if (ci) return 'ci';
-    if (deps.env['AGENT_CONFIG_NO_QUOTA_NOTICE'] === '1') return 'kill switch';
+    if (deps.env[killSwitch] === '1') return 'kill switch';
     if (!deps.viaHost || deps.sessionId === null) return 'no user channel';
     return null;
 }
@@ -92,7 +110,7 @@ export function meteredText(b: BillingClassReading): string {
     return (
         `AC: this session may bill per token rather than your plan — ${b.source ?? 'an API credential'} is configured. ` +
         '`/status` shows which auth Claude Code is using; remove the key or helper to stay on your subscription. ' +
-        'AC asks before subagent spawns here until one has run.'
+        'AC asks before subagent spawns here until you allow one.'
     );
 }
 
@@ -123,41 +141,66 @@ export function noticeLines(deps: QuotaNoticeDeps): string[] {
 
 export interface AskDeps extends QuotaNoticeDeps {
     readonly toolName: string | null;
+    /** The host's id for this tool call; read only to be hashed, never stored. */
+    readonly toolUseId: string | null;
     readonly repoRoot: string;
 }
 
 const SPAWN_TOOLS = new Set(['Agent', 'Task']);
 
-/** The ask reason, or `null` when this spawn passes without one. */
+function markerPath(kind: 'pending' | 'approved', key: string, stateEnv?: EnvMap | null): string {
+    return path.join(quotaStateDir(stateEnv), kind, digest(key));
+}
+
+function touch(p: string, now: number): void {
+    const dir = path.dirname(p);
+    fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+    prune(dir, now);
+    fs.writeFileSync(p, '', { mode: 0o600 });
+}
+
+/**
+ * The ask reason, or `null` when this spawn passes without one. Asking marks
+ * exactly this call as pending; nothing else is recorded.
+ */
 export function spawnAsk(deps: AskDeps): string | null {
     if (deps.toolName === null || !SPAWN_TOOLS.has(deps.toolName)) return null;
-    if (suppression(deps) !== null) return null;
+    if (suppression(deps, 'AGENT_CONFIG_NO_SPAWN_ASK') !== null) return null;
     if (deps.billing.billing_class !== 'metered') return null;
     if (hasBillingGrant(deps.repoRoot, deps.env)) return null;
     if (spawnApproved(deps.sessionId, deps.stateEnv)) return null;
+    if (deps.toolUseId !== null) {
+        try {
+            touch(markerPath('pending', `${deps.sessionId ?? ''}|${deps.toolUseId}`, deps.stateEnv), deps.now);
+        } catch {
+            // without a pending marker the post event approves nothing: it asks again
+        }
+    }
     return (
         `agent-config: this session may bill per token (${deps.billing.source ?? 'an API credential'} is configured), ` +
-        'and a subagent spawn starts another paid context. Once one spawn has run in this session, AC stops asking. ' +
+        'and a subagent spawn starts another paid context. Once you have allowed one spawn here, AC stops asking. ' +
         'If /status shows your subscription, allowing costs nothing extra.'
     );
 }
 
-function approvalPath(sessionId: string | null, stateEnv?: EnvMap | null): string {
-    return path.join(quotaStateDir(stateEnv), 'approved', hashSessionId(sessionId));
-}
-
-/** Has a spawn run in this metered session — the one observable "yes"? */
+/** Has the user allowed an asked spawn in this session? */
 export function spawnApproved(sessionId: string | null, stateEnv?: EnvMap | null): boolean {
-    return sessionId !== null && fs.existsSync(approvalPath(sessionId, stateEnv));
+    return sessionId !== null && fs.existsSync(markerPath('approved', sessionId, stateEnv));
 }
 
-/** Called on post_tool_use: the spawn ran, so the user (or a rule) allowed it. */
-export function recordSpawnRan(deps: Pick<AskDeps, 'sessionId' | 'stateEnv' | 'toolName' | 'billing'>): void {
-    if (deps.sessionId === null || deps.toolName === null || !SPAWN_TOOLS.has(deps.toolName)) return;
-    if (deps.billing.billing_class !== 'metered') return;
-    const p = approvalPath(deps.sessionId, deps.stateEnv);
-    fs.mkdirSync(path.dirname(p), { recursive: true, mode: 0o700 });
-    fs.writeFileSync(p, '', { mode: 0o600 });
+/**
+ * post_tool_use: the session is approved only when THIS call was asked about
+ * and then ran — the one observable "yes". A spawn that ran without an ask
+ * (a billing grant, a suppressed ask, no call id) approves nothing.
+ */
+export function recordSpawnRan(deps: Pick<AskDeps, 'sessionId' | 'stateEnv' | 'toolName' | 'toolUseId' | 'now'>): boolean {
+    if (deps.sessionId === null || deps.toolUseId === null) return false;
+    if (deps.toolName === null || !SPAWN_TOOLS.has(deps.toolName)) return false;
+    const pending = markerPath('pending', `${deps.sessionId}|${deps.toolUseId}`, deps.stateEnv);
+    if (!fs.existsSync(pending)) return false;
+    touch(markerPath('approved', deps.sessionId, deps.stateEnv), deps.now);
+    fs.rmSync(pending, { force: true });
+    return true;
 }
 
 function field(o: Record<string, unknown> | null, key: string): string | null {
@@ -182,11 +225,12 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         };
         if (argv.includes('--ask')) {
             const toolName = field(payload, 'tool_name');
+            const toolUseId = field(payload, 'tool_use_id');
             if (field(envelope, 'event') === 'post_tool_use') {
-                recordSpawnRan({ ...base, toolName });
+                recordSpawnRan({ ...base, toolName, toolUseId });
                 return 0;
             }
-            const reason = spawnAsk({ ...base, toolName, repoRoot: cwd });
+            const reason = spawnAsk({ ...base, toolName, toolUseId, repoRoot: cwd });
             if (reason !== null) process.stdout.write(JSON.stringify({ decision: 'ask', reason }));
             return 0;
         }

@@ -120,6 +120,13 @@ describe('_permission_for — four gates, each sufficient to withhold', () => {
         expect(reason.length).toBeLessThanOrEqual(300);
     });
 
+    it('an empty confirmation reason emits nothing, and several reasons stay under 600 characters', () => {
+        const empty = _concern_permission_verdict(0, { decision: 'ask', reason: ' \n\t ' }, 'confirmation');
+        expect(_permission_for('pre_tool_use', READ, 0, [empty])).toBeNull();
+        const many = [1, 2, 3, 4].map(() => _concern_permission_verdict(0, { decision: 'ask', reason: 'y'.repeat(300) }, 'confirmation'));
+        expect(_permission_for('pre_tool_use', READ, 0, many)?.reason.length).toBe(600);
+    });
+
     it('a reason belongs to its dispatch only', () => {
         _concern_permission_verdict(0, { decision: 'ask', reason: 'first' }, 'confirmation');
         _permission_for('post_tool_use', READ, 0, ['ask']);

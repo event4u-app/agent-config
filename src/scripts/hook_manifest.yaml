@@ -679,12 +679,14 @@ concerns:
     effect: notification
   # The ask before AC fans out on metered money. In a session that may bill per
   # token, with no billing grant, an Agent/Task spawn gets the host's native
-  # `ask` until one spawn has actually RUN in the session (post_tool_use, same
-  # concern, records it) — so a "no" leaves the next spawn asking again. Never a
+  # `ask` until the user has allowed one: the ask marks that call (hashed
+  # tool_use_id) pending, and only that call's own post_tool_use approves the
+  # session — a "no", or a spawn that ran without an ask, approves nothing. Never a
   # deny, never an amount. `effect: confirmation` is the only effect whose `ask`
   # the dispatcher hands to the host. In a headless session nobody can answer,
   # so a paid fan-out there does not start without a billing grant — the
-  # conservative outcome. Same script as `quota-notice`.
+  # conservative outcome. Kill switch: `AGENT_CONFIG_NO_SPAWN_ASK=1`. Same
+  # script as `quota-notice`.
   metered-spawn-ask:
     script: src/scripts/quota_notice_hook.ts
     args: ['--ask']

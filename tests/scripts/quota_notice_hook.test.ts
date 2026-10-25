@@ -100,35 +100,79 @@ describe('suppression', () => {
 });
 
 describe('spawn ask', () => {
-    const askDeps = (over: Record<string, unknown> = {}) => ({ ...deps({ billing: METERED }), toolName: 'Agent', repoRoot: home, ...over });
-
-    it('a "no" records nothing: the next spawn asks again', () => {
-        expect(spawnAsk(askDeps())).toMatch(/may bill per token .*Once one spawn has run in this session, AC stops asking/);
-        expect(spawnAsk(askDeps())).toMatch(/may bill per token/);
+    const askDeps = (over: Record<string, unknown> = {}) => ({
+        ...deps({ billing: METERED }),
+        toolName: 'Agent',
+        toolUseId: 'call-1',
+        repoRoot: home,
+        ...over,
     });
-
-    it('once a spawn has run in the session, later spawns pass — and only in that session', () => {
-        recordSpawnRan({ sessionId: 'sess-a', stateEnv, toolName: 'Agent', billing: METERED });
-        expect(spawnApproved('sess-a', stateEnv)).toBe(true);
-        expect(spawnAsk(askDeps())).toBeNull();
-        expect(spawnAsk(askDeps({ sessionId: 'sess-b' }))).toMatch(/may bill per token/);
-    });
-
-    it('a non-spawn tool or a plan session running records no approval', () => {
-        recordSpawnRan({ sessionId: 'sess-a', stateEnv, toolName: 'Bash', billing: METERED });
-        recordSpawnRan({ sessionId: 'sess-a', stateEnv, toolName: 'Agent', billing: PLAN });
-        expect(spawnApproved('sess-a', stateEnv)).toBe(false);
-    });
-
-    it('never asks in a plan session, for a non-spawn tool, or under a billing grant', () => {
-        expect(spawnAsk(askDeps({ billing: PLAN }))).toBeNull();
-        expect(spawnAsk(askDeps({ toolName: 'Bash' }))).toBeNull();
+    const ran = (over: Record<string, unknown> = {}) =>
+        recordSpawnRan({ sessionId: 'sess-a', stateEnv, toolName: 'Agent', toolUseId: 'call-1', now: NOW, ...over });
+    const grant = () => {
         fs.mkdirSync(path.join(home, 'agents', 'runtime', 'billing-grants'), { recursive: true });
         fs.writeFileSync(
             path.join(home, 'agents', 'runtime', 'billing-grants', 'run-1.json'),
             JSON.stringify({ run_id: 'run-1', issued_at: new Date().toISOString() }),
         );
+    };
+
+    it('a "no" approves nothing: the next spawn asks again', () => {
+        expect(spawnAsk(askDeps())).toMatch(/may bill per token .*Once you have allowed one spawn here, AC stops asking/);
+        expect(spawnAsk(askDeps({ toolUseId: 'call-2' }))).toMatch(/may bill per token/);
+    });
+
+    it('the asked call running approves the session — that session only', () => {
+        spawnAsk(askDeps());
+        expect(ran()).toBe(true);
+        expect(spawnApproved('sess-a', stateEnv)).toBe(true);
+        expect(spawnAsk(askDeps({ toolUseId: 'call-2' }))).toBeNull();
+        expect(spawnAsk(askDeps({ sessionId: 'sess-b' }))).toMatch(/may bill per token/);
+    });
+
+    it('a spawn that ran under a billing grant approves nothing once the grant is gone', () => {
+        grant();
         expect(spawnAsk(askDeps({ env: { AC_BILLING_GRANT: 'run-1' } }))).toBeNull();
+        expect(ran()).toBe(false);
+        expect(spawnAsk(askDeps({ toolUseId: 'call-2' }))).toMatch(/may bill per token/);
+    });
+
+    it('a spawn whose ask was suppressed approves nothing', () => {
+        expect(spawnAsk(askDeps({ env: { AGENT_CONFIG_NO_SPAWN_ASK: '1' } }))).toBeNull();
+        expect(ran()).toBe(false);
+        expect(spawnApproved('sess-a', stateEnv)).toBe(false);
+    });
+
+    it('another call running, or a call with no id, approves nothing', () => {
+        spawnAsk(askDeps());
+        expect(ran({ toolUseId: 'call-other' })).toBe(false);
+        expect(spawnAsk(askDeps({ toolUseId: null }))).toMatch(/may bill per token/);
+        expect(ran({ toolUseId: null })).toBe(false);
+        expect(spawnApproved('sess-a', stateEnv)).toBe(false);
+    });
+
+    it('the ask kill switch leaves the notices on, and the notice kill switch leaves the ask on', () => {
+        expect(spawnAsk(askDeps({ env: { AGENT_CONFIG_NO_QUOTA_NOTICE: '1' } }))).toMatch(/may bill per token/);
+        expect(noticeLines(deps({ billing: METERED, env: { AGENT_CONFIG_NO_SPAWN_ASK: '1' } }))).toHaveLength(1);
+    });
+
+    it('never asks in a plan session or for a non-spawn tool', () => {
+        expect(spawnAsk(askDeps({ billing: PLAN }))).toBeNull();
+        expect(spawnAsk(askDeps({ toolName: 'Bash' }))).toBeNull();
+    });
+
+    it('markers older than eight days expire', () => {
+        spawnAsk(askDeps());
+        ran();
+        const approvedDir = path.join(home, 'state', 'quota', 'approved');
+        for (const f of fs.readdirSync(approvedDir)) {
+            const old = (NOW - 9 * 24 * 3600 * 1000) / 1000;
+            fs.utimesSync(path.join(approvedDir, f), old, old);
+        }
+        spawnAsk(askDeps({ sessionId: 'sess-b', toolUseId: 'call-9' }));
+        recordSpawnRan({ sessionId: 'sess-b', stateEnv, toolName: 'Agent', toolUseId: 'call-9', now: NOW });
+        expect(spawnApproved('sess-a', stateEnv)).toBe(false);
+        expect(spawnApproved('sess-b', stateEnv)).toBe(true);
     });
 });
 

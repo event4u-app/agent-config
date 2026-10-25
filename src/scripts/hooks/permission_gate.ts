@@ -84,9 +84,9 @@ export function _concern_permission_verdict(
   if (stated === "ask") {
     // Only a `confirmation` concern's ask reaches the host; any other ask still
     // just withholds the allow. The reason is one bounded line of plain text.
-    if (effect === "confirmation" && typeof reply["reason"] === "string") {
-      _askReasons.push(reply["reason"].replace(/[\u0000-\u001f\u007f-\u009f\s]+/g, " ").trim().slice(0, 300));
-    }
+    const line = typeof reply["reason"] === "string"
+      ? reply["reason"].replace(/[\u0000-\u001f\u007f-\u009f\s]+/g, " ").trim().slice(0, 300) : "";
+    if (effect === "confirmation" && line !== "") _askReasons.push(line);
     return "ask";
   }
   if (stated === "deny") return "deny";
@@ -125,7 +125,7 @@ export function _permission_for(
   // A concern that asked gets the host's own confirmation, with its reason.
   // Before this an `ask` only withheld the allow, so the host's machinery
   // decided alone and the question was never put.
-  if (composed === "ask") return askReasons.length > 0 ? { decision: "ask", reason: askReasons.join(" ") } : null;
+  if (composed === "ask") return askReasons.length > 0 ? { decision: "ask", reason: askReasons.join(" ").slice(0, 600) } : null;
   if (composed !== "allow") return null;
   const tool_name = _payload_tool_name(envelope);
   const verdict = categoryAVerdict(tool_name, _payload_tool_input(envelope), _working_tree_root(envelope));
