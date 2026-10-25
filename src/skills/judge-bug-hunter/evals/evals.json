@@ -1,0 +1,34 @@
+{
+  "skill": "judge-bug-hunter",
+  "_calibration": "One planted defect and one clean control (road-to-closing-the-gaps-a-comparison-named 2.1). Fixture authoring only: no run has graded these yet, so they are not evidence of the judge's recall or precision.",
+  "scenarios": [
+    {
+      "id": "planted-swallowed-exception",
+      "prompt": "Review this diff for bugs and list each finding as its own bullet:\n```ts\nexport async function saveInvoice(invoice: Invoice): Promise<void> {\n  try {\n    await db.insert('invoices', invoice);\n  } catch (e) {\n  }\n}\n```",
+      "assertions": [
+        {
+          "kind": "finding_floor",
+          "n": 1
+        },
+        {
+          "kind": "contains",
+          "value": "catch"
+        }
+      ]
+    },
+    {
+      "id": "clean-control-rethrows",
+      "prompt": "Review this diff for bugs and list each finding as its own bullet. If it is clean, say 'no findings':\n```ts\nexport async function saveInvoice(invoice: Invoice): Promise<void> {\n  try {\n    await db.insert('invoices', invoice);\n  } catch (e) {\n    logger.error('invoice insert failed', { id: invoice.id });\n    throw e;\n  }\n}\n```",
+      "assertions": [
+        {
+          "kind": "finding_floor",
+          "n": 0
+        },
+        {
+          "kind": "not_contains",
+          "value": "swallow"
+        }
+      ]
+    }
+  ]
+}
