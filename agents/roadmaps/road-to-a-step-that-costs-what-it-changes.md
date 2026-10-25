@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-u verified at 553e58dfb that every roadmap step runs the same ceremony regardless of what it changes: classify_change_risk exists and its header says nothing consumes it (src/scripts/classify_change_risk.ts:25-32), `complexity:` has 0 references in roadmap-process-loop.md, process-full, pr/create and plan-review-gates.md, and probe_turnaround cannot split a step's time into change versus ceremony (src/scripts/probe_turnaround.ts:85,533). No active roadmap owns per-step depth: road-to-agent-throughput-recovery owns night-level throughput and waits until 2026-11-17; road-to-an-installed-layer-that-is-thinned owns the size of the standing layer, not how often a step pays for ceremony. Parking was rejected because this is the owner's third arrival of the slow-run subject and Phase 0-1 are floor-neutral work that can start now."
-estate_growth_exempt: "+1 open_blockers: class-depth-flip-reopens-the-risk-null, added in this change. Lowering ceremony depth by change class re-uses the mechanism whose consumer phase was cancelled on a pre-registered null on 2026-08-23 (archive/road-to-target-project-assurance-readiness Phase 2); the decision-revisit gate requires that reopening be routed, not taken, so it is recorded as a blocker on the flip only. Every other phase runs."
+estate_growth_exempt: "+3 open_blockers, added 2026-10-25 by the process-full run: telemetry-async-and-stop-ordinal-await-owner (1.1, 1.2 wait on owner questions OQ-4 and OQ-5), largest-roadmap-drain-under-forty-kb (1.3 waits on a drain over another roadmap), flip-readiness-thirty-shadow-steps (4.1-5.2 wait on 30 shadow steps per class, R0 at 7 and R1 at 0). Every open step was already gated; the run records each gate as a blocker instead of leaving it as step prose, and nothing was archived to offset it because nothing here is finished."
 relates:
   - slug: road-to-a-review-that-ends
     relation: disjoint
@@ -95,20 +95,20 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 
 ## Phase 1 — Floor-neutral speedups
 
-- [ ] **1.1 Run the seven telemetry post-tool concerns `async`.** Measured 2026-10-21, not built: the telemetry concerns cost 1.2 ms p50 together per tool call (`bench_hook_latency --runs 30` with `AGENT_CONFIG_HOOK_TIMINGS`), against a ~68 ms post_tool_use dispatch; an async split saves ~1.2 ms and adds a second node start per call. Cancelling it is an owner call (D15). Only
+- [ ] **1.1 Run the seven telemetry post-tool concerns `async`.** Measured 2026-10-21, not built: the telemetry concerns cost 1.2 ms p50 together per tool call (`bench_hook_latency --runs 30` with `AGENT_CONFIG_HOOK_TIMINGS`), against a ~68 ms post_tool_use dispatch; an async split saves ~1.2 ms and adds a second node start per call. Cancelling it is an owner call (D15). Only <!-- blocked-by: telemetry-async-and-stop-ordinal-await-owner | asked: yes -->
       concerns whose `effect` is `telemetry` and that never emit
       `additionalContext` (C8). Hosts without an async hook form keep
       today's binding.
       verify: a census row per concern; a fixture shows no injected byte lost;
       `chat-history` still records every call.
-- [ ] **1.2 Answer the Stop ordinal from state, then read the tail.** Measured 2026-10-21, not built: `readTranscriptTail` walks a 6.5-7.6 MB real transcript in 13-18 ms, once per turn; stored state would add risk to the turn-end gate for ~15 ms a turn. Cancelling it is an owner call (D15). Keep the
+- [ ] **1.2 Answer the Stop ordinal from state, then read the tail.** Measured 2026-10-21, not built: `readTranscriptTail` walks a 6.5-7.6 MB real transcript in 13-18 ms, once per turn; stored state would add risk to the turn-end gate for ~15 ms a turn. Cancelling it is an owner call (D15). Keep the <!-- blocked-by: telemetry-async-and-stop-ordinal-await-owner | asked: yes -->
       turn ordinal and byte offset in the per-session state file so the
       design constraint at `turn_end_transcript.ts:101-103` is met without a
       full walk; fall back to the full walk when the state is missing or the
       file shrank.
       verify: detector verdicts identical on a 30-session replay; Stop p95
       lower; the fallback path covered by a test.
-- [ ] **1.3 Read the current phase, `## Decisions` and `## Blockers` per step.** Contract changed 2026-10-21, verify pending: `--steps` counts roadmap text returned to `Read` and to shell reads per step (R2 finding 4 — an early tick on `Read` alone was withdrawn). Over 242 steps p50 0 KB, p90 33.7 KB; but the largest active roadmap had a step read 86.2 KB and the second 46.8 KB, over the target. The loop's § 5 step 1 now says: the step's own section by `grep -n` plus a ranged read, never the whole roadmap. Closes on the first drain over the largest roadmap reading < 40 KB per step; none since 2026-10-21 (2026-10-24).
+- [ ] **1.3 Read the current phase, `## Decisions` and `## Blockers` per step.** Contract changed 2026-10-21, verify pending: `--steps` counts roadmap text returned to `Read` and to shell reads per step (R2 finding 4 — an early tick on `Read` alone was withdrawn). Over 242 steps p50 0 KB, p90 33.7 KB; but the largest active roadmap had a step read 86.2 KB and the second 46.8 KB, over the target. The loop's § 5 step 1 now says: the step's own section by `grep -n` plus a ranged read, never the whole roadmap. Closes on the first drain over the largest roadmap reading < 40 KB per step; none since 2026-10-21 (2026-10-24). <!-- blocked-by: largest-roadmap-drain-under-forty-kb -->
       Other sections are read on demand. Decisions stay whole, as
       `roadmap-process-loop.md:162-173` requires.
       verify: a drain over the largest active roadmap reads < 40 KB of it per
@@ -154,7 +154,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
       same blocker as 4.1 — it exists only to serve the flip.
       verify: red-first test — a PR ticking a step without a receipt fails, a
       PR touching an older unreceipted tick passes.
-- [ ] **4.1 Lower depth for R0/R1 per the table.** The owner chose (d)
+- [ ] **4.1 Lower depth for R0/R1 per the table.** The owner chose (d) <!-- blocked-by: flip-readiness-thirty-shadow-steps -->
       (D18): the flip may apply only to structurally safe paths. Built
       2026-10-21: the `flip` block, `isStructurallySafe`, `effectiveMode`, and a
       test that refuses `mode: active` without a committed `flip.reading`. The
@@ -164,7 +164,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
       `scope=safe` from 2026-10-21 on). On 2026-10-24 it read R0 7, R1 0, once undated `scope=safe` ticks counted.
       verify: the D18 owner row exists before the flip commit; that commit
       names the reading in `flip.reading`.
-- [ ] **4.2 Rule depth by class, behind an A/B.** R0/R1 steps receive the
+- [ ] **4.2 Rule depth by class, behind an A/B.** R0/R1 steps receive the <!-- blocked-by: flip-readiness-thirty-shadow-steps -->
       kernel plus rules whose triggers match the changed paths; R2/R3 keep
       today's delivery. Paired A/B on the benchmark's frozen tasks: discipline
       score not below the full arm's lower CI bound. No settings key.
@@ -180,10 +180,10 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 
 ## Phase 5 — Prove both halves
 
-- [ ] **5.1 Read the Goal over five drains.** Speed and escape rate together;
+- [ ] **5.1 Read the Goal over five drains.** Speed and escape rate together; <!-- blocked-by: flip-readiness-thirty-shadow-steps -->
       neither alone closes the roadmap.
       verify: a Decisions row with both figures.
-- [ ] **5.2 Independent review of the reading.** One round.
+- [ ] **5.2 Independent review of the reading.** One round. <!-- blocked-by: flip-readiness-thirty-shadow-steps -->
       verify: findings or an honest null over denominators and windows.
 
 ## Blockers
@@ -200,6 +200,42 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 - **If you do nothing:** Phases 0-3 run and deliver their savings; depth stays uniform; the shadow keeps counting.
 - **What to do:** pick exactly one — (a) flip R0/R1 once 2.3 shows a would-have-escape rate at or below 0.2's threshold over at least 30 shadow steps per class; or (b) flip R0 only and keep R1 at full depth until 4.3 has 30 samples; or (c) do not flip until `stubs/road-to-human-risk-corpus` reaches its promotion criterion; or (d) flip only steps whose changed paths are all documentation, roadmap/evidence prose or test fixtures, on the same shadow threshold, and decide (a) later on 4.3's samples.
 - **Resolved when:** the chosen option is recorded in this entry or in `docs/decisions/`, and Status reads resolved.
+
+### blocker: telemetry-async-and-stop-ordinal-await-owner
+- **Status:** open — 2026-10-25, both steps are measured (D15) and put to the owner as OQ-4 and OQ-5 in `agents/owner-questions.md`; no answer yet
+- **Class:** 3
+- **Owner:** user
+- **Ownership:** product-owned
+- **Blocks:** steps 1.1 and 1.2
+- **Question:** Cancel 1.1 (async telemetry concerns, ~1.2 ms of a ~68 ms dispatch) and 1.2 (Stop ordinal from stored state, ~15 ms a turn on the turn-end gate)? Cancelling is a `[-]`, which drops scope and is owner-reserved.
+- **Recommendation:** (a) for both — the measured gain is below the cost each adds (a second node start per call; a new failure mode in the gate that refuses unfinished turns).
+- **If you do nothing:** both steps stay open, nothing else here waits on them, and the roadmap cannot archive.
+- **What to do:** pick per step — (a) cancel it as `[-]` in `agents/roadmaps/road-to-a-step-that-costs-what-it-changes.md` with the answer moved to `## Answered` in `agents/owner-questions.md`; or (b) keep it open and have the next run build it against its `verify:` line.
+- **Resolved when:** OQ-4 and OQ-5 sit under `## Answered` in `agents/owner-questions.md`, a `## Decisions` row resolved by `owner` names this blocker with the date, and Status reads resolved.
+
+### blocker: largest-roadmap-drain-under-forty-kb
+- **Status:** open — 2026-10-25, re-read over every store of this repository since 2026-10-21: no drain has run over the largest active roadmap (`road-to-self-modification-that-a-council-must-pass`, 136 KB; one step at 90.3 KB before the § 5 step-1 change), and one step of `road-to-an-update-that-installs-itself-only-when-it-is-safe` read 50.1 KB on 2026-10-24
+- **Class:** 0
+- **Owner:** agent
+- **Blocks:** step 1.3
+- **Run:** `./scripts-run src/scripts/probe_turnaround --steps --store <every store of this repository, comma-separated>`, reading `roadmapReadBytes` per closed step of the largest active roadmap
+- **Question:** none — this waits on a drain, not a decision; nothing in this run can produce a drain over another roadmap without executing that roadmap.
+- **Recommendation:** close 1.3 on the first drain whose every step reads < 40 KB of the largest roadmap; if a step reads more, the § 5 step-1 instruction is not being followed and that is the defect to fix.
+- **If you do nothing:** 1.3 stays open; nothing else here waits on it.
+- **What to do:** after the next drain over `agents/roadmaps/road-to-self-modification-that-a-council-must-pass.md`, run the **Run:** command and either (1) tick 1.3 with the per-step maximum, or (2) open the defect in `src/agent-src/contexts/execution/roadmap-process-loop.md` § 5 step 1.
+- **Resolved when:** a drain over the largest active roadmap shows every closed step reading < 40 KB of it, and 1.3 is ticked with that reading.
+
+### blocker: flip-readiness-thirty-shadow-steps
+- **Status:** open — 2026-10-25, `probe_depth_shadow --flip-readiness` reads R0 7 shadow steps, R1 0, escaped 0, critical 0, not ready (unchanged since 2026-10-24); owner questions OQ-1 (flip now on the audit) and OQ-6 (how 4.2 narrows the rule load) are open in `agents/owner-questions.md`
+- **Class:** 0
+- **Owner:** agent
+- **Blocks:** steps 4.1, 4.2, 5.1, 5.2; AC-2, AC-3, AC-4
+- **Run:** `./scripts-run src/scripts/probe_depth_shadow --flip-readiness`
+- **Question:** none for the agent — D18 fixes the threshold (30 shadow steps per class inside the safe scope, at most one escape, no critical). OQ-1 lets the owner flip earlier; OQ-6 decides 4.2's mechanism and its paid A/B.
+- **Recommendation:** keep counting; flip a class the day the probe reads READY for it, or the day the owner answers OQ-1 (a).
+- **If you do nothing:** depth stays uniform, the shadow keeps counting, and Phase 5's five-drain window cannot start.
+- **What to do:** (1) re-run the **Run:** command at each drain; (2) on READY, or on OQ-1 (a), commit the flip with `flip.reading` in `src/config/step-depth-table.json` and tick 4.1; (3) then 4.2 per OQ-6's answer, and 5.1 after five drains on the flipped table.
+- **Resolved when:** 4.1 is ticked with a committed `flip.reading`, and Status reads resolved.
 
 ## Decisions
 
