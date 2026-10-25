@@ -1864,6 +1864,7 @@ describe('reach:doctor — the video channel probes the frame path, not the vers
         return bin;
     }
 
+    // skip-reason: the fake ffmpeg is a /bin/sh script
     it.skipIf(!POSIX)('GIVEN an ffmpeg that answers -version but fails the clip THEN the capability is not-ready', () => {
         const row = probeFramePath(fakeFfmpeg());
         expect(row.kind).toBe('frame-path');
@@ -1871,6 +1872,7 @@ describe('reach:doctor — the video channel probes the frame path, not the vers
         expect(row.detail).toContain('1-s');
     });
 
+    // skip-reason: the fake ffmpeg is a /bin/sh script
     it.skipIf(!POSIX)('GIVEN that fake ffmpeg first on PATH THEN the channel is not-ready with no active backend, never ok', () => {
         const fake = fakeFfmpeg();
         const saved = process.env['PATH'];
@@ -1889,12 +1891,14 @@ describe('reach:doctor — the video channel probes the frame path, not the vers
     const realFfmpeg = spawnSync('ffmpeg', ['-version']).status === 0;
     const ffmpegPath = (): string => spawnSync('sh', ['-c', 'command -v ffmpeg']).stdout.toString('utf8').trim();
 
+    // skip-reason: needs a real ffmpeg to reach the ffprobe check, and a /bin/sh PATH shim
     it.skipIf(!realFfmpeg || !POSIX)('GIVEN a working ffmpeg but no ffprobe THEN the frame path is not-ready, naming ffprobe', () => {
         const row = probeFramePath(ffmpegPath(), null);
         expect(row.status).toBe('not-ready');
         expect(row.detail).toMatch(/ffprobe is not on PATH/);
     });
 
+    // skip-reason: needs a real ffmpeg to reach the ffprobe check; the fake ffprobe is /bin/sh
     it.skipIf(!realFfmpeg || !POSIX)('GIVEN an ffprobe that answers -version but cannot describe a clip THEN the frame path is not-ready', () => {
         const dir = fs.mkdtempSync(path.join(TMP, 'fake-ffprobe-'));
         const bin = path.join(dir, 'ffprobe');
@@ -1905,6 +1909,7 @@ describe('reach:doctor — the video channel probes the frame path, not the vers
         expect(row.detail).toMatch(/ffprobe did not describe/);
     });
 
+    // skip-reason: the happy path needs a real ffmpeg; it runs on the Linux CI shards
     it.skipIf(!realFfmpeg)('GIVEN the shipped video channel on a host with ffmpeg THEN ffmpeg is ready and the payload validates', () => {
         const payload = collect({ channel: 'video' });
         const channel = payload.channels[0];

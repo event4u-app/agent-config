@@ -136,6 +136,7 @@ describe('local source adapters', () => {
     });
 
     const hasFfmpeg = spawnSync('ffmpeg', ['-version']).status === 0;
+    // skip-reason: ffmpeg generates the clip; the extension test below covers classification everywhere
     it.skipIf(!hasFfmpeg)('pins a generated media clip by the sha256 of its bytes, as kind media', () => {
         const clip = path.join(root, 'clip.mp4');
         const gen = spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'testsrc2=s=160x90:d=1', '-c:v', 'mpeg4', clip]);
