@@ -296,6 +296,14 @@ step 4 (plus any external council blocks from 4b) and produces one report:
   [`judge-synthesis` § 4c](../../skills/judge-synthesis/SKILL.md); a spec
   finding never becomes a craft finding.
 
+- A **plan-versus-use block**, when the review runs inside a roadmap run:
+  `./scripts-run src/scripts/skill_plan_usage <roadmap.md>` prints, per skill a
+  step planned with `uses:`, `applied`, `waived` with its closed reason, or
+  `missing`, plus skills applied without a plan. It is a fact, not a judge
+  verdict, and is read from tool events only. A row reading `missing` is a **process
+  finding** — the plan said it would be used and the session shows no use; an
+  invalid waiver reason is one too. Rules read `not-observable`, never unused.
+
 `judge-synthesis` emits no single quality score and never auto-gates — it
 structures the verdicts so the next step's decision is informed.
 

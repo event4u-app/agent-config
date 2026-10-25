@@ -27,7 +27,7 @@ skill and scope by visibility. The `legacy-all` pseudo-profile and
 Implement a ticket end-to-end, fix CI red, run a self-review before
 the PR. `/implement-ticket` refines the ticket, plans, edits, tests,
 and verifies; `/work` is the free-form sibling; `/review-changes`
-dispatches five judges (bug, security, tests, quality, architecture)
+dispatches seven judges (bug, security, tests, quality, architecture, spec, overbuild)
 on the local diff. Stack-aware skills cover Laravel · Symfony ·
 Next.js · React · Node. **Preset default: `balanced`.**
 [Profile YAML](../src/agent-src/profiles/developer.yml) ·

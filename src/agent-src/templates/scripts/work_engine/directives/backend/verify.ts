@@ -53,7 +53,7 @@ export const AMBIGUITIES: ReadonlyArray<Record<string, string>> = [
     },
     {
         code: 'empty_verify_delegate',
-        trigger: '`state.verify` empty — four-judge review not run yet',
+        trigger: '`state.verify` empty — seven-judge review not run yet',
         resolution: 'agent directive `review-changes` → `/review-changes`',
     },
     {
@@ -131,8 +131,8 @@ function _delegate_to_review_changes(state: DeliveryState): StepResult {
         outcome: Outcome.BLOCKED,
         questions: [
             agent_directive('review-changes', { ticket: ticketId }),
-            `> Ticket ${ticketId} — running the four-judge review ` +
-                '(bugs, security, tests, code quality) before the delivery ' +
+            `> Ticket ${ticketId} — running the seven-judge review ` +
+                '(bugs, security, tests, quality, architecture, spec, overbuild) before the delivery ' +
                 'report is written.',
             '> 1. Continue — run `review-changes` now',
             '> 2. Abort — skip review (NOT recommended)',
@@ -189,7 +189,7 @@ function _blocked_on_bad_verdict(state: DeliveryState, verdict: Any): StepResult
             ticket_id: ticketId,
             verdict,
             decision,
-            fix_hint: 'address the recorded findings, then re-run the four-judge review.',
+            fix_hint: 'address the recorded findings, then re-run the seven-judge review.',
             rerun_directive: 'review-changes',
         });
     }

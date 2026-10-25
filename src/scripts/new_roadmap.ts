@@ -38,6 +38,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { headSha } from './_lib/git_drift.js';
+
 /** Today, as the risk-review marker wants it. */
 function today(): string {
     return new Date().toISOString().slice(0, 10);
@@ -55,11 +57,16 @@ function titleOf(slug: string): string {
 const H2 = '#'.repeat(2) + ' ';
 const H3 = '#'.repeat(3) + ' ';
 
-export function skeleton(slug: string, complexity: 'lightweight' | 'structural', date: string): string {
+export function skeleton(
+    slug: string,
+    complexity: 'lightweight' | 'structural',
+    date: string,
+    pin: string | null = null,
+): string {
     return `---
 complexity: ${complexity}
 status: draft
-execution:
+${pin === null ? '' : `tree_pin: ${pin}\n`}execution:
   mode: phase-checkpoints
 ---
 # Road to ${titleOf(slug)}
@@ -144,7 +151,7 @@ function main(argv: readonly string[]): number {
         return 2;
     }
 
-    const body = skeleton(slug, structural ? 'structural' : 'lightweight', today());
+    const body = skeleton(slug, structural ? 'structural' : 'lightweight', today(), headSha(process.cwd()));
     if (toStdout) {
         process.stdout.write(body);
         return 0;

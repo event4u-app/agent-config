@@ -448,3 +448,38 @@ describe('owner directive 2026-10-24 — timebox, WIP cap, session cap, owner sh
     });
 });
 
+
+describe('freshness at execution start', () => {
+    it('marks each entry against its own pin and shows it in the render', async () => {
+        const { execFileSync } = await import('node:child_process');
+        const { annotateFreshness, renderText } = await import('../../src/scripts/roadmap_drain_queue.js');
+        const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'drain-fresh-'));
+        const env = { ...process.env, GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t' };
+        const git = (...a: string[]): string => execFileSync('git', ['-C', repo, ...a], { encoding: 'utf-8', env }).trim();
+        try {
+            git('init', '-q', '-b', 'main');
+            fs.mkdirSync(path.join(repo, 'src'));
+            fs.writeFileSync(path.join(repo, 'src/a.ts'), 'a\n');
+            git('add', '-A');
+            git('commit', '-q', '-m', 'base');
+            const pin = git('rev-parse', '--short=10', 'HEAD');
+            fs.mkdirSync(path.join(repo, 'agents/roadmaps'), { recursive: true });
+            const body = (p: string): string => `---\nstatus: ready\ntree_pin: ${p}\n---\n# r\n\nCites \`src/a.ts\`.\n`;
+            fs.writeFileSync(path.join(repo, 'agents/roadmaps/road-to-fresh.md'), body(pin));
+            fs.writeFileSync(path.join(repo, 'agents/roadmaps/road-to-moved.md'), body(pin));
+            fs.writeFileSync(path.join(repo, 'agents/roadmaps/road-to-nopin.md'), '# r\n');
+            const q = buildQueue([], NO_CLAIMS, TODAY);
+            q.queue = ['fresh', 'moved', 'nopin'].map((s) => ({
+                slug: `road-to-${s}`, bucket: 'continue' as const, done: 1, open: 1, runnable: 1, acceptance_open: 0, dispatchable: true,
+            }));
+            annotateFreshness(q.queue, repo);
+            expect(q.queue.map((e) => e.freshness)).toEqual(['fresh', 'fresh', 'unpinned']);
+            fs.writeFileSync(path.join(repo, 'src/a.ts'), 'changed\n');
+            annotateFreshness(q.queue, repo);
+            expect(q.queue[1]?.freshness).toBe('drifted');
+            expect(renderText(q)).toContain('road-to-moved  done 1 · open 1 · runnable 1 · AC open 0 · drifted');
+        } finally {
+            fs.rmSync(repo, { recursive: true, force: true });
+        }
+    });
+});

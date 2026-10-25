@@ -5,6 +5,13 @@ review_by: 2026-12-09
 
 # Stub: road to a census that refuses to publish from a partial store
 
+> **Arrivals:** 2 — latest `inbox-2026-10-at` (2026-10-25): two plans read
+> ADR-263's zero against this defect. One asks for a census over every store slug
+> of the repository before the ADR is reopened; the other notes the population is
+> this package's own maintainer sessions, where `laravel-*` or security skills have
+> no task to fire on. Both are the reading this stub's fix would make
+> trustworthy; the reopen itself is `agents/owner-questions.md` OQ-14.
+
 > **Stub — not active work.** Found 2026-09-09 by the drain run holding
 > `road-to-the-14-22-0-disposition-residuals`, whose step 1.3 was instructed to
 > re-emit the skill-activation census and did not. The run avoided the defect by

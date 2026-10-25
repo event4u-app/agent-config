@@ -17,6 +17,22 @@ estate_growth_exempt: "AMENDED 2026-09-02 (drain run 17), and the current claim 
 ---
 # Road to governed evidence production
 
+> **Arrivals:** 1 — `inbox-2026-10-at` (2026-10-25): a three-loop study of an
+> external skill optimizer concludes this file's resume condition is the missing
+> piece — a candidate-aware runner — and offers, for whoever builds it: count a
+> trial without a read receipt or with a spawn, quota or timeout failure as
+> `invalid`, never as a failure, with its own abort threshold; a proposer that
+> sees train-split failure evidence and earlier rejections, rendered as
+> behaviour and never as a verifier string; a patch of at most four operations
+> with a deletion cap instead of a rewrite; a one-shot rewrite arm as a mandatory
+> control; a base-body hash on every candidate so a promotion against a changed
+> skill is refused; and a pilot on one domain-truth skill, whose answer keys need
+> no metered evaluator. Its reading of ADR-118 § 3 Rejection 1 (iteration on a
+> sandbox copy with one proposal per checkpoint) is a council question when this
+> file resumes; the record is `unclassified`. The one deterministic defect it
+> found — two selection rules in the tree — is fixed by
+> `road-to-a-plan-that-stays-true` 5.2-5.3.
+
 > **Source:** the terminal-disposition AI council of 2026-09-01, 2 of 2
 > convergent (`anthropic/claude-sonnet-4-5` + `openai/codex-default`,
 > subscription transport, nothing billed), recorded in full at

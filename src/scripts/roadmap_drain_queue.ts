@@ -63,6 +63,7 @@ import { fileURLToPath } from 'node:url';
 
 import { gitEnv } from './_lib/git_env.js';
 import { holder_is_live, read_holders, read_locks } from './_lib/roadmap_slug_lock.js';
+import { freshness, type RoadmapVerdict } from './_lib/roadmap_revalidation.js';
 import {
     is_expired,
     read_live_records,
@@ -114,6 +115,8 @@ export interface QueueEntry {
     lane?: { worktree: string; branch: string | null };
     /** What a dead holder left in its worktree; filled by `main`, not by `buildQueue`. */
     salvage?: Salvage;
+    /** The roadmap's pin against the tree, cheap path only; filled by `main`. */
+    freshness?: RoadmapVerdict;
 }
 
 export interface Salvage {
@@ -644,6 +647,21 @@ function renderSalvage(s: Salvage | undefined): string {
     return `  [salvage: ${s.ahead ?? '?'} commit(s) ahead, ${s.dirty ?? '?'} uncommitted file(s)]`;
 }
 
+/**
+ * Each entry's freshness against its own pin (`docs/contracts/roadmap-revalidation-v1.md`).
+ * `drifted` or `broken` tells the lane to revalidate before its first mutation.
+ */
+export function annotateFreshness(entries: QueueEntry[], root: string): void {
+    for (const e of entries) {
+        const rel = `${ACTIVE_DIR}/${e.slug}.md`;
+        try {
+            e.freshness = freshness(root, rel, fs.readFileSync(path.join(root, rel), 'utf-8'));
+        } catch {
+            /* unreadable file: no verdict rather than a guessed one */
+        }
+    }
+}
+
 export function renderText(q: DrainQueue): string {
     const out: string[] = [`drain queue · ${q.today} · ${q.queue.length} roadmap(s) with open steps`];
     for (const e of q.queue) {
@@ -656,7 +674,7 @@ export function renderText(q: DrainQueue): string {
         out.push(
             `  ${e.dispatchable ? '▶' : ' '} ${e.bucket.padEnd(8)} ${e.slug}  ` +
                 `done ${e.done} · open ${e.open} · runnable ${e.runnable} · AC open ${e.acceptance_open}` +
-                `${tail}${renderSalvage(e.salvage)}`,
+                `${e.freshness !== undefined ? ` · ${e.freshness}` : ''}${tail}${renderSalvage(e.salvage)}`,
         );
     }
     out.push(`next: ${q.next === null ? `none — ${q.dispatch_hold ?? 'nothing dispatchable'}` : `${q.next.slug} (${q.next.bucket})`}`);
@@ -701,6 +719,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         const wt = e.resume?.worktree ?? (e.claimed_by === 'a lane of this session' ? e.lane?.worktree : undefined);
         if (wt !== undefined) e.salvage = readSalvage(wt);
     }
+    annotateFreshness(q.queue, root);
     process.stdout.write(argv.includes('--json') ? `${JSON.stringify(q, null, 2)}\n` : renderText(q));
     return 0;
 }

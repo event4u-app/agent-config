@@ -34,7 +34,7 @@ AC: signature multiply(a: int, b: int) -> int returning the product;
 | c1 | `create-plan` | Builds the three-step plan (impl, test, run) |
 | c2 | `apply-plan` | Edits `src/calculator.py` and `tests/test_calculator.py` |
 | c3 | `run-tests` | `pytest` — `4 passed` (targeted scope) |
-| c4 | `review-changes` | Four judges (bug, security, test-coverage, code-quality) — `success` |
+| c4 | `review-changes` | Seven judges (bug, security, tests, quality, architecture, spec, overbuild) — `success` |
 | c5 | _(none)_ | Engine emits the delivery report, exits `0` |
 
 **Outcome** — verified delivery report at
