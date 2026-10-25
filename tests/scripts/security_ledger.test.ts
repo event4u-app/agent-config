@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { coverage, renderLedger, type SecurityLedger, validateLedger } from '../../src/scripts/_lib/security_ledger.js';
+import { coverage, renderLedger, runStatus, type SecurityLedger, validateLedger } from '../../src/scripts/_lib/security_ledger.js';
 
 const base = (): SecurityLedger => ({
     schema_version: 1,
@@ -79,3 +79,26 @@ describe('coverage and the derived report', () => {
         expect(renderLedger(null)).toMatch(/^Security: not checked/);
     });
 });
+
+describe('runStatus', () => {
+    it('is partial while a counted row is unreviewed or a finding still needs validation', () => {
+        expect(runStatus(base())).toBe('partial');
+        const l = base();
+        l.rows[1] = { ...l.rows[1]!, reviewed: true };
+        expect(runStatus(l)).toBe('partial');
+        l.findings[1] = { ...l.findings[1]!, status: 'rejected', reason: 'served as attachment' };
+        expect(runStatus(l)).toBe('complete');
+    });
+
+    it('is not_enumerated when no row came from the graph or a convention, whatever the findings say', () => {
+        const l = base();
+        l.rows = l.rows.filter((r) => r.enumeration === 'model');
+        l.findings = [];
+        expect(runStatus(l)).toBe('not_enumerated');
+    });
+
+    it('is printed before anything else in the report', () => {
+        expect(renderLedger(base()).split('\n')[1]).toBe('status: partial');
+    });
+});
+
