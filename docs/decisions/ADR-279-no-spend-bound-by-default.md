@@ -186,6 +186,32 @@ superseded above is unaffected because this record does not mention it.
   in this record touches money paid to anyone but a model provider for the
   agent's own tooling.
 
+## Amendment 1 (2026-10-22) — the owner moves the per-day call guards
+
+Opened through this record's own `review_trigger` ("the owner moves a line
+between the two lists"). The owner, 2026-10-22, in his own words: *"Ja, wir
+hatten in einer alten Version Budgets, auch Limits für CLI Anfragen an
+Agents/AI, damit man nicht zu viele stellt. Aber auch das sollte weg.
+Vielleicht einen Counter damit AC das für sich managen kann und überwachen,
+aber wir sollten nicht einfach stoppen."* <!-- md-language-check: ignore -->
+(Yes, an old version had budgets and limits on CLI requests to agents/AI. That
+should go too — perhaps a counter AC uses to manage and watch itself, but we
+should not simply stop.)
+
+- **Moved out of § What stays:** the per-day call guards for subscription seats
+  and for the team transport, as *shipped defaults*. `cli_call_budget` no longer
+  seeds 50 calls per provider, and `ai_team.max_calls_per_day` defaults to
+  `null`. An unset guard books into the counter and never refuses on count.
+- **Still in § What stays:** a guard the user writes keeps its contract exactly,
+  `0` included — the principle this record applies to money, applied to counts.
+- **Not an amount bound, and kept:** `api_on_quota: false` and the run-scoped
+  `billing_grant`. They ask whether a run may change billing class at all, not
+  how much it may spend, so the metered-session notice and the one ask before a
+  metered fan-out (`road-to-a-quota-the-user-sees-coming`) sit with them.
+
+What replaces the count is the plan window the host reports: a call count is
+the wrong unit for plan quota, and the provider's own refusal stays the limit.
+
 ## Not reopened
 
 The supersession above is scoped, and these live clauses of the two named

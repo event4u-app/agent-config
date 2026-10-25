@@ -36,7 +36,6 @@ import { runTsScript } from './ai_council/_harness.js';
 // Imported rather than hardcoded: the point of the quota test below is that the
 // report prints the cap the gate enforces, so re-typing the number here would
 // let the two drift apart in exactly the way the test exists to catch.
-import { DEFAULT_CLI_CALLS_PER_DAY } from '../../src/scripts/ai_council/config.js';
 
 // tests/scripts/council_cli.test.ts → two levels up is the repo root.
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -424,26 +423,17 @@ describe('council_cli quota + shadow-report — intent', () => {
         expect(ts.stdout).toMatch(/^council:quota · /);
     });
 
-    // The case above proves the verb runs anywhere; this one pins WHICH cap it
-    // reports when the settings cascade configures none.
-    //
-    // It used to assert an "empty-caps" line. That line was the reported half of
-    // a divergence: the gate in `build_members` seeds
-    // `DEFAULT_CLI_CALLS_PER_DAY` for every known provider, so a machine with no
-    // configured block is capped — and the report told the operator it was not,
-    // while the shared counter had already been booked past that cap. Both
-    // sides now resolve through `resolve_cli_call_caps`, so an absent block
-    // reports the enforced default instead of claiming there is none.
-    it('quota with no configured caps → exit 0 + the ENFORCED defaults', () => {
+    // The case above proves the verb runs anywhere; this one pins what it
+    // reports when the settings cascade configures no cap: every known provider,
+    // named as counted and uncapped — the gate admits it on count (ADR-279
+    // addendum), and the report must not claim a cap the gate does not apply.
+    it('quota with no configured caps → exit 0 + every provider uncapped and counted', () => {
         // Injected empty settings, NOT the host's — see `quotaHarness`.
         const ts = runQuotaHarnessTs();
         expect(ts.status, ts.stderr).toBe(0);
-        expect(ts.stdout).not.toContain('no providers have a configured');
-        // Every known provider is seeded, and the default is the number the
-        // gate applies — not a number this test re-derives.
         for (const provider of ['anthropic', 'gemini', 'openai', 'perplexity', 'xai']) {
             expect(ts.stdout, `provider ${provider}`).toMatch(
-                new RegExp(`council:quota · ${provider} · \\d+/${DEFAULT_CLI_CALLS_PER_DAY}\\b`),
+                new RegExp(`council:quota · ${provider} · \\d+/uncapped · counted`),
             );
         }
     });

@@ -49,11 +49,12 @@
  * Multi-round debate multiplies the generation pass by `rounds`
  * (`orchestrator.ts:160-161`, `:246`: "across every billable member × rounds").
  *
- * The per-provider daily ceiling is `DEFAULT_CLI_CALLS_PER_DAY = 50`
- * (`cli_call_budget.ts:60`), applied per provider, never aggregated.
+ * Batches are sized to 50 calls per provider per UTC day, applied per
+ * provider, never aggregated. The council ships no cap since 2026-10-22, so
+ * this is the bench's own pacing choice, not a mirror of a gate.
  */
 
-/** Per-provider daily call ceiling. Mirrors `cli_call_budget.ts:60`. */
+/** Per-provider daily call ceiling the bench paces its batches to. */
 export const CALLS_PER_PROVIDER_PER_UTC_DAY = 50;
 
 /** The two providers the shipped council configuration seats. */

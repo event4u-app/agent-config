@@ -61,7 +61,7 @@ Cold-start's 4.3, 4.5 and 5.3, which the first plan proposed to take over, are
 
 ## Phase 1 — Call caps become counters (D9)
 
-- [ ] **1.1 An absent council cap is a counter, not a 50.**
+- [x] **1.1 An absent council cap is a counter, not a 50.**
       `resolveCliCallCaps` stops seeding `DEFAULT_CLI_CALLS_PER_DAY`; an absent
       or malformed entry yields no cap for that provider, so the gate books and
       never refuses on count. A user-written number keeps its contract exactly.
@@ -70,12 +70,12 @@ Cold-start's 4.3, 4.5 and 5.3, which the first plan proposed to take over, are
       successful call on an unset provider are admitted; a written cap of 3
       still refuses the fourth.
       verify: `npx vitest run tests/scripts/ai_council/config.test.ts tests/scripts/council_cli.test.ts` -> 0
-- [ ] **1.2 The team ceiling defaults to unset.** `ai_team.max_calls_per_day`
+- [x] **1.2 The team ceiling defaults to unset.** `ai_team.max_calls_per_day`
       becomes optional (`null` = no team ceiling); `team_dispatch.ts` admits on
       `null`. Template, `docs/contracts/ai-team-config.md` and the team command
       docs say "unset = counted, never refused".
       verify: `grep -c "max_calls_per_day: 50" src/config/agent-settings.template.yml` -> /^0$/
-- [ ] **1.3 ADR-279 records the move.** One addendum: the owner moved the
+- [x] **1.3 ADR-279 records the move.** One addendum: the owner moved the
       per-day call guards from § What stays to § Supersedes on 2026-10-22, via
       the record's own `review_trigger`. The billing-class half (`api_on_quota:
       false`, `billing_grant`) stays, and the addendum says why that is not an
@@ -126,7 +126,7 @@ Cold-start's 4.3, 4.5 and 5.3, which the first plan proposed to take over, are
       notices once per session when `context_used_pct ≥ 80`, naming `/compact`.
       Window-relative, so a 200k session is served.
       verify: `npx vitest run tests/scripts/quota_notice_hook.test.ts -t "context"` -> 0
-- [ ] **3.4 Fix the stale description (D12).** `docs/settings-reference.md:88`
+- [x] **3.4 Fix the stale description (D12).** `docs/settings-reference.md:88`
       and its generator source stop naming a recycle advisory that no longer
       exists.
       verify: `grep -c "the recycle advisory" docs/settings-reference.md` -> /^0$/

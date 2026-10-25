@@ -74,6 +74,7 @@ import {
     load_council_config,
     resolve_api_key,
     resolve_cli_call_caps,
+    cli_call_providers,
     resolve_config_path,
 } from './ai_council/config.js';
 import { AuthCache, select_solo_member } from './ai_council/solo_dispatch.js';
@@ -611,12 +612,9 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
     // dropped the configured default for every caller that hands this
     // exported function a raw `.ai-council.yml` dict.
     const global_mode = resolve_global_mode(ai);
-    // ENFORCED cap source. This function accepts BOTH config shapes (see the
-    // `resolve_global_mode` note above), and for a RAW `.ai-council.yml` dict a
-    // commented-out `cli_call_budget:` leaves the map empty — the lookup below
-    // used to fall back to `null`, which `ask()` reads as uncapped while still
-    // booking. Resolution runs through `resolve_cli_call_caps`, the same
-    // authority `cmd_quota` uses, so uncapped is unreachable by omission.
+    // ENFORCED cap source, shared with `cmd_quota` through `resolve_cli_call_caps`
+    // so the gate and the report cannot diverge. A provider with no written cap
+    // gets `null` below, which `ask()` reads as uncapped while still booking.
     const cli_budget_cfg = _isDict(ai) ? ((ai['cli_call_budget'] as Dict) || {}) : {};
     const cli_caps = resolve_cli_call_caps(
         _isDict(cli_budget_cfg) ? cli_budget_cfg['max_calls_per_day'] : undefined,
@@ -796,7 +794,7 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
                 members.push(
                     _construct_cli_member(name, model, {
                         binary: (cfg['binary'] as string | null) ?? null,
-                        max_calls_per_day: cli_caps[name] as number,
+                        max_calls_per_day: cli_caps[name] ?? null,
                         warn_at: cli_warn_at,
                     }),
                 );
@@ -3347,10 +3345,8 @@ function cmd_quota(args: Args, opts: { settings?: Dict | null } = {}): number {
     const s = opts.settings !== undefined && opts.settings !== null ? opts.settings : load_settings();
     const ai_cfg = _isDict(s) ? ((s['ai_council'] as Dict) || {}) : {};
     const cli_budget_cfg = _isDict(ai_cfg) ? ((ai_cfg['cli_call_budget'] as Dict) || {}) : {};
-    // REPORTED cap source — the same authority the gate uses. It used to read
-    // the settings mapping directly and print "no providers have a configured
-    // cap", which was misleading: the gate seeds a default for every provider,
-    // so an operator reading "no cap" was capped and already booked past it.
+    // REPORTED cap source — the same authority the gate uses, so a provider
+    // reported uncapped is one the gate admits on count.
     const caps = resolve_cli_call_caps(
         _isDict(cli_budget_cfg) ? cli_budget_cfg['max_calls_per_day'] : undefined,
     );
@@ -3369,18 +3365,10 @@ function cmd_quota(args: Args, opts: { settings?: Dict | null } = {}): number {
 
     const counts = load_cli_call_counts();
     const attribution = load_cli_call_attribution();
-    // No empty-caps branch: the resolver seeds every provider, so there is no
-    // configuration in which this command has nothing to report.
-    for (const provider of _pySortedStr(Object.keys(caps))) {
-        const limit = _pyInt(caps[provider]);
+    // Every known provider is listed: an uncapped one is named as counted, never
+    // omitted, because its counter still moves.
+    for (const provider of cli_call_providers()) {
         const used = _pyInt(counts[provider] ?? 0, 0);
-        const ratio = limit > 0 ? used / limit : 0.0;
-        let status = 'ok';
-        if (used >= limit) {
-            status = 'exhausted';
-        } else if (ratio >= warn_at) {
-            status = 'warn';
-        }
         // Named when the sidecar knows them. An empty suffix is the honest
         // reading for a bucket booked before attribution existed — not a claim
         // that nobody spent it.
@@ -3389,6 +3377,18 @@ function cmd_quota(args: Args, opts: { settings?: Dict | null } = {}): number {
         const by = consumers.length > 0
             ? ` · by ${consumers.map((c) => `${c} ${_pyInt(perConsumer[c] ?? 0, 0)}`).join(' + ')}`
             : '';
+        if (caps[provider] === undefined) {
+            _stdout(`council:quota · ${provider} · ${used}/uncapped · counted${by}\n`);
+            continue;
+        }
+        const limit = _pyInt(caps[provider]);
+        const ratio = limit > 0 ? used / limit : 0.0;
+        let status = 'ok';
+        if (used >= limit) {
+            status = 'exhausted';
+        } else if (ratio >= warn_at) {
+            status = 'warn';
+        }
         _stdout(`council:quota · ${provider} · ${used}/${limit} · ${status}${by}\n`);
     }
     return 0;

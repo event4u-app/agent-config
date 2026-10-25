@@ -50,7 +50,7 @@ pre-registered benchmark (§ No-claims note).
 |---|---|---|
 | Shape | Breadth — N members, one round by default | Depth — one strong reviewer on the real diff |
 | Context | Artefact text only; never the repo, never host framing (neutrality contract) | Full repo access — the reviewer reads git state itself |
-| Cost model | Billable API members by default; USD cost gate | Subscription-authed Codex CLI; daily call quota (`cli_call_budget.max_calls_per_day.openai`) |
+| Cost model | Billable API members by default; USD cost gate | Subscription-authed Codex CLI; daily call counter, capped only where `cli_call_budget.max_calls_per_day.openai` is written |
 | Model choice | Mid-tier default (cost decision) | Strongest available — `ai_team.model: 'auto'` defers to the CLI default |
 | Write access | Never (text only; one opt-in PR comment under `pr`) | Read-only by default; `/team delegate` is the single write path, behind a second opt-in |
 

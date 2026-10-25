@@ -1914,22 +1914,15 @@ function _build_member(
     };
 }
 
-/**
- * Generous per-provider guard for `mode: cli` / `mode: auto` members
- * (road-to-always-on-orchestration Phase 3.4). Before this default the map
- * shipped empty and an unlisted provider ran uncapped — a plan-quota guard
- * that only existed if the user remembered to opt in.
- *
- * Re-exported from `cli_call_budget.ts`, which owns it: `build_members` and
- * `cmd_quota` both need the same number, and re-deriving it at either site is
- * how the reported cap and the enforced cap drift apart.
- */
-export const DEFAULT_CLI_CALLS_PER_DAY = budget.DEFAULT_CLI_CALLS_PER_DAY;
+/** Every provider a CLI call budget can name, sorted — what the quota report lists. */
+export function cli_call_providers(): string[] {
+    return [..._VALID_PROVIDERS].sort();
+}
 
 /**
  * Resolve the per-provider daily cap map — the SINGLE authority, shared with the
  * gate and the report. Thin wrapper that supplies this module's provider set;
- * the contract (defaults on omission, lenient where this module is strict) is
+ * the contract (only a written cap is a cap, lenient where this module is strict) is
  * documented on `budget.resolveCliCallCaps`.
  */
 export function resolve_cli_call_caps(raw: unknown): Record<string, number> {

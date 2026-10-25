@@ -37,7 +37,7 @@ describe('build_ai_team_config — defaults', () => {
         expect(c).toEqual(AI_TEAM_DEFAULTS);
         expect(c.model).toBe(AI_TEAM_MODEL_AUTO);
         expect(c.allow_delegate).toBe(false);
-        expect(c.max_calls_per_day).toBe(50);
+        expect(c.max_calls_per_day).toBeNull();
         expect(c.review_gate.managed).toBe(false);
         expect(c.review_gate.max_consecutive_blocks).toBe(3);
     });
@@ -54,7 +54,7 @@ describe('build_ai_team_config — defaults', () => {
         const c = build_ai_team_config({ allow_delegate: true });
         expect(c.model).toBe('auto');
         expect(c.allow_delegate).toBe(true);
-        expect(c.max_calls_per_day).toBe(50);
+        expect(c.max_calls_per_day).toBeNull();
         expect(c.review_gate).toEqual({ managed: false, max_consecutive_blocks: 3 });
     });
 
@@ -106,7 +106,7 @@ describe('build_ai_team_config — defaults', () => {
         expect(template).toMatch(/^ai_team:$/m);
         expect(template).toMatch(/^ {2}model: auto$/m);
         expect(template).toMatch(/^ {2}allow_delegate: false$/m);
-        expect(template).toMatch(/^ {2}max_calls_per_day: 50$/m);
+        expect(template).toMatch(/^ {2}max_calls_per_day: null$/m);
         expect(template).not.toMatch(/^ {2}suppress_setup_hint:/m);
         expect(template).toMatch(/^ {2}review_gate:$/m);
         expect(template).toMatch(/^ {4}managed: false$/m);
