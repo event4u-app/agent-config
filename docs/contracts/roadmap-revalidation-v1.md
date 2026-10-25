@@ -77,6 +77,13 @@ drifted paths since the pin, and the answer set `holds | holds-changed | falls`.
 A drifted path cited only by a step yields no question; numbers moving never do.
 The question uses the existing prompt mode.
 
+**Who answers it** follows the row's `ownership` and the owner directive of
+2026-10-24 (council only for irreversible, release- or security-relevant
+decisions): a `reversible-technical` row is answered by the agent from the
+rendered question and recorded `resolved by: agent (revalidation <date>)`; a
+`contested-technical`, `product-owned` or owner-reserved row, or one whose
+answer would be irreversible, goes to the council.
+
 ```
 A DEGRADED COUNCIL — ONE SEAT, OR SEATS THAT SPLIT — IS NEVER CONSENT.
 ```

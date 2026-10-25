@@ -208,9 +208,12 @@ On resume the same check runs before the first mutation. On `drifted` or `broken
    `corrected-from-reproduction`. A step whose premise is `already-fixed` or
    `never-true` does not run as written.
 2. Each decision the report lists under "decisions whose evidence moved" carries
-   a rendered question (`--json`, field `question`). Send it through the council
-   in prompt mode and record the answer — `holds | holds-changed | falls` — as a
-   `## Decisions` row `resolved by: council:<date>`, dissent kept separately. **A
+   a rendered question (`--json`, field `question`). A `reversible-technical`
+   row is answered by the agent from that question and recorded `resolved by:
+   agent (revalidation <date>)`; any other ownership, or an irreversible answer,
+   goes through the council in prompt mode, recorded `resolved by:
+   council:<date>` with dissent kept separately. Either way the answer is one of
+   `holds | holds-changed | falls` in a `## Decisions` row. **A
    degraded council — one seat, or seats that split — is never consent:** a
    technical row is recorded `provisional`, an owner-reserved one becomes an
    `agents/owner-questions.md` entry with the partial vote. A step whose

@@ -1,7 +1,8 @@
 ---
 complexity: lightweight
 status: ready
-tree_pin: 01bb841cbd
+tree_pin: 4e7efca19f
+revalidated: 4e7efca19f 2026-10-25
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-at, verified at 01bb841cb: no roadmap owns plan revalidation. Search `grep -rlniE 'revalidat|tree_pin|plan-pin|re-verified at execution' agents/roadmaps/*.md agents/roadmaps/later agents/roadmaps/stubs` over the whole roadmap tree returned six files; none owns the mechanism — road-to-a-step-that-costs-what-it-changes names `revalidation` only as a would-skip ceremony in its depth table (src/config/step-depth-table.json), the other five mention the word in passing. The mechanism itself is absent: no `tree_pin` field in src/scripts/new_roadmap.ts or the template, no `--revalidate` mode in src/scripts/roadmap_context.ts, and `staleArtefactVerdict` (src/scripts/roadmap_context.ts:470) has no production caller. The owner asked for exactly this in the source transcript (turn 2). Active estate was 4 of 5 at authoring. Parking it in later/ was rejected because the same invocation asks to execute this round's roadmaps now; merging into road-to-a-step-that-costs-what-it-changes was rejected because that file owns per-class ceremony depth, not the ceremony, and folding five phases into it would double its open work."
@@ -191,12 +192,13 @@ Evidence (executed): `src/scripts/optimize_skill_description.ts:128`
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
-| D1 | reversible-technical | agent | Revalidation never blocks; the verdict is context | Drift is a prompt to re-verify (`src/scripts/report_memory_pointers.ts:367-372`) | the false-alarm share of `drifted` → `still-true` stays under a tenth over 30 roadmaps |
+| D1 | reversible-technical | agent | Revalidation never blocks; the verdict is context | Drift is a prompt to re-verify (`src/scripts/_lib/git_drift.ts:1-7`) <!-- corrected-from-reproduction: the text moved there in 1.3 --> | the false-alarm share of `drifted` → `still-true` stays under a tenth over 30 roadmaps |
 | D2 | reversible-technical | agent | The `revalidated:` frontmatter line is the record; no evidence file per run | Owner directive 2026-10-24: evidence only when re-read later | a reader needs the per-run history the line overwrites |
 | D3 | reversible-technical | agent | A `revisit if` cell is evaluated only in the closed forms `test -f <path>` / `test -e <path>`; any other command is `unverifiable`, never executed | a roadmap's text is untrusted input to a script | a third safe form is asked for twice |
 | D4 | reversible-technical | agent | Council questions reuse the existing prompt mode; no new council mode | `src/scripts/ai_council/prompts.ts:185-195` mode table; nine modes already | a rendered question is rejected by the bundler size limit |
 | D5 | reversible-technical | agent | `uses:` and `waived:` are step lines like `verify:`, not frontmatter | the step is the unit the closure reads | a roadmap needs a skill plan above step level |
-| D6 | reversible-technical | agent | Closure scan of 2026-10-25: C1 and C3 (`destructive-owned`) match the word "merge" inside the slug `road-to-a-retro-the-merge-runs`; C2 is a pointer line in § What this roadmap does not do. No decision is open behind any of them | `./scripts-run src/scripts/closure_scan agents/roadmaps/road-to-a-plan-that-stays-true.md` | a step of this file starts a merge or names an acceptance criterion in prose |
+| D7 | reversible-technical | agent (revalidation 2026-10-25) | D1 holds: its evidence moved only because step 1.3 relocated the cited text, unchanged, into `_lib/git_drift.ts`; council not asked — a reversible-technical row, per the owner directive of 2026-10-24 | closing `roadmap:context --revalidate` | — |
+| D6 | reversible-technical | agent | Closure scan of 2026-10-25: C1 and C3 (`destructive-owned`) match the word "merge" inside the slug `road-to-a-retro-the-merge-runs`; C2 is a pointer line in § What this roadmap does not do. No decision is open behind any of them | `./scripts-run src/scripts/closure_scan agents/roadmaps/archive/road-to-a-plan-that-stays-true.md` | a step of this file starts a merge or names an acceptance criterion in prose |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-25 | reviewer: claude/host -->
@@ -210,14 +212,14 @@ Evidence (executed): `src/scripts/optimize_skill_description.ts:128`
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A roadmap written by `new_roadmap` carries `tree_pin:`, and
+- [x] AC-1 — A roadmap written by `new_roadmap` carries `tree_pin:`, and
       `roadmap:context --revalidate` reports its verdict with no new verb, engine
       or settings key.
-- [ ] AC-2 — A drain-queue entry, a phase boundary and a closure each surface the
+- [x] AC-2 — A drain-queue entry, a phase boundary and a closure each surface the
       verdict without the agent having to remember the primitive.
-- [ ] AC-3 — A decision whose evidence moved produces exactly one council
+- [x] AC-3 — A decision whose evidence moved produces exactly one council
       question; a step whose evidence moved produces none.
-- [ ] AC-4 — A step's `uses:` line is read back as applied, waived or missing at
+- [x] AC-4 — A step's `uses:` line is read back as applied, waived or missing at
       review and at closure, from tool events only.
-- [ ] AC-5 — No surface counts the `/review-changes` judges as four or five, and
+- [x] AC-5 — No surface counts the `/review-changes` judges as four or five, and
       no code path in the tree picks a skill-description candidate by raw score.
