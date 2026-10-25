@@ -37,6 +37,16 @@
 - [ ] Condensed preserves: triggers, validation, decisions, gotchas
 - [ ] Symlinks regenerated (`task generate-tools`)
 
+## Measurements
+
+<!-- A change to a dispatch default (a row of src/config/dispatch-policy.json:
+     subagent tier, instruction skip, parallelism, council rounds) names what it
+     rests on. Otherwise write: none — no dispatch default changed. -->
+
+- Policy row:
+- Claim (docs/CLAIMS.md):
+- Report (pinned to a commit of this PR):
+
 ## Testing
 
 <!-- How was this tested? -->

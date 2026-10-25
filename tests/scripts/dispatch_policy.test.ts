@@ -11,7 +11,10 @@ import {
     checkPolicy,
     claimStatuses,
     loadPolicy,
+    overdueRows,
+    policyDelta,
     readSink,
+    renderMeasuredSection,
     type PolicyRow,
     type PolicyTable,
 } from '../../src/scripts/_lib/dispatch_policy.js';
@@ -103,5 +106,43 @@ describe('dispatch-policy table', () => {
         const odd = row({ sink: { kind: 'prose' as never, file: 'x', key: 'y' } });
         expect(check({ rows: [odd] }).join('\n')).toContain('sink kind');
         expect(check({ rows: [row(), row()] }).join('\n')).toContain('duplicate');
+    });
+});
+
+describe('measured-in-this-release section', () => {
+    const before: PolicyTable = {
+        rows: [
+            row({ id: 'tier', value: 'inherit' }),
+            row({ id: 'parallel', value: 3, review_by: '2026-01-01' }),
+        ],
+    };
+
+    it('lists a moved row and an overdue row', () => {
+        const after: PolicyTable = {
+            rows: [
+                row({ id: 'tier', value: 'lite', claim: 'tier-downshift-quality-held', review_by: undefined }),
+                row({ id: 'parallel', value: 3, review_by: '2026-01-01' }),
+            ],
+        };
+        const lines = renderMeasuredSection(policyDelta(before, after), overdueRows(after, '2026-10-25'));
+        const text = lines.join('\n');
+        expect(lines[0]).toBe('### Measured in this release');
+        expect(text).toContain('`tier`: "inherit" → "lite" (claim `tier-downshift-quality-held`)');
+        expect(text).toContain('Overdue');
+        expect(text).toContain('`parallel` — unmeasured, review_by 2026-01-01');
+    });
+
+    it('renders nothing for an unchanged table whose dates lie ahead', () => {
+        const dated: PolicyTable = { rows: [row({ id: 'tier' })] };
+        expect(renderMeasuredSection(policyDelta(dated, dated), overdueRows(dated, '2026-10-25'))).toEqual([]);
+    });
+
+    it('names added and removed rows, and a first table as one line', () => {
+        const added = policyDelta({ rows: [] }, before);
+        expect(added.map((d) => d.kind)).toEqual(['added', 'added']);
+        expect(policyDelta(before, { rows: [] }).map((d) => d.kind)).toEqual(['removed', 'removed']);
+        expect(renderMeasuredSection(policyDelta(null, before), [], before).join('\n')).toContain(
+            'dispatch-policy table introduced with 2 row(s)',
+        );
     });
 });

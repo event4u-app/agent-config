@@ -164,3 +164,83 @@ export function checkPolicy(table: PolicyTable, deps: CheckDeps): string[] {
     }
     return findings;
 }
+
+export interface PolicyChange {
+    kind: 'moved' | 'added' | 'removed';
+    id: string;
+    before?: PolicyRow;
+    after?: PolicyRow;
+}
+
+/**
+ * What changed between two tables, by row id. `before === null` means the
+ * previous release had no table, which is reported as one line rather than as
+ * every row being added.
+ */
+export function policyDelta(before: PolicyTable | null, after: PolicyTable): PolicyChange[] {
+    if (before === null) {
+        return [];
+    }
+    const prev = new Map(before.rows.map((r) => [r.id, r]));
+    const next = new Map(after.rows.map((r) => [r.id, r]));
+    const out: PolicyChange[] = [];
+    for (const r of after.rows) {
+        const old = prev.get(r.id);
+        if (old === undefined) {
+            out.push({ kind: 'added', id: r.id, after: r });
+        } else if (JSON.stringify(old.value) !== JSON.stringify(r.value) || old.claim !== r.claim) {
+            out.push({ kind: 'moved', id: r.id, before: old, after: r });
+        }
+    }
+    for (const r of before.rows) {
+        if (!next.has(r.id)) {
+            out.push({ kind: 'removed', id: r.id, before: r });
+        }
+    }
+    return out;
+}
+
+/** Unmeasured rows whose `review_by` lies before `today` (both ISO dates). */
+export function overdueRows(table: PolicyTable, today: string): PolicyRow[] {
+    return table.rows.filter(
+        (r) => r.claim === UNMEASURED && typeof r.review_by === 'string' && ISO_DATE.test(r.review_by) && r.review_by < today,
+    );
+}
+
+function claimNote(r: PolicyRow): string {
+    return r.claim === UNMEASURED ? 'unmeasured' : `claim \`${r.claim}\``;
+}
+
+/**
+ * The changelog section a release prints: rows that moved and rows whose
+ * measurement is overdue. Empty when there is nothing to say, so a release that
+ * moved nothing carries no ceremony.
+ */
+export function renderMeasuredSection(
+    delta: readonly PolicyChange[],
+    overdue: readonly PolicyRow[],
+    introduced: PolicyTable | null = null,
+): string[] {
+    const lines: string[] = [];
+    if (introduced !== null) {
+        lines.push(`- dispatch-policy table introduced with ${introduced.rows.length} row(s)`);
+    }
+    for (const d of delta) {
+        if (d.kind === 'moved') {
+            lines.push(
+                `- \`${d.id}\`: ${JSON.stringify(d.before!.value)} → ${JSON.stringify(d.after!.value)} (${claimNote(d.after!)})`,
+            );
+        } else if (d.kind === 'added') {
+            lines.push(`- \`${d.id}\` added: ${JSON.stringify(d.after!.value)} (${claimNote(d.after!)})`);
+        } else {
+            lines.push(`- \`${d.id}\` removed (was ${JSON.stringify(d.before!.value)})`);
+        }
+    }
+    if (overdue.length > 0) {
+        lines.push('', '**Overdue** — unmeasured past their review date:', '');
+        for (const r of overdue) {
+            lines.push(`- \`${r.id}\` — unmeasured, review_by ${r.review_by}`);
+        }
+    }
+    return lines.length === 0 ? [] : ['### Measured in this release', '', ...lines];
+}

@@ -210,6 +210,20 @@ describe('nothing_to_release_ci', () => {
 // ─── changelog rendering ──────────────────────────────────────────────────────
 
 describe('render_changelog_entry', () => {
+    it('places the measured section under the head and above the generated log', () => {
+        const measured = ['### Measured in this release', '', '- `tier`: "inherit" → "lite" (claim `x`)'];
+        const [, body] = render_changelog_entry('1.2.0', '1.1.0', [_c('feat(api): add endpoint')], '2026-04-24', {
+            measured,
+        });
+        const head = body.indexOf('### Release highlights');
+        const section = body.indexOf('### Measured in this release');
+        const feat = body.indexOf('### Features');
+        expect(head).toBeLessThan(section);
+        expect(section).toBeLessThan(feat);
+        const [, plain] = render_changelog_entry('1.2.0', '1.1.0', [_c('feat(api): add endpoint')], '2026-04-24');
+        expect(plain).not.toContain('Measured in this release');
+    });
+
     it('groups by type in order', () => {
         const commits = [
             _c('feat(api): add endpoint'),
