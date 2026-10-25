@@ -24,7 +24,6 @@ routes_to:
   - "skill:nda-triage"
   - "skill:dpa-review"
   - "skill:legal-intake-triage"
-  - "skill:legal-practice-profile"
 workspaces: [legal-review-prep]
 packs: [legal-review-prep]
 trust:

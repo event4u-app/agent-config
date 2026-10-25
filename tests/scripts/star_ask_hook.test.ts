@@ -155,8 +155,7 @@ describe('cadence', () => {
         expect(h.out).toHaveLength(1);
     });
 
-    // Root writes through mode 0500/0400, so the unwritable state cannot be built there.
-    it.skipIf(process.getuid?.() === 0)('a state file that cannot be written means no ask at all', () => {
+    it('a state file that cannot be written means no ask at all', () => {
         const h = harness();
         const dir = path.join(tmp, 'ro');
         fs.mkdirSync(dir);

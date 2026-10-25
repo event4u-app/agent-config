@@ -30,7 +30,7 @@ end. Each of these is a test or a lint that can go red.
 
 ## Phase 1 — The impact class agrees with the bump
 
-- [x] **1.1 Let a wrapped `BREAKING CHANGE:` footer continue onto unindented
+- [x] **1.1 Let a wrapped `BREAKING CHANGE:` footer continue onto unindented <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=dependency manifest: package.json -->
       lines.** `parse_trailer_paragraph`
       (`src/scripts/_lib/consumer_impact.ts:89-97`) discards the whole paragraph
       when one line is not a trailer. Both 18.0.0 breaking commits
@@ -44,7 +44,7 @@ end. Each of these is a test or a lint that can go red.
       `79cb86c0dd` body shape yields `action, recorded: true`; the existing cases
       stay green.
       Landed 2026-10-25: red, then green with 438/438 in the impact and release suites.
-- [x] **1.2 An unrecorded breaking commit classes as `action`.** `span_bump`
+- [x] **1.2 An unrecorded breaking commit classes as `action`.** `span_bump` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=dependency manifest: package.json -->
       (`impact_bump.ts:88`) already reads a breaking commit with no valid trailer
       as a major (ADR-300); `release_impact_entry`
       (`consumer_impact.ts:168-176`) ignores it, so one span produced a major bump
@@ -53,7 +53,7 @@ end. Each of these is a test or a lint that can go red.
       commit yields `{ impact: 'action' }`.
       Landed 2026-10-25: the span test that pinned `none` for this case was the
       defect itself; it now expects `action` and was seen red first.
-- [x] **1.3 Correct the 17.0.0 and 18.0.0 entries of the impact map.**
+- [x] **1.3 Correct the 17.0.0 and 18.0.0 entries of the impact map.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=dependency manifest: package.json -->
       `package.json` `agentConfig.impact` read `notice` for both;
       `BREAKING_CHANGES.md` says `action` for both. Set them to `action`, so an
       installed pre-17 or pre-18 updater is asked rather than notified.
@@ -64,7 +64,7 @@ end. Each of these is a test or a lint that can go red.
       `git log 17.4.0..18.0.0` and `16.5.0..17.0.0` returns `action` for each, and
       `18.0.0..18.1.0`, `18.1.0..18.2.0` return `none`, matching their absence.
       Landed 2026-10-25: all four spans reproduced with the shipped readers.
-- [x] **1.4 A major's absence from the map means a declared `none`, and only that.**
+- [x] **1.4 A major's absence from the map means a declared `none`, and only that.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=dependency manifest: package.json -->
       `classifyUpdate` (`src/scripts/_lib/classify_update.ts:131-170`) returns
       `auto` when the range crosses a major with no map entry.
       `corrected-from-reproduction`: the planned classifier floor reddened the
@@ -80,42 +80,47 @@ end. Each of these is a test or a lint that can go red.
 
 ## Phase 2 — Guards that run where they say they run
 
-- [x] **2.1 Run the shipped-Pending-row check with history in CI.** The
+- [x] **2.1 Run the shipped-Pending-row check with history in CI.** The <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       real-index test (`tests/scripts/release_head_prefill.test.ts:253-270`) skips
       in `node-tests`, whose checkout is shallow, and no full-history job runs it.
       Run it in a job with full history and tags, where a skip fails.
       verify: the workflow step exists in a full-history job; locally, forcing
       the skip condition under the require-history switch fails the test.
       Landed 2026-10-25: `rule-backstops.yml` step with `RELEASE_PENDING_REQUIRE_HISTORY=1`; probed red with a missing commit and with `79cb86c0dd` (in 18.0.0), green restored.
-- [x] **2.2 A dependency cycle is a plan error, not a crash.** `orderStages`
+- [x] **2.2 A dependency cycle is a plan error, not a crash.** `orderStages` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/invocation_plan.ts -->
       (`src/scripts/_lib/invocation_plan.ts:211-215`) takes `ready[0]` unguarded;
       a hard-edge cycle (including `A dependsOn A`) throws a TypeError. Detect it
       in `validate` and throw `InvocationPlanError` naming the cycle.
       verify: red-first case G15 in `tests/scripts/invocation_plan.test.ts`
       (self-loop and two-stage cycle) expects `InvocationPlanError`.
       Landed 2026-10-25: `validate` names the cycle; the guard case was red first, 22/22 green.
-- [x] **2.3 A key honoured during a window does not print "ignored".**
+- [x] **2.3 A key honoured during a window does not print "ignored".** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/settings_removed_keys.ts -->
       `warnRemovedKeys` (`src/scripts/_lib/settings_removed_keys.ts:207`) appends
       `; ignored.` to every removed key, including `projection.rule_packs`, whose
       own reason says an explicit value is still honoured. Print the window
       instead of "ignored" for that key.
       verify: a test captures stderr for `projection.rule_packs` and finds no
       "ignored".
-      Landed 2026-10-25: red first, then "still honoured until its window closes".
-- [x] **2.4 The star-ask unwritable-state test holds as root.**
+      Landed 2026-10-25: red first, then "still honoured" — read from the key's own
+      reason, which keeps the hook bundle inside its byte budget.
+- [x] **2.4 Decide the star-ask unwritable-state test under root.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `tests/scripts/star_ask_hook.test.ts:158-176` relies on `chmod`, which root
-      ignores. Skip it when `process.getuid?.() === 0`, as
-      `classify_merge_risk_base_revision.test.ts` does.
-      verify: the test file contains the guard and passes.
-      Landed 2026-10-25: `it.skipIf(process.getuid?.() === 0)`; not probed as root on this host.
-- [x] **2.5 Drop the stale "stays on 20" comments.** `.github/workflows/tests.yml:310,645`
+      ignores, so it would fail as root.
+      verify: the decision is recorded here and the test file is unchanged from
+      the base.
+      `corrected-from-reproduction`: the planned `it.skipIf(getuid === 0)` was
+      added and removed again. `check_test_weakening` counts it as a net-added
+      suppression that needs an independent verdict, and no CI job here runs as
+      root, so there is no failing run to justify one. The test stays as it is;
+      revisit if a root runner is added.
+- [x] **2.5 Drop the stale "stays on 20" comments.** `.github/workflows/tests.yml:310,645` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/tests.yml -->
       says other jobs stay on Node 20; `engines.node` is `>=22` and no job pins 20.
       verify: `grep -c 'stays on 20' .github/workflows/tests.yml` is 0.
       Landed 2026-10-25: three blocks replaced; the count is 0.
 
 ## Phase 3 — A floor ships where its skills ship
 
-- [x] **3.1 Put D14's revisit-if to the council.** On claude-code and codex every
+- [x] **3.1 Put D14's revisit-if to the council.** On claude-code and codex every <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/install/ruleInScope.ts -->
       skill ships (`src/install/scoped_projection.ts:480-488`), but
       `legal-safety-floor` (`packs: [legal-review-prep]`) and
       `finance-safety-floor` ship only with their pack, while `contract-review`
@@ -125,7 +130,7 @@ end. Each of these is a test or a lint that can go red.
       `## Decisions`.
       Landed 2026-10-25: 2/2 seats, option 1 (D3);
       `agents/evidence/council/safety-floor-with-its-skills-20261025.md`.
-- [x] **3.2 Implement the verdict with an install test.** If the council says
+- [x] **3.2 Implement the verdict with an install test.** If the council says <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/install/ruleInScope.ts -->
       yes: the rule scope adds a pack-scoped rule tagged a safety floor when any
       projected skill names it. Either way, the test pins the outcome.
       verify: an install test asserts the chosen behaviour for `contract-review`
@@ -136,10 +141,15 @@ end. Each of these is a test or a lint that can go red.
       lever, the fail-safe direction the predicate already takes.
       Landed 2026-10-25: `tests/install/safety_floor_follows_skill.test.ts` (red
       first) asserts the three floors ship with no pack, `image-likeness-and-rights`
-      stays pack-scoped, every `routes_to` skill exists and every skill that says
-      it obeys a floor is in that floor's `routes_to` (which added
-      `legal-practice-profile`); `rule_packs_auto.test.ts` now pins the floors as kept.
-- [x] **3.3 Name the lost coverage in the 18.0.0 migration.** `docs/MIGRATION.md`
+      stays pack-scoped, every `routes_to` skill exists, and every
+      consequence-class rule a skill says it obeys ships with no pack active
+      (red with the pack-axis change neutralised); `rule_packs_auto.test.ts` now
+      pins the floors as kept. A first version required the obeying skill to sit
+      in the floor's `routes_to` and added `legal-practice-profile` there; that
+      line was withdrawn, because it changes nothing the install ships (the floor
+      already ships through `contract-review`) while it grows the per-spawn
+      preamble past its ratchet, which only a human-approved grant can widen.
+- [x] **3.3 Name the lost coverage in the 18.0.0 migration.** `docs/MIGRATION.md` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/install/ruleInScope.ts -->
       § 18.0.0 lists the eight rules but not what stops firing (contract, NDA,
       valuation, likeness triggers) or the one-line restore.
       verify: the section names the four floor rules, their trigger class and
@@ -149,7 +159,7 @@ end. Each of these is a test or a lint that can go red.
 
 ## Phase 4 — Records census and the open window
 
-- [x] **4.1 Run the owner-claim predicate once over existing ADRs.**
+- [x] **4.1 Run the owner-claim predicate once over existing ADRs.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `check_new_adr_evidence` checks only added records. Apply
       `claimsOwnerDecision` + `citesOwnerDirective` to every accepted ADR since
       ADR-282 and append each miss to `agents/owner-questions.md` as a question,
@@ -158,7 +168,7 @@ end. Each of these is a test or a lint that can go red.
       with its count, and every miss has a question.
       Landed 2026-10-25: 14 misses from ADR-282 on, 8 naming the owner as decision-maker; ADR-286 is already corrected, the other 7 are OQ-18.
       `corrected-from-reproduction`: one question for the 7, not one per record, so the list stays readable.
-- [x] **4.2 Schedule the `rule_packs` legacy window.** `RULE_PACKS_LEGACY_WINDOW`
+- [x] **4.2 Schedule the `rule_packs` legacy window.** `RULE_PACKS_LEGACY_WINDOW` <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       (`src/install/rule_scope.ts:122`) is prose with no end; 18.1.0 and 18.2.0
       shipped since. Add a `docs/MIGRATION.md` § Scheduled deprecations row for
       the legacy honouring and the `ProjectionMode` residue in `mcp_bridge.ts`,

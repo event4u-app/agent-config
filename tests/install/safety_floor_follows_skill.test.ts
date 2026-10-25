@@ -56,17 +56,23 @@ describe('a safety floor follows the skills it guards', () => {
         }
     });
 
-    it('lists every skill that says it obeys the floor', () => {
-        const ids = floors.map((f) => f.replace(/\.md$/, ''));
+    it('ships every pack-scoped consequence rule a skill says it obeys, with no pack active', () => {
+        const excluded = new Set(excludedRuleBasenames(RULES, NO_PACKS));
+        const consequence = fs
+            .readdirSync(RULES)
+            .filter((f) => f.endsWith('.md') && typeof meta(f)['consequence_class'] === 'string')
+            .map((f) => f.replace(/\.md$/, ''));
+        let obeyed = 0;
         for (const skill of fs.readdirSync(SKILLS)) {
             const file = path.join(SKILLS, skill, 'SKILL.md');
             if (!fs.existsSync(file)) continue;
             const text = fs.readFileSync(file, 'utf-8');
-            for (const id of ids) {
-                if (new RegExp(`[Oo]beys? \`?${id}\\b`).test(text)) {
-                    expect(guardedSkills(`${id}.md`), `${skill} obeys ${id}`).toContain(skill);
-                }
+            for (const id of consequence) {
+                if (!new RegExp(`[Oo]beys? \`?${id}\\b`).test(text)) continue;
+                obeyed += 1;
+                expect(excluded.has(`${id}.md`), `${skill} obeys ${id}, which a no-pack install drops`).toBe(false);
             }
         }
+        expect(obeyed).toBeGreaterThan(0);
     });
 });
