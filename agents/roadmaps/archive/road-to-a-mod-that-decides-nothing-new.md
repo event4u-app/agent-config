@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: ready
+status: archived
 tree_pin: c073ca2e5a
 execution:
   mode: phase-checkpoints
@@ -19,7 +19,7 @@ relates:
 > user turns) and three plans on Claude Code mods; the master plan is the
 > operative one, the two earlier ones are its parents. Claims re-verified and the
 > load-bearing host claims reproduced in the host's own harness:
-> [`claude-code-mod-harness-probes-2026-10-25`](../evidence/analysis/claude-code-mod-harness-probes-2026-10-25.md).
+> [`claude-code-mod-harness-probes-2026-10-25`](../../evidence/analysis/claude-code-mod-harness-probes-2026-10-25.md).
 
 ## Goal
 
