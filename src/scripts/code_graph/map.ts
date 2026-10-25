@@ -937,11 +937,6 @@ function readViewer(name: string): string {
     return fs.readFileSync(path.join(VIEWER_DIR, name), 'utf-8');
 }
 
-/** Inline a viewer image: the page loads nothing but itself. */
-function readViewerDataUri(name: string, mime: string): string {
-    return `data:${mime};base64,${fs.readFileSync(path.join(VIEWER_DIR, name)).toString('base64')}`;
-}
-
 /** Escape every `<` so no file or symbol name can close the data block. */
 export function embedJson(value: unknown): string {
     return JSON.stringify(value).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
@@ -968,9 +963,7 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         "default-src 'none'",
         `script-src 'sha256-${sha256(js)}'`,
         `style-src 'sha256-${sha256(css)}'`,
-        // Inline images only (the brand mark): a data: URI is decoded in place and
-        // fetches nothing, so the page still loads nothing but itself.
-        "img-src data:",
+        "img-src 'none'",
         "connect-src 'none'",
         "base-uri 'none'",
         "form-action 'none'",
@@ -988,7 +981,15 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         '<body>',
         '<header class="top">',
         '<div class="brand">',
-        `<img class="logo" src="${readViewerDataUri('logo.png', 'image/png')}" width="40" height="40" alt="AC">`,
+        // The AC mark from .github/assets/info-banner.png, redrawn as vectors: the
+        // published package carries no images.
+        '<svg class="logo" width="40" height="40" viewBox="0 0 96 96" role="img" aria-label="AC"><defs><linearGradient id="acRim" x1="0" y1="0" x2="0.35" y2="1"><stop offset="0" stop-color="#ff8c2a"/><stop offset="0.5" stop-color="#ff6a1f"/><stop offset="0.78" stop-color="#9a7bff"/><stop offset="1" stop-color="#3ec5ff"/></linearGradient><linearGradient id="acA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#aab6c8"/></linearGradient><linearGradient id="acC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe0c2"/><stop offset="1" stop-color="#ff8c2a"/></linearGradient><filter id="acGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>' +
+            '<rect x="7" y="7" width="82" height="82" rx="17" fill="#05080f" stroke="url(#acRim)" stroke-width="2.6" filter="url(#acGlow)"/>' +
+            '<g fill="none" stroke="#3ec5ff" stroke-width="1.4" opacity="0.8"><path d="M15 35 L27 22 L43 26 L60 15 L81 31"/><path d="M27 22 L22 49"/><path d="M60 15 L66 30"/><path d="M80 50 L86 46 M80 58 L86 63 L86 70"/></g>' +
+            '<circle cx="15" cy="35" r="4" fill="#ff8c2a"/><circle cx="27" cy="22" r="3" fill="#ff8c2a"/><circle cx="22" cy="49" r="3.4" fill="#ff8c2a"/><circle cx="43" cy="26" r="2.2" fill="#3ec5ff"/><circle cx="60" cy="15" r="3.4" fill="#3ec5ff"/><circle cx="81" cy="31" r="4" fill="#3ec5ff"/><circle cx="86" cy="46" r="2.2" fill="none" stroke="#ff8c2a" stroke-width="1.4"/><circle cx="86" cy="70" r="2.2" fill="none" stroke="#ff8c2a" stroke-width="1.4"/>' +
+            '<path d="M19 70 L41 22 L54 22 L77 70 L63 70 L47.5 35 L33 70 Z" fill="url(#acA)"/>' +
+            '<path d="M76 45 A12.5 12.5 0 1 0 76 63" fill="none" stroke="url(#acC)" stroke-width="8.5" stroke-linecap="round"/>' +
+            '<rect x="15" y="71" width="38" height="14" rx="2.5" fill="#05080f" stroke="#f5b23c" stroke-width="1.5"/><path d="M20 75 L24 78 L20 81 M27 81 L33 81" fill="none" stroke="#ffffff" stroke-width="1.7" stroke-linecap="round"/></svg>',
         '<div class="brand-name"><b>AGENT CONFIG</b><span>CODE MAP</span></div>',
         '</div>',
         '<div class="pins mono"><span class="chip" id="pin-commit"></span><span class="chip fresh" id="pin-fresh"></span><span class="chip gen" id="pin-gen"></span></div>',

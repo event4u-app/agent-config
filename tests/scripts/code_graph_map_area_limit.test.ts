@@ -133,6 +133,18 @@ describe('the map uses the height it is given', () => {
         }));
         expect(m.stage).toBeGreaterThan(700);
         expect(m.page).toBeLessThanOrEqual(m.vh + 1);
+        // The side panels span the height under the header and scroll inside themselves.
+        const panes = await page.evaluate(() =>
+            ['pane-left', 'pane-right'].map((id) => {
+                const el = document.getElementById(id) as HTMLElement;
+                const top = (document.querySelector('.top') as HTMLElement).getBoundingClientRect().bottom;
+                return { height: el.getBoundingClientRect().height, below: window.innerHeight - top, overflowY: getComputedStyle(el).overflowY };
+            }),
+        );
+        for (const p of panes) {
+            expect(p.overflowY).toBe('auto');
+            expect(p.height).toBeGreaterThanOrEqual(p.below - 1);
+        }
         await page.close();
     });
 });
@@ -170,23 +182,18 @@ describe('every lens has a way back to where it started', () => {
 
 
 describe('the brand mark', () => {
-    it('is the AC icon, embedded so the page loads nothing but itself', async () => {
+    it('is the AC mark drawn as inline vectors; the page loads no image at all', async () => {
         const text = fs.readFileSync(html, 'utf-8');
-        expect(text).toMatch(/<img class="logo" src="data:image\/png;base64,[A-Za-z0-9+/=]{1000,}" width="40" height="40" alt="AC">/);
-        // The policy opens inline images and nothing on the network.
-        expect(text).toMatch(/img-src data:;/);
-        expect(text).toMatch(/default-src 'none'/);
+        expect(text).toMatch(/<svg class="logo" width="40" height="40" viewBox="0 0 96 96" role="img" aria-label="AC">/);
+        expect(text).not.toMatch(/<img\b/);
+        expect(text).toMatch(/img-src 'none'/);
         const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-        const external: string[] = [];
-        page.on('request', (r) => { if (!r.url().startsWith('file:') && !r.url().startsWith('data:')) external.push(r.url()); });
         await page.goto(pathToFileURL(html).href);
-        const loaded = await page.evaluate(async () => {
-            const img = document.querySelector('.brand .logo') as HTMLImageElement;
-            await img.decode().catch(() => undefined);
-            return img.naturalWidth;
+        const box = await page.evaluate(() => {
+            const r = (document.querySelector('.brand .logo') as SVGElement).getBoundingClientRect();
+            return { w: Math.round(r.width), h: Math.round(r.height) };
         });
-        expect(loaded).toBe(96);
-        expect(external).toEqual([]);
+        expect(box).toEqual({ w: 40, h: 40 });
         await page.close();
     });
 });
