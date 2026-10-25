@@ -45,7 +45,7 @@ jobs:
 
       - name: Install agent-config
         # Pinned to a major: an unpinned install runs whatever was published last.
-        run: npm install -g @event4u/agent-config@17
+        run: npm install -g @event4u/agent-config@18
 
       - name: Classify risk
         id: risk
