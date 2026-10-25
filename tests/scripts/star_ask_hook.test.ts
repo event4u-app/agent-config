@@ -20,6 +20,7 @@ import { parse as parseYaml } from 'yaml';
 import { USER_NOTICE_HOSTS, USER_NOTICE_ID_KEY, USER_NOTICE_KEY } from '../../src/scripts/hooks/user_notice.js';
 import {
     ASK_INTERVAL_DAYS,
+    claimPathFor,
     CONCERN,
     FIRST_ASK_GRACE_DAYS,
     readStarAskSettings,
@@ -28,6 +29,7 @@ import {
     runStarAsk,
     writeStarAskState,
     type StarAskDeps,
+    type StarAskState,
 } from '../../src/scripts/star_ask_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -172,37 +174,47 @@ describe('cadence', () => {
         }
     });
 
-    it('a session that finds the ask lock held by another session does not ask', () => {
-        // The council's third refusal: atomic replacement is not mutual exclusion,
-        // so two simultaneous session starts could both read "due" and both ask.
-        const h = harness();
-        h.run();
-        fs.writeFileSync(path.join(tmp, 'star-ask.json.lock'), '');
+    it('two sessions that read the same state compete for one claim, and only one asks', () => {
+        // The council's third and fourth refusals: atomic replacement is not
+        // mutual exclusion, and a lock that expires lets a paused holder ask too.
+        // The claim is keyed on the state each session read and never expires.
+        const statePath = path.join(tmp, 'star-ask.json');
+        const read: StarAskState = { first_seen_at: T0.toISOString(), last_asked_at: null };
+        writeStarAskState(statePath, read);
         const due = new Date(T0.getTime() + FIRST_ASK_GRACE_DAYS * DAY);
-        expect(h.run({ now: due })).toEqual({ asked: false, reason: 'another session is asking' });
-        expect(h.out).toEqual([]);
+        const a = harness();
+        expect(a.run({ now: due }).asked).toBe(true);
+        // B read the same state before A wrote its ask.
+        writeStarAskState(statePath, read);
+        const b = harness();
+        expect(b.run({ sessionId: 'session-2', now: due })).toEqual({ asked: false, reason: 'another session is asking' });
+        expect(b.out).toEqual([]);
     });
 
-    it('a lock left behind by a crashed session expires, and an ask releases its lock', () => {
+    it('a claim never expires: one made long ago for the same state still wins', () => {
+        const statePath = path.join(tmp, 'star-ask.json');
+        const read: StarAskState = { first_seen_at: T0.toISOString(), last_asked_at: null };
+        writeStarAskState(statePath, read);
+        const claim = claimPathFor(statePath, read);
+        fs.mkdirSync(path.dirname(claim), { recursive: true });
+        fs.writeFileSync(claim, '');
+        const old = new Date(Date.now() - 365 * DAY);
+        fs.utimesSync(claim, old, old);
         const h = harness();
-        h.run();
-        const lock = path.join(tmp, 'star-ask.json.lock');
-        fs.writeFileSync(lock, '');
-        const old = new Date(Date.now() - 10 * 60_000);
-        fs.utimesSync(lock, old, old);
-        expect(h.run({ now: new Date(T0.getTime() + FIRST_ASK_GRACE_DAYS * DAY) }).asked).toBe(true);
-        expect(fs.existsSync(lock)).toBe(false);
+        expect(h.run({ now: new Date(T0.getTime() + FIRST_ASK_GRACE_DAYS * DAY) })).toEqual({
+            asked: false,
+            reason: 'another session is asking',
+        });
     });
 
-    it('under the lock the state is read again, so a session that lost the race sees the ask already made', () => {
+    it('after winning the claim the state is read again, so a stale reading never asks', () => {
         const h = harness();
         h.run();
         const due = new Date(T0.getTime() + FIRST_ASK_GRACE_DAYS * DAY);
         const statePath = path.join(tmp, 'star-ask.json');
-        // The winner records its ask between this session's first read and its lock.
         const r = h.run({
             now: due,
-            beforeLock: () => void writeStarAskState(statePath, { first_seen_at: T0.toISOString(), last_asked_at: due.toISOString() }),
+            beforeClaim: () => void writeStarAskState(statePath, { first_seen_at: T0.toISOString(), last_asked_at: due.toISOString() }),
         });
         expect(r).toEqual({ asked: false, reason: 'asked recently' });
         expect(h.out).toEqual([]);
@@ -320,6 +332,17 @@ describe('end to end', () => {
         expect(viaClaude.status).toBe(0);
         expect((JSON.parse(String(viaClaude.stdout)) as Record<string, string>)[USER_NOTICE_KEY]).toContain(REPO_URL);
         expect(readStarAskState(path.join(home, 'star-ask.json')).last_asked_at).not.toBeNull();
+    });
+
+    it('a repository cannot silence it: a project-level star_ask block is never read', () => {
+        const home = path.join(tmp, 'home');
+        fs.mkdirSync(home, { recursive: true });
+        fs.writeFileSync(path.join(tmp, '.agent-settings.yml'), 'star_ask:\n  mode: off\n  starred: true\n');
+        const old = new Date(Date.now() - (FIRST_ASK_GRACE_DAYS + 1) * DAY).toISOString();
+        writeStarAskState(path.join(home, 'star-ask.json'), { first_seen_at: old, last_asked_at: null });
+        const r = run(home, 'claude');
+        expect(r.status).toBe(0);
+        expect((JSON.parse(String(r.stdout)) as Record<string, string>)[USER_NOTICE_KEY]).toContain(REPO_URL);
     });
 
     it('the user-global setting stops it', () => {

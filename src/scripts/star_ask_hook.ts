@@ -20,8 +20,8 @@
  * emission: if that write fails, nothing is emitted. A notice the host dropped
  * waits for the next interval rather than being repeated, because a cadence
  * gated on a delivery receipt asks every session whenever the receipt is lost.
- * The read-decide-write-emit step runs under an exclusive lock file, so two
- * simultaneous session starts cannot both ask.
+ * The ask is claimed exclusively for the state it follows (`claimPathFor`),
+ * so two simultaneous session starts cannot both ask.
  *
  * WHAT STOPS IT. `star_ask.starred: true`, `star_ask.mode: off`, a user-global
  * settings layer that exists but cannot be read (it may hold the opt-out),
@@ -32,7 +32,7 @@
  *
  * Fail-open for the session (exit 0 on every path), fail-closed for the ask.
  */
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -148,41 +148,30 @@ export interface StarAskDeps {
     readonly statePath: string;
     readonly now: Date;
     readonly notice: { write(text: string): void };
-    /** Test seam: runs after the first decision and before the lock is taken. */
-    readonly beforeLock?: () => void;
+    /** Test seam: runs after the first decision and before the claim is taken. */
+    readonly beforeClaim?: () => void;
 }
-
-/** A lock older than this was left by a session that died holding it. */
-export const LOCK_STALE_MS = 60_000;
 
 /**
- * Mutual exclusion across simultaneous session starts: `write_atomic` keeps the
- * file whole but does not stop two sessions from both reading "due" and both
- * asking. `wx` creation is the exclusive step; any other failure denies the ask.
+ * The one exclusive step. Each ask is claimed for the exact state it follows,
+ * by creating a file named for that state with `wx`. Sessions that read the
+ * same state compete for the same name and only one creation succeeds. A claim
+ * is never expired or deleted — expiry is what let a paused holder and its
+ * successor both ask — so at most one ask can follow any one state, however
+ * long a session sleeps. Twelve empty files a year is the cost.
  */
-function acquireLock(lockPath: string): 'acquired' | 'held' | 'unwritable' {
-    for (let attempt = 0; attempt < 2; attempt++) {
-        try {
-            fs.closeSync(fs.openSync(lockPath, 'wx', 0o600));
-            return 'acquired';
-        } catch (e) {
-            if ((e as NodeJS.ErrnoException).code !== 'EEXIST') return 'unwritable';
-            try {
-                if (Date.now() - fs.statSync(lockPath).mtimeMs <= LOCK_STALE_MS) return 'held';
-                fs.unlinkSync(lockPath);
-            } catch {
-                return 'held';
-            }
-        }
-    }
-    return 'held';
+export function claimPathFor(statePath: string, state: StarAskState): string {
+    const key = createHash('sha256').update(`${state.first_seen_at ?? ''}|${state.last_asked_at ?? 'never'}`).digest('hex');
+    return path.join(`${statePath}.claims`, key.slice(0, 16));
 }
 
-function releaseLock(lockPath: string): void {
+function claim(claimPath: string): 'won' | 'taken' | 'unwritable' {
     try {
-        fs.unlinkSync(lockPath);
-    } catch {
-        /* already gone; a leftover lock expires after LOCK_STALE_MS */
+        fs.mkdirSync(path.dirname(claimPath), { recursive: true, mode: 0o700 });
+        fs.closeSync(fs.openSync(claimPath, 'wx', 0o600));
+        return 'won';
+    } catch (e) {
+        return (e as NodeJS.ErrnoException).code === 'EEXIST' ? 'taken' : 'unwritable';
     }
 }
 
@@ -225,24 +214,21 @@ export function runStarAsk(deps: StarAskDeps): StarAskOutcome {
     const early = notDue(state, deps.now);
     if (early !== null) return { asked: false, reason: early };
 
-    deps.beforeLock?.();
-    const lockPath = `${deps.statePath}.lock`;
-    const lock = acquireLock(lockPath);
-    if (lock === 'held') return { asked: false, reason: 'another session is asking' };
-    if (lock === 'unwritable') return { asked: false, reason: 'state not writable' };
-    try {
-        const locked = readStarAskState(deps.statePath);
-        const late = notDue(locked, deps.now);
-        if (late !== null) return { asked: false, reason: late };
-        if (!writeStarAskState(deps.statePath, { first_seen_at: locked.first_seen_at, last_asked_at: nowIso })) {
-            return { asked: false, reason: 'state not writable' };
-        }
-        const text = starAskText();
-        deps.notice.write(JSON.stringify({ [USER_NOTICE_KEY]: text, [USER_NOTICE_ID_KEY]: randomUUID() }));
-        return { asked: true, text };
-    } finally {
-        releaseLock(lockPath);
+    deps.beforeClaim?.();
+    if (is_replay_mode()) return { asked: false, reason: 'state not writable' };
+    const won = claim(claimPathFor(deps.statePath, state));
+    if (won === 'taken') return { asked: false, reason: 'another session is asking' };
+    if (won === 'unwritable') return { asked: false, reason: 'state not writable' };
+    const current = readStarAskState(deps.statePath);
+    if (current.first_seen_at !== state.first_seen_at || current.last_asked_at !== state.last_asked_at) {
+        return { asked: false, reason: notDue(current, deps.now) ?? 'another session is asking' };
     }
+    if (!writeStarAskState(deps.statePath, { first_seen_at: state.first_seen_at, last_asked_at: nowIso })) {
+        return { asked: false, reason: 'state not writable' };
+    }
+    const text = starAskText();
+    deps.notice.write(JSON.stringify({ [USER_NOTICE_KEY]: text, [USER_NOTICE_ID_KEY]: randomUUID() }));
+    return { asked: true, text };
 }
 
 function envelopeField(raw: string, key: string): string | null {

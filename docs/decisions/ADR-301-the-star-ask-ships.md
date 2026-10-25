@@ -71,12 +71,14 @@ switch never silences an update notice.
 The first ask comes 7 days after the concern first runs on the machine; after
 that at most once per 30 days. An ask counts the moment it is emitted, and the
 state recording it is written before the emission; if that write fails, nothing
-is emitted. The read-decide-write-emit step holds an exclusive lock file, so
-two simultaneous session starts cannot both ask. A notice the host dropped
-waits for the next interval. (The first
+is emitted. Each ask is claimed exclusively for the exact state it follows —
+an empty file named for that state, created with `wx`, never expired or
+deleted — so sessions that read the same state cannot both ask, however long
+one of them pauses. A notice the host dropped waits for the next interval. (The first
 draft counted an ask only on the dispatcher's delivery receipt; the AI council
 refused that on 2026-10-25, 2/2, because a lost receipt or an unwritable state
-file then asked on every session.)
+file then asked on every session; later rounds refused an unreadable settings
+layer read as "no opt-out" and a lock whose expiry let a paused holder ask too.)
 
 ### D3 — Stop condition: the user's word, read locally
 
