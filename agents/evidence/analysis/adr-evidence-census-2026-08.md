@@ -29,9 +29,9 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 | `evidence.strength` | `E2` | 53 |
 | `evidence.strength` | `E3` | 25 |
 | `evidence.strength` | `E4` | 0 |
-| `provenance.kind` | `human` | 17 |
+| `provenance.kind` | `human` | 16 |
 | `provenance.kind` | `agentic` | 139 |
-| `provenance.kind` | `mixed` | 33 |
+| `provenance.kind` | `mixed` | 34 |
 | `provenance.kind` | `unknown` | 59 |
 | frontmatter | absent | 0 |
 
@@ -278,7 +278,7 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 | `docs/decisions/ADR-298-framework-neutral-graph-core.md` | `unknown` | `E1` — one dated local observation | `incomplete` | measurement @ ADR-298-framework-neutral-graph-core.md:61, ADR-298-framework-neutral-graph-core.md:79, ADR-298-framework-neutral-graph-core.md:80 | provenance: human · evidence: E1 |
 | `docs/decisions/ADR-299-a-graph-home-beside-the-project-graph.md` | `unknown` | `E1` — one dated local observation | `incomplete` | measurement @ ADR-299-a-graph-home-beside-the-project-graph.md:52 | provenance: mixed · evidence: E1 |
 | `docs/decisions/ADR-300-consumer-impact-binds-the-bump.md` | `mixed` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | council @ ADR-300-consumer-impact-binds-the-bump.md:39, ADR-300-consumer-impact-binds-the-bump.md:88, ADR-300-consumer-impact-binds-the-bump.md:100<br>measurement @ ADR-300-consumer-impact-binds-the-bump.md:50<br>owner @ ADR-300-consumer-impact-binds-the-bump.md:111, ADR-300-consumer-impact-binds-the-bump.md:112 | provenance: human · evidence: E1 |
-| `docs/decisions/ADR-301-the-star-ask-ships.md` | `human` | `E1` — one dated local observation | `incomplete` | owner @ ADR-301-the-star-ask-ships.md:9, ADR-301-the-star-ask-ships.md:17, ADR-301-the-star-ask-ships.md:112<br>measurement @ ADR-301-the-star-ask-ships.md:71, ADR-301-the-star-ask-ships.md:72 | provenance: human · evidence: E1 · authority_basis: owner_intent |
+| `docs/decisions/ADR-301-the-star-ask-ships.md` | `mixed` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | owner @ ADR-301-the-star-ask-ships.md:9, ADR-301-the-star-ask-ships.md:17, ADR-301-the-star-ask-ships.md:133<br>measurement @ ADR-301-the-star-ask-ships.md:71, ADR-301-the-star-ask-ships.md:72, ADR-301-the-star-ask-ships.md:78, ADR-301-the-star-ask-ships.md:104<br>council @ ADR-301-the-star-ask-ships.md:78 | provenance: human · evidence: E1 · authority_basis: owner_intent |
 | `docs/decisions/ADR-rule-kernel-and-router.md` | `unknown` | `E1` — one dated local observation | `incomplete` | measurement @ ADR-rule-kernel-and-router.md:55, ADR-rule-kernel-and-router.md:107, ADR-rule-kernel-and-router.md:112, ADR-rule-kernel-and-router.md:113, ADR-rule-kernel-and-router.md:117 | provenance: — · evidence: — |
 | `docs/adrs/cost/0001-hard-stop-hook.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: — · evidence: — |
 | `docs/adrs/memory/0001-consumer-side-snapshot.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: — · evidence: — |
