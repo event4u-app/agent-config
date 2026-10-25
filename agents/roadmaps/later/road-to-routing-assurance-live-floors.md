@@ -10,7 +10,7 @@ estate_offset_exempt: "Not a new plan. This is the live-harness SUFFIX of road-t
 ---
 # Road to routing assurance — the live-harness floors
 
-> **Arrivals:** 3 (at least) — latest `inbox-2026-10-i` (2026-10-11): an audit names the host's own skill evaluator (with/without delta, ablation) as the independent grader this file was parked for. The count before it read: 2 (at least) — latest `inbox-2026-09-l` (2026-09-05); earlier: agents/roadmaps/archive/road-to-routing-assurance.md.
+> **Arrivals:** 4 (at least) — latest `inbox-2026-10-an` (2026-10-25): two parallel plans both open with this file's question and recommend option (1); new inputs are listed under § Inputs for the protocol session. Not un-parked by that round: the active estate was at its five-roadmap cap. The count before it read: 3 (at least) — latest `inbox-2026-10-i` (2026-10-11): an audit names the host's own skill evaluator (with/without delta, ablation) as the independent grader this file was parked for. The count before it read: 2 (at least) — latest `inbox-2026-09-l` (2026-09-05); earlier: agents/roadmaps/archive/road-to-routing-assurance.md.
 
 > **The posed question — 3 arrivals, council-decidable per this file's own Authority paragraph.**
 > Does a scored run on the host's own skill evaluator, with the execution protocol
@@ -187,6 +187,25 @@ landed or rejected with a reason.
 
 **Exit:** floors restated as rates in the pre-registration, one canary cycle
 completed at the new measurement.
+
+## Inputs for the protocol session
+
+Offered by round `inbox-2026-10-an`, for the independent session that freezes
+the protocol to take or refuse. None is a step; none changes the un-park
+condition.
+
+- **A listing snapshot before each run.** The host drops the descriptions of
+  little-used skills when its listing overflows; a pilot skill whose
+  description is not in the listing is "not interpretable", not "did not fire".
+- **Two arms besides plugin on/off:** the `skill-route` hook on and off, to
+  read whether the pointer duplicates, helps or hurts native routing; and a
+  root built from the previous release, run at `task release` only.
+- **Two control fixtures:** a typo fix must pull no spec, council or security
+  skill; an authorisation change must pull `security-audit`.
+- **Four separate report axes** — selection, execution, outcome, efficiency —
+  with an infrastructure failure reported `UNKNOWN`, never green.
+- **The gate reading** of `road-to-a-measured-pointer-gate-and-true-records`
+  2.2 is the no-model baseline for the hook arm.
 
 ## Blockers
 
