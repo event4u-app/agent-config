@@ -195,6 +195,7 @@ Evidence (executed): `src/scripts/optimize_skill_description.ts:128`
 | D3 | reversible-technical | agent | A `revisit if` cell is evaluated only in the closed forms `test -f <path>` / `test -e <path>`; any other command is `unverifiable`, never executed | a roadmap's text is untrusted input to a script | a third safe form is asked for twice |
 | D4 | reversible-technical | agent | Council questions reuse the existing prompt mode; no new council mode | `src/scripts/ai_council/prompts.ts:185-195` mode table; nine modes already | a rendered question is rejected by the bundler size limit |
 | D5 | reversible-technical | agent | `uses:` and `waived:` are step lines like `verify:`, not frontmatter | the step is the unit the closure reads | a roadmap needs a skill plan above step level |
+| D6 | reversible-technical | agent | Closure scan of 2026-10-25: C1 and C3 (`destructive-owned`) match the word "merge" inside the slug `road-to-a-retro-the-merge-runs`; C2 is a pointer line in § What this roadmap does not do. No decision is open behind any of them | `./scripts-run src/scripts/closure_scan agents/roadmaps/road-to-a-plan-that-stays-true.md` | a step of this file starts a merge or names an acceptance criterion in prose |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-25 | reviewer: claude/host -->
