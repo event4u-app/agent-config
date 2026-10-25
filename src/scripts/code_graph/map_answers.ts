@@ -89,12 +89,16 @@ export interface MapPin {
     generation: string;
 }
 
+/** Absolute, so the part measures the tree and not its own percentile cut. */
+export const HOTSPOT_MIN_CHURN = 20;
+export const HOTSPOT_MIN_LOC = 500;
+
 export const HEALTH_FORMULA =
     'Score = sum of four parts, 25 points each, each part loses its points linearly up to a limit: ' +
     'dead = 25 × (1 − min(1, dead code files / scope files ÷ 0.20)); ' +
     'cycles = 25 × (1 − min(1, file cycles ÷ (2 % of scope files))); ' +
     'guesses = 25 × (1 − min(1, guessed edge share ÷ 0.30)); ' +
-    'hotspots = 25 × (1 − min(1, hotspot files / scope files ÷ 0.05)), a hotspot being a code file at or above the 90th percentile of both churn and lines. ' +
+    'hotspots = 25 × (1 − min(1, hotspot files / scope files ÷ 0.05)), a hotspot being a code file with at least ' + HOTSPOT_MIN_CHURN + ' commits in the git window and at least ' + HOTSPOT_MIN_LOC + ' lines. ' +
     'Grade A ≥ 80, B ≥ 60, C ≥ 40, D ≥ 20, else F — withheld while any part is missing.';
 
 export function blastLevel(share: number): BlastLevel {
@@ -396,11 +400,6 @@ export function layerOf(p: string, rules: LayerRules): string | undefined {
 }
 
 
-function percentile(sorted: number[], q: number): number {
-    if (!sorted.length) return 0;
-    return sorted[Math.min(sorted.length - 1, Math.floor(q * (sorted.length - 1)))] as number;
-}
-
 function part(value: number, limit: number): HealthPart {
     const points = Math.round(25 * (1 - Math.min(1, limit === 0 ? 1 : value / limit)) * 10) / 10;
     return { value: round3(value), weight: 25, points };
@@ -467,15 +466,8 @@ export function finishAnswers(m: MapModel, rules: LayerRules | null): void {
 
     const scopeN = Math.max(1, scope.length);
     const deadKnown = m.analyses.deadFiles !== undefined;
-    const churns = scope.map((i) => m.files[i]?.churn ?? 0).sort((a, b) => a - b);
-    const locs = scope.map((i) => m.files[i]?.loc ?? 0).sort((a, b) => a - b);
-    const p90c = percentile(churns, 0.9);
-    const p90l = percentile(locs, 0.9);
     const hotspotFiles = hasChurn
-        ? scope.filter((i) => {
-              const f = m.files[i];
-              return (f?.churn ?? 0) > 0 && (f?.churn ?? 0) >= p90c && (f?.loc ?? 0) >= p90l;
-          }).length
+        ? scope.filter((i) => (m.files[i]?.churn ?? 0) >= HOTSPOT_MIN_CHURN && (m.files[i]?.loc ?? 0) >= HOTSPOT_MIN_LOC).length
         : 0;
     const parts: MapHealth['parts'] = {
         cycles: part(m.analyses.cyclesTotal, 0.02 * scopeN),

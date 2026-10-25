@@ -248,6 +248,16 @@ describe('layers, violations, hotspots and health (Phase 2)', () => {
             0,
         );
         expect(m.health?.score).toBeCloseTo(sum, 5);
+        expect(m.health?.parts.hotspots?.value).toBe(0);
+    });
+
+    it('counts a hotspot by absolute churn and size, never by a percentile of the tree', () => {
+        const files = Array.from({ length: 20 }, (_, i) => file(`f${i}.ts`, 'code', { loc: 600, churn: i === 0 ? 25 : 1 }));
+        const m = model(files);
+        m.analyses.deadFiles = 0;
+        finishAnswers(m, null);
+        expect(m.health?.parts.hotspots?.value).toBe(0.05);
+        expect(m.health?.parts.hotspots?.points).toBe(0);
     });
 });
 
@@ -274,5 +284,20 @@ describe('the map writer answers on a real tree', () => {
         expect(m.pin).toMatchObject({ date: '2026-05-01' });
         expect(m.health?.formula).toBe(HEALTH_FORMULA);
         expect(JSON.stringify(doc)).not.toContain('@example.com');
+    });
+});
+
+describe('the Workbench page (Phase 4)', () => {
+    it('ships the frame the design names and none of the design\'s demo figures', async () => {
+        fs.mkdirSync(path.join(root, 'agents'));
+        write('src/a.ts', 'export const a = 1;\n');
+        const res = await buildMap(root);
+        const html = fs.readFileSync(path.join(res.outDir, 'index.html'), 'utf-8');
+        for (const id of ['health', 'kpis', 'colorby', 'explorer', 'lenses', 'crumbs', 'legend', 'lensview', 'foot', 'tabs', 'panel', 'dim2d', 'fullcard'])
+            expect(html).toContain(`id="${id}"`);
+        // The design was drawn with this repository's numbers at one pin; none may be baked in.
+        for (const demo of ['12.493', '74.515', 'session_register', 'Skript-Sammelbecken', 'd95b952d7142'])
+            expect(html).not.toContain(demo);
+        expect(html).not.toMatch(/fonts\.googleapis/);
     });
 });

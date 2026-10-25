@@ -143,32 +143,32 @@ The two drafted analyses were checked claim by claim against `e85417a02`:
 
 ## Phase 4 — The Workbench page
 
-- [ ] **4.1 Tokens and frame.** Port the design's dark and light token sets
+- [x] **4.1 Tokens and frame.** Port the design's dark and light token sets
       and its header, three-pane frame and rail sections into
       `map_viewer/viewer.{js,css}` (D8). One self-contained offline
       `index.html`, no web fonts fetched at runtime (system fallback stack
       named in the CSS).
       verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
-- [ ] **4.2 Left rail.** Health ring and parts, KPI tiles, role bar,
+- [x] **4.2 Left rail.** Health ring and parts, KPI tiles, role bar,
       confidence bar, colour-by group (Blast, Area, Test share, Role, Folder,
       Layer, Churn, Complexity — an option is disabled with the design's hint
       exactly when its field is absent) and the explorer with scope chip.
       verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
-- [ ] **4.3 Graph lens, 2D and orb.** The design's area overview and in-area
+- [x] **4.3 Graph lens, 2D and orb.** The design's area overview and in-area
       file view, blast colouring by depth, the 2D / 3D-orb switch, zoom and
       fit, legend as a DOM element that follows the colour-by choice.
       verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
-- [ ] **4.4 Layers, Matrix, Knowledge, Treemap lenses.** Depth rings from the
+- [x] **4.4 Layers, Matrix, Knowledge, Treemap lenses.** Depth rings from the
       selection; the area DSM with the selection's row and column and cycle
       blocks from `violations[]`; the knowledge columns from 3.1; the treemap
       weighted by `loc`. Flow stays disabled with the design's hint.
       verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
-- [ ] **4.5 Right rail.** File head, blast panel (numbers, depth list,
+- [x] **4.5 Right rail.** File head, blast panel (numbers, depth list,
       formula line), connections with relation and trust, symbols with call
       counts, knowledge list, ownership and churn, findings (cycles,
       surprises, drift, layer breaches, hotspots, dead files).
       verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
-- [ ] **4.6 Render check and fidelity matrix.** `map_verify` passes at its
+- [x] **4.6 Render check and fidelity matrix.** `map_verify` passes at its
       three widths in both themes; a committed fidelity matrix under
       `agents/evidence/reviews/` names, per design zone, what was compared and
       every deviation with its reason.
