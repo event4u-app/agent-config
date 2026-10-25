@@ -230,6 +230,13 @@ run tests**.
   recovery. Named as chapters, never quoted as values: a number copied out of
   a standard goes stale silently where a pointer does not.
   [pages.nist.gov/800-63-3/sp800-63b.html](https://pages.nist.gov/800-63-3/sp800-63b.html)
+- **OWASP ASVS v5.0.0 V5 File Handling** and the **OWASP File Upload Cheat
+  Sheet** — the authority the `file-upload` rows defer to for validation,
+  storage, the processor and the serving origin. 5.0.0 reuses the number V5 for
+  this new chapter; the 2026-09-27 re-derivation mapped the old V5 forward and
+  missed the new one, which is why the upload rows arrived later than the rest.
+  Named as chapters, never quoted as values.
+  [cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html)
 - **OWASP Top 10 2021** — A01 Broken Access Control, A04 Insecure Design,
   A05 Security Misconfiguration — cross-reference when naming abuse cases.
   [owasp.org/Top10/](https://owasp.org/Top10/)

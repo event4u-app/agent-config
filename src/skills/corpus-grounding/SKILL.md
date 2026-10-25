@@ -182,6 +182,10 @@ Each domain ships `data/manifest.json` beside its CSVs — declaring its
   named in the evidence gap as dropped, so a description spanning two
   categories never reports `none`. The manifest sets it because only the
   corpus knows which score separates a second real match from a shared word.
+- `category_floor` (optional object in `reasoning`, domain → class column):
+  when the grounded category has no row among a planned domain's results, that
+  class's best row takes the last slot and the evidence gap says so — a
+  correctly grounded surface never ships with only another class's threats.
 - Decision rules are surfaced as `matched` **and** `unmatched` — the full
   rule space stays auditable, never a hidden gate.
 
