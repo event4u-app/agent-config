@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-n carries the owner's directive of 2026-10-12 — remove the lean settings and make loading default and dynamic, but only if the package gets no worse and stays as reliable as today. road-to-an-installed-layer-that-is-thinned plans the opposite form (its step 3.1 keeps the rollback as one setting) and is blocked on an instrument no scheduled file owns; folding six phases into it would turn a three-phase opt-in file into the largest active roadmap and bury its own owner answer. Archiving or parking it is wrong because its opt-in phases stay valid; this file replaces only its 3.1 form."
-estate_growth_exempt: "+1 concern_count on 2026-10-24 for step 3.3: `layer-promote` is the concern the step exists to bind — the claude-only session_start carrier of promote-after-proof, shipped with promotion switched off and ratified 2/2 (agents/evidence/ratifications/layer-promote-binding-20261024.md); the same change resolves two blockers (`project-tree-form-source-needs-a-full-quorum`, `surface-snapshot-waits-on-the-release-cut`). Earlier entry: +1 concern_count on 2026-10-23 for step 1.1: `instructions-observer` is the concern the step exists to bind — the observe-only capture that feeds the arrival record 3.1 reads; it is one concern on one event on one host, and the same change closes blocker `instructions-loaded-binding-needs-a-ratification-quorum` (-1 open_blockers). Earlier entry: +3 open_blockers on 2026-10-20, each registering a stop the Phase 4 drain lane MET rather than one it introduced: `instructions-loaded-binding-needs-a-ratification-quorum` (the byte half of 1.1's stop is gone — the lane freed 1,148 B — and what remains is a two-provider ratification the `anthropic` seat could not supply that day), `project-tree-form-source-needs-a-full-quorum` (one seat of two answered 3.6), and `projection-mode-removal-waits-on-second-host-reach` (ADR-289 point 3, falsified in the skills roadmap the same week). Each closes no box, changes no behaviour, and names the venue that resolves it; between them they close out eight steps' worth of re-derivation for the next lane. The original entry read: +1 open_blockers for `instruction-load-observer-has-no-scheduled-owner`, the question this round raised for the seventh time — resolved 2026-10-15 by owner answer (a)."
+estate_growth_exempt: "+1 open_blockers on 2026-10-25 for `phase5-run-waits-on-an-observed-effect-row`: it registers a stop that already existed in prose — the frozen Phase 5 pre-registration states 5.2 cannot run until the first host's effect row reads `observed-true` — so steps 5.2 and 5.3 name their hold instead of reading as forgotten; the same change closes step 4.10 and AC-1 and resolves nothing else. Earlier entry: +1 concern_count on 2026-10-24 for step 3.3: `layer-promote` is the concern the step exists to bind — the claude-only session_start carrier of promote-after-proof, shipped with promotion switched off and ratified 2/2 (agents/evidence/ratifications/layer-promote-binding-20261024.md); the same change resolves two blockers (`project-tree-form-source-needs-a-full-quorum`, `surface-snapshot-waits-on-the-release-cut`). Earlier entry: +1 concern_count on 2026-10-23 for step 1.1: `instructions-observer` is the concern the step exists to bind — the observe-only capture that feeds the arrival record 3.1 reads; it is one concern on one event on one host, and the same change closes blocker `instructions-loaded-binding-needs-a-ratification-quorum` (-1 open_blockers). Earlier entry: +3 open_blockers on 2026-10-20, each registering a stop the Phase 4 drain lane MET rather than one it introduced: `instructions-loaded-binding-needs-a-ratification-quorum` (the byte half of 1.1's stop is gone — the lane freed 1,148 B — and what remains is a two-provider ratification the `anthropic` seat could not supply that day), `project-tree-form-source-needs-a-full-quorum` (one seat of two answered 3.6), and `projection-mode-removal-waits-on-second-host-reach` (ADR-289 point 3, falsified in the skills roadmap the same week). Each closes no box, changes no behaviour, and names the venue that resolves it; between them they close out eight steps' worth of re-derivation for the next lane. The original entry read: +1 open_blockers for `instruction-load-observer-has-no-scheduled-owner`, the question this round raised for the seventh time — resolved 2026-10-15 by owner answer (a)."
 relates:
   - slug: road-to-a-hook-carrier-that-is-never-silent
     relation: extends
@@ -324,7 +324,7 @@ with that file.
   verify: mixed-version fixture — removal release, then the previous release —
   lands on `eager-all` / `legacy-all`.
   Landed 2026-10-20: `tests/scripts/projection_key_downgrade.test.ts`. There is no second checkout in the fixture and there does not need to be — the previous release's readers ARE `normalizeLeanProjectionMode` and `projectionModeOf`, and ADR-293 left both untouched precisely so this direction keeps working. So the fixture takes the settings file the REMOVAL release actually writes (through `sparseSettingsValues` / `renderSparseSettings`, not a hand-made stand-in), asserts it carries no projection key for an older reader to find, and feeds it to those readers: `eager-all` and `legacy-all`. The matrix covers every value a prior release could have written, the retired `tiered` included — which maps onto the full surface rather than pruning on a split this reader no longer computes. Sensitivity shown by making the normaliser map `''` onto `delivery`: two of the four cases went red, and the two that did not are the ones that assert on the written file rather than on the reader.
-- [ ] **4.10 Record what ADR-293 did to ADR-284.** ADR-284 (installer honours
+- [x] **4.10 Record what ADR-293 did to ADR-284.** ADR-284 (installer honours
   the host axis on an explicit opt-in) acts on `lean_projection.hosts` and
   `mode: delivery`, both removed by ADR-293, yet reads `accepted` with
   `superseded_by: —`, and ADR-293's `supersedes` names only ADR-267 and ADR-278.
@@ -333,6 +333,7 @@ with that file.
   form. Arrived from an external review; not decided here because both records
   carry owner and council provenance.
   verify: running `./scripts-run src/scripts/adr_cite_check ADR-284` names ADR-293 as its successor, or ADR-284 carries a dated note naming the limb that still binds.
+  Landed 2026-10-25, both halves (D15): ADR-293 gains a scoped `supersedes: ADR-284` and an Amendment 1 that reads each ADR-284 limb against the tree — decisions 2, 3, 4 and 6 and the installer-writes-stubs half of decision 1 are superseded (`installerThinsHost` is a constant `false`; the only writer of a thinned layer is 3.3's promotion); decision 5 and the host-outside-the-axis-is-eager-all half of decision 1 still bind. ADR-284 carries `superseded_by: ADR-293` (the bare form ADR-228 uses for the same partial case, because `check_adr_frontmatter` warns that a parenthetical reads as total) and a dated status note naming the limbs that still bind; it stays `accepted`. `./scripts-run src/scripts/adr_cite_check ADR-284` -> `superseded in scope by ADR-293` and `PARTLY SUPERSEDED IN SCOPE by ADR-293`; `check_adr_frontmatter` -> no errors; `docs/decisions/INDEX.md` regenerated.
 
 ## Phase 5 — Prove "not worse" once, then enable
 
@@ -360,12 +361,28 @@ with that file.
   Landed 2026-10-24: `agents/evidence/analysis/setup-phase5-preregistration.md`, frozen at `fd44cd7ff7`, sha-256 `7edbb97e5a164255bcc291840086ec642fc1db6ac80fa098b884974abda75453`, council 2/2 `freeze` (D13).
 - [ ] **5.2 Run under the existing spend and independence rules.**
   verify: the result carries the claims gate's honesty label.
+  Open 2026-10-25, held by blocker `phase5-run-waits-on-an-observed-effect-row`: the frozen pre-registration states the run cannot start until the first host's row in `src/config/host-injection-effect.json` reads `observed-true`, and row `claude` still reads `unobserved`. No machine can produce a `thinned` decision, so the computed arm cannot be built; a run now would report every host as "no computed arm", which is a non-result, not a non-inferior one.
 - [ ] **5.3 Enable on the record.** 3.3's promotion is enabled for consumers only
   on a non-inferior 5.2; otherwise every machine stays full. Phase 4 ships either
   way: full is today's behaviour, now without its keys.
   verify: the enabling commit cites 5.2's result file.
+  Open 2026-10-25, held by the same blocker through 5.2: nothing to enable on until 5.2 has a result file. Every machine stays full meanwhile, which is the state Phase 4 shipped.
 
 ## Blockers
+
+### blocker: phase5-run-waits-on-an-observed-effect-row
+
+<!-- asked: 2026-10-25 | record: agents/evidence/analysis/setup-phase5-preregistration.md -->
+
+- **Status:** open — raised 2026-10-25 by the process-full run that closed 4.10; it records a stop that already existed in the frozen pre-registration, so the next run does not re-derive it.
+- **Class:** 1 — no decision is owed; the condition is an observation another file produces.
+- **Owner:** `road-to-delivery-on-hook-hosts` (parked in `agents/roadmaps/later/`, `review_by: 2026-12-08`), which owns the effect verdicts.
+- **Run:** `grep -A1 '"claude"' src/config/host-injection-effect.json` — the blocker clears when `state` reads `observed-true`.
+- **Blocks:** steps 5.2 and 5.3, and through them AC-3 and AC-4. Nothing else in this file.
+- **What to do:** nothing in this file until the effect row moves. Check it with `grep -A1 '"claude"' src/config/host-injection-effect.json`; when `state` reads `observed-true`, (1) confirm `./scripts-run src/scripts/arrival_report` shows a session on the current host version, (2) run 5.2 exactly as `agents/evidence/analysis/setup-phase5-preregistration.md` freezes it (hash in step 5.1), (3) then 5.3 on its result.
+- **Resolved when:** row `claude` of `src/config/host-injection-effect.json` reads `observed-true` and `agent-config doctor --check layer-form` prints a decision other than `delivery-unobserved` for that host.
+- **Recommendation:** leave it. The council found the measurement confounded in this environment (`road-to-delivery-on-hook-hosts`, 2026-09-11); forcing an `observed-true` would void the pre-registration's premise.
+- **If you do nothing:** every machine stays on the full layer, which is today's behaviour and a valid end state for this file (Goal, last sentence); 5.2, 5.3, AC-3 and AC-4 stay open naming this entry.
 
 ### blocker: surface-snapshot-waits-on-the-release-cut
 
@@ -449,6 +466,7 @@ with that file.
 | D11 | reversible-technical | council:agents/evidence/council/setup-project-tree-form-source-20261024.md | The project tree keeps `project-tree-form.json` as its source, with `projectTreeForm()` on the live path, verdict provenance carried as `scope: 'project-tree'` rather than read from a reason string, and `AGENT_CONFIG_PROJECT_TREE_FORM=full` as the rollback | AI council 2026-10-24, anthropic + openai, design mode, two rounds, 2/2 for (c), $0.00; supersedes the one-seat reading of 2026-10-20 | a project-tree observer exists and contradicts ADR-267, or parity, reachability or near-miss results regress |
 | D12 | reversible-technical | agent | 3.3's promotion is gated by a shipped switch (`layer-form-promotion.json`, off) that 5.3 flips, not by the absence of evidence alone; demotion is never gated; the ownership ledger is re-recorded on every rewrite | 5.3 enables promotion "on the record", which a decision function that could already return `thinned` on a fresh observed row would pre-empt; an un-re-recorded rewrite reads as a user edit to the next install (`decideDeployWrite`) | 5.3 lands, or the installer gains its own recognition of package-written stubs |
 | D13 | contested-technical | council:agents/evidence/council/setup-prereg-review-20261024.md | 5.1's primary reads the three present corpus sources; D2's 1 % candidate margin is replaced by zero tolerance on every source, because 239 non-critical matrix positives cannot power it (zero regressions bound at 1.25 %) — D2's own revisit condition | Council 2/2 twice on 2026-10-24: the endpoint (`setup-prereg-primary-endpoint-20261024.md`) and three review rounds, frozen 2/2 in round 3; stricter than D2, no computed-arm data seen | a host-graded case set is committed, or the frozen corpus or scorer changes |
+| D15 | reversible-technical | agent | 4.10 → ADR-293 names ADR-284 as a scoped predecessor (Amendment 1); ADR-284 keeps `accepted` with decision 5 and the eager-all half of decision 1 still binding | The supersession already held in code (`installerThinsHost` constant `false`, 3.3 the only thinning writer); recording a fact changes no behaviour, default or floor, so neither record's provenance makes it owner-reserved (decision-revisit-gate: historical decision-maker does not set the venue) | a reader shows an ADR-284 limb named superseded still governs live code |
 | D14 | product-owned | owner | AC-1's remaining key `projection.rule_packs` is retired by step 4.9 under the council's conditions, in the next major | owner answer "1" of 2026-10-24 (`agents/evidence/owner-directives/2026-10-24-rule-packs-retirement.md`) to the question the council routed (`agents/evidence/council/setup-rule-packs-key-20261024.md`, 2/2, owner-reserved) | the eight-rule audit finds a rule that applies regardless of its pack |
 
 ## Risk Register
@@ -464,7 +482,7 @@ with that file.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No projection key in template, schema, wizard or docs except
+- [x] AC-1 — No projection key in template, schema, wizard or docs except
   `projection.mode` pending the skills completeness question; each removal has a
   tombstone; `doctor` names leftovers.
   Open 2026-10-20, with the tombstone half MET: `lean_projection.mode`,
@@ -480,6 +498,7 @@ with that file.
   retiring it is a different question from deriving a fixed list, and it needs
   its own step rather than being folded into one that did not ask about it.
   Decided 2026-10-24 by the owner (D14, answer "1"): step 4.9 retires it, under the council's conditions (`agents/evidence/council/setup-rule-packs-key-20261024.md`).
+  Met 2026-10-25: 4.7 and 4.9 removed the last two keys; `grep -n "projection\." src/config/agent-settings.template.yml src/server/schemas/settings.ts` finds no key; all five carry a `REMOVED_KEYS` entry; `agent-config doctor` in a scratch project setting `lean_projection.mode`, `projection.mode` and `projection.rule_packs` prints one `… was removed (…); ignored.` line per key, plus the `rule-packs-legacy` diff.
 - [x] AC-2 — 3.1 returns `full` whenever any of its conditions fails, and for
   every consequence-class and safety-floor rule under every input.
 - [ ] AC-3 — 5.2 reads non-inferior under D2, or consumers stay full and the
@@ -490,3 +509,4 @@ with that file.
   `[claude-code]`. Left open because the criterion is about EVERY step and four
   are not taken — a tick here would claim a reading for steps nobody has run.
   Re-run 2026-10-24 after 3.6 (`d20610310c`) and after 3.3 (`ff276c482a`): `./scripts-run src/scripts/check_host_tree_parity` -> 0 both times, same reading. Still open for the steps not taken: 4.6c, 4.7 and Phase 5.
+  Re-run 2026-10-25 at `ac73481341`, after 4.6c, 4.7, 4.9 and 4.10 landed: -> 0, same reading. Open only for 5.2 and 5.3, held by blocker `phase5-run-waits-on-an-observed-effect-row`.
