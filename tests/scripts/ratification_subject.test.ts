@@ -17,10 +17,11 @@ import {
     classifyPaths,
     expectedSubjectFor,
 } from '../../src/scripts/check_kernel_edit_ratified.js';
-import { commitAll } from './ratification_git_fixture.js';
+import { commitAll, writeEmptyConsequenceClass } from './ratification_git_fixture.js';
 
 function tmpTree(files: Readonly<Record<string, string>>): string {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'subj-'));
+    writeEmptyConsequenceClass(root); // the gate refuses a commit without the class list
     for (const [rel, body] of Object.entries(files)) {
         const abs = path.join(root, rel);
         fs.mkdirSync(path.dirname(abs), { recursive: true });

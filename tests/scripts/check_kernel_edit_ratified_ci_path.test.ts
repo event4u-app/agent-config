@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { parse as parseYaml } from 'yaml';
 
 import { main as gateMain } from '../../src/scripts/check_kernel_edit_ratified.js';
-import { commitAll } from './ratification_git_fixture.js';
+import { commitAll, writeEmptyConsequenceClass } from './ratification_git_fixture.js';
 
 /**
  * Step 2.8 — the authoritative CI path lists a gated file renamed away.
@@ -32,6 +32,7 @@ let root: string;
 
 beforeEach(() => {
     root = fs.mkdtempSync(path.join(os.tmpdir(), 'ci-path-'));
+    writeEmptyConsequenceClass(root); // the gate refuses a commit without the class list
 });
 
 afterEach(() => {

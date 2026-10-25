@@ -6,7 +6,7 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { parse as parseYaml } from 'yaml';
 
-import { commitAll } from './ratification_git_fixture.js';
+import { commitAll, writeEmptyConsequenceClass } from './ratification_git_fixture.js';
 
 /**
  * Step 2.9 — the two CI steps that list changed files see both sides of a
@@ -77,6 +77,7 @@ let root: string;
 
 beforeEach(() => {
     root = fs.mkdtempSync(path.join(os.tmpdir(), 'ci-rename-'));
+    writeEmptyConsequenceClass(root); // the gate refuses a commit without the class list
 });
 
 afterEach(() => {
