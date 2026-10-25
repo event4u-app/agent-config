@@ -76,29 +76,70 @@ describe('the area limit is independent of 2D / 3D', () => {
         expect(areaCount).toBeGreaterThan(15);
     });
 
-    it('by default both views show every area', async () => {
+    it('by default both views show the same top fifteen areas', async () => {
         const page = await open();
-        const flat = await shown(page);
-        await page.click('#dim');
-        const orb = await shown(page);
-        expect(flat).toHaveLength(areaCount);
-        expect(orb).toEqual(flat);
-        await page.close();
-    });
-
-    it('"Top 15" limits both views to the same fifteen areas', async () => {
-        const page = await open();
-        await page.click('#lim-top');
+        expect(await page.locator('#lim').getAttribute('data-value')).toBe('15');
+        expect(await page.locator('#lim').textContent()).toMatch(/Top 15/);
         const flat = await shown(page);
         await page.click('#dim');
         const orb = await shown(page);
         expect(flat).toHaveLength(15);
         expect(orb).toEqual(flat);
-        await page.click('#lim-all');
-        expect(await shown(page)).toHaveLength(areaCount);
+        await page.close();
+    });
+
+    it('the area limit is a choice of 15, 30, 50, 100 or all, applied to both views', async () => {
+        const page = await open();
+        await page.click('#lim');
+        const options = await page.locator('#limlist [role="option"]').evaluateAll((os) => os.map((o) => o.getAttribute('data-value')));
+        expect(options).toEqual(['15', '30', '50', '100', 'all']);
+        await page.click('#limlist [data-value="all"]');
+        expect(await page.locator('#limlist').isVisible()).toBe(false);
+        const flat = await shown(page);
+        await page.click('#dim');
+        expect(flat).toHaveLength(areaCount);
+        expect(await shown(page)).toEqual(flat);
+        // 30 on a map with fewer areas shows them all; the limit never invents areas.
+        await pickLimit(page, '30');
+        expect(await shown(page)).toHaveLength(Math.min(30, areaCount));
+        await pickLimit(page, '15');
+        expect(await shown(page)).toHaveLength(15);
+        await page.close();
+    });
+
+    it('the area-limit dropdown works from the keyboard and closes on Escape and outside clicks', async () => {
+        const page = await open();
+        await page.focus('#lim');
+        await page.keyboard.press('Enter');
+        expect(await page.locator('#lim').getAttribute('aria-expanded')).toBe('true');
+        await page.keyboard.press('ArrowDown');
+        await page.keyboard.press('Enter');
+        expect(await page.locator('#lim').getAttribute('data-value')).toBe('30');
+        expect(await page.locator('#limlist').isVisible()).toBe(false);
+        await page.click('#lim');
+        await page.keyboard.press('Escape');
+        expect(await page.locator('#limlist').isVisible()).toBe(false);
+        await page.click('#lim');
+        await page.mouse.click(5, 5);
+        expect(await page.locator('#limlist').isVisible()).toBe(false);
+        await page.close();
+    });
+
+    it('the active 2D/3D button looks like the active view tab, not a solid brand fill', async () => {
+        const page = await open();
+        const look = (sel: string): Promise<string[]> => page.locator(sel).evaluate((e) => { const c = getComputedStyle(e); return [c.backgroundColor, c.boxShadow, c.color]; });
+        const tab = await look('#lenses [aria-selected="true"]');
+        expect(await look('#dim2d')).toEqual(tab);
+        await page.click('#dim');
+        expect(await look('#dim')).toEqual(tab);
         await page.close();
     });
 });
+
+async function pickLimit(page: Page, v: string): Promise<void> {
+    await page.click('#lim');
+    await page.click(`#limlist [data-value="${v}"]`);
+}
 
 describe('click marks, double click opens', () => {
     it('one click on an area marks it and stays in the overview', async () => {
@@ -185,7 +226,7 @@ describe('every lens has a way back to where it started', () => {
 describe('the brand mark', () => {
     it('is the AC mark drawn as inline vectors; the page loads no image at all', async () => {
         const text = fs.readFileSync(html, 'utf-8');
-        expect(text).toMatch(/<svg class="logo" width="40" height="40" viewBox="0 0 96 96" role="img" aria-label="AC">/);
+        expect(text).toMatch(/<svg class="logo" width="40" height="40" viewBox="0 0 172 172" role="img" aria-label="AC">/);
         expect(text).not.toMatch(/<img\b/);
         expect(text).toMatch(/img-src 'none'/);
         const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });

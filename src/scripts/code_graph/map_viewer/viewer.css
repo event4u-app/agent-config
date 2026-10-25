@@ -149,7 +149,8 @@ body { height: 100vh; height: 100dvh; }
 .rail { overflow-y: auto; }
 .pane-head { display: flex; justify-content: flex-end; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--line); flex: none; }
 .pane-head button, .pane-open { height: 30px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--soft); font-size: 12px; font-weight: 600; }
-.pane-head .pane-pin[aria-pressed='true'] { background: var(--brandTint); border-color: var(--brandLine); color: var(--text); }
+/* "Unpin" is an action, not a state: it stays neutral, never the brand fill of a pressed control. */
+.pane-head .pane-pin[aria-pressed='true'] { background: transparent; border-color: var(--line); color: var(--soft); }
 .pane-close { width: 30px; padding: 0; font-size: 16px; }
 .wb.pin-left #open-left, .wb.pin-right #open-right { display: none; }
 .wb.pin-left #close-left, .wb.pin-right #close-right { display: none; }
@@ -172,9 +173,19 @@ body.full .top, body.full .crumbs, body.full .legend, body.full .foot { display:
 .overlay { position: absolute; left: 12px; top: 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; z-index: 2; }
 .seg { display: flex; gap: 2px; padding: 3px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); }
 .seg button { height: 30px; padding: 0 12px; border-radius: 6px; border: 0; font-size: 12px; font-weight: 600; background: transparent; color: var(--soft); }
-.seg button[aria-checked='true'], .seg button[aria-pressed='true'] { background: var(--brand); color: var(--onColor); }
+/* Same active look as the view tabs above, so one state reads one way. */
+.seg button[aria-checked='true'], .seg button[aria-pressed='true'] { background: var(--brandTint); box-shadow: inset 0 0 0 1px var(--brandLine); color: var(--text); }
 .seg .z { width: 32px; padding: 0; font-size: 16px; font-weight: 400; color: var(--text); }
 .seg .fit { font-weight: 400; color: var(--text); }
+.dd { position: relative; }
+.seg .lim { display: inline-flex; align-items: center; gap: 10px; padding: 0 10px 0 12px; color: var(--text); }
+.seg .lim:hover, .seg .lim[aria-expanded='true'] { background: var(--raise); }
+.chev { width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid var(--muted); transition: transform 0.15s; }
+.lim[aria-expanded='true'] .chev { transform: rotate(180deg); }
+.ddlist { position: absolute; top: calc(100% + 6px); left: 0; z-index: 20; min-width: 100%; margin: 0; padding: 4px; list-style: none; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35); }
+.ddlist [role='option'] { display: flex; align-items: center; height: 30px; padding: 0 12px; border-radius: 6px; font-size: 12px; font-weight: 500; white-space: nowrap; color: var(--soft); cursor: pointer; outline: none; }
+.ddlist [role='option']:hover, .ddlist [role='option']:focus-visible, .ddlist [role='option']:focus { background: var(--raise); color: var(--text); }
+.ddlist [role='option'][aria-selected='true'] { font-weight: 600; background: var(--brandTint); box-shadow: inset 0 0 0 1px var(--brandLine); color: var(--text); }
 .backbtn { height: 36px; padding: 0 12px; border-radius: 9px; border: 1px solid var(--brandLine); background: var(--brandTint); color: var(--text); font-size: 12px; font-weight: 600; }
 .hintbar { position: absolute; left: 12px; bottom: 12px; display: flex; flex-wrap: wrap; gap: 6px; font-size: 11px; color: var(--muted); font-family: var(--monof); z-index: 2; pointer-events: none; }
 .hintbar span { padding: 4px 8px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line); }
@@ -319,3 +330,8 @@ body.full .top, body.full .crumbs, body.full .legend, body.full .foot { display:
 
 #graphwrap { display: flex; flex-direction: column; gap: 10px; }
 #lensview { display: flex; flex-direction: column; gap: 14px; }
+/* A control without data: visible, dashed, labelled — never hidden. */
+.nodata { border-style: dashed !important; opacity: 0.75; }
+.nodata-tag { margin-left: 6px; padding: 0 5px; border-radius: 4px; border: 1px dashed currentColor; font-size: 10px; font-weight: 600; letter-spacing: 0.02em; opacity: 0.85; white-space: nowrap; }
+.opt.nodata { white-space: normal; height: auto; min-height: 34px; padding-top: 4px; padding-bottom: 4px; line-height: 1.25; }
+.opt.nodata .nodata-tag { display: inline-block; margin-left: 4px; margin-top: 2px; }

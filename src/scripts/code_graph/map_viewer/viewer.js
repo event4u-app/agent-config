@@ -38,11 +38,11 @@
             cBlast: 'Blast', cArea: 'Area', cTests: 'Test share', cRole: 'Role', cFolder: 'Folder', cLayer: 'Layer', cChurn: 'Churn', cComplexity: 'Complexity',
             hBlast: 'How far the selection reaches', hArea: 'Louvain community', hTests: 'testShare per area', hRole: 'code / test / doc …', hFolder: 'folder of each file',
             lGraph: 'Graph', lLayers: 'Layers', lMatrix: 'Matrix', lKnowledge: 'Knowledge', lTreemap: 'Treemap', lFlow: 'Flow',
-            hLayers: 'Depth rings from the selection', hMatrix: 'DSM', hKnowledge: 'Knowledge sources of the selection', hTreemap: 'Area = lines per folder', hTreemapMissing: 'needs loc per file', hFlow: 'Request paths – next design',
+            hLayers: 'Depth rings from the selection', hMatrix: 'DSM', hKnowledge: 'Knowledge sources of the selection', hTreemap: 'Area = lines per folder', hTreemapMissing: 'needs line counts per file', hFlow: 'the request-path view is not built yet; the paths themselves are listed per file in the detail panel',
             edges: 'Edges:', fTests: 'Tests', fInfra: 'Infra hubs', full: 'Full screen', fullOff: 'Exit full screen',
-            lgPick: 'Mark a file to see what a change to it reaches', moreFiles: function (n) { return '+ ' + n + ' more'; }, offGraph: function (f, r) { return f + ' is not on the graph (' + r + '): areas hold code, tests and views'; }, noEffectOverview: 'Acts on file edges: open an area to use it', sAllShort: '+ Docs', navBack: '← Back', openLeft: '☰ Repository', openRight: 'Details ☰', pin: 'Pin', unpin: 'Unpin', closePane: 'Close', repo: 'Repo', overview: 'Overview', areasOf: function (a, b) { return 'Areas (' + a + ' of ' + b + ')'; }, allAreas: '← All areas',
+            lgPick: 'Mark a file to see what a change to it reaches', moreFiles: function (n) { return '+ ' + n + ' more'; }, offGraph: function (f, r) { return f + ' is not on the graph (' + r + '): areas hold code, tests and views'; }, noEffectOverview: 'Acts on file edges: open an area to use it', sAllShort: '+ Docs', noDataShort: 'no data', noViewShort: 'no view yet', noDataUnknown: 'the source is unknown', noDataTitle: function (r) { return 'No data yet: ' + r + '. It switches on by itself once the data exists.'; }, navBack: '← Back', openLeft: '☰ Repository', openRight: 'Details ☰', pin: 'Pin', unpin: 'Unpin', closePane: 'Close', repo: 'Repo', overview: 'Overview', areasOf: function (a, b) { return 'Areas (' + a + ' of ' + b + ')'; }, allAreas: '← All areas',
             hint2d: 'Drag: move · Wheel: zoom · Click: mark · Double-click: open', hint3d: 'Drag: turn · Shift+drag: move · Wheel: zoom · Click: mark · Double-click: open',
-            zoomIn: 'Zoom in', zoomOut: 'Zoom out', fit: 'Fit', limTop: 'Top 15', limAll: 'All areas', d2: '2D', d3: '3D Orb', dimHint: 'Show the map as an orb. Drag to turn it, Shift+drag to move it, arrow keys turn it too.',
+            zoomIn: 'Zoom in', zoomOut: 'Zoom out', fit: 'Fit', limTop: function (n) { return 'Top ' + n; }, limAll: 'All areas', limLabel: 'Areas shown', d2: '2D', d3: '3D Orb', dimHint: 'Show the map as an orb. Drag to turn it, Shift+drag to move it, arrow keys turn it too. The position on the sphere carries no data: it wraps the 2D layout.',
             showPanels: 'Show panels again', direct: 'direct', transitive: 'transitive', transitive3: 'transitive ≤ 3', score: 'Score',
             legend: 'Legend', sizeOverview: 'Name = hub file of the area · Size = files per area · Line = edges between areas',
             sizeArea: 'Size = incoming edges · Line = edge, orange = points at the selection',
@@ -98,11 +98,11 @@
             cBlast: 'Blast', cArea: 'Area', cTests: 'Test-Anteil', cRole: 'Rolle', cFolder: 'Ordner', cLayer: 'Layer', cChurn: 'Churn', cComplexity: 'Komplexität',
             hBlast: 'Betroffenheit der Auswahl', hArea: 'Louvain-Community', hTests: 'testShare je Area', hRole: 'code / test / doc …', hFolder: 'Ordner jeder Datei',
             lGraph: 'Graph', lLayers: 'Layers', lMatrix: 'Matrix', lKnowledge: 'Knowledge', lTreemap: 'Treemap', lFlow: 'Flow',
-            hLayers: 'Tiefenringe ab Auswahl', hMatrix: 'DSM', hKnowledge: 'Wissensquellen zur Auswahl', hTreemap: 'Fläche = Zeilen je Ordner', hTreemapMissing: 'braucht loc je Datei', hFlow: 'Request-Pfade – nächster Entwurf',
+            hLayers: 'Tiefenringe ab Auswahl', hMatrix: 'DSM', hKnowledge: 'Wissensquellen zur Auswahl', hTreemap: 'Fläche = Zeilen je Ordner', hTreemapMissing: 'braucht Zeilenzahlen je Datei', hFlow: 'die Ansicht für Request-Pfade ist noch nicht gebaut; die Pfade selbst stehen je Datei im Detail-Panel',
             edges: 'Kanten:', fTests: 'Tests', fInfra: 'Infra-Hubs', full: 'Vollbild', fullOff: 'Vollbild beenden',
-            lgPick: 'Datei markieren, um zu sehen, was eine Änderung erreicht', moreFiles: function (n) { return '+ ' + n + ' weitere'; }, offGraph: function (f, r) { return f + ' ist nicht im Graph (' + r + '): Areas enthalten Code, Tests und Views'; }, noEffectOverview: 'Wirkt auf Datei-Kanten: Area öffnen, um es zu nutzen', sAllShort: '+ Doku', navBack: '← Zurück', openLeft: '☰ Repository', openRight: 'Details ☰', pin: 'Anheften', unpin: 'Lösen', closePane: 'Schließen', repo: 'Repo', overview: 'Übersicht', areasOf: function (a, b) { return 'Areas (' + a + ' von ' + b + ')'; }, allAreas: '← Alle Areas',
+            lgPick: 'Datei markieren, um zu sehen, was eine Änderung erreicht', moreFiles: function (n) { return '+ ' + n + ' weitere'; }, offGraph: function (f, r) { return f + ' ist nicht im Graph (' + r + '): Areas enthalten Code, Tests und Views'; }, noEffectOverview: 'Wirkt auf Datei-Kanten: Area öffnen, um es zu nutzen', sAllShort: '+ Doku', noDataShort: 'keine Daten', noViewShort: 'noch keine Ansicht', noDataUnknown: 'die Quelle ist unbekannt', noDataTitle: function (r) { return 'Noch keine Daten: ' + r + '. Schaltet sich von selbst frei, sobald die Daten da sind.'; }, navBack: '← Zurück', openLeft: '☰ Repository', openRight: 'Details ☰', pin: 'Anheften', unpin: 'Lösen', closePane: 'Schließen', repo: 'Repo', overview: 'Übersicht', areasOf: function (a, b) { return 'Areas (' + a + ' von ' + b + ')'; }, allAreas: '← Alle Areas',
             hint2d: 'Ziehen: verschieben · Rad: zoomen · Klick: markieren · Doppelklick: öffnen', hint3d: 'Ziehen: drehen · Shift+Ziehen: verschieben · Rad: zoomen · Klick: markieren · Doppelklick: öffnen',
-            zoomIn: 'Hineinzoomen', zoomOut: 'Herauszoomen', fit: 'Einpassen', limTop: 'Top 15', limAll: 'Alle Areas', d2: '2D', d3: '3D Orb', dimHint: 'Karte als Kugel zeigen. Ziehen dreht sie, Shift+Ziehen verschiebt sie, die Pfeiltasten drehen ebenfalls.',
+            zoomIn: 'Hineinzoomen', zoomOut: 'Herauszoomen', fit: 'Einpassen', limTop: function (n) { return 'Top ' + n; }, limAll: 'Alle Areas', limLabel: 'Angezeigte Areas', d2: '2D', d3: '3D Orb', dimHint: 'Karte als Kugel zeigen. Ziehen dreht sie, Shift+Ziehen verschiebt sie, die Pfeiltasten drehen ebenfalls. Die Lage auf der Kugel trägt keine Daten: Sie wickelt das 2D-Layout auf.',
             showPanels: 'Panels wieder einblenden', direct: 'direkt', transitive: 'transitiv', transitive3: 'transitiv ≤ 3', score: 'Score',
             legend: 'Legende', sizeOverview: 'Name = Hub-Datei der Area · Größe = Dateien je Area · Linie = Kanten zwischen Areas',
             sizeArea: 'Größe = eingehende Kanten · Linie = Kante, orange = zeigt auf die Auswahl',
@@ -193,6 +193,12 @@
     }
     function add(parent) { for (var i = 1; i < arguments.length; i++) if (arguments[i]) parent.appendChild(arguments[i]); return parent; }
     function clear(n) { while (n.firstChild) n.removeChild(n.firstChild); }
+    // A control whose data is missing stays visible: it says so and names what is missing.
+    function markNoData(b, tag, reason) {
+        b.classList.add('nodata');
+        b.appendChild(el('span', { class: 'nodata-tag' }, tag));
+        b.setAttribute('title', t('noDataTitle')(reason));
+    }
     function swatch(colour) { var s = el('span', { class: 'swatch' }); s.style.background = colour; return s; }
     function dotEl(cls, colour) { var d = el('span', { class: 'dot' + (cls ? ' ' + cls : '') }); if (colour) { if (cls === 'ring') d.style.borderColor = colour; else d.style.background = colour; } return d; }
 
@@ -215,7 +221,7 @@
         full: false, formula: false, treePath: '', scopeDir: '', open: Object.create(null),
         view: { scale: 1, x: 0, y: 0 }, orb: false, rot: { yaw: ORB_YAW, pitch: ORB_PITCH },
         // Which areas the overview shows. A data choice, so it never depends on 2D / 3D.
-        areaLimit: 'all',
+        areaLimit: OVERVIEW_AREAS,
         // Side panels: `pin` null = the width's default (pinned only on a wide window).
         pin: { left: null, right: null }, fly: { left: false, right: false }
     };
@@ -414,6 +420,8 @@
     }
     function orbRadius() { var s = size(); return (Math.min(s.w, s.h) / 2 - 48) * state.view.scale; }
 
+    /** How many areas the overview shows: the chosen limit, never more than exist. */
+    function limitCount() { return state.areaLimit === 'all' ? areas.length : Math.min(state.areaLimit, areas.length); }
     var inDirCache = Object.create(null);
     function areaInDir(i, dirPath) {
         var key = i + '|' + dirPath;
@@ -421,7 +429,7 @@
         return inDirCache[key];
     }
     function overviewAreas() {
-        var n = state.areaLimit === 'top' ? Math.min(OVERVIEW_AREAS, areas.length) : areas.length;
+        var n = limitCount();
         var out = [];
         for (var i = 0; i < n; i++) out.push(i);
         var sel = state.file >= 0 ? files[state.file].area : state.area;
@@ -467,7 +475,11 @@
     function draw() {
         if (state.lens !== 'graph') return;
         var s = size();
-        ctx.clearRect(0, 0, s.w, s.h);
+        // Clear the bitmap itself: a CSS-sized clear misses whatever the rounded bitmap holds beyond it.
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
         var nodes = currentNodes();
         var pos = Object.create(null);
         if (state.orb) {
@@ -804,7 +816,8 @@
             ['folder', 'cFolder', 'hFolder'], ['layer', 'cLayer'], ['churn', 'cChurn'], ['complexity', 'cComplexity']].forEach(function (o) {
             var lg = legendByKey[o[0]];
             var off = lg ? !lg.available : (o[0] === 'layer' || o[0] === 'churn' || o[0] === 'complexity');
-            var b = el('button', { type: 'button', role: 'radio', class: 'opt', 'aria-checked': String(state.colorBy === o[0]), disabled: off, title: off ? (lg && lg.reason ? lg.reason : '') : (o[2] ? t(o[2]) : '') }, t(o[1]));
+            var b = el('button', { type: 'button', role: 'radio', class: 'opt', 'aria-checked': String(state.colorBy === o[0]), disabled: off, title: off ? '' : (o[2] ? t(o[2]) : '') }, t(o[1]));
+            if (off) markNoData(b, t('noDataShort'), lg && lg.reason ? lg.reason : t('noDataUnknown'));
             b.addEventListener('click', function () { if (!off) { state.colorBy = o[0]; refresh(); } });
             group.appendChild(b);
         });
@@ -912,6 +925,7 @@
         [['graph', 'lGraph', ''], ['layers', 'lLayers', 'hLayers'], ['matrix', 'lMatrix', 'hMatrix'], ['knowledge', 'lKnowledge', 'hKnowledge'],
             ['treemap', 'lTreemap', hasLoc ? 'hTreemap' : 'hTreemapMissing', !hasLoc], ['flow', 'lFlow', 'hFlow', true]].forEach(function (o) {
             var b = el('button', { type: 'button', role: 'tab', class: 'lens', 'aria-selected': String(state.lens === o[0]), disabled: !!o[3], title: o[2] ? t(o[2]) : '' }, t(o[1]));
+            if (o[3]) markNoData(b, o[0] === 'flow' ? t('noViewShort') : t('noDataShort'), t(o[2]));
             b.addEventListener('click', function () { if (!o[3] && state.lens !== o[0]) { step(); state.lens = o[0]; refresh(); } });
             bar.appendChild(b);
         });
@@ -930,7 +944,7 @@
         c.appendChild(el('span', { 'aria-hidden': 'true' }, '›'));
         var sel = state.file >= 0 ? base(files[state.file].path) : '';
         if (state.lens === 'graph') {
-            var shown = state.areaLimit === 'top' ? Math.min(OVERVIEW_AREAS, areas.length) : areas.length;
+            var shown = limitCount();
             if (state.level === 'area') {
                 c.appendChild(btn('Areas', goHome));
                 c.appendChild(el('span', { 'aria-hidden': 'true' }, '›'));
@@ -1032,7 +1046,8 @@
             tb.disabled = overview;
             tb.title = overview ? t('noEffectOverview') : '';
         });
-        $('lim-top').parentNode.hidden = state.level === 'area';
+        $('lim').parentNode.hidden = state.level === 'area';
+        if (state.level === 'area') { $('limlist').hidden = true; $('lim').setAttribute('aria-expanded', 'false'); }
         $('zoomtxt').textContent = 'Zoom ' + state.view.scale.toFixed(1) + '×';
         if (graph) { renderLegend(); return; }
         clear(lensView);
@@ -1223,7 +1238,7 @@
         col(t('kRoadmaps'), String(g.roadmaps.length), g.roadmaps.slice(0, 8).map(function (i) { return kcard(i); }));
         col(t('kEvidence'), String(g.evidence.length), g.evidence.slice(0, 8).map(function (i) { return kcard(i); }));
         col(t('kDrafts'), String(g.drafts.length), g.drafts.slice(0, 8).map(function (i) { return kcard(i); }));
-        col(t('kMemory'), '?', [add(el('div', { class: 'kmissing' }), el('b', null, t('collectorMissing')), el('span', null, t('memNote1')), el('span', null, t('memNote2')))]);
+        col(t('kMemory'), t('noDataShort'), [add(el('div', { class: 'kmissing' }), el('b', null, t('collectorMissing')), el('span', null, t('memNote1')), el('span', null, t('memNote2')))]);
         lensView.appendChild(add(cols, grid));
         var cards = el('div', { class: 'kcards' });
         var art = model.artefacts;
@@ -1800,17 +1815,57 @@
         refresh();
     }
     dimButton.addEventListener('click', function () { setOrb(!state.orb); });
-    var limTop = $('lim-top');
-    var limAll = $('lim-all');
-    function setLimit(v) {
-        state.areaLimit = v;
-        limTop.setAttribute('aria-pressed', String(v === 'top'));
-        limAll.setAttribute('aria-pressed', String(v === 'all'));
+    // The area limit is a listbox, not a <select>: a native select opens the system's own list.
+    var limButton = $('lim');
+    var limList = $('limlist');
+    function limOptions() { return Array.prototype.slice.call(limList.querySelectorAll('[role="option"]')); }
+    function limLabel(v) { return v === 'all' ? t('limAll') : t('limTop')(v); }
+    function limOpen(open) {
+        limList.hidden = !open;
+        limButton.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (open) (limList.querySelector('[aria-selected="true"]') || limOptions()[0]).focus();
+    }
+    function limPick(v) {
+        limButton.setAttribute('data-value', v);
+        limOptions().forEach(function (o) { o.setAttribute('aria-selected', o.getAttribute('data-value') === v ? 'true' : 'false'); });
+        $('limtxt').textContent = limLabel(v);
+        limOpen(false);
+        limButton.focus();
+        state.areaLimit = v === 'all' ? 'all' : Number(v);
         resetView();
         refresh();
     }
-    limTop.addEventListener('click', function () { setLimit('top'); });
-    limAll.addEventListener('click', function () { setLimit('all'); });
+    limButton.addEventListener('click', function () { limOpen(limList.hidden); });
+    limButton.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); limOpen(true); }
+    });
+    limList.addEventListener('click', function (e) {
+        var o = e.target.closest('[role="option"]');
+        if (o) limPick(o.getAttribute('data-value'));
+    });
+    limList.addEventListener('keydown', function (e) {
+        var opts = limOptions();
+        var i = opts.indexOf(document.activeElement);
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            opts[Math.max(0, Math.min(opts.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)))].focus();
+        } else if (e.key === 'Home' || e.key === 'End') {
+            e.preventDefault();
+            opts[e.key === 'Home' ? 0 : opts.length - 1].focus();
+        } else if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (i >= 0) limPick(opts[i].getAttribute('data-value'));
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            limOpen(false);
+            limButton.focus();
+        } else if (e.key === 'Tab') {
+            limOpen(false);
+        }
+    });
+    document.addEventListener('pointerdown', function (e) {
+        if (!limList.hidden && !e.target.closest('.dd')) limOpen(false);
+    });
     dim2d.addEventListener('click', function () { setOrb(false); });
     $('export').addEventListener('click', function () {
         var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -1852,8 +1907,10 @@
         $('open-left').textContent = t('openLeft');
         $('open-right').textContent = t('openRight');
         ['left', 'right'].forEach(function (side) { $('close-' + side).setAttribute('aria-label', t('closePane')); });
-        limTop.textContent = t('limTop');
-        limAll.textContent = t('limAll');
+        limOptions().forEach(function (o) { o.textContent = limLabel(o.getAttribute('data-value')); });
+        $('limtxt').textContent = limLabel(limButton.getAttribute('data-value'));
+        limButton.setAttribute('aria-label', t('limLabel'));
+        limList.setAttribute('aria-label', t('limLabel'));
         dimButton.textContent = t('d3');
         dimButton.setAttribute('title', t('dimHint'));
         $('back').textContent = t('allAreas');
@@ -1863,6 +1920,11 @@
     applyStrings();
     renderHeader();
     window.addEventListener('resize', function () { applyPanes(false); resize(); if (state.lens === 'treemap') renderLens(); });
+    // The stage also changes size without a window resize (controls appearing, panes, full screen).
+    if (window.ResizeObserver) new ResizeObserver(function () {
+        var dpr = window.devicePixelRatio || 1, r = canvas.getBoundingClientRect();
+        if (r.width && (canvas.width !== Math.max(1, Math.round(r.width * dpr)) || canvas.height !== Math.max(1, Math.round(r.height * dpr)))) resize();
+    }).observe(canvas);
     refresh();
     resize();
 })();
