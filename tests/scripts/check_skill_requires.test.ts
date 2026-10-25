@@ -99,6 +99,35 @@ describe('check_skill_requires — co-availability gate (ported pytest)', () => 
         expect(rc).toBe(1);
         expect(out).toContain('pack-gated');
     });
+
+    it('rejects a requires_skills cycle and prints its path', () => {
+        const skills = {
+            alpha: skill([], ['beta'], 'skills/alpha/SKILL.md'),
+            beta: skill([], ['alpha'], 'skills/beta/SKILL.md'),
+        };
+        const { rc, out } = drive(skills);
+        expect(rc).toBe(1);
+        expect(out).toContain('cycle');
+        expect(out).toContain('alpha → beta → alpha');
+    });
+
+    it('rejects a self-edge as a cycle', () => {
+        const skills = { solo: skill([], ['solo'], 'skills/solo/SKILL.md') };
+        const { rc, out } = drive(skills);
+        expect(rc).toBe(1);
+        expect(out).toContain('solo → solo');
+    });
+
+    it('accepts a diamond, which shares a node without a cycle', () => {
+        const skills = {
+            top: skill([], ['left', 'right'], 'skills/top/SKILL.md'),
+            left: skill([], ['bottom'], 'skills/left/SKILL.md'),
+            right: skill([], ['bottom'], 'skills/right/SKILL.md'),
+            bottom: skill(),
+        };
+        const { rc } = drive(skills);
+        expect(rc).toBe(0);
+    });
 });
 
 describe('check_skill_requires — reference link across a pack boundary (roadmap 1.4)', () => {
