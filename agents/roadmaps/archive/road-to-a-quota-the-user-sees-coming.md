@@ -107,7 +107,7 @@ Cold-start's 4.3, 4.5 and 5.3, which the first plan proposed to take over, are
       wraps the existing `statusLine.command` in `~/.claude/settings.json` (or
       sets the tap alone when none exists) and records the original value;
       `statusline:uninstall` puts that value back, or removes the key it added. Whether `setup` runs it
-      by default is owner question OQ-18 (`quota-tap-default`).
+      by default is owner question OQ-19 (`quota-tap-default`).
       verify: `npx vitest run tests/scripts/statusline_install.test.ts` -> 0
 
 ## Phase 3 — Pressure and the notice the user sees (D2, D3)
