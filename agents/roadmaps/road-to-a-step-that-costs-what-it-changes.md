@@ -95,13 +95,13 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 
 ## Phase 1 — Floor-neutral speedups
 
-- [ ] **1.1 Run the seven telemetry post-tool concerns `async`.** Measured 2026-10-21, not built: the telemetry concerns cost 1.2 ms p50 together per tool call (`bench_hook_latency --runs 30` with `AGENT_CONFIG_HOOK_TIMINGS`), against a ~68 ms post_tool_use dispatch; an async split saves ~1.2 ms and adds a second node start per call. Cancelling it is an owner call (D15). Only <!-- blocked-by: telemetry-async-and-stop-ordinal-await-owner | asked: yes -->
+- [-] **1.1 Run the seven telemetry post-tool concerns `async`.** Cancelled 2026-10-25 by the owner (OQ-4 (a), `agents/evidence/owner-directives/2026-10-25-step-costs-oq-1-4-5-6.md`, D19). Measured 2026-10-21, not built: the telemetry concerns cost 1.2 ms p50 together per tool call (`bench_hook_latency --runs 30` with `AGENT_CONFIG_HOOK_TIMINGS`), against a ~68 ms post_tool_use dispatch; an async split saves ~1.2 ms and adds a second node start per call. Only
       concerns whose `effect` is `telemetry` and that never emit
       `additionalContext` (C8). Hosts without an async hook form keep
       today's binding.
       verify: a census row per concern; a fixture shows no injected byte lost;
       `chat-history` still records every call.
-- [ ] **1.2 Answer the Stop ordinal from state, then read the tail.** Measured 2026-10-21, not built: `readTranscriptTail` walks a 6.5-7.6 MB real transcript in 13-18 ms, once per turn; stored state would add risk to the turn-end gate for ~15 ms a turn. Cancelling it is an owner call (D15). Keep the <!-- blocked-by: telemetry-async-and-stop-ordinal-await-owner | asked: yes -->
+- [-] **1.2 Answer the Stop ordinal from state, then read the tail.** Cancelled 2026-10-25 by the owner (OQ-5 (a), `agents/evidence/owner-directives/2026-10-25-step-costs-oq-1-4-5-6.md`, D19). Measured 2026-10-21, not built: `readTranscriptTail` walks a 6.5-7.6 MB real transcript in 13-18 ms, once per turn; stored state would add risk to the turn-end gate for ~15 ms a turn. Keep the
       turn ordinal and byte offset in the per-session state file so the
       design constraint at `turn_end_transcript.ts:101-103` is met without a
       full walk; fall back to the full walk when the state is missing or the
@@ -154,7 +154,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
       same blocker as 4.1 — it exists only to serve the flip.
       verify: red-first test — a PR ticking a step without a receipt fails, a
       PR touching an older unreceipted tick passes.
-- [ ] **4.1 Lower depth for R0/R1 per the table.** The owner chose (d) <!-- blocked-by: flip-readiness-thirty-shadow-steps -->
+- [x] **4.1 Lower depth for R0/R1 per the table.** Done 2026-10-25 on OQ-1 (a) (D19): `step-depth-table.json` is `mode: active`, `flip.reading` names `agents/evidence/owner-directives/2026-10-25-step-costs-oq-1-4-5-6.md`, which records the reading of the day (R0 7, R1 0, escaped 0, critical 0) — the flip runs on the 4.3 audit, not on 30 steps. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/step-depth-table.json --> The owner chose (d)
       (D18): the flip may apply only to structurally safe paths. Built
       2026-10-21: the `flip` block, `isStructurallySafe`, `effectiveMode`, and a
       test that refuses `mode: active` without a committed `flip.reading`. The
@@ -164,7 +164,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
       `scope=safe` from 2026-10-21 on). On 2026-10-24 it read R0 7, R1 0, once undated `scope=safe` ticks counted.
       verify: the D18 owner row exists before the flip commit; that commit
       names the reading in `flip.reading`.
-- [ ] **4.2 Rule depth by class, behind an A/B.** R0/R1 steps receive the <!-- blocked-by: flip-readiness-thirty-shadow-steps -->
+- [ ] **4.2 Rule depth by class, behind an A/B.** Waits per OQ-6 (a) (D19): mechanism and paid A/B are decided with the flip data in hand. R0/R1 steps receive the <!-- blocked-by: five-drains-on-the-flipped-table -->
       kernel plus rules whose triggers match the changed paths; R2/R3 keep
       today's delivery. Paired A/B on the benchmark's frozen tasks: discipline
       score not below the full arm's lower CI bound. No settings key.
@@ -180,10 +180,10 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 
 ## Phase 5 — Prove both halves
 
-- [ ] **5.1 Read the Goal over five drains.** Speed and escape rate together; <!-- blocked-by: flip-readiness-thirty-shadow-steps -->
+- [ ] **5.1 Read the Goal over five drains.** Speed and escape rate together; <!-- blocked-by: five-drains-on-the-flipped-table -->
       neither alone closes the roadmap.
       verify: a Decisions row with both figures.
-- [ ] **5.2 Independent review of the reading.** One round. <!-- blocked-by: flip-readiness-thirty-shadow-steps -->
+- [ ] **5.2 Independent review of the reading.** One round. <!-- blocked-by: five-drains-on-the-flipped-table -->
       verify: findings or an honest null over denominators and windows.
 
 ## Blockers
@@ -202,7 +202,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 - **Resolved when:** the chosen option is recorded in this entry or in `docs/decisions/`, and Status reads resolved.
 
 ### blocker: telemetry-async-and-stop-ordinal-await-owner
-- **Status:** open — 2026-10-25, both steps are measured (D15) and put to the owner as OQ-4 and OQ-5 in `agents/owner-questions.md`; no answer yet
+- **Status:** resolved — 2026-10-25, the owner answered OQ-4 (a) and OQ-5 (a): both steps cancelled (D19, `agents/evidence/owner-directives/2026-10-25-step-costs-oq-1-4-5-6.md`). Was: open, both steps measured (D15) and put to the owner
 - **Class:** 3
 - **Owner:** user
 - **Ownership:** product-owned
@@ -226,7 +226,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 - **Resolved when:** a drain over the largest active roadmap shows every closed step reading < 40 KB of it, and 1.3 is ticked with that reading.
 
 ### blocker: flip-readiness-thirty-shadow-steps
-- **Status:** open — 2026-10-25, `probe_depth_shadow --flip-readiness` reads R0 7 shadow steps, R1 0, escaped 0, critical 0, not ready (unchanged since 2026-10-24); owner questions OQ-1 (flip now on the audit) and OQ-6 (how 4.2 narrows the rule load) are open in `agents/owner-questions.md`
+- **Status:** resolved — 2026-10-25, the owner answered OQ-1 (a): 4.1 is ticked with `flip.reading` committed (`agents/evidence/owner-directives/2026-10-25-step-costs-oq-1-4-5-6.md`, D19). Was: open, `--flip-readiness` read R0 7 shadow steps, R1 0, escaped 0, critical 0, not ready
 - **Class:** 0
 - **Owner:** agent
 - **Blocks:** steps 4.1, 4.2, 5.1, 5.2; AC-2, AC-3, AC-4
@@ -236,6 +236,18 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 - **If you do nothing:** depth stays uniform, the shadow keeps counting, and Phase 5's five-drain window cannot start.
 - **What to do:** (1) re-run the **Run:** command at each drain; (2) on READY, or on OQ-1 (a), commit the flip with `flip.reading` in `src/config/step-depth-table.json` and tick 4.1; (3) then 4.2 per OQ-6's answer, and 5.1 after five drains on the flipped table.
 - **Resolved when:** 4.1 is ticked with a committed `flip.reading`, and Status reads resolved.
+
+### blocker: five-drains-on-the-flipped-table
+- **Status:** open — 2026-10-25, the table went `active` today (4.1, D19); no drain has run on it yet
+- **Class:** 0
+- **Owner:** agent
+- **Blocks:** steps 4.2, 5.1, 5.2; AC-2, AC-3, AC-4
+- **Run:** `./scripts-run src/scripts/probe_depth_shadow --flip-readiness` and `./scripts-run src/scripts/probe_turnaround --steps --store <every store of this repository, comma-separated>`
+- **Question:** none — this waits on five drains, not a decision. OQ-6 (a) places 4.2's mechanism decision after the flip data exists.
+- **Recommendation:** count drains from 2026-10-25; at five, read 5.1 against D14 (1) and (4) and decide 4.2 on the same data.
+- **If you do nothing:** the flipped table keeps running under 4.3's audit; Phase 5 stays open.
+- **What to do:** (1) at each drain re-run the **Run:** commands; (2) after the fifth, write the 5.1 Decisions row with both figures; (3) put 4.2's mechanism to the owner with that row; (4) run 5.2.
+- **Resolved when:** five drains on the active table are read in a Decisions row and 5.1 is ticked.
 
 ## Decisions
 
@@ -259,6 +271,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 | D16 | reversible-technical | council: anthropic, openai (2026-10-21) | Step 2.3 measures without blocking: receipt coverage and the review row's would-have-escape are reported per class by `probe_depth_shadow`; a blocking receipt check arrives as 4.0, PR-local and only before depth is lowered. | Two seats converged on non-blocking now (first round degraded to one seat, the second ran both): a repo-wide check on every tick turns shadow instrumentation into mandatory ceremony before it has shown value, and would fail parallel branches' flips; the audit-trail half of a receipt only matters once something is skipped. One seat asked for class-stratified coverage, which the probe reports. | R0/R1 receipt coverage below half over a month of ticks, or the probe showing misclassified R1 steps. |
 | D15 | reversible-technical | agent | Steps 1.1 and 1.2 are measured and not built; both are put to the owner for cancellation. | Async telemetry would move ~1.2 ms of a ~68 ms dispatch off the foreground for a second node start per call; a stored Stop ordinal would save ~15 ms per turn on a correctness surface. The supplied plan's hook and Stop costs (D9, D10 there) are real but not where a step's time goes: the 0.2 reading puts 53.5 % in waits and 30.3 % in model time. | a reading shows post_tool_use or Stop above 250 ms p50 on a real session. |
 | D10 | deterministic | evidence | Closure pass ran 2026-10-21: no open decision beyond the blocker. The `typed-op` hits are mentions of the word merge (a sibling slug, the `pr/merge` path, "after merge", red-after-merge); no step here merges, deploys or publishes. Prose verifies on 0.3, 1.2, 1.3 and 3.2 are made command-shaped when each step runs. | `closure_scan` listed six `typed-op` and four `unfalsifiable-verify` rows, the latter non-blocking by its own contract. | a step is executed with its prose oracle unchanged. |
+| D19 | product-owned | owner | 2026-10-25, OQ-1 (a), OQ-4 (a), OQ-5 (a), OQ-6 (a): the R0/R1 flip is active now on D18's scope with the 4.3 audit as its guard; 1.1 and 1.2 are cancelled; 4.2 waits for the flip data. | `agents/evidence/owner-directives/2026-10-25-step-costs-oq-1-4-5-6.md` | 4.3 rolls a class back, or five drains miss D14 (1). |
 
 ## What verification changed
 
