@@ -247,7 +247,7 @@ const WARN_TEXT =
   "First evaluation dispatch this turn. Two shapes fabricated a binding honest-null — " +
   "check your prompt for both: " +
   "(1) a verdict pre-loaded into the prompt, (2) a scope narrowed to files you chose. " +
-  "A self-commissioned review is gate evidence only with its prompt recorded.";
+  "A self-review is gate evidence only with its prompt recorded.";
 
 export const FAN_OUT_ROLE = /^\s*<!-- dispatch-role: (?:hunter|reader|implementer) -->/;
 
@@ -323,8 +323,8 @@ export function decide(
           `Second evaluation dispatch of your own work in this turn. If both passes ` +
           `judge the SAME subject, that is verdict shopping — commissioning another ` +
           `with a different prompt or scope selects the answer instead of measuring ` +
-          `it. Report the first pass, re-plan. An implementation ` +
-          `fan-out may carry on, or open with <!-- dispatch-role: implementer -->.`,
+          `it. Report the first pass, re-plan. Implementation ` +
+          `fan-out: open with <!-- dispatch-role: implementer -->.`,
       })}\n`,
       stderr: "",
       evaluations: priorEvaluations + 1,
