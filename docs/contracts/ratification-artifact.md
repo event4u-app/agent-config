@@ -421,7 +421,7 @@ checked and read through that one descriptor; the committed reviews are read
 from one `HEAD` tree listing per run; a record's name and values reach a finding
 with control and line-separator characters replaced.
 
-A record closed by `superseded-by-owner-ruling` is not reported as unrestored; its council review is still owed, cites the record's `subject`, must be committed at or after `time`, and is overdue seven days after `restore_by`. The ruling must be committed at `HEAD`; a missing one, or a path outside `agents/evidence/owner-directives/`, is malformed. A standing actor with `bypass_mode: always` is still an unconditional bypass and still fails the anchor; no ruling closes that.
+A record closed by `superseded-by-owner-ruling` is not reported as unrestored; its council review is still owed, cites the record's `subject`, must be committed at or after `time`, and is overdue seven days after `restore_by`. The ruling must be committed at `HEAD` and must name the record's `ruleset_version_after` on its own line as `<!-- standing-bypass: ruleset_version=<id> -->`; a missing ruling, a path outside `agents/evidence/owner-directives/`, or a ruling that does not name that version is malformed, so a directive about something else closes no record. A standing actor with `bypass_mode: always` is still an unconditional bypass and still fails the anchor; no ruling closes that.
 
 **What that check does not establish.** The records are files in the branch it
 runs on, so a branch can rewrite one to look closed, and the values it checks
