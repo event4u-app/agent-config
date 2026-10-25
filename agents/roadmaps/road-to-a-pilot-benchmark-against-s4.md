@@ -63,14 +63,14 @@ win, and no headline number is taken from it beyond what it measured.
 
 ## Phase 3 — Run within the cap, record both directions
 
-- [ ] **3.1 Run the pre-registered pilot**, stopping at the cap.
+- [x] **3.1 Run the pre-registered pilot**, stopping at the cap. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: docs/benchmark.md -->
       verify: the run log shows spend at or under the cap and every planned pair completed or named.
-- [ ] **3.2 Record per arm and per axis** in `docs/benchmark.md`, intervals
+- [x] **3.2 Record per arm and per axis** in `docs/benchmark.md`, intervals <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: docs/benchmark.md -->
       included, a loss or null stated as plainly as a win.
       verify: the section names arms, n, host, cap and the verdict per axis.
-- [ ] **3.3 Record the outcome on the assurance-benchmark stub** as an arrival
+- [x] **3.3 Record the outcome on the assurance-benchmark stub** as an arrival <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: docs/benchmark.md -->
       answer, so a sixth arrival meets a number.
-      verify: the stub's `Arrivals:` line cites this pilot's section.
+      verify: the stub carries an answer line citing this pilot's `docs/benchmark.md` section.
 
 ## Blockers
 
@@ -102,9 +102,9 @@ win, and no headline number is taken from it beyond what it measured.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A pre-registration committed before the run fixes arms, tasks,
+- [x] AC-1 — A pre-registration committed before the run fixes arms, tasks,
       host, n, metrics and the decision rule.
-- [ ] AC-2 — The neighbour arm ran only inside credential-free throwaway clones
+- [x] AC-2 — The neighbour arm ran only inside credential-free throwaway clones
       of a pinned S4 commit.
-- [ ] AC-3 — `docs/benchmark.md` reports the pilot per arm and axis, with
+- [x] AC-3 — `docs/benchmark.md` reports the pilot per arm and axis, with
       intervals and the cap, whatever the result.
