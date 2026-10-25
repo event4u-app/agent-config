@@ -7,9 +7,9 @@ routes_to: [dependency-upgrade]
 replaces: []
 visibility: advanced
 cluster: audit
-skills: [dependency-upgrade, finishing-a-development-branch, using-git-worktrees, authz-review]
-description: Security advisories and agent actions for this project
-argument-hint: "deps [refresh|show|gaps|fix <id>|accept <id>] | agents"
+skills: [dependency-upgrade, finishing-a-development-branch, using-git-worktrees, authz-review, security-audit]
+description: Security advisories, code and agent actions for this project
+argument-hint: "deps [refresh|show|gaps|fix <id>|accept <id>] | code [diff|full|retest|show|matrix] | agents"
 suggestion:
   eligible: true
   trigger_description: "is anything we use vulnerable, check for security updates, which advisories affect this project, fix that CVE"
@@ -23,11 +23,13 @@ packs:
 # /audit
 ## Instructions
 
-Two audits of the project — both distinct from `/security-audit-config`, which
+Three audits of the project — all distinct from `/security-audit-config`, which
 audits the agent configuration itself:
 
 - `/audit deps` — advisories, malware, end-of-support and pre-announced
   security releases for what the project **uses**.
+- `/audit code` — security holes in the project's **own code**, each confirmed
+  by a red test a second agent wrote (§ 7).
 - `/audit agents` — what an AI agent, bot or MCP server in the project can
   **do**, and which of those actions nobody declared or let a model choose whose
   record it changes (§ 6).
@@ -38,6 +40,8 @@ audits the agent configuration itself:
 /audit deps                       # refresh if stale, then the findings by tier
 /audit deps fix CVE-2026-59948    # carry one finding to a verified PR
 /audit deps gaps                  # what the project's own bots and CI could already cover
+/audit code full                  # hunters per surface, a verifier per candidate, proof tests
+/audit code show                  # the ledger: open, coverage, unreviewed, rejected
 /audit agents                     # every tool registration vs. agents/settings/contexts/agent-actions.yml
 ```
 
@@ -146,3 +150,41 @@ template ships beside `auth-model.md`). Findings:
 No findings is "no finding at the last run" for the recognised shapes — never
 "the agents are safe". Enforcement stays in the project's backend; this audit
 finds where to look and does not block anything.
+
+### 7. `/audit code` — a finding is confirmed by a test it fails
+
+The procedure is [`security-audit`](../../../skills/security-audit/SKILL.md)
+§ 1b and § 6; this section is its entry. Modes:
+
+| Mode | Runs | Cost |
+|---|---|---|
+| `diff` | the diff judges over the branch diff (`/review-changes`, security lens) | cheapest — the default per PR |
+| `full` | enumerate → one hunter per surface class → a fresh verifier per candidate → a red proof test per confirmed finding | model calls; before a launch or on request |
+| `retest` | every proof test, `judge-security-auditor` over the fix diff only, and the ledger rows whose source changed | the suite plus one narrow judge |
+| `show` | `agent-config audit:code show` | none |
+| `matrix` | `agent-config audit:code matrix [--skeleton]` | none |
+
+```bash
+agent-config audit:code matrix --root .             # every API route × {anonymous, user A, user B}
+agent-config audit:code matrix --root . --skeleton  # a draft test per route, failing until bound
+agent-config audit:code validate                    # the newest ledger against its schema
+agent-config audit:code show                        # the report, derived from the ledger
+```
+
+The matrix reads the code graph's routes and calls no model: an anonymous
+request expects `401`, the owner `2xx`, a second account `403|404` on a
+parameterised path. It is the cheapest way to find a missing ownership check,
+and its rows seed the proof tests. A public route will read as a false hole —
+the verifier edits the expectation; the matrix is never run as a verdict.
+
+The ledger (`agents/runtime/state/security/<run>/ledger.json`, gitignored —
+an open finding is an exploit map) records surface × endpoint rows with their
+enumeration source, and findings as `confirmed` / `needs_validation` /
+`rejected`. Coverage counts only rows the graph or a file convention found.
+"0 open findings" is never written without that figure; no ledger is "not
+checked", never "no findings".
+
+**Runs add up.** A follow-up `full` run receives the previous ledger and targets
+its `unreviewed` rows and changed sources — never an identical restart. One run
+by default, `--runs N` on request, and it stops when a run adds no `confirmed`.
+Model spend follows the council's quota ask.
