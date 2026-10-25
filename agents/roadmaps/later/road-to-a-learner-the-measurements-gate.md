@@ -9,6 +9,7 @@ entry_condition:
   when: after that roadmap's PR merges; Phase 1 runs then, Phases 4-5 need one release of shadow records
   who: the maintainer, whose subscription runs the Phase 1 measurements on his own machine
 review_by: 2026-12-15
+estate_growth_exempt: "later_roadmaps +1: the owner's 2026-10-23 demands (run the open measurements, measurements ride with every PR, AC learns locally) need measurement windows, subscription runs, a ratified gate and a release of shadow data; the 2026-10-24 directive sends such work to later/ rather than the active estate, and no existing later/ roadmap owns a dispatch-policy learner."
 estate_offset_exempt: "Owner search: grep -rlF -e local-policy -e dispatch-policy -e policy:digest -e learning.local_policy over agents/roadmaps/*.md, later/ and stubs/ returned only road-to-a-policy-the-measurements-write, which this round also adds. Parked by the 2026-10-24 directive: everything here needs a measurement window, a paid or subscription run, a ratified gate or a release of shadow data, none of which a run can produce."
 relates:
   - slug: road-to-a-policy-the-measurements-write
