@@ -105,7 +105,7 @@ same way; a mod only reads and shows what the dispatcher already wrote.
 - [x] **4.1 Ship the module.** `src/templates/claude-mod/` with <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: dist/install/install.mjs -->
       `.claude-plugin/plugin.json` (with `"hooks": "./module/hooks.json"`),
       `.claude-plugin/marketplace.json` (source `./`), `module/hooks.json`
-      (`{"modules":["./register.ts"]}`), `module/register.ts`, `README.md`, `LICENSE`.
+      (`{"modules":["./register.ts"]}`), `module/register.ts`, `README.md`; licence via `plugin.json` `"license": "MIT"` (an extensionless file is refused by the pack-size gate).
       `corrected-from-reproduction`: the plan put the config at `hooks/hooks.json`,
       a path the `block-plumbing-writes` guard reserves for generated output; the
       manifest field was verified to work in `validate` and `test`. One hook: `turn.complete` awaits `next(e)`, then sets
