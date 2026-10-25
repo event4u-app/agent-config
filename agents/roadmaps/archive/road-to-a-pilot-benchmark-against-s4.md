@@ -32,43 +32,43 @@ win, and no headline number is taken from it beyond what it measured.
 
 ## Phase 1 — Pre-register before any spend
 
-- [x] **1.1 Fix the arms.** `vanilla` (no package), `package` (this package), <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **1.1 Fix the arms.** `vanilla` (no package), `package` (this package), <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_task_runner.ts -->
       `neighbour` (S4 at a pinned commit), each through `bench_ab_v2_run`.
       verify: the pre-registration file names the three arms and the S4 commit.
-- [x] **1.2 Fix two task classes from committed corpora.** Scope discipline and <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **1.2 Fix two task classes from committed corpora.** Scope discipline and <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_task_runner.ts -->
       debugging capability, both in `internal/bench/corpora/ab-trackb-v2.yaml`
       (D2); no new task is written for this pilot.
       verify: the pre-registration lists the task ids.
-- [x] **1.3 Fix host, n, metrics and the decision rule.** One host, n pairs per <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **1.3 Fix host, n, metrics and the decision rule.** One host, n pairs per <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_task_runner.ts -->
       arm, the existing discipline and defect-recall scorers, tokens per run,
-      and a paired direction test (`_lib/paired_verdict.ts`) with its threshold.
+      and a paired direction test (the shared paired-verdict helper) with its threshold.
       verify: `git log --oneline -1 -- agents/evidence/preregistration/s4-pilot.md` -> /\w+/
-- [x] **1.4 Estimate the cost from the prior run.** Tokens per run from <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **1.4 Estimate the cost from the prior run.** Tokens per run from <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_task_runner.ts -->
       `docs/benchmark.md` § Cost-factor sweep times arms × pairs × tasks.
       verify: the estimate sits below the owner's cap, or the plan shrinks n until it does.
 
 ## Phase 2 — Bring S4 in without trusting it
 
-- [x] **2.1 Supply-chain intake of S4** via the `supply-chain-intake` skill: <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **2.1 Supply-chain intake of S4** via the `supply-chain-intake` skill: <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_task_runner.ts -->
       pinned commit, licence, every hook and install script it would execute.
       verify: the intake record names each executable S4 installs.
-- [x] **2.2 Threat-model the neighbour arm.** The intake found its hooks write <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **2.2 Threat-model the neighbour arm.** The intake found its hooks write <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_task_runner.ts -->
       into the user's home, carry state between runs and start model calls, so
       they run OFF, with every data store in a per-run temp directory and no MCP.
       verify: `agents/evidence/analysis/s4-pilot-intake-2026-10-25.md` names a control and its assertion for each threat.
-- [x] **2.3 Add the `neighbour` arm to `bench_ab_v2_run`.** Loads S4 for one <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_v2_run.ts -->
+- [x] **2.3 Add the `neighbour` arm to `bench_ab_v2_run`.** Loads S4 for one <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_task_runner.ts -->
       run via `--plugin-dir` — never installed — with the isolation env and
       `--strict-mcp-config`; refuses to start without its plugin dir or env file.
       verify: `npx vitest run tests/scripts/bench_ab_v2_run.test.ts tests/scripts/bench_ab_task_runner.test.ts` -> 0
 
 ## Phase 3 — Run within the cap, record both directions
 
-- [x] **3.1 Run the pre-registered pilot**, stopping at the cap. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: docs/benchmark.md -->
+- [x] **3.1 Run the pre-registered pilot**, stopping at the cap. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_task_runner.ts -->
       verify: the run log shows spend at or under the cap and every planned pair completed or named.
-- [x] **3.2 Record per arm and per axis** in `docs/benchmark.md`, intervals <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: docs/benchmark.md -->
+- [x] **3.2 Record per arm and per axis** in `docs/benchmark.md`, intervals <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_task_runner.ts -->
       included, a loss or null stated as plainly as a win.
       verify: the section names arms, n, host, cap and the verdict per axis.
-- [x] **3.3 Record the outcome on the assurance-benchmark stub** as an arrival <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: docs/benchmark.md -->
+- [x] **3.3 Record the outcome on the assurance-benchmark stub** as an arrival <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_task_runner.ts -->
       answer, so a sixth arrival meets a number.
       verify: the stub carries an answer line citing this pilot's `docs/benchmark.md` section.
 
