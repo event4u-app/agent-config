@@ -13,7 +13,8 @@ const real = loadDepthTable();
 const table: DepthTable = { ...real, mode: 'shadow', flip: { ...real.flip, reading: null } };
 
 describe('step_receipt', () => {
-    it('the depth table names a row for every class', () => {
+    it('the depth table has a known mode and names a row for every class', () => {
+        expect(['shadow', 'active']).toContain(real.mode);
         for (const k of ['R0', 'R1', 'R2', 'R3'] as const) {
             expect(Object.keys(real.classes[k]).sort()).toEqual(Object.keys(real.full).sort());
         }
