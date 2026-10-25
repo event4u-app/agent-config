@@ -9,6 +9,8 @@ and keep the full search — this file only adds candidates to it.
 
 | slug | dir | status | owns |
 |---|---|---|---|
+| road-to-a-finding-that-fails-a-test | active | ready | A user who asks "check my app for security holes before launch" gets one chain instead of one opinion: the … |
+| road-to-a-post-the-analysis-can-watch | active | ready | `/analyze:post <url\|file>` pins a public post or video once, builds an evidence bundle (metadata, transcript by a named ladder rung, … |
 | road-to-a-setup-that-decides-itself | active | ready | A consumer never sets, reads or reasons about how the package loads its rule layer. |
 | road-to-a-step-that-costs-what-it-changes | active | ready | A roadmap step costs in proportion to its change, and nothing a step needs is skipped. |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe | active | ready | A global install stays on a supported, patched release without ever mutating a running session, moving a team's pin, or … |
@@ -149,6 +151,8 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-path-route-under-delivery | stubs | — | road to a path-activation route under `delivery` |
 | road-to-a-primary-goal-that-is-asked-for | stubs | — | road to a primary goal that is asked for |
 | road-to-a-proposal-that-can-be-adopted | stubs | — | eleven prepared proposals arrived and none was adoptable as written |
+| road-to-a-route-that-names-its-guard | stubs | — | a route that names its guard |
+| road-to-a-security-chain-measured | stubs | — | a security chain that is measured, not asserted |
 | road-to-a-visibility-sync-that-can-write | stubs | — | road to a visibility sync that can actually write |
 | road-to-a-weekly-lineage-watch | stubs | — | a weekly lineage watch on the maintainer's machine |
 | road-to-adopt-and-reset-flags-with-a-specification | stubs | — | `adopt` and `reset` have a routing and no behaviour |
@@ -214,6 +218,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-main-protection-ruleset-changes | stubs | — | road to the `main` protection-ruleset changes (required checks + merge queue) |
 | road-to-make-it-stick-telemetry | stubs | — | "make it stick" needs telemetry that does not exist |
 | road-to-mcp-fingerprint-slot-binding | stubs | — | road to binding the MCP tool-fingerprint store to a hook slot |
+| road-to-media-channels-measured | stubs | — | media channels measured one by one |
 | road-to-merge-confirmation-doctrine | stubs | — | road to the direct-order merge-confirmation doctrine |
 | road-to-multi-host-screenshot-census | stubs | — | road to the multi-host screenshot census |
 | road-to-obligation-exposure-instrumentation | stubs | — | Road to obligation-exposure instrumentation |
