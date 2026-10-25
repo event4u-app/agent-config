@@ -24,6 +24,14 @@ relates:
 ---
 # Road to host inputs the installer honours
 
+> **Arrivals:** 1 — `inbox-2026-10-at` (2026-10-25): a plan reproduced H1 at
+> `main@01bb841cb` (45 of 301 skills keep a description, alphabetically up to
+> `composer-packages`; `security-audit`, `threat-modeling`,
+> `test-driven-development` and every `laravel-*` skill go `name-only`) and asks
+> the same thing as Phase 2 — with one ordering constraint this file should take:
+> change the default override only in a PR that carries a measured baseline of
+> the selection it moves (`road-to-routing-assurance-live-floors`).
+
 > **Source:** `agents/tmp.old/inbox-2026-10-y/` — the same round as
 > `road-to-seats-that-know-why-they-failed`. Host facts were read from Claude Code 2.1.304 by
 > the strings method `docs/setup/host-traffic-environment.md` documents, by the supplied plan,

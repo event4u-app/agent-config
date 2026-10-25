@@ -252,7 +252,7 @@ refine → memory → analyze → plan → implement → test → verify → rep
 - **Plans** the change; you confirm before any file is touched.
 - **Implements** under `minimal-safe-diff` + `scope-control` — no drive-by edits.
 - **Tests** (targeted first, full suite on success).
-- **Reviews** the diff through four judges (bugs, security, tests, code quality).
+- **Reviews** the diff through seven judges (bugs, security, tests, quality, architecture, spec, overbuild).
 - **Reports** changes, verdicts, follow-ups — then stops. `/commit` and `/pr:create` are suggestions, never auto-run.
 
 Any ambiguity halts the flow with numbered options — never a silent guess. Persona comes from `.agent-settings.yml` (`roles.active_role`): `senior-engineer` (default), `qa` or `advisory` (plan-only).

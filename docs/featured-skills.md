@@ -67,7 +67,7 @@ Each row links to the canonical artefact under `dist/agent-src/`. Substitutions 
 |---|---|
 | [`/work`](../dist/agent-src/commands/work.md) | Free-form prompt end-to-end loop — refine → plan → implement → test → verify, confidence-band gated |
 | [`/implement-ticket`](../dist/agent-src/commands/implement-ticket.md) | Drive a Jira / Linear ticket end-to-end — same loop, ticket-anchored |
-| [`/review-changes`](../dist/agent-src/commands/review/changes.md) | Self-review local changes before creating a PR — dispatches to five specialized judges and consolidates verdicts |
+| [`/review-changes`](../dist/agent-src/commands/review/changes.md) | Self-review local changes before creating a PR — dispatches to seven specialized judges and consolidates verdicts |
 | [`/commit`](../dist/agent-src/commands/commit.md) | Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits |
 | [`judge-bug-hunter`](../dist/agent-src/skills/judge-bug-hunter/SKILL.md) | Correctness review — null-safety, edge cases, off-by-one, races, error handling |
 | [`judge-code-quality`](../dist/agent-src/skills/judge-code-quality/SKILL.md) | Readability review — naming, single-responsibility, DRY, dead code, codebase-convention drift |

@@ -293,7 +293,7 @@
         ".implement-ticket-state.json"
       ],
       "exit_code": 1,
-      "stdout": "[halt] outcome=blocked step=verify\n@agent-directive: review-changes ticket=GT-5-NEG\n> Ticket GT-5-NEG — running the four-judge review (bugs, security, tests, code quality) before the delivery report is written.\n> 1. Continue — run `review-changes` now\n> 2. Abort — skip review (NOT recommended)\n",
+      "stdout": "[halt] outcome=blocked step=verify\n@agent-directive: review-changes ticket=GT-5-NEG\n> Ticket GT-5-NEG — running the seven-judge review (bugs, security, tests, quality, architecture, spec, overbuild) before the delivery report is written.\n> 1. Continue — run `review-changes` now\n> 2. Abort — skip review (NOT recommended)\n",
       "stderr": "",
       "state_after": {
         "ticket": {
@@ -359,7 +359,7 @@
         },
         "questions": [
           "@agent-directive: review-changes ticket=GT-5-NEG",
-          "> Ticket GT-5-NEG — running the four-judge review (bugs, security, tests, code quality) before the delivery report is written.",
+          "> Ticket GT-5-NEG — running the seven-judge review (bugs, security, tests, quality, architecture, spec, overbuild) before the delivery report is written.",
           "> 1. Continue — run `review-changes` now",
           "> 2. Abort — skip review (NOT recommended)"
         ],

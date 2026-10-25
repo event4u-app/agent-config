@@ -65,7 +65,7 @@ describe('directives/backend/verify — outcome contract', () => {
             "outcome": "blocked",
             "questions": [
               "@agent-directive: review-changes ticket=V-3",
-              "> Ticket V-3 — running the four-judge review (bugs, security, tests, code quality) before the delivery report is written.",
+              "> Ticket V-3 — running the seven-judge review (bugs, security, tests, quality, architecture, spec, overbuild) before the delivery report is written.",
               "> 1. Continue — run \`review-changes\` now",
               "> 2. Abort — skip review (NOT recommended)"
             ],
@@ -91,7 +91,7 @@ describe('directives/backend/verify — outcome contract', () => {
             "questions": [
               "@agent-directive: fix-failing-checks ticket=V-5 lane=verify attempt=1 ceiling=3",
               "> Ticket V-5 — \`verify\` reported \`blocked\`. Self-fix attempt 1 of 3.",
-              "> The verdict is deterministic, so the fix is delegated rather than asked: address the recorded findings, then re-run the four-judge review.",
+              "> The verdict is deterministic, so the fix is delegated rather than asked: address the recorded findings, then re-run the seven-judge review.",
               "> 1. Continue — fix the failures and re-run \`review-changes\`",
               "> 2. Abort — stop this cycle and hand the failures back"
             ],
@@ -107,7 +107,7 @@ describe('directives/backend/verify — outcome contract', () => {
             "questions": [
               "@agent-directive: fix-failing-checks ticket=V-6 lane=verify attempt=1 ceiling=3",
               "> Ticket V-6 — \`verify\` reported \`partial\`. Self-fix attempt 1 of 3.",
-              "> The verdict is deterministic, so the fix is delegated rather than asked: address the recorded findings, then re-run the four-judge review.",
+              "> The verdict is deterministic, so the fix is delegated rather than asked: address the recorded findings, then re-run the seven-judge review.",
               "> 1. Continue — fix the failures and re-run \`review-changes\`",
               "> 2. Abort — stop this cycle and hand the failures back"
             ],
@@ -164,7 +164,7 @@ describe('directives/backend/verify — outcome contract', () => {
             "outcome": "blocked",
             "questions": [
               "@agent-directive: review-changes ticket=(no id)",
-              "> Ticket (no id) — running the four-judge review (bugs, security, tests, code quality) before the delivery report is written.",
+              "> Ticket (no id) — running the seven-judge review (bugs, security, tests, quality, architecture, spec, overbuild) before the delivery report is written.",
               "> 1. Continue — run \`review-changes\` now",
               "> 2. Abort — skip review (NOT recommended)"
             ],

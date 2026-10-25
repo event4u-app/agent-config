@@ -838,6 +838,21 @@ that was never a judgement call.
     refuses a new step over the cap; steps already over it when the cap landed
     sit in a baseline that only shrinks.
 
+30. **A roadmap carries a pin, and the pin moves only after a revalidation.**
+    `tree_pin: <short-sha>` in the frontmatter names the commit the roadmap was
+    last verified against; `new_roadmap` writes it. `agent-config roadmap:context
+    --revalidate <slug>` reports what the roadmap cites that moved since the pin;
+    the agent re-verifies and corrects what moved, then `--advance` moves the pin.
+    Drift is a prompt to re-verify, never a verdict. Contract:
+    `docs/contracts/roadmap-revalidation-v1.md`.
+
+31. **A step may name the skills it plans to use.** An indented
+    `uses: <skill>[, <skill>]` line under the step, parallel to `verify:`; a skill
+    the step decides against is `waived: <skill> — <reason>`, the reason from
+    `not-applicable-scope | superseded-by:<skill> | unavailable-on-host |
+    already-satisfied`. The review and the closure read the plan back against the
+    session's tool events (`skill_plan_usage`).
+
 ---
 
 ## Quality Gates (remote CI by default)
@@ -894,6 +909,7 @@ Copy the structure below into a new file:
 ```markdown
 ---
 complexity: lightweight
+tree_pin: {short HEAD sha}
 ---
 
 # Roadmap: {Short descriptive title}

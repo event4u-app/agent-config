@@ -20,7 +20,7 @@
  * - `plan`      → `contract`      — backend contract lock.
  * - `implement` → `ui`            — delegate to UI sub-flow.
  * - `test`      → `stitch`        — integration verification.
- * - `verify`    → backend.verify  — four-judge review on the merged diff.
+ * - `verify`    → backend.verify  — seven-judge `review-changes` on the merged diff.
  * - `report`    → backend.report  — delivery markdown.
  *
  * The shared steps are reused by reference, not by duplication.
