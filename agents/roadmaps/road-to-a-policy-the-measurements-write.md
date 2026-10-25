@@ -55,7 +55,7 @@ egress (c) and (f) pass (`internal/bench/reports/egress-placeholders-identifier-
 
 ## Phase 1 — One policy table and its binding test (M1)
 
-- [ ] **1.1 Add `src/config/dispatch-policy.json`.** One row per dispatch knob:
+- [x] **1.1 Add `src/config/dispatch-policy.json`.** One row per dispatch knob:
       `{ id, value, sink: { file, kind, key }, claim, review_by, local, note }` where
       `claim` is a claim id or `"unmeasured"`, and `local` is `fixed` or `learnable`.
       Seed rows: tier and instruction skip of `ac-worker` and `ac-researcher`,
@@ -64,7 +64,7 @@ egress (c) and (f) pass (`internal/bench/reports/egress-placeholders-identifier-
       Every row is `unmeasured` except `adversarial_council: off`, which cites its
       `resolved-null` claim.
       verify: the file parses and the test of 1.2 reads every row.
-- [ ] **1.2 One binding test.** `tests/scripts/dispatch_policy.test.ts` reads each
+- [x] **1.2 One binding test.** `tests/scripts/dispatch_policy.test.ts` reads each
       row's sink — subagent frontmatter, settings-template key, council default in
       `config.ts` — and fails when the sink value disagrees with the row. A row citing a
       claim requires that claim to exist and to be closed (`backed` or `resolved-null`);

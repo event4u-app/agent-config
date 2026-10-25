@@ -1,0 +1,89 @@
+{
+  "$comment": "One row per dispatch default AC ships (road-to-a-policy-the-measurements-write Phase 1). `claim` names the closed claim that backs the value, or is \"unmeasured\" with a `review_by` date by which it must be measured. `measures` names the open claim a measurement would settle. `local: fixed` rows are floors no local learner may move. tests/scripts/dispatch_policy.test.ts fails when a sink disagrees with its row.",
+  "rows": [
+    {
+      "id": "ac-worker-tier",
+      "value": "inherit",
+      "sink": { "kind": "subagent-frontmatter", "file": "src/subagents/ac-worker.md", "key": "model_tier" },
+      "claim": "unmeasured",
+      "review_by": "2026-12-15",
+      "local": "learnable",
+      "note": "The orchestrator sizes the tier per slice; bounded implementation has no tier claim yet."
+    },
+    {
+      "id": "ac-researcher-tier",
+      "value": "inherit",
+      "sink": { "kind": "subagent-frontmatter", "file": "src/subagents/ac-researcher.md", "key": "model_tier" },
+      "claim": "unmeasured",
+      "measures": "tier-downshift-quality-held",
+      "review_by": "2026-12-15",
+      "local": "learnable",
+      "note": "The 2026-10-23 pinned rerun read underpowered; lite stays a per-call argument."
+    },
+    {
+      "id": "ac-researcher-web-never-lite",
+      "value": "inherit",
+      "forbid": ["lite"],
+      "sink": { "kind": "subagent-frontmatter", "file": "src/subagents/ac-researcher.md", "key": "model_tier" },
+      "claim": "unmeasured",
+      "review_by": "2026-12-15",
+      "local": "fixed",
+      "floor": true,
+      "note": "A definition that keeps web synthesis never ships below the session tier; the tier claims cover exact lookups only."
+    },
+    {
+      "id": "ac-worker-instruction-skip",
+      "value": true,
+      "sink": { "kind": "subagent-frontmatter", "file": "src/subagents/ac-worker.md", "key": "omit_project_instructions" },
+      "claim": "unmeasured",
+      "review_by": "2026-12-15",
+      "local": "fixed",
+      "note": "Token half measured (first call 2,620 vs 144,138); quality half unmeasured. The subagent-constraints concern carries the project's CLAUDE.md."
+    },
+    {
+      "id": "ac-researcher-instruction-skip",
+      "value": true,
+      "sink": { "kind": "subagent-frontmatter", "file": "src/subagents/ac-researcher.md", "key": "omit_project_instructions" },
+      "claim": "unmeasured",
+      "review_by": "2026-12-15",
+      "local": "fixed",
+      "note": "As ac-worker-instruction-skip."
+    },
+    {
+      "id": "max-parallel",
+      "value": 3,
+      "sink": { "kind": "settings-template", "file": "src/config/agent-settings.template.yml", "key": "subagents.max_parallel" },
+      "claim": "unmeasured",
+      "review_by": "2026-12-15",
+      "local": "learnable",
+      "note": "Host cap on concurrent new spawns; a resume is not bounded by it."
+    },
+    {
+      "id": "adversarial-council",
+      "value": "off",
+      "sink": { "kind": "settings-template", "file": "src/config/agent-settings.template.yml", "key": "subagents.adversarial_council" },
+      "claim": "adversarial-council-finding-coverage",
+      "local": "fixed",
+      "note": "Default-off because the finding-coverage claim resolved null."
+    },
+    {
+      "id": "council-min-rounds",
+      "value": 2,
+      "sink": { "kind": "council-default", "file": "src/scripts/ai_council/config.ts", "key": "min_rounds" },
+      "claim": "unmeasured",
+      "measures": "council-vs-solo-baseline",
+      "review_by": "2026-12-15",
+      "local": "learnable",
+      "note": "Neither council-vs-solo nor 2-vs-1 rounds has been measured."
+    },
+    {
+      "id": "council-deep-min-rounds",
+      "value": 3,
+      "sink": { "kind": "council-default", "file": "src/scripts/ai_council/config.ts", "key": "deep_min_rounds" },
+      "claim": "unmeasured",
+      "review_by": "2026-12-15",
+      "local": "learnable",
+      "note": "Unmeasured, as council-min-rounds."
+    }
+  ]
+}
