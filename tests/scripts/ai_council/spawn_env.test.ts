@@ -11,6 +11,7 @@
 //      is the falsifiability.
 import { describe, expect, it } from 'vitest';
 
+import { withoutUngrantedCredentials } from '../../../src/scripts/_lib/billing_grant.js';
 import { hardenedSpawnEnv } from '../../../src/scripts/_lib/spawn_env.js';
 import {
     AnthropicCliClient,
@@ -110,6 +111,29 @@ describe('CliClient._runSubprocess — end-to-end env-injection defence', () => 
             printed,
             `injection vars leaked into the child: ${printed.join(', ')}`,
         ).toHaveLength(0);
+    });
+
+    // road-to-a-quota-the-user-sees-coming 4.2: an unmetered seat must not bill
+    // the user's API key silently. Revert the withoutUngrantedCredentials wiring
+    // and the first case goes red.
+    it('an unmetered Anthropic seat receives no API key or auth token without a billing grant', () => {
+        const client = new AnthropicCliClient({ binary: '/bin/sh' });
+        const run = (
+            client as unknown as {
+                _runSubprocess: (c: string[], s: string | null) => SubprocessResult;
+            }
+        )._runSubprocess.bind(client);
+        const result = withEnv({ ANTHROPIC_API_KEY: 'sk-test', ANTHROPIC_AUTH_TOKEN: 'tok', AC_BILLING_GRANT: '' }, () =>
+            run(['/bin/sh', '-c', 'printf "%s|%s" "$ANTHROPIC_API_KEY" "$ANTHROPIC_AUTH_TOKEN"'], null),
+        );
+        expect((result.stdout ?? '').trim()).toBe('|');
+    });
+
+    it('a billable seat keeps the key it is billed through', () => {
+        const env = withEnv({ ANTHROPIC_API_KEY: 'sk-test' }, () =>
+            withoutUngrantedCredentials(hardenedSpawnEnv(), true, process.cwd()),
+        );
+        expect(env.ANTHROPIC_API_KEY).toBe('sk-test');
     });
 
     it('preserves a benign env var into the child (proves it is not empty-env)', () => {

@@ -144,7 +144,7 @@ Cold-start's 4.3, 4.5 and 5.3, which the first plan proposed to take over, are
       metered session gets one `user_notice` on its first turn: it bills per
       token, and `/status` shows the auth source.
       verify: `npx vitest run tests/scripts/quota_notice_hook.test.ts` -> 0
-- [ ] **4.2 An unmetered vendor-CLI child cannot bill silently.** For
+- [x] **4.2 An unmetered vendor-CLI child cannot bill silently.** For
       Anthropic CLI children booked `billable=false`, `ANTHROPIC_API_KEY` and
       `ANTHROPIC_AUTH_TOKEN` are removed from the spawn env unless the run
       holds a `billing_grant`; the self-review gate's CLI label stops saying
