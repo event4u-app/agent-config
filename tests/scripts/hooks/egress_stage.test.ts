@@ -26,6 +26,7 @@ import {
   EGRESS_STAGE_KILL_SWITCH,
   egressViewFor,
   EXECUTION_VIEW_GRANTS,
+  layerLeavesEgressOff,
   OBSERVATION_FILE,
   publishedEgressState,
   readEgressMode,
@@ -114,6 +115,24 @@ describe("mode resolution", () => {
     expect(readEgressMode(tmp)).toBe("off");
     fs.writeFileSync(file, "egress:\n  placeholders:\n    mode: protect\n");
     expect(readEgressMode(tmp)).toBe("protect");
+  });
+
+  it("decides the shipped template's off from its egress block alone, and nothing that could set another mode", () => {
+    const template = fs.readFileSync(path.join(REPO_ROOT, "src", "config", "agent-settings.template.yml"), "utf8");
+    expect(template).toMatch(/^egress:/m);
+    expect(layerLeavesEgressOff(template)).toBe(true);
+    expect(layerLeavesEgressOff(template.replace(/mode: "off"/, 'mode: "protect"'))).toBe(false);
+    // A nested key and comments named egress are not the top-level key.
+    expect(layerLeavesEgressOff("audit:\n  egress: query\n# egress\n")).toBe(true);
+    expect(layerLeavesEgressOff('"egress":\n  placeholders: {mode: observe}\n')).toBe(false);
+    // A root this cannot read as a plain block mapping goes to the full parse.
+    for (const shape of ["{egress: {placeholders: {mode: off}}}\n", "base: &b {}\negress: *b\n", "<<: *x\negress: {}\n"]) {
+      expect(layerLeavesEgressOff(shape)).toBe(false);
+    }
+    fs.writeFileSync(path.join(tmp, ".agent-settings.yml"), template.replace(/mode: "off"/, "mode: observe"));
+    expect(readEgressMode(tmp)).toBe("observe");
+    fs.writeFileSync(path.join(tmp, ".agent-settings.yml"), template);
+    expect(readEgressMode(tmp)).toBe("off");
   });
 
   it("a thrown kill switch is off whatever the settings say", () => {

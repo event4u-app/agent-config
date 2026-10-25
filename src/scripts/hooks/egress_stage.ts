@@ -117,13 +117,47 @@ export function resolveEgressMode(settings: unknown): EgressMode {
 const EGRESS_WORD = /\begress\b/;
 
 /**
+ * A column-0 line that can make the root anything but a plain block mapping:
+ * flow collections, complex keys, document markers, merge keys, anchors,
+ * aliases, tags, directives.
+ */
+const NON_BLOCK_ROOT = /^(?:[{[?%&*!]|---|\.\.\.|<<)/m;
+
+/** A top-level `egress:` key, plain or quoted, with its indented, blank and comment lines. */
+const EGRESS_BLOCK = /^["']?egress["']?[ \t]*:.*(?:\r?\n(?:[ \t].*|[ \t]*#.*|[ \t]*))*/gm;
+
+/**
+ * Does this layer leave the mode at `off`, read without parsing the whole file?
+ *
+ * The installer writes the full template into every project, and the template
+ * opens `egress: {placeholders: {mode: "off"}}` and mentions the word in two
+ * comments and one nested key. Only a top-level key can set the mode, so in a
+ * plain block-mapping document the top-level `egress:` blocks alone are parsed —
+ * a few lines, not the template. `false` means the layer may set another mode or
+ * has a shape this cannot decide; the caller then takes the full cascade.
+ */
+export function layerLeavesEgressOff(text: string): boolean {
+  if (NON_BLOCK_ROOT.test(text)) return false;
+  for (const block of text.match(EGRESS_BLOCK) ?? []) {
+    if (/[&*!]|<</.test(block.replace(/#.*$/gm, ""))) return false;
+    try {
+      if (resolveEgressMode(parseYaml(block, { version: "1.1" })) !== "off") return false;
+    } catch {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
  * Every project settings layer the cascade would read; the user-global layer
- * cannot carry `egress` (it is not on MERGEABLE_KEYS). When no layer contains
- * the word at all the shipped default holds, and the full cascade — whose
- * template parse measured about 25 ms cold — is skipped. A layer that names it
- * anywhere, even in a comment, pays the full parse. `broken` means a layer
- * exists but cannot be read, or names `egress` and does not parse; the cascade
- * would read either as empty and fall to `off`.
+ * cannot carry `egress` (it is not on MERGEABLE_KEYS). When no layer can set a
+ * mode other than `off` the shipped default holds, and the full cascade — whose
+ * template parse measured about 25 ms cold — is skipped. A layer that names the
+ * word but whose top-level `egress:` block {@link layerLeavesEgressOff} reads as
+ * `off` costs that block's parse, not the template's. `broken` means a layer
+ * exists but cannot be read, or names `egress` undecidably and does not parse;
+ * the cascade would read either as empty and fall to `off`.
  */
 function egressLayers(workspaceRoot: string, readFile: (p: string) => string): "none" | "named" | "broken" {
   let named = false;
@@ -138,6 +172,7 @@ function egressLayers(workspaceRoot: string, readFile: (p: string) => string): "
       return "broken";
     }
     if (!EGRESS_WORD.test(text)) continue;
+    if (layerLeavesEgressOff(text)) continue;
     named = true;
     try {
       parseYaml(text, { version: "1.1" });
