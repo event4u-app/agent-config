@@ -47,10 +47,11 @@ tree, and every adopted item is a step here or in the parent's successor.
 ## Phase 1 — The reference tools, read in depth
 
 - [ ] **1.1 Run `/analyze:reference` on each tool the analyses named** —
-      CodeFlow, Graphify, blast-radius, CodeScene (docs), CodeCharta, repowise,
-      CodeLayers, BISO, dependency-cruiser, Graphiti, Mem0 — one verdict table
-      per tool, sources anonymised per `source-confidentiality`, raw named
-      evidence kept local-only.
+      eleven references (code-map viewers, blast-radius and hotspot tools, a
+      dependency-rule checker, two agent-memory graph stores), listed by name
+      only in the round's local intake under `agents/tmp.old/inbox-2026-10-ap/`
+      — one verdict table per tool as Source A–K, sources anonymised per
+      `source-confidentiality`, raw named evidence kept local-only.
       verify: one findings file per tool under `agents/evidence/analysis/`
 - [ ] **1.2 Fold the adopted items** into the phases below or into a named
       successor, each with the tool's finding id.
