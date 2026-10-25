@@ -156,6 +156,23 @@ export const MECHANISM_IMPORT_PATHS: readonly string[] = [
     'src/scripts/_lib/scan_scope.ts',
 ];
 
+/**
+ * The modules that decide what the review asks, what its answers add up to, and
+ * what record it leaves: the question list, the verdict rule, the stance parser
+ * the verdict rule imports, and the record writer. The gate imports none of
+ * them, so the import-closure criterion never reached them, while the contract
+ * reserves them to the owner. The rest of `src/scripts/ai_council/` — prompts,
+ * transports, quorum, chairman, CLI — stays ungated, so a routine council edit
+ * is not priced as a governance change. The writer's CLI stays outside for the
+ * reason the other writer CLIs do.
+ */
+export const REVIEWER_PATHS: readonly string[] = [
+    'src/scripts/_lib/ratification_record_writer.ts',
+    'src/scripts/ai_council/modification_review.ts',
+    'src/scripts/ai_council/modification_review_questions.ts',
+    'src/scripts/ai_council/stance_tally.ts',
+];
+
 /** The in-repo quorum policy. Present on every runner; absent means refuse. */
 export const POLICY_PATH = 'src/config/ratification-policy.json';
 
@@ -488,7 +505,8 @@ export function isMechanismPath(p: string): boolean {
         p === CONSEQUENCE_CLASS_PATH ||
         p === CONSEQUENCE_CRITERION_PATH ||
         ANCHOR_PATHS.includes(p) ||
-        MECHANISM_IMPORT_PATHS.includes(p)
+        MECHANISM_IMPORT_PATHS.includes(p) ||
+        REVIEWER_PATHS.includes(p)
     );
 }
 
