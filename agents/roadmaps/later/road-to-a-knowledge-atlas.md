@@ -15,6 +15,7 @@ entry_condition:
     none — the maintainer moves this file to `agents/roadmaps/` when the
     condition holds.
 review_by: 2026-12-07
+estate_growth_exempt: "+1 later_roadmaps: a new parked roadmap from round inbox-2026-10-ap, not a move into later/; it carries the owner's turn-2 demands (deep analysis of the reference tools, memory and knowledge views) that its parent road-to-a-map-that-answers, opened and archived in the same change, names as out of scope. Parked rather than active under the WIP cap of five."
 estate_offset_exempt: "Parked, not active: the owner's turn-2 demands (deep analysis of the reference tools, memory and every knowledge source visualised) need the Workbench page of road-to-a-map-that-answers to exist first. Owner search: grep -rlF for map_model, map_viewer, agents/map, blast radius, churn and typed-knowledge-graph over agents/roadmaps/*.md, later/ and stubs/ found no roadmap owning the page or the memory view; stubs/road-to-typed-knowledge-graph-memory owns a typed memory store, not its visualisation, and keeps that subject."
 relates:
   - slug: road-to-a-map-that-answers

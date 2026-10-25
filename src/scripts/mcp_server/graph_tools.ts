@@ -468,7 +468,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
     graph_map_status: {
         name: 'graph_map_status',
         side_effect: 'ro',
-        description: 'Is there a code map (agents/map/)? Freshness, counts, health and findings; with `file`, its blast radius.',
+        description: 'Code map: freshness, health, findings; `file` adds blast.',
         input_schema: { type: 'object', properties: { file: { type: 'string' } }, additionalProperties: false },
         handler: async (args, root) => {
             const staleness = graphState(root, graphHome(root).cachePath);

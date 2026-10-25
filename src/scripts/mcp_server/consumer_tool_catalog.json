@@ -348,7 +348,7 @@
     },
     {
       "name": "graph_map_status",
-      "description": "Is there a code map (agents/map/)? Freshness, counts, health and findings; with `file`, its blast radius.",
+      "description": "Code map: freshness, health, findings; `file` adds blast.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"

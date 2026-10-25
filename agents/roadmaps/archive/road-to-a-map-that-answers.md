@@ -93,28 +93,28 @@ model (`soleOwner`). The step texts above were corrected to match the code.
 
 ## Phase 1 — Data the design marks missing
 
-- [x] **1.1 Size and language per file.** `MapFile` gains `loc` (lines) and
+- [x] **1.1 Size and language per file.** `MapFile` gains `loc` (lines) and <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
       `lang` (from the graph's extension map, `types.ts`); the model gains
       `languages: Array<[lang, files, loc]>`. Counted at map build from the
       file contents read again from the working tree; binary or unreadable →
       field absent.
       verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
-- [x] **1.2 Git collector, once per map build.** The map writer (IO lives
+- [x] **1.2 Git collector, once per map build.** The map writer (IO lives <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
       there, beside `drift` and `prOverlap`) runs one `git log --since=180.days
       --name-only` pass and writes per file `churn` (commits in window),
       `owners` (top three `[name, share]`, names only — D5) and `lastChange`
       (ISO date). No git → all three absent, never zero.
       verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
-- [x] **1.3 Dead flag.** A scope file is `dead` when the `dead` verb lists
+- [x] **1.3 Dead flag.** A scope file is `dead` when the `dead` verb lists <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
       every symbol it declares and no trusted or guessed edge enters it; entry
       files never count. Written as `MapFile.dead`, `analyses.deadFiles` and
       `analyses.deadBasis`, which names the exports gap the verb ran under.
       verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
-- [x] **1.4 Call counts per symbol.** `MapSymbol` gains internal and external
+- [x] **1.4 Call counts per symbol.** `MapSymbol` gains internal and external <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
       call counts from accepted `calls`/`uses` edges (same file versus other
       file); guessed edges are not counted.
       verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
-- [x] **1.5 Blast numbers per file.** `MapFile.blast = {direct, transitive,
+- [x] **1.5 Blast numbers per file.** `MapFile.blast = {direct, transitive, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
       score, share, level}` over trusted in-edges to depth 3, scope code files;
       `score = direct + 0.5 × transitive`, level by share (≥ 50 % critical,
       ≥ 25 % high, ≥ 10 % medium, else low). Membership is not stored (D3).
@@ -122,67 +122,67 @@ model (`soleOwner`). The step texts above were corrected to match the code.
 
 ## Phase 2 — Findings and health
 
-- [x] **2.1 Layers from a rule file.** Read `agents/map/layers.yaml` (glob →
+- [x] **2.1 Layers from a rule file.** Read `agents/map/layers.yaml` (glob → <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
       layer, allowed directions); write `MapFile.layer` and a `layer` entry in
       `violations[]` per forbidden edge. Absent file → neither field (D2).
       verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
-- [x] **2.2 Violations and hotspots.** `violations[]` carries cycles (from
+- [x] **2.2 Violations and hotspots.** `violations[]` carries cycles (from <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
       `analyses.cycles`) and layer breaches, each with files and a severity;
       `hotspots[]` ranks code files by `churn × loc`, top 20, both factors in
       the row (D4). No churn → `hotspots` absent.
       verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
-- [x] **2.3 Health with its formula.** `health = {grade?, score?, parts,
+- [x] **2.3 Health with its formula.** `health = {grade?, score?, parts, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
       formula}` with parts dead share, cycles, guessed-edge share, hotspots;
       each part `{value, weight, points}` or absent; `grade` only when every
       part is present (D1).
       verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
-- [x] **2.4 Legend and pin.** `legend` per colour-by and size option (key,
+- [x] **2.4 Legend and pin.** `legend` per colour-by and size option (key, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
       label, scale, unit) and `pin = {commit, date, freshness, generation}`
       plus `blastDepth` and `gitWindowDays`, so the header and every legend read from `map.json`.
       verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
 
 ## Phase 3 — Knowledge per file
 
-- [x] **3.1 Knowledge list from the artefact layer.** Per file, the artefacts
+- [x] **3.1 Knowledge list from the artefact layer.** Per file, the artefacts <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
       with an edge to it, grouped as the design groups them — contract,
       roadmap (active, later, archived), evidence, draft (`agents/tmp`,
       `agents/tmp.old`) — with status read from the path and a duplicate mark
       when the same basename sits in a roadmap folder and in an inbox folder.
       Memory is a named absent group, never an empty one.
       verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
-- [x] **3.2 Knowledge finding.** When drafts outnumber contracts for a file,
+- [x] **3.2 Knowledge finding.** When drafts outnumber contracts for a file, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
       the knowledge list carries the design's finding row ("mehr Entwürfe als
       Verträge") with both counts.
       verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
 
 ## Phase 4 — The Workbench page
 
-- [x] **4.1 Tokens and frame.** Port the design's dark and light token sets
+- [x] **4.1 Tokens and frame.** Port the design's dark and light token sets <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
       and its header, three-pane frame and rail sections into
       `map_viewer/viewer.{js,css}` (D8). One self-contained offline
       `index.html`, no web fonts fetched at runtime (system fallback stack
       named in the CSS).
       verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
-- [x] **4.2 Left rail.** Health ring and parts, KPI tiles, role bar,
+- [x] **4.2 Left rail.** Health ring and parts, KPI tiles, role bar, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
       confidence bar, colour-by group (Blast, Area, Test share, Role, Folder,
       Layer, Churn, Complexity — an option is disabled with the design's hint
       exactly when its field is absent) and the explorer with scope chip.
       verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
-- [x] **4.3 Graph lens, 2D and orb.** The design's area overview and in-area
+- [x] **4.3 Graph lens, 2D and orb.** The design's area overview and in-area <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
       file view, blast colouring by depth, the 2D / 3D-orb switch, zoom and
       fit, legend as a DOM element that follows the colour-by choice.
       verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
-- [x] **4.4 Layers, Matrix, Knowledge, Treemap lenses.** Depth rings from the
+- [x] **4.4 Layers, Matrix, Knowledge, Treemap lenses.** Depth rings from the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
       selection; the area DSM with the selection's row and column and cycle
       blocks from `violations[]`; the knowledge columns from 3.1; the treemap
       weighted by `loc`. Flow stays disabled with the design's hint.
       verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
-- [x] **4.5 Right rail.** File head, blast panel (numbers, depth list,
+- [x] **4.5 Right rail.** File head, blast panel (numbers, depth list, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
       formula line), connections with relation and trust, symbols with call
       counts, knowledge list, ownership and churn, findings (cycles,
       surprises, drift, layer breaches, hotspots, dead files).
       verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
-- [x] **4.6 Render check and fidelity matrix.** `map_verify` passes at its
+- [x] **4.6 Render check and fidelity matrix.** `map_verify` passes at its <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
       three widths in both themes; a committed fidelity matrix under
       `agents/evidence/reviews/` names, per design zone, what was compared and
       every deviation with its reason.
@@ -190,10 +190,10 @@ model (`soleOwner`). The step texts above were corrected to match the code.
 
 ## Phase 5 — The same numbers for an agent
 
-- [x] **5.1 MAP.md health block.** `renderMapMd` writes the health parts with
+- [x] **5.1 MAP.md health block.** `renderMapMd` writes the health parts with <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
       the formula and the top five findings, inside the existing token budget.
       verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
-- [x] **5.2 The same numbers over MCP.** `graph_map_status` returns the
+- [x] **5.2 The same numbers over MCP.** `graph_map_status` returns the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
       health and the top findings, and with `file` that file's blast record
       and the files it reaches by depth, from the same model (D7, revised);
       catalogue, inventory and the code-intelligence skill row follow.
