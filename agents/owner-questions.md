@@ -8,22 +8,23 @@ and the run that applies it links its PR.
 
 ## Open
 
-### OQ-14 — Self-modification AC-5: a proposal that passed, or one that landed
+### OQ-13 — Restore the kernel literal in non-destructive-by-default
 
-- **Context:** AC-5 of `road-to-self-modification-that-a-council-must-pass` asks
-  for one proposal whose change passes the gate on a passing record. The only
-  proposal, `test-through-the-entry-point`, carries a refused record and landed
-  through the owner's forge act (OQ-7), so the criterion is not met as written.
-  It is the roadmap's last open item once 3.4 to 6.2 and AC-2/AC-3 are on main.
-- **Options:** (a) run one new learning through a two-seat modification review
-  until a record passes, then close AC-5; (b) amend AC-5 to accept a change that
-  landed through the D11 owner route with its refused record; (c) park the
-  roadmap with AC-5 as the entry condition.
-- **Recommendation:** (a) — it is the only option that proves the pipeline can
-  pass, which is what the criterion is for; (b) weakens it and is yours alone.
-- **Blocks:** AC-5 and the archive of the roadmap.
+- **Context:** `check_rule_invariants` exits 1 on main because
+  `src/rules/non-destructive-by-default.md` no longer carries the clause "The
+  ask and the action are strictly sequential … WAIT for the answer"; the rule was
+  reworded. It is the one red in `task ci` an agent may not fix: a kernel-rule
+  edit is owner-gated, and the edit itself is written out in
+  `agents/roadmaps/stubs/road-to-kernel-clause-1-restore.md`. Arrived in four
+  earlier rounds and again in `inbox-2026-10-as`.
+- **Options:** (a) restore the literal sentence as the stub writes it; (b)
+  update the invariant to the current wording and record why; (c) leave it red.
+- **Recommendation:** (a) — the stub's edit is ready and keeps the rule's text
+  and its invariant saying the same thing.
+- **Blocks:** a green `check_rule_invariants`, and with it the last owner-red in
+  `task ci`.
 
-### OQ-12 — Reopen ADR-263 for a package-side run basis
+### OQ-14 — Reopen ADR-263 for a package-side run basis
 
 - **Context:** round `inbox-2026-10-at` asks that every run determines its base
   skills once and closes them out (`later/road-to-a-run-that-knows-its-skills`).
@@ -39,7 +40,7 @@ and the run that applies it links its PR.
   rather than an owner reopen.
 - **Blocks:** Phase 2 of `later/road-to-a-run-that-knows-its-skills`.
 
-### OQ-13 — Un-park the live selection floors and fund one pilot
+### OQ-15 — Un-park the live selection floors and fund one pilot
 
 - **Context:** `later/road-to-routing-assurance-live-floors` now has 5 arrivals;
   each recommends its option (1): a protocol frozen by a session that did not
@@ -155,3 +156,4 @@ and the run that applies it links its PR.
 | OQ-5 | 2026-10-25 | Cancel step-that-costs 1.2? | a — cancelled |
 | OQ-6 | 2026-10-25 | How 4.2 narrows the rule load, and its A/B | a — wait for the flip data |
 | OQ-7 self-modification owner act | 2026-10-25 | Land the split-council self-modification work? | 1 — land through the D11 forge bypass; 3.4, 5.2 and 6.2 ride one PR the owner merges with bypass, 4.1 and 4.2 follow in their own change after the writer is on main |
+| OQ-12 self-modification AC-5 | 2026-10-25 | A proposal that passed, or one that landed? | b — amend AC-5: a change that landed through the D11 owner route with its refused record counts; the roadmap closes |

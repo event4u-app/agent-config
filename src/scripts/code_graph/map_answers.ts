@@ -9,13 +9,12 @@
  * The viewer computes none of these values; it only walks shipped edges for the
  * blast membership (decision D3).
  */
-import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
 
-import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
+import { gitProbe } from '../_lib/spawn_env.js';
 import type { FileRole, MapModel } from './map_model.js';
 import { EXT_LANG } from './types.js';
 
@@ -310,12 +309,7 @@ export interface GitFacts {
  */
 export function readGitHistory(root: string, days = GIT_WINDOW_DAYS): Map<string, GitFacts> | null {
     const git = (args: string[]): string =>
-        execFileSync('git', ['-C', root, ...args], {
-            env: hardenedSpawnEnv(),
-            encoding: 'utf-8',
-            stdio: ['ignore', 'pipe', 'ignore'],
-            maxBuffer: 512 * 1024 * 1024,
-        });
+        gitProbe(root, [...args], { maxBuffer: 512 * 1024 * 1024 });
     let head: string;
     try {
         head = git(['log', '-1', '--format=%cI']).trim();

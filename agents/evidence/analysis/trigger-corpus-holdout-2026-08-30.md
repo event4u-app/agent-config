@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  dfcb887d8fdfa6e13d53cdbb5a0c1401a266ed1087a727a43fe9b19f51e59ed3
+SET-SHA256  92f138f317212de9eb58ceb70280b83424795ae02bdd0ab6f98d497677ed81c1
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1316,7 +1316,7 @@ open and which this file does not settle.
 | `rule-writing` | `c03c83678a07e7c08201aa06fb1109bad1270a0d9883d14508cda496c21dbe0f` |
 | `screenshot-hygiene` | `2493ae6cee8869c659e34610c7ec6a7d7a6f5c76098136c98fa35c90484adb2c` |
 | `security` | `7e2c5b70d7d42d0fa53ce71e5f664f89c3afe943e198389eecebfd82a0ef61d3` |
-| `security-audit` | `27ccbdcd02b8cf7fbd6b85da1043c680233a6ed840697eac6ef9dace37cb0993` |
+| `security-audit` | `4d59d72af3793f7d949f38604408a24e71ba0b5ee4b3849145b2d12214fd3529` |
 | `security-maturity-assessment` | `071894293d4c9a1997843d9bfc78f69b2fc64c0e5306544756cb6853bfd31b30` |
 | `server-hardening` | `8301bedcbcd9129f8c55d3640e66164baec4753e92a55a8b56df54449e3f3f46` |
 | `skill-reviewer` | `86b4abf170034661be4a9136bdfa51f2f00f5e9a3db0b579d4946c1f091108f7` |
@@ -1777,3 +1777,32 @@ tokens against the 500 target, still **MET**. Neither verdict changes in kind.
 
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
 and `routing_signal_measurement.test.ts` § 5.1.
+
+## Growth — 2026-10-25, `security-audit` corpus extended; the seal does not move
+
+```
+ONE TRAIN ROW EDITED. NO ROW ADDED, NONE MOVED. THE SEALED SET STAYS AT 37.
+```
+
+**What changed.** `road-to-security-answer-that-names-what-it-checked` 2.1 added
+four casual whole-app exemplars (two German) to `security-audit`, because the
+casual "is my app secure?" question ranked the skill nowhere or below
+`agent-security-review`.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `security-audit` | train | unchanged | edited |
+
+The set is still 173 files, 37 of them sealed. `SET-SHA256` moves because it is
+computed over every row: `dfcb887d…` → `92f138f3…`.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.
+
+**Both train-side measurements were re-taken on this tree.**
+`routing-body-signal-verdict.json`: still `harmful` on the false-activation
+guard (**+5.56 pp** against +2.0 pp), cases 1,317 → 1,321, delta recall +2.38 → +2.53 pp (the
+description edit moved it, not the corpus alone).
+`delivery-set-measurement-2026-08-31.json`: recall loss **38.78 pp**, the
+ceiling stays **BREACHED**; context cost **231.0** tokens against the 500
+target, still **MET**. Neither verdict changes in kind.

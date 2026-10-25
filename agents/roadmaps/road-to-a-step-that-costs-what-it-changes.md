@@ -222,7 +222,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 - **Question:** none — this waits on a drain, not a decision; nothing in this run can produce a drain over another roadmap without executing that roadmap.
 - **Recommendation:** close 1.3 on the first drain whose every step reads < 40 KB of the largest roadmap; if a step reads more, the § 5 step-1 instruction is not being followed and that is the defect to fix.
 - **If you do nothing:** 1.3 stays open; nothing else here waits on it.
-- **What to do:** after the next drain over `agents/roadmaps/road-to-self-modification-that-a-council-must-pass.md`, run the **Run:** command and either (1) tick 1.3 with the per-step maximum, or (2) open the defect in `src/agent-src/contexts/execution/roadmap-process-loop.md` § 5 step 1.
+- **What to do:** after the next drain over `agents/roadmaps/archive/road-to-self-modification-that-a-council-must-pass.md`, run the **Run:** command and either (1) tick 1.3 with the per-step maximum, or (2) open the defect in `src/agent-src/contexts/execution/roadmap-process-loop.md` § 5 step 1.
 - **Resolved when:** a drain over the largest active roadmap shows every closed step reading < 40 KB of it, and 1.3 is ticked with that reading.
 
 ### blocker: flip-readiness-thirty-shadow-steps

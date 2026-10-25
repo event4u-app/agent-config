@@ -13,7 +13,7 @@ entry_condition:
   when: >
     Producer-driven. (i) lands with the active file; (ii) is dated by its owner.
   who: >
-    An implementer for Phases 1-3. The owner for ADR-263 (OQ-12) before Phase 2
+    An implementer for Phases 1-3. The owner for ADR-263 (OQ-14) before Phase 2
     can bind a run basis that a host is expected to honour.
 estate_growth_exempt: "+1 later_roadmaps on 2026-10-25, round inbox-2026-10-at: topic 1 asks that the base skills of a run are determined once at the start and enforced, extendable during the run. No roadmap owns a run basis or a skill stop gate — the same search as road-to-a-plan-that-stays-true's offset claim plus `grep -rlniE 'run.basis|skill-settle|forced.verdict' agents/roadmaps` returned nothing. It cannot start now: the active estate is at its cap with that file, and its entry condition names two readings that do not exist yet. Parked rather than added active, per the owner directive of 2026-10-24."
 execution:

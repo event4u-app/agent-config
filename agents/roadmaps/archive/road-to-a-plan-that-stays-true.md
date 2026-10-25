@@ -170,7 +170,7 @@ Evidence (executed): `src/scripts/optimize_skill_description.ts:128`
 - [x] **5.4 One id per owner question.** `agents/owner-questions.md` carries
       `OQ-11` twice; the self-modification one, which nothing cites, becomes
       the next free id (the archived memory roadmap cites the teardown one).
-      verify: `grep -c '^### OQ-11 ' agents/owner-questions.md` -> 1
+      verify: `grep -c '^### OQ-11 ' agents/owner-questions.md` -> 1 <!-- merged with main: #2683 renumbered and answered the self-modification question as OQ-12 the same day; this branch took main's numbering and filed its two questions as OQ-14 and OQ-15 -->
 
 ## What this roadmap does not do
 
@@ -183,7 +183,7 @@ Evidence (executed): `src/scripts/optimize_skill_description.ts:128`
   `stubs/road-to-live-trigger-eval`, under their Arrivals lines.
 - The candidate-aware runner and the failure-informed proposer (topic 3):
   `later/road-to-governed-evidence-production`, under its Arrivals line.
-- Reopening ADR-263: `agents/owner-questions.md` OQ-12.
+- Reopening ADR-263: `agents/owner-questions.md` OQ-14.
 - A JSON record per revalidation, a dashboard column, a CI gate over every
   roadmap's freshness: refused — the `revalidated:` line is the record, and drift
   is a re-verification prompt, not falsity.

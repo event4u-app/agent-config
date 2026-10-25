@@ -1,3 +1,5 @@
+import { execFileSync } from 'node:child_process';
+
 /**
  * Hardened environment for spawned subprocesses
  * (road-to-runtime-security-hardening Phase 1).
@@ -110,6 +112,21 @@ function isDeniedByFamily(name: string): boolean {
  *   genuinely needs one — that is an explicit, reviewable decision at the call
  *   site, never an ambient inheritance.
  */
+/**
+ * Leading git arguments for a read-only probe of a checkout this process did not
+ * create. `hardenedSpawnEnv()` strips env-borne config; these disable two exec
+ * channels the checkout's own `.git/config` can set — `core.fsmonitor`, which
+ * runs on `git status` and on a `git diff` against the worktree, and hooks. A
+ * clean/smudge filter driver is still honoured: its name is the checkout's
+ * choice, so it cannot be disabled here.
+ */
+const GIT_SAFE_ARGS: readonly string[] = ['-c', 'core.fsmonitor=false', '-c', 'core.hooksPath=/dev/null'];
+
+/** `git -C root …` with {@link GIT_SAFE_ARGS}, the hardened env, stdout as text, stderr dropped. */
+export function gitProbe(root: string, args: readonly string[], opts: { maxBuffer?: number; timeout?: number } = {}): string {
+    return execFileSync('git', [...GIT_SAFE_ARGS, '-C', root, ...args], { env: hardenedSpawnEnv(), encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'], ...opts });
+}
+
 export function hardenedSpawnEnv(
     overrides: Record<string, string> = {},
 ): NodeJS.ProcessEnv {

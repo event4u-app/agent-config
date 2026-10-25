@@ -203,3 +203,15 @@ and a confidentiality classification on material nobody has seen yet. An agent
 that ran it anyway would either spend unauthorised or commit raw named evidence,
 and both are worse failures than an unmet acceptance criterion sitting in a stub
 with a probe on it.
+
+## Arrival 2026-10-25 — a relay path for a source the run cannot fetch
+
+> **Arrivals:** 1 — `inbox-2026-10-as` (2026-10-25).
+
+When a source is `blocked` or `degraded`, the analysis takes the user's relay
+(text, screenshot, transcript) as `provider-reported`. A statement that rests
+only on the relay sets the topic and never grounds a defect; every defect still
+needs a tree citation. Fixture: a blocked URL plus a relay, where the report
+keeps the relay's statements apart. The file path for local media already
+exists (`analyze:post`); the relay of a description does not.
+

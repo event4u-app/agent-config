@@ -50,6 +50,7 @@ Run the row(s) for what you touched. The grep is a fast authoring-time backstop 
 | **User-controlled render (FE)** | output-encoded; no `dangerouslySetInnerHTML`/`v-html`/`innerHTML`/`eval` on non-constant input; no secret/token in client code; token not in `localStorage`. **This surface also carries the four completeness rows below — they are part of it, not an optional extra.** | `frontend-render-security` |
 | **Third-party asset in shipped markup / CSS** | delivery is self-hosted through the project's own route (framework font/asset primitive, bundled package, or locally-served file) — a font/icon/stylesheet CDN link transmits the **visitor's IP** to that third party on every page view; a hotlink only on a stated consumer opt-in; `integrity` + `crossorigin` if a CDN link stays | `design-fidelity-mechanics` § Asset & imagery discipline (owner), `typography-system` |
 | **File / outbound fetch** | path confined to an allowed base; SSRF allow-list + private-IP block on user-supplied URLs; size limit; **explicit timeout** (no unbounded/default-infinite wait); server-side validation (never client-only) | `security`, `defense-in-depth` |
+| **File upload / file processing** | the server names the file and picks the extension from an allowlist (never the client filename); stored where nothing executes, served from a separate origin or as an attachment with `nosniff`; content type checked together with the extension (`mimes` + `extensions`), a sniff is only a hint; processors and scanners run isolated and the file stays unpublished until the verdict; archives bounded before extraction; no `include`/`require` of an upload path | `threat-modeling` (`file-upload` rows), `security-audit` |
 | **Infra / IaC** | least-privilege (no `Action:*`/`Resource:*`); encryption at rest; no `0.0.0.0/0` to mgmt/DB ports; no hardcoded creds; scanner-verified, not `plan`-verified | `engineering-safety-floor`, `terraform`, `secrets-management` |
 | **New dependency** | package exists on the real registry (not hallucinated); not typo-adjacent to a popular one; pinned + lockfile committed; CVE-scanned | `supply-chain-intake`, `dependency-upgrade` |
 | **Secrets/credentials** | never a literal in source; env / secret-manager reference; password columns use bcrypt/argon2, never MD5/SHA; **agent/MCP config too** — no raw key in `.mcp.json` / agent-config / CI YAML / a committed `.env` (env-var indirection, gitignored) | `secrets-management`, `domain-safety-pii` |
@@ -104,6 +105,10 @@ rg -n '\$?(token|otp|signature|mac|hmac|digest)\s*===?\s*|===?\s*\$?(token|otp|s
 rg -n '"Action"\s*:\s*"\*"|"Resource"\s*:\s*"\*"|0\.0\.0\.0/0|InsecureSkipVerify|verify=false|curl.*\| *bash' .
 # Raw secret in an agent/MCP/CI config (should be an env-var reference, not a literal)
 rg -n '(sk_live_|sk-[A-Za-z0-9]{20}|AKIA[0-9A-Z]{16}|ghp_[0-9A-Za-z]{36}|AIza[0-9A-Za-z_\-]{35})' --glob '*.mcp.json' --glob '.mcp.json' --glob '*.env' --glob '**/agent*config*' --glob '.github/workflows/*'
+# Upload: client filename into a storage path, mimes without extensions, executable sinks
+rg -n 'getClientOriginalName|getClientOriginalExtension|originalname|getOriginalFilename|storeAs\(|storePubliclyAs\(' .
+rg -n "mimes:" . | rg -v 'extensions:'
+rg -n 'move_uploaded_file\(|phar://|(include|require)(_once)?\s*\(?\s*\$' .
 # Swallowed error (empty catch) / unbounded external call (no timeout arg)
 rg -n 'catch\s*\([^)]*\)\s*\{\s*\}|except[^:]*:\s*pass' .
 ```

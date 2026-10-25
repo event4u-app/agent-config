@@ -47,6 +47,10 @@
       "signup",
       "passkey",
       "upload",
+      "uploads",
+      "uploaded",
+      "multipart",
+      "hochladen",
       "webhook",
       "tenant",
       "billing",
@@ -71,6 +75,9 @@
     "match_column": "Surface_Class",
     "rules_column": "Decision_Rules",
     "composite_min_score": 3.0,
+    "category_floor": {
+      "threats": "Surface Class"
+    },
     "plan": {
       "surfaces": 1,
       "threats": 4

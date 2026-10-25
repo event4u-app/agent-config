@@ -53,6 +53,8 @@ const IMPORTED_BROWSER_SUITES = [
     'tests/cli/ui_render_asset_font_state.test.ts',
     'tests/cli/ui_render_painted_family.test.ts',
     'tests/scripts/code_graph_map_area_limit.test.ts',
+    'tests/scripts/code_graph_map_no_data.test.ts',
+    'tests/scripts/code_graph_map_canvas_clear.test.ts',
 ];
 const BROWSER_SUITES = [
     'tests/cli/ui_render_asset_profile.test.ts',

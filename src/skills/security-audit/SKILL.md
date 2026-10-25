@@ -1,7 +1,9 @@
 ---
 model_tier: high
 name: security-audit
-description: "Security audit — vulnerability scan, pentest review, attack-surface sweep; explicit request only, not regular feature work. Pre-implementation threat pass → threat-modeling."
+description: "Security audit — is my app secure, security vulnerabilities before launch (Sicherheit, Sicherheitslücken, Schwachstellen), pentest. Threat pass first → threat-modeling."
+personas:
+  - security-engineer
 domain: quality
 parallelizable: independent
 workspaces:
@@ -27,6 +29,8 @@ Use this skill when:
 - `analysis-autonomous-mode` routes here after detecting risky patterns
 - Reviewing code that handles user input, authentication, or authorization
 - Checking for vulnerabilities before a release or deployment
+- A casual "is my app secure?" or "check my app before launch" — answer through
+  § Casual question below, never with a bare all-clear
 
 Do NOT use when:
 
@@ -39,6 +43,21 @@ Do NOT use when:
   [`authz-review`](../authz-review/SKILL.md)
 
 ## Procedure: Security audit
+
+### Casual question — scope before verdict
+
+A casual question gets a short check, not a full audit. The answer closes with
+a scope block, and never with "secure", "no vulnerabilities" or "nothing to
+fix" unless a ledger backs it:
+
+```
+checked: <the routes, files or surfaces actually traced>
+not checked: <everything else — payments, admin, uploads, dependencies, …>
+```
+
+Then offer `/audit code full` for the rest. An absence claim is only as wide as
+what was checked; without a ledger the honest answer for the rest is "not
+checked", never "safe".
 
 ### 0. False-positive gate — restate the claim before reporting
 
@@ -53,7 +72,8 @@ naming all three of:
    control to trigger it.
 
 If any of the three cannot be named concretely, the item is **not a finding
-yet** — trace further or drop it with a one-line reason.
+yet** — trace further, record it `needs_validation` with the one open fact, or
+`rejected` with a one-line reason (§ 1b).
 
 **Rationalizations to Reject:**
 
@@ -88,6 +108,9 @@ Identify all entry points where untrusted data enters:
 - Queue job payloads from external sources
 - Import files (CSV, Excel, XML)
 - URL path segments and query strings
+- CI workflows and their triggers, CLI arguments and environment variables
+- Model context and tool arguments an AI agent fills — the agent's own
+  permissions route to `/audit agents`
 
 ### 1b. Hunters by surface, a fresh verifier per candidate
 
@@ -140,11 +163,11 @@ User Input → Controller → Validation → Service → DB/File/External
 | **Auth bypass** | Missing policy checks, broken gate logic, `withoutMiddleware()` |
 | **IDOR** | Direct object access without ownership verification |
 | **Mass assignment** | Missing `$fillable`/`$guarded`, `request()->all()` in create/update |
-| **File upload** | Missing type validation, path traversal, executable uploads |
+| **File upload** | Client-chosen name or extension in the storage path; content sniffing trusted as the only check; execution on fetch through handler config (`x.jpg/a.php`, an uploaded `.htaccess`); the processor or scanner that parses the file by content (thumbnailer, metadata reader, AV) as its own attack surface; the file served before the scan verdict — rows in [`threats.csv`](../threat-modeling/data/threats.csv) `file-upload` |
 | **SSRF** | User-controlled URLs passed to HTTP client |
 | **Deserialization** | Unserializing user input, unsafe queue payloads |
 | **Secret exposure** | Hardcoded credentials, secrets in logs, `.env` in public dir |
-| **Rate limiting** | Missing throttle on auth endpoints, password reset, API |
+| **Rate limiting** | Missing throttle on auth endpoints, password reset, API — a finding only when Step 0 names the attacker gain (credential guessing, code enumeration); otherwise a hardening note |
 | **Header injection** | User input in response headers, email headers |
 | **Insecure defaults / fail-open** | Guards that allow on error (`catch { return true }` in an authz check), default-allow matchers, debug mode defaulting on, permissive CORS/`verify=false` fallbacks, feature flags whose missing value grants access |
 
@@ -161,7 +184,10 @@ version floor: a value copied here reads authoritative long after it stops being
 true. Report the finding, route the fix to
 <https://cheatsheetseries.owasp.org/> — Cryptographic Storage, Transport Layer
 Security, Password Storage, XML External Entity Prevention — and never name a
-value from memory. Rationale and reopening condition:
+value from memory. The same holds for file processors and servers: processor
+versions, image-processor policy files and web-server handler directives route
+to the vendor's security policy and the advisory database, never to a value
+here. Rationale and reopening condition:
 [ADR-238](../../../docs/decisions/ADR-238-security-content-routes-to-external-authority.md).
 
 ### 4. Framework-specific checks
@@ -170,10 +196,9 @@ value from memory. Rationale and reopening condition:
 
 ### 5. Dependency audit
 
-- Check `composer.lock` for known vulnerable packages
-- Check `package-lock.json` for frontend vulnerabilities
-- Identify outdated packages with known CVEs
-- Check if security patches are available
+Run `/audit deps` — it owns the lockfile scan, the advisory tiers and the fix
+path. Report its findings that are reachable from the audited code; never
+re-derive the advisory list by hand.
 
 ### 6. Proof, fix, retest
 
@@ -219,6 +244,11 @@ open fact instead of Severity):
 - **Fix:** concrete mitigation
 - **Confidence:** Low / Medium / High
 - **Proof:** `static-trace` or `test` (with the proof-test path)
+
+Severity is anchored to the demonstrated impact: the overall rating never
+exceeds what the trace or the red test showed. A gap with no Step-0 tuple
+(missing header, missing throttle with no named gain) goes under **Hardening
+notes**, never among the findings.
 
 After the findings, add a **Rejected candidates** section: one line per
 look-dangerous-but-benign pattern the Step-0 gate killed, with the traced

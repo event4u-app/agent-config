@@ -546,6 +546,21 @@ so. One question per turn on either shape - the Iron Law above does not change w
       verify: a fixture run that discovers a larger unrelated refactor emits a follow-up
       artefact rather than expanding the mission.
 
+## Phase 7 — Arrivals from inbox-2026-10-as (agent work, no unparking needed)
+
+> **Arrivals:** 1 — `inbox-2026-10-as` (2026-10-25); earlier rounds named the
+> owner queue (`inbox-2026-09-b`, `inbox-2026-10-s`, `inbox-2026-10-t`) but were
+> not counted here.
+
+- [ ] **7.1 One `stubs_due` implementation.** `src/agent-src/scripts/stubs_due --counts`
+      reads `43 13` and `src/scripts/stubs_due --counts` reads `43 40` on the
+      same tree; fold them into one and count items, not headings.
+      verify: both entry points print the same `--counts` line.
+- [ ] **7.2 Retire `blocker_class: estate`.** It is dead since ADR-287
+      (`QUICKWIN_BLOCKER_CLASSES` in `stubs_due.ts`); the two stubs carrying it
+      are re-typed, the mcp-fingerprint one as a capability gap.
+      verify: `grep -rln "^blocker_class: estate" agents/roadmaps/stubs` -> 1
+
 ## Kill register
 
 | K | Killed | Why |

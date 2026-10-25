@@ -494,6 +494,16 @@ it.
       made repeatable, and its output for the window is committed next to this
       roadmap. A miss is published as a miss.
 
+## Phase 6 — Arrivals from inbox-2026-10-as
+
+> **Arrivals:** 1 — `inbox-2026-10-as` (2026-10-25); earlier rounds
+> `inbox-2026-10-ag`, `inbox-2026-10-s`, `inbox-2026-10-w` named the same line.
+
+- [ ] **6.1 Cancel in progress on PRs only.** `.github/workflows/tests.yml`
+      cancels in-progress runs on main too, so a push can cancel the run that
+      verifies the previous merge.
+      verify: `grep -n "cancel-in-progress" .github/workflows/tests.yml` -> /github\.ref/
+
 ## Blockers
 
 - **B1 — `dist/` untrack.** `dist/` is tracked at 14 MB and is the single

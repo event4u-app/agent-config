@@ -30,6 +30,18 @@ review_by: 2027-01-25
    the human? Record `native | human-only | absent` per host before naming it as
    an additional independent seat.
 
+6. A **false-all-clear rate** as a bench endpoint: the share of runs or
+   replies that say "secure" or "no vulnerabilities" while planted findings
+   are still open. It measures the failure a casual question produces.
+7. **Host-native security results import.** Where a host plugin already
+   writes a results file with a revision stamp, import its findings as
+   `needs_validation`, stale when the stamp is not HEAD, rather than re-hunting.
+8. **No double review per turn.** When a host plugin already reviews the diff
+   at stop, the package does not run its own security diff review there too;
+   measure the turn cost with and without.
+
+> **Arrivals:** 1 — `inbox-2026-10-as` (2026-10-25) added items 6–8.
+
 ## Trigger
 
 The owner authorises the bench spend, or a consumer runs `/audit code full` and
