@@ -145,14 +145,16 @@ function mergeInto(dst: JsonObject, src: JsonObject): void {
  * empty, as the cascade reads it.
  */
 function egressFromLayers(workspaceRoot: string, readFile: (p: string) => string): EgressMode {
+  // The canonical layer can also sit in the directory chain. Under the
+  // cascade's last-writer-wins merge, A·D·A equals D·A, so each path is read
+  // once, at its last position.
   const texts: string[] = [];
-  for (const p of _resolve_cascade_paths(workspaceRoot, null)) {
+  for (const p of [...new Set(_resolve_cascade_paths(workspaceRoot, null).reverse())].reverse()) {
     try {
       texts.push(readFile(p));
     } catch (exc) {
       // Only a missing layer is skipped; a layer that exists and cannot be read could hold the mode.
-      const code = (exc as NodeJS.ErrnoException).code;
-      if (code === "ENOENT" || code === "ENOTDIR") continue;
+      if (/^ENO(ENT|TDIR)$/.test((exc as NodeJS.ErrnoException).code ?? "")) continue;
       return "protect";
     }
   }
