@@ -7,7 +7,8 @@
  *
  * Sticky by design: a later plain `install` or upgrade leaves the field in
  * place, because a brake that an upgrade silently released would not be one.
- * `agent-config uninstall` removes the runtime directory and the field with it.
+ * `agent-config uninstall --global --purge` removes the runtime directory and
+ * the field with it; a plain uninstall keeps both.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

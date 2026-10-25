@@ -95,6 +95,7 @@ import { project_settings_path } from '../_lib/agent_settings.js';
 import { _is_source_repo } from './cmd_refresh.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
 import { parse_version } from '../_lib/version_order.js';
+import { EXIT_COMPLETED_WITH_CONFLICTS, SIDECAR_SUFFIX } from '../../install/preserve.js';
 
 const PACKAGE_NAME = '@event4u/agent-config';
 const PACKAGE_ROOT = resolvePackageRoot(import.meta.url);
@@ -598,10 +599,21 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
     // step and reporting per-step outcomes in the summary. A failed
     // essential step (global deploy) still exits 1 — after the others ran.
     const failed_essential: string[] = [];
+    // Exit 3 is the installer completing with the user's edited files kept and
+    // the package copy staged beside them — a designed outcome, not a failure.
+    // Re-running would preserve again, so it is never advised for this case.
+    const preserved_steps: string[] = [];
     for (const cmd of steps.slice(1)) {
         _print(out, '→ ' + cmd.join(' '));
         const rc = runner(cmd);
-        if (rc !== 0) {
+        if (rc === EXIT_COMPLETED_WITH_CONFLICTS) {
+            preserved_steps.push(cmd.join(' '));
+            _print(
+                out,
+                `⚠️  agent-config upgrade: ${cmd.join(' ')} completed and kept files you changed; ` +
+                    `the package version of each sits beside it as *${SIDECAR_SUFFIX}.`,
+            );
+        } else if (rc !== 0) {
             failed_essential.push(cmd.join(' '));
             _print(
                 err,
@@ -682,6 +694,16 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
                 '`agent-config doctor` names anything left in a mixed state.',
         );
         return 1;
+    }
+
+    if (preserved_steps.length > 0) {
+        _print(
+            out,
+            '✅  agent-config upgraded, with files you changed kept as they were.\n' +
+                `   Merge each *${SIDECAR_SUFFIX} file into its original and delete it, or ` +
+                'run `agent-config global --force` to take the package versions instead.',
+        );
+        return EXIT_COMPLETED_WITH_CONFLICTS;
     }
 
     _print(

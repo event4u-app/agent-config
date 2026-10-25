@@ -262,6 +262,32 @@ export function assertsDeletion(f: Pick<Finding, 'title' | 'detail'>): boolean {
     return /\b(deleted|removed|deletion|removal)\b/i.test(`${f.title}\n${f.detail}`);
 }
 
+const REMOVAL_WORD = /\b(deleted|removed|deletion|removal)\b/i;
+
+/**
+ * The names a removal claim is ABOUT: the artifacts named in a sentence that
+ * also carries a removal word, plus `file` when that sentence names it.
+ *
+ * `namedArtifacts` alone made any removal word anywhere in a finding a claim
+ * about every name the finding carries, its own `file` included. Measured on
+ * the 16.5.0 ledger: three security findings about a ratification record (one
+ * high) said a seat's entry "was removed from" a probe-state file, and were
+ * de-blocked because the record itself — the `file`, created in the range and
+ * present in the tree — "was not deleted". Nobody had claimed it was.
+ */
+export function removalClaimNames(f: Pick<Finding, 'title' | 'detail' | 'file'>): string[] {
+    const out = new Set<string>();
+    for (const sentence of `${f.title}\n${f.detail}`.split(/(?<=[.!?])\s+|\n/)) {
+        if (!REMOVAL_WORD.test(sentence)) continue;
+        if (f.file && (sentence.includes(f.file) || sentence.includes(path.basename(f.file)))) out.add(f.file);
+        for (const m of sentence.matchAll(/`([^`\n]{2,120})`/g)) {
+            const tok = (m[1] ?? '').trim();
+            if (tok !== '' && !/\s/.test(tok)) out.add(tok);
+        }
+    }
+    return [...out];
+}
+
 /**
  * The disproof, or null when there is none.
  *
@@ -310,7 +336,7 @@ export function contradictedByTree(
     modified: ReadonlySet<string> = new Set<string>(),
 ): string | null {
     if (!assertsDeletion(f)) return null;
-    for (const name of namedArtifacts(f)) {
+    for (const name of removalClaimNames(f)) {
         // Any deletion whose path mentions the token leaves the claim standing.
         if ([...deleted].some((d) => d === name || d.includes(name))) continue;
         const candidates = [name, `src/skills/${name}/SKILL.md`, `src/rules/${name}.md`, `src/scripts/${name}`];

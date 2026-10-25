@@ -51,7 +51,7 @@ rather than asserted.
 | **UI / settings server** | `src/cli/commands/uiServe.ts` → `src/server/app.ts` | **B** | Listens on `127.0.0.1`. Started by an explicit human action (`agent-config config`, `settings`, `install`, `setup`), bounded to that session. |
 | **MCP server** | `src/scripts/mcp_server/server.ts` | **B** | A stdio server with a lifecycle beyond one command; ADR-124's own Class-B text names "MCP *servers* run as memory/retrieval backends" explicitly. |
 | **A request gateway** | not in this tree yet — `road-to-placeholders-on-the-wire` Phase 7, and building it is an open owner decision (blocker `request-gateway-build`) | **B**, in the UI server's shape | Classified before any gateway code exists. A loopback listener fails Class A's "no listening socket" test, so it is Class B in the shape the UI server already carries — human-started, session-bounded, loopback only — with one difference written down: it carries model traffic. **Started by** the launching command, which spawns the host as its child. **Writes** the session table and nothing else. **Stops** with its child. |
-| **A supervised telemetry collector** | not in this tree yet — `road-to-supervised-telemetry-collector` builds it | **B**, permitted under ADR-249 | Listed because ADR-249 exists FOR this row and a table that omitted it would read as if the reversal had no subject. It is the only planned component that runs unattended, and it is therefore the only one that needs ADR-249's four conditions rather than "a human started it". |
+| **A supervised telemetry collector** | `src/scripts/collector_daemon.ts` — default-off: `start()` refuses unless the opt-in marker exists, and nothing in the install path creates it | **B**, permitted under ADR-249 | Listed because ADR-249 exists FOR this row and a table that omitted it would read as if the reversal had no subject. It is the only planned component that runs unattended, and it is therefore the only one that needs ADR-249's four conditions rather than "a human started it". |
 
 ### The Class-B rows are four, and each is permitted for a different reason
 
@@ -71,9 +71,8 @@ misreading ADR-249's `supersedes_scope` was written to prevent:
   it is built rather than after. It does not exist in this tree yet.
 - **The supervised collector** — the only row that would run unattended, and
   therefore the only one that needs ADR-249's four governance conditions rather
-  than "a human started it". It does not exist in this tree yet; the row is here
-  because leaving it out would make the table look like ADR-249 reversed a
-  prohibition for nothing.
+  than "a human started it". It is in this tree as `src/scripts/collector_daemon.ts`
+  and ships off: it runs only after a user creates its opt-in marker.
 
 ### What is NOT in this table, and why that is not an omission
 

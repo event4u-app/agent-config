@@ -8,8 +8,18 @@
  * historical roots every surface has lived at.
  */
 
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { pendingRows } from './breaking_pending.js';
+
 /** The triggers at `CONTRIBUTING.md` § Versioning policy that a diff can decide. */
-export const MAJOR_SURFACES = ['installer-layout', 'settings-keys', 'rule-or-skill-removal', 'command-removal'] as const;
+export const MAJOR_SURFACES = [
+    'installer-layout',
+    'settings-keys',
+    'rule-or-skill-removal',
+    'command-removal',
+    'pending-breaking',
+] as const;
 export type MajorSurface = (typeof MAJOR_SURFACES)[number];
 
 /**
@@ -175,6 +185,7 @@ function is_create_or_delete(status: string): boolean {
 export function classify_surfaces(
     entries: readonly DiffEntry[],
     removed_keys: readonly string[] = [],
+    unshipped_pending = 0,
 ): Set<MajorSurface> {
     const out = new Set<MajorSurface>();
     for (const entry of entries) {
@@ -184,7 +195,27 @@ export function classify_surfaces(
         if (entry.status === 'D' && matches(entry.path, COMMAND_PATHS)) out.add('command-removal');
     }
     if (removed_keys.length > 0) out.add('settings-keys');
+    if (unshipped_pending > 0) out.add('pending-breaking');
     return out;
+}
+
+/**
+ * Rows of `BREAKING_CHANGES.md` § Pending that this span ships: a row whose
+ * `Landed` commit is in `<tag>..HEAD`, or that cites none. The index files them
+ * as breaking and states that a minor never breaks, so a span carrying one is a
+ * major whatever its trailers say — no commit subject carries the row's wording.
+ */
+export function unshipped_pending_rows(index: string, span_shas: readonly string[]): number {
+    return pendingRows(index).filter((r) => r.commit === null || span_shas.some((sha) => sha.startsWith(r.commit!)))
+        .length;
+}
+
+function read_breaking_index(): string {
+    try {
+        return fs.readFileSync(path.join(process.cwd(), 'BREAKING_CHANGES.md'), 'utf-8');
+    } catch {
+        return '';
+    }
 }
 
 /** `git diff --name-status` output into entries; a rename record keeps its new path. */
@@ -202,10 +233,16 @@ export function parse_name_status(raw: string): DiffEntry[] {
 }
 
 /** The surfaces the span `<tag>..HEAD` touched; `git` runs one git command and returns its stdout. */
-export function span_surfaces(tag: string | null, git: (args: string[]) => string): Set<MajorSurface> {
+export function span_surfaces(
+    tag: string | null,
+    git: (args: string[]) => string,
+    read_index: () => string = read_breaking_index,
+): Set<MajorSurface> {
     if (!tag) return new Set();
     const entries = parse_name_status(git(['diff', '--name-status', `${tag}..HEAD`]));
     const paths = settings_key_paths(entries);
     const patch = paths.length > 0 ? git(['diff', `${tag}..HEAD`, '--', ...paths]) : '';
-    return classify_surfaces(entries, removed_setting_keys(patch));
+    const index = read_index();
+    const shas = pendingRows(index).length > 0 ? git(['log', '--format=%H', `${tag}..HEAD`]).split('\n') : [];
+    return classify_surfaces(entries, removed_setting_keys(patch), unshipped_pending_rows(index, shas));
 }

@@ -23,7 +23,7 @@ execution:
 > finding id. The release-blocking findings themselves live in
 > `road-to-hook-guards-that-hold-17-findings` and are not repeated here.
 >
-> **Arrivals:** 1 — latest `inbox-2026-10-aj` (2026-10-25): two external review rounds over 17.0.0–17.2.0 re-verified at `d2ec783d95` add eight still-true findings no roadmap owned — steps 1.9, 3.10–3.13, 4.9–4.10 and 6.5.
+> **Arrivals:** 2 — latest `inbox-2026-10-al`/`-am` (2026-10-25): two review sets at `6194e27` and `1e885a4`/`efa1cca`, re-verified at `384e9e85c9`, add steps 1.10, 3.14–3.16 and 6.6. Before it: 1 — `inbox-2026-10-aj` (2026-10-25): two external review rounds over 17.0.0–17.2.0 re-verified at `d2ec783d95` add eight still-true findings no roadmap owned — steps 1.9, 3.10–3.13, 4.9–4.10 and 6.5.
 
 ## Goal
 
@@ -99,6 +99,18 @@ release ledger. The residue items are closed the same way.
       still needs a ratification record, so it rides with 1.8's round.
       verify: the header names the egress default and says the residue is
       uncaught while it stays off.
+- [ ] **1.10 Arrival — the credential guard's declared residue still omits
+      three shapes it lets through.** Run against the guard at `384e9e85c9`
+      with tsx: the Grep tool with `glob: ".env*"` (`PATH_KEYS` at
+      `block_credential_reads.ts:70-72` has no `glob`), `tar czf - . | base64`,
+      and `cat ./.e?v` all exit 0. #2580 named `grep -r`, `rg`, `cat .e*` and
+      `Grep path=.` in the header; the archive shape and the Grep `glob` key are
+      named nowhere, and `tests/fixtures/egress-prevention-gaps/` still has only
+      its three classes. Either refuse the Grep `glob` that names a credential
+      basename, or name all three in the header and add a fixture class for
+      glob and archive reads. Rides with 1.8's ratification round.
+      verify: each of the three shapes is refused by a test, or named in the
+      header and in a fixture class.
 
 ## Phase 2 — council, review and billing
 
@@ -227,6 +239,32 @@ release ledger. The residue items are closed the same way.
       `src/scripts/_cli/cmd_route_explain.ts:96` still read retired projection
       keys.
       verify: `grep -nE 'lean_projection|rule_workspaces' src/scripts/_cli/cmd_conformance.ts src/scripts/_cli/cmd_route_explain.ts` -> 1
+- [ ] **3.14 Arrival — trigger the consumer matrix on CLI changes too.**
+      Beside 3.12's `src/install/**`, `.github/workflows/consumer-matrix.yml`
+      `paths:` (`:32-39`) omits `src/scripts/_cli/**`, where `upgrade`,
+      `update` and `uninstall` live. Lands with 3.12 in one workflow edit.
+      verify: a change under `src/scripts/_cli/` alone starts the consumer matrix.
+- [ ] **3.15 Arrival — a project uninstall cannot read the inventory it was
+      given.** `installed_tools.read_manifest` always uses `_parse_manual`,
+      which skips the nested `files:` and `merged_keys:` arrays, so
+      `cmd_uninstall` sees no v2 entry and falls back to removing the bridge
+      marker only; `--purge` never reaches the recorded deployed files. Found
+      while adding the project-root containment check of
+      `road-to-a-cut-the-upgrader-can-take` (archived), whose test calls
+      `_delete_tool_files` directly for this reason.
+      verify: a project lock with `files:` written by `write_manifest` reads
+      back with the same entries, and `uninstall --purge` removes a recorded
+      deployed directory inside the project.
+- [ ] **3.16 Arrival — an unattended upgrade restores after a kept file.**
+      `upgrade_unattended.ts` `run_steps` treats any non-zero rc of the global
+      step as a failure and restores the previous version, so the installer's
+      exit 3 — completed, user-edited files kept — rolls an upgrade back.
+      `cmd_upgrade` and `cmd_update` treat 3 as completed since
+      `road-to-a-cut-the-upgrader-can-take` 2.1. Coordinate with the active
+      `road-to-an-update-that-installs-itself-only-when-it-is-safe`, which owns
+      the unattended path.
+      verify: an unattended run whose global step exits 3 keeps the new version
+      and reports the kept files.
 
 ## Phase 4 — gates and lints
 
@@ -364,6 +402,19 @@ release ledger. The residue items are closed the same way.
       `agents/evidence/reports/command-surface.json:11` holds an absolute home
       path; step 5.2 of the 17.0.0 cut redacted the `.md` reports only.
       verify: the regenerated JSON report holds no absolute home path.
+- [ ] **6.6 Arrival — command links are projected unrewritten.** A command
+      source under `src/domains/<pack>/<group>/<cmd>/command.md` links its
+      siblings as `../<sibling>/command.md` and other packs by their source
+      path; the projection writes it to `dist/agent-src/commands/<group>/<cmd>.md`
+      without rewriting those links. 16 sibling links resolve nowhere in `dist/`
+      (`design-system/sync.md:36,38` among them), and the link lint added in
+      #2411 covers skills, not commands. Fix the shared path — the link
+      rewriter, kept identical in `condense.ts` and `check_condensation.ts` —
+      not the call sites, then extend the lint to commands as a ratchet at the
+      count it reads.
+      verify: no `../<sibling>/command.md` link remains under
+      `dist/agent-src/commands/`, and a broken command link added in a test
+      fixture fails the lint.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-22 | reviewer: claude/host -->

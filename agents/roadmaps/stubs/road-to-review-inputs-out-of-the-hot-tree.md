@@ -5,7 +5,7 @@ review_by: 2026-12-31
 
 # Stub: review inputs out of the hot tree
 
-> **Arrivals:** 2 — latest `inbox-2026-10-m` (2026-10-12): at least six 16.4.0
+> **Arrivals:** 3 - latest `inbox-2026-10-am` (2026-10-25): five of the reviews in that round name the committed `review-input/diff.patch` copies again (265 tracked, about 48.7 MB at `384e9e85c9`). Before it: 2 — latest `inbox-2026-10-m` (2026-10-12): at least six 16.4.0
 > release reviews name the committed review inputs as the bulk of the release —
 > re-derived: `git diff --shortstat 16.3.0 d411219277 -- 'agents/evidence/reviews/*.review-input/diff.patch'`
 > prints 48 files, 273,686 insertions; the tree now holds 230 tracked

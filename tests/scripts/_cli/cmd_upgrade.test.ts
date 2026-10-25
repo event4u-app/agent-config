@@ -192,6 +192,48 @@ describe('upgrade --dry-run / apply', () => {
     });
 });
 
+// The global step exits 3 when it kept files the user changed (a schema-1
+// migration, or a real edit). That is a completed upgrade, not a failed one.
+describe('upgrade — a global step that kept edited files', () => {
+    async function runWithGlobalRc(globalRc: number): Promise<{ rc: number; out: string; err: string }> {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'upgrade-preserved-'));
+        const saved = process.env['EVENT4U_CONFIG_HOME'];
+        process.env['EVENT4U_CONFIG_HOME'] = home;
+        try {
+            const { main } = await import('../../../src/scripts/_cli/cmd_upgrade.js');
+            let out = '';
+            let err = '';
+            const rc = await main([], {
+                installed: '1.0.0',
+                fetcher: () => '2.0.0',
+                runner: (cmd: string[]) => (cmd[1] === 'global' ? globalRc : 0),
+                out: { write: (t: string) => void (out += t) },
+                err: { write: (t: string) => void (err += t) },
+            });
+            return { rc, out, err };
+        } finally {
+            if (saved === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+            else process.env['EVENT4U_CONFIG_HOME'] = saved;
+            fs.rmSync(home, { recursive: true, force: true });
+        }
+    }
+
+    it('exit 3 is reported as completed with kept files, never as a failed step', async () => {
+        const r = await runWithGlobalRc(3);
+        expect(r.rc).toBe(3);
+        expect(r.err).not.toContain('step failed');
+        expect(r.err).not.toContain('Re-run `agent-config upgrade`');
+        expect(r.out).toContain('.agent-config.new');
+        expect(r.out).toContain('agent-config global --force');
+    });
+
+    it('a genuine non-zero exit of the global step still fails the upgrade', async () => {
+        const r = await runWithGlobalRc(1);
+        expect(r.rc).toBe(1);
+        expect(r.err).toContain('step failed (exit 1)');
+    });
+});
+
 // ---------------------------------------------------------------------------
 // Post-upgrade settings sync (injected runner + EVENT4U_CONFIG_HOME override).
 //
@@ -469,10 +511,11 @@ const TS_DECOUPLE_HARNESS = `
     let out = '', err = '';
     const calls = [];
     const sink = (b) => ({ write: (t) => { if (b === 'o') out += t; else err += t; } });
-    // Fails ONLY the 'global' step; every other command succeeds.
+    // Fails ONLY the 'global' step; every other command succeeds. Not 3: that
+    // exit is the installer completing with kept files, which is no failure.
     const runner = (cmd) => {
         calls.push(cmd.join(' '));
-        return cmd.includes('global') ? 3 : 0;
+        return cmd.includes('global') ? 4 : 0;
     };
     const code = await m.main(args, {
         fetcher: () => '2.0.0',
