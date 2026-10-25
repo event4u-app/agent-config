@@ -66,3 +66,13 @@ describe('runTap', () => {
         expect(runTap({ stdin: warm, env, now })).toMatch(/^AC 5h window 64 %/);
     });
 });
+
+describe('runTap → pressure verdict', () => {
+    it('leaves a fresh verdict the dispatch-path readers can find', async () => {
+        const { hotWindowLine } = await import('../../src/scripts/_lib/pressure_state.js');
+        const hot = JSON.stringify({ rate_limits: { five_hour: { used_percentage: 91, resets_at: Math.trunc(now / 1000) + 3600 } } });
+        runTap({ stdin: hot, env, now });
+        expect(hotWindowLine(env, now)).toMatch(/^5h window 91 %/);
+        expect(hotWindowLine(env, now + 11 * 60_000)).toBeNull();
+    });
+});

@@ -25,7 +25,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { write_atomic } from '../_lib/fs_atomic.js';
 import { appendQuotaSnapshot, quotaStateDir, snapshotFromStatusPayload } from '../_lib/quota_ledger.js';
-import { quotaSegment } from '../_lib/pressure.js';
+import { quotaSegment, writePressureState } from '../_lib/pressure.js';
 import type { EnvMap } from '../_lib/user_global_paths.js';
 
 /** The command the installer writes into `statusLine.command`. */
@@ -106,7 +106,10 @@ export function runTap(opts: TapOptions): string {
     }
     try {
         const snapshot = snapshotFromStatusPayload(JSON.parse(opts.stdin), now);
-        if (snapshot !== null) appendQuotaSnapshot(snapshot, opts.env);
+        if (snapshot !== null) {
+            appendQuotaSnapshot(snapshot, opts.env);
+            writePressureState(opts.env, now);
+        }
     } catch {
         // the ledger is best-effort; the line must still print
     }

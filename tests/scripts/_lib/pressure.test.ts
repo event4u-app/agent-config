@@ -114,3 +114,24 @@ describe('describeWindow', () => {
         expect(text).toMatch(/^5h window 30 % · projected full \d\d:\d\d · resets \d\d:\d\d$/);
     });
 });
+
+describe('planWindowHot', () => {
+    it('reads the ledger and is true only at hot or worse', async () => {
+        const fs = await import('node:fs');
+        const os = await import('node:os');
+        const path = await import('node:path');
+        const { appendQuotaSnapshot } = await import('../../../src/scripts/_lib/quota_ledger.js');
+        const { planWindowHot } = await import('../../../src/scripts/_lib/pressure.js');
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'pressure-hot-'));
+        const env = { EVENT4U_CONFIG_HOME: home };
+        try {
+            expect(planWindowHot(env, NOW)).toBe(false);
+            appendQuotaSnapshot({ ts: NOW, session: 's', five_hour: { pct: 60, resets_at: RESET_IN_3H } }, env);
+            expect(planWindowHot(env, NOW)).toBe(false);
+            appendQuotaSnapshot({ ts: NOW, session: 's', five_hour: { pct: 90, resets_at: RESET_IN_3H } }, env);
+            expect(planWindowHot(env, NOW)).toBe(true);
+        } finally {
+            fs.rmSync(home, { recursive: true, force: true });
+        }
+    });
+});

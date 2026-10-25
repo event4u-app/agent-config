@@ -161,16 +161,16 @@ Cold-start's 4.3, 4.5 and 5.3, which the first plan proposed to take over, are
 
 ## Phase 5 — Throttle by choosing differently (D10)
 
-- [ ] **5.1 No fan-out push into a hot window.** `delegation-nudge` reads
-      `pressure` and, at `hot` or `exhausted`, emits no delegation push — it
+- [x] **5.1 No fan-out push into a hot window.** `delegation-nudge` reads
+      the verdict the tap leaves in `state/quota/pressure.json` and, at `hot` or `exhausted`, emits no delegation push — it
       says instead, once, that the plan window is nearly spent and in-session
       work or a resume is the cheaper path. Nothing is refused.
       verify: `npx vitest run tests/scripts/delegation_nudge_hook.test.ts` -> 0
-- [ ] **5.2 The stricter council bar also fires on projection.** The
+- [x] **5.2 The stricter council bar also fires on projection.** The
       window-threshold rule of cold-start 5.3 (`necessity.ts`) reads `hot`
       from `pressure` as well as the after-the-fact host marker.
       verify: `npx vitest run tests/scripts/ai_council/necessity.test.ts` -> 0
-- [ ] **5.3 The spawn-guard shadow records `would_wait` from pressure.**
+- [x] **5.3 The spawn-guard shadow records `would_wait` from pressure.**
       Shadow only: it records, never denies (a deny is a stop).
       verify: `npx vitest run tests/hooks/spawn_guard_shadow.test.ts` -> 0
 

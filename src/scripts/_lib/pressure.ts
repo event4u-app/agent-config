@@ -16,6 +16,8 @@
  * `road-to-a-quota-notice-that-earned-its-bands` is where they get measured.
  */
 
+import { write_atomic } from './fs_atomic.js';
+import { pressureStatePath } from './pressure_state.js';
 import { readQuotaLedger, type QuotaSnapshot, type QuotaWindow } from './quota_ledger.js';
 import type { EnvMap } from './user_global_paths.js';
 
@@ -150,4 +152,15 @@ export function quotaSegment(env?: EnvMap | null, now: number = Date.now()): str
 
 export function atLeast(state: PressureState, floor: PressureState): boolean {
     return STATE_RANK[state] >= STATE_RANK[floor];
+}
+
+/** Is any plan window hot or exhausted right now? The stricter council bar reads this. */
+export function planWindowHot(env?: EnvMap | null, now: number = Date.now()): boolean {
+    return atLeast(readPlanPressure(env, now).worst.state, 'hot');
+}
+
+/** Leave the verdict where the dispatch-path readers find it (`pressure_state.ts`). */
+export function writePressureState(env?: EnvMap | null, now: number = Date.now()): void {
+    const { worst } = readPlanPressure(env, now);
+    write_atomic(pressureStatePath(env), JSON.stringify({ at: now, state: worst.state, line: describeWindow(worst) }));
 }

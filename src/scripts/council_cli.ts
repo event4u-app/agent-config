@@ -77,6 +77,7 @@ import {
     cli_call_providers,
     resolve_config_path,
 } from './ai_council/config.js';
+import { planWindowHot } from './_lib/pressure.js';
 import { AuthCache, select_solo_member } from './ai_council/solo_dispatch.js';
 import { InvalidModeError, resolve_global_mode } from './ai_council/modes.js';
 import { classifyCliFailure, resolveMemberTransport, type AbsentReason } from './ai_council/transport_resolver.js';
@@ -1890,7 +1891,7 @@ function _necessity_gate(opts: {
     if (!enabled || mode === 'off') {
         return [true, 0, null];
     }
-    const result = classify_necessity(opts.prompt, opts.lens, opts.invocation as never, { ratePressure: recentHostMarker(REPO_ROOT) });
+    const result = classify_necessity(opts.prompt, opts.lens, opts.invocation as never, { ratePressure: recentHostMarker(REPO_ROOT) || planWindowHot() });
     const caps = _provider_caps_snapshot(opts.ai_cfg);
     const hashed = (opts.original_ask || '') || opts.prompt;
 
