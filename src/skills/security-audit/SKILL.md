@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: security-audit
-description: "Security audit of an app — is my app secure, check for security vulnerabilities before launch (Sicherheit, Sicherheitslücken, Schwachstellen), pentest. Threat pass before building → threat-modeling."
+description: "Security audit — is my app secure, security vulnerabilities before launch (Sicherheit, Sicherheitslücken, Schwachstellen), pentest. Threat pass first → threat-modeling."
 personas:
   - security-engineer
 domain: quality

@@ -30,13 +30,13 @@
       "20": 76.077
     },
     "false_activation_at_k": 15.123,
-    "context_cost_tokens": 231.3,
+    "context_cost_tokens": 231,
     "token_target_met": true,
     "benefit_unconditional": 61.218,
     "benefit_conditional_on_activation": 80.784,
     "adjudicated_deliveries": 510,
-    "unadjudicated_deliveries": 5619,
-    "tie_decided_cut_pp": 82.222
+    "unadjudicated_deliveries": 5620,
+    "tie_decided_cut_pp": 82.146
   },
   "set_compatibility": {
     "shared_prompts": 15,

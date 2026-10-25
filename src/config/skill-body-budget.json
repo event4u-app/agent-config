@@ -8,7 +8,7 @@
     "adr-create": 17859,
     "adversarial-review": 7860,
     "agent-docs-writing": 18341,
-    "agent-security-review": 6141,
+    "agent-security-review": 6120,
     "agents-md-thin-root": 13319,
     "ai-code-blindspots": 14143,
     "ai-council": 21697,
@@ -747,12 +747,6 @@
       "old": 12620,
       "new": 14648,
       "reason": "road-to-security-answer-that-names-what-it-checked 2.2-2.3/4.4: the casual-question scope block, the needs_validation exit replacing 'drop it', non-HTTP entry points, the upload attack classes, severity anchored to demonstrated impact; the dependency step shrank to a /audit deps pointer."
-    },
-    {
-      "skill": "agent-security-review",
-      "old": 6120,
-      "new": 6141,
-      "reason": "road-to-security-answer-that-names-what-it-checked 2.1: the description routes the product itself to security-audit instead of saying 'not a code audit', whose tokens drew app-security prompts here."
     },
     {
       "skill": "ai-code-blindspots",

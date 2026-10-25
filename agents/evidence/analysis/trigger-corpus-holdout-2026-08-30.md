@@ -1801,8 +1801,8 @@ and `routing_signal_measurement.test.ts` § 5.1.
 
 **Both train-side measurements were re-taken on this tree.**
 `routing-body-signal-verdict.json`: still `harmful` on the false-activation
-guard (**+5.56 pp** against +2.0 pp), cases 1,317 → 1,321, delta recall +2.38 → +2.53 pp (the two
-description edits moved it, not the corpus alone).
+guard (**+5.56 pp** against +2.0 pp), cases 1,317 → 1,321, delta recall +2.38 → +2.53 pp (the
+description edit moved it, not the corpus alone).
 `delivery-set-measurement-2026-08-31.json`: recall loss **38.78 pp**, the
-ceiling stays **BREACHED**; context cost **231.3** tokens against the 500
+ceiling stays **BREACHED**; context cost **231.0** tokens against the 500
 target, still **MET**. Neither verdict changes in kind.

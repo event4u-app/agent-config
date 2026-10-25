@@ -52,7 +52,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 
 - **`accessibility-auditor`** — Use when reviewing UI for accessibility — WCAG 2.2 AA, keyboard nav, focus, ARIA, contrast, screen-reader semantics — even on 'is this a11y-OK?' or 'mach das barrierefrei'.
 - **`adversarial-review`** — Adversarial critique — devil's advocate, stress-test, honest teardown ('poke holes', 'be brutal', 'was hältst du davon'); explicit request only. Routine code or design review → code-review.
-- **`agent-security-review`** — Use for an adversarial red-team / blue-team / auditor review of an AI agent's CONFIG + behaviour (rules, skills, MCP, hooks, permissions) — attack-chain → defensive-gaps; the product → security-audit.
+- **`agent-security-review`** — Use for an adversarial red-team / blue-team / auditor review of an AI agent's CONFIG + behaviour (rules, skills, MCP, hooks, permissions) — attack-chain → defensive-gap list, not a code audit.
 - **`ai-code-blindspots`** — Before finishing any code (endpoint, query, migration, render, file, infra, dependency, test) — the senior pre-ship checklist of invisible cross-cutting controls AI omits, with backstop greps
 - **`alerting-doctrine`** — Use when deciding what earns a page — the page, action and info classes stated provider-neutrally, and the rule that a page without an owner, a runbook and a first diagnostic step is malformed.
 - **`api-design`** — Use when designing APIs, planning endpoints, REST conventions, versioning, or deprecation — even when the user just says 'expose this as an endpoint' without naming API design.
@@ -118,7 +118,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`risk-officer`** — Use when surfacing and prioritising risk before commit — blast-radius framing, mitigations, residual-risk verdict — even if the user just says 'what could go wrong here?'.
 - **`secrets-management`** — When picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azure, GCP), CI and Kubernetes — decision framework, provider deep-dives externalized.
 - **`security`** — Use when applying security best practices — authentication, authorization, CSRF protection, input sanitization, rate limiting, or secure coding — stack-agnostic.
-- **`security-audit`** — Security audit of an app — is my app secure, check for security vulnerabilities before launch (Sicherheit, Sicherheitslücken, Schwachstellen), pentest. Threat pass before building → threat-modeling.
+- **`security-audit`** — Security audit — is my app secure, security vulnerabilities before launch (Sicherheit, Sicherheitslücken, Schwachstellen), pentest. Threat pass first → threat-modeling.
 - **`security-maturity-assessment`** — Use when the user wants a security-maturity scorecard / posture assessment of a module — category ratings with evidence, not a vulnerability hunt. Also on 'wie sicher ist dieses Modul aufgestellt?'
 - **`sentry-integration`** — Use when the user shares a Sentry URL, says "check Sentry", or wants to investigate production errors. Uses Sentry MCP tools for deep analysis.
 - **`server-hardening`** — Use when hardening a Linux host you operate — SSH posture, a default-deny firewall baseline, and unattended security upgrades, each verified on the box rather than assumed from a config file.

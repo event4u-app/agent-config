@@ -73,8 +73,10 @@ or scanner that reads it.
 - [x] **2.1 Trigger corpus and descriptions.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change --> Add casual whole-app exemplars
       (DE/EN, "is my app secure before launch") to
       `security-audit/evals/triggers.json`. State the whole-app/launch question
-      in the `security-audit` description, and state in `agent-security-review`
-      that it reviews the agent's own config, not application code.
+      in the `security-audit` description and give it the
+      `security-engineer` persona its siblings carry; `agent-security-review`
+      stays unchanged, because the per-spawn payload ratchet allowed no net
+      growth and the probe holds without it.
       verify: `npx vitest run tests/scripts/security_audit_route_probe.test.ts` -> 0
 - [x] **2.2 Guidance-mode answer shape.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> `security-audit` gains a casual-question
       path: a short check, then a scope block (`checked: …` / `not checked: …`),
@@ -136,7 +138,7 @@ or scanner that reads it.
 
 ## Phase 6 — Hand-offs to the owners
 
-- [x] **6.1 Arrivals on the adjacent owners.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> `stubs/road-to-a-security-chain-measured`
+- [x] **6.1 Arrivals on the adjacent owners.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/skill-body-budget.json --> `stubs/road-to-a-security-chain-measured`
       gains: a false-all-clear rate as a bench endpoint, the host-native security
       results import, and no-double-review when a host plugin already reviews at
       stop. The deferred work this round did not build lands in one parked
