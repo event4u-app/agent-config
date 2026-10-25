@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { GIT_SAFE_ARGS, gitProbe } from '../../src/scripts/_lib/spawn_env.js';
+import { gitProbe } from '../../src/scripts/_lib/spawn_env.js';
 import { diffFiles } from '../../src/scripts/code_graph/map.js';
 
 const REPO = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -63,7 +63,6 @@ describe('code-graph git probes ignore repo-local exec config', () => {
     });
 
     it('no file under code_graph/ spawns git except through gitProbe', () => {
-        expect(GIT_SAFE_ARGS).toContain('core.fsmonitor=false');
         // Whole-file, whitespace-tolerant, every spawn primitive: a multiline
         // call or a nested directory cannot slip past a line-by-line scan.
         const direct = /\b(?:execFileSync|execFile|spawnSync|spawn|execSync|exec)\(\s*['"`]git['"`]/;

@@ -120,7 +120,7 @@ function isDeniedByFamily(name: string): boolean {
  * clean/smudge filter driver is still honoured: its name is the checkout's
  * choice, so it cannot be disabled here.
  */
-export const GIT_SAFE_ARGS: readonly string[] = ['-c', 'core.fsmonitor=false', '-c', 'core.hooksPath=/dev/null'];
+const GIT_SAFE_ARGS: readonly string[] = ['-c', 'core.fsmonitor=false', '-c', 'core.hooksPath=/dev/null'];
 
 /** `git -C root …` with {@link GIT_SAFE_ARGS}, the hardened env, stdout as text, stderr dropped. */
 export function gitProbe(root: string, args: readonly string[], opts: { maxBuffer?: number; timeout?: number } = {}): string {

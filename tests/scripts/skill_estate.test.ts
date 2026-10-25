@@ -167,9 +167,14 @@ describe('the live corpus', () => {
         // 300 -> 301 and 11455 -> 11489 on 2026-10-18: `type-design` landed
         // (road-to-type-with-a-witness Phase 4), claimed by estate_growth_exempt;
         // its catalogue cost was paid by a same-change rules reduction instead.
+        //
+        // 11489 -> 11492 on 2026-10-25: `security-audit` names the casual
+        // whole-app question so it routes (road-to-security-answer-that-names-
+        // what-it-checked 2.1), claimed by estate_growth_exempt; the per-spawn
+        // payload stays at zero net growth.
         const e = measureSkillEstate(REPO);
         expect(e.skill_count).toBe(301);
-        expect(e.skill_description_tokens).toBe(11489);
+        expect(e.skill_description_tokens).toBe(11492);
         expect(e.deprecated_count).toBe(0);
     });
 
