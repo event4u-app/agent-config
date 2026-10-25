@@ -18,7 +18,8 @@
     var files = model.files;
     var areas = model.areas;
     var an = model.analyses;
-    var BLAST_DEPTH = 3;
+    var BLAST_DEPTH = model.blastDepth || 3;
+    var WINDOW = model.gitWindowDays || 180;
     var OVERVIEW_AREAS = 15;
     var RAIL_CAP = 8;
     var SYMBOL_CAP = 12;
@@ -50,7 +51,7 @@
             lgFolder: 'Colour = top folder', lgLayer: 'Colour = layer from layers.yaml', lgChurn: function (a) { return 'Commits in the git window, 0 → ' + a; },
             visibleAreas: function (a, b) { return a + ' / ' + b + ' areas'; }, filesIn: function (n, a) { return n + ' files in ' + a; },
             areaEdges: function (n) { return n + ' area edges'; }, edgesIn: function (n, a) { return n + ' edges in ' + a; },
-            affected: function (n, s) { return n + ' affected · ' + s; }, sCode: 'Code', sTests: 'Code + tests', sAll: 'everything', aggregated: 'aggregated: > 3,000 files in scope',
+            affected: function (n, s) { return n + ' affected · ' + s; }, sCode: 'Code', sTests: 'Code + tests', sAll: 'everything',
             layersHead: 'Depth = hops over incoming edges from', depth0: 'Depth 0', depth: function (d) { return 'Depth ' + d; },
             n0: 'the selection', n1: 'import directly', n2: 'through one step', n3: 'edge of the analysis', selectFirst: 'Select a file to see how far it reaches.',
             matrixHead: 'Dependency structure matrix at area level · cell = edges between two areas · highlighted row/column = selection · red frame = both areas hold files of one cycle',
@@ -74,8 +75,8 @@
             levels: { critical: 'critical', high: 'high', medium: 'medium', low: 'low' },
             uses: 'Uses', usedBy: 'Used by', relTrust: 'edge · trust', symbols: 'Symbols', symCols: 'line · kind · calls int/ext',
             knowledge: 'Knowledge', openCenter: 'Open in the centre', memMissing: 'Memory: collector missing',
-            ownership: 'Ownership · Churn', gitMissing: 'Git collector missing', gitMissingNote: 'Top 3 authors, commits in 180 days, last change, bus factor. Hidden until the refresh writes owners / churn.',
-            commits: function (n) { return n + ' commits in 180 days'; }, lastChange: 'last change', busFactor: 'Bus factor: one author holds more than 80 %',
+            ownership: 'Ownership · Churn', gitMissing: 'Git collector missing', gitMissingNote: 'Top 3 authors, commits in the git window, last change, bus factor. Hidden until the refresh writes owners / churn.',
+            commits: function (n) { return n + ' commits in ' + WINDOW + ' days'; }, lastChange: 'last change', busFactor: 'Bus factor: one author holds more than 80 %',
             coveredBy: 'Covered by tests', requestPaths: 'Request paths', externals: 'External dependencies',
             cycles: 'Cycles', biggest: function (n) { return 'Largest: ' + n + ' files'; }, surprises: 'Surprising edges', drift: 'Drift since the last map',
             layerBreaches: 'Layer breaches', hotspots: 'Hotspots', deadFiles: 'Dead files', needLayers: 'Needs agents/map/layers.yaml', needChurn: 'Needs git history',
@@ -110,7 +111,7 @@
             lgFolder: 'Farbe = oberster Ordner', lgLayer: 'Farbe = Layer aus layers.yaml', lgChurn: function (a) { return 'Commits im Git-Fenster, 0 → ' + a; },
             visibleAreas: function (a, b) { return a + ' / ' + b + ' Areas'; }, filesIn: function (n, a) { return n + ' Dateien in ' + a; },
             areaEdges: function (n) { return n + ' Area-Kanten'; }, edgesIn: function (n, a) { return n + ' Kanten in ' + a; },
-            affected: function (n, s) { return n + ' betroffen · ' + s; }, sCode: 'Code', sTests: 'Code + Tests', sAll: 'alles', aggregated: 'aggregiert: > 3.000 Dateien im Scope',
+            affected: function (n, s) { return n + ' betroffen · ' + s; }, sCode: 'Code', sTests: 'Code + Tests', sAll: 'alles',
             layersHead: 'Tiefe = Hops über eingehende Kanten von', depth0: 'Tiefe 0', depth: function (d) { return 'Tiefe ' + d; },
             n0: 'die Auswahl', n1: 'importieren direkt', n2: 'über einen Zwischenschritt', n3: 'Rand der Analyse', selectFirst: 'Wähle eine Datei, um zu sehen, wie weit sie reicht.',
             matrixHead: 'Dependency-Structure-Matrix auf Area-Ebene · Zelle = Kanten zwischen zwei Areas · hervorgehobene Zeile/Spalte = Auswahl · roter Rahmen = beide Areas enthalten Dateien eines Zyklus',
@@ -134,8 +135,8 @@
             levels: { critical: 'kritisch', high: 'hoch', medium: 'mittel', low: 'niedrig' },
             uses: 'Nutzt', usedBy: 'Genutzt von', relTrust: 'Kante · Vertrauen', symbols: 'Symbole', symCols: 'Zeile · Art · Aufrufe int/ext',
             knowledge: 'Wissen', openCenter: 'In der Mitte öffnen', memMissing: 'Memory: Collector fehlt',
-            ownership: 'Ownership · Churn', gitMissing: 'Git-Collector fehlt', gitMissingNote: 'Top-3-Autoren, Commits in 180 Tagen, letzte Änderung, Bus-Faktor. Ausgeblendet, bis der Refresh owners / churn schreibt.',
-            commits: function (n) { return n + ' Commits in 180 Tagen'; }, lastChange: 'letzte Änderung', busFactor: 'Bus-Faktor: ein Autor hält mehr als 80 %',
+            ownership: 'Ownership · Churn', gitMissing: 'Git-Collector fehlt', gitMissingNote: 'Top-3-Autoren, Commits im Git-Fenster, letzte Änderung, Bus-Faktor. Ausgeblendet, bis der Refresh owners / churn schreibt.',
+            commits: function (n) { return n + ' Commits in ' + WINDOW + ' Tagen'; }, lastChange: 'letzte Änderung', busFactor: 'Bus-Faktor: ein Autor hält mehr als 80 %',
             coveredBy: 'Abgedeckt durch Tests', requestPaths: 'Request-Pfade', externals: 'Externe Abhängigkeiten',
             cycles: 'Zyklen', biggest: function (n) { return 'Größter: ' + n + ' Dateien'; }, surprises: 'Überraschende Kanten', drift: 'Drift seit letzter Karte',
             layerBreaches: 'Layer-Verletzungen', hotspots: 'Hotspots', deadFiles: 'Tote Dateien', needLayers: 'Braucht agents/map/layers.yaml', needChurn: 'Braucht Git-Historie',
@@ -258,7 +259,12 @@
     var tsMax = 0;
     areas.forEach(function (a) { tsMin = Math.min(tsMin, a.testShare); tsMax = Math.max(tsMax, a.testShare); });
     function mix(a, b, w) { return 'color-mix(in srgb, ' + a + ' ' + Math.round(w * 100) + '%, ' + b + ')'; }
+    var colourCache = Object.create(null);
     function resolveColour(c) {
+        if (colourCache[c] === undefined) colourCache[c] = resolveColourNow(c);
+        return colourCache[c];
+    }
+    function resolveColourNow(c) {
         // Canvas cannot read `var()`: resolve tokens and approximate color-mix by its weight.
         if (c.indexOf('var(') === 0) return cssVar(c.slice(4, -1));
         var m = /^color-mix\(in srgb, (var\(--[\w]+\)|#[0-9a-f]+) (\d+)%, (var\(--[\w]+\)|#[0-9a-f]+)\)$/i.exec(c);
@@ -295,9 +301,11 @@
     function areaHits(ai) {
         var w = selWalk();
         if (!w) return 0;
-        var n = 0;
-        for (var k in w.depthOf) if (w.depthOf[k] > 0 && files[k].area === ai) n += 1;
-        return n;
+        if (!w.hits) {
+            w.hits = Object.create(null);
+            for (var k in w.depthOf) if (w.depthOf[k] > 0 && files[k].area >= 0) w.hits[files[k].area] = (w.hits[files[k].area] || 0) + 1;
+        }
+        return w.hits[ai] || 0;
     }
     function areaColour(ai) {
         var a = areas[ai];
@@ -638,7 +646,7 @@
     // Header.
     function renderHeader() {
         var pin = model.pin || { commit: meta.commit, freshness: meta.state, generation: meta.graph_generation || '' };
-        $('pin-commit').textContent = 'main @ ' + pin.commit + (pin.date ? ' · ' + pin.date : '');
+        $('pin-commit').textContent = '@ ' + pin.commit + (pin.date ? ' · ' + pin.date : '');
         var fresh = $('pin-fresh');
         var st = String(pin.freshness || meta.state || '');
         fresh.textContent = st === 'fresh' ? 'FRESH' : st.toUpperCase();
@@ -923,7 +931,6 @@
             f.appendChild(el('span', null, t('areaEdges')(num(model.areaEdges.length))));
         }
         f.appendChild(el('span', { class: 'hot' }, t('affected')(num(hit), t(state.scope === 'code' ? 'sCode' : state.scope === 'tests' ? 'sTests' : 'sAll'))));
-        if (files.length > 3000) f.appendChild(el('span', { class: 'note' }, t('aggregated')));
     }
 
     function renderLens() {
@@ -1274,7 +1281,9 @@
         var bl = el('section', { class: 'blast' });
         var rec = f.blast;
         var level = rec ? rec.level : 'low';
-        add(bl, add(el('div', { class: 'blast-h' }), el('b', null, t('blastRadius')), el('span', { class: 'level ' + level }, t('levels')[level])));
+        var head = add(el('div', { class: 'blast-h' }), el('b', null, t('blastRadius')));
+        if (rec && state.scope === 'code') head.appendChild(el('span', { class: 'level ' + level }, t('levels')[level]));
+        bl.appendChild(head);
         var scopes = el('div', { class: 'scopes', role: 'radiogroup', 'aria-label': 'Scope' });
         [['code', t('sCode')], ['tests', '+ ' + t('fTests')], ['all', '+ Doku']].forEach(function (o) {
             var b = el('button', { type: 'button', role: 'radio', 'aria-checked': String(state.scope === o[0]) }, o[1]);
@@ -1393,7 +1402,7 @@
                 so.appendChild(row);
             });
             if (f.lastChange) so.appendChild(el('span', { class: 'note-line' }, t('lastChange') + ' ' + f.lastChange));
-            if (f.owners && f.owners[0] && f.owners[0][1] > 0.8 && f.churn >= 3) so.appendChild(el('span', { class: 'note-line' }, t('busFactor')));
+            if (f.soleOwner) so.appendChild(el('span', { class: 'note-line' }, t('busFactor')));
             panel.appendChild(so);
         } else {
             var miss = el('span', { class: 'dashchip mono' }, t('gitMissing'));
@@ -1575,6 +1584,7 @@
 
     // Input.
     var drag = null;
+    var frame = 0;
     canvas.addEventListener('pointerdown', function (e) {
         drag = { x: e.clientX, y: e.clientY, vx: state.view.x, vy: state.view.y, yaw: state.rot.yaw, pitch: state.rot.pitch, turn: state.orb && !e.shiftKey, moved: false };
         canvas.setPointerCapture(e.pointerId);
@@ -1585,8 +1595,9 @@
         var dy = e.clientY - drag.y;
         if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
         if (!drag.moved) return;
-        if (drag.turn) turnTo(drag.yaw + dx * 0.008, drag.pitch - dy * 0.008);
-        else { state.view.x = drag.vx + dx; state.view.y = drag.vy + dy; draw(); }
+        if (drag.turn) { state.rot.yaw = drag.yaw + dx * 0.008; state.rot.pitch = Math.max(-1.4, Math.min(1.4, drag.pitch - dy * 0.008)); }
+        else { state.view.x = drag.vx + dx; state.view.y = drag.vy + dy; }
+        if (!frame) frame = requestAnimationFrame(function () { frame = 0; draw(); });
     });
     function turnTo(yaw, pitch) { state.rot.yaw = yaw; state.rot.pitch = Math.max(-1.4, Math.min(1.4, pitch)); draw(); }
     canvas.addEventListener('pointerup', function (e) {
@@ -1669,6 +1680,7 @@
     var theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
     function applyTheme() {
         document.documentElement.dataset.resolvedTheme = theme;
+        colourCache = Object.create(null);
         var b = $('theme');
         var label = theme === 'light' ? t('dark') : t('light');
         b.setAttribute('aria-label', label);

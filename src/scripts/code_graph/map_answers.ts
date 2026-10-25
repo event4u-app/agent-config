@@ -23,6 +23,9 @@ import { EXT_LANG } from './types.js';
 export const BLAST_SCOPE_ROLES: ReadonlySet<FileRole> = new Set(['code', 'entry', 'view', 'infra', 'isolated']);
 export const BLAST_DEPTH = 3;
 export const GIT_WINDOW_DAYS = 180;
+/** Bus-factor finding: one author holds more than this share of at least this many commits. */
+export const SOLE_OWNER_SHARE = 0.8;
+export const SOLE_OWNER_MIN_CHURN = 3;
 const OWNERS_TOP = 3;
 const HOTSPOTS_TOP = 20;
 const KNOWLEDGE_CAP = 40;
@@ -153,6 +156,7 @@ export function blastOf(
 
 /** The knowledge a path holds, read from where it sits; null for a path that is not knowledge. */
 export function knowledgeKind(p: string, role: FileRole): KnowledgeKind | null {
+    if (role !== 'doc') return null;
     if (/^agents\/tmp(\.old)?\//.test(p)) return 'draft';
     if (/^agents\/roadmaps\/archive\//.test(p) || /^agents\/roadmaps\/skipped\//.test(p)) return 'roadmap-archived';
     if (/^agents\/roadmaps\/later\//.test(p)) return 'roadmap-later';
@@ -177,6 +181,7 @@ export function duplicateBasenames(paths: readonly string[]): Set<string> {
     const inInbox = new Set<string>();
     for (const p of paths) {
         const b = path.posix.basename(p);
+        if (!b.startsWith('road-to-')) continue;
         if (p.startsWith('agents/roadmaps/')) inRoadmaps.add(b);
         else if (/^agents\/tmp(\.old)?\//.test(p)) inInbox.add(b);
     }
@@ -318,10 +323,17 @@ export function readGitHistory(root: string, days = GIT_WINDOW_DAYS): Map<string
         return null;
     }
     if (!head) return null;
+    // A shallow clone holds a commit or two: churn read from it would look healthy, not unknown.
+    try {
+        if (git(['rev-parse', '--is-shallow-repository']).trim() === 'true') return null;
+    } catch {
+        return null;
+    }
     const since = new Date(new Date(head).getTime() - days * 86_400_000).toISOString();
     let out: string;
     try {
-        out = git(['log', `--since=${since}`, '--no-merges', '--no-renames', '--name-only', '--format=%x1e%an%x1f%cs']);
+        // `--relative` makes paths root-relative when root is a package inside a larger repository.
+        out = git(['-c', 'core.quotePath=false', 'log', `--since=${since}`, '--no-merges', '--no-renames', '--relative', '--name-only', '--format=%x1e%aN%x1f%cs', '--', '.']);
     } catch {
         return null;
     }
@@ -329,7 +341,9 @@ export function readGitHistory(root: string, days = GIT_WINDOW_DAYS): Map<string
     for (const rec of out.split('\x1e')) {
         if (!rec.trim()) continue;
         const [header, ...files] = rec.split('\n');
-        const [author = '', date = ''] = (header ?? '').split('\x1f');
+        const [rawAuthor = '', date = ''] = (header ?? '').split('\x1f');
+        // A name configured as an address is an address: it never reaches the map.
+        const author = rawAuthor.includes('@') ? '(name withheld)' : rawAuthor;
         for (const f of files) {
             const p = f.trim();
             if (!p) continue;
@@ -482,6 +496,8 @@ export function finishAnswers(m: MapModel, rules: LayerRules | null): void {
         health.grade = gradeOf(score);
     }
     m.health = health;
+    m.blastDepth = BLAST_DEPTH;
+    m.gitWindowDays = GIT_WINDOW_DAYS;
 
     const has = (k: 'loc' | 'churn' | 'layer'): boolean => m.files.some((f) => f[k] !== undefined);
     m.legend = [
@@ -540,7 +556,8 @@ export function mapHealthReport(m: MapModel): Record<string, unknown> {
         health: m.health ?? null,
         findings: {
             cycles: m.analyses.cyclesTotal,
-            largest_cycle: (m.analyses.cycles[0] ?? []).map(p),
+            // The model keeps the ten largest cycles, each cut to its first eight files.
+            largest_cycle_first_files: (m.analyses.cycles[0] ?? []).map(p),
             layer_breaches: m.analyses.layerBreaches ?? null,
             hotspots: (m.hotspots ?? []).slice(0, 5).map(([i, churn, loc]) => ({ file: p(i), churn, loc })),
             dead_files: m.analyses.deadFiles ?? null,

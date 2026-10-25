@@ -67,6 +67,17 @@ The two drafted analyses were checked claim by claim against `e85417a02`:
   (`loc`), stated as such in `health.formula`; the complexity variant is
   carried to the parked sibling. Decision D4.
 
+## Completion review
+
+An independent review of the delta (2026-10-25) found two defects that bent the
+health grade, both fixed before the PR: entry files counted as dead, and a
+package root inside a larger repository read every file's churn as zero. Also
+fixed: an author name set to an e-mail address reads `(name withheld)`; a
+shallow clone yields no history instead of a healthy one; knowledge kinds need
+a doc role; duplicates are roadmap-named files only; the viewer reads the blast
+depth and the git window from `map.json`; the bus-factor finding moved into the
+model (`soleOwner`). The step texts above were corrected to match the code.
+
 ## Decisions
 
 | # | Question | Decision | Why | Revisit-if |
@@ -85,47 +96,50 @@ The two drafted analyses were checked claim by claim against `e85417a02`:
 - [x] **1.1 Size and language per file.** `MapFile` gains `loc` (lines) and
       `lang` (from the graph's extension map, `types.ts`); the model gains
       `languages: Array<[lang, files, loc]>`. Counted at map build from the
-      file contents the graph already read; binary or unreadable → field absent.
-      verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
+      file contents read again from the working tree; binary or unreadable →
+      field absent.
+      verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
 - [x] **1.2 Git collector, once per map build.** The map writer (IO lives
       there, beside `drift` and `prOverlap`) runs one `git log --since=180.days
       --name-only` pass and writes per file `churn` (commits in window),
       `owners` (top three `[name, share]`, names only — D5) and `lastChange`
       (ISO date). No git → all three absent, never zero.
-      verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
-- [x] **1.3 Dead flag.** The `dead` verb's result lands on `MapFile.dead` and
-      as `analyses.deadCount`, from the same function, not a second rule.
-      verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
+      verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
+- [x] **1.3 Dead flag.** A scope file is `dead` when the `dead` verb lists
+      every symbol it declares and no trusted or guessed edge enters it; entry
+      files never count. Written as `MapFile.dead`, `analyses.deadFiles` and
+      `analyses.deadBasis`, which names the exports gap the verb ran under.
+      verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
 - [x] **1.4 Call counts per symbol.** `MapSymbol` gains internal and external
       call counts from accepted `calls`/`uses` edges (same file versus other
       file); guessed edges are not counted.
-      verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
+      verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
 - [x] **1.5 Blast numbers per file.** `MapFile.blast = {direct, transitive,
       score, share, level}` over trusted in-edges to depth 3, scope code files;
       `score = direct + 0.5 × transitive`, level by share (≥ 50 % critical,
       ≥ 25 % high, ≥ 10 % medium, else low). Membership is not stored (D3).
-      verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
+      verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
 
 ## Phase 2 — Findings and health
 
 - [x] **2.1 Layers from a rule file.** Read `agents/map/layers.yaml` (glob →
       layer, allowed directions); write `MapFile.layer` and a `layer` entry in
       `violations[]` per forbidden edge. Absent file → neither field (D2).
-      verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
+      verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
 - [x] **2.2 Violations and hotspots.** `violations[]` carries cycles (from
       `analyses.cycles`) and layer breaches, each with files and a severity;
       `hotspots[]` ranks code files by `churn × loc`, top 20, both factors in
       the row (D4). No churn → `hotspots` absent.
-      verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
+      verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
 - [x] **2.3 Health with its formula.** `health = {grade?, score?, parts,
       formula}` with parts dead share, cycles, guessed-edge share, hotspots;
       each part `{value, weight, points}` or absent; `grade` only when every
       part is present (D1).
-      verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
+      verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
 - [x] **2.4 Legend and pin.** `legend` per colour-by and size option (key,
-      label, scale, unit) and `pin = {commit, date, dirty, freshness,
-      generation}`, so the header and every legend read from `map.json`.
-      verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
+      label, scale, unit) and `pin = {commit, date, freshness, generation}`
+      plus `blastDepth` and `gitWindowDays`, so the header and every legend read from `map.json`.
+      verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
 
 ## Phase 3 — Knowledge per file
 
@@ -135,11 +149,11 @@ The two drafted analyses were checked claim by claim against `e85417a02`:
       `agents/tmp.old`) — with status read from the path and a duplicate mark
       when the same basename sits in a roadmap folder and in an inbox folder.
       Memory is a named absent group, never an empty one.
-      verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
+      verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
 - [x] **3.2 Knowledge finding.** When drafts outnumber contracts for a file,
       the knowledge list carries the design's finding row ("mehr Entwürfe als
       Verträge") with both counts.
-      verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
+      verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
 
 ## Phase 4 — The Workbench page
 
@@ -148,26 +162,26 @@ The two drafted analyses were checked claim by claim against `e85417a02`:
       `map_viewer/viewer.{js,css}` (D8). One self-contained offline
       `index.html`, no web fonts fetched at runtime (system fallback stack
       named in the CSS).
-      verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
+      verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
 - [x] **4.2 Left rail.** Health ring and parts, KPI tiles, role bar,
       confidence bar, colour-by group (Blast, Area, Test share, Role, Folder,
       Layer, Churn, Complexity — an option is disabled with the design's hint
       exactly when its field is absent) and the explorer with scope chip.
-      verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
+      verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
 - [x] **4.3 Graph lens, 2D and orb.** The design's area overview and in-area
       file view, blast colouring by depth, the 2D / 3D-orb switch, zoom and
       fit, legend as a DOM element that follows the colour-by choice.
-      verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
+      verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
 - [x] **4.4 Layers, Matrix, Knowledge, Treemap lenses.** Depth rings from the
       selection; the area DSM with the selection's row and column and cycle
       blocks from `violations[]`; the knowledge columns from 3.1; the treemap
       weighted by `loc`. Flow stays disabled with the design's hint.
-      verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
+      verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
 - [x] **4.5 Right rail.** File head, blast panel (numbers, depth list,
       formula line), connections with relation and trust, symbols with call
       counts, knowledge list, ownership and churn, findings (cycles,
       surprises, drift, layer breaches, hotspots, dead files).
-      verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
+      verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
 - [x] **4.6 Render check and fidelity matrix.** `map_verify` passes at its
       three widths in both themes; a committed fidelity matrix under
       `agents/evidence/reviews/` names, per design zone, what was compared and
@@ -178,7 +192,7 @@ The two drafted analyses were checked claim by claim against `e85417a02`:
 
 - [x] **5.1 MAP.md health block.** `renderMapMd` writes the health parts with
       the formula and the top five findings, inside the existing token budget.
-      verify: `npx vitest run tests/scripts/code_graph_map.test.ts` -> 0
+      verify: `npx vitest run tests/scripts/code_graph_map_answers.test.ts` -> 0
 - [x] **5.2 The same numbers over MCP.** `graph_map_status` returns the
       health and the top findings, and with `file` that file's blast record
       and the files it reaches by depth, from the same model (D7, revised);
@@ -191,7 +205,7 @@ The two drafted analyses were checked claim by claim against `e85417a02`:
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The page shows a number AC did not compute | product | a port of the design copies its demo constants (12,493 files, area names) into the viewer | every rendered figure is read from `map.json`; 4.6's matrix lists each zone's data source | Phase 4 — The Workbench page |
-| 2 | `map.json` grows past what a browser opens | implementation | per-file records and per-symbol counts on a 12k-file repo | blast membership is walked, not stored (D3); 1.x tests assert the per-file record stays a fixed set of scalars | Phase 1 — Data the design marks missing |
+| 2 | `map.json` grows past what a browser opens | implementation | per-file records and per-symbol counts on a 12k-file repo | blast membership is walked, not stored (D3); measured on this repository: `map.json` 5.9 MB, `index.html` 6.0 MB for 10,971 files | Phase 1 — Data the design marks missing |
 | 3 | Git names leak where they should not | product | owners land in a committed map in a consumer repo | names only, no e-mail (D5); absent without git | Phase 1 — Data the design marks missing |
 | 4 | Health grade read as a verdict | product | a single letter replaces the parts | grade withheld while a part is missing, formula always printed (D1) | Phase 2 — Findings and health |
 

@@ -565,7 +565,9 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
 /** One file's blast record and the files it reaches by depth, or a refusal naming why there is none. */
 function blastFor(m: MapModel, file: string): Record<string, unknown> {
     if (file === '') return {};
-    const i = m.files.findIndex((f) => f.path === file);
+    if (!m.files.some((f) => f.blast)) return { blast: { refusal: 'the map predates blast records — redraw it with `agent-config code-graph map`' } };
+    const wanted = file.replace(/^\.\//, '');
+    const i = m.files.findIndex((f) => f.path === wanted);
     if (i < 0) return { blast: { refusal: `no file \`${file}\` in the map` } };
     const f = m.files[i] as MapModel['files'][number];
     if (!f.blast) return { blast: { file, refusal: `role \`${f.role}\` is outside the blast scope (code files only)` } };

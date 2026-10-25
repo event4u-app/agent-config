@@ -141,7 +141,7 @@ describe('knowledge per file (3.1)', () => {
     });
 
     it('marks a roadmap that also sits in an inbox folder as a duplicate', () => {
-        expect([...duplicateBasenames(['agents/roadmaps/archive/r.md', 'agents/tmp.old/inbox-2026-01-b/r.md', 'agents/roadmaps/s.md'])]).toEqual(['r.md']);
+        expect([...duplicateBasenames(['agents/roadmaps/archive/road-to-r.md', 'agents/tmp.old/inbox-2026-01-b/road-to-r.md', 'agents/roadmaps/README.md', 'agents/tmp.old/inbox-2026-01-b/README.md'])]).toEqual(['road-to-r.md']);
     });
 
     it('lists linked knowledge contracts first, from trusted and guessed edges alike', () => {
@@ -203,6 +203,23 @@ describe('git history (1.2)', () => {
         expect(JSON.stringify([...(h?.values() ?? [])])).not.toContain('@');
     });
 
+    it('reads paths relative to a package root inside a larger repository', () => {
+        git('init', '-q');
+        write('pkg/src/a.ts', '1\n');
+        write('other.ts', '1\n');
+        commitAs('Ann', '2026-01-01T00:00:00Z', 'one');
+        const h = readGitHistory(path.join(root, 'pkg'));
+        expect(h?.get('src/a.ts')?.churn).toBe(1);
+        expect(h?.has('other.ts')).toBe(false);
+    });
+
+    it('withholds an author name that is an e-mail address', () => {
+        git('init', '-q');
+        write('a.ts', '1\n');
+        commitAs('me@host.example', '2026-01-01T00:00:00Z', 'one');
+        expect(readGitHistory(root)?.get('a.ts')?.owners).toEqual([['(name withheld)', 1]]);
+    });
+
     it('answers null outside a repository', () => {
         expect(readGitHistory(root)).toBeNull();
     });
@@ -261,6 +278,23 @@ describe('layers, violations, hotspots and health (Phase 2)', () => {
         );
         expect(m.health?.score).toBeCloseTo(sum, 5);
         expect(m.health?.parts.hotspots?.value).toBe(0);
+        // Pinned: no dead, no cycles, no guesses, no hotspots is the full 100 and an A.
+        expect(m.health?.score).toBe(100);
+        expect(m.health?.grade).toBe('A');
+    });
+
+    it('takes a part\'s points linearly down to its limit', () => {
+        const m = model([file('a.ts', 'code'), file('b.ts', 'code')]);
+        m.analyses.deadFiles = 0;
+        m.analyses.guessShare = 0.15;
+        m.files.forEach((f) => (f.churn = 0));
+        finishAnswers(m, null);
+        expect(m.health?.parts.guesses.points).toBe(12.5);
+        m.analyses.guessShare = 0.6;
+        finishAnswers(m, null);
+        expect(m.health?.parts.guesses.points).toBe(0);
+        expect(m.health?.score).toBe(75);
+        expect(m.health?.grade).toBe('B');
     });
 
     it('counts a hotspot by absolute churn and size, never by a percentile of the tree', () => {
@@ -280,6 +314,8 @@ describe('the map writer answers on a real tree', () => {
         write('src/a.ts', "import { log } from './util/log.js';\nexport function a(): void { log('a'); }\n");
         write('src/b.ts', "import { a } from './a.js';\nexport function b(): void { a(); }\n");
         write('src/lonely.ts', 'export function nobody(): number { return 1; }\n');
+        write('src/cli.ts', 'export function main(): number { return 1; }\n');
+        write('package.json', JSON.stringify({ name: 'fx', bin: { fx: './src/cli.ts' } }));
         git('init', '-q');
         commitAs('Ann', '2026-05-01T00:00:00Z', 'init');
         const res = await buildMap(root);
@@ -292,13 +328,16 @@ describe('the map writer answers on a real tree', () => {
         expect(logSym?.[4]).toBe(1);
         expect(byPath('src/lonely.ts').dead).toBe(true);
         expect(byPath('src/a.ts').dead).toBeUndefined();
+        expect(byPath('src/cli.ts').role).toBe('entry');
+        expect(byPath('src/cli.ts').dead).toBeUndefined();
+        expect(m.blastDepth).toBe(3);
         expect(m.analyses.deadBasis).toMatch(/exports unchecked/);
         expect(m.pin).toMatchObject({ date: '2026-05-01' });
         expect(m.health?.formula).toBe(HEALTH_FORMULA);
         expect(JSON.stringify(doc)).not.toContain('@example.com');
         const mapMd = fs.readFileSync(path.join(res.outDir, 'MAP.md'), 'utf-8');
         expect(mapMd).toContain('## Health');
-        expect(mapMd).toContain(`Formula: Score = sum of four parts`);
+        expect(mapMd).toContain('Formula: `health.formula` in `map.json`.');
         expect(mapMd).toMatch(/- \d+ dead files \(exports unchecked/);
     });
 });
@@ -312,7 +351,7 @@ describe('the Workbench page (Phase 4)', () => {
         for (const id of ['health', 'kpis', 'colorby', 'explorer', 'lenses', 'crumbs', 'legend', 'lensview', 'foot', 'tabs', 'panel', 'dim2d', 'fullcard'])
             expect(html).toContain(`id="${id}"`);
         // The design was drawn with this repository's numbers at one pin; none may be baked in.
-        for (const demo of ['12.493', '74.515', 'session_register', 'Skript-Sammelbecken', 'd95b952d7142'])
+        for (const demo of ['12.493', '74.515', 'session_register', 'Skript-Sammelbecken', 'd95b952d7142', "'main @ '", '180 Tagen', '180 days'])
             expect(html).not.toContain(demo);
         expect(html).not.toMatch(/fonts\.googleapis/);
     });

@@ -84,6 +84,8 @@ export interface MapFile {
     /** Top authors by name with their share of the window's commits; never an e-mail. */
     owners?: Array<[string, number]>;
     lastChange?: string;
+    /** One author holds most of the window's commits: a bus-factor finding. */
+    soleOwner?: true;
     /** Every symbol has no accepted in-edge and the file has no trusted in-edge. */
     dead?: true;
     /** From `layers.yaml`; absent without one. */
@@ -181,6 +183,9 @@ export interface MapModel {
     health?: MapHealth;
     legend?: LegendEntry[];
     pin?: MapPin;
+    /** The depth the blast numbers were computed to; the viewer's walk uses the same. */
+    blastDepth?: number;
+    gitWindowDays?: number;
     analyses: {
         hubs: number[];
         surprises: Array<[number, number, number]>;

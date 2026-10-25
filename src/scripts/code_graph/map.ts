@@ -25,7 +25,7 @@ import { buildFromRepo, readProjectProbe } from './build.js';
 import { acquire as acquireRefreshLock, heldByThisProcess } from './refresh_lock.js';
 import { computeVerdict, graphState } from './detect.js';
 import { graphHome } from './graph_home.js';
-import { BLAST_SCOPE_ROLES, finishAnswers, layerOf, readFileFacts, readGitHistory, readLayerRules } from './map_answers.js';
+import { BLAST_SCOPE_ROLES, SOLE_OWNER_MIN_CHURN, SOLE_OWNER_SHARE, finishAnswers, layerOf, readFileFacts, readGitHistory, readLayerRules } from './map_answers.js';
 import {
     areaDrift,
     buildMapModel,
@@ -418,6 +418,7 @@ function answerQuestions(root: string, outDir: string, cachePath: string, graph:
             if (h) {
                 f.owners = h.owners;
                 f.lastChange = h.lastChange;
+                if (h.churn >= SOLE_OWNER_MIN_CHURN && (h.owners[0]?.[1] ?? 0) > SOLE_OWNER_SHARE) f.soleOwner = true;
             }
         }
     }
@@ -477,16 +478,19 @@ function markDead(root: string, cachePath: string, graph: CodeGraph, model: MapM
             list.push(n.id);
             symbolsOf.set(n.source_file, list);
         }
+        // A guessed link (name lookup, dynamic call) may be the only way a file is reached.
+        const guessedInto = new Set(model.guessEdges.map(([, t]) => t));
         let count = 0;
-        for (const f of model.files) {
-            if (!BLAST_SCOPE_ROLES.has(f.role) || f.inFiles > 0) continue;
+        for (const [i, f] of model.files.entries()) {
+            if (!BLAST_SCOPE_ROLES.has(f.role) || f.role === 'entry' || f.inFiles > 0 || guessedInto.has(i)) continue;
             const syms = symbolsOf.get(f.path) ?? [];
             if (syms.length === 0 || !syms.every((id) => deadIds.has(id))) continue;
             f.dead = true;
             count++;
         }
         model.analyses.deadFiles = count;
-        model.analyses.deadBasis = 'exports unchecked: the extractor records no exportedness, so an exported but unimported file counts as dead';
+        model.analyses.deadBasis =
+            'exports unchecked: the extractor records no exportedness, so an exported but unimported file counts as dead; entry files and files reached by a guessed link are never counted';
     } finally {
         g.close?.();
     }
@@ -625,7 +629,7 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
                 row('Guessed edges', h.parts.guesses, pct),
                 row('Hotspot files', h.parts.hotspots, pct),
                 '',
-                `Formula: ${md(h.formula)}`,
+                'Formula: `health.formula` in `map.json`.',
                 '',
                 'Top findings:',
                 '',
