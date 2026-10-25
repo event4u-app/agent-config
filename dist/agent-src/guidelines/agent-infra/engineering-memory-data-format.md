@@ -30,7 +30,7 @@ warns if both exist for the same type.
 
 ## Shared frontmatter fields
 
-Every entry across all four types MUST carry these keys. The gate
+Every entry across all three types MUST carry these keys. The gate
 rejects entries missing any required field.
 
 | Key | Required | Type | Notes |

@@ -160,6 +160,9 @@ export function rootIsPackageSelf(root: string): boolean {
     }
 }
 
+/** The memory lives in this package's maintainer store; a consumer has neither it nor the reason. */
+const inPkg = (ctx: RuleContext): boolean => ctx.roots.some(rootIsPackageSelf);
+
 /** True when ANY candidate root carries a symlinked `node_modules`. */
 export function anyRootHasSymlinkedNodeModules(ctx: RuleContext): boolean {
     return ctx.roots.some(nodeModulesIsSymlink);
@@ -180,29 +183,32 @@ export const RECALL_RULES: readonly RecallRule[] = [
         slug: 'worktree-build-poisons-install-bundle',
         tools: COMMAND_TOOLS,
         test: (call) => BUILD_COMMAND_RE.test(call.command),
-        requires: anyRootHasSymlinkedNodeModules,
-        why: 'node_modules is a SYMLINK, so esbuild bakes ../../../node_modules/ paths into the tracked dist/install/install.mjs',
+        requires: (c) => inPkg(c) && anyRootHasSymlinkedNodeModules(c),
+        why: 'SYMLINK node_modules: esbuild bakes ../../../node_modules/ into tracked dist/install/install.mjs',
     },
     {
         id: 'adr-edit',
         slug: 'adding-an-adr-downstream-surface',
+        requires: inPkg,
         tools: EDIT_TOOLS,
         test: (call) => call.paths.some((p) => ADR_PATH_RE.test(p)),
-        why: 'an ADR feeds the INDEX and the evidence census; a stale census reds Rule-backstops in CI only',
+        why: 'an ADR feeds the INDEX and evidence census; a stale census reds Rule-backstops',
     },
     {
         id: 'install-source-edit',
         slug: 'adding-a-src-install-module-needs-two-builds',
+        requires: inPkg,
         tools: EDIT_TOOLS,
         test: (call) => call.paths.some((p) => INSTALL_SOURCE_RE.test(p)),
-        why: 'committed twice: run build:cli AND build:install-bundle; preflight checks neither',
+        why: 'committed twice: run build:cli and build:install-bundle',
     },
     {
         id: 'hook-latency-bench',
         slug: 'hook-latency-gate-has-runner-variance',
+        requires: inPkg,
         tools: COMMAND_TOOLS,
         test: (call) => LATENCY_BENCH_RE.test(call.command),
-        why: "read main's latest run of this job as step ONE; a local run answers nothing",
+        why: "read main's latest run of this job as step ONE",
     },
 ];
 
@@ -272,9 +278,6 @@ export function matchRule(
     ctx: RuleContext,
     rules: readonly RecallRule[] = RECALL_RULES,
 ): RecallRule | null {
-    // Every committed row is seeded from this package's maintainer store; a
-    // consumer install has neither the memory nor the reason.
-    if (!ctx.roots.some(rootIsPackageSelf)) return null;
     for (const rule of rules) {
         if (!rule.tools.has(call.tool)) continue;
         if (!rule.test(call)) continue;

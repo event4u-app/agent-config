@@ -101,6 +101,12 @@ export interface AuditGate {
     /** Whole days since {@link GATE_LIVE_SINCE}. */
     readonly day: number;
     readonly dueDate: string;
+    /**
+     * Past day 90, the teardown review is open when the accept rate is under the
+     * floor OR nothing was ever proposed (the no-adoption limb, ADR-138 amendment
+     * 2026-10-25). `evaluateKillCriterion` stays a pure count and cannot see the date.
+     */
+    readonly reviewOpen: boolean;
 }
 
 export interface GlobalMemoryAuditRender {
@@ -201,7 +207,11 @@ export function renderGlobalMemoryAudit(
             : `accept rate ${Math.round(gate.acceptRate * 100)} % (floor ${REVIEW_ACCEPT_RATE_FLOOR * 100} %)`;
     lines.push('');
     lines.push(`ADR-138 promotion gate: ${dueState} (live since ${GATE_LIVE_SINCE}, due ${gate.dueDate})`);
-    lines.push('  no-adoption limb: 0 proposals at day 90 also opens the teardown review (ADR-138 amendment 2026-10-25)');
+    lines.push(
+        gate.reviewOpen
+            ? `  teardown review: OPEN (${gate.acceptRate === null ? 'no proposals by day 90 — no-adoption limb' : 'accept rate under the floor'}, ADR-138 amendment 2026-10-25)`
+            : '  teardown review: not open',
+    );
     lines.push(
         `  proposed ${gate.counters.observations_proposed} · accepted ${gate.counters.observations_accepted} · ${rate}`,
     );
@@ -224,10 +234,14 @@ export function renderGlobalMemoryAudit(
 function auditGate(env: user_global_paths.EnvMap | null, now: Date): AuditGate {
     const counters = readGateCounters({ env });
     const start = Date.parse(`${GATE_LIVE_SINCE}T00:00:00Z`);
+    const kill = evaluateKillCriterion(counters);
+    const day = Math.floor((now.getTime() - start) / DAY_MS);
     return {
         counters,
-        acceptRate: evaluateKillCriterion(counters).review_accept_rate,
-        day: Math.floor((now.getTime() - start) / DAY_MS),
+        acceptRate: kill.review_accept_rate,
+        day,
         dueDate: new Date(start + GATE_WINDOW_DAYS * DAY_MS).toISOString().slice(0, 10),
+        reviewOpen:
+            day >= GATE_WINDOW_DAYS && (counters.observations_proposed === 0 || kill.teardown_review_required),
     };
 }

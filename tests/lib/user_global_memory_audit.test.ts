@@ -279,7 +279,8 @@ describe('renderGlobalMemoryAudit — the ADR-138 promotion gate', () => {
         expect(render.text).toContain('day 87 of 90');
         expect(render.text).toContain('due 2026-10-28');
         expect(render.text).toContain('accept rate 33 %');
-        expect(render.text).toContain('no-adoption limb');
+        expect(render.gate.reviewOpen).toBe(false);
+        expect(render.text).toContain('teardown review: not open');
     });
 
     it('renders zeros and no rate without a counter file, and never throws', () => {
@@ -289,5 +290,14 @@ describe('renderGlobalMemoryAudit — the ADR-138 promotion gate', () => {
         expect(render.gate.counters.observations_proposed).toBe(0);
         expect(render.text).toContain('accept rate n/a (no proposals)');
         expect(render.text).toContain('past due');
+        expect(render.gate.reviewOpen).toBe(true);
+        expect(render.text).toContain('no-adoption limb');
+    });
+
+    it('a sub-floor accept rate past day 90 opens the review; the same rate before it does not', () => {
+        const { home, env } = fakeConfigHome();
+        seedCounters(home, { observations_proposed: 10, observations_accepted: 1 });
+        expect(renderGlobalMemoryAudit({ env, now: new Date('2026-10-28T12:00:00Z') }).gate.reviewOpen).toBe(true);
+        expect(renderGlobalMemoryAudit({ env, now: new Date('2026-10-27T12:00:00Z') }).gate.reviewOpen).toBe(false);
     });
 });

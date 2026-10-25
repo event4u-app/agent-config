@@ -82,7 +82,7 @@ reachable by consumers or kept internal by a recorded decision.
       `src/install/a.ts` edit) stays silent; the existing package-root replays still
       fire.
 - [x] **1.2 Make the ADR-138 gate readable before 2026-10-28.** `renderGlobalMemoryAudit`
-      adds a gate block: the four counters, the accept rate (or "no proposals yet"),
+      adds a gate block: the proposed and accepted counters (the two project counters were cancelled on 2026-07-30), the accept rate (or "no proposals yet"),
       live-since 2026-07-30, day N of 90 and the due date, from `readGateCounters`.
       verify: `npx vitest run tests/lib/user_global_memory_audit.test.ts` — a counter
       file with 3 proposed / 1 accepted renders 33 % and the day count; an absent file

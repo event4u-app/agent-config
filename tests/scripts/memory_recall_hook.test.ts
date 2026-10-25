@@ -343,6 +343,30 @@ describe('a consumer repo never receives the maintainer rows', () => {
         expect(r.stdout).toBe('');
     });
 
+    it('the silent path never reads the roots — the package check runs after `test`', () => {
+        const untouchable = {
+            some: () => {
+                throw new Error('roots read on the silent path');
+            },
+        } as unknown as readonly string[];
+        const call = { tool: 'Edit', paths: ['README.md'], command: '', cwd: '' };
+        expect(matchRule(call, { roots: untouchable })).toBeNull();
+    });
+
+    it('a row without the package check still fires in a consumer root', () => {
+        const consumerRow = {
+            id: 'consumer-migration',
+            slug: 'consumer-migration-note',
+            tools: new Set(['Edit']),
+            test: (c: { paths: readonly string[] }) => c.paths.some((p) => p.startsWith('migrations/')),
+            why: 'consumer-authored',
+        };
+        const call = { tool: 'Edit', paths: ['migrations/001.sql'], command: '', cwd: '' };
+        expect(matchRule(call, { roots: [makeConsumer()] }, [consumerRow])?.slug).toBe(
+            'consumer-migration-note',
+        );
+    });
+
     it('a root without package.json is not the package', () => {
         const root = mkTmp('memory-recall-bare-');
         expect(rootIsPackageSelf(root)).toBe(false);
