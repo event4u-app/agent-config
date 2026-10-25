@@ -411,7 +411,8 @@ describe('quota — shared openai bucket read/increment', () => {
         record_cli_call('openai', state);
         record_cli_call('openai', state);
         const used = load_cli_call_counts(state)['openai'] ?? 0;
-        // The pre-flight check a /team invocation performs:
-        expect(used >= cfg.max_calls_per_day).toBe(true);
+        // The pre-flight check a /team invocation performs — a written cap only:
+        expect(cfg.max_calls_per_day).toBe(2);
+        expect(used >= (cfg.max_calls_per_day ?? Number.POSITIVE_INFINITY)).toBe(true);
     });
 });
