@@ -25,7 +25,9 @@ A task is classified **delegable** when **any** of these holds:
    steps / a roadmap phase / a checklist) → `do-in-steps`. Deterministic markers:
    - User message contains `1. … 2. … 3.` numbered list.
    - User message references a roadmap phase or checklist.
-   - User message uses "first … then … finally" with distinct deliverables.
+   - User message uses "first … then … finally" with distinct deliverables —
+     an ordered candidate, not a schedule: [`invocation-plan`](invocation-plan.md)
+     orders it before a mode is chosen.
    - User message says "in N steps" or "phase by phase".
 3. **Independent-slices structure** — N ≥ 3 independent targets of the same shape
    → `do-in-parallel`. Deterministic markers (N ≥ 3 of the same form):
@@ -120,9 +122,8 @@ that lists them side by side.
 | Architecture-shaped slice (structural/boundary decision — the same shape as rung 4's design-decision signal, one level down in stakes) | `medium` | [`subagent-modes-detail`](subagent-modes-detail.md) § Severity-conditioned team composition |
 | Security-sensitive slice (auth, tenant, secrets, billing — `security-sensitive-stop`'s surface table) | `high` | [`subagent-modes-detail`](subagent-modes-detail.md) § Critical severity row |
 
-Criteria are independent and additive in the obvious way (a slice matching
-two rows takes the higher of the two tiers); this table never lowers a
-tier `inferSliceTier` (§ below) already raised.
+Criteria are additive (a slice matching two rows takes the higher tier);
+this table never lowers a tier `inferSliceTier` (§ below) already raised.
 
 ## Cross-vendor worker direction (declared, not implemented)
 
@@ -148,7 +149,7 @@ OR DISPATCHES ONWARD.
 ```
 
 Nothing reads CV-1/CV-2 at runtime: a contract surface a future implementation
-must satisfy, replacing the phantom artefact the original survey cited.
+must satisfy.
 
 ## Per-slice tier inference (v1.5 — deterministic, task-TYPE-keyed)
 

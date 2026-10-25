@@ -5,51 +5,15 @@
 // fixtures and asserts byte-identical stdout / stderr / exit code AND the two
 // written files (report markdown + level file). argparse --help is NOT
 // byte-compared (out of scope per the migration contract).
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import * as prr from '../../src/agent-src/templates/scripts/pr_risk_review.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'agent-src', 'templates', 'scripts', 'pr_risk_review.ts');
-const TSX_BIN = process.env.TSX_BIN
-    ? path.resolve(REPO_ROOT, process.env.TSX_BIN)
-    : path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
-
-const tmpDirs: string[] = [];
-function mkTmp(): string {
-    const d = fs.mkdtempSync(path.join(os.tmpdir(), 'pr-risk-'));
-    tmpDirs.push(d);
-    return d;
-}
-afterEach(() => {
-    while (tmpDirs.length > 0) {
-        const d = tmpDirs.pop();
-        if (d && fs.existsSync(d)) {
-            fs.rmSync(d, { recursive: true, force: true });
-        }
-    }
-});
-
-function git(cwd: string, ...args: string[]): void {
-    const r = spawnSync('git', args, { cwd, encoding: 'utf8' });
-    if (r.status !== 0) {
-        throw new Error(`git ${args.join(' ')} failed: ${r.stderr}`);
-    }
-}
-
-interface Run {
-    status: number | null;
-    stdout: string;
-    stderr: string;
-    report: string;
-    level: string;
-}
 
 describe('pr_risk_review — pure helpers', () => {
     it('_compile translates the gitignore-ish glob dialect', () => {
@@ -83,5 +47,37 @@ describe('pr_risk_review — pure helpers', () => {
         expect(out).toContain('## 🟢 PR Risk: **low**');
         expect(out).toContain('No high- or medium-risk patterns matched');
         expect(out.endsWith('\n')).toBe(true);
+    });
+});
+
+describe('pr_risk_review — agent surfaces', () => {
+    it('rates a change to something an AI agent can do as high', () => {
+        for (const file of [
+            'src/mcp/tools/update_account.ts',
+            'server/mcp_server.py',
+            'app/agent/tools/change_email.py',
+            'src/prompts/support.txt',
+            'agents/settings/contexts/agent-actions.yml',
+            '.mcp.json',
+        ]) {
+            const [lvl] = prr.classify([file], prr.DEFAULT_CONFIG);
+            expect(lvl, file).toBe('high');
+        }
+    });
+
+    it('does not rate an unrelated build-tool file high', () => {
+        const [lvl] = prr.classify(['scripts/build-tools/minify.ts'], prr.DEFAULT_CONFIG);
+        expect(lvl).toBe('low');
+    });
+
+    it('the shipped workflow installs a pinned major of the package', () => {
+        const wf = fs.readFileSync(
+            path.join(REPO_ROOT, 'src', 'agent-src', 'templates', 'github-workflows', 'pr-risk-review.yml'),
+            'utf8',
+        );
+        const pkg = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8')) as { version: string };
+        const major = pkg.version.split('.')[0];
+        expect(wf).toContain(`@event4u/agent-config@${major}`);
+        expect(wf).not.toMatch(/npm install -g @event4u\/agent-config\s*$/m);
     });
 });

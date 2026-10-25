@@ -2,14 +2,14 @@
 model_tier: medium
 name: audit
 pack: engineering-base
-intent: "Check what this project uses for security advisories and carry a finding to a fix"
+intent: "Check what this project uses for security advisories, and what its AI agents can do, and carry a finding to a fix"
 routes_to: [dependency-upgrade]
 replaces: []
 visibility: advanced
 cluster: audit
-skills: [dependency-upgrade, finishing-a-development-branch, using-git-worktrees]
-description: Security advisories for this project
-argument-hint: "deps [refresh|show|gaps|fix <id>|accept <id>]"
+skills: [dependency-upgrade, finishing-a-development-branch, using-git-worktrees, authz-review]
+description: Security advisories and agent actions for this project
+argument-hint: "deps [refresh|show|gaps|fix <id>|accept <id>] | agents"
 suggestion:
   eligible: true
   trigger_description: "is anything we use vulnerable, check for security updates, which advisories affect this project, fix that CVE"
@@ -23,9 +23,14 @@ packs:
 # /audit
 ## Instructions
 
-`/audit deps` is the one audit today: advisories, malware, end-of-support and
-pre-announced security releases for what the project **uses** — distinct from
-`/security-audit-config`, which audits the agent configuration itself.
+Two audits of the project — both distinct from `/security-audit-config`, which
+audits the agent configuration itself:
+
+- `/audit deps` — advisories, malware, end-of-support and pre-announced
+  security releases for what the project **uses**.
+- `/audit agents` — what an AI agent, bot or MCP server in the project can
+  **do**, and which of those actions nobody declared or let a model choose whose
+  record it changes (§ 6).
 
 ## Examples
 
@@ -33,6 +38,7 @@ pre-announced security releases for what the project **uses** — distinct from
 /audit deps                       # refresh if stale, then the findings by tier
 /audit deps fix CVE-2026-59948    # carry one finding to a verified PR
 /audit deps gaps                  # what the project's own bots and CI could already cover
+/audit agents                     # every tool registration vs. agents/settings/contexts/agent-actions.yml
 ```
 
 **Why it works:** (`self-check-loop`) only `refresh` touches the network, and every finding names the
@@ -113,3 +119,30 @@ The tool refuses an acceptance without an expiry, and refuses a reason that is
 only the absence of a search hit — "grep found nothing" is not unreachability.
 That refusal is a phrase check: a reworded non-argument passes it, so an
 acceptance is the owner's to review, never cleared by the tool.
+
+### 6. `/audit agents` — what the project's agents can do
+
+A claim in a conversation is an input, never an authorization: the subject of a
+write comes from the authenticated principal, and the check lives where the
+write happens. Same contract as `deps` — every finding names `file:line`,
+`unknown` is said and never reported as clean, and the fix is a change the
+owner merges.
+
+```bash
+./scripts-run src/scripts/agent_actions_detect --root <repo>   # --json for the raw report
+```
+
+Read-only, no model, no network. It recognises tool registrations of known SDK
+shapes and compares them with `agents/settings/contexts/agent-actions.yml` (the
+template ships beside `auth-model.md`). Findings:
+
+| Kind | Means | Fix |
+|---|---|---|
+| `undeclared` | a registered tool missing from the inventory | add the entry with its authority block |
+| `subject-argument` | a write tool whose input names `account` / `email` / `user_id` / … | take the subject from the session; walk it with [`authz-review`](../../../skills/authz-review/SKILL.md) |
+| `unknown` | agent-tooling signals, no shape the detector knows | read the file by hand and declare what it registers |
+| `invalid-inventory` | an entry missing a field, or `subject_source: argument` on a write | complete the entry |
+
+No findings is "no finding at the last run" for the recognised shapes — never
+"the agents are safe". Enforcement stays in the project's backend; this audit
+finds where to look and does not block anything.

@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  2b91239cddc834c7e7415951d18ea9ed23f63bfd572e05c5e1730b442b847b4a
+SET-SHA256  dfcb887d8fdfa6e13d53cdbb5a0c1401a266ed1087a727a43fe9b19f51e59ed3
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1287,6 +1287,7 @@ open and which this file does not settle.
 | `llm-provider-knowledge` | `9cfb3639dd7dee51520aebf2f180ce41ae752229b76716774468f6a9598461a1` |
 | `logging-monitoring` | `5e8406b3c814db3d1e100a1c817a9fce388afd40f4f3caa8230cd8f69e44f0f4` |
 | `markitdown` | `663ee4c4f9d5c707ff96208d1723d9817639fca7c00b346e43be2cb557610f6a` |
+| `mcp-builder` | `ae92b28ec126c62dbfd8520f94103b8d56edc44f86e544eecffc4d8d8489f503` |
 | `messaging-architecture` | `884739cdfadce5039917772df035f19a4ca8f5863fd1ab57bcb023aa183421b0` |
 | `monorepo-workspace` | `766a958aae4898bd938e493be8597b6d8b9ee38914ed95ab87ed867422e38233` |
 | `motion-choreographer` | `8c252805f97ee03e9ff3513172a8b04d7700e6d4f1ad12b0c9cfaefd326df454` |
@@ -1745,3 +1746,34 @@ still **MET**. Neither verdict changes in kind.
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
 and `routing_signal_measurement.test.ts` § 5.1.
 
+
+## Growth — 2026-10-24, one train corpus; the seal does not move
+
+```
+ONE ROW IS NEW, ON THE TRAIN SIDE. NO HOLDOUT FILE WAS ADDED OR EDITED.
+BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN IN THE SAME CHANGE.
+```
+
+**What changed.** `road-to-a-claim-that-is-not-a-key` 4.2 edited `mcp-builder`
+(a per-tool authority block and two authority questions), and
+`check_routing_coverage` requires every touched skill to carry a corpus. It got
+ten cases: five exemplars, one of them German, three near-misses — wiring an
+existing MCP server into a host, listing configured servers, and reviewing who
+may call an endpoint — and two counterexamples for `server` and `tool` in
+unrelated senses.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `mcp-builder` | train | `0x7e` = 126 ≥ 51 | new |
+
+The set is now 173 files, 37 of them sealed, which is unchanged. `SET-SHA256`
+moves because it is computed over every row: `2b91239c…` → `dfcb887d…`.
+
+**Both train-side measurements were re-taken on this tree.**
+`routing-body-signal-verdict.json`: still `harmful` on the false-activation
+guard (**+5.56 pp** against +2.0 pp). `delivery-set-measurement-2026-08-31.json`:
+recall loss **39.31 pp**, the ceiling stays **BREACHED**; context cost **231**
+tokens against the 500 target, still **MET**. Neither verdict changes in kind.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.

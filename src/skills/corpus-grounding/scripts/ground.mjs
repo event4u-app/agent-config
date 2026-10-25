@@ -959,6 +959,23 @@ async function ground(manifest, query, context = null, dials = null) {
         `category lookup in '${cat_domain}' found nothing \u2014 grounding against default category '${category}'`
       );
     }
+    const composite_min = reasoning.composite_min_score;
+    if (typeof composite_min === "number" && rows.length > 0) {
+      const wide = search_domain(manifest, query, cat_domain, 100);
+      const wide_rows = wide.results || [];
+      const wide_scores = wide.scores || [];
+      const dropped = /* @__PURE__ */ new Set();
+      wide_rows.forEach((r, i) => {
+        const cls = r[cat_column];
+        const score = floatVal(wide_scores[i] ?? 0);
+        if (cls && pyStr2(cls) !== category && score >= composite_min) dropped.add(pyStr2(cls));
+      });
+      for (const cls of dropped) {
+        gaps.push(
+          `one '${cat_domain}' row grounded this as '${category}', but the description also matches '${cls}' \u2014 that class was dropped; ground it separately`
+        );
+      }
+    }
   }
   const rules_path = resolve_data_path(manifest, reasoning.file);
   const rule_rows = fs3.existsSync(rules_path) ? load_csv(rules_path) : [];

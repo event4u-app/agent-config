@@ -120,6 +120,16 @@ D6/D7); [`scope-control`](../../../../rules/scope-control.md) § Git operations
 still gates every other branch, PR or worktree. `vcs: none` or `--no-pr` ends
 the run validated and local, and says so in one line.
 
+**A composed invocation makes this run an inner stage.** When a later stage of
+the same invocation writes this branch — "first the roadmap, then
+`/roadmap:process-full`, then update the PR" — this run commits and stops at
+`committed` (publish `stage: 'inner'`): no push, no PR, no CI wait, because the
+next push would cancel that CI run anyway. The terminal stage publishes once
+(ADR-288 Amendment 1; order per
+[`invocation-plan`](../../contexts/execution/invocation-plan.md)). Unlike
+`--no-pr`, the inner stage commits. With `delivery.wait_for_ci: false` a
+publishing run ends at `pr-open` and says so in one line.
+
 ## The Iron Law
 
 ```

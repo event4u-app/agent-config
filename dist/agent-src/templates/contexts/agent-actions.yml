@@ -1,0 +1,33 @@
+# Agent actions — template shipped by event4u/agent-config.
+#
+# Copy to `agents/settings/contexts/agent-actions.yml` in the consumer project.
+# One entry per thing an AI agent, bot or MCP server can DO for a requester:
+# every tool, function-calling tool or bot action. `/audit agents` compares the
+# code against this list — a registration missing here is reported, and so is a
+# write tool whose input names a subject (account, email, user_id, …).
+#
+# A claim in a conversation is an input, never an authorization. The subject of
+# a write comes from the authenticated principal; the check lives where the
+# write happens, on every path. Enforcement is the project's backend — this file
+# is the inventory a reviewer reads, not a gate.
+#
+# Fields (all required):
+#   name                the registered tool name, exactly as in code
+#   subject_source      session | policy | argument   (argument: read tools only)
+#   effect              read | write-reversible | write-identity | write-money | external-send
+#   verifier            the check that proves the caller may act on the subject
+#   human_approval      required | none   (required for any write-identity)
+#   notify_old_channel  true | false      (true for a recovery-channel or credential change)
+#   audit_log           where the action is recorded, with caller and subject
+#
+# Replace the example entry below with the project's own actions.
+
+version: 1
+actions:
+  - name: example_lookup_order
+    subject_source: session
+    effect: read
+    verifier: "orders are filtered by the signed-in customer, never by a name in the request"
+    human_approval: none
+    notify_old_channel: false
+    audit_log: "request log with caller id"

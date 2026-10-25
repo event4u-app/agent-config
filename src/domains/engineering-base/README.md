@@ -40,7 +40,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`prefer-enums-over-literals`** — Field with multiple non-boolean states — prefer an enum over string/numeric literals; old-style literals found → note, finish the task, ask after
 - **`scope-control`** — Scope control — no unsolicited architectural changes, refactors, or library replacements
 - **`secret-vcs-guard`** — Writing a credential into a tracked file or committing one in any VCS (git/svn/hg) — STOP, show the match, ask, offer alternatives; never silently
-- **`security-sensitive-stop`** — Security-sensitive paths (auth, billing, tenants, secrets, uploads, webhooks) — threat-model BEFORE editing
+- **`security-sensitive-stop`** — Security-sensitive paths (auth, billing, tenants, secrets, uploads, webhooks, agent/bot actions) — threat-model BEFORE editing
 - **`senior-engineering-discipline`** — Writing/generating code — generalize (no overfit/tautological tests), supply the invisible cross-cutting controls, never invent an API/field/package
 - **`source-discovery-gate`** — Before coding/DB/API/vendor work — prove structural facts against a real source (file:line, SDL, probe)
 - **`test-first`** — A behavior change gets a failing test first — and the test must fail for the intended reason before any implementation is written
