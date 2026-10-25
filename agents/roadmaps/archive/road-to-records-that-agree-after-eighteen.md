@@ -103,7 +103,7 @@ end. Each of these is a test or a lint that can go red.
       "ignored".
       Landed 2026-10-25: red first, then "still honoured" — read from the key's own
       reason, which keeps the hook bundle inside its byte budget.
-- [x] **2.4 Decide the star-ask unwritable-state test under root.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **2.4 Decide the star-ask unwritable-state test under root.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `tests/scripts/star_ask_hook.test.ts:158-176` relies on `chmod`, which root
       ignores, so it would fail as root.
       verify: the decision is recorded here and the test file is unchanged from
