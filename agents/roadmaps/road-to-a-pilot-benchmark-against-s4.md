@@ -42,7 +42,7 @@ win, and no headline number is taken from it beyond what it measured.
 - [ ] **1.3 Fix host, n, metrics and the decision rule.** One host, n pairs per
       arm, the existing discipline and defect-recall scorers, tokens per run,
       and a paired direction test (`_lib/paired_verdict.ts`) with its threshold.
-      verify: `agents/evidence/preregistration/` holds the file, committed before 3.1.
+      verify: `git log --oneline -1 -- agents/evidence/preregistration/s4-pilot.md` -> /\w+/
 - [ ] **1.4 Estimate the cost from the prior run.** Tokens per run from
       `docs/benchmark.md` § Cost-factor sweep times arms × pairs × tasks.
       verify: the estimate sits below the owner's cap, or the plan shrinks n until it does.
@@ -86,9 +86,9 @@ win, and no headline number is taken from it beyond what it measured.
 
 ## Decisions
 
-| ID | Decision | Alternatives | Reason | Revisit-if |
-|---|---|---|---|---|
-| D1 | Pilot on existing corpora, one host | Build the eight-class corpus the source plans | Answers the recurring question for a bounded cost; the full corpus is the assurance stub's | the pilot shows a lift worth confirming |
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | owner-reserved | owner (OQ-17, 2026-10-25) | A $150-capped pilot on existing corpora and one host. Rejected alternative: the eight-class corpus the source plans. | OQ-17 answered "1"; the full corpus is owned by `stubs/road-to-assurance-benchmark`. | The pilot shows a lift worth confirming at a larger n. |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-25 | reviewer: claude/host -->

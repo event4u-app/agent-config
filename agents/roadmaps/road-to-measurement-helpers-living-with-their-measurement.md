@@ -43,8 +43,8 @@ own path never reaches.
 
 ## Decisions
 
-| ID | Decision | Alternatives | Reason | Revisit-if |
-|---|---|---|---|---|
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-25 | reviewer: claude/host -->
