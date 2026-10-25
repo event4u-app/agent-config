@@ -185,32 +185,40 @@ the remedy: it outsources the automated gate's job and merely defers the same
 enumeration by 90 days.
 
 
-### Amendment 2026-10-25 — the window restarts at consumer reachability
+### Amendment 2026-10-25 — a no-adoption limb, and a teardown review that cannot delete
 
 Decided by the AI council (anthropic + openai, 2/2 convergent, 2026-10-25) under
 `road-to-a-memory-that-names-its-moment` step 1.3, before day 90 fell due.
 
-**Why.** For the whole first window every `/agents user` command was
-`visibility: internal`, so no consumer could review, accept or delete an
-observation. The numerator of the accept rate depended on an action only the
-maintainer could take: the window measured the rollout, not the layer.
+**Correction first.** An earlier round the same day was given the claim that
+consumers could not reach `/agents user review` or `accept`, and decided to restart
+the window. The claim was false: `visibility: internal` means "reachable by full
+name; not advertised" (`command-surface-tiers.md`), sub-commands of an orchestrator
+are internal by contract, the `/agents` head is `advanced`, and the `meta` pack is
+`always_on`, so a global install carries every `/agents user` sub-command. That
+verdict is void; this one replaces it.
+
+**Why an amendment at all.** Candidate observations come only from the manual,
+opt-in `/memory mine-session`. Nothing was proposed — not even on the maintainer's
+machine — so day 90 reads 0/0, `review_accept_rate` is `null` and the 30 % limb
+cannot fire. `null` is the correct rate; the gap is the policy, which had no
+condition for a layer nobody used.
 
 **What changes.**
 
-1. The reading on **2026-10-28** is recorded as a **non-binding baseline** and
-   classified as a rollout failure (the layer was not operationally delivered),
-   never erased.
-2. The binding 90-day window starts on the day `/agents user review` and
-   `accept` are installed for consumers **and** a clean consumer install has
-   passed propose → review → accept → present in `profile.md` end to end. A
-   visibility change alone does not start it.
-3. The binding window counts a **fresh cohort**: the counters at its start are
-   recorded and subtracted, so proposals no consumer could act on do not
-   contaminate the rate.
-4. The rate is read only once **≥ 20 proposals** sit in that cohort; below that
-   the raw counts are reported and the gate waits.
-5. The threshold is **unchanged**: accept rate < 30 % → mandatory teardown
-   review, default outcome deprecation-with-archive.
+1. **No-adoption limb.** If no observation was proposed by day 90, the teardown
+   review opens, exactly as a sub-30 % rate would open it.
+2. **The review is non-destructive.** It chooses between (a) archive-first
+   deprecation, (b) a redesigned activation path, and (c) one bounded activation
+   trial with exposure, expiry and sample criteria fixed in advance — never an
+   unbounded "wait for proposals" window.
+3. **User data first.** Before any removal: inventory the global paths, export or
+   preserve accepted profiles, deprecate the commands for at least one release,
+   and delete nothing without the user's explicit consent.
+4. **The quality limb is unchanged.** Accept rate < 30 % still opens the review;
+   it is read only once a predetermined sample exists.
+5. **Command visibility is unchanged.** Promoting individual sub-commands would
+   break the surface contract without touching the step users skip (mining).
 
 ## Consequences
 

@@ -53,11 +53,7 @@ import {
 } from './user_memory_gate_counters.js';
 import type { PromotionGateCounters } from './user_memory_gate_counters.js';
 
-/**
- * ADR-138's layer went live at fa7b8e0381. Its first 90 days are a non-binding
- * baseline (amendment 2026-10-25); the binding window has no date until consumers
- * can reach `/agents user accept`.
- */
+/** ADR-138's layer went live at fa7b8e0381; its kill criterion is read 90 days later. */
 export const GATE_LIVE_SINCE = '2026-07-30';
 export const GATE_WINDOW_DAYS = 90;
 const DAY_MS = 86_400_000;
@@ -205,7 +201,7 @@ export function renderGlobalMemoryAudit(
             : `accept rate ${Math.round(gate.acceptRate * 100)} % (floor ${REVIEW_ACCEPT_RATE_FLOOR * 100} %)`;
     lines.push('');
     lines.push(`ADR-138 promotion gate: ${dueState} (live since ${GATE_LIVE_SINCE}, due ${gate.dueDate})`);
-    lines.push('  baseline window, non-binding: the binding window starts at consumer reachability (ADR-138 amendment 2026-10-25)');
+    lines.push('  no-adoption limb: 0 proposals at day 90 also opens the teardown review (ADR-138 amendment 2026-10-25)');
     lines.push(
         `  proposed ${gate.counters.observations_proposed} · accepted ${gate.counters.observations_accepted} · ${rate}`,
     );

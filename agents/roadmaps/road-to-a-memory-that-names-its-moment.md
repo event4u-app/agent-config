@@ -45,10 +45,12 @@ own memory instead:
   fires 90 days after the layer went live at `fa7b8e0381` on 2026-07-30 — on
   **2026-10-28**. `evaluateKillCriterion` has no caller outside its test, and
   `renderGlobalMemoryAudit` shows none of the four counters.
-- Every command that would let a consumer accept an observation — the whole
-  `/agents user` family — and the only contested-entry resolver, `/team-knowledge`,
-  are `visibility: internal` under the `agent-config-maintainer` workspace. The gate
-  would measure a visibility setting, not a user.
+- The drafts claimed the `/agents user` family and `/team-knowledge` are unreachable
+  for consumers because they are `visibility: internal`. Step 2.1 refuted that:
+  internal means "reachable by full name; not advertised", the `/agents` head is
+  `advanced`, and the always-on `meta` pack ships every sub-command. What is true is
+  that observations come only from the manual `/memory mine-session`, and nothing was
+  ever proposed — day 90 reads 0/0, and a 0/0 rate cannot fire the 30 % limb.
 - Three truth surfaces say more than the tree delivers: the session index "restored
   at `session_start` across all 7 platforms" (`knowledge-pages.md:94-95`) is opt-in;
   the profile template says it "loads into every reply" (`src/templates/agent-user.md:36`)
@@ -112,22 +114,25 @@ reachable by consumers or kept internal by a recorded decision.
 
 ## Phase 2 — Reachability
 
-- [ ] **2.1 Apply the E2 verdict to the profile and knowledge commands.** If the
-      council opens them: `/agents user` (init, show, review, accept, delete, update)
-      and `/team-knowledge` (bootstrap, consolidate) move from `internal` to
-      `advanced`, and their workspace lists gain the non-developer profiles whose
-      wizard step already writes the profile. If it keeps them internal: the reason is
-      recorded at each command and in ADR-138, and the E1 window stays as decided.
-      verify: an installer test or a throwaway-HOME install lists the slash wrappers
-      for claude when opened, and lists none when kept internal; `task sync` and
-      `task generate-tools` leave no drift.
+- [x] **2.1 Apply the E2 verdict to the profile and knowledge commands.** The first
+      council round opened four sub-commands; flipping them showed that no sub-command
+      in the tree is `advanced` and that `command-surface-tiers.md` makes orchestrator
+      children internal by contract and reachable by full name. The corrected round
+      chose to change nothing. Recorded in ADR-138's amendment; no command file
+      changes.
+      verify: `./scripts-run src/scripts/build_discovery_manifest --write --out <tmp>`
+      lists `agents` as `advanced` routing to `agents-user`, and a real global install
+      carries `~/.claude/commands/agents/user/{accept,delete,review,show}.md`;
+      `git diff origin/main -- src/domains/meta/agents src/domains/meta/team-knowledge | grep '^[-+]visibility'`
+      returns nothing.
 
 ## Decisions
 
 | ID | Question | Route | Verdict | Record |
 |---|---|---|---|---|
-| E1 | ADR-138 gate: evaluate on 2026-10-28, or restart the window at consumer reachability? | council (reopens an ADR; personal-data layer) | option 2: 2026-10-28 is a non-binding baseline and a recorded rollout failure; the binding window starts at tested consumer reachability, on a fresh cohort, read at ≥ 20 proposals, threshold unchanged | council: 2026-10-25, anthropic + openai 2/2 convergent; ADR-138 Amendment 2026-10-25 |
-| E2 | `/agents user` + `/team-knowledge`: `advanced` or `internal`? | council (exposes a personal-profile capture path to consumers) | option 4: `show`, `review`, `accept`, `delete` advanced with a preview and confirmation before any deletion; `init`, `update` internal; of `/team-knowledge` only the contested-entry resolution, split out if `consolidate` mutates more; non-developer profiles added | council: 2026-10-25, same round as E1 |
+| E1 | ADR-138 gate at day 90, when nothing was ever proposed? | council (reopens an ADR; personal-data layer) | option 3: a no-adoption limb — 0 proposals at day 90 opens the teardown review; the review is non-destructive (archive-first deprecation, redesigned activation, or one bounded trial), inventories and preserves user data, and deletes nothing without consent; the 30 % limb is unchanged | council: 2026-10-25 correction round, anthropic + openai 2/2 convergent; ADR-138 Amendment 2026-10-25. The first round (restart the window) was decided on the false unreachability claim and is void |
+| E2 | Advertise `/agents user` sub-commands? | council (personal-profile commands) | option 1: change nothing — reachable by full name per the surface contract; `mine-session` already points to `/agents user review` | council: 2026-10-25 correction round, same as E1 |
+| E12 | Who runs the teardown review that opens on 2026-10-28? | owner (its outcome can deprecate a user-data layer) | asked in `agents/owner-questions.md` as OQ-11 | — |
 | E8 | Add the slot p95 against 1.5 s to the dogfood closing condition? | run (strengthens a measurement, reversible) | yes | step 1.5 |
 | E6 | Receiver? | run | this roadmap for the dated work; the structural rest parked as `later/road-to-a-memory-the-consumer-owns` | Source search in frontmatter |
 
@@ -141,9 +146,9 @@ reachable by consumers or kept internal by a recorded decision.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A consumer root editing an ADR or an install source gets no recall
+- [x] AC-1 — A consumer root editing an ADR or an install source gets no recall
       line, and the package root still gets its four.
-- [ ] AC-2 — The audit render shows the gate counters and the due date, and § Decisions
+- [x] AC-2 — The audit render shows the gate counters and the due date, and § Decisions
       carries the council's verdicts on E1 and E2.
-- [ ] AC-3 — None of the four truth surfaces states a behaviour the default tree does
+- [x] AC-3 — None of the four truth surfaces states a behaviour the default tree does
       not have, and the dogfood closing condition names the slot time against 1.5 s.
