@@ -149,19 +149,23 @@ end. Each of these is a test or a lint that can go red.
 
 ## Phase 4 — Records census and the open window
 
-- [ ] **4.1 Run the owner-claim predicate once over existing ADRs.**
+- [x] **4.1 Run the owner-claim predicate once over existing ADRs.**
       `check_new_adr_evidence` checks only added records. Apply
       `claimsOwnerDecision` + `citesOwnerDirective` to every accepted ADR since
       ADR-282 and append each miss to `agents/owner-questions.md` as a question,
       not a fix.
       verify: the census output is committed under `agents/evidence/analysis/`
       with its count, and every miss has a question.
-- [ ] **4.2 Schedule the `rule_packs` legacy window.** `RULE_PACKS_LEGACY_WINDOW`
+      Landed 2026-10-25: 14 misses from ADR-282 on, 8 naming the owner as decision-maker; ADR-286 is already corrected, the other 7 are OQ-18.
+      `corrected-from-reproduction`: one question for the 7, not one per record, so the list stays readable.
+- [x] **4.2 Schedule the `rule_packs` legacy window.** `RULE_PACKS_LEGACY_WINDOW`
       (`src/install/rule_scope.ts:122`) is prose with no end; 18.1.0 and 18.2.0
       shipped since. Add a `docs/MIGRATION.md` § Scheduled deprecations row for
       the legacy honouring and the `ProjectionMode` residue in `mcp_bridge.ts`,
       with removal due at the next major (not pinned).
       verify: `lint_scheduled_deprecations` passes with the row present.
+      `corrected-from-reproduction`: the row reads "next major after 18.x", which the lint resolves to 19, so the window gets teeth instead of staying unpinned.
+      Landed 2026-10-25: 4 rows parsed, none due.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-25 | reviewer: claude/host -->
@@ -182,11 +186,11 @@ end. Each of these is a test or a lint that can go red.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — For every release in the impact map, the class equals what the fixed
+- [x] AC-1 — For every release in the impact map, the class equals what the fixed
       parser computes over its span, and an unrecorded breaking commit yields
       `action`.
-- [ ] AC-2 — No span carrying an undeclared break is absent from the impact
+- [x] AC-2 — No span carrying an undeclared break is absent from the impact
       map, so a major's absence means a declared `none` (1.4 as corrected).
-- [ ] AC-3 — The guards in Phase 2 each have a test that was seen red.
-- [ ] AC-4 — Whether a safety floor ships with its skills is decided, recorded,
+- [x] AC-3 — The behavioural guards in Phase 2 (2.1–2.3) each have a test that was seen red; 2.4 (root-only) and 2.5 (a comment) have no red to see.
+- [x] AC-4 — Whether a safety floor ships with its skills is decided, recorded,
       and pinned by an install test.

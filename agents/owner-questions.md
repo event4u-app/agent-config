@@ -81,6 +81,21 @@ and the run that applies it links its PR.
   a small pre-registered pilot answers it either way for a bounded cost.
 - **Blocks:** every head-to-head KPI in the round's master plan.
 
+### OQ-18 — Seven ADRs name you as decision-maker without your words
+
+- **Context:** `check_new_adr_evidence` caught ADR-286 recording a refusal you
+  never gave, but it checks only new records. Run once over the tree
+  (`agents/evidence/analysis/owner-claim-census-2026-10-25.md`), it finds 7 more
+  records from ADR-282 on that list `owner` in `decision_makers` and cite no
+  owner-directive: ADR-283, 287, 288, 293, 297, 298, 299. Raised by an 18.0.0
+  review in `inbox-2026-10-aw`.
+- **Options:** (a) for each, confirm the attribution — the run then records your
+  words as an owner-directive and cites it; (b) relabel those you did not decide
+  as `council` / `agent`; (c) leave them as they are.
+- **Recommendation:** (a) for the ones you remember deciding, (b) for the rest —
+  a record a reader can check is the point of the gate that caught ADR-286.
+- **Blocks:** nothing executable; the gate stays diff-scoped either way.
+
 ## Not owner questions — waits, or already settled in the tree
 
 - `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
