@@ -95,6 +95,7 @@ Evidence (read): `src/scripts/roadmap_drain_queue.ts:103`
       skips the pin stays in `emitted`; `/analyze:inbox` Phase 6 says the pin is
       the emit-time HEAD.
       verify: `npx vitest run tests/scripts/analysis_validate.test.ts` -> 0 — reds on a fixture without `tree_pin:`
+      reach exempt: `emitRound` is the analysis engine's library entry, called from the `/analyze:*` procedure rather than imported by a CLI; it had no import caller before this step either, and the step only adds an optional `treePin` field to it.
 - [x] **2.2 Execution start sees freshness.** Each drain-queue entry carries <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/roadmap_drain_queue.ts -->
       `freshness: fresh | drifted | broken | unpinned` from the cheap path; the
       text render shows it; no fifth step class. On `drifted` or `broken` the
@@ -163,14 +164,17 @@ Evidence (executed): `src/scripts/optimize_skill_description.ts:128`
       verdict on the test split per candidate instead of picking by raw `>`;
       `underpowered` is printed, never overwritten.
       verify: `npx vitest run tests/scripts/optimize_skill_description.test.ts` -> 0
+      production entry: src/scripts/optimize_skill_description.ts
 - [x] **5.3 Multiple-comparison correction.** A Holm step-down over the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/paired_verdict.ts -->
       candidates of one run, next to the sign test in `_lib/paired_verdict.ts`,
       used by 5.2.
       verify: `npx vitest run tests/scripts/paired_verdict.test.ts` -> 0 — five candidates each just under α alone are not significant after correction
+      production entry: src/scripts/optimize_skill_description.ts
 - [x] **5.4 One id per owner question.** `agents/owner-questions.md` carries <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/paired_verdict.ts -->
       `OQ-11` twice; the self-modification one, which nothing cites, becomes
       the next free id (the archived memory roadmap cites the teardown one).
       verify: `grep -c '^### OQ-11 ' agents/owner-questions.md` -> /^1$/ <!-- merged with main: #2683 renumbered and answered the self-modification question as OQ-12 the same day; this branch took main's numbering and filed its two questions as OQ-14 and OQ-15 -->
+      production entry: src/scripts/optimize_skill_description.ts
 
 ## What this roadmap does not do
 
