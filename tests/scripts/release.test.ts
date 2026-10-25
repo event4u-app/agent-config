@@ -24,6 +24,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { measuredSection } from '../../src/scripts/_lib/dispatch_policy.js';
 import { preflightPosition } from '../../src/scripts/_lib/release_position.js';
 import { _TEST_LIST_ARGV } from '../../src/scripts/release_publication.js';
 
@@ -210,6 +211,20 @@ describe('nothing_to_release_ci', () => {
 // ─── changelog rendering ──────────────────────────────────────────────────────
 
 describe('render_changelog_entry', () => {
+    it('places the measured section under the head and above the generated log', () => {
+        const measured = ['### Measured in this release', '', '- `tier`: "inherit" → "lite" (claim `x`)'];
+        const [, body] = render_changelog_entry('1.2.0', '1.1.0', [_c('feat(api): add endpoint')], '2026-04-24', {
+            measured,
+        });
+        const head = body.indexOf('### Release highlights');
+        const section = body.indexOf('### Measured in this release');
+        const feat = body.indexOf('### Features');
+        expect(head).toBeLessThan(section);
+        expect(section).toBeLessThan(feat);
+        const [, plain] = render_changelog_entry('1.2.0', '1.1.0', [_c('feat(api): add endpoint')], '2026-04-24');
+        expect(plain).not.toContain('Measured in this release');
+    });
+
     it('groups by type in order', () => {
         const commits = [
             _c('feat(api): add endpoint'),
@@ -1354,5 +1369,56 @@ describe('assert_scheduled_deprecations_clear', () => {
             SystemExitError,
         );
         expect(calls).toHaveLength(1);
+    });
+});
+
+describe('measuredSection', () => {
+    const dirs: string[] = [];
+    afterEach(() => {
+        for (const d of dirs.splice(0)) fs.rmSync(d, { recursive: true, force: true });
+    });
+
+    const table = (value: number) =>
+        JSON.stringify({
+            rows: [
+                {
+                    id: 'max-parallel',
+                    value,
+                    sink: { kind: 'yaml-file', file: 'x.yml', key: 'a' },
+                    claim: 'unmeasured',
+                    review_by: '2026-01-01',
+                    local: 'learnable',
+                },
+            ],
+        });
+
+    function repo(): string {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'measured-section-'));
+        dirs.push(dir);
+        const git = (...args: string[]) =>
+            spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@example.com', ...args], { cwd: dir });
+        git('init', '-q');
+        fs.mkdirSync(path.join(dir, 'src', 'config'), { recursive: true });
+        const file = path.join(dir, 'src', 'config', 'dispatch-policy.json');
+        fs.writeFileSync(file, table(3));
+        git('add', '-A');
+        git('commit', '-qm', 'one');
+        git('tag', 'v1');
+        fs.writeFileSync(file, table(4));
+        git('commit', '-qam', 'two');
+        // An uncommitted edit must not reach the notes: the section reads HEAD.
+        fs.writeFileSync(file, table(9));
+        return dir;
+    }
+
+    it('lists the committed move since the tag and the overdue row', () => {
+        const text = measuredSection(repo(), 'v1', '2026-10-25').join('\n');
+        expect(text).toContain('`max-parallel`: 3 → 4');
+        expect(text).not.toContain('→ 9');
+        expect(text).toContain('review_by 2026-01-01');
+    });
+
+    it('skips the section when the previous tag is not available', () => {
+        expect(measuredSection(repo(), 'v-missing', '2026-10-25')).toEqual([]);
     });
 });

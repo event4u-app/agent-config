@@ -78,7 +78,18 @@
 - non_inference: <what this data does NOT license>   # optional; ratcheted on backed quant
 - retires_phrasings: <phrase> | <phrase>             # closed entries only; or `never-published — <reason>`
 - promotion_evidence: <consumer-side evidence>      # required on measured-in-repo entries, forbidden elsewhere
+- review_by: <YYYY-MM-DD>        # optional; the date an open claim must be measured by
 ```
+
+**`review_by` — when an open measurement is owed.** An `unbacked` or
+`measured-in-repo` entry may name the date by which it must be measured.
+`check_claims` rejects a malformed date and a date on a closed entry, prints
+every open entry past its date under `Overdue` without failing the build (also
+under `--quiet`, the mode CI runs), and `check_claims --status` lists
+every open entry with its dates. The dispatch-policy table
+(`src/config/dispatch-policy.json`) dates its unmeasured rows the same way, and
+`check_claims` fails when a row disagrees with the file that carries its value,
+cites a claim that is not closed, or a floor row is learnable.
 
 **`non_inference` — the sentence that stops a number travelling.** A measured
 figure outlives its measurement: it is quoted without the corpus, the arm count,
@@ -530,6 +541,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - kind: comparative
 - evidence: PRE-REGISTERED 2026-07-12 (road-to-feedback-8.11 Phase 3 — no goalpost-moving after the numbers land; design at `docs/design/council-vs-solo-baseline.md`). Falsification criteria fixed BEFORE data: (1) quality = blind post-hoc grading against known ground-truth dispositions, two blind judges, admissible only at Cohen's κ ≥ 0.60 (reuse `check_quality_regression.ts` kappa machinery); (2) the five feedback-proposed admission dimensions are recorded per decision AT pre-registration, so "≥2-of-5" is a testable post-hoc correlate, never a pre-imposed gate; (3) NO lift on any subset (overall, per impact class, per dimension stratum) → honest null, deliberation-protocol phases stop (maintenance-only), recorded in road-to-opt-council-deliberation; lift on a subset → admission criteria derived FROM that subset's characteristics. Execution is spend-gated (user confirms rendered estimate in-session); shadow-log was absent/empty at design time — zero prior council-vs-solo data exists.
 - status: unbacked
+- review_by: 2026-12-15
 - last_verified:
 
 ### claim: humanizer-tell-reduction
@@ -1279,6 +1291,7 @@ is the named exception in the claim itself.
 - kind: quant
 - evidence: PRE-REGISTERED 2026-09-07 (road-to-admissible-council-seats Phase 3.1), BEFORE any measurement run and before any seat capable of running it is authorized -- the roadmap's `free-seat-measurement-spend` blocker was DECLINED for this round in the same change, so the claim is filed with no result and no route to one. That ordering is the pre-registration: a threshold fixed while the measurement is impossible cannot have been fitted to a result. THRESHOLD: Cohen's kappa >= 0.60, the conventional "substantial agreement" floor, computed with the existing `cohensKappa` in `src/scripts/check_quality_regression.ts:117` rather than a new statistic written for this claim. CORPUS: repo-owned PUBLIC artifacts only -- skill descriptions, the trigger corpus, rule text, bench fixtures -- never consumer content; the seat-level enforcement is the `public-artifact` content ceiling in `src/scripts/ai_council/content_ceiling.ts`. PANEL: at least two model families, enforced by `juryAggregate` in `src/scripts/ai_council/jury_aggregate.ts`, which returns absent for a single-family panel rather than scoring it -- `docs/CLAIMS.md` already records that a same-posture second vendor's catches were a strict SUBSET of the first's, so a same-family panel measures redundancy and not agreement. AGGREGATE: a trimmed mean or median, never a vote count, for the same reason. POSITION ORDER swaps per judge via `src/scripts/ai_council/judge_position_bias.ts`. ONE CLAIM, NOT TWO: the proposer-lift question is held behind `metered-backend-park` in `agents/roadmaps/later/road-to-governed-evidence-production.md` and is deliberately NOT filed here. FALSIFICATION: a measured kappa below 0.60 on a run whose panel composition, corpus slice and swap seed are recorded. HONEST-NULL PATH, written before the run rather than after it: below the bar the jury stays evaluation-only and NO gate consumes its output; lifting that is not authorized by this claim and requires a new pre-registered claim, which is the scoped form -- a refusal that said "permanently" would prejudge a future owner ruling. ROLE BOUND, independent of the result: ADR-257 records that a route this package did not pay for may propose and may score but may never carry a verdict, chair, or act as evaluator of record; a passing kappa does not lift that boundary, because the boundary is about accountability and not capability. UNDERPOWERED is neither a pass nor a null: a corpus slice too small to separate 0.60 from chance settles nothing and may be cited for neither direction.
 - status: unbacked
+- review_by: 2026-12-15
 - last_verified:
 
 ### claim: free-jury-effective-independence
@@ -1286,6 +1299,7 @@ is the named exception in the claim itself.
 - kind: quant
 - evidence: PRE-REGISTERED 2026-10-22 (road-to-free-hands-a-paid-head-checks step 4.3), BEFORE any jury run and with the statistic committed in the same change, so the bar cannot have been fitted to a reading. STATISTIC: `juryIndependence` in `src/scripts/ai_council/jury_aggregate.ts` -- a judge's error on an item is its label differing from the known disposition; phi is the pairwise correlation of two judges' error vectors; phi-bar is the mean of the defined pairs, floored at 0; n_eff = k / (1 + (k - 1) * phi-bar). A perfectly correlated synthetic panel yields n_eff = 1, asserted in `tests/scripts/ai_council/jury_aggregate.test.ts`. BAR: n_eff / k >= 0.5. RELATION TO THE KAPPA CLAIM: reported BESIDE it, never in place of it -- `free-jury-judge-agreement`'s bar (Cohen's kappa >= 0.60) is unchanged, and a panel can clear one bar and miss the other. PANEL: at most five judges, enforced by the same module, because past five the effective count stops growing. CORPUS: the same public-artifact corpus and the same run as the kappa claim; a reading taken on a different run is not this claim. FALSIFICATION: n_eff / k below 0.5 on a run whose panel composition, corpus slice and swap seed are recorded. UNDEFINED PAIRS: a judge whose errors do not vary gives no phi; a run where every pair is undefined reports no n_eff and settles nothing. UNDERPOWERED is neither a pass nor a null. ROLE BOUND, independent of the result: ADR-257 -- an unpaid route may score, never carry a verdict; a passing n_eff lifts nothing.
 - status: unbacked
+- review_by: 2026-12-15
 - last_verified:
 
 ### claim: free-hands-limit-relief
@@ -1293,6 +1307,7 @@ is the named exception in the claim itself.
 - kind: quant
 - evidence: PRE-REGISTERED 2026-10-22 (road-to-free-hands-a-paid-head-checks step 6.1), BEFORE any free call is routed and before the route that could make one exists. MEASURE: per calendar week, the paid billable tokens of the rung-0.5 asks that a free route served (the tokens the paid fallback would have spent, read from the `billing_class` axis of the `ask_economy` metric in `src/config/dispatch-economy-metrics.json`), MINUS the paid head's own tokens spent verifying those free returns (the orchestration record's verification-token field of step 3.3). BAR: the weekly net is greater than zero, in each of the weeks of the Phase 6 shadow. A gross saving with no subtraction is not this claim: the owner's constraint is that paid limits last longer, and tokens the head spends again on checking the hands are not saved. FALSIFICATION: a net at or below zero in the shadow window. UNDERPOWERED (fewer free-served asks than the shadow cap of decision A5 needs per kind) is neither a pass nor a null. NOT LICENSED, whatever the result: any statement about quality -- that is `free-hands-quality-held`, and neither claim backs the other.
 - status: unbacked
+- review_by: 2026-12-15
 - last_verified:
 
 ### claim: free-hands-quality-held
@@ -1300,6 +1315,7 @@ is the named exception in the claim itself.
 - kind: quant
 - evidence: PRE-REGISTERED 2026-10-22 (road-to-free-hands-a-paid-head-checks step 6.1), BEFORE any free call. MEASURE: per task kind, the escalation-plus-verify-fail rate of free-routed asks against that of paid-routed asks, both read from the `ask_economy` metric split by its `billing_class` axis and from the orchestration record's `verified` field; a `skipped` verify on a free return counts as an escalation. BAR, both halves: (1) free rate <= paid rate + 5 percentage points, and (2) free rate < 0.3, the escalation kill already registered on `ask_economy`. A kind that clears both may flip (step 6.3); a kind that later breaches the kill reverts. FALSIFICATION: either half missed for a kind on a window meeting the A5 sample. UNDERPOWERED is neither a pass nor a null and backs no flip. NOT LICENSED: any statement about limit relief, which is `free-hands-limit-relief`.
 - status: unbacked
+- review_by: 2026-12-15
 - last_verified:
 
 ### claim: obligation-settle-shadow-bar
@@ -1383,6 +1399,7 @@ is the named exception in the claim itself.
 - kind: quant
 - evidence: PRE-REGISTERED 2026-10-16 (`road-to-a-cold-start-paid-once` step 6.1), BEFORE Phases 3-4 change any behaviour. METRIC: host `StopFailure` events with error class `rate_limit` per drain run, counted before and after Phases 3-4, same operator, same host version band. DIRECTION ONLY: a fall is a pass, no fall is a null; no percentage target is set (that roadmap's K7). PRECONDITION: the `StopFailure` row of step 1.9 exists with a version; without it the event is unobserved and the claim is UNDERPOWERED. This counts stops, not tokens, because the owner's constraint is requests in a short window, and subscription windows need not follow API token arithmetic. READ 2026-10-22, UNDERPOWERED: 0 stops of any class in 16 sessions, no before/after pair, and no plan-limit StopFailure has been observed live; revisit on the first observed StopFailure(rate_limit) or a real drain pair (agents/evidence/analysis/warm-worker-claims-2026-10-22.md#Readings).
 - status: unbacked
+- review_by: 2026-11-24
 - last_verified: 2026-10-22
 
 ### claim: fresh-spawns-per-drain
@@ -1390,6 +1407,7 @@ is the named exception in the claim itself.
 - kind: quant
 - evidence: PRE-REGISTERED 2026-10-16 (`road-to-a-cold-start-paid-once` step 6.1), BEFORE step 3.6. METRIC: ledger `subagent_start` lines per drain run whose ref was not seen earlier in that run, before and after Phase 3. DIRECTION ONLY: a fall is a pass, no fall is a null. A resume does not reduce the number of requests, so this claim is reported beside `rate-limit-stops-per-drain` and never substitutes for it. READ 2026-10-22, UNDERPOWERED: not measurable by that window, whose arm prompts fix the spawn count (9 against 1); revisit on a real drain run before and after Phase 3 (agents/evidence/analysis/warm-worker-claims-2026-10-22.md#Readings).
 - status: unbacked
+- review_by: 2026-11-24
 - last_verified: 2026-10-22
 
 ### claim: resume-non-inferiority
@@ -1405,6 +1423,7 @@ is the named exception in the claim itself.
 - kind: quant
 - evidence: agents/evidence/analysis/tier-downshift-paired-run-2026-10-23.md#Verdict **underpowered**
 - status: unbacked
+- review_by: 2026-12-15
 - last_verified: 2026-10-23
 - non_inference: PRE-REGISTERED 2026-10-22 (`road-to-a-tier-the-dispatch-carries` step 2.1), BEFORE the first paired run (step 2.2) and before any slice kind's default dispatch changes (step 2.3). ARMS: each slice runs once with the per-call model argument of `lite` and once with no model argument (inherit), both verified by the same deterministic check. KIND: read-only fan-out only (that roadmap's decision A5). METRIC: (verify-fail + escalation) rate of the `lite` arm minus the same rate of the inherit arm. THRESHOLD: <= +5 pp, AND the `lite` arm's escalation rate stays below the 0.3 escalation kill of `src/config/dispatch-economy-metrics.json`. SAMPLE: at most 60 slice pairs (decision A2). FALSIFICATION: the difference exceeds +5 pp, or the escalation rate reaches 0.3; the kind then keeps the inherited tier. UNDERPOWERED when the run cannot separate a 5 pp difference at the cap — then this claim and `tier-downshift-limit-relief` are both cited for neither direction. VERDICT 2026-10-22: HELD at the margin — 60 complete pairs, both arms 60/60 verified, 0 escalations; no discordant pair, so the rule of three bounds the difference at 3/60 = 5.0 pp, equal to the bar (`agents/evidence/analysis/tier-downshift-paired-run-2026-10-22.md`, `internal/bench/tier-downshift/verdict-2026-10-22.json`). Scope of the backing: exact-lookup read-only fan-out on Claude Code 2.1.308, inherit arm on `sonnet`. A later window that breaches the bar or the 0.3 kill reverts the kind (`kindTierAfter`). SUPERSEDED 2026-10-23 (`road-to-a-tick-the-shipped-path-earns` 4.2): that verdict is not evidence. Its corpus disagrees with both commits it named (`count-ts-src/scripts/_lib` 461 against 460 at `f4e20ba12f` and `5653d32f32`), `verified` read the head's reply instead of the leg's, and the bound was inverted (rule of three for 0 discordant pairs, a looser Wald interval for 1). RERUN 2026-10-23 on an archive of commit `fe4fa4bcd7b9bffaba49a233b18a6e82bdcfcc7b`, corpus and every row bound to that commit, `verified` from the leg's own transcript, exact one-sided 95 % Clopper–Pearson bound: 60 pairs, lite 59/60, inherit 60/60, 0 escalations; the one discordant pair (`imports-block_kernel_rule_writes.ts`, haiku answered 6 for 8) puts the upper bound at 7.66 pp, not below 5. VERDICT: UNDERPOWERED, cited for neither direction (`agents/evidence/analysis/tier-downshift-paired-run-2026-10-23.md`, `internal/bench/tier-downshift/verdict-2026-10-23.json`). The kind returns to `inherit`. REVISIT IF a pinned run of the same kind reads an upper bound strictly below 5 pp — at this bound that needs at least 59 clean pairs at zero lite failures or about 93 at one, so a rerun above the 60-pair cap needs the cap reopened first.
 
@@ -1413,6 +1432,7 @@ is the named exception in the claim itself.
 - kind: quant
 - evidence: agents/evidence/analysis/tier-downshift-paired-run-2026-10-23.md#Verdict **underpowered**
 - status: unbacked
+- review_by: 2026-12-15
 - last_verified: 2026-10-23
 - non_inference: PRE-REGISTERED 2026-10-22 (`road-to-a-tier-the-dispatch-carries` step 2.1), on the same paired run as `tier-downshift-quality-held`. METRIC: per arm, the sum over its slices of billable input weighted as the tree already weights cache (cache read 0.1x, five-minute cache write 1.25x, uncached 1x) plus output, each leg's tokens priced at its served model's per-token rate, divided by the number of slices that passed verification in that arm; a `lite` slice that escalated adds its re-run's cost to the `lite` arm. DIRECTION: the `lite` arm's cost per verified slice is lower. No percentage target is set (that roadmap's K10). UNDERPOWERED under the same condition as the quality claim; a cheaper arm that fails `tier-downshift-quality-held` backs nothing. VERDICT 2026-10-22: RELIEF — cost per verified slice 0.00152 USD on `lite` against 0.01548 on inherit (`sonnet`), list prices from `internal/bench/pricing.yaml`, same paired run; no escalated re-run occurred to charge. Backed only together with `tier-downshift-quality-held`. SUPERSEDED 2026-10-23 (`road-to-a-tick-the-shipped-path-earns` 4.2): the 2026-10-22 run priced `claude-haiku-5-5` legs with a family row sourced 2026-05-14 for a former generation, and rests on the quality verdict that run no longer backs. RERUN 2026-10-23 on the same pinned run as `tier-downshift-quality-held`, priced with per-model rows read 2026-10-23 from https://platform.claude.com/docs/en/about-claude/pricing (`internal/bench/pricing.yaml`): 0.00081 USD per verified slice on `lite` against 0.00986 on inherit (`sonnet`). VERDICT: UNDERPOWERED, because the quality claim is underpowered and a cheaper arm backs nothing without it (`agents/evidence/analysis/tier-downshift-paired-run-2026-10-23.md`). REVISIT IF `tier-downshift-quality-held` is backed by a pinned run, with price rows that `price_freshness` accepts on the verdict date.
 

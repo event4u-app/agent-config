@@ -45,6 +45,8 @@ import {
     parse_exec_pointer,
     run_exec_evidence,
 } from './_lib/exec_evidence.js';
+import { asOf, localIsoDate } from './_lib/as_of.js';
+import { POLICY_REL, checkPolicy, loadPolicy, readSink } from './_lib/dispatch_policy.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 import {
@@ -426,23 +428,70 @@ export interface LedgerEntry {
      * separate from its ratchet.
      */
     retires_phrasings_present: boolean;
+    /**
+     * Optional on an open entry: the date by which it must be measured
+     * (road-to-a-policy-the-measurements-write 2.1). Past-due is reported,
+     * never failed — an overdue date nobody can satisfy inside a PR would block
+     * unrelated work; a malformed one is a finding.
+     */
+    review_by: string;
 }
 
 interface Args {
     quiet: boolean;
+    status: boolean;
+}
+
+const OPEN_STATUSES = new Set(['unbacked', 'measured-in-repo']);
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Open entries whose `review_by` lies before `today` (both ISO dates). */
+export function overdue_entries(ledger: Map<string, LedgerEntry>, today: string): LedgerEntry[] {
+    return [...ledger.values()].filter(
+        (e) => OPEN_STATUSES.has(e.status) && ISO_DATE_RE.test(e.review_by) && e.review_by < today,
+    );
+}
+
+export function render_overdue(overdue: readonly LedgerEntry[]): string {
+    if (overdue.length === 0) {
+        return '';
+    }
+    const lines = [`⚠️  Overdue: ${overdue.length} open claim(s) past review_by (reported, not failed)`];
+    for (const e of overdue) {
+        lines.push(`      ${e.id} — review_by ${e.review_by}`);
+    }
+    return `${lines.join('\n')}\n`;
+}
+
+/** Local calendar date of the as-of seam, as the release generator reads it. */
+export function local_today(now: Date = asOf()): string {
+    return localIsoDate(now);
+}
+
+export function render_status(ledger: Map<string, LedgerEntry>, today: string): string {
+    const open = [...ledger.values()].filter((e) => OPEN_STATUSES.has(e.status));
+    const lines = [`open claims: ${open.length} (today ${today})`];
+    for (const e of open) {
+        const due = e.review_by || '-';
+        const mark = ISO_DATE_RE.test(e.review_by) && e.review_by < today ? '  OVERDUE' : '';
+        lines.push(`  ${e.id}  ${e.status}  last_verified ${e.last_verified || '-'}  review_by ${due}${mark}`);
+    }
+    return `${lines.join('\n')}\n`;
 }
 
 function parse_args(argv: string[]): Args {
-    const out: Args = { quiet: false };
+    const out: Args = { quiet: false, status: false };
     for (const a of argv) {
         if (a === '--quiet') {
             out.quiet = true;
+        } else if (a === '--status') {
+            out.status = true;
         } else if (a === '--self-test') {
             // Handled in main() before parse_args is reached; accepted here so
             // a stray ordering never turns the flag into a usage error.
             continue;
         } else if (a === '-h' || a === '--help') {
-            process.stdout.write('usage: check_claims [--quiet]\n');
+            process.stdout.write('usage: check_claims [--quiet] [--status]\n');
             throw new ExitCode(0);
         } else {
             process.stderr.write(`❌  check_claims: unrecognized argument: ${a}\n`);
@@ -477,6 +526,7 @@ function load_ledger(): Map<string, LedgerEntry> {
                 retires_phrasings: cur.retires_phrasings ?? '',
                 promotion_evidence: cur.promotion_evidence ?? '',
                 retires_phrasings_present: cur.retires_phrasings_present ?? false,
+                review_by: cur.review_by ?? '',
             });
         }
         cur = {};
@@ -494,7 +544,7 @@ function load_ledger(): Map<string, LedgerEntry> {
         // would have silently ignored the second and dropped whichever field
         // came from the other branch. One union, both fields.
         const field = line.match(
-            /^-\s+(claim|kind|evidence|status|last_verified|superseded_by|retired_by|measured_on|non_inference|retires_phrasings|promotion_evidence):\s*(.*)$/,
+            /^-\s+(claim|kind|evidence|status|last_verified|superseded_by|retired_by|measured_on|non_inference|retires_phrasings|promotion_evidence|review_by):\s*(.*)$/,
         );
         if (field) {
             const key = field[1] as keyof LedgerEntry;
@@ -622,8 +672,42 @@ function main(argv: string[] = process.argv.slice(2)): number {
         }
         throw exc;
     }
+    const today = local_today();
+    if (args.status) {
+        process.stdout.write(render_status(ledger, today));
+        return 0;
+    }
     const markers = scan_markers();
     const findings: Finding[] = [];
+
+    for (const entry of ledger.values()) {
+        if (entry.review_by !== '' && !ISO_DATE_RE.test(entry.review_by)) {
+            findings.push({
+                id: entry.id,
+                file: LEDGER_REL,
+                reason: `review_by '${entry.review_by}' is not an ISO date (YYYY-MM-DD)`,
+            });
+        } else if (entry.review_by !== '' && !OPEN_STATUSES.has(entry.status)) {
+            findings.push({
+                id: entry.id,
+                file: LEDGER_REL,
+                reason: `review_by on a '${entry.status}' entry — only an open claim is owed a measurement; drop the date`,
+            });
+        }
+    }
+
+    // Every dispatch default is bound to its sinks and to the claim behind it
+    // (road-to-a-policy-the-measurements-write 1.2). Absent table, nothing to bind.
+    if (fs.existsSync(path.join(REPO, POLICY_REL))) {
+        const policyFindings = checkPolicy(loadPolicy(REPO), {
+            readSink: (_row, sink) => readSink(REPO, sink),
+            claimStatus: (id) => ledger.get(id)?.status,
+            claimReviewBy: (id) => ledger.get(id)?.review_by,
+        });
+        for (const reason of policyFindings) {
+            findings.push({ id: 'dispatch-policy', file: POLICY_REL, reason });
+        }
+    }
 
     // 1. Every markered claim must map to a backed, resolvable ledger entry.
     for (const { id, file } of markers) {
@@ -1088,6 +1172,9 @@ function main(argv: string[] = process.argv.slice(2)): number {
         return 2;
     }
 
+    // Printed under --quiet too: CI runs this gate quiet, and an overdue
+    // measurement nobody sees is the defect the field exists to end.
+    process.stdout.write(render_overdue(overdue_entries(ledger, today)));
     if (!args.quiet) {
         const backed = [...ledger.values()].filter((e) => e.status === 'backed').length;
         const unbacked = [...ledger.values()].filter((e) => e.status === 'unbacked').length;
@@ -1138,11 +1225,11 @@ function _isCliEntry(): boolean {
  */
 function selfTest(): number {
     const roots: string[] = [];
-    // FOUR, not three: this gate imports `gate_self_test.ts` for the harness
-    // it is running right now, and a missing fourth lib fails as a module
-    // resolution error in EVERY case at once — which reads as the detection
-    // having broken rather than the fixture being incomplete.
-    const libs = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts'];
+    // Every lib this gate imports, `gate_self_test.ts` included:
+    // a missing one fails as a module resolution error in EVERY case at once —
+    // which reads as the detection having broken rather than the fixture being
+    // incomplete.
+    const libs = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts', 'dispatch_policy.ts'];
 
     const fixture = (files: Record<string, string>): number => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'check-claims-selftest-'));
@@ -1182,6 +1269,19 @@ function selfTest(): number {
         ].join('\n');
 
     const CLEAN_README = '# Agent Config\n\nGoverned skills, rules and commands.\n';
+
+    const openClaim = (reviewBy: string): string =>
+        [
+            closed(null),
+            '### claim: tier-held',
+            '- claim: A lower tier holds quality on lookups.',
+            '- kind: comparative',
+            '- evidence: docs/evidence.md#ANCHOR',
+            '- status: unbacked',
+            '- last_verified:',
+            `- review_by: ${reviewBy}`,
+            '',
+        ].join('\n');
 
     /** A registry carrying exactly one byte-unit metric, for the 4.1 cases. */
     const BYTE_REGISTRY = [
@@ -1268,6 +1368,49 @@ function selfTest(): number {
                     'docs/CLAIMS.md': closed(null),
                     'src/config/metric-registry.yml': BYTE_REGISTRY,
                     'README.md': `${CLEAN_README}\nThe example payload below is 2048 bytes long.\n`,
+                }),
+        },
+        // road-to-a-policy-the-measurements-write 2.1: an overdue date is
+        // reported, never failed; a date nobody can read is a finding.
+        {
+            name: 'an unbacked entry past its review_by → accept (reported as overdue)',
+            expect: 'accept',
+            run: () => fixture({ 'docs/CLAIMS.md': openClaim('2000-01-01'), 'README.md': CLEAN_README }),
+        },
+        {
+            name: 'a malformed review_by → reject',
+            expect: 'reject',
+            run: () => fixture({ 'docs/CLAIMS.md': openClaim('soon'), 'README.md': CLEAN_README }),
+        },
+        {
+            name: 'a dispatch-policy row its sink disagrees with → reject',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    'docs/CLAIMS.md': closed(null),
+                    'README.md': CLEAN_README,
+                    'conf.yml': 'subagents:\n  max_parallel: 4\n',
+                    'src/config/dispatch-policy.json': JSON.stringify({
+                        rows: [
+                            {
+                                id: 'max-parallel',
+                                value: 3,
+                                sink: { kind: 'yaml-file', file: 'conf.yml', key: 'subagents.max_parallel' },
+                                claim: 'unmeasured',
+                                review_by: '2026-12-15',
+                                local: 'learnable',
+                            },
+                        ],
+                    }),
+                }),
+        },
+        {
+            name: 'a review_by on a backed entry → reject',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    'docs/CLAIMS.md': openClaim('2026-12-15').replace('- status: unbacked', '- status: backed'),
+                    'README.md': CLEAN_README,
                 }),
         },
         {

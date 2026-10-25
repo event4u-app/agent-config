@@ -144,6 +144,8 @@ import {
     assert_scheduled_deprecations_clear,
 } from './_lib/release_migration_gate.js';
 import { releaseHoldPreflight } from './_lib/release_holds.js';
+import { measuredSection } from './_lib/dispatch_policy.js';
+import { localIsoDate } from './_lib/as_of.js';
 import { assert_settings_surface_delta, writeReleasedSurface } from './_lib/release_settings_surface.js';
 
 // `__doc__.splitlines()[0]` in `_parse_args` — the argparse description. Kept
@@ -236,12 +238,6 @@ import {
 // ---------------------------------------------------------------------------
 
 
-/** `_date.today().isoformat()` — local date as `YYYY-MM-DD`. */
-function todayIso(now?: Date): string {
-    const d = now ?? new Date();
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
 
 // ---------------------------------------------------------------------------
 // _cap_body (release.py:87-101)
@@ -501,6 +497,7 @@ function render_changelog_entry(
         test_trend_line?: string | null;
         head?: Readonly<Record<string, string>>;
         mix?: MixObligation | null;
+        measured?: readonly string[];
     } = {},
 ): [string, string] {
     const test_trend_line = opts.test_trend_line ?? null;
@@ -545,6 +542,7 @@ function render_changelog_entry(
         body_lines.push('');
         body_lines.push(...render_mix_response(opts.mix.level));
     }
+    body_lines.push(...(opts.measured?.length ? ['', ...opts.measured] : []));
     const ordered_labels = ['BREAKING CHANGES', ...SECTIONS.map(([label]) => label)];
     for (const label of ordered_labels) {
         const bucket = grouped[label] ?? [];
@@ -1527,7 +1525,7 @@ function main(argv: readonly string[] | null = null): number {
         preflight(target, { resume: args.resume, ci: args.ci });
     }
 
-    const today = todayIso();
+    const today = localIsoDate(new Date());
     // Dry-run stays fast: the trend line costs a full vitest collection
     // (~15s+), which `--dry-run exits 0 without needing …` contracts (and
     // the release test) assume never runs. Real releases compute it.
@@ -1544,6 +1542,7 @@ function main(argv: readonly string[] | null = null): number {
         test_trend_line,
         head: _derive_head_prefill(prev, target),
         mix: measure_mix_obligation(target, prev),
+        measured: measuredSection(REPO_ROOT, prev, today),
     });
     assert_major_migration_section(target, full, { previewOnly: args.dry_run });
     assert_settings_surface_delta(target, { previewOnly: args.dry_run, impact: release_impact_entry(commits).impact });
