@@ -15,9 +15,14 @@ import { parse as parseYaml } from 'yaml';
 
 export const POLICY_REL = 'src/config/dispatch-policy.json';
 
-export type SinkKind = 'subagent-frontmatter' | 'settings-template' | 'council-default';
+/**
+ * `yaml-file` reads a dotted key from a YAML file — the shipped settings
+ * template, or the council example a consumer's config is copied from, whose
+ * explicit value overrides the `council-default` fallback in code.
+ */
+export type SinkKind = 'subagent-frontmatter' | 'yaml-file' | 'council-default';
 
-const SINK_KINDS: readonly SinkKind[] = ['subagent-frontmatter', 'settings-template', 'council-default'];
+const SINK_KINDS: readonly SinkKind[] = ['subagent-frontmatter', 'yaml-file', 'council-default'];
 
 export interface PolicySink {
     kind: SinkKind;
@@ -29,6 +34,8 @@ export interface PolicyRow {
     id: string;
     value: unknown;
     sink: PolicySink;
+    /** Further files that carry the same value; each must agree with the row. */
+    also?: PolicySink[];
     /** A closed claim id, or `unmeasured`. */
     claim: string;
     /** The open claim a measurement would settle. */
@@ -58,23 +65,37 @@ export function parsePolicy(text: string): PolicyTable {
     return { rows: Array.isArray(raw.rows) ? raw.rows : [] };
 }
 
-/** `id → status` for every `### claim:` block of a CLAIMS.md text. */
-export function claimStatuses(ledger: string): Map<string, string> {
-    const out = new Map<string, string>();
-    let id: string | null = null;
+export interface ClaimRecord {
+    status: string;
+    review_by: string;
+}
+
+/** `id → { status, review_by }` for every `### claim:` block of a CLAIMS.md text. */
+export function claimRecords(ledger: string): Map<string, ClaimRecord> {
+    const out = new Map<string, ClaimRecord>();
+    let cur: ClaimRecord | null = null;
     for (const line of ledger.split('\n')) {
         const head = /^###\s+claim:\s*([A-Za-z0-9._-]+)\s*$/.exec(line);
         if (head) {
-            id = head[1]!;
-            out.set(id, '');
+            cur = { status: '', review_by: '' };
+            out.set(head[1]!, cur);
             continue;
         }
-        const status = /^-\s+status:\s*(.*)$/.exec(line);
-        if (id !== null && status && out.get(id) === '') {
-            out.set(id, status[1]!.trim());
+        if (/^#{1,6}\s/.test(line)) {
+            cur = null;
+            continue;
+        }
+        const field = /^-\s+(status|review_by):\s*(.*)$/.exec(line);
+        if (cur !== null && field && cur[field[1] as keyof ClaimRecord] === '') {
+            cur[field[1] as keyof ClaimRecord] = field[2]!.trim();
         }
     }
     return out;
+}
+
+/** `id → status`, the view `checkPolicy` needs. */
+export function claimStatuses(ledger: string): Map<string, string> {
+    return new Map([...claimRecords(ledger)].map(([id, r]) => [id, r.status]));
 }
 
 function frontmatterOf(text: string): Record<string, unknown> {
@@ -103,7 +124,7 @@ export function readSink(root: string, sink: PolicySink): unknown {
     switch (sink.kind) {
         case 'subagent-frontmatter':
             return frontmatterOf(text)[sink.key];
-        case 'settings-template':
+        case 'yaml-file':
             return dig(parseYaml(text), sink.key);
         case 'council-default': {
             const key = sink.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -116,8 +137,10 @@ export function readSink(root: string, sink: PolicySink): unknown {
 }
 
 export interface CheckDeps {
-    readSink: (row: PolicyRow) => unknown;
+    readSink: (row: PolicyRow, sink: PolicySink) => unknown;
     claimStatus: (id: string) => string | undefined;
+    /** The `review_by` of a claim, `''` when it has none. */
+    claimReviewBy?: (id: string) => string | undefined;
 }
 
 /** Every disagreement between the table, its sinks and the claim ledger. */
@@ -130,18 +153,22 @@ export function checkPolicy(table: PolicyTable, deps: CheckDeps): string[] {
             findings.push(`${at}: duplicate id`);
         }
         seen.add(row.id);
-        if (!SINK_KINDS.includes(row.sink?.kind)) {
-            findings.push(`${at}: unknown sink kind \`${String(row.sink?.kind)}\``);
+        const sinks = [row.sink, ...(row.also ?? [])];
+        const unknown = sinks.find((s) => !SINK_KINDS.includes(s?.kind));
+        if (unknown !== undefined) {
+            findings.push(`${at}: unknown sink kind \`${String(unknown?.kind)}\``);
             continue;
         }
-        const actual = deps.readSink(row);
-        if (actual !== row.value) {
-            findings.push(
-                `${at}: ${row.sink.file} ${row.sink.key} is ${JSON.stringify(actual)}, the row says ${JSON.stringify(row.value)}`,
-            );
-        }
-        if ((row.forbid ?? []).includes(actual)) {
-            findings.push(`${at}: ${JSON.stringify(actual)} is forbidden on this floor`);
+        for (const sink of sinks) {
+            const actual = deps.readSink(row, sink);
+            if (actual !== row.value) {
+                findings.push(
+                    `${at}: ${sink.file} ${sink.key} is ${JSON.stringify(actual)}, the row says ${JSON.stringify(row.value)}`,
+                );
+            }
+            if ((row.forbid ?? []).includes(actual)) {
+                findings.push(`${at}: ${JSON.stringify(actual)} is forbidden on this floor`);
+            }
         }
         if (row.floor === true && row.local !== 'fixed') {
             findings.push(`${at}: a floor must be \`local: fixed\``);
@@ -158,15 +185,25 @@ export function checkPolicy(table: PolicyTable, deps: CheckDeps): string[] {
                 findings.push(`${at}: claim \`${row.claim}\` is ${status || 'unbacked'}, not backed or resolved-null`);
             }
         }
-        if (row.measures !== undefined && deps.claimStatus(row.measures) === undefined) {
-            findings.push(`${at}: measures \`${row.measures}\`, which is not in docs/CLAIMS.md`);
+        if (row.measures !== undefined) {
+            if (deps.claimStatus(row.measures) === undefined) {
+                findings.push(`${at}: measures \`${row.measures}\`, which is not in docs/CLAIMS.md`);
+            } else {
+                const due = deps.claimReviewBy?.(row.measures) ?? '';
+                if (due !== '' && due !== row.review_by) {
+                    findings.push(
+                        `${at}: review_by ${String(row.review_by)} disagrees with claim \`${row.measures}\` (review_by ${due})`,
+                    );
+                }
+            }
         }
     }
     return findings;
 }
 
 export interface PolicyChange {
-    kind: 'moved' | 'added' | 'removed';
+    /** `constrained`: value and claim held, but `forbid`, `local` or `floor` changed. */
+    kind: 'moved' | 'constrained' | 'added' | 'removed';
     id: string;
     before?: PolicyRow;
     after?: PolicyRow;
@@ -190,6 +227,8 @@ export function policyDelta(before: PolicyTable | null, after: PolicyTable): Pol
             out.push({ kind: 'added', id: r.id, after: r });
         } else if (JSON.stringify(old.value) !== JSON.stringify(r.value) || old.claim !== r.claim) {
             out.push({ kind: 'moved', id: r.id, before: old, after: r });
+        } else if (constraintsOf(old) !== constraintsOf(r)) {
+            out.push({ kind: 'constrained', id: r.id, before: old, after: r });
         }
     }
     for (const r of before.rows) {
@@ -205,6 +244,10 @@ export function overdueRows(table: PolicyTable, today: string): PolicyRow[] {
     return table.rows.filter(
         (r) => r.claim === UNMEASURED && typeof r.review_by === 'string' && ISO_DATE.test(r.review_by) && r.review_by < today,
     );
+}
+
+function constraintsOf(r: PolicyRow): string {
+    return JSON.stringify({ forbid: r.forbid ?? [], local: r.local, floor: r.floor === true });
 }
 
 function claimNote(r: PolicyRow): string {
@@ -230,6 +273,8 @@ export function renderMeasuredSection(
             lines.push(
                 `- \`${d.id}\`: ${JSON.stringify(d.before!.value)} → ${JSON.stringify(d.after!.value)} (${claimNote(d.after!)})`,
             );
+        } else if (d.kind === 'constrained') {
+            lines.push(`- \`${d.id}\` constraints changed: ${constraintsOf(d.before!)} → ${constraintsOf(d.after!)}`);
         } else if (d.kind === 'added') {
             lines.push(`- \`${d.id}\` added: ${JSON.stringify(d.after!.value)} (${claimNote(d.after!)})`);
         } else {

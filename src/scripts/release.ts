@@ -147,7 +147,6 @@ import {
 import { releaseHoldPreflight } from './_lib/release_holds.js';
 import {
     POLICY_REL,
-    loadPolicy,
     overdueRows,
     parsePolicy,
     policyDelta,
@@ -334,12 +333,24 @@ function _derive_head_prefill(prev: string | null, version?: string): Record<str
  * (road-to-a-policy-the-measurements-write 3.1). Best-effort like the head
  * pre-fill: a read failure drops the section, never the release.
  */
-export function _measured_section(prev: string | null, today: string): string[] {
+export function _measured_section(prev: string | null, today: string, cwd: string = REPO_ROOT): string[] {
+    const show = (ref: string) => spawnSync('git', ['show', `${ref}:${POLICY_REL}`], { cwd, encoding: 'utf8' });
     try {
-        const current = loadPolicy(REPO_ROOT);
+        const head = show('HEAD');
+        if (head.status !== 0) {
+            return [];
+        }
+        const current = parsePolicy(head.stdout);
         let before: PolicyTable | null = null;
         if (prev) {
-            const shown = spawnSync('git', ['show', `${prev}:${POLICY_REL}`], { cwd: REPO_ROOT, encoding: 'utf8' });
+            const known = spawnSync('git', ['rev-parse', '--verify', '--quiet', `${prev}^{commit}`], { cwd, encoding: 'utf8' });
+            if (known.status !== 0) {
+                // An unfetched tag is not "no table at the previous release":
+                // claiming the table was introduced would hide every real move.
+                process.stderr.write(`warning: previous tag ${prev} is not available locally; measured section skipped\n`);
+                return [];
+            }
+            const shown = show(prev);
             if (shown.status === 0) {
                 before = parsePolicy(shown.stdout);
             }

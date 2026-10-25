@@ -83,8 +83,9 @@
 
 **`review_by` — when an open measurement is owed.** An `unbacked` or
 `measured-in-repo` entry may name the date by which it must be measured.
-`check_claims` rejects a malformed date, prints every open entry past its date
-under `Overdue` without failing the build, and `check_claims --status` lists
+`check_claims` rejects a malformed date and a date on a closed entry, prints
+every open entry past its date under `Overdue` without failing the build (also
+under `--quiet`, the mode CI runs), and `check_claims --status` lists
 every open entry with its dates. The dispatch-policy table
 (`src/config/dispatch-policy.json`) dates its unmeasured rows the same way.
 

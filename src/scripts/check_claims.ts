@@ -450,7 +450,24 @@ export function overdue_entries(ledger: Map<string, LedgerEntry>, today: string)
     );
 }
 
-function render_status(ledger: Map<string, LedgerEntry>, today: string): string {
+export function render_overdue(overdue: readonly LedgerEntry[]): string {
+    if (overdue.length === 0) {
+        return '';
+    }
+    const lines = [`⚠️  Overdue: ${overdue.length} open claim(s) past review_by (reported, not failed)`];
+    for (const e of overdue) {
+        lines.push(`      ${e.id} — review_by ${e.review_by}`);
+    }
+    return `${lines.join('\n')}\n`;
+}
+
+/** Local calendar date, as the release generator's `todayIso` reads it. */
+export function local_today(now: Date = new Date()): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+export function render_status(ledger: Map<string, LedgerEntry>, today: string): string {
     const open = [...ledger.values()].filter((e) => OPEN_STATUSES.has(e.status));
     const lines = [`open claims: ${open.length} (today ${today})`];
     for (const e of open) {
@@ -654,7 +671,7 @@ function main(argv: string[] = process.argv.slice(2)): number {
         }
         throw exc;
     }
-    const today = new Date().toISOString().slice(0, 10);
+    const today = local_today();
     if (args.status) {
         process.stdout.write(render_status(ledger, today));
         return 0;
@@ -668,6 +685,12 @@ function main(argv: string[] = process.argv.slice(2)): number {
                 id: entry.id,
                 file: LEDGER_REL,
                 reason: `review_by '${entry.review_by}' is not an ISO date (YYYY-MM-DD)`,
+            });
+        } else if (entry.review_by !== '' && !OPEN_STATUSES.has(entry.status)) {
+            findings.push({
+                id: entry.id,
+                file: LEDGER_REL,
+                reason: `review_by on a '${entry.status}' entry — only an open claim is owed a measurement; drop the date`,
             });
         }
     }
@@ -1135,19 +1158,15 @@ function main(argv: string[] = process.argv.slice(2)): number {
         return 2;
     }
 
+    // Printed under --quiet too: CI runs this gate quiet, and an overdue
+    // measurement nobody sees is the defect the field exists to end.
+    process.stdout.write(render_overdue(overdue_entries(ledger, today)));
     if (!args.quiet) {
         const backed = [...ledger.values()].filter((e) => e.status === 'backed').length;
         const unbacked = [...ledger.values()].filter((e) => e.status === 'unbacked').length;
         process.stdout.write(
             `✅  check_claims: ${markers.length} markered claim(s) bound · ledger ${ledger.size} entries (${backed} backed, ${unbacked} unbacked inventory)\n`,
         );
-        const overdue = overdue_entries(ledger, today);
-        if (overdue.length > 0) {
-            process.stdout.write(`    Overdue: ${overdue.length} open claim(s) past review_by (reported, not failed)\n`);
-            for (const e of overdue) {
-                process.stdout.write(`      ${e.id} — review_by ${e.review_by}\n`);
-            }
-        }
         if (execEntries.length > 0) {
             const detail = execVerified.length > 0 ? ` (${execVerified.length} re-verified)` : '';
             process.stdout.write(
@@ -1348,6 +1367,15 @@ function selfTest(): number {
             name: 'a malformed review_by → reject',
             expect: 'reject',
             run: () => fixture({ 'docs/CLAIMS.md': openClaim('soon'), 'README.md': CLEAN_README }),
+        },
+        {
+            name: 'a review_by on a backed entry → reject',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    'docs/CLAIMS.md': openClaim('2026-12-15').replace('- status: unbacked', '- status: backed'),
+                    'README.md': CLEAN_README,
+                }),
         },
         {
             name: 'the never-published sentinel with a stated reason → accept',

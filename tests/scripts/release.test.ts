@@ -29,6 +29,7 @@ import { _TEST_LIST_ARGV } from '../../src/scripts/release_publication.js';
 
 import {
     RELEASE_HEAD_CAP_LINES,
+    _measured_section,
     dedupe_commit_lines,
     release_head_line_count,
     render_release_head,
@@ -1368,5 +1369,56 @@ describe('assert_scheduled_deprecations_clear', () => {
             SystemExitError,
         );
         expect(calls).toHaveLength(1);
+    });
+});
+
+describe('_measured_section', () => {
+    const dirs: string[] = [];
+    afterEach(() => {
+        for (const d of dirs.splice(0)) fs.rmSync(d, { recursive: true, force: true });
+    });
+
+    const table = (value: number) =>
+        JSON.stringify({
+            rows: [
+                {
+                    id: 'max-parallel',
+                    value,
+                    sink: { kind: 'yaml-file', file: 'x.yml', key: 'a' },
+                    claim: 'unmeasured',
+                    review_by: '2026-01-01',
+                    local: 'learnable',
+                },
+            ],
+        });
+
+    function repo(): string {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'measured-section-'));
+        dirs.push(dir);
+        const git = (...args: string[]) =>
+            spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@example.com', ...args], { cwd: dir });
+        git('init', '-q');
+        fs.mkdirSync(path.join(dir, 'src', 'config'), { recursive: true });
+        const file = path.join(dir, 'src', 'config', 'dispatch-policy.json');
+        fs.writeFileSync(file, table(3));
+        git('add', '-A');
+        git('commit', '-qm', 'one');
+        git('tag', 'v1');
+        fs.writeFileSync(file, table(4));
+        git('commit', '-qam', 'two');
+        // An uncommitted edit must not reach the notes: the section reads HEAD.
+        fs.writeFileSync(file, table(9));
+        return dir;
+    }
+
+    it('lists the committed move since the tag and the overdue row', () => {
+        const text = _measured_section('v1', '2026-10-25', repo()).join('\n');
+        expect(text).toContain('`max-parallel`: 3 → 4');
+        expect(text).not.toContain('→ 9');
+        expect(text).toContain('review_by 2026-01-01');
+    });
+
+    it('skips the section when the previous tag is not available', () => {
+        expect(_measured_section('v-missing', '2026-10-25', repo())).toEqual([]);
     });
 });

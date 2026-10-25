@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
     checkPolicy,
+    claimRecords,
     claimStatuses,
     loadPolicy,
     overdueRows,
@@ -22,10 +23,12 @@ import {
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const LEDGER = fs.readFileSync(path.join(ROOT, 'docs', 'CLAIMS.md'), 'utf8');
 
+/** `sinks` overrides by sink file first, then by row id; everything else agrees. */
 function check(table: PolicyTable, sinks: Record<string, unknown> = {}): string[] {
     return checkPolicy(table, {
-        readSink: (row) => (row.id in sinks ? sinks[row.id] : row.value),
+        readSink: (row, sink) => (sink.file in sinks ? sinks[sink.file] : row.id in sinks ? sinks[row.id] : row.value),
         claimStatus: (id) => claimStatuses(LEDGER).get(id),
+        claimReviewBy: (id) => claimRecords(LEDGER).get(id)?.review_by,
     });
 }
 
@@ -45,10 +48,29 @@ describe('dispatch-policy table', () => {
     it('every sink in the tree agrees with its row', () => {
         const table = loadPolicy(ROOT);
         const findings = checkPolicy(table, {
-            readSink: (r) => readSink(ROOT, r.sink),
+            readSink: (_r, sink) => readSink(ROOT, sink),
             claimStatus: (id) => claimStatuses(LEDGER).get(id),
+            claimReviewBy: (id) => claimRecords(LEDGER).get(id)?.review_by,
         });
         expect(findings).toEqual([]);
+    });
+
+    it('checks the council example a consumer config is copied from', () => {
+        const rounds = loadPolicy(ROOT).rows.find((r) => r.id === 'council-min-rounds')!;
+        expect(rounds.also?.map((s) => s.file)).toContain('agents/templates/.ai-council.yml.example');
+        expect(check({ rows: [rounds] }, { 'agents/templates/.ai-council.yml.example': 1 }).join('\n')).toContain(
+            '.ai-council.yml.example defaults.min_rounds is 1',
+        );
+    });
+
+    it('reds a row whose review_by disagrees with the claim it measures', () => {
+        const findings = check({ rows: [row({ measures: 'tier-downshift-quality-held', review_by: '2027-06-01' })] });
+        expect(findings.join('\n')).toContain('disagrees with claim `tier-downshift-quality-held`');
+    });
+
+    it('stops reading a claim at the next heading', () => {
+        const ledger = '### claim: a\n- claim: x\n\n## Other\n- status: backed\n';
+        expect(claimRecords(ledger).get('a')).toEqual({ status: '', review_by: '' });
     });
 
     it('seeds every dispatch knob the roadmap names', () => {
@@ -68,7 +90,7 @@ describe('dispatch-policy table', () => {
     });
 
     it('reads each sink kind from the tree', () => {
-        expect(readSink(ROOT, { kind: 'settings-template', file: 'src/config/agent-settings.template.yml', key: 'subagents.adversarial_council' })).toBe('off');
+        expect(readSink(ROOT, { kind: 'yaml-file', file: 'src/config/agent-settings.template.yml', key: 'subagents.adversarial_council' })).toBe('off');
         expect(readSink(ROOT, { kind: 'council-default', file: 'src/scripts/ai_council/config.ts', key: 'min_rounds' })).toBe(2);
         expect(readSink(ROOT, { kind: 'subagent-frontmatter', file: 'src/subagents/ac-worker.md', key: 'omit_project_instructions' })).toBe(true);
     });
@@ -144,5 +166,15 @@ describe('measured-in-this-release section', () => {
         expect(renderMeasuredSection(policyDelta(null, before), [], before).join('\n')).toContain(
             'dispatch-policy table introduced with 2 row(s)',
         );
+    });
+});
+
+describe('constraint changes', () => {
+    it('reports a floor that loses its forbid list even when the value holds', () => {
+        const before: PolicyTable = { rows: [row({ id: 'floor', local: 'fixed', floor: true, forbid: ['lite'] })] };
+        const after: PolicyTable = { rows: [row({ id: 'floor', local: 'fixed', floor: true })] };
+        const delta = policyDelta(before, after);
+        expect(delta.map((d) => d.kind)).toEqual(['constrained']);
+        expect(renderMeasuredSection(delta, []).join('\n')).toContain('`floor` constraints changed');
     });
 });
