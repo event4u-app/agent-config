@@ -221,7 +221,7 @@ with that file.
   entry or wizard question.
   verify: receipt fixture with the field forces `full`; the settings schema has
   no matching key.
-  Landed 2026-10-18: `src/install/userPin.ts` writes `user_pin` into `runtime/carrier.json` (the receipt the carrier probe already writes, which now keeps fields it does not own); `prepareClaudeCarrier` refuses to thin while it is there, and `withMachineEvidence` hands it to 3.1 for every host. Sticky across a plain `install` and upgrades; `uninstall` removes it with the runtime directory. Tests: `hook_carrier_never_silent.test.ts` (pin on a reached carrier, survives a probe rewrite and a plain install) and `layer_form_evidence.test.ts` (`user-pin` on all three thinnable hosts). `grep -c user_pin src/server/schemas/settings.ts` reads 0. Documented in `docs/installation.md`.
+  Landed 2026-10-18: `src/install/userPin.ts` writes `user_pin` into `runtime/carrier.json` (the receipt the carrier probe already writes, which now keeps fields it does not own); `prepareClaudeCarrier` refuses to thin while it is there, and `withMachineEvidence` hands it to 3.1 for every host. Sticky across a plain `install` and upgrades; `uninstall --global --purge` removes it with the runtime directory (a plain uninstall keeps both). Tests: `hook_carrier_never_silent.test.ts` (pin on a reached carrier, survives a probe rewrite and a plain install) and `layer_form_evidence.test.ts` (`user-pin` on all three thinnable hosts). `grep -c user_pin src/server/schemas/settings.ts` reads 0. Documented in `docs/installation.md`.
 - [x] **3.6 The project tree uses the same function**, with the project's own
   dispatcher as its carrier.
   verify: ADR-267's three corpus figures reproduce, and
