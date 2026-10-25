@@ -45,6 +45,7 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -112,6 +113,20 @@ interface ArmSpec {
      * always-firing nor a never-firing audit passes.
      */
     min_lift_ratio?: number | null;
+    /**
+     * Env var naming a plugin directory this arm loads for the run only
+     * (`--plugin-dir`). The neighbour package is never installed, and its path
+     * never appears in the tree: the operator points the env var at a pinned,
+     * vetted checkout.
+     */
+    plugin_dir_env?: string;
+    /**
+     * Run the loaded plugin with no MCP server and the operator's isolation env
+     * (`neighbour_env`) over a per-run temp directory — so a neighbour whose own
+     * hooks write outside the run, or carry state between runs, can be switched
+     * off or redirected without naming it here.
+     */
+    isolate_neighbour?: boolean;
 }
 
 // Arm -> (setting_sources, inject) where inject ∈ {None, "rdp", "placebo"}.
@@ -169,7 +184,51 @@ export const ARMS: Record<string, ArmSpec> = {
     'rules-balanced': { setting_sources: 'project,local', inject: 'rules-balanced' },
     'package-ladder': { setting_sources: null, inject: 'ladder' },
     'bare-principle': { setting_sources: 'project,local', inject: 'bare-principle', min_lift_ratio: null },
+    neighbour: {
+        setting_sources: 'project,local',
+        inject: null,
+        plugin_dir_env: 'BENCH_NEIGHBOUR_PLUGIN_DIR',
+        isolate_neighbour: true,
+        min_lift_ratio: null,
+    },
 };
+
+/**
+ * The environment an isolated neighbour run gets. The operator supplies it as a
+ * JSON object of string values in the file `BENCH_NEIGHBOUR_ENV_FILE` names,
+ * kept outside the tree like the plugin itself; `{data}` in a value becomes the
+ * per-run temp directory, so every store the neighbour writes is thrown away.
+ */
+export function neighbour_env(
+    dataDir: string,
+    env: NodeJS.ProcessEnv = process.env,
+): Record<string, string> {
+    const file = env['BENCH_NEIGHBOUR_ENV_FILE'];
+    if (!file) throw new Error('BENCH_NEIGHBOUR_ENV_FILE is not set; it must name the isolation env JSON');
+    const raw = JSON.parse(fs.readFileSync(file, 'utf-8')) as unknown;
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error(`${file} is not a JSON object`);
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+        if (typeof v !== 'string') throw new Error(`${file}: ${k} is not a string`);
+        out[k] = v.split('{data}').join(dataDir);
+    }
+    return out;
+}
+
+/**
+ * The plugin directory an arm loads, or null for an arm that loads none. Throws
+ * when the arm needs one and the env var is unset or names no directory — a
+ * neighbour arm that silently ran without its plugin would be a second vanilla.
+ */
+export function neighbour_plugin_dir(spec: ArmSpec, env: NodeJS.ProcessEnv = process.env): string | null {
+    if (!spec.plugin_dir_env) return null;
+    const dir = env[spec.plugin_dir_env];
+    if (!dir) throw new Error(`${spec.plugin_dir_env} is not set; it must name the neighbour plugin directory`);
+    if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
+        throw new Error(`${spec.plugin_dir_env} is not a directory: ${dir}`);
+    }
+    return dir;
+}
 
 /**
  * Deterministic inert prose of ~target_chars — no rules, no discipline cues.
@@ -629,6 +688,9 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
             setting_sources: spec.setting_sources,
             max_budget: opts.max_budget,
             model: opts.model,
+            plugin_dir: neighbour_plugin_dir(spec),
+            strict_mcp: spec.isolate_neighbour === true,
+            env: spec.isolate_neighbour ? neighbour_env(fs.mkdtempSync(path.join(os.tmpdir(), 'bench-neighbour-'))) : null,
         }) as unknown as Dict;
     }
     const score = scoring.score_task_v2(task, {
@@ -1091,6 +1153,13 @@ export function main(argv: string[] | null = null): number {
     for (const a of arms) {
         if (!(a in ARMS)) {
             process.stderr.write(`unknown arm: ${a}\n`);
+            return 1;
+        }
+        try {
+            neighbour_plugin_dir(ARMS[a] as ArmSpec);
+            if ((ARMS[a] as ArmSpec).isolate_neighbour) neighbour_env(os.tmpdir());
+        } catch (e) {
+            process.stderr.write(`arm ${a}: ${(e as Error).message}\n`);
             return 1;
         }
         if (args.host === 'codex' && !CODEX_VALID_ARMS.includes(a)) {
