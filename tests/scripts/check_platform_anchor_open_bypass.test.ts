@@ -81,7 +81,7 @@ describe('evaluateBypassRecords — an open bypass reds', () => {
 describe('evaluateBypassRecords — a bypass the owner keeps standing closes on the ruling', () => {
     const RULING = 'agents/evidence/owner-directives/2026-10-10-standing-bypass.md';
     const superseded = `superseded-by-owner-ruling ${RULING}`;
-    const judge = (text: string, now = NOW, ruling = (rel: string) => rel === RULING) =>
+    const judge = (text: string, now = NOW, ruling: (rel: string) => boolean = (rel) => rel === RULING) =>
         evaluateBypassRecords(
             [{ path: 'agents/evidence/bypass-records/x.md', text }],
             now,
