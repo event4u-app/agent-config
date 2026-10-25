@@ -1104,6 +1104,25 @@ run that must justify at length before it may say no will quietly say nothing
 instead. What it may not be is empty; "out of scope" without naming the scope is
 the verdict line this command already forbids one row above.
 
+**The owner's own demand is never `declined` by the run.**
+
+```
+A DEMAND FROM THE OWNER'S OWN TURN TAKES adopted, already-satisfied OR
+owner-decision — NEVER declined. A COLLISION WITH AN ADR IS AN owner-decision,
+NOT A REFUSAL. AN owner-decision OPTION NEVER BUNDLES ONE OWNER DEMAND WITH
+OTHER ITEMS: EACH DEMAND GETS ITS OWN QUESTION, AND THE RECORD OF THE ANSWER
+NAMES THAT DEMAND.
+```
+
+`declined` stays cheap for every other source — an agent's proposal, a review, a
+spec an agent wrote. It is closed to the owner's words because the run is the
+owner's delegate: a delegate that declines its principal's instruction has
+replaced him. Measured 2026-10-16: a round folded the owner's star ask into
+"adoption in full", the owner picked the narrower option for other reasons, and
+ADR-286 recorded the ask as refused by the owner — a refusal he never gave and
+found nine days later (ADR-301). An ADR that records such a ruling must cite
+the owner's words, which `check_new_adr_evidence` now enforces for added records.
+
 **A demand restating one the tree already declined is not re-declined on that
 basis alone.** Phase 4c has the count; `recurring-criticism` owns what a repeat
 means — the earlier disposition is reopened and resolved on evidence, never on

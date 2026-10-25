@@ -292,6 +292,13 @@ explanation lives now that the file no longer carries it as comments.
 | `screenshots.forbid_terminal_capture` | C | boolean | `true` |  | Consumed by the doc-screenshot-hygiene rule. true (default) = terminal/CLI/IDE screenshots are forbidden (highest leak vector: absolute local paths, env tokens); use text code blocks with text redaction instead. false = allowed, still subject to the data-bearing human gate. |
 | `screenshots.identity_allowlist` | C | array | `[]` |  | Consumed by the doc-screenshot-hygiene rule and screenshot-hygiene skill. Public identity tokens SAFE to show unredacted in a documentation screenshot — the maintainer's own public handles plus well-known fake-data tokens. Not a general fake-data dictionary and not identity-resolution: everything not listed is treated as sensitive by default, and a public handle co-located with a real name does not whitelist the real name. Default [] = nothing auto-allowed. |
 
+## star_ask
+
+| Key | Class | Type | Default | Allowed values | What it does |
+|---|---|---|---|---|---|
+| `star_ask.mode` | A | string | `"monthly"` | `monthly` · `off` | Whether a session start asks you to star the agent-config repository on GitHub. monthly (default) asks at most once per 30 days, the first time 7 days after the first session; off never asks. Text only, no network. Read from the user-global layer only. |
+| `star_ask.starred` | A | boolean | `false` |  | Set to true once you have starred the repository; the ask then stops for good. The agent may set it when you tell it you have starred. |
+
 ## subagents
 
 | Key | Class | Type | Default | Allowed values | What it does |

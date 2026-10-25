@@ -1473,6 +1473,21 @@ decision_engine:
 update_check:
   enabled: true
 
+# --- Star ask ---
+#
+# Once a month, at a session start, the user is asked to star the repository on
+# GitHub — until they say they have (ADR-301). Text only: no network, no GitHub
+# account lookup. Read from the user-global layer only, so a repository can
+# neither ask its contributors nor silence the ask for them.
+#
+#   mode:    monthly (default) ask at most once per 30 days, the first time
+#            7 days after the first session · off never ask
+#   starred: set to true once you have starred; the asking stops for good
+#            (`agent-config settings:set star_ask.starred true`)
+star_ask:
+  mode: monthly
+  starred: false
+
 # --- Security advisories ---
 #
 # Advisories, malware reports, end-of-support dates and pre-announced security
