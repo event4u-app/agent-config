@@ -2,7 +2,7 @@
 
 # Ratification review — one `routes_to` line on `legal-safety-floor`
 
-subject: `5d87e26965f3ef6dd5dbe1ab6008d97c721ca192b4345b2eaf483942be6209ac`
+subject: 5d87e26965f3ef6dd5dbe1ab6008d97c721ca192b4345b2eaf483942be6209ac
 
 ## The gated change
 
