@@ -4,7 +4,7 @@ status: ready
 tree_pin: c073ca2e5a
 execution:
   mode: phase-checkpoints
-estate_offset_exempt: "Round inbox-2026-10-aw, searched 2026-10-25 with `grep -rlF` over agents/roadmaps/*.md, agents/roadmaps/later and agents/roadmaps/stubs for release_impact_entry, parse_impact_trailers, classifyUpdate major floor, orderStages, warnRemovedKeys, RULE_PACKS_LEGACY_WINDOW, check_new_adr_evidence and legal-safety-floor shipping with its skills: no roadmap owns any of them (road-to-an-update-that-installs-itself-only-when-it-is-safe consumes the impact map but owns neither its parser nor its writer; road-to-a-setup-that-decides-itself closed rule_packs at 4.9 and records D14's revisit-if without a step). The owner asked this run to process what it writes, so the roadmap is active; active count goes 3 -> 4, inside the WIP cap of 5."
+estate_offset_exempt: "Round inbox-2026-10-aw, searched 2026-10-25 with `grep -rlF` over agents/roadmaps/*.md, agents/roadmaps/later and agents/roadmaps/stubs for release_impact_entry, parse_impact_trailers, classifyUpdate major floor, orderStages, warnRemovedKeys, RULE_PACKS_LEGACY_WINDOW, check_new_adr_evidence and legal-safety-floor shipping with its skills: no roadmap owns any of them (road-to-an-update-that-installs-itself-only-when-it-is-safe consumes the impact map but owns neither its parser nor its writer; road-to-a-setup-that-decides-itself closed rule_packs at 4.9 and records D14's revisit-if without a step). The owner asked this run to process what it writes, so the roadmap is active; active count goes 3 -> 4, inside the WIP cap of 5. Parking it in later/ was rejected because the owner asked this run to execute it, and folding it into road-to-an-update-that-installs-itself-only-when-it-is-safe was rejected because that roadmap owns the consent path, not the parser or the safety-floor scope."
 estate_growth_exempt: "THIS CHANGE (2026-10-25) grows active_roadmaps 3 -> 4 by adding this roadmap at the owner's request to process it in the same run (`/analyze:inbox` round inbox-2026-10-aw, then `/roadmap:process-full`). No finished roadmap exists to offset it, the count stays inside the WIP cap of 5 from the 2026-10-24 owner directive, and this roadmap archives itself when its steps close in the same PR."
 relates:
   - slug: road-to-an-update-that-installs-itself-only-when-it-is-safe
@@ -30,37 +30,53 @@ end. Each of these is a test or a lint that can go red.
 
 ## Phase 1 — The impact class agrees with the bump
 
-- [ ] **1.1 Read the trailing trailer run of a paragraph.** `parse_trailer_paragraph`
+- [x] **1.1 Let a wrapped `BREAKING CHANGE:` footer continue onto unindented
+      lines.** `parse_trailer_paragraph`
       (`src/scripts/_lib/consumer_impact.ts:89-97`) discards the whole paragraph
       when one line is not a trailer. Both 18.0.0 breaking commits
       (`79cb86c0dd`, `a3d4596078`) end with a wrapped `BREAKING CHANGE:` footer in
       the same paragraph as `Consumer-Impact: action`, so the parse returns
-      `none, recorded: false`. Take the maximal trailing run of trailer lines
-      (indented continuations allowed) instead of all-or-nothing.
+      `none, recorded: false`. `corrected-from-reproduction`: the planned
+      "trailing run" reading made a quoted `Consumer-Impact:` line in prose a
+      trailer and reddened an existing case, so only the footer's own
+      continuation lines are admitted.
       verify: a red-first test in `tests/lib/consumer_impact.test.ts` with the
       `79cb86c0dd` body shape yields `action, recorded: true`; the existing cases
       stay green.
-- [ ] **1.2 An unrecorded breaking commit classes as `action`.** `span_bump`
+      Landed 2026-10-25: red, then green with 438/438 in the impact and release suites.
+- [x] **1.2 An unrecorded breaking commit classes as `action`.** `span_bump`
       (`impact_bump.ts:88`) already reads a breaking commit with no valid trailer
       as a major (ADR-300); `release_impact_entry`
       (`consumer_impact.ts:168-176`) ignores it, so one span produced a major bump
       and a `notice` class. Apply the same reading there.
       verify: a test where a span holds one `breaking: true, recorded: false`
       commit yields `{ impact: 'action' }`.
-- [ ] **1.3 Correct the 18.0.0 entry of the impact map.** `package.json`
-      `agentConfig.impact["18.0.0"]` reads `notice`; `BREAKING_CHANGES.md` and
-      `docs/MIGRATION.md` say `action`. Set it to `action`, so an installed
-      pre-18 updater is asked rather than notified.
-      verify: `node -p "require('./package.json').agentConfig.impact['18.0.0'].impact"`
-      prints `action`, and a test in `tests/lib/consumer_impact.test.ts` over the
-      `17.4.0..18.0.0` span computes the same value.
-- [ ] **1.4 A major the map does not describe is never `auto`.**
+      Landed 2026-10-25: the span test that pinned `none` for this case was the
+      defect itself; it now expects `action` and was seen red first.
+- [x] **1.3 Correct the 17.0.0 and 18.0.0 entries of the impact map.**
+      `package.json` `agentConfig.impact` read `notice` for both;
+      `BREAKING_CHANGES.md` says `action` for both. Set them to `action`, so an
+      installed pre-17 or pre-18 updater is asked rather than notified.
+      `corrected-from-reproduction`: re-running the fixed code over
+      `16.5.0..17.0.0` showed 17.0.0 carries the same disagreement.
+      verify: `node -p "JSON.stringify(require('./package.json').agentConfig.impact)"`
+      prints `action` for both versions; the fixed `release_impact_entry` over
+      `git log 17.4.0..18.0.0` and `16.5.0..17.0.0` returns `action` for each, and
+      `18.0.0..18.1.0`, `18.1.0..18.2.0` return `none`, matching their absence.
+      Landed 2026-10-25: all four spans reproduced with the shipped readers.
+- [x] **1.4 A major's absence from the map means a declared `none`, and only that.**
       `classifyUpdate` (`src/scripts/_lib/classify_update.ts:131-170`) returns
-      `auto` when the range crosses a major whose map entry is missing. Treat a
-      crossed major without an entry as at least `notice`.
-      verify: `npx vitest run tests/lib/classify_update.test.ts` passes a case
-      with `mode: auto`, installed `17.4.0`, candidate `19.0.0` and an empty map
-      that expects `notify`.
+      `auto` when the range crosses a major with no map entry.
+      `corrected-from-reproduction`: the planned classifier floor reddened the
+      recorded no-action majors 13.0.0 and 16.0.0 (`tests/lib/classify_update.test.ts:72-84`),
+      which are absent BY DESIGN because `with_release_impact` omits a `none`
+      span. The defect was the writer producing that absence for an undeclared
+      break, which 1.2 closes; this step pins it at the writer instead.
+      verify: `npx vitest run tests/lib/consumer_impact.test.ts` passes "never
+      omits a span carrying an undeclared break", and neutralising the 1.2 line
+      turns it red.
+      Landed 2026-10-25: red with the 1.2 line neutralised, green restored; the
+      classifier and its 72 cases are unchanged.
 
 ## Phase 2 — Guards that run where they say they run
 
