@@ -33,8 +33,15 @@ export interface Matrix {
     skipped: { route: string; reason: string }[];
 }
 
-const VERBS = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'ANY']);
-const PARAM = /\{[^}]+\}|\[[^\]]+\]|(?:^|\/):[A-Za-z_]/;
+// `ROUTE` is what several providers emit for an API module whose method set is
+// not declared (pages/api, a bare route.ts, a nuxt server route).
+const VERBS = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'ANY', 'ROUTE']);
+const SKIP_REASON: Record<string, string> = {
+    OPTIONS: 'preflight/metadata verb — no resource is returned',
+    HEAD: 'preflight/metadata verb — no resource is returned',
+    WS: 'websocket — the request/response matrix does not apply; audit by hand',
+};
+const PARAM = /\{[^}]+\}|\[[^\]]+\]|(?:^|\/):[A-Za-z_]|<[^>]+>|\(\?P</;
 
 export function buildMatrix(graph: CodeGraph): Matrix {
     const rows: MatrixRow[] = [];
@@ -43,7 +50,7 @@ export function buildMatrix(graph: CodeGraph): Matrix {
         if (node.kind !== 'route') continue;
         const [verb = '', routePath = ''] = node.label.split(' ', 2);
         if (!VERBS.has(verb)) {
-            skipped.push({ route: node.label, reason: 'not an API verb (page or view route)' });
+            skipped.push({ route: node.label, reason: SKIP_REASON[verb] ?? 'not an API verb (page or view route)' });
             continue;
         }
         const edge = graph.edges.find((e) => e.source === node.id && e.relation === 'routes-to');
@@ -67,15 +74,18 @@ export function buildMatrix(graph: CodeGraph): Matrix {
 }
 
 /** A draft test per row for the verifier — it fails until the route's resource is bound to user A. */
+const PHP_PROVIDERS = new Set(['laravel']);
+const phpQuote = (v: string): string => `'${v.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+
 export function renderSkeleton(matrix: Matrix): string {
-    const php = matrix.rows.some((r) => r.provider === 'laravel');
     const out: string[] = [];
     for (const r of matrix.rows) {
+        const php = PHP_PROVIDERS.has(r.provider);
         const name = `${r.route}: user B must not read user A's resource`;
         if (php) {
             out.push(
-                `it('${name.replace(/'/g, "\\'")}', function () {`,
-                `    throw new RuntimeException('bind ${r.path} to a resource owned by user A, then assert the matrix: anonymous 401, user A 2xx, user B ${r.cases[2]?.expect}');`,
+                `it(${phpQuote(name)}, function () {`,
+                `    throw new RuntimeException(${phpQuote(`bind ${r.path} to a resource owned by user A, then assert the matrix: anonymous 401, user A 2xx, user B ${r.cases[2]?.expect}`)});`,
                 '});',
                 '',
             );

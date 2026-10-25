@@ -44,6 +44,7 @@ describe("FAN_OUT_ROLE", () => {
     expect(FAN_OUT_ROLE.test("<!-- dispatch-role: implementer -->\nx")).toBe(true);
     expect(FAN_OUT_ROLE.test("<!-- dispatch-role: verifier -->\nx")).toBe(false);
     expect(FAN_OUT_ROLE.test("Review my change.\n<!-- dispatch-role: hunter -->")).toBe(false);
+    expect(FAN_OUT_ROLE.test("\uFEFF  <!-- dispatch-role: reader -->\nx")).toBe(true);
   });
 });
 

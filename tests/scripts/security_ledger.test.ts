@@ -62,6 +62,19 @@ describe('coverage and the derived report', () => {
         expect(renderLedger(empty)).toContain('none open — at 50 % coverage');
     });
 
+    it('says "not enumerated" when no row came from the graph or a convention', () => {
+        const l = { ...base(), rows: [base().rows[2]!], findings: [] };
+        const text = renderLedger(l);
+        expect(text).toContain('coverage: not enumerated');
+        expect(text).not.toContain('0 %');
+    });
+
+    it('compares finder and verifier after trimming and case-folding', () => {
+        const l = base();
+        l.findings[0] = { ...l.findings[0]!, finder: 'Hunter-Authz ', verifier: 'hunter-authz' };
+        expect(validateLedger(l)[0]).toMatch(/finder and verifier are the same/);
+    });
+
     it('says "not checked" when there is no ledger', () => {
         expect(renderLedger(null)).toMatch(/^Security: not checked/);
     });

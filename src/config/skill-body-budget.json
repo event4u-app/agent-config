@@ -290,7 +290,7 @@
     "stakeholder-tradeoff": 9443,
     "standards-from-config": 7565,
     "storybook-workshop": 13536,
-    "subagent-orchestration": 19982,
+    "subagent-orchestration": 19978,
     "supply-chain-intake": 10137,
     "svg-authoring": 17970,
     "symfony-workflow": 10329,
@@ -733,7 +733,7 @@
     {
       "skill": "subagent-orchestration",
       "old": 19741,
-      "new": 19982,
+      "new": 19978,
       "reason": "road-to-a-finding-that-fails-a-test 4.2: the dispatch-role marker that lets the independence hook read a field instead of prose."
     }
   ]

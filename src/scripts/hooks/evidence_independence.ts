@@ -249,7 +249,7 @@ const WARN_TEXT =
   "(1) a verdict pre-loaded into the prompt, (2) a scope narrowed to files you chose. " +
   "A self-commissioned review is gate evidence only with its prompt recorded.";
 
-export const FAN_OUT_ROLE = /^<!-- dispatch-role: (?:hunter|reader|implementer) -->/;
+export const FAN_OUT_ROLE = /^\s*<!-- dispatch-role: (?:hunter|reader|implementer) -->/;
 
 export function decide(
   tool: string | null,
@@ -323,7 +323,7 @@ export function decide(
           `Second evaluation dispatch of your own work in this turn. If both passes ` +
           `judge the SAME subject, that is verdict shopping — commissioning another ` +
           `with a different prompt or scope selects the answer instead of measuring ` +
-          `it. Report the first pass, then re-plan. An implementation ` +
+          `it. Report the first pass, re-plan. An implementation ` +
           `fan-out may carry on, or open with <!-- dispatch-role: implementer -->.`,
       })}\n`,
       stderr: "",

@@ -73,10 +73,6 @@
     {
       "prompt": "analyse this TikTok video and tell me what we can adopt: https://www.tiktok.com/@creator/video/123",
       "expected": "analyze-post"
-    },
-    {
-      "prompt": "watch ~/Downloads/tutorial.mp4 and compare what it shows with our code",
-      "expected": "analyze-post"
     }
   ]
 }

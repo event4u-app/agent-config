@@ -167,7 +167,7 @@ The procedure is [`security-audit`](../../../skills/security-audit/SKILL.md)
 ```bash
 agent-config audit:code matrix --root .             # every API route × {anonymous, user A, user B}
 agent-config audit:code matrix --root . --skeleton  # a draft test per route, failing until bound
-agent-config audit:code validate                    # the newest ledger against its schema
+agent-config audit:code validate                    # the newest ledger against the ledger rules
 agent-config audit:code show                        # the report, derived from the ledger
 ```
 
@@ -180,7 +180,8 @@ the verifier edits the expectation; the matrix is never run as a verdict.
 The ledger (`agents/runtime/state/security/<run>/ledger.json`, gitignored —
 an open finding is an exploit map) records surface × endpoint rows with their
 enumeration source, and findings as `confirmed` / `needs_validation` /
-`rejected`. Coverage counts only rows the graph or a file convention found.
+`rejected`. Coverage counts only rows the graph or a file convention found; a ledger
+with none reads "not enumerated", never "0 %" or clean.
 "0 open findings" is never written without that figure; no ledger is "not
 checked", never "no findings".
 

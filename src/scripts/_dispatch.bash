@@ -868,7 +868,7 @@ cmd_audit_deps() {
 # `audit:code <mode>` — the deterministic half of `/audit code`; the ledger
 # lives under the consumer's gitignored agents/runtime/state/security/.
 cmd_audit_code() {
-  exec_ts "$PACKAGE_ROOT/src/scripts/audit_code.ts" "$@"
+  exec_ts "$PACKAGE_ROOT/src/scripts/code_audit.ts" "$@"
 }
 
 # `media:bundle <url|file>` — `/analyze:post`'s evidence bundle. A URL is

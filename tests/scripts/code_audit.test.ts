@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { main, newestLedger } from '../../src/scripts/audit_code.js';
+import { main, newestLedger } from '../../src/scripts/code_audit.js';
 
 let root: string;
 let out: string[];

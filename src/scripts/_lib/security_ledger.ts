@@ -87,7 +87,8 @@ export function validateLedger(value: unknown): string[] {
             out.push(`${at}: status must be confirmed|needs_validation|rejected`);
             return;
         }
-        if (f['finder'] === f['verifier'] && f['review_independence'] !== 'single-member') {
+        const seat = (v: unknown): string => String(v ?? '').trim().toLowerCase();
+        if (seat(f['finder']) === seat(f['verifier']) && f['review_independence'] !== 'single-member') {
             out.push(`${at}: finder and verifier are the same — record review_independence: single-member`);
         }
         if (status === 'needs_validation') {
@@ -117,13 +118,16 @@ export function renderLedger(ledger: SecurityLedger | null): string {
     const open = ledger.findings.filter((f) => f.status !== 'rejected');
     const confirmed = open.filter((f) => f.status === 'confirmed');
     const cov = coverage(ledger);
+    const covText = cov.total === 0 ? 'coverage: not enumerated' : `coverage ${cov.percent} % (${cov.reviewed}/${cov.total} enumerated rows)`;
     const lines: string[] = [
         `Security ledger ${ledger.run} (${ledger.at})`,
-        `open: ${confirmed.length} confirmed · ${open.length - confirmed.length} needs_validation · coverage ${cov.percent} % (${cov.reviewed}/${cov.total} enumerated rows)`,
+        `open: ${confirmed.length} confirmed · ${open.length - confirmed.length} needs_validation · ${covText}`,
         '',
         '## Open findings',
     ];
-    if (open.length === 0) lines.push(`none open — at ${cov.percent} % coverage; see Unreviewed below`);
+    if (open.length === 0) {
+        lines.push(cov.total === 0 ? 'none open — and nothing was enumerated, so this is not a clean result' : `none open — at ${cov.percent} % coverage; see Unreviewed below`);
+    }
     for (const f of open) {
         lines.push(
             f.status === 'confirmed'
