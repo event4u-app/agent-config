@@ -32,6 +32,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { pendingRowCommits } from './_lib/release_highlights.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -209,6 +210,12 @@ function run_selftest(): number {
     const noop = evaluate(newWithBreaking, newWithBreaking, false, false);
     assert('pre-existing released BREAKING is not re-flagged', !noop.violation);
 
+    // 6. A Pending row must cite the commit that landed it.
+    const pendingIndex = (landed: string): string =>
+        `## Pending\n\n| Landed | What changes | Migration |\n|---|---|---|\n| ${landed} | **X.** | y |\n`;
+    assert('uncited Pending row FAILS', uncited_pending_rows(pendingIndex('2026-10-18')) === 1);
+    assert('cited Pending row passes', uncited_pending_rows(pendingIndex('2026-10-18 (`3f8c98e74`)')) === 0);
+
     if (failed > 0) {
         process.stderr.write(`❌  selftest: ${failed} fixture(s) failed.\n`);
         return 1;
@@ -246,10 +253,32 @@ function parse_args(argv: readonly string[]): ParsedArgs {
     return args;
 }
 
+/**
+ * Pending rows whose `Landed` cell cites no commit. The release cut skips a row
+ * whose commit an earlier tag already contains; an uncited row escapes that
+ * check and is re-announced by every release until someone deletes it by hand.
+ */
+export function uncited_pending_rows(index: string): number {
+    return pendingRowCommits(index).filter((c) => c === null).length;
+}
+
 function main(argv?: readonly string[]): number {
     const args = parse_args(argv ?? process.argv.slice(2));
     if (args.selftest) {
         return run_selftest();
+    }
+
+    const indexFile = path.join(REPO_ROOT, INDEX_REL);
+    if (fs.existsSync(indexFile)) {
+        const uncited = uncited_pending_rows(fs.readFileSync(indexFile, 'utf-8'));
+        if (uncited > 0) {
+            process.stderr.write(
+                `❌ lint-breaking-changes-index: ${uncited} \`## Pending\` row(s) in ${INDEX_REL} cite no commit.\n` +
+                    '   Put the landing commit in the Landed cell as `<sha>` so the release cut can tell\n' +
+                    '   whether an earlier tag already shipped the row.\n',
+            );
+            return 1;
+        }
     }
 
     const base = _base();

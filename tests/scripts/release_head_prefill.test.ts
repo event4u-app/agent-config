@@ -12,6 +12,7 @@
  * generator output through the real gate over a span shaped like a normal
  * release of this repo, and asserts zero contradictions.
  */
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -25,6 +26,7 @@ import {
     type SpanCommit,
     derive_category_hits,
     pendingBreakingLine,
+    pendingRowCommits,
     publication_blockers,
     render_derived_head_values,
     stale_draft_labels,
@@ -219,6 +221,22 @@ describe('pending breaking-changes rows reach the curated head', () => {
         '| 16.0.0 | 2026-10-01 | **Released row.** | z | z |',
     ].join('\n');
 
+    it('drops a row whose cited commit an earlier release already contains', () => {
+        const cited = index
+            .replace('| 2026-10-18 | **Guard A runs.**', '| 2026-10-18 ([`aaaaaaa1`](https://x/commit/aaaaaaa1)) | **Guard A runs.**')
+            .replace('| 2026-10-17 | **Guard B runs.**', '| 2026-10-17 (`bbbbbbb2`) | **Guard B runs.**');
+        expect(pendingRowCommits(cited)).toEqual(['aaaaaaa1', 'bbbbbbb2']);
+        const line = pendingBreakingLine(cited, (sha) => sha === 'aaaaaaa1');
+        expect(line).not.toContain('Guard A');
+        expect(line).toContain('**Guard B runs.**');
+        expect(pendingBreakingLine(cited, () => true)).toBeNull();
+    });
+
+    it('keeps a row that cites no commit, whatever the predicate says', () => {
+        expect(pendingRowCommits(index)).toEqual([null, null]);
+        expect(pendingBreakingLine(index, () => true)).toContain('**Guard A runs.**');
+    });
+
     it('carries every Pending What-changes cell and no released row', () => {
         const line = pendingBreakingLine(index);
         expect(line).toContain('**Guard A runs.** It refuses X.');
@@ -232,20 +250,23 @@ describe('pending breaking-changes rows reach the curated head', () => {
         expect(pendingBreakingLine('# Breaking\n')).toBeNull();
     });
 
-    it('names the three fail_closed guards in the head rendered from the real index', (t) => {
-        const real = fs.readFileSync(path.join(import.meta.dirname, '..', '..', 'BREAKING_CHANGES.md'), 'utf-8');
-        const line = pendingBreakingLine(real);
-        // Only meaningful while the #2455 row is still pending; once a release
-        // moves it into the by-major table that release has already named it.
-        // skip-reason: reported as SKIPPED, never a silent green with nothing asserted.
-        if (line === null || !line.includes('fail_closed')) {
-            t.skip('the #2455 row is no longer pending');
-            return;
+    it('keeps no row in the real index whose commit a release tag already contains', (t) => {
+        const root = path.join(import.meta.dirname, '..', '..');
+        const real = fs.readFileSync(path.join(root, 'BREAKING_CHANGES.md'), 'utf-8');
+        const commits = pendingRowCommits(real);
+        // The lint (`lint_breaking_changes_index`) is what refuses an uncited row.
+        expect(commits).not.toContain(null);
+        const shipped: string[] = [];
+        for (const sha of commits as string[]) {
+            const known = spawnSync('git', ['cat-file', '-e', `${sha}^{commit}`], { cwd: root });
+            const tags = spawnSync('git', ['tag', '--contains', sha, '--list', '[0-9]*.[0-9]*.[0-9]*'], { cwd: root, encoding: 'utf-8' });
+            // skip-reason: a shallow clone without the commit or the tags cannot judge; reported as SKIPPED.
+            if (known.status !== 0 || tags.status !== 0) {
+                t.skip(`commit ${sha} or the release tags are not in this clone`);
+                return;
+            }
+            if (tags.stdout.trim() !== '') shipped.push(`${sha} (in ${tags.stdout.trim().split('\n')[0]})`);
         }
-        const head = render_release_head({ 'Default changes + migration': line }).join('\n');
-        for (const guard of ['block-no-verify', 'block-kernel-rule-writes', 'block-plumbing-writes']) {
-            expect(head).toContain(guard);
-        }
-        expect(publication_blockers(head, '17.0.0')).toEqual([]);
+        expect(shipped).toEqual([]);
     });
 });
