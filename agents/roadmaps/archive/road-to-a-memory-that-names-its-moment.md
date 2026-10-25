@@ -92,7 +92,7 @@ reachable by consumers or kept internal by a recorded decision.
       restart the 90 days from the day consumers can reach `/agents user accept`.
       The verdict lands in § Decisions and, if the window moves, as a dated amendment
       under the kill criterion in ADR-138.
-      verify: `grep -nE "^\| E1 .*\| council:" agents/roadmaps/road-to-a-memory-that-names-its-moment.md`
+      verify: `grep -nE "^\| E1 .*\| council:" agents/roadmaps/archive/road-to-a-memory-that-names-its-moment.md`
       returns one row naming the council record; if that row says the window moved,
       `grep -n "Amendment 2026-10" docs/decisions/ADR-138-global-user-profile-layer.md`
       returns one line.
