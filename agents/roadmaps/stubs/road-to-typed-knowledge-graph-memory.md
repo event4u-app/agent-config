@@ -23,7 +23,10 @@ review_by: 2026-09-25
 > inbox rounds under `agents/tmp.old/` (measured 2026-09-06). Latest
 > `inbox-2026-09-r`. A floor on the recurrence, not a count of asks for this
 > stub. Written here so the next round meets a number.
-> Own arrivals: 1 — latest `inbox-2026-10-ap` (2026-10-25): a drafted analysis
+> Own arrivals: 2 — latest `inbox-2026-10-aq` (2026-10-25): two drafted roadmaps
+> propose typed relations, a graph index and an optional vector index, each only
+> after an ablation shows files plus index fail; recorded here, gates unchanged.
+> Earlier: `inbox-2026-10-ap` (2026-10-25): a drafted analysis
 > proposes a typed memory graph only after memory is visualised and a retrieval
 > failure names the need; the visualisation is planned in
 > `later/road-to-a-knowledge-atlas.md`, this stub's gates are unchanged.
