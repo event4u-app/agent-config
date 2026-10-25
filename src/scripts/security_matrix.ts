@@ -98,7 +98,7 @@ export async function matrixForRepo(root: string): Promise<Matrix> {
 
 export async function main(argv: readonly string[]): Promise<number> {
     const i = argv.indexOf('--root');
-    const root = i >= 0 && argv[i + 1] !== undefined ? (argv[i + 1] as string) : process.cwd();
+    const root = i >= 0 && argv[i + 1] !== undefined ? (argv[i + 1] as string) : (process.env['AGENT_CONFIG_PROJECT_ROOT'] ?? process.cwd());
     const matrix = await matrixForRepo(root);
     if (matrix.rows.length === 0) {
         process.stderr.write('security_matrix: no API routes in the code graph — nothing to cross; say "not enumerated", never "no holes".\n');

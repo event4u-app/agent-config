@@ -2,13 +2,13 @@
 model_tier: medium
 name: analyze
 disable-model-invocation: true
-argument-hint: "[postmortem|premortem|decision|near-miss|incident|reference|roadmap-repos|inbox|conformance|and-optimize|pr] [subject]"
+argument-hint: "[postmortem|premortem|decision|near-miss|incident|reference|roadmap-repos|inbox|conformance|and-optimize|pr|post] [subject]"
 pack: analysis-workbench
 intent: "Analysis dispatcher — classify input by keywords, propose a weighted framework path, let the user pick"
-routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident, analyze-reference, analyze-roadmap-repos, analyze-inbox, analyze-conformance, analyze-and-optimize, analyze-pr]
+routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident, analyze-reference, analyze-roadmap-repos, analyze-inbox, analyze-conformance, analyze-and-optimize, analyze-pr, analyze-post]
 replaces: []
 visibility: advanced
-description: Analysis orchestrator — confidence-weighted suggester routing to postmortem, premortem, decision, near-miss, incident, reference repo, roadmap repos, inbox, conformance, this project or a PR.
+description: Analysis orchestrator — confidence-weighted suggester routing to postmortem, premortem, decision, near-miss, incident, reference repo, roadmap repos, inbox, conformance, this project, a PR or a post/video.
 cluster: analyze
 type: orchestrator
 suggestion:
@@ -43,6 +43,7 @@ to the chosen sub-command. Never auto-selects silently.
 | `/analyze:conformance` | `analyze/conformance/command.md` | Audit recent local sessions for rule violations → deterministic scan + subagent passes, root-caused per class, and a roadmap for what is mechanisable |
 | `/analyze:and-optimize` | `analyze/and-optimize/command.md` | Analyse this project, repository or module and improve it → analysts, exchange, council, ready roadmaps, PR (alias: `/optimize:deep`) |
 | `/analyze:pr` | `analyze/pr/command.md` | Run the loops and councils on an existing pull request → a read-only verdict by default, `--optimize` to push tested fixes |
+| `/analyze:post` | `analyze/post/command.md` | A public post or video (or a media file) → pinned evidence bundle with timestamp anchors → the reference door's analysis |
 
 ## Dispatch
 
@@ -72,6 +73,7 @@ match:
 | "rule violations", "did the sessions follow the rules", "conformance", "Regelverstöße" | `conformance` |
 | "optimize this project", "deep optimization pass", "improve this module", "analysiere und verbessere" | `and-optimize` |
 | PR URL / `#<number>`, "this pull request", "review the PR in depth", "PR analysieren" | `pr` |
+| TikTok / YouTube / Reel / X video URL, a `.mp4`/`.mov` file, "this video", "this post", "dieses Video" | `post` |
 
 Assign a confidence level (high / medium / low) per framework based on
 signal count. A framework with zero signals gets `low`.
@@ -95,7 +97,8 @@ escape:
 > 9. [low] Conformance (`/analyze:conformance`) — recent sessions against the rules
 > 10. [low] This project (`/analyze:and-optimize`) — analyse and improve the current project, repository or module
 > 11. [low] Pull request (`/analyze:pr`) — loops and councils on an existing PR, feedback by default
-> 12. Describe in your own words — I'll re-classify
+> 12. [low] Post or video (`/analyze:post`) — a linked post/video or media file → evidence bundle → analysis
+> 13. Describe in your own words — I'll re-classify
 
 **Empfehlung:** 1
 

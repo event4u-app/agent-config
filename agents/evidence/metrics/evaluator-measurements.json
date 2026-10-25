@@ -1,12 +1,12 @@
 {
     "schema_version": 1,
     "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit — refresh it from a real run.",
-    "recorded_at": "2026-10-24T10:14:11.152Z",
-    "git_sha": "c1500bc436456d091b367999044e1430c59f210c",
-    "run_url": "https://github.com/event4u-app/agent-config/actions/runs/40084894454",
-    "conditions": "Refresh for the 28 -> 29 mcp_public_tool_count move: the code-graph estate work added `graph_estate` over MCP without refreshing this record. Value taken from the packed-artifact evaluation of release PR #2630 (clean container, linked run). cli_help_command_count unchanged at 114.",
+    "recorded_at": "2026-10-25T07:04:49.134Z",
+    "git_sha": "9c9397c4efef0bb42c3e222d992a0c531c4d0f28",
+    "run_url": null,
+    "conditions": "Refresh for the 114 -> 116 cli_help_command_count move: audit:code and media:bundle registered in the same PR. 116 = registry enumeration on the working tree (check_cli_registry_budget_sync). mcp_public_tool_count unchanged at 29.",
     "measurements": {
-        "cli_help_command_count": 114,
+        "cli_help_command_count": 116,
         "mcp_public_tool_count": 29
     }
 }

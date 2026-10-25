@@ -41,6 +41,7 @@ commands:
     - analyze/conformance
     - analyze/and-optimize
     - analyze/pr
+    - analyze/post
     - analyze/decision
     - analyze/incident
     - analyze/near-miss

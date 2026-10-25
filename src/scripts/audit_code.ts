@@ -18,7 +18,8 @@ const LEDGER_DIR = path.join('agents', 'runtime', 'state', 'security');
 
 function rootOf(argv: readonly string[]): string {
     const i = argv.indexOf('--root');
-    return i >= 0 && argv[i + 1] !== undefined ? (argv[i + 1] as string) : process.cwd();
+    // The dispatcher consumes a global `--root` and hands it on in this variable.
+    return i >= 0 && argv[i + 1] !== undefined ? (argv[i + 1] as string) : (process.env['AGENT_CONFIG_PROJECT_ROOT'] ?? process.cwd());
 }
 
 /** The newest ledger by run-directory mtime, or null when no run was recorded. */
