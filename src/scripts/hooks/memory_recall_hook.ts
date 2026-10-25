@@ -151,6 +151,15 @@ export function nodeModulesIsSymlink(root: string): boolean {
     }
 }
 
+/** True when `<root>/package.json` names this package. */
+export function rootIsPackageSelf(root: string): boolean {
+    try {
+        return JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).name === '@event4u/agent-config';
+    } catch {
+        return false;
+    }
+}
+
 /** True when ANY candidate root carries a symlinked `node_modules`. */
 export function anyRootHasSymlinkedNodeModules(ctx: RuleContext): boolean {
     return ctx.roots.some(nodeModulesIsSymlink);
@@ -172,38 +181,28 @@ export const RECALL_RULES: readonly RecallRule[] = [
         tools: COMMAND_TOOLS,
         test: (call) => BUILD_COMMAND_RE.test(call.command),
         requires: anyRootHasSymlinkedNodeModules,
-        why:
-            'node_modules here is a SYMLINK, so esbuild resolves every dependency ' +
-            'outside the repo root and bakes ../../../node_modules/ paths into the ' +
-            'TRACKED dist/install/install.mjs',
+        why: 'node_modules is a SYMLINK, so esbuild bakes ../../../node_modules/ paths into the tracked dist/install/install.mjs',
     },
     {
         id: 'adr-edit',
         slug: 'adding-an-adr-downstream-surface',
         tools: EDIT_TOOLS,
         test: (call) => call.paths.some((p) => ADR_PATH_RE.test(p)),
-        why:
-            'an ADR has TWO generated consumers — the INDEX and the evidence census; ' +
-            'census staleness reds the Rule-backstops CI job and no local preflight ' +
-            'gate catches it',
+        why: 'an ADR feeds the INDEX and the evidence census; a stale census reds Rule-backstops in CI only',
     },
     {
         id: 'install-source-edit',
         slug: 'adding-a-src-install-module-needs-two-builds',
         tools: EDIT_TOOLS,
         test: (call) => call.paths.some((p) => INSTALL_SOURCE_RE.test(p)),
-        why:
-            'this source is committed twice — build:cli AND build:install-bundle are ' +
-            'both required, and neither freshness gate is in task preflight',
+        why: 'committed twice: run build:cli AND build:install-bundle; preflight checks neither',
     },
     {
         id: 'hook-latency-bench',
         slug: 'hook-latency-gate-has-runner-variance',
         tools: COMMAND_TOOLS,
         test: (call) => LATENCY_BENCH_RE.test(call.command),
-        why:
-            "reading main's own most recent run of the same job is step ONE, not the " +
-            'fallback — measuring locally first answered nothing and cost a CI cycle',
+        why: "read main's latest run of this job as step ONE; a local run answers nothing",
     },
 ];
 
@@ -273,6 +272,9 @@ export function matchRule(
     ctx: RuleContext,
     rules: readonly RecallRule[] = RECALL_RULES,
 ): RecallRule | null {
+    // Every committed row is seeded from this package's maintainer store; a
+    // consumer install has neither the memory nor the reason.
+    if (!ctx.roots.some(rootIsPackageSelf)) return null;
     for (const rule of rules) {
         if (!rule.tools.has(call.tool)) continue;
         if (!rule.test(call)) continue;

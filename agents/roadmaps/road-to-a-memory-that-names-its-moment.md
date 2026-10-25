@@ -71,7 +71,7 @@ reachable by consumers or kept internal by a recorded decision.
 
 ## Phase 1 — Deadlines and truth
 
-- [ ] **1.1 Fire the maintainer's recall rows only in this package.** Each of the
+- [x] **1.1 Fire the maintainer's recall rows only in this package.** Each of the
       four `RECALL_RULES` rows gets a `requires` predicate that holds only when a
       candidate root's `package.json` names `@event4u/agent-config`. Rows a consumer
       authors later (the parked follow-up) are unaffected; the table stays committed.
