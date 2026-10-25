@@ -41,6 +41,7 @@ import {
     liveReadinessRow,
     main,
     parseYtDlpVersion,
+    probeFramePath,
     probeJsRuntimes,
     readConfigFlag,
     renderTable,
@@ -1808,15 +1809,15 @@ ${OK_CHANNEL}`,
         expect(renderTable(payload)).not.toContain('readiness (');
     });
 
-    it('GIVEN the SHIPPED registry THEN only the youtube channel carries a readiness row, and every other channel is byte-for-byte unaffected', () => {
+    it('GIVEN the SHIPPED registry THEN only the channels naming yt-dlp carry a readiness row, and every other channel is byte-for-byte unaffected', () => {
         const payload = collect();
         const withReadiness = payload.channels.filter((channel) =>
             channel.backends.some((backend) => backend.readiness !== undefined),
         );
 
-        expect(withReadiness.map((channel) => channel.id)).toEqual(['youtube']);
+        expect(withReadiness.map((channel) => channel.id)).toEqual(['youtube', 'video']);
         for (const channel of payload.channels) {
-            if (channel.id === 'youtube') continue;
+            if (channel.id === 'youtube' || channel.id === 'video') continue;
             expect(JSON.stringify(channel), channel.id).not.toContain('readiness');
             expect(channel.status, channel.id).not.toBe('not-ready');
         }
@@ -1843,5 +1844,59 @@ ${OK_CHANNEL}`,
         expect(table).toContain('pipx install yt-dlp==');
         // No flag remedy is offered for a tool that is not installed.
         expect(table).not.toContain('readiness fix');
+    });
+});
+
+describe('reach:doctor — the video channel probes the frame path, not the version string', () => {
+    const VIDEO_CHANNEL = {
+        id: 'video',
+        tier: 'zero-config',
+        lifecycle: 'experimental',
+        last_verified: '2026-10-25',
+        backends: [{ id: 'ffmpeg', probe_cmd: 'ffmpeg', probe_args: ['-version'], install: { default: 'os-baseline: an ffmpeg on PATH' } }],
+    };
+
+    function fakeFfmpeg(): string {
+        const dir = fs.mkdtempSync(path.join(TMP, 'fake-ffmpeg-'));
+        const bin = path.join(dir, 'ffmpeg');
+        fs.writeFileSync(bin, '#!/bin/sh\ncase "$1" in -version|--version) echo "ffmpeg version 0"; exit 0;; esac\nexit 1\n');
+        fs.chmodSync(bin, 0o755);
+        return bin;
+    }
+
+    it.skipIf(!POSIX)('GIVEN an ffmpeg that answers -version but fails the clip THEN the capability is not-ready', () => {
+        const row = probeFramePath(fakeFfmpeg());
+        expect(row.kind).toBe('frame-path');
+        expect(row.status).toBe('not-ready');
+        expect(row.detail).toContain('1-s');
+    });
+
+    it.skipIf(!POSIX)('GIVEN that fake ffmpeg first on PATH THEN the channel is not-ready with no active backend, never ok', () => {
+        const fake = fakeFfmpeg();
+        const saved = process.env['PATH'];
+        process.env['PATH'] = `${path.dirname(fake)}${path.delimiter}${saved ?? ''}`;
+        try {
+            const row = buildChannelRow(VIDEO_CHANNEL, { deep: false, now: new Date('2026-10-25T00:00:00Z'), readiness: () => null });
+            expect(row.backends[0]?.status).toBe('ok');
+            expect(row.backends[0]?.capability?.status).toBe('not-ready');
+            expect(row.status).toBe('not-ready');
+            expect(row.active_backend).toBeNull();
+        } finally {
+            process.env['PATH'] = saved;
+        }
+    });
+
+    const realFfmpeg = spawnSync('ffmpeg', ['-version']).status === 0;
+    it.skipIf(!realFfmpeg)('GIVEN the shipped video channel on a host with ffmpeg THEN ffmpeg is ready and the payload validates', () => {
+        const payload = collect({ channel: 'video' });
+        const channel = payload.channels[0];
+        expect(channel?.status).toBe('ok');
+        expect(channel?.active_backend).toBe('ffmpeg');
+        expect(channel?.backends[0]?.capability?.status).toBe('ready');
+        const ytDlp = channel?.backends.find((b) => b.id === 'yt-dlp');
+        expect(ytDlp).toBeDefined();
+        expect(ytDlp?.capability).toBeUndefined();
+        expect(makeValidator()(JSON.parse(JSON.stringify(payload)))).toBe(true);
+        expect(renderTable(payload)).toContain('capability (frame-path): ready');
     });
 });

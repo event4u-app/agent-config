@@ -207,13 +207,13 @@ rejected. No finding without a state, no "clean" without a coverage figure.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `security-audit` cannot reach `confirmed` without a verifier other
+- [x] AC-1 — `security-audit` cannot reach `confirmed` without a verifier other
       than the finder and a red proof test; otherwise the record says
       `needs_validation` or `single-member`.
-- [ ] AC-2 — `audit:code matrix` emits the two-account matrix for a fixture
+- [x] AC-2 — `audit:code matrix` emits the two-account matrix for a fixture
       route set without a model call.
-- [ ] AC-3 — `launch-readiness` names the ledger status or "not checked".
-- [ ] AC-4 — Five hunter dispatches carrying the role marker produce no
+- [x] AC-3 — `launch-readiness` names the ledger status or "not checked".
+- [x] AC-4 — Five hunter dispatches carrying the role marker produce no
       independence warn; two verifier dispatches still do.
-- [ ] AC-5 — No source tool or creator name in the tracked tree
+- [x] AC-5 — No source tool or creator name in the tracked tree
       (`./scripts-run src/scripts/check_no_external_sources` green).

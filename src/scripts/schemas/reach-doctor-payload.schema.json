@@ -130,6 +130,17 @@
                 "exit_code": { "type": ["integer", "null"], "description": "Probe exit code, or null when the child never reported one." },
                 "diagnostic": { "type": "string", "minLength": 1, "description": "Short, OUTPUT-FREE explanation. Probe stdio is ignored, so fetched content and credentials can never reach a report." },
                 "fix": { "type": ["string", "null"], "description": "Platform-selected pinned prescription for this backend; populated for missing/broken only." },
+                "capability": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["kind", "status", "detail"],
+                  "description": "Capability verdict for a backend whose version probe cannot show it does the channel's job. PRESENT ONLY for a backend declared in reach_doctor.ts § CAPABILITY_PROBES (ffmpeg: a generated 1-s clip pushed through the media_bundle frame path over pipes, no file written). Absent for every other backend.",
+                  "properties": {
+                    "kind": { "type": "string", "enum": ["frame-path"], "description": "Which capability this row settles." },
+                    "status": { "type": "string", "enum": ["ready", "not-ready", "unknown"], "description": "`ready` = the probe clip yielded frames; `not-ready` = it did not; `unknown` = the backend is not installed or not answering, so nothing was exercised." },
+                    "detail": { "type": "string", "minLength": 1, "description": "One-line explanation; carries no child output beyond an exit code." }
+                  }
+                },
                 "readiness": {
                   "type": "object",
                   "additionalProperties": false,

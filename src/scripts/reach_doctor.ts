@@ -183,6 +183,18 @@ export interface BackendRow {
      * value a reader has to interpret.
      */
     readiness?: ReadinessRow;
+    /**
+     * Capability verdict for a backend whose `--version` says nothing about
+     * whether it can do the channel's job (see `CAPABILITY_PROBES`). Absent for
+     * every backend that declares no such probe.
+     */
+    capability?: CapabilityRow;
+}
+
+export interface CapabilityRow {
+    kind: 'frame-path';
+    status: ReadinessStatus;
+    detail: string;
 }
 
 /**
@@ -992,6 +1004,56 @@ export function liveReadinessRow(
 }
 
 /**
+ * A generated one-second clip pushed through the frame path `media_bundle`
+ * uses: encoded, decoded again, scaled to the 9×8 grayscale a frame hash reads,
+ * and tiled into a JPEG sheet. An ffmpeg build can answer `-version` and still
+ * lack the lavfi source, an encoder or a filter that path needs; only running
+ * it tells. Everything travels through pipes, so the doctor stays a program
+ * with no filesystem write.
+ */
+export function probeFramePath(ffmpegBin: string): CapabilityRow {
+    const notReady = (detail: string): CapabilityRow => ({ kind: 'frame-path', status: 'not-ready', detail });
+    const ffmpeg = (args: readonly string[], input?: Buffer) =>
+        spawnSync(ffmpegBin, ['-hide_banner', '-loglevel', 'error', ...args], {
+            env: hardenedSpawnEnv(),
+            timeout: 30_000,
+            maxBuffer: 16 * 1024 * 1024,
+            ...(input === undefined ? {} : { input }),
+        });
+    const clip = ffmpeg(['-f', 'lavfi', '-i', 'testsrc2=s=160x90:d=1', '-c:v', 'mpeg4', '-f', 'matroska', 'pipe:1']);
+    if (clip.error !== undefined || clip.status !== 0 || clip.stdout.length === 0) {
+        return notReady(`ffmpeg could not generate a 1-s probe clip (exit ${String(clip.status)})`);
+    }
+    const hashInput = ffmpeg(['-i', 'pipe:0', '-frames:v', '1', '-vf', 'scale=9:8,format=gray', '-f', 'rawvideo', 'pipe:1'], clip.stdout);
+    if (hashInput.status !== 0 || hashInput.stdout.length !== 72) {
+        return notReady(`the generated clip did not decode to a 9x8 hash frame (exit ${String(hashInput.status)})`);
+    }
+    const sheet = ffmpeg(
+        ['-i', 'pipe:0', '-vf', "select='gt(scene,0)+eq(n,0)',scale=80:-2,tile=4x3", '-fps_mode', 'vfr', '-frames:v', '1', '-f', 'image2pipe', '-c:v', 'mjpeg', 'pipe:1'],
+        clip.stdout,
+    );
+    if (sheet.status !== 0 || sheet.stdout.subarray(0, 2).toString('hex') !== 'ffd8') {
+        return notReady(`the generated clip did not tile into a contact sheet (exit ${String(sheet.status)})`);
+    }
+    return { kind: 'frame-path', status: 'ready', detail: 'a generated 1-s clip decoded, hashed and tiled through the frame path' };
+}
+
+export type CapabilityProbeFn = (backendId: string, probedStatus: ToolProbeStatus, resolvedPath: string | null) => CapabilityRow | null;
+
+const CAPABILITY_PROBES: Readonly<Record<string, (bin: string) => CapabilityRow>> = {
+    ffmpeg: probeFramePath,
+};
+
+export function liveCapabilityRow(backendId: string, probedStatus: ToolProbeStatus, resolvedPath: string | null): CapabilityRow | null {
+    const probe = Object.hasOwn(CAPABILITY_PROBES, backendId) ? CAPABILITY_PROBES[backendId] : undefined;
+    if (probe === undefined) return null;
+    if (probedStatus !== 'ok' || resolvedPath === null) {
+        return { kind: 'frame-path', status: 'unknown', detail: `the backend itself is ${probedStatus}, so the frame path is not exercised` };
+    }
+    return probe(resolvedPath);
+}
+
+/**
  * Injectable readiness observer. The default is `liveReadinessRow`; the option
  * exists for the same reason `now` does — a fixture cannot install yt-dlp, and
  * a machine without it could otherwise only ever exercise the `unknown` branch.
@@ -1017,9 +1079,10 @@ export type ReadinessProbeFn = (
  */
 export function buildChannelRow(
     raw: unknown,
-    options: { deep: boolean; now: Date; readiness?: ReadinessProbeFn },
+    options: { deep: boolean; now: Date; readiness?: ReadinessProbeFn; capability?: CapabilityProbeFn },
 ): ChannelRow {
     const readinessProbe = options.readiness ?? liveReadinessRow;
+    const capabilityProbe = options.capability ?? liveCapabilityRow;
     // Entry gate — defense in depth behind `collect()`'s schema validation. Each
     // shape a validated registry cannot produce is refused with a named reason
     // rather than read speculatively: a row built from an entry whose `id` or
@@ -1155,6 +1218,7 @@ export function buildChannelRow(
         });
 
         const readiness = readinessProbe(backendId, probed.status);
+        const capability = capabilityProbe(backendId, probed.status, probed.path);
 
         backends.push({
             id: backendId,
@@ -1168,6 +1232,7 @@ export function buildChannelRow(
             // Omitted entirely (not null) when the backend declares no
             // requirement — the four other channels gain no field at all.
             ...(readiness === null ? {} : { readiness }),
+            ...(capability === null ? {} : { capability }),
         });
     }
 
@@ -1178,7 +1243,8 @@ export function buildChannelRow(
     // green (`yt-dlp --version` exits 0, the transcript pull still fails).
     const usable = (backend: BackendRow): boolean =>
         backend.status === 'ok' &&
-        (backend.readiness === undefined || backend.readiness.status === 'ready');
+        (backend.readiness === undefined || backend.readiness.status === 'ready') &&
+        (backend.capability === undefined || backend.capability.status === 'ready');
     const active = backends.find(usable) ?? null;
     // With no healthy candidate the channel takes the FIRST candidate's
     // verdict — that is the one whose fix the operator is expected to run.
@@ -1193,8 +1259,8 @@ export function buildChannelRow(
     const unready = backends.some(
         (backend) =>
             backend.status === 'ok' &&
-            backend.readiness !== undefined &&
-            backend.readiness.status !== 'ready',
+            ((backend.readiness !== undefined && backend.readiness.status !== 'ready') ||
+                (backend.capability !== undefined && backend.capability.status !== 'ready')),
     );
     const status: ChannelStatus =
         active !== null ? 'ok' : unready ? 'not-ready' : first.status;
@@ -1406,6 +1472,11 @@ export function renderTable(payload: ReachDoctorPayload): string {
             // reading "installed" needs to see that the second question was
             // asked at all, otherwise a silent pass is indistinguishable from
             // a check that never ran.
+            if (backend.capability !== undefined) {
+                lines.push(
+                    `       capability (${backend.capability.kind}): ${backend.capability.status} — ${backend.capability.detail}`,
+                );
+            }
             if (backend.readiness !== undefined) {
                 const readiness = backend.readiness;
                 lines.push(

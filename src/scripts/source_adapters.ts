@@ -1,6 +1,7 @@
 /**
  * source_adapters.ts — the local sources of the foreign-source door: a path
- * read in place, a tar archive, and an already-present clone. Each yields one
+ * read in place, a tar archive, an already-present clone, and a media file
+ * (pinned by its bytes, never unpacked or read as text). Each yields one
  * `SourceRef` whose pin and digest make a later run checkable against the same
  * bytes.
  *
@@ -20,7 +21,9 @@ import { detectSpdxFromText, resolveLicenseSignals, scanDirectoryLicenseSignals 
 export const FETCH_BLOCKER = 'source-fetch-authorization';
 export const DEFAULT_MAX_ARCHIVE_BYTES = 200 * 1024 * 1024;
 
-export type SourceKind = 'local-path' | 'archive' | 'local-clone';
+export type SourceKind = 'local-path' | 'archive' | 'local-clone' | 'media';
+
+export const MEDIA_EXTENSIONS: readonly string[] = ['.mp4', '.mov', '.webm', '.mkv', '.m4a', '.mp3', '.wav'];
 
 export interface SourceRef {
     identity: string;
@@ -43,6 +46,21 @@ function sha(data: string | Buffer): string {
     return `sha256:${createHash('sha256').update(data).digest('hex')}`;
 }
 
+/** Hashed in chunks: a media file may be hundreds of megabytes and is never held whole. */
+export function fileDigest(fileAbs: string): string {
+    const hash = createHash('sha256');
+    const buf = Buffer.alloc(1024 * 1024);
+    const fd = fs.openSync(fileAbs, 'r');
+    try {
+        for (let n = fs.readSync(fd, buf, 0, buf.length, null); n > 0; n = fs.readSync(fd, buf, 0, buf.length, null)) {
+            hash.update(buf.subarray(0, n));
+        }
+    } finally {
+        fs.closeSync(fd);
+    }
+    return `sha256:${hash.digest('hex')}`;
+}
+
 function treeDigest(files: Record<string, string>): string {
     return sha(
         Object.keys(files)
@@ -54,7 +72,7 @@ function treeDigest(files: Record<string, string>): string {
 
 function unsupported(arg: string, why: string): SourceError {
     return new SourceError(
-        `${arg}: ${why} — resolveSource reads local paths, tar archives and present clones; a network source goes through network_sources.ts under the fetch answer of ${FETCH_BLOCKER} (ADR-288 D7)`,
+        `${arg}: ${why} — resolveSource reads local paths, tar archives, media files and present clones; a network source goes through network_sources.ts under the fetch answer of ${FETCH_BLOCKER} (ADR-288 D7)`,
     );
 }
 
@@ -173,6 +191,10 @@ export function resolveSource(arg: string, opts: { maxArchiveBytes?: number } = 
             return { identity: abs, kind: 'local-clone', license: dirLicense(abs), pin: readHeadSha(abs), digest, tier: 'read', files };
         }
         return { identity: abs, kind: 'local-path', license: dirLicense(abs), pin: digest, digest, tier: 'read', files };
+    }
+    if (MEDIA_EXTENSIONS.includes(path.extname(abs).toLowerCase())) {
+        const digest = fileDigest(abs);
+        return { identity: abs, kind: 'media', license: 'unknown', pin: digest, digest, tier: 'read', files: { [path.basename(abs)]: digest } };
     }
     if (/\.(tar|tgz|tar\.gz)$/.test(abs)) {
         const { files, license } = readTar(abs, opts.maxArchiveBytes ?? DEFAULT_MAX_ARCHIVE_BYTES);
