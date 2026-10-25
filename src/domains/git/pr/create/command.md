@@ -137,9 +137,8 @@ hash** per
   during the Stage-A baseline window). `planning.completion_review:
   false` is the settings escape hatch.
 - Depth row: `review` and, for the findings and PR body, `evidence` in
-  `src/config/step-depth-table.json`. The table is in `shadow` mode — run
-  the review at full depth; `step_receipt` records what the change class
-  would have skipped.
+  `src/config/step-depth-table.json`. Run the review at the row's depth
+  only when `step_receipt` reads `active`; otherwise at full depth.
 
 ### 2. Generate PR content
 
