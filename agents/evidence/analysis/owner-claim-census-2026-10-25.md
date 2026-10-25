@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Owner-claim census over existing ADRs — 2026-10-25
 
 **Tree:** `c073ca2e5a` (18.2.0). **Step:** 4.1 of `road-to-records-that-agree-after-eighteen`.

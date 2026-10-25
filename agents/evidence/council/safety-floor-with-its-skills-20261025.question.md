@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Question: should a pack-scoped safety-floor rule ship wherever a skill that names it ships?
 
 ## Facts (verified in the tree at c073ca2e5a, agent-config 18.2.0)
