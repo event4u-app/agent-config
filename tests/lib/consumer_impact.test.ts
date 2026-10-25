@@ -108,6 +108,13 @@ describe('parse_impact_trailers — GitHub squash-merge bodies', () => {
         expect(parse_impact_trailers('consumer-impact: notice\n\n' + coauthor).invalid).toContain('Consumer-Impact');
     });
 
+    it('reads the trailer run that follows a wrapped BREAKING CHANGE footer in the same paragraph', () => {
+        const body = 'Why.\n\nBREAKING CHANGE: projection.mode and the legacy-all pseudo-profile are\n'
+            + 'removed; hosts without a listing lever receive the active profile\'s packs.\n'
+            + 'Consumer-Impact: action\n' + coauthor;
+        expect(parse_impact_trailers(body)).toEqual({ impact: 'action', recorded: true, invalid: null, security: false });
+    });
+
     it('does not count a Consumer-Impact line inside prose, a quote or a code fence', () => {
         const prose = 'The squashed PR said Consumer-Impact: action in passing.\n\n' + coauthor;
         const quoted = 'Reviewer wrote:\n> Consumer-Impact: action\nso we kept it.\n\n' + coauthor;
@@ -220,12 +227,12 @@ function fixture_span(breaking_body: string): Commit[] {
 }
 
 describe('a release span read from a real git log', () => {
-    it('keeps a breaking commit without a trailer in the span, recorded as none', () => {
+    it('classes a span holding a breaking commit without a trailer as action, as its bump is a major (ADR-300)', () => {
         const span = fixture_span('Internal only.');
         const breaking = span.find((c) => c.breaking);
         expect(breaking?.subject).toBe('rework the pipeline');
         expect(breaking?.trailers).toMatchObject({ impact: 'none', recorded: false });
-        expect(release_impact_entry(span)).toEqual({ impact: 'none' });
+        expect(release_impact_entry(span)).toEqual({ impact: 'action' });
     });
 
     it('reads the trailer of the same breaking commit into the release entry', () => {
@@ -246,6 +253,11 @@ describe('release impact map', () => {
                 c(''),
             ]),
         ).toEqual({ impact: 'notice', security: true });
+    });
+
+    it('never omits a span carrying an undeclared break, so an absent major reads as a declared none', () => {
+        const brk = commit_from_record({ sha, subject: 'feat!: drop x', body: '' });
+        expect(with_release_impact({}, '19.0.0', [brk, c('Consumer-Impact: none')])).toEqual({ '19.0.0': { impact: 'action' } });
     });
 
     it('omits a release whose span is none throughout', () => {

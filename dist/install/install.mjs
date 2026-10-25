@@ -12556,7 +12556,7 @@ function warnRemovedKeys(merged) {
       continue;
     }
     _warnedRemovedKeys.add(key);
-    process.stderr.write(`${key} was removed (${reason}); ignored.
+    process.stderr.write(`${key} was removed (${reason}); ${reason.includes("honours") ? "still honoured" : "ignored"}.
 `);
   }
 }
@@ -13137,7 +13137,9 @@ function rule_in_scope(source_path, scope, pack_scope = null, role_scope = null)
     }
     return values.some((v) => configured.includes(v));
   };
-  return axis("workspaces", scope) && axis("packs", pack_scope) && axis("roles", role_scope);
+  const routes = Array.isArray(meta2["routes_to"]) ? meta2["routes_to"] : [];
+  const guardsSkill = typeof meta2["consequence_class"] === "string" && routes.some((r) => String(r).startsWith("skill:"));
+  return axis("workspaces", scope) && (guardsSkill || axis("packs", pack_scope)) && axis("roles", role_scope);
 }
 
 // src/install/rule_scope.ts

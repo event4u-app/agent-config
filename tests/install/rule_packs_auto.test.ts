@@ -95,9 +95,6 @@ describe('what the derived scope actually gates', () => {
     // Each floor's own body declares the pack condition; under `auto` it stops
     // shipping where the guarded pack is absent.
     const DROPPED = [
-        'finance-safety-floor.md',
-        'legal-safety-floor.md',
-        'strategy-safety-floor.md',
         'media-governance-routing.md',
         'media-sync-ground-truth.md',
         'image-likeness-and-rights.md',
@@ -109,6 +106,15 @@ describe('what the derived scope actually gates', () => {
         expect(fs.existsSync(ruleFile(name))).toBe(true);
         expect(ruleFileArrives(ruleFile(name), scope)).toBe(false);
     });
+
+    // A floor that guards a skill follows that skill, which a listing-lever host
+    // receives whatever the packs are (council 2026-10-25).
+    it.each(['finance-safety-floor.md', 'legal-safety-floor.md', 'strategy-safety-floor.md'])(
+        'keeps %s — its guarded skills can ship without its pack',
+        (name) => {
+            expect(ruleFileArrives(ruleFile(name), scope)).toBe(true);
+        },
+    );
 
     // Named in the roadmap step as candidates, but their packs carry
     // workspaces: [engineering], so they are active. Retaining them is the

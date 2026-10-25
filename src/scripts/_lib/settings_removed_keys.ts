@@ -204,6 +204,7 @@ export function warnRemovedKeys(merged: SettingsDict): void {
             continue;
         }
         _warnedRemovedKeys.add(key);
-        process.stderr.write(`${key} was removed (${reason}); ignored.\n`);
+        // A reason that says the key is still honoured must not end in "ignored".
+        process.stderr.write(`${key} was removed (${reason}); ${reason.includes('honours') ? 'still honoured' : 'ignored'}.\n`);
     }
 }

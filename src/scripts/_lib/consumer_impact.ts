@@ -86,12 +86,18 @@ export function trailer_blocks(body: string): Array<Array<[key: string, value: s
     return blocks;
 }
 
+// A Conventional Commits `BREAKING CHANGE:` footer may wrap onto unindented
+// lines; those continue its value. Rejecting them dropped the whole paragraph,
+// and with it 18.0.0's `Consumer-Impact: action`.
 function parse_trailer_paragraph(lines: readonly string[]): Array<[string, string]> {
     const out: Array<[string, string]> = [];
     for (const line of lines) {
         if (/^[ \t]+\S/.test(line) && out.length > 0) continue;
         const m = TRAILER_LINE.exec(line);
-        if (!m) return [];
+        if (!m) {
+            if (out.length > 0 && /^BREAKING[ -]CHANGE$/.test(out[out.length - 1]![0])) continue;
+            return [];
+        }
         out.push([m[1]!, m[2]!]);
     }
     return out;
@@ -169,7 +175,9 @@ export function release_impact_entry(commits: readonly ImpactCommit[]): ImpactEn
     let impact: ConsumerImpact = 'none';
     let security = false;
     for (const c of commits) {
-        if (IMPACT_RANK[c.trailers.impact] > IMPACT_RANK[impact]) impact = c.trailers.impact;
+        // ADR-300's reading, as `span_bump` applies it: an undeclared break is a major, so it needs a hand.
+        const own = c.breaking && !c.trailers.recorded ? 'action' : c.trailers.impact;
+        if (IMPACT_RANK[own] > IMPACT_RANK[impact]) impact = own;
         security = security || c.trailers.security;
     }
     return security ? { impact, security: true } : { impact };

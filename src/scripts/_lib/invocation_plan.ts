@@ -114,6 +114,17 @@ function validate(input: InvocationInput): void {
     }
     const refs = [...input.stages.flatMap((s) => [...(s.dependsOn ?? []), ...(s.voids ?? [])]), ...(input.fenceAfter ? [input.fenceAfter] : [])];
     for (const r of refs) if (!known.has(r)) throw new InvocationPlanError(`unknown stage ${JSON.stringify(r)}`);
+    // A hard-edge cycle leaves no ready stage, and the toposort would crash on it.
+    const deps = new Map(input.stages.map((s) => [s.id, s.dependsOn ?? []]));
+    const done = new Set<string>();
+    const visit = (id: string, path: string[]): void => {
+        if (done.has(id)) return;
+        const at = path.indexOf(id);
+        if (at >= 0) throw new InvocationPlanError(`cyclic stage dependencies: ${[...path.slice(at), id].join(' -> ')}`);
+        for (const d of deps.get(id) ?? []) visit(d, [...path, id]);
+        done.add(id);
+    };
+    for (const s of input.stages) visit(s.id, []);
 }
 
 const isFixed = (s: StageInput): boolean => s.effects.some((e) => EFFECTS[e.effect].fixed);
