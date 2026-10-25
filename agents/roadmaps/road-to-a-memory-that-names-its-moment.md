@@ -103,7 +103,7 @@ reachable by consumers or kept internal by a recorded decision.
       verify: `./scripts-run src/scripts/check_claims` passes; `grep -n "every reply" src/templates/agent-user.md`
       returns nothing; `grep -c "four" src/domains/meta/memory/add/command.md` agrees
       with the menu.
-- [ ] **1.5 Name the slot time in the dogfood closing condition (E8).** The closing
+- [x] **1.5 Name the slot time in the dogfood closing condition (E8).** The closing
       condition gains a second measure: p95 of the whole `session_end` dispatch on
       claude against the 1.5 s shared host budget, measured with
       `bench_hook_latency`, beside the existing `wall_ms` line.
