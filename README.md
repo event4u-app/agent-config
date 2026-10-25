@@ -165,8 +165,10 @@ Freshest measured row: in one post-fix session, advisory context injection cut l
 Maintaining a skills catalog yourself? The **anti-reskin gate** that blocks
 find-replace re-skin PRs here runs on yours too — [`docs/anti-reskin-gate.md`](docs/anti-reskin-gate.md).
 
-Audit-disciplined by construction — every memory consult, decision key and hook
-concern lands in `agents/runtime/state/` so you can replay it.
+Audit-disciplined by construction — memory consults and decision keys land in
+`agents/runtime/state/`. The per-hook journal you can replay a session from is
+opt-in: a default install records nothing until `hooks.runtime_journal.enabled`
+is set.
 [Core principles](#core-principles) names the four invariants.
 
 ## Contribute
@@ -215,7 +217,7 @@ It is **not** an agent runtime. The agent loop, the LLM dispatcher and tool orch
 | Skills, rules, commands, guidelines, personas | Agent loop / LLM dispatcher |
 | Multi-tool projection + condensation pipeline | Execution engine inside the package |
 | Memory helpers (`memory-add`, `memory-promote`) | Cross-tool observability dashboard |
-| Linters, CI, frontmatter validation against [JSON-Schema](scripts/schemas/) ([contract](agents/reference/docs/frontmatter-contract.md)) | Runtime GUI / web dashboard |
+| Linters, CI, frontmatter validation against [JSON-Schema](scripts/schemas/) ([contract](agents/reference/docs/frontmatter-contract.md)) | Runtime GUI / web dashboard (an opt-in host status line that only reads state AC already wrote is not one) |
 | Skill orchestration via citations + deterministic helpers | Opinionated *automatic* skill-resolver (ML / relevance ranking that decides for you) |
 | User-driven projection-time filtering by profile + packs ([ADR-040](docs/decisions/ADR-040-execution-model-projection-time-filtering.md)) | A *runtime* resolver / daemon (mid-session switching — conditional, post-6.0.0) |
 

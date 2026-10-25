@@ -52,14 +52,14 @@ same way; a mod only reads and shows what the dispatcher already wrote.
 
 ## Phase 1 — Two README sentences that are false today
 
-- [ ] **1.1 Correct the replay claim (`README.md:168-169`).** It says every hook
+- [x] **1.1 Correct the replay claim (`README.md:168-169`).** It says every hook
       concern lands in `agents/runtime/state/` "so you can replay it"; the journal
       is off by default (`src/scripts/hook_manifest.yaml:1568`). Say that the
       record is opt-in and name how it is switched on.
       verify: `grep -n "so you can replay it" README.md` returns nothing, and the
       new sentence names the opt-in; `task check-claims` (or the claims gate the
       README is bound to) is green.
-- [ ] **1.2 Narrow the non-goal (`README.md:218`).** "Runtime GUI / web dashboard"
+- [x] **1.2 Narrow the non-goal (`README.md:218`).** "Runtime GUI / web dashboard"
       stays a non-goal, but an opt-in host status surface that only reads existing
       state is not one, and the sentence would block Phase 4 in review.
       verify: the row still lists the web dashboard as a non-goal and names the
