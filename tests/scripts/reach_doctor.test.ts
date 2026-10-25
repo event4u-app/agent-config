@@ -41,7 +41,6 @@ import {
     liveReadinessRow,
     main,
     parseYtDlpVersion,
-    probeFramePath,
     probeJsRuntimes,
     readConfigFlag,
     renderTable,
@@ -51,6 +50,7 @@ import {
     type ReachDoctorPayload,
     type ReadinessRow,
 } from '../../src/scripts/reach_doctor.js';
+import { probeFramePath } from '../../src/scripts/_lib/reach_capability_probe.js';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SCHEMA_PATH = path.join(
@@ -1887,6 +1887,24 @@ describe('reach:doctor — the video channel probes the frame path, not the vers
     });
 
     const realFfmpeg = spawnSync('ffmpeg', ['-version']).status === 0;
+    const ffmpegPath = (): string => spawnSync('sh', ['-c', 'command -v ffmpeg']).stdout.toString('utf8').trim();
+
+    it.skipIf(!realFfmpeg || !POSIX)('GIVEN a working ffmpeg but no ffprobe THEN the frame path is not-ready, naming ffprobe', () => {
+        const row = probeFramePath(ffmpegPath(), null);
+        expect(row.status).toBe('not-ready');
+        expect(row.detail).toMatch(/ffprobe is not on PATH/);
+    });
+
+    it.skipIf(!realFfmpeg || !POSIX)('GIVEN an ffprobe that answers -version but cannot describe a clip THEN the frame path is not-ready', () => {
+        const dir = fs.mkdtempSync(path.join(TMP, 'fake-ffprobe-'));
+        const bin = path.join(dir, 'ffprobe');
+        fs.writeFileSync(bin, '#!/bin/sh\ncase "$1" in -version) echo "ffprobe version 0"; exit 0;; esac\necho "{}"\nexit 0\n');
+        fs.chmodSync(bin, 0o755);
+        const row = probeFramePath(ffmpegPath(), bin);
+        expect(row.status).toBe('not-ready');
+        expect(row.detail).toMatch(/ffprobe did not describe/);
+    });
+
     it.skipIf(!realFfmpeg)('GIVEN the shipped video channel on a host with ffmpeg THEN ffmpeg is ready and the payload validates', () => {
         const payload = collect({ channel: 'video' });
         const channel = payload.channels[0];

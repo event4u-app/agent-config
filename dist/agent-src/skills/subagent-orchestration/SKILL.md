@@ -80,8 +80,8 @@ never auto-write — ADR-098 floor). The five rules verbatim:
 [`subagent-spawn-contract` § Worker-prompt rules](../../contexts/execution/subagent-spawn-contract.md).
 
 Open the prompt with `<!-- dispatch-role: hunter|reader|implementer|verifier|judge -->`
-when the role is known: the independence hook then reads the field instead of
-guessing from prose — the first three are never counted as evaluations.
+when the role is known: the independence hook exempts the first three from
+evaluation counting; verifier and judge are still classified from prose.
 
 When to delegate at all is [`delegation-policy`](../../rules/delegation-policy.md);
 the spawn boundary is the [`subagent-spawn-contract`](../../contexts/execution/subagent-spawn-contract.md).

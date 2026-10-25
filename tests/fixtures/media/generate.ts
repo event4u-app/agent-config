@@ -136,3 +136,26 @@ export function generateFixtures(dir: string): MediaFixtures {
 
     return { threeScene, silent, burnedIn, codeScroll, injection };
 }
+
+/** Scene cuts of `generateBurstTail`: every cut sits before this second, a static tail follows. */
+export const BURST_END = 9;
+
+/** 30 distinct block patterns of 0.3 s each, then a 21-s static tail: more cuts than the frame cap, all early. */
+export function generateBurstTail(dir: string): string {
+    let seed = 7;
+    const next = (): number => {
+        seed = (seed * 1103515245 + 12345) % 2147483648;
+        return seed / 2147483648;
+    };
+    const frames: Uint8Array[] = [];
+    for (let scene = 0; scene < 30; scene++) {
+        const f = new Uint8Array(W * H);
+        const blocks = Array.from({ length: 64 }, () => Math.round(next() * 255));
+        for (let y = 0; y < H; y++) {
+            for (let x = 0; x < W; x++) f[y * W + x] = blocks[Math.floor((y * 8) / H) * 8 + Math.floor((x * 8) / W)] as number;
+        }
+        frames.push(...hold(f, 0.3));
+    }
+    frames.push(...hold(gradient('vee'), 21));
+    return encode(frames, path.join(dir, 'burst-tail.mp4'));
+}

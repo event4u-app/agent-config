@@ -193,6 +193,7 @@ export function resolveSource(arg: string, opts: { maxArchiveBytes?: number } = 
         return { identity: abs, kind: 'local-path', license: dirLicense(abs), pin: digest, digest, tier: 'read', files };
     }
     if (MEDIA_EXTENSIONS.includes(path.extname(abs).toLowerCase())) {
+        if (!st.isFile()) throw new SourceError(`${arg}: not a regular file — a FIFO or device named like media is refused`);
         const digest = fileDigest(abs);
         return { identity: abs, kind: 'media', license: 'unknown', pin: digest, digest, tier: 'read', files: { [path.basename(abs)]: digest } };
     }
