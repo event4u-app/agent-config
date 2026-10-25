@@ -14,7 +14,10 @@ estate_growth_exempt: >-
   on blocker worker-reuse-window-not-ready, a shadow window that fills with time
   and cannot be produced inside a run (2026-10-25 reading: 96 calls, 0
   would_resume). The parent is archived in the same change, so the active count
-  drops by one while the later count rises by one.
+  drops by one while the later count rises by one. open_blockers +1: the
+  blocker is newly raised for a precondition first measured 2026-10-25 (the
+  report passes null measurements to flipReadiness, so ready true is
+  unreachable as shipped), not a repaired undercount.
 ---
 # Road to a cold start paid once — carried
 
