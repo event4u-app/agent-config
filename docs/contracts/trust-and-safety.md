@@ -9,12 +9,10 @@ keep-beta-until: 2026-08-21
 > · **Authoritative ADR:** [`ADR-018`](../decisions/ADR-018-trust-and-safety-layer.md)
 
 Phase 1 stamped every artefact with `trust.level`,
-`trust.confidence`, and `trust.human_review_required`. Phase 5
-**enforces** those fields: the installer surfaces them at selection
-time, the condenseor injects banners into compiled output, the
-runtime gates `human_review_required: true` artefacts before final
-output, and a lint catches drift. This contract is what those four
-consumers depend on.
+`trust.confidence`, and `trust.human_review_required`. Two consumers
+act on those fields today: the condenser injects banners into compiled
+output (§ 2), and a lint catches drift (§ 5). The installer confirm gate
+ADR-018 specified was never built (§ 4).
 
 ## § 1 — Trust levels
 
@@ -24,7 +22,7 @@ A closed enum on `trust.level`:
 |---------------|----------------------------------------------------------------------|
 | `core`        | Iron-Law / structural. Cannot be downgraded. Kernel rules sit here.  |
 | `professional`| Domain expertise the user opted into; no human-review floor.         |
-| `advisory`    | High-impact judgement. Installer **must** confirm; banner injected.  |
+| `advisory`    | High-impact judgement. Banner injected; a pack shipping one needs a safety-floor rule. |
 | `restricted`  | Reserved for future legal / regulated content. Same surface as advisory, stricter copy. |
 | `experimental`| Pre-stable. May be removed without ADR.                              |
 
@@ -37,8 +35,9 @@ demand review on its specific surface.
 
 ## § 2 — HRR banner
 
-The condenseor (`scripts/condense.py`) prepends every artefact whose
-frontmatter declares `trust.human_review_required: true` with:
+The condenser (`src/scripts/condense.ts`, `_inject_hrr_banner`) prepends
+the body of every artefact whose frontmatter declares
+`trust.human_review_required: true` with:
 
 ```text
 <!-- agent-config:human-review-banner -->
@@ -48,13 +47,13 @@ frontmatter declares `trust.human_review_required: true` with:
 ```
 
 - The HTML comment is the parser-stable marker
-  (`_HRR_BANNER_MARKER` in `scripts/condense.py`). Runtime detection
-  greps for this string, never the prose line.
+  (`_HRR_BANNER_MARKER` in `src/scripts/condense.ts`). Detection greps
+  for this string, never the prose line.
 - Idempotent: re-condensing a file that already carries the marker
   leaves it unchanged.
-- `<domain>` is the first pack id that ships the artefact (e.g.
-  `finance-basic`, `founder-strategy`); falls back to `core` for
-  unscoped artefacts.
+- `<domain>` is the first `-`-separated segment of the artefact's first
+  `packs:` entry (`finance-basic` → `finance`), else its first
+  `workspaces:` entry, else `unknown`.
 
 ## § 3 — Domain safety floors
 
@@ -78,30 +77,25 @@ A safety-floor rule:
   instead (alternatives, sensitivity, assumptions, jurisdiction).
 - Loads automatically alongside the rest of the pack — no opt-in.
 
-## § 4 — Installer flow
+## § 4 — Installer flow — specified, not built
 
-[`packages/core/installer/src/trust-escalation.ts`](../../packages/core/installer/src/trust-escalation.ts)
-implements the gate:
+ADR-018 specified an installer confirm gate: the pack picker shows
+`packs[].trust_summary`, selecting a pack with `advisory`/`restricted`
+artefacts asks for confirmation (`--accept-advisory=<pack-id>` in
+non-interactive mode), and the lockfile records accepted counts so an
+escalation re-asks. **None of it exists.** The file the ADR named
+(`packages/core/installer/src/trust-escalation.ts`) was never written,
+and no installer, CLI or lockfile code reads `trust_summary` or accepts
+`--accept-advisory`.
 
-1. **Display.** The pack picker reads `packs[].trust_summary` from
-   `dist/discovery/discovery-manifest.json` and renders one line per pack:
-   `Finance basic: 3 advisory · 3 professional · human-review on 1`.
-2. **Confirm.** Selecting a pack with any `advisory`/`restricted`
-   artefact triggers a confirm prompt. Non-interactive mode (CI,
-   agent-mode) requires `--accept-advisory=<pack-id>[,<pack-id>...]`
-   explicitly; absence aborts with a non-zero exit.
-3. **Agent-mode.** Emits a structured `confirm` question type with the
-   trust counts inline; the host agent must relay it verbatim per
-   `command-suggestion-policy`.
-4. **Lockfile.** `.agent-config.lock.json` records the accepted trust
-   counts per pack at install time. A later `sync` that finds the
-   manifest's `trust_summary` has **escalated** (more advisory /
-   restricted artefacts than were accepted) re-runs the confirm step
-   before applying.
+What exists: `src/scripts/build_discovery_manifest.ts` writes
+`packs[].trust_summary` into `dist/discovery/discovery-manifest.json`,
+and § 5's lint is its only reader. Building the gate is an open
+decision, not a defect in this contract.
 
 ## § 5 — Coherence lint
 
-`scripts/lint_trust_coherence.py` (wired into `ci-fast` and `ci-full`)
+`src/scripts/lint_trust_coherence.ts` (task `lint-trust-coherence`)
 asserts three invariants over `dist/discovery/discovery-manifest.json`:
 
 1. **Safety-floor presence.** Every pack with
@@ -116,13 +110,13 @@ asserts three invariants over `dist/discovery/discovery-manifest.json`:
    Iron-Law floor) and no demotion (experimental cannot guarantee it).
 
 Exits 0 clean, 1 on any violation. Tests in
-`tests/test_lint_trust_coherence.py` lock the seven failure modes.
+`tests/scripts/lint_trust_coherence.test.ts` lock the failure modes.
 
 ## § 6 — What this contract does **not** do
 
 - **Per-user permissions.** Trust is a property of artefacts, not of
-  users. The installer confirms once at install / sync time; there is
-  no runtime per-action authorisation.
+  users. There is no install-time confirmation (§ 4) and no runtime
+  per-action authorisation.
 - **Rewriting the Iron Law floor.** `non-destructive-by-default`,
   `commit-policy`, `scope-control § git-ops`, `security-sensitive-stop`
   keep their universal scope — this contract references them, never
@@ -135,10 +129,10 @@ Exits 0 clean, 1 on any violation. Tests in
 ## § 7 — References
 
 - ADR: [`ADR-018 — Trust & Safety Layer`](../decisions/ADR-018-trust-and-safety-layer.md)
-- Condenseor implementation: [`scripts/condense.py`](../../src/scripts/condense.ts)
+- Condenser implementation: [`src/scripts/condense.ts`](../../src/scripts/condense.ts)
   (`_inject_hrr_banner`, `_HRR_BANNER_MARKER`)
-- Installer implementation: [`packages/core/installer/src/trust-escalation.ts`](../../packages/core/installer/src/trust-escalation.ts)
-- Lint implementation: [`scripts/lint_trust_coherence.py`](../../src/scripts/lint_trust_coherence.ts)
+- Manifest writer: [`src/scripts/build_discovery_manifest.ts`](../../src/scripts/build_discovery_manifest.ts)
+- Lint implementation: [`src/scripts/lint_trust_coherence.ts`](../../src/scripts/lint_trust_coherence.ts)
 - Sibling contracts: [`safety-model`](safety-model.md) ·
   [`kernel-membership`](kernel-membership.md) ·
   [`ADR-013` — discovery frontmatter](../decisions/ADR-013-discovery-frontmatter-contract.md)
