@@ -342,7 +342,7 @@ waits:
       which every reuse was refused is a valid null.
       verify: `ls agents/evidence/analysis/` -> /worker-reuse-shadow-window/
       Done 2026-10-23: `agents/evidence/analysis/worker-reuse-shadow-window-2026-10-22.md` — 107 spawns, 85 complete joins, **0 `would_resume`** (reconstructed at report time, D14). A valid null for the policy as implemented; condition (c) waits for a later window by owner decision (D15).
-- [~] **3.6 Flip only under the policy's four conditions** <!-- blocked-by: worker-reuse-window-not-ready -->
+- [~] **3.6 Flip only under the policy's four conditions** <!-- blocked-by: worker-reuse-window-not-ready --> <!-- deferred-resolution: carried-to=road-to-a-cold-start-paid-once-carried -->
       (`concern-activation-policy.md:67-85`), with a council ratification
       artefact and the reverse trigger shipped in the same change. Blocking form:
       deny the `Agent` call with a reason naming the eligible worker. The resume
@@ -465,7 +465,7 @@ waits:
 - **Question:** The recycling roadmap's posed question — keep the parking, manufacture the sample, lower the floor, or close as an unmeasured null — now has a candidate replacement for its Phase 2: re-task a warm worker at task boundaries and brief a successor from the capsule (3.1, 3.4). Which option does the owner take?
 - **Recommendation:** (d) — its option 4: close Phase 2 as an unmeasured null superseded in form by Phase 3 here, keeping the Phase 0–1 schema and capsule standing as this plan's handoff format. Mid-task respawn waits on a primitive no host offers; task-boundary handoff uses one the host documents.
 - **If you do nothing:** step 6.4 stays open, every other step proceeds, and the recycling roadmap keeps its parking condition unchanged.
-- **What to do:** pick exactly one — (a) keep the parking in `agents/roadmaps/later/road-to-worker-generation-recycling.md` unchanged; or (b) manufacture the Phase 1 sample by running long tasks, recorded as manufactured; or (c) lower its exit-gate floor to the real sample, with the confidence it costs; or (d) close its Phase 2 as an unmeasured null under its step 3.3 and point it at `agents/roadmaps/road-to-a-cold-start-paid-once.md` Phase 3.
+- **What to do:** pick exactly one — (a) keep the parking in `agents/roadmaps/later/road-to-worker-generation-recycling.md` unchanged; or (b) manufacture the Phase 1 sample by running long tasks, recorded as manufactured; or (c) lower its exit-gate floor to the real sample, with the confidence it costs; or (d) close its Phase 2 as an unmeasured null under its step 3.3 and point it at `agents/roadmaps/archive/road-to-a-cold-start-paid-once.md` Phase 3.
 - **Resolved when:** the chosen option is written under that file's posed question and this entry's Status reads resolved.
 
 ### blocker: third-writable-host-env-row
@@ -480,7 +480,7 @@ waits:
 - **Resolved when:** the chosen option is recorded in `docs/decisions/` or in this entry, and this entry's Status reads resolved.
 
 ### blocker: worker-reuse-window-not-ready
-- **Status:** open — raised 2026-10-25; the flip's evidence does not exist yet and cannot be produced inside a run
+- **Status:** resolved — carried, still open, to `road-to-a-cold-start-paid-once-carried` with the steps it blocks (was: open — raised 2026-10-25; the flip's evidence does not exist yet and cannot be produced inside a run)
 - **Class:** 1 — mechanical: the window fills with time and traffic; no decision is owed until it reads ready
 - **Run:** `./scripts-run src/scripts/worker_reuse_shadow_report <checkout-root>` — prints the window and `flipReadiness`
 - **Owner:** implementer
