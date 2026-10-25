@@ -47,6 +47,7 @@ breaking-changes index files as pending is numbered major; and no comment says
       verify: the three cases in `tests/lib/major_surface.test.ts` under "a
       Pending row in BREAKING_CHANGES.md is a major surface" pass, and the bump
       suites (`impact_bump`, `release*`) stay green — 421 tests.
+      reach exempt: the flagged symbol is `UNDERIVABLE_SURFACES`, a constant that predates this step and that the shared test file checks for disjointness; the new surface is reached through `span_surfaces` from `release.ts`.
 
 ## Phase 2 — An upgrade that kept files is not an upgrade that failed
 

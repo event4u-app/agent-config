@@ -45,6 +45,7 @@ the code has moved past points at the code.
       `src/scripts/collector_daemon.ts` is, default-off behind an opt-in marker.
       verify: the contract's collector row and its Class-B paragraph name the
       file and its opt-in.
+      reach exempt: a documentation-only step that names the collector's path; the collector ships default-off behind an opt-in marker, so no production entry imports it by design.
 - [x] **2.2 The security policy names the published version.** `SECURITY.md`
       said fixes go to the latest published version and listed `main` as the
       supported row; the table now lists the published version as supported

@@ -412,8 +412,9 @@ release ledger. The residue items are closed the same way.
       rewriter, kept identical in `condense.ts` and `check_condensation.ts` —
       not the call sites, then extend the lint to commands as a ratchet at the
       count it reads.
-      verify: `rg -o '\]\(\.\./[a-z0-9-]+/command\.md' dist/agent-src/commands` finds
-      nothing, and a broken command link added in a test fixture fails the lint.
+      verify: no `../<sibling>/command.md` link remains under
+      `dist/agent-src/commands/`, and a broken command link added in a test
+      fixture fails the lint.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-22 | reviewer: claude/host -->
