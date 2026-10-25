@@ -94,8 +94,6 @@ nothing that changes its finish line:**
 ```text
 Run /roadmap:process-full on <roadmap path>, in the worktree <absolute path>.
 Your finish line is count_open == 0 for this roadmap and exactly ONE pull request.
-Before the first edit: if the queue marked this roadmap drifted or broken, run
-`agent-config roadmap:context --revalidate <slug>`, re-verify what moved, then --advance.
 Commit locally in logical chunks. Push and open the PR only after the last step
 is done — no intermediate push, PR or merge; delivery fixes go to that same PR.
 Do not flip checkboxes. For every step you finish, return the step id and its

@@ -1,3 +1,4 @@
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -38,8 +39,10 @@ describe('process-full lane brief', () => {
         expect(brief).toMatch(/finish line is count_open == 0 for this roadmap and exactly ONE pull request/);
     });
 
-    it('revalidates a drifted or broken roadmap before the first edit', () => {
-        expect(brief).toMatch(/drifted or broken, run\n`agent-config roadmap:context --revalidate <slug>`/);
+    it('leaves revalidation at run start to the loop every lane runs', () => {
+        const loopSet = fs.readFileSync(path.resolve(__dirname, '../../src/agent-src/contexts/execution/roadmap-process-loop-set.md'), 'utf-8');
+        expect(loopSet).toMatch(/At run start and on resume the same check runs before the first mutation/);
+        expect(loopSet).toMatch(/freshness/);
     });
 
     it('forbids intermediate pushes and self-flipped boxes', () => {

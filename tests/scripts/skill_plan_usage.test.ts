@@ -32,6 +32,7 @@ afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
 describe('parsePlan', () => {
     it('reads uses and waived lines per step, and flags a reason outside the closed set', () => {
         const plan = parsePlan(ROADMAP);
+        expect(plan.steps).toBe(3);
         expect(plan.planned).toEqual([
             { skill: 'security-audit', step: '1.1' },
             { skill: 'test-driven-development', step: '1.1' },

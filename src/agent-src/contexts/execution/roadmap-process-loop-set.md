@@ -200,7 +200,9 @@ probe.** Cache the new value as the run's baseline either way.
 **Differs → also revalidate the roadmap itself.** The fingerprint says the world
 moved; `agent-config roadmap:context --revalidate <slug>` says whether what this
 roadmap cites moved with it ([`roadmap-revalidation-v1`](../../../../docs/contracts/roadmap-revalidation-v1.md)).
-On resume the same check runs before the first mutation. On `drifted` or `broken`:
+At run start and on resume the same check runs before the first mutation —
+the drain queue's `freshness` field (`drifted`, `broken`) says when it will
+find something; a lane brief need not repeat it, since every lane runs this loop. On `drifted` or `broken`:
 
 1. Re-read each listed citation, label the statement that rests on it
    (`still-true | already-fixed | never-true | unverifiable`) and correct it in

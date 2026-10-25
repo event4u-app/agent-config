@@ -18,6 +18,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { reportScanned } from './_lib/scan_scope.js';
 import { defaultStore } from './report_skill_activation.js';
 
 export const WAIVER_REASONS = ['not-applicable-scope', 'unavailable-on-host', 'already-satisfied'] as const;
@@ -32,6 +33,8 @@ export interface Waiver extends PlannedSkill {
 }
 
 export interface Plan {
+    /** Steps read; a roadmap with none is a dead input, not an empty plan. */
+    steps: number;
     planned: PlannedSkill[];
     waived: Waiver[];
     invalidWaivers: Waiver[];
@@ -53,12 +56,13 @@ function validReason(reason: string): boolean {
 }
 
 export function parsePlan(text: string): Plan {
-    const plan: Plan = { planned: [], waived: [], invalidWaivers: [] };
+    const plan: Plan = { steps: 0, planned: [], waived: [], invalidWaivers: [] };
     let step: string | null = null;
     for (const line of text.split('\n')) {
         const s = STEP_RE.exec(line);
         if (s !== null) {
             step = s[1] as string;
+            plan.steps += 1;
             continue;
         }
         if (step === null) continue;
@@ -185,8 +189,19 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         process.stderr.write(`skill_plan_usage: cannot read ${roadmap}\n`);
         return 2;
     }
-    const rep = planUsage(parsePlan(text), appliedSkills(files));
-    process.stdout.write(argv.includes('--json') ? `${JSON.stringify({ transcripts: files, ...rep }, null, 2)}\n` : renderUsage(rep));
+    const plan = parsePlan(text);
+    const json = argv.includes('--json');
+    try {
+        reportScanned(
+            { gate: 'skill_plan_usage', scanned: plan.steps, units: 'roadmap steps', roots: [roadmap] },
+            json ? process.stderr.write.bind(process.stderr) : process.stdout.write.bind(process.stdout),
+        );
+    } catch (err) {
+        process.stderr.write(`${err instanceof Error ? err.message : String(err)}\n`);
+        return 2;
+    }
+    const rep = planUsage(plan, appliedSkills(files));
+    process.stdout.write(json ? `${JSON.stringify({ transcripts: files, ...rep }, null, 2)}\n` : renderUsage(rep));
     return 0;
 }
 

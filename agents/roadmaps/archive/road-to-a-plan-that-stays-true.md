@@ -97,9 +97,9 @@ Evidence (read): `src/scripts/roadmap_drain_queue.ts:103`
       verify: `npx vitest run tests/scripts/analysis_validate.test.ts` reds on a fixture without `tree_pin:`
 - [x] **2.2 Execution start sees freshness.** Each drain-queue entry carries
       `freshness: fresh | drifted | broken | unpinned` from the cheap path; the
-      text render shows it; no fifth step class. The process-full lane brief
-      gains one sentence: on `drifted` or `broken`, revalidate before the first
-      mutation.
+      text render shows it; no fifth step class. On `drifted` or `broken` the
+      loop revalidates at run start before the first mutation; every lane runs
+      that loop, so the brief does not repeat it. <!-- corrected-from-reproduction: the brief sentence put process-full-all.md over the 16,000-char depth ceiling (2 chars of headroom) -->
       verify: `npx vitest run tests/scripts/roadmap_drain_queue.test.ts tests/scripts/process_full_lane_brief.test.ts`
 - [x] **2.3 Phase boundary and resume.** The context-refresh subsection of
       `roadmap-process-loop-set.md` runs `--revalidate` when the fingerprint
