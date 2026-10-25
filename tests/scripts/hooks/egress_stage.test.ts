@@ -35,6 +35,7 @@ import {
   type EgressMode,
 } from "../../../src/scripts/hooks/egress_stage.js";
 import { planPayloadShapes, type JsonObject } from "../../../src/scripts/hooks/payload_stub.js";
+import { load_agent_settings } from "../../../src/scripts/_lib/agent_settings.js";
 import { feedback_dir } from "../../../src/scripts/hooks/state_io.js";
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), "..", "..", "..", "..");
@@ -116,20 +117,46 @@ describe("mode resolution", () => {
     expect(readEgressMode(tmp)).toBe("protect");
   });
 
-  it("a layer whose own egress is off skips the cascade, and any other mode still reaches it", () => {
+  it("detects and resolves from one read, so the disk cannot answer differently afterwards", () => {
     const template = fs.readFileSync(path.join(REPO_ROOT, "src", "config", "agent-settings.template.yml"), "utf8");
     expect(template).toMatch(/^egress:\n  placeholders:\n    mode: "off"$/m);
-    // The disk says protect; the injected reader hands the egress check the
-    // template. "off" can then only come from the cascade never being read.
+    // The disk says protect; the injected reader is the only read there is.
     fs.writeFileSync(path.join(tmp, ".agent-settings.yml"), "egress:\n  placeholders:\n    mode: protect\n");
     const view = (text: string) => (p: string): string => {
       if (p === path.join(tmp, ".agent-settings.yml")) return text;
       throw Object.assign(new Error("absent"), { code: "ENOENT" });
     };
     expect(readEgressMode(tmp, view(template))).toBe("off");
-    // A layer that sets another mode, or does not parse, is not skipped.
-    expect(readEgressMode(tmp, view(template.replace('mode: "off"', "mode: observe")))).toBe("protect");
+    expect(readEgressMode(tmp, view(template.replace('mode: "off"', "mode: observe")))).toBe("observe");
     expect(readEgressMode(tmp, view(template + "\negress: [unclosed\n"))).toBe("protect");
+  });
+
+  it("merges every layer the way the settings cascade does", () => {
+    // The project root anchors the chain; a nested cwd adds a deeper layer.
+    fs.mkdirSync(path.join(tmp, ".git"));
+    const sub = path.join(tmp, "pkg");
+    fs.mkdirSync(sub);
+    const shapes = [
+      undefined,
+      "egress:\n  placeholders:\n    mode: protect\n",
+      'egress:\n  placeholders:\n    mode: "off"\n',
+      "egress:\n  placeholders: {}\n",
+      "egress: on\n",
+      "egress:\n  placeholders:\n    mode: observe\n    other: 1\n",
+      "# names egress only in a comment\nscreenshots: {}\n",
+      "egress:\n  placeholders:\n    mode: Protect\n",
+    ];
+    for (const outer of shapes) {
+      for (const inner of shapes) {
+        for (const [dir, text] of [[tmp, outer], [sub, inner]] as const) {
+          const f = path.join(dir, ".agent-settings.yml");
+          if (text === undefined) fs.rmSync(f, { force: true });
+          else fs.writeFileSync(f, text);
+        }
+        const viaCascade = resolveEgressMode(load_agent_settings({ cwd: sub }));
+        expect(readEgressMode(sub), JSON.stringify({ outer, inner })).toBe(viaCascade);
+      }
+    }
   });
 
   it("a thrown kill switch is off whatever the settings say", () => {

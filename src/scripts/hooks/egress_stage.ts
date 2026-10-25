@@ -16,7 +16,7 @@ import * as path from "node:path";
 
 import { parse as parseYaml } from "yaml";
 
-import { _resolve_cascade_paths, load_agent_settings } from "../_lib/agent_settings.js";
+import { _resolve_cascade_paths } from "../_lib/agent_settings.js";
 import type { EgressClass } from "../_lib/egress_rules.js";
 import type { TokenScope } from "../_lib/egress_token.js";
 import { isEnvKillSwitchActive } from "../_lib/env_kill_switch.js";
@@ -116,39 +116,59 @@ export function resolveEgressMode(settings: unknown): EgressMode {
 /** Any spelling of the key — block, flow or quoted — contains the word. */
 const EGRESS_WORD = /\begress\b/;
 
+/** The cascade's merge rule: plain objects merge key by key, anything else replaces. Mutates parsed layers, which are discarded. */
+function mergeInto(dst: JsonObject, src: JsonObject): void {
+  for (const [k, v] of Object.entries(src)) {
+    const cur = dst[k];
+    if (isObject(v) && isObject(cur)) mergeInto(cur, v);
+    else dst[k] = v;
+  }
+}
+
 /**
- * Every project settings layer the cascade would read; the user-global layer
- * cannot carry `egress` (it is not on MERGEABLE_KEYS). A layer without the word
- * is skipped unparsed. A layer that names it is parsed, and is skipped too when
- * its own `egress` resolves to `off` — the installer writes the full template,
- * which opens `egress:` with mode `off`, so before this every installed project
- * paid the cascade on top of the parse (template: 26.0 ms cold / 9.9 ms warm,
- * 13.9 / 6.1 of it the cascade). Only a layer that sets another mode reaches
- * the cascade, which settles precedence between layers. `broken` means a layer
- * exists but cannot be read, or names `egress` and does not parse; the cascade
- * would read either as empty and fall to `off`.
+ * The mode, read from ONE read of every project settings layer the cascade
+ * would read, merged in the cascade's order with its rule. The user-global
+ * layer cannot carry `egress` (it is not on MERGEABLE_KEYS), the template's
+ * default is `off`, and no rename maps onto the key, so the merged `egress` of
+ * the project layers is the cascade's.
+ *
+ * Detection and resolution share this one read. The previous path read every
+ * layer to look for the word and then ran the full cascade, which read them
+ * again — 26.0 ms cold / 9.9 ms warm on the template the installer writes into
+ * every project, because that template opens `egress:` with mode `off`. A
+ * second read is also a second answer: a layer changed between the two could
+ * be judged by one and resolved by the other.
+ *
+ * No layer naming the word: `off`, unparsed, as before. Otherwise every layer is
+ * parsed. A layer that exists and cannot be read, or names the word and does not
+ * parse, is `protect`; a layer without the word that does not parse is read as
+ * empty, as the cascade reads it.
  */
-function egressLayers(workspaceRoot: string, readFile: (p: string) => string): "none" | "named" | "broken" {
-  let named = false;
+function egressFromLayers(workspaceRoot: string, readFile: (p: string) => string): EgressMode {
+  const texts: string[] = [];
   for (const p of _resolve_cascade_paths(workspaceRoot, null)) {
-    let text: string;
     try {
-      text = readFile(p);
+      texts.push(readFile(p));
     } catch (exc) {
       // Only a missing layer is skipped; a layer that exists and cannot be read could hold the mode.
       const code = (exc as NodeJS.ErrnoException).code;
       if (code === "ENOENT" || code === "ENOTDIR") continue;
-      return "broken";
+      return "protect";
     }
-    if (!EGRESS_WORD.test(text)) continue;
-    try {
-      if (resolveEgressMode(parseYaml(text, { version: "1.1" })) === "off") continue;
-    } catch {
-      return "broken";
-    }
-    named = true;
   }
-  return named ? "named" : "none";
+  if (!texts.some((t) => EGRESS_WORD.test(t))) return "off";
+  const merged: JsonObject = {};
+  for (const text of texts) {
+    let doc: unknown;
+    try {
+      doc = parseYaml(text, { version: "1.1" });
+    } catch {
+      if (EGRESS_WORD.test(text)) return "protect";
+      continue;
+    }
+    if (isObject(doc) && "egress" in doc) mergeInto(merged, { egress: doc["egress"] } as JsonObject);
+  }
+  return resolveEgressMode(merged);
 }
 
 /**
@@ -161,16 +181,8 @@ export function readEgressMode(
   readFile: (p: string) => string = (p) => fs.readFileSync(p, "utf8"),
 ): EgressMode {
   if (isEnvKillSwitchActive(EGRESS_STAGE_KILL_SWITCH)) return "off";
-  let layers: "none" | "named" | "broken";
   try {
-    layers = egressLayers(workspaceRoot, readFile);
-  } catch {
-    return "protect";
-  }
-  if (layers === "none") return "off";
-  if (layers === "broken") return "protect";
-  try {
-    return resolveEgressMode(load_agent_settings({ cwd: workspaceRoot }));
+    return egressFromLayers(workspaceRoot, readFile);
   } catch {
     return "protect";
   }
