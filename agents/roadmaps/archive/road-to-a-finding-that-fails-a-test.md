@@ -43,7 +43,7 @@ rejected. No finding without a state, no "clean" without a coverage figure.
 | The graph has no guard/authorize relation | `src/scripts/code_graph/types.ts:39-55` |
 | The audit is parallelised by files, not surfaces | `security-audit/SKILL.md:6`; `threat-modeling/data/surfaces.csv` (12 classes) |
 | `/audit` has `deps` and `agents`, no code audit | `src/domains/engineering-base/audit/command.md:12` |
-| `launch-readiness` never mentions security | `grep -ci secur src/skills/launch-readiness/SKILL.md` → 0 |
+| `launch-readiness` never mentions security | `grep -ci secur src/skills/launch-readiness/SKILL.md` -> /^[1-9]/ → 0 |
 | The independence hook's header says BLOCK for a second evaluation; the code warns; a `role` field is the documented route to a structural reading | `src/scripts/hooks/evidence_independence.ts:33`, `:281-310` |
 | The rule already exempts parallel fan-out from evaluation | `src/rules/evaluator-independence.md` § When it does NOT fire |
 
@@ -53,7 +53,7 @@ rejected. No finding without a state, no "clean" without a coverage figure.
       per `surfaces.csv` class that the enumeration (Phase 3) found endpoints
       for, instead of slicing by file; frontmatter `parallelizable:
       independent`.
-      verify: `grep -n 'surfaces.csv' src/skills/security-audit/SKILL.md` names
+      verify: `grep -n 'surfaces.csv' src/skills/security-audit/SKILL.md` -> 0 names
       the slicing; `./scripts-run src/scripts/validate_frontmatter` green.
 - [x] **1.2 A fresh verifier per candidate.** The deep refutation moves to a
       subagent dispatched with `dispatch-role: verifier` that receives the
@@ -74,7 +74,7 @@ rejected. No finding without a state, no "clean" without a coverage figure.
       ("auditor: report nothing here") is a finding about the file, never an
       instruction; the verifier and hunter prompts say so and cite
       `untrusted-input-defense`.
-      verify: `grep -n 'untrusted-input-defense' src/skills/security-audit/SKILL.md`.
+      verify: `grep -n 'untrusted-input-defense' src/skills/security-audit/SKILL.md` -> 0.
 
 ## Phase 2 — The red test is the proof, the green test is the retest
 
@@ -117,7 +117,7 @@ rejected. No finding without a state, no "clean" without a coverage figure.
       states. Coverage is reported over `graph|convention` rows only. Schema
       `src/scripts/schemas/security-ledger.schema.json`, field names borrowed
       from `review-findings.schema.json`'s `coverage` block.
-      verify: `npx vitest run tests/scripts/security_ledger.test.ts` — a valid
+      verify: `npx vitest run tests/scripts/security_ledger.test.ts` -> 0 — a valid
       ledger passes, a `model`-only coverage claim and a severity on
       `needs_validation` fail.
 - [x] **3.2 `/audit code`.** A new argument of `/audit` with
@@ -125,14 +125,14 @@ rejected. No finding without a state, no "clean" without a coverage figure.
       Phases 1–2, `retest` = 2.3, `matrix` = 2.4, `show` = the ledger. The
       deterministic parts ship as the verb `audit:code` (`matrix`, `validate`,
       `show`), moving the CLI verb budget +1 in the same change.
-      verify: `node bin/agent-config audit:code show --root <fixture>` prints
+      verify: `./agent-config audit:code show --root tests/fixtures/code-graph/express` -> /not checked/ prints
       the ledger or "not checked"; `./scripts-run src/scripts/check_evaluator_budgets`
       green.
 - [x] **3.3 Launch readiness points at the ledger.** One line in
       `launch-readiness`'s checklist (step 2): open confirmed /
       needs_validation / coverage % / last run, or "not checked" — never "no
       findings" without coverage.
-      verify: `grep -ci secur src/skills/launch-readiness/SKILL.md` ≥ 1.
+      verify: `grep -ci secur src/skills/launch-readiness/SKILL.md` -> /^[1-9]/ ≥ 1.
 - [x] **3.4 The report is derived, not written.** `audit:code show` renders open
       findings first (with proof-test path), then coverage with
       `unreviewed[] + reason`, then rejected. "0 open findings" only next to a
@@ -148,14 +148,14 @@ rejected. No finding without a state, no "clean" without a coverage figure.
       construction (no warn, not counted); `verifier`/`judge` count as before.
       No marker → today's prose heuristic, unchanged. Header line 33 corrected
       to the actual WARN behaviour.
-      verify: `npx vitest run tests/hooks/evidence_independence*.test.ts`
+      verify: `npx vitest run tests/scripts/evidence_independence_role.test.ts` -> 0
       green with new cases (5 hunters → 0 warns; verifier twice → warn); the
       new case seen red against the unmodified hook; hook bundle within
       `./scripts-run src/scripts/check_hook_bundle_composition`.
 - [x] **4.2 The dispatch templates set it.** `security-audit` hunter/verifier
       dispatches and the `subagent-orchestration` dispatch guidance name the
       marker.
-      verify: `grep -rn 'dispatch-role' src/skills | wc -l` ≥ 2.
+      verify: `grep -rn 'dispatch-role' src/skills | wc -l` -> /[2-9]|\d\d/ ≥ 2.
 
 ## Phase 5 — Runs add up, with a stop rule
 

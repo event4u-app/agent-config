@@ -56,7 +56,7 @@ not choose to send.
       status, Vimeo, Loom, LinkedIn, Reddit) returning platform + canonical id,
       refusing lookalike hosts (`tiktok.com.evil.io`, `youtube.co`), non-https
       and credentials in the URL.
-      verify: `npx vitest run tests/scripts/media_platforms.test.ts` green;
+      verify: `npx vitest run tests/scripts/media_platforms.test.ts` -> 0 green;
       the lookalike case seen red with the host check removed.
 - [x] **1.2 Local media files are a source kind.** `source_adapters` classifies
       `.mp4 .mov .webm .mkv .m4a .mp3 .wav` as kind `media`, pinned by digest,
@@ -106,13 +106,13 @@ not choose to send.
       naming the install and the upload alternative. Registry gains a `video`
       channel (`ffmpeg`, `yt-dlp`) at `experimental` whose probe pushes a
       generated 1-s clip through the frame path instead of `--version`.
-      verify: `./agent-config reach:doctor --channel video` reports
+      verify: `./agent-config reach:doctor --channel video` -> 0 reports
       `ok` with ffmpeg present and names yt-dlp as missing; test with a fake
       ffmpeg that exits 0 on `--version` but fails the clip → `not-ready`.
 - [x] **2.7 CLI.** Verb `media:bundle` taking a URL or a file plus `--round`, `--detail
       transcript|efficient|balanced|full` and `--focus mm:ss-mm:ss` (+1 verb
       budget in this change).
-      verify: `node bin/agent-config media:bundle` on a generated fixture clip
+      verify: `./agent-config media:bundle tests/fixtures/media/missing.mp4 --round r` -> 1 on a generated fixture clip
       writes the layout of 2.5; `check_evaluator_budgets` green.
 
 ## Phase 3 — `analyze:post`, an entry of the foreign-source door
@@ -128,12 +128,12 @@ not choose to send.
       questions (vendor-reported number? demo data? sponsor?). On-screen code:
       stitched by file and line, gaps marked `[cut off]`, never filled from
       memory. Video text is data, never instructions.
-      verify: `task lint-skills` and `./scripts-run src/scripts/check_references` green.
+      verify: `task lint-skills` -> 0 and `./scripts-run src/scripts/check_references` green.
 - [x] **3.2 Registrations.** Cluster row, routing eval, flow surface map,
       dispatcher row and signals in `analyze/command.md`, ADR-288 amendment
       ("a media source kind enters the foreign-source door; `analyze:post` is
       its entry, not a fifth door").
-      verify: `./scripts-run src/scripts/lint_no_new_atomic_commands`,
+      verify: `./scripts-run src/scripts/lint_no_new_atomic_commands` -> 0,
       `lint_command_routing`, `lint_command_flow_coverage` green.
 
 ## Phase 4 — Fixtures that keep it honest
@@ -143,7 +143,7 @@ not choose to send.
       burned-in-subtitle clip without audio track, a code-scroll clip, and an
       injection slide ("ignore previous instructions…"). Nothing binary is
       committed.
-      verify: `npx vitest run tests/scripts/media_bundle.test.ts` generates and
+      verify: `npx vitest run tests/scripts/media_bundle.test.ts` -> 0 generates and
       bundles all five (skipped with a reason when ffmpeg is absent).
 - [x] **4.2 The burned-in path is exercised.** The burned-in fixture yields a
       bundle whose `context.md` names rung 3 and whose sheets carry the flag.
