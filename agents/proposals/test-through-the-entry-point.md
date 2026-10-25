@@ -131,12 +131,14 @@ after them.
 
 ## 9. Gate verdict
 
-`proposal:check` returns PASS at `stage: proposed`. The change was reviewed by
-the council's modification review named in `ratification_record:`. The
-proposal stays at `stage: proposed`: under ADR-281 as amended a package
-proposal reaches `stage: gated` only with an `owner_authorization:` bound to
-the same digest, and that approval is the owner's act, not an agent's. Writing
-`gated` here would be an agent asserting it.
+`proposal:check` returns PASS at `stage: proposed`. The council's modification
+review named in `ratification_record:` **refused** the change in three rounds,
+each split (anthropic `ratified`, openai `refused`), so the skill edit is not in
+the tree — a council refusal fails closed under ADR-281 as amended — and the
+owner decides, per the record. The proposal stays at `stage: proposed`: it
+could reach `stage: gated` only on a passing record and an
+`owner_authorization:` bound to the same digest, and that approval is the
+owner's act, not an agent's.
 
 ## 10. Upstream PR
 
