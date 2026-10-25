@@ -200,8 +200,8 @@ should not simply stop.)
 
 - **Moved out of § What stays:** the per-day call guards for subscription seats
   and for the team transport, as *shipped defaults*. `cli_call_budget` no longer
-  seeds 50 calls per provider, and `ai_team.max_calls_per_day` defaults to
-  `null`. An unset guard books into the counter and never refuses on count.
+  seeds 50 calls per provider, and `ai_team.max_calls_per_day` ships
+  unset. An unset guard books into the counter and never refuses on count.
 - **Still in § What stays:** a guard the user writes keeps its contract exactly,
   `0` included — the principle this record applies to money, applied to counts.
 - **Not an amount bound, and kept:** `api_on_quota: false` and the run-scoped

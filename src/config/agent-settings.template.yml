@@ -948,10 +948,10 @@ ai_team:
   # daily UTC reset) — the counter tracks MACHINE-WIDE use across ALL
   # subscriptions/profiles on this machine (an `agent-switch` profile
   # switch does NOT get its own counter; the bucket is deliberately one
-  # per machine, never parallel counts). null (default) = counted, never
+  # per machine, never parallel counts). Unset (default) = counted, never
   # refused — the provider's own quota is the limit. A number is a
   # team-side ceiling read against that shared bucket; 0 = block all team calls.
-  max_calls_per_day: null
+  # max_calls_per_day: 50
 
   # Managed governance of the codex plugin's Stop-hook Review Gate
   # (road-to-team-mode Phase 4). The gate itself stays upstream's; these

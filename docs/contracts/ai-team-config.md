@@ -44,7 +44,7 @@ parity test).
 ai_team:
   model: <string>                 # default 'auto'
   allow_delegate: <bool>          # second opt-in for the write path, default false
-  max_calls_per_day: <int >= 0 | null>  # default null = counted, never refused
+  max_calls_per_day: <int >= 0>   # optional; unset = counted, never refused
   review_gate:                    # managed governance of the plugin's Stop-hook Review Gate
     managed: <bool>               # default false = byte-identical pre-Phase-4 behavior
     max_consecutive_blocks: <int >= 1>  # default 3; circuit-breaker loop bound
@@ -77,7 +77,7 @@ ai_team:
 |---|---|---|---|
 | `model` | string | `'auto'` | Model handed to the codex CLI. `'auto'` = pass **no** `--model` flag; the codex CLI's own default applies. Any other value passes through **verbatim** as `--model <value>`. |
 | `allow_delegate` | bool | `false` | Second opt-in for the **only** wrapper that delegates write access (`/team:delegate`). Refuses until BOTH `/team` is available (codex CLI installed + authenticated, not halted) AND `allow_delegate` is `true`. |
-| `max_calls_per_day` | int ≥ 0 or null | `null` | Optional per-day ceiling on team calls, read against the **shared** `cli_call_budget` openai bucket (see § Quota). `null` = counted, never refused — the provider's own quota is the limit (ADR-279 addendum, 2026-10-22). `0` blocks all team calls. |
+| `max_calls_per_day` | int ≥ 0, optional | unset | Optional per-day ceiling on team calls, read against the **shared** `cli_call_budget` openai bucket (see § Quota). unset = counted, never refused — the provider's own quota is the limit (ADR-279 addendum, 2026-10-22). `0` blocks all team calls. |
 | `review_gate.managed` | bool | `false` | Managed governance of the codex plugin's Stop-hook Review Gate (Phase 4). `false` = no counting, no circuit breaker — the Stop path is byte-identical to pre-Phase-4 dispatch. `true` = consecutive BLOCK verdicts are counted per session (first-line `ALLOW:`/`BLOCK:` contract of the gate transcript; anything else is honestly `UNKNOWN` and never counted) and the circuit breaker trips at the bound. Independent of `/team`'s own availability — governs the codex PLUGIN's own Stop-hook loop, which upstream runs regardless of our codex-CLI-availability check. |
 | `review_gate.max_consecutive_blocks` | int ≥ 1 | `3` | Circuit-breaker bound. At this many CONSECUTIVE BLOCKs in one session a visible notice is injected **exactly once** and the managed layer stops re-blocking — the user decides, never an infinite Claude↔Codex loop. An ALLOW verdict resets the counter. Unknown keys inside `review_gate` are rejected fail-closed, same as the parent block. |
 
@@ -220,7 +220,7 @@ Plugin text is summarized INTO the envelope and preserved verbatim beneath — n
    and the setup hint is always shown),
 3. `allow_delegate` is not a boolean,
 4. `model` is not a non-empty string,
-5. `max_calls_per_day` is neither `null` nor a non-negative integer (booleans rejected).
+5. `max_calls_per_day` is set and not a non-negative integer (booleans rejected; `null` reads as unset).
 
 An **absent** `ai_team` block is not an error — it yields the defaults
 (`AI_TEAM_DEFAULTS`).

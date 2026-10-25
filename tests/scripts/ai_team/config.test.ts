@@ -106,7 +106,7 @@ describe('build_ai_team_config — defaults', () => {
         expect(template).toMatch(/^ai_team:$/m);
         expect(template).toMatch(/^ {2}model: auto$/m);
         expect(template).toMatch(/^ {2}allow_delegate: false$/m);
-        expect(template).toMatch(/^ {2}max_calls_per_day: null$/m);
+        expect(template).toMatch(/^ {2}# max_calls_per_day: 50$/m);
         expect(template).not.toMatch(/^ {2}suppress_setup_hint:/m);
         expect(template).toMatch(/^ {2}review_gate:$/m);
         expect(template).toMatch(/^ {4}managed: false$/m);

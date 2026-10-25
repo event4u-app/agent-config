@@ -680,13 +680,14 @@ concerns:
   # The one ask before AC fans out on metered money: the first Agent/Task spawn
   # of a session that may bill per token, with no billing grant, gets the host's
   # native `ask` (permission_gate emits an `ask` vote as the host ask). Once per
-  # session, never a deny, never an amount. Same script as `quota-notice`.
+  # session, never a deny, never an amount — it cannot refuse, so its effect is
+  # `notification`, not `permission`. Same script as `quota-notice`.
   metered-spawn-ask:
     script: src/scripts/quota_notice_hook.ts
     args: ['--ask']
     fail_closed: false
     severity: advisory
-    effect: permission
+    effect: notification
     tools: [Agent, Task]
   # road-to-install-path-convergence Phase 4 — duplicate-surface probe.
   # Reads src/config/surface-matrix.yml, existence-checks declared duplicate

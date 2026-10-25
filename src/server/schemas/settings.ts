@@ -361,8 +361,8 @@ export const settingsSchema = z.object({
         allow_delegate: z.boolean().default(false).describe(
             'Second opt-in for the only wrapper that delegates write access (/team:delegate). false (default) = delegate refuses even when /team itself is available. Availability (codex CLI installed + authenticated) is necessary but not sufficient — this key must ALSO be true before delegation is reachable.',
         ),
-        max_calls_per_day: z.number().int().min(0).nullable().default(null).describe(
-            'Optional per-day cap on team calls, read against the EXISTING cli_call_budget openai bucket (~/.event4u/agent-config/cli-calls.json, daily UTC reset) — one subscription, one counter, never a parallel count. null (default) = counted, never refused; the provider quota is the limit. 0 = block all team calls.',
+        max_calls_per_day: z.number().int().min(0).optional().describe(
+            'Optional per-day cap on team calls, read against the EXISTING cli_call_budget openai bucket (~/.event4u/agent-config/cli-calls.json, daily UTC reset) — one subscription, one counter, never a parallel count. Unset (default) = counted, never refused; the provider quota is the limit. 0 = block all team calls.',
         ),
         review_gate: z.object({
             managed: z.boolean().default(false).describe(
@@ -372,7 +372,7 @@ export const settingsSchema = z.object({
                 'Circuit-breaker bound: after this many CONSECUTIVE BLOCK verdicts in one session, a visible notice is injected exactly once and the managed layer stops re-blocking — the user decides, never an infinite Claude↔Codex loop. An ALLOW verdict resets the counter. Positive integer.',
             ),
         }).prefault({ managed: false, max_consecutive_blocks: 3 }),
-    }).prefault({ model: 'auto', allow_delegate: false, max_calls_per_day: null, review_gate: { managed: false, max_consecutive_blocks: 3 } }),
+    }).prefault({ model: 'auto', allow_delegate: false, review_gate: { managed: false, max_consecutive_blocks: 3 } }),
     emergency: z.object({
         orchestration_halt: z.boolean().default(false).describe(
             'The one audited incident switch over the always-on orchestration stack (subagents, council, team). NOT an activation gate: false (default) = the stack runs normally. true = halted; arming requires no ceremony. Disarming (returning to false) requires orchestration_halt_justification to be a non-empty string. Both transitions emit one telemetry line.',

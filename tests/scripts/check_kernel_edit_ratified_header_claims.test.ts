@@ -30,7 +30,9 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
  * advisory in the manifest and cannot deny. `block-credential-reads` (bound
  * 2026-10-18) can deny, and refuses only a read of a credential-class file or of
  * the process environment; the case below sends the same three envelopes through
- * its `verdictFor` for both paths and asserts no refusal.
+ * its `verdictFor` for both paths and asserts no refusal. `metered-spawn-ask`
+ * (bound 2026-10-25) is advisory and filtered to `Agent`/`Task` by its manifest
+ * `tools:`, so an edit of either path never reaches it, and it only ever asks.
  *
  * When the last case fails because a concern was bound: if it can deny (its
  * manifest `severity` is `blocking`), send an edit of both paths through the
@@ -50,6 +52,7 @@ const REVIEWED_PRE_TOOL_USE = [
     'design-slop',
     'evidence-independence',
     'memory-recall',
+    'metered-spawn-ask',
     'one-question-per-ask',
     'reread-guard',
     'rtk-wrap',

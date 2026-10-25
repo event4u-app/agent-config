@@ -9,6 +9,7 @@ and keep the full search — this file only adds candidates to it.
 
 | slug | dir | status | owns |
 |---|---|---|---|
+| road-to-a-quota-the-user-sees-coming | active | ready | A user of AC on Claude Code is told — in their own terminal, never in the model's context — … |
 | road-to-a-setup-that-decides-itself | active | ready | A consumer never sets, reads or reasons about how the package loads its rule layer. |
 | road-to-a-step-that-costs-what-it-changes | active | ready | A roadmap step costs in proportion to its change, and nothing a step needs is skipped. |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe | active | ready | A global install stays on a supported, patched release without ever mutating a running session, moving a team's pin, or … |
@@ -153,6 +154,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-path-route-under-delivery | stubs | — | road to a path-activation route under `delivery` |
 | road-to-a-primary-goal-that-is-asked-for | stubs | — | road to a primary goal that is asked for |
 | road-to-a-proposal-that-can-be-adopted | stubs | — | eleven prepared proposals arrived and none was adoptable as written |
+| road-to-a-quota-notice-that-earned-its-bands | stubs | — | road to a quota notice that earned its bands |
 | road-to-a-route-that-names-its-guard | stubs | — | a route that names its guard |
 | road-to-a-security-chain-measured | stubs | — | a security chain that is measured, not asserted |
 | road-to-a-visibility-sync-that-can-write | stubs | — | road to a visibility sync that can actually write |
