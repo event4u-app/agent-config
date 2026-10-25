@@ -31,7 +31,7 @@ detector that asks it.
       open. The fallback names `src/skills`.
       verify: a test asserts the reported path for an unknown skill sits under
       `src/skills/`, seen red before the fix.
-      <!-- verify: npm run test:ts -- tests/scripts/skill_trigger_eval.test.ts -->
+      <!-- verify: npm run test:ts -- tests/scripts/skill_trigger_eval.test.ts -> 0 -->
       <!-- Sibling sweep: 10 more `.agent-src.uncondensed` joins in 7 files; the install.ts
       hits detect a legacy layout on purpose, the rest are pre-existing and not this step. -->
 
@@ -69,7 +69,8 @@ detector that asks it.
       verify: unit tests over a fixture matrix pin each count, and an unknown
       `--arm` value exits 2. Replacing `routeDecision` with the bare ranker
       turns the fire and false-fire tests red.
-      <!-- verify: npm run test:ts -- tests/scripts/measure_skill_ranker_baseline.test.ts -->
+      reach exempt: a measurement CLI run by a maintainer; no production entry imports it by design, and the hook it measures is reached through `routeDecision` unchanged.
+      <!-- verify: npm run test:ts -- tests/scripts/measure_skill_ranker_baseline.test.ts -> 0 -->
 - [x] **2.2 The reading, recorded where the routing roadmaps read it.** Run the
       arm at this commit and write the numbers into
       `agents/evidence/analysis/skill-routing-precision-2026-09.md` as a dated
@@ -97,7 +98,7 @@ detector that asks it.
       Landed: 19 fixture cases; 370 tests across the callers' suites; the
       tampering self-test 18/18; the bundle grew 33 B to 1,554,955 B of a
       1,554,977 B ceiling.
-      <!-- verify: npm run test:ts -- tests/scripts/test_path.test.ts -->
+      <!-- verify: npm run test:ts -- tests/scripts/test_path.test.ts -> 0 -->
 
 ## Declined or owned elsewhere, with the reason
 
