@@ -8,8 +8,10 @@
  * installer read them. What this module adds is the check that the two agree,
  * and the delta a release prints.
  */
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 
 import { parse as parseYaml } from 'yaml';
 
@@ -288,4 +290,39 @@ export function renderMeasuredSection(
         }
     }
     return lines.length === 0 ? [] : ['### Measured in this release', '', ...lines];
+}
+
+/**
+ * The release's measured section, computed from git: the table at `HEAD`
+ * against the table at `prev` (road-to-a-policy-the-measurements-write 3.1).
+ * Best-effort like the head pre-fill: a read failure drops the section, never
+ * the release.
+ */
+export function measuredSection(cwd: string, prev: string | null, today: string): string[] {
+    const show = (ref: string) => spawnSync('git', ['show', `${ref}:${POLICY_REL}`], { cwd, encoding: 'utf8' });
+    try {
+        const head = show('HEAD');
+        if (head.status !== 0) {
+            return [];
+        }
+        const current = parsePolicy(head.stdout);
+        let before: PolicyTable | null = null;
+        if (prev) {
+            const known = spawnSync('git', ['rev-parse', '--verify', '--quiet', `${prev}^{commit}`], { cwd, encoding: 'utf8' });
+            if (known.status !== 0) {
+                // An unfetched tag is not "no table at the previous release":
+                // claiming the table was introduced would hide every real move.
+                process.stderr.write(`warning: previous tag ${prev} is not available locally; measured section skipped\n`);
+                return [];
+            }
+            const shown = show(prev);
+            if (shown.status === 0) {
+                before = parsePolicy(shown.stdout);
+            }
+        }
+        return renderMeasuredSection(policyDelta(before, current), overdueRows(current, today), before === null ? current : null);
+    } catch (err) {
+        process.stderr.write(`warning: could not render the measured section (${(err as Error).message})\n`);
+        return [];
+    }
 }

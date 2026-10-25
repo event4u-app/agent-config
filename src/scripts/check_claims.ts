@@ -45,6 +45,7 @@ import {
     parse_exec_pointer,
     run_exec_evidence,
 } from './_lib/exec_evidence.js';
+import { asOf, localIsoDate } from './_lib/as_of.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 import {
@@ -461,10 +462,9 @@ export function render_overdue(overdue: readonly LedgerEntry[]): string {
     return `${lines.join('\n')}\n`;
 }
 
-/** Local calendar date, as the release generator's `todayIso` reads it. */
-export function local_today(now: Date = new Date()): string {
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+/** Local calendar date of the as-of seam, as the release generator reads it. */
+export function local_today(now: Date = asOf()): string {
+    return localIsoDate(now);
 }
 
 export function render_status(ledger: Map<string, LedgerEntry>, today: string): string {
@@ -1211,11 +1211,11 @@ function _isCliEntry(): boolean {
  */
 function selfTest(): number {
     const roots: string[] = [];
-    // FOUR, not three: this gate imports `gate_self_test.ts` for the harness
-    // it is running right now, and a missing fourth lib fails as a module
-    // resolution error in EVERY case at once — which reads as the detection
-    // having broken rather than the fixture being incomplete.
-    const libs = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts'];
+    // Every lib this gate imports, `gate_self_test.ts` and `as_of.ts` included:
+    // a missing one fails as a module resolution error in EVERY case at once —
+    // which reads as the detection having broken rather than the fixture being
+    // incomplete.
+    const libs = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts'];
 
     const fixture = (files: Record<string, string>): number => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'check-claims-selftest-'));

@@ -223,6 +223,12 @@ export function asOfBanner(override?: string): string {
     return `as-of: ${r.at.toISOString()} (rung=${r.rung}, reproducible=${String(r.reproducible)})`;
 }
 
+/** `YYYY-MM-DD` of `d` in the local calendar — a formatter, never a clock read. */
+export function localIsoDate(d: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 /** Test seam — drops the memo so a self-test can exercise more than one rung. */
 export function _resetAsOfCacheForTests(): void {
     cached = null;

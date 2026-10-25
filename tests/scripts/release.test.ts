@@ -24,12 +24,12 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { measuredSection } from '../../src/scripts/_lib/dispatch_policy.js';
 import { preflightPosition } from '../../src/scripts/_lib/release_position.js';
 import { _TEST_LIST_ARGV } from '../../src/scripts/release_publication.js';
 
 import {
     RELEASE_HEAD_CAP_LINES,
-    _measured_section,
     dedupe_commit_lines,
     release_head_line_count,
     render_release_head,
@@ -1372,7 +1372,7 @@ describe('assert_scheduled_deprecations_clear', () => {
     });
 });
 
-describe('_measured_section', () => {
+describe('measuredSection', () => {
     const dirs: string[] = [];
     afterEach(() => {
         for (const d of dirs.splice(0)) fs.rmSync(d, { recursive: true, force: true });
@@ -1412,13 +1412,13 @@ describe('_measured_section', () => {
     }
 
     it('lists the committed move since the tag and the overdue row', () => {
-        const text = _measured_section('v1', '2026-10-25', repo()).join('\n');
+        const text = measuredSection(repo(), 'v1', '2026-10-25').join('\n');
         expect(text).toContain('`max-parallel`: 3 → 4');
         expect(text).not.toContain('→ 9');
         expect(text).toContain('review_by 2026-01-01');
     });
 
     it('skips the section when the previous tag is not available', () => {
-        expect(_measured_section('v-missing', '2026-10-25', repo())).toEqual([]);
+        expect(measuredSection(repo(), 'v-missing', '2026-10-25')).toEqual([]);
     });
 });
