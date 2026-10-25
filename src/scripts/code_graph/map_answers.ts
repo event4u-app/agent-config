@@ -15,7 +15,7 @@ import * as path from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
 
-import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
+import { GIT_SAFE_ARGS, hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import type { FileRole, MapModel } from './map_model.js';
 import { EXT_LANG } from './types.js';
 
@@ -310,7 +310,7 @@ export interface GitFacts {
  */
 export function readGitHistory(root: string, days = GIT_WINDOW_DAYS): Map<string, GitFacts> | null {
     const git = (args: string[]): string =>
-        execFileSync('git', ['-C', root, ...args], {
+        execFileSync('git', [...GIT_SAFE_ARGS, '-C', root, ...args], {
             env: hardenedSpawnEnv(),
             encoding: 'utf-8',
             stdio: ['ignore', 'pipe', 'ignore'],

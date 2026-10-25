@@ -18,7 +18,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { load_agent_settings } from '../_lib/agent_settings.js';
-import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
+import { GIT_SAFE_ARGS, hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { projectHome } from './graph_home.js';
 import { EXT_LANG } from './types.js';
 import { validateGraph } from './validate.js';
@@ -76,7 +76,7 @@ export function consumerCandidates(root: string): string[] {
 
 function gitLastCommitEpoch(root: string): number | null {
     try {
-        const out = execFileSync('git', ['-C', root, 'log', '-1', '--format=%ct'], {
+        const out = execFileSync('git', [...GIT_SAFE_ARGS, '-C', root, 'log', '-1', '--format=%ct'], {
             env: hardenedSpawnEnv(),
             encoding: 'utf-8',
             stdio: ['ignore', 'pipe', 'ignore'],
@@ -90,7 +90,7 @@ function gitLastCommitEpoch(root: string): number | null {
 
 function commitsBehind(root: string, sha: string): number | null {
     try {
-        const out = execFileSync('git', ['-C', root, 'rev-list', '--count', `${sha}..HEAD`], {
+        const out = execFileSync('git', [...GIT_SAFE_ARGS, '-C', root, 'rev-list', '--count', `${sha}..HEAD`], {
             env: hardenedSpawnEnv(),
             encoding: 'utf-8',
             stdio: ['ignore', 'pipe', 'ignore'],
@@ -277,7 +277,7 @@ export type GraphState = 'absent' | 'fresh' | 'edited' | `behind:${number}`;
 function hasUncommittedIndexedEdit(root: string): boolean {
     let out: string;
     try {
-        out = execFileSync('git', ['-C', root, 'status', '--porcelain', '--untracked-files=all'], {
+        out = execFileSync('git', [...GIT_SAFE_ARGS, '-C', root, 'status', '--porcelain', '--untracked-files=all'], {
             env: hardenedSpawnEnv(),
             encoding: 'utf-8',
             stdio: ['ignore', 'pipe', 'ignore'],

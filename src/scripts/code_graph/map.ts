@@ -20,7 +20,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { write_atomic } from '../_lib/fs_atomic.js';
-import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
+import { GIT_SAFE_ARGS, hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { buildFromRepo, readProjectProbe } from './build.js';
 import { acquire as acquireRefreshLock, heldByThisProcess } from './refresh_lock.js';
 import { computeVerdict, graphState } from './detect.js';
@@ -92,7 +92,7 @@ export interface MapBuildResult {
 
 function gitHead(root: string): string {
     try {
-        return execFileSync('git', ['-C', root, 'rev-parse', '--short=12', 'HEAD'], {
+        return execFileSync('git', [...GIT_SAFE_ARGS, '-C', root, 'rev-parse', '--short=12', 'HEAD'], {
             env: hardenedSpawnEnv(),
             encoding: 'utf-8',
             stdio: ['ignore', 'pipe', 'ignore'],
@@ -178,7 +178,7 @@ type MapInputsArtefacts = NonNullable<Parameters<typeof buildMapModel>[1]>['arte
 
 function isGitRepo(root: string): boolean {
     try {
-        execFileSync('git', ['-C', root, 'rev-parse', '--is-inside-work-tree'], {
+        execFileSync('git', [...GIT_SAFE_ARGS, '-C', root, 'rev-parse', '--is-inside-work-tree'], {
             env: hardenedSpawnEnv(),
             stdio: ['ignore', 'ignore', 'ignore'],
         });
@@ -221,7 +221,7 @@ export function diffFiles(root: string, rev: string): string[] | null {
     if (rev.startsWith('-')) return null;
     try {
         const run = (args: string[]): string[] =>
-            execFileSync('git', ['-C', root, ...args], {
+            execFileSync('git', [...GIT_SAFE_ARGS, '-C', root, ...args], {
                 env: hardenedSpawnEnv(),
                 encoding: 'utf-8',
                 stdio: ['ignore', 'pipe', 'ignore'],
@@ -441,7 +441,7 @@ function answerQuestions(root: string, outDir: string, cachePath: string, graph:
 
 function headDate(root: string): string {
     try {
-        return execFileSync('git', ['-C', root, 'log', '-1', '--format=%cs'], {
+        return execFileSync('git', [...GIT_SAFE_ARGS, '-C', root, 'log', '-1', '--format=%cs'], {
             env: hardenedSpawnEnv(),
             encoding: 'utf-8',
             stdio: ['ignore', 'pipe', 'ignore'],

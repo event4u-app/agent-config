@@ -110,6 +110,16 @@ function isDeniedByFamily(name: string): boolean {
  *   genuinely needs one — that is an explicit, reviewable decision at the call
  *   site, never an ambient inheritance.
  */
+/**
+ * Leading git arguments for a read-only probe of a checkout this process did not
+ * create. `hardenedSpawnEnv()` strips env-borne config; these disable the exec
+ * keys the checkout's own `.git/config` can set — `core.fsmonitor` runs on
+ * `git status` and on a `git diff` against the worktree. A clean/smudge filter
+ * driver is still honoured: its name is the checkout's choice, so it cannot be
+ * named here.
+ */
+export const GIT_SAFE_ARGS: readonly string[] = ['-c', 'core.fsmonitor=false', '-c', 'core.hooksPath=/dev/null'];
+
 export function hardenedSpawnEnv(
     overrides: Record<string, string> = {},
 ): NodeJS.ProcessEnv {

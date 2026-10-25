@@ -90,7 +90,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { resolve_project_root } from '../_lib/agent_settings.js';
-import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
+import { GIT_SAFE_ARGS, hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { buildFromRepo, discoverFiles, isTestFile, sidecarPath } from './build.js';
 import { DOC_EXTS } from './docs_layer.js';
 import {
@@ -386,7 +386,7 @@ export function changedFiles(root: string, ref: string): string[] | null {
     // exit 0 (probed 2026-09-09). A rev never begins with `-`.
     if (ref.startsWith('-')) return null;
     try {
-        return execFileSync('git', ['-C', root, 'diff', '--name-only', `${ref}..HEAD`], {
+        return execFileSync('git', [...GIT_SAFE_ARGS, '-C', root, 'diff', '--name-only', `${ref}..HEAD`], {
             env: hardenedSpawnEnv(),
             encoding: 'utf-8',
             stdio: ['ignore', 'pipe', 'ignore'],
@@ -749,7 +749,7 @@ function sweepOrphanedTemps(out: string): void {
  */
 function git(root: string, ...args: string[]): string | null {
     try {
-        return execFileSync('git', ['-C', root, ...args], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'], env: hardenedSpawnEnv() }).trim();
+        return execFileSync('git', [...GIT_SAFE_ARGS, '-C', root, ...args], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'], env: hardenedSpawnEnv() }).trim();
     } catch {
         return null;
     }
