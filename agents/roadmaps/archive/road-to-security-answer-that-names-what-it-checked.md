@@ -55,7 +55,7 @@ or scanner that reads it.
 
 ## Phase 1 — Git probes ignore repo-local exec config
 
-- [x] **1.1 One helper, every code-graph git call.** `code_graph/detect.ts:280`
+- [x] **1.1 One helper, every code-graph git call.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/spawn_env.ts --> `code_graph/detect.ts:280`
       (`git status`) and `map.ts:224` (`git diff` against the worktree) run
       under `hardenedSpawnEnv()`, which neutralises env-borne git config but not
       the target's own `.git/config` — so `core.fsmonitor` in that file runs.
@@ -70,19 +70,19 @@ or scanner that reads it.
 
 ## Phase 2 — A casual question finds the skill and gets a scoped answer
 
-- [x] **2.1 Trigger corpus and descriptions.** Add casual whole-app exemplars
+- [x] **2.1 Trigger corpus and descriptions.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change --> Add casual whole-app exemplars
       (DE/EN, "is my app secure before launch") to
       `security-audit/evals/triggers.json`. State the whole-app/launch question
       in the `security-audit` description, and state in `agent-security-review`
       that it reviews the agent's own config, not application code.
       verify: `npx vitest run tests/scripts/security_audit_route_probe.test.ts` -> 0
-- [x] **2.2 Guidance-mode answer shape.** `security-audit` gains a casual-question
+- [x] **2.2 Guidance-mode answer shape.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> `security-audit` gains a casual-question
       path: a short check, then a scope block (`checked: …` / `not checked: …`),
       then an offer of `/audit code full`. It never says "secure" or "no
       vulnerabilities" without a ledger. This is skill text, not rule text,
       so it adds no per-spawn cost.
       verify: `grep -c "not checked:" src/skills/security-audit/SKILL.md` -> /^[1-9]/
-- [x] **2.3 Skill hygiene from the residue.** Replace "drop it" with the
+- [x] **2.3 Skill hygiene from the residue.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Replace "drop it" with the
       `needs_validation` / `rejected` exits; point the dependency step at
       `/audit deps` instead of restating it; anchor severity to demonstrated
       impact; qualify the rate-limit row; name non-HTTP entry points (CI
@@ -91,7 +91,7 @@ or scanner that reads it.
 
 ## Phase 3 — The ledger can say partial
 
-- [x] **3.1 `run_status` on the security ledger.** Derive
+- [x] **3.1 `run_status` on the security ledger.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/security_ledger.ts --> Derive
       `complete | partial | not_enumerated` in `_lib/security_ledger.ts`:
       `complete` only when rows exist and none is still open; zero rows is
       `not_enumerated`, never `complete`. `/audit code show` prints it first.
@@ -99,18 +99,18 @@ or scanner that reads it.
 
 ## Phase 4 — Uploads that stay data
 
-- [x] **4.1 Freeze the misses first.** A grounding test over the reproduced
+- [x] **4.1 Freeze the misses first.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change --> A grounding test over the reproduced
       misses: "thumbnails with ImageMagick", "virus scan uploaded attachments",
       "handle uploaded files", "Bild hochladen", an avatar upload. Each must
       ground to `file-upload` with a file-upload threat row. A near-miss
       ("publish the release to npm") must not.
       verify: `npx vitest run tests/scripts/threat_modeling_upload_grounding.test.ts` -> 0
-- [x] **4.2 Surface keywords.** Add the inflected and processor class signals
+- [x] **4.2 Surface keywords.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: src/skills/threat-modeling/data/surfaces.csv --> Add the inflected and processor class signals
       (uploaded, uploads, multipart, avatar, thumbnail, resize, exif, virus,
       scanner, hochladen, Anhang) to `surfaces.csv` and the manifest's
       `detect.surfaces`. Data only; the engine is unchanged.
       verify: `npx vitest run tests/scripts/threat_modeling_delegated_action_grounding.test.ts` -> 0
-- [x] **4.3 Corpus rows.** Reorder the polyglot row so content sniffing is a hint,
+- [x] **4.3 Corpus rows.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/skills/corpus-grounding/scripts/decision_engine.ts --> Reorder the polyglot row so content sniffing is a hint,
       not the first control. Add class rows for: processor or scanner as attack
       surface; execution on fetch through handler config; scan-before-publish
       race; archive extraction; resource bombs. Each row carries a CWE reference
@@ -118,7 +118,7 @@ or scanner that reads it.
       decision rules to `reasoning.csv`, and cite ASVS 5.0 V5 File Handling in
       the skill's references.
       verify: `grep -c "^file-upload," src/skills/threat-modeling/data/threats.csv` -> /^([7-9]|[1-9][0-9])$/
-- [x] **4.4 Pre-ship checklist and stack rows.** `ai-code-blindspots` gains a
+- [x] **4.4 Pre-ship checklist and stack rows.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: src/skills/ai-code-blindspots/SKILL.md --> `ai-code-blindspots` gains a
       file-upload row with backstop greps (client filename into a storage path,
       `mimes:` without `extensions:`, `move_uploaded_file(`, `include` of a
       variable, `phar://`). `design-intelligence` Laravel rows pair `mimes` with
@@ -130,13 +130,13 @@ or scanner that reads it.
 
 ## Phase 5 — Regenerate and prove
 
-- [x] **5.1 Projections and lint.** `task sync`, `task generate-tools`, skill lint,
+- [x] **5.1 Projections and lint.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> `task sync`, `task generate-tools`, skill lint,
       and the targeted suites above green.
       verify: `task lint-skills` -> 0
 
 ## Phase 6 — Hand-offs to the owners
 
-- [x] **6.1 Arrivals on the adjacent owners.** `stubs/road-to-a-security-chain-measured`
+- [x] **6.1 Arrivals on the adjacent owners.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> `stubs/road-to-a-security-chain-measured`
       gains: a false-all-clear rate as a bench endpoint, the host-native security
       results import, and no-double-review when a host plugin already reviews at
       stop. The deferred work this round did not build lands in one parked
