@@ -102,10 +102,10 @@ reachable by consumers or kept internal by a recorded decision.
       commands, not loaded into every reply; `second-brain-recall-lift` gains a
       `non_inference` naming the retired working-memory half; `memory:add` carries one
       type list and says why `ownership` and `historical-patterns` are not offered.
-      verify: `./scripts-run src/scripts/check_claims` -> 0; `grep -n "every reply" src/templates/agent-user.md`
+      verify: `./scripts-run src/scripts/check_claims` -> 0 and `grep -n "every reply" src/templates/agent-user.md`
       returns nothing; `grep -c "four" src/domains/meta/memory/add/command.md` agrees
       with the menu.
-- [x] **1.5 Name the slot time in the dogfood closing condition (E8).** The closing <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **1.5 Name the slot time in the dogfood closing condition (E8).** The closing <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       condition gains a second measure: p95 of the whole `session_end` dispatch on
       claude against the 1.5 s shared host budget, measured with
       `bench_hook_latency`, beside the existing `wall_ms` line.
@@ -114,13 +114,13 @@ reachable by consumers or kept internal by a recorded decision.
 
 ## Phase 2 — Reachability
 
-- [x] **2.1 Apply the E2 verdict to the profile and knowledge commands.** The first <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **2.1 Apply the E2 verdict to the profile and knowledge commands.** The first <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       council round opened four sub-commands; flipping them showed that no sub-command
       in the tree is `advanced` and that `command-surface-tiers.md` makes orchestrator
       children internal by contract and reachable by full name. The corrected round
       chose to change nothing. Recorded in ADR-138's amendment; no command file
       changes.
-      verify: `./scripts-run src/scripts/build_discovery_manifest --write --out <tmp>` -> 0, and the written manifest
+      verify: `./scripts-run src/scripts/build_discovery_manifest --write --out <tmp>` -> 0 and the written manifest
       lists `agents` as `advanced` routing to `agents-user`, and a real global install
       carries `~/.claude/commands/agents/user/{accept,delete,review,show}.md`;
       `git diff origin/main -- src/domains/meta/agents src/domains/meta/team-knowledge | grep '^[-+]visibility'`
