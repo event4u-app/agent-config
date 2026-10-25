@@ -9,8 +9,9 @@
  * the next person to find — and that is the purpose, not a measurement.
  *
  * WHAT IT COSTS. Reads the user-global settings layers and one user-global
- * state file, and writes that state file (two timestamps). No network, no
- * `gh`, no GitHub identity. The stop condition ADR-286 called uncheckable is checked
+ * state file; writes that state file (two timestamps) and, per ask, one empty
+ * claim file in the `star-ask.json.claims/` directory beside it. No network,
+ * no `gh`, no GitHub identity. The stop condition ADR-286 called uncheckable is checked
  * locally instead: the user says they starred (`star_ask.starred: true`, an
  * A-class key the agent may set when told), and that is believed.
  *
