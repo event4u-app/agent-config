@@ -86,7 +86,7 @@ AREA_MODULES.systems = {
                 key: 'package/' + syLabel(k), kind: 'package', label: syLabel(k), sub: k.ecosystem + ' · ' + syScope(k) + (k.framework ? ' · ' + t('sFramework') : ''),
                 rows: [[t('sVersion'), k.version], [t('sScope'), syScope(k)], [t('sDeclared'), k.declared.join('\n')], [t('sWhy'), syWhy(k)],
                     [t('sUsed'), k.usedByTotal ? t('sFiles')(num(k.usedByTotal)) : t('sNoUse')], [t('sNonimport'), k.nonimport.join('\n')],
-                    ['usage', t('sUsageHint')], ['remove-plan', t('sRemoveHint')]],
+                    [t('cDomain'), (k.domains || []).join(', ')], ['usage', t('sUsageHint')], ['remove-plan', t('sRemoveHint')]],
                 witnesses: ws,
                 links: function () { return syPackageLinks(p, k); }
             };

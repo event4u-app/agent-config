@@ -28,6 +28,7 @@ import { buildFromRepo, readProjectProbe } from './build.js';
 import { acquire as acquireRefreshLock, heldByThisProcess } from './refresh_lock.js';
 import { computeVerdict, graphState } from './detect.js';
 import { graphHome } from './graph_home.js';
+import { analyseDomains, assignDomains, ownerFromCodeowners, proposalSnippet, proposeDomains, readCodeowners, readDomainRules, structuralDomains } from './domains.js';
 import { cachedProvenance, type CommitRef, spanHistory, ticketKeysOf } from './provenance.js';
 import { BLAST_SCOPE_ROLES, SOLE_OWNER_MIN_CHURN, SOLE_OWNER_SHARE, finishAnswers, layerOf, readFileFacts, readGitHistory, readLayerRules } from './map_answers.js';
 import {
@@ -437,6 +438,7 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
         ...(opts.demo ? { demo: true } : {}),
     };
     answerQuestions(root, outDir, cachePath, graph, model, meta);
+    if (model.domains) domainsOnAreas(areas, model, graph);
     meta.summary =
         `${model.files.length} files · ${model.areas.length} areas · ` +
         `${model.analyses.trustedEdges} trusted links · guess share ${pct(model.analyses.guessShare)}`;
@@ -526,6 +528,7 @@ function answerQuestions(root: string, outDir: string, cachePath: string, graph:
             if (layer) f.layer = layer;
         }
     }
+    attachDomains(root, outDir, graph, model);
     finishAnswers(model, rules);
     model.pin = {
         commit: meta.commit,
@@ -533,6 +536,74 @@ function answerQuestions(root: string, outDir: string, cachePath: string, graph:
         freshness: meta.state,
         generation: meta.graph_generation ?? '',
     };
+}
+
+/** Domains on files, the breaches against their declaration, and proposals when nothing is declared. */
+function attachDomains(root: string, outDir: string, graph: CodeGraph, model: MapModel): void {
+    const paths = model.files.map((f) => f.path);
+    const rules = readDomainRules(path.join(outDir, 'layers.yaml')) ?? structuralDomains(paths);
+    if (!rules) {
+        const list = proposeDomains(model.areas, paths);
+        if (list.length) model.domainProposals = { source: 'inferred', list, snippet: proposalSnippet(list) };
+        return;
+    }
+    const asg = assignDomains(paths, rules);
+    asg.of.forEach((d, i) => {
+        if (d) (model.files[i] as MapModel['files'][number]).domain = d;
+    });
+    const an = analyseDomains(model.edges, (i) => model.files[i]?.role === 'test', paths, asg, rules);
+    // A table written from two domains: the code that writes it names its owners.
+    const fileIdx = new Map(paths.map((p, i) => [p, i] as const));
+    const nodeFile = new Map(graph.nodes.map((n) => [n.id, n.source_file] as const));
+    const writers = new Map<string, Map<string, number>>();
+    for (const e of graph.edges) {
+        if (e.relation !== 'writes' && e.relation !== 'persists') continue;
+        const fi = fileIdx.get(nodeFile.get(e.source) ?? '');
+        const d = fi !== undefined ? asg.of[fi] : undefined;
+        if (fi === undefined || !d) continue;
+        const table = e.target.replace(/^table:/, '').replace(/\..*$/, '');
+        const m = writers.get(table) ?? new Map<string, number>();
+        if (!m.has(d)) m.set(d, fi);
+        writers.set(table, m);
+    }
+    const tableViolations = [...writers.entries()]
+        .filter(([, m]) => m.size > 1)
+        .sort(([a], [b]) => (a < b ? -1 : 1))
+        .map(([table, m]) => ({ kind: 'domain-table' as const, files: [...m.values()], domains: [...m.keys()].sort(), table }));
+    const owners = readCodeowners(root);
+    model.domains = {
+        source: rules.source,
+        list: rules.domains.map((d) => {
+            const own = paths.filter((_, i) => asg.of[i] === d.name);
+            return { name: d.name, files: own.length, owner: d.owner ?? (owners ? ownerFromCodeowners(owners, own) : null), parent: d.parent, globs: d.globs, public: d.publicMatch !== null };
+        }),
+        edges: an.edges,
+        crossings: an.crossings,
+        breaches: rules.allow || an.violations.some((v) => v.kind !== 'domain') || tableViolations.length ? an.breaches + tableViolations.length : null,
+        violations: [...an.violations, ...tableViolations],
+    };
+}
+
+/** Each table gets the domains of the code that writes it, each package those of the files that use it. */
+function domainsOnAreas(areas: MapAreas, model: MapModel, graph: CodeGraph): void {
+    const domainOf = new Map(model.files.filter((f) => f.domain).map((f) => [f.path, f.domain as string] as const));
+    const nodeFile = new Map(graph.nodes.map((n) => [n.id, n.source_file] as const));
+    const into = new Map<string, Set<string>>();
+    for (const e of graph.edges) {
+        if (e.relation !== 'writes' && e.relation !== 'persists' && e.relation !== 'uses') continue;
+        const d = domainOf.get(nodeFile.get(e.source) ?? '');
+        if (!d) continue;
+        const key = e.relation === 'uses' ? e.target : e.target.replace(/^table:/, '').replace(/\..*$/, '');
+        into.set(key, (into.get(key) ?? new Set()).add(d));
+    }
+    for (const t of areas.data?.tables ?? []) {
+        const ds = into.get(t.name);
+        if (ds?.size) t.domains = [...ds].sort();
+    }
+    for (const k of areas.systems?.packages ?? []) {
+        const ds = into.get(k.id);
+        if (ds?.size) k.domains = [...ds].sort();
+    }
 }
 
 /** Routes whose introduction is read per build: a count, not a clock, so a redraw of one tree writes the same bytes. */
@@ -1113,6 +1184,7 @@ export const VIEWER_SCRIPTS = [
     'area_code.js',
     'areas_common.js',
     'history.js',
+    'domains.js',
     'area_kit.js',
     'area_overview.js',
     'area_data.js',

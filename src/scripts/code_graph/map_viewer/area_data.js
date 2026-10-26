@@ -1596,6 +1596,7 @@ function dDetail(p, key, sel, right) {
     var col = item.kind === 'column' && tb ? tb.columns.filter(function (c) { return tb.name + '.' + c.name === item.label; })[0] : null;
     add(d, add(el('div', { class: 'db-dhead' }), add(el('div'), el('span', { class: 'kick' }, (tb ? tb.connection + ' · ' : '') + item.kind), el('span', { class: 'ttl mono' }, item.label)), x));
     if (item.kind === 'table' && tb) d.appendChild(el('p', { class: 'db-sum' }, t('tableSum')(num(tb.columns.length), num(tb.models.length), num(dPathsTo(tb).length))));
+    if (tb && tb.domains && tb.domains.length) d.appendChild(add(el('div', { class: 'chips' }), el('span', { class: tb.domains.length > 1 ? 'c-miss' : 'c-cyan' }, t('cDomain') + ' ' + tb.domains.join(', '))));
     if (col) {
         var st = dActualState(col);
         d.appendChild(el('p', { class: 'db-sum' }, col.type + (col.nullable ? ' · nullable' : '') + (col.key ? ' · ' + col.key.toUpperCase() : '') + '\n' +

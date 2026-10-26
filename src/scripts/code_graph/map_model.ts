@@ -91,6 +91,8 @@ export interface MapFile {
     dead?: true;
     /** From `layers.yaml`; absent without one. */
     layer?: string;
+    /** The declared (or code-structure) business domain; absent outside every one. */
+    domain?: string;
     /** Scope files only (code roles). */
     blast?: BlastRecord;
     /** What this file is as knowledge, when it is one. */
@@ -178,6 +180,25 @@ export interface MapProvenance {
     gap?: string;
 }
 
+/** The domain axis: declared in `layers.yaml`, or by the code's folder structure; proposals only when neither exists. */
+export interface MapDomains {
+    source: 'declared' | 'structure';
+    list: Array<{ name: string; files: number; owner: string | null; parent: string | null; globs: string[]; public: boolean }>;
+    /** `[from, to, edges]` between domains */
+    edges: Array<[string, string, number]>;
+    crossings: number;
+    /** null when `domain_allow` is undeclared: crossings are counted, never judged */
+    breaches: number | null;
+    violations: Array<{ kind: 'domain' | 'domain-public' | 'domain-cycle' | 'domain-overlap' | 'domain-table'; files: number[]; domains: string[]; table?: string }>;
+}
+
+export interface MapDomainProposals {
+    /** always `inferred`: never a boundary, never a breach */
+    source: 'inferred';
+    list: Array<{ name: string; globs: string[]; files: number; cohesion: number }>;
+    snippet: string;
+}
+
 export interface MapModel {
     version: number;
     thresholds: MapThresholds;
@@ -206,6 +227,8 @@ export interface MapModel {
     legend?: LegendEntry[];
     pin?: MapPin;
     provenance?: MapProvenance;
+    domains?: MapDomains;
+    domainProposals?: MapDomainProposals;
     /** The depth the blast numbers were computed to; the viewer's walk uses the same. */
     blastDepth?: number;
     gitWindowDays?: number;

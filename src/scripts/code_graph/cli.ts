@@ -189,6 +189,7 @@ import {
     why as systemsWhy,
     type WhyAnswer,
 } from './lanes/systems/verbs.js';
+import { domainResolver } from './domains.js';
 import { cachedProvenance, readCachedProvenance, ticketsTouched } from './provenance.js';
 import { provenanceAnswer } from './provenance_verbs.js';
 import { overlayState, overlayView, readOverlay } from './verify/overlay.js';
@@ -726,6 +727,26 @@ function cmdReviewRisk(argv: string[]): number {
     if (argv.includes('--json')) process.stdout.write(`${JSON.stringify(tickets ? { ...r, tickets } : r)}\n`);
     else {
         const lines = renderReviewRisk(r);
+        const domainOf = domainResolver(path.dirname(path.dirname(p)));
+        if (domainOf) {
+            const crossings = new Set<string>();
+            const changed = new Set(r.changed);
+            for (const t of r.terms) {
+                for (const i of t.items) {
+                    const far = i.witness?.file;
+                    if (!far || changed.has(far)) continue;
+                    for (const c of r.changed) {
+                        const a = domainOf(c);
+                        const b = domainOf(far);
+                        if (a && b && a !== b) crossings.add(`${a} ↔ ${b} (${c} · ${far})`);
+                    }
+                }
+            }
+            if (crossings.size) {
+                lines.push(`domain crossings (${crossings.size}), not part of the sum:`);
+                for (const x of [...crossings].sort().slice(0, 20)) lines.push(`  ${x}`);
+            }
+        }
         if (tickets && tickets.length) {
             lines.push(`tickets and PRs whose code the diff touches (${tickets.length}), not part of the sum:`);
             for (const t of tickets.slice(0, 20)) lines.push(`  ${t.key} — ${t.files.join(', ')}`);

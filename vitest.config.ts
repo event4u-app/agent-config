@@ -79,6 +79,7 @@ const IMPORTED_BROWSER_SUITES = [
     'tests/scripts/code_graph_map_ported_pages.test.ts',
     'tests/scripts/code_graph_map_systems_page.test.ts',
     'tests/scripts/code_graph_map_history.test.ts',
+    'tests/scripts/code_graph_map_domains_page.test.ts',
 ];
 const BROWSER_SUITES = [
     'tests/cli/ui_render_asset_profile.test.ts',

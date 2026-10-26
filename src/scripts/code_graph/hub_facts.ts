@@ -15,6 +15,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import type { CodeGraph } from './types.js';
+import { readDomainRules } from './domains.js';
 import { graphHome } from './graph_home.js';
 import { readInterfaces } from './lanes/interfaces/index.js';
 import { type LaneOutput, spanHash, type Witness } from './lanes/lane_fact.js';
@@ -83,8 +84,16 @@ export interface HubVersionRow {
     differs: boolean;
 }
 
+/** A business domain two projects both declare by the same name in their `layers.yaml`. */
+export interface HubSharedDomain {
+    name: string;
+    uses: HubUse[];
+}
+
 export interface HubFacts {
     ports: HubPortCollision[];
+    /** absent in a hub written before domains */
+    domains?: HubSharedDomain[];
     /** absent in a hub written before the systems lane */
     versions?: HubVersionRow[];
     images: HubSharedImage[];
@@ -224,6 +233,7 @@ export function hubFacts(projects: readonly HubProjectInput[], readers: HubReade
     const images = new Map<string, HubSharedImage>();
     const services = new Map<string, HubSharedService>();
     const versions = new Map<string, HubVersionRow>();
+    const domains = new Map<string, HubSharedDomain>();
     const calls: HubCall[] = [];
     const routes: HubRoute[] = [];
     const skipped: HubFacts['skipped'] = [];
@@ -255,6 +265,26 @@ export function hubFacts(projects: readonly HubProjectInput[], readers: HubReade
                 row.uses.push({ project: p.id, name: f.name, witness: f.witness });
                 if (!row.refs.includes(f.name)) row.refs.push(f.name);
                 images.set(repo, row);
+            }
+        }
+        // Only a declared name links two projects: structure and proposals never do.
+        const layersFile = path.join(graphHome(p.root).mapDir, 'layers.yaml');
+        const declared = readDomainRules(layersFile);
+        if (declared) {
+            let text = '';
+            try {
+                text = fs.readFileSync(layersFile, 'utf-8');
+            } catch {
+                text = '';
+            }
+            const rel = path.relative(p.root, layersFile).split(path.sep).join('/');
+            for (const d of declared.domains) {
+                const lines = text.split('\n');
+                const i = lines.findIndex((l) => new RegExp(`name:\\s*["']?${d.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']?\\s*$`).test(l));
+                const line = i >= 0 ? i + 1 : 1;
+                const row = domains.get(d.name) ?? { name: d.name, uses: [] };
+                row.uses.push({ project: p.id, name: d.name, witness: { file: rel, line, hash: spanHash(lines[line - 1] ?? '') } });
+                domains.set(d.name, row);
             }
         }
         let sys: LaneOutput | null = null;
@@ -311,5 +341,5 @@ export function hubFacts(projects: readonly HubProjectInput[], readers: HubReade
     calls.sort((a, b) => a.project.localeCompare(b.project) || a.witness.file.localeCompare(b.witness.file) || a.witness.line - b.witness.line);
     const versionRows = grouped(versions).map((r) => ({ ...r, differs: new Set(r.uses.map((u) => u.name)).size > 1 }));
     versionRows.sort((a, b) => Number(b.framework) - Number(a.framework) || Number(b.differs) - Number(a.differs) || a.subject.localeCompare(b.subject));
-    return { ports: grouped(ports), versions: versionRows, images: grouped(images), services: grouped(services), calls, skipped };
+    return { ports: grouped(ports), versions: versionRows, domains: grouped(domains), images: grouped(images), services: grouped(services), calls, skipped };
 }

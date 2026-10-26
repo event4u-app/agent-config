@@ -123,6 +123,8 @@ export interface DataTable {
     columns: DataColumn[];
     /** Files of the models that persist to this table. */
     models: string[];
+    /** Domains of the code that writes it; several are the finding, not an error */
+    domains?: string[];
     witness: Witness;
 }
 
@@ -222,6 +224,8 @@ export interface SystemsPackage {
     usedBy: Array<{ file: string; names: string[]; witness: Witness }>;
     usedByTotal: number;
     nonimport: string[];
+    /** Domains of the files that use it */
+    domains?: string[];
     witness: Witness;
 }
 

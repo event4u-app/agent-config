@@ -14,7 +14,7 @@ extendStrings({
         pBudget: 'Budget', pBudgetWhy: 'the hub keeps no size budget or eviction yet',
         pKinds: { package: 'package · fact', call: 'contract · call → route', 'unique-name': 'unique-name · guess', mention: 'mention · never a dependency', shared: 'shared · port, image, service' },
         pChip: { package: 'fact', call: 'evidenced', 'unique-name': 'guess', mention: 'mention', shared: 'shared' },
-        pKindOf: { package: 'package · fact', call: 'contract · call → route', 'unique-name': 'unique-name · guess', mention: 'mention', port: 'shared host port', image: 'shared image', service: 'shared external service' },
+        pKindOf: { package: 'package · fact', call: 'contract · call → route', 'unique-name': 'unique-name · guess', mention: 'mention', port: 'shared host port', image: 'shared image', service: 'shared external service', domain: 'shared domain' },
         pText: {
             package: function (a, b, d) { return a + ' depends on ' + d + ', which ' + b + ' publishes. Declared in the manifest, so certain.'; },
             'unique-name': function (a, b, d) { return 'Both declare the name ' + d + '. A same name is no dependency — only a candidate to check.'; },
@@ -22,7 +22,8 @@ extendStrings({
             call: function (a, b, d) { return a + ' calls ' + d + '; ' + b + ' serves a route that matches it.'; },
             port: function (a, b, d) { return 'Both publish host port ' + d + ': only one of them can start at a time on this machine.'; },
             image: function (a, b, d) { return 'Both run the image ' + d + '.'; },
-            service: function (a, b, d) { return 'Both reach the external service ' + d + '.'; }
+            service: function (a, b, d) { return 'Both reach the external service ' + d + '.'; },
+            domain: function (a, b, d) { return 'Both declare the domain ' + d + ' in their layers.yaml.'; }
         },
         pSource: 'source', pVersion: 'version', pEvidence: 'evidence', pProvider: 'provider', pConsumer: 'consumer', pService: 'service', pReason: 'reason', pUse: 'use',
         pEv: { package: 'declared', 'unique-name': 'heuristic', mention: 'heuristic · mention', call: 'call ↔ route', shared: 'declared in both' },
@@ -43,7 +44,7 @@ extendStrings({
         pBudget: 'Budget', pBudgetWhy: 'der Hub führt noch kein Größen-Budget und keine Verdrängung',
         pKinds: { package: 'package · Fakt', call: 'Vertrag · Aufruf → Route', 'unique-name': 'unique-name · Vermutung', mention: 'mention · nie eine Abhängigkeit', shared: 'geteilt · Port, Image, Dienst' },
         pChip: { package: 'Fakt', call: 'belegt', 'unique-name': 'Vermutung', mention: 'Erwähnung', shared: 'geteilt' },
-        pKindOf: { package: 'package · Fakt', call: 'Vertrag · Aufruf → Route', 'unique-name': 'unique-name · Vermutung', mention: 'mention', port: 'geteilter Host-Port', image: 'geteiltes Image', service: 'geteilter externer Dienst' },
+        pKindOf: { package: 'package · Fakt', call: 'Vertrag · Aufruf → Route', 'unique-name': 'unique-name · Vermutung', mention: 'mention', port: 'geteilter Host-Port', image: 'geteiltes Image', service: 'geteilter externer Dienst', domain: 'geteilte Domäne' },
         pText: {
             package: function (a, b, d) { return a + ' hängt von ' + d + ' ab, das ' + b + ' veröffentlicht. Im Manifest deklariert, daher sicher.'; },
             'unique-name': function (a, b, d) { return 'Beide deklarieren den Namen ' + d + '. Ein gleicher Name ist keine Abhängigkeit – nur ein Kandidat zum Prüfen.'; },
@@ -51,7 +52,8 @@ extendStrings({
             call: function (a, b, d) { return a + ' ruft ' + d + '; ' + b + ' stellt eine passende Route bereit.'; },
             port: function (a, b, d) { return 'Beide veröffentlichen den Host-Port ' + d + ': auf diesem Rechner kann nur einer von beiden zugleich starten.'; },
             image: function (a, b, d) { return 'Beide nutzen das Image ' + d + '.'; },
-            service: function (a, b, d) { return 'Beide erreichen den externen Dienst ' + d + '.'; }
+            service: function (a, b, d) { return 'Beide erreichen den externen Dienst ' + d + '.'; },
+            domain: function (a, b, d) { return 'Beide deklarieren die Domäne ' + d + ' in ihrer layers.yaml.'; }
         },
         pSource: 'quelle', pVersion: 'version', pEvidence: 'evidence', pProvider: 'provider', pConsumer: 'consumer', pService: 'dienst', pReason: 'grund', pUse: 'nutzung',
         pEv: { package: 'declared', 'unique-name': 'heuristic', mention: 'heuristic · mention', call: 'Aufruf ↔ Route', shared: 'in beiden deklariert' },
@@ -105,7 +107,7 @@ function hubLinks(p) {
         calls[k] = { kind: 'call', style: 'call', a: c.project, b: c.match.project, label: c.match.route, detail: callText(c), calls: [c] };
         out.push(calls[k]);
     });
-    [['port', p.ports, 'port'], ['image', p.images, 'image'], ['service', p.services, 'identity']].forEach(function (g) {
+    [['port', p.ports, 'port'], ['image', p.images, 'image'], ['service', p.services, 'identity'], ['domain', p.domains || [], 'name']].forEach(function (g) {
         g[1].forEach(function (f) {
             var first = f.uses[0];
             f.uses.slice(1).forEach(function (u) {

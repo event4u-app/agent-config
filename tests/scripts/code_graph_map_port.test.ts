@@ -91,7 +91,7 @@ describe('the Code Workbench follows the design rail by rail', () => {
     it('colour options in the design order, Lines among them', async () => {
         const page = await open(full, '#/code');
         const opts = (await page.locator('#colorby .opt').allTextContents()).map((s) => s.replace(/no data.*$/, '').trim());
-        expect(opts).toEqual(['Blast', 'Area', 'Test share', 'Role', 'Churn', 'Lines', 'Folder', 'Layer', 'Complexity']);
+        expect(opts).toEqual(['Blast', 'Area', 'Test share', 'Role', 'Churn', 'Lines', 'Folder', 'Layer', 'Domain', 'Complexity']);
         await page.click('#colorby .opt:has-text("Lines")');
         expect(await page.locator('#legend').textContent()).toMatch(/Lines per area: [\d,]+ → [\d,]+/);
         await page.close();

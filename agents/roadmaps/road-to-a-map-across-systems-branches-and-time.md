@@ -75,7 +75,7 @@ no absolute local path.
 | D6 | Domains are declared in a `domains:` section of the existing `layers.yaml`, read by the same reader; no rename to `boundaries.yaml` | separate `domains.yaml`; rename with a read-both window | one reader and one file; a rename buys nothing measured (owner decision E25 resolved toward the single file) | the file needs a second hand-written section |
 | D7 | A file gets at most one **declared** domain; a file matched by two domain globs is a finding. Routes, tables, packages and tickets may touch several domains — that is information | M:N on files (v7) | a file in two declared domains has no defined owner; the aggregation already gives M:N where it is real | a fixture shows a legitimate shared file the rule misreads |
 | D8 | Inferred domains are proposals only: shown in the Domain lens with `source: inferred`, never a breach, never in the context pack | auto-adopt | K30; an inferred boundary would generate false breaches | — |
-| D9 | Domain crossings enter review risk as a visible term; `classify_change_risk` is not edited | raise its class | that table is owned by `road-to-a-step-that-costs-what-it-changes` | that roadmap asks for the signal |
+| D9 | Domain crossings and touched tickets are listed under review risk, outside its weighted sum; `classify_change_risk` is not edited | raise its class | that table is owned by `road-to-a-step-that-costs-what-it-changes` | that roadmap asks for the signal |
 | D10 | Branch facts are content-addressed: a fact blob is keyed by reader version, path and git blob hash; a branch manifest maps path → blob hash. Read with `git ls-tree` / `git cat-file`, never a checkout | a graph per branch | K20; two branches differing in three files cost three files | storage per branch is not proportional on the fixture |
 | D11 | Branch cache clean-up drops a manifest when the local ref is gone or it was unseen for 30 days; the default branch, `release/*` and branches with a remote-tracking ref are pinned; offline never counts as gone; git refs are never deleted | delete on remote absence | E18; v6 retention rules | the owner wants a different window |
 | D12 | The chain cascade has **no new setting**: it merges a parent into a branch only when every commit on that branch since its parent is authored by the current git user, only with a clean tree, only by merge (never rebase), in a temporary worktree for branches not checked out — and never pushes. Any other branch gets a report, and its children are not integrated past it (K23) | `git.cascade: auto/ask/report` (E19) | a key choosing a mutating git operation is class C (C9); the Hard Floor keeps every push behind this-turn confirmation, so `auto` could only ever mean a local merge — which is what this does without a key | the owner wants pushes automated |
@@ -177,7 +177,7 @@ no absolute local path.
 
 ## Phase 3 — Domains: which business boundary
 
-- [ ] **3.1 Declared domains.** `domains: [{name, paths, owner?, parent?, public?}]`
+- [x] **3.1 Declared domains.** `domains: [{name, paths, owner?, parent?, public?}]`
       and `domain_allow:` in `layers.yaml`, same reader and glob engine; plus
       structure the code declares (`app/Domain/<X>`, `src/Domain/<X>`,
       `Modules/<X>`, workspace packages), each with its witness, used only
@@ -185,22 +185,24 @@ no absolute local path.
       `CODEOWNERS` owner of its paths when one rule covers them all.
       verify: a fixture file gets its domain; a file in two globs is one
       finding.
-- [ ] **3.2 Attached, not duplicated.** Domain on files and, through them, on
+- [x] **3.2 Attached, not duplicated.** Domain on files and, through them, on
       routes (handler), tables (writers), packages (call sites), tickets
       (touched files).
       verify: the fixture's table reports both writing domains.
-- [ ] **3.3 Boundary rules.** Cross-domain edge not allowed; a table written
+- [x] **3.3 Boundary rules.** Cross-domain edge not allowed; a table written
       by more than one domain; reaching a non-public file of another domain;
       cycles between domains — each with both witnesses.
       verify: AC-8 fixture.
-- [ ] **3.4 Inferred proposals.** Without a declaration, proposals from areas
-      and co-change, labelled `inferred`, with a ready snippet; never a breach.
+- [x] **3.4 Inferred proposals.** Without a declaration, proposals from the
+      coupling areas, labelled `inferred`, each with its cohesion (share of the
+      area inside the proposed folder — read from this map alone, so a redraw
+      writes the same bytes) and a ready snippet; never a breach.
       verify: AC-9 fixture.
-- [ ] **3.5 Domain lens and overview.** A Domain lens beside Area and Layer,
+- [x] **3.5 Domain lens and overview.** A Domain lens beside Area and Layer,
       a domain overview with breaches, a domain chip and a search filter; the
       hub links projects only by a name declared in both.
       verify: the map test reads the lens and the overview.
-- [ ] **3.6 Feeds.** The context pack names each item's domain and the
+- [x] **3.6 Feeds.** The context pack names each item's domain and the
       boundaries a change crosses; review risk shows crossings as a term.
       verify: a review-risk test on a cross-domain diff.
 
