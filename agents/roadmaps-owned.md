@@ -9,16 +9,17 @@ and keep the full search — this file only adds candidates to it.
 
 | slug | dir | status | owns |
 |---|---|---|---|
+| road-to-a-graph-that-wins | active | ready | Register before measuring; measure on repositories in the owner's stack that this repository does not own; publish both directions; and … |
 | road-to-a-setup-that-decides-itself | active | ready | A consumer never sets, reads or reasons about how the package loads its rule layer. |
 | road-to-a-step-that-costs-what-it-changes | active | ready | A roadmap step costs in proportion to its change, and nothing a step needs is skipped. |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe | active | ready | A global install stays on a supported, patched release without ever mutating a running session, moving a team's pin, or … |
+| road-to-release-finding-ordering | active | ready | Road to the release-finding ordering guarantee |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
 | road-to-17-0-follow-ups | later | later | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
 | road-to-a-byte-bound-and-a-public-figure | later | later | Two numbers this tree can now produce and cannot yet bound. |
 | road-to-a-canvas-the-code-owns | later | later | The repository is the only store of the design system. |
 | road-to-a-cold-start-paid-once-carried | later | later | Every step road-to-a-cold-start-paid-once deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-graph-that-feeds-the-gate | later | later | The code graph reaches the searches an agent actually runs and feeds a gate decision in shadow. |
-| road-to-a-graph-that-wins | later | later | Register before measuring; measure on repositories in the owner's stack that this repository does not own; publish both directions; and … |
 | road-to-a-hard-floor-the-shell-cannot-talk-past | later | later | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |
 | road-to-a-knowledge-atlas | later | later | The Workbench page answers four questions about one selection, not one: how the code is built (done by the parent), … |
 | road-to-a-learner-the-measurements-gate | later | later | The open dispatch measurements are run or dated; a PR that moves a policy row without a measurement pinned to … |
@@ -115,7 +116,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-reach-transcribe | later | ready | Reach — audio transcription when no caption track exists |
 | road-to-reach-twitter-login | later | ready | Reach — Twitter beyond a single tweet (timelines, search, threads) |
 | road-to-regulatory-radar | later | draft | Answer one question with a number instead of an intuition: when someone asks "what do I have to do as … |
-| road-to-release-finding-ordering | later | later | Road to the release-finding ordering guarantee |
 | road-to-release-holds-that-refuse | later | later | A roadmap declares, in a form one evaluator reads, exactly which of its intermediate tree states must not be published … |
 | road-to-residual-interruption-measurement | later | later | Road to the residual-interruption measurement |
 | road-to-roadmaps-finished-before-new-ones-start-carried | later | ready | Every step road-to-roadmaps-finished-before-new-ones-start deferred is either done here or explicitly disposed of — a step that still cannot run is … |

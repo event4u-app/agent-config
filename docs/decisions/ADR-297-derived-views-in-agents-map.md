@@ -29,6 +29,12 @@ review_trigger: >-
 
 # ADR-297 — A Class-A engine may write human-facing derived views to `agents/map/`
 
+> **Note, 2026-10-26 — not a reopening.** This record quotes the owner's words
+> but files them under no owner-directive, and the owner states it was created
+> automatically rather than asked for as a record
+> (`agents/evidence/owner-directives/2026-10-26-auto-created-adrs.md`). The quoted
+> words are the evidence for the owner attribution; nothing beyond them is.
+
 ## Status
 
 Accepted 2026-10-23 on the owner's directive of the same day ("build the map in a

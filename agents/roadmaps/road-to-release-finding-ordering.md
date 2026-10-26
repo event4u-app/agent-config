@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: later
+status: ready
 parent_roadmap: road-to-binding-findings
 review_by: 2026-09-20
 relates:
@@ -14,7 +14,8 @@ relates:
       synthetic release/* pull request no autonomous run may open. It also
       recorded the second occurrence below and moved this review_by; it did not
       touch this roadmap status or its AC-2 demonstration, which is still owed.
-estate_growth_exempt: "Adds one later/ roadmap to receive the release-findings ORDERING guarantee, which road-to-binding-findings could not close: demonstrating it end to end requires creating a synthetic release/* pull request, and release/* is named in non-destructive-by-default's Hard-Floor table, which no autonomous run lifts. The four authorization defects and the ledger ingestion in that roadmap are independently verified and close there; holding them open behind an administrative and Hard-Floor dependency would be worse than partitioning. It also receives the three non-blocking findings dispositioned accepted_risk, so each carries a named receiver rather than an expiring note. That roadmap archives in the same change, so the active count falls by one."
+estate_growth_exempt: "THIS CHANGE (2026-10-26) moves this roadmap from later/ to active: active_roadmaps +1, later_roadmaps -1. Its one blocker, release-pr-demonstration-owner-call, gates step 2.2 and AC-2 only, so the AI council decided 2/2 on 2026-10-26 to run every other step and keep 2.2 and AC-2 behind the owner (agents/evidence/council/open-questions-inbox-aw-20261026.md). Active count becomes 5, the WIP cap of the owner directive of 2026-10-24."
+estate_offset_exempt: "Woken from later/, not added: the AI council decided the wake 2/2 on 2026-10-26 (agents/evidence/council/open-questions-inbox-aw-20261026.md), and the owner chose to land it. No active roadmap is finished, so none can be archived to offset it; the count reaches the WIP cap of 5 and stops there. Leaving it parked was rejected because its one blocker gates step 2.2 and AC-2 only, and the request has arrived seven times."
 ---
 # Road to the release-finding ordering guarantee
 
@@ -138,33 +139,42 @@ Actions. The second reading is the better one on the mechanics; the first is
 still the reason to have a human present, and the Hard Floor decides it either
 way.
 
+## Mechanism options (input to step 1.1)
+
+**(a) Merge the jobs** into the producer's workflow with `needs:`.
+Ordering becomes free; the required-check NAME changes, so branch
+protection must be re-pointed by a repo admin, and the consumer
+workflow's own path filter — which includes
+`agents/evidence/release-findings/**` specifically for this job — is left
+orphaned.
+
+**(b) Cross-workflow artifact download** with `run-id` and a token,
+resolving the producer run by head SHA. No check-name change; needs a new
+pinned third-party action, and it must tolerate a legitimately absent
+artifact without reintroducing the fail-open path.
+
+**(c) `workflow_run` trigger.** Executes the default-branch copy of the
+workflow and attaches no check to the pull request, so the check run must
+be created through the API and the workflow needs `checks: write`, which
+it does not have today.
+
+**(d) In-process** — call the disposition check straight after the
+findings are written. Ordering is guaranteed by sequence, and it destroys
+the "deterministic, never fail-open" property the consumer job's own
+comment asserts, because the producer job is `continue-on-error: true`.
+
+Both seats chose **(b)**; it is recorded here as a decision to take with
+the evidence rather than as one already taken.
+
 ## Phase 1 — the ordering mechanism
 
 The producer and consumer live in **different workflow files**, so `needs:` is
 not expressible between them — the roadmap's own second option was impossible
-as written. Four candidates, with their costs:
+as written. The four candidates and their costs are under § Mechanism options.
 
-- [ ] **1.1 Decide the mechanism, and record why the other three lost.**
-      **(a) Merge the jobs** into the producer's workflow with `needs:`.
-      Ordering becomes free; the required-check NAME changes, so branch
-      protection must be re-pointed by a repo admin, and the consumer
-      workflow's own path filter — which includes
-      `agents/evidence/release-findings/**` specifically for this job — is left
-      orphaned.
-      **(b) Cross-workflow artifact download** with `run-id` and a token,
-      resolving the producer run by head SHA. No check-name change; needs a new
-      pinned third-party action, and it must tolerate a legitimately absent
-      artifact without reintroducing the fail-open path.
-      **(c) `workflow_run` trigger.** Executes the default-branch copy of the
-      workflow and attaches no check to the pull request, so the check run must
-      be created through the API and the workflow needs `checks: write`, which
-      it does not have today.
-      **(d) In-process** — call the disposition check straight after the
-      findings are written. Ordering is guaranteed by sequence, and it destroys
-      the "deterministic, never fail-open" property the consumer job's own
-      comment asserts, because the producer job is `continue-on-error: true`.
-      Both seats chose **(b)**; it is recorded here as a decision to take with
-      the evidence rather than as one already taken.
+- [ ] **1.1 Decide the mechanism, and record why the other three lost.** The
+      four candidates and what each costs are listed under § Mechanism options;
+      both council seats chose (b).
       verify: the decision names the mechanism, the three rejected options and
       the cost that rejected each; the required-check name is stated as changed
       or unchanged.

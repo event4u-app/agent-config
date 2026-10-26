@@ -49,20 +49,6 @@ and the run that applies it links its PR.
   exists to stop, one file away from its scope.
 - **Blocks:** nothing; one stale cardinal remains.
 
-### OQ-18 — Seven ADRs name you as decision-maker without your words
-
-- **Context:** `check_new_adr_evidence` caught ADR-286 recording a refusal you
-  never gave, but it checks only new records. Run once over the tree
-  (`agents/evidence/analysis/owner-claim-census-2026-10-25.md`), it finds 7 more
-  records from ADR-282 on that list `owner` in `decision_makers` and cite no
-  owner-directive: ADR-283, 287, 288, 293, 297, 298, 299. Raised by an 18.0.0
-  review in `inbox-2026-10-aw`.
-- **Options:** (a) for each, confirm the attribution — the run then records your
-  words as an owner-directive and cites it; (b) relabel those you did not decide
-  as `council` / `agent`; (c) leave them as they are.
-- **Recommendation:** (a) for the ones you remember deciding, (b) for the rest —
-  a record a reader can check is the point of the gate that caught ADR-286.
-- **Blocks:** nothing executable; the gate stays diff-scoped either way.
 ### OQ-19 — Install the quota status-line tap by default (`quota-tap-default`)
 
 - **Context:** `road-to-a-quota-the-user-sees-coming` Phase 2 ships
@@ -186,6 +172,22 @@ and the run that applies it links its PR.
   the whole pilot, land both roadmaps by PR and merge, then run the pilot
   roadmap. Applied in `road-to-a-pilot-benchmark-against-s4` (blocker
   `pilot-spend-cap` resolved).
+
+### OQ-18 — Seven ADRs name you as decision-maker without your words
+
+- **Context:** `check_new_adr_evidence` caught ADR-286 recording a refusal you
+  never gave, but it checks only new records. Run once over the tree
+  (`agents/evidence/analysis/owner-claim-census-2026-10-25.md`), it finds 7 more
+  records from ADR-282 on that list `owner` in `decision_makers` and cite no
+  owner-directive: ADR-283, 287, 288, 293, 297, 298, 299. Raised by an 18.0.0
+  review in `inbox-2026-10-aw`.
+- **Options:** (a) for each, confirm the attribution — the run then records your
+  words as an owner-directive and cites it; (b) relabel those you did not decide
+  as `council` / `agent`; (c) leave them as they are.
+- **Recommendation:** (a) for the ones you remember deciding, (b) for the rest —
+  a record a reader can check is the point of the gate that caught ADR-286.
+- **Blocks:** nothing executable; the gate stays diff-scoped either way.
+- **Answered 2026-10-26:** "Vieles habe ich selber getroffen, aber nie als aktiv genangen ADR. Die wurden automatisch erstellt" — much of it his, none of it asked for as a record, no single record confirmed. Recorded in `agents/evidence/owner-directives/2026-10-26-auto-created-adrs.md`; ADR-293, 297 and 298 quote his words and say so, ADR-283, 287, 288 and 299 carry an unverified-attribution note; nothing is relabelled (AI council 2026-10-26, 2/2). <!-- md-language-check: ignore -->
 
 | ID | Date | Question | Answer |
 |---|---|---|---|

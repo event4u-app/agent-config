@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: later
+status: ready
 parent_roadmap: road-to-a-graph-that-is-shipped
 execution:
   mode: phase-checkpoints
@@ -23,7 +23,8 @@ entry_condition:
     maintainer, for confirming the parent is archived.
 review_by: 2026-12-07
 capability_gap: none
-estate_growth_exempt: "Parked, not active: it may not start before its parent ships, because every measurement in it would otherwise measure an engine no consumer holds. Charges +1 later_roadmaps against the origin/main floor of 82 measured at 0918def55. All five receivers named here were re-verified present at that pin: internal/bench/code-graph/, src/scripts/detect_silent_catch.ts, src/scripts/detect_verification_tampering.ts, agents/evidence/release-findings/, src/scripts/_lib/paired_verdict.ts."
+estate_growth_exempt: "THIS CHANGE (2026-10-26) moves this roadmap from later/ to active: active_roadmaps +1, later_roadmaps -1. Its entry_condition holds in the tree — the parent road-to-a-graph-that-is-shipped is archived and the owner named both benchmark subjects in the corpus header on 2026-10-23 — and the AI council decided the wake 2/2 on 2026-10-26 (agents/evidence/council/open-questions-inbox-aw-20261026.md). Active count becomes 5, the WIP cap of the owner directive of 2026-10-24."
+estate_offset_exempt: "Woken from later/, not added: the AI council decided the wake 2/2 on 2026-10-26 (agents/evidence/council/open-questions-inbox-aw-20261026.md), and the owner chose to land it. No active roadmap is finished, so none can be archived to offset it; the count reaches the WIP cap of 5 and stops there. Leaving it parked was rejected because its entry_condition already holds in the tree and the request has arrived four times."
 ---
 # Road to a graph that wins
 
@@ -176,6 +177,15 @@ K1 oracle never an arm or provider · K2 no hidden benchmark inputs · K3 no LLM
 · K4 no "fused" arm on retrieval suites · K5 no language without fixture + class · K6 no
 obligation inference in any pack/selection verb · K7 no external flow-analyzer adapters (S9 class; ingested findings only) ·
 K8 no Fact-IR rewrite before a second provider emits the same edge family.
+
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-10-26 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | The corpus is fitted to the engine after the fact | implementation | Questions or oracle truth written after the engine has seen the subject repositories would score what the engine already answers, and repeat the lost-inputs failure of the 2026-08-28 registration | Registration, with SHA pins and every input tracked, lands before any measurement (Phase 2; K2) | Phase 2 — Registration, then measurement |
+| 2 | A tie is reported as a win | product | The in-repo v2 corpus tied on every class against a 0.917-recall grep; a weak bar would let graph-first wording ship on noise | The null path is stated now: fewer than 4 of 6 classes winning withholds the wording | Phase 2 — Registration, then measurement |
+| 3 | Breadth outruns reach | implementation | A language or framework added without a fixture and a corpus class widens the claim without evidence | K5 forbids it; each Phase 1 language carries both | Phase 1 — Reach, scoped (each language with fixture + corpus class) |
 
 ## Acceptance Criteria
 - [ ] AC-1 Corpus v3 and the F task suite are tracked in-tree with hashes before the engine sees the subject repos.

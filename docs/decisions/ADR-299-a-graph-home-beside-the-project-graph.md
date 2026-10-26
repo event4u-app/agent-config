@@ -32,6 +32,14 @@ review_trigger: >-
 
 # ADR-299 — The project graph stays the only truth; the user-global layer is a home and an index, never a merged graph
 
+> **Note, 2026-10-26 — owner attribution unverified, not a reopening.** This record
+> names the owner as decision-maker but cites none of his words. The owner states it
+> was created automatically: much of its substance is his, but he did not ask for it
+> as a record and does not confirm this one
+> (`agents/evidence/owner-directives/2026-10-26-auto-created-adrs.md`). Read the
+> decision as owner-directed; do not cite it as owner authority or as precedent for
+> an owner-reserved transition.
+
 ## Status
 
 Accepted 2026-10-24 on the owner's two questions of the same day (a graph on the

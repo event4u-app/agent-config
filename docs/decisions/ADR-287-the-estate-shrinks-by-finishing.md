@@ -34,6 +34,14 @@ evidence:
 
 # ADR-287 — The estate shrinks by finishing, not by capping
 
+> **Note, 2026-10-26 — owner attribution unverified, not a reopening.** This record
+> names the owner as decision-maker but cites none of his words. The owner states it
+> was created automatically: much of its substance is his, but he did not ask for it
+> as a record and does not confirm this one
+> (`agents/evidence/owner-directives/2026-10-26-auto-created-adrs.md`). Read the
+> decision as owner-directed; do not cite it as owner authority or as precedent for
+> an owner-reserved transition.
+
 ## Context
 
 The size of the active roadmap estate has been raised as a risk nine times.
