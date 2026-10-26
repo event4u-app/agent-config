@@ -11,6 +11,7 @@ import {
 } from '../../../src/agent-src/templates/scripts/work_engine/_lib/control_roles.js';
 import { DeliveryState } from '../../../src/agent-src/templates/scripts/work_engine/delivery_state.js';
 import { run } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui_trivial/apply.js';
+import { run as polishRun } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/polish.js';
 
 const FORM = `<form>
   <label>Name <x-input name="name" /></label>
@@ -114,6 +115,21 @@ describe('ui_trivial apply — the computed role cannot be overridden', () => {
         process.chdir(repo);
         const { result } = applyWith({ files: ['filters.blade.php'], lines_changed: 1 });
         expect(result.outcome).toBe('success');
+    });
+
+    it('a raw select added during a polish round is recorded on its change', () => {
+        const repo = repoWith(FORM);
+        fs.writeFileSync(
+            path.join(repo, 'filters.blade.php'),
+            FORM.replace('</form>', '  <select name="status"></select>\n</form>'),
+        );
+        process.chdir(repo);
+        const st = new DeliveryState({
+            changes: [{ kind: 'ui', file: 'filters.blade.php', summary: 'polish' }],
+            ui_review: { review_clean: true, findings: [] },
+        } as never);
+        polishRun(st);
+        expect(st.changes[0]!['new_control_roles']).toEqual(['select']);
     });
 
     it('reports an unreadable listed file instead of judging it clean', () => {

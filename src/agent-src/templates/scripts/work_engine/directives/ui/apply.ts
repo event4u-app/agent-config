@@ -25,6 +25,7 @@ import {
     conformance_lines,
     plan_component_placement,
 } from '../../taxonomy/place.js';
+import { annotateControlRoles } from '../../_lib/control_roles.js';
 import { has_design_system, placeholder_paths, provided_artifact } from './design.js';
 import { _playbook_lines, _scaffold_playbooks } from './scaffold.js';
 import {
@@ -142,6 +143,7 @@ export function run(state: DeliveryState): StepResult {
     }
 
     _record_changes(state, envelope);
+    annotateControlRoles(state.changes as Array<Record<string, Any>>);
     return new StepResult({
         outcome: Outcome.SUCCESS,
         message: notes.join('\n'),

@@ -97,6 +97,30 @@ export function newControlRoles(before: string, after: string): ControlRole[] {
     return CONTROL_ROLES.filter((r) => has.has(r) && !had.has(r));
 }
 
+/**
+ * Refresh `new_control_roles` on every `state.changes` entry that names a file,
+ * so a role introduced in any UI path — apply, a polish round, the UI half of a
+ * mixed task — is recorded by file change rather than by intent. Returns the
+ * union of roles found, in role-table order.
+ */
+export function annotateControlRoles(
+    changes: Array<Record<string, unknown>>,
+    cwd: string = process.cwd(),
+): ControlRole[] {
+    const found = new Set<ControlRole>();
+    for (const change of changes) {
+        const file = change['file'];
+        const files = typeof file === 'string' ? [file] : change['files'];
+        if (!Array.isArray(files)) continue;
+        const names = files.filter((f): f is string => typeof f === 'string' && f !== '');
+        const { perFile } = newControlRolesForFiles(names, cwd);
+        const roles = perFile.flatMap((f) => f.roles);
+        change['new_control_roles'] = roles;
+        for (const r of roles) found.add(r);
+    }
+    return CONTROL_ROLES.filter((r) => found.has(r));
+}
+
 export interface FileRoles {
     file: string;
     roles: ControlRole[];
