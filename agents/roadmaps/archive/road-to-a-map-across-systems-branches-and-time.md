@@ -241,11 +241,13 @@ no absolute local path.
       against its parent, remote SHAs when reachable and `unverified` offline.
       verify: `tests/scripts/branch_chain.test.ts` reports the lagging level and
       `unverified` with no remote.
+      production entry: src/scripts/branch_chain.ts
 - [x] **5.3 Cascade.** `branch_chain sync` per D12: root first, own branches <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/branch_chain_status.ts -->
       merged, foreign ones reported, no integration past a lagging foreign
       parent, no push, conflicts stop and name their paths.
       verify: `tests/scripts/branch_chain.test.ts` integrates an owned parent
       first, reports a foreign one, and leaves every remote ref unchanged.
+      production entry: src/scripts/branch_chain.ts
 - [x] **5.4 Early warning.** Files, tables, columns, packages and routes <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/branch_chain_status.ts -->
       changed both by the parent since the merge base and by this branch.
       verify: the fixture warns on the shared column.
