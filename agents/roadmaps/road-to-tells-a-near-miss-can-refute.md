@@ -261,30 +261,30 @@ The gate for every later promotion.
 
 ## Phase 7 — Logos with a process and a proof
 
-- [ ] **7.1 Process.** `logo-generation` gains a divergence step (≥ 3 concepts
+- [x] **7.1 Process.** Done 2026-10-26: step 1b (≥ 3 concepts of different mark types, one-line idea each, user picks), step 5b (stop before the kit), critique mode in step 1 (scorecard, top-3 fixes, equity note); `skill_linter` passes. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/logo_export_kit.ts --> `logo-generation` gains a divergence step (≥ 3 concepts
       of different mark types, one-line idea each), a stop point before the
       export kit, and a critique mode (scorecard, top-3 fixes, equity note) for a
       supplied mark.
       verify: the SKILL.md diff; the body stays under the skill size lint.
-- [ ] **7.2 Name the witness it already has.** The vector path runs
+- [x] **7.2 Name the witness it already has.** Done 2026-10-26: step 5 runs `agent-config ui:render <mark.svg> --profile asset --class mark` and forbids a legibility claim without the capture; the grep finds it. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/logo_export_kit.ts --> The vector path runs
       `agent-config ui:render <mark.svg> --profile asset --class mark` (16/32 px
       on light and dark); legibility is never claimed without that capture.
       verify: `grep -n "profile asset" src/skills/logo-generation/SKILL.md` ≥ 1.
-- [ ] **7.3 Shelf test from the user's inputs.** User-supplied competitor or
+- [x] **7.3 Shelf test from the user's inputs.** Done 2026-10-26: supplied marks only, rendered beside the candidate at the same sizes and backgrounds, rights check still applies; eval `critique-supplied-mark` carries two supplied marks; no mark added to the tree. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/logo_export_kit.ts --> User-supplied competitor or
       category marks render beside the candidate at the same sizes; nothing is
       bundled; `image-likeness-and-rights` stays mandatory.
       verify: an eval case with two supplied marks; no third-party mark is added
       to the tree.
-- [ ] **7.4 Behaviour evals.** Three cases: a three-direction brief, a
+- [x] **7.4 Behaviour evals.** Done 2026-10-26: `src/skills/logo-generation/evals/evals.json` with `three-directions`, `favicon-stops-before-kit`, `critique-supplied-mark`; `run_skill_evals scaffold logo-generation` accepts all three. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/logo_export_kit.ts --> Three cases: a three-direction brief, a
       favicon/app-icon brief that stops before the kit, a critique of a supplied
       mark.
       verify: `src/skills/logo-generation/evals/evals.json` with 3 cases accepted
       by `src/scripts/run_skill_evals.ts`.
-- [ ] **7.5 Export kit.** Define the kit 7.1 stops before: SVG, PNG at 1×/2×,
+- [x] **7.5 Export kit.** Done 2026-10-26: `src/scripts/logo_export_kit.ts` (SVG, PNG 1×/2×, favicon 16/32 + apple-touch 180 + 192/512, `site.webmanifest`, light/dark lockups with the mark nested as vector); `tests/scripts/logo_export_kit.test.ts` runs it twice from one fixture, every file byte-identical — PNGs included on a machine with Chromium, reported missing (never passed) without one. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/logo_export_kit.ts --> Define the kit 7.1 stops before: SVG, PNG at 1×/2×,
       favicon set with webmanifest, light/dark lockups, reproducible from one
       command.
       verify: the command produces the kit twice byte-identical from one fixture.
-- [ ] **7.6 (candidate, pre-register first) Mark audit readings.** Monochrome and
+- [x] **7.6 (candidate, pre-register first) Mark audit readings.** Closed 2026-10-26 as a named null: no reading was pre-registered this run, so none ships — monochrome, reversed, 96 px and sub-pixel-detail readings stay unbuilt rather than unmeasured-but-claimed. Reopens with a PREREG file under `internal/bench/corpora/`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/logo_export_kit.ts --> Monochrome and
       reversed renders at the mark sizes, a 96 px capture, and sub-pixel detail at
       16 px (features under 1 px rendered extent); path complexity and
       text-to-path only through `road-to-svg-witness-provenance`'s

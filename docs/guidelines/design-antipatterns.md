@@ -48,13 +48,13 @@ one status and `lint_design_antipattern_parity` checks the `backed` rows against
 the registry on every run. A second hand-maintained list in this paragraph is
 precisely the drift the gate exists to prevent, so there is only one.
 
-## Current-generation tells (generation-dated — review 2026-Q4)
+## Current-generation tells (generation-dated — reviewed 2026-10-26, next review 2027-Q2)
 
 Default-template signatures rotate as model defaults rotate; naming the
 *current* one is more actionable than a timeless list. The entries below stay
 in their own categories — this section only tracks which combination reads as
 *this year's* generated default, so the first-impulse check has one dated
-pointer instead of a scattered mental list. As of **2026-07**:
+pointer instead of a scattered mental list. As of **2026-10** (re-confirmed; unchanged since 2026-07):
 
 - **This generation — "warm editorial":** cream/sand background + serif display
   + brass/clay/terracotta accent (catalog **C5** + **T2** + **T7** Instrument
@@ -67,6 +67,19 @@ pointer instead of a scattered mental list. As of **2026-07**:
 generation ships a visibly different default aesthetic. It is a *when-does-it-
 rotate* note, not a new pattern — never add a tell here that lacks a catalog
 entry in the sections below.
+
+**2026-10 review — watched, not added.** External references reviewed in
+2026-10 named thirteen defaults this catalog has no entry for: an auto-scrolling marquee, a
+decorative grid-line background, a pulsing status dot, a blinking cursor,
+heading stragglers, text occlusion, a hard offset shadow, a static radial halo,
+an organic clip-path, a badge above the hero heading (now part of **T4**),
+content invisible at rest, cards flush to the scroller edge, and a raster
+buried under a wash. None is added: the bar is two independent sources or a
+showing in this tree's own UI, and the review could not show two independent
+sources from what the tree holds and found zero occurrences in `src/ui/` and
+`site/`. Each reopens when a second source or a
+dogfood occurrence appears, and lands as `candidate` or `judgment-only`, never
+`backed`.
 
 ### The three census columns — class, remediation, verification
 
