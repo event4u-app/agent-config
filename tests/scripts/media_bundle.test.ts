@@ -347,7 +347,8 @@ describe.skipIf(!HAVE_FFMPEG)('media bundle — generated fixtures through the r
         const text = out.join('');
         expect(text).toContain('cache: miss');
         expect(text).toContain('cache: hit');
-        expect(text).toMatch(/media_bundle: refused — duration 00:03 exceeds the 0.01-min cap/);
+        // The encoded fixture lands at 3 or 4 seconds depending on the ffmpeg build.
+        expect(text).toMatch(/media_bundle: refused — duration 00:0[34] exceeds the 0.01-min cap/);
     });
 });
 
