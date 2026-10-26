@@ -92,8 +92,64 @@ permissions:
   actions: write
 
 jobs:
+  # The release job builds from `main`, and its own wait (release.ts step 6)
+  # covers the release PR it opens. This job makes the other half explicit:
+  # the commit `main` stands on was merged from a pull request whose required
+  # checks — main's live ruleset, not a copied list — finished green. Latest
+  # run per check wins, so a re-run that went green counts and one that went
+  # red does not. Read-only token; nothing here can release anything.
+  verify-source-checks:
+    name: Verify source checks
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || contains(github.event.pull_request.labels.*.name, 'release:major') || contains(github.event.pull_request.labels.*.name, 'release:minor') || contains(github.event.pull_request.labels.*.name, 'release:patch')))
+    permissions:
+      contents: read
+      checks: read
+      pull-requests: read
+      statuses: read
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+    steps:
+      - name: Required checks of the commit being released are green
+        run: |
+          set -euo pipefail
+          tip=$(gh api "repos/$REPO/commits/main" --jq .sha)
+          head=$(gh api "repos/$REPO/commits/$tip/pulls" --jq '[.[] | select(.merged_at != null)][0].head.sha // empty')
+          if [ -z "$head" ]; then
+            echo "::error title=No source checks::main at $tip is not the merge of a pull request, so it has no pull-request checks to verify. Nothing was released."
+            exit 1
+          fi
+          required=$(gh api "repos/$REPO/rules/branches/main" --jq '[.[] | select(.type == "required_status_checks") | .parameters.required_status_checks[].context] | unique | .[]')
+          if [ -z "$required" ]; then
+            echo "::error title=No required checks::main declares no required checks, so there is nothing to verify the release against. Nothing was released."
+            exit 1
+          fi
+          runs=$(gh api --paginate "repos/$REPO/commits/$head/check-runs?per_page=100" --jq '.check_runs[] | [.id, .name, .status, (.conclusion // "none")] | @tsv')
+          statuses=$(gh api --paginate "repos/$REPO/commits/$head/statuses?per_page=100" --jq '.[] | [.id, .context, .state] | @tsv')
+          echo "main $tip — merged from pull-request head $head"
+          failed=0
+          while IFS= read -r ctx; do
+            run=$(printf '%s\n' "$runs" | awk -F'\t' -v n="$ctx" '$2 == n' | sort -n -k1,1 | tail -n 1)
+            if [ -n "$run" ]; then
+              verdict=$(printf '%s' "$run" | awk -F'\t' '{ print $3 "/" $4 }')
+            else
+              state=$(printf '%s\n' "$statuses" | awk -F'\t' -v n="$ctx" '$2 == n' | sort -n -k1,1 | tail -n 1 | cut -f3)
+              verdict="status/${state:-missing}"
+            fi
+            case "$verdict" in
+              completed/success|completed/skipped|status/success) echo "  ok    $ctx ($verdict)" ;;
+              *) echo "::error title=Required check not green::$ctx is $verdict on $head"; failed=1 ;;
+            esac
+          done <<< "$required"
+          if [ "$failed" -ne 0 ]; then
+            echo "Nothing was released."
+            exit 1
+          fi
+
   release:
     name: Release
+    needs: verify-source-checks
     runs-on: ubuntu-latest
     # PR path: only a MERGED pull_request carrying one of the exact release
     # labels — `contains(array, item)` against the labels array, never a
