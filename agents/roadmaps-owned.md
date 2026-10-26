@@ -133,7 +133,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-supervised-telemetry-collector | later | later | One resident process runs on this machine under a named supervisor, on named platforms, storing a schema whose fields are … |
 | road-to-surface-consolidation | later | later | Cut the proactive command-suggestion surface from ~160 self-suggesting commands to the cluster-head journeys (+ genuine standalone entry points), fold the … |
 | road-to-svg-witness-provenance | later | later | The blocking SVG turn-end obligation is discharged only by a render the hook itself saw succeed. |
-| road-to-tells-a-near-miss-can-refute | later | later | Every `backed` design tell carries an M1 measured on a corpus that contains a legitimate near-miss for it; a DESIGN.md … |
 | road-to-ten-across-the-board | later | draft | Every rubric category in the declared manifest of `agents/evidence/ac-capability-scorecard.yaml` reaches `ten`, `measured-null`, or `max-boundary` under the six-dimension definition frozen in … |
 | road-to-thin-flip-under-anchor-scoring | later | later | Road to a Thin Flip Under Anchor-Scoring |
 | road-to-token-economy-cache-followup | later | later | Close the census-gated remainder of the parent: idempotency gates on the measured top repeat-slot concerns, plus the data-halves of the … |

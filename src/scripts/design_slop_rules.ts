@@ -108,13 +108,15 @@ export interface SlopRule {
 export function cssBlocks(content: string): Array<{ selector: string; body: string; line: number }> {
   const blocks: Array<{ selector: string; body: string; line: number }> = [];
   const re = /([^{}]+)\{([^{}]*)\}/g;
+  // Comments blanked, not removed: line numbers hold.
+  content = content.replace(/\/\*[^]*?\*\//g, (c) => c.replace(/./g, " "));
   let m: RegExpExecArray | null;
   while ((m = re.exec(content)) !== null) {
     // The match starts right after the previous `}`, newline included; the
     // block's line is where its selector starts.
     const sel = m[1] ?? "";
     const line = lineOf(content, m.index + sel.length - sel.trimStart().length);
-    blocks.push({ selector: (m[1] ?? "").trim(), body: m[2] ?? "", line });
+    blocks.push({ selector: sel.trim(), body: m[2] ?? "", line });
   }
   return blocks;
 }

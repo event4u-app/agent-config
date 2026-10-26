@@ -98,6 +98,25 @@ German: the first three read structure and are language-agnostic. The last
 two are English phrase families; their German equivalents ("Du denkst jetzt
 vielleicht…", "In diesem Artikel werden wir…") are named gaps, not built.
 
+## Metamorphic relations instead of an imported corpus (5.1, 2026-10-26)
+
+The planned external before/after split was dropped by the owner (OQ-20): no
+third-party corpus enters the tree. In its place,
+`tests/scripts/prose_tells_metamorphic.test.ts` rewrites every clean file and
+every seeded `before` draft six ways that cannot change what the text says (CRLF,
+trailing spaces, doubled and trailing blank lines, soft-wrapped paragraphs
+joined, no-break spaces) and requires every per-family count to stay where it
+was. Sensitivity was shown on a seventh, meaning-changing rewrite (one injected
+stock phrase moves 41 of the 55 files).
+
+The first run found one real defect: a no-break space where a space belongs
+changed the counts of 22 of the 55 files, so any phrase family could be dodged by it.
+`analyzeText` now reads U+00A0 and U+202F as spaces. No count on either corpus
+moved, so this is not a new epoch.
+
+What the relations cannot see is a tell nobody here thought to write down.
+They test the detector against itself, never against an outside reader.
+
 ## Measured effect on the seeded corpus
 
 **Per family**, which is the figure that means something here. Six of the

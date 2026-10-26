@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: later
+status: archived
 review_by: 2027-01-26
 estate_growth_exempt: "This change parks both roadmaps of the 2026-10-26 inbox round with every agent-executable step done and verified. What remains waits on an owner licence answer (OQ-20), a maintainer-only differential-oracle run and a shadow window of real UI edits, none of which an agent run can produce. The two new open blockers are those waits, recorded rather than dropped; later/ grows by one, not two, because the round archived the later/ file this roadmap superseded."
 entry_condition:
@@ -129,12 +129,21 @@ The gate for every later promotion.
       the `dogfood/` split.
       verify: a labels file with one row per finding, basis and labeller; the
       bench reports precision on `dogfood/` separately.
-- [~] **1.5 External near-misses as a separately reported split.** The external
-      design source's should-pass fixtures under its licence, with
-      `provenance/borrows.jsonl` rows and attribution, reported only as their own
-      split, never folded into the headline (lineage overlap with the catalog).
-      Blocked: `external-test-data-licence` (OQ-20).
-      verify: licence text and SHA pinned; three named splits in the bench output.
+- [x] **1.5 An outside check without importing anyone's data.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/design_slop_rules.ts --> Rewritten
+      2026-10-26 after OQ-20: the owner chose not to import the external design
+      source's fixtures, on the AI council's reading that independence is a
+      property of who selects and tunes, not of where a file lives. Instead,
+      metamorphic relations: four meaning-preserving rewrites (CRLF, trailing
+      spaces, a leading comment, trailing blank lines) of every calibration
+      fixture and every valid near-miss must keep the verdict. Done 2026-10-26:
+      `src/scripts/design_slop_rules.test.ts`, 208 relations (23 fixtures and 29
+      near-misses, four rewrites each). The first run was
+      red on one: a CSS comment above a block became part of its selector, so
+      T12 went silent; `cssBlocks` now blanks comments (line numbers kept),
+      the dogfood trees stay at 0 findings, hook bundle 1 B under its ceiling.
+      `docs/CLAIMS.md` now reads the zero as a near-miss false-alarm rate with
+      its upper bound (0 of 29, about 9.8%), not a precision.
+      verify: `npx vitest run src/scripts/design_slop_rules.test.ts` -> 0
 - [x] **1.6 Run, record, let rules fall.** Done 2026-10-26: first run M1 > 0 for 15 of 26; tuned once L4, T9, T10; demoted CP2, CP5, CP6, M1, V3, V6; 20 rules at M1 = 0 on both splits; claim `design-slop-near-miss-baseline`; parity green. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/corpora/design-slop-nearmiss/holdout/m6-lazy-images-reading-progress.jsx --> A rule with M1 > 0 on a near-miss is
       tuned once, then demoted to `judgment-only` (the C6 precedent).
       verify: a new CLAIMS epoch with per-split M1;
@@ -219,13 +228,17 @@ The gate for every later promotion.
 
 ## Phase 5 — Prose: recall on someone else's corpus, facts that cannot move
 
-- [~] **5.1 External recall/FP split.** An external humanizer corpus's
-      before/after pairs as `tests/fixtures/ai-tells/external/`, reported as
-      their own split (recall per family, FP on the after side); scoped as
-      mechanism reach, not real-draft lift. Blocked:
-      `external-test-data-licence` (OQ-20).
-      verify: the bench prints an `external` split; CLAIMS gains a separate claim
-      scoped to it.
+- [x] **5.1 Metamorphic relations instead of an external split.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/detect_ai_tells.ts --> Rewritten
+      2026-10-26 after OQ-20 (no third-party corpus). Done 2026-10-26:
+      `tests/scripts/prose_tells_metamorphic.test.ts` rewrites the 35 clean files
+      and the 20 seeded drafts six ways that cannot change the text's meaning and
+      requires every per-family count to hold; a meaning-changing rewrite moves
+      41 of 55, so the relation can fail. It found one defect: no-break spaces
+      changed the counts of 22 of 55 files, a way to dodge any phrase family;
+      `analyzeText` now reads U+00A0 and U+202F as spaces. Recorded in
+      `internal/bench/corpora/prose-tells-epochs.md`; no count moved, the FP gate
+      exits 0. What it cannot see — a tell nobody here wrote down — is said there.
+      verify: `npx vitest run tests/scripts/prose_tells_metamorphic.test.ts` -> 0
 - [x] **5.2 New deterministic families only where a matcher exists.** Done 2026-10-26: all five cleared the gate at M1 = 0 (`bench_prose_tells_fp --gate`), epochs 14-18 in `internal/bench/corpora/prose-tells-epochs.md`; matchers in `src/scripts/_lib/structural_tells.ts`, phrase families in `ai_tells_rules.ts`; probe and counter-probe each in `tests/scripts/tell_family_epochs.test.ts`; rule-count delta +5 = families passed. One tune before landing: three of the scanner's own unit tests pad with a verbatim-repeated sentence, which `tell-repeated-openings` read as a run — a verbatim repeat now breaks it. Declared reach gap: the corpus has no deliberate anaphora. German forms of the two phrase families are named gaps; the model-judged rest is listed in `anti-aiisms.md`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/structural_tells.ts --> In
       strength order, each pre-registered and FP-run on the clean prose corpus:
       heading echoed in the first sentence (token overlap), repeated sentence
@@ -317,18 +330,19 @@ The gate for every later promotion.
       a declared voice exception.
       verify: `npx tsx src/scripts/lint_design_slop.ts --dir src/ui --json` -> /"findings": \[\]/ and the same for
       `--dir site`; every remaining case is declared; the count is in the PR body.
-- [~] **8.3 (maintainer-run) Differential oracle.** The external detector beside
+- [-] **8.3 (maintainer-run) Differential oracle.** The external detector beside
       ours on the Phase 1 splits, from the maintainer's machine only (external
-      code, never in CI); every disagreement becomes a triage row. Waits on a
-      maintainer run: executing third-party code is outside an agent run.
-      Blocked: `maintainer-run-differential-oracle`.
-      verify: a triage table under `agents/evidence/analysis/`; zero dependency
-      added.
+      code, never in CI); every disagreement becomes a triage row. Cancelled
+      2026-10-26 by the owner ("1, mach das und schließ die Roadmap ab"), under <!-- md-language-check: ignore -->
+      the same decision as OQ-20: no third-party data or code in this check. The
+      metamorphic relations of 1.5 and 5.1 take its place; for detectors that
+      only advise, the council judged that sufficient. Reopen together with
+      OQ-20 if a detector ever blocks.
 
 ## Blockers
 
 ### blocker: external-test-data-licence
-- **Status:** open — 2026-10-26, put to the owner as OQ-20 in `agents/owner-questions.md`
+- **Status:** resolved — 2026-10-26, OQ-20 answered by the owner: neither corpus is imported; 1.5 and 5.1 were rewritten as metamorphic relations and are done
 - **Class:** 3
 - **Owner:** user
 - **Ownership:** product-owned
@@ -340,7 +354,7 @@ The gate for every later promotion.
 - **Resolved when:** OQ-20 sits under `## Answered` in `agents/owner-questions.md` and Status reads resolved.
 
 ### blocker: maintainer-run-differential-oracle
-- **Status:** open — 2026-10-26, waits on a maintainer run
+- **Status:** resolved — 2026-10-26, option (b): 8.3 cancelled by the owner together with OQ-20
 - **Class:** 3
 - **Owner:** user
 - **Ownership:** product-owned
@@ -363,6 +377,7 @@ The gate for every later promotion.
 | D6 | reversible-technical | agent | The drafted plan's step 0.5 (inbox note to `road-to-consumer-invocations-that-install`) is dropped as already satisfied. | That roadmap already lists both sites (`:65`, `:70`). | — |
 | D7 | reversible-technical | agent | Kept from the drafted plan's kill register: no porting of the source's design commands (CLI budget 119/119, ADR-041); no external detector as a dependency; no detector evasion goal; no bundled third-party logo library; no 0-10 self-scores; no blocking every hook finding; external fixtures never in the headline number; no second DESIGN/PRODUCT schema. | Drafted plan K1-K8; `src/config/evaluator-budgets.json` `cli_help_command_count`. | — |
 | D8 | reversible-technical | agent | Declined from the external plan: a typed `design_evidence` envelope and trace links, a `capability-gap.json` inventory, render caches and budget tiers, a 20-task × 3-run blind benchmark with token release gates, skill-listing retrieval, an upstream watcher, a public gallery, a logo metadata search adapter. | No measurement would fill a new schema yet; the defect register is the inventory; 3.3 produces the cost evidence first; retrieval is out of topic; the trademark concern of D7 extends to metadata search. Already in the tree: the polish ceiling, SVG active-content rules, the authority ranking, the provenance ledgers, encrypted links, PR-only merge flow. | 3.3 shows a cost the declined items would address. |
+| D10 | product-owned | owner | OQ-20: import neither external corpus; replace 1.5 and 5.1 with metamorphic relations, rename the zero to a near-miss false-alarm rate with its upper bound, and cancel 8.3 with it. | The owner's turns of 2026-10-26 ("wir wollen das verhindern, wenn möglich"; "1, mach das und schließ die Roadmap ab"); AI council 2026-10-26, anthropic + openai, 2/2: independence comes from who selects and tunes, not from where a file lives; a visible external split turns into development data once tuned against; for advisory detectors self-checks plus holdout discipline suffice. | A detector becomes blocking, or a public precision figure is wanted — then a pinned, hash-checked, data-only, non-gating external split. | <!-- md-language-check: ignore -->
 | D9 | deterministic | evidence | Closure pass ran 2026-10-26: the only hit is the quoted owner demand in the Source header; OQ-20 carries the owner-owned residue and 8.3 waits on a maintainer run. | `closure_scan` over this file. | — |
 
 ## What verification changed
