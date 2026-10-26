@@ -54,7 +54,7 @@ function renderHeader() {
     var pin = model.pin || { commit: meta.commit, freshness: meta.state, generation: meta.graph_generation || '' };
     var commit = $('pin-commit');
     clear(commit);
-    add(commit, document.createTextNode(pin.commit), pin.date ? el('span', { class: 'pin-date' }, ' · ' + pin.date) : null);
+    add(commit, document.createTextNode(shortCommit(pin.commit)), pin.date ? el('span', { class: 'pin-date' }, ' · ' + shortDate(pin.date, true)) : null);
     commit.setAttribute('title', t('generation')(String(pin.generation || '').slice(0, 8)));
     var fresh = $('pin-fresh');
     var st = String(pin.freshness || meta.state || '');
@@ -76,20 +76,25 @@ function renderNav() {
     var on = nav.querySelector('a[aria-current]');
     if (on && nav.scrollWidth > nav.clientWidth) nav.scrollLeft = Math.max(0, on.offsetLeft - nav.offsetLeft - 8);
 }
-/** Shown on every area while the graph is not level with HEAD, with the reason and what to do. */
+/**
+ * While the graph is not level with HEAD the header's freshness chip carries
+ * the reason and what to do, as its tooltip: the design draws no banner row.
+ */
 function renderBanner() {
     var b = $('banner');
     clear(b);
-    if (SHELL.hub) { b.hidden = true; return; }
+    b.hidden = true;
+    if (SHELL.hub) return;
+    var chip = $('pin-fresh');
     var st = String((model.pin && model.pin.freshness) || meta.state || '');
-    if (st === 'fresh') { b.hidden = true; return; }
+    if (st === 'fresh') { chip.removeAttribute('title'); chip.removeAttribute('aria-label'); return; }
     var m = /^behind:(\d+)$/.exec(st);
     var key = m ? 'behind' : st === 'edited' ? 'edited' : st === 'absent' || !st ? 'absent' : 'other';
     var title = key === 'behind' ? t('bannerStale').behind(m[1]) : key === 'other' ? t('bannerStale').other(st) : t('bannerStale')[key];
-    add(b, stChip(t('bannerLabel') + ' · ' + (st || 'absent'), key === 'absent' ? 'dash' : 'warn'), el('b', null, title), el('span', { class: 'soft' }, t('bannerWhy')[key]));
-    b.hidden = false;
+    var text = title + ' — ' + t('bannerWhy')[key];
+    chip.setAttribute('title', text);
+    chip.setAttribute('aria-label', t('bannerLabel') + ': ' + text);
 }
-
 function renderRoute() {
     var r = current.route;
     var code = r === 'code';

@@ -344,6 +344,18 @@ function areaMetaLine(id, own) {
     return m;
 }
 
+/** The compact reader line of a page head: the module's own summary first, then completeness; the reader's name is its tooltip. */
+function pageMetaLine(id, own) {
+    var p = KA[id];
+    var mod = AREA_MODULES[id];
+    if (!p) return null;
+    var m = el('div', { class: 'av-meta av-barmeta mono', title: t('reader') + ': ' + p.reader });
+    if (own) m.appendChild(el('span', null, mod.meta(p)));
+    var lower = p.completeness === 'partial' ? t('lowerBound') : p.completeness === 'unknown' ? t('unknownRead') : null;
+    m.appendChild(stChip(t('completeNames')[p.completeness] || p.completeness, COMPLETE_CLASS[p.completeness], lower));
+    return m;
+}
+
 /**
  * One knowledge area page. A module with `page` lays out both rails and the
  * centre itself: page(payload|null, view, key, { bar, left, main, right });
@@ -380,11 +392,11 @@ function renderAreaPage(id, key) {
         bar.hidden = false;
         var centre = main;
         if (!mod.ownsBar) {
+            // One row as the designs draw it: the views on the left, what the reader saw on the right.
             var head = el('div', { class: 'av-head' });
-            add(head, avCrumbs(id, item));
             if (live && tabList.length) head.appendChild(viewTabs(id, key, tabList));
-            var m = areaMetaLine(id, own);
-            if (m) { m.classList.add('av-barmeta'); head.appendChild(m); }
+            var m = pageMetaLine(id, own);
+            if (m) head.appendChild(m);
             main.appendChild(head);
             centre = el('div', { class: 'av-page' });
             main.appendChild(centre);
