@@ -98,7 +98,7 @@ interface Read {
     model: PipelineModel;
 }
 
-function emitPipeline(em: Emitter, { file, model }: Read, all: Read[], protectedEnvs: Set<string>, byName: Map<string, string>): void {
+function emitPipeline(em: Emitter, { file, model }: Read, all: Read[], protectedEnvs: Set<string>, byName: Map<string, string>, filesUnder: (dir: string) => string[]): void {
     const wfId = em.fact(
         'workflow',
         file,
@@ -113,7 +113,7 @@ function emitPipeline(em: Emitter, { file, model }: Read, all: Read[], protected
         file,
         model.system === 'github' ? model.nameLine : 1,
     );
-    const own = ownPipelineFiles(file, model);
+    const own = ownPipelineFiles(file, model, filesUnder);
     for (const t of model.triggers) {
         if (model.system !== 'github') break;
         const hasFilter = t.paths.length > 0 || t.pathsIgnore.length > 0;
@@ -286,6 +286,16 @@ export function readDelivery(root: string): LaneOutput {
     const byName = new Map<string, string>();
     for (const r of reads) if (r.model.name) byName.set(r.model.name, `workflow:${r.file}`);
     const protectedEnvs = protectedBySettings(em, root);
-    for (const r of reads) emitPipeline(em, r, reads, protectedEnvs, byName);
+    const filesUnder = (dir: string): string[] => {
+        try {
+            return (fs.readdirSync(path.join(root, dir), { recursive: true }) as string[])
+                .map((f) => `${dir}/${f.split(path.sep).join('/')}`)
+                .filter((f) => fs.statSync(path.join(root, f)).isFile())
+                .sort();
+        } catch {
+            return [];
+        }
+    };
+    for (const r of reads) emitPipeline(em, r, reads, protectedEnvs, byName, filesUnder);
     return redactOutput(em.output('delivery'));
 }

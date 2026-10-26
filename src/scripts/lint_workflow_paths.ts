@@ -188,7 +188,7 @@ export function scanWorkflowDir(
                 findings.push({ file: f, line: entry.line, glob: entry.glob, why: 'no-match' });
             }
         }
-        findings.push(...ownFileExclusions(`.github/workflows/${f}`, f, body));
+        findings.push(...ownFileExclusions(`.github/workflows/${f}`, f, body, opts.tracked));
         if (findings.length > before) {
             ledger.fail(f, `${String(findings.length - before)} dead path filter(s)`);
         } else {
@@ -204,12 +204,17 @@ export function scanWorkflowDir(
  * that file alone then never runs the workflow that depends on it. Same
  * semantics as the delivery lane's DL-5, from the same function.
  */
-export function ownFileExclusions(workflowPath: string, file: string, body: string): PathFinding[] {
+export function ownFileExclusions(
+    workflowPath: string,
+    file: string,
+    body: string,
+    tracked: readonly string[],
+): PathFinding[] {
     const model = parsePipeline(body, 'github');
     if (model.error !== null) {
         return [];
     }
-    const own = ownPipelineFiles(workflowPath, model);
+    const own = ownPipelineFiles(workflowPath, model, (dir) => tracked.filter((t) => t.startsWith(`${dir}/`)));
     const out: PathFinding[] = [];
     for (const t of model.triggers) {
         if (t.paths.length === 0 && t.pathsIgnore.length === 0) {
@@ -247,13 +252,17 @@ function _parseArgs(argv: readonly string[]): Args {
 
 function _selfTest(): number {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lwp-selftest-'));
-    const mkRepo = (name: string, workflow: string): string => {
+    const mkRepo = (name: string, workflow: string, extra: Record<string, string> = {}): string => {
         const repo = path.join(tmp, name);
         fs.mkdirSync(path.join(repo, '.github', 'workflows'), { recursive: true });
         fs.mkdirSync(path.join(repo, '.github', 'actions', 'setup'), { recursive: true });
         fs.mkdirSync(path.join(repo, 'src'), { recursive: true });
         fs.writeFileSync(path.join(repo, 'src', 'real.ts'), '// real\n');
         fs.writeFileSync(path.join(repo, '.github', 'actions', 'setup', 'action.yml'), 'runs:\n  using: composite\n  steps: []\n');
+        for (const [rel, body] of Object.entries(extra)) {
+            fs.mkdirSync(path.dirname(path.join(repo, rel)), { recursive: true });
+            fs.writeFileSync(path.join(repo, rel), body);
+        }
         execFileSync('git', ['init', '-q'], { cwd: repo });
         execFileSync('git', ['add', '-A'], { cwd: repo });
         fs.writeFileSync(path.join(repo, '.github', 'workflows', 'w.yml'), workflow, 'utf-8');
@@ -281,14 +290,19 @@ function _selfTest(): number {
         const bareDir = mkRepo('baredir', `${HEAD}      - "src"\n`);
         const USES = 'jobs:\n  j:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ./.github/actions/setup\n';
         const actionExcluded = mkRepo('actionexcluded', `${HEAD}      - "src/**"\n${USES}`);
+        const manifestOnly = mkRepo(
+            'manifestonly',
+            `${HEAD}      - "src/**"\n      - ".github/actions/setup/action.yml"\n${USES}`,
+            { '.github/actions/setup/run.sh': 'echo setup\n' },
+        );
         const actionCovered = mkRepo(
             'actioncovered',
             `${HEAD}      - "src/**"\n      - ".github/actions/setup/**"\n${USES}`,
         );
         return runSelfTest({
             gate: 'lint_workflow_paths',
-            minCases: 6,
-            minRejectCases: 3,
+            minCases: 7,
+            minRejectCases: 4,
             cases: [
                 {
                     name: 'a filter naming a retired tree is rejected',
@@ -315,6 +329,11 @@ function _selfTest(): number {
                     name: 'a filter that excludes a local action the workflow uses is rejected',
                     expect: 'reject',
                     run: () => run(actionExcluded),
+                },
+                {
+                    name: 'a filter naming only the manifest misses the rest of the action and is rejected',
+                    expect: 'reject',
+                    run: () => run(manifestOnly),
                 },
                 {
                     name: 'a filter that covers the local action directory passes',

@@ -33,13 +33,23 @@ export function excludedOwnFiles(paths: string[], pathsIgnore: string[], own: st
 /**
  * The files a GitHub workflow is made of: itself, plus every local action and
  * reusable workflow it calls. A local action is a directory, and a path filter
- * sees the files in it, so its `action.yml` manifest stands for it.
+ * sees the files in it, so each file `filesUnder` lists for it counts; when it
+ * lists none, the `action.yml` manifest stands in for the directory.
  */
-export function ownPipelineFiles(file: string, model: PipelineModel): string[] {
+export function ownPipelineFiles(
+    file: string,
+    model: PipelineModel,
+    filesUnder: (dir: string) => readonly string[] = () => [],
+): string[] {
     const local = model.jobs
         .flatMap((j) => [j.uses?.ref, ...j.steps.map((s) => s.uses?.ref)])
         .filter((r): r is string => typeof r === 'string' && r.startsWith('./'))
         .map((r) => r.replace(/^\.\//, ''))
-        .map((r) => (/\.ya?ml$/.test(r) ? r : `${r.replace(/\/$/, '')}/action.yml`));
+        .flatMap((r) => {
+            if (/\.ya?ml$/.test(r)) return [r];
+            const dir = r.replace(/\/$/, '');
+            const files = filesUnder(dir);
+            return files.length > 0 ? [...files] : [`${dir}/action.yml`];
+        });
     return [...new Set([file, ...local])];
 }
