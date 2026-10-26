@@ -597,8 +597,9 @@ tasks:
       - kind: pipeline
         id: job test
         aliases:
-          - "`test`"
           - test job
+          - "job: test"
+          - jobs.test
       - kind: file
         id: .github/workflows/ci.yml
       - kind: file
