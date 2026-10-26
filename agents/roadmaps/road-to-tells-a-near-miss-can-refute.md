@@ -187,7 +187,7 @@ The gate for every later promotion.
       without attribution.
       verify: a numbers table in the PR; if attribution hides an introduced P0 in
       any case, 3.1 reverts.
-- [ ] **3.3 Cost receipt.** Measure tokens and hook time on non-UI transcripts
+- [x] **3.3 Cost receipt.** Done 2026-10-26, measured after Phases 3 and 6, in process, median of 30. Non-UI writes (`README.md`, a `.ts` script): `UI_EXT` is false, the hook exits before any scan, before and after — 0 tokens injected, 0 loads of `design-antipatterns.md` (no hook or concern reads it; grep over `src/scripts/hooks` and `src/scripts/*hook*.ts`). UI writes: `src/ui/app.css` 1.7 ms → 17.6 ms, `WizardPage.tsx` 173.6 ms → 368.7 ms — the second scan plus `git show`. Acted on: a write with no P0/P1 finding now skips the baseline scan, so a clean write pays nothing extra (WizardPage carries only P2, so it is back at one scan); the cost stays on writes that have something to report, where it buys the incumbent split. Injected text only shrinks: incumbent findings become one count. Hook bundle 193 B under its ceiling after this step. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/design_slop_hook.ts --> Measure tokens and hook time on non-UI transcripts
       before and after Phases 3 and 6 and assert the design catalog loads 0 times
       there. A measurement, not a gate.
       verify: a before/after table in the PR.
