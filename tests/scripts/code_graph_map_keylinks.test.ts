@@ -3,7 +3,8 @@
  * states (an ORM relation's key, a raw-SQL join) with no constraint in the
  * database, and a same-name key nothing states. The payload carries them at
  * both ends; the page draws them column to column with one icon per line, a
- * popup per icon, and moves or zooms only while Ctrl / ⌘ is held.
+ * popup per icon; the wheel zooms and a drag pans, and only moving a table needs
+ * Ctrl / ⌘ held.
  */
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -193,8 +194,8 @@ describe('the ERD draws key links', () => {
     });
 });
 
-describe('moving and zooming need Ctrl / ⌘', () => {
-    it('a plain wheel scrolls the page and leaves the zoom; with Ctrl or ⌘ it zooms', async () => {
+describe('the wheel zooms and a drag pans; only moving a table needs Ctrl / ⌘', () => {
+    it('a plain wheel over the stage zooms and the page stays; the help names the gestures', async () => {
         // A short window, so the page has somewhere to scroll.
         const page = await open('#/data', 1440, 640);
         const z = (): Promise<number> => page.evaluate(() => (window as unknown as { __mapErd: { z: number } }).__mapErd.z);
@@ -202,32 +203,31 @@ describe('moving and zooming need Ctrl / ⌘', () => {
         const z0 = await z();
         const box = (await page.locator('#db-stage').boundingBox())!;
         await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-        await page.mouse.wheel(0, 300);
+        await page.mouse.wheel(0, -200);
         await page.waitForTimeout(150);
-        expect(await z()).toBe(z0);
-        expect(await scroll()).toBeGreaterThan(0);
-        for (const key of ['Control', 'Meta']) {
-            const before = await z();
-            await page.locator('#db-stage').dispatchEvent('wheel', { deltaY: -100, ctrlKey: key === 'Control', metaKey: key === 'Meta' });
-            expect(await z(), key).toBeGreaterThan(before);
-        }
-        expect(await page.locator('.db-help').textContent()).toMatch(/^Hold (Ctrl|⌘) to move and zoom/);
+        expect(await z()).toBeGreaterThan(z0);
+        expect(await scroll()).toBe(0);
+        expect(await page.locator('.db-help').textContent()).toMatch(/^Drag to pan, wheel to zoom; hold (Ctrl|⌘) and drag to move a table/);
         await page.close();
     });
 
-    it('a plain drag leaves a card where it is; with the modifier held it moves the card', async () => {
+    it('a plain drag on a card pans and leaves the card where it is; with the modifier held it moves the card', async () => {
         const page = await open('#/data', 1440);
         const card = page.locator('.db-table[data-table="users"] .db-thead');
         const pos = (): Promise<string> => page.locator('.db-table[data-table="users"]').evaluate((c) => `${(c as HTMLElement).style.left},${(c as HTMLElement).style.top}`);
+        const world = (): Promise<string> => page.locator('#db-stage .db-world').evaluate((w) => (w as HTMLElement).style.transform);
         const before = await pos();
-        const b = (await card.boundingBox())!;
+        const w0 = await world();
+        let b = (await card.boundingBox())!;
         await page.mouse.move(b.x + 20, b.y + 8);
         await page.mouse.down();
         await page.mouse.move(b.x + 140, b.y + 90, { steps: 5 });
         await page.mouse.up();
         expect(await pos()).toBe(before);
+        expect(await world()).not.toBe(w0);
         await page.keyboard.down('Control');
         expect(await page.locator('#db-stage').getAttribute('class')).toContain('mod');
+        b = (await card.boundingBox())!;
         await page.mouse.move(b.x + 20, b.y + 8);
         await page.mouse.down();
         await page.mouse.move(b.x + 140, b.y + 90, { steps: 5 });
@@ -239,7 +239,7 @@ describe('moving and zooming need Ctrl / ⌘', () => {
 });
 
 describe('the ERD in 3D', () => {
-    interface Erd3d { yaw: number; pitch: number; front: string; hood: string[]; proj: Record<string, { x: number; y: number }> }
+    interface Erd3d { rot: number[]; front: string; hood: string[]; proj: Record<string, { x: number; y: number }> }
     const erd3 = (page: Page): Promise<Erd3d> => page.evaluate(() => (window as unknown as { __mapErd3d: Erd3d }).__mapErd3d);
     it('renders from the 2D / 3D toggle, Focus stays the default, and a picked table comes to the front with all its columns', async () => {
         const page = await open();
@@ -262,7 +262,7 @@ describe('the ERD in 3D', () => {
         await page.close();
     });
 
-    it('a plain drag leaves the projection; Ctrl + drag turns it; the arrow keys turn it too', async () => {
+    it('a plain drag turns it; the arrow keys turn it too', async () => {
         const page = await open();
         await page.click('#av-main .dimseg button[data-dim="3d"]');
         await page.waitForFunction(() => (window as unknown as { __mapErd3d?: unknown }).__mapErd3d !== undefined);
@@ -275,16 +275,12 @@ describe('the ERD in 3D', () => {
             await page.mouse.up();
         };
         await drag();
-        expect((await erd3(page)).yaw).toBe(before.yaw);
-        await page.keyboard.down('Control');
-        await drag();
-        await page.keyboard.up('Control');
         const turned = await erd3(page);
-        expect(turned.yaw).not.toBe(before.yaw);
+        expect(turned.rot).not.toEqual(before.rot);
         expect(turned.proj['users']).not.toEqual(before.proj['users']);
         await page.locator('#db-stage').focus();
         await page.keyboard.press('ArrowLeft');
-        expect((await erd3(page)).yaw).toBeCloseTo(turned.yaw - 0.15, 5);
+        expect((await erd3(page)).rot).not.toEqual(turned.rot);
         await page.close();
     });
 });
