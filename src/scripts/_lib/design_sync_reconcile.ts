@@ -40,7 +40,7 @@ export interface ReconcileInput {
     tiers: string[];
     owner: 'fe-design' | 'directives/ui';
     /** Presence and declared register of DESIGN.md / PRODUCT.md (`readDocAuthority`). */
-    docs?: { design_md: Signals['design_md']; product_md: Signals['product_md'] };
+    docs?: { design_md: NonNullable<Signals['design_md']>; product_md: NonNullable<Signals['product_md']> };
 }
 
 /** Build the resolver's signals — the one place the sync inputs meet `ui_authority`. */
