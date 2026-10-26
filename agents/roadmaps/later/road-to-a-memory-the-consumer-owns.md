@@ -155,6 +155,14 @@ what the user is working on and wants to reach.
       stale index, scheduled-vs-contested and person recall; the drafts' target numbers
       go into the corpus header as hypotheses.
       verify: the corpus dry-run lists the four new classes.
+- [ ] **8.2 A recall log that carries no prompt.** Arrived in `inbox-2026-10-ay`
+      (2026-10-26): `memory-recall` leaves no trace of what it fired, so recall quality
+      cannot be read offline and `session_index` / `learn_on_session_end` can never be
+      flipped on a measurement. Append one line per fire — rule id, slug, hit or
+      unreadable, a digest of the payload, never its text — under `agents/runtime/`,
+      capped by lines and bytes. Measurement precondition only; no flip rides on it.
+      verify: a fixture fire appends exactly one line with no payload substring, and
+      the cap holds on the 1,001st fire.
 
 ## Decisions
 
