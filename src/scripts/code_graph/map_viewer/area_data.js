@@ -90,6 +90,8 @@ var dbState = { lines: null, cols: null, layout: 'grid', src: { C: true, M: true
 function dBare(tb) { return tb.connection !== 'default' && tb.name.indexOf(tb.connection + ':') === 0 ? tb.name.slice(tb.connection.length + 1) : tb.name; }
 function dTable(p, name) { for (var i = 0; i < p.tables.length; i++) if (p.tables[i].name === name) return p.tables[i]; return null; }
 function dClassOf(file) { return base(file).replace(/\.[A-Za-z0-9]+$/, ''); }
+/** The shipped no-data tag alone, the reason in its title: for a slot as small as a chip. */
+function dNoDataTag(reason) { return el('span', { class: 'nodata-tag', title: t('noDataTitle')(reason) }, t('noDataShort')); }
 function dNoData(reason) { var s = el('span', { class: 'nodata-tag', title: t('noDataTitle')(reason) }, t('noDataShort')); return add(el('span', { class: 'db-nd' }), s, el('span', { class: 'muted' }, ' ' + reason)); }
 
 /** A relation side names a model class or a table; this resolves it to a table, or null when no table backs it. */
@@ -190,7 +192,7 @@ AREA_MODULES.data = {
         });
         return out;
     },
-    meta: function (p) { return t('dbMeta')(num(p.tables.length), num(p.foreignKeys.length + p.relations.length)); },
+    meta: function (p) { return t('dbMeta')(num(p.tables.length), num(p.foreignKeys.length + p.relations.length)) + ((p.actualSources || []).length ? ' · ' + t('dbSnap')(p.actualSources.map(base).join(', ')) : ''); },
     page: function (p, view, key, slots) {
         var sel = dSelection(p, key);
         dLeft(p, sel, slots.left);
@@ -243,15 +245,15 @@ function dLeft(p, sel, left) {
     var actual = p.actualSources || [];
     var nModels = Object.keys(models).length;
     var defs = [
-        ['C', t('srcC'), t('srcCmeta')(num(nModels), num(p.relations.length)), nModels || p.relations.length ? stChip(t('completeNames')[p.completeness] || p.completeness, COMPLETE_CLASS[p.completeness]) : dNoData(t('noDataUnknown'))],
+        ['C', t('srcC'), t('srcCmeta')(num(nModels), num(p.relations.length)), nModels || p.relations.length ? stChip(t('completeNames')[p.completeness] || p.completeness, COMPLETE_CLASS[p.completeness]) : dNoDataTag(t('noDataUnknown'))],
         ['M', t('srcM'), t('srcMmeta')(num(p.tables.length), num(Object.keys(migFiles).length)), stChip(t('completeNames')[p.completeness] || p.completeness, COMPLETE_CLASS[p.completeness])],
-        ['L', t('srcL'), actual.length ? t('srcLmeta')(actual.map(base).join(', ')) : t('srcLnone'), actual.length ? stChip(t('covOf')(num(covered), num(p.tables.length)), covered === p.tables.length ? 'ok' : 'warn') : dNoData(t('srcLno'))],
-        ['Q', t('srcQ'), t('srcQmeta')(num(queried)), queried ? stChip(t('completeNames').partial, 'warn', t('lowerBound')) : dNoData(t('srcQno'))]
+        ['L', t('srcL'), actual.length ? t('srcLmeta')(actual.map(base).join(', ')) : t('srcLnone') + ' · ' + t('srcLno'), actual.length ? stChip(t('covOf')(num(covered), num(p.tables.length)), covered === p.tables.length ? 'ok' : 'warn') : dNoDataTag(t('srcLno'))],
+        ['Q', t('srcQ'), t('srcQmeta')(num(queried)), queried ? stChip(t('completeNames').partial, 'warn', t('lowerBound')) : dNoDataTag(t('srcQno'))]
     ];
     defs.forEach(function (d) {
         var on = dbState.src[d[0]];
         var b = el('button', { type: 'button', role: 'switch', class: 'db-switch', 'aria-checked': String(on), 'data-src': d[0] });
-        add(b, el('span', { class: 'db-src ' + d[0] + (on ? '' : ' off') }, d[0]), add(el('span', { class: 'nm' }, el('b', null, d[1]), el('span', null, d[2])), d[3]);
+        add(b, el('span', { class: 'db-src ' + d[0] + (on ? '' : ' off') }, d[0]), add(el('span', { class: 'nm' }), el('b', null, d[1]), el('span', null, d[2])), d[3]);
         b.addEventListener('click', function () { dbState.src[d[0]] = !dbState.src[d[0]]; renderAreaPage('data', current.item); });
         srcs.appendChild(b);
     });
@@ -291,27 +293,12 @@ function dLeft(p, sel, left) {
 // ---- Centre ---------------------------------------------------------------------
 
 function dCentre(p, view, key, sel, main) {
-    var head = el('div', { class: 'db-head' });
-    var tabs = el('div', { class: 'lenses', role: 'tablist', 'aria-label': t('views') });
-    AREA_MODULES.data.tabs.forEach(function (o) {
-        var b = el('button', { type: 'button', role: 'tab', class: 'lens', 'aria-selected': String(view === o[0]) }, t(o[1]));
-        b.addEventListener('click', function () { avState.view.data = o[0]; renderAreaPage('data', key); });
-        tabs.appendChild(b);
-    });
-    head.appendChild(tabs);
-    var metaText = AREA_MODULES.data.meta(p) + ((p.actualSources || []).length ? ' · ' + t('dbSnap')(p.actualSources.map(base).join(', ')) : '') + ' · ' + t('reader') + ': ' + p.reader;
-    var m = el('span', { class: 'db-meta' }, metaText);
-    if (p.completeness !== 'complete') m.appendChild(document.createTextNode(' · ' + (p.completeness === 'partial' ? t('lowerBound') : t('unknownRead'))));
-    head.appendChild(m);
-    main.appendChild(head);
-    var crumbs = avCrumbs('data', key ? itemByKey('data', key) : null);
-    crumbs.classList.add('db-crumbs');
-    main.appendChild(crumbs);
-    var bodyEl = el('div', { class: 'db-body' });
-    main.appendChild(bodyEl);
-    if (view === 'drift') dDriftLens(p, bodyEl);
-    else if (view === 'mig') dMigLens(p, bodyEl);
-    else dErd(p, sel, bodyEl);
+    // The shell draws the head row (crumbs, lenses, reader line); the design's centre has no padding of its own.
+    $('av-main').classList.add('db-main');
+    main.classList.add('db-body');
+    if (view === 'drift') dDriftLens(p, main);
+    else if (view === 'mig') dMigLens(p, main);
+    else dErd(p, sel, main);
 }
 
 function dSeg(label, opts, value, pick) {
@@ -368,6 +355,11 @@ function dGrid(names, adj, ncols) {
     var cell = Object.create(null);
     var taken = Object.create(null);
     var nrows = Math.ceil(names.length / ncols) + 2;
+    var inSet = Object.create(null);
+    names.forEach(function (n) { inSet[n] = true; });
+    var nbOf = Object.create(null);
+    names.forEach(function (n) { nbOf[n] = adj[n].filter(function (m) { return inSet[m]; }); });
+    adj = nbOf;
     var byDeg = function (a, b) { return adj[b].length - adj[a].length || (a < b ? -1 : 1); };
     var seen = Object.create(null);
     var order = [];
@@ -628,12 +620,17 @@ function dEdges(stage) {
         var mx = (p1[0] + p2[0]) / 2 + 8;
         var my = (p1[1] + p2[1]) / 2 - 10;
         if (Math.abs(bc[0] - ac[0]) > Math.abs(bc[1] - ac[1])) { mx = (p1[0] + p2[0]) / 2; my = Math.min(ra.y, rb.y) - 14; }
+        // A second labelled edge between the same two cards stacks its label below the first.
+        var pair = a < b ? a + '|' + b : b + '|' + a;
+        my += (labelled[pair] || 0) * 18;
+        labelled[pair] = (labelled[pair] || 0) + 1;
         var lb = el('div', { class: 'db-elabel ' + lcls, title: title }, text);
         lb.style.left = mx.toFixed(0) + 'px';
         lb.style.top = my.toFixed(0) + 'px';
         e.labels.appendChild(lb);
     }
     var hot = e.sel.hot;
+    var labelled = Object.create(null);
     if (phys) {
         e.p.foreignKeys.forEach(function (k) {
             var cascade = /cascade/i.test(k.onDelete || '');
@@ -757,11 +754,11 @@ function dDriftLens(p, bodyEl) {
         add(g, b, el('span', { class: 'c' }, r.c.type + (r.c.nullable ? ' · null' : '')),
             el('span', { class: 'c' }, r.c.actual ? r.c.actual.type + (r.c.actual.nullable ? ' · null' : '') : '–'),
             el('span', { class: 'c m' }, t('unverifiable')),
-            add(el('span', { class: 'c s' }, stChip(t(DRIFT_LABEL[r.st]), DRIFT_CLASS[r.st]))));
+            add(el('span', { class: 'c s' }), stChip(t(DRIFT_LABEL[r.st]), DRIFT_CLASS[r.st])));
     });
     if (!rows.length) {
-        add(g, el('span', { class: 'c' }, '–'), el('span', { class: 'c' }, t('present')), add(el('span', { class: 'c' }, dNoData(t('driftNone')))), el('span', { class: 'c m' }, t('unverifiable')),
-            add(el('span', { class: 'c s' }, stChip(t('unverifiable'), 'dash'))));
+        add(g, el('span', { class: 'c' }, '–'), el('span', { class: 'c' }, t('present')), add(el('span', { class: 'c' }), dNoData(t('driftNone'))), el('span', { class: 'c m' }, t('unverifiable')),
+            add(el('span', { class: 'c s' }), stChip(t('unverifiable'), 'dash')));
     }
     grid.appendChild(g);
     wrap.appendChild(grid);

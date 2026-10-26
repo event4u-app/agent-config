@@ -274,6 +274,21 @@ describe('the page shows each area', () => {
             ['impact', 'comments.body'],
             ['agent', 'review-risk'],
         ];
+        // P1: the Schema rail lists DR-1, DR-3 and DR-4, and each one's detail shows every witness it carries.
+        const dataPage = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+        await dataPage.goto(`${html}#/data`);
+        await dataPage.waitForFunction(() => (window as unknown as { __mapRoute?: unknown }).__mapRoute !== undefined);
+        const listed = await dataPage.locator('#av-left-body .db-find .id').allTextContents();
+        expect(listed).toEqual(expect.arrayContaining(['DR-1', 'DR-3', 'DR-4']));
+        for (const id of ['DR-1', 'DR-3', 'DR-4']) {
+            const i = areas.data!.findings.findIndex((f) => f.id === id);
+            await dataPage.evaluate((k) => { location.hash = `#/data/finding%2F${k}`; }, i);
+            await dataPage.waitForFunction((k) => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === `finding/${k}`, i);
+            const detail = (await dataPage.locator('#av-right-body').textContent()) ?? '';
+            for (const w of areas.data!.findings[i]!.witnesses) expect(detail, id).toContain(`${w.file}:${w.line}`);
+            expect(await dataPage.locator('#av-right-body .db-ev').count(), id).toBe(areas.data!.findings[i]!.witnesses.length);
+        }
+        await dataPage.close();
         for (const [hash, text] of expectations) {
             const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
             const errors: string[] = [];
