@@ -1,3 +1,5 @@
+<!-- evidence-type: original-review -->
+
 # Independent test review — check_test_weakening on the inbox-2026-10-az branch
 
 - **Date:** 2026-10-26
