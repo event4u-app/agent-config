@@ -102,7 +102,7 @@ no absolute local path.
       external in the map model.
 - [x] **0.3 Commit the map.** Rebuild `agents/map/`, assert no listed path is <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: agents/map/MAP.md -->
       ignored and no `/Users/` or `/home/` string remains, and commit it.
-      verify: `git check-ignore` over the map's file list prints nothing.
+      verify: `node -e "for(const f of require('./agents/map/code/map.json').model.files)console.log(f.path)" | git check-ignore --stdin | wc -l` -> /^\s*0\s*$/
 
 ## Phase 1 — Systems: what runs and why
 
