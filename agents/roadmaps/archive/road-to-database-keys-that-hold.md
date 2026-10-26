@@ -55,35 +55,35 @@ pinned to their current size (`src/config/skill-body-budget.json`).
 
 ## Phase 1 — Stop shipping falsehoods
 
-- [x] **1.1 Repair the taught linter command.** Drop the `--` from the
+- [x] **1.1 Repair the taught linter command.** Drop the `--` from the <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       `lint_persistence` line in `src/skills/schema-review/SKILL.md`, and add a
       test that extracts that line's arguments and runs them against a fixture.
       verify: the new test fails against the old line and passes against the new one.
-- [x] **1.2 Make the subquery rewrite conditional** in
+- [x] **1.2 Make the subquery rewrite conditional** in <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `src/skills/database/SKILL.md`, pointing at the guideline's subquery table.
       verify: `grep -c 'subquery → JOIN' src/skills/database/SKILL.md` -> 1
       verify: `test $(wc -c < src/skills/database/SKILL.md) -le 5941` -> 0
-- [x] **1.3 Fix the migration template.** No index on the boolean; the foreign
+- [x] **1.3 Fix the migration template.** No index on the boolean; the foreign <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       key via `foreignId()->constrained()` with an explicit action; the
       project-specific prefix and command block replaced by a pointer to the
       project's own conventions.
       verify: `laravel-migration/SKILL.md` contains neither `index('is_active')` nor `make:migration:customer` and stays within 8,597 bytes.
-- [x] **1.4 De-lock the engine in `sql-writing`.** Validate and Output check the
+- [x] **1.4 De-lock the engine in `sql-writing`.** Validate and Output check the <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       syntax against the engine step 3 read, not against MySQL.
       verify: `grep -c 'using MariaDB/MySQL syntax\|Confirm MariaDB/MySQL syntax' src/skills/sql-writing/SKILL.md` -> 1
       verify: `test $(wc -c < src/skills/sql-writing/SKILL.md) -le 3717` -> 0
-- [x] **1.5 Give constraint correctness an owner.** `data-integrity` names keys,
+- [x] **1.5 Give constraint correctness an owner.** `data-integrity` names keys, <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       referential actions and cascade blast radius as its own.
       verify: the persona's Focus names constraint correctness and `backend-architect` stays unchanged.
 
 ## Phase 2 — The engine is an input the report states
 
-- [x] **2.1 Report engines and the unverified count.** The index-parity result
+- [x] **2.1 Report engines and the unverified count.** The index-parity result <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/persistence/detect_index_parity.ts -->
       carries the engine per connection, and counts WHERE references whose only
       support is a foreign key on a connection whose engine the project does not
       state. `lint_persistence` prints both in text and JSON.
       verify: a fixture with no engine reports `engine_unverified: 1` for a FK-only column; the pgsql fixture reports `engine_unverified: 0` and the F2.
-- [x] **2.2 Give the S0.2 oracle its engine dimension.** The fixture's comment
+- [x] **2.2 Give the S0.2 oracle its engine dimension.** The fixture's comment <!-- receipt: class=R3 · shadow · scope=safe · would-skip=none · bound=override-list path: tests/fixtures/persistence/index_parity/eloquent/migrations/2024_01_01_000003_create_orders_table.php -->
       says why its FK column counts as indexed, and a test pins the three
       outcomes — pgsql finding, mysql silence, unknown counted — on one schema.
       The spike record gets a dated note; its resolution figure is
@@ -92,26 +92,26 @@ pinned to their current size (`src/config/skill-body-budget.json`).
 
 ## Phase 3 — Migration safety where the Laravel migrations are
 
-- [x] **3.1 Laravel F6 at parity with raw SQL, advice tier.** A detector over
+- [x] **3.1 Laravel F6 at parity with raw SQL, advice tier.** A detector over <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/persistence/detect_migration_safety_laravel.ts -->
       the replayed DDL operations flags, on a table an earlier migration
       created: drop table or column (destructive), a NOT NULL column added
       without a default (data-dependent), `->change()` (rewrite), and an index
       added on pgsql (blocking). Same waiver as raw SQL (`migration-unsafe`).
       Renames and added foreign keys stay with `-evolution-tactics` 4.1.
       verify: P1's second migration yields three advice findings; a create-only migration yields none; a waived line is counted as waived.
-- [x] **3.2 `DROP INDEX` without `CONCURRENTLY` on postgres, advice tier**, in
+- [x] **3.2 `DROP INDEX` without `CONCURRENTLY` on postgres, advice tier**, in <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/persistence/adapter_raw_sql.ts -->
       the raw-SQL adapter.
       verify: P2 yields one advice finding for `DROP INDEX`; a `DROP INDEX CONCURRENTLY` line yields none.
 
 ## Phase 4 — Hand the rest to its owners
 
-- [x] **4.1 Land the modeling findings on `-relational-modeling`.** Arrivals
+- [x] **4.1 Land the modeling findings on `-relational-modeling`.** Arrivals <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       line; new steps for the relationship → constraint table, DB cascade
       bypassing model events, soft-delete uniqueness, test-engine parity and
       shared-schema tenancy; the `database` description's engine lock joins its
       step 2.1.
       verify: the roadmap carries an `Arrivals:` line and one step per finding.
-- [x] **4.2 Land the evolution findings on `-evolution-tactics`.** Arrivals
+- [x] **4.2 Land the evolution findings on `-evolution-tactics`.** Arrivals <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       line; 4.1 notes that the Laravel substrate now exists and that `SET NOT
       NULL` is a fourth candidate; a step to spike Phase 3's advice rules
       toward gate; the lock-timeout presence check as advice next to 4.4.
