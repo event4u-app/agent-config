@@ -94,19 +94,19 @@ renders from real facts or says why it has none.
 
 ## Phase 0 — Fold the parked work
 
-- [ ] **0.1 Fold the local ERD branch.** Bring SchemaIR v1, its four adapters,
+- [x] **0.1 Fold the local ERD branch.** Bring SchemaIR v1, its four adapters,
       the differ and the Mermaid renderer from `feat/schema-erd-diff` into
       `src/scripts/_lib/schema/`, with their tests, adapted to the IR shape of
       Phase 1. The branch's skill does not land (DEC-11).
       verify: the folded tests pass under vitest and `grep -rl erDiagram src`
       finds the renderer.
-- [ ] **0.2 Close the dead parks.** `later/road-to-database-erd-landing.md` is
+- [x] **0.2 Close the dead parks.** `later/road-to-database-erd-landing.md` is
       folded here and archived with a pointer; `later/road-to-database-relational-modeling.md`
       gets a wake rule that can fire (this roadmap's archive), and its
       `grace_ceiling` lines become historical.
       verify: no non-historical `grace_ceiling` line remains under
       `agents/roadmaps/later/`.
-- [ ] **0.3 Fix the skill/guideline contradiction.** The `database` skill's
+- [x] **0.3 Fix the skill/guideline contradiction.** The `database` skill's
       composite-index advice and the guideline's `foreignId()` claim agree and
       name the engine where it matters.
       verify: the two texts no longer contradict on column order or on FK
@@ -114,15 +114,15 @@ renders from real facts or says why it has none.
 
 ## Phase 1 — Correct the base
 
-- [ ] **1.1 `User` is a model.** A base class is recognised by the framework's
+- [x] **1.1 `User` is a model.** A base class is recognised by the framework's
       own declaration, never by an app class's name.
       verify: a fixture with `class User extends Authenticatable` yields
       `persists` → `users` and its `relates` edges.
-- [ ] **1.2 Facades are not in-repo methods.** A call whose receiver is a known
+- [x] **1.2 Facades are not in-repo methods.** A call whose receiver is a known
       static facade or SDK client never resolves to an in-repo method by name;
       it is held for the interface reader.
       verify: the P5 fixture has no `Comment::post` edge from the partner client.
-- [ ] **1.3 One schema model per stack, by replay.** Migrations are replayed in
+- [x] **1.3 One schema model per stack, by replay.** Migrations are replayed in
       order (create, alter, add/drop column/index/FK, rename, drop) per
       connection; conditional DDL is `uncertain`; completeness per connection
       is `complete | partial | unknown`. Laravel, raw SQL DDL and Prisma first;
@@ -130,12 +130,12 @@ renders from real facts or says why it has none.
       graph read the same result.
       verify: P1/P2 fixtures — `invoices` on `tenant`, no dropped table, the
       dropped index no longer counted; a sabotage probe turns the suite red.
-- [ ] **1.4 Columns, keys, actions.** `column` nodes; table→table `references`
+- [x] **1.4 Columns, keys, actions.** `column` nodes; table→table `references`
       with on_delete/on_update; `relates` carries kind (1:1, 1:n, n:1, n:m,
       polymorphic) and key column; `SCHEMA_VERSION` bumped.
       verify: a graph query on `comments.post_id` reaches the relation and the
       controller that filters on it.
-- [ ] **1.5 Correctness suite and recall ratchet.** Every defect above is a
+- [x] **1.5 Correctness suite and recall ratchet.** Every defect above is a
       planted fixture; fixtures list must-exist and must-not-exist facts; a
       baseline file may only rise; every `graph_*` MCP tool has a test against
       the real SQLite twin.
@@ -144,12 +144,12 @@ renders from real facts or says why it has none.
 
 ## Phase 2 — One fact layer
 
-- [ ] **2.1 Fact shape.** Every fact records owner file, witness (`file:line`,
+- [x] **2.1 Fact shape.** Every fact records owner file, witness (`file:line`,
       span hash), source rung (T1 code/migration · T2 committed dump/contract ·
       T3 user-produced snapshot · T4 framework oracle) and `resolved_via`, in
       the existing graph and its SQLite twin.
       verify: a round-trip test writes and reads every field through SQLite.
-- [ ] **2.2 One vocabulary file.** Kinds and directional relations for all lanes
+- [x] **2.2 One vocabulary file.** Kinds and directional relations for all lanes
       (`table`/`column`, `service`, `operation`, `resource`, `environment`,
       `workflow`/`job`, `decision`; `references`, `reads`/`writes` at column
       level, `calls-out`, `configured-by`, `described-by`, `deploys-to`,
@@ -160,13 +160,13 @@ renders from real facts or says why it has none.
       shape (both witnesses, engine, completeness, tier), waivers declared with
       a non-empty reason, every report printing its basis.
       verify: one rule file change adds a finding without engine code changes.
-- [ ] **2.4 One query surface.** Existing verbs and `graph_*` tools gain kind and
+- [x] **2.4 One query surface.** Existing verbs and `graph_*` tools gain kind and
       relation filters; answers are compact indented trees with relation labels,
       each item with witness and confirm state, lists with
       `returned/total/hasMore`, absence answers naming their population.
       verify: `graph_query` with a kind filter returns only that kind and its
       population line.
-- [ ] **2.5 Old readers keep working.** The previous CLI and MCP output shapes
+- [x] **2.5 Old readers keep working.** The previous CLI and MCP output shapes
       stay readable for one release; the cache path reads a fallback.
       verify: the existing graph tool tests pass unchanged.
 
