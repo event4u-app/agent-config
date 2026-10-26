@@ -33,9 +33,19 @@
  * A rule is suppressed when the consumer's DESIGN.md declares the pattern as
  * intentional (the context gate), via inline-ignore, or via .design-quality.json.
  */
+import { DEFAULT_MAX_DASH_DENSITY } from "./_lib/dash_density.js";
 
 export type Severity = "P0" | "P1" | "P2" | "P3";
-export type Engine = "css" | "html" | "jsx" | "copy";
+/**
+ * `render` reads the computed-style rows `ui:render` writes (`*.styles.json`,
+ * with box, visibility and ancestor chain), never a screenshot — the input
+ * class for tells only a rendered page shows (road-to-tells-a-near-miss-can-
+ * refute 2.3).
+ */
+export type Engine = "css" | "html" | "jsx" | "copy" | "render";
+
+/** One element of a `ui:render` styles capture. */
+export type StyleRow = Record<string, string>;
 
 export interface RawHit {
   line: number;
@@ -45,8 +55,20 @@ export interface RawHit {
 export interface DesignContext {
   /** lowercased DESIGN.md text, or "" when absent */
   raw: string;
-  /** true when DESIGN.md mentions any of the given keywords */
+  /**
+   * True when DESIGN.md DECLARES one of the keywords as intentional: in a
+   * frontmatter `intent:` list or an `## Intentional` section, word-bounded,
+   * never inside a negated sentence. A mention elsewhere is not a declaration.
+   */
   has(...keywords: string[]): boolean;
+  /**
+   * The pre-0.2 free-text test (a raw substring anywhere in DESIGN.md), kept for
+   * one minor version so a run can report what it WOULD have suppressed. It
+   * suppresses nothing. Absent on a hand-built context.
+   */
+  legacyHas?(...keywords: string[]): string | null;
+  /** The register DESIGN.md declares (`register:` or `## Register`), never inferred. */
+  register?: "brand" | "product";
 }
 
 export interface RuleInput {
@@ -54,6 +76,8 @@ export interface RuleInput {
   lines: string[];
   ext: string; // e.g. ".css"
   ctx: DesignContext;
+  /** Present for the `render` engine only: the captured rows of one viewport. */
+  rows?: StyleRow[];
 }
 
 export interface SlopRule {
@@ -66,6 +90,13 @@ export interface SlopRule {
   message: string;
   /** suppress the rule entirely for this file when DESIGN.md declares intent */
   gated?: (ctx: DesignContext) => boolean;
+  /**
+   * Extensions this rule reads beyond its engines' own. The global engine map
+   * stays closed to `.ts` / `.js` (widening it put CP1 on code comments,
+   * measured 2026-10-26); a rule whose signal is code — an observer, a
+   * handler — opts in here (road-to-tells-a-near-miss-can-refute 2.4).
+   */
+  alsoExts?: string[];
   detect: (input: RuleInput) => RawHit[];
 }
 
@@ -79,8 +110,10 @@ export function cssBlocks(content: string): Array<{ selector: string; body: stri
   const re = /([^{}]+)\{([^{}]*)\}/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(content)) !== null) {
-    const before = content.slice(0, m.index);
-    const line = (before.match(/\n/g) ?? []).length + 1;
+    // The match starts right after the previous `}`, newline included; the
+    // block's line is where its selector starts.
+    const sel = m[1] ?? "";
+    const line = lineOf(content, m.index + sel.length - sel.trimStart().length);
     blocks.push({ selector: (m[1] ?? "").trim(), body: m[2] ?? "", line });
   }
   return blocks;
@@ -88,6 +121,27 @@ export function cssBlocks(content: string): Array<{ selector: string; body: stri
 
 function lineOf(content: string, index: number): number {
   return (content.slice(0, index).match(/\n/g) ?? []).length + 1;
+}
+
+/**
+ * True when a selector's SUBJECT is body-length text — the last compound of any
+ * member of a selector list, read as an element (p, li, blockquote, article,
+ * body) or a class that names a body region (`prose`, `body`, `content`,
+ * `copy`, or one ending in `-body` / `__body`, `-content`, `-copy`, `-prose`).
+ *
+ * Tuned 2026-10-26 on the near-miss corpus (road-to-tells-a-near-miss-can-
+ * refute 1.6): the old test matched `article` anywhere in the selector, so
+ * `.article-pullquote` (display type) and `.article-body abbr` (small caps)
+ * were judged as body text.
+ */
+export function isBodySubject(selector: string): boolean {
+  return selector.split(",").some((member) => {
+    const subject = member.trim().split(/\s*[\s>+~]\s*/).pop() ?? "";
+    if (/^(?:p|li|blockquote|article|body)(?=$|[.#:[])/i.test(subject)) return true;
+    return [...subject.matchAll(/\.([\w-]+)/g)].some(
+      (m) => /^(?:prose|body|content|copy)$|[-_](?:body|content|copy|prose)$/i.test(m[1] ?? ""),
+    );
+  });
 }
 
 /** Visible text from HTML/JSX/Markdown: strip tags, code fences, attributes. */
@@ -164,46 +218,6 @@ const DEFAULT_FONTS = [
   "instrument serif",
 ];
 
-const BUZZWORDS = [
-  "streamline",
-  "empower",
-  "supercharge",
-  "world-class",
-  "enterprise-grade",
-  "seamlessly",
-  "robust",
-  "leverage",
-];
-
-/**
- * Stock render subjects — the default thing an image or 3D model becomes when
- * nobody decided what it should be about.
- *
- * Same mechanism as `BUZZWORDS` (CP2), applied to art direction instead of
- * prose: each entry names a *visual* that carries no subject matter. The
- * delete-test is the same one — swap the phrase for the product's actual
- * subject and the brief says more, which is the proof it said nothing.
- *
- * On the `copy` engine deliberately. A CSS engine cannot see subject matter:
- * `transform: translateZ()` looks identical whether it moves a product or a
- * glowing orb. The only detectable surface is the brief's own wording.
- */
-const STOCK_RENDER_SUBJECTS = [
-  "floating abstract shapes",
-  "abstract floating shapes",
-  "gradient mesh",
-  "glowing orb",
-  "glowing orbs",
-  "floating particles",
-  "particle field",
-  "abstract 3d shape",
-  "abstract 3d shapes",
-  "futuristic hud",
-  "digital landscape",
-  "flowing ribbons",
-  "liquid metal blob",
-];
-
 // ---------------------------------------------------------------------------
 // The registry
 // ---------------------------------------------------------------------------
@@ -239,38 +253,6 @@ export const SLOP_RULES: SlopRule[] = [
           return stripe.test(b.body) || foursided.test(b.body) || gradient.test(b.body);
         })
         .map((b) => ({ line: b.line, snippet: b.selector.slice(0, 80) })),
-  },
-  {
-    id: "slop-v3-ghost-card",
-    catalogId: "V3",
-    severity: "P2",
-    engines: ["css"],
-    description: "Ghost card: 1px border AND a ≥16px box-shadow on the same surface",
-    message:
-      "Border + heavy shadow together signal no confident depth decision. Choose one (V3).",
-    detect: ({ content }) =>
-      cssBlocks(content)
-        .filter(
-          (b) =>
-            /border\s*:\s*1px\s+solid/i.test(b.body) &&
-            /box-shadow\s*:[^;]*?(?:1[6-9]|[2-9]\d)px/i.test(b.body),
-        )
-        .map((b) => ({ line: b.line, snippet: b.selector.slice(0, 80) })),
-  },
-  {
-    id: "slop-v6-diagonal-stripes",
-    catalogId: "V6",
-    severity: "P2",
-    engines: ["css"],
-    description: "repeating-linear-gradient stripes as a background texture",
-    message: "Repeating diagonal stripes are a generated-CSS-art cliché (V6).",
-    gated: (ctx) => ctx.has("pattern background", "pattern-background", "stripe texture"),
-    detect: ({ lines }) =>
-      lines.flatMap((l, i) =>
-        /background[^;]*repeating-linear-gradient\s*\(/i.test(l)
-          ? [{ line: i + 1, snippet: l.trim().slice(0, 90) }]
-          : [],
-      ),
   },
   {
     id: "slop-c2-gradient-text",
@@ -311,25 +293,30 @@ export const SLOP_RULES: SlopRule[] = [
     id: "slop-t4-eyebrow-overuse",
     catalogId: "T4",
     severity: "P2",
-    engines: ["html", "jsx", "css"],
-    description: "More than one ALL-CAPS eyebrow per 3 sections",
+    engines: ["html", "jsx"],
+    description: "More than one ALL-CAPS eyebrow per 3 sections, or a pill badge on top of the h1",
     message:
-      "Eyebrow/ALL-CAPS labels above every section collapse emphasis; cap is 1 per 3 sections (T4).",
+      "Eyebrow/ALL-CAPS labels above every section collapse emphasis; cap is 1 per 3 sections, and a pill badge stacked on the h1 is the template's own (T4).",
+    // By position, not by count of the word `uppercase`: an eyebrow is a short
+    // label whose next element is a heading. A status chip in a table row or an
+    // uppercase button is not one. Fails open on markup the regex cannot pair
+    // (a heading built by a component, an eyebrow wrapped twice).
     detect: ({ content }) => {
+      const hits: RawHit[] = [];
       const sections = (content.match(/<section\b|<Section\b/gi) ?? []).length;
-      const eyebrows =
-        (content.match(/text-transform\s*:\s*uppercase/gi) ?? []).length +
-        (content.match(/(?:class|className)=["'][^"']*\buppercase\b/gi) ?? []).length;
+      const eyebrow =
+        /<([a-z][\w.]*)\b[^>]*(?:(?:class|className)=["'][^"']*\buppercase\b[^"']*["']|style=["'][^"']*text-transform\s*:\s*uppercase)[^>]*>[^<]{1,60}<\/\1>\s*<h[1-6]\b/gi;
+      const eyebrows = (content.match(eyebrow) ?? []).length;
       const cap = Math.max(1, Math.ceil(sections / 3));
       if (sections >= 3 && eyebrows > cap) {
-        return [
-          {
-            line: 1,
-            snippet: `${eyebrows} uppercase eyebrows across ${sections} sections (cap ${cap})`,
-          },
-        ];
+        hits.push({ line: 1, snippet: `${eyebrows} uppercase eyebrows above headings across ${sections} sections (cap ${cap})` });
       }
-      return [];
+      const badge =
+        /<([a-z][\w.]*)\b[^>]*(?:class|className)=["'][^"']*\b(?:rounded-full|badge|pill)\b[^"']*["'][^>]*>[^<]{1,60}<\/\1>\s*<h1\b/i.exec(content);
+      if (badge) {
+        hits.push({ line: content.slice(0, badge.index).split("\n").length, snippet: badge[0].slice(0, 80) });
+      }
+      return hits;
     },
   },
   {
@@ -362,7 +349,8 @@ export const SLOP_RULES: SlopRule[] = [
     // guidelines. P2 is a rebuttable presumption (see the header), never a block.
     message:
       "This is a default AI-coding-tool font pick. Declare it with a reason (T7) — in the product register, \"single reliable family\" IS the reason; state it in DESIGN.md or the surface brief.",
-    gated: (ctx) => DEFAULT_FONTS.some((f) => ctx.has(f)),
+    // A declared product register is the stated reason the catalog accepts.
+    gated: (ctx) => ctx.register === "product" || DEFAULT_FONTS.some((f) => ctx.has(f)),
     detect: ({ lines }) =>
       lines.flatMap((l, i) => {
         if (!/font-family\s*:/i.test(l)) return [];
@@ -380,7 +368,10 @@ export const SLOP_RULES: SlopRule[] = [
     message:
       "Numbered 01/02/03 section markers are a universal generated-landing-page tell (L4).",
     detect: ({ content, ext }) => {
-      const text = visibleText(content, ext);
+      // Numbers inside an ordered list number its steps — the catalog's own
+      // override ("a genuinely numbered process"). Tuned 2026-10-26 on the
+      // near-miss corpus: only markers outside <ol> are section decoration.
+      const text = visibleText(content.replace(/<ol\b[\s\S]*?<\/ol>/gi, " "), ext);
       const markers = text.match(/(?<![\d/.])0[1-9](?![\d%])/g) ?? [];
       const distinct = new Set(markers.map((s) => s.trim()));
       if (distinct.has("01") && distinct.has("02") && distinct.has("03")) {
@@ -432,80 +423,19 @@ export const SLOP_RULES: SlopRule[] = [
     catalogId: "CP1",
     severity: "P2",
     engines: ["copy"],
+    // The catalog's override: an editorial voice that uses em dashes on purpose.
+    gated: (ctx) => ctx.has("em dash", "em-dash"),
     description: "Em-dash overuse in visible copy (> 2 per 500 words)",
     message: "Em-dash density above ~2 per 500 words is the #1 LLM syntactic tell (CP1).",
     detect: ({ content, ext }) => {
       const text = visibleText(content, ext);
       const words = (text.match(/\S+/g) ?? []).length;
       const dashes = (text.match(/—/g) ?? []).length;
-      if (words >= 80 && dashes > Math.max(2, Math.round((words / 500) * 2))) {
+      const cap = DEFAULT_MAX_DASH_DENSITY;
+      if (words >= 80 && dashes > Math.max(cap, Math.round((words / 500) * cap))) {
         return [{ line: 1, snippet: `${dashes} em-dashes in ~${words} words` }];
       }
       return [];
-    },
-  },
-  {
-    id: "slop-cp2-buzzword",
-    catalogId: "CP2",
-    severity: "P2",
-    engines: ["copy"],
-    description: "Marketing buzzwords (streamline/empower/supercharge/world-class/…)",
-    message: "These words carry no information — delete-test each one (CP2).",
-    detect: ({ content, ext }) => {
-      const text = visibleText(content, ext);
-      const lower = text.toLowerCase();
-      const hits = BUZZWORDS.filter((w) => new RegExp(`\\b${w}\\b`, "i").test(lower));
-      if (hits.length > 0) {
-        return [{ line: 1, snippet: `buzzwords: ${hits.join(", ")}` }];
-      }
-      return [];
-    },
-  },
-  {
-    id: "slop-cp6-generic-art-direction",
-    catalogId: "CP6",
-    severity: "P2",
-    engines: ["copy"],
-    description: "Stock render subject named in a brief instead of the product's own subject matter",
-    message:
-      "This names a default visual, not a subject — swap it for what the product " +
-      "actually shows and the brief says more (CP6).",
-    detect: ({ content, ext }) => {
-      const text = visibleText(content, ext);
-      const lower = text.toLowerCase();
-      const hits = STOCK_RENDER_SUBJECTS.filter((s) => lower.includes(s));
-      if (hits.length === 0) {
-        return [];
-      }
-      return [{ line: 1, snippet: hits.slice(0, 3).join(", ") }];
-    },
-  },
-  {
-    id: "slop-cp5-emoji-ui",
-    catalogId: "CP5",
-    severity: "P2",
-    engines: ["html", "jsx"],
-    description: "Emoji-decoration prepending headings, buttons, list items, or CTAs",
-    message:
-      "Emoji-prepended UI text (🚀 Get Started) is the default-startup-template tell — no emoji beats decorative emoji (CP5). Functional status/category emojis and brand-declared emoji strategies are exempt.",
-    gated: (ctx) => ctx.has("emoji"),
-    detect: ({ content }) => {
-      // Emoji as the FIRST visible character inside a heading, button, list
-      // item, or link — decoration position. Emojis elsewhere (mid-sentence,
-      // table cells, status chips) are not matched: those are the functional
-      // placements CP5 explicitly exempts.
-      const re =
-        /<(h[1-6]|button|li|a)\b[^>]*>\s*(?:<(?!\/)[^>]*>\s*)*(\p{Extended_Pictographic})/giu;
-      const hits: RawHit[] = [];
-      let m: RegExpExecArray | null;
-      while ((m = re.exec(content)) !== null) {
-        const before = content.slice(0, m.index);
-        hits.push({
-          line: (before.match(/\n/g) ?? []).length + 1,
-          snippet: content.slice(m.index, m.index + 60).replace(/\n/g, " "),
-        });
-      }
-      return hits;
     },
   },
   {
@@ -650,7 +580,7 @@ export const SLOP_RULES: SlopRule[] = [
       cssBlocks(content)
         // Short UI surfaces (labels, buttons, table headers, badges, eyebrows)
         // are the legitimate home of uppercase and are excluded by selector.
-        .filter((b) => /\b(p|body|article|\.prose|\.body|\.content|\.copy|blockquote|li)\b/i.test(b.selector))
+        .filter((b) => isBodySubject(b.selector))
         .filter((b) => !/label|button|\bth\b|badge|chip|tag|eyebrow|kicker|caption|nav/i.test(b.selector))
         .filter((b) => /text-transform\s*:\s*uppercase/i.test(b.body))
         .map((b) => ({ line: b.line, snippet: b.selector.slice(0, 80) })),
@@ -665,7 +595,7 @@ export const SLOP_RULES: SlopRule[] = [
     gated: (ctx) => ctx.has("wide tracking", "letterspacing", "letter-spacing"),
     detect: ({ content }) =>
       cssBlocks(content)
-        .filter((b) => /\b(p|body|article|\.prose|\.body|\.content|\.copy|blockquote|li)\b/i.test(b.selector))
+        .filter((b) => isBodySubject(b.selector))
         .filter((b) => !/label|button|\bth\b|badge|chip|tag|eyebrow|kicker|caption|nav|h[1-6]/i.test(b.selector))
         .filter((b) => {
           const em = /letter-spacing\s*:\s*(\d*\.?\d+)(em|rem)/i.exec(b.body);
@@ -706,36 +636,6 @@ export const SLOP_RULES: SlopRule[] = [
     },
   },
   {
-    id: "slop-m1-bounce-easing",
-    catalogId: "M1",
-    severity: "P2",
-    engines: ["css"],
-    description: "Bounce or elastic easing on a UI transition",
-    message: "Overshoot draws attention to the animation instead of the state change (M1).",
-    gated: (ctx) => ctx.has("bounce", "playful motion", "elastic"),
-    detect: ({ lines }) => {
-      const out: RawHit[] = [];
-      for (let i = 0; i < lines.length; i++) {
-        const l = lines[i] ?? "";
-        // Overshoot is decidable from the curve itself: a control point outside
-        // [0,1] on the output axis means the value passes its target and returns.
-        const cb = /cubic-bezier\(\s*[-\d.]+\s*,\s*(-?[\d.]+)\s*,\s*[-\d.]+\s*,\s*(-?[\d.]+)\s*\)/i.exec(l);
-        if (cb?.[1] !== undefined && cb[2] !== undefined) {
-          const y1 = parseFloat(cb[1]);
-          const y2 = parseFloat(cb[2]);
-          if (y1 < 0 || y1 > 1 || y2 < 0 || y2 > 1) {
-            out.push({ line: i + 1, snippet: l.trim().slice(0, 80) });
-            continue;
-          }
-        }
-        if (/(?:transition|animation)[^;]*\b(?:bounce|elastic|back(?:In|Out|InOut))\b/i.test(l)) {
-          out.push({ line: i + 1, snippet: l.trim().slice(0, 80) });
-        }
-      }
-      return out;
-    },
-  },
-  {
     id: "slop-m3-img-hover-transform",
     catalogId: "M3",
     severity: "P3",
@@ -748,5 +648,66 @@ export const SLOP_RULES: SlopRule[] = [
         .filter((b) => /\bimg\b/i.test(b.selector) && /:hover|:focus-within/i.test(b.selector))
         .filter((b) => /(?:^|[;{\s])(?:transform|filter)\s*:/i.test(b.body))
         .map((b) => ({ line: b.line, snippet: b.selector.slice(0, 80) })),
+  },
+  {
+    id: "slop-m6-scroll-reveal",
+    catalogId: "M6",
+    severity: "P2",
+    engines: ["jsx"],
+    alsoExts: [".ts", ".js", ".mjs"],
+    description: "IntersectionObserver used to fade or slide content into view on scroll",
+    message:
+      "A per-section reveal delays what the reader already scrolled to. Keep it only for a stepped narrative or a progress cue (M6).",
+    gated: (ctx) => ctx.has("scroll reveal", "stepped narrative"),
+    detect: ({ content }) => {
+      if (!/\bIntersectionObserver\b/.test(content)) return [];
+      // The reveal signature: the observer's effect is a visibility class or an
+      // opacity / transform change. Lazy-loading (setting a src) and a
+      // table-of-contents highlight set neither.
+      const reveal =
+        /classList\.(?:add|toggle)\(\s*["'`][\w-]*(?:reveal|visible|in-view|inview|fade|animate|show)[\w-]*["'`]/i.test(content) ||
+        /\.style\.(?:opacity|transform)\s*=/.test(content) ||
+        /data-(?:reveal|animate|aos)\b/i.test(content);
+      if (!reveal) return [];
+      const idx = content.search(/\bIntersectionObserver\b/);
+      return [{ line: lineOf(content, idx), snippet: "IntersectionObserver driving a reveal" }];
+    },
+  },
+  {
+    id: "slop-m8-hover-fade",
+    catalogId: "M8",
+    severity: "P2",
+    engines: ["css"],
+    description: "An interactive control that lowers its own opacity on hover",
+    message:
+      "A hover fade makes the target retreat at the moment of commitment. Respond with colour, weight or elevation instead (M8).",
+    detect: ({ content }) =>
+      cssBlocks(content)
+        .filter((b) => /:hover\b/.test(b.selector))
+        // A disabled or dismissed state may fade — the catalog's override.
+        .filter((b) => !/:disabled|\[aria-disabled|\[disabled|is-disabled|--disabled|dismiss|removing/i.test(b.selector))
+        .filter((b) => /\b(?:a|button|btn|link|\[role=["']?button|input|select|card|tab|chip)\b/i.test(b.selector))
+        .filter((b) => {
+          const m = /(?:^|[;{\s])opacity\s*:\s*(0?\.\d+|0)\b/i.exec(b.body);
+          return m !== null;
+        })
+        .map((b) => ({ line: b.line, snippet: b.selector.slice(0, 80) })),
+  },
+  {
+    id: "slop-v9-grain-over-gradient",
+    catalogId: "V9",
+    severity: "P3",
+    engines: ["css"],
+    description: "Noise or grain texture laid over a gradient surface",
+    message:
+      "Grain over a gradient is the generated-CSS-art 'premium' default. Keep it only as a documented brand surface (V9).",
+    gated: (ctx) => ctx.has("grain", "noise texture", "print-inspired"),
+    detect: ({ content }) => {
+      const grain = /feTurbulence|\bgrain\b|\bnoise\b/i;
+      const gradient = /(?:linear|radial|conic)-gradient\s*\(/i;
+      return cssBlocks(content)
+        .filter((b) => grain.test(b.body) && gradient.test(b.body))
+        .map((b) => ({ line: b.line, snippet: b.selector.slice(0, 80) }));
+    },
   },
 ];

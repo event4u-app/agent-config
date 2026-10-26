@@ -1,0 +1,37 @@
+/*
+ * Case-study article. Wide tracking is used only on display text
+ * (the pull quote) and on small-caps abbreviations, where letterspacing
+ * capitals is standard typographic practice. Body copy keeps normal
+ * tracking.
+ */
+.article-body {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  letter-spacing: normal;
+  max-width: 68ch;
+}
+
+.article-pullquote {
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-block: 2.5rem;
+  padding-inline: 1rem;
+}
+
+.article-body abbr {
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+}
+
+.article-pullquote cite {
+  display: block;
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+}

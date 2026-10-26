@@ -1314,9 +1314,11 @@ hooks:
   # aesthetic tells — the side-stripe signature, gradient-text, magic z-index,
   # etc. Flags are rebuttable: declare intent in DESIGN.md, design-slop-disable,
   # or proceed. Anti-loop: a file::rule signature surfaced 3x goes silent so it
-  # never traps the agent. The universal gate is the lint_design_slop linter/CI;
-  # this hook is a host-limited convenience layer (pre_tool_use fires on ~2-3
-  # hosts). Opt in once you trust the signal-to-noise on your UI.
+  # never traps the agent. What runs today without this hook: nothing in CI —
+  # run lint_design_slop yourself (`--dir <ui src>`, `--fail-on` to gate); this
+  # package's own CI runs only its catalog-parity check and a false-positive
+  # bench task. This hook is a host-limited convenience layer (pre_tool_use
+  # fires on ~2-3 hosts). Opt in once you trust the signal-to-noise on your UI.
   design_slop:
     enabled: false
 

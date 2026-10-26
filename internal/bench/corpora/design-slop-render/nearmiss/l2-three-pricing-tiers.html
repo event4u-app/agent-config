@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plans</title>
+<style>
+  body { margin: 0; font: 16px/1.5 Georgia, "Times New Roman", serif; color: #222a33; background: #fbfaf8; }
+  main { max-width: 1080px; margin: 56px auto; padding: 0 24px; }
+  h1 { font: 600 30px/1.2 system-ui, sans-serif; margin: 0 0 8px; }
+  .lede { margin: 0 0 40px; color: #56606c; }
+  .tiers { display: grid; grid-template-columns: 1fr 1.15fr 1fr; gap: 20px; align-items: end; }
+  .tier { border: 1px solid #d4d8de; border-radius: 8px; background: #fff; }
+  .tier h2 { font: 600 18px system-ui, sans-serif; margin: 0 0 4px; }
+  .price { font: 700 32px system-ui, sans-serif; margin: 8px 0; }
+  .price small { font-size: 14px; font-weight: 400; color: #6a7380; }
+  ul { padding-left: 18px; margin: 12px 0 20px; }
+  .solo { padding: 20px 22px; }
+  .team { padding: 36px 30px; border: 2px solid #234f8a; }
+  .team .flag { font: 600 12px system-ui, sans-serif; color: #234f8a; }
+  .org { padding: 24px 26px; background: #f1f3f6; }
+  a.btn { display: inline-block; font: 600 15px system-ui, sans-serif; padding: 9px 16px; border-radius: 6px; text-decoration: none; }
+  .solo a.btn, .org a.btn { border: 1px solid #234f8a; color: #234f8a; }
+  .team a.btn { background: #234f8a; color: #fff; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Plans for bookkeeping teams</h1>
+  <p class="lede">Every plan includes bank import, receipt capture and the full report set. Plans differ by seats and approval workflow.</p>
+  <div class="tiers">
+    <section class="tier solo"><h2>Sole trader</h2><p class="price">€9 <small>/ month</small></p>
+      <ul><li>1 seat</li><li>2 bank connections</li><li>Quarterly VAT summary</li></ul>
+      <a class="btn" href="#">Start with sole trader</a></section>
+    <section class="tier team"><span class="flag">Chosen by most practices</span><h2>Practice</h2><p class="price">€29 <small>/ month</small></p>
+      <ul><li>Up to 8 seats</li><li>Unlimited bank connections</li><li>Two-step payment approval</li><li>Client portal</li></ul>
+      <a class="btn" href="#">Start with practice</a></section>
+    <section class="tier org"><h2>Multi-entity</h2><p class="price">€79 <small>/ month</small></p>
+      <ul><li>Unlimited seats</li><li>Consolidated group reports</li><li>Per-entity audit trail</li></ul>
+      <a class="btn" href="#">Talk to us about multi-entity</a></section>
+  </div>
+</main>
+</body>
+</html>

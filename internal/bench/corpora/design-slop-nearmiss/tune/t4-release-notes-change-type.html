@@ -1,0 +1,39 @@
+<!-- Release notes. The label above each heading names the change type
+     (Breaking, Deprecated, Added, Fixed); readers scan by it to find what
+     affects their integration. -->
+<style>
+  .change-type {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .change-type--breaking { color: var(--color-danger-fg); }
+  .change-type--deprecated { color: var(--color-warning-fg); }
+  .change-type--added { color: var(--color-success-fg); }
+  .change-type--fixed { color: var(--color-fg-muted); }
+</style>
+<article class="release-notes">
+  <h1>Version 4.2.0</h1>
+  <section>
+    <span class="change-type change-type--breaking">Breaking</span>
+    <h2>Webhook signatures use SHA-256</h2>
+    <p>Verify the <code>X-Signature-256</code> header. The SHA-1 header is gone.</p>
+  </section>
+  <section>
+    <span class="change-type change-type--deprecated">Deprecated</span>
+    <h2>The <code>/v1/exports</code> endpoint</h2>
+    <p>Removed in 5.0. Use <code>/v2/exports</code>, which streams results.</p>
+  </section>
+  <section>
+    <span class="change-type change-type--added">Added</span>
+    <h2>Bulk archive for projects</h2>
+    <p>Select up to 200 projects and archive them in one action.</p>
+  </section>
+  <section>
+    <span class="change-type change-type--fixed">Fixed</span>
+    <h2>Time zone in scheduled reports</h2>
+    <p>Reports now use the workspace time zone instead of UTC.</p>
+  </section>
+</article>

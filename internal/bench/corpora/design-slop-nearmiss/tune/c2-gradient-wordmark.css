@@ -1,0 +1,32 @@
+/*
+ * Product wordmark. The registered brand mark is a two-stop gradient
+ * (brand-to-tokens: --brand-mark-from / --brand-mark-to), so the text
+ * wordmark in the app header reproduces the logo rather than decorating
+ * a heading. Body headings never use this treatment.
+ */
+:root {
+  --brand-mark-from: oklch(0.62 0.17 152);
+  --brand-mark-to: oklch(0.55 0.14 200);
+}
+
+.app-header__wordmark {
+  font-weight: 700;
+  font-size: 1.125rem;
+  background-image: linear-gradient(90deg, var(--brand-mark-from), var(--brand-mark-to));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Forced-colors mode drops background images; fall back to solid text. */
+@media (forced-colors: active) {
+  .app-header__wordmark {
+    background-image: none;
+    color: CanvasText;
+  }
+}
+
+.app-header__wordmark:focus-visible {
+  outline: 2px solid var(--brand-mark-to);
+  outline-offset: 2px;
+}

@@ -1,0 +1,40 @@
+/*
+ * Filter chips in the search toolbar. Single-line tags, so the pill shape
+ * is intentional; cards and panels use the 8px radius token.
+ */
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 160px;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filter-chip[aria-pressed="true"] {
+  background: var(--color-selected-bg);
+  border-color: var(--color-selected-border);
+}
+
+.filter-chip__remove {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 9999px;
+  display: inline-grid;
+  place-items: center;
+}
+
+.avatar-sm {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.result-card {
+  border-radius: 8px;
+}

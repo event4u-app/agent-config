@@ -31,6 +31,7 @@ import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import {
     DELIVERY_MODES,
     parseElements,
+    parseIgnores,
     scanHostHtml,
     scanSvg,
     type DeliveryMode,
@@ -323,6 +324,17 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
                 ? scanSvg(content, rel, { delivery })
                 : scanHostHtml(content, rel, { delivery });
             all.push(...findings.filter((f) => !ignoreRules.has(f.rule.toLowerCase())));
+            if (!quiet) {
+                for (const [rule, ig] of parseIgnores(content.split('\n'))) {
+                    for (const [line, reason] of ig.reasons ?? []) {
+                        if (reason === null) {
+                            process.stderr.write(
+                                `[lint_svg_asset] ${rel}:${line === 0 ? 1 : line} ignore-without-reason — ${rule} is suppressed with no \`-- <reason>\`\n`,
+                            );
+                        }
+                    }
+                }
+            }
         } catch (err) {
             if (!quiet) process.stderr.write(`[lint_svg_asset] error: ${abs}: ${err}\n`);
         }

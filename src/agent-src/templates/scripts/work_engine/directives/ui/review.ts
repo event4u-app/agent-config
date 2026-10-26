@@ -182,9 +182,98 @@ export function run(state: DeliveryState): StepResult {
         return preview_halt;
     }
 
+    const selection_halt = _apply_selection_gate(state, r);
+    if (selection_halt !== null) {
+        return selection_halt;
+    }
+
     _stamp_verdict_scope(r);
+    (r['verdict_scope'] as Record<string, Any>)['consistency_status'] = consistency_status(
+        r,
+        state.changes as ReadonlyArray<Record<string, Any>>,
+    );
 
     return new StepResult({ outcome: Outcome.SUCCESS });
+}
+
+/**
+ * Whether the change fits the project's own controls, as one of four words — and
+ * never `pass` without render evidence (road-to-a-control-that-matches-its-
+ * neighbours 3.6). Inputs: `review.consistency` (`findings` from
+ * `lint_design_consistency`, `open_state` per added control from
+ * `ui:render --interact`) and the `new_control_roles` the apply and polish steps
+ * computed on `state.changes`.
+ *
+ *   fail         a consistency finding stands
+ *   unverified   a control role was added and its open state was not captured
+ *   static-pass  no finding, but nothing was rendered
+ *   pass         no finding, rendered, every added control captured open
+ */
+export function consistency_status(
+    review: Record<string, Any>,
+    changes: ReadonlyArray<Record<string, Any>>,
+): 'pass' | 'fail' | 'static-pass' | 'unverified' {
+    const raw = review['consistency'];
+    const consistency: Record<string, Any> = _isDict(raw) ? raw : {};
+    const findings = consistency['findings'];
+    if (Array.isArray(findings) && findings.length > 0) return 'fail';
+
+    const added = new Set<string>();
+    for (const c of changes) {
+        const roles = c['new_control_roles'];
+        if (Array.isArray(roles)) for (const r of roles) if (typeof r === 'string') added.add(r);
+    }
+    const open = consistency['open_state'];
+    const captured = new Set<string>();
+    if (_isDict(open)) {
+        for (const [role, state] of Object.entries(open)) if (state === 'captured') captured.add(role);
+    }
+    const preview = _isDict(review['preview']) ? (review['preview'] as Record<string, Any>) : {};
+    const rendered = preview['render_ok'] === true;
+
+    if ([...added].some((r) => !captured.has(r))) return 'unverified';
+    return rendered ? 'pass' : 'static-pass';
+}
+
+/**
+ * After a review-only selection was applied, every SELECTED finding carries a
+ * resolution in `ui_review.resolved` — `{status: "fixed", commit}` or
+ * `{status: "not-fixed", reason}` — and the re-review covers those findings
+ * only (4.3). An unselected finding that came back fixed is an unrequested
+ * change and is itself reported.
+ */
+export function selection_gaps(review: Record<string, Any>): { missing: string[]; unrequested: string[] } {
+    const sel = Array.isArray(review['selection']) ? (review['selection'] as Any[]).filter((s) => typeof s === 'string') : [];
+    const resolved = _isDict(review['resolved']) ? (review['resolved'] as Record<string, Any>) : {};
+    const ok = (v: Any): boolean =>
+        _isDict(v) &&
+        ((v['status'] === 'fixed' && typeof v['commit'] === 'string' && v['commit'] !== '') ||
+            (v['status'] === 'not-fixed' && typeof v['reason'] === 'string' && v['reason'] !== ''));
+    return {
+        missing: (sel as string[]).filter((id) => !ok(resolved[id])),
+        unrequested: Object.keys(resolved).filter((id) => !(sel as string[]).includes(id)),
+    };
+}
+
+function _apply_selection_gate(state: DeliveryState, review: Record<string, Any>): StepResult | null {
+    if (state.ticket?.['review_only'] !== true || !Array.isArray(review['selection'])) return null;
+    const { missing, unrequested } = selection_gaps(review);
+    if (missing.length === 0 && unrequested.length === 0) return null;
+    return new StepResult({
+        outcome: Outcome.BLOCKED,
+        questions: [
+            agent_directive('review-selection-resolve'),
+            ...(missing.length
+                ? [`> Selected finding(s) without a resolution: ${missing.join(', ')}. Re-review ONLY these, ` +
+                      'and write `ui_review.resolved[<id>] = {status: "fixed", commit}` or `{status: "not-fixed", reason}`.']
+                : []),
+            ...(unrequested.length
+                ? [`> Resolved but never selected: ${unrequested.join(', ')} — an unrequested change. ` +
+                      'Revert it, or report it as a finding of its own.']
+                : []),
+        ],
+        message: 'Review-only selection is not fully resolved.',
+    });
 }
 
 /** True when `review` is a dict with at least one own key. */
@@ -245,6 +334,13 @@ function _delegate_to_review_skill(state: DeliveryState): StepResult {
             '> Ground chart-type and contrast findings in the adopted ' +
                 "corpus (design-intelligence § 'Grounding the review/polish " +
                 "a11y gate') — cite the corpus row, don't eyeball.",
+            '> Consistency: run `lint_design_consistency` over the changed ' +
+                'files and `ui:render --interact` on every control a change ' +
+                'added (see `new_control_roles` on `state.changes`); write ' +
+                '`consistency: {findings: [...], open_state: {<role>: "captured"}}`. ' +
+                'Where an approved baseline exists, `ui:render --region <changed region>` ' +
+                'compares against it; each delta is a finding, so the polish loop repairs ' +
+                'it within its two rounds and reports what remains.',
             '> 1. Continue — run the review and write ' +
                 '`{findings: [...], review_clean: bool}` into ' +
                 '`state.ui_review`',

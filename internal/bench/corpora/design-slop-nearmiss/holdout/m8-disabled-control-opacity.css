@@ -1,0 +1,32 @@
+/*
+ * Primary button. Hover is carried by background colour. The reduced
+ * opacity belongs to the disabled state only; the :hover selector on the
+ * disabled state pins the same value so the control does not react to a
+ * pointer it cannot accept.
+ */
+.button-primary {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  border: 0;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background-color 150ms ease-out;
+}
+
+.button-primary:hover {
+  background: var(--color-accent-hover);
+}
+
+.button-primary:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.button-primary:disabled,
+.button-primary:disabled:hover,
+.button-primary[aria-disabled="true"]:hover {
+  opacity: 0.45;
+  background: var(--color-accent);
+  cursor: not-allowed;
+}

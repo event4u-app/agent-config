@@ -119,18 +119,20 @@ describe('scoped-dangle follow rate — attempts is null, never 0, on a dead ins
         // prevent. The instrument is still dead and the null branch still
         // closes nothing, so NOTHING here licenses leaving any remaining link
         // as it is — `measured_branch` still owns that decision and still needs
-        // a live window to reach it.
-        expect(r.scoped_dangles).toBe(24);
-        expect(r.survivors_with_dangle).toBe(17);
+        // a live window to reach it. 2026-10-26, 24/17 → 21/14: three skills
+        // that linked `humanizer` across a pack boundary now name it instead
+        // (road-to-tells-a-near-miss-can-refute 5.4); the row was re-taken.
+        expect(r.scoped_dangles).toBe(21);
+        expect(r.survivors_with_dangle).toBe(14);
     });
 
     it('a live instrument counts only FOLLOW_KINDS against a pruned slug', () => {
         const inWindow = '2026-08-22T09:00:00Z';
         rows([
             // pruned target + a follow kind → counts
-            { ts: inWindow, kind: 'read', slug: 'humanizer' },
+            { ts: inWindow, kind: 'read', slug: 'image-editing' },
             // pruned target + exposure → does NOT count (exposure is not a follow)
-            { ts: inWindow, kind: 'exposure', slug: 'humanizer' },
+            { ts: inWindow, kind: 'exposure', slug: 'image-editing' },
             // a follow kind against a SURVIVING skill → does not count
             { ts: inWindow, kind: 'read', slug: 'readme-writing' },
             // in a follow kind but outside the window → does not count
@@ -145,7 +147,7 @@ describe('scoped-dangle follow rate — attempts is null, never 0, on a dead ins
         );
         expect(r.instrument_live).toBe(true);
         expect(r.attempts).toBe(1);
-        expect(r.pruned_targets_hit).toEqual(['humanizer']);
+        expect(r.pruned_targets_hit).toEqual(['image-editing']);
     });
 
     // Why the measurement is blocked even with a live clock.

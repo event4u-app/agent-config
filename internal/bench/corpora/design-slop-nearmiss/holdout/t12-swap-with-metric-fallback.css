@@ -1,0 +1,36 @@
+/*
+ * Self-hosted text face with font-display: swap, paired with a
+ * metric-matched local fallback so the swap does not reflow lines.
+ * Override values were derived from the webfont's vertical metrics
+ * (unitsPerEm 2048, ascender 1984, descender -494, avg width ratio).
+ */
+@font-face {
+  font-family: "Reading Sans";
+  src: url("/fonts/reading-sans-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Reading Sans";
+  src: url("/fonts/reading-sans-semibold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Reading Sans Fallback";
+  src: local("Arial");
+  size-adjust: 104.2%;
+  ascent-override: 93%;
+  descent-override: 23%;
+  line-gap-override: 0%;
+}
+
+body {
+  font-family: "Reading Sans", "Reading Sans Fallback", sans-serif;
+  font-size: 1rem;
+  line-height: 1.55;
+}

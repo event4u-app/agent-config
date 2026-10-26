@@ -31,6 +31,31 @@ function ledgerFamilies(): string[] {
  * declaration the design-side instrument makes about its own recall figure.
  */
 const PROBES: Record<string, { fires: string; quiet: string; lang: "en" | "de" }> = {
+  "tell-heading-echo": {
+    lang: "en",
+    fires: "## Retry budget\n\nThe retry budget is what this section is about.",
+    quiet: "## Retry budget\n\nThree attempts, then the job lands in the dead-letter table.",
+  },
+  "tell-repeated-openings": {
+    lang: "en",
+    fires: "We moved the queue. We moved the cron. We moved the cache to the new host.",
+    quiet: "We moved the queue. The cron followed on Tuesday. Then the cache went to the new host.",
+  },
+  "tell-repeated-closer": {
+    lang: "en",
+    fires: "## One\n\nThe queue drained.\n\nThat is the whole story here.\n\n## Two\n\nThe cron stopped.\n\nThat is the whole story here.",
+    quiet: "## One\n\nThe queue drained.\n\nIt took four minutes.\n\n## Two\n\nThe cron stopped.\n\nIt restarted on its own.",
+  },
+  "tell-strawman-preemption": {
+    lang: "en",
+    fires: "You might be thinking the cache is the problem.",
+    quiet: "The cache was the first suspect, and the logs cleared it.",
+  },
+  "tell-self-describing-document": {
+    lang: "en",
+    fires: "This guide will walk through the migration step by step.",
+    quiet: "The migration takes three steps, and the second one is irreversible.",
+  },
   "tell-staccato-run": {
     lang: "en",
     fires: "The build broke. We rolled back. The team shipped. Users noticed.",

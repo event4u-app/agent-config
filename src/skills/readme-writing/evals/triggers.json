@@ -1,0 +1,63 @@
+{
+  "skill": "readme-writing",
+  "last_eval": "2026-10-26",
+  "description": "5 should-trigger + 6 should-not-trigger (one an unrelated counterexample) queries. Should-trigger covers writing or rewriting a project README from the repository itself (EN + DE phrasings). Should-not-trigger covers the near-miss neighbors: reviewing an existing README (readme-reviewer), a README for a reusable package (readme-writing-package), agent docs (agent-docs-writing), a changelog, and de-slopping finished prose (humanizer).",
+  "queries": [
+    {
+      "q": "write a README for this repo",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "our README is outdated, rewrite it from what the project actually does",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "create a README with setup steps and the commands we really use",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "schreib die README für dieses Projekt neu",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "q": "the README is a mess, improve it for new contributors",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "review our README for broken setup steps",
+      "trigger": false,
+      "class": "near-miss"
+    },
+    {
+      "q": "write the README for our npm library so people can install it",
+      "trigger": false,
+      "class": "near-miss"
+    },
+    {
+      "q": "update AGENTS.md with the new module layout",
+      "trigger": false,
+      "class": "near-miss"
+    },
+    {
+      "q": "draft the changelog entry for this release",
+      "trigger": false,
+      "class": "near-miss"
+    },
+    {
+      "q": "this blog post reads like AI wrote it, fix the tone",
+      "trigger": false,
+      "class": "near-miss"
+    },
+    {
+      "q": "fix the failing date parser test in the billing module",
+      "trigger": false,
+      "class": "counterexample"
+    }
+  ]
+}

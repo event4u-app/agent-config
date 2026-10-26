@@ -18,7 +18,10 @@ import {
 
 const REPO = path.resolve(__dirname, '..', '..');
 const CATALOG = fs.readFileSync(path.join(REPO, 'docs', 'guidelines', 'design-antipatterns.md'), 'utf-8');
-const REGISTRY = fs.readFileSync(path.join(REPO, 'src', 'scripts', 'design_slop_rules.ts'), 'utf-8');
+// The render-engine rules live in their own module; the gate reads both.
+const REGISTRY = ['design_slop_rules.ts', 'design_slop_render_rules.ts']
+    .map((f) => fs.readFileSync(path.join(REPO, 'src', 'scripts', f), 'utf-8'))
+    .join('\n');
 const WITNESS = WITNESS_SOURCES.map((rel) => fs.readFileSync(path.join(REPO, rel), 'utf-8')).join('\n');
 
 /**

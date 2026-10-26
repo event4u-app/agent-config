@@ -1,0 +1,70 @@
+{
+  "files": {
+    "nearmiss/l7-scrolling-ledger-table.html": {
+      "catalog_id": "L7",
+      "signal": "table scrollWidth (1500px) exceeds its container clientWidth, plus a skip link positioned at left:-10000px outside the viewport",
+      "basis": "L7 targets 'text truncation or reflow failures'; here the wide table sits in a focusable overflow-x:auto region that scrolls on purpose and the off-screen skip link is the standard visually-hidden accessibility pattern, so nothing is truncated or untested.",
+      "author": "independent-agent"
+    },
+    "nearmiss/l6-contained-and-fixed-menus.html": {
+      "catalog_id": "L6",
+      "signal": "position:absolute menu inside an overflow:hidden card, and a second menu that is a descendant of an overflow:hidden card",
+      "basis": "L6's harm is that the 'dropdown clips'; the first menu fits entirely inside the card's box so nothing is clipped, and the second uses position:fixed, which is the catalog's own named remediation to escape the clipping container.",
+      "author": "independent-agent",
+      "viewports": [
+        "desktop"
+      ],
+      "adjudication": "Adjudicated 2026-10-26 by the run that wrote the render rules: the author was asked for a page that renders at 1440x900, so the near-miss claim is scoped to the desktop capture; an overflow at 375 or 320 px is a real L7 finding (\"never acceptable … test at 320px\") outside that claim."
+    },
+    "nearmiss/v7-project-board-card.html": {
+      "catalog_id": "V7",
+      "signal": "three nested box surfaces with backgrounds/radii: project panel > board column > task card",
+      "basis": "Matches the V7 override verbatim — 'a truly three-level hierarchy (e.g., project → board → card)' — and each level has distinct visual weight (borderless plane, tinted column, white raised card).",
+      "author": "independent-agent",
+      "viewports": [
+        "desktop"
+      ],
+      "adjudication": "Adjudicated 2026-10-26 by the run that wrote the render rules: the author was asked for a page that renders at 1440x900, so the near-miss claim is scoped to the desktop capture; an overflow at 375 or 320 px is a real L7 finding (\"never acceptable … test at 320px\") outside that claim."
+    },
+    "nearmiss/l2-three-pricing-tiers.html": {
+      "catalog_id": "L2",
+      "signal": "three sibling bordered cards in a three-column grid with the same internal structure (heading, price, list, button)",
+      "basis": "L2 override: 'Product genuinely has three equally weighted features; must still vary padding, or use a different composition' — the three pricing tiers vary padding, column width, border weight, background and button fill.",
+      "author": "independent-agent",
+      "viewports": [
+        "desktop"
+      ],
+      "adjudication": "Adjudicated 2026-10-26 by the run that wrote the render rules: the author was asked for a page that renders at 1440x900, so the near-miss claim is scoped to the desktop capture; an overflow at 375 or 320 px is a real L7 finding (\"never acceptable … test at 320px\") outside that claim."
+    },
+    "nearmiss/t3-settings-custom-icons.html": {
+      "catalog_id": "T3",
+      "signal": "small 36px rounded-square tinted tile containing an icon directly above an h2 in each of three grid items",
+      "basis": "T3 override: 'listed features genuinely benefit from visual-icon-then-title affordance AND the icons are custom, not library defaults' — these are hand-authored inline SVGs that identify distinct settings destinations in a navigation grid.",
+      "author": "independent-agent",
+      "viewports": [
+        "desktop"
+      ],
+      "adjudication": "Adjudicated 2026-10-26 by the run that wrote the render rules: the author was asked for a page that renders at 1440x900, so the near-miss claim is scoped to the desktop capture; an overflow at 375 or 320 px is a real L7 finding (\"never acceptable … test at 320px\") outside that claim."
+    },
+    "nearmiss/t2-editorial-feature-article.html": {
+      "catalog_id": "T2",
+      "signal": "the h1 is a 52px italic serif and is the largest, primary headline on the page",
+      "basis": "T2 override: 'Brand adopts editorial-magazine aesthetic with a documented italic serif rationale' — the page is a magazine feature article and carries a design-brief comment documenting the italic serif choice; the headline is article-scale, not a marketing hero.",
+      "author": "independent-agent",
+      "viewports": [
+        "desktop"
+      ],
+      "adjudication": "Adjudicated 2026-10-26 by the run that wrote the render rules: the author was asked for a page that renders at 1440x900, so the near-miss claim is scoped to the desktop capture; an overflow at 375 or 320 px is a real L7 finding (\"never acceptable … test at 320px\") outside that claim."
+    },
+    "nearmiss/l1-monitoring-primary-metric.html": {
+      "catalog_id": "L1",
+      "signal": "a 64px number with a small label above it on a dashboard, alongside four further stats",
+      "basis": "L1 override: 'Data storytelling genuinely requires a primary metric with supporting context; must vary the arrangement' — the latency figure carries its objective, cause, trend chart and error budget, and the four supporting signals sit in an asymmetric side list rather than a row of equal stat tiles, with no gradient.",
+      "author": "independent-agent",
+      "viewports": [
+        "desktop"
+      ],
+      "adjudication": "Adjudicated 2026-10-26 by the run that wrote the render rules: the author was asked for a page that renders at 1440x900, so the near-miss claim is scoped to the desktop capture; an overflow at 375 or 320 px is a real L7 finding (\"never acceptable … test at 320px\") outside that claim."
+    }
+  }
+}

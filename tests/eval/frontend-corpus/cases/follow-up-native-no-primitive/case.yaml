@@ -1,0 +1,22 @@
+# Case: follow-up-native-no-primitive
+# Registered by road-to-a-control-that-matches-its-neighbours step 0.2.
+# Negative control: no project primitive exists, so a native <select> is
+# correct — it must take the .field recipe the siblings use, not be flagged.
+id: follow-up-native-no-primitive
+prompt: "Add a select for the preferred contact time to the callback form."
+authority:
+  surface_mode: operate
+  register: product
+  change_intent: extend
+  reference_maturity: production-incumbent
+note: |
+  Plain HTML and CSS. A native select styled with the .field class (and
+  appearance: base-select as progressive enhancement) is the right answer; a
+  consistency-raw-control finding here is a false positive.
+bars:
+  raw_select_with_primitive: 0
+  raw_control_false_positive: 0
+  sibling_box_deviation: "the .field recipe, same as the sibling inputs"
+files:
+  - callback.html
+  - styles.css

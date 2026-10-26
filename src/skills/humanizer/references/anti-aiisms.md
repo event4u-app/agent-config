@@ -120,6 +120,17 @@ matches four stacked-hedge phrases, not one-hedge-per-claim;
 `tell-ai-vocabulary` contributes occurrences to a per-500-words cluster score,
 which is a different denominator from the per-100-words bound above.
 
+**Structural families — scanned vs model-judged.** Five structural tells have a
+matcher and are scanned: a first sentence that restates its heading
+(`tell-heading-echo`), three consecutive sentences on the same two opening words
+(`tell-repeated-openings`), one sign-off closing two sections
+(`tell-repeated-closer`), a pre-empted objection nobody raised
+(`tell-strawman-preemption`, English only) and a text that announces itself
+(`tell-self-describing-document`, English only). The rest stay **model-judged**
+because no text-level matcher reads them: a summary paragraph that repeats the
+body, a rhetorical question used as a transition, uniform paragraph length,
+manufactured stakes, and the German forms of the two English phrase families.
+
 **Did the rewrite clear the flagged tells without introducing new ones?** A
 re-run over already-clean prose is a no-op. If a bound is intentionally
 exceeded by a voice fingerprint (a person who genuinely writes in dashes),
@@ -127,8 +138,14 @@ the fingerprint wins and the bound is suppressed for that pass.
 
 ## Factual-integrity guard (U4)
 
-Where a rewrite touches factual content — a number, date, name, quantity, or
-claim — emit a flag rather than silently altering it:
+With a runtime, the guard is mechanical:
+`detect_ai_tells --baseline <before> <after>` lists every number, date,
+currency amount, URL, code span and capitalised multi-word name the rewrite
+lost or added, and exits 1 on any. Each one is restored, not reworded. A claim
+without such a token is still the eye-check's job.
+
+Without a runtime, or for a claim the diff cannot see, emit a flag rather
+than silently altering it:
 
 ```
 [VERIFY: <original span> → <rewritten span>]

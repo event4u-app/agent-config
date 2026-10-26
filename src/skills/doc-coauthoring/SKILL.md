@@ -159,4 +159,4 @@ Apply the [Frugality Charter](../../contexts/contracts/frugality-charter.md).
 * Declare "done" without the Stage 3 reader test
 * Generate doc content from scratch when the user has existing context — gap-closing is the whole point
 
-→ Final prose pass for audience-facing output: [`humanizer`](../humanizer/SKILL.md) — remove AI-writing tells before delivery.
+→ Final prose pass for audience-facing output: `humanizer` (gtm-marketing pack) — remove AI-writing tells before delivery.

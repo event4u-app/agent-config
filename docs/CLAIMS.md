@@ -809,12 +809,30 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - status: backed
 - last_verified: 2026-08-11
 
+### claim: design-slop-near-miss-baseline
+- claim: On a 30-file near-miss corpus written from the catalog prose by an agent that did not see the detectors (legitimate uses a naive detector would flag, tune and holdout splits), every one of the 23 shipped design-slop rules fires on zero files; this holds after one tuning pass (L4, T9, T10), six demotions to judgment-only (CP2, CP5, CP6, M1, V3, V6) and three promotions measured on the same corpus (M6, M8, V9; M7 stayed judgment-only because its near-miss is the same code as the tell). The five render-engine rules (L1, L2, L6, L7, V7) are measured apart, on 7 rendered near-misses by the same independent author and 5 positives: zero fire on a near-miss at the viewport it was written for (six are desktop-scoped by adjudication in its LABELS.json), and each fires on its positive; T2 and T3 stayed judgment-only. Four files carry the DESIGN.md declaration their catalog override requires, and one (CP1) was adjudicated a true positive by the catalog's own wording and left out.
+- kind: quant
+- evidence: internal/bench/corpora/design-slop-nearmiss-PREREG.md#The bar, declared before the run
+- status: backed
+- last_verified: 2026-10-26
+
+  First run, before any change: M1 > 0 for 15 of 26 rules (10 tune, 5
+  holdout). Precision on this repository's own UI, reported apart from M1:
+  CP1 1.00 (26 TP), V1 0.25 (2 TP, 6 near-miss). The labels on that split are
+  this run's own judgement, not an independent label. Re-run with
+  `task bench:design-slop-nearmiss`.
+
 ### claim: design-slop-false-positive-baseline
-- claim: On a 32-file labelled clean-UI corpus, 18 of the 19 shipped design-slop rules produced zero false positives; the nineteenth (`slop-c6-lock-colour`, catalog C6) fired on 4 of the 32 files and was demoted to judgment-only rather than tuned.
+- claim: On a 32-file labelled clean-UI corpus (digest `90544389b05c1d0b`), all 23 shipped text-engine design-slop rules produce zero false positives (the five render-engine rules read rendered pages and are measured on their own corpus, see design-slop-near-miss-baseline) (26 before the 2026-10-26 near-miss demotions and promotions) — which the pre-registration reads as the corpus failing to discriminate, not as precision. History: the 2026-08-13 epoch ran 19 rules, 18 at zero, and the nineteenth (`slop-c6-lock-colour`, catalog C6) fired on 4 of the 32 files and was demoted to judgment-only rather than tuned.
 - kind: quant
 - evidence: internal/bench/corpora/design-slop-fp-PREREG.md#The ceiling, declared before the run
 - status: backed
-- last_verified: 2026-08-13
+- last_verified: 2026-10-26
+
+  Epoch 2026-10-26, `npx tsx internal/bench/design-slop-fp/run.ts`: 26 rules ×
+  32 clean files, M1 = 0 for every rule. This is the honest-null branch named
+  below, and it is the reason the near-miss corpus of
+  `road-to-tells-a-near-miss-can-refute` Phase 1 gates every later promotion.
 
   Counting method: M1 is the number of distinct corpus files on which a rule
   emits at least one finding — per file, not per hit. Every corpus file is

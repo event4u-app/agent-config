@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checkout service — health</title>
+<style>
+  body { margin: 0; font: 14px/1.45 system-ui, sans-serif; color: #1b2430; background: #f3f5f8; }
+  main { max-width: 1240px; margin: 32px auto; padding: 0 32px; }
+  h1 { font-size: 20px; margin: 0 0 20px; }
+  .layout { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; }
+  .panel { background: #fff; border: 1px solid #dbe0e7; border-radius: 8px; padding: 20px 24px; }
+  .primary .label { font-size: 14px; font-weight: 600; color: #3c4757; margin: 0; }
+  .primary .value { font-size: 64px; font-weight: 700; line-height: 1.05; margin: 6px 0 4px; font-variant-numeric: tabular-nums; }
+  .primary .value small { font-size: 22px; font-weight: 500; color: #5d6878; }
+  .context { margin: 0 0 16px; color: #485365; }
+  .context b { color: #a3360f; }
+  svg.trend { width: 100%; height: 120px; display: block; }
+  .budget { margin-top: 12px; font-size: 13px; color: #5d6878; }
+  .side dl { margin: 0; display: grid; grid-template-columns: 1fr auto; row-gap: 12px; }
+  .side dt { color: #5d6878; } .side dd { margin: 0; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+  .side h2 { font-size: 15px; margin: 0 0 14px; }
+  .incidents { margin-top: 20px; }
+  .incidents li { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Checkout service — production, last 24 hours</h1>
+  <div class="layout">
+    <section class="panel primary" aria-labelledby="p95">
+      <p class="label" id="p95">p95 latency, payment authorisation</p>
+      <p class="value">842 <small>ms</small></p>
+      <p class="context">Objective is 600 ms. Up <b>+310 ms since 14:05</b>, when the card-network gateway began retrying timeouts.</p>
+      <svg class="trend" viewBox="0 0 600 120" role="img" aria-label="Latency trend: flat near 520 ms until 14:05, then rising to 842 ms">
+        <line x1="0" y1="48" x2="600" y2="48" stroke="#c4cbd5" stroke-dasharray="4 4"/>
+        <text x="4" y="42" font-size="11" fill="#5d6878">objective 600 ms</text>
+        <polyline fill="none" stroke="#1f5fbf" stroke-width="2" points="0,70 60,68 120,72 180,69 240,71 300,70 360,66 400,52 440,40 480,30 520,24 560,20 600,18"/>
+      </svg>
+      <p class="budget">Error budget for October: 38% remaining · burn rate 4.2× over the last hour</p>
+    </section>
+    <aside class="panel side">
+      <h2>Supporting signals</h2>
+      <dl>
+        <dt>Requests per minute</dt><dd>3,410</dd>
+        <dt>Authorisation failures</dt><dd>1.8%</dd>
+        <dt>Gateway retries</dt><dd>212 / min</dd>
+        <dt>Queue depth</dt><dd>47</dd>
+      </dl>
+      <ul class="incidents">
+        <li>14:05 — gateway timeout alarm opened</li>
+        <li>14:20 — on-call acknowledged, retry cap lowered</li>
+      </ul>
+    </aside>
+  </div>
+</main>
+</body>
+</html>

@@ -25,6 +25,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { type DesignContext } from "../design_slop_rules.js";
 import { UI_EXT } from "../_lib/ui_surface.js";
 import { loadDesignContext, scanFile } from "../lint_design_slop.js";
+import { attribute, committedBlob } from "../_lib/finding_baseline.js";
 import { readHookStdin } from "./hook_stdin.js";
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
@@ -82,16 +83,18 @@ function _unwrap(envelope: JsonObject): JsonObject {
 }
 
 /** Best-effort: pull (toolName, filePath, proposedContent) from the PreToolUse envelope. */
-function extract(outer: JsonObject): { file: string; content: string } | null {
+function extract(outer: JsonObject): { file: string; content: string; replaced: string | null } | null {
   const envelope = _unwrap(outer);
   const ti = envelope["tool_input"] ?? envelope["toolInput"] ?? envelope["input"];
   if (!isObject(ti)) return null;
   const fileVal = ti["file_path"] ?? ti["path"] ?? ti["filePath"];
   const file = typeof fileVal === "string" ? fileVal : "";
-  // Edit → new_string/new_str; Write → content; some hosts → text
+  // Edit → new_string/new_str; Write → content; some hosts → text. An edit's
+  // baseline is the text it replaces; a whole-file write's is the committed blob.
+  const old = ti["old_string"] ?? ti["old_str"] ?? ti["oldText"];
   for (const key of ["content", "new_string", "new_str", "text", "newText"]) {
     const v = ti[key];
-    if (typeof v === "string" && v.length > 0) return { file, content: v };
+    if (typeof v === "string" && v.length > 0) return { file, content: v, replaced: typeof old === "string" ? old : null };
   }
   return null;
 }
@@ -149,10 +152,16 @@ export function main(): number {
   }
 
   let findings;
+  let incumbent = 0;
   try {
-    findings = scanFile(ex.content, ex.file, ctx).filter(
-      (f) => f.severity === "P0" || f.severity === "P1",
-    );
+    const high = (content: string) =>
+      scanFile(content, ex.file, ctx).filter((f) => f.severity === "P0" || f.severity === "P1");
+    // Say only what this write introduced (road-to-tells-a-near-miss-can-refute 3.1).
+    // A clean write pays no baseline scan.
+    const found = high(ex.content);
+    const split = attribute(found, found.length ? high(ex.replaced ?? committedBlob(root, ex.file)) : []);
+    findings = split.introduced;
+    incumbent = split.incumbent;
   } catch {
     return EXIT_ALLOW;
   }
@@ -178,7 +187,8 @@ export function main(): number {
     "⚠️ Anti-slop: high-severity aesthetic tell(s) in the proposed UI — " +
     lines +
     ". Rebuttable: declare intent in DESIGN.md, add design-slop-disable-next-line, " +
-    "or proceed if deliberate (this is a flag, not a block).";
+    "or proceed if deliberate (this is a flag, not a block)." +
+    (incumbent ? ` ${incumbent} incumbent finding(s) already in the file are not repeated.` : "");
   process.stdout.write(JSON.stringify({ decision: "warn", reason }) + "\n");
   return EXIT_WARN;
 }

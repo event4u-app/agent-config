@@ -163,7 +163,7 @@
         ".implement-ticket-state.json"
       ],
       "exit_code": 0,
-      "stdout": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/contact.blade.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`\n",
+      "stdout": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/contact.blade.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## UI consistency\n\n- `static-pass` — statically checked only — nothing was rendered, so this is NOT a visual verification\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`\n",
       "stderr": "",
       "state_after": {
         "version": 1,
@@ -283,7 +283,8 @@
               "screenshot-diff"
             ],
             "blocker": "b-page-capture-primitive",
-            "skip_reason": "b-page-capture-primitive"
+            "skip_reason": "b-page-capture-primitive",
+            "consistency_status": "static-pass"
           }
         },
         "ui_polish": null,
@@ -299,7 +300,8 @@
             "kind": "ui",
             "stack": "plain",
             "file": "resources/views/contact.blade.php",
-            "summary": "Contact form scaffolded reusing forms.text-input"
+            "summary": "Contact form scaffolded reusing forms.text-input",
+            "new_control_roles": []
           }
         ],
         "tests": null,
@@ -315,7 +317,7 @@
           "report": "success"
         },
         "questions": [],
-        "report": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/contact.blade.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
+        "report": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/contact.blade.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## UI consistency\n\n- `static-pass` — statically checked only — nothing was rendered, so this is NOT a visual verification\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
       },
       "directive": null,
       "recipe_action": null,

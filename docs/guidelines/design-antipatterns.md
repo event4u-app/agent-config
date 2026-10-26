@@ -48,13 +48,13 @@ one status and `lint_design_antipattern_parity` checks the `backed` rows against
 the registry on every run. A second hand-maintained list in this paragraph is
 precisely the drift the gate exists to prevent, so there is only one.
 
-## Current-generation tells (generation-dated — review 2026-Q4)
+## Current-generation tells (generation-dated — reviewed 2026-10-26, next review 2027-Q2)
 
 Default-template signatures rotate as model defaults rotate; naming the
 *current* one is more actionable than a timeless list. The entries below stay
 in their own categories — this section only tracks which combination reads as
 *this year's* generated default, so the first-impulse check has one dated
-pointer instead of a scattered mental list. As of **2026-07**:
+pointer instead of a scattered mental list. As of **2026-10** (re-confirmed; unchanged since 2026-07):
 
 - **This generation — "warm editorial":** cream/sand background + serif display
   + brass/clay/terracotta accent (catalog **C5** + **T2** + **T7** Instrument
@@ -67,6 +67,19 @@ pointer instead of a scattered mental list. As of **2026-07**:
 generation ships a visibly different default aesthetic. It is a *when-does-it-
 rotate* note, not a new pattern — never add a tell here that lacks a catalog
 entry in the sections below.
+
+**2026-10 review — watched, not added.** External references reviewed in
+2026-10 named thirteen defaults this catalog has no entry for: an auto-scrolling marquee, a
+decorative grid-line background, a pulsing status dot, a blinking cursor,
+heading stragglers, text occlusion, a hard offset shadow, a static radial halo,
+an organic clip-path, a badge above the hero heading (now part of **T4**),
+content invisible at rest, cards flush to the scroller edge, and a raster
+buried under a wash. None is added: the bar is two independent sources or a
+showing in this tree's own UI, and the review could not show two independent
+sources from what the tree holds and found zero occurrences in `src/ui/` and
+`site/`. Each reopens when a second source or a
+dogfood occurrence appears, and lands as `candidate` or `judgment-only`, never
+`backed`.
 
 ### The three census columns — class, remediation, verification
 
@@ -128,7 +141,7 @@ Within-project invariants + repetition caps. Override = declare the value in
 | T1 | Flat type hierarchy: body and headings use the same optical weight and nearly the same size | Type hierarchy is invisible; user cannot scan the page | Deliberately minimal aesthetic where all text is body-weight; must be an explicit brand decision | craft-presumption | retune | render |
 | T2 | Oversized italic serif as the primary hero headline | The "AI startup landing page" template; seen on ~60% of AI-generated marketing pages | Brand adopts editorial-magazine aesthetic with a documented italic serif rationale | style-preference | replace | render |
 | T3 | Icon tile (small rounded-square container) above heading | The universal AI feature-card template; reads as scaffold | Listed features genuinely benefit from visual-icon-then-title affordance AND the icons are custom, not library defaults | style-preference | delete | static |
-| T4 | Eyebrow / ALL-CAPS label above every section heading | Overuse collapses the emphasis; maximum is 1 eyebrow per 3 sections (countable: grep tracking classes) | Used for genuine section-type differentiation with meaningful vocabulary (not just "FEATURES", "PRICING") | craft-presumption | delete → reduce | static |
+| T4 | Eyebrow / ALL-CAPS label above every section heading, or a pill badge stacked on the `h1` | Overuse collapses the emphasis; maximum is 1 eyebrow per 3 sections, counted by position (a short uppercase label whose next element is a heading — a status chip or an uppercase button is not one) | Used for genuine section-type differentiation with meaningful vocabulary (not just "FEATURES", "PRICING") | craft-presumption | delete → reduce | static |
 | T5 | Repeated section kickers ("Our mission", "What we offer", "Why choose us") | Filler vocabulary; every AI-generated page has the same three section titles | Every kicker is substantive and uses brand-specific vocabulary, not generic marketing speak | craft-presumption | replace | judgment |
 | T6 | Crushed letter-spacing on display text (`letter-spacing` < −0.04em) | Below −0.04em glyphs collide optically; reads as "designer-ish effect" with no grounding | Intentional tight display treatment with a documented minimum floor; verify at the actual render size | floor | retune | static |
 | T7 | Overused fonts without a stated reason: Inter, Roboto, DM Sans, Geist, Space Grotesk, Instrument Serif | These are the default AI-coding-tool font picks; every generated UI uses one of them | **Register-scoped.** In the **brand** register: the brand has explicitly adopted one of these AND there is a documented reason. In the **product** register: a single reliable family is the sanctioned strategy ([`design-modes`](design-modes.md) § The two registers), so one of these is legitimate on a **stated** product-register choice — the register itself is the reason, and it must be stated (DESIGN.md, the surface brief, or `design-slop-disable`). Neither register admits an *undeclared* pick. | reference-constraint | replace | judgment |
@@ -249,13 +262,13 @@ are listed in § Quality floors.
 |---|---|---|
 | V1 | backed | |
 | V2 | judgment-only | decoration-vs-intent is the tell; a text pass cannot read intent |
-| V3 | backed | |
+| V3 | judgment-only | demoted 2026-10-26 at M1 = 1 on the near-miss holdout split: a transparent border kept for forced-colors mode plus a depth shadow is not the ghost card; not tuned against the holdout split |
 | V4 | backed | |
 | V5 | judgment-only | icon register collision is a visual-style comparison |
-| V6 | backed | |
-| V7 | judgment-only | DOM-structure nesting depth, measured too false-positive-prone |
+| V6 | judgment-only | demoted 2026-10-26 at M1 = 1 on the near-miss holdout split: hatching that marks unavailable calendar slots is a state, not a background texture; not tuned against the holdout split |
+| V7 | backed | promoted 2026-10-26 (render engine): three nested surfaces of the same weight; a hierarchy whose levels differ in weight stays clean |
 | V8 | backed | |
-| V9 | judgment-only | texture-over-gradient is a compositional judgment, and the pre-registered clean corpus contains no grain-over-gradient near-miss, so an M1 = 0 for a detector here would be a vacuous pass rather than measured precision |
+| V9 | backed | promoted 2026-10-26: M1 = 0 on both near-miss splits; grain on a flat color stays clean, only grain composed with a gradient in one rule fires |
 | C1 | judgment-only | the tell is the combination *as the primary scheme*; which colours are primary is a judgment |
 | C2 | backed | |
 | C3 | backed | |
@@ -264,10 +277,10 @@ are listed in § Quality floors.
 | C6 | judgment-only | demoted 2026-08-13 at M1 = 4 of 32 clean files; the rule counted every saturated hue, so one accent plus a semantic danger colour reached its threshold — which is correct design, not the tell this entry describes |
 | C7 | judgment-only | theme inversion may be deliberate emphasis |
 | T1 | judgment-only | requires comparing optical weight across the document |
-| T2 | judgment-only | requires knowing which element is the hero |
-| T3 | judgment-only | icon-tile stack; DOM-structure analysis, too false-positive-prone |
-| T4 | backed | |
-| T5 | judgment-only | copy phrase-list; that mechanism is council-rejected |
+| T2 | judgment-only | own analysis 2026-10-26: the override is a documented rationale, which no render shows; an italic serif hero renders the same either way |
+| T3 | judgment-only | own analysis 2026-10-26: the override (custom icons that carry meaning) differs from the tell only in where an icon came from, which no render shows |
+| T4 | backed | by position since 2026-10-26: an uppercase label directly before a heading, and a pill badge directly before the `h1`; fails open on a heading a component builds |
+| T5 | judgment-only | named null (2026-10-26): the only candidate is a kicker phrase-list, the mechanism council-rejected for copy; no M1 is reported because no matcher was built |
 | T6 | backed | |
 | T7 | backed | |
 | T8 | deferred | typeface count is a design-system opinion, not a floor |
@@ -275,30 +288,30 @@ are listed in § Quality floors.
 | T10 | backed | |
 | T11 | witness | `ui:render --profile asset` reports `geometry/font-synthesised`; fixture `missing-weight-reads-synthesised` |
 | T12 | backed | |
-| L1 | judgment-only | composite structural template |
-| L2 | judgment-only | three-identical-card grid; DOM-structure analysis |
+| L1 | backed | promoted 2026-10-26 (render engine): a giant number with a row of three or four stats on a gradient; a primary metric with context in a varied arrangement stays clean |
+| L2 | backed | promoted 2026-10-26 (render engine) after one tuning: three or more identical surfaces side by side in a row; a stacked list of equal cards and varied tiers stay clean |
 | L3 | deferred | spacing-multiple uniformity is a design-system opinion |
 | L4 | backed | |
 | L5 | floor | line length, Q3 |
-| L6 | judgment-only | requires an ancestor relation a flat text pass cannot establish |
-| L7 | judgment-only | requires a render |
+| L6 | backed | promoted 2026-10-26 (render engine): an absolutely positioned box cut by an overflow-clipping ancestor; a contained menu and a fixed one stay clean |
+| L7 | backed | promoted 2026-10-26 (render engine): M1 = 0 on the rendered near-misses, which are scoped to the viewport they were written for; reads every viewport, so it also finds overflow at 375 and 320 px |
 | L8 | backed | |
 | L9 | backed | |
 | L10 | backed | |
-| M1 | backed | |
+| M1 | judgment-only | demoted 2026-10-26 at M1 = 1 on the near-miss holdout split: a brief, non-repeating onboarding celebration (the override) uses the same overshoot curve; the motion authority and its drift gate carry the rule for carriers |
 | M2 | backed | |
 | M3 | backed | |
 | M4 | backed | |
 | M5 | floor | reduced-motion alternative, Q4 |
-| M6 | judgment-only | two independent reasons, both measured: the scanner classifies no engine for plain `.ts` / `.js` (`lint_design_slop.ts` § enginesForExt), which is where a reveal hook normally lives; and the clean corpus contains zero `IntersectionObserver`, so an M1 = 0 would measure nothing. Promotion needs both closed first: a corpus carrying a legitimate near-miss for the signal, and a recorded decision on whether the scanner reaches `.ts` / `.js` |
-| M7 | judgment-only | same two reasons as M6: no engine for `.ts` / `.js`, and zero `mousemove` and zero `radial-gradient` in the clean corpus |
-| M8 | judgment-only | the corpus carries no `:hover { opacity }` at all, and its only `opacity` occurrences sit inside a `@keyframes` block, so it cannot separate a hover fade from a legitimate transition |
+| M6 | backed | promoted 2026-10-26: M1 = 0 on both near-miss splits (lazy-loading and table-of-contents observers stay clean); reads .ts/.js through the rule's own extension list, not a widened engine map — widening put CP1 on 4 code-comment files of this tree |
+| M7 | judgment-only | measured 2026-10-26: the near-miss corpus's inspection loupe (the override, "a canvas inspection tool") is a mousemove handler feeding a radial gradient — the same code an ambient spotlight is, so a detector cannot tell them apart |
+| M8 | backed | promoted 2026-10-26: M1 = 0 on both near-miss splits; a :disabled / aria-disabled / dismissing hover is the override and is not read |
 | CP1 | backed | |
-| CP2 | backed | |
-| CP3 | judgment-only | copy phrase-list; that mechanism is council-rejected |
-| CP4 | judgment-only | copy phrase-list; that mechanism is council-rejected |
-| CP5 | backed | |
-| CP6 | backed | copy-engine phrase list, same mechanism as CP2; a CSS engine cannot see subject matter |
+| CP2 | judgment-only | demoted 2026-10-26 at M1 = 1 on the near-miss tune split: "robust" and "leverage" as statistical terms pass the delete-test this entry names, and a phrase list cannot tell a term of art from a buzzword |
+| CP3 | judgment-only | measured on the prose side (2026-10-26): `tell-negative-parallelism` and `tell-binary-contrast` reach the shape, clean-corpus M1 = 0 (`bench_prose_tells_fp --gate`); not a design-slop rule, because the override (a contrast that names a real product distinction) is not in the text a matcher reads |
+| CP4 | judgment-only | named null (2026-10-26): the override is a "so what" test a reader answers, and no candidate matcher reads it; no M1 is reported because no matcher was built |
+| CP5 | judgment-only | demoted 2026-10-26 at M1 = 1 on the near-miss holdout split: functional status markers (the override this entry names) read the same as decoration to a text pass |
+| CP6 | judgment-only | demoted 2026-10-26 at M1 = 1 on the near-miss tune split: a data-driven field whose data is named (the override) uses the same phrase; a phrase list cannot see the brief's decision |
 
 ---
 

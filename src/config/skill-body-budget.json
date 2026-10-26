@@ -23,7 +23,7 @@
     "async-python-patterns": 8203,
     "authz-review": 17109,
     "aws-infrastructure": 7441,
-    "blade-ui": 6836,
+    "blade-ui": 7227,
     "blameless-post-mortem": 7809,
     "blast-radius-analyzer": 9668,
     "brand": 5866,
@@ -72,14 +72,14 @@
     "dependency-upgrade": 17216,
     "description-assist": 7718,
     "design-intelligence": 11085,
-    "design-review": 19912,
-    "design-system-capture": 14873,
-    "design-tokens": 8812,
+    "design-review": 20894,
+    "design-system-capture": 14605,
+    "design-tokens": 9024,
     "design-variations": 6907,
     "devcontainer": 4553,
     "developer-like-execution": 11443,
     "discovery-interview": 6428,
-    "doc-coauthoring": 8782,
+    "doc-coauthoring": 8778,
     "docker": 11104,
     "docx-authoring": 5464,
     "dpa-review": 9595,
@@ -104,11 +104,11 @@
     "existing-ui-audit/references/steps/09-validate-and-write.md": 430,
     "expansion-playbook": 8838,
     "experiment-loop": 7297,
-    "fe-design": 16747,
+    "fe-design": 17366,
     "feature-planning": 14676,
     "file-editor": 7026,
     "finishing-a-development-branch": 9404,
-    "flux": 5632,
+    "flux": 6022,
     "forecast-accuracy": 8187,
     "forecasting": 8626,
     "forensics-report": 5052,
@@ -125,7 +125,7 @@
     "hiring-loop-design": 12107,
     "history-design": 4758,
     "html-deck": 8141,
-    "humanizer": 15706,
+    "humanizer": 15909,
     "iconography": 8205,
     "image-analyser": 6133,
     "image-creator": 5784,
@@ -167,11 +167,11 @@
     "license-compliance-borrow-check": 7450,
     "license-compliance-credits": 4270,
     "lint-skills": 3705,
-    "livewire": 5734,
+    "livewire": 6125,
     "livewire-architect": 6631,
     "llm-provider-knowledge": 8465,
     "logging-monitoring": 12016,
-    "logo-generation": 5790,
+    "logo-generation": 7831,
     "market-entry-analysis": 10016,
     "markitdown": 14443,
     "mcp": 9204,
@@ -244,10 +244,10 @@
     "prompt-validator": 7198,
     "quality-tools": 7516,
     "react-native-setup": 10016,
-    "react-shadcn-ui": 20203,
+    "react-shadcn-ui": 20594,
     "readme-reviewer": 9033,
-    "readme-writing": 10943,
-    "readme-writing-package": 13381,
+    "readme-writing": 10939,
+    "readme-writing-package": 13377,
     "reasoning-orchestrator": 7409,
     "receiving-code-review": 8492,
     "recursive-verification": 9376,
@@ -310,7 +310,7 @@
     "traefik": 9138,
     "type-design": 9883,
     "typography-system": 11967,
-    "ui-apply-generic": 8283,
+    "ui-apply-generic": 8674,
     "ui-component-architect": 13328,
     "unit-economics-modeling": 9297,
     "universal-project-analysis": 5547,
@@ -771,6 +771,66 @@
       "old": 11938,
       "new": 12522,
       "reason": "road-to-security-answer-that-names-what-it-checked 4.3: cites ASVS 5.0 V5 File Handling and the OWASP upload cheat sheet, and records why the chapter was missed."
+    },
+    {
+      "skill": "blade-ui",
+      "old": 6836,
+      "new": 7227,
+      "reason": "road-to-a-control-that-matches-its-neighbours 2.x: one shared 'Control roles' line — reuse the project's primitive for a role before adding a raw control."
+    },
+    {
+      "skill": "flux",
+      "old": 5632,
+      "new": 6022,
+      "reason": "road-to-a-control-that-matches-its-neighbours 2.x: one shared 'Control roles' line — reuse the project's primitive for a role before adding a raw control."
+    },
+    {
+      "skill": "livewire",
+      "old": 5734,
+      "new": 6125,
+      "reason": "road-to-a-control-that-matches-its-neighbours 2.x: one shared 'Control roles' line — reuse the project's primitive for a role before adding a raw control."
+    },
+    {
+      "skill": "react-shadcn-ui",
+      "old": 20203,
+      "new": 20594,
+      "reason": "road-to-a-control-that-matches-its-neighbours 2.x: one shared 'Control roles' line — reuse the project's primitive for a role before adding a raw control."
+    },
+    {
+      "skill": "ui-apply-generic",
+      "old": 8283,
+      "new": 8674,
+      "reason": "road-to-a-control-that-matches-its-neighbours 2.x: one shared 'Control roles' line — reuse the project's primitive for a role before adding a raw control."
+    },
+    {
+      "skill": "fe-design",
+      "old": 16747,
+      "new": 17366,
+      "reason": "road-to-a-control-that-matches-its-neighbours 2.x: one shared 'Control roles' line — reuse the project's primitive for a role before adding a raw control. Plus the momentum-carried motion class and the gesture-mechanics reference pointer."
+    },
+    {
+      "skill": "design-review",
+      "old": 19912,
+      "new": 20894,
+      "reason": "road-to-a-control-that-matches-its-neighbours 3.x/5.x: the open-state interact line, phase-split prescribe wording, interruptibility hint and the persuade check."
+    },
+    {
+      "skill": "design-tokens",
+      "old": 8812,
+      "new": 9024,
+      "reason": "road-to-a-control-that-matches-its-neighbours: letter-spacing per type step in the starter, the tracking ladder."
+    },
+    {
+      "skill": "humanizer",
+      "old": 15706,
+      "new": 15909,
+      "reason": "road-to-tells-a-near-miss-can-refute 5.3: the factual-integrity step runs the deterministic fact diff instead of a self-report."
+    },
+    {
+      "skill": "logo-generation",
+      "old": 5790,
+      "new": 7831,
+      "reason": "road-to-tells-a-near-miss-can-refute 7.1-7.5: divergence, critique mode, the legibility witness, the shelf test, the stop before the kit and the kit command."
     }
   ]
 }

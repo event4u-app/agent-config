@@ -617,6 +617,10 @@ describe('the owner skill reports what it is allowed to report', () => {
             vi.doMock('@playwright/test', () => {
                 throw new Error("Cannot find package '@playwright/test'");
             });
+            // browserReach falls back to playwright-core; absent means both are gone.
+            vi.doMock('playwright-core', () => {
+                throw new Error("Cannot find package '@playwright/test'");
+            });
             const mod = await import('../../src/cli/commands/uiRender.js');
             const code = await mod.runUiRender({
                 target: path.join(DIR, sc.input as string),
@@ -651,6 +655,7 @@ describe('the owner skill reports what it is allowed to report', () => {
             expect(report).toContain('renderer-absent');
         } finally {
             vi.doUnmock('@playwright/test');
+            vi.doUnmock('playwright-core');
             vi.resetModules();
             fs.rmSync(tmp, { recursive: true, force: true });
         }

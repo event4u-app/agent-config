@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Depot renovation — boards</title>
+<style>
+  body { margin: 0; font: 14px/1.45 system-ui, sans-serif; color: #1c2430; background: #e9ecf0; }
+  /* Level 1: project — full-bleed surface, no border, largest radius-free plane. */
+  .project { margin: 32px; padding: 28px 32px; background: #f6f7f9; }
+  .project h1 { margin: 0 0 4px; font-size: 26px; }
+  .project > p { margin: 0 0 24px; color: #586273; }
+  .boards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  /* Level 2: board — tinted column, header bar, no shadow. */
+  .board { background: #dfe4eb; border-radius: 6px; padding: 12px; }
+  .board h2 { margin: 0 0 12px; font-size: 13px; font-weight: 700; letter-spacing: .02em; color: #3a4556; display: flex; justify-content: space-between; }
+  /* Level 3: card — white, raised, smallest text. */
+  .task { background: #fff; border-radius: 4px; padding: 10px 12px; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(16,24,40,.18); }
+  .task strong { display: block; font-size: 14px; font-weight: 600; }
+  .task span { font-size: 12px; color: #6a7484; }
+</style>
+</head>
+<body>
+<section class="project" aria-labelledby="p">
+  <h1 id="p">Depot renovation</h1>
+  <p>Project · 3 boards · target handover 12 December</p>
+  <div class="boards">
+    <section class="board" aria-label="Planning">
+      <h2>Planning <span>3</span></h2>
+      <article class="task"><strong>Confirm loading-bay dimensions</strong><span>Due 30 Oct · structural survey</span></article>
+      <article class="task"><strong>Request quotes for dock levellers</strong><span>Due 2 Nov · procurement</span></article>
+      <article class="task"><strong>Schedule fire-door inspection</strong><span>Due 6 Nov · compliance</span></article>
+    </section>
+    <section class="board" aria-label="In progress">
+      <h2>In progress <span>2</span></h2>
+      <article class="task"><strong>Replace roof skylights, bay 2</strong><span>Started 21 Oct · contractor on site</span></article>
+      <article class="task"><strong>Re-mark forklift lanes</strong><span>Started 24 Oct · 60% done</span></article>
+    </section>
+    <section class="board" aria-label="Done">
+      <h2>Done <span>2</span></h2>
+      <article class="task"><strong>Strip old racking, aisle C</strong><span>Closed 18 Oct</span></article>
+      <article class="task"><strong>Asbestos survey report filed</strong><span>Closed 15 Oct</span></article>
+    </section>
+  </div>
+</section>
+</body>
+</html>

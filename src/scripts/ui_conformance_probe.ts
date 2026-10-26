@@ -977,6 +977,74 @@ const READ_SIGNATURE = (kinds: readonly string[]): {
     return { leaves, arrangement, overflow: doc.scrollWidth > doc.clientWidth };
 };
 
+/**
+ * The box a control presents, read from computed style — the render half of a
+ * `control_roles` box metric (road-to-a-control-that-matches-its-neighbours
+ * 3.4). Pixel values, rounded to 0.5 so sub-pixel layout noise is not a finding.
+ */
+export interface BoxReading {
+    height_px: number;
+    padding_x_px: number;
+    padding_y_px: number;
+    radius_px: number;
+    font_size_px: number;
+    border_px: number;
+}
+
+export interface SiblingFinding {
+    metric: keyof BoxReading;
+    subject: number;
+    sibling: number;
+    delta_px: number;
+}
+
+/** Pure: every metric where the subject deviates from its sibling by more than the tolerance. */
+export function compareSiblingBoxes(subject: BoxReading, sibling: BoxReading, tolerancePx = 0): SiblingFinding[] {
+    const out: SiblingFinding[] = [];
+    for (const k of Object.keys(subject) as Array<keyof BoxReading>) {
+        const d = Math.abs(subject[k] - sibling[k]);
+        if (d > tolerancePx) out.push({ metric: k, subject: subject[k], sibling: sibling[k], delta_px: d });
+    }
+    return out;
+}
+
+const READ_BOX = (el: Element): BoxReading => {
+    const cs = getComputedStyle(el);
+    const px = (v: string) => Math.round(parseFloat(v || '0') * 2) / 2;
+    return {
+        height_px: Math.round(el.getBoundingClientRect().height * 2) / 2,
+        padding_x_px: px(cs.paddingLeft),
+        padding_y_px: px(cs.paddingTop),
+        radius_px: px(cs.borderTopLeftRadius),
+        font_size_px: px(cs.fontSize),
+        border_px: px(cs.borderTopWidth),
+    };
+};
+
+/**
+ * Sibling-reference mode: compare a node against a sibling on the SAME page, so
+ * the box deviation of a new control is measurable without a reference build
+ * and without Tailwind classes to parse. Shadow, like the rest of this probe.
+ */
+export async function captureSiblingPair(
+    indexHtml: string,
+    subjectSelector: string,
+    siblingSelector: string,
+): Promise<{ subject: BoxReading; sibling: BoxReading }> {
+    const pw = loadPlaywright();
+    if (!pw) throw new Error('captureSiblingPair: @playwright/test is not resolvable on this host');
+    const browser = await pw.chromium.launch();
+    try {
+        const page = await browser.newPage({ viewport: { width: VIEWPORTS[0], height: 900 } });
+        await page.goto(pathToFileURL(indexHtml).href);
+        const subject = await page.$eval(subjectSelector, READ_BOX);
+        const sibling = await page.$eval(siblingSelector, READ_BOX);
+        return { subject, sibling };
+    } finally {
+        await browser.close();
+    }
+}
+
 export async function captureVariant(indexHtml: string): Promise<Observation> {
     const pw = loadPlaywright();
     if (!pw) throw new Error('captureVariant: @playwright/test is not resolvable on this host');
@@ -1149,6 +1217,37 @@ async function main(): Promise<number> {
     }
     const out = arg('out') ?? path.join('agents', 'runtime', 'state', 'ui-conformance.json');
     const referencePath = arg('reference');
+    const siblingSelector = arg('reference-sibling');
+    if (siblingSelector !== undefined) {
+        const subjectSelector = arg('subject');
+        if (!subjectSelector) {
+            process.stderr.write('usage: ui_conformance_probe --target <index.html> --subject <selector> --reference-sibling <selector> [--tolerance <px>]\n');
+            return 1;
+        }
+        const tolerance = Number(arg('tolerance') ?? '0');
+        const result = chromiumAvailable()
+            ? await captureSiblingPair(target, subjectSelector, siblingSelector)
+            : null;
+        const report = {
+            mode: 'reference-sibling',
+            posture: 'shadow',
+            target,
+            subject: subjectSelector,
+            sibling: siblingSelector,
+            tolerance_px: tolerance,
+            verification: result === null ? 'unverified' : 'verified',
+            findings: result === null ? null : compareSiblingBoxes(result.subject, result.sibling, tolerance),
+            boxes: result,
+        };
+        fs.mkdirSync(path.dirname(out), { recursive: true });
+        fs.writeFileSync(out, `${JSON.stringify(report, null, 2)}\n`);
+        process.stdout.write(
+            report.findings === null
+                ? 'reference-sibling: unverified — no Chromium resolved\n'
+                : `reference-sibling: ${report.findings.length} deviation(s)\n`,
+        );
+        return 0;
+    }
 
     let artefact: ProbeArtefact;
     if (!chromiumAvailable()) {

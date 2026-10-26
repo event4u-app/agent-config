@@ -42,6 +42,7 @@ function _render(state: DeliveryState): string {
         _tests_section(state),
         _verify_section(state),
         _visual_preview_section(state),
+        _ui_consistency_section(state),
         _memory_section(state),
         _followups_section(state),
         _next_commands_section(state),
@@ -170,6 +171,27 @@ function _visual_preview_section(state: DeliveryState): string {
         return '';
     }
     return ['## Visual preview', '', ...lines].join('\n');
+}
+
+/**
+ * The consistency verdict the review stamped (road-to-a-control-that-matches-
+ * its-neighbours 3.6). Worded so a reader cannot take `static-pass` or
+ * `unverified` for a visual verification; absent when no UI review ran.
+ */
+function _ui_consistency_section(state: DeliveryState): string {
+    const ui_review = state.ui_review;
+    if (!_isPlainObject(ui_review)) return '';
+    const scope = (ui_review as Record<string, unknown>).verdict_scope;
+    if (!_isPlainObject(scope)) return '';
+    const status = (scope as Record<string, unknown>).consistency_status;
+    if (typeof status !== 'string') return '';
+    const meaning: Record<string, string> = {
+        pass: 'visually verified — rendered, no consistency finding, every added control checked open',
+        fail: 'a consistency finding stands — the change does not match the project\'s own controls',
+        'static-pass': 'statically checked only — nothing was rendered, so this is NOT a visual verification',
+        unverified: 'NOT verified — a control was added and its open state was never captured',
+    };
+    return ['## UI consistency', '', `- \`${status}\` — ${meaning[status] ?? 'unknown status'}`].join('\n');
 }
 
 /** Render **only** hits that changed an outcome (per report schema). */

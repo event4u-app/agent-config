@@ -1,0 +1,33 @@
+/*
+ * Dark theme focus indicator. The ring is drawn as a zero-offset spread
+ * shadow so it follows the control's border-radius in every engine; the
+ * colour is the focus token, chosen for 3:1 against the dark surface.
+ * No blur, no glow: the ring is a crisp 3px outline.
+ */
+[data-theme="dark"] {
+  --surface: #121417;
+  --control-bg: #1c1f24;
+  --focus-ring: #4cc2ff;
+}
+
+[data-theme="dark"] .text-input,
+[data-theme="dark"] .button {
+  background: var(--control-bg);
+  border: 1px solid #3a3f47;
+  border-radius: 6px;
+  color: #e8eaed;
+}
+
+[data-theme="dark"] .text-input:focus-visible,
+[data-theme="dark"] .button:focus-visible {
+  outline: 2px solid transparent; /* kept for forced-colors mode */
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+[data-theme="dark"] .text-input[aria-invalid="true"] {
+  border-color: #ff6b6b;
+}
+
+[data-theme="dark"] .text-input[aria-invalid="true"]:focus-visible {
+  box-shadow: 0 0 0 3px #ff6b6b;
+}

@@ -43,6 +43,7 @@ import {
 } from './_lib/design_sync_ledger.js';
 import { planCounts, planLedger, readBaseAtCommit } from './_lib/design_sync_plan.js';
 import { matrixRows, reconcileLedger } from './_lib/design_sync_reconcile.js';
+import { readDocAuthority } from './_lib/doc_authority.js';
 import { stampBaselines, verifyLedger } from './_lib/design_sync_verify.js';
 import type { ChangeIntent, ReferenceMaturity } from './_lib/ui_authority.js';
 
@@ -195,6 +196,7 @@ function runReconcile(p: Parsed, scope: string, out: string[]): number {
         dispositions: sets as Record<string, Disposition>,
         tiers: detect_component_taxonomy(scope).tiers,
         owner,
+        docs: readDocAuthority(scope),
     });
     writeIfChanged(path.join(scope, LEDGER_RELATIVE), serializeLedger(next));
     for (const b of next.briefs ?? []) out.push(`brief → ${String(b['owner'])}: ${String(b['component'])}`);
