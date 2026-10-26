@@ -13,7 +13,7 @@ import { buildDemoMap, type DemoResult } from '../../src/scripts/code_graph/map_
 // The demo map in a browser: every area route is live — no area-level "no data
 // yet" card — and the sample-data chip sits in the header; a real map has none.
 
-const ROUTES = ['overview', 'code', 'data', 'interfaces', 'runtime', 'delivery', 'impact', 'agent'] as const;
+const ROUTES = ['overview', 'code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'impact', 'agent'] as const;
 
 let browser: Browser;
 let demo: DemoResult;

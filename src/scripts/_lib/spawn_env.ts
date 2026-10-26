@@ -132,6 +132,11 @@ export function gitProbeWithEnv(root: string, args: readonly string[], env: Reco
     return execFileSync('git', [...GIT_SAFE_ARGS, '-C', root, ...args], { env: hardenedSpawnEnv(env), encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] });
 }
 
+/** {@link gitProbe} fed `input` on stdin, returning the raw bytes (`cat-file --batch`). Separate so the hook bundle tree-shakes it out. */
+export function gitProbeInput(root: string, args: readonly string[], input: string, opts: { maxBuffer?: number } = {}): Buffer {
+    return execFileSync('git', [...GIT_SAFE_ARGS, '-C', root, ...args], { env: hardenedSpawnEnv(), input, stdio: ['pipe', 'pipe', 'ignore'], maxBuffer: opts.maxBuffer ?? 1024 * 1024 * 1024 });
+}
+
 export function hardenedSpawnEnv(
     overrides: Record<string, string> = {},
 ): NodeJS.ProcessEnv {

@@ -494,7 +494,7 @@ export function finishAnswers(m: MapModel, rules: LayerRules | null): void {
     m.blastDepth = BLAST_DEPTH;
     m.gitWindowDays = GIT_WINDOW_DAYS;
 
-    const has = (k: 'loc' | 'churn' | 'layer'): boolean => m.files.some((f) => f[k] !== undefined);
+    const has = (k: 'loc' | 'churn' | 'layer' | 'domain'): boolean => m.files.some((f) => f[k] !== undefined);
     m.legend = [
         { key: 'blast', label: 'Blast', scale: 'depth', unit: 'hops', available: true },
         { key: 'area', label: 'Area', scale: 'categorical', unit: 'community', available: true },
@@ -504,6 +504,9 @@ export function finishAnswers(m: MapModel, rules: LayerRules | null): void {
         has('layer')
             ? { key: 'layer', label: 'Layer', scale: 'categorical', unit: 'layer', available: true }
             : { key: 'layer', label: 'Layer', scale: 'categorical', unit: 'layer', available: false, reason: 'needs agents/map/layers.yaml' },
+        has('domain')
+            ? { key: 'domain', label: 'Domain', scale: 'categorical', unit: 'domain', available: true }
+            : { key: 'domain', label: 'Domain', scale: 'categorical', unit: 'domain', available: false, reason: m.domainProposals ? 'no domain declared — proposals only (domains: in agents/map/layers.yaml)' : 'needs domains: in agents/map/layers.yaml' },
         has('churn')
             ? { key: 'churn', label: 'Churn', scale: 'sequential', unit: `commits in ${GIT_WINDOW_DAYS} days`, available: true }
             : { key: 'churn', label: 'Churn', scale: 'sequential', unit: 'commits', available: false, reason: 'needs git history' },

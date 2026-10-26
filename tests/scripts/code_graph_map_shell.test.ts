@@ -17,7 +17,7 @@ import { sampleAreas, wit } from './code_graph_map_areas_fixture.js';
 
 // The Overview draws the design's nine layer cards: Code, Database, Integrations,
 // Environment, CI/CD, Infrastructure, Knowledge, Impact and Projects.
-const OVERVIEW_LAYERS = 9;
+const OVERVIEW_LAYERS = 10;
 
 let browser: Browser;
 let empty: string;
@@ -319,6 +319,7 @@ describe('the hub on the same shell (5.11)', () => {
         ports: [{ port: '8080/tcp', uses: [{ project: 'aaaa-1', name: 'web', witness: w('docker-compose.yml', 5) }, { project: 'bbbb-2', name: 'api', witness: w('docker-compose.yml', 5) }] }],
         images: [],
         services: [],
+        versions: [{ subject: 'npm:react', framework: true, differs: true, uses: [{ project: 'aaaa-1', name: '18.2.0', witness: w('package-lock.json', 9) }, { project: 'bbbb-2', name: '19.0.0', witness: w('package-lock.json', 9) }] }],
         calls: [
             { project: 'aaaa-1', service: 'beta', method: 'GET', path: '/api/v1/orders/{id}', witness: w('src/orders.ts', 2), match: { project: 'bbbb-2', route: 'GET /orders/:id', witness: w('src/app.ts', 6) } },
             { project: 'aaaa-1', service: 'beta', method: 'POST', path: '/audit-log', witness: w('src/orders.ts', 7), unmatched: 'no_endpoint_match' },
@@ -343,6 +344,7 @@ describe('the hub on the same shell (5.11)', () => {
         // The call that lands on a route is the link picked first.
         expect(await page.locator('#av-right-body').textContent()).toMatch(/call → route[\s\S]*alpha → beta[\s\S]*alpha · src\/orders\.ts:2[\s\S]*beta · src\/app\.ts:6/);
         expect(await page.locator('#av-main').textContent()).toMatch(/Calls without a target \(1\)[\s\S]*POST \/audit-log[\s\S]*no route matches/);
+        expect(await page.locator('#av-main').textContent()).toMatch(/Versions across projects \(1\)[\s\S]*npm:react[\s\S]*18\.2\.0[\s\S]*19\.0\.0[\s\S]*differs/);
         await page.locator('.ops-elabel', { hasText: '8080/tcp' }).click();
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === 'edge/2');
         expect(await page.locator('#av-right-body').textContent()).toMatch(/shared host port[\s\S]*alpha · web · docker-compose\.yml:5[\s\S]*beta · api · docker-compose\.yml:5/);

@@ -16,16 +16,8 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { write_atomic } from '../_lib/fs_atomic.js';
-import { gitProbe } from '../_lib/spawn_env.js';
-import { readData } from './lanes/data/read_data.js';
-import { readDecisions } from './lanes/decisions/decisions.js';
-import { readDelivery } from './lanes/delivery/index.js';
-import { buildFlows } from './lanes/flows/flows.js';
-import { readHistory } from './lanes/history/history.js';
-import { readInterfaces } from './lanes/interfaces/index.js';
-import type { LaneOutput } from './lanes/lane_fact.js';
-import { type MergeRefusal, mergeLaneOutputs } from './lanes/merge.js';
-import { readRuntime } from './lanes/runtime/index.js';
+import { gitVisibleFiles, visibleDir } from '../_lib/git_visible_files.js';
+import { type LaneSummary, runLaneReaders } from './lane_runner.js';
 import { extractFile, type FileExtract, type RawEdge } from './extract.js';
 import { grammarWasmPath } from './loader.js';
 import { type PassReport, runPasses } from './passes.js';
@@ -117,7 +109,8 @@ function walkFiles(root: string, accept: (name: string) => boolean): string[] {
         return [];
     }
     const out: string[] = [];
-    const walk = (dir: string): void => {
+    const visible = gitVisibleFiles(abs);
+    const walk = (dir: string, filtered: boolean): void => {
         let entries: fs.Dirent[];
         try {
             entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -127,13 +120,16 @@ function walkFiles(root: string, accept: (name: string) => boolean): string[] {
         for (const e of entries.sort((a, b) => (a.name < b.name ? -1 : 1))) {
             const full = path.join(dir, e.name);
             if (e.isSymbolicLink()) continue; // never follow symlinks
+            const rel = path.relative(abs, full).split(path.sep).join('/');
             if (e.isDirectory()) {
                 if (IGNORE_DIRS.has(e.name) || e.name.startsWith('.')) continue;
-                if (GENERATED_DIRS.has(path.relative(abs, full).split(path.sep).join('/'))) continue;
-                walk(full);
+                if (GENERATED_DIRS.has(rel)) continue;
+                const verdict = filtered && visible ? visibleDir(visible, rel) : 'all';
+                if (verdict !== 'skip') walk(full, verdict === 'enter');
                 continue;
             }
             if (!e.isFile()) continue;
+            if (filtered && visible && !visible.files.has(rel)) continue;
             if (!accept(e.name)) continue;
             let real: string;
             try {
@@ -145,7 +141,7 @@ function walkFiles(root: string, accept: (name: string) => boolean): string[] {
             out.push(full);
         }
     };
-    walk(abs);
+    walk(abs, true);
     return out.sort();
 }
 
@@ -270,6 +266,9 @@ function idJoin(dir: string, rel: string): string {
  * TS source imports `./types.js` and the file on disk is `types.ts`, so the
  * runtime extension is stripped before the candidate list is tried.
  */
+/** A POSIX, `file://` or drive-letter absolute path. */
+const ABSOLUTE_SPEC = /^(?:\/|file:|[A-Za-z]:[\\/])/;
+
 function resolveSpecifier(fromFile: string, spec: string, fileIds: ReadonlySet<string>): string | null {
     if (!spec.startsWith('.')) return null;
     const base = idJoin(idDirname(fromFile), spec);
@@ -584,8 +583,22 @@ export function buildGraph(
                     ...new Set((sym.byName.get(k(ex.lang, r.targetName)) ?? []).filter((id) => id.includes('#'))),
                 ];
                 const top = named.filter((id) => !id.includes('::'));
-                const only = named.length === 1 ? named[0] : top.length === 1 ? top[0] : undefined;
-                if (only !== undefined) imports.set(local, { target: only, exact: false, via: 'name-lookup' });
+                const hit = named.length === 1 ? named[0] : top.length === 1 ? top[0] : undefined;
+                // A namespace outside every PSR-4 prefix the project declares is
+                // not the same class as a same-named one inside a PSR-4 directory,
+                // whose name the directory fixes.
+                const bare = fq.replace(/^\\+/, '');
+                const foreign =
+                    ex.lang === 'php' &&
+                    bare.includes('\\') &&
+                    resolution.psr4.length > 0 &&
+                    !resolution.psr4.some((rule) => bare.startsWith(rule.prefix)) &&
+                    (!hit || resolution.psr4.some((rule) => rule.dirs.some((d) => (hit.split('#')[0] as string).startsWith(d))));
+                if (hit && !foreign) imports.set(local, { target: hit, exact: false, via: 'name-lookup' });
+                // A qualified name nothing in the tree declares is a vendor class:
+                // bind it by name, as a JS import binds its package, so the
+                // systems lane can tell which package the file uses.
+                else if (ex.lang === 'php' && bare.includes('\\') && (named.length === 0 || foreign)) imports.set(local, { target: `external:${bare}`, exact: true, via: 'import-specifier' });
                 continue;
             }
             if (ex.lang === 'csharp' && (namespaceFiles.get(spec)?.length ?? 0) > 1) continue;
@@ -624,8 +637,11 @@ export function buildGraph(
                 // repository's same-named symbol. `import * as path from
                 // 'node:path'` ends here, which is the whole of 1.1.
                 const named = r.importKind === 'named';
+                // An absolute path names one machine's disk, and would carry its
+                // user's home directory into every map built from this graph.
+                const mod = ABSOLUTE_SPEC.test(spec) ? '<absolute>' : spec;
                 imports.set(local, {
-                    target: named ? `external:${spec}#${r.targetName}` : `external:${spec}`,
+                    target: named ? `external:${mod}#${r.targetName}` : `external:${mod}`,
                     exact: true,
                     via: 'import-specifier',
                 });
@@ -915,7 +931,7 @@ export function buildGraph(
             const inRepo = resolveInScope(ex.file, heldName, 'any', ex.lang, true);
             const fq = importFq.get(ex.file)?.get(heldName);
             const receiver = fq !== undefined ? (held.has(fq) ? fq : null) : held.has(heldName) ? heldName : null;
-            if (receiver !== null && !(inRepo && isStatedResolution(inRepo.via))) {
+            if (receiver !== null && !(inRepo && isStatedResolution(inRepo.via) && !inRepo.target.startsWith('external:'))) {
                 emit({
                     source: r.sourceId,
                     target: `external:${receiver}::${r.targetName}`,
@@ -933,6 +949,19 @@ export function buildGraph(
         // edge is exactly as trustworthy as the class binding.
         if ((r.callStyle === 'scoped' || r.callStyle === 'dynamic') && r.scopeName) {
             const cls = resolveInScope(ex.file, r.scopeName, 'any', ex.lang, true);
+            // The file imports the class from outside the tree: the call leaves
+            // the repository, whatever in-repo method shares its name.
+            if (cls && isStatedResolution(cls.via) && cls.target.startsWith('external:')) {
+                emit({
+                    source: r.sourceId,
+                    target: `${cls.target.split('#')[0]}::${r.targetName}`,
+                    relation: 'calls',
+                    confidence: 'EXTRACTED',
+                    resolved_via: cls.via,
+                    provider: 'native',
+                });
+                return;
+            }
             const kind = cls ? nodeKind.get(cls.target) : undefined;
             if (cls && isStatedResolution(cls.via) && (kind === 'class' || kind === 'interface' || kind === 'enum')) {
                 const owned = hierOwners(cls.target, r.targetName).owners;
@@ -1230,6 +1259,8 @@ export function serializeGraph(g: CodeGraph): string {
     return JSON.stringify(ordered, null, 2) + '\n';
 }
 
+export { type LaneRun, type LaneSummary, runLaneReaders } from './lane_runner.js';
+
 export interface BuildResult {
     graph: CodeGraph;
     json: string;
@@ -1238,79 +1269,6 @@ export interface BuildResult {
     reused: number;
     /** Set when the lane readers ran: what each read, what failed, what the merge refused. */
     lanes?: LaneSummary;
-}
-
-export interface LaneRun {
-    lane: LaneOutput['lane'];
-    ms: number;
-    facts: number;
-    relations: number;
-    skipped: number;
-    /** Relations about files the graph does not hold (co-changes of docs and configs), left out before the merge. */
-    outside?: number;
-    /** The reader threw: its lane is left out of the graph, the build goes on. */
-    error?: string;
-}
-
-export interface LaneSummary {
-    runs: LaneRun[];
-    refused: MergeRefusal[];
-    ms: number;
-}
-
-/** Bounds the history lane's one `git log` pass, so a huge history cannot stall a build. */
-const HISTORY_GIT_TIMEOUT_MS = 20_000;
-
-/**
- * Run every lane reader over the tree and merge their facts into `graph`.
- *
- * A reader that throws is recorded in the summary and its lane is left out;
- * it never fails the build. Flows walk the merged graph, so they run last.
- * The runtime lane runs before the data lane, which takes a connection's
- * engine from the runtime's database service when the project states none.
- */
-export function runLaneReaders(
-    root: string,
-    graph: CodeGraph,
-    opts: { readers?: Partial<Record<LaneOutput['lane'], (root: string) => LaneOutput>> } = {},
-): { graph: CodeGraph; summary: LaneSummary } {
-    const started = Date.now();
-    const runs: LaneRun[] = [];
-    const run = (lane: LaneOutput['lane'], read: () => LaneOutput): LaneOutput | null => {
-        const t0 = Date.now();
-        try {
-            const replaced = opts.readers?.[lane];
-            const out = replaced ? replaced(root) : read();
-            runs.push({ lane, ms: Date.now() - t0, facts: out.facts.length, relations: out.relations.length, skipped: out.skipped.length });
-            return out;
-        } catch (e) {
-            runs.push({ lane, ms: Date.now() - t0, facts: 0, relations: 0, skipped: 0, error: (e as Error).message });
-            return null;
-        }
-    };
-    const runtime = run('runtime', () => readRuntime(root));
-    const nodeIds = new Set(graph.nodes.map((n) => n.id));
-    const history = run('history', () => readHistory(root, { git: (r, a) => gitProbe(r, a, { maxBuffer: 512 * 1024 * 1024, timeout: HISTORY_GIT_TIMEOUT_MS }) }));
-    if (history) {
-        const kept = history.relations.filter((r) => nodeIds.has(r.from) && nodeIds.has(r.to));
-        const rec = runs.find((r) => r.lane === 'history');
-        if (rec) Object.assign(rec, { relations: kept.length, outside: history.relations.length - kept.length });
-        history.relations = kept;
-    }
-    const outputs = [
-        runtime,
-        run('interfaces', () => readInterfaces(root)),
-        run('delivery', () => readDelivery(root)),
-        history,
-        run('decisions', () => readDecisions(root)),
-        run('data', () => readData(root, graph, runtime ? { runtime } : {})),
-    ].filter((o): o is LaneOutput => o !== null);
-    const first = mergeLaneOutputs(graph, outputs);
-    const flows = run('flows', () => buildFlows(first.graph, { root }));
-    const second = flows ? mergeLaneOutputs(first.graph, [flows]) : { graph: first.graph, refused: [] };
-    // No timing in the graph: a rebuild of the same tree stays byte-identical.
-    const lanes_run = runs.map(({ ms: _m, skipped: _s, outside: _o, ...r }) => r);
-    return { graph: { ...second.graph, lanes_run }, summary: { runs, refused: [...first.refused, ...second.refused], ms: Date.now() - started } };
 }
 
 function contentHash(s: string): string {

@@ -640,11 +640,10 @@ function dErd(p, sel, bodyEl) {
     dEdges(stage);
     dInteract(stage);
     dApply(stage);
-    // A large schema frames the picked table and what it links to, on open and on every new pick.
-    var frameKey = (current.item || '') + '|' + sel.focus;
-    if (!dbState.fitted || (p.tables.length > DB_FOCUS_OPEN && dbState.framed !== frameKey)) {
+    // Framed once, when the page opens: a large schema on the picked table and what it links to.
+    // A later pick never moves or zooms the view — only the reader's own zoom, pan or drag does.
+    if (!dbState.fitted) {
         dbState.fitted = true;
-        dbState.framed = frameKey;
         requestAnimationFrame(function () { if (stage.isConnected) { if (p.tables.length > DB_FOCUS_OPEN) dFitFocus(stage); else dFit(stage, true); } });
     }
 }
@@ -1596,6 +1595,7 @@ function dDetail(p, key, sel, right) {
     var col = item.kind === 'column' && tb ? tb.columns.filter(function (c) { return tb.name + '.' + c.name === item.label; })[0] : null;
     add(d, add(el('div', { class: 'db-dhead' }), add(el('div'), el('span', { class: 'kick' }, (tb ? tb.connection + ' · ' : '') + item.kind), el('span', { class: 'ttl mono' }, item.label)), x));
     if (item.kind === 'table' && tb) d.appendChild(el('p', { class: 'db-sum' }, t('tableSum')(num(tb.columns.length), num(tb.models.length), num(dPathsTo(tb).length))));
+    if (tb && tb.domains && tb.domains.length) d.appendChild(add(el('div', { class: 'chips' }), el('span', { class: tb.domains.length > 1 ? 'c-miss' : 'c-cyan' }, t('cDomain') + ' ' + tb.domains.join(', '))));
     if (col) {
         var st = dActualState(col);
         d.appendChild(el('p', { class: 'db-sum' }, col.type + (col.nullable ? ' · nullable' : '') + (col.key ? ' · ' + col.key.toUpperCase() : '') + '\n' +
@@ -1628,6 +1628,8 @@ function dDetail(p, key, sel, right) {
         });
     }
     if (!tb && item.rows) d.appendChild(kvGrid(item.rows));
+    var hist = historySection(col ? col.witness.file : tb ? tb.witness.file : null);
+    if (hist) d.appendChild(hist);
     var codeFrom = col ? 1 + (col.actual ? 1 : 0) : Infinity;
     add(d, dEvidence(item.witnesses, item.witnesses.map(function (w, i) { return i >= codeFrom; })), dKv(item.witnesses, p.completeness, ''));
     var links = item.links ? item.links() : [];

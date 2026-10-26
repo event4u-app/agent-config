@@ -112,8 +112,12 @@ describe('honest confidence taxonomy', () => {
         expect(by('symbol:strlen')?.confidence).toBe('EXTRACTED');
         // INFERRED — $this-> resolved up the in-repo hierarchy
         expect(by('app/Base.php#Base::shared')?.confidence).toBe('INFERRED');
-        // AMBIGUOUS — facade (Cache::get), dynamic ($bar->run), unresolved $this->missing
-        expect(by('symbol:get')?.confidence).toBe('AMBIGUOUS');
+        // EXTRACTED — a static call on a class the file imports from outside the
+        // tree (`use …\Facades\Cache`) leaves the repository by name; it is never
+        // a name lookup of `get`.
+        expect(by('external:Illuminate\\Support\\Facades\\Cache::get')?.confidence).toBe('EXTRACTED');
+        expect(by('symbol:get')).toBeUndefined();
+        // AMBIGUOUS — dynamic ($bar->run), unresolved $this->missing
         expect(by('symbol:missing')?.confidence).toBe('AMBIGUOUS');
         const dyn = calls.find((e) => e.confidence === 'AMBIGUOUS' && (e.candidates ?? []).some((c) => c.endsWith('Bar::run')));
         expect(dyn).toBeTruthy();

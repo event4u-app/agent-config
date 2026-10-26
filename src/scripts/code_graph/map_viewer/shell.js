@@ -10,7 +10,7 @@ extendStrings({
     en: {
         kindNames: { folder: 'Folders', file: 'Files', symbol: 'Symbols', route: 'Routes', area: 'Code areas', table: 'Tables', column: 'Columns', fk: 'Foreign keys', rel: 'ORM relations',
             service: 'Services', operation: 'Operations', resource: 'Resources', workflow: 'Workflows', job: 'Jobs', chain: 'Build / deploy', affected: 'Affected', risk: 'Risk terms',
-            verb: 'Verbs', pack: 'Context pack', finding: 'Findings' },
+            verb: 'Verbs', pack: 'Context pack', finding: 'Findings', ticket: 'Tickets', pr: 'Pull requests', package: 'Packages', runtime: 'Runtimes', domain: 'Domains' },
         allKinds: 'All kinds', kindsLabel: 'Kinds', searchUp: 'Up one level', searchEnter: 'Step into (→)',
         searchCount: function (n) { return n + ' hits'; }, searchCountIn: function (n, p) { return n + ' hits in ' + p; }, generation: function (g) { return 'Generation ' + g; }, noHits: 'Nothing found.',
         hubChip: 'HUB · this machine only', hubChipT: 'Never committed, never inside a repository map', hubCount: function (i, n) { return i + ' of ' + n + ' indexed'; },
@@ -19,7 +19,7 @@ extendStrings({
     de: {
         kindNames: { folder: 'Ordner', file: 'Dateien', symbol: 'Symbole', route: 'Routen', area: 'Code-Areas', table: 'Tabellen', column: 'Spalten', fk: 'Fremdschlüssel', rel: 'ORM-Beziehungen',
             service: 'Dienste', operation: 'Operationen', resource: 'Ressourcen', workflow: 'Workflows', job: 'Jobs', chain: 'Build / Deploy', affected: 'Betroffen', risk: 'Risiko-Terme',
-            verb: 'Verben', pack: 'Context-Pack', finding: 'Befunde' },
+            verb: 'Verben', pack: 'Context-Pack', finding: 'Befunde', ticket: 'Tickets', pr: 'Pull Requests', package: 'Pakete', runtime: 'Runtimes', domain: 'Domänen' },
         allKinds: 'Alle Arten', kindsLabel: 'Arten', searchUp: 'Eine Ebene höher', searchEnter: 'Hineingehen (→)',
         searchCount: function (n) { return n + ' Treffer'; }, searchCountIn: function (n, p) { return n + ' Treffer in ' + p; }, generation: function (g) { return 'Generation ' + g; }, noHits: 'Nichts gefunden.',
         hubChip: 'HUB · nur dieser Rechner', hubChipT: 'Nie committet, nie in einer Projekt-Map', hubCount: function (i, n) { return i + ' von ' + n + ' indiziert'; },
@@ -179,6 +179,8 @@ function rootHits(q) {
         hits.push(h);
     }
     codeSearchHits(q, hit);
+    historyHits(q, function (h) { if (hits.length < 2000) hits.push(h); });
+    domainHits(q, function (h) { if (hits.length < 2000) hits.push(h); });
     ROUTES.filter(function (r) { return !!AREA_MODULES[r]; }).forEach(function (id) {
         areaItems(id).forEach(function (it) {
             if (hits.length >= 2000) return;

@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "generation": "36eb5b1973482ba7",
+  "commit": "2efd5be1444a",
+  "state": "fresh",
+  "areas": {
+    "code": {
+      "path": "code/map.json",
+      "source": "code-graph",
+      "freshness": "fresh",
+      "facts": 11614
+    },
+    "data": {
+      "path": "data/data.json",
+      "source": "data lane (migrations, dumps, snapshots)",
+      "freshness": "empty",
+      "completeness": "unknown",
+      "facts": 36,
+      "findings": 18,
+      "reason": "no migration, schema file, committed dump or snapshot was found"
+    },
+    "systems": {
+      "path": "systems/systems.json",
+      "source": "systems lane (lockfiles, manifests, version files, images, CI)",
+      "freshness": "fresh",
+      "completeness": "complete",
+      "facts": 1836,
+      "findings": 66
+    },
+    "interfaces": {
+      "path": "interfaces/interfaces.json",
+      "source": "interfaces lane (call sites, contracts, configuration names)",
+      "freshness": "fresh",
+      "completeness": "complete",
+      "facts": 40,
+      "findings": 6
+    },
+    "runtime": {
+      "path": "runtime/runtime.json",
+      "source": "runtime lane (compose, Dockerfiles, Terraform, Kubernetes, task files)",
+      "freshness": "fresh",
+      "completeness": "complete",
+      "facts": 5,
+      "findings": 1
+    },
+    "delivery": {
+      "path": "delivery/delivery.json",
+      "source": "delivery lane (GitHub Actions, GitLab CI)",
+      "freshness": "fresh",
+      "completeness": "complete",
+      "facts": 110,
+      "findings": 0
+    },
+    "impact": {
+      "path": "code/map.json",
+      "source": "review-risk over the working diff",
+      "freshness": "empty",
+      "completeness": "complete",
+      "facts": 0,
+      "findings": 0,
+      "reason": "no change against HEAD"
+    },
+    "agent": {
+      "path": "code/map.json",
+      "source": "code-graph CLI and MCP surface",
+      "freshness": "fresh",
+      "completeness": "complete",
+      "facts": 0,
+      "findings": 0
+    }
+  }
+}

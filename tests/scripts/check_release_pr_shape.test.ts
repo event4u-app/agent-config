@@ -315,7 +315,9 @@ describe('check_release_pr_shape — the census writer/pipeline binding', () => 
             .filter((f) => f !== 'src/scripts/report_evidence_temperature.ts')
             .filter((f) => !f.startsWith('tests/'))
             // Review artifacts hold committed diffs of this very file.
-            .filter((f) => !f.startsWith('agents/evidence/'));
+            .filter((f) => !f.startsWith('agents/evidence/'))
+            // The committed code map mirrors every file's name and imports.
+            .filter((f) => !f.startsWith('agents/map/'));
         // grep found the module somewhere, so an empty set after filtering means
         // the filters ate everything — which must not read as "no caller".
         expect(files.length).toBeGreaterThan(0);

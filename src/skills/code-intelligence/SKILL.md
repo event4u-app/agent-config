@@ -282,6 +282,10 @@ Nothing on this page says they beat grep, none of the four appears in the v2
 benchmark corpus (which measures `callers`, `transitive-impact`, `path-between`
 and `references`), and § Measured twice still governs that question.
 
+## Systems, provenance, domains, branches
+
+[Why installed, since when, which domain, on which branch](references/systems-provenance-domains-branches.md).
+
 ## Do NOT
 
 - Do NOT rebuild a **fresh** consumer-shipped index — query it (interop

@@ -173,7 +173,7 @@ export interface DriftReport {
     refused: string[];
 }
 
-const FAMILY: Record<string, Lane> = { DR: 'data', IF: 'interfaces', RT: 'runtime', DL: 'delivery' };
+const FAMILY: Record<string, Lane> = { DR: 'data', IF: 'interfaces', RT: 'runtime', DL: 'delivery', SY: 'systems' };
 
 export function laneOfRule(r: Pick<DriftRule, 'id' | 'lane'>): Lane | undefined {
     return r.lane ?? FAMILY[r.id.slice(0, 2)];

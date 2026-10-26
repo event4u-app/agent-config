@@ -10,7 +10,11 @@
  * budget is spent; the rest is counted, never silently dropped. The returned
  * items are then confirmed, so each carries `at=file:line` and its state.
  */
+import * as path from 'node:path';
+
 import type { ConfirmState } from '../map_areas.js';
+import { domainResolver } from '../domains.js';
+import { introducedNote, readCachedProvenance } from '../provenance.js';
 import { type LoadedGraph, resolveExactNode } from '../query.js';
 import type { CodeEdge } from '../types.js';
 import { confirmIds, type ConfirmResult } from './confirm.js';
@@ -27,6 +31,10 @@ export interface PackItem {
     depth: number;
     at: string | null;
     confirm: ConfirmState;
+    /** for an item whose file came in for a ticket or a PR: which, and when */
+    introduced?: string;
+    /** the business domain of the item's file */
+    domain?: string;
 }
 
 export interface PackResult {
@@ -38,6 +46,8 @@ export interface PackResult {
     total: number;
     hasMore: boolean;
     budget: { tokens: number; used: number };
+    /** the domains the pack's items belong to: more than one means the change crosses a boundary */
+    domains?: string[];
     confirm: Pick<ConfirmResult, 'status' | 'counts' | 'risk' | 'ms' | 'error'>;
     lines: string[];
 }
@@ -68,7 +78,7 @@ export function seedWords(task: string): string[] {
 
 function itemLine(it: PackItem): string {
     const arrow = it.direction === 'seed' ? '*' : it.direction === 'out' ? `-${it.relation}->` : `<-${it.relation}-`;
-    return `${'  '.repeat(Math.max(0, it.depth - 1))}${arrow} ${it.label} [${it.kind}]${it.at ? ` at=${it.at}` : ''} (${it.confirm})`;
+    return `${'  '.repeat(Math.max(0, it.depth - 1))}${arrow} ${it.label} [${it.kind}]${it.at ? ` at=${it.at}` : ''} (${it.confirm})${it.domain ? ` · domain ${it.domain}` : ''}${it.introduced ? ` · ${it.introduced}` : ''}`;
 }
 
 function atOf(g: LoadedGraph, id: string, e?: CodeEdge): string | null {
@@ -143,7 +153,24 @@ export function contextPack(g: LoadedGraph, root: string, cachePath: string, tas
         it.confirm = c.state;
         if (c.now_at) it.at = c.now_at;
     }
+    const prov = items.length > 0 ? readCachedProvenance(root, path.dirname(cachePath)) : null;
+    if (prov) {
+        for (const it of items) {
+            const file = it.at ? it.at.replace(/:\d+$/, '') : (g.byId.get(it.id)?.source_file ?? null);
+            const note = file ? introducedNote(prov, file) : null;
+            if (note) it.introduced = note;
+        }
+    }
 
+    const domainOf = items.length > 0 ? domainResolver(path.dirname(path.dirname(cachePath))) : null;
+    if (domainOf) {
+        for (const it of items) {
+            const file = it.at ? it.at.replace(/:\d+$/, '') : (g.byId.get(it.id)?.source_file ?? null);
+            const d = file ? domainOf(file) : null;
+            if (d) it.domain = d;
+        }
+    }
+    const spans = [...new Set(items.map((i) => i.domain).filter((d): d is string => !!d))].sort();
     let population: string;
     if (seeds.length === 0) {
         population =
@@ -165,9 +192,10 @@ export function contextPack(g: LoadedGraph, root: string, cachePath: string, tas
         total: found.length,
         hasMore: found.length > items.length,
         budget: { tokens: budget, used },
+        ...(spans.length ? { domains: spans } : {}),
         confirm: confirmed
             ? { status: confirmed.status, counts: confirmed.counts, risk: confirmed.risk, ms: confirmed.ms, ...(confirmed.error ? { error: confirmed.error } : {}) }
             : { status: 'ok', counts: {}, risk: { class: 'R0', reason: 'nothing to confirm', depth_chosen: 'none', depth_ran: 'none' }, ms: 0 },
-        lines: items.map(itemLine),
+        lines: [...items.map(itemLine), ...(spans.length > 1 ? [`the change crosses domains: ${spans.join(', ')}`] : [])],
     };
 }

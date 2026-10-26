@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **637**
-- Edges (incl. self-WRITE): **2420**
+- Files indexed: **638**
+- Edges (incl. self-WRITE): **2422**
 
 ## READ_ONLY edges
 
@@ -813,6 +813,7 @@
 | `.agent-src.uncondensed/skills/churn-prevention/SKILL.md` | `.agent-src.uncondensed/skills/retention-loops/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/code-intelligence/SKILL.md` | `.agent-src.uncondensed/rules/external-code-graph-interop.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/code-intelligence/SKILL.md` | `.agent-src.uncondensed/skills/code-intelligence/references/find-confirm-act-update.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/code-intelligence/SKILL.md` | `.agent-src.uncondensed/skills/code-intelligence/references/systems-provenance-domains-branches.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/code-intelligence/SKILL.md` | `.agent-src.uncondensed/skills/source-discovery/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/code-refactoring/SKILL.md` | `.agent-src.uncondensed/skills/laravel-api-endpoint/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/code-refactoring/SKILL.md` | `.agent-src.uncondensed/skills/nextjs-patterns/SKILL.md` | `body_link` | 1 |
@@ -1803,5 +1804,5 @@
 | `context` | 79 |
 | `persona` | 36 |
 | `rule` | 122 |
-| `skill` | 400 |
+| `skill` | 401 |
 

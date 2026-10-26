@@ -41,6 +41,8 @@ import {
 } from './map_model.js';
 import { DECLARATIONS_FILE, ORACLE_DIR, SNAPSHOT_DIR } from './lanes/data/read_data.js';
 import { produceAreas } from './map_area_payloads.js';
+import { sourceWithholding, withholdSources } from './map_withhold.js';
+import { attachDomains, domainsOnAreas, mapBranches, mapProvenance } from './map_knowledge.js';
 import { nodeOwner } from './verify/owner_index.js';
 import { type Overlay, readOverlay } from './verify/overlay.js';
 import { workingChanges } from './verify/paths.js';
@@ -84,7 +86,7 @@ export function graphGeneration(cachePath: string): string | null {
 }
 
 /** Payload folders of the knowledge areas that have one in the map folder (ADR-303). */
-export const AREA_FOLDERS = ['data', 'interfaces', 'runtime', 'delivery'] as const;
+export const AREA_FOLDERS = ['data', 'systems', 'interfaces', 'runtime', 'delivery'] as const;
 
 /**
  * `code/map.json` in a map folder, or the top-level `map.json` a release before
@@ -353,6 +355,8 @@ export async function buildMap(
         cachePath?: string;
         diffRev?: string;
         prs?: boolean;
+        /** Embed the indexed branches and their difference from this one: local state, so never by default. */
+        branches?: boolean;
         noBuild?: boolean;
         /** Marks the map as drawn from the demo fixture (`map --demo`); never set for a real repository. */
         demo?: boolean;
@@ -426,6 +430,10 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
         const prs = openPrs(root);
         if (prs) model.prOverlap = prOverlap(model, prs);
     }
+    if (opts.branches) {
+        const b = await mapBranches(root, path.dirname(cachePath));
+        if (b) model.branches = b;
+    }
     const meta: MapMeta = {
         title: `Map of ${path.basename(root)}`,
         commit: gitHead(root),
@@ -435,6 +443,7 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
         ...(opts.demo ? { demo: true } : {}),
     };
     answerQuestions(root, outDir, cachePath, graph, model, meta);
+    if (model.domains) domainsOnAreas(areas, model, graph);
     meta.summary =
         `${model.files.length} files · ${model.areas.length} areas · ` +
         `${model.analyses.trustedEdges} trusted links · guess share ${pct(model.analyses.guessShare)}`;
@@ -514,6 +523,8 @@ function answerQuestions(root: string, outDir: string, cachePath: string, graph:
             }
         }
     }
+    const prov = mapProvenance(root, path.join(outDir, '.build'), graph, paths);
+    if (prov) model.provenance = prov;
     markDead(root, cachePath, graph, model);
     const rules = readLayerRules(path.join(outDir, 'layers.yaml'));
     if (rules) {
@@ -522,7 +533,10 @@ function answerQuestions(root: string, outDir: string, cachePath: string, graph:
             if (layer) f.layer = layer;
         }
     }
+    attachDomains(root, outDir, graph, model);
     finishAnswers(model, rules);
+    const withheld = sourceWithholding(root);
+    if (withheld) withholdSources(model, withheld);
     model.pin = {
         commit: meta.commit,
         date: history ? headDate(root) : '',
@@ -1057,9 +1071,12 @@ export const VIEWER_SCRIPTS = [
     'core.js',
     'area_code.js',
     'areas_common.js',
+    'history.js',
+    'domains.js',
     'area_kit.js',
     'area_overview.js',
     'area_data.js',
+    'area_systems.js',
     'area_interfaces.js',
     'area_runtime.js',
     'area_delivery.js',
@@ -1085,7 +1102,7 @@ export function viewerStyle(): string {
     return VIEWER_STYLES.map(readViewer).join('\n');
 }
 
-const AREA_NAV = ['overview', 'code', 'data', 'interfaces', 'runtime', 'delivery', 'impact', 'agent'] as const;
+const AREA_NAV = ['overview', 'code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'impact', 'agent'] as const;
 
 /**
  * What the shell routes between when a page is not a project map. Only the

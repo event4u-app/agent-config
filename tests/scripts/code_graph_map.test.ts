@@ -141,7 +141,7 @@ describe('agents/map/ artefacts (Phase 3)', () => {
         expect(manifest.generation).toBe(r.meta.graph_generation);
         expect(manifest.areas.code).toMatchObject({ path: 'code/map.json', source: 'code-graph', facts: r.model.files.length });
         expect(manifest.areas.data).toMatchObject({ path: 'data/data.json', freshness: 'empty' });
-        expect(Object.keys(manifest.areas)).toEqual(['code', 'data', 'interfaces', 'runtime', 'delivery', 'impact', 'agent']);
+        expect(Object.keys(manifest.areas)).toEqual(['code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'impact', 'agent']);
     });
 
     it('a redraw that fails part-way leaves the previous generation whole', async () => {

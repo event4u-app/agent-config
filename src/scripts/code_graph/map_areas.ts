@@ -1,6 +1,6 @@
 /**
- * The knowledge areas beside Code — Data, Interfaces, Runtime, Delivery,
- * Impact, Agent — as `map.json` carries them in its top-level `areas` section.
+ * The knowledge areas beside Code — Data, Systems, Interfaces, Runtime,
+ * Delivery, Impact, Agent — as `map.json` carries them in its top-level `areas` section.
  *
  * Each area is filled by its own reader. A reader that did not run leaves its
  * key out, and the viewer shows the area with "no data yet" and the reason; a
@@ -16,7 +16,7 @@
  */
 
 /** Area ids in nav order after Overview and Code. */
-export const KNOWLEDGE_AREA_IDS = ['data', 'interfaces', 'runtime', 'delivery', 'impact', 'agent'] as const;
+export const KNOWLEDGE_AREA_IDS = ['data', 'systems', 'interfaces', 'runtime', 'delivery', 'impact', 'agent'] as const;
 export type KnowledgeAreaId = (typeof KNOWLEDGE_AREA_IDS)[number];
 
 /**
@@ -123,6 +123,8 @@ export interface DataTable {
     columns: DataColumn[];
     /** Files of the models that persist to this table. */
     models: string[];
+    /** Domains of the code that writes it; several are the finding, not an error */
+    domains?: string[];
     witness: Witness;
 }
 
@@ -192,6 +194,45 @@ export interface InterfaceService {
 
 export interface InterfacesPayload extends AreaPayloadBase {
     services: InterfaceService[];
+}
+
+// Systems — runtimes, frameworks and packages, why each is installed, where it is used.
+
+export interface SystemsRuntime {
+    name: string;
+    /** every witness kept apart: a declared range, a version file, an image tag, a CI value */
+    witnesses: Array<{ kind: string; value: string; witness: Witness }>;
+    disagrees: boolean;
+}
+
+export interface SystemsPackage {
+    id: string;
+    ecosystem: string;
+    name: string;
+    version: string;
+    dev: boolean;
+    direct: boolean;
+    framework: boolean;
+    locked: boolean;
+    /** `manifest:line kind range` per declaration */
+    declared: string[];
+    /** the shortest path from a declaration, as `name@version` steps */
+    path: string[];
+    requiredBy: string[];
+    requires: string[];
+    /** files that import it, each at its import */
+    usedBy: Array<{ file: string; names: string[]; witness: Witness }>;
+    usedByTotal: number;
+    nonimport: string[];
+    /** Domains of the files that use it */
+    domains?: string[];
+    witness: Witness;
+}
+
+export interface SystemsPayload extends AreaPayloadBase {
+    runtimes: SystemsRuntime[];
+    packages: SystemsPackage[];
+    lockfiles: string[];
 }
 
 // Runtime — infrastructure resources, environments, services and ports.
@@ -380,6 +421,7 @@ export interface MapTour {
 
 export interface MapAreas {
     data?: DataPayload;
+    systems?: SystemsPayload;
     interfaces?: InterfacesPayload;
     runtime?: RuntimePayload;
     delivery?: DeliveryPayload;
@@ -412,6 +454,15 @@ export function witnessesOf(areas: MapAreas): Array<[string, Witness]> {
         for (const k of d.foreignKeys) push(`data fk ${k.from.table}.${k.from.column}`, k.witness);
         for (const r of d.relations) push(`data relation ${r.from} → ${r.to}`, r.witness);
         findings('data', d.findings);
+    }
+    const sy = areas.systems;
+    if (sy) {
+        for (const r of sy.runtimes) for (const w of r.witnesses) push(`systems runtime ${r.name} ${w.kind}`, w.witness);
+        for (const k of sy.packages) {
+            push(`systems package ${k.name}@${k.version}`, k.witness);
+            for (const u of k.usedBy) push(`systems use of ${k.name} in ${u.file}`, u.witness);
+        }
+        findings('systems', sy.findings);
     }
     const i = areas.interfaces;
     if (i) {
@@ -487,6 +538,11 @@ export function areaSummaryLines(areas: MapAreas): string[] {
             case 'data': {
                 const d = p as DataPayload;
                 what = `${count(d.tables.length, 'table', 'tables')}, ${count(d.foreignKeys.length, 'foreign key', 'foreign keys')}, ${count(d.relations.length, 'relation', 'relations')}`;
+                break;
+            }
+            case 'systems': {
+                const y = p as SystemsPayload;
+                what = `${count(y.runtimes.length, 'runtime', 'runtimes')}, ${count(y.packages.filter((k) => k.framework).length, 'framework', 'frameworks')}, ${count(y.packages.length, 'package', 'packages')}`;
                 break;
             }
             case 'interfaces': {

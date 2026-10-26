@@ -57,6 +57,21 @@
  *                                             partners, areas, columns,
  *                                             operations, pipelines), each fact
  *                                             with its witness
+ *   why <package[@version]>                   every path from a declaration to the
+ *                                             package, from the lockfiles (offline)
+ *   usage <package>                           the public names the code uses, of how
+ *                                             many — only with the package installed
+ *   remove-plan <package>                     call sites, non-import uses, dependents
+ *                                             and packages leaving with it: a proposal
+ *   provenance <ticket|#pr|file|symbol>       since when, by which commit, PR and
+ *                                             ticket — from the local history only
+ *   branches [index [ref…] | gc | list]       facts per branch without a checkout:
+ *                                             index the default set (current, its
+ *                                             parent chain, recently checked out) or
+ *                                             named refs; gc drops stale branches
+ *   branch-diff <a> [<b>]                     files, symbols, packages, tables and
+ *                                             columns that differ (b = current)
+ *   on-branches <package|table.column|symbol|file>  the indexed branches holding it
  *   tests-for <symbol>                        test files importing the symbol
  *   untested  --diff <rev>                    changed symbols no test imports
  *   dead      [--entry-points F]              zero accepted in-edges, minus
@@ -87,6 +102,8 @@
  *            [--no-verify] [--diff <rev>]      agents/map/ (ADR-297, ADR-303), or the
  *                                               hub's <repo id>-<checkout>/ (ADR-299); renders it
  *            [--prs]                           (open PRs by area, via gh)
+ *            [--branches]                      (the indexed branches and how each differs
+ *                                               from this one — local state, so off by default)
  *                                               at three widths when Playwright
  *                                               is present
  *   map --demo [--out DIR] [--open]           the map and the hub drawn from the demo
@@ -111,7 +128,6 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-import { resolve_project_root } from '../_lib/agent_settings.js';
 import { gitProbe, hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { buildFromRepo, discoverFiles, isTestFile, type LaneSummary, sidecarPath } from './build.js';
 import { diffHunks, renderReviewRisk, reviewRisk } from './review_risk.js';
@@ -128,7 +144,6 @@ import { suggestVerb } from './intent.js';
 import { estateMain } from './estate_cli.js';
 import { estateMapMain } from './estate_map.js';
 import { touchHome } from './graph_budget.js';
-import { resolveProjectRef } from './project_ref.js';
 import { projectsMain, registerUse } from './projects_cli.js';
 import { buildMap, graphGeneration, hasMap, mapGeneration, recordOutcome } from './map.js';
 import { cliPackage, usableCli } from './refresh_cli.js';
@@ -170,81 +185,26 @@ import {
 } from './verbs.js';
 import { main as lineageMain } from './lineage_cli.js';
 import { graphChecksum } from './verify/owner_index.js';
+import { writeChainStatus } from '../_lib/branch_chain_status.js';
+import { domainResolver } from './domains.js';
+import { readCachedProvenance, ticketsTouched } from './provenance.js';
 import { overlayState, overlayView, readOverlay } from './verify/overlay.js';
 import { headSha, verifyPaths } from './verify/paths.js';
 import { renderShrink, shrinkCheck } from './verify/shrink_guard.js';
 import { writeTombstones } from './verify/tombstones.js';
 import { usageLowerBound, verifyMain } from './verify/verify_cli.js';
 
+import { buildCacheFor, cacheFor, flag, isFlagValue, resolveRoot, shown, UsageError } from './cli_args.js';
+import { cmdBranchDiff, cmdBranches, cmdOnBranches, cmdProvenance, cmdSystems } from './cli_knowledge.js';
+
+export { buildCacheFor, cacheFor } from './cli_args.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
-/**
- * The cache belongs to the project it describes: `<root>/agents/map/.build/`
- * when the root has a project home, its home in the user-global hub otherwise
- * (ADR-299) — the path MCP, the context hook and `detect` read. Anchoring it to
- * the package tree put a consumer's graph inside `node_modules`, where `npm ci`
- * deleted it, two projects sharing an install overwrote each other, and MCP
- * answered "no graph" right after the CLI reported a fresh one.
- */
-export function cacheFor(root: string): string {
-    return graphHome(root).cachePath;
-}
-/** Where a build of `root` writes its graph: always the current layout, never the pre-ADR-303 path a reader falls back to. */
-export function buildCacheFor(root: string): string {
-    return graphHome(root).buildCachePath;
-}
-/** A path relative to the root when it lies inside it; a graph home outside the root prints in full. */
-function shown(root: string, p: string): string {
-    const rel = path.relative(root, p);
-    return rel.startsWith('..') || path.isAbsolute(rel) ? p : rel;
-}
 /** Local `tsx` binary — `refresh` spawns `build` as a child of THIS file
  * through it, so a budget-exceeded kill only ever terminates the child. */
 const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 const DEFAULT_BUDGET_SECONDS = 60;
-
-/** A refusal that names what the caller asked for wrongly; exits 1, not 3. */
-class UsageError extends Error {}
-
-function flag(argv: string[], name: string): string | null {
-    const i = argv.indexOf(name);
-    return i >= 0 && i + 1 < argv.length ? (argv[i + 1] as string) : null;
-}
-
-/**
- * Resolve the repository to operate on: `--root` > the shared project-root
- * resolver (`AGENT_CONFIG_PROJECT_ROOT`, then the anchor walk from `cwd`, then
- * `cwd`). The package tree is never a fallback — in a consumer it is
- * `node_modules/@event4u/agent-config`, and indexing it answered every
- * question about the wrong repository.
- *
- * `realpathSync` rather than `resolve` alone: a symlinked root must normalise to
- * what will actually be walked. A root that does not exist is returned
- * unresolved, so the caller's existence check prints the path it was given.
- */
-function resolveRoot(argv: string[]): string {
-    const explicit = flag(argv, '--root');
-    const project = flag(argv, '--project');
-    let candidate: string;
-    if (project !== null) {
-        const r = resolveProjectRef(project);
-        if ('error' in r) throw new UsageError(r.error);
-        candidate = r.root;
-    } else if (explicit !== null) {
-        candidate = explicit;
-    } else {
-        try {
-            candidate = resolve_project_root(null)[0];
-        } catch {
-            candidate = process.env['AGENT_CONFIG_PROJECT_ROOT'] ?? process.cwd();
-        }
-    }
-    try {
-        return fs.realpathSync(path.resolve(candidate));
-    } catch {
-        return path.resolve(candidate);
-    }
-}
 
 /**
  * A cache an older version wrote inside the package directory is named once
@@ -535,11 +495,6 @@ function renderUsage(g: LoadedGraph, argv: string[], seed: string): void {
     for (const at of lb.text_only_at) process.stdout.write(`  text only: ${at}\n`);
 }
 
-function isFlagValue(argv: string[], token: string): boolean {
-    const i = argv.indexOf(token);
-    return i > 0 && (argv[i - 1] as string).startsWith('--');
-}
-
 // Phase-3 gate verbs (3.1-3.3).
 
 /** The staleness token every gate verb prints, per step 3.1–3.3's shared
@@ -642,8 +597,38 @@ function cmdReviewRisk(argv: string[]): number {
     }
     const graph = JSON.parse(fs.readFileSync(p, 'utf-8')) as CodeGraph;
     const r = reviewRisk(root, graph, rev, hunks);
-    if (argv.includes('--json')) process.stdout.write(`${JSON.stringify(r)}\n`);
-    else process.stdout.write(`${renderReviewRisk(r).join('\n')}\n`);
+    // Whose work the diff touches — informational, never a weighted term of the sum.
+    const prov = readCachedProvenance(root, path.dirname(p));
+    const tickets = prov ? ticketsTouched(prov, r.changed) : null;
+    if (argv.includes('--json')) process.stdout.write(`${JSON.stringify(tickets ? { ...r, tickets } : r)}\n`);
+    else {
+        const lines = renderReviewRisk(r);
+        const domainOf = domainResolver(path.dirname(path.dirname(p)));
+        if (domainOf) {
+            const crossings = new Set<string>();
+            const changed = new Set(r.changed);
+            for (const t of r.terms) {
+                for (const i of t.items) {
+                    const far = i.witness?.file;
+                    if (!far || changed.has(far)) continue;
+                    for (const c of r.changed) {
+                        const a = domainOf(c);
+                        const b = domainOf(far);
+                        if (a && b && a !== b) crossings.add(`${a} ↔ ${b} (${c} · ${far})`);
+                    }
+                }
+            }
+            if (crossings.size) {
+                lines.push(`domain crossings (${crossings.size}), not part of the sum:`);
+                for (const x of [...crossings].sort().slice(0, 20)) lines.push(`  ${x}`);
+            }
+        }
+        if (tickets && tickets.length) {
+            lines.push(`tickets and PRs whose code the diff touches (${tickets.length}), not part of the sum:`);
+            for (const t of tickets.slice(0, 20)) lines.push(`  ${t.key} — ${t.files.join(', ')}`);
+        }
+        process.stdout.write(`${lines.join('\n')}\n`);
+    }
     return 0;
 }
 
@@ -1029,6 +1014,12 @@ async function cmdRefresh(argv: string[]): Promise<number> {
         return 0;
     }
     try {
+        // The branch chain's offline status beside the graph: local refs only, never the network.
+        try {
+            writeChainStatus(root, path.join(path.dirname(out), 'branch-chain.json'));
+        } catch {
+            /* a chain that cannot be read is no reason to skip the refresh */
+        }
         let rc = HEAD_MOVED;
         // One retry: a second move inside one build window means the tree is
         // still in motion, and the next hook or session start will refresh it.
@@ -1235,6 +1226,7 @@ async function drawMap(argv: string[]): Promise<number> {
         ...(out ? { outDir: path.resolve(out) } : {}),
         ...(diffRev !== null ? { diffRev } : {}),
         ...(argv.includes('--prs') ? { prs: true } : {}),
+        ...(argv.includes('--branches') ? { branches: true } : {}),
         ...(argv.includes('--no-build') ? { noBuild: true } : {}),
     });
     const rel = path.relative(process.cwd(), r.outDir) || '.';
@@ -1362,6 +1354,11 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'impact') return cmdImpact(argv.slice(1));
         if (sub === 'tests-for') return cmdTestsFor(argv.slice(1));
         if (sub === 'review-risk') return cmdReviewRisk(argv.slice(1));
+        if (sub === 'why' || sub === 'usage' || sub === 'remove-plan') return await cmdSystems(sub, argv.slice(1));
+        if (sub === 'provenance') return cmdProvenance(argv.slice(1));
+        if (sub === 'branches') return await cmdBranches(argv.slice(1));
+        if (sub === 'branch-diff') return await cmdBranchDiff(argv.slice(1));
+        if (sub === 'on-branches') return cmdOnBranches(argv.slice(1));
         if (sub === 'untested') return cmdUntested(argv.slice(1));
         if (sub === 'dead') return cmdDead(argv.slice(1));
         if (sub === 'suggest-verb') return cmdSuggestVerb(argv.slice(1));
@@ -1375,7 +1372,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'estate') return estateMain(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|review-risk|tests-for|untested|dead|confirm|pack|rebuild-diff|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
+                'impact|review-risk|why|usage|remove-plan|provenance|branches|branch-diff|on-branches|tests-for|untested|dead|confirm|pack|rebuild-diff|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
         );
         return 2;
     } catch (e) {

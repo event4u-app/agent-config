@@ -111,6 +111,26 @@ describe('hub facts on two fixture projects (4.9)', () => {
         expect(facts.skipped).toEqual([]);
     }, 120_000);
 
+    it('lists the version each project runs of a package or runtime two of them share (1.8)', () => {
+        const mk = (name: string, react: string, php: string): string => {
+            const dir = fs.realpathSync(fs.mkdtempSync(path.join(tmp, `hubv-${name}-`)));
+            fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ dependencies: { react: `^${react}` } }));
+            fs.writeFileSync(path.join(dir, 'package-lock.json'), JSON.stringify({ lockfileVersion: 3, packages: { '': { dependencies: { react: `^${react}` } }, 'node_modules/react': { version: react } } }, null, 2));
+            fs.writeFileSync(path.join(dir, 'Dockerfile'), `FROM php:${php}-fpm\n`);
+            return dir;
+        };
+        const facts = hubFacts([
+            { id: 'a', name: 'a', root: mk('a', '18.2.0', '8.3') },
+            { id: 'b', name: 'b', root: mk('b', '19.0.0', '8.3') },
+        ]);
+        const react = facts.versions?.find((r) => r.subject === 'npm:react');
+        expect(react?.framework).toBe(true);
+        expect(react?.differs).toBe(true);
+        expect(react?.uses.map((u) => [u.project, u.name])).toEqual([['a', '18.2.0'], ['b', '19.0.0']]);
+        expect(facts.versions?.find((r) => r.subject === 'runtime:php')?.differs).toBe(false);
+        expect(facts.versions?.[0]?.subject).toBe('npm:react');
+    });
+
     it('reports a project whose root is gone instead of failing the hub', () => {
         const facts = hubFacts([{ id: 'gone', name: 'gone', root: path.join(tmp, 'nowhere') }]);
         expect(facts.skipped).toEqual([{ project: 'gone', reason: 'root is gone' }]);

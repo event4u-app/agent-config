@@ -250,6 +250,7 @@
             case 'role': return f.role === 'test' ? 'var(--green)' : f.role === 'doc' ? 'var(--doc)' : SCOPE_CODE[f.role] ? 'var(--cyan)' : 'var(--violet)';
             case 'folder': return cat(strHash(top2(f.path)));
             case 'layer': return f.layer ? cat(strHash(f.layer)) : 'var(--node)';
+            case 'domain': return f.domain ? cat(strHash(f.domain)) : 'var(--node)';
             case 'churn': return f.churn ? mix('var(--brand)', 'var(--node)', Math.sqrt(f.churn / maxChurn)) : 'var(--node)';
             case 'size': return f.loc ? mix('var(--cyan)', 'var(--node)', Math.max(0.1, Math.sqrt(f.loc / maxLoc))) : 'var(--node)';
             default: {
@@ -277,6 +278,7 @@
             case 'role': return 'var(--cyan)';
             case 'folder': return cat(strHash(top2(files[a.hub].path)));
             case 'layer': return files[a.hub].layer ? cat(strHash(files[a.hub].layer)) : 'var(--node)';
+            case 'domain': return files[a.hub].domain ? cat(strHash(files[a.hub].domain)) : 'var(--node)';
             case 'churn': {
                 var cr = sumRange('churn', overviewAreas());
                 var sum = areaSums[ai].churn;
@@ -960,9 +962,9 @@
         var legendByKey = Object.create(null);
         (model.legend || []).forEach(function (l) { legendByKey[l.key] = l; });
         [['blast', 'cBlast', t('hBlast')], ['area', 'cArea', t('hArea')], ['tests', 'cTests', t('hTests')], ['role', 'cRole', t('hRole')],
-            ['churn', 'cChurn', t('hChurn')(WINDOW)], ['size', 'cSize', t('hSize'), 'size'], ['folder', 'cFolder', t('hFolderA')], ['layer', 'cLayer'], ['complexity', 'cComplexity']].forEach(function (o) {
+            ['churn', 'cChurn', t('hChurn')(WINDOW)], ['size', 'cSize', t('hSize'), 'size'], ['folder', 'cFolder', t('hFolderA')], ['layer', 'cLayer'], ['domain', 'cDomain'], ['complexity', 'cComplexity']].forEach(function (o) {
             var lg = legendByKey[o[3] || o[0]];
-            var off = lg ? !lg.available : (o[0] === 'layer' || o[0] === 'churn' || o[0] === 'complexity' || (o[0] === 'size' && !hasLoc));
+            var off = lg ? !lg.available : (o[0] === 'layer' || o[0] === 'domain' || o[0] === 'churn' || o[0] === 'complexity' || (o[0] === 'size' && !hasLoc));
             var b = el('button', { type: 'button', role: 'radio', class: 'opt', 'aria-checked': String(state.colorBy === o[0]), disabled: off, title: off ? '' : (o[2] || '') }, t(o[1]));
             if (off) markNoData(b, t('noDataShort'), lg && lg.reason ? lg.reason : t('noDataUnknown'));
             b.addEventListener('click', function () { if (!off) { state.colorBy = o[0]; refresh(); } });
@@ -1187,6 +1189,8 @@
             L.appendChild(legendItem(t('lgSize')(num(lr[0]), num(lr[1])), g4));
         } else if (state.colorBy === 'layer') {
             L.appendChild(legendItem(t('lgLayer'), dotEl('', cat(2))));
+        } else if (state.colorBy === 'domain') {
+            ((model.domains && model.domains.list) || []).slice(0, 8).forEach(function (d) { L.appendChild(legendItem(d.name, dotEl('', cat(strHash(d.name))))); });
         } else if (state.colorBy === 'churn') {
             var g3 = el('span', { class: 'dot' }); g3.style.width = '40px'; g3.style.borderRadius = '3px'; g3.style.background = 'linear-gradient(90deg,var(--node),var(--brand))';
             var cr = sumRange('churn', overviewAreas());
@@ -1532,7 +1536,7 @@
             });
             box.appendChild(b);
         });
-        var names = { blast: 'cBlast', area: 'cArea', tests: 'cTests', role: 'cRole', churn: 'cChurn', size: 'cSize', folder: 'cFolder', layer: 'cLayer' };
+        var names = { blast: 'cBlast', area: 'cArea', tests: 'cTests', role: 'cRole', churn: 'cChurn', size: 'cSize', folder: 'cFolder', layer: 'cLayer', domain: 'cDomain' };
         lensView.appendChild(add(el('div', { class: 'legend' }), el('b', null, t('legend')), el('span', { class: 'muted' }, t('treemapLegend')(t(names[state.colorBy] || 'cBlast')))));
     }
 
@@ -1586,7 +1590,7 @@
         return b;
     }
     function codeFindingCount() {
-        return (an.cyclesTotal || 0) + (an.surprises || []).length + (an.layerBreaches || 0) + (model.hotspots ? model.hotspots.length : 0) + (an.deadFiles || 0);
+        return (an.cyclesTotal || 0) + (an.surprises || []).length + (an.layerBreaches || 0) + (model.domains && model.domains.breaches ? model.domains.breaches : 0) + (model.hotspots ? model.hotspots.length : 0) + (an.deadFiles || 0);
     }
     function renderTabs() {
         var tabs = $('tabs');
@@ -1652,6 +1656,7 @@
         chips.appendChild(el('span', null, 'in ' + f.inFiles + ' · out ' + f.outFiles));
         if (f.guesses) chips.appendChild(el('span', { class: 'c-guess' }, t('guesses')(f.guesses)));
         if (f.layer) chips.appendChild(el('span', null, 'Layer ' + f.layer));
+        if (f.domain) chips.appendChild(el('span', { class: 'c-cyan' }, t('cDomain') + ' ' + f.domain));
         if (f.dead) chips.appendChild(el('span', { class: 'c-dead', title: an.deadBasis || '' }, t('dead')));
         head.appendChild(chips);
         if (f.churn !== undefined) {
@@ -1665,6 +1670,8 @@
             head.appendChild(trio);
         }
         panel.appendChild(head);
+        var hist = historySection(f.path);
+        if (hist) panel.appendChild(hist);
 
         // Blast radius.
         var w = walk(i, state.scope);
@@ -1892,6 +1899,8 @@
                     return fileLink(v.files[0], base(files[v.files[0]].path) + ' → ' + base(files[v.files[1]].path) + ' (' + v.layers[0] + ' → ' + v.layers[1] + ')');
                 })));
         } else p.appendChild(findCard(t('layerBreaches'), null, null, [el('p', null, t('needLayers'))], true));
+        var dc = domainCard(findCard, fileLink);
+        if (dc) p.appendChild(dc);
         if (model.prOverlap && model.prOverlap.conflicts.length) {
             p.appendChild(findCard(t('prs'), num(model.prOverlap.conflicts.length), 'var(--cyanText)', model.prOverlap.conflicts.slice(0, 4).map(function (c) {
                 return el('p', null, '#' + c[0] + ' · #' + c[1] + ' → ' + c[2].map(function (a) { return areas[a].id; }).join(', '));

@@ -18,7 +18,7 @@
 
 ### See what a change touches
 
-`agent-config code-graph map` draws an offline map into `agents/map/`: code, data, interfaces, runtime, delivery. Each fact keeps its `file:line`, re-read before acting. Pick a file: every area it reaches lights up.
+`agent-config code-graph map` draws an offline map into `agents/map/`: code, data, systems, interfaces, runtime, delivery, history, domains. Facts keep `file:line`, re-read before acting. Pick a file: every reached area lights up.
 
 ![Code map blast radius](.github/assets/screenshots/graph-blast.png)
 

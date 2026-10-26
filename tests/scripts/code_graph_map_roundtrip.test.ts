@@ -55,7 +55,7 @@ async function hashTo(page: Page, h: string, route: string): Promise<void> {
     await at(page, route);
 }
 async function overviewDrawn(page: Page): Promise<void> {
-    expect(await page.locator('#av-main .ocard').count()).toBe(9);
+    expect(await page.locator('#av-main .ocard').count()).toBe(10);
     expect(await page.locator('#av-main').isVisible()).toBe(true);
 }
 
@@ -73,7 +73,7 @@ async function goDeep(page: Page, area: string): Promise<void> {
 }
 
 describe('back to the Overview from every area, however deep', () => {
-    for (const area of ['code', 'data', 'interfaces', 'runtime', 'delivery', 'impact', 'agent']) {
+    for (const area of ['code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'impact', 'agent']) {
         it(`${area} → Overview by the nav, by back, by a typed hash`, async () => {
             const { page, errors } = await open('#/overview');
             await overviewDrawn(page);

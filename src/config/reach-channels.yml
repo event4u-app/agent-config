@@ -73,7 +73,7 @@ channels:
     tier: free-key
     lifecycle: stable
     override_key: reach.channels.github.backend
-    last_verified: "2026-07-24"
+    last_verified: "2026-10-26"
     backends:
       - id: gh
         probe_cmd: gh
@@ -144,7 +144,7 @@ channels:
     tier: zero-config
     lifecycle: stable
     override_key: reach.channels.rss.backend
-    last_verified: "2026-07-24"
+    last_verified: "2026-10-26"
     backends:
       - id: curl
         probe_cmd: curl
@@ -170,7 +170,7 @@ channels:
     tier: zero-config
     lifecycle: stable
     override_key: reach.channels.web-read.backend
-    last_verified: "2026-07-24"
+    last_verified: "2026-10-26"
     backends:
       - id: curl
         probe_cmd: curl
@@ -196,7 +196,7 @@ channels:
     tier: zero-config
     lifecycle: stable
     override_key: reach.channels.hackernews.backend
-    last_verified: "2026-07-24"
+    last_verified: "2026-10-26"
     backends:
       - id: curl
         probe_cmd: curl
@@ -212,7 +212,7 @@ channels:
     tier: zero-config
     lifecycle: experimental
     override_key: reach.channels.reddit.backend
-    last_verified: "2026-07-25"
+    last_verified: "2026-10-26"
     backends:
       - id: curl
         probe_cmd: curl
@@ -236,7 +236,7 @@ channels:
     tier: zero-config
     lifecycle: experimental
     override_key: reach.channels.twitter-oembed.backend
-    last_verified: "2026-07-25"
+    last_verified: "2026-10-26"
     backends:
       - id: curl
         probe_cmd: curl

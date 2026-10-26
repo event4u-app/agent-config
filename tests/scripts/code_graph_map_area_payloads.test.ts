@@ -74,9 +74,9 @@ afterAll(async () => {
 });
 
 describe('every area is drawn from facts, every fact with a witness', () => {
-    it('writes a sound areas section with all six areas', () => {
+    it('writes a sound areas section with all seven areas', () => {
         expect(areaProblems(areas)).toEqual([]);
-        expect(Object.keys(areas).sort()).toEqual(['agent', 'data', 'delivery', 'impact', 'interfaces', 'runtime', 'tours']);
+        expect(Object.keys(areas).sort()).toEqual(['agent', 'data', 'delivery', 'impact', 'interfaces', 'runtime', 'systems', 'tours']);
     });
 
     it('Data: tables, keys, relations, and DR-1 / DR-3 / DR-4 with witnesses (P1)', () => {
@@ -205,7 +205,7 @@ describe('the graph records which lane readers ran', () => {
         const dir = tmp('map-lanes-');
         fs.writeFileSync(path.join(dir, 'a.ts'), 'export const a = 1;\n');
         const { graph, json } = await buildFromRepo(dir, null, { lanes: true });
-        expect(graph.lanes_run?.map((r) => r.lane).sort()).toEqual(['data', 'decisions', 'delivery', 'flows', 'history', 'interfaces', 'runtime']);
+        expect(graph.lanes_run?.map((r) => r.lane).sort()).toEqual(['data', 'decisions', 'delivery', 'flows', 'history', 'interfaces', 'runtime', 'systems']);
         expect(graph.lanes_run!.every((r) => r.facts >= 0 && r.relations >= 0)).toBe(true);
         expect((JSON.parse(json) as CodeGraph).lanes_run).toEqual(graph.lanes_run);
         expect(validateGraph(JSON.parse(json)).ok).toBe(true);
@@ -214,6 +214,7 @@ describe('the graph records which lane readers ran', () => {
         expect(ran.delivery?.empty).toMatch(/no GitHub Actions workflow/);
         expect(ran.interfaces?.empty).toMatch(/no outbound call site/);
         expect(ran.data?.empty).toMatch(/no migration/);
+        expect(ran.systems?.empty).toMatch(/no lockfile, manifest/);
         // The same graph with only the runtime reader recorded: the others never ran.
         const onlyRuntime: CodeGraph = { ...graph, lanes_run: graph.lanes_run!.filter((r) => r.lane === 'runtime') };
         const some = produceAreas(dir, onlyRuntime, { hunks: [] }).areas;
@@ -221,6 +222,7 @@ describe('the graph records which lane readers ran', () => {
         expect(some.delivery).toBeUndefined();
         expect(some.interfaces).toBeUndefined();
         expect(some.data).toBeUndefined();
+        expect(some.systems).toBeUndefined();
     }, 60_000);
 
     it('a reader that failed is recorded with its error, and its area says so without a host path', async () => {

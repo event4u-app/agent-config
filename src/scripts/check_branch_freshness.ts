@@ -67,6 +67,8 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { chainStatus } from "./_lib/branch_chain_status.js";
+
 import { runGateCli, runSelfTest, type SelfTestCase } from "./_lib/gate_self_test.js";
 import { workspaceIdentity } from "./_lib/git_common_dir.js";
 import { describeRefusal, isRefusal, type GitConventionReading } from "./_lib/git_convention.js";
@@ -616,6 +618,28 @@ export function behindRemedy(base: string, strategy: GitConventionReading | null
  * against ambient credentials, where a `GH_REPO` override could return a real
  * PR base for a same-named branch and silently change the base under test.
  */
+/**
+ * One warning line per level of this branch's chain that lags its own parent —
+ * advice, never a refusal: the gate's verdict is about the push base, and a
+ * lagging grandparent is a reason to run `branch_chain sync`, not to block.
+ * Local refs only; nothing here reaches the network.
+ */
+function chainWarning(branch: string): void {
+  try {
+    for (const l of chainStatus(process.cwd(), branch)) {
+      if (l.parent && l.behind) {
+        process.stdout.write(
+          `⚠️  branch chain: ${l.branch} is ${l.behind} commit(s) behind its parent ${l.parent}` +
+            (l.overlap.length ? `; both changed ${l.overlap.slice(0, 3).join(", ")}` : "") +
+            " — `./scripts-run src/scripts/branch_chain sync`\n",
+        );
+      }
+    }
+  } catch {
+    /* advice only: an unreadable chain never changes the verdict */
+  }
+}
+
 export function main(
   argv: string[] = process.argv.slice(2),
   forge?: (b: string) => ForgeAnswer,
@@ -704,6 +728,7 @@ export function main(
         `✅  branch is current with ${shown} (${sha.slice(0, 9)}) — ${describeBase(resolved)}\n`,
       );
     }
+    chainWarning(branch);
     return 0;
   }
 

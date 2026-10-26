@@ -91,6 +91,8 @@ export interface MapFile {
     dead?: true;
     /** From `layers.yaml`; absent without one. */
     layer?: string;
+    /** The declared (or code-structure) business domain; absent outside every one. */
+    domain?: string;
     /** Scope files only (code roles). */
     blast?: BlastRecord;
     /** What this file is as knowledge, when it is one. */
@@ -159,6 +161,61 @@ export interface MapThresholds {
     neighboursPerArea: number;
 }
 
+/**
+ * Since when an element exists and for which pull request and ticket — keys,
+ * numbers, dates and author names only, never ticket or PR text.
+ */
+export interface MapProvenance {
+    head: string;
+    /** `[short sha, date, author, pr | '', tickets, subject]`, oldest first */
+    commits: Array<[string, string, string, string, string[], string]>;
+    /** file path → `[introduced | -1, last, changes]` as commit indexes */
+    files: Record<string, [number, number, number]>;
+    /** route label → `[introduced | -1, last, declaring file]`; a route outside the budget is absent */
+    routes: Record<string, [number, number, string]>;
+    /** ticket key → commit indexes; `#N` / `!N` → commit indexes */
+    tickets: Record<string, number[]>;
+    prs: Record<string, number[]>;
+    /** set when part of the history was not read, with why */
+    gap?: string;
+}
+
+/** The domain axis: declared in `layers.yaml`, or by the code's folder structure; proposals only when neither exists. */
+export interface MapDomains {
+    source: 'declared' | 'structure';
+    list: Array<{ name: string; files: number; owner: string | null; parent: string | null; globs: string[]; public: boolean }>;
+    /** `[from, to, edges]` between domains */
+    edges: Array<[string, string, number]>;
+    crossings: number;
+    /** null when `domain_allow` is undeclared: crossings are counted, never judged */
+    breaches: number | null;
+    violations: Array<{ kind: 'domain' | 'domain-public' | 'domain-cycle' | 'domain-overlap' | 'domain-table'; files: number[]; domains: string[]; table?: string }>;
+}
+
+export interface MapDomainProposals {
+    /** always `inferred`: never a boundary, never a breach */
+    source: 'inferred';
+    list: Array<{ name: string; globs: string[]; files: number; cohesion: number }>;
+    snippet: string;
+}
+
+/** The indexed branches against the checked-out one; only on a map drawn with `--branches`. */
+export interface MapBranches {
+    current: string;
+    /** the chain root first: each level against its parent, from local refs */
+    chain: Array<{ branch: string; parent: string | null; behind: number | null; owned: boolean | null; overlap: string[] }>;
+    list: Array<{
+        ref: string;
+        commit: string;
+        seen: string;
+        parent: string | null;
+        files: number;
+        packages: string[];
+        columns: string[];
+        symbols: number;
+    }>;
+}
+
 export interface MapModel {
     version: number;
     thresholds: MapThresholds;
@@ -186,6 +243,10 @@ export interface MapModel {
     health?: MapHealth;
     legend?: LegendEntry[];
     pin?: MapPin;
+    provenance?: MapProvenance;
+    domains?: MapDomains;
+    domainProposals?: MapDomainProposals;
+    branches?: MapBranches;
     /** The depth the blast numbers were computed to; the viewer's walk uses the same. */
     blastDepth?: number;
     gitWindowDays?: number;
