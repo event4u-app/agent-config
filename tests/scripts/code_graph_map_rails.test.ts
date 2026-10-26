@@ -169,7 +169,12 @@ describe('a page module lays out both rails and the centre', () => {
     });
 
     it('a module without page keeps the witness rail', async () => {
-        const { page } = await open(html, 1440, '#/interfaces');
+        const plain = withModule(
+            "{ tabs: [['one', 'lGraph']], items: function () { return []; }, meta: function () { return 'plain'; }, render: function (p, v, main) { main.appendChild(el('div', { id: 'tp' }, 'plain')); } }",
+            'plain',
+        );
+        const { page } = await open(plain, 1440, '#/data');
+        expect(await page.locator('#tp').isVisible()).toBe(true);
         expect(await page.locator('#av-detail').isVisible()).toBe(true);
         expect(await shown(page, 'av-left')).toMatchObject({ visible: false });
         await page.close();
