@@ -23,47 +23,7 @@ and the run that applies it links its PR.
   ADR's own review trigger has already fired, which would make this a supersede
   rather than an owner reopen.
 - **Blocks:** Phase 2 of `later/road-to-a-run-that-knows-its-skills`.
-
-### OQ-15 — Un-park the live selection floors and fund one pilot
-
-- **Context:** `later/road-to-routing-assurance-live-floors` now has 5 arrivals;
-  each recommends its option (1): a protocol frozen by a session that did not
-  author the corpus, then one pilot on the host's evaluator, natural against
-  explicit invocation. The question itself is council-decidable; the pilot is
-  metered spend, and the file can only start in a free active slot.
-- **Options:** (a) yes, with a cap of 25 USD for the pilot, started in the next
-  free slot; (b) yes, with a different cap you name; (c) keep it parked.
-- **Recommendation:** (a) — five rounds have asked the same question, and one
-  bounded run answers whether the package hides its own skills.
-- **Blocks:** every step of `later/road-to-routing-assurance-live-floors`.
-
-### OQ-16 — One stale word in the ai-council skill
-
-- **Context:** `src/skills/ai-council/SKILL.md:91` calls `/review-changes` an
-  "internal four-judge pass"; it dispatches seven. Every other surface was fixed
-  in `road-to-a-plan-that-stays-true` 5.1, but any edit to this file classifies a
-  PR `needs-owner` (council surface, ADR-281), so it was left out of that PR.
-- **Options:** (a) a one-line PR changing "four-judge" to "7-judge" (the body
-  budget allows no longer wording), merged by you; (b) leave it.
-- **Recommendation:** (a) — the drift is the defect `review_changes_judge_count`
-  exists to stop, one file away from its scope.
-- **Blocks:** nothing; one stale cardinal remains.
-
-### OQ-19 — Install the quota status-line tap by default (`quota-tap-default`)
-
-- **Context:** `road-to-a-quota-the-user-sees-coming` Phase 2 ships
-  `agent-config statusline:install`, which wraps the user's existing
-  `statusLine.command` in `~/.claude/settings.json` and restores it
-  byte-for-byte on uninstall. Without the tap AC never sees the plan window, so
-  no quota notice can fire. Default-on writes into a user-global host file at
-  install time; the archived cold-start roadmap had chosen opt-in (its D4).
-- **Options:** (a) `setup`/`init` installs the tap by default, uninstall
-  restores; (b) opt-in only — the user runs `statusline:install`; (c) offer it
-  once during `setup` with default yes.
-- **Recommendation:** (c) — it reaches every new install without writing a
-  host file nobody was told about; existing installs see the command named in
-  the first metered or session-size notice.
-- **Blocks:** nothing executable; until answered the tap is opt-in (b).
+- **Partly answered 2026-10-26:** "Erst Zählung, dann entscheiden (Empfohlen)" — option (b). The census over all 11 store slugs of this repository (`agents/evidence/metrics/skill-activation-census-all-slugs-2026-10-26.md`) read 133 sessions and 48 `Skill` calls over 8 skills — off zero, but the count does not separate user-requested invocations from model-chosen ones. AI council 2026-10-26 (2/2): ADR-263's review trigger did **not** fire (the worktree slugs are one maintainer on one host, not a second store; `keyword-v2` is not the ranker's default), so this is not a council supersession. **Still open, now narrower:** Phase 2 would assemble and enforce a skill basis automatically, which ADR-263 rules out — so either you reopen ADR-263 and Phase 2 supersedes it, or Phase 2 is narrowed to skills a command explicitly declares, with no automatic ranked-candidate enforcement, and ADR-263 stands. <!-- md-language-check: ignore -->
 
 ## Not owner questions — waits, or already settled in the tree
 
@@ -147,6 +107,50 @@ and the run that applies it links its PR.
   (`road-to-a-memory-that-names-its-moment` § Decisions E12).
 
 ## Answered
+
+### OQ-19 — Install the quota status-line tap by default (`quota-tap-default`)
+
+- **Context:** `road-to-a-quota-the-user-sees-coming` Phase 2 ships
+  `agent-config statusline:install`, which wraps the user's existing
+  `statusLine.command` in `~/.claude/settings.json` and puts the
+  recorded value back on uninstall. Without the tap AC never sees the plan window, so
+  no quota notice can fire. Default-on writes into a user-global host file at
+  install time; the archived cold-start roadmap had chosen opt-in (its D4).
+- **Options:** (a) `setup`/`init` installs the tap by default, uninstall
+  restores; (b) opt-in only — the user runs `statusline:install`; (c) offer it
+  once during `setup` with default yes.
+- **Recommendation:** (c) — it reaches every new install without writing a
+  host file nobody was told about; existing installs see the command named in
+  the first metered or session-size notice.
+- **Blocks:** nothing executable; until answered the tap is opt-in (b).
+- **Answered 2026-10-26 by the AI council (2/2), not the owner:** option (c). The council judged it council-decidable (reversible, no floor lowered, no write without the user's answer). Applied: `setup` offers the tap once on the identity step, box ticked; it is added when setup finishes, and a declined offer is remembered (`src/ui/wizard/StatuslineTapRow.tsx`, `src/server/routes/statusline.ts`).
+
+### OQ-16 — One stale word in the ai-council skill
+
+- **Context:** `src/skills/ai-council/SKILL.md:91` calls `/review-changes` an
+  "internal four-judge pass"; it dispatches seven. Every other surface was fixed
+  in `road-to-a-plan-that-stays-true` 5.1, but any edit to this file classifies a
+  PR `needs-owner` (council surface, ADR-281), so it was left out of that PR.
+- **Options:** (a) a one-line PR changing "four-judge" to "7-judge" (the body
+  budget allows no longer wording), merged by you; (b) leave it.
+- **Recommendation:** (a) — the drift is the defect `review_changes_judge_count`
+  exists to stop, one file away from its scope.
+- **Blocks:** nothing; one stale cardinal remains.
+- **Answered 2026-10-26:** "Ja, PR vorbereiten (Empfohlen)" — option (a): the one-line PR is prepared; it is `needs-owner`, so the owner merges it. <!-- md-language-check: ignore -->
+
+### OQ-15 — Un-park the live selection floors and fund one pilot
+
+- **Context:** `later/road-to-routing-assurance-live-floors` now has 5 arrivals;
+  each recommends its option (1): a protocol frozen by a session that did not
+  author the corpus, then one pilot on the host's evaluator, natural against
+  explicit invocation. The question itself is council-decidable; the pilot is
+  metered spend, and the file can only start in a free active slot.
+- **Options:** (a) yes, with a cap of 25 USD for the pilot, started in the next
+  free slot; (b) yes, with a different cap you name; (c) keep it parked.
+- **Recommendation:** (a) — five rounds have asked the same question, and one
+  bounded run answers whether the package hides its own skills.
+- **Blocks:** every step of `later/road-to-routing-assurance-live-floors`.
+- **Answered 2026-10-26:** "Ja, Cap 25 USD (Empfohlen)" — option (a): un-parked into the free active slot with a 25 USD cap for the pilot. Applied: `agents/roadmaps/road-to-routing-assurance-live-floors.md`; directive `agents/evidence/owner-directives/2026-10-26-owner-questions-14-15-16.md`. <!-- md-language-check: ignore -->
 
 ### OQ-17 — Fund or close the outcome benchmark against S4
 
