@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **632**
-- Edges (incl. self-WRITE): **2414**
+- Files indexed: **635**
+- Edges (incl. self-WRITE): **2420**
 
 ## READ_ONLY edges
 
@@ -812,6 +812,7 @@
 | `.agent-src.uncondensed/skills/churn-prevention/SKILL.md` | `.agent-src.uncondensed/skills/onboarding-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/churn-prevention/SKILL.md` | `.agent-src.uncondensed/skills/retention-loops/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/code-intelligence/SKILL.md` | `.agent-src.uncondensed/rules/external-code-graph-interop.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/code-intelligence/SKILL.md` | `.agent-src.uncondensed/skills/code-intelligence/references/find-confirm-act-update.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/code-intelligence/SKILL.md` | `.agent-src.uncondensed/skills/source-discovery/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/code-refactoring/SKILL.md` | `.agent-src.uncondensed/skills/laravel-api-endpoint/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/code-refactoring/SKILL.md` | `.agent-src.uncondensed/skills/nextjs-patterns/SKILL.md` | `body_link` | 1 |
@@ -911,8 +912,9 @@
 | `.agent-src.uncondensed/skills/data-flow-mapper/SKILL.md` | `.agent-src.uncondensed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/data-handling-judgment/SKILL.md` | `.agent-src.uncondensed/skills/contracts-cognition/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/data-handling-judgment/SKILL.md` | `.agent-src.uncondensed/skills/privacy-review/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/skills/database/SKILL.md` | `.agent-src.uncondensed/skills/code-intelligence/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/database/SKILL.md` | `.agent-src.uncondensed/skills/database/references/map-schema-facts.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/database/SKILL.md` | `.agent-src.uncondensed/skills/source-discovery/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/database/references/map-schema-facts.md` | `.agent-src.uncondensed/skills/code-intelligence/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/dcf-modeling/SKILL.md` | `.agent-src.uncondensed/skills/okr-tree-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/dcf-modeling/SKILL.md` | `.agent-src.uncondensed/skills/rice-prioritization/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/dcf-modeling/SKILL.md` | `.agent-src.uncondensed/skills/unit-economics-modeling/SKILL.md` | `body_link` | 1 |
@@ -999,6 +1001,7 @@
 | `.agent-src.uncondensed/skills/doc-coauthoring/SKILL.md` | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/doc-coauthoring/SKILL.md` | `.agent-src.uncondensed/rules/minimal-safe-diff.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/doc-coauthoring/SKILL.md` | `.agent-src.uncondensed/skills/humanizer/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/docker/SKILL.md` | `.agent-src.uncondensed/skills/docker/references/map-runtime-facts.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/docx-authoring/SKILL.md` | `.agent-src.uncondensed/skills/html-deck/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/docx-authoring/SKILL.md` | `.agent-src.uncondensed/skills/markitdown/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/docx-authoring/SKILL.md` | `.agent-src.uncondensed/skills/pdf-tools/SKILL.md` | `body_link` | 1 |
@@ -1802,5 +1805,5 @@
 | `context` | 79 |
 | `persona` | 36 |
 | `rule` | 122 |
-| `skill` | 395 |
+| `skill` | 398 |
 

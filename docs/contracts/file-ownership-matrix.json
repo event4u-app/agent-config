@@ -1722,6 +1722,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/code-intelligence/references/find-confirm-act-update.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/code-refactoring/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1920,6 +1926,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/database/references/map-schema-facts.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/dcf-modeling/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2089,6 +2101,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/skills/docker/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/docker/references/map-runtime-facts.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -11397,10 +11415,24 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/code-intelligence/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/code-intelligence/references/find-confirm-act-update.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-intelligence/SKILL.md",
       "target": ".agent-src.uncondensed/skills/source-discovery/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-intelligence/references/find-confirm-act-update.md",
+      "target": ".agent-src.uncondensed/skills/code-intelligence/references/find-confirm-act-update.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncondensed/skills/code-refactoring/SKILL.md",
@@ -12314,13 +12346,6 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/database/SKILL.md",
-      "target": ".agent-src.uncondensed/skills/code-intelligence/SKILL.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/database/SKILL.md",
       "target": ".agent-src.uncondensed/skills/database/SKILL.md",
       "type": "WRITE",
       "via": "self",
@@ -12328,10 +12353,31 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/database/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/database/references/map-schema-facts.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/database/SKILL.md",
       "target": ".agent-src.uncondensed/skills/source-discovery/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/database/references/map-schema-facts.md",
+      "target": ".agent-src.uncondensed/skills/code-intelligence/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/database/references/map-schema-facts.md",
+      "target": ".agent-src.uncondensed/skills/database/references/map-schema-facts.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncondensed/skills/dcf-modeling/SKILL.md",
@@ -13134,6 +13180,20 @@
     {
       "source": ".agent-src.uncondensed/skills/docker/SKILL.md",
       "target": ".agent-src.uncondensed/skills/docker/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/docker/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/docker/references/map-runtime-facts.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/docker/references/map-runtime-facts.md",
+      "target": ".agent-src.uncondensed/skills/docker/references/map-runtime-facts.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
