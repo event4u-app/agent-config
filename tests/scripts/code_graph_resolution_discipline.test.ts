@@ -42,6 +42,14 @@ describe('closure local (1.1)', () => {
         expect(wrong, JSON.stringify(wrong)).toEqual([]);
     });
 
+    it('treats a function declared inside a class method as local too', async () => {
+        const g = await build([
+            { path: 'src/a.ts', source: 'export class K { m() { function helper() { return 1; } return helper(); } }\n' },
+            { path: 'src/b.ts', source: 'export function go() { return helper(); }\n' },
+        ]);
+        expect(callsFrom(g, 'src/b.ts#go').filter((e) => e.target.startsWith('src/a.ts#'))).toEqual([]);
+    });
+
     it('still resolves the closure local inside its own file', async () => {
         const g = await build(FILES);
         const targets = callsFrom(g, 'a.ts#outer').map((e) => [e.target, e.resolved_via]);
@@ -152,6 +160,37 @@ describe('barrel and re-exports (1.3)', () => {
         expect(targets).toContainEqual(['src/a.ts#baz', 'import-specifier']);
     });
 
+    it('lets an explicit re-export shadow an `export *` offering the same name', async () => {
+        const g = await build([
+            A,
+            { path: 'src/b.ts', source: 'export function foo() { return 3; }\n' },
+            { path: 'src/index.ts', source: "export { foo } from './a.js';\nexport * from './b.js';\n" },
+            { path: 'src/use.ts', source: "import { foo } from './index.js';\nexport function go() { return foo(); }\n" },
+        ]);
+        expect(callsFrom(g, 'src/use.ts#go')[0]).toMatchObject({ target: 'src/a.ts#foo', resolved_via: 'import-specifier' });
+    });
+
+    it('keeps a nested `export *` ambiguity ambiguous instead of taking a sibling', async () => {
+        const g = await build([
+            A,
+            { path: 'src/b.ts', source: 'export function foo() { return 3; }\n' },
+            { path: 'src/c.ts', source: 'export function foo() { return 4; }\n' },
+            { path: 'src/sub.ts', source: "export * from './a.js';\nexport * from './b.js';\n" },
+            { path: 'src/index.ts', source: "export * from './sub.js';\nexport * from './c.js';\n" },
+            { path: 'src/use.ts', source: "import { foo } from './index.js';\nexport function go() { return foo(); }\n" },
+        ]);
+        expect(callsFrom(g, 'src/use.ts#go').filter((e) => e.resolved_via === 'import-specifier')).toEqual([]);
+    });
+
+    it('never forwards a closure local through `export *`', async () => {
+        const g = await build([
+            { path: 'src/a.ts', source: 'export function outer() { function hidden() { return 1; } return hidden(); }\n' },
+            { path: 'src/index.ts', source: "export * from './a.js';\n" },
+            { path: 'src/use.ts', source: "import { hidden } from './index.js';\nexport function go() { return hidden(); }\n" },
+        ]);
+        expect(callsFrom(g, 'src/use.ts#go').filter((e) => e.target === 'src/a.ts#hidden')).toEqual([]);
+    });
+
     it('terminates on a re-export cycle and binds nothing', async () => {
         const g = await build([
             { path: 'src/x.ts', source: "export * from './y.js';\n" },
@@ -188,17 +227,51 @@ describe('class hierarchy (1.4)', () => {
         expect(isAcceptedEdge(e as never)).toBe(true);
     });
 
-    it('is ambiguous when two parents at the same level declare the method', async () => {
+    it('lets a concrete parent method win over the interface that only declares it', async () => {
         const g = await build([
             {
                 path: 'src/C.php',
                 source: '<?php\ninterface I { public function m(); }\nclass P { public function m() {} }\nclass C extends P implements I { public function go() { return $this->m(); } }\n',
             },
         ]);
+        expect(callsFrom(g, 'src/C.php#C::go')[0]).toMatchObject({ target: 'src/C.php#P::m', resolved_via: 'class-hierarchy' });
+    });
+
+    it('is ambiguous when two concrete parents at the same level declare the method', async () => {
+        const g = await build([
+            {
+                path: 'src/C.php',
+                source: '<?php\nclass P { public function m() {} }\ntrait T { public function m() {} }\nclass Q { public function m() {} }\nclass C extends P implements Q { public function go() { return $this->m(); } }\n',
+            },
+        ]);
         const e = callsFrom(g, 'src/C.php#C::go')[0];
         expect(e).toMatchObject({ confidence: 'AMBIGUOUS', ambiguity_reason: 'name-collision' });
-        expect(e?.candidates).toEqual(['src/C.php#I::m', 'src/C.php#P::m']);
         expect(isAcceptedEdge(e as never)).toBe(false);
+    });
+
+    it('keeps a walk through a parent found only by name a guess', async () => {
+        const g = await build([
+            { path: 'src/other/base.ts', source: 'export class Base { save() { return 1; } }\n' },
+            {
+                path: 'src/a.ts',
+                source: "import { Base } from 'some-lib';\nexport class A extends Base { run() { return this.save(); } }\n",
+            },
+        ]);
+        const e = callsFrom(g, 'src/a.ts#A::run').find((x) => x.target === 'src/other/base.ts#Base::save');
+        expect(e?.resolved_via).toBe('name-lookup');
+        expect(isAcceptedEdge(e as never)).toBe(false);
+    });
+
+    it('follows the parent the file imports when two classes share its name', async () => {
+        const g = await build([
+            { path: 'src/x/base.ts', source: 'export class Base { save() { return 1; } }\n' },
+            { path: 'src/y/base.ts', source: 'export class Base { save() { return 2; } }\n' },
+            {
+                path: 'src/a.ts',
+                source: "import { Base } from './y/base.js';\nexport class A extends Base { run() { return this.save(); } }\n",
+            },
+        ]);
+        expect(callsFrom(g, 'src/a.ts#A::run')[0]).toMatchObject({ target: 'src/y/base.ts#Base::save', resolved_via: 'class-hierarchy' });
     });
 });
 
@@ -248,12 +321,14 @@ describe('several scip indexes (2.2)', () => {
         return Buffer.from(bytes);
     };
 
-    it('reads one index per package, re-rooted, and drops a path that escapes the root', () => {
+    it('reads every index.scip, re-rooted, ignores other .scip files, and drops a path that escapes the root', () => {
         const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cg-scips-')));
         try {
             fs.mkdirSync(path.join(root, 'packages', 'a'), { recursive: true });
             fs.writeFileSync(path.join(root, 'index.scip'), index(['src/root.ts', '../outside.ts']));
             fs.writeFileSync(path.join(root, 'packages', 'a', 'index.scip'), index(['src/x.ts']));
+            fs.writeFileSync(path.join(root, 'old.scip'), index(['src/stale.ts']));
+            fs.writeFileSync(path.join(root, 'packages', 'a', 'index.scip.bak'), index(['src/bak.ts']));
             expect(readScipIndexes(root).map((d) => d.path)).toEqual(['src/root.ts', 'packages/a/src/x.ts']);
         } finally {
             fs.rmSync(root, { recursive: true, force: true });

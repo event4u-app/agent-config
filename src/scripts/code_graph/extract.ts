@@ -463,7 +463,8 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                 const nm = nameField(n) ?? '<anon>';
                 const id = uniq(out, `${file}#${nm}`);
                 out.nodes.push({ id, label: nm, kind: 'function', source_file: file, source_location: loc(n) });
-                if (!topLevel && !classId) (out.nestedIds ??= []).push(id);
+                // Inside a function OR a method body: either way a local.
+                if (!topLevel) (out.nestedIds ??= []).push(id);
                 out.rawEdges.push({ sourceId: fileId, relation: 'member', targetName: nm, confidenceHint: 'EXTRACTED' });
                 const body = n.childForFieldName('body');
                 if (body) for (const c of namedChildren(body)) walk(c, classId, id, false);

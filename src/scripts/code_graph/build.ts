@@ -445,20 +445,41 @@ export function buildGraph(
         }
 
     /**
+     * Parent links stated by the child file itself (a local declaration, an
+     * import specifier, PSR-4, a C# namespace), as `child\0parent`. Filled once
+     * the file scopes exist; a link the name table alone supplied is a guess.
+     */
+    const statedLinks = new Set<string>();
+    /**
      * Every owner of method `name` at the nearest level of `classId`'s
      * in-repo hierarchy: the class itself, else its parents, else theirs. One
-     * owner is the method the call runs; two at the same level (two parents,
-     * a parent and an interface) is a choice the graph does not make.
+     * owner is the method the call runs; two concrete owners at one level is a
+     * choice the graph does not make. An interface method never runs, so it
+     * yields to a concrete owner at the same level. `stated` is true only when
+     * every link walked to reach the owners was stated by its child's file.
      */
-    const hierOwners = (classId: string, name: string): string[] => {
+    const hierOwners = (classId: string, name: string): { owners: string[]; stated: boolean } => {
         const seen = new Set<string>();
-        for (let level = [classId]; level.length > 0; ) {
-            const owners = level.filter((c) => sym.ownMethods.get(c)?.has(name)).map((c) => `${c}::${name}`);
-            if (owners.length > 0) return [...new Set(owners)].sort();
-            for (const c of level) seen.add(c);
-            level = [...new Set(level.flatMap((c) => sym.parents.get(c) ?? []))].filter((p) => !seen.has(p));
+        let level = new Map<string, boolean>([[classId, true]]);
+        while (level.size > 0) {
+            const hits = [...level].filter(([c]) => sym.ownMethods.get(c)?.has(name));
+            if (hits.length > 0) {
+                const concrete = hits.filter(([c]) => nodeKind.get(c) !== 'interface');
+                const pick = concrete.length > 0 ? concrete : hits;
+                const owners = [...new Set(pick.map(([c]) => `${c}::${name}`))].sort();
+                return { owners, stated: pick.every(([, st]) => st) };
+            }
+            for (const c of level.keys()) seen.add(c);
+            const next = new Map<string, boolean>();
+            for (const [c, st] of level)
+                for (const p of sym.parents.get(c) ?? []) {
+                    if (seen.has(p)) continue;
+                    const viaStated = st && statedLinks.has(`${c}\0${p}`);
+                    next.set(p, (next.get(p) ?? false) || viaStated);
+                }
+            level = next;
         }
-        return [];
+        return { owners: [], stated: false };
     };
 
     const nodeKind = new Map(nodes.map((n) => [n.id, n.kind as string]));
@@ -493,25 +514,37 @@ export function buildGraph(
     }
     const reexportsOf = new Map(extracts.map((e) => [e.file, e.reexports ?? []] as const));
     /**
-     * The declaration `name` reaches through `file`'s re-exports, or null.
-     *
-     * Cycle-safe, and unique or nothing: two `export *` sources both offering
-     * the name are excluded by the language itself, so the graph does not pick.
+     * The declaration `name` reaches through `file`'s re-exports: its id, null
+     * when nothing forwards it, or `AMBIGUOUS` when the language itself would
+     * reject the name. An explicit `export { name } from` shadows every
+     * `export *`; two `export *` sources offering it — at any depth — make it
+     * ambiguous rather than absent. A local closure is never exported.
      */
+    const AMBIGUOUS_EXPORT = '\0ambiguous';
     const followReexport = (file: string, name: string, seen = new Set<string>()): string | null => {
         const key = `${file}\0${name}`;
         if (seen.has(key)) return null;
         seen.add(key);
+        const step = (to: string, remote: string): string | null => {
+            const direct = `${to}#${remote}`;
+            return nodeKind.has(direct) && !nested.has(direct) ? direct : followReexport(to, remote, seen);
+        };
+        const target = (spec: string): string | null =>
+            resolveSpecifier(file, spec, fileIds) ?? resolveAlias(spec, resolution, fileIds);
+        for (const re of reexportsOf.get(file) ?? []) {
+            const remote = re.names?.find((p) => p.local === name)?.remote;
+            if (remote === undefined || remote === 'default') continue;
+            const to = target(re.spec);
+            return to === null ? null : step(to, remote);
+        }
         const hits = new Set<string>();
         for (const re of reexportsOf.get(file) ?? []) {
-            const to = resolveSpecifier(file, re.spec, fileIds) ?? resolveAlias(re.spec, resolution, fileIds);
-            if (to === null || re.ns !== undefined) continue;
-            const remote = re.star ? name : re.names?.find((p) => p.local === name)?.remote;
-            if (remote === undefined || remote === 'default') continue;
-            const direct = `${to}#${remote}`;
-            const hit = nodeKind.has(direct) ? direct : followReexport(to, remote, seen);
+            if (!re.star) continue;
+            const to = target(re.spec);
+            const hit = to === null ? null : step(to, name);
             if (hit !== null) hits.add(hit);
         }
+        if (hits.has(AMBIGUOUS_EXPORT) || hits.size > 1) return AMBIGUOUS_EXPORT;
         return hits.size === 1 ? ([...hits][0] as string) : null;
     };
     for (const ex of extracts) {
@@ -603,7 +636,8 @@ export function buildGraph(
             // declare is followed through its `export … from` chain.
             const member = `${file}#${r.targetName}`;
             const named = r.importKind === 'named';
-            const target = named && nodeKind.has(member) ? member : (named ? followReexport(file, r.targetName) : null) ?? file;
+            const forwarded = named && !nodeKind.has(member) ? followReexport(file, r.targetName) : null;
+            const target = named && nodeKind.has(member) ? member : forwarded !== null && forwarded !== AMBIGUOUS_EXPORT ? forwarded : file;
             imports.set(local, { target, exact: true, via: aliasFile === null ? 'import-specifier' : ALIAS_VIA });
         }
         scopes.set(ex.file, { locals, imports });
@@ -690,6 +724,14 @@ export function buildGraph(
             };
         return null;
     };
+
+    for (const ex of extracts)
+        for (const inh of ex.inherits) {
+            const hit = resolveInScope(ex.file, inh.parentName, 'constructible', ex.lang, true);
+            if (!hit || !isStatedResolution(hit.via) || !nodeKind.has(hit.target)) continue;
+            if (!(sym.parents.get(inh.classId) ?? []).includes(hit.target)) push(sym.parents, inh.classId, hit.target);
+            statedLinks.add(`${inh.classId}\0${hit.target}`);
+        }
 
 /**
  * The mechanism for an edge whose target did not resolve.
@@ -817,7 +859,8 @@ export function buildGraph(
             return;
         }
         if (r.callStyle === 'this' || r.callStyle === 'self' || r.callStyle === 'static' || r.callStyle === 'parent') {
-            const owners = r.enclosingClassId ? hierOwners(r.enclosingClassId, r.targetName) : [];
+            const walked = r.enclosingClassId ? hierOwners(r.enclosingClassId, r.targetName) : { owners: [], stated: false };
+            const owners = walked.owners;
             if (owners.length === 1) {
                 emit({
                     source: r.sourceId,
@@ -828,7 +871,8 @@ export function buildGraph(
                     // keep the edge. The confidence stays INFERRED (ADR-124):
                     // a subclass may still override the method at runtime.
                     confidence: 'INFERRED',
-                    resolved_via: 'class-hierarchy',
+                    // A link supplied by the name table alone keeps the walk a guess.
+                    resolved_via: walked.stated ? 'class-hierarchy' : 'name-lookup',
                     provider: 'native',
                 });
             } else if (owners.length > 1) {
@@ -891,7 +935,7 @@ export function buildGraph(
             const cls = resolveInScope(ex.file, r.scopeName, 'any', ex.lang, true);
             const kind = cls ? nodeKind.get(cls.target) : undefined;
             if (cls && isStatedResolution(cls.via) && (kind === 'class' || kind === 'interface' || kind === 'enum')) {
-                const owned = hierOwners(cls.target, r.targetName);
+                const owned = hierOwners(cls.target, r.targetName).owners;
                 const m = owned.length === 1 ? owned[0] : undefined;
                 if (m) {
                     emit({
@@ -1320,14 +1364,15 @@ export function extractorFingerprint(): string {
 }
 
 /**
- * Every SCIP index in the tree, merged: the root `index.scip` and one per
- * package in a monorepo. A SCIP document path is relative to its index's
- * directory, so it is re-rooted there; one that would land outside the root
- * is dropped, never followed.
+ * Every `index.scip` in the tree, merged: the root one and one per package in
+ * a monorepo. Only that name is read — a stray `old.scip` or a fixture is not a
+ * project index. A document path is re-rooted at its index's directory, which
+ * is where an indexer run in that package writes it; one that would land
+ * outside the root is dropped, never followed.
  */
 export function readScipIndexes(abs: string): ScipDocument[] {
     const out: ScipDocument[] = [];
-    for (const full of discoverFiles(abs, new Set(['.scip'])).sort()) {
+    for (const full of walkFiles(abs, (name) => name === 'index.scip').sort()) {
         const dir = toPosixRel(abs, path.dirname(full));
         try {
             for (const d of readScipIndex(fs.readFileSync(full))) {

@@ -25,10 +25,13 @@ Top multi labels before: `resolve` 52, `run` 32, `write` 30, `at` 29, `git` 18,
 
 The first census draft counted constants and nested functions as candidates the
 resolver never holds; its pre-change reading was 727 of 2,095, matching the
-inbox round's shape (684 of 1,342 on an older tree). The committed version mirrors
-the resolver: callable kinds only, test files out of a production caller's pool,
-and a function inside another function's range out of every pool. Re-read with
-it, the pre-change figure is 460.
+inbox round's shape (684 of 1,342 on an older tree). The committed version
+approximates the resolver: function and class kinds only, test files out of a
+production caller's pool, and a function inside another function's range out of
+every pool. It is an approximation, not a mirror — an independent review of this
+change named the gaps: nesting is read off ranges for every language while the
+extractor marks only TS/JS, nesting on a single line is invisible, and interface
+and trait kinds are not counted. Re-read with it, the pre-change figure is 460.
 
 **The 10 after Phase 1 are census artefacts, all inspected.** Each target is the
 only top-level candidate the resolver held; each twin the census counts is a
@@ -45,3 +48,15 @@ choices, and over-reports exactly this nesting. Closing that gap needs a nesting
 flag on the node, which is a schema change and not taken here.
 
 after Phase 1: name_lookup_multi: 10, residue attributed in full (census cannot see nesting inside anonymous callbacks); resolver arbitrary winners: 0
+
+## Review round
+
+An independent review of the diff (no outcome stated in its prompt) found one
+major and six minor defects; all were fixed with a test that is red on the
+pre-fix commit `ae20fc7ee3`: a hierarchy walk through a parent found only by
+name was stated (now a guess unless every link is stated by its child's file);
+an interface declaration tied a concrete parent; a function inside a class
+method stayed a repo-wide target; an `export *` overrode an explicit re-export
+and a nested ambiguity read as absence; `export *` forwarded closure locals; any
+`*.scip` was merged (now only `index.scip`). The readings above were taken after
+those fixes and did not move.
