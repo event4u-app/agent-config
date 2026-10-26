@@ -551,7 +551,7 @@ claimed to route (D2). Ownership lives in each skill's own scope lines above.
 | 1.1, 3.1–3.5, 4.1–4.3 | `src/skills/database/references/relational-modeling.md` | ownership contract with six phrasings (one German); numbered procedure; worked examples for the membership junction, no-new-index and both cascade fixtures; `grep -c project_user` = 0; no `min_version` in `src/skills/` |
 | 1.2, 1.4, 2.4, 2.5 | this file, `## Decisions` D1–D2 and the Notes above | host table with `file:line`; extend verdict on a measured zero preamble headroom; no ownership map under `contexts/` |
 | 2.1 | `database` and `sql-writing` | hosting detection and the `ALTER SYSTEM` guardrail at `database/SKILL.md:51`; `MariaDB/MySQL` count in both descriptions = 0 |
-| 2.2 | `migration-architect/evals/triggers.json` | grandfather list 122 → 121; `check_trigger_eval_presence` and `lint_skill_trigger_corpus` green; `database` evals gain two modeling exemplars |
+| 2.2 | `migration-architect/evals/triggers.json` | grandfather list 122 → 120 (`multi-tenancy` also gained a corpus, because 4.8 touched it; it seals, 0x12); `check_trigger_eval_presence`, `lint_skill_trigger_corpus` and `check_routing_coverage` green; `database` evals gain two modeling exemplars; the trigger-corpus holdout pin and both train-side measurements are re-taken (still `harmful`, +4.90 pp; recall loss 38.75 pp) |
 | 2.3, 2.6 | the five DB-family `SKILL.md` scope lines | `database` claims modeling; `schema-review` and `migration-architect` route schema design to it |
 | 4.4–4.7 | `docs/guidelines/php/eloquent.md`, `php/database.md` | relationship → constraint table, cascade-bypasses-model-events, unique-under-soft-delete per engine, SQLite parity note; `laravel-migration` cross-links 4.6 |
 | 4.8 | `multi-tenancy` + `references/shared-schema-integrity.md` | both tenancy modes named; composite `(tenant_id, id)` key — the brief's `(id, tenant_id)` order is refused by MySQL against `REFERENCES (tenant_id, id)`, which the reference states |
@@ -560,9 +560,21 @@ claimed to route (D2). Ownership lives in each skill's own scope lines above.
 
 The fixture verifies are worked examples, not executed agent runs; they were
 read by an independent reviewer before merge rather than asserted by a test
-written to pass. Engine facts carry a version-pinned upstream URL, or are stated
-as a question with a detection step (MariaDB and PostgreSQL trigger firing on
-cascades, MySQL/MariaDB constraint-check timing).
+written to pass. Engine facts carry a version-pinned upstream URL — in the
+references inline, in the corpus at the end of each row's Verification — or are
+stated as a question with a detection step (MariaDB and PostgreSQL trigger firing
+on cascades, MySQL/MariaDB constraint-check timing, enum evolution cost).
+
+The independent review (2026-10-27, fresh context, whole delta) returned 15
+findings, none high. Fixed in the same change: the shared-schema reference
+claimed the composite FK indexes itself on PostgreSQL; a source link one level
+short; uncited engine facts in six corpus rows; hosting detection that let a dev
+compose file mask a managed production database; the composite-key rule missing
+from `multi-tenancy`; the redundant-index query comparing `INCLUDE` columns and
+non-B-tree methods; four wording errors in the modeling reference; and the
+pre-existing corpus claim that MySQL has no skip scan (it has one since 8.0.13).
+Left as is: the archived file's `status: ready` (the archive gate reads the
+directory) and two naming nits. Risk 3 is moot under D2 — no map is generated.
 
 ### 6.3 — when the corpus splits
 
