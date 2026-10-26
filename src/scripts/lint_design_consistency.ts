@@ -29,6 +29,8 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { asOf } from './_lib/as_of.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 import {
     boxMetricsFromClasses,
@@ -58,7 +60,7 @@ export interface ShadowRecord {
 }
 
 /** One shadow row for a file: counts per tolerance, never a finding shown to anyone. */
-export function shadowRecord(content: string, relPath: string, roles: ControlRoleMap, now = new Date()): ShadowRecord {
+export function shadowRecord(content: string, relPath: string, roles: ControlRoleMap, now = asOf()): ShadowRecord {
     const all = consistencyFindings(content, relPath, roles, 0);
     const would_fire: Record<string, number> = {};
     for (const t of SHADOW_TOLERANCES_PX) {
@@ -213,7 +215,18 @@ export function main(args: string[]): number {
     }
     const findings: ConsistencyFinding[] = [];
     if (roles !== null) {
-        for (const fp of walk(dir)) {
+        const files = [...walk(dir)];
+        // An existing root that yields no UI file is a moved tree, not a clean scan.
+        try {
+            assertScanned({ gate: 'lint_design_consistency', scanned: files.length, units: 'UI source file(s)', roots: [dir] });
+        } catch (exc) {
+            if (exc instanceof DeadScopeError) {
+                process.stderr.write(`❌  ${exc.message}\n`);
+                return 1;
+            }
+            throw exc;
+        }
+        for (const fp of files) {
             findings.push(...consistencyFindings(fs.readFileSync(fp, 'utf8'), path.relative(process.cwd(), fp), roles, tolerance));
         }
     }

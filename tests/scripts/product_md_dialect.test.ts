@@ -13,10 +13,10 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 const FIX = path.join(REPO, 'tests', 'fixtures', 'product-md');
 const read = (name: string) => fs.readFileSync(path.join(FIX, name), 'utf8');
 
-/** The template block in the skill, the file a first capture writes. */
+/** The template the skill points at, the file a first capture writes. */
 function template(): string {
-    const skill = fs.readFileSync(path.join(REPO, 'src', 'skills', 'design-system-capture', 'SKILL.md'), 'utf8');
-    const m = /### `PRODUCT\.md`[\s\S]*?```markdown\n([\s\S]*?)\n```/.exec(skill);
+    const ref = fs.readFileSync(path.join(REPO, 'src', 'skills', 'design-system-capture', 'references', 'product-md-template.md'), 'utf8');
+    const m = /```markdown\n([\s\S]*?)\n```/.exec(ref);
     return m?.[1] ?? '';
 }
 

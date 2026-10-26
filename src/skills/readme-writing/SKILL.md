@@ -247,4 +247,4 @@ to every README you author.
 - Do NOT preserve weak structure from an existing README just because it exists
 - Do NOT add marketing language ("blazing fast", "revolutionary", "next-gen")
 
-→ Final prose pass for audience-facing output: the `humanizer` skill (gtm-marketing pack) — remove AI-writing tells before delivery.
+→ Final prose pass for audience-facing output: `humanizer` (gtm-marketing pack) — remove AI-writing tells before delivery.

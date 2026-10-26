@@ -890,6 +890,13 @@ export function list_unhardened_gates(
     } catch {
       continue;
     }
+    // A gate whose CLI body sits in `<id>_main.ts` (kept out of the hook bundle)
+    // is hardened where that body asserts.
+    try {
+      src += fs.readFileSync(path.join(dir, `${id}_main.ts`), 'utf8');
+    } catch {
+      /* no split entry */
+    }
     const asserts = /assertScanned\(|assertWatchlistResolves\(|reportScanned\(/.test(src);
     const emits = /(?:process\.(?:stdout|stderr)\.write|lines\.push)\(\s*`scanned: /.test(src);
     if (!asserts && !(emits && registered.has(id))) out.push(id);

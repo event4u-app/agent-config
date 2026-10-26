@@ -39,12 +39,16 @@ const BASELINE: Record<string, number> = {
     'src/skills/agent-security-review/SKILL.md': 1,
     'src/skills/design-review/SKILL.md': 1,
     'src/skills/design-system-capture/references/design-system-json.md': 1,
+    // No consumer verb for product_md_dialect, detect_ai_tells --baseline or
+    // logo_export_kit (road-to-tells-a-near-miss-can-refute 6.1, 5.3, 7.5).
+    'src/skills/design-system-capture/SKILL.md': 1,
     'src/skills/forensics-report/SKILL.md': 2,
     'src/skills/git-workflow/SKILL.md': 1,
-    'src/skills/humanizer/SKILL.md': 2,
+    'src/skills/humanizer/SKILL.md': 3,
     'src/skills/launch-readiness/SKILL.md': 2,
     'src/skills/license-compliance-borrow-check/SKILL.md': 2,
     'src/skills/license-compliance-credits/SKILL.md': 3,
+    'src/skills/logo-generation/SKILL.md': 1,
     'src/skills/prediction-pool-optimizer/SKILL.md': 4,
     'src/skills/project-analysis-core/SKILL.md': 2,
     'src/skills/schema-review/SKILL.md': 1,
