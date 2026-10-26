@@ -11,6 +11,17 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
+// The shape is what is pinned, so the transcript half reads an empty root: on a
+// maintainer machine the real ~/.claude/projects took 34 s to parse and timed
+// the suite out, while CI has none and ran it in a quarter of a second.
+vi.mock('../../../src/scripts/_lib/cc_transcript.js', async (importOriginal) => {
+    const fs = await import('node:fs');
+    const os = await import('node:os');
+    const path = await import('node:path');
+    const orig = await importOriginal<Record<string, unknown>>();
+    return { ...orig, DEFAULT_PROJECTS_ROOT: fs.mkdtempSync(path.join(os.tmpdir(), 'anatomy-projects-')) };
+});
+
 import { _parse, main } from '../../../src/scripts/_cli/cmd_doctor.js';
 
 function captureStdout(run: () => number): { code: number; stdout: string } {
