@@ -1,0 +1,6 @@
+{
+    "window_days": 180,
+    "max_files_per_commit": 50,
+    "min_co_changes": 3,
+    "min_strength": 0.3
+}
