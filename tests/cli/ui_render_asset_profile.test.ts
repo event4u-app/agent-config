@@ -1196,4 +1196,5 @@ import '../scripts/code_graph_map_supernodes.test.js';
 import '../scripts/code_graph_map_data_page.test.js';
 import '../scripts/code_graph_map_erd_load.test.js';
 import '../scripts/code_graph_map_erd_interaction.test.js';
+import '../scripts/code_graph_map_label_click.test.js';
 import '../scripts/code_graph_map_ported_pages.test.js';

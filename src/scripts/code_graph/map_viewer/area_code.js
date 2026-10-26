@@ -113,6 +113,8 @@
         superOn: Object.create(null), superOpen: Object.create(null), superZoom: false
     };
     var drawn = [];
+    // The names painted on the canvas, each with the node it names: a click on one is a click on that node.
+    var labelHits = [];
     var superList = [];
     var superOf = Object.create(null);
     function paneMode() { var w = window.innerWidth; return w <= 720 ? 'phone' : w < 1240 ? 'tablet' : 'wide'; }
@@ -619,6 +621,7 @@
         var glowA = Number(cssVar('--glow')) || 0.5;
         var scopeDim = state.scopeDir;
         drawn = [];
+        labelHits = [];
         nodes.forEach(function (n) {
             var colour;
             var isTest = false;
@@ -766,6 +769,7 @@
                 if (!fits(box)) continue;
             }
             placed.push(box);
+            labelHits.push({ x: box.x, y: box.y, w: box.w, h: box.h, kind: n.kind, idx: n.idx });
             var cx = box.x + 2 + (bw - w) / 2;
             ctx.strokeStyle = bg;
             ctx.lineWidth = 4;
@@ -792,6 +796,7 @@
                 var box = { x: n.sx + n.r - 6, y: n.sy - n.r - 10, w: w, h: 18 };
                 if (!fits(box)) return;
                 placed.push(box);
+                labelHits.push({ x: box.x, y: box.y, w: box.w, h: box.h, kind: n.kind, idx: n.idx });
                 ctx.fillStyle = bg;
                 ctx.strokeStyle = cssVar('--amber');
                 ctx.lineWidth = 1;
@@ -812,6 +817,7 @@
             var box = { x: n.sx + n.r + 2, y: n.sy + n.r - 4, w: w, h: 16 };
             if (!fits(box)) return;
             placed.push(box);
+            labelHits.push({ x: box.x, y: box.y, w: box.w, h: box.h, kind: n.kind, idx: n.idx });
             ctx.fillStyle = bg;
             ctx.strokeStyle = cssVar('--line2');
             ctx.lineWidth = 1;
@@ -823,7 +829,7 @@
             ctx.fillStyle = cssVar('--muted');
             ctx.fillText(txt, box.x + 6, box.y + 8);
         });
-        window.__mapLabelBoxes = { boxes: placed, width: s.w, height: s.h };
+        window.__mapLabelBoxes = { boxes: placed, labels: labelHits.slice(), width: s.w, height: s.h };
         exposeView();
     }
     function roundRect(x, y, w, h, r) {
@@ -836,7 +842,12 @@
         ctx.closePath();
     }
 
+    /** What a click at (x, y) reaches: a painted name first — it lies over the drawing — then the nearest node. */
     function hitTest(x, y) {
+        for (var i = labelHits.length - 1; i >= 0; i--) {
+            var l = labelHits[i];
+            if (x >= l.x && x <= l.x + l.w && y >= l.y && y <= l.y + l.h) return { kind: l.kind, idx: l.idx };
+        }
         var best = null;
         var bestD = Infinity;
         drawn.forEach(function (d) {
@@ -2003,7 +2014,12 @@
         canvas.setPointerCapture(e.pointerId);
     });
     canvas.addEventListener('pointermove', function (e) {
-        if (!drag) return;
+        if (!drag) {
+            // Over a node or its name the pointer says it can be clicked; elsewhere the stage's grab stands.
+            var hr = canvas.getBoundingClientRect();
+            canvas.style.cursor = hitTest(e.clientX - hr.left, e.clientY - hr.top) ? 'pointer' : '';
+            return;
+        }
         var dx = e.clientX - drag.x;
         var dy = e.clientY - drag.y;
         if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
