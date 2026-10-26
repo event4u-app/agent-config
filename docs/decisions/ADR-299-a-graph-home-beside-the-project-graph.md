@@ -5,6 +5,7 @@ date: 2026-10-24
 decision: a-graph-home-beside-the-project-graph
 supersedes: —
 superseded_by: —
+amended_by: ADR-303
 amends: ADR-297, ADR-129
 phase: road-to-a-graph-that-follows-you · step 2.1
 type: structural
@@ -39,6 +40,11 @@ review_trigger: >-
 > (`agents/evidence/owner-directives/2026-10-26-auto-created-adrs.md`). Read the
 > decision as owner-directed; do not cite it as owner authority or as precedent for
 > an owner-reserved transition.
+
+> **Amended 2026-10-26 by [ADR-303](ADR-303-the-graph-is-an-index-never-the-truth.md).**
+> "The only truth" in the title and decision reads as "the only *index*": the
+> project graph is the one place to find a project's facts, the source files are
+> the truth, and every graph answer is confirmed against them before an agent acts.
 
 ## Status
 

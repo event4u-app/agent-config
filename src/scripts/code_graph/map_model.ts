@@ -112,6 +112,8 @@ export interface MapProvider {
 export interface MapArea {
     id: string;
     name: string;
+    /** Working title, unique within its kind — see {@link areaTitles}. */
+    title: string;
     /** Index into `files`. */
     hub: number;
     /** Indexes into `files`, sorted by path. */
@@ -546,6 +548,7 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
     );
 
     const neighboursPerArea = 12;
+    const titles = areaTitles(drafts);
     const areas: MapArea[] = drafts.map((d, ai) => {
         const hubDir = path.posix.dirname(paths[d.hub] as string);
         // Tests live under their own tree by convention, so they say nothing
@@ -560,6 +563,7 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
         return {
             id: `a${ai + 1}`,
             name: d.name,
+            title: titles[ai] as string,
             hub: d.hub,
             files: d.files,
             kind: d.kind,
@@ -860,6 +864,51 @@ function collectRequestPaths(graph: CodeGraph, idx: ReadonlyMap<string, number>)
         });
     }
     return paths.sort((a, b) => (a.route < b.route ? -1 : a.route > b.route ? 1 : a.file - b.file));
+}
+
+/**
+ * Working titles for the areas, in input order. An area is named after its hub
+ * file (`order_service.ts` → "Order Service"), a small-parts bucket after its
+ * folder. Titles that collide within a kind get the shortest parent-folder
+ * suffix that tells that member apart from every other member — Python
+ * packages all name their hub `core.py`, and a map of five "Core" areas says
+ * nothing. When the folders are identical, the full folder and the file name
+ * decide. The viewer adds the localised "small parts" prefix itself.
+ */
+export function areaTitles(areas: ReadonlyArray<{ name: string; kind: MapArea['kind'] }>): string[] {
+    const parts = areas.map((a) => {
+        const subject = a.kind === 'small-parts' ? a.name.replace(/^small parts · /, '') : a.name;
+        const segs = subject.split('/').filter((s) => s !== '');
+        const file = segs.pop() ?? subject;
+        const stem = file
+            .replace(/\.[^.]+$/, '')
+            .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+            .replace(/[_\-.]+/g, ' ')
+            .trim();
+        const pretty = stem
+            .split(/\s+/)
+            .filter((w) => w !== '')
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(' ');
+        return { kind: a.kind, dirs: segs, file, base: a.kind === 'small-parts' ? file : pretty || file };
+    });
+    const groups = new Map<string, number[]>();
+    parts.forEach((p, i) => {
+        const key = `${p.kind}\u0000${p.base}`;
+        groups.set(key, [...(groups.get(key) ?? []), i]);
+    });
+    const suffix = (dirs: string[], k: number): string => dirs.slice(Math.max(0, dirs.length - k)).join('/');
+    return parts.map((p, i) => {
+        const others = (groups.get(`${p.kind}\u0000${p.base}`) ?? []).filter((j) => j !== i).map((j) => parts[j] as (typeof parts)[number]);
+        if (others.length === 0) return p.base;
+        const depth = Math.max(p.dirs.length, ...others.map((o) => o.dirs.length));
+        for (let k = 1; k <= depth; k++) {
+            const mine = suffix(p.dirs, k);
+            if (others.every((o) => suffix(o.dirs, k) !== mine)) return mine === '' ? p.base : `${mine} · ${p.base}`;
+        }
+        const dir = p.dirs.join('/');
+        return dir === '' ? p.file : `${dir} · ${p.file}`;
+    });
 }
 
 function topDir(p: string): string {

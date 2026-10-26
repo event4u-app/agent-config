@@ -1,0 +1,13 @@
+services:
+  app:
+    image: drift-app:1.0.0
+    ports:
+      - "8080:80"
+    environment:
+      DB_HOST: db
+      APP_TOKEN: resolved-placeholder-value
+      EXTRA_FLAG: "1"
+  db:
+    image: postgres:16.4
+    ports:
+      - "5432:5432"

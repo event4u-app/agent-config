@@ -3,6 +3,7 @@
  * Native code-graph engine CLI (Class-A, ADR-124).
  *
  *   build    [--root P] [--out P] [--force]   (re)build the deterministic graph
+ *            [--no-lanes]                      and merge every lane reader's facts
  *   validate [--graph P]                       schema-gate a graph.json
  *   detect   [--root P] [--format json]        three-state freshness verdict
  *   refresh  [--root P] [--out P] [--budget-seconds N]
@@ -10,6 +11,14 @@
  *                                               (FRESH) / full build (ABSENT);
  *                                               a result built while HEAD moved
  *                                               is discarded and retried once
+ *            [--allow-shrink]                  a result that loses more than a
+ *                                               set share of facts with no matching
+ *                                               change in the tree is refused unless
+ *   refresh --touched [file…]                   re-read changed files into the
+ *                                               working-tree overlay (`verify/`)
+ *   confirm <id…> | --from-query <symbol>       re-read the witnesses of facts
+ *   pack "<task>" [--diff] [--since <rev>]      a verified context pack
+ *   rebuild-diff                                incremental vs cold build
  *   auto-refresh on|off|status [--root P]      opt this project in to the
  *                                               session-start background refresh
  *   projects list|add|remove|prune             the user-global registry of
@@ -34,14 +43,20 @@
  * completed temp output — on budget-exceeded, build failure, or the child
  * never producing output, the rename never happens and the OLD cache is left
  * byte-for-byte untouched. The cache itself (default
- * `agents/runtime/state/code-graph-v1.json`; for a root without `agents/` or a
- * project install, the user-global `runtime/graphs/<repo id>/state/`, ADR-299)
- * is local-only and disposable — gitignored, rebuildable from source at any
- * time; never a source of truth.
+ * `agents/map/.build/code-graph-v1.json`; for a root without `agents/` or a
+ * project install, the hub's `map/<repo id>-<checkout>/.build/`, ADR-299 and
+ * ADR-303; a cache an older release left at `agents/runtime/state/` is still
+ * read) is local-only and disposable — gitignored, rebuildable from source at
+ * any time; never a source of truth.
  *
  *   impact    --diff <rev> [--depth N]      callers/dependents/test files
  *                                             reachable from the changed
  *                                             symbols over ACCEPTED edges
+ *   review-risk [--diff <rev>] [--json]       the diff as a sum of terms (callers,
+ *                                             entry points, flows, co-change
+ *                                             partners, areas, columns,
+ *                                             operations, pipelines), each fact
+ *                                             with its witness
  *   tests-for <symbol>                        test files importing the symbol
  *   untested  --diff <rev>                    changed symbols no test imports
  *   dead      [--entry-points F]              zero accepted in-edges, minus
@@ -57,6 +72,10 @@
  * project in the user-global registry, resolved to its root and graph home
  * (ADR-299). Only a registered project resolves.
  *
+ * query/explain/affected also take [--kind K,..] [--relation R,..] [--direction
+ * in|out|both] [--depth 1-3] [--limit N]: any of them answers a filtered tree,
+ * each item with its witness, `returned of total`, and the population searched.
+ *
  * Query subcommands (query/path/explain/affected) are added by the Phase-3
  * query tier. Deterministic, LLM-free, no network. Exit codes:
  * 0 ok · 1 not-found / validation-failed / refresh-budget-exceeded ·
@@ -65,14 +84,17 @@
  *   open     [--root P] [--out DIR]           open the drawn map in the browser
  *                                               without redrawing it
  *   map      [--root P] [--out DIR] [--open]  draw the project map into
- *            [--no-verify] [--diff <rev>]      agents/map/ (ADR-297), or the
- *                                               graph home's map/ (ADR-299); renders it
+ *            [--no-verify] [--diff <rev>]      agents/map/ (ADR-297, ADR-303), or the
+ *                                               hub's <repo id>-<checkout>/ (ADR-299); renders it
  *            [--prs]                           (open PRs by area, via gh)
  *                                               at three widths when Playwright
  *                                               is present
- *   map --estate [--out DIR] [--no-verify]     one page of the registered projects
- *                                               and their links, under the user-global
- *                                               home; refused inside a git work tree
+ *   map --demo [--out DIR] [--open]           the map and the hub drawn from the demo
+ *            [--no-verify]                     fixture, into agents/map/.build/demo/ — for
+ *                                               frontend work; source checkout only
+ *   map --estate [--out DIR] [--no-verify]     the hub: the registered projects, their
+ *                                               links and the facts they share, under the
+ *                                               user-global map/; refused inside a git work tree
  *
  *   suggest-verb "<question>"                  (Phase 9 D3) print the verb
  *                                               (query/affected/path/explain)
@@ -91,7 +113,8 @@ import { fileURLToPath } from 'node:url';
 
 import { resolve_project_root } from '../_lib/agent_settings.js';
 import { gitProbe, hardenedSpawnEnv } from '../_lib/spawn_env.js';
-import { buildFromRepo, discoverFiles, isTestFile, sidecarPath } from './build.js';
+import { buildFromRepo, discoverFiles, isTestFile, type LaneSummary, sidecarPath } from './build.js';
+import { diffHunks, renderReviewRisk, reviewRisk } from './review_risk.js';
 import { DOC_EXTS } from './docs_layer.js';
 import {
     computeVerdict,
@@ -107,7 +130,7 @@ import { estateMapMain } from './estate_map.js';
 import { touchHome } from './graph_budget.js';
 import { resolveProjectRef } from './project_ref.js';
 import { projectsMain, registerUse } from './projects_cli.js';
-import { buildMap, graphGeneration, mapGeneration, recordOutcome } from './map.js';
+import { buildMap, graphGeneration, hasMap, mapGeneration, recordOutcome } from './map.js';
 import { cliPackage, usableCli } from './refresh_cli.js';
 import {
     STALE_LOCK_MS,
@@ -127,6 +150,8 @@ import {
     path as graphPath,
     query,
     type QueryResult,
+    resolveSeeds,
+    tree,
 } from './query.js';
 import { openGraphIndex, sqliteTwinPath } from './sqlite_store.js';
 import type { CodeGraph } from './types.js';
@@ -144,12 +169,18 @@ import {
     type UntestedResult,
 } from './verbs.js';
 import { main as lineageMain } from './lineage_cli.js';
+import { graphChecksum } from './verify/owner_index.js';
+import { overlayState, overlayView, readOverlay } from './verify/overlay.js';
+import { headSha, verifyPaths } from './verify/paths.js';
+import { renderShrink, shrinkCheck } from './verify/shrink_guard.js';
+import { writeTombstones } from './verify/tombstones.js';
+import { usageLowerBound, verifyMain } from './verify/verify_cli.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
 /**
- * The cache belongs to the project it describes: `<root>/agents/runtime/state/`
- * when the root has a project home, its user-global graph home otherwise
+ * The cache belongs to the project it describes: `<root>/agents/map/.build/`
+ * when the root has a project home, its home in the user-global hub otherwise
  * (ADR-299) — the path MCP, the context hook and `detect` read. Anchoring it to
  * the package tree put a consumer's graph inside `node_modules`, where `npm ci`
  * deleted it, two projects sharing an install overwrote each other, and MCP
@@ -157,6 +188,10 @@ export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
  */
 export function cacheFor(root: string): string {
     return graphHome(root).cachePath;
+}
+/** Where a build of `root` writes its graph: always the current layout, never the pre-ADR-303 path a reader falls back to. */
+export function buildCacheFor(root: string): string {
+    return graphHome(root).buildCachePath;
 }
 /** A path relative to the root when it lies inside it; a graph home outside the root prints in full. */
 function shown(root: string, p: string): string {
@@ -227,14 +262,14 @@ function legacyCacheNotice(root: string): string {
 
 async function cmdBuild(argv: string[]): Promise<number> {
     const root = resolveRoot(argv);
-    const out = argv.includes('--out') ? flag(argv, '--out') : cacheFor(root);
+    const out = argv.includes('--out') ? flag(argv, '--out') : buildCacheFor(root);
     if (!fs.existsSync(root)) {
         process.stderr.write(`code-graph: root not found: ${root}\n`);
         return 1;
     }
     const update = argv.includes('--update');
-    const { graph, fileCount, reExtracted, reused } = await buildFromRepo(root, out, { update });
-    if (out === cacheFor(root)) registerUse(root, graph, git(root, 'rev-parse', 'HEAD'));
+    const { graph, fileCount, reExtracted, reused, lanes } = await buildFromRepo(root, out, { update, lanes: !argv.includes('--no-lanes') });
+    if (out === buildCacheFor(root)) registerUse(root, graph, git(root, 'rev-parse', 'HEAD'));
     const c = graph.edge_confidence_counts;
     process.stdout.write(
         `✅  code-graph ${update ? 'updated' : 'built'} — ${fileCount} files · ${graph.nodes.length} nodes · ${graph.edges.length} edges\n` +
@@ -242,10 +277,22 @@ async function cmdBuild(argv: string[]): Promise<number> {
             `    edges: EXTRACTED ${c.EXTRACTED} · INFERRED ${c.INFERRED} · AMBIGUOUS ${c.AMBIGUOUS}\n` +
             `    resolved_via: ${resolvedViaHistogram(graph)}\n` +
             (update ? `    incremental: ${reExtracted} re-extracted · ${reused} reused\n` : '') +
+            (lanes ? laneSummaryLines(lanes) : '') +
             (out ? `    cache: ${shown(root, out)}\n` : '') +
             legacyCacheNotice(root),
     );
     return 0;
+}
+
+/** One line per lane reader, then what failed and what the merge refused. */
+function laneSummaryLines(l: LaneSummary): string {
+    const ok = l.runs.filter((r) => !r.error).map((r) => `${r.lane} ${r.facts}/${r.relations}${r.outside ? ` (+${r.outside} outside the graph)` : ''} (${r.ms} ms)`);
+    const failed = l.runs.filter((r) => r.error).map((r) => `    lane ${r.lane} failed, left out: ${r.error}\n`);
+    return (
+        `    lanes (facts/relations): ${ok.join(' · ') || '(none)'} · ${l.ms} ms\n` +
+        failed.join('') +
+        (l.refused.length ? `    lane merge refused ${l.refused.length}: ${l.refused.slice(0, 3).map((x) => `${x.lane} ${x.item} — ${x.reason}`).join('; ')}\n` : '')
+    );
 }
 
 /**
@@ -341,14 +388,25 @@ function resolveGraph(argv: string[]): { g: LoadedGraph; note: string } | { err:
     const root = resolveRoot(argv);
     if (explicit) {
         if (!fs.existsSync(explicit)) return { err: `graph not found: ${explicit}` };
-        return { g: loadGraph(explicit, path.relative(root, explicit)), note: '' };
+        return { g: withOverlay(loadGraph(explicit, path.relative(root, explicit))), note: '' };
     }
     const picked = pickSource(detectSources(root, cacheFor(root)));
     if (!picked) return { err: 'no code-graph source found — run `code_graph build` or ship a graph.json' };
     if (picked.kind === 'scip') return { err: `${picked.note ?? 'SCIP detected'} — run \`code-graph build\` to merge it into the native graph` };
     const staleNote = picked.stale ? ` ⚠ index is ${picked.commits_behind ?? 'N'} commit(s) behind — rebuild before trusting` : '';
     touchHome(root);
-    return { g: loadGraph(picked.path, `${picked.kind}:${shown(root, picked.path)}`), note: staleNote };
+    return { g: withOverlay(loadGraph(picked.path, `${picked.kind}:${shown(root, picked.path)}`)), note: staleNote };
+}
+
+/** `added` for a fact only the working-tree overlay holds. */
+function overlayStateOf(g: LoadedGraph): (id: string) => ReturnType<typeof overlayState> {
+    const ov = readOverlay(g.answeredBy, graphChecksum(g));
+    return (id) => overlayState(ov, id);
+}
+
+/** Committed facts seen through the working-tree overlay, when `refresh --touched` computed one against this graph. */
+function withOverlay(g: LoadedGraph): LoadedGraph {
+    return overlayView(g, readOverlay(g.answeredBy, graphChecksum(g)));
 }
 
 function render(r: QueryResult, staleNote: string): number {
@@ -439,8 +497,42 @@ function cmdQuery(kind: 'query' | 'explain' | 'affected' | 'path', argv: string[
         }
         return render(graphPath(r.g, a, b, budget), r.note);
     }
+    const kinds = flag(argv, '--kind');
+    const relation = flag(argv, '--relation');
+    const dir = flag(argv, '--direction');
+    if (kinds || relation || dir || flag(argv, '--depth')) {
+        const t = tree(r.g, a, {
+            ...(kinds ? { kinds: kinds.split(',').map((k) => k.trim()).filter(Boolean) } : {}),
+            ...(relation ? { relations: relation.split(',').map((k) => k.trim()).filter(Boolean) } : {}),
+            direction: dir === 'in' || dir === 'out' ? dir : kind === 'affected' ? 'in' : kind === 'query' ? 'out' : 'both',
+            depth: Number(flag(argv, '--depth') ?? (kind === 'query' ? 1 : 2)),
+            limit: Number(flag(argv, '--limit') ?? 50),
+            stateOf: overlayStateOf(r.g),
+        });
+        process.stdout.write(`source: ${t.source}${r.note}\n`);
+        if (t.seeds.length) process.stdout.write(`seeds: ${t.seeds.join(', ')}\n`);
+        process.stdout.write(`population: ${t.population}\n`);
+        for (const l of t.tree) process.stdout.write(`  ${l}\n`);
+        process.stdout.write(`returned ${t.returned} of ${t.total}${t.hasMore ? ' (more — raise --limit)' : ''}\n`);
+        if (t.items.some((i) => i.direction === 'in')) renderUsage(r.g, argv, a);
+        return 0;
+    }
     const fn = kind === 'query' ? query : kind === 'explain' ? explain : affected;
-    return render(fn(r.g, a, budget), r.note);
+    const rc = render(fn(r.g, a, budget), r.note);
+    if (kind === 'affected') renderUsage(r.g, argv, a);
+    return rc;
+}
+
+/** A usage answer is a lower bound: pair it with a text search for the seed's name. */
+function renderUsage(g: LoadedGraph, argv: string[], seed: string): void {
+    const ids = resolveSeeds(g, seed, 1);
+    if (ids.length === 0) return;
+    const root = resolveRoot(argv);
+    const users = tree(g, ids[0] as string, { direction: 'in', depth: 2, limit: 10_000 }).items.map((i) => i.id);
+    const lb = usageLowerBound(g, root, flag(argv, '--graph') ?? g.answeredBy, ids[0] as string, users);
+    if (!lb) return;
+    process.stdout.write(`usage: ${lb.line}\n`);
+    for (const at of lb.text_only_at) process.stdout.write(`  text only: ${at}\n`);
 }
 
 function isFlagValue(argv: string[], token: string): boolean {
@@ -528,6 +620,31 @@ function cmdImpact(argv: string[]): number {
     } finally {
         r.g.close();
     }
+}
+
+/**
+ * `review-risk [--diff <rev>]` — the diff's hunks against the graph as a sum of
+ * terms, each counted fact listed with its witness. Without `--diff` the
+ * working tree is set against HEAD.
+ */
+function cmdReviewRisk(argv: string[]): number {
+    const root = resolveRoot(argv);
+    const rev = flag(argv, '--diff') ?? 'HEAD';
+    const hunks = diffHunks(root, rev);
+    if (hunks === null) {
+        process.stderr.write(`code-graph: cannot resolve rev '${rev}' in ${root}\n`);
+        return 1;
+    }
+    const p = flag(argv, '--graph') ?? cacheFor(root);
+    if (!fs.existsSync(p)) {
+        process.stderr.write(`code-graph: graph not found: ${p} — run \`code-graph build\` first\n`);
+        return 1;
+    }
+    const graph = JSON.parse(fs.readFileSync(p, 'utf-8')) as CodeGraph;
+    const r = reviewRisk(root, graph, rev, hunks);
+    if (argv.includes('--json')) process.stdout.write(`${JSON.stringify(r)}\n`);
+    else process.stdout.write(`${renderReviewRisk(r).join('\n')}\n`);
+    return 0;
 }
 
 /** `tests-for <symbol>` (3.2) — the test files that import the symbol. */
@@ -801,7 +918,7 @@ function treeStamp(root: string): string {
 /** Returned by {@link runBudgetedBuild} when HEAD or the working tree moved while the child built. */
 const HEAD_MOVED = -1;
 
-function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeconds: number): number {
+function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeconds: number, allowShrink = false): number {
     if (!(budgetSeconds > 0)) {
         // Node's own `timeout` option treats 0 as "no limit" — a genuinely
         // zero-or-negative budget is an immediate, deterministic abort
@@ -867,6 +984,13 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
         process.stderr.write('code-graph: files changed during the refresh — result discarded\n');
         return HEAD_MOVED;
     }
+    const shrink = shrinkCheck(root, out, tmpOut, { basis: headSha(root) ?? 'no-commit' });
+    if (!shrink.ok && !allowShrink) {
+        cleanupTemp(tmpOut);
+        process.stderr.write(`code-graph: ${renderShrink(shrink)}\n`);
+        return 1;
+    }
+    if (shrink.tombstones.length > 0) writeTombstones(verifyPaths(out).tombstones, shrink.tombstones);
     fs.renameSync(tmpOut, out); // same-dir → atomic; real cache only ever changes here
     const tmpSidecar = sidecarPath(tmpOut);
     if (fs.existsSync(tmpSidecar)) fs.renameSync(tmpSidecar, sidecarPath(out));
@@ -887,7 +1011,7 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
  */
 async function cmdRefresh(argv: string[]): Promise<number> {
     const root = resolveRoot(argv);
-    const out = flag(argv, '--out') ?? cacheFor(root);
+    const out = flag(argv, '--out') ?? buildCacheFor(root);
     const budgetSeconds = budgetSecondsOf(argv);
     if (!fs.existsSync(root)) {
         process.stderr.write(`code-graph: root not found: ${root}\n`);
@@ -915,7 +1039,7 @@ async function cmdRefresh(argv: string[]): Promise<number> {
                 rc = 0;
                 break;
             }
-            rc = runBudgetedBuild(root, out, v.verdict === 'STALE', budgetSeconds);
+            rc = runBudgetedBuild(root, out, v.verdict === 'STALE', budgetSeconds, argv.includes('--allow-shrink'));
         }
         if (rc === HEAD_MOVED) {
             record('tree-moved', 'HEAD or files changed during both attempts; the next refresh retries');
@@ -925,7 +1049,7 @@ async function cmdRefresh(argv: string[]): Promise<number> {
             record('failed', `build exited ${rc}`);
             return rc;
         }
-        if (out === cacheFor(root)) registerUse(root, null, git(root, 'rev-parse', 'HEAD'));
+        if (out === buildCacheFor(root)) registerUse(root, null, git(root, 'rev-parse', 'HEAD'));
         if (argv.includes('--map') && mapIsBehind(root, out)) {
             const mrc = await drawMap(['--root', root, '--no-build', '--no-verify']);
             record(mrc === 0 ? 'refreshed-with-map' : 'map-failed', mrc === 0 ? undefined : `map exited ${mrc}`);
@@ -958,8 +1082,10 @@ function cmdAutoRefresh(argv: string[]): number {
             );
             return 1;
         }
-        fs.mkdirSync(path.dirname(marker), { recursive: true });
-        fs.writeFileSync(marker, `${JSON.stringify({ enabled_at: new Date().toISOString() })}\n`);
+        const now = path.join(home.buildDir, path.basename(marker));
+        fs.mkdirSync(home.buildDir, { recursive: true });
+        fs.writeFileSync(now, `${JSON.stringify({ enabled_at: new Date().toISOString() })}\n`);
+        if (now !== marker) fs.rmSync(marker, { force: true });
         const cli = usableCli(root);
         process.stdout.write(
             'auto-refresh on — each agent session start refreshes the graph, and agents/map/ when it exists,\n' +
@@ -977,7 +1103,7 @@ function cmdAutoRefresh(argv: string[]): number {
         return 0;
     }
     if (action === 'off') {
-        fs.rmSync(marker, { force: true });
+        for (const m of new Set([marker, path.join(home.buildDir, path.basename(marker)), path.join(home.legacyDir, path.basename(marker))])) fs.rmSync(m, { force: true });
         process.stdout.write('auto-refresh off\n');
         return 0;
     }
@@ -998,7 +1124,7 @@ function cmdAutoRefresh(argv: string[]): number {
             `last session start: ${line(last['session-start'])}\n` +
             `last refresh: ${line(last.refresh)}\n` +
             `graph: ${computeVerdict(root, cacheFor(root)).verdict}\n` +
-            `map: ${!fs.existsSync(mapDir) ? 'absent' : drawnFrom === null ? 'present (generation unknown — redrawn on the next refresh)' : drawnFrom === gen ? 'present, drawn from the current graph' : 'present, drawn from an older graph'}\n` +
+            `map: ${!hasMap(mapDir) ? 'absent' : drawnFrom === null ? 'present (generation unknown — redrawn on the next refresh)' : drawnFrom === gen ? 'present, drawn from the current graph' : 'present, drawn from an older graph'}\n` +
             (fs.existsSync(mutex) && mutexAgeMs(mutex) > 60_000
                 ? `reclaim mutex: ${shown(root, mutex)} left by a crash — stale locks stay held until it is removed by hand\n`
                 : ''),
@@ -1021,7 +1147,7 @@ function mutexAgeMs(p: string): number {
  */
 function mapIsBehind(root: string, cache: string): boolean {
     const mapDir = graphHome(root).mapDir;
-    if (!fs.existsSync(mapDir)) return false;
+    if (!hasMap(mapDir)) return false;
     const gen = graphGeneration(cache);
     return gen !== null && mapGeneration(mapDir) !== gen;
 }
@@ -1033,6 +1159,7 @@ function mapIsBehind(root: string, cache: string): boolean {
  */
 async function cmdMap(argv: string[]): Promise<number> {
     if (argv.includes('--estate')) return estateMapMain(argv);
+    if (argv.includes('--demo')) return cmdMapDemo(argv);
     const root = resolveRoot(argv);
     if (!fs.existsSync(root)) {
         process.stderr.write(`code-graph: root not found: ${root}\n`);
@@ -1057,6 +1184,43 @@ async function cmdMap(argv: string[]): Promise<number> {
     } finally {
         release();
     }
+}
+
+/**
+ * `map --demo [--out DIR] [--open] [--no-verify]` — the map and the hub drawn
+ * from the demo fixture (`map_demo.ts`), for frontend work in a repository that
+ * has no data, contracts or pipelines of its own.
+ */
+async function cmdMapDemo(argv: string[]): Promise<number> {
+    const root = resolveRoot(argv);
+    const out = flag(argv, '--out');
+    const { buildDemoMap } = await import('./map_demo.js');
+    let r: Awaited<ReturnType<typeof buildDemoMap>>;
+    try {
+        r = await buildDemoMap(root, out ? { outDir: path.resolve(out) } : {});
+    } catch (e) {
+        process.stderr.write(`code-graph map --demo: ${(e as Error).message}\n`);
+        return 1;
+    }
+    const rel = path.relative(process.cwd(), r.outDir) || '.';
+    process.stdout.write(
+        `✅  code-graph map --demo — ${r.map.meta.summary} · state ${r.map.meta.state}\n` +
+            `    hub: ${r.hubProjects} fixture projects\n` +
+            `    wrote ${path.join(rel, 'index.html')} and ${path.join(rel, 'hub', 'index.html')}\n`,
+    );
+    let rc = 0;
+    if (!argv.includes('--no-verify')) {
+        for (const [page, hash] of [[r.page, ''], [r.hubPage, '#/projects']] as const) {
+            const check = await verifyMap(page, hash ? { hash } : {});
+            process.stdout.write(`    render check ${path.basename(path.dirname(page))}: ${check.verification}${check.reason ? ` — ${check.reason}` : ''}\n`);
+            if (check.verification === 'failed') rc = 1;
+        }
+    }
+    if (argv.includes('--open')) {
+        const { default: open } = await import('open');
+        await open(r.page);
+    }
+    return rc;
 }
 
 /** How long `map` waits for a background refresh to release the lock. */
@@ -1088,7 +1252,7 @@ async function drawMap(argv: string[]): Promise<number> {
                 : '    keep it current at every agent session start: agent-config code-graph auto-refresh on\n'),
     );
     let rc = 0;
-    const renderFile = path.join(r.outDir, 'map-render.json');
+    const renderFile = path.join(r.outDir, '.build', 'map-render.json');
     if (argv.includes('--no-verify')) {
         // A check that names the generation it checked can stay beside a newer
         // map without being read as about it; one that names none cannot.
@@ -1189,11 +1353,15 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'build') return await cmdBuild(argv.slice(1));
         if (sub === 'validate') return cmdValidate(argv.slice(1));
         if (sub === 'detect') return cmdDetect(argv.slice(1));
+        if (sub === 'refresh' && argv.includes('--touched')) return await verifyMain('refresh', argv.slice(1), resolveRoot(argv.slice(1)), flag(argv, '--graph') ?? cacheFor(resolveRoot(argv.slice(1))));
         if (sub === 'refresh') return await cmdRefresh(argv.slice(1));
+        if (sub === 'confirm' || sub === 'pack' || sub === 'rebuild-diff')
+            return await verifyMain(sub, argv.slice(1), resolveRoot(argv.slice(1)), flag(argv, '--graph') ?? cacheFor(resolveRoot(argv.slice(1))));
         if (sub === 'query' || sub === 'explain' || sub === 'affected' || sub === 'path')
             return cmdQuery(sub, argv.slice(1));
         if (sub === 'impact') return cmdImpact(argv.slice(1));
         if (sub === 'tests-for') return cmdTestsFor(argv.slice(1));
+        if (sub === 'review-risk') return cmdReviewRisk(argv.slice(1));
         if (sub === 'untested') return cmdUntested(argv.slice(1));
         if (sub === 'dead') return cmdDead(argv.slice(1));
         if (sub === 'suggest-verb') return cmdSuggestVerb(argv.slice(1));
@@ -1207,7 +1375,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'estate') return estateMain(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|tests-for|untested|dead|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
+                'impact|review-risk|tests-for|untested|dead|confirm|pack|rebuild-diff|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
         );
         return 2;
     } catch (e) {

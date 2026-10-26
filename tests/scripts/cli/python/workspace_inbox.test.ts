@@ -421,7 +421,6 @@ describe('workspace_inbox — write + read + list + forget', () => {
 
           ## Gotcha
 
-          - All PHP commands (artisan, composer, phpunit) must run INSIDE the PHP container — never on the host.
           - The fast container and Xdebug container share the same codebase but have different PHP configs — don't confuse them.
           - \`docker compose down -v\` destroys volumes including the database — use \`down\` without \`-v\` unless you mean it.
           - The model forgets to use \`docker compose exec -T\` (no TTY) when running in scripts or CI.
@@ -439,6 +438,7 @@ describe('workspace_inbox — write + read + list + forget', () => {
           - **Skill:** \`devcontainer\` — DevContainer and Codespaces setup
           - **Skill:** \`php-debugging\` — Xdebug dual-container architecture
           - **Rule:** \`docker-commands.md\` — all PHP commands run inside Docker
+          - **Map facts:** [\`references/map-runtime-facts.md\`](references/map-runtime-facts.md)
 
           "
         `);

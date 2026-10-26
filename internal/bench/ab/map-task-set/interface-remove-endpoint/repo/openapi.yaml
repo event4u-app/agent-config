@@ -1,0 +1,16 @@
+openapi: 3.0.3
+info:
+  title: Stats API
+  version: 1.0.0
+paths:
+  /api/v2/stats:
+    get:
+      responses:
+        '200':
+          description: visit count
+  /api/v1/legacy-stats:
+    get:
+      deprecated: true
+      responses:
+        '200':
+          description: hit count

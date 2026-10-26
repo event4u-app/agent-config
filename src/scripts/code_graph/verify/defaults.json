@@ -1,0 +1,11 @@
+{
+    "shrink_share": 0.2,
+    "move_window_lines": 40,
+    "max_span_lines": 30,
+    "pack_budget_tokens": 1500,
+    "pack_depth": 2,
+    "pack_seed_tokens": 40,
+    "text_search_shown": 20,
+    "tombstones_kept": 500,
+    "confirm_neighbours": 20
+}

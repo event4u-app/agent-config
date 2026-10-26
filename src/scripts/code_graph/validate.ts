@@ -4,19 +4,12 @@
  */
 import { type CodeGraph, GUESS_RESOLVED_VIA, STATED_RESOLVED_VIA } from './types.js';
 
-/** One space-separated string per vocabulary: this module ships in the hook bundle, paid on every dispatch. */
-const words = (s: string): ReadonlySet<string> => new Set(s.split(' '));
-
-/** Mirrors `Relation` in types.ts. `tests` is derived by the build pass (3.2),
- * not extracted, and is validated on exactly the same terms as the rest. */
-const RELATIONS = words(
-    'calls imports uses inherits member tests routes-to renders includes reads migrates persists relates injects documents',
-);
 const CONFIDENCES = new Set(['EXTRACTED', 'INFERRED', 'AMBIGUOUS']);
 /** Every `ResolvedVia` member: the trust lists in types.ts, so the two cannot drift. */
 const RESOLVED_VIA: ReadonlySet<string> = new Set([...STATED_RESOLVED_VIA, ...GUESS_RESOLVED_VIA]);
 const PROVIDERS = new Set(['native', 'foreign', 'scip']);
-const KINDS = words('file class interface trait function method constant type enum skipped route table');
+/** Shape only: membership is `vocabularyErrors` in vocabulary.ts, kept out of the hook bundle. */
+const WORD = /^[a-z][a-z-]*$/;
 
 export interface ValidateResult {
     ok: boolean;
@@ -34,6 +27,8 @@ export function validateGraph(g: unknown): ValidateResult {
     if (typeof obj['source_checksum'] !== 'string') push('source_checksum must be a string');
     if (!Array.isArray(obj['nodes'])) push('nodes must be an array');
     if (!Array.isArray(obj['edges'])) push('edges must be an array');
+    const lr = obj['lanes_run'] as Array<{ lane?: unknown; facts?: unknown; relations?: unknown; error?: unknown }> | undefined;
+    if (lr && !(Array.isArray(lr) && lr.every((r) => WORD.test(String(r?.lane)) && [r.facts, r.relations].every(Number.isInteger) && typeof (r.error ?? '') == 'string'))) push('bad lanes_run');
     if (errors.length) return { ok: false, errors };
 
     const nodes = obj['nodes'] as unknown[];
@@ -47,7 +42,7 @@ export function validateGraph(g: unknown): ValidateResult {
         // of them ambiguous — so it is a schema error, not a warning.
         else if (ids.has(nn['id'])) push(`node[${i}].id is a duplicate: ${nn['id']}`);
         else ids.add(nn['id']);
-        if (!KINDS.has(nn['kind'] as string)) push(`node[${i}].kind invalid: ${String(nn['kind'])}`);
+        if (!WORD.test(String(nn['kind']))) push(`node[${i}].kind invalid: ${String(nn['kind'])}`);
         if (typeof nn['source_file'] !== 'string') push(`node[${i}].source_file must be a string`);
         if (!Array.isArray(nn['source_location'])) push(`node[${i}].source_location must be an array`);
     });
@@ -57,7 +52,7 @@ export function validateGraph(g: unknown): ValidateResult {
         const ee = e as Record<string, unknown>;
         if (typeof ee['source'] !== 'string') push(`edge[${i}].source must be a string`);
         if (typeof ee['target'] !== 'string') push(`edge[${i}].target must be a string`);
-        if (!RELATIONS.has(ee['relation'] as string)) push(`edge[${i}].relation invalid: ${String(ee['relation'])}`);
+        if (!WORD.test(String(ee['relation']))) push(`edge[${i}].relation invalid: ${String(ee['relation'])}`);
         if (!CONFIDENCES.has(ee['confidence'] as string))
             push(`edge[${i}].confidence invalid: ${String(ee['confidence'])}`);
         // Both are REQUIRED (2.2). Checked as presence-and-membership rather

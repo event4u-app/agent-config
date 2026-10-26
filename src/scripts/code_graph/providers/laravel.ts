@@ -20,7 +20,12 @@ import * as path from 'node:path';
 import type { SourceFile } from '../build.js';
 import type { FileRole } from '../map_model.js';
 import { psr4RulesFrom, resolvePsr4, type ResolutionConfig } from '../resolution_tiers.js';
-import type { CodeEdge, CodeNode } from '../types.js';
+import { readLaravelSchema } from '../../_lib/schema/readers/laravel_migrations.js';
+import { isFixturePath } from '../fixture_paths.js';
+import { replay, tableMap } from '../../_lib/schema/replay.js';
+import { spanHash } from '../lanes/lane_fact.js';
+import type { CodeEdge, CodeNode, FactMeta } from '../types.js';
+import { columnId, schemaGraph, tableId } from './shared/schema_graph.js';
 import type { ConventionProvider, ProjectProbe } from './types.js';
 
 export interface LaravelOverlayStats {
@@ -88,7 +93,24 @@ const ROUTE_BUILDER_METHODS = new Set([
     'missing',
     'can',
 ]);
-const MODEL_BASES = new Set(['Model', 'Authenticatable', 'Pivot', 'MorphPivot', 'User']);
+/** The framework's own model base classes, by fully-qualified name; an app class's name never makes a model. */
+const MODEL_BASES = new Set([
+    'Illuminate\\Database\\Eloquent\\Model',
+    'Illuminate\\Foundation\\Auth\\User',
+    'Illuminate\\Database\\Eloquent\\Relations\\Pivot',
+    'Illuminate\\Database\\Eloquent\\Relations\\MorphPivot',
+]);
+const FACADES = 'App Artisan Auth Blade Broadcast Bus Cache Config Cookie Crypt Date DB Event File Gate Hash Http Lang Log Mail Notification Password Process Queue RateLimiter Redirect Redis Request Response Route Schema Session Storage URL Validator View';
+/** Static receivers that leave the repository: the framework's facades (and their global aliases) and common SDK clients. */
+const HELD_RECEIVERS: readonly string[] = [
+    ...FACADES.split(' ').flatMap((n) => [`Illuminate\\Support\\Facades\\${n}`, n]),
+    'GuzzleHttp\\Client',
+    'SoapClient',
+    'Stripe\\Stripe',
+    'Stripe\\StripeClient',
+    'Aws\\S3\\S3Client',
+    'Twilio\\Rest\\Client',
+];
 const RELATION_METHODS =
     'hasOne|hasMany|belongsTo|belongsToMany|hasOneThrough|hasManyThrough|morphOne|morphMany|morphToMany|morphedByMany';
 
@@ -172,6 +194,70 @@ function snakePlural(name: string): string {
     return `${snake}s`;
 }
 
+function isMigrationPath(p: string): boolean {
+    return /(^|\/)migrations\//.test(p);
+}
+
+/** Offset of the `]` closing the `[` at `open`, skipping quoted strings; -1 when unbalanced. */
+function matchingBracket(src: string, open: number): number {
+    let depth = 0;
+    for (let i = open; i < src.length; i++) {
+        const c = src[i];
+        if (c === "'" || c === '"') {
+            for (i += 1; i < src.length && src[i] !== c; i++) if (src[i] === '\\') i += 1;
+            continue;
+        }
+        if (c === '[') depth += 1;
+        else if (c === ']') {
+            depth -= 1;
+            if (depth === 0) return i;
+        }
+    }
+    return -1;
+}
+
+function snake(name: string): string {
+    return name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
+}
+
+/** Quoted string arguments in the text after a relation's `X::class`. */
+function stringArgs(rest: string): string[] {
+    return [...rest.matchAll(/'([^']*)'|"([^"]*)"/g)].map((m) => (m[1] ?? m[2]) as string);
+}
+
+interface RelationShape {
+    kind: '1:1' | '1:n' | 'n:1' | 'n:m' | 'polymorphic';
+    /** The join column, by the framework's naming rule unless the call names it. */
+    key: string;
+    /** Which table carries `key`: the declaring model's, the related model's, or the pivot. */
+    keyOn: 'own' | 'target' | 'pivot' | 'none';
+    pivot?: string;
+}
+
+/** Cardinality and join key of one relation call, by the framework's own defaults. */
+function relationShape(call: string, own: string, target: string, method: string, args: string[]): RelationShape {
+    const ownKey = `${snake(own)}_id`;
+    switch (call) {
+        case 'hasOne':
+            return { kind: '1:1', key: args[0] ?? ownKey, keyOn: 'target' };
+        case 'hasMany':
+            return { kind: '1:n', key: args[0] ?? ownKey, keyOn: 'target' };
+        case 'belongsTo':
+            return { kind: 'n:1', key: args[0] ?? `${snake(method)}_id`, keyOn: 'own' };
+        case 'belongsToMany':
+            return { kind: 'n:m', key: args[1] ?? ownKey, keyOn: 'pivot', pivot: args[0] ?? [snake(own), snake(target)].sort().join('_') };
+        case 'hasOneThrough':
+            return { kind: '1:1', key: args[0] ?? ownKey, keyOn: 'none' };
+        case 'hasManyThrough':
+            return { kind: '1:n', key: args[0] ?? ownKey, keyOn: 'none' };
+        case 'morphOne':
+        case 'morphMany':
+            return { kind: 'polymorphic', key: `${args[0] ?? snake(method)}_id`, keyOn: 'target' };
+        default:
+            return { kind: 'polymorphic', key: `${args[0] ?? snake(method)}_id`, keyOn: 'pivot', pivot: args[1] ?? snakePlural(args[0] ?? method) };
+    }
+}
+
 export function buildLaravelOverlay(
     files: readonly SourceFile[],
     baseNodes: readonly CodeNode[],
@@ -201,11 +287,11 @@ export function buildLaravelOverlay(
     const nodes: CodeNode[] = [];
     const edges: CodeEdge[] = [];
     const seenEdge = new Set<string>();
-    const emit = (source: string, target: string, relation: CodeEdge['relation'], via: CodeEdge['resolved_via']): void => {
+    const emit = (source: string, target: string, relation: CodeEdge['relation'], via: CodeEdge['resolved_via'], fact?: FactMeta): void => {
         const key = `${source}\0${relation}\0${target}`;
         if (seenEdge.has(key)) return;
         seenEdge.add(key);
-        edges.push({ source, target, relation, confidence: 'EXTRACTED', resolved_via: via, provider: 'native' });
+        edges.push({ source, target, relation, confidence: 'EXTRACTED', resolved_via: via, provider: 'native', ...(fact ? { fact } : {}) });
     };
 
     // Innermost function/method node per file, by line, for attributing a
@@ -366,82 +452,121 @@ export function buildLaravelOverlay(
         }
     }
 
-    // Tables, from the migrations that create or change them.
-    const tableNodes = new Map<string, string>();
-    const migrations = php.filter((f) => /(^|\/)migrations\//.test(f.path)).sort((a, b) => (a.path < b.path ? -1 : 1));
-    for (const f of migrations) {
-        const at = lineIndex(f.source);
-        for (const m of f.source.matchAll(/Schema::(create|table)\(\s*(['"])(\w+)\2/g)) {
-            const table = m[3] as string;
-            let id = tableNodes.get(table);
-            if (!id) {
-                id = `table:${table}`;
-                tableNodes.set(table, id);
-                const line = at(m.index as number);
-                nodes.push({ id, label: table, kind: 'table', source_file: f.path, source_location: [line, 1, line, 1] });
-                stats.tables += 1;
-            }
-            emit(f.path, id, 'migrates', 'schema-call');
-        }
-    }
+    // Tables and columns, by replaying the migrations in apply order per
+    // connection: a table created and later dropped is no node, an index added
+    // and later dropped is no index. Migrations in a test, fixture or benchmark
+    // tree describe a schema the project ships to its tests, not its own.
+    const config = files.find((f) => f.path === `${prefix}config/database.php`)?.source ?? null;
+    const schemaRead = readLaravelSchema(php.filter((f) => !isFixturePath(f.path)), config);
+    const schema = replay({ ops: schemaRead.ops, engines: schemaRead.engines });
+    const schemaFacts = schemaGraph(schema, new Set([...nodeById.keys()]));
+    for (const n of schemaFacts.nodes) nodes.push(n);
+    for (const e of schemaFacts.edges) emit(e.source, e.target, e.relation, e.resolved_via, e.fact);
+    stats.tables = schemaFacts.nodes.filter((n) => n.kind === 'table').length;
+    const liveTables = new Map(schema.connections.map((c) => [c.connection, tableMap(c)] as const));
+    const connectionOf = (name: string | undefined): string => (!name || name === schemaRead.defaultName ? '' : name);
 
-    // Models: classes whose parent chain reaches an Eloquent base, by short name.
-    const classDecl = new Map<string, { file: SourceFile; parent: string; abstract: boolean; scope: PhpScope }>();
+    // Models: classes whose parent chain reaches a framework model base, by
+    // fully-qualified name — `class User extends Authenticatable` is a model
+    // because `Authenticatable` imports the framework's `User`, not because of
+    // either short name.
+    const classDecl = new Map<string, { file: SourceFile; fq: string; parentFq: string; abstract: boolean; scope: PhpScope }>();
     for (const f of php) {
         if (blade(f.path)) continue;
         const scope = phpScope(f.source);
         for (const m of f.source.matchAll(/(abstract\s+)?class\s+(\w+)\s+extends\s+([\\\w]+)/g)) {
-            classDecl.set(`${f.path}#${m[2] as string}`, {
+            const name = m[2] as string;
+            classDecl.set(`${f.path}#${name}`, {
                 file: f,
-                parent: shortName(m[3] as string),
+                fq: scope.namespace ? `${scope.namespace}\\${name}` : name,
+                parentFq: qualify(m[3] as string, scope),
                 abstract: Boolean(m[1]),
                 scope,
             });
         }
     }
-    const modelNames = new Set(MODEL_BASES);
+    const modelFqs = new Set(MODEL_BASES);
     for (let changed = true; changed; ) {
         changed = false;
-        for (const [id, d] of classDecl) {
-            const name = id.split('#')[1] as string;
-            if (!modelNames.has(name) && modelNames.has(d.parent)) {
-                modelNames.add(name);
+        for (const d of classDecl.values()) {
+            if (!modelFqs.has(d.fq) && modelFqs.has(d.parentFq)) {
+                modelFqs.add(d.fq);
                 changed = true;
             }
         }
     }
+    const isModel = (id: string, d: { fq: string; parentFq: string }): boolean =>
+        modelFqs.has(d.parentFq) && !MODEL_BASES.has(d.fq) && nodeById.has(id);
     // `$table` is inherited: a model whose ancestor names its table persists
     // there, and the naming convention applies only when no ancestor names one.
-    const byShortName = new Map<string, { source: string; parent: string }>();
-    for (const [id, d] of classDecl) byShortName.set(id.split('#')[1] as string, { source: d.file.source, parent: d.parent });
-    const inheritedTable = (name: string): string | undefined => {
+    const byFq = new Map<string, { source: string; parentFq: string }>();
+    for (const d of classDecl.values()) byFq.set(d.fq, { source: d.file.source, parentFq: d.parentFq });
+    const inheritedTable = (fq: string): string | undefined => {
         const seen = new Set<string>();
-        for (let cur: string | undefined = name; cur && !seen.has(cur); ) {
+        for (let cur: string | undefined = fq; cur && !seen.has(cur); ) {
             seen.add(cur);
-            const decl = byShortName.get(cur);
+            const decl = byFq.get(cur);
             if (!decl) return undefined;
             const own = /protected\s+\$table\s*=\s*['"](\w+)['"]/.exec(decl.source)?.[1];
             if (own) return own;
-            cur = decl.parent;
+            cur = decl.parentFq;
         }
         return undefined;
     };
+    const inheritedConnection = (fq: string): string => {
+        const seen = new Set<string>();
+        for (let cur: string | undefined = fq; cur && !seen.has(cur); ) {
+            seen.add(cur);
+            const decl = byFq.get(cur);
+            if (!decl) return '';
+            const own = /protected\s+\$connection\s*=\s*['"](\w+)['"]/.exec(decl.source)?.[1];
+            if (own) return connectionOf(own);
+            cur = decl.parentFq;
+        }
+        return '';
+    };
+    /** A model's table: `[connection, name]`, whether or not a migration created it. */
+    const modelTable = new Map<string, { connection: string; table: string | null }>();
+    for (const [id, d] of classDecl) {
+        if (!isModel(id, d)) continue;
+        const explicit = inheritedTable(d.fq);
+        modelTable.set(id, { connection: inheritedConnection(d.fq), table: explicit ?? (d.abstract ? null : snakePlural(id.split('#')[1] as string)) });
+    }
+    const columnOf = (connection: string, table: string | null, column: string): string | null => {
+        if (!table || !liveTables.get(connection)?.get(table)?.columns.some((c) => c.name === column)) return null;
+        return columnId(connection, table, column);
+    };
     for (const [id, d] of [...classDecl.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
+        if (!isModel(id, d)) continue;
         const name = id.split('#')[1] as string;
-        if (!modelNames.has(d.parent) || MODEL_BASES.has(name) || !nodeById.has(id)) continue;
         stats.models += 1;
-        const explicit = inheritedTable(name);
-        const table = explicit ?? (d.abstract ? null : snakePlural(name));
-        const tableId = table ? tableNodes.get(table) : undefined;
-        if (tableId) emit(id, tableId, 'persists', 'schema-call');
+        const own = modelTable.get(id) as { connection: string; table: string | null };
+        if (own.table && liveTables.get(own.connection)?.has(own.table)) emit(id, tableId(own.connection, own.table), 'persists', 'schema-call');
         const at = lineIndex(d.file.source);
-        for (const m of d.file.source.matchAll(new RegExp(`\\$this->(?:${RELATION_METHODS})\\(\\s*([\\\\\\w]+)::class`, 'g'))) {
-            const fq = qualify(m[1] as string, d.scope);
+        for (const m of d.file.source.matchAll(new RegExp(`\\$this->(${RELATION_METHODS})\\(\\s*([\\\\\\w]+)::class([^)]*)\\)`, 'g'))) {
+            const fq = qualify(m[2] as string, d.scope);
             const file = classFile(fq);
             const target = file ? `${file}#${shortName(fq)}` : null;
             if (!target || !nodeById.has(target)) continue;
-            emit(enclosing(d.file.path, at(m.index as number)), target, 'relates', 'orm-relation');
+            const offset = m.index as number;
+            const source = enclosing(d.file.path, at(offset));
+            const method = source.includes('::') ? (source.split('::').pop() as string) : name;
+            const shape = relationShape(m[1] as string, name, shortName(fq), method, stringArgs(m[3] ?? ''));
+            const line = at(offset);
+            const lineText = d.file.source.split('\n')[line - 1] ?? '';
+            const relFact: FactMeta = {
+                owner: d.file.path,
+                witness: { file: d.file.path, line, hash: spanHash(lineText.trim()) },
+                rung: 'T1',
+                attrs: { kind: shape.kind, method: m[1] as string, key: shape.key, ...(shape.pivot ? { pivot: shape.pivot } : {}) },
+            };
+            emit(source, target, 'relates', 'orm-relation', relFact);
             stats.relations += 1;
+            // The key column the relation joins on, on whichever table holds it.
+            const other = modelTable.get(target);
+            const keyTable = shape.keyOn === 'own' ? own : shape.keyOn === 'target' ? other : shape.pivot ? { connection: own.connection, table: shape.pivot } : undefined;
+            const keyColumn = keyTable ? columnOf(keyTable.connection, keyTable.table, shape.key) : null;
+            if (keyColumn) emit(source, keyColumn, 'uses', 'orm-relation', relFact);
         }
     }
 
@@ -450,10 +575,7 @@ export function buildLaravelOverlay(
     // than from the file's `use` lines (which attribute every model of the file
     // to every route the file serves).
     const modelIds = new Set<string>();
-    for (const [id, d] of classDecl) {
-        const name = id.split('#')[1] as string;
-        if (modelNames.has(d.parent) && !MODEL_BASES.has(name) && nodeById.has(id)) modelIds.add(id);
-    }
+    for (const [id, d] of classDecl) if (isModel(id, d)) modelIds.add(id);
     if (modelIds.size > 0) {
         for (const f of php) {
             if (blade(f.path)) continue;
@@ -480,11 +602,61 @@ export function buildLaravelOverlay(
         }
     }
 
+    // Columns a query chain on a model names: `Comment::where('post_id', …)`
+    // reads `comments.post_id`; `Comment::create(['body' => …])` writes
+    // `comments.body`. Only literal column names on a model this tree maps to a
+    // replayed table — a dynamic name or an unmapped class draws nothing.
+    if (modelTable.size > 0) {
+        for (const f of php) {
+            if (blade(f.path) || isMigrationPath(f.path)) continue;
+            const scope = phpScope(f.source);
+            const at = lineIndex(f.source);
+            const lines = f.source.split('\n');
+            for (const m of f.source.matchAll(/\b([A-Z]\w*)::(?:query\(\)\s*->\s*)?(?=where|whereIn|whereNotIn|whereNull|whereNotNull|firstWhere|orderBy|orderByDesc|pluck|create|insert|updateOrCreate|firstOrCreate)/g)) {
+                const fq = qualify(m[1] as string, scope);
+                const file = classFile(fq);
+                const model = file ? `${file}#${shortName(fq)}` : null;
+                const mapped = model ? modelTable.get(model) : undefined;
+                if (!mapped?.table) continue;
+                const start = m.index as number;
+                const end = f.source.indexOf(';', start);
+                const stmt = f.source.slice(start, end < 0 ? f.source.length : end);
+                const edgeAt = (local: number, relation: 'reads' | 'writes', column: string): void => {
+                    const target = columnOf(mapped.connection, mapped.table, column);
+                    if (!target) return;
+                    const line = at(start + local);
+                    emit(enclosing(f.path, line), target, relation, 'schema-call', {
+                        owner: f.path,
+                        witness: { file: f.path, line, hash: spanHash((lines[line - 1] ?? '').trim()) },
+                        rung: 'T1',
+                    });
+                };
+                for (const q of stmt.matchAll(/(?:::|->)\s*(?:where|orWhere|whereIn|whereNotIn|whereNull|whereNotNull|firstWhere|orderBy|orderByDesc|pluck)\(\s*['"](\w+)['"]/g)) {
+                    edgeAt(q.index as number, 'reads', q[1] as string);
+                }
+                for (const w of stmt.matchAll(/(?:::|->)\s*(?:create|insert|update|updateOrCreate|firstOrCreate|fill)\(\s*\[/g)) {
+                    const open = (w.index as number) + w[0].length - 1;
+                    const close = matchingBracket(stmt, open);
+                    for (const k of stmt.slice(open, close < 0 ? stmt.length : close).matchAll(/['"](\w+)['"]\s*=>/g)) {
+                        edgeAt(open + (k.index as number), 'writes', k[1] as string);
+                    }
+                }
+            }
+        }
+    }
+
     const routesFiles = new Set(php.filter((x) => x.path.startsWith(`${prefix}routes/`)).map((x) => x.path));
     const dropEdge = (e: CodeEdge): boolean => {
         if (e.relation !== 'calls' || e.resolved_via === 'same-file') return false;
         const src = nodeById.get(e.source);
-        if (!src || !routesFiles.has(src.source_file)) return false;
+        if (!src) return false;
+        // Inside a migration, `$table->index()` and its kin are schema-builder
+        // calls; one that name lookup bound to an in-repo method is false.
+        if (isMigrationPath(src.source_file) && e.resolved_via === 'dynamic' && !e.target.startsWith('symbol:')) {
+            stats.builderCallsDropped += 1;
+            return true;
+        }
+        if (!routesFiles.has(src.source_file)) return false;
         const target = nodeById.get(e.target);
         const name = target ? target.label : e.target.replace(/^symbol:/, '');
         if (!ROUTE_BUILDER_METHODS.has(name)) return false;
@@ -557,4 +729,5 @@ export const laravelProvider: ConventionProvider = {
         return { nodes: [...nodes.values()], edges: [...edges.values()], contest: (e) => contests.some((c) => c(e)) };
     },
     roleOf: laravelRole,
+    heldReceivers: HELD_RECEIVERS,
 };

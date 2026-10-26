@@ -6,7 +6,9 @@
  * from them. Off by default (council O1): with the registry switch off nothing
  * here runs and no file is written.
  *
- * `runtime/projects/index-v1.sqlite3`. A project's rows are replaced, never
+ * `<user-global>/map/.build/estate-index-v1.sqlite3` (ADR-303; an index an
+ * older release wrote at `runtime/projects/index-v1.sqlite3` is read until the
+ * next write copies it across). A project's rows are replaced, never
  * appended, on its next refresh. Edges are labelled by how they are known:
  *
  *   package      A declares a dependency on a package B publishes — a stated fact
@@ -21,6 +23,7 @@ import { readRegistry, registryDir, type RegistryOptions, repoIdOf } from '../_l
 import { isSqliteAvailableSync, loadSqliteSync } from '../_lib/sqlite_guard.js';
 import { isTestFile } from './build.js';
 import { type ManifestFacts, manifestFacts } from './estate_manifests.js';
+import { hubDir } from './graph_home.js';
 import { openGraphIndex, sqliteTwinPath, twinIsCurrent } from './sqlite_store.js';
 import type { CodeGraph } from './types.js';
 
@@ -44,7 +47,19 @@ const KINDS = ['class', 'interface', 'trait', 'function', 'constant', 'type', 'e
 const EXPORT_KINDS: ReadonlySet<string> = new Set(KINDS);
 
 export function indexPath(opts: RegistryOptions = {}): string {
+    return opts.dir !== undefined ? path.join(opts.dir, 'index-v1.sqlite3') : path.join(hubDir(opts.env), '.build', 'estate-index-v1.sqlite3');
+}
+
+/** Where a release before ADR-303 wrote the index. */
+function legacyIndexPath(opts: RegistryOptions): string {
     return path.join(registryDir(opts), 'index-v1.sqlite3');
+}
+
+/** The index a reader opens: the current one, else the pre-ADR-303 one when only that exists. */
+export function readableIndexPath(opts: RegistryOptions = {}): string {
+    const now = indexPath(opts);
+    const old = legacyIndexPath(opts);
+    return fs.existsSync(now) || !fs.existsSync(old) ? now : old;
 }
 
 /**
@@ -167,6 +182,9 @@ type Db = InstanceType<ReturnType<typeof loadSqliteSync>['DatabaseSync']>;
 function openWritable(opts: RegistryOptions): Db {
     const file = indexPath(opts);
     fs.mkdirSync(path.dirname(file), { recursive: true });
+    // The other projects' rows an older release indexed move with the first write, not lost to it.
+    const old = legacyIndexPath(opts);
+    if (!fs.existsSync(file) && old !== file && fs.existsSync(old)) fs.copyFileSync(old, file);
     const { DatabaseSync } = loadSqliteSync('code_graph.estate_index');
     const fresh = !fs.existsSync(file);
     const db = new DatabaseSync(file);
@@ -223,7 +241,7 @@ export function writeProjectRows(
 
 /** Remove a project from the index (a `projects remove` / `prune`). */
 export function dropProjectRows(id: string, opts: RegistryOptions = {}): void {
-    if (!fs.existsSync(indexPath(opts)) || !isSqliteAvailableSync()) return;
+    if (!fs.existsSync(readableIndexPath(opts)) || !isSqliteAvailableSync()) return;
     const db = openWritable(opts);
     try {
         const row = db.prepare('SELECT key FROM projects WHERE id = ?').get(id) as { key: number } | undefined;
@@ -273,7 +291,7 @@ function graphChecksum(cachePath: string, graph: CodeGraph | null): string | nul
 }
 
 function storedFactsKey(id: string, opts: RegistryOptions): string | null {
-    const file = indexPath(opts);
+    const file = readableIndexPath(opts);
     if (!fs.existsSync(file)) return null;
     const { DatabaseSync } = loadSqliteSync('code_graph.estate_index');
     const db = new DatabaseSync(file, { readOnly: true });
@@ -289,7 +307,7 @@ function storedFactsKey(id: string, opts: RegistryOptions): string | null {
 
 /** A read-only view of the index; `null` when there is none. */
 export function openEstate(opts: RegistryOptions = {}): EstateReader | null {
-    const file = indexPath(opts);
+    const file = readableIndexPath(opts);
     if (!fs.existsSync(file) || !isSqliteAvailableSync()) return null;
     const { DatabaseSync } = loadSqliteSync('code_graph.estate_index');
     return new EstateReader(new DatabaseSync(file, { readOnly: true }));
