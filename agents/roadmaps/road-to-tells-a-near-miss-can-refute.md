@@ -70,12 +70,12 @@ deterministic proof where a claim is made.
 
 ## Phase 0 — Close the cheap lies first (no new surface)
 
-- [ ] **0.1 Falsifying fixtures for D1, before the fix.** Three DESIGN.md
+- [x] **0.1 Falsifying fixtures for D1, before the fix.** Done 2026-10-26: `tests/scripts/design_slop_context_gate.test.ts`, 3 red before 0.2 (the first substring control fired nothing and was rebuilt to fire C5 and C3, with a guard against an empty control). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/design_slop_rules.ts --> Three DESIGN.md
       fixtures: negation ("never use Inter"), substring collision ("thousands",
       "glowing", "spill"), scope (the keyword under a "What we avoid" heading).
       verify: `npx vitest run tests/scripts/design_slop_context_gate.test.ts` is
       red before 0.2 and green after.
-- [ ] **0.2 A declared-intent reader replaces the substring gate.** Only a
+- [x] **0.2 A declared-intent reader replaces the substring gate.** Done 2026-10-26: `declaredIntent` in `lint_design_slop.ts`, `legacyHas` report-only as `would_have_suppressed`; FP bench unchanged; CLI body split to `lint_design_slop_main.ts` to keep the hook bundle under its ceiling. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/design_slop_rules.ts --> Only a
       frontmatter key (`intent: [warm-neutral, …]`) or an `## Intentional`
       section counts; matching is word-bounded; a negated sentence never counts.
       The free-text fallback stays one minor version report-only ("would have
@@ -83,13 +83,13 @@ deterministic proof where a claim is made.
       verify: 0.1 green; `src/scripts/design_slop_rules.test.ts` and
       `tests/scripts/design_slop_vs_provided.test.ts` unchanged-green; the FP
       bench count unchanged.
-- [ ] **0.3 One ignore syntax with a reason.** `design-slop-disable[-line|-next-line]
+- [x] **0.3 One ignore syntax with a reason.** Done 2026-10-26: `_lib/ignore_reason.ts`; slop `--json` lists `suppressions` with reasons; both linters report `ignore-without-reason`; the svg JSON stays an array, so its reasons are recorded in `RuleIgnore.reasons` and reported on stderr. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/ignore_reason.ts --> `design-slop-disable[-line|-next-line]
       <rule> -- <reason>` and the svg parser records the reason it already
       documents; a reasonless ignore still applies for one minor version and is
       reported `ignore-without-reason`.
       verify: fixtures with and without a reason; `--json` carries `reason` on
       every honoured suppression in both linters.
-- [ ] **0.4 Restate the two stale texts.** `docs/CLAIMS.md:812-817` gains the
+- [x] **0.4 Restate the two stale texts.** Done 2026-10-26: claim restated as the 2026-10-26 null epoch, history kept; `build_proof` rerun; the settings comment drops the "universal gate" sentence. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml --> `docs/CLAIMS.md:812-817` gains the
       26-rule run as a new epoch reported as the null it is, keeping the
       2026-08-13 figure as history; the settings comment at
       `agent-settings.template.yml:1317` names what actually runs.
