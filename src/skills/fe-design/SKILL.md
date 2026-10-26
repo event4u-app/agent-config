@@ -206,6 +206,7 @@ implementation skill, not from here.
 Load the reference file whose sections the task needs — never all of them by default:
 
 - [`references/design-patterns.md`](references/design-patterns.md) — Component Architecture · Form Design · Table Design · Responsive Strategy · Accessibility (a11y) · Motion — decision-tree and rationale · UX Principles · Craft details — typography & imagery · Presenting variants
+- [`references/gesture-mechanics.md`](references/gesture-mechanics.md) — Respond at contact, not at release · Follow the hand 1:1 · Hand the motion back to physics · Edges and symmetry · Accessibility
 - [`references/design-read-and-memory.md`](references/design-read-and-memory.md) — Cross-task design memory — read DESIGN.md / PRODUCT.md first · Register — brand vs product · Design Read — articulate intent before generating · Aesthetic direction
 
 ## Procedure
