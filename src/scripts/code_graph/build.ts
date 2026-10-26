@@ -410,8 +410,11 @@ export function buildGraph(
         parents: new Map(),
         classByName: new Map(),
     };
+    const nested = new Set(extracts.flatMap((e) => e.nestedIds ?? []));
+    const nodeKind0 = new Map(nodes.map((n) => [n.id, n.kind as string]));
     for (const n of nodes) {
         const lang = nodeLang.get(n.id) ?? null;
+        if (nested.has(n.id)) continue;
         // `byName` stays the CALLABLE/CONSTRUCTIBLE table it always was. The
         // kinds 2.1 added (constant / type / enum) are deliberately NOT put in
         // it: they are reachable through a file's own scope and through
@@ -433,8 +436,12 @@ export function buildGraph(
     // resolve inheritance to in-repo class ids (same language)
     for (const e of extracts)
         for (const inh of e.inherits) {
-            const parentId = sym.classByName.get(k(e.lang, inh.parentName));
-            if (parentId) push(sym.parents, inh.classId, parentId);
+            // Only an unambiguous parent extends the hierarchy walk: a second
+            // same-named class would make every inherited method a guess.
+            const parents = (sym.byName.get(k(e.lang, inh.parentName)) ?? []).filter(
+                (id) => nodeKind0.get(id) !== 'function',
+            );
+            if (parents.length === 1) push(sym.parents, inh.classId, parents[0] as string);
         }
 
     const ancestorsOf = (classId: string): string[] => {
@@ -515,10 +522,15 @@ export function buildGraph(
                 }
                 // TIER 2: base name, namespace discarded. A lookup, not a
                 // syntactic fact: `exact: false`.
-                const hit =
-                    sym.classByName.get(k(ex.lang, r.targetName)) ??
-                    (sym.byName.get(k(ex.lang, r.targetName)) ?? []).find((id) => id.includes('#') && !id.includes('::'));
-                if (hit) imports.set(local, { target: hit, exact: false, via: 'name-lookup' });
+                // Bound only when the base name names exactly one declaration:
+                // `use One\\Mailer` beside `Two\\Mailer` is a collision, not a
+                // choice the first in sort order gets to make.
+                const named = [
+                    ...new Set((sym.byName.get(k(ex.lang, r.targetName)) ?? []).filter((id) => id.includes('#'))),
+                ];
+                const top = named.filter((id) => !id.includes('::'));
+                const only = named.length === 1 ? named[0] : top.length === 1 ? top[0] : undefined;
+                if (only !== undefined) imports.set(local, { target: only, exact: false, via: 'name-lookup' });
                 continue;
             }
             if (ex.lang === 'csharp' && (namespaceFiles.get(spec)?.length ?? 0) > 1) continue;
@@ -575,6 +587,26 @@ export function buildGraph(
     const emptyScope: FileScope = { locals: new Map(), imports: new Map() };
 
     /**
+     * Every repo-wide top-level declaration `name` could mean from `file`.
+     *
+     * A caller outside the test tree never binds to a test file's declaration
+     * while a non-test one exists. Sorted, so a collision lists its candidates
+     * in the same order on every build.
+     */
+    const wideCandidates = (file: string, name: string, want: Capability, lang: Lang): string[] => {
+        // `constructible` keeps the table it always read — every type kind,
+        // interfaces and traits included, because an `extends` / `implements`
+        // list names those too.
+        const all = (sym.byName.get(k(lang, name)) ?? []).filter((id) =>
+            want === 'constructible'
+                ? nodeKind.get(id) !== 'function'
+                : id.includes('#') && !id.includes('::') && satisfies(nodeKind.get(id), want),
+        );
+        const prod = isTestFile(file) ? all : all.filter((id) => !isTestFile(id.split('#')[0] as string));
+        return [...new Set(prod.length > 0 ? prod : all)].sort();
+    };
+
+    /**
      * Resolve a bare name at a use site inside `file`, capability-filtered.
      *
      * The ladder is the language's own: a LOCAL declaration shadows an import
@@ -588,7 +620,13 @@ export function buildGraph(
         want: Capability,
         lang: Lang,
         scopeOnly = false,
-    ): { target: string; confidence: EdgeConfidence; via: ResolvedVia } | null => {
+    ): {
+        target: string;
+        confidence: EdgeConfidence;
+        via: ResolvedVia;
+        candidates?: string[];
+        reason?: 'name-collision';
+    } | null => {
         const scope = scopes.get(file) ?? emptyScope;
         // The ladder's rungs ARE the mechanism taxonomy, so `via` is read off
         // the branch that succeeded rather than inferred afterwards.
@@ -611,16 +649,21 @@ export function buildGraph(
             if (fit.length === 1) return { target: fit[0] as string, confidence: 'EXTRACTED', via: 'namespace-scope' };
         }
         if (scopeOnly) return null;
-        const wide =
-            want === 'constructible'
-                ? sym.classByName.get(k(lang, name))
-                : (sym.byName.get(k(lang, name)) ?? []).find(
-                      (id) => id.includes('#') && !id.includes('::') && satisfies(nodeKind.get(id), want),
-                  );
         // Reached only by matching a name across the whole repository, with no
         // binding in this file to justify it. That is not a syntactic fact and
-        // no longer claims to be one.
-        if (wide) return { target: wide, confidence: 'INFERRED', via: 'name-lookup' };
+        // no longer claims to be one — and it binds only when exactly one
+        // candidate survives. Two same-named declarations are a collision the
+        // graph records as such, never a first-in-sort-order winner.
+        const cands = wideCandidates(file, name, want, lang);
+        if (cands.length === 1) return { target: cands[0] as string, confidence: 'INFERRED', via: 'name-lookup' };
+        if (cands.length > 1)
+            return {
+                target: `symbol:${name}`,
+                confidence: 'AMBIGUOUS',
+                via: 'name-lookup',
+                candidates: cands.slice(0, CANDIDATE_CAP),
+                reason: 'name-collision',
+            };
         return null;
     };
 
@@ -659,6 +702,7 @@ export function buildGraph(
                 confidence: hit?.confidence ?? 'EXTRACTED',
                 resolved_via: hit?.via ?? UNRESOLVED_VIA,
                 provider: 'native',
+                ...(hit?.candidates ? { candidates: hit.candidates, ambiguity_reason: hit.reason } : {}),
             });
         }
         for (const r of ex.rawEdges) resolveRawEdge(r, ex);
@@ -744,6 +788,7 @@ export function buildGraph(
                 confidence: hit?.confidence ?? 'EXTRACTED',
                 resolved_via: hit?.via ?? UNRESOLVED_VIA,
                 provider: 'native',
+                ...(hit?.candidates ? { candidates: hit.candidates, ambiguity_reason: hit.reason } : {}),
             });
             return;
         }

@@ -94,6 +94,12 @@ export interface FileExtract {
     namespaces?: string[];
     /** C#: the namespace each declared type sits in, by node id, for namespace-scope resolution. */
     typeNamespaces?: Record<string, string>;
+    /**
+     * Function nodes declared below module level (a closure, a helper inside a
+     * function body). They resolve same-file, but are never a repo-wide target:
+     * a caller in another file cannot reach them by name.
+     */
+    nestedIds?: string[];
 }
 
 export function loc(n: TsNode): number[] {
@@ -451,6 +457,7 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                 const nm = nameField(n) ?? '<anon>';
                 const id = uniq(out, `${file}#${nm}`);
                 out.nodes.push({ id, label: nm, kind: 'function', source_file: file, source_location: loc(n) });
+                if (!topLevel && !classId) (out.nestedIds ??= []).push(id);
                 out.rawEdges.push({ sourceId: fileId, relation: 'member', targetName: nm, confidenceHint: 'EXTRACTED' });
                 const body = n.childForFieldName('body');
                 if (body) for (const c of namedChildren(body)) walk(c, classId, id, false);
@@ -526,6 +533,7 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                         source_file: file,
                         source_location: loc(d),
                     });
+                    if (!topLevel && !classId) (out.nestedIds ??= []).push(id);
                     out.rawEdges.push({
                         sourceId: classId ?? fileId,
                         relation: 'member',

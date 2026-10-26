@@ -299,7 +299,7 @@ export interface CodeEdge {
      * without has NO in-repo candidate, so no amount of inference would find a
      * target.
      */
-    ambiguity_reason?: 'receiver-unknown' | 'hierarchy-unresolved';
+    ambiguity_reason?: 'receiver-unknown' | 'hierarchy-unresolved' | 'name-collision';
     /** The convention provider that drew this edge (ADR-298); absent on every other edge. */
     provider_id?: string;
     fact?: FactMeta;
