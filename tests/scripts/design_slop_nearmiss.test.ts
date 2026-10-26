@@ -85,3 +85,16 @@ describe('L4 — numbers inside an ordered list number its steps', () => {
         expect(run('<ol><li><span>01</span>Plug in</li><li><span>02</span>Pair</li><li><span>03</span>Name</li></ol>')).toEqual([]);
     });
 });
+
+describe('T4 by position (2.6)', () => {
+    const t4 = SLOP_RULES.find((r) => r.id === 'slop-t4-eyebrow-overuse')!;
+    const run = (content: string) => t4.detect({ content, lines: content.split('\n'), ext: '.html', ctx: { raw: '', has: () => false } });
+
+    it('a pill badge stacked on the h1 flags', () => {
+        expect(run('<header><span class="rounded-full bg-indigo-50 px-3">New in v2</span>\n<h1>Ship faster</h1></header>')).toHaveLength(1);
+    });
+
+    it('a status chip in a table row does not', () => {
+        expect(run('<h1>Orders</h1><table><tr><td><span class="rounded-full badge">Paid</span></td></tr></table>')).toEqual([]);
+    });
+});

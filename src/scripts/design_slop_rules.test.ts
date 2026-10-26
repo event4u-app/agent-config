@@ -48,9 +48,9 @@ const FIXTURES: Record<string, { ext: string; positive: string; negative: string
   "slop-t4-eyebrow-overuse": {
     ext: "html",
     positive:
-      '<section><span class="uppercase">Features</span></section><section><span class="uppercase">Pricing</span></section><section><h2>Contact</h2></section>',
+      '<section><span class="uppercase">Features</span><h2>Fast</h2></section><section><span class="uppercase">Pricing</span><h2>Fair</h2></section><section><h2>Contact</h2></section>',
     negative:
-      '<section><span class="uppercase">Features</span></section><section><h2>Pricing</h2></section><section><h2>Contact</h2></section>',
+      '<section><span class="uppercase">Features</span><h2>Fast</h2></section><section><h2>Pricing</h2><table><tr><td><span class="uppercase">Paid</span></td></tr></table></section><section><h2>Contact</h2><button class="uppercase">Send</button></section>',
   },
   "slop-t6-crushed-tracking": {
     ext: "css",

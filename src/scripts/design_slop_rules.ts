@@ -288,25 +288,30 @@ export const SLOP_RULES: SlopRule[] = [
     id: "slop-t4-eyebrow-overuse",
     catalogId: "T4",
     severity: "P2",
-    engines: ["html", "jsx", "css"],
-    description: "More than one ALL-CAPS eyebrow per 3 sections",
+    engines: ["html", "jsx"],
+    description: "More than one ALL-CAPS eyebrow per 3 sections, or a pill badge on top of the h1",
     message:
-      "Eyebrow/ALL-CAPS labels above every section collapse emphasis; cap is 1 per 3 sections (T4).",
+      "Eyebrow/ALL-CAPS labels above every section collapse emphasis; cap is 1 per 3 sections, and a pill badge stacked on the h1 is the template's own (T4).",
+    // By position, not by count of the word `uppercase`: an eyebrow is a short
+    // label whose next element is a heading. A status chip in a table row or an
+    // uppercase button is not one. Fails open on markup the regex cannot pair
+    // (a heading built by a component, an eyebrow wrapped twice).
     detect: ({ content }) => {
+      const hits: RawHit[] = [];
       const sections = (content.match(/<section\b|<Section\b/gi) ?? []).length;
-      const eyebrows =
-        (content.match(/text-transform\s*:\s*uppercase/gi) ?? []).length +
-        (content.match(/(?:class|className)=["'][^"']*\buppercase\b/gi) ?? []).length;
+      const eyebrow =
+        /<([a-z][\w.]*)\b[^>]*(?:(?:class|className)=["'][^"']*\buppercase\b[^"']*["']|style=["'][^"']*text-transform\s*:\s*uppercase)[^>]*>[^<]{1,60}<\/\1>\s*<h[1-6]\b/gi;
+      const eyebrows = (content.match(eyebrow) ?? []).length;
       const cap = Math.max(1, Math.ceil(sections / 3));
       if (sections >= 3 && eyebrows > cap) {
-        return [
-          {
-            line: 1,
-            snippet: `${eyebrows} uppercase eyebrows across ${sections} sections (cap ${cap})`,
-          },
-        ];
+        hits.push({ line: 1, snippet: `${eyebrows} uppercase eyebrows above headings across ${sections} sections (cap ${cap})` });
       }
-      return [];
+      const badge =
+        /<([a-z][\w.]*)\b[^>]*(?:class|className)=["'][^"']*\b(?:rounded-full|badge|pill)\b[^"']*["'][^>]*>[^<]{1,60}<\/\1>\s*<h1\b/i.exec(content);
+      if (badge) {
+        hits.push({ line: content.slice(0, badge.index).split("\n").length, snippet: badge[0].slice(0, 80) });
+      }
+      return hits;
     },
   },
   {
