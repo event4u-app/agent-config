@@ -7,7 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
 import type { Severity } from "./design_slop_rules.js";
-import { loadDesignContext, scanFile, wouldHaveSuppressed, type Finding } from "./lint_design_slop.js";
+import { loadDesignContext, scanFile, suppressions, wouldHaveSuppressed, type Finding } from "./lint_design_slop.js";
 
 interface ProjectConfig {
   ignoreRules?: string[];
@@ -108,7 +108,13 @@ export function main(): void {
   if (jsonMode) {
     process.stdout.write(
       JSON.stringify(
-        { findings, failOn: failOn ?? null, overThreshold: overThreshold.length, would_have_suppressed: wouldHaveSuppressed },
+        {
+          findings,
+          failOn: failOn ?? null,
+          overThreshold: overThreshold.length,
+          would_have_suppressed: wouldHaveSuppressed,
+          suppressions,
+        },
         null,
         2,
       ) + "\n",
@@ -117,6 +123,12 @@ export function main(): void {
   }
 
   if (!quiet) {
+    for (const s of suppressions.filter((x) => x.reason === null)) {
+      process.stdout.write(
+        `ℹ️  ${s.file}:${s.line} ignore-without-reason — ${s.rule} is suppressed with no \`-- <reason>\`; ` +
+          "it still applies this minor version.\n",
+      );
+    }
     for (const w of wouldHaveSuppressed) {
       process.stdout.write(
         `ℹ️  ${w.file}: the old DESIGN.md word match would have suppressed ${w.rule}; declare it under ` +

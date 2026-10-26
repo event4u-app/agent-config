@@ -26,9 +26,12 @@
  * Context gate: a consumer DESIGN.md (project root or scan dir) that declares a
  * pattern as intentional suppresses the matching rule (e.g. "warm-neutral" →
  * C5 cream-palette is not flagged). Inline-ignore (eslint-style):
- *   design-slop-disable <rule-id>            (file scope, top of file)
- *   design-slop-disable-next-line <rule-id>
- *   design-slop-disable-line <rule-id>
+ *   design-slop-disable <rule-id> -- <reason>            (file scope, top of file)
+ *   design-slop-disable-next-line <rule-id> -- <reason>
+ *   design-slop-disable-line <rule-id> -- <reason>
+ * The reason is the same shape every design linter reads (_lib/ignore_reason.ts);
+ * an ignore without one still applies this minor version and is reported as
+ * ignore-without-reason. --json lists every honoured ignore under suppressions.
  * Per-project config (.design-quality.json, shared with lint_design_quality):
  *   { "ignoreRules": ["slop-c5-cream-palette"], "ignoreFiles": ["src/legacy/**"] }
  *
@@ -43,6 +46,7 @@ import {
   type Engine,
   type Severity,
 } from "./design_slop_rules.js";
+import { ignoreReason } from "./_lib/ignore_reason.js";
 
 export interface Finding {
   rule: string;
@@ -60,6 +64,9 @@ export interface Finding {
  * reader did not. Report-only, collected across one run.
  */
 export const wouldHaveSuppressed: Array<{ rule: string; file: string }> = [];
+
+/** Every inline ignore the run honoured, with the reason it gave (null = none). */
+export const suppressions: Array<{ rule: string; file: string; line: number; reason: string | null }> = [];
 
 
 // ext → which engine-classes a file of that type can contain
@@ -131,23 +138,23 @@ export function loadDesignContext(scanDir: string): DesignContext {
   };
 }
 
-function parseIgnores(lines: string[]): Map<string, Set<number>> {
-  const ignores = new Map<string, Set<number>>();
-  const add = (rule: string, line: number) => {
-    const set = ignores.get(rule) ?? new Set<number>();
-    set.add(line);
-    ignores.set(rule, set);
+/** rule → (line → reason). Line 0 stands for the whole file. */
+function parseIgnores(lines: string[]): Map<string, Map<number, string | null>> {
+  const ignores = new Map<string, Map<number, string | null>>();
+  const add = (rule: string, line: number, reason: string | null) => {
+    const m = ignores.get(rule) ?? new Map<number, string | null>();
+    m.set(line, reason);
+    ignores.set(rule, m);
   };
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? "";
+    const reason = ignoreReason(line);
     const file = /design-slop-disable\s+([\w-]+)/i.exec(line);
-    if (file && file[1] && !/-line|-next-line/.test(line)) {
-      ignores.set(file[1].toLowerCase(), new Set([...Array(99999).keys()].map((n) => n + 1)));
-    }
+    if (file && file[1] && !/-line|-next-line/.test(line)) add(file[1].toLowerCase(), 0, reason);
     const next = /design-slop-disable-next-line\s+([\w-]+)/i.exec(line);
-    if (next && next[1]) add(next[1].toLowerCase(), i + 2);
+    if (next && next[1]) add(next[1].toLowerCase(), i + 2, reason);
     const cur = /design-slop-disable-line\s+([\w-]+)/i.exec(line);
-    if (cur && cur[1]) add(cur[1].toLowerCase(), i + 1);
+    if (cur && cur[1]) add(cur[1].toLowerCase(), i + 1, reason);
   }
   return ignores;
 }
@@ -180,7 +187,11 @@ export function scanFile(
     }
     for (const h of hits) {
       const ruleIgnore = ignores.get(rule.id.toLowerCase());
-      if (ruleIgnore && ruleIgnore.has(h.line)) continue;
+      const at = ruleIgnore?.has(h.line) ? h.line : ruleIgnore?.has(0) ? 0 : null;
+      if (ruleIgnore && at !== null) {
+        suppressions.push({ rule: rule.id, file: relPath, line: h.line, reason: ruleIgnore.get(at) ?? null });
+        continue;
+      }
       out.push({
         rule: rule.id,
         catalogId: rule.catalogId,
