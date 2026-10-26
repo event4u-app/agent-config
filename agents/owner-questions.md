@@ -65,6 +65,32 @@ and the run that applies it links its PR.
   the first metered or session-size notice.
 - **Blocks:** nothing executable; until answered the tap is opt-in (b).
 
+### OQ-20 — Third-party test data as attributed splits (`external-test-data-licence`)
+
+- **Context:** round `inbox-2026-10-az` measures the design and prose tell
+  detectors only on corpora this repo wrote. Two external corpora would judge
+  them from outside: an external design source's should-pass fixtures
+  (Apache-2.0) and an external humanizer corpus's before/after pairs (MIT). Both
+  would be reported only as their own split, never in a headline number.
+- **Options:** (a) accept both as attributed separate splits; (b) accept the MIT
+  pairs only; (c) accept neither and cancel the two steps.
+- **Recommendation:** (a) — both licences allow it with attribution, and without
+  them every precision figure stays self-judged.
+- **Blocks:** steps 1.5 and 5.1 of `road-to-tells-a-near-miss-can-refute`.
+
+### OQ-21 — How consumers get a browser for `ui:render`
+
+- **Context:** `@playwright/test` is a devDependency, so no consumer install can
+  render a page (`road-to-tells-a-near-miss-can-refute` D4). Step 2.1 ships the
+  no-new-dependency half: use `playwright-core` when the consumer already has it,
+  plus a discovered system browser.
+- **Options:** (a) add `playwright-core` (13 MB) as a runtime dependency;
+  (b) write a zero-dependency CDP client over Node's global `WebSocket`;
+  (c) keep the optional resolution only.
+- **Recommendation:** (c) until a render rule is `backed` — the witness tier only
+  matters once Phase 2.5 has promoted a row, and (a) changes every install.
+- **Blocks:** nothing now; consumer reach of the render engine (Phase 2).
+
 ## Not owner questions — waits, or already settled in the tree
 
 - `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its

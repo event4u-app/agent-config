@@ -1,6 +1,6 @@
 ---
 complexity: bounded
-status: later
+status: archived
 parent_roadmap: road-to-tell-currency
 review_by: 2026-12-03
 estate_growth_exempt: "Adds one later/ roadmap because a [~] deferral has no other legal receiver: deferralProblems resolves carried-to only against agents/roadmaps/<slug>.md or agents/roadmaps/later/<slug>.md and fail-closes on a stubs/ path, and the receiver must additionally carry parent_roadmap: verified from both ends. This change archives road-to-tell-currency (active 4 to 3) and defers two of its steps on a 2/2 council verdict that neither can ship a truthful backed claim today; without a later/ receiver those two steps could be expressed only as [ ] on an archived roadmap, which the archival guard refuses, or as [-] cancelled, which is owner-reserved and would drop work the council explicitly parked. One later entry is the cost of not lying about two."
@@ -8,7 +8,11 @@ estate_growth_exempt: "Adds one later/ roadmap because a [~] deferral has no oth
 
 # Road to the interaction-layer detector promotions
 
-> **Arrivals:** 3 (at least) — latest `inbox-2026-09-l` (2026-09-05); earlier: agents/roadmaps/archive/road-to-design-craft-antislop.md, agents/roadmaps/stubs/road-to-frontend-power-detector-promotions.md.
+> **Arrivals:** 4 — latest `inbox-2026-10-az` (2026-10-26); earlier: `inbox-2026-09-l` (2026-09-05), agents/roadmaps/archive/road-to-design-craft-antislop.md, agents/roadmaps/stubs/road-to-frontend-power-detector-promotions.md.
+
+> **Superseded 2026-10-26** by `road-to-tells-a-near-miss-can-refute` on the
+> owner's instruction to process that round's roadmaps. Every open item is
+> carried there: A1 → 1.3, A2 → 2.4, A3 → 2.5, B1 and B2 → 2.6.
 
 > **Parked, not abandoned.** Created 2026-09-03 when `road-to-tell-currency`
 > closed. It receives two deferrals from that roadmap — the four new
@@ -58,7 +62,7 @@ normally live. A `.jsx`/`.tsx`-only detector would be honest about nothing a
 
 ### A — the four interaction and texture detectors
 
-- [ ] **A1 Enrich the clean corpus with real near-misses, not just occurrences.**
+- [~] <!-- deferred-resolution: carried-to=road-to-tells-a-near-miss-can-refute --> **A1 Enrich the clean corpus with real near-misses, not just occurrences.**
       The distinction is the whole point: adding files that merely *contain*
       `IntersectionObserver` makes the bench non-vacuous while still not
       measuring precision. The near-misses have to be **legitimate** uses —
@@ -69,7 +73,7 @@ normally live. A `.jsx`/`.tsx`-only detector would be honest about nothing a
       verify: the corpus digest changes, and for each of the four signals the
       corpus contains at least one legitimate use that a naive detector would
       flag.
-- [ ] **A2 Decide the scanner-reach question, and record it either way.** Widen
+- [~] <!-- deferred-resolution: carried-to=road-to-tells-a-near-miss-can-refute --> **A2 Decide the scanner-reach question, and record it either way.** Widen
       `enginesForExt` to `.ts` / `.js`, or scope the interaction rules to
       colocated-markup extensions and say so in the § Detector status note.
       Widening re-opens the M1 epoch for **all 25 existing rules** against a
@@ -78,7 +82,7 @@ normally live. A `.jsx`/`.tsx`-only detector would be honest about nothing a
       decision, not a footnote to it.
       verify: the decision is recorded with its measurement; if the answer is
       widen, every one of the 25 existing rules carries a fresh M1 number.
-- [ ] **A3 Promote at most one row per epoch.** M6, M7, M8 and V9, each on its
+- [~] <!-- deferred-resolution: carried-to=road-to-tells-a-near-miss-can-refute --> **A3 Promote at most one row per epoch.** M6, M7, M8 and V9, each on its
       own epoch with its own M1 number, each carrying a `provenance/borrows.jsonl`
       row or an explicit own-analysis label. A batch promotion has no per-rule
       number and cannot satisfy any of the verifies above — the constraint is
@@ -91,7 +95,7 @@ normally live. A `.jsx`/`.tsx`-only detector would be honest about nothing a
 
 ### B — the T4 widening
 
-- [ ] **B1 Show that dependency-free adjacency can carry the position claim.**
+- [~] <!-- deferred-resolution: carried-to=road-to-tells-a-near-miss-can-refute --> **B1 Show that dependency-free adjacency can carry the position claim.**
       T4's current form is ALL-CAPS-and-ratio: it counts `text-transform:
       uppercase` and `uppercase` classes against a `sections / 3` cap and
       requires `sections >= 3`, so a single sentence-case pill badge above a
@@ -106,7 +110,7 @@ normally live. A `.jsx`/`.tsx`-only detector would be honest about nothing a
       verify: a fixture with a pill badge above an `h1` flags and a status chip
       inside a table row does not, with the adjacency heuristic's failure mode
       stated rather than assumed.
-- [ ] **B2 Keep T4's prose and its `backed` status in step.** T4 is `backed`
+- [~] <!-- deferred-resolution: carried-to=road-to-tells-a-near-miss-can-refute --> **B2 Keep T4's prose and its `backed` status in step.** T4 is `backed`
       today, so widening its prose without widening its rule makes the parity
       gate green while the claim goes false — which is the exact defect class
       that gate exists to catch. Prose and rule move together or neither moves.

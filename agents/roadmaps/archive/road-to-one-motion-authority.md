@@ -30,7 +30,7 @@ Four bodies of work the inbox drafts proposed are **prevented, not deferred**, a
 none appears as a step below. Automatic activation on UI work already ships
 (`fe-design/SKILL.md:4`, the brief at `:49–51`). Experience-first variant
 comparison already ships (`design-variations/SKILL.md:70–78`). New `backed`
-detector rows are owned by `agents/roadmaps/later/road-to-tell-detector-promotions.md`
+detector rows are owned by `agents/roadmaps/archive/road-to-tell-detector-promotions.md`
 under a 2/2 council verdict that they cannot make a truthful claim until the clean
 corpus carries a near-miss per signal, and blind-judgment benchmarking is owned by
 `agents/roadmaps/later/road-to-routing-assurance-live-floors.md` under an

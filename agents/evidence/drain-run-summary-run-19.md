@@ -62,7 +62,7 @@ anthropic 24/50, openai 24/50.
 
 | From | What | Receiver | Why |
 |---|---|---|---|
-| `tell-currency` 1.1, 3.2, AC-3b | fixture corpus; the T4 widening | `later/road-to-tell-detector-promotions.md` | the clean corpus carries no near-miss for the four new tells, so an `M1 = 0` would be a vacuous pass; and T4 is `backed`, so its prose cannot move without its rule |
+| `tell-currency` 1.1, 3.2, AC-3b | fixture corpus; the T4 widening | `archive/road-to-tell-detector-promotions.md` | the clean corpus carries no near-miss for the four new tells, so an `M1 = 0` would be a vacuous pass; and T4 is `backed`, so its prose cannot move without its rule |
 | `tell-currency` 4.1 remainder | 41 grounding-corpus collisions | `later/road-to-grounding-corpus-catalog-parity.md` | "stated as intentional" would be false — they are defects; the first step is a scope decision, not an edit |
 | `binding-findings` 1.1, AC-2 | the release-finding ordering guarantee | `later/road-to-release-finding-ordering.md` | **Hard Floor.** The demonstration needs a synthetic `release/*` pull request, which `non-destructive-by-default` names and no autonomy lifts |
 | `binding-findings` — 3 findings | `9b91a14e9d35`, `0687468c0d65`, `26c9fdbcedc2` | same receiver | dispositioned `accepted_risk` with a receiver rather than an expiring note |
