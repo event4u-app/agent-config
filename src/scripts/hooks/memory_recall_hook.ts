@@ -43,6 +43,11 @@
  * starts injecting memory BODIES fails the build instead of quietly tripling a
  * per-call slot). Injecting a whole memory file would be 1.5-6 kB per fire.
  *
+ * The description is quoted as stored data, not an instruction, and one the
+ * injection-scan concern's `_scan` flags is withheld — the pointer still emits.
+ * The screen knows only that scanner's phrases and encodings; a plainly worded
+ * imperative passes it and relies on the framing alone.
+ *
  * Cost of the silent path. The overwhelmingly common case is no match, and it
  * costs a payload parse and a few regex tests — zero filesystem work. An
  * `lstat` runs only after a build-shaped command has already matched; the

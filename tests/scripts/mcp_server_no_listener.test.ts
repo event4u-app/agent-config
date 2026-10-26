@@ -12,7 +12,11 @@ import { describe, expect, it } from 'vitest';
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SERVER_DIR = path.join(REPO_ROOT, 'src', 'scripts', 'mcp_server');
 
-const NETWORK_BIND = /\.listen\s*\(|\bcreateServer\s*\(|0\.0\.0\.0/;
+// Covers the node and runtime listener shapes; a listener in a helper outside
+// the server directory is out of reach of a directory scan.
+const NETWORK_BIND =
+    /\.listen\s*\(|\bcreate(?:Secure)?Server\s*\(|\bcreateSocket\s*\(|\bWebSocketServer\b|\b(?:Bun|Deno)\.serve\s*\(|0\.0\.0\.0/;
+const COMMENT_LINE = /^\s*(?:\/\/|\*|\/\*)/;
 
 function sourceFiles(dir: string): string[] {
     return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
@@ -23,7 +27,7 @@ function sourceFiles(dir: string): string[] {
 }
 
 function bindingLines(text: string): string[] {
-    return text.split('\n').filter((l) => NETWORK_BIND.test(l));
+    return text.split('\n').filter((l) => !COMMENT_LINE.test(l) && NETWORK_BIND.test(l));
 }
 
 describe('mcp server binds no network socket', () => {
@@ -44,8 +48,16 @@ describe('mcp server binds no network socket', () => {
             "srv.listen(3000);",
             "net.createServer().listen(0, '127.0.0.1');",
             "server.listen({ host: '0.0.0.0', port });",
+            "const s = http2.createSecureServer(opts);",
+            "dgram.createSocket('udp4');",
+            "new WebSocketServer({ port });",
+            "Bun.serve({ fetch });",
         ]) {
             expect(bindingLines(planted), planted).toHaveLength(1);
         }
+    });
+
+    it('a comment naming a listener is not a listener', () => {
+        expect(bindingLines(' * never call createServer( here; never bind 0.0.0.0')).toEqual([]);
     });
 });
