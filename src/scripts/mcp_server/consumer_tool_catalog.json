@@ -336,6 +336,11 @@
             "default": false,
             "description": "Instead return changed symbols no test imports."
           },
+          "review_risk": {
+            "type": "boolean",
+            "default": false,
+            "description": "Instead score the diff as a sum of terms, each counted fact with its witness."
+          },
           "project": {
             "type": "string"
           }

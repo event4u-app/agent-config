@@ -62,7 +62,8 @@ import {
     tree as graphTreeVerb,
     type TreeOptions,
 } from '../code_graph/query.js';
-import type { Relation } from '../code_graph/types.js';
+import { diffHunks, reviewRisk } from '../code_graph/review_risk.js';
+import type { CodeGraph, Relation } from '../code_graph/types.js';
 import { RELATIONS as VOCAB_RELATIONS } from '../code_graph/vocabulary.js';
 import {
     dead,
@@ -234,12 +235,24 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
                     default: false,
                     description: 'Instead return changed symbols no test imports.',
                 },
+                review_risk: {
+                    type: 'boolean',
+                    default: false,
+                    description: 'Instead score the diff as a sum of terms, each counted fact with its witness.',
+                },
             },
             additionalProperties: false,
         },
         handler: async (args, root) => {
             const rev = str(args, 'diff');
             if (rev === '') return { status: 'error', error: 'diff must be a non-empty git rev' };
+            if (args['review_risk'] === true) {
+                const hunks = diffHunks(root, rev);
+                if (hunks === null) return { status: 'error', error: `cannot resolve rev '${rev}' in ${root}` };
+                const cache = graphHome(root).cachePath;
+                if (!fs.existsSync(cache)) return { status: 'error', error: 'no graph yet — run `code-graph build`' };
+                return { status: 'ok', ...reviewRisk(root, JSON.parse(fs.readFileSync(cache, 'utf-8')) as CodeGraph, rev, hunks) };
+            }
             const files = changedFiles(root, rev);
             if (files === null) return { status: 'error', error: `cannot resolve rev '${rev}' in ${root}` };
             const state = graphState(root, graphHome(root).cachePath);

@@ -3,6 +3,7 @@
  * Native code-graph engine CLI (Class-A, ADR-124).
  *
  *   build    [--root P] [--out P] [--force]   (re)build the deterministic graph
+ *            [--no-lanes]                      and merge every lane reader's facts
  *   validate [--graph P]                       schema-gate a graph.json
  *   detect   [--root P] [--format json]        three-state freshness verdict
  *   refresh  [--root P] [--out P] [--budget-seconds N]
@@ -42,6 +43,11 @@
  *   impact    --diff <rev> [--depth N]      callers/dependents/test files
  *                                             reachable from the changed
  *                                             symbols over ACCEPTED edges
+ *   review-risk [--diff <rev>] [--json]       the diff as a sum of terms (callers,
+ *                                             entry points, flows, co-change
+ *                                             partners, areas, columns,
+ *                                             operations, pipelines), each fact
+ *                                             with its witness
  *   tests-for <symbol>                        test files importing the symbol
  *   untested  --diff <rev>                    changed symbols no test imports
  *   dead      [--entry-points F]              zero accepted in-edges, minus
@@ -96,6 +102,7 @@ import { fileURLToPath } from 'node:url';
 import { resolve_project_root } from '../_lib/agent_settings.js';
 import { gitProbe, hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { buildFromRepo, discoverFiles, isTestFile, type LaneSummary, sidecarPath } from './build.js';
+import { diffHunks, renderReviewRisk, reviewRisk } from './review_risk.js';
 import { DOC_EXTS } from './docs_layer.js';
 import {
     computeVerdict,
@@ -563,6 +570,31 @@ function cmdImpact(argv: string[]): number {
     } finally {
         r.g.close();
     }
+}
+
+/**
+ * `review-risk [--diff <rev>]` — the diff's hunks against the graph as a sum of
+ * terms, each counted fact listed with its witness. Without `--diff` the
+ * working tree is set against HEAD.
+ */
+function cmdReviewRisk(argv: string[]): number {
+    const root = resolveRoot(argv);
+    const rev = flag(argv, '--diff') ?? 'HEAD';
+    const hunks = diffHunks(root, rev);
+    if (hunks === null) {
+        process.stderr.write(`code-graph: cannot resolve rev '${rev}' in ${root}\n`);
+        return 1;
+    }
+    const p = flag(argv, '--graph') ?? cacheFor(root);
+    if (!fs.existsSync(p)) {
+        process.stderr.write(`code-graph: graph not found: ${p} — run \`code-graph build\` first\n`);
+        return 1;
+    }
+    const graph = JSON.parse(fs.readFileSync(p, 'utf-8')) as CodeGraph;
+    const r = reviewRisk(root, graph, rev, hunks);
+    if (argv.includes('--json')) process.stdout.write(`${JSON.stringify(r)}\n`);
+    else process.stdout.write(`${renderReviewRisk(r).join('\n')}\n`);
+    return 0;
 }
 
 /** `tests-for <symbol>` (3.2) — the test files that import the symbol. */
@@ -1229,6 +1261,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
             return cmdQuery(sub, argv.slice(1));
         if (sub === 'impact') return cmdImpact(argv.slice(1));
         if (sub === 'tests-for') return cmdTestsFor(argv.slice(1));
+        if (sub === 'review-risk') return cmdReviewRisk(argv.slice(1));
         if (sub === 'untested') return cmdUntested(argv.slice(1));
         if (sub === 'dead') return cmdDead(argv.slice(1));
         if (sub === 'suggest-verb') return cmdSuggestVerb(argv.slice(1));
@@ -1242,7 +1275,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'estate') return estateMain(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|tests-for|untested|dead|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
+                'impact|review-risk|tests-for|untested|dead|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
         );
         return 2;
     } catch (e) {
