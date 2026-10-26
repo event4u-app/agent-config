@@ -1,0 +1,21 @@
+# Case: follow-up-select-blade
+# Registered by road-to-a-control-that-matches-its-neighbours step 0.2.
+# The reported case on a Blade stack, with the German follow-up prompt.
+id: follow-up-select-blade
+prompt: "Füg einen Status-Filter als Select hinzu."
+authority:
+  surface_mode: operate
+  register: product
+  change_intent: extend
+  reference_maturity: production-incumbent
+note: |
+  The project ships <x-select> and <x-input> Blade components. A raw <select>
+  is the defect; the filter must use <x-select> with the siblings' sizing.
+bars:
+  raw_select_with_primitive: 0
+  sibling_box_deviation: "the x-input sizing (h-9 px-3 rounded-md text-sm)"
+  open_state_captured: 1
+files:
+  - resources/views/orders/filters.blade.php
+  - resources/views/components/select.blade.php
+  - resources/views/components/input.blade.php

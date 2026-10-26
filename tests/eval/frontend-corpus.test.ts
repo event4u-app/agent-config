@@ -56,8 +56,11 @@ describe('frontend corpus population', () => {
     const cases = fs.readdirSync(path.join(CORPUS_ROOT, 'cases')).sort();
     const nearMiss = fs.readdirSync(path.join(CORPUS_ROOT, 'near-miss')).sort();
 
-    it('carries the twenty cases step 0.2 enumerates', () => {
-        expect(cases).toHaveLength(20);
+    it('carries the twenty cases step 0.2 enumerates plus the four follow-up cases', () => {
+        // road-to-a-control-that-matches-its-neighbours step 0.2 added the
+        // four `follow-up-*` cases on 2026-10-26.
+        expect(cases).toHaveLength(24);
+        expect(cases.filter((c) => c.startsWith('follow-up-'))).toHaveLength(4);
     });
 
     it('carries the three near-miss fixtures step 0.2 names', () => {

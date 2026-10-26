@@ -1,0 +1,23 @@
+# Case: follow-up-select-shadcn
+# Registered by road-to-a-control-that-matches-its-neighbours step 0.2.
+# A one-line follow-up on a finished screen: the reported defect shape.
+id: follow-up-select-shadcn
+prompt: "Add a status filter as a select next to the two existing filters."
+authority:
+  surface_mode: operate
+  register: product
+  change_intent: extend
+  reference_maturity: production-incumbent
+note: |
+  The project ships its own Select primitive. A raw <select> here is the
+  defect; the filter must reuse components/ui/select.tsx and the siblings'
+  box metrics (h-9, px-3, rounded-md, text-sm).
+# Bars, frozen before any Phase 1 change. Deterministic only.
+bars:
+  raw_select_with_primitive: 0
+  sibling_box_deviation: "height, padding and radius equal to the sibling Inputs"
+  open_state_captured: 1
+files:
+  - app/orders/filters.tsx
+  - components/ui/select.tsx
+  - components/ui/input.tsx

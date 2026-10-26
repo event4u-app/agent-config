@@ -1,0 +1,32 @@
+:root {
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --radius: 6px;
+    --border: #c9ccd1;
+}
+
+.stack {
+    display: grid;
+    gap: var(--space-3);
+    max-width: 24rem;
+}
+
+.label {
+    display: grid;
+    gap: var(--space-2);
+    font-size: 0.875rem;
+}
+
+.field {
+    height: 2.25rem;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font: inherit;
+}
+
+.button {
+    height: 2.25rem;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius);
+}
