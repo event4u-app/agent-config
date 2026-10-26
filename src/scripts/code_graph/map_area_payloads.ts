@@ -551,7 +551,9 @@ function runtimePayload(c: Ctx, findings: AreaFinding[], st: LaneState): Runtime
         const type = String(attr(r, 'api_kind') ?? attr(r, 'type') ?? attr(r, 'resource_type') ?? r.label.split(/[./]/)[0] ?? 'resource');
         const module = attr(r, 'module');
         const ns = attr(r, 'namespace');
-        resources.push({ name: r.label, type, ...(typeof module === 'string' ? { module } : {}), environments: typeof ns === 'string' ? [ns] : [], witness: w });
+        const tfEnvs = attr(r, 'environments');
+        const environments = typeof ns === 'string' ? [ns] : Array.isArray(tfEnvs) ? tfEnvs.filter((e): e is string => typeof e === 'string') : [];
+        resources.push({ name: r.label, type, ...(typeof module === 'string' ? { module } : {}), environments, witness: w });
     }
     const links: NonNullable<RuntimePayload['links']> = [];
     for (const e of c.graph.edges) {

@@ -21,7 +21,7 @@ import { dbEngineOf, parseImageRef } from './images.js';
 import { looksLikeManifest, readKubernetesFiles } from './kubernetes.js';
 import { redactImage, redactOutput, redactText } from './redact.js';
 import { isMakefileName, isTaskfileName, parseMakefile, parseTaskfile } from './targets.js';
-import { readTerraformDir, terraformDirs } from './terraform.js';
+import { readTerraform } from './terraform.js';
 
 const RUNTIME_SKIP = new Set([...SKIP_DIRS, '.terraform', '.terragrunt-cache', 'tests', 'test', '__tests__', 'fixtures']);
 /** a `docker compose config` output the user saved (rung T3) */
@@ -409,7 +409,7 @@ export function readRuntime(root: string, opts: RuntimeOptions = {}): LaneOutput
     composeScopes(em, [...composeReads, ...resolvedReads], scopes);
     readDevcontainers(em, files.filter((f) => /(^|\/)\.devcontainer(\/[^/]+)?\/devcontainer\.json$|(^|\/)\.devcontainer\.json$/.test(f)), composeReads, scopes);
     readTargets(em, files.filter((f) => isMakefileName(base(f)) || isTaskfileName(base(f))));
-    for (const [dir, tfs] of terraformDirs(files.filter((f) => f.endsWith('.tf')))) readTerraformDir(em, dir, tfs);
+    readTerraform(em, files.filter((f) => f.endsWith('.tf')), files.filter((f) => /\.tfvars(\.json)?$/.test(f)));
 
     const manifestCandidates = files.filter((f) => {
         const n = base(f);
