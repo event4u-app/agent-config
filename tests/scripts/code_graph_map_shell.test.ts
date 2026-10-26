@@ -12,7 +12,7 @@ import { KNOWLEDGE_AREA_IDS, type MapAreas, type RuntimePayload } from '../../sr
 import { sampleAreas, wit } from './code_graph_map_areas_fixture.js';
 
 // The shell around the areas: routing, the area pages with and without a
-// payload, search over every kind, the freshness banner, both languages, and
+// payload, search over every kind, the freshness reason, both languages, and
 // the page at every width in both themes.
 
 // The Overview draws the design's nine layer cards: Code, Database, Integrations,
@@ -157,15 +157,16 @@ describe('an area with a payload renders its facts with their witnesses', () => 
 
     it('interfaces, delivery and agent draw their own facts; explain is the graph verb with its CLI', async () => {
         const page = await open(full, '#/interfaces');
-        expect(await page.locator('#av-main').textContent()).toMatch(/partner[\s\S]*soap[\s\S]*PARTNER_URL/);
-        await page.click('#av-bar [role="tab"]:has-text("Operations")');
-        expect(await page.locator('#av-main').textContent()).toMatch(/partner · GetStock/);
+        // Interfaces lays out its own rails: the services sit in the left rail, the operations in the centre.
+        expect(await page.locator('#av').textContent()).toMatch(/partner[\s\S]*soap[\s\S]*PARTNER_URL/i);
+        await page.click('#av [role="tab"]:has-text("Operations")');
+        expect(await page.locator('#av').textContent()).toMatch(/partner[\s\S]*GetStock/);
         await page.evaluate(() => { location.hash = '#/delivery'; });
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'delivery');
         expect(await page.locator('#av-main').textContent()).toMatch(/Stage 1[\s\S]*test[\s\S]*Stage 2[\s\S]*deploy/);
         await page.evaluate(() => { location.hash = '#/agent'; });
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'agent');
-        expect(await page.locator('#av-main').textContent()).toContain('agent-config code-graph explain <seed>');
+        expect(await page.locator('#av').textContent()).toContain('agent-config code-graph explain <seed>');
         await page.close();
     });
 });
@@ -340,7 +341,7 @@ describe('search covers every kind; a preset only narrows the kind', () => {
         expect(await hits.first().textContent()).toBe('Interfaces · partner');
         await hits.first().click();
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === 'service/partner');
-        expect(await page.locator('#av-detail').textContent()).toContain('PARTNER_URL');
+        expect(await page.locator('#av-side').textContent()).toContain('PARTNER_URL');
         await page.close();
     });
 
@@ -354,16 +355,17 @@ describe('search covers every kind; a preset only narrows the kind', () => {
     });
 });
 
-describe('the freshness banner', () => {
-    it('names the reason while the graph is behind HEAD, on every area, and is absent when fresh', async () => {
-        for (const hash of ['', '#/overview', '#/data']) {
+describe('the freshness reason', () => {
+    it('rides on the header chip while the graph is behind HEAD, on every area, with no banner row; none when fresh', async () => {
+        for (const hash of ['', '#/overview', '#/data', '#/code']) {
             const page = await open(behind, hash);
-            expect(await page.locator('#banner').isVisible()).toBe(true);
-            expect(await page.locator('#banner').textContent()).toMatch(/3 commit\(s\) behind HEAD[\s\S]*Confirm a witness/);
+            expect(await page.locator('#banner').isVisible()).toBe(false);
+            expect(await page.locator('#pin-fresh').textContent()).toBe('BEHIND:3');
+            expect(await page.locator('#pin-fresh').getAttribute('title')).toMatch(/3 commit\(s\) behind HEAD[\s\S]*Confirm a witness/);
             await page.close();
         }
         const fresh = await open(full);
-        expect(await fresh.locator('#banner').isVisible()).toBe(false);
+        expect(await fresh.locator('#pin-fresh').getAttribute('title')).toBeNull();
         await fresh.close();
     });
 });

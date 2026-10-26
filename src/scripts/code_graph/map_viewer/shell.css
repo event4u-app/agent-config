@@ -67,8 +67,8 @@
 .pane-head .cap { margin-right: auto; align-self: center; }
 .rsec { padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
 .rsec-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.av-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
-.av-head .av-crumbs { flex-basis: 100%; }
+.av-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.av-head .av-barmeta { font-size: 12px; color: var(--muted); }
 .av-head .av-barmeta { margin-left: auto; }
 .av-page { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .av-bar.owned { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
