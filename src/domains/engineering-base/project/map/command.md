@@ -83,6 +83,27 @@ agent-config code-graph open
 It resolves the page where `map` writes it (`--root` and `--out` work the same) and
 exits 1, opening nothing, when no map has been drawn yet.
 
+### Demo map for frontend work
+
+A repository without a database, contracts or pipelines leaves most areas empty.
+To work on the map pages anyway, draw them from sample data:
+
+```bash
+agent-config code-graph map --demo --open    # or: task map:demo -- --open
+```
+
+It copies the demo fixture (`tests/fixtures/code-graph/demo/` — a shop with
+migrations, a schema dump, a snapshot and oracle output, REST and SOAP partner
+calls with an OpenAPI contract, Compose, Terraform, Kubernetes, GitHub Actions,
+GitLab CI, decision records and a queued job) into a temporary git repository with
+a scripted history and an uncommitted change, then runs the normal build, lane
+readers and map writer on it. The hub demo is drawn from that shop and two more
+fixture projects, registered in a temporary user-global home, so the real registry
+is never touched. Both pages land in `agents/map/.build/demo/` (gitignored; `hub/` <!-- ref-ignore -->
+beside the map) or `--out <dir>`, and carry the "Sample data · Fixture" chip in the
+header — a map of a real repository never does. Source checkout of agent-config only:
+the fixture is not part of the published package.
+
 ### 2. Report
 
 Quote the command's summary lines (files, areas, largest area, graph state, render
