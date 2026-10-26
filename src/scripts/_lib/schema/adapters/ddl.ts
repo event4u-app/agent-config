@@ -70,7 +70,7 @@ function stripComments(sql: string): string {
     return out;
 }
 
-function unquoteIdent(raw: string): string {
+export function unquoteIdent(raw: string): string {
     const s = raw.trim();
     if (s.length >= 2) {
         const first = at(s, 0);
@@ -85,7 +85,7 @@ function unquoteIdent(raw: string): string {
 }
 
 /** Split on commas that sit at paren depth zero and outside any quote. */
-function splitTopLevel(body: string): string[] {
+export function splitTopLevel(body: string): string[] {
     const parts: string[] = [];
     let depth = 0;
     let quote: string | null = null;
@@ -120,7 +120,7 @@ function splitTopLevel(body: string): string[] {
     return parts.map((p) => p.trim()).filter((p) => p.length > 0);
 }
 
-function columnList(raw: string): string[] {
+export function columnList(raw: string): string[] {
     return splitTopLevel(raw)
         .map((c) => unquoteIdent(c.replace(/\s+(asc|desc)$/i, '').replace(/\(\d+\)$/, '')))
         .filter((c) => c.length > 0);
@@ -158,7 +158,7 @@ function balancedBody(text: string, from: number): { body: string; end: number }
 const TABLE_CONSTRAINT_HEAD =
     /^(constraint\b|primary\s+key\b|unique\b|key\b|index\b|foreign\s+key\b|check\b|fulltext\b|spatial\b)/i;
 
-function parseColumn(clause: string, ordinal: number, skipped: SkipCounters): IrColumn | null {
+export function parseColumn(clause: string, ordinal: number, skipped: SkipCounters): IrColumn | null {
     const m = /^(`[^`]+`|"[^"]+"|\[[^\]]+\]|[A-Za-z_][\w$]*)\s+([\s\S]+)$/.exec(clause);
     if (m === null) return null;
     const name = unquoteIdent(req(m, 1));
@@ -214,7 +214,7 @@ function parseColumn(clause: string, ordinal: number, skipped: SkipCounters): Ir
     return { name, type: type.toLowerCase(), nullable, default: def, auto_increment: auto, ordinal, comment };
 }
 
-function parseCreateTable(
+export function parseCreateTable(
     stmt: string,
     skipped: SkipCounters,
 ): { table: IrTable; inlineUnique: IrIndex[] } | null {

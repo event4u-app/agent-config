@@ -23,6 +23,9 @@
 
 import { readFileSync, readdirSync, lstatSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { readLaravelSchema } from '../schema/readers/laravel_migrations.js';
+import { readPrismaSchema } from '../schema/readers/prisma_schema.js';
+import { leadingIndexState, replay, type ConnectionSchema } from '../schema/replay.js';
 import { type Finding, parse_waiver, is_ignored_dir } from './types';
 
 // ---------------------------------------------------------------------------
@@ -111,128 +114,56 @@ function ensure_table(schema: SchemaMap, table: string): TableSchema {
 }
 
 // ---------------------------------------------------------------------------
-// Schema parsing — Laravel migrations
+// Schema — the replayed model the code graph reads too (one reader per stack)
 // ---------------------------------------------------------------------------
 
-const LARAVEL_COLUMN_TYPES = [
-    'string', 'text', 'mediumText', 'longText', 'char', 'enum', 'uuid', 'ulid',
-    'integer', 'bigInteger', 'unsignedInteger', 'unsignedBigInteger', 'tinyInteger',
-    'smallInteger', 'decimal', 'float', 'double', 'boolean', 'json', 'jsonb',
-    'date', 'dateTime', 'dateTimeTz', 'timestamp', 'timestampTz', 'time', 'year',
-    'ipAddress', 'macAddress', 'binary',
-];
-
-export function parse_laravel_migrations(text: string, schema: SchemaMap): void {
-    // Matches Schema::create / Schema::table and the Schema::connection(...)
-    // variants — ALTER migrations add indexes too (real-world FP source).
-    const create_re = /Schema::(?:connection\([^)]*\)\s*->\s*)?(?:create|table)\(\s*['"](\w+)['"]/g;
-    let m: RegExpExecArray | null;
-    while ((m = create_re.exec(text)) !== null) {
-        const table = ensure_table(schema, m[1]!);
-        const paren = m.index + m[0].lastIndexOf('(');
-        const body = balanced_span(text, paren, '(', ')');
-
-        // $table->id() / ->bigIncrements('id') / ->increments(...) — primary, indexed.
-        for (const im of body.matchAll(/\$table->(?:id|(?:big|small|medium|tiny)?[iI]ncrements)\(\s*(?:['"](\w+)['"])?\s*\)/g)) {
-            const col = im[1] ?? 'id';
-            table.columns.add(col);
-            table.indexed.add(col);
-        }
-
-        // $table->foreignId('user_id')->constrained(...) — FK, indexed by the constraint.
-        for (const im of body.matchAll(/\$table->foreignId\(\s*['"](\w+)['"]\s*\)((?:->\w+\([^)]*\))*)/g)) {
-            const col = im[1]!;
-            table.columns.add(col);
-            if (/->constrained\b/.test(im[2] ?? '')) table.indexed.add(col);
-        }
-
-        // Plain typed columns, with inline ->index()/->unique()/->primary() modifiers.
-        const type_re = new RegExp(
-            String.raw`\$table->(${LARAVEL_COLUMN_TYPES.join('|')})\(\s*['"](\w+)['"][^;]*?\)((?:->\w+\([^)]*\))*)`,
-            'g',
-        );
-        for (const im of body.matchAll(type_re)) {
-            const col = im[2]!;
-            table.columns.add(col);
-            if (/->(index|unique|primary)\(\s*\)/.test(im[0])) table.indexed.add(col);
-        }
-
-        // Timestamp / soft-delete helpers.
-        if (/\$table->timestamps\(\)/.test(body)) {
-            table.columns.add('created_at');
-            table.columns.add('updated_at');
-        }
-        if (/\$table->softDeletes\(\)/.test(body)) table.columns.add('deleted_at');
-
-        // Standalone index declarations: $table->index('col') / index(['a','b']).
-        // Leftmost-prefix rule: only the FIRST column of a composite counts.
-        for (const im of body.matchAll(/\$table->(index|unique|primary|fullText)\(\s*(\[[^\]]*\]|['"]\w+['"])/g)) {
-            const arg = im[2]!;
-            const cols = [...arg.matchAll(/['"](\w+)['"]/g)].map((c) => c[1]!);
-            if (cols.length > 0) {
-                for (const c of cols) table.columns.add(c);
-                table.indexed.add(cols[0]!); // leftmost column is always usable alone
-                table.composites.push(cols);
+/**
+ * Fold one replayed connection into the index-parity map. A column counts as
+ * indexed when a primary key or index leads with it, or when the engine itself
+ * indexes the foreign key on it. On an engine the project does not state, a
+ * constrained foreign key keeps counting as indexed: the gate does not raise a
+ * finding whose truth depends on which server runs the schema.
+ */
+function add_connection(schema: SchemaMap, c: ConnectionSchema, key_of: (table: string) => string[] = (t) => [t]): void {
+    for (const t of c.tables) {
+        for (const key of key_of(t.name)) {
+            const entry = ensure_table(schema, key);
+            for (const col of t.columns) entry.columns.add(col.name);
+            for (const list of [t.primary_key, ...t.indexes.map((ix) => ix.columns)]) {
+                if (list.length === 0) continue;
+                entry.indexed.add(list[0]!);
+                if (list.length > 1) entry.composites.push([...list]);
             }
-        }
-
-        // $table->foreign('col')->references(...) — FK index.
-        for (const im of body.matchAll(/\$table->foreign\(\s*['"](\w+)['"]\s*\)/g)) {
-            table.columns.add(im[1]!);
-            table.indexed.add(im[1]!);
+            for (const fk of t.foreign_keys) {
+                const state = leadingIndexState(t, fk.columns, c.engine);
+                if (state === 'implicit' || state === 'engine-unknown') entry.indexed.add(fk.columns[0]!);
+            }
         }
     }
 }
 
-// ---------------------------------------------------------------------------
-// Schema parsing — schema.prisma
-// ---------------------------------------------------------------------------
+/** Laravel migrations (one file or several, applied in name order) into `schema`. */
+export function parse_laravel_migrations(text: string | Array<{ path: string; source: string }>, schema: SchemaMap, config: string | null = null): void {
+    const files = typeof text === 'string' ? [{ path: 'migrations/inline.php', source: text }] : text;
+    const read = readLaravelSchema(files, config);
+    for (const c of replay({ ops: read.ops, engines: read.engines }).connections) add_connection(schema, c);
+}
 
-const PRISMA_SCALARS = new Set([
-    'Int', 'BigInt', 'String', 'Boolean', 'DateTime', 'Decimal', 'Float', 'Json', 'Bytes',
-]);
-
+/** A `schema.prisma` into `schema`, keyed by MODEL name with FIELD names, as the client queries them. */
 export function parse_prisma_schema(text: string, schema: SchemaMap): void {
-    const model_re = /model\s+(\w+)\s*\{/g;
-    let m: RegExpExecArray | null;
-    while ((m = model_re.exec(text)) !== null) {
-        const table = ensure_table(schema, m[1]!);
-        const brace = text.indexOf('{', m.index);
-        const body = balanced_span(text, brace, '{', '}');
-
-        for (const raw of body.split('\n')) {
-            const line = raw.trim();
-
-            // Block attributes: @@index([a, b]) / @@unique([a, b]) — full order
-            // recorded; leftmost usable alone.
-            const block_full = line.match(/^@@(index|unique)\(\s*\[([^\]]*)\]/);
-            if (block_full) {
-                const cols = [...block_full[2]!.matchAll(/(\w+)/g)].map((c) => c[1]!);
-                if (cols.length > 0) table.composites.push(cols);
-            }
-            const block = line.match(/^@@(index|unique)\(\s*\[\s*(\w+)/);
-            if (block) {
-                table.columns.add(block[2]!);
-                table.indexed.add(block[2]!);
-                continue;
-            }
-            if (line.startsWith('@@') || line.startsWith('//') || line === '' || line === '{' || line === '}') {
-                continue;
-            }
-
-            // Field lines: `name Type ...attributes`. Scalar and enum-ish types are
-            // columns; relation object fields (type == another model, or @relation
-            // with a list type) are not columns themselves.
-            const field = line.match(/^(\w+)\s+(\w+)(\[\])?(\?)?\s*(.*)$/);
-            if (!field) continue;
-            const [, name, type, is_list, , rest] = field;
-            if (is_list) continue; // relation list — not a column
-            if (!PRISMA_SCALARS.has(type!) && /@relation\b/.test(rest ?? '')) continue;
-            if (!PRISMA_SCALARS.has(type!)) continue; // unknown/model type without scalar — skip
-
-            table.columns.add(name!);
-            if (/@id\b/.test(rest ?? '') || /@unique\b/.test(rest ?? '')) table.indexed.add(name!);
-        }
+    const read = readPrismaSchema({ path: 'schema.prisma', source: text });
+    const tmp: SchemaMap = new Map();
+    for (const c of replay({ ops: read.ops, engines: new Map([['', read.engine]]) }).connections) add_connection(tmp, c);
+    for (const [model, table] of read.modelTables) {
+        const physical = tmp.get(table);
+        if (!physical) continue;
+        const entry = ensure_table(schema, model);
+        const fields = read.fieldColumns.get(model) ?? new Map<string, string>();
+        const field_of = new Map([...fields].map(([f, col]) => [col, f] as const));
+        const name = (col: string): string => field_of.get(col) ?? col;
+        for (const col of physical.columns) entry.columns.add(name(col));
+        for (const col of physical.indexed) entry.indexed.add(name(col));
+        for (const list of physical.composites) entry.composites.push(list.map(name));
     }
 }
 
@@ -548,18 +479,25 @@ export function analyze(dir: string, opts: AnalyzeOptions = {}): IndexParityResu
     const schema: SchemaMap = new Map();
     const query_files: Array<{ rel: string; text: string; lang: 'php' | 'ts' }> = [];
 
+    const migrations: Array<{ path: string; source: string }> = [];
+    let config: string | null = null;
     for (const f of files) {
         const rel = relative(dir, f);
         if (f.endsWith('.prisma')) {
             parse_prisma_schema(readFileSync(f, 'utf8'), schema);
         } else if (f.endsWith('.php')) {
             const text = readFileSync(f, 'utf8');
-            if (/Schema::(?:connection\([^)]*\)\s*->\s*)?(?:create|table)\(/.test(text)) parse_laravel_migrations(text, schema);
-            else query_files.push({ rel, text, lang: 'php' });
+            const posix = rel.split('\\').join('/');
+            if (posix === 'config/database.php') config = text;
+            if (/Schema::(?:connection\([^)]*\)\s*->\s*)?(?:create|table)\(/.test(text)) {
+                migrations.push({ path: /(^|\/)migrations\//.test(posix) ? posix : `migrations/${posix}`, source: text });
+            } else query_files.push({ rel, text, lang: 'php' });
         } else if (f.endsWith('.ts')) {
             query_files.push({ rel, text: readFileSync(f, 'utf8'), lang: 'ts' });
         }
     }
+
+    if (migrations.length > 0) parse_laravel_migrations(migrations, schema, config);
 
     const refs: ColumnRef[] = [];
     const file_lines = new Map<string, string[]>();
