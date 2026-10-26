@@ -70,11 +70,18 @@ function renderNav() {
         var p = KA[r];
         a.classList.toggle('empty', r !== 'overview' && r !== 'code' && (!p || !!p.empty));
     });
-    // On a narrow window the nav scrolls sideways: keep the open area in view without scrolling the page.
-    var nav = $('areanav');
-    var on = nav.querySelector('a[aria-current]');
-    if (on && nav.scrollWidth > nav.clientWidth) nav.scrollLeft = Math.max(0, on.offsetLeft - nav.offsetLeft - 8);
+    // On a phone the nav folds into one menu button that names the open area.
+    var menu = $('areamenu');
+    menu.textContent = '☰ ' + (t('areaNames')[current.route] || current.route);
+    menu.setAttribute('aria-label', t('navLabel') + ': ' + (t('areaNames')[current.route] || current.route));
+    setAreaMenu(false);
 }
+function setAreaMenu(open) {
+    $('areamenu').setAttribute('aria-expanded', String(open));
+    $('areanav').classList.toggle('open', open);
+}
+$('areamenu').addEventListener('click', function () { setAreaMenu($('areamenu').getAttribute('aria-expanded') !== 'true'); });
+document.addEventListener('pointerdown', function (e) { if ($('areanav').classList.contains('open') && !e.target.closest('#areanav, #areamenu')) setAreaMenu(false); });
 /** Shown on every area while the graph is not level with HEAD, with the reason and what to do. */
 function renderBanner() {
     var b = $('banner');
@@ -169,6 +176,7 @@ searchInput.addEventListener('focus', function () { if (searchInput.value.trim()
 document.addEventListener('keydown', function (e) {
     if (e.key === '/' && document.activeElement !== searchInput) { e.preventDefault(); searchInput.focus(); return; }
     if (e.key !== 'Escape') return;
+    if ($('areanav').classList.contains('open')) { setAreaMenu(false); $('areamenu').focus(); return; }
     if (document.activeElement === searchInput && searchInput.value) { closeSearch(); return; }
     if (current.route !== 'code' && avState.fly) { avState.fly = false; applyAvPanes(); }
 });

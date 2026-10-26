@@ -1160,6 +1160,7 @@ export function renderPage(m: MapModel, meta: MapMeta, areas: object, shell?: Ma
             '<rect x="30.75" y="118.75" width="57.5" height="29.5" rx="3" fill="#04070d" stroke="url(#acTerm)" stroke-width="1.3" filter="url(#acGlow)"/><path d="M40.75 129.5 L47.75 134.5 L40.75 139.5 M51.75 139.75 H61.75" fill="none" stroke="#ffb43c" stroke-width="1.8" stroke-linecap="round"/></svg>',
         '<div class="brand-name"><b>AGENT CONFIG</b><span>KNOWLEDGE MAP</span></div>',
         '</div>',
+        '<button type="button" class="areamenu" id="areamenu" aria-haspopup="true" aria-expanded="false" aria-controls="areanav"></button>',
         `<nav class="areanav" id="areanav" aria-label="Areas">${nav.map((r) => `<a href="#/${r}" data-route="${r}">${r}</a>`).join('')}</nav>`,
         '</div>',
         '<div class="top-row row2">',
