@@ -27,7 +27,7 @@ extendStrings({
         cols: 'Columns', cAll: 'All', cKeys: 'Keys', cAllT: 'every column', cKeysT: 'only PK, FK, index and *_id',
         layout: 'Layout', yGrid: 'Grid', yDomain: 'By domain', yGridT: 'free arrangement', yDomainT: 'grouped by cluster of keys',
         fitB: 'Fit', resetPos: 'Reset arrangement', zoomL: function (z) { return 'Zoom ' + z + '×'; },
-        erdHelp: function (k) { return 'Hold ' + k + ' to move and zoom: then drag a card, drag the background, or use the wheel. Without it the page scrolls; − / + / Fit always work. Lines start on “Focus”: only the edges of the picked table, the rest stays calm. A large schema also starts with “Keys”.'; },
+        erdHelp: function (k) { return 'Drag to pan, wheel to zoom; hold ' + k + ' and drag to move a table. − / + / Fit zoom too. Lines start on “Focus”: only the edges of the picked table, the rest stays calm. A large schema also starts with “Keys”.'; },
         moreCols: function (n) { return '+ ' + n + (n === 1 ? ' more column' : ' more columns'); }, noTable: 'named by code, no table',
         driftIntro: function (c) { return 'Intended state (M, commit ' + c + ') against the observed state (L) of the saved schema file. A pending migration is not drift.'; },
         driftEl: 'Element', driftM: 'M · Migration', driftL: function (f) { return 'L · ' + f; }, driftOther: 'L · other environments', driftClass: 'Classification',
@@ -45,7 +45,7 @@ extendStrings({
         icons: { fk: 'foreign key declared in the database', cascade: 'delete cascades', setnull: 'delete sets null', restrict: 'delete is restricted', soft: 'code only · no FK in the database', implied: 'same name, nothing states it (suggestion)', finding: 'a drift finding is attached' },
         iconsHead: 'Lines', iconOpen: function (what) { return 'Relation ' + what + ' — open details'; }, popKind: { fk: 'foreign key (database)', soft: 'soft relation (code only)', implied: 'implied by name (suggestion)', orm: 'ORM relation' },
         popRules: 'rules', popVia: 'known from', viaNames: { schema: 'schema', orm: 'ORM relation', query: 'query join', name: 'matching name' }, popSelect: 'Show in the detail rail', popClose: 'Close',
-        dim3: '3D', dimLabel: '2D / 3D', help3d: function (k) { return 'Hold ' + k + ' and drag to turn the schema, ' + k + ' + wheel to zoom; the arrow keys turn it too. Picking a table brings it to the front with all its columns; tables further back show their name and keys. A card\'s place in space carries no data: tables of one cluster of keys sit together.'; },
+        dim3: '3D', dimLabel: '2D / 3D', help3d: function () { return 'Drag to turn the schema any way round, wheel to zoom; the arrow keys turn it too. Picking a table brings it to the front with all its columns; tables further back show their name and keys. A card\'s place in space carries no data: tables of one cluster of keys sit together.'; },
         linksHead: { fk: 'Foreign keys (database)', soft: 'Soft relations (code only · no FK in the database)', implied: 'Implied keys (suggestion)' }, missingFk: 'The database has no constraint for this relation.', linkTo: function (n) { return n + ' linked'; }
     },
     de: {
@@ -66,7 +66,7 @@ extendStrings({
         cols: 'Spalten', cAll: 'Alle', cKeys: 'Schlüssel', cAllT: 'alle Spalten', cKeysT: 'nur PK, FK, Index und *_id',
         layout: 'Layout', yGrid: 'Raster', yDomain: 'Nach Domäne', yGridT: 'freie Anordnung', yDomainT: 'gruppiert nach Schlüssel-Cluster',
         fitB: 'Einpassen', resetPos: 'Anordnung zurücksetzen', zoomL: function (z) { return 'Zoom ' + z + '×'; },
-        erdHelp: function (k) { return k + ' halten zum Verschieben und Zoomen: dann Karte ziehen, Hintergrund ziehen oder Mausrad. Ohne die Taste scrollt die Seite; − / + / Einpassen gehen immer. Linien starten auf „Fokus“: nur die Kanten der gewählten Tabelle, der Rest bleibt ruhig. Große Schemas starten zusätzlich mit „Schlüssel“.'; },
+        erdHelp: function (k) { return 'Ziehen verschiebt die Ansicht, das Mausrad zoomt; ' + k + ' halten und ziehen verschiebt eine Tabelle. − / + / Einpassen zoomen auch. Linien starten auf „Fokus“: nur die Kanten der gewählten Tabelle, der Rest bleibt ruhig. Große Schemas starten zusätzlich mit „Schlüssel“.'; },
         moreCols: function (n) { return '+ ' + n + (n === 1 ? ' weitere Spalte' : ' weitere Spalten'); }, noTable: 'vom Code benannt, keine Tabelle',
         driftIntro: function (c) { return 'Gewünschter Stand (M, Commit ' + c + ') gegen beobachteten Stand (L) der gespeicherten Schema-Datei. Offene Migration ist kein Drift.'; },
         driftEl: 'Element', driftM: 'M · Migration', driftL: function (f) { return 'L · ' + f; }, driftOther: 'L · weitere Umgebungen', driftClass: 'Einordnung',
@@ -84,7 +84,7 @@ extendStrings({
         icons: { fk: 'Fremdschlüssel in der Datenbank deklariert', cascade: 'Löschen kaskadiert', setnull: 'Löschen setzt NULL', restrict: 'Löschen ist eingeschränkt', soft: 'nur im Code · FK fehlt in der DB', implied: 'gleicher Name, nichts belegt es (Vorschlag)', finding: 'ein Drift-Befund hängt daran' },
         iconsHead: 'Linien', iconOpen: function (what) { return 'Beziehung ' + what + ' — Details öffnen'; }, popKind: { fk: 'Fremdschlüssel (Datenbank)', soft: 'weiche Beziehung (nur im Code)', implied: 'per Name vermutet (Vorschlag)', orm: 'ORM-Beziehung' },
         popRules: 'Regeln', popVia: 'bekannt aus', viaNames: { schema: 'Schema', orm: 'ORM-Beziehung', query: 'Query-Join', name: 'gleicher Name' }, popSelect: 'In der Detail-Leiste zeigen', popClose: 'Schließen',
-        dim3: '3D', dimLabel: '2D / 3D', help3d: function (k) { return k + ' halten und ziehen dreht das Schema, ' + k + ' + Mausrad zoomt; die Pfeiltasten drehen ebenfalls. Eine gewählte Tabelle kommt nach vorn, mit allen Spalten; Tabellen weiter hinten zeigen Name und Schlüssel. Die Lage im Raum trägt keine Daten: Tabellen eines Schlüssel-Clusters stehen beieinander.'; },
+        dim3: '3D', dimLabel: '2D / 3D', help3d: function () { return 'Ziehen dreht das Schema in jede Richtung, das Mausrad zoomt; die Pfeiltasten drehen ebenfalls. Eine gewählte Tabelle kommt nach vorn, mit allen Spalten; Tabellen weiter hinten zeigen Name und Schlüssel. Die Lage im Raum trägt keine Daten: Tabellen eines Schlüssel-Clusters stehen beieinander.'; },
         linksHead: { fk: 'Fremdschlüssel (Datenbank)', soft: 'Weiche Beziehungen (nur im Code · FK fehlt in der DB)', implied: 'Vermutete Schlüssel (Vorschlag)' }, missingFk: 'Die Datenbank hat für diese Beziehung keinen Constraint.', linkTo: function (n) { return n + ' verknüpft'; }
     }
 });
@@ -100,7 +100,7 @@ var DB_MIN_READABLE_Z = 0.6;
 var DB_CARD_W = 180;
 var DB_GAP_X = 64;
 var DB_GAP_Y = 80;
-var dbState = { dim: '2d', rot: { yaw: 0.5, pitch: -0.35 }, z3: 1, front: '', lines: null, cols: null, layout: 'grid', src: { C: true, M: true, L: true, Q: false }, focus: '', pos: Object.create(null), z: 1, panX: 0, panY: 0, fitted: false, act: '' };
+var dbState = { dim: '2d', rot: null, z3: 1, front: '', lines: null, cols: null, layout: 'grid', src: { C: true, M: true, L: true, Q: false }, focus: '', pos: Object.create(null), z: 1, panX: 0, panY: 0, fitted: false, act: '' };
 
 function dBare(tb) { return tb.connection !== 'default' && tb.name.indexOf(tb.connection + ':') === 0 ? tb.name.slice(tb.connection.length + 1) : tb.name; }
 function dTable(p, name) { for (var i = 0; i < p.tables.length; i++) if (p.tables[i].name === name) return p.tables[i]; return null; }
@@ -662,72 +662,64 @@ function dClip(r, tx, ty) {
 /**
  * A line annotation: one icon badge on the line instead of a text label. It is a
  * button; it opens a popup with everything the label would have said and more.
+ * `pts` is the drawn connector — the part between the two card borders — as a
+ * polyline in its layer's coordinates; the badge sits at its middle.
  */
-function dBadge(stage, x, y, icon, info, seg) {
+function dBadge(stage, pts, icon, info) {
     var b = el('button', { type: 'button', class: 'db-badge ' + icon + (info.finding ? ' has-finding' : ''), 'data-icon': icon, 'aria-label': t('iconOpen')(info.title), title: t('icons')[icon] });
     b.appendChild(dIcon(icon));
-    // The line the badge belongs to, in the layer's own coordinates; placing it keeps it on the visible part.
-    b._at = [x, y];
-    b._seg = seg || [x, y, x, y];
-    b.style.left = x.toFixed(0) + 'px';
-    b.style.top = y.toFixed(0) + 'px';
+    b._pts = pts;
+    b.style.left = pts[0][0].toFixed(1) + 'px';
+    b.style.top = pts[0][1].toFixed(1) + 'px';
     b.addEventListener('pointerdown', function (ev) { ev.stopPropagation(); });
     b.addEventListener('click', function (ev) { ev.stopPropagation(); dPopup(stage, b, info); });
     stage.db.labels.appendChild(b);
     return b;
 }
 
-/** The part of segment a→b inside the rectangle, as [x1, y1, x2, y2], or null when none of it is (Liang–Barsky). */
-function dClipSeg(a, b, r) {
-    var t0 = 0;
-    var t1 = 1;
-    var dx = b[0] - a[0];
-    var dy = b[1] - a[1];
-    var tests = [[-dx, a[0] - r.l], [dx, r.r - a[0]], [-dy, a[1] - r.t], [dy, r.b - a[1]]];
-    for (var i = 0; i < 4; i++) {
-        var pq = tests[i];
-        if (pq[0] === 0) { if (pq[1] < 0) return null; continue; }
-        var u = pq[1] / pq[0];
-        if (pq[0] < 0) { if (u > t1) return null; if (u > t0) t0 = u; } else { if (u < t0) return null; if (u < t1) t1 = u; }
-    }
-    return [a[0] + t0 * dx, a[1] + t0 * dy, a[0] + t1 * dx, a[1] + t1 * dy];
+/** The point at share `f` of a polyline's length, and that length. */
+function dAlong(pts, f) {
+    var cum = [0];
+    for (var i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+    var total = cum[cum.length - 1];
+    var d = Math.max(0, Math.min(1, f)) * total;
+    var k = 1;
+    while (k < pts.length - 1 && cum[k] < d) k++;
+    var seg = cum[k] - cum[k - 1] || 1;
+    var u = (d - cum[k - 1]) / seg;
+    return { x: pts[k - 1][0] + (pts[k][0] - pts[k - 1][0]) * u, y: pts[k - 1][1] + (pts[k][1] - pts[k - 1][1]) * u, len: total };
 }
+/** Badges closer than this, in their layer's units, would cover each other. */
+var DB_BADGE_GAP = 24;
 /**
- * Every badge on the visible part of its line: its own place when that is in view,
- * else the middle of the line's visible stretch, else — the line is wholly out of
- * view — the stage edge toward it. Badges never cover each other and keep their size
- * whatever the zoom. `toScreen` / `fromScreen` convert between the layer and the stage.
+ * Every badge at the middle of its drawn connector, in the layer the line lives in,
+ * so pan, zoom, a page scroll or a resize move it with the line and never along it.
+ * A badge whose middle would cover one placed before it moves once along its own
+ * line, by a fixed step — shortened on a short connector so it stays clear of the
+ * cards at the line's ends, and left out where the connector has no room at all. Run only when the lines themselves are drawn again. A connector
+ * shorter than `minLen` has no room for a badge between its cards and carries none.
  */
-function dPlaceBadges(stage, toScreen, fromScreen, unscale) {
-    var w = stage.clientWidth;
-    var h = stage.clientHeight;
-    var r = { l: 14, r: w - 14, t: 56, b: h - 34 };
+function dPlaceBadges(stage, minLen) {
     var taken = [];
+    var clash = function (q) { return taken.some(function (o) { return Math.abs(o.x - q.x) < DB_BADGE_GAP && Math.abs(o.y - q.y) < DB_BADGE_GAP; }); };
     Array.prototype.forEach.call(stage.db.labels.querySelectorAll('.db-badge'), function (b) {
-        if (!b._seg) return;
-        var a = toScreen([b._seg[0], b._seg[1]]);
-        var c = toScreen([b._seg[2], b._seg[3]]);
-        var at = toScreen(b._at);
-        var pos;
-        var inside = function (q) { return q[0] >= r.l && q[0] <= r.r && q[1] >= r.t && q[1] <= r.b; };
-        var vis = dClipSeg(a, c, r);
-        b.classList.toggle('edge', !vis);
-        if (inside(at)) pos = at;
-        else if (vis) pos = [(vis[0] + vis[2]) / 2, (vis[1] + vis[3]) / 2];
-        else pos = [Math.max(r.l, Math.min(r.r, at[0])), Math.max(r.t, Math.min(r.b, at[1]))];
-        for (var guard = 0; guard < 16 && taken.some(function (q) { return Math.abs(q[0] - pos[0]) < 24 && Math.abs(q[1] - pos[1]) < 24; }); guard++) {
-            pos = [pos[0], pos[1] + 24 > r.b ? pos[1] - 24 * (guard + 1) : pos[1] + 24];
+        if (!b._pts) return;
+        var pos = dAlong(b._pts, 0.5);
+        b.hidden = pos.len < (minLen || 0);
+        if (b.hidden) return;
+        if (clash(pos) && pos.len) {
+            var step = Math.min(DB_BADGE_GAP + 2, pos.len / 2 - 16);
+            if (step >= 8) pos = dAlong(b._pts, 0.5 + step / pos.len);
         }
         taken.push(pos);
-        var world = fromScreen(pos);
-        b.style.left = world[0].toFixed(1) + 'px';
-        b.style.top = world[1].toFixed(1) + 'px';
-        b.style.transform = 'translate(-50%, -50%)' + (unscale ? ' scale(' + (1 / dbState.z).toFixed(3) + ')' : '');
+        b.style.left = pos.x.toFixed(1) + 'px';
+        b.style.top = pos.y.toFixed(1) + 'px';
     });
 }
-function dPlace2d(stage) {
-    dPlaceBadges(stage, function (v) { return [dbState.panX + v[0] * dbState.z, dbState.panY + v[1] * dbState.z]; },
-        function (v) { return [(v[0] - dbState.panX) / dbState.z, (v[1] - dbState.panY) / dbState.z]; }, true);
+/** 2D: badges live in the panned and zoomed world, so they only keep their on-screen size here. */
+function dBadgeScale(stage) {
+    var tr = 'translate(-50%, -50%) scale(' + (1 / dbState.z).toFixed(3) + ')';
+    Array.prototype.forEach.call(stage.db.labels.querySelectorAll('.db-badge'), function (b) { b.style.transform = tr; });
 }
 
 function dClosePopup() {
@@ -795,10 +787,11 @@ function dFindingFor(p, ids, rule) {
     return null;
 }
 
-/** The edges as the cards stand now, with every badge on the visible part of its line; drawn again after every drag. */
+/** The edges as the cards stand now, each badge at the middle of its line; drawn again after every drag. */
 function dEdges(stage) {
     dEdgesDraw(stage);
-    dPlace2d(stage);
+    dPlaceBadges(stage);
+    dBadgeScale(stage);
 }
 function dEdgesDraw(stage) {
     var e = stage.db;
@@ -818,7 +811,6 @@ function dEdgesDraw(stage) {
     if (e.link) { dLinkLines(stage); return; }
     if (e.lines === 'off') return;
     var phys = e.src.L || e.src.M;
-    var badged = Object.create(null);
     function edge(a, b, cls, off, info, selected) {
         var ca = e.cards[a];
         var cb = e.cards[b];
@@ -840,11 +832,7 @@ function dEdgesDraw(stage) {
         title(l, info ? info.title : '');
         e.svg.appendChild(l);
         if (!info) return;
-        // Badges of one pair of cards sit apart along the line.
-        var pair = a < b ? a + '|' + b : b + '|' + a;
-        var n = badged[pair] = (badged[pair] || 0) + 1;
-        var f = n === 1 ? 0.5 : n === 2 ? 0.32 : 0.68;
-        dBadge(stage, p1[0] + (p2[0] - p1[0]) * f + ox, p1[1] + (p2[1] - p1[1]) * f + oy, info.icon, info, [p1[0] + ox, p1[1] + oy, p2[0] + ox, p2[1] + oy]);
+        dBadge(stage, [[p1[0] + ox, p1[1] + oy], [p2[0] + ox, p2[1] + oy]], info.icon, info);
     }
     var hot = e.sel.hot;
     if (phys) {
@@ -894,7 +882,6 @@ function dLinkLines(stage) {
     var self = e.cards[link.table];
     if (!self) return;
     var sr = dRect(self);
-    var counts = Object.create(null);
     link.links.forEach(function (l) {
         var other = e.cards[l.to.table];
         if (!other) return;
@@ -916,15 +903,18 @@ function dLinkLines(stage) {
         tt.textContent = name;
         path.appendChild(tt);
         e.svg.appendChild(path);
-        var mx = (a.x + 3 * c1[0] + 3 * c2[0] + b.x) / 8;
-        var my = (a.y + 3 * c1[1] + 3 * c2[1] + b.y) / 8;
-        var k = l.to.table + '|' + l.kind;
-        my += (counts[k] = (counts[k] || 0) + 1) > 1 ? (counts[k] - 1) * 22 : 0;
+        // The curve as drawn, sampled, so its badge sits on the curve and not on the chord.
+        var curve = [];
+        for (var i = 0; i <= 24; i++) {
+            var u = i / 24;
+            var v = 1 - u;
+            curve.push([v * v * v * a.x + 3 * v * v * u * c1[0] + 3 * v * u * u * c2[0] + u * u * u * b.x, v * v * v * a.y + 3 * v * v * u * c1[1] + 3 * v * u * u * c2[1] + u * u * u * b.y]);
+        }
         var acts = [];
         if (l.onDelete) acts.push('ON DELETE ' + l.onDelete.toUpperCase());
         if (l.onUpdate) acts.push('ON UPDATE ' + l.onUpdate.toUpperCase());
         var f = l.finding !== undefined && e.p.findings[l.finding] ? { f: e.p.findings[l.finding], i: l.finding } : null;
-        dBadge(stage, mx, my, l.kind === 'fk' ? dRuleIcon(l.onDelete) : l.kind, { title: name, icon: l.kind === 'fk' ? dRuleIcon(l.onDelete) : l.kind, kind: l.kind, via: l.via, rules: acts.join(' · '), witnesses: l.witnesses, finding: f, pick: 'column/' + l.to.table + '.' + l.to.column }, [a.x, a.y, b.x, b.y]);
+        dBadge(stage, curve, l.kind === 'fk' ? dRuleIcon(l.onDelete) : l.kind, { title: name, icon: l.kind === 'fk' ? dRuleIcon(l.onDelete) : l.kind, kind: l.kind, via: l.via, rules: acts.join(' · '), witnesses: l.witnesses, finding: f, pick: 'column/' + l.to.table + '.' + l.to.column });
     });
 }
 
@@ -932,12 +922,12 @@ function dApply(stage) {
     stage.db.world.style.transform = 'translate(' + dbState.panX + 'px, ' + dbState.panY + 'px) scale(' + dbState.z + ')';
     stage.db.zl.textContent = t('zoomL')(dbState.z.toFixed(1).replace('.', lang === 'de' ? ',' : '.'));
     window.__mapErd = { z: dbState.z, tables: Object.keys(stage.db.cards), focus: stage.db.sel.focus, src: dbState.src, lines: stage.db.lines };
-    dPlace2d(stage);
+    dBadgeScale(stage);
 }
-function dZoom(stage, f) {
+/** Zoom by `f` about a stage point (default: the stage's centre), which stays where it is. */
+function dZoom(stage, f, cx, cy) {
     var nz = Math.max(0.4, Math.min(3, dbState.z * f));
-    var cx = stage.clientWidth / 2;
-    var cy = stage.clientHeight / 2;
+    if (cx === undefined) { cx = stage.clientWidth / 2; cy = stage.clientHeight / 2; }
     dbState.panX = cx - (cx - dbState.panX) * nz / dbState.z;
     dbState.panY = cy - (cy - dbState.panY) * nz / dbState.z;
     dbState.z = nz;
@@ -1002,9 +992,10 @@ function dModKeyName() { return /Mac|iPhone|iPad/.test(navigator.platform || nav
 function dMod(ev) { return !!(ev.ctrlKey || ev.metaKey); }
 
 /**
- * Moving and zooming need Ctrl / ⌘ held, so the page scrolls freely over the
- * stage: a plain drag does nothing, a plain wheel scrolls, clicks still pick.
- * Touch has no modifier: two fingers pinch and pan, one finger scrolls the page.
+ * DEC-19 as corrected: the wheel zooms around the pointer and a drag pans, from the
+ * background and from a table alike; only moving a table needs Ctrl / ⌘ held, so a
+ * table never moves by accident. A click without a drag picks as before. Touch:
+ * two fingers pinch and pan, one finger scrolls the page.
  */
 function dInteract(stage) {
     var touches = Object.create(null);
@@ -1021,9 +1012,9 @@ function dInteract(stage) {
             }
             return;
         }
-        if (ev.button !== 0 || !dMod(ev)) return;
+        if (ev.button !== 0) return;
         ev.preventDefault();
-        var card = ev.target.closest('.db-table');
+        var card = dMod(ev) ? ev.target.closest('.db-table') : null;
         var sx = ev.clientX;
         var sy = ev.clientY;
         var px = dbState.panX;
@@ -1089,9 +1080,10 @@ function dInteract(stage) {
         if (current.item.indexOf('column/') === 0) avPick('data', '');
     });
     stage.addEventListener('wheel', function (ev) {
-        if (!dMod(ev)) return;
+        if (ev.target.closest('#db-pop')) return;
         ev.preventDefault();
-        dZoom(stage, ev.deltaY < 0 ? 1.12 : 1 / 1.12);
+        var r = stage.getBoundingClientRect();
+        dZoom(stage, Math.pow(1.0015, -ev.deltaY * (ev.deltaMode === 1 ? 16 : 1)), ev.clientX - r.left, ev.clientY - r.top);
     }, { passive: false });
 }
 var dbModBound = false;
@@ -1111,6 +1103,8 @@ function dBindModifier() {
 var D3_MAX = 24;
 /** Readable names for the 3D chips; an overlapping pair is pushed apart until this gap remains. */
 var D3_GAP = 6;
+/** Between the front card and a chip: room for a badge (22 px, 31 px across its diagonal) at the connector's middle with air on both sides, at any angle. */
+var D3_FRONT_GAP = 48;
 
 /** Tables joined to a table: foreign keys, key links of every kind and ORM relations. */
 function d3Adjacency(p) {
@@ -1147,14 +1141,37 @@ function d3Sphere(n, radius) {
     }
     return pts;
 }
+/*
+ * The view's orientation is one rotation matrix, turned by small steps about the
+ * screen's axes and re-orthonormalised — the Code orb's trackball — so dragging and
+ * the arrow keys turn it without end on any axis, over the poles too.
+ */
+function d3RotY(a) { var c = Math.cos(a); var s2 = Math.sin(a); return [c, 0, s2, 0, 1, 0, -s2, 0, c]; }
+function d3RotX(a) { var c = Math.cos(a); var s2 = Math.sin(a); return [1, 0, 0, 0, c, -s2, 0, s2, c]; }
+function d3Mul(A, B) {
+    var out = [];
+    for (var r = 0; r < 3; r++) for (var c = 0; c < 3; c++) out.push(A[r * 3] * B[c] + A[r * 3 + 1] * B[3 + c] + A[r * 3 + 2] * B[6 + c]);
+    return out;
+}
+function d3Ortho(m) {
+    var a = [m[0], m[1], m[2]];
+    var b = [m[3], m[4], m[5]];
+    var la = Math.hypot(a[0], a[1], a[2]);
+    a = [a[0] / la, a[1] / la, a[2] / la];
+    var d = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    b = [b[0] - d * a[0], b[1] - d * a[1], b[2] - d * a[2]];
+    var lb = Math.hypot(b[0], b[1], b[2]);
+    b = [b[0] / lb, b[1] / lb, b[2] / lb];
+    return a.concat(b, [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]);
+}
+/** The opening tilt: turned a little to the side and looked at slightly from above. */
+function d3Start() { return d3Mul(d3RotX(-0.35), d3RotY(0.5)); }
+/** Turn by `yaw` about the screen's vertical axis and `pitch` about its horizontal one. */
+function d3Turn(yaw, pitch) { dbState.rot = d3Ortho(d3Mul(d3Mul(d3RotX(pitch), d3RotY(yaw)), d3View())); }
+function d3View() { if (!dbState.rot) dbState.rot = d3Start(); return dbState.rot; }
 function d3Rotate(v) {
-    var cy = Math.cos(dbState.rot.yaw);
-    var sy = Math.sin(dbState.rot.yaw);
-    var x1 = v[0] * cy + v[2] * sy;
-    var z1 = -v[0] * sy + v[2] * cy;
-    var cp = Math.cos(dbState.rot.pitch);
-    var sp = Math.sin(dbState.rot.pitch);
-    return [x1, v[1] * cp - z1 * sp, v[1] * sp + z1 * cp];
+    var m = d3View();
+    return [m[0] * v[0] + m[1] * v[1] + m[2] * v[2], m[3] * v[0] + m[4] * v[1] + m[5] * v[2], m[6] * v[0] + m[7] * v[1] + m[8] * v[2]];
 }
 
 /**
@@ -1162,8 +1179,8 @@ function d3Rotate(v) {
  * neighbourhood (≤ D3_MAX tables) sits on a shell around it, the side facing the
  * viewer as named chips, the far side as small fogged dots; every other table is a
  * faint dot on an outer shell. Overlapping chips are pushed apart on screen. Lines
- * keep the 2D styles and their badges, placed on the stage. Ctrl / ⌘ + drag and the
- * arrow keys orbit, Ctrl / ⌘ + wheel and the buttons zoom.
+ * keep the 2D styles and their badges, placed on the stage. A drag and the arrow
+ * keys turn it freely, the wheel and the buttons zoom; a click picks what is in front.
  */
 function dErd3d(p, sel, erd, lines, dim) {
     var stage = el('div', { class: 'db-stage db-3d', id: 'db-stage', tabindex: '0', 'aria-label': t('dim3') });
@@ -1255,7 +1272,9 @@ function dErd3d(p, sel, erd, lines, dim) {
             r.x = Math.max(r.w / 2 + 4, Math.min(w - r.w / 2 - 4, r.x));
             r.y = Math.max(r.h / 2 + 52, Math.min(h - r.h / 2 - 4, r.y));
         };
-        var overlap = function (a, b) { return [(a.w + b.w) / 2 + D3_GAP - Math.abs(a.x - b.x), (a.h + b.h) / 2 + D3_GAP - Math.abs(a.y - b.y)]; };
+        // Chips keep a badge's width plus a margin clear of the front card, so a line between them has room for its icon.
+        var gapOf = function (a, b) { return a.fixed || b.fixed ? D3_FRONT_GAP : D3_GAP; };
+        var overlap = function (a, b) { var g = gapOf(a, b); return [(a.w + b.w) / 2 + g - Math.abs(a.x - b.x), (a.h + b.h) / 2 + g - Math.abs(a.y - b.y)]; };
         rects.forEach(clampR);
         for (var it = 0; it < 80; it++) {
             var moved = false;
@@ -1277,10 +1296,23 @@ function dErd3d(p, sel, erd, lines, dim) {
             }
             if (!moved) break;
         }
-        // Nearest first: a card stays only when it clears every card kept before it.
+        // A chip the stage edge has kept on the front card goes above or below it, whichever side it is nearer.
+        var fr = rects.filter(function (q) { return q.fixed; })[0];
+        if (fr) rects.forEach(function (q) {
+            if (q.fixed) return;
+            var o3 = overlap(q, fr);
+            if (o3[0] <= 0 || o3[1] <= 0) return;
+            var up = q.y <= fr.y;
+            q.y = up ? fr.y - fr.h / 2 - D3_FRONT_GAP - q.h / 2 : fr.y + fr.h / 2 + D3_FRONT_GAP + q.h / 2;
+            clampR(q);
+            if (overlap(q, fr)[1] > 0) { q.y = up ? fr.y + fr.h / 2 + D3_FRONT_GAP + q.h / 2 : fr.y - fr.h / 2 - D3_FRONT_GAP - q.h / 2; clampR(q); }
+        });
+        // The front card first, then the tables its drawn lines reach, then the rest, nearest first: a card stays
+        // only when it clears every card kept before it, so on a narrow stage the linked chips are the ones kept.
         var kept = [];
-        rects.slice().sort(function (a, b) { return (b.fixed ? 9 : proj[b.n].z) - (a.fixed ? 9 : proj[a.n].z); }).forEach(function (r) {
-            var clear2 = kept.every(function (k2) { var o2 = overlap(r, k2); return o2[0] <= D3_GAP || o2[1] <= D3_GAP; });
+        var rank = function (q) { return q.fixed ? 9 : proj[q.n].z + ((link ? link.tables[q.n] : adj[focus] && adj[focus][q.n]) ? 4 : 0); };
+        rects.slice().sort(function (a, b) { return rank(b) - rank(a); }).forEach(function (r) {
+            var clear2 = kept.every(function (k2) { var o2 = overlap(r, k2); var g2 = r.fixed || k2.fixed ? 0.5 : D3_GAP; return o2[0] <= g2 || o2[1] <= g2; });
             if (!clear2 && !r.fixed) { cards[r.n].hidden = true; proj[r.n].facing = false; return; }
             kept.push(r);
         });
@@ -1296,22 +1328,29 @@ function dErd3d(p, sel, erd, lines, dim) {
         svg.setAttribute('width', String(w));
         svg.setAttribute('height', String(h));
         // Dots: the far side of the neighbourhood and every table outside it, fogged by depth.
-        Object.keys(proj).forEach(function (n) {
-            var q = proj[n];
-            if (n === focus || (inHood[n] && q.facing)) return;
-            var dot = document.createElementNS(svgNS, 'circle');
-            dot.setAttribute('cx', q.x.toFixed(1));
-            dot.setAttribute('cy', q.y.toFixed(1));
-            dot.setAttribute('r', String(Math.max(2, (inHood[n] ? 5 : 3) * q.s).toFixed(1)));
-            dot.setAttribute('class', 'db-3dot' + (inHood[n] ? ' near' : ''));
-            dot.setAttribute('data-table', n);
-            dot.style.opacity = String((0.18 + 0.5 * Math.max(0, Math.min(1, (q.z + 1.7) / 3.4))).toFixed(2));
-            var tt = document.createElementNS(svgNS, 'title');
-            tt.textContent = n;
-            dot.appendChild(tt);
-            dot.addEventListener('click', function () { avPick('data', 'table/' + n); });
-            svg.appendChild(dot);
-        });
+        // Far ones first, so a nearer dot is drawn — and hit — in front of a farther one. Each dot is a group: the
+        // fogged disc as drawn, and a ring around it that a hand can hit.
+        Object.keys(proj).filter(function (n) { return n !== focus && !(inHood[n] && proj[n].facing); })
+            .sort(function (a, b) { return proj[a].z - proj[b].z; }).forEach(function (n) {
+                var q = proj[n];
+                var dot = document.createElementNS(svgNS, 'g');
+                dot.setAttribute('class', 'db-3dot' + (inHood[n] ? ' near' : ''));
+                dot.setAttribute('data-table', n);
+                var hit = document.createElementNS(svgNS, 'circle');
+                hit.setAttribute('class', 'hit');
+                var disc = document.createElementNS(svgNS, 'circle');
+                disc.setAttribute('class', 'disc');
+                [hit, disc].forEach(function (c) { c.setAttribute('cx', q.x.toFixed(1)); c.setAttribute('cy', q.y.toFixed(1)); });
+                var rad = Math.max(2, (inHood[n] ? 5 : 3) * q.s);
+                disc.setAttribute('r', rad.toFixed(1));
+                hit.setAttribute('r', Math.max(9, rad + 4).toFixed(1));
+                disc.style.opacity = String((0.18 + 0.5 * Math.max(0, Math.min(1, (q.z + 1.7) / 3.4))).toFixed(2));
+                var tt = document.createElementNS(svgNS, 'title');
+                tt.textContent = n;
+                add(dot, tt, hit, disc);
+                dot.addEventListener('click', function () { if (!stage.moved) avPick('data', 'table/' + n); });
+                svg.appendChild(dot);
+            });
         function edgeLine(a, b, cls, kind, info) {
             var pa = proj[a];
             var pb = proj[b];
@@ -1332,18 +1371,12 @@ function dErd3d(p, sel, erd, lines, dim) {
             l.setAttribute('d', 'M' + pa.x.toFixed(1) + ' ' + pa.y.toFixed(1) + ' L' + pb.x.toFixed(1) + ' ' + pb.y.toFixed(1));
             l.setAttribute('class', 'db-link ' + cls);
             l.setAttribute('data-kind', kind);
+            if (info) { var lt = document.createElementNS(svgNS, 'title'); lt.textContent = info.title; l.appendChild(lt); }
             l.style.opacity = String(pb.facing === false || pa.facing === false ? 0.45 : 1);
             svg.insertBefore(l, svg.firstChild);
             if (!info) return;
-            // The badge sits on the stretch nearest the viewer: a third of the way from the nearer end.
-            var near = pa.z >= pb.z ? pa : pb;
-            var far = near === pa ? pb : pa;
-            var bx = near.x + (far.x - near.x) * 0.45;
-            var by = near.y + (far.y - near.y) * 0.45;
-            // A short stretch between two cards: the badge steps off the line rather than onto a card.
-            var len = Math.hypot(far.x - near.x, far.y - near.y);
-            if (len < 30) { bx += len ? -(far.y - near.y) / len * 18 : 18; by += len ? (far.x - near.x) / len * 18 : 0; }
-            dBadge(stage, bx, by, info.icon, info, [near.x, near.y, far.x, far.y]);
+            // The badge sits at the middle of the projected connector, between the two card borders.
+            dBadge(stage, [[pa.x, pa.y], [pb.x, pb.y]], info.icon, info);
         }
         var touches = function (a, b) { return lines === 'all' ? inHood[a] && inHood[b] : a === focus || b === focus; };
         if (link) {
@@ -1372,34 +1405,37 @@ function dErd3d(p, sel, erd, lines, dim) {
                 });
             });
         }
-        dPlaceBadges(stage, function (v) { return v; }, function (v) { return v; }, false);
-        window.__mapErd3d = { yaw: dbState.rot.yaw, pitch: dbState.rot.pitch, z: dbState.z3, front: focus, hood: hood.slice(), proj: proj };
+        dPlaceBadges(stage, DB_BADGE_GAP + 10);
+        window.__mapErd3d = { rot: d3View().slice(), z: dbState.z3, front: focus, hood: hood.slice(), proj: proj };
     }
     var zoom = el('div', { class: 'db-zoom' });
     function zb(text, aria, cls, fn) { var b = el('button', { type: 'button', class: cls || '', 'aria-label': aria, title: aria }, text); b.addEventListener('click', fn); return b; }
     add(zoom, zb('−', t('zoomOut'), '', function () { dbState.z3 = Math.max(0.4, dbState.z3 / 1.2); draw(); }), zb('+', t('zoomIn'), '', function () { dbState.z3 = Math.min(3, dbState.z3 * 1.2); draw(); }),
-        zb(t('fitB'), t('fitB'), 'fit', function () { dbState.z3 = 1; draw(); }), zb('↺', t('resetPos'), 'reset', function () { dbState.rot = { yaw: 0.5, pitch: -0.35 }; draw(); }));
+        zb(t('fitB'), t('fitB'), 'fit', function () { dbState.z3 = 1; draw(); }), zb('↺', t('resetPos'), 'reset', function () { dbState.rot = d3Start(); draw(); }));
     stage.appendChild(add(el('div', { class: 'db-overlay' }), dim, zoom));
     var legend = add(el('div', { class: 'db-legend', 'aria-label': t('iconsHead') }), el('span', { class: 'cap' }, t('iconsHead')));
     ['fk', 'cascade', 'setnull', 'restrict', 'soft', 'implied', 'finding'].forEach(function (k) {
         legend.appendChild(add(el('span', { class: 'db-leg', 'data-icon': k }), add(el('span', { class: 'db-badge ' + k + (k === 'finding' ? ' has-finding' : ''), 'aria-hidden': 'true' }), dIcon(k)), el('span', null, t('icons')[k])));
     });
     erd.appendChild(legend);
-    erd.appendChild(el('div', { class: 'db-help' }, t('help3d')(dModKeyName())));
+    erd.appendChild(el('div', { class: 'db-help' }, t('help3d')()));
     stage.addEventListener('pointerdown', function (ev) {
-        if (ev.button !== 0 || !dMod(ev) || ev.target.closest('.db-overlay, .db-badge, #db-pop')) return;
+        if (ev.pointerType === 'touch' || ev.button !== 0 || ev.target.closest('.db-overlay, .db-badge, #db-pop')) return;
         ev.preventDefault();
+        // The default focus is suppressed with the text selection; the arrow keys still need the stage focused.
+        stage.focus({ preventScroll: true });
         var sx = ev.clientX;
         var sy = ev.clientY;
-        var r0 = { yaw: dbState.rot.yaw, pitch: dbState.rot.pitch };
+        var lx = sx;
+        var ly = sy;
         stage.moved = false;
         function move(m) {
-            var dx = m.clientX - sx;
-            var dy = m.clientY - sy;
-            if (!stage.moved && Math.abs(dx) + Math.abs(dy) <= 3) return;
+            if (!stage.moved && Math.abs(m.clientX - sx) + Math.abs(m.clientY - sy) <= 3) return;
             stage.moved = true;
             stage.classList.add('grabbing');
-            dbState.rot = { yaw: r0.yaw + dx * 0.01, pitch: Math.max(-1.4, Math.min(1.4, r0.pitch + dy * 0.01)) };
+            d3Turn((m.clientX - lx) * 0.01, (m.clientY - ly) * 0.01);
+            lx = m.clientX;
+            ly = m.clientY;
             draw();
         }
         function up() {
@@ -1411,11 +1447,10 @@ function dErd3d(p, sel, erd, lines, dim) {
         window.addEventListener('pointermove', move);
         window.addEventListener('pointerup', up);
     });
-    stage.addEventListener('pointermove', function (ev) { if (ev.pointerType !== 'touch') stage.classList.toggle('mod', dMod(ev)); });
     stage.addEventListener('wheel', function (ev) {
-        if (!dMod(ev)) return;
+        if (ev.target.closest('#db-pop')) return;
         ev.preventDefault();
-        dbState.z3 = Math.max(0.4, Math.min(3, dbState.z3 * (ev.deltaY < 0 ? 1.12 : 1 / 1.12)));
+        dbState.z3 = Math.max(0.4, Math.min(3, dbState.z3 * Math.pow(1.0015, -ev.deltaY * (ev.deltaMode === 1 ? 16 : 1))));
         draw();
     }, { passive: false });
     stage.addEventListener('click', function (ev) {
@@ -1426,11 +1461,10 @@ function dErd3d(p, sel, erd, lines, dim) {
         var step = { ArrowLeft: [-0.15, 0], ArrowRight: [0.15, 0], ArrowUp: [0, 0.15], ArrowDown: [0, -0.15] }[ev.key];
         if (!step || ev.target !== stage) return;
         ev.preventDefault();
-        dbState.rot = { yaw: dbState.rot.yaw + step[0], pitch: Math.max(-1.4, Math.min(1.4, dbState.rot.pitch + step[1])) };
+        d3Turn(step[0], step[1]);
         draw();
     });
     dBindKeys();
-    dBindModifier();
     dClosePopup();
     draw();
 }

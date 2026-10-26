@@ -73,6 +73,20 @@ async function enter(page: Page): Promise<void> {
     await page.fill('#search', 'src/hub.ts');
     await page.locator('#results button', { hasText: 'src/hub.ts' }).first().click();
     await page.waitForFunction(() => (window as unknown as { __mapView: { level: string } }).__mapView.level === 'area');
+    await drawnAtStageSize(page);
+}
+/**
+ * The last drawing was made at the stage's present size, so the positions __mapView reports are where the
+ * nodes are now: the drawing's size is the stage's box, and the bitmap matches it.
+ */
+async function drawnAtStageSize(page: Page): Promise<void> {
+    await page.waitForFunction(() => {
+        const c = document.getElementById('stage') as HTMLCanvasElement;
+        const r = c.getBoundingClientRect();
+        const d = window.devicePixelRatio || 1;
+        const lb = (window as unknown as { __mapLabelBoxes: { width: number; height: number } }).__mapLabelBoxes;
+        return lb.width === r.width && lb.height === r.height && c.width === Math.max(1, Math.round(r.width * d)) && c.height === Math.max(1, Math.round(r.height * d));
+    });
 }
 const sup = (page: Page): Promise<SuperState> => page.evaluate(() => (window as unknown as { __mapSuper: SuperState }).__mapSuper);
 const drawnKinds = (page: Page): Promise<string[]> => page.evaluate(() => (window as unknown as { __mapView: { drawn: Array<{ kind: string }> } }).__mapView.drawn.map((d) => d.kind));
