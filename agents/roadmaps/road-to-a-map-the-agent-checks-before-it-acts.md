@@ -172,25 +172,25 @@ renders from real facts or says why it has none.
 
 ## Phase 3 — Verify before acting, update after
 
-- [ ] **3.1 Witness, tombstone, shrink guard.** Deleting a source span writes a
+- [x] **3.1 Witness, tombstone, shrink guard.** Deleting a source span writes a
       tombstone; a refresh that loses more than a set share of facts without
       matching deletions is refused; a scheduled full rebuild diffs against the
       incremental state.
       verify: deleting a migrated column yields a tombstone; a planted mass
       loss is refused.
-- [ ] **3.2 Working-tree overlay.** Facts are owned by files; a changed file
+- [x] **3.2 Working-tree overlay.** Facts are owned by files; a changed file
       replaces exactly its facts in an overlay above the committed index.
       verify: an uncommitted new column shows as `added` before any rebuild.
-- [ ] **3.3 `confirm`.** Re-reads only the witnesses of an answer through the
+- [x] **3.3 `confirm`.** Re-reads only the witnesses of an answer through the
       SQLite index → `confirmed | moved | changed | gone`; p95 ≤ 50 ms for ≤ 20
       witnesses on this repository; never loads the JSON graph. CLI verb and a
       `graph_node` mode.
       verify: a latency test on this repository records p95 under the budget.
-- [ ] **3.4 Depth by risk class, in shadow.** `classify_change_risk` decides
+- [x] **3.4 Depth by risk class, in shadow.** `classify_change_risk` decides
       confirm depth (R0 none, R1 witnesses, R2 + text cross-check, R3 + fan-out
       and drift re-run); recorded, not enforced.
       verify: a shadow record lists the class and the depth chosen per call.
-- [ ] **3.5 Counts are lower bounds.** Every usage list is paired with a text
+- [x] **3.5 Counts are lower bounds.** Every usage list is paired with a text
       search for the name: "known places N (+M only by text search)";
       differences are logged as reader gaps.
       verify: a planted dynamic usage appears in M, not in N.
@@ -199,12 +199,12 @@ renders from real facts or says why it has none.
       verified sha and dirty flag.
       verify: after editing a fixture the map shows the new fact without a full
       rebuild.
-- [ ] **3.7 Verified context pack.** From task text and working diff, seeds
+- [x] **3.7 Verified context pack.** From task text and working diff, seeds
       (ambiguous ones refused) are walked seed-first within a token budget,
       confirmed, and returned with `at=file:line` per item — a CLI verb and a
       `graph_query` mode; the pre-tool hook stays a state line (bundle budget).
       verify: a planted task's pack holds its affected set within the budget.
-- [ ] **3.8 Amend the rule.** `external-code-graph-interop`: find with the map,
+- [x] **3.8 Amend the rule.** `external-code-graph-interop`: find with the map,
       confirm with the source, update after the change; its routing evals gain
       "fresh graph, missed dynamic usage".
       verify: the rule text and its eval fixture carry the three-step order.
@@ -277,7 +277,7 @@ renders from real facts or says why it has none.
       one service via two config names).
       verify: the P5 fixture yields service `partner` bound to `PARTNER_URL`,
       the SOAP operation `GetStock`, and no `Comment::post` edge.
-- [ ] **4.9 Hub facts.** Published host-port collisions across registered
+- [x] **4.9 Hub facts.** Published host-port collisions across registered
       projects; shared images and shared external services; cross-project
       service map (HTTP client in one project matched to a route of another by
       normalised path, prefix aliases and verb; unique match only, otherwise an
@@ -287,14 +287,14 @@ renders from real facts or says why it has none.
 
 ## Phase 5 — One folder, one interface
 
-- [ ] **5.1 One layout.** `agents/map/` holds `index.html`, `MAP.md`,
+- [x] **5.1 One layout.** `agents/map/` holds `index.html`, `MAP.md`,
       `manifest.json` (generation, sources, freshness per area), `code/`,
       `data/`, `interfaces/`, `runtime/`, `delivery/`, and `.build/` for graph,
       SQLite, overlay and tombstones (the only gitignored part); the hub mirrors
       it under the user-global home with `projects/`. The old cache path is read
       as a fallback for one release.
       verify: a fresh build writes only inside the two layouts.
-- [ ] **5.2 Writer gate.** A check fails any code path that writes a graph, map
+- [x] **5.2 Writer gate.** A check fails any code path that writes a graph, map
       or cache outside the two layouts.
       verify: the gate is red on a planted writer and green on the tree.
 - [x] **5.3 The design shell.** Header with logo, `KNOWLEDGE MAP` wordmark, the
@@ -329,7 +329,7 @@ renders from real facts or says why it has none.
 - [ ] **5.10 Agent area.** Context pack, review risk, the verb list with what
       each answers; `explain` names the existing graph verb.
       verify: the area lists the verbs that exist and nothing that does not.
-- [ ] **5.11 Hub with the same shell.** The estate map is rendered by the
+- [x] **5.11 Hub with the same shell.** The estate map is rendered by the
       shared shell with a Projects area and per-project links; the separate
       estate renderer is retired; the work-tree refusal stays.
       verify: the hub renders and still refuses a git work tree.
