@@ -37,9 +37,10 @@
         }
     });
 
-    /** An area's working title, a template over its hub file's name: `order_service.ts` → "Order Service". */
+    /** An area's working title: the model's, unique within its kind, over its hub file's name (`order_service.ts` → "Order Service"). */
     function areaTitle(a) {
-        if (a.kind === 'small-parts') return t('smallParts') + ' · ' + base(a.name.replace(/^small parts · /, ''));
+        if (a.kind === 'small-parts') return t('smallParts') + ' · ' + (a.title || base(a.name.replace(/^small parts · /, '')));
+        if (a.title) return a.title;
         var stem = base(a.name).replace(/\.[^.]+$/, '').replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_\-.]+/g, ' ').trim();
         return stem.split(/\s+/).map(function (w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ') || base(a.name);
     }
@@ -1984,8 +1985,8 @@
             });
         })(tree, '');
         areas.forEach(function (a, i) {
-            if (a.name.toLowerCase().indexOf(q) < 0 && a.id !== q) return;
-            hit('area', '◎ ' + a.id + ' · ' + a.name, function () { openArea(i); }, { count: a.files.length, crumb: a.id, kids: function () { return a.files.map(function (f) { return fileHit(f); }); } });
+            if (a.name.toLowerCase().indexOf(q) < 0 && areaTitle(a).toLowerCase().indexOf(q) < 0 && a.id !== q) return;
+            hit('area', '◎ ' + a.id + ' · ' + areaTitle(a) + ' · ' + a.name, function () { openArea(i); }, { count: a.files.length, crumb: a.id, kids: function () { return a.files.map(function (f) { return fileHit(f); }); } });
         });
         (an.requestPaths || []).forEach(function (r) { if (r.route.toLowerCase().indexOf(q) >= 0) hit('route', '↳ ' + r.route, function () { openFile(r.handler >= 0 ? r.handler : r.file); }); });
         files.forEach(function (f, i) {

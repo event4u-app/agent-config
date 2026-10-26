@@ -165,7 +165,7 @@
     function base(p) { var i = p.lastIndexOf('/'); return i < 0 ? p : p.slice(i + 1); }
     function dir(p) { var i = p.lastIndexOf('/'); return i < 0 ? '.' : p.slice(0, i); }
     function top2(p) { var s = p.split('/'); return s.length > 2 ? s[0] + '/' + s[1] : s[0]; }
-    function areaLabel(a) { return a.kind === 'small-parts' ? '… ' + base(a.name.replace(/^small parts · /, '')) : base(a.name); }
+    function areaLabel(a) { return a.kind === 'small-parts' ? '… ' + (a.title || base(a.name.replace(/^small parts · /, ''))) : a.title || base(a.name); }
     function inScope(f, scope) {
         if (scope === 'all') return true;
         if (scope === 'tests') return SCOPE_CODE[f.role] === 1 || f.role === 'test';
