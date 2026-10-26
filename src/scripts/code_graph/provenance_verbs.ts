@@ -50,7 +50,7 @@ export function provenanceAnswer(root: string, g: G, index: ProvenanceIndex, que
     if (index.reason) lines.push(`note: ${index.reason}`);
     if (TICKET.test(query) || PR.test(query)) {
         const isTicket = TICKET.test(query);
-        const ids = (isTicket ? index.tickets[query] : index.prs[query]) ?? [];
+        const ids = (isTicket ? (Object.hasOwn(index.tickets, query) ? index.tickets[query] : undefined) : Object.hasOwn(index.prs, query) ? index.prs[query] : undefined) ?? [];
         if (ids.length === 0) {
             lines.push(`${query}: no commit in the history read names it${isTicket ? ' in a branch name or at the head of a subject (add the key to `ticket_keys` in .git-convention.yml to read bodies too)' : ''}`);
             return { query, kind: isTicket ? 'ticket' : 'pr', lines };
@@ -73,7 +73,7 @@ export function provenanceAnswer(root: string, g: G, index: ProvenanceIndex, que
         lines.push(isTicket ? `why: ${query}'s title and description live in its tracker — ask it; nothing of its text is stored here` : `why: the description of ${query} lives in the forge — ask it; nothing of its text is stored here`);
         return { query, kind: isTicket ? 'ticket' : 'pr', lines };
     }
-    const file = index.files[query];
+    const file = Object.hasOwn(index.files, query) ? index.files[query] : undefined;
     if (file) {
         const intro = file.introduced !== null ? index.commits[file.introduced] : undefined;
         lines.push(`${query}`);

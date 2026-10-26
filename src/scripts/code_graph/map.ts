@@ -586,6 +586,13 @@ async function mapBranches(root: string, buildDir: string): Promise<MapBranches 
     };
 }
 
+/** The table a write lands on: a table id whole (`public.users` stays itself), a column id without its column. */
+function tableOfTarget(target: string): string | null {
+    if (target.startsWith('table:')) return target.slice('table:'.length);
+    if (target.startsWith('column:')) return target.slice('column:'.length).replace(/\.[^.]*$/, '');
+    return null;
+}
+
 /** Domains on files, the breaches against their declaration, and proposals when nothing is declared. */
 function attachDomains(root: string, outDir: string, graph: CodeGraph, model: MapModel): void {
     const paths = model.files.map((f) => f.path);
@@ -609,12 +616,13 @@ function attachDomains(root: string, outDir: string, graph: CodeGraph, model: Ma
         const fi = fileIdx.get(nodeFile.get(e.source) ?? '');
         const d = fi !== undefined ? asg.of[fi] : undefined;
         if (fi === undefined || !d) continue;
-        const table = e.target.replace(/^table:/, '').replace(/\..*$/, '');
+        const table = tableOfTarget(e.target);
+        if (!table) continue;
         const m = writers.get(table) ?? new Map<string, number>();
         if (!m.has(d)) m.set(d, fi);
         writers.set(table, m);
     }
-    const tableViolations = [...writers.entries()]
+    const tableViolations = rules.source !== 'declared' ? [] : [...writers.entries()]
         .filter(([, m]) => m.size > 1)
         .sort(([a], [b]) => (a < b ? -1 : 1))
         .map(([table, m]) => ({ kind: 'domain-table' as const, files: [...m.values()], domains: [...m.keys()].sort(), table }));
@@ -641,7 +649,8 @@ function domainsOnAreas(areas: MapAreas, model: MapModel, graph: CodeGraph): voi
         if (e.relation !== 'writes' && e.relation !== 'persists' && e.relation !== 'uses') continue;
         const d = domainOf.get(nodeFile.get(e.source) ?? '');
         if (!d) continue;
-        const key = e.relation === 'uses' ? e.target : e.target.replace(/^table:/, '').replace(/\..*$/, '');
+        const key = e.relation === 'uses' ? e.target : tableOfTarget(e.target);
+        if (!key) continue;
         into.set(key, (into.get(key) ?? new Set()).add(d));
     }
     for (const t of areas.data?.tables ?? []) {

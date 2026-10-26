@@ -21,6 +21,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { parseTicketKeys, ticketCandidates } from '../_lib/git_convention_grammar.js';
+import { defaultBranch } from '../_lib/branch_parents.js';
 import { gitProbe } from '../_lib/spawn_env.js';
 
 export interface CommitRef {
@@ -146,9 +147,19 @@ export function readProvenance(root: string, opts: { git?: Git; maxCommits?: num
 
     // Pull requests: a first-parent merge owns the commits its second parent brings in.
     const prOf = new Map<string, { pr: string; branch: string | null }>();
+    // The first-parent line of HEAD and of the default branch: on a branch that merged its parent in,
+    // the parent's own PR merges sit behind a second parent, and they still own their commits.
     const mainline = new Set<string>();
-    for (let x: Raw | undefined = raws[0]; x; x = bySha.get(x.parents[0] ?? '')) mainline.add(x.sha);
-    const firstParentMerges = raws.filter((r) => mainline.has(r.sha) && r.parents.length > 1).reverse();
+    const tips = [raws[0]?.sha, ...['refs/heads/' + defaultBranch(root), 'refs/remotes/origin/HEAD'].map((r) => {
+        try {
+            return git(['rev-parse', '--verify', '--quiet', `${r}^{commit}`]).trim();
+        } catch {
+            return '';
+        }
+    })].filter((x): x is string => !!x);
+    for (const tip of tips) for (let x: Raw | undefined = bySha.get(tip); x && !mainline.has(x.sha); x = bySha.get(x.parents[0] ?? '')) mainline.add(x.sha);
+    const age = new Map(raws.map((r, i) => [r.sha, i] as const));
+    const firstParentMerges = raws.filter((r) => mainline.has(r.sha) && r.parents.length > 1).sort((a, b) => (age.get(b.sha) as number) - (age.get(a.sha) as number));
     for (const m of firstParentMerges) {
         const gh = PR_MERGE.exec(m.subject);
         const mr = MR_TRAILER.exec(m.body);
@@ -250,7 +261,11 @@ export function readProvenance(root: string, opts: { git?: Git; maxCommits?: num
         if (tf) touched[i] = [...tf].sort();
     }
     // Oldest first, so an index reads in history order; remap every reference.
-    const order = commits.map((c, i) => [c, i] as const).sort(([a], [b]) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+    // Oldest first by date; one day's commits in history order (git log lists newest first).
+    const rank = new Map(raws.map((r, i) => [r.sha.slice(0, 12), i] as const));
+    const order = commits
+        .map((c, i) => [c, i] as const)
+        .sort(([a], [b]) => (a.date < b.date ? -1 : a.date > b.date ? 1 : (rank.get(b.sha) ?? 0) - (rank.get(a.sha) ?? 0)));
     const remap = new Map(order.map(([, old], nu) => [old, nu] as const));
     const re = (i: number): number => remap.get(i) as number;
     for (const f of Object.values(files)) {

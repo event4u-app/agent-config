@@ -84,7 +84,7 @@ export function structuralDomains(paths: readonly string[]): DomainRules | null 
     for (const p of paths) {
         for (const re of STRUCTURE) {
             const m = re.exec(p);
-            if (!m) continue;
+            if (!m || NOT_A_DOMAIN.test(m[1] as string)) continue;
             const prefix = p.slice(0, (m.index ?? 0) + m[0].length);
             if (!seen.has(prefix)) seen.set(prefix, m[1] as string);
             break;
@@ -204,7 +204,8 @@ export function analyseDomains(
             if (comp.length > 1) sccs.push(comp.sort());
         }
     };
-    for (const v of names) if (!index.has(v)) strong(v);
+    // A cycle is a breach of a declared architecture; folder structure declares none.
+    if (rules.source === 'declared') for (const v of names) if (!index.has(v)) strong(v);
     for (const comp of sccs) {
         const set = new Set(comp);
         const witness = edges.find(([s, t]) => a.of[s] && a.of[t] && a.of[s] !== a.of[t] && set.has(a.of[s] as string) && set.has(a.of[t] as string) && !isTest(s));
@@ -302,7 +303,8 @@ export function readCodeowners(root: string): ((p: string) => string | null) | n
         return (p) => {
             let owner: string | null = null;
             for (const [re, o] of rules) if (re.test(p)) owner = o;
-            return owner;
+            // A CODEOWNERS owner may be an e-mail address; the map carries handles only.
+            return owner === null ? null : owner.split(' ').map((x) => (x.includes('@') && !x.startsWith('@') ? '(address withheld)' : x)).join(' ');
         };
     }
     return null;

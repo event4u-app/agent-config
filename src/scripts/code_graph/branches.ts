@@ -181,7 +181,7 @@ export async function indexBranch(root: string, buildDir: string, ref: string, o
     const pkgFiles = set(PACKAGE_FILES);
     let systems: string | null = null;
     if (pkgFiles.length) {
-        systems = hash(`systems:${BRANCH_STORE_VERSION}\0${pkgFiles.map(([p, s]) => `${p}:${s}`).join('\n')}`);
+        systems = hash(`systems:${BRANCH_STORE_VERSION}\0${fp}\0${pkgFiles.map(([p, s]) => `${p}:${s}`).join('\n')}`);
         if (!fs.existsSync(factFile(dir, 'systems', systems))) {
             const blobs = catBlobs(root, pkgFiles.map(([, s]) => s));
             const out = withSparseTree(new Map(pkgFiles.map(([p, s]) => [p, blobs.get(s) ?? ''] as const)), (tmp) => readSystems(tmp));
@@ -199,7 +199,7 @@ export async function indexBranch(root: string, buildDir: string, ref: string, o
     let data: string | null = null;
     if (migFiles.length) {
         const withManifests = [...migFiles, ...pkgFiles.filter(([p]) => !p.includes('/'))];
-        data = hash(`data:${BRANCH_STORE_VERSION}\0${withManifests.map(([p, s]) => `${p}:${s}`).join('\n')}`);
+        data = hash(`data:${BRANCH_STORE_VERSION}\0${fp}\0${withManifests.map(([p, s]) => `${p}:${s}`).join('\n')}`);
         if (!fs.existsSync(factFile(dir, 'data', data))) {
             const blobs = catBlobs(root, withManifests.map(([, s]) => s));
             // The schema replay is the framework providers' work in the core build, so the sparse tree is built, not lane-read.
@@ -318,7 +318,7 @@ export function onBranches(buildDir: string, query: string): OnBranch[] {
     const out: OnBranch[] = [];
     const q = query.toLowerCase();
     for (const m of listManifests(buildDir)) {
-        if (m.files[query]) {
+        if (Object.hasOwn(m.files, query)) {
             out.push({ ref: m.ref, commit: m.commit, what: `file ${query} (blob ${(m.files[query] as string).slice(0, 8)})` });
             continue;
         }
@@ -367,13 +367,29 @@ function refExists(root: string, branch: string): boolean {
     }
 }
 
+/** `refs/remotes/<remote>/<branch>` exactly: a glob's `*` would also match `origin/feat/<branch>`. */
 function hasRemoteTracking(root: string, branch: string): boolean {
     try {
-        return gitProbe(root, ['for-each-ref', '--format=%(refname)', `refs/remotes/*/${branch}`]).trim().length > 0;
+        const remotes = gitProbe(root, ['remote']).split('\n').map((r) => r.trim()).filter(Boolean);
+        const refs = new Set(gitProbe(root, ['for-each-ref', '--format=%(refname)', 'refs/remotes']).split('\n').map((r) => r.trim()));
+        return remotes.some((r) => refs.has(`refs/remotes/${r}/${branch}`));
     } catch {
         return false;
     }
 }
+
+/** A manifest made for a tag, a SHA or a remote ref is gone only when that name no longer resolves. */
+function resolves(root: string, ref: string): boolean {
+    try {
+        gitProbe(root, ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`]);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+/** Facts younger than this may belong to an index still in progress; gc leaves them. */
+const SWEEP_GRACE_MS = 10 * 60_000;
 
 export interface GcResult {
     dropped: Array<{ ref: string; why: string }>;
@@ -382,7 +398,8 @@ export interface GcResult {
 }
 
 /** Drop stale manifests and the facts nothing references any more; never touches a git ref. */
-export function gcBranches(root: string, buildDir: string, opts: { day?: string; unseenDays?: number } = {}): GcResult {
+export function gcBranches(root: string, buildDir: string, opts: { day?: string; unseenDays?: number; now?: number } = {}): GcResult {
+    const now = opts.now ?? Date.now();
     const dir = storeDir(buildDir);
     const day = opts.day ?? today();
     const cutoff = new Date(new Date(`${day}T00:00:00Z`).getTime() - (opts.unseenDays ?? UNSEEN_DAYS) * 86_400_000).toISOString().slice(0, 10);
@@ -398,7 +415,7 @@ export function gcBranches(root: string, buildDir: string, opts: { day?: string;
             live.push(m);
             continue;
         }
-        const gone = !refExists(root, m.ref);
+        const gone = !refExists(root, m.ref) && !resolves(root, m.ref);
         if (gone || m.seen < cutoff) {
             fs.rmSync(manifestFile(dir, m.ref), { force: true });
             dropped.push({ ref: m.ref, why: gone ? 'the local branch is gone' : `unseen since ${m.seen}` });
@@ -424,6 +441,12 @@ export function gcBranches(root: string, buildDir: string, opts: { day?: string;
         }
         for (const n of names) {
             if (referenced[kind].has(n.replace(/\.json$/, ''))) continue;
+            // A fact written moments ago may be an index that has not written its manifest yet.
+            try {
+                if (now - fs.statSync(path.join(d, n)).mtimeMs < SWEEP_GRACE_MS) continue;
+            } catch {
+                continue;
+            }
             fs.rmSync(path.join(d, n), { force: true });
             swept++;
         }

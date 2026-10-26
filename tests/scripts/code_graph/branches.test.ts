@@ -80,7 +80,7 @@ describe('clean-up by itself', () => {
         await indexBranch(root, build, 'release/1', { day: '2026-10-01' });
         await indexBranch(root, build, 'old', { day: '2026-10-01' });
         git('branch', '-q', '-D', 'old');
-        const r = gcBranches(root, build, { day: '2026-11-15' });
+        const r = gcBranches(root, build, { day: '2026-11-15', now: Date.now() + 3_600_000 });
         expect(r.dropped.map((x) => `${x.ref}: ${x.why}`).sort()).toEqual(['feat-x: unseen since 2026-10-01', 'old: the local branch is gone']);
         expect(r.kept.map((x) => `${x.ref}: ${x.why}`).sort()).toEqual(['main: default branch', 'release/1: release line']);
         expect(r.swept).toBe(4);

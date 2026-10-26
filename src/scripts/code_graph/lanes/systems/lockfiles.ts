@@ -83,8 +83,15 @@ function lineOf(text: string, needle: string, from = 0): number {
     return i < 0 ? 1 : text.slice(0, i).split('\n').length;
 }
 
+/** The line of a YAML mapping key, quoted or not, anchored at a line start: `ms@2:` never matches inside `foo-ms@2:`. */
+function keyLine(text: string, key: string): number {
+    const esc = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const m = new RegExp(`^[ \\t]*["']?${esc}["']?\\s*:`, 'm').exec(text);
+    return m ? text.slice(0, m.index).split('\n').length : 1;
+}
+
 const dirOf = (rel: string): string => (rel.includes('/') ? rel.slice(0, rel.lastIndexOf('/')) : '');
-const join = (dir: string, rel: string): string => (dir ? `${dir}/${rel}` : rel);
+const join = (dir: string, rel: string): string => (dir && rel ? `${dir}/${rel}` : dir || rel);
 
 function blank(name: string, version: string, line: number): LockPackage {
     return { key: `${name}@${version}`, name, version, line, dev: false, optional: false, requires: [], bins: [], namespaces: [], autoloadFiles: false, classmap: false, providers: [], peers: [], private: false };
@@ -326,7 +333,7 @@ export function readPnpmLock(file: string, text: string): LockGraph | { unread: 
     for (const [k, e] of Object.entries(body)) {
         const nv = splitPnpmKey(k);
         if (!nv) continue;
-        const p = blank(nv.name, nv.version, lineOf(text, k.startsWith('/') ? `${k}:` : `${k}:`));
+        const p = blank(nv.name, nv.version, keyLine(text, k));
         p.dev = e.dev === true;
         p.optional = e.optional === true;
         p.peers = Object.keys(e.peerDependencies ?? {});
@@ -394,7 +401,7 @@ export function readYarnLock(file: string, text: string, manifests: readonly Man
             const descs = header.split(/,\s*/).map((d) => d.trim());
             const name = descriptorName(descs[0] ?? '');
             if (/@workspace:/.test(header)) continue;
-            const p = blank(name, e.version, lineOf(text, header));
+            const p = blank(name, e.version, keyLine(text, header));
             p.bins = Object.keys(e.bin ?? {});
             p.peers = Object.keys(e.peerDependencies ?? {});
             const key = p.key;

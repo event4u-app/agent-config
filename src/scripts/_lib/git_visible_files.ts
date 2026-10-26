@@ -51,7 +51,13 @@ export function gitVisibleFiles(root: string): GitVisible | null {
     }
     const files = new Set<string>();
     const dirs = new Set<string>();
-    for (const p of listed.split('\0')) {
+    for (const raw of listed.split('\0')) {
+        // A nested repository git does not track is listed as its directory: walk it as before.
+        if (raw.endsWith('/')) {
+            gitlinks.add(raw.slice(0, -1));
+            continue;
+        }
+        const p = raw;
         if (!p || gitlinks.has(p)) continue;
         files.add(p);
         for (let i = p.indexOf('/'); i > 0; i = p.indexOf('/', i + 1)) dirs.add(p.slice(0, i));

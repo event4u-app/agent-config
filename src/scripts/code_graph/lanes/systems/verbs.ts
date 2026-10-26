@@ -32,6 +32,10 @@ export interface PackageRef {
 const MAX_PATHS = 20;
 const MAX_DEPTH = 12;
 const MAX_SURFACE_FILES = 2000;
+/** Partial chains a `why` walk may hold: a dense lockfile's fan-in must not turn the walk exponential. */
+const MAX_EXPANSIONS = 20_000;
+/** A package name a lockfile may carry; anything else is never joined into a path. */
+const SAFE_NAME = /^(@[a-z0-9][\w.-]*\/)?[a-z0-9][\w.-]*(\/[a-z0-9][\w.-]*)?$/i;
 
 function asRef(n: CodeNode): PackageRef {
     const a = n.fact?.attrs ?? {};
@@ -78,8 +82,13 @@ export function why(g: G, query: string): WhyAnswer[] {
         const paths: WhyAnswer['paths'] = [];
         let truncated = false;
         const queue: string[][] = [[pkg.id]];
-        while (queue.length) {
-            const chain = queue.shift() as string[];
+        let expanded = 0;
+        for (let qi = 0; qi < queue.length; qi++) {
+            if (++expanded > MAX_EXPANSIONS) {
+                truncated = true;
+                break;
+            }
+            const chain = queue[qi] as string[];
             const head = byId.get(chain[0] as string);
             if (!head) continue;
             const ref = asRef(head);
@@ -103,7 +112,6 @@ export interface CallSite {
     file: string;
     line: number;
     names: string[];
-    dev: boolean;
 }
 
 function callSites(g: G, pkgId: string): CallSite[] {
@@ -113,7 +121,6 @@ function callSites(g: G, pkgId: string): CallSite[] {
             file: e.source,
             line: e.fact?.witness.line ?? 1,
             names: Array.isArray(e.fact?.attrs?.['names']) ? (e.fact?.attrs?.['names'] as string[]) : [],
-            dev: false,
         }))
         .sort((a, b) => (a.file < b.file ? -1 : 1));
 }
@@ -142,6 +149,7 @@ export interface UsageAnswer {
 
 /** The public names a package offers, read from its installed files. */
 export function packageSurface(root: string, ref: PackageRef): { names: Set<string>; source: string } | null {
+    if (!SAFE_NAME.test(ref.name) || ref.name.split('/').includes('..')) return null;
     if (ref.ecosystem === 'npm') return npmSurface(root, ref.name);
     if (ref.ecosystem === 'composer') return composerSurface(root, ref.name);
     return null;

@@ -67,3 +67,15 @@ describe('an absolute import specifier', () => {
         expect(targets).toContain('external:<absolute>#run');
     });
 });
+
+describe('a nested repository git does not track', () => {
+    it('is walked as before, its ignore rules aside', () => {
+        git('init', '-q');
+        write('src/a.ts', 'export const a = 1;\n');
+        git('add', 'src/a.ts');
+        git('commit', '-qm', 'init');
+        write('vendor-repo/x.ts', 'export const x = 1;\n');
+        execFileSync('git', ['init', '-q'], { cwd: path.join(root, 'vendor-repo'), stdio: 'ignore' });
+        expect(rels(discoverFiles(root)).sort()).toEqual(['src/a.ts', 'vendor-repo/x.ts']);
+    });
+});

@@ -103,7 +103,13 @@ function mergeIn(
       .split("\n")
       .filter(Boolean);
     tryGit(g, ["merge", "--abort"]);
-    return { ok: false, conflicts, reason: "the merge conflicts" };
+    return {
+      ok: false,
+      conflicts,
+      reason: conflicts.length
+        ? "the merge conflicts"
+        : "git refused the merge",
+    };
   }
 }
 
@@ -160,6 +166,28 @@ export function chainSync(
         branch: lvl.branch,
         action: "reported",
         detail: `${lvl.behind} behind ${lvl.parent} — ${why}${lvl.overlap.length ? `; both changed ${lvl.overlap.slice(0, 5).join(", ")}` : ""}`,
+      });
+      blockedBy = lvl.branch;
+      continue;
+    }
+    // Someone pushed to this branch since it was fetched here: a local merge would diverge from it.
+    if (
+      tryGit(git, [
+        "rev-parse",
+        "--verify",
+        "--quiet",
+        `refs/remotes/origin/${lvl.branch}`,
+      ]) &&
+      (tryGit(git, [
+        "rev-list",
+        "--count",
+        `refs/heads/${lvl.branch}..refs/remotes/origin/${lvl.branch}`,
+      ]) ?? "0") !== "0"
+    ) {
+      steps.push({
+        branch: lvl.branch,
+        action: "reported",
+        detail: `origin/${lvl.branch} is ahead of the local branch — pull it first, then sync`,
       });
       blockedBy = lvl.branch;
       continue;
