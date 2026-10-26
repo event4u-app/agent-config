@@ -93,10 +93,19 @@ function shortDate(iso, short) {
 }
 function shortCommit(c) { return String(c || '').slice(0, 8); }
 
+/**
+ * The pickable items of an area, plus the Compose services: Runtime stores them
+ * but lists only resources, and Delivery shows them as the local environment.
+ */
+function layerItems(area) {
+    var list = areaItems(area);
+    if (area !== 'runtime') return list;
+    return list.concat(localServices().map(function (s) { return { key: 'service/' + s.name, label: s.name, witnesses: [s.witness] }; }));
+}
 /** Witness confirm counts over the items an Overview layer covers; `prefix` narrows an area to one kind of item. */
 function layerCounts(area, prefix) {
     var c = { confirmed: 0, moved: 0, changed: 0, gone: 0, added: 0, unconfirmed: 0, total: 0 };
-    areaItems(area).forEach(function (it) {
+    layerItems(area).forEach(function (it) {
         if (it.kind === 'finding' || (prefix && it.key.indexOf(prefix) !== 0)) return;
         it.witnesses.forEach(function (w) { if (c[w.confirm] !== undefined) { c[w.confirm] += 1; c.total += 1; } });
     });
@@ -160,7 +169,7 @@ function layerFindings(spec) {
     var list = p.findings || [];
     if (!spec.ids) return list;
     var names = Object.create(null);
-    areaItems(spec.area).forEach(function (it) { if (it.key.indexOf(spec.prefix) === 0) names[it.label] = true; });
+    layerItems(spec.area).forEach(function (it) { if (it.key.indexOf(spec.prefix) === 0) names[it.label] = true; });
     return list.filter(function (f) { return names[f.subject] || names[String(f.subject).split('.')[0]]; });
 }
 function layerLive(spec) {

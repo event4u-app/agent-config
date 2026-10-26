@@ -228,13 +228,25 @@ function rtCompare(p, sel, main) {
     grid.appendChild(el('span', { class: 'ops-th' }, t('rRail')));
     if (envs) envs.forEach(function (e) { grid.appendChild(el('span', { class: 'ops-th' }, e)); });
     else grid.appendChild(add(el('span', { class: 'ops-th' }), ndTag(t('rNoEnvs'), true)));
-    p.resources.filter(function (r) { return !isRawType(r.type); }).slice(0, ROW_CAP).forEach(function (r) {
-        var nb = el('button', { type: 'button', class: 'ops-cmpname' + (sel === r ? ' on' : '') });
-        add(nb, el('span', { class: 'ops-b' }, r.name), el('br'), el('span', { class: 'muted' }, r.type));
-        nb.addEventListener('click', function () { avPick('runtime', 'resource/' + r.name); });
+    // One row per resource, whatever namespace declares it: the same Deployment in dev, staging and prod is one row
+    // with three cells. A resource no environment names stays a row of its own file.
+    var rows = [];
+    var byKey = Object.create(null);
+    p.resources.filter(function (r) { return !isRawType(r.type); }).forEach(function (r) {
+        var k = r.type + '\u0000' + r.name + (r.environments.length ? '' : '\u0000' + r.witness.file);
+        if (!byKey[k]) { byKey[k] = { name: r.name, type: r.type, members: [] }; rows.push(byKey[k]); }
+        byKey[k].members.push(r);
+    });
+    rows.slice(0, ROW_CAP).forEach(function (row) {
+        var first = row.members[0];
+        var nb = el('button', { type: 'button', class: 'ops-cmpname' + (row.members.indexOf(sel) >= 0 ? ' on' : '') });
+        add(nb, el('span', { class: 'ops-b' }, row.name), el('br'), el('span', { class: 'muted' }, row.type));
+        nb.addEventListener('click', function () { avPick('runtime', 'resource/' + first.name); });
         grid.appendChild(nb);
         (envs || ['']).forEach(function (e) {
-            var on = !!e && r.environments.indexOf(e) >= 0;
+            var r = null;
+            row.members.forEach(function (m) { if (!r && e && m.environments.indexOf(e) >= 0) r = m; });
+            var on = !!r;
             var hasF = on && rtFindings(p, r).length > 0;
             grid.appendChild(add(el('span', { class: 'ops-cell' }), el('span', { class: 'soft' }, on ? t('rDeclaredCell') : '–'),
                 add(el('span'), on ? opsChip(hasF ? t('rDrift') : t('rState').ok, hasF ? 'drift' : 'ok') : opsChip(e ? t('rNotDeclared') : '–', 'none'))));
@@ -242,6 +254,7 @@ function rtCompare(p, sel, main) {
     });
     box.appendChild(grid);
     wrap.appendChild(box);
+    if (rows.length > ROW_CAP) wrap.appendChild(el('span', { class: 'ops-note' }, t('moreRows')(num(rows.length - ROW_CAP))));
     wrap.appendChild(el('span', { class: 'ops-note' }, t('rProdNote')));
     main.appendChild(wrap);
 }

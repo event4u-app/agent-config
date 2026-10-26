@@ -70,6 +70,8 @@ export interface MapMeta {
      * instead of comparing modification times.
      */
     graph_generation?: string;
+    /** Set only by `map --demo`: the page is drawn from the demo fixture and says so in its header. */
+    demo?: boolean;
 }
 
 /** The generation of a graph cache: the first 16 hex of the SHA-256 of its bytes; null when unreadable. */
@@ -352,6 +354,8 @@ export async function buildMap(
         diffRev?: string;
         prs?: boolean;
         noBuild?: boolean;
+        /** Marks the map as drawn from the demo fixture (`map --demo`); never set for a real repository. */
+        demo?: boolean;
         /** Payloads of the knowledge areas beside Code, one per reader that ran; `{}` when none did. */
         areas?: MapAreas;
         /** Test seam: called after each artefact lands in the new generation. */
@@ -428,6 +432,7 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
         state: graphState(root, cachePath),
         summary: '',
         graph_generation: graphGeneration(cachePath) ?? createHash('sha256').update(JSON.stringify(graph)).digest('hex').slice(0, 16),
+        ...(opts.demo ? { demo: true } : {}),
     };
     answerQuestions(root, outDir, cachePath, graph, model, meta);
     meta.summary =
@@ -1169,7 +1174,7 @@ export function renderPage(m: MapModel, meta: MapMeta, areas: object, shell?: Ma
         `<nav class="areanav" id="areanav" aria-label="Areas"${shell?.hub ? ' hidden' : ''}>${nav.map((r) => `<a href="#/${r}" data-route="${r}">${r}</a>`).join('')}</nav>`,
         '</div>',
         '<div class="top-row row2">',
-        '<div class="pins mono"><span class="chip" id="pin-commit"></span><span class="chip fresh" id="pin-fresh"></span></div>',
+        `<div class="pins mono"><span class="chip" id="pin-commit"></span><span class="chip fresh" id="pin-fresh"></span>${meta.demo ? '<span class="chip demo" id="pin-demo"></span>' : ''}</div>`,
         '<div class="search"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="5"></circle><path d="M11 11l3.5 3.5"></path></svg>' +
             '<input id="search" type="search" autocomplete="off"><span class="kbd mono">/</span>' +
             '<span class="sr-only" id="search-live" aria-live="polite"></span>' +

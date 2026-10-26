@@ -138,8 +138,8 @@ function displayDir(dir: string): string {
     return dir === home || dir.startsWith(home + path.sep) ? `~${dir.slice(home.length).split(path.sep).join('/')}/` : `${dir.split(path.sep).join('/')}/`;
 }
 
-export function renderHub(payload: HubPayload, dir: string = hubDir()): string {
-    const meta: MapMeta = { title: 'Projects hub', commit: '', state: 'fresh', summary: `${payload.projects.length} registered projects` };
+export function renderHub(payload: HubPayload, dir: string = hubDir(), demo = false): string {
+    const meta: MapMeta = { title: 'Projects hub', commit: '', state: 'fresh', summary: `${payload.projects.length} registered projects`, ...(demo ? { demo: true } : {}) };
     const shell: MapShell = { routes: ['projects'], home: 'projects', hub: { projects: payload.projects.length, indexed: payload.projects.filter((p) => p.indexed).length, dir: displayDir(dir) } };
     return renderPage(buildMapModel(EMPTY_GRAPH), meta, { projects: payload }, shell);
 }
@@ -168,7 +168,7 @@ function hubManifest(payload: HubPayload): string {
 }
 
 /** Write the hub into `out`, one generation at a time; returns the page. */
-export function writeHub(out: string, plan: Plan): string {
+export function writeHub(out: string, plan: Plan, demo = false): string {
     const build = path.join(out, '.build');
     fs.mkdirSync(build, { recursive: true });
     const suffix = `${process.pid}-${randomBytes(4).toString('hex')}`;
@@ -188,7 +188,7 @@ export function writeHub(out: string, plan: Plan): string {
                 if (fs.existsSync(from)) fs.cpSync(from, path.join(next, id, entry), { recursive: true });
             }
         }
-        write('index.html', renderHub(plan.payload, out));
+        write('index.html', renderHub(plan.payload, out, demo));
         swapIn(next, out, prev);
     } finally {
         fs.rmSync(next, { recursive: true, force: true });

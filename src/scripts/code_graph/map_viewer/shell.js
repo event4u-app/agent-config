@@ -13,7 +13,8 @@ extendStrings({
             verb: 'Verbs', pack: 'Context pack', finding: 'Findings' },
         allKinds: 'All kinds', kindsLabel: 'Kinds', searchUp: 'Up one level', searchEnter: 'Step into (→)',
         searchCount: function (n) { return n + ' hits'; }, searchCountIn: function (n, p) { return n + ' hits in ' + p; }, generation: function (g) { return 'Generation ' + g; }, noHits: 'Nothing found.',
-        hubChip: 'HUB · this machine only', hubChipT: 'Never committed, never inside a repository map', hubCount: function (i, n) { return i + ' of ' + n + ' indexed'; }
+        hubChip: 'HUB · this machine only', hubChipT: 'Never committed, never inside a repository map', hubCount: function (i, n) { return i + ' of ' + n + ' indexed'; },
+        demoChip: 'Sample data · Fixture', demoChipT: 'Drawn from the demo fixture, not from a repository of yours'
     },
     de: {
         kindNames: { folder: 'Ordner', file: 'Dateien', symbol: 'Symbole', route: 'Routen', area: 'Code-Areas', table: 'Tabellen', column: 'Spalten', fk: 'Fremdschlüssel', rel: 'ORM-Beziehungen',
@@ -21,7 +22,8 @@ extendStrings({
             verb: 'Verben', pack: 'Context-Pack', finding: 'Befunde' },
         allKinds: 'Alle Arten', kindsLabel: 'Arten', searchUp: 'Eine Ebene höher', searchEnter: 'Hineingehen (→)',
         searchCount: function (n) { return n + ' Treffer'; }, searchCountIn: function (n, p) { return n + ' Treffer in ' + p; }, generation: function (g) { return 'Generation ' + g; }, noHits: 'Nichts gefunden.',
-        hubChip: 'HUB · nur dieser Rechner', hubChipT: 'Nie committet, nie in einer Projekt-Map', hubCount: function (i, n) { return i + ' von ' + n + ' indiziert'; }
+        hubChip: 'HUB · nur dieser Rechner', hubChipT: 'Nie committet, nie in einer Projekt-Map', hubCount: function (i, n) { return i + ' von ' + n + ' indiziert'; },
+        demoChip: 'Beispieldaten · Fixture', demoChipT: 'Aus der Demo-Fixture gezeichnet, nicht aus einem deiner Repositories'
     }
 });
 
@@ -45,6 +47,8 @@ function go(route, item) {
 }
 
 function renderHeader() {
+    var demo = $('pin-demo');
+    if (demo) { demo.textContent = t('demoChip'); demo.setAttribute('title', t('demoChipT')); }
     if (SHELL.hub) {
         $('pin-commit').textContent = t('hubChip');
         $('pin-commit').setAttribute('title', t('hubChipT'));
