@@ -90,3 +90,56 @@ describe('name collision (1.2)', () => {
         expect(ctor).toMatchObject({ confidence: 'AMBIGUOUS', ambiguity_reason: 'name-collision' });
     });
 });
+
+describe('barrel and re-exports (1.3)', () => {
+    const A = { path: 'src/a.ts', source: 'export function foo() { return 1; }\nexport function baz() { return 2; }\n' };
+
+    it('binds a call through `export { foo } from` to the definition, stated', async () => {
+        const g = await build([
+            A,
+            { path: 'src/index.ts', source: "export { foo } from './a.js';\n" },
+            { path: 'src/use.ts', source: "import { foo } from './index.js';\nexport function go() { return foo(); }\n" },
+        ]);
+        expect(callsFrom(g, 'src/use.ts#go')[0]).toMatchObject({
+            target: 'src/a.ts#foo',
+            confidence: 'EXTRACTED',
+            resolved_via: 'import-specifier',
+        });
+    });
+
+    it('follows `export *`, a rename, and a two-hop chain', async () => {
+        const g = await build([
+            A,
+            { path: 'src/mid.ts', source: "export * from './a.js';\n" },
+            { path: 'src/index.ts', source: "export { baz as qux } from './mid.js';\nexport * from './mid.js';\n" },
+            {
+                path: 'src/use.ts',
+                source: "import { foo, qux } from './index.js';\nexport function go() { return foo() + qux(); }\n",
+            },
+        ]);
+        const targets = callsFrom(g, 'src/use.ts#go').map((e) => [e.target, e.resolved_via]);
+        expect(targets).toContainEqual(['src/a.ts#foo', 'import-specifier']);
+        expect(targets).toContainEqual(['src/a.ts#baz', 'import-specifier']);
+    });
+
+    it('terminates on a re-export cycle and binds nothing', async () => {
+        const g = await build([
+            { path: 'src/x.ts', source: "export * from './y.js';\n" },
+            { path: 'src/y.ts', source: "export * from './x.js';\n" },
+            { path: 'src/use.ts', source: "import { ghost } from './x.js';\nexport function go() { return ghost(); }\n" },
+        ]);
+        expect(callsFrom(g, 'src/use.ts#go').filter((e) => e.target.includes('#ghost'))).toEqual([]);
+    });
+
+    it('records a literal require() and import() as imports of the file', async () => {
+        const g = await build([
+            A,
+            {
+                path: 'src/use.js',
+                source: "const a = require('./a.js');\nexport async function go() { const m = await import('./a.js'); return a.foo() + m.baz(); }\n",
+            },
+        ]);
+        const imports = g.edges.filter((e) => e.source === 'src/use.js' && e.relation === 'imports').map((e) => e.target);
+        expect(imports).toEqual(['src/a.ts']);
+    });
+});

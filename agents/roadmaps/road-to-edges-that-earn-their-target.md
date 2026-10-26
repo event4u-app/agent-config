@@ -70,7 +70,7 @@ hierarchy to exactly one owner is stated; and SCIP supersedes by node id.
       otherwise the edge is AMBIGUOUS with `candidates[]` and
       `ambiguity_reason: 'name-collision'`. No path-proximity tiebreak.
       verify: `npx vitest run tests/scripts/code_graph_resolution_discipline.test.ts -t 'name collision'` -> 0
-- [ ] **1.3 Re-exports and literal `require` / `import()` resolve.**
+- [x] **1.3 Re-exports and literal `require` / `import()` resolve.**
       `export { a } from`, `export * from` and `export * as ns from` become
       re-export facts the import binding follows, cycle-safe, to the definition;
       `require('x')` and `import('x')` with a string literal become import facts.

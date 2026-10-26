@@ -492,6 +492,29 @@ export function buildGraph(
         for (const r of ex.rawEdges) if (r.relation === 'imports' && r.moduleSpecifier === undefined && r.fqName) fqs.set(r.localName ?? r.targetName, r.fqName.replace(/^\\/, ''));
         if (fqs.size) importFq.set(ex.file, fqs);
     }
+    const reexportsOf = new Map(extracts.map((e) => [e.file, e.reexports ?? []] as const));
+    /**
+     * The declaration `name` reaches through `file`'s re-exports, or null.
+     *
+     * Cycle-safe, and unique or nothing: two `export *` sources both offering
+     * the name are excluded by the language itself, so the graph does not pick.
+     */
+    const followReexport = (file: string, name: string, seen = new Set<string>()): string | null => {
+        const key = `${file}\0${name}`;
+        if (seen.has(key)) return null;
+        seen.add(key);
+        const hits = new Set<string>();
+        for (const re of reexportsOf.get(file) ?? []) {
+            const to = resolveSpecifier(file, re.spec, fileIds) ?? resolveAlias(re.spec, resolution, fileIds);
+            if (to === null || re.ns !== undefined) continue;
+            const remote = re.star ? name : re.names?.find((p) => p.local === name)?.remote;
+            if (remote === undefined || remote === 'default') continue;
+            const direct = `${to}#${remote}`;
+            const hit = nodeKind.has(direct) ? direct : followReexport(to, remote, seen);
+            if (hit !== null) hits.add(hit);
+        }
+        return hits.size === 1 ? ([...hits][0] as string) : null;
+    };
     for (const ex of extracts) {
         const locals = new Map<string, string[]>();
         for (const n of ex.nodes) if (n.kind !== 'file') push(locals, n.label, n.id);
@@ -577,9 +600,11 @@ export function buildGraph(
                 continue;
             }
             // A namespace or default import binds the MODULE, never a
-            // same-named export inside it.
+            // same-named export inside it. A named import the file does not
+            // declare is followed through its `export … from` chain.
             const member = `${file}#${r.targetName}`;
-            const target = r.importKind === 'named' && nodeKind.has(member) ? member : file;
+            const named = r.importKind === 'named';
+            const target = named && nodeKind.has(member) ? member : (named ? followReexport(file, r.targetName) : null) ?? file;
             imports.set(local, { target, exact: true, via: aliasFile === null ? 'import-specifier' : ALIAS_VIA });
         }
         scopes.set(ex.file, { locals, imports });
