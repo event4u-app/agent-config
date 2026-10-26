@@ -40,6 +40,7 @@ import * as path from 'node:path';
 import type { chromium as Chromium } from '@playwright/test';
 
 import { runAssetRender } from './uiRenderAsset.js';
+import { resolveBrowser } from './browserReach.js';
 import { interactWith, type InteractionReading } from './uiRenderInteract.js';
 import { BASELINE_REL, regionReading, type RegionReading } from './uiRenderRegion.js';
 import type { AssetClass, AssetReading, Registration } from './uiRenderAsset.js';
@@ -305,10 +306,8 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
     const outDir = path.join(projectRoot, RENDER_REL, slug);
     const isAsset = opts.profile === 'asset';
 
-    let chromium: typeof Chromium;
-    try {
-        ({ chromium } = await import('@playwright/test'));
-    } catch {
+    const reach = await resolveBrowser();
+    if (reach === null) {
         // Step 2.3, and the reason the absence path sits ABOVE the profile
         // branch rather than inside either one: both profiles reach it by
         // construction, so there is no second absence path to keep honest.
@@ -329,8 +328,9 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
             ...(isAsset ? { profile: 'asset' as const, reason: 'renderer-absent' as const, goal: 'unassessed' as const } : {}),
             ...(staticReading ? { static: staticReading } : {}),
             degradation_reason:
-                '@playwright/test is not installed — it is a devDependency, so a consumer install has no browser. ' +
-                'Install it, or scope any verdict to the static checks that actually ran.',
+                'neither @playwright/test nor playwright-core is installed — @playwright/test is a devDependency, so a consumer install has no driver. ' +
+                'Install playwright-core (a system Chrome, Edge or Chromium is then used when its own browser is absent; AGENT_CONFIG_BROWSER names one), ' +
+                'or scope any verdict to the static checks that actually ran.',
         };
         writeManifest(outDir, manifest);
         process.stderr.write(`[ui:render] ${manifest.degradation_reason}\n`);
@@ -348,6 +348,17 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
         // a missing path or a URL handed to the asset profile.
         return isAsset ? EXIT_RENDERER_ABSENT : 0;
     }
+
+    // A system browser stands in for Playwright's own when that one is not
+    // installed (2.1); every launch below, page or asset, goes through this.
+    const systemBrowser = reach.executablePath;
+    const chromium: typeof Chromium =
+        systemBrowser === undefined
+            ? reach.chromium
+            : Object.assign(Object.create(reach.chromium) as typeof Chromium, {
+                  launch: (o?: Parameters<typeof Chromium.launch>[0]) =>
+                      reach.chromium.launch({ ...o, executablePath: systemBrowser }),
+              });
 
     fs.mkdirSync(outDir, { recursive: true });
 
