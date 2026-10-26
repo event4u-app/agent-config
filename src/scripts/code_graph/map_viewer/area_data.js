@@ -662,14 +662,13 @@ function dClip(r, tx, ty) {
 /**
  * A line annotation: one icon badge on the line instead of a text label. It is a
  * button; it opens a popup with everything the label would have said and more.
- * `pts` is the drawn line as a polyline in its layer's coordinates and `f` the
- * share of its length the badge prefers; the badge is only ever placed on it.
+ * `pts` is the drawn connector — the part between the two card borders — as a
+ * polyline in its layer's coordinates; the badge sits at its middle.
  */
-function dBadge(stage, pts, f, icon, info) {
+function dBadge(stage, pts, icon, info) {
     var b = el('button', { type: 'button', class: 'db-badge ' + icon + (info.finding ? ' has-finding' : ''), 'data-icon': icon, 'aria-label': t('iconOpen')(info.title), title: t('icons')[icon] });
     b.appendChild(dIcon(icon));
     b._pts = pts;
-    b._f = f;
     b.style.left = pts[0][0].toFixed(1) + 'px';
     b.style.top = pts[0][1].toFixed(1) + 'px';
     b.addEventListener('pointerdown', function (ev) { ev.stopPropagation(); });
@@ -690,121 +689,37 @@ function dAlong(pts, f) {
     var u = (d - cum[k - 1]) / seg;
     return { x: pts[k - 1][0] + (pts[k][0] - pts[k - 1][0]) * u, y: pts[k - 1][1] + (pts[k][1] - pts[k - 1][1]) * u, len: total };
 }
+/** Badges closer than this, in their layer's units, would cover each other. */
+var DB_BADGE_GAP = 24;
 /**
- * Every badge on its own line, never beside it, and never on a card: it may only sit
- * where its box clears every drawn card (`cards`, stage rectangles). With `keep` (a
- * pan or a zoom) a badge still in such a spot stays where it is on its line;
- * otherwise it takes the share it prefers when that is free, else the middle of the
- * line's longest free stretch on the stage, else the free point of the line nearest
- * the stage. A line with no free point at all — it runs over cards end to end —
- * shows no badge. Badges that would cover each other step apart along their lines.
- * The place is a point of the line in the layer's own coordinates, so a page scroll
- * moves badge and line together. `toScreen` maps the layer onto the stage.
+ * Every badge at the middle of its drawn connector, in the layer the line lives in,
+ * so pan, zoom, a page scroll or a resize move it with the line and never along it.
+ * A badge whose middle would cover one placed before it moves once along its own
+ * line, by a fixed step — shortened on a short connector so it stays clear of the
+ * cards at the line's ends, and left out where the connector has no room at all. Run only when the lines themselves are drawn again. A connector
+ * shorter than `minLen` has no room for a badge between its cards and carries none.
  */
-function dPlaceBadges(stage, toScreen, keep, cards) {
-    var w = stage.clientWidth;
-    var h = stage.clientHeight;
-    var r = { l: 14, r: w - 14, t: 56, b: h - 34 };
-    var inside = function (q) { return q.x >= r.l && q.x <= r.r && q.y >= r.t && q.y <= r.b; };
-    // Half a badge and a 2 px gap: a badge centred closer than this to a card would touch it.
-    var M = 13;
-    var free = function (q) {
-        for (var i = 0; i < cards.length; i++) {
-            var c = cards[i];
-            if (q.x > c.l - M && q.x < c.r + M && q.y > c.t - M && q.y < c.b + M) return false;
-        }
-        return true;
-    };
-    var ok = function (q) { return inside(q) && free(q); };
+function dPlaceBadges(stage, minLen) {
     var taken = [];
-    var clash = function (q) { return taken.some(function (o) { return Math.abs(o.x - q.x) < 22 && Math.abs(o.y - q.y) < 22; }); };
+    var clash = function (q) { return taken.some(function (o) { return Math.abs(o.x - q.x) < DB_BADGE_GAP && Math.abs(o.y - q.y) < DB_BADGE_GAP; }); };
     Array.prototype.forEach.call(stage.db.labels.querySelectorAll('.db-badge'), function (b) {
         if (!b._pts) return;
-        var pts = b._pts.map(toScreen);
-        var at = function (g) { return dAlong(pts, g); };
-        var len = at(0).len || 1;
-        // A sample every 10 px or so, so even a short free stretch of a long line on the stage is found.
-        var N = Math.max(48, Math.min(800, Math.ceil(len / 10)));
-        var share = function (k) { return k / N; };
-        var f = keep && b._at !== undefined && ok(at(b._at)) ? b._at : b._f;
-        var found = ok(at(f));
-        if (!found) {
-            var best = null;
-            var run = -1;
-            for (var k = 0; k <= N + 1; k++) {
-                var vis = k <= N && ok(at(share(k)));
-                if (vis && run < 0) run = k;
-                if (!vis && run >= 0) { if (!best || k - 1 - run > best[1] - best[0]) best = [run, k - 1]; run = -1; }
-            }
-            if (best) { f = share((best[0] + best[1]) / 2); found = true; }
-            else {
-                var near = Infinity;
-                for (var k2 = 0; k2 <= N; k2++) {
-                    var q = at(share(k2));
-                    if (!free(q)) continue;
-                    var dd = Math.hypot(Math.max(r.l - q.x, 0, q.x - r.r), Math.max(r.t - q.y, 0, q.y - r.b));
-                    if (dd < near) { near = dd; f = share(k2); found = true; }
-                }
-            }
-        }
-        b.hidden = !found;
-        if (!found) return;
-        var pos = at(f);
-        if (clash(pos)) {
-            var step = 26 / len;
-            for (var j = 1; j <= 12; j++) {
-                var hit = null;
-                [f + j * step, f - j * step].some(function (g) {
-                    if (g < 0 || g > 1) return false;
-                    var q2 = at(g);
-                    if (!ok(q2) || clash(q2)) return false;
-                    hit = { q: q2, g: g };
-                    return true;
-                });
-                if (hit) { pos = hit.q; f = hit.g; break; }
-            }
-        }
-        // No room beside the others here (lines that share a path): the free spot of the line nearest the
-        // stage that no other badge holds, off the stage if need be — still on its line, never on a card.
-        if (clash(pos)) {
-            var bestD = Infinity;
-            for (var k3 = 0; k3 <= N; k3++) {
-                var q3 = at(share(k3));
-                if (!free(q3) || clash(q3)) continue;
-                var d3 = Math.hypot(Math.max(r.l - q3.x, 0, q3.x - r.r), Math.max(r.t - q3.y, 0, q3.y - r.b));
-                if (d3 < bestD) { bestD = d3; pos = q3; f = share(k3); }
-            }
-            if (bestD === Infinity) { b.hidden = true; return; }
+        var pos = dAlong(b._pts, 0.5);
+        b.hidden = pos.len < (minLen || 0);
+        if (b.hidden) return;
+        if (clash(pos) && pos.len) {
+            var step = Math.min(DB_BADGE_GAP + 2, pos.len / 2 - 16);
+            if (step >= 8) pos = dAlong(b._pts, 0.5 + step / pos.len);
         }
         taken.push(pos);
-        b._at = f;
-        var p = dAlong(b._pts, f);
-        b.style.left = p.x.toFixed(1) + 'px';
-        b.style.top = p.y.toFixed(1) + 'px';
+        b.style.left = pos.x.toFixed(1) + 'px';
+        b.style.top = pos.y.toFixed(1) + 'px';
     });
 }
 /** 2D: badges live in the panned and zoomed world, so they only keep their on-screen size here. */
 function dBadgeScale(stage) {
     var tr = 'translate(-50%, -50%) scale(' + (1 / dbState.z).toFixed(3) + ')';
     Array.prototype.forEach.call(stage.db.labels.querySelectorAll('.db-badge'), function (b) { b.style.transform = tr; });
-}
-function dPlace2d(stage, keep) {
-    var toScreen = function (v) { return [dbState.panX + v[0] * dbState.z, dbState.panY + v[1] * dbState.z]; };
-    // The cards on or near the stage, in stage pixels; one far off-stage cannot be under a badge anyone sees.
-    var w = stage.clientWidth;
-    var h = stage.clientHeight;
-    var cards = [];
-    Object.keys(stage.db.cards).forEach(function (n) {
-        var c = stage.db.cards[n];
-        if (!c.isConnected) return;
-        var rc = dRect(c);
-        var a = toScreen([rc.x, rc.y]);
-        var b = toScreen([rc.x + rc.w, rc.y + rc.h]);
-        if (b[0] < -40 || a[0] > w + 40 || b[1] < -40 || a[1] > h + 40) return;
-        cards.push({ l: a[0], t: a[1], r: b[0], b: b[1] });
-    });
-    dPlaceBadges(stage, toScreen, keep, cards);
-    dBadgeScale(stage);
 }
 
 function dClosePopup() {
@@ -872,10 +787,11 @@ function dFindingFor(p, ids, rule) {
     return null;
 }
 
-/** The edges as the cards stand now, with every badge on the visible part of its line; drawn again after every drag. */
+/** The edges as the cards stand now, each badge at the middle of its line; drawn again after every drag. */
 function dEdges(stage) {
     dEdgesDraw(stage);
-    dPlace2d(stage);
+    dPlaceBadges(stage);
+    dBadgeScale(stage);
 }
 function dEdgesDraw(stage) {
     var e = stage.db;
@@ -895,7 +811,6 @@ function dEdgesDraw(stage) {
     if (e.link) { dLinkLines(stage); return; }
     if (e.lines === 'off') return;
     var phys = e.src.L || e.src.M;
-    var badged = Object.create(null);
     function edge(a, b, cls, off, info, selected) {
         var ca = e.cards[a];
         var cb = e.cards[b];
@@ -917,11 +832,7 @@ function dEdgesDraw(stage) {
         title(l, info ? info.title : '');
         e.svg.appendChild(l);
         if (!info) return;
-        // Badges of one pair of cards sit apart along the line.
-        var pair = a < b ? a + '|' + b : b + '|' + a;
-        var n = badged[pair] = (badged[pair] || 0) + 1;
-        var f = n === 1 ? 0.5 : n === 2 ? 0.32 : 0.68;
-        dBadge(stage, [[p1[0] + ox, p1[1] + oy], [p2[0] + ox, p2[1] + oy]], f, info.icon, info);
+        dBadge(stage, [[p1[0] + ox, p1[1] + oy], [p2[0] + ox, p2[1] + oy]], info.icon, info);
     }
     var hot = e.sel.hot;
     if (phys) {
@@ -1003,7 +914,7 @@ function dLinkLines(stage) {
         if (l.onDelete) acts.push('ON DELETE ' + l.onDelete.toUpperCase());
         if (l.onUpdate) acts.push('ON UPDATE ' + l.onUpdate.toUpperCase());
         var f = l.finding !== undefined && e.p.findings[l.finding] ? { f: e.p.findings[l.finding], i: l.finding } : null;
-        dBadge(stage, curve, 0.5, l.kind === 'fk' ? dRuleIcon(l.onDelete) : l.kind, { title: name, icon: l.kind === 'fk' ? dRuleIcon(l.onDelete) : l.kind, kind: l.kind, via: l.via, rules: acts.join(' · '), witnesses: l.witnesses, finding: f, pick: 'column/' + l.to.table + '.' + l.to.column });
+        dBadge(stage, curve, l.kind === 'fk' ? dRuleIcon(l.onDelete) : l.kind, { title: name, icon: l.kind === 'fk' ? dRuleIcon(l.onDelete) : l.kind, kind: l.kind, via: l.via, rules: acts.join(' · '), witnesses: l.witnesses, finding: f, pick: 'column/' + l.to.table + '.' + l.to.column });
     });
 }
 
@@ -1011,7 +922,7 @@ function dApply(stage) {
     stage.db.world.style.transform = 'translate(' + dbState.panX + 'px, ' + dbState.panY + 'px) scale(' + dbState.z + ')';
     stage.db.zl.textContent = t('zoomL')(dbState.z.toFixed(1).replace('.', lang === 'de' ? ',' : '.'));
     window.__mapErd = { z: dbState.z, tables: Object.keys(stage.db.cards), focus: stage.db.sel.focus, src: dbState.src, lines: stage.db.lines };
-    dPlace2d(stage, true);
+    dBadgeScale(stage);
 }
 /** Zoom by `f` about a stage point (default: the stage's centre), which stays where it is. */
 function dZoom(stage, f, cx, cy) {
@@ -1033,7 +944,6 @@ function dFit(stage, onlyShrink) {
     dbState.panX = Math.max(0, (stage.clientWidth - bw * z) / 2);
     dbState.panY = Math.max(48, (stage.clientHeight - bh * z) / 2);
     dApply(stage);
-    dPlace2d(stage);
 }
 
 /**
@@ -1075,7 +985,6 @@ function dFitFocus(stage) {
     under = top + m - (dbState.panY + f.y * z);
     if (under > 0) dbState.panY += under;
     dApply(stage);
-    dPlace2d(stage);
 }
 
 /** The key that unlocks moving and zooming, named as the platform names it. */
@@ -1176,16 +1085,6 @@ function dInteract(stage) {
         var r = stage.getBoundingClientRect();
         dZoom(stage, Math.pow(1.0015, -ev.deltaY * (ev.deltaMode === 1 ? 16 : 1)), ev.clientX - r.left, ev.clientY - r.top);
     }, { passive: false });
-    // A new stage size re-places the badges on what is now in view.
-    if (window.ResizeObserver) {
-        var seen = '';
-        var ro = new ResizeObserver(function () {
-            if (!stage.isConnected) { ro.disconnect(); return; }
-            var size = stage.clientWidth + 'x' + stage.clientHeight;
-            if (size !== seen) { seen = size; dPlace2d(stage, true); }
-        });
-        ro.observe(stage);
-    }
 }
 var dbModBound = false;
 /** The stage shows grab and move cursors while the modifier is down, even before the pointer moves. */
@@ -1204,8 +1103,8 @@ function dBindModifier() {
 var D3_MAX = 24;
 /** Readable names for the 3D chips; an overlapping pair is pushed apart until this gap remains. */
 var D3_GAP = 6;
-/** Between the front card and a chip: a badge (22 px) with 2 px on either side, plus a little air. */
-var D3_FRONT_GAP = 34;
+/** Between the front card and a chip: room for a badge (22 px, 31 px across its diagonal) at the connector's middle with air on both sides, at any angle. */
+var D3_FRONT_GAP = 48;
 
 /** Tables joined to a table: foreign keys, key links of every kind and ORM relations. */
 function d3Adjacency(p) {
@@ -1476,10 +1375,8 @@ function dErd3d(p, sel, erd, lines, dim) {
             l.style.opacity = String(pb.facing === false || pa.facing === false ? 0.45 : 1);
             svg.insertBefore(l, svg.firstChild);
             if (!info) return;
-            // The badge sits on the stretch nearest the viewer, a little short of the middle from the nearer end.
-            var near = pa.z >= pb.z ? pa : pb;
-            var far = near === pa ? pb : pa;
-            dBadge(stage, [[near.x, near.y], [far.x, far.y]], 0.45, info.icon, info);
+            // The badge sits at the middle of the projected connector, between the two card borders.
+            dBadge(stage, [[pa.x, pa.y], [pb.x, pb.y]], info.icon, info);
         }
         var touches = function (a, b) { return lines === 'all' ? inHood[a] && inHood[b] : a === focus || b === focus; };
         if (link) {
@@ -1508,14 +1405,7 @@ function dErd3d(p, sel, erd, lines, dim) {
                 });
             });
         }
-        var sr = stage.getBoundingClientRect();
-        var drawn = [];
-        Object.keys(cards).forEach(function (n) {
-            if (cards[n].hidden) return;
-            var cr = cards[n].getBoundingClientRect();
-            drawn.push({ l: cr.left - sr.left, t: cr.top - sr.top, r: cr.right - sr.left, b: cr.bottom - sr.top });
-        });
-        dPlaceBadges(stage, function (v) { return v; }, false, drawn);
+        dPlaceBadges(stage, DB_BADGE_GAP + 10);
         window.__mapErd3d = { rot: d3View().slice(), z: dbState.z3, front: focus, hood: hood.slice(), proj: proj };
     }
     var zoom = el('div', { class: 'db-zoom' });

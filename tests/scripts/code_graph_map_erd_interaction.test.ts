@@ -73,34 +73,44 @@ async function backgroundPoint(page: Page): Promise<{ x: number; y: number }> {
 }
 
 /**
- * Every icon whose centre is on the stage, with its distance in screen pixels to the
- * nearest point of the line it annotates — the drawn line or path whose title the
- * icon's label names, measured on the geometry the browser draws.
+ * Every icon whose centre is on the stage that is NOT at the middle of the line it
+ * annotates — the drawn line or path whose title the icon's label names, measured
+ * by arc length on the geometry the browser draws, within 2 px. The one allowed
+ * exception is the one step a later icon takes along its own line when another
+ * icon already sits at its middle: then it must lie on its line, at most one step
+ * (26 layer units) from the middle, with another icon at that middle.
  */
-async function iconsOffTheirLine(page: Page): Promise<{ n: number; off: string[] }> {
+async function iconsOffMidpoint(page: Page): Promise<{ n: number; off: string[] }> {
     return page.evaluate(() => {
-        const st = document.getElementById('db-stage')!.getBoundingClientRect();
-        const lines = new Map<string, Array<[number[], number[]]>>();
+        const stage = document.getElementById('db-stage')!;
+        const st = stage.getBoundingClientRect();
+        const z = stage.classList.contains('db-3d') ? 1 : (window as unknown as { __mapErd: { z: number } }).__mapErd.z;
+        const lines = new Map<string, Array<{ segs: Array<[number[], number[]]>; mid: number[] }>>();
         for (const g of document.querySelectorAll('#db-stage svg line, #db-stage svg path')) {
             const title = g.querySelector('title')?.textContent;
             if (!title) continue;
             const m = (g as SVGGraphicsElement).getScreenCTM()!;
             const pt = (x: number, y: number): number[] => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f];
-            const segs = lines.get(title) ?? [];
-            lines.set(title, segs);
+            const pts: number[][] = [];
             if (g.tagName === 'line') {
-                segs.push([pt(+g.getAttribute('x1')!, +g.getAttribute('y1')!), pt(+g.getAttribute('x2')!, +g.getAttribute('y2')!)]);
+                pts.push(pt(+g.getAttribute('x1')!, +g.getAttribute('y1')!), pt(+g.getAttribute('x2')!, +g.getAttribute('y2')!));
             } else {
                 const p = g as SVGPathElement;
                 const len = p.getTotalLength();
-                let prev: number[] | null = null;
-                for (let i = 0; i <= 120; i++) {
-                    const q = p.getPointAtLength((len * i) / 120);
-                    const s = pt(q.x, q.y);
-                    if (prev) segs.push([prev, s]);
-                    prev = s;
-                }
+                for (let i = 0; i <= 200; i++) { const q = p.getPointAtLength((len * i) / 200); pts.push(pt(q.x, q.y)); }
             }
+            const cum = [0];
+            for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1]! + Math.hypot(pts[i]![0]! - pts[i - 1]![0]!, pts[i]![1]! - pts[i - 1]![1]!));
+            const half = cum[cum.length - 1]! / 2;
+            let k = 1;
+            while (k < pts.length - 1 && cum[k]! < half) k++;
+            const u = (half - cum[k - 1]!) / ((cum[k]! - cum[k - 1]!) || 1);
+            const mid = [pts[k - 1]![0]! + (pts[k]![0]! - pts[k - 1]![0]!) * u, pts[k - 1]![1]! + (pts[k]![1]! - pts[k - 1]![1]!) * u];
+            const segs: Array<[number[], number[]]> = [];
+            for (let i = 1; i < pts.length; i++) segs.push([pts[i - 1]!, pts[i]!]);
+            const list = lines.get(title) ?? [];
+            list.push({ segs, mid });
+            lines.set(title, list);
         }
         const dist = (c: number[], a: number[], b: number[]): number => {
             const dx = b[0]! - a[0]!;
@@ -108,21 +118,38 @@ async function iconsOffTheirLine(page: Page): Promise<{ n: number; off: string[]
             const t = Math.max(0, Math.min(1, ((c[0]! - a[0]!) * dx + (c[1]! - a[1]!) * dy) / (dx * dx + dy * dy || 1)));
             return Math.hypot(c[0]! - a[0]! - t * dx, c[1]! - a[1]! - t * dy);
         };
+        const centres = [...document.querySelectorAll('#db-stage button.db-badge')].map((b) => {
+            const r = b.getBoundingClientRect();
+            return { b, c: [r.left + r.width / 2, r.top + r.height / 2] };
+        });
         const off: string[] = [];
         let n = 0;
-        for (const b of document.querySelectorAll('#db-stage button.db-badge')) {
-            const r = b.getBoundingClientRect();
-            const c = [r.left + r.width / 2, r.top + r.height / 2];
+        for (const { b, c } of centres) {
             if ((b as HTMLElement).hidden || c[0]! <= st.left || c[0]! >= st.right || c[1]! <= st.top || c[1]! >= st.bottom) continue;
             n += 1;
             const label = b.getAttribute('aria-label') ?? '';
+            let ok = false;
             let best = Infinity;
-            for (const [title, segs] of lines) if (label.includes(title)) for (const s of segs) best = Math.min(best, dist(c, s[0], s[1]));
-            if (!(best <= 3)) off.push(`${label} ${Math.round(best)}px`);
+            for (const [title, list] of lines) {
+                if (!label.includes(title)) continue;
+                for (const l of list) {
+                    const dMid = Math.hypot(c[0]! - l.mid[0]!, c[1]! - l.mid[1]!);
+                    best = Math.min(best, dMid);
+                    if (dMid <= 2) ok = true;
+                    const onLine = Math.min(...l.segs.map((s2) => dist(c, s2[0], s2[1])));
+                    const other = centres.some((o) => o.b !== b && Math.hypot(o.c[0]! - l.mid[0]!, o.c[1]! - l.mid[1]!) < 24 * z + 4);
+                    if (onLine <= 2 && dMid <= 26 * z + 3 && other) ok = true;
+                }
+            }
+            if (!ok) off.push(`${label} ${Math.round(best)}px from the middle`);
         }
         return { n, off };
     });
 }
+
+/** Where each icon sits in its own layer (left / top), which pan, zoom, scroll and resize must not change. */
+const iconPlaces = (page: Page): Promise<string[]> =>
+    page.evaluate(() => [...document.querySelectorAll('#db-stage button.db-badge')].map((b) => `${b.getAttribute('aria-label')} @ ${(b as HTMLElement).style.left},${(b as HTMLElement).style.top}`));
 
 async function drag(page: Page, from: { x: number; y: number }, by: { x: number; y: number }, mod?: 'Control' | 'Meta'): Promise<void> {
     if (mod) await page.keyboard.down(mod);
@@ -203,55 +230,103 @@ describe('2D: zoom and pan need no modifier, only moving a table does', () => {
         });
     }
 
-    it('demo: every visible line icon stays on its own line after a page scroll, a pan, a zoom, a table drag and with all lines drawn', async () => {
+    it('demo: every visible line icon sits at the middle of its own line and keeps its place in the layer through a page scroll, a pan, a zoom and a resize; a table drag moves it to the new middle', async () => {
         const page = await open('demo', 1440, 640);
+        // The demo's focused lines are long; a pan brings the middle of the first one to the stage's centre.
+        const icon = (await page.locator('#db-stage button.db-badge').first().boundingBox())!;
+        const sbox = (await page.locator('#db-stage').boundingBox())!;
+        const from = await backgroundPoint(page);
+        await drag(page, from, { x: sbox.x + sbox.width / 2 - (icon.x + icon.width / 2), y: sbox.y + sbox.height / 2 - (icon.y + icon.height / 2) });
         const check = async (step: string): Promise<void> => {
-            const r = await iconsOffTheirLine(page);
+            const r = await iconsOffMidpoint(page);
             expect(r.n, `${step}: icons on the stage`).toBeGreaterThan(0);
             expect(r.off, step).toEqual([]);
         };
         await check('open');
+        const placed = await iconPlaces(page);
+        const kept = async (step: string): Promise<void> => expect(await iconPlaces(page), `${step}: places in the layer`).toEqual(placed);
         await page.evaluate(() => { document.getElementById('av-main')!.scrollTop += 180; window.scrollBy(0, 120); });
         await settle(page);
         await check('page scroll');
+        await kept('page scroll');
         const box = (await page.locator('#db-stage').boundingBox())!;
         await page.mouse.move(box.x + box.width / 2, Math.max(4, box.y - 40));
         await page.mouse.wheel(0, 200);
         await settle(page);
         await check('wheel beside the stage');
-        await drag(page, await backgroundPoint(page), { x: 260, y: -140 });
+        await drag(page, await backgroundPoint(page), { x: 80, y: -50 });
         await check('pan');
-        const sb = (await page.locator('#db-stage').boundingBox())!;
-        await page.mouse.move(sb.x + sb.width * 0.45, sb.y + sb.height * 0.55);
+        await kept('pan');
+        // Zoom about an icon, so the point under the pointer — the icon — stays on the stage.
+        const ib = (await page.locator('#db-stage button.db-badge').first().boundingBox())!;
+        await page.mouse.move(ib.x + ib.width / 2, ib.y + ib.height / 2);
         await page.mouse.wheel(0, -300);
         await settle(page);
         await check('zoom in');
+        await kept('zoom in');
         await page.mouse.wheel(0, 900);
         await settle(page);
         await check('zoom out');
-        const name = await page.evaluate(() => (window as unknown as { __mapErd: { focus: string } }).__mapErd.focus);
-        const hb = (await page.locator(`#db-stage .db-table[data-table="${name}"] .db-thead`).boundingBox())!;
-        await drag(page, { x: hb.x + 30, y: hb.y + hb.height / 2 }, { x: 140, y: 90 }, 'Meta');
+        await kept('zoom out');
+        await page.setViewportSize({ width: 1100, height: 700 });
+        await settle(page);
+        await kept('resize');
+        // A table on the stage that one of the icons' lines joins, moved by its head.
+        const head = await page.evaluate(() => {
+            const st = document.getElementById('db-stage')!.getBoundingClientRect();
+            const labels = [...document.querySelectorAll('#db-stage button.db-badge')].map((b) => b.getAttribute('aria-label') ?? '');
+            for (const c of document.querySelectorAll('#db-stage .db-table')) {
+                const name = c.getAttribute('data-table')!;
+                if (!labels.some((l) => l.includes(`${name}.`))) continue;
+                const r = c.querySelector('.db-thead')!.getBoundingClientRect();
+                const x = r.left + 20;
+                const y = r.top + r.height / 2;
+                if (x > st.left + 10 && x < st.right - 160 && y > st.top + 60 && y < st.bottom - 100 && document.elementFromPoint(x, y)?.closest('.db-table') === c) return { x, y };
+            }
+            return null;
+        });
+        expect(head, 'a joined table on the stage').not.toBeNull();
+        await drag(page, head!, { x: 140, y: 90 }, 'Meta');
         await check('table drag');
+        expect(await iconPlaces(page), 'a moved table moves its icons').not.toEqual(placed);
         await page.click('.db-seg[aria-label="Lines"] button[data-v="all"]');
         await settle(page);
         await check('all lines');
+        const all = await iconPlaces(page);
         await drag(page, await backgroundPoint(page), { x: -300, y: 200 });
         await check('all lines, pan');
-        await page.setViewportSize({ width: 1100, height: 700 });
-        await settle(page);
-        await check('resize');
+        expect(await iconPlaces(page), 'all lines, pan: places in the layer').toEqual(all);
         await page.close();
     });
 });
 
-/** Visible icons whose box overlaps a drawn table card's box (2D cards, 3D cards and chips) by more than 1 px. */
-async function iconsOnCards(page: Page): Promise<string[]> {
+/**
+ * Visible icons whose box overlaps (by more than 1 px) one of the two cards its own line joins — 2D cards, 3D
+ * cards and chips. The line's ends lie on those cards' borders; a long line may cross a third card, and its
+ * middle may then lie on it, which is the owner's choice (the icon stays at the middle of its line).
+ */
+async function iconsOnTheirCards(page: Page): Promise<string[]> {
     return page.evaluate(() => {
         const st = document.getElementById('db-stage')!.getBoundingClientRect();
         const cards = [...document.querySelectorAll('#db-stage .db-table')]
             .filter((c) => !(c as HTMLElement).hidden && (c as HTMLElement).offsetWidth > 0)
             .map((c) => ({ name: c.getAttribute('data-table')!, r: c.getBoundingClientRect() }));
+        const ends = new Map<string, number[][]>();
+        for (const g of document.querySelectorAll('#db-stage svg line, #db-stage svg path')) {
+            const title = g.querySelector('title')?.textContent;
+            if (!title) continue;
+            const m = (g as SVGGraphicsElement).getScreenCTM()!;
+            const pt = (x: number, y: number): number[] => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f];
+            const list = ends.get(title) ?? [];
+            if (g.tagName === 'line') list.push(pt(+g.getAttribute('x1')!, +g.getAttribute('y1')!), pt(+g.getAttribute('x2')!, +g.getAttribute('y2')!));
+            else {
+                const p = g as SVGPathElement;
+                const a = p.getPointAtLength(0);
+                const b = p.getPointAtLength(p.getTotalLength());
+                list.push(pt(a.x, a.y), pt(b.x, b.y));
+            }
+            ends.set(title, list);
+        }
         const out: string[] = [];
         for (const b of document.querySelectorAll('#db-stage button.db-badge')) {
             if ((b as HTMLElement).hidden) continue;
@@ -259,21 +334,26 @@ async function iconsOnCards(page: Page): Promise<string[]> {
             const cx = r.left + r.width / 2;
             const cy = r.top + r.height / 2;
             if (cx <= st.left || cx >= st.right || cy <= st.top || cy >= st.bottom) continue;
+            const label = b.getAttribute('aria-label') ?? '';
+            const own: number[][] = [];
+            for (const [title, list] of ends) if (label.includes(title)) own.push(...list);
             for (const c of cards) {
+                const joins = own.some((q) => q[0]! >= c.r.left - 3 && q[0]! <= c.r.right + 3 && q[1]! >= c.r.top - 3 && q[1]! <= c.r.bottom + 3);
+                if (!joins) continue;
                 const w = Math.min(r.right, c.r.right) - Math.max(r.left, c.r.left);
                 const h = Math.min(r.bottom, c.r.bottom) - Math.max(r.top, c.r.top);
-                if (w > 1 && h > 1) out.push(`${b.getAttribute('aria-label')} on ${c.name}`);
+                if (w > 1 && h > 1) out.push(`${label} on ${c.name}`);
             }
         }
         return out;
     });
 }
 
-describe('no icon covers a table', () => {
-    it('demo, 1440 and 375: no visible icon lies on a card — 2D after a pan, a zoom and a table drag, 3D after turning', async () => {
+describe('no icon covers a table its line joins', () => {
+    it('demo, 1440 and 375: no visible icon lies on either card its line joins — 2D after a pan, a zoom and a table drag, 3D after turning', async () => {
         for (const width of [1440, 375]) {
             const page = await open('demo', width, 900);
-            const check = async (step: string): Promise<void> => expect(await iconsOnCards(page), `${width} ${step}`).toEqual([]);
+            const check = async (step: string): Promise<void> => expect(await iconsOnTheirCards(page), `${width} ${step}`).toEqual([]);
             await check('2D open');
             await drag(page, await backgroundPoint(page), { x: width > 500 ? 220 : 60, y: -120 });
             await check('2D pan');
@@ -343,7 +423,7 @@ describe('3D: a plain drag turns, the wheel zooms, a click picks', () => {
             await page.keyboard.press('ArrowUp');
             await settle(page);
             expect(spread(e, await erd3(page)), 'arrows').toBeGreaterThan(2);
-            const r = await iconsOffTheirLine(page);
+            const r = await iconsOffMidpoint(page);
             expect(r.off, 'icons after turning').toEqual([]);
             await page.close();
         });
