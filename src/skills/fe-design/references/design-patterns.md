@@ -55,6 +55,27 @@ React island vs. Vue SFC) is the apply-step's concern, not this skill's.
 - **Extract a props-only UI shell when used 3+ times** — DRY applies to UI too; stateful components carry a higher bar (~4 + real state) — per-class canon: [`abstraction-thresholds`](../../../docs/guidelines/abstraction-thresholds.md).
 - **Component workshop when the project is large enough** — for a real, growing shared-component library, isolate and document each reusable component in a component workshop so it stays discoverable and reused, not re-invented; skip it for a small surface of one-offs. Tool-specific setup is a carve-out (Storybook et al.) — see the implementation skill (e.g. [`react-shadcn-ui`](../../react-shadcn-ui/SKILL.md) § Component workshop), never a generic mandate.
 
+### Native select — the canon when the project has no primitive
+
+1. **A project primitive exists → always use it.** `control_roles.select.canonical`
+   in the `ui:audit` artefact names it; a raw `<select>` beside it is the defect.
+2. **No primitive → a native `<select>` styled with the project's tokens.** The
+   closed state is styled for every browser (height, padding, radius, border and
+   font matching the sibling inputs). The open picker is styled as progressive
+   enhancement:
+
+   ```css
+   select { appearance: base-select; }          /* opt-in, Chromium 135+ */
+   select::picker(select) { appearance: base-select; border-radius: var(--radius); }
+   ```
+
+   Browsers without `base-select` (Safari has announced it, Firefox has not)
+   keep the OS popup, which is correct, not broken.
+3. **A custom listbox only with the full ARIA combobox pattern** — keyboard,
+   `aria-activedescendant`, focus return, dismissal — per
+   [`accessibility-auditor`](../../accessibility-auditor/SKILL.md). A `div` list
+   that opens on click is not a select.
+
 ## Form Design
 
 ### Principles
