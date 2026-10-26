@@ -238,7 +238,7 @@ function emitDir(em: Emitter, dir: string, blocks: DirBlocks, environments: read
         if (asEdge.has(b)) continue;
         const address = addressOf(b);
         const provArg = b.args.get('provider')?.text ?? null;
-        const attrs: Record<string, string | null> = {
+        const attrs: Record<string, string | string[] | null> = {
             tf_block: b.type,
             tf_type: b.type === 'module' || b.type === 'provider' ? null : b.label,
             address,
