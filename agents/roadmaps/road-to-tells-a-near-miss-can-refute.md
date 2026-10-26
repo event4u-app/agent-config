@@ -200,7 +200,7 @@ The gate for every later promotion.
       verify: findings on the FP corpus and on `src/ui` + `site/` identical before
       and after (snapshot); `grep -n "const BUZZWORDS"
       src/scripts/design_slop_rules.ts` → gone.
-- [ ] **4.2 Answer the rejection with the number that exists.** CP3 maps to
+- [x] **4.2 Answer the rejection with the number that exists.** Done 2026-10-26: CP3 → `tell-negative-parallelism` + `tell-binary-contrast`, clean-prose-corpus M1 = 0 (`npx tsx src/scripts/bench_prose_tells_fp.ts --gate …`); CP4 and T5 are named nulls (no matcher reads a "so what" test; T5's only candidate is the council-rejected phrase-list). Parity green. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> CP3 maps to
       `tell-negative-parallelism`; CP4 and T5 to candidate rules on the prose FP
       bench; each gets `backed` or a named null with its M1.
       verify: the T5, CP3, CP4 rows of `design-antipatterns.md` carry a status

@@ -24,6 +24,8 @@
  * Dependency-free by design (npx-shipped package) — pattern analysis only.
  */
 
+import { matchHeadingEcho, matchRepeatedCloser, matchRepeatedOpenings } from "./_lib/structural_tells.js";
+
 export type TellSeverity = "hard" | "cluster";
 export type TellGroup =
   | "content"
@@ -702,6 +704,63 @@ export const TELL_RULES: TellRule[] = [
     0.5,
     "Title-Case Headings With Every Word Capitalized",
     [/^#{2,6}\s+(?:[A-Z][a-z]+\s+){3,}[A-Z][a-z]+\s*$/m],
+  ),
+  // Structural families, promoted under the epoch gate
+  // (road-to-tells-a-near-miss-can-refute 5.2).
+  w(
+    "tell-heading-echo",
+    "style",
+    "cluster",
+    "any",
+    1,
+    "The first sentence under a heading restates the heading",
+    [],
+    matchHeadingEcho,
+  ),
+  w(
+    "tell-repeated-openings",
+    "style",
+    "cluster",
+    "any",
+    1,
+    "Three or more consecutive sentences opening on the same two words",
+    [],
+    matchRepeatedOpenings,
+  ),
+  w(
+    "tell-repeated-closer",
+    "style",
+    "cluster",
+    "any",
+    1,
+    "The same one-line sign-off closes two or more sections",
+    [],
+    matchRepeatedCloser,
+  ),
+  w(
+    "tell-strawman-preemption",
+    "language",
+    "cluster",
+    "en",
+    1,
+    "Pre-empting an objection nobody raised ('You might be thinking…', 'Critics will say…')",
+    [
+      /\b(?:you might|you may|some may|some might) (?:be thinking|be wondering|ask|say|object)\b/i,
+      /\bI know what you'?re thinking\b/i,
+      /\bcritics (?:will|might|may) (?:say|argue|object)\b/i,
+    ],
+  ),
+  w(
+    "tell-self-describing-document",
+    "language",
+    "cluster",
+    "en",
+    1,
+    "The text announces itself ('This article will…', 'In this guide, we'll…')",
+    [
+      /\bthis (?:article|post|guide|piece|document) (?:will|aims to|explores|walks you through|covers)\b/i,
+      /\bin this (?:article|post|guide|piece), (?:we|I)(?:'ll| will)\b/i,
+    ],
   ),
 ];
 

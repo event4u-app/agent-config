@@ -74,6 +74,30 @@ the `nicht um … sondern um` form alongside the literal `nicht nur` it already
 required. Extensions clear the same gate — M1 = 0 — and are recorded here so
 the widening is visible, but they do not consume an epoch.
 
+## Epochs 14-18 — structural families a matcher can read (road-to-tells-a-near-miss-can-refute 5.2)
+
+Declared before the run: each lands only at M1 = 0 on the pinned corpus, in
+this strength order; a non-zero count refuses the family and it gets no row.
+All five cleared it on 2026-10-26.
+
+| # | Family | Lang | M1 at promotion | Seeded instances |
+|---|---|---|---|---|
+| 14 | `tell-heading-echo` | any | 0 | 0 |
+| 15 | `tell-repeated-openings` | any | 0 | 0 |
+| 16 | `tell-repeated-closer` | any | 0 | 0 |
+| 17 | `tell-strawman-preemption` | en | 0 | 0 |
+| 18 | `tell-self-describing-document` | en | 0 | 0 |
+
+Known reach, stated rather than found later: the corpus holds no deliberate
+anaphora ("We will… We will… We will…" as a rhetorical device), so
+`tell-repeated-openings` has M1 = 0 against a corpus that cannot refute it on
+that case. A sentence repeated verbatim breaks its run — that is duplication,
+and three of the scanner's own unit tests pad with exactly that.
+
+German: the first three read structure and are language-agnostic. The last
+two are English phrase families; their German equivalents ("Du denkst jetzt
+vielleicht…", "In diesem Artikel werden wir…") are named gaps, not built.
+
 ## Measured effect on the seeded corpus
 
 **Per family**, which is the figure that means something here. Six of the
