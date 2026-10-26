@@ -159,7 +159,9 @@ describe('routes (4.1)', () => {
             (e) => e.target === 'app/Support/Permission.php#Permission::middleware' && e.relation === 'calls',
         );
         expect(bad).toEqual([]);
-        expect(graph.suppressed_edge_counts.contested_by_provider?.['laravel'] ?? 0).toBeGreaterThan(0);
+        // The chain starts at the framework's `Route` alias, so the core holds it
+        // as an external call before any provider has to contest a binding.
+        expect(has('routes/web.php', 'calls', 'external:Route::middleware')).toBe(true);
     });
 });
 

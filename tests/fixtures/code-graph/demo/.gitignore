@@ -1,0 +1,4 @@
+/agents/map/.build/
+/vendor/
+/node_modules/
+.env

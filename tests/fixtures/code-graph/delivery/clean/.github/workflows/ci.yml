@@ -1,0 +1,32 @@
+name: CI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - '.github/workflows/**'
+  pull_request:
+    paths:
+      - 'src/**'
+      - '.github/workflows/ci.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@0123456789abcdef0123456789abcdef01234567
+      - run: npm test
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - run: kubectl apply -f k8s/
+  stage-deploy:
+    needs: [test]
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - run: helm upgrade shop ./chart

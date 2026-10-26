@@ -288,8 +288,8 @@ and `references`), and § Measured twice still governs that question.
   courtesy).
 - Do NOT block or defer a read waiting on the graph — it is an accelerator, not
   a gate.
-- Do NOT treat the cache as a source of truth for anything beyond the last
-  build; it is a rebuildable artifact.
+- Do NOT trust the rebuildable cache as truth —
+  [confirm a fact](references/find-confirm-act-update.md) first.
 
 ## See also
 

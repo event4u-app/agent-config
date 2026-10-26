@@ -1,0 +1,78 @@
+{
+  "name": "shop",
+  "tables": [
+    {
+      "name": "users",
+      "type": "BASE TABLE",
+      "comment": "",
+      "columns": [
+        { "name": "id", "type": "bigint unsigned", "nullable": false, "default": null, "comment": "" },
+        { "name": "email", "type": "varchar(255)", "nullable": false, "default": null, "comment": "" },
+        { "name": "name", "type": "varchar(191)", "nullable": false, "default": null, "comment": "" }
+      ],
+      "indexes": [
+        { "name": "PRIMARY", "def": "PRIMARY KEY (id) USING BTREE", "columns": ["id"] },
+        { "name": "users_email_unique", "def": "UNIQUE KEY users_email_unique (email) USING BTREE", "columns": ["email"] }
+      ],
+      "constraints": [
+        {
+          "name": "PRIMARY",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "columns": ["id"],
+          "referenced_table": "",
+          "referenced_columns": []
+        },
+        {
+          "name": "users_email_check",
+          "type": "CHECK",
+          "def": "CHECK (email <> '')",
+          "columns": ["email"],
+          "referenced_table": "",
+          "referenced_columns": []
+        }
+      ]
+    },
+    {
+      "name": "orders",
+      "type": "BASE TABLE",
+      "comment": "customer orders",
+      "columns": [
+        { "name": "id", "type": "bigint unsigned", "nullable": false, "default": null, "comment": "" },
+        { "name": "user_id", "type": "bigint unsigned", "nullable": false, "default": null, "comment": "" },
+        { "name": "total_cents", "type": "bigint", "nullable": false, "default": "0", "comment": "" }
+      ],
+      "indexes": [
+        { "name": "PRIMARY", "def": "PRIMARY KEY (id) USING BTREE", "columns": ["id"] },
+        { "name": "orders_user_id_index", "def": "KEY orders_user_id_index (user_id) USING BTREE", "columns": ["user_id"] }
+      ],
+      "constraints": [
+        {
+          "name": "PRIMARY",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "columns": ["id"],
+          "referenced_table": "",
+          "referenced_columns": []
+        }
+      ]
+    },
+    {
+      "name": "active_users",
+      "type": "VIEW",
+      "comment": "",
+      "columns": [{ "name": "id", "type": "bigint unsigned", "nullable": false, "default": null, "comment": "" }],
+      "indexes": [],
+      "constraints": []
+    }
+  ],
+  "relations": [
+    {
+      "table": "orders",
+      "columns": ["user_id"],
+      "parent_table": "users",
+      "parent_columns": ["id"],
+      "def": "FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE RESTRICT"
+    }
+  ]
+}

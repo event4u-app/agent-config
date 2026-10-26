@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions name="StockService"
+             targetNamespace="urn:fixture:stock"
+             xmlns="http://schemas.xmlsoap.org/wsdl/"
+             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+             xmlns:tns="urn:fixture:stock"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <types>
+    <xsd:schema targetNamespace="urn:fixture:stock">
+      <xsd:element name="GetStockRequest">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="ItemCode" type="xsd:string"/>
+            <xsd:element name="Warehouse" type="xsd:string" minOccurs="0"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="GetStockResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="Quantity" type="xsd:int"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </types>
+  <message name="GetStockInput">
+    <part name="parameters" element="tns:GetStockRequest"/>
+  </message>
+  <message name="GetStockOutput">
+    <part name="parameters" element="tns:GetStockResponse"/>
+  </message>
+  <portType name="StockPort">
+    <operation name="GetStock">
+      <input message="tns:GetStockInput"/>
+      <output message="tns:GetStockOutput"/>
+    </operation>
+  </portType>
+  <binding name="StockBinding" type="tns:StockPort">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="GetStock">
+      <soap:operation soapAction="urn:fixture:stock#GetStock"/>
+    </operation>
+  </binding>
+  <service name="StockService">
+    <port name="StockPort" binding="tns:StockBinding">
+      <soap:address location="https://soap.stock-host.example/StockService"/>
+    </port>
+  </service>
+</definitions>

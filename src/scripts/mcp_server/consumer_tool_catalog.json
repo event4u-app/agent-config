@@ -250,7 +250,7 @@
     },
     {
       "name": "graph_dead",
-      "description": "Symbols no accepted reference and no declared entry point names. REFUSES (status `refused`) while a source is unreadable: without recorded exportedness an exported-but-unimported symbol looks dead. Never a deletion recommendation.",
+      "description": "Symbols no accepted reference and no declared entry point names. REFUSES while a source is unreadable: without recorded exportedness an exported-but-unimported symbol looks dead. Never a deletion recommendation.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"
@@ -310,7 +310,7 @@
     },
     {
       "name": "graph_impact",
-      "description": "What a diff can break: callers, dependents and test files reaching the changed symbols, over stated-fact edges only (refused guesses reported). Runs `git diff` for the rev.",
+      "description": "What a diff breaks: callers, dependents, tests of changed symbols over stated edges; `review_risk` scores it.",
       "side_effect": "shell",
       "implemented_on": [
         "stdio"
@@ -335,6 +335,9 @@
             "type": "boolean",
             "default": false,
             "description": "Instead return changed symbols no test imports."
+          },
+          "review_risk": {
+            "type": "boolean"
           },
           "project": {
             "type": "string"
@@ -371,7 +374,7 @@
     },
     {
       "name": "graph_node",
-      "description": "One symbol in full: where it is declared, what reaches it, what it reaches, how connected it is. Resolves EXACTLY (node id, then label) and refuses anything else — never scores free text.",
+      "description": "One symbol in full: its declaration, what reaches it, what it reaches. Resolves EXACTLY (node id, then label), never free text. mode=confirm re-reads its witness.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"
@@ -386,6 +389,13 @@
             "type": "string",
             "description": "Node id `<relpath>#<sym>` or an exact label."
           },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "node",
+              "confirm"
+            ]
+          },
           "direction": {
             "type": "string",
             "enum": [
@@ -394,35 +404,19 @@
               "both"
             ],
             "default": "both",
-            "description": "`in` = who reaches it, `out` = what it reaches."
+            "description": "in = who reaches it, out = what it reaches."
           },
           "depth": {
             "type": "integer",
-            "minimum": 1,
-            "maximum": 3,
-            "default": 1,
-            "description": "Hop limit."
+            "maximum": 3
           },
           "relation": {
             "type": "string",
-            "enum": [
-              "calls",
-              "imports",
-              "uses",
-              "inherits",
-              "member",
-              "tests",
-              "routes-to",
-              "renders",
-              "includes",
-              "reads",
-              "migrates",
-              "persists",
-              "relates",
-              "injects",
-              "documents"
-            ],
-            "description": "One relation only; omit for all."
+            "description": "One relation only."
+          },
+          "kind": {
+            "type": "string",
+            "description": "Far ends of this kind only."
           },
           "project": {
             "type": "string"
@@ -457,9 +451,7 @@
             "description": "Goal node id, label, or free text."
           },
           "budget": {
-            "type": "integer",
-            "minimum": 1,
-            "default": 1500
+            "type": "integer"
           },
           "project": {
             "type": "string"
@@ -473,7 +465,7 @@
     },
     {
       "name": "graph_query",
-      "description": "A symbol's direct outgoing relations (calls, imports, uses, inherits), each with its confidence and resolution mechanism: \"what does this touch\" before reading a file.",
+      "description": "A symbol's outgoing relations with confidence and mechanism. kind/relation/direction/depth: a tree with witnesses. mode=pack: facts for a task.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"
@@ -488,10 +480,37 @@
             "type": "string",
             "description": "Node id, label, or free text."
           },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "relations",
+              "pack"
+            ]
+          },
           "budget": {
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string",
+            "description": "Comma-separated kinds."
+          },
+          "relation": {
+            "type": "string"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "in",
+              "out",
+              "both"
+            ]
+          },
+          "depth": {
             "type": "integer",
-            "minimum": 1,
-            "default": 1500
+            "maximum": 3
+          },
+          "limit": {
+            "type": "integer"
           },
           "project": {
             "type": "string"
@@ -505,7 +524,7 @@
     },
     {
       "name": "graph_tests_for",
-      "description": "Test files that exercise a symbol: a test file imports it or its module. Empty means none does — a finding, not an error.",
+      "description": "Test files that exercise a symbol: a test file imports it or its module. Empty is a finding, not an error.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"

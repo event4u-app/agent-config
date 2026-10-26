@@ -1478,6 +1478,14 @@ gates:
     status: enforced
     no_canary_reason: "The gate carries its own `--self-test` (6 cases, 4 rejecting), run as its own CI step: a switch with no row, a row with no switch, one-added-plus-one-stale (which a COUNT comparison would pass and a set comparison must not), and a missing section — plus two ACCEPT cases pinning that the two esbuild `--define` identifiers stay excluded, so a gate that started rejecting everything would not pass either. A planted canary would mean committing a fake `AGENT_CONFIG_*` read into a real hook file and removing it again, and a forgotten one is an environment variable in the shipped hook layer that nothing reads — the exact defect this gate exists to catch, left behind by its own canary."
 
+  - id: check_graph_writers
+    argv: []
+    ci_invocation: .github/workflows/rule-backstops.yml
+    min_scanned: 1800
+    corpus: "every `src/**/*.ts` file the gate reads for write calls (2,055 at registration); each write target is expanded through the file's own initialisers and checked against the two layouts of ADR-303 — `agents/map/` per project and the user-global hub."
+    status: enforced
+    no_canary_reason: "The gate carries its own `--self-test` (7 cases, 5 rejecting), run as its own CI step, and tests/scripts/check_graph_writers.test.ts plants writers outside both layouts and runs the gate over the pre-change graph_home, estate_index and estate_map, which it reports as six findings. A canary committed into src/ would be a real graph writer outside the layout — the defect this gate exists to catch, left behind by its own canary."
+
   - id: check_rule_evidence_declaration
     argv: []
     min_scanned: 10

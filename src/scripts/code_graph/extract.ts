@@ -37,6 +37,8 @@ export interface RawEdge {
     enclosingClassId?: string;
     /** scope token for `Scope::m()` scoped calls (a class name / self / static). */
     scopeName?: string;
+    /** PHP `->m()` on a fluent chain that starts at `Scope::x()` or `new Scope(…)`: that class name. */
+    chainHead?: string;
     /**
      * `imports` only: the module specifier as written (`'./types.js'`,
      * `'node:path'`), stripped of its quotes.
@@ -271,6 +273,14 @@ function extractPhp(root: TsNode, file: string, out: FileExtract): void {
                 if (nm) {
                     const objText = obj?.text ?? '';
                     const isThis = objText === '$this';
+                    let head = obj;
+                    while (head && head.type === 'member_call_expression') head = head.childForFieldName('object');
+                    const headClass =
+                        head?.type === 'scoped_call_expression'
+                            ? head.childForFieldName('scope')?.text
+                            : head?.type === 'object_creation_expression'
+                              ? namedChildren(head).find((c) => NAME_TYPES.has(c.type))?.text
+                              : undefined;
                     out.rawEdges.push({
                         sourceId: scopeId,
                         relation: 'calls',
@@ -278,6 +288,7 @@ function extractPhp(root: TsNode, file: string, out: FileExtract): void {
                         confidenceHint: isThis && classId ? 'INFERRED' : 'AMBIGUOUS',
                         callStyle: isThis ? 'this' : 'dynamic',
                         ...(classId ? { enclosingClassId: classId } : {}),
+                        ...(headClass && !/^(self|static|parent)$/.test(headClass) ? { chainHead: baseName(headClass) } : {}),
                     });
                 }
                 break;

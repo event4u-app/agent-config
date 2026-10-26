@@ -7,6 +7,8 @@
  * of the shape. Deterministic + LLM-free + no network: identical source →
  * identical graph bytes (enforced by the golden-checksum test).
  */
+import type { SourceRung, Witness } from './lanes/lane_fact.js';
+import type { VocabKind, VocabRelation } from './vocabulary.js';
 
 /** Launch set — the stacks this suite's consumers actually run. */
 export type Lang = 'php' | 'typescript' | 'javascript' | 'python' | 'go' | 'java' | 'csharp' | 'ruby';
@@ -34,7 +36,8 @@ export type EdgeConfidence = 'EXTRACTED' | 'INFERRED' | 'AMBIGUOUS';
  * it renders, a template to the template it includes, code to the translation
  * or config file it reads, a migration to its table, a model to its table, a
  * model to the model a relation names, a class to the service a container
- * injects into it. The vocabulary is fixed and names no framework.
+ * injects into it. The vocabulary is fixed, names no framework, and lives in
+ * `vocabulary.ts` with every lane's relations and their directions.
  */
 export type Relation =
     | 'calls'
@@ -52,7 +55,36 @@ export type Relation =
     | 'relates'
     | 'injects'
     /** A Markdown document links to, or names, the file (`docs_layer.ts`). */
-    | 'documents';
+    | 'documents'
+    | 'references'
+    | 'writes'
+    | 'calls-out'
+    | 'configured-by'
+    | 'described-by'
+    | 'deploys-to'
+    | 'triggers'
+    | 'governs'
+    | 'supersedes'
+    | 'co-changes'
+    | 'based-on'
+    | 'uses-image'
+    | 'depends-on'
+    | 'connects'
+    | 'publishes'
+    | 'mounts'
+    | 'on-network'
+    | 'owned-by'
+    | 'selects'
+    | 'resolves-to'
+    | 'needs'
+    | 'contains'
+    | 'builds'
+    | 'delivers'
+    | 'consumes';
+
+/** Fails to compile while `Relation` and the vocabulary file disagree. */
+type InSync<T extends true> = T;
+export type RelationMatchesVocabulary = InSync<[Exclude<Relation, VocabRelation> | Exclude<VocabRelation, Relation>] extends [never] ? true : false>;
 
 /**
  * HOW an edge's target was arrived at — the mechanism, not the confidence.
@@ -104,6 +136,8 @@ export type ResolvedVia =
     | 'fs-route'
     /** A request-call URL literal ending in exactly one route's path (the default pass, off by default). */
     | 'literal-url'
+    /** Stated by a lane reader's record of a file it read (`lanes/merge.ts`). */
+    | 'lane-read'
     /** Stated by a compiler-grade SCIP index the project ships (`scip_reader.ts`). */
     | 'compiler-index'
     /** C#: the one type of that name in the namespaces the file can see (its own, their parents, its `using`s). */
@@ -163,7 +197,7 @@ export type EdgeProvider =
 // One space-separated string per list: this module ships in the hook bundle,
 // where an array literal costs a line per entry. `Words` splits it in the type.
 const STATED_WORDS =
-    'same-file import-specifier path-alias psr4 route-table directive-scan schema-call orm-relation di-binding compiler-index namespace-scope test-import literal-path literal-dotted fs-route literal-url' as const;
+    'same-file import-specifier path-alias psr4 route-table directive-scan schema-call orm-relation di-binding lane-read compiler-index namespace-scope test-import literal-path literal-dotted fs-route literal-url' as const;
 const GUESS_WORDS = 'name-lookup dynamic foreign' as const;
 type Words<S extends string> = S extends `${infer H} ${infer T}` ? H | Words<T> : S;
 /** Mechanisms in neither list; must be `never` (a test asserts it). */
@@ -198,24 +232,29 @@ export interface CodeNode {
      * to one by name. `const Widget = class {}` is emitted as `class` for
      * exactly that reason.
      */
-    kind:
-        | 'file'
-        | 'class'
-        | 'interface'
-        | 'trait'
-        | 'function'
-        | 'method'
-        | 'constant'
-        | 'type'
-        | 'enum'
-        | 'skipped'
-        /** A declared route or dispatched entry, `<VERB> <path>` (a convention provider). */
-        | 'route'
-        /** A database table a migration or schema creates (a convention provider). */
-        | 'table';
+    kind: VocabKind;
     source_file: string;
     /** 1-based [startLine, startCol, endLine, endCol]; [] for synthetic nodes. */
     source_location: readonly number[];
+    /** Witness and provenance, on facts a lane reader or schema replay produced. */
+    fact?: FactMeta;
+}
+
+/**
+ * Where a fact was read and on what footing (ADR-303: the graph indexes
+ * witnesses, it is not the truth). Same fields as a lane reader's record, so a
+ * merged fact and a native one are checked the same way.
+ */
+export interface FactMeta {
+    /** The file whose rewrite replaces this fact. */
+    owner: string;
+    witness: Witness;
+    rung: SourceRung;
+    /** How a node was reached; edges carry `resolved_via` on the edge itself. */
+    resolved_via?: ResolvedVia;
+    /** The lane reader that produced it; a re-merge of that lane replaces exactly these. */
+    lane?: string;
+    attrs?: Record<string, string | number | boolean | string[] | null>;
 }
 
 export interface CodeEdge {
@@ -263,12 +302,22 @@ export interface CodeEdge {
     ambiguity_reason?: 'receiver-unknown' | 'hierarchy-unresolved';
     /** The convention provider that drew this edge (ADR-298); absent on every other edge. */
     provider_id?: string;
+    fact?: FactMeta;
 }
 
 /** A convention provider active in this build, with the package roots it applied to. */
 export interface ActiveProviderRecord {
     id: string;
     roots: string[];
+}
+
+/** One lane reader's run: what it merged, or why it merged nothing. No timing, so a rebuild stays byte-identical. */
+export interface LaneRunRecord {
+    lane: string;
+    facts: number;
+    relations: number;
+    /** The reader threw; its lane holds no facts from this build. */
+    error?: string;
 }
 
 export interface CodeGraph {
@@ -305,6 +354,12 @@ export interface CodeGraph {
     };
     /** Convention providers active in this build; present only when one was. */
     providers?: ActiveProviderRecord[];
+    /**
+     * The lane readers that ran in this build, in run order. Absent when no
+     * lane reader ran at all, so a reader that ran and found nothing
+     * (`facts: 0`) is told apart from one that never ran.
+     */
+    lanes_run?: LaneRunRecord[];
     nodes: CodeNode[];
     edges: CodeEdge[];
 }
@@ -343,8 +398,12 @@ export interface CodeGraph {
  * names left the schema (`orm-relation`, `contested_by_provider`), provider
  * edges carry `provider_id`, the graph records its active providers, and the
  * vocabulary gained `injects` / `di-binding`.
+ *
+ * Bumped 6 → 7: `column` nodes and `references` edges from schema replay, the
+ * lane kinds and relations of `vocabulary.ts`, and the optional `fact` witness
+ * on nodes and edges.
  */
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 /** Deterministic per-file byte cap — files above this become a SKIPPED node. */
 export const MAX_FILE_BYTES = 1_000_000;

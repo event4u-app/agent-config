@@ -320,7 +320,7 @@ describe('the map writer answers on a real tree', () => {
         git('init', '-q');
         commitAs('Ann', '2026-05-01T00:00:00Z', 'init');
         const res = await buildMap(root);
-        const doc = JSON.parse(fs.readFileSync(path.join(res.outDir, 'map.json'), 'utf-8')) as { model: MapModel };
+        const doc = JSON.parse(fs.readFileSync(path.join(res.outDir, 'code', 'map.json'), 'utf-8')) as { model: MapModel };
         const m = doc.model;
         const byPath = (p: string): MapFile => m.files.find((f) => f.path === p) as MapFile;
         expect(byPath('src/a.ts')).toMatchObject({ loc: 2, lang: 'typescript', churn: 1, owners: [['Ann', 1]], lastChange: '2026-05-01' });
@@ -338,7 +338,7 @@ describe('the map writer answers on a real tree', () => {
         expect(JSON.stringify(doc)).not.toContain('@example.com');
         const mapMd = fs.readFileSync(path.join(res.outDir, 'MAP.md'), 'utf-8');
         expect(mapMd).toContain('## Health');
-        expect(mapMd).toContain('Formula: `health.formula` in `map.json`.');
+        expect(mapMd).toContain('Formula: `health.formula` in `code/map.json`.');
         expect(mapMd).toMatch(/- \d+ dead files \(exports unchecked/);
     });
 });
