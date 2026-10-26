@@ -130,6 +130,31 @@ describe('the demo map in a browser', () => {
         await page.close();
     }, 120_000);
 
+    it('a large schema opens on the picked table and its links at a readable zoom; Fit still shows all', async () => {
+        type Erd = { z: number; focus: string; lines: string; tables: string[] };
+        const erd = (page: Page): Promise<Erd> => page.evaluate(() => (window as unknown as { __mapErd: Erd }).__mapErd);
+        for (const width of [1440, 375]) {
+            const { page, errors } = await open(demo.page, '#/data', width);
+            await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+            const e = await erd(page);
+            expect(e.tables.length, `@${width}`).toBeGreaterThan(100);
+            expect(e.lines).toBe('focus');
+            expect(await page.locator('.dimseg button[data-dim="2d"]').getAttribute('aria-pressed')).toBe('true');
+            expect(e.z, `@${width}`).toBeGreaterThanOrEqual(0.9);
+            const stage = (await page.locator('#db-stage').boundingBox())!;
+            const card = (await page.locator(`.db-table[data-table="${e.focus}"]`).boundingBox())!;
+            expect(card.x, `@${width}`).toBeGreaterThanOrEqual(stage.x - 0.5);
+            expect(card.y, `@${width}`).toBeGreaterThanOrEqual(stage.y - 0.5);
+            expect(Math.min(card.x + card.width, stage.x + stage.width) - card.x, `@${width} visible width`).toBeGreaterThan(Math.min(card.width, stage.width) * 0.95);
+            expect(card.y + Math.min(card.height, 60), `@${width}`).toBeLessThanOrEqual(stage.y + stage.height + 0.5);
+            // Fit shows the whole schema: on a desktop stage that means zooming out; a phone stage fits its width.
+            await page.click('.db-zoom button.fit');
+            if (width === 1440) expect((await erd(page)).z, 'after Fit').toBeLessThan(e.z);
+            expect(errors).toEqual([]);
+            await page.close();
+        }
+    }, 120_000);
+
     it('a real map has no chip', async () => {
         const { page } = await open(realPage, '#/overview');
         expect(await page.locator('#pin-demo').count()).toBe(0);

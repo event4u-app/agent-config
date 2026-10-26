@@ -90,6 +90,11 @@ extendStrings({
 });
 
 var DB_BIG = 12;
+// Measured on the demo schema at 1440 px: fitting the whole schema gives 1.0 at 4 tables, 0.59–0.67 at 6–16,
+// 0.47 at 20 and the 0.4 floor from 30 up — unreadable cards. Above this count the ERD opens on the picked
+// table and its linked tables at a readable zoom instead; Fit still shows the whole schema.
+var DB_FOCUS_OPEN = 16;
+var DB_READABLE_Z = 0.9;
 var DB_CARD_W = 180;
 var DB_GAP_X = 64;
 var DB_GAP_Y = 80;
@@ -626,7 +631,7 @@ function dErd(p, sel, bodyEl) {
     erd.appendChild(legend);
     erd.appendChild(el('div', { class: 'db-help' }, t('erdHelp')(dModKeyName())));
 
-    stage.db = { world: world, svg: svg, labels: labels, cards: cards, zl: zl, p: p, rels: rels, fkPair: fkPair, lines: lines, src: src, sel: sel, link: link };
+    stage.db = { world: world, svg: svg, labels: labels, cards: cards, zl: zl, p: p, rels: rels, fkPair: fkPair, lines: lines, src: src, sel: sel, link: link, near: near };
     dBindKeys();
     dBindModifier();
     dClosePopup();
@@ -635,7 +640,7 @@ function dErd(p, sel, bodyEl) {
     dApply(stage);
     if (!dbState.fitted) {
         dbState.fitted = true;
-        requestAnimationFrame(function () { if (stage.isConnected) dFit(stage, true); });
+        requestAnimationFrame(function () { if (stage.isConnected) { if (p.tables.length > DB_FOCUS_OPEN) dFitFocus(stage); else dFit(stage, true); } });
     }
 }
 
@@ -886,6 +891,42 @@ function dFit(stage, onlyShrink) {
     dbState.z = z;
     dbState.panX = Math.max(0, (stage.clientWidth - bw * z) / 2);
     dbState.panY = Math.max(48, (stage.clientHeight - bh * z) / 2);
+    dApply(stage);
+}
+
+/**
+ * Centre the picked table and its linked tables at a readable zoom. When they do not all fit at that zoom, the
+ * picked table is centred instead, its lines leading out to the rest, and it stays fully in view (top-left
+ * first, if it is taller than the stage).
+ */
+function dFitFocus(stage) {
+    var db = stage.db;
+    var focus = db.cards[db.sel.focus];
+    if (!focus) { dFit(stage, true); return; }
+    var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    Object.keys(db.near).forEach(function (n) {
+        if (!db.cards[n]) return;
+        var r = dRect(db.cards[n]);
+        x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y); x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h);
+    });
+    var top = 48;
+    var m = 16;
+    var vw = stage.clientWidth;
+    var vh = stage.clientHeight - top;
+    var z = Math.max(DB_READABLE_Z, Math.min(1.2, (vw - 2 * m) / (x1 - x0), (vh - 2 * m) / (y1 - y0)));
+    var f = dRect(focus);
+    if ((x1 - x0) * z > vw - 2 * m || (y1 - y0) * z > vh - 2 * m) { x0 = f.x; x1 = f.x + f.w; y0 = f.y; y1 = f.y + f.h; }
+    dbState.z = z;
+    dbState.panX = vw / 2 - (x0 + x1) / 2 * z;
+    dbState.panY = top + vh / 2 - (y0 + y1) / 2 * z;
+    var over = dbState.panX + (f.x + f.w) * z - (vw - m);
+    if (over > 0) dbState.panX -= over;
+    var under = m - (dbState.panX + f.x * z);
+    if (under > 0) dbState.panX += under;
+    over = dbState.panY + (f.y + f.h) * z - (top + vh - m);
+    if (over > 0) dbState.panY -= over;
+    under = top + m - (dbState.panY + f.y * z);
+    if (under > 0) dbState.panY += under;
     dApply(stage);
 }
 
