@@ -8,7 +8,7 @@
  *   agents/map/index.html        one self-contained offline file
  *   agents/map/MAP.md            the same picture in words, budgeted
  *   agents/map/areas/<id>.md     one page per area of five or more files
- *   agents/map/map.json          the model the other three are rendered from
+ *   agents/map/map.json          the model and the area payloads the other three are rendered from
  *
  * Same tree in, same bytes out: nothing written here carries a timestamp, a
  * host path or anything else that differs between two builds of one commit.
