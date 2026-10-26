@@ -63,6 +63,8 @@
  *                                             many — only with the package installed
  *   remove-plan <package>                     call sites, non-import uses, dependents
  *                                             and packages leaving with it: a proposal
+ *   provenance <ticket|#pr|file|symbol>       since when, by which commit, PR and
+ *                                             ticket — from the local history only
  *   tests-for <symbol>                        test files importing the symbol
  *   untested  --diff <rev>                    changed symbols no test imports
  *   dead      [--entry-points F]              zero accepted in-edges, minus
@@ -187,6 +189,8 @@ import {
     why as systemsWhy,
     type WhyAnswer,
 } from './lanes/systems/verbs.js';
+import { cachedProvenance, readCachedProvenance, ticketsTouched } from './provenance.js';
+import { provenanceAnswer } from './provenance_verbs.js';
 import { overlayState, overlayView, readOverlay } from './verify/overlay.js';
 import { headSha, verifyPaths } from './verify/paths.js';
 import { renderShrink, shrinkCheck } from './verify/shrink_guard.js';
@@ -674,6 +678,33 @@ function cmdSystems(sub: 'why' | 'usage' | 'remove-plan', argv: string[]): numbe
     return answer.length ? 0 : 1;
 }
 
+/** `provenance <ticket|#pr|file|symbol>` — since when, and for which ticket and PR. */
+function cmdProvenance(argv: string[]): number {
+    const positional = argv.filter((a) => !a.startsWith('--') && !isFlagValue(argv, a));
+    const query = positional[0];
+    if (!query) {
+        process.stderr.write('usage: code_graph/cli.ts provenance <ticket|#pr|file|symbol> [--graph P]\n');
+        return 2;
+    }
+    const root = resolveRoot(argv);
+    const graphPath = flag(argv, '--graph') ?? cacheFor(root);
+    const buildDir = path.dirname(graphPath);
+    const index = cachedProvenance(root, buildDir);
+    if (!index) {
+        process.stderr.write('code-graph: no git history here — provenance reads the local history only\n');
+        return 1;
+    }
+    let g: Pick<CodeGraph, 'nodes'> = { nodes: [] };
+    try {
+        g = JSON.parse(fs.readFileSync(graphPath, 'utf-8')) as CodeGraph;
+    } catch {
+        /* files and tickets answer without a graph; symbols and routes need one */
+    }
+    const a = provenanceAnswer(root, g, index, query.replace(/^\.\//, ''), buildDir);
+    process.stdout.write(`${a.lines.join('\n')}\n`);
+    return a.kind === 'none' ? 1 : 0;
+}
+
 function cmdReviewRisk(argv: string[]): number {
     const root = resolveRoot(argv);
     const rev = flag(argv, '--diff') ?? 'HEAD';
@@ -689,8 +720,18 @@ function cmdReviewRisk(argv: string[]): number {
     }
     const graph = JSON.parse(fs.readFileSync(p, 'utf-8')) as CodeGraph;
     const r = reviewRisk(root, graph, rev, hunks);
-    if (argv.includes('--json')) process.stdout.write(`${JSON.stringify(r)}\n`);
-    else process.stdout.write(`${renderReviewRisk(r).join('\n')}\n`);
+    // Whose work the diff touches — informational, never a weighted term of the sum.
+    const prov = readCachedProvenance(root, path.dirname(p));
+    const tickets = prov ? ticketsTouched(prov, r.changed) : null;
+    if (argv.includes('--json')) process.stdout.write(`${JSON.stringify(tickets ? { ...r, tickets } : r)}\n`);
+    else {
+        const lines = renderReviewRisk(r);
+        if (tickets && tickets.length) {
+            lines.push(`tickets and PRs whose code the diff touches (${tickets.length}), not part of the sum:`);
+            for (const t of tickets.slice(0, 20)) lines.push(`  ${t.key} — ${t.files.join(', ')}`);
+        }
+        process.stdout.write(`${lines.join('\n')}\n`);
+    }
     return 0;
 }
 
@@ -1410,6 +1451,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'tests-for') return cmdTestsFor(argv.slice(1));
         if (sub === 'review-risk') return cmdReviewRisk(argv.slice(1));
         if (sub === 'why' || sub === 'usage' || sub === 'remove-plan') return cmdSystems(sub, argv.slice(1));
+        if (sub === 'provenance') return cmdProvenance(argv.slice(1));
         if (sub === 'untested') return cmdUntested(argv.slice(1));
         if (sub === 'dead') return cmdDead(argv.slice(1));
         if (sub === 'suggest-verb') return cmdSuggestVerb(argv.slice(1));
@@ -1423,7 +1465,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'estate') return estateMain(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|review-risk|why|usage|remove-plan|tests-for|untested|dead|confirm|pack|rebuild-diff|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
+                'impact|review-risk|why|usage|remove-plan|provenance|tests-for|untested|dead|confirm|pack|rebuild-diff|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
         );
         return 2;
     } catch (e) {

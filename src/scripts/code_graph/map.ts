@@ -28,6 +28,7 @@ import { buildFromRepo, readProjectProbe } from './build.js';
 import { acquire as acquireRefreshLock, heldByThisProcess } from './refresh_lock.js';
 import { computeVerdict, graphState } from './detect.js';
 import { graphHome } from './graph_home.js';
+import { cachedProvenance, type CommitRef, spanHistory, ticketKeysOf } from './provenance.js';
 import { BLAST_SCOPE_ROLES, SOLE_OWNER_MIN_CHURN, SOLE_OWNER_SHARE, finishAnswers, layerOf, readFileFacts, readGitHistory, readLayerRules } from './map_answers.js';
 import {
     areaDrift,
@@ -35,6 +36,7 @@ import {
     type FileRole,
     MAP_MODEL_VERSION,
     type MapModel,
+    type MapProvenance,
     type OutcomeEvent,
     outcomeScores,
     prOverlap,
@@ -514,6 +516,8 @@ function answerQuestions(root: string, outDir: string, cachePath: string, graph:
             }
         }
     }
+    const prov = mapProvenance(root, path.join(outDir, '.build'), graph, paths);
+    if (prov) model.provenance = prov;
     markDead(root, cachePath, graph, model);
     const rules = readLayerRules(path.join(outDir, 'layers.yaml'));
     if (rules) {
@@ -529,6 +533,57 @@ function answerQuestions(root: string, outDir: string, cachePath: string, graph:
         freshness: meta.state,
         generation: meta.graph_generation ?? '',
     };
+}
+
+/** Routes whose introduction is read per build: a count, not a clock, so a redraw of one tree writes the same bytes. */
+export const ROUTE_HISTORY_BUDGET = 100;
+
+/**
+ * The provenance section of the map: for the map's own files and routes, the
+ * commit that introduced and the one that last changed each, and the tickets
+ * and PRs of those commits only. The whole index, with every commit a ticket or
+ * a PR touched, stays in the gitignored cache for `code-graph provenance`.
+ */
+function mapProvenance(root: string, buildDir: string, graph: CodeGraph, paths: readonly string[]): MapProvenance | null {
+    const index = cachedProvenance(root, buildDir);
+    if (!index) return null;
+    const keys = ticketKeysOf(root);
+    const commits: MapProvenance['commits'] = [];
+    const at = new Map<string, number>();
+    const add = (c: CommitRef): number => {
+        const known = at.get(c.sha);
+        if (known !== undefined) return known;
+        at.set(c.sha, commits.length);
+        commits.push([c.sha, c.date, c.author, c.pr ?? '', c.tickets, c.subject]);
+        return commits.length - 1;
+    };
+    const fromIndex = (i: number | null): number => (i === null || i < 0 ? -1 : add(index.commits[i] as CommitRef));
+    const files: MapProvenance['files'] = {};
+    for (const f of [...paths].sort()) {
+        const p = index.files[f];
+        if (p) files[f] = [fromIndex(p.introduced), fromIndex(p.last), p.changes];
+    }
+    const routes: MapProvenance['routes'] = {};
+    const routeNodes = graph.nodes
+        .filter((n) => n.kind === 'route' && n.source_file && (n.source_location[0] ?? 0) > 0)
+        .sort((a, b) => (a.label < b.label ? -1 : a.label > b.label ? 1 : 0))
+        .slice(0, ROUTE_HISTORY_BUDGET);
+    for (const n of routeNodes) {
+        const line = n.source_location[0] as number;
+        const h = spanHistory(root, n.source_file, line, line, { cacheDir: buildDir, index, keys });
+        if (!h || h.commits.length === 0) continue;
+        routes[n.label] = [h.bounded ? -1 : add(h.commits[h.commits.length - 1] as CommitRef), add(h.commits[0] as CommitRef), n.source_file];
+    }
+    // Reverse lookups over the commits the map carries: a ticket or PR names what it introduced or last changed here.
+    const tickets: MapProvenance['tickets'] = {};
+    const prs: MapProvenance['prs'] = {};
+    commits.forEach((c, i) => {
+        for (const t of c[4]) (tickets[t] ??= []).push(i);
+        if (c[3]) (prs[c[3]] ??= []).push(i);
+    });
+    const totalRoutes = graph.nodes.filter((n) => n.kind === 'route').length;
+    const gaps = [index.reason, totalRoutes > ROUTE_HISTORY_BUDGET ? `${totalRoutes - ROUTE_HISTORY_BUDGET} route(s) beyond the per-build budget: \`code-graph provenance <route>\` reads them on demand` : null].filter(Boolean);
+    return { head: index.head, commits, files, routes, tickets, prs, ...(gaps.length ? { gap: gaps.join('; ') } : {}) };
 }
 
 function headDate(root: string): string {
@@ -1057,6 +1112,7 @@ export const VIEWER_SCRIPTS = [
     'core.js',
     'area_code.js',
     'areas_common.js',
+    'history.js',
     'area_kit.js',
     'area_overview.js',
     'area_data.js',

@@ -10,7 +10,10 @@
  * budget is spent; the rest is counted, never silently dropped. The returned
  * items are then confirmed, so each carries `at=file:line` and its state.
  */
+import * as path from 'node:path';
+
 import type { ConfirmState } from '../map_areas.js';
+import { introducedNote, readCachedProvenance } from '../provenance.js';
 import { type LoadedGraph, resolveExactNode } from '../query.js';
 import type { CodeEdge } from '../types.js';
 import { confirmIds, type ConfirmResult } from './confirm.js';
@@ -27,6 +30,8 @@ export interface PackItem {
     depth: number;
     at: string | null;
     confirm: ConfirmState;
+    /** for an item whose file came in for a ticket or a PR: which, and when */
+    introduced?: string;
 }
 
 export interface PackResult {
@@ -68,7 +73,7 @@ export function seedWords(task: string): string[] {
 
 function itemLine(it: PackItem): string {
     const arrow = it.direction === 'seed' ? '*' : it.direction === 'out' ? `-${it.relation}->` : `<-${it.relation}-`;
-    return `${'  '.repeat(Math.max(0, it.depth - 1))}${arrow} ${it.label} [${it.kind}]${it.at ? ` at=${it.at}` : ''} (${it.confirm})`;
+    return `${'  '.repeat(Math.max(0, it.depth - 1))}${arrow} ${it.label} [${it.kind}]${it.at ? ` at=${it.at}` : ''} (${it.confirm})${it.introduced ? ` · ${it.introduced}` : ''}`;
 }
 
 function atOf(g: LoadedGraph, id: string, e?: CodeEdge): string | null {
@@ -142,6 +147,14 @@ export function contextPack(g: LoadedGraph, root: string, cachePath: string, tas
         if (!c) continue;
         it.confirm = c.state;
         if (c.now_at) it.at = c.now_at;
+    }
+    const prov = items.length > 0 ? readCachedProvenance(root, path.dirname(cachePath)) : null;
+    if (prov) {
+        for (const it of items) {
+            const file = it.at ? it.at.replace(/:\d+$/, '') : (g.byId.get(it.id)?.source_file ?? null);
+            const note = file ? introducedNote(prov, file) : null;
+            if (note) it.introduced = note;
+        }
     }
 
     let population: string;

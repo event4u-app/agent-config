@@ -1665,6 +1665,8 @@
             head.appendChild(trio);
         }
         panel.appendChild(head);
+        var hist = historySection(f.path);
+        if (hist) panel.appendChild(hist);
 
         // Blast radius.
         var w = walk(i, state.scope);

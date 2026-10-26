@@ -149,29 +149,29 @@ no absolute local path.
 
 ## Phase 2 — Provenance: since when and for what
 
-- [ ] **2.1 One extended history pass.** The pass reads sha, date, author
+- [x] **2.1 One extended history pass.** The pass reads sha, date, author
       name, subject and body, follows renames, attributes commits to PRs
       (first-parent merges `Merge pull request #N`, squash `(#N)`, GitLab
       `See merge request !N`) and extracts ticket keys with the existing
       grammar from branch name, subject and body. Files get
       `history:introduced_*`, `history:last_*` and `history:changes`.
       verify: the AC-6 fixture.
-- [ ] **2.2 Elements.** Tables and columns take the introduction of the
-      migration that created them; routes and symbols take `last_changed` from
-      one porcelain blame per owner file and `introduced` from a bounded
-      line-range history (route budget and time budget, the rest marked
-      `not computed in this build`).
+- [x] **2.2 Elements.** Tables and columns take the introduction of the
+      migration that created them; routes take `introduced` and `last_changed`
+      from a bounded line-range history of their declaring line (a count
+      budget, so a redraw writes the same bytes; the rest is named as a gap);
+      symbols are read on demand by `code-graph provenance`.
       verify: the fixture's route reports its PR and ticket.
-- [ ] **2.3 `code-graph provenance`.** For an element: introduced, last
+- [x] **2.3 `code-graph provenance`.** For an element: introduced, last
       changed, tickets, PRs, a timeline (on demand, cached by blob hash and
       span under `.build/`). For a ticket key or `#N`: what it introduced and
       what it touched.
       verify: searching the fixture's ticket lists the route, the table and the
       controller.
-- [ ] **2.4 History in the map.** Every detail panel gets a History section;
+- [x] **2.4 History in the map.** Every detail panel gets a History section;
       the shared search finds ticket keys and `#N`.
       verify: a viewer test opens a route and reads its ticket.
-- [ ] **2.5 Feeds.** The context pack carries "introduced for KEY, PR #N" for
+- [x] **2.5 Feeds.** The context pack carries "introduced for KEY, PR #N" for
       an item; review risk lists the tickets whose code a diff touches.
       verify: a pack test shows the provenance line.
 

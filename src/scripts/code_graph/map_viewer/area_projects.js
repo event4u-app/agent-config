@@ -430,7 +430,7 @@ extendStrings({
 /** The version matrix: one row per shared package or runtime, one column per registered project. */
 function hubVersions(p, main) {
     var rows = p.versions || [];
-    if (!rows.length) return;
+    if (!rows.length) return null;
     var sec = add(el('div', { class: 'ops-col tight' }), el('span', { class: 'cap' }, t('pVersions') + ' (' + rows.length + ')'), el('span', { class: 'ops-note' }, t('pVersionsNote')));
     var ids = p.projects.map(function (x) { return x.id; });
     main.appendChild(sec);
@@ -439,6 +439,13 @@ function hubVersions(p, main) {
         r.uses.forEach(function (u) { at[u.project] = (at[u.project] ? at[u.project] + ', ' : '') + u.name; });
         return { cells: [el('span', { class: 'mono' }, r.subject)].concat(ids.map(function (id) { return at[id] || '–'; })).concat([stChip(r.differs ? t('pDiffers') : t('pSame'), r.differs ? 'warn' : 'ok')]) };
     })));
+    return sec;
+}
+/** The graph is measured as it is drawn, so whatever follows it is on the page first: a scrollbar it brings is then already counted. */
+function hubGraphThenVersions(p, sel, main) {
+    var vs = hubVersions(p, main);
+    hubGraph(p, sel, main);
+    if (vs) main.appendChild(vs);
 }
 
 AREA_MODULES.projects = {
@@ -457,13 +464,12 @@ AREA_MODULES.projects = {
         return out;
     },
     meta: function (p) { return t('pCount')(num(p.projects.length), num(p.projects.filter(function (x) { return x.indexed; }).length)); },
-    render: function (p, view, main) { hubGraph(p, {}, main); hubVersions(p, main); },
+    render: function (p, view, main) { hubGraphThenVersions(p, {}, main); },
     page: function (p, view, key, c) {
         c.bar.classList.add('ops-empty');
         var sel = hubSelected(p, key);
         hubRegistry(p, c.left);
-        hubGraph(p, sel, c.main);
-        hubVersions(p, c.main);
+        hubGraphThenVersions(p, sel, c.main);
         hubRail(p, sel, c.right);
     }
 };

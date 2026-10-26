@@ -1628,6 +1628,8 @@ function dDetail(p, key, sel, right) {
         });
     }
     if (!tb && item.rows) d.appendChild(kvGrid(item.rows));
+    var hist = historySection(col ? col.witness.file : tb ? tb.witness.file : null);
+    if (hist) d.appendChild(hist);
     var codeFrom = col ? 1 + (col.actual ? 1 : 0) : Infinity;
     add(d, dEvidence(item.witnesses, item.witnesses.map(function (w, i) { return i >= codeFrom; })), dKv(item.witnesses, p.completeness, ''));
     var links = item.links ? item.links() : [];

@@ -159,6 +159,25 @@ export interface MapThresholds {
     neighboursPerArea: number;
 }
 
+/**
+ * Since when an element exists and for which pull request and ticket — keys,
+ * numbers, dates and author names only, never ticket or PR text.
+ */
+export interface MapProvenance {
+    head: string;
+    /** `[short sha, date, author, pr | '', tickets, subject]`, oldest first */
+    commits: Array<[string, string, string, string, string[], string]>;
+    /** file path → `[introduced | -1, last, changes]` as commit indexes */
+    files: Record<string, [number, number, number]>;
+    /** route label → `[introduced | -1, last, declaring file]`; a route outside the budget is absent */
+    routes: Record<string, [number, number, string]>;
+    /** ticket key → commit indexes; `#N` / `!N` → commit indexes */
+    tickets: Record<string, number[]>;
+    prs: Record<string, number[]>;
+    /** set when part of the history was not read, with why */
+    gap?: string;
+}
+
 export interface MapModel {
     version: number;
     thresholds: MapThresholds;
@@ -186,6 +205,7 @@ export interface MapModel {
     health?: MapHealth;
     legend?: LegendEntry[];
     pin?: MapPin;
+    provenance?: MapProvenance;
     /** The depth the blast numbers were computed to; the viewer's walk uses the same. */
     blastDepth?: number;
     gitWindowDays?: number;
