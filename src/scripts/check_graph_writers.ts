@@ -34,11 +34,13 @@
  * Usage: check_graph_writers [--root <dir>] [--json]   (exit 0 clean · 1 finding · 2 usage)
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import ts from 'typescript';
 
+import { runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -187,10 +189,44 @@ export function scanTree(root: string): { findings: WriterFinding[]; scanned: nu
     return { findings, scanned: files.length };
 }
 
+const FIXTURE_HEAD = "import * as fs from 'node:fs';\nimport * as path from 'node:path';\n";
+
+function selfTest(): number {
+    const dirs: string[] = [];
+    const run = (file: string, body: string): number => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'graph-writers-'));
+        dirs.push(dir);
+        fs.mkdirSync(path.join(dir, 'src', path.dirname(file)), { recursive: true });
+        fs.writeFileSync(path.join(dir, 'src', file), FIXTURE_HEAD + body);
+        const write = process.stdout.write;
+        process.stdout.write = (() => true) as typeof process.stdout.write;
+        try {
+            return main(['--root', dir]);
+        } finally {
+            process.stdout.write = write;
+        }
+    };
+    const cases: SelfTestCase[] = [
+        { name: 'a cache written to the old state directory is rejected', expect: 'reject', run: () => run('a.ts', "fs.writeFileSync(path.join(root, 'agents', 'runtime', 'state', 'code-graph-v1.json'), '{}');\n") },
+        { name: 'the same write through a variable is rejected', expect: 'reject', run: () => run('b.ts', "const STATE = path.join('agents', 'runtime', 'state');\nfunction f(root: string): void {\n    write_atomic(path.join(root, STATE, 'code-graph-v1.json'), '{}');\n}\n") },
+        { name: 'a map written beside agents/map is rejected', expect: 'reject', run: () => run('c.ts', "fs.writeFileSync(path.join(root, 'agents', 'graph', 'map.json'), '{}');\n") },
+        { name: 'an estate index written into the old registry directory is rejected', expect: 'reject', run: () => run('d.ts', "const db = new DatabaseSync(path.join(registryDir(), 'index-v1.sqlite3'));\n") },
+        { name: 'a layout constant pointing outside both layouts is rejected', expect: 'reject', run: () => run('graph_home.ts', "export const NATIVE_CACHE_REL = path.join('agents', 'runtime', 'state', 'code-graph-v1.json');\n") },
+        { name: 'a write inside agents/map/.build is accepted', expect: 'accept', run: () => run('e.ts', "fs.writeFileSync(path.join(root, 'agents', 'map', '.build', 'code-graph-v1.json'), '{}');\n") },
+        { name: 'a temp copy and a read of the old path are accepted', expect: 'accept', run: () => run('f.ts', "fs.copyFileSync(graph, path.join(os.tmpdir(), 'x', 'code-graph-v1.json'));\nconst old = fs.readFileSync(path.join(root, 'agents', 'runtime', 'state', 'code-graph-v1.json'), 'utf-8');\n") },
+    ];
+    try {
+        return runSelfTest({ gate: 'check_graph_writers', cases, minCases: 7, minRejectCases: 5 });
+    } finally {
+        for (const d of dirs) fs.rmSync(d, { recursive: true, force: true });
+    }
+}
+
 export function main(argv: string[] = process.argv.slice(2)): number {
+    if (argv.includes('--self-test')) return selfTest();
     const at = argv.indexOf('--root');
     if (at >= 0 && argv[at + 1] === undefined) {
-        process.stderr.write('usage: check_graph_writers [--root <dir>] [--json]\n');
+        process.stderr.write('usage: check_graph_writers [--root <dir>] [--json] [--self-test]\n');
         return 2;
     }
     const root = at >= 0 ? path.resolve(argv[at + 1] as string) : REPO_ROOT;
