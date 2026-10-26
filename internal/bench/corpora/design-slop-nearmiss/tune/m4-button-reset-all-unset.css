@@ -1,0 +1,35 @@
+/*
+ * Icon button. `all: unset` strips the user-agent button styles; the
+ * transition list names only the properties that change on interaction.
+ */
+.icon-button {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 6px;
+  color: var(--color-fg-muted);
+  cursor: pointer;
+  transition: background-color 150ms ease-out, color 150ms ease-out;
+}
+
+.icon-button:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-fg);
+}
+
+.icon-button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.icon-button:disabled {
+  cursor: not-allowed;
+  color: var(--color-fg-disabled);
+}
+
+@media all and (prefers-reduced-motion: reduce) {
+  .icon-button { transition: none; }
+}

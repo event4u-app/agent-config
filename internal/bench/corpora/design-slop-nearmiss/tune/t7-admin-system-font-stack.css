@@ -1,0 +1,33 @@
+/*
+ * Internal admin console, product register.
+ * Typeface decision (stated in DESIGN.md "Admin typography"): the platform
+ * system font stack. No webfont download, native rendering on every
+ * operator machine, tabular figures for the audit tables. Hierarchy is
+ * carried by weight and size, not by a second family.
+ */
+:root {
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  --font-code: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+body {
+  font-family: var(--font-ui);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.audit-table td {
+  font-variant-numeric: tabular-nums;
+}
+
+.audit-table code,
+.request-id {
+  font-family: var(--font-code);
+  font-size: 0.8125rem;
+}
+
+h1, h2, h3 {
+  font-weight: 650;
+  line-height: 1.25;
+}

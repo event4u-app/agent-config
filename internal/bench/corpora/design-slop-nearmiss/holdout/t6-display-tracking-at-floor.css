@@ -1,0 +1,36 @@
+/*
+ * Dashboard KPI numerals. Large tabular figures are tightened so the
+ * digits read as one value. Documented floor: -0.04em, verified at the
+ * 88px render size; smaller sizes relax toward 0.
+ */
+.kpi-value {
+  font-size: 88px;
+  line-height: 1;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+}
+
+.kpi-value--compact {
+  font-size: 48px;
+  letter-spacing: -0.025em;
+}
+
+.page-title {
+  font-size: 2.25rem;
+  line-height: 1.15;
+  letter-spacing: -1px;
+}
+
+.kpi-label {
+  font-size: 0.875rem;
+  letter-spacing: normal;
+  color: var(--color-fg-muted);
+}
+
+@media (max-width: 640px) {
+  .kpi-value {
+    font-size: 56px;
+    letter-spacing: -0.02em;
+  }
+}

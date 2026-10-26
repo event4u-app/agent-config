@@ -1,0 +1,35 @@
+/*
+ * Semantic z-index scale. Every stacking value in the app comes from this
+ * list; components never write a raw number. The top tier is reserved for
+ * the skip link, which must sit above everything including toasts.
+ */
+:root {
+  --z-base: 0;
+  --z-sticky-header: 100;
+  --z-dropdown: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-skip-link: 9999;
+}
+
+.app-header { position: sticky; top: 0; z-index: var(--z-sticky-header); }
+
+.menu-popover { position: absolute; z-index: var(--z-dropdown); }
+
+.modal-backdrop { position: fixed; inset: 0; z-index: var(--z-overlay); }
+
+.modal { position: fixed; z-index: var(--z-modal); }
+
+.toast-region { position: fixed; bottom: 1rem; right: 1rem; z-index: var(--z-toast); }
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -3rem;
+  z-index: var(--z-skip-link);
+}
+
+.skip-link:focus {
+  top: 1rem;
+}

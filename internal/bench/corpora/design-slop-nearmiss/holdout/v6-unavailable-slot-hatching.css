@@ -1,0 +1,33 @@
+/*
+ * Room booking calendar. Diagonal hatching marks slots that cannot be
+ * booked (maintenance, outside opening hours). It is a state marker on
+ * individual cells, not a page background, and the cell also carries a
+ * text label and aria-disabled for non-visual users.
+ */
+.calendar-slot {
+  min-height: 2.5rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.calendar-slot[aria-disabled="true"] {
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--color-surface-subtle) 0 6px,
+    var(--color-border) 6px 7px
+  );
+  color: var(--color-fg-muted);
+  cursor: not-allowed;
+}
+
+.calendar-slot__reason {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+@media (forced-colors: active) {
+  .calendar-slot[aria-disabled="true"] {
+    background-image: none;
+    color: GrayText;
+  }
+}

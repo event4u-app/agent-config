@@ -1,0 +1,32 @@
+/*
+ * Photo print shop: the order preview simulates matte paper stock.
+ * Grain is part of the documented brand surface treatment ("Paper", see
+ * DESIGN.md); its opacity is a token, the surface underneath is a flat
+ * paper colour, and the grain is only applied to the print preview.
+ */
+:root {
+  --paper-matte: #f7f6f2;
+  --grain-opacity: 0.08;
+  --grain-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.print-preview {
+  position: relative;
+  background-color: var(--paper-matte);
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.print-preview[data-finish="matte"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--grain-noise);
+  opacity: var(--grain-opacity);
+  mix-blend-mode: multiply;
+}
+
+.print-preview[data-finish="gloss"]::after {
+  content: none;
+}

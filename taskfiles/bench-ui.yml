@@ -44,6 +44,15 @@ tasks:
       from bench:ui, which scores port fidelity, not detector precision.
     cmd: npx tsx internal/bench/design-slop-fp/run.ts {{.CLI_ARGS}}
 
+  bench:design-slop-nearmiss:
+    silent: true
+    desc: |
+      M1 per design-slop rule on the near-miss corpus (tune / holdout), and
+      precision on this repository's own UI (dogfood), each reported on its
+      own. A rule keeps `backed` only at M1 = 0 on every split; pre-registration
+      in internal/bench/corpora/design-slop-nearmiss-PREREG.md.
+    cmd: npx tsx internal/bench/design-slop-nearmiss/run.ts {{.CLI_ARGS}}
+
   bench:design-consistency-shadow:
     silent: true
     desc: |

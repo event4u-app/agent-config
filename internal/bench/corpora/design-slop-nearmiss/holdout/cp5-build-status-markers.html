@@ -1,0 +1,31 @@
+<!-- Deployment checks list. The marker before each item is a status
+     indicator tied to the check result (passed / failed / pending), and the
+     same state is repeated in text for screen readers and colour-blind
+     users. Rendered from the check result, never authored by hand. -->
+<section class="deploy-checks" aria-labelledby="checks-heading">
+  <h2 id="checks-heading">Pre-deploy checks</h2>
+  <ul class="check-list">
+    <li class="check check--passed">
+      <span class="check__marker" aria-hidden="true">✅</span>
+      Database migrations applied
+      <span class="visually-hidden">(passed)</span>
+    </li>
+    <li class="check check--passed">
+      <span class="check__marker" aria-hidden="true">✅</span>
+      Health endpoint responding
+      <span class="visually-hidden">(passed)</span>
+    </li>
+    <li class="check check--failed">
+      <span class="check__marker" aria-hidden="true">❌</span>
+      Error rate below 1% on canary
+      <span class="visually-hidden">(failed: 2.4%)</span>
+    </li>
+    <li class="check check--pending">
+      <span class="check__marker" aria-hidden="true">⏳</span>
+      Cache warm-up
+      <span class="visually-hidden">(pending)</span>
+    </li>
+  </ul>
+  <button type="button" class="button" disabled>Promote to production</button>
+  <p class="deploy-checks__note">Promotion unlocks when every check has passed.</p>
+</section>

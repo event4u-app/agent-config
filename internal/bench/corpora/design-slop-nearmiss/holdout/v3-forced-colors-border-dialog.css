@@ -1,0 +1,32 @@
+/*
+ * Dialog surface. Depth is carried by the shadow alone. The 1px border is
+ * transparent and exists for Windows forced-colors mode, which drops
+ * box-shadow; without it the dialog has no visible edge there.
+ */
+.dialog {
+  max-width: 32rem;
+  padding: 1.5rem;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: var(--color-surface-raised);
+  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.18);
+}
+
+@media (forced-colors: active) {
+  .dialog {
+    border-color: CanvasText;
+  }
+}
+
+.dialog__title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
