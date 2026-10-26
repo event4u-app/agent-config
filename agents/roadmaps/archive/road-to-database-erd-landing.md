@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: later
+status: archived
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "One of four siblings split from a single inbox drop. This one exists because the analysis found a finished, tested capability sitting off-trunk that three of the four input proposals planned to build from scratch. Its disposition is landing, not building, which is a different task from every sibling and from anything in the current estate — rule 11 forbids folding it into the modeling roadmap that would otherwise have rebuilt it."
@@ -8,8 +8,13 @@ estate_growth_exempt: "later_roadmaps +1: this roadmap is parked. Its blocker wa
 ---
 # Road to database ERD landing
 
+> **Folded and archived 2026-10-26.** The ERD code and its 134 tests moved into
+> `src/scripts/_lib/schema/` under `road-to-a-map-the-agent-checks-before-it-acts`
+> step 0.1, without the skill (that roadmap's DEC-11), so the open steps below are
+> superseded rather than done. Continue there.
+
 > **Resume when** `check_preamble_payload_budget` reports a measured total at
-> least **60 tokens** below `ci_delivery.grace_ceiling` on `origin/main`, **and**
+> least **60 tokens** below the historical `ci_delivery.grace_ceiling` on `origin/main`, **and**
 > `check_estate_count`'s `skill_count` allowance has been explicitly allocated
 > across this roadmap and `road-to-database-relational-modeling`. Parked
 > 2026-08-27 by AI council; the implementation is finished and preserved — see
@@ -267,7 +272,7 @@ allowance the modeling sibling is arguing about — recorded as
   `check_estate_count` is satisfied by this roadmap's own
   `estate_growth_exempt` claim. What cannot happen is the push.
 - **Class:** 3
-- **What to do:** `check_preamble_payload_budget`'s `grace_ceiling` is **138,212**,
+- **What to do (historical):** `check_preamble_payload_budget`'s `grace_ceiling` is **138,212**,
   set to the exact measured total on 2026-08-24 with zero slack, and its config
   states "**It may never move UP**". Measured in clean worktrees:
   `origin/main` = **138,195** (−17), plus this skill = **138,248** (+36), plus
@@ -462,7 +467,7 @@ and cannot be substituted by budget pressure; blocker 5 takes fallback (b) and
 blocker 6 is recorded as *deferred verification*, not resolution.
 
 **Revisit-if:** `check_preamble_payload_budget` reports a measured total at least
-49 tokens below `ci_delivery.grace_ceiling` on `origin/main` — via a committed
+49 tokens below the historical `ci_delivery.grace_ceiling` on `origin/main` — via a committed
 rules reduction, not a catalogue trim — **and** the `skill_count` allowance is
 explicitly allocated across this roadmap and `-relational-modeling`.
 **The second trigger this paragraph used to carry is DELETED, not merely stale
@@ -472,7 +477,7 @@ becomes 30,615 tokens rather than 49." That trigger could never have fired —
 nothing in the tree enforced `grace_end_date`, and the key no longer exists. A
 wake condition on an event no code produces is a park with no exit, so it is
 removed rather than re-dated. The first trigger above is unaffected and is now
-the only one: `ci_delivery.grace_ceiling` survives at 138,490, enforced and
+the only one: the historical `ci_delivery.grace_ceiling` survived at 138,490, enforced and
 undated. Evidence:
 `agents/evidence/analysis/grace-ceiling-expiry-is-unenforced-2026-09-10.md`.
 

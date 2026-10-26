@@ -64,7 +64,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-credible-install | later | later | Make a fresh `npm i @event4u/agent-config` survive the first five minutes of a competent external evaluation: `npm audit` clean of … |
 | road-to-cross-model-residuals | later | later | Road to cross-model residuals — the human/external-triggered remainder |
 | road-to-cross-model-routing-eval | later | later | Road to cross-model routing eval — the falsifiability lever, parked behind its gates |
-| road-to-database-erd-landing | later | later | The ER-diagram capability that already exists on `feat/schema-erd-diff` is on `main`, validated against the gates that exist today rather than … |
 | road-to-database-evolution-tactics | later | later | A schema change in this package is planned by escalating from the cheapest adequate strategy, and the plan states the … |
 | road-to-database-relational-modeling | later | later | An agent asked to design or extend a relational schema in this package has a procedure that starts from invariants … |
 | road-to-decision-closure | later | later | Every roadmap enters execution as an execution contract: every foreseeable decision closed, the closing done council-first, the owner reached only … |
