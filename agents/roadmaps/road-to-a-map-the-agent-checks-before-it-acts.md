@@ -360,6 +360,14 @@ renders from real facts or says why it has none.
       link and finds the three highlighted columns with their line styles, no
       inline edge text, one icon per annotated edge and a popup that opens.
 
+- [ ] **5.15 Keyboard navigation in the search.** The header search is a
+      combobox: ↑/↓ move through the hits, Enter opens, Esc closes; → enters a
+      container hit (folder, area, file, table, service, workflow, project) and
+      lists its children under a breadcrumb, ← or Backspace on an empty query
+      goes back up; ←/→ inside the text still edit it.
+      verify: a browser test walks down, into a folder and back out by keys
+      alone and finds aria-activedescendant on the active row.
+
 - [ ] **5.13 Demo map for frontend work.** `code-graph map --demo` builds a
       composite fixture repo (data drift, interfaces, runtime, delivery,
       decisions, flows, history, a working diff) through the normal build and
