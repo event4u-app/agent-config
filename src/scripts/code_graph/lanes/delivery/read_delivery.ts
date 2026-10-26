@@ -18,7 +18,7 @@ import type { LaneOutput } from '../lane_fact.js';
 import { Emitter, posix } from '../runtime/emit.js';
 import { parseImageRef } from '../runtime/images.js';
 import { redactImage, redactOutput, redactText } from '../runtime/redact.js';
-import { excludedOwnFiles } from './self_trigger.js';
+import { excludedOwnFiles, ownPipelineFiles } from './self_trigger.js';
 
 const DEPLOY_NAME = /(^|[^a-z])(deploy|release|rollout|promote|ship)/i;
 const DEPLOY_CMD = /kubectl\s+(apply|set\s+image|rollout)|helm\s+(upgrade|install)|terraform\s+apply|aws\s+ecs\s+update-service|fly(ctl)?\s+deploy|vercel\s+.*--prod|gcloud\s+run\s+deploy|kamal\s+deploy|cap\s+\w+\s+deploy|serverless\s+deploy|sls\s+deploy/;
@@ -113,12 +113,10 @@ function emitPipeline(em: Emitter, { file, model }: Read, all: Read[], protected
         file,
         model.system === 'github' ? model.nameLine : 1,
     );
-    const ownFiles = [file];
+    const own = ownPipelineFiles(file, model);
     for (const t of model.triggers) {
         if (model.system !== 'github') break;
         const hasFilter = t.paths.length > 0 || t.pathsIgnore.length > 0;
-        const localUses = model.jobs.flatMap((j) => [j.uses?.ref, ...j.steps.map((s) => s.uses?.ref)]).filter((r): r is string => typeof r === 'string' && r.startsWith('./'));
-        const own = [...new Set([...ownFiles, ...localUses.map((u) => u.replace(/^\.\//, ''))])];
         const excluded = hasFilter ? excludedOwnFiles(t.paths.map((p) => p.glob), t.pathsIgnore.map((p) => p.glob), own) : [];
         const self = hasFilter ? excluded.length === 0 : null;
         const tid = em.fact(

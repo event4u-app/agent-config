@@ -3,7 +3,7 @@
  * that excludes them means an edit to the workflow is never exercised by the
  * workflow it edits.
  */
-import { globToRegExp } from '../../../_lib/infra_files/pipeline.js';
+import { globToRegExp, type PipelineModel } from '../../../_lib/infra_files/pipeline.js';
 
 /** GitHub semantics: patterns apply in order, a `!` pattern negates, the last match wins. */
 function matchesFilter(globs: string[], file: string): boolean {
@@ -28,4 +28,18 @@ export function selfTriggers(paths: string[], pathsIgnore: string[], own: string
 /** The pipeline files that, changed alone, do not pass the filter. */
 export function excludedOwnFiles(paths: string[], pathsIgnore: string[], own: string[]): string[] {
     return own.filter((f) => !((paths.length === 0 || matchesFilter(paths, f)) && !(pathsIgnore.length > 0 && matchesFilter(pathsIgnore, f))));
+}
+
+/**
+ * The files a GitHub workflow is made of: itself, plus every local action and
+ * reusable workflow it calls. A local action is a directory, and a path filter
+ * sees the files in it, so its `action.yml` manifest stands for it.
+ */
+export function ownPipelineFiles(file: string, model: PipelineModel): string[] {
+    const local = model.jobs
+        .flatMap((j) => [j.uses?.ref, ...j.steps.map((s) => s.uses?.ref)])
+        .filter((r): r is string => typeof r === 'string' && r.startsWith('./'))
+        .map((r) => r.replace(/^\.\//, ''))
+        .map((r) => (/\.ya?ml$/.test(r) ? r : `${r.replace(/\/$/, '')}/action.yml`));
+    return [...new Set([file, ...local])];
 }
