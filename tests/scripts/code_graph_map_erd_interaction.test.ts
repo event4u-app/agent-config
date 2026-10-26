@@ -245,6 +245,66 @@ describe('2D: zoom and pan need no modifier, only moving a table does', () => {
     });
 });
 
+/** Visible icons whose box overlaps a drawn table card's box (2D cards, 3D cards and chips) by more than 1 px. */
+async function iconsOnCards(page: Page): Promise<string[]> {
+    return page.evaluate(() => {
+        const st = document.getElementById('db-stage')!.getBoundingClientRect();
+        const cards = [...document.querySelectorAll('#db-stage .db-table')]
+            .filter((c) => !(c as HTMLElement).hidden && (c as HTMLElement).offsetWidth > 0)
+            .map((c) => ({ name: c.getAttribute('data-table')!, r: c.getBoundingClientRect() }));
+        const out: string[] = [];
+        for (const b of document.querySelectorAll('#db-stage button.db-badge')) {
+            if ((b as HTMLElement).hidden) continue;
+            const r = b.getBoundingClientRect();
+            const cx = r.left + r.width / 2;
+            const cy = r.top + r.height / 2;
+            if (cx <= st.left || cx >= st.right || cy <= st.top || cy >= st.bottom) continue;
+            for (const c of cards) {
+                const w = Math.min(r.right, c.r.right) - Math.max(r.left, c.r.left);
+                const h = Math.min(r.bottom, c.r.bottom) - Math.max(r.top, c.r.top);
+                if (w > 1 && h > 1) out.push(`${b.getAttribute('aria-label')} on ${c.name}`);
+            }
+        }
+        return out;
+    });
+}
+
+describe('no icon covers a table', () => {
+    it('demo, 1440 and 375: no visible icon lies on a card — 2D after a pan, a zoom and a table drag, 3D after turning', async () => {
+        for (const width of [1440, 375]) {
+            const page = await open('demo', width, 900);
+            const check = async (step: string): Promise<void> => expect(await iconsOnCards(page), `${width} ${step}`).toEqual([]);
+            await check('2D open');
+            await drag(page, await backgroundPoint(page), { x: width > 500 ? 220 : 60, y: -120 });
+            await check('2D pan');
+            const sb = (await page.locator('#db-stage').boundingBox())!;
+            await page.mouse.move(sb.x + sb.width / 2, sb.y + sb.height / 2);
+            await page.mouse.wheel(0, -300);
+            await settle(page);
+            await check('2D zoom in');
+            await page.mouse.wheel(0, 700);
+            await settle(page);
+            await check('2D zoom out');
+            const name = await page.evaluate(() => (window as unknown as { __mapErd: { focus: string } }).__mapErd.focus);
+            const hb = await page.locator(`#db-stage .db-table[data-table="${name}"] .db-thead`).boundingBox();
+            if (hb) {
+                await drag(page, { x: hb.x + 20, y: hb.y + hb.height / 2 }, { x: 60, y: 50 }, 'Control');
+                await check('2D table drag');
+            }
+            await page.click('#db-stage .dimseg button[data-dim="3d"]');
+            await page.waitForFunction(() => (window as unknown as { __mapErd3d?: unknown }).__mapErd3d !== undefined);
+            await settle(page);
+            await check('3D open');
+            const box = (await page.locator('#db-stage').boundingBox())!;
+            for (const by of [{ x: 120, y: -40 }, { x: -60, y: 160 }, { x: 200, y: 90 }]) {
+                await drag(page, { x: box.x + box.width / 2, y: box.y + box.height - 30 }, by);
+                await check(`3D turned ${by.x},${by.y}`);
+            }
+            await page.close();
+        }
+    });
+});
+
 describe('3D: a plain drag turns, the wheel zooms, a click picks', () => {
     interface Erd3d { front: string; z: number; proj: Record<string, { x: number; y: number }> }
     const erd3 = (page: Page): Promise<Erd3d> => page.evaluate(() => (window as unknown as { __mapErd3d: Erd3d }).__mapErd3d);

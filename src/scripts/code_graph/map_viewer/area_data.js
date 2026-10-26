@@ -691,64 +691,90 @@ function dAlong(pts, f) {
     return { x: pts[k - 1][0] + (pts[k][0] - pts[k - 1][0]) * u, y: pts[k - 1][1] + (pts[k][1] - pts[k - 1][1]) * u, len: total };
 }
 /**
- * Every badge on its own line, never beside it. With `keep` (a pan or a zoom) a
- * badge still on the stage stays where it is on its line; otherwise it takes the
- * share it prefers when that point is on the stage, else the middle of the line's
- * longest stretch on the stage, else the line's point nearest the stage (out of
- * view, still on the line). Badges that would cover each other step apart along
- * their lines. The place is a point of the line in the layer's own coordinates, so
- * a page scroll moves badge and line together. `toScreen` maps the layer onto the stage.
+ * Every badge on its own line, never beside it, and never on a card: it may only sit
+ * where its box clears every drawn card (`cards`, stage rectangles). With `keep` (a
+ * pan or a zoom) a badge still in such a spot stays where it is on its line;
+ * otherwise it takes the share it prefers when that is free, else the middle of the
+ * line's longest free stretch on the stage, else the free point of the line nearest
+ * the stage. A line with no free point at all — it runs over cards end to end —
+ * shows no badge. Badges that would cover each other step apart along their lines.
+ * The place is a point of the line in the layer's own coordinates, so a page scroll
+ * moves badge and line together. `toScreen` maps the layer onto the stage.
  */
-function dPlaceBadges(stage, toScreen, keep) {
+function dPlaceBadges(stage, toScreen, keep, cards) {
     var w = stage.clientWidth;
     var h = stage.clientHeight;
     var r = { l: 14, r: w - 14, t: 56, b: h - 34 };
     var inside = function (q) { return q.x >= r.l && q.x <= r.r && q.y >= r.t && q.y <= r.b; };
+    // Half a badge and a 2 px gap: a badge centred closer than this to a card would touch it.
+    var M = 13;
+    var free = function (q) {
+        for (var i = 0; i < cards.length; i++) {
+            var c = cards[i];
+            if (q.x > c.l - M && q.x < c.r + M && q.y > c.t - M && q.y < c.b + M) return false;
+        }
+        return true;
+    };
+    var ok = function (q) { return inside(q) && free(q); };
     var taken = [];
     var clash = function (q) { return taken.some(function (o) { return Math.abs(o.x - q.x) < 22 && Math.abs(o.y - q.y) < 22; }); };
     Array.prototype.forEach.call(stage.db.labels.querySelectorAll('.db-badge'), function (b) {
         if (!b._pts) return;
         var pts = b._pts.map(toScreen);
         var at = function (g) { return dAlong(pts, g); };
-        var f = keep && b._at !== undefined && inside(at(b._at)) ? b._at : b._f;
-        // Shares along the line, 14 px short of its ends, where a badge would sit on a card's edge.
         var len = at(0).len || 1;
-        var lo = Math.min(0.04, 14 / len);
-        // A sample every 20 px or so, so even a short stretch of a long line on the stage is found.
-        var N = Math.max(48, Math.min(400, Math.ceil(len / 20)));
-        var share = function (k) { return lo + (1 - 2 * lo) * k / N; };
-        if (!inside(at(f))) {
+        // A sample every 10 px or so, so even a short free stretch of a long line on the stage is found.
+        var N = Math.max(48, Math.min(800, Math.ceil(len / 10)));
+        var share = function (k) { return k / N; };
+        var f = keep && b._at !== undefined && ok(at(b._at)) ? b._at : b._f;
+        var found = ok(at(f));
+        if (!found) {
             var best = null;
             var run = -1;
             for (var k = 0; k <= N + 1; k++) {
-                var vis = k <= N && inside(at(share(k)));
+                var vis = k <= N && ok(at(share(k)));
                 if (vis && run < 0) run = k;
                 if (!vis && run >= 0) { if (!best || k - 1 - run > best[1] - best[0]) best = [run, k - 1]; run = -1; }
             }
-            if (best) f = share((best[0] + best[1]) / 2);
+            if (best) { f = share((best[0] + best[1]) / 2); found = true; }
             else {
                 var near = Infinity;
                 for (var k2 = 0; k2 <= N; k2++) {
                     var q = at(share(k2));
+                    if (!free(q)) continue;
                     var dd = Math.hypot(Math.max(r.l - q.x, 0, q.x - r.r), Math.max(r.t - q.y, 0, q.y - r.b));
-                    if (dd < near) { near = dd; f = share(k2); }
+                    if (dd < near) { near = dd; f = share(k2); found = true; }
                 }
             }
         }
+        b.hidden = !found;
+        if (!found) return;
         var pos = at(f);
         if (clash(pos)) {
-            var step = 26 / (pos.len || 1);
+            var step = 26 / len;
             for (var j = 1; j <= 12; j++) {
                 var hit = null;
                 [f + j * step, f - j * step].some(function (g) {
-                    if (g < lo || g > 1 - lo) return false;
+                    if (g < 0 || g > 1) return false;
                     var q2 = at(g);
-                    if (!inside(q2) || clash(q2)) return false;
+                    if (!ok(q2) || clash(q2)) return false;
                     hit = { q: q2, g: g };
                     return true;
                 });
                 if (hit) { pos = hit.q; f = hit.g; break; }
             }
+        }
+        // No room beside the others here (lines that share a path): the free spot of the line nearest the
+        // stage that no other badge holds, off the stage if need be — still on its line, never on a card.
+        if (clash(pos)) {
+            var bestD = Infinity;
+            for (var k3 = 0; k3 <= N; k3++) {
+                var q3 = at(share(k3));
+                if (!free(q3) || clash(q3)) continue;
+                var d3 = Math.hypot(Math.max(r.l - q3.x, 0, q3.x - r.r), Math.max(r.t - q3.y, 0, q3.y - r.b));
+                if (d3 < bestD) { bestD = d3; pos = q3; f = share(k3); }
+            }
+            if (bestD === Infinity) { b.hidden = true; return; }
         }
         taken.push(pos);
         b._at = f;
@@ -763,7 +789,21 @@ function dBadgeScale(stage) {
     Array.prototype.forEach.call(stage.db.labels.querySelectorAll('.db-badge'), function (b) { b.style.transform = tr; });
 }
 function dPlace2d(stage, keep) {
-    dPlaceBadges(stage, function (v) { return [dbState.panX + v[0] * dbState.z, dbState.panY + v[1] * dbState.z]; }, keep);
+    var toScreen = function (v) { return [dbState.panX + v[0] * dbState.z, dbState.panY + v[1] * dbState.z]; };
+    // The cards on or near the stage, in stage pixels; one far off-stage cannot be under a badge anyone sees.
+    var w = stage.clientWidth;
+    var h = stage.clientHeight;
+    var cards = [];
+    Object.keys(stage.db.cards).forEach(function (n) {
+        var c = stage.db.cards[n];
+        if (!c.isConnected) return;
+        var rc = dRect(c);
+        var a = toScreen([rc.x, rc.y]);
+        var b = toScreen([rc.x + rc.w, rc.y + rc.h]);
+        if (b[0] < -40 || a[0] > w + 40 || b[1] < -40 || a[1] > h + 40) return;
+        cards.push({ l: a[0], t: a[1], r: b[0], b: b[1] });
+    });
+    dPlaceBadges(stage, toScreen, keep, cards);
     dBadgeScale(stage);
 }
 
@@ -1164,6 +1204,8 @@ function dBindModifier() {
 var D3_MAX = 24;
 /** Readable names for the 3D chips; an overlapping pair is pushed apart until this gap remains. */
 var D3_GAP = 6;
+/** Between the front card and a chip: a badge (22 px) with 2 px on either side, plus a little air. */
+var D3_FRONT_GAP = 34;
 
 /** Tables joined to a table: foreign keys, key links of every kind and ORM relations. */
 function d3Adjacency(p) {
@@ -1331,7 +1373,9 @@ function dErd3d(p, sel, erd, lines, dim) {
             r.x = Math.max(r.w / 2 + 4, Math.min(w - r.w / 2 - 4, r.x));
             r.y = Math.max(r.h / 2 + 52, Math.min(h - r.h / 2 - 4, r.y));
         };
-        var overlap = function (a, b) { return [(a.w + b.w) / 2 + D3_GAP - Math.abs(a.x - b.x), (a.h + b.h) / 2 + D3_GAP - Math.abs(a.y - b.y)]; };
+        // Chips keep a badge's width plus a margin clear of the front card, so a line between them has room for its icon.
+        var gapOf = function (a, b) { return a.fixed || b.fixed ? D3_FRONT_GAP : D3_GAP; };
+        var overlap = function (a, b) { var g = gapOf(a, b); return [(a.w + b.w) / 2 + g - Math.abs(a.x - b.x), (a.h + b.h) / 2 + g - Math.abs(a.y - b.y)]; };
         rects.forEach(clampR);
         for (var it = 0; it < 80; it++) {
             var moved = false;
@@ -1353,10 +1397,23 @@ function dErd3d(p, sel, erd, lines, dim) {
             }
             if (!moved) break;
         }
-        // Nearest first: a card stays only when it clears every card kept before it.
+        // A chip the stage edge has kept on the front card goes above or below it, whichever side it is nearer.
+        var fr = rects.filter(function (q) { return q.fixed; })[0];
+        if (fr) rects.forEach(function (q) {
+            if (q.fixed) return;
+            var o3 = overlap(q, fr);
+            if (o3[0] <= 0 || o3[1] <= 0) return;
+            var up = q.y <= fr.y;
+            q.y = up ? fr.y - fr.h / 2 - D3_FRONT_GAP - q.h / 2 : fr.y + fr.h / 2 + D3_FRONT_GAP + q.h / 2;
+            clampR(q);
+            if (overlap(q, fr)[1] > 0) { q.y = up ? fr.y + fr.h / 2 + D3_FRONT_GAP + q.h / 2 : fr.y - fr.h / 2 - D3_FRONT_GAP - q.h / 2; clampR(q); }
+        });
+        // The front card first, then the tables its drawn lines reach, then the rest, nearest first: a card stays
+        // only when it clears every card kept before it, so on a narrow stage the linked chips are the ones kept.
         var kept = [];
-        rects.slice().sort(function (a, b) { return (b.fixed ? 9 : proj[b.n].z) - (a.fixed ? 9 : proj[a.n].z); }).forEach(function (r) {
-            var clear2 = kept.every(function (k2) { var o2 = overlap(r, k2); return o2[0] <= D3_GAP || o2[1] <= D3_GAP; });
+        var rank = function (q) { return q.fixed ? 9 : proj[q.n].z + ((link ? link.tables[q.n] : adj[focus] && adj[focus][q.n]) ? 4 : 0); };
+        rects.slice().sort(function (a, b) { return rank(b) - rank(a); }).forEach(function (r) {
+            var clear2 = kept.every(function (k2) { var o2 = overlap(r, k2); var g2 = r.fixed || k2.fixed ? 0.5 : D3_GAP; return o2[0] <= g2 || o2[1] <= g2; });
             if (!clear2 && !r.fixed) { cards[r.n].hidden = true; proj[r.n].facing = false; return; }
             kept.push(r);
         });
@@ -1451,7 +1508,14 @@ function dErd3d(p, sel, erd, lines, dim) {
                 });
             });
         }
-        dPlaceBadges(stage, function (v) { return v; });
+        var sr = stage.getBoundingClientRect();
+        var drawn = [];
+        Object.keys(cards).forEach(function (n) {
+            if (cards[n].hidden) return;
+            var cr = cards[n].getBoundingClientRect();
+            drawn.push({ l: cr.left - sr.left, t: cr.top - sr.top, r: cr.right - sr.left, b: cr.bottom - sr.top });
+        });
+        dPlaceBadges(stage, function (v) { return v; }, false, drawn);
         window.__mapErd3d = { rot: d3View().slice(), z: dbState.z3, front: focus, hood: hood.slice(), proj: proj };
     }
     var zoom = el('div', { class: 'db-zoom' });

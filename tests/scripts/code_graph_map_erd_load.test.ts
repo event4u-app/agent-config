@@ -43,19 +43,24 @@ async function open(hash: string, width: number, height = 1000): Promise<Page> {
 }
 
 /** Badges on the stage that a click reaches: inside the stage box and the topmost element at their centre. */
-async function badgeReach(page: Page): Promise<{ n: number; inside: number; clickable: number }> {
+async function badgeReach(page: Page): Promise<{ n: number; inside: number; clickable: number; centred: number }> {
     return page.evaluate(() => {
         const st = document.getElementById('db-stage')!.getBoundingClientRect();
-        const bs = [...document.querySelectorAll('#db-stage button.db-badge')] as HTMLElement[];
+        // A badge whose line has no spot clear of the cards is not shown (it never covers a card).
+        const bs = ([...document.querySelectorAll('#db-stage button.db-badge')] as HTMLElement[]).filter((b) => !b.hidden);
         let inside = 0;
         let clickable = 0;
+        let centred = 0;
         for (const b of bs) {
             const r = b.getBoundingClientRect();
+            const cx = r.left + r.width / 2;
+            const cy = r.top + r.height / 2;
+            if (cx > st.left && cx < st.right && cy > st.top && cy < st.bottom) centred += 1;
             if (r.left >= st.left && r.right <= st.right && r.top >= st.top && r.bottom <= st.bottom) inside += 1;
             const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
             if (hit && (hit === b || b.contains(hit))) clickable += 1;
         }
-        return { n: bs.length, inside, clickable };
+        return { n: bs.length, inside, clickable, centred };
     });
 }
 
@@ -64,10 +69,13 @@ describe('2D on the demo schema', () => {
         expect(data.tables.length).toBeGreaterThan(100);
         for (const width of [1440, 375]) {
             const page = await open('#/data', width);
+            // On a phone the one-column layout stacks lines on one path; badges that find no free spot between the
+            // cards on the stage wait further along their line, so there only the badges on the stage are counted.
+            const want = (r: { n: number; centred: number }): number => (width < 721 ? r.centred : r.n);
             const first = await badgeReach(page);
-            expect(first.n, `open ${width}`).toBeGreaterThan(0);
-            expect(first.inside, `open ${width}`).toBe(first.n);
-            expect(first.clickable, `open ${width}`).toBe(first.n);
+            expect(first.centred, `open ${width}`).toBeGreaterThan(0);
+            expect(first.inside, `open ${width}`).toBe(want(first));
+            expect(first.clickable, `open ${width}`).toBe(want(first));
             const picks = data.tables.filter((t) => t.columns.some((c) => (c.links ?? []).length)).slice(0, 4).map((t) => t.name);
             for (const name of picks) {
                 await page.evaluate((n) => { location.hash = `#/data/table%2F${encodeURIComponent(n)}`; }, name);
@@ -76,8 +84,8 @@ describe('2D on the demo schema', () => {
                 // On a phone the pick opens the detail flyout over the stage; close it to reach the stage again.
                 if (width < 721) await page.keyboard.press('Escape');
                 const r = await badgeReach(page);
-                expect(r.inside, `${name} ${width}`).toBe(r.n);
-                expect(r.clickable, `${name} ${width}`).toBe(r.n);
+                expect(r.inside, `${name} ${width}`).toBe(want(r));
+                expect(r.clickable, `${name} ${width}`).toBe(want(r));
             }
             await page.close();
         }
