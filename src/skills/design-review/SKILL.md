@@ -124,6 +124,7 @@ passing says nothing about 320px, which is where a two-column grid or a fixed
 - **Colors:** Contrast ratios, brand consistency, dark mode.
 - **Alignment:** Grid alignment, visual balance.
 - **Icons:** Consistent size, style, and spacing.
+- **Path to the primary action** (`surface_mode: persuade` only): one primary action per surface, reachable in the first viewport, in the same place across pages; answer the wayfinding questions — where am I, where can I go, how do I get out. A finding with evidence, never a score.
 
 ### Phase 4: Accessibility (WCAG 2.1 AA)
 
@@ -217,8 +218,8 @@ Load the reference file whose sections the review needs — never all of them by
 
 ## Output format
 
-1. Design review report following the Report structure section
-2. Severity-rated findings (blocker, suggestion, nit)
+1. At most four plain-language headlines first, for a reader who is not a designer ("the logo is too small", "the reserve button gets lost") — each a projection of a finding below, never a new claim
+2. Design review report following the Report structure section, with severity-rated findings (blocker, suggestion, nit)
 3. Accessibility and responsive compliance summary
 
 ## Auto-trigger keywords
