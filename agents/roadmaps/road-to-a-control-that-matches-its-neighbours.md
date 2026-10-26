@@ -56,7 +56,7 @@ and is never reported as visually verified without render evidence.
 
 ## Phase 0 — Measure before changing anything
 
-- [ ] **0.1 Corpus and runner, pre-registered.** Add ≥ 16 cases to
+- [x] **0.1 Corpus and runner, pre-registered.** Done 2026-10-26: 18 cases (uit-041..058) with `category`/`lang`, three bars in `eval_ui_triviality`; baseline add_control 8/10 (uit-049, uit-050 fail), de_ui_recall 1/6, backend 4/4, trivial recall 0.882. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/eval_ui_triviality.ts --> Add ≥ 16 cases to
       `internal/bench/corpora/ui-triviality-golden.yaml`: 8 "insert a control
       into an existing surface" (select, date, checkbox, toggle, textarea,
       radio, dialog, combobox) and 8 German prompts (trivial, add-control and
@@ -68,7 +68,7 @@ and is never reported as visually verified without render evidence.
       recall ≥ 0.80; backend precision unchanged.
       verify: `./scripts-run src/scripts/eval_ui_triviality` prints the three bars
       and FAILS on the add-control and German rows at this step (C3 as a number).
-- [ ] **0.2 Frontend corpus "follow-up" cases.** Under
+- [x] **0.2 Frontend corpus "follow-up" cases.** Done 2026-10-26: `follow-up-select-shadcn`, `follow-up-popover-in-scroll-dialog`, `follow-up-native-no-primitive`, `follow-up-select-blade`, each with a `bars:` block; population 20 → 24, digest rewritten. <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change --> Under
       `tests/eval/frontend-corpus/cases/`: (a) an existing form with a project
       select component and two styled inputs, prompt "add a status filter as a
       select"; (b) a popover inside a scrollable dialog (clipping); (c) a
@@ -82,25 +82,25 @@ and is never reported as visually verified without render evidence.
 
 ## Phase 1 — Close the bypass (deterministic, no hook dependency)
 
-- [ ] **1.1 Tighten the allow-list** (`src/rules/ui-audit-gate.md:78-84`). A fifth
+- [x] **1.1 Tighten the allow-list** (`src/rules/ui-audit-gate.md:78-84`). Done 2026-10-26: fifth condition in `ui-audit-gate` and `design-review-after-ui-write`, and in `docs/ui-track-mental-model.md`. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> A fifth
       condition: no new interactive control role — no element or component of a
       role the file did not contain before (select, input other than hidden,
       textarea, checkbox, radio, switch, date/time, dialog, details, popover,
       combobox, menu, menu-button, tooltip, tabs, table). Tweaking an existing
       control stays trivial.
       verify: `grep -n 'control role' src/rules/ui-audit-gate.md` shows the fifth condition; the 1.2 fixtures pass against it.
-- [ ] **1.2 Replace the self-report** (`ui_trivial/apply.ts:147`). Compute
+- [x] **1.2 Replace the self-report** (`ui_trivial/apply.ts:147`). Done 2026-10-26: `work_engine/_lib/control_roles.ts` (`newControlRolesForFiles` against `git show HEAD:`), wired into `ui_trivial/apply.ts`; `tests/scripts/work_engine/control_roles.test.ts` (20 cases; neutralising the wiring reds the reclassify case). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/templates/scripts/work_engine/_lib/control_roles.ts --> Compute
       `new_control_roles` from the diff (added lines against 1.1's role table
       and against component tags the file did not contain). Non-empty → reclassify
       to `ui-improve`; the envelope field cannot override the computed value.
       verify: unit cases "insert a select" (reclassify), "change a select label"
       (stays trivial), "duplicate an existing `<x-select>`" (stays trivial).
-- [ ] **1.3 Compute it on every UI diff path.** The same function runs in the
+- [x] **1.3 Compute it on every UI diff path.** Done 2026-10-26: `annotateControlRoles` refreshes `new_control_roles` on `state.changes` in `ui/apply` and at every `ui/polish` round; mixed tasks reach it through the UI track. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/templates/scripts/work_engine/_lib/control_roles.ts --> The same function runs in the
       `ui`, `mixed` and polish paths of the work engine, not only in
       `ui_trivial`, so a control added during polish or a mixed task is caught
       by file change rather than by intent.
       verify: a polish-path fixture adding a raw select reports the role.
-- [ ] **1.4 Classifier vocabulary** (`classify.ts:67-118`). Control nouns
+- [x] **1.4 Classifier vocabulary** (`classify.ts:67-118`). Done 2026-10-26: control phrases plus `UI_I18N.de`; bare `select` and `site` stay out (counter-probes uit-059/060 added before the change). Bars: add_control 10/10, de_ui_recall 6/6, backend 6/6, trivial recall 1.000, precision 0.944. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/templates/scripts/work_engine/intent/classify.ts --> Control nouns
       (`select`, `selectbox`, `combobox`, `listbox`, `picker`, `datepicker`,
       `popover`, `tooltip`, `website`, `site`, `landing page`) and a separate,
       testable i18n table with German as its first column: Seite, Webseite,
@@ -113,22 +113,22 @@ and is never reported as visually verified without render evidence.
 
 ## Phase 2 — An object for "fits the rest"
 
-- [ ] **2.1 Role map in the `ui:audit` artefact** (`uiAudit.ts:99`). Additive
+- [x] **2.1 Role map in the `ui:audit` artefact** (`uiAudit.ts:99`). Done 2026-10-26: `control_roles` via `src/scripts/_lib/control_roles.ts` (`buildControlRoles`: prevalence, defined primitives, native-vs-component and system-marker tie breaks, else `tie`). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/templates/scripts/work_engine/_lib/control_roles.ts --> Additive
       field `control_roles`: per 1.1 role, `{canonical, uses, outliers:
       [path:line]}`; canonical by prevalence, ties broken by
       `design_system_markers`, otherwise ask. `schema: 1` stays (additive).
       verify: a `ui:audit` fixture with two project selects and one raw select reports `control_roles.select.canonical` = the component and one outlier.
-- [ ] **2.2 Box metrics per role.** `box_metrics` per role: height, padding x/y,
+- [x] **2.2 Box metrics per role.** Done 2026-10-26: Tailwind `box_metrics` from the canonical use or its primitive (trigger / Blade class merge); `null` + `box_metrics_reason` otherwise; `source: render` waits on 3.4/3.5. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/templates/scripts/work_engine/_lib/control_roles.ts --> `box_metrics` per role: height, padding x/y,
       radius, font size, border — `source: static` from Tailwind classes and
       token references, `source: render` when a `ui:render` artefact exists,
       `null` with a reason when neither, never 0.
       verify: the same fixture reports `box_metrics.select` with `source: static`; a non-Tailwind fixture reports `null` with a reason.
-- [ ] **2.3 Staleness stamp.** The artefact records the git HEAD and the input
+- [x] **2.3 Staleness stamp.** Done 2026-10-26: `stamp {head, inputs_digest, files}`, `isUiAuditStale`, `lookupControlRoles` recomputes; `tests/cli/uiAudit_control_roles.test.ts`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/templates/scripts/work_engine/_lib/control_roles.ts --> The artefact records the git HEAD and the input
       file hashes it was computed from; a consumer seeing a different HEAD on a
       touched UI file recomputes before use.
       verify: a fixture edits a component after the audit and the lookup
       recomputes.
-- [ ] **2.4 One lookup line in every apply path.** `fe-design`,
+- [x] **2.4 One lookup line in every apply path.** Done 2026-10-26: one identical **Control roles** sentence in the six skills (`grep -c control_roles` = 1 each); fe-design's skip clause names the new control role. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> `fe-design`,
       `ui-apply-generic`, `blade-ui`, `livewire`, `react-shadcn-ui` and `flux`
       get the same canonical sentence: for every control you add, look up its
       role in `control_roles`, use the canonical implementation and the
@@ -136,7 +136,7 @@ and is never reported as visually verified without render evidence.
       kind. Choosing a native control although a primitive exists records a
       `native_control_reason` in the step output.
       verify: `grep -c control_roles` over the six SKILL.md files returns 1 each, with identical wording.
-- [ ] **2.5 Native-select canon** in `fe-design/references/design-patterns.md`
+- [x] **2.5 Native-select canon** Done 2026-10-26: § Native select in `design-patterns.md`. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> in `fe-design/references/design-patterns.md`
       § Component Architecture: a project primitive is always used; without one,
       a native `<select>` with `appearance: base-select` and `::picker(select)`
       as progressive enhancement (Chromium 135+; Safari announced; Firefox open),
@@ -174,7 +174,8 @@ and is never reported as visually verified without render evidence.
 - [ ] **3.5 Open-state probe.** `ui:render --interact <selector>` opens, focuses
       and keyboard-operates each newly added interactive control (click, Enter,
       Arrow, Escape, outside click), captures the open state and records overlay
-      and portal bounds, clipping against scroll ancestors and z-index. No
+      and portal bounds, clipping against scroll ancestors and z-index, and
+      writes measured box metrics back as `box_metrics.source: render` (2.2). No
       browser → `unverified`, never `verified`.
       verify: fixture 0.2(b) reports the clipped popover; a closed-state-only
       run of 0.2(a) reports `open_state: not-captured`.
