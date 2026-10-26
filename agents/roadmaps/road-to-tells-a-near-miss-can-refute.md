@@ -167,7 +167,7 @@ The gate for every later promotion.
       `provenance/borrows.jsonl` row or an own-analysis label.
       verify: per row, `backed` in § Detector status, a CLAIMS epoch line, parity
       green.
-- [ ] **2.6 T4 by position, prose and status in step** (carried B1/B2). A
+- [x] **2.6 T4 by position, prose and status in step** (carried B1/B2). Done 2026-10-26: an eyebrow is an uppercase label whose next element is a heading; a `rounded-full`/`badge`/`pill` label directly before the `h1` flags; failure mode (a heading built by a component) stated in § Detector status; `tests/scripts/design_slop_nearmiss.test.ts` § T4 by position; FP bench M1 = 0, near-miss bar green, no T4 hit on `src/ui`. Text markup only — no render geometry was needed. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/design_slop_rules.ts --> A
       dependency-free adjacency heuristic for a badge immediately preceding an
       `h1` (render geometry where available), with its failure mode stated; T4's
       prose describes only what its rule reaches.
@@ -176,7 +176,7 @@ The gate for every later promotion.
 
 ## Phase 3 — Say only what the edit introduced
 
-- [ ] **3.1 A git baseline for hook findings.** Baseline = `git show HEAD:<path>`
+- [x] **3.1 A git baseline for hook findings.** Done 2026-10-26: `src/scripts/_lib/finding_baseline.ts` (`attribute`, multiset on rule + snippet with digits masked; `committedBlob`); `design_slop_hook.ts` surfaces only introduced P0/P1 and appends the incumbent count. Deviation, on purpose: an Edit's baseline is its `old_string`, not the HEAD blob — an edit's `new_string` is a fragment, and comparing a fragment with the whole committed file would call a copied stripe incumbent while the original still stands. The hook never blocks (it warns), so "P0 still blocks" reads "an introduced P0 still warns". Found on the way and fixed: `cssBlocks` reported every block after the first one line early (sibling search: 1 site). `tests/scripts/finding_baseline.test.ts` (introduced 1 / incumbent 1, end-to-end through the hook). <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/design_slop_hook.ts --> Baseline = `git show HEAD:<path>`
       (or the index blob), empty for an untracked file; a finding whose rule and
       normalised snippet exist in the baseline is `incumbent`, reported as a
       count, never a block. No pre-hook needed.

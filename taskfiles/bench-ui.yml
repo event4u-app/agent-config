@@ -62,6 +62,15 @@ tasks:
       skips where no Chromium resolves.
     cmd: npx vitest run tests/scripts/design_slop_render_bench.test.ts
 
+  bench:design-slop-attribution:
+    silent: true
+    desc: |
+      Replays the design-slop hook over the frontend corpus and this
+      repository's own UI with and without introduced/incumbent attribution:
+      a neutral edit and an edit that adds one side-stripe, per file. Fails
+      when attribution hides an introduced finding.
+    cmd: npx tsx internal/bench/design-slop-attribution/run.ts {{.CLI_ARGS}}
+
   bench:design-consistency-shadow:
     silent: true
     desc: |
