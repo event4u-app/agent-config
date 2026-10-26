@@ -53,7 +53,7 @@ Check for: full table scans (`type=ALL`), missing indexes (`key=NULL`), filesort
 ### Step 2: Fix
 
 - Add missing indexes (composites: equality, then a range, then sort-only; selectivity breaks ties)
-- Rewrite anti-patterns (`OFFSET` → cursor, `SELECT *` → columns; subqueries: see guideline)
+- Fix anti-patterns (`OFFSET` → cursor, `SELECT *` → columns; subqueries: `php/database.md`)
 - Add eager loading for N+1 queries
 - Always paginate list endpoints
 
