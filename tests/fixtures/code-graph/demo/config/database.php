@@ -11,5 +11,9 @@ return [
             'driver' => 'pgsql',
             'database' => env('TENANT_DATABASE', 'tenant'),
         ],
+        'analytics' => [
+            'driver' => 'mysql',
+            'database' => env('ANALYTICS_DATABASE', 'analytics'),
+        ],
     ],
 ];

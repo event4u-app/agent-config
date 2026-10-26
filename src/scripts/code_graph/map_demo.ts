@@ -25,6 +25,7 @@ import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { planHub, writeHub } from './estate_map.js';
 import { graphHome } from './graph_home.js';
 import { buildMap, hasMap, type MapBuildResult } from './map.js';
+import { generateDemoLoad, generateHubProjects } from './map_demo_generate.js';
 import { registerUse } from './projects_cli.js';
 import type { CodeGraph } from './types.js';
 
@@ -109,9 +110,10 @@ const HISTORY: Step[] = [
     { author: BEN, message: 'feat: partner prices', paths: ['app/Services/PartnerClient.php', 'contracts/partner.openapi.yaml'] },
 ];
 
-/** First commit of the scripted history; each later one is ten days on. */
-const HISTORY_START = Date.parse('2026-05-04T09:00:00Z');
-const STEP_MS = 10 * 86_400_000;
+/** First commit of the scripted history; each later one is two days on, the generated ones ten hours apart. */
+const HISTORY_START = Date.parse('2026-03-02T09:00:00Z');
+const STEP_MS = 2 * 86_400_000;
+const LOAD_STEP_MS = 10 * 3_600_000;
 
 /**
  * The uncommitted change on top of the history, so Impact and the agent's
@@ -162,7 +164,7 @@ function git(root: string, args: string[], who?: Author, at?: number): void {
 }
 
 /** The demo repository at `root`: the fixture, committed step by step, with the working change on top. */
-export function materialiseDemoRepo(fixture: string, root: string, steps: readonly Step[] = HISTORY): void {
+export function materialiseDemoRepo(fixture: string, root: string, steps: readonly Step[] = HISTORY, opts: { load?: boolean } = {}): void {
     const files = listFiles(fixture);
     const placed = new Set<string>();
     fs.mkdirSync(root, { recursive: true });
@@ -189,6 +191,30 @@ export function materialiseDemoRepo(fixture: string, root: string, steps: readon
         for (const f of left) put(f);
         git(root, ['add', '-A']);
         git(root, ['commit', '-q', '-m', 'chore: remaining fixture files'], ADA, HISTORY_START + steps.length * STEP_MS);
+    }
+    if (opts.load !== false) {
+        const load = generateDemoLoad();
+        const start = HISTORY_START + (steps.length + 1) * STEP_MS;
+        load.commits.forEach((c, i) => {
+            for (const [rel, text] of Object.entries(c.files)) {
+                const p = path.join(root, rel);
+                fs.mkdirSync(path.dirname(p), { recursive: true });
+                fs.writeFileSync(p, text);
+            }
+            for (const e of c.edits) {
+                const p = path.join(root, e.file);
+                fs.writeFileSync(p, e.edit(fs.readFileSync(p, 'utf-8')));
+            }
+            git(root, ['add', '-A']);
+            git(root, ['commit', '-q', '-m', c.message], c.author, start + i * LOAD_STEP_MS);
+        });
+        for (const e of load.working) {
+            const p = path.join(root, e.file);
+            const before = fs.readFileSync(p, 'utf-8');
+            const after = e.edit(before);
+            if (after === before) throw new Error(`demo working change: ${e.file} no longer contains its anchor`);
+            fs.writeFileSync(p, after);
+        }
     }
     for (const w of WORKING_CHANGE) {
         const p = path.join(root, w.file);
@@ -275,6 +301,19 @@ export async function buildDemoMap(root: string, opts: { outDir?: string } = {})
             if (!fs.existsSync(from)) continue;
             const r = path.join(tmp, name);
             hubProject(from, r);
+            await buildMap(r, { demo: true });
+            projects.push(r);
+        }
+        for (const hp of generateHubProjects()) {
+            const r = path.join(tmp, hp.name);
+            for (const [rel, text] of Object.entries(hp.files)) {
+                fs.mkdirSync(path.dirname(path.join(r, rel)), { recursive: true });
+                fs.writeFileSync(path.join(r, rel), text);
+            }
+            fs.mkdirSync(path.join(r, 'agents'), { recursive: true });
+            git(r, ['init', '-q']);
+            git(r, ['add', '-A']);
+            git(r, ['commit', '-q', '-m', 'fixture'], CLEO, HISTORY_START);
             await buildMap(r, { demo: true });
             projects.push(r);
         }
