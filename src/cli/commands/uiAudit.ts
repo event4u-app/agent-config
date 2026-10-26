@@ -24,9 +24,12 @@
  * the artefact's meaning depend on taste.
  */
 
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { buildControlRoles, type ControlRole, type RoleEntry } from '../../scripts/_lib/control_roles.js';
 import { isUiPath, isUiTreePath } from '../../scripts/_lib/ui_surface.js';
 
 /**
@@ -116,6 +119,17 @@ export interface UiAuditArtefact {
      * false negative here becomes a wrong `change_intent` downstream.
      */
     coherence_signals: string[];
+    /**
+     * Which implementation IS each interactive control in this project, how often
+     * it is used, where it is not, and the box metrics a new one copies. Additive
+     * (road-to-a-control-that-matches-its-neighbours 2.1/2.2); `schema` stays 1.
+     */
+    control_roles: Partial<Record<ControlRole, RoleEntry>>;
+    /**
+     * What the artefact was computed from. A consumer that sees a different HEAD
+     * or a different digest over the same UI files recomputes before use (2.3).
+     */
+    stamp: { head: string | null; inputs_digest: string; files: number };
     verification: 'verified' | 'degraded';
     degradation_reason?: string;
 }
@@ -309,9 +323,35 @@ export function buildArtefact(
         greenfield,
         audit_path: greenfield ? 'greenfield' : coherent ? 'high_confidence' : 'ambiguous',
         coherence_signals: signals,
+        control_roles: buildControlRoles(
+            uiFiles,
+            markers.map((m) => m.path),
+        ),
+        stamp: { head: null, inputs_digest: inputsDigest(uiFiles), files: uiFiles.length },
         context_stale: staleness(files, tokens),
         verification: 'verified',
     };
+}
+
+/** Order-independent digest over the UI files an artefact was computed from. */
+export function inputsDigest(files: ReadonlyArray<readonly [string, string]>): string {
+    const h = createHash('sha256');
+    for (const [rel, text] of [...files].sort(([a], [b]) => a.localeCompare(b))) {
+        h.update(rel).update('\0').update(text).update('\0');
+    }
+    return h.digest('hex').slice(0, 16);
+}
+
+function gitHead(cwd: string): string | null {
+    try {
+        return execFileSync('git', ['rev-parse', 'HEAD'], {
+            cwd,
+            encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'ignore'],
+        }).trim();
+    } catch {
+        return null;
+    }
 }
 
 /**
@@ -346,14 +386,7 @@ export interface UiAuditOptions {
     projectRoot?: string | undefined;
 }
 
-export function runUiAudit(opts: UiAuditOptions = {}): number {
-    const projectRoot = path.resolve(opts.projectRoot ?? process.cwd());
-    const target = path.resolve(projectRoot, opts.target ?? '.');
-    if (!fs.existsSync(target)) {
-        process.stderr.write(`[ui:audit] path not found: ${target}\n`);
-        return 1;
-    }
-
+function readPairs(projectRoot: string, target: string): { pairs: Array<readonly [string, string]>; unreadable: number } {
     const stat = fs.statSync(target);
     const absFiles = stat.isDirectory() ? walk(target) : [target];
     const pairs: Array<readonly [string, string]> = [];
@@ -366,8 +399,14 @@ export function runUiAudit(opts: UiAuditOptions = {}): number {
             unreadable++;
         }
     }
+    return { pairs, unreadable };
+}
 
+/** Compute the artefact for `target` under `projectRoot`, stamped with git HEAD. */
+export function computeUiAudit(projectRoot: string, target: string): UiAuditArtefact {
+    const { pairs, unreadable } = readPairs(projectRoot, target);
     let artefact = buildArtefact(path.relative(projectRoot, target).split(path.sep).join('/') || '.', pairs);
+    artefact = { ...artefact, stamp: { ...artefact.stamp, head: gitHead(projectRoot) } };
     if (unreadable > 0) {
         artefact = {
             ...artefact,
@@ -375,6 +414,54 @@ export function runUiAudit(opts: UiAuditOptions = {}): number {
             degradation_reason: `${unreadable} file(s) could not be read`,
         };
     }
+    return artefact;
+}
+
+/**
+ * True when `artefact` no longer describes the tree: HEAD moved, or the UI files
+ * it was computed from changed (a working-tree edit moves no HEAD). An artefact
+ * without a stamp predates 2.3 and is stale by definition.
+ */
+export function isUiAuditStale(projectRoot: string, artefact: Partial<UiAuditArtefact>): boolean {
+    const stamp = artefact.stamp;
+    if (!stamp) return true;
+    if (stamp.head !== gitHead(projectRoot)) return true;
+    const target = path.resolve(projectRoot, artefact.root ?? '.');
+    if (!fs.existsSync(target)) return true;
+    const { pairs } = readPairs(projectRoot, target);
+    const ui = pairs.filter(([rel]) => isUiPath(rel) || isUiTreePath(rel));
+    return inputsDigest(ui) !== stamp.inputs_digest;
+}
+
+/**
+ * The control-role lookup every apply path makes (2.4): read the artefact,
+ * recompute and rewrite it first when it is missing or stale.
+ */
+export function lookupControlRoles(projectRoot: string, target = '.'): UiAuditArtefact['control_roles'] {
+    const outPath = path.join(projectRoot, ARTEFACT_REL);
+    let artefact: Partial<UiAuditArtefact> | null = null;
+    try {
+        artefact = JSON.parse(fs.readFileSync(outPath, 'utf8')) as Partial<UiAuditArtefact>;
+    } catch {
+        artefact = null;
+    }
+    if (artefact === null || isUiAuditStale(projectRoot, artefact) || artefact.control_roles === undefined) {
+        const fresh = computeUiAudit(projectRoot, path.resolve(projectRoot, target));
+        fs.mkdirSync(path.dirname(outPath), { recursive: true });
+        fs.writeFileSync(outPath, `${JSON.stringify(fresh, null, 2)}\n`);
+        return fresh.control_roles;
+    }
+    return artefact.control_roles;
+}
+
+export function runUiAudit(opts: UiAuditOptions = {}): number {
+    const projectRoot = path.resolve(opts.projectRoot ?? process.cwd());
+    const target = path.resolve(projectRoot, opts.target ?? '.');
+    if (!fs.existsSync(target)) {
+        process.stderr.write(`[ui:audit] path not found: ${target}\n`);
+        return 1;
+    }
+    const artefact = computeUiAudit(projectRoot, target);
 
     const outPath = path.join(projectRoot, ARTEFACT_REL);
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
@@ -384,7 +471,8 @@ export function runUiAudit(opts: UiAuditOptions = {}): number {
     else {
         process.stdout.write(
             `✅  ui:audit — ${artefact.components_found.length} component(s), ${artefact.tokens.length} token(s), ` +
-                `${artefact.design_system_markers.length} system marker(s); path=${artefact.audit_path}\n` +
+                `${artefact.design_system_markers.length} system marker(s), ` +
+                `${Object.keys(artefact.control_roles).length} control role(s); path=${artefact.audit_path}\n` +
                 `    ${ARTEFACT_REL}\n` +
                 (artefact.context_stale.length
                     ? `    ⚠️  ${artefact.context_stale.length} CONTEXT_STALE line(s) — reported, not repaired\n`

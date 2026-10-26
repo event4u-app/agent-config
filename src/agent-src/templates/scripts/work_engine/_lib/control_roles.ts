@@ -34,58 +34,82 @@ export const CONTROL_ROLES = [
 
 export type ControlRole = (typeof CONTROL_ROLES)[number];
 
-// A component tag is matched by its last name segment so `<Select>`,
-// `<x-select>`, `<flux:select>`, `<ui-select>` and `<v-select>` all read as the
-// select role. Each pattern is anchored on `<` so prose and identifiers do not
-// count — only markup does.
-const TAG = (names: string): RegExp =>
-    new RegExp(`<(?:[\\w-]+[:.-])?(?:${names})(?=[\\s/>])`, 'i');
+// The tag parser below is a copy of `src/scripts/_lib/control_roles.ts`
+// (`roleOfTag`, `occurrences`): the CLI must not import from this template tree
+// and this tree is projected without `src/scripts`. The two are held in step by
+// `tests/scripts/control_roles_parity.test.ts`. Markup only — prose and
+// identifiers never count.
+const NAME: Record<ControlRole, string> = {
+    select: 'select|selectbox|listbox|native-select',
+    input: 'input|text-?field|text-?input',
+    textarea: 'textarea',
+    checkbox: 'checkbox',
+    radio: 'radio|radio-?group',
+    switch: 'switch|toggle',
+    date: 'date-?picker|calendar|date-?input|time-?picker',
+    dialog: 'dialog|modal|alert-?dialog|sheet|drawer',
+    details: 'details|accordion|collapsible',
+    popover: 'popover|popup',
+    combobox: 'combobox|autocomplete|command',
+    menu: 'menu|dropdown-?menu|context-?menu|menubar',
+    'menu-button': 'menu-?button|dropdown-?trigger|menu-?trigger',
+    tooltip: 'tooltip',
+    tabs: 'tabs|tab-?list|tab-?group',
+    table: 'table|data-?table|data-?grid',
+};
 
-const PATTERNS: ReadonlyArray<[ControlRole, RegExp]> = [
-    ['select', TAG('select|selectbox|listbox|native-select')],
-    ['date', /<input\b[^>]*\btype\s*=\s*["']?(?:date|datetime-local|time|month|week)\b/i],
-    ['date', TAG('date-?picker|calendar|date-?input|time-?picker')],
-    ['checkbox', /<input\b[^>]*\btype\s*=\s*["']?checkbox\b/i],
-    ['checkbox', TAG('checkbox')],
-    ['radio', /<input\b[^>]*\btype\s*=\s*["']?radio\b/i],
-    ['radio', TAG('radio|radio-?group')],
-    ['switch', TAG('switch|toggle')],
-    ['switch', /\brole\s*=\s*["']switch["']/i],
-    ['textarea', TAG('textarea')],
-    ['dialog', TAG('dialog|modal|alert-?dialog|sheet|drawer')],
-    ['details', TAG('details|accordion|collapsible')],
-    ['popover', TAG('popover|popup')],
-    ['popover', /\bpopover\s*=\s*["']?(?:auto|manual)?["'\s>]/i],
-    ['combobox', TAG('combobox|autocomplete|command')],
-    ['combobox', /\brole\s*=\s*["']combobox["']/i],
-    ['menu', TAG('menu|dropdown-?menu|context-?menu|menubar')],
-    ['menu-button', TAG('menu-?button|dropdown-?trigger|menu-?trigger')],
-    ['tooltip', TAG('tooltip')],
-    ['tabs', TAG('tabs|tab-?list|tab-?group')],
-    ['table', TAG('table|data-?table|data-?grid')],
-];
+const NATIVE: Partial<Record<ControlRole, string>> = {
+    select: 'select',
+    input: 'input',
+    textarea: 'textarea',
+    dialog: 'dialog',
+    details: 'details',
+    table: 'table',
+};
 
-// A plain `<input>` is the input role only when it is not one of the typed
-// roles above and not hidden.
-const PLAIN_INPUT =
-    /<input\b(?![^>]*\btype\s*=\s*["']?(?:hidden|checkbox|radio|date|datetime-local|time|month|week|submit|button|reset|image)\b)[^>]*>?/i;
-// The native `<input>` is judged by PLAIN_INPUT alone; a component needs a
-// namespace prefix (`<x-input>`, `<flux:input>`) or a capital (`<Input>`).
-const INPUT_COMPONENT_CAPITAL = /<(?:Input|TextField|TextInput)(?=[\s/>])/;
-const INPUT_COMPONENT_PREFIXED = /<[\w-]+[:.-](?:input|text-?field|text-?input)(?=[\s/>])/i;
+const INPUT_TYPE_ROLE: Record<string, ControlRole> = {
+    checkbox: 'checkbox',
+    radio: 'radio',
+    date: 'date',
+    'datetime-local': 'date',
+    time: 'date',
+    month: 'date',
+    week: 'date',
+};
+const INPUT_TYPES_NOT_A_CONTROL = new Set(['hidden', 'submit', 'button', 'reset', 'image']);
+
+const TAG_RE = /<([A-Za-z][\w:.-]*)([^<>]*?)\/?>/g;
+
+/** The role of a tag, or null. A component matches on its last name segment. */
+export function roleOfTag(tag: string, attrs: string): ControlRole | null {
+    const lower = tag.toLowerCase();
+    if (lower === 'input') {
+        const type = /\btype\s*=\s*["']?([\w-]+)/i.exec(attrs)?.[1]?.toLowerCase() ?? 'text';
+        if (INPUT_TYPES_NOT_A_CONTROL.has(type)) return null;
+        return INPUT_TYPE_ROLE[type] ?? 'input';
+    }
+    if (/\brole\s*=\s*["']switch["']/i.test(attrs)) return 'switch';
+    if (/\brole\s*=\s*["']combobox["']/i.test(attrs)) return 'combobox';
+    const isNative = /^[a-z]+$/.test(tag);
+    for (const role of CONTROL_ROLES) {
+        if (isNative) {
+            if (NATIVE[role] === lower) return role;
+            continue;
+        }
+        const last = tag.split(/[:.]/).pop() ?? tag;
+        const segment = last.replace(/^(?:x|ui|v|el|n|q|a|b)-/i, '');
+        if (new RegExp(`^(?:${NAME[role]})$`, 'i').test(segment)) return role;
+    }
+    if (isNative && /\bpopover\b/i.test(attrs)) return 'popover';
+    return null;
+}
 
 /** Every control role whose markup occurs in `text`. */
 export function rolesIn(text: string): Set<ControlRole> {
     const found = new Set<ControlRole>();
-    for (const [role, re] of PATTERNS) {
-        if (re.test(text)) found.add(role);
-    }
-    if (
-        PLAIN_INPUT.test(text) ||
-        INPUT_COMPONENT_CAPITAL.test(text) ||
-        INPUT_COMPONENT_PREFIXED.test(text)
-    ) {
-        found.add('input');
+    for (const m of text.matchAll(TAG_RE)) {
+        const role = roleOfTag(m[1]!, m[2] ?? '');
+        if (role !== null) found.add(role);
     }
     return found;
 }
