@@ -129,7 +129,7 @@ The gate for every later promotion.
       the `dogfood/` split.
       verify: a labels file with one row per finding, basis and labeller; the
       bench reports precision on `dogfood/` separately.
-- [x] **1.5 An outside check without importing anyone's data.** Rewritten
+- [x] **1.5 An outside check without importing anyone's data.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/design_slop_rules.ts --> Rewritten
       2026-10-26 after OQ-20: the owner chose not to import the external design
       source's fixtures, on the AI council's reading that independence is a
       property of who selects and tunes, not of where a file lives. Instead,
@@ -228,7 +228,7 @@ The gate for every later promotion.
 
 ## Phase 5 — Prose: recall on someone else's corpus, facts that cannot move
 
-- [x] **5.1 Metamorphic relations instead of an external split.** Rewritten
+- [x] **5.1 Metamorphic relations instead of an external split.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/detect_ai_tells.ts --> Rewritten
       2026-10-26 after OQ-20 (no third-party corpus). Done 2026-10-26:
       `tests/scripts/prose_tells_metamorphic.test.ts` rewrites the 35 clean files
       and the 20 seeded drafts six ways that cannot change the text's meaning and
