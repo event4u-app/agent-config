@@ -112,7 +112,8 @@ left to read as finished.
       of the pushed branch. The review was right and the reopen is the finding:
       a reader shipped, and it does not print the number this step names.
       WHAT SHIPPED. `collectShadowStats` / `retryConditionedShare` /
-      `DISPATCH_CENSORED_DETECTORS` in `src/scripts/_lib/turn_end_refusals.ts`;
+      `DISPATCH_CENSORED_DETECTORS` in `src/scripts/_lib/turn_end_refusals.ts`
+      (moved into `measure_turn_end_gate.ts` on 2026-10-26);
       `renderQ1` and the `--q1` / `--workspace` flags in
       `src/scripts/measure_turn_end_gate.ts`; the contract's § Q1 rewritten in
       the same change. `turn_end_refusals.test.ts` 33 green (23 pre-existing

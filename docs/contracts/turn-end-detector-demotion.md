@@ -109,8 +109,7 @@ gate: no turn is refused twice. Instrument 1 (the shadow read,
 ```
 
 `renderQ1` in `src/scripts/measure_turn_end_gate.ts`, over
-`collectShadowStats` / `retryConditionedShare` in
-`src/scripts/_lib/turn_end_refusals.ts`.
+`collectShadowStats` / `retryConditionedShare` in the same file.
 
 **That reader does not print Q1, and this file said for several hours that it
 did.** An independent review caught it before the change landed. The honest
@@ -188,7 +187,7 @@ elsewhere. Q2 is measurable today from `RefusalRecord.counts`
   `dispatchOpen` — A, D and F — and § The six detectors above has said so in its
   fourth column since F landed on 2026-09-11. This paragraph simply predates F
   and was never revisited. `DISPATCH_CENSORED_DETECTORS` in
-  `src/scripts/_lib/turn_end_refusals.ts` is now the single set both the gate's
+  `src/scripts/measure_turn_end_gate.ts` is now the single set both the gate's
   reader and this clause are checked against, so the next detector to change
   sides cannot leave the two disagreeing silently.
 - A refusal is *eligible* only if it was recorded under a version that stamps
@@ -605,6 +604,6 @@ right verdict, and both halves of that are worth keeping.
 - [`concern-activation-policy`](concern-activation-policy.md) — the ladder, the generic reverse triggers, and the `would_fire` shadow mechanism instrument 1 applies.
 - [`hook-architecture-v1`](hook-architecture-v1.md) — the dispatcher contract, and which hosts carry a `stop` slot at all.
 - `src/scripts/hooks/turn_end_gate_hook.ts` — the gate, its five detectors, and the two re-entrancy layers Q1 dies on.
-- `src/scripts/_lib/turn_end_refusals.ts` — `DETECTOR_IDS`, `RefusalRecord`, and the counts Q2 is read from; also `ShadowRecord`, `collectShadowStats`, `DISPATCH_CENSORED_DETECTORS` and `retryConditionedShare` — the last of which is NOT Q1 and says so in its own docstring.
-- `src/scripts/measure_turn_end_gate.ts` — `renderQ1`, the shadow-corpus reader. `--q1` prints the retry-conditioned share without a transcript corpus, and states in its header that it is not bar-comparable.
+- `src/scripts/_lib/turn_end_refusals.ts` — `DETECTOR_IDS`, `RefusalRecord`, `ShadowRecord`, and the counts Q2 is read from.
+- `src/scripts/measure_turn_end_gate.ts` — `renderQ1`, the shadow-corpus reader, with `collectShadowStats`, `DISPATCH_CENSORED_DETECTORS` and `retryConditionedShare` — the last of which is NOT Q1 and says so in its own docstring. `--q1` prints the retry-conditioned share without a transcript corpus, and states in its header that it is not bar-comparable.
 - [`condensation-default-kill-criterion`](condensation-default-kill-criterion.md) — the sibling shape: one feature's kill criterion, pre-registered with its decision table.
