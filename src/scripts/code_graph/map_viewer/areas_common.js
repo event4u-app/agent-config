@@ -174,7 +174,7 @@ function factTable(id, headers, rows) {
             var td = el('td');
             if (k === 0 && r.key) {
                 var b = el('button', { type: 'button', class: 'rowpick' + (current.item === r.key ? ' on' : '') }, null);
-                if (typeof c === 'object') b.appendChild(c); else b.textContent = String(c);
+                if (typeof c === 'object') b.appendChild(c); else { b.textContent = String(c); b.title = String(c); }
                 b.addEventListener('click', function () { avPick(id, r.key); });
                 td.appendChild(b);
             } else if (c != null && typeof c === 'object') td.appendChild(c);
@@ -193,8 +193,10 @@ function findingsView(id, main) {
     var list = p.findings || [];
     if (!list.length) { main.appendChild(el('div', { class: 'box' }, t('noFindings'))); return; }
     main.appendChild(factTable(id, [t('colRule'), t('colSeverity'), t('colSubject'), t('colMessage'), t('colWitness')], list.map(function (f, i) {
-        var w = f.witnesses && f.witnesses[0];
-        return { key: 'finding/' + i, cells: [f.id, stChip(t('sevNames')[f.severity] || f.severity, SEV_CLASS[f.severity]), f.subject, f.message, w ? add(el('span', { class: 'mono' }, wloc(w) + ' '), confirmChip(w.confirm)) : '–'] };
+        var ws = f.witnesses || [];
+        var cell = ws.length ? el('div', { class: 'wcell' }) : '–';
+        ws.forEach(function (w) { cell.appendChild(add(el('div', { class: 'mono' }, wloc(w) + ' '), confirmChip(w.confirm))); });
+        return { key: 'finding/' + i, cells: [f.id, stChip(t('sevNames')[f.severity] || f.severity, SEV_CLASS[f.severity]), f.subject, f.message, cell] };
     })));
 }
 
@@ -270,6 +272,17 @@ function renderAvDetail(id, item) {
     var sw = add(el('section', { class: 'sec' }), add(el('div', { class: 'sec-h' }), el('span', null, t('witnesses') + ' (' + item.witnesses.length + ')')));
     sw.appendChild(item.witnesses.length ? witnessList(item.witnesses) : el('span', { class: 'note-line' }, t('none')));
     d.appendChild(sw);
+    var links = item.links ? item.links() : [];
+    if (links.length) {
+        var sl = add(el('section', { class: 'sec' }), add(el('div', { class: 'sec-h' }), el('span', null, t('links') + ' (' + links.length + ')')));
+        links.forEach(function (l) {
+            var b = el('button', { type: 'button', class: 'frow link', title: l[1].go ? t('openCode') : t('notOnMap'), disabled: !l[1].go });
+            add(b, el('span', { class: 'muted' }, l[0]), el('span', { class: 'mono' }, l[1].label), l[1].sub ? el('span', { class: 'mono muted' }, l[1].sub) : null);
+            if (l[1].go) b.addEventListener('click', l[1].go);
+            sl.appendChild(b);
+        });
+        d.appendChild(sl);
+    }
     if (item.kind !== 'finding') {
         var related = ((p && p.findings) || []).map(function (f, i) { return [f, i]; }).filter(function (fi) {
             return fi[0].subject === item.label || fi[0].subject.indexOf(item.label + '.') === 0 ||
@@ -331,7 +344,8 @@ function renderAreaPage(id, key) {
         ['confirmed', 'moved', 'changed', 'gone', 'added', 'unconfirmed'].forEach(function (s) { legend.appendChild(confirmChip(s)); });
         main.appendChild(legend);
         var v = avState.view[id];
-        if (v === 'findings') findingsView(id, main);
+        if (v === 'findings' && mod.renderFindings && own) mod.renderFindings(p, main);
+        else if (v === 'findings') findingsView(id, main);
         else mod.render(own ? p : null, v, main);
     }
     renderAvDetail(id, item);

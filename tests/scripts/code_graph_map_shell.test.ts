@@ -42,7 +42,8 @@ const route = (page: Page): Promise<{ route: string; item: string }> =>
     page.evaluate(() => (window as unknown as { __mapRoute: { route: string; item: string } }).__mapRoute);
 
 beforeAll(async () => {
-    empty = (await drawn()).html;
+    // No reader ran for any knowledge area: the map is drawn with an empty areas section.
+    empty = (await drawn({})).html;
     const f = await drawn(sampleAreas());
     full = f.html;
     // The same map, drawn while the graph is three commits behind HEAD.
