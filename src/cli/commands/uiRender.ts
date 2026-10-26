@@ -40,6 +40,9 @@ import * as path from 'node:path';
 import type { chromium as Chromium } from '@playwright/test';
 
 import { runAssetRender } from './uiRenderAsset.js';
+import { resolveBrowser } from './browserReach.js';
+import { interactWith, type InteractionReading } from './uiRenderInteract.js';
+import { BASELINE_REL, regionReading, type RegionReading } from './uiRenderRegion.js';
 import type { AssetClass, AssetReading, Registration } from './uiRenderAsset.js';
 import { scanHostHtml, scanSvg } from '../../scripts/lint_svg_asset.js';
 import { EXIT_RENDERER_ABSENT, RENDER_REL, renderSlug } from '../../scripts/_lib/asset_render_record.js';
@@ -62,6 +65,17 @@ export const CAPTURED_PROPERTIES = [
     'line-height',
     'overflow-x',
     'overflow-y',
+    // 2.2: what the render-engine rules read (road-to-tells-a-near-miss-can-refute).
+    'border-top-width',
+    'border-left-width',
+    'border-radius',
+    'box-shadow',
+    'font-style',
+    'font-weight',
+    'opacity',
+    'position',
+    'z-index',
+    'background-image',
 ] as const;
 
 export interface ViewportCapture {
@@ -94,6 +108,10 @@ export interface RenderManifest {
      */
     profile?: 'asset';
     asset?: AssetReading;
+    /** `--interact`: the open state of each named control. Optional, page profile only. */
+    interactions?: InteractionReading[];
+    /** `--region`: the changed region against its approved baseline. Optional, page profile only. */
+    region?: RegionReading;
     /**
      * WHY the verification is not `verified`, as a token rather than as prose,
      * and only when the COMMAND can say why.
@@ -260,6 +278,28 @@ export function collectTypeFamilies(styleRecords: ReadonlyArray<Record<string, s
     return [...out].sort();
 }
 
+/** True when a stylesheet the page loads carries a `prefers-color-scheme: dark` rule. */
+async function declaresDarkScheme(
+    browser: Awaited<ReturnType<typeof Chromium.launch>>,
+    url: string,
+): Promise<boolean> {
+    const page = await browser.newPage();
+    try {
+        await page.goto(url, { waitUntil: 'load', timeout: 30_000 });
+        return await page.evaluate(() =>
+            Array.from(document.styleSheets).some((sheet) => {
+                try {
+                    return Array.from(sheet.cssRules).some((r) => /prefers-color-scheme\s*:\s*dark/i.test(r.cssText));
+                } catch {
+                    return false;
+                }
+            }),
+        );
+    } finally {
+        await page.close();
+    }
+}
+
 export interface UiRenderOptions {
     target: string;
     json?: boolean | undefined;
@@ -276,6 +316,14 @@ export interface UiRenderOptions {
     /** Step 2.6: the other render of the same frame. */
     compareTo?: string | undefined;
     registration?: Registration | undefined;
+    /** Selectors of controls to open, focus and operate (page profile). */
+    interact?: readonly string[] | undefined;
+    /** Selector of the changed region to compare against its approved baseline. */
+    region?: string | undefined;
+    /** Baseline file; defaults to `agents/runtime/state/render-baselines/<slug>.json`. */
+    baseline?: string | undefined;
+    /** Write the current region as the approved baseline instead of comparing. */
+    approve?: boolean | undefined;
 }
 
 export async function runUiRender(opts: UiRenderOptions): Promise<number> {
@@ -291,10 +339,8 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
     const outDir = path.join(projectRoot, RENDER_REL, slug);
     const isAsset = opts.profile === 'asset';
 
-    let chromium: typeof Chromium;
-    try {
-        ({ chromium } = await import('@playwright/test'));
-    } catch {
+    const reach = await resolveBrowser();
+    if (reach === null) {
         // Step 2.3, and the reason the absence path sits ABOVE the profile
         // branch rather than inside either one: both profiles reach it by
         // construction, so there is no second absence path to keep honest.
@@ -315,8 +361,9 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
             ...(isAsset ? { profile: 'asset' as const, reason: 'renderer-absent' as const, goal: 'unassessed' as const } : {}),
             ...(staticReading ? { static: staticReading } : {}),
             degradation_reason:
-                '@playwright/test is not installed — it is a devDependency, so a consumer install has no browser. ' +
-                'Install it, or scope any verdict to the static checks that actually ran.',
+                'neither @playwright/test nor playwright-core is installed — @playwright/test is a devDependency, so a consumer install has no driver. ' +
+                'Install playwright-core (a system Chrome, Edge or Chromium is then used when its own browser is absent; AGENT_CONFIG_BROWSER names one), ' +
+                'or scope any verdict to the static checks that actually ran.',
         };
         writeManifest(outDir, manifest);
         process.stderr.write(`[ui:render] ${manifest.degradation_reason}\n`);
@@ -335,6 +382,17 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
         return isAsset ? EXIT_RENDERER_ABSENT : 0;
     }
 
+    // A system browser stands in for Playwright's own when that one is not
+    // installed (2.1); every launch below, page or asset, goes through this.
+    const systemBrowser = reach.executablePath;
+    const chromium: typeof Chromium =
+        systemBrowser === undefined
+            ? reach.chromium
+            : Object.assign(Object.create(reach.chromium) as typeof Chromium, {
+                  launch: (o?: Parameters<typeof Chromium.launch>[0]) =>
+                      reach.chromium.launch({ ...o, executablePath: systemBrowser }),
+              });
+
     fs.mkdirSync(outDir, { recursive: true });
 
     if (isAsset) {
@@ -346,13 +404,19 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
     }
 
     const captures: ViewportCapture[] = [];
+    const interactions: InteractionReading[] = [];
+    let region: RegionReading | undefined;
     const allStyles: Array<Record<string, string>> = [];
     let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null;
 
     try {
         browser = await chromium.launch({ headless: true });
-        for (const vp of VIEWPORTS) {
-            const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
+        const open = browser;
+        const captureAt = async (
+            vp: { name: string; width: number; height: number },
+            colorScheme: 'light' | 'dark' = 'light',
+        ): Promise<void> => {
+            const page = await open.newPage({ viewport: { width: vp.width, height: vp.height }, colorScheme });
             await page.goto(isUrl ? abs : `file://${abs}`, { waitUntil: 'load', timeout: 30_000 });
 
             const shot = path.join(outDir, `${vp.name}.png`);
@@ -404,10 +468,35 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
                     return out;
                 };
                 const rows: Array<Record<string, string>> = [];
-                for (const el of Array.from(document.querySelectorAll('*')).slice(0, 1500)) {
+                const els = Array.from(document.querySelectorAll('*')).slice(0, 1500);
+                const indexOf = new Map(els.map((e, i) => [e, i]));
+                for (const [i, el] of els.entries()) {
                     const cs = window.getComputedStyle(el);
                     const rec: Record<string, string> = { selector: el.tagName.toLowerCase() };
                     for (const p of props) rec[p] = cs.getPropertyValue(p);
+                    // Geometry (road-to-tells-a-near-miss-can-refute 2.2): what a
+                    // structural tell is measured on — the box, whether it is
+                    // painted, and the ancestor chain to depth 4 by row index.
+                    const r = el.getBoundingClientRect();
+                    rec['index'] = String(i);
+                    rec['rect'] = [r.x, r.y, r.width, r.height].map((n) => Math.round(n)).join(',');
+                    rec['visible'] =
+                        r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none' ? '1' : '0';
+                    const chain: string[] = [];
+                    for (let a = el.parentElement; a && chain.length < 4; a = a.parentElement) {
+                        const at = indexOf.get(a);
+                        if (at !== undefined) chain.push(String(at));
+                    }
+                    rec['parents'] = chain.join(',');
+                    rec['class'] = el.getAttribute('class') ?? '';
+                    // The element's own text, short — enough for a rule to tell a
+                    // number from a sentence, never a copy of the page.
+                    const own = Array.from(el.childNodes)
+                        .filter((n) => n.nodeType === Node.TEXT_NODE)
+                        .map((n) => n.textContent ?? '')
+                        .join('')
+                        .trim();
+                    if (own !== '') rec['text'] = own.slice(0, 40);
                     // `<style>` and `<script>` carry text and paint none of it.
                     const NO_PAINT = ['style', 'script', 'title', 'head', 'noscript', 'template'];
                     const ownText =
@@ -437,6 +526,33 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
                 document_scroll_width: scrollWidth,
                 horizontal_overflow: scrollWidth > vp.width + 1,
             });
+        };
+        for (const vp of VIEWPORTS) await captureAt(vp);
+        // A page that declares a dark scheme gets a dark desktop pass too.
+        const declaresDark = allStyles.length > 0 && (await declaresDarkScheme(open, isUrl ? abs : `file://${abs}`));
+        if (declaresDark) await captureAt({ ...VIEWPORTS[0], name: 'desktop-dark' }, 'dark');
+        if (opts.interact && opts.interact.length > 0) {
+            const vp = VIEWPORTS[0];
+            for (const [i, selector] of opts.interact.entries()) {
+                // A fresh page per control, so one popup left open cannot hide
+                // the next control's open state.
+                const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
+                await page.goto(isUrl ? abs : `file://${abs}`, { waitUntil: 'load', timeout: 30_000 });
+                const reading = await interactWith(page, selector, outDir, i);
+                await page.close();
+                interactions.push({
+                    ...reading,
+                    screenshot: reading.screenshot === null ? null : path.relative(projectRoot, reading.screenshot).split(path.sep).join('/'),
+                });
+            }
+        }
+        if (opts.region !== undefined) {
+            const vp = VIEWPORTS[0];
+            const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
+            await page.goto(isUrl ? abs : `file://${abs}`, { waitUntil: 'load', timeout: 30_000 });
+            const baselinePath = path.resolve(projectRoot, opts.baseline ?? path.join(BASELINE_REL, `${slug}.json`));
+            region = await regionReading(page, opts.region, baselinePath, opts.approve === true);
+            await page.close();
         }
     } catch (err) {
         const manifest: RenderManifest = {
@@ -468,6 +584,8 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
         palette: collectPalette(allStyles),
         type_families: collectTypeFamilies(allStyles),
         verification: 'verified',
+        ...(interactions.length > 0 ? { interactions } : {}),
+        ...(region === undefined ? {} : { region }),
     };
     writeManifest(outDir, manifest);
 
@@ -477,7 +595,22 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
         process.stdout.write(
             `✅  ui:render — ${manifest.captures.length} viewport(s), ${manifest.palette.length} colour(s), ` +
                 `${manifest.type_families.length} family(ies)\n    ${path.relative(projectRoot, outDir)}\n` +
-                (overflow.length ? `    ⚠️  horizontal overflow at: ${overflow.join(', ')}\n` : ''),
+                (overflow.length ? `    ⚠️  horizontal overflow at: ${overflow.join(', ')}\n` : '') +
+                interactions
+                    .map(
+                        (r) =>
+                            `    ${r.open_state === 'captured' ? '✅' : '⚠️ '} ${r.selector}: open state ${r.open_state}` +
+                            (r.popup.clipped_by ? `, clipped by ${r.popup.clipped_by}` : '') +
+                            (r.reason ? ` — ${r.reason}` : '') +
+                            '\n',
+                    )
+                    .join('') +
+                (region === undefined
+                    ? ''
+                    : `    ${region.status === 'pass' ? '✅' : '⚠️ '} region ${region.selector}: ${region.status}` +
+                      (region.deltas.length ? ` (${region.deltas.length} delta(s))` : '') +
+                      (region.status === 'no-baseline' ? ' — approve one with --approve, or compare a sibling' : '') +
+                      '\n'),
         );
     }
     return 0;

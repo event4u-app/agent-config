@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  11b55380faeaabe40a3aa01d5c68645f8a9a4ec2971e56a0d4d61957eb5da42a
+SET-SHA256  8948e51d0e5274073e494879f67d1b0a7990792879be8e695b47cc6977f8bd45
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1046,8 +1046,8 @@ open and which this file does not settle.
 | `authz-review` | `2dffacd346e8d656affa0af1ea56c7661e7b0c99e3a8ac2c92be50981b2c970c` |
 | `brand` | `43abaf7937a73ea8b041e18d977ce6a080b2226f6c0f49bb55cf59bc4545df36` |
 | `canvas-design` | `63229b3cfc336241f96140baf7c41c695a0f4fdbe8c30c9f1f787cd84ddfe02b` |
-| `competitive-positioning` | `6d1d550d9a2af6b030fb5a30789274a38ab2f2bf5aab4a4b0899c5ee5ff76d46` |
 | `code-intelligence` | `350a6d29f264800744fe9b1a4fcc48e9f7acba25cdd325f33df5b3a0aa1aaac2` |
+| `competitive-positioning` | `6d1d550d9a2af6b030fb5a30789274a38ab2f2bf5aab4a4b0899c5ee5ff76d46` |
 | `condense-memory` | `2c150c0b67c0a3342edb6429dfb71ef05c010501e8488a88c26a3757108afc93` |
 | `conventional-commits-writing` | `dc33e3a5c2b87ef7b95a4a588c0d12266f023c80e1adca73cbd147a6a59b25e4` |
 | `dashboard-design` | `118088e410b5fe2bf03f9b4b5eacec86735cee3be56d4f2b201f841e86e9bdaf` |
@@ -1070,6 +1070,7 @@ open and which this file does not settle.
 | `positioning-strategy` | `2b7dee4903969df4f5ed478fc7e98c9b6c80773c3f34fc7e0d7fc6019d208f0b` |
 | `quality-tools` | `d6dfc15a7258796dc586cb897d96e536d09cda6f276e95f6d8900bc79ace900f` |
 | `react-native-setup` | `1c62bd45cea7c9d4c2dc1202d12feff4b45e4794cfe88395a33115d7a01e401d` |
+| `readme-writing-package` | `30fe2d91098eddabfab192eafd45b1498f77a139beece7cdd3b9debd17d2fbe1` |
 | `review-routing` | `9fd8b380be9addab50039ecba11ea668db0e57de27c57a65ca1b089acd3b8bcc` |
 | `roadmap-management` | `e3b7b1e506b713a88fc9c8f4b0ee4854efda2b8dd7c54fc940a8989e242aa0dd` |
 | `schema-review` | `7c98b3409de8ebb6ef3ee999a46e9c07f69574809c42283b25d2ab384f6cd53f` |
@@ -1308,6 +1309,7 @@ open and which this file does not settle.
 | `prompt-engineering-patterns` | `4c7db08fbc25fdca01a72f2175785d5b8e0d805c1479a7b18bd972968e6d4240` |
 | `prompt-validator` | `daeecf1063775e3c4671de74f3b292fe30fb6d3e4ce8e1c490c2935ef5e5af07` |
 | `react-shadcn-ui` | `e6d4b560f29a896c9332bdc629ef8e7b39a3129046a6f512b98458b2e012cfb6` |
+| `readme-writing` | `7aa1d17f117d9f36e18ba1e29fed45d73ddbc77e82f03e9b08198dd8fb483506` |
 | `reasoning-orchestrator` | `a968ef1f04693b46eb3838b43eb83b092429149069599c3aef2c2e4628701b85` |
 | `receiving-code-review` | `7ee75a93ea97aa344ada7d026d6b59f99e0d6823dd46f6877c579f2321806d78` |
 | `refine-ticket` | `bab09021f8664cd0676e9613bd511a3f87d115583ea5f4639fb4800df9715328` |
@@ -1842,6 +1844,43 @@ than the evaluation. `SET-SHA256` moves because it is computed over every row.
 guard (**+5.17 pp** against +2.0 pp), delta-recall **1.898 pp** (below the 5.0
 pp bar), McNemar p **0.4088**. `delivery-set-measurement-2026-08-31.json`:
 precision@5 **80.651 %**, recall loss **38.54 pp**, the ceiling stays
+**BREACHED**; context cost **231.3** tokens against the 500 target, still
+**MET**. Neither verdict changes in kind.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.
+
+## Growth — 2026-10-26, two README corpora; one seals
+
+```
+TWO ROWS ADDED: ONE SEALS, ONE TRAINS. NO PRE-EXISTING CORPUS FILE WAS EDITED.
+BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN AFTER THE CORPORA WERE ON DISK.
+```
+
+**What changed.** `road-to-tells-a-near-miss-can-refute` 5.4 edited
+`readme-writing` and `readme-writing-package` (a cross-pack link named instead of
+linked), and `check_routing_coverage` requires every touched skill to carry a
+corpus. Each got eleven cases: five exemplars, one of them German, five
+near-misses (the sibling README skills, a reviewer, a changelog, agent docs or
+publishing) and one counterexample. No trigger eval has run on them, so they
+carry no `last_eval` beyond the authoring date.
+
+| Row | Partition | `sha256(name)[0:2]` | Bucket |
+|---|---|---|---|
+| `readme-writing` | train | `0x78` | 120 ≥ 51 |
+| `readme-writing-package` | holdout | `0x02` | 2 < 51 |
+
+**One row seals, and nobody chose it.** The sealed set moves **38 -> 39**, the
+train set **138 -> 139**, the set **176 -> 178**. AC-6 still rests on the same
+18 rows, so it is now 18 of 39; a proposer evaluated against this holdout must
+exclude `readme-writing-package` or say it is using a row whose seal is younger
+than the evaluation. `SET-SHA256` moves because it is computed over every row.
+
+**Both train-side measurements were re-taken on this tree.**
+`routing-body-signal-verdict.json`: still `harmful` on the false-activation
+guard (**+5.12 pp** against +2.0 pp), delta-recall **1.739 pp** (below the 5.0
+pp bar), McNemar p **0.4522**. `delivery-set-measurement-2026-08-31.json`:
+precision@5 **80.762 %**, recall loss **38.551 pp**, the ceiling stays
 **BREACHED**; context cost **231.3** tokens against the 500 target, still
 **MET**. Neither verdict changes in kind.
 

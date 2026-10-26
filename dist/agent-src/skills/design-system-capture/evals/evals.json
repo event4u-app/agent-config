@@ -10,6 +10,14 @@
         { "kind": "contains", "value": "PRODUCT.md" },
         { "kind": "rubric", "criterion": "Routes the visual decisions (spacing/radius/motion/color) into DESIGN.md and interaction patterns into PRODUCT.md, and flags any TBD rather than inventing values." }
       ]
+    },
+    {
+      "id": "foreign-product-md",
+      "prompt": "Capture our interaction patterns. There is already a PRODUCT.md another tool wrote: it has `## Register` (product), `## Users`, `## Product Purpose`, `## Anti-references` and `## Design Principles`, and no interaction section. Deletes here use a typed confirmation.",
+      "assertions": [
+        { "kind": "contains", "value": "PRODUCT.md" },
+        { "kind": "rubric", "criterion": "Treats the existing PRODUCT.md as a file it does not own: reads its Register, Users and Principles as inputs, does not rewrite or reformat it, and proposes the interaction patterns (including the typed-confirmation delete) as a diff the user applies." }
+      ]
     }
   ]
 }

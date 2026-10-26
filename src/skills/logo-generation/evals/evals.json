@@ -1,0 +1,30 @@
+{
+  "skill": "logo-generation",
+  "_calibration": "Behavioural cases (road-to-tells-a-near-miss-can-refute 7.4): divergence before convergence, the stop before the export kit, and critique of a supplied mark. Deterministic `contains` asserts the witness command and the stop; the rubric checks the judgement.",
+  "scenarios": [
+    {
+      "id": "three-directions",
+      "prompt": "Design a logo for Fernweh, a small travel bookshop in Leipzig. Keep it calm, no gradients, legible at 16 px.",
+      "assertions": [
+        { "kind": "contains", "value": "--profile asset" },
+        { "kind": "rubric", "criterion": "Proposes at least three concepts of different mark types (not three variants of one idea), each with a one-line idea of what it means, and asks the user to pick before refining any of them." }
+      ]
+    },
+    {
+      "id": "favicon-stops-before-kit",
+      "prompt": "Make an app icon and favicon for our habit tracker, Streakly. Here is the brief: a single bold glyph, works on dark home screens.",
+      "assertions": [
+        { "kind": "contains", "value": "--class mark" },
+        { "kind": "rubric", "criterion": "Witnesses the candidate at 16 and 32 px on light and dark before claiming legibility, then stops and asks for confirmation before producing the export kit (favicon set, webmanifest), rather than producing the kit unasked." }
+      ]
+    },
+    {
+      "id": "critique-supplied-mark",
+      "prompt": "Here is our current logo, logo.svg (a thin-line owl inside a circle with the name underneath). What is wrong with it? We also attached the marks of our two biggest competitors, comp-a.svg and comp-b.svg.",
+      "assertions": [
+        { "kind": "contains", "value": "--profile asset" },
+        { "kind": "rubric", "criterion": "Does not generate a new logo: renders the supplied mark, renders the two supplied competitor marks beside it at the same sizes (shelf test), and returns a scorecard, the top three fixes in priority order and an equity note on what the current mark has earned — using only the supplied marks, never fetching or bundling others." }
+      ]
+    }
+  ]
+}

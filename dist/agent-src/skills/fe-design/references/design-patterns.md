@@ -55,6 +55,27 @@ React island vs. Vue SFC) is the apply-step's concern, not this skill's.
 - **Extract a props-only UI shell when used 3+ times** — DRY applies to UI too; stateful components carry a higher bar (~4 + real state) — per-class canon: [`abstraction-thresholds`](../../../guidelines/abstraction-thresholds.md).
 - **Component workshop when the project is large enough** — for a real, growing shared-component library, isolate and document each reusable component in a component workshop so it stays discoverable and reused, not re-invented; skip it for a small surface of one-offs. Tool-specific setup is a carve-out (Storybook et al.) — see the implementation skill (e.g. [`react-shadcn-ui`](../../react-shadcn-ui/SKILL.md) § Component workshop), never a generic mandate.
 
+### Native select — the canon when the project has no primitive
+
+1. **A project primitive exists → always use it.** `control_roles.select.canonical`
+   in the `ui:audit` artifact names it; a raw `<select>` beside it is the defect.
+2. **No primitive → a native `<select>` styled with the project's tokens.** The
+   closed state is styled for every browser (height, padding, radius, border and
+   font matching the sibling inputs). The open picker is styled as progressive
+   enhancement:
+
+   ```css
+   select { appearance: base-select; }          /* opt-in, Chromium 135+ */
+   select::picker(select) { appearance: base-select; border-radius: var(--radius); }
+   ```
+
+   Browsers without `base-select` (Safari has announced it, Firefox has not)
+   keep the OS popup, which is correct, not broken.
+3. **A custom listbox only with the full ARIA combobox pattern** — keyboard,
+   `aria-activedescendant`, focus return, dismissal — per
+   [`accessibility-auditor`](../../accessibility-auditor/SKILL.md). A `div` list
+   that opens on click is not a select.
+
 ## Form Design
 
 ### Principles
@@ -188,7 +209,8 @@ Before adding any animation to a UI element, run through this decision tree:
 - Entering (element appearing)? **ease-out** (starts fast, slows to rest). Why: the element arriving quickly signals responsiveness; the deceleration feels natural as it settles.
 - Exiting (element disappearing)? **ease-out** as well. Why: one curve in both directions is the value a reader can hold and a gate can check; the field has no settled answer on exit easing, so a single shared curve removes the contradiction between carriers instead of propagating it. This line settles the **curve** only — how long an exit runs relative to its enter is a separate question it does not answer.
 - **Never ease-in, in either direction.** Why: ease-in delays the initial movement — the exact moment the user is watching most closely — making it feel slow even at the same total duration.
-- **Never bounce or elastic easing in UI.** Why: bounce draws attention to the animation itself, not the content; it feels dated.
+- **Never bounce or elastic easing in UI.** Why: bounce draws attention to the animation itself, not the content; it feels dated. This holds for decorative, hover, menu, dropdown and entrance motion without exception.
+- **One class may overshoot: `momentum-carried`.** A motion that continues a gesture's release velocity — a dragged sheet, a flicked card, a pulled drawer — may overshoot slightly and settle, because the overshoot is the momentum the user's hand put in, not decoration. Critically damped is the default; under momentum keep damping near 0.8 (or a spring `bounce` at most 0.2). A carrier that supplies such a curve names the class in its override condition, and the drift gate refuses one that does not.
 
 **3. How long?**
 - Button/micro-feedback: 100–160ms. Tooltip: 100ms. Dropdown open: 150–200ms. Modal: 200–350ms. Page transition: 300–500ms. Above 500ms: almost never.

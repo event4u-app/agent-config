@@ -1,0 +1,21 @@
+# Case: follow-up-popover-in-scroll-dialog
+# Registered by road-to-a-control-that-matches-its-neighbours step 0.2.
+# The open state is the defect surface: a popup inside a scrolling dialog body.
+id: follow-up-popover-in-scroll-dialog
+prompt: "Add a country select to the address step of the checkout dialog."
+authority:
+  surface_mode: operate
+  register: product
+  change_intent: extend
+  reference_maturity: production-incumbent
+note: |
+  The dialog body scrolls (overflow-y-auto). A popup rendered inside that
+  container is clipped when opened near the bottom edge; the project Select
+  portals its content to the body. Only an open-state capture sees the clip.
+bars:
+  raw_select_with_primitive: 0
+  popup_clipped_by_scroll_ancestor: 0
+  open_state_captured: 1
+files:
+  - components/checkout-dialog.tsx
+  - components/ui/select.tsx

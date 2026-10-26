@@ -97,6 +97,14 @@ export interface Authority {
 /** Curve families the authority prohibits outright. Overshoot, by name. */
 export const OVERSHOOT_FAMILIES = ['elastic', 'back', 'bounce'] as const;
 
+/**
+ * The two classes that license an overshoot, and nothing else does: the
+ * `playful` register (a brand choice) and `momentum-carried` (a motion that
+ * continues a gesture's release velocity — drag, flick, sheet). An override
+ * condition naming neither is a reason with no class behind it.
+ */
+export const OVERSHOOT_CLASS = /playful register|momentum-carried/i;
+
 const DASH = /[–—-]/;
 
 function parseBandList(line: string): Map<string, Band> {
@@ -235,10 +243,14 @@ export function checkMotionCsv(text: string, auth: Authority): MotionResult {
         const override = col(hdr, row, 'Override Condition').trim();
 
         const bad = overshootIn(easing) ?? overshootIn(snippet);
-        if (bad !== null && override === '') {
+        if (bad !== null && !OVERSHOOT_CLASS.test(override)) {
             findings.push({
                 target,
-                reason: `supplies ${/^[aeiou]/.test(bad) ? 'an' : 'a'} ${bad} curve; the authority forbids bounce and elastic easing in UI, and the row declares no override condition`,
+                reason:
+                    `supplies ${/^[aeiou]/.test(bad) ? 'an' : 'a'} ${bad} curve; the authority forbids bounce and elastic easing in UI, ` +
+                    (override === ''
+                        ? 'and the row declares no override condition'
+                        : 'and the override names neither the playful register nor the momentum-carried class'),
             });
         }
 
@@ -670,6 +682,24 @@ function selfTest(): number {
                 [MOTION_REL]: cleanMotion
                     .replace('power1.out', '"elastic.out(1,0.4)"')
                     .replace('"gsap.to(el)",', '"gsap.to(el)",M1 — declared playful register'),
+            }),
+        },
+        {
+            name: 'an override that names no class does not license an overshoot',
+            expect: 'reject',
+            run: () => fixture({
+                [MOTION_REL]: cleanMotion
+                    .replace('power1.out', '"elastic.out(1,0.4)"')
+                    .replace('"gsap.to(el)",', '"gsap.to(el)",looks lively on dropdown open'),
+            }),
+        },
+        {
+            name: 'a sheet release that continues gesture velocity is accepted as momentum-carried',
+            expect: 'accept',
+            run: () => fixture({
+                [MOTION_REL]: cleanMotion
+                    .replace('power1.out', '"back.out(1.2)"')
+                    .replace('"gsap.to(el)",', '"gsap.to(el)",momentum-carried — sheet release continues the drag velocity'),
             }),
         },
         {

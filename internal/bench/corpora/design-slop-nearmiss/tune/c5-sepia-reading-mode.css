@@ -1,0 +1,37 @@
+/*
+ * Reader view: user-selectable reading themes.
+ * "Sepia" is a reading mode the reader picks in Settings > Display,
+ * not the product's default palette (default is the neutral light theme).
+ * Warm paper background with brown ink lowers glare for long-form reading.
+ */
+.reader[data-theme="light"] {
+  --reader-bg: #ffffff;
+  --reader-ink: #1f2328;
+  --reader-link: #0b5cad;
+}
+
+.reader[data-theme="sepia"] {
+  --reader-bg: oklch(0.94 0.03 85);   /* warm paper */
+  --reader-ink: oklch(0.32 0.04 60);  /* brown ink */
+  --reader-link: oklch(0.48 0.09 50); /* clay link */
+}
+
+.reader[data-theme="dark"] {
+  --reader-bg: #16181c;
+  --reader-ink: #e6e6e6;
+  --reader-link: #8ab4f8;
+}
+
+.reader {
+  background: var(--reader-bg);
+  color: var(--reader-ink);
+  max-width: 68ch;
+  margin-inline: auto;
+  line-height: 1.6;
+  font-size: 1.125rem;
+}
+
+.reader a {
+  color: var(--reader-link);
+  text-underline-offset: 0.15em;
+}

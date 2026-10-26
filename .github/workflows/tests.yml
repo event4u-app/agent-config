@@ -707,6 +707,11 @@ jobs:
           npm run test:ts --silent --
           tests/cli/ui_render_asset_profile.test.ts
           tests/design-artifacts/svg_scenarios.test.ts
+          tests/cli/uiRenderInteract.test.ts
+          tests/cli/uiRenderRegion.test.ts
+          tests/cli/uiRender_geometry.test.ts
+          tests/scripts/design_slop_render_bench.test.ts
+          tests/scripts/ui_conformance_probe_sibling.test.ts
 
   collector-lifecycle:
     # The five process-level lifecycle properties of the telemetry collector

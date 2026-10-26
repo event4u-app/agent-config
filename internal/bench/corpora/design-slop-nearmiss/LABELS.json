@@ -1,0 +1,224 @@
+{
+  "files": {
+    "tune/c2-gradient-wordmark.css": {
+      "catalog_id": "C2",
+      "split": "tune",
+      "signal": "background-clip: text (and -webkit-background-clip: text) with a linear-gradient background and color: transparent",
+      "basis": "The gradient text reproduces a brand mark that is itself a gradient, which is the catalog's override ('a product whose logo is a gradient'), and it is limited to the wordmark with a forced-colors fallback.",
+      "author": "independent-agent",
+      "intent": "## Intentional\n- Gradient identity: our logo is a gradient, and the wordmark carries it.\n",
+      "adjudication": "Adjudicated 2026-10-26 by the run that tunes the detectors (not the independent author): the catalog override is a declaration, so the file is legitimate only with it and is scanned with this DESIGN.md text."
+    },
+    "tune/c5-sepia-reading-mode.css": {
+      "catalog_id": "C5",
+      "split": "tune",
+      "signal": "cream/paper body background oklch(0.94 0.03 85) with a brown/clay accent oklch(0.48 0.09 50)",
+      "basis": "The warm palette is a user-selectable sepia reading theme beside light and dark themes, a deliberate first-party reading mode rather than the product's default reach.",
+      "author": "independent-agent"
+    },
+    "tune/cp2-robust-statistics-help.md": {
+      "catalog_id": "CP2",
+      "split": "tune",
+      "signal": "the words 'robust' and 'leverage' repeated in help copy",
+      "basis": "Both words are statistical terms of art (robust standard errors, robust regression, high-leverage points); deleting them loses meaning, so they pass the catalog's own delete test.",
+      "author": "independent-agent"
+    },
+    "tune/cp6-request-rate-particle-field.md": {
+      "catalog_id": "CP6",
+      "split": "tune",
+      "signal": "the phrases 'particle field' and 'gradient mesh' in an art-direction brief",
+      "basis": "The field is abstract by decision and data-driven with its data named (live request rate per region), and the brief states the decision and why, matching the catalog override; 'gradient mesh' appears only as a prohibition.",
+      "author": "independent-agent"
+    },
+    "tune/l4-numbered-setup-guide.html": {
+      "catalog_id": "L4",
+      "split": "tune",
+      "signal": "zero-padded section markers 01 / 02 / 03 / 04 before headings",
+      "basis": "The numbers belong to a genuinely ordered pairing procedure and are referenced by support, the catalog's override ('a genuinely numbered process ... where the step number carries meaning').",
+      "author": "independent-agent"
+    },
+    "tune/l9-archive-uniform-grid.html": {
+      "catalog_id": "L9",
+      "split": "tune",
+      "signal": "8 sections sharing one layout family (identical archive-year section + grid)",
+      "basis": "A year-by-year photo archive is a deliberately uniform gallery grid, declared as such, which the catalog names as the override.",
+      "author": "independent-agent",
+      "intent": "## Intentional\n- Uniform grid for the archive gallery, every section the same on purpose.\n",
+      "adjudication": "Adjudicated 2026-10-26 by the run that tunes the detectors (not the independent author): the catalog override is a declaration, so the file is legitimate only with it and is scanned with this DESIGN.md text."
+    },
+    "tune/m2-progress-scalex.css": {
+      "catalog_id": "M2",
+      "split": "tune",
+      "signal": "width, height, top, left declared in rules that also carry transition / animation",
+      "basis": "The layout properties are set statically; only transform (scaleX / translateX) is transitioned or animated, which is exactly the catalog's prescribed replacement.",
+      "author": "independent-agent"
+    },
+    "tune/m4-button-reset-all-unset.css": {
+      "catalog_id": "M4",
+      "split": "tune",
+      "signal": "the keyword 'all' (all: unset, @media all) in a rule/file that declares transition",
+      "basis": "The transition enumerates background-color and color explicitly, as the catalog prescribes; 'all' appears only as the CSS reset property and a media type.",
+      "author": "independent-agent"
+    },
+    "tune/m7-image-inspection-loupe.jsx": {
+      "catalog_id": "M7",
+      "split": "tune",
+      "signal": "onMouseMove handler feeding a radial-gradient positioned at the pointer over a dark (#0d0f12) frame",
+      "basis": "The pointer-tracked highlight is a canvas inspection loupe, the interaction itself, which the catalog lists as an override ('a canvas inspection tool, an accessibility magnifier').",
+      "author": "independent-agent"
+    },
+    "tune/t10-pull-quote-small-caps.css": {
+      "catalog_id": "T10",
+      "split": "tune",
+      "signal": "letter-spacing: 0.06em and 0.08em (> 0.05em)",
+      "basis": "Wide tracking is applied only to a pull quote (display text, the catalog's override) and to small-caps abbreviations, while body copy keeps normal tracking.",
+      "author": "independent-agent"
+    },
+    "tune/t4-release-notes-change-type.html": {
+      "catalog_id": "T4",
+      "split": "tune",
+      "signal": "uppercase, letter-spaced label above every section heading",
+      "basis": "Each label names the change type (Breaking, Deprecated, Added, Fixed), the catalog's override of genuine section-type differentiation with meaningful vocabulary.",
+      "author": "independent-agent"
+    },
+    "tune/t7-admin-system-font-stack.css": {
+      "catalog_id": "T7",
+      "split": "tune",
+      "signal": "font-family stack containing Roboto (system-ui, -apple-system, \"Segoe UI\", Roboto, ...)",
+      "basis": "A product-register admin tool with a stated single-family choice (the platform system stack, Roboto only as an OS fallback), which the catalog's register-scoped override sanctions when stated.",
+      "author": "independent-agent"
+    },
+    "tune/v1-citation-and-error-stripe.css": {
+      "catalog_id": "V1",
+      "split": "tune",
+      "signal": "border-left: 3px solid on a blockquote and border-left: 4px solid in a danger colour on an alert",
+      "basis": "One stripe is a neutral grey citation rule (typographic convention for quotations), the other a semantic danger-state marker paired with a text label, not a decorative accent on a card.",
+      "author": "independent-agent",
+      "intent": "## Intentional\n- Side stripe marks citations (neutral) and danger alerts, nothing else.\n",
+      "adjudication": "Adjudicated 2026-10-26 by the run that tunes the detectors (not the independent author): the catalog override is a declaration, so the file is legitimate only with it and is scanned with this DESIGN.md text."
+    },
+    "tune/v4-filter-chip-pill.css": {
+      "catalog_id": "V4",
+      "split": "tune",
+      "signal": "border-radius: 9999px / 50% on elements under 200px wide (max-width: 160px chip, 24px avatar)",
+      "basis": "The catalog override explicitly allows a pill radius on single-line tags/chips, and a circular avatar is a shape, not an over-rounded card; the card uses 8px.",
+      "author": "independent-agent"
+    },
+    "tune/v8-documented-radius-scale.css": {
+      "catalog_id": "V8",
+      "split": "tune",
+      "signal": "5 distinct border-radius values (2px, 4px, 8px, 12px, 9999px) in one surface",
+      "basis": "The values form a declared radius scale with each tier's job documented, which is the catalog's override ('a genuine multi-tier scale documents each tier').",
+      "author": "independent-agent",
+      "intent": "## Intentional\n- Shape lock: five radius tiers, each with a documented job.\n",
+      "adjudication": "Adjudicated 2026-10-26 by the run that tunes the detectors (not the independent author): the catalog override is a declaration, so the file is legitimate only with it and is scanned with this DESIGN.md text."
+    },
+    "holdout/c3-dark-focus-ring.css": {
+      "catalog_id": "C3",
+      "split": "holdout",
+      "signal": "box-shadow: 0 0 0 3px in a bright cyan (#4cc2ff) / red on a dark theme",
+      "basis": "The shadow is a zero-blur focus ring and an invalid-field focus ring, a required accessibility indicator (focus-visible), not a decorative neon glow.",
+      "author": "independent-agent"
+    },
+    "holdout/cp1-glossary-dash-separators.md": {
+      "catalog_id": "CP1",
+      "split": "holdout",
+      "signal": "13 em-dashes in under 200 words",
+      "basis": "The dashes are the stated house-style separator in a term-definition glossary (list punctuation), a deliberate editorial convention rather than sentence-level dash habit.",
+      "author": "independent-agent",
+      "valid": false,
+      "adjudication": "Adjudicated 2026-10-26: the CP1 override exempts only a specific editorial voice; dashes as glossary separators get no exemption from the catalog, so a hit is a true positive by its own wording and the file is left out of M1."
+    },
+    "holdout/cp5-build-status-markers.html": {
+      "catalog_id": "CP5",
+      "split": "holdout",
+      "signal": "emoji (✅ ❌ ⏳) prepended to list items",
+      "basis": "Each emoji is a functional status indicator rendered from the check result and duplicated in text, which the catalog names as an override ('the emoji is functional (status indicator ...)').",
+      "author": "independent-agent"
+    },
+    "holdout/l10-sequenced-import-walkthrough.html": {
+      "catalog_id": "L10",
+      "split": "holdout",
+      "signal": "4 consecutive two-column image/text sections alternating media-left / media-right",
+      "basis": "It is a sequenced four-step walkthrough whose screenshots sit beside the step they illustrate, the catalog's override ('a genuinely sequenced walkthrough where alternation aids comprehension').",
+      "author": "independent-agent"
+    },
+    "holdout/l8-semantic-z-index-scale.css": {
+      "catalog_id": "L8",
+      "split": "holdout",
+      "signal": "z-index magic number 9999 (as --z-skip-link: 9999)",
+      "basis": "The value lives in a named semantic z-index scale that every component consumes via var(), which is exactly the remedy the catalog prescribes.",
+      "author": "independent-agent"
+    },
+    "holdout/m1-onboarding-complete-pop.css": {
+      "catalog_id": "M1",
+      "split": "holdout",
+      "signal": "overshoot easing cubic-bezier(0.34, 1.56, 0.64, 1) (y > 1)",
+      "basis": "The overshoot is a one-shot 360ms onboarding-completion celebration with a reduced-motion fallback, the catalog's override ('onboarding celebration state; must be brief and non-repeating').",
+      "author": "independent-agent"
+    },
+    "holdout/m3-thumbnail-load-fade.css": {
+      "catalog_id": "M3",
+      "split": "holdout",
+      "signal": "an img rule with a transition in a file whose tile has a :hover rule",
+      "basis": "Hover feedback is on the tile's border and shadow as the catalog prescribes; the image's only transition is an opacity fade on load completion, never on hover.",
+      "author": "independent-agent"
+    },
+    "holdout/m6-lazy-images-reading-progress.jsx": {
+      "catalog_id": "M6",
+      "split": "holdout",
+      "signal": "IntersectionObserver with isIntersecting callbacks over figures and sections",
+      "basis": "The observer defers image downloads and drives the table-of-contents highlight (signalling position in a long-form article); no element fades or rises into view.",
+      "author": "independent-agent"
+    },
+    "holdout/m8-disabled-control-opacity.css": {
+      "catalog_id": "M8",
+      "split": "holdout",
+      "signal": ":hover selector carrying opacity: 0.45 (.button-primary:disabled:hover)",
+      "basis": "The reduced opacity is the disabled state, pinned on hover so a non-interactive control does not react; the enabled control's hover uses background colour as the catalog recommends.",
+      "author": "independent-agent"
+    },
+    "holdout/t12-swap-with-metric-fallback.css": {
+      "catalog_id": "T12",
+      "split": "holdout",
+      "signal": "self-hosted @font-face with font-display: swap",
+      "basis": "A metric-matched fallback @font-face with size-adjust, ascent-override and descent-override is present, which is the catalog's stated override.",
+      "author": "independent-agent"
+    },
+    "holdout/t6-display-tracking-at-floor.css": {
+      "catalog_id": "T6",
+      "split": "holdout",
+      "signal": "negative letter-spacing on display text: -0.04em at 88px, -1px on a title",
+      "basis": "The tightest value sits exactly at the catalog's documented -0.04em floor (not below it), is stated as a floor verified at render size, and the px value is about -0.028em.",
+      "author": "independent-agent"
+    },
+    "holdout/t9-status-badge-caps.css": {
+      "catalog_id": "T9",
+      "split": "holdout",
+      "signal": "text-transform: uppercase",
+      "basis": "Uppercase is applied to one-to-four-character status badges, short UI labels the catalog permits, while field labels and body text are explicitly sentence case.",
+      "author": "independent-agent"
+    },
+    "holdout/v3-forced-colors-border-dialog.css": {
+      "catalog_id": "V3",
+      "split": "holdout",
+      "signal": "border: 1px solid together with box-shadow 0 16px 48px on the same surface",
+      "basis": "The border is transparent and exists only for forced-colors mode, which drops shadows; visually depth is carried by the shadow alone, so the surface does not combine both depth cues.",
+      "author": "independent-agent"
+    },
+    "holdout/v6-unavailable-slot-hatching.css": {
+      "catalog_id": "V6",
+      "split": "holdout",
+      "signal": "repeating-linear-gradient(45deg, ...) diagonal stripes",
+      "basis": "The hatching is a state marker on unavailable calendar cells (paired with text and aria-disabled), an established convention for blocked time, not a decorative background texture.",
+      "author": "independent-agent"
+    },
+    "holdout/v9-print-grain-token.css": {
+      "catalog_id": "V9",
+      "split": "holdout",
+      "signal": "feTurbulence fractalNoise grain overlay with mix-blend-mode on a surface",
+      "basis": "The grain is a documented brand surface treatment simulating matte paper with its opacity as a token, the catalog's override, and it sits on a flat paper colour rather than over a gradient.",
+      "author": "independent-agent"
+    }
+  }
+}

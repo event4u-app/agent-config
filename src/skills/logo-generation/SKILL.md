@@ -39,6 +39,17 @@ governance. All adapters are scaffold-tier (dry-run) until promoted to `stable`.
 1. **Capture the brand brief** — extract: business name, style intent (wordmark /
    icon mark / combination), colour palette, do/don't constraints (e.g. "no gradients",
    "must be legible at 16 px").
+   **Critique mode** — when the user supplies a mark and asks what is wrong with
+   it, skip generation: render it (step 5's witness), then return a scorecard
+   (legibility at 16/32 px, distinctiveness on the shelf, reproduction in one
+   color, fit to the brief), the top three fixes in priority order, and an
+   equity note — what the current mark has earned that a fix must not throw
+   away. Stop there.
+1b. **Diverge before converging** — propose at least three concepts of
+   **different mark types** (e.g. wordmark, lettermark, pictorial, abstract,
+   emblem), each with a one-line idea that says what it means, not how it
+   looks. Three takes on one idea are one concept. The user picks before any
+   concept is refined.
 2. **Choose the path** — raster concept (text-in-mark → Ideogram for legible type)
    vs. **true vector** (a vector-native provider for editable marks, or a
    hand-authored one for simple geometric marks — authored under
@@ -62,13 +73,30 @@ governance. All adapters are scaffold-tier (dry-run) until promoted to `stable`.
    counting `<path>` elements: a raster embedded beside one dummy path passes
    that count and is not a vector, and a mark built from `rect`/`circle` fails
    it and is one. See [`svg-authoring`](../svg-authoring/SKILL.md).
+   **The legibility witness** — every vector candidate is rendered with
+   `agent-config ui:render <mark.svg> --profile asset --class mark`, which
+   captures it at 16 and 32 px and at 1×/2×, on light and dark. Legibility is
+   never claimed without that capture; no capture, no claim, and say so.
+   **Shelf test** — when the user supplies competitor or category marks, render
+   them beside the candidate at the same sizes and backgrounds and compare. Use
+   only the marks the user supplied; nothing is bundled or fetched, and the
+   rights check below still applies to every one of them.
+5b. **Stop before the export kit** — once a direction is chosen and witnessed,
+   stop and confirm before producing the kit (step 7). A favicon or app-icon
+   brief stops here too: the kit is a separate, confirmed step.
 6. **Rights check** — never reproduce a mark that resembles an existing trademarked
    logo. Run [`image-likeness-and-rights`](../../rules/image-likeness-and-rights.md)
    when the brief names a brand, references a known mark style, or targets a
    regulated sector.
+7. **Export kit (after confirmation)** —
+   `npx tsx node_modules/@event4u/agent-config/src/scripts/logo_export_kit.ts <mark.svg> --name "<Name>" --out <dir>`
+   writes the SVG, PNG at 1× and 2×, the favicon set with `site.webmanifest`,
+   and light and dark lockups — the same bytes every run from the same input.
 
 ## Output format
 
+0. **Concepts** (generation) — three or more, of different mark types, one-line
+   idea each; or, in critique mode, the scorecard, top-3 fixes and equity note.
 1. **Chosen path** — raster concept or true vector, with rationale.
 2. **Prompt or SVG** — the prompt string ready to copy (raster/vector provider), or
    the authored SVG markup (LLM-authored geometric mark path).

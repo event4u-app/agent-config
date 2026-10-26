@@ -1,0 +1,37 @@
+/*
+ * Onboarding completion state. When the last setup task is done, the
+ * checkmark plays one short overshoot "pop" to mark the finish. It runs
+ * once (no iteration), lasts 360ms, and never appears elsewhere in the app.
+ * All other UI motion uses --ease-standard.
+ */
+:root {
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-celebrate: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.onboarding-complete__check {
+  width: 48px;
+  height: 48px;
+  color: var(--color-success);
+  transform: scale(0);
+}
+
+.onboarding-complete[data-state="done"] .onboarding-complete__check {
+  animation: onboarding-check-pop 360ms var(--ease-celebrate) 1 forwards;
+}
+
+@keyframes onboarding-check-pop {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+.onboarding-complete__title {
+  transition: opacity 200ms var(--ease-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-complete[data-state="done"] .onboarding-complete__check {
+    animation: none;
+    transform: scale(1);
+  }
+}

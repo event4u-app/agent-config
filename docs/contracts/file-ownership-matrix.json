@@ -2058,6 +2058,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/design-system-capture/references/product-md-template.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/design-system-capture/references/snapshot-preference-order.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2299,6 +2305,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/skills/fe-design/references/design-read-and-memory.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/fe-design/references/gesture-mechanics.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -12934,6 +12946,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/design-system-capture/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/design-system-capture/references/product-md-template.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-system-capture/SKILL.md",
       "target": ".agent-src.uncondensed/skills/design-system-capture/references/snapshot-preference-order.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -12994,6 +13013,13 @@
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-system-capture/references/product-md-template.md",
+      "target": ".agent-src.uncondensed/skills/design-system-capture/references/product-md-template.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncondensed/skills/design-system-capture/references/snapshot-preference-order.md",
@@ -13169,13 +13195,6 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/doc-coauthoring/SKILL.md",
-      "target": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/docker/SKILL.md",
@@ -13893,6 +13912,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/fe-design/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/fe-design/references/gesture-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/fe-design/SKILL.md",
       "target": ".agent-src.uncondensed/skills/fe-design/references/source-led-port.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -13942,6 +13968,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/fe-design/references/design-patterns.md",
+      "target": ".agent-src.uncondensed/skills/accessibility-auditor/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/fe-design/references/design-patterns.md",
       "target": ".agent-src.uncondensed/skills/design-review/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -13978,6 +14011,13 @@
     {
       "source": ".agent-src.uncondensed/skills/fe-design/references/design-read-and-memory.md",
       "target": ".agent-src.uncondensed/skills/fe-design/references/design-read-and-memory.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/fe-design/references/gesture-mechanics.md",
+      "target": ".agent-src.uncondensed/skills/fe-design/references/gesture-mechanics.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -14671,20 +14711,6 @@
     {
       "source": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
       "target": ".agent-src.uncondensed/rules/direct-answers.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
-      "target": ".agent-src.uncondensed/rules/media-governance-routing.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
-      "target": ".agent-src.uncondensed/rules/untrusted-input-defense.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -17547,13 +17573,6 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/readme-writing-package/SKILL.md",
-      "target": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/readme-writing-package/SKILL.md",
       "target": ".agent-src.uncondensed/skills/readme-writing-package/SKILL.md",
       "type": "WRITE",
       "via": "self",
@@ -17562,13 +17581,6 @@
     {
       "source": ".agent-src.uncondensed/skills/readme-writing/SKILL.md",
       "target": ".agent-src.uncondensed/contexts/contracts/frugality-charter.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/readme-writing/SKILL.md",
-      "target": ".agent-src.uncondensed/skills/humanizer/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1

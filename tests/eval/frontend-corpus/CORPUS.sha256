@@ -1,7 +1,7 @@
 # frontend benchmark corpus — sha256 manifest
 # Produced by src/scripts/frontend_corpus_hash.ts. Do not hand-edit.
-# files: 55
-# corpus: bf5d0a852d8c1538621ac967c6e36125d81c534083cb680dcbc1a4ff0033b208
+# files: 69
+# corpus: 8dd2f62b4b927ad53a9f222d2c64b65d174639444ce5ff944260aaafc6b960d1
 f40befc3d1b3f84ea3acea12a391240d83821569c547dc3c61b68472d8856d62  cases/astro-marketing/case.yaml
 a5279b5c4cb79c8cda967ee2a130fa4fad2869c6739d3452aacdfae66fd9188c  cases/astro-marketing/src/pages/index.astro
 c969639c662c2a879fa20a4ba0212b7e85a6905d24d47613dca3dfef7b4d2afe  cases/blade-view/case.yaml
@@ -12,6 +12,20 @@ fed0fde02f67e86415b2511cd76a01ad57ec16f351cd16e18ce6f6a9f133de0d  cases/custom-d
 bee9529ef274855109f7eea20f444d1bf56496fa63e154d070b878fec4c0160d  cases/custom-design-system/tokens.css
 83f9bda4116ea08666075a93353b4738a18ad268a914ddb4a0fc33c660e75c21  cases/explicit-redesign/Legacy.tsx
 eb984cfb625cb80aaf22a6587abb497c37936a94b69543059218db34b1f24aa4  cases/explicit-redesign/case.yaml
+d37a2c1f0ed805248ee9ba0f884a727dafb5ddda84d7003c363748d41e4dd55d  cases/follow-up-native-no-primitive/callback.html
+22c576dcaadf0cf57c0c146510d76a08a04554e581bb6652fea77f44298b1e44  cases/follow-up-native-no-primitive/case.yaml
+7a7c885adcb52e0bf7aa2eca23efd6159045337890180de4ffbd42522d674ec9  cases/follow-up-native-no-primitive/styles.css
+5b3d466e999f7455c720d8e3e75e43fde2c0ab5fd7b45b8a68f35db72b6b33be  cases/follow-up-popover-in-scroll-dialog/case.yaml
+60a1e3e59081df0603214caf955b9fb5dabc1d39e39ad5087f26043d4e577dcc  cases/follow-up-popover-in-scroll-dialog/components/checkout-dialog.tsx
+c63bf3d12ca4962fe2a1ce7aa6e34afb5d7990161a1598d38d1eb062b15b3f24  cases/follow-up-popover-in-scroll-dialog/components/ui/select.tsx
+a6904419e20ebc721644ce7d675b5a7dd12c46919d07536829cbe5d2e9f10475  cases/follow-up-select-blade/case.yaml
+e0631cb045496ab1776de8138b9542b302359c19502668592ea5ab09710858e3  cases/follow-up-select-blade/resources/views/components/input.blade.php
+acd3d925699f2e590a5300454cf3bf3d481530cc89c74375886b34a2584709a0  cases/follow-up-select-blade/resources/views/components/select.blade.php
+dbef2491456e89a8b223359b33c2464c991ae118f921173dcef21bffb33ff9f4  cases/follow-up-select-blade/resources/views/orders/filters.blade.php
+4fc912e4d99a5385d34782c2371b13d40549a67a359a71915ca0432a8821a8f5  cases/follow-up-select-shadcn/app/orders/filters.tsx
+506776204873e727a2be08c055ab9afa1f4425d32fae447090a4e24e07bbbcc0  cases/follow-up-select-shadcn/case.yaml
+2856df70a88c6e82d6ff8f9785b504042190d3a5c407cfa03c4b3c45084c01c8  cases/follow-up-select-shadcn/components/ui/input.tsx
+c63bf3d12ca4962fe2a1ce7aa6e34afb5d7990161a1598d38d1eb062b15b3f24  cases/follow-up-select-shadcn/components/ui/select.tsx
 b245c9313b9805300346b1b472c188f4156cd09f20a49658ff5baaabfbc73cb9  cases/full-stack-feature-with-ui/case.yaml
 8a70a0029e57403a35c251147c54126bf26d2633c34ee592af8ae5a705720815  cases/full-stack-feature-with-ui/pages/api/reports/export.ts
 bf93ebe23a45ba98956b73f632054939aa646fd601ceab0d321ede53beb43ee8  cases/full-stack-feature-with-ui/pages/reports.tsx

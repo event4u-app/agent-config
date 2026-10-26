@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shipment ledger</title>
+<style>
+  :root { --ink: #1d2430; --muted: #5b6574; --line: #d9dee6; --bg: #f7f8fa; }
+  body { margin: 0; font: 15px/1.5 system-ui, sans-serif; color: var(--ink); background: var(--bg); }
+  .skip-link { position: absolute; left: -10000px; top: 0; width: 1px; height: 1px; overflow: hidden; }
+  .skip-link:focus { left: 16px; top: 16px; width: auto; height: auto; padding: 8px 12px; background: #fff; border: 1px solid var(--line); }
+  header { padding: 24px 32px 8px; }
+  h1 { margin: 0 0 4px; font-size: 24px; }
+  header p { margin: 0; color: var(--muted); }
+  main { max-width: 960px; margin: 16px 32px; background: #fff; border: 1px solid var(--line); border-radius: 8px; }
+  .scroller { overflow-x: auto; }
+  .scroller:focus-visible { outline: 2px solid #2f5fd0; outline-offset: -2px; }
+  table { border-collapse: collapse; min-width: 1500px; }
+  th, td { padding: 10px 14px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--line); }
+  th { position: sticky; top: 0; background: #eef1f5; font-weight: 600; font-size: 13px; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  caption { caption-side: top; text-align: left; padding: 12px 14px; color: var(--muted); }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#ledger">Skip to ledger</a>
+<header>
+  <h1>Shipment ledger — week 43</h1>
+  <p>Twelve columns per consignment; scroll the table sideways to see carrier and customs data.</p>
+</header>
+<main id="ledger">
+  <div class="scroller" tabindex="0" role="region" aria-label="Shipment ledger, scrollable horizontally">
+    <table>
+      <caption>Consignments dispatched from the north depot</caption>
+      <thead>
+        <tr><th>Ref</th><th>Dispatched</th><th>Origin</th><th>Destination</th><th>Carrier</th><th>Service</th><th>Pallets</th><th>Weight (kg)</th><th>Declared value</th><th>Customs code</th><th>ETA</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>CN-40211</td><td>2026-10-19</td><td>North depot</td><td>Harbour terminal 3</td><td>Coastal Freight</td><td>Standard</td><td class="num">6</td><td class="num">4,180</td><td class="num">18,400.00</td><td>8471.30</td><td>2026-10-22</td><td>Delivered</td></tr>
+        <tr><td>CN-40212</td><td>2026-10-19</td><td>North depot</td><td>Inland hub East</td><td>Ridgeway Haulage</td><td>Express</td><td class="num">2</td><td class="num">910</td><td class="num">6,250.00</td><td>9403.60</td><td>2026-10-20</td><td>Delivered</td></tr>
+        <tr><td>CN-40217</td><td>2026-10-20</td><td>North depot</td><td>Retail park, unit 14</td><td>Coastal Freight</td><td>Standard</td><td class="num">11</td><td class="num">7,020</td><td class="num">31,975.50</td><td>6403.99</td><td>2026-10-24</td><td>In transit</td></tr>
+        <tr><td>CN-40223</td><td>2026-10-21</td><td>North depot</td><td>Cold store West</td><td>Polar Logistics</td><td>Refrigerated</td><td class="num">4</td><td class="num">2,640</td><td class="num">12,880.00</td><td>0406.10</td><td>2026-10-23</td><td>Held at customs</td></tr>
+        <tr><td>CN-40230</td><td>2026-10-22</td><td>North depot</td><td>Harbour terminal 1</td><td>Ridgeway Haulage</td><td>Standard</td><td class="num">8</td><td class="num">5,310</td><td class="num">22,090.00</td><td>7308.90</td><td>2026-10-27</td><td>Booked</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>

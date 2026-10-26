@@ -28,6 +28,7 @@
  * every existing import keeps resolving.
  */
 
+import { ignoreReason } from './ignore_reason.js';
 import { attrsOf, parseDocument, tagEnd, type XmlDocument, type XmlNode } from './svg_dom.js';
 import { ruleFilledCounter } from './svg_filled_counter.js';
 import { cssUnescape, isActiveUrl, localName, rawAttrs, resolvedUrl, svgPrefixes, URL_ATTRS } from './svg_urls.js';
@@ -1418,6 +1419,8 @@ export function scanHostHtml(content: string, relPath: string, opts: ScanOptions
 export interface RuleIgnore {
     lines: Set<number>;
     wholeFile: boolean;
+    /** The `-- reason` per ignore line (0 = whole file); null when none was given. */
+    reasons?: Map<number, string | null>;
 }
 
 export function parseIgnores(lines: string[]): Map<string, RuleIgnore> {
@@ -1427,18 +1430,24 @@ export function parseIgnores(lines: string[]): Map<string, RuleIgnore> {
         ignores.set(rule, found);
         return found;
     };
-    const add = (rule: string, line: number): void => {
+    const note = (rule: string, at: number, reason: string | null): void => {
+        const s = slot(rule);
+        (s.reasons ??= new Map()).set(at, reason);
+    };
+    const add = (rule: string, line: number, reason: string | null): void => {
         slot(rule).lines.add(line);
+        note(rule, line, reason);
     };
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i] ?? '';
         const next = /svg-asset-disable-next-line\s+([\w-]+)/i.exec(line);
-        if (next?.[1]) add(next[1].toLowerCase(), i + 2);
+        if (next?.[1]) add(next[1].toLowerCase(), i + 2, ignoreReason(line));
         const same = /svg-asset-disable-line\s+([\w-]+)/i.exec(line);
-        if (same?.[1]) add(same[1].toLowerCase(), i + 1);
+        if (same?.[1]) add(same[1].toLowerCase(), i + 1, ignoreReason(line));
         const whole = /svg-asset-disable\s+([\w-]+)/i.exec(line);
         if (whole?.[1] && !/-next-line|-line\s/.test(line)) {
             slot(whole[1].toLowerCase()).wholeFile = true;
+            note(whole[1].toLowerCase(), 0, ignoreReason(line));
         }
     }
     return ignores;

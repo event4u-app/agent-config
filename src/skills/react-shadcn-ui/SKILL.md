@@ -288,6 +288,7 @@ this over a registry file.
 ### Step 4: Validate
 
 1. No raw `<input>` / `<button>` / `<select>` outside the primitive set.
+   **Control roles.** For every control you add, look up its role in the `control_roles` of `agent-config ui:audit` (re-run it when the artifact is older than your last UI edit): use the canonical implementation and the siblings' box metrics. Role missing or tied → ask before inventing a control kind; a native control beside an existing primitive needs a stated `native_control_reason`.
 2. No hardcoded colors / spacing — every value is a token.
 3. Microcopy matches `state.ui_design.microcopy` byte-for-byte.
 4. Dark mode: toggle `.dark` on `<html>`, render the component, every

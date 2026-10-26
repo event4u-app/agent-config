@@ -58,6 +58,16 @@
       "3xl": { "$value": { "value": 1.875, "unit": "rem" }, "$type": "dimension" },
       "4xl": { "$value": { "value": 2.25, "unit": "rem" }, "$type": "dimension" }
     },
+    "letterSpacing": {
+      "xs": { "$value": { "value": 0.0075, "unit": "rem" }, "$type": "dimension" },
+      "sm": { "$value": { "value": 0.00875, "unit": "rem" }, "$type": "dimension" },
+      "base": { "$value": { "value": 0, "unit": "rem" }, "$type": "dimension" },
+      "lg": { "$value": { "value": 0, "unit": "rem" }, "$type": "dimension" },
+      "xl": { "$value": { "value": -0.0125, "unit": "rem" }, "$type": "dimension" },
+      "2xl": { "$value": { "value": -0.015, "unit": "rem" }, "$type": "dimension" },
+      "3xl": { "$value": { "value": -0.01875, "unit": "rem" }, "$type": "dimension" },
+      "4xl": { "$value": { "value": -0.03375, "unit": "rem" }, "$type": "dimension" }
+    },
     "radius": {
       "none": { "$value": { "value": 0, "unit": "px" }, "$type": "dimension" },
       "sm": { "$value": { "value": 0.125, "unit": "rem" }, "$type": "dimension" },

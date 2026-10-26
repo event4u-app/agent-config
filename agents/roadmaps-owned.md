@@ -13,11 +13,13 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-setup-that-decides-itself | active | ready | A consumer never sets, reads or reasons about how the package loads its rule layer. |
 | road-to-a-step-that-costs-what-it-changes | active | ready | A roadmap step costs in proportion to its change, and nothing a step needs is skipped. |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe | active | ready | A global install stays on a supported, patched release without ever mutating a running session, moving a team's pin, or … |
+| road-to-routing-assurance-live-floors | active | ready | Road to routing assurance — the live-harness floors |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
 | road-to-17-0-follow-ups | later | later | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
 | road-to-a-byte-bound-and-a-public-figure | later | later | Two numbers this tree can now produce and cannot yet bound. |
 | road-to-a-canvas-the-code-owns | later | later | The repository is the only store of the design system. |
 | road-to-a-cold-start-paid-once-carried | later | later | Every step road-to-a-cold-start-paid-once deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-a-control-that-matches-its-neighbours | later | later | Every UI change — including a one-line follow-up with no command — that adds an interactive control uses the project's … |
 | road-to-a-graph-that-feeds-the-gate | later | later | The code graph reaches the searches an agent actually runs and feeds a gate decision in shadow. |
 | road-to-a-hard-floor-the-shell-cannot-talk-past | later | later | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |
 | road-to-a-knowledge-atlas | later | later | The Workbench page answers four questions about one selection, not one: how the code is built (done by the parent), … |
@@ -117,7 +119,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-release-holds-that-refuse | later | later | A roadmap declares, in a form one evaluator reads, exactly which of its intermediate tree states must not be published … |
 | road-to-residual-interruption-measurement | later | later | Road to the residual-interruption measurement |
 | road-to-roadmaps-finished-before-new-ones-start-carried | later | ready | Every step road-to-roadmaps-finished-before-new-ones-start deferred is either done here or explicitly disposed of — a step that still cannot run is … |
-| road-to-routing-assurance-live-floors | later | later | Road to routing assurance — the live-harness floors |
 | road-to-rule-triggers-and-links-that-hold | later | later | What an installed rule file declares and links to is true on the host that loads it. |
 | road-to-seats-that-know-why-they-failed | later | later | Every failure of a council seat carries a class before it gets a reaction, and the class picks the reaction: … |
 | road-to-security-guards-that-hold-at-turn-end | later | later | The skill-level fixes are in: a casual security question now gets a scoped answer. |
@@ -132,7 +133,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-supervised-telemetry-collector | later | later | One resident process runs on this machine under a named supervisor, on named platforms, storing a schema whose fields are … |
 | road-to-surface-consolidation | later | later | Cut the proactive command-suggestion surface from ~160 self-suggesting commands to the cluster-head journeys (+ genuine standalone entry points), fold the … |
 | road-to-svg-witness-provenance | later | later | The blocking SVG turn-end obligation is discharged only by a render the hook itself saw succeed. |
-| road-to-tell-detector-promotions | later | later | Road to the interaction-layer detector promotions |
+| road-to-tells-a-near-miss-can-refute | later | later | Every `backed` design tell carries an M1 measured on a corpus that contains a legitimate near-miss for it; a DESIGN.md … |
 | road-to-ten-across-the-board | later | draft | Every rubric category in the declared manifest of `agents/evidence/ac-capability-scorecard.yaml` reaches `ten`, `measured-null`, or `max-boundary` under the six-dimension definition frozen in … |
 | road-to-thin-flip-under-anchor-scoring | later | later | Road to a Thin Flip Under Anchor-Scoring |
 | road-to-token-economy-cache-followup | later | later | Close the census-gated remainder of the parent: idempotency gates on the measured top repeat-slot concerns, plus the data-halves of the … |

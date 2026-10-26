@@ -18,6 +18,10 @@
  *   DQ5 heading-skip   — Heading levels skipped (h1 → h3 without h2)
  *   DQ6 focus-indicator— Interactive element with no :focus-visible indicator
  *
+ * Shadow candidate, reported only under `--shadow` and never in the exit code:
+ *   DQ7 material-fallback — translucent surface with no prefers-reduced-transparency
+ *                           or prefers-contrast route (`_lib/material_fallback.ts`)
+ *
  * Rules NOT implemented (design-system opinions, not objective quality floors):
  *   - Spacing multiples (multiples of 4px/8px)
  *   - Font-weight count per scale
@@ -46,6 +50,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
+import { materialFallbackFindings } from "./_lib/material_fallback.js";
 import { firstSmilLine, smilVerdict } from "./_lib/svg_motion.js";
 
 interface Finding {
@@ -357,6 +362,16 @@ function main(): void {
       allFindings.push(...findings);
     } catch (err) {
       if (!quiet) process.stderr.write(`[lint_design_quality] error: ${filePath}: ${err}\n`);
+    }
+  }
+
+  if (args.includes("--shadow")) {
+    // Shadow candidates: printed on their own, never counted, never an exit code.
+    for (const filePath of htmlCssFiles) {
+      const rel = path.relative(process.cwd(), filePath);
+      for (const f of materialFallbackFindings(fs.readFileSync(filePath, "utf-8"))) {
+        process.stderr.write(`shadow ${rel}:${f.line} [${f.rule}] missing ${f.missing.join(" + ")}: ${f.snippet}\n`);
+      }
     }
   }
 

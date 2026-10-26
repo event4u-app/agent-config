@@ -27,6 +27,14 @@ import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const CORPUS_REL = 'internal/bench/corpora/ui-triviality-golden.yaml';
 export const PREREGISTERED_RECALL = 0.8;
+/** Pre-registered 2026-10-26 in the corpus, before any classifier change. */
+export const BAR_ADD_CONTROL = 1.0;
+export const BAR_DE_UI_RECALL = 0.8;
+export const BAR_BACKEND = 1.0;
+
+export type Category = 'trivial' | 'add-control' | 'backend' | 'ui-other';
+
+const UI_SETS: ReadonlySet<string> = new Set(['ui', 'ui-trivial', 'mixed']);
 
 export interface Task {
     id: string;
@@ -34,14 +42,28 @@ export interface Task {
     label: 'trivial' | 'non-trivial';
     label_criterion?: string;
     source?: string;
+    category?: Category;
+    lang?: string;
 }
 
 export interface EvalRow {
     id: string;
     label: string;
+    category: Category;
+    lang: string;
     intent: string;
     directive_set: string;
     hit: boolean; // prediction agrees with the label
+}
+
+export interface Bar {
+    name: 'add_control' | 'de_ui_recall' | 'backend';
+    threshold: number;
+    total: number;
+    passed: number;
+    share: number;
+    verdict: 'PASS' | 'MISS' | 'EMPTY';
+    failing: string[];
 }
 
 export interface EvalResult {
@@ -51,7 +73,54 @@ export interface EvalResult {
     recall: number;
     precision: number;
     verdict: 'PASS' | 'MISS';
+    bars: Bar[];
     rows: EvalRow[];
+}
+
+export function category_of(t: Task): Category {
+    return t.category ?? (t.label === 'trivial' ? 'trivial' : 'ui-other');
+}
+
+function bar(
+    name: Bar['name'],
+    threshold: number,
+    rows: EvalRow[],
+    ok: (r: EvalRow) => boolean,
+): Bar {
+    const passing = rows.filter(ok);
+    const share = rows.length === 0 ? 0 : passing.length / rows.length;
+    return {
+        name,
+        threshold,
+        total: rows.length,
+        passed: passing.length,
+        share,
+        verdict: rows.length === 0 ? 'EMPTY' : share >= threshold ? 'PASS' : 'MISS',
+        failing: rows.filter((r) => !ok(r)).map((r) => r.id),
+    };
+}
+
+export function compute_bars(rows: EvalRow[]): Bar[] {
+    return [
+        bar(
+            'add_control',
+            BAR_ADD_CONTROL,
+            rows.filter((r) => r.category === 'add-control'),
+            (r) => r.directive_set !== 'ui-trivial' && r.directive_set !== 'backend',
+        ),
+        bar(
+            'de_ui_recall',
+            BAR_DE_UI_RECALL,
+            rows.filter((r) => r.lang === 'de' && r.category !== 'backend'),
+            (r) => UI_SETS.has(r.directive_set),
+        ),
+        bar(
+            'backend',
+            BAR_BACKEND,
+            rows.filter((r) => r.category === 'backend'),
+            (r) => r.directive_set === 'backend',
+        ),
+    ];
 }
 
 export function load_corpus(p: string): Task[] {
@@ -75,6 +144,8 @@ export function run_eval(tasks: Task[]): EvalResult {
         return {
             id: t.id,
             label: t.label,
+            category: category_of(t),
+            lang: t.lang ?? 'en',
             intent,
             directive_set: set,
             hit: predicted_trivial === (t.label === 'trivial'),
@@ -93,6 +164,7 @@ export function run_eval(tasks: Task[]): EvalResult {
         recall,
         precision,
         verdict: recall >= PREREGISTERED_RECALL ? 'PASS' : 'MISS',
+        bars: compute_bars(rows),
         rows,
     };
 }
@@ -108,6 +180,12 @@ export function render(result: EvalResult): string {
     out.push(
         `recall: ${result.recall.toFixed(3)} · precision: ${result.precision.toFixed(3)} · verdict: ${result.verdict}`,
     );
+    for (const b of result.bars) {
+        out.push(
+            `bar ${b.name}: ${b.passed}/${b.total} = ${b.share.toFixed(3)} (>= ${b.threshold.toFixed(2)}) · ${b.verdict}` +
+                (b.failing.length > 0 ? ` · failing: ${b.failing.join(', ')}` : ''),
+        );
+    }
     const misses = result.rows.filter((r) => !r.hit);
     if (misses.length > 0) {
         out.push('');

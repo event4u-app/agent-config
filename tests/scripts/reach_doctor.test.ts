@@ -720,8 +720,8 @@ channels:
 describe.skipIf(!POSIX)('reach:doctor — credential_path confinement (the arbitrary-path oracle is refused)', () => {
     /** Substring of the refusal warning — the operator-facing half of the fix. */
     const REFUSED = 'outside the permitted roots';
-    /** The exact string from the reported exploit, kept verbatim as the repro. */
-    const TRAVERSAL = '../../../../../../../etc/passwd';
+    /** The reported exploit's traversal, made deep enough to escape any checkout. */
+    const TRAVERSAL = `${'../'.repeat(40)}etc/passwd`;
 
     function confinementRegistry(name: string, declared: string): string {
         return registry(

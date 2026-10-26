@@ -42,6 +42,7 @@ import {
   sniffLanguage,
 } from "./ai_tells_rules.js";
 import { _classify } from "./lint_hidden_unicode.js";
+import { diffFacts } from "./_lib/fact_diff.js";
 
 /**
  * ReDoS bound: the detector runs static-registry regexes (never user-supplied
@@ -456,13 +457,28 @@ function humanSummary(name: string, r: TellReport, reasons: string[]): string {
 function usage(): never {
   console.error(
     "usage: detect_ai_tells <file...> | --stdin  [--json] [--fail] " +
-      "[--max-hard N] [--max-score N] [--max-dash-density N] [--language en|de|auto]",
+      "[--max-hard N] [--max-score N] [--max-dash-density N] [--language en|de|auto]\n" +
+      "       detect_ai_tells --baseline <before> <after>   (fact diff; exit 1 on any moved fact)",
   );
   process.exit(2);
 }
 
+/** `--baseline <before> <after>`: every fact the rewrite lost or added is a hard finding. */
+function factDiffMain(before: string, after: string): never {
+  const d = diffFacts(readFileSync(before, "utf8"), readFileSync(after, "utf8"));
+  const lines = [...d.lost.map((f) => `lost ${f.kind} ${f.value}`), ...d.added.map((f) => `added ${f.kind} ${f.value}`)];
+  process.stdout.write(lines.length ? `${lines.join("\n")}\n` : "facts unchanged\n");
+  process.exit(lines.length ? 1 : 0);
+}
+
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
+  const b = args.indexOf("--baseline");
+  if (b >= 0) {
+    const [before, after] = [args[b + 1], args[b + 2]];
+    if (!before || !after) usage();
+    factDiffMain(before, after);
+  }
   const files: string[] = [];
   let useStdin = false;
   let json = false;

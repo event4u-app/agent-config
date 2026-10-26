@@ -1,0 +1,304 @@
+{
+  "split": "dogfood",
+  "labelled_at": "2026-10-26",
+  "findings": [
+    {
+      "file": "src/ui/app.css",
+      "line": 162,
+      "rule": "slop-v1-side-stripe",
+      "catalog_id": "V1",
+      "label": "near-miss",
+      "basis": "status banner: the accent default carries danger and success variants, so the stripe is the state channel",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "src/ui/app.css",
+      "line": 185,
+      "rule": "slop-v1-side-stripe",
+      "catalog_id": "V1",
+      "label": "near-miss",
+      "basis": "field error message: a danger stripe marks the error state",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "src/ui/app.css",
+      "line": 498,
+      "rule": "slop-v1-side-stripe",
+      "catalog_id": "V1",
+      "label": "near-miss",
+      "basis": "removal warning: a danger stripe marks a destructive consequence",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "src/ui/app.css",
+      "line": 740,
+      "rule": "slop-v1-side-stripe",
+      "catalog_id": "V1",
+      "label": "near-miss",
+      "basis": "neutral citation rule in --color-border, the quotation convention",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "src/ui/app.css",
+      "line": 849,
+      "rule": "slop-v1-side-stripe",
+      "catalog_id": "V1",
+      "label": "near-miss",
+      "basis": "change card: neutral by default with must-fix and adopt severity variants",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "src/ui/App.tsx",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "src/ui/forms/UserMdForm.tsx",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "src/ui/pages/ProjectSettingsPage.tsx",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "src/ui/pages/SettingsChangesPage.tsx",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "src/ui/pages/SettingsHubPage.tsx",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "src/ui/pages/SettingsPage.tsx",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "src/ui/pages/UserMdPanel.tsx",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "src/ui/pages/WizardPage.tsx",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "src/ui/pages/WorkspacePage.tsx",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "src/ui/wizard/BackupScreen.tsx",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "src/ui/wizard/ContinueScreen.tsx",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "src/ui/wizard/RecoveryBanner.tsx",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "site/src/styles/custom.css",
+      "line": 17,
+      "rule": "slop-v1-side-stripe",
+      "catalog_id": "V1",
+      "label": "near-miss",
+      "basis": "a 2px border on all four sides of a button, not a side stripe at all",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "site/src/content/docs/agent-commands/clusters.md",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "site/src/content/docs/agent-commands/overview.md",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "site/src/content/docs/architecture/kernel-and-router.md",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "site/src/content/docs/architecture/overview.md",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "site/src/content/docs/cli/overview.md",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "site/src/content/docs/configuration/overview.md",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "site/src/content/docs/configuration/packs.md",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "site/src/content/docs/configuration/profiles.md",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "site/src/content/docs/configuration/settings-reference.md",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "site/src/content/docs/getting-started/installation.md",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "site/src/content/docs/getting-started/introduction.md",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "site/src/content/docs/getting-started/profiles-and-packs.md",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "site/src/content/docs/getting-started/quick-start.md",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "site/src/content/docs/index.mdx",
+      "line": 1,
+      "rule": "slop-cp1-em-dash",
+      "catalog_id": "CP1",
+      "label": "tp",
+      "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
+      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "src/ui/app.css",
+      "line": 564,
+      "rule": "slop-v1-side-stripe",
+      "catalog_id": "V1",
+      "label": "near-miss",
+      "basis": "review step with an error: the danger stripe is the error channel and appears only on that variant",
+      "labeller": "claude/host (road-to-tells-a-near-miss-can-refute 8.2; own judgement, not an independent label)"
+    }
+  ],
+  "relabelled_at": "2026-10-26: lines moved by the cssBlocks line fix (3.1); the two decorative stripes (448 summary card, 517 review nav button) were removed in 8.2 and their rows dropped; the review-nav error variant now carries the stripe alone"
+}

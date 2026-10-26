@@ -124,6 +124,7 @@ passing says nothing about 320px, which is where a two-column grid or a fixed
 - **Colors:** Contrast ratios, brand consistency, dark mode.
 - **Alignment:** Grid alignment, visual balance.
 - **Icons:** Consistent size, style, and spacing.
+- **Path to the primary action** (`surface_mode: persuade` only): one primary action per surface, reachable in the first viewport, in the same place across pages; answer the wayfinding questions — where am I, where can I go, how do I get out. A finding with evidence, never a score.
 
 ### Phase 4: Accessibility (WCAG 2.1 AA)
 
@@ -179,7 +180,7 @@ collapsed or overlapping layout, no missing region, no unstyled flash; **no prob
 covers it**, because a computed style can be correct on a node nobody can see; (2) pixel
 comparison against a baseline where one exists, element-scoped, dynamic content masked. No
 render capability → scope the verdict and say so per the gate at the top of this skill;
-degrading is reported, never a pass. What a clean render does *not* answer:
+degrading is reported, never a pass. An added control (select, menu, dialog, tooltip) is reviewed OPEN — `ui:render <page> --interact <selector>` records open state, popup bounds and clipping. What a clean render does *not* answer:
 [`references/verification-automation.md`](references/verification-automation.md) § Appearance verification.
 
 ## Reviewer posture
@@ -195,12 +196,12 @@ real issues because the reviewer defaulted to charitable assumptions.
 
 ## Subtraction-first remedial hierarchy
 
-When a finding warrants a remediation recommendation, prefer in this order:
+This applies in the APPLY phase, to findings the user selected; in the review phase describe problem and impact and prescribe no fix. When a finding warrants a remediation, prefer in this order:
 
 1. **Delete** — remove the element, animation, pattern, or copy entirely
 2. **Reduce** — make it smaller, shorter, subtler, less frequent
 3. **Fix the specific issue** — change easing, origin, duration, contrast, font
-4. **Make it interruptible** (for motion) — switch to transition/spring
+4. **Make it interruptible** (for motion) — gesture-driven: a spring or WAAPI animation that starts from the current on-screen value and carries the velocity; a state change with no gesture: a CSS transition suffices
 5. **Move to GPU** (for motion) — animate only transform/opacity
 6. **Polish** — the lowest-leverage fix; only if the above don't apply
 
@@ -217,8 +218,8 @@ Load the reference file whose sections the review needs — never all of them by
 
 ## Output format
 
-1. Design review report following the Report structure section
-2. Severity-rated findings (blocker, suggestion, nit)
+1. At most four plain-language headlines first, for a reader who is not a designer ("the logo is too small", "the reserve button gets lost") — each a projection of a finding below, never a new claim
+2. Design review report following the Report structure section, with severity-rated findings (blocker, suggestion, nit)
 3. Accessibility and responsive compliance summary
 
 ## Auto-trigger keywords
@@ -394,6 +395,6 @@ Typography / Color / Layout taste); `accessibility-auditor` owns the
 
 - Do NOT skip accessibility testing — it's not optional.
 - Do NOT report issues without evidence (screenshots, specific elements).
-- Do NOT prescribe solutions — describe problems and impact.
+- Do NOT prescribe solutions in the review phase — describe problems and impact; the remedial hierarchy applies in the apply phase.
 - Do NOT block PRs on nitpicks.
 - Do NOT test only at desktop resolution.

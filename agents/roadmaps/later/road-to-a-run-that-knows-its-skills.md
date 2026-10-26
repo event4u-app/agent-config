@@ -13,8 +13,8 @@ entry_condition:
   when: >
     Producer-driven. (i) lands with the active file; (ii) is dated by its owner.
   who: >
-    An implementer for Phases 1-3. The owner for ADR-263 (OQ-14) before Phase 2
-    can bind a run basis that a host is expected to honour.
+    An implementer for Phases 1-3. ADR-263 is not reopened: the owner narrowed
+    Phase 2 to declared skills instead (OQ-14, 2026-10-26).
 estate_growth_exempt: "+1 later_roadmaps on 2026-10-25, round inbox-2026-10-at: topic 1 asks that the base skills of a run are determined once at the start and enforced, extendable during the run. No roadmap owns a run basis or a skill stop gate — the same search as road-to-a-plan-that-stays-true's offset claim plus `grep -rlniE 'run.basis|skill-settle|forced.verdict' agents/roadmaps` returned nothing. It cannot start now: the active estate is at its cap with that file, and its entry condition names two readings that do not exist yet. Parked rather than added active, per the owner directive of 2026-10-24."
 execution:
   mode: phase-checkpoints
@@ -31,12 +31,20 @@ depends: road-to-a-plan-that-stays-true
 
 > **Source:** `agents/tmp.old/inbox-2026-10-at/` — topic 1, programme S of the
 > supplied master plan, verified at `main@01bb841cb`.
+>
+> **Owner decision, 2026-10-26 (OQ-14):** Phase 2 is narrowed, ADR-263 stands.
+> A run basis holds only skills that are declared — a step's `uses:`, a
+> command's required skills, a flow's skills — never ranked candidates, and
+> nothing is enforced on a skill nobody declared. A census over all 11 store
+> slugs (`agents/evidence/metrics/skill-activation-census-all-slugs-2026-10-26.md`)
+> did not fire ADR-263's review trigger (AI council 2026-10-26, 2/2); the
+> directive is `agents/evidence/owner-directives/2026-10-26-owner-questions-14-15-16.md`.
 
 ## Goal
 
 A run — a command, a `/work` run, or a roadmap lane — determines its base skills
 once at its start, from what is declared (the step's `uses:`, the command's
-required skills, the flow) before what is ranked; keeps at most three loaded;
+required skills, the flow) and from nothing ranked; keeps at most three loaded;
 may add more during the run; and ends with every required skill either applied
 or waived with a reason from the closed set. The gate measures the outcome, not
 an activation rate.
@@ -73,15 +81,16 @@ Evidence (claimed): `src/scripts/hooks/skill_route_hook.ts:32`
 
 - [ ] **2.1 Run start and persistence.** A command expansion, a `/work` start or
       a lane start opens a run; conversation does not. The basis is stored as
-      `{skill, class: required|candidate, source: roadmap|command|flow|rank, run}`
+      `{skill, class: required, source: roadmap|command|flow, run}`
       with the same `run` id the closure and the retro read.
       verify: fixtures — a conversation opens no run; a command, a `/work` start and a lane each open one
 - [ ] **2.2 Resolver: `skill-route` extended, not twinned.** Order: the step's
-      `uses:`, then `required`, then flow skills, then ranked candidates over the
-      floor; cap three, required first; kernel rules and rules never in the basis.
+      `uses:`, then `required`, then flow skills; cap three, required first. No
+      ranked candidate enters the basis — the ranker may still suggest, and a
+      suggestion binds nothing (OQ-14). Kernel rules and rules never in the basis.
       verify: fixture — a step `uses:` outranks a command's required skill when the cap is hit
-- [ ] **2.3 Forced verdict per candidate.** One line `skill <id>: yes | no —
-      <reason>` per candidate; a waiver of a required skill only with a reason
+- [ ] **2.3 Forced verdict per required skill.** One line `skill <id>: yes | no —
+      <reason>` per required skill in the basis; a waiver only with a reason
       from the closed set of `road-to-a-plan-that-stays-true` 4.1. A waiver is
       text, an application is a tool event.
       verify: parser fixtures in German and English; an unlisted skill does not count
@@ -91,8 +100,8 @@ Evidence (claimed): `src/scripts/hooks/skill_route_hook.ts:32`
 Evidence (claimed): `src/scripts/hooks/host_lowering.yaml:107`
 
 - [ ] **3.1 `skill-settle` on `stop`, outside the turn-end gate.** A required
-      skill with neither application nor waiver is `missing`; a candidate
-      without a verdict is `unjudged`. Shadow only; on Claude Code it later holds
+      skill with neither application nor waiver is `missing`. Nothing outside the
+      declared basis is judged. Shadow only; on Claude Code it later holds
       once per run with the concrete list, then records `waived-by-exhaustion`.
       Other hosts only record.
       verify: fixtures — applied allows, closed-reason waiver allows, neither writes a shadow `missing` row, a second stop records `waived-by-exhaustion`

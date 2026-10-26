@@ -120,6 +120,7 @@ When `DESIGN.md` declares `## Taste Dials`, honour them: Variance → layout-fam
 ## Do NOT
 
 - Do NOT use raw `<input>`, `<select>`, `<button>` when Flux equivalents exist.
+  **Control roles.** For every control you add, look up its role in the `control_roles` of `agent-config ui:audit` (re-run it when the artifact is older than your last UI edit): use the canonical implementation and the siblings' box metrics. Role missing or tied → ask before inventing a control kind; a native control beside an existing primitive needs a stated `native_control_reason`.
 - Do NOT override Flux styles with conflicting Tailwind — use variants or slots.
 - Do NOT skip the `label` prop on form fields — accessibility.
 

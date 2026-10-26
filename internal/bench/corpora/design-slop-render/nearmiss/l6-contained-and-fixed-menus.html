@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Team members</title>
+<style>
+  body { margin: 0; font: 15px/1.5 system-ui, sans-serif; color: #1f2733; background: #f4f5f7; padding: 40px; }
+  h1 { font-size: 22px; margin: 0 0 20px; }
+  .grid { display: grid; grid-template-columns: repeat(2, 420px); gap: 24px; }
+  .card { position: relative; overflow: hidden; background: #fff; border: 1px solid #dde1e7; border-radius: 10px; height: 320px; padding: 20px; box-sizing: border-box; }
+  .card h2 { font-size: 16px; margin: 0 0 4px; }
+  .card p { margin: 0; color: #5d6675; }
+  .trigger { position: absolute; top: 16px; right: 16px; border: 1px solid #c9cfd8; background: #fff; border-radius: 6px; padding: 4px 10px; font: inherit; }
+  /* Opens downward inside the card; card height leaves room so nothing is clipped. */
+  .menu-in-card { position: absolute; top: 52px; right: 16px; width: 200px; margin: 0; padding: 6px 0; list-style: none; background: #fff; border: 1px solid #c9cfd8; border-radius: 8px; box-shadow: 0 4px 10px rgba(20,30,50,.12); }
+  .menu-in-card li, .menu-fixed li { padding: 7px 14px; }
+  /* Escapes the clipping ancestor entirely, as the catalog's remediation names. */
+  .menu-fixed { position: fixed; top: 168px; left: 900px; width: 220px; margin: 0; padding: 6px 0; list-style: none; background: #fff; border: 1px solid #c9cfd8; border-radius: 8px; box-shadow: 0 4px 10px rgba(20,30,50,.12); z-index: 10; }
+</style>
+</head>
+<body>
+<h1>Team members</h1>
+<div class="grid">
+  <section class="card" aria-labelledby="m1">
+    <h2 id="m1">Field operations</h2>
+    <p>7 members · 2 pending invitations</p>
+    <button class="trigger" aria-expanded="true" aria-controls="menu1">Actions</button>
+    <ul class="menu-in-card" id="menu1" role="menu">
+      <li role="menuitem">Invite member</li>
+      <li role="menuitem">Change default role</li>
+      <li role="menuitem">Export member list</li>
+      <li role="menuitem">Archive team</li>
+    </ul>
+  </section>
+  <section class="card" aria-labelledby="m2">
+    <h2 id="m2">Accounts payable</h2>
+    <p>4 members · last change 3 days ago</p>
+    <button class="trigger" aria-expanded="true" aria-controls="menu2">Actions</button>
+    <ul class="menu-fixed" id="menu2" role="menu">
+      <li role="menuitem">Invite member</li>
+      <li role="menuitem">Change approval limit</li>
+      <li role="menuitem">Review audit trail</li>
+      <li role="menuitem">Transfer ownership</li>
+      <li role="menuitem">Archive team</li>
+      <li role="menuitem">Delete team</li>
+    </ul>
+  </section>
+</div>
+</body>
+</html>

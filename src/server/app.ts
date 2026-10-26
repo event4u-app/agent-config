@@ -27,6 +27,7 @@ import { discoveryRoute } from './routes/discovery.js';
 import { installRoute, type InstallRouteOptions } from './routes/install.js';
 import { schemaRoute } from './routes/schema.js';
 import { settingsRoute } from './routes/settings.js';
+import { statuslineRoute } from './routes/statusline.js';
 import { settingsChangesRoute } from './routes/settingsChanges.js';
 import { userMdRoute } from './routes/userMd.js';
 import { wizardRoute } from './routes/wizard.js';
@@ -310,6 +311,7 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
         ...(opts.wizardMode !== undefined ? { wizardMode: opts.wizardMode } : {}),
     }));
     await app.register(workspaceRoute({ writeRoot, packageRoot, dryRun }));
+    await app.register(statuslineRoute({ dryRun }));
 
     // Boot-time 2PC replay — finishes or aborts any wizard commit that
     // crashed mid-rename. Idempotent; failures are logged and ignored so

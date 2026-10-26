@@ -65,3 +65,30 @@ describe('the pre-registered bar — the regression net', () => {
         expect(result.verdict).toBe('PASS');
     });
 });
+
+describe('the add-control / German / backend bars (pre-registered 2026-10-26)', () => {
+    it('computes each bar from category and lang, and names the failing ids', () => {
+        const result = run_eval([
+            { id: 'uit-911', prompt: 'Add a date picker to the existing task form.', label: 'non-trivial', category: 'add-control' },
+            { id: 'uit-912', prompt: 'Add a column to the orders table.', label: 'non-trivial', category: 'backend' },
+            { id: 'uit-913', prompt: 'Make the button red', label: 'trivial', lang: 'de' },
+            { id: 'uit-914', prompt: 'zzz qqq', label: 'non-trivial', category: 'ui-other', lang: 'de' },
+        ]);
+        const byName = Object.fromEntries(result.bars.map((b) => [b.name, b]));
+        expect(byName.add_control).toMatchObject({ total: 1, passed: 1, verdict: 'PASS' });
+        expect(byName.backend).toMatchObject({ total: 1, passed: 1, verdict: 'PASS' });
+        expect(byName.de_ui_recall).toMatchObject({ total: 2, passed: 1, verdict: 'MISS', failing: ['uit-914'] });
+    });
+
+    it('all three bars hold on the golden corpus — the regression net for 1.4', () => {
+        const result = run_eval(CORPUS);
+        for (const b of result.bars) {
+            expect(b.verdict, `${b.name}: ${b.failing.join(', ')}`).toBe('PASS');
+        }
+    });
+
+    it('an empty bar reads EMPTY, never PASS', () => {
+        const result = run_eval([{ id: 'uit-921', prompt: 'make the button red', label: 'trivial' }]);
+        expect(result.bars.every((b) => b.verdict === 'EMPTY')).toBe(true);
+    });
+});

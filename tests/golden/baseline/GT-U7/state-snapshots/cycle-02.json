@@ -24,7 +24,8 @@
         "summary": "primary button color blue → brand-red",
         "new_component": false,
         "new_state": false,
-        "new_dependency": false
+        "new_dependency": false,
+        "new_control_roles": []
       }
     }
   },

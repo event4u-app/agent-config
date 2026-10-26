@@ -294,6 +294,10 @@ describe('ui:render --profile asset', () => {
             vi.doMock('@playwright/test', () => {
                 throw new Error("Cannot find package '@playwright/test'");
             });
+            // browserReach falls back to playwright-core; absent means both are gone.
+            vi.doMock('playwright-core', () => {
+                throw new Error("Cannot find package '@playwright/test'");
+            });
             try {
                 const mod = await import('../../src/cli/commands/uiRender.js');
                 const code = await mod.runUiRender({
@@ -319,7 +323,7 @@ describe('ui:render --profile asset', () => {
                 expect(manifest.profile).toBe('asset');
                 expect(manifest.captures).toEqual([]);
                 expect(manifest.asset).toBeUndefined();
-                expect(manifest.degradation_reason).toMatch(/@playwright\/test is not installed/);
+                expect(manifest.degradation_reason).toMatch(/neither @playwright\/test nor playwright-core is installed/);
                 // Never a pass, and never a silent one: the honest state is on the
                 // record, which is what the owner (3.1) reads as `static-only`.
                 expect(manifest.verification).not.toBe('verified');
@@ -355,6 +359,7 @@ describe('ui:render --profile asset', () => {
                 expect(pageManifest.static).toBeUndefined();
             } finally {
                 vi.doUnmock('@playwright/test');
+                vi.doUnmock('playwright-core');
                 vi.resetModules();
             }
         },
@@ -645,10 +650,15 @@ describe('the asset profile reports its own absence honestly', () => {
         vi.doMock('@playwright/test', () => {
             throw new Error("Cannot find package '@playwright/test'");
         });
+        // browserReach falls back to playwright-core; absent means both are gone.
+        vi.doMock('playwright-core', () => {
+            throw new Error("Cannot find package '@playwright/test'");
+        });
         try {
             return await fn(await import('../../src/cli/commands/uiRender.js'));
         } finally {
             vi.doUnmock('@playwright/test');
+            vi.doUnmock('playwright-core');
             vi.resetModules();
         }
     };
