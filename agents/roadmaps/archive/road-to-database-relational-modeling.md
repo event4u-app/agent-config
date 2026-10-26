@@ -200,8 +200,9 @@ corpus follows the ownership decision, not the other way round.
       `why_not_extend`. Record the verdict, the number it rests on, and the
       alternative rejected.
       verify: re-scoped 2026-10-27 (`## Decisions` D1). The 25 % verdict stands,
-      and a new skill stays inadmissible: `check_preamble_payload_budget`
-      measures ceiling 135834 = base 135834, zero headroom. The owner chose the
+      and a new skill stays inadmissible: the preamble ratchet measured
+      ceiling 135834 = base 135834, zero headroom —
+      `./scripts-run src/scripts/check_preamble_payload_budget` -> /zero net growth/. The owner chose the
       extend branch: `database` owns modeling through
       `references/relational-modeling.md`. No admissions-ledger line is written
       because no skill is admitted. Verify: `## Decisions` D1 carries the
@@ -259,8 +260,8 @@ corpus follows the ownership decision, not the other way round.
       modeling. With `database` as the owner, removing "designing schemas"
       would leave the concept claimed by nothing — the exact failure Risk 2
       names. The claim stays and now routes to the procedure.
-      verify: `grep -n "designing schemas" src/skills/database/SKILL.md`
-      returns the When-to-use line, and the next paragraph routes to
+      verify: `grep -n "designing schemas" src/skills/database/SKILL.md` ->
+      /Use when designing schemas/, and the next paragraph routes to
       `references/relational-modeling.md`.
 
 ## Phase 3 — The modeling procedure
