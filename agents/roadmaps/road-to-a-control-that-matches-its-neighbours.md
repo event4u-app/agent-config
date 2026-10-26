@@ -231,7 +231,7 @@ and is never reported as visually verified without render evidence.
 
 ## Phase 5 — Craft mechanics, only where the tree has a gap
 
-- [ ] **5.1 A class instead of a hole in the bounce ban**
+- [x] **5.1 A class instead of a hole in the bounce ban** Done 2026-10-26: authority bullet; drift gate requires `playful register` or `momentum-carried` in an overshoot row's override (`OVERSHOOT_CLASS`); self-test 15/15 incl. both cases. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_motion_authority_drift.ts -->
       (`design-patterns.md:191`). The ban stays for decorative, hover, menu and
       entrance bounce. New class `momentum-carried`: overshoot allowed if and
       only if the motion continues a gesture's release velocity (drag, flick,
@@ -240,30 +240,30 @@ and is never reported as visually verified without render evidence.
       the prose carriers (the `playful` mechanism reaches `styles.csv` only).
       verify: "bounce on dropdown open" stays red; "sheet release with velocity
       + momentum-carried" is green.
-- [ ] **5.2 Correct the interruptibility hint** (`design-review/SKILL.md:203`):
+- [x] **5.2 Correct the interruptibility hint** Done 2026-10-26. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> (`design-review/SKILL.md:203`):
       gesture-driven → spring or WAAPI from the current on-screen value carrying
       velocity; state change without a gesture → a CSS transition suffices
       (consistent with `design-patterns.md:233,241`).
       verify: `grep -n 'switch to transition/spring' src/skills/design-review/SKILL.md` returns nothing.
-- [ ] **5.3 Gesture reference** as a reference file under
+- [x] **5.3 Gesture reference** Done 2026-10-26: `fe-design/references/gesture-mechanics.md`, linked from `fe-design`. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> as a reference file under
       `fe-design/references/`, not a skill: feedback on pointer-down, 1:1
       tracking with grab offset and pointer capture, ~10 px hysteresis, velocity
       hand-off, momentum projection, rubber-banding, start from the current
       value, symmetric enter/exit paths, origin at the trigger. Own wording.
       verify: the reference file exists and `fe-design/SKILL.md` links it.
-- [ ] **5.4 Tracking and leading ladder** in
+- [x] **5.4 Tracking and leading ladder** Done 2026-10-26: ladder in `worked-scales.md`; starter emits `letterSpacing` per step in rem (DTCG dimensions allow px/rem only). <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> in
       `typography-system/references/worked-scales.md`: `letterSpacing` per step
       (display negative, body ≈ 0, small/caps slightly positive) within T6
       (−0.04 em) and T10 (0.05 em); `font-optical-sizing: auto` first for `opsz`
       fonts; `design-tokens` emits DTCG `letterSpacing` per step.
       verify: every step in `worked-scales.md` carries `letterSpacing` within T6/T10; `design-tokens` emits it.
-- [ ] **5.5 Material fallbacks.** A DQ7 candidate in `lint_design_quality` after
+- [x] **5.5 Material fallbacks.** Done 2026-10-26: `_lib/material_fallback.ts`, `lint_design_quality --shadow` (never counted); first reading over `src/ui`: 5 rows. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/material_fallback.ts --> A DQ7 candidate in `lint_design_quality` after
       DQ4's pattern: `backdrop-filter` or translucent background without an
       opaque variant under `prefers-reduced-transparency: reduce` and a contrast
       variant under `prefers-contrast: more`; the canon recommends the additive
       pattern. Starts in shadow.
       verify: a translucent-surface fixture without fallbacks fires in shadow; one with the additive pattern does not.
-- [ ] **5.6 Path to the primary action.** For `surface_mode: persuade`,
+- [x] **5.6 Path to the primary action.** Done 2026-10-26: `design-review` Phase 3 bullet (prose; no executable contract, so no test). <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> For `surface_mode: persuade`,
       `design-review` Phase 3 gets a check: one primary action per surface,
       reachable in the first viewport, same placement across pages, wayfinding
       questions. A finding with evidence, no score.
@@ -271,7 +271,7 @@ and is never reported as visually verified without render evidence.
 
 ## Phase 6 — A result a non-designer understands
 
-- [ ] **6.1 Plain-language head.** At most four plain headlines before the
+- [x] **6.1 Plain-language head.** Done 2026-10-26: `design-review` § Output format item 1. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> At most four plain headlines before the
       technical ledger of a review report ("the logo is too small", "the reserve
       button gets lost"), projected from findings, no new claims.
       verify: a review report fixture opens with at most four plain headlines, each traceable to a finding.
