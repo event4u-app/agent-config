@@ -28,6 +28,7 @@ extendStrings({
         pEv: { package: 'declared', 'unique-name': 'heuristic', mention: 'heuristic · mention', call: 'call ↔ route', shared: 'declared in both' },
         pRailNote: 'No merged graph: each project keeps its own; the hub holds names, paths and the links between them only.',
         pNoIndexOff: 'Every registered project is in the estate index.',
+        pBundle: function (n) { return n + ' links of this kind between these two projects'; },
         pIndexOff: function (n) { return n + ': not in the estate index — no package, name or mention link; facts from its files still count.'; },
         pNoEdges: function (r) { return 'No link from the estate index: ' + r; }, pUnmatched: { dynamic_baseurl: 'base or path unknown', no_endpoint_match: 'no route matches', ambiguous: 'several routes match' },
         pCalls: function (n) { return 'Calls without a target (' + n + ')'; }, pSkipped: function (n) { return n + ' project(s) could not be read'; },
@@ -55,6 +56,7 @@ extendStrings({
         pEv: { package: 'declared', 'unique-name': 'heuristic', mention: 'heuristic · mention', call: 'Aufruf ↔ Route', shared: 'in beiden deklariert' },
         pRailNote: 'Kein gemergter Gesamtgraph: jedes Projekt behält seinen eigenen; der Hub hält nur Namen, Pfade und die Kanten dazwischen.',
         pNoIndexOff: 'Jedes registrierte Projekt ist im Estate-Index.',
+        pBundle: function (n) { return n + ' Kanten dieser Art zwischen diesen beiden Projekten'; },
         pIndexOff: function (n) { return n + ': nicht im Estate-Index – keine Paket-, Namens- oder Erwähnungskante; Fakten aus seinen Dateien zählen trotzdem.'; },
         pNoEdges: function (r) { return 'Keine Kante aus dem Estate-Index: ' + r; }, pUnmatched: { dynamic_baseurl: 'Basis oder Pfad unbekannt', no_endpoint_match: 'keine Route passt', ambiguous: 'mehrere Routen passen' },
         pCalls: function (n) { return 'Aufrufe ohne Ziel (' + n + ')'; }, pSkipped: function (n) { return n + ' Projekt(e) nicht lesbar'; },
@@ -109,6 +111,21 @@ function hubLinks(p) {
                 out.push({ kind: g[0], style: 'shared', a: first.project, b: u.project, label: f[g[2]], detail: f[g[2]], uses: [first, u], fact: f });
             });
         });
+    });
+    return out;
+}
+/**
+ * The links of one pair of projects and one line style, drawn as one line with
+ * one label: several shared ports between the same two projects would otherwise
+ * be parallel lines whose labels cannot all fit between two nodes.
+ */
+function hubBundles(links) {
+    var out = [];
+    var at = Object.create(null);
+    links.forEach(function (l, i) {
+        var k = [l.a, l.b].sort().join('|') + '|' + l.style;
+        if (at[k] === undefined) { at[k] = out.length; out.push({ a: l.a, b: l.b, style: l.style, links: [] }); }
+        out[at[k]].links.push(i);
     });
     return out;
 }
@@ -195,50 +212,89 @@ function hubGraph(p, sel, main) {
         var a = -Math.PI / 2 + 2 * Math.PI * ((i * step) % Math.max(1, n)) / Math.max(1, n);
         pos[id] = n < 2 ? { x: 360, y: 250 } : { x: 360 + 250 * Math.cos(a), y: 250 + 175 * Math.sin(a) };
     });
-    var pairs = Object.create(null);
-    links.forEach(function (l, i) {
-        var s = pos[l.a];
-        var g = pos[l.b];
-        if (!s || !g) return;
-        var pk = [l.a, l.b].sort().join('|');
-        var k = pairs[pk] = (pairs[pk] || 0) + 1;
-        // Parallel links of one pair sit side by side, 30 units apart, alternating sides.
-        var off = Math.ceil((k - 1) / 2) * 30 * (k % 2 ? 1 : -1);
-        var len = Math.max(1, Math.sqrt((g.x - s.x) * (g.x - s.x) + (g.y - s.y) * (g.y - s.y)));
-        var nx = -(g.y - s.y) / len * off;
-        var ny = (g.x - s.x) / len * off;
-        var line = document.createElementNS(NS, 'line');
-        line.setAttribute('x1', s.x + nx); line.setAttribute('y1', s.y + ny); line.setAttribute('x2', g.x + nx); line.setAttribute('y2', g.y + ny);
-        line.setAttribute('vector-effect', 'non-scaling-stroke');
-        line.setAttribute('class', 'pe-' + l.style + (sel.index === i ? ' on' : ''));
-        svg.appendChild(line);
-        var along = 0.5 + Math.ceil((k - 1) / 2) * 0.14 * (k % 2 ? 1 : -1);
-        var mx = s.x + (g.x - s.x) * along + nx;
-        var my = s.y + (g.y - s.y) * along + ny;
-        var b = el('button', { type: 'button', class: 'mono ops-elabel' + (sel.index === i ? ' on' : ''), title: t('pKindOf')[l.kind] + ': ' + l.detail }, shortName(String(l.label)));
-        b.style.left = 'calc(' + (mx / 7.2).toFixed(3) + '% - 40px)';
-        b.style.top = (my - 12) + 'px';
-        b.addEventListener('click', function () { avPick('projects', 'edge/' + i); });
-        box.appendChild(b);
-    });
     var boxes = [];
+    var nodes = [];
     p.projects.forEach(function (x) {
         var q = pos[x.id];
         var nd = el('button', { type: 'button', class: 'ops-pnode' + (x.indexed ? '' : ' off') + (sel.project === x.id ? ' on' : ''), title: x.id });
         add(nd, el('span', { class: 'mono ops-pname' }, x.name), el('span', { class: 'ops-pmeta' }, x.indexed ? t('pIndexed') : t('pNotIndexed')));
-        nd.style.left = 'calc(' + (q.x / 7.2).toFixed(3) + '% - 80px)';
-        nd.style.top = (q.y - 26) + 'px';
         nd.addEventListener('click', function () { avPick('projects', 'project/' + x.id); });
         box.appendChild(nd);
+        // Centred on its spot by its own size: a phone draws the cards narrower.
+        nd.style.left = 'calc(' + (q.x / 7.2).toFixed(3) + '% - ' + (nd.offsetWidth / 2).toFixed(1) + 'px)';
+        nd.style.top = (q.y - nd.offsetHeight / 2).toFixed(1) + 'px';
+        nodes.push(nd);
     });
-    var origin = box.getBoundingClientRect();
-    Array.prototype.forEach.call(box.querySelectorAll('.ops-pnode, .ops-elabel'), function (e) {
-        var r = e.getBoundingClientRect();
-        boxes.push({ x: r.left - origin.left, y: r.top - origin.top, w: r.width, h: r.height });
-    });
-    window.__mapLabelBoxes = { boxes: boxes, width: origin.width, height: origin.height };
     var off = p.projects.filter(function (x) { return !x.indexed; }).map(function (x) { return x.name; });
-    box.appendChild(el('div', { class: 'ops-gnote' }, off.length ? t('pIndexOff')(off.join(', ')) : !p.edges.length && p.edgesReason ? t('pNoEdges')(p.edgesReason) : t('pNoIndexOff')));
+    var note = el('div', { class: 'ops-gnote' }, off.length ? t('pIndexOff')(off.join(', ')) : !p.edges.length && p.edgesReason ? t('pNoEdges')(p.edgesReason) : t('pNoIndexOff'));
+    box.appendChild(note);
+    var origin = box.getBoundingClientRect();
+    var W = origin.width || 720;
+    var H = origin.height || 500;
+    var sx = W / 720;
+    function rectOf(e) { var r = e.getBoundingClientRect(); return { x: r.left - origin.left, y: r.top - origin.top, w: r.width, h: r.height }; }
+    // Everything a label must not cover: the project cards and the note.
+    var taken = nodes.map(rectOf).concat([rectOf(note)]);
+    function hits(r, list) {
+        var area = 0;
+        list.forEach(function (o) {
+            var w = Math.min(r.x + r.w, o.x + o.w) - Math.max(r.x, o.x) + 4;
+            var h = Math.min(r.y + r.h, o.y + o.h) - Math.max(r.y, o.y) + 4;
+            if (w > 0 && h > 0) area += w * h;
+        });
+        return area;
+    }
+    var bundles = hubBundles(links);
+    var perPair = Object.create(null);
+    bundles.forEach(function (bd) { var pk = [bd.a, bd.b].sort().join('|'); perPair[pk] = (perPair[pk] || 0) + 1; });
+    var seen = Object.create(null);
+    var ALONG = [0.5, 0.4, 0.6, 0.32, 0.68, 0.25, 0.75, 0.18, 0.82];
+    var ACROSS = [0, 26, -26, 52, -52];
+    bundles.forEach(function (bd) {
+        var s = pos[bd.a];
+        var g = pos[bd.b];
+        if (!s || !g) return;
+        var pk = [bd.a, bd.b].sort().join('|');
+        var k = seen[pk] = (seen[pk] || 0) + 1;
+        // Different kinds of link between one pair sit side by side, 14 units apart, centred on the pair.
+        var shift = (k - 1 - (perPair[pk] - 1) / 2) * 14;
+        var len = Math.max(1, Math.sqrt((g.x - s.x) * (g.x - s.x) + (g.y - s.y) * (g.y - s.y)));
+        var ux = -(g.y - s.y) / len;
+        var uy = (g.x - s.x) / len;
+        var on = bd.links.indexOf(sel.index) >= 0;
+        var line = document.createElementNS(NS, 'line');
+        line.setAttribute('x1', s.x + ux * shift); line.setAttribute('y1', s.y + uy * shift); line.setAttribute('x2', g.x + ux * shift); line.setAttribute('y2', g.y + uy * shift);
+        line.setAttribute('vector-effect', 'non-scaling-stroke');
+        line.setAttribute('class', 'pe-' + bd.style + (on ? ' on' : ''));
+        svg.appendChild(line);
+        var first = links[bd.links[0]];
+        var text = shortName(String(first.label)) + (bd.links.length > 1 ? ' +' + (bd.links.length - 1) : '');
+        var title = bd.links.map(function (i) { return t('pKindOf')[links[i].kind] + ': ' + links[i].detail; }).join('\n');
+        var b = el('button', { type: 'button', class: 'mono ops-elabel' + (on ? ' on' : ''), title: title }, text);
+        b.style.left = '0px';
+        b.style.top = '0px';
+        b.addEventListener('click', function () { avPick('projects', 'edge/' + (on ? sel.index : bd.links[0])); });
+        box.insertBefore(b, nodes[0] || null);
+        var bw = b.getBoundingClientRect().width;
+        var bh = b.getBoundingClientRect().height;
+        // The first spot along the line, then beside it, that covers nothing and stays inside the canvas.
+        var best = null;
+        for (var i = 0; i < ALONG.length && !(best && best.cost === 0); i++) {
+            for (var j = 0; j < ACROSS.length; j++) {
+                var cx = (s.x + (g.x - s.x) * ALONG[i] + ux * (shift + ACROSS[j])) * sx;
+                var cy = s.y + (g.y - s.y) * ALONG[i] + uy * (shift + ACROSS[j]);
+                var r = { x: Math.min(Math.max(4, cx - bw / 2), W - bw - 4), y: Math.min(Math.max(4, cy - bh / 2), H - bh - 4), w: bw, h: bh };
+                var cost = hits(r, taken);
+                if (!best || cost < best.cost) best = { r: r, cost: cost };
+                if (cost === 0) break;
+            }
+        }
+        b.style.left = (best.r.x / W * 100).toFixed(3) + '%';
+        b.style.top = best.r.y.toFixed(1) + 'px';
+        taken.push(best.r);
+    });
+    Array.prototype.forEach.call(box.querySelectorAll('.ops-pnode, .ops-elabel'), function (e) { boxes.push(rectOf(e)); });
+    window.__mapLabelBoxes = { boxes: boxes, width: W, height: H };
     var lost = p.calls.filter(function (c) { return !c.match; });
     if (lost.length) {
         var sec = add(el('div', { class: 'ops-col tight' }), el('span', { class: 'cap' }, t('pCalls')(num(lost.length))));
@@ -284,6 +340,17 @@ function hubRail(p, sel, right) {
         var ws = l.kind === 'call' ? l.calls.map(function (k) { return projWitness(p, k); }).concat([projWitness(p, { project: l.b, witness: l.calls[0].match.witness })]) : l.uses.map(function (u) { return projWitness(p, u); });
         pad.appendChild(witnessList(ws));
     }
+    var links = hubLinks(p);
+    hubBundles(links).forEach(function (bd) {
+        if (bd.links.length < 2 || bd.links.indexOf(sel.index) < 0) return;
+        var list = el('div', { class: 'mono ops-boxlist' });
+        bd.links.forEach(function (i) {
+            var x = el('button', { type: 'button', class: 'ops-bundle' + (i === sel.index ? ' on' : ''), 'aria-pressed': String(i === sel.index) }, String(links[i].label));
+            x.addEventListener('click', function () { avPick('projects', 'edge/' + i); });
+            list.appendChild(x);
+        });
+        pad.appendChild(add(el('div', { class: 'ops-col tight' }), el('span', { class: 'cap' }, t('pBundle')(num(bd.links.length))), list));
+    });
     pad.appendChild(el('span', { class: 'ops-railnote' }, t('pRailNote')));
     right.appendChild(pad);
 }
