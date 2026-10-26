@@ -158,6 +158,7 @@ The gate for every later promotion.
       verify: `src/cli/commands/uiRender.test.ts` asserts the new fields; the
       manifest schema version bumps.
 - [x] **2.3 A `render` engine in the slop registry.** Done 2026-10-26: `Engine` gained `render`; the rules live in `src/scripts/design_slop_render_rules.ts` (`scanRender`), apart from the text registry so the hook bundle does not carry them; `lint_design_slop --render <manifest>` reads the captured `*.styles.json`. Deviation, on purpose: the parity table keeps the plain `backed` status — the engine is a property of the rule, not of the catalog row — and parity reads both registry files. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/design-slop-nearmiss/run.ts --> Rules read `*.styles.json`
+      reach exempt: scanRender is imported by lint_design_slop_main.ts, which lint_design_slop.ts loads through a computed specifier to keep it out of the hook bundle, so a static import walk cannot see it; ALL_SLOP_RULES is the test-side union the catalog parity test reads.
       and geometry, never the screenshot; a fifth input class beside
       `css`/`html`/`jsx`/`copy` (`design_slop_rules.ts:38`); the parity table
       accepts `backed (render)`.
