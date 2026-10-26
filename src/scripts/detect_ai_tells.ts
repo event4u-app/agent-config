@@ -336,7 +336,9 @@ export function analyzeText(
   // ReDoS bound: cap the scanned length so adversarial ingested content cannot
   // force catastrophic backtracking on the variable-width registry patterns.
   const truncated = text.length > MAX_SCAN_CHARS;
-  const scanned = truncated ? text.slice(0, MAX_SCAN_CHARS) : text;
+  // A no-break space reads as a space and must count as one, or it hides every
+  // phrase it sits in. One char for one, so offsets and lines hold.
+  const scanned = (truncated ? text.slice(0, MAX_SCAN_CHARS) : text).replace(/[  ]/g, " ");
   const { base, forQuotes } = stripExempt(scanned);
   const words = base.split(/\s+/).filter(Boolean).length || 1;
   const language = languageOpt === "auto" ? sniffLanguage(base) : languageOpt;

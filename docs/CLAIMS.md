@@ -822,6 +822,16 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
   this run's own judgement, not an independent label. Re-run with
   `task bench:design-slop-nearmiss`.
 
+  How to read the zero (2026-10-26, OQ-20): it is a near-miss false-alarm
+  rate, not a precision, and every file was written inside this repository.
+  Zero of 29 valid files leaves a one-sided 95% upper bound of about 9.8% on
+  the per-file false-alarm rate, and far wider per rule, where most rules have
+  one or two near-misses. No third-party corpus is imported (owner decision);
+  the external check is metamorphic instead: four meaning-preserving rewrites
+  of every near-miss and calibration fixture must keep its verdict
+  (`src/scripts/design_slop_rules.test.ts`). Their first run found one real
+  defect, a CSS comment above a block read as part of its selector.
+
 ### claim: design-slop-false-positive-baseline
 - claim: On a 32-file labelled clean-UI corpus (digest `90544389b05c1d0b`), all 23 shipped text-engine design-slop rules produce zero false positives (the five render-engine rules read rendered pages and are measured on their own corpus, see design-slop-near-miss-baseline) (26 before the 2026-10-26 near-miss demotions and promotions) — which the pre-registration reads as the corpus failing to discriminate, not as precision. History: the 2026-08-13 epoch ran 19 rules, 18 at zero, and the nineteenth (`slop-c6-lock-colour`, catalog C6) fired on 4 of the 32 files and was demoted to judgment-only rather than tuned.
 - kind: quant
@@ -833,6 +843,8 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
   32 clean files, M1 = 0 for every rule. This is the honest-null branch named
   below, and it is the reason the near-miss corpus of
   `road-to-tells-a-near-miss-can-refute` Phase 1 gates every later promotion.
+  Zero of 32 leaves a one-sided 95% upper bound of about 8.9% on the per-file
+  false-alarm rate.
 
   Counting method: M1 is the number of distinct corpus files on which a rule
   emits at least one finding — per file, not per hit. Every corpus file is

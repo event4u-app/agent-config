@@ -1,7 +1,9 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { describe, expect, it } from "vitest";
 import { SLOP_RULES, type DesignContext } from "./design_slop_rules.js";
 import { ALL_SLOP_RULES, scanRender } from "./design_slop_render_rules.js";
-import { scanFile } from "./lint_design_slop.js";
+import { contextFromText, scanFile } from "./lint_design_slop.js";
 import type { StyleRow } from "./design_slop_rules.js";
 
 // Context with no DESIGN.md → all gates OFF, every rule active.
@@ -332,4 +334,55 @@ describe("inline-ignore", () => {
     const css = "/* design-slop-disable slop-l8-zindex-magic */\n.a{z-index:9999}\n.b{z-index:999}";
     expect(findingsFor("slop-l8-zindex-magic", css, "css").length).toBe(0);
   });
+});
+
+/**
+ * Metamorphic relations — the no-import answer to OQ-20 (road-to-tells-a-near-miss-can-refute
+ * 1.5): a rewrite that cannot change what a file means must not change what the
+ * detector says about it. They test the detector against itself, so they find
+ * brittleness; a blind spot the corpus authors share stays invisible to them.
+ */
+const commentFor = (ext: string) =>
+  ext === "css" ? "/* unrelated note */" : ext === "html" || ext === "md" ? "<!-- unrelated note -->" : "// unrelated note";
+const REWRITES: Record<string, (text: string, ext: string) => string> = {
+  "CRLF line endings": (t) => t.replace(/\n/g, "\r\n"),
+  "a trailing space on every line": (t) => t.split("\n").map((l) => `${l} `).join("\n"),
+  "a leading comment": (t, ext) => `${commentFor(ext)}\n${t}`,
+  "trailing blank lines": (t) => `${t}\n\n\n`,
+};
+
+describe("metamorphic: meaning-preserving rewrites keep every calibration verdict", () => {
+  for (const [name, rewrite] of Object.entries(REWRITES)) {
+    for (const [id, fx] of Object.entries(FIXTURES)) {
+      it(`${name} · ${id}`, () => {
+        expect(findingsFor(id, rewrite(fx.positive, fx.ext), fx.ext).length, "positive must still fire").toBeGreaterThan(0);
+        expect(findingsFor(id, rewrite(fx.negative, fx.ext), fx.ext).length, "negative must stay clean").toBe(0);
+      });
+    }
+  }
+});
+
+describe("metamorphic: meaning-preserving rewrites keep every near-miss silent", () => {
+  const dir = path.join("internal", "bench", "corpora", "design-slop-nearmiss");
+  const labels = (JSON.parse(fs.readFileSync(path.join(dir, "LABELS.json"), "utf8")) as {
+    files: Record<string, { intent?: string; valid?: boolean }>;
+  }).files;
+  const rels = Object.keys(labels).filter((r) => labels[r]!.valid !== false).sort();
+
+  it("reads the whole valid corpus", () => {
+    expect(rels.length).toBeGreaterThanOrEqual(26);
+  });
+
+  for (const rel of rels) {
+    const label = labels[rel]!;
+    const ctx = label.intent ? contextFromText(label.intent) : NO_CTX;
+    const ext = path.extname(rel).slice(1);
+    const text = fs.readFileSync(path.join(dir, rel), "utf8");
+    const fired = (t: string) => [...new Set(scanFile(t, path.basename(rel), ctx).map((f) => f.rule))].sort();
+    for (const [name, rewrite] of Object.entries(REWRITES)) {
+      it(`${name} · ${rel}`, () => {
+        expect(fired(rewrite(text, ext))).toEqual(fired(text));
+      });
+    }
+  }
 });
