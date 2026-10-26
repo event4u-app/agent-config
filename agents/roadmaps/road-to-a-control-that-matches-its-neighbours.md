@@ -171,7 +171,7 @@ and is never reported as visually verified without render evidence.
       `data-probe-id` matching, `src/scripts/ui_conformance_probe.ts:1140-1147`).
       Stays shadow.
       verify: `ui_conformance_probe --reference-sibling` reports the padding deviation of 0.2(a).
-- [ ] **3.5 Open-state probe.** `ui:render --interact <selector>` opens, focuses
+- [x] **3.5 Open-state probe.** Done 2026-10-26: `src/cli/commands/uiRenderInteract.ts`, `ui:render --interact`; manifest `interactions`; `ui:audit` takes render boxes first (`renderedBoxMetrics`); live tests in `tests/cli/uiRenderInteract.test.ts` (clipping by `#dialog-body` reported, native select → `native-os`). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiAudit.ts --> `ui:render --interact <selector>` opens, focuses
       and keyboard-operates each newly added interactive control (click, Enter,
       Arrow, Escape, outside click), captures the open state and records overlay
       and portal bounds, clipping against scroll ancestors and z-index, and
@@ -179,13 +179,13 @@ and is never reported as visually verified without render evidence.
       browser → `unverified`, never `verified`.
       verify: fixture 0.2(b) reports the clipped popover; a closed-state-only
       run of 0.2(a) reports `open_state: not-captured`.
-- [ ] **3.6 No false done.** The UI completion report carries
+- [x] **3.6 No false done.** Done 2026-10-26: `consistency_status` in `ui/review.ts` (stamped on `verdict_scope`), `## UI consistency` in the delivery report; `tests/scripts/work_engine/consistency_status.test.ts`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/templates/scripts/work_engine/directives/backend/report.ts --> The UI completion report carries
       `consistency_status: pass | fail | static-pass | unverified`, derived from
       the 3.1 rules, the 3.5 capture and `ui:render`'s `verification`. "Visually
       verified" is never written without render evidence.
       verify: a run with no browser reports `static-pass` or `unverified`, never
       `pass`.
-- [ ] **3.7 Visual regression with bounded repair.** Extend
+- [x] **3.7 Visual regression with bounded repair.** Done 2026-10-26 as a computed-style signature, not a pixel diff (D12): `src/cli/commands/uiRenderRegion.ts`, `ui:render --region/--baseline/--approve`; deltas enter the polish loop via the review instruction; `tests/cli/uiRenderRegion.test.ts` (live: approve, then a 12→4 px padding change fails). <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/continuity-surface.json --> Extend
       `uiRenderAssetCompare` to the page profile (same font-delta tolerance,
       animations off): compare the changed region against an approved baseline
       when one exists under the project's render store, otherwise against the
@@ -205,26 +205,26 @@ and is never reported as visually verified without render evidence.
 
 ## Phase 4 — Review before rebuild
 
-- [ ] **4.1 Review-only entry.** "Prüf meine Seite/Website …" (1.4) routes to <!-- md-language-check: ignore -->
+- [x] **4.1 Review-only entry.** Done 2026-10-26: `is_review_only` marks `input.data.review_only` at routing; `ui/apply` halts with `review-before-rebuild` (no write). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/templates/scripts/work_engine/directives/ui/apply.ts --> "Prüf meine Seite/Website …" (1.4) routes to <!-- md-language-check: ignore -->
       `design-review` with `change_intent: preserve` and no write access in this
       phase. Output: a numbered finding list — severity, before/after/why,
       `file:line`, and the `control_roles` deviation where present.
       verify: a review-only fixture run makes no write before the selection.
-- [ ] **4.2 Selection instead of full rebuild.** Findings are put as a
+- [x] **4.2 Selection instead of full rebuild.** Done 2026-10-26: `ui_review.selection` releases apply; unselected → `deferred` with `accepted_risk` / "deferred by the user" (recorded in the review envelope, not via `check_finding_dispositions`). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/templates/scripts/work_engine/directives/ui/apply.ts --> Findings are put as a
       host-native multi-select question grouped by severity, blockers selected by
       default; unselected findings are recorded as deferred by the user. The
       disposition vocabulary is wired to design-review findings here (today
       `check_finding_dispositions.ts:63` serves PR/release reviews only).
       verify: unselected findings appear with the deferred disposition in the report.
-- [ ] **4.3 Apply selected, re-review selected.** Only selected findings are
+- [x] **4.3 Apply selected, re-review selected.** Done 2026-10-26: `selection_gaps` + review gate: every selected id `fixed`+commit or `not-fixed`+reason; unrequested fixes reported. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/templates/scripts/work_engine/directives/ui/apply.ts --> Only selected findings are
       changed; a re-review over their diff marks each `fixed` with its commit;
       unrequested changes are a review finding.
       verify: each selected finding ends `fixed` with its commit; an unrequested change is reported.
-- [ ] **4.4 Resolve the contradiction** (`design-review/SKILL.md:196` vs `:397`):
+- [x] **4.4 Resolve the contradiction** Done 2026-10-26. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> (`design-review/SKILL.md:196` vs `:397`):
       "In review: describe problem and impact, prescribe no fix. In apply: the
       remedial hierarchy applies."
       verify: `grep -n 'prescribe' src/skills/design-review/SKILL.md` returns the phase-split wording only.
-- [ ] **4.5 Unattended default.** User unreachable → apply blockers, leave the
+- [x] **4.5 Unattended default.** Done 2026-10-26: in the `review-before-rebuild` halt text, tested. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/templates/scripts/work_engine/directives/ui/apply.ts --> User unreachable → apply blockers, leave the
       rest as a list, say so at the top of the result; never a silent full
       rebuild.
       verify: the unattended fixture applies blockers only and says so in its first line.
@@ -290,6 +290,7 @@ and is never reported as visually verified without render evidence.
 | D8 | reversible-technical | agent | Kept from the drafted plan's kill register: no cloned vendor-look design skill and no default "look"; no one-sentence initial response pattern; no text copied from the source; no advisory nudge as the fix (measured advisory null, `concern-activation-policy.md:41`); no new slash command (ADR-041); no 0-10 design scores. | Drafted plan § 6, K1-K7. | — |
 | D9 | reversible-technical | agent | Declined from the external plans: blind A/B judge with multi-run scoring, lite/standard/deep tiers, a scored assessment JSON, a 12-20 task benchmark, variant generation, an upstream watcher, a feedback loop and a web-vitals track. | The defect is deterministic and P0 measures it; `design-variations` and the release runbook's upstream watchlist exist; tiers are covered by the 1.1-1.3 classification; scores are D8. | P0's bars cannot be met without a judged signal. |
 | D11 | reversible-technical | agent | The two consistency findings live in `lint_design_consistency`, not in `design_slop_rules.ts`; their shadow carrier is `--shadow` plus a task, not `design_pass_hook`, and no workflow step is added. | A registry rule is a `backed` catalog claim (`lint_design_antipattern_parity` check C) that the sibling roadmap's near-miss gate has not measured; the dispatch bundle has 55 B of headroom (`check_hook_bundle_composition`, 1,556,615 / 1,556,670) and `design_pass` ships default-off; a workflow edit is a governance surface (`check_kernel_edit_ratified`). The hook wiring is part of 3.8, where the default flip is decided. | 3.8 flips the default; the near-miss gate promotes the rules. |
+| D12 | reversible-technical | agent | Page regression (3.7) compares a computed-style signature of the changed region against an approved baseline, not pixels; a font-only difference reads `degraded`. | A pixel verdict is a per-machine verdict through anti-aliasing and font rasterisation — the reason `uiRenderAssetCompare` refuses one; the asset compare itself is SVG-geometry-specific and does not extend to a page. | A consumer needs a pixel diff that a style signature provably misses. |
 | D10 | deterministic | evidence | Closure pass ran 2026-10-26: no open decision beyond D1-D9. The three `ambiguous-acceptance` hits (the C2 context row, 1.2, 1.4) are wording; each step carries a command-shaped `verify:`. | `closure_scan` over this file. | a step is executed and its oracle cannot be checked. |
 
 ## What verification changed
