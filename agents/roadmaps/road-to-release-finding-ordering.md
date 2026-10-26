@@ -15,6 +15,7 @@ relates:
       recorded the second occurrence below and moved this review_by; it did not
       touch this roadmap status or its AC-2 demonstration, which is still owed.
 estate_growth_exempt: "THIS CHANGE (2026-10-26) moves this roadmap from later/ to active: active_roadmaps +1, later_roadmaps -1. Its one blocker, release-pr-demonstration-owner-call, gates step 2.2 and AC-2 only, so the AI council decided 2/2 on 2026-10-26 to run every other step and keep 2.2 and AC-2 behind the owner (agents/evidence/council/open-questions-inbox-aw-20261026.md). Active count becomes 5, the WIP cap of the owner directive of 2026-10-24."
+estate_offset_exempt: "Woken from later/, not added: the AI council decided the wake 2/2 on 2026-10-26 (agents/evidence/council/open-questions-inbox-aw-20261026.md), and the owner chose to land it. No active roadmap is finished, so none can be archived to offset it; the count reaches the WIP cap of 5 and stops there. Leaving it parked was rejected because its one blocker gates step 2.2 and AC-2 only, and the request has arrived seven times."
 ---
 # Road to the release-finding ordering guarantee
 

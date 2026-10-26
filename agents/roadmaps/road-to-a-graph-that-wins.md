@@ -24,6 +24,7 @@ entry_condition:
 review_by: 2026-12-07
 capability_gap: none
 estate_growth_exempt: "THIS CHANGE (2026-10-26) moves this roadmap from later/ to active: active_roadmaps +1, later_roadmaps -1. Its entry_condition holds in the tree — the parent road-to-a-graph-that-is-shipped is archived and the owner named both benchmark subjects in the corpus header on 2026-10-23 — and the AI council decided the wake 2/2 on 2026-10-26 (agents/evidence/council/open-questions-inbox-aw-20261026.md). Active count becomes 5, the WIP cap of the owner directive of 2026-10-24."
+estate_offset_exempt: "Woken from later/, not added: the AI council decided the wake 2/2 on 2026-10-26 (agents/evidence/council/open-questions-inbox-aw-20261026.md), and the owner chose to land it. No active roadmap is finished, so none can be archived to offset it; the count reaches the WIP cap of 5 and stops there. Leaving it parked was rejected because its entry_condition already holds in the tree and the request has arrived four times."
 ---
 # Road to a graph that wins
 
