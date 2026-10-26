@@ -208,13 +208,23 @@ function dataPayload(c: Ctx, findings: AreaFinding[], st: LaneState): { payload:
                 const key = attr(col, 'primary') === true ? 'pk' : fk ? 'fk' : uniques.has(name) ? 'uk' : attr(col, 'index') === 'declared' ? 'ix' : undefined;
                 const act = actualCols.get(col.id);
                 const actW = act ? nodeWitness(c, act) : null;
+                const uses = (relation: 'reads' | 'writes'): Witness[] =>
+                    (c.inn.get(col.id) ?? []).filter((e) => e.relation === relation).map((e) => edgeWitness(c, e)).filter((x): x is Witness => x !== null);
+                const reads = uses('reads');
+                const writes = uses('writes');
                 return {
                     name,
                     type: String(attr(col, 'type') ?? ''),
                     nullable: attr(col, 'nullable') === true,
                     ...(key ? { key: key as 'pk' | 'fk' | 'uk' | 'ix' } : {}),
                     witness: w,
-                    ...(act && actW ? { actual: { type: String(attr(act, 'type') ?? ''), nullable: attr(act, 'nullable') === true, witness: actW } } : actualSeen ? { actual: null } : {}),
+                    ...(typeof attr(col, 'data:type_family') === 'string' ? { family: String(attr(col, 'data:type_family')) } : {}),
+                    ...(act && actW
+                        ? { actual: { type: String(attr(act, 'type') ?? ''), nullable: attr(act, 'nullable') === true, ...(typeof attr(act, 'data:type_family') === 'string' ? { family: String(attr(act, 'data:type_family')) } : {}), witness: actW } }
+                        : actualSeen
+                          ? { actual: null }
+                          : {}),
+                    ...(reads.length || writes.length ? { code: { reads, writes } } : {}),
                 };
             })
             .filter((x): x is NonNullable<typeof x> => x !== null)
@@ -312,7 +322,7 @@ function dataPayload(c: Ctx, findings: AreaFinding[], st: LaneState): { payload:
         erd.push({
             cluster,
             file,
-            tables: names,
+            tables: g.ids.map((id) => tableName(c.byId.get(id)!)),
             content: [
                 `# Schema — ${cluster}`,
                 '',

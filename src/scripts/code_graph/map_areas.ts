@@ -80,7 +80,11 @@ export interface DataColumn {
      * `null` when that schema covers the table and lacks the column. Absent when
      * no actual schema covers the table.
      */
-    actual?: { type: string; nullable: boolean; witness: Witness } | null;
+    actual?: { type: string; nullable: boolean; family?: string; witness: Witness } | null;
+    /** The type family the drift rules compare (`integer`, `text`, `timestamp` …), so the page agrees with DR-11. */
+    family?: string;
+    /** Where the code reads or writes the column by a literal name; absent when it never does. */
+    code?: { reads: Witness[]; writes: Witness[] };
 }
 
 export interface DataTable {
@@ -115,7 +119,7 @@ export interface DataPayload extends AreaPayloadBase {
     engine?: string;
     /** Files the actual schema was read from (T3 snapshots, T4 oracle output). */
     actualSources?: string[];
-    /** One Mermaid ERD page per cluster of tables joined by foreign keys. */
+    /** One Mermaid ERD page per cluster of tables joined by foreign keys; `tables` holds `DataTable.name`s. */
     erd?: Array<{ cluster: string; file: string; tables: string[] }>;
     tables: DataTable[];
     foreignKeys: DataForeignKey[];
@@ -335,6 +339,8 @@ export function witnessesOf(areas: MapAreas): Array<[string, Witness]> {
             for (const c of t.columns) {
                 push(`data column ${t.name}.${c.name}`, c.witness);
                 push(`data actual column ${t.name}.${c.name}`, c.actual?.witness);
+                for (const w of c.code?.reads ?? []) push(`data read of ${t.name}.${c.name}`, w);
+                for (const w of c.code?.writes ?? []) push(`data write of ${t.name}.${c.name}`, w);
             }
         }
         for (const k of d.foreignKeys) push(`data fk ${k.from.table}.${k.from.column}`, k.witness);
