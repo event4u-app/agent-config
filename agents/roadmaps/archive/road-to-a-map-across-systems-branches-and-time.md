@@ -286,34 +286,34 @@ no absolute local path.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The committed `agents/map/` lists no gitignored path and contains
+- [x] AC-1 — The committed `agents/map/` lists no gitignored path and contains
       no absolute home path.
-- [ ] AC-2 — For a fixture with npm and Composer locks, `why` returns every
+- [x] AC-2 — For a fixture with npm and Composer locks, `why` returns every
       path to a root declaration, and a PHP `use` of a vendor class binds to
       its package through `autoload`.
-- [ ] AC-3 — A package used only in a CI step or a tool config is not reported
+- [x] AC-3 — A package used only in a CI step or a tool config is not reported
       unused; a share is shown only with the package installed.
-- [ ] AC-4 — Runtime witnesses that disagree are shown side by side with one
+- [x] AC-4 — Runtime witnesses that disagree are shown side by side with one
       finding, never one merged number.
-- [ ] AC-5 — Each systems drift rule has a red and a green fixture.
-- [ ] AC-6 — In a fixture with branch `ABC-12-orders`, a merge commit for PR
+- [x] AC-5 — Each systems drift rule has a red and a green fixture.
+- [x] AC-6 — In a fixture with branch `ABC-12-orders`, a merge commit for PR
       #7 and a squash commit `feat: status (#9)`, the route reports ABC-12 /
       PR #7 with date and commit, the column reports PR #9, and `ABC-12` lists
       the route, the table and the controller.
-- [ ] AC-7 — No ticket text and no e-mail address appears under `agents/map/`.
-- [ ] AC-8 — With `domains: Orders, Billing` and `domain_allow: {Billing:
+- [x] AC-7 — No ticket text and no e-mail address appears under `agents/map/`.
+- [x] AC-8 — With `domains: Orders, Billing` and `domain_allow: {Billing:
       [Orders]}`, an Orders → Billing call is one breach with both witnesses; a
       table written from both domains is one finding; files outside every glob
       show as no domain.
-- [ ] AC-9 — Without a declaration, proposals appear only in the Domain lens
+- [x] AC-9 — Without a declaration, proposals appear only in the Domain lens
       with `source: inferred` and never as a breach or in the context pack.
-- [ ] AC-10 — Two branches differing in three files add facts only for those
+- [x] AC-10 — Two branches differing in three files add facts only for those
       three, one per reader that reads each;
       an expired branch disappears with its unreferenced blobs; a pinned one
       stays; no git ref is deleted.
-- [ ] AC-11 — "On which branches does column C exist" and a package version
+- [x] AC-11 — "On which branches does column C exist" and a package version
       per branch are answered from manifests without a checkout.
-- [ ] AC-12 — In a chain main → p → c with p behind main: p owned → p is
+- [x] AC-12 — In a chain main → p → c with p behind main: p owned → p is
       integrated first, then c; p foreign → c gets a report and no direct
       integration of main; nothing is pushed.
-- [ ] AC-13 — Gated catalogue delta ≤ 0 and MCP tool count unchanged.
+- [x] AC-13 — Gated catalogue delta ≤ 0 and MCP tool count unchanged.
