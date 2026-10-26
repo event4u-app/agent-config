@@ -42,6 +42,7 @@ export interface TsNode {
     namedChild(i: number): TsNode | null;
     child(i: number): TsNode | null;
     childForFieldName(field: string): TsNode | null;
+    parent: TsNode | null;
     hasError: boolean | (() => boolean);
 }
 export interface TsTree {
