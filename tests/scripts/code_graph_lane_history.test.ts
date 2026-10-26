@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { DEFAULT_HISTORY_THRESHOLDS, hiddenDependencies, parseNameStatusLog, readHistory } from '../../src/scripts/code_graph/lanes/history/history.js';
 import type { LaneOutput } from '../../src/scripts/code_graph/lanes/lane_fact.js';
 import type { CodeGraph } from '../../src/scripts/code_graph/types.js';
+import { gitProbe } from '../../src/scripts/_lib/spawn_env.js';
 
 let root: string;
 let tick = 0;
@@ -176,9 +177,16 @@ describe('hiddenDependencies', () => {
 });
 
 describe('readHistory on this repository', () => {
-    it('finds at least one co-change pair', () => {
+    // CI checks out one commit, where the reader must refuse rather than report an empty history as no coupling.
+    it('finds at least one co-change pair, or names the shallow clone it cannot read', () => {
         const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+        const shallow = gitProbe(repo, ['rev-parse', '--is-shallow-repository']).trim() === 'true';
         const out = readHistory(repo);
-        expect(out.relations.length).toBeGreaterThanOrEqual(1);
+        if (shallow) {
+            expect(out.relations).toEqual([]);
+            expect(out.skipped.map((s) => s.reason)).toContain('shallow clone');
+        } else {
+            expect(out.relations.length).toBeGreaterThanOrEqual(1);
+        }
     }, 120_000);
 });
