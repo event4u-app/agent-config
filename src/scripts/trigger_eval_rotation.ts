@@ -175,6 +175,7 @@ export interface RotationPlan {
 export function rotation_plan(
     suites: readonly string[],
     cycleWeeks: number = ROTATION_CYCLE_WEEKS,
+    repetitions = 1,
 ): RotationPlan {
     const span = Math.max(cycleWeeks, 1);
     const counts = new Array<number>(span).fill(0);
@@ -183,7 +184,7 @@ export function rotation_plan(
         counts[slot] = (counts[slot] ?? 0) + 1;
     }
     const peakSuitesPerWeek = counts.length > 0 ? Math.max(...counts) : 0;
-    const peakWeeklyQueries = peakSuitesPerWeek * QUERIES_PER_SUITE;
+    const peakWeeklyQueries = peakSuitesPerWeek * QUERIES_PER_SUITE * repetitions;
     return {
         total: suites.length,
         cycleWeeks,
@@ -258,7 +259,11 @@ export async function run_eval_async(
     router: AsyncCapableRouter,
     skills: SkillMeta[],
     model: string,
+    repetitions = 1,
 ): Promise<EvalResult> {
+    if (!Number.isInteger(repetitions) || repetitions < 1) {
+        throw new Error('run_eval_async: repetitions must be a positive integer');
+    }
     const result: EvalResult = {
         skill: skill_name,
         model,
@@ -271,23 +276,53 @@ export async function run_eval_async(
         cost_usd_estimate: 0.0,
     };
     for (const q of queries) {
-        const [loaded, inTok, outTok] =
-            typeof router.routeAsync === 'function'
-                ? await router.routeAsync(q.q, skills)
-                : router.route(q.q, skills);
-        const observed = loaded.includes(skill_name);
-        result.queries.push({
-            q: q.q,
-            expected: q.trigger,
-            observed,
-            loaded_skills: [...loaded].sort(),
-            passed: observed === q.trigger,
-        });
-        result.input_tokens += inTok;
-        result.output_tokens += outTok;
+        for (let rep = 0; rep < repetitions; rep += 1) {
+            const [loaded, inTok, outTok] =
+                typeof router.routeAsync === 'function'
+                    ? await router.routeAsync(q.q, skills)
+                    : router.route(q.q, skills);
+            const observed = loaded.includes(skill_name);
+            result.queries.push({
+                q: q.q,
+                expected: q.trigger,
+                observed,
+                loaded_skills: [...loaded].sort(),
+                passed: observed === q.trigger,
+            });
+            result.input_tokens += inTok;
+            result.output_tokens += outTok;
+        }
     }
     result.metrics = compute_metrics(result.queries);
     return result;
+}
+
+/** One query's firing rate over its repeated runs. */
+export interface QueryRate {
+    q: string;
+    expected: boolean;
+    runs: number;
+    fired: number;
+    /** fired / runs — a rate, never a boolean, once runs > 1. */
+    rate: number;
+}
+
+/**
+ * Per-query trigger RATE over a result whose queries were repeated
+ * (`road-to-routing-assurance-live-floors` 6.1). Firing is stochastic, so a
+ * single run is a noisy floor; the rate is the quantity a floor compares.
+ */
+export function trigger_rates(result: EvalResult): QueryRate[] {
+    const by = new Map<string, QueryRate>();
+    for (const r of result.queries) {
+        const key = `${r.expected ? '1' : '0'}\0${r.q}`;
+        const cur = by.get(key) ?? { q: r.q, expected: r.expected, runs: 0, fired: 0, rate: 0 };
+        cur.runs += 1;
+        if (r.observed) cur.fired += 1;
+        cur.rate = Math.round((cur.fired / cur.runs) * 1000) / 1000;
+        by.set(key, cur);
+    }
+    return [...by.values()];
 }
 
 export interface RotationOptions {
@@ -300,6 +335,11 @@ export interface RotationOptions {
     /** Injectable router (tests). Default: MockRouter (dry) / AnthropicFetchRouter (live). */
     router?: AsyncCapableRouter;
     skillsDir?: string;
+    /**
+     * Runs per query (6.1). Multiplies the paid calls; `rotation_plan` and the
+     * cost line report the product, so a raise is visible before it is billed.
+     */
+    repetitions?: number;
 }
 
 export interface RotationSuiteOutcome {
@@ -312,6 +352,8 @@ export interface RotationSuiteOutcome {
     /** False when a live suite's router returned no usage on any call: no answer was scored. */
     answered: boolean;
     resultPath: string;
+    /** Per-query firing rate over the repetitions. */
+    rates: QueryRate[];
 }
 
 export interface RotationSummary {
@@ -321,6 +363,9 @@ export interface RotationSummary {
     dry_run: boolean;
     outcomes: RotationSuiteOutcome[];
     breaches: number;
+    repetitions: number;
+    /** Provider queries this run actually issued: Σ queries × repetitions. */
+    queries_issued: number;
 }
 
 export async function run_rotation(opts: RotationOptions = {}): Promise<RotationSummary> {
@@ -330,6 +375,7 @@ export async function run_rotation(opts: RotationOptions = {}): Promise<Rotation
     const outDir = opts.outDir ?? DEFAULT_OUT_DIR;
     const model = opts.model ?? DEFAULT_MODEL;
     const skillsDir = opts.skillsDir ?? SKILLS_DIR;
+    const repetitions = opts.repetitions ?? 1;
 
     const suites = list_trigger_suites(skillsDir);
     const picked = pick_rotation(suites, week, cycleWeeks);
@@ -348,10 +394,11 @@ export async function run_rotation(opts: RotationOptions = {}): Promise<Rotation
     fs.mkdirSync(outDir, { recursive: true });
 
     const outcomes: RotationSuiteOutcome[] = [];
+    let queriesIssued = 0;
     for (const skill of picked) {
         const triggersPath = path.join(skillsDir, skill, 'evals', 'triggers.json');
         const [skillName, queries] = load_triggers_any(triggersPath, skill);
-        const result = await run_eval_async(skillName, queries, router, catalogue, model);
+        const result = await run_eval_async(skillName, queries, router, catalogue, model, repetitions);
         const floor = floor_for(skillName);
         const passed =
             result.metrics.precision >= floor.minPrecision &&
@@ -368,7 +415,9 @@ export async function run_rotation(opts: RotationOptions = {}): Promise<Rotation
             passed: passed && answered,
             answered,
             resultPath,
+            rates: trigger_rates(result),
         });
+        queriesIssued += result.queries.length;
     }
 
     return {
@@ -378,7 +427,22 @@ export async function run_rotation(opts: RotationOptions = {}): Promise<Rotation
         dry_run: dryRun,
         outcomes,
         breaches: outcomes.filter((o) => !o.passed).length,
+        repetitions,
+        queries_issued: queriesIssued,
     };
+}
+
+/**
+ * The run report's cost line (6.3): queries issued, the repetition factor, and
+ * the weekly ceiling they are measured against. Repetition multiplies the
+ * bill, so the line names the product rather than the per-suite count.
+ */
+export function cost_line(summary: Pick<RotationSummary, 'queries_issued' | 'repetitions'>): string {
+    return (
+        `cost · ${String(summary.queries_issued)} provider queries ` +
+        `(× ${String(summary.repetitions)} repetition${summary.repetitions === 1 ? '' : 's'}) · ` +
+        `weekly ceiling ${String(MAX_WEEKLY_QUERIES)}`
+    );
 }
 
 function parse_args(argv: string[]): RotationOptions & { help?: boolean } {
@@ -398,6 +462,7 @@ function parse_args(argv: string[]): RotationOptions & { help?: boolean } {
         else if (a === '--dry-run') out.dryRun = true;
         else if (a === '--out-dir') out.outDir = path.resolve(take());
         else if (a === '--model') out.model = take();
+        else if (a === '--repetitions') out.repetitions = Number(take());
         else if (a === '-h' || a === '--help') out.help = true;
         else {
             process.stderr.write(`trigger_eval_rotation: error: unrecognized arguments: ${a}\n`);
@@ -406,6 +471,10 @@ function parse_args(argv: string[]): RotationOptions & { help?: boolean } {
     }
     if (out.week !== undefined && !Number.isInteger(out.week)) {
         process.stderr.write('trigger_eval_rotation: error: --week must be an integer\n');
+        process.exit(2);
+    }
+    if (out.repetitions !== undefined && (!Number.isInteger(out.repetitions) || out.repetitions < 1)) {
+        process.stderr.write('trigger_eval_rotation: error: --repetitions must be a positive integer\n');
         process.exit(2);
     }
     if (out.cycleWeeks !== undefined && (!Number.isInteger(out.cycleWeeks) || out.cycleWeeks <= 0)) {
@@ -420,7 +489,7 @@ export async function main(argv?: string[]): Promise<number> {
     if (opts.help) {
         process.stdout.write(
             'usage: trigger_eval_rotation [--week N] [--cycle-weeks N] [--dry-run]\n' +
-                '                             [--out-dir DIR] [--model MODEL]\n',
+                '                             [--out-dir DIR] [--model MODEL] [--repetitions N]\n',
         );
         return 0;
     }
@@ -436,6 +505,7 @@ export async function main(argv?: string[]): Promise<number> {
             `${summary.outcomes.length}/${summary.total_suites} suites this run` +
             `${summary.dry_run ? ' · DRY-RUN (floors advisory)' : ''}\n`,
     );
+    process.stdout.write(cost_line(summary) + '\n');
     for (const o of summary.outcomes) {
         const mark = o.passed ? '✅' : '❌';
         if (!o.answered) {
