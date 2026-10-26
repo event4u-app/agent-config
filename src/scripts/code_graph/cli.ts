@@ -10,6 +10,14 @@
  *                                               (FRESH) / full build (ABSENT);
  *                                               a result built while HEAD moved
  *                                               is discarded and retried once
+ *            [--allow-shrink]                  a result that loses more than a
+ *                                               set share of facts with no matching
+ *                                               change in the tree is refused unless
+ *   refresh --touched [file…]                   re-read changed files into the
+ *                                               working-tree overlay (`verify/`)
+ *   confirm <id…> | --from-query <symbol>       re-read the witnesses of facts
+ *   pack "<task>" [--diff] [--since <rev>]      a verified context pack
+ *   rebuild-diff                                incremental vs cold build
  *   auto-refresh on|off|status [--root P]      opt this project in to the
  *                                               session-start background refresh
  *   projects list|add|remove|prune             the user-global registry of
@@ -131,6 +139,7 @@ import {
     path as graphPath,
     query,
     type QueryResult,
+    resolveSeeds,
     tree,
 } from './query.js';
 import { openGraphIndex, sqliteTwinPath } from './sqlite_store.js';
@@ -149,6 +158,12 @@ import {
     type UntestedResult,
 } from './verbs.js';
 import { main as lineageMain } from './lineage_cli.js';
+import { graphChecksum } from './verify/owner_index.js';
+import { overlayState, overlayView, readOverlay } from './verify/overlay.js';
+import { headSha, verifyPaths } from './verify/paths.js';
+import { renderShrink, shrinkCheck } from './verify/shrink_guard.js';
+import { writeTombstones } from './verify/tombstones.js';
+import { usageLowerBound, verifyMain } from './verify/verify_cli.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
@@ -346,14 +361,25 @@ function resolveGraph(argv: string[]): { g: LoadedGraph; note: string } | { err:
     const root = resolveRoot(argv);
     if (explicit) {
         if (!fs.existsSync(explicit)) return { err: `graph not found: ${explicit}` };
-        return { g: loadGraph(explicit, path.relative(root, explicit)), note: '' };
+        return { g: withOverlay(loadGraph(explicit, path.relative(root, explicit))), note: '' };
     }
     const picked = pickSource(detectSources(root, cacheFor(root)));
     if (!picked) return { err: 'no code-graph source found — run `code_graph build` or ship a graph.json' };
     if (picked.kind === 'scip') return { err: `${picked.note ?? 'SCIP detected'} — run \`code-graph build\` to merge it into the native graph` };
     const staleNote = picked.stale ? ` ⚠ index is ${picked.commits_behind ?? 'N'} commit(s) behind — rebuild before trusting` : '';
     touchHome(root);
-    return { g: loadGraph(picked.path, `${picked.kind}:${shown(root, picked.path)}`), note: staleNote };
+    return { g: withOverlay(loadGraph(picked.path, `${picked.kind}:${shown(root, picked.path)}`)), note: staleNote };
+}
+
+/** `added` for a fact only the working-tree overlay holds. */
+function overlayStateOf(g: LoadedGraph): (id: string) => ReturnType<typeof overlayState> {
+    const ov = readOverlay(g.answeredBy, graphChecksum(g));
+    return (id) => overlayState(ov, id);
+}
+
+/** Committed facts seen through the working-tree overlay, when `refresh --touched` computed one against this graph. */
+function withOverlay(g: LoadedGraph): LoadedGraph {
+    return overlayView(g, readOverlay(g.answeredBy, graphChecksum(g)));
 }
 
 function render(r: QueryResult, staleNote: string): number {
@@ -454,16 +480,32 @@ function cmdQuery(kind: 'query' | 'explain' | 'affected' | 'path', argv: string[
             direction: dir === 'in' || dir === 'out' ? dir : kind === 'affected' ? 'in' : kind === 'query' ? 'out' : 'both',
             depth: Number(flag(argv, '--depth') ?? (kind === 'query' ? 1 : 2)),
             limit: Number(flag(argv, '--limit') ?? 50),
+            stateOf: overlayStateOf(r.g),
         });
         process.stdout.write(`source: ${t.source}${r.note}\n`);
         if (t.seeds.length) process.stdout.write(`seeds: ${t.seeds.join(', ')}\n`);
         process.stdout.write(`population: ${t.population}\n`);
         for (const l of t.tree) process.stdout.write(`  ${l}\n`);
         process.stdout.write(`returned ${t.returned} of ${t.total}${t.hasMore ? ' (more — raise --limit)' : ''}\n`);
+        if (t.items.some((i) => i.direction === 'in')) renderUsage(r.g, argv, a);
         return 0;
     }
     const fn = kind === 'query' ? query : kind === 'explain' ? explain : affected;
-    return render(fn(r.g, a, budget), r.note);
+    const rc = render(fn(r.g, a, budget), r.note);
+    if (kind === 'affected') renderUsage(r.g, argv, a);
+    return rc;
+}
+
+/** A usage answer is a lower bound: pair it with a text search for the seed's name. */
+function renderUsage(g: LoadedGraph, argv: string[], seed: string): void {
+    const ids = resolveSeeds(g, seed, 1);
+    if (ids.length === 0) return;
+    const root = resolveRoot(argv);
+    const users = tree(g, ids[0] as string, { direction: 'in', depth: 2, limit: 10_000 }).items.map((i) => i.id);
+    const lb = usageLowerBound(g, root, flag(argv, '--graph') ?? g.answeredBy, ids[0] as string, users);
+    if (!lb) return;
+    process.stdout.write(`usage: ${lb.line}\n`);
+    for (const at of lb.text_only_at) process.stdout.write(`  text only: ${at}\n`);
 }
 
 function isFlagValue(argv: string[], token: string): boolean {
@@ -824,7 +866,7 @@ function treeStamp(root: string): string {
 /** Returned by {@link runBudgetedBuild} when HEAD or the working tree moved while the child built. */
 const HEAD_MOVED = -1;
 
-function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeconds: number): number {
+function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeconds: number, allowShrink = false): number {
     if (!(budgetSeconds > 0)) {
         // Node's own `timeout` option treats 0 as "no limit" — a genuinely
         // zero-or-negative budget is an immediate, deterministic abort
@@ -890,6 +932,13 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
         process.stderr.write('code-graph: files changed during the refresh — result discarded\n');
         return HEAD_MOVED;
     }
+    const shrink = shrinkCheck(root, out, tmpOut, { basis: headSha(root) ?? 'no-commit' });
+    if (!shrink.ok && !allowShrink) {
+        cleanupTemp(tmpOut);
+        process.stderr.write(`code-graph: ${renderShrink(shrink)}\n`);
+        return 1;
+    }
+    if (shrink.tombstones.length > 0) writeTombstones(verifyPaths(out).tombstones, shrink.tombstones);
     fs.renameSync(tmpOut, out); // same-dir → atomic; real cache only ever changes here
     const tmpSidecar = sidecarPath(tmpOut);
     if (fs.existsSync(tmpSidecar)) fs.renameSync(tmpSidecar, sidecarPath(out));
@@ -938,7 +987,7 @@ async function cmdRefresh(argv: string[]): Promise<number> {
                 rc = 0;
                 break;
             }
-            rc = runBudgetedBuild(root, out, v.verdict === 'STALE', budgetSeconds);
+            rc = runBudgetedBuild(root, out, v.verdict === 'STALE', budgetSeconds, argv.includes('--allow-shrink'));
         }
         if (rc === HEAD_MOVED) {
             record('tree-moved', 'HEAD or files changed during both attempts; the next refresh retries');
@@ -1212,7 +1261,10 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'build') return await cmdBuild(argv.slice(1));
         if (sub === 'validate') return cmdValidate(argv.slice(1));
         if (sub === 'detect') return cmdDetect(argv.slice(1));
+        if (sub === 'refresh' && argv.includes('--touched')) return await verifyMain('refresh', argv.slice(1), resolveRoot(argv.slice(1)), flag(argv, '--graph') ?? cacheFor(resolveRoot(argv.slice(1))));
         if (sub === 'refresh') return await cmdRefresh(argv.slice(1));
+        if (sub === 'confirm' || sub === 'pack' || sub === 'rebuild-diff')
+            return await verifyMain(sub, argv.slice(1), resolveRoot(argv.slice(1)), flag(argv, '--graph') ?? cacheFor(resolveRoot(argv.slice(1))));
         if (sub === 'query' || sub === 'explain' || sub === 'affected' || sub === 'path')
             return cmdQuery(sub, argv.slice(1));
         if (sub === 'impact') return cmdImpact(argv.slice(1));
@@ -1230,7 +1282,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'estate') return estateMain(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|tests-for|untested|dead|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
+                'impact|tests-for|untested|dead|confirm|pack|rebuild-diff|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
         );
         return 2;
     } catch (e) {

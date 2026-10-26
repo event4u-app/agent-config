@@ -52,10 +52,18 @@ import { repoIdentity } from '../code_graph/repo_identity.js';
 import { readRegistry, repoIdOf } from '../_lib/project_registry.js';
 import { resolvePath } from './path_util.js';
 import { isTestFile } from '../code_graph/build.js';
+import { confirmIds } from '../code_graph/verify/confirm.js';
+import { overlayState, overlayView, readOverlay } from '../code_graph/verify/overlay.js';
+import { contextPack } from '../code_graph/verify/pack.js';
+import { workingChanges } from '../code_graph/verify/paths.js';
+import { usageLowerBound } from '../code_graph/verify/verify_cli.js';
+import { graphChecksum, loadIndexedGraph } from '../code_graph/verify/owner_index.js';
 import {
     loadGraph,
     type LoadedGraph,
     node as graphNodeVerb,
+    resolveExactNode,
+    resolveSeeds,
     type NodeOptions,
     path as graphPathVerb,
     query as graphQueryVerb,
@@ -144,7 +152,9 @@ function withGraph<T extends Record<string, unknown>>(
     const picked = pickSource(detectSources(root, graphHome(root).cachePath));
     if (!picked || picked.kind === 'scip') return noGraph(root);
     touchHome(root);
-    const g = loadGraph(picked.path, `${picked.kind}:${shown(root, picked.path)}`);
+    const base = loadGraph(picked.path, `${picked.kind}:${shown(root, picked.path)}`);
+    // Committed facts seen through the working-tree overlay, when one was computed against this graph.
+    const g = overlayView(base, readOverlay(picked.path, graphChecksum(base)));
     try {
         const out = fn(g);
         // `status` is DERIVED from the answer, never prefixed onto it. An
@@ -157,8 +167,16 @@ function withGraph<T extends Record<string, unknown>>(
         const refused = typeof out['refusal'] === 'string' && out['refusal'] !== '';
         return { status: refused ? 'refused' : 'ok', ...out };
     } finally {
-        g.close();
+        base.close();
     }
+}
+
+/** The tool-side lower bound of a usage answer: the seed's known places plus a text search. */
+function usageOf(g: LoadedGraph, root: string, seed: string, knownIds: Iterable<string>): Record<string, unknown> {
+    const id = resolveSeeds(g, seed, 1)[0];
+    if (id === undefined) return {};
+    const lb = usageLowerBound(g, root, graphHome(root).cachePath, id, knownIds);
+    return lb ? { usage: lb } : {};
 }
 
 /** Relative inside the root, absolute for a graph home outside it (ADR-299). */
@@ -354,12 +372,14 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         description:
             "A symbol's direct outgoing relations (calls, imports, uses, inherits), each " +
             'with its confidence and resolution mechanism: "what does this touch" before reading a file. ' +
-            'With kind, relation, direction or depth: a filtered tree, each item with its witness.',
+            'With kind, relation, direction or depth: a filtered tree, each item with its witness. ' +
+            'mode=pack: symbol is a task; its confirmed facts.',
         input_schema: {
             type: 'object',
             required: ['symbol'],
             properties: {
                 symbol: { type: 'string', description: 'Node id, label, or free text.' },
+                mode: { type: 'string', enum: ['relations', 'pack'], default: 'relations' },
                 budget: { type: 'integer', minimum: 1, default: 1500 },
                 kind: { type: 'string', description: 'Tree mode: only these node kinds (comma-separated).' },
                 relation: { type: 'string', enum: RELATIONS, description: 'Tree mode: only this relation.' },
@@ -373,6 +393,17 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             const symbol = str(args, 'symbol');
             if (symbol === '') return { status: 'error', error: 'symbol must be a non-empty string' };
             const staleness = graphState(root, graphHome(root).cachePath);
+            if (str(args, 'mode') === 'pack') {
+                const diffFiles = workingChanges(root)?.changed ?? [];
+                return withGraph(root, (g) => ({
+                    staleness,
+                    ...contextPack(g, root, graphHome(root).cachePath, symbol, {
+                        diffFiles,
+                        ...(args['budget'] !== undefined ? { budget: num(args, 'budget', 1500) } : {}),
+                        ...(args['depth'] !== undefined ? { depth: num(args, 'depth', 2) } : {}),
+                    }),
+                }));
+            }
             const kinds = str(args, 'kind').split(',').map((k) => k.trim()).filter(Boolean);
             const relation = str(args, 'relation');
             if (kinds.length > 0 || relation !== '' || args['direction'] !== undefined || args['depth'] !== undefined) {
@@ -381,7 +412,12 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
                 if ((RELATIONS as readonly string[]).includes(relation)) opts.relations = [relation];
                 const dir = str(args, 'direction');
                 if (dir === 'in' || dir === 'out' || dir === 'both') opts.direction = dir;
-                return withGraph(root, (g) => ({ staleness, ...graphTreeVerb(g, symbol, opts) }));
+                return withGraph(root, (g) => {
+                    const ov = readOverlay(g.answeredBy, graphChecksum(g));
+                    const t = graphTreeVerb(g, symbol, { ...opts, stateOf: (id) => overlayState(ov, id) });
+                    const users = t.items.filter((i) => i.direction === 'in').map((i) => i.id);
+                    return { staleness, ...t, ...(users.length > 0 ? usageOf(g, root, symbol, users) : {}) };
+                });
             }
             return withGraph(root, (g) => ({
                 staleness,
@@ -396,12 +432,13 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         description:
             'One symbol in full: where it is declared, what reaches it, what it reaches, ' +
             'how connected it is. Resolves EXACTLY (node id, then label) and refuses ' +
-            'anything else — never scores free text.',
+            'anything else — never scores free text. mode=confirm re-reads its witness.',
         input_schema: {
             type: 'object',
             required: ['id'],
             properties: {
                 id: { type: 'string', description: 'Node id `<relpath>#<sym>` or an exact label.' },
+                mode: { type: 'string', enum: ['node', 'confirm'], default: 'node' },
                 direction: {
                     type: 'string',
                     enum: ['in', 'out', 'both'],
@@ -433,7 +470,11 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             if ((RELATIONS as readonly string[]).includes(rel)) opts.relation = rel as Relation;
             const kind = str(args, 'kind');
             if (kind !== '') opts.kind = kind;
-            return withGraph(root, (g) => ({ staleness, ...graphNodeVerb(g, id, opts) }));
+            if (str(args, 'mode') === 'confirm') return confirmNode(root, id, staleness, args['direction'] === undefined ? undefined : opts.direction);
+            return withGraph(root, (g) => {
+                const r = graphNodeVerb(g, id, opts);
+                return { staleness, ...r, ...(r.in.length > 0 ? usageOf(g, root, r.id, r.in.map((e) => e.id)) : {}) };
+            });
         },
     },
 
@@ -560,6 +601,31 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         },
     },
 });
+
+/**
+ * `graph_node` in confirm mode: resolve the id exactly through the SQLite index
+ * and re-read its witness — and, with a direction, those of its listed ends.
+ * Never loads the JSON graph; without a current index it says so.
+ */
+function confirmNode(root: string, id: string, staleness: string, direction: 'in' | 'out' | 'both' | undefined): Record<string, unknown> {
+    const cache = graphHome(root).cachePath;
+    const g = loadIndexedGraph(cache, cache);
+    if (!g) {
+        return { status: 'unavailable', staleness, error: 'no current graph index — run `agent-config code-graph build`; confirm never reads the JSON graph' };
+    }
+    let resolved: string | null;
+    let ambiguous: string[];
+    try {
+        ({ id: resolved, ambiguous } = resolveExactNode(overlayView(g, readOverlay(cache, graphChecksum(g))), id));
+    } finally {
+        g.close();
+    }
+    if (resolved === null) {
+        return { status: 'refused', staleness, refusal: ambiguous.length ? `'${id}' names ${ambiguous.length} nodes — re-ask with one id` : `'${id}' matches no node id or label`, candidates: ambiguous };
+    }
+    const r = confirmIds(root, cache, [resolved], direction ? { neighbours: direction } : {});
+    return { ...r, staleness, id: resolved };
+}
 
 /** One file's blast record and the files it reaches by depth, or a refusal naming why there is none. */
 function blastFor(m: MapModel, file: string): Record<string, unknown> {

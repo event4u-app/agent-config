@@ -70,9 +70,11 @@ export const MAP_CONFIRM_TEXT = [
     'and a code-graph index under agents/runtime/state/ that the graph_* tools and',
     '`agent-config code-graph` read.',
     'Use the map to find every place a change affects. The map is an index, not the truth:',
-    'confirm each place it names against the file itself before relying on it, search the',
-    'source text for names the map may not know, and re-read every file you changed when you',
-    'are done.',
+    'before relying on a place it names, re-read its witness with `agent-config code-graph confirm <id…>`',
+    '(or `graph_node` with mode=confirm); start a task with `agent-config code-graph pack "<task>" --diff`',
+    '(or `graph_query` with mode=pack) for the confirmed facts it touches; treat every usage count as a',
+    'lower bound and search the source text for names the map may not know; and when you are done run',
+    '`agent-config code-graph refresh --touched` so the map re-reads every file you changed.',
 ].join('\n');
 
 export const MAP_ARMS: Record<string, MapArmSpec> = {

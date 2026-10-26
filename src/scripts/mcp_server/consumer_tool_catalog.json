@@ -371,7 +371,7 @@
     },
     {
       "name": "graph_node",
-      "description": "One symbol in full: where it is declared, what reaches it, what it reaches, how connected it is. Resolves EXACTLY (node id, then label) and refuses anything else — never scores free text.",
+      "description": "One symbol in full: where it is declared, what reaches it, what it reaches, how connected it is. Resolves EXACTLY (node id, then label) and refuses anything else — never scores free text. mode=confirm re-reads its witness.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"
@@ -385,6 +385,14 @@
           "id": {
             "type": "string",
             "description": "Node id `<relpath>#<sym>` or an exact label."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "node",
+              "confirm"
+            ],
+            "default": "node"
           },
           "direction": {
             "type": "string",
@@ -502,7 +510,7 @@
     },
     {
       "name": "graph_query",
-      "description": "A symbol's direct outgoing relations (calls, imports, uses, inherits), each with its confidence and resolution mechanism: \"what does this touch\" before reading a file. With kind, relation, direction or depth: a filtered tree, each item with its witness.",
+      "description": "A symbol's direct outgoing relations (calls, imports, uses, inherits), each with its confidence and resolution mechanism: \"what does this touch\" before reading a file. With kind, relation, direction or depth: a filtered tree, each item with its witness. mode=pack: symbol is a task; its confirmed facts.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"
@@ -516,6 +524,14 @@
           "symbol": {
             "type": "string",
             "description": "Node id, label, or free text."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "relations",
+              "pack"
+            ],
+            "default": "relations"
           },
           "budget": {
             "type": "integer",
