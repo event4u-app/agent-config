@@ -100,24 +100,24 @@ deterministic proof where a claim is made.
 
 The gate for every later promotion.
 
-- [ ] **1.1 Pre-register before building.**
+- [x] **1.1 Pre-register before building.** Done 2026-10-26: `design-slop-nearmiss-PREREG.md` committed before any corpus file. Predictions vs. reading: M1 and V1 fired as predicted, CP1 fired on a file later adjudicated a true positive, C3 and T7 did not fire; ten unpredicted rules did. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/corpora/design-slop-nearmiss/holdout/m6-lazy-images-reading-progress.jsx -->
       `internal/bench/corpora/design-slop-nearmiss-PREREG.md` with metrics,
       predicted non-zero rules and the honest-null reading, in the form of
       `prose-tells-fp-PREREG.md`.
       verify: the PREREG commit precedes the corpus commit.
-- [ ] **1.2 One near-miss per backed rule, authored independently.** For each of
+- [x] **1.2 One near-miss per backed rule, authored independently.** Done 2026-10-26: 26 files by an agent that saw only the catalog, tune/holdout alternating by id; `LABELS.json` with signal, basis, author, and the adjudication of five labels. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/corpora/design-slop-nearmiss/holdout/m6-lazy-images-reading-progress.jsx --> For each of
       the 26 rules one legitimate use a naive detector would flag (a neutral 3px
       citation rule for V1, a danger-state stripe, …); tune/holdout split as in
       the prose bench.
       verify: for every rule ≥ 1 file the PREREG labels its near-miss; the bench
       prints per-split M1.
-- [ ] **1.3 Near-misses for the four interaction signals** (carried A1): a
+- [x] **1.3 Near-misses for the four interaction signals** Done 2026-10-26: m6 (lazy-load + reading progress), m7 (inspection loupe), m8 (disabled hover opacity), v9 (grain without gradient). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/corpora/design-slop-nearmiss/holdout/m6-lazy-images-reading-progress.jsx --> (carried A1): a
       lazy-loading or scroll-progress `IntersectionObserver`, cursor tracking
       driving a functional canvas, hover opacity on a disabled control, grain
       without V9's gradient composition.
       verify: the corpus digest changes; each of M6, M7, M8, V9 has ≥ 1
       legitimate use a naive detector would flag.
-- [ ] **1.4 Real code as a labelled split.** The D13 findings in `src/ui/` and
+- [x] **1.4 Real code as a labelled split.** Done 2026-10-26: `DOGFOOD-LABELS.json`, 34 findings (V1: 2 TP, 6 near-miss; CP1: 26 TP), labelled by this run and said so. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/corpora/design-slop-nearmiss/holdout/m6-lazy-images-reading-progress.jsx --> The D13 findings in `src/ui/` and
       `site/`, labelled by hand TP or near-miss with a one-line basis, kept as
       the `dogfood/` split.
       verify: a labels file with one row per finding, basis and labeller; the
@@ -128,7 +128,7 @@ The gate for every later promotion.
       split, never folded into the headline (lineage overlap with the catalog).
       Blocked: `external-test-data-licence` (OQ-20).
       verify: licence text and SHA pinned; three named splits in the bench output.
-- [ ] **1.6 Run, record, let rules fall.** A rule with M1 > 0 on a near-miss is
+- [x] **1.6 Run, record, let rules fall.** Done 2026-10-26: first run M1 > 0 for 15 of 26; tuned once L4, T9, T10; demoted CP2, CP5, CP6, M1, V3, V6; 20 rules at M1 = 0 on both splits; claim `design-slop-near-miss-baseline`; parity green. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/corpora/design-slop-nearmiss/holdout/m6-lazy-images-reading-progress.jsx --> A rule with M1 > 0 on a near-miss is
       tuned once, then demoted to `judgment-only` (the C6 precedent).
       verify: a new CLAIMS epoch with per-split M1;
       `lint_design_antipattern_parity` green after any demotion.
