@@ -284,9 +284,7 @@ and `references`), and § Measured twice still governs that question.
 
 ## Systems, provenance, domains, branches
 
-Why a package is installed, since when and for which ticket an element exists,
-which business domain it belongs to, and on which branch it exists:
-[`references/systems-provenance-domains-branches.md`](references/systems-provenance-domains-branches.md).
+[Why installed, since when, which domain, on which branch](references/systems-provenance-domains-branches.md).
 
 ## Do NOT
 
