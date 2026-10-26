@@ -165,7 +165,7 @@ renders from real facts or says why it has none.
       relation filters; answers are compact indented trees with relation labels,
       each item with witness and confirm state, lists with
       `returned/total/hasMore`, absence answers naming their population.
-      verify: `graph_query` with a kind filter returns only that kind and its
+      verify: a call of `graph_query` with a kind filter returns only that kind and its
       population line.
 - [x] **2.5 Old readers keep working.** The previous CLI and MCP output shapes
       stay readable for one release; the cache path reads a fallback.
