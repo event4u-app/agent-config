@@ -32,7 +32,7 @@ async function mapOf(withGit: boolean): Promise<string> {
 
 async function open(html: string): Promise<Page> {
     const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
-    await page.goto(pathToFileURL(html).href);
+    await page.goto(`${pathToFileURL(html).href}#/code`);
     await page.waitForFunction(() => (window as unknown as { __mapView?: unknown }).__mapView !== undefined);
     return page;
 }

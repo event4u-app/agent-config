@@ -1258,7 +1258,7 @@ function readSidecar(p: string, fingerprint: string): ExtractSidecar | null {
 export async function buildFromRepo(
     root: string,
     cachePath: string | null,
-    opts: { update?: boolean; fingerprint?: string; lanes?: boolean } = {},
+    opts: { update?: boolean; fingerprint?: string; sidecarFrom?: string; lanes?: boolean } = {},
 ): Promise<BuildResult> {
     const abs = path.resolve(root);
     const fullPaths = discoverFiles(abs);
@@ -1275,7 +1275,9 @@ export async function buildFromRepo(
     }
 
     const fingerprint = opts.fingerprint ?? extractorFingerprint();
-    const prior = opts.update && cachePath ? readSidecar(sidecarPath(cachePath), fingerprint) : null;
+    // `sidecarFrom` lets an in-memory build (`cachePath` null) reuse a cache's extracts without writing it.
+    const priorPath = opts.sidecarFrom ?? (cachePath ? sidecarPath(cachePath) : null);
+    const prior = opts.update && priorPath ? readSidecar(priorPath, fingerprint) : null;
     const priorFiles = prior?.files ?? {};
     const nextSidecar: ExtractSidecar = { version: SCHEMA_VERSION, fingerprint, files: {} };
     const extracts: FileExtract[] = [];

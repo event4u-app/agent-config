@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { buildMap, renderHtml, VIEWER_SCRIPTS, VIEWER_STYLES, viewerScript } from '../../src/scripts/code_graph/map.js';
+import { buildMap, HUB_SCRIPTS, renderHtml, VIEWER_SCRIPTS, VIEWER_STYLES, viewerScript } from '../../src/scripts/code_graph/map.js';
 import { areaProblems, areaSummaryLines, KNOWLEDGE_AREA_IDS, type MapAreas } from '../../src/scripts/code_graph/map_areas.js';
 import { sampleAreas, wit } from './code_graph_map_areas_fixture.js';
 
@@ -68,7 +68,7 @@ describe('the areas payload contract', () => {
 describe('map.json carries the areas section', () => {
     it('writes an empty section when no reader ran, and the page says so per area', async () => {
         const res = await buildMap(root, { areas: {} });
-        const doc = JSON.parse(fs.readFileSync(path.join(res.outDir, 'map.json'), 'utf-8')) as { areas?: unknown; model?: unknown };
+        const doc = JSON.parse(fs.readFileSync(path.join(res.outDir, 'code', 'map.json'), 'utf-8')) as { areas?: unknown; model?: unknown };
         expect(doc.areas).toEqual({});
         expect(fs.readFileSync(path.join(res.outDir, 'MAP.md'), 'utf-8')).toMatch(/## Knowledge areas[\s\S]*- data: no data yet/);
     });
@@ -76,7 +76,7 @@ describe('map.json carries the areas section', () => {
     it('passes a payload through unchanged into map.json and the page data', async () => {
         const areas = sampleAreas();
         const res = await buildMap(root, { areas });
-        const doc = JSON.parse(fs.readFileSync(path.join(res.outDir, 'map.json'), 'utf-8')) as { areas: MapAreas };
+        const doc = JSON.parse(fs.readFileSync(path.join(res.outDir, 'code', 'map.json'), 'utf-8')) as { areas: MapAreas };
         expect(doc.areas).toEqual(areas);
         const html = fs.readFileSync(path.join(res.outDir, 'index.html'), 'utf-8');
         const block = html.slice(html.indexOf('id="map-data">') + 'id="map-data">'.length, html.indexOf('</script>'));
@@ -86,11 +86,11 @@ describe('map.json carries the areas section', () => {
 
     it('refuses a payload with a host path and leaves the previous map in place', async () => {
         const first = await buildMap(root);
-        const before = fs.readFileSync(path.join(first.outDir, 'map.json'), 'utf-8');
+        const before = fs.readFileSync(path.join(first.outDir, 'code', 'map.json'), 'utf-8');
         const areas = sampleAreas();
         areas.data!.tables[0]!.witness.file = `${root}/database/x.php`;
         await expect(buildMap(root, { areas })).rejects.toThrow(/repository-relative/);
-        expect(fs.readFileSync(path.join(first.outDir, 'map.json'), 'utf-8')).toBe(before);
+        expect(fs.readFileSync(path.join(first.outDir, 'code', 'map.json'), 'utf-8')).toBe(before);
     });
 });
 
@@ -117,9 +117,12 @@ describe('the viewer is joined from its parts before it is hashed', () => {
             expect(js.indexOf(body, i + 1), part).toBe(-1);
             at = i;
         }
-        // No part of the viewer is left out of the join.
+        // No part of the viewer is left out of the join; the Projects area joins the hub's only.
         const onDisk = fs.readdirSync(VIEWER_DIR).filter((f) => f.endsWith('.js') || f.endsWith('.css')).sort();
-        expect(onDisk).toEqual([...VIEWER_SCRIPTS, ...VIEWER_STYLES].sort());
+        expect(onDisk).toEqual([...new Set([...VIEWER_SCRIPTS, ...HUB_SCRIPTS, ...VIEWER_STYLES])].sort());
+        expect(HUB_SCRIPTS.filter((p) => !(VIEWER_SCRIPTS as readonly string[]).includes(p))).toEqual(['area_projects.js']);
+        expect(js).not.toContain('AREA_MODULES.projects');
+        expect(viewerScript(HUB_SCRIPTS)).toContain('AREA_MODULES.projects');
     });
 
     it('a change to one part changes the pinned hash', () => {

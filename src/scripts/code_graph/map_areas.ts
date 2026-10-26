@@ -319,7 +319,8 @@ export interface MapAreas {
     tours?: MapTour[];
 }
 
-function witnessesOf(areas: MapAreas): Array<[string, Witness]> {
+/** Every witness in the areas section, each with a label naming the fact it backs. */
+export function witnessesOf(areas: MapAreas): Array<[string, Witness]> {
     const out: Array<[string, Witness]> = [];
     const push = (where: string, w: Witness | undefined): void => {
         if (w) out.push([where, w]);

@@ -177,14 +177,14 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: holder, started_at: Date.now(), nonce: 't', host: os.hostname() }));
         const r = runCli(['map', '--root', tmp, '--no-verify'], { AGENT_CONFIG_MAP_LOCK_WAIT_MS: '20000' });
         expect(r.status, r.stderr).toBe(0);
-        expect(fs.existsSync(path.join(tmp, 'agents', 'map', 'map.json'))).toBe(true);
+        expect(fs.existsSync(path.join(tmp, 'agents', 'map', 'code', 'map.json'))).toBe(true);
     }, 60_000);
 
     it('redraws the map by graph generation, not by modification time', () => {
         expect(runCli(['refresh', '--root', tmp]).status).toBe(0);
         expect(runCli(['map', '--root', tmp, '--no-verify', '--no-build']).status).toBe(0);
-        const mapJson = path.join(tmp, 'agents', 'map', 'map.json');
-        const cache = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-v1.json');
+        const mapJson = path.join(tmp, 'agents', 'map', 'code', 'map.json');
+        const cache = path.join(tmp, 'agents', 'map', '.build', 'code-graph-v1.json');
         const drawn = JSON.parse(fs.readFileSync(mapJson, 'utf-8')).meta.graph_generation;
         expect(drawn).toMatch(/^[0-9a-f]{16}$/);
         // A map that LOOKS newer than its cache but was drawn from another graph is redrawn.
@@ -210,17 +210,28 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
     }, 60_000);
 
     it('--map draws no map for a project that never asked for one', () => {
-        const out = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-v1.json');
+        const out = path.join(tmp, 'agents', 'map', '.build', 'code-graph-v1.json');
         expect(runCli(['refresh', '--root', tmp, '--map']).status).toBe(0);
         expect(fs.existsSync(out)).toBe(true);
-        expect(fs.existsSync(path.join(tmp, 'agents', 'map'))).toBe(false);
+        // The graph's own .build/ is no map: nothing beside it.
+        expect(fs.readdirSync(path.join(tmp, 'agents', 'map'))).toEqual(['.build']);
     });
 
     it('--map redraws an existing map that is older than the cache', () => {
-        fs.mkdirSync(path.join(tmp, 'agents', 'map'), { recursive: true });
+        fs.mkdirSync(path.join(tmp, 'agents', 'map', 'code'), { recursive: true });
+        fs.writeFileSync(path.join(tmp, 'agents', 'map', 'code', 'map.json'), '{}\n');
         const r = runCli(['refresh', '--root', tmp, '--map']);
         expect(r.status, r.stderr).toBe(0);
-        expect(fs.existsSync(path.join(tmp, 'agents', 'map', 'map.json'))).toBe(true);
+        expect(JSON.parse(fs.readFileSync(path.join(tmp, 'agents', 'map', 'code', 'map.json'), 'utf-8')).meta.graph_generation).toMatch(/^[0-9a-f]{16}$/);
+    });
+
+    it('--map redraws a map an older release drew at the top of agents/map/, into the current layout', () => {
+        fs.mkdirSync(path.join(tmp, 'agents', 'map', 'areas'), { recursive: true });
+        fs.writeFileSync(path.join(tmp, 'agents', 'map', 'map.json'), '{}\n');
+        const r = runCli(['refresh', '--root', tmp, '--map']);
+        expect(r.status, r.stderr).toBe(0);
+        expect(fs.existsSync(path.join(tmp, 'agents', 'map', 'code', 'map.json'))).toBe(true);
+        for (const old of ['map.json', 'areas']) expect(fs.existsSync(path.join(tmp, 'agents', 'map', old)), old).toBe(false);
     });
 
     it('discards a graph built while HEAD moved, and keeps the old cache', () => {
@@ -269,7 +280,7 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
     });
 
     it('status names a reclaim mutex a crash left behind, for a human to remove', () => {
-        const mutex = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-refresh.lock.reclaim');
+        const mutex = path.join(tmp, 'agents', 'map', '.build', 'code-graph-refresh.lock.reclaim');
         fs.mkdirSync(mutex, { recursive: true });
         const old = (Date.now() - 10 * 60 * 1000) / 1000;
         fs.utimesSync(mutex, old, old);
@@ -279,7 +290,7 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
     });
 
     it('auto-refresh on / status / off writes and removes the local opt-in', () => {
-        const marker = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-auto-refresh.json');
+        const marker = path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.json');
         expect(runCli(['auto-refresh', 'status', '--root', tmp]).stdout).toMatch(/auto-refresh: off/);
         expect(runCli(['auto-refresh', 'on', '--root', tmp]).status).toBe(0);
         expect(fs.existsSync(marker)).toBe(true);
@@ -287,6 +298,19 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         expect(runCli(['auto-refresh', 'off', '--root', tmp]).status).toBe(0);
         expect(fs.existsSync(marker)).toBe(false);
         expect(runCli(['auto-refresh', 'sideways', '--root', tmp]).status).toBe(2);
+    });
+
+    it('auto-refresh reads an opt-in an older release wrote, moves it on `on` and removes it on `off`', () => {
+        const legacy = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-auto-refresh.json');
+        const marker = path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.json');
+        fs.mkdirSync(path.dirname(legacy), { recursive: true });
+        fs.writeFileSync(legacy, '{}\n');
+        expect(runCli(['auto-refresh', 'status', '--root', tmp]).stdout).toMatch(/auto-refresh: on/);
+        expect(runCli(['auto-refresh', 'on', '--root', tmp]).status).toBe(0);
+        expect([fs.existsSync(marker), fs.existsSync(legacy)]).toEqual([true, false]);
+        fs.writeFileSync(legacy, '{}\n');
+        expect(runCli(['auto-refresh', 'off', '--root', tmp]).status).toBe(0);
+        expect([fs.existsSync(marker), fs.existsSync(legacy)]).toEqual([false, false]);
     });
 
     it('budget exceeded with an EXISTING cache → old cache byte-identical', () => {

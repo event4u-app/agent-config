@@ -165,7 +165,7 @@ export async function makeFixture(root: string, files: number, withGraph: boolea
         // bench spawns run under their own user-global root, where a global
         // graph home would not be found.
         fs.mkdirSync(path.join(dir, 'agents'));
-        await buildFromRepo(dir, graphHome(dir).cachePath);
+        await buildFromRepo(dir, graphHome(dir).buildCachePath);
     }
     fs.writeFileSync(path.join(dir, 'src', 'service.ts'), 'export function handle(x: string): string {\n    return x.trim();\n}\n');
     return dir;

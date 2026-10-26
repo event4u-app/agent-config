@@ -2,25 +2,31 @@
  * The shell: header (commit, freshness, area nav, search over every kind,
  * export, theme, language), the freshness banner, and the hash router that
  * shows one area at a time — `#/overview`, `#/code`, `#/data/<item>` …
- * An empty or unknown hash opens Code, the area with the most facts.
+ * An empty or unknown hash opens the map home, Overview. The hub page sets
+ * `data.shell` to its own routes and home (Projects); a project map never has
+ * a Projects route.
  */
 extendStrings({
     en: {
         kindNames: { file: 'Files', symbol: 'Symbols', route: 'Routes', area: 'Code areas', table: 'Tables', column: 'Columns', fk: 'Foreign keys', rel: 'ORM relations',
             service: 'Services', operation: 'Operations', resource: 'Resources', workflow: 'Workflows', job: 'Jobs', chain: 'Build / deploy', affected: 'Affected', risk: 'Risk terms',
             verb: 'Verbs', pack: 'Context pack', finding: 'Findings' },
-        allKinds: 'All kinds', kindsLabel: 'Kinds', generation: function (g) { return 'Generation ' + g; }, noHits: 'Nothing found.'
+        allKinds: 'All kinds', kindsLabel: 'Kinds', generation: function (g) { return 'Generation ' + g; }, noHits: 'Nothing found.',
+        hubChip: 'HUB · this machine only', hubChipT: 'Never committed, never inside a repository map', hubCount: function (i, n) { return i + ' of ' + n + ' indexed'; }
     },
     de: {
         kindNames: { file: 'Dateien', symbol: 'Symbole', route: 'Routen', area: 'Code-Areas', table: 'Tabellen', column: 'Spalten', fk: 'Fremdschlüssel', rel: 'ORM-Beziehungen',
             service: 'Dienste', operation: 'Operationen', resource: 'Ressourcen', workflow: 'Workflows', job: 'Jobs', chain: 'Build / Deploy', affected: 'Betroffen', risk: 'Risiko-Terme',
             verb: 'Verben', pack: 'Context-Pack', finding: 'Befunde' },
-        allKinds: 'Alle Arten', kindsLabel: 'Arten', generation: function (g) { return 'Generation ' + g; }, noHits: 'Nichts gefunden.'
+        allKinds: 'Alle Arten', kindsLabel: 'Arten', generation: function (g) { return 'Generation ' + g; }, noHits: 'Nichts gefunden.',
+        hubChip: 'HUB · nur dieser Rechner', hubChipT: 'Nie committet, nie in einer Projekt-Map', hubCount: function (i, n) { return i + ' von ' + n + ' indiziert'; }
     }
 });
 
-var ROUTES = ['overview', 'code'].concat(KNOWLEDGE_IDS);
-var current = { route: 'code', item: '' };
+var SHELL = data.shell || {};
+var ROUTES = SHELL.routes || ['overview', 'code'].concat(KNOWLEDGE_IDS);
+var HOME = SHELL.home || 'overview';
+var current = { route: HOME, item: '' };
 
 function parseHash() {
     var h = (location.hash || '').replace(/^#\/?/, '');
@@ -28,7 +34,7 @@ function parseHash() {
     var route = cut < 0 ? h : h.slice(0, cut);
     var item = '';
     if (cut >= 0) { try { item = decodeURIComponent(h.slice(cut + 1)); } catch (e) { item = ''; } }
-    if (ROUTES.indexOf(route) < 0) return { route: 'code', item: '' };
+    if (ROUTES.indexOf(route) < 0) return { route: HOME, item: '' };
     return { route: route, item: item };
 }
 function go(route, item) {
@@ -37,6 +43,13 @@ function go(route, item) {
 }
 
 function renderHeader() {
+    if (SHELL.hub) {
+        $('pin-commit').textContent = t('hubChip');
+        $('pin-commit').setAttribute('title', t('hubChipT'));
+        $('pin-fresh').textContent = t('hubCount')(num(SHELL.hub.indexed), num(SHELL.hub.projects));
+        $('pin-fresh').className = 'chip fresh';
+        return;
+    }
     var pin = model.pin || { commit: meta.commit, freshness: meta.state, generation: meta.graph_generation || '' };
     var commit = $('pin-commit');
     clear(commit);
@@ -66,6 +79,7 @@ function renderNav() {
 function renderBanner() {
     var b = $('banner');
     clear(b);
+    if (SHELL.hub) { b.hidden = true; return; }
     var st = String((model.pin && model.pin.freshness) || meta.state || '');
     if (st === 'fresh') { b.hidden = true; return; }
     var m = /^behind:(\d+)$/.exec(st);
@@ -119,7 +133,7 @@ function runSearch() {
     var hits = [];
     function hit(kind, text, fn) { if (hits.length < 2000) hits.push({ kind: kind, text: text, fn: fn }); }
     codeSearchHits(q, function (kind, text, fn) { hit(kind, text, function () { go('code'); fn(); }); });
-    KNOWLEDGE_IDS.forEach(function (id) {
+    ROUTES.filter(function (r) { return !!AREA_MODULES[r]; }).forEach(function (id) {
         areaItems(id).forEach(function (it) {
             if (it.label.toLowerCase().indexOf(q) < 0 && String(it.sub || '').toLowerCase().indexOf(q) < 0) return;
             hit(it.key.split('/')[0], t('areaNames')[id] + ' · ' + it.label, function () { avPick(id, it.key); });

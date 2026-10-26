@@ -52,10 +52,18 @@ import { repoIdentity } from '../code_graph/repo_identity.js';
 import { readRegistry, repoIdOf } from '../_lib/project_registry.js';
 import { resolvePath } from './path_util.js';
 import { isTestFile } from '../code_graph/build.js';
+import { confirmIds } from '../code_graph/verify/confirm.js';
+import { overlayState, overlayView, readOverlay } from '../code_graph/verify/overlay.js';
+import { contextPack } from '../code_graph/verify/pack.js';
+import { workingChanges } from '../code_graph/verify/paths.js';
+import { usageLowerBound } from '../code_graph/verify/verify_cli.js';
+import { graphChecksum, loadIndexedGraph } from '../code_graph/verify/owner_index.js';
 import {
     loadGraph,
     type LoadedGraph,
     node as graphNodeVerb,
+    resolveExactNode,
+    resolveSeeds,
     type NodeOptions,
     path as graphPathVerb,
     query as graphQueryVerb,
@@ -145,7 +153,9 @@ function withGraph<T extends Record<string, unknown>>(
     const picked = pickSource(detectSources(root, graphHome(root).cachePath));
     if (!picked || picked.kind === 'scip') return noGraph(root);
     touchHome(root);
-    const g = loadGraph(picked.path, `${picked.kind}:${shown(root, picked.path)}`);
+    const base = loadGraph(picked.path, `${picked.kind}:${shown(root, picked.path)}`);
+    // Committed facts seen through the working-tree overlay, when one was computed against this graph.
+    const g = overlayView(base, readOverlay(picked.path, graphChecksum(base)));
     try {
         const out = fn(g);
         // `status` is DERIVED from the answer, never prefixed onto it. An
@@ -158,8 +168,16 @@ function withGraph<T extends Record<string, unknown>>(
         const refused = typeof out['refusal'] === 'string' && out['refusal'] !== '';
         return { status: refused ? 'refused' : 'ok', ...out };
     } finally {
-        g.close();
+        base.close();
     }
+}
+
+/** The tool-side lower bound of a usage answer: the seed's known places plus a text search. */
+function usageOf(g: LoadedGraph, root: string, seed: string, knownIds: Iterable<string>): Record<string, unknown> {
+    const id = resolveSeeds(g, seed, 1)[0];
+    if (id === undefined) return {};
+    const lb = usageLowerBound(g, root, graphHome(root).cachePath, id, knownIds);
+    return lb ? { usage: lb } : {};
 }
 
 /** Relative inside the root, absolute for a graph home outside it (ADR-299). */
@@ -221,9 +239,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         name: 'graph_impact',
         side_effect: 'shell',
         description:
-            'What a diff can break: callers, dependents and test files reaching the ' +
-            'changed symbols, over stated-fact edges only (refused guesses reported). ' +
-            'Runs `git diff` for the rev.',
+            'What a diff breaks: callers, dependents, tests of changed symbols over stated edges; `review_risk` scores it.',
         input_schema: {
             type: 'object',
             required: ['diff'],
@@ -235,11 +251,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
                     default: false,
                     description: 'Instead return changed symbols no test imports.',
                 },
-                review_risk: {
-                    type: 'boolean',
-                    default: false,
-                    description: 'Instead score the diff as a sum of terms, each counted fact with its witness.',
-                },
+                review_risk: { type: 'boolean' },
             },
             additionalProperties: false,
         },
@@ -269,7 +281,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         side_effect: 'ro',
         description:
             'Test files that exercise a symbol: a test file imports it or its module. ' +
-            'Empty means none does — a finding, not an error.',
+            'Empty is a finding, not an error.',
         input_schema: {
             type: 'object',
             required: ['symbol'],
@@ -291,7 +303,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         side_effect: 'ro',
         description:
             'Symbols no accepted reference and no declared entry point names. REFUSES ' +
-            '(status `refused`) while a source is unreadable: without recorded exportedness ' +
+            'while a source is unreadable: without recorded exportedness ' +
             'an exported-but-unimported symbol looks dead. Never a deletion recommendation.',
         input_schema: {
             type: 'object',
@@ -365,20 +377,20 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         name: 'graph_query',
         side_effect: 'ro',
         description:
-            "A symbol's direct outgoing relations (calls, imports, uses, inherits), each " +
-            'with its confidence and resolution mechanism: "what does this touch" before reading a file. ' +
-            'With kind, relation, direction or depth: a filtered tree, each item with its witness.',
+            "A symbol's outgoing relations with confidence and mechanism. " +
+            'kind/relation/direction/depth: a tree with witnesses. mode=pack: facts for a task.',
         input_schema: {
             type: 'object',
             required: ['symbol'],
             properties: {
                 symbol: { type: 'string', description: 'Node id, label, or free text.' },
-                budget: { type: 'integer', minimum: 1, default: 1500 },
-                kind: { type: 'string', description: 'Tree mode: only these node kinds (comma-separated).' },
-                relation: { type: 'string', enum: RELATIONS, description: 'Tree mode: only this relation.' },
-                direction: { type: 'string', enum: ['in', 'out', 'both'], default: 'both' },
-                depth: { type: 'integer', minimum: 1, maximum: 3, default: 1 },
-                limit: { type: 'integer', minimum: 1, default: 50 },
+                mode: { type: 'string', enum: ['relations', 'pack'] },
+                budget: { type: 'integer' },
+                kind: { type: 'string', description: 'Comma-separated kinds.' },
+                relation: { type: 'string' },
+                direction: { type: 'string', enum: ['in', 'out', 'both'] },
+                depth: { type: 'integer', maximum: 3 },
+                limit: { type: 'integer' },
             },
             additionalProperties: false,
         },
@@ -386,15 +398,34 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             const symbol = str(args, 'symbol');
             if (symbol === '') return { status: 'error', error: 'symbol must be a non-empty string' };
             const staleness = graphState(root, graphHome(root).cachePath);
+            if (str(args, 'mode') === 'pack') {
+                const diffFiles = workingChanges(root)?.changed ?? [];
+                return withGraph(root, (g) => ({
+                    staleness,
+                    ...contextPack(g, root, graphHome(root).cachePath, symbol, {
+                        diffFiles,
+                        ...(args['budget'] !== undefined ? { budget: num(args, 'budget', 1500) } : {}),
+                        ...(args['depth'] !== undefined ? { depth: num(args, 'depth', 2) } : {}),
+                    }),
+                }));
+            }
             const kinds = str(args, 'kind').split(',').map((k) => k.trim()).filter(Boolean);
             const relation = str(args, 'relation');
             if (kinds.length > 0 || relation !== '' || args['direction'] !== undefined || args['depth'] !== undefined) {
                 const opts: TreeOptions = { depth: num(args, 'depth', 1), limit: num(args, 'limit', 50) };
                 if (kinds.length > 0) opts.kinds = kinds;
-                if ((RELATIONS as readonly string[]).includes(relation)) opts.relations = [relation];
+                if (relation !== '' && !(RELATIONS as readonly string[]).includes(relation)) {
+                    return { status: 'error', error: `unknown relation: ${relation}; one of ${RELATIONS.join(', ')}` };
+                }
+                if (relation !== '') opts.relations = [relation];
                 const dir = str(args, 'direction');
                 if (dir === 'in' || dir === 'out' || dir === 'both') opts.direction = dir;
-                return withGraph(root, (g) => ({ staleness, ...graphTreeVerb(g, symbol, opts) }));
+                return withGraph(root, (g) => {
+                    const ov = readOverlay(g.answeredBy, graphChecksum(g));
+                    const t = graphTreeVerb(g, symbol, { ...opts, stateOf: (id) => overlayState(ov, id) });
+                    const users = t.items.filter((i) => i.direction === 'in').map((i) => i.id);
+                    return { staleness, ...t, ...(users.length > 0 ? usageOf(g, root, symbol, users) : {}) };
+                });
             }
             return withGraph(root, (g) => ({
                 staleness,
@@ -407,27 +438,23 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         name: 'graph_node',
         side_effect: 'ro',
         description:
-            'One symbol in full: where it is declared, what reaches it, what it reaches, ' +
-            'how connected it is. Resolves EXACTLY (node id, then label) and refuses ' +
-            'anything else — never scores free text.',
+            'One symbol in full: its declaration, what reaches it, what it reaches. Resolves ' +
+            'EXACTLY (node id, then label), never free text. mode=confirm re-reads its witness.',
         input_schema: {
             type: 'object',
             required: ['id'],
             properties: {
                 id: { type: 'string', description: 'Node id `<relpath>#<sym>` or an exact label.' },
+                mode: { type: 'string', enum: ['node', 'confirm'] },
                 direction: {
                     type: 'string',
                     enum: ['in', 'out', 'both'],
                     default: 'both',
-                    description: '`in` = who reaches it, `out` = what it reaches.',
+                    description: 'in = who reaches it, out = what it reaches.',
                 },
-                depth: { type: 'integer', minimum: 1, maximum: 3, default: 1, description: 'Hop limit.' },
-                relation: {
-                    type: 'string',
-                    enum: RELATIONS,
-                    description: 'One relation only; omit for all.',
-                },
-                kind: { type: 'string', description: 'List only far ends of this node kind.' },
+                depth: { type: 'integer', maximum: 3 },
+                relation: { type: 'string', description: 'One relation only.' },
+                kind: { type: 'string', description: 'Far ends of this kind only.' },
             },
             additionalProperties: false,
         },
@@ -443,10 +470,17 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             // two places enforcing one band is how they drift apart.
             opts.depth = num(args, 'depth', 1);
             const rel = str(args, 'relation');
-            if ((RELATIONS as readonly string[]).includes(rel)) opts.relation = rel as Relation;
+            if (rel !== '' && !(RELATIONS as readonly string[]).includes(rel)) {
+                return { status: 'error', error: `unknown relation: ${rel}; one of ${RELATIONS.join(', ')}` };
+            }
+            if (rel !== '') opts.relation = rel as Relation;
             const kind = str(args, 'kind');
             if (kind !== '') opts.kind = kind;
-            return withGraph(root, (g) => ({ staleness, ...graphNodeVerb(g, id, opts) }));
+            if (str(args, 'mode') === 'confirm') return confirmNode(root, id, staleness, args['direction'] === undefined ? undefined : opts.direction);
+            return withGraph(root, (g) => {
+                const r = graphNodeVerb(g, id, opts);
+                return { staleness, ...r, ...(r.in.length > 0 ? usageOf(g, root, r.id, r.in.map((e) => e.id)) : {}) };
+            });
         },
     },
 
@@ -462,7 +496,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             properties: {
                 from: { type: 'string', description: 'Start node id, label, or free text.' },
                 to: { type: 'string', description: 'Goal node id, label, or free text.' },
-                budget: { type: 'integer', minimum: 1, default: 1500 },
+                budget: { type: 'integer' },
             },
             additionalProperties: false,
         },
@@ -573,6 +607,31 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         },
     },
 });
+
+/**
+ * `graph_node` in confirm mode: resolve the id exactly through the SQLite index
+ * and re-read its witness — and, with a direction, those of its listed ends.
+ * Never loads the JSON graph; without a current index it says so.
+ */
+function confirmNode(root: string, id: string, staleness: string, direction: 'in' | 'out' | 'both' | undefined): Record<string, unknown> {
+    const cache = graphHome(root).cachePath;
+    const g = loadIndexedGraph(cache, cache);
+    if (!g) {
+        return { status: 'unavailable', staleness, error: 'no current graph index — run `agent-config code-graph build`; confirm never reads the JSON graph' };
+    }
+    let resolved: string | null;
+    let ambiguous: string[];
+    try {
+        ({ id: resolved, ambiguous } = resolveExactNode(overlayView(g, readOverlay(cache, graphChecksum(g))), id));
+    } finally {
+        g.close();
+    }
+    if (resolved === null) {
+        return { status: 'refused', staleness, refusal: ambiguous.length ? `'${id}' names ${ambiguous.length} nodes — re-ask with one id` : `'${id}' matches no node id or label`, candidates: ambiguous };
+    }
+    const r = confirmIds(root, cache, [resolved], direction ? { neighbours: direction } : {});
+    return { ...r, staleness, id: resolved };
+}
 
 /** One file's blast record and the files it reaches by depth, or a refusal naming why there is none. */
 function blastFor(m: MapModel, file: string): Record<string, unknown> {

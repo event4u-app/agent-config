@@ -65,6 +65,8 @@ export interface ProduceOptions {
     diffRev?: string;
     /** The previous map's tours, so a step whose input changed is marked stale. */
     previousTours?: MapTour[];
+    /** Node ids the working-tree overlay holds and the committed index does not: their witnesses read `added`. */
+    added?: readonly string[];
     /** Hunks to use instead of running `git diff` (tests). */
     hunks?: Hunk[];
 }
@@ -82,6 +84,7 @@ interface Ctx {
     out: Map<string, CodeEdge[]>;
     inn: Map<string, CodeEdge[]>;
     lines: Map<string, string[] | null>;
+    added: ReadonlySet<string>;
 }
 
 function lineOf(c: Ctx, file: string, line: number): string | null {
@@ -111,7 +114,10 @@ function witness(c: Ctx, w: { file: string | null; line: number | null; hash: st
 
 function nodeWitness(c: Ctx, n: CodeNode | undefined): Witness | null {
     if (!n) return null;
-    if (n.fact) return witness(c, n.fact.witness, n.fact.rung);
+    if (n.fact) {
+        const w = witness(c, n.fact.witness, n.fact.rung);
+        return w && c.added.has(n.id) ? { ...w, confirm: 'added' } : w;
+    }
     const line = n.source_location[0] ?? (n.kind === 'file' ? 1 : null);
     return witness(c, { file: n.source_file, line, hash: null }, 'T1');
 }
@@ -624,7 +630,7 @@ function tours(c: Ctx, areas: MapAreas, previous: readonly MapTour[] = []): MapT
 
 /** Every knowledge area the merged graph can fill, with its ERD pages. */
 export function produceAreas(root: string, graph: CodeGraph, opts: ProduceOptions = {}): AreaBuild {
-    const c: Ctx = { root, graph, byId: new Map(graph.nodes.map((n) => [n.id, n] as const)), out: new Map(), inn: new Map(), lines: new Map() };
+    const c: Ctx = { root, graph, byId: new Map(graph.nodes.map((n) => [n.id, n] as const)), out: new Map(), inn: new Map(), lines: new Map(), added: new Set(opts.added ?? []) };
     for (const e of graph.edges) {
         c.out.set(e.source, [...(c.out.get(e.source) ?? []), e]);
         c.inn.set(e.target, [...(c.inn.get(e.target) ?? []), e]);

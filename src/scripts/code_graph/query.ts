@@ -15,6 +15,7 @@ import {
     INDEXED_READ_MIN_EDGES,
     openGraphIndex,
 } from './sqlite_store.js';
+import type { ConfirmState } from './map_areas.js';
 import type { CodeEdge, CodeGraph, CodeNode, Relation } from './types.js';
 import { validateGraph } from './validate.js';
 import { adaptForeignGraph, looksForeign } from './foreign.js';
@@ -99,7 +100,7 @@ export interface LoadedGraph {
  * same label repeatedly while rendering edge lines, and that repetition is
  * cheap to remove and expensive to leave.
  */
-function indexBackedGraph(index: GraphIndex, source: string, answeredBy: string): LoadedGraph {
+export function indexBackedGraph(index: GraphIndex, source: string, answeredBy: string): LoadedGraph {
     const nodeCache = new Map<string, CodeNode | undefined>();
     const readNode = (id: string): CodeNode | undefined => {
         if (nodeCache.has(id)) return nodeCache.get(id);
@@ -669,6 +670,8 @@ export interface TreeOptions {
     depth?: number;
     /** Items returned at most; the rest is counted. */
     limit?: number;
+    /** A state the caller already knows for an id (a working-tree overlay's `added`); the rest stay `unconfirmed`. */
+    stateOf?: (id: string) => ConfirmState | undefined;
 }
 
 export interface TreeItem {
@@ -684,8 +687,8 @@ export interface TreeItem {
     /** `file:line` the fact was read at, when the graph knows one. */
     at: string | null;
     hash: string | null;
-    /** Whether the witness still holds in the working tree; this answer does not check, so always `unconfirmed`. */
-    confirm: 'unconfirmed';
+    /** Whether the witness still holds in the working tree; `unconfirmed` until `confirm` re-reads it. */
+    confirm: ConfirmState;
 }
 
 export interface TreeResult {
@@ -743,7 +746,7 @@ export function tree(g: LoadedGraph, seed: string, opts: TreeOptions = {}): Tree
                 const kind = n?.kind ?? 'external';
                 walked.push({ id: far, via: cur });
                 if (kinds && !kinds.has(kind)) continue;
-                found.push({ id: far, label: n?.label ?? far, kind, relation: e.relation, direction: way, depth: d, via: cur, ...witnessOf(n, e), confirm: 'unconfirmed' });
+                found.push({ id: far, label: n?.label ?? far, kind, relation: e.relation, direction: way, depth: d, via: cur, ...witnessOf(n, e), confirm: opts.stateOf?.(far) ?? 'unconfirmed' });
             }
         }
         frontier = next;

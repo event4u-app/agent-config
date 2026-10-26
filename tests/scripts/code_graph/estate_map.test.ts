@@ -5,7 +5,8 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { main } from '../../../src/scripts/code_graph/cli.js';
-import { estateMapDir, renderEstateHtml } from '../../../src/scripts/code_graph/estate_map.js';
+import { estateMapDir, renderHub, type HubPayload } from '../../../src/scripts/code_graph/estate_map.js';
+import { hubDir } from '../../../src/scripts/code_graph/graph_home.js';
 import { verifyMap } from '../../../src/scripts/code_graph/map_verify.js';
 import { makeEstate } from './estate_fixture.js';
 
@@ -36,30 +37,73 @@ afterEach(() => {
     fs.rmSync(tmp, { recursive: true, force: true });
 });
 
-async function indexEstate(): Promise<void> {
+async function indexEstate(): Promise<ReturnType<typeof makeEstate>> {
     const e = makeEstate(tmp, 2);
     expect(await cg('projects', 'index', 'on')).toBe(0);
     for (const r of [e.core, e.app, e.billing]) expect(await cg('build', '--root', r)).toBe(0);
+    return e;
 }
 
-describe('map --estate (5.4)', () => {
-    it('writes one page under the user-global home, package edges solid and guesses dashed', async () => {
+function hubData(): { payload: HubPayload; shell: { routes: string[]; home: string } } {
+    const html = fs.readFileSync(path.join(estateMapDir(), 'index.html'), 'utf-8');
+    const json = /<script type="application\/json" id="map-data">(.*?)<\/script>/s.exec(html)?.[1] ?? '{}';
+    const data = JSON.parse(json) as { areas: { projects: HubPayload }; shell: { routes: string[]; home: string } };
+    return { payload: data.areas.projects, shell: data.shell };
+}
+
+describe('the hub (5.11): the estate on the shared shell', () => {
+    it('writes the hub layout under the user-global map/, package links solid and guesses dashed', async () => {
         await indexEstate();
         expect(await cg('map', '--estate', '--no-verify')).toBe(0);
-        const page = path.join(estateMapDir(), 'index.html');
-        expect(fs.readdirSync(estateMapDir())).toEqual(['index.html']);
-        const html = fs.readFileSync(page, 'utf-8');
-        expect(html).toContain('"via":"package"');
-        expect(html).toContain('"via":"unique-name"');
-        expect(html).toMatch(/line\.package\{[^}]*stroke-width:2\}/);
-        expect(html).toMatch(/line\.guess\{[^}]*stroke-dasharray/);
+        expect(estateMapDir()).toBe(hubDir());
+        const own = fs.readdirSync(estateMapDir()).filter((e) => ['index.html', 'manifest.json', 'projects', '.build'].includes(e));
+        expect(own.sort()).toEqual(['.build', 'index.html', 'manifest.json', 'projects']);
+        expect(fs.existsSync(path.join(estateMapDir(), 'projects', 'hub.json'))).toBe(true);
+        const { payload, shell } = hubData();
+        expect(shell).toMatchObject({ routes: ['projects'], home: 'projects' });
+        expect(payload.projects).toHaveLength(3);
+        expect(payload.projects.every((p) => p.indexed && p.name !== '')).toBe(true);
+        expect(payload.edges.some((e) => e.via === 'package')).toBe(true);
+        expect(payload.edges.some((e) => e.via === 'unique-name')).toBe(true);
+        const html = fs.readFileSync(path.join(estateMapDir(), 'index.html'), 'utf-8');
+        expect(html).toContain('href="#/projects"');
+        expect(html).not.toContain('href="#/code"');
+        expect(html).toMatch(/\.pgraph line\.pfact \{[^}]*stroke-width: 2;/);
+        expect(html).toMatch(/\.pgraph line\.pguess \{[^}]*stroke-dasharray/);
         expect(html).not.toMatch(/(src|href)="https?:/);
+        const manifest = JSON.parse(fs.readFileSync(path.join(estateMapDir(), 'manifest.json'), 'utf-8')) as { kind: string; areas: { projects: { path: string; projects: number } } };
+        expect(manifest).toMatchObject({ kind: 'hub', areas: { projects: { path: 'projects/hub.json', projects: 3 } } });
     }, 120_000);
 
-    it('passes the map render check', async () => {
+    it('links each project to its own page in the hub: a graph home, or a mirror of the project\'s agents/map/', async () => {
+        const e = makeEstate(tmp, 1);
+        fs.mkdirSync(path.join(e.app, 'agents'));
+        for (const r of [e.core, e.app]) expect(await cg('build', '--root', r)).toBe(0);
+        expect(await cg('map', '--root', e.core, '--no-verify')).toBe(0);
+        expect(await cg('map', '--root', e.app, '--no-verify')).toBe(0);
+        expect(await cg('map', '--estate', '--no-verify')).toBe(0);
+        const { payload } = hubData();
+        expect(payload.projects).toHaveLength(2);
+        for (const p of payload.projects) {
+            expect(p.page, p.name).toBe(`${p.id}/index.html`);
+            expect(fs.existsSync(path.join(estateMapDir(), p.page as string))).toBe(true);
+        }
+        const app = payload.projects.find((p) => fs.existsSync(path.join(estateMapDir(), p.id, 'code', 'map.json')) && !fs.existsSync(path.join(estateMapDir(), p.id, '.build')));
+        expect(app, 'the project-home map is mirrored without its .build/').toBeDefined();
+        expect(payload.edgesReason).toMatch(/estate index is off/);
+    }, 120_000);
+
+    it('renders an empty machine with the reason, not a blank page', async () => {
+        expect(await cg('map', '--estate', '--no-verify')).toBe(0);
+        const { payload } = hubData();
+        expect(payload.projects).toEqual([]);
+        expect(payload.empty).toMatch(/no project is registered/);
+    });
+
+    it('passes the map render check on its Projects route', async () => {
         await indexEstate();
         expect(await cg('map', '--estate', '--no-verify')).toBe(0);
-        const check = await verifyMap(path.join(estateMapDir(), 'index.html'));
+        const check = await verifyMap(path.join(estateMapDir(), 'index.html'), { hash: '#/projects' });
         expect(check.verification, JSON.stringify(check)).not.toBe('failed');
         if (check.verification === 'verified') {
             expect(check.viewports.map((v) => v.name)).toEqual(['desktop', 'mobile-375', 'mobile-320']);
@@ -81,11 +125,23 @@ describe('map --estate (5.4)', () => {
         expect(fs.existsSync(path.join(repo, 'estate'))).toBe(false);
         process.env.EVENT4U_CONFIG_HOME = path.join(repo, 'home');
         expect(await cg('map', '--estate', '--no-verify')).toBe(1);
-        expect(fs.existsSync(path.join(repo, 'home', 'runtime', 'estate'))).toBe(false);
+        expect(fs.existsSync(path.join(repo, 'home', 'map', 'index.html'))).toBe(false);
     }, 120_000);
 
     it('renders a hostile project name as data', () => {
-        const html = renderEstateHtml({ projects: [{ id: 'a'.repeat(12), name: '</script><img src=x onerror=alert(1)>', indexed_at: 'x' }], edges: [] });
+        const payload: HubPayload = {
+            reader: 'hub',
+            completeness: 'complete',
+            findings: [],
+            projects: [{ id: 'a'.repeat(12), name: '</script><img src=x onerror=alert(1)>', indexed: false, page: null }],
+            edges: [],
+            ports: [],
+            images: [],
+            services: [],
+            calls: [],
+            skipped: [],
+        };
+        const html = renderHub(payload);
         expect(html).not.toContain('</script><img');
         expect(html).toContain('\\u003c/script>');
     });

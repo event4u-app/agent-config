@@ -13,6 +13,7 @@ import type { Browser } from '@playwright/test';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
+import { main as cli } from '../../src/scripts/code_graph/cli.js';
 import { buildMap } from '../../src/scripts/code_graph/map.js';
 import { AGENT_VERBS, cliVerbs, produceAreas } from '../../src/scripts/code_graph/map_area_payloads.js';
 import { areaProblems, type MapAreas } from '../../src/scripts/code_graph/map_areas.js';
@@ -64,7 +65,7 @@ beforeAll(async () => {
     fs.writeFileSync(mig, fs.readFileSync(mig, 'utf-8').replace("->text('body');", "->text('body')->nullable();"));
     outDir = path.join(tmp('map-out-'), 'map');
     await buildMap(root, { outDir, cachePath: path.join(root, '.g', 'graph.json') });
-    areas = (JSON.parse(fs.readFileSync(path.join(outDir, 'map.json'), 'utf-8')) as { areas: MapAreas }).areas;
+    areas = (JSON.parse(fs.readFileSync(path.join(outDir, 'code', 'map.json'), 'utf-8')) as { areas: MapAreas }).areas;
 }, 120_000);
 afterAll(async () => {
     await browser?.close();
@@ -172,6 +173,35 @@ describe('the intended against the actual schema', () => {
         expect(Object.keys(a).sort()).toEqual(['agent', 'impact']);
         expect(a.impact?.empty).toMatch(/no change/);
     });
+});
+
+describe('after refresh --touched, a redraw reads the working-tree overlay', () => {
+    it('shows an uncommitted new column as added, without rebuilding the graph', async () => {
+        const dir = tmp('map-overlay-');
+        fs.cpSync(path.join(FX, 'correctness/p1-blog'), dir, { recursive: true });
+        fs.mkdirSync(path.join(dir, 'agents'), { recursive: true });
+        git(dir, 'init', '-q');
+        git(dir, 'add', '-A');
+        git(dir, 'commit', '-qm', 'base');
+        const first = await buildMap(dir);
+        expect(first.graphBuilt).toBe(true);
+        const mig = 'database/migrations/2024_01_01_000003_create_comments_table.php';
+        const p = path.join(dir, mig);
+        fs.writeFileSync(p, fs.readFileSync(p, 'utf-8').replace("$table->text('body');", "$table->text('body');\n            $table->string('mood')->nullable();"));
+        const stdout = process.stdout.write.bind(process.stdout);
+        process.stdout.write = (() => true) as typeof process.stdout.write;
+        try {
+            expect(await cli(['refresh', '--touched', mig, '--root', dir])).toBe(0);
+        } finally {
+            process.stdout.write = stdout;
+        }
+        const second = await buildMap(dir);
+        expect(second.graphBuilt).toBe(false);
+        const a = (JSON.parse(fs.readFileSync(path.join(second.outDir, 'code', 'map.json'), 'utf-8')) as { areas: MapAreas }).areas;
+        const mood = a.data!.tables.find((t) => t.name === 'comments')!.columns.find((c) => c.name === 'mood');
+        expect(mood).toMatchObject({ type: 'varchar', nullable: true, witness: { file: mig, confirm: 'added' } });
+        expect(a.data!.tables.find((t) => t.name === 'comments')!.columns.find((c) => c.name === 'body')?.witness.confirm).toBe('unconfirmed');
+    }, 120_000);
 });
 
 describe('the page shows each area', () => {
