@@ -237,3 +237,51 @@ describe('moving and zooming need Ctrl / ⌘', () => {
         await page.close();
     });
 });
+
+describe('the ERD in 3D', () => {
+    interface Erd3d { yaw: number; pitch: number; front: string; proj: Record<string, { x: number; y: number }> }
+    const erd3 = (page: Page): Promise<Erd3d> => page.evaluate(() => (window as unknown as { __mapErd3d: Erd3d }).__mapErd3d);
+    it('renders from the 2D / 3D toggle, Focus stays the default, and a picked table comes to the front with all its columns', async () => {
+        const page = await open();
+        expect(await page.locator('#av-main .dimseg button[aria-pressed="true"]').getAttribute('data-dim')).toBe('2d');
+        await page.click('#av-main .dimseg button[data-dim="3d"]');
+        await page.waitForFunction(() => (window as unknown as { __mapErd3d?: unknown }).__mapErd3d !== undefined);
+        expect(await page.locator('.db-3d .db-3card').count()).toBe(data.tables.length);
+        expect(await page.locator('.db-seg[aria-label="Lines"] button[aria-checked="true"]').getAttribute('data-v')).toBe('focus');
+        await page.locator('.db-3card[data-table="customers"] .db-thead').click({ force: true });
+        await page.waitForFunction(() => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === 'table/customers');
+        expect((await erd3(page)).front).toBe('customers');
+        const cols = data.tables.find((t) => t.name === 'customers')!.columns.map((c) => c.name);
+        expect(await page.locator('.db-3card.front[data-table="customers"] .db-col').evaluateAll((rs) => rs.map((r) => r.getAttribute('data-col')))).toEqual(cols);
+        // A table further back shows its keys only.
+        const back = await page.locator('.db-3card:not(.front)[data-table="posts"] .db-col').evaluateAll((rs) => rs.map((r) => r.getAttribute('data-col')));
+        expect(back).toEqual(['id', 'user_id', 'author_id']);
+        await page.close();
+    });
+
+    it('a plain drag leaves the projection; Ctrl + drag turns it; the arrow keys turn it too', async () => {
+        const page = await open();
+        await page.click('#av-main .dimseg button[data-dim="3d"]');
+        await page.waitForFunction(() => (window as unknown as { __mapErd3d?: unknown }).__mapErd3d !== undefined);
+        const before = await erd3(page);
+        const box = (await page.locator('#db-stage').boundingBox())!;
+        const drag = async (): Promise<void> => {
+            await page.mouse.move(box.x + 40, box.y + box.height - 40);
+            await page.mouse.down();
+            await page.mouse.move(box.x + 200, box.y + box.height - 80, { steps: 6 });
+            await page.mouse.up();
+        };
+        await drag();
+        expect((await erd3(page)).yaw).toBe(before.yaw);
+        await page.keyboard.down('Control');
+        await drag();
+        await page.keyboard.up('Control');
+        const turned = await erd3(page);
+        expect(turned.yaw).not.toBe(before.yaw);
+        expect(turned.proj['users']).not.toEqual(before.proj['users']);
+        await page.locator('#db-stage').focus();
+        await page.keyboard.press('ArrowLeft');
+        expect((await erd3(page)).yaw).toBeCloseTo(turned.yaw - 0.15, 5);
+        await page.close();
+    });
+});

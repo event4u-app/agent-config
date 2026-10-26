@@ -352,3 +352,14 @@ button.db-badge:hover, button.db-badge:focus-visible { border-color: var(--brand
 .db-warn { color: var(--amberText); }
 .db-nd { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px; }
 .db-nd .nodata-tag { margin-left: 0; }
+.db-ctls .dimseg button { height: 26px; padding: 0 10px; font-size: 12px; }
+.db-3d { height: clamp(460px, calc(100vh - 300px), 760px); background-image: radial-gradient(circle at 50% 50%, rgba(255, 140, 42, 0.07) 0%, rgba(62, 197, 255, 0.04) 35%, transparent 65%), linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: auto, 32px 32px, 32px 32px; }
+.db-3d .db-edges { position: absolute; inset: 0; pointer-events: none; }
+.db-3d-badges { position: absolute; inset: 0; pointer-events: none; z-index: 450; }
+.db-3d-badges .db-badge { pointer-events: auto; }
+.db-badge.back { opacity: 0.4; pointer-events: none; }
+.db-3card { transform-origin: 50% 50%; transition: none; }
+.db-3card.front { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); }
+.db-edges path.db-link.fk { stroke: var(--soft); stroke-width: 2px; }
+.db-edges path.db-link.fk.cascade { stroke: var(--alert); }
+.db-3d .db-zoom { z-index: 500; }
