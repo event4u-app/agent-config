@@ -169,7 +169,7 @@ Cold-start's 4.3, 4.5 and 5.3, which the first plan proposed to take over, are
 - [x] **5.2 The stricter council bar also fires on projection.** The <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/necessity.ts -->
       window-threshold rule of cold-start 5.3 (`necessity.ts`) reads `hot`
       from `pressure` as well as the after-the-fact host marker.
-      verify: `npx vitest run tests/scripts/ai_council/necessity.test.ts` -> 0
+      verify: `npx vitest run tests/scripts/_lib/pressure.test.ts -t planWindowHot` -> 0
 - [x] **5.3 The spawn-guard shadow records `would_wait` from pressure.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/spawn_guard_shadow_hook.ts -->
       Shadow only: it records, never denies (a deny is a stop).
       verify: `npx vitest run tests/hooks/spawn_guard_shadow.test.ts` -> 0
