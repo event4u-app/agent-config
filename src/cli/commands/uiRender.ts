@@ -65,6 +65,16 @@ export const CAPTURED_PROPERTIES = [
     'line-height',
     'overflow-x',
     'overflow-y',
+    // 2.2: what the render-engine rules read (road-to-tells-a-near-miss-can-refute).
+    'border-top-width',
+    'border-left-width',
+    'border-radius',
+    'box-shadow',
+    'font-style',
+    'font-weight',
+    'opacity',
+    'position',
+    'z-index',
 ] as const;
 
 export interface ViewportCapture {
@@ -267,6 +277,28 @@ export function collectTypeFamilies(styleRecords: ReadonlyArray<Record<string, s
     return [...out].sort();
 }
 
+/** True when a stylesheet the page loads carries a `prefers-color-scheme: dark` rule. */
+async function declaresDarkScheme(
+    browser: Awaited<ReturnType<typeof Chromium.launch>>,
+    url: string,
+): Promise<boolean> {
+    const page = await browser.newPage();
+    try {
+        await page.goto(url, { waitUntil: 'load', timeout: 30_000 });
+        return await page.evaluate(() =>
+            Array.from(document.styleSheets).some((sheet) => {
+                try {
+                    return Array.from(sheet.cssRules).some((r) => /prefers-color-scheme\s*:\s*dark/i.test(r.cssText));
+                } catch {
+                    return false;
+                }
+            }),
+        );
+    } finally {
+        await page.close();
+    }
+}
+
 export interface UiRenderOptions {
     target: string;
     json?: boolean | undefined;
@@ -378,8 +410,12 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
 
     try {
         browser = await chromium.launch({ headless: true });
-        for (const vp of VIEWPORTS) {
-            const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
+        const open = browser;
+        const captureAt = async (
+            vp: { name: string; width: number; height: number },
+            colorScheme: 'light' | 'dark' = 'light',
+        ): Promise<void> => {
+            const page = await open.newPage({ viewport: { width: vp.width, height: vp.height }, colorScheme });
             await page.goto(isUrl ? abs : `file://${abs}`, { waitUntil: 'load', timeout: 30_000 });
 
             const shot = path.join(outDir, `${vp.name}.png`);
@@ -431,10 +467,27 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
                     return out;
                 };
                 const rows: Array<Record<string, string>> = [];
-                for (const el of Array.from(document.querySelectorAll('*')).slice(0, 1500)) {
+                const els = Array.from(document.querySelectorAll('*')).slice(0, 1500);
+                const indexOf = new Map(els.map((e, i) => [e, i]));
+                for (const [i, el] of els.entries()) {
                     const cs = window.getComputedStyle(el);
                     const rec: Record<string, string> = { selector: el.tagName.toLowerCase() };
                     for (const p of props) rec[p] = cs.getPropertyValue(p);
+                    // Geometry (road-to-tells-a-near-miss-can-refute 2.2): what a
+                    // structural tell is measured on — the box, whether it is
+                    // painted, and the ancestor chain to depth 4 by row index.
+                    const r = el.getBoundingClientRect();
+                    rec['index'] = String(i);
+                    rec['rect'] = [r.x, r.y, r.width, r.height].map((n) => Math.round(n)).join(',');
+                    rec['visible'] =
+                        r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none' ? '1' : '0';
+                    const chain: string[] = [];
+                    for (let a = el.parentElement; a && chain.length < 4; a = a.parentElement) {
+                        const at = indexOf.get(a);
+                        if (at !== undefined) chain.push(String(at));
+                    }
+                    rec['parents'] = chain.join(',');
+                    rec['class'] = el.getAttribute('class') ?? '';
                     // `<style>` and `<script>` carry text and paint none of it.
                     const NO_PAINT = ['style', 'script', 'title', 'head', 'noscript', 'template'];
                     const ownText =
@@ -464,7 +517,11 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
                 document_scroll_width: scrollWidth,
                 horizontal_overflow: scrollWidth > vp.width + 1,
             });
-        }
+        };
+        for (const vp of VIEWPORTS) await captureAt(vp);
+        // A page that declares a dark scheme gets a dark desktop pass too.
+        const declaresDark = allStyles.length > 0 && (await declaresDarkScheme(open, isUrl ? abs : `file://${abs}`));
+        if (declaresDark) await captureAt({ ...VIEWPORTS[0], name: 'desktop-dark' }, 'dark');
         if (opts.interact && opts.interact.length > 0) {
             const vp = VIEWPORTS[0];
             for (const [i, selector] of opts.interact.entries()) {
