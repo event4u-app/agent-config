@@ -28,16 +28,17 @@ own path never reaches.
 
 ## Phase 1 — Pick the home, then move or wire
 
-- [ ] **1.1 Decide between two shapes and record why.** (a) Move the three into
+- [x] **1.1 Decide between two shapes and record why.** (a) Move the three into <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/turn_end_refusals.ts -->
       `measure_turn_end_gate.ts`, the only importer, with their tests. (b) Give
       the measurement a task in `taskfiles/` so it becomes an entry by the
       config's own rule. Recommendation: (a) — the helpers serve one maintainer
       tool, and a task only to satisfy a gate is a wiring nobody runs.
       verify: the `## Decisions` table names the choice and the reason.
-- [ ] **1.2 Apply the chosen shape.** For (a): move the code and its tests,
+- [x] **1.2 Apply the chosen shape.** For (a): move the code and its tests, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/turn_end_refusals.ts -->
       leave `turn_end_refusals.ts` exporting nothing the gate path does not use.
       verify: `npx vitest run tests/scripts/turn_end_refusals.test.ts tests/scripts/measure_turn_end_gate.test.ts` -> 0
-- [ ] **1.3 Prove the reach finding is gone.** A fixture step naming
+      production entry: src/scripts/measure_turn_end_gate.ts
+- [x] **1.3 Prove the reach finding is gone.** A fixture step naming <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/turn_end_refusals.ts -->
       `src/scripts/_lib/turn_end_refusals.ts` passes the reach check.
       verify: `grep -rn 'collectShadowStats' src/scripts/_lib/turn_end_refusals.ts` -> /^$/
 
@@ -45,6 +46,7 @@ own path never reaches.
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
+| D1 | reversible-technical | agent | Shape (a): the shadow rollup moves into `measure_turn_end_gate.ts`, its only importer. Rejected alternative: (b) a taskfile entry that makes the measurement an entry. | The three exports and their two types are read by that one script and its tests; a task added only to satisfy the reach gate is wiring nobody runs. | A second production reader of the shadow rollup appears. |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-25 | reviewer: claude/host -->
@@ -55,7 +57,7 @@ own path never reaches.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No export of `turn_end_refusals.ts` is reported unreached by
+- [x] AC-1 — No export of `turn_end_refusals.ts` is reported unreached by
       `check_step_production_reach`.
-- [ ] AC-2 — `measure_turn_end_gate` produces the same figures on the same
+- [x] AC-2 — `measure_turn_end_gate` produces the same figures on the same
       corpus before and after.

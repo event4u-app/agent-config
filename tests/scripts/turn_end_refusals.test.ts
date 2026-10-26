@@ -21,13 +21,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     DETECTOR_IDS,
-    DISPATCH_CENSORED_DETECTORS,
     REFUSAL_STATE_MAX_AGE_DAYS,
     SHADOW_LAYERS,
     collectRefusalStats,
-    collectShadowStats,
     countsOf,
-    retryConditionedShare,
     deriveSessionKey,
     emptyCounts,
     foldRefusal,
@@ -42,6 +39,11 @@ import {
     parseShadowRecord,
     type RefusalRecord,
 } from '../../src/scripts/_lib/turn_end_refusals.js';
+import {
+    DISPATCH_CENSORED_DETECTORS,
+    collectShadowStats,
+    retryConditionedShare,
+} from '../../src/scripts/measure_turn_end_gate.js';
 
 let root: string;
 
