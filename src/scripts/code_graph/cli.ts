@@ -89,6 +89,9 @@
  *            [--prs]                           (open PRs by area, via gh)
  *                                               at three widths when Playwright
  *                                               is present
+ *   map --demo [--out DIR] [--open]           the map and the hub drawn from the demo
+ *            [--no-verify]                     fixture, into agents/map/.build/demo/ — for
+ *                                               frontend work; source checkout only
  *   map --estate [--out DIR] [--no-verify]     the hub: the registered projects, their
  *                                               links and the facts they share, under the
  *                                               user-global map/; refused inside a git work tree
@@ -1156,6 +1159,7 @@ function mapIsBehind(root: string, cache: string): boolean {
  */
 async function cmdMap(argv: string[]): Promise<number> {
     if (argv.includes('--estate')) return estateMapMain(argv);
+    if (argv.includes('--demo')) return cmdMapDemo(argv);
     const root = resolveRoot(argv);
     if (!fs.existsSync(root)) {
         process.stderr.write(`code-graph: root not found: ${root}\n`);
@@ -1180,6 +1184,43 @@ async function cmdMap(argv: string[]): Promise<number> {
     } finally {
         release();
     }
+}
+
+/**
+ * `map --demo [--out DIR] [--open] [--no-verify]` — the map and the hub drawn
+ * from the demo fixture (`map_demo.ts`), for frontend work in a repository that
+ * has no data, contracts or pipelines of its own.
+ */
+async function cmdMapDemo(argv: string[]): Promise<number> {
+    const root = resolveRoot(argv);
+    const out = flag(argv, '--out');
+    const { buildDemoMap } = await import('./map_demo.js');
+    let r: Awaited<ReturnType<typeof buildDemoMap>>;
+    try {
+        r = await buildDemoMap(root, out ? { outDir: path.resolve(out) } : {});
+    } catch (e) {
+        process.stderr.write(`code-graph map --demo: ${(e as Error).message}\n`);
+        return 1;
+    }
+    const rel = path.relative(process.cwd(), r.outDir) || '.';
+    process.stdout.write(
+        `✅  code-graph map --demo — ${r.map.meta.summary} · state ${r.map.meta.state}\n` +
+            `    hub: ${r.hubProjects} fixture projects\n` +
+            `    wrote ${path.join(rel, 'index.html')} and ${path.join(rel, 'hub', 'index.html')}\n`,
+    );
+    let rc = 0;
+    if (!argv.includes('--no-verify')) {
+        for (const [page, hash] of [[r.page, ''], [r.hubPage, '#/projects']] as const) {
+            const check = await verifyMap(page, hash ? { hash } : {});
+            process.stdout.write(`    render check ${path.basename(path.dirname(page))}: ${check.verification}${check.reason ? ` — ${check.reason}` : ''}\n`);
+            if (check.verification === 'failed') rc = 1;
+        }
+    }
+    if (argv.includes('--open')) {
+        const { default: open } = await import('open');
+        await open(r.page);
+    }
+    return rc;
 }
 
 /** How long `map` waits for a background refresh to release the lock. */
