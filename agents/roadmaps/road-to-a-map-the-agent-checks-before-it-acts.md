@@ -297,16 +297,16 @@ renders from real facts or says why it has none.
 - [ ] **5.2 Writer gate.** A check fails any code path that writes a graph, map
       or cache outside the two layouts.
       verify: the gate is red on a planted writer and green on the tree.
-- [ ] **5.3 The design shell.** Header with logo, `KNOWLEDGE MAP` wordmark, the
+- [x] **5.3 The design shell.** Header with logo, `KNOWLEDGE MAP` wordmark, the
       eight-area nav, commit and freshness chips, search across every kind,
       Export, theme and language toggles; rails with pin/unpin as shipped;
       hash router; shared detail panel with witness and confirm state.
       verify: the render check passes at 1440, 375 and 320 px in both themes.
-- [ ] **5.4 Code area.** The Workbench refinements: languages stack, health
+- [x] **5.4 Code area.** The Workbench refinements: languages stack, health
       points per part and the largest lever, empty-state lists, deselect,
       footer aggregation chip — keeping every shipped decision of DEC-2.
       verify: the render check passes and the 13 shipped decisions are unchanged.
-- [ ] **5.5 Overview area.** Map home: per-area freshness, coverage and trust
+- [x] **5.5 Overview area.** Map home: per-area freshness, coverage and trust
       states (fresh, stale, contradicted, unverifiable, incomplete), provenance
       labels, entry points into each area.
       verify: a fixture map shows each area's state with its reason.
@@ -341,7 +341,7 @@ renders from real facts or says why it has none.
 
 ## Phase 6 — Measure
 
-- [ ] **6.1 Task set T.** 20–30 planted in-repo tasks across code, data,
+- [x] **6.1 Task set T.** 20–30 planted in-repo tasks across code, data,
       interfaces, runtime and delivery, each with its affected set and a hidden
       check.
       verify: every task's hidden check fails on the unmodified fixture.

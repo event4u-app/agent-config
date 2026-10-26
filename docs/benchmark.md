@@ -978,3 +978,22 @@ favours this package on both classes, at roughly thirteen times the neighbour's
 context cost. The claim this pilot does NOT support: "the package beats S4".
 What it does support: a confirmation run with more seeds is cheap (this one used
 under 3 % of the cap) and would be pre-registered before it runs.
+
+## Map task set — three-arm harness (built, not yet run) {#map-task-set}
+
+Twenty planted change tasks under `internal/bench/ab/map-task-set/` (four each in
+code, data, interfaces, runtime, delivery), each with a hidden check that is red
+on the untouched fixture and on the naive change the prompt names, and green on
+the reference change (`tests/scripts/bench_map_task_set_corpus.test.ts`). The
+runner `src/scripts/bench_map_task_set.ts` compares `vanilla`, `ac` (package, no
+map) and `ac-map` (package, map drawn into the working copy, plus a find-confirm-update
+note) and reports M1 wrong-change share, M2 recall and precision of the
+`AFFECTED SET` each run declares, and M3 tokens of all runs per successful run,
+plus two readings under a fixed per-run token budget (`--token-budget`). Run
+`./scripts-run src/scripts/bench_map_task_set --dry-run` first: it swaps only the
+model call for a stub (nothing / naive / reference change per arm), runs the clone,
+map build, hidden checks, parser and aggregation for real, writes a `tier: dry-run`
+report to a temp directory and exits 2 if the metrics disagree with the stub. A
+live run takes `--model <full id>`, `--seeds`, `--budget` (USD per run) and
+`--max-usd` (sweep cap, priced from `internal/bench/pricing.yaml`) and writes
+`internal/bench/reports/map-task-set/<stamp>-map-task-set.json`.

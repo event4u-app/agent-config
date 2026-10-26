@@ -297,7 +297,6 @@ export const CATALOG: readonly CatalogRow[] = [
             ['quarkus', 'Quarkus', 'Java'],
             ['micronaut', 'Micronaut', 'Java'],
             ['drizzle', 'Drizzle', 'TypeScript'],
-            ['infrastructure', 'Docker, Kubernetes, Terraform, CI', 'YAML / HCL'],
         ] as const
     ).map(
         ([id, name, language]): CatalogRow => ({
@@ -311,6 +310,18 @@ export const CATALOG: readonly CatalogRow[] = [
             usage: 'coverage list in road-to-graph-providers-for-every-stack (kill register K7)',
         }),
     ),
+    {
+        id: 'infrastructure',
+        name: 'Docker, Kubernetes, Terraform, CI',
+        language: 'YAML / HCL',
+        markers: 'compose files, Dockerfiles, .devcontainer, Makefile/Taskfile, *.tf, Kubernetes manifests, .github/workflows, .gitlab-ci.yml',
+        relations: [],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/runtime tests/fixtures/code-graph/delivery',
+        usage: 'coverage list in road-to-graph-providers-for-every-stack (kill register K7)',
+        limits:
+            'Read by the runtime and delivery lane readers, not a framework provider, so no code-graph relation is listed. Terraform by line rules: no expression evaluation, no state, count/for_each instances are one node, references resolve within one directory only. Kubernetes: Helm/Go-templated manifests are skipped; label selectors match pod-template labels in the same namespace only. Compose: one file per read plus same-directory siblings, no profiles or extends; interpolated values stay unresolved unless a user-produced `docker compose config` file is present. CI: GitHub Actions and GitLab CI only; GitLab includes are recorded by name, never followed; composite actions are not opened.',
+    },
 ];
 
 /** The catalog row for a provider id, if any. */

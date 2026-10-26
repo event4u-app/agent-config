@@ -1,0 +1,4 @@
+default:
+  adapter: postgresql
+  host: postgres
+  port: 5432

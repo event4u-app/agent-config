@@ -1,0 +1,724 @@
+# Map task set T — planted in-repo change tasks with a hidden check each.
+#
+# Every task is a small fixture repo (repo/) plus a reference change (solution/,
+# plus reference_delete). The prompt names one place; the affected set lists
+# every place a correct change touches; hidden_check is evaluated from OUTSIDE the
+# agent's working copy, so the agent never sees it. `primary` is the place the
+# prompt names: applying only its part of the reference change is the naive
+# change, and the hidden check must fail on it.
+#
+# Invariants, asserted by tests/scripts/bench_map_task_set.test.ts:
+#   - the hidden check fails on the unmodified fixture,
+#   - it fails on the naive change,
+#   - it passes on the reference change.
+#
+# Runner: src/scripts/bench_map_task_set.ts. Change a task here and in its
+# directory together.
+version: 1
+tasks:
+  - id: code-rename-function
+    area: code
+    fixture: map-task-set/code-rename-function/repo
+    reference: map-task-set/code-rename-function/solution
+    primary:
+      - src/billing.js
+    prompt: Rename the function `calcTotal` in src/billing.js to `computeInvoiceTotal`. Behaviour stays the same.
+    trap: src/dispatch.js reaches the function by a string key, which no import graph sees.
+    affected:
+      - kind: file
+        id: src/billing.js
+      - kind: file
+        id: src/checkout.js
+      - kind: file
+        id: src/report.js
+      - kind: file
+        id: src/dispatch.js
+    hidden_check:
+      - path: src/billing.js
+        match: export function computeInvoiceTotal\(
+        protects: src/billing.js
+      - path: src/checkout.js
+        match: computeInvoiceTotal\(cart\.items\)
+        no_match: \bcalcTotal\b
+        protects: src/checkout.js
+      - path: src/report.js
+        match: billing\.computeInvoiceTotal\(
+        protects: src/report.js
+      - path: src/dispatch.js
+        match: "'computeInvoiceTotal'"
+        no_match: "'calcTotal'"
+        protects: src/dispatch.js
+  - id: code-add-parameter
+    area: code
+    fixture: map-task-set/code-add-parameter/repo
+    reference: map-task-set/code-add-parameter/solution
+    primary:
+      - src/money.ts
+    prompt: "Change `formatPrice` in src/money.ts so it takes a required second parameter `currency: string` and returns the amount followed by a space and the currency code, for example `12.50 EUR`."
+    trap: src/admin/export.ts calls through a namespace import.
+    affected:
+      - kind: file
+        id: src/money.ts
+      - kind: file
+        id: src/cart.ts
+      - kind: file
+        id: src/email.ts
+      - kind: file
+        id: src/admin/export.ts
+    hidden_check:
+      - path: src/money.ts
+        match: "formatPrice\\(amount: number, currency: string\\)"
+        protects: src/money.ts
+      - path: src/cart.ts
+        match: formatPrice\(\s*[\w.]+\s*,\s*[\w.]+\s*\)
+        no_match: formatPrice\(\s*[\w.]+\s*\)
+        protects: src/cart.ts
+      - path: src/email.ts
+        match: formatPrice\(\s*[\w.]+\s*,\s*[\w.]+\s*\)
+        no_match: formatPrice\(\s*[\w.]+\s*\)
+        protects: src/email.ts
+      - path: src/admin/export.ts
+        match: formatPrice\(\s*[\w.]+\s*,\s*[\w.]+\s*\)
+        no_match: formatPrice\(\s*[\w.]+\s*\)
+        protects: src/admin/export.ts
+  - id: code-remove-helper
+    area: code
+    fixture: map-task-set/code-remove-helper/repo
+    reference: map-task-set/code-remove-helper/solution
+    primary:
+      - utils/text.py
+    prompt: Remove the deprecated `legacy_slugify` function from utils/text.py. Code that used it must use `slugify` instead.
+    trap: app/feeds.py calls it as a module attribute.
+    affected:
+      - kind: file
+        id: utils/text.py
+      - kind: file
+        id: app/views.py
+      - kind: file
+        id: app/feeds.py
+    hidden_check:
+      - path: utils/text.py
+        match: def slugify\(
+        no_match: def legacy_slugify
+        protects: utils/text.py
+      - path: app/views.py
+        match: \bslugify\(article\.title\)
+        no_match: legacy_slugify
+        protects: app/views.py
+      - path: app/feeds.py
+        match: text\.slugify\(
+        no_match: legacy_slugify
+        protects: app/feeds.py
+  - id: code-move-module
+    area: code
+    fixture: map-task-set/code-move-module/repo
+    reference: map-task-set/code-move-module/solution
+    reference_delete:
+      - src/lib/date.js
+    primary:
+      - src/lib/date.js
+      - src/shared/date.js
+    prompt: Move src/lib/date.js to src/shared/date.js. Afterwards src/lib/date.js must no longer exist.
+    trap: The test imports the module across the source root.
+    affected:
+      - kind: file
+        id: src/lib/date.js
+      - kind: file
+        id: src/shared/date.js
+      - kind: file
+        id: src/orders.js
+      - kind: file
+        id: src/api/feed.js
+      - kind: file
+        id: test/date.test.js
+    hidden_check:
+      - path: src/shared/date.js
+        match: export function isoDay
+        protects: src/shared/date.js
+      - absent: src/lib/date.js
+        protects: src/lib/date.js
+      - path: src/orders.js
+        match: from '\./shared/date\.js'
+        protects: src/orders.js
+      - path: src/api/feed.js
+        match: from '\.\./shared/date\.js'
+        protects: src/api/feed.js
+      - path: test/date.test.js
+        match: src/shared/date\.js'
+        protects: test/date.test.js
+  - id: data-rename-column
+    area: data
+    fixture: map-task-set/data-rename-column/repo
+    reference: map-task-set/data-rename-column/solution
+    primary:
+      - database/migrations/2024_06_01_000000_rename_users_email.php
+    prompt: Rename the `email` column of the `users` table to `email_address`. Add a new migration; do not edit the existing create migration.
+    trap: A raw SQL string and a database view read the column by name.
+    affected:
+      - kind: column
+        id: users.email
+      - kind: migration
+        id: new migration
+        aliases:
+          - rename_users_email
+          - renamecolumn
+      - kind: file
+        id: app/Models/User.php
+      - kind: file
+        id: app/Reports/UserExport.php
+      - kind: file
+        id: database/views/active_users.sql
+    hidden_check:
+      - glob: database/migrations/*.php
+        match: renameColumn\(\s*'email'\s*,\s*'email_address'\s*\)
+        protects: new migration
+      - path: database/migrations/2024_01_01_000000_create_users_table.php
+        match: string\('email'\)
+        why: the existing migration stays untouched
+      - path: app/Models/User.php
+        match: "'email_address'"
+        no_match: "'email'"
+        protects: app/Models/User.php
+      - path: app/Reports/UserExport.php
+        match: email_address
+        no_match: \bemail\b
+        protects: app/Reports/UserExport.php
+      - path: database/views/active_users.sql
+        match: email_address
+        no_match: \bemail\b
+        protects: database/views/active_users.sql
+  - id: data-drop-column
+    area: data
+    fixture: map-task-set/data-drop-column/repo
+    reference: map-task-set/data-drop-column/solution
+    primary:
+      - database/migrations/2024_06_01_000001_drop_orders_legacy_ref.php
+    prompt: The `legacy_ref` column on the `orders` table is no longer needed. Drop it with a new migration.
+    trap: A frontend column list outside app/ still reads the column.
+    affected:
+      - kind: column
+        id: orders.legacy_ref
+      - kind: migration
+        id: new migration
+        aliases:
+          - drop_orders_legacy_ref
+          - dropcolumn
+      - kind: file
+        id: app/Models/Order.php
+      - kind: file
+        id: app/Services/OrderSync.php
+      - kind: file
+        id: resources/js/dashboard/orders.js
+    hidden_check:
+      - glob: database/migrations/*.php
+        match: dropColumn\(\s*'legacy_ref'\s*\)
+        protects: new migration
+      - path: app/Models/Order.php
+        no_match: legacy_ref
+        protects: app/Models/Order.php
+      - path: app/Services/OrderSync.php
+        no_match: legacy_ref
+        protects: app/Services/OrderSync.php
+      - path: resources/js/dashboard/orders.js
+        no_match: legacy_ref
+        protects: resources/js/dashboard/orders.js
+  - id: data-rename-table
+    area: data
+    fixture: map-task-set/data-rename-table/repo
+    reference: map-task-set/data-rename-table/solution
+    primary:
+      - database/migrations/2024_06_01_000002_rename_invoice_items.php
+    prompt: Rename the table `invoice_items` to `invoice_lines` with a new migration.
+    trap: A query-builder join and a seeder name the table as a string.
+    affected:
+      - kind: table
+        id: invoice_items
+      - kind: migration
+        id: new migration
+        aliases:
+          - rename_invoice_items
+          - schema::rename
+      - kind: file
+        id: app/Models/InvoiceItem.php
+      - kind: file
+        id: app/Reports/Revenue.php
+      - kind: file
+        id: database/seeders/InvoiceSeeder.php
+    hidden_check:
+      - glob: database/migrations/*.php
+        match: Schema::rename\(\s*'invoice_items'\s*,\s*'invoice_lines'\s*\)
+        protects: new migration
+      - path: app/Models/InvoiceItem.php
+        match: "'invoice_lines'"
+        no_match: invoice_items
+        protects: app/Models/InvoiceItem.php
+      - path: app/Reports/Revenue.php
+        match: invoice_lines
+        no_match: invoice_items
+        protects: app/Reports/Revenue.php
+      - path: database/seeders/InvoiceSeeder.php
+        match: invoice_lines
+        no_match: invoice_items
+        protects: database/seeders/InvoiceSeeder.php
+  - id: data-change-unit
+    area: data
+    fixture: map-task-set/data-change-unit/repo
+    reference: map-task-set/data-change-unit/solution
+    primary:
+      - database/migrations/2024_06_01_000003_products_price_decimal.php
+    prompt: Replace the integer column `products.price_cents` with a decimal column `price` that stores the amount in currency units, not cents. Do it with a new migration.
+    trap: Two readers divide by 100; renaming alone leaves a factor-100 error.
+    affected:
+      - kind: column
+        id: products.price_cents
+      - kind: migration
+        id: new migration
+        aliases:
+          - products_price_decimal
+          - decimal(
+      - kind: file
+        id: src/pricing.js
+      - kind: file
+        id: templates/product.html
+    hidden_check:
+      - glob: database/migrations/*.php
+        match: decimal\(\s*'price'
+        protects: new migration
+      - glob: database/migrations/*.php
+        match: dropColumn\(\s*'price_cents'\s*\)
+        protects: new migration
+      - path: src/pricing.js
+        match: product\.price\b
+        no_match: price_cents|/\s*100
+        protects: src/pricing.js
+      - path: templates/product.html
+        match: product\.price\b
+        no_match: price_cents|/\s*100
+        protects: templates/product.html
+  - id: interface-remove-endpoint
+    area: interfaces
+    fixture: map-task-set/interface-remove-endpoint/repo
+    reference: map-task-set/interface-remove-endpoint/solution
+    primary:
+      - server/routes.js
+    prompt: Remove the deprecated endpoint `GET /api/v1/legacy-stats` from the server. `GET /api/v2/stats` returns the same number in the field `visits`.
+    trap: A browser client still calls the endpoint and reads the old field.
+    affected:
+      - kind: operation
+        id: GET /api/v1/legacy-stats
+        aliases:
+          - legacy-stats
+      - kind: file
+        id: server/routes.js
+      - kind: file
+        id: web/src/statsClient.js
+      - kind: file
+        id: openapi.yaml
+    hidden_check:
+      - path: server/routes.js
+        match: /api/v2/stats
+        no_match: legacy-stats
+        protects: server/routes.js
+      - path: web/src/statsClient.js
+        match: fetch\('/api/v2/stats'\)
+        no_match: legacy-stats
+        protects: web/src/statsClient.js
+      - path: web/src/statsClient.js
+        match: body\.visits
+        protects: web/src/statsClient.js
+      - path: openapi.yaml
+        no_match: legacy-stats
+        protects: openapi.yaml
+  - id: interface-rename-field
+    area: interfaces
+    fixture: map-task-set/interface-rename-field/repo
+    reference: map-task-set/interface-rename-field/solution
+    primary:
+      - api/serializers/user.py
+    prompt: In the user API response produced by api/serializers/user.py, rename the field `user_name` to `username`.
+    trap: The contract fixture and the published schema describe the field too.
+    affected:
+      - kind: field
+        id: user_name
+      - kind: file
+        id: api/serializers/user.py
+      - kind: file
+        id: web/src/components/UserBadge.jsx
+      - kind: file
+        id: openapi.yaml
+      - kind: file
+        id: tests/contract/user.json
+    hidden_check:
+      - path: api/serializers/user.py
+        match: '"username"'
+        no_match: user_name
+        protects: api/serializers/user.py
+      - path: web/src/components/UserBadge.jsx
+        match: user\.username
+        no_match: user_name
+        protects: web/src/components/UserBadge.jsx
+      - path: openapi.yaml
+        match: "^\\s+username:"
+        flags: m
+        no_match: user_name
+        protects: openapi.yaml
+      - path: tests/contract/user.json
+        match: '"username"'
+        no_match: user_name
+        protects: tests/contract/user.json
+  - id: interface-rename-env
+    area: interfaces
+    fixture: map-task-set/interface-rename-env/repo
+    reference: map-task-set/interface-rename-env/solution
+    primary:
+      - src/payments.js
+    prompt: Rename the environment variable `PAYMENT_API_URL`, which src/payments.js reads, to `PAYMENTS_BASE_URL`.
+    trap: "The name is set in three non-code places: env template, compose, CI."
+    affected:
+      - kind: env
+        id: PAYMENT_API_URL
+      - kind: file
+        id: src/payments.js
+      - kind: file
+        id: .env.example
+      - kind: file
+        id: docker-compose.yml
+      - kind: file
+        id: .github/workflows/ci.yml
+    hidden_check:
+      - path: src/payments.js
+        match: process\.env\.PAYMENTS_BASE_URL
+        no_match: PAYMENT_API_URL
+        protects: src/payments.js
+      - path: .env.example
+        match: ^PAYMENTS_BASE_URL=
+        flags: m
+        no_match: PAYMENT_API_URL
+        protects: .env.example
+      - path: docker-compose.yml
+        match: "PAYMENTS_BASE_URL:"
+        no_match: PAYMENT_API_URL
+        protects: docker-compose.yml
+      - path: .github/workflows/ci.yml
+        match: "PAYMENTS_BASE_URL:"
+        no_match: PAYMENT_API_URL
+        protects: .github/workflows/ci.yml
+  - id: interface-graphql-field
+    area: interfaces
+    fixture: map-task-set/interface-graphql-field/repo
+    reference: map-task-set/interface-graphql-field/solution
+    primary:
+      - schema.graphql
+    prompt: Rename the GraphQL field `Order.total` to `Order.totalAmount` in schema.graphql.
+    trap: The resolver map and a client operation name the field without importing anything.
+    affected:
+      - kind: field
+        id: Order.total
+      - kind: file
+        id: schema.graphql
+      - kind: file
+        id: src/resolvers.js
+      - kind: file
+        id: web/queries/order.graphql
+      - kind: file
+        id: web/src/OrderView.jsx
+    hidden_check:
+      - path: schema.graphql
+        match: "totalAmount: Float!"
+        no_match: "^\\s*total:"
+        flags: m
+        protects: schema.graphql
+      - path: src/resolvers.js
+        match: "totalAmount:"
+        no_match: "\\btotal:"
+        protects: src/resolvers.js
+      - path: web/queries/order.graphql
+        match: ^\s*totalAmount\s*$
+        no_match: ^\s*total\s*$
+        flags: m
+        protects: web/queries/order.graphql
+      - path: web/src/OrderView.jsx
+        match: order\.totalAmount
+        no_match: order\.total\b
+        protects: web/src/OrderView.jsx
+  - id: runtime-compose-port
+    area: runtime
+    fixture: map-task-set/runtime-compose-port/repo
+    reference: map-task-set/runtime-compose-port/solution
+    primary:
+      - docker-compose.yml
+    prompt: The `web` service must listen on port 8080 instead of 3000. Change docker-compose.yml accordingly (host and container side).
+    trap: The reverse proxy and the CI smoke test hard-code the old port.
+    affected:
+      - kind: port
+        id: web:3000
+        aliases:
+          - "3000"
+      - kind: file
+        id: docker-compose.yml
+      - kind: file
+        id: Dockerfile
+      - kind: file
+        id: deploy/nginx.conf
+      - kind: file
+        id: .github/workflows/ci.yml
+    hidden_check:
+      - path: docker-compose.yml
+        match: '"8080:8080"'
+        no_match: "3000"
+        protects: docker-compose.yml
+      - path: Dockerfile
+        match: EXPOSE 8080
+        no_match: "3000"
+        protects: Dockerfile
+      - path: deploy/nginx.conf
+        match: server web:8080;
+        no_match: "3000"
+        protects: deploy/nginx.conf
+      - path: .github/workflows/ci.yml
+        match: localhost:8080/health
+        no_match: "3000"
+        protects: .github/workflows/ci.yml
+  - id: runtime-rename-service
+    area: runtime
+    fixture: map-task-set/runtime-rename-service/repo
+    reference: map-task-set/runtime-rename-service/solution
+    primary:
+      - docker-compose.yml
+    prompt: Rename the compose service `db` to `postgres` in docker-compose.yml.
+    trap: The service name is a hostname in a shell script and an app config.
+    affected:
+      - kind: service
+        id: db
+        aliases:
+          - service db
+          - db service
+      - kind: file
+        id: docker-compose.yml
+      - kind: file
+        id: scripts/wait-for-db.sh
+      - kind: file
+        id: config/database.yml
+    hidden_check:
+      - path: docker-compose.yml
+        match: ^  postgres:$
+        no_match: "^  db:$|- db$|DB_HOST: db$"
+        flags: m
+        protects: docker-compose.yml
+      - path: scripts/wait-for-db.sh
+        match: -h postgres\b
+        no_match: -h db\b
+        protects: scripts/wait-for-db.sh
+      - path: config/database.yml
+        match: "host: postgres$"
+        no_match: "host: db$"
+        flags: m
+        protects: config/database.yml
+  - id: runtime-terraform-variable
+    area: runtime
+    fixture: map-task-set/runtime-terraform-variable/repo
+    reference: map-task-set/runtime-terraform-variable/solution
+    primary:
+      - infra/variables.tf
+    prompt: Rename the Terraform input variable `instance_type` to `app_instance_type` in infra/variables.tf.
+    trap: A tfvars file and a CI command line pass the variable by name.
+    affected:
+      - kind: variable
+        id: instance_type
+      - kind: file
+        id: infra/variables.tf
+      - kind: file
+        id: infra/main.tf
+      - kind: file
+        id: infra/prod.tfvars
+      - kind: file
+        id: .github/workflows/deploy.yml
+    hidden_check:
+      - path: infra/variables.tf
+        match: variable "app_instance_type"
+        no_match: variable "instance_type"
+        protects: infra/variables.tf
+      - path: infra/main.tf
+        match: var\.app_instance_type\b
+        no_match: var\.instance_type\b
+        protects: infra/main.tf
+      - path: infra/prod.tfvars
+        match: ^app_instance_type\s*=
+        no_match: ^instance_type\s*=
+        flags: m
+        protects: infra/prod.tfvars
+      - path: .github/workflows/deploy.yml
+        match: -var app_instance_type=
+        no_match: -var instance_type=
+        protects: .github/workflows/deploy.yml
+  - id: runtime-node-version
+    area: runtime
+    fixture: map-task-set/runtime-node-version/repo
+    reference: map-task-set/runtime-node-version/solution
+    primary:
+      - Dockerfile
+    prompt: The project moves from Node 18 to Node 22. Start with the base image in Dockerfile.
+    trap: Three more places pin the runtime version; only the image is named.
+    affected:
+      - kind: file
+        id: Dockerfile
+      - kind: file
+        id: .nvmrc
+      - kind: file
+        id: package.json
+      - kind: file
+        id: .github/workflows/ci.yml
+    hidden_check:
+      - path: Dockerfile
+        match: FROM node:22
+        no_match: node:18
+        protects: Dockerfile
+      - path: .nvmrc
+        match: ^v?22
+        no_match: "18"
+        protects: .nvmrc
+      - path: package.json
+        match: '"node": "[^"]*22'
+        no_match: <19|>=18
+        protects: package.json
+      - path: .github/workflows/ci.yml
+        match: "node-version: '?22"
+        no_match: "node-version: '?18"
+        protects: .github/workflows/ci.yml
+  - id: delivery-rename-job
+    area: delivery
+    fixture: map-task-set/delivery-rename-job/repo
+    reference: map-task-set/delivery-rename-job/solution
+    primary:
+      - .github/workflows/ci.yml
+    prompt: Rename the CI job `test` to `unit-tests` in .github/workflows/ci.yml.
+    trap: Branch protection requires the job by name; a renamed job never reports.
+    affected:
+      - kind: pipeline
+        id: job test
+        aliases:
+          - test job
+          - "job: test"
+          - jobs.test
+      - kind: file
+        id: .github/workflows/ci.yml
+      - kind: file
+        id: .github/settings.yml
+      - kind: file
+        id: Makefile
+    hidden_check:
+      - path: .github/workflows/ci.yml
+        match: ^  unit-tests:$
+        no_match: "^  test:$|needs: test$"
+        flags: m
+        protects: .github/workflows/ci.yml
+      - path: .github/workflows/ci.yml
+        match: "needs: unit-tests"
+        protects: .github/workflows/ci.yml
+      - path: .github/settings.yml
+        match: '"unit-tests"'
+        no_match: '"test"'
+        protects: .github/settings.yml
+      - path: Makefile
+        match: -j unit-tests
+        no_match: -j test\b
+        protects: Makefile
+  - id: delivery-rename-script
+    area: delivery
+    fixture: map-task-set/delivery-rename-script/repo
+    reference: map-task-set/delivery-rename-script/solution
+    primary:
+      - package.json
+    prompt: Rename the npm script `build:prod` to `build` in package.json.
+    trap: CI, the image build and a Makefile target call the script by name.
+    affected:
+      - kind: script
+        id: build:prod
+      - kind: file
+        id: package.json
+      - kind: file
+        id: .github/workflows/build.yml
+      - kind: file
+        id: Dockerfile
+      - kind: file
+        id: Makefile
+    hidden_check:
+      - path: package.json
+        match: '"build": "vite build --mode production"'
+        no_match: build:prod
+        protects: package.json
+      - path: .github/workflows/build.yml
+        match: npm run build$
+        no_match: build:prod
+        flags: m
+        protects: .github/workflows/build.yml
+      - path: Dockerfile
+        match: npm run build$
+        no_match: build:prod
+        flags: m
+        protects: Dockerfile
+      - path: Makefile
+        match: npm run build$
+        no_match: build:prod
+        flags: m
+        protects: Makefile
+  - id: delivery-artifact-name
+    area: delivery
+    fixture: map-task-set/delivery-artifact-name/repo
+    reference: map-task-set/delivery-artifact-name/solution
+    primary:
+      - .github/workflows/build.yml
+    prompt: Rename the build artifact uploaded in .github/workflows/build.yml from `dist-bundle` to `web-dist`.
+    trap: A second workflow downloads the artifact by name.
+    affected:
+      - kind: artifact
+        id: dist-bundle
+      - kind: file
+        id: .github/workflows/build.yml
+      - kind: file
+        id: .github/workflows/deploy.yml
+      - kind: file
+        id: scripts/fetch-artifact.sh
+    hidden_check:
+      - path: .github/workflows/build.yml
+        match: "name: web-dist"
+        no_match: dist-bundle
+        protects: .github/workflows/build.yml
+      - path: .github/workflows/deploy.yml
+        match: "name: web-dist"
+        no_match: dist-bundle
+        protects: .github/workflows/deploy.yml
+      - path: scripts/fetch-artifact.sh
+        match: -n web-dist
+        no_match: dist-bundle
+        protects: scripts/fetch-artifact.sh
+  - id: delivery-rename-secret
+    area: delivery
+    fixture: map-task-set/delivery-rename-secret/repo
+    reference: map-task-set/delivery-rename-secret/solution
+    primary:
+      - .github/workflows/deploy.yml
+    prompt: The repository secret `DEPLOY_TOKEN` has been renamed to `DEPLOY_KEY`. Rename `DEPLOY_TOKEN` to `DEPLOY_KEY` wherever deployment uses it, starting with .github/workflows/deploy.yml.
+    trap: A second workflow and the deploy script read the same name.
+    affected:
+      - kind: secret
+        id: DEPLOY_TOKEN
+      - kind: file
+        id: .github/workflows/deploy.yml
+      - kind: file
+        id: .github/workflows/staging.yml
+      - kind: file
+        id: scripts/deploy.sh
+    hidden_check:
+      - path: .github/workflows/deploy.yml
+        match: secrets\.DEPLOY_KEY
+        no_match: DEPLOY_TOKEN
+        protects: .github/workflows/deploy.yml
+      - path: .github/workflows/staging.yml
+        match: secrets\.DEPLOY_KEY
+        no_match: DEPLOY_TOKEN
+        protects: .github/workflows/staging.yml
+      - path: scripts/deploy.sh
+        match: DEPLOY_KEY
+        no_match: DEPLOY_TOKEN
+        protects: scripts/deploy.sh

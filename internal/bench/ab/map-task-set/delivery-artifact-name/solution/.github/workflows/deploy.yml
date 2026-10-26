@@ -1,0 +1,15 @@
+name: deploy
+on:
+  workflow_run:
+    workflows: [build]
+    types: [completed]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: dist/
+          run-id: ${{ github.event.workflow_run.id }}
+      - run: ls dist

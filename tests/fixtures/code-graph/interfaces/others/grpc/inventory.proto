@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package inventory;
+
+// Stock lookups.
+service Inventory {
+  rpc GetStock (StockRequest) returns (StockReply);
+  rpc Reserve (ReserveRequest) returns (ReserveReply);
+}
+
+message StockRequest {
+  string sku = 1;
+  string warehouse = 2;
+}
+
+message StockReply {
+  int32 qty = 1;
+}
+
+message ReserveRequest {
+  string sku = 1;
+  int32 qty = 2;
+}
+
+message ReserveReply {
+  string id = 1;
+}

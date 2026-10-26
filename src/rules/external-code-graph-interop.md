@@ -23,20 +23,20 @@ obligation_frequency: "per-turn"
 # External Code-Graph Interop
 
 Some repos commit a pre-built code-intelligence index — a `graph.json`-shaped
-artifact or a SCIP index (`index.scip`, `*.scip`). One that exists is already
-built, so it is the cheap first question for "who calls X", "where is Y used",
-"what does this import". This suite is an **orchestrator first, owner where it
+artifact or a SCIP index (`index.scip`, `*.scip`). One that exists is built,
+so it is the cheap first question for "who calls X", "where is Y used",
+"what does it import". This suite is an **orchestrator first, owner where it
 wins** (ADR-124): query a shipped index when present and fresh; otherwise the
-native engine covers the gap (shipped since ADR-259 — no manual install).
+native engine covers the gap (ADR-259).
 
 ## The rule
 
 ```
-REPO SHIPS A CODE-GRAPH INDEX (graph.json-shaped OR a SCIP index)
-→ QUERY IT FIRST FOR CODEBASE-STRUCTURE QUESTIONS. GREP IS THE FALLBACK,
-NOT THE FIRST MOVE. NEVER REBUILD A FRESH CONSUMER-SHIPPED INDEX.
-NO FRESH INDEX SHIPPED → THE NATIVE ENGINE MAY BUILD ONE (ADR-124); STILL
-GREP-FALLBACK FOR WHAT THE GRAPH DOES NOT ANSWER, AND SAY WHICH SOURCE ANSWERED.
+A GRAPH IS AN INDEX, NEVER THE TRUTH (ADR-303). FIND WITH IT FIRST FOR
+CODEBASE-STRUCTURE QUESTIONS; NEVER REBUILD A FRESH CONSUMER-SHIPPED INDEX.
+CONFIRM WITH THE SOURCE BEFORE ACTING: READ THE CITED SPANS, AND TEXT-SEARCH
+THE NAME — COUNTS ARE LOWER BOUNDS. UPDATE THE MAP AFTER THE CHANGE.
+SAY WHICH SOURCE ANSWERED.
 ```
 
 ## Staleness is part of the answer
@@ -64,8 +64,9 @@ AND the repo contains a detectable index:
 1. **Detect** the index (its path is the concrete pointer; the specific tool
    that produced it is named in the repo's own docs, not here).
 2. **Query it** for the relationship the user asked about.
-3. **Fall back to `grep`/read** only for what the index does not cover, and say
-   so ("the index has no entry for X, so I grepped").
+3. **Confirm** before changing anything: `code-graph confirm` re-reads the
+   witnesses; a text search for the name finds what the index missed.
+4. **Update** after the change: `code-graph refresh` re-reads touched files.
 
 Query-first is an **ordering** heuristic, never a claim the index answers better
 — no measured class beat `grep`. Figures:

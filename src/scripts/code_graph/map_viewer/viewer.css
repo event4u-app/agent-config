@@ -10,7 +10,8 @@
     --amber: #ffc14d; --amberText: #ffc14d; --sand: #f5e08a; --d3: #a7c46b;
     --node: #2a3445; --nodeStroke: #3a4760; --edge: rgba(200, 214, 235, 0.17); --grid: rgba(62, 197, 255, 0.055);
     --doc: #6b7280; --violet: #c9a2ff; --onColor: #0d1522; --blastBg: #120d08; --glow: 0.9;
-    --alert: #ff5d6c; --alertText: #e0414f;
+    --alert: #ff5d6c; --alertText: #e0414f; --alertTint: rgba(255, 93, 108, 0.14);
+    --amberTint: rgba(255, 193, 77, 0.14); --violetText: #d9bdff; --violetTint: rgba(201, 162, 255, 0.14);
     --orb-light: rgba(62, 197, 255, 0.10); --orb-dark: rgba(7, 11, 18, 0);
     color-scheme: dark;
 }
@@ -24,6 +25,8 @@
     --node: #cdd5e1; --nodeStroke: #aab5c6; --edge: rgba(30, 41, 59, 0.17); --grid: rgba(14, 165, 233, 0.09);
     --doc: #9aa3b2; --violet: #8b5cf6; --onColor: #0d1522; --blastBg: #fff8ef; --glow: 0.35;
     --orb-light: rgba(14, 165, 233, 0.12); --orb-dark: rgba(243, 245, 249, 0);
+    --alert: #e11d48; --alertText: #be123c; --alertTint: rgba(225, 29, 72, 0.1);
+    --amberTint: rgba(245, 179, 36, 0.16); --violetText: #6d28d9; --violetTint: rgba(139, 92, 246, 0.12);
     color-scheme: light;
 }
 :root { --sbThumb: color-mix(in srgb, var(--muted) 45%, transparent); --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; --monof: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; --display: 'Anton', Impact, 'Arial Narrow', sans-serif; }
@@ -54,7 +57,6 @@ button:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visibl
 .chip.fresh { border: 0; background: var(--greenTint); color: var(--greenText); display: inline-flex; align-items: center; gap: 6px; }
 .chip.stale { border: 0; background: var(--brandTint); color: var(--brandText); display: inline-flex; align-items: center; gap: 6px; }
 .chip.fresh::before, .chip.stale::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.chip.gen { color: var(--muted); }
 .search { position: relative; flex: 1 1 260px; display: flex; align-items: center; gap: 8px; min-width: 220px; max-width: 520px; margin-left: auto; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
 .search svg { color: var(--muted); flex: none; }
 .search input { flex: 1; min-width: 0; height: 36px; background: transparent; border: 0; color: var(--text); font: inherit; font-size: 13px; outline: none; }

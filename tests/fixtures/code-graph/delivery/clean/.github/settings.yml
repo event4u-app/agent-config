@@ -1,0 +1,3 @@
+environments:
+  - name: staging
+    wait_timer: 5

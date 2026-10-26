@@ -17,6 +17,11 @@ import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { parseCompose } from './infra_files/compose.js';
+import { parseDockerfile } from './infra_files/dockerfile.js';
+import { parsePipeline } from './infra_files/pipeline.js';
+import { isComposeName, isDockerfileName, isGithubWorkflowPath, walkFiles } from './infra_files/walk.js';
+
 export type Ecosystem = 'npm' | 'Packagist' | 'GitHub Actions' | 'runtime' | 'manager' | 'image';
 export type Provenance = 'lockfile' | 'declared' | 'image' | 'ci';
 
@@ -47,36 +52,11 @@ export interface Inventory {
     files: string[];
 }
 
-const SKIP_DIRS = new Set(['node_modules', '.git', 'vendor', 'dist', '.claude', '.worktrees', 'coverage', '.next']);
-const MAX_DEPTH = 4;
+const walk = (root: string, match: (name: string, rel: string) => boolean): string[] => walkFiles(root, match);
 
 function lineOf(text: string, needle: string): number {
     const i = text.indexOf(needle);
     return i < 0 ? 1 : text.slice(0, i).split('\n').length;
-}
-
-/** Repo-relative files whose basename matches, walked to a bounded depth. */
-function walk(root: string, match: (name: string, rel: string) => boolean): string[] {
-    const out: string[] = [];
-    const visit = (dir: string, depth: number): void => {
-        let names: fs.Dirent[];
-        try {
-            names = fs.readdirSync(dir, { withFileTypes: true });
-        } catch {
-            return;
-        }
-        for (const d of names) {
-            const abs = path.join(dir, d.name);
-            const rel = path.relative(root, abs);
-            if (d.isDirectory()) {
-                if (depth < MAX_DEPTH && !SKIP_DIRS.has(d.name)) visit(abs, depth + 1);
-            } else if (d.isFile() && match(d.name, rel)) {
-                out.push(rel);
-            }
-        }
-    };
-    visit(root, 0);
-    return out.sort();
 }
 
 const PUBLIC_NPM = /^https:\/\/registry\.npmjs\.org\//;
@@ -282,43 +262,39 @@ function imageEntry(ref: string, provenance: Provenance, file: string, line: num
 }
 
 function readDockerfile(rel: string, text: string): InventoryEntry[] {
-    const out: InventoryEntry[] = [];
-    text.split('\n').forEach((raw, i) => {
-        const m = /^\s*FROM\s+(?:--platform=\S+\s+)?(\S+)/i.exec(raw);
-        if (m && !m[1]!.startsWith('$') && m[1] !== 'scratch') out.push(imageEntry(m[1]!, 'image', rel, i + 1));
-    });
-    return out;
+    return parseDockerfile(text)
+        .stages.filter((st) => !st.image.startsWith('$') && st.image !== 'scratch')
+        .map((st) => imageEntry(st.image, 'image', rel, st.line));
 }
 
-/** Compose files and CI workflows: `image:` lines, runtime setup keys, action pins. */
-function readYaml(rel: string, text: string, ci: boolean): InventoryEntry[] {
+function readCompose(rel: string, text: string): InventoryEntry[] {
+    return parseCompose(text)
+        .services.filter((s) => s.image !== null && !s.image.includes('${'))
+        .map((s) => imageEntry(s.image!, 'image', rel, s.imageLine));
+}
+
+/** Workflow images, runtime setup keys and action pins, from the shared pipeline model. */
+function readWorkflow(rel: string, text: string): InventoryEntry[] {
     const out: InventoryEntry[] = [];
-    const prov: Provenance = ci ? 'ci' : 'image';
-    text.split('\n').forEach((raw, i) => {
-        const l = raw.replace(/\s#.*$/, '');
-        const img = /^\s*image:\s*["']?([^"'\s]+)["']?\s*$/.exec(l);
-        if (img && !img[1]!.includes('${')) out.push(imageEntry(img[1]!, prov, rel, i + 1));
-        if (!ci) return;
-        const setup = /^\s*(node-version|php-version):\s*["']?([^"'\s[\]]+)["']?\s*$/.exec(l);
-        if (setup && !setup[2]!.includes('${')) {
-            out.push(runtime(setup[1] === 'node-version' ? 'node' : 'php', setup[2]!, 'ci', rel, i + 1));
+    const action = (ref: string, line: number): void => {
+        const m = /^([\w.-]+\/[\w./-]+)@(\S+)$/.exec(ref);
+        if (!m) return;
+        out.push({ ecosystem: 'GitHub Actions', name: m[1]!, version: m[2]!, range: null, provenance: 'ci', file: rel, line, private: false, scope: 'runtime' });
+    };
+    for (const job of parsePipeline(text, 'github').jobs) {
+        for (const img of job.images) if (!img.ref.includes('${')) out.push(imageEntry(img.ref, 'ci', rel, img.line));
+        if (job.uses) action(job.uses.ref, job.uses.line);
+        for (const st of job.steps) {
+            if (st.uses) action(st.uses.ref, st.uses.line);
+            for (const key of ['node-version', 'php-version'] as const) {
+                const v = st.with[key];
+                if (v && !v.value.includes('${') && !/[[\]\s]/.test(v.value)) {
+                    out.push(runtime(key === 'node-version' ? 'node' : 'php', v.value, 'ci', rel, v.line));
+                }
+            }
         }
-        const uses = /^\s*-?\s*uses:\s*["']?([\w.-]+\/[\w./-]+)@([^"'\s]+)["']?/.exec(l);
-        if (uses) {
-            out.push({
-                ecosystem: 'GitHub Actions',
-                name: uses[1]!,
-                version: uses[2]!,
-                range: null,
-                provenance: 'ci',
-                file: rel,
-                line: i + 1,
-                private: false,
-                scope: 'runtime',
-            });
-        }
-    });
-    return out;
+    }
+    return out.sort((x, y) => x.line - y.line);
 }
 
 /** Every file this reader consults, with the parser for it. */
@@ -334,12 +310,9 @@ function sources(root: string): Array<{ rel: string; parse: (rel: string, text: 
     add(walk(root, (n) => n === '.nvmrc' || n === '.node-version'), (r, t) => readVersionFile(r, t, 'node'));
     add(walk(root, (n) => n === '.php-version'), (r, t) => readVersionFile(r, t, 'php'));
     add(walk(root, (n) => n === '.tool-versions' || n === 'mise.toml' || n === '.mise.toml'), readToolVersions);
-    add(walk(root, (n) => /^Dockerfile(\..+)?$/.test(n) || n.endsWith('.Dockerfile')), readDockerfile);
-    add(walk(root, (n) => /^(docker-)?compose(\.[\w-]+)?\.ya?ml$/.test(n)), (r, t) => readYaml(r, t, false));
-    add(
-        walk(root, (_n, rel) => /^\.github[\\/]workflows[\\/][^\\/]+\.ya?ml$/.test(rel)),
-        (r, t) => readYaml(r, t, true),
-    );
+    add(walk(root, isDockerfileName), readDockerfile);
+    add(walk(root, isComposeName), readCompose);
+    add(walk(root, (_n, rel) => isGithubWorkflowPath(rel)), readWorkflow);
     return list;
 }
 
