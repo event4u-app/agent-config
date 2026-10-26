@@ -56,6 +56,7 @@ button:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visibl
 .chip { padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--soft); }
 .chip.fresh { border: 0; background: var(--greenTint); color: var(--greenText); display: inline-flex; align-items: center; gap: 6px; }
 .chip.stale { border: 0; background: var(--brandTint); color: var(--brandText); display: inline-flex; align-items: center; gap: 6px; }
+.chip.demo { border: 0; background: var(--amberTint); color: var(--amberText); white-space: nowrap; }
 .chip.fresh::before, .chip.stale::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .search { position: relative; flex: 1 1 260px; display: flex; align-items: center; gap: 8px; min-width: 220px; max-width: 520px; margin-left: auto; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
 .search svg { color: var(--muted); flex: none; }

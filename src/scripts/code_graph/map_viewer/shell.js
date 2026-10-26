@@ -12,14 +12,16 @@ extendStrings({
             service: 'Services', operation: 'Operations', resource: 'Resources', workflow: 'Workflows', job: 'Jobs', chain: 'Build / deploy', affected: 'Affected', risk: 'Risk terms',
             verb: 'Verbs', pack: 'Context pack', finding: 'Findings' },
         allKinds: 'All kinds', kindsLabel: 'Kinds', generation: function (g) { return 'Generation ' + g; }, noHits: 'Nothing found.',
-        hubChip: 'HUB · this machine only', hubChipT: 'Never committed, never inside a repository map', hubCount: function (i, n) { return i + ' of ' + n + ' indexed'; }
+        hubChip: 'HUB · this machine only', hubChipT: 'Never committed, never inside a repository map', hubCount: function (i, n) { return i + ' of ' + n + ' indexed'; },
+        demoChip: 'Sample data · Fixture', demoChipT: 'Drawn from the demo fixture, not from a repository of yours'
     },
     de: {
         kindNames: { file: 'Dateien', symbol: 'Symbole', route: 'Routen', area: 'Code-Areas', table: 'Tabellen', column: 'Spalten', fk: 'Fremdschlüssel', rel: 'ORM-Beziehungen',
             service: 'Dienste', operation: 'Operationen', resource: 'Ressourcen', workflow: 'Workflows', job: 'Jobs', chain: 'Build / Deploy', affected: 'Betroffen', risk: 'Risiko-Terme',
             verb: 'Verben', pack: 'Context-Pack', finding: 'Befunde' },
         allKinds: 'Alle Arten', kindsLabel: 'Arten', generation: function (g) { return 'Generation ' + g; }, noHits: 'Nichts gefunden.',
-        hubChip: 'HUB · nur dieser Rechner', hubChipT: 'Nie committet, nie in einer Projekt-Map', hubCount: function (i, n) { return i + ' von ' + n + ' indiziert'; }
+        hubChip: 'HUB · nur dieser Rechner', hubChipT: 'Nie committet, nie in einer Projekt-Map', hubCount: function (i, n) { return i + ' von ' + n + ' indiziert'; },
+        demoChip: 'Beispieldaten · Fixture', demoChipT: 'Aus der Demo-Fixture gezeichnet, nicht aus einem deiner Repositories'
     }
 });
 
@@ -43,6 +45,8 @@ function go(route, item) {
 }
 
 function renderHeader() {
+    var demo = $('pin-demo');
+    if (demo) { demo.textContent = t('demoChip'); demo.setAttribute('title', t('demoChipT')); }
     if (SHELL.hub) {
         $('pin-commit').textContent = t('hubChip');
         $('pin-commit').setAttribute('title', t('hubChipT'));
