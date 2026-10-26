@@ -43,3 +43,16 @@ tasks:
       internal/bench/corpora/design-slop-fp-PREREG.md. A different instrument
       from bench:ui, which scores port fidelity, not detector precision.
     cmd: npx tsx internal/bench/design-slop-fp/run.ts {{.CLI_ARGS}}
+
+  bench:design-consistency-shadow:
+    silent: true
+    desc: |
+      Shadow window for the two consistency findings (raw control beside a
+      project primitive, box metrics off the role canonical) over this
+      repository's own UI: audits src/ui, then records would_fire at 0/2/4 px
+      into agents/runtime/state/design-consistency-shadow.jsonl and prints
+      nothing. Report-only; the threshold is read off the recorded curve
+      (road-to-a-control-that-matches-its-neighbours 3.3).
+    cmds:
+      - npx tsx src/cli/agent-config.ts ui:audit src/ui --json > /dev/null
+      - npx tsx src/scripts/lint_design_consistency.ts --dir src/ui --shadow

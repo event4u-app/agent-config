@@ -485,6 +485,13 @@
             "reason": "UI audit output. Analysis result."
         },
         {
+            "id": "design-consistency-shadow.jsonl",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/lint_design_consistency.ts:43",
+            "reason": "Shadow-window measurement of the two consistency findings at several tolerances. Read to derive a threshold, never by a successor session to resume anything."
+        },
+        {
             "id": "ui-conformance.json",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
