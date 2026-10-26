@@ -94,6 +94,7 @@ renders from real facts or says why it has none.
 | DEC-16 | product-owned | owner | Every map page is a 1:1 port of its prototype in the handover (markup, layout, components, labels, states), translated to the shell's vanilla ES5; only the DEC-2 shipped decisions override it. A page re-derived "in the shell's style" does not close its step; side-by-side screenshots against the rendered prototype are the evidence. | Owner, 2026-10-26: "Warum hältst Du dich nicht an die Designs aus den Zip Files? … Du sollst das neue Design anwenden" | the owner changes a prototype |
 | DEC-17 | product-owned | owner | Frontend work needs test values in every area even where the repository has no database: a demo map built from fixtures through the real code path, marked with the "Beispieldaten · Fixture" chip, never mixed into a real map (DEC-5 stays). | Owner, 2026-10-26: "Während wir entwickeln brauchen wir natürlich hier Testwerte um das Frontend überall zu prüfen. Auch wenn wir hier vielleicht keine Datenbank haben" | never |
 | DEC-18 | product-owned | owner | A clicked key in the ERD shows every place it links to, including relations the DB does not declare but code and queries prove; those are shown as soft relations and flagged as missing in the DB, never drawn like a real FK. | Owner, 2026-10-26: "selbst wenn in der DB keine Relation ist, wir diese aber anhand des Codes und der Queries wissen, sollten wir sie hervorheben, aber auch dass da in der DB die Verknüpfung fehlt und es nur eine Soft-Relation ist" | never |
+| DEC-19 | product-owned | owner | In the Data ERD (and other in-page canvases), drag, pan and wheel-zoom need Ctrl/Cmd held; without it the page scrolls. Deviates from the prototype's always-on drag by owner decision. | Owner, 2026-10-26: "Bei Drag And Drop beim Graphen (Data) oder ERD sollte nur möglich sein, wenn man STRG/CMD gedrückt hält … Dann kann man leichter scrollen" | the owner asks for always-on drag again |
 
 ## Phase 0 — Fold the parked work
 
@@ -349,7 +350,9 @@ renders from real facts or says why it has none.
       implied same-name key; the rail lists the links with witnesses and the
       missing-constraint finding. Edge annotations (delete rule, FK, code
       only, implied) are small icons on the line with a legend below the
-      stage; clicking an icon opens a popup with the full information.
+      stage; clicking an icon opens a popup with the full information. Moving
+      cards, panning and wheel-zoom work only while Ctrl/Cmd is held, so the
+      page scrolls normally; the zoom buttons work without it.
       verify: a browser test clicks a key with one FK, one soft and one implied
       link and finds the three highlighted columns with their line styles, no
       inline edge text, one icon per annotated edge and a popup that opens.
