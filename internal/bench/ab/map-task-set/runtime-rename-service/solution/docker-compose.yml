@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+  postgres:
+    image: postgres:16

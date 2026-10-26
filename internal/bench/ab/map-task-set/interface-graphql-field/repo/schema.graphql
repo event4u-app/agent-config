@@ -1,0 +1,8 @@
+type Order {
+  id: ID!
+  total: Float!
+}
+
+type Query {
+  order(id: ID!): Order
+}
