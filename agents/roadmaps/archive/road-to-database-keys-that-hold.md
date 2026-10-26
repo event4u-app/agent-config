@@ -105,13 +105,13 @@ pinned to their current size (`src/config/skill-body-budget.json`).
 
 ## Phase 4 — Hand the rest to its owners
 
-- [x] **4.1 Land the modeling findings on `-relational-modeling`.** Arrivals <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **4.1 Land the modeling findings on `-relational-modeling`.** Arrivals <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/host_docs_pages.yaml -->
       line; new steps for the relationship → constraint table, DB cascade
       bypassing model events, soft-delete uniqueness, test-engine parity and
       shared-schema tenancy; the `database` description's engine lock joins its
       step 2.1.
       verify: the roadmap carries an `Arrivals:` line and one step per finding.
-- [x] **4.2 Land the evolution findings on `-evolution-tactics`.** Arrivals <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **4.2 Land the evolution findings on `-evolution-tactics`.** Arrivals <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/host_docs_pages.yaml -->
       line; 4.1 notes that the Laravel substrate now exists and that `SET NOT
       NULL` is a fourth candidate; a step to spike Phase 3's advice rules
       toward gate; the lock-timeout presence check as advice next to 4.4.
