@@ -810,11 +810,16 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-08-11
 
 ### claim: design-slop-false-positive-baseline
-- claim: On a 32-file labelled clean-UI corpus, 18 of the 19 shipped design-slop rules produced zero false positives; the nineteenth (`slop-c6-lock-colour`, catalog C6) fired on 4 of the 32 files and was demoted to judgment-only rather than tuned.
+- claim: On a 32-file labelled clean-UI corpus (digest `90544389b05c1d0b`), all 26 shipped design-slop rules produce zero false positives — which the pre-registration reads as the corpus failing to discriminate, not as precision. History: the 2026-08-13 epoch ran 19 rules, 18 at zero, and the nineteenth (`slop-c6-lock-colour`, catalog C6) fired on 4 of the 32 files and was demoted to judgment-only rather than tuned.
 - kind: quant
 - evidence: internal/bench/corpora/design-slop-fp-PREREG.md#The ceiling, declared before the run
 - status: backed
-- last_verified: 2026-08-13
+- last_verified: 2026-10-26
+
+  Epoch 2026-10-26, `npx tsx internal/bench/design-slop-fp/run.ts`: 26 rules ×
+  32 clean files, M1 = 0 for every rule. This is the honest-null branch named
+  below, and it is the reason the near-miss corpus of
+  `road-to-tells-a-near-miss-can-refute` Phase 1 gates every later promotion.
 
   Counting method: M1 is the number of distinct corpus files on which a rule
   emits at least one finding — per file, not per hit. Every corpus file is
