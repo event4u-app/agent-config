@@ -298,43 +298,43 @@ renders from real facts or says why it has none.
 - [x] **5.2 Writer gate.** A check fails any code path that writes a graph, map
       or cache outside the two layouts.
       verify: the gate is red on a planted writer and green on the tree.
-- [ ] **5.3 The design shell.** Header with logo, `KNOWLEDGE MAP` wordmark, the
+- [x] **5.3 The design shell.** Header with logo, `KNOWLEDGE MAP` wordmark, the
       eight-area nav, commit and freshness chips, search across every kind,
       Export, theme and language toggles; rails with pin/unpin as shipped;
       hash router; shared detail panel with witness and confirm state.
       verify: the render check passes at 1440, 375 and 320 px in both themes.
-- [ ] **5.4 Code area.** The Workbench refinements: languages stack, health
+- [x] **5.4 Code area.** The Workbench refinements: languages stack, health
       points per part and the largest lever, empty-state lists, deselect,
       footer aggregation chip — keeping every shipped decision of DEC-2.
       verify: the render check passes and the 13 shipped decisions are unchanged.
-- [ ] **5.5 Overview area.** Map home: per-area freshness, coverage and trust
+- [x] **5.5 Overview area.** Map home: per-area freshness, coverage and trust
       states (fresh, stale, contradicted, unverifiable, incomplete), provenance
       labels, entry points into each area.
       verify: a fixture map shows each area's state with its reason.
-- [ ] **5.6 Data area.** ERD (tables, columns, keys, actions; code ∣ intended ∣
+- [x] **5.6 Data area.** ERD (tables, columns, keys, actions; code ∣ intended ∣
       actual overlay), ORM relations, drift list with witnesses, model ↔ table
       ↔ request-path links.
       verify: the P1 fixture map shows the three drift findings with witnesses.
-- [ ] **5.7 Interfaces area.** Services, operations with protocol filter,
+- [x] **5.7 Interfaces area.** Services, operations with protocol filter,
       parameters and configuration names, callers linked to Code, contract
       drift.
       verify: the P5 fixture map shows `partner` and `GetStock` with callers.
-- [ ] **5.8 Runtime and Delivery areas.** Infrastructure resources and
+- [x] **5.8 Runtime and Delivery areas.** Infrastructure resources and
       environment comparison; local environment (services, ports), pipeline
       graph, build → image → deploy chain, drift.
       verify: the runtime and delivery fixtures render their facts.
-- [ ] **5.9 Impact area.** Change preview from the working diff: affected code,
+- [x] **5.9 Impact area.** Change preview from the working diff: affected code,
       columns, operations, pipelines, the review-risk terms, and the confirm
       state of each.
       verify: a planted diff renders its affected set.
-- [ ] **5.10 Agent area.** Context pack, review risk, the verb list with what
+- [x] **5.10 Agent area.** Context pack, review risk, the verb list with what
       each answers; `explain` names the existing graph verb.
       verify: the area lists the verbs that exist and nothing that does not.
-- [ ] **5.11 Hub with the same shell.** The estate map is rendered by the
+- [x] **5.11 Hub with the same shell.** The estate map is rendered by the
       shared shell with a Projects area and per-project links; the separate
       estate renderer is retired; the work-tree refusal stays.
       verify: the hub renders and still refuses a git work tree.
-- [ ] **5.12 Navigation from facts.** Overview → area → file drill-down with a
+- [x] **5.12 Navigation from facts.** Overview → area → file drill-down with a
       breadcrumb, presets that only filter kinds, a freshness banner with reason,
       tours as templates over facts with input hashes, collapsed super-nodes
       above a measured node threshold.
