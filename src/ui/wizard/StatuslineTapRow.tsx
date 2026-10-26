@@ -12,7 +12,7 @@ import { useEffect } from 'preact/hooks';
 import { apiFetch } from '../api.js';
 
 interface StatuslineOffer {
-    state: 'offer' | 'installed' | 'declined';
+    state: 'offer' | 'installed' | 'accepted' | 'declined';
     settings_path: string;
     has_existing: boolean;
 }
@@ -33,14 +33,17 @@ async function loadOffer(): Promise<void> {
 export async function applyStatuslineTap(): Promise<string> {
     if (offer.value?.state !== 'offer') return '';
     try {
-        const r = await apiFetch<{ ok: boolean; message: string }>('/api/v1/wizard/statusline', {
+        const r = await apiFetch<{ ok: boolean; message: string; dryRun?: boolean }>('/api/v1/wizard/statusline', {
             method: 'POST',
             body: { install: statuslineTapWanted.value },
         });
-        offer.value = { ...offer.value, state: statuslineTapWanted.value ? 'installed' : 'declined' };
+        // A dry run recorded nothing, so the offer stays open.
+        if (r.dryRun !== true) offer.value = { ...offer.value, state: statuslineTapWanted.value ? 'installed' : 'declined' };
         return r.message;
     } catch {
-        return 'The status-line tap could not be added; run `agent-config statusline:install` to try again.';
+        return statuslineTapWanted.value
+            ? 'The status-line tap could not be added; run `agent-config statusline:install` to try again.'
+            : 'Your "no" could not be saved, so the next setup may offer the status-line tap again.';
     }
 }
 
