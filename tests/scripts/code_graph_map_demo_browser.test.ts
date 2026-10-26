@@ -209,6 +209,33 @@ describe('the demo map in a browser', () => {
         }
     }, 120_000);
 
+    it('the Code detail names colliding file names apart by folder and keeps the full path as the title', async () => {
+        for (const width of [1440, 375]) {
+            const { page, errors } = await open(demo.page, '#/code', width);
+            const groups = await page.evaluate(() =>
+                Array.from(document.querySelectorAll('#panel .egroup')).map((g) => ({
+                    cap: g.querySelector('.cap')?.textContent ?? '',
+                    rows: Array.from(g.querySelectorAll('li button')).map((b) => ({ label: b.querySelector('.fname')?.textContent ?? '', title: b.getAttribute('title') ?? '' })),
+                })),
+            );
+            const listed = groups.filter((g) => g.rows.length > 1);
+            expect(listed.length, `@${width}`).toBeGreaterThan(0);
+            for (const g of listed) {
+                expect(new Set(g.rows.map((r) => r.label)).size, `${g.cap} @${width}: ${g.rows.map((r) => r.label).join(', ')}`).toBe(g.rows.length);
+                for (const r of g.rows) {
+                    expect(r.title.endsWith(r.label.split(' · ').pop() ?? ''), r.title).toBe(true);
+                    const prefix = r.label.includes(' · ') ? r.label.split(' · ')[0]! : '';
+                    if (prefix) expect(r.title.includes(`${prefix}/`), r.title).toBe(true);
+                }
+            }
+            // The demo's two most used stores sit in different feature folders.
+            const most = listed.find((g) => /Most used/.test(g.cap))!;
+            expect(most.rows.filter((r) => r.label.endsWith('store.ts')).every((r) => r.label.includes(' · '))).toBe(true);
+            expect(errors).toEqual([]);
+            await page.close();
+        }
+    }, 120_000);
+
     it('a real map has no chip', async () => {
         const { page } = await open(realPage, '#/overview');
         expect(await page.locator('#pin-demo').count()).toBe(0);

@@ -1449,9 +1449,31 @@
         return add(el('li'), b);
     }
     /** A two-column row the design draws in mono: the file and one measure beside it. */
-    function gridRow(i, metaText, cls) {
+    /**
+     * Labels for files listed together: the file name, and where two names collide the shortest parent-folder
+     * suffix that tells this one apart ("cart · store.ts") — the rule the area titles follow.
+     */
+    function fileLabels(idx) {
+        var dirsOf = function (i) { var s = files[i].path.split('/'); s.pop(); return s; };
+        var suffix = function (d, k) { return d.slice(Math.max(0, d.length - k)).join('/'); };
+        var out = Object.create(null);
+        idx.forEach(function (i) {
+            var name = base(files[i].path);
+            var others = idx.filter(function (j) { return j !== i && base(files[j].path) === name; });
+            out[i] = name;
+            if (!others.length) return;
+            var mine = dirsOf(i);
+            var depth = Math.max.apply(null, [mine.length].concat(others.map(function (j) { return dirsOf(j).length; })));
+            for (var k = 1; k <= depth; k++) {
+                var own = suffix(mine, k);
+                if (others.every(function (j) { return suffix(dirsOf(j), k) !== own; })) { out[i] = own ? own + ' · ' + name : name; return; }
+            }
+        });
+        return out;
+    }
+    function gridRow(i, metaText, cls, label) {
         var b = el('button', { type: 'button', title: files[i].path, class: cls || '' });
-        add(b, el('span', { class: 'fname' }, base(files[i].path)), el('span', { class: 'fdir' }, metaText));
+        add(b, el('span', { class: 'fname' }, label || base(files[i].path)), el('span', { class: 'fdir' }, metaText));
         b.addEventListener('click', function () { openFile(i); });
         return add(el('li'), b);
     }
@@ -1492,21 +1514,24 @@
             var p = add(el('div', { class: 'pad epad' }), add(el('div', { class: 'empty-head' }), el('b', null, t('pickTitle')), el('span', { class: 'muted' }, t('pickHint'))));
             if (recentFiles.length) {
                 var ur = el('ul', { class: 'plist pgrid' });
+                var rl = fileLabels(recentFiles);
                 recentFiles.forEach(function (x) {
                     var b = files[x].blast;
-                    ur.appendChild(gridRow(x, (files[x].area >= 0 ? areas[files[x].area].id : files[x].role) + (b ? ' · Blast ' + num(b.direct + 0.5 * b.transitive) : ''), 'recent'));
+                    ur.appendChild(gridRow(x, (files[x].area >= 0 ? areas[files[x].area].id : files[x].role) + (b ? ' · Blast ' + num(b.direct + 0.5 * b.transitive) : ''), 'recent', rl[x]));
                 });
                 p.appendChild(add(el('div', { class: 'egroup' }), el('span', { class: 'cap' }, t('recent')), ur));
             }
             var hg = add(el('div', { class: 'egroup' }), el('span', { class: 'cap' }, t('topHotspots')));
             if (model.hotspots && model.hotspots.length) {
                 var uh = el('ul', { class: 'plist pgrid' });
-                model.hotspots.slice(0, 3).forEach(function (h) { uh.appendChild(gridRow(h[0], num(h[1]) + ' × ' + num(h[2]))); });
+                var hl = fileLabels(model.hotspots.slice(0, 3).map(function (h) { return h[0]; }));
+                model.hotspots.slice(0, 3).forEach(function (h) { uh.appendChild(gridRow(h[0], num(h[1]) + ' × ' + num(h[2]), '', hl[h[0]])); });
                 hg.appendChild(uh);
             } else hg.appendChild(el('span', { class: 'dashchip mono', title: t('noDataTitle')(t('needChurn')) }, t('noDataShort') + ' · ' + t('needChurn')));
             p.appendChild(hg);
             var ul = el('ul', { class: 'plist pgrid' });
-            (an.hubs || []).slice(0, 5).forEach(function (h) { ul.appendChild(gridRow(h, 'in ' + num(files[h].inFiles))); });
+            var ml = fileLabels((an.hubs || []).slice(0, 5));
+            (an.hubs || []).slice(0, 5).forEach(function (h) { ul.appendChild(gridRow(h, 'in ' + num(files[h].inFiles), '', ml[h])); });
             p.appendChild(add(el('div', { class: 'egroup' }), el('span', { class: 'cap' }, t('mostUsed')), ul));
             panel.appendChild(p);
             return;
@@ -1740,7 +1765,8 @@
         p.appendChild(findCard(t('fileCycles'), num(an.cyclesTotal), 'var(--amberText)', cycLines));
         if (model.hotspots) {
             var hl = el('ul', { class: 'plist pgrid' });
-            model.hotspots.slice(0, 4).forEach(function (h) { hl.appendChild(gridRow(h[0], num(h[1]) + ' × ' + num(h[2]))); });
+            var fl = fileLabels(model.hotspots.slice(0, 4).map(function (h) { return h[0]; }));
+            model.hotspots.slice(0, 4).forEach(function (h) { hl.appendChild(gridRow(h[0], num(h[1]) + ' × ' + num(h[2]), '', fl[h[0]])); });
             p.appendChild(findCard(t('hotspots'), t('hotspotsUnit'), 'var(--amberText)', [hl]));
         } else p.appendChild(findCard(t('hotspots'), null, null, [el('p', null, t('needChurn'))], true));
         if (an.deadFiles !== undefined) {
@@ -1792,7 +1818,8 @@
             p.appendChild(tiles);
             p.appendChild(el('span', { class: 'soft' }, t('mismatch')(pct(a.folderMismatch))));
             var top = a.files.slice().sort(function (x, y) { return files[y].inFiles - files[x].inFiles || x - y; });
-            p.appendChild(el('span', { class: 'muted' }, t('mostUsed') + ': ' + top.slice(0, 3).map(function (x) { return base(files[x].path); }).join(', ')));
+            var tl = fileLabels(top.slice(0, 3));
+            p.appendChild(el('span', { class: 'muted', title: top.slice(0, 3).map(function (x) { return files[x].path; }).join('\n') }, t('mostUsed') + ': ' + top.slice(0, 3).map(function (x) { return tl[x]; }).join(', ')));
             if (state.level !== 'area' || state.area !== ai) {
                 var ob = el('button', { type: 'button', class: 'openarea', id: 'open-area' }, t('openArea'));
                 ob.addEventListener('click', function () { openArea(ai); });
