@@ -25,8 +25,15 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { editPathClass, measure, render, renderUnverifiedFires, renderQ1 } from '../../src/scripts/measure_turn_end_gate.js';
-import { emptyShadowStats, type ShadowStats } from '../../src/scripts/_lib/turn_end_refusals.js';
+import {
+    editPathClass,
+    emptyShadowStats,
+    measure,
+    render,
+    renderQ1,
+    renderUnverifiedFires,
+    type ShadowStats,
+} from '../../src/scripts/measure_turn_end_gate.js';
 
 let store: string;
 
