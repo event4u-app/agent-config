@@ -906,6 +906,13 @@ tasks:
     desc: "Report a roadmap step this diff ticks whose tested symbols no production entry reaches, or that is ticked while it says `built, not wired`. Enforcing since road-to-a-tick-the-shipped-path-earns 3.3; a false positive carries a line `reach exempt: <reason>` in its own step block. Diff-scoped against origin/main"
     cmd: ./scripts-run src/scripts/check_step_production_reach --base origin/main --enforce
 
+  check-graph-writers:
+    silent: true
+    desc: "Fail a graph, map or cache write that lands outside the two layouts ADR-303 allows (agents/map/ in a project, the hub's map/ elsewhere), then run the gate's own self-test"
+    cmds:
+      - ./scripts-run src/scripts/check_graph_writers
+      - ./scripts-run src/scripts/check_graph_writers --self-test
+
   lint-deferral-integrity:
     silent: true
     desc: "Fail when a deferral carried out of an archived roadmap has lost its receiver — deleted, renamed, re-parented, skipped, or archived with open steps. Walks from the archived parent, which is the durable record, because the archival sweep validates a carry exactly once and never sees the pair again"

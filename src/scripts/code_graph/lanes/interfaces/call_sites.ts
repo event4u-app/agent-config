@@ -7,6 +7,7 @@
  * the base is resolved to configuration NAMES (`config('services.partner.url')`,
  * `env('X')`, `process.env.X`, …) or to a literal host. Nothing is evaluated.
  */
+import { CREDENTIAL_PREFIXES } from '../../../_lib/egress_prefixes.js';
 import type { Witness } from '../lane_fact.js';
 import { serviceFromConfigKey, type ConfigIndex } from './config.js';
 import { serviceFromEnvName, type Protocol } from './model.js';
@@ -70,7 +71,9 @@ const USER_VALUE =
     /\$request->|\brequest\(\)|\$_(?:GET|POST|REQUEST|COOKIE)\b|->input\(|->query\(|\breq\.(?:query|params|body)\b|\brequest\.(?:args|form|GET|POST|json|query_params|path_params)\b|\bsearchParams\.get\(|\br\.URL\.Query\(\)|\br\.FormValue\(|\bRequest\.Query\b|\bparams\[:/;
 const SIGNATURE_MARKERS =
     /signature|hash_hmac|hmac|constructEvent|timingSafeEqual|hash_equals|compare_digest|validateRequest|verifyWebhook|webhook_secret|webhookSecret/i;
-const CREDENTIAL_PREFIX = /^(?:sk_(?:live|test)_|rk_(?:live|test)_|AKIA|ASIA|ghp_|gho_|github_pat_|xox[abpr]-|AIza|SG\.)/;
+// The egress table owns the shared vendor prefixes; these three it does not declare.
+const EXTRA_KEY_PREFIX = /^(?:rk_(?:live|test)_|ASIA|SG\.)/;
+const hasKeyPrefix = (v: string): boolean => CREDENTIAL_PREFIXES.some((p) => v.startsWith(p)) || EXTRA_KEY_PREFIX.test(v);
 const CREDENTIAL_KEY = /^(?:api[_-]?key|apikey|token|access[_-]?token|secret|client[_-]?secret|password|passwd|auth|authorization|x-api-key)$/i;
 const PLACEHOLDER = /^(?:x+|\*+|changeme|your[-_ ].*|<.*>|\{\{.*\}\}|%.*%|\$\{.*\}|null|none|example.*|test|dummy)$/i;
 
@@ -80,7 +83,7 @@ export function maskSecret(v: string): string {
 
 function credentialLiteral(value: string): boolean {
     if (value.length < 8 || PLACEHOLDER.test(value)) return false;
-    return CREDENTIAL_PREFIX.test(value) || /^[A-Za-z0-9_\-+/=.]{16,}$/.test(value);
+    return hasKeyPrefix(value) || /^[A-Za-z0-9_\-+/=.]{16,}$/.test(value);
 }
 
 function hostOf(url: string): string | null {
@@ -382,7 +385,7 @@ function credentialIn(stmt: string, ctx: Ctx, at: number): { masked: string; wit
         }
     }
     for (const m of stmt.matchAll(/(['"])([^'"\s]{8,})\1/g)) {
-        if (CREDENTIAL_PREFIX.test(m[2] as string)) return { masked: maskSecret(m[2] as string), witness: ctx.src.witness(at + (m.index ?? 0)) };
+        if (hasKeyPrefix(m[2] as string)) return { masked: maskSecret(m[2] as string), witness: ctx.src.witness(at + (m.index ?? 0)) };
     }
     return null;
 }
