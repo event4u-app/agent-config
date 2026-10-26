@@ -8,22 +8,7 @@ and the run that applies it links its PR.
 
 ## Open
 
-### OQ-14 — Reopen ADR-263 for a package-side run basis
-
-- **Context:** round `inbox-2026-10-at` asks that every run determines its base
-  skills once and closes them out (`later/road-to-a-run-that-knows-its-skills`).
-  ADR-263 (`reopen_policy: owner`) rejected a package-side routing claim because
-  no host routing contract exists; a run basis needs none — it uses the
-  documented hook contract only. Its zero is read from one store slug
-  (`stubs/road-to-a-census-that-refuses-a-partial-store`).
-- **Options:** (a) reopen now, narrowly: a package-side run basis is not a host
-  routing claim; the rest of ADR-263 stands; (b) reopen only after a census over
-  every store slug (that roadmap's step 1.1) is recorded; (c) do not reopen.
-- **Recommendation:** (b) — the census is cheap, and it decides whether the
-  ADR's own review trigger has already fired, which would make this a supersede
-  rather than an owner reopen.
-- **Blocks:** Phase 2 of `later/road-to-a-run-that-knows-its-skills`.
-- **Partly answered 2026-10-26:** "Erst Zählung, dann entscheiden (Empfohlen)" — option (b). The census over all 11 store slugs of this repository (`agents/evidence/metrics/skill-activation-census-all-slugs-2026-10-26.md`) read 133 sessions and 48 `Skill` calls over 8 skills — off zero, but the count does not separate user-requested invocations from model-chosen ones. AI council 2026-10-26 (2/2): ADR-263's review trigger did **not** fire (the worktree slugs are one maintainer on one host, not a second store; `keyword-v2` is not the ranker's default), so this is not a council supersession. **Still open, now narrower:** Phase 2 would assemble and enforce a skill basis automatically, which ADR-263 rules out — so either you reopen ADR-263 and Phase 2 supersedes it, or Phase 2 is narrowed to skills a command explicitly declares, with no automatic ranked-candidate enforcement, and ADR-263 stands. <!-- md-language-check: ignore -->
+None open.
 
 ## Not owner questions — waits, or already settled in the tree
 
@@ -107,6 +92,24 @@ and the run that applies it links its PR.
   (`road-to-a-memory-that-names-its-moment` § Decisions E12).
 
 ## Answered
+
+### OQ-14 — Reopen ADR-263 for a package-side run basis
+
+- **Context:** round `inbox-2026-10-at` asks that every run determines its base
+  skills once and closes them out (`later/road-to-a-run-that-knows-its-skills`).
+  ADR-263 (`reopen_policy: owner`) rejected a package-side routing claim because
+  no host routing contract exists; a run basis needs none — it uses the
+  documented hook contract only. Its zero is read from one store slug
+  (`stubs/road-to-a-census-that-refuses-a-partial-store`).
+- **Options:** (a) reopen now, narrowly: a package-side run basis is not a host
+  routing claim; the rest of ADR-263 stands; (b) reopen only after a census over
+  every store slug (that roadmap's step 1.1) is recorded; (c) do not reopen.
+- **Recommendation:** (b) — the census is cheap, and it decides whether the
+  ADR's own review trigger has already fired, which would make this a supersede
+  rather than an owner reopen.
+- **Blocks:** Phase 2 of `later/road-to-a-run-that-knows-its-skills`.
+- **Partly answered 2026-10-26:** "Erst Zählung, dann entscheiden (Empfohlen)" — option (b). The census over all 11 store slugs of this repository (`agents/evidence/metrics/skill-activation-census-all-slugs-2026-10-26.md`) read 133 sessions and 48 `Skill` calls over 8 skills — off zero, but the count does not separate user-requested invocations from model-chosen ones. AI council 2026-10-26 (2/2): ADR-263's review trigger did **not** fire (the worktree slugs are one maintainer on one host, not a second store; `keyword-v2` is not the ranker's default), so this is not a council supersession. **Still open, now narrower:** Phase 2 would assemble and enforce a skill basis automatically, which ADR-263 rules out — so either you reopen ADR-263 and Phase 2 supersedes it, or Phase 2 is narrowed to skills a command explicitly declares, with no automatic ranked-candidate enforcement, and ADR-263 stands. <!-- md-language-check: ignore -->
+- **Answered 2026-10-26:** "Phase 2 verengen (Empfohlen)" — narrow Phase 2, ADR-263 stands: a run basis holds only declared skills (`uses:`, a command's `required` skills, flow skills), no ranked candidates and no enforcement beyond them. Applied in `agents/roadmaps/later/road-to-a-run-that-knows-its-skills.md`. <!-- md-language-check: ignore -->
 
 ### OQ-19 — Install the quota status-line tap by default (`quota-tap-default`)
 
