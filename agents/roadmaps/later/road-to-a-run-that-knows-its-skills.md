@@ -34,7 +34,7 @@ depends: road-to-a-plan-that-stays-true
 >
 > **Owner decision, 2026-10-26 (OQ-14):** Phase 2 is narrowed, ADR-263 stands.
 > A run basis holds only skills that are declared — a step's `uses:`, a
-> command's `required` skills, a flow's skills — never ranked candidates, and
+> command's required skills, a flow's skills — never ranked candidates, and
 > nothing is enforced on a skill nobody declared. A census over all 11 store
 > slugs (`agents/evidence/metrics/skill-activation-census-all-slugs-2026-10-26.md`)
 > did not fire ADR-263's review trigger (AI council 2026-10-26, 2/2); the
