@@ -354,6 +354,8 @@ renders from real facts or says why it has none.
       cards, panning and wheel-zoom work only while Ctrl/Cmd is held, so the
       page scrolls normally; the zoom buttons work without it. The line mode
       opens on "Fokus".
+      A 2D/3D toggle (2D default) shows the ERD in space like the code orb:
+      front table with all columns, tables behind with name and keys only.
       verify: a browser test clicks a key with one FK, one soft and one implied
       link and finds the three highlighted columns with their line styles, no
       inline edge text, one icon per annotated edge and a popup that opens.
