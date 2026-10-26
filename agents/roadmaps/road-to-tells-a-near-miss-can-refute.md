@@ -194,7 +194,7 @@ The gate for every later promotion.
 
 ## Phase 4 — One copy engine
 
-- [ ] **4.1 The slop `copy` engine delegates to the tell registry.** CP1/CP2/CP5
+- [x] **4.1 The slop `copy` engine delegates to the tell registry.** Done 2026-10-26, narrowed by Phase 1: CP2 and CP5 were demoted, so the copy engine is CP1 alone and the buzzword list is already gone (`grep -n "const BUZZWORDS" src/scripts/design_slop_rules.ts` → nothing). The dash cap is one constant, `src/scripts/_lib/dash_density.ts`, which `ai_tells_rules.ts` re-exports. Not delegated in full, on purpose: the tell registry is not in the hook bundle (685 B under its ceiling after this step), and its dash rule counts en dashes too with a 50-word floor against CP1's 80, so delegation would change findings. Findings identical: CP1 on `src/ui` + `site/` is 12 + 14 = 26, the 26 `DOGFOOD-LABELS.json` recorded. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/dash_density.ts --> CP1/CP2/CP5
       keep their ids and become views over `ai_tells_rules.ts`; one buzzword
       source; the dash cap stays one constant.
       verify: findings on the FP corpus and on `src/ui` + `site/` identical before

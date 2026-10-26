@@ -267,7 +267,7 @@ are listed in § Quality floors.
 | T2 | judgment-only | own analysis 2026-10-26: the override is a documented rationale, which no render shows; an italic serif hero renders the same either way |
 | T3 | judgment-only | own analysis 2026-10-26: the override (custom icons that carry meaning) differs from the tell only in where an icon came from, which no render shows |
 | T4 | backed | by position since 2026-10-26: an uppercase label directly before a heading, and a pill badge directly before the `h1`; fails open on a heading a component builds |
-| T5 | judgment-only | copy phrase-list; that mechanism is council-rejected |
+| T5 | judgment-only | named null (2026-10-26): the only candidate is a kicker phrase-list, the mechanism council-rejected for copy; no M1 is reported because no matcher was built |
 | T6 | backed | |
 | T7 | backed | |
 | T8 | deferred | typeface count is a design-system opinion, not a floor |
@@ -295,8 +295,8 @@ are listed in § Quality floors.
 | M8 | backed | promoted 2026-10-26: M1 = 0 on both near-miss splits; a :disabled / aria-disabled / dismissing hover is the override and is not read |
 | CP1 | backed | |
 | CP2 | judgment-only | demoted 2026-10-26 at M1 = 1 on the near-miss tune split: "robust" and "leverage" as statistical terms pass the delete-test this entry names, and a phrase list cannot tell a term of art from a buzzword |
-| CP3 | judgment-only | copy phrase-list; that mechanism is council-rejected |
-| CP4 | judgment-only | copy phrase-list; that mechanism is council-rejected |
+| CP3 | judgment-only | measured on the prose side (2026-10-26): `tell-negative-parallelism` and `tell-binary-contrast` reach the shape, clean-corpus M1 = 0 (`bench_prose_tells_fp --gate`); not a design-slop rule, because the override (a contrast that names a real product distinction) is not in the text a matcher reads |
+| CP4 | judgment-only | named null (2026-10-26): the override is a "so what" test a reader answers, and no candidate matcher reads it; no M1 is reported because no matcher was built |
 | CP5 | judgment-only | demoted 2026-10-26 at M1 = 1 on the near-miss holdout split: functional status markers (the override this entry names) read the same as decoration to a text pass |
 | CP6 | judgment-only | demoted 2026-10-26 at M1 = 1 on the near-miss tune split: a data-driven field whose data is named (the override) uses the same phrase; a phrase list cannot see the brief's decision |
 
