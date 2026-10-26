@@ -44,39 +44,39 @@ more than one SCIP index is read.
 
 ## Phase 0 — Measure before changing
 
-- [x] **0.1 An edge census.** `internal/bench/code-graph/edge_census.ts` reads a built
+- [x] **0.1 An edge census.** `internal/bench/code-graph/edge_census.ts` reads a built <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/code-graph/edge_census.ts -->
       graph and prints, as JSON, the name-lookup call edges with more than one
       candidate, their top labels, `symbol:` targets and AMBIGUOUS among them, and
       `suppressed_edge_counts`. A report, not a gate: a measurement is not a gate
       until its noise is known (owner decision E6 of the supplied plan, taken here
       as "report").
       verify: `npx vitest run tests/scripts/code_graph/edge_census.test.ts` -> 0
-- [x] **0.2 Baseline published.** The census at `700c41137b` and after Phase 1 land in
+- [x] **0.2 Baseline published.** The census at `700c41137b` and after Phase 1 land in <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/code-graph/edge_census.ts -->
       `agents/evidence/analysis/code-graph-edge-census-2026-10-26.md`.
       verify: `grep -c 'resolver arbitrary winners: 0' agents/evidence/analysis/code-graph-edge-census-2026-10-26.md` -> /^1$/
-- [x] **0.3 The grammar count is true.** `loader.ts:9` and
+- [x] **0.3 The grammar count is true.** `loader.ts:9` and <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
       `src/config/agent-settings.template.yml:1393` say "three loadable grammars";
       `src/vendor/grammars/` ships eight.
       verify: `grep -c 'three loadable grammars' src/scripts/code_graph/loader.ts src/config/agent-settings.template.yml` -> 1
 
 ## Phase 1 — Fewer false edges
 
-- [x] **1.1 Closure locals leave the repo-wide name index.** A function-valued
+- [x] **1.1 Closure locals leave the repo-wide name index.** A function-valued <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/extract.ts -->
       declarator below module level stays a node (same-file resolution still finds
       it) but no longer enters `sym.byName`, so it can never be a repo-wide target.
       verify: `npx vitest run tests/scripts/code_graph_resolution_discipline.test.ts -t 'closure local'` -> 0
-- [x] **1.2 More than one candidate is AMBIGUOUS, never a winner.** The repo-wide rung
+- [x] **1.2 More than one candidate is AMBIGUOUS, never a winner.** The repo-wide rung <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/extract.ts -->
       (`build.ts:617`, and the import fallback at `:520`) binds only when exactly one
       candidate survives after test files are set aside for a non-test caller;
       otherwise the edge is AMBIGUOUS with `candidates[]` and
       `ambiguity_reason: 'name-collision'`. No path-proximity tiebreak.
       verify: `npx vitest run tests/scripts/code_graph_resolution_discipline.test.ts -t 'name collision'` -> 0
-- [x] **1.3 Re-exports and literal `require` / `import()` resolve.**
+- [x] **1.3 Re-exports and literal `require` / `import()` resolve.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/extract.ts -->
       `export { a } from`, `export * from` and `export * as ns from` become
       re-export facts the import binding follows, cycle-safe, to the definition;
       `require('x')` and `import('x')` with a string literal become import facts.
       verify: `npx vitest run tests/scripts/code_graph_resolution_discipline.test.ts -t 'barrel'` -> 0
-- [x] **1.4 A hierarchy walk to one owner is stated.** `this.m()` / `self::m()`
+- [x] **1.4 A hierarchy walk to one owner is stated.** `this.m()` / `self::m()` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/extract.ts -->
       resolved by `resolveHierMethod` to exactly one owner is emitted as
       `resolved_via: 'class-hierarchy'` (a stated mechanism, added to both trust
       lists); today it is `name-lookup` (`build.ts:750-762`) and every gate verb
@@ -90,14 +90,14 @@ more than one SCIP index is read.
       which also pays for the new word in the bundled trust list (the hook
       bundle had 8 bytes left).
       verify: `npx vitest run tests/scripts/code_graph_resolution_discipline.test.ts -t 'class hierarchy'` -> 0
-- [x] **1.5 Every fixed shape has a negative test.** Each step above ships one test
+- [x] **1.5 Every fixed shape has a negative test.** Each step above ships one test <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/extract.ts -->
       named `… emits no edge` / `… is ambiguous` that fails on the pre-change build,
       and the existing graph suites stay green.
       verify: `npx vitest run tests/scripts/code_graph` -> 0
 
 ## Phase 2 — The compiler index, pinned and widened
 
-- [x] **2.1 Pin the supersede rule (corrected).** The supplied step asked to compare
+- [x] **2.1 Pin the supersede rule (corrected).** The supplied step asked to compare <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       node ids in `supersededByScip` (`scip_reader.ts:183-201`) instead of labels.
       Reproduction says no: the reader emits `uses` edges for every reference a
       source makes, so a native guess from that source to a *different* same-named
@@ -108,7 +108,7 @@ more than one SCIP index is read.
       name, another source, or a stated mechanism are not.
       `corrected-from-reproduction`.
       verify: `npx vitest run tests/scripts/code_graph_resolution_discipline.test.ts -t 'compiler index'` -> 0
-- [x] **2.2 More than one index.** Besides `<root>/index.scip`, read every `index.scip`
+- [x] **2.2 More than one index.** Besides `<root>/index.scip`, read every `index.scip` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/build.ts -->
       the tree walk finds (one index per package in a monorepo; a stray `*.scip` is
       not a project index), re-rooting each
       document path at its index's directory and dropping any that lands outside
