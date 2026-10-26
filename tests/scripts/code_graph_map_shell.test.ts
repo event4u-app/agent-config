@@ -15,6 +15,10 @@ import { sampleAreas, wit } from './code_graph_map_areas_fixture.js';
 // payload, search over every kind, the freshness banner, both languages, and
 // the page at every width in both themes.
 
+// The Overview draws the design's nine layer cards: Code, Database, Integrations,
+// Environment, CI/CD, Infrastructure, Knowledge, Impact and Projects.
+const OVERVIEW_LAYERS = 9;
+
 let browser: Browser;
 let empty: string;
 let full: string;
@@ -64,7 +68,7 @@ describe('the router', () => {
         expect((await route(page)).route).toBe('overview');
         expect(await page.locator('#wb').isVisible()).toBe(false);
         expect(await page.locator('#av').isVisible()).toBe(true);
-        expect(await page.locator('.ocard').count()).toBe(1 + KNOWLEDGE_AREA_IDS.length);
+        expect(await page.locator('.ocard').count()).toBe(OVERVIEW_LAYERS);
         expect(await page.locator('#areanav a[data-route="overview"]').getAttribute('aria-current')).toBe('page');
         await page.click('#areanav a[data-route="code"]');
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'code');
@@ -84,11 +88,12 @@ describe('the router', () => {
         await projects.close();
     });
 
-    it('the Code breadcrumb starts at the map home', async () => {
+    it('the Code breadcrumb starts at the repository, the nav leads home', async () => {
         const page = await open(empty, '#/code');
-        await page.click('#crumbs .crumb-map');
+        expect((await page.locator('#crumbs button').first().textContent())?.trim()).toBe('Repo');
+        await page.click('#areanav a[data-route="overview"]');
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'overview');
-        expect(await page.locator('.ocard').count()).toBe(1 + KNOWLEDGE_AREA_IDS.length);
+        expect(await page.locator('.ocard').count()).toBe(OVERVIEW_LAYERS);
         await page.close();
     });
 });
@@ -96,7 +101,8 @@ describe('the router', () => {
 describe('an area without data is shown, says so and names the reason', () => {
     it('every knowledge area with no reader run', async () => {
         const page = await open(empty, '#/overview');
-        for (const id of KNOWLEDGE_AREA_IDS) {
+        // The Agent payload lists the CLI and MCP surface, which every tree has; it is never empty.
+        for (const id of KNOWLEDGE_AREA_IDS.filter((a) => a !== 'agent')) {
             expect(await page.locator(`#areanav a[data-route="${id}"]`).getAttribute('class')).toContain('empty');
             await page.evaluate((r) => { location.hash = `#/${r}`; }, id);
             await page.waitForFunction((r) => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === r, id);
@@ -298,9 +304,9 @@ describe('the hub on the same shell (5.11)', () => {
 });
 
 describe('the overview', () => {
-    it('one card per area, with the fact state and its reason, a filter and tours', async () => {
+    it('one card per design layer, with the fact state and its reason, a filter and tours', async () => {
         const page = await open(full, '#/overview');
-        expect(await page.locator('.ocard').count()).toBe(1 + KNOWLEDGE_AREA_IDS.length);
+        expect(await page.locator('.ocard').count()).toBe(OVERVIEW_LAYERS);
         // Data holds a changed and a gone witness.
         expect(await page.locator('#ov-data').textContent()).toMatch(/contradicted[\s\S]*changed or gone/);
         expect(await page.locator('#ov-interfaces').textContent()).toMatch(/1 of 3/);
@@ -309,7 +315,7 @@ describe('the overview', () => {
         await page.click('.ov-filters button:has-text("With data")');
         expect(await page.locator('#ov-impact').count()).toBe(0);
         expect(await page.locator('#ov-data').count()).toBe(1);
-        await page.click('.ov-filters button:has-text("No data yet")');
+        await page.click('.ov-filters button:has-text("Planned")');
         expect(await page.locator('#ov-impact').count()).toBe(1);
         expect(await page.locator('#ov-code').count()).toBe(0);
         expect(await page.locator('#av-main').textContent()).toMatch(/Then the partner service\s*input changed/);

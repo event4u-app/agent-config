@@ -53,7 +53,7 @@ function renderHeader() {
     var pin = model.pin || { commit: meta.commit, freshness: meta.state, generation: meta.graph_generation || '' };
     var commit = $('pin-commit');
     clear(commit);
-    add(commit, document.createTextNode(pin.commit), pin.date ? el('span', { class: 'pin-date' }, ' · ' + pin.date) : null);
+    add(commit, document.createTextNode(shortCommit(pin.commit)), pin.date ? el('span', { class: 'pin-date' }, ' · ' + shortDate(pin.date, true)) : null);
     commit.setAttribute('title', t('generation')(String(pin.generation || '').slice(0, 8)));
     var fresh = $('pin-fresh');
     var st = String(pin.freshness || meta.state || '');
