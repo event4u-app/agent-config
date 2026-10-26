@@ -61,6 +61,17 @@ const IMPORTED_BROWSER_SUITES = [
     'tests/scripts/code_graph_map_canvas_clear.test.ts',
     'tests/scripts/code_graph_map_shell.test.ts',
     'tests/scripts/code_graph_map_demo_browser.test.ts',
+    'tests/scripts/code_graph_map_area_payloads.test.ts',
+    'tests/scripts/code_graph_map_keylinks.test.ts',
+    'tests/scripts/code_graph_map_rails.test.ts',
+    'tests/scripts/code_graph_map_orb.test.ts',
+    'tests/scripts/code_graph_map_port.test.ts',
+    'tests/scripts/code_graph_map_roundtrip.test.ts',
+    'tests/scripts/code_graph_map_search_keys.test.ts',
+    'tests/scripts/code_graph_map_supernodes.test.ts',
+    'tests/scripts/code_graph_map_data_page.test.ts',
+    'tests/scripts/code_graph_map_erd_load.test.ts',
+    'tests/scripts/code_graph_map_ported_pages.test.ts',
 ];
 const BROWSER_SUITES = [
     'tests/cli/ui_render_asset_profile.test.ts',
