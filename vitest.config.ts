@@ -30,6 +30,9 @@ const SHARED_EXCLUDE = [
     'dist/agent-src/**',
     '.agent-src.uncondensed/**',
     'tests/golden/sandbox/repo/**',
+    // Fixture trees are inputs to the readers; a `*.test.ts` there is a test file
+    // the code graph must find, not a suite to run.
+    'tests/fixtures/**',
     // Host-harness tests of the shipped Claude Code module: they import
     // `claude-code/testing`, which only `claude plugin test` provides.
     // tests/scripts/claude_mod_surface.test.ts runs them through that CLI.
