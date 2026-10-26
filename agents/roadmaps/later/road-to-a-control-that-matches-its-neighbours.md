@@ -1,9 +1,13 @@
 ---
 complexity: structural
-status: ready
+status: later
+review_by: 2027-01-26
+entry_condition:
+  what: "agents/runtime/state/design-consistency-shadow.jsonl holds the shadow window the 3.3 activation policy names — all four conditions readable off the curve that `task bench:design-consistency-shadow` records; then 3.8 flips the default and AC-2 reads the box tolerance from the same curve"
+  when: "after enough UI edits have run with the consistency rules in shadow; no date is promised"
+  who: "maintainer (runs the bench over real edits); the council confirms the threshold read off the curve, per D2"
 execution:
   mode: phase-checkpoints
-estate_offset_exempt: "The owner asked in the invoking turn of 2026-10-26 for this round's roadmaps to be processed with /roadmap:process-full in the same run, which is the operator exception of /analyze:inbox Phase 6 to the later/-by-default WIP rule. No active roadmap owns UI consistency of follow-up edits: road-to-a-graph-that-wins, road-to-a-setup-that-decides-itself, road-to-a-step-that-costs-what-it-changes, road-to-an-update-that-installs-itself-only-when-it-is-safe and road-to-release-finding-ordering name no UI surface (grep -l 'ui-audit-gate\\|ui_trivial\\|control_roles' over agents/roadmaps/*.md agents/roadmaps/later agents/roadmaps/stubs returned nothing that owns the subject). None is finished, so none can be archived to offset it; parking was rejected because the owner called the defect one that must not happen at all."
 relates:
   - slug: road-to-tells-a-near-miss-can-refute
     relation: disjoint
@@ -320,8 +324,8 @@ and is never reported as visually verified without render evidence.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — 0.1's bars are committed before any classifier change; after Phase 1 add-control prompts never route `ui-trivial` or `backend-coding`, German UI recall ≥ 0.80, backend precision unchanged.
+- [x] AC-1 — 0.1's bars are committed before any classifier change; after Phase 1 add-control prompts never route `ui-trivial` or `backend-coding`, German UI recall ≥ 0.80, backend precision unchanged. Met 2026-10-26: `eval_ui_triviality` bars add_control 10/10, de_ui_recall 6/6, backend 6/6, all PASS; the bars landed in the corpus commit before the classifier change. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/design_slop_hook.ts -->
 - [ ] AC-2 — Case 0.2(a): raw select = 0 with a primitive present, box deviation within the shadow tolerance, open state captured.
-- [ ] AC-3 — No UI completion report says `pass` without render evidence.
-- [ ] AC-4 — `lint_motion_authority_drift` green with the new class; its negative case red.
-- [ ] AC-5 — A review-only run writes nothing before the selection; every selected finding ends `fixed` with a commit or a reason.
+- [x] AC-3 — No UI completion report says `pass` without render evidence. Met: `consistency_status` returns `pass` only for a rendered review with every added control captured open (`tests/scripts/work_engine/consistency_status.test.ts`). <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/design_slop_hook.ts -->
+- [x] AC-4 — `lint_motion_authority_drift` green with the new class; its negative case red. Met: `lint_motion_authority_drift --self-test` 15/15, its negative cases rejecting. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/design_slop_hook.ts -->
+- [x] AC-5 — A review-only run writes nothing before the selection; every selected finding ends `fixed` with a commit or a reason. Met: `tests/scripts/work_engine/review_before_rebuild.test.ts` green. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/design_slop_hook.ts -->

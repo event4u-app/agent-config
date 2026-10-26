@@ -1,9 +1,14 @@
 ---
 complexity: structural
-status: ready
+status: later
+review_by: 2027-01-26
+estate_growth_exempt: "This change parks both roadmaps of the 2026-10-26 inbox round with every agent-executable step done and verified. What remains waits on an owner licence answer (OQ-20), a maintainer-only differential-oracle run and a shadow window of real UI edits, none of which an agent run can produce. The two new open blockers are those waits, recorded rather than dropped; later/ grows by one, not two, because the round archived the later/ file this roadmap superseded."
+entry_condition:
+  what: "OQ-20 in agents/owner-questions.md is answered (licence for the external test data that 1.5 and 5.1 need), or a maintainer run of the differential oracle lands its triage table under agents/evidence/analysis/ (8.3)"
+  when: "whichever comes first; no date is promised"
+  who: "owner (OQ-20); maintainer (8.3, external code on the maintainer's machine only)"
 execution:
   mode: phase-checkpoints
-estate_offset_exempt: "The owner asked in the invoking turn of 2026-10-26 for this round's roadmaps to be processed with /roadmap:process-full in the same run (the operator exception of /analyze:inbox Phase 6). This file supersedes later/road-to-tell-detector-promotions, which this change archives with its five open items carried here (later -1, active +1); that file's subject has now arrived four times. No active roadmap owns design-tell evaluation validity (grep -l 'design_slop\\|tell-detector\\|near-miss' over agents/roadmaps/*.md returned none), and none is finished, so none can be archived to offset it."
 supersedes:
   - later/road-to-tell-detector-promotions
 relates:
@@ -298,7 +303,7 @@ The gate for every later promotion.
       sources name them or the dogfood split shows them, each as `candidate` or
       `judgment-only`, never `backed`.
       verify: `design-antipatterns.md:51` carries the new date; parity green.
-- [ ] **8.2 The tree's own UI declares or fixes.** A `DESIGN.md` for `src/ui/` and
+- [x] **8.2 The tree's own UI declares or fixes.** Done 2026-10-26: the two non-semantic stripes are gone (review summary card; the success stripe on every review nav button — its error variant now carries a danger stripe alone); `src/ui/DESIGN.md` (register product; side stripe and em dash declared) and `site/DESIGN.md` (accent border, em dash); CP1 gained the catalog's own override as a gate (a declared em-dash voice). Counts for the PR body: `lint_design_slop --dir src/ui` 19 → 0, `--dir site` 15 → 0, every remaining one declared. Dogfood labels re-keyed to the moved lines; V1 on the raw dogfood split is now 0 TP / 7 near-miss. Hook bundle 60 B under its ceiling after this step. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/design_slop_rules.ts --> A `DESIGN.md` for `src/ui/` and
       `site/` declaring the stripe system where it is semantic through 0.2's
       reader; non-semantic stripes removed; CP1 in the site docs under the cap or
       a declared voice exception.
@@ -380,8 +385,8 @@ The gate for every later promotion.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No DESIGN.md sentence silences a rule unless it declares intent; 0.1's fixtures prove it.
-- [ ] AC-2 — Every `backed` design tell has an M1 on a corpus containing a legitimate near-miss for it.
-- [ ] AC-3 — Hook reports separate introduced from incumbent findings, and no introduced P0 is hidden in 3.2's replay.
-- [ ] AC-4 — `logo-generation` never claims small-size legibility without an asset-profile capture.
-- [ ] AC-5 — The humanizer's fact check is a command, not a self-report.
+- [x] AC-1 — No DESIGN.md sentence silences a rule unless it declares intent; 0.1's fixtures prove it. Met: `tests/scripts/design_slop_context_gate.test.ts` green; the two DESIGN.md files 8.2 added declare in `intent:` and `## Intentional`. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/design_slop_hook.ts -->
+- [x] AC-2 — Every `backed` design tell has an M1 on a corpus containing a legitimate near-miss for it. Met: text rules by `design_slop_nearmiss.test.ts` (no uncovered catalog id, M1 = 0 both splits), render rules by its render-coverage test and the render bench. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/design_slop_hook.ts -->
+- [x] AC-3 — Hook reports separate introduced from incumbent findings, and no introduced P0 is hidden in 3.2's replay. Met: `finding_baseline.test.ts` (end to end through the hook) and `design_slop_attribution_replay.test.ts` (59 of 59 introduced surfaced). <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/design_slop_hook.ts -->
+- [x] AC-4 — `logo-generation` never claims small-size legibility without an asset-profile capture. Met: step 5 names `--profile asset --class mark` and forbids the claim without it; eval `favicon-stops-before-kit` asserts it. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/design_slop_hook.ts -->
+- [x] AC-5 — The humanizer's fact check is a command, not a self-report. Met: step 6 runs `detect_ai_tells --baseline`; `fact_diff.test.ts` pins both exits. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/design_slop_hook.ts -->

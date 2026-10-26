@@ -9,7 +9,7 @@ roadmap is scored against.
 
 Twenty labelled cases plus three near-miss fixtures, and since 2026-10-26 four
 `follow-up-*` cases registered by step 0.2 of
-[`road-to-a-control-that-matches-its-neighbours`](../../../agents/roadmaps/road-to-a-control-that-matches-its-neighbours.md):
+[`road-to-a-control-that-matches-its-neighbours`](../../../agents/roadmaps/later/road-to-a-control-that-matches-its-neighbours.md):
 a control added to a finished surface, each with deterministic `bars:` frozen
 before any change they measure. A number published before that date was scored
 against the 55-file digest; the population grew, it was not edited. Each case is a directory
