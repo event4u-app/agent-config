@@ -60,9 +60,19 @@ const IMPORTED_BROWSER_SUITES = [
     'tests/scripts/code_graph_map_no_data.test.ts',
     'tests/scripts/code_graph_map_canvas_clear.test.ts',
 ];
+// Suites whose live cases skip without Chromium; the browser job runs them whole,
+// so a node shard without a browser does not collect them as skipped duplicates.
+const LIVE_BROWSER_SUITES = [
+    'tests/cli/uiRenderInteract.test.ts',
+    'tests/cli/uiRenderRegion.test.ts',
+    'tests/cli/uiRender_geometry.test.ts',
+    'tests/scripts/design_slop_render_bench.test.ts',
+    'tests/scripts/ui_conformance_probe_sibling.test.ts',
+];
 const BROWSER_SUITES = [
     'tests/cli/ui_render_asset_profile.test.ts',
     'tests/design-artifacts/svg_scenarios.test.ts',
+    ...LIVE_BROWSER_SUITES,
     ...IMPORTED_BROWSER_SUITES,
 ];
 const WITH_BROWSER = process.env['AGENT_CONFIG_BROWSER_SUITES'] === '1';
