@@ -30,7 +30,7 @@ subjects and import specifiers that gate would block, since the map is tracked.
 
 ## Domains — which business boundary
 
-Declare domains in `agents/map/layers.yaml`:
+Declare domains in `agents/map/layers.yaml`: <!-- ref-ignore -->
 
 ```yaml
 domains:
