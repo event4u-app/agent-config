@@ -214,7 +214,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 - **Resolved when:** OQ-4 and OQ-5 sit under `## Answered` in `agents/owner-questions.md`, a `## Decisions` row resolved by `owner` names this blocker with the date, and Status reads resolved.
 
 ### blocker: largest-roadmap-drain-under-forty-kb
-- **Status:** open — 2026-10-25, re-read over every store of this repository since 2026-10-21: no drain has run over the largest active roadmap (`road-to-self-modification-that-a-council-must-pass`, 136 KB; one step at 90.3 KB before the § 5 step-1 change), and one step of `road-to-an-update-that-installs-itself-only-when-it-is-safe` read 50.1 KB on 2026-10-24
+- **Status:** open — 2026-10-27, re-read over the 11 stores of this repository (312 transcripts, 70 closed steps since 2026-10-21): the largest active roadmap is now `road-to-a-setup-that-decides-itself` (79 KB) and no closed step of it is visible; the drains of 2026-10-24/25 on it and of 2026-10-26/27 on `road-to-routing-assurance-live-floors` show no checkbox `Edit` in any lane transcript, so `--steps` cannot join them to a step. Was: 2026-10-25, no drain has run over the largest active roadmap (`road-to-self-modification-that-a-council-must-pass`, 136 KB; one step at 90.3 KB before the § 5 step-1 change), and one step of `road-to-an-update-that-installs-itself-only-when-it-is-safe` read 50.1 KB on 2026-10-24
 - **Class:** 0
 - **Owner:** agent
 - **Blocks:** step 1.3
@@ -238,7 +238,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 - **Resolved when:** 4.1 is ticked with a committed `flip.reading`, and Status reads resolved.
 
 ### blocker: five-drains-on-the-flipped-table
-- **Status:** open — 2026-10-25, the table went `active` today (4.1, D19); no drain has run on it yet
+- **Status:** open — 2026-10-27, `--flip-readiness` reads R0 7, R1 0 (unchanged), and no receipt in the tree carries `active`: every R0/R1 tick merged since the flip touched a path outside the D18 scope, so no step has yet run at lowered depth. Was: 2026-10-25, the table went `active` (4.1, D19)
 - **Class:** 0
 - **Owner:** agent
 - **Blocks:** steps 4.2, 5.1, 5.2; AC-2, AC-3, AC-4
