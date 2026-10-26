@@ -77,6 +77,21 @@ export const MAP_CONFIRM_TEXT = [
     '`agent-config code-graph refresh --touched` so the map re-reads every file you changed.',
 ].join('\n');
 
+/**
+ * The map arm must run the confirm/pack verbs of the tree under test, not the
+ * globally installed package, which may predate them: an `agent-config` shim
+ * first on PATH execs this checkout's entry point. Written once per run.
+ */
+function branchCliShim(dir: string): string {
+    const bin = path.join(dir, '.map-arm-bin');
+    const shim = path.join(bin, 'agent-config');
+    if (!fs.existsSync(shim)) {
+        fs.mkdirSync(bin, { recursive: true });
+        fs.writeFileSync(shim, `#!/bin/sh\nexec ${JSON.stringify(path.join(REPO_ROOT, 'agent-config'))} "$@"\n`, { mode: 0o755 });
+    }
+    return bin;
+}
+
 export const MAP_ARMS: Record<string, MapArmSpec> = {
     vanilla: { setting_sources: 'project,local', map: false, inject: null },
     ac: { setting_sources: null, map: false, inject: null },
@@ -167,6 +182,7 @@ export function run_trial(task: MapTask, arm: string, opts: TrialOpts): MapTrial
             fs.writeFileSync(sp_file, spec.inject, 'utf-8');
         }
         const run = v1.run_live({ id: task.id, prompt: task.prompt + AFFECTED_SET_INSTRUCTION }, clone, opts.timeout, {
+            ...(spec.map ? { env: { PATH: `${branchCliShim(opts.sp_dir)}${path.delimiter}${process.env['PATH'] ?? ''}` } } : {}),
             sysprompt_file: sp_file,
             setting_sources: spec.setting_sources,
             max_budget: opts.max_budget,

@@ -5,13 +5,14 @@
  */
 import { readPrismaSchema } from '../../_lib/schema/readers/prisma_schema.js';
 import { replay } from '../../_lib/schema/replay.js';
+import { isFixturePath } from '../fixture_paths.js';
 import { schemaGraph } from './shared/schema_graph.js';
 import type { ConventionProvider } from './types.js';
 
 const PRISMA_SCHEMA = /(^|\/)(?:schema\.prisma|prisma\/schema\/[^/]+\.prisma)$/;
-const NOT_PROJECT = /(^|\/)(?:tests?|__tests__|fixtures?|vendor|node_modules)\//i;
+const VENDORED = /(^|\/)(?:vendor|node_modules)\//i;
 
-const isPrismaSchema = (p: string): boolean => PRISMA_SCHEMA.test(p) && !NOT_PROJECT.test(p);
+const isPrismaSchema = (p: string): boolean => PRISMA_SCHEMA.test(p) && !VENDORED.test(p) && !isFixturePath(p);
 
 export const prismaProvider: ConventionProvider = {
     id: 'prisma',

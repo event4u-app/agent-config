@@ -353,7 +353,7 @@ renders from real facts or says why it has none.
 
 ## Phase 7 — Docs follow code
 
-- [ ] **7.1 Describe the surface.** README map section, `code-intelligence`,
+- [x] **7.1 Describe the surface.** README map section, `code-intelligence`,
       `database`, `openapi`, `docker`, `terraform`, `github-ci` skill bodies,
       CLI and MCP tool docs, CHANGELOG entry.
       verify: every new verb and mode is named in its doc.

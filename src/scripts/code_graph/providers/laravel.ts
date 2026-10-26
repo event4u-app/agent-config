@@ -21,6 +21,7 @@ import type { SourceFile } from '../build.js';
 import type { FileRole } from '../map_model.js';
 import { psr4RulesFrom, resolvePsr4, type ResolutionConfig } from '../resolution_tiers.js';
 import { readLaravelSchema } from '../../_lib/schema/readers/laravel_migrations.js';
+import { isFixturePath } from '../fixture_paths.js';
 import { replay, tableMap } from '../../_lib/schema/replay.js';
 import { spanHash } from '../lanes/lane_fact.js';
 import type { CodeEdge, CodeNode, FactMeta } from '../types.js';
@@ -453,9 +454,10 @@ export function buildLaravelOverlay(
 
     // Tables and columns, by replaying the migrations in apply order per
     // connection: a table created and later dropped is no node, an index added
-    // and later dropped is no index.
+    // and later dropped is no index. Migrations in a test, fixture or benchmark
+    // tree describe a schema the project ships to its tests, not its own.
     const config = files.find((f) => f.path === `${prefix}config/database.php`)?.source ?? null;
-    const schemaRead = readLaravelSchema(php, config);
+    const schemaRead = readLaravelSchema(php.filter((f) => !isFixturePath(f.path)), config);
     const schema = replay({ ops: schemaRead.ops, engines: schemaRead.engines });
     const schemaFacts = schemaGraph(schema, new Set([...nodeById.keys()]));
     for (const n of schemaFacts.nodes) nodes.push(n);

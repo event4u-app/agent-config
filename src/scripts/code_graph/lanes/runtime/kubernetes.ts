@@ -1,6 +1,7 @@
 /**
  * Kubernetes manifests: workloads, Services, Ingresses, ConfigMaps and Secrets
- * by NAME. Secret and ConfigMap data is never read. Edges come from three
+ * by NAME, and the env NAMES a container declares. Secret and ConfigMap data,
+ * and an env entry's value, are never read. Edges come from three
  * stated mechanisms only — an explicit reference by name, a Service's label
  * selector matching a workload's pod labels, and `ownerReferences`.
  */
@@ -8,6 +9,7 @@ import type { Document } from 'yaml';
 
 import { entries, get, items, scalar, parseYamlSource, type YNode, type YamlSource } from '../../../_lib/infra_files/yaml_source.js';
 import type { Emitter } from './emit.js';
+import { isPlatformName } from './env_names.js';
 
 const WORKLOADS = new Set(['Deployment', 'StatefulSet', 'DaemonSet', 'Job', 'CronJob', 'ReplicaSet', 'Pod']);
 const NAMED = new Set([...WORKLOADS, 'Service', 'Ingress', 'ConfigMap', 'Secret', 'PersistentVolumeClaim', 'ServiceAccount', 'HorizontalPodAutoscaler', 'NetworkPolicy']);
@@ -95,6 +97,12 @@ export function readKubernetesFiles(em: Emitter, files: string[]): void {
                     if (sr) refTo('Secret', scalar(doc, get(src, doc, sr.value, 'name')?.value), sr.line, 'envFrom');
                 }
                 for (const ev of items(doc, get(src, doc, c, 'env')?.value)) {
+                    const named = get(src, doc, ev, 'name');
+                    const envName = scalar(doc, named?.value);
+                    if (named && envName && /^[A-Za-z_][A-Za-z0-9_]*$/.test(envName)) {
+                        const envId = em.fact('env-var', `k8s:${o.file}#${o.namespace}/${o.kind}/${o.name}:${envName}`, envName, { name: envName, source: 'kubernetes', platform: isPlatformName(envName) }, o.file, named.line);
+                        em.rel('configured-by', o.id, envId, { mechanism: 'env' }, o.file, named.line);
+                    }
                     const vf = get(src, doc, ev, 'valueFrom')?.value;
                     const cm = get(src, doc, vf, 'configMapKeyRef');
                     const sr = get(src, doc, vf, 'secretKeyRef');

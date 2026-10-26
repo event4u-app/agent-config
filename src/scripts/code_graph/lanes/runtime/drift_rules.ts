@@ -2,6 +2,12 @@
  * Runtime drift classes RT-1 … RT-6, as data for the one drift engine (`../../drift.ts`). All are
  * `advice`: none gates until its precision on planted fixtures is recorded.
  *
+ * RT-3 judges only a code read that a declaring file speaks for
+ * (`declared_scope`): a compose service's build context or directory, an env
+ * example's directory, a devcontainer's project, or — for a Kubernetes manifest
+ * — the whole tree. Reads outside every such scope are counted by the reader,
+ * never reported as missing.
+ *
  * RT-2 compares against the data lane: it expects a data-lane fact of kind
  * `connection` carrying the engine the schema is written for in `engine`.
  */
@@ -34,10 +40,10 @@ export const RUNTIME_RULES: readonly DriftRule[] = [
         title: 'environment name read in code but not declared',
         tier: 'advice',
         match: 'missing',
-        select: { lane: 'runtime', kind: 'env-var', where: { source: 'code', platform: false } },
+        select: { lane: 'runtime', kind: 'env-var', where: { source: 'code', platform: false, declared_scope: true } },
         key: 'name',
-        against: { lane: 'runtime', kind: 'env-var', where: { source: { in: ['compose', 'example'] } }, key: 'name' },
-        message: '{attr.name} is read in code but appears in no compose environment or example env file',
+        against: { lane: 'runtime', kind: 'env-var', where: { source: { in: ['compose', 'compose-config', 'example', 'devcontainer', 'kubernetes'] } }, key: 'name' },
+        message: '{attr.name} is read in code but appears in no compose environment, example env file, devcontainer or Kubernetes manifest',
     },
     {
         id: 'RT-4',

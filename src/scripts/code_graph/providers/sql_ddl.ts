@@ -1,18 +1,19 @@
 /**
  * Raw SQL schema files: `schema.sql` / `structure.sql` and numbered `*.sql`
  * migrations under a `migrations` or `migrate` directory. Their statements are
- * replayed in path order into tables, columns and foreign keys; a test or
- * fixture directory is never read as the project's schema.
+ * replayed in path order into tables, columns and foreign keys; a test,
+ * fixture or benchmark tree is never read as the project's schema.
  */
 import { readSqlSchema } from '../../_lib/schema/readers/sql_ddl.js';
 import { replay } from '../../_lib/schema/replay.js';
+import { isFixturePath } from '../fixture_paths.js';
 import { schemaGraph } from './shared/schema_graph.js';
 import type { ConventionProvider } from './types.js';
 
 const SQL_SCHEMA = /(^|\/)(?:(?:schema|structure)\.sql|(?:migrations?|migrate)\/[^/]+\.sql)$/i;
-const NOT_PROJECT = /(^|\/)(?:tests?|__tests__|fixtures?|spec|vendor|node_modules)\//i;
+const VENDORED = /(^|\/)(?:vendor|node_modules)\//i;
 
-export const isSqlSchemaPath = (p: string): boolean => SQL_SCHEMA.test(p) && !NOT_PROJECT.test(p);
+export const isSqlSchemaPath = (p: string): boolean => SQL_SCHEMA.test(p) && !VENDORED.test(p) && !isFixturePath(p);
 
 export const sqlDdlProvider: ConventionProvider = {
     id: 'sql-ddl',
