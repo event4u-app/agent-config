@@ -100,6 +100,27 @@ function lineOf(content: string, index: number): number {
   return (content.slice(0, index).match(/\n/g) ?? []).length + 1;
 }
 
+/**
+ * True when a selector's SUBJECT is body-length text — the last compound of any
+ * member of a selector list, read as an element (p, li, blockquote, article,
+ * body) or a class that names a body region (`prose`, `body`, `content`,
+ * `copy`, or one ending in `-body` / `__body`, `-content`, `-copy`, `-prose`).
+ *
+ * Tuned 2026-10-26 on the near-miss corpus (road-to-tells-a-near-miss-can-
+ * refute 1.6): the old test matched `article` anywhere in the selector, so
+ * `.article-pullquote` (display type) and `.article-body abbr` (small caps)
+ * were judged as body text.
+ */
+export function isBodySubject(selector: string): boolean {
+  return selector.split(",").some((member) => {
+    const subject = member.trim().split(/\s*[\s>+~]\s*/).pop() ?? "";
+    if (/^(?:p|li|blockquote|article|body)(?=$|[.#:[])/i.test(subject)) return true;
+    return [...subject.matchAll(/\.([\w-]+)/g)].some(
+      (m) => /^(?:prose|body|content|copy)$|[-_](?:body|content|copy|prose)$/i.test(m[1] ?? ""),
+    );
+  });
+}
+
 /** Visible text from HTML/JSX/Markdown: strip tags, code fences, attributes. */
 export function visibleText(content: string, ext: string): string {
   let t = content;
@@ -174,46 +195,6 @@ const DEFAULT_FONTS = [
   "instrument serif",
 ];
 
-const BUZZWORDS = [
-  "streamline",
-  "empower",
-  "supercharge",
-  "world-class",
-  "enterprise-grade",
-  "seamlessly",
-  "robust",
-  "leverage",
-];
-
-/**
- * Stock render subjects — the default thing an image or 3D model becomes when
- * nobody decided what it should be about.
- *
- * Same mechanism as `BUZZWORDS` (CP2), applied to art direction instead of
- * prose: each entry names a *visual* that carries no subject matter. The
- * delete-test is the same one — swap the phrase for the product's actual
- * subject and the brief says more, which is the proof it said nothing.
- *
- * On the `copy` engine deliberately. A CSS engine cannot see subject matter:
- * `transform: translateZ()` looks identical whether it moves a product or a
- * glowing orb. The only detectable surface is the brief's own wording.
- */
-const STOCK_RENDER_SUBJECTS = [
-  "floating abstract shapes",
-  "abstract floating shapes",
-  "gradient mesh",
-  "glowing orb",
-  "glowing orbs",
-  "floating particles",
-  "particle field",
-  "abstract 3d shape",
-  "abstract 3d shapes",
-  "futuristic hud",
-  "digital landscape",
-  "flowing ribbons",
-  "liquid metal blob",
-];
-
 // ---------------------------------------------------------------------------
 // The registry
 // ---------------------------------------------------------------------------
@@ -249,38 +230,6 @@ export const SLOP_RULES: SlopRule[] = [
           return stripe.test(b.body) || foursided.test(b.body) || gradient.test(b.body);
         })
         .map((b) => ({ line: b.line, snippet: b.selector.slice(0, 80) })),
-  },
-  {
-    id: "slop-v3-ghost-card",
-    catalogId: "V3",
-    severity: "P2",
-    engines: ["css"],
-    description: "Ghost card: 1px border AND a ≥16px box-shadow on the same surface",
-    message:
-      "Border + heavy shadow together signal no confident depth decision. Choose one (V3).",
-    detect: ({ content }) =>
-      cssBlocks(content)
-        .filter(
-          (b) =>
-            /border\s*:\s*1px\s+solid/i.test(b.body) &&
-            /box-shadow\s*:[^;]*?(?:1[6-9]|[2-9]\d)px/i.test(b.body),
-        )
-        .map((b) => ({ line: b.line, snippet: b.selector.slice(0, 80) })),
-  },
-  {
-    id: "slop-v6-diagonal-stripes",
-    catalogId: "V6",
-    severity: "P2",
-    engines: ["css"],
-    description: "repeating-linear-gradient stripes as a background texture",
-    message: "Repeating diagonal stripes are a generated-CSS-art cliché (V6).",
-    gated: (ctx) => ctx.has("pattern background", "pattern-background", "stripe texture"),
-    detect: ({ lines }) =>
-      lines.flatMap((l, i) =>
-        /background[^;]*repeating-linear-gradient\s*\(/i.test(l)
-          ? [{ line: i + 1, snippet: l.trim().slice(0, 90) }]
-          : [],
-      ),
   },
   {
     id: "slop-c2-gradient-text",
@@ -390,7 +339,10 @@ export const SLOP_RULES: SlopRule[] = [
     message:
       "Numbered 01/02/03 section markers are a universal generated-landing-page tell (L4).",
     detect: ({ content, ext }) => {
-      const text = visibleText(content, ext);
+      // Numbers inside an ordered list number its steps — the catalog's own
+      // override ("a genuinely numbered process"). Tuned 2026-10-26 on the
+      // near-miss corpus: only markers outside <ol> are section decoration.
+      const text = visibleText(content.replace(/<ol\b[\s\S]*?<\/ol>/gi, " "), ext);
       const markers = text.match(/(?<![\d/.])0[1-9](?![\d%])/g) ?? [];
       const distinct = new Set(markers.map((s) => s.trim()));
       if (distinct.has("01") && distinct.has("02") && distinct.has("03")) {
@@ -452,70 +404,6 @@ export const SLOP_RULES: SlopRule[] = [
         return [{ line: 1, snippet: `${dashes} em-dashes in ~${words} words` }];
       }
       return [];
-    },
-  },
-  {
-    id: "slop-cp2-buzzword",
-    catalogId: "CP2",
-    severity: "P2",
-    engines: ["copy"],
-    description: "Marketing buzzwords (streamline/empower/supercharge/world-class/…)",
-    message: "These words carry no information — delete-test each one (CP2).",
-    detect: ({ content, ext }) => {
-      const text = visibleText(content, ext);
-      const lower = text.toLowerCase();
-      const hits = BUZZWORDS.filter((w) => new RegExp(`\\b${w}\\b`, "i").test(lower));
-      if (hits.length > 0) {
-        return [{ line: 1, snippet: `buzzwords: ${hits.join(", ")}` }];
-      }
-      return [];
-    },
-  },
-  {
-    id: "slop-cp6-generic-art-direction",
-    catalogId: "CP6",
-    severity: "P2",
-    engines: ["copy"],
-    description: "Stock render subject named in a brief instead of the product's own subject matter",
-    message:
-      "This names a default visual, not a subject — swap it for what the product " +
-      "actually shows and the brief says more (CP6).",
-    detect: ({ content, ext }) => {
-      const text = visibleText(content, ext);
-      const lower = text.toLowerCase();
-      const hits = STOCK_RENDER_SUBJECTS.filter((s) => lower.includes(s));
-      if (hits.length === 0) {
-        return [];
-      }
-      return [{ line: 1, snippet: hits.slice(0, 3).join(", ") }];
-    },
-  },
-  {
-    id: "slop-cp5-emoji-ui",
-    catalogId: "CP5",
-    severity: "P2",
-    engines: ["html", "jsx"],
-    description: "Emoji-decoration prepending headings, buttons, list items, or CTAs",
-    message:
-      "Emoji-prepended UI text (🚀 Get Started) is the default-startup-template tell — no emoji beats decorative emoji (CP5). Functional status/category emojis and brand-declared emoji strategies are exempt.",
-    gated: (ctx) => ctx.has("emoji"),
-    detect: ({ content }) => {
-      // Emoji as the FIRST visible character inside a heading, button, list
-      // item, or link — decoration position. Emojis elsewhere (mid-sentence,
-      // table cells, status chips) are not matched: those are the functional
-      // placements CP5 explicitly exempts.
-      const re =
-        /<(h[1-6]|button|li|a)\b[^>]*>\s*(?:<(?!\/)[^>]*>\s*)*(\p{Extended_Pictographic})/giu;
-      const hits: RawHit[] = [];
-      let m: RegExpExecArray | null;
-      while ((m = re.exec(content)) !== null) {
-        const before = content.slice(0, m.index);
-        hits.push({
-          line: (before.match(/\n/g) ?? []).length + 1,
-          snippet: content.slice(m.index, m.index + 60).replace(/\n/g, " "),
-        });
-      }
-      return hits;
     },
   },
   {
@@ -660,7 +548,7 @@ export const SLOP_RULES: SlopRule[] = [
       cssBlocks(content)
         // Short UI surfaces (labels, buttons, table headers, badges, eyebrows)
         // are the legitimate home of uppercase and are excluded by selector.
-        .filter((b) => /\b(p|body|article|\.prose|\.body|\.content|\.copy|blockquote|li)\b/i.test(b.selector))
+        .filter((b) => isBodySubject(b.selector))
         .filter((b) => !/label|button|\bth\b|badge|chip|tag|eyebrow|kicker|caption|nav/i.test(b.selector))
         .filter((b) => /text-transform\s*:\s*uppercase/i.test(b.body))
         .map((b) => ({ line: b.line, snippet: b.selector.slice(0, 80) })),
@@ -675,7 +563,7 @@ export const SLOP_RULES: SlopRule[] = [
     gated: (ctx) => ctx.has("wide tracking", "letterspacing", "letter-spacing"),
     detect: ({ content }) =>
       cssBlocks(content)
-        .filter((b) => /\b(p|body|article|\.prose|\.body|\.content|\.copy|blockquote|li)\b/i.test(b.selector))
+        .filter((b) => isBodySubject(b.selector))
         .filter((b) => !/label|button|\bth\b|badge|chip|tag|eyebrow|kicker|caption|nav|h[1-6]/i.test(b.selector))
         .filter((b) => {
           const em = /letter-spacing\s*:\s*(\d*\.?\d+)(em|rem)/i.exec(b.body);
@@ -713,36 +601,6 @@ export const SLOP_RULES: SlopRule[] = [
           /descent-override\s*:/i.test(b.body),
       );
       return matched ? [] : swapped.map((b) => ({ line: b.line, snippet: b.body.trim().split("\n")[0]?.slice(0, 80) ?? "" }));
-    },
-  },
-  {
-    id: "slop-m1-bounce-easing",
-    catalogId: "M1",
-    severity: "P2",
-    engines: ["css"],
-    description: "Bounce or elastic easing on a UI transition",
-    message: "Overshoot draws attention to the animation instead of the state change (M1).",
-    gated: (ctx) => ctx.has("bounce", "playful motion", "elastic"),
-    detect: ({ lines }) => {
-      const out: RawHit[] = [];
-      for (let i = 0; i < lines.length; i++) {
-        const l = lines[i] ?? "";
-        // Overshoot is decidable from the curve itself: a control point outside
-        // [0,1] on the output axis means the value passes its target and returns.
-        const cb = /cubic-bezier\(\s*[-\d.]+\s*,\s*(-?[\d.]+)\s*,\s*[-\d.]+\s*,\s*(-?[\d.]+)\s*\)/i.exec(l);
-        if (cb?.[1] !== undefined && cb[2] !== undefined) {
-          const y1 = parseFloat(cb[1]);
-          const y2 = parseFloat(cb[2]);
-          if (y1 < 0 || y1 > 1 || y2 < 0 || y2 > 1) {
-            out.push({ line: i + 1, snippet: l.trim().slice(0, 80) });
-            continue;
-          }
-        }
-        if (/(?:transition|animation)[^;]*\b(?:bounce|elastic|back(?:In|Out|InOut))\b/i.test(l)) {
-          out.push({ line: i + 1, snippet: l.trim().slice(0, 80) });
-        }
-      }
-      return out;
     },
   },
   {

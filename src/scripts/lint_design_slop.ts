@@ -126,6 +126,12 @@ export function loadDesignContext(scanDir: string): DesignContext {
       break;
     }
   }
+  return contextFromText(raw);
+}
+
+/** The context a DESIGN.md text yields — declared intent only, plus the report-only legacy match. */
+export function contextFromText(text: string): DesignContext {
+  const raw = text.toLowerCase();
   const declared = declaredIntent(raw);
   return {
     raw,

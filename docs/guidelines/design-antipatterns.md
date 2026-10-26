@@ -249,10 +249,10 @@ are listed in § Quality floors.
 |---|---|---|
 | V1 | backed | |
 | V2 | judgment-only | decoration-vs-intent is the tell; a text pass cannot read intent |
-| V3 | backed | |
+| V3 | judgment-only | demoted 2026-10-26 at M1 = 1 on the near-miss holdout split: a transparent border kept for forced-colors mode plus a depth shadow is not the ghost card; not tuned against the holdout split |
 | V4 | backed | |
 | V5 | judgment-only | icon register collision is a visual-style comparison |
-| V6 | backed | |
+| V6 | judgment-only | demoted 2026-10-26 at M1 = 1 on the near-miss holdout split: hatching that marks unavailable calendar slots is a state, not a background texture; not tuned against the holdout split |
 | V7 | judgment-only | DOM-structure nesting depth, measured too false-positive-prone |
 | V8 | backed | |
 | V9 | judgment-only | texture-over-gradient is a compositional judgment, and the pre-registered clean corpus contains no grain-over-gradient near-miss, so an M1 = 0 for a detector here would be a vacuous pass rather than measured precision |
@@ -285,7 +285,7 @@ are listed in § Quality floors.
 | L8 | backed | |
 | L9 | backed | |
 | L10 | backed | |
-| M1 | backed | |
+| M1 | judgment-only | demoted 2026-10-26 at M1 = 1 on the near-miss holdout split: a brief, non-repeating onboarding celebration (the override) uses the same overshoot curve; the motion authority and its drift gate carry the rule for carriers |
 | M2 | backed | |
 | M3 | backed | |
 | M4 | backed | |
@@ -294,11 +294,11 @@ are listed in § Quality floors.
 | M7 | judgment-only | same two reasons as M6: no engine for `.ts` / `.js`, and zero `mousemove` and zero `radial-gradient` in the clean corpus |
 | M8 | judgment-only | the corpus carries no `:hover { opacity }` at all, and its only `opacity` occurrences sit inside a `@keyframes` block, so it cannot separate a hover fade from a legitimate transition |
 | CP1 | backed | |
-| CP2 | backed | |
+| CP2 | judgment-only | demoted 2026-10-26 at M1 = 1 on the near-miss tune split: "robust" and "leverage" as statistical terms pass the delete-test this entry names, and a phrase list cannot tell a term of art from a buzzword |
 | CP3 | judgment-only | copy phrase-list; that mechanism is council-rejected |
 | CP4 | judgment-only | copy phrase-list; that mechanism is council-rejected |
-| CP5 | backed | |
-| CP6 | backed | copy-engine phrase list, same mechanism as CP2; a CSS engine cannot see subject matter |
+| CP5 | judgment-only | demoted 2026-10-26 at M1 = 1 on the near-miss holdout split: functional status markers (the override this entry names) read the same as decoration to a text pass |
+| CP6 | judgment-only | demoted 2026-10-26 at M1 = 1 on the near-miss tune split: a data-driven field whose data is named (the override) uses the same phrase; a phrase list cannot see the brief's decision |
 
 ---
 

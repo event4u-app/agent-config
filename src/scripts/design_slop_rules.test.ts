@@ -33,16 +33,6 @@ const FIXTURES: Record<string, { ext: string; positive: string; negative: string
       ".tab { border: 2px solid transparent; }\n" +
       ".icon-btn { border: 2px solid currentColor; }",
   },
-  "slop-v3-ghost-card": {
-    ext: "css",
-    positive: ".card { border: 1px solid #ddd; box-shadow: 0 8px 24px rgba(0,0,0,.1); }",
-    negative: ".card { box-shadow: 0 2px 4px rgba(0,0,0,.1); }",
-  },
-  "slop-v6-diagonal-stripes": {
-    ext: "css",
-    positive: ".bg { background: repeating-linear-gradient(45deg,#000,#000 10px,#111 10px,#111 20px); }",
-    negative: ".bg { background: linear-gradient(#fff,#eee); }",
-  },
   "slop-c2-gradient-text": {
     ext: "css",
     positive: ".h { background: linear-gradient(90deg,#f00,#00f); -webkit-background-clip: text; color: transparent; }",
@@ -101,25 +91,6 @@ const FIXTURES: Record<string, { ext: string; positive: string; negative: string
       "We build tools, fast and focused tools, that teams genuinely love using every single day of the working week. " +
       "The product is calm and clear and useful, and people return to it daily because it respects their time and their attention and never wastes a single click of effort or a moment of their busy day — and that quiet reliability is the whole point of the thing we set out to make together, and the team keeps shipping the small improvements that matter most to the people who rely on it.",
   },
-  "slop-cp2-buzzword": {
-    ext: "md",
-    positive: "We streamline and empower your robust, world-class workflow.",
-    negative: "We cut page load by 40% and remove three steps from checkout.",
-  },
-  "slop-cp6-generic-art-direction": {
-    ext: "md",
-    positive: "Build a Three.js hero with floating abstract shapes and a gradient mesh.",
-    negative:
-      "Build a Three.js hero: the assembled chassis rotates, one component " +
-      "highlighted per beat, ending on the price panel.",
-  },
-  "slop-cp5-emoji-ui": {
-    ext: "html",
-    positive: '<h1>🚀 Get Started</h1><button>✅ Track progress</button>',
-    // Functional placements stay clean: mid-sentence emoji, status-cell emoji.
-    negative:
-      '<h1>Get Started</h1><p>Deploys are marked ✅ when healthy.</p><td>✅</td><button>Track progress</button>',
-  },
   "slop-v8-lock-shape": {
     ext: "css",
     positive: ".a{border-radius:4px}.b{border-radius:8px}.c{border-radius:12px}.d{border-radius:20px}",
@@ -176,12 +147,6 @@ const FIXTURES: Record<string, { ext: string; positive: string; negative: string
       '@font-face{font-family:"Brand";src:url(/f/brand.woff2) format("woff2");font-display:swap}\n' +
       '@font-face{font-family:"Brand Fallback";src:local("Arial");size-adjust:104%;ascent-override:92%;descent-override:24%}',
   },
-  "slop-m1-bounce-easing": {
-    ext: "css",
-    // y1 = 1.56 overshoots the target and returns — the bounce signature
-    positive: ".card{transition:transform .3s cubic-bezier(.34,1.56,.64,1)}",
-    negative: ".card{transition:transform .3s cubic-bezier(.4,0,.2,1)}",
-  },
   "slop-m3-img-hover-transform": {
     ext: "css",
     positive: ".tile:hover img{transform:scale(1.05)}",
@@ -233,14 +198,6 @@ describe("context gates suppress when DESIGN.md declares intent", () => {
     expect(findingsFor("slop-t7-default-fonts", fx.positive, "css", NO_CTX).length).toBeGreaterThan(0);
     expect(
       findingsFor("slop-t7-default-fonts", fx.positive, "css", ctxWith("Body font: Inter (chosen for variable metrics in a data-dense dashboard)")).length,
-    ).toBe(0);
-  });
-
-  it("cp5 emoji-ui is suppressed when DESIGN.md declares an emoji strategy", () => {
-    const fx = FIXTURES["slop-cp5-emoji-ui"]!;
-    expect(findingsFor("slop-cp5-emoji-ui", fx.positive, "html", NO_CTX).length).toBeGreaterThan(0);
-    expect(
-      findingsFor("slop-cp5-emoji-ui", fx.positive, "html", ctxWith("Voice: playful; emoji are part of the brand voice in headings and CTAs")).length,
     ).toBe(0);
   });
 

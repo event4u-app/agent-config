@@ -809,8 +809,21 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - status: backed
 - last_verified: 2026-08-11
 
+### claim: design-slop-near-miss-baseline
+- claim: On a 30-file near-miss corpus written from the catalog prose by an agent that did not see the detectors (legitimate uses a naive detector would flag, tune and holdout splits), every one of the 20 shipped design-slop rules fires on zero files; this holds after one tuning pass (L4, T9, T10) and six demotions to judgment-only (CP2, CP5, CP6, M1, V3, V6). Four files carry the DESIGN.md declaration their catalog override requires, and one (CP1) was adjudicated a true positive by the catalog's own wording and left out.
+- kind: quant
+- evidence: internal/bench/corpora/design-slop-nearmiss-PREREG.md#The bar, declared before the run
+- status: backed
+- last_verified: 2026-10-26
+
+  First run, before any change: M1 > 0 for 15 of 26 rules (10 tune, 5
+  holdout). Precision on this repository's own UI, reported apart from M1:
+  CP1 1.00 (26 TP), V1 0.25 (2 TP, 6 near-miss). The labels on that split are
+  this run's own judgement, not an independent label. Re-run with
+  `task bench:design-slop-nearmiss`.
+
 ### claim: design-slop-false-positive-baseline
-- claim: On a 32-file labelled clean-UI corpus (digest `90544389b05c1d0b`), all 26 shipped design-slop rules produce zero false positives — which the pre-registration reads as the corpus failing to discriminate, not as precision. History: the 2026-08-13 epoch ran 19 rules, 18 at zero, and the nineteenth (`slop-c6-lock-colour`, catalog C6) fired on 4 of the 32 files and was demoted to judgment-only rather than tuned.
+- claim: On a 32-file labelled clean-UI corpus (digest `90544389b05c1d0b`), all 20 shipped design-slop rules produce zero false positives (26 before the 2026-10-26 near-miss demotions) — which the pre-registration reads as the corpus failing to discriminate, not as precision. History: the 2026-08-13 epoch ran 19 rules, 18 at zero, and the nineteenth (`slop-c6-lock-colour`, catalog C6) fired on 4 of the 32 files and was demoted to judgment-only rather than tuned.
 - kind: quant
 - evidence: internal/bench/corpora/design-slop-fp-PREREG.md#The ceiling, declared before the run
 - status: backed
