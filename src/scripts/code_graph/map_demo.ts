@@ -20,7 +20,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { updateRegistry } from '../_lib/project_registry.js';
-import { gitProbe } from '../_lib/spawn_env.js';
+import { gitProbeWithEnv } from '../_lib/spawn_env.js';
 import { planHub, writeHub } from './estate_map.js';
 import { graphHome } from './graph_home.js';
 import { buildMap, hasMap, type MapBuildResult } from './map.js';
@@ -155,10 +155,8 @@ function draftLine(rel: string, n: number): string {
 function git(root: string, args: string[], who?: Author, at?: number): void {
     const stamp = at === undefined ? {} : { GIT_AUTHOR_DATE: new Date(at).toISOString(), GIT_COMMITTER_DATE: new Date(at).toISOString() };
     const ident = who ? { GIT_AUTHOR_NAME: who.name, GIT_AUTHOR_EMAIL: who.email, GIT_COMMITTER_NAME: who.name, GIT_COMMITTER_EMAIL: who.email } : {};
-    gitProbe(root, ['-c', 'commit.gpgsign=false', '-c', 'init.defaultBranch=main', ...args], {
-        // The user's own git configuration (hooks, signing, templates) has no say over a throwaway fixture repository.
-        env: { GIT_CONFIG_GLOBAL: os.devNull, GIT_CONFIG_NOSYSTEM: '1', ...ident, ...stamp },
-    });
+    // The user's own git configuration (hooks, signing, templates) has no say over a throwaway fixture repository.
+    gitProbeWithEnv(root, ['-c', 'commit.gpgsign=false', '-c', 'init.defaultBranch=main', ...args], { GIT_CONFIG_GLOBAL: os.devNull, GIT_CONFIG_NOSYSTEM: '1', ...ident, ...stamp });
 }
 
 /** The demo repository at `root`: the fixture, committed step by step, with the working change on top. */
@@ -247,7 +245,7 @@ function readGraph(root: string): CodeGraph | null {
 
 function head(root: string): string | null {
     try {
-        return gitProbe(root, ['rev-parse', 'HEAD'], { env: { GIT_CONFIG_GLOBAL: os.devNull, GIT_CONFIG_NOSYSTEM: '1' } }).trim();
+        return gitProbeWithEnv(root, ['rev-parse', 'HEAD'], { GIT_CONFIG_GLOBAL: os.devNull, GIT_CONFIG_NOSYSTEM: '1' }).trim();
     } catch {
         return null;
     }

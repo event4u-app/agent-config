@@ -122,14 +122,14 @@ function isDeniedByFamily(name: string): boolean {
  */
 const GIT_SAFE_ARGS: readonly string[] = ['-c', 'core.fsmonitor=false', '-c', 'core.hooksPath=/dev/null'];
 
-/** `git -C root …` with {@link GIT_SAFE_ARGS}, the hardened env (plus `env` overrides), stdout as text, stderr dropped. */
-export function gitProbe(
-    root: string,
-    args: readonly string[],
-    opts: { maxBuffer?: number; timeout?: number; env?: Record<string, string> } = {},
-): string {
-    const { env, ...rest } = opts;
-    return execFileSync('git', [...GIT_SAFE_ARGS, '-C', root, ...args], { env: hardenedSpawnEnv(env), encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'], ...rest });
+/** `git -C root …` with {@link GIT_SAFE_ARGS}, the hardened env, stdout as text, stderr dropped. */
+export function gitProbe(root: string, args: readonly string[], opts: { maxBuffer?: number; timeout?: number } = {}): string {
+    return execFileSync('git', [...GIT_SAFE_ARGS, '-C', root, ...args], { env: hardenedSpawnEnv(), encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'], ...opts });
+}
+
+/** {@link gitProbe} with env overrides on top of the hardened env. Separate so the hook bundle, which never needs it, tree-shakes it out. */
+export function gitProbeWithEnv(root: string, args: readonly string[], env: Record<string, string>): string {
+    return execFileSync('git', [...GIT_SAFE_ARGS, '-C', root, ...args], { env: hardenedSpawnEnv(env), encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] });
 }
 
 export function hardenedSpawnEnv(
