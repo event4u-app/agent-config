@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: later
+status: ready
 execution:
   mode: phase-checkpoints
 owner: maintainer
@@ -11,6 +11,14 @@ estate_offset_exempt: "Not a new plan. This is the live-harness SUFFIX of road-t
 # Road to routing assurance — the live-harness floors
 
 > **Arrivals:** 5 (at least) — latest `inbox-2026-10-at` (2026-10-25): a plan built on a third party's advice — compare automatic selection with explicit invocation on identical tasks, and investigate loading before adding review agents — reaches this file's question again and recommends option (1); its inputs are under § Inputs for the protocol session. Not un-parked: the active estate is at its cap, and the pilot spend is the owner's (`agents/owner-questions.md` OQ-15). The count before it read: 4 (at least) — latest `inbox-2026-10-an` (2026-10-25): two parallel plans both open with this file's question and recommend option (1); new inputs are listed under § Inputs for the protocol session. Not un-parked by that round: the active estate was at its five-roadmap cap. The count before it read: 3 (at least) — latest `inbox-2026-10-i` (2026-10-11): an audit names the host's own skill evaluator (with/without delta, ablation) as the independent grader this file was parked for. The count before it read: 2 (at least) — latest `inbox-2026-09-l` (2026-09-05); earlier: agents/roadmaps/archive/road-to-routing-assurance.md.
+
+> **Owner decision, 2026-10-26 (OQ-15):** un-parked into the free active slot,
+> with option (1) below and one pilot on the host evaluator capped at **25 USD**
+> (`agents/evidence/owner-directives/2026-10-26-owner-questions-14-15-16.md`).
+> The cap is for the pilot run, cumulative; crossing it pauses the run and
+> reports before spending more. Blocker `b-live-baseline-independence` still
+> holds: the protocol is frozen by a session that did not author the corpus
+> before any baseline is captured.
 
 > **The posed question — 3 arrivals, council-decidable per this file's own Authority paragraph.**
 > Does a scored run on the host's own skill evaluator, with the execution protocol

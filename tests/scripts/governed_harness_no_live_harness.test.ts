@@ -245,10 +245,16 @@ describe('5.2 half B — the code the steps touch reaches no live harness', () =
 // --- § the park itself -------------------------------------------------------
 
 describe('5.2 — the live-floors park is intact', () => {
-    it('the parked roadmap still exists, under later/', () => {
-        expect(existsSync(PARK)).toBe(true);
-        const body = readFileSync(PARK, 'utf-8');
-        expect(body).toContain('status: later');
-        expect(body).toContain('2/2');
+    it('the parked roadmap still exists, under later/ or un-parked by the owner', () => {
+        if (existsSync(PARK)) {
+            const body = readFileSync(PARK, 'utf-8');
+            expect(body).toContain('status: later');
+            expect(body).toContain('2/2');
+            return;
+        }
+        // OQ-15, 2026-10-26: only an owner decision recorded in the file may move it.
+        const unparked = path.join(REPO, 'agents', 'roadmaps', 'road-to-routing-assurance-live-floors.md');
+        expect(existsSync(unparked)).toBe(true);
+        expect(readFileSync(unparked, 'utf-8')).toContain('Owner decision, 2026-10-26 (OQ-15)');
     });
 });

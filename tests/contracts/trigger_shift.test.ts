@@ -110,10 +110,13 @@ describe('8.1 — the gap report, and what it deliberately does not count', () =
 });
 
 describe('8.2 — the live-floors park stays parked', () => {
-    it('the parked roadmap is still in later/, not reopened here', () => {
-        expect(
-            fs.existsSync(path.join(repoRoot, 'agents/roadmaps/later/road-to-routing-assurance-live-floors.md')),
-        ).toBe(true);
+    it('the parked roadmap is still in later/, or was un-parked by the owner — not reopened here', () => {
+        const parked = path.join(repoRoot, 'agents/roadmaps/later/road-to-routing-assurance-live-floors.md');
+        const active = path.join(repoRoot, 'agents/roadmaps/road-to-routing-assurance-live-floors.md');
+        if (fs.existsSync(parked)) return;
+        // OQ-15, 2026-10-26: only an owner decision recorded in the file may move it.
+        expect(fs.existsSync(active)).toBe(true);
+        expect(fs.readFileSync(active, 'utf-8')).toContain('Owner decision, 2026-10-26 (OQ-15)');
     });
 
     it('the shift module has no path to a routing harness at all', () => {

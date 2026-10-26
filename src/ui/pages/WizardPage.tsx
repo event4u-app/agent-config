@@ -32,6 +32,7 @@ import { RecoveryBanner } from '../wizard/RecoveryBanner.js';
 import { ContinueScreen } from '../wizard/ContinueScreen.js';
 import { BackupScreen } from '../wizard/BackupScreen.js';
 import { FinishChecklist } from '../wizard/FinishChecklist.js';
+import { applyStatuslineTap, StatuslineTapRow } from '../wizard/StatuslineTapRow.js';
 import {
     activeTotalSteps,
     asDetectionLoaded,
@@ -918,7 +919,8 @@ async function finish(): Promise<void> {
                 applyCopy = ` Installer bridge failed: ${message}. Settings were saved; re-run the wizard to retry the install plan.`;
             }
         }
-        banner.value = { message: `${finishCopy}${applyCopy} ${closeHint}`, tone: 'success' };
+        const tapCopy = await applyStatuslineTap();
+        banner.value = { message: `${finishCopy}${applyCopy}${tapCopy !== '' ? ` ${tapCopy}` : ''} ${closeHint}`, tone: 'success' };
         // Drop wizard state on success — server unlinks; mirror locally.
         stepIndex.value = clampStep(activeTotalSteps() - 1);
         // Refresh initialSettings to match the just-written state so a
@@ -1553,6 +1555,7 @@ function StepBody(): preact.JSX.Element | null {
             <>
                 {step.id === 'identity' ? <RtkRow /> : null}
                 {step.id === 'identity' ? <AgentSwitchRow /> : null}
+                {step.id === 'identity' ? <StatuslineTapRow /> : null}
                 <SchemaForm
                     schema={sliced}
                     values={values.value}
