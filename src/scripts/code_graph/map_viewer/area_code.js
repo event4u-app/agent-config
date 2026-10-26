@@ -8,18 +8,47 @@
         en: {
             healthScale: '4 parts of 25 points · A ≥ 80, B ≥ 60', lever: function (part, pts) { return 'Largest lever: ' + part.toLowerCase() + ' (−' + pts + ' points)'; },
             tLines: 'Lines', langs: 'Languages by lines', langMore: function (n) { return n + ' more'; },
-            pickTitle: 'Pick a file', pickHint: 'Click in the graph, search with / – or start here.', recent: 'Recently picked', topHotspots: 'Largest hotspots (commits × lines)',
+            pickTitle: 'Pick a file', pickHint: 'Click in the graph, search with / – or start here.', recent: 'Recently picked', topHotspots: 'Largest hotspots',
             deselect: 'Clear selection', linesN: function (n) { return n + ' lines'; }, commitsWin: function (d) { return 'commits / ' + d + ' d'; }, owners: 'owners', ownerBus: 'owner · bus factor',
-            aggregated: function (f, a) { return 'aggregated: ' + f + ' files in ' + a + ' area bubbles'; }, commitsShort: 'Commits', outsideHub: 'outside hub folder', openArea: 'Open area (double-click)', crumbMap: 'Map'
+            aggregated: function (f, a) { return 'aggregated: ' + f + ' files in ' + a + ' area bubbles'; }, commitsShort: 'Commits', outsideHub: 'outside hub', openArea: 'Open area (double-click)', crumbMap: 'Map',
+            smallParts: 'Small parts', hubLine: function (h) { return 'Hub: ' + h; }, cSize: 'Lines', hSize: 'LOC per area', hChurn: function (d) { return 'Commits in ' + d + ' days'; }, hFolderA: 'Main folder of the area',
+            lgSize: function (a, b) { return 'Lines per area: ' + a + ' → ' + b; }, lgChurnA: function (d, a, b) { return 'Commits in ' + d + ' days: ' + a + ' → ' + b; },
+            crumbLayers: function (f) { return 'Blast depth · ' + f; }, crumbMatrix: function (n) { return 'Area matrix ' + n + ' × ' + n; }, crumbKnow: function (f) { return 'Knowledge of ' + f; }, crumbArea: function (id, title, n) { return id + ' ' + title + ' · ' + n + ' files'; },
+            moreDirect: function (n) { return '+ ' + n + ' more direct · expand depth 2 and 3'; }, depthCollapse: 'Show depth 1 only', testsMore: function (n) { return '+' + n + ' more · import link, no coverage'; },
+            symSorted: function (n) { return 'Sorted by external calls · ≥ 10 external = orange' + (n ? ' · +' + n + ' more' : ''); }, soleOwner: 'sole owner',
+            ownerShare: function (p, c) { return p + ' · ' + c + ' commits'; }, ownerNote: function (d, b) { return 'Window ' + d + ' days · handles only, no e-mails' + (b ? ' · bus factor 1' : ''); },
+            treemapLegend: function (c) { return 'Area = lines per folder · Colour = ' + c + ' · Click: open'; }, linesFiles: function (l, f) { return l + ' lines · ' + f + ' files'; },
+            hTrusted: 'Trusted links between files, documentation links included', hotspotsUnit: 'Commits × lines', fileCycles: 'File cycles'
         },
         de: {
             healthScale: '4 Teile à 25 Punkte · A ≥ 80, B ≥ 60', lever: function (part, pts) { return 'Größter Hebel: ' + part + ' (−' + pts + ' Punkte)'; },
             tLines: 'Zeilen', langs: 'Sprachen nach Zeilen', langMore: function (n) { return n + ' weitere'; },
-            pickTitle: 'Datei wählen', pickHint: 'Im Graph klicken, suchen mit / – oder hier einsteigen.', recent: 'Zuletzt gewählt', topHotspots: 'Größte Hotspots (Commits × Zeilen)',
+            pickTitle: 'Datei wählen', pickHint: 'Im Graph klicken, suchen mit / – oder hier einsteigen.', recent: 'Zuletzt gewählt', topHotspots: 'Größte Hotspots',
             deselect: 'Auswahl aufheben', linesN: function (n) { return n + ' Zeilen'; }, commitsWin: function (d) { return 'Commits / ' + d + ' T.'; }, owners: 'Owner', ownerBus: 'Owner · Bus-Faktor',
-            aggregated: function (f, a) { return 'aggregiert: ' + f + ' Dateien in ' + a + ' Area-Blasen'; }, commitsShort: 'Commits', outsideHub: 'außerhalb Hub-Ordner', openArea: 'Area öffnen (Doppelklick)', crumbMap: 'Karte'
+            aggregated: function (f, a) { return 'aggregiert: ' + f + ' Dateien in ' + a + ' Area-Blasen'; }, commitsShort: 'Commits', outsideHub: 'außerhalb Hub', openArea: 'Area öffnen (Doppelklick)', crumbMap: 'Karte',
+            smallParts: 'Kleinteile', hubLine: function (h) { return 'Hub: ' + h; }, cSize: 'Zeilen', hSize: 'LOC je Area', hChurn: function (d) { return 'Commits in ' + d + ' Tagen'; }, hFolderA: 'Hauptordner der Area',
+            lgSize: function (a, b) { return 'Zeilen je Area: ' + a + ' → ' + b; }, lgChurnA: function (d, a, b) { return 'Commits in ' + d + ' Tagen: ' + a + ' → ' + b; },
+            crumbLayers: function (f) { return 'Blast-Tiefe · ' + f; }, crumbMatrix: function (n) { return 'Area-Matrix ' + n + ' × ' + n; }, crumbKnow: function (f) { return 'Wissen zu ' + f; }, crumbArea: function (id, title, n) { return id + ' ' + title + ' · ' + n + ' Dateien'; },
+            moreDirect: function (n) { return '+ ' + n + ' weitere direkt · Tiefe 2 und 3 aufklappen'; }, depthCollapse: 'Nur Tiefe 1 zeigen', testsMore: function (n) { return '+' + n + ' weitere · Import-Bezug, keine Coverage'; },
+            symSorted: function (n) { return 'Sortiert nach externen Aufrufen · ≥ 10 extern = orange' + (n ? ' · +' + n + ' weitere' : ''); }, soleOwner: 'einziger Owner',
+            ownerShare: function (p, c) { return p + ' · ' + c + ' Commits'; }, ownerNote: function (d, b) { return 'Fenster ' + d + ' Tage · nur Handles, keine E-Mails' + (b ? ' · Bus-Faktor 1' : ''); },
+            treemapLegend: function (c) { return 'Fläche = Zeilen je Ordner · Farbe = ' + c + ' · Klick: öffnen'; }, linesFiles: function (l, f) { return l + ' Zeilen · ' + f + ' Dateien'; },
+            hTrusted: 'Sichere Verweise zwischen Dateien, Doku-Links eingeschlossen', hotspotsUnit: 'Commits × Zeilen', fileCycles: 'Datei-Zyklen'
         }
     });
+
+    /** An area's working title, a template over its hub file's name: `order_service.ts` → "Order Service". */
+    function areaTitle(a) {
+        if (a.kind === 'small-parts') return t('smallParts') + ' · ' + base(a.name.replace(/^small parts · /, ''));
+        var stem = base(a.name).replace(/\.[^.]+$/, '').replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_\-.]+/g, ' ').trim();
+        return stem.split(/\s+/).map(function (w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ') || base(a.name);
+    }
+    /** The hub file the way the design writes it: its folder's last segment and its name. */
+    function hubShort(a) {
+        if (a.kind === 'small-parts') return a.name;
+        var parts = files[a.hub] ? files[a.hub].path.split('/') : [a.name];
+        return parts.slice(-2).join('/');
+    }
 
     // Adjacency over trusted edges, built once.
     var inOf = files.map(function () { return []; });
@@ -53,7 +82,7 @@
         lens: 'graph', colorBy: 'blast', scope: 'code', tab: 'file',
         level: 'overview', area: -1, file: -1, cell: null,
         showTrusted: true, showGuesses: false, showTests: true, showInfra: false,
-        full: false, formula: false, treePath: '', scopeDir: '', open: Object.create(null),
+        full: false, formula: false, deep: false, treePath: '', scopeDir: '', open: Object.create(null),
         view: { scale: 1, x: 0, y: 0 }, orb: false, rot: { yaw: ORB_YAW, pitch: ORB_PITCH },
         // Which areas the overview shows. A data choice, so it never depends on 2D / 3D.
         areaLimit: OVERVIEW_AREAS,
@@ -148,7 +177,18 @@
 
     // Colour per file and per area for the current colour-by option.
     var maxChurn = 1;
-    files.forEach(function (f) { if (f.churn) maxChurn = Math.max(maxChurn, f.churn); });
+    var maxLoc = 1;
+    files.forEach(function (f) { if (f.churn) maxChurn = Math.max(maxChurn, f.churn); if (f.loc) maxLoc = Math.max(maxLoc, f.loc); });
+    var areaSums = areas.map(function (a) {
+        var loc = 0; var churn = 0;
+        a.files.forEach(function (i) { loc += files[i].loc || 0; churn += files[i].churn || 0; });
+        return { loc: loc, churn: churn };
+    });
+    function sumRange(key, list) {
+        var lo = Infinity; var hi = 0;
+        list.forEach(function (i) { var v = areaSums[i][key]; lo = Math.min(lo, v); hi = Math.max(hi, v); });
+        return [lo === Infinity ? 0 : lo, hi];
+    }
     var tsMin = 1;
     var tsMax = 0;
     areas.forEach(function (a) { tsMin = Math.min(tsMin, a.testShare); tsMax = Math.max(tsMax, a.testShare); });
@@ -184,6 +224,7 @@
             case 'folder': return cat(strHash(top2(f.path)));
             case 'layer': return f.layer ? cat(strHash(f.layer)) : 'var(--node)';
             case 'churn': return f.churn ? mix('var(--brand)', 'var(--node)', Math.sqrt(f.churn / maxChurn)) : 'var(--node)';
+            case 'size': return f.loc ? mix('var(--cyan)', 'var(--node)', Math.max(0.1, Math.sqrt(f.loc / maxLoc))) : 'var(--node)';
             default: {
                 var w = selWalk();
                 if (!w) return f.role === 'test' ? 'var(--green)' : 'var(--cyan)';
@@ -210,9 +251,13 @@
             case 'folder': return cat(strHash(top2(files[a.hub].path)));
             case 'layer': return files[a.hub].layer ? cat(strHash(files[a.hub].layer)) : 'var(--node)';
             case 'churn': {
-                var sum = 0;
-                a.files.forEach(function (f) { sum += files[f].churn || 0; });
-                return sum ? mix('var(--brand)', 'var(--node)', Math.sqrt(sum / a.files.length / maxChurn)) : 'var(--node)';
+                var cr = sumRange('churn', overviewAreas());
+                var sum = areaSums[ai].churn;
+                return sum ? mix('var(--brand)', 'var(--node)', Math.max(0.08, Math.log(sum + 1) / Math.log(cr[1] + 1) - 0.2)) : 'var(--node)';
+            }
+            case 'size': {
+                var lr = sumRange('loc', overviewAreas());
+                return areaSums[ai].loc ? mix('var(--cyan)', 'var(--node)', Math.max(0.1, areaSums[ai].loc / Math.max(1, lr[1]))) : 'var(--node)';
             }
             default:
                 if (state.file >= 0 && files[state.file].area === ai) return 'var(--brand)';
@@ -230,10 +275,13 @@
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         draw();
     }
-    function toScreen(x, y) {
+    function toScreen(x, y, fill) {
         var s = size();
         var k = (Math.min(s.w, s.h) / 2 - 56) * state.view.scale;
-        return [s.w / 2 + x * k + state.view.x, s.h / 2 + y * k + state.view.y];
+        // The overview fills the stage on both axes, as the design spreads its areas.
+        var kx = fill ? (s.w / 2 - 90) * state.view.scale : k;
+        var ky = fill ? (s.h / 2 - 70) * state.view.scale : k;
+        return [s.w / 2 + x * kx + state.view.x, s.h / 2 + y * ky + state.view.y];
     }
     // The orb: the precomputed 2D layout wrapped onto a sphere with the inverse
     // Lambert azimuthal equal-area projection. Distance and direction are both
@@ -283,14 +331,15 @@
                 minX = Math.min(minX, areas[i].x); maxX = Math.max(maxX, areas[i].x);
                 minY = Math.min(minY, areas[i].y); maxY = Math.max(maxY, areas[i].y);
             });
-            var span = Math.max(maxX - minX, maxY - minY, 1e-6) / 2;
+            var spanX = Math.max(maxX - minX, 1e-6) / 2;
+            var spanY = Math.max(maxY - minY, 1e-6) / 2;
             var mx = (minX + maxX) / 2;
             var my = (minY + maxY) / 2;
             shown.forEach(function (i) {
                 var a = areas[i];
-                var x = state.orb ? a.x : (a.x - mx) / span * 0.85;
-                var y = state.orb ? a.y : (a.y - my) / span * 0.85;
-                out.push({ kind: 'area', idx: i, x: x, y: y, r: 8 + 30 * Math.sqrt(a.files.length / max), label: areaLabel(a), weight: a.files.length });
+                var x = state.orb ? a.x : (a.x - mx) / spanX * 0.85;
+                var y = state.orb ? a.y : (a.y - my) / spanY * 0.85;
+                out.push({ kind: 'area', idx: i, x: x, y: y, r: 8 + 30 * Math.sqrt(a.files.length / max), label: areaTitle(a), sub: hubShort(a), weight: a.files.length });
             });
             return out;
         }
@@ -355,11 +404,12 @@
             ctx.fill();
         } else {
             nodes.forEach(function (n) {
-                var p = toScreen(n.x, n.y);
+                var p = toScreen(n.x, n.y, state.level === 'overview');
                 n.sx = p[0];
                 n.sy = p[1];
                 pos[n.kind + n.idx] = n;
             });
+            if (state.level === 'overview') separate(nodes, 14);
         }
         function nearness(a) { return state.orb ? 0.28 + 0.72 * (a.depth + 1) / 2 : 1; }
 
@@ -469,6 +519,32 @@
         renderFoot();
     }
 
+    /**
+     * Area bubbles laid out by community can sit on top of each other; push
+     * overlapping pairs apart along the line between them, a few rounds, so
+     * every bubble and its id stays readable. Deterministic: same input, same picture.
+     */
+    function separate(nodes, gap) {
+        for (var round = 0; round < 40; round++) {
+            var moved = false;
+            for (var i = 0; i < nodes.length; i++) {
+                for (var j = i + 1; j < nodes.length; j++) {
+                    var a = nodes[i]; var b = nodes[j];
+                    var dx = b.sx - a.sx; var dy = b.sy - a.sy;
+                    var d = Math.hypot(dx, dy);
+                    var need = a.r + b.r + gap;
+                    if (d >= need) continue;
+                    if (d < 0.01) { dx = (j - i) % 2 ? 1 : -1; dy = 0.5; d = Math.hypot(dx, dy); }
+                    var push = (need - d) / 2;
+                    a.sx -= dx / d * push; a.sy -= dy / d * push;
+                    b.sx += dx / d * push; b.sy += dy / d * push;
+                    moved = true;
+                }
+            }
+            if (!moved) break;
+        }
+    }
+
     // Labels sit below their node with a halo, biggest first, only where they fit,
     // never outside the canvas, never on top of another label; badges likewise.
     function drawLabels(nodes, s, blastMode) {
@@ -483,35 +559,56 @@
         var mono = cssVar('--monof');
         var sans = cssVar('--sans');
         var count = 0;
+        // Bubbles are obstacles too: a label never lies across another bubble.
+        var bubbles = state.level === 'overview' ? nodes.map(function (n) { return { x: n.sx - n.r, y: n.sy - n.r, w: 2 * n.r, h: 2 * n.r, idx: n.idx }; }) : [];
+        var owner = -1;
+        function hits(box, p) { return box.x < p.x + p.w && p.x < box.x + box.w && box.y < p.y + p.h && p.y < box.y + box.h; }
         function fits(box) {
             if (box.x < 2 || box.y < 2 || box.x + box.w > s.w - 2 || box.y + box.h > s.h - 2) return false;
-            return !placed.some(function (p) { return box.x < p.x + p.w && p.x < box.x + box.w && box.y < p.y + p.h && p.y < box.y + box.h; });
+            if (bubbles.some(function (b) { return b.idx !== owner && hits(box, b); })) return false;
+            return !placed.some(function (p) { return hits(box, p); });
         }
         ctx.textBaseline = 'middle';
         ctx.lineJoin = 'round';
         for (var i = 0; i < order.length && count < limit; i++) {
             var n = order[i];
             var sel = n.kind === 'file' && n.idx === state.file;
+            owner = n.idx;
             ctx.font = n.kind === 'area' ? '600 12px ' + sans : (sel ? '600' : '500') + ' 11px ' + mono;
             var label = n.label.length > 34 ? n.label.slice(0, 33) + '…' : n.label;
             var w = ctx.measureText(label).width;
-            var h = 14;
-            var box = { x: n.sx - w / 2 - 2, y: n.sy + n.r + 4, w: w + 4, h: h };
+            // The hub file goes under the title once the reader zooms in, or when the area holds affected files.
+            var sub = n.kind === 'area' && (state.view.scale > 1.5 || (blastMode && areaHits(n.idx) > 0)) ? n.sub : '';
+            if (sub && sub.length > 40) sub = '…' + sub.slice(-39);
+            var sw = 0;
+            if (sub) { ctx.font = '400 10px ' + mono; sw = ctx.measureText(sub).width; ctx.font = '600 12px ' + sans; }
+            var bw = Math.max(w, sw);
+            var h = sub ? 27 : 14;
+            var box = { x: n.sx - bw / 2 - 2, y: n.sy + n.r + 4, w: bw + 4, h: h };
             if (!fits(box)) {
-                box = { x: n.sx + n.r + 4, y: n.sy - h / 2, w: w + 4, h: h };
+                box = { x: n.sx + n.r + 4, y: n.sy - h / 2, w: bw + 4, h: h };
                 if (!fits(box)) continue;
             }
             placed.push(box);
+            var cx = box.x + 2 + (bw - w) / 2;
             ctx.strokeStyle = bg;
             ctx.lineWidth = 4;
-            ctx.strokeText(label, box.x + 2, box.y + h / 2);
+            ctx.strokeText(label, cx, box.y + 7);
             ctx.fillStyle = n.kind === 'area' ? text : sel ? brandText : soft;
-            ctx.fillText(label, box.x + 2, box.y + h / 2);
+            ctx.fillText(label, cx, box.y + 7);
+            if (sub) {
+                ctx.font = '400 10px ' + mono;
+                var sx = box.x + 2 + (bw - sw) / 2;
+                ctx.strokeText(sub, sx, box.y + 20);
+                ctx.fillStyle = cssVar('--muted');
+                ctx.fillText(sub, sx, box.y + 20);
+            }
             count += 1;
         }
         if (blastMode && state.level === 'overview') {
             ctx.font = '600 11px ' + mono;
             nodes.forEach(function (n) {
+                owner = n.idx;
                 var hits = areaHits(n.idx);
                 if (!hits || n.r <= 12 || (state.file >= 0 && files[state.file].area === n.idx)) return;
                 var txt = String(hits);
@@ -583,7 +680,7 @@
         add(ring, add(el('div', { class: 'ring-in' }), el('span', { class: 'grade' }, graded ? health.grade : '–'), graded ? el('span', { class: 'mono score' }, num(health.score)) : null));
         var title = add(el('div', { class: 'health-title' }), el('b', null, t('health')),
             el('span', null, graded ? t('healthScale') : t('noGrade')(missing)));
-        var fbtn = el('button', { type: 'button', class: 'linkish', 'aria-expanded': String(state.formula) }, state.formula ? t('hideFormula') : t('formula'));
+        var fbtn = el('button', { type: 'button', class: 'linkish', 'aria-expanded': String(state.formula), title: health ? health.formula : null }, state.formula ? t('hideFormula') : t('formula'));
         fbtn.addEventListener('click', function () { state.formula = !state.formula; renderRail(); });
         title.appendChild(fbtn);
         add(h, add(el('div', { class: 'health-head' }), ring, title));
@@ -654,11 +751,11 @@
         var group = el('div', { class: 'opts', role: 'radiogroup', 'aria-label': t('colorBy') });
         var legendByKey = Object.create(null);
         (model.legend || []).forEach(function (l) { legendByKey[l.key] = l; });
-        [['blast', 'cBlast', 'hBlast'], ['area', 'cArea', 'hArea'], ['tests', 'cTests', 'hTests'], ['role', 'cRole', 'hRole'],
-            ['folder', 'cFolder', 'hFolder'], ['layer', 'cLayer'], ['churn', 'cChurn'], ['complexity', 'cComplexity']].forEach(function (o) {
-            var lg = legendByKey[o[0]];
-            var off = lg ? !lg.available : (o[0] === 'layer' || o[0] === 'churn' || o[0] === 'complexity');
-            var b = el('button', { type: 'button', role: 'radio', class: 'opt', 'aria-checked': String(state.colorBy === o[0]), disabled: off, title: off ? '' : (o[2] ? t(o[2]) : '') }, t(o[1]));
+        [['blast', 'cBlast', t('hBlast')], ['area', 'cArea', t('hArea')], ['tests', 'cTests', t('hTests')], ['role', 'cRole', t('hRole')],
+            ['churn', 'cChurn', t('hChurn')(WINDOW)], ['size', 'cSize', t('hSize'), 'size'], ['folder', 'cFolder', t('hFolderA')], ['layer', 'cLayer'], ['complexity', 'cComplexity']].forEach(function (o) {
+            var lg = legendByKey[o[3] || o[0]];
+            var off = lg ? !lg.available : (o[0] === 'layer' || o[0] === 'churn' || o[0] === 'complexity' || (o[0] === 'size' && !hasLoc));
+            var b = el('button', { type: 'button', role: 'radio', class: 'opt', 'aria-checked': String(state.colorBy === o[0]), disabled: off, title: off ? '' : (o[2] || '') }, t(o[1]));
             if (off) markNoData(b, t('noDataShort'), lg && lg.reason ? lg.reason : t('noDataUnknown'));
             b.addEventListener('click', function () { if (!off) { state.colorBy = o[0]; refresh(); } });
             group.appendChild(b);
@@ -677,13 +774,23 @@
             return miss;
         }
         var colours = ['var(--cyan)', 'var(--amber)', 'var(--green)'];
+        var fixed = { markdown: 'var(--doc)', typescript: 'var(--cyan)', javascript: 'var(--amber)' };
+        var used = Object.create(null);
+        langs.slice(0, 3).forEach(function (l) { if (fixed[l[0]]) used[fixed[l[0]]] = true; });
+        var free = colours.filter(function (c) { return !used[c]; });
         var rows = [];
-        var c = 0;
-        langs.slice(0, 3).forEach(function (l) { rows.push([l[0], l[2], /^markdown$/i.test(l[0]) ? 'var(--doc)' : colours[c++]]); });
+        langs.slice(0, 3).forEach(function (l) { rows.push([langName(l[0]), l[2], fixed[l[0]] || free.shift() || 'var(--green)', langName(l[0], true)]); });
         var rest = 0;
         langs.slice(3).forEach(function (l) { rest += l[2]; });
         if (rest) rows.push([t('langMore')(langs.length - 3), rest, 'var(--violet)']);
         return stackBlock(t('langs'), rows, total, true);
+    }
+    var LANG_NAMES = { typescript: ['TypeScript', 'TS'], javascript: ['JavaScript', 'JS'], markdown: ['Markdown'], php: ['PHP'], python: ['Python'], go: ['Go'], java: ['Java'], ruby: ['Ruby'], rust: ['Rust'], csharp: ['C#'], kotlin: ['Kotlin'], swift: ['Swift'], html: ['HTML'], css: ['CSS'], vue: ['Vue'], svelte: ['Svelte'], sql: ['SQL'], shell: ['Shell'], yaml: ['YAML'], json: ['JSON'] };
+    /** A language's display name; `short` is the key label, which the design abbreviates for JavaScript only. */
+    function langName(id, short) {
+        var n = LANG_NAMES[String(id).toLowerCase()];
+        if (!n) return String(id);
+        return short && id === 'javascript' ? n[1] : n[0];
     }
     function stackBlock(title, rows, total, keys) {
         var wrap = add(el('div', { class: 'parts' }), el('span', { class: 'cap' }, title));
@@ -703,7 +810,7 @@
                 var s = el('span');
                 var sw = el('span', { class: 'sw' });
                 sw.style.background = r[2];
-                add(s, sw, document.createTextNode(r[0] + ' ' + pct(r[1] / Math.max(1, total))));
+                add(s, sw, document.createTextNode((r[3] || r[0]) + ' ' + pct(r[1] / Math.max(1, total))));
                 kk.appendChild(s);
             });
             wrap.appendChild(kk);
@@ -801,10 +908,6 @@
             bk.className = 'nav-back';
             c.appendChild(bk);
         }
-        var mapHome = btn(t('crumbMap'), function () { go('overview'); });
-        mapHome.className = 'crumb-map';
-        c.appendChild(mapHome);
-        c.appendChild(el('span', { 'aria-hidden': 'true' }, '›'));
         c.appendChild(btn(t('repo'), goHome));
         c.appendChild(el('span', { 'aria-hidden': 'true' }, '›'));
         var sel = state.file >= 0 ? base(files[state.file].path) : '';
@@ -813,7 +916,7 @@
             if (state.level === 'area') {
                 c.appendChild(btn('Areas', goHome));
                 c.appendChild(el('span', { 'aria-hidden': 'true' }, '›'));
-                c.appendChild(btn(areas[state.area].id + ' · ' + t('files')(areas[state.area].files.length)));
+                c.appendChild(btn(t('crumbArea')(areas[state.area].id, areaTitle(areas[state.area]), num(areas[state.area].files.length))));
             } else {
                 c.appendChild(btn(t('areasOf')(shown, areas.length)));
                 c.appendChild(el('span', { 'aria-hidden': 'true' }, '›'));
@@ -821,10 +924,12 @@
             }
         } else {
             var atStart = !state.treePath && !state.cell;
-            var home = btn(t({ layers: 'lLayers', matrix: 'lMatrix', knowledge: 'lKnowledge', treemap: 'lTreemap' }[state.lens]), atStart ? null : lensHome);
+            c.appendChild(btn('Areas', goHome));
+            c.appendChild(el('span', { 'aria-hidden': 'true' }, '›'));
+            var label = state.lens === 'matrix' ? t('crumbMatrix')(Math.min(15, areas.length)) : state.lens === 'layers' && sel ? t('crumbLayers')(sel) : state.lens === 'knowledge' && sel ? t('crumbKnow')(sel) : t({ layers: 'lLayers', matrix: 'lMatrix', knowledge: 'lKnowledge', treemap: 'lTreemap' }[state.lens]);
+            var home = btn(label, atStart ? null : lensHome);
             home.className = 'lens-home';
             c.appendChild(home);
-            if (sel && state.lens !== 'treemap' && state.lens !== 'matrix') { c.appendChild(el('span', { 'aria-hidden': 'true' }, '›')); c.appendChild(btn(sel)); }
             if (state.lens === 'treemap' && state.treePath) {
                 var acc = '';
                 state.treePath.split('/').forEach(function (seg) {
@@ -864,12 +969,20 @@
             L.appendChild(legendItem(state.level === 'area' ? 'code' : t('lgRole'), dotEl('', 'var(--cyan)')));
             if (state.level === 'area') { L.appendChild(legendItem('test', dotEl('ring', 'var(--green)'))); L.appendChild(legendItem('doc', dotEl('', 'var(--doc)'))); }
         } else if (state.colorBy === 'folder') {
-            L.appendChild(legendItem(t('lgFolder'), dotEl('', cat(1))));
+            var seen = Object.create(null);
+            var shownFolders = state.level === 'area' ? areas[state.area].files : overviewAreas().map(function (i) { return areas[i].hub; });
+            shownFolders.forEach(function (fi) { var d = top2(files[fi].path); if (Object.keys(seen).length < 8) seen[d] = true; });
+            Object.keys(seen).forEach(function (d) { L.appendChild(legendItem(d, dotEl('', cat(strHash(d))))); });
+        } else if (state.colorBy === 'size') {
+            var g4 = el('span', { class: 'dot' }); g4.style.width = '40px'; g4.style.borderRadius = '3px'; g4.style.background = 'linear-gradient(90deg,var(--node),var(--cyan))';
+            var lr = state.level === 'area' ? [0, maxLoc] : sumRange('loc', overviewAreas());
+            L.appendChild(legendItem(t('lgSize')(num(lr[0]), num(lr[1])), g4));
         } else if (state.colorBy === 'layer') {
             L.appendChild(legendItem(t('lgLayer'), dotEl('', cat(2))));
         } else if (state.colorBy === 'churn') {
             var g3 = el('span', { class: 'dot' }); g3.style.width = '40px'; g3.style.borderRadius = '3px'; g3.style.background = 'linear-gradient(90deg,var(--node),var(--brand))';
-            L.appendChild(legendItem(t('lgChurn')(num(maxChurn)), g3));
+            var cr = sumRange('churn', overviewAreas());
+            L.appendChild(legendItem(state.level === 'area' ? t('lgChurn')(num(maxChurn)) : t('lgChurnA')(WINDOW, num(cr[0]), num(cr[1])), g3));
         }
     }
     function renderFoot() {
@@ -894,8 +1007,8 @@
             f.appendChild(el('span', null, t('visibleAreas')(num(shownList.length), num(areas.length))));
             f.appendChild(el('span', null, t('areaEdges')(num(drawnEdges))));
         }
-        if (state.level === 'overview' && state.lens === 'graph') f.appendChild(el('span', { class: 'note' }, t('aggregated')(num(files.length), num(overviewAreas().length))));
         f.appendChild(el('span', { class: 'hot' }, t('affected')(num(hit), t(state.scope === 'code' ? 'sCode' : state.scope === 'tests' ? 'sTests' : 'sAll'))));
+        if (state.level === 'overview' && state.lens === 'graph') f.appendChild(el('span', { class: 'note' }, t('aggregated')(num(files.length), num(overviewAreas().length))));
     }
 
     function renderLens() {
@@ -1062,16 +1175,22 @@
         });
         return g;
     }
+    var KIND_TEXT = { contract: 'var(--greenText)', adr: 'var(--greenText)', 'roadmap-active': 'var(--greenText)', evidence: 'var(--greenText)', 'roadmap-planned': 'var(--cyanText)', 'roadmap-later': 'var(--cyanText)', draft: 'var(--amberText)' };
     function kcard(i, extra) {
         var f = files[i];
         var cls = 'kcard';
         if (f.knowledge === 'draft') cls += ' draft';
         if (f.knowledge === 'roadmap-archived') cls += ' archived';
+        if (f.role === 'test') cls += ' ktest';
         if (f.duplicate) cls += ' dup';
         var b = el('button', { type: 'button', class: cls, title: f.path });
-        b.appendChild(document.createTextNode(base(f.path)));
-        var sub = extra || (f.knowledge ? t('kinds')[f.knowledge] + (f.duplicate ? ' · ' + t('kDup') : '') : dir(f.path));
-        b.appendChild(el('small', null, sub));
+        b.appendChild(el('span', { class: 'kname' }, base(f.path)));
+        var sub = extra === '' ? '' : extra || (f.knowledge === 'draft' || f.knowledge === 'evidence' ? dir(f.path) : f.knowledge ? t('kinds')[f.knowledge] + (f.duplicate ? ' · ' + t('kDup') : '') : dir(f.path));
+        if (sub) {
+            var sm = el('small', null, sub);
+            sm.style.color = f.duplicate ? 'var(--alertText)' : KIND_TEXT[f.knowledge] || 'var(--muted)';
+            b.appendChild(sm);
+        }
         b.addEventListener('click', function () { openFile(i); });
         return b;
     }
@@ -1090,20 +1209,22 @@
         var g = knowledgeGroups(f);
         var cols = el('div', { class: 'kcols' });
         var grid = el('div', { class: 'kgrid' });
-        function col(title, count, children) {
+        function col(title, count, children, more) {
             var c = el('section', { class: 'kcol' });
             c.appendChild(add(el('div', { class: 'cap' }), el('span', null, title), el('span', null, count)));
             children.forEach(function (ch) { c.appendChild(ch); });
+            if (more) c.appendChild(el('span', { class: 'note-line kmore' }, more));
             grid.appendChild(c);
         }
+        function rest(n, cap) { return n > cap ? t('moreN')(num(n - cap)) : ''; }
         var sel = add(el('div', { class: 'kcard selcard mono' }), document.createTextNode(base(f.path)), el('small', null, t('symbolsCount')(f.symbols.length + f.symbolsOmitted) + ' · in ' + f.inFiles + ' · out ' + f.outFiles));
-        var uses = outOf[state.file].slice(0, 6).map(function (x) { return kcard(x[0], dir(files[x[0]].path)); });
-        col(t('kCode'), '1 + ' + outOf[state.file].length, [sel].concat(uses));
-        col(t('kTests'), String(f.tests.length), f.tests.slice(0, 8).map(function (i) { return kcard(i, dir(files[i].path)); }));
-        col(t('kContracts'), String(g.contracts.length), g.contracts.slice(0, 8).map(function (i) { return kcard(i); }));
-        col(t('kRoadmaps'), String(g.roadmaps.length), g.roadmaps.slice(0, 8).map(function (i) { return kcard(i); }));
-        col(t('kEvidence'), String(g.evidence.length), g.evidence.slice(0, 8).map(function (i) { return kcard(i); }));
-        col(t('kDrafts'), String(g.drafts.length), g.drafts.slice(0, 8).map(function (i) { return kcard(i); }));
+        var uses = outOf[state.file].slice(0, 6).map(function (x) { return kcard(x[0], ''); });
+        col(t('kCode'), '1 + ' + outOf[state.file].length, [sel].concat(uses), rest(outOf[state.file].length, 6));
+        col(t('kTests'), String(f.tests.length), f.tests.slice(0, 3).map(function (i) { return kcard(i, ''); }), f.tests.length > 3 ? t('testsMore')(num(f.tests.length - 3)) : '');
+        col(t('kContracts'), String(g.contracts.length), g.contracts.slice(0, 8).map(function (i) { return kcard(i); }), rest(g.contracts.length, 8));
+        col(t('kRoadmaps'), String(g.roadmaps.length), g.roadmaps.slice(0, 8).map(function (i) { return kcard(i); }), rest(g.roadmaps.length, 8));
+        col(t('kEvidence'), String(g.evidence.length), g.evidence.slice(0, 8).map(function (i) { return kcard(i); }), rest(g.evidence.length, 8));
+        col(t('kDrafts'), String(g.drafts.length), g.drafts.slice(0, 3).map(function (i) { return kcard(i); }), rest(g.drafts.length, 3));
         col(t('kMemory'), t('noDataShort'), [add(el('div', { class: 'kmissing' }), el('b', null, t('collectorMissing')), el('span', null, t('memNote1')), el('span', null, t('memNote2')))]);
         lensView.appendChild(add(cols, grid));
         var cards = el('div', { class: 'kcards' });
@@ -1140,7 +1261,7 @@
             return s;
         };
         var items = [];
-        Object.keys(node.kids).forEach(function (k) { var v = locOf(node.kids[k]); if (v > 0) items.push({ name: k, value: v, dir: true }); });
+        Object.keys(node.kids).forEach(function (k) { var v = locOf(node.kids[k]); if (v > 0) items.push({ name: k, value: v, dir: true, count: node.kids[k].n }); });
         node.files.forEach(function (i) { if (files[i].loc) items.push({ name: base(files[i].path), value: files[i].loc, file: i }); });
         items.sort(function (a, b) { return b.value - a.value; });
         items = items.slice(0, 120);
@@ -1180,7 +1301,7 @@
         rects.forEach(function (r) {
             var it = r[0];
             var b = el('button', { type: 'button', class: 'tm', title: (state.treePath ? state.treePath + '/' : '') + it.name + ' · ' + num(it.value) });
-            b.style.left = r[1] + 'px'; b.style.top = r[2] + 'px'; b.style.width = Math.max(0, r[3]) + 'px'; b.style.height = Math.max(0, r[4]) + 'px';
+            b.style.left = (r[1] + 2) + 'px'; b.style.top = (r[2] + 2) + 'px'; b.style.width = Math.max(0, r[3] - 4) + 'px'; b.style.height = Math.max(0, r[4] - 4) + 'px';
             var colour;
             if (it.file !== undefined) colour = fileColour(it.file);
             else {
@@ -1190,13 +1311,17 @@
             }
             b.style.background = colour === 'var(--node)' ? 'var(--raise)' : colour;
             if (colour === 'var(--node)') b.style.color = 'var(--soft)';
-            if (r[3] > 50 && r[4] > 22) add(b, el('span', null, it.name + (it.dir ? '/' : '')), r[4] > 36 ? el('small', null, num(it.value)) : null);
+            var small = r[3] < 110 || r[4] < 56;
+            if (small) b.classList.add('small');
+            if (r[3] > 40 && r[4] > 22) add(b, el('span', null, it.name + (it.dir ? '/' : '')), small ? null : el('small', null, it.dir ? t('linesFiles')(num(it.value), num(it.count)) : t('linesN')(num(it.value))));
             b.addEventListener('click', function () {
                 if (it.file !== undefined) openFile(it.file);
                 else { step(); state.treePath = state.treePath ? state.treePath + '/' + it.name : it.name; refresh(); }
             });
             box.appendChild(b);
         });
+        var names = { blast: 'cBlast', area: 'cArea', tests: 'cTests', role: 'cRole', churn: 'cChurn', size: 'cSize', folder: 'cFolder', layer: 'cLayer' };
+        lensView.appendChild(add(el('div', { class: 'legend' }), el('b', null, t('legend')), el('span', { class: 'muted' }, t('treemapLegend')(t(names[state.colorBy] || 'cBlast')))));
     }
 
     // Right rail.
@@ -1212,6 +1337,19 @@
         add(b, swatch(files[i].area >= 0 ? cat(files[i].area) : 'var(--node)'), el('span', { class: 'fname' }, base(files[i].path)), metaText ? el('span', { class: 'fdir' }, metaText) : null);
         b.addEventListener('click', function () { openFile(i); });
         return add(el('li'), b);
+    }
+    /** A two-column row the design draws in mono: the file and one measure beside it. */
+    function gridRow(i, metaText, cls) {
+        var b = el('button', { type: 'button', title: files[i].path, class: cls || '' });
+        add(b, el('span', { class: 'fname' }, base(files[i].path)), el('span', { class: 'fdir' }, metaText));
+        b.addEventListener('click', function () { openFile(i); });
+        return add(el('li'), b);
+    }
+    function relRow(i, metaText) {
+        var b = el('button', { type: 'button', title: files[i].path });
+        add(b, el('span', null, files[i].path.split('/').slice(-2).join('/')), el('span', { class: 'mt' }, metaText));
+        b.addEventListener('click', function () { openFile(i); });
+        return b;
     }
     function codeFindingCount() {
         return (an.cyclesTotal || 0) + (an.surprises || []).length + (an.layerBreaches || 0) + (model.hotspots ? model.hotspots.length : 0) + (an.deadFiles || 0);
@@ -1241,21 +1379,25 @@
     function deselect() { step(); state.file = -1; refresh(); }
     function renderFileTab() {
         if (state.file < 0) {
-            var p = add(el('div', { class: 'pad' }), add(el('div', { class: 'empty-head' }), el('b', null, t('pickTitle')), el('span', { class: 'muted' }, t('pickHint'))));
+            var p = add(el('div', { class: 'pad epad' }), add(el('div', { class: 'empty-head' }), el('b', null, t('pickTitle')), el('span', { class: 'muted' }, t('pickHint'))));
             if (recentFiles.length) {
-                var ur = el('ul', { class: 'plist' });
-                recentFiles.forEach(function (x) { ur.appendChild(fileRow(x, files[x].area >= 0 ? areas[files[x].area].id : files[x].role)); });
-                add(p, el('span', { class: 'cap' }, t('recent')), ur);
+                var ur = el('ul', { class: 'plist pgrid' });
+                recentFiles.forEach(function (x) {
+                    var b = files[x].blast;
+                    ur.appendChild(gridRow(x, (files[x].area >= 0 ? areas[files[x].area].id : files[x].role) + (b ? ' · Blast ' + num(b.direct + 0.5 * b.transitive) : ''), 'recent'));
+                });
+                p.appendChild(add(el('div', { class: 'egroup' }), el('span', { class: 'cap' }, t('recent')), ur));
             }
-            p.appendChild(el('span', { class: 'cap' }, t('topHotspots')));
+            var hg = add(el('div', { class: 'egroup' }), el('span', { class: 'cap' }, t('topHotspots')));
             if (model.hotspots && model.hotspots.length) {
-                var uh = el('ul', { class: 'plist' });
-                model.hotspots.slice(0, 3).forEach(function (h) { uh.appendChild(fileRow(h[0], num(h[1]) + ' × ' + num(h[2]))); });
-                p.appendChild(uh);
-            } else p.appendChild(el('span', { class: 'dashchip mono', title: t('noDataTitle')(t('needChurn')) }, t('noDataShort') + ' · ' + t('needChurn')));
-            var ul = el('ul', { class: 'plist' });
-            (an.hubs || []).forEach(function (h) { ul.appendChild(fileRow(h, 'in ' + files[h].inFiles)); });
-            add(p, el('span', { class: 'cap' }, t('mostUsed')), ul);
+                var uh = el('ul', { class: 'plist pgrid' });
+                model.hotspots.slice(0, 3).forEach(function (h) { uh.appendChild(gridRow(h[0], num(h[1]) + ' × ' + num(h[2]))); });
+                hg.appendChild(uh);
+            } else hg.appendChild(el('span', { class: 'dashchip mono', title: t('noDataTitle')(t('needChurn')) }, t('noDataShort') + ' · ' + t('needChurn')));
+            p.appendChild(hg);
+            var ul = el('ul', { class: 'plist pgrid' });
+            (an.hubs || []).slice(0, 5).forEach(function (h) { ul.appendChild(gridRow(h, 'in ' + num(files[h].inFiles))); });
+            p.appendChild(add(el('div', { class: 'egroup' }), el('span', { class: 'cap' }, t('mostUsed')), ul));
             panel.appendChild(p);
             return;
         }
@@ -1265,10 +1407,10 @@
         x.addEventListener('click', deselect);
         var head = add(el('div', { class: 'fhead' }), add(el('div', { class: 'fhead-top' }), el('div', { class: 'fn' }, base(f.path)), x), el('div', { class: 'fp' }, f.path));
         var chips = el('div', { class: 'chips' });
-        chips.appendChild(el('span', { class: SCOPE_CODE[f.role] ? 'c-cyan' : f.role === 'test' ? 'c-green' : '' }, (t('roleNames')[f.role] || f.role) + (f.lang ? ' · ' + f.lang : '')));
+        chips.appendChild(el('span', { class: SCOPE_CODE[f.role] ? 'c-cyan' : f.role === 'test' ? 'c-green' : '' }, (t('roleNames')[f.role] || f.role) + (f.lang ? ' · ' + langName(f.lang) : '')));
         if (f.loc !== undefined) chips.appendChild(el('span', null, t('linesN')(num(f.loc))));
         else chips.appendChild(el('span', { class: 'c-miss' }, t('locMissing')));
-        if (f.area >= 0) chips.appendChild(el('span', null, 'Area ' + areas[f.area].id + (areas[f.area].hub === i ? ' (' + t('hub') + ')' : '')));
+        if (f.area >= 0) chips.appendChild(el('span', null, 'Area ' + areas[f.area].id + ' ' + areaTitle(areas[f.area]) + (areas[f.area].hub === i ? ' (' + t('hub') + ')' : '')));
         if (f.tests.length) chips.appendChild(el('span', { class: 'c-green' }, t('tests')(f.tests.length)));
         chips.appendChild(el('span', null, 'in ' + f.inFiles + ' · out ' + f.outFiles));
         if (f.guesses) chips.appendChild(el('span', { class: 'c-guess' }, t('guesses')(f.guesses)));
@@ -1281,7 +1423,7 @@
             var ownerV = el('div', { class: 'mono v' }, num(owners));
             if (f.soleOwner) ownerV.style.color = 'var(--brandText)';
             add(trio, add(el('div'), el('div', { class: 'mono v' }, num(f.churn)), document.createTextNode(t('commitsWin')(WINDOW))),
-                add(el('div'), el('div', { class: 'mono v' }, f.lastChange || '–'), document.createTextNode(t('lastChange'))),
+                add(el('div'), el('div', { class: 'mono v' }, f.lastChange ? shortDate(f.lastChange, true) : '–'), document.createTextNode(t('lastChange'))),
                 add(el('div'), ownerV, document.createTextNode(f.soleOwner ? t('ownerBus') : t('owners'))));
             head.appendChild(trio);
         }
@@ -1322,34 +1464,39 @@
         var cc = 0; var tc = 0; var dc = 0;
         for (var d = 1; d <= BLAST_DEPTH; d++) all.byDepth[d].forEach(function (x) { var r = files[x].role; if (r === 'test') tc += 1; else if (r === 'doc') dc += 1; else if (SCOPE_CODE[r]) cc += 1; });
         bl.appendChild(el('div', { class: 'insight' }, rec ? t('insight')(num(cc), num(tc), num(dc)) : t('notScope')));
-        var depthCols = ['var(--amber)', 'var(--sand)', 'var(--d3)'];
-        for (var dd = 1; dd <= BLAST_DEPTH; dd++) {
+        var deeper = w.byDepth[2].length + w.byDepth[3].length;
+        for (var dd = 1; dd <= (state.deep ? BLAST_DEPTH : 1); dd++) {
             var list = w.byDepth[dd];
             if (!list.length) continue;
             var dl = add(el('div', { class: 'dlist' }), el('span', { class: 'cap' }, t('depthList')(dd)));
-            list.slice(0, 8).forEach(function (x) {
+            (state.deep && dd === 1 ? list : list.slice(0, 8)).forEach(function (x) {
                 var r = el('button', { type: 'button', class: 'drow', title: files[x].path });
-                var dt = files[x].role === 'test' ? dotEl('ring', depthCols[dd - 1]) : dotEl(files[x].role === 'doc' ? 'small' : '', depthCols[dd - 1]);
-                add(r, dt, el('span', { class: 'nm' }, base(files[x].path)), el('span', { class: 'mt' }, files[x].area >= 0 ? areas[files[x].area].id : files[x].role));
+                add(r, kindDot(files[x]), el('span', { class: 'nm' }, base(files[x].path)), el('span', { class: 'mt' }, files[x].area >= 0 ? areas[files[x].area].id : files[x].role));
                 r.addEventListener('click', function () { openFile(x); });
                 dl.appendChild(r);
             });
-            if (list.length > 8) dl.appendChild(el('span', { class: 'note-line' }, t('moreN')(num(list.length - 8))));
+            if (state.deep && list.length > 8 && dd > 1) dl.appendChild(el('span', { class: 'note-line' }, t('moreN')(num(list.length - 8))));
             bl.appendChild(dl);
+        }
+        if (w.byDepth[1].length > 8 || deeper) {
+            var more = el('button', { type: 'button', class: 'linkmore', 'aria-expanded': String(!!state.deep) }, state.deep ? t('depthCollapse') : t('moreDirect')(num(Math.max(0, w.byDepth[1].length - 8))));
+            more.addEventListener('click', function () { state.deep = !state.deep; renderPanel(); });
+            bl.appendChild(more);
         }
         bl.appendChild(el('div', { class: 'formula' }, t('blastFormula')));
         panel.appendChild(bl);
 
         // Uses / used by.
         var su = sec(t('uses') + ' (' + outOf[i].length + ')', t('relTrust'));
-        var ul1 = el('ul', { class: 'plist' });
-        outOf[i].slice(0, RAIL_CAP).forEach(function (x) { ul1.appendChild(fileRow(x[0], '× ' + x[1] + ' · ●')); });
+        su.classList.add('uses');
+        var ul1 = el('div', { class: 'rows' });
+        outOf[i].slice(0, RAIL_CAP).forEach(function (x) { ul1.appendChild(relRow(x[0], '× ' + x[1] + ' · ●')); });
         su.appendChild(ul1);
         if (outOf[i].length > RAIL_CAP) su.appendChild(el('span', { class: 'note-line' }, t('moreN')(outOf[i].length - RAIL_CAP)));
         panel.appendChild(su);
         var sy = sec(t('usedBy') + ' (' + inOf[i].length + ')', t('relTrust'));
-        var ul2 = el('ul', { class: 'plist' });
-        inOf[i].slice(0, RAIL_CAP).forEach(function (x) { ul2.appendChild(fileRow(x[0], '× ' + x[1] + ' · ●')); });
+        var ul2 = el('div', { class: 'rows' });
+        inOf[i].slice(0, RAIL_CAP).forEach(function (x) { ul2.appendChild(relRow(x[0], '× ' + x[1] + ' · ●')); });
         sy.appendChild(ul2);
         if (inOf[i].length > RAIL_CAP) sy.appendChild(el('span', { class: 'note-line' }, t('moreN')(inOf[i].length - RAIL_CAP)));
         panel.appendChild(sy);
@@ -1357,17 +1504,19 @@
         // Symbols.
         var ss = sec(t('symbols') + ' (' + (f.symbols.length + f.symbolsOmitted) + ')', t('symCols'));
         var grid = el('div', { class: 'symgrid' });
-        f.symbols.slice(0, SYMBOL_CAP).forEach(function (s) {
+        var syms = f.symbols.slice().sort(function (a, b) { return (b[4] || 0) - (a[4] || 0) || (b[3] || 0) - (a[3] || 0); });
+        syms.slice(0, SYMBOL_CAP).forEach(function (s) {
             var hasCalls = s.length > 3;
             var row = el('div');
-            var calls = el('span', { class: 'mt' }, hasCalls ? (s[3] || '–') + ' / ' + (s[4] || '–') : '– / –');
-            if (hasCalls && s[4] >= 20) calls.className = 'hot';
+            var calls = el('span', { class: 'mt' }, hasCalls ? (s[3] || 0) + ' / ' + (s[4] || 0) : '– / –');
+            if (hasCalls && s[4] >= 10) calls.className = 'hot';
+            else if (hasCalls && s[4] >= 7) calls.className = 'warm';
             add(row, el('span', { title: s[0] }, s[0]), el('span', { class: 'mt' }, 'L' + s[2]), el('span', { class: 'mt' }, s[1]), calls);
             grid.appendChild(row);
         });
         ss.appendChild(grid);
         var symMore = f.symbolsOmitted + Math.max(0, f.symbols.length - SYMBOL_CAP);
-        if (symMore) ss.appendChild(el('span', { class: 'note-line' }, t('moreN')(symMore)));
+        ss.appendChild(el('span', { class: 'note-line' }, t('symSorted')(symMore ? num(symMore) : '')));
         panel.appendChild(ss);
 
         // Knowledge.
@@ -1382,7 +1531,7 @@
         var plan = g.roadmaps.filter(function (x) { return files[x].knowledge === 'roadmap-planned' || files[x].knowledge === 'roadmap-later'; }).length;
         var arch = g.roadmaps.filter(function (x) { return files[x].knowledge === 'roadmap-archived'; }).length;
         sk.appendChild(stackBlock('', [[t('kActive'), actv, 'var(--green)'], [t('kPlanned'), plan, 'var(--cyan)'], [t('kArchived'), arch, 'var(--doc)'],
-            [t('kDraft'), g.drafts.length, 'hatch4'], ['Evidence', g.evidence.length, 'var(--violet)'], ['doc', g.docs.length, 'var(--line2)']], Math.max(1, total), false).lastChild);
+            [t('kDraft'), g.drafts.length, 'hatch4'], ['Evidence', g.evidence.length, 'var(--violet)']], Math.max(1, total), false).lastChild);
         var rows = el('div', { class: 'rows' });
         ((f.knows && f.knows.files) || []).slice(0, 6).forEach(function (k) {
             var b = el('button', { type: 'button', title: files[k].path });
@@ -1402,9 +1551,10 @@
 
         // Ownership and churn.
         if (f.churn !== undefined) {
-            var so = sec(t('ownership'), t('commits')(num(f.churn)));
+            var so = sec(t('ownership'), f.soleOwner ? el('span', { class: 'mono solechip' }, t('soleOwner')) : null);
+            so.classList.add('own');
             (f.owners || []).forEach(function (o) {
-                var row = add(el('div', { class: 'owner' }), el('span', null, o[0]), el('span', { class: 'mono muted' }, pct(o[1], 0)));
+                var row = add(el('div', { class: 'owner' }), el('span', { class: 'mono' }, o[0]), el('span', { class: 'mono muted' }, t('ownerShare')(pct(o[1], 0), num(Math.round(o[1] * f.churn)))));
                 var b = el('div', { class: 'bar' });
                 var ii = el('i');
                 ii.style.width = (o[1] * 100) + '%';
@@ -1412,8 +1562,7 @@
                 row.appendChild(b);
                 so.appendChild(row);
             });
-            if (f.lastChange) so.appendChild(el('span', { class: 'note-line' }, t('lastChange') + ' ' + f.lastChange));
-            if (f.soleOwner) so.appendChild(el('span', { class: 'note-line' }, t('busFactor')));
+            so.appendChild(el('span', { class: 'note-line' }, t('ownerNote')(WINDOW, !!f.soleOwner)));
             panel.appendChild(so);
         } else {
             var miss = el('span', { class: 'dashchip mono' }, t('gitMissing'));
@@ -1469,22 +1618,33 @@
         var p = el('div', { class: 'pad' });
         var cyc = (model.violations || []).filter(function (v) { return v.kind === 'cycle'; });
         var cycLines = [];
+        var sev = cyc.some(function (v) { return v.severity === 'high'; }) ? 'high' : cyc.length ? 'medium' : '';
         if (an.cycles && an.cycles[0]) {
             var sizeOf = function (k) { return (an.cycleSizes && an.cycleSizes[k]) || an.cycles[k].length; };
-            cycLines.push(el('p', null, t('biggest')(sizeOf(0)) + ' · ' + an.cycles[0].slice(0, 4).map(function (x) { return base(files[x].path); }).join(' ↔ ') + (sizeOf(0) > 4 ? ' ↔ …' : '')));
+            var first = el('p');
+            if (sev) first.appendChild(el('span', { class: 'sev ' + sev }, t('levels')[sev]));
+            first.appendChild(document.createTextNode(t('biggest')(sizeOf(0)) + ' · ' + an.cycles[0].slice(0, 4).map(function (x) { return base(files[x].path); }).join(' ↔ ') + (sizeOf(0) > 4 ? ' ↔ …' : '')));
+            cycLines.push(first);
             an.cycles.slice(1, 3).forEach(function (c, k) { cycLines.push(el('p', null, sizeOf(k + 1) + ' · ' + dir(files[c[0]].path))); });
         }
-        var cycCard = findCard(t('cycles'), num(an.cyclesTotal), 'var(--amberText)', cycLines);
-        var sev = cyc.some(function (v) { return v.severity === 'high'; }) ? 'high' : cyc.length ? 'medium' : '';
-        if (sev) cycCard.firstChild.insertBefore(el('span', { class: 'sev ' + sev }, t('levels')[sev]), cycCard.firstChild.lastChild);
-        p.appendChild(cycCard);
+        p.appendChild(findCard(t('fileCycles'), num(an.cyclesTotal), 'var(--amberText)', cycLines));
+        if (model.hotspots) {
+            var hl = el('ul', { class: 'plist pgrid' });
+            model.hotspots.slice(0, 4).forEach(function (h) { hl.appendChild(gridRow(h[0], num(h[1]) + ' × ' + num(h[2]))); });
+            p.appendChild(findCard(t('hotspots'), t('hotspotsUnit'), 'var(--amberText)', [hl]));
+        } else p.appendChild(findCard(t('hotspots'), null, null, [el('p', null, t('needChurn'))], true));
+        if (an.deadFiles !== undefined) {
+            var deadList = [];
+            files.forEach(function (f, i) { if (f.dead && deadList.length < 5) deadList.push(fileLink(i)); });
+            p.appendChild(findCard(t('deadFiles'), num(an.deadFiles), 'var(--amberText)', [el('p', null, an.deadBasis || '')].concat(deadList)));
+        } else p.appendChild(findCard(t('deadFiles'), null, null, [el('p', null, an.deadBasis || t('missDead'))], true));
         p.appendChild(findCard(t('surprises'), num((an.surprises || []).length), 'var(--amberText)',
             (an.surprises || []).slice(0, 4).map(function (s) { return fileLink(s[0], files[s[0]].path + ' → ' + base(files[s[1]].path)); })));
         if (model.drift) {
             var d = model.drift;
             var lines = [];
             d.changed.slice(0, 3).forEach(function (c) { lines.push(el('p', null, areas[c[0]].id + ' +' + c[1] + ' / −' + c[2])); });
-            d.appeared.slice(0, 2).forEach(function (a) { lines.push(el('p', null, '+ ' + areas[a].id + ' ' + areaLabel(areas[a]))); });
+            d.appeared.slice(0, 2).forEach(function (a) { lines.push(el('p', null, '+ ' + areas[a].id + ' ' + areaTitle(areas[a]))); });
             d.vanished.slice(0, 2).forEach(function (v) { lines.push(el('p', null, '− ' + v)); });
             p.appendChild(findCard(t('drift'), num(d.changed.length + d.appeared.length + d.vanished.length + d.split.length + d.merged.length), 'var(--cyanText)', lines));
         }
@@ -1494,16 +1654,6 @@
                     return fileLink(v.files[0], base(files[v.files[0]].path) + ' → ' + base(files[v.files[1]].path) + ' (' + v.layers[0] + ' → ' + v.layers[1] + ')');
                 })));
         } else p.appendChild(findCard(t('layerBreaches'), null, null, [el('p', null, t('needLayers'))], true));
-        if (model.hotspots) {
-            p.appendChild(findCard(t('hotspots'), num(model.hotspots.length), 'var(--brandText)', model.hotspots.slice(0, 5).map(function (h) {
-                return fileLink(h[0], base(files[h[0]].path) + ' · ' + h[1] + ' × ' + num(h[2]));
-            })));
-        } else p.appendChild(findCard(t('hotspots'), null, null, [el('p', null, t('needChurn'))], true));
-        if (an.deadFiles !== undefined) {
-            var deadList = [];
-            files.forEach(function (f, i) { if (f.dead && deadList.length < 5) deadList.push(fileLink(i)); });
-            p.appendChild(findCard(t('deadFiles'), num(an.deadFiles), 'var(--alertText)', [el('p', null, an.deadBasis || '')].concat(deadList)));
-        } else p.appendChild(findCard(t('deadFiles'), null, null, [el('p', null, an.deadBasis || t('missDead'))], true));
         if (model.prOverlap && model.prOverlap.conflicts.length) {
             p.appendChild(findCard(t('prs'), num(model.prOverlap.conflicts.length), 'var(--cyanText)', model.prOverlap.conflicts.slice(0, 4).map(function (c) {
                 return el('p', null, '#' + c[0] + ' · #' + c[1] + ' → ' + c[2].map(function (a) { return areas[a].id; }).join(', '));
@@ -1521,32 +1671,32 @@
         var p = el('div', { class: 'pad' });
         if (ai >= 0) {
             var a = areas[ai];
-            p.appendChild(el('div', { class: 'mono' }, a.id + ' · ' + a.name)).style.fontWeight = '600';
+            p.appendChild(add(el('div', { class: 'atitle' }), el('b', null, a.id + ' · ' + areaTitle(a)), el('span', { class: 'mono muted' }, t('hubLine')(hubShort(a)))));
             var tiles = el('div', { class: 'atiles' });
             var aLoc = 0; var aChurn = 0; var aHasLoc = false; var aHasChurn = false;
             a.files.forEach(function (x) { var r = files[x]; if (r.loc !== undefined) { aHasLoc = true; aLoc += r.loc; } if (r.churn !== undefined) { aHasChurn = true; aChurn += r.churn; } });
             [[num(a.files.length), t('files')('').trim()], [pct(a.cohesion), t('cohesion')], [pct(a.testShare), t('testShare')],
-                [aHasLoc ? compact(aLoc) : '–', t('tLines')], [aHasChurn ? num(aChurn) : '–', t('commitsShort')], [pct(a.folderMismatch), t('outsideHub')]].forEach(function (x) {
+                [aHasLoc ? num(aLoc) : '–', t('tLines')], [aHasChurn ? num(aChurn) : '–', t('commitsShort')], [pct(a.folderMismatch), t('outsideHub')]].forEach(function (x) {
                 tiles.appendChild(add(el('div', { class: 'tile' }), el('div', { class: 'v' }, x[0]), el('div', { class: 'l' }, x[1])));
             });
             p.appendChild(tiles);
             p.appendChild(el('span', { class: 'soft' }, t('mismatch')(pct(a.folderMismatch))));
             var top = a.files.slice().sort(function (x, y) { return files[y].inFiles - files[x].inFiles || x - y; });
             p.appendChild(el('span', { class: 'muted' }, t('mostUsed') + ': ' + top.slice(0, 3).map(function (x) { return base(files[x].path); }).join(', ')));
-            var ul = el('ul', { class: 'plist' });
-            top.slice(0, 60).forEach(function (x) { ul.appendChild(fileRow(x, 'in ' + files[x].inFiles)); });
-            p.appendChild(ul);
             if (state.level !== 'area' || state.area !== ai) {
-                var ob = el('button', { type: 'button', class: 'btn', id: 'open-area' }, t('openArea'));
+                var ob = el('button', { type: 'button', class: 'openarea', id: 'open-area' }, t('openArea'));
                 ob.addEventListener('click', function () { openArea(ai); });
                 p.appendChild(ob);
             }
+            panel.appendChild(p);
+            return;
         }
+        // Nothing marked yet: every area, to start from.
         p.appendChild(el('span', { class: 'cap' }, t('allAreasList') + ' (' + areas.length + ')'));
         var list = el('ul', { class: 'plist' });
         areas.forEach(function (a, i) {
             var b = el('button', { type: 'button', class: 'aentry', title: a.name + ' · ' + a.files.length });
-            var label = add(el('span', { class: 'alabel' }), el('span', { class: 'fname' }, a.id + ' · ' + areaLabel(a) + ' · ' + a.files.length));
+            var label = add(el('span', { class: 'alabel' }), el('span', { class: 'fname' }, a.id + ' · ' + areaTitle(a) + ' · ' + a.files.length));
             add(b, swatch(cat(i)), label);
             b.addEventListener('click', function () { openArea(i); });
             list.appendChild(add(el('li'), b));
@@ -1604,6 +1754,7 @@
         }
         state.file = i;
         state.tab = 'file';
+        state.deep = false;
         remember(i);
         refresh();
     }
