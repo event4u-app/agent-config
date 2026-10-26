@@ -144,16 +144,22 @@
 .steps, .tour { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--soft); }
 
 @media (max-width: 720px) {
-    .areanav { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; }
+    .top-row:first-child { flex-wrap: nowrap; }
+    .top-row:first-child .brand-name { display: none; }
+    .areanav { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; flex: 1 1 auto; }
     .row2 .actions { margin-left: auto; }
     .row2 .search { order: 3; flex-basis: 100%; max-width: none; }
     .av-bar { padding: 10px 12px; }
     .av-main { padding: 12px; }
     .av-main.ov { padding: 16px 12px; }
     .av-open { right: 12px; }
-    .banner { padding: 8px 12px; }
+    .banner { padding: 6px 12px; font-size: 12px; }
+    .banner .soft { display: none; }
     .ov-intro h1 { font-size: 24px; }
     .ocard .kv { grid-template-columns: 110px minmax(0, 1fr); }
 }
 
 .av-main .vcard .mono.muted { font-size: 12px; }
+@media (max-width: 400px) {
+    .pin-date { display: none; }
+}
