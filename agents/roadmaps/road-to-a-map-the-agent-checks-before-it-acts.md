@@ -93,6 +93,7 @@ renders from real facts or says why it has none.
 | DEC-15 | spend-exhaustion | evidence | Measurement uses an in-repo planted task set; the three-arm run stays inside the ADR-237 per-run budget and is published whatever it says. | ADR-237; proposal K9 | the budget cannot power the run |
 | DEC-16 | product-owned | owner | Every map page is a 1:1 port of its prototype in the handover (markup, layout, components, labels, states), translated to the shell's vanilla ES5; only the DEC-2 shipped decisions override it. A page re-derived "in the shell's style" does not close its step; side-by-side screenshots against the rendered prototype are the evidence. | Owner, 2026-10-26: "Warum hältst Du dich nicht an die Designs aus den Zip Files? … Du sollst das neue Design anwenden" | the owner changes a prototype |
 | DEC-17 | product-owned | owner | Frontend work needs test values in every area even where the repository has no database: a demo map built from fixtures through the real code path, marked with the "Beispieldaten · Fixture" chip, never mixed into a real map (DEC-5 stays). | Owner, 2026-10-26: "Während wir entwickeln brauchen wir natürlich hier Testwerte um das Frontend überall zu prüfen. Auch wenn wir hier vielleicht keine Datenbank haben" | never |
+| DEC-18 | product-owned | owner | A clicked key in the ERD shows every place it links to, including relations the DB does not declare but code and queries prove; those are shown as soft relations and flagged as missing in the DB, never drawn like a real FK. | Owner, 2026-10-26: "selbst wenn in der DB keine Relation ist, wir diese aber anhand des Codes und der Queries wissen, sollten wir sie hervorheben, aber auch dass da in der DB die Verknüpfung fehlt und es nur eine Soft-Relation ist" | never |
 
 ## Phase 0 — Fold the parked work
 
@@ -340,6 +341,15 @@ renders from real facts or says why it has none.
       tours as templates over facts with input hashes, collapsed super-nodes
       above a measured node threshold.
       verify: a tour step turns stale when its input fact changes.
+
+- [ ] **5.14 Key links in the ERD.** Clicking a key column highlights every
+      column and table it links to, with column-to-column lines: solid for a
+      declared FK, dashed and labelled "code only · no FK in DB" for a soft
+      relation known from an ORM relation or a query join, dotted for an
+      implied same-name key; the rail lists the links with witnesses and the
+      missing-constraint finding.
+      verify: a browser test clicks a key with one FK, one soft and one implied
+      link and finds the three highlighted columns with their line styles.
 
 - [ ] **5.13 Demo map for frontend work.** `code-graph map --demo` builds a
       composite fixture repo (data drift, interfaces, runtime, delivery,
