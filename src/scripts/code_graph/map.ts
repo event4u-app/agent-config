@@ -48,6 +48,7 @@ import {
 } from './map_model.js';
 import { DECLARATIONS_FILE, ORACLE_DIR, SNAPSHOT_DIR } from './lanes/data/read_data.js';
 import { produceAreas } from './map_area_payloads.js';
+import { sourceWithholding, withholdSources } from './map_withhold.js';
 import { nodeOwner } from './verify/owner_index.js';
 import { type Overlay, readOverlay } from './verify/overlay.js';
 import { workingChanges } from './verify/paths.js';
@@ -540,6 +541,8 @@ function answerQuestions(root: string, outDir: string, cachePath: string, graph:
     }
     attachDomains(root, outDir, graph, model);
     finishAnswers(model, rules);
+    const withheld = sourceWithholding(root);
+    if (withheld) withholdSources(model, withheld);
     model.pin = {
         commit: meta.commit,
         date: history ? headDate(root) : '',

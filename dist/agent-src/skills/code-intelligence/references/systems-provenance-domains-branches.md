@@ -25,6 +25,8 @@ gives the commit that introduced it, the last change, and a timeline. Without a
 `ticket_keys` line in `.git-convention.yml`, ticket keys are read only from
 branch names and the head of a commit subject, so prose such as `AC-1` is not
 mistaken for a ticket. Ask the user's own tracker for the ticket's title and why.
+In a repository that runs a source-confidentiality gate, the map withholds commit
+subjects and import specifiers that gate would block, since the map is tracked.
 
 ## Domains — which business boundary
 
