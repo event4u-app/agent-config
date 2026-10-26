@@ -30,6 +30,7 @@ import type {
     AgentVerb,
     AreaFinding,
     Completeness,
+    DataKeyLink,
     DataPayload,
     DataTable,
     DeliveryPayload,
@@ -194,6 +195,7 @@ function dataPayload(c: Ctx, findings: AreaFinding[], st: LaneState): { payload:
     const members = (t: CodeNode): CodeNode[] =>
         (c.out.get(t.id) ?? []).filter((e) => e.relation === 'member').map((e) => c.byId.get(e.target)).filter((x): x is CodeNode => x?.kind === 'column');
     const tables: DataTable[] = [];
+    const colById = new Map<string, { table: string; col: DataTable['columns'][number] }>();
     const irTables = new Map<string, { conn: string; ir: IrTable }>();
     for (const t of intended) {
         const tw = nodeWitness(c, t);
@@ -230,6 +232,7 @@ function dataPayload(c: Ctx, findings: AreaFinding[], st: LaneState): { payload:
             })
             .filter((x): x is NonNullable<typeof x> => x !== null)
             .sort((a, b) => a.witness.file.localeCompare(b.witness.file) || a.witness.line - b.witness.line || (a.name < b.name ? -1 : 1));
+        for (const col of cols) colById.set(`${t.id.replace(/^table:/, 'column:')}.${col.name}`, { table: tableName(t), col });
         const models = (c.inn.get(t.id) ?? []).filter((e) => e.relation === 'persists').map((e) => c.byId.get(e.source)?.source_file ?? '').filter(Boolean);
         tables.push({ name: tableName(t), connection: String(attr(t, 'connection') ?? 'default'), columns: cols, models: [...new Set(models)].sort(), witness: tw });
         irTables.set(t.id, {
@@ -282,6 +285,8 @@ function dataPayload(c: Ctx, findings: AreaFinding[], st: LaneState): { payload:
         const key = e.fact?.attrs?.['key'];
         relations.push({ kind: kind as DataPayload['relations'][number]['kind'], from: owner, to: c.byId.get(e.target)?.label ?? e.target, ...(typeof key === 'string' ? { key } : {}), witness: w });
     }
+
+    keyLinks(c, colById, findings);
 
     // ERD clusters: tables joined by foreign keys, per connection; tables with no key form one cluster per connection.
     const erd: ErdPage[] = [];
@@ -359,6 +364,95 @@ function dataPayload(c: Ctx, findings: AreaFinding[], st: LaneState): { payload:
         },
         erd,
     };
+}
+
+/**
+ * Every key relation a column takes part in, attached at both ends: declared
+ * foreign keys, soft links the code states (an ORM relation's key, a query join)
+ * where no foreign key joins the same two columns, and same-name keys nothing
+ * states. A soft or implied link carries the finding that names it.
+ */
+function keyLinks(c: Ctx, colById: Map<string, { table: string; col: DataTable['columns'][number] }>, findings: AreaFinding[]): void {
+    const nameOf = (id: string): { table: string; column: string } | null => {
+        const x = colById.get(id);
+        return x ? { table: x.table, column: x.col.name } : null;
+    };
+    const pair = (a: string, b: string): string => (a < b ? `${a}|${b}` : `${b}|${a}`);
+    const links = new Map<string, DataKeyLink>();
+    const fkPairs = new Set<string>();
+    const add = (from: string, to: string, kind: DataKeyLink['kind'], via: DataKeyLink['via'][number], ws: Witness[], extra: Partial<DataKeyLink> = {}): void => {
+        const a = nameOf(from);
+        const b = nameOf(to);
+        if (!a || !b || from === to) return;
+        for (const [self, other, direction] of [[from, b, 'out'], [to, a, 'in']] as const) {
+            const key = `${self}>${other.table}.${other.column}>${kind}`;
+            const have = links.get(key);
+            if (have) {
+                if (!have.via.includes(via)) have.via.push(via);
+                for (const w of ws) if (!have.witnesses.some((x) => x.file === w.file && x.line === w.line)) have.witnesses.push(w);
+                continue;
+            }
+            links.set(key, { kind, via: [via], to: other, direction, ...extra, witnesses: [...ws] });
+        }
+    };
+    const findingOf = (ids: string[], rule: string): number | undefined => {
+        const i = findings.findIndex((f) => f.id === rule && ids.includes(f.subject));
+        return i >= 0 ? i : undefined;
+    };
+    for (const e of c.graph.edges) {
+        if (e.relation !== 'references' || c.byId.get(e.source)?.kind !== 'column' || c.byId.get(e.target)?.kind !== 'column') continue;
+        const w = edgeWitness(c, e);
+        const onDelete = e.fact?.attrs?.['on_delete'];
+        const onUpdate = e.fact?.attrs?.['on_update'];
+        fkPairs.add(pair(e.source, e.target));
+        add(e.source, e.target, 'fk', 'schema', w ? [w] : [], { ...(typeof onDelete === 'string' ? { onDelete } : {}), ...(typeof onUpdate === 'string' ? { onUpdate } : {}) });
+    }
+    const pkOf = (tableNodeId: string): string => {
+        const pk = attr(c.byId.get(tableNodeId), 'primary_key');
+        return Array.isArray(pk) && typeof pk[0] === 'string' ? pk[0] : 'id';
+    };
+    const soft = (from: string, to: string, via: 'orm' | 'query', ws: Witness[]): void => {
+        if (fkPairs.has(pair(from, to))) return;
+        const f = findingOf([from, to], 'DR-1');
+        add(from, to, 'soft', via, ws, f !== undefined ? { finding: f } : {});
+    };
+    for (const e of c.graph.edges) {
+        if (e.relation !== 'uses' || e.resolved_via !== 'orm-relation' || c.byId.get(e.target)?.kind !== 'column') continue;
+        const col = c.byId.get(e.target)!;
+        const refTable = attr(col, 'data:ref_table');
+        if (typeof refTable !== 'string') continue;
+        const conn = col.id.slice('column:'.length, col.id.length - col.label.length);
+        const target = `column:${conn}${refTable}.${String(attr(col, 'data:ref_column') ?? 'id')}`;
+        const w = edgeWitness(c, e);
+        soft(col.id, target, 'orm', w ? [w] : []);
+    }
+    for (const n of c.graph.nodes) {
+        if (n.kind !== 'column') continue;
+        for (const entry of strs(attr(n, 'data:query_links'))) {
+            const m = /^(\S+) (.*):(\d+):([0-9a-f]+)$/.exec(entry);
+            if (!m || (m[1] as string) < n.id) continue;
+            const w = witness(c, { file: m[2] as string, line: Number(m[3]), hash: m[4] as string });
+            // A join names no direction; the key points at the side that is its table's primary key.
+            const other = c.byId.get(m[1] as string);
+            const isKey = (x: CodeNode | undefined): boolean => attr(x, 'primary') === true || /\.id$/.test(x?.label ?? '');
+            const [from, to] = isKey(n) && !isKey(other) ? [m[1] as string, n.id] : [n.id, m[1] as string];
+            soft(from, to, 'query', w ? [w] : []);
+        }
+        const implied = attr(n, 'data:implied_target');
+        if (typeof implied === 'string') {
+            const target = `${implied.replace(/^table:/, 'column:')}.${pkOf(implied)}`;
+            const own = nodeWitness(c, n);
+            const f = findingOf([n.id], 'DR-13');
+            add(n.id, target, 'implied', 'name', own ? [own] : [], f !== undefined ? { finding: f } : {});
+        }
+    }
+    for (const [key, link] of links) {
+        const self = key.slice(0, key.indexOf('>'));
+        const col = colById.get(self)!.col;
+        col.links = [...(col.links ?? []), link];
+    }
+    const rank = { fk: 0, soft: 1, implied: 2 } as const;
+    for (const { col } of colById.values()) col.links?.sort((a, b) => rank[a.kind] - rank[b.kind] || (`${a.to.table}.${a.to.column}` < `${b.to.table}.${b.to.column}` ? -1 : 1));
 }
 
 // ---- interfaces ---------------------------------------------------------------

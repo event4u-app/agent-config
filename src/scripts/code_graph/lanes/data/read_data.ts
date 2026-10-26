@@ -39,6 +39,7 @@ import { readSqlSchema } from '../../../_lib/schema/readers/sql_ddl.js';
 import { type Engine, replay } from '../../../_lib/schema/replay.js';
 import type { Waiver } from '../../drift.js';
 import { isFixturePath } from '../../fixture_paths.js';
+import { queryLinks } from './query_links.js';
 import { isSqlSchemaPath } from '../../providers/sql_ddl.js';
 import { columnId, tableId } from '../../providers/shared/schema_graph.js';
 import type { CodeGraph, CodeNode } from '../../types.js';
@@ -273,6 +274,27 @@ export function readData(root: string, graph: CodeGraph, opts: ReadDataOptions =
         }
     })();
 
+    // Columns the code joins on in a query: both sides carry the pair and where it was read.
+    const CODE_FILE = /\.(?:php|ts|tsx|js|jsx|mjs|cjs|py|rb|go|java|kt|cs|sql)$/;
+    const columnsOf = new Map<string, Map<string, string>>();
+    for (const t of tables) {
+        const cols = columnsOf.get(t.label) ?? new Map<string, string>();
+        for (const e of outE.get(t.id) ?? []) {
+            const c = byId.get(e.target);
+            if (e.relation === 'member' && c?.kind === 'column') cols.set(c.label.slice(t.label.length + 1), c.id);
+        }
+        columnsOf.set(t.label, cols);
+    }
+    const codeFiles = graph.nodes
+        .filter((n) => n.kind === 'file' && CODE_FILE.test(n.source_file) && !SCHEMA_SOURCE.test(n.source_file) && !isFixturePath(n.source_file))
+        .map((n) => ({ path: n.source_file, text: read(root, n.source_file) ?? '' }))
+        .filter((f) => /join|\bON\b|WHERE/i.test(f.text));
+    const joined = new Map<string, string[]>();
+    for (const l of queryLinks(codeFiles, (t, c) => columnsOf.get(t)?.get(c))) {
+        for (const [from, to] of [[l.a, l.b], [l.b, l.a]] as const) joined.set(from, [...(joined.get(from) ?? []), `${to} ${ref(l.witness)}`]);
+    }
+    for (const [id, links] of joined) annotate(id, { 'data:query_links': [...new Set(links)].sort() });
+
     // Relation keys: which table a key column points into, and whether across connections.
     for (const e of graph.edges) {
         if (e.relation !== 'uses' || e.resolved_via !== 'orm-relation' || byId.get(e.target)?.kind !== 'column') continue;
@@ -348,7 +370,7 @@ export function readData(root: string, graph: CodeGraph, opts: ReadDataOptions =
             const m = /^(\w+)_id$/.exec(name);
             if (!m || c.fact?.attrs?.['primary'] === true) continue;
             if ((outE.get(c.id) ?? []).some((e) => e.relation === 'references')) continue;
-            if ((inE.get(c.id) ?? []).some((e) => e.relation === 'uses')) continue;
+            if ((inE.get(c.id) ?? []).some((e) => e.relation === 'uses') || joined.has(c.id)) continue;
             const target = stemCandidates(m[1] as string).map((s) => `${prefix}${s}`).find((id) => id !== t.id && byId.get(id)?.kind === 'table');
             if (target) annotate(c.id, { 'data:implied_target': target });
         }

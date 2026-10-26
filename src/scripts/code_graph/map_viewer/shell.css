@@ -213,8 +213,10 @@
 .db-seg { display: flex; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
 .db-seg button { height: 26px; padding: 0 9px; border-radius: 6px; border: 0; font-size: 12px; background: transparent; color: var(--soft); }
 .db-seg button[aria-checked='true'] { background: var(--brandTint); box-shadow: inset 0 0 0 1px var(--brandLine); color: var(--text); }
-.db-stage { position: relative; flex: 1; width: 100%; min-height: 540px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background-color: var(--bg); background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 32px 32px; cursor: default; touch-action: none; }
-.db-stage.grabbing { cursor: grabbing; }
+.db-stage { position: relative; flex: 1; width: 100%; min-height: 540px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background-color: var(--bg); background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 32px 32px; cursor: default; touch-action: pan-x pan-y; }
+.db-stage.mod { cursor: move; }
+.db-stage.mod .db-table, .db-stage.mod .db-thead { cursor: grab; }
+.db-stage.grabbing, .db-stage.grabbing .db-table { cursor: grabbing; }
 .db-world { position: absolute; left: 0; top: 0; width: 100%; height: 100%; transform-origin: 0 0; }
 .db-group { position: absolute; border: 1px dashed var(--line2); border-radius: 12px; background: var(--raise); opacity: 0.6; }
 .db-group span { position: absolute; left: 10px; top: 6px; font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
@@ -224,9 +226,33 @@
 .db-edges line.orm.sel { stroke-width: 3px; }
 .db-edges line.cascade { stroke: var(--alert); stroke-width: 2.5px; }
 .db-edges line.cascade.sel { stroke-width: 3.5px; }
-.db-elabel { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; pointer-events: none; z-index: 2; font-family: var(--monof); font-size: 11px; padding: 2px 7px; border-radius: 5px; }
-.db-elabel.orm { background: var(--cyanTint); color: var(--cyanText); }
-.db-elabel.cascade { background: var(--alertTint); color: var(--alertText); }
+/* Line annotations: one icon badge per line, a popup with the details, a legend under the stage */
+.db-badge { position: absolute; transform: translate(-50%, -50%); z-index: 3; width: 22px; height: 22px; padding: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid var(--line2); background: var(--panel); color: var(--soft); }
+button.db-badge { cursor: pointer; }
+button.db-badge:hover, button.db-badge:focus-visible { border-color: var(--brand); color: var(--text); }
+.db-badge.cascade { border-color: var(--alert); color: var(--alertText); background: var(--alertTint); }
+.db-badge.setnull { border-color: var(--amber); color: var(--amberText); }
+.db-badge.restrict { border-color: var(--violet); color: var(--violetText); }
+.db-badge.soft { border: 1.5px dashed var(--cyan); color: var(--cyanText); background: var(--cyanTint); }
+.db-badge.implied { border: 1.5px dotted var(--muted); color: var(--muted); }
+.db-badge.finding { border-color: var(--alert); color: var(--alertText); }
+.db-badge.has-finding::after { content: ''; position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--alert); border: 1.5px solid var(--panel); }
+.db-legend .db-badge, .db-edge .db-badge, .db-find .db-badge, .db-pop-h .db-badge { position: relative; transform: none; flex: none; }
+.db-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: 12px; color: var(--muted); }
+.db-leg { display: inline-flex; align-items: center; gap: 6px; }
+.db-pop { position: absolute; z-index: 20; width: min(340px, calc(100% - 16px)); max-height: calc(100% - 16px); overflow: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; border-radius: 10px; border: 1px solid var(--line2); background: var(--panel); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); font-size: 12px; cursor: default; }
+.db-pop-h { display: flex; align-items: center; gap: 8px; }
+.db-pop-h b { flex: 1; min-width: 0; font-size: 12px; overflow-wrap: anywhere; }
+.db-pop-miss { margin: 0; color: var(--cyanText); }
+.db-pop-pick { align-self: flex-start; height: 30px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--brandLine); background: var(--brandTint); color: var(--text); font-size: 12px; }
+.db-edges path.db-link { fill: none; stroke: var(--soft); stroke-width: 2.5px; }
+.db-edges path.db-link.cascade { stroke: var(--alert); }
+.db-edges path.db-link.soft { stroke: var(--cyan); stroke-dasharray: 7 5; }
+.db-edges path.db-link.implied { stroke: var(--muted); stroke-dasharray: 1.5 4.5; stroke-linecap: round; }
+.db-table.linked { border: 2px solid var(--cyan); }
+.db-col.linked { background: var(--cyanTint); }
+.db-col.linked.lk-implied { background: var(--raise); }
+.db-col.haslinks .n { text-decoration: underline dotted var(--line2); text-underline-offset: 3px; }
 .db-table { position: absolute; width: 180px; padding: 0 0 6px; border-radius: 10px; background: var(--panel); color: var(--text); text-align: left; user-select: none; cursor: pointer; z-index: 1; border: 1px solid var(--line2); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2); }
 .db-table.focus { border: 2px solid var(--cyan); }
 .db-table.hot { border: 2px solid var(--brand); box-shadow: 0 0 18px rgba(255, 140, 42, 0.35); }
@@ -234,7 +260,7 @@
 .db-table.dragging { cursor: grabbing; z-index: 3; }
 .db-table.ghost { border: 1px dashed var(--alert); }
 .db-table.outside { border-style: dashed; }
-.db-thead { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--line); cursor: grab; }
+.db-thead { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--line); cursor: pointer; }
 .db-thead .tn { font-family: var(--monof); font-weight: 600; font-size: 13px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .db-thead .bd { display: inline-flex; gap: 3px; flex: none; }
 .db-col { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 6px; width: 100%; padding: 3px 10px; font-family: var(--monof); font-size: 11px; text-align: left; border: 0; background: none; color: var(--text); }
@@ -326,3 +352,14 @@
 .db-warn { color: var(--amberText); }
 .db-nd { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px; }
 .db-nd .nodata-tag { margin-left: 0; }
+.db-ctls .dimseg button { height: 26px; padding: 0 10px; font-size: 12px; }
+.db-3d { height: clamp(460px, calc(100vh - 300px), 760px); background-image: radial-gradient(circle at 50% 50%, rgba(255, 140, 42, 0.07) 0%, rgba(62, 197, 255, 0.04) 35%, transparent 65%), linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: auto, 32px 32px, 32px 32px; }
+.db-3d .db-edges { position: absolute; inset: 0; pointer-events: none; }
+.db-3d-badges { position: absolute; inset: 0; pointer-events: none; z-index: 450; }
+.db-3d-badges .db-badge { pointer-events: auto; }
+.db-badge.back { opacity: 0.4; pointer-events: none; }
+.db-3card { transform-origin: 50% 50%; transition: none; }
+.db-3card.front { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); }
+.db-edges path.db-link.fk { stroke: var(--soft); stroke-width: 2px; }
+.db-edges path.db-link.fk.cascade { stroke: var(--alert); }
+.db-3d .db-zoom { z-index: 500; }

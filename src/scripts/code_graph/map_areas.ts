@@ -89,8 +89,31 @@ export interface DataColumn {
     actual?: { type: string; nullable: boolean; family?: string; witness: Witness } | null;
     /** The type family the drift rules compare (`integer`, `text`, `timestamp` …), so the page agrees with DR-11. */
     family?: string;
+    /** The key relations the column takes part in, from either end; absent when it takes part in none. */
+    links?: DataKeyLink[];
     /** Where the code reads or writes the column by a literal name; absent when it never does. */
     code?: { reads: Witness[]; writes: Witness[] };
+}
+
+/**
+ * A key relation seen from one of its two columns. `fk` is declared in the schema;
+ * `soft` is known only from code — an ORM relation's key or a query join — and has
+ * no constraint in the database; `implied` is a same-name key nothing states, a
+ * suggestion only.
+ */
+export interface DataKeyLink {
+    kind: 'fk' | 'soft' | 'implied';
+    /** How the link is known: the schema, an ORM relation, a query join, a matching name. */
+    via: Array<'schema' | 'orm' | 'query' | 'name'>;
+    /** The other end. */
+    to: { table: string; column: string };
+    /** The direction the key points: `out` from this column to `to`, `in` from `to` to this one. */
+    direction: 'out' | 'in';
+    onDelete?: string;
+    onUpdate?: string;
+    witnesses: Witness[];
+    /** Index into the payload's findings of the drift finding about this link (DR-1, DR-13). */
+    finding?: number;
 }
 
 export interface DataTable {
@@ -381,6 +404,7 @@ export function witnessesOf(areas: MapAreas): Array<[string, Witness]> {
             for (const c of t.columns) {
                 push(`data column ${t.name}.${c.name}`, c.witness);
                 push(`data actual column ${t.name}.${c.name}`, c.actual?.witness);
+                for (const l of c.links ?? []) for (const w of l.witnesses) push(`data ${l.kind} link ${t.name}.${c.name} → ${l.to.table}.${l.to.column}`, w);
                 for (const w of c.code?.reads ?? []) push(`data read of ${t.name}.${c.name}`, w);
                 for (const w of c.code?.writes ?? []) push(`data write of ${t.name}.${c.name}`, w);
             }
