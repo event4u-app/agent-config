@@ -80,6 +80,13 @@ describe('the add-control / German / backend bars (pre-registered 2026-10-26)', 
         expect(byName.de_ui_recall).toMatchObject({ total: 2, passed: 1, verdict: 'MISS', failing: ['uit-914'] });
     });
 
+    it('all three bars hold on the golden corpus — the regression net for 1.4', () => {
+        const result = run_eval(CORPUS);
+        for (const b of result.bars) {
+            expect(b.verdict, `${b.name}: ${b.failing.join(', ')}`).toBe('PASS');
+        }
+    });
+
     it('an empty bar reads EMPTY, never PASS', () => {
         const result = run_eval([{ id: 'uit-921', prompt: 'make the button red', label: 'trivial' }]);
         expect(result.bars.every((b) => b.verdict === 'EMPTY')).toBe(true);

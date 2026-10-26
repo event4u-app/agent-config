@@ -71,7 +71,72 @@ const _UI_NOUNS: ReadonlySet<string> = new Set([
     'dropdown', 'tab', 'panel', 'layout', 'component', 'icon',
     'tooltip', 'toast', 'banner', 'badge', 'avatar', 'label',
     'checkbox', 'radio', 'toggle', 'switch', 'stepper', 'wizard',
+    // Control nouns (2026-10-26, road-to-a-control-that-matches-its-neighbours
+    // 1.4). Bare `select` and `site` stay out: SQL `select` and a multi-site
+    // data layer are backend words (corpus uit-059, uit-060).
+    'selectbox', 'select box', 'select field', 'select input', 'select menu',
+    'select dropdown', 'combobox', 'listbox', 'picker', 'datepicker',
+    'date picker', 'popover', 'website', 'web page', 'landing page',
 ]);
+
+/**
+ * Non-English vocabulary, one column per language — German first. Each entry is
+ * a word STEM: it matches as the end of a compound and with an inflection
+ * ending ("Startseite", "Speichern-Knopfs"). `table`/`field`-like words
+ * (Tabelle, Feld, Spalte) stay out for the reason `_UI_NOUNS` gives.
+ */
+export const UI_I18N: Readonly<
+    Record<string, { nouns: string[]; build: string[]; trivial: string[]; objects: string[]; improve: string[]; fix: string[] }>
+> = {
+    de: {
+        nouns: [
+            'seite', 'webseite', 'website', 'formular', 'schaltfläche', 'knopf',
+            'auswahlfeld', 'auswahlliste', 'eingabefeld', 'dialog', 'menü',
+            'selectbox', 'dropdown', 'oberfläche', 'ansicht', 'layout',
+        ],
+        build: ['füg', 'füge', 'hinzufügen', 'erstell', 'erstelle', 'bau', 'baue', 'ergänz', 'ergänze'],
+        trivial: ['änder', 'ändere', 'pass', 'passe', 'tausch', 'tausche', 'setz', 'setze', 'mach', 'mache', 'korrigier', 'korrigiere', 'ersetz', 'ersetze'],
+        objects: [
+            'farbe', 'text', 'beschriftung', 'bezeichnung', 'label', 'tippfehler',
+            'überschrift', 'titel', 'abstand', 'schrift', 'schriftgröße', 'icon',
+            'symbol', 'platzhalter', 'ausrichtung', 'rahmen', 'radius',
+        ],
+        improve: ['prüf', 'prüfe', 'überprüf', 'überprüfe', 'überarbeite', 'überarbeit', 'verbesser', 'verbessere', 'polier', 'poliere'],
+        fix: ['behebe', 'beheb', 'reparier', 'repariere'],
+    },
+};
+
+const _I18N_ENDING = '(?:e|s|es|n|en|er|ern)?';
+
+/** Stem as the last segment of a (possibly compound, possibly inflected) word. */
+function _stemRe(stems: string[], compound: boolean): RegExp {
+    // `reEscape` escapes every non-ASCII letter, which the `u` flag rejects.
+    const alt = stems.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+    const prefix = compound ? '\\p{L}*' : '';
+    return new RegExp(`(?<![\\p{L}\\p{N}])${prefix}(?:${alt})${_I18N_ENDING}(?![\\p{L}\\p{N}])`, 'u');
+}
+
+function _i18n(text: string, kind: 'nouns' | 'build' | 'improve' | 'fix'): boolean {
+    for (const table of Object.values(UI_I18N)) {
+        if (_stemRe(table[kind], kind === 'nouns').test(text)) return true;
+    }
+    return false;
+}
+
+function _i18n_trivial(text: string): boolean {
+    for (const table of Object.values(UI_I18N)) {
+        const verb = _stemRe(table.trivial, false);
+        const obj = _stemRe(table.objects, true);
+        // German puts the finite verb first ("Ändere die Farbe") or the
+        // infinitive last ("die Farbe ändern"); either order, same sentence.
+        for (const sentence of text.split(/[.!?]/)) {
+            if (verb.test(sentence) && obj.test(sentence) && !_stemRe(table.build, false).test(sentence)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 const _UI_STYLE: ReadonlySet<string> = new Set([
     'color', 'colour', 'css', 'tailwind', 'padding', 'margin',
@@ -254,7 +319,7 @@ function _has_ui_signal(text: string): boolean {
             return true;
         }
     }
-    return false;
+    return _i18n(text, 'nouns');
 }
 
 function _has_backend_signal(text: string): boolean {
@@ -273,6 +338,9 @@ function _is_trivial(text: string): boolean {
     if (reSearch(_TRIVIAL_PATTERN, text) || reSearch(_TRIVIAL_COPY_PATTERN, text)) {
         return true;
     }
+    if (_i18n_trivial(text)) {
+        return true;
+    }
     let hasVerb = false;
     for (const v of _TRIVIAL_VERBS) {
         if (reSearch(wordBoundary(v), text)) {
@@ -284,6 +352,9 @@ function _is_trivial(text: string): boolean {
 }
 
 function _is_fix(text: string): boolean {
+    if (_i18n(text, 'fix')) {
+        return true;
+    }
     for (const v of _FIX_VERBS) {
         if (reSearch(wordBoundary(v), text)) {
             return true;
@@ -293,7 +364,7 @@ function _is_fix(text: string): boolean {
 }
 
 function _is_improve(text: string): boolean {
-    if (reSearch(_EXISTING_SURFACE, text)) {
+    if (reSearch(_EXISTING_SURFACE, text) || _i18n(text, 'improve')) {
         return true;
     }
     for (const v of _IMPROVE_VERBS) {
@@ -305,7 +376,7 @@ function _is_improve(text: string): boolean {
 }
 
 function _is_build(text: string): boolean {
-    if (reSearch(_NEW_SURFACE, text)) {
+    if (reSearch(_NEW_SURFACE, text) || _i18n(text, 'build')) {
         return true;
     }
     for (const v of _BUILD_VERBS) {
