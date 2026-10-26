@@ -191,6 +191,16 @@ DB::connection('tenant_database')->transaction(function () {
 - Use explicit connection in migrations targeting specific databases.
 - Transactions are per-connection — cross-connection requires manual begin/commit/rollback.
 
+## Test-engine parity
+
+A suite running on SQLite proves **cascade semantics** — which rows a
+referential action removes or nulls — and nothing about lock cost, lock scope,
+or whether the production planner uses an index; those belong to the production
+engine and are measured there. The cascade proof holds only if foreign-key
+enforcement is on in the test connection: check that `PRAGMA foreign_keys`
+returns `1` (Laravel's `sqlite` connection reads `foreign_key_constraints` from
+`config/database.php`) before trusting a green cascade test.
+
 ## Do NOT
 
 - Use raw SQL with user input — always parameterize.
