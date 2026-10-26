@@ -169,7 +169,7 @@ and is never reported as visually verified without render evidence.
       P99+1 of the legitimate distribution. The CI linter variant runs
       report-only from day one.
       verify: the shadow record carries `would_fire` per tolerance and emits nothing to the user.
-- [x] **3.4 Sibling reference mode for `ui_conformance_probe`.** Done 2026-10-26: `--subject` + `--reference-sibling` (+ `--tolerance`), `captureSiblingPair` / `compareSiblingBoxes`; live test in `tests/scripts/ui_conformance_probe_sibling.test.ts`.
+- [x] **3.4 Sibling reference mode for `ui_conformance_probe`.** Done 2026-10-26: `--subject` + `--reference-sibling` (+ `--tolerance`), `captureSiblingPair` / `compareSiblingBoxes`; live test in `tests/scripts/ui_conformance_probe_sibling.test.ts`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ui_conformance_probe.ts -->
       `--reference-sibling <selector>` compares a node against a sibling on the
       same page (today only `--target`/`--reference` whole files and
       `data-probe-id` matching, `src/scripts/ui_conformance_probe.ts:1140-1147`).

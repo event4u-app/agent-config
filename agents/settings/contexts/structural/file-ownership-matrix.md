@@ -5,7 +5,7 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **632**
+- Files indexed: **634**
 - Edges (incl. self-WRITE): **2413**
 
 ## READ_ONLY edges
@@ -972,6 +972,7 @@
 | `.agent-src.uncondensed/skills/design-review/references/verification-automation.md` | `.agent-src.uncondensed/skills/verify-repair-loop/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-system-capture/SKILL.md` | `.agent-src.uncondensed/skills/design-system-capture/references/design-system-json.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-system-capture/SKILL.md` | `.agent-src.uncondensed/skills/design-system-capture/references/import-procedure.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/design-system-capture/SKILL.md` | `.agent-src.uncondensed/skills/design-system-capture/references/product-md-template.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-system-capture/SKILL.md` | `.agent-src.uncondensed/skills/design-system-capture/references/snapshot-preference-order.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-system-capture/SKILL.md` | `.agent-src.uncondensed/skills/storybook-workshop/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-system-capture/references/design-system-json.md` | `.agent-src.uncondensed/rules/untrusted-input-defense.md` | `body_link` | 1 |
@@ -997,7 +998,6 @@
 | `.agent-src.uncondensed/skills/discovery-interview/SKILL.md` | `.agent-src.uncondensed/skills/voc-extract/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/doc-coauthoring/SKILL.md` | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/doc-coauthoring/SKILL.md` | `.agent-src.uncondensed/rules/minimal-safe-diff.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/skills/doc-coauthoring/SKILL.md` | `.agent-src.uncondensed/skills/humanizer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/docx-authoring/SKILL.md` | `.agent-src.uncondensed/skills/html-deck/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/docx-authoring/SKILL.md` | `.agent-src.uncondensed/skills/markitdown/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/docx-authoring/SKILL.md` | `.agent-src.uncondensed/skills/pdf-tools/SKILL.md` | `body_link` | 1 |
@@ -1068,12 +1068,14 @@
 | `.agent-src.uncondensed/skills/fe-design/SKILL.md` | `.agent-src.uncondensed/skills/fe-design/references/craft-floor.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/fe-design/SKILL.md` | `.agent-src.uncondensed/skills/fe-design/references/design-patterns.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/fe-design/SKILL.md` | `.agent-src.uncondensed/skills/fe-design/references/design-read-and-memory.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/fe-design/SKILL.md` | `.agent-src.uncondensed/skills/fe-design/references/gesture-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/fe-design/SKILL.md` | `.agent-src.uncondensed/skills/fe-design/references/source-led-port.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/fe-design/SKILL.md` | `.agent-src.uncondensed/skills/flux/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/fe-design/SKILL.md` | `.agent-src.uncondensed/skills/livewire/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/fe-design/SKILL.md` | `.agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/fe-design/references/craft-floor.md` | `.agent-src.uncondensed/skills/fe-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/fe-design/references/craft-floor.md` | `.agent-src.uncondensed/skills/fe-design/references/design-patterns.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/fe-design/references/design-patterns.md` | `.agent-src.uncondensed/skills/accessibility-auditor/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/fe-design/references/design-patterns.md` | `.agent-src.uncondensed/skills/design-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/fe-design/references/design-patterns.md` | `.agent-src.uncondensed/skills/design-variations/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/fe-design/references/design-patterns.md` | `.agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md` | `body_link` | 1 |
@@ -1153,8 +1155,6 @@
 | `.agent-src.uncondensed/skills/html-deck/SKILL.md` | `.agent-src.uncondensed/skills/fe-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/humanizer/SKILL.md` | `.agent-src.uncondensed/rules/content-quoting-floor.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/humanizer/SKILL.md` | `.agent-src.uncondensed/rules/direct-answers.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/skills/humanizer/SKILL.md` | `.agent-src.uncondensed/rules/media-governance-routing.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/skills/humanizer/SKILL.md` | `.agent-src.uncondensed/rules/untrusted-input-defense.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/humanizer/SKILL.md` | `.agent-src.uncondensed/skills/humanizer/data/patterns.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/humanizer/SKILL.md` | `.agent-src.uncondensed/skills/humanizer/references/anti-aiisms.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/humanizer/SKILL.md` | `.agent-src.uncondensed/skills/humanizer/references/fixtures.md` | `body_link` | 1 |
@@ -1430,9 +1430,7 @@
 | `.agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md` | `.agent-src.uncondensed/skills/storybook-workshop/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/react-shadcn-ui/references/registry.md` | `.agent-src.uncondensed/skills/supply-chain-intake/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/readme-writing-package/SKILL.md` | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/skills/readme-writing-package/SKILL.md` | `.agent-src.uncondensed/skills/humanizer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/readme-writing/SKILL.md` | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/skills/readme-writing/SKILL.md` | `.agent-src.uncondensed/skills/humanizer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/readme-writing/SKILL.md` | `.agent-src.uncondensed/skills/screenshot-hygiene/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/reasoning-orchestrator/SKILL.md` | `.agent-src.uncondensed/contexts/execution/rdp-gate.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/reasoning-orchestrator/SKILL.md` | `.agent-src.uncondensed/rules/delegation-policy.md` | `body_link` | 1 |
@@ -1801,5 +1799,5 @@
 | `context` | 79 |
 | `persona` | 36 |
 | `rule` | 122 |
-| `skill` | 395 |
+| `skill` | 397 |
 

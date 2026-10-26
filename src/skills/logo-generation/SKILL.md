@@ -42,7 +42,7 @@ governance. All adapters are scaffold-tier (dry-run) until promoted to `stable`.
    **Critique mode** — when the user supplies a mark and asks what is wrong with
    it, skip generation: render it (step 5's witness), then return a scorecard
    (legibility at 16/32 px, distinctiveness on the shelf, reproduction in one
-   colour, fit to the brief), the top three fixes in priority order, and an
+   color, fit to the brief), the top three fixes in priority order, and an
    equity note — what the current mark has earned that a fix must not throw
    away. Stop there.
 1b. **Diverge before converging** — propose at least three concepts of

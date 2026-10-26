@@ -58,7 +58,7 @@ React island vs. Vue SFC) is the apply-step's concern, not this skill's.
 ### Native select — the canon when the project has no primitive
 
 1. **A project primitive exists → always use it.** `control_roles.select.canonical`
-   in the `ui:audit` artefact names it; a raw `<select>` beside it is the defect.
+   in the `ui:audit` artifact names it; a raw `<select>` beside it is the defect.
 2. **No primitive → a native `<select>` styled with the project's tokens.** The
    closed state is styled for every browser (height, padding, radius, border and
    font matching the sibling inputs). The open picker is styled as progressive

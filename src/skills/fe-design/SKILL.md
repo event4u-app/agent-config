@@ -46,7 +46,7 @@ control role. Anything else runs the loop.
 1. **Audit first** — run [`existing-ui-audit`](../existing-ui-audit/SKILL.md).
    What already exists (components, tokens, layout conventions) outranks every
    heuristic below. Reinventing an existing component is the #1 failure mode.
-   **Control roles.** For every control you add, look up its role in the `control_roles` of `agent-config ui:audit` (re-run it when the artefact is older than your last UI edit): use the canonical implementation and the siblings' box metrics. Role missing or tied → ask before inventing a control kind; a native control beside an existing primitive needs a stated `native_control_reason`.
+   **Control roles.** For every control you add, look up its role in the `control_roles` of `agent-config ui:audit` (re-run it when the artifact is older than your last UI edit): use the canonical implementation and the siblings' box metrics. Role missing or tied → ask before inventing a control kind; a native control beside an existing primitive needs a stated `native_control_reason`.
 2. **Brief** — seven keys before any code. Five are the ones the engine gates
    (`REQUIRED_BRIEF_KEYS`): `layout`, `components`, `states`, `microcopy`,
    `a11y`. `states` means all five of `empty`, `loading`, `error`, `success`,

@@ -268,7 +268,7 @@ are listed in § Quality floors.
 | V6 | judgment-only | demoted 2026-10-26 at M1 = 1 on the near-miss holdout split: hatching that marks unavailable calendar slots is a state, not a background texture; not tuned against the holdout split |
 | V7 | backed | promoted 2026-10-26 (render engine): three nested surfaces of the same weight; a hierarchy whose levels differ in weight stays clean |
 | V8 | backed | |
-| V9 | backed | promoted 2026-10-26: M1 = 0 on both near-miss splits; grain on a flat colour stays clean, only grain composed with a gradient in one rule fires |
+| V9 | backed | promoted 2026-10-26: M1 = 0 on both near-miss splits; grain on a flat color stays clean, only grain composed with a gradient in one rule fires |
 | C1 | judgment-only | the tell is the combination *as the primary scheme*; which colours are primary is a judgment |
 | C2 | backed | |
 | C3 | backed | |
