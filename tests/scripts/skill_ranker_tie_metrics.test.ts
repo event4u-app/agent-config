@@ -104,7 +104,10 @@ describe('tie metrics on the committed corpus (keyword-v1)', () => {
         // needs no re-take: the new skill scores on no labelled prompt in the
         // routing matrix, which is why a bigger catalogue moved no tie. The
         // labelled-row count is untouched at 390 — the branch added no fixture.
-        expect(whole.length, 'routing-matrix labelled rows moved since 2026-10-01').toBe(390);
+        // 390 -> 391 on 2026-10-26: external-code-graph-interop gained a positive
+        // (a code-graph usage count that may be short). It lands in the tuning
+        // slice and is not a tie, so the tuning pin below moves 315 -> 316 at 69.
+        expect(whole.length, 'routing-matrix labelled rows moved since 2026-10-26').toBe(391);
         // 300 -> 301 on 2026-10-18: `type-design` landed. The tie pins below
         // reproduce unchanged at 301 (69/315 tuning, 14/75 sealed).
         expect(_globSkillMd(SKILLS_DIR).length, 'skill catalogue moved since 2026-10-18').toBe(301);
@@ -122,10 +125,10 @@ describe('tie metrics on the committed corpus (keyword-v1)', () => {
     // taken under the old token class; it is annotated rather than rewritten,
     // because its `idf` narration is about a comparison made that day. The pin
     // below is the live reading, which is what this test is for.
-    it('reproduces 69 of 315 on tuning and 14 of 75 on sealed', () => {
+    it('reproduces 69 of 316 on tuning and 14 of 75 on sealed', () => {
         const tuning = readRows(partitionBySlice(whole, 'tuning'), SKILLS_DIR, 'keyword-v1');
         const sealed = readRows(partitionBySlice(whole, 'sealed'), SKILLS_DIR, 'keyword-v1');
-        expect([tuning.length, tuning.filter((r) => r.lostOnTie).length]).toEqual([315, 69]);
+        expect([tuning.length, tuning.filter((r) => r.lostOnTie).length]).toEqual([316, 69]);
         expect([sealed.length, sealed.filter((r) => r.lostOnTie).length]).toEqual([75, 14]);
     }, 120_000);
 });

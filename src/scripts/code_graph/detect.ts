@@ -18,7 +18,7 @@ import * as path from 'node:path';
 
 import { load_agent_settings } from '../_lib/agent_settings.js';
 import { gitProbe } from '../_lib/spawn_env.js';
-import { projectHome } from './graph_home.js';
+import { projectCachePath } from './graph_home.js';
 import { EXT_LANG } from './types.js';
 import { validateGraph } from './validate.js';
 
@@ -319,7 +319,7 @@ function hasUncommittedIndexedEdit(root: string): boolean {
  * a caller serving a user-global home passes `graphHome(root).cachePath`.
  */
 export function graphState(root: string, nativeCache?: string): GraphState {
-    const picked = pickSource(detectSources(root, nativeCache ?? projectHome(root).cachePath));
+    const picked = pickSource(detectSources(root, nativeCache ?? projectCachePath(root)));
     if (!picked) return 'absent';
     if (picked.stale === true) {
         const behind = picked.commits_behind;

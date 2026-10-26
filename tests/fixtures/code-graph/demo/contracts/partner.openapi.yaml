@@ -1,0 +1,50 @@
+openapi: 3.0.3
+info:
+  title: Partner API
+  version: 1.0.0
+paths:
+  /stock/{sku}:
+    get:
+      operationId: getStock
+      parameters:
+        - name: sku
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: stock level
+  /orders:
+    post:
+      operationId: placeOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      responses:
+        '201':
+          description: created
+  /invoices:
+    get:
+      operationId: listInvoices
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: invoices
+components:
+  schemas:
+    OrderRequest:
+      type: object
+      required: [sku, quantity]
+      properties:
+        sku:
+          type: string
+        quantity:
+          type: integer

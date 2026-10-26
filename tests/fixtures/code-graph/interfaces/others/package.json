@@ -1,0 +1,8 @@
+{
+    "name": "fixture-interfaces-others",
+    "private": true,
+    "dependencies": {
+        "graphql-request": "^7.0.0",
+        "stripe": "^16.0.0"
+    }
+}

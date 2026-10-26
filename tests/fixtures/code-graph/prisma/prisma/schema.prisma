@@ -1,0 +1,22 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Author {
+  id    Int    @id @default(autoincrement())
+  name  String
+  books Book[]
+
+  @@map("authors")
+}
+
+model Book {
+  id       Int    @id @default(autoincrement())
+  title    String
+  authorId Int    @map("author_id")
+  author   Author @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@map("books")
+}

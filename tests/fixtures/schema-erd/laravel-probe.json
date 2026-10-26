@@ -1,0 +1,69 @@
+{
+  "dialect": "mysql",
+  "skipped": { "views": 1, "triggers": 0, "check_constraints": 0, "generated_columns": 1 },
+  "tables": [
+    {
+      "name": "users",
+      "comment": null,
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "default": null,
+          "auto_increment": true,
+          "ordinal": 1,
+          "comment": null
+        },
+        {
+          "name": "email",
+          "type": "varchar(255)",
+          "nullable": false,
+          "default": null,
+          "auto_increment": false,
+          "ordinal": 2,
+          "comment": null
+        }
+      ],
+      "primary_key": ["id"],
+      "indexes": [{ "name": "users_email_unique", "columns": ["email"], "unique": true, "type": "btree" }],
+      "foreign_keys": []
+    },
+    {
+      "name": "orders",
+      "comment": null,
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "default": null,
+          "auto_increment": true,
+          "ordinal": 1,
+          "comment": null
+        },
+        {
+          "name": "user_id",
+          "type": "bigint unsigned",
+          "nullable": false,
+          "default": null,
+          "auto_increment": false,
+          "ordinal": 2,
+          "comment": null
+        }
+      ],
+      "primary_key": ["id"],
+      "indexes": [{ "name": "orders_user_id_index", "columns": ["user_id"], "unique": false, "type": "btree" }],
+      "foreign_keys": [
+        {
+          "name": "orders_user_id_foreign",
+          "columns": ["user_id"],
+          "ref_table": "users",
+          "ref_columns": ["id"],
+          "on_update": null,
+          "on_delete": "restrict"
+        }
+      ]
+    }
+  ]
+}

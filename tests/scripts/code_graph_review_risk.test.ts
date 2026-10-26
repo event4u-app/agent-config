@@ -1,0 +1,122 @@
+/**
+ * `review-risk`: a planted diff against a planted repository lists every term
+ * with the facts it counted and their witnesses; the total is their sum.
+ */
+import { execFileSync } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+
+import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
+import { graphHome } from '../../src/scripts/code_graph/graph_home.js';
+import { diffHunks, parseUnifiedZero, RISK_TERMS, RISK_WEIGHTS, type ReviewRisk, reviewRisk } from '../../src/scripts/code_graph/review_risk.js';
+import type { CodeGraph } from '../../src/scripts/code_graph/types.js';
+import { GRAPH_TOOLS } from '../../src/scripts/mcp_server/graph_tools.js';
+
+const FX = path.resolve(__dirname, '../fixtures/code-graph');
+let root: string;
+let graph: CodeGraph;
+
+const git = (...args: string[]): string =>
+    execFileSync('git', ['-C', root, '-c', 'user.email=t@example.com', '-c', 'user.name=t', '-c', 'commit.gpgsign=false', ...args], { encoding: 'utf-8' });
+const edit = (rel: string, from: string | RegExp, to: string): void => {
+    const p = path.join(root, rel);
+    const before = fs.readFileSync(p, 'utf-8');
+    const after = before.replace(from, to);
+    if (after === before) throw new Error(`planted edit did not apply to ${rel}`);
+    fs.writeFileSync(p, after);
+};
+
+/** A blog (P1), the partner client (P5) behind a route, and a CI workflow; two files that change together. */
+function plant(): void {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'review-risk-'));
+    fs.cpSync(path.join(FX, 'correctness/p1-blog'), root, { recursive: true });
+    for (const rel of ['app/Services/PartnerClient.php', 'config/services.php', 'contracts/partner.openapi.yaml', 'resources/wsdl/stock.wsdl']) {
+        fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+        fs.copyFileSync(path.join(FX, 'interfaces/p5', rel), path.join(root, rel));
+    }
+    fs.cpSync(path.join(FX, 'delivery/clean/.github'), path.join(root, '.github'), { recursive: true });
+    fs.mkdirSync(path.join(root, 'agents'), { recursive: true });
+    fs.writeFileSync(
+        path.join(root, 'app/Http/Controllers/StockController.php'),
+        '<?php\n\nnamespace App\\Http\\Controllers;\n\nuse App\\Services\\PartnerClient;\n\nclass StockController\n{\n    public function show(string $sku)\n    {\n        $client = new PartnerClient();\n        return $client->warehouseStock($sku);\n    }\n}\n',
+    );
+    fs.appendFileSync(path.join(root, 'routes/web.php'), "Route::get('/stock/{sku}', [App\\Http\\Controllers\\StockController::class, 'show']);\n");
+    git('init', '-q');
+    git('add', '-A');
+    git('commit', '-qm', 'base');
+    for (const i of [1, 2, 3]) {
+        fs.appendFileSync(path.join(root, 'app/Services/PartnerClient.php'), `// rev ${i}\n`);
+        fs.appendFileSync(path.join(root, 'config/services.php'), `// rev ${i}\n`);
+        git('commit', '-qam', `co ${i}`);
+    }
+}
+
+beforeAll(async () => {
+    plant();
+    ({ graph } = await buildFromRepo(root, graphHome(root).cachePath, { lanes: true }));
+});
+afterAll(() => fs.rmSync(root, { recursive: true, force: true }));
+
+describe('review-risk on a planted diff', () => {
+    let r: ReviewRisk;
+    beforeAll(() => {
+        edit('app/Services/PartnerClient.php', "GetStock(['ItemCode' => $sku])", "GetStock(['ItemCode' => strtoupper($sku)])");
+        edit('database/migrations/2024_01_01_000003_create_comments_table.php', "->text('body');", "->text('body')->nullable();");
+        edit('.github/workflows/ci.yml', /runs-on: ubuntu-latest/g, 'runs-on: ubuntu-24.04');
+        r = reviewRisk(root, graph, 'HEAD', diffHunks(root, 'HEAD')!);
+    });
+
+    it('starts from the symbols the hunks overlap', () => {
+        expect(r.changed).toEqual(['.github/workflows/ci.yml', 'app/Services/PartnerClient.php', 'database/migrations/2024_01_01_000003_create_comments_table.php']);
+        expect(r.seeds.map((s) => s.label)).toContain('warehouseStock');
+    });
+
+    it('lists every term with the facts it counted, each with a witness', () => {
+        for (const t of r.terms) {
+            expect(t.items.length, t.term).toBeGreaterThan(0);
+            for (const i of t.items) expect(i.witness, `${t.term} ${i.id}`).toMatchObject({ file: expect.any(String), line: expect.any(Number), hash: expect.stringMatching(/^[0-9a-f]{8}$/) });
+        }
+        const labels = (term: string): string[] => r.terms.find((t) => t.term === term)!.items.map((i) => i.label);
+        expect(labels('entry points')).toEqual(['GET /stock/{sku}']);
+        expect(labels('missing partners')).toEqual(['config/services.php']);
+        expect(labels('columns')).toEqual(['comments.body']);
+        expect(labels('operations')).toEqual(['GetStock']);
+        expect(labels('pipelines').sort()).toEqual(['deploy', 'stage-deploy', 'test']);
+    });
+
+    it('is a sum of count times weight, and nothing else', () => {
+        expect(r.terms.map((t) => t.term)).toEqual([...RISK_TERMS]);
+        for (const t of r.terms) expect(t.contribution).toBe(t.items.length * RISK_WEIGHTS[t.term]);
+        expect(r.total).toBe(r.terms.reduce((n, t) => n + t.contribution, 0));
+        expect(reviewRisk(root, graph, 'HEAD', diffHunks(root, 'HEAD')!, { ...RISK_WEIGHTS, pipelines: 0 }).total).toBe(r.total - r.terms.find((t) => t.term === 'pipelines')!.contribution);
+    });
+
+    it('answers through graph_impact in review_risk mode', async () => {
+        const out = (await GRAPH_TOOLS['graph_impact']!.handler({ diff: 'HEAD', review_risk: true }, root)) as { status: string; total: number };
+        expect(out.status).toBe('ok');
+        expect(out.total).toBe(r.total);
+    });
+});
+
+describe('review-risk boundaries', () => {
+    it('no hunks score zero', () => {
+        const clean = reviewRisk(root, graph, 'HEAD', []);
+        expect(clean.total).toBe(0);
+        expect(clean.terms.every((t) => t.items.length === 0)).toBe(true);
+    });
+
+    it('refuses a rev that does not resolve or reads as an option', () => {
+        expect(diffHunks(root, 'no-such-rev')).toBeNull();
+        expect(diffHunks(root, '--output=/tmp/x')).toBeNull();
+    });
+
+    it('reads zero-context hunks, a deleted file on its old side', () => {
+        const text = ['--- a/x.ts', '+++ b/x.ts', '@@ -3,0 +4,2 @@', '+a', '+b', '--- a/gone.ts', '+++ /dev/null', '@@ -1,5 +0,0 @@'].join('\n');
+        expect(parseUnifiedZero(text)).toEqual([
+            { file: 'x.ts', from: 4, to: 5 },
+            { file: 'gone.ts', from: 1, to: 5 },
+        ]);
+    });
+});

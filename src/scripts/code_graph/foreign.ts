@@ -65,18 +65,7 @@ const RELATION_MAP: Readonly<Record<string, Relation>> = {
     test: 'tests',
 };
 
-const KINDS = new Set([
-    'file',
-    'class',
-    'interface',
-    'trait',
-    'function',
-    'method',
-    'constant',
-    'type',
-    'enum',
-    'skipped',
-]);
+const KINDS = new Set('file class interface trait function method constant type enum skipped'.split(' '));
 
 function isObject(v: unknown): v is Record<string, unknown> {
     return typeof v === 'object' && v !== null && !Array.isArray(v);

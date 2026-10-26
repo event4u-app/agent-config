@@ -95,6 +95,12 @@ jobs:
       - name: Lint topics.yml
         run: ./scripts-run src/scripts/lint_topics_yaml
 
+      # `apply` runs `sync_github_metadata.ts` with an admin-write token and
+      # `needs: preview`, so the script's own tests gate it here, not only the
+      # dry-run's exit code.
+      - name: Test the sync script and the topics linter
+        run: npx vitest run tests/scripts/sync_github_metadata.test.ts tests/scripts/lint_topics_yaml.test.ts
+
       - name: Dry-run preview
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

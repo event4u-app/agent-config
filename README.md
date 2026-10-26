@@ -18,7 +18,7 @@
 
 ### See what a change touches
 
-`agent-config code-graph map` draws an offline map of the repository. Pick a file and every area it reaches lights up.
+`agent-config code-graph map` draws an offline map into `agents/map/`: code, data, interfaces, runtime, delivery. Each fact keeps its `file:line`, re-read before acting. Pick a file: every area it reaches lights up.
 
 ![Code map blast radius](.github/assets/screenshots/graph-blast.png)
 
@@ -468,11 +468,11 @@ Reduces and documents risk — never eliminates it.
 
 ### Maintainer telemetry (opt-in, default-off)
 
-Local-only artefact-engagement log. Set `telemetry.artifact_engagement.enabled: true` in `.agent-settings.yml`. Records which skills / rules / commands / guidelines the agent consults during `/implement-ticket` / `/work`. JSONL under the project root, nothing uploaded. Reports: `npx @event4u/agent-config telemetry:report`.
+Local-only log of skills, rules and commands consulted in `/implement-ticket` / `/work`. Enable via `telemetry.artifact_engagement.enabled: true`; JSONL in the project, nothing uploaded. Reports: `npx @event4u/agent-config telemetry:report`.
 
 ### Context-aware command suggestion
 
-When a prompt matches a command's purpose ("setze ticket ABC-123 um" → `/implement-ticket`), the agent surfaces matches as numbered options — **nothing auto-executes**. Per-conversation off: `/command-suggestion-off`. Settings: `commands.suggestion.{enabled,blocklist,confidence_floor}` in `.agent-settings.yml`.
+A prompt matching a command's purpose ("setze ticket ABC-123 um" → `/implement-ticket`) surfaces it as a numbered option — **nothing auto-executes**. Per-conversation off: `/command-suggestion-off`. Settings: `commands.suggestion.{enabled,blocklist,confidence_floor}` in `.agent-settings.yml`.
 
 ---
 

@@ -1,0 +1,10 @@
+openapi: 3.0.3
+info:
+  title: Stats API
+  version: 1.0.0
+paths:
+  /api/v2/stats:
+    get:
+      responses:
+        '200':
+          description: visit count

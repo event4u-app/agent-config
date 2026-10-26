@@ -127,6 +127,11 @@ export function gitProbe(root: string, args: readonly string[], opts: { maxBuffe
     return execFileSync('git', [...GIT_SAFE_ARGS, '-C', root, ...args], { env: hardenedSpawnEnv(), encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'], ...opts });
 }
 
+/** {@link gitProbe} with env overrides on top of the hardened env. Separate so the hook bundle, which never needs it, tree-shakes it out. */
+export function gitProbeWithEnv(root: string, args: readonly string[], env: Record<string, string>): string {
+    return execFileSync('git', [...GIT_SAFE_ARGS, '-C', root, ...args], { env: hardenedSpawnEnv(env), encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] });
+}
+
 export function hardenedSpawnEnv(
     overrides: Record<string, string> = {},
 ): NodeJS.ProcessEnv {

@@ -24,7 +24,13 @@ and it must not be read as governing (2).
 - Columns in `WHERE` clauses
 - Columns in `JOIN` conditions
 - Columns in `ORDER BY` (especially with pagination)
-- Foreign key columns (Laravel adds with `foreignId()`)
+- Foreign key columns. Whether one exists already depends on the engine:
+  MySQL / MariaDB (InnoDB) create an index on a foreign-key column when the
+  constraint is added and no index leads with it; PostgreSQL and SQLite never
+  do. In Laravel, `foreignId('x')` alone adds a column and no constraint, so no
+  engine indexes it; `foreignId('x')->constrained()` adds the constraint, which
+  is indexed on MySQL / MariaDB and **not** on PostgreSQL or SQLite — add
+  `->index()` there.
 - Columns carrying a declared uniqueness constraint
 
 ### When NOT to add indexes

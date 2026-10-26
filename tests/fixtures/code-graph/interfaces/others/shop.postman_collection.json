@@ -1,0 +1,20 @@
+{
+    "info": {
+        "name": "Shop",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Orders",
+            "item": [
+                {
+                    "name": "Create order",
+                    "request": {
+                        "method": "POST",
+                        "url": { "raw": "{{shop}}/orders" }
+                    }
+                }
+            ]
+        }
+    ]
+}
