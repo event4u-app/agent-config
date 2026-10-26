@@ -11,7 +11,10 @@ import { buildFromRepo, serializeGraph } from '../../src/scripts/code_graph/buil
 import { evaluateDrift, loadRules, renderDrift, ruleError, type DriftRule } from '../../src/scripts/code_graph/drift.js';
 import { DRIFT_RULES } from '../../src/scripts/code_graph/drift_rules.js';
 import { type LaneOutput, spanHash } from '../../src/scripts/code_graph/lanes/lane_fact.js';
+import { readDelivery } from '../../src/scripts/code_graph/lanes/delivery/index.js';
+import { readInterfaces } from '../../src/scripts/code_graph/lanes/interfaces/index.js';
 import { applyLaneOutputs, mergeLaneOutputs } from '../../src/scripts/code_graph/lanes/merge.js';
+import { readRuntime } from '../../src/scripts/code_graph/lanes/runtime/index.js';
 import { loadGraph } from '../../src/scripts/code_graph/query.js';
 import { openGraphIndex } from '../../src/scripts/code_graph/sqlite_store.js';
 import type { CodeGraph } from '../../src/scripts/code_graph/types.js';
@@ -112,12 +115,18 @@ describe('2.2 — one vocabulary file', () => {
         expect(directionError('frobs', 'file', 'file')).toMatch(/not in the vocabulary/);
     });
 
-    /** Kind literals of the nodes and facts a reader writes: `kind: 'x'` in an object literal that also names its file or witness. */
-    const kindsUsed = (src: string): string[] =>
-        [...src.matchAll(/\{(?:[^{}]|\{[^{}]*\})*\}/g)]
+    /**
+     * Kind literals of the nodes and facts a reader writes: `kind: 'x'` in an
+     * object literal that also names its `source_file` (a node) or `rung` (a
+     * lane fact), and the first argument of a lane emitter's `.fact('x', …)`.
+     */
+    const kindsUsed = (src: string): string[] => [
+        ...[...src.matchAll(/\{(?:[^{}]|\{[^{}]*\})*\}/g)]
             .map((m) => m[0])
-            .filter((obj) => /\b(source_file|witness|owner)\b/.test(obj))
-            .flatMap((obj) => [...obj.matchAll(/\bkind:\s*'([a-z][a-z-]*)'/g)].map((k) => k[1] as string));
+            .filter((obj) => /\b(source_file|rung)\b/.test(obj))
+            .flatMap((obj) => [...obj.matchAll(/\bkind:\s*'([a-z][a-z-]*)'/g)].map((k) => k[1] as string)),
+        ...[...src.matchAll(/\.fact\(\s*'([a-z][a-z-]*)'/g)].map((m) => m[1] as string),
+    ];
     const readerSources = (): Array<[string, string]> => {
         const out: Array<[string, string]> = [];
         const walk = (d: string): void => {
@@ -141,7 +150,8 @@ describe('2.2 — one vocabulary file', () => {
 
     it('that scan fails on a kind used in code but absent from the file', () => {
         expect(kindsUsed("nodes.push({ id, kind: 'widget', label, source_file: f })").filter((k) => !KINDS.has(k))).toEqual(['widget']);
-        expect(kindsUsed("facts.push({ kind: 'gizmo', id, witness: w })")).toEqual(['gizmo']);
+        expect(kindsUsed("facts.push({ kind: 'gizmo', id, witness: w, rung: 'T1' })")).toEqual(['gizmo']);
+        expect(kindsUsed("em.fact('sprocket', key, name, {}, file, 1)")).toEqual(['sprocket']);
     });
 
     it('every graph a provider builds fits the vocabulary', () => {
@@ -174,16 +184,16 @@ function sampleOutputs(): LaneOutput[] {
 describe('the lane merge', () => {
     it('merges vocabulary facts and relations, and refuses the rest with the reason', () => {
         const r = mergeLaneOutputs(graph, sampleOutputs());
-        expect(r.merged).toEqual({ nodes: 2, edges: 2 });
-        expect(r.refused.map((x) => x.reason)).toEqual([
-            'kind "widget" is not in the vocabulary',
-            '"supersedes" may not start at a table',
-            'endpoint not in the graph: nowhere',
+        expect(r.merged).toEqual({ nodes: 2, edges: 3 });
+        expect(r.refused.map((x) => x.reason)).toEqual(['kind "widget" is not in the vocabulary', '"supersedes" may not start at a table']);
+        expect(r.graph.edges.some((e) => e.relation === 'governs' && e.target === 'nowhere')).toBe(true);
+        expect(mergeLaneOutputs(graph, [{ ...sampleOutputs()[0]!, facts: [], relations: [sampleOutputs()[0]!.relations[0]!] }]).refused.map((x) => x.reason)).toEqual([
+            'source not in the graph: decision:ADR-2',
         ]);
         const sup = r.graph.edges.find((e) => e.relation === 'supersedes');
         expect([sup?.source, sup?.target]).toEqual(['decision:ADR-2', 'decision:ADR-1']);
         expect(sup?.resolved_via).toBe('lane-read');
-        const gov = r.graph.edges.find((e) => e.relation === 'governs');
+        const gov = r.graph.edges.find((e) => e.relation === 'governs' && e.target === 'table:posts');
         expect([gov?.confidence, gov?.resolved_via]).toEqual(['INFERRED', 'name-lookup']);
         expect(validateGraph(JSON.parse(serializeGraph(r.graph))).errors).toEqual([]);
         expect(vocabularyErrors(r.graph)).toEqual([]);
@@ -203,7 +213,7 @@ describe('the lane merge', () => {
         const index = openGraphIndex(file);
         try {
             expect(index?.getNode('decision:ADR-1')?.fact).toMatchObject({ lane: 'decisions', rung: 'T1', owner: 'docs/adr/ADR-1.md' });
-            expect(index?.edgesFrom('decision:ADR-2').map((e) => e.relation).sort()).toEqual(['governs', 'supersedes']);
+            expect(index?.edgesFrom('decision:ADR-2').map((e) => e.relation).sort()).toEqual(['governs', 'governs', 'supersedes']);
         } finally {
             index?.close();
         }
@@ -211,6 +221,27 @@ describe('the lane merge', () => {
         expect(g.kindCount('decision')).toBe(2);
         g.close();
     });
+});
+
+describe('the lane readers merge through the one merge', () => {
+    const FIX = path.resolve(__dirname, '../fixtures/code-graph');
+    for (const [name, read, sub] of [
+        ['runtime', readRuntime, 'runtime/drift'],
+        ['delivery', readDelivery, 'delivery/drift'],
+        ['interfaces', readInterfaces, 'interfaces/p5'],
+    ] as const) {
+        it(`${name}: every fact and relation fits the vocabulary`, async () => {
+            const root = path.join(FIX, sub);
+            const { graph: base } = await buildFromRepo(root, null);
+            const out = (read as (r: string) => LaneOutput)(root);
+            const r = mergeLaneOutputs(base, [out]);
+            expect(out.facts.length).toBeGreaterThan(0);
+            expect(r.refused).toEqual([]);
+            expect(r.merged).toEqual({ nodes: out.facts.length, edges: out.relations.length });
+            expect(vocabularyErrors(r.graph)).toEqual([]);
+            expect(validateGraph(JSON.parse(serializeGraph(r.graph))).errors).toEqual([]);
+        });
+    }
 });
 
 describe('2.3 — one drift engine', () => {

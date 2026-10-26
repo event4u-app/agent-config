@@ -7,9 +7,14 @@
  * is refused and reported rather than merged. A lane's earlier facts are
  * replaced as a whole, so merging the same output twice yields the same graph.
  *
- * Ids: a fact becomes node `<kind>:<id>`. A relation's `from` / `to` name either
- * such a fact (`<kind>:<id>`) or any node already in the graph (a file, a
- * symbol, a table), and an endpoint that resolves to neither is refused.
+ * Ids: a fact becomes node `<kind>:<id>` (an id already carrying its kind
+ * prefix keeps it once). A relation's `from` / `to` name either such a fact or
+ * any node already in the graph (a file, a symbol, a table). A source that
+ * resolves to neither is refused; a target may stay unresolved, as `symbol:` and
+ * `external:` targets do — a reference to something nobody declared is itself
+ * a fact a drift rule can see. A kind is checked against the whole
+ * vocabulary, not only its owning lane: a runtime reader's `service` and an
+ * interfaces reader's `service` are the same kind of thing.
  *
  * `applyLaneOutputs` does the same on a graph file and re-derives its SQLite
  * twin, so a query sees the merged facts through either store.
@@ -20,7 +25,7 @@ import { write_atomic } from '../../_lib/fs_atomic.js';
 import { serializeGraph } from '../build.js';
 import { emitSqliteTwin } from '../sqlite_store.js';
 import type { CodeEdge, CodeGraph, CodeNode, FactMeta } from '../types.js';
-import { directionError, KINDS, LANE_CAP, laneOfKind, RELATIONS } from '../vocabulary.js';
+import { directionError, KINDS, LANE_CAP, RELATIONS } from '../vocabulary.js';
 import type { LaneOutput } from './lane_fact.js';
 
 export interface MergeRefusal {
@@ -35,7 +40,8 @@ export interface MergeResult {
     refused: MergeRefusal[];
 }
 
-const factId = (kind: string, id: string): string => `${kind}:${id}`;
+/** A reader may already prefix its ids with the kind; the node id carries the prefix once. */
+const factId = (kind: string, id: string): string => (id.startsWith(`${kind}:`) ? id : `${kind}:${id}`);
 
 /** Merge lane outputs into a copy of `graph`; the input graph is not changed. */
 export function mergeLaneOutputs(graph: CodeGraph, outputs: readonly LaneOutput[]): MergeResult {
@@ -54,10 +60,6 @@ export function mergeLaneOutputs(graph: CodeGraph, outputs: readonly LaneOutput[
             const item = factId(f.kind, f.id);
             if (!KINDS.has(f.kind)) {
                 refused.push({ lane: o.lane, item, reason: `kind "${f.kind}" is not in the vocabulary` });
-                continue;
-            }
-            if (laneOfKind(f.kind) !== o.lane) {
-                refused.push({ lane: o.lane, item, reason: `kind "${f.kind}" belongs to the ${laneOfKind(f.kind)} lane` });
                 continue;
             }
             const fact: FactMeta = { owner: f.owner, witness: { ...f.witness }, rung: f.rung, resolved_via: 'lane-read', lane: o.lane, attrs: { ...f.attrs } };
@@ -87,18 +89,18 @@ export function mergeLaneOutputs(graph: CodeGraph, outputs: readonly LaneOutput[
             }
             const from = byId.get(r.from);
             const to = byId.get(r.to);
-            if (!from || !to) {
-                refused.push({ lane: o.lane, item, reason: `endpoint not in the graph: ${!from ? r.from : r.to}` });
+            if (!from) {
+                refused.push({ lane: o.lane, item, reason: `source not in the graph: ${r.from}` });
                 continue;
             }
-            const wrongWay = directionError(r.relation, from.kind, to.kind);
+            const wrongWay = directionError(r.relation, from.kind, to?.kind);
             if (wrongWay) {
                 refused.push({ lane: o.lane, item, reason: wrongWay });
                 continue;
             }
             const edge: CodeEdge = {
                 source: from.id,
-                target: to.id,
+                target: to?.id ?? r.to,
                 relation: r.relation as CodeEdge['relation'],
                 confidence: r.guess ? 'INFERRED' : 'EXTRACTED',
                 resolved_via: r.guess ? 'name-lookup' : 'lane-read',

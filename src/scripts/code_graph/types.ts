@@ -65,7 +65,22 @@ export type Relation =
     | 'triggers'
     | 'governs'
     | 'supersedes'
-    | 'co-changes';
+    | 'co-changes'
+    | 'based-on'
+    | 'uses-image'
+    | 'depends-on'
+    | 'connects'
+    | 'publishes'
+    | 'mounts'
+    | 'on-network'
+    | 'owned-by'
+    | 'selects'
+    | 'resolves-to'
+    | 'needs'
+    | 'contains'
+    | 'builds'
+    | 'delivers'
+    | 'consumes';
 
 /** Fails to compile while `Relation` and the vocabulary file disagree. */
 type InSync<T extends true> = T;
