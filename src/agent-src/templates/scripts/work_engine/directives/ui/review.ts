@@ -183,8 +183,51 @@ export function run(state: DeliveryState): StepResult {
     }
 
     _stamp_verdict_scope(r);
+    (r['verdict_scope'] as Record<string, Any>)['consistency_status'] = consistency_status(
+        r,
+        state.changes as ReadonlyArray<Record<string, Any>>,
+    );
 
     return new StepResult({ outcome: Outcome.SUCCESS });
+}
+
+/**
+ * Whether the change fits the project's own controls, as one of four words — and
+ * never `pass` without render evidence (road-to-a-control-that-matches-its-
+ * neighbours 3.6). Inputs: `review.consistency` (`findings` from
+ * `lint_design_consistency`, `open_state` per added control from
+ * `ui:render --interact`) and the `new_control_roles` the apply and polish steps
+ * computed on `state.changes`.
+ *
+ *   fail         a consistency finding stands
+ *   unverified   a control role was added and its open state was not captured
+ *   static-pass  no finding, but nothing was rendered
+ *   pass         no finding, rendered, every added control captured open
+ */
+export function consistency_status(
+    review: Record<string, Any>,
+    changes: ReadonlyArray<Record<string, Any>>,
+): 'pass' | 'fail' | 'static-pass' | 'unverified' {
+    const raw = review['consistency'];
+    const consistency: Record<string, Any> = _isDict(raw) ? raw : {};
+    const findings = consistency['findings'];
+    if (Array.isArray(findings) && findings.length > 0) return 'fail';
+
+    const added = new Set<string>();
+    for (const c of changes) {
+        const roles = c['new_control_roles'];
+        if (Array.isArray(roles)) for (const r of roles) if (typeof r === 'string') added.add(r);
+    }
+    const open = consistency['open_state'];
+    const captured = new Set<string>();
+    if (_isDict(open)) {
+        for (const [role, state] of Object.entries(open)) if (state === 'captured') captured.add(role);
+    }
+    const preview = _isDict(review['preview']) ? (review['preview'] as Record<string, Any>) : {};
+    const rendered = preview['render_ok'] === true;
+
+    if ([...added].some((r) => !captured.has(r))) return 'unverified';
+    return rendered ? 'pass' : 'static-pass';
 }
 
 /** True when `review` is a dict with at least one own key. */
@@ -245,6 +288,10 @@ function _delegate_to_review_skill(state: DeliveryState): StepResult {
             '> Ground chart-type and contrast findings in the adopted ' +
                 "corpus (design-intelligence § 'Grounding the review/polish " +
                 "a11y gate') — cite the corpus row, don't eyeball.",
+            '> Consistency: run `lint_design_consistency` over the changed ' +
+                'files and `ui:render --interact` on every control a change ' +
+                'added (see `new_control_roles` on `state.changes`); write ' +
+                '`consistency: {findings: [...], open_state: {<role>: "captured"}}`.',
             '> 1. Continue — run the review and write ' +
                 '`{findings: [...], review_clean: bool}` into ' +
                 '`state.ui_review`',
