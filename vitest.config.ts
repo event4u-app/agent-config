@@ -74,6 +74,7 @@ const IMPORTED_BROWSER_SUITES = [
     'tests/scripts/code_graph_map_supernodes.test.ts',
     'tests/scripts/code_graph_map_data_page.test.ts',
     'tests/scripts/code_graph_map_erd_load.test.ts',
+    'tests/scripts/code_graph_map_erd_interaction.test.ts',
     'tests/scripts/code_graph_map_ported_pages.test.ts',
 ];
 const BROWSER_SUITES = [

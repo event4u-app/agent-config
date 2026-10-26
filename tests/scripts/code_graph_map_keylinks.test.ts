@@ -207,6 +207,12 @@ describe('the wheel zooms and a drag pans; only moving a table needs Ctrl / ⌘'
         await page.waitForTimeout(150);
         expect(await z()).toBeGreaterThan(z0);
         expect(await scroll()).toBe(0);
+        // A trackpad pinch arrives as a wheel with Ctrl held; with Ctrl or ⌘ the wheel still zooms.
+        for (const key of ['Control', 'Meta']) {
+            const before = await z();
+            await page.locator('#db-stage').dispatchEvent('wheel', { deltaY: -100, ctrlKey: key === 'Control', metaKey: key === 'Meta' });
+            expect(await z(), key).toBeGreaterThan(before);
+        }
         expect(await page.locator('.db-help').textContent()).toMatch(/^Drag to pan, wheel to zoom; hold (Ctrl|⌘) and drag to move a table/);
         await page.close();
     });
