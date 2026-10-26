@@ -73,6 +73,36 @@ export interface ProduceOptions {
 
 const LANES_OF_AREA = { data: 'data', interfaces: 'interfaces', runtime: 'runtime', delivery: 'delivery' } as const;
 
+/** Whether a lane's reader ran in the build the graph came from, and why it merged nothing when it failed. */
+interface LaneState {
+    ran: boolean;
+    error?: string;
+}
+
+/**
+ * `lanes_run` is the record; a graph written before it existed falls back to
+ * "some lane fact is present", which cannot tell one lane from another.
+ */
+function laneState(c: Ctx, lane: string, legacyRan: boolean): LaneState {
+    const runs = c.graph.lanes_run;
+    if (!runs) return { ran: legacyRan };
+    const r = runs.find((x) => x.lane === lane);
+    if (!r) return { ran: false };
+    return r.error === undefined ? { ran: true } : { ran: true, error: publicError(c, r.error) };
+}
+
+/** A reader's error goes into a committed page: no host path survives in it. */
+function publicError(c: Ctx, message: string): string {
+    return (c.root ? message.split(c.root).join('.') : message)
+        .replace(/(?:[A-Za-z]:)?[\\/](?:Users|home|private|tmp|var|opt|root)[\\/][^\s'"`]*/g, '<path>')
+        .slice(0, 240);
+}
+
+/** The reason an area that ran shows instead of facts. */
+function emptyReason(st: LaneState, foundNothing: string): string {
+    return st.error === undefined ? foundNothing : `the reader failed: ${st.error}`;
+}
+
 const COMPLETENESS: readonly Completeness[] = ['unknown', 'partial', 'complete'];
 const worst = (cs: readonly string[]): Completeness =>
     cs.length === 0 ? 'unknown' : (cs.reduce((a, b) => (COMPLETENESS.indexOf(a as Completeness) <= COMPLETENESS.indexOf(b as Completeness) ? a : b)) as Completeness);
@@ -155,7 +185,7 @@ function tableName(n: CodeNode): string {
     return conn === 'default' ? n.label : `${conn}:${n.label}`;
 }
 
-function dataPayload(c: Ctx, findings: AreaFinding[]): { payload: DataPayload; erd: ErdPage[] } | null {
+function dataPayload(c: Ctx, findings: AreaFinding[], st: LaneState): { payload: DataPayload; erd: ErdPage[] } | null {
     const intended = c.graph.nodes.filter((n) => n.kind === 'table' && n.fact && !n.id.includes('@'));
     const actualSources = [...new Set(c.graph.nodes.filter((n) => n.kind === 'table' && n.id.includes('@')).map((n) => n.fact?.owner ?? '').filter(Boolean))].sort();
     const actualCols = new Map<string, CodeNode>();
@@ -298,7 +328,7 @@ function dataPayload(c: Ctx, findings: AreaFinding[]): { payload: DataPayload; e
 
     if (tables.length === 0 && actualSources.length === 0) {
         return {
-            payload: { reader: 'data lane (migrations, dumps, snapshots)', completeness: 'unknown', empty: 'no migration, schema file, committed dump or snapshot was found', findings, tables: [], foreignKeys: [], relations: [] },
+            payload: { reader: 'data lane (migrations, dumps, snapshots)', completeness: 'unknown', empty: emptyReason(st, 'no migration, schema file, committed dump or snapshot was found'), findings, tables: [], foreignKeys: [], relations: [] },
             erd: [],
         };
     }
@@ -324,7 +354,7 @@ function dataPayload(c: Ctx, findings: AreaFinding[]): { payload: DataPayload; e
 
 const PROTOCOLS = ['rest', 'soap', 'graphql', 'grpc', 'sdk', 'webhook'] as const;
 
-function interfacesPayload(c: Ctx, findings: AreaFinding[], ran: boolean): InterfacesPayload | null {
+function interfacesPayload(c: Ctx, findings: AreaFinding[], st: LaneState): InterfacesPayload | null {
     const services: InterfaceService[] = [];
     for (const s of c.graph.nodes.filter((n) => n.kind === 'service' && n.fact?.lane === 'interfaces')) {
         const sw = nodeWitness(c, s);
@@ -361,11 +391,11 @@ function interfacesPayload(c: Ctx, findings: AreaFinding[], ran: boolean): Inter
             witness: sw,
         });
     }
-    if (!ran && services.length === 0) return null;
+    if (!st.ran && services.length === 0) return null;
     return {
         reader: 'interfaces lane (call sites, contracts, configuration names)',
-        completeness: services.some((s) => s.protocol === 'unknown') ? 'partial' : 'complete',
-        ...(services.length === 0 ? { empty: 'no outbound call site, contract or service configuration name was found' } : {}),
+        completeness: st.error !== undefined ? 'unknown' : services.some((s) => s.protocol === 'unknown') ? 'partial' : 'complete',
+        ...(services.length === 0 ? { empty: emptyReason(st, 'no outbound call site, contract or service configuration name was found') } : {}),
         findings,
         services: services.sort((a, b) => (a.name < b.name ? -1 : 1)),
     };
@@ -373,7 +403,7 @@ function interfacesPayload(c: Ctx, findings: AreaFinding[], ran: boolean): Inter
 
 // ---- runtime -------------------------------------------------------------------
 
-function runtimePayload(c: Ctx, findings: AreaFinding[], ran: boolean): RuntimePayload | null {
+function runtimePayload(c: Ctx, findings: AreaFinding[], st: LaneState): RuntimePayload | null {
     const services: RuntimePayload['services'] = [];
     for (const s of c.graph.nodes.filter((n) => n.kind === 'service' && n.fact?.lane === 'runtime' && attr(n, 'source') !== 'resolved')) {
         const w = nodeWitness(c, s);
@@ -413,11 +443,11 @@ function runtimePayload(c: Ctx, findings: AreaFinding[], ran: boolean): RuntimeP
         resources.push({ name: r.label, type, ...(typeof module === 'string' ? { module } : {}), environments: typeof ns === 'string' ? [ns] : [], witness: w });
     }
     const environments = [...new Set([...c.graph.nodes.filter((n) => n.kind === 'environment' && n.fact?.lane === 'runtime').map((n) => n.label), ...resources.flatMap((r) => r.environments)])].sort();
-    if (!ran && services.length === 0 && resources.length === 0) return null;
+    if (!st.ran && services.length === 0 && resources.length === 0) return null;
     return {
         reader: 'runtime lane (compose, Dockerfiles, Terraform, Kubernetes, task files)',
-        completeness: 'complete',
-        ...(services.length === 0 && resources.length === 0 ? { empty: 'no compose file, Dockerfile, Terraform or Kubernetes manifest was found' } : {}),
+        completeness: st.error !== undefined ? 'unknown' : 'complete',
+        ...(services.length === 0 && resources.length === 0 ? { empty: emptyReason(st, 'no compose file, Dockerfile, Terraform or Kubernetes manifest was found') } : {}),
         findings,
         environments,
         resources: resources.sort((a, b) => (a.name < b.name ? -1 : 1)),
@@ -427,7 +457,7 @@ function runtimePayload(c: Ctx, findings: AreaFinding[], ran: boolean): RuntimeP
 
 // ---- delivery ------------------------------------------------------------------
 
-function deliveryPayload(c: Ctx, findings: AreaFinding[], ran: boolean): DeliveryPayload | null {
+function deliveryPayload(c: Ctx, findings: AreaFinding[], st: LaneState): DeliveryPayload | null {
     const strip = (id: string, kind: string): string => id.replace(new RegExp(`^${kind}:`), '');
     const workflows: DeliveryPayload['workflows'] = [];
     for (const w of c.graph.nodes.filter((n) => n.kind === 'workflow' && n.fact?.lane === 'delivery' && !n.id.startsWith('workflow:include:'))) {
@@ -467,11 +497,11 @@ function deliveryPayload(c: Ctx, findings: AreaFinding[], ran: boolean): Deliver
         } else if (e.relation === 'deploys-to') chain.push({ kind: 'deploy', name: src?.label ?? e.source, environment: tgt?.label ?? e.target, job: strip(e.source, 'job'), witness: w });
     }
     const environments = [...new Set(c.graph.nodes.filter((n) => n.kind === 'environment' && n.fact?.lane === 'delivery').map((n) => n.label))].sort();
-    if (!ran && workflows.length === 0) return null;
+    if (!st.ran && workflows.length === 0) return null;
     return {
         reader: 'delivery lane (GitHub Actions, GitLab CI)',
-        completeness: 'complete',
-        ...(workflows.length === 0 ? { empty: 'no GitHub Actions workflow or GitLab CI file was found' } : {}),
+        completeness: st.error !== undefined ? 'unknown' : 'complete',
+        ...(workflows.length === 0 ? { empty: emptyReason(st, 'no GitHub Actions workflow or GitLab CI file was found') } : {}),
         findings,
         workflows: workflows.sort((a, b) => (a.file < b.file ? -1 : 1)),
         jobs: jobs.sort((a, b) => (a.id < b.id ? -1 : 1)),
@@ -635,17 +665,19 @@ export function produceAreas(root: string, graph: CodeGraph, opts: ProduceOption
         c.out.set(e.source, [...(c.out.get(e.source) ?? []), e]);
         c.inn.set(e.target, [...(c.inn.get(e.target) ?? []), e]);
     }
-    const lanesRan = graph.nodes.some((n) => n.fact?.lane !== undefined) || graph.edges.some((e) => e.fact?.lane !== undefined);
+    const legacyRan = graph.nodes.some((n) => n.fact?.lane !== undefined) || graph.edges.some((e) => e.fact?.lane !== undefined);
+    const lane = (id: string): LaneState => laneState(c, id, legacyRan);
     const report = evaluateDrift(graph, ALL_DRIFT_RULES, readDeclaredWaivers(root));
     const byLane = (lane: string): AreaFinding[] => report.findings.filter((f) => f.lane === lane).map((f) => toAreaFinding(c, f));
     const areas: MapAreas = {};
-    const data = dataPayload(c, byLane(LANES_OF_AREA.data));
-    if (data && (lanesRan || data.payload.tables.length)) areas.data = data.payload;
-    const interfaces = interfacesPayload(c, byLane(LANES_OF_AREA.interfaces), lanesRan);
+    const dataLane = lane(LANES_OF_AREA.data);
+    const data = dataPayload(c, byLane(LANES_OF_AREA.data), dataLane);
+    if (data && (dataLane.ran || data.payload.tables.length)) areas.data = data.payload;
+    const interfaces = interfacesPayload(c, byLane(LANES_OF_AREA.interfaces), lane(LANES_OF_AREA.interfaces));
     if (interfaces) areas.interfaces = interfaces;
-    const runtime = runtimePayload(c, byLane(LANES_OF_AREA.runtime), lanesRan);
+    const runtime = runtimePayload(c, byLane(LANES_OF_AREA.runtime), lane(LANES_OF_AREA.runtime));
     if (runtime) areas.runtime = runtime;
-    const delivery = deliveryPayload(c, byLane(LANES_OF_AREA.delivery), lanesRan);
+    const delivery = deliveryPayload(c, byLane(LANES_OF_AREA.delivery), lane(LANES_OF_AREA.delivery));
     if (delivery) areas.delivery = delivery;
     let isRepo = true;
     try {

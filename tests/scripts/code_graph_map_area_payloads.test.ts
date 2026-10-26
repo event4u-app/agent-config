@@ -12,12 +12,13 @@ import { pathToFileURL } from 'node:url';
 import type { Browser } from '@playwright/test';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
+import { buildFromRepo, runLaneReaders } from '../../src/scripts/code_graph/build.js';
 import { main as cli } from '../../src/scripts/code_graph/cli.js';
 import { buildMap } from '../../src/scripts/code_graph/map.js';
 import { AGENT_VERBS, cliVerbs, produceAreas } from '../../src/scripts/code_graph/map_area_payloads.js';
 import { areaProblems, type MapAreas } from '../../src/scripts/code_graph/map_areas.js';
 import type { CodeGraph } from '../../src/scripts/code_graph/types.js';
+import { validateGraph } from '../../src/scripts/code_graph/validate.js';
 import { GRAPH_TOOLS } from '../../src/scripts/mcp_server/graph_tools.js';
 
 const FX = path.resolve(__dirname, '../fixtures/code-graph');
@@ -172,6 +173,61 @@ describe('the intended against the actual schema', () => {
         const a = produceAreas(dir, graph, { hunks: [] }).areas;
         expect(Object.keys(a).sort()).toEqual(['agent', 'impact']);
         expect(a.impact?.empty).toMatch(/no change/);
+    });
+});
+
+describe('the graph records which lane readers ran', () => {
+    it('a reader that ran and found nothing gives its area a reason; one that never ran leaves the area out', async () => {
+        const dir = tmp('map-lanes-');
+        fs.writeFileSync(path.join(dir, 'a.ts'), 'export const a = 1;\n');
+        const { graph, json } = await buildFromRepo(dir, null, { lanes: true });
+        expect(graph.lanes_run?.map((r) => r.lane).sort()).toEqual(['data', 'decisions', 'delivery', 'flows', 'history', 'interfaces', 'runtime']);
+        expect(graph.lanes_run!.every((r) => r.facts >= 0 && r.relations >= 0)).toBe(true);
+        expect((JSON.parse(json) as CodeGraph).lanes_run).toEqual(graph.lanes_run);
+        expect(validateGraph(JSON.parse(json)).ok).toBe(true);
+        const ran = produceAreas(dir, graph, { hunks: [] }).areas;
+        expect(ran.runtime?.empty).toMatch(/no compose file/);
+        expect(ran.delivery?.empty).toMatch(/no GitHub Actions workflow/);
+        expect(ran.interfaces?.empty).toMatch(/no outbound call site/);
+        expect(ran.data?.empty).toMatch(/no migration/);
+        // The same graph with only the runtime reader recorded: the others never ran.
+        const onlyRuntime: CodeGraph = { ...graph, lanes_run: graph.lanes_run!.filter((r) => r.lane === 'runtime') };
+        const some = produceAreas(dir, onlyRuntime, { hunks: [] }).areas;
+        expect(some.runtime?.empty).toMatch(/no compose file/);
+        expect(some.delivery).toBeUndefined();
+        expect(some.interfaces).toBeUndefined();
+        expect(some.data).toBeUndefined();
+    }, 60_000);
+
+    it('a reader that failed is recorded with its error, and its area says so without a host path', async () => {
+        const dir = tmp('map-lanefail-');
+        fs.writeFileSync(path.join(dir, 'a.ts'), 'export const a = 1;\n');
+        const { graph: core } = await buildFromRepo(dir, null);
+        expect(core.lanes_run).toBeUndefined();
+        const { graph } = runLaneReaders(dir, core, {
+            readers: {
+                delivery: () => {
+                    throw new Error(`cannot read ${path.join(dir, '.github/workflows/x.yml')} or /Users/someone/elsewhere.yml`);
+                },
+            },
+        });
+        const rec = graph.lanes_run!.find((r) => r.lane === 'delivery')!;
+        expect(rec).toMatchObject({ facts: 0, relations: 0 });
+        expect(rec.error).toContain('cannot read');
+        const d = produceAreas(dir, graph, { hunks: [] }).areas.delivery!;
+        expect(d.completeness).toBe('unknown');
+        expect(d.empty).toMatch(/^the reader failed: cannot read \.\/\.github\/workflows\/x\.yml or <path>/);
+        expect(d.empty).not.toContain(dir);
+        expect(d.empty).not.toContain('/Users/');
+    });
+
+    it('the schema gate refuses a malformed lane record', () => {
+        const base = { schema_version: 7, source_checksum: 'x', nodes: [], edges: [] };
+        expect(validateGraph({ ...base, lanes_run: [{ lane: 'data', facts: 0, relations: 0 }] }).ok).toBe(true);
+        expect(validateGraph({ ...base, lanes_run: 'data' }).ok).toBe(false);
+        expect(validateGraph({ ...base, lanes_run: [{ lane: 'Data!', facts: 0, relations: 0 }] }).ok).toBe(false);
+        expect(validateGraph({ ...base, lanes_run: [{ lane: 'data', facts: 1.5, relations: 0 }] }).ok).toBe(false);
+        expect(validateGraph({ ...base, lanes_run: [{ lane: 'data', facts: 0, relations: 0, error: 3 }] }).ok).toBe(false);
     });
 });
 

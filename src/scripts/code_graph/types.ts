@@ -311,6 +311,15 @@ export interface ActiveProviderRecord {
     roots: string[];
 }
 
+/** One lane reader's run: what it merged, or why it merged nothing. No timing, so a rebuild stays byte-identical. */
+export interface LaneRunRecord {
+    lane: string;
+    facts: number;
+    relations: number;
+    /** The reader threw; its lane holds no facts from this build. */
+    error?: string;
+}
+
 export interface CodeGraph {
     schema_version: number;
     /** content-addressed to the file-manifest checksum (cache key). */
@@ -345,6 +354,12 @@ export interface CodeGraph {
     };
     /** Convention providers active in this build; present only when one was. */
     providers?: ActiveProviderRecord[];
+    /**
+     * The lane readers that ran in this build, in run order. Absent when no
+     * lane reader ran at all, so a reader that ran and found nothing
+     * (`facts: 0`) is told apart from one that never ran.
+     */
+    lanes_run?: LaneRunRecord[];
     nodes: CodeNode[];
     edges: CodeEdge[];
 }
