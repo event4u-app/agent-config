@@ -381,7 +381,7 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
     const { graph, built, overlay } = await loadOrBuildGraph(root, opts.cachePath ?? home.cachePath, opts.cachePath ?? home.buildCachePath, opts.noBuild === true, outDir);
     // After a build the current file is the one to read, whatever an older release left beside it.
     const cachePath = opts.cachePath ?? graphHome(root).cachePath;
-    const produced = opts.areas ? { areas: opts.areas, erd: [] } : produceAreas(root, graph, { ...(opts.diffRev !== undefined ? { diffRev: opts.diffRev } : {}), previousTours: previousTours(outDir), ...(overlay ? { added: overlay.added } : {}) });
+    const produced = opts.areas ? { areas: opts.areas, erd: [] } : produceAreas(root, graph, { ...(opts.diffRev !== undefined ? { diffRev: opts.diffRev } : {}), previousTours: previousTours(outDir), cachePath, ...(overlay ? { added: overlay.added } : {}) });
     const areas = produced.areas;
     const problems = areaProblems(areas);
     if (problems.length) throw new Error(`refusing to draw the map: the areas section is unsafe or unreadable — ${problems.slice(0, 5).join('; ')}`);
