@@ -13,6 +13,7 @@
  * tree, and the facts it holds are never written into a project map.
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { randomBytes } from 'node:crypto';
 
@@ -131,9 +132,15 @@ export function planHub(out: string = hubDir(), readers: HubReaders = DEFAULT_RE
     return { payload, mirrors };
 }
 
-export function renderHub(payload: HubPayload): string {
+/** A folder for the hub's banner: under the home directory it starts with `~`. */
+function displayDir(dir: string): string {
+    const home = os.homedir();
+    return dir === home || dir.startsWith(home + path.sep) ? `~${dir.slice(home.length).split(path.sep).join('/')}/` : `${dir.split(path.sep).join('/')}/`;
+}
+
+export function renderHub(payload: HubPayload, dir: string = hubDir()): string {
     const meta: MapMeta = { title: 'Projects hub', commit: '', state: 'fresh', summary: `${payload.projects.length} registered projects` };
-    const shell: MapShell = { routes: ['projects'], home: 'projects', hub: { projects: payload.projects.length, indexed: payload.projects.filter((p) => p.indexed).length } };
+    const shell: MapShell = { routes: ['projects'], home: 'projects', hub: { projects: payload.projects.length, indexed: payload.projects.filter((p) => p.indexed).length, dir: displayDir(dir) } };
     return renderPage(buildMapModel(EMPTY_GRAPH), meta, { projects: payload }, shell);
 }
 
@@ -181,7 +188,7 @@ export function writeHub(out: string, plan: Plan): string {
                 if (fs.existsSync(from)) fs.cpSync(from, path.join(next, id, entry), { recursive: true });
             }
         }
-        write('index.html', renderHub(plan.payload));
+        write('index.html', renderHub(plan.payload, out));
         swapIn(next, out, prev);
     } finally {
         fs.rmSync(next, { recursive: true, force: true });
