@@ -239,14 +239,14 @@ The gate for every later promotion.
 
 ## Phase 6 — Product truth that survives a second skill
 
-- [ ] **6.1 Dialect detection before any write.** `design-system-capture`
+- [x] **6.1 Dialect detection before any write.** Done 2026-10-26: `src/scripts/product_md_dialect.ts` (`classifyProductMd`, `captureMayRewrite`; a fourth class, `superset`, is the new template); the skill's Step 1 runs it and proposes additions to a foreign file as a diff. Three fixtures under `tests/fixtures/product-md/`; the foreign one is byte-identical after a run (`tests/scripts/product_md_dialect.test.ts`). The capture itself is the agent's, so "a capture run" is pinned as the classifier the skill must consult plus the read-only verdict it returns. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/product_md_dialect.ts --> `design-system-capture`
       classifies an existing PRODUCT.md as `ac-interaction`, `product-truth`
       (Register / Users / Product Purpose / Anti-references / Design Principles)
       or `unknown`; a file it does not own is read, never rewritten; additions
       are proposed as a diff.
       verify: three fixtures; the foreign-format fixture is byte-identical after
       a capture run.
-- [ ] **6.2 Interop, not a rename.** The template becomes a superset (Register,
+- [x] **6.2 Interop, not a rename.** Done 2026-10-26: the template is Register, Users, Purpose, Anti-references, Principles, then `## Interaction patterns` with the seven old sections as subsections; the test reads the template out of the skill and asserts it classifies as `superset`; `evals.json` gains `foreign-product-md`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/product_md_dialect.ts --> The template becomes a superset (Register,
       Users, Purpose, Anti-references, Principles, and Interaction patterns as
       one section).
       verify: template diff; `design-system-capture/evals/evals.json` gains a case

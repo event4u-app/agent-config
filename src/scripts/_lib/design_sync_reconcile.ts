@@ -39,6 +39,8 @@ export interface ReconcileInput {
     /** The tiers `detect_component_taxonomy` recorded, or none. */
     tiers: string[];
     owner: 'fe-design' | 'directives/ui';
+    /** Presence and declared register of DESIGN.md / PRODUCT.md (`readDocAuthority`). */
+    docs?: { design_md: Signals['design_md']; product_md: Signals['product_md'] };
 }
 
 /** Build the resolver's signals — the one place the sync inputs meet `ui_authority`. */
@@ -51,6 +53,7 @@ export function authoritySignals(input: ReconcileInput): Signals {
         incumbent: input.incumbent,
         ...(input.userIntent !== undefined ? { user: input.userIntent } : {}),
         ...(hard.length > 0 ? { hard_constraints: hard } : {}),
+        ...(input.docs ?? {}),
     };
 }
 

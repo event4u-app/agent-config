@@ -47,6 +47,7 @@ import {
   type Severity,
 } from "./design_slop_rules.js";
 import { ignoreReason } from "./_lib/ignore_reason.js";
+import { declaredRegister } from "./_lib/doc_authority.js";
 
 export interface Finding {
   rule: string;
@@ -133,6 +134,7 @@ export function loadDesignContext(scanDir: string): DesignContext {
 export function contextFromText(text: string): DesignContext {
   const raw = text.toLowerCase();
   const declared = declaredIntent(raw);
+  const register = declaredRegister(raw);
   return {
     raw,
     has: (...keywords: string[]) =>
@@ -141,6 +143,7 @@ export function contextFromText(text: string): DesignContext {
         return declared.some((d) => re.test(d));
       }),
     legacyHas: (...keywords: string[]) => keywords.find((k) => raw.includes(k.toLowerCase())) ?? null,
+    ...(register ? { register } : {}),
   };
 }
 

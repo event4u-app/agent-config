@@ -67,6 +67,8 @@ export interface DesignContext {
    * suppresses nothing. Absent on a hand-built context.
    */
   legacyHas?(...keywords: string[]): string | null;
+  /** The register DESIGN.md declares (`register:` or `## Register`), never inferred. */
+  register?: "brand" | "product";
 }
 
 export interface RuleInput {
@@ -347,7 +349,8 @@ export const SLOP_RULES: SlopRule[] = [
     // guidelines. P2 is a rebuttable presumption (see the header), never a block.
     message:
       "This is a default AI-coding-tool font pick. Declare it with a reason (T7) — in the product register, \"single reliable family\" IS the reason; state it in DESIGN.md or the surface brief.",
-    gated: (ctx) => DEFAULT_FONTS.some((f) => ctx.has(f)),
+    // A declared product register is the stated reason the catalog accepts.
+    gated: (ctx) => ctx.register === "product" || DEFAULT_FONTS.some((f) => ctx.has(f)),
     detect: ({ lines }) =>
       lines.flatMap((l, i) => {
         if (!/font-family\s*:/i.test(l)) return [];
