@@ -397,6 +397,10 @@ function runtimePayload(c: Ctx, findings: AreaFinding[], ran: boolean): RuntimeP
             ports,
             networks: target('on-network').map((n) => n.label).sort(),
             envNames: [...envNames].sort(),
+            volumes: outs
+                .filter((e) => e.relation === 'mounts')
+                .map((e) => ({ name: String(e.fact?.attrs?.['target_name'] ?? c.byId.get(e.target)?.label ?? e.target), target: String(e.fact?.attrs?.['target'] ?? '') })),
+            dependsOn: outs.filter((e) => e.relation === 'depends-on').map((e) => String(e.fact?.attrs?.['target_name'] ?? c.byId.get(e.target)?.label ?? e.target)),
             witness: w,
         });
     }
@@ -412,6 +416,16 @@ function runtimePayload(c: Ctx, findings: AreaFinding[], ran: boolean): RuntimeP
         const ns = attr(r, 'namespace');
         resources.push({ name: r.label, type, ...(typeof module === 'string' ? { module } : {}), environments: typeof ns === 'string' ? [ns] : [], witness: w });
     }
+    const links: NonNullable<RuntimePayload['links']> = [];
+    for (const e of c.graph.edges) {
+        if (e.fact?.lane !== 'runtime' || c.byId.get(e.source)?.kind !== 'resource') continue;
+        const tgt = c.byId.get(e.target);
+        if (tgt && tgt.kind !== 'resource') continue;
+        const w = edgeWitness(c, e);
+        if (!w) continue;
+        const mech = e.fact.attrs?.['mechanism'] ?? e.fact.attrs?.['name'];
+        links.push({ from: c.byId.get(e.source)!.label, to: tgt?.label ?? String(e.fact.attrs?.['target_name'] ?? e.target), relation: e.relation, ...(typeof mech === 'string' ? { mechanism: mech } : {}), witness: w });
+    }
     const environments = [...new Set([...c.graph.nodes.filter((n) => n.kind === 'environment' && n.fact?.lane === 'runtime').map((n) => n.label), ...resources.flatMap((r) => r.environments)])].sort();
     if (!ran && services.length === 0 && resources.length === 0) return null;
     return {
@@ -422,6 +436,7 @@ function runtimePayload(c: Ctx, findings: AreaFinding[], ran: boolean): RuntimeP
         environments,
         resources: resources.sort((a, b) => (a.name < b.name ? -1 : 1)),
         services: services.sort((a, b) => (a.name < b.name ? -1 : 1)),
+        links,
     };
 }
 
@@ -433,7 +448,18 @@ function deliveryPayload(c: Ctx, findings: AreaFinding[], ran: boolean): Deliver
     for (const w of c.graph.nodes.filter((n) => n.kind === 'workflow' && n.fact?.lane === 'delivery' && !n.id.startsWith('workflow:include:'))) {
         const ww = nodeWitness(c, w);
         if (!ww) continue;
-        workflows.push({ file: w.fact!.owner, name: w.label, triggers: strs(attr(w, 'triggers')), witness: ww });
+        const events = c.graph.nodes
+            .filter((t) => t.kind === 'trigger' && t.fact?.lane === 'delivery' && attr(t, 'context') === w.id)
+            .map((t) => {
+                const job = (c.out.get(t.id) ?? []).find((e) => e.relation === 'triggers' && c.byId.get(e.target)?.kind === 'job');
+                return {
+                    event: String(attr(t, 'event') ?? t.label),
+                    branches: strs(attr(t, 'branches')),
+                    paths: strs(attr(t, 'paths')).length > 0 || strs(attr(t, 'paths_ignore')).length > 0,
+                    ...(job ? { job: strip(job.target, 'job') } : {}),
+                };
+            });
+        workflows.push({ file: w.fact!.owner, name: w.label, triggers: strs(attr(w, 'triggers')), events, witness: ww });
     }
     const jobs: DeliveryPayload['jobs'] = [];
     for (const j of c.graph.nodes.filter((n) => n.kind === 'job' && n.fact?.lane === 'delivery')) {
@@ -450,6 +476,11 @@ function deliveryPayload(c: Ctx, findings: AreaFinding[], ran: boolean): Deliver
             ...(typeof env === 'string' ? { environment: env } : {}),
             ...(typeof cond === 'string' ? { condition: cond } : {}),
             uses: outs.filter((e) => e.relation === 'uses' || e.relation === 'calls').map((e) => c.byId.get(e.target)?.label ?? strip(strip(e.target, 'action'), 'workflow')),
+            ...(attr(j, 'system') === 'github' || attr(j, 'system') === 'gitlab' ? { system: attr(j, 'system') as 'github' | 'gitlab' } : {}),
+            ...(typeof attr(j, 'stage') === 'string' ? { stage: attr(j, 'stage') as string } : {}),
+            branches: strs(attr(j, 'branches')),
+            isTest: attr(j, 'is_test') === true,
+            isDeploy: attr(j, 'is_deploy') === true,
             witness: jw,
         });
     }

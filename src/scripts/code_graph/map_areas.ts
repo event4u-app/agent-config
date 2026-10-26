@@ -174,6 +174,21 @@ export interface RuntimeService {
     /** Environment variable NAMES the service declares; never values. */
     envNames: string[];
     environment?: string;
+    /** Named volumes and bind sources the service mounts, with the path inside the container. */
+    volumes?: Array<{ name: string; target: string }>;
+    /** Services this one declares it depends on, by name as written. */
+    dependsOn?: string[];
+    witness: Witness;
+}
+
+/** A declared reference between two resources; `to` may name a resource no file declares. */
+export interface RuntimeLink {
+    from: string;
+    to: string;
+    /** Graph relation: `references`, `connects`, `routes-to`, `selects`, `owned-by`, `configured-by`. */
+    relation: string;
+    /** How the files express it, e.g. `aws_security_group_rule`, `envFrom`. */
+    mechanism?: string;
     witness: Witness;
 }
 
@@ -191,6 +206,7 @@ export interface RuntimePayload extends AreaPayloadBase {
     environments: string[];
     resources: RuntimeResource[];
     services: RuntimeService[];
+    links?: RuntimeLink[];
 }
 
 // Delivery — workflows, jobs and the build → image → deploy chain.
@@ -200,6 +216,8 @@ export interface DeliveryWorkflow {
     file: string;
     name: string;
     triggers: string[];
+    /** Each trigger's event with its branch filter as written (an empty list filters nothing), whether a path filter narrows it, and the one job it gates when it is a job's own rule. */
+    events?: Array<{ event: string; branches: string[]; paths: boolean; job?: string }>;
     witness: Witness;
 }
 
@@ -214,6 +232,13 @@ export interface DeliveryJob {
     condition?: string;
     /** Reusable workflows and actions the job uses. */
     uses: string[];
+    system?: 'github' | 'gitlab';
+    /** The CI system's own stage name, where it has one (GitLab). */
+    stage?: string;
+    /** Branch restrictions the job itself declares; `<default>` is the default branch. */
+    branches?: string[];
+    isTest?: boolean;
+    isDeploy?: boolean;
     witness: Witness;
 }
 
@@ -357,6 +382,7 @@ export function witnessesOf(areas: MapAreas): Array<[string, Witness]> {
     if (r) {
         for (const x of r.resources) push(`runtime resource ${x.name}`, x.witness);
         for (const x of r.services) push(`runtime service ${x.name}`, x.witness);
+        for (const x of r.links ?? []) push(`runtime link ${x.from} → ${x.to}`, x.witness);
         findings('runtime', r.findings);
     }
     const v = areas.delivery;
