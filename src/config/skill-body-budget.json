@@ -62,7 +62,7 @@
     "dashboard-design": 5850,
     "data-flow-mapper": 7207,
     "data-handling-judgment": 11444,
-    "database": 5940,
+    "database": 6906,
     "dcf-modeling": 4903,
     "deal-qualification-meddic": 8505,
     "decision-record": 14289,
@@ -150,7 +150,7 @@
     "laravel-horizon": 5036,
     "laravel-mail": 8604,
     "laravel-middleware": 5215,
-    "laravel-migration": 8383,
+    "laravel-migration": 8594,
     "laravel-notifications": 5083,
     "laravel-pennant": 4985,
     "laravel-pulse": 4774,
@@ -180,13 +180,13 @@
     "memory-consolidation": 21606,
     "merge-conflicts": 10878,
     "messaging-architecture": 8793,
-    "migration-architect": 4207,
+    "migration-architect": 4575,
     "mobile-e2e-strategy": 9361,
     "module-detect-on-the-fly": 8738,
     "module-management": 8219,
     "monorepo-workspace": 8228,
     "motion-choreographer": 8214,
-    "multi-tenancy": 5787,
+    "multi-tenancy": 6123,
     "nda-triage": 6984,
     "nextjs-patterns": 10113,
     "okr-tree-modeling": 5111,
@@ -269,7 +269,7 @@
     "runway-cognition": 10795,
     "scenario-modeling": 10059,
     "scene-expander": 6559,
-    "schema-review": 3897,
+    "schema-review": 4232,
     "screenshot-hygiene": 9081,
     "script-writing": 9324,
     "secrets-management": 12029,
@@ -837,6 +837,36 @@
       "old": 17182,
       "new": 17334,
       "reason": "road-to-a-map-across-systems-branches-and-time 7.1: one pointer to the systems, provenance, domain and branch verbs, whose detail lives in a reference."
+    },
+    {
+      "skill": "database",
+      "old": 5940,
+      "new": 6906,
+      "reason": "road-to-database-relational-modeling 2.1/2.6: per-environment hosting detection with the managed-service guardrail, and the ownership paragraph routing schema design to references/relational-modeling.md and drops to references/consumer-census.md; the procedures themselves live in those references."
+    },
+    {
+      "skill": "migration-architect",
+      "old": 4207,
+      "new": 4575,
+      "reason": "road-to-database-relational-modeling 5.1: the consumer census becomes a required step that routes to blast-radius-analyzer and database/references/consumer-census.md, plus the route-away line for target-schema design."
+    },
+    {
+      "skill": "multi-tenancy",
+      "old": 5787,
+      "new": 6123,
+      "reason": "road-to-database-relational-modeling 4.8: names both tenancy modes and the composite-key rule and routes shared-schema key integrity to references/shared-schema-integrity.md; the single-database exclusion it replaces contradicted shared-schema tenancy."
+    },
+    {
+      "skill": "schema-review",
+      "old": 3897,
+      "new": 4232,
+      "reason": "road-to-database-relational-modeling 5.1/2.3: the consumer-census step for drops and renames, and the route-away line for schema design."
+    },
+    {
+      "skill": "laravel-migration",
+      "old": 8383,
+      "new": 8594,
+      "reason": "road-to-database-relational-modeling 4.6: one cross-link from the soft-delete paragraph to the engine-specific unique-under-soft-delete forms in php/eloquent.md."
     }
   ]
 }

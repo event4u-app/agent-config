@@ -70,7 +70,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`dashboard-design`** — Use when designing monitoring dashboards — visualization selection, layout principles, observability strategies (RED/USE/Golden Signals), and data storytelling.
 - **`data-flow-mapper`** — Use BEFORE editing code that touches user data — traces the value from entry → validation → transformation → storage → egress, every hop cited with file:line.
 - **`data-handling-judgment`** — Use when classifying data, setting retention, judging cross-border transfer, or shaping DSR workflow. Triggers on 'how long do we keep this', 'can this data go to the US'.
-- **`database`** — Use when working with database architecture, MariaDB/MySQL tuning, indexing strategies, slow queries, or multi-connection patterns — even when the user just says 'this query is slow'.
+- **`database`** — Use when designing schemas and relations, tuning queries or indexes on any SQL engine, or multi-connection patterns — even when the user just says 'this query is slow'.
 - **`deep-reading-analyst`** — Deep analysis of articles/long-form via thinking frameworks (SCQA, mental models, inversion) — 'analyze article', 'deep dive', 'extract insights', URL/text wanting depth not summary.
 - **`defense-in-depth`** — Use when validation needs entry, business-logic, environment, and instrumentation guards so a bad value cannot reach the failure point — turns a local bug fix into a structural one.
 - **`dependency-upgrade`** — Use when upgrading dependencies — 'update framework X', 'bump runtime version', or 'upgrade packages'. Covers changelog review, breaking-change detection, and verification. Stack-agnostic.
@@ -123,7 +123,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`sentry-integration`** — Use when the user shares a Sentry URL, says "check Sentry", or wants to investigate production errors. Uses Sentry MCP tools for deep analysis.
 - **`server-hardening`** — Use when hardening a Linux host you operate — SSH posture, a default-deny firewall baseline, and unattended security upgrades, each verified on the box rather than assumed from a config file.
 - **`source-discovery`** — Use BEFORE planning/coding against a DB schema, API/GraphQL shape, DTO/Model/Entity, or vendor package — read the real source, emit an Evidence Report, stop inventing fields.
-- **`sql-writing`** — Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement`; fires even on a pasted query asking 'why is this slow'.
+- **`sql-writing`** — Use when writing raw SQL — dialect-aware syntax, parameterization, raw migrations, seeders with `DB::statement`; fires even on a pasted query asking 'why is this slow'.
 - **`standards-from-config`** — Use when you need this project's coding standards (line length, quotes, import order, naming, commit format) — derive them from the REAL tooling config as a pointer + digest, never a guessed claim.
 - **`storybook-workshop`** — Use when a component library needs a workshop — one story per concept, JSDoc summaries the manifest can carry, stories run as tests, and an opt-in MCP channel that replaces guessing with querying.
 - **`supply-chain-intake`** — Before adding/installing any dependency the agent named — verify the package exists (slopsquatting: ~1 in 5 AI suggestions are hallucinated), isn't typo-adjacent, is pinned + locked, and CVE-scanned

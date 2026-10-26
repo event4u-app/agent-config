@@ -27,7 +27,8 @@ install:
 - NOT for runtime performance analysis of live traffic (no APM here —
   route to `performance-analysis`) and NOT for authoring a new migration
   from scratch (route to `laravel-migration` or the stack-native tool,
-  then come back with the diff).
+  then come back with the diff), and NOT for designing the schema itself
+  (route to `database`, which owns relational modeling).
 
 ## Procedure
 
@@ -54,7 +55,10 @@ install:
    reversibility of data transformations, retention policy for any new
    append-only table (the `-- retention: <policy>` line), backfill plan
    for new NOT NULL columns on large tables.
-5. **Report waiver density neutrally** — count waivers per rule; state
+5. **A drop or rename → run the consumer census** before judging it safe:
+   app side via [`blast-radius-analyzer`](../blast-radius-analyzer/SKILL.md),
+   catalog side via [`consumer-census`](../database/references/consumer-census.md).
+6. **Report waiver density neutrally** — count waivers per rule; state
    both readings (informed exceptions vs rule misfit) and let the human
    decide. Density alone is never a verdict.
 
