@@ -202,7 +202,7 @@ async function loadOrBuildGraph(
         if (!fs.existsSync(cachePath)) throw new Error('no graph to draw (--no-build)');
         return { graph: JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as CodeGraph, built: false };
     }
-    const { graph } = await buildFromRepo(root, cachePath, { update: fs.existsSync(cachePath) });
+    const { graph } = await buildFromRepo(root, cachePath, { update: fs.existsSync(cachePath), lanes: true });
     return { graph, built: true };
 }
 

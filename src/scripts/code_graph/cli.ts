@@ -95,7 +95,7 @@ import { fileURLToPath } from 'node:url';
 
 import { resolve_project_root } from '../_lib/agent_settings.js';
 import { gitProbe, hardenedSpawnEnv } from '../_lib/spawn_env.js';
-import { buildFromRepo, discoverFiles, isTestFile, sidecarPath } from './build.js';
+import { buildFromRepo, discoverFiles, isTestFile, type LaneSummary, sidecarPath } from './build.js';
 import { DOC_EXTS } from './docs_layer.js';
 import {
     computeVerdict,
@@ -238,7 +238,7 @@ async function cmdBuild(argv: string[]): Promise<number> {
         return 1;
     }
     const update = argv.includes('--update');
-    const { graph, fileCount, reExtracted, reused } = await buildFromRepo(root, out, { update });
+    const { graph, fileCount, reExtracted, reused, lanes } = await buildFromRepo(root, out, { update, lanes: !argv.includes('--no-lanes') });
     if (out === cacheFor(root)) registerUse(root, graph, git(root, 'rev-parse', 'HEAD'));
     const c = graph.edge_confidence_counts;
     process.stdout.write(
@@ -247,10 +247,22 @@ async function cmdBuild(argv: string[]): Promise<number> {
             `    edges: EXTRACTED ${c.EXTRACTED} · INFERRED ${c.INFERRED} · AMBIGUOUS ${c.AMBIGUOUS}\n` +
             `    resolved_via: ${resolvedViaHistogram(graph)}\n` +
             (update ? `    incremental: ${reExtracted} re-extracted · ${reused} reused\n` : '') +
+            (lanes ? laneSummaryLines(lanes) : '') +
             (out ? `    cache: ${shown(root, out)}\n` : '') +
             legacyCacheNotice(root),
     );
     return 0;
+}
+
+/** One line per lane reader, then what failed and what the merge refused. */
+function laneSummaryLines(l: LaneSummary): string {
+    const ok = l.runs.filter((r) => !r.error).map((r) => `${r.lane} ${r.facts}/${r.relations}${r.outside ? ` (+${r.outside} outside the graph)` : ''} (${r.ms} ms)`);
+    const failed = l.runs.filter((r) => r.error).map((r) => `    lane ${r.lane} failed, left out: ${r.error}\n`);
+    return (
+        `    lanes (facts/relations): ${ok.join(' · ') || '(none)'} · ${l.ms} ms\n` +
+        failed.join('') +
+        (l.refused.length ? `    lane merge refused ${l.refused.length}: ${l.refused.slice(0, 3).map((x) => `${x.lane} ${x.item} — ${x.reason}`).join('; ')}\n` : '')
+    );
 }
 
 /**
