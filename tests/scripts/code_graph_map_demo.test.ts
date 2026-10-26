@@ -8,7 +8,7 @@ import { main } from '../../src/scripts/code_graph/cli.js';
 import { buildMap, type MapMeta } from '../../src/scripts/code_graph/map.js';
 import { buildDemoMap, DEMO_FIXTURE, demoOutDir, materialiseDemoRepo, type DemoResult } from '../../src/scripts/code_graph/map_demo.js';
 import { KNOWLEDGE_AREA_IDS, type MapAreas } from '../../src/scripts/code_graph/map_areas.js';
-import { generateDemoLoad, generateHubProjects } from '../../src/scripts/code_graph/map_demo_generate.js';
+import { generateDemoLoad, generateHubProjects } from '../../src/scripts/code_graph/demo/map_demo_generate.js';
 
 // `map --demo`: the demo fixture goes through the real build and map writer,
 // every area has data, only the demo carries the sample-data flag, and nothing

@@ -224,7 +224,7 @@ export interface RuntimeLink {
     to: string;
     /** Graph relation: `references`, `connects`, `routes-to`, `selects`, `owned-by`, `configured-by`. */
     relation: string;
-    /** How the files express it, e.g. `aws_security_group_rule`, `envFrom`. */
+    /** How the files state it, e.g. `aws_security_group_rule`, `envFrom`. */
     mechanism?: string;
     witness: Witness;
 }

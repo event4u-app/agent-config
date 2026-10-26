@@ -14,18 +14,17 @@
  * so the user's own registry, estate index and hub are never read or written.
  * Both pages land in `<map dir>/.build/demo/` (gitignored) or `--out`.
  */
-import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { updateRegistry } from '../_lib/project_registry.js';
-import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
+import { gitProbe } from '../_lib/spawn_env.js';
 import { planHub, writeHub } from './estate_map.js';
 import { graphHome } from './graph_home.js';
 import { buildMap, hasMap, type MapBuildResult } from './map.js';
-import { generateDemoLoad, generateHubProjects } from './map_demo_generate.js';
+import { generateDemoLoad, generateHubProjects } from './demo/map_demo_generate.js';
 import { registerUse } from './projects_cli.js';
 import type { CodeGraph } from './types.js';
 
@@ -156,10 +155,9 @@ function draftLine(rel: string, n: number): string {
 function git(root: string, args: string[], who?: Author, at?: number): void {
     const stamp = at === undefined ? {} : { GIT_AUTHOR_DATE: new Date(at).toISOString(), GIT_COMMITTER_DATE: new Date(at).toISOString() };
     const ident = who ? { GIT_AUTHOR_NAME: who.name, GIT_AUTHOR_EMAIL: who.email, GIT_COMMITTER_NAME: who.name, GIT_COMMITTER_EMAIL: who.email } : {};
-    execFileSync('git', ['-c', 'core.hooksPath=/dev/null', '-c', 'core.fsmonitor=false', '-c', 'commit.gpgsign=false', '-c', 'init.defaultBranch=main', '-C', root, ...args], {
+    gitProbe(root, ['-c', 'commit.gpgsign=false', '-c', 'init.defaultBranch=main', ...args], {
         // The user's own git configuration (hooks, signing, templates) has no say over a throwaway fixture repository.
-        env: hardenedSpawnEnv({ GIT_CONFIG_GLOBAL: os.devNull, GIT_CONFIG_NOSYSTEM: '1', ...ident, ...stamp }),
-        stdio: ['ignore', 'ignore', 'pipe'],
+        env: { GIT_CONFIG_GLOBAL: os.devNull, GIT_CONFIG_NOSYSTEM: '1', ...ident, ...stamp },
     });
 }
 
@@ -249,7 +247,7 @@ function readGraph(root: string): CodeGraph | null {
 
 function head(root: string): string | null {
     try {
-        return execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], { env: hardenedSpawnEnv({ GIT_CONFIG_GLOBAL: os.devNull, GIT_CONFIG_NOSYSTEM: '1' }), encoding: 'utf-8' }).trim();
+        return gitProbe(root, ['rev-parse', 'HEAD'], { env: { GIT_CONFIG_GLOBAL: os.devNull, GIT_CONFIG_NOSYSTEM: '1' } }).trim();
     } catch {
         return null;
     }
