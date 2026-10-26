@@ -200,7 +200,7 @@ This applies in the APPLY phase, to findings the user selected; in the review ph
 1. **Delete** — remove the element, animation, pattern, or copy entirely
 2. **Reduce** — make it smaller, shorter, subtler, less frequent
 3. **Fix the specific issue** — change easing, origin, duration, contrast, font
-4. **Make it interruptible** (for motion) — switch to transition/spring
+4. **Make it interruptible** (for motion) — gesture-driven: a spring or WAAPI animation that starts from the current on-screen value and carries the velocity; a state change with no gesture: a CSS transition suffices
 5. **Move to GPU** (for motion) — animate only transform/opacity
 6. **Polish** — the lowest-leverage fix; only if the above don't apply
 
