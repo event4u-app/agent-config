@@ -35,6 +35,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
+    deriveFloors,
     ingestCases,
     invokedFromTrace,
     selectBaseline,
@@ -484,7 +485,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
                 '       compile_trigger_evals --baseline-plan --plugin-root DIR --units N [--per-unit N]\n' +
                 '           [--plugin NAME] [--catalogue DIR]\n' +
                 '       compile_trigger_evals --ingest AGGREGATE.json --plan PLAN.json --protocol PATH \\\n' +
-                '           --model ID --commit SHA --artifact OUT.json\n\n' +
+                '           --model ID --commit SHA --artifact OUT.json\n' +
+                '       compile_trigger_evals --derive-floors BASELINE.json --tolerance T --floors OUT.json\n\n' +
                 'Compiles the trigger corpus into host-shaped eval cases. It never runs them.\n',
         );
         return 0;
@@ -509,6 +511,34 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             `compile_trigger_evals: ${String(plan.rows.length)} baseline case(s) -> ${pluginRoot}/evals ` +
                 `(catalogue ${plan.catalogue_sha256.slice(0, 12)})\nNothing was run.\n`,
         );
+        return 0;
+    }
+
+    const derive = arg(argv, 'derive-floors');
+    if (derive !== null) {
+        const outFile = arg(argv, 'floors');
+        const tolerance = Number(arg(argv, 'tolerance') ?? Number.NaN);
+        if (outFile === null || !(tolerance >= 0 && tolerance < 1)) {
+            process.stderr.write('compile_trigger_evals: --derive-floors needs --floors OUT.json and --tolerance T\n');
+            return 2;
+        }
+        const art = JSON.parse(fs.readFileSync(derive, 'utf8')) as BaselineArtifact;
+        const floors = deriveFloors(art.units, tolerance);
+        fs.writeFileSync(
+            outFile,
+            JSON.stringify(
+                {
+                    schema: 'routing-floors/v1',
+                    baseline: path.relative(REPO_ROOT, path.resolve(derive)),
+                    baseline_sha256: sha256(fs.readFileSync(derive, 'utf8')),
+                    tolerance,
+                    floors,
+                },
+                null,
+                2,
+            ) + '\n',
+        );
+        process.stdout.write(`compile_trigger_evals: ${String(floors.length)} floor(s) derived -> ${outFile}\n`);
         return 0;
     }
 

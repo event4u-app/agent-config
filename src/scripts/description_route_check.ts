@@ -25,9 +25,9 @@
  *
  * So a green run here is evidence that the **description signal** did not
  * regress. It is NEVER evidence that production routing works. The fidelity of
- * this proxy to real sessions is a MEASURED quantity — roadmap step 5.4, over
- * prompts appearing in both the trace corpus and the fixture corpus — and until
- * that measurement exists the gap is unquantified rather than small.
+ * this proxy to real sessions is a MEASURED quantity, over prompts where a
+ * session record and the corpus both have an answer; the committed report at
+ * `FIDELITY_REL` holds it, and its status decides whether a breach gates.
  *
  * ## Fail direction: recall first (Phase 1.3)
  *
@@ -38,8 +38,12 @@
  * asymmetry is deliberate and matches defect D2's direction: this repository's
  * measured failure is under-delivery, not over-delivery.
  *
- * Exit codes: 0 = no recall breach · 1 = a positive stopped loading · 2 = usage
- * or IO error.
+ * Downgrade on measured infidelity: when the committed `routing-proxy-fidelity.json` reports `degraded`, a recall
+ * breach is printed but exits 0: the checker has stopped agreeing with what
+ * sessions consult, so its verdict is advisory until a later report recovers.
+ *
+ * Exit codes: 0 = no recall breach, or proxy fidelity degraded · 1 = a positive
+ * stopped loading · 2 = usage or IO error.
  */
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
@@ -48,6 +52,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { GateLedger } from './_lib/gate_ledger.js';
+import { applyFidelity, readFidelityStatus } from './_lib/proxy_fidelity.js';
 import { type SkillMeta } from './skill_trigger_eval.js';
 
 const HERE = fileURLToPath(import.meta.url);
@@ -56,6 +61,9 @@ const REAL_REPO_ROOT = path.resolve(path.dirname(HERE), '..', '..');
 const REPO_ROOT = process.env['DESCRIPTION_ROUTE_CHECK_ROOT'] ?? REAL_REPO_ROOT;
 
 export const CACHE_REL = 'internal/evals/cache/description-route';
+
+/** The committed 5.4 report whose status decides whether a breach gates. */
+export const FIDELITY_REL = 'agents/evidence/metrics/routing-proxy-fidelity.json';
 
 /** One corpus case: a prompt, and whether the unit must be consulted for it. */
 export interface Case {
@@ -486,7 +494,7 @@ export function main(argv: string[] = process.argv.slice(2), root = REPO_ROOT): 
         );
         return 0;
     }
-    return code;
+    return applyFidelity(code, readFidelityStatus(path.join(root, FIDELITY_REL)), write);
 }
 
 if (path.resolve(process.argv[1] ?? '') === path.resolve(HERE)) {

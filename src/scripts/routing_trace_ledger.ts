@@ -22,6 +22,7 @@
  *   routing_trace_ledger --harvest [--sessions DIR]... [--ledger PATH]
  *   routing_trace_ledger --export PATH [--ledger PATH]
  *   routing_trace_ledger --propose [--ledger PATH] [--candidates PATH]
+ *   routing_trace_ledger --fidelity OUT.json --baseline ARTIFACT.json [--ledger PATH]
  */
 
 import { spawnSync } from 'node:child_process';
@@ -31,7 +32,15 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import {
+    FIDELITY_TOLERANCE,
+    fidelityStatus,
+    measureFidelity,
+    type FidelityCase,
+    type FidelityReport,
+} from './_lib/proxy_fidelity.js';
 import { readCorpus } from './compile_trigger_evals.js';
+import { DryBackend, loadCatalogue } from './description_route_check.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..');
@@ -244,6 +253,44 @@ export function landCandidate(c: Candidate, skillsRoot: string, id: string): voi
     fs.writeFileSync(file, JSON.stringify(doc, null, 2) + '\n');
 }
 
+/**
+ * 5.4 — the cases fidelity is measured on: prompts present in BOTH a session
+ * record and the corpus. Two sources, counted apart in the report: this
+ * machine's own sessions (exact normalized prompt match against a corpus
+ * query, consulted = the turn invoked the corpus unit), and baseline runs,
+ * whose prompt IS a corpus query and whose trace says what was invoked.
+ */
+export function fidelityCases(
+    rows: readonly TraceRow[],
+    baselineCases: readonly { skill: string; id: string; invoked: string[] | null }[],
+    skillsRoot: string,
+): { cases: FidelityCase[]; sources: Record<string, number> } {
+    const corpus = readCorpus(skillsRoot);
+    const byText = new Map<string, { skill: string }[]>();
+    for (const q of corpus) {
+        const list = byText.get(norm(q.query)) ?? [];
+        list.push({ skill: q.skill });
+        byText.set(norm(q.query), list);
+    }
+    const cases: FidelityCase[] = [];
+    let own = 0;
+    for (const r of rows) {
+        for (const hit of byText.get(norm(r.prompt)) ?? []) {
+            cases.push({ unit: hit.skill, prompt: r.prompt, consulted: r.invoked.includes(hit.skill) });
+            own += 1;
+        }
+    }
+    const byId = new Map(corpus.map((q) => [`${q.skill}\0${q.id}`, q.query]));
+    let base = 0;
+    for (const c of baselineCases) {
+        const prompt = byId.get(`${c.skill}\0${c.id}`);
+        if (prompt === undefined || c.invoked === null) continue;
+        cases.push({ unit: c.skill, prompt, consulted: c.invoked.includes(c.skill) });
+        base += 1;
+    }
+    return { cases, sources: { 'own-sessions': own, 'baseline-runs': base } };
+}
+
 function arg(argv: readonly string[], name: string): string | null {
     const i = argv.indexOf(`--${name}`);
     return i >= 0 && i + 1 < argv.length ? (argv[i + 1] as string) : null;
@@ -289,7 +336,43 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         );
         return 0;
     }
-    process.stderr.write('usage: routing_trace_ledger --harvest | --export PATH | --propose\n');
+    const fidelityOut = arg(argv, 'fidelity');
+    if (fidelityOut !== null) {
+        const baselinePath = arg(argv, 'baseline');
+        if (baselinePath === null) {
+            process.stderr.write('routing_trace_ledger: --fidelity needs --baseline ARTIFACT.json\n');
+            return 2;
+        }
+        const baseline = JSON.parse(fs.readFileSync(baselinePath, 'utf8')) as {
+            cases: { skill: string; id: string; invoked: string[] | null }[];
+        };
+        const skillsRoot = arg(argv, 'skills') ?? path.join(REPO_ROOT, 'src', 'skills');
+        const { cases, sources } = fidelityCases(readLedger(ledger), baseline.cases, skillsRoot);
+        const catalogue = loadCatalogue();
+        const backend = new DryBackend();
+        const measured = measureFidelity(cases, (prompt, unit) => backend.route(prompt, catalogue).includes(unit));
+        let reference: number | null = null;
+        if (fs.existsSync(fidelityOut)) {
+            const prior = JSON.parse(fs.readFileSync(fidelityOut, 'utf8')) as Partial<FidelityReport>;
+            reference = typeof prior.reference_agreement === 'number' ? prior.reference_agreement : null;
+        }
+        const report: FidelityReport = {
+            schema: 'routing-proxy-fidelity/v1',
+            backend: backend.name,
+            ...measured,
+            reference_agreement: reference ?? measured.agreement,
+            tolerance: FIDELITY_TOLERANCE,
+            status: fidelityStatus(measured.agreement, reference),
+            sources,
+        };
+        fs.writeFileSync(fidelityOut, JSON.stringify(report, null, 2) + '\n');
+        process.stdout.write(
+            `routing_trace_ledger: fidelity ${String(report.agreement)} over ${String(report.n)} prompt(s) ` +
+                `(${JSON.stringify(sources)}), status ${report.status} -> ${fidelityOut}\n`,
+        );
+        return 0;
+    }
+    process.stderr.write('usage: routing_trace_ledger --harvest | --export PATH | --propose | --fidelity OUT --baseline ART\n');
     return 2;
 }
 

@@ -12,6 +12,7 @@ import {
     DEFAULT_LEDGER,
     appendRows,
     exportRows,
+    fidelityCases,
     harvestSession,
     landCandidate,
     proposeCandidates,
@@ -130,5 +131,23 @@ describe('proposeCandidates / landCandidate — 5.2', () => {
             queries: { id: string; trigger: boolean }[];
         };
         expect(doc.queries.find((q) => q.id === 'cr-t1')?.trigger).toBe(true);
+    });
+});
+
+describe('fidelityCases — 5.4 inputs', () => {
+    it('takes own-session prompts that are corpus queries and baseline runs, counted apart', () => {
+        const root = tmp();
+        fs.mkdirSync(path.join(root, 'code-review', 'evals'), { recursive: true });
+        fs.writeFileSync(
+            path.join(root, 'code-review', 'evals', 'triggers.json'),
+            JSON.stringify({ queries: [{ id: 'cr1', q: 'Review this PR', trigger: true }] }),
+        );
+        const rows: TraceRow[] = [
+            { session_id: 's', turn_idx: 0, prompt: 'review this  pr', prompt_sha256: 'x', invoked: [], catalogue_sha256: null },
+            { session_id: 's', turn_idx: 1, prompt: 'unrelated', prompt_sha256: 'y', invoked: ['code-review'], catalogue_sha256: null },
+        ];
+        const got = fidelityCases(rows, [{ skill: 'code-review', id: 'cr1', invoked: ['code-review'] }], root);
+        expect(got.sources).toEqual({ 'own-sessions': 1, 'baseline-runs': 1 });
+        expect(got.cases.map((c) => c.consulted)).toEqual([false, true]);
     });
 });
