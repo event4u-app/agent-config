@@ -78,8 +78,8 @@ deterministic proof where a claim is made.
 - [x] **0.1 Falsifying fixtures for D1, before the fix.** Done 2026-10-26: `tests/scripts/design_slop_context_gate.test.ts`, 3 red before 0.2 (the first substring control fired nothing and was rebuilt to fire C5 and C3, with a guard against an empty control). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/design_slop_rules.ts --> Three DESIGN.md
       fixtures: negation ("never use Inter"), substring collision ("thousands",
       "glowing", "spill"), scope (the keyword under a "What we avoid" heading).
-      verify: `npx vitest run tests/scripts/design_slop_context_gate.test.ts` is
-      red before 0.2 and green after.
+      verify: `npx vitest run tests/scripts/design_slop_context_gate.test.ts` -> 0
+      after 0.2 (it was red before).
 - [x] **0.2 A declared-intent reader replaces the substring gate.** Done 2026-10-26: `declaredIntent` in `lint_design_slop.ts`, `legacyHas` report-only as `would_have_suppressed`; FP bench unchanged; CLI body split to `lint_design_slop_main.ts` to keep the hook bundle under its ceiling. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/design_slop_rules.ts --> Only a
       frontmatter key (`intent: [warm-neutral, …]`) or an `## Intentional`
       section counts; matching is word-bounded; a negated sentence never counts.
@@ -98,8 +98,8 @@ deterministic proof where a claim is made.
       26-rule run as a new epoch reported as the null it is, keeping the
       2026-08-13 figure as history; the settings comment at
       `agent-settings.template.yml:1317` names what actually runs.
-      verify: `task check-claims` green; `grep -n "universal gate"
-      src/config/agent-settings.template.yml` returns the corrected wording.
+      verify: `task check-claims` -> 0; `grep -c "universal gate" src/config/agent-settings.template.yml` -> /^0$/
+      (the corrected wording no longer claims a gate).
 
 ## Phase 1 — A corpus that can say no
 
@@ -141,6 +141,7 @@ The gate for every later promotion.
 ## Phase 2 — A witness for what only a render can show
 
 - [x] **2.1 Browser reach for consumers without a new dependency.** Done 2026-10-26: `src/cli/commands/browserReach.ts` (`resolveBrowser`, `findSystemBrowser`); `tests/cli/browserReach.test.ts`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/browserReach.ts --> Resolve
+      reach exempt: the tests import the browser finders directly; production reaches them through resolveBrowser in uiRender.ts, run by `agent-config ui:render`.
       `playwright-core` when the consumer has it and pass `executablePath` for a
       discovered system Chrome/Edge/Chromium; the renderer-absent path stays as
       honest as today. Adding `playwright-core` (13 MB) as a runtime dependency
@@ -149,6 +150,7 @@ The gate for every later promotion.
       `agent-config ui:render <fixture>` writes `verification` ≠ `unverified`;
       without one it degrades exactly as today.
 - [x] **2.2 Geometry and dark scheme on the page profile.** Done 2026-10-26: `rect`, `visible`, `parents`, `class` per row; nine properties added; `desktop-dark` capture. The manifest stays `schema: 1` — the fields are additive, the asset profile's precedent — so the verify's schema bump did not happen, on purpose. `tests/cli/uiRender_geometry.test.ts` (live). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts --> Bounding boxes,
+      reach exempt: the tests import uiRender.ts constants and helpers directly; the module runs as `agent-config ui:render` from src/cli/agent-config.ts.
       parent chain to depth 4, visibility; `CAPTURED_PROPERTIES` extended only by
       what a pre-registered rule reads; reuse `uiRenderAsset.ts:790`'s helper; a
       `prefers-color-scheme: dark` pass where the page declares one.
@@ -158,8 +160,8 @@ The gate for every later promotion.
       and geometry, never the screenshot; a fifth input class beside
       `css`/`html`/`jsx`/`copy` (`design_slop_rules.ts:38`); the parity table
       accepts `backed (render)`.
-      verify: `lint_design_slop --render <manifest>` runs the engine; parity lint
-      accepts the new status form.
+      verify: `npx vitest run src/scripts/design_slop_rules.test.ts` -> 0 (the render fixtures run the engine);
+      `./scripts-run src/scripts/lint_design_antipattern_parity` -> 0.
 - [x] **2.4 Scanner reach for `.ts`/`.js`** (carried A2). Done 2026-10-26, scoped, not widened: a rule opts in with `alsoExts`; only M6 does. Measured first: widening every rule to `.ts` gave CP1 four false positives on dashes in code comments (`tests/scripts/design_slop_nearmiss.test.ts` § scanner reach pins both directions). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/design_slop_rules.ts --> Decide and record:
       widen `enginesForExt` — which re-opens M1 for every existing rule on the
       larger surface — or scope interaction rules to colocated-markup extensions
@@ -206,6 +208,7 @@ The gate for every later promotion.
       and after (snapshot); `grep -n "const BUZZWORDS"
       src/scripts/design_slop_rules.ts` → gone.
 - [x] **4.2 Answer the rejection with the number that exists.** Done 2026-10-26: CP3 → `tell-negative-parallelism` + `tell-binary-contrast`, clean-prose-corpus M1 = 0 (`npx tsx src/scripts/bench_prose_tells_fp.ts --gate …`); CP4 and T5 are named nulls (no matcher reads a "so what" test; T5's only candidate is the council-rejected phrase-list). Parity green. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> CP3 maps to
+      production entry: `src/scripts/bench_prose_tells_fp.ts`
       `tell-negative-parallelism`; CP4 and T5 to candidate rules on the prose FP
       bench; each gets `backed` or a named null with its M1.
       verify: the T5, CP3, CP4 rows of `design-antipatterns.md` carry a status
@@ -239,7 +242,7 @@ The gate for every later promotion.
       command.
 - [x] **5.4 Reach.** Done 2026-10-26: two outbound links in the humanizer and three inbound (doc-coauthoring, readme-writing, readme-writing-package) now name the neighbour in prose; `lint_pack_boundaries` 120 → 115, no `suggests` edge added. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Replace the humanizer's cross-pack links with
       named-not-linked prose (the convention `logo-generation` uses).
-      verify: `lint_pack_boundaries` drops by 5 humanizer rows with no new
+      verify: `./scripts-run src/scripts/lint_pack_boundaries` -> 0, five humanizer rows fewer, no new
       `suggests` edge.
 
 ## Phase 6 — Product truth that survives a second skill
@@ -257,6 +260,7 @@ The gate for every later promotion.
       verify: template diff; `design-system-capture/evals/evals.json` gains a case
       reading an external-format file.
 - [x] **6.3 Wire the dead authority level.** Done 2026-10-26: `src/scripts/_lib/doc_authority.ts` (`declaredRegister` — frontmatter `register:` or the first word under `## Register`; `readDocAuthority`); `design_sync reconcile` is the non-test producer and passes `design_md`/`product_md` into `resolveUiAuthority`; T7 is gated by a declared product register. T8 has no rule (catalog status `deferred`), so only T7 consumes it. `tests/scripts/doc_authority.test.ts` (declared product lifts T7 on Inter, undeclared and brand do not; producer → resolver end to end); `ui_authority.test.ts` green. Hook bundle 238 B under its ceiling after this step. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/design_sync_reconcile.ts --> A reader produces
+      reach exempt: ui_authority.test.ts covers pre-existing exports this step did not touch; the step's own symbol, resolveUiAuthority, is reached from design_sync.ts through design_sync_reconcile.ts.
       `design_md`/`product_md` `{present, register}` from declared fields only
       (0.2's reader) and passes them to `resolveUiAuthority`; T7/T8 consume the
       stated register.
@@ -274,13 +278,14 @@ The gate for every later promotion.
 - [x] **7.2 Name the witness it already has.** Done 2026-10-26: step 5 runs `agent-config ui:render <mark.svg> --profile asset --class mark` and forbids a legibility claim without the capture; the grep finds it. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/logo_export_kit.ts --> The vector path runs
       `agent-config ui:render <mark.svg> --profile asset --class mark` (16/32 px
       on light and dark); legibility is never claimed without that capture.
-      verify: `grep -n "profile asset" src/skills/logo-generation/SKILL.md` ≥ 1.
+      verify: `grep -c "profile asset" src/skills/logo-generation/SKILL.md` -> /^[1-9]/
 - [x] **7.3 Shelf test from the user's inputs.** Done 2026-10-26: supplied marks only, rendered beside the candidate at the same sizes and backgrounds, rights check still applies; eval `critique-supplied-mark` carries two supplied marks; no mark added to the tree. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/logo_export_kit.ts --> User-supplied competitor or
       category marks render beside the candidate at the same sizes; nothing is
       bundled; `image-likeness-and-rights` stays mandatory.
       verify: an eval case with two supplied marks; no third-party mark is added
       to the tree.
 - [x] **7.4 Behaviour evals.** Done 2026-10-26: `src/skills/logo-generation/evals/evals.json` with `three-directions`, `favicon-stops-before-kit`, `critique-supplied-mark`; `run_skill_evals scaffold logo-generation` accepts all three. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/logo_export_kit.ts --> Three cases: a three-direction brief, a
+      production entry: `src/scripts/run_skill_evals.ts`
       favicon/app-icon brief that stops before the kit, a critique of a supplied
       mark.
       verify: `src/skills/logo-generation/evals/evals.json` with 3 cases accepted
@@ -307,8 +312,8 @@ The gate for every later promotion.
       `site/` declaring the stripe system where it is semantic through 0.2's
       reader; non-semantic stripes removed; CP1 in the site docs under the cap or
       a declared voice exception.
-      verify: `lint_design_slop --dir src/ui` and `--dir site` report only
-      declared or justified findings; the count is in the PR body.
+      verify: `npx tsx src/scripts/lint_design_slop.ts --dir src/ui --json` -> /"findings": \[\]/ and the same for
+      `--dir site`; every remaining case is declared; the count is in the PR body.
 - [~] **8.3 (maintainer-run) Differential oracle.** The external detector beside
       ours on the Phase 1 splits, from the maintainer's machine only (external
       code, never in CI); every disagreement becomes a triage row. Waits on a

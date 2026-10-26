@@ -61,6 +61,7 @@ and is never reported as visually verified without render evidence.
 ## Phase 0 — Measure before changing anything
 
 - [x] **0.1 Corpus and runner, pre-registered.** Done 2026-10-26: 18 cases (uit-041..058) with `category`/`lang`, three bars in `eval_ui_triviality`; baseline add_control 8/10 (uit-049, uit-050 fail), de_ui_recall 1/6, backend 4/4, trivial recall 0.882. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/eval_ui_triviality.ts --> Add ≥ 16 cases to
+      production entry: `src/scripts/eval_ui_triviality.ts`
       `internal/bench/corpora/ui-triviality-golden.yaml`: 8 "insert a control
       into an existing surface" (select, date, checkbox, toggle, textarea,
       radio, dialog, combobox) and 8 German prompts (trivial, add-control and
@@ -70,7 +71,7 @@ and is never reported as visually verified without render evidence.
       bars, frozen in the corpus header before any classifier change:
       add-control never `ui-trivial` and never `backend-coding`; German UI
       recall ≥ 0.80; backend precision unchanged.
-      verify: `./scripts-run src/scripts/eval_ui_triviality` prints the three bars
+      verify: `./scripts-run src/scripts/eval_ui_triviality` -> /bar add_control: .* PASS/ (and the de_ui_recall and backend bars print beside it)
       and FAILS on the add-control and German rows at this step (C3 as a number).
 - [x] **0.2 Frontend corpus "follow-up" cases.** Done 2026-10-26: `follow-up-select-shadcn`, `follow-up-popover-in-scroll-dialog`, `follow-up-native-no-primitive`, `follow-up-select-blade`, each with a `bars:` block; population 20 → 24, digest rewritten. <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change --> Under
       `tests/eval/frontend-corpus/cases/`: (a) an existing form with a project
@@ -92,8 +93,9 @@ and is never reported as visually verified without render evidence.
       textarea, checkbox, radio, switch, date/time, dialog, details, popover,
       combobox, menu, menu-button, tooltip, tabs, table). Tweaking an existing
       control stays trivial.
-      verify: `grep -n 'control role' src/rules/ui-audit-gate.md` shows the fifth condition; the 1.2 fixtures pass against it.
+      verify: `grep -c 'no new control' src/rules/ui-audit-gate.md` -> /^[1-9]/ (the fifth condition); the 1.2 fixtures pass against it.
 - [x] **1.2 Replace the self-report** (`ui_trivial/apply.ts:147`). Done 2026-10-26: `work_engine/_lib/control_roles.ts` (`newControlRolesForFiles` against `git show HEAD:`), wired into `ui_trivial/apply.ts`; `tests/scripts/work_engine/control_roles.test.ts` (20 cases; neutralising the wiring reds the reclassify case). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/templates/scripts/work_engine/_lib/control_roles.ts --> Compute
+      reach exempt: the tests call newControlRoles and newControlRolesForFiles directly; production reaches them through annotateControlRoles, which ui/apply.ts, ui/polish.ts and ui_trivial/apply.ts import.
       `new_control_roles` from the diff (added lines against 1.1's role table
       and against component tags the file did not contain). Non-empty → reclassify
       to `ui-improve`; the envelope field cannot override the computed value.
@@ -139,7 +141,7 @@ and is never reported as visually verified without render evidence.
       siblings' `box_metrics`; role missing → ask before inventing a control
       kind. Choosing a native control although a primitive exists records a
       `native_control_reason` in the step output.
-      verify: `grep -c control_roles` over the six SKILL.md files returns 1 each, with identical wording.
+      verify: `grep -lF 'Control roles.' src/skills/fe-design/SKILL.md src/skills/ui-apply-generic/SKILL.md src/skills/blade-ui/SKILL.md src/skills/livewire/SKILL.md src/skills/react-shadcn-ui/SKILL.md src/skills/flux/SKILL.md | wc -l` -> /^\s*6$/, with identical wording.
 - [x] **2.5 Native-select canon** Done 2026-10-26: § Native select in `design-patterns.md`. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> in `fe-design/references/design-patterns.md`
       § Component Architecture: a project primitive is always used; without one,
       a native `<select>` with `appearance: base-select` and `::picker(select)`
@@ -147,7 +149,7 @@ and is never reported as visually verified without render evidence.
       styled with project tokens, closed state styled for every browser; a custom
       listbox only with the full ARIA combobox pattern (cross-reference
       `accessibility-auditor`).
-      verify: `grep -n 'base-select' src/skills/fe-design/references/design-patterns.md` returns at least one line.
+      verify: `grep -c 'base-select' src/skills/fe-design/references/design-patterns.md` -> /^[1-9]/
 
 ## Phase 3 — The check that would have caught it (shadow first)
 
@@ -170,12 +172,14 @@ and is never reported as visually verified without render evidence.
       report-only from day one.
       verify: the shadow record carries `would_fire` per tolerance and emits nothing to the user.
 - [x] **3.4 Sibling reference mode for `ui_conformance_probe`.** Done 2026-10-26: `--subject` + `--reference-sibling` (+ `--tolerance`), `captureSiblingPair` / `compareSiblingBoxes`; live test in `tests/scripts/ui_conformance_probe_sibling.test.ts`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ui_conformance_probe.ts -->
+      production entry: `src/scripts/ui_conformance_probe.ts`
       `--reference-sibling <selector>` compares a node against a sibling on the
       same page (today only `--target`/`--reference` whole files and
       `data-probe-id` matching, `src/scripts/ui_conformance_probe.ts:1140-1147`).
       Stays shadow.
-      verify: `ui_conformance_probe --reference-sibling` reports the padding deviation of 0.2(a).
+      verify: `npx vitest run tests/scripts/ui_conformance_probe_sibling.test.ts` -> 0 (it reports the padding deviation of 0.2(a)).
 - [x] **3.5 Open-state probe.** Done 2026-10-26: `src/cli/commands/uiRenderInteract.ts`, `ui:render --interact`; manifest `interactions`; `ui:audit` takes render boxes first (`renderedBoxMetrics`); live tests in `tests/cli/uiRenderInteract.test.ts` (clipping by `#dialog-body` reported, native select → `native-os`). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiAudit.ts --> `ui:render --interact <selector>` opens, focuses
+      reach exempt: the tests import module constants and builders of uiAudit.ts and uiRenderInteract.ts; both run through `agent-config ui:audit` and `ui:render --interact` from src/cli/agent-config.ts.
       and keyboard-operates each newly added interactive control (click, Enter,
       Arrow, Escape, outside click), captures the open state and records overlay
       and portal bounds, clipping against scroll ancestors and z-index, and
@@ -190,6 +194,7 @@ and is never reported as visually verified without render evidence.
       verify: a run with no browser reports `static-pass` or `unverified`, never
       `pass`.
 - [x] **3.7 Visual regression with bounded repair.** Done 2026-10-26 as a computed-style signature, not a pixel diff (D12): `src/cli/commands/uiRenderRegion.ts`, `ui:render --region/--baseline/--approve`; deltas enter the polish loop via the review instruction; `tests/cli/uiRenderRegion.test.ts` (live: approve, then a 12→4 px padding change fails). <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/continuity-surface.json --> Extend
+      reach exempt: the tests import compareRegion and regionReading directly; production reaches them through `ui:render --region/--baseline/--approve` in uiRender.ts.
       `uiRenderAssetCompare` to the page profile (same font-delta tolerance,
       animations off): compare the changed region against an approved baseline
       when one exists under the project's render store, otherwise against the
@@ -227,7 +232,7 @@ and is never reported as visually verified without render evidence.
 - [x] **4.4 Resolve the contradiction** Done 2026-10-26. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> (`design-review/SKILL.md:196` vs `:397`):
       "In review: describe problem and impact, prescribe no fix. In apply: the
       remedial hierarchy applies."
-      verify: `grep -n 'prescribe' src/skills/design-review/SKILL.md` returns the phase-split wording only.
+      verify: `grep -c 'prescribe' src/skills/design-review/SKILL.md` -> /^[1-9]/ (the phase-split wording only).
 - [x] **4.5 Unattended default.** Done 2026-10-26: in the `review-before-rebuild` halt text, tested. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/templates/scripts/work_engine/directives/ui/apply.ts --> User unreachable → apply blockers, leave the
       rest as a list, say so at the top of the result; never a silent full
       rebuild.
@@ -248,7 +253,7 @@ and is never reported as visually verified without render evidence.
       gesture-driven → spring or WAAPI from the current on-screen value carrying
       velocity; state change without a gesture → a CSS transition suffices
       (consistent with `design-patterns.md:233,241`).
-      verify: `grep -n 'switch to transition/spring' src/skills/design-review/SKILL.md` returns nothing.
+      verify: `grep -c 'switch to transition/spring' src/skills/design-review/SKILL.md` -> /^0$/
 - [x] **5.3 Gesture reference** Done 2026-10-26: `fe-design/references/gesture-mechanics.md`, linked from `fe-design`. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> as a reference file under
       `fe-design/references/`, not a skill: feedback on pointer-down, 1:1
       tracking with grab offset and pointer capture, ~10 px hysteresis, velocity
@@ -262,6 +267,7 @@ and is never reported as visually verified without render evidence.
       fonts; `design-tokens` emits DTCG `letterSpacing` per step.
       verify: every step in `worked-scales.md` carries `letterSpacing` within T6/T10; `design-tokens` emits it.
 - [x] **5.5 Material fallbacks.** Done 2026-10-26: `_lib/material_fallback.ts`, `lint_design_quality --shadow` (never counted); first reading over `src/ui`: 5 rows. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/material_fallback.ts --> A DQ7 candidate in `lint_design_quality` after
+      production entry: `src/scripts/lint_design_quality.ts`
       DQ4's pattern: `backdrop-filter` or translucent background without an
       opaque variant under `prefers-reduced-transparency: reduce` and a contrast
       variant under `prefers-contrast: more`; the canon recommends the additive
