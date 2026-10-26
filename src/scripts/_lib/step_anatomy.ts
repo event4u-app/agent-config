@@ -10,7 +10,9 @@
  * THE UNIT. A step closes when the session edits a roadmap file (`ROADMAP_FILE`)
  * and turns a `- [ ]` into `- [x]` / `- [~]` / `- [-]`. The
  * step's interval runs from the previous close in the same session (or the
- * session's first timestamped row) to that edit.
+ * session's first timestamped row) to that edit. A lane run under an
+ * orchestrator flips nothing itself; its step closes at the commit that flipped
+ * the box (`parseGitFlips`, `assignGitFlips`).
  *
  * THE ATTRIBUTION. Every gap between two consecutive timestamped rows inside the
  * interval goes to exactly one class, chosen by the row that ENDS the gap: an
@@ -23,6 +25,7 @@
  * is not a record path. The step's own paths are not knowable from a transcript
  * before the step names them, so "not record prose" is the closest observable.
  */
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -184,8 +187,132 @@ function roadmapCharsIn(e: Entry, roadmapReads: Set<string>): number {
     return n;
 }
 
-/** Every closed step in one transcript file. */
-export function readSteps(file: string, causeOf: CauseOf): StepReading[] {
+/**
+ * A checkbox flip git recorded: one commit, one roadmap, the steps it closed.
+ * A lane run under an orchestrator never flips a box itself — the orchestrator
+ * does it with a shell edit and commits — so for that lane the commit is the only
+ * record of when its step closed.
+ */
+export interface GitFlip {
+    roadmap: string;
+    steps: string[];
+    /** Committer time, milliseconds. */
+    at: number;
+}
+
+const OPEN_LINE = /^-- \[ \]\s+\*\*(\d+\.\d+[a-z]?)\b/;
+const CLOSED_LINE = /^\+- \[[x~-]\]\s+\*\*(\d+\.\d+[a-z]?)\b/;
+
+/** Flips in `git log -p --format='@@commit %ct'` output: a step removed open and added closed in one commit. */
+export function parseGitFlips(log: string): GitFlip[] {
+    const out: GitFlip[] = [];
+    let at: number | null = null;
+    let file: string | null = null;
+    let perFile = new Map<string, { opened: Set<string>; closed: string[] }>();
+    const flush = (): void => {
+        for (const [f, { opened, closed }] of perFile) {
+            const steps = closed.filter((x) => opened.has(x));
+            if (at !== null && steps.length > 0 && ROADMAP_FILE.test(f)) out.push({ roadmap: path.basename(f, '.md'), steps, at });
+        }
+        perFile = new Map();
+    };
+    for (const line of log.split('\n')) {
+        const commit = /^@@commit (\d+)$/.exec(line);
+        if (commit !== null) {
+            flush();
+            at = Number(commit[1]) * 1000;
+            file = null;
+            continue;
+        }
+        const diff = /^diff --git a\/\S+ b\/(\S+)$/.exec(line);
+        if (diff !== null) {
+            file = diff[1]!;
+            continue;
+        }
+        if (file === null) continue;
+        const entry = perFile.get(file) ?? { opened: new Set<string>(), closed: [] };
+        const o = OPEN_LINE.exec(line);
+        const c = CLOSED_LINE.exec(line);
+        if (o !== null) entry.opened.add(o[1]!);
+        if (c !== null) entry.closed.push(c[1]!);
+        if (o !== null || c !== null) perFile.set(file, entry);
+    }
+    flush();
+    return out;
+}
+
+/** Every checkbox flip on `ref` since `sinceMs`. Merge commits carry no diff here, so a lane's commit counts once. */
+export function gitFlips(repo: string, ref: string, sinceMs: number): GitFlip[] {
+    const r = spawnSync(
+        'git',
+        ['-C', repo, 'log', ref, `--since=@${String(Math.floor(sinceMs / 1000))}`, '-p', '--no-color', '--unified=0', '--format=@@commit %ct', '--', 'agents/roadmaps'],
+        { encoding: 'utf8', maxBuffer: 1024 * 1024 * 1024 },
+    );
+    return r.status === 0 ? parseGitFlips(r.stdout) : [];
+}
+
+/** How long after a lane's last row the orchestrator's flip commit may still be its step. */
+const FLIP_GRACE_MS = 3 * 3600_000;
+
+/**
+ * Which lane transcript each git flip closes. A candidate is a subagent
+ * transcript whose dispatch prompt (its first user row) names the roadmap file,
+ * that flips no box itself, and whose rows start before the flip and end at most
+ * `FLIP_GRACE_MS` before it. Of several, the lane that started last gets it.
+ * Transcript rows carry the parent session's cwd and branch, not the lane's
+ * worktree, so the roadmap the dispatch names is the join key that exists; a
+ * reviewer or survey agent that only reads the roadmap was not sent to run it.
+ */
+export function assignGitFlips(files: readonly string[], flips: readonly GitFlip[]): Map<string, GitFlip[]> {
+    const spans: { file: string; first: number; last: number; prompt: string }[] = [];
+    for (const file of files) {
+        if (!isSubagentFile(file)) continue;
+        const text = fs.readFileSync(file, 'utf8');
+        let first: number | null = null;
+        let last: number | null = null;
+        let ownFlip = false;
+        let prompt: string | null = null;
+        for (const line of text.split('\n')) {
+            if (!line.trim()) continue;
+            let e: Entry;
+            try {
+                e = JSON.parse(line) as Entry;
+            } catch {
+                continue;
+            }
+            if (e['type'] !== 'user' && e['type'] !== 'assistant') continue;
+            const t = ms(e['timestamp']);
+            if (t === null) continue;
+            first ??= t;
+            last = t;
+            const msg = e['message'];
+            if (prompt === null && e['type'] === 'user' && isObj(msg)) {
+                prompt = typeof msg['content'] === 'string' ? msg['content'] : JSON.stringify(msg['content'] ?? '');
+            }
+            if (e['type'] !== 'assistant' || !isObj(msg) || !Array.isArray(msg['content'])) continue;
+            for (const b of msg['content']) {
+                if (isObj(b) && b['type'] === 'tool_use' && closedStep(String(b['name'] ?? ''), b['input']) !== null) ownFlip = true;
+            }
+        }
+        if (!ownFlip && first !== null && last !== null) spans.push({ file, first, last, prompt: prompt ?? '' });
+    }
+    const out = new Map<string, GitFlip[]>();
+    for (const f of flips) {
+        const lane = spans
+            .filter((s) => s.first <= f.at && f.at <= s.last + FLIP_GRACE_MS && s.prompt.includes(`${f.roadmap}.md`))
+            .sort((a, b) => b.first - a.first)[0];
+        if (lane === undefined) continue;
+        out.set(lane.file, [...(out.get(lane.file) ?? []), f].sort((a, b) => a.at - b.at));
+    }
+    return out;
+}
+
+/**
+ * Every closed step in one transcript file. `flips` are git-recorded closes
+ * assigned to this transcript (`assignGitFlips`); each closes the interval at the
+ * last row before it, and the ones after the last row close what remains.
+ */
+export function readSteps(file: string, causeOf: CauseOf, flips: readonly GitFlip[] = []): StepReading[] {
     // A subagent's own transcript is sidechain rows throughout; only in a session
     // file does the flag mark rows that belong to someone else's timeline.
     const skipSidechain = !isSubagentFile(file);
@@ -200,6 +327,27 @@ export function readSteps(file: string, causeOf: CauseOf): StepReading[] {
     let roadmapBytes = 0;
     const roadmapReads = new Set<string>();
     const session = path.basename(file, '.jsonl');
+    const queue = [...flips].sort((a, b) => a.at - b.at);
+    let next = 0;
+    const close = (roadmap: string, step: string, endAt: number): void => {
+        out.push({
+            session,
+            roadmap,
+            step,
+            totalMs: endAt - (startAt ?? endAt),
+            ms: acc,
+            riskClass: classifyPaths([...paths].filter((p) => !ROADMAP_FILE.test(p))).cls,
+            toolCalls: calls,
+            toolRequests: requests.size,
+            roadmapReadBytes: roadmapBytes,
+        });
+        acc = emptyMs();
+        startAt = endAt;
+        paths = new Set();
+        calls = 0;
+        requests = new Set();
+        roadmapBytes = 0;
+    };
 
     for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
         if (!line.trim()) continue;
@@ -216,6 +364,14 @@ export function readSteps(file: string, causeOf: CauseOf): StepReading[] {
         const at = ms(e['timestamp']);
         if (at === null) continue;
         if (startAt === null) startAt = at;
+        // A git flip that landed before this row closes the step at the row before it.
+        if (next < queue.length && queue[next]!.at < at && lastAt !== null && lastAt > startAt) {
+            let n = next;
+            while (n < queue.length && queue[n]!.at < at) n += 1;
+            const due = queue.slice(next, n);
+            next = n;
+            close(due[0]!.roadmap, due.flatMap((f) => f.steps).join('+'), lastAt);
+        }
 
         const isAssistant = e['type'] === 'assistant';
         if (lastAt !== null) {
@@ -245,26 +401,12 @@ export function readSteps(file: string, causeOf: CauseOf): StepReading[] {
                 paths.add(cwd !== '' && path.isAbsolute(fp) ? path.relative(cwd, fp) : fp);
             }
             const closed = closedStep(tool, b['input']);
-            if (closed !== null) {
-                out.push({
-                    session,
-                    roadmap: closed.roadmap,
-                    step: closed.step,
-                    totalMs: at - startAt,
-                    ms: acc,
-                    riskClass: classifyPaths([...paths].filter((p) => !ROADMAP_FILE.test(p))).cls,
-                    toolCalls: calls,
-                    toolRequests: requests.size,
-                    roadmapReadBytes: roadmapBytes,
-                });
-                acc = emptyMs();
-                startAt = at;
-                paths = new Set();
-                calls = 0;
-                requests = new Set();
-                roadmapBytes = 0;
-            }
+            if (closed !== null) close(closed.roadmap, closed.step, at);
         }
+    }
+    if (next < queue.length && lastAt !== null && startAt !== null && lastAt > startAt) {
+        const rest = queue.slice(next);
+        close(rest[0]!.roadmap, rest.flatMap((f) => f.steps).join('+'), lastAt);
     }
     return out;
 }
