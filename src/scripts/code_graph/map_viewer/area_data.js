@@ -640,11 +640,10 @@ function dErd(p, sel, bodyEl) {
     dEdges(stage);
     dInteract(stage);
     dApply(stage);
-    // A large schema frames the picked table and what it links to, on open and on every new pick.
-    var frameKey = (current.item || '') + '|' + sel.focus;
-    if (!dbState.fitted || (p.tables.length > DB_FOCUS_OPEN && dbState.framed !== frameKey)) {
+    // Framed once, when the page opens: a large schema on the picked table and what it links to.
+    // A later pick never moves or zooms the view — only the reader's own zoom, pan or drag does.
+    if (!dbState.fitted) {
         dbState.fitted = true;
-        dbState.framed = frameKey;
         requestAnimationFrame(function () { if (stage.isConnected) { if (p.tables.length > DB_FOCUS_OPEN) dFitFocus(stage); else dFit(stage, true); } });
     }
 }

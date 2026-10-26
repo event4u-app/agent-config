@@ -484,3 +484,37 @@ describe('3D: a plain drag turns, the wheel zooms, a click picks', () => {
         }
     });
 });
+
+describe('2D: picking a table leaves zoom and position alone', () => {
+    for (const which of ['demo', 'p1'] as const) {
+        it(`${which}: a click on another table, or a pick from the list, changes neither the zoom nor the view`, async () => {
+            const page = await open(which);
+            const z0 = await zoomOf(page);
+            const t0 = await worldTransform(page);
+            const focus = await page.evaluate(() => (window as unknown as { __mapErd: { focus: string } }).__mapErd.focus);
+            const other = await page.evaluate((f) => {
+                const cards = [...document.querySelectorAll('#db-stage .db-table')] as HTMLElement[];
+                const stage = (document.getElementById('db-stage') as HTMLElement).getBoundingClientRect();
+                const seen = cards.find((c) => {
+                    const b = c.querySelector('.db-thead')!.getBoundingClientRect();
+                    const hit = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
+                    return c.dataset['table'] !== f && b.left > stage.left && b.right < stage.right && b.top > stage.top && b.bottom < stage.bottom && !!hit && c.contains(hit);
+                });
+                return seen?.dataset['table'] ?? null;
+            }, focus);
+            expect(other).not.toBeNull();
+            await page.locator(`#db-stage .db-table[data-table="${other}"] .db-thead`).click();
+            await settle(page);
+            await settle(page);
+            expect(await page.evaluate(() => (window as unknown as { __mapErd: { focus: string } }).__mapErd.focus)).toBe(other);
+            expect(await zoomOf(page)).toBe(z0);
+            expect(await worldTransform(page)).toBe(t0);
+            await page.evaluate((n) => { location.hash = '#/data/' + encodeURIComponent('table/' + n); }, focus);
+            await settle(page);
+            await settle(page);
+            expect(await zoomOf(page)).toBe(z0);
+            expect(await worldTransform(page)).toBe(t0);
+            await page.close();
+        });
+    }
+});
