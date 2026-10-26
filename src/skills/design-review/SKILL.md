@@ -195,7 +195,7 @@ real issues because the reviewer defaulted to charitable assumptions.
 
 ## Subtraction-first remedial hierarchy
 
-When a finding warrants a remediation recommendation, prefer in this order:
+This applies in the APPLY phase, to findings the user selected; in the review phase describe problem and impact and prescribe no fix. When a finding warrants a remediation, prefer in this order:
 
 1. **Delete** — remove the element, animation, pattern, or copy entirely
 2. **Reduce** — make it smaller, shorter, subtler, less frequent
@@ -394,6 +394,6 @@ Typography / Color / Layout taste); `accessibility-auditor` owns the
 
 - Do NOT skip accessibility testing — it's not optional.
 - Do NOT report issues without evidence (screenshots, specific elements).
-- Do NOT prescribe solutions — describe problems and impact.
+- Do NOT prescribe solutions in the review phase — describe problems and impact; the remedial hierarchy applies in the apply phase.
 - Do NOT block PRs on nitpicks.
 - Do NOT test only at desktop resolution.
