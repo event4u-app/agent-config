@@ -1201,3 +1201,4 @@ import '../scripts/code_graph_map_ported_pages.test.js';
 import '../scripts/code_graph_map_systems_page.test.js';
 import '../scripts/code_graph_map_history.test.js';
 import '../scripts/code_graph_map_domains_page.test.js';
+import '../scripts/code_graph_map_branches_page.test.js';

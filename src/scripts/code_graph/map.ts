@@ -28,6 +28,8 @@ import { buildFromRepo, readProjectProbe } from './build.js';
 import { acquire as acquireRefreshLock, heldByThisProcess } from './refresh_lock.js';
 import { computeVerdict, graphState } from './detect.js';
 import { graphHome } from './graph_home.js';
+import { chainOf, currentBranch, parentOf } from '../_lib/branch_parents.js';
+import { type BranchManifest, defaultBranchSet, diffBranches, indexBranch } from './branches.js';
 import { analyseDomains, assignDomains, ownerFromCodeowners, proposalSnippet, proposeDomains, readCodeowners, readDomainRules, structuralDomains } from './domains.js';
 import { cachedProvenance, type CommitRef, spanHistory, ticketKeysOf } from './provenance.js';
 import { BLAST_SCOPE_ROLES, SOLE_OWNER_MIN_CHURN, SOLE_OWNER_SHARE, finishAnswers, layerOf, readFileFacts, readGitHistory, readLayerRules } from './map_answers.js';
@@ -37,6 +39,7 @@ import {
     type FileRole,
     MAP_MODEL_VERSION,
     type MapModel,
+    type MapBranches,
     type MapProvenance,
     type OutcomeEvent,
     outcomeScores,
@@ -356,6 +359,8 @@ export async function buildMap(
         cachePath?: string;
         diffRev?: string;
         prs?: boolean;
+        /** Embed the indexed branches and their difference from this one: local state, so never by default. */
+        branches?: boolean;
         noBuild?: boolean;
         /** Marks the map as drawn from the demo fixture (`map --demo`); never set for a real repository. */
         demo?: boolean;
@@ -428,6 +433,10 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
     if (opts.prs) {
         const prs = openPrs(root);
         if (prs) model.prOverlap = prOverlap(model, prs);
+    }
+    if (opts.branches) {
+        const b = await mapBranches(root, path.dirname(cachePath));
+        if (b) model.branches = b;
     }
     const meta: MapMeta = {
         title: `Map of ${path.basename(root)}`,
@@ -535,6 +544,43 @@ function answerQuestions(root: string, outDir: string, cachePath: string, graph:
         date: history ? headDate(root) : '',
         freshness: meta.state,
         generation: meta.graph_generation ?? '',
+    };
+}
+
+/** The default branch set indexed, each compared with the checked-out branch. */
+async function mapBranches(root: string, buildDir: string): Promise<MapBranches | null> {
+    const cur = currentBranch(root);
+    if (!cur) return null;
+    const refs = defaultBranchSet(root);
+    const manifests: BranchManifest[] = [];
+    for (const ref of refs) {
+        try {
+            manifests.push((await indexBranch(root, buildDir, ref)).manifest);
+        } catch {
+            /* a ref that does not resolve is left out */
+        }
+    }
+    const here = manifests.find((m) => m.ref === cur);
+    if (!here) return null;
+    const chain = chainOf(root, cur);
+    return {
+        current: cur,
+        list: manifests
+            .filter((m) => m.ref !== cur)
+            .map((m) => {
+                const d = diffBranches(buildDir, here, m);
+                const link = chain.find((l) => l.branch === m.ref) ?? parentOf(root, m.ref);
+                return {
+                    ref: m.ref,
+                    commit: m.commit.slice(0, 12),
+                    seen: m.seen,
+                    parent: link.parent,
+                    files: d.files.added.length + d.files.removed.length + d.files.changed.length,
+                    packages: [...d.packages.added.map((x) => `+ ${x}`), ...d.packages.removed.map((x) => `− ${x}`), ...d.packages.changed.map(([k, x, y]) => `${k} ${x} → ${y}`)].slice(0, 12),
+                    columns: [...d.columns.added.map((x) => `+ ${x}`), ...d.columns.removed.map((x) => `− ${x}`)].slice(0, 12),
+                    symbols: d.symbols.added.length + d.symbols.removed.length,
+                };
+            }),
     };
 }
 

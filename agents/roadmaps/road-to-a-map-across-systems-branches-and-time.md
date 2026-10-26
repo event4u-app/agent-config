@@ -82,6 +82,8 @@ no absolute local path.
 | D13 | A branch's parent is resolved: open PR base (the freshness gate's resolver) → `branch.<name>.agentConfigParent` in local git config → unknown, reported with the command to record it | merge-base heuristics | merge-base does not name a parent (v6 § 7) | — |
 | D14 | The chain check runs inside the existing detached code-graph refresh (session start) and as a warning line of the pre-push freshness gate; no new hook concern | a new session-start concern | the hook bundle has no headroom; the refresh already runs detached | a host has no refresh |
 | D16 | Closure pass: the `typed-op` hits on `merge`/`push` in the estate notes, step 2.1, step 5.4 and AC-6 name git history formats or the operator's own instruction, not an operation this roadmap performs; the only mutating git operation it performs is D12's local merge, which the owner asked for in turn 1, and it never pushes | ask the owner per hit | the owner's own words decide it (turn 1) | the cascade gains a push |
+| D17 | Branch state enters the map only when it is drawn with `--branches`; the verbs answer it always | branches always in the map | branch names and dates are one machine's state: they would make a committed map differ per machine and per day, and leak local branch names | the owner wants branch state in the committed map |
+| D18 | A branch's schema facts come from a core build of a sparse tree holding only its migrations and root manifests, read from git objects | the data lane reader alone | the schema replay is the framework providers' work inside the core build; the data lane reads the graph it produced | a provider reads files outside migrations to replay a schema |
 | D15 | The map discovery uses `git ls-files --cached --others --exclude-standard` inside a git work tree and falls back to the walk outside one | a hand-written gitignore matcher | git is the authority on what it ignores | — |
 
 ## Phase 0 — A map that can be committed
@@ -208,24 +210,26 @@ no absolute local path.
 
 ## Phase 4 — Every fact knows its branches
 
-- [ ] **4.1 Branch manifests.** `git ls-tree -r` per indexed branch into
+- [x] **4.1 Branch manifests.** `git ls-tree -r` per indexed branch into
       `.build/branches/`; fact blobs for the file-local readers — packages,
       migrations, and the per-file code extract (symbols, routes) — keyed by
       reader version, path and blob hash, read with `git cat-file`.
-      verify: two fixture branches differing in three files add three blobs.
-- [ ] **4.2 Which branches.** The current branch, its parent chain, branches
+      verify: two fixture branches differing in three files add facts only for
+      those three — one per reader that reads each (four: a source file, a
+      lockfile, and a migration read both as code and as schema).
+- [x] **4.2 Which branches.** The current branch, its parent chain, branches
       checked out in the last window (reflog), and any branch named on request.
       verify: a fixture chain is indexed without a checkout.
-- [ ] **4.3 Branch queries.** `--branch` on the systems verbs, `code-graph
+- [x] **4.3 Branch queries.** `--branch` on the systems verbs, `code-graph
       branches`, `code-graph on-branches <fact>` and `code-graph branch-diff A B`
       (manifest diff → fact diff).
       verify: `tests/scripts/code_graph/branches.test.ts` answers a column and a
       package version per branch with no checkout.
-- [ ] **4.4 Clean-up by itself.** D11 rules; unreferenced blobs swept in the
+- [x] **4.4 Clean-up by itself.** D11 rules; unreferenced blobs swept in the
       same pass; never a git ref.
       verify: an expired fixture branch disappears with its blobs; a pinned one
       stays.
-- [ ] **4.5 Branches in the map.** A branch panel: indexed branches, their
+- [x] **4.5 Branches in the map.** A branch panel: indexed branches, their
       parent, and the package and column differences from the current branch.
       verify: the map test reads a difference.
 
@@ -301,7 +305,8 @@ no absolute local path.
       show as no domain.
 - [ ] AC-9 — Without a declaration, proposals appear only in the Domain lens
       with `source: inferred` and never as a breach or in the context pack.
-- [ ] AC-10 — Two branches differing in three files add three fact blobs;
+- [ ] AC-10 — Two branches differing in three files add facts only for those
+      three, one per reader that reads each;
       an expired branch disappears with its unreferenced blobs; a pinned one
       stays; no git ref is deleted.
 - [ ] AC-11 — "On which branches does column C exist" and a package version

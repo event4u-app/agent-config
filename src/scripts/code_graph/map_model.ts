@@ -199,6 +199,21 @@ export interface MapDomainProposals {
     snippet: string;
 }
 
+/** The indexed branches against the checked-out one; only on a map drawn with `--branches`. */
+export interface MapBranches {
+    current: string;
+    list: Array<{
+        ref: string;
+        commit: string;
+        seen: string;
+        parent: string | null;
+        files: number;
+        packages: string[];
+        columns: string[];
+        symbols: number;
+    }>;
+}
+
 export interface MapModel {
     version: number;
     thresholds: MapThresholds;
@@ -229,6 +244,7 @@ export interface MapModel {
     provenance?: MapProvenance;
     domains?: MapDomains;
     domainProposals?: MapDomainProposals;
+    branches?: MapBranches;
     /** The depth the blast numbers were computed to; the viewer's walk uses the same. */
     blastDepth?: number;
     gitWindowDays?: number;

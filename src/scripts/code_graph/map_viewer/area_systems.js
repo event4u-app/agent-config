@@ -14,7 +14,10 @@ extendStrings({
         sRuntime: 'Runtime', sWitness: 'Witness', sKind: 'Source', sValue: 'Value', sDisagree: 'witnesses disagree', sAgree: 'consistent',
         sMeta: function (r, f, p) { return r + ' runtimes · ' + f + ' frameworks · ' + p + ' packages'; },
         sNoUse: 'no file imports it', sUsageHint: 'share of its surface: `code-graph usage <package>` with the package installed',
-        sRemoveHint: 'what removing it touches: `code-graph remove-plan <package>`', sMore: function (n) { return '+ ' + n + ' more files'; }
+        sRemoveHint: 'what removing it touches: `code-graph remove-plan <package>`', sMore: function (n) { return '+ ' + n + ' more files'; },
+        sBranches: 'Branches', sBranch: 'Branch', sParent: 'Parent', sSeen: 'Seen', sDiffFiles: 'Files differ', sDiffPkgs: 'Packages', sDiffCols: 'Columns', sDiffSyms: 'Symbols',
+        sNoBranches: 'Drawn without --branches: branch names and dates are this machine\'s state, so they stay out of a map that may be committed. `code-graph map --branches` adds them; `code-graph branches` lists them.',
+        sAgainst: function (b) { return 'Each indexed branch against ' + b + ', read from git objects without a checkout.'; }
     },
     de: {
         sPackages: 'Pakete', sRuntimes: 'Runtimes', sFindings: 'Befunde',
@@ -24,7 +27,10 @@ extendStrings({
         sRuntime: 'Runtime', sWitness: 'Nachweis', sKind: 'Quelle', sValue: 'Wert', sDisagree: 'Nachweise widersprechen sich', sAgree: 'stimmig',
         sMeta: function (r, f, p) { return r + ' Runtimes · ' + f + ' Frameworks · ' + p + ' Pakete'; },
         sNoUse: 'keine Datei importiert es', sUsageHint: 'Anteil an seiner Oberfläche: `code-graph usage <Paket>` mit installiertem Paket',
-        sRemoveHint: 'was ein Entfernen berührt: `code-graph remove-plan <Paket>`', sMore: function (n) { return '+ ' + n + ' weitere Dateien'; }
+        sRemoveHint: 'was ein Entfernen berührt: `code-graph remove-plan <Paket>`', sMore: function (n) { return '+ ' + n + ' weitere Dateien'; },
+        sBranches: 'Branches', sBranch: 'Branch', sParent: 'Parent', sSeen: 'Gesehen', sDiffFiles: 'Dateien anders', sDiffPkgs: 'Pakete', sDiffCols: 'Spalten', sDiffSyms: 'Symbole',
+        sNoBranches: 'Ohne --branches gezeichnet: Branch-Namen und Daten sind der Zustand dieses Rechners und bleiben daher aus einer Map, die committet werden kann. `code-graph map --branches` nimmt sie auf; `code-graph branches` listet sie.',
+        sAgainst: function (b) { return 'Jeder indizierte Branch gegen ' + b + ', aus Git-Objekten gelesen, ohne Checkout.'; }
     }
 });
 
@@ -77,8 +83,17 @@ function syPackageLinks(p, k) {
     return out;
 }
 
+function syBranches(main) {
+    var b = model.branches;
+    if (!b) { main.appendChild(el('div', { class: 'box' }, t('sNoBranches'))); return; }
+    main.appendChild(el('p', { class: 'muted' }, t('sAgainst')(b.current)));
+    main.appendChild(factTable('systems', [t('sBranch'), t('sParent'), t('sSeen'), t('sDiffFiles'), t('sDiffPkgs'), t('sDiffCols'), t('sDiffSyms')], b.list.map(function (x) {
+        return { cells: [el('span', { class: 'mono' }, x.ref + ' @ ' + x.commit.slice(0, 8)), x.parent || '–', x.seen, String(x.files), el('span', { class: 'mono' }, x.packages.join('\n') || '–'), el('span', { class: 'mono' }, x.columns.join('\n') || '–'), String(x.symbols)] };
+    })));
+}
+
 AREA_MODULES.systems = {
-    tabs: [['packages', 'sPackages'], ['runtimes', 'sRuntimes'], ['findings', 'sFindings']],
+    tabs: [['packages', 'sPackages'], ['runtimes', 'sRuntimes'], ['branches', 'sBranches'], ['findings', 'sFindings']],
     items: function (p) {
         var out = p.packages.map(function (k) {
             var ws = [k.witness].concat(k.usedBy.map(function (u) { return u.witness; }));
@@ -104,6 +119,6 @@ AREA_MODULES.systems = {
         return t('sMeta')(num(p.runtimes.length), num(p.packages.filter(function (k) { return k.framework; }).length), num(p.packages.length));
     },
     render: function (p, view, main) {
-        if (view === 'runtimes') syRuntimes(p, main); else syPackages(p, main);
+        if (view === 'runtimes') syRuntimes(p, main); else if (view === 'branches') syBranches(main); else syPackages(p, main);
     }
 };
