@@ -1,0 +1,8 @@
+{
+  // a comment the reader must survive
+  "name": "drift dev",
+  "dockerComposeFile": ["../compose.yaml"],
+  "service": "app",
+  "forwardPorts": [8080, 5432],
+  "features": { "ghcr.io/devcontainers/features/node:1": {} },
+}

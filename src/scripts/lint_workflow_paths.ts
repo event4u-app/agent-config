@@ -60,6 +60,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { GateLedger } from './_lib/gate_ledger.js';
+import { globMatchesAny, globToRegExp } from './_lib/infra_files/pipeline.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
@@ -78,43 +79,9 @@ export interface PathFinding {
     readonly why: 'no-match' | 'thin-reason';
 }
 
-/**
- * Translate the subset of glob syntax GitHub path filters use into a RegExp.
- *
- * `**` crosses directory separators, `*` and `?` do not. Everything else is a
- * literal — no brace expansion, no character classes, because GitHub does not
- * document them for this field and guessing at unsupported syntax would make
- * the gate disagree with the thing it is auditing.
- */
-export function globToRegExp(glob: string): RegExp {
-    let out = '';
-    for (let i = 0; i < glob.length; i += 1) {
-        const c = glob[i] as string;
-        if (c === '*') {
-            if (glob[i + 1] === '*') {
-                out += '.*';
-                i += 1;
-                if (glob[i + 1] === '/') {
-                    i += 1;
-                }
-            } else {
-                out += '[^/]*';
-            }
-        } else if (c === '?') {
-            out += '[^/]';
-        } else {
-            out += c.replace(/[.+^${}()|[\]\\]/g, '\\$&');
-        }
-    }
-    return new RegExp(`^${out}$`);
-}
-
-/** Does `glob` match at least one path in `tracked`? */
-export function globMatchesAny(glob: string, tracked: readonly string[]): boolean {
-    const re = globToRegExp(glob);
-    const prefix = `${glob.replace(/\/?\*\*$/, '').replace(/\/$/, '')}/`;
-    return tracked.some((t) => re.test(t) || t === glob || t.startsWith(prefix));
-}
+// Glob semantics are owned by the shared pipeline model so the delivery lane
+// and this gate can never disagree about what a filter matches.
+export { globMatchesAny, globToRegExp };
 
 /**
  * Extract every `paths:` / `paths-ignore:` list entry from one workflow body.
