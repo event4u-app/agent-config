@@ -356,7 +356,7 @@ renders from real facts or says why it has none.
       interfaces, runtime and delivery, each with its affected set and a hidden
       check.
       verify: every task's hidden check fails on the unmodified fixture.
-- [ ] **6.2 Three-arm run.** Vanilla, AC without map facts, AC with map facts +
+- [x] **6.2 Three-arm run.** Vanilla, AC without map facts, AC with map facts +
       confirm; M1 wrong changes, M2 dependency recall/precision, M3 cost per
       successful task (failed runs counted), inside the per-run budget; the
       result is published whatever it says.
@@ -400,5 +400,5 @@ renders from real facts or says why it has none.
       daemon or external endpoint, or reads a `.env` value.
 - [x] AC-7 — The recall ratchet runs in CI with must-exist and must-not-exist
       facts; every `graph_*` tool has a test against the real SQLite twin.
-- [ ] AC-8 — Task set T exists with a recorded three-arm result.
+- [x] AC-8 — Task set T exists with a recorded three-arm result.
 - [x] AC-9 — Gated catalogue delta ≤ 0 and MCP tool count unchanged.
