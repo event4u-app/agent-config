@@ -88,7 +88,7 @@ prose passed as an argument overflows the argument limit.
 * The user asks "what would Claude / GPT say about this?" or invokes
   `/council`.
 * A PR diff or commit range needs a second-opinion review beyond the
-  internal four-judge pass.
+  internal 7-judge pass.
 * A free-form proposal benefits from being challenged by an outside
   reviewer before it calcifies into work.
 
