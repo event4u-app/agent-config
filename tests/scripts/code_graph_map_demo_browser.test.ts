@@ -7,6 +7,7 @@ import type { Browser, Page } from '@playwright/test';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { buildMap } from '../../src/scripts/code_graph/map.js';
+import { labelProblems } from '../../src/scripts/code_graph/map_verify.js';
 import { buildDemoMap, type DemoResult } from '../../src/scripts/code_graph/map_demo.js';
 
 // The demo map in a browser: every area route is live — no area-level "no data
@@ -94,6 +95,37 @@ describe('the demo map in a browser', () => {
         expect(errors).toEqual([]);
         await page.close();
     }, 60_000);
+
+    it('the hub graph bundles the links of one pair, and no label overlaps another or leaves the canvas, at every width', async () => {
+        for (const width of [1440, 1000, 375, 320]) {
+            const { page } = await open(demo.hubPage, '#/projects', width);
+            const r = await page.evaluate(() => (window as unknown as { __mapLabelBoxes: { boxes: Array<{ x: number; y: number; w: number; h: number }>; width: number; height: number } }).__mapLabelBoxes);
+            expect(r.boxes.length, `@${width}`).toBeGreaterThan(3);
+            expect(labelProblems(r.boxes, r.width, r.height), `@${width}`).toEqual({ outside: 0, overlapping: 0 });
+            // Every label sits inside the visible graph: no sideways scroll hides one on a phone.
+            const clipped = await page.evaluate(() => {
+                const view = document.querySelector('.ops-gscroll') as HTMLElement;
+                const v = view.getBoundingClientRect();
+                return Array.prototype.filter.call(document.querySelectorAll('.ops-elabel, .ops-pnode'), (e: Element) => {
+                    const b = e.getBoundingClientRect();
+                    return b.left < v.left - 0.5 || b.right > v.right + 0.5;
+                }).length;
+            });
+            expect(clipped, `@${width}`).toBe(0);
+            await page.close();
+        }
+        const { page } = await open(demo.hubPage, '#/projects');
+        const hub = JSON.parse(fs.readFileSync(path.join(path.dirname(demo.hubPage), 'projects', 'hub.json'), 'utf-8')) as { ports: Array<{ uses: unknown[] }> };
+        const shared = hub.ports.reduce((n, f) => n + f.uses.length - 1, 0);
+        expect(await page.locator('.ops-elabel').count()).toBeLessThan(shared);
+        await page.locator('.ops-elabel', { hasText: '+' }).first().click();
+        const list = page.locator('.ops-bundle');
+        expect(await list.count()).toBeGreaterThan(1);
+        await list.nth(1).click();
+        await expect.poll(() => page.locator('.ops-bundle').nth(1).getAttribute('aria-pressed')).toBe('true');
+        expect(await page.locator('.ops-bundle.on').count()).toBe(1);
+        await page.close();
+    }, 120_000);
 
     it('a real map has no chip', async () => {
         const { page } = await open(realPage, '#/overview');
