@@ -36,6 +36,7 @@ import {
     outcomeScores,
     prOverlap,
 } from './map_model.js';
+import { areaProblems, areaSummaryLines, type MapAreas } from './map_areas.js';
 import { loadGraph } from './query.js';
 import type { CodeGraph } from './types.js';
 import { dead, repoEntryPoints } from './verbs.js';
@@ -283,6 +284,8 @@ export async function buildMap(
         diffRev?: string;
         prs?: boolean;
         noBuild?: boolean;
+        /** Payloads of the knowledge areas beside Code, one per reader that ran; `{}` when none did. */
+        areas?: MapAreas;
         /** Test seam: called after each artefact lands in the new generation. */
         _afterWrite?: (rel: string) => void;
     } = {},
@@ -317,6 +320,9 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
     ) {
         throw new Error(`refusing to write a map into ${outDir}: it is not empty and holds no map.json`);
     }
+    const areas = opts.areas ?? {};
+    const problems = areaProblems(areas);
+    if (problems.length) throw new Error(`refusing to draw the map: the areas section is unsafe or unreadable — ${problems.slice(0, 5).join('; ')}`);
     const cachePath = opts.cachePath ?? home.cachePath;
     const { graph, built } = await loadOrBuildGraph(root, cachePath, opts.noBuild === true);
     let diff: { rev: string; changed: string[] } | undefined;
@@ -373,12 +379,12 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
             written.push(rel);
             opts._afterWrite?.(rel);
         };
-        write('map.json', `${JSON.stringify({ meta, model })}\n`);
-        write('MAP.md', renderMapMd(model, meta));
+        write('map.json', `${JSON.stringify({ meta, model, areas })}\n`);
+        write('MAP.md', renderMapMd(model, meta, areas));
         for (const [i, a] of model.areas.entries()) {
             if (a.files.length >= AREA_PAGE_MIN_FILES) write(path.join('areas', `${a.id}.md`), renderAreaMd(model, i, meta));
         }
-        write('index.html', renderHtml(model, meta));
+        write('index.html', renderHtml(model, meta, areas));
         carryForeignEntries(outDir, next);
         swapIn(next, outDir, prev);
     } finally {
@@ -565,7 +571,7 @@ function code(s: string): string {
  * priority order; the first one that would cross the budget is replaced by a
  * line naming every section that was cut, so a reader knows what is missing.
  */
-export function renderMapMd(m: MapModel, meta: MapMeta): string {
+export function renderMapMd(m: MapModel, meta: MapMeta, areas: MapAreas = {}): string {
     const f = m.files;
     const head = [
         `# ${md(meta.title)}`,
@@ -623,6 +629,18 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
             ].join('\n'),
         ]);
     }
+
+    sections.push([
+        'Knowledge areas',
+        [
+            '## Knowledge areas',
+            '',
+            'Beside Code, each area is filled by its own reader. Every fact carries a witness (file, line, hash) and its confirm state in `map.json` → `areas`.',
+            '',
+            ...areaSummaryLines(areas).map((l) => `- ${md(l.slice(2))}`),
+            '',
+        ].join('\n'),
+    ]);
 
     if (m.drift) {
         const d = m.drift;
@@ -925,6 +943,39 @@ function readViewer(name: string): string {
     return fs.readFileSync(path.join(VIEWER_DIR, name), 'utf-8');
 }
 
+/**
+ * The viewer's script parts, in the order they run: each reads names the ones
+ * before it declared, and the shell, last, routes between the areas and boots.
+ */
+export const VIEWER_SCRIPTS = [
+    'core.js',
+    'area_code.js',
+    'areas_common.js',
+    'area_overview.js',
+    'area_data.js',
+    'area_interfaces.js',
+    'area_runtime.js',
+    'area_delivery.js',
+    'area_impact.js',
+    'area_agent.js',
+    'shell.js',
+] as const;
+export const VIEWER_STYLES = ['viewer.css', 'shell.css'] as const;
+
+/**
+ * The one inline script: every part inside one function scope. Joined BEFORE
+ * the page hashes it, so the Content-Security-Policy pins exactly what runs.
+ */
+export function viewerScript(): string {
+    return `(function () {\n'use strict';\n${VIEWER_SCRIPTS.map(readViewer).join('\n')}\n})();\n`;
+}
+
+export function viewerStyle(): string {
+    return VIEWER_STYLES.map(readViewer).join('\n');
+}
+
+const AREA_NAV = ['overview', 'code', 'data', 'interfaces', 'runtime', 'delivery', 'impact', 'agent'] as const;
+
 /** Escape every `<` so no file or symbol name can close the data block. */
 export function embedJson(value: unknown): string {
     return JSON.stringify(value).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
@@ -943,10 +994,10 @@ function sha256(s: string): string {
  * in the Content-Security-Policy, which also forbids every network fetch:
  * the page cannot load anything, so "offline" is enforced rather than hoped.
  */
-export function renderHtml(m: MapModel, meta: MapMeta): string {
-    const css = readViewer('viewer.css');
-    const js = readViewer('viewer.js');
-    const data = embedJson({ meta, model: m });
+export function renderHtml(m: MapModel, meta: MapMeta, areas: MapAreas = {}): string {
+    const css = viewerStyle();
+    const js = viewerScript();
+    const data = embedJson({ meta, model: m, areas });
     const csp = [
         "default-src 'none'",
         `script-src 'sha256-${sha256(js)}'`,
@@ -968,6 +1019,7 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         '</head>',
         '<body>',
         '<header class="top">',
+        '<div class="top-row">',
         '<div class="brand">',
         // The AC mark from .github/assets/info-banner.png as vectors: the letters are
         // traced from the image, the rest redrawn. The published package carries no images.
@@ -987,18 +1039,24 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
             '<path d="M74.4 47.4L75.6 47.9L75.9 49.6L77.6 51.6L80.9 58.6L84.6 64.9L106.1 109.6L108.4 111.1L111.1 111.4L113.9 110.9L117.4 109.1L122.9 103.9L132.6 114.1L132.9 115.6L132.1 116.6L127.4 121.1L124.6 121.9L95.4 121.6L89.9 110.1L88.9 109.1L74.9 108.6L70.1 99.4L69.1 96.9L69.1 95.4L81.6 95.1L82.6 94.1L78.4 84.4L78.1 82.4L75.1 76.4L73.4 75.1L71.1 77.1L69.6 80.6L67.9 82.4L66.4 85.9L64.9 87.4L64.1 89.9L45.6 118.9L43.9 119.6L32.4 119.6L30.6 121.6L30.4 121.4L30.4 120.4L29.4 118.9L29.9 117.1L55.1 76.1L66.1 58.9L74.1 47.6ZM105.4 59.1L113.1 59.1L120.6 61.1L126.1 64.1L131.6 69.1L131.9 70.6L131.1 71.6L122.9 80.6L121.1 81.4L117.4 77.6L115.1 76.1L110.1 74.9L105.1 75.4L98.4 79.1L97.4 79.1L96.4 78.1L90.6 67.1L90.6 65.9L93.4 63.4L97.9 61.1L105.1 59.4Z" fill="#ffb877" opacity="0.3" filter="url(#acLH)"/>' +
             '<path d="M74.4 47.4L75.6 47.9L75.9 49.6L77.6 51.6L80.9 58.6L84.6 64.9L106.1 109.6L108.4 111.1L111.1 111.4L113.9 110.9L117.4 109.1L122.9 103.9L132.6 114.1L132.9 115.6L132.1 116.6L127.4 121.1L124.6 121.9L95.4 121.6L89.9 110.1L88.9 109.1L74.9 108.6L70.1 99.4L69.1 96.9L69.1 95.4L81.6 95.1L82.6 94.1L78.4 84.4L78.1 82.4L75.1 76.4L73.4 75.1L71.1 77.1L69.6 80.6L67.9 82.4L66.4 85.9L64.9 87.4L64.1 89.9L45.6 118.9L43.9 119.6L32.4 119.6L30.6 121.6L30.4 121.4L30.4 120.4L29.4 118.9L29.9 117.1L55.1 76.1L66.1 58.9L74.1 47.6ZM105.4 59.1L113.1 59.1L120.6 61.1L126.1 64.1L131.6 69.1L131.9 70.6L131.1 71.6L122.9 80.6L121.1 81.4L117.4 77.6L115.1 76.1L110.1 74.9L105.1 75.4L98.4 79.1L97.4 79.1L96.4 78.1L90.6 67.1L90.6 65.9L93.4 63.4L97.9 61.1L105.1 59.4Z" fill="url(#acA)"/>' +
             '<rect x="30.75" y="118.75" width="57.5" height="29.5" rx="3" fill="#04070d" stroke="url(#acTerm)" stroke-width="1.3" filter="url(#acGlow)"/><path d="M40.75 129.5 L47.75 134.5 L40.75 139.5 M51.75 139.75 H61.75" fill="none" stroke="#ffb43c" stroke-width="1.8" stroke-linecap="round"/></svg>',
-        '<div class="brand-name"><b>AGENT CONFIG</b><span>CODE MAP</span></div>',
+        '<div class="brand-name"><b>AGENT CONFIG</b><span>KNOWLEDGE MAP</span></div>',
         '</div>',
-        '<div class="pins mono"><span class="chip" id="pin-commit"></span><span class="chip fresh" id="pin-fresh"></span><span class="chip gen" id="pin-gen"></span></div>',
+        `<nav class="areanav" id="areanav" aria-label="Areas">${AREA_NAV.map((r) => `<a href="#/${r}" data-route="${r}">${r}</a>`).join('')}</nav>`,
+        '</div>',
+        '<div class="top-row row2">',
+        '<div class="pins mono"><span class="chip" id="pin-commit"></span><span class="chip fresh" id="pin-fresh"></span></div>',
         '<div class="search"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="5"></circle><path d="M11 11l3.5 3.5"></path></svg>' +
-            '<input id="search" type="search" autocomplete="off"><span class="kbd mono">/</span><ul class="results" id="results"></ul></div>',
+            '<input id="search" type="search" autocomplete="off"><span class="kbd mono">/</span>' +
+            '<div class="pop" id="pop" hidden><div class="kinds" id="kinds" role="group"></div><ul class="results" id="results"></ul></div></div>',
         '<div class="actions">',
         '<button type="button" class="btn" id="export"></button>',
         '<button type="button" class="btn icon" id="theme"><svg id="theme-sun" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="3"></circle><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1"></path></svg>' +
             '<svg id="theme-moon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" hidden><path d="M13.5 9.5A6 6 0 0 1 6.5 2.5a6 6 0 1 0 7 7z"></path></svg></button>',
         '<button type="button" class="btn mono" id="lang" aria-label="Language"></button>',
         '</div>',
+        '</div>',
         '</header>',
+        '<div class="banner" id="banner" role="status" hidden></div>',
         '<div class="wb" id="wb">',
         '<div class="scrim" id="scrim" hidden></div>',
         '<aside class="rail" id="pane-left" aria-label="Repository">',
@@ -1046,6 +1104,18 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         '<div class="tabs" role="tablist" aria-label="Detail" id="tabs"></div>',
         '<div id="panel" aria-live="polite"></div>',
         '</aside>',
+        '</div>',
+        '<div class="av" id="av" hidden>',
+        '<div class="av-bar" id="av-bar"></div>',
+        '<div class="av-body" id="av-body">',
+        '<div class="scrim" id="av-scrim" hidden></div>',
+        '<main class="av-main" id="av-main"></main>',
+        '<aside class="av-side" id="av-side" aria-label="Detail">',
+        '<div class="pane-head"><button type="button" class="pane-pin" id="av-pin" aria-pressed="false"></button><button type="button" class="pane-close" id="av-close">×</button></div>',
+        '<div id="av-detail" aria-live="polite"></div>',
+        '</aside>',
+        '<button type="button" class="pane-open av-open" id="av-open" aria-controls="av-side"></button>',
+        '</div>',
         '</div>',
         `<script type="application/json" id="map-data">${data}</script>`,
         `<script>${js}</script>`,
