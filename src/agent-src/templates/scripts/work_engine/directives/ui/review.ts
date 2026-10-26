@@ -182,6 +182,11 @@ export function run(state: DeliveryState): StepResult {
         return preview_halt;
     }
 
+    const selection_halt = _apply_selection_gate(state, r);
+    if (selection_halt !== null) {
+        return selection_halt;
+    }
+
     _stamp_verdict_scope(r);
     (r['verdict_scope'] as Record<string, Any>)['consistency_status'] = consistency_status(
         r,
@@ -228,6 +233,47 @@ export function consistency_status(
 
     if ([...added].some((r) => !captured.has(r))) return 'unverified';
     return rendered ? 'pass' : 'static-pass';
+}
+
+/**
+ * After a review-only selection was applied, every SELECTED finding carries a
+ * resolution in `ui_review.resolved` — `{status: "fixed", commit}` or
+ * `{status: "not-fixed", reason}` — and the re-review covers those findings
+ * only (4.3). An unselected finding that came back fixed is an unrequested
+ * change and is itself reported.
+ */
+export function selection_gaps(review: Record<string, Any>): { missing: string[]; unrequested: string[] } {
+    const sel = Array.isArray(review['selection']) ? (review['selection'] as Any[]).filter((s) => typeof s === 'string') : [];
+    const resolved = _isDict(review['resolved']) ? (review['resolved'] as Record<string, Any>) : {};
+    const ok = (v: Any): boolean =>
+        _isDict(v) &&
+        ((v['status'] === 'fixed' && typeof v['commit'] === 'string' && v['commit'] !== '') ||
+            (v['status'] === 'not-fixed' && typeof v['reason'] === 'string' && v['reason'] !== ''));
+    return {
+        missing: (sel as string[]).filter((id) => !ok(resolved[id])),
+        unrequested: Object.keys(resolved).filter((id) => !(sel as string[]).includes(id)),
+    };
+}
+
+function _apply_selection_gate(state: DeliveryState, review: Record<string, Any>): StepResult | null {
+    if (state.ticket?.['review_only'] !== true || !Array.isArray(review['selection'])) return null;
+    const { missing, unrequested } = selection_gaps(review);
+    if (missing.length === 0 && unrequested.length === 0) return null;
+    return new StepResult({
+        outcome: Outcome.BLOCKED,
+        questions: [
+            agent_directive('review-selection-resolve'),
+            ...(missing.length
+                ? [`> Selected finding(s) without a resolution: ${missing.join(', ')}. Re-review ONLY these, ` +
+                      'and write `ui_review.resolved[<id>] = {status: "fixed", commit}` or `{status: "not-fixed", reason}`.']
+                : []),
+            ...(unrequested.length
+                ? [`> Resolved but never selected: ${unrequested.join(', ')} — an unrequested change. ` +
+                      'Revert it, or report it as a finding of its own.']
+                : []),
+        ],
+        message: 'Review-only selection is not fully resolved.',
+    });
 }
 
 /** True when `review` is a dict with at least one own key. */

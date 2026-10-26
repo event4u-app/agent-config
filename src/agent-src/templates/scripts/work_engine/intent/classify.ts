@@ -444,6 +444,30 @@ export function populate_routing(state: WorkState): void {
     const intent = classify_intent(text, { title });
     state.intent = intent;
     state.directive_set = directive_set_for(intent);
+    if (intent === INTENT_UI_IMPROVE && is_review_only(text)) {
+        // Review before rebuild (road-to-a-control-that-matches-its-neighbours
+        // 4.1): `ui/apply` writes nothing until the user selected findings.
+        (state.input.data as Record<string, unknown>)['review_only'] = true;
+    }
+}
+
+/**
+ * True for a request to CHECK a surface rather than change it: a review verb
+ * ("prüf", "review", "audit", "check") and no build, fix or change verb. Read
+ * from the text alone, so a prompt asking to check AND fix is not review-only.
+ */
+export function is_review_only(raw: string): boolean {
+    const text = pyLower(pyStrip(raw));
+    const review =
+        /(?<![\p{L}])(?:über)?prüf\p{L}*|\b(?:review|audit|check|inspect|critique|assess)\b/u.test(text);
+    if (!review) return false;
+    const changes =
+        _is_build(text) ||
+        _is_fix(text) ||
+        _is_trivial(text) ||
+        /\b(?:redesign|rebuild|rework|refactor|improve|polish|update)\b/.test(text) ||
+        /(?<![\p{L}])(?:überarbeit|verbesser|bau|änder|korrigier)\p{L}*/u.test(text);
+    return !changes;
 }
 
 function _extract_text(state: WorkState): [string, string | null] {

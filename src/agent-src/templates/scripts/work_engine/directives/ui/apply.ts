@@ -116,6 +116,10 @@ function _pyTruthy(value: Any): boolean {
 
 /** Apply the stack-dispatched implementation gate. */
 export function run(state: DeliveryState): StepResult {
+    const selection = review_selection(state);
+    if (selection === 'pending') {
+        return _halt_review_before_rebuild();
+    }
     const envelope = _apply_envelope(state);
     if (envelope === null) {
         return _delegate_to_stack_skill(state);
@@ -631,6 +635,41 @@ function _halt_placeholders(state: DeliveryState, violations: string[]): StepRes
         message:
             `UI apply rejected: ${violations.length} placeholder ` +
             'violation(s) in rendered output.',
+    });
+}
+
+/**
+ * Review before rebuild (road-to-a-control-that-matches-its-neighbours 4.1-4.5).
+ * A review-only request (`state.ticket.review_only`, set by routing) writes
+ * nothing until `state.ui_review.selection` lists the finding ids to apply.
+ * `null` when the request is not review-only.
+ */
+export function review_selection(state: DeliveryState): 'pending' | string[] | null {
+    if (state.ticket?.['review_only'] !== true) return null;
+    const review = _isDict(state.ui_review) ? (state.ui_review as Record<string, Any>) : {};
+    const sel = review['selection'];
+    if (!Array.isArray(sel)) return 'pending';
+    return sel.filter((s): s is string => typeof s === 'string');
+}
+
+/** BLOCKED — present findings, let the user choose, write nothing yet. */
+function _halt_review_before_rebuild(): StepResult {
+    return new StepResult({
+        outcome: Outcome.BLOCKED,
+        questions: [
+            agent_directive('review-before-rebuild'),
+            '> This request asks to CHECK the surface. Nothing is written in this phase.',
+            '> Run `design-review` with `change_intent: preserve`: a numbered finding list ' +
+                '— id, severity, before/after/why, `file:line`, and the `control_roles` deviation ' +
+                'where there is one. Describe problems; prescribe no fix yet.',
+            '> Put the list to the user as a host-native multi-select grouped by severity, ' +
+                'blockers preselected; fall back to the chat when the host has no such prompt.',
+            '> Write `state.ui_review.selection = [<ids>]` and, for every finding not chosen, ' +
+                '`state.ui_review.deferred = [{id, disposition: "accepted_risk", reason: "deferred by the user"}]`.',
+            '> User unreachable → select the blockers only, defer the rest, and say so in the ' +
+                'first line of the result. Never a silent full rebuild.',
+        ],
+        message: 'Review-only request: findings first, selection by the user, then apply only the selection.',
     });
 }
 
