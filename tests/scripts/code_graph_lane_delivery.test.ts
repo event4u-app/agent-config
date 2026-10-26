@@ -143,4 +143,39 @@ describe('delivery drift DL-1 … DL-5', () => {
         const hits = evaluateRules(DELIVERY_RULES, [readDelivery(dir)]).filter((f) => f.rule === 'DL-3');
         expect(hits.map((h) => h.subjects[0])).toEqual([`environment:${GH}/ci.yml#staging`]);
     });
+
+    it('DL-5 counts a local action as the files under its directory, so a `dir/**` filter covers it', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lane-delivery-'));
+        tmpDirs.push(dir);
+        fs.mkdirSync(path.join(dir, GH), { recursive: true });
+        fs.mkdirSync(path.join(dir, '.github', 'actions', 'setup'), { recursive: true });
+        fs.writeFileSync(path.join(dir, '.github', 'actions', 'setup', 'action.yml'), 'runs:\n  using: composite\n  steps: []\n');
+        const wf = (extra: string) =>
+            `name: Lint\non:\n  pull_request:\n    paths:\n      - "src/**"\n      - ".github/workflows/lint.yml"\n${extra}jobs:\n  lint:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ./.github/actions/setup\n`;
+        const dl5 = () => evaluateRules(DELIVERY_RULES, [readDelivery(dir)]).filter((f) => f.rule === 'DL-5');
+        fs.writeFileSync(path.join(dir, GH, 'lint.yml'), wf(''));
+        expect(dl5().map((h) => h.subjects[0])).toEqual([`trigger:${GH}/lint.yml#pull_request`]);
+        fs.writeFileSync(path.join(dir, GH, 'lint.yml'), wf('      - ".github/actions/setup/**"\n'));
+        expect(dl5()).toEqual([]);
+    });
+
+    it('DL-5 reads every file of a local action, so a manifest-only filter misses its implementation', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lane-delivery-'));
+        tmpDirs.push(dir);
+        const act = path.join(dir, '.github', 'actions', 'setup');
+        fs.mkdirSync(path.join(dir, GH), { recursive: true });
+        fs.mkdirSync(path.join(act, 'dist'), { recursive: true });
+        fs.writeFileSync(path.join(act, 'action.yaml'), 'runs:\n  using: node20\n  main: dist/index.js\n');
+        fs.writeFileSync(path.join(act, 'dist', 'index.js'), '// impl\n');
+        const wf = (extra: string) =>
+            `name: Lint\non:\n  pull_request:\n    paths:\n      - ".github/workflows/lint.yml"\n${extra}jobs:\n  lint:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ./.github/actions/setup\n`;
+        const dl5 = () => evaluateRules(DELIVERY_RULES, [readDelivery(dir)]).filter((f) => f.rule === 'DL-5');
+        fs.writeFileSync(path.join(dir, GH, 'lint.yml'), wf('      - ".github/actions/setup/action.yaml"\n'));
+        const hits = dl5();
+        expect(hits.map((h) => h.subjects[0])).toEqual([`trigger:${GH}/lint.yml#pull_request`]);
+        expect(hits[0]!.message).toContain('.github/actions/setup/dist/index.js');
+        expect(hits[0]!.message).not.toContain('action.yaml');
+        fs.writeFileSync(path.join(dir, GH, 'lint.yml'), wf('      - ".github/actions/setup/action.yaml"\n      - ".github/actions/setup/dist/**"\n'));
+        expect(dl5()).toEqual([]);
+    });
 });
