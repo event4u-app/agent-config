@@ -56,10 +56,22 @@ export interface LaneRelation {
     guess: boolean;
 }
 
+/**
+ * Attributes a lane derives about a fact another reader owns (a table's soft
+ * deletes, a column's referenced table). Every key carries the lane as prefix
+ * (`data:soft_deletes`), so a re-merge of the lane removes exactly what it added.
+ */
+export interface LaneAnnotation {
+    /** the graph node the attributes belong to */
+    id: string;
+    attrs: Record<string, string | number | boolean | string[] | null>;
+}
+
 export interface LaneOutput {
     lane: 'data' | 'interfaces' | 'runtime' | 'delivery' | 'history' | 'decisions' | 'flows';
     facts: LaneFact[];
     relations: LaneRelation[];
+    annotations?: LaneAnnotation[];
     /** files the reader looked at and could not read, with the reason */
     skipped: { file: string; reason: string }[];
 }

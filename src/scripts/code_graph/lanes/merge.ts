@@ -16,6 +16,10 @@
  * vocabulary, not only its owning lane: a runtime reader's `service` and an
  * interfaces reader's `service` are the same kind of thing.
  *
+ * A lane's annotations add `<lane>:`-prefixed attributes to facts another
+ * reader owns; a re-merge of the lane drops every key with its prefix first,
+ * so an annotation the reader no longer derives disappears with it.
+ *
  * `applyLaneOutputs` does the same on a graph file and re-derives its SQLite
  * twin, so a query sees the merged facts through either store.
  */
@@ -47,7 +51,14 @@ const factId = (kind: string, id: string): string => (id.startsWith(`${kind}:`) 
 export function mergeLaneOutputs(graph: CodeGraph, outputs: readonly LaneOutput[]): MergeResult {
     const lanes = new Set(outputs.map((o) => o.lane));
     const refused: MergeRefusal[] = [];
-    const nodes = graph.nodes.filter((n) => !(n.fact?.lane && lanes.has(n.fact.lane as LaneOutput['lane'])));
+    const prefixes = [...lanes].map((l) => `${l}:`);
+    const unannotated = (n: CodeNode): CodeNode => {
+        const attrs = n.fact?.attrs;
+        if (!attrs || !Object.keys(attrs).some((k) => prefixes.some((p) => k.startsWith(p)))) return n;
+        const kept = Object.fromEntries(Object.entries(attrs).filter(([k]) => !prefixes.some((p) => k.startsWith(p))));
+        return { ...n, fact: { ...n.fact!, attrs: kept } };
+    };
+    const nodes = graph.nodes.filter((n) => !(n.fact?.lane && lanes.has(n.fact.lane as LaneOutput['lane']))).map(unannotated);
     const edges = graph.edges.filter((e) => !(e.fact?.lane && lanes.has(e.fact.lane as LaneOutput['lane'])));
     const byId = new Map(nodes.map((n) => [n.id, n] as const));
     let mergedNodes = 0;
@@ -78,6 +89,25 @@ export function mergeLaneOutputs(graph: CodeGraph, outputs: readonly LaneOutput[
             byId.set(item, node);
             nodes.push(node);
             mergedNodes += 1;
+        }
+    }
+    const position = new Map(nodes.map((n, i) => [n.id, i] as const));
+    for (const o of outputs) {
+        for (const a of o.annotations ?? []) {
+            const at = position.get(a.id) ?? -1;
+            const target = at >= 0 ? nodes[at] : undefined;
+            const foreign = Object.keys(a.attrs).filter((k) => !k.startsWith(`${o.lane}:`));
+            if (!target?.fact) {
+                refused.push({ lane: o.lane, item: a.id, reason: target ? 'annotated node carries no fact' : 'annotated node not in the graph' });
+                continue;
+            }
+            if (foreign.length) {
+                refused.push({ lane: o.lane, item: a.id, reason: `annotation keys must carry the lane prefix "${o.lane}:": ${foreign.join(', ')}` });
+                continue;
+            }
+            const next: CodeNode = { ...target, fact: { ...target.fact, attrs: { ...(target.fact.attrs ?? {}), ...a.attrs } } };
+            nodes[at] = next;
+            byId.set(next.id, next);
         }
     }
     for (const o of outputs) {

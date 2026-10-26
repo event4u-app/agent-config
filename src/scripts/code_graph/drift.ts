@@ -113,7 +113,7 @@ export type DriftRule = RuleHead &
         | { match?: 'expect'; select: DriftSelect; expect?: DriftExpect | DriftExpect[]; subject?: string }
         | { match: 'fact'; select: DriftSelect; counter?: string; counter_required?: boolean }
         | { match: 'collision'; select: DriftSelect; key: string[]; distinct: string }
-        | { match: 'missing'; select: DriftSelect; key: string; against: AgainstSelect }
+        | { match: 'missing'; select: DriftSelect; key: string; against: AgainstSelect; counter?: string }
         | { match: 'mismatch'; select: DriftSelect; key: string; against: AgainstSelect; aliases?: Record<string, string> }
         | { match: 'join'; select: DriftSelect; key: string; against: AgainstSelect; compare: string[]; aliases?: Record<string, string> }
         | { match: 'dangling'; relation: string | string[]; lane?: Lane }
@@ -590,7 +590,11 @@ function hitsOf(r: DriftRule, p: Population, ix: Index): Hit[] {
                 break;
             }
             const have = new Set(pop.map((x) => keyOf(x, r.against.key)));
-            for (const s of sel) if (!have.has(keyOf(s, r.key))) hits.push({ a: s, b: other(pop[0]!) });
+            for (const s of sel) {
+                if (have.has(keyOf(s, r.key))) continue;
+                const named = r.match === 'missing' && r.counter ? ix.byId.get(render(readPath(s, r.counter, ix))) : undefined;
+                hits.push({ a: s, b: named ? asOther(named) : other(pop[0]!) });
+            }
             break;
         }
         case 'dangling': {
@@ -668,7 +672,7 @@ export function evaluateDrift(input: CodeGraph | LaneOutput | readonly LaneOutpu
             if (findings.has(dedupe)) continue;
             const ctx = ix.ctxOf(h.subject !== undefined && ix.byId.has(subject) ? subject : h.a.edge ? h.a.source : h.a.id);
             const hasSchema = ctx['completeness'] !== undefined || ctx['engine'] !== undefined;
-            const engine = String(ctx['engine'] ?? 'unknown');
+            const engine = String(ctx['effective_engine'] ?? ctx['engine'] ?? 'unknown');
             const fix = r.fix === undefined ? undefined : typeof r.fix === 'string' ? r.fix : (r.fix[engine] ?? r.fix['default']);
             const reason = waived.get(`${r.id}\0${subject}`);
             const trigger = h.subject !== undefined && h.a.edge ? h.a.source : h.a.id;

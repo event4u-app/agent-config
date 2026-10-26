@@ -98,6 +98,8 @@ export const DRIFT_RULES: readonly DriftRule[] = [
         title: 'foreign key without a leading index',
         tier: 'advice',
         select: { ...FK_COLUMNS, where: { index: ['missing', 'engine-unknown'] } },
+        // InnoDB indexes a key itself; the runtime lane may name the engine the project did not.
+        exempt: [{ index: 'engine-unknown', 'ctx.effective_engine': ['mysql', 'mariadb'] }],
         subject: '$source',
         message: 'the foreign key on $source has no index leading with it ({attr.index}); deletes on $target and joins scan the table',
         fix: {
@@ -151,8 +153,9 @@ export const DRIFT_RULES: readonly DriftRule[] = [
         title: 'intended column missing from the actual schema',
         tier: 'advice',
         match: 'missing',
-        select: { kind: 'column', rung: ['T1', 'T2'], where: { 'ctx.data:actual_seen': true } },
+        select: { kind: 'column', rung: ['T1', 'T2'], where: { 'ctx.data:actual_seen': { exists: true } } },
         key: '$ref',
+        counter: 'ctx.data:actual_seen',
         against: { kind: 'column', rung: ['T3', 'T4'], key: '$ref' },
         message: '{name} is in the migrations, and the actual schema read from {other.attr.source} has no such column',
     },
@@ -164,6 +167,7 @@ export const DRIFT_RULES: readonly DriftRule[] = [
         match: 'missing',
         select: { kind: 'column', rung: ['T3', 'T4'], where: { 'ctx.intended_seen': true } },
         key: '$ref',
+        counter: 'ctx.intended',
         against: { kind: 'column', rung: ['T1', 'T2'], key: '$ref' },
         message: '{name} is in the actual schema read from {attr.source}, and no migration creates it',
     },
