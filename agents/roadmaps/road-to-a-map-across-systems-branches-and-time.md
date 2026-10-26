@@ -256,19 +256,21 @@ no absolute local path.
 
 ## Phase 6 — Measure
 
-- [ ] **6.1 Fixtures as the acceptance set.** One fixture repository per lane
+- [x] **6.1 Fixtures as the acceptance set.** One fixture repository per lane
       (systems, provenance, domains, branches, chain) built in a temp dir by
       the tests, so every criterion below runs in CI.
       verify: the five suites pass.
-- [ ] **6.2 Cost.** Build time and storage on this repository with and without
+- [x] **6.2 Cost.** Build time and storage on this repository with and without
       the new lanes, and storage per extra branch; recorded in the evidence
       file, positive or not.
-      verify: the evidence file exists with both readings.
+      verify: `agents/evidence/analysis/map-systems-branches-cost-2026-10-26.md`
+      holds the build, provenance and per-branch readings.
 
 ## Phase 7 — Docs follow code
 
-- [ ] **7.1 Describe the surface.** README map section, `code-intelligence`,
-      the CLI help, and `MAP.md`'s area list name the new verbs and areas.
+- [x] **7.1 Describe the surface.** README map section, `code-intelligence`
+      (a reference page beside the skill), the CLI help, and `MAP.md`'s area
+      list name the new verbs and areas.
       verify: the help test lists every new verb.
 
 ## Risk Register
