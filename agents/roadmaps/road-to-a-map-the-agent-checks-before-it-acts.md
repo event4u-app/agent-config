@@ -368,6 +368,12 @@ renders from real facts or says why it has none.
       verify: a browser test walks down, into a folder and back out by keys
       alone and finds aria-activedescendant on the active row.
 
+- [ ] **5.16 Every route switch re-renders its page.** Coming back to the
+      Overview after drilling into Code, Data or any area shows the Overview
+      again without a reload (owner bug report).
+      verify: a browser test round-trips every area → Übersicht, by nav link,
+      back button and hash change, and finds the Overview cards rendered.
+
 - [ ] **5.13 Demo map for frontend work.** `code-graph map --demo` builds a
       composite fixture repo (data drift, interfaces, runtime, delivery,
       decisions, flows, history, a working diff) through the normal build and
