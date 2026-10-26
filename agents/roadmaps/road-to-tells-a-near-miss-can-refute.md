@@ -232,7 +232,7 @@ The gate for every later promotion.
       verify: fixtures for a dropped number, a changed date, an added name and a
       pure reword (clean); `src/skills/humanizer/SKILL.md` step 6 names the
       command.
-- [ ] **5.4 Reach.** Replace the humanizer's cross-pack links with
+- [x] **5.4 Reach.** Done 2026-10-26: two outbound links in the humanizer and three inbound (doc-coauthoring, readme-writing, readme-writing-package) now name the neighbour in prose; `lint_pack_boundaries` 120 → 115, no `suggests` edge added. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Replace the humanizer's cross-pack links with
       named-not-linked prose (the convention `logo-generation` uses).
       verify: `lint_pack_boundaries` drops by 5 humanizer rows with no new
       `suggests` edge.

@@ -140,46 +140,66 @@ a declared Lock is off-system; `design_lock.ts` flags it (rebuttable).
 - Icon system: [Phosphor / Heroicons / Lucide / etc.]
 ```
 
-### `PRODUCT.md` — cross-feature interaction patterns
+### `PRODUCT.md` — product truth and cross-feature interaction patterns
 
-Captures *interaction decisions* that should be consistent across features.
-Unlike a feature spec (which describes one feature), PRODUCT.md captures
-patterns that apply everywhere.
+Captures *what the product is* and the *interaction decisions* that should be
+consistent across features. Unlike a feature spec (which describes one
+feature), PRODUCT.md captures what applies everywhere. The format is a
+superset of the product-truth format other design tools write (Register,
+Users, Purpose, Anti-references, Principles), so a file either side writes
+reads on both.
 
 **Format:**
 
 ```markdown
-# PRODUCT.md — [Project name] interaction patterns
+# PRODUCT.md — [Project name]
 
-> AI-readable cross-feature pattern memory. Update when a new pattern is established.
+> AI-readable product memory. Update when a new pattern is established.
 > Last updated: [date]
 
-## Destructive actions
+## Register
+[brand / product] — brand: the impression is the product; product: design serves the task.
+
+## Users
+[Who uses it, in what situation, with what at stake.]
+
+## Purpose
+[One sentence: what the product is for.]
+
+## Anti-references
+- [A product or style this must not look or behave like, and why.]
+
+## Principles
+1. [A design principle a reviewer can check.]
+
+## Interaction patterns
+
+### Destructive actions
 Policy: [typed confirmation ("DELETE") / dialog with verb button / undo toast / etc.]
 Example: "All destructive actions require the user to type 'DELETE' or the resource name."
 
-## Mutation feedback
+### Mutation feedback
 Policy: [optimistic UI + inline undo / loading spinner / success toast / etc.]
 Undo window: [N seconds, or "not applicable"]
 Example: "Optimistic UI for all mutations; inline undo toast for 5 seconds, then commit."
 
-## Filter and sort persistence
+### Filter and sort persistence
 Policy: [URL params / localStorage / session / not persisted]
 Restore on load: [yes / no]
 
-## Empty states
+### Empty states
 Approach: [illustration + CTA / text only / skeleton / etc.]
 Example: "Illustration + primary CTA for empty lists; text-only for zero-search-results."
 
-## Error handling
+### Error handling
 Approach: [inline field errors / toast / error boundary / etc.]
 Network errors: [retry + message / fail fast / etc.]
 
-## Navigation and routing
+### Navigation and routing
 Pattern: [SPA / MPA / hybrid / etc.]
 Active state: [how active nav items are marked]
 
-## Mental model
+### Mental model
 One sentence: [how the product conceptualizes itself to the user]
 Example: "Dashboard = control panel for power users, not an exploration space."
 ```
@@ -189,6 +209,13 @@ Example: "Dashboard = control panel for power users, not an exploration space."
 ### Step 1 — Assess what exists
 
 1. Check if `DESIGN.md` and `PRODUCT.md` already exist in the project root.
+   For an existing PRODUCT.md, classify it before anything else:
+   `npx tsx node_modules/@event4u/agent-config/src/scripts/product_md_dialect.ts PRODUCT.md`.
+   `superset` or `ac-interaction` is this skill's own file. `product-truth`
+   or `unknown` was written by something else: **read it, never rewrite it**
+   — every addition is proposed to the user as a diff, and the file stays
+   byte-identical unless they apply it. Its Register, Users and Principles
+   are inputs to the capture, not fields to overwrite.
 2. If they exist: read both → skip to Step 3 (Update).
 3. If they don't exist: run `existing-ui-audit` (if not already done for this session) to inventory existing components, tokens, and conventions → proceed to Step 2.
 
