@@ -75,13 +75,21 @@ hierarchy to exactly one owner is stated; and SCIP supersedes by node id.
       re-export facts the import binding follows, cycle-safe, to the definition;
       `require('x')` and `import('x')` with a string literal become import facts.
       verify: `npx vitest run tests/scripts/code_graph_resolution_discipline.test.ts -t 'barrel'` -> 0
-- [ ] **1.4 A hierarchy walk to one owner is stated.** `this.m()` / `self::m()`
+- [x] **1.4 A hierarchy walk to one owner is stated.** `this.m()` / `self::m()`
       resolved by `resolveHierMethod` to exactly one owner is emitted as
       `resolved_via: 'class-hierarchy'` (a stated mechanism, added to both trust
-      lists) with EXTRACTED; today it is `name-lookup`/INFERRED
-      (`build.ts:750-762`) and every gate verb drops it.
+      lists); today it is `name-lookup` (`build.ts:750-762`) and every gate verb
+      drops it. The confidence stays INFERRED, as the ADR-124 taxonomy and
+      `tests/scripts/code_graph.test.ts:114` require, because a subclass may
+      override at runtime; two owners at the same level are AMBIGUOUS with
+      `candidates[]` and stay a guess (`corrected-from-reproduction` — the
+      supplied step said EXTRACTED). The SQLite twin's reader dropped every
+      `ambiguity_reason` outside the two older values, so `name-collision`
+      would have vanished on the indexed read path; it now keeps the field,
+      which also pays for the new word in the bundled trust list (the hook
+      bundle had 8 bytes left).
       verify: `npx vitest run tests/scripts/code_graph_resolution_discipline.test.ts -t 'class hierarchy'` -> 0
-- [ ] **1.5 Every fixed shape has a negative test.** Each step above ships one test
+- [x] **1.5 Every fixed shape has a negative test.** Each step above ships one test
       named `… emits no edge` / `… is ambiguous` that fails on the pre-change build,
       and the existing graph suites stay green.
       verify: `npx vitest run tests/scripts/code_graph` -> 0

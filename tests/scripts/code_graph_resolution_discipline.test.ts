@@ -10,6 +10,8 @@ import { describe, expect, it } from 'vitest';
 import { buildGraph, type SourceFile } from '../../src/scripts/code_graph/build.js';
 import { extractFile } from '../../src/scripts/code_graph/extract.js';
 import type { CodeGraph, Lang } from '../../src/scripts/code_graph/types.js';
+import { toEdge } from '../../src/scripts/code_graph/sqlite_store.js';
+import { isAcceptedEdge } from '../../src/scripts/code_graph/verbs.js';
 
 const langOf = (p: string): Lang => (p.endsWith('.php') ? 'php' : 'typescript');
 
@@ -59,6 +61,22 @@ describe('name collision (1.2)', () => {
             ambiguity_reason: 'name-collision',
             candidates: ['a.ts#run', 'b.ts#run'],
         });
+    });
+
+    it('keeps the collision reason on the indexed read path', () => {
+        const e = toEdge({
+            source: 'c.ts#go',
+            target: 'symbol:run',
+            relation: 'calls',
+            confidence: 'AMBIGUOUS',
+            candidates: JSON.stringify(['a.ts#run', 'b.ts#run']),
+            ambiguity_reason: 'name-collision',
+            resolved_via: 'name-lookup',
+            provider: 'native',
+            provider_id: null,
+            fact: null,
+        } as never);
+        expect(e.ambiguity_reason).toBe('name-collision');
     });
 
     it('still binds a name exactly one file declares', async () => {
@@ -141,5 +159,33 @@ describe('barrel and re-exports (1.3)', () => {
         ]);
         const imports = g.edges.filter((e) => e.source === 'src/use.js' && e.relation === 'imports').map((e) => e.target);
         expect(imports).toEqual(['src/a.ts']);
+    });
+});
+
+describe('class hierarchy (1.4)', () => {
+    it('states a this-call that walked to one owner, so a gate verb keeps it', async () => {
+        const g = await build([
+            { path: 'src/base.ts', source: 'export class Base { shared() { return 1; } }\n' },
+            {
+                path: 'src/widget.ts',
+                source: "import { Base } from './base.js';\nexport class Widget extends Base { render() { return this.shared(); } }\n",
+            },
+        ]);
+        const e = callsFrom(g, 'src/widget.ts#Widget::render').find((x) => x.target === 'src/base.ts#Base::shared');
+        expect(e).toMatchObject({ resolved_via: 'class-hierarchy', confidence: 'INFERRED' });
+        expect(isAcceptedEdge(e as never)).toBe(true);
+    });
+
+    it('is ambiguous when two parents at the same level declare the method', async () => {
+        const g = await build([
+            {
+                path: 'src/C.php',
+                source: '<?php\ninterface I { public function m(); }\nclass P { public function m() {} }\nclass C extends P implements I { public function go() { return $this->m(); } }\n',
+            },
+        ]);
+        const e = callsFrom(g, 'src/C.php#C::go')[0];
+        expect(e).toMatchObject({ confidence: 'AMBIGUOUS', ambiguity_reason: 'name-collision' });
+        expect(e?.candidates).toEqual(['src/C.php#I::m', 'src/C.php#P::m']);
+        expect(isAcceptedEdge(e as never)).toBe(false);
     });
 });

@@ -455,11 +455,21 @@ export function buildGraph(
         }
         return [...seen];
     };
-    /** find a method `name` on `classId` or its in-repo ancestors. */
-    const resolveHierMethod = (classId: string, name: string): string | null => {
-        if (sym.ownMethods.get(classId)?.has(name)) return `${classId}::${name}`;
-        for (const anc of ancestorsOf(classId)) if (sym.ownMethods.get(anc)?.has(name)) return `${anc}::${name}`;
-        return null;
+    /**
+     * Every owner of method `name` at the nearest level of `classId`'s
+     * in-repo hierarchy: the class itself, else its parents, else theirs. One
+     * owner is the method the call runs; two at the same level (two parents,
+     * a parent and an interface) is a choice the graph does not make.
+     */
+    const hierOwners = (classId: string, name: string): string[] => {
+        const seen = new Set<string>();
+        for (let level = [classId]; level.length > 0; ) {
+            const owners = level.filter((c) => sym.ownMethods.get(c)?.has(name)).map((c) => `${c}::${name}`);
+            if (owners.length > 0) return [...new Set(owners)].sort();
+            for (const c of level) seen.add(c);
+            level = [...new Set(level.flatMap((c) => sym.parents.get(c) ?? []))].filter((p) => !seen.has(p));
+        }
+        return [];
     };
 
     const nodeKind = new Map(nodes.map((n) => [n.id, n.kind as string]));
@@ -818,18 +828,31 @@ export function buildGraph(
             return;
         }
         if (r.callStyle === 'this' || r.callStyle === 'self' || r.callStyle === 'static' || r.callStyle === 'parent') {
-            const hit = r.enclosingClassId ? resolveHierMethod(r.enclosingClassId, r.targetName) : null;
-            if (hit) {
+            const owners = r.enclosingClassId ? hierOwners(r.enclosingClassId, r.targetName) : [];
+            if (owners.length === 1) {
                 emit({
                     source: r.sourceId,
-                    target: hit,
+                    target: owners[0] as string,
                     relation: 'calls',
+                    // The hierarchy names one owner, which the declarations
+                    // state — so the mechanism is stated and the gate verbs
+                    // keep the edge. The confidence stays INFERRED (ADR-124):
+                    // a subclass may still override the method at runtime.
                     confidence: 'INFERRED',
-                    // Walked the class hierarchy, which is same-file only when
-                    // the declaring class is; the honest mechanism for a
-                    // hierarchy walk is the repo-wide method table.
+                    resolved_via: 'class-hierarchy',
+                    provider: 'native',
+                });
+            } else if (owners.length > 1) {
+                emit({
+                    source: r.sourceId,
+                    target: `symbol:${r.targetName}`,
+                    relation: 'calls',
+                    confidence: 'AMBIGUOUS',
+                    // A choice between owners is a guess, not a statement.
                     resolved_via: 'name-lookup',
                     provider: 'native',
+                    ambiguity_reason: 'name-collision',
+                    candidates: owners.slice(0, CANDIDATE_CAP),
                 });
             } else {
                 // enclosing class extends an out-of-repo base → honest AMBIGUOUS
@@ -879,7 +902,8 @@ export function buildGraph(
             const cls = resolveInScope(ex.file, r.scopeName, 'any', ex.lang, true);
             const kind = cls ? nodeKind.get(cls.target) : undefined;
             if (cls && isStatedResolution(cls.via) && (kind === 'class' || kind === 'interface' || kind === 'enum')) {
-                const m = resolveHierMethod(cls.target, r.targetName);
+                const owned = hierOwners(cls.target, r.targetName);
+                const m = owned.length === 1 ? owned[0] : undefined;
                 if (m) {
                     emit({
                         source: r.sourceId,
