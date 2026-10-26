@@ -77,13 +77,32 @@ export function _working_tree_root(envelope: JsonObject): string {
 export function _concern_permission_verdict(
   rc: number,
   reply: JsonObject,
+  effect?: unknown,
 ): PermissionDecision {
   if (rc === EXIT_BLOCK) return "deny";
   const stated = String(reply["decision"] ?? "").trim().toLowerCase();
-  if (stated === "ask") return "ask";
+  if (stated === "ask") {
+    // Only a `confirmation` concern's ask reaches the host; any other ask still
+    // just withholds the allow. The reason is one bounded line of plain text.
+    const line = typeof reply["reason"] === "string"
+      ? reply["reason"].replace(/[\u0000-\u001f\u007f-\u009f\s]+/g, " ").trim().slice(0, 300) : "";
+    if (effect === "confirmation" && line !== "") _askReasons.push(line);
+    return "ask";
+  }
   if (stated === "deny") return "deny";
   return "allow";
 }
+
+/**
+ * The reasons the `confirmation` concerns of the current dispatch gave with an
+ * `ask`, read and cleared by `_permission_for` on every call.
+ * It assumes one dispatch at a time per process, which is how the dispatcher
+ * runs (one process per hook event); `_permission_for` clearing it on every
+ * call, any event, keeps a reason from outliving its dispatch. Module state rather than a parameter
+ * because `dispatch_hook.ts` sits at its source-size ceiling: a dispatch calls
+ * `_concern_permission_verdict` per concern and `_permission_for` once.
+ */
+const _askReasons: string[] = [];
 
 /**
  * The permission field to hand the host, or `null` to keep the legacy envelope.
@@ -93,6 +112,8 @@ export function _concern_permission_verdict(
  * already be `allow`; no concern may have voted `ask` or `deny`; and the call
  * itself must be category A. An allow is emitted only when all four hold, so
  * widening any one of them is a visible edit rather than an emergent effect.
+ * A vote of `ask` from a `confirmation` concern, with no `deny` beside it, is
+ * emitted as the host's `ask`; any other `ask` withholds the allow and no more.
  */
 export function _permission_for(
   event: string,
@@ -100,9 +121,15 @@ export function _permission_for(
   final_rc: number,
   verdicts: readonly PermissionDecision[],
 ): PermissionEmission | null {
+  const askReasons = _askReasons.splice(0);
   if (event !== "pre_tool_use") return null;
   if (final_rc !== EXIT_ALLOW) return null;
-  if (composePermissionDecision(verdicts) !== "allow") return null;
+  const composed = composePermissionDecision(verdicts);
+  // A concern that asked gets the host's own confirmation, with its reason.
+  // Before this an `ask` only withheld the allow, so the host's machinery
+  // decided alone and the question was never put.
+  if (composed === "ask") return askReasons.length > 0 ? { decision: "ask", reason: askReasons.join(" ").slice(0, 600) } : null;
+  if (composed !== "allow") return null;
   const tool_name = _payload_tool_name(envelope);
   const verdict = categoryAVerdict(tool_name, _payload_tool_input(envelope), _working_tree_root(envelope));
   if (!verdict.categoryA) return null;

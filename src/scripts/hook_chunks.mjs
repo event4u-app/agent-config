@@ -70,6 +70,11 @@ export const HOOK_CHUNKS = Object.freeze([
         outfile: 'dist/hooks/star_ask.chunk.cjs',
         external: Object.freeze(['yaml']),
     }),
+    // `quota-notice` and `metered-spawn-ask` share this script; neither reads YAML.
+    Object.freeze({
+        entry: 'src/scripts/quota_notice_hook.ts',
+        outfile: 'dist/hooks/quota_notice.chunk.cjs',
+    }),
     // `session_start` on claude alone; the thin pass and the ownership ledger
     // it reads stay off every other dispatch's parse. `yaml` external for the
     // reason given at `chat_history`, which `require`s the same copy earlier on

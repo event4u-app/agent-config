@@ -68,9 +68,20 @@ const DEFAULT_HOST_LOWERING = path.join(HOOKS_DIR, "host_lowering.yaml");
  * - `telemetry`    records state, a ledger, a counter
  * - `memory`       reads or writes the memory layer
  * - `notification` tells the human something and changes nothing else
+ * - `confirmation` asks the human to confirm the call it fires on, through the
+ *                  host's native ask; it never refuses, and it is the only
+ *                  effect whose `ask` vote the dispatcher hands to the host
  * - `formatting`   reshapes a command or a generated file
  * - `execution`    starts a process that outlives the event it fired on
  */
+/**
+ * The concerns admitted to `effect: confirmation`. That effect is privileged —
+ * its `ask` reaches the host as a prompt the user must answer, and a headless
+ * run waits on it — so the set is closed: adding a name here is a reviewed
+ * change to this file, never a manifest edit alone.
+ */
+export const CONFIRMATION_CONCERNS: ReadonlySet<string> = new Set(["metered-spawn-ask"]);
+
 export const CONCERN_EFFECTS: ReadonlySet<string> = new Set([
   "permission",
   "context",
@@ -78,6 +89,7 @@ export const CONCERN_EFFECTS: ReadonlySet<string> = new Set([
   "telemetry",
   "memory",
   "notification",
+  "confirmation",
   "formatting",
   "execution",
 ]);
@@ -204,6 +216,12 @@ function _check_concerns(manifest: YamlObject, errors: string[]): Set<string> {
       errors.push(
         `concerns.${name}: 'effect' must be one of ` +
           `${[...CONCERN_EFFECTS].sort().join(" | ")} (got ${JSON.stringify(effect)})`,
+      );
+    } else if (effect === "confirmation" && !CONFIRMATION_CONCERNS.has(name)) {
+      errors.push(
+        `concerns.${name}: 'effect: confirmation' is reserved to ` +
+          `${[...CONFIRMATION_CONCERNS].join(", ")} — its ask reaches the host as a prompt; ` +
+          `admitting another concern is a reviewed edit of CONFIRMATION_CONCERNS`,
       );
     } else if ((spec["severity"] === "blocking") !== (effect === "permission")) {
       // The two fields answer the same question from different sides, so a

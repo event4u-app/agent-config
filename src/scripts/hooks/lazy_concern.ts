@@ -62,37 +62,18 @@ import type { ConcernMain } from './concern_registry_types.js';
  * Manifest `script:` path → the chunk basename beside `dist/hooks/dispatch.js`,
  * and the source module to fall back to when running from the tree.
  */
-export const LAZY_CONCERNS: Readonly<Record<string, { readonly chunk: string; readonly source: string }>> =
-    Object.freeze({
-        'src/scripts/chat_history.ts': Object.freeze({
-            chunk: 'chat_history.chunk.cjs',
-            source: path.join('..', 'chat_history'),
-        }),
-        'src/scripts/hooks/instructions_observer_hook.ts': Object.freeze({
-            chunk: 'instructions_observer.chunk.cjs',
-            source: 'instructions_observer_hook',
-        }),
-        'src/scripts/hooks/code_graph_refresh_hook.ts': Object.freeze({
-            chunk: 'code_graph_refresh.chunk.cjs',
-            source: 'code_graph_refresh_hook',
-        }),
-        'src/scripts/hooks/subagent_constraints_hook.ts': Object.freeze({
-            chunk: 'subagent_constraints.chunk.cjs',
-            source: 'subagent_constraints_hook',
-        }),
-        'src/scripts/update_notice_hook.ts': Object.freeze({
-            chunk: 'update_notice.chunk.cjs',
-            source: path.join('..', 'update_notice_hook'),
-        }),
-        'src/scripts/star_ask_hook.ts': Object.freeze({
-            chunk: 'star_ask.chunk.cjs',
-            source: path.join('..', 'star_ask_hook'),
-        }),
-        'src/scripts/hooks/layer_promotion_hook.ts': Object.freeze({
-            chunk: 'layer_promotion.chunk.cjs',
-            source: 'layer_promotion_hook',
-        }),
-    });
+const lazy = (chunk: string, source: string) => Object.freeze({ chunk, source });
+
+export const LAZY_CONCERNS: Readonly<Record<string, { readonly chunk: string; readonly source: string }>> = Object.freeze({
+    'src/scripts/chat_history.ts': lazy('chat_history.chunk.cjs', '../chat_history'),
+    'src/scripts/hooks/instructions_observer_hook.ts': lazy('instructions_observer.chunk.cjs', 'instructions_observer_hook'),
+    'src/scripts/hooks/code_graph_refresh_hook.ts': lazy('code_graph_refresh.chunk.cjs', 'code_graph_refresh_hook'),
+    'src/scripts/hooks/subagent_constraints_hook.ts': lazy('subagent_constraints.chunk.cjs', 'subagent_constraints_hook'),
+    'src/scripts/update_notice_hook.ts': lazy('update_notice.chunk.cjs', '../update_notice_hook'),
+    'src/scripts/star_ask_hook.ts': lazy('star_ask.chunk.cjs', '../star_ask_hook'),
+    'src/scripts/quota_notice_hook.ts': lazy('quota_notice.chunk.cjs', '../quota_notice_hook'),
+    'src/scripts/hooks/layer_promotion_hook.ts': lazy('layer_promotion.chunk.cjs', 'layer_promotion_hook'),
+});
 
 declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 

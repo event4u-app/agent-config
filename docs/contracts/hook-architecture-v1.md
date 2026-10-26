@@ -829,7 +829,26 @@ category A off; withdrawing it means reverting `permission_gate.ts`.
 The composition policy is **one `ask` or `deny` beats every `allow`**
 (`composePermissionDecision`), and the emission additionally requires the reduced
 severity to already be `allow`, so an allow can never travel with a finding. This
-answers the permission half of the composition gap above. The rewrite half is
+answers the permission half of the composition gap above.
+
+**A `confirmation` concern's `ask` is emitted as the host's ask** (2026-10-25,
+`road-to-a-quota-the-user-sees-coming` 4.3, narrowed by ratification round 1). A concern
+declared `effect: confirmation` that replies `{"decision":"ask","reason":…}` on
+`pre_tool_use`, with no `deny` beside it and a reduced severity of `allow`, gets
+`permissionDecision: "ask"`; each reason is passed as one line, control characters
+removed, at most 300 characters, an empty one is dropped, and the joined reasons stop at
+600. An `ask` from any other effect still only withholds the allow, as before. The one
+`confirmation` concern is `metered-spawn-ask`: it asks before a subagent spawn in a session
+that may bill per token until the user has allowed one. The ask marks that call (by its
+hashed `tool_use_id`) pending, and only that call's own `post_tool_use` approves the
+session, so a "no", a spawn that ran under a billing grant or with its ask suppressed, and
+a call with no id approve nothing. Markers expire after eight days, and the approval's age
+is checked when it is read, not only when a new marker is written. Only `AGENT_CONFIG_NO_SPAWN_ASK=1` or a billing
+grant silences the ask; CI and print mode do not, and an unanswered ask keeps the spawn
+from running (observed on Claude Code 2.1.310 in print mode, with a control run that
+executed the same allowed call), so a headless paid fan-out needs a billing grant. `effect: confirmation`
+is privileged: `lint_hook_manifest` admits it only for the concerns named in
+`CONFIRMATION_CONCERNS`, so adding one is a reviewed edit of the linter. The rewrite half is
 answered separately by ADR-285 (one stage writes, no concern does), and no
 allow-composition result may be read as a rewrite answer.
 

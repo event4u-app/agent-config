@@ -63,7 +63,8 @@ export interface AiTeamReviewGateConfig {
 export interface AiTeamConfig {
     readonly model: string;
     readonly allow_delegate: boolean;
-    readonly max_calls_per_day: number;
+    /** `null` = no team ceiling: the shared bucket counts and never refuses. */
+    readonly max_calls_per_day: number | null;
     readonly review_gate: AiTeamReviewGateConfig;
 }
 
@@ -77,7 +78,7 @@ export const AI_TEAM_REVIEW_GATE_DEFAULTS: AiTeamReviewGateConfig = Object.freez
 export const AI_TEAM_DEFAULTS: AiTeamConfig = Object.freeze({
     model: 'auto',
     allow_delegate: false,
-    max_calls_per_day: 50,
+    max_calls_per_day: null,
     review_gate: AI_TEAM_REVIEW_GATE_DEFAULTS,
 });
 
@@ -218,11 +219,11 @@ export function build_ai_team_config(raw: unknown): AiTeamConfig {
     }
 
     let max_calls_per_day = AI_TEAM_DEFAULTS.max_calls_per_day;
-    if ('max_calls_per_day' in raw) {
+    if ('max_calls_per_day' in raw && raw['max_calls_per_day'] !== null) {
         const value = raw['max_calls_per_day'];
         if (_isBool(value) || typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
             throw new TeamConfigError(
-                '`ai_team.max_calls_per_day` must be a non-negative integer ' +
+                '`ai_team.max_calls_per_day` must be a non-negative integer or null ' +
                     `(got ${JSON.stringify(value)}).`,
             );
         }

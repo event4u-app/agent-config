@@ -1341,7 +1341,7 @@ export function main(argv?: string[]): number {
     }
     rcs.push(rc);
     const reply = _parse_concern_stdout(stdout_text);
-    permission_verdicts.push(_concern_permission_verdict(rc, reply));
+    permission_verdicts.push(_concern_permission_verdict(rc, reply, concern["effect"]));
     // A concern states its reason either as JSON {"reason": …} on stdout
     // (advisory concerns) or as a formatted stderr line (the block guards, e.g.
     // `block-no-verify: BLOCKED — …`). Both are captured here so the emission

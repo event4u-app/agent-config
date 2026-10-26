@@ -243,6 +243,11 @@ read-only environment report from `src/scripts/_lib/environment_detector.ts`.
   twin is metered USD, and converting exhausted plan quota into API spend is a
   decision the operator states, never one `auto` infers. With the key set, the
   retry still passes the ordinary `cost_budget` gates.
+- **An unmetered seat carries no Anthropic key.** A vendor-CLI seat booked
+  `billable=false` is spawned without `ANTHROPIC_API_KEY` and
+  `ANTHROPIC_AUTH_TOKEN` unless the run holds a `billing_grant`: a key in the
+  parent env would let `claude -p` bill at API rates while the seat skips every
+  USD gate. API-billed seats stay available through the grant or `mode: api`.
 
   ```yaml
   # Top level of .ai-council.yml — NOT nested under an `ai_council:` root.

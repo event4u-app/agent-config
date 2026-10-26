@@ -131,6 +131,17 @@ function getTemplateAt(root: Json, path: string): Json | undefined {
     return current;
 }
 
+/**
+ * Leaves that are optional with no default, so the template can only show them
+ * commented out: a value would be a default, and `null` is not in their type.
+ * Each one is named, so a leaf cannot drop out of the template unnoticed.
+ */
+const OPTIONAL_WITHOUT_DEFAULT: ReadonlySet<string> = new Set([
+    // Owner directive 2026-10-22 (ADR-279 Amendment 1): unset = counted, never
+    // refused. Its released type stays `integer`, so a cut reads no type change.
+    'ai_team.max_calls_per_day',
+]);
+
 describe('settings schema ↔ template parity', () => {
     const template = loadTemplate();
     const templateLeaves = templatePaths(template);
@@ -142,7 +153,9 @@ describe('settings schema ↔ template parity', () => {
     });
 
     it('every schema leaf has a matching template key', () => {
-        const missing = schemaLeaves.filter((p) => getTemplateAt(template, p) === undefined);
+        const missing = schemaLeaves.filter(
+            (p) => getTemplateAt(template, p) === undefined && !OPTIONAL_WITHOUT_DEFAULT.has(p),
+        );
         expect(missing, `schema leaves missing from template:\n  ${missing.join('\n  ')}`).toEqual([]);
     });
 

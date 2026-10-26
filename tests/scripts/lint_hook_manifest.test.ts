@@ -182,6 +182,11 @@ describe("lint_hook_manifest — red fixtures", () => {
     expect(lint("/nonexistent/hook_manifest.yaml", false)).toBe(2);
   });
 
+  it("returns 1 when a concern outside CONFIRMATION_CONCERNS declares effect: confirmation", () => {
+    const p = fixtureManifest(VALID.replace("    effect: context", "    severity: advisory\n    effect: confirmation"));
+    expect(lint(p, false)).toBe(1);
+  });
+
   it("returns 1 for a wrong schema_version", () => {
     const p = fixtureManifest(VALID.replace("schema_version: 1", "schema_version: 2"));
     expect(lint(p, false)).toBe(1);
@@ -370,7 +375,8 @@ describe("effect: — the census's field (Phase 2.2)", () => {
     // and 68 since `subagent-constraints` (road-to-a-tick-the-shipped-path-earns 2.4),
     // and 69 since `layer-promote` (road-to-a-setup-that-decides-itself 3.3).
     // and 70 since `star-ask` (ADR-301, owner ruling amending ADR-286 § D2).
-    expect(names.length).toBe(70);
+    // and 72 since `quota-notice` + `metered-spawn-ask` (road-to-a-quota-the-user-sees-coming).
+    expect(names.length).toBe(72);
     const missing = names.filter((n) => !CONCERN_EFFECTS.has(String(manifest.concerns[n]?.effect)));
     expect(missing).toStrictEqual([]);
     const mismatched = names.filter(

@@ -80,6 +80,10 @@ TS-shell native (run via the installed `agent-config` binary):
   brand:status               Is a consumer brand layer present, and at which of the
                              four canonical tokens.json paths. Flags a dot-prefixed
                              .tokens.json, which nothing reads.
+  statusline:tap             Claude Code status-line tap: chains your status line and
+                             records the plan window (rate_limits) for quota notices.
+  statusline:install         Point statusLine at the tap, keeping yours chained.
+  statusline:uninstall       Restore the status line the tap replaced.
   ci:settle <pr>             Wait for a PR's checks to settle; the last line is the
                              verdict (exit 0 green · 1 red · 2 no verdict).
   audit:deps <mode>          Security advisories for this project's packages, runtimes
@@ -851,6 +855,11 @@ cmd_mcp_available() {
 
 cmd_brand_status() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_brand_status.ts" "$@"
+}
+
+# `statusline:tap|install|uninstall` — the plan-window tap and its installer.
+cmd_statusline() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_statusline.ts" "$@"
 }
 
 # `ci:settle <pr>` — the one CI waiter, through the package's own executable so a
@@ -1644,6 +1653,9 @@ main() {
     git:convention)          cmd_git_convention "$@" ;;
     mcp:available)           cmd_mcp_available "$@" ;;
     brand:status)            cmd_brand_status "$@" ;;
+    statusline:tap)          cmd_statusline tap "$@" ;;
+    statusline:install)      cmd_statusline install "$@" ;;
+    statusline:uninstall)    cmd_statusline uninstall "$@" ;;
     ci:settle)               cmd_ci_settle "$@" ;;
     audit:deps)              cmd_audit_deps "$@" ;;
     audit:code)              cmd_audit_code "$@" ;;

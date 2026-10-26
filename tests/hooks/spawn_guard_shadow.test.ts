@@ -599,6 +599,20 @@ describe('spawn-guard-shadow — rate window', () => {
     });
 });
 
+// road-to-a-quota-the-user-sees-coming 5.3: a plan window projected to run out
+// is the same would_wait, recorded before the cliff — and still never a deny.
+describe('spawn-guard-shadow — plan window', () => {
+    it('a hot plan window records would_wait and allows the call', () => {
+        expect(processEnvelope(agentCall('ac-worker'), root, { plan_window_hot: true })).toBe(0);
+        expect(shadowLines().at(-1)!.plan_window).toBe('would_wait');
+    });
+
+    it('a quiet plan window records clear', () => {
+        processEnvelope(agentCall('ac-worker'), root, { plan_window_hot: false });
+        expect(shadowLines().at(-1)!.plan_window).toBe('clear');
+    });
+});
+
 describe('spawn-guard-shadow — payload bodies never reach the ledger (ratification r1)', () => {
     it('prompts, results, messages and the raw agent id are absent from every ledger file', () => {
         const env = (event: string, hook: string, tool: string, input: Record<string, unknown>, response?: Record<string, unknown>) => ({
