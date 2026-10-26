@@ -107,8 +107,10 @@ export function cssBlocks(content: string): Array<{ selector: string; body: stri
   const re = /([^{}]+)\{([^{}]*)\}/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(content)) !== null) {
-    const before = content.slice(0, m.index);
-    const line = (before.match(/\n/g) ?? []).length + 1;
+    // The match starts right after the previous `}`, newline included; the
+    // block's line is where its selector starts.
+    const sel = m[1] ?? "";
+    const line = lineOf(content, m.index + sel.length - sel.trimStart().length);
     blocks.push({ selector: (m[1] ?? "").trim(), body: m[2] ?? "", line });
   }
   return blocks;
