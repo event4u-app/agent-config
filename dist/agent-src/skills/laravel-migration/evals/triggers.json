@@ -1,0 +1,79 @@
+{
+  "skill": "laravel-migration",
+  "last_eval": "2026-10-26",
+  "description": "6 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-26 under road-to-database-keys-that-hold, which corrected this skill's migration template and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover what its description names — creating a migration with make:migration, adding a column on an explicit connection, a foreign key with a chosen referential action, a multi-tenant table — plus the down() contract and a German request. Near-misses share migration vocabulary and are somebody else's job: the rollout strategy of a risky schema change (migration-architect), the reviewer's pass over a schema diff (schema-review), and the raw DDL statement a migration wraps (sql-writing). Counterexamples guard the word migration: a data-center move and a mail-provider migration.",
+  "queries": [
+    {
+      "id": "lm-e1",
+      "q": "create a Laravel migration for an invoices table with a customer foreign key",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "lm-e2",
+      "q": "php artisan make:migration add_currency_to_orders — write the up and down",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "lm-e3",
+      "q": "add a nullable archived_at column to the tenant connection's projects table",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "lm-e4",
+      "q": "should this foreignId cascade on delete or restrict? write the migration either way",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "lm-e5",
+      "q": "my migration's down() drops the wrong table — fix the rollback",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "lm-e6",
+      "q": "schreib mir eine Laravel-Migration für die Tabelle customer_notes",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "lm-n1",
+      "q": "plan the zero-downtime rollout for renaming a column used by three services",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "rollout strategy across consumers → migration-architect"
+    },
+    {
+      "id": "lm-n2",
+      "q": "review this PR's schema changes for missing indexes and unsafe migrations",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "review pass over a schema diff → schema-review"
+    },
+    {
+      "id": "lm-n3",
+      "q": "write the raw ALTER TABLE statement with ALGORITHM=INPLACE for this column",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "raw DDL text → sql-writing"
+    },
+    {
+      "id": "lm-c1",
+      "q": "plan the migration of our servers from the old data center to the new region",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "infrastructure move, no schema"
+    },
+    {
+      "id": "lm-c2",
+      "q": "draft the customer email announcing our migration to a new mail provider",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "communication about a vendor switch"
+    }
+  ]
+}

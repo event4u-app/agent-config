@@ -48,7 +48,6 @@
     "laravel-horizon",
     "laravel-mail",
     "laravel-middleware",
-    "laravel-migration",
     "laravel-notifications",
     "laravel-pennant",
     "laravel-pulse",
