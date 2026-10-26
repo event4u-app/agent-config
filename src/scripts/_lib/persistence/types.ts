@@ -104,6 +104,18 @@ export const IGNORED_DIRS: ReadonlySet<string> = new Set([
     'spec',
 ]);
 
+/**
+ * A PHP file read as a Laravel migration: any file under `migrations/` that
+ * calls `Schema::create|table|drop|dropIfExists|rename`, and outside it only a
+ * `create`/`table` call — a service that drops a temporary table stays a query
+ * file. Comments are ignored, so a commented-out call classifies nothing.
+ */
+export function is_laravel_migration_source(posixPath: string, text: string): boolean {
+    const code = text.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, '');
+    const verbs = /(^|\/)migrations\//.test(posixPath) ? 'create|table|drop|dropIfExists|rename' : 'create|table';
+    return new RegExp(`Schema::(?:connection\\([^)]*\\)\\s*->\\s*)?(?:${verbs})\\(`).test(code);
+}
+
 export function is_ignored_dir(name: string): boolean {
     return IGNORED_DIRS.has(name) || name.startsWith('.');
 }

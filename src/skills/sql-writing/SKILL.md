@@ -55,13 +55,13 @@ DB::select("SELECT * FROM users WHERE email = '{$email}'");
 ### Validate
 
 1. Verify every variable in SQL uses parameter binding (`?` or named `:param`).
-2. Confirm MariaDB/MySQL syntax — not PostgreSQL or MSSQL.
+2. Confirm Procedure step 3 found MySQL/MariaDB; else say so.
 3. Run EXPLAIN on complex queries to check index usage.
 4. Check that no PHP variable interpolation (`"$var"`, `'{$var}'`) appears in SQL strings.
 
 ## Output format
 
-1. Parameterized SQL query using MariaDB/MySQL syntax
+1. Parameterized SQL query in MySQL/MariaDB syntax
 2. EXPLAIN output for performance-critical queries
 
 ## Gotcha

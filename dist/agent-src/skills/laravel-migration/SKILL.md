@@ -65,21 +65,14 @@ return new class extends Migration {
     {
         Schema::connection('api_database')->create('example_table', function (Blueprint $table): void {
             $table->id();
-            $table->unsignedBigInteger('customer_id');
+            // Choose the referential action; never inherit it from a
+            // template. See "Referential action is a decision" below.
+            $table->foreignId('customer_id')->constrained()
+                ->cascadeOnDelete(); // rows here are expendable WITHOUT their customer
             $table->string('name');
-            $table->boolean('is_active')->default(true);
+            $table->boolean('is_active')->default(true); // no index: a boolean alone rarely earns one
             $table->timestamps();
             $table->softDeletes();
-
-            $table->foreign('customer_id')
-                ->references('id')
-                ->on('customers')
-                // Choose the referential action; never inherit it from a
-                // template. See "Referential action is a decision" below.
-                ->onDelete('cascade'); // cascade: rows here are expendable
-                                       // WITHOUT their customer
-
-            $table->index('is_active');
         });
     }
 
@@ -90,13 +83,9 @@ return new class extends Migration {
 };
 ```
 
-### Customer database migration
+### Other connections
 
-```bash
-php artisan make:migration:customer AddWeatherColumn --table=cl_lv_weather
-```
-
-Customer database tables use the `cl_` prefix (e.g. `cl_user`, `cl_lv_weather`).
+Table prefixes and custom `make:migration:*` generators are project conventions — read them from the project's `agents/` docs.
 
 ### Adding a column (with explicit connection)
 
