@@ -347,9 +347,12 @@ renders from real facts or says why it has none.
       declared FK, dashed and labelled "code only · no FK in DB" for a soft
       relation known from an ORM relation or a query join, dotted for an
       implied same-name key; the rail lists the links with witnesses and the
-      missing-constraint finding.
+      missing-constraint finding. Edge annotations (delete rule, FK, code
+      only, implied) are small icons on the line with a legend below the
+      stage; clicking an icon opens a popup with the full information.
       verify: a browser test clicks a key with one FK, one soft and one implied
-      link and finds the three highlighted columns with their line styles.
+      link and finds the three highlighted columns with their line styles, no
+      inline edge text, one icon per annotated edge and a popup that opens.
 
 - [ ] **5.13 Demo map for frontend work.** `code-graph map --demo` builds a
       composite fixture repo (data drift, interfaces, runtime, delivery,
