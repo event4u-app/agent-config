@@ -33,7 +33,7 @@ mid-flight.
 |---|---|
 | No UI keywords, no UI envelope, prompt edits services / migrations / tests / config | `backend` |
 | New component / screen / partial; "improve this dashboard"; "build a settings panel"; major edit to a screen | `ui` |
-| Bounded edit, **provably** ≤ 1 file, ≤ 5 changed lines, no new component, no new state, no new dependency | `ui-trivial` |
+| Bounded edit, **provably** ≤ 1 file, ≤ 5 changed lines, no new component, no new state, no new dependency, no new control role | `ui-trivial` |
 | One prompt that adds a backend endpoint **and** the screen that consumes it | `mixed` |
 
 The classifier picks; the agent does not override the pick silently.
