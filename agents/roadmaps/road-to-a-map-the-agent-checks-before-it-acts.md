@@ -91,6 +91,7 @@ renders from real facts or says why it has none.
 | DEC-13 | deterministic | evidence | Code from audited outside projects is re-implemented, never copied. | code-provenance rule; one audited source has no LICENSE file | never |
 | DEC-14 | reversible-technical | agent | Telemetry, SBOM, feature flags, CODEOWNERS, incidents, PII dimensions and Helm values, Pulumi, CloudFormation are out of scope here; each enters only with a measured M2 case. | Proposal P-3 base before breadth | a lane slice shows an M2 case one of them answers |
 | DEC-15 | spend-exhaustion | evidence | Measurement uses an in-repo planted task set; the three-arm run stays inside the ADR-237 per-run budget and is published whatever it says. | ADR-237; proposal K9 | the budget cannot power the run |
+| DEC-16 | product-owned | owner | Every map page is a 1:1 port of its prototype in the handover (markup, layout, components, labels, states), translated to the shell's vanilla ES5; only the DEC-2 shipped decisions override it. A page re-derived "in the shell's style" does not close its step; side-by-side screenshots against the rendered prototype are the evidence. | Owner, 2026-10-26: "Warum hältst Du dich nicht an die Designs aus den Zip Files? … Du sollst das neue Design anwenden" | the owner changes a prototype |
 
 ## Phase 0 — Fold the parked work
 
@@ -297,16 +298,16 @@ renders from real facts or says why it has none.
 - [x] **5.2 Writer gate.** A check fails any code path that writes a graph, map
       or cache outside the two layouts.
       verify: the gate is red on a planted writer and green on the tree.
-- [x] **5.3 The design shell.** Header with logo, `KNOWLEDGE MAP` wordmark, the
+- [ ] **5.3 The design shell.** Header with logo, `KNOWLEDGE MAP` wordmark, the
       eight-area nav, commit and freshness chips, search across every kind,
       Export, theme and language toggles; rails with pin/unpin as shipped;
       hash router; shared detail panel with witness and confirm state.
       verify: the render check passes at 1440, 375 and 320 px in both themes.
-- [x] **5.4 Code area.** The Workbench refinements: languages stack, health
+- [ ] **5.4 Code area.** The Workbench refinements: languages stack, health
       points per part and the largest lever, empty-state lists, deselect,
       footer aggregation chip — keeping every shipped decision of DEC-2.
       verify: the render check passes and the 13 shipped decisions are unchanged.
-- [x] **5.5 Overview area.** Map home: per-area freshness, coverage and trust
+- [ ] **5.5 Overview area.** Map home: per-area freshness, coverage and trust
       states (fresh, stale, contradicted, unverifiable, incomplete), provenance
       labels, entry points into each area.
       verify: a fixture map shows each area's state with its reason.
@@ -314,22 +315,22 @@ renders from real facts or says why it has none.
       actual overlay), ORM relations, drift list with witnesses, model ↔ table
       ↔ request-path links.
       verify: the P1 fixture map shows the three drift findings with witnesses.
-- [x] **5.7 Interfaces area.** Services, operations with protocol filter,
+- [ ] **5.7 Interfaces area.** Services, operations with protocol filter,
       parameters and configuration names, callers linked to Code, contract
       drift.
       verify: the P5 fixture map shows `partner` and `GetStock` with callers.
-- [x] **5.8 Runtime and Delivery areas.** Infrastructure resources and
+- [ ] **5.8 Runtime and Delivery areas.** Infrastructure resources and
       environment comparison; local environment (services, ports), pipeline
       graph, build → image → deploy chain, drift.
       verify: the runtime and delivery fixtures render their facts.
-- [x] **5.9 Impact area.** Change preview from the working diff: affected code,
+- [ ] **5.9 Impact area.** Change preview from the working diff: affected code,
       columns, operations, pipelines, the review-risk terms, and the confirm
       state of each.
       verify: a planted diff renders its affected set.
-- [x] **5.10 Agent area.** Context pack, review risk, the verb list with what
+- [ ] **5.10 Agent area.** Context pack, review risk, the verb list with what
       each answers; `explain` names the existing graph verb.
       verify: the area lists the verbs that exist and nothing that does not.
-- [x] **5.11 Hub with the same shell.** The estate map is rendered by the
+- [ ] **5.11 Hub with the same shell.** The estate map is rendered by the
       shared shell with a Projects area and per-project links; the separate
       estate renderer is retired; the work-tree refusal stays.
       verify: the hub renders and still refuses a git work tree.
