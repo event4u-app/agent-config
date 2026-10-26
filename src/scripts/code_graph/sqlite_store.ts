@@ -258,7 +258,7 @@ export interface GraphIndex {
     close(): void;
 }
 
-interface NodeRow {
+export interface NodeRow {
     id: string;
     label: string;
     kind: string | null;
@@ -270,7 +270,7 @@ interface NodeRow {
     fact?: string | null;
 }
 
-interface EdgeRow {
+export interface EdgeRow {
     source: string;
     target: string;
     relation: string;
@@ -283,7 +283,7 @@ interface EdgeRow {
     fact?: string | null;
 }
 
-function toNode(r: NodeRow): CodeNode {
+export function toNode(r: NodeRow): CodeNode {
     const loc = [r.l0, r.l1, r.l2, r.l3].filter((v): v is number => typeof v === 'number');
     const n: CodeNode = {
         id: r.id,
@@ -304,7 +304,7 @@ function toNode(r: NodeRow): CodeNode {
  * `name-lookup` is the weakest mechanism, so a mislabelled edge is
  * under-trusted rather than over-trusted by Phase 3's filter.
  */
-function toEdge(r: EdgeRow): CodeEdge {
+export function toEdge(r: EdgeRow): CodeEdge {
     const e: CodeEdge = {
         source: r.source,
         target: r.target,
