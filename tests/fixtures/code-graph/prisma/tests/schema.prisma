@@ -1,0 +1,3 @@
+model FixtureOnly {
+  id Int @id
+}

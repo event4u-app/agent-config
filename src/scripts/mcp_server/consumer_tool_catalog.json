@@ -407,22 +407,36 @@
             "type": "string",
             "enum": [
               "calls",
+              "calls-out",
+              "co-changes",
+              "configured-by",
+              "deploys-to",
+              "described-by",
+              "documents",
+              "governs",
               "imports",
-              "uses",
-              "inherits",
-              "member",
-              "tests",
-              "routes-to",
-              "renders",
               "includes",
-              "reads",
+              "inherits",
+              "injects",
+              "member",
               "migrates",
               "persists",
+              "reads",
+              "references",
               "relates",
-              "injects",
-              "documents"
+              "renders",
+              "routes-to",
+              "supersedes",
+              "tests",
+              "triggers",
+              "uses",
+              "writes"
             ],
             "description": "One relation only; omit for all."
+          },
+          "kind": {
+            "type": "string",
+            "description": "List only far ends of this node kind."
           },
           "project": {
             "type": "string"
@@ -473,7 +487,7 @@
     },
     {
       "name": "graph_query",
-      "description": "A symbol's direct outgoing relations (calls, imports, uses, inherits), each with its confidence and resolution mechanism: \"what does this touch\" before reading a file.",
+      "description": "A symbol's direct outgoing relations (calls, imports, uses, inherits), each with its confidence and resolution mechanism: \"what does this touch\" before reading a file. With kind, relation, direction or depth: a filtered tree, each item with its witness.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"
@@ -492,6 +506,61 @@
             "type": "integer",
             "minimum": 1,
             "default": 1500
+          },
+          "kind": {
+            "type": "string",
+            "description": "Tree mode: only these node kinds (comma-separated)."
+          },
+          "relation": {
+            "type": "string",
+            "enum": [
+              "calls",
+              "calls-out",
+              "co-changes",
+              "configured-by",
+              "deploys-to",
+              "described-by",
+              "documents",
+              "governs",
+              "imports",
+              "includes",
+              "inherits",
+              "injects",
+              "member",
+              "migrates",
+              "persists",
+              "reads",
+              "references",
+              "relates",
+              "renders",
+              "routes-to",
+              "supersedes",
+              "tests",
+              "triggers",
+              "uses",
+              "writes"
+            ],
+            "description": "Tree mode: only this relation."
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "in",
+              "out",
+              "both"
+            ],
+            "default": "both"
+          },
+          "depth": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3,
+            "default": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 50
           },
           "project": {
             "type": "string"

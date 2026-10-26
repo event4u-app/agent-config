@@ -19,7 +19,7 @@ import { write_atomic } from '../_lib/fs_atomic.js';
 import { extractFile, type FileExtract, type RawEdge } from './extract.js';
 import { grammarWasmPath } from './loader.js';
 import { type PassReport, runPasses } from './passes.js';
-import { EMPTY_PROBE, PROBE_MARKERS, type ProjectProbe } from './providers/index.js';
+import { EMPTY_PROBE, heldReceivers, PROBE_MARKERS, PROBE_READS, type ProjectProbe } from './providers/index.js';
 import {
     ALIAS_VIA,
     aliasRulesFrom,
@@ -40,10 +40,12 @@ import {
     type CodeGraph,
     type EdgeConfidence,
     EXPECTED_GRAMMAR_ABI,
+    type FactMeta,
     EXT_LANG,
     GRAMMAR_WASM,
     isStatedResolution,
     type Lang,
+    MAX_FILE_BYTES,
     type ResolvedVia,
     SCHEMA_VERSION,
 } from './types.js';
@@ -150,12 +152,13 @@ export function readProjectProbe(root: string): ProjectProbe {
         const rel = toPosixRel(abs, full);
         paths.push(rel);
         const name = path.basename(full);
-        if (!MANIFEST_NAME.test(name) && !PROBE_MARKERS.has(name)) continue;
+        if (!MANIFEST_NAME.test(name) && !PROBE_MARKERS.has(name) && !PROBE_READS.some((r) => r.test(rel))) continue;
         if (PROBE_MARKERS.has(name)) {
             markers.add(rel);
             continue;
         }
         try {
+            if (fs.statSync(full).size > MAX_FILE_BYTES) continue;
             manifests.set(rel, fs.readFileSync(full, 'utf-8'));
         } catch {
             continue;
@@ -463,6 +466,15 @@ export function buildGraph(
         for (const r of ex.rawEdges) if (r.relation === 'imports' && r.importKind === 'namespace' && !r.localName && r.moduleSpecifier) seen.add(r.moduleSpecifier);
         csVisible.set(ex.file, [...seen]);
     }
+    // Fully-qualified names of `use` imports, per file: what a static receiver
+    // really is when no in-repo class answers to it.
+    const importFq = new Map<string, Map<string, string>>();
+    const held = heldReceivers(probe);
+    for (const ex of extracts) {
+        const fqs = new Map<string, string>();
+        for (const r of ex.rawEdges) if (r.relation === 'imports' && r.moduleSpecifier === undefined && r.fqName) fqs.set(r.localName ?? r.targetName, r.fqName.replace(/^\\/, ''));
+        if (fqs.size) importFq.set(ex.file, fqs);
+    }
     for (const ex of extracts) {
         const locals = new Map<string, string[]>();
         for (const n of ex.nodes) if (n.kind !== 'file') push(locals, n.label, n.id);
@@ -759,6 +771,26 @@ export function buildGraph(
             }
             return;
         }
+        // A static call on a framework facade or an SDK client leaves the
+        // repository: it is held as an external call and never bound by name to
+        // an in-repo method that happens to share the method's name.
+        const heldName = r.callStyle === 'scoped' ? r.scopeName : r.callStyle === 'dynamic' ? r.chainHead : undefined;
+        if (heldName && held.size > 0) {
+            const inRepo = resolveInScope(ex.file, heldName, 'any', ex.lang, true);
+            const fq = importFq.get(ex.file)?.get(heldName);
+            const receiver = fq !== undefined ? (held.has(fq) ? fq : null) : held.has(heldName) ? heldName : null;
+            if (receiver !== null && !(inRepo && isStatedResolution(inRepo.via))) {
+                emit({
+                    source: r.sourceId,
+                    target: `external:${receiver}::${r.targetName}`,
+                    relation: 'calls',
+                    confidence: 'EXTRACTED',
+                    resolved_via: fq !== undefined ? 'import-specifier' : 'name-lookup',
+                    provider: 'native',
+                });
+                return;
+            }
+        }
         // scoped `C::m()` whose class the file binds by a stated mechanism
         // (an import, PSR-4, a local declaration, a C# namespace): the class
         // is known, so a method it declares or inherits is the target, and the
@@ -996,6 +1028,18 @@ export function isTestFile(relPath: string): boolean {
     return false;
 }
 
+/** A fact's fields in a fixed order, attributes sorted, so equal facts serialize to equal bytes. */
+function factJson(f: FactMeta): Record<string, unknown> {
+    const out: Record<string, unknown> = {
+        owner: f.owner,
+        witness: { file: f.witness.file, line: f.witness.line, hash: f.witness.hash },
+        rung: f.rung,
+    };
+    if (f.resolved_via) out['resolved_via'] = f.resolved_via;
+    if (f.attrs) out['attrs'] = Object.fromEntries(Object.entries(f.attrs).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
+    return out;
+}
+
 export function serializeGraph(g: CodeGraph): string {
     const key_order: (keyof CodeGraph)[] = [
         'schema_version',
@@ -1014,6 +1058,7 @@ export function serializeGraph(g: CodeGraph): string {
         kind: n.kind,
         source_file: n.source_file,
         source_location: n.source_location,
+        ...(n.fact ? { fact: factJson(n.fact) } : {}),
     });
     const edge = (e: CodeEdge) => {
         const base: Record<string, unknown> = {
@@ -1034,6 +1079,7 @@ export function serializeGraph(g: CodeGraph): string {
         if (e.ambiguity_reason) base['ambiguity_reason'] = e.ambiguity_reason;
         if (e.candidates) base['candidates'] = e.candidates;
         if (e.provider_id) base['provider_id'] = e.provider_id;
+        if (e.fact) base['fact'] = factJson(e.fact);
         return base;
     };
     const ordered: Record<string, unknown> = {};

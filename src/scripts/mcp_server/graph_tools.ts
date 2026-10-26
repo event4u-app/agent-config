@@ -59,8 +59,11 @@ import {
     type NodeOptions,
     path as graphPathVerb,
     query as graphQueryVerb,
+    tree as graphTreeVerb,
+    type TreeOptions,
 } from '../code_graph/query.js';
 import type { Relation } from '../code_graph/types.js';
+import { RELATIONS as VOCAB_RELATIONS } from '../code_graph/vocabulary.js';
 import {
     dead,
     entryPointsFromFile,
@@ -169,31 +172,8 @@ function str(args: Record<string, unknown>, key: string): string {
     return typeof v === 'string' ? v.trim() : '';
 }
 
-/**
- * The closed relation vocabulary, as a schema enum.
- *
- * Spelled out rather than derived from the `Relation` union, which erases at
- * compile time — and pinned by a test against that union so the two cannot
- * drift. An enum that silently lost a value would turn a legal filter into a
- * rejected argument.
- */
-const RELATIONS = [
-    'calls',
-    'imports',
-    'uses',
-    'inherits',
-    'member',
-    'tests',
-    'routes-to',
-    'renders',
-    'includes',
-    'reads',
-    'migrates',
-    'persists',
-    'relates',
-    'injects',
-    'documents',
-] as const;
+/** The closed relation vocabulary, as a schema enum — read from the vocabulary file, so it cannot drift. */
+const RELATIONS = [...VOCAB_RELATIONS.keys()].sort();
 
 function num(args: Record<string, unknown>, key: string, dflt: number): number {
     const v = args[key];
@@ -373,13 +353,19 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         side_effect: 'ro',
         description:
             "A symbol's direct outgoing relations (calls, imports, uses, inherits), each " +
-            'with its confidence and resolution mechanism: "what does this touch" before reading a file.',
+            'with its confidence and resolution mechanism: "what does this touch" before reading a file. ' +
+            'With kind, relation, direction or depth: a filtered tree, each item with its witness.',
         input_schema: {
             type: 'object',
             required: ['symbol'],
             properties: {
                 symbol: { type: 'string', description: 'Node id, label, or free text.' },
                 budget: { type: 'integer', minimum: 1, default: 1500 },
+                kind: { type: 'string', description: 'Tree mode: only these node kinds (comma-separated).' },
+                relation: { type: 'string', enum: RELATIONS, description: 'Tree mode: only this relation.' },
+                direction: { type: 'string', enum: ['in', 'out', 'both'], default: 'both' },
+                depth: { type: 'integer', minimum: 1, maximum: 3, default: 1 },
+                limit: { type: 'integer', minimum: 1, default: 50 },
             },
             additionalProperties: false,
         },
@@ -387,6 +373,16 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             const symbol = str(args, 'symbol');
             if (symbol === '') return { status: 'error', error: 'symbol must be a non-empty string' };
             const staleness = graphState(root, graphHome(root).cachePath);
+            const kinds = str(args, 'kind').split(',').map((k) => k.trim()).filter(Boolean);
+            const relation = str(args, 'relation');
+            if (kinds.length > 0 || relation !== '' || args['direction'] !== undefined || args['depth'] !== undefined) {
+                const opts: TreeOptions = { depth: num(args, 'depth', 1), limit: num(args, 'limit', 50) };
+                if (kinds.length > 0) opts.kinds = kinds;
+                if ((RELATIONS as readonly string[]).includes(relation)) opts.relations = [relation];
+                const dir = str(args, 'direction');
+                if (dir === 'in' || dir === 'out' || dir === 'both') opts.direction = dir;
+                return withGraph(root, (g) => ({ staleness, ...graphTreeVerb(g, symbol, opts) }));
+            }
             return withGraph(root, (g) => ({
                 staleness,
                 ...graphQueryVerb(g, symbol, num(args, 'budget', 1500)),
@@ -418,6 +414,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
                     enum: RELATIONS,
                     description: 'One relation only; omit for all.',
                 },
+                kind: { type: 'string', description: 'List only far ends of this node kind.' },
             },
             additionalProperties: false,
         },
@@ -434,6 +431,8 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             opts.depth = num(args, 'depth', 1);
             const rel = str(args, 'relation');
             if ((RELATIONS as readonly string[]).includes(rel)) opts.relation = rel as Relation;
+            const kind = str(args, 'kind');
+            if (kind !== '') opts.kind = kind;
             return withGraph(root, (g) => ({ staleness, ...graphNodeVerb(g, id, opts) }));
         },
     },
