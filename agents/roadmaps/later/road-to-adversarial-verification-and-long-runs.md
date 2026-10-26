@@ -840,6 +840,15 @@ before the record is signed.
       owner's review — six named sections, each answering a question the owner would otherwise
       have to ask. -->
       <!-- verify: npm run test:ts -- tests/e2e/adversarial-verification-fixtures.test.ts -->
+- [ ] **8.3 Completion evidence binds to what it checked.** Arrived in `inbox-2026-10-ay`
+      (2026-10-26): `before_complete_hook` records *that* a verification ran
+      (`src/scripts/before_complete_hook.ts:21-30`) but not against which state, so an edit
+      after the green run still reads as verified. Record a digest of the touched files'
+      content and the step id with each verification, treat a digest mismatch as unverified,
+      and keep "the check could not run" (offline, quota, missing tool) a third state distinct
+      from both passed and failed.
+      verify: fixture — verify, edit a touched file, claim done → reported unverified;
+      fixture — the check is unreachable → neither passed nor failed.
 
 ## Phase 9 — Long-run continuity
 
