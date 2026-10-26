@@ -314,9 +314,9 @@ export function toEdge(r: EdgeRow): CodeEdge {
         provider: (r.provider ?? 'native') as CodeEdge['provider'],
     };
     if (r.candidates) e.candidates = JSON.parse(r.candidates) as string[];
-    if (r.ambiguity_reason === 'receiver-unknown' || r.ambiguity_reason === 'hierarchy-unresolved') {
-        e.ambiguity_reason = r.ambiguity_reason;
-    }
+    // Written only by this module's own emitter, so every non-null value is a
+    // member of the closed vocabulary.
+    if (r.ambiguity_reason) e.ambiguity_reason = r.ambiguity_reason as NonNullable<CodeEdge['ambiguity_reason']>;
     if (r.provider_id) e.provider_id = r.provider_id;
     if (r.fact) e.fact = JSON.parse(r.fact) as FactMeta;
     return e;

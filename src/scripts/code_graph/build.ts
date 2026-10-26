@@ -410,8 +410,11 @@ export function buildGraph(
         parents: new Map(),
         classByName: new Map(),
     };
+    const nested = new Set(extracts.flatMap((e) => e.nestedIds ?? []));
+    const nodeKind0 = new Map(nodes.map((n) => [n.id, n.kind as string]));
     for (const n of nodes) {
         const lang = nodeLang.get(n.id) ?? null;
+        if (nested.has(n.id)) continue;
         // `byName` stays the CALLABLE/CONSTRUCTIBLE table it always was. The
         // kinds 2.1 added (constant / type / enum) are deliberately NOT put in
         // it: they are reachable through a file's own scope and through
@@ -433,26 +436,50 @@ export function buildGraph(
     // resolve inheritance to in-repo class ids (same language)
     for (const e of extracts)
         for (const inh of e.inherits) {
-            const parentId = sym.classByName.get(k(e.lang, inh.parentName));
-            if (parentId) push(sym.parents, inh.classId, parentId);
+            // Only an unambiguous parent extends the hierarchy walk: a second
+            // same-named class would make every inherited method a guess.
+            const parents = (sym.byName.get(k(e.lang, inh.parentName)) ?? []).filter(
+                (id) => nodeKind0.get(id) !== 'function',
+            );
+            if (parents.length === 1) push(sym.parents, inh.classId, parents[0] as string);
         }
 
-    const ancestorsOf = (classId: string): string[] => {
+    /**
+     * Parent links stated by the child file itself (a local declaration, an
+     * import specifier, PSR-4, a C# namespace), as `child\0parent`. Filled once
+     * the file scopes exist; a link the name table alone supplied is a guess.
+     */
+    const statedLinks = new Set<string>();
+    /**
+     * Every owner of method `name` at the nearest level of `classId`'s
+     * in-repo hierarchy: the class itself, else its parents, else theirs. One
+     * owner is the method the call runs; two concrete owners at one level is a
+     * choice the graph does not make. An interface method never runs, so it
+     * yields to a concrete owner at the same level. `stated` is true only when
+     * every link walked to reach the owners was stated by its child's file.
+     */
+    const hierOwners = (classId: string, name: string): { owners: string[]; stated: boolean } => {
         const seen = new Set<string>();
-        const stack = [...(sym.parents.get(classId) ?? [])];
-        while (stack.length) {
-            const p = stack.pop() as string;
-            if (seen.has(p)) continue;
-            seen.add(p);
-            for (const gp of sym.parents.get(p) ?? []) stack.push(gp);
+        let level = new Map<string, boolean>([[classId, true]]);
+        while (level.size > 0) {
+            const hits = [...level].filter(([c]) => sym.ownMethods.get(c)?.has(name));
+            if (hits.length > 0) {
+                const concrete = hits.filter(([c]) => nodeKind.get(c) !== 'interface');
+                const pick = concrete.length > 0 ? concrete : hits;
+                const owners = [...new Set(pick.map(([c]) => `${c}::${name}`))].sort();
+                return { owners, stated: pick.every(([, st]) => st) };
+            }
+            for (const c of level.keys()) seen.add(c);
+            const next = new Map<string, boolean>();
+            for (const [c, st] of level)
+                for (const p of sym.parents.get(c) ?? []) {
+                    if (seen.has(p)) continue;
+                    const viaStated = st && statedLinks.has(`${c}\0${p}`);
+                    next.set(p, (next.get(p) ?? false) || viaStated);
+                }
+            level = next;
         }
-        return [...seen];
-    };
-    /** find a method `name` on `classId` or its in-repo ancestors. */
-    const resolveHierMethod = (classId: string, name: string): string | null => {
-        if (sym.ownMethods.get(classId)?.has(name)) return `${classId}::${name}`;
-        for (const anc of ancestorsOf(classId)) if (sym.ownMethods.get(anc)?.has(name)) return `${anc}::${name}`;
-        return null;
+        return { owners: [], stated: false };
     };
 
     const nodeKind = new Map(nodes.map((n) => [n.id, n.kind as string]));
@@ -485,6 +512,41 @@ export function buildGraph(
         for (const r of ex.rawEdges) if (r.relation === 'imports' && r.moduleSpecifier === undefined && r.fqName) fqs.set(r.localName ?? r.targetName, r.fqName.replace(/^\\/, ''));
         if (fqs.size) importFq.set(ex.file, fqs);
     }
+    const reexportsOf = new Map(extracts.map((e) => [e.file, e.reexports ?? []] as const));
+    /**
+     * The declaration `name` reaches through `file`'s re-exports: its id, null
+     * when nothing forwards it, or `AMBIGUOUS` when the language itself would
+     * reject the name. An explicit `export { name } from` shadows every
+     * `export *`; two `export *` sources offering it — at any depth — make it
+     * ambiguous rather than absent. A local closure is never exported.
+     */
+    const AMBIGUOUS_EXPORT = '\0ambiguous';
+    const followReexport = (file: string, name: string, seen = new Set<string>()): string | null => {
+        const key = `${file}\0${name}`;
+        if (seen.has(key)) return null;
+        seen.add(key);
+        const step = (to: string, remote: string): string | null => {
+            const direct = `${to}#${remote}`;
+            return nodeKind.has(direct) && !nested.has(direct) ? direct : followReexport(to, remote, seen);
+        };
+        const target = (spec: string): string | null =>
+            resolveSpecifier(file, spec, fileIds) ?? resolveAlias(spec, resolution, fileIds);
+        for (const re of reexportsOf.get(file) ?? []) {
+            const remote = re.names?.find((p) => p.local === name)?.remote;
+            if (remote === undefined || remote === 'default') continue;
+            const to = target(re.spec);
+            return to === null ? null : step(to, remote);
+        }
+        const hits = new Set<string>();
+        for (const re of reexportsOf.get(file) ?? []) {
+            if (!re.star) continue;
+            const to = target(re.spec);
+            const hit = to === null ? null : step(to, name);
+            if (hit !== null) hits.add(hit);
+        }
+        if (hits.has(AMBIGUOUS_EXPORT) || hits.size > 1) return AMBIGUOUS_EXPORT;
+        return hits.size === 1 ? ([...hits][0] as string) : null;
+    };
     for (const ex of extracts) {
         const locals = new Map<string, string[]>();
         for (const n of ex.nodes) if (n.kind !== 'file') push(locals, n.label, n.id);
@@ -515,10 +577,15 @@ export function buildGraph(
                 }
                 // TIER 2: base name, namespace discarded. A lookup, not a
                 // syntactic fact: `exact: false`.
-                const hit =
-                    sym.classByName.get(k(ex.lang, r.targetName)) ??
-                    (sym.byName.get(k(ex.lang, r.targetName)) ?? []).find((id) => id.includes('#') && !id.includes('::'));
-                if (hit) imports.set(local, { target: hit, exact: false, via: 'name-lookup' });
+                // Bound only when the base name names exactly one declaration:
+                // `use One\\Mailer` beside `Two\\Mailer` is a collision, not a
+                // choice the first in sort order gets to make.
+                const named = [
+                    ...new Set((sym.byName.get(k(ex.lang, r.targetName)) ?? []).filter((id) => id.includes('#'))),
+                ];
+                const top = named.filter((id) => !id.includes('::'));
+                const only = named.length === 1 ? named[0] : top.length === 1 ? top[0] : undefined;
+                if (only !== undefined) imports.set(local, { target: only, exact: false, via: 'name-lookup' });
                 continue;
             }
             if (ex.lang === 'csharp' && (namespaceFiles.get(spec)?.length ?? 0) > 1) continue;
@@ -565,14 +632,37 @@ export function buildGraph(
                 continue;
             }
             // A namespace or default import binds the MODULE, never a
-            // same-named export inside it.
+            // same-named export inside it. A named import the file does not
+            // declare is followed through its `export … from` chain.
             const member = `${file}#${r.targetName}`;
-            const target = r.importKind === 'named' && nodeKind.has(member) ? member : file;
+            const named = r.importKind === 'named';
+            const forwarded = named && !nodeKind.has(member) ? followReexport(file, r.targetName) : null;
+            const target = named && nodeKind.has(member) ? member : forwarded !== null && forwarded !== AMBIGUOUS_EXPORT ? forwarded : file;
             imports.set(local, { target, exact: true, via: aliasFile === null ? 'import-specifier' : ALIAS_VIA });
         }
         scopes.set(ex.file, { locals, imports });
     }
     const emptyScope: FileScope = { locals: new Map(), imports: new Map() };
+
+    /**
+     * Every repo-wide top-level declaration `name` could mean from `file`.
+     *
+     * A caller outside the test tree never binds to a test file's declaration
+     * by name — production code does not call into tests. Sorted, so a
+     * collision lists its candidates in the same order on every build.
+     */
+    const wideCandidates = (file: string, name: string, want: Capability, lang: Lang): string[] => {
+        // `constructible` keeps the table it always read — every type kind,
+        // interfaces and traits included, because an `extends` / `implements`
+        // list names those too.
+        const all = (sym.byName.get(k(lang, name)) ?? []).filter((id) =>
+            want === 'constructible'
+                ? nodeKind.get(id) !== 'function'
+                : id.includes('#') && !id.includes('::') && satisfies(nodeKind.get(id), want),
+        );
+        const seen = isTestFile(file) ? all : all.filter((id) => !isTestFile(id.split('#')[0] as string));
+        return [...new Set(seen)].sort();
+    };
 
     /**
      * Resolve a bare name at a use site inside `file`, capability-filtered.
@@ -588,7 +678,13 @@ export function buildGraph(
         want: Capability,
         lang: Lang,
         scopeOnly = false,
-    ): { target: string; confidence: EdgeConfidence; via: ResolvedVia } | null => {
+    ): {
+        target: string;
+        confidence: EdgeConfidence;
+        via: ResolvedVia;
+        candidates?: string[];
+        reason?: 'name-collision';
+    } | null => {
         const scope = scopes.get(file) ?? emptyScope;
         // The ladder's rungs ARE the mechanism taxonomy, so `via` is read off
         // the branch that succeeded rather than inferred afterwards.
@@ -611,18 +707,31 @@ export function buildGraph(
             if (fit.length === 1) return { target: fit[0] as string, confidence: 'EXTRACTED', via: 'namespace-scope' };
         }
         if (scopeOnly) return null;
-        const wide =
-            want === 'constructible'
-                ? sym.classByName.get(k(lang, name))
-                : (sym.byName.get(k(lang, name)) ?? []).find(
-                      (id) => id.includes('#') && !id.includes('::') && satisfies(nodeKind.get(id), want),
-                  );
         // Reached only by matching a name across the whole repository, with no
         // binding in this file to justify it. That is not a syntactic fact and
-        // no longer claims to be one.
-        if (wide) return { target: wide, confidence: 'INFERRED', via: 'name-lookup' };
+        // no longer claims to be one — and it binds only when exactly one
+        // candidate survives. Two same-named declarations are a collision the
+        // graph records as such, never a first-in-sort-order winner.
+        const cands = wideCandidates(file, name, want, lang);
+        if (cands.length === 1) return { target: cands[0] as string, confidence: 'INFERRED', via: 'name-lookup' };
+        if (cands.length > 1)
+            return {
+                target: `symbol:${name}`,
+                confidence: 'AMBIGUOUS',
+                via: 'name-lookup',
+                candidates: cands.slice(0, CANDIDATE_CAP),
+                reason: 'name-collision',
+            };
         return null;
     };
+
+    for (const ex of extracts)
+        for (const inh of ex.inherits) {
+            const hit = resolveInScope(ex.file, inh.parentName, 'constructible', ex.lang, true);
+            if (!hit || !isStatedResolution(hit.via) || !nodeKind.has(hit.target)) continue;
+            if (!(sym.parents.get(inh.classId) ?? []).includes(hit.target)) push(sym.parents, inh.classId, hit.target);
+            statedLinks.add(`${inh.classId}\0${hit.target}`);
+        }
 
 /**
  * The mechanism for an edge whose target did not resolve.
@@ -659,6 +768,7 @@ export function buildGraph(
                 confidence: hit?.confidence ?? 'EXTRACTED',
                 resolved_via: hit?.via ?? UNRESOLVED_VIA,
                 provider: 'native',
+                ...(hit?.candidates ? { candidates: hit.candidates, ambiguity_reason: hit.reason } : {}),
             });
         }
         for (const r of ex.rawEdges) resolveRawEdge(r, ex);
@@ -744,22 +854,38 @@ export function buildGraph(
                 confidence: hit?.confidence ?? 'EXTRACTED',
                 resolved_via: hit?.via ?? UNRESOLVED_VIA,
                 provider: 'native',
+                ...(hit?.candidates ? { candidates: hit.candidates, ambiguity_reason: hit.reason } : {}),
             });
             return;
         }
         if (r.callStyle === 'this' || r.callStyle === 'self' || r.callStyle === 'static' || r.callStyle === 'parent') {
-            const hit = r.enclosingClassId ? resolveHierMethod(r.enclosingClassId, r.targetName) : null;
-            if (hit) {
+            const walked = r.enclosingClassId ? hierOwners(r.enclosingClassId, r.targetName) : { owners: [], stated: false };
+            const owners = walked.owners;
+            if (owners.length === 1) {
                 emit({
                     source: r.sourceId,
-                    target: hit,
+                    target: owners[0] as string,
                     relation: 'calls',
+                    // The hierarchy names one owner, which the declarations
+                    // state — so the mechanism is stated and the gate verbs
+                    // keep the edge. The confidence stays INFERRED (ADR-124):
+                    // a subclass may still override the method at runtime.
                     confidence: 'INFERRED',
-                    // Walked the class hierarchy, which is same-file only when
-                    // the declaring class is; the honest mechanism for a
-                    // hierarchy walk is the repo-wide method table.
+                    // A link supplied by the name table alone keeps the walk a guess.
+                    resolved_via: walked.stated ? 'class-hierarchy' : 'name-lookup',
+                    provider: 'native',
+                });
+            } else if (owners.length > 1) {
+                emit({
+                    source: r.sourceId,
+                    target: `symbol:${r.targetName}`,
+                    relation: 'calls',
+                    confidence: 'AMBIGUOUS',
+                    // A choice between owners is a guess, not a statement.
                     resolved_via: 'name-lookup',
                     provider: 'native',
+                    ambiguity_reason: 'name-collision',
+                    candidates: owners.slice(0, CANDIDATE_CAP),
                 });
             } else {
                 // enclosing class extends an out-of-repo base → honest AMBIGUOUS
@@ -809,7 +935,8 @@ export function buildGraph(
             const cls = resolveInScope(ex.file, r.scopeName, 'any', ex.lang, true);
             const kind = cls ? nodeKind.get(cls.target) : undefined;
             if (cls && isStatedResolution(cls.via) && (kind === 'class' || kind === 'interface' || kind === 'enum')) {
-                const m = resolveHierMethod(cls.target, r.targetName);
+                const owned = hierOwners(cls.target, r.targetName).owners;
+                const m = owned.length === 1 ? owned[0] : undefined;
                 if (m) {
                     emit({
                         source: r.sourceId,
@@ -1236,6 +1363,30 @@ export function extractorFingerprint(): string {
     return _fingerprint;
 }
 
+/**
+ * Every `index.scip` in the tree, merged: the root one and one per package in
+ * a monorepo. Only that name is read — a stray `old.scip` or a fixture is not a
+ * project index. A document path is re-rooted at its index's directory, which
+ * is where an indexer run in that package writes it; one that would land
+ * outside the root is dropped, never followed.
+ */
+export function readScipIndexes(abs: string): ScipDocument[] {
+    const out: ScipDocument[] = [];
+    for (const full of walkFiles(abs, (name) => name === 'index.scip').sort()) {
+        const dir = toPosixRel(abs, path.dirname(full));
+        try {
+            for (const d of readScipIndex(fs.readFileSync(full))) {
+                const p = path.posix.normalize(dir === '' ? d.path : `${dir}/${d.path}`);
+                if (p.startsWith('../') || p === '..' || path.posix.isAbsolute(p)) continue;
+                out.push({ ...d, path: p });
+            }
+        } catch (e) {
+            process.stderr.write(`code-graph: ${toPosixRel(abs, full)} not read — ${(e as Error).message}\n`);
+        }
+    }
+    return out;
+}
+
 /** Exported so `refresh` (cli.ts) can locate/seed/promote the sidecar next to
  * a temp `--out` path without duplicating the naming convention. */
 export function sidecarPath(cachePath: string): string {
@@ -1302,15 +1453,7 @@ export async function buildFromRepo(
         nextSidecar.files[f.path] = { hash, extract };
     }
 
-    const scipPath = path.join(abs, 'index.scip');
-    let scip: ScipDocument[] = [];
-    if (fs.existsSync(scipPath)) {
-        try {
-            scip = readScipIndex(fs.readFileSync(scipPath));
-        } catch (e) {
-            process.stderr.write(`code-graph: index.scip not read — ${(e as Error).message}\n`);
-        }
-    }
+    const scip = readScipIndexes(abs);
     const docs: SourceFile[] = [];
     for (const full of discoverFiles(abs, DOC_EXTS)) {
         try {

@@ -51,7 +51,7 @@ depends: [road-to-leading-every-row]
 > corpus. Corrected from the supplied draft where reproduction diverged (tagged
 > `corrected-from-reproduction`).
 
-> **Arrivals:** 2 — latest `inbox-2026-10-m` (2026-10-12): 16.4.0 release reviews ask that the feeder's stop-slot cost (p95 up to about 1 s on this repository's graph) fall or move off the stop path before any graph verdict gates, and that graph-selected verification be measured against full verification; the cost is step 3.5 (measured) and the promotion it gates is 3.4, deferred behind 3.3's recall reading, so no step moved. The count before it read: 1 — latest `inbox-2026-10-i` (2026-10-11): an audit lists the code graph's missing CI consumer as a defect and draws no row for it.
+> **Arrivals:** 3 — latest `inbox-2026-10-bb` (2026-10-26): a comparison round cites measurements that graph neighbours appended to search output beat a graph offered as a separate tool, and asks that the context line carry stated neighbours instead of a freshness notice; landed as step 2.5. Before that: 2 — latest `inbox-2026-10-m` (2026-10-12): 16.4.0 release reviews ask that the feeder's stop-slot cost (p95 up to about 1 s on this repository's graph) fall or move off the stop path before any graph verdict gates, and that graph-selected verification be measured against full verification; the cost is step 3.5 (measured) and the promotion it gates is 3.4, deferred behind 3.3's recall reading, so no step moved. The count before it read: 1 — latest `inbox-2026-10-i` (2026-10-11): an audit lists the code graph's missing CI consumer as a defect and draws no row for it.
 
 ## Goal
 
@@ -105,6 +105,16 @@ refuses.
       `staleness` reads `edited`. The CLI `query` verb has no `--json`, so the supplied
       CLI verify was unexecutable. `corrected-from-reproduction`.
       verify: `npx vitest run tests/scripts/code_graph.test.ts -t 'staleness edited'` -> 0
+
+- [ ] **2.5 Stated neighbours instead of a freshness notice.** Added 2026-10-26 from
+      round `inbox-2026-10-bb`. The existing `code-graph-context` concern, unchanged in
+      count, prints at most three stated neighbours of the symbols a search hit (with
+      their mechanism) where it now prints a freshness line and verbs; it recommends no
+      tool (K5 of `road-to-a-graph-that-wins`). Its extension filter
+      (`code_graph_context_hook.ts:51`, php/ts/js only) derives from the vendored
+      grammars. Measure the hook-bundle headroom before writing; default-on or opt-in
+      is decided when this wakes, against an adoption count.
+      verify: a fixture search on a fresh graph yields one line naming at most three stated neighbours and no tool name
 
 ## Phase 3 — One node tool, and the gate feeder in shadow
 

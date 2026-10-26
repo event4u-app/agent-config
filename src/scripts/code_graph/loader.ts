@@ -6,7 +6,7 @@
  * `tests/scripts/code_graph.test.ts`.
  *
  * SHIPPED TO CONSUMERS (ADR-259, amended 2026-09-07). `web-tree-sitter` is a
- * runtime `dependency`, and the three loadable grammars are vendored at
+ * runtime `dependency`, and the eight loadable grammars are vendored at
  * `src/vendor/grammars/` and listed in `package.json` `files`. So a consumer
  * install resolves both halves with no manual step. `tree-sitter-wasms` stays a
  * devDependency — it is the source the vendored copies are refreshed from, and
@@ -42,6 +42,7 @@ export interface TsNode {
     namedChild(i: number): TsNode | null;
     child(i: number): TsNode | null;
     childForFieldName(field: string): TsNode | null;
+    parent: TsNode | null;
     hasError: boolean | (() => boolean);
 }
 export interface TsTree {
