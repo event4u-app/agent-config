@@ -155,6 +155,60 @@ describe('the demo map in a browser', () => {
         }
     }, 120_000);
 
+    it('the Runtime environment comparison stays readable on a phone: no word broken mid-letter, no chip overlapping', async () => {
+        for (const width of [375, 1440]) {
+            const { page, errors } = await open(demo.page, '#/runtime', width);
+            const r = await page.evaluate(() => {
+                const inside = (a: DOMRect, b: DOMRect): boolean => a.left >= b.left - 0.5 && a.right <= b.right + 0.5 && a.top >= b.top - 0.5 && a.bottom <= b.bottom + 0.5;
+                const cells = Array.from(document.querySelectorAll('.ops-cmpgrid .ops-cell, .ops-cmpgrid .ops-cmpname, .ops-cmpgrid .ops-th'));
+                let broken = 0;
+                let spill = 0;
+                const chips: DOMRect[] = [];
+                for (const cell of cells) {
+                    const cb = cell.getBoundingClientRect();
+                    const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+                    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+                        const text = n.textContent ?? '';
+                        // A dot or slash is a wrap point of its own (Terraform address, kind/name); a break anywhere else is letter-wrapping.
+                        const re = /[^\s./]+[./]?/g;
+                        for (let m = re.exec(text); m; m = re.exec(text)) {
+                            const range = document.createRange();
+                            range.setStart(n, m.index);
+                            range.setEnd(n, m.index + m[0].length);
+                            const lines = new Set(Array.from(range.getClientRects()).filter((q) => q.width > 0).map((q) => Math.round(q.top)));
+                            if (lines.size > 1) broken += 1;
+                        }
+                    }
+                    for (const chip of Array.from(cell.querySelectorAll('.st'))) {
+                        const b = chip.getBoundingClientRect();
+                        if (!inside(b, cb)) spill += 1;
+                        chips.push(b);
+                    }
+                }
+                let overlap = 0;
+                for (let i = 0; i < chips.length; i++) for (let j = i + 1; j < chips.length; j++) {
+                    const a = chips[i]!;
+                    const b = chips[j]!;
+                    if (a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5) overlap += 1;
+                }
+                const scroller = document.querySelector('.ops-cmp') as HTMLElement;
+                return { cells: cells.length, broken, spill, overlap, pageScroll: document.documentElement.scrollWidth - document.documentElement.clientWidth, scroll: scroller.scrollWidth > scroller.clientWidth };
+            });
+            expect(r.cells, `@${width}`).toBeGreaterThan(50);
+            expect({ broken: r.broken, spill: r.spill, overlap: r.overlap, pageScroll: r.pageScroll }, `@${width}`).toEqual({ broken: 0, spill: 0, overlap: 0, pageScroll: 0 });
+            if (width === 375) {
+                // The grid scrolls inside its box and the resource column stays put while it does.
+                expect(r.scroll).toBe(true);
+                const first = page.locator('.ops-cmpname .ops-b').first();
+                const before = (await first.boundingBox())!.x;
+                await page.locator('.ops-cmp').evaluate((e) => { e.scrollLeft = 200; });
+                expect(Math.abs((await first.boundingBox())!.x - before)).toBeLessThan(1);
+            }
+            expect(errors).toEqual([]);
+            await page.close();
+        }
+    }, 120_000);
+
     it('a real map has no chip', async () => {
         const { page } = await open(realPage, '#/overview');
         expect(await page.locator('#pin-demo').count()).toBe(0);

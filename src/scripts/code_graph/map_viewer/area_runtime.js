@@ -225,7 +225,8 @@ function rtCompare(p, sel, main) {
     var box = el('div', { class: 'ops-cmp' });
     var grid = el('div', { class: 'mono ops-cmpgrid' });
     grid.style.gridTemplateColumns = 'minmax(150px, 1.1fr) repeat(' + cols + ', minmax(0, 1fr))';
-    grid.appendChild(el('span', { class: 'ops-th' }, t('rRail')));
+    grid.style.setProperty('--envs', String(cols));
+    grid.appendChild(el('span', { class: 'ops-th ops-th0' }, t('rRail')));
     if (envs) envs.forEach(function (e) { grid.appendChild(el('span', { class: 'ops-th' }, e)); });
     else grid.appendChild(add(el('span', { class: 'ops-th' }), ndTag(t('rNoEnvs'), true)));
     // One row per resource, whatever namespace declares it: the same Deployment in dev, staging and prod is one row
@@ -240,7 +241,10 @@ function rtCompare(p, sel, main) {
     rows.slice(0, ROW_CAP).forEach(function (row) {
         var first = row.members[0];
         var nb = el('button', { type: 'button', class: 'ops-cmpname' + (row.members.indexOf(sel) >= 0 ? ' on' : '') });
-        add(nb, el('span', { class: 'ops-b' }, row.name), el('br'), el('span', { class: 'muted' }, row.type));
+        var nm = el('span', { class: 'ops-b' });
+        // A Terraform address or a Kubernetes kind/name may wrap after its dot or slash, never inside a part.
+        row.name.split(/(?<=[./])/).forEach(function (part, i) { if (i) nm.appendChild(el('wbr')); nm.appendChild(document.createTextNode(part)); });
+        add(nb, nm, el('br'), el('span', { class: 'muted' }, row.type));
         nb.addEventListener('click', function () { avPick('runtime', 'resource/' + first.name); });
         grid.appendChild(nb);
         (envs || ['']).forEach(function (e) {

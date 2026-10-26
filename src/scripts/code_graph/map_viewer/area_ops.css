@@ -53,6 +53,16 @@
 .ops-cmpname.on { background: var(--brandTint); box-shadow: inset 3px 0 0 var(--brand); }
 .ops-b { font-weight: 600; }
 .ops-cell { padding: 9px 12px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+/* A phone has no room for a name column beside the environments: the name takes a row of its own and stays in
+   view while the environment cells beneath it scroll sideways at a width their chips fit in. */
+@media (max-width: 720px) {
+    .ops-cmp { overflow-x: auto; }
+    .ops-cmpgrid { grid-template-columns: repeat(var(--envs, 1), minmax(132px, 1fr)) !important; }
+    .ops-th0 { display: none; }
+    .ops-cmpname { grid-column: 1 / -1; }
+    .ops-cmpname > br { display: none; }
+    .ops-cmpname > span { display: block; position: sticky; left: 12px; width: max-content; }
+}
 
 /* Detail rail */
 .ops-rail { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
