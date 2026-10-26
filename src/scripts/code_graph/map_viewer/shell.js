@@ -48,6 +48,7 @@ function renderHeader() {
         $('pin-commit').setAttribute('title', t('hubChipT'));
         $('pin-fresh').textContent = t('hubCount')(num(SHELL.hub.indexed), num(SHELL.hub.projects));
         $('pin-fresh').className = 'chip fresh';
+        if (typeof hubHeader === 'function') hubHeader();
         return;
     }
     var pin = model.pin || { commit: meta.commit, freshness: meta.state, generation: meta.graph_generation || '' };
