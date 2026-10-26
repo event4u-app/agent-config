@@ -374,7 +374,7 @@ renders from real facts or says why it has none.
       verify: a browser test round-trips every area → Übersicht, by nav link,
       back button and hash change, and finds the Overview cards rendered.
 
-- [ ] **5.13 Demo map for frontend work.** `code-graph map --demo` builds a
+- [x] **5.13 Demo map for frontend work.** `code-graph map --demo` builds a
       composite fixture repo (data drift, interfaces, runtime, delivery,
       decisions, flows, history, a working diff) through the normal build and
       writes the map to `agents/map/.build/demo/`, with a hub demo from two

@@ -80,10 +80,11 @@ export const MAP_CONFIRM_TEXT = [
 /**
  * The map arm must run the confirm/pack verbs of the tree under test, not the
  * globally installed package, which may predate them: an `agent-config` shim
- * first on PATH execs this checkout's entry point. Written once per run.
+ * first on PATH execs this checkout's entry point. Written once per run, in
+ * the temp dir so it never lands beside the published report.
  */
-function branchCliShim(dir: string): string {
-    const bin = path.join(dir, '.map-arm-bin');
+function branchCliShim(): string {
+    const bin = path.join(os.tmpdir(), `map-arm-bin-${process.pid}`);
     const shim = path.join(bin, 'agent-config');
     if (!fs.existsSync(shim)) {
         fs.mkdirSync(bin, { recursive: true });
@@ -182,7 +183,7 @@ export function run_trial(task: MapTask, arm: string, opts: TrialOpts): MapTrial
             fs.writeFileSync(sp_file, spec.inject, 'utf-8');
         }
         const run = v1.run_live({ id: task.id, prompt: task.prompt + AFFECTED_SET_INSTRUCTION }, clone, opts.timeout, {
-            ...(spec.map ? { env: { PATH: `${branchCliShim(opts.sp_dir)}${path.delimiter}${process.env['PATH'] ?? ''}` } } : {}),
+            ...(spec.map ? { env: { PATH: `${branchCliShim()}${path.delimiter}${process.env['PATH'] ?? ''}` } } : {}),
             sysprompt_file: sp_file,
             setting_sources: spec.setting_sources,
             max_budget: opts.max_budget,
