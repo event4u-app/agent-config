@@ -117,11 +117,14 @@ human voice there; do not inject personality or restructure it.
    self-validation thresholds (dash density, consecutive-staccato cap,
    uniform-bullet run, hedge stack, stock-vocabulary density): did the
    rewrite clear the flagged tells **without introducing new ones**? A
-   re-run over already-clean prose is a **no-op**. Where the rewrite
-   touched a number, date, name, quantity, or claim, emit
-   `[VERIFY: <original> → <rewritten>]` — a humanizing pass changes *how*
-   something is said, never *what is true*; a silent factual edit is a
-   defect, not a style win. **Long-rewrite re-anchor (guards against style
+   re-run over already-clean prose is a **no-op**. Then diff the facts:
+   `npx tsx node_modules/@event4u/agent-config/src/scripts/detect_ai_tells.ts --baseline <before> <after>`
+   lists every number, date, amount, URL, code span and multi-word name the
+   rewrite lost or added, and exits 1 on any — each is a hard finding to
+   restore, never to reword away. A humanizing pass changes *how* something
+   is said, never *what is true*. Without a runtime, fall back to
+   `[VERIFY: <original> → <rewritten>]` for every touched number, date,
+   name, quantity or claim. **Long-rewrite re-anchor (guards against style
    slippage):** before finishing a long rewrite, re-state the active style
    ruleset (intensity level + voice precedence) so late paragraphs match
    early ones.

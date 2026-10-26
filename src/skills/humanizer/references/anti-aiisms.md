@@ -138,8 +138,14 @@ the fingerprint wins and the bound is suppressed for that pass.
 
 ## Factual-integrity guard (U4)
 
-Where a rewrite touches factual content — a number, date, name, quantity, or
-claim — emit a flag rather than silently altering it:
+With a runtime, the guard is mechanical:
+`detect_ai_tells --baseline <before> <after>` lists every number, date,
+currency amount, URL, code span and capitalised multi-word name the rewrite
+lost or added, and exits 1 on any. Each one is restored, not reworded. A claim
+without such a token is still the eye-check's job.
+
+Without a runtime, or for a claim the diff cannot see, emit a flag rather
+than silently altering it:
 
 ```
 [VERIFY: <original span> → <rewritten span>]

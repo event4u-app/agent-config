@@ -215,7 +215,7 @@ The gate for every later promotion.
       `external-test-data-licence` (OQ-20).
       verify: the bench prints an `external` split; CLAIMS gains a separate claim
       scoped to it.
-- [ ] **5.2 New deterministic families only where a matcher exists.** In
+- [x] **5.2 New deterministic families only where a matcher exists.** Done 2026-10-26: all five cleared the gate at M1 = 0 (`bench_prose_tells_fp --gate`), epochs 14-18 in `internal/bench/corpora/prose-tells-epochs.md`; matchers in `src/scripts/_lib/structural_tells.ts`, phrase families in `ai_tells_rules.ts`; probe and counter-probe each in `tests/scripts/tell_family_epochs.test.ts`; rule-count delta +5 = families passed. One tune before landing: three of the scanner's own unit tests pad with a verbatim-repeated sentence, which `tell-repeated-openings` read as a run — a verbatim repeat now breaks it. Declared reach gap: the corpus has no deliberate anaphora. German forms of the two phrase families are named gaps; the model-judged rest is listed in `anti-aiisms.md`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/structural_tells.ts --> In
       strength order, each pre-registered and FP-run on the clean prose corpus:
       heading echoed in the first sentence (token overlap), repeated sentence
       openings (≥ 3 consecutive same first bigram), a repeated one-line closer,
