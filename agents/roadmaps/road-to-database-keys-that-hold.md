@@ -92,14 +92,14 @@ pinned to their current size (`src/config/skill-body-budget.json`).
 
 ## Phase 3 — Migration safety where the Laravel migrations are
 
-- [ ] **3.1 Laravel F6 at parity with raw SQL, advice tier.** A detector over
+- [x] **3.1 Laravel F6 at parity with raw SQL, advice tier.** A detector over
       the replayed DDL operations flags, on a table an earlier migration
       created: drop table or column (destructive), a NOT NULL column added
       without a default (data-dependent), `->change()` (rewrite), and an index
       added on pgsql (blocking). Same waiver as raw SQL (`migration-unsafe`).
       Renames and added foreign keys stay with `-evolution-tactics` 4.1.
       verify: P1's second migration yields three advice findings; a create-only migration yields none; a waived line is counted as waived.
-- [ ] **3.2 `DROP INDEX` without `CONCURRENTLY` on postgres, advice tier**, in
+- [x] **3.2 `DROP INDEX` without `CONCURRENTLY` on postgres, advice tier**, in
       the raw-SQL adapter.
       verify: P2 yields one advice finding for `DROP INDEX`; a `DROP INDEX CONCURRENTLY` line yields none.
 

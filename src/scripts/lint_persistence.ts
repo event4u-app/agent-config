@@ -7,9 +7,10 @@
  *
  * Adapters:
  *   raw-sql   — R-A6 migration-safety (F6) + R-A7 growth-budget (F7)
- *   eloquent  — R-A1 N+1 (F1), R-A2 index-parity (F2), R-A8/R-A10
- *               offload + durable-async (F9/F11), R-B1 audit-coverage (F8,
- *               only when an audit-scope file is present)
+ *   eloquent  — R-A1 N+1 (F1), R-A2 index-parity (F2), R-A6 Laravel
+ *               migration safety (F6, advice), R-A8/R-A10 offload +
+ *               durable-async (F9/F11), R-B1 audit-coverage (F8, only when an
+ *               audit-scope file is present)
  *   prisma    — R-A2 index-parity (F2) over schema.prisma + client queries
  *
  * "Deterministic" = deterministic pattern detection with an auditable waiver
@@ -37,6 +38,7 @@ import { scan_dir as scan_offload_dir } from './_lib/persistence/detect_offload.
 import { analyze_repo as analyze_audit } from './_lib/persistence/detect_audit_coverage.js';
 import { scan_dir as scan_bounded_dir } from './_lib/persistence/detect_bounded_reads.js';
 import { scan_dir as scan_prisma_growth_dir } from './_lib/persistence/detect_prisma_growth.js';
+import { scan_dir as scan_laravel_migration_dir } from './_lib/persistence/detect_migration_safety_laravel.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -88,6 +90,7 @@ export function run_lint(dir: string, stacks: StackId[], audit_scope_file?: stri
             findings.push(...index_parity().findings);
             findings.push(...scan_offload_dir(dir, 'eloquent'));
             findings.push(...scan_bounded_dir(dir));
+            findings.push(...scan_laravel_migration_dir(dir));
             const scope_file = audit_scope_file ?? path.join(dir, 'audit-scope.json');
             if (fs.existsSync(scope_file)) {
                 const scope = JSON.parse(fs.readFileSync(scope_file, 'utf8'));

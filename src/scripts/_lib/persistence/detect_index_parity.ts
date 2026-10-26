@@ -516,7 +516,7 @@ export function analyze(dir: string, opts: AnalyzeOptions = {}): IndexParityResu
             const text = readFileSync(f, 'utf8');
             const posix = rel.split('\\').join('/');
             if (posix === 'config/database.php') config = text;
-            if (/Schema::(?:connection\([^)]*\)\s*->\s*)?(?:create|table)\(/.test(text)) {
+            if (/Schema::(?:connection\([^)]*\)\s*->\s*)?(?:create|table|drop|dropIfExists|rename)\(/.test(text)) {
                 migrations.push({ path: /(^|\/)migrations\//.test(posix) ? posix : `migrations/${posix}`, source: text });
             } else query_files.push({ rel, text, lang: 'php' });
         } else if (f.endsWith('.ts')) {

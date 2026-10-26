@@ -343,6 +343,11 @@ function scan_one_file(file: string, text: string): FileFindings {
             );
         }
 
+        // R-A6(c') — DROP INDEX without CONCURRENTLY on postgres (advice: unspiked).
+        if (is_pg && /^DROP INDEX\b/.test(norm) && !/\bCONCURRENTLY\b/.test(norm)) {
+            push('R-A6', stmt.line, 'DROP INDEX without CONCURRENTLY on postgres — blocks reads and writes on the table while it runs', 'advice');
+        }
+
         // R-A6(d) — column type change.
         if (
             /^ALTER TABLE\b/.test(norm) &&
