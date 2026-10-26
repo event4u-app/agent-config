@@ -684,7 +684,16 @@
         drawLabels(state.orb ? nodes.filter(function (n) { return n.depth > 0.15; }) : nodes, s, blastMode);
         window.__mapOrbNodes = state.orb ? nodes.map(function (n) { return { kind: n.kind, idx: n.idx, x: n.sx, y: n.sy, r: n.r, near: n.depth > 0, u: n.u, deg: n.deg }; }) : [];
         renderFoot();
+        // The footer just written can change the stage's size. Draw again at once at the new size, so what is
+        // drawn, what a click hits and what __mapView reports never come from a stage that no longer exists.
+        var after = size();
+        if ((after.w !== s.w || after.h !== s.h) && redrawDepth < 2) {
+            redrawDepth += 1;
+            resize();
+            redrawDepth -= 1;
+        }
     }
+    var redrawDepth = 0;
 
     /**
      * Area bubbles laid out by community can sit on top of each other; push
