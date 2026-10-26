@@ -343,7 +343,7 @@ renders from real facts or says why it has none.
       above a measured node threshold.
       verify: a tour step turns stale when its input fact changes.
 
-- [ ] **5.14 Key links in the ERD.** Clicking a key column highlights every
+- [x] **5.14 Key links in the ERD.** Clicking a key column highlights every
       column and table it links to, with column-to-column lines: solid for a
       declared FK, dashed and labelled "code only · no FK in DB" for a soft
       relation known from an ORM relation or a query join, dotted for an
