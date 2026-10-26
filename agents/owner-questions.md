@@ -8,22 +8,6 @@ and the run that applies it links its PR.
 
 ## Open
 
-### OQ-13 — Restore the kernel literal in non-destructive-by-default
-
-- **Context:** `check_rule_invariants` exits 1 on main because
-  `src/rules/non-destructive-by-default.md` no longer carries the clause "The
-  ask and the action are strictly sequential … WAIT for the answer"; the rule was
-  reworded. It is the one red in `task ci` an agent may not fix: a kernel-rule
-  edit is owner-gated, and the edit itself is written out in
-  `agents/roadmaps/stubs/road-to-kernel-clause-1-restore.md`. Arrived in four
-  earlier rounds and again in `inbox-2026-10-as`.
-- **Options:** (a) restore the literal sentence as the stub writes it; (b)
-  update the invariant to the current wording and record why; (c) leave it red.
-- **Recommendation:** (a) — the stub's edit is ready and keeps the rule's text
-  and its invariant saying the same thing.
-- **Blocks:** a green `check_rule_invariants`, and with it the last owner-red in
-  `task ci`.
-
 ### OQ-14 — Reopen ADR-263 for a package-side run basis
 
 - **Context:** round `inbox-2026-10-at` asks that every run determines its base
@@ -190,6 +174,7 @@ and the run that applies it links its PR.
 
 | ID | Date | Question | Answer |
 |---|---|---|---|
+| OQ-13 kernel literal | 2026-10-25 | Restore the never-act-while-asking literal in non-destructive-by-default? | 1 — restore it; council 2/2 on (a), owner chose the variant that keeps the same-turn sentence and shortens the examples ("download:" for "a download names", likewise purchase and send) |
 | impact-numbering-model | 2026-10-24 | Does the Consumer-Impact trailer bind the bump? | 1 — bind, automatic migration is not a major (ADR-300) |
 | AC-4 release wording | 2026-10-24 | Amend AC-4 to the shipped `action` form? | 1 — amend |
 | 7-1-closure-standard | 2026-10-24 | Closure standard for authority-routing 7.1 | 1 — ledger + fail-closed gate |

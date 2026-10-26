@@ -30,7 +30,7 @@ header both see it. A state nobody counts is a state nobody reads.
 ### blocker: clause-1-restore-is-human-only
 - **Status:** open
 - **Owner:** maintainer
-- **State:** `pending-owner-action` (created 2026-08-27)
+- **State:** `scheduled` (2026-10-25: the owner answered OQ-13 with option 1 after a 2/2 council recommendation; the edit lands in its own PR with the ≥ 24 h soak)
 - **Severity:** **CI-blocking** — `check_rule_invariants` exits non-zero on
   `main`, so `task ci` stops at that gate and every gate after it goes unrun
   locally.
@@ -57,8 +57,12 @@ In `src/rules/non-destructive-by-default.md:41`, restore the protected literal
 and **keep the sentence that follows it**, so the line reads:
 
 ```
-**Never act while asking.** The ask and the action are strictly sequential: surface the confirmation, then WAIT for the answer. Never fire the action in the turn you ask — no do-then-ask race, no "I went ahead and…".
+**Never act while asking.** The ask and the action are strictly sequential: surface the confirmation, then WAIT for the answer. Never fire the action in the turn you ask — no do-then-ask race, no "I went ahead and…". **The approval names the exact object**, not a category: download: filename + size + source; purchase: amount + card-last4 + total; send: recipient + subject. Shape per [`user-interaction`](user-interaction.md) numbered-options.
 ```
+
+The example clauses are shortened ("download:" for "a download names") so the
+line stays within the per-spawn payload ratchet; chosen by the owner on
+2026-10-25 (OQ-13, option 1).
 
 Then regenerate the projection (`task sync`), because
 `check_rule_invariants` checks `src/` and `dist/agent-src/` both.
