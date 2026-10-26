@@ -505,10 +505,6 @@ function asOther(f: PFact | undefined): Hit['b'] {
     return f ? { id: f.id, name: f.name, attrs: f.attrs, witness: f.witness } : null;
 }
 
-function factSubject(f: PFact): Subject {
-    return { id: f.id, name: f.name, attrs: f.attrs, witness: f.witness, guess: f.guess, source: f.id, target: f.id, rung: f.rung, lane: f.lane, kind: f.kind, edge: false };
-}
-
 function hitsOf(r: DriftRule, p: Population, ix: Index): Hit[] {
     const hits: Hit[] = [];
     switch (r.match) {

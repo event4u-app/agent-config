@@ -43,7 +43,7 @@ import { queryLinks } from './query_links.js';
 import { isSqlSchemaPath } from '../../providers/sql_ddl.js';
 import { columnId, tableId } from '../../providers/shared/schema_graph.js';
 import type { CodeGraph, CodeNode } from '../../types.js';
-import { spanHash, type LaneAnnotation, type LaneFact, type LaneOutput, type LaneRelation, type SourceRung, type Witness } from '../lane_fact.js';
+import { spanHash, type LaneAnnotation, type LaneFact, type LaneOutput, type SourceRung, type Witness } from '../lane_fact.js';
 
 export const SNAPSHOT_DIR = 'agents/map/data/snapshot';
 export const ORACLE_DIR = 'agents/map/data/oracle';
