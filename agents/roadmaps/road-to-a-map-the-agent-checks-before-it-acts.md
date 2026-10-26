@@ -360,7 +360,7 @@ renders from real facts or says why it has none.
       link and finds the three highlighted columns with their line styles, no
       inline edge text, one icon per annotated edge and a popup that opens.
 
-- [ ] **5.15 Keyboard navigation in the search.** The header search is a
+- [x] **5.15 Keyboard navigation in the search.** The header search is a
       combobox: ↑/↓ move through the hits, Enter opens, Esc closes; → enters a
       container hit (folder, area, file, table, service, workflow, project) and
       lists its children under a breadcrumb, ← or Backspace on an empty query
@@ -368,7 +368,7 @@ renders from real facts or says why it has none.
       verify: a browser test walks down, into a folder and back out by keys
       alone and finds aria-activedescendant on the active row.
 
-- [ ] **5.16 Every route switch re-renders its page.** Coming back to the
+- [x] **5.16 Every route switch re-renders its page.** Coming back to the
       Overview after drilling into Code, Data or any area shows the Overview
       again without a reload (owner bug report).
       verify: a browser test round-trips every area → Übersicht, by nav link,
