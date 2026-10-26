@@ -1,0 +1,2659 @@
+{
+  "schema": "map-task-set/0.1",
+  "stamp": "2026-10-26T07-12-04Z",
+  "tier": "live",
+  "synthetic": false,
+  "model": "claude-haiku-4-5",
+  "arms": [
+    "vanilla",
+    "ac",
+    "ac-map"
+  ],
+  "seeds": 1,
+  "tasks": [
+    "code-rename-function",
+    "code-add-parameter",
+    "code-remove-helper",
+    "code-move-module",
+    "data-rename-column",
+    "data-drop-column",
+    "data-rename-table",
+    "data-change-unit",
+    "interface-remove-endpoint",
+    "interface-rename-field",
+    "interface-rename-env",
+    "interface-graphql-field",
+    "runtime-compose-port",
+    "runtime-rename-service",
+    "runtime-terraform-variable",
+    "runtime-node-version",
+    "delivery-rename-job",
+    "delivery-rename-script",
+    "delivery-artifact-name",
+    "delivery-rename-secret"
+  ],
+  "budget_usd_per_run": 1,
+  "sweep_cap_usd": 6,
+  "sweep_spend_usd": 4.1151,
+  "budget_tokens_per_run": 1500000,
+  "map_confirm_text": "This repository carries a prebuilt map of itself: agents/map/MAP.md and agents/map/code/map.json,\nand a code-graph index under agents/map/.build/ that the graph_* tools and\n`agent-config code-graph` read.\nUse the map to find every place a change affects. The map is an index, not the truth:\nbefore relying on a place it names, re-read its witness with `agent-config code-graph confirm <id…>`\n(or `graph_node` with mode=confirm); start a task with `agent-config code-graph pack \"<task>\" --diff`\n(or `graph_query` with mode=pack) for the confirmed facts it touches; treat every usage count as a\nlower bound and search the source text for names the map may not know; and when you are done run\n`agent-config code-graph refresh --touched` so the map re-reads every file you changed.",
+  "aborted": null,
+  "dry_run_problems": [],
+  "summaries": {
+    "vanilla": {
+      "arm": "vanilla",
+      "runs": 20,
+      "errored": 0,
+      "successes": 18,
+      "m1_wrong_change_share": 0.1,
+      "m1_runs_with_broken_dependent": 2,
+      "m2_mean_recall": 0.8250000000000002,
+      "m2_mean_precision": 0.9349999999999999,
+      "m2_section_missing": 0,
+      "m3_tokens_total": 5219456,
+      "m3_tokens_per_success": 289969.77777777775,
+      "usd_total": 0.30441155000000003,
+      "budget_tokens_per_run": 1500000,
+      "success_within_budget_share": 0.9,
+      "successes_per_budget": 5.17295289010962,
+      "by_area": {
+        "code": {
+          "runs": 4,
+          "successes": 4
+        },
+        "data": {
+          "runs": 4,
+          "successes": 4
+        },
+        "interfaces": {
+          "runs": 4,
+          "successes": 3
+        },
+        "runtime": {
+          "runs": 4,
+          "successes": 4
+        },
+        "delivery": {
+          "runs": 4,
+          "successes": 3
+        }
+      }
+    },
+    "ac": {
+      "arm": "ac",
+      "runs": 20,
+      "errored": 1,
+      "successes": 14,
+      "m1_wrong_change_share": 0.3,
+      "m1_runs_with_broken_dependent": 6,
+      "m2_mean_recall": 0.7700000000000001,
+      "m2_mean_precision": 0.9368421052631579,
+      "m2_section_missing": 1,
+      "m3_tokens_total": 37207322,
+      "m3_tokens_per_success": 2657665.8571428573,
+      "usd_total": 1.8087219699999997,
+      "budget_tokens_per_run": 1500000,
+      "success_within_budget_share": 0.3,
+      "successes_per_budget": 0.5644050383416468,
+      "by_area": {
+        "code": {
+          "runs": 4,
+          "successes": 4
+        },
+        "data": {
+          "runs": 4,
+          "successes": 2
+        },
+        "interfaces": {
+          "runs": 4,
+          "successes": 3
+        },
+        "runtime": {
+          "runs": 4,
+          "successes": 2
+        },
+        "delivery": {
+          "runs": 4,
+          "successes": 3
+        }
+      }
+    },
+    "ac-map": {
+      "arm": "ac-map",
+      "runs": 20,
+      "errored": 1,
+      "successes": 15,
+      "m1_wrong_change_share": 0.25,
+      "m1_runs_with_broken_dependent": 4,
+      "m2_mean_recall": 0.7850000000000001,
+      "m2_mean_precision": 0.9305764411027568,
+      "m2_section_missing": 1,
+      "m3_tokens_total": 42010005,
+      "m3_tokens_per_success": 2800667,
+      "usd_total": 2.0019723099999998,
+      "budget_tokens_per_run": 1500000,
+      "success_within_budget_share": 0.1,
+      "successes_per_budget": 0.5355867013107949,
+      "by_area": {
+        "code": {
+          "runs": 4,
+          "successes": 4
+        },
+        "data": {
+          "runs": 4,
+          "successes": 4
+        },
+        "interfaces": {
+          "runs": 4,
+          "successes": 3
+        },
+        "runtime": {
+          "runs": 4,
+          "successes": 3
+        },
+        "delivery": {
+          "runs": 4,
+          "successes": 1
+        }
+      }
+    }
+  },
+  "records": [
+    {
+      "task_id": "code-rename-function",
+      "area": "code",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 1,
+        "matched": [
+          "src/billing.js",
+          "src/checkout.js",
+          "src/report.js",
+          "src/dispatch.js"
+        ],
+        "missed": [],
+        "unmatched_lines": []
+      },
+      "tokens": 188474,
+      "usd": 0.01295893,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 58,
+        "output_tokens": 2793,
+        "cache_read_input_tokens": 171236,
+        "cache_creation_input_tokens": 14387
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-rename-function__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-rename-function__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "code-rename-function",
+      "area": "code",
+      "arm": "ac",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 5,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 1,
+        "matched": [
+          "src/billing.js",
+          "src/checkout.js",
+          "src/report.js",
+          "src/dispatch.js"
+        ],
+        "missed": [],
+        "unmatched_lines": []
+      },
+      "tokens": 2321432,
+      "usd": 0.10595887999999999,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 149,
+        "output_tokens": 3618,
+        "cache_read_input_tokens": 2199631,
+        "cache_creation_input_tokens": 118034
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-rename-function__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-rename-function__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "code-rename-function",
+      "area": "code",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 1,
+        "matched": [
+          "src/billing.js",
+          "src/checkout.js",
+          "src/report.js",
+          "src/dispatch.js"
+        ],
+        "missed": [],
+        "unmatched_lines": []
+      },
+      "tokens": 2370735,
+      "usd": 0.10823173999999999,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 149,
+        "output_tokens": 3720,
+        "cache_read_input_tokens": 2246353,
+        "cache_creation_input_tokens": 120513
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 470,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-rename-function__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-rename-function__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "code-add-parameter",
+      "area": "code",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 1,
+        "matched": [
+          "src/money.ts",
+          "src/cart.ts",
+          "src/email.ts",
+          "src/admin/export.ts"
+        ],
+        "missed": [],
+        "unmatched_lines": []
+      },
+      "tokens": 238997,
+      "usd": 0.01412714,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 74,
+        "output_tokens": 2658,
+        "cache_read_input_tokens": 222568,
+        "cache_creation_input_tokens": 13697
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-add-parameter__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-add-parameter__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "code-add-parameter",
+      "area": "code",
+      "arm": "ac",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 1,
+        "matched": [
+          "src/money.ts",
+          "src/cart.ts",
+          "src/email.ts",
+          "src/admin/export.ts"
+        ],
+        "missed": [],
+        "unmatched_lines": []
+      },
+      "tokens": 1420910,
+      "usd": 0.07901420999999999,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 95,
+        "output_tokens": 3830,
+        "cache_read_input_tokens": 1299602,
+        "cache_creation_input_tokens": 117383
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-add-parameter__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-add-parameter__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "code-add-parameter",
+      "area": "code",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 1,
+        "matched": [
+          "src/money.ts",
+          "src/cart.ts",
+          "src/email.ts",
+          "src/admin/export.ts"
+        ],
+        "missed": [],
+        "unmatched_lines": []
+      },
+      "tokens": 2478912,
+      "usd": 0.11313509,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 157,
+        "output_tokens": 4793,
+        "cache_read_input_tokens": 2352163,
+        "cache_creation_input_tokens": 121799
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 453,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-add-parameter__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-add-parameter__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "code-remove-helper",
+      "area": "code",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 3,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 1,
+        "matched": [
+          "utils/text.py",
+          "app/views.py",
+          "app/feeds.py"
+        ],
+        "missed": [],
+        "unmatched_lines": []
+      },
+      "tokens": 240118,
+      "usd": 0.014789289999999998,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 74,
+        "output_tokens": 3028,
+        "cache_read_input_tokens": 222663,
+        "cache_creation_input_tokens": 14353
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-remove-helper__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-remove-helper__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "code-remove-helper",
+      "area": "code",
+      "arm": "ac",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 3,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 1,
+        "matched": [
+          "utils/text.py",
+          "app/views.py",
+          "app/feeds.py"
+        ],
+        "missed": [],
+        "unmatched_lines": []
+      },
+      "tokens": 1145919,
+      "usd": 0.06933154,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 77,
+        "output_tokens": 3235,
+        "cache_read_input_tokens": 1027828,
+        "cache_creation_input_tokens": 114779
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-remove-helper__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-remove-helper__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "code-remove-helper",
+      "area": "code",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 3,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 1,
+        "matched": [
+          "utils/text.py",
+          "app/views.py",
+          "app/feeds.py"
+        ],
+        "missed": [],
+        "unmatched_lines": []
+      },
+      "tokens": 1915155,
+      "usd": 0.09366453,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 127,
+        "output_tokens": 3952,
+        "cache_read_input_tokens": 1794926,
+        "cache_creation_input_tokens": 116150
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 397,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-remove-helper__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-remove-helper__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "code-move-module",
+      "area": "code",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 5,
+        "section_missing": false,
+        "recall": 0.8,
+        "precision": 0.8,
+        "matched": [
+          "src/shared/date.js",
+          "src/orders.js",
+          "src/api/feed.js",
+          "test/date.test.js"
+        ],
+        "missed": [
+          "src/lib/date.js"
+        ],
+        "unmatched_lines": [
+          "src/shared/"
+        ]
+      },
+      "tokens": 301534,
+      "usd": 0.01744128,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 90,
+        "output_tokens": 3549,
+        "cache_read_input_tokens": 282911,
+        "cache_creation_input_tokens": 14984
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-move-module__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-move-module__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "code-move-module",
+      "area": "code",
+      "arm": "ac",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 5,
+        "section_missing": false,
+        "recall": 0.8,
+        "precision": 0.8,
+        "matched": [
+          "src/shared/date.js",
+          "src/orders.js",
+          "src/api/feed.js",
+          "test/date.test.js"
+        ],
+        "missed": [
+          "src/lib/date.js"
+        ],
+        "unmatched_lines": [
+          "agents/runtime/state/reread-guard/50f6ea041a789940f0d3abcac08cd4552916ac4e0e4f313efe1db0392409633c.json"
+        ]
+      },
+      "tokens": 3034856,
+      "usd": 0.13128555,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 189,
+        "output_tokens": 5862,
+        "cache_read_input_tokens": 2906410,
+        "cache_creation_input_tokens": 122395
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-move-module__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-move-module__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "code-move-module",
+      "area": "code",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 7,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 0.7142857142857143,
+        "matched": [
+          "src/lib/date.js",
+          "src/shared/date.js",
+          "src/orders.js",
+          "src/api/feed.js",
+          "test/date.test.js"
+        ],
+        "missed": [],
+        "unmatched_lines": [
+          "src/lib/",
+          "src/shared/"
+        ]
+      },
+      "tokens": 2433756,
+      "usd": 0.11022853,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 157,
+        "output_tokens": 4620,
+        "cache_read_input_tokens": 2312146,
+        "cache_creation_input_tokens": 116833
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 381,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-move-module__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/code-move-module__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "data-rename-column",
+      "area": "data",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 5,
+        "section_missing": false,
+        "recall": 0.8,
+        "precision": 0.8,
+        "matched": [
+          "users.email",
+          "app/Models/User.php",
+          "app/Reports/UserExport.php",
+          "database/views/active_users.sql"
+        ],
+        "missed": [
+          "new migration"
+        ],
+        "unmatched_lines": [
+          "database/migrations/2024_01_02_000000_rename_email_column_in_users_table.php"
+        ]
+      },
+      "tokens": 155688,
+      "usd": 0.011663989999999999,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 50,
+        "output_tokens": 2703,
+        "cache_read_input_tokens": 139288,
+        "cache_creation_input_tokens": 13647
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-rename-column__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-rename-column__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "data-rename-column",
+      "area": "data",
+      "arm": "ac",
+      "seed": 0,
+      "errored": false,
+      "success": false,
+      "broken_dependents": [
+        "database/views/active_users.sql"
+      ],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 0.6,
+        "precision": 0.75,
+        "matched": [
+          "users.email",
+          "app/Models/User.php",
+          "app/Reports/UserExport.php"
+        ],
+        "missed": [
+          "new migration",
+          "database/views/active_users.sql"
+        ],
+        "unmatched_lines": [
+          "database/migrations/2024_01_02_000000_rename_email_to_email_address.php"
+        ]
+      },
+      "tokens": 2181705,
+      "usd": 0.10228769,
+      "reason": "ok",
+      "check_failures": [
+        {
+          "index": 4,
+          "reason": "database/views/active_users.sql lacks /email_address/",
+          "protects": "database/views/active_users.sql"
+        }
+      ],
+      "tokens_breakdown": {
+        "input_tokens": 147,
+        "output_tokens": 4123,
+        "cache_read_input_tokens": 2059753,
+        "cache_creation_input_tokens": 117682
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-rename-column__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-rename-column__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "data-rename-column",
+      "area": "data",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 5,
+        "section_missing": false,
+        "recall": 0.8,
+        "precision": 0.8,
+        "matched": [
+          "users.email",
+          "app/Models/User.php",
+          "app/Reports/UserExport.php",
+          "database/views/active_users.sql"
+        ],
+        "missed": [
+          "new migration"
+        ],
+        "unmatched_lines": [
+          "database/migrations/2024_01_02_000000_rename_email_to_email_address.php"
+        ]
+      },
+      "tokens": 2562872,
+      "usd": 0.11408199,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 167,
+        "output_tokens": 4442,
+        "cache_read_input_tokens": 2440708,
+        "cache_creation_input_tokens": 117555
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 380,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-rename-column__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-rename-column__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "data-drop-column",
+      "area": "data",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 6,
+        "section_missing": false,
+        "recall": 0.8,
+        "precision": 0.6666666666666666,
+        "matched": [
+          "orders.legacy_ref",
+          "app/Models/Order.php",
+          "app/Services/OrderSync.php",
+          "resources/js/dashboard/orders.js"
+        ],
+        "missed": [
+          "new migration"
+        ],
+        "unmatched_lines": [
+          "database/migrations/2024_01_01_000001_create_orders_table.php",
+          "database/migrations/2024_01_02_000000_drop_legacy_ref_from_orders_table.php"
+        ]
+      },
+      "tokens": 242637,
+      "usd": 0.015917090000000002,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 74,
+        "output_tokens": 3657,
+        "cache_read_input_tokens": 223498,
+        "cache_creation_input_tokens": 15408
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-drop-column__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-drop-column__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "data-drop-column",
+      "area": "data",
+      "arm": "ac",
+      "seed": 0,
+      "errored": false,
+      "success": false,
+      "broken_dependents": [
+        "resources/js/dashboard/orders.js"
+      ],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 0.6,
+        "precision": 0.75,
+        "matched": [
+          "orders.legacy_ref",
+          "app/Models/Order.php",
+          "app/Services/OrderSync.php"
+        ],
+        "missed": [
+          "new migration",
+          "resources/js/dashboard/orders.js"
+        ],
+        "unmatched_lines": [
+          "database/migrations/2024_01_01_000002_drop_legacy_ref_from_orders_table.php"
+        ]
+      },
+      "tokens": 1914594,
+      "usd": 0.09354718,
+      "reason": "ok",
+      "check_failures": [
+        {
+          "index": 3,
+          "reason": "resources/js/dashboard/orders.js still has /legacy_ref/",
+          "protects": "resources/js/dashboard/orders.js"
+        }
+      ],
+      "tokens_breakdown": {
+        "input_tokens": 127,
+        "output_tokens": 3801,
+        "cache_read_input_tokens": 1794206,
+        "cache_creation_input_tokens": 116460
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-drop-column__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-drop-column__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "data-drop-column",
+      "area": "data",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 6,
+        "section_missing": false,
+        "recall": 0.8,
+        "precision": 0.6666666666666666,
+        "matched": [
+          "orders.legacy_ref",
+          "app/Models/Order.php",
+          "app/Services/OrderSync.php",
+          "resources/js/dashboard/orders.js"
+        ],
+        "missed": [
+          "new migration"
+        ],
+        "unmatched_lines": [
+          "database/migrations/2024_01_01_000001_create_orders_table.php",
+          "database/migrations/2024_01_02_000000_drop_legacy_ref_from_orders_table.php"
+        ]
+      },
+      "tokens": 2485244,
+      "usd": 0.11251773000000001,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 159,
+        "output_tokens": 4296,
+        "cache_read_input_tokens": 2359736,
+        "cache_creation_input_tokens": 121053
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 397,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-drop-column__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-drop-column__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "data-rename-table",
+      "area": "data",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 6,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 0.8333333333333334,
+        "matched": [
+          "invoice_items",
+          "new migration",
+          "app/Models/InvoiceItem.php",
+          "app/Reports/Revenue.php",
+          "database/seeders/InvoiceSeeder.php"
+        ],
+        "missed": [],
+        "unmatched_lines": [
+          "invoice_lines (database table)"
+        ]
+      },
+      "tokens": 381677,
+      "usd": 0.019966869999999998,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 114,
+        "output_tokens": 3479,
+        "cache_read_input_tokens": 362354,
+        "cache_creation_input_tokens": 15730
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-rename-table__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-rename-table__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "data-rename-table",
+      "area": "data",
+      "arm": "ac",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 6,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 1,
+        "matched": [
+          "invoice_items",
+          "new migration",
+          "app/Models/InvoiceItem.php",
+          "app/Reports/Revenue.php",
+          "database/seeders/InvoiceSeeder.php"
+        ],
+        "missed": [],
+        "unmatched_lines": []
+      },
+      "tokens": 3111121,
+      "usd": 0.13270863,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 201,
+        "output_tokens": 5565,
+        "cache_read_input_tokens": 2984831,
+        "cache_creation_input_tokens": 120524
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-rename-table__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-rename-table__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "data-rename-table",
+      "area": "data",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 1,
+        "matched": [
+          "invoice_items",
+          "new migration",
+          "app/Models/InvoiceItem.php",
+          "app/Reports/Revenue.php",
+          "database/seeders/InvoiceSeeder.php"
+        ],
+        "missed": [],
+        "unmatched_lines": []
+      },
+      "tokens": 3048743,
+      "usd": 0.13075729,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 197,
+        "output_tokens": 4996,
+        "cache_read_input_tokens": 2920748,
+        "cache_creation_input_tokens": 122802
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 386,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-rename-table__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-rename-table__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "data-change-unit",
+      "area": "data",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 5,
+        "section_missing": false,
+        "recall": 0.75,
+        "precision": 0.6,
+        "matched": [
+          "products.price_cents",
+          "src/pricing.js",
+          "templates/product.html"
+        ],
+        "missed": [
+          "new migration"
+        ],
+        "unmatched_lines": [
+          "database/migrations/2024_01_01_000004_replace_price_cents_with_price.php",
+          "products.price"
+        ]
+      },
+      "tokens": 429935,
+      "usd": 0.020896579999999998,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 130,
+        "output_tokens": 3227,
+        "cache_read_input_tokens": 411641,
+        "cache_creation_input_tokens": 14937
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-change-unit__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-change-unit__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "data-change-unit",
+      "area": "data",
+      "arm": "ac",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 6,
+        "section_missing": false,
+        "recall": 0.75,
+        "precision": 0.5,
+        "matched": [
+          "products.price_cents",
+          "src/pricing.js",
+          "templates/product.html"
+        ],
+        "missed": [
+          "new migration"
+        ],
+        "unmatched_lines": [
+          "database/migrations/2024_01_01_000003_create_products_table.php",
+          "database/migrations/2024_10_26_000001_migrate_price_to_decimal.php",
+          "products.price"
+        ]
+      },
+      "tokens": 2080620,
+      "usd": 0.10124823,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 133,
+        "output_tokens": 5026,
+        "cache_read_input_tokens": 1954466,
+        "cache_creation_input_tokens": 120995
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-change-unit__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-change-unit__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "data-change-unit",
+      "area": "data",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 6,
+        "section_missing": false,
+        "recall": 0.75,
+        "precision": 0.5,
+        "matched": [
+          "products.price_cents",
+          "src/pricing.js",
+          "templates/product.html"
+        ],
+        "missed": [
+          "new migration"
+        ],
+        "unmatched_lines": [
+          "database/migrations/2024_01_01_000003_create_products_table.php",
+          "database/migrations/2024_01_02_000000_replace_price_cents_with_price.php",
+          "products.price"
+        ]
+      },
+      "tokens": 2833214,
+      "usd": 0.12291042,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 185,
+        "output_tokens": 4832,
+        "cache_read_input_tokens": 2709759,
+        "cache_creation_input_tokens": 118438
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 401,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-change-unit__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/data-change-unit__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "interface-remove-endpoint",
+      "area": "interfaces",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 3,
+        "section_missing": false,
+        "recall": 0.75,
+        "precision": 1,
+        "matched": [
+          "server/routes.js",
+          "web/src/statsClient.js",
+          "openapi.yaml"
+        ],
+        "missed": [
+          "GET /api/v1/legacy-stats"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 212269,
+      "usd": 0.01373798,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 66,
+        "output_tokens": 2953,
+        "cache_read_input_tokens": 195351,
+        "cache_creation_input_tokens": 13899
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-remove-endpoint__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-remove-endpoint__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "interface-remove-endpoint",
+      "area": "interfaces",
+      "arm": "ac",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 3,
+        "section_missing": false,
+        "recall": 0.75,
+        "precision": 1,
+        "matched": [
+          "server/routes.js",
+          "web/src/statsClient.js",
+          "openapi.yaml"
+        ],
+        "missed": [
+          "GET /api/v1/legacy-stats"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 3097492,
+      "usd": 0.13046234,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 199,
+        "output_tokens": 4586,
+        "cache_read_input_tokens": 2974563,
+        "cache_creation_input_tokens": 118144
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-remove-endpoint__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-remove-endpoint__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "interface-remove-endpoint",
+      "area": "interfaces",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 3,
+        "section_missing": false,
+        "recall": 0.75,
+        "precision": 1,
+        "matched": [
+          "server/routes.js",
+          "web/src/statsClient.js",
+          "openapi.yaml"
+        ],
+        "missed": [
+          "GET /api/v1/legacy-stats"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 3062305,
+      "usd": 0.13115378,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 195,
+        "output_tokens": 4981,
+        "cache_read_input_tokens": 2934296,
+        "cache_creation_input_tokens": 122833
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 386,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-remove-endpoint__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-remove-endpoint__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "interface-rename-field",
+      "area": "interfaces",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": false,
+      "broken_dependents": [
+        "openapi.yaml"
+      ],
+      "affected": {
+        "declared": 3,
+        "section_missing": false,
+        "recall": 0.6,
+        "precision": 1,
+        "matched": [
+          "api/serializers/user.py",
+          "web/src/components/UserBadge.jsx",
+          "tests/contract/user.json"
+        ],
+        "missed": [
+          "user_name",
+          "openapi.yaml"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 291834,
+      "usd": 0.01570308,
+      "reason": "ok",
+      "check_failures": [
+        {
+          "index": 2,
+          "reason": "openapi.yaml lacks /^\\s+username:/",
+          "protects": "openapi.yaml"
+        }
+      ],
+      "tokens_breakdown": {
+        "input_tokens": 90,
+        "output_tokens": 2685,
+        "cache_read_input_tokens": 275531,
+        "cache_creation_input_tokens": 13528
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-rename-field__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-rename-field__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "interface-rename-field",
+      "area": "interfaces",
+      "arm": "ac",
+      "seed": 0,
+      "errored": false,
+      "success": false,
+      "broken_dependents": [
+        "web/src/components/UserBadge.jsx"
+      ],
+      "affected": {
+        "declared": 3,
+        "section_missing": false,
+        "recall": 0.6,
+        "precision": 1,
+        "matched": [
+          "api/serializers/user.py",
+          "openapi.yaml",
+          "tests/contract/user.json"
+        ],
+        "missed": [
+          "user_name",
+          "web/src/components/UserBadge.jsx"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 2436966,
+      "usd": 0.10941198999999999,
+      "reason": "ok",
+      "check_failures": [
+        {
+          "index": 1,
+          "reason": "web/src/components/UserBadge.jsx lacks /user\\.username/",
+          "protects": "web/src/components/UserBadge.jsx"
+        }
+      ],
+      "tokens_breakdown": {
+        "input_tokens": 155,
+        "output_tokens": 3661,
+        "cache_read_input_tokens": 2315363,
+        "cache_creation_input_tokens": 117787
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-rename-field__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-rename-field__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "interface-rename-field",
+      "area": "interfaces",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": false,
+      "success": false,
+      "broken_dependents": [
+        "openapi.yaml",
+        "web/src/components/UserBadge.jsx"
+      ],
+      "affected": {
+        "declared": 2,
+        "section_missing": false,
+        "recall": 0.4,
+        "precision": 1,
+        "matched": [
+          "api/serializers/user.py",
+          "tests/contract/user.json"
+        ],
+        "missed": [
+          "user_name",
+          "web/src/components/UserBadge.jsx",
+          "openapi.yaml"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 2420952,
+      "usd": 0.11113063000000001,
+      "reason": "ok",
+      "check_failures": [
+        {
+          "index": 1,
+          "reason": "web/src/components/UserBadge.jsx lacks /user\\.username/",
+          "protects": "web/src/components/UserBadge.jsx"
+        },
+        {
+          "index": 2,
+          "reason": "openapi.yaml lacks /^\\s+username:/",
+          "protects": "openapi.yaml"
+        }
+      ],
+      "tokens_breakdown": {
+        "input_tokens": 153,
+        "output_tokens": 3785,
+        "cache_read_input_tokens": 2291641,
+        "cache_creation_input_tokens": 125373
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 385,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-rename-field__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-rename-field__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "interface-rename-env",
+      "area": "interfaces",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 0.8,
+        "precision": 1,
+        "matched": [
+          "src/payments.js",
+          ".env.example",
+          "docker-compose.yml",
+          ".github/workflows/ci.yml"
+        ],
+        "missed": [
+          "PAYMENT_API_URL"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 159356,
+      "usd": 0.011826209999999998,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 50,
+        "output_tokens": 2663,
+        "cache_read_input_tokens": 142622,
+        "cache_creation_input_tokens": 14021
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-rename-env__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-rename-env__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "interface-rename-env",
+      "area": "interfaces",
+      "arm": "ac",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 0.8,
+        "precision": 1,
+        "matched": [
+          "src/payments.js",
+          ".env.example",
+          "docker-compose.yml",
+          ".github/workflows/ci.yml"
+        ],
+        "missed": [
+          "PAYMENT_API_URL"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 1016424,
+      "usd": 0.0651419,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 69,
+        "output_tokens": 3082,
+        "cache_read_input_tokens": 898925,
+        "cache_creation_input_tokens": 114348
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-rename-env__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-rename-env__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "interface-rename-env",
+      "area": "interfaces",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 0.8,
+        "precision": 1,
+        "matched": [
+          "src/payments.js",
+          ".env.example",
+          "docker-compose.yml",
+          ".github/workflows/ci.yml"
+        ],
+        "missed": [
+          "PAYMENT_API_URL"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 1048688,
+      "usd": 0.06832189999999999,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 69,
+        "output_tokens": 3454,
+        "cache_read_input_tokens": 924305,
+        "cache_creation_input_tokens": 120860
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 389,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-rename-env__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-rename-env__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "interface-graphql-field",
+      "area": "interfaces",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 0.8,
+        "precision": 1,
+        "matched": [
+          "schema.graphql",
+          "src/resolvers.js",
+          "web/queries/order.graphql",
+          "web/src/OrderView.jsx"
+        ],
+        "missed": [
+          "Order.total"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 209380,
+      "usd": 0.01301975,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 66,
+        "output_tokens": 2542,
+        "cache_read_input_tokens": 193355,
+        "cache_creation_input_tokens": 13417
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-graphql-field__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-graphql-field__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "interface-graphql-field",
+      "area": "interfaces",
+      "arm": "ac",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 0.8,
+        "precision": 1,
+        "matched": [
+          "schema.graphql",
+          "src/resolvers.js",
+          "web/queries/order.graphql",
+          "web/src/OrderView.jsx"
+        ],
+        "missed": [
+          "Order.total"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 2220343,
+      "usd": 0.10516257999999999,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 143,
+        "output_tokens": 4630,
+        "cache_read_input_tokens": 2093821,
+        "cache_creation_input_tokens": 121749
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-graphql-field__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-graphql-field__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "interface-graphql-field",
+      "area": "interfaces",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 0.8,
+        "precision": 1,
+        "matched": [
+          "schema.graphql",
+          "src/resolvers.js",
+          "web/queries/order.graphql",
+          "web/src/OrderView.jsx"
+        ],
+        "missed": [
+          "Order.total"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 3166573,
+      "usd": 0.13337627999999999,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 197,
+        "output_tokens": 4442,
+        "cache_read_input_tokens": 3040021,
+        "cache_creation_input_tokens": 121913
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 394,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-graphql-field__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/interface-graphql-field__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "runtime-compose-port",
+      "area": "runtime",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 5,
+        "section_missing": false,
+        "recall": 0.8,
+        "precision": 1,
+        "matched": [
+          "docker-compose.yml",
+          "Dockerfile",
+          "deploy/nginx.conf",
+          ".github/workflows/ci.yml"
+        ],
+        "missed": [
+          "web:3000"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 436605,
+      "usd": 0.02093383,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 130,
+        "output_tokens": 3084,
+        "cache_read_input_tokens": 418411,
+        "cache_creation_input_tokens": 14980
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-compose-port__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-compose-port__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "runtime-compose-port",
+      "area": "runtime",
+      "arm": "ac",
+      "seed": 0,
+      "errored": false,
+      "success": false,
+      "broken_dependents": [
+        ".github/workflows/ci.yml"
+      ],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 0.6,
+        "precision": 1,
+        "matched": [
+          "docker-compose.yml",
+          "Dockerfile",
+          "deploy/nginx.conf"
+        ],
+        "missed": [
+          "web:3000",
+          ".github/workflows/ci.yml"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 2172118,
+      "usd": 0.10086666,
+      "reason": "ok",
+      "check_failures": [
+        {
+          "index": 3,
+          "reason": ".github/workflows/ci.yml lacks /localhost:8080/health/",
+          "protects": ".github/workflows/ci.yml"
+        }
+      ],
+      "tokens_breakdown": {
+        "input_tokens": 147,
+        "output_tokens": 3537,
+        "cache_read_input_tokens": 2052302,
+        "cache_creation_input_tokens": 116132
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-compose-port__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-compose-port__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "runtime-compose-port",
+      "area": "runtime",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 5,
+        "section_missing": false,
+        "recall": 0.8,
+        "precision": 1,
+        "matched": [
+          "docker-compose.yml",
+          "Dockerfile",
+          "deploy/nginx.conf",
+          ".github/workflows/ci.yml"
+        ],
+        "missed": [
+          "web:3000"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 2361197,
+      "usd": 0.10878788999999998,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 149,
+        "output_tokens": 4427,
+        "cache_read_input_tokens": 2236183,
+        "cache_creation_input_tokens": 120438
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 372,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-compose-port__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-compose-port__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "runtime-rename-service",
+      "area": "runtime",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 5,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 1,
+        "matched": [
+          "db",
+          "docker-compose.yml",
+          "scripts/wait-for-db.sh",
+          "config/database.yml"
+        ],
+        "missed": [],
+        "unmatched_lines": []
+      },
+      "tokens": 441649,
+      "usd": 0.022341580000000003,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 130,
+        "output_tokens": 3918,
+        "cache_read_input_tokens": 421736,
+        "cache_creation_input_tokens": 15865
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-rename-service__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-rename-service__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "runtime-rename-service",
+      "area": "runtime",
+      "arm": "ac",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 3,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 1,
+        "matched": [
+          "db",
+          "docker-compose.yml",
+          "scripts/wait-for-db.sh",
+          "config/database.yml"
+        ],
+        "missed": [],
+        "unmatched_lines": []
+      },
+      "tokens": 2559356,
+      "usd": 0.11334496,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 165,
+        "output_tokens": 4202,
+        "cache_read_input_tokens": 2438687,
+        "cache_creation_input_tokens": 116302
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-rename-service__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-rename-service__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "runtime-rename-service",
+      "area": "runtime",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 5,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 1,
+        "matched": [
+          "db",
+          "docker-compose.yml",
+          "scripts/wait-for-db.sh",
+          "config/database.yml"
+        ],
+        "missed": [],
+        "unmatched_lines": []
+      },
+      "tokens": 2391992,
+      "usd": 0.11115238,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 149,
+        "output_tokens": 4438,
+        "cache_read_input_tokens": 2261681,
+        "cache_creation_input_tokens": 125724
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 372,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-rename-service__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-rename-service__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "runtime-terraform-variable",
+      "area": "runtime",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 0.8,
+        "precision": 1,
+        "matched": [
+          "infra/variables.tf",
+          "infra/main.tf",
+          "infra/prod.tfvars",
+          ".github/workflows/deploy.yml"
+        ],
+        "missed": [
+          "instance_type"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 184791,
+      "usd": 0.01299559,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 58,
+        "output_tokens": 3036,
+        "cache_read_input_tokens": 167863,
+        "cache_creation_input_tokens": 13834
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-terraform-variable__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-terraform-variable__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "runtime-terraform-variable",
+      "area": "runtime",
+      "arm": "ac",
+      "seed": 0,
+      "errored": false,
+      "success": false,
+      "broken_dependents": [
+        ".github/workflows/deploy.yml"
+      ],
+      "affected": {
+        "declared": 3,
+        "section_missing": false,
+        "recall": 0.8,
+        "precision": 1,
+        "matched": [
+          "instance_type",
+          "infra/variables.tf",
+          "infra/main.tf",
+          "infra/prod.tfvars"
+        ],
+        "missed": [
+          ".github/workflows/deploy.yml"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 1531355,
+      "usd": 0.08193117999999999,
+      "reason": "ok",
+      "check_failures": [
+        {
+          "index": 3,
+          "reason": ".github/workflows/deploy.yml lacks /-var app_instance_type=/",
+          "protects": ".github/workflows/deploy.yml"
+        }
+      ],
+      "tokens_breakdown": {
+        "input_tokens": 103,
+        "output_tokens": 3771,
+        "cache_read_input_tokens": 1411306,
+        "cache_creation_input_tokens": 116175
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-terraform-variable__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-terraform-variable__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "runtime-terraform-variable",
+      "area": "runtime",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": false,
+      "success": false,
+      "broken_dependents": [
+        ".github/workflows/deploy.yml"
+      ],
+      "affected": {
+        "declared": 3,
+        "section_missing": false,
+        "recall": 0.8,
+        "precision": 1,
+        "matched": [
+          "instance_type",
+          "infra/variables.tf",
+          "infra/main.tf",
+          "infra/prod.tfvars"
+        ],
+        "missed": [
+          ".github/workflows/deploy.yml"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 1278145,
+      "usd": 0.07409183999999999,
+      "reason": "ok",
+      "check_failures": [
+        {
+          "index": 3,
+          "reason": ".github/workflows/deploy.yml lacks /-var app_instance_type=/",
+          "protects": ".github/workflows/deploy.yml"
+        }
+      ],
+      "tokens_breakdown": {
+        "input_tokens": 87,
+        "output_tokens": 3603,
+        "cache_read_input_tokens": 1158408,
+        "cache_creation_input_tokens": 116047
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 379,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-terraform-variable__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-terraform-variable__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "runtime-node-version",
+      "area": "runtime",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 1,
+        "matched": [
+          "Dockerfile",
+          ".nvmrc",
+          "package.json",
+          ".github/workflows/ci.yml"
+        ],
+        "missed": [],
+        "unmatched_lines": []
+      },
+      "tokens": 183603,
+      "usd": 0.012316439999999998,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 58,
+        "output_tokens": 2530,
+        "cache_read_input_tokens": 167278,
+        "cache_creation_input_tokens": 13737
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-node-version__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-node-version__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "runtime-node-version",
+      "area": "runtime",
+      "arm": "ac",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 1,
+        "matched": [
+          "Dockerfile",
+          ".nvmrc",
+          "package.json",
+          ".github/workflows/ci.yml"
+        ],
+        "missed": [],
+        "unmatched_lines": []
+      },
+      "tokens": 1270780,
+      "usd": 0.07254559999999999,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 85,
+        "output_tokens": 2909,
+        "cache_read_input_tokens": 1153510,
+        "cache_creation_input_tokens": 114276
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-node-version__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-node-version__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "runtime-node-version",
+      "area": "runtime",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 1,
+        "matched": [
+          "Dockerfile",
+          ".nvmrc",
+          "package.json",
+          ".github/workflows/ci.yml"
+        ],
+        "missed": [],
+        "unmatched_lines": []
+      },
+      "tokens": 1546552,
+      "usd": 0.08164898999999999,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 101,
+        "output_tokens": 2849,
+        "cache_read_input_tokens": 1425993,
+        "cache_creation_input_tokens": 117609
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 374,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-node-version__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/runtime-node-version__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "delivery-rename-job",
+      "area": "delivery",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": false,
+      "broken_dependents": [
+        "Makefile"
+      ],
+      "affected": {
+        "declared": 3,
+        "section_missing": false,
+        "recall": 0.5,
+        "precision": 1,
+        "matched": [
+          ".github/workflows/ci.yml",
+          ".github/settings.yml"
+        ],
+        "missed": [
+          "job test",
+          "Makefile"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 234096,
+      "usd": 0.012982919999999998,
+      "reason": "ok",
+      "check_failures": [
+        {
+          "index": 3,
+          "reason": "Makefile lacks /-j unit-tests/",
+          "protects": "Makefile"
+        }
+      ],
+      "tokens_breakdown": {
+        "input_tokens": 74,
+        "output_tokens": 2075,
+        "cache_read_input_tokens": 219309,
+        "cache_creation_input_tokens": 12638
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-rename-job__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-rename-job__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "delivery-rename-job",
+      "area": "delivery",
+      "arm": "ac",
+      "seed": 0,
+      "errored": true,
+      "success": false,
+      "broken_dependents": [
+        "Makefile"
+      ],
+      "affected": {
+        "declared": 0,
+        "section_missing": true,
+        "recall": 0,
+        "precision": null,
+        "matched": [],
+        "missed": [
+          "job test",
+          ".github/workflows/ci.yml",
+          ".github/settings.yml",
+          "Makefile"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 0,
+      "usd": 0,
+      "reason": "timeout after 900s",
+      "check_failures": [
+        {
+          "index": 3,
+          "reason": "Makefile lacks /-j unit-tests/",
+          "protects": "Makefile"
+        }
+      ],
+      "tokens_breakdown": {},
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-rename-job__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-rename-job__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "delivery-rename-job",
+      "area": "delivery",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": false,
+      "success": false,
+      "broken_dependents": [
+        "Makefile"
+      ],
+      "affected": {
+        "declared": 3,
+        "section_missing": false,
+        "recall": 0.5,
+        "precision": 1,
+        "matched": [
+          ".github/workflows/ci.yml",
+          ".github/settings.yml"
+        ],
+        "missed": [
+          "job test",
+          "Makefile"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 917333,
+      "usd": 0.06290082,
+      "reason": "ok",
+      "check_failures": [
+        {
+          "index": 3,
+          "reason": "Makefile lacks /-j unit-tests/",
+          "protects": "Makefile"
+        }
+      ],
+      "tokens_breakdown": {
+        "input_tokens": 63,
+        "output_tokens": 2688,
+        "cache_read_input_tokens": 795739,
+        "cache_creation_input_tokens": 118843
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 454,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-rename-job__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-rename-job__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "delivery-rename-script",
+      "area": "delivery",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 0.8,
+        "precision": 1,
+        "matched": [
+          "package.json",
+          ".github/workflows/build.yml",
+          "Dockerfile",
+          "Makefile"
+        ],
+        "missed": [
+          "build:prod"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 268160,
+      "usd": 0.015459669999999998,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 82,
+        "output_tokens": 2871,
+        "cache_read_input_tokens": 250784,
+        "cache_creation_input_tokens": 14423
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-rename-script__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-rename-script__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "delivery-rename-script",
+      "area": "delivery",
+      "arm": "ac",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 0.8,
+        "precision": 1,
+        "matched": [
+          "package.json",
+          ".github/workflows/build.yml",
+          "Dockerfile",
+          "Makefile"
+        ],
+        "missed": [
+          "build:prod"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 759964,
+      "usd": 0.05701476999999999,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 53,
+        "output_tokens": 2791,
+        "cache_read_input_tokens": 643049,
+        "cache_creation_input_tokens": 114071
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-rename-script__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-rename-script__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "delivery-rename-script",
+      "area": "delivery",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 4,
+        "section_missing": false,
+        "recall": 1,
+        "precision": 1,
+        "matched": [
+          "build:prod",
+          "package.json",
+          ".github/workflows/build.yml",
+          "Dockerfile",
+          "Makefile"
+        ],
+        "missed": [],
+        "unmatched_lines": []
+      },
+      "tokens": 1277046,
+      "usd": 0.07400407999999999,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 85,
+        "output_tokens": 3533,
+        "cache_read_input_tokens": 1157266,
+        "cache_creation_input_tokens": 116162
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 675,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-rename-script__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-rename-script__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "delivery-artifact-name",
+      "area": "delivery",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 3,
+        "section_missing": false,
+        "recall": 0.75,
+        "precision": 1,
+        "matched": [
+          ".github/workflows/build.yml",
+          ".github/workflows/deploy.yml",
+          "scripts/fetch-artifact.sh"
+        ],
+        "missed": [
+          "dist-bundle"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 262500,
+      "usd": 0.01409957,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 82,
+        "output_tokens": 2168,
+        "cache_read_input_tokens": 247059,
+        "cache_creation_input_tokens": 13191
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-artifact-name__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-artifact-name__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "delivery-artifact-name",
+      "area": "delivery",
+      "arm": "ac",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 3,
+        "section_missing": false,
+        "recall": 0.75,
+        "precision": 1,
+        "matched": [
+          ".github/workflows/build.yml",
+          ".github/workflows/deploy.yml",
+          "scripts/fetch-artifact.sh"
+        ],
+        "missed": [
+          "dist-bundle"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 756896,
+      "usd": 0.05582411,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 53,
+        "output_tokens": 2172,
+        "cache_read_input_tokens": 641872,
+        "cache_creation_input_tokens": 112799
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-artifact-name__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-artifact-name__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "delivery-artifact-name",
+      "area": "delivery",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": false,
+      "success": false,
+      "broken_dependents": [
+        "scripts/fetch-artifact.sh"
+      ],
+      "affected": {
+        "declared": 2,
+        "section_missing": false,
+        "recall": 0.5,
+        "precision": 1,
+        "matched": [
+          ".github/workflows/build.yml",
+          ".github/workflows/deploy.yml"
+        ],
+        "missed": [
+          "dist-bundle",
+          "scripts/fetch-artifact.sh"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 755866,
+      "usd": 0.05537436,
+      "reason": "ok",
+      "check_failures": [
+        {
+          "index": 2,
+          "reason": "scripts/fetch-artifact.sh lacks /-n web-dist/",
+          "protects": "scripts/fetch-artifact.sh"
+        }
+      ],
+      "tokens_breakdown": {
+        "input_tokens": 51,
+        "output_tokens": 1866,
+        "cache_read_input_tokens": 641317,
+        "cache_creation_input_tokens": 112632
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 384,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-artifact-name__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-artifact-name__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "delivery-rename-secret",
+      "area": "delivery",
+      "arm": "vanilla",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 3,
+        "section_missing": false,
+        "recall": 0.75,
+        "precision": 1,
+        "matched": [
+          ".github/workflows/deploy.yml",
+          ".github/workflows/staging.yml",
+          "scripts/deploy.sh"
+        ],
+        "missed": [
+          "DEPLOY_TOKEN"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 156153,
+      "usd": 0.01123376,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 50,
+        "output_tokens": 2454,
+        "cache_read_input_tokens": 140522,
+        "cache_creation_input_tokens": 13127
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-rename-secret__vanilla__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-rename-secret__vanilla__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "delivery-rename-secret",
+      "area": "delivery",
+      "arm": "ac",
+      "seed": 0,
+      "errored": false,
+      "success": true,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 3,
+        "section_missing": false,
+        "recall": 0.75,
+        "precision": 1,
+        "matched": [
+          ".github/workflows/deploy.yml",
+          ".github/workflows/staging.yml",
+          "scripts/deploy.sh"
+        ],
+        "missed": [
+          "DEPLOY_TOKEN"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 2174471,
+      "usd": 0.10163397,
+      "reason": "ok",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 141,
+        "output_tokens": 4014,
+        "cache_read_input_tokens": 2053754,
+        "cache_creation_input_tokens": 116562
+      },
+      "map_build": null,
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-rename-secret__ac__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-rename-secret__ac__seed0.transcript.txt",
+      "synthetic": false
+    },
+    {
+      "task_id": "delivery-rename-secret",
+      "area": "delivery",
+      "arm": "ac-map",
+      "seed": 0,
+      "errored": true,
+      "success": false,
+      "broken_dependents": [],
+      "affected": {
+        "declared": 0,
+        "section_missing": true,
+        "recall": 0,
+        "precision": null,
+        "matched": [],
+        "missed": [
+          "DEPLOY_TOKEN",
+          ".github/workflows/deploy.yml",
+          ".github/workflows/staging.yml",
+          "scripts/deploy.sh"
+        ],
+        "unmatched_lines": []
+      },
+      "tokens": 1654725,
+      "usd": 0.08450204000000001,
+      "reason": "success",
+      "check_failures": [],
+      "tokens_breakdown": {
+        "input_tokens": 107,
+        "output_tokens": 3132,
+        "cache_read_input_tokens": 1536613,
+        "cache_creation_input_tokens": 114873
+      },
+      "map_build": {
+        "ok": true,
+        "ms": 378,
+        "detail": "map drawn"
+      },
+      "workspace": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-rename-secret__ac-map__seed0",
+      "transcript_path": "/var/folders/_s/c58ktjj93tx8zsw3x69wrbch0000gn/T/agent-config-bench-v2-clones/delivery-rename-secret__ac-map__seed0.transcript.txt",
+      "synthetic": false
+    }
+  ]
+}

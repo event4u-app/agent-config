@@ -1,0 +1,22 @@
+{
+    "fixture": "p2-tenant",
+    "must_exist": [
+        "node table:tenant:invoices",
+        "node table:tenant:customers",
+        "node column:tenant:invoices.customer_id",
+        "attr table:tenant:invoices connection=\"tenant\"",
+        "attr table:tenant:invoices engine=\"pgsql\"",
+        "attr table:tenant:invoices completeness=\"complete\"",
+        "edge app/Models/Invoice.php#Invoice persists table:tenant:invoices",
+        "edge column:tenant:invoices.customer_id references column:tenant:customers.id",
+        "node table:audits",
+        "attr table:audits uncertain=true",
+        "attr table:audits completeness=\"partial\""
+    ],
+    "must_not_exist": [
+        "node table:invoices",
+        "node table:legacy_things",
+        "node table:tenant:legacy_things",
+        "edge app/Models/Invoice.php#Invoice persists table:invoices"
+    ]
+}

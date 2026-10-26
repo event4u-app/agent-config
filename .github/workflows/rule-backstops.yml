@@ -750,6 +750,12 @@ jobs:
       - name: Kill-switch table — self-test
         run: ./scripts-run src/scripts/check_kill_switch_table --self-test
 
+      - name: Graph writers — every graph, map and cache write lands in one of the two layouts (ADR-303)
+        run: ./scripts-run src/scripts/check_graph_writers
+
+      - name: Graph writers — self-test
+        run: ./scripts-run src/scripts/check_graph_writers --self-test
+
       # `check_platform_anchor` is NOT wired here, and the reason is a platform
       # capability rather than a choice.
       #

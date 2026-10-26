@@ -30,6 +30,9 @@ const SHARED_EXCLUDE = [
     'dist/agent-src/**',
     '.agent-src.uncondensed/**',
     'tests/golden/sandbox/repo/**',
+    // Fixture trees are inputs to the readers; a `*.test.ts` there is a test file
+    // the code graph must find, not a suite to run.
+    'tests/fixtures/**',
     // Host-harness tests of the shipped Claude Code module: they import
     // `claude-code/testing`, which only `claude plugin test` provides.
     // tests/scripts/claude_mod_surface.test.ts runs them through that CLI.
@@ -59,6 +62,21 @@ const IMPORTED_BROWSER_SUITES = [
     'tests/scripts/code_graph_map_area_limit.test.ts',
     'tests/scripts/code_graph_map_no_data.test.ts',
     'tests/scripts/code_graph_map_canvas_clear.test.ts',
+    'tests/scripts/code_graph_map_shell.test.ts',
+    'tests/scripts/code_graph_map_demo_browser.test.ts',
+    'tests/scripts/code_graph_map_area_payloads.test.ts',
+    'tests/scripts/code_graph_map_keylinks.test.ts',
+    'tests/scripts/code_graph_map_rails.test.ts',
+    'tests/scripts/code_graph_map_orb.test.ts',
+    'tests/scripts/code_graph_map_port.test.ts',
+    'tests/scripts/code_graph_map_roundtrip.test.ts',
+    'tests/scripts/code_graph_map_search_keys.test.ts',
+    'tests/scripts/code_graph_map_supernodes.test.ts',
+    'tests/scripts/code_graph_map_data_page.test.ts',
+    'tests/scripts/code_graph_map_erd_load.test.ts',
+    'tests/scripts/code_graph_map_erd_interaction.test.ts',
+    'tests/scripts/code_graph_map_label_click.test.ts',
+    'tests/scripts/code_graph_map_ported_pages.test.ts',
 ];
 // Suites whose live cases skip without Chromium; the browser job runs them whole,
 // so a node shard without a browser does not collect them as skipped duplicates.

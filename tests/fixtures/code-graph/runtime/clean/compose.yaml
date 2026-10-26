@@ -1,0 +1,18 @@
+services:
+  app:
+    image: clean-app:2.3.1
+    ports:
+      - "8080:80"
+    environment:
+      DB_HOST: db
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:16.4@sha256:0000000000000000000000000000000000000000000000000000000000000000
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+volumes:
+  dbdata: {}

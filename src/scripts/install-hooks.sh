@@ -697,7 +697,7 @@ fi
 EOF
     fi
     cat >> "$HOOKS_DIR/$name" << 'EOF'
-if [ -f agents/runtime/state/code-graph-v1.json ] && [ -x ./agent-config ]; then
+if { [ -f agents/map/.build/code-graph-v1.json ] || [ -f agents/runtime/state/code-graph-v1.json ]; } && [ -x ./agent-config ]; then
     ./agent-config code-graph refresh --single-flight --map --budget-seconds 60 \
         </dev/null >/dev/null 2>&1 &
 fi

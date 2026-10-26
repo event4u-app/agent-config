@@ -1,0 +1,3 @@
+partner:
+  url: ${PARTNER_URL}
+  timeout-ms: 2000

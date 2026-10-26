@@ -31,7 +31,7 @@ beforeAll(async () => {
     fs.writeFileSync(path.join(root, 'README.md'), '# Fixture\n');
     const res = await buildMap(root);
     html = path.join(res.outDir, 'index.html');
-    const doc = JSON.parse(fs.readFileSync(path.join(res.outDir, 'map.json'), 'utf-8')) as { model?: { areas?: unknown[] } };
+    const doc = JSON.parse(fs.readFileSync(path.join(res.outDir, 'code', 'map.json'), 'utf-8')) as { model?: { areas?: unknown[] } };
     areaCount = (doc.model?.areas ?? []).length;
     const { chromium } = await import('@playwright/test');
     browser = await chromium.launch({ headless: true });
@@ -44,7 +44,7 @@ afterAll(async () => {
 
 async function open(): Promise<Page> {
     const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-    await page.goto(pathToFileURL(html).href);
+    await page.goto(`${pathToFileURL(html).href}#/code`);
     await page.waitForFunction(() => (window as unknown as { __mapView?: unknown }).__mapView !== undefined);
     return page;
 }
@@ -166,7 +166,7 @@ describe('click marks, double click opens', () => {
 describe('the map uses the height it is given', () => {
     it('on a wide window the stage reaches the foot of the centre column', async () => {
         const page = await browser.newPage({ viewport: { width: 1600, height: 1100 } });
-        await page.goto(pathToFileURL(html).href);
+        await page.goto(`${pathToFileURL(html).href}#/code`);
         await page.waitForFunction(() => (window as unknown as { __mapView?: unknown }).__mapView !== undefined);
         const m = await page.evaluate(() => ({
             stage: (document.querySelector('.stage') as HTMLElement).getBoundingClientRect().height,
@@ -230,7 +230,7 @@ describe('the brand mark', () => {
         expect(text).not.toMatch(/<img\b/);
         expect(text).toMatch(/img-src 'none'/);
         const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-        await page.goto(pathToFileURL(html).href);
+        await page.goto(`${pathToFileURL(html).href}#/code`);
         const box = await page.evaluate(() => {
             const r = (document.querySelector('.brand .logo') as SVGElement).getBoundingClientRect();
             return { w: Math.round(r.width), h: Math.round(r.height) };
@@ -244,7 +244,7 @@ describe('side panels: pinned on a wide window, flyouts below it', () => {
     async function at(width: number, height = 900): Promise<Page> {
         const page = await browser.newPage({ viewport: { width, height } });
         await page.emulateMedia({ reducedMotion: 'reduce' });
-        await page.goto(pathToFileURL(html).href);
+        await page.goto(`${pathToFileURL(html).href}#/code`);
         await page.waitForFunction(() => (window as unknown as { __mapView?: unknown }).__mapView !== undefined);
         return page;
     }

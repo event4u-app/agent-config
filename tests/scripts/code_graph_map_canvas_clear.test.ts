@@ -31,7 +31,7 @@ afterAll(async () => {
 
 async function open(): Promise<Page> {
     const page = await browser.newPage({ viewport: { width: 1401, height: 1000 }, deviceScaleFactor: 1.5 });
-    await page.goto(pathToFileURL(html).href);
+    await page.goto(`${pathToFileURL(html).href}#/code`);
     await page.waitForFunction(() => (window as unknown as { __mapView?: unknown }).__mapView !== undefined);
     return page;
 }

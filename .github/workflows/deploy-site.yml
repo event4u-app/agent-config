@@ -30,6 +30,10 @@ concurrency:
 
 jobs:
   build:
+    # The deploy publishes exactly this job's artifact, so the link check that
+    # `site.yml` runs gates it here too — a docs-only change this workflow
+    # deploys never reaches `site.yml`'s path filter.
+    name: Build and link-check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -48,6 +52,11 @@ jobs:
           cd site
           npm ci --no-audit --no-fund --prefer-offline
           npm run build
+      # Root deps provide node_modules/.bin/tsx for ./scripts-run.
+      - name: Install root dependencies (tsx for scripts-run)
+        run: npm ci --no-audit --no-fund --prefer-offline
+      - name: Internal-link check (no dangling links in the built site)
+        run: ./scripts-run src/scripts/check_site_links
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5.0.0
         with:
           path: site/dist

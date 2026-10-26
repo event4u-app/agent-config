@@ -56,8 +56,10 @@ describe('the graph core names no framework (ADR-298)', () => {
             expect(['partial', 'verified', 'deep']).toContain(row?.status);
             expect(row?.relations.length, p.id).toBeGreaterThan(0);
         }
+        // The infrastructure row is covered by the runtime and delivery lane readers, which are not providers.
+        const laneRead = new Set(['infrastructure']);
         for (const row of CATALOG.filter((r) => r.status !== 'planned')) {
-            expect(PROVIDERS.some((p) => p.id === row.id), row.id).toBe(true);
+            expect(PROVIDERS.some((p) => p.id === row.id) || laneRead.has(row.id), row.id).toBe(true);
             const fixture = row.fixture?.split(' ')[0] ?? '';
             expect(fs.existsSync(path.resolve(__dirname, '../..', fixture)), `${row.id}: ${fixture}`).toBe(true);
         }

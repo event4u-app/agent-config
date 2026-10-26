@@ -1,0 +1,9 @@
+services:
+  api:
+    image: node:22
+    ports:
+      - "8080:3000"
+  db:
+    image: postgres:15
+    ports:
+      - "5433:5432"

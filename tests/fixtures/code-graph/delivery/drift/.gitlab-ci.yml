@@ -1,0 +1,37 @@
+stages: [build, test, deploy, review]
+
+include:
+  - local: /ci/common.yml
+  - template: Security/SAST.gitlab-ci.yml
+
+build-image:
+  stage: build
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+
+unit-test:
+  stage: test
+  script:
+    - npm test
+  rules:
+    - changes:
+        - src/**/*
+
+deploy-prod:
+  stage: deploy
+  needs: [build-image]
+  environment:
+    name: production
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - kubectl set image deployment/shop shop=$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+
+review-app:
+  stage: review
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    url: https://$CI_COMMIT_REF_SLUG.review.client-corp.com
+  script:
+    - helm upgrade review-$CI_COMMIT_REF_SLUG ./chart

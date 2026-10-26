@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { graphHome, graphsRoot } from '../../../src/scripts/code_graph/graph_home.js';
+import { graphHome, graphsRoot, homeDirs, hubDir, isHomeDir, legacyGraphsRoot, projectCachePath } from '../../../src/scripts/code_graph/graph_home.js';
 import { repoIdentity } from '../../../src/scripts/code_graph/repo_identity.js';
 
 let tmp: string;
@@ -19,17 +19,39 @@ afterEach(() => {
 });
 
 describe('graphHome — a root with a project home', () => {
-    it('keeps today\'s paths under <root>/agents/ when agents/ exists', () => {
+    it('keeps graph, map and caches in one folder, agents/map/, with .build/ for the caches', () => {
         const root = path.join(tmp, 'proj');
         fs.mkdirSync(path.join(root, 'agents'), { recursive: true });
         const h = graphHome(root, env);
+        const build = path.join(root, 'agents', 'map', '.build');
         expect(h.kind).toBe('project');
-        expect(h.cachePath).toBe(path.join(root, 'agents', 'runtime', 'state', 'code-graph-v1.json'));
-        expect(h.stateDir).toBe(path.join(root, 'agents', 'runtime', 'state'));
         expect(h.mapDir).toBe(path.join(root, 'agents', 'map'));
-        expect(h.lockPath).toBe(path.join(root, 'agents', 'runtime', 'state', 'code-graph-refresh.lock'));
-        expect(h.autoRefreshPath).toBe(path.join(root, 'agents', 'runtime', 'state', 'code-graph-auto-refresh.json'));
+        expect(h.buildDir).toBe(build);
+        expect(h.cachePath).toBe(path.join(build, 'code-graph-v1.json'));
+        expect(h.buildCachePath).toBe(h.cachePath);
+        expect(h.lockPath).toBe(path.join(build, 'code-graph-refresh.lock'));
+        expect(h.autoRefreshPath).toBe(path.join(build, 'code-graph-auto-refresh.json'));
         expect(fs.existsSync(env.EVENT4U_CONFIG_HOME!)).toBe(false);
+        expect(fs.existsSync(build)).toBe(false);
+    });
+
+    it('reads the pre-ADR-303 cache and opt-in while only they exist, and always builds into .build/', () => {
+        const root = path.join(tmp, 'old');
+        const legacy = path.join(root, 'agents', 'runtime', 'state');
+        fs.mkdirSync(legacy, { recursive: true });
+        fs.writeFileSync(path.join(legacy, 'code-graph-v1.json'), '{}');
+        fs.writeFileSync(path.join(legacy, 'code-graph-auto-refresh.json'), '{}');
+        const before = graphHome(root, env);
+        expect(before.cachePath).toBe(path.join(legacy, 'code-graph-v1.json'));
+        expect(projectCachePath(root)).toBe(before.cachePath);
+        expect(before.autoRefreshPath).toBe(path.join(legacy, 'code-graph-auto-refresh.json'));
+        expect(before.buildCachePath).toBe(path.join(root, 'agents', 'map', '.build', 'code-graph-v1.json'));
+        expect(before.lockPath.startsWith(path.join(root, 'agents', 'map', '.build'))).toBe(true);
+        fs.mkdirSync(before.buildDir, { recursive: true });
+        fs.writeFileSync(before.buildCachePath, '{}');
+        const after = graphHome(root, env);
+        expect(after.cachePath).toBe(after.buildCachePath);
+        expect(projectCachePath(root)).toBe(after.buildCachePath);
     });
 
     it('treats a project install (`.agent-settings.yml`) as a project home without creating agents/', () => {
@@ -38,13 +60,13 @@ describe('graphHome — a root with a project home', () => {
         fs.writeFileSync(path.join(root, '.agent-settings.yml'), 'project: {}\n');
         const h = graphHome(root, env);
         expect(h.kind).toBe('project');
-        expect(h.cachePath).toBe(path.join(root, 'agents', 'runtime', 'state', 'code-graph-v1.json'));
+        expect(h.cachePath).toBe(path.join(root, 'agents', 'map', '.build', 'code-graph-v1.json'));
         expect(fs.existsSync(path.join(root, 'agents'))).toBe(false);
     });
 });
 
 describe('graphHome — a root without one', () => {
-    it('lives under runtime/graphs/<repo id>-<checkout> and never creates agents/', () => {
+    it('lives in the hub as map/<repo id>-<checkout>/ and never creates agents/', () => {
         const root = path.join(tmp, 'foreign');
         fs.mkdirSync(root, { recursive: true });
         execFileSync('git', ['-C', root, 'init', '-q']);
@@ -54,11 +76,35 @@ describe('graphHome — a root without one', () => {
         expect(h.repoId).toBe(id);
         expect(path.dirname(h.dir)).toBe(graphsRoot(env));
         expect(path.basename(h.dir)).toMatch(new RegExp(`^${id}-[0-9a-f]{8}$`));
-        expect(graphsRoot(env)).toBe(path.join(env.EVENT4U_CONFIG_HOME!, 'runtime', 'graphs'));
-        expect(h.cachePath).toBe(path.join(h.dir, 'state', 'code-graph-v1.json'));
-        expect(h.mapDir).toBe(path.join(h.dir, 'map'));
-        expect(h.lockPath).toBe(path.join(h.dir, 'state', 'code-graph-refresh.lock'));
+        expect(graphsRoot(env)).toBe(hubDir(env));
+        expect(hubDir(env)).toBe(path.join(env.EVENT4U_CONFIG_HOME!, 'map'));
+        expect(h.mapDir).toBe(h.dir);
+        expect(h.cachePath).toBe(path.join(h.dir, '.build', 'code-graph-v1.json'));
+        expect(h.lockPath).toBe(path.join(h.dir, '.build', 'code-graph-refresh.lock'));
+        expect(h.legacyDir).toBe(path.join(legacyGraphsRoot(env), path.basename(h.dir), 'state'));
         expect(fs.existsSync(path.join(root, 'agents'))).toBe(false);
+    });
+
+    it('reads a home an older release wrote under runtime/graphs/ until the hub holds one', () => {
+        const root = path.join(tmp, 'foreign-old');
+        fs.mkdirSync(root, { recursive: true });
+        execFileSync('git', ['-C', root, 'init', '-q']);
+        const h = graphHome(root, env);
+        fs.mkdirSync(h.legacyDir, { recursive: true });
+        fs.writeFileSync(path.join(h.legacyDir, 'code-graph-v1.json'), '{}');
+        expect(graphHome(root, env).cachePath).toBe(path.join(h.legacyDir, 'code-graph-v1.json'));
+        expect(graphHome(root, env).buildCachePath).toBe(path.join(h.dir, '.build', 'code-graph-v1.json'));
+    });
+
+    it('lists homes in both places and never takes the hub\'s own entries for one', () => {
+        const hub = hubDir(env);
+        for (const d of ['projects', '.build', 'abc-1', path.join('..', 'runtime', 'graphs', 'def-2')]) fs.mkdirSync(path.join(hub, d), { recursive: true });
+        fs.writeFileSync(path.join(hub, 'index.html'), '');
+        expect(homeDirs(env).map((d) => path.basename(d)).sort()).toEqual(['abc-1', 'def-2']);
+        expect(isHomeDir(path.join(hub, 'abc-1'), env)).toBe(true);
+        expect(isHomeDir(path.join(legacyGraphsRoot(env), 'def-2'), env)).toBe(true);
+        for (const own of ['projects', '.build', 'index.html', '']) expect(isHomeDir(path.join(hub, own), env)).toBe(false);
+        expect(isHomeDir(path.join(hub, 'abc-1', 'code'), env)).toBe(false);
     });
 
     it('gives two clones of one origin (https and ssh) one repo id and separate homes', () => {
@@ -98,23 +144,23 @@ describe('graphHome — a root without one', () => {
 describe('graphHome — every reader and writer goes through it (2.4)', () => {
     const repoRoot = path.resolve(__dirname, '..', '..', '..');
 
-    it('names the three path constants only in graph_home.ts', () => {
+    it('names the three path constants only in graph_home.ts and the writer gate that checks them', () => {
         const hits = execFileSync('git', ['-C', repoRoot, 'grep', '-n', '-w', '-E', '(NATIVE_CACHE_REL|MAP_DIR_REL|LOCK_REL)', '--', 'src/scripts/*.ts'], {
             encoding: 'utf-8',
         })
             .split('\n')
             .filter(Boolean)
             .map((l) => l.split(':')[0]);
-        expect([...new Set(hits)]).toEqual(['src/scripts/code_graph/graph_home.ts']);
+        expect([...new Set(hits)].sort()).toEqual(['src/scripts/check_graph_writers.ts', 'src/scripts/code_graph/graph_home.ts']);
     });
 
-    it('keeps this repository\'s graph, map and lock exactly where they are today', async () => {
-        const { cacheFor } = await import('../../../src/scripts/code_graph/cli.js');
+    it('keeps this repository\'s graph, map and lock in agents/map/', async () => {
+        const { buildCacheFor } = await import('../../../src/scripts/code_graph/cli.js');
         const h = graphHome(repoRoot, env);
         expect(h.kind).toBe('project');
-        expect(cacheFor(repoRoot)).toBe(path.join(repoRoot, 'agents', 'runtime', 'state', 'code-graph-v1.json'));
+        expect(buildCacheFor(repoRoot)).toBe(path.join(repoRoot, 'agents', 'map', '.build', 'code-graph-v1.json'));
         expect(h.mapDir).toBe(path.join(repoRoot, 'agents', 'map'));
-        expect(h.lockPath).toBe(path.join(repoRoot, 'agents', 'runtime', 'state', 'code-graph-refresh.lock'));
+        expect(h.lockPath).toBe(path.join(repoRoot, 'agents', 'map', '.build', 'code-graph-refresh.lock'));
     });
 
     it('sends a root without a project home to the user-global cache in every module', async () => {

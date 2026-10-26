@@ -52,7 +52,7 @@ Check for: full table scans (`type=ALL`), missing indexes (`key=NULL`), filesort
 
 ### Step 2: Fix
 
-- Add missing indexes (most selective column first in composites)
+- Add missing indexes (composites: equality, then a range, then sort-only; selectivity breaks ties)
 - Rewrite anti-patterns (subquery → JOIN, `OFFSET` → cursor, `SELECT *` → specific columns)
 - Add eager loading for N+1 queries
 - Always paginate list endpoints
@@ -74,6 +74,7 @@ Re-run `EXPLAIN` and confirm improved plan.
    - Prisma: `npx prisma db pull --print | grep -A20 "model Table"`
    - Generic SQL: `psql -d mydb -c "\d table"` / `mysql -e "DESCRIBE table"`
 4. **Check project docs** — `agents/reference/docs/` for conventions
+5. **Map facts** (files only): [`references/map-schema-facts.md`](references/map-schema-facts.md)
 
 | Trap | Reality |
 |---|---|
@@ -122,9 +123,7 @@ diverge. Read the engine and its version from the project before making any
 claim in that second group; where the project does not declare one, say the
 engine is unknown rather than assuming.
 
-- Check existing indexes before adding — duplicates waste write performance.
 - Consider multi-tenant implications — queries may need customer DB scoping.
-- `EXPLAIN` output varies between MariaDB and MySQL.
 - Don't use `TEXT` in WHERE without prefix index.
 
 ## Do NOT

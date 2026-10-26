@@ -1,0 +1,17 @@
+name: Release
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+permissions:
+  contents: read
+jobs:
+  publish:
+    uses: ./.github/workflows/reusable-deploy.yml
+  hotfix-deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: staging
+    steps:
+      - uses: azure/setup-helm@0123456789abcdef0123456789abcdef01234567
+      - run: helm upgrade shop ./chart
