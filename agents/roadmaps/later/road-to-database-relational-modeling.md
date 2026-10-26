@@ -31,6 +31,10 @@ estate_growth_exempt: "Three blockers were discovered during verification, not p
 > defect wordings needed correction because the tree already carries part of
 > what they claim is absent.
 
+> **Arrivals:** 2 — latest `inbox-2026-10-bc` (2026-10-26; its enforcement half
+> landed in the archived `road-to-database-keys-that-hold`, its modeling half is
+> steps 2.1, 3.5 and 4.4–4.8 here); earlier: the 2026-08-26 round above.
+
 ## Goal
 
 An agent asked to design or extend a relational schema in this package has a
@@ -222,7 +226,10 @@ corpus follows the ownership decision, not the other way round.
       and the managed-service guardrail the tree has zero hits for: on a managed
       service there is no `ALTER SYSTEM`, no `postgresql.conf` path, no OS
       access — the control-plane CLI is the surface. Where hosting cannot be
-      determined, say unknown rather than assuming.
+      determined, say unknown rather than assuming. The `database` and
+      `sql-writing` descriptions still route as MySQL-only ("MariaDB/MySQL
+      tuning", "MariaDB/MySQL syntax"); de-lock them here, with the trigger
+      evals of 2.2 in the same change so the routing move is measured.
       verify: `grep -n "ALTER SYSTEM" src/skills/database/SKILL.md` returns a
       guardrail line, and a fixture describing a managed instance produces no
       instruction requiring server-level access.
@@ -348,6 +355,30 @@ corpus follows the ownership decision, not the other way round.
       expendable child table with a very large row count. The correct answer is
       a batched delete plan, not `ON DELETE CASCADE`.
       verify: the fixture exists and the expected answer is the batched plan.
+
+- [ ] **4.4 Relationship → constraint table in `php/eloquent.md`.**
+      belongsTo ↔ foreign key plus its index on engines that do not create one;
+      hasOne ↔ unique foreign key; belongsToMany ↔ pivot with a composite
+      primary or unique key `(a, b)` and an index on `(b)`; morphTo ↔ no foreign
+      key possible, so an exclusive-arc CHECK, per-type tables, or a waiver.
+      The guideline has zero hits for foreign, cascade, pivot or morph today.
+      verify: the table exists and names the engine wherever the index half differs.
+- [ ] **4.5 State that a database cascade bypasses model events.** Cascade only
+      children with no domain events or delete hooks; otherwise delete in a
+      transaction through the model. DR-9 detects the conflict; nothing teaches it.
+      verify: `php/eloquent.md` carries the rule next to the 4.4 table.
+- [ ] **4.6 Unique constraints under soft delete.** A partial unique index on
+      postgres, a generated-column form on MySQL, cross-linked from the
+      soft-delete line in `laravel-migration`.
+      verify: both engine forms are stated with their engine named.
+- [ ] **4.7 Test-engine parity.** SQLite tests prove cascade semantics, not lock
+      cost or index use; say so where the guideline discusses tests.
+      verify: the sentence exists in `php/database.md` or `php/eloquent.md`.
+- [ ] **4.8 Shared-schema tenancy integrity.** `multi-tenancy` covers
+      database-per-tenant only. Add the shared-schema half: foreign keys between
+      tenant tables carry `tenant_id` in the key, the parent is unique on
+      `(id, tenant_id)`, and a cross-tenant reference fixture is rejected.
+      verify: the skill names both tenancy modes and the composite-key rule.
 
 ## Phase 5 — The consumer census, wired rather than rebuilt
 

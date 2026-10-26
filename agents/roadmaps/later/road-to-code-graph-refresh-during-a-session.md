@@ -18,6 +18,10 @@ relates: []
 > **Source:** two reviews of PR #2604 (2026-10-24), pasted into the session that fixed the
 > pre-merge findings. Re-read at `feat/code-graph-auto-refresh` after those fixes.
 
+> **Arrivals:** 1 — latest `inbox-2026-10-bb` (2026-10-26): a comparison round asks
+> for an update that re-resolves only what changed and survives deletions; landed as
+> steps 1.3 and 1.4.
+
 ## Goal
 
 The code graph and `agents/map/` stay current for the whole length of an agent session, on
@@ -36,6 +40,15 @@ instead of each adding their own trigger.
       (resolve the CLI's real `.js` entry and run it with `process.execPath`), so the session
       concern stops returning `unsupported` there.
       verify: a test on a `win32` platform stub asserts a spawn with no shell and the resolved entry.
+- [ ] **1.3 An update that re-resolves only what changed.** `--update` re-extracts
+      changed files but re-resolves the whole tree (`build.ts`, the update path).
+      Re-resolve only edges from changed files and edges onto exports they removed or
+      renamed; unchanged nodes enter the resolver read-only.
+      verify: a fixture edits one file of a built graph and asserts the update equals a full rebuild
+- [ ] **1.4 A shrink guard.** A smaller graph is written only when every lost node
+      belongs to a changed or deleted file; otherwise fall back to a full build. Never
+      cache an empty extraction.
+      verify: a fixture deletes one file and asserts no ghost node and no other node lost
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-24 | reviewer: claude/host -->

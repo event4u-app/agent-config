@@ -7,9 +7,10 @@
  *
  * Adapters:
  *   raw-sql   — R-A6 migration-safety (F6) + R-A7 growth-budget (F7)
- *   eloquent  — R-A1 N+1 (F1), R-A2 index-parity (F2), R-A8/R-A10
- *               offload + durable-async (F9/F11), R-B1 audit-coverage (F8,
- *               only when an audit-scope file is present)
+ *   eloquent  — R-A1 N+1 (F1), R-A2 index-parity (F2), R-A6 Laravel
+ *               migration safety (F6, advice), R-A8/R-A10 offload +
+ *               durable-async (F9/F11), R-B1 audit-coverage (F8, only when an
+ *               audit-scope file is present)
  *   prisma    — R-A2 index-parity (F2) over schema.prisma + client queries
  *
  * "Deterministic" = deterministic pattern detection with an auditable waiver
@@ -37,6 +38,7 @@ import { scan_dir as scan_offload_dir } from './_lib/persistence/detect_offload.
 import { analyze_repo as analyze_audit } from './_lib/persistence/detect_audit_coverage.js';
 import { scan_dir as scan_bounded_dir } from './_lib/persistence/detect_bounded_reads.js';
 import { scan_dir as scan_prisma_growth_dir } from './_lib/persistence/detect_prisma_growth.js';
+import { scan_dir as scan_laravel_migration_dir } from './_lib/persistence/detect_migration_safety_laravel.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -49,6 +51,10 @@ export interface LintReport {
     waived_count: number;
     empty_reason_waivers: WaiverRecord[];
     stacks: StackId[];
+    /** Engine per connection the index-parity check judged against (`unknown` when the project does not state it). */
+    engines: Record<string, string>;
+    /** WHERE references counted as indexed only because the engine is unstated — never findings. */
+    engine_unverified: number;
 }
 
 export function detect_stacks(dir: string): StackId[] {
@@ -71,6 +77,8 @@ export function detect_stacks(dir: string): StackId[] {
 export function run_lint(dir: string, stacks: StackId[], audit_scope_file?: string): LintReport {
     const findings: Finding[] = [];
     const empty_reason_waivers: WaiverRecord[] = [];
+    let parity: ReturnType<typeof analyze_index_parity> | null = null;
+    const index_parity = (): ReturnType<typeof analyze_index_parity> => (parity ??= analyze_index_parity(dir));
 
     for (const stack of stacks) {
         if (stack === 'raw-sql') {
@@ -79,21 +87,25 @@ export function run_lint(dir: string, stacks: StackId[], audit_scope_file?: stri
             empty_reason_waivers.push(...res.waivers.filter((w) => w.reason === ''));
         } else if (stack === 'eloquent') {
             findings.push(...scan_n1_dir(dir));
-            findings.push(...analyze_index_parity(dir).findings);
+            findings.push(...index_parity().findings);
             findings.push(...scan_offload_dir(dir, 'eloquent'));
             findings.push(...scan_bounded_dir(dir));
+            const migration = scan_laravel_migration_dir(dir);
+            findings.push(...migration.findings);
+            empty_reason_waivers.push(...migration.waivers.filter((w) => w.reason === ''));
             const scope_file = audit_scope_file ?? path.join(dir, 'audit-scope.json');
             if (fs.existsSync(scope_file)) {
                 const scope = JSON.parse(fs.readFileSync(scope_file, 'utf8'));
                 findings.push(...analyze_audit(dir, scope).findings);
             }
         } else if (stack === 'prisma') {
-            findings.push(...analyze_index_parity(dir).findings);
+            findings.push(...index_parity().findings);
             findings.push(...scan_offload_dir(dir, 'ts'));
             findings.push(...scan_prisma_growth_dir(dir));
         }
     }
 
+    const judged = stacks.includes('eloquent') || stacks.includes('prisma') ? index_parity() : null;
     const active = findings.filter((f) => !f.waived);
     return {
         findings,
@@ -102,6 +114,8 @@ export function run_lint(dir: string, stacks: StackId[], audit_scope_file?: stri
         waived_count: findings.filter((f) => f.waived).length,
         empty_reason_waivers,
         stacks,
+        engines: judged?.engines ?? {},
+        engine_unverified: judged?.engine_unverified ?? 0,
     };
 }
 
@@ -114,8 +128,11 @@ function format_text(report: LintReport): string {
     for (const w of report.empty_reason_waivers) {
         lines.push(`${w.file}:${w.line} [waiver-hygiene/gate] empty ${w.kind} waiver reason — a waiver must say why`);
     }
+    const engines = Object.entries(report.engines).map(([k, v]) => `${k}=${v}`);
     lines.push(
-        `${report.gate_count} gate · ${report.advice_count} advice · ${report.waived_count} waived · stacks: ${report.stacks.join(', ') || 'none'}`,
+        `${report.gate_count} gate · ${report.advice_count} advice · ${report.waived_count} waived · stacks: ${report.stacks.join(', ') || 'none'}` +
+            (engines.length ? ` · engine: ${engines.join(', ')}` : '') +
+            (report.engine_unverified ? ` · ${report.engine_unverified} WHERE ref(s) judged indexed only because the engine is unstated` : ''),
     );
     return lines.join('\n') + '\n';
 }

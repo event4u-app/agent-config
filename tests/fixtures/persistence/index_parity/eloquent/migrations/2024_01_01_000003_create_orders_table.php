@@ -2,7 +2,9 @@
 
 // Fixture for spike S0.2 (index parity) — road-to-scale-and-history-discipline.
 // Schema expectation: table `orders`
-//   indexed columns: id (primary), user_id (foreignId->constrained),
+//   indexed columns: id (primary), user_id (foreignId->constrained — indexed
+//                    only because this fixture states no engine; postgres would
+//                    not index it, see tests/scripts/index_parity_engine_split.test.ts),
 //                    reference (unique), shipped_at ($table->index('shipped_at'))
 //   plain columns:   total, channel, created_at, updated_at
 

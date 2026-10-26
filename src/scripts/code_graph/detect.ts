@@ -148,8 +148,9 @@ export function detectSources(root: string, nativeCache: string): SourceVerdict[
         /* ignore */
     }
     const scip = scipCandidates.find((p) => fs.existsSync(p));
-    // Only `index.scip` is read; another `*.scip` is reported, not merged.
-    if (scip) out.push({ kind: 'scip', path: scip, present: true, note: 'SCIP — index.scip merges into the build' });
+    // Every `index.scip` in the tree merges into the build (one per package in
+    // a monorepo); another `*.scip` at the root is reported, not merged.
+    if (scip) out.push({ kind: 'scip', path: scip, present: true, note: 'SCIP — every index.scip merges into the build' });
 
     // native cache
     if (fs.existsSync(nativeCache)) out.push({ kind: 'native', path: nativeCache, present: true, ...freshness(abs, nativeCache, null) });

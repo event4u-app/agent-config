@@ -94,6 +94,18 @@ export interface FileExtract {
     namespaces?: string[];
     /** C#: the namespace each declared type sits in, by node id, for namespace-scope resolution. */
     typeNamespaces?: Record<string, string>;
+    /**
+     * Function nodes declared below module level (a closure, a helper inside a
+     * function body). They resolve same-file, but are never a repo-wide target:
+     * a caller in another file cannot reach them by name.
+     */
+    nestedIds?: string[];
+    /**
+     * TS/JS `export … from` statements: the module they forward and what they
+     * forward — named pairs, everything (`*`), or everything under one name
+     * (`* as ns`). The build pass follows them to the declaring file.
+     */
+    reexports?: Array<{ spec: string; names?: Array<{ remote: string; local: string }>; star?: boolean; ns?: string }>;
 }
 
 export function loc(n: TsNode): number[] {
@@ -451,6 +463,8 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                 const nm = nameField(n) ?? '<anon>';
                 const id = uniq(out, `${file}#${nm}`);
                 out.nodes.push({ id, label: nm, kind: 'function', source_file: file, source_location: loc(n) });
+                // Inside a function OR a method body: either way a local.
+                if (!topLevel) (out.nestedIds ??= []).push(id);
                 out.rawEdges.push({ sourceId: fileId, relation: 'member', targetName: nm, confidenceHint: 'EXTRACTED' });
                 const body = n.childForFieldName('body');
                 if (body) for (const c of namedChildren(body)) walk(c, classId, id, false);
@@ -526,6 +540,7 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                         source_file: file,
                         source_location: loc(d),
                     });
+                    if (!topLevel && !classId) (out.nestedIds ??= []).push(id);
                     out.rawEdges.push({
                         sourceId: classId ?? fileId,
                         relation: 'member',
@@ -631,8 +646,57 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                 }
                 break;
             }
+            case 'export_statement': {
+                const src = n.childForFieldName('source');
+                if (!src) break;
+                const spec = src.text.replace(/^['"`]/, '').replace(/['"`]$/, '');
+                const clause = firstNamed(n, new Set(['export_clause']));
+                const nsExport = firstNamed(n, new Set(['namespace_export']));
+                const re: NonNullable<FileExtract['reexports']>[number] = { spec };
+                if (clause) {
+                    re.names = [];
+                    for (const sp of namedChildren(clause)) {
+                        if (sp.type !== 'export_specifier') continue;
+                        const remote = sp.childForFieldName('name')?.text ?? sp.text;
+                        re.names.push({ remote, local: sp.childForFieldName('alias')?.text ?? remote });
+                    }
+                } else if (nsExport) {
+                    const idn = firstNamed(nsExport, new Set(['identifier']));
+                    if (idn) re.ns = idn.text;
+                } else re.star = true;
+                (out.reexports ??= []).push(re);
+                out.rawEdges.push({
+                    sourceId: fileId,
+                    relation: 'imports',
+                    targetName: baseName(spec),
+                    confidenceHint: 'EXTRACTED',
+                    moduleSpecifier: spec,
+                    importKind: 'namespace',
+                    localName: `\0reexport:${spec}`,
+                });
+                return;
+            }
             case 'call_expression': {
                 const fn = n.childForFieldName('function');
+                // `require('x')` and `import('x')` with a string literal name a
+                // module as plainly as an `import` statement does.
+                const args = n.childForFieldName('arguments');
+                const first = args ? namedChildren(args)[0] : undefined;
+                const arg0 = first?.type === 'string' ? first : null;
+                if (fn && arg0 && (fn.type === 'import' || (fn.type === 'identifier' && fn.text === 'require'))) {
+                    const spec = arg0.text.replace(/^['"`]/, '').replace(/['"`]$/, '');
+                    const holder = n.parent?.type === 'await_expression' ? n.parent.parent : n.parent;
+                    const bound = holder?.type === 'variable_declarator' ? holder.childForFieldName('name') : null;
+                    out.rawEdges.push({
+                        sourceId: fileId,
+                        relation: 'imports',
+                        targetName: baseName(spec),
+                        confidenceHint: 'EXTRACTED',
+                        moduleSpecifier: spec,
+                        importKind: 'namespace',
+                        localName: bound?.type === 'identifier' ? bound.text : `\0dynamic-import:${spec}`,
+                    });
+                }
                 if (fn) {
                     if (fn.type === 'identifier') {
                         out.rawEdges.push({

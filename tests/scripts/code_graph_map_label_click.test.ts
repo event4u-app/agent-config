@@ -60,11 +60,22 @@ async function clearSelection(page: Page): Promise<void> {
     await page.keyboard.press('Escape');
     await settle(page);
 }
-/** A name label whose centre lies on no node, so a click there can only reach the label. */
-async function freeLabel(page: Page, kind: string): Promise<Label> {
+/**
+ * A name label whose centre lies on no node, so a click there can only reach the
+ * label — and, with `room`, one that stays wholly on the stage after a pan by
+ * that much, since a label pushed past the edge is no longer drawn.
+ */
+async function freeLabel(page: Page, kind: string, room = { dx: 0, dy: 0 }): Promise<Label> {
     const lb = await boxes(page);
     const v = await view(page);
-    const label = (lb.labels ?? []).find((l) => l.kind === kind && !v.drawn.some((d) => Math.hypot(d.x - (l.x + l.w / 2), d.y - (l.y + l.h / 2)) < 30));
+    const stage = (await page.locator('#stage').boundingBox())!;
+    const label = (lb.labels ?? []).find(
+        (l) =>
+            l.kind === kind &&
+            l.x + l.w + room.dx <= stage.width &&
+            l.y + l.h + room.dy <= stage.height &&
+            !v.drawn.some((d) => Math.hypot(d.x - (l.x + l.w / 2), d.y - (l.y + l.h / 2)) < 30),
+    );
     expect(label, `a ${kind} label clear of the nodes`).toBeTruthy();
     return label!;
 }
@@ -99,7 +110,7 @@ describe('the Code workbench: a canvas label selects its node', () => {
 
     it('2D: hovering a name shows the pointer; a drag that starts on it pans and selects nothing; a double click opens the area, and there a file name selects the file', async () => {
         const page = await openCode();
-        const label = await freeLabel(page, 'area');
+        const label = await freeLabel(page, 'area', { dx: 90, dy: 50 });
         const lp = await stageAt(page, centre(label).x, centre(label).y);
         await page.mouse.move(lp.x, lp.y);
         expect(await page.locator('#stage').evaluate((c) => getComputedStyle(c).cursor)).toBe('pointer');

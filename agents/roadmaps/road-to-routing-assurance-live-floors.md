@@ -6,6 +6,7 @@ execution:
 owner: maintainer
 review_by: 2026-12-31
 estate_growth_exempt: "The later/ estate grows by one because a live-harness SUFFIX was split out of road-to-routing-assurance, which was archived in the same change -- so the ACTIVE estate shrank by one while later/ gained one, and the total plan count is unchanged. AI council 2026-08-25, 2/2, authorised the carry at that roadmap's own declared cut line; the alternative to this file was dropping four acceptance criteria, which the preservation test reserves to the owner. Growth here is preservation, not accumulation."
+estate_growth_exempt: "open_blockers +1: b-live-baseline-independence existed since the 2026-10-26 un-park but lacked the `blocker:` prefix, so lint_roadmap_blockers was red on main and the estate never counted it. Prefixing it adds no new gate, only counts the one the owner decision already names."
 estate_offset_exempt: "Not a new plan. This is the live-harness SUFFIX of road-to-routing-assurance, parked under agents/roadmaps/later/ by AI council verdict (2/2, 2026-08-25) at that roadmap's own declared cut line. later/ is excluded from the dashboard and from /roadmap:process-*, so it adds no active roadmap and needs no offset; the work is preserved rather than created."
 ---
 # Road to routing assurance — the live-harness floors
@@ -237,14 +238,23 @@ Offered by round `inbox-2026-10-at`, same terms:
 
 ## Blockers
 
-### b-live-baseline-independence
+### blocker: b-live-baseline-independence
 
+- **Status:** open
+- **Owner:** implementer — a session that did not author the Phase-2 corpus;
+  the 2026-10-26 owner decision (OQ-15) already settled spend and scope.
 - **Blocks:** every step in this roadmap.
-- **Owner:** maintainer.
+- **Recommendation:** (a) — a fresh session freezes the protocol first; it is
+  the only order in which the baseline stays neutral.
+- **If you do nothing:** no step runs, and the 25 USD pilot the owner approved
+  stays unspent.
+- **What to do:** pick exactly one — (a) start a session that did not author
+  the Phase-2 corpus and have it write the frozen execution protocol before
+  any baseline capture, or (b) re-park this roadmap under `later/` until such
+  a session is scheduled.
 - **Resolved when:** a session that did NOT author the Phase-2 corpus has
   frozen the execution protocol (model/provider version, prompts, sampling,
   retry and exclusion policy) in writing, before capturing any baseline.
-- **Status:** open.
 - **Why it is a blocker and not a note:** 0.2's artifact is the reference every
   floor below derives from. A baseline captured under discretionary choices made
   by the session being evaluated is not neutral, and the defect would be

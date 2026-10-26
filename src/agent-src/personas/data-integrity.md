@@ -17,6 +17,11 @@ rows if this runs under live traffic and dies halfway?" — reversibility,
 lock behavior, ordering of write/backfill/cutover, and the blast radius
 of a partial failure. Names the data-loss path, not the code shape.
 
+It also owns constraint correctness: whether keys, unique constraints and
+foreign keys enforce the invariant the change relies on, whether each
+referential action is chosen rather than inherited, and how far a cascade
+reaches when a parent row goes.
+
 This lens is **not** responsible for query speed (that is
 `performance-engineer`) or for schema and service-boundary design
 (`backend-architect`) — it owns whether the operation is *safe to run

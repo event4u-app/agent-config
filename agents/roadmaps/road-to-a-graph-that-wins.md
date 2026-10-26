@@ -23,6 +23,13 @@ entry_condition:
     maintainer, for confirming the parent is archived.
 review_by: 2026-12-07
 capability_gap: none
+relates:
+  - slug: road-to-edges-that-earn-their-target
+    relation: disjoint
+    note: "corrects name-resolution edges; this file measures them (2.6)"
+  - slug: road-to-a-graph-that-feeds-the-gate
+    relation: disjoint
+    note: "hook delivery and the detector-F feeder; its own Phase 3 detectors stay here"
 estate_growth_exempt: "THIS CHANGE (2026-10-26) moves this roadmap from later/ to active: active_roadmaps +1, later_roadmaps -1. Its entry_condition holds in the tree — the parent road-to-a-graph-that-is-shipped is archived and the owner named both benchmark subjects in the corpus header on 2026-10-23 — and the AI council decided the wake 2/2 on 2026-10-26 (agents/evidence/council/open-questions-inbox-aw-20261026.md). Active count becomes 5, the WIP cap of the owner directive of 2026-10-24."
 estate_offset_exempt: "Woken from later/, not added: the AI council decided the wake 2/2 on 2026-10-26 (agents/evidence/council/open-questions-inbox-aw-20261026.md), and the owner chose to land it. No active roadmap is finished, so none can be archived to offset it; the count reaches the WIP cap of 5 and stops there. Leaving it parked was rejected because its entry_condition already holds in the tree and the request has arrived four times."
 ---
@@ -34,7 +41,7 @@ estate_offset_exempt: "Woken from later/, not added: the AI council decided the 
 > plan — the two benchmark **subjects** ADR-260 § 5 reserves are test subjects the owner
 > names in the corpus header, and this file wakes on that edit.
 
-> **Arrivals:** 4 — latest `inbox-2026-10-aw` (2026-10-25): two 18.0.0 reviews read the entry condition as met (parent archived, both benchmark repositories named) and ask for the wake; no detector evaluates `entry_condition`, so it stays parked until someone triages it. Before that: `inbox-2026-10-aj` (2026-10-25): 17.2.0 reviews note both benchmark repositories are now named and the native graph gained SCIP, Laravel overlay and `agents/map/`; they ask for the wake decision, pinned SHAs, and bars that include the new layers and the map (orientation bench 2026-10-23 read TIE). The count before it read: 2 — latest `inbox-2026-10-m` (2026-10-12): 16.4.0 release reviews read the named benchmark repositories and ask that the benchmark finally run; no new fact. The count before it read: 1 — latest `inbox-2026-10-j` (2026-10-11), asking for step 1.2's
+> **Arrivals:** 5 — latest `inbox-2026-10-bb` (2026-10-26): a comparison round against an external code-graph tool asks for an opt-in oracle producer, per-mechanism edge precision/recall against it, and a same-roots parity run; landed as step 2.6, its correctness half went to `road-to-edges-that-earn-their-target`. Before that: 4 — latest `inbox-2026-10-aw` (2026-10-25): two 18.0.0 reviews read the entry condition as met (parent archived, both benchmark repositories named) and ask for the wake; no detector evaluates `entry_condition`, so it stays parked until someone triages it. Before that: `inbox-2026-10-aj` (2026-10-25): 17.2.0 reviews note both benchmark repositories are now named and the native graph gained SCIP, Laravel overlay and `agents/map/`; they ask for the wake decision, pinned SHAs, and bars that include the new layers and the map (orientation bench 2026-10-23 read TIE). The count before it read: 2 — latest `inbox-2026-10-m` (2026-10-12): 16.4.0 release reviews read the named benchmark repositories and ask that the benchmark finally run; no new fact. The count before it read: 1 — latest `inbox-2026-10-j` (2026-10-11), asking for step 1.2's
 > `route` relation so account-flow entry points (login, reset, OAuth callback)
 > can be classified and graph-backed missing-control checks become decidable;
 > earlier: none.
@@ -145,6 +152,13 @@ tracked.
 - [ ] 2.5 Run; publish both directions; no renegotiation. Record ADR-246/259's benchmark
       trigger as fired or not. Then, and only then, rewrite the skill description as a
       **class list** (which classes are graph-first, which stay grep-routine).
+- [ ] 2.6 Edge precision and recall per `resolved_via`, against the 2.2 oracle, on
+      `src/scripts/` and both subjects. The oracle index is produced by an indexer the
+      maintainer installs (`scip-typescript` first; PHP per 2.2), never fetched at
+      runtime (ADR-259); without one the runner exits naming it. A same-roots parity
+      run against the external tool the `inbox-2026-10-bb` round compared runs on the
+      maintainer's machine, recorded without the tool's name. Census baseline:
+      `agents/evidence/analysis/code-graph-edge-census-2026-10-26.md`.
 
 ## Phase 3 — The gate feeder
 - [ ] 3.1 Edge acceptance policy, one file: `accept: same-file, import-specifier,

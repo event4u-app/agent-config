@@ -144,6 +144,8 @@ export type ResolvedVia =
     /** C#: the one type of that name in the namespaces the file can see (its own, their parents, its `using`s). */
     | 'namespace-scope'
     | 'test-import'
+    /** `this.m()` / `self::m()` walked the class hierarchy to exactly one owner (confidence stays INFERRED). */
+    | 'class-hierarchy'
     | 'name-lookup'
     | 'dynamic'
     /**
@@ -198,7 +200,7 @@ export type EdgeProvider =
 // One space-separated string per list: this module ships in the hook bundle,
 // where an array literal costs a line per entry. `Words` splits it in the type.
 const STATED_WORDS =
-    'same-file import-specifier path-alias psr4 route-table directive-scan schema-call orm-relation di-binding lane-read compiler-index namespace-scope test-import literal-path literal-dotted fs-route literal-url' as const;
+    'same-file import-specifier path-alias psr4 route-table directive-scan schema-call orm-relation di-binding lane-read compiler-index namespace-scope test-import literal-path literal-dotted fs-route literal-url class-hierarchy' as const;
 const GUESS_WORDS = 'name-lookup dynamic foreign' as const;
 type Words<S extends string> = S extends `${infer H} ${infer T}` ? H | Words<T> : S;
 /** Mechanisms in neither list; must be `never` (a test asserts it). */
@@ -300,7 +302,7 @@ export interface CodeEdge {
      * without has NO in-repo candidate, so no amount of inference would find a
      * target.
      */
-    ambiguity_reason?: 'receiver-unknown' | 'hierarchy-unresolved';
+    ambiguity_reason?: 'receiver-unknown' | 'hierarchy-unresolved' | 'name-collision';
     /** The convention provider that drew this edge (ADR-298); absent on every other edge. */
     provider_id?: string;
     fact?: FactMeta;
