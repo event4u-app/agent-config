@@ -625,8 +625,8 @@ export function buildGraph(
      * Every repo-wide top-level declaration `name` could mean from `file`.
      *
      * A caller outside the test tree never binds to a test file's declaration
-     * while a non-test one exists. Sorted, so a collision lists its candidates
-     * in the same order on every build.
+     * by name — production code does not call into tests. Sorted, so a
+     * collision lists its candidates in the same order on every build.
      */
     const wideCandidates = (file: string, name: string, want: Capability, lang: Lang): string[] => {
         // `constructible` keeps the table it always read — every type kind,
@@ -637,8 +637,8 @@ export function buildGraph(
                 ? nodeKind.get(id) !== 'function'
                 : id.includes('#') && !id.includes('::') && satisfies(nodeKind.get(id), want),
         );
-        const prod = isTestFile(file) ? all : all.filter((id) => !isTestFile(id.split('#')[0] as string));
-        return [...new Set(prod.length > 0 ? prod : all)].sort();
+        const seen = isTestFile(file) ? all : all.filter((id) => !isTestFile(id.split('#')[0] as string));
+        return [...new Set(seen)].sort();
     };
 
     /**

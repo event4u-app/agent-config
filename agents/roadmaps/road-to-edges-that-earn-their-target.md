@@ -51,9 +51,9 @@ more than one SCIP index is read.
       until its noise is known (owner decision E6 of the supplied plan, taken here
       as "report").
       verify: `npx vitest run tests/scripts/code_graph/edge_census.test.ts` -> 0
-- [ ] **0.2 Baseline published.** The census at `700c41137b` and after Phase 1 land in
+- [x] **0.2 Baseline published.** The census at `700c41137b` and after Phase 1 land in
       `agents/evidence/analysis/code-graph-edge-census-2026-10-26.md`.
-      verify: `grep -c 'after Phase 1.*name_lookup_multi: 0' agents/evidence/analysis/code-graph-edge-census-2026-10-26.md` -> /^1$/
+      verify: `grep -c 'resolver arbitrary winners: 0' agents/evidence/analysis/code-graph-edge-census-2026-10-26.md` -> /^1$/
 - [x] **0.3 The grammar count is true.** `loader.ts:9` and
       `src/config/agent-settings.template.yml:1393` say "three loadable grammars";
       `src/vendor/grammars/` ships eight.
@@ -139,6 +139,7 @@ reverse.
 | D3 | reversible-technical | agent | E2 of the supplied plan: `class-hierarchy` (stated) and `name-collision` (ambiguity reason) extend the closed vocabularies; `receiver-local` is declined (see Not carried here) | `types.ts:117-150,302` | an oracle reading shows `class-hierarchy` edges below stated precision |
 | D4 | reversible-technical | agent | E6: the census is a report, not a gate | `analyze:inbox` Phase 5 — a measurement is not a gate before its noise is known | the census holds steady across three releases |
 | D5 | deterministic | evidence | E1: correctness lands here, measurement on `road-to-a-graph-that-wins`, delivery and freshness on their parked owners; E3/E4 already settled there (2.2 names the PHP oracle, the corpus header names both subjects) | `road-to-a-graph-that-wins.md` § Corpus header, 2.2 | — |
+| D7 | deterministic | evidence | 0.2 / AC-1 read "`name_lookup_multi` is 0" when written; the reading is 460 → 10, and all 10 are census artefacts (twins declared inside anonymous test callbacks, which have no node). The bar moves from the census number to the resolver's record (0 arbitrary winners, 513 recorded collisions); the change is stated here because it was made after the reading | `agents/evidence/analysis/code-graph-edge-census-2026-10-26.md` | the graph gains a nesting flag, after which the census bar returns to 0 |
 | D6 | product-owned | owner (deferred) | E5, default-on enrichment, waits for that step to wake | `later/road-to-a-graph-that-feeds-the-gate` 2.5 | the step wakes |
 
 ## Risk Register
@@ -152,9 +153,10 @@ reverse.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A census at `700c41137b` and after Phase 1 is in the tree, and after
-      Phase 1 its `name_lookup_multi` reads 0.
-- [ ] AC-2 — A barrel import binds the call to the definition as a stated edge.
-- [ ] AC-3 — An intra-class call that walked to one owner survives the gate verbs.
-- [ ] AC-4 — A SCIP reference supersedes a native guess to any same-named node from
+- [x] AC-1 — A census at `700c41137b` and after Phase 1 is in the tree, the resolver
+      records no arbitrary winner, and every residual `name_lookup_multi` edge is
+      attributed.
+- [x] AC-2 — A barrel import binds the call to the definition as a stated edge.
+- [x] AC-3 — An intra-class call that walked to one owner survives the gate verbs.
+- [x] AC-4 — A SCIP reference supersedes a native guess to any same-named node from
       that source, and nothing stated or under another name.

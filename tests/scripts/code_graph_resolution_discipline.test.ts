@@ -100,6 +100,14 @@ describe('name collision (1.2)', () => {
         expect(callsFrom(g, 'src/c.ts#go')[0]).toMatchObject({ target: 'src/a.ts#run', confidence: 'INFERRED' });
     });
 
+    it('never binds a production caller to a test file by name, even when it is the only candidate', async () => {
+        const g = await build([
+            { path: 'tests/a.test.ts', source: 'export function only() { return 2; }\n' },
+            { path: 'src/c.ts', source: 'export function go() { return only(); }\n' },
+        ]);
+        expect(callsFrom(g, 'src/c.ts#go')[0]?.target).toBe('symbol:only');
+    });
+
     it('does not bind a PHP `use` by base name when two classes share it', async () => {
         const g = await build([
             { path: 'One/Mailer.php', source: '<?php\nnamespace One;\nclass Mailer { public function send() {} }\n' },

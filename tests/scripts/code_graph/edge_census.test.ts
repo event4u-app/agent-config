@@ -41,6 +41,22 @@ describe('edgeCensus', () => {
         expect(c.name_lookup_multi).toBe(0);
     });
 
+    it('does not count a function nested inside another, nor a test file for a production caller', () => {
+        const graph = {
+            nodes: [
+                { ...node('a.ts#run', 'run'), source_location: [1, 0, 3, 0] },
+                { ...node('b.ts#outer', 'outer'), source_location: [1, 0, 9, 0] },
+                { ...node('b.ts#run', 'run'), source_location: [2, 0, 4, 0] },
+                node('tests/x.test.ts#run', 'run'),
+                node('d.ts', 'd.ts', 'file'),
+            ],
+            edges: [call('d.ts', 'a.ts#run'), call('tests/y.test.ts', 'a.ts#run')],
+        };
+        const c = edgeCensus(graph as never);
+        expect(c.name_lookup_calls).toBe(2);
+        expect(c.name_lookup_multi).toBe(1);
+    });
+
     it('counts symbol targets, the ambiguous ones, collisions and the suppressed counts', () => {
         const graph = {
             nodes: [node('d.ts', 'd.ts', 'file')],
