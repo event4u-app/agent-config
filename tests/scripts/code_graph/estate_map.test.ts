@@ -68,8 +68,9 @@ describe('the hub (5.11): the estate on the shared shell', () => {
         const html = fs.readFileSync(path.join(estateMapDir(), 'index.html'), 'utf-8');
         expect(html).toContain('href="#/projects"');
         expect(html).not.toContain('href="#/code"');
-        expect(html).toMatch(/\.pgraph line\.pfact \{[^}]*stroke-width: 2;/);
-        expect(html).toMatch(/\.pgraph line\.pguess \{[^}]*stroke-dasharray/);
+        expect(html).toMatch(/line\.pe-package \{[^}]*stroke-width: 2\.5px;[^}]*\}/);
+        expect(html).not.toMatch(/line\.pe-package \{[^}]*stroke-dasharray/);
+        expect(html).toMatch(/line\.pe-unique-name \{[^}]*stroke-dasharray/);
         expect(html).not.toMatch(/(src|href)="https?:/);
         const manifest = JSON.parse(fs.readFileSync(path.join(estateMapDir(), 'manifest.json'), 'utf-8')) as { kind: string; areas: { projects: { path: string; projects: number } } };
         expect(manifest).toMatchObject({ kind: 'hub', areas: { projects: { path: 'projects/hub.json', projects: 3 } } });
@@ -104,13 +105,17 @@ describe('the hub (5.11): the estate on the shared shell', () => {
         await indexEstate();
         expect(await cg('map', '--estate', '--no-verify')).toBe(0);
         const check = await verifyMap(path.join(estateMapDir(), 'index.html'), { hash: '#/projects' });
+        // This estate shares no port, image, service or call: the labels are one box per project and one per link.
+        const { payload } = hubData();
+        expect(payload.ports.length + payload.images.length + payload.services.length + payload.calls.length).toBe(0);
+        const labels = payload.projects.length + payload.edges.length;
         expect(check.verification, JSON.stringify(check)).not.toBe('failed');
         if (check.verification === 'verified') {
             expect(check.viewports.map((v) => v.name)).toEqual(['desktop', 'mobile-375', 'mobile-320']);
             for (const v of check.viewports) {
                 expect(v.pageErrors + v.externalRequests).toBe(0);
                 expect(v.horizontalScroll).toBe(false);
-                expect(v.views.every((x) => x.labels === 3 && x.outside === 0 && x.overlapping === 0)).toBe(true);
+                expect(v.views.every((x) => x.labels === labels && x.outside === 0 && x.overlapping === 0)).toBe(true);
             }
         }
     }, 180_000);

@@ -12,8 +12,12 @@ import { KNOWLEDGE_AREA_IDS, type MapAreas, type RuntimePayload } from '../../sr
 import { sampleAreas, wit } from './code_graph_map_areas_fixture.js';
 
 // The shell around the areas: routing, the area pages with and without a
-// payload, search over every kind, the freshness banner, both languages, and
+// payload, search over every kind, the freshness reason, both languages, and
 // the page at every width in both themes.
+
+// The Overview draws the design's nine layer cards: Code, Database, Integrations,
+// Environment, CI/CD, Infrastructure, Knowledge, Impact and Projects.
+const OVERVIEW_LAYERS = 9;
 
 let browser: Browser;
 let empty: string;
@@ -65,7 +69,7 @@ describe('the router', () => {
         expect((await route(page)).route).toBe('overview');
         expect(await page.locator('#wb').isVisible()).toBe(false);
         expect(await page.locator('#av').isVisible()).toBe(true);
-        expect(await page.locator('.ocard').count()).toBe(1 + KNOWLEDGE_AREA_IDS.length);
+        expect(await page.locator('.ocard').count()).toBe(OVERVIEW_LAYERS);
         expect(await page.locator('#areanav a[data-route="overview"]').getAttribute('aria-current')).toBe('page');
         await page.click('#areanav a[data-route="code"]');
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'code');
@@ -85,11 +89,12 @@ describe('the router', () => {
         await projects.close();
     });
 
-    it('the Code breadcrumb starts at the map home', async () => {
+    it('the Code breadcrumb starts at the repository, the nav leads home', async () => {
         const page = await open(empty, '#/code');
-        await page.click('#crumbs .crumb-map');
+        expect((await page.locator('#crumbs button').first().textContent())?.trim()).toBe('Repo');
+        await page.click('#areanav a[data-route="overview"]');
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'overview');
-        expect(await page.locator('.ocard').count()).toBe(1 + KNOWLEDGE_AREA_IDS.length);
+        expect(await page.locator('.ocard').count()).toBe(OVERVIEW_LAYERS);
         await page.close();
     });
 });
@@ -97,7 +102,11 @@ describe('the router', () => {
 describe('an area without data is shown, says so and names the reason', () => {
     it('every knowledge area with no reader run', async () => {
         const page = await open(empty, '#/overview');
-        for (const id of KNOWLEDGE_AREA_IDS) {
+        // The agent area's verb list is written on every map, so only the others can be without a reader.
+        const written = await page.evaluate(() => Object.keys((JSON.parse(document.getElementById('map-data')!.textContent!) as { areas: object }).areas));
+        const unread = KNOWLEDGE_AREA_IDS.filter((id) => !written.includes(id));
+        expect(unread.length).toBeGreaterThanOrEqual(KNOWLEDGE_AREA_IDS.length - 1);
+        for (const id of unread) {
             expect(await page.locator(`#areanav a[data-route="${id}"]`).getAttribute('class')).toContain('empty');
             await page.evaluate((r) => { location.hash = `#/${r}`; }, id);
             await page.waitForFunction((r) => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === r, id);
@@ -151,15 +160,16 @@ describe('an area with a payload renders its facts with their witnesses', () => 
 
     it('interfaces, delivery and agent draw their own facts; explain is the graph verb with its CLI', async () => {
         const page = await open(full, '#/interfaces');
-        expect(await page.locator('#av-main').textContent()).toMatch(/partner[\s\S]*soap[\s\S]*PARTNER_URL/);
-        await page.click('#av-bar [role="tab"]:has-text("Operations")');
-        expect(await page.locator('#av-main').textContent()).toMatch(/partner · GetStock/);
+        // Interfaces lays out its own rails: the services sit in the left rail, the operations in the centre.
+        expect(await page.locator('#av').textContent()).toMatch(/partner[\s\S]*soap[\s\S]*PARTNER_URL/i);
+        await page.click('#av [role="tab"]:has-text("Operations")');
+        expect(await page.locator('#av').textContent()).toMatch(/partner[\s\S]*GetStock/);
         await page.evaluate(() => { location.hash = '#/delivery'; });
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'delivery');
-        expect(await page.locator('#av-main').textContent()).toMatch(/Stage 1[\s\S]*test[\s\S]*Stage 2[\s\S]*deploy/);
+        expect(await page.locator('#av-main').textContent()).toMatch(/Check[\s\S]*test[\s\S]*Roll out[\s\S]*deploy/);
         await page.evaluate(() => { location.hash = '#/agent'; });
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'agent');
-        expect(await page.locator('#av-main').textContent()).toContain('agent-config code-graph explain <seed>');
+        expect(await page.locator('#av').textContent()).toContain('agent-config code-graph explain <seed>');
         await page.close();
     });
 });
@@ -178,27 +188,29 @@ describe('the local environment on the Delivery area (DEC-1)', () => {
         ],
     });
 
-    it('shows Compose services and published ports from the Runtime payload, with a collision marked', async () => {
+    it('shows Compose services as cards, a host port two of them publish as a conflict, and the service in the rail', async () => {
         const areas = sampleAreas();
         areas.runtime = services();
         const page = await open((await drawn(areas)).html, '#/delivery');
+        await page.click('#av-bar [role="tab"]:has-text("Local environment")');
         const tabs = await page.locator('#av-bar [role="tab"]').allTextContents();
-        expect(tabs[0]).toBe('Local environment');
-        expect(tabs).toEqual(expect.arrayContaining(['Pipeline', 'Build → deploy', 'Findings']));
+        expect(tabs).toEqual(['Local environment', 'CI/CD']);
         const main = (await page.locator('#av-main').textContent()) ?? '';
         expect(main).toMatch(/web[\s\S]*nginx:1\.25[\s\S]*api[\s\S]*db/);
-        expect(main).toMatch(/Published ports \(2\)/);
-        expect(await page.locator('#av-main .tbl tbody tr').count()).toBe(3);
-        expect(await page.locator('#av-main .tbl .st.bad').count()).toBe(2);
-        expect(await page.locator('#av-bar').textContent()).toMatch(/3 services · 2 published ports · declared, never observed/);
-        await page.locator('#av-main .tname', { hasText: 'db' }).click();
+        expect(main).toMatch(/Networks[\s\S]*front · web, api/);
+        expect(await page.locator('#av-main .ops-card').count()).toBe(3);
+        expect(await page.locator('#av-main .ops-card .st.ops-bad').count()).toBe(2);
+        expect(await page.locator('#av-main .ops-card', { hasText: 'db' }).locator('.st.ops-bad').count()).toBe(0);
+        expect(await page.locator('#av-bar').textContent()).toMatch(/3 services · 1 network · 1 conflict/);
+        // Observed state and health are never read: the elements stay and say so.
+        expect(await page.locator('#av-main .ops-card .nodata-tag').count()).toBe(3);
+        await page.locator('#av-main .ops-card', { hasText: 'db' }).click();
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === 'local/db');
-        expect(await page.locator('#av-detail').textContent()).toMatch(/docker-compose\.yml:15/);
-        // The facts stay where the Runtime reader stored them.
+        expect(await page.locator('#av-right-body').textContent()).toMatch(/Compose service[\s\S]*db[\s\S]*docker-compose\.yml:15/);
+        // The facts stay where the Runtime reader stored them; Runtime itself shows IaC only.
         await page.evaluate(() => { location.hash = '#/runtime'; });
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'runtime');
-        await page.click('#av-bar [role="tab"]:has-text("Services")');
-        expect(await page.locator('#av-main').textContent()).toMatch(/web[\s\S]*api[\s\S]*db/);
+        expect(await page.locator('#av-main').textContent()).toMatch(/no Terraform or Kubernetes resource was read/);
         await page.close();
     });
 
@@ -206,11 +218,90 @@ describe('the local environment on the Delivery area (DEC-1)', () => {
         const page = await open((await drawn({ runtime: services() })).html, '#/delivery');
         expect(await page.locator('#av-bar [role="tab"]').allTextContents()).toEqual(['Local environment']);
         expect(await page.locator('#nodata-delivery').count()).toBe(0);
-        expect(await page.locator('#av-main').textContent()).toMatch(/web[\s\S]*8080\/tcp/);
+        expect(await page.locator('#av-main').textContent()).toMatch(/web[\s\S]*8080→80/);
         await page.close();
         const none = await open(empty, '#/delivery');
         expect(await none.locator('#nodata-delivery').isVisible()).toBe(true);
         await none.close();
+    });
+});
+
+describe('the Runtime page is the design\'s Infrastruktur page', () => {
+    const iac = (): RuntimePayload => ({
+        reader: 'runtime',
+        completeness: 'complete',
+        findings: [{ id: 'RT-6', severity: 'medium', subject: 'resource:tf:infra:aws_iam_role.app', message: 'aws_instance.app references aws_iam_role.app, which no file declares', completeness: 'complete', witnesses: [wit('infra/main.tf', 9), wit('infra/main.tf', 3)] }],
+        environments: ['shop'],
+        resources: [
+            { name: 'aws_instance.app', type: 'aws_instance', environments: [], witness: wit('infra/main.tf', 3) },
+            { name: 'aws_security_group.web', type: 'aws_security_group', environments: [], witness: wit('infra/main.tf', 12) },
+            { name: 'Deployment/api', type: 'Deployment', environments: ['shop'], witness: wit('k8s/app.yaml', 2, 'confirmed') },
+        ],
+        services: [],
+        links: [
+            { from: 'aws_instance.app', to: 'aws_security_group.web', relation: 'references', witness: wit('infra/main.tf', 5) },
+            { from: 'aws_instance.app', to: 'aws_iam_role.app', relation: 'references', witness: wit('infra/main.tf', 9) },
+        ],
+    });
+
+    it('zones per folder, the raw switch, the environment grid, and the resource rail with its finding', async () => {
+        const page = await open((await drawn({ runtime: iac() })).html, '#/runtime');
+        expect(await page.locator('#av-bar [role="tab"]').allTextContents()).toEqual(['Topology', 'Environment comparison']);
+        // The comparison: one column per environment, the stands the map cannot read tagged with why.
+        expect(await page.locator('#av-main .ops-th').allTextContents()).toEqual(['Resource', 'shop']);
+        expect(await page.locator('#av-main').textContent()).toMatch(/P, R and O need a plan file/);
+        await page.click('#av-bar [role="tab"]:has-text("Topology")');
+        const zones = await page.locator('#av-main .ops-zone-outer .ops-zname').allTextContents();
+        expect(zones.sort()).toEqual(['aws · infra/', 'kubernetes · k8s/']);
+        // Cleaned: the security group and its link are hidden; the raw view shows them.
+        expect(await page.locator('#av-main .ops-res', { hasText: 'aws_security_group.web' }).count()).toBe(0);
+        expect(await page.locator('#av-bar [role="switch"]').getAttribute('aria-checked')).toBe('false');
+        expect(await page.locator('#av-bar [role="switch"]').textContent()).toBe('Cleaned · 1 link hidden');
+        expect(await page.locator('#av-main .ops-links').textContent()).toMatch(/aws_iam_role\.app \(references\) · declared in no file/);
+        await page.click('#av-bar [role="switch"]');
+        expect(await page.locator('#av-main .ops-res.raw', { hasText: 'aws_security_group.web' }).count()).toBe(1);
+        expect(await page.locator('#av-main .ops-links').textContent()).toMatch(/aws_instance\.app → aws_security_group\.web/);
+        // The resource with a finding is picked first and shows it.
+        expect(await page.locator('#av-main .ops-res.on').textContent()).toMatch(/aws_instance\.app[\s\S]*drift\?/);
+        expect(await page.locator('#av-right-body').textContent()).toMatch(/infra\/main\.tf:3[\s\S]*no data[\s\S]*RT-6/);
+        await page.locator('#av-main .ops-res', { hasText: 'Deployment/api' }).click();
+        await page.waitForFunction(() => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === 'resource/Deployment/api');
+        expect(await page.locator('#av-right-body').textContent()).toMatch(/Deployment · shop[\s\S]*k8s\/app\.yaml:2[\s\S]*No findings/);
+        await page.close();
+    });
+});
+
+describe('the Delivery CI/CD view judges each job per scenario, never inventing a result', () => {
+    const ci = (): NonNullable<MapAreas['delivery']> => ({
+        reader: 'delivery',
+        completeness: 'complete',
+        findings: [{ id: 'DL-3', severity: 'medium', subject: 'environment:.github/workflows/ci.yml#production', message: 'production has no manual gate', completeness: 'complete', witnesses: [wit('.github/workflows/ci.yml', 20)] }],
+        workflows: [{ file: '.github/workflows/ci.yml', name: 'CI', triggers: ['push', 'pull_request'], events: [{ event: 'push', branches: ['main'], paths: false }, { event: 'pull_request', branches: [], paths: false }], witness: wit('.github/workflows/ci.yml', 1) }],
+        jobs: [
+            { id: '.github/workflows/ci.yml#test', workflow: '.github/workflows/ci.yml', name: 'test', needs: [], uses: [], isTest: true, witness: wit('.github/workflows/ci.yml', 8) },
+            { id: '.github/workflows/ci.yml#deploy', workflow: '.github/workflows/ci.yml', name: 'deploy', needs: ['.github/workflows/ci.yml#test'], environment: 'production', uses: [], isDeploy: true, witness: wit('.github/workflows/ci.yml', 14) },
+            { id: '.github/workflows/ci.yml#gate', workflow: '.github/workflows/ci.yml', name: 'gate', needs: [], uses: [], condition: "vars.ON == 'true'", witness: wit('.github/workflows/ci.yml', 18) },
+        ],
+        environments: ['production'],
+        chain: [],
+    });
+    const runs = async (page: Page): Promise<Record<string, string>> =>
+        Object.fromEntries(await page.locator('#av-main .ops-job').evaluateAll((bs) => bs.map((b) => [b.querySelector('.ops-jname')?.textContent ?? '', b.querySelector('.st')?.textContent ?? ''])));
+
+    it('push → main runs, a tag skips the branch-filtered workflow, a condition is unknown; findings land on the job', async () => {
+        const page = await open((await drawn({ delivery: ci() })).html, '#/delivery');
+        expect(await page.locator('#av-bar [role="radio"]').allTextContents()).toEqual(['push → main', 'pull_request', 'tag v1.2.0']);
+        expect(await runs(page)).toEqual({ test: 'skipped', deploy: 'skipped', gate: 'skipped' });
+        await page.click('#av-bar [role="radio"]:has-text("push → main")');
+        expect(await page.locator('#av-bar [role="radio"][aria-checked="true"]').textContent()).toBe('push → main');
+        expect(await runs(page)).toEqual({ test: 'runs', deploy: 'runs', gate: 'unknown' });
+        expect(await page.locator('#av-main').textContent()).toMatch(/Check[\s\S]*test[\s\S]*gate[\s\S]*Production · Clean up[\s\S]*deploy/);
+        await page.locator('#av-main .ops-job', { hasText: 'deploy' }).click();
+        await page.waitForFunction(() => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === 'job/.github/workflows/ci.yml#deploy');
+        expect(await page.locator('#av-right-body').textContent()).toMatch(/Job · ci\.yml[\s\S]*deploy[\s\S]*push → main[\s\S]*DL-3/);
+        await page.click('#av-bar [role="radio"]:has-text("pull_request")');
+        expect(await runs(page)).toEqual({ test: 'runs', deploy: 'runs', gate: 'unknown' });
+        await page.close();
     });
 });
 
@@ -235,27 +326,27 @@ describe('the hub on the same shell (5.11)', () => {
         skipped: [],
     });
 
-    it('routes only to Projects, draws the projects, the service map and the detail with both witnesses', async () => {
+    it('is the global-scope page: banner, registry, every link drawn by kind, and the picked link with both witnesses', async () => {
         const html = path.join(fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cg-hub-'))), 'index.html');
         roots.push(path.dirname(html));
-        fs.writeFileSync(html, renderHub(payload()));
+        fs.writeFileSync(html, renderHub(payload(), path.dirname(html)));
         const page = await open(html);
         expect(await route(page)).toEqual({ route: 'projects', item: '' });
-        expect(await page.locator('#areanav a').allTextContents()).toEqual(['Projects']);
-        expect(await page.locator('#pin-commit').textContent()).toMatch(/HUB/);
+        expect(await page.locator('#areanav').isVisible()).toBe(false);
+        expect(await page.locator('#hub-banner').textContent()).toMatch(/GLOBAL SCOPE[\s\S]*cg-hub-[\s\S]*this machine only/);
+        expect(await page.locator('.brand-name.hub').textContent()).toContain('ESTATE MAP');
+        expect(await page.locator('#pin-fresh').textContent()).toBe('2 projects · 1 indexed');
         expect(await page.locator('#banner').isVisible()).toBe(false);
-        expect(await page.locator('.pgraph text.plabel').allTextContents()).toEqual(['alpha', 'beta']);
-        expect(await page.locator('.pgraph line.pfact').count()).toBe(1);
-        expect(await page.evaluate(() => (window as unknown as { __mapLabelBoxes: { boxes: unknown[] } }).__mapLabelBoxes.boxes.length)).toBe(2);
-        await page.click('#av-bar [role="tab"]:has-text("Service map")');
-        const calls = (await page.locator('#av-main').textContent()) ?? '';
-        expect(calls).toMatch(/GET \/api\/v1\/orders\/\{id\}[\s\S]*beta · GET \/orders\/:id/);
-        expect(calls).toMatch(/POST \/audit-log[\s\S]*no route matches/);
-        await page.locator('#av-main .rowpick', { hasText: 'GET /api/v1/orders/{id}' }).click();
-        await page.waitForFunction(() => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === 'call/0');
-        expect(await page.locator('#av-detail').textContent()).toMatch(/alpha · src\/orders\.ts:2[\s\S]*beta · src\/app\.ts:6/);
-        await page.click('#av-bar [role="tab"]:has-text("Port collisions")');
-        expect(await page.locator('#av-main').textContent()).toMatch(/8080\/tcp[\s\S]*alpha[\s\S]*web[\s\S]*beta[\s\S]*api/);
+        expect((await page.locator('#av-left-body .ops-regname').allTextContents()).sort()).toEqual(['alpha', 'beta']);
+        expect((await page.locator('.ops-pnode .ops-pname').allTextContents()).sort()).toEqual(['alpha', 'beta']);
+        for (const k of ['package', 'call', 'shared']) expect(await page.locator(`.ops-gsvg line.pe-${k}`).count()).toBe(1);
+        // The call that lands on a route is the link picked first.
+        expect(await page.locator('#av-right-body').textContent()).toMatch(/call → route[\s\S]*alpha → beta[\s\S]*alpha · src\/orders\.ts:2[\s\S]*beta · src\/app\.ts:6/);
+        expect(await page.locator('#av-main').textContent()).toMatch(/Calls without a target \(1\)[\s\S]*POST \/audit-log[\s\S]*no route matches/);
+        await page.locator('.ops-elabel', { hasText: '8080/tcp' }).click();
+        await page.waitForFunction(() => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === 'edge/2');
+        expect(await page.locator('#av-right-body').textContent()).toMatch(/shared host port[\s\S]*alpha · web · docker-compose\.yml:5[\s\S]*beta · api · docker-compose\.yml:5/);
+        expect(await page.locator('.ops-gsvg line.pe-shared.on').count()).toBe(1);
         await page.fill('#search', 'alp');
         expect(await page.locator('#results button').first().textContent()).toMatch(/Projects · alpha/);
         await page.close();
@@ -267,15 +358,16 @@ describe('the hub on the same shell (5.11)', () => {
     it('links a project to its page only where one exists, and renders in both languages and at every width', async () => {
         const html = path.join(fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cg-hub-'))), 'index.html');
         roots.push(path.dirname(html));
-        fs.writeFileSync(html, renderHub(payload()));
+        fs.writeFileSync(html, renderHub(payload(), path.dirname(html)));
         const page = await open(html, '#/projects/project%2Faaaa-1');
-        expect(await page.locator('#av-detail a[href="aaaa-1/index.html"]').count()).toBe(1);
+        expect(await page.locator('#av-right-body a[href="aaaa-1/index.html"]').count()).toBe(1);
         await page.evaluate(() => { location.hash = '#/projects/project%2Fbbbb-2'; });
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === 'project/bbbb-2');
-        expect(await page.locator('#av-detail a').count()).toBe(0);
-        expect(await page.locator('#av-detail').textContent()).toContain('no map drawn yet');
+        expect(await page.locator('#av-right-body a').count()).toBe(0);
+        expect(await page.locator('#av-right-body').textContent()).toContain('no map drawn yet');
         await page.click('#lang');
-        expect(await page.locator('#areanav a').allTextContents()).toEqual(['Projekte']);
+        expect(await page.locator('#hub-scope').textContent()).toBe('GLOBALER SCOPE');
+        expect(await page.locator('#search').getAttribute('placeholder')).toBe('Projekt, Paket, Vertrag …');
         expect(await page.evaluate(() => document.body.innerText)).not.toMatch(/undefined|\[object Object\]|NaN/);
         await page.close();
         const problems: string[] = [];
@@ -284,11 +376,10 @@ describe('the hub on the same shell (5.11)', () => {
                 const p = await browser.newPage({ viewport: { width, height: 800 }, colorScheme: scheme });
                 let errors = 0;
                 p.on('pageerror', () => { errors += 1; });
-                for (const tab of ['', 'Service map', 'Port collisions']) {
-                    await p.goto(`${pathToFileURL(html).href}#/projects`);
-                    if (tab) await p.click(`#av-bar [role="tab"]:has-text("${tab}")`);
+                for (const hash of ['#/projects', '#/projects/edge%2F2', '#/projects/project%2Fbbbb-2']) {
+                    await p.goto(`${pathToFileURL(html).href}${hash}`);
                     const scroll = await p.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
-                    if (errors || scroll) problems.push(`${scheme} ${width} ${tab || 'Projects'}: errors ${errors}, scroll ${scroll}`);
+                    if (errors || scroll) problems.push(`${scheme} ${width} ${hash}: errors ${errors}, scroll ${scroll}`);
                 }
                 await p.close();
             }
@@ -298,9 +389,9 @@ describe('the hub on the same shell (5.11)', () => {
 });
 
 describe('the overview', () => {
-    it('one card per area, with the fact state and its reason, a filter and tours', async () => {
+    it('one card per design layer, with the fact state and its reason, a filter and tours', async () => {
         const page = await open(full, '#/overview');
-        expect(await page.locator('.ocard').count()).toBe(1 + KNOWLEDGE_AREA_IDS.length);
+        expect(await page.locator('.ocard').count()).toBe(OVERVIEW_LAYERS);
         // Data holds a changed and a gone witness.
         expect(await page.locator('#ov-data').textContent()).toMatch(/contradicted[\s\S]*changed or gone/);
         expect(await page.locator('#ov-interfaces').textContent()).toMatch(/1 of 3/);
@@ -309,7 +400,7 @@ describe('the overview', () => {
         await page.click('.ov-filters button:has-text("With data")');
         expect(await page.locator('#ov-impact').count()).toBe(0);
         expect(await page.locator('#ov-data').count()).toBe(1);
-        await page.click('.ov-filters button:has-text("No data yet")');
+        await page.click('.ov-filters button:has-text("Planned")');
         expect(await page.locator('#ov-impact').count()).toBe(1);
         expect(await page.locator('#ov-code').count()).toBe(0);
         expect(await page.locator('#av-main').textContent()).toMatch(/Then the partner service\s*input changed/);
@@ -334,7 +425,7 @@ describe('search covers every kind; a preset only narrows the kind', () => {
         expect(await hits.first().textContent()).toBe('Interfaces · partner');
         await hits.first().click();
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === 'service/partner');
-        expect(await page.locator('#av-detail').textContent()).toContain('PARTNER_URL');
+        expect(await page.locator('#av-side').textContent()).toContain('PARTNER_URL');
         await page.close();
     });
 
@@ -348,16 +439,17 @@ describe('search covers every kind; a preset only narrows the kind', () => {
     });
 });
 
-describe('the freshness banner', () => {
-    it('names the reason while the graph is behind HEAD, on every area, and is absent when fresh', async () => {
-        for (const hash of ['', '#/overview', '#/data']) {
+describe('the freshness reason', () => {
+    it('rides on the header chip while the graph is behind HEAD, on every area, with no banner row; none when fresh', async () => {
+        for (const hash of ['', '#/overview', '#/data', '#/code']) {
             const page = await open(behind, hash);
-            expect(await page.locator('#banner').isVisible()).toBe(true);
-            expect(await page.locator('#banner').textContent()).toMatch(/3 commit\(s\) behind HEAD[\s\S]*Confirm a witness/);
+            expect(await page.locator('#banner').isVisible()).toBe(false);
+            expect(await page.locator('#pin-fresh').textContent()).toBe('BEHIND:3');
+            expect(await page.locator('#pin-fresh').getAttribute('title')).toMatch(/3 commit\(s\) behind HEAD[\s\S]*Confirm a witness/);
             await page.close();
         }
         const fresh = await open(full);
-        expect(await fresh.locator('#banner').isVisible()).toBe(false);
+        expect(await fresh.locator('#pin-fresh').getAttribute('title')).toBeNull();
         await fresh.close();
     });
 });

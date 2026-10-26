@@ -107,6 +107,11 @@ describe('every area is drawn from facts, every fact with a witness', () => {
         const getStock = s.flatMap((x) => x.operations).find((o) => o.name === 'GetStock')!;
         expect(getStock.callers.map((w) => w.file)).toEqual(['app/Services/PartnerClient.php']);
         expect(getStock.contract?.file).toBe('resources/wsdl/stock.wsdl');
+        // Each service names the contract files that describe it and the hosts written in code, never a URL value.
+        expect(s.find((x) => x.name === 'StockService')?.contracts).toEqual(['resources/wsdl/stock.wsdl']);
+        expect(s.find((x) => x.name === 'partner')?.contracts).toEqual(['contracts/partner.openapi.yaml']);
+        for (const x of s) for (const h of x.hosts ?? []) expect(h).not.toMatch(/[/:]/);
+        expect(s.filter((x) => (x.contracts ?? []).length === 0).every((x) => x.operations.every((o) => o.contract === undefined))).toBe(true);
     });
 
     it('Runtime and Delivery: services with ports, resources, workflows, jobs and the deploy chain', () => {
@@ -125,6 +130,24 @@ describe('every area is drawn from facts, every fact with a witness', () => {
         expect(m.affected.find((a) => a.layer === 'data')?.name).toBe('comments.body');
         expect(m.risk!.terms.map((t) => t.term)).toContain('columns');
         expect(m.risk!.total).toBe(m.risk!.terms.reduce((n, t) => n + t.contribution, 0));
+        // Every contribution can be re-derived on the page as count × weight.
+        for (const t of m.risk!.terms) expect(t.contribution, t.term).toBe(t.count! * t.weight!);
+    });
+
+    it('Agent: the context pack the working diff seeds, each item at a witness, cut to its budget', () => {
+        const pk = areas.agent!.contextPack!;
+        expect(pk.items.length).toBeGreaterThan(0);
+        expect(pk.items.length).toBeLessThanOrEqual(pk.returned);
+        expect(pk.usedTokens).toBeLessThanOrEqual(pk.budgetTokens);
+        expect(pk.hasMore).toBe(pk.total > pk.returned);
+        expect(pk.items.filter((i) => i.why === 'changed by the diff').map((i) => i.witness.file)).toContain(areas.impact!.changed[0]);
+        for (const it of pk.items) expect(['confirmed', 'moved', 'changed', 'gone', 'added', 'unconfirmed']).toContain(it.witness.confirm);
+    });
+
+    it('Agent: no pack without a cache or without a change', () => {
+        const g = JSON.parse(fs.readFileSync(path.join(root, '.g', 'graph.json'), 'utf-8')) as CodeGraph;
+        expect(produceAreas(root, g, {}).areas.agent!.contextPack).toBeUndefined();
+        expect(produceAreas(root, g, { cachePath: path.join(root, '.g', 'graph.json'), hunks: [] }).areas.agent!.contextPack).toBeUndefined();
     });
 
     it('Agent: exactly the verbs the CLI routes, each MCP tool named exists', () => {
@@ -132,6 +155,7 @@ describe('every area is drawn from facts, every fact with a witness', () => {
         expect(areas.agent!.verbs.map((v) => v.name)).toEqual(AGENT_VERBS.filter((v) => routed.has(v.name)).map((v) => v.name));
         expect(areas.agent!.verbs.map((v) => v.name)).toEqual(expect.arrayContaining(['query', 'explain', 'impact', 'review-risk']));
         for (const v of areas.agent!.verbs) if (v.mcp) expect(Object.keys(GRAPH_TOOLS), v.name).toContain(v.mcp.split(' ')[0]);
+        for (const v of areas.agent!.verbs) expect([v.input, v.output, v.guarantee].every((x) => typeof x === 'string' && x.length > 0), v.name).toBe(true);
         expect(cliVerbs(os.tmpdir()).size).toBe(0);
     });
 });

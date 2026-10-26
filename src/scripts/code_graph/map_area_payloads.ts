@@ -44,8 +44,10 @@ import type {
     SourceRung,
     Witness,
 } from './map_areas.js';
+import { loadGraph } from './query.js';
 import { diffHunks, type Hunk, reviewRisk, type RiskItem } from './review_risk.js';
 import type { CodeEdge, CodeGraph, CodeNode } from './types.js';
+import { contextPack } from './verify/pack.js';
 
 export interface ErdPage {
     cluster: string;
@@ -69,6 +71,8 @@ export interface ProduceOptions {
     added?: readonly string[];
     /** Hunks to use instead of running `git diff` (tests). */
     hunks?: Hunk[];
+    /** The graph cache: with it, the Agent area carries the context pack the working diff seeds. */
+    cachePath?: string;
 }
 
 const LANES_OF_AREA = { data: 'data', interfaces: 'interfaces', runtime: 'runtime', delivery: 'delivery' } as const;
@@ -154,12 +158,6 @@ function nodeWitness(c: Ctx, n: CodeNode | undefined): Witness | null {
 
 function edgeWitness(c: Ctx, e: CodeEdge): Witness | null {
     return e.fact ? witness(c, e.fact.witness, e.fact.rung) : nodeWitness(c, c.byId.get(e.source));
-}
-
-function refWitness(c: Ctx, ref: unknown): Witness | null {
-    if (typeof ref !== 'string') return null;
-    const m = /^(.*):(\d+):([0-9a-f]{6,})$/.exec(ref);
-    return m ? witness(c, { file: m[1] as string, line: Number(m[2]), hash: m[3] as string }) : null;
 }
 
 const attr = (n: CodeNode | undefined, k: string): unknown => n?.fact?.attrs?.[k];
@@ -401,6 +399,8 @@ function interfacesPayload(c: Ctx, findings: AreaFinding[], st: LaneState): Inte
             direction: proto === 'webhook' ? 'inbound' : 'outbound',
             configNames: [...configNames].sort(),
             operations: operations.sort((a, b) => (a.name < b.name ? -1 : 1)),
+            ...(strs(attr(s, 'contracts')).filter(safeFile).length ? { contracts: strs(attr(s, 'contracts')).filter(safeFile).sort() } : {}),
+            ...(strs(attr(s, 'hosts')).length ? { hosts: strs(attr(s, 'hosts')).sort() } : {}),
             witness: sw,
         });
     }
@@ -440,6 +440,10 @@ function runtimePayload(c: Ctx, findings: AreaFinding[], st: LaneState): Runtime
             ports,
             networks: target('on-network').map((n) => n.label).sort(),
             envNames: [...envNames].sort(),
+            volumes: outs
+                .filter((e) => e.relation === 'mounts')
+                .map((e) => ({ name: String(e.fact?.attrs?.['target_name'] ?? c.byId.get(e.target)?.label ?? e.target), target: String(e.fact?.attrs?.['target'] ?? '') })),
+            dependsOn: outs.filter((e) => e.relation === 'depends-on').map((e) => String(e.fact?.attrs?.['target_name'] ?? c.byId.get(e.target)?.label ?? e.target)),
             witness: w,
         });
     }
@@ -455,6 +459,16 @@ function runtimePayload(c: Ctx, findings: AreaFinding[], st: LaneState): Runtime
         const ns = attr(r, 'namespace');
         resources.push({ name: r.label, type, ...(typeof module === 'string' ? { module } : {}), environments: typeof ns === 'string' ? [ns] : [], witness: w });
     }
+    const links: NonNullable<RuntimePayload['links']> = [];
+    for (const e of c.graph.edges) {
+        if (e.fact?.lane !== 'runtime' || c.byId.get(e.source)?.kind !== 'resource') continue;
+        const tgt = c.byId.get(e.target);
+        if (tgt && tgt.kind !== 'resource') continue;
+        const w = edgeWitness(c, e);
+        if (!w) continue;
+        const mech = e.fact.attrs?.['mechanism'] ?? e.fact.attrs?.['name'];
+        links.push({ from: c.byId.get(e.source)!.label, to: tgt?.label ?? String(e.fact.attrs?.['target_name'] ?? e.target), relation: e.relation, ...(typeof mech === 'string' ? { mechanism: mech } : {}), witness: w });
+    }
     const environments = [...new Set([...c.graph.nodes.filter((n) => n.kind === 'environment' && n.fact?.lane === 'runtime').map((n) => n.label), ...resources.flatMap((r) => r.environments)])].sort();
     if (!st.ran && services.length === 0 && resources.length === 0) return null;
     return {
@@ -465,6 +479,7 @@ function runtimePayload(c: Ctx, findings: AreaFinding[], st: LaneState): Runtime
         environments,
         resources: resources.sort((a, b) => (a.name < b.name ? -1 : 1)),
         services: services.sort((a, b) => (a.name < b.name ? -1 : 1)),
+        links,
     };
 }
 
@@ -476,7 +491,18 @@ function deliveryPayload(c: Ctx, findings: AreaFinding[], st: LaneState): Delive
     for (const w of c.graph.nodes.filter((n) => n.kind === 'workflow' && n.fact?.lane === 'delivery' && !n.id.startsWith('workflow:include:'))) {
         const ww = nodeWitness(c, w);
         if (!ww) continue;
-        workflows.push({ file: w.fact!.owner, name: w.label, triggers: strs(attr(w, 'triggers')), witness: ww });
+        const events = c.graph.nodes
+            .filter((t) => t.kind === 'trigger' && t.fact?.lane === 'delivery' && attr(t, 'context') === w.id)
+            .map((t) => {
+                const job = (c.out.get(t.id) ?? []).find((e) => e.relation === 'triggers' && c.byId.get(e.target)?.kind === 'job');
+                return {
+                    event: String(attr(t, 'event') ?? t.label),
+                    branches: strs(attr(t, 'branches')),
+                    paths: strs(attr(t, 'paths')).length > 0 || strs(attr(t, 'paths_ignore')).length > 0,
+                    ...(job ? { job: strip(job.target, 'job') } : {}),
+                };
+            });
+        workflows.push({ file: w.fact!.owner, name: w.label, triggers: strs(attr(w, 'triggers')), events, witness: ww });
     }
     const jobs: DeliveryPayload['jobs'] = [];
     for (const j of c.graph.nodes.filter((n) => n.kind === 'job' && n.fact?.lane === 'delivery')) {
@@ -493,6 +519,11 @@ function deliveryPayload(c: Ctx, findings: AreaFinding[], st: LaneState): Delive
             ...(typeof env === 'string' ? { environment: env } : {}),
             ...(typeof cond === 'string' ? { condition: cond } : {}),
             uses: outs.filter((e) => e.relation === 'uses' || e.relation === 'calls').map((e) => c.byId.get(e.target)?.label ?? strip(strip(e.target, 'action'), 'workflow')),
+            ...(attr(j, 'system') === 'github' || attr(j, 'system') === 'gitlab' ? { system: attr(j, 'system') as 'github' | 'gitlab' } : {}),
+            ...(typeof attr(j, 'stage') === 'string' ? { stage: attr(j, 'stage') as string } : {}),
+            branches: strs(attr(j, 'branches')),
+            isTest: attr(j, 'is_test') === true,
+            isDeploy: attr(j, 'is_deploy') === true,
             witness: jw,
         });
     }
@@ -556,7 +587,14 @@ function impactPayload(c: Ctx, opts: ProduceOptions): ImpactPayload | null {
             total: r.total,
             terms: r.terms.map((t) => {
                 const w = t.items[0]?.witness ? witness(c, t.items[0].witness) : null;
-                return { term: t.term, fact: `${t.items.length} × weight ${t.weight}${t.items.length ? ` (first: ${t.items[0]!.label})` : ''}`, contribution: t.contribution, ...(w ? { witness: w } : {}) };
+                return {
+                    term: t.term,
+                    fact: `${t.items.length} × weight ${t.weight}${t.items.length ? ` (first: ${t.items[0]!.label})` : ''}`,
+                    contribution: t.contribution,
+                    count: t.items.length,
+                    weight: t.weight,
+                    ...(w ? { witness: w } : {}),
+                };
             }),
         },
     };
@@ -566,17 +604,17 @@ function impactPayload(c: Ctx, opts: ProduceOptions): ImpactPayload | null {
 
 /** Every graph verb an agent can call, what it answers, and the MCP tool (and mode) that answers the same. */
 export const AGENT_VERBS: readonly AgentVerb[] = [
-    { name: 'query', answers: 'Which symbols match a name, kind or relation filter — with witness and population line', cli: 'agent-config code-graph query <term>', mcp: 'graph_query' },
-    { name: 'explain', answers: 'The two-hop neighbourhood of one symbol (callers, callees, members), never generated prose', cli: 'agent-config code-graph explain <symbol>', mcp: 'graph_node' },
-    { name: 'affected', answers: 'What reaches a symbol or the files changed since a rev', cli: 'agent-config code-graph affected <symbol>|--since <rev>' },
-    { name: 'path', answers: 'The shortest stated path between two symbols', cli: 'agent-config code-graph path <a> <b>', mcp: 'graph_path' },
-    { name: 'impact', answers: 'Callers, dependents and test files a diff can break', cli: 'agent-config code-graph impact --diff <rev>', mcp: 'graph_impact' },
-    { name: 'tests-for', answers: 'The test files that exercise a symbol', cli: 'agent-config code-graph tests-for <symbol>', mcp: 'graph_tests_for' },
-    { name: 'untested', answers: 'Changed symbols no test imports', cli: 'agent-config code-graph untested --diff <rev>', mcp: 'graph_impact (untested_only)' },
-    { name: 'dead', answers: 'Symbols nothing reaches, refused where the graph cannot tell', cli: 'agent-config code-graph dead', mcp: 'graph_dead' },
-    { name: 'review-risk', answers: 'A diff as a sum of terms — callers, entry points, flows, co-change partners, areas, columns, operations, pipelines — each fact with its witness', cli: 'agent-config code-graph review-risk [--diff <rev>]', mcp: 'graph_impact (review_risk)' },
-    { name: 'confirm', answers: 'Whether the witnesses of an answer still hold in the working tree: confirmed, moved, changed or gone', cli: 'agent-config code-graph confirm <id…>', mcp: 'graph_node (confirm)' },
-    { name: 'pack', answers: 'A verified context pack for a task within a token budget, each item at file:line', cli: 'agent-config code-graph pack "<task>"', mcp: 'graph_query (pack)' },
+    { name: 'query', answers: 'Which symbols match a name, kind or relation filter — with witness and population line', cli: 'agent-config code-graph query <term>', mcp: 'graph_query', input: 'a name, kind or relation filter', output: 'matching symbols, each with its witness, and the population line', guarantee: 'only indexed facts; what the index does not hold is said, not guessed' },
+    { name: 'explain', answers: 'The two-hop neighbourhood of one symbol (callers, callees, members), never generated prose', cli: 'agent-config code-graph explain <symbol>', mcp: 'graph_node', input: 'one symbol', output: 'its callers, callees and members within two hops, with witnesses', guarantee: 'a graph query: no generated prose, every line is a fact' },
+    { name: 'affected', answers: 'What reaches a symbol or the files changed since a rev', cli: 'agent-config code-graph affected <symbol>|--since <rev>', input: 'a symbol, or --since <rev>', output: 'the symbols and files that reach it', guarantee: 'walks accepted edges only; guessed links are marked' },
+    { name: 'path', answers: 'The shortest stated path between two symbols', cli: 'agent-config code-graph path <a> <b>', mcp: 'graph_path', input: 'two symbols', output: 'the shortest stated path, one edge per step', guarantee: 'no step without a recorded edge' },
+    { name: 'impact', answers: 'Callers, dependents and test files a diff can break', cli: 'agent-config code-graph impact --diff <rev>', mcp: 'graph_impact', input: '--diff <rev>', output: 'callers, dependents and test files of the changed symbols', guarantee: 'the graph names candidates; the source decides' },
+    { name: 'tests-for', answers: 'The test files that exercise a symbol', cli: 'agent-config code-graph tests-for <symbol>', mcp: 'graph_tests_for', input: 'one symbol', output: 'the test files that import or exercise it', guarantee: 'only tests the graph links to the symbol' },
+    { name: 'untested', answers: 'Changed symbols no test imports', cli: 'agent-config code-graph untested --diff <rev>', mcp: 'graph_impact (untested_only)', input: '--diff <rev>', output: 'changed symbols no test imports', guarantee: 'absence is reported against the indexed tests only' },
+    { name: 'dead', answers: 'Symbols nothing reaches, refused where the graph cannot tell', cli: 'agent-config code-graph dead', mcp: 'graph_dead', input: 'the whole graph', output: 'symbols nothing reaches', guarantee: 'refuses where the graph cannot tell' },
+    { name: 'review-risk', answers: 'A diff as a sum of terms — callers, entry points, flows, co-change partners, areas, columns, operations, pipelines — each fact with its witness', cli: 'agent-config code-graph review-risk [--diff <rev>]', mcp: 'graph_impact (review_risk)', input: '--diff <rev>', output: 'terms, count × weight, the sum', guarantee: 'every term is a fact with its witness; no model, no hidden term' },
+    { name: 'confirm', answers: 'Whether the witnesses of an answer still hold in the working tree: confirmed, moved, changed or gone', cli: 'agent-config code-graph confirm <id…>', mcp: 'graph_node (confirm)', input: 'fact ids, or --from-query <symbol>', output: 'confirmed, moved, changed or gone per witness', guarantee: 'reads the working tree, not the index' },
+    { name: 'pack', answers: 'A verified context pack for a task within a token budget, each item at file:line', cli: 'agent-config code-graph pack "<task>"', mcp: 'graph_query (pack)', input: 'a task in words, a token budget', output: 'items with rank, reason and file:line, cut by rank at the budget', guarantee: 'each item re-read against the working tree before it is returned' },
 ];
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -594,15 +632,43 @@ export function cliVerbs(dir: string = HERE): Set<string> {
     return new Set();
 }
 
-function agentPayload(): AgentPayload {
+function agentPayload(c: Ctx, cachePath: string | undefined, changed: readonly string[]): AgentPayload {
     const routed = cliVerbs();
     const verbs = AGENT_VERBS.filter((v) => routed.has(v.name));
+    const pack = cachePath && changed.length ? diffPack(c, cachePath, changed) : null;
     return {
         reader: 'code-graph CLI and MCP surface',
         completeness: 'complete',
         findings: [],
         verbs,
+        ...(pack ? { contextPack: pack } : {}),
     };
+}
+
+/** The pack `code-graph pack --diff` returns for the working diff, as the page shows it: each item at its witness. */
+function diffPack(c: Ctx, cachePath: string, changed: readonly string[]): NonNullable<AgentPayload['contextPack']> | null {
+    let g: ReturnType<typeof loadGraph>;
+    try {
+        g = loadGraph(cachePath);
+    } catch {
+        return null;
+    }
+    try {
+        const r = contextPack(g, c.root, cachePath, '', { diffFiles: changed });
+        const items: NonNullable<AgentPayload['contextPack']>['items'] = [];
+        r.items.forEach((it, i) => {
+            const m = it.at ? /^(.*):(\d+)$/.exec(it.at) : null;
+            const w = m ? witness(c, { file: m[1] as string, line: Number(m[2]), hash: null }) : null;
+            if (!w) return;
+            const why = it.relation === 'seed' ? 'changed by the diff' : `${it.relation} ${it.direction === 'in' ? '←' : '→'} ${it.via ? (c.byId.get(it.via)?.label ?? it.via) : ''}`.trim();
+            items.push({ kind: it.kind, name: it.label, why, tokens: Math.ceil(((r.lines[i] ?? '').length + 12) / 4), witness: { ...w, confirm: it.confirm } });
+        });
+        return { returned: r.returned, total: r.total, hasMore: r.hasMore, budgetTokens: r.budget.tokens, usedTokens: r.budget.used, items };
+    } catch {
+        return null;
+    } finally {
+        g.close?.();
+    }
 }
 
 // ---- tours -----------------------------------------------------------------------
@@ -700,7 +766,7 @@ export function produceAreas(root: string, graph: CodeGraph, opts: ProduceOption
     }
     const impact = isRepo || opts.hunks ? impactPayload(c, opts) : null;
     if (impact) areas.impact = impact;
-    areas.agent = agentPayload();
+    areas.agent = agentPayload(c, opts.cachePath, impact?.changed ?? []);
     const t = tours(c, areas, opts.previousTours);
     if (t.length) areas.tours = t;
     return { areas, erd: areas.data ? (data?.erd ?? []) : [] };

@@ -48,12 +48,13 @@ function renderHeader() {
         $('pin-commit').setAttribute('title', t('hubChipT'));
         $('pin-fresh').textContent = t('hubCount')(num(SHELL.hub.indexed), num(SHELL.hub.projects));
         $('pin-fresh').className = 'chip fresh';
+        if (typeof hubHeader === 'function') hubHeader();
         return;
     }
     var pin = model.pin || { commit: meta.commit, freshness: meta.state, generation: meta.graph_generation || '' };
     var commit = $('pin-commit');
     clear(commit);
-    add(commit, document.createTextNode(pin.commit), pin.date ? el('span', { class: 'pin-date' }, ' · ' + pin.date) : null);
+    add(commit, document.createTextNode(shortCommit(pin.commit)), pin.date ? el('span', { class: 'pin-date' }, ' · ' + shortDate(pin.date, true)) : null);
     commit.setAttribute('title', t('generation')(String(pin.generation || '').slice(0, 8)));
     var fresh = $('pin-fresh');
     var st = String(pin.freshness || meta.state || '');
@@ -72,30 +73,37 @@ function renderNav() {
     });
     // On a phone the nav folds into one menu button that names the open area.
     var menu = $('areamenu');
+    if (!menu) return;
     menu.textContent = '☰ ' + (t('areaNames')[current.route] || current.route);
     menu.setAttribute('aria-label', t('navLabel') + ': ' + (t('areaNames')[current.route] || current.route));
     setAreaMenu(false);
 }
 function setAreaMenu(open) {
+    if (!$('areamenu')) return;
     $('areamenu').setAttribute('aria-expanded', String(open));
     $('areanav').classList.toggle('open', open);
 }
-$('areamenu').addEventListener('click', function () { setAreaMenu($('areamenu').getAttribute('aria-expanded') !== 'true'); });
+if ($('areamenu')) $('areamenu').addEventListener('click', function () { setAreaMenu($('areamenu').getAttribute('aria-expanded') !== 'true'); });
 document.addEventListener('pointerdown', function (e) { if ($('areanav').classList.contains('open') && !e.target.closest('#areanav, #areamenu')) setAreaMenu(false); });
-/** Shown on every area while the graph is not level with HEAD, with the reason and what to do. */
+/**
+ * While the graph is not level with HEAD the header's freshness chip carries
+ * the reason and what to do, as its tooltip: the design draws no banner row.
+ */
 function renderBanner() {
     var b = $('banner');
     clear(b);
-    if (SHELL.hub) { b.hidden = true; return; }
+    b.hidden = true;
+    if (SHELL.hub) return;
+    var chip = $('pin-fresh');
     var st = String((model.pin && model.pin.freshness) || meta.state || '');
-    if (st === 'fresh') { b.hidden = true; return; }
+    if (st === 'fresh') { chip.removeAttribute('title'); chip.removeAttribute('aria-label'); return; }
     var m = /^behind:(\d+)$/.exec(st);
     var key = m ? 'behind' : st === 'edited' ? 'edited' : st === 'absent' || !st ? 'absent' : 'other';
     var title = key === 'behind' ? t('bannerStale').behind(m[1]) : key === 'other' ? t('bannerStale').other(st) : t('bannerStale')[key];
-    add(b, stChip(t('bannerLabel') + ' · ' + (st || 'absent'), key === 'absent' ? 'dash' : 'warn'), el('b', null, title), el('span', { class: 'soft' }, t('bannerWhy')[key]));
-    b.hidden = false;
+    var text = title + ' — ' + t('bannerWhy')[key];
+    chip.setAttribute('title', text);
+    chip.setAttribute('aria-label', t('bannerLabel') + ': ' + text);
 }
-
 function renderRoute() {
     var r = current.route;
     var code = r === 'code';
@@ -179,7 +187,7 @@ searchInput.addEventListener('focus', function () { if (searchInput.value.trim()
 document.addEventListener('keydown', function (e) {
     if (e.key === '/' && document.activeElement !== searchInput) { e.preventDefault(); searchInput.focus(); return; }
     if (e.key !== 'Escape') return;
-    if ($('areanav').classList.contains('open')) { setAreaMenu(false); $('areamenu').focus(); return; }
+    if ($('areamenu') && $('areanav').classList.contains('open')) { setAreaMenu(false); $('areamenu').focus(); return; }
     if (document.activeElement === searchInput && searchInput.value) { closeSearch(); return; }
     if (current.route !== 'code' && (avState.fly || avState.flyL)) { avState.fly = false; avState.flyL = false; applyAvPanes(); }
 });
