@@ -1,0 +1,14 @@
+{
+    "max_depth": 8,
+    "max_branch": 12,
+    "max_nodes": 200,
+    "max_overlap": 0.5,
+    "walk_relations": ["calls", "persists", "reads"],
+    "entry_markers": {
+        "job": ["ShouldQueue", "Job", "BaseJob", "Queueable"],
+        "cli": ["Command", "BaseCommand", "ConsoleCommand"],
+        "listener": ["Listener", "EventSubscriber", "EventSubscriberInterface", "ShouldHandleEventsAfterCommit"],
+        "schedule": ["ScheduledTask", "Schedulable"]
+    },
+    "entry_methods": ["handle", "__invoke", "execute", "run", "perform", "process"]
+}
