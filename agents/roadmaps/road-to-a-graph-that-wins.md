@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: later
+status: ready
 parent_roadmap: road-to-a-graph-that-is-shipped
 execution:
   mode: phase-checkpoints
@@ -23,7 +23,7 @@ entry_condition:
     maintainer, for confirming the parent is archived.
 review_by: 2026-12-07
 capability_gap: none
-estate_growth_exempt: "Parked, not active: it may not start before its parent ships, because every measurement in it would otherwise measure an engine no consumer holds. Charges +1 later_roadmaps against the origin/main floor of 82 measured at 0918def55. All five receivers named here were re-verified present at that pin: internal/bench/code-graph/, src/scripts/detect_silent_catch.ts, src/scripts/detect_verification_tampering.ts, agents/evidence/release-findings/, src/scripts/_lib/paired_verdict.ts."
+estate_growth_exempt: "THIS CHANGE (2026-10-26) moves this roadmap from later/ to active: active_roadmaps +1, later_roadmaps -1. Its entry_condition holds in the tree — the parent road-to-a-graph-that-is-shipped is archived and the owner named both benchmark subjects in the corpus header on 2026-10-23 — and the AI council decided the wake 2/2 on 2026-10-26 (agents/evidence/council/open-questions-inbox-aw-20261026.md). Active count becomes 5, the WIP cap of the owner directive of 2026-10-24."
 ---
 # Road to a graph that wins
 

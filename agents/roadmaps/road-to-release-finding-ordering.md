@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: later
+status: ready
 parent_roadmap: road-to-binding-findings
 review_by: 2026-09-20
 relates:
@@ -14,7 +14,7 @@ relates:
       synthetic release/* pull request no autonomous run may open. It also
       recorded the second occurrence below and moved this review_by; it did not
       touch this roadmap status or its AC-2 demonstration, which is still owed.
-estate_growth_exempt: "Adds one later/ roadmap to receive the release-findings ORDERING guarantee, which road-to-binding-findings could not close: demonstrating it end to end requires creating a synthetic release/* pull request, and release/* is named in non-destructive-by-default's Hard-Floor table, which no autonomous run lifts. The four authorization defects and the ledger ingestion in that roadmap are independently verified and close there; holding them open behind an administrative and Hard-Floor dependency would be worse than partitioning. It also receives the three non-blocking findings dispositioned accepted_risk, so each carries a named receiver rather than an expiring note. That roadmap archives in the same change, so the active count falls by one."
+estate_growth_exempt: "THIS CHANGE (2026-10-26) moves this roadmap from later/ to active: active_roadmaps +1, later_roadmaps -1. Its one blocker, release-pr-demonstration-owner-call, gates step 2.2 and AC-2 only, so the AI council decided 2/2 on 2026-10-26 to run every other step and keep 2.2 and AC-2 behind the owner (agents/evidence/council/open-questions-inbox-aw-20261026.md). Active count becomes 5, the WIP cap of the owner directive of 2026-10-24."
 ---
 # Road to the release-finding ordering guarantee
 
