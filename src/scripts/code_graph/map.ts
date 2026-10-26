@@ -1049,7 +1049,7 @@ export const VIEWER_SCRIPTS = [
 ] as const;
 /** The hub's parts: a project map's plus the Projects area, which no project map carries — not even as code. */
 export const HUB_SCRIPTS = [...VIEWER_SCRIPTS.slice(0, -1), 'area_projects.js', 'shell.js'] as const;
-export const VIEWER_STYLES = ['viewer.css', 'shell.css'] as const;
+export const VIEWER_STYLES = ['viewer.css', 'shell.css', 'area_ops.css'] as const;
 
 /**
  * The one inline script: every part inside one function scope. Joined BEFORE
@@ -1072,7 +1072,7 @@ const AREA_NAV = ['overview', 'code', 'data', 'interfaces', 'runtime', 'delivery
 export interface MapShell {
     routes: string[];
     home: string;
-    hub?: { projects: number; indexed: number };
+    hub?: { projects: number; indexed: number; /** Where the hub lives, home shortened to `~`; shown in its banner. */ dir?: string };
 }
 
 /** Escape every `<` so no file or symbol name can close the data block. */
@@ -1123,6 +1123,7 @@ export function renderPage(m: MapModel, meta: MapMeta, areas: object, shell?: Ma
         `<style>${css}</style>`,
         '</head>',
         '<body>',
+        ...(shell?.hub ? [`<div class="hub-banner" id="hub-banner" role="note"><b id="hub-scope"></b><span class="mono" id="hub-path">${htmlText(shell.hub.dir ?? '')}</span><span id="hub-only"></span></div>`] : []),
         '<header class="top">',
         '<div class="top-row">',
         '<div class="brand">',
@@ -1144,9 +1145,10 @@ export function renderPage(m: MapModel, meta: MapMeta, areas: object, shell?: Ma
             '<path d="M74.4 47.4L75.6 47.9L75.9 49.6L77.6 51.6L80.9 58.6L84.6 64.9L106.1 109.6L108.4 111.1L111.1 111.4L113.9 110.9L117.4 109.1L122.9 103.9L132.6 114.1L132.9 115.6L132.1 116.6L127.4 121.1L124.6 121.9L95.4 121.6L89.9 110.1L88.9 109.1L74.9 108.6L70.1 99.4L69.1 96.9L69.1 95.4L81.6 95.1L82.6 94.1L78.4 84.4L78.1 82.4L75.1 76.4L73.4 75.1L71.1 77.1L69.6 80.6L67.9 82.4L66.4 85.9L64.9 87.4L64.1 89.9L45.6 118.9L43.9 119.6L32.4 119.6L30.6 121.6L30.4 121.4L30.4 120.4L29.4 118.9L29.9 117.1L55.1 76.1L66.1 58.9L74.1 47.6ZM105.4 59.1L113.1 59.1L120.6 61.1L126.1 64.1L131.6 69.1L131.9 70.6L131.1 71.6L122.9 80.6L121.1 81.4L117.4 77.6L115.1 76.1L110.1 74.9L105.1 75.4L98.4 79.1L97.4 79.1L96.4 78.1L90.6 67.1L90.6 65.9L93.4 63.4L97.9 61.1L105.1 59.4Z" fill="#ffb877" opacity="0.3" filter="url(#acLH)"/>' +
             '<path d="M74.4 47.4L75.6 47.9L75.9 49.6L77.6 51.6L80.9 58.6L84.6 64.9L106.1 109.6L108.4 111.1L111.1 111.4L113.9 110.9L117.4 109.1L122.9 103.9L132.6 114.1L132.9 115.6L132.1 116.6L127.4 121.1L124.6 121.9L95.4 121.6L89.9 110.1L88.9 109.1L74.9 108.6L70.1 99.4L69.1 96.9L69.1 95.4L81.6 95.1L82.6 94.1L78.4 84.4L78.1 82.4L75.1 76.4L73.4 75.1L71.1 77.1L69.6 80.6L67.9 82.4L66.4 85.9L64.9 87.4L64.1 89.9L45.6 118.9L43.9 119.6L32.4 119.6L30.6 121.6L30.4 121.4L30.4 120.4L29.4 118.9L29.9 117.1L55.1 76.1L66.1 58.9L74.1 47.6ZM105.4 59.1L113.1 59.1L120.6 61.1L126.1 64.1L131.6 69.1L131.9 70.6L131.1 71.6L122.9 80.6L121.1 81.4L117.4 77.6L115.1 76.1L110.1 74.9L105.1 75.4L98.4 79.1L97.4 79.1L96.4 78.1L90.6 67.1L90.6 65.9L93.4 63.4L97.9 61.1L105.1 59.4Z" fill="url(#acA)"/>' +
             '<rect x="30.75" y="118.75" width="57.5" height="29.5" rx="3" fill="#04070d" stroke="url(#acTerm)" stroke-width="1.3" filter="url(#acGlow)"/><path d="M40.75 129.5 L47.75 134.5 L40.75 139.5 M51.75 139.75 H61.75" fill="none" stroke="#ffb43c" stroke-width="1.8" stroke-linecap="round"/></svg>',
-        '<div class="brand-name"><b>AGENT CONFIG</b><span>KNOWLEDGE MAP</span></div>',
+        shell?.hub ? '<div class="brand-name hub"><b>AGENT CONFIG</b><span>ESTATE MAP</span></div>' : '<div class="brand-name"><b>AGENT CONFIG</b><span>KNOWLEDGE MAP</span></div>',
         '</div>',
-        `<nav class="areanav" id="areanav" aria-label="Areas">${nav.map((r) => `<a href="#/${r}" data-route="${r}">${r}</a>`).join('')}</nav>`,
+        ...(shell?.hub ? ['<span class="chip mono hub-chip" id="hub-chip"></span><span class="hub-back" id="hub-back"></span>'] : []),
+        `<nav class="areanav" id="areanav" aria-label="Areas"${shell?.hub ? ' hidden' : ''}>${nav.map((r) => `<a href="#/${r}" data-route="${r}">${r}</a>`).join('')}</nav>`,
         '</div>',
         '<div class="top-row row2">',
         '<div class="pins mono"><span class="chip" id="pin-commit"></span><span class="chip fresh" id="pin-fresh"></span></div>',
