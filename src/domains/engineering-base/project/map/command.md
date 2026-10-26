@@ -96,8 +96,13 @@ It copies the demo fixture (`tests/fixtures/code-graph/demo/` — a shop with
 migrations, a schema dump, a snapshot and oracle output, REST and SOAP partner
 calls with an OpenAPI contract, Compose, Terraform, Kubernetes, GitHub Actions,
 GitLab CI, decision records and a queued job) into a temporary git repository with
-a scripted history and an uncommitted change, then runs the normal build, lane
-readers and map writer on it. The hub demo is drawn from that shop and two more
+a scripted history and an uncommitted change. A seeded generator then expands it to
+realistic load — about 2,500 files in PHP, TypeScript, Python and Go over 120+ code
+areas, 100+ tables on three connections, three dozen external services, Compose,
+Kubernetes and Terraform over three environments, 140 CI jobs, 30 decision records
+and 240 commits by ten authors. The same seed always produces the same repository,
+and nothing generated is committed here. The normal build, lane readers and map
+writer then run on it (about 20 s). The hub demo is drawn from that shop and ten more
 fixture projects, registered in a temporary user-global home, so the real registry
 is never touched. Both pages land in `agents/map/.build/demo/` (gitignored; `hub/` <!-- ref-ignore -->
 beside the map) or `--out <dir>`, and carry the "Sample data · Fixture" chip in the
