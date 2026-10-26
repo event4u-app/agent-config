@@ -122,8 +122,8 @@ hosts:
         fail_policy: discard
         timeout_unit: unknown
         timeout_default: null
-        # Established by a documentation read on 2026-09-29, repeated 2026-10-14, not
-        # by a live probe — `probe_at` stays null and says so.
+        # Established by a documentation read on 2026-09-29, repeated 2026-10-14 and
+        # 2026-10-26, not by a live probe — `probe_at` stays null and says so.
         verified:
           docs_at: 2026-10-26
           docs_url: https://docs.augmentcode.com/cli/hooks.md
@@ -186,7 +186,9 @@ hosts:
         # and the digest watcher is what will surface the next move; re-deriving
         # the event names from a page that no longer lists them is a separate
         # piece of work, and inventing a citation for them here would be the
-        # defect this file was built to remove.
+        # defect this file was built to remove. The 2026-10-26 re-date reads the
+        # same pointer page (only an index banner was added); it dates the
+        # citation and re-validates none of the slot event names.
         verified:
           docs_at: 2026-10-26
           docs_url: https://docs.cline.bot/customization/hooks.md
