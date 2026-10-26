@@ -78,12 +78,12 @@ pinned to their current size (`src/config/skill-body-budget.json`).
 
 ## Phase 2 — The engine is an input the report states
 
-- [ ] **2.1 Report engines and the unverified count.** The index-parity result
+- [x] **2.1 Report engines and the unverified count.** The index-parity result
       carries the engine per connection, and counts WHERE references whose only
       support is a foreign key on a connection whose engine the project does not
       state. `lint_persistence` prints both in text and JSON.
       verify: a fixture with no engine reports `engine_unverified: 1` for a FK-only column; the pgsql fixture reports `engine_unverified: 0` and the F2.
-- [ ] **2.2 Give the S0.2 oracle its engine dimension.** The fixture's comment
+- [x] **2.2 Give the S0.2 oracle its engine dimension.** The fixture's comment
       says why its FK column counts as indexed, and a test pins the three
       outcomes — pgsql finding, mysql silence, unknown counted — on one schema.
       The spike record gets a dated note; its resolution figure is

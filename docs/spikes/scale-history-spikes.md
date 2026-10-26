@@ -39,6 +39,12 @@
 - "Deterministic" everywhere means deterministic **pattern detection with an
   auditable waiver process** (council round 2) — instance-level correctness
   stays contextual and waiver-mediated.
+- **2026-10-26 note on S0.2:** the fixture states no engine, so its constrained
+  foreign keys count as indexed under the unstated-engine rule. The 80.8%
+  resolution figure measures column resolution and is engine-independent; it
+  stands. The engine dimension is pinned separately — postgres finding, MySQL
+  silence, unstated counted as `engine_unverified` — in
+  `tests/scripts/index_parity_engine_split.test.ts`.
 - S0.2's 80.8% is a NARROW pass over the fixture corpus — and a
   DETERMINISTIC one: S0.2 runs only on the committed fixture set (the
   real-world harvest belongs to S0.3 and only counts parser crashes), so

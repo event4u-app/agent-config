@@ -49,6 +49,10 @@ export interface LintReport {
     waived_count: number;
     empty_reason_waivers: WaiverRecord[];
     stacks: StackId[];
+    /** Engine per connection the index-parity check judged against (`unknown` when the project does not state it). */
+    engines: Record<string, string>;
+    /** WHERE references counted as indexed only because the engine is unstated — never findings. */
+    engine_unverified: number;
 }
 
 export function detect_stacks(dir: string): StackId[] {
@@ -71,6 +75,8 @@ export function detect_stacks(dir: string): StackId[] {
 export function run_lint(dir: string, stacks: StackId[], audit_scope_file?: string): LintReport {
     const findings: Finding[] = [];
     const empty_reason_waivers: WaiverRecord[] = [];
+    let parity: ReturnType<typeof analyze_index_parity> | null = null;
+    const index_parity = (): ReturnType<typeof analyze_index_parity> => (parity ??= analyze_index_parity(dir));
 
     for (const stack of stacks) {
         if (stack === 'raw-sql') {
@@ -79,7 +85,7 @@ export function run_lint(dir: string, stacks: StackId[], audit_scope_file?: stri
             empty_reason_waivers.push(...res.waivers.filter((w) => w.reason === ''));
         } else if (stack === 'eloquent') {
             findings.push(...scan_n1_dir(dir));
-            findings.push(...analyze_index_parity(dir).findings);
+            findings.push(...index_parity().findings);
             findings.push(...scan_offload_dir(dir, 'eloquent'));
             findings.push(...scan_bounded_dir(dir));
             const scope_file = audit_scope_file ?? path.join(dir, 'audit-scope.json');
@@ -88,7 +94,7 @@ export function run_lint(dir: string, stacks: StackId[], audit_scope_file?: stri
                 findings.push(...analyze_audit(dir, scope).findings);
             }
         } else if (stack === 'prisma') {
-            findings.push(...analyze_index_parity(dir).findings);
+            findings.push(...index_parity().findings);
             findings.push(...scan_offload_dir(dir, 'ts'));
             findings.push(...scan_prisma_growth_dir(dir));
         }
@@ -102,6 +108,8 @@ export function run_lint(dir: string, stacks: StackId[], audit_scope_file?: stri
         waived_count: findings.filter((f) => f.waived).length,
         empty_reason_waivers,
         stacks,
+        engines: parity?.engines ?? {},
+        engine_unverified: parity?.engine_unverified ?? 0,
     };
 }
 
@@ -114,8 +122,11 @@ function format_text(report: LintReport): string {
     for (const w of report.empty_reason_waivers) {
         lines.push(`${w.file}:${w.line} [waiver-hygiene/gate] empty ${w.kind} waiver reason — a waiver must say why`);
     }
+    const engines = Object.entries(report.engines).map(([k, v]) => `${k}=${v}`);
     lines.push(
-        `${report.gate_count} gate · ${report.advice_count} advice · ${report.waived_count} waived · stacks: ${report.stacks.join(', ') || 'none'}`,
+        `${report.gate_count} gate · ${report.advice_count} advice · ${report.waived_count} waived · stacks: ${report.stacks.join(', ') || 'none'}` +
+            (engines.length ? ` · engine: ${engines.join(', ')}` : '') +
+            (report.engine_unverified ? ` · ${report.engine_unverified} WHERE ref(s) judged indexed only because the engine is unstated` : ''),
     );
     return lines.join('\n') + '\n';
 }

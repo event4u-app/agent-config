@@ -25,7 +25,7 @@ import { readFileSync, readdirSync, lstatSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { readLaravelSchema } from '../schema/readers/laravel_migrations.js';
 import { readPrismaSchema } from '../schema/readers/prisma_schema.js';
-import { leadingIndexState, replay, type ConnectionSchema } from '../schema/replay.js';
+import { leadingIndexState, replay, type ConnectionSchema, type Engine } from '../schema/replay.js';
 import { type Finding, parse_waiver, is_ignored_dir } from './types';
 
 // ---------------------------------------------------------------------------
@@ -37,10 +37,21 @@ export interface TableSchema {
     indexed: Set<string>;
     /** Composite index column lists, in declared order (leftmost first). */
     composites: string[][];
+    /** Columns counted as indexed only because a foreign key sits on a connection whose engine is unstated. */
+    engine_assumed?: Set<string>;
 }
 
 /** table (Laravel) or model name (Prisma) -> schema */
 export type SchemaMap = Map<string, TableSchema>;
+
+/** The engine each replayed connection was judged against, per schema map (`''` = default connection). */
+const ENGINES_OF = new WeakMap<SchemaMap, Map<string, Engine>>();
+
+export function schema_engines(schema: SchemaMap): Map<string, Engine> {
+    let m = ENGINES_OF.get(schema);
+    if (!m) ENGINES_OF.set(schema, (m = new Map()));
+    return m;
+}
 
 export interface ColumnRef {
     file: string; // relative to the analyzed dir
@@ -61,6 +72,10 @@ export interface IndexParityResult {
     resolution_rate: number;
     /** Every extracted reference (where + orderBy), for auditing. */
     refs: ColumnRef[];
+    /** WHERE references whose only support is a foreign key on a connection with an unstated engine. */
+    engine_unverified: number;
+    /** Engine per connection the schema was replayed on; `default` names the default connection. */
+    engines: Record<string, Engine>;
 }
 
 // ---------------------------------------------------------------------------
@@ -137,9 +152,12 @@ function add_connection(schema: SchemaMap, c: ConnectionSchema, key_of: (table: 
             for (const fk of t.foreign_keys) {
                 const state = leadingIndexState(t, fk.columns, c.engine);
                 if (state === 'implicit' || state === 'engine-unknown') entry.indexed.add(fk.columns[0]!);
+                if (state === 'engine-unknown') (entry.engine_assumed ??= new Set()).add(fk.columns[0]!);
             }
         }
     }
+    const engines = schema_engines(schema);
+    if (!engines.has(c.connection) || engines.get(c.connection) === 'unknown') engines.set(c.connection, c.engine);
 }
 
 /** Laravel migrations (one file or several, applied in name order) into `schema`. */
@@ -154,6 +172,10 @@ export function parse_prisma_schema(text: string, schema: SchemaMap): void {
     const read = readPrismaSchema({ path: 'schema.prisma', source: text });
     const tmp: SchemaMap = new Map();
     for (const c of replay({ ops: read.ops, engines: new Map([['', read.engine]]) }).connections) add_connection(tmp, c);
+    for (const [name, engine] of schema_engines(tmp)) {
+        const engines = schema_engines(schema);
+        if (!engines.has(name) || engines.get(name) === 'unknown') engines.set(name, engine);
+    }
     for (const [model, table] of read.modelTables) {
         const physical = tmp.get(table);
         if (!physical) continue;
@@ -164,6 +186,7 @@ export function parse_prisma_schema(text: string, schema: SchemaMap): void {
         for (const col of physical.columns) entry.columns.add(name(col));
         for (const col of physical.indexed) entry.indexed.add(name(col));
         for (const list of physical.composites) entry.composites.push(list.map(name));
+        for (const col of physical.engine_assumed ?? []) (entry.engine_assumed ??= new Set()).add(name(col));
     }
 }
 
@@ -382,6 +405,7 @@ export function classify_refs(
     const findings: Finding[] = [];
     let resolved = 0;
     let unresolved = 0;
+    let engine_unverified = 0;
 
     for (const ref of refs) {
         const table = ref.table ? schema.get(ref.table) : undefined;
@@ -417,6 +441,7 @@ export function classify_refs(
             return idx.slice(0, pos).every((c) => chain_cols.has(c));
         });
 
+        if (ref.kind === 'where' && !composite_covered && table!.engine_assumed?.has(ref.column!)) engine_unverified++;
         if (!table!.indexed.has(ref.column!) && !composite_covered) {
             const lines = file_lines.get(ref.file) ?? [];
             const waiver = parse_waiver(lines, ref.line - 1);
@@ -440,6 +465,8 @@ export function classify_refs(
         unresolved,
         resolution_rate: total === 0 ? 1 : resolved / total,
         refs,
+        engine_unverified,
+        engines: Object.fromEntries([...schema_engines(schema)].map(([k, v]) => [k === '' ? 'default' : k, v])),
     };
 }
 
