@@ -9,6 +9,7 @@ entry_condition:
   who: "owner (OQ-20); maintainer (8.3, external code on the maintainer's machine only)"
 execution:
   mode: phase-checkpoints
+parent_roadmap: road-to-tell-detector-promotions
 supersedes:
   - later/road-to-tell-detector-promotions
 relates:

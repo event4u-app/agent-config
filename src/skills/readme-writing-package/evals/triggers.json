@@ -1,7 +1,7 @@
 {
   "skill": "readme-writing-package",
   "last_eval": "2026-10-26",
-  "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers a README for a reusable package or library: install, minimal usage, compatibility (EN + DE phrasings). Should-not-trigger covers the near-miss neighbors: an application README (readme-writing), reviewing a README (readme-reviewer), package publishing mechanics, API reference docs, and a changelog.",
+  "description": "5 should-trigger + 6 should-not-trigger (one an unrelated counterexample) queries. Should-trigger covers a README for a reusable package or library: install, minimal usage, compatibility (EN + DE phrasings). Should-not-trigger covers the near-miss neighbors: an application README (readme-writing), reviewing a README (readme-reviewer), package publishing mechanics, API reference docs, and a changelog.",
   "queries": [
     {
       "q": "write the README for our npm package",
@@ -21,7 +21,8 @@
     {
       "q": "schreib eine README für unser Paket mit Installation und Kompatibilität",
       "trigger": true,
-      "class": "exemplar"
+      "class": "exemplar",
+      "language": "de"
     },
     {
       "q": "document which PHP and Laravel versions the package supports in its README",
@@ -52,6 +53,11 @@
       "q": "write the changelog for version 2.0",
       "trigger": false,
       "class": "near-miss"
+    },
+    {
+      "q": "add a dark mode toggle to the settings page",
+      "trigger": false,
+      "class": "counterexample"
     }
   ]
 }
