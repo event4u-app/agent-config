@@ -189,11 +189,10 @@ superseded above is unaffected because this record does not mention it.
 ## Amendment 1 (2026-10-22) — the owner moves the per-day call guards
 
 Opened through this record's own `review_trigger` ("the owner moves a line
-between the two lists"). The owner, 2026-10-22, in his own words: *"Ja, wir
-hatten in einer alten Version Budgets, auch Limits für CLI Anfragen an
-Agents/AI, damit man nicht zu viele stellt. Aber auch das sollte weg.
-Vielleicht einen Counter damit AC das für sich managen kann und überwachen,
-aber wir sollten nicht einfach stoppen."* <!-- md-language-check: ignore -->
+between the two lists"). The owner, 2026-10-22, in his own words:
+
+> *"Ja, wir hatten in einer alten Version Budgets, auch Limits für CLI Anfragen an Agents/AI, damit man nicht zu viele stellt. Aber auch das sollte weg. Vielleicht einen Counter damit AC das für sich managen kann und überwachen, aber wir sollten nicht einfach stoppen."* <!-- md-language-check: ignore -->
+
 (Yes, an old version had budgets and limits on CLI requests to agents/AI. That
 should go too — perhaps a counter AC uses to manage and watch itself, but we
 should not simply stop.)
