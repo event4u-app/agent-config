@@ -11,7 +11,6 @@ and keep the full search — this file only adds candidates to it.
 |---|---|---|---|
 | road-to-a-graph-that-wins | active | ready | Register before measuring; measure on repositories in the owner's stack that this repository does not own; publish both directions; and … |
 | road-to-a-setup-that-decides-itself | active | ready | A consumer never sets, reads or reasons about how the package loads its rule layer. |
-| road-to-a-step-that-costs-what-it-changes | active | ready | A roadmap step costs in proportion to its change, and nothing a step needs is skipped. |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe | active | ready | A global install stays on a supported, patched release without ever mutating a running session, moving a team's pin, or … |
 | road-to-routing-assurance-live-floors | active | ready | Road to routing assurance — the live-harness floors |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
@@ -32,6 +31,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-review-that-ends | later | later | A completion review runs at most N rounds, N set by the owner — round 1 over the scope, each … |
 | road-to-a-run-that-knows-its-skills | later | later | A run — a command, a `/work` run, or a roadmap lane — determines its base skills once at its … |
 | road-to-a-runnable-share-ratchet | later | later | A shrink-only bound on the share of `verify:` clauses that can actually fail. |
+| road-to-a-step-that-costs-what-it-changes-carried | later | later | Every step road-to-a-step-that-costs-what-it-changes deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-stop-that-holds-carried | later | later | Every step road-to-a-stop-that-holds deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-trunk-whose-own-gates-are-green-carried | later | later | Every step road-to-a-trunk-whose-own-gates-are-green deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-ac-deep-capabilities | later | draft | Three deep capabilities are either proven to earn their cost on the default path, or closed with a recorded terminal … |
