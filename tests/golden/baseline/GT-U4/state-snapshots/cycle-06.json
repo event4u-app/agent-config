@@ -105,7 +105,8 @@
       "kind": "ui",
       "stack": "plain",
       "file": "resources/views/onboarding/wizard.blade.php",
-      "summary": "Onboarding wizard rendered; spacing applied per brief"
+      "summary": "Onboarding wizard rendered; spacing applied per brief",
+      "new_control_roles": []
     }
   ],
   "tests": null,

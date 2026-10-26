@@ -22,6 +22,10 @@ _(no tests ran)_
 
 _(no verify verdict)_
 
+## UI consistency
+
+- `static-pass` — statically checked only — nothing was rendered, so this is NOT a visual verification
+
 ## Follow-ups
 
 _(none)_

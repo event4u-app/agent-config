@@ -106,7 +106,8 @@
       "kind": "ui",
       "stack": "plain",
       "file": "resources/views/marketing/pricing.blade.php",
-      "summary": "Pricing tier grid rendered with three tiers"
+      "summary": "Pricing tier grid rendered with three tiers",
+      "new_control_roles": []
     }
   ],
   "tests": null,

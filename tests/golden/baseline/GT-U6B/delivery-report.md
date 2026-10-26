@@ -22,6 +22,10 @@ _(no tests ran)_
 
 _(no verify verdict)_
 
+## UI consistency
+
+- `pass` — visually verified — rendered, no consistency finding, every added control checked open
+
 ## Follow-ups
 
 _(none)_

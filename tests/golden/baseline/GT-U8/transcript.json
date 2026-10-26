@@ -526,7 +526,7 @@
         ".implement-ticket-state.json"
       ],
       "exit_code": 1,
-      "stdout": "[halt] outcome=blocked step=test\n@agent-directive: ui-design-review-plain\n> Stack: `plain`. Reviewing rendered components against the locked design brief.\n> Skills: `design-review` — stack-neutral, which is what `plain` means.\n> The review pass compares `state.ticket.ui_apply.rendered` against `state.ui_design` (microcopy, states, a11y, layout) and produces a structured `findings` list.\n> Ground chart-type and contrast findings in the adopted corpus (design-intelligence § 'Grounding the review/polish a11y gate') — cite the corpus row, don't eyeball.\n> 1. Continue — run the review and write `{findings: [...], review_clean: bool}` into `state.ui_review`\n> 2. Abort — drop this UI request\n",
+      "stdout": "[halt] outcome=blocked step=test\n@agent-directive: ui-design-review-plain\n> Stack: `plain`. Reviewing rendered components against the locked design brief.\n> Skills: `design-review` — stack-neutral, which is what `plain` means.\n> The review pass compares `state.ticket.ui_apply.rendered` against `state.ui_design` (microcopy, states, a11y, layout) and produces a structured `findings` list.\n> Ground chart-type and contrast findings in the adopted corpus (design-intelligence § 'Grounding the review/polish a11y gate') — cite the corpus row, don't eyeball.\n> Consistency: run `lint_design_consistency` over the changed files and `ui:render --interact` on every control a change added (see `new_control_roles` on `state.changes`); write `consistency: {findings: [...], open_state: {<role>: \"captured\"}}`. Where an approved baseline exists, `ui:render --region <changed region>` compares against it; each delta is a finding, so the polish loop repairs it within its two rounds and reports what remains.\n> 1. Continue — run the review and write `{findings: [...], review_clean: bool}` into `state.ui_review`\n> 2. Abort — drop this UI request\n",
       "stderr": "",
       "state_after": {
         "version": 1,
@@ -640,13 +640,15 @@
             "kind": "ui",
             "stack": "plain",
             "file": "resources/views/marketing/hero.blade.php",
-            "summary": "Hero headline updated and CTA button retokenised to brand-red"
+            "summary": "Hero headline updated and CTA button retokenised to brand-red",
+            "new_control_roles": []
           },
           {
             "kind": "ui",
             "stack": "plain",
             "file": "resources/views/components/button.blade.php",
-            "summary": "Hero headline updated and CTA button retokenised to brand-red"
+            "summary": "Hero headline updated and CTA button retokenised to brand-red",
+            "new_control_roles": []
           }
         ],
         "tests": null,
@@ -665,6 +667,7 @@
           "> Skills: `design-review` — stack-neutral, which is what `plain` means.",
           "> The review pass compares `state.ticket.ui_apply.rendered` against `state.ui_design` (microcopy, states, a11y, layout) and produces a structured `findings` list.",
           "> Ground chart-type and contrast findings in the adopted corpus (design-intelligence § 'Grounding the review/polish a11y gate') — cite the corpus row, don't eyeball.",
+          "> Consistency: run `lint_design_consistency` over the changed files and `ui:render --interact` on every control a change added (see `new_control_roles` on `state.changes`); write `consistency: {findings: [...], open_state: {<role>: \"captured\"}}`. Where an approved baseline exists, `ui:render --region <changed region>` compares against it; each delta is a finding, so the polish loop repairs it within its two rounds and reports what remains.",
           "> 1. Continue — run the review and write `{findings: [...], review_clean: bool}` into `state.ui_review`",
           "> 2. Abort — drop this UI request"
         ],
@@ -685,7 +688,7 @@
         ".implement-ticket-state.json"
       ],
       "exit_code": 0,
-      "stdout": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/marketing/hero.blade.php`\n- `resources/views/components/button.blade.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`\n",
+      "stdout": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/marketing/hero.blade.php`\n- `resources/views/components/button.blade.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## UI consistency\n\n- `static-pass` — statically checked only — nothing was rendered, so this is NOT a visual verification\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`\n",
       "stderr": "",
       "state_after": {
         "version": 1,
@@ -798,7 +801,8 @@
               "screenshot-diff"
             ],
             "blocker": "b-page-capture-primitive",
-            "skip_reason": "b-page-capture-primitive"
+            "skip_reason": "b-page-capture-primitive",
+            "consistency_status": "static-pass"
           }
         },
         "ui_polish": null,
@@ -814,13 +818,15 @@
             "kind": "ui",
             "stack": "plain",
             "file": "resources/views/marketing/hero.blade.php",
-            "summary": "Hero headline updated and CTA button retokenised to brand-red"
+            "summary": "Hero headline updated and CTA button retokenised to brand-red",
+            "new_control_roles": []
           },
           {
             "kind": "ui",
             "stack": "plain",
             "file": "resources/views/components/button.blade.php",
-            "summary": "Hero headline updated and CTA button retokenised to brand-red"
+            "summary": "Hero headline updated and CTA button retokenised to brand-red",
+            "new_control_roles": []
           }
         ],
         "tests": null,
@@ -836,7 +842,7 @@
           "report": "success"
         },
         "questions": [],
-        "report": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/marketing/hero.blade.php`\n- `resources/views/components/button.blade.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
+        "report": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/marketing/hero.blade.php`\n- `resources/views/components/button.blade.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## UI consistency\n\n- `static-pass` — statically checked only — nothing was rendered, so this is NOT a visual verification\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
       },
       "directive": null,
       "recipe_action": null,

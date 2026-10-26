@@ -80,19 +80,14 @@ EXISTING-UI-AUDIT RUNS FIRST. ALWAYS.
 Skip only when **all** hold:
 
 - ≤ 1 file, ≤ 5 changed lines, no new component, no new state, no new control
-  role — no element or component of a role the file lacked (select, input,
-  textarea, checkbox, radio, switch, date/time, dialog, details, popover,
-  combobox, menu, menu-button, tooltip, tabs, table). A native `<select>` is new.
+  role (roles: `control_roles.ts`; a native `<select>` counts).
 - Inside the work engine, `directive_set == "ui-trivial"` — the dispatcher
   states it directly. Outside it, the same conditions are read **off the
   diff**, which is observable without any dispatcher state.
 
-The `directive_set` check used to be an additional *requirement* rather than
-the dispatcher's way of stating the same fact. That made the escape hatch
-dispatcher-only, and with `state.ui_audit` also dispatcher-only the gate could
-be neither satisfied nor skipped in a plain chat session — the only
-rule-conform action left was "write no UI". A gate whose sole compliant path is
-inaction is not a gate.
+The `directive_set` check was once an extra *requirement*, which left a plain
+chat session no compliant path but "write no UI". A gate whose sole compliant
+path is inaction is not a gate.
 
 ## Honest scope — what this rule does NOT enforce in a chat session
 

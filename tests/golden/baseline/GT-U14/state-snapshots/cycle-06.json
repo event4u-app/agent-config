@@ -119,7 +119,8 @@
       "kind": "ui",
       "stack": "plain",
       "file": "resources/views/settings/notifications.blade.php",
-      "summary": "Settings panel rendered with toggles and tooltips"
+      "summary": "Settings panel rendered with toggles and tooltips",
+      "new_control_roles": []
     }
   ],
   "tests": null,

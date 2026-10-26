@@ -160,7 +160,7 @@
         ".implement-ticket-state.json"
       ],
       "exit_code": 0,
-      "stdout": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/livewire/sidebar-empty-state.blade.php`\n- `app/Livewire/Sidebar/EmptyState.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`\n",
+      "stdout": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/livewire/sidebar-empty-state.blade.php`\n- `app/Livewire/Sidebar/EmptyState.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## UI consistency\n\n- `pass` — visually verified — rendered, no consistency finding, every added control checked open\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`\n",
       "stderr": "",
       "state_after": {
         "version": 1,
@@ -270,7 +270,8 @@
               "touch-target-size",
               "rendered-contrast",
               "screenshot-diff"
-            ]
+            ],
+            "consistency_status": "pass"
           }
         },
         "ui_polish": null,
@@ -286,13 +287,15 @@
             "kind": "ui",
             "stack": "blade-livewire-flux",
             "file": "resources/views/livewire/sidebar-empty-state.blade.php",
-            "summary": "Sidebar empty-state rendered as Flux + Livewire component"
+            "summary": "Sidebar empty-state rendered as Flux + Livewire component",
+            "new_control_roles": []
           },
           {
             "kind": "ui",
             "stack": "blade-livewire-flux",
             "file": "app/Livewire/Sidebar/EmptyState.php",
-            "summary": "Sidebar empty-state rendered as Flux + Livewire component"
+            "summary": "Sidebar empty-state rendered as Flux + Livewire component",
+            "new_control_roles": []
           }
         ],
         "tests": null,
@@ -308,7 +311,7 @@
           "report": "success"
         },
         "questions": [],
-        "report": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/livewire/sidebar-empty-state.blade.php`\n- `app/Livewire/Sidebar/EmptyState.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
+        "report": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/livewire/sidebar-empty-state.blade.php`\n- `app/Livewire/Sidebar/EmptyState.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## UI consistency\n\n- `pass` — visually verified — rendered, no consistency finding, every added control checked open\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
       },
       "directive": null,
       "recipe_action": null,

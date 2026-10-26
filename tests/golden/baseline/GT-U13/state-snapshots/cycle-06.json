@@ -100,7 +100,8 @@
       "kind": "ui",
       "stack": "plain",
       "file": "resources/views/dashboard/header.blade.php",
-      "summary": "Status banner rendered under the dashboard header"
+      "summary": "Status banner rendered under the dashboard header",
+      "new_control_roles": []
     }
   ],
   "tests": null,
