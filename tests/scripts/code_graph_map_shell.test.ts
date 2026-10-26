@@ -6,9 +6,10 @@ import { pathToFileURL } from 'node:url';
 import type { Browser, Page } from '@playwright/test';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { type HubPayload, renderHub } from '../../src/scripts/code_graph/estate_map.js';
 import { buildMap, renderHtml } from '../../src/scripts/code_graph/map.js';
-import { KNOWLEDGE_AREA_IDS, type MapAreas } from '../../src/scripts/code_graph/map_areas.js';
-import { sampleAreas } from './code_graph_map_areas_fixture.js';
+import { KNOWLEDGE_AREA_IDS, type MapAreas, type RuntimePayload } from '../../src/scripts/code_graph/map_areas.js';
+import { sampleAreas, wit } from './code_graph_map_areas_fixture.js';
 
 // The shell around the areas: routing, the area pages with and without a
 // payload, search over every kind, the freshness banner, both languages, and
@@ -45,7 +46,7 @@ beforeAll(async () => {
     const f = await drawn(sampleAreas());
     full = f.html;
     // The same map, drawn while the graph is three commits behind HEAD.
-    const doc = JSON.parse(fs.readFileSync(path.join(f.dir, 'map.json'), 'utf-8')) as { meta: Parameters<typeof renderHtml>[1]; model: Parameters<typeof renderHtml>[0]; areas: MapAreas };
+    const doc = JSON.parse(fs.readFileSync(path.join(f.dir, 'code', 'map.json'), 'utf-8')) as { meta: Parameters<typeof renderHtml>[1]; model: Parameters<typeof renderHtml>[0]; areas: MapAreas };
     doc.model.pin = { ...(doc.model.pin ?? { commit: '', date: '', generation: '' }), freshness: 'behind:3' };
     behind = path.join(f.dir, 'behind.html');
     fs.writeFileSync(behind, renderHtml(doc.model, { ...doc.meta, state: 'behind:3' }, doc.areas));
@@ -58,11 +59,16 @@ afterAll(async () => {
 });
 
 describe('the router', () => {
-    it('opens Code without a hash or with an unknown one, and the nav switches areas', async () => {
+    it('opens the map home, Overview, without a hash or with an unknown one, and the nav switches areas', async () => {
         const page = await open(empty);
-        expect((await route(page)).route).toBe('code');
+        expect((await route(page)).route).toBe('overview');
+        expect(await page.locator('#wb').isVisible()).toBe(false);
+        expect(await page.locator('#av').isVisible()).toBe(true);
+        expect(await page.locator('.ocard').count()).toBe(1 + KNOWLEDGE_AREA_IDS.length);
+        expect(await page.locator('#areanav a[data-route="overview"]').getAttribute('aria-current')).toBe('page');
+        await page.click('#areanav a[data-route="code"]');
+        await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'code');
         expect(await page.locator('#wb').isVisible()).toBe(true);
-        expect(await page.locator('#av').isVisible()).toBe(false);
         expect(await page.locator('#areanav a[data-route="code"]').getAttribute('aria-current')).toBe('page');
         await page.click('#areanav a[data-route="data"]');
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'data');
@@ -70,12 +76,16 @@ describe('the router', () => {
         expect(await page.locator('#areanav a[data-route="data"]').getAttribute('aria-current')).toBe('page');
         await page.close();
         const odd = await open(empty, '#/nowhere');
-        expect((await route(odd)).route).toBe('code');
+        expect((await route(odd)).route).toBe('overview');
         await odd.close();
+        const projects = await open(empty, '#/projects');
+        expect((await route(projects)).route).toBe('overview');
+        expect(await projects.locator('#areanav a[data-route="projects"]').count()).toBe(0);
+        await projects.close();
     });
 
     it('the Code breadcrumb starts at the map home', async () => {
-        const page = await open(empty);
+        const page = await open(empty, '#/code');
         await page.click('#crumbs .crumb-map');
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'overview');
         expect(await page.locator('.ocard').count()).toBe(1 + KNOWLEDGE_AREA_IDS.length);
@@ -154,6 +164,139 @@ describe('an area with a payload renders its facts with their witnesses', () => 
     });
 });
 
+describe('the local environment on the Delivery area (DEC-1)', () => {
+    const services = (): RuntimePayload => ({
+        reader: 'compose',
+        completeness: 'complete',
+        findings: [],
+        environments: [],
+        resources: [],
+        services: [
+            { name: 'web', image: 'nginx:1.25', ports: [{ published: 8080, target: 80 }], networks: ['front'], envNames: ['APP_URL'], witness: wit('docker-compose.yml', 3, 'confirmed') },
+            { name: 'api', image: 'node:22', ports: [{ published: 8080, target: 3000 }, { target: 9229 }], networks: ['front'], envNames: [], witness: wit('docker-compose.yml', 9) },
+            { name: 'db', image: 'postgres:16', ports: [{ published: 5432, target: 5432 }], networks: [], envNames: ['POSTGRES_DB'], witness: wit('docker-compose.yml', 15) },
+        ],
+    });
+
+    it('shows Compose services and published ports from the Runtime payload, with a collision marked', async () => {
+        const areas = sampleAreas();
+        areas.runtime = services();
+        const page = await open((await drawn(areas)).html, '#/delivery');
+        const tabs = await page.locator('#av-bar [role="tab"]').allTextContents();
+        expect(tabs[0]).toBe('Local environment');
+        expect(tabs).toEqual(expect.arrayContaining(['Pipeline', 'Build → deploy', 'Findings']));
+        const main = (await page.locator('#av-main').textContent()) ?? '';
+        expect(main).toMatch(/web[\s\S]*nginx:1\.25[\s\S]*api[\s\S]*db/);
+        expect(main).toMatch(/Published ports \(2\)/);
+        expect(await page.locator('#av-main .tbl tbody tr').count()).toBe(3);
+        expect(await page.locator('#av-main .tbl .st.bad').count()).toBe(2);
+        expect(await page.locator('#av-bar').textContent()).toMatch(/3 services · 2 published ports · declared, never observed/);
+        await page.locator('#av-main .tname', { hasText: 'db' }).click();
+        await page.waitForFunction(() => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === 'local/db');
+        expect(await page.locator('#av-detail').textContent()).toMatch(/docker-compose\.yml:15/);
+        // The facts stay where the Runtime reader stored them.
+        await page.evaluate(() => { location.hash = '#/runtime'; });
+        await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'runtime');
+        await page.click('#av-bar [role="tab"]:has-text("Services")');
+        expect(await page.locator('#av-main').textContent()).toMatch(/web[\s\S]*api[\s\S]*db/);
+        await page.close();
+    });
+
+    it('is live with only the local environment when no delivery reader ran', async () => {
+        const page = await open((await drawn({ runtime: services() })).html, '#/delivery');
+        expect(await page.locator('#av-bar [role="tab"]').allTextContents()).toEqual(['Local environment']);
+        expect(await page.locator('#nodata-delivery').count()).toBe(0);
+        expect(await page.locator('#av-main').textContent()).toMatch(/web[\s\S]*8080\/tcp/);
+        await page.close();
+        const none = await open(empty, '#/delivery');
+        expect(await none.locator('#nodata-delivery').isVisible()).toBe(true);
+        await none.close();
+    });
+});
+
+describe('the hub on the same shell (5.11)', () => {
+    const w = (file: string, line: number) => ({ file, line, hash: 'ab12cd34' });
+    const payload = (): HubPayload => ({
+        reader: 'hub',
+        completeness: 'complete',
+        findings: [],
+        projects: [
+            { id: 'aaaa-1', name: 'alpha', indexed: true, indexedAt: '2026-10-26', page: 'aaaa-1/index.html' },
+            { id: 'bbbb-2', name: 'beta', indexed: false, page: null, pageReason: 'no map drawn yet' },
+        ],
+        edges: [{ source: 'aaaa-1', target: 'bbbb-2', via: 'package', detail: '@x/beta' }],
+        ports: [{ port: '8080/tcp', uses: [{ project: 'aaaa-1', name: 'web', witness: w('docker-compose.yml', 5) }, { project: 'bbbb-2', name: 'api', witness: w('docker-compose.yml', 5) }] }],
+        images: [],
+        services: [],
+        calls: [
+            { project: 'aaaa-1', service: 'beta', method: 'GET', path: '/api/v1/orders/{id}', witness: w('src/orders.ts', 2), match: { project: 'bbbb-2', route: 'GET /orders/:id', witness: w('src/app.ts', 6) } },
+            { project: 'aaaa-1', service: 'beta', method: 'POST', path: '/audit-log', witness: w('src/orders.ts', 7), unmatched: 'no_endpoint_match' },
+        ],
+        skipped: [],
+    });
+
+    it('routes only to Projects, draws the projects, the service map and the detail with both witnesses', async () => {
+        const html = path.join(fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cg-hub-'))), 'index.html');
+        roots.push(path.dirname(html));
+        fs.writeFileSync(html, renderHub(payload()));
+        const page = await open(html);
+        expect(await route(page)).toEqual({ route: 'projects', item: '' });
+        expect(await page.locator('#areanav a').allTextContents()).toEqual(['Projects']);
+        expect(await page.locator('#pin-commit').textContent()).toMatch(/HUB/);
+        expect(await page.locator('#banner').isVisible()).toBe(false);
+        expect(await page.locator('.pgraph text.plabel').allTextContents()).toEqual(['alpha', 'beta']);
+        expect(await page.locator('.pgraph line.pfact').count()).toBe(1);
+        expect(await page.evaluate(() => (window as unknown as { __mapLabelBoxes: { boxes: unknown[] } }).__mapLabelBoxes.boxes.length)).toBe(2);
+        await page.click('#av-bar [role="tab"]:has-text("Service map")');
+        const calls = (await page.locator('#av-main').textContent()) ?? '';
+        expect(calls).toMatch(/GET \/api\/v1\/orders\/\{id\}[\s\S]*beta · GET \/orders\/:id/);
+        expect(calls).toMatch(/POST \/audit-log[\s\S]*no route matches/);
+        await page.locator('#av-main .rowpick', { hasText: 'GET /api/v1/orders/{id}' }).click();
+        await page.waitForFunction(() => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === 'call/0');
+        expect(await page.locator('#av-detail').textContent()).toMatch(/alpha · src\/orders\.ts:2[\s\S]*beta · src\/app\.ts:6/);
+        await page.click('#av-bar [role="tab"]:has-text("Port collisions")');
+        expect(await page.locator('#av-main').textContent()).toMatch(/8080\/tcp[\s\S]*alpha[\s\S]*web[\s\S]*beta[\s\S]*api/);
+        await page.fill('#search', 'alp');
+        expect(await page.locator('#results button').first().textContent()).toMatch(/Projects · alpha/);
+        await page.close();
+        const odd = await open(html, '#/code');
+        expect((await route(odd)).route).toBe('projects');
+        await odd.close();
+    });
+
+    it('links a project to its page only where one exists, and renders in both languages and at every width', async () => {
+        const html = path.join(fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cg-hub-'))), 'index.html');
+        roots.push(path.dirname(html));
+        fs.writeFileSync(html, renderHub(payload()));
+        const page = await open(html, '#/projects/project%2Faaaa-1');
+        expect(await page.locator('#av-detail a[href="aaaa-1/index.html"]').count()).toBe(1);
+        await page.evaluate(() => { location.hash = '#/projects/project%2Fbbbb-2'; });
+        await page.waitForFunction(() => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === 'project/bbbb-2');
+        expect(await page.locator('#av-detail a').count()).toBe(0);
+        expect(await page.locator('#av-detail').textContent()).toContain('no map drawn yet');
+        await page.click('#lang');
+        expect(await page.locator('#areanav a').allTextContents()).toEqual(['Projekte']);
+        expect(await page.evaluate(() => document.body.innerText)).not.toMatch(/undefined|\[object Object\]|NaN/);
+        await page.close();
+        const problems: string[] = [];
+        for (const scheme of ['dark', 'light'] as const) {
+            for (const width of [1440, 375, 320]) {
+                const p = await browser.newPage({ viewport: { width, height: 800 }, colorScheme: scheme });
+                let errors = 0;
+                p.on('pageerror', () => { errors += 1; });
+                for (const tab of ['', 'Service map', 'Port collisions']) {
+                    await p.goto(`${pathToFileURL(html).href}#/projects`);
+                    if (tab) await p.click(`#av-bar [role="tab"]:has-text("${tab}")`);
+                    const scroll = await p.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+                    if (errors || scroll) problems.push(`${scheme} ${width} ${tab || 'Projects'}: errors ${errors}, scroll ${scroll}`);
+                }
+                await p.close();
+            }
+        }
+        expect(problems).toEqual([]);
+    });
+});
+
 describe('the overview', () => {
     it('one card per area, with the fact state and its reason, a filter and tours', async () => {
         const page = await open(full, '#/overview');
@@ -178,7 +321,7 @@ describe('the overview', () => {
 
 describe('search covers every kind; a preset only narrows the kind', () => {
     it('finds a service and an operation, narrows to services, and opens the hit in its area', async () => {
-        const page = await open(full);
+        const page = await open(full, '#/code');
         await page.fill('#search', 'partner');
         const presets = page.locator('#kinds button');
         expect(await presets.count()).toBe(3);
@@ -221,7 +364,7 @@ describe('the freshness banner', () => {
 
 describe('the Code area refinements', () => {
     it('health in points of 25 with the largest lever, the six tiles, languages, the empty-state lists, deselect and the aggregation chip', async () => {
-        const page = await open(empty);
+        const page = await open(empty, '#/code');
         const health = (await page.locator('#health').textContent()) ?? '';
         expect(health).toMatch(/\d+(\.\d+)?\/25/);
         expect(health).toMatch(/Largest lever: /);

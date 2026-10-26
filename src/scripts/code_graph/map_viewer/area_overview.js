@@ -117,7 +117,7 @@ function renderOverview() {
     var pin = model.pin || { commit: meta.commit, date: '', freshness: meta.state, generation: meta.graph_generation || '' };
     var nog = el('span', null, t('oNoGlobal'));
     nog.style.color = 'var(--greenText)';
-    head.appendChild(add(el('div', { class: 'manifest' }), kvGrid([[t('oSource'), 'map.json'], [t('oCommit'), pin.commit + (pin.date ? ' · ' + pin.date : '')],
+    head.appendChild(add(el('div', { class: 'manifest' }), kvGrid([[t('oSource'), 'code/map.json'], [t('oCommit'), pin.commit + (pin.date ? ' · ' + pin.date : '')],
         [t('oGeneration'), String(pin.generation || '').slice(0, 8)], [t('oState'), String(pin.freshness || meta.state || '')], [t('oExport'), nog]])));
     main.appendChild(head);
 

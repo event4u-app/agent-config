@@ -118,6 +118,23 @@
 .vcard { align-items: flex-start; text-align: left; color: var(--text); font: inherit; }
 .kpi4 { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 
+/* Projects (hub only) */
+.pgraph { padding: 12px; }
+.pgraph svg { display: block; width: 100%; height: auto; }
+.pgraph line.pfact { stroke: var(--brand); stroke-width: 2; }
+.pgraph line.pguess { stroke: var(--amberText); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.pgraph line.dim { opacity: 0.15; }
+.pgraph circle.pnode { fill: var(--panel); stroke: var(--brand); stroke-width: 2; cursor: pointer; }
+.pgraph circle.pnode.off { stroke: var(--muted); stroke-dasharray: 3 2; }
+.pgraph text.plabel { fill: var(--text); font-size: 13px; font-weight: 600; }
+.plegend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--muted); }
+.plegend .k { display: inline-block; width: 24px; border-top: 2px solid var(--brand); vertical-align: middle; margin-right: 4px; }
+.plegend .k.g { border-top: 2px dashed var(--amberText); }
+.projlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.projlist button { display: flex; align-items: center; gap: 8px; width: 100%; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--text); padding: 6px 10px; text-align: left; font-size: 13px; }
+.projlist button[aria-pressed='true'] { border-color: var(--brandLine); }
+.projlist .fname { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* Overview */
 .ov-head { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between; }
 .ov-intro { display: flex; flex-direction: column; gap: 6px; max-width: 760px; }

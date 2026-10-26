@@ -17,9 +17,9 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { findProjects, mainRoot, type ProjectEntry, readRegistry, recordProject, repoIdOf, updateRegistry } from '../_lib/project_registry.js';
-import { dropProjectRows, indexAfterRefresh, indexPath } from './estate_index.js';
+import { dropProjectRows, indexAfterRefresh, indexPath, readableIndexPath } from './estate_index.js';
 import { enforceBudget, homeUsage } from './graph_budget.js';
-import { graphHome, graphsRoot } from './graph_home.js';
+import { graphHome, graphsRoot, isHomeDir } from './graph_home.js';
 import type { CodeGraph } from './types.js';
 
 /** A root missing this long is flagged by `list` and removed by `prune` (6.2). */
@@ -73,11 +73,9 @@ export function registerUse(root: string, graph: CodeGraph | null, commit: strin
 
 /** User-global homes are removable caches; a home under a repository's own `agents/` never is. */
 function removeGlobalHomes(e: ProjectEntry): string[] {
-    const base = graphsRoot();
     const removed: string[] = [];
     for (const dir of new Set([...Object.keys(e.homes), ...(e.graph_home ? [e.graph_home] : [])])) {
-        const rel = path.relative(base, dir);
-        if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) continue;
+        if (!isHomeDir(dir)) continue;
         fs.rmSync(dir, { recursive: true, force: true });
         removed.push(dir);
     }
@@ -169,7 +167,7 @@ function cmdIndex(action: string | undefined): number {
         updateRegistry((reg) => {
             reg.index = action === 'on';
         });
-        if (action === 'off') fs.rmSync(indexPath(), { force: true });
+        if (action === 'off') for (const f of new Set([indexPath(), readableIndexPath()])) fs.rmSync(f, { force: true });
         process.stdout.write(
             action === 'on'
                 ? 'estate index on — each registered project is indexed on its next build or refresh. It names client projects by path and never leaves this machine.\n'
@@ -182,7 +180,7 @@ function cmdIndex(action: string | undefined): number {
         return 2;
     }
     const reg = readRegistry();
-    process.stdout.write(`estate index: ${reg.index ? 'on' : 'off'} · ${fs.existsSync(indexPath()) ? indexPath() : 'no index file'}\n`);
+    process.stdout.write(`estate index: ${reg.index ? 'on' : 'off'} · ${fs.existsSync(readableIndexPath()) ? readableIndexPath() : 'no index file'}\n`);
     return 0;
 }
 

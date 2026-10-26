@@ -34,10 +34,11 @@
  * completed temp output — on budget-exceeded, build failure, or the child
  * never producing output, the rename never happens and the OLD cache is left
  * byte-for-byte untouched. The cache itself (default
- * `agents/runtime/state/code-graph-v1.json`; for a root without `agents/` or a
- * project install, the user-global `runtime/graphs/<repo id>/state/`, ADR-299)
- * is local-only and disposable — gitignored, rebuildable from source at any
- * time; never a source of truth.
+ * `agents/map/.build/code-graph-v1.json`; for a root without `agents/` or a
+ * project install, the hub's `map/<repo id>-<checkout>/.build/`, ADR-299 and
+ * ADR-303; a cache an older release left at `agents/runtime/state/` is still
+ * read) is local-only and disposable — gitignored, rebuildable from source at
+ * any time; never a source of truth.
  *
  *   impact    --diff <rev> [--depth N]      callers/dependents/test files
  *                                             reachable from the changed
@@ -65,14 +66,14 @@
  *   open     [--root P] [--out DIR]           open the drawn map in the browser
  *                                               without redrawing it
  *   map      [--root P] [--out DIR] [--open]  draw the project map into
- *            [--no-verify] [--diff <rev>]      agents/map/ (ADR-297), or the
- *                                               graph home's map/ (ADR-299); renders it
+ *            [--no-verify] [--diff <rev>]      agents/map/ (ADR-297, ADR-303), or the
+ *                                               hub's <repo id>-<checkout>/ (ADR-299); renders it
  *            [--prs]                           (open PRs by area, via gh)
  *                                               at three widths when Playwright
  *                                               is present
- *   map --estate [--out DIR] [--no-verify]     one page of the registered projects
- *                                               and their links, under the user-global
- *                                               home; refused inside a git work tree
+ *   map --estate [--out DIR] [--no-verify]     the hub: the registered projects, their
+ *                                               links and the facts they share, under the
+ *                                               user-global map/; refused inside a git work tree
  *
  *   suggest-verb "<question>"                  (Phase 9 D3) print the verb
  *                                               (query/affected/path/explain)
@@ -107,7 +108,7 @@ import { estateMapMain } from './estate_map.js';
 import { touchHome } from './graph_budget.js';
 import { resolveProjectRef } from './project_ref.js';
 import { projectsMain, registerUse } from './projects_cli.js';
-import { buildMap, graphGeneration, mapGeneration, recordOutcome } from './map.js';
+import { buildMap, graphGeneration, hasMap, mapGeneration, recordOutcome } from './map.js';
 import { cliPackage, usableCli } from './refresh_cli.js';
 import {
     STALE_LOCK_MS,
@@ -148,8 +149,8 @@ import { main as lineageMain } from './lineage_cli.js';
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
 /**
- * The cache belongs to the project it describes: `<root>/agents/runtime/state/`
- * when the root has a project home, its user-global graph home otherwise
+ * The cache belongs to the project it describes: `<root>/agents/map/.build/`
+ * when the root has a project home, its home in the user-global hub otherwise
  * (ADR-299) — the path MCP, the context hook and `detect` read. Anchoring it to
  * the package tree put a consumer's graph inside `node_modules`, where `npm ci`
  * deleted it, two projects sharing an install overwrote each other, and MCP
@@ -157,6 +158,10 @@ export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
  */
 export function cacheFor(root: string): string {
     return graphHome(root).cachePath;
+}
+/** Where a build of `root` writes its graph: always the current layout, never the pre-ADR-303 path a reader falls back to. */
+export function buildCacheFor(root: string): string {
+    return graphHome(root).buildCachePath;
 }
 /** A path relative to the root when it lies inside it; a graph home outside the root prints in full. */
 function shown(root: string, p: string): string {
@@ -227,14 +232,14 @@ function legacyCacheNotice(root: string): string {
 
 async function cmdBuild(argv: string[]): Promise<number> {
     const root = resolveRoot(argv);
-    const out = argv.includes('--out') ? flag(argv, '--out') : cacheFor(root);
+    const out = argv.includes('--out') ? flag(argv, '--out') : buildCacheFor(root);
     if (!fs.existsSync(root)) {
         process.stderr.write(`code-graph: root not found: ${root}\n`);
         return 1;
     }
     const update = argv.includes('--update');
     const { graph, fileCount, reExtracted, reused } = await buildFromRepo(root, out, { update });
-    if (out === cacheFor(root)) registerUse(root, graph, git(root, 'rev-parse', 'HEAD'));
+    if (out === buildCacheFor(root)) registerUse(root, graph, git(root, 'rev-parse', 'HEAD'));
     const c = graph.edge_confidence_counts;
     process.stdout.write(
         `✅  code-graph ${update ? 'updated' : 'built'} — ${fileCount} files · ${graph.nodes.length} nodes · ${graph.edges.length} edges\n` +
@@ -887,7 +892,7 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
  */
 async function cmdRefresh(argv: string[]): Promise<number> {
     const root = resolveRoot(argv);
-    const out = flag(argv, '--out') ?? cacheFor(root);
+    const out = flag(argv, '--out') ?? buildCacheFor(root);
     const budgetSeconds = budgetSecondsOf(argv);
     if (!fs.existsSync(root)) {
         process.stderr.write(`code-graph: root not found: ${root}\n`);
@@ -925,7 +930,7 @@ async function cmdRefresh(argv: string[]): Promise<number> {
             record('failed', `build exited ${rc}`);
             return rc;
         }
-        if (out === cacheFor(root)) registerUse(root, null, git(root, 'rev-parse', 'HEAD'));
+        if (out === buildCacheFor(root)) registerUse(root, null, git(root, 'rev-parse', 'HEAD'));
         if (argv.includes('--map') && mapIsBehind(root, out)) {
             const mrc = await drawMap(['--root', root, '--no-build', '--no-verify']);
             record(mrc === 0 ? 'refreshed-with-map' : 'map-failed', mrc === 0 ? undefined : `map exited ${mrc}`);
@@ -958,8 +963,10 @@ function cmdAutoRefresh(argv: string[]): number {
             );
             return 1;
         }
-        fs.mkdirSync(path.dirname(marker), { recursive: true });
-        fs.writeFileSync(marker, `${JSON.stringify({ enabled_at: new Date().toISOString() })}\n`);
+        const now = path.join(home.buildDir, path.basename(marker));
+        fs.mkdirSync(home.buildDir, { recursive: true });
+        fs.writeFileSync(now, `${JSON.stringify({ enabled_at: new Date().toISOString() })}\n`);
+        if (now !== marker) fs.rmSync(marker, { force: true });
         const cli = usableCli(root);
         process.stdout.write(
             'auto-refresh on — each agent session start refreshes the graph, and agents/map/ when it exists,\n' +
@@ -977,7 +984,7 @@ function cmdAutoRefresh(argv: string[]): number {
         return 0;
     }
     if (action === 'off') {
-        fs.rmSync(marker, { force: true });
+        for (const m of new Set([marker, path.join(home.buildDir, path.basename(marker)), path.join(home.legacyDir, path.basename(marker))])) fs.rmSync(m, { force: true });
         process.stdout.write('auto-refresh off\n');
         return 0;
     }
@@ -998,7 +1005,7 @@ function cmdAutoRefresh(argv: string[]): number {
             `last session start: ${line(last['session-start'])}\n` +
             `last refresh: ${line(last.refresh)}\n` +
             `graph: ${computeVerdict(root, cacheFor(root)).verdict}\n` +
-            `map: ${!fs.existsSync(mapDir) ? 'absent' : drawnFrom === null ? 'present (generation unknown — redrawn on the next refresh)' : drawnFrom === gen ? 'present, drawn from the current graph' : 'present, drawn from an older graph'}\n` +
+            `map: ${!hasMap(mapDir) ? 'absent' : drawnFrom === null ? 'present (generation unknown — redrawn on the next refresh)' : drawnFrom === gen ? 'present, drawn from the current graph' : 'present, drawn from an older graph'}\n` +
             (fs.existsSync(mutex) && mutexAgeMs(mutex) > 60_000
                 ? `reclaim mutex: ${shown(root, mutex)} left by a crash — stale locks stay held until it is removed by hand\n`
                 : ''),
@@ -1021,7 +1028,7 @@ function mutexAgeMs(p: string): number {
  */
 function mapIsBehind(root: string, cache: string): boolean {
     const mapDir = graphHome(root).mapDir;
-    if (!fs.existsSync(mapDir)) return false;
+    if (!hasMap(mapDir)) return false;
     const gen = graphGeneration(cache);
     return gen !== null && mapGeneration(mapDir) !== gen;
 }
@@ -1088,7 +1095,7 @@ async function drawMap(argv: string[]): Promise<number> {
                 : '    keep it current at every agent session start: agent-config code-graph auto-refresh on\n'),
     );
     let rc = 0;
-    const renderFile = path.join(r.outDir, 'map-render.json');
+    const renderFile = path.join(r.outDir, '.build', 'map-render.json');
     if (argv.includes('--no-verify')) {
         // A check that names the generation it checked can stay beside a newer
         // map without being read as about it; one that names none cannot.
