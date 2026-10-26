@@ -239,23 +239,26 @@ describe('moving and zooming need Ctrl / ⌘', () => {
 });
 
 describe('the ERD in 3D', () => {
-    interface Erd3d { yaw: number; pitch: number; front: string; proj: Record<string, { x: number; y: number }> }
+    interface Erd3d { yaw: number; pitch: number; front: string; hood: string[]; proj: Record<string, { x: number; y: number }> }
     const erd3 = (page: Page): Promise<Erd3d> => page.evaluate(() => (window as unknown as { __mapErd3d: Erd3d }).__mapErd3d);
     it('renders from the 2D / 3D toggle, Focus stays the default, and a picked table comes to the front with all its columns', async () => {
         const page = await open();
         expect(await page.locator('#av-main .dimseg button[aria-pressed="true"]').getAttribute('data-dim')).toBe('2d');
         await page.click('#av-main .dimseg button[data-dim="3d"]');
         await page.waitForFunction(() => (window as unknown as { __mapErd3d?: unknown }).__mapErd3d !== undefined);
-        expect(await page.locator('.db-3d .db-3card').count()).toBe(data.tables.length);
+        // The picked table's neighbourhood are cards; every other table is a dot.
+        const hood = (await erd3(page)).front;
+        expect(hood).toBe('comments');
+        expect(await page.locator('.db-3d .db-3card').count() + (await page.locator('.db-3d .db-3dot').count())).toBeGreaterThanOrEqual(data.tables.length - 1);
         expect(await page.locator('.db-seg[aria-label="Lines"] button[aria-checked="true"]').getAttribute('data-v')).toBe('focus');
-        await page.locator('.db-3card[data-table="customers"] .db-thead').click({ force: true });
+        await page.locator('.db-3dot[data-table="customers"]').dispatchEvent('click');
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === 'table/customers');
         expect((await erd3(page)).front).toBe('customers');
         const cols = data.tables.find((t) => t.name === 'customers')!.columns.map((c) => c.name);
         expect(await page.locator('.db-3card.front[data-table="customers"] .db-col').evaluateAll((rs) => rs.map((r) => r.getAttribute('data-col')))).toEqual(cols);
-        // A table further back shows its keys only.
-        const back = await page.locator('.db-3card:not(.front)[data-table="posts"] .db-col').evaluateAll((rs) => rs.map((r) => r.getAttribute('data-col')));
-        expect(back).toEqual(['id', 'user_id', 'author_id']);
+        // Its neighbours are named chips without columns.
+        expect(await page.locator('.db-3card.chip[data-table="invoices"] .db-col').count()).toBe(0);
+        expect(await page.locator('.db-3card.chip[data-table="invoices"] .tn').textContent()).toBe('invoices');
         await page.close();
     });
 

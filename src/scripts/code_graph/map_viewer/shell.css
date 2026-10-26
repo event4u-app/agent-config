@@ -362,7 +362,6 @@ button.db-badge:hover, button.db-badge:focus-visible { border-color: var(--brand
 .db-warn { color: var(--amberText); }
 .db-nd { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px; }
 .db-nd .nodata-tag { margin-left: 0; }
-.db-ctls .dimseg button { height: 26px; padding: 0 10px; font-size: 12px; }
 .db-3d { height: clamp(460px, calc(100vh - 300px), 760px); background-image: radial-gradient(circle at 50% 50%, rgba(255, 140, 42, 0.07) 0%, rgba(62, 197, 255, 0.04) 35%, transparent 65%), linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: auto, 32px 32px, 32px 32px; }
 .db-3d .db-edges { position: absolute; inset: 0; pointer-events: none; }
 .db-3d-badges { position: absolute; inset: 0; pointer-events: none; z-index: 450; }
@@ -373,3 +372,13 @@ button.db-badge:hover, button.db-badge:focus-visible { border-color: var(--brand
 .db-edges path.db-link.fk { stroke: var(--soft); stroke-width: 2px; }
 .db-edges path.db-link.fk.cascade { stroke: var(--alert); }
 .db-3d .db-zoom { z-index: 500; }
+.db-badge.edge { box-shadow: 0 0 0 3px var(--brandTint); border-style: dashed; }
+.db-overlay { position: absolute; left: 12px; top: 12px; z-index: 500; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.db-overlay .db-zoom { position: static; }
+.db-overlay .dimseg { padding: 3px; background: var(--panel); }
+.db-overlay .dimseg button { height: 30px; padding: 0 12px; font-size: 12px; }
+.db-3card.chip .db-thead { border-bottom: 0; padding: 6px 10px; gap: 10px; }
+.db-3card.chip { width: auto; max-width: 220px; padding: 0; }
+.db-3card.linked { border-color: var(--cyan); }
+.db-3dot { fill: var(--muted); cursor: pointer; pointer-events: auto; }
+.db-3dot.near { fill: var(--cyan); }

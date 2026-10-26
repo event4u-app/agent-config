@@ -95,10 +95,12 @@ var DB_BIG = 12;
 // table and its linked tables at a readable zoom instead; Fit still shows the whole schema.
 var DB_FOCUS_OPEN = 16;
 var DB_READABLE_Z = 0.9;
+// Below this a card's column text is under 7 px at 11 px type: framing the picked table's links stops there.
+var DB_MIN_READABLE_Z = 0.6;
 var DB_CARD_W = 180;
 var DB_GAP_X = 64;
 var DB_GAP_Y = 80;
-var dbState = { dim: '2d', rot: { yaw: 0.35, pitch: -0.25 }, z3: 1, front: '', lines: null, cols: null, layout: 'grid', src: { C: true, M: true, L: true, Q: false }, focus: '', pos: Object.create(null), z: 1, panX: 0, panY: 0, fitted: false, act: '' };
+var dbState = { dim: '2d', rot: { yaw: 0.5, pitch: -0.35 }, z3: 1, front: '', lines: null, cols: null, layout: 'grid', src: { C: true, M: true, L: true, Q: false }, focus: '', pos: Object.create(null), z: 1, panX: 0, panY: 0, fitted: false, act: '' };
 
 function dBare(tb) { return tb.connection !== 'default' && tb.name.indexOf(tb.connection + ':') === 0 ? tb.name.slice(tb.connection.length + 1) : tb.name; }
 function dTable(p, name) { for (var i = 0; i < p.tables.length; i++) if (p.tables[i].name === name) return p.tables[i]; return null; }
@@ -467,12 +469,11 @@ function dErd(p, sel, bodyEl) {
         b.addEventListener('click', function () { dbState.dim = o[0]; rerender(); });
         dim.appendChild(b);
     });
-    ctl.appendChild(dim);
     if (dbState.dim === '3d') {
         add(ctl, dSeg(t('lines'), [['all', t('lAll'), t('lAllT')], ['focus', t('lFocus'), t('lFocusT')], ['off', t('lOff'), t('lOffT')]], lines, function (v) { dbState.lines = v; rerender(); }));
         erd.appendChild(ctl);
         bodyEl.appendChild(erd);
-        dErd3d(p, sel, erd, lines);
+        dErd3d(p, sel, erd, lines, dim);
         return;
     }
     add(ctl, dSeg(t('lines'), [['all', t('lAll'), t('lAllT')], ['focus', t('lFocus'), t('lFocusT')], ['off', t('lOff'), t('lOffT')]], lines, function (v) { dbState.lines = v; rerender(); }),
@@ -623,7 +624,8 @@ function dErd(p, sel, bodyEl) {
     add(zoom, zb('−', t('zoomOut'), '', function () { dZoom(stage, 1 / 1.2); }), zb('+', t('zoomIn'), '', function () { dZoom(stage, 1.2); }),
         zb(t('fitB'), t('fitB'), 'fit', function () { dFit(stage); }), reset);
     var zl = el('span', { class: 'db-zl' });
-    add(stage, zoom, zl);
+    // The 2D / 3D switch sits on the stage beside the zoom, where the Code workbench keeps its own.
+    add(stage, add(el('div', { class: 'db-overlay' }), dim, zoom), zl);
     var legend = add(el('div', { class: 'db-legend', 'aria-label': t('iconsHead') }), el('span', { class: 'cap' }, t('iconsHead')));
     ['fk', 'cascade', 'setnull', 'restrict', 'soft', 'implied', 'finding'].forEach(function (k) {
         legend.appendChild(add(el('span', { class: 'db-leg', 'data-icon': k }), add(el('span', { class: 'db-badge ' + k + (k === 'finding' ? ' has-finding' : ''), 'aria-hidden': 'true' }), dIcon(k)), el('span', null, t('icons')[k])));
@@ -638,8 +640,11 @@ function dErd(p, sel, bodyEl) {
     dEdges(stage);
     dInteract(stage);
     dApply(stage);
-    if (!dbState.fitted) {
+    // A large schema frames the picked table and what it links to, on open and on every new pick.
+    var frameKey = (current.item || '') + '|' + sel.focus;
+    if (!dbState.fitted || (p.tables.length > DB_FOCUS_OPEN && dbState.framed !== frameKey)) {
         dbState.fitted = true;
+        dbState.framed = frameKey;
         requestAnimationFrame(function () { if (stage.isConnected) { if (p.tables.length > DB_FOCUS_OPEN) dFitFocus(stage); else dFit(stage, true); } });
     }
 }
@@ -658,19 +663,71 @@ function dClip(r, tx, ty) {
  * A line annotation: one icon badge on the line instead of a text label. It is a
  * button; it opens a popup with everything the label would have said and more.
  */
-function dBadge(stage, x, y, icon, info) {
+function dBadge(stage, x, y, icon, info, seg) {
     var b = el('button', { type: 'button', class: 'db-badge ' + icon + (info.finding ? ' has-finding' : ''), 'data-icon': icon, 'aria-label': t('iconOpen')(info.title), title: t('icons')[icon] });
     b.appendChild(dIcon(icon));
-    // Two badges never cover each other: a later one steps down until it is clear.
-    var placed = stage.db.badges || (stage.db.badges = []);
-    for (var guard = 0; guard < 12 && placed.some(function (q) { return Math.abs(q[0] - x) < 24 && Math.abs(q[1] - y) < 24; }); guard++) y += 24;
-    placed.push([x, y]);
+    // The line the badge belongs to, in the layer's own coordinates; placing it keeps it on the visible part.
+    b._at = [x, y];
+    b._seg = seg || [x, y, x, y];
     b.style.left = x.toFixed(0) + 'px';
     b.style.top = y.toFixed(0) + 'px';
     b.addEventListener('pointerdown', function (ev) { ev.stopPropagation(); });
     b.addEventListener('click', function (ev) { ev.stopPropagation(); dPopup(stage, b, info); });
     stage.db.labels.appendChild(b);
     return b;
+}
+
+/** The part of segment a→b inside the rectangle, as [x1, y1, x2, y2], or null when none of it is (Liang–Barsky). */
+function dClipSeg(a, b, r) {
+    var t0 = 0;
+    var t1 = 1;
+    var dx = b[0] - a[0];
+    var dy = b[1] - a[1];
+    var tests = [[-dx, a[0] - r.l], [dx, r.r - a[0]], [-dy, a[1] - r.t], [dy, r.b - a[1]]];
+    for (var i = 0; i < 4; i++) {
+        var pq = tests[i];
+        if (pq[0] === 0) { if (pq[1] < 0) return null; continue; }
+        var u = pq[1] / pq[0];
+        if (pq[0] < 0) { if (u > t1) return null; if (u > t0) t0 = u; } else { if (u < t0) return null; if (u < t1) t1 = u; }
+    }
+    return [a[0] + t0 * dx, a[1] + t0 * dy, a[0] + t1 * dx, a[1] + t1 * dy];
+}
+/**
+ * Every badge on the visible part of its line: its own place when that is in view,
+ * else the middle of the line's visible stretch, else — the line is wholly out of
+ * view — the stage edge toward it. Badges never cover each other and keep their size
+ * whatever the zoom. `toScreen` / `fromScreen` convert between the layer and the stage.
+ */
+function dPlaceBadges(stage, toScreen, fromScreen, unscale) {
+    var w = stage.clientWidth;
+    var h = stage.clientHeight;
+    var r = { l: 14, r: w - 14, t: 56, b: h - 34 };
+    var taken = [];
+    Array.prototype.forEach.call(stage.db.labels.querySelectorAll('.db-badge'), function (b) {
+        if (!b._seg) return;
+        var a = toScreen([b._seg[0], b._seg[1]]);
+        var c = toScreen([b._seg[2], b._seg[3]]);
+        var at = toScreen(b._at);
+        var pos;
+        var inside = function (q) { return q[0] >= r.l && q[0] <= r.r && q[1] >= r.t && q[1] <= r.b; };
+        var vis = dClipSeg(a, c, r);
+        b.classList.toggle('edge', !vis);
+        if (inside(at)) pos = at;
+        else if (vis) pos = [(vis[0] + vis[2]) / 2, (vis[1] + vis[3]) / 2];
+        else pos = [Math.max(r.l, Math.min(r.r, at[0])), Math.max(r.t, Math.min(r.b, at[1]))];
+        for (var guard = 0; guard < 16 && taken.some(function (q) { return Math.abs(q[0] - pos[0]) < 24 && Math.abs(q[1] - pos[1]) < 24; }); guard++) {
+            pos = [pos[0], pos[1] + 24 > r.b ? pos[1] - 24 * (guard + 1) : pos[1] + 24];
+        }
+        taken.push(pos);
+        var world = fromScreen(pos);
+        b.style.left = world[0].toFixed(1) + 'px';
+        b.style.top = world[1].toFixed(1) + 'px';
+        b.style.transform = 'translate(-50%, -50%)' + (unscale ? ' scale(' + (1 / dbState.z).toFixed(3) + ')' : '');
+    });
+}
+function dPlace2d(stage) {
+    dPlaceBadges(stage, function (v) { return [dbState.panX + v[0] * dbState.z, dbState.panY + v[1] * dbState.z]; },
+        function (v) { return [(v[0] - dbState.panX) / dbState.z, (v[1] - dbState.panY) / dbState.z]; }, true);
 }
 
 function dClosePopup() {
@@ -738,8 +795,12 @@ function dFindingFor(p, ids, rule) {
     return null;
 }
 
-/** The edges as the cards stand now; drawn again after every drag. */
+/** The edges as the cards stand now, with every badge on the visible part of its line; drawn again after every drag. */
 function dEdges(stage) {
+    dEdgesDraw(stage);
+    dPlace2d(stage);
+}
+function dEdgesDraw(stage) {
     var e = stage.db;
     var svgNS = 'http://www.w3.org/2000/svg';
     while (e.svg.firstChild) e.svg.removeChild(e.svg.firstChild);
@@ -783,7 +844,7 @@ function dEdges(stage) {
         var pair = a < b ? a + '|' + b : b + '|' + a;
         var n = badged[pair] = (badged[pair] || 0) + 1;
         var f = n === 1 ? 0.5 : n === 2 ? 0.32 : 0.68;
-        dBadge(stage, p1[0] + (p2[0] - p1[0]) * f + ox, p1[1] + (p2[1] - p1[1]) * f + oy, info.icon, info);
+        dBadge(stage, p1[0] + (p2[0] - p1[0]) * f + ox, p1[1] + (p2[1] - p1[1]) * f + oy, info.icon, info, [p1[0] + ox, p1[1] + oy, p2[0] + ox, p2[1] + oy]);
     }
     var hot = e.sel.hot;
     if (phys) {
@@ -863,7 +924,7 @@ function dLinkLines(stage) {
         if (l.onDelete) acts.push('ON DELETE ' + l.onDelete.toUpperCase());
         if (l.onUpdate) acts.push('ON UPDATE ' + l.onUpdate.toUpperCase());
         var f = l.finding !== undefined && e.p.findings[l.finding] ? { f: e.p.findings[l.finding], i: l.finding } : null;
-        dBadge(stage, mx, my, l.kind === 'fk' ? dRuleIcon(l.onDelete) : l.kind, { title: name, icon: l.kind === 'fk' ? dRuleIcon(l.onDelete) : l.kind, kind: l.kind, via: l.via, rules: acts.join(' · '), witnesses: l.witnesses, finding: f, pick: 'column/' + l.to.table + '.' + l.to.column });
+        dBadge(stage, mx, my, l.kind === 'fk' ? dRuleIcon(l.onDelete) : l.kind, { title: name, icon: l.kind === 'fk' ? dRuleIcon(l.onDelete) : l.kind, kind: l.kind, via: l.via, rules: acts.join(' · '), witnesses: l.witnesses, finding: f, pick: 'column/' + l.to.table + '.' + l.to.column }, [a.x, a.y, b.x, b.y]);
     });
 }
 
@@ -871,6 +932,7 @@ function dApply(stage) {
     stage.db.world.style.transform = 'translate(' + dbState.panX + 'px, ' + dbState.panY + 'px) scale(' + dbState.z + ')';
     stage.db.zl.textContent = t('zoomL')(dbState.z.toFixed(1).replace('.', lang === 'de' ? ',' : '.'));
     window.__mapErd = { z: dbState.z, tables: Object.keys(stage.db.cards), focus: stage.db.sel.focus, src: dbState.src, lines: stage.db.lines };
+    dPlace2d(stage);
 }
 function dZoom(stage, f) {
     var nz = Math.max(0.4, Math.min(3, dbState.z * f));
@@ -903,19 +965,24 @@ function dFitFocus(stage) {
     var db = stage.db;
     var focus = db.cards[db.sel.focus];
     if (!focus) { dFit(stage, true); return; }
+    // The picked table and every table its drawn lines reach: the picked key's links, or the focused table's keys.
+    var around = db.link ? db.link.tables : db.near;
     var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-    Object.keys(db.near).forEach(function (n) {
+    Object.keys(around).concat([db.sel.focus]).forEach(function (n) {
         if (!db.cards[n]) return;
         var r = dRect(db.cards[n]);
         x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y); x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h);
     });
-    var top = 48;
-    var m = 16;
+    var top = 56;
+    var m = 24;
     var vw = stage.clientWidth;
-    var vh = stage.clientHeight - top;
-    var z = Math.max(DB_READABLE_Z, Math.min(1.2, (vw - 2 * m) / (x1 - x0), (vh - 2 * m) / (y1 - y0)));
+    var vh = stage.clientHeight - top - 30;
+    // All of them at the largest zoom that holds them while it stays readable; when they lie too far apart for
+    // that, the picked table at a readable zoom, its lines leading out with their badges kept on the stage.
+    var fitZ = Math.min(1.2, (vw - 2 * m) / (x1 - x0), (vh - 2 * m) / (y1 - y0));
     var f = dRect(focus);
-    if ((x1 - x0) * z > vw - 2 * m || (y1 - y0) * z > vh - 2 * m) { x0 = f.x; x1 = f.x + f.w; y0 = f.y; y1 = f.y + f.h; }
+    var z = fitZ >= DB_MIN_READABLE_Z ? fitZ : DB_READABLE_Z;
+    if (fitZ < DB_MIN_READABLE_Z) { x0 = f.x; x1 = f.x + f.w; y0 = f.y; y1 = f.y + f.h; }
     dbState.z = z;
     dbState.panX = vw / 2 - (x0 + x1) / 2 * z;
     dbState.panY = top + vh / 2 - (y0 + y1) / 2 * z;
@@ -943,7 +1010,7 @@ function dInteract(stage) {
     var touches = Object.create(null);
     var pinch = null;
     stage.addEventListener('pointerdown', function (ev) {
-        if (ev.target.closest('.db-zoom, .db-badge, #db-pop')) return;
+        if (ev.target.closest('.db-overlay, .db-badge, #db-pop')) return;
         if (ev.pointerType === 'touch') {
             touches[ev.pointerId] = [ev.clientX, ev.clientY];
             var ids = Object.keys(touches);
@@ -1018,7 +1085,7 @@ function dInteract(stage) {
     stage.addEventListener('pointerleave', function (ev) { if (ev.pointerType !== 'touch') stage.classList.remove('mod'); });
     // A click on the empty stage clears a picked key; on a card, a key or an icon it picks as before.
     stage.addEventListener('click', function (ev) {
-        if (stage.moved || ev.target.closest('.db-table, .db-zoom, .db-badge, #db-pop')) return;
+        if (stage.moved || ev.target.closest('.db-table, .db-overlay, .db-badge, #db-pop')) return;
         if (current.item.indexOf('column/') === 0) avPick('data', '');
     });
     stage.addEventListener('wheel', function (ev) {
@@ -1040,32 +1107,45 @@ function dBindModifier() {
 
 // ---- ERD in 3D -------------------------------------------------------------------
 
-/**
- * Seeded places in space: clusters of keys on a ring, the tables of one cluster on
- * a small sphere around its centre (golden-angle spiral). Same schema, same places.
- */
-function d3Places(p, names) {
-    var clusters = dClusters(p);
-    var placed = Object.create(null);
-    clusters.forEach(function (c) { c.tables.forEach(function (n) { placed[n] = true; }); });
-    var extra = names.filter(function (n) { return !placed[n]; });
-    if (extra.length) clusters.push({ id: 'code', tables: extra });
-    var out = Object.create(null);
-    var ring = clusters.length > 1 ? 1.5 : 0;
-    clusters.forEach(function (c, i) {
-        var a = i / clusters.length * Math.PI * 2;
-        var cx = Math.cos(a) * ring;
-        var cz = Math.sin(a) * ring;
-        var k = c.tables.length;
-        var r = k > 1 ? 0.45 + 0.12 * Math.sqrt(k) : 0;
-        c.tables.forEach(function (n, j) {
-            var y = k > 1 ? 1 - 2 * (j + 0.5) / k : 0;
-            var rad = Math.sqrt(Math.max(0, 1 - y * y));
-            var th = j * 2.399963;
-            out[n] = [cx + Math.cos(th) * rad * r, y * r * 0.9, cz + Math.sin(th) * rad * r];
+/** Cards drawn in 3D: the picked table and its neighbourhood; every other table is a dot further out. */
+var D3_MAX = 24;
+/** Readable names for the 3D chips; an overlapping pair is pushed apart until this gap remains. */
+var D3_GAP = 6;
+
+/** Tables joined to a table: foreign keys, key links of every kind and ORM relations. */
+function d3Adjacency(p) {
+    var adj = Object.create(null);
+    p.tables.forEach(function (tb) { adj[tb.name] = adj[tb.name] || Object.create(null); });
+    var join = function (a, b) { if (adj[a] && adj[b] && a !== b) { adj[a][b] = true; adj[b][a] = true; } };
+    p.foreignKeys.forEach(function (k) { join(k.from.table, k.to.table); });
+    p.tables.forEach(function (tb) { tb.columns.forEach(function (c) { (c.links || []).forEach(function (l) { join(tb.name, l.to.table); }); }); });
+    p.relations.forEach(function (r) { var a = dRelTable(p, r.from); var b = dRelTable(p, r.to); if (a && b) join(a.name, b.name); });
+    return adj;
+}
+/** The picked table, then breadth-first by joins (best-joined first), up to the card budget. */
+function d3Neighbourhood(p, adj, focus, first) {
+    var out = [focus];
+    var seen = Object.create(null);
+    seen[focus] = true;
+    var deg = function (n) { return Object.keys(adj[n] || {}).length; };
+    (first || []).forEach(function (n) { if (!seen[n] && adj[n] && out.length < D3_MAX) { seen[n] = true; out.push(n); } });
+    for (var i = 0; i < out.length && out.length < D3_MAX; i++) {
+        Object.keys(adj[out[i]] || {}).sort(function (a, b) { return deg(b) - deg(a) || (a < b ? -1 : 1); }).forEach(function (n) {
+            if (!seen[n] && out.length < D3_MAX) { seen[n] = true; out.push(n); }
         });
-    });
+    }
     return out;
+}
+/** `n` points spread evenly over a sphere (golden-angle spiral), the same for the same `n`. */
+function d3Sphere(n, radius) {
+    var pts = [];
+    for (var i = 0; i < n; i++) {
+        var y = n > 1 ? 1 - 2 * (i + 0.5) / n : 0;
+        var rad = Math.sqrt(Math.max(0, 1 - y * y));
+        var th = i * 2.399963;
+        pts.push([Math.cos(th) * rad * radius, y * radius, Math.sin(th) * rad * radius]);
+    }
+    return pts;
 }
 function d3Rotate(v) {
     var cy = Math.cos(dbState.rot.yaw);
@@ -1076,33 +1156,40 @@ function d3Rotate(v) {
     var sp = Math.sin(dbState.rot.pitch);
     return [x1, v[1] * cp - z1 * sp, v[1] * sp + z1 * cp];
 }
-/** Turn so that `v` faces the viewer. */
-function d3Face(v) {
-    var yaw = Math.atan2(-v[0], v[2]);
-    var cy = Math.cos(yaw);
-    var sy = Math.sin(yaw);
-    var z1 = -v[0] * sy + v[2] * cy;
-    dbState.rot = { yaw: yaw, pitch: Math.atan2(v[1], z1 || 1e-6) };
-}
 
-function dErd3d(p, sel, erd, lines) {
+/**
+ * The ERD in space. The picked table stands in front with all its columns; its
+ * neighbourhood (≤ D3_MAX tables) sits on a shell around it, the side facing the
+ * viewer as named chips, the far side as small fogged dots; every other table is a
+ * faint dot on an outer shell. Overlapping chips are pushed apart on screen. Lines
+ * keep the 2D styles and their badges, placed on the stage. Ctrl / ⌘ + drag and the
+ * arrow keys orbit, Ctrl / ⌘ + wheel and the buttons zoom.
+ */
+function dErd3d(p, sel, erd, lines, dim) {
     var stage = el('div', { class: 'db-stage db-3d', id: 'db-stage', tabindex: '0', 'aria-label': t('dim3') });
     var svgNS = 'http://www.w3.org/2000/svg';
     var svg = document.createElementNS(svgNS, 'svg');
     svg.setAttribute('class', 'db-edges');
-    svg.setAttribute('aria-hidden', 'true');
     var labels = el('div', { class: 'db-3d-badges' });
     stage.appendChild(svg);
     stage.appendChild(labels);
     erd.appendChild(stage);
     var link = dLinkSel(p, current.item);
-    var names = p.tables.map(function (tb) { return tb.name; });
-    var places = d3Places(p, names);
-    // The picked table, or the one the page opens on (the first with a finding), faces the viewer.
-    var picked = sel.focus;
-    if (picked && places[picked] && dbState.front !== picked) { d3Face(places[picked]); dbState.front = picked; }
+    var focus = link ? link.table : sel.focus;
+    var adj = d3Adjacency(p);
+    var hood = d3Neighbourhood(p, adj, focus, link ? Object.keys(link.tables) : Object.keys(adj[focus] || {}));
+    var inHood = Object.create(null);
+    hood.forEach(function (n) { inHood[n] = true; });
+    var others = p.tables.map(function (tb) { return tb.name; }).filter(function (n) { return !inHood[n]; });
+    var R = Math.max(240, 70 * Math.sqrt(hood.length));
+    // Direct neighbours take the places that face the viewer when the view opens.
+    var shell = d3Sphere(hood.length - 1, R).sort(function (a, b) { return d3Rotate(b)[2] - d3Rotate(a)[2]; });
+    var place = Object.create(null);
+    hood.slice(1).forEach(function (n, i) { place[n] = shell[i]; });
+    var outer = d3Sphere(others.length, R * 1.7);
+    others.forEach(function (n, i) { place[n] = outer[i]; });
     var cards = Object.create(null);
-    names.forEach(function (n) {
+    hood.forEach(function (n) {
         var card = el('div', { class: 'db-table db-3card', role: 'button', tabindex: '0', 'data-table': n, 'aria-label': n });
         card.addEventListener('click', function () { if (!stage.moved) avPick('data', 'table/' + n); });
         card.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target === card) avPick('data', 'table/' + n); });
@@ -1110,123 +1197,197 @@ function dErd3d(p, sel, erd, lines) {
         cards[n] = card;
     });
     stage.db = { labels: labels, badges: [], p: p };
-    var shownFull = '';
-    function fill(n, full) {
-        var card = cards[n];
-        var tb = dTable(p, n);
-        clear(card);
-        add(card, add(el('div', { class: 'db-thead' }), el('span', { class: 'tn', title: n }, n)));
-        var list = full ? tb.columns : tb.columns.filter(function (c) { return c.key || /_id$/.test(c.name) || (link && link.cols[n + '.' + c.name]); });
-        list.forEach(function (c) {
-            var row = el('button', { type: 'button', class: 'db-col', 'data-col': c.name, title: n + '.' + c.name + ' · ' + c.type });
-            if (link && link.cols[n + '.' + c.name]) row.classList.add('linked', 'lk-' + link.cols[n + '.' + c.name]);
-            if (current.item === 'column/' + n + '.' + c.name) row.classList.add('on');
-            var k = c.key ? c.key.toUpperCase() : '';
-            add(row, el('span', { class: 'k ' + k }, k), el('span', { class: 'n' }, c.name), el('span', { class: 'y' }, c.type));
-            row.addEventListener('click', function (ev) { ev.stopPropagation(); if (!stage.moved) avPick('data', 'column/' + n + '.' + c.name); });
-            card.appendChild(row);
+    // The front card: every column; the others: the name and how many keys they hold.
+    (function fillAll() {
+        hood.forEach(function (n) {
+            var card = cards[n];
+            var tb = dTable(p, n);
+            clear(card);
+            if (n !== focus) {
+                card.classList.add('chip');
+                var keys = tb.columns.filter(function (c) { return c.key || /_id$/.test(c.name); }).length;
+                add(card, add(el('div', { class: 'db-thead' }), el('span', { class: 'tn', title: n }, n), el('span', { class: 'muted mono' }, String(keys))));
+                return;
+            }
+            card.classList.add('front');
+            add(card, add(el('div', { class: 'db-thead' }), el('span', { class: 'tn', title: n }, n)));
+            tb.columns.forEach(function (c) {
+                var row = el('button', { type: 'button', class: 'db-col', 'data-col': c.name, title: n + '.' + c.name + ' · ' + c.type });
+                if (link && link.column === c.name) row.classList.add('on');
+                var k = c.key ? c.key.toUpperCase() : '';
+                add(row, el('span', { class: 'k ' + k }, k), el('span', { class: 'n' }, c.name), el('span', { class: 'y' }, c.type));
+                row.addEventListener('click', function (ev) { ev.stopPropagation(); if (!stage.moved) avPick('data', 'column/' + n + '.' + c.name); });
+                card.appendChild(row);
+            });
         });
-        if (list.length < tb.columns.length) card.appendChild(el('div', { class: 'db-more' }, t('moreCols')(tb.columns.length - list.length)));
-        card.classList.toggle('front', full);
-    }
+    })();
     function draw() {
         var w = stage.clientWidth;
         var h = stage.clientHeight;
-        var scale = Math.min(w, h) * 0.24 * dbState.z3;
+        var D = R * 3.2;
+        var fit = Math.min(w, h) * 0.44 / (R * D / (D - R)) * dbState.z3;
         var proj = Object.create(null);
-        names.forEach(function (n) {
-            var v = d3Rotate(places[n]);
-            var s = 2.6 / (2.6 - v[2]);
-            proj[n] = { x: w / 2 + v[0] * s * scale, y: h / 2 + v[1] * s * scale, z: v[2], s: s, k: 1 };
-        });
-        var front = picked && proj[picked] ? picked : names.slice().sort(function (a, b) { return proj[b].z - proj[a].z; })[0];
-        if (front !== shownFull) { names.forEach(function (n) { fill(n, n === front); }); shownFull = front; }
-        names.forEach(function (n) {
+        var project = function (v) { var q = d3Rotate(v); var s2 = D / (D - q[2]); return { x: w / 2 + q[0] * s2 * fit, y: h / 2 + q[1] * s2 * fit, z: q[2] / R, s: s2 }; };
+        Object.keys(place).forEach(function (n) { proj[n] = project(place[n]); });
+        proj[focus] = { x: w / 2, y: h / 2, z: 2, s: 1 };
+        // Cards: the front one fixed in the middle, the near side as chips, the far side hidden behind dots.
+        var rects = [];
+        hood.forEach(function (n) {
             var q = proj[n];
             var card = cards[n];
-            var depth = (q.z + 1) / 2;
-            var k = n === front ? 1 : 0.55 + 0.4 * Math.max(0, Math.min(1, depth));
-            q.k = k;
-            card.style.left = q.x + 'px';
-            card.style.top = q.y + 'px';
+            var front = n === focus;
+            var facing = front || q.z > -0.2;
+            card.hidden = !facing;
+            q.facing = facing;
+            if (!facing) return;
+            var depth = front ? 1 : Math.max(0, Math.min(1, (q.z + 0.2) / 1.2));
+            var k = front ? 1 : 0.72 + 0.28 * depth;
             card.style.transform = 'translate(-50%, -50%) scale(' + k.toFixed(3) + ')';
-            card.style.zIndex = String(n === front ? 400 : Math.round(100 + q.z * 100));
-            var faded = link ? !link.tables[n] : false;
-            card.style.opacity = String(((n === front ? 1 : 0.45 + 0.5 * Math.max(0, Math.min(1, depth))) * (faded ? 0.35 : 1)).toFixed(2));
+            card.style.opacity = String(front ? 1 : (0.55 + 0.45 * depth).toFixed(2));
+            card.style.zIndex = String(front ? 400 : Math.round(100 + depth * 100));
             card.classList.toggle('hot', !!sel.hot[n]);
-            card.classList.toggle('focus', sel.focus === n && !sel.hot[n]);
-            card.classList.toggle('faded', faded);
+            card.classList.toggle('linked', !!(link && link.tables[n] && !front));
+            rects.push({ n: n, x: q.x, y: q.y, w: card.offsetWidth * k, h: card.offsetHeight * k, fixed: front });
+        });
+        // Push overlapping cards apart on the screen, inside the stage; the front card does not move. A chip that
+        // still overlaps a nearer card after that falls back to a dot — the view never stacks cards.
+        var clampR = function (r) {
+            r.x = Math.max(r.w / 2 + 4, Math.min(w - r.w / 2 - 4, r.x));
+            r.y = Math.max(r.h / 2 + 52, Math.min(h - r.h / 2 - 4, r.y));
+        };
+        var overlap = function (a, b) { return [(a.w + b.w) / 2 + D3_GAP - Math.abs(a.x - b.x), (a.h + b.h) / 2 + D3_GAP - Math.abs(a.y - b.y)]; };
+        rects.forEach(clampR);
+        for (var it = 0; it < 80; it++) {
+            var moved = false;
+            for (var i = 0; i < rects.length; i++) {
+                for (var j = i + 1; j < rects.length; j++) {
+                    var a = rects[i];
+                    var b = rects[j];
+                    var o = overlap(a, b);
+                    if (o[0] <= 0 || o[1] <= 0) continue;
+                    moved = true;
+                    var horiz = o[0] / (a.w + b.w) < o[1] / (a.h + b.h);
+                    var dir = horiz ? (b.x >= a.x ? 1 : -1) : (b.y >= a.y ? 1 : -1);
+                    var amt = (horiz ? o[0] : o[1]) + 0.5;
+                    var sa = a.fixed ? 0 : b.fixed ? 1 : 0.5;
+                    if (horiz) { a.x -= dir * amt * sa; b.x += dir * amt * (1 - sa); } else { a.y -= dir * amt * sa; b.y += dir * amt * (1 - sa); }
+                    clampR(a);
+                    clampR(b);
+                }
+            }
+            if (!moved) break;
+        }
+        // Nearest first: a card stays only when it clears every card kept before it.
+        var kept = [];
+        rects.slice().sort(function (a, b) { return (b.fixed ? 9 : proj[b.n].z) - (a.fixed ? 9 : proj[a.n].z); }).forEach(function (r) {
+            var clear2 = kept.every(function (k2) { var o2 = overlap(r, k2); return o2[0] <= D3_GAP || o2[1] <= D3_GAP; });
+            if (!clear2 && !r.fixed) { cards[r.n].hidden = true; proj[r.n].facing = false; return; }
+            kept.push(r);
+        });
+        rects = kept;
+        rects.forEach(function (r) {
+            proj[r.n].x = r.x;
+            proj[r.n].y = r.y;
+            cards[r.n].style.left = r.x.toFixed(1) + 'px';
+            cards[r.n].style.top = r.y.toFixed(1) + 'px';
         });
         while (svg.firstChild) svg.removeChild(svg.firstChild);
         clear(labels);
-        stage.db.badges = [];
         svg.setAttribute('width', String(w));
         svg.setAttribute('height', String(h));
-        function line(a, b, cls, kind, info) {
+        // Dots: the far side of the neighbourhood and every table outside it, fogged by depth.
+        Object.keys(proj).forEach(function (n) {
+            var q = proj[n];
+            if (n === focus || (inHood[n] && q.facing)) return;
+            var dot = document.createElementNS(svgNS, 'circle');
+            dot.setAttribute('cx', q.x.toFixed(1));
+            dot.setAttribute('cy', q.y.toFixed(1));
+            dot.setAttribute('r', String(Math.max(2, (inHood[n] ? 5 : 3) * q.s).toFixed(1)));
+            dot.setAttribute('class', 'db-3dot' + (inHood[n] ? ' near' : ''));
+            dot.setAttribute('data-table', n);
+            dot.style.opacity = String((0.18 + 0.5 * Math.max(0, Math.min(1, (q.z + 1.7) / 3.4))).toFixed(2));
+            var tt = document.createElementNS(svgNS, 'title');
+            tt.textContent = n;
+            dot.appendChild(tt);
+            dot.addEventListener('click', function () { avPick('data', 'table/' + n); });
+            svg.appendChild(dot);
+        });
+        function edgeLine(a, b, cls, kind, info) {
             var pa = proj[a];
             var pb = proj[b];
             if (!pa || !pb || a === b) return;
-            // From card edge to card edge, so the line and its badge sit between the cards, not on them.
-            var box = function (n, q) { var c = cards[n]; return { x: q.x - c.offsetWidth * q.k / 2, y: q.y - c.offsetHeight * q.k / 2, w: c.offsetWidth * q.k, h: c.offsetHeight * q.k }; };
-            var e1 = dClip(box(a, pa), pb.x, pb.y);
-            var e2 = dClip(box(b, pb), pa.x, pa.y);
+            // A line leaves a card at its edge, so neither the line nor its badge lies on the card.
+            var edgeOf = function (n, q, toward) {
+                var c = cards[n];
+                if (!c || c.hidden) return [q.x, q.y];
+                var r = c.getBoundingClientRect();
+                var sr = stage.getBoundingClientRect();
+                return dClip({ x: r.left - sr.left, y: r.top - sr.top, w: r.width, h: r.height }, toward.x, toward.y);
+            };
+            var ea = edgeOf(a, pa, pb);
+            var eb = edgeOf(b, pb, pa);
+            pa = { x: ea[0], y: ea[1], z: pa.z, facing: pa.facing };
+            pb = { x: eb[0], y: eb[1], z: pb.z, facing: pb.facing };
             var l = document.createElementNS(svgNS, 'path');
-            l.setAttribute('d', 'M' + e1[0].toFixed(1) + ' ' + e1[1].toFixed(1) + ' L' + e2[0].toFixed(1) + ' ' + e2[1].toFixed(1));
+            l.setAttribute('d', 'M' + pa.x.toFixed(1) + ' ' + pa.y.toFixed(1) + ' L' + pb.x.toFixed(1) + ' ' + pb.y.toFixed(1));
             l.setAttribute('class', 'db-link ' + cls);
             l.setAttribute('data-kind', kind);
-            l.style.opacity = String((0.35 + 0.65 * Math.max(0, Math.min(1, ((pa.z + pb.z) / 2 + 1) / 2))).toFixed(2));
-            svg.appendChild(l);
+            l.style.opacity = String(pb.facing === false || pa.facing === false ? 0.45 : 1);
+            svg.insertBefore(l, svg.firstChild);
             if (!info) return;
-            var bx = (e1[0] + e2[0]) / 2;
-            var by = (e1[1] + e2[1]) / 2;
-            // One card hides the other: the badge goes beside the front one, never onto it.
-            var fb2 = box(pa.z >= pb.z ? a : b, pa.z >= pb.z ? pa : pb);
-            if (bx > fb2.x - 11 && bx < fb2.x + fb2.w + 11 && by > fb2.y - 11 && by < fb2.y + fb2.h + 11) {
-                bx = fb2.x + fb2.w + 14;
-                by = fb2.y + 18;
-            }
-            var b2 = dBadge(stage, bx, by, info.icon, info);
-            // A badge on the far side of the schema is drawn but takes no click until it faces the viewer.
-            if ((pa.z + pb.z) / 2 < -0.2) { b2.classList.add('back'); b2.disabled = true; }
+            // The badge sits on the stretch nearest the viewer: a third of the way from the nearer end.
+            var near = pa.z >= pb.z ? pa : pb;
+            var far = near === pa ? pb : pa;
+            var bx = near.x + (far.x - near.x) * 0.45;
+            var by = near.y + (far.y - near.y) * 0.45;
+            // A short stretch between two cards: the badge steps off the line rather than onto a card.
+            var len = Math.hypot(far.x - near.x, far.y - near.y);
+            if (len < 30) { bx += len ? -(far.y - near.y) / len * 18 : 18; by += len ? (far.x - near.x) / len * 18 : 0; }
+            dBadge(stage, bx, by, info.icon, info, [near.x, near.y, far.x, far.y]);
         }
+        var touches = function (a, b) { return lines === 'all' ? inHood[a] && inHood[b] : a === focus || b === focus; };
         if (link) {
             link.links.forEach(function (l2) {
                 var icon = l2.kind === 'fk' ? dRuleIcon(l2.onDelete) : l2.kind;
                 var name = l2.direction === 'out' ? link.table + '.' + link.column + ' → ' + l2.to.table + '.' + l2.to.column : l2.to.table + '.' + l2.to.column + ' → ' + link.table + '.' + link.column;
                 var f = l2.finding !== undefined && p.findings[l2.finding] ? { f: p.findings[l2.finding], i: l2.finding } : null;
-                line(link.table, l2.to.table, l2.kind + (l2.kind === 'fk' && /cascade/i.test(l2.onDelete || '') ? ' cascade' : ''), l2.kind,
-                    { title: name, icon: icon, kind: l2.kind, via: l2.via, rules: (l2.onDelete ? 'ON DELETE ' + l2.onDelete.toUpperCase() : ''), witnesses: l2.witnesses, finding: f, pick: 'column/' + l2.to.table + '.' + l2.to.column });
+                edgeLine(link.table, l2.to.table, l2.kind + (l2.kind === 'fk' && /cascade/i.test(l2.onDelete || '') ? ' cascade' : ''), l2.kind,
+                    { title: name, icon: icon, kind: l2.kind, via: l2.via, rules: l2.onDelete ? 'ON DELETE ' + l2.onDelete.toUpperCase() : '', witnesses: l2.witnesses, finding: f, pick: 'column/' + l2.to.table + '.' + l2.to.column });
             });
-            return;
-        }
-        if (lines === 'off') return;
-        var touches = function (a, b) { return lines !== 'focus' || a === sel.focus || b === sel.focus; };
-        p.foreignKeys.forEach(function (k2) {
-            if (!touches(k2.from.table, k2.to.table)) return;
-            var name = k2.from.table + '.' + k2.from.column + ' → ' + k2.to.table + '.' + k2.to.column;
-            line(k2.from.table, k2.to.table, 'fk' + (/cascade/i.test(k2.onDelete || '') ? ' cascade' : ''), 'fk',
-                { title: name, icon: dRuleIcon(k2.onDelete), kind: 'fk', via: ['schema'], rules: k2.onDelete ? 'ON DELETE ' + k2.onDelete.toUpperCase() : '', witnesses: [k2.witness], pick: 'fk/' + name });
-        });
-        p.tables.forEach(function (tb) {
-            tb.columns.forEach(function (c) {
-                (c.links || []).forEach(function (l2) {
-                    if (l2.kind === 'fk' || l2.direction !== 'out' || !touches(tb.name, l2.to.table)) return;
-                    var name = tb.name + '.' + c.name + ' → ' + l2.to.table + '.' + l2.to.column;
-                    var f = l2.finding !== undefined && p.findings[l2.finding] ? { f: p.findings[l2.finding], i: l2.finding } : null;
-                    line(tb.name, l2.to.table, l2.kind, l2.kind, { title: name, icon: l2.kind, kind: l2.kind, via: l2.via, rules: '', witnesses: l2.witnesses, finding: f, pick: 'column/' + tb.name + '.' + c.name });
+        } else if (lines !== 'off') {
+            p.foreignKeys.forEach(function (k2) {
+                if (!touches(k2.from.table, k2.to.table)) return;
+                var name = k2.from.table + '.' + k2.from.column + ' → ' + k2.to.table + '.' + k2.to.column;
+                edgeLine(k2.from.table, k2.to.table, 'fk' + (/cascade/i.test(k2.onDelete || '') ? ' cascade' : ''), 'fk',
+                    { title: name, icon: dRuleIcon(k2.onDelete), kind: 'fk', via: ['schema'], rules: k2.onDelete ? 'ON DELETE ' + k2.onDelete.toUpperCase() : '', witnesses: [k2.witness], pick: 'fk/' + name });
+            });
+            p.tables.forEach(function (tb) {
+                tb.columns.forEach(function (c) {
+                    (c.links || []).forEach(function (l2) {
+                        if (l2.kind === 'fk' || l2.direction !== 'out' || !touches(tb.name, l2.to.table)) return;
+                        var name = tb.name + '.' + c.name + ' → ' + l2.to.table + '.' + l2.to.column;
+                        var f = l2.finding !== undefined && p.findings[l2.finding] ? { f: p.findings[l2.finding], i: l2.finding } : null;
+                        edgeLine(tb.name, l2.to.table, l2.kind, l2.kind, { title: name, icon: l2.kind, kind: l2.kind, via: l2.via, rules: '', witnesses: l2.witnesses, finding: f, pick: 'column/' + tb.name + '.' + c.name });
+                    });
                 });
             });
-        });
-        window.__mapErd3d = { yaw: dbState.rot.yaw, pitch: dbState.rot.pitch, z: dbState.z3, front: front, proj: proj };
+        }
+        dPlaceBadges(stage, function (v) { return v; }, function (v) { return v; }, false);
+        window.__mapErd3d = { yaw: dbState.rot.yaw, pitch: dbState.rot.pitch, z: dbState.z3, front: focus, hood: hood.slice(), proj: proj };
     }
     var zoom = el('div', { class: 'db-zoom' });
     function zb(text, aria, cls, fn) { var b = el('button', { type: 'button', class: cls || '', 'aria-label': aria, title: aria }, text); b.addEventListener('click', fn); return b; }
     add(zoom, zb('−', t('zoomOut'), '', function () { dbState.z3 = Math.max(0.4, dbState.z3 / 1.2); draw(); }), zb('+', t('zoomIn'), '', function () { dbState.z3 = Math.min(3, dbState.z3 * 1.2); draw(); }),
-        zb(t('fitB'), t('fitB'), 'fit', function () { dbState.z3 = 1; draw(); }), zb('↺', t('resetPos'), 'reset', function () { dbState.rot = { yaw: 0.35, pitch: -0.25 }; dbState.front = ''; draw(); }));
-    stage.appendChild(zoom);
+        zb(t('fitB'), t('fitB'), 'fit', function () { dbState.z3 = 1; draw(); }), zb('↺', t('resetPos'), 'reset', function () { dbState.rot = { yaw: 0.5, pitch: -0.35 }; draw(); }));
+    stage.appendChild(add(el('div', { class: 'db-overlay' }), dim, zoom));
+    var legend = add(el('div', { class: 'db-legend', 'aria-label': t('iconsHead') }), el('span', { class: 'cap' }, t('iconsHead')));
+    ['fk', 'cascade', 'setnull', 'restrict', 'soft', 'implied', 'finding'].forEach(function (k) {
+        legend.appendChild(add(el('span', { class: 'db-leg', 'data-icon': k }), add(el('span', { class: 'db-badge ' + k + (k === 'finding' ? ' has-finding' : ''), 'aria-hidden': 'true' }), dIcon(k)), el('span', null, t('icons')[k])));
+    });
+    erd.appendChild(legend);
     erd.appendChild(el('div', { class: 'db-help' }, t('help3d')(dModKeyName())));
     stage.addEventListener('pointerdown', function (ev) {
-        if (ev.button !== 0 || !dMod(ev) || ev.target.closest('.db-zoom, .db-badge, #db-pop')) return;
+        if (ev.button !== 0 || !dMod(ev) || ev.target.closest('.db-overlay, .db-badge, #db-pop')) return;
         ev.preventDefault();
         var sx = ev.clientX;
         var sy = ev.clientY;
@@ -1258,7 +1419,7 @@ function dErd3d(p, sel, erd, lines) {
         draw();
     }, { passive: false });
     stage.addEventListener('click', function (ev) {
-        if (stage.moved || ev.target.closest('.db-table, .db-zoom, .db-badge, #db-pop')) return;
+        if (stage.moved || ev.target.closest('.db-table, .db-overlay, .db-badge, #db-pop, .db-3dot')) return;
         if (current.item.indexOf('column/') === 0) avPick('data', '');
     });
     stage.addEventListener('keydown', function (ev) {
