@@ -415,3 +415,20 @@ tasks:
     lang: en
     label_criterion: "an API response field — not a UI task"
     source: inbox-2026-10-az
+  # Added 2026-10-26 before the vocabulary change, same pre-registration: SQL
+  # `select` and a multi-site setup must not read as UI once `select` and
+  # `website` become UI nouns.
+  - id: uit-059
+    prompt: "Select all overdue invoices with one query and return them from the billing service."
+    label: non-trivial
+    category: backend
+    lang: en
+    label_criterion: "an SQL select — not a UI task"
+    source: inbox-2026-10-az
+  - id: uit-060
+    prompt: "Make the tenancy layer multi-site aware so every site gets its own database."
+    label: non-trivial
+    category: backend
+    lang: en
+    label_criterion: "a multi-site data layer — not a UI task"
+    source: inbox-2026-10-az
