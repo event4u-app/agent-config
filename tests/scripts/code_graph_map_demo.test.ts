@@ -8,6 +8,7 @@ import { main } from '../../src/scripts/code_graph/cli.js';
 import { buildMap, type MapMeta } from '../../src/scripts/code_graph/map.js';
 import { buildDemoMap, DEMO_FIXTURE, demoOutDir, materialiseDemoRepo, type DemoResult } from '../../src/scripts/code_graph/map_demo.js';
 import { KNOWLEDGE_AREA_IDS, type MapAreas } from '../../src/scripts/code_graph/map_areas.js';
+import { generateDemoLoad, generateHubProjects } from '../../src/scripts/code_graph/map_demo_generate.js';
 
 // `map --demo`: the demo fixture goes through the real build and map writer,
 // every area has data, only the demo carries the sample-data flag, and nothing
@@ -22,7 +23,7 @@ function tmpDir(prefix: string): string {
 
 interface Drawn {
     meta: MapMeta;
-    model: { files: Array<{ path: string; churn?: number; owners?: Array<[string, number]> }> };
+    model: { files: Array<{ path: string; churn?: number; owners?: Array<[string, number]> }>; areas: Array<{ kind: string }> };
     areas: MapAreas;
 }
 const readMapJson = (dir: string): Drawn => JSON.parse(fs.readFileSync(path.join(dir, 'code', 'map.json'), 'utf-8')) as Drawn;
@@ -68,39 +69,58 @@ describe('the demo map', () => {
         }
     });
 
-    it('has a payload with data for every knowledge area', () => {
-        const { areas } = readMapJson(demo.outDir);
+    it('has a payload with data for every knowledge area, under load', () => {
+        const { model, areas } = readMapJson(demo.outDir);
         for (const id of KNOWLEDGE_AREA_IDS) {
             const p = areas[id] as { empty?: string } | undefined;
             expect(p, id).toBeDefined();
             expect(p?.empty, id).toBeUndefined();
         }
-        const data = areas.data as unknown as { tables: Array<{ name: string }>; findings: Array<{ id: string }> };
-        expect(data.tables.length).toBeGreaterThan(5);
-        expect(data.findings.some((f) => f.id.startsWith('DR-'))).toBe(true);
-        const interfaces = areas.interfaces as unknown as { findings: Array<{ id: string }> };
+        expect(model.files.length).toBeGreaterThanOrEqual(2000);
+        expect(model.areas.length).toBeGreaterThanOrEqual(120);
+        const data = areas.data as unknown as { tables: Array<{ name: string; connection?: string }>; findings: Array<{ id: string }> };
+        expect(data.tables.length).toBeGreaterThanOrEqual(60);
+        expect(new Set(data.tables.map((t) => t.connection)).size).toBeGreaterThanOrEqual(3);
+        expect(data.findings.filter((f) => f.id.startsWith('DR-')).length).toBeGreaterThanOrEqual(24);
+        const interfaces = areas.interfaces as unknown as { services: Array<{ protocol: string; operations: unknown[] }>; findings: Array<{ id: string }> };
+        expect(interfaces.services.length).toBeGreaterThanOrEqual(25);
+        expect(interfaces.services.reduce((n, s) => n + s.operations.length, 0)).toBeGreaterThanOrEqual(150);
+        expect(new Set(interfaces.services.map((s) => s.protocol))).toEqual(new Set(['rest', 'soap', 'graphql', 'grpc', 'sdk']));
         expect(interfaces.findings.some((f) => f.id.startsWith('IF-'))).toBe(true);
-        const delivery = areas.delivery as unknown as { findings: Array<{ id: string }> };
+        const runtime = areas.runtime as unknown as { services: unknown[]; resources: unknown[]; environments: string[] };
+        expect(runtime.services.length).toBeGreaterThanOrEqual(30);
+        expect(runtime.resources.length).toBeGreaterThanOrEqual(80);
+        expect(runtime.environments).toEqual(expect.arrayContaining(['dev', 'staging', 'prod']));
+        const delivery = areas.delivery as unknown as { workflows: unknown[]; jobs: unknown[]; findings: Array<{ id: string }> };
+        expect(delivery.workflows.length).toBeGreaterThanOrEqual(20);
+        expect(delivery.jobs.length).toBeGreaterThanOrEqual(100);
         expect(delivery.findings.some((f) => f.id.startsWith('DL-'))).toBe(true);
-        const runtime = areas.runtime as unknown as { services: unknown[]; resources: unknown[] };
-        expect(runtime.services.length).toBeGreaterThan(0);
-        expect(runtime.resources.length).toBeGreaterThan(0);
     });
 
     it('reads the scripted history and the working change', () => {
         const { meta, model, areas } = readMapJson(demo.outDir);
         expect(meta.state).toBe('edited');
-        const shared = model.files.filter((f) => (f.owners?.length ?? 0) > 1);
-        expect(shared.length).toBeGreaterThan(0);
-        expect(model.files.some((f) => (f.churn ?? 0) >= 3)).toBe(true);
+        const authors = new Set(model.files.flatMap((f) => (f.owners ?? []).map((o) => o[0])));
+        expect(authors.size).toBeGreaterThanOrEqual(8);
+        expect(model.files.filter((f) => (f.owners?.length ?? 0) > 1).length).toBeGreaterThan(50);
+        expect(model.files.some((f) => (f.churn ?? 0) >= 20)).toBe(true);
         const impact = areas.impact as unknown as { changed: string[] };
-        expect(impact.changed).toEqual(expect.arrayContaining(['app/Services/PartnerClient.php', '.github/workflows/ci.yml']));
+        expect(impact.changed.length).toBeGreaterThanOrEqual(18);
+        expect(impact.changed).toEqual(expect.arrayContaining(['app/Services/PartnerClient.php', '.github/workflows/ci.yml', 'deploy/shop/compose.yaml', 'infra/envs/prod/main.tf']));
     });
 
-    it('draws the hub from three fixture projects', () => {
-        const hub = JSON.parse(fs.readFileSync(path.join(demo.outDir, 'hub', 'projects', 'hub.json'), 'utf-8')) as { projects: Array<{ name: string; page: string | null }>; ports: unknown[] };
-        expect(hub.projects.map((p) => p.name).sort()).toEqual(['alpha', 'beta', 'demo-shop']);
+    it('draws the hub from at least ten projects with package, call and shared links', () => {
+        const hub = JSON.parse(fs.readFileSync(path.join(demo.outDir, 'hub', 'projects', 'hub.json'), 'utf-8')) as {
+            projects: Array<{ name: string; page: string | null }>;
+            edges: Array<{ via: string }>;
+            calls: Array<{ match?: unknown }>;
+            ports: unknown[];
+        };
+        expect(hub.projects.length).toBeGreaterThanOrEqual(10);
+        expect(hub.projects.map((p) => p.name)).toEqual(expect.arrayContaining(['alpha', 'beta', 'demo-shop']));
         expect(hub.projects.every((p) => p.page !== null && fs.existsSync(path.join(demo.outDir, 'hub', p.page)))).toBe(true);
+        expect(hub.edges.some((e) => e.via === 'package')).toBe(true);
+        expect(hub.calls.some((c) => c.match)).toBe(true);
         expect(hub.ports.length).toBeGreaterThan(0);
     });
 
@@ -152,7 +172,7 @@ describe('guards', () => {
         expect(await main(['map', '--demo', '--root', root, '--out', dir, '--no-verify'])).toBe(0);
         expect(readMapJson(dir).meta.demo).toBe(true);
         expect(out.join('')).toContain('code-graph map --demo');
-    }, 120_000);
+    }, 300_000);
 
     it('fails loudly when a history step or the working change no longer matches the fixture', () => {
         const a = tmpDir('cg-demo-step-');
@@ -160,6 +180,28 @@ describe('guards', () => {
         const fixture = path.join(tmpDir('cg-demo-fx-'), 'fx');
         fs.cpSync(DEMO_FIXTURE, fixture, { recursive: true });
         fs.writeFileSync(path.join(fixture, '.github', 'workflows', 'ci.yml'), 'name: CI\n');
-        expect(() => materialiseDemoRepo(fixture, path.join(a, 'r2'))).toThrow(/no longer contains its anchor/);
+        expect(() => materialiseDemoRepo(fixture, path.join(a, 'r2'), undefined, { load: false })).toThrow(/no longer contains its anchor/);
     }, 60_000);
+});
+
+describe('the load generator', () => {
+    it('is deterministic for a seed and differs for another', () => {
+        const flat = (seed: number): string => JSON.stringify(generateDemoLoad(seed).commits.map((c) => [c.author.name, c.message, Object.keys(c.files), Object.values(c.files)]));
+        expect(flat(7)).toBe(flat(7));
+        expect(JSON.stringify(generateHubProjects(7))).toBe(JSON.stringify(generateHubProjects(7)));
+        expect(JSON.stringify(generateHubProjects(7))).not.toBe(JSON.stringify(generateHubProjects(8)));
+    });
+
+    it('writes at least 200 commits by at least 8 authors, 25 decision records and a working change across layers', () => {
+        const load = generateDemoLoad();
+        expect(load.commits.length).toBeGreaterThanOrEqual(200);
+        expect(new Set(load.commits.map((c) => c.author.email)).size).toBeGreaterThanOrEqual(8);
+        const files = load.commits.flatMap((c) => Object.keys(c.files));
+        expect(files.filter((f) => /^docs\/decisions\/ADR-\d+/.test(f)).length).toBeGreaterThanOrEqual(25);
+        expect(files.length).toBeGreaterThanOrEqual(2000);
+        const touched = load.working.map((w) => w.file);
+        for (const prefix of ['app/Modules/', 'database/migrations/', 'app/Integrations/', '.github/workflows/', 'deploy/', 'infra/']) {
+            expect(touched.some((f) => f.startsWith(prefix)), prefix).toBe(true);
+        }
+    });
 });

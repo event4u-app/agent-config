@@ -115,15 +115,18 @@ describe('the demo map in a browser', () => {
             await page.close();
         }
         const { page } = await open(demo.hubPage, '#/projects');
-        const hub = JSON.parse(fs.readFileSync(path.join(path.dirname(demo.hubPage), 'projects', 'hub.json'), 'utf-8')) as { ports: Array<{ uses: unknown[] }> };
-        const shared = hub.ports.reduce((n, f) => n + f.uses.length - 1, 0);
-        expect(await page.locator('.ops-elabel').count()).toBeLessThan(shared);
+        type Fact = { uses: unknown[] };
+        const hub = JSON.parse(fs.readFileSync(path.join(path.dirname(demo.hubPage), 'projects', 'hub.json'), 'utf-8')) as { edges: unknown[]; calls: Array<{ match?: unknown }>; ports: Fact[]; images: Fact[]; services: Fact[] };
+        const links = hub.edges.length + hub.calls.filter((c) => c.match).length + [...hub.ports, ...hub.images, ...hub.services].reduce((n, f) => n + f.uses.length - 1, 0);
+        // Bundled: fewer labels than links, drawn or listed below the drawing.
+        expect(await page.locator('.ops-elabel').count()).toBeLessThan(links);
+        expect(await page.locator('.ops-elabel', { hasText: '+' }).count()).toBeGreaterThan(0);
         await page.locator('.ops-elabel', { hasText: '+' }).first().click();
-        const list = page.locator('.ops-bundle');
-        expect(await list.count()).toBeGreaterThan(1);
+        const list = page.locator('#av-side .ops-bundle');
+        await expect.poll(() => list.count()).toBeGreaterThan(1);
         await list.nth(1).click();
-        await expect.poll(() => page.locator('.ops-bundle').nth(1).getAttribute('aria-pressed')).toBe('true');
-        expect(await page.locator('.ops-bundle.on').count()).toBe(1);
+        await expect.poll(() => page.locator('#av-side .ops-bundle').nth(1).getAttribute('aria-pressed')).toBe('true');
+        expect(await page.locator('#av-side .ops-bundle.on').count()).toBe(1);
         await page.close();
     }, 120_000);
 
