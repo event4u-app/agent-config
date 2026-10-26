@@ -1782,6 +1782,8 @@
         dim2d.textContent = t('d2');
         $('open-left').textContent = t('openLeft');
         $('open-right').textContent = t('openRight');
+        $('title-left').textContent = t('repository');
+        $('title-right').textContent = t('detail');
         ['left', 'right'].forEach(function (side) { $('close-' + side).setAttribute('aria-label', t('closePane')); });
         limOptions().forEach(function (o) { o.textContent = limLabel(o.getAttribute('data-value')); });
         $('limtxt').textContent = limLabel(limButton.getAttribute('data-value'));

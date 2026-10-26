@@ -150,6 +150,10 @@ export interface InterfaceService {
     /** Configuration NAMES the service is bound through (`PARTNER_URL`); never their values. */
     configNames: string[];
     operations: InterfaceOperation[];
+    /** Contract files in the tree that describe the service. */
+    contracts?: string[];
+    /** Hosts written in code for the service (names only). */
+    hosts?: string[];
     witness: Witness;
 }
 
@@ -250,6 +254,9 @@ export interface ImpactRiskTerm {
     /** The graph fact the term counts, in words. */
     fact: string;
     contribution: number;
+    /** How many facts the term counted and the weight each one carries: contribution = count × weight. */
+    count?: number;
+    weight?: number;
     witness?: Witness;
 }
 
@@ -272,6 +279,10 @@ export interface AgentVerb {
     cli: string;
     /** The MCP tool that answers the same, when there is one. */
     mcp?: string;
+    /** What the verb takes, what it returns, and what it guarantees about the answer. */
+    input?: string;
+    output?: string;
+    guarantee?: string;
 }
 
 export interface AgentPackItem {

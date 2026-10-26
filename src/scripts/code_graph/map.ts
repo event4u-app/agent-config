@@ -381,7 +381,7 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
     const { graph, built, overlay } = await loadOrBuildGraph(root, opts.cachePath ?? home.cachePath, opts.cachePath ?? home.buildCachePath, opts.noBuild === true, outDir);
     // After a build the current file is the one to read, whatever an older release left beside it.
     const cachePath = opts.cachePath ?? graphHome(root).cachePath;
-    const produced = opts.areas ? { areas: opts.areas, erd: [] } : produceAreas(root, graph, { ...(opts.diffRev !== undefined ? { diffRev: opts.diffRev } : {}), previousTours: previousTours(outDir), ...(overlay ? { added: overlay.added } : {}) });
+    const produced = opts.areas ? { areas: opts.areas, erd: [] } : produceAreas(root, graph, { ...(opts.diffRev !== undefined ? { diffRev: opts.diffRev } : {}), previousTours: previousTours(outDir), cachePath, ...(overlay ? { added: overlay.added } : {}) });
     const areas = produced.areas;
     const problems = areaProblems(areas);
     if (problems.length) throw new Error(`refusing to draw the map: the areas section is unsafe or unreadable — ${problems.slice(0, 5).join('; ')}`);
@@ -1038,6 +1038,7 @@ export const VIEWER_SCRIPTS = [
     'core.js',
     'area_code.js',
     'areas_common.js',
+    'area_kit.js',
     'area_overview.js',
     'area_data.js',
     'area_interfaces.js',
@@ -1049,7 +1050,7 @@ export const VIEWER_SCRIPTS = [
 ] as const;
 /** The hub's parts: a project map's plus the Projects area, which no project map carries — not even as code. */
 export const HUB_SCRIPTS = [...VIEWER_SCRIPTS.slice(0, -1), 'area_projects.js', 'shell.js'] as const;
-export const VIEWER_STYLES = ['viewer.css', 'shell.css'] as const;
+export const VIEWER_STYLES = ['viewer.css', 'shell.css', 'area_kit.css', 'area_interfaces.css', 'area_impact.css', 'area_agent.css'] as const;
 
 /**
  * The one inline script: every part inside one function scope. Joined BEFORE
@@ -1165,7 +1166,7 @@ export function renderPage(m: MapModel, meta: MapMeta, areas: object, shell?: Ma
         '<div class="wb" id="wb">',
         '<div class="scrim" id="scrim" hidden></div>',
         '<aside class="rail" id="pane-left" aria-label="Repository">',
-        '<div class="pane-head"><button type="button" class="pane-pin" id="pin-left" aria-pressed="false"></button><button type="button" class="pane-close" id="close-left">×</button></div>',
+        '<div class="pane-head"><span class="cap" id="title-left"></span><button type="button" class="pane-pin" id="pin-left" aria-pressed="false"></button><button type="button" class="pane-close" id="close-left">×</button></div>',
         '<section id="health"></section>',
         '<section id="kpis"></section>',
         '<section id="colorby"></section>',
@@ -1205,20 +1206,26 @@ export function renderPage(m: MapModel, meta: MapMeta, areas: object, shell?: Ma
         '<footer class="foot" id="foot"></footer>',
         '</main>',
         '<aside class="rail side" id="pane-right" aria-label="Detail">',
-        '<div class="pane-head"><button type="button" class="pane-pin" id="pin-right" aria-pressed="false"></button><button type="button" class="pane-close" id="close-right">×</button></div>',
+        '<div class="pane-head"><span class="cap" id="title-right"></span><button type="button" class="pane-pin" id="pin-right" aria-pressed="false"></button><button type="button" class="pane-close" id="close-right">×</button></div>',
         '<div class="tabs" role="tablist" aria-label="Detail" id="tabs"></div>',
         '<div id="panel" aria-live="polite"></div>',
         '</aside>',
         '</div>',
         '<div class="av" id="av" hidden>',
         '<div class="av-bar" id="av-bar"></div>',
-        '<div class="av-body" id="av-body">',
+        '<div class="av-body no-left" id="av-body">',
         '<div class="scrim" id="av-scrim" hidden></div>',
+        '<aside class="av-left" id="av-left" aria-label="List">',
+        '<div class="pane-head"><span class="cap" id="av-left-title"></span><button type="button" class="pane-pin" id="av-pin-left" aria-pressed="false"></button><button type="button" class="pane-close" id="av-close-left">×</button></div>',
+        '<div id="av-left-body"></div>',
+        '</aside>',
         '<main class="av-main" id="av-main"></main>',
         '<aside class="av-side" id="av-side" aria-label="Detail">',
-        '<div class="pane-head"><button type="button" class="pane-pin" id="av-pin" aria-pressed="false"></button><button type="button" class="pane-close" id="av-close">×</button></div>',
+        '<div class="pane-head"><span class="cap" id="av-right-title"></span><button type="button" class="pane-pin" id="av-pin" aria-pressed="false"></button><button type="button" class="pane-close" id="av-close">×</button></div>',
         '<div id="av-detail" aria-live="polite"></div>',
+        '<div id="av-right-body" hidden></div>',
         '</aside>',
+        '<button type="button" class="pane-open av-open-left" id="av-open-left" aria-controls="av-left"></button>',
         '<button type="button" class="pane-open av-open" id="av-open" aria-controls="av-side"></button>',
         '</div>',
         '</div>',
