@@ -156,7 +156,7 @@ renders from real facts or says why it has none.
       `triggers`, `governs`, `supersedes`, `co-changes`), with a version stamp
       and a cap per lane; no kind outside the file.
       verify: a test fails on a kind used in code but absent from the file.
-- [ ] **2.3 One drift engine.** Rules as data over the fact layer, one finding
+- [x] **2.3 One drift engine.** Rules as data over the fact layer, one finding
       shape (both witnesses, engine, completeness, tier), waivers declared with
       a non-empty reason, every report printing its basis.
       verify: one rule file change adds a finding without engine code changes.
@@ -194,7 +194,7 @@ renders from real facts or says why it has none.
       search for the name: "known places N (+M only by text search)";
       differences are logged as reader gaps.
       verify: a planted dynamic usage appears in M, not in N.
-- [ ] **3.6 Update after acting.** Touched files are re-read into the overlay,
+- [x] **3.6 Update after acting.** Touched files are re-read into the overlay,
       drift recomputed for touched facts only; a completion line names the
       verified sha and dirty flag.
       verify: after editing a fixture the map shows the new fact without a full
@@ -215,7 +215,7 @@ renders from real facts or says why it has none.
 
 ## Phase 4 — Lanes
 
-- [ ] **4.1 Data.** Readers T1–T4 (migrations, committed dumps, user-produced
+- [x] **4.1 Data.** Readers T1–T4 (migrations, committed dumps, user-produced
       schema-only snapshot, framework oracle output files); column-level
       `reads`/`writes` from code; drift DR-1…DR-13 (code relation without FK ·
       FK without code relation · model without table · missing target or pivot ·
@@ -227,25 +227,25 @@ renders from real facts or says why it has none.
       proposals only.
       verify: the P1 fixture yields DR-1 on `comments.post_id`, DR-3 on `Tag`,
       DR-4 on `post_tag`.
-- [ ] **4.2 History.** Co-change pairs from the existing `git log` pass
+- [x] **4.2 History.** Co-change pairs from the existing `git log` pass
       (window, size cut, minimum count and strength as data); `hidden
       dependency` = coupled with no static edge; renames followed for files the
       map shows.
       verify: this repository lists at least one hidden-dependency pair with
       both witnesses; a planted fixture pins the rule.
-- [ ] **4.3 Decisions.** ADR files become `decision` nodes (status, date,
+- [x] **4.3 Decisions.** ADR files become `decision` nodes (status, date,
       supersedes/superseded-by with a direction test); `governs` only for a
       unique path-qualified mention.
       verify: a superseded ADR fixture produces the edge in the right direction.
-- [ ] **4.4 Flows.** From declared entry points (routes, CLI commands, jobs,
+- [x] **4.4 Flows.** From declared entry points (routes, CLI commands, jobs,
       listeners, schedules) with depth, branch and size caps and overlap dedup,
       extending request paths into tables, operations and environments.
       verify: a job fixture reaches its table.
-- [ ] **4.5 Review-risk verb.** Diff hunks → symbols → callers within two hops,
+- [x] **4.5 Review-risk verb.** Diff hunks → symbols → callers within two hops,
       entry points and flows hit, missing co-change partners, area crossings,
       columns/operations/pipelines touched — a transparent sum, each term shown.
       verify: a planted diff lists every term with its witness.
-- [ ] **4.6 Delivery.** One workflow model for GitHub Actions and GitLab CI
+- [x] **4.6 Delivery.** One workflow model for GitHub Actions and GitLab CI
       (jobs, `needs`, `uses`, `workflow_run`, environments, paths filters,
       permissions, action pinning) on the shared reader; branch → environment;
       build → image → deploy chain; review environments; drift DL-1…DL-5
@@ -253,7 +253,7 @@ renders from real facts or says why it has none.
       reference · deploy job without a needs-chain from tests · paths filter
       that excludes the changed files of its own trigger).
       verify: a workflow fixture yields the job graph and one finding per class.
-- [ ] **4.7 Runtime.** Compose services, images, published ports, networks,
+- [x] **4.7 Runtime.** Compose services, images, published ports, networks,
       volumes, env **names**; Dockerfile base images and exposed ports;
       devcontainer; Make/Task targets; Terraform by line rules with a per-provider
       node-vs-edge mapping file and generic fallback; Kubernetes manifests with
@@ -266,7 +266,7 @@ renders from real facts or says why it has none.
       catalog becomes `partial` with its stated limits.
       verify: a compose + Terraform fixture yields services, ports and resources,
       and the database image sets the data lane's engine.
-- [ ] **4.8 Interfaces.** Call sites (HTTP clients, SOAP with WSDL, GraphQL
+- [x] **4.8 Interfaces.** Call sites (HTTP clients, SOAP with WSDL, GraphQL
       documents, gRPC stubs, SDK constructors); contracts in the repo (OpenAPI,
       WSDL/XSD with entity expansion disabled, GraphQL SDL, `.proto`, request
       collections, `.http`); configuration names only; `service`/`operation`
@@ -314,19 +314,19 @@ renders from real facts or says why it has none.
       actual overlay), ORM relations, drift list with witnesses, model ↔ table
       ↔ request-path links.
       verify: the P1 fixture map shows the three drift findings with witnesses.
-- [ ] **5.7 Interfaces area.** Services, operations with protocol filter,
+- [x] **5.7 Interfaces area.** Services, operations with protocol filter,
       parameters and configuration names, callers linked to Code, contract
       drift.
       verify: the P5 fixture map shows `partner` and `GetStock` with callers.
-- [ ] **5.8 Runtime and Delivery areas.** Infrastructure resources and
+- [x] **5.8 Runtime and Delivery areas.** Infrastructure resources and
       environment comparison; local environment (services, ports), pipeline
       graph, build → image → deploy chain, drift.
       verify: the runtime and delivery fixtures render their facts.
-- [ ] **5.9 Impact area.** Change preview from the working diff: affected code,
+- [x] **5.9 Impact area.** Change preview from the working diff: affected code,
       columns, operations, pipelines, the review-risk terms, and the confirm
       state of each.
       verify: a planted diff renders its affected set.
-- [ ] **5.10 Agent area.** Context pack, review risk, the verb list with what
+- [x] **5.10 Agent area.** Context pack, review risk, the verb list with what
       each answers; `explain` names the existing graph verb.
       verify: the area lists the verbs that exist and nothing that does not.
 - [x] **5.11 Hub with the same shell.** The estate map is rendered by the
