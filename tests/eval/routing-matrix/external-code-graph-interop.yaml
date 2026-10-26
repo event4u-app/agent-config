@@ -6,7 +6,7 @@ positives:
     expected_skills: [code-intelligence]
   - prompt: "Wo liegt der Code Graph in diesem Repo und wie frage ich ihn ab?"
     expected_skills: [code-intelligence]
-  - prompt: "The graph says customers.email is used in three places — is that all of them before I rename the column?"
+  - prompt: "The code graph says customers.email is used in three places — is that all of them before I rename the column?"
     expected_skills: [code-intelligence]
 near_misses:
   - prompt: "Show me the inheritance hierarchy for the payment module."
