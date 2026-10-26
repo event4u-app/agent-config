@@ -25,6 +25,14 @@ const DEPLOY_CMD = /kubectl\s+(apply|set\s+image|rollout)|helm\s+(upgrade|instal
 const TEST_NAME = /(^|[^a-z])(test|tests|lint|check|checks|spec|verify|ci)([^a-z]|$)/i;
 const TEST_CMD = /\b(npm\s+(run\s+)?test|yarn\s+test|pnpm\s+(run\s+)?test|vitest|jest|pytest|phpunit|pest|go\s+test|cargo\s+test|task\s+test|make\s+test|rspec|playwright\s+test|composer\s+test|php\s+artisan\s+test)\b/;
 const SHA = /^[0-9a-f]{40}$/;
+/**
+ * A deploy word in a job's name is weak evidence: "Release install E2E" and
+ * "deploy dry-run" check a release, they do not ship one. A checking word in
+ * the job's name, or a validating word in its workflow's name, outweighs it.
+ * An environment or a deploy command is strong evidence and is never outweighed.
+ */
+const CHECK_NAME = /(^|[^a-z])(dry[-_ ]?run|preview|validat\w*|verif\w*|detector|health|watch|monitor|smoke|e2e)([^a-z]|$)/i;
+const CHECK_WORKFLOW = /(^|[^a-z])(validat\w*|verif\w*|health|monitor\w*|watch\w*)([^a-z]|$)/i;
 
 function jobText(job: PipelineJob): string {
     return job.steps
@@ -135,8 +143,10 @@ function emitPipeline(em: Emitter, { file, model }: Read, all: Read[], protected
     const envFacts = new Map<string, { jobs: string[] }>();
     for (const job of model.jobs) {
         const text = jobText(job);
-        const isDeploy = job.environment !== null || DEPLOY_NAME.test(`${job.id} ${job.name}`) || DEPLOY_CMD.test(text);
-        const isTest = TEST_NAME.test(`${job.id} ${job.name}`) || TEST_CMD.test(text);
+        const label = `${job.id} ${job.name}`;
+        const isTest = TEST_NAME.test(label) || TEST_CMD.test(text);
+        const deployByName = DEPLOY_NAME.test(label) && !TEST_NAME.test(label) && !CHECK_NAME.test(label) && !CHECK_WORKFLOW.test(model.name ?? '');
+        const isDeploy = job.environment !== null || deployByName || DEPLOY_CMD.test(text);
         const permissions = job.permissions ?? model.permissions;
         const jid = em.fact(
             'job',

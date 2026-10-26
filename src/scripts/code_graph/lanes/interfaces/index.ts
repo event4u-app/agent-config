@@ -9,6 +9,9 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { parseCompose } from '../../../_lib/infra_files/compose.js';
+import { isComposeName } from '../../../_lib/infra_files/walk.js';
+import { isDocOrExamplePath, isFixturePath } from '../../fixture_paths.js';
 import type { LaneFact, LaneOutput, LaneRelation, Witness } from '../lane_fact.js';
 import { scanFile, scanGraphqlDocument, scanSdk, signatureCheckIn, type RawCall, type WebhookRoute } from './call_sites.js';
 import { emptyConfig, isSecretEnvFile, readExampleEnvNames, readLaravelConfig, readSpringConfig, siblingEntries, EXAMPLE_ENV_FILE, type ConfigIndex } from './config.js';
@@ -23,7 +26,11 @@ export interface ReadInterfacesOptions {
     files?: string[];
     /** files above this size are skipped with a reason */
     maxBytes?: number;
-    /** read test files for call sites too (default false: fakes and fixtures are not traffic) */
+    /**
+     * read test, fixture, benchmark, doc and example files too (default false:
+     * fakes, fixtures and sample URLs are not traffic and describe no system
+     * the project talks to)
+     */
     includeTests?: boolean;
 }
 
@@ -98,8 +105,13 @@ class Model {
 /** Reads every interface fact under `root`. */
 export function readInterfaces(root: string, opts: ReadInterfacesOptions = {}): LaneOutput {
     const maxBytes = opts.maxBytes ?? DEFAULT_MAX_BYTES;
-    const files = (opts.files ?? walk(root)).filter(relevant);
+    const all = opts.files ?? walk(root);
+    const notTraffic = (rel: string): boolean => !opts.includeTests && (isFixturePath(rel) || isDocOrExamplePath(rel));
+    const files = all.filter((rel) => relevant(rel) && !notTraffic(rel));
     const skipped: LaneOutput['skipped'] = [];
+    const set = all.filter((rel) => relevant(rel) && notTraffic(rel)).length;
+    if (set > 0) skipped.push({ file: '.', reason: `${set} test, fixture, benchmark, doc or example file(s) not read: they describe no system the project talks to` });
+    const composeHosts = composeServiceNames(root, all.filter((rel) => isComposeName(path.posix.basename(rel)) && !notTraffic(rel)));
     const texts = new Map<string, string>();
     for (const rel of files) {
         const abs = path.join(root, rel);
@@ -167,7 +179,58 @@ export function readInterfaces(root: string, opts: ReadInterfacesOptions = {}): 
     for (const call of raw) addCall(m, call, config, contracts, contractService, graphqlClients);
     for (const w of webhooks) addWebhook(m, w);
     matchCalls(m);
+    dropLocalServices(m, composeHosts, skipped);
     return flatten(m, config, skipped);
+}
+
+/** Service names the project's compose files declare: a URL naming one reaches a sibling container, not an outside system. */
+function composeServiceNames(root: string, files: string[]): Set<string> {
+    const out = new Set<string>();
+    for (const rel of files) {
+        let text: string;
+        try {
+            text = fs.readFileSync(path.join(root, rel), 'utf8');
+        } catch {
+            continue;
+        }
+        for (const s of parseCompose(text).services) out.add(s.name.toLowerCase());
+    }
+    return out;
+}
+
+const LOCAL_NAME = /^(?:localhost|host\.docker\.internal|0\.0\.0\.0|::1|\[::1\]|127(?:\.\d{1,3}){3})$/;
+const LOCAL_SUFFIX = /\.(?:localhost|local|test)$/;
+
+/**
+ * A host on this machine or inside the project's own network: loopback, the
+ * any-address, a reserved local or test TLD, the Docker host alias, a compose
+ * service name, or any dotless literal name (a container or cluster-internal
+ * service — no public host is dotless). A templated host is never local.
+ */
+export function isLocalHost(host: string, composeHosts: ReadonlySet<string> = new Set()): boolean {
+    const h = host.toLowerCase();
+    if (LOCAL_NAME.test(h)) return true;
+    // A templated or otherwise non-literal host is unknown, not local.
+    if (!/^[a-z0-9][a-z0-9.-]*$/.test(h)) return false;
+    return LOCAL_SUFFIX.test(h) || composeHosts.has(h) || !h.includes('.');
+}
+
+/**
+ * A service known ONLY by literal local hosts — no contract, SDK or configured
+ * base name — is the project talking to itself; it is not an external system.
+ * Its operations and calls go with it, counted in `skipped`.
+ */
+function dropLocalServices(m: Model, composeHosts: ReadonlySet<string>, skipped: LaneOutput['skipped']): void {
+    const local = [...m.services.values()].filter(
+        (s) => s.contracts.size === 0 && !s.sdkPackage && s.baseNames.size === 0 && s.hosts.size > 0 && [...s.hosts].every((h) => isLocalHost(h, composeHosts)),
+    );
+    if (local.length === 0) return;
+    const names = new Set(local.map((s) => s.name));
+    for (const n of names) m.services.delete(n);
+    for (const [id, op] of m.ops) if (names.has(op.service)) m.ops.delete(id);
+    const calls = m.calls.filter((c) => names.has(c.service)).length;
+    m.calls = m.calls.filter((c) => !names.has(c.service));
+    skipped.push({ file: '.', reason: `${local.length} local host(s) (${[...names].sort().join(', ')}) with ${calls} call site(s) not listed as external services` });
 }
 
 function bindSdkServices(m: Model, deps: Dependency[], rows: typeof SDK_TABLE): void {

@@ -38,6 +38,7 @@ import { laravelEngines } from '../../../_lib/schema/readers/laravel_migrations.
 import { readSqlSchema } from '../../../_lib/schema/readers/sql_ddl.js';
 import { type Engine, replay } from '../../../_lib/schema/replay.js';
 import type { Waiver } from '../../drift.js';
+import { isFixturePath } from '../../fixture_paths.js';
 import { isSqlSchemaPath } from '../../providers/sql_ddl.js';
 import { columnId, tableId } from '../../providers/shared/schema_graph.js';
 import type { CodeGraph, CodeNode } from '../../types.js';
@@ -64,7 +65,7 @@ export interface ReadDataOptions {
 type Attrs = LaneFact['attrs'];
 
 const SKIP_DIRS = new Set(['.git', 'node_modules', 'vendor', 'dist', 'build', '.tscache', 'coverage']);
-const NOT_PROJECT = /(^|\/)(?:tests?|__tests__|fixtures?|spec)\//i;
+const SCHEMA_SOURCE = /(?:^|\/)(?:migrations?|migrate)\/|(?:^|\/)(?:schema|structure)\.sql$|\.prisma$/i;
 const DUMP_HEAD = /^--\s*(?:MySQL dump|MariaDB dump|PostgreSQL database dump)|mysqldump|pg_dump/im;
 
 function posix(rel: string): string {
@@ -353,9 +354,17 @@ export function readData(root: string, graph: CodeGraph, opts: ReadDataOptions =
         }
     }
 
+    // Schema sources in a test, fixture or benchmark tree are never the project's
+    // data model: no provider replays them and no dump below is read from there.
+    const fixtureSchema = new Set<string>();
+    for (const n of graph.nodes) if (n.kind === 'file' && SCHEMA_SOURCE.test(n.source_file) && isFixturePath(n.source_file)) fixtureSchema.add(n.source_file);
+    const sqlAll = sqlFiles(root);
+    for (const f of sqlAll) if (isFixturePath(f) && !f.startsWith('agents/')) fixtureSchema.add(f);
+    if (fixtureSchema.size > 0) out.skipped.push({ file: '.', reason: `${fixtureSchema.size} schema file(s) under test, fixture or benchmark trees not read as this project's data model` });
+
     // T2: committed dumps nothing else replays.
-    for (const file of sqlFiles(root)) {
-        if (isSqlSchemaPath(file) || NOT_PROJECT.test(file) || file.startsWith('agents/')) continue;
+    for (const file of sqlAll) {
+        if (isSqlSchemaPath(file) || isFixturePath(file) || file.startsWith('agents/')) continue;
         const text = read(root, file);
         if (text === null) continue;
         const isDump = /^database\/schema\/[^/]+\.sql$/.test(file) || DUMP_HEAD.test(text.slice(0, 2048));

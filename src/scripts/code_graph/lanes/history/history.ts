@@ -8,7 +8,13 @@
  * followed so a file keeps the history it had under its old name, but only
  * files present in HEAD are reported — a coupling to a deleted file is not
  * something the agent can act on.
+ *
+ * A pair whose BOTH files are generated (a build projection, a lockfile, a
+ * changelog, a regenerated dashboard — the `generated` globs) is dropped: such
+ * files move together because one command rewrites them all, which is no
+ * dependency an agent could miss. A glob without `/` matches the basename.
  */
+import { globToRegExp } from '../../../_lib/infra_files/pipeline.js';
 import { gitProbe } from '../../../_lib/spawn_env.js';
 import type { CodeGraph } from '../../types.js';
 import type { LaneOutput, LaneRelation, Witness } from '../lane_fact.js';
@@ -19,6 +25,7 @@ export interface HistoryThresholds {
     max_files_per_commit: number;
     min_co_changes: number;
     min_strength: number;
+    generated: string[];
 }
 
 export const DEFAULT_HISTORY_THRESHOLDS: Readonly<HistoryThresholds> = defaults;
@@ -92,7 +99,9 @@ export function readHistory(root: string, opts: ReadHistoryOptions = {}): LaneOu
         max_files_per_commit: opts.max_files_per_commit ?? DEFAULT_HISTORY_THRESHOLDS.max_files_per_commit,
         min_co_changes: opts.min_co_changes ?? DEFAULT_HISTORY_THRESHOLDS.min_co_changes,
         min_strength: opts.min_strength ?? DEFAULT_HISTORY_THRESHOLDS.min_strength,
+        generated: opts.generated ?? DEFAULT_HISTORY_THRESHOLDS.generated,
     };
+    const isGenerated = generatedMatcher(t.generated);
     const git = opts.git ?? defaultGit;
     const output: LaneOutput = { lane: 'history', facts: [], relations: [], skipped: [] };
     const skip = (reason: string): LaneOutput => {
@@ -162,11 +171,16 @@ export function readHistory(root: string, opts: ReadHistoryOptions = {}): LaneOu
     if (bulk > 0) output.skipped.push({ file: '.git', reason: `${bulk} commit(s) over ${t.max_files_per_commit} files skipped` });
 
     const relations: LaneRelation[] = [];
+    let generatedPairs = 0;
     for (const [key, p] of pairs) {
         if (p.count < t.min_co_changes) continue;
         const [a = '', b = ''] = key.split('\0');
         const strength = p.count / Math.max(perFile.get(a) ?? 0, perFile.get(b) ?? 0);
         if (strength < t.min_strength) continue;
+        if (isGenerated(a) && isGenerated(b)) {
+            generatedPairs++;
+            continue;
+        }
         relations.push({
             relation: 'co-changes',
             from: a,
@@ -185,9 +199,21 @@ export function readHistory(root: string, opts: ReadHistoryOptions = {}): LaneOu
             guess: false,
         });
     }
+    if (generatedPairs > 0) output.skipped.push({ file: '.git', reason: `${generatedPairs} coupled pair(s) of two generated files skipped` });
     relations.sort((x, y) => (x.from < y.from ? -1 : x.from > y.from ? 1 : x.to < y.to ? -1 : x.to > y.to ? 1 : 0));
     output.relations = relations;
     return output;
+}
+
+/** Matcher for the `generated` globs; a glob without `/` is tested against the basename. */
+export function generatedMatcher(globs: readonly string[]): (file: string) => boolean {
+    const full = globs.filter((g) => g.includes('/')).map(globToRegExp);
+    const base = globs.filter((g) => !g.includes('/')).map(globToRegExp);
+    return (file) => {
+        if (full.some((re) => re.test(file))) return true;
+        const name = file.slice(file.lastIndexOf('/') + 1);
+        return base.some((re) => re.test(name));
+    };
 }
 
 /** A commit is the span: the witness names the file and the commit that last coupled it. */

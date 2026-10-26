@@ -13,6 +13,7 @@ import * as path from 'node:path';
 import { parseCompose, type ComposeModel, type ComposeService } from '../../../_lib/infra_files/compose.js';
 import { parseDockerfile } from '../../../_lib/infra_files/dockerfile.js';
 import { SKIP_DIRS, isComposeName, isDockerfileName, isGithubWorkflowPath, isGitlabCiName, walkFiles } from '../../../_lib/infra_files/walk.js';
+import { isFixturePath } from '../../fixture_paths.js';
 import type { LaneOutput } from '../lane_fact.js';
 import { Emitter, posix } from './emit.js';
 import { CODE_EXT, envNamesInExample, envReadsInCode, isEnvExampleName, isPlatformName } from './env_names.js';
@@ -207,7 +208,14 @@ function stripJsonc(text: string): string {
     return out.replace(/,(\s*[}\]])/g, '$1');
 }
 
-function readDevcontainers(em: Emitter, files: string[], composeReads: ComposeRead[]): void {
+/** The project a devcontainer configures: the directory holding `.devcontainer/` or `.devcontainer.json`. */
+function devcontainerProject(file: string): string {
+    const i = file.lastIndexOf('.devcontainer');
+    const dir = file.slice(0, i).replace(/\/$/, '');
+    return dir;
+}
+
+function readDevcontainers(em: Emitter, files: string[], composeReads: ComposeRead[], scopes: string[]): void {
     for (const file of files) {
         const text = em.read(file);
         if (text === null) continue;
@@ -245,6 +253,19 @@ function readDevcontainers(em: Emitter, files: string[], composeReads: ComposeRe
             const target = `service:${serviceKey(hit?.file ?? targets[0] ?? file, svc, false)}`;
             em.rel('depends-on', id, target, { mechanism: 'dockerComposeFile', target_name: svc }, file, lineOf('"service"'));
         }
+        let declares = false;
+        for (const key of ['containerEnv', 'remoteEnv']) {
+            const env = doc[key];
+            if (!env || typeof env !== 'object' || Array.isArray(env)) continue;
+            for (const name of Object.keys(env)) {
+                if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) continue;
+                const line = lineOf(`"${name}"`);
+                const envId = em.fact('env-var', `devcontainer:${file}#${name}`, name, { name, source: 'devcontainer', platform: isPlatformName(name) }, file, line);
+                em.rel('configured-by', id, envId, {}, file, line);
+                declares = true;
+            }
+        }
+        if (declares) scopes.push(devcontainerProject(file));
         const fwd = Array.isArray(doc['forwardPorts']) ? doc['forwardPorts'] : [];
         for (const p of fwd) {
             if (typeof p !== 'number' && typeof p !== 'string') continue;
@@ -275,21 +296,74 @@ function readTargets(em: Emitter, files: string[]): void {
     }
 }
 
-function readEnvNames(em: Emitter, root: string): void {
+/**
+ * The code a compose service's environment speaks for: its build context, or
+ * the compose file's own directory for a service that builds nothing. A
+ * context outside the scanned root is unplaceable and speaks for nothing here.
+ */
+function composeScopes(em: Emitter, reads: ComposeRead[], scopes: string[]): void {
+    for (const { file, model } of reads) {
+        const dir = path.posix.dirname(file);
+        for (const s of model.services) {
+            if (s.envNames.length === 0) continue;
+            if (s.build === null) {
+                scopes.push(dir === '.' ? '' : dir);
+                continue;
+            }
+            const ctx = path.posix.normalize(path.posix.join(dir, s.build));
+            if (ctx === '..' || ctx.startsWith('../')) {
+                em.skip(file, `service ${s.name}: build context ${s.build} lies outside the scanned root; its environment is not matched against code`);
+                continue;
+            }
+            scopes.push(ctx === '.' ? '' : ctx);
+        }
+    }
+}
+
+const inScope = (file: string, scopes: readonly string[]): boolean => scopes.some((s) => s === '' || file === s || file.startsWith(`${s}/`));
+
+/**
+ * Env names read in code, each marked with whether a declaring file speaks
+ * for it (`declared_scope`) — RT-3 judges only those. With no declaring file at
+ * all the check has no population: `env_check` is `unknown`, not `complete`.
+ * Test, fixture and benchmark files are not read: a name only a test reads is
+ * not one the deployed code needs.
+ */
+function readEnvNames(em: Emitter, root: string, scopes: string[]): void {
     for (const file of walkFiles(root, (n) => isEnvExampleName(n), { maxDepth: 3, skipDirs: RUNTIME_SKIP }).map(posix)) {
+        if (isFixturePath(file)) continue;
         const text = em.read(file);
         if (text === null) continue;
-        for (const e of envNamesInExample(text)) em.fact('env-var', `example:${file}#${e.name}`, e.name, { name: e.name, source: 'example', platform: isPlatformName(e.name) }, file, e.line);
+        const names = envNamesInExample(text);
+        for (const e of names) em.fact('env-var', `example:${file}#${e.name}`, e.name, { name: e.name, source: 'example', platform: isPlatformName(e.name) }, file, e.line);
+        if (names.length > 0) {
+            const dir = path.posix.dirname(file);
+            scopes.push(dir === '.' ? '' : dir);
+        }
     }
+    if (em.facts.some((f) => f.kind === 'env-var' && f.attrs['source'] === 'kubernetes')) scopes.push('');
+    const reads: { file: string; name: string; line: number; scoped: boolean }[] = [];
     for (const file of walkFiles(root, (n) => CODE_EXT.test(n) && !/\.(test|spec|d)\.\w+$/.test(n), { maxDepth: 8, skipDirs: RUNTIME_SKIP }).map(posix)) {
+        if (isFixturePath(file)) continue;
         const text = em.read(file);
         if (text === null || text.length > 1024 * 1024) continue;
         const seen = new Set<string>();
+        const scoped = inScope(file, scopes);
         for (const r of envReadsInCode(text)) {
             if (seen.has(r.name)) continue;
             seen.add(r.name);
-            em.fact('env-var', `code:${file}#${r.name}`, r.name, { name: r.name, source: 'code', platform: isPlatformName(r.name) }, file, r.line);
+            reads.push({ file, name: r.name, line: r.line, scoped });
         }
+    }
+    const outside = reads.filter((r) => !r.scoped && !isPlatformName(r.name));
+    const check = scopes.length === 0 ? 'unknown' : outside.length > 0 ? 'partial' : 'complete';
+    for (const r of reads) {
+        em.fact('env-var', `code:${r.file}#${r.name}`, r.name, { name: r.name, source: 'code', platform: isPlatformName(r.name), declared_scope: r.scoped, env_check: check }, r.file, r.line);
+    }
+    if (scopes.length === 0 && reads.length > 0) {
+        em.skip('.', `env check unknown: ${reads.length} env name read(s) in code, but no compose service, env example, devcontainer or Kubernetes manifest declares an env name`);
+    } else if (outside.length > 0) {
+        em.skip('.', `env check partial: ${outside.length} env name read(s) in ${new Set(outside.map((r) => r.file)).size} file(s) lie outside every declaring file's scope and are not judged`);
     }
 }
 
@@ -300,7 +374,10 @@ export interface RuntimeOptions {
 
 export function readRuntime(root: string, opts: RuntimeOptions = {}): LaneOutput {
     const em = new Emitter(root);
-    const files = walkFiles(root, () => true, { maxDepth: 6, skipDirs: RUNTIME_SKIP }).map(posix);
+    const walked = walkFiles(root, () => true, { maxDepth: 6, skipDirs: RUNTIME_SKIP }).map(posix);
+    const files = walked.filter((f) => !isFixturePath(f));
+    if (files.length < walked.length) em.skip('.', `${walked.length - files.length} file(s) under test, fixture or benchmark trees not read as this project's runtime`);
+    const scopes: string[] = [];
     const base = (f: string): string => path.posix.basename(f);
 
     const composeReads: ComposeRead[] = [];
@@ -329,7 +406,8 @@ export function readRuntime(root: string, opts: RuntimeOptions = {}): LaneOutput
         }
     }
     readDockerfiles(em, files.filter((f) => isDockerfileName(base(f))));
-    readDevcontainers(em, files.filter((f) => /(^|\/)\.devcontainer(\/[^/]+)?\/devcontainer\.json$|(^|\/)\.devcontainer\.json$/.test(f)), composeReads);
+    composeScopes(em, [...composeReads, ...resolvedReads], scopes);
+    readDevcontainers(em, files.filter((f) => /(^|\/)\.devcontainer(\/[^/]+)?\/devcontainer\.json$|(^|\/)\.devcontainer\.json$/.test(f)), composeReads, scopes);
     readTargets(em, files.filter((f) => isMakefileName(base(f)) || isTaskfileName(base(f))));
     for (const [dir, tfs] of terraformDirs(files.filter((f) => f.endsWith('.tf')))) readTerraformDir(em, dir, tfs);
 
@@ -345,6 +423,6 @@ export function readRuntime(root: string, opts: RuntimeOptions = {}): LaneOutput
         if (text !== null && text.length <= MAX_YAML_BYTES && looksLikeManifest(text)) manifests.push(f);
     }
     readKubernetesFiles(em, manifests);
-    if (opts.codeEnv !== false) readEnvNames(em, root);
+    if (opts.codeEnv !== false) readEnvNames(em, root, scopes);
     return redactOutput(em.output('runtime'));
 }

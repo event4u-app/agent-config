@@ -2,5 +2,20 @@
     "window_days": 180,
     "max_files_per_commit": 50,
     "min_co_changes": 3,
-    "min_strength": 0.3
+    "min_strength": 0.3,
+    "generated": [
+        "dist/**",
+        "build/**",
+        ".augment/**",
+        ".claude/**",
+        ".cursor/**",
+        ".clinerules/**",
+        ".windsurfrules",
+        "GEMINI.md",
+        "*.lock",
+        "package-lock.json",
+        "pnpm-lock.yaml",
+        "CHANGELOG*",
+        "agents/roadmaps-progress.md"
+    ]
 }
