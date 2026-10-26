@@ -346,7 +346,9 @@ renders from real facts or says why it has none.
       decisions, flows, history, a working diff) through the normal build and
       writes the map to `agents/map/.build/demo/`, with a hub demo from two
       fixture projects in an isolated home; the page carries the prototype's
-      "Beispieldaten · Fixture" chip, which a real map never shows.
+      "Beispieldaten · Fixture" chip, which a real map never shows. A seeded
+      generator scales it to real load (≥ 120 code areas, ≥ 60 tables, ≥ 25
+      services, ≥ 100 jobs, ≥ 10 hub projects) so every view is seen full.
       verify: a browser test opens the demo map and finds every area live and
       the chip present; a node test finds no demo flag on a normal map.
 
