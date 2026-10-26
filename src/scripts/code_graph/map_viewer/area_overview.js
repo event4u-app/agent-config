@@ -9,7 +9,7 @@ extendStrings({
         oTitle: 'What does AC know – and how sure is it?',
         oIntro: 'The graph is an index, not the truth. Each layer shows when it was indexed, when its source was last checked and how much it covers. Without a complete scan the answer is "unknown", never "missing".',
         oManifest: 'manifest', oCommit: 'commit', oGeneration: 'generation', oExport: 'export', oNoGlobal: 'without global data ✓',
-        oStateLegend: 'State per fact', oRungLegend: 'Provenance:', oFilters: { all: 'All layers', live: 'With data', none: 'Planned' },
+        oStateLegend: 'State per fact', oRungLegend: 'Provenance:', oRungs: 'T1 code · T2 dump/contract · T3 snapshot · T4 oracle', oFilters: { all: 'All layers', live: 'With data', none: 'Planned' },
         oIndexed: 'indexed', oConfirmed: 'source checked', oCoverage: 'coverage', oFindings: 'findings', oNever: 'never (index only)',
         oBadge: { live: 'active', empty: 'read, empty', none: 'no data yet', scope: 'own scope' },
         oLayer: { code: 'Code', data: 'Database', interfaces: 'Integrations', env: 'Environment', ci: 'CI/CD', infra: 'Infrastructure', knowledge: 'Knowledge · Memory', impact: 'Impact', projects: 'Projects' },
@@ -42,7 +42,7 @@ extendStrings({
         oTitle: 'Was weiß AC – und wie sicher?',
         oIntro: 'Der Graph ist ein Index, keine Wahrheit. Jede Ebene zeigt, wann sie indiziert wurde, wann die Quelle zuletzt geprüft wurde und wie viel sie abdeckt. Ohne vollständigen Scan heißt es „unbekannt“, nie „fehlt“.',
         oManifest: 'manifest', oCommit: 'commit', oGeneration: 'generation', oExport: 'export', oNoGlobal: 'ohne globale Daten ✓',
-        oStateLegend: 'Zustand je Fakt', oRungLegend: 'Herkunft:', oFilters: { all: 'Alle Ebenen', live: 'Mit Daten', none: 'Geplant' },
+        oStateLegend: 'Zustand je Fakt', oRungLegend: 'Herkunft:', oRungs: 'T1 Code · T2 Dump/Vertrag · T3 Snapshot · T4 Orakel', oFilters: { all: 'Alle Ebenen', live: 'Mit Daten', none: 'Geplant' },
         oIndexed: 'indiziert', oConfirmed: 'Quelle geprüft', oCoverage: 'Abdeckung', oFindings: 'Befunde', oNever: 'nie (nur Index)',
         oBadge: { live: 'aktiv', empty: 'gelesen, leer', none: 'noch keine Daten', scope: 'eigener Scope' },
         oLayer: { code: 'Code', data: 'Database', interfaces: 'Integrations', env: 'Umgebung', ci: 'CI/CD', infra: 'Infrastruktur', knowledge: 'Knowledge · Memory', impact: 'Impact', projects: 'Projects' },
@@ -240,7 +240,7 @@ function renderOverview() {
     var rl = el('span', { class: 'muted' }, t('oRungLegend'));
     rl.style.marginLeft = '8px';
     legend.appendChild(rl);
-    legend.appendChild(el('span', { class: 'mono soft' }, ['T1', 'T2', 'T3', 'T4'].map(function (r) { return t('rungNames')[r]; }).join(' · ')));
+    legend.appendChild(el('span', { class: 'mono soft', title: ['T1', 'T2', 'T3', 'T4'].map(function (r) { return t('rungNames')[r]; }).join(' · ') }, t('oRungs')));
     main.appendChild(legend);
 
     var tabs = el('div', { class: 'ov-filters', role: 'tablist', 'aria-label': 'Filter' });

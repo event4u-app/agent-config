@@ -205,7 +205,6 @@
     .av-open { right: 12px; }
     .banner { padding: 6px 12px; font-size: 12px; }
     .banner .soft { display: none; }
-    .ov-intro h1 { font-size: 24px; }
     .okv { grid-template-columns: 104px minmax(0, 1fr); }
 }
 
