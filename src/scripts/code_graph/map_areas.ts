@@ -51,6 +51,12 @@ export interface AreaFinding {
     /** What it is about: `table.column`, a service, a job. */
     subject: string;
     message: string;
+    /** The rule's title, e.g. `code relation without a foreign key`. */
+    title?: string;
+    /** `advice` informs; `gate` blocks once its precision is recorded. */
+    tier?: 'advice' | 'gate';
+    /** The fix the rule proposes; the map never applies it. */
+    fix?: string;
     /** Both sides when the finding compares two facts. */
     witnesses: Witness[];
     /** The engine a rule is specific to (`mysql`, `postgres`), when it is. */
