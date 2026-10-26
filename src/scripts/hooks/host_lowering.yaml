@@ -88,16 +88,16 @@ hosts:
         # read was never dated, and the absence was the record. Both are filled
         # now from sources this tree already carries — the 2026-09-06 live probe
         # recorded in `host_semantics.ts` (Claude Code 2.1.263) and a fresh
-        # documentation read on 2026-09-29, repeated 2026-10-14 and 2026-10-19.
-        # `expires` is deliberately unchanged.
+        # documentation read on 2026-09-29, repeated 2026-10-14, 2026-10-19 and
+        # 2026-10-26. `expires` is deliberately unchanged.
         #
         # The committed `docs_url` was `https://docs.claude.com/en/docs/claude-code/hooks`,
         # which answers 301 and lands on the URL below. Recording the redirect
         # target is what makes a digest reproducible.
         verified:
-          docs_at: 2026-10-19
+          docs_at: 2026-10-26
           docs_url: https://code.claude.com/docs/en/hooks.md
-          docs_digest: dd0f114dac70bc7836abd37797fb486d3007d889eeb6bbc88c307ed2587a44ef
+          docs_digest: 86de346e7bfcfac466578190c46e003b5f0b17796855166f23806c8da26b6a0d
           probe_at: 2026-09-06
           host_version: 2.1.263
           expires: 2027-09-06
@@ -122,15 +122,15 @@ hosts:
         fail_policy: discard
         timeout_unit: unknown
         timeout_default: null
-        # Established by a documentation read on 2026-09-29, repeated 2026-10-14, not
-        # by a live probe — `probe_at` stays null and says so.
+        # Established by a documentation read on 2026-09-29, repeated 2026-10-14 and
+        # 2026-10-26, not by a live probe — `probe_at` stays null and says so.
         verified:
-          docs_at: 2026-10-14
+          docs_at: 2026-10-26
           docs_url: https://docs.augmentcode.com/cli/hooks.md
-          docs_digest: 93f421dccdd017099d87b12ffd7fe8f272d8adf750856ddfb200d9b55c695378
+          docs_digest: a3372f2d949de22297a07a516e21ea75cecb7101947ec868350b14d2f79196e0
           probe_at: null
           host_version: null
-          expires: 2027-10-14
+          expires: 2027-10-26
         # THE FINDING THIS ROW CARRIES. Augment's own documentation states that
         # `PreToolUse` can block tool execution and shows `exit 2` doing it. The
         # `block_exit: null` below is therefore NOT a claim that the host cannot
@@ -156,12 +156,12 @@ hosts:
         timeout_unit: unknown
         timeout_default: null
         verified:
-          docs_at: 2026-09-29
+          docs_at: 2026-10-26
           docs_url: https://cursor.com/docs/hooks.md
-          docs_digest: 7294a2d63b19d79a5283c948afe174cba8b06a7585563d34a2c41b90f5df0d39
+          docs_digest: a5f76c8eab2c3ec3fe30fe5d41fbaf5c276da0090ac4d1f6687c4e5c0f4084fa
           probe_at: null
           host_version: null
-          expires: 2027-09-29
+          expires: 2027-10-26
         slots:
           session_start:      { native: sessionStart,        block_exit: null, answered_at: 2026-09-29 }
           session_end:        { native: sessionEnd,          block_exit: null, answered_at: 2026-09-29 }
@@ -186,14 +186,16 @@ hosts:
         # and the digest watcher is what will surface the next move; re-deriving
         # the event names from a page that no longer lists them is a separate
         # piece of work, and inventing a citation for them here would be the
-        # defect this file was built to remove.
+        # defect this file was built to remove. The 2026-10-26 re-date reads the
+        # same pointer page (only an index banner was added); it dates the
+        # citation and re-validates none of the slot event names.
         verified:
-          docs_at: 2026-10-14
+          docs_at: 2026-10-26
           docs_url: https://docs.cline.bot/customization/hooks.md
-          docs_digest: 73b6df1bf5e51589313ea3fcfdd50c0d505530234418adcdc9fe198af61837c2
+          docs_digest: 796c59215233d401f270e6f93cf5bf76ce3b064f25dc0aa675292083614bdf5a
           probe_at: null
           host_version: null
-          expires: 2027-10-14
+          expires: 2027-10-26
         slots:
           session_start:      { native: [TaskStart, TaskResume], block_exit: null, answered_at: 2026-09-29 }
           session_end:        { native: TaskComplete,            block_exit: null, answered_at: 2026-09-29 }
@@ -213,12 +215,12 @@ hosts:
         # redirects to `docs.devin.ai`; the redirect target is recorded so the
         # digest is reproducible.
         verified:
-          docs_at: 2026-10-14
+          docs_at: 2026-10-26
           docs_url: https://docs.devin.ai/desktop/cascade/hooks.md
-          docs_digest: b9e0cd4772de9e7c4086ecf31bfcb456dc74c3b36516f52c2ff8ec1dd5c1170d
+          docs_digest: 2871edb5ba442a7ecf87b46e09196e2aaf9f0ef47127394bf91231f553d62de8
           probe_at: null
           host_version: null
-          expires: 2027-10-14
+          expires: 2027-10-26
         slots:
           session_start:      { native: post_setup_worktree,   block_exit: null, answered_at: 2026-09-29 }
           user_prompt_submit: { native: pre_user_prompt,       block_exit: null, answered_at: 2026-09-29 }
@@ -330,13 +332,23 @@ hosts:
         # (see the correction above), so this host is further from a binding
         # than codex, not equally close. Either way the gate is the same: a
         # probe, never a re-read.
+        #
+        # MOVED 2026-10-26. The page above answered 404; the hooks contract now
+        # lives at the reference URL below, which still documents all eight
+        # events listed above. Unlike the old page it DOES carry exit-code
+        # semantics: a command `preToolUse` hook is fail-closed — exit 2, a
+        # crash or any other non-zero exit denies the tool call — while a
+        # timeout is always fail-open. That makes the 2026-10-01 correction a
+        # statement about the old page, not about the host. It arms nothing:
+        # this package still binds no slot here and has still probed nothing,
+        # and the codex lesson above says a documented exit 2 is not a binding.
         verified:
-          docs_at: 2026-09-29
-          docs_url: https://docs.github.com/en/copilot/concepts/agents/hooks.md
-          docs_digest: bfd40aa93ad62133efc17a50f189034f01594dc89a5d31a13a0c541d691acede
+          docs_at: 2026-10-26
+          docs_url: https://docs.github.com/en/copilot/reference/hooks-reference.md
+          docs_digest: 7ad7c168f319ce390802289ededf8dead2742959b18b5ccf6f41c2342cbf1c97
           probe_at: null
           host_version: null
-          expires: 2027-09-29
+          expires: 2027-10-26
         slots: {}
 
   codex:
