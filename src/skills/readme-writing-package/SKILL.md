@@ -352,4 +352,4 @@ to every package README you author.
 - Do NOT write a giant example when a 10-line one would do
 - Do NOT overload README with reference material — link to /docs
 
-→ Final prose pass for audience-facing output: [`humanizer`](../humanizer/SKILL.md) — remove AI-writing tells before delivery.
+→ Final prose pass for audience-facing output: the `humanizer` skill (gtm-marketing pack) — remove AI-writing tells before delivery.

@@ -225,7 +225,7 @@ The gate for every later promotion.
       M1 = 0; German equivalents in the same PR or named as gaps.
       verify: per family, clean-corpus M1 = 0 and recall ≥ 1 on its positive
       fixtures; rule-count delta equals families passed.
-- [ ] **5.3 Deterministic fact diff.** `detect_ai_tells --baseline <before.md>
+- [x] **5.3 Deterministic fact diff.** Done 2026-10-26: `src/scripts/_lib/fact_diff.ts` (multiset diff both ways; literal on purpose — "three" vs "3" is a finding); `detect_ai_tells --baseline` exits 1 on any moved fact; humanizer step 6 and the anti-aiisms guard name the command, `[VERIFY]` stays the no-runtime fallback. `tests/scripts/fact_diff.test.ts`: dropped number, changed date, added name, moved amount, pure reword clean, CLI both exits. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/fact_diff.ts --> `detect_ai_tells --baseline <before.md>
       <after.md>` extracts numbers, dates, currency, URLs, code spans and
       capitalised multi-word names from both texts; anything lost or added is a
       hard finding. The humanizer's step 6 calls it instead of `[VERIFY]`.
