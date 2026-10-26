@@ -128,7 +128,6 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-import { resolve_project_root } from '../_lib/agent_settings.js';
 import { gitProbe, hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { buildFromRepo, discoverFiles, isTestFile, type LaneSummary, sidecarPath } from './build.js';
 import { diffHunks, renderReviewRisk, reviewRisk } from './review_risk.js';
@@ -145,7 +144,6 @@ import { suggestVerb } from './intent.js';
 import { estateMain } from './estate_cli.js';
 import { estateMapMain } from './estate_map.js';
 import { touchHome } from './graph_budget.js';
-import { resolveProjectRef } from './project_ref.js';
 import { projectsMain, registerUse } from './projects_cli.js';
 import { buildMap, graphGeneration, hasMap, mapGeneration, recordOutcome } from './map.js';
 import { cliPackage, usableCli } from './refresh_cli.js';
@@ -187,98 +185,26 @@ import {
 } from './verbs.js';
 import { main as lineageMain } from './lineage_cli.js';
 import { graphChecksum } from './verify/owner_index.js';
-import {
-    removePlan as systemsRemovePlan,
-    type RemovePlan,
-    renderRemovePlan,
-    renderUsage as renderPackageUsage,
-    renderWhy,
-    usage as systemsUsage,
-    type UsageAnswer,
-    why as systemsWhy,
-    type WhyAnswer,
-} from './lanes/systems/verbs.js';
-import { chainOf, currentBranch } from '../_lib/branch_parents.js';
 import { writeChainStatus } from '../_lib/branch_chain_status.js';
-import { branchPackageGraph, defaultBranchSet, diffBranches, gcBranches, indexBranch, listManifests, onBranches, renderDiff, storeBytes, touchManifest } from './branches.js';
 import { domainResolver } from './domains.js';
-import { cachedProvenance, readCachedProvenance, ticketsTouched } from './provenance.js';
-import { provenanceAnswer } from './provenance_verbs.js';
+import { readCachedProvenance, ticketsTouched } from './provenance.js';
 import { overlayState, overlayView, readOverlay } from './verify/overlay.js';
 import { headSha, verifyPaths } from './verify/paths.js';
 import { renderShrink, shrinkCheck } from './verify/shrink_guard.js';
 import { writeTombstones } from './verify/tombstones.js';
 import { usageLowerBound, verifyMain } from './verify/verify_cli.js';
 
+import { buildCacheFor, cacheFor, flag, isFlagValue, resolveRoot, shown, UsageError } from './cli_args.js';
+import { cmdBranchDiff, cmdBranches, cmdOnBranches, cmdProvenance, cmdSystems } from './cli_knowledge.js';
+
+export { buildCacheFor, cacheFor } from './cli_args.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
-/**
- * The cache belongs to the project it describes: `<root>/agents/map/.build/`
- * when the root has a project home, its home in the user-global hub otherwise
- * (ADR-299) — the path MCP, the context hook and `detect` read. Anchoring it to
- * the package tree put a consumer's graph inside `node_modules`, where `npm ci`
- * deleted it, two projects sharing an install overwrote each other, and MCP
- * answered "no graph" right after the CLI reported a fresh one.
- */
-export function cacheFor(root: string): string {
-    return graphHome(root).cachePath;
-}
-/** Where a build of `root` writes its graph: always the current layout, never the pre-ADR-303 path a reader falls back to. */
-export function buildCacheFor(root: string): string {
-    return graphHome(root).buildCachePath;
-}
-/** A path relative to the root when it lies inside it; a graph home outside the root prints in full. */
-function shown(root: string, p: string): string {
-    const rel = path.relative(root, p);
-    return rel.startsWith('..') || path.isAbsolute(rel) ? p : rel;
-}
 /** Local `tsx` binary — `refresh` spawns `build` as a child of THIS file
  * through it, so a budget-exceeded kill only ever terminates the child. */
 const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 const DEFAULT_BUDGET_SECONDS = 60;
-
-/** A refusal that names what the caller asked for wrongly; exits 1, not 3. */
-class UsageError extends Error {}
-
-function flag(argv: string[], name: string): string | null {
-    const i = argv.indexOf(name);
-    return i >= 0 && i + 1 < argv.length ? (argv[i + 1] as string) : null;
-}
-
-/**
- * Resolve the repository to operate on: `--root` > the shared project-root
- * resolver (`AGENT_CONFIG_PROJECT_ROOT`, then the anchor walk from `cwd`, then
- * `cwd`). The package tree is never a fallback — in a consumer it is
- * `node_modules/@event4u/agent-config`, and indexing it answered every
- * question about the wrong repository.
- *
- * `realpathSync` rather than `resolve` alone: a symlinked root must normalise to
- * what will actually be walked. A root that does not exist is returned
- * unresolved, so the caller's existence check prints the path it was given.
- */
-function resolveRoot(argv: string[]): string {
-    const explicit = flag(argv, '--root');
-    const project = flag(argv, '--project');
-    let candidate: string;
-    if (project !== null) {
-        const r = resolveProjectRef(project);
-        if ('error' in r) throw new UsageError(r.error);
-        candidate = r.root;
-    } else if (explicit !== null) {
-        candidate = explicit;
-    } else {
-        try {
-            candidate = resolve_project_root(null)[0];
-        } catch {
-            candidate = process.env['AGENT_CONFIG_PROJECT_ROOT'] ?? process.cwd();
-        }
-    }
-    try {
-        return fs.realpathSync(path.resolve(candidate));
-    } catch {
-        return path.resolve(candidate);
-    }
-}
 
 /**
  * A cache an older version wrote inside the package directory is named once
@@ -569,11 +495,6 @@ function renderUsage(g: LoadedGraph, argv: string[], seed: string): void {
     for (const at of lb.text_only_at) process.stdout.write(`  text only: ${at}\n`);
 }
 
-function isFlagValue(argv: string[], token: string): boolean {
-    const i = argv.indexOf(token);
-    return i > 0 && (argv[i - 1] as string).startsWith('--');
-}
-
 // Phase-3 gate verbs (3.1-3.3).
 
 /** The staleness token every gate verb prints, per step 3.1–3.3's shared
@@ -661,156 +582,6 @@ function cmdImpact(argv: string[]): number {
  * terms, each counted fact listed with its witness. Without `--diff` the
  * working tree is set against HEAD.
  */
-/** `why` / `usage` / `remove-plan <package>` — the systems lane's package answers. */
-async function cmdSystems(sub: 'why' | 'usage' | 'remove-plan', argv: string[]): Promise<number> {
-    const positional = argv.filter((a) => !a.startsWith('--') && !isFlagValue(argv, a));
-    const query = positional[0];
-    if (!query) {
-        process.stderr.write(`usage: code_graph/cli.ts ${sub} <package[@version]> [--branch B] [--json] [--graph P]\n`);
-        return 2;
-    }
-    const root = resolveRoot(argv);
-    const graphPath = flag(argv, '--graph') ?? cacheFor(root);
-    const branch = flag(argv, '--branch');
-    let g: CodeGraph;
-    if (branch !== null) {
-        if (sub === 'usage') {
-            process.stderr.write(`code-graph: usage reads the package's installed files, and ${branch}'s are not installed here — check it out to ask\n`);
-            return 1;
-        }
-        const build = path.dirname(graphPath);
-        const m = (await indexBranch(root, build, branch)).manifest;
-        g = { ...branchPackageGraph(build, m) } as CodeGraph;
-    } else {
-        try {
-            g = JSON.parse(fs.readFileSync(graphPath, 'utf-8')) as CodeGraph;
-        } catch {
-            process.stderr.write(`code-graph: no graph at ${shown(root, graphPath)} — run \`code-graph build\` first\n`);
-            return 1;
-        }
-    }
-    if (!g.nodes.some((n) => n.kind === 'package')) {
-        process.stderr.write('code-graph: the graph holds no package facts — no lockfile or manifest was read, or it was built without lanes\n');
-        return 1;
-    }
-    const answer = sub === 'why' ? systemsWhy(g, query) : sub === 'usage' ? systemsUsage(g, root, query) : systemsRemovePlan(g, query);
-    if (argv.includes('--json')) process.stdout.write(`${JSON.stringify(answer, null, 2)}\n`);
-    else {
-        const lines = sub === 'why' ? renderWhy(answer as WhyAnswer[]) : sub === 'usage' ? renderPackageUsage(answer as UsageAnswer[]) : renderRemovePlan(answer as RemovePlan[]);
-        process.stdout.write(`${lines.join('\n')}\n`);
-    }
-    return answer.length ? 0 : 1;
-}
-
-function branchStoreOf(argv: string[]): { root: string; build: string } {
-    const root = resolveRoot(argv);
-    return { root, build: path.dirname(flag(argv, '--graph') ?? cacheFor(root)) };
-}
-
-/** `branches [index [ref…] | gc | list]` — the per-branch fact store. */
-async function cmdBranches(argv: string[]): Promise<number> {
-    const { root, build } = branchStoreOf(argv);
-    const positional = argv.filter((a) => !a.startsWith('--') && !isFlagValue(argv, a));
-    const action = positional[0] ?? 'list';
-    if (action === 'index') {
-        const refs = positional.length > 1 ? positional.slice(1) : defaultBranchSet(root);
-        for (const ref of refs) {
-            try {
-                const r = await indexBranch(root, build, ref);
-                process.stdout.write(`indexed ${ref} @ ${r.manifest.commit.slice(0, 8)} — ${Object.keys(r.manifest.files).length} files, ${r.written} new fact file(s)\n`);
-            } catch (e) {
-                process.stdout.write(`skipped ${ref}: ${(e as Error).message.split('\n')[0]}\n`);
-            }
-        }
-        const bytes = storeBytes(build);
-        process.stdout.write(`store: ${bytes.manifests} B manifests, ${bytes.facts} B facts\n`);
-        return 0;
-    }
-    if (action === 'gc') {
-        const r = gcBranches(root, build);
-        for (const d of r.dropped) process.stdout.write(`dropped ${d.ref} — ${d.why}\n`);
-        for (const k of r.kept) process.stdout.write(`kept    ${k.ref} — ${k.why}\n`);
-        process.stdout.write(`swept ${r.swept} unreferenced fact file(s); no git ref was touched\n`);
-        return 0;
-    }
-    if (action !== 'list') {
-        process.stderr.write('usage: code_graph/cli.ts branches [index [ref…] | gc | list]\n');
-        return 2;
-    }
-    const list = listManifests(build);
-    if (!list.length) {
-        process.stdout.write('no branch is indexed yet — `code-graph branches index`\n');
-        return 0;
-    }
-    for (const m of list) {
-        const link = chainOf(root, m.ref).find((l) => l.branch === m.ref);
-        process.stdout.write(`${m.ref.padEnd(32)} ${m.commit.slice(0, 8)}  seen ${m.seen}  parent ${link?.parent ?? (link?.source === 'root' ? '— (default)' : 'unknown')}\n`);
-    }
-    return 0;
-}
-
-/** `branch-diff <a> [<b>]` — b defaults to the checked-out branch; both are indexed on demand. */
-async function cmdBranchDiff(argv: string[]): Promise<number> {
-    const { root, build } = branchStoreOf(argv);
-    const positional = argv.filter((a) => !a.startsWith('--') && !isFlagValue(argv, a));
-    const a = positional[0];
-    const b = positional[1] ?? currentBranch(root);
-    if (!a || !b) {
-        process.stderr.write('usage: code_graph/cli.ts branch-diff <a> [<b>]\n');
-        return 2;
-    }
-    const ma = (await indexBranch(root, build, a)).manifest;
-    const mb = (await indexBranch(root, build, b)).manifest;
-    process.stdout.write(`${renderDiff(diffBranches(build, ma, mb)).join('\n')}\n`);
-    return 0;
-}
-
-/** `on-branches <package|table.column|symbol|file>` — over the indexed branches; asking keeps them seen. */
-function cmdOnBranches(argv: string[]): number {
-    const { build } = branchStoreOf(argv);
-    const q = argv.filter((a) => !a.startsWith('--') && !isFlagValue(argv, a))[0];
-    if (!q) {
-        process.stderr.write('usage: code_graph/cli.ts on-branches <package|table.column|symbol|file>\n');
-        return 2;
-    }
-    const hits = onBranches(build, q);
-    const indexed = listManifests(build);
-    for (const m of indexed) touchManifest(build, m);
-    if (!hits.length) {
-        process.stdout.write(`${q}: on none of the ${indexed.length} indexed branch(es)\n`);
-        return 1;
-    }
-    for (const h of hits) process.stdout.write(`${h.ref.padEnd(32)} ${h.commit.slice(0, 8)}  ${h.what}\n`);
-    return 0;
-}
-
-/** `provenance <ticket|#pr|file|symbol>` — since when, and for which ticket and PR. */
-function cmdProvenance(argv: string[]): number {
-    const positional = argv.filter((a) => !a.startsWith('--') && !isFlagValue(argv, a));
-    const query = positional[0];
-    if (!query) {
-        process.stderr.write('usage: code_graph/cli.ts provenance <ticket|#pr|file|symbol> [--graph P]\n');
-        return 2;
-    }
-    const root = resolveRoot(argv);
-    const graphPath = flag(argv, '--graph') ?? cacheFor(root);
-    const buildDir = path.dirname(graphPath);
-    const index = cachedProvenance(root, buildDir);
-    if (!index) {
-        process.stderr.write('code-graph: no git history here — provenance reads the local history only\n');
-        return 1;
-    }
-    let g: Pick<CodeGraph, 'nodes'> = { nodes: [] };
-    try {
-        g = JSON.parse(fs.readFileSync(graphPath, 'utf-8')) as CodeGraph;
-    } catch {
-        /* files and tickets answer without a graph; symbols and routes need one */
-    }
-    const a = provenanceAnswer(root, g, index, query.replace(/^\.\//, ''), buildDir);
-    process.stdout.write(`${a.lines.join('\n')}\n`);
-    return a.kind === 'none' ? 1 : 0;
-}
-
 function cmdReviewRisk(argv: string[]): number {
     const root = resolveRoot(argv);
     const rev = flag(argv, '--diff') ?? 'HEAD';
