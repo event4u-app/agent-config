@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import { buildGraph, type SourceFile } from '../../src/scripts/code_graph/build.js';
 import { extractFile } from '../../src/scripts/code_graph/extract.js';
 import type { CodeGraph, Lang } from '../../src/scripts/code_graph/types.js';
+import { supersededByScip } from '../../src/scripts/code_graph/scip_reader.js';
 import { toEdge } from '../../src/scripts/code_graph/sqlite_store.js';
 import { isAcceptedEdge } from '../../src/scripts/code_graph/verbs.js';
 
@@ -187,5 +188,25 @@ describe('class hierarchy (1.4)', () => {
         expect(e).toMatchObject({ confidence: 'AMBIGUOUS', ambiguity_reason: 'name-collision' });
         expect(e?.candidates).toEqual(['src/C.php#I::m', 'src/C.php#P::m']);
         expect(isAcceptedEdge(e as never)).toBe(false);
+    });
+});
+
+describe('supersede by the compiler index (2.1)', () => {
+    const node = (id: string, label: string) => ({ id, label, kind: 'function', source_file: id.split('#')[0] as string, source_location: [1, 0, 1, 0] });
+    const nodes = [node('a.ts#run', 'run'), node('b.ts#run', 'run'), node('c.ts#other', 'other'), node('s.ts#go', 'go')];
+    const edge = (source: string, target: string, resolved_via: string, confidence = 'INFERRED') =>
+        ({ source, target, relation: 'calls', confidence, resolved_via, provider: 'native' }) as never;
+    const scip = [{ source: 's.ts#go', target: 'a.ts#run', relation: 'uses', confidence: 'EXTRACTED', resolved_via: 'compiler-index', provider: 'scip' }] as never;
+    const superseded = supersededByScip(scip, nodes as never);
+
+    it('drops a native guess to a different same-named node — the index names the real one', () => {
+        expect(superseded(edge('s.ts#go', 'b.ts#run', 'name-lookup'))).toBe(true);
+        expect(superseded(edge('s.ts#go', 'symbol:run', 'name-lookup', 'AMBIGUOUS'))).toBe(true);
+    });
+
+    it('keeps a guess under another name, from another source, or by a stated mechanism', () => {
+        expect(superseded(edge('s.ts#go', 'c.ts#other', 'name-lookup'))).toBe(false);
+        expect(superseded(edge('c.ts#other', 'b.ts#run', 'name-lookup'))).toBe(false);
+        expect(superseded(edge('s.ts#go', 'b.ts#run', 'import-specifier', 'EXTRACTED'))).toBe(false);
     });
 });

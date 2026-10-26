@@ -39,7 +39,8 @@ declarators carry no `topLevel` check. The supplied plan read 684 of 1,342 (51 %
 an older tree; the defect holds, the ratio moved (`corrected-from-reproduction`).
 Done means: a census that measures this exists; no name-lookup edge binds an
 arbitrary winner; re-exports resolve; an intra-class `this.m()` that walked the
-hierarchy to exactly one owner is stated; and SCIP supersedes by node id.
+hierarchy to exactly one owner is stated; the SCIP supersede rule is pinned; and
+more than one SCIP index is read.
 
 ## Phase 0 — Measure before changing
 
@@ -94,13 +95,19 @@ hierarchy to exactly one owner is stated; and SCIP supersedes by node id.
       and the existing graph suites stay green.
       verify: `npx vitest run tests/scripts/code_graph` -> 0
 
-## Phase 2 — The compiler index supersedes by identity
+## Phase 2 — The compiler index, pinned and widened
 
-- [ ] **2.1 Supersede by node id.** `supersededByScip` (`scip_reader.ts:183-201`)
-      compares labels, so a SCIP edge to one `run` hides a native guess to a
-      different `run`. Compare the target id; keep the `symbol:` fallback only for
-      unresolved native targets.
-      verify: `npx vitest run tests/scripts/code_graph_resolution_discipline.test.ts -t 'supersede by id'` -> 0
+- [x] **2.1 Pin the supersede rule (corrected).** The supplied step asked to compare
+      node ids in `supersededByScip` (`scip_reader.ts:183-201`) instead of labels.
+      Reproduction says no: the reader emits `uses` edges for every reference a
+      source makes, so a native guess from that source to a *different* same-named
+      node is exactly the arbitrary winner the index exists to remove — an id
+      comparison would keep it. The trap the plan feared needs SCIP `calls`
+      emission, which this file does not take. The label rule stays and is pinned:
+      a different same-named target and a `symbol:` target are superseded; another
+      name, another source, or a stated mechanism are not.
+      `corrected-from-reproduction`.
+      verify: `npx vitest run tests/scripts/code_graph_resolution_discipline.test.ts -t 'compiler index'` -> 0
 - [ ] **2.2 More than one index.** Besides `<root>/index.scip`, read every `*.scip`
       under a configured directory (one index per package in a monorepo), keeping
       only documents whose path lies inside the root.
@@ -146,4 +153,5 @@ reverse.
       Phase 1 its `name_lookup_multi` reads 0.
 - [ ] AC-2 — A barrel import binds the call to the definition as a stated edge.
 - [ ] AC-3 — An intra-class call that walked to one owner survives the gate verbs.
-- [ ] AC-4 — A SCIP edge supersedes only the native guess to the same node id.
+- [ ] AC-4 — A SCIP reference supersedes a native guess to any same-named node from
+      that source, and nothing stated or under another name.
