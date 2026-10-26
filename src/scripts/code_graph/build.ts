@@ -444,17 +444,6 @@ export function buildGraph(
             if (parents.length === 1) push(sym.parents, inh.classId, parents[0] as string);
         }
 
-    const ancestorsOf = (classId: string): string[] => {
-        const seen = new Set<string>();
-        const stack = [...(sym.parents.get(classId) ?? [])];
-        while (stack.length) {
-            const p = stack.pop() as string;
-            if (seen.has(p)) continue;
-            seen.add(p);
-            for (const gp of sym.parents.get(p) ?? []) stack.push(gp);
-        }
-        return [...seen];
-    };
     /**
      * Every owner of method `name` at the nearest level of `classId`'s
      * in-repo hierarchy: the class itself, else its parents, else theirs. One
