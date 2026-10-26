@@ -11,7 +11,7 @@
             pickTitle: 'Pick a file', pickHint: 'Click in the graph, search with / – or start here.', recent: 'Recently picked', topHotspots: 'Largest hotspots',
             deselect: 'Clear selection', linesN: function (n) { return n + ' lines'; }, commitsWin: function (d) { return 'commits / ' + d + ' d'; }, owners: 'owners', ownerBus: 'owner · bus factor',
             aggregated: function (f, a) { return 'aggregated: ' + f + ' files in ' + a + ' area bubbles'; }, outsideArea: 'outside this area', folderFiles: '(files)', folded: function (f, s2, z) { return 'folded: ' + f + ' files into ' + s2 + ' folder nodes · click one to open it · zoom past ' + z + '× to open all'; }, commitsShort: 'Commits', outsideHub: 'outside hub', openArea: 'Open area (double-click)', crumbMap: 'Map',
-            smallParts: 'Small parts', hubLine: function (h) { return 'Hub: ' + h; }, cSize: 'Lines', hSize: 'LOC per area', hChurn: function (d) { return 'Commits in ' + d + ' days'; }, hFolderA: 'Main folder of the area',
+            smallParts: 'Small parts', hiddenEdges: function (n) { return '+' + n + ' hidden'; }, hubLine: function (h) { return 'Hub: ' + h; }, cSize: 'Lines', hSize: 'LOC per area', hChurn: function (d) { return 'Commits in ' + d + ' days'; }, hFolderA: 'Main folder of the area',
             lgSize: function (a, b) { return 'Lines per area: ' + a + ' → ' + b; }, lgChurnA: function (d, a, b) { return 'Commits in ' + d + ' days: ' + a + ' → ' + b; },
             crumbLayers: function (f) { return 'Blast depth · ' + f; }, crumbMatrix: function (n) { return 'Area matrix ' + n + ' × ' + n; }, crumbKnow: function (f) { return 'Knowledge of ' + f; }, crumbArea: function (id, title, n) { return id + ' ' + title + ' · ' + n + ' files'; },
             moreDirect: function (n) { return '+ ' + n + ' more direct · expand depth 2 and 3'; }, depthCollapse: 'Show depth 1 only', testsMore: function (n) { return '+' + n + ' more · import link, no coverage'; },
@@ -26,7 +26,7 @@
             pickTitle: 'Datei wählen', pickHint: 'Im Graph klicken, suchen mit / – oder hier einsteigen.', recent: 'Zuletzt gewählt', topHotspots: 'Größte Hotspots',
             deselect: 'Auswahl aufheben', linesN: function (n) { return n + ' Zeilen'; }, commitsWin: function (d) { return 'Commits / ' + d + ' T.'; }, owners: 'Owner', ownerBus: 'Owner · Bus-Faktor',
             aggregated: function (f, a) { return 'aggregiert: ' + f + ' Dateien in ' + a + ' Area-Blasen'; }, outsideArea: 'außerhalb der Area', folderFiles: '(Dateien)', folded: function (f, s2, z) { return 'gefaltet: ' + f + ' Dateien in ' + s2 + ' Ordner-Knoten · einen anklicken öffnet ihn · über ' + z + '× zoomen öffnet alle'; }, commitsShort: 'Commits', outsideHub: 'außerhalb Hub', openArea: 'Area öffnen (Doppelklick)', crumbMap: 'Karte',
-            smallParts: 'Kleinteile', hubLine: function (h) { return 'Hub: ' + h; }, cSize: 'Zeilen', hSize: 'LOC je Area', hChurn: function (d) { return 'Commits in ' + d + ' Tagen'; }, hFolderA: 'Hauptordner der Area',
+            smallParts: 'Kleinteile', hiddenEdges: function (n) { return '+' + n + ' ausgeblendet'; }, hubLine: function (h) { return 'Hub: ' + h; }, cSize: 'Zeilen', hSize: 'LOC je Area', hChurn: function (d) { return 'Commits in ' + d + ' Tagen'; }, hFolderA: 'Hauptordner der Area',
             lgSize: function (a, b) { return 'Zeilen je Area: ' + a + ' → ' + b; }, lgChurnA: function (d, a, b) { return 'Commits in ' + d + ' Tagen: ' + a + ' → ' + b; },
             crumbLayers: function (f) { return 'Blast-Tiefe · ' + f; }, crumbMatrix: function (n) { return 'Area-Matrix ' + n + ' × ' + n; }, crumbKnow: function (f) { return 'Wissen zu ' + f; }, crumbArea: function (id, title, n) { return id + ' ' + title + ' · ' + n + ' Dateien'; },
             moreDirect: function (n) { return '+ ' + n + ' weitere direkt · Tiefe 2 und 3 aufklappen'; }, depthCollapse: 'Nur Tiefe 1 zeigen', testsMore: function (n) { return '+' + n + ' weitere · Import-Bezug, keine Coverage'; },
@@ -78,13 +78,33 @@
 
     var ORB_YAW = 0.35;
     var ORB_PITCH = -0.3;
+    // The orb's orientation is one rotation matrix (row-major), turned by small steps
+    // about the screen's axes. Angles would lock at a pole; a matrix turns on forever.
+    function rotX(a) { var c = Math.cos(a); var s = Math.sin(a); return [1, 0, 0, 0, c, -s, 0, s, c]; }
+    function rotY(a) { var c = Math.cos(a); var s = Math.sin(a); return [c, 0, s, 0, 1, 0, -s, 0, c]; }
+    function matMul(A, B) {
+        var out = [];
+        for (var r = 0; r < 3; r++) for (var c = 0; c < 3; c++) out.push(A[r * 3] * B[c] + A[r * 3 + 1] * B[3 + c] + A[r * 3 + 2] * B[6 + c]);
+        return out;
+    }
+    /** Gram–Schmidt over the rows: thousands of small turns never shear or shrink the sphere. */
+    function orthonormal(m) {
+        var a = [m[0], m[1], m[2]]; var b = [m[3], m[4], m[5]];
+        var la = Math.hypot(a[0], a[1], a[2]); a = [a[0] / la, a[1] / la, a[2] / la];
+        var d = a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; b = [b[0] - d * a[0], b[1] - d * a[1], b[2] - d * a[2]];
+        var lb = Math.hypot(b[0], b[1], b[2]); b = [b[0] / lb, b[1] / lb, b[2] / lb];
+        return a.concat(b, [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]);
+    }
+    function startRotation() { return { m: matMul(rotX(ORB_PITCH), rotY(ORB_YAW)) }; }
+    /** Turn the orb by `yaw` about the screen's vertical axis and `pitch` about its horizontal one. */
+    function turnBy(yaw, pitch) { state.rot.m = orthonormal(matMul(matMul(rotX(pitch), rotY(yaw)), state.rot.m)); }
 
     var state = {
         lens: 'graph', colorBy: 'blast', scope: 'code', tab: 'file',
         level: 'overview', area: -1, file: -1, cell: null,
         showTrusted: true, showGuesses: false, showTests: true, showInfra: false,
         full: false, formula: false, deep: false, treePath: '', scopeDir: '', open: Object.create(null),
-        view: { scale: 1, x: 0, y: 0 }, orb: false, rot: { yaw: ORB_YAW, pitch: ORB_PITCH },
+        view: { scale: 1, x: 0, y: 0 }, orb: false, rot: startRotation(),
         // Which areas the overview shows. A data choice, so it never depends on 2D / 3D.
         areaLimit: OVERVIEW_AREAS,
         // Side panels: `pin` null = the width's default (pinned only on a wide window).
@@ -146,7 +166,7 @@
     }
     function lensHome() { step(); state.treePath = ''; state.cell = null; refresh(); }
     function exposeView() {
-        window.__mapView = { lens: state.lens, treePath: state.treePath, level: state.level, area: state.area, file: state.file, shownAreas: state.level === 'overview' ? overviewAreas() : [], drawn: drawn.map(function (d) { return { kind: d.kind, idx: d.idx, x: d.x, y: d.y }; }) };
+        window.__mapView = { lens: state.lens, treePath: state.treePath, level: state.level, area: state.area, file: state.file, shownAreas: state.level === 'overview' ? overviewAreas() : [], drawn: drawn.map(function (d) { return { kind: d.kind, idx: d.idx, x: d.x, y: d.y, deg: d.deg }; }) };
     }
     window.__mapLabelBoxes = { boxes: [], width: 0, height: 0 };
 
@@ -298,13 +318,8 @@
         var px = Math.cos(phi) * rho * f;
         var py = Math.sin(phi) * rho * f;
         var pz = 1 - (rho * rho) / 2;
-        var cy = Math.cos(state.rot.yaw);
-        var sy = Math.sin(state.rot.yaw);
-        var x1 = px * cy + pz * sy;
-        var z1 = -px * sy + pz * cy;
-        var cp = Math.cos(state.rot.pitch);
-        var sp = Math.sin(state.rot.pitch);
-        return [x1, py * cp - z1 * sp, py * sp + z1 * cp];
+        var m = state.rot.m;
+        return [m[0] * px + m[1] * py + m[2] * pz, m[3] * px + m[4] * py + m[5] * pz, m[6] * px + m[7] * py + m[8] * pz];
     }
     function orbRadius() { var s = size(); return (Math.min(s.w, s.h) / 2 - 48) * state.view.scale; }
 
@@ -353,12 +368,40 @@
         ar.local.forEach(function (l) { maxIn = Math.max(maxIn, files[l[0]].inFiles); });
         ar.local.forEach(function (l) {
             var f = files[l[0]];
-            if (!state.showTests && f.role === 'test') return;
-            if (!state.showInfra && f.role === 'infra' && l[0] !== state.file) return;
+            if (!fileShown(l[0])) return;
             var outside = f.area !== state.area;
             out.push({ kind: 'file', idx: l[0], x: l[1], y: l[2], r: outside ? 4 : 4 + 12 * Math.sqrt(f.inFiles / maxIn), label: base(f.path), weight: f.inFiles + (l[0] === state.file ? 1e6 : 0) + (outside ? -1000 : 0), outside: outside });
         });
+        // The local layout carries only a few outside neighbours per area. The marked file's
+        // own neighbours all join, on a ring around the area grouped by their area, so every
+        // trusted edge it has is drawn rather than ending at a file the view left out.
+        if (state.file >= 0) {
+            var have = Object.create(null);
+            out.forEach(function (n) { have[n.idx] = true; });
+            if (have[state.file]) {
+                var extra = [];
+                outOf[state.file].concat(inOf[state.file]).forEach(function (x) {
+                    var g = files[x[0]];
+                    if (have[x[0]] || !fileShown(x[0])) return;
+                    have[x[0]] = true;
+                    extra.push(x[0]);
+                });
+                extra.sort(function (a, b) { return files[a].area - files[b].area || (files[a].path < files[b].path ? -1 : 1); });
+                extra.forEach(function (i, k) {
+                    var ang = (k / extra.length) * Math.PI * 2 - Math.PI / 2;
+                    out.push({ kind: 'file', idx: i, x: Math.cos(ang) * 1.12, y: Math.sin(ang) * 1.12, r: 3.5, label: base(files[i].path), weight: -2000, outside: true, ring: true });
+                });
+            }
+        }
         return foldSupers(out);
+    }
+
+    /** Whether the tests and infra-hub toggles let a file onto the stage. */
+    function fileShown(i) {
+        var f = files[i];
+        if (!state.showTests && f.role === 'test') return false;
+        if (!state.showInfra && f.role === 'infra' && i !== state.file) return false;
+        return true;
     }
 
     /**
@@ -374,8 +417,10 @@
         superOf = Object.create(null);
         var key = state.area;
         var on = !!state.superOn[key];
-        if (!on && nodes.length > L.collapseAbove) on = true;
-        else if (on && nodes.length <= L.expandBelow) on = false;
+        // The marked file's ring of neighbours is not the area's own count.
+        var count = nodes.filter(function (n) { return !n.ring; }).length;
+        if (!on && count > L.collapseAbove) on = true;
+        else if (on && count <= L.expandBelow) on = false;
         state.superOn[key] = on;
         if (!state.superZoom && state.view.scale >= L.zoomExpand) state.superZoom = true;
         else if (state.superZoom && state.view.scale < L.zoomCollapse) state.superZoom = false;
@@ -509,6 +554,7 @@
         var amber = cssVar('--amber');
         var blastMode = state.colorBy === 'blast';
         ctx.lineCap = 'round';
+        nodes.forEach(function (n) { n.deg = 0; });
         if (state.level === 'overview') {
             var selArea = state.file >= 0 ? files[state.file].area : state.area;
             model.areaEdges.forEach(function (e) {
@@ -524,6 +570,7 @@
                 ctx.moveTo(a.sx, a.sy);
                 ctx.lineTo(b.sx, b.sy);
                 ctx.stroke();
+                a.deg += 1; b.deg += 1;
             });
             ctx.globalAlpha = 1;
         } else {
@@ -535,6 +582,7 @@
                     var b = pos['file' + e[1]] || (superOf[e[1]] && pos['super' + superOf[e[1]].idx]);
                     if (!a || !b || a === b) return;
                     var pairKey = a.kind + a.idx + '>' + b.kind + b.idx;
+                    a.deg += 1; b.deg += 1;
                     if ((a.kind === 'super' || b.kind === 'super') && seenPair[pairKey]) return;
                     seenPair[pairKey] = true;
                     var toSel = e[1] === state.file;
@@ -552,6 +600,19 @@
             if (state.showTrusted) drawEdges(model.edges, false);
             if (state.showGuesses) drawEdges(model.guessEdges, true);
         }
+
+        // What a node has but the view does not draw: edges to areas or files left out, or
+        // switched off. A node with such edges and none drawn says so instead of looking alone.
+        var hidden = Object.create(null);
+        nodes.forEach(function (n) {
+            var real = 0;
+            if (n.kind === 'area') model.areaEdges.forEach(function (e) { if (e[0] === n.idx || e[1] === n.idx) real += 1; });
+            else if (n.kind === 'file') real = outOf[n.idx].length + inOf[n.idx].length;
+            else return;
+            n.hidden = Math.max(0, real - n.deg);
+            if (n.hidden) hidden[n.kind + n.idx] = n.hidden;
+        });
+        window.__mapHidden = hidden;
 
         var nodeStroke = cssVar('--nodeStroke');
         var bg = cssVar('--bg');
@@ -618,10 +679,10 @@
                 ctx.setLineDash([]);
             }
             ctx.globalAlpha = 1;
-            if (!state.orb || n.depth > 0) drawn.push({ kind: n.kind, idx: n.idx, x: n.sx, y: n.sy, r: Math.max(n.r, 8) });
+            if (!state.orb || n.depth > 0) drawn.push({ kind: n.kind, idx: n.idx, x: n.sx, y: n.sy, r: Math.max(n.r, 8), deg: n.deg });
         });
         drawLabels(state.orb ? nodes.filter(function (n) { return n.depth > 0.15; }) : nodes, s, blastMode);
-        window.__mapOrbNodes = state.orb ? nodes.map(function (n) { return { x: n.sx, y: n.sy, r: n.r, near: n.depth > 0, u: n.u }; }) : [];
+        window.__mapOrbNodes = state.orb ? nodes.map(function (n) { return { kind: n.kind, idx: n.idx, x: n.sx, y: n.sy, r: n.r, near: n.depth > 0, u: n.u, deg: n.deg }; }) : [];
         renderFoot();
     }
 
@@ -732,6 +793,27 @@
                 ctx.fillText(txt, box.x + 8, box.y + 9);
             });
         }
+        ctx.font = '600 10px ' + mono;
+        nodes.forEach(function (n) {
+            var sel = n.kind === 'file' ? n.idx === state.file : n.idx === (state.file >= 0 ? files[state.file].area : state.area);
+            if (!n.hidden || (n.deg && !sel)) return;
+            owner = n.idx;
+            var txt = t('hiddenEdges')(num(n.hidden));
+            var w = ctx.measureText(txt).width + 12;
+            var box = { x: n.sx + n.r + 2, y: n.sy + n.r - 4, w: w, h: 16 };
+            if (!fits(box)) return;
+            placed.push(box);
+            ctx.fillStyle = bg;
+            ctx.strokeStyle = cssVar('--line2');
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 2]);
+            roundRect(box.x, box.y, box.w, box.h, 8);
+            ctx.fill();
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = cssVar('--muted');
+            ctx.fillText(txt, box.x + 6, box.y + 8);
+        });
         window.__mapLabelBoxes = { boxes: placed, width: s.w, height: s.h };
         exposeView();
     }
@@ -1877,7 +1959,7 @@
         back.addEventListener('click', function () { state.full = false; refresh(); resize(); });
         card.appendChild(back);
     }
-    function resetView() { state.view = { scale: 1, x: 0, y: 0 }; state.rot = { yaw: ORB_YAW, pitch: ORB_PITCH }; }
+    function resetView() { state.view = { scale: 1, x: 0, y: 0 }; state.rot = startRotation(); }
     function goHome() { step(); state.level = 'overview'; state.lens = 'graph'; resetView(); refresh(); }
     // Entering an area decides its fold from the upper line again; the band only holds within one visit.
     function freshFold(i) {
@@ -1908,7 +1990,7 @@
     var drag = null;
     var frame = 0;
     canvas.addEventListener('pointerdown', function (e) {
-        drag = { x: e.clientX, y: e.clientY, vx: state.view.x, vy: state.view.y, yaw: state.rot.yaw, pitch: state.rot.pitch, turn: state.orb && !e.shiftKey, moved: false };
+        drag = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, vx: state.view.x, vy: state.view.y, turn: state.orb && !e.shiftKey, moved: false };
         canvas.setPointerCapture(e.pointerId);
     });
     canvas.addEventListener('pointermove', function (e) {
@@ -1917,11 +1999,11 @@
         var dy = e.clientY - drag.y;
         if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
         if (!drag.moved) return;
-        if (drag.turn) { state.rot.yaw = drag.yaw + dx * 0.008; state.rot.pitch = Math.max(-1.4, Math.min(1.4, drag.pitch - dy * 0.008)); }
+        if (drag.turn) { turnBy((e.clientX - drag.lx) * 0.008, -(e.clientY - drag.ly) * 0.008); drag.lx = e.clientX; drag.ly = e.clientY; }
         else { state.view.x = drag.vx + dx; state.view.y = drag.vy + dy; }
         if (!frame) frame = requestAnimationFrame(function () { frame = 0; draw(); });
     });
-    function turnTo(yaw, pitch) { state.rot.yaw = yaw; state.rot.pitch = Math.max(-1.4, Math.min(1.4, pitch)); draw(); }
+
     canvas.addEventListener('pointerup', function (e) {
         var wasDrag = drag && drag.moved;
         drag = null;
@@ -1964,7 +2046,7 @@
     document.addEventListener('keydown', function (e) {
         if (current.route !== 'code' || document.activeElement === searchInput) return;
         var step = TURN_KEYS[e.key];
-        if (step && state.orb) { e.preventDefault(); turnTo(state.rot.yaw + step[0], state.rot.pitch + step[1]); return; }
+        if (step && state.orb) { e.preventDefault(); turnBy(step[0], step[1]); draw(); return; }
         if (e.key === 'Escape') {
             if (state.fly.left || state.fly.right) { state.fly.left = false; state.fly.right = false; applyPanes(false); return; }
             if (state.level === 'area') goHome(); else if (state.file >= 0 || state.area >= 0) { state.file = -1; state.area = -1; refresh(); }
