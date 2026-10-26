@@ -10,14 +10,14 @@
             tLines: 'Lines', langs: 'Languages by lines', langMore: function (n) { return n + ' more'; },
             pickTitle: 'Pick a file', pickHint: 'Click in the graph, search with / – or start here.', recent: 'Recently picked', topHotspots: 'Largest hotspots (commits × lines)',
             deselect: 'Clear selection', linesN: function (n) { return n + ' lines'; }, commitsWin: function (d) { return 'commits / ' + d + ' d'; }, owners: 'owners', ownerBus: 'owner · bus factor',
-            aggregated: function (f, a) { return 'aggregated: ' + f + ' files in ' + a + ' area bubbles'; }, commitsShort: 'Commits', outsideHub: 'outside hub folder', openArea: 'Open area (double-click)', crumbMap: 'Map'
+            aggregated: function (f, a) { return 'aggregated: ' + f + ' files in ' + a + ' area bubbles'; }, outsideArea: 'outside this area', folderFiles: '(files)', folded: function (f, s2, z) { return 'folded: ' + f + ' files into ' + s2 + ' folder nodes · click one to open it · zoom past ' + z + '× to open all'; }, commitsShort: 'Commits', outsideHub: 'outside hub folder', openArea: 'Open area (double-click)', crumbMap: 'Map'
         },
         de: {
             healthScale: '4 Teile à 25 Punkte · A ≥ 80, B ≥ 60', lever: function (part, pts) { return 'Größter Hebel: ' + part + ' (−' + pts + ' Punkte)'; },
             tLines: 'Zeilen', langs: 'Sprachen nach Zeilen', langMore: function (n) { return n + ' weitere'; },
             pickTitle: 'Datei wählen', pickHint: 'Im Graph klicken, suchen mit / – oder hier einsteigen.', recent: 'Zuletzt gewählt', topHotspots: 'Größte Hotspots (Commits × Zeilen)',
             deselect: 'Auswahl aufheben', linesN: function (n) { return n + ' Zeilen'; }, commitsWin: function (d) { return 'Commits / ' + d + ' T.'; }, owners: 'Owner', ownerBus: 'Owner · Bus-Faktor',
-            aggregated: function (f, a) { return 'aggregiert: ' + f + ' Dateien in ' + a + ' Area-Blasen'; }, commitsShort: 'Commits', outsideHub: 'außerhalb Hub-Ordner', openArea: 'Area öffnen (Doppelklick)', crumbMap: 'Karte'
+            aggregated: function (f, a) { return 'aggregiert: ' + f + ' Dateien in ' + a + ' Area-Blasen'; }, outsideArea: 'außerhalb der Area', folderFiles: '(Dateien)', folded: function (f, s2, z) { return 'gefaltet: ' + f + ' Dateien in ' + s2 + ' Ordner-Knoten · einen anklicken öffnet ihn · über ' + z + '× zoomen öffnet alle'; }, commitsShort: 'Commits', outsideHub: 'außerhalb Hub-Ordner', openArea: 'Area öffnen (Doppelklick)', crumbMap: 'Karte'
         }
     });
 
@@ -58,9 +58,13 @@
         // Which areas the overview shows. A data choice, so it never depends on 2D / 3D.
         areaLimit: OVERVIEW_AREAS,
         // Side panels: `pin` null = the width's default (pinned only on a wide window).
-        pin: { left: null, right: null }, fly: { left: false, right: false }
+        pin: { left: null, right: null }, fly: { left: false, right: false },
+        // Folder super-nodes at area level: folded per area with hysteresis, opened per folder or by zoom.
+        superOn: Object.create(null), superOpen: Object.create(null), superZoom: false
     };
     var drawn = [];
+    var superList = [];
+    var superOf = Object.create(null);
     function paneMode() { var w = window.innerWidth; return w <= 720 ? 'phone' : w < 1240 ? 'tablet' : 'wide'; }
     function isPinned(side) {
         var mode = paneMode();
@@ -304,7 +308,93 @@
             var outside = f.area !== state.area;
             out.push({ kind: 'file', idx: l[0], x: l[1], y: l[2], r: outside ? 4 : 4 + 12 * Math.sqrt(f.inFiles / maxIn), label: base(f.path), weight: f.inFiles + (l[0] === state.file ? 1e6 : 0) + (outside ? -1000 : 0), outside: outside });
         });
-        return out;
+        return foldSupers(out);
+    }
+
+    /**
+     * Above the measured node count an area folds its files into one node per folder under
+     * the area's common folder. It unfolds only at the lower count, so a filter that moves
+     * the count across one line does not flip the view; zooming past one scale opens every
+     * folder and below a lower one folds them again. A picked file and files from outside
+     * the area always stay single.
+     */
+    function foldSupers(nodes) {
+        var L = typeof SUPER_LIMITS === 'object' ? SUPER_LIMITS : { collapseAbove: 50, expandBelow: 40, zoomExpand: 2, zoomCollapse: 1.5 };
+        superList = [];
+        superOf = Object.create(null);
+        var key = state.area;
+        var on = !!state.superOn[key];
+        if (!on && nodes.length > L.collapseAbove) on = true;
+        else if (on && nodes.length <= L.expandBelow) on = false;
+        state.superOn[key] = on;
+        if (!state.superZoom && state.view.scale >= L.zoomExpand) state.superZoom = true;
+        else if (state.superZoom && state.view.scale < L.zoomCollapse) state.superZoom = false;
+        var result = nodes;
+        if (on && !state.superZoom) {
+            var own = nodes.filter(function (n) { return !n.outside && n.idx !== state.file; });
+            var paths = own.map(function (n) { return files[n.idx].path; });
+            var prefix = paths.length ? dir(paths[0]) + '/' : '';
+            paths.forEach(function (p) { while (prefix && p.indexOf(prefix) !== 0) prefix = prefix.slice(0, prefix.slice(0, -1).lastIndexOf('/') + 1); });
+            // Folders under the common one; the largest is split into its own sub-folders while
+            // the drawn count stays under the fold line, so a big area keeps its structure.
+            function split(members, at) {
+                var out2 = { groups: [], singles: [] };
+                var byG = Object.create(null);
+                members.forEach(function (n) {
+                    var rel = files[n.idx].path.slice(at.length);
+                    var cut = rel.indexOf('/');
+                    if (cut < 0) { out2.singles.push(n); return; }
+                    var g = at + rel.slice(0, cut + 1);
+                    if (!byG[g]) { byG[g] = { path: g, members: [] }; out2.groups.push(byG[g]); }
+                    byG[g].members.push(n);
+                });
+                return out2;
+            }
+            var first = split(own, prefix);
+            var groups = first.groups;
+            var singles = first.singles;
+            var count = function () { return groups.reduce(function (c, g) { return c + (g.members.length >= 2 ? 1 : g.members.length); }, 0) + singles.length; };
+            var target = Math.round(L.collapseAbove * 0.6);
+            var stuck = Object.create(null);
+            for (var guard = 0; guard < 200 && count() < target; guard++) {
+                var big = groups.filter(function (g) { return !stuck[g.path] && g.members.length >= 2; }).sort(function (x, y) { return y.members.length - x.members.length; })[0];
+                if (!big) break;
+                var parts = split(big.members, big.path);
+                var grown = count() - 1 + parts.groups.reduce(function (c, g) { return c + (g.members.length >= 2 ? 1 : 1); }, 0) + parts.singles.length;
+                if (grown > L.collapseAbove || (parts.groups.length <= 1 && !parts.singles.length)) {
+                    if (parts.groups.length === 1 && !parts.singles.length) { big.path = parts.groups[0].path; continue; }
+                    stuck[big.path] = true;
+                    continue;
+                }
+                groups.splice(groups.indexOf(big), 1);
+                groups = groups.concat(parts.groups);
+                singles = singles.concat(parts.singles);
+            }
+            // Still over the line: the files right in the common folder become one node, and so do
+            // the files from outside the area that are drawn for context.
+            var outside = nodes.filter(function (n) { return n.outside && n.idx !== state.file; });
+            if (count() + outside.length > target && singles.length >= 2) { groups.push({ path: prefix + '\u0000', members: singles, own: true }); singles = []; }
+            if (count() + outside.length > target && outside.length >= 2) groups.push({ path: '\u0000outside', members: outside, outside: true });
+            var folded = Object.create(null);
+            var maxCount = 1;
+            groups.forEach(function (g) { if (g.members.length >= 2) maxCount = Math.max(maxCount, g.members.length); });
+            result = [];
+            groups.forEach(function (g) {
+                var members = g.members;
+                if (state.superOpen[key + '|' + g.path] || members.length < 2) return;
+                var sx = 0;
+                var sy = 0;
+                members.forEach(function (n) { sx += n.x; sy += n.y; folded[n.idx] = true; });
+                var label = g.outside ? t('outsideArea') : g.own ? (base(prefix.slice(0, -1)) || '.') + '/ ' + t('folderFiles') : g.path.slice(prefix.length);
+                var node = { kind: 'super', idx: superList.length, x: sx / members.length, y: sy / members.length, r: 7 + 16 * Math.sqrt(members.length / maxCount), label: label + ' · ' + members.length, weight: 1e5 + members.length, members: members.map(function (n) { return n.idx; }) };
+                superList.push({ key: g.path, node: node });
+                members.forEach(function (n) { superOf[n.idx] = node; });
+                result.push(node);
+            });
+            nodes.forEach(function (n) { if (!folded[n.idx]) result.push(n); });
+        }
+        window.__mapSuper = { area: key, on: on, zoomed: state.superZoom, scale: state.view.scale, nodes: nodes.length, supers: superList.length, limits: L };
+        return result;
     }
 
     function draw() {
@@ -386,12 +476,16 @@
             });
             ctx.globalAlpha = 1;
         } else {
+            var seenPair = Object.create(null);
             var drawEdges = function (list, dashed) {
                 ctx.setLineDash(dashed ? [4, 4] : []);
                 list.forEach(function (e) {
-                    var a = pos['file' + e[0]];
-                    var b = pos['file' + e[1]];
-                    if (!a || !b) return;
+                    var a = pos['file' + e[0]] || (superOf[e[0]] && pos['super' + superOf[e[0]].idx]);
+                    var b = pos['file' + e[1]] || (superOf[e[1]] && pos['super' + superOf[e[1]].idx]);
+                    if (!a || !b || a === b) return;
+                    var pairKey = a.kind + a.idx + '>' + b.kind + b.idx;
+                    if ((a.kind === 'super' || b.kind === 'super') && seenPair[pairKey]) return;
+                    seenPair[pairKey] = true;
                     var toSel = e[1] === state.file;
                     ctx.strokeStyle = toSel && blastMode ? brand : edge;
                     ctx.lineWidth = toSel ? 1.6 : 0.9;
@@ -420,6 +514,8 @@
             if (n.kind === 'area') {
                 colour = resolveColour(areaColour(n.idx));
                 sel = state.file >= 0 ? files[state.file].area === n.idx : state.area === n.idx;
+            } else if (n.kind === 'super') {
+                colour = resolveColour(areaColour(state.area));
             } else {
                 var f = files[n.idx];
                 isTest = f.role === 'test';
@@ -461,6 +557,15 @@
                 ctx.fillText(areas[n.idx].id, n.sx, n.sy + 1);
                 ctx.textAlign = 'left';
             }
+            if (n.kind === 'super') {
+                ctx.setLineDash([3, 3]);
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = colour;
+                ctx.beginPath();
+                ctx.arc(n.sx, n.sy, n.r + 4, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
             ctx.globalAlpha = 1;
             if (!state.orb || n.depth > 0) drawn.push({ kind: n.kind, idx: n.idx, x: n.sx, y: n.sy, r: Math.max(n.r, 8) });
         });
@@ -492,7 +597,7 @@
         for (var i = 0; i < order.length && count < limit; i++) {
             var n = order[i];
             var sel = n.kind === 'file' && n.idx === state.file;
-            ctx.font = n.kind === 'area' ? '600 12px ' + sans : (sel ? '600' : '500') + ' 11px ' + mono;
+            ctx.font = n.kind === 'area' || n.kind === 'super' ? '600 12px ' + sans : (sel ? '600' : '500') + ' 11px ' + mono;
             var label = n.label.length > 34 ? n.label.slice(0, 33) + '…' : n.label;
             var w = ctx.measureText(label).width;
             var h = 14;
@@ -505,7 +610,7 @@
             ctx.strokeStyle = bg;
             ctx.lineWidth = 4;
             ctx.strokeText(label, box.x + 2, box.y + h / 2);
-            ctx.fillStyle = n.kind === 'area' ? text : sel ? brandText : soft;
+            ctx.fillStyle = n.kind === 'area' || n.kind === 'super' ? text : sel ? brandText : soft;
             ctx.fillText(label, box.x + 2, box.y + h / 2);
             count += 1;
         }
@@ -895,6 +1000,10 @@
             f.appendChild(el('span', null, t('areaEdges')(num(drawnEdges))));
         }
         if (state.level === 'overview' && state.lens === 'graph') f.appendChild(el('span', { class: 'note' }, t('aggregated')(num(files.length), num(overviewAreas().length))));
+        if (state.level === 'area' && state.lens === 'graph' && superList.length) {
+            var foldedN = superList.reduce(function (n, x) { return n + x.node.members.length; }, 0);
+            f.appendChild(el('span', { class: 'note' }, t('folded')(num(foldedN), num(superList.length), String(typeof SUPER_LIMITS === 'object' ? SUPER_LIMITS.zoomExpand : 2))));
+        }
         f.appendChild(el('span', { class: 'hot' }, t('affected')(num(hit), t(state.scope === 'code' ? 'sCode' : state.scope === 'tests' ? 'sTests' : 'sAll'))));
     }
 
@@ -1592,12 +1701,20 @@
     }
     function resetView() { state.view = { scale: 1, x: 0, y: 0 }; state.rot = { yaw: ORB_YAW, pitch: ORB_PITCH }; }
     function goHome() { step(); state.level = 'overview'; state.lens = 'graph'; resetView(); refresh(); }
-    function openArea(i) { step(); closeFlyouts(); if (state.file >= 0 && files[state.file].area !== i) state.file = -1; state.level = 'area'; state.area = i; state.lens = state.lens === 'graph' ? 'graph' : state.lens; resetView(); refresh(); }
+    // Entering an area decides its fold from the upper line again; the band only holds within one visit.
+    function freshFold(i) {
+        delete state.superOn[i];
+        Object.keys(state.superOpen).forEach(function (k) { if (k.indexOf(i + '|') === 0) delete state.superOpen[k]; });
+    }
+    function openArea(i) {
+        freshFold(i);
+        step(); closeFlyouts(); if (state.file >= 0 && files[state.file].area !== i) state.file = -1; state.level = 'area'; state.area = i; state.lens = state.lens === 'graph' ? 'graph' : state.lens; resetView(); refresh(); }
     function openFile(i) {
         step();
         closeFlyouts();
         var f = files[i];
         if (state.lens === 'graph' && f.area >= 0 && (state.level !== 'area' || state.area !== f.area)) {
+            freshFold(f.area);
             state.level = 'area';
             state.area = f.area;
             resetView();
@@ -1638,10 +1755,16 @@
         var r = canvas.getBoundingClientRect();
         var hit = hitTest(e.clientX - r.left, e.clientY - r.top);
         if (!hit) return;
+        if (hit.kind === 'super') return;
         if (hit.kind === 'area') openArea(hit.idx);
         else openFile(hit.idx);
     });
     function select(hit) {
+        if (hit && hit.kind === 'super') {
+            if (superList[hit.idx]) state.superOpen[state.area + '|' + superList[hit.idx].key] = true;
+            draw();
+            return;
+        }
         if (!hit) {
             if (state.level === 'overview') state.area = -1;
             state.file = -1;

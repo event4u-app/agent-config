@@ -1070,7 +1070,9 @@ export const VIEWER_STYLES = ['viewer.css', 'shell.css'] as const;
  * the page hashes it, so the Content-Security-Policy pins exactly what runs.
  */
 export function viewerScript(parts: readonly string[] = VIEWER_SCRIPTS): string {
-    return `(function () {\n'use strict';\n${parts.map(readViewer).join('\n')}\n})();\n`;
+    const limits = JSON.parse(readViewer('supernodes.json')) as { collapseAbove: number; expandBelow: number; zoomExpand: number; zoomCollapse: number };
+    const supers = JSON.stringify({ collapseAbove: limits.collapseAbove, expandBelow: limits.expandBelow, zoomExpand: limits.zoomExpand, zoomCollapse: limits.zoomCollapse });
+    return `(function () {\n'use strict';\nvar SUPER_LIMITS = ${supers};\n${parts.map(readViewer).join('\n')}\n})();\n`;
 }
 
 export function viewerStyle(): string {
