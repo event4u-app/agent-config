@@ -199,6 +199,7 @@ import {
     type WhyAnswer,
 } from './lanes/systems/verbs.js';
 import { chainOf, currentBranch } from '../_lib/branch_parents.js';
+import { writeChainStatus } from '../_lib/branch_chain_status.js';
 import { branchPackageGraph, defaultBranchSet, diffBranches, gcBranches, indexBranch, listManifests, onBranches, renderDiff, storeBytes, touchManifest } from './branches.js';
 import { domainResolver } from './domains.js';
 import { cachedProvenance, readCachedProvenance, ticketsTouched } from './provenance.js';
@@ -1242,6 +1243,12 @@ async function cmdRefresh(argv: string[]): Promise<number> {
         return 0;
     }
     try {
+        // The branch chain's offline status beside the graph: local refs only, never the network.
+        try {
+            writeChainStatus(root, path.join(path.dirname(out), 'branch-chain.json'));
+        } catch {
+            /* a chain that cannot be read is no reason to skip the refresh */
+        }
         let rc = HEAD_MOVED;
         // One retry: a second move inside one build window means the tree is
         // still in motion, and the next hook or session start will refresh it.

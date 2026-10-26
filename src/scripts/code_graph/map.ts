@@ -28,6 +28,7 @@ import { buildFromRepo, readProjectProbe } from './build.js';
 import { acquire as acquireRefreshLock, heldByThisProcess } from './refresh_lock.js';
 import { computeVerdict, graphState } from './detect.js';
 import { graphHome } from './graph_home.js';
+import { chainStatus } from '../_lib/branch_chain_status.js';
 import { chainOf, currentBranch, parentOf } from '../_lib/branch_parents.js';
 import { type BranchManifest, defaultBranchSet, diffBranches, indexBranch } from './branches.js';
 import { analyseDomains, assignDomains, ownerFromCodeowners, proposalSnippet, proposeDomains, readCodeowners, readDomainRules, structuralDomains } from './domains.js';
@@ -565,6 +566,7 @@ async function mapBranches(root: string, buildDir: string): Promise<MapBranches 
     const chain = chainOf(root, cur);
     return {
         current: cur,
+        chain: chainStatus(root, cur).map((l) => ({ branch: l.branch, parent: l.parent, behind: l.behind, owned: l.owned, overlap: l.overlap.slice(0, 20) })),
         list: manifests
             .filter((m) => m.ref !== cur)
             .map((m) => {

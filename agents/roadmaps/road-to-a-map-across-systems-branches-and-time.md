@@ -235,21 +235,21 @@ no absolute local path.
 
 ## Phase 5 — Keep the branch chain current
 
-- [ ] **5.1 Lineage.** D13; `branch_chain parent --set <branch>` records it.
+- [x] **5.1 Lineage.** D13; `branch_chain parent --set <branch>` records it.
       verify: a three-level fixture resolves its chain.
-- [ ] **5.2 Read-only check.** `branch_chain status`: top-down, each level
+- [x] **5.2 Read-only check.** `branch_chain status`: top-down, each level
       against its parent, remote SHAs when reachable and `unverified` offline.
       verify: `tests/scripts/branch_chain.test.ts` reports the lagging level and
       `unverified` with no remote.
-- [ ] **5.3 Cascade.** `branch_chain sync` per D12: root first, own branches
+- [x] **5.3 Cascade.** `branch_chain sync` per D12: root first, own branches
       merged, foreign ones reported, no integration past a lagging foreign
       parent, no push, conflicts stop and name their paths.
       verify: `tests/scripts/branch_chain.test.ts` integrates an owned parent
       first, reports a foreign one, and leaves every remote ref unchanged.
-- [ ] **5.4 Early warning.** Files, tables, columns, packages and routes
+- [x] **5.4 Early warning.** Files, tables, columns, packages and routes
       changed both by the parent since the merge base and by this branch.
       verify: the fixture warns on the shared column.
-- [ ] **5.5 Wiring.** D14: the detached refresh writes the chain status beside
+- [x] **5.5 Wiring.** D14: the detached refresh writes the chain status beside
       the map and the map shows it; the pre-push freshness gate prints one
       warning line when a parent lags.
       verify: the refresh test writes the status file.

@@ -17,7 +17,8 @@ extendStrings({
         sRemoveHint: 'what removing it touches: `code-graph remove-plan <package>`', sMore: function (n) { return '+ ' + n + ' more files'; },
         sBranches: 'Branches', sBranch: 'Branch', sParent: 'Parent', sSeen: 'Seen', sDiffFiles: 'Files differ', sDiffPkgs: 'Packages', sDiffCols: 'Columns', sDiffSyms: 'Symbols',
         sNoBranches: 'Drawn without --branches: branch names and dates are this machine\'s state, so they stay out of a map that may be committed. `code-graph map --branches` adds them; `code-graph branches` lists them.',
-        sAgainst: function (b) { return 'Each indexed branch against ' + b + ', read from git objects without a checkout.'; }
+        sAgainst: function (b) { return 'Each indexed branch against ' + b + ', read from git objects without a checkout.'; },
+        sChain: 'Branch chain, root first — `branch_chain sync` brings owned levels current', sBehind: 'Behind its parent', sOverlap: 'Both changed', sForeign: 'not ours'
     },
     de: {
         sPackages: 'Pakete', sRuntimes: 'Runtimes', sFindings: 'Befunde',
@@ -30,7 +31,8 @@ extendStrings({
         sRemoveHint: 'was ein Entfernen berührt: `code-graph remove-plan <Paket>`', sMore: function (n) { return '+ ' + n + ' weitere Dateien'; },
         sBranches: 'Branches', sBranch: 'Branch', sParent: 'Parent', sSeen: 'Gesehen', sDiffFiles: 'Dateien anders', sDiffPkgs: 'Pakete', sDiffCols: 'Spalten', sDiffSyms: 'Symbole',
         sNoBranches: 'Ohne --branches gezeichnet: Branch-Namen und Daten sind der Zustand dieses Rechners und bleiben daher aus einer Map, die committet werden kann. `code-graph map --branches` nimmt sie auf; `code-graph branches` listet sie.',
-        sAgainst: function (b) { return 'Jeder indizierte Branch gegen ' + b + ', aus Git-Objekten gelesen, ohne Checkout.'; }
+        sAgainst: function (b) { return 'Jeder indizierte Branch gegen ' + b + ', aus Git-Objekten gelesen, ohne Checkout.'; },
+        sChain: 'Branch-Kette, Wurzel zuerst — `branch_chain sync` bringt eigene Ebenen auf Stand', sBehind: 'Hinter dem Parent', sOverlap: 'Beide geändert', sForeign: 'nicht unserer'
     }
 });
 
@@ -86,6 +88,12 @@ function syPackageLinks(p, k) {
 function syBranches(main) {
     var b = model.branches;
     if (!b) { main.appendChild(el('div', { class: 'box' }, t('sNoBranches'))); return; }
+    if (b.chain && b.chain.length > 1) {
+        main.appendChild(el('p', { class: 'cap' }, t('sChain')));
+        main.appendChild(factTable('systems', [t('sBranch'), t('sParent'), t('sBehind'), t('sOverlap')], b.chain.map(function (l) {
+            return { cls: l.behind ? 'warn' : '', cells: [el('span', { class: 'mono' }, l.branch + (l.owned === false ? ' · ' + t('sForeign') : '')), l.parent || '–', l.behind === null ? '–' : String(l.behind), el('span', { class: 'mono' }, l.overlap.join('\n') || '–')] };
+        })));
+    }
     main.appendChild(el('p', { class: 'muted' }, t('sAgainst')(b.current)));
     main.appendChild(factTable('systems', [t('sBranch'), t('sParent'), t('sSeen'), t('sDiffFiles'), t('sDiffPkgs'), t('sDiffCols'), t('sDiffSyms')], b.list.map(function (x) {
         return { cells: [el('span', { class: 'mono' }, x.ref + ' @ ' + x.commit.slice(0, 8)), x.parent || '–', x.seen, String(x.files), el('span', { class: 'mono' }, x.packages.join('\n') || '–'), el('span', { class: 'mono' }, x.columns.join('\n') || '–'), String(x.symbols)] };

@@ -202,6 +202,8 @@ export interface MapDomainProposals {
 /** The indexed branches against the checked-out one; only on a map drawn with `--branches`. */
 export interface MapBranches {
     current: string;
+    /** the chain root first: each level against its parent, from local refs */
+    chain: Array<{ branch: string; parent: string | null; behind: number | null; owned: boolean | null; overlap: string[] }>;
     list: Array<{
         ref: string;
         commit: string;
