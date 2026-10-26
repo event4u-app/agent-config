@@ -1,156 +1,25 @@
 /*
- * Offline Workbench viewer for agents/map/index.html.
- *
- * Reads the map model from the inline `#map-data` JSON block. Every number on
- * the page is a field of that model; the one thing computed here is which files
- * a blast reaches — a breadth-first walk over the edges the model ships, to the
- * depth the model's blast numbers were computed with (decision D3).
- *
- * Every string from the model reaches the page through textContent, never
- * innerHTML: file paths and symbol names come from the scanned repository.
+ * The Code area: the Workbench — rails, the canvas graph and its lenses, and
+ * the file / findings / area detail. The one thing computed here rather than
+ * read from the model is which files a blast reaches: a breadth-first walk over
+ * the edges the model ships, to the depth its blast numbers were computed with.
  */
-(function () {
-    'use strict';
-
-    var data = JSON.parse(document.getElementById('map-data').textContent);
-    var model = data.model;
-    var meta = data.meta;
-    var files = model.files;
-    var areas = model.areas;
-    var an = model.analyses;
-    var BLAST_DEPTH = model.blastDepth || 3;
-    var WINDOW = model.gitWindowDays || 180;
-    var OVERVIEW_AREAS = 15;
-    var RAIL_CAP = 8;
-    var SYMBOL_CAP = 12;
-    var SCOPE_CODE = { code: 1, entry: 1, view: 1, infra: 1, isolated: 1 };
-
-    var STR = {
+    extendStrings({
         en: {
-            search: 'File, symbol, route, area …', exportBtn: 'Export', light: 'Light theme', dark: 'Dark theme', langBtn: 'DE',
-            health: 'Health', noGrade: function (n) { return 'No grade while ' + n + ' of 4 parts are missing'; }, gradeOf: 'Score {s} of 100',
-            formula: 'Show formula', hideFormula: 'Hide formula',
-            pCycles: 'Cycles (SCC)', pGuesses: 'Guessed edges', pDead: 'Dead code', pHotspots: 'Hotspots',
-            missDead: 'dead → not in map.json', missHot: 'churn missing',
-            tFiles: 'Files', tTrusted: 'Trusted links (incl. doc links)', tAreas: 'Areas', tRoutes: 'Routes resolved',
-            roles: 'Roles', trust: 'Edges by trust', sure: 'trusted', guessed: 'guessed', other: 'infra/config/…',
-            colorBy: 'Colour by', explorer: 'Explorer', scope: 'Scope', all: 'all',
-            cBlast: 'Blast', cArea: 'Area', cTests: 'Test share', cRole: 'Role', cFolder: 'Folder', cLayer: 'Layer', cChurn: 'Churn', cComplexity: 'Complexity',
-            hBlast: 'How far the selection reaches', hArea: 'Louvain community', hTests: 'testShare per area', hRole: 'code / test / doc …', hFolder: 'folder of each file',
-            lGraph: 'Graph', lLayers: 'Layers', lMatrix: 'Matrix', lKnowledge: 'Knowledge', lTreemap: 'Treemap', lFlow: 'Flow',
-            hLayers: 'Depth rings from the selection', hMatrix: 'DSM', hKnowledge: 'Knowledge sources of the selection', hTreemap: 'Area = lines per folder', hTreemapMissing: 'needs line counts per file', hFlow: 'the request-path view is not built yet; the paths themselves are listed per file in the detail panel',
-            edges: 'Edges:', fTests: 'Tests', fInfra: 'Infra hubs', full: 'Full screen', fullOff: 'Exit full screen',
-            lgPick: 'Mark a file to see what a change to it reaches', moreFiles: function (n) { return '+ ' + n + ' more'; }, offGraph: function (f, r) { return f + ' is not on the graph (' + r + '): areas hold code, tests and views'; }, noEffectOverview: 'Acts on file edges: open an area to use it', sAllShort: '+ Docs', noDataShort: 'no data', noViewShort: 'no view yet', noDataUnknown: 'the source is unknown', noDataTitle: function (r) { return 'No data yet: ' + r + '. It switches on by itself once the data exists.'; }, navBack: '← Back', openLeft: '☰ Repository', openRight: 'Details ☰', pin: 'Pin', unpin: 'Unpin', closePane: 'Close', repo: 'Repo', overview: 'Overview', areasOf: function (a, b) { return 'Areas (' + a + ' of ' + b + ')'; }, allAreas: '← All areas',
-            hint2d: 'Drag: move · Wheel: zoom · Click: mark · Double-click: open', hint3d: 'Drag: turn · Shift+drag: move · Wheel: zoom · Click: mark · Double-click: open',
-            zoomIn: 'Zoom in', zoomOut: 'Zoom out', fit: 'Fit', limTop: function (n) { return 'Top ' + n; }, limAll: 'All areas', limLabel: 'Areas shown', d2: '2D', d3: '3D Orb', dimHint: 'Show the map as an orb. Drag to turn it, Shift+drag to move it, arrow keys turn it too. The position on the sphere carries no data: it wraps the 2D layout.',
-            showPanels: 'Show panels again', direct: 'direct', transitive: 'transitive', transitive3: 'transitive ≤ 3', score: 'Score',
-            legend: 'Legend', sizeOverview: 'Name = hub file of the area · Size = files per area · Line = edges between areas',
-            sizeArea: 'Size = incoming edges · Line = edge, orange = points at the selection',
-            lgSel: 'Selection', lgHasHit: 'holds affected files (number = files)', lgNotHit: 'not affected', lgD1: 'Depth 1', lgD2: 'Depth 2', lgD3: 'Depth 3', lgRing: 'Ring = test',
-            lgArea: 'Colour = area (categorical)', lgTests: function (a, b) { return 'Test share ' + a + ' → ' + b; }, lgRole: 'Role: areas are mixed – meaningful at file level',
-            lgFolder: 'Colour = top folder', lgLayer: 'Colour = layer from layers.yaml', lgChurn: function (a) { return 'Commits in the git window, 0 → ' + a; },
-            visibleAreas: function (a, b) { return a + ' / ' + b + ' areas'; }, filesIn: function (n, a) { return n + ' files in ' + a; },
-            areaEdges: function (n) { return n + ' area edges'; }, edgesIn: function (n, a) { return n + ' edges in ' + a; },
-            affected: function (n, s) { return n + ' affected · ' + s; }, sCode: 'Code', sTests: 'Code + tests', sAll: 'everything',
-            layersHead: 'Depth = hops over incoming edges from', depth0: 'Depth 0', depth: function (d) { return 'Depth ' + d; },
-            n0: 'the selection', n1: 'import directly', n2: 'through one step', n3: 'edge of the analysis', selectFirst: 'Select a file to see how far it reaches.',
-            matrixHead: 'Dependency structure matrix at area level · cell = links (symbol references) between two areas · highlighted row/column = selection · red frame = both areas hold files of one cycle',
-            matrixNote: function (a, b, n) { return 'Pick a cell to list the edges between two areas. Strongest coupling: ' + a + ' ↔ ' + b + ' with ' + n + ' edges.'; },
-            diag: 'diagonal (inside the area)', edgesN: function (n, p) { return n + ' links across ' + p + ' file pairs'; },
-            knowHead: 'The same selection, along the knowledge sources · only files with an edge to the selection',
-            kActive: 'active', kPlanned: 'planned', kArchived: 'archived', kDraft: 'draft', kDup: 'duplicate',
-            kCode: 'Code', kTests: 'Tests', kContracts: 'Contracts', kRoadmaps: 'Roadmaps', kEvidence: 'Evidence', kDrafts: 'Drafts', kMemory: 'Memory',
-            collectorMissing: 'Collector missing', memNote1: 'mem entries for the file with validity (valid_from / valid_to), source and use in retrieval.',
-            memNote2: 'Mentioned ≠ describes: the same entity shows as a guessed edge.', artLayer: 'Artefact layer', knowFile: 'Knowledge of the file',
-            docs: function (n) { return n + ' documents'; }, finding: 'Finding', moreDrafts: 'More drafts than contracts',
-            draftsOf: function (d, n) { return d + ' of ' + n + ' sources sit in tmp folders. An agent in doubt reads the draft instead of the contract.'; },
-            noArtLayer: 'not an agent-config tree', symbolsCount: function (n) { return n + ' symbols'; },
-            tabFile: 'File', tabFind: 'Findings', tabArea: 'Area', pickFile: 'Pick a file — the most used ones:',
-            tests: function (n) { return n + ' tests'; }, guesses: function (n) { return n + ' guessed'; }, locMissing: 'LOC / language missing', hub: 'Hub', dead: 'dead',
-            blastRadius: 'Blast radius', notScope: 'Not a code file: no blast record; the walk below follows the selected scope.',
-            shareText: function (a, b, p) { return a + ' of ' + b + ' · ' + p; }, marks: 'Marks 10 / 25 %',
-            insight: function (c, t, d) { return c + ' code files reachable. Also ' + t + ' tests and ' + d + ' documentation files – shown through the scope switch.'; },
-            depthList: function (d) { return d === 1 ? 'Depth 1 · direct' : 'Depth ' + d; }, moreN: function (n) { return '+ ' + n + ' more'; },
-            blastFormula: 'Score = direct + 0.5 × transitive · trusted edges only · level by share of scope: ≥ 50 % critical, ≥ 25 % high, ≥ 10 % medium',
-            levels: { critical: 'critical', high: 'high', medium: 'medium', low: 'low' },
-            uses: 'Uses', usedBy: 'Used by', relTrust: 'edge · trust', symbols: 'Symbols', symCols: 'line · kind · calls int/ext',
-            knowledge: 'Knowledge', openCenter: 'Open in the centre', memMissing: 'Memory: collector missing',
-            ownership: 'Ownership · Churn', gitMissing: 'Git collector missing', gitMissingNote: 'Top 3 authors, commits in the git window, last change, bus factor. Hidden until the refresh writes owners / churn.',
-            commits: function (n) { return n + ' commits in ' + WINDOW + ' days'; }, lastChange: 'last change', busFactor: 'Bus factor: one author holds more than 80 %',
-            coveredBy: 'Covered by tests', requestPaths: 'Request paths', externals: 'External dependencies',
-            cycles: 'Cycles', biggest: function (n) { return 'Largest: ' + n + ' files'; }, surprises: 'Surprising edges', drift: 'Drift since the last map',
-            layerBreaches: 'Layer breaches', hotspots: 'Hotspots', deadFiles: 'Dead files', needLayers: 'Needs agents/map/layers.yaml', needChurn: 'Needs git history',
-            prs: 'Open PRs sharing an area', change: 'This change',
-            files: function (n) { return n + ' files'; }, cohesion: 'Cohesion', testShare: 'Tests',
-            mismatch: function (p) { return p + ' of the files sit outside the hub folder – folders and real coupling differ here.'; }, mostUsed: 'Most used',
-            allAreasList: 'All areas', none: 'none', kinds: { contract: 'Contract', adr: 'ADR', 'roadmap-active': 'active', 'roadmap-planned': 'planned', 'roadmap-later': 'later', 'roadmap-archived': 'archived', evidence: 'Evidence', draft: 'Draft', doc: 'Doc' },
-            roleNames: { code: 'code', test: 'test', entry: 'entry point', view: 'view', migration: 'migration', translation: 'translation', config: 'config', doc: 'doc', infra: 'infrastructure', isolated: 'isolated' }
+            healthScale: '4 parts of 25 points · A ≥ 80, B ≥ 60', lever: function (part, pts) { return 'Largest lever: ' + part.toLowerCase() + ' (−' + pts + ' points)'; },
+            tLines: 'Lines', langs: 'Languages by lines', langMore: function (n) { return n + ' more'; },
+            pickTitle: 'Pick a file', pickHint: 'Click in the graph, search with / – or start here.', recent: 'Recently picked', topHotspots: 'Largest hotspots (commits × lines)',
+            deselect: 'Clear selection', linesN: function (n) { return n + ' lines'; }, commitsWin: function (d) { return 'commits / ' + d + ' d'; }, owners: 'owners', ownerBus: 'owner · bus factor',
+            aggregated: function (f, a) { return 'aggregated: ' + f + ' files in ' + a + ' area bubbles'; }, commitsShort: 'Commits', outsideHub: 'outside hub folder', openArea: 'Open area (double-click)', crumbMap: 'Map'
         },
         de: {
-            search: 'Datei, Symbol, Route, Area …', exportBtn: 'Export', light: 'Helles Design', dark: 'Dunkles Design', langBtn: 'EN',
-            health: 'Health', noGrade: function (n) { return 'Kein Grade, solange ' + n + ' von 4 Teilwerten fehlen'; }, gradeOf: 'Score {s} von 100',
-            formula: 'Formel ansehen', hideFormula: 'Formel ausblenden',
-            pCycles: 'Zyklen (SCC)', pGuesses: 'Geratene Kanten', pDead: 'Toter Code', pHotspots: 'Hotspots',
-            missDead: 'dead → map.json fehlt', missHot: 'churn fehlt',
-            tFiles: 'Dateien', tTrusted: 'Sichere Verweise (inkl. Doku-Links)', tAreas: 'Areas', tRoutes: 'Routen gelöst',
-            roles: 'Rollen', trust: 'Kanten nach Vertrauen', sure: 'sicher', guessed: 'geraten', other: 'infra/config/…',
-            colorBy: 'Färben nach', explorer: 'Explorer', scope: 'Scope', all: 'alles',
-            cBlast: 'Blast', cArea: 'Area', cTests: 'Test-Anteil', cRole: 'Rolle', cFolder: 'Ordner', cLayer: 'Layer', cChurn: 'Churn', cComplexity: 'Komplexität',
-            hBlast: 'Betroffenheit der Auswahl', hArea: 'Louvain-Community', hTests: 'testShare je Area', hRole: 'code / test / doc …', hFolder: 'Ordner jeder Datei',
-            lGraph: 'Graph', lLayers: 'Layers', lMatrix: 'Matrix', lKnowledge: 'Knowledge', lTreemap: 'Treemap', lFlow: 'Flow',
-            hLayers: 'Tiefenringe ab Auswahl', hMatrix: 'DSM', hKnowledge: 'Wissensquellen zur Auswahl', hTreemap: 'Fläche = Zeilen je Ordner', hTreemapMissing: 'braucht Zeilenzahlen je Datei', hFlow: 'die Ansicht für Request-Pfade ist noch nicht gebaut; die Pfade selbst stehen je Datei im Detail-Panel',
-            edges: 'Kanten:', fTests: 'Tests', fInfra: 'Infra-Hubs', full: 'Vollbild', fullOff: 'Vollbild beenden',
-            lgPick: 'Datei markieren, um zu sehen, was eine Änderung erreicht', moreFiles: function (n) { return '+ ' + n + ' weitere'; }, offGraph: function (f, r) { return f + ' ist nicht im Graph (' + r + '): Areas enthalten Code, Tests und Views'; }, noEffectOverview: 'Wirkt auf Datei-Kanten: Area öffnen, um es zu nutzen', sAllShort: '+ Doku', noDataShort: 'keine Daten', noViewShort: 'noch keine Ansicht', noDataUnknown: 'die Quelle ist unbekannt', noDataTitle: function (r) { return 'Noch keine Daten: ' + r + '. Schaltet sich von selbst frei, sobald die Daten da sind.'; }, navBack: '← Zurück', openLeft: '☰ Repository', openRight: 'Details ☰', pin: 'Anheften', unpin: 'Lösen', closePane: 'Schließen', repo: 'Repo', overview: 'Übersicht', areasOf: function (a, b) { return 'Areas (' + a + ' von ' + b + ')'; }, allAreas: '← Alle Areas',
-            hint2d: 'Ziehen: verschieben · Rad: zoomen · Klick: markieren · Doppelklick: öffnen', hint3d: 'Ziehen: drehen · Shift+Ziehen: verschieben · Rad: zoomen · Klick: markieren · Doppelklick: öffnen',
-            zoomIn: 'Hineinzoomen', zoomOut: 'Herauszoomen', fit: 'Einpassen', limTop: function (n) { return 'Top ' + n; }, limAll: 'Alle Areas', limLabel: 'Angezeigte Areas', d2: '2D', d3: '3D Orb', dimHint: 'Karte als Kugel zeigen. Ziehen dreht sie, Shift+Ziehen verschiebt sie, die Pfeiltasten drehen ebenfalls. Die Lage auf der Kugel trägt keine Daten: Sie wickelt das 2D-Layout auf.',
-            showPanels: 'Panels wieder einblenden', direct: 'direkt', transitive: 'transitiv', transitive3: 'transitiv ≤ 3', score: 'Score',
-            legend: 'Legende', sizeOverview: 'Name = Hub-Datei der Area · Größe = Dateien je Area · Linie = Kanten zwischen Areas',
-            sizeArea: 'Größe = eingehende Kanten · Linie = Kante, orange = zeigt auf die Auswahl',
-            lgSel: 'Auswahl', lgHasHit: 'enthält Betroffene (Zahl = Dateien)', lgNotHit: 'nicht betroffen', lgD1: 'Tiefe 1', lgD2: 'Tiefe 2', lgD3: 'Tiefe 3', lgRing: 'Ring = Test',
-            lgArea: 'Farbe = Area (kategorisch)', lgTests: function (a, b) { return 'Test-Anteil ' + a + ' → ' + b; }, lgRole: 'Rolle: Areas sind gemischt – erst auf Datei-Ebene sinnvoll',
-            lgFolder: 'Farbe = oberster Ordner', lgLayer: 'Farbe = Layer aus layers.yaml', lgChurn: function (a) { return 'Commits im Git-Fenster, 0 → ' + a; },
-            visibleAreas: function (a, b) { return a + ' / ' + b + ' Areas'; }, filesIn: function (n, a) { return n + ' Dateien in ' + a; },
-            areaEdges: function (n) { return n + ' Area-Kanten'; }, edgesIn: function (n, a) { return n + ' Kanten in ' + a; },
-            affected: function (n, s) { return n + ' betroffen · ' + s; }, sCode: 'Code', sTests: 'Code + Tests', sAll: 'alles',
-            layersHead: 'Tiefe = Hops über eingehende Kanten von', depth0: 'Tiefe 0', depth: function (d) { return 'Tiefe ' + d; },
-            n0: 'die Auswahl', n1: 'importieren direkt', n2: 'über einen Zwischenschritt', n3: 'Rand der Analyse', selectFirst: 'Wähle eine Datei, um zu sehen, wie weit sie reicht.',
-            matrixHead: 'Dependency-Structure-Matrix auf Area-Ebene · Zelle = Verweise (Symbol-Referenzen) zwischen zwei Areas · hervorgehobene Zeile/Spalte = Auswahl · roter Rahmen = beide Areas enthalten Dateien eines Zyklus',
-            matrixNote: function (a, b, n) { return 'Zelle wählen, um die Kanten zwischen zwei Areas zu listen. Stärkste Kopplung: ' + a + ' ↔ ' + b + ' mit ' + n + ' Kanten.'; },
-            diag: 'Diagonale (innerhalb der Area)', edgesN: function (n, p) { return n + ' Verweise in ' + p + ' Dateipaaren'; },
-            knowHead: 'Dieselbe Auswahl, entlang der Wissensquellen · nur Dateien mit Kante zur Auswahl',
-            kActive: 'aktiv', kPlanned: 'geplant', kArchived: 'archiviert', kDraft: 'Entwurf', kDup: 'Dublette',
-            kCode: 'Code', kTests: 'Tests', kContracts: 'Verträge', kRoadmaps: 'Roadmaps', kEvidence: 'Evidence', kDrafts: 'Entwürfe', kMemory: 'Memory',
-            collectorMissing: 'Collector fehlt', memNote1: 'mem-Einträge zur Datei mit Gültigkeit (valid_from / valid_to), Quelle und Nutzung im Retrieval.',
-            memNote2: 'Erwähnt ≠ beschreibt: gleiche Entität erscheint als geratene Kante.', artLayer: 'Artefakt-Schicht', knowFile: 'Wissen zur Datei',
-            docs: function (n) { return n + ' Dokumente'; }, finding: 'Befund', moreDrafts: 'Mehr Entwürfe als Verträge',
-            draftsOf: function (d, n) { return d + ' von ' + n + ' Quellen liegen in tmp-Ordnern. Ein Agent liest im Zweifel den Entwurf statt des Vertrags.'; },
-            noArtLayer: 'kein agent-config-Baum', symbolsCount: function (n) { return n + ' Symbole'; },
-            tabFile: 'Datei', tabFind: 'Befunde', tabArea: 'Area', pickFile: 'Datei wählen — die meistgenutzten:',
-            tests: function (n) { return n + ' Tests'; }, guesses: function (n) { return n + ' geraten'; }, locMissing: 'LOC / Sprache fehlt', hub: 'Hub', dead: 'tot',
-            blastRadius: 'Blast Radius', notScope: 'Keine Code-Datei: kein Blast-Datensatz; die Liste folgt dem gewählten Scope.',
-            shareText: function (a, b, p) { return a + ' von ' + b + ' · ' + p; }, marks: 'Marken 10 / 25 %',
-            insight: function (c, t, d) { return c + ' Code-Dateien erreichbar. Zusätzlich ' + t + ' Tests und ' + d + ' Doku-Dateien – über den Scope-Schalter einblendbar.'; },
-            depthList: function (d) { return d === 1 ? 'Tiefe 1 · direkt' : 'Tiefe ' + d; }, moreN: function (n) { return '+ ' + n + ' weitere'; },
-            blastFormula: 'Score = direkt + 0,5 × transitiv · nur sichere Kanten · Level nach Anteil am Scope: ≥ 50 % kritisch, ≥ 25 % hoch, ≥ 10 % mittel',
-            levels: { critical: 'kritisch', high: 'hoch', medium: 'mittel', low: 'niedrig' },
-            uses: 'Nutzt', usedBy: 'Genutzt von', relTrust: 'Kante · Vertrauen', symbols: 'Symbole', symCols: 'Zeile · Art · Aufrufe int/ext',
-            knowledge: 'Wissen', openCenter: 'In der Mitte öffnen', memMissing: 'Memory: Collector fehlt',
-            ownership: 'Ownership · Churn', gitMissing: 'Git-Collector fehlt', gitMissingNote: 'Top-3-Autoren, Commits im Git-Fenster, letzte Änderung, Bus-Faktor. Ausgeblendet, bis der Refresh owners / churn schreibt.',
-            commits: function (n) { return n + ' Commits in ' + WINDOW + ' Tagen'; }, lastChange: 'letzte Änderung', busFactor: 'Bus-Faktor: ein Autor hält mehr als 80 %',
-            coveredBy: 'Abgedeckt durch Tests', requestPaths: 'Request-Pfade', externals: 'Externe Abhängigkeiten',
-            cycles: 'Zyklen', biggest: function (n) { return 'Größter: ' + n + ' Dateien'; }, surprises: 'Überraschende Kanten', drift: 'Drift seit letzter Karte',
-            layerBreaches: 'Layer-Verletzungen', hotspots: 'Hotspots', deadFiles: 'Tote Dateien', needLayers: 'Braucht agents/map/layers.yaml', needChurn: 'Braucht Git-Historie',
-            prs: 'Offene PRs im selben Bereich', change: 'Diese Änderung',
-            files: function (n) { return n + ' Dateien'; }, cohesion: 'Kohäsion', testShare: 'Tests',
-            mismatch: function (p) { return p + ' der Dateien liegen außerhalb des Hub-Ordners – Ordner und echte Kopplung weichen hier ab.'; }, mostUsed: 'Meistgenutzt',
-            allAreasList: 'Alle Areas', none: 'keine', kinds: { contract: 'Vertrag', adr: 'ADR', 'roadmap-active': 'aktiv', 'roadmap-planned': 'geplant', 'roadmap-later': 'später', 'roadmap-archived': 'archiviert', evidence: 'Evidence', draft: 'Entwurf', doc: 'Doku' },
-            roleNames: { code: 'code', test: 'test', entry: 'Einstieg', view: 'view', migration: 'Migration', translation: 'Übersetzung', config: 'config', doc: 'doc', infra: 'Infrastruktur', isolated: 'isoliert' }
+            healthScale: '4 Teile à 25 Punkte · A ≥ 80, B ≥ 60', lever: function (part, pts) { return 'Größter Hebel: ' + part + ' (−' + pts + ' Punkte)'; },
+            tLines: 'Zeilen', langs: 'Sprachen nach Zeilen', langMore: function (n) { return n + ' weitere'; },
+            pickTitle: 'Datei wählen', pickHint: 'Im Graph klicken, suchen mit / – oder hier einsteigen.', recent: 'Zuletzt gewählt', topHotspots: 'Größte Hotspots (Commits × Zeilen)',
+            deselect: 'Auswahl aufheben', linesN: function (n) { return n + ' Zeilen'; }, commitsWin: function (d) { return 'Commits / ' + d + ' T.'; }, owners: 'Owner', ownerBus: 'Owner · Bus-Faktor',
+            aggregated: function (f, a) { return 'aggregiert: ' + f + ' Dateien in ' + a + ' Area-Blasen'; }, commitsShort: 'Commits', outsideHub: 'außerhalb Hub-Ordner', openArea: 'Area öffnen (Doppelklick)', crumbMap: 'Karte'
         }
-    };
-    var lang = (navigator.language || 'en').toLowerCase().indexOf('de') === 0 ? 'de' : 'en';
-    function t(key) { return STR[lang][key]; }
-    function num(n) { return Number(n).toLocaleString(lang === 'de' ? 'de-DE' : 'en-US'); }
-    function pct(x, digits) { return (x * 100).toLocaleString(lang === 'de' ? 'de-DE' : 'en-US', { maximumFractionDigits: digits == null ? 1 : digits }) + ' %'; }
+    });
 
     // Adjacency over trusted edges, built once.
     var inOf = files.map(function () { return []; });
@@ -171,43 +40,9 @@
     var cycleOf = Object.create(null);
     (model.violations || []).forEach(function (v, k) { if (v.kind === 'cycle') v.files.forEach(function (f) { cycleOf[f] = k; }); });
 
-    var CAT = ['#3ec5ff', '#3ddc84', '#c9a2ff', '#ffc14d', '#6fd3e0', '#f28fb3', '#d6c46b', '#9fb4c8'];
-    function cat(i) { return CAT[((i % CAT.length) + CAT.length) % CAT.length]; }
-    function strHash(s) { var h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
-    function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-    function base(p) { var i = p.lastIndexOf('/'); return i < 0 ? p : p.slice(i + 1); }
-    function dir(p) { var i = p.lastIndexOf('/'); return i < 0 ? '.' : p.slice(0, i); }
-    function top2(p) { var s = p.split('/'); return s.length > 2 ? s[0] + '/' + s[1] : s[0]; }
-    function areaLabel(a) { return a.kind === 'small-parts' ? '… ' + base(a.name.replace(/^small parts · /, '')) : base(a.name); }
-    function inScope(f, scope) {
-        if (scope === 'all') return true;
-        if (scope === 'tests') return SCOPE_CODE[f.role] === 1 || f.role === 'test';
-        return SCOPE_CODE[f.role] === 1;
-    }
-
-    function el(tag, attrs, text) {
-        var n = document.createElement(tag);
-        if (attrs) Object.keys(attrs).forEach(function (k) { if (attrs[k] !== false && attrs[k] != null) n.setAttribute(k, attrs[k] === true ? '' : attrs[k]); });
-        if (text != null) n.textContent = String(text);
-        return n;
-    }
-    function add(parent) { for (var i = 1; i < arguments.length; i++) if (arguments[i]) parent.appendChild(arguments[i]); return parent; }
-    function clear(n) { while (n.firstChild) n.removeChild(n.firstChild); }
-    // A control whose data is missing stays visible: it says so and names what is missing.
-    function markNoData(b, tag, reason) {
-        b.classList.add('nodata');
-        b.appendChild(el('span', { class: 'nodata-tag' }, tag));
-        b.setAttribute('title', t('noDataTitle')(reason));
-    }
-    function swatch(colour) { var s = el('span', { class: 'swatch' }); s.style.background = colour; return s; }
-    function dotEl(cls, colour) { var d = el('span', { class: 'dot' + (cls ? ' ' + cls : '') }); if (colour) { if (cls === 'ring') d.style.borderColor = colour; else d.style.background = colour; } return d; }
-
-    var $ = function (id) { return document.getElementById(id); };
     var canvas = $('stage');
     var ctx = canvas.getContext('2d');
     var panel = $('panel');
-    var searchInput = $('search');
-    var results = $('results');
     var lensView = $('lensview');
     var graphWrap = $('graphwrap');
 
@@ -717,80 +552,87 @@
         return best;
     }
 
-    // Header.
-    function renderHeader() {
-        var pin = model.pin || { commit: meta.commit, freshness: meta.state, generation: meta.graph_generation || '' };
-        $('pin-commit').textContent = '@ ' + pin.commit + (pin.date ? ' · ' + pin.date : '');
-        var fresh = $('pin-fresh');
-        var st = String(pin.freshness || meta.state || '');
-        fresh.textContent = st === 'fresh' ? 'FRESH' : st.toUpperCase();
-        fresh.className = 'chip ' + (st === 'fresh' ? 'fresh' : 'stale');
-        $('pin-gen').textContent = 'gen ' + String(pin.generation || '').slice(0, 8);
-    }
-
     // Left rail.
+    var locTotal = 0;
+    var hasLoc = false;
+    files.forEach(function (f) { if (f.loc !== undefined) { hasLoc = true; locTotal += f.loc; } });
+    function compact(n) {
+        if (n < 1e6) return num(n);
+        return (n / 1e6).toLocaleString(lang === 'de' ? 'de-DE' : 'en-US', { maximumFractionDigits: 2 }) + ' M';
+    }
+    var HEALTH_PARTS = [['dead', 'pDead', 'missDead', function (v) { return pct(v.value); }], ['hotspots', 'pHotspots', 'missHot', function (v) { return pct(v.value); }],
+        ['cycles', 'pCycles', '', function (v) { return num(v.value); }], ['guesses', 'pGuesses', '', function (v) { return pct(v.value); }]];
+    /** The part that costs the most points: the one a fix would move furthest. */
+    function largestLever(parts) {
+        var best = null;
+        HEALTH_PARTS.forEach(function (p) {
+            var v = parts[p[0]];
+            if (v && (!best || 25 - v.points > 25 - best[1].points)) best = [p, v];
+        });
+        return best && best[1].points < 25 ? best : null;
+    }
     function renderRail() {
         var h = $('health');
         clear(h);
         var health = model.health;
-        var head = el('div', { class: 'health-head' });
         var parts = health ? health.parts : null;
-        var missing = parts ? ['dead', 'cycles', 'guesses', 'hotspots'].filter(function (k) { return !parts[k]; }).length : 4;
-        var ring = el('div', { class: 'ring mono' + (health && health.grade ? '' : ' none') }, health && health.grade ? health.grade : '–');
+        var missing = parts ? HEALTH_PARTS.filter(function (p) { return !parts[p[0]]; }).length : 4;
+        var graded = !!(health && health.grade);
+        var ring = el('div', { class: 'ring' + (graded ? '' : ' none') });
+        if (graded) ring.style.background = 'conic-gradient(var(--amber) 0 ' + health.score + '%, var(--line) ' + health.score + '% 100%)';
+        add(ring, add(el('div', { class: 'ring-in' }), el('span', { class: 'grade' }, graded ? health.grade : '–'), graded ? el('span', { class: 'mono score' }, num(health.score)) : null));
         var title = add(el('div', { class: 'health-title' }), el('b', null, t('health')),
-            el('span', null, health && health.grade ? t('gradeOf').replace('{s}', num(health.score)) : t('noGrade')(missing)));
+            el('span', null, graded ? t('healthScale') : t('noGrade')(missing)));
         var fbtn = el('button', { type: 'button', class: 'linkish', 'aria-expanded': String(state.formula) }, state.formula ? t('hideFormula') : t('formula'));
         fbtn.addEventListener('click', function () { state.formula = !state.formula; renderRail(); });
         title.appendChild(fbtn);
-        add(h, add(head, ring, title));
+        add(h, add(el('div', { class: 'health-head' }), ring, title));
         if (state.formula && health) h.appendChild(el('div', { class: 'formula', id: 'formel' }, health.formula));
         var list = el('div', { class: 'parts' });
-        function bar(label, valueText, ratio, colour, cls) {
-            var p = el('div', { class: 'part' });
-            var v = el('span', { class: 'mono' }, valueText);
-            if (cls) v.style.color = 'var(' + cls + ')';
-            add(p, el('span', null, label), v);
+        HEALTH_PARTS.forEach(function (p) {
+            var v = parts ? parts[p[0]] : null;
+            if (!v && !parts && p[0] === 'cycles') v = { value: an.cyclesTotal, points: null };
+            if (!v && !parts && p[0] === 'guesses') v = { value: an.guessShare, points: null };
+            if (!v) {
+                list.appendChild(add(el('div', { class: 'part missing' }), el('span', null, t(p[1])), el('span', { class: 'dashchip mono' }, t(p[2] || 'noDataShort'))));
+                return;
+            }
+            var row = el('div', { class: 'part' });
+            var pts = el('span', { class: 'mono pts' }, v.points == null ? '–' : num(v.points) + '/25');
+            add(row, el('span', null, t(p[1])), el('span', { class: 'mono' }, p[3](v)), pts);
             var b = el('div', { class: 'bar' });
             var i = el('i');
-            i.style.width = Math.max(0, Math.min(100, ratio * 100)) + '%';
-            i.style.background = colour;
+            var share = v.points == null ? 0 : v.points / 25;
+            i.style.width = Math.max(0, Math.min(100, share * 100)) + '%';
+            i.style.background = share >= 0.8 ? 'var(--green)' : share >= 0.5 ? 'var(--amber)' : 'var(--brand)';
+            if (share < 0.5) pts.style.color = 'var(--brandText)';
             b.appendChild(i);
-            p.appendChild(b);
-            list.appendChild(p);
-        }
-        function miss(label, note) {
-            list.appendChild(add(el('div', { class: 'part missing' }), el('span', null, label), el('span', { class: 'dashchip mono' }, note)));
-        }
-        if (parts) {
-            bar(t('pCycles'), num(parts.cycles.value), 1 - parts.cycles.points / 25, 'var(--amber)', '--amberText');
-            bar(t('pGuesses'), pct(parts.guesses.value), 1 - parts.guesses.points / 25, 'var(--cyan)');
-            if (parts.dead) bar(t('pDead'), pct(parts.dead.value), 1 - parts.dead.points / 25, 'var(--alert)');
-            else miss(t('pDead'), t('missDead'));
-            if (parts.hotspots) bar(t('pHotspots'), pct(parts.hotspots.value), 1 - parts.hotspots.points / 25, 'var(--brand)');
-            else miss(t('pHotspots'), t('missHot'));
-        } else {
-            bar(t('pCycles'), num(an.cyclesTotal), 0, 'var(--amber)', '--amberText');
-            bar(t('pGuesses'), pct(an.guessShare), an.guessShare, 'var(--cyan)');
-            miss(t('pDead'), t('missDead'));
-            miss(t('pHotspots'), t('missHot'));
-        }
+            row.appendChild(b);
+            list.appendChild(row);
+        });
+        var lever = parts ? largestLever(parts) : null;
+        if (lever) list.appendChild(el('span', { class: 'note-line lever' }, t('lever')(t(lever[0][1]), num(Math.round((25 - lever[1].points) * 10) / 10))));
         h.appendChild(list);
 
         var k = $('kpis');
         clear(k);
         var tiles = el('div', { class: 'tiles' });
-        function tile(v, label, small) {
-            var d = el('div', { class: 'tile' });
+        function tile(v, label, small, noData) {
+            var d = el('div', { class: 'tile' + (noData ? ' nodata' : '') });
             var vv = el('div', { class: 'v' }, v);
             if (small) vv.appendChild(el('small', null, small));
             add(d, vv, el('div', { class: 'cap' }, label));
+            if (noData) { d.appendChild(el('span', { class: 'nodata-tag' }, t('noDataShort'))); d.setAttribute('title', t('noDataTitle')(noData)); }
             tiles.appendChild(d);
         }
         tile(num(files.length), t('tFiles'));
+        tile(hasLoc ? compact(locTotal) : '–', t('tLines'), null, hasLoc ? null : t('hTreemapMissing'));
         tile(num(an.trustedEdges), t('tTrusted'));
         tile(num(areas.length), t('tAreas'));
+        tile(an.deadFiles !== undefined ? num(an.deadFiles) : '–', t('deadFiles'), null, an.deadFiles !== undefined ? null : (an.deadBasis || t('noDataUnknown')));
         tile(num(an.requestPathsResolved), t('tRoutes'), '/' + num(an.requestPathsTotal));
         k.appendChild(tiles);
+        k.appendChild(languageBlock());
         var rc = an.roleCounts;
         var codeN = 0;
         Object.keys(SCOPE_CODE).forEach(function (r) { codeN += rc[r] || 0; });
@@ -823,6 +665,25 @@
         });
         c.appendChild(group);
         renderExplorer();
+    }
+    /** Lines per language, the three largest by name and the rest as one share. */
+    function languageBlock() {
+        var langs = (model.languages || []).filter(function (l) { return l[2] > 0; });
+        var total = 0;
+        langs.forEach(function (l) { total += l[2]; });
+        if (!total) {
+            var miss = add(el('div', { class: 'parts' }), el('span', { class: 'cap' }, t('langs')), el('span', { class: 'dashchip mono' }, t('noDataShort')));
+            miss.setAttribute('title', t('noDataTitle')(t('hTreemapMissing')));
+            return miss;
+        }
+        var colours = ['var(--cyan)', 'var(--amber)', 'var(--green)'];
+        var rows = [];
+        var c = 0;
+        langs.slice(0, 3).forEach(function (l) { rows.push([l[0], l[2], /^markdown$/i.test(l[0]) ? 'var(--doc)' : colours[c++]]); });
+        var rest = 0;
+        langs.slice(3).forEach(function (l) { rest += l[2]; });
+        if (rest) rows.push([t('langMore')(langs.length - 3), rest, 'var(--violet)']);
+        return stackBlock(t('langs'), rows, total, true);
     }
     function stackBlock(title, rows, total, keys) {
         var wrap = add(el('div', { class: 'parts' }), el('span', { class: 'cap' }, title));
@@ -940,6 +801,10 @@
             bk.className = 'nav-back';
             c.appendChild(bk);
         }
+        var mapHome = btn(t('crumbMap'), function () { go('overview'); });
+        mapHome.className = 'crumb-map';
+        c.appendChild(mapHome);
+        c.appendChild(el('span', { 'aria-hidden': 'true' }, '›'));
         c.appendChild(btn(t('repo'), goHome));
         c.appendChild(el('span', { 'aria-hidden': 'true' }, '›'));
         var sel = state.file >= 0 ? base(files[state.file].path) : '';
@@ -1029,6 +894,7 @@
             f.appendChild(el('span', null, t('visibleAreas')(num(shownList.length), num(areas.length))));
             f.appendChild(el('span', null, t('areaEdges')(num(drawnEdges))));
         }
+        if (state.level === 'overview' && state.lens === 'graph') f.appendChild(el('span', { class: 'note' }, t('aggregated')(num(files.length), num(overviewAreas().length))));
         f.appendChild(el('span', { class: 'hot' }, t('affected')(num(hit), t(state.scope === 'code' ? 'sCode' : state.scope === 'tests' ? 'sTests' : 'sAll'))));
     }
 
@@ -1347,10 +1213,13 @@
         b.addEventListener('click', function () { openFile(i); });
         return add(el('li'), b);
     }
+    function codeFindingCount() {
+        return (an.cyclesTotal || 0) + (an.surprises || []).length + (an.layerBreaches || 0) + (model.hotspots ? model.hotspots.length : 0) + (an.deadFiles || 0);
+    }
     function renderTabs() {
         var tabs = $('tabs');
         clear(tabs);
-        var findCount = (an.cyclesTotal || 0) + (an.surprises || []).length + (an.layerBreaches || 0) + (model.hotspots ? model.hotspots.length : 0) + (an.deadFiles || 0);
+        var findCount = codeFindingCount();
         [['file', t('tabFile')], ['find', t('tabFind') + ' · ' + num(findCount)], ['area', t('tabArea')]].forEach(function (o) {
             var b = el('button', { type: 'button', role: 'tab', class: 'tab', 'aria-selected': String(state.tab === o[0]) }, o[1]);
             b.addEventListener('click', function () { state.tab = o[0]; renderPanel(); renderTabs(); });
@@ -1363,37 +1232,69 @@
         else if (state.tab === 'area') renderAreaTab();
         else renderFileTab();
     }
+    // Files marked in this session, newest first; kept in the page only.
+    var recentFiles = [];
+    function remember(i) {
+        if (i < 0) return;
+        recentFiles = [i].concat(recentFiles.filter(function (x) { return x !== i; })).slice(0, 5);
+    }
+    function deselect() { step(); state.file = -1; refresh(); }
     function renderFileTab() {
         if (state.file < 0) {
-            var p = add(el('div', { class: 'pad' }), el('span', { class: 'soft' }, t('pickFile')));
+            var p = add(el('div', { class: 'pad' }), add(el('div', { class: 'empty-head' }), el('b', null, t('pickTitle')), el('span', { class: 'muted' }, t('pickHint'))));
+            if (recentFiles.length) {
+                var ur = el('ul', { class: 'plist' });
+                recentFiles.forEach(function (x) { ur.appendChild(fileRow(x, files[x].area >= 0 ? areas[files[x].area].id : files[x].role)); });
+                add(p, el('span', { class: 'cap' }, t('recent')), ur);
+            }
+            p.appendChild(el('span', { class: 'cap' }, t('topHotspots')));
+            if (model.hotspots && model.hotspots.length) {
+                var uh = el('ul', { class: 'plist' });
+                model.hotspots.slice(0, 3).forEach(function (h) { uh.appendChild(fileRow(h[0], num(h[1]) + ' × ' + num(h[2]))); });
+                p.appendChild(uh);
+            } else p.appendChild(el('span', { class: 'dashchip mono', title: t('noDataTitle')(t('needChurn')) }, t('noDataShort') + ' · ' + t('needChurn')));
             var ul = el('ul', { class: 'plist' });
             (an.hubs || []).forEach(function (h) { ul.appendChild(fileRow(h, 'in ' + files[h].inFiles)); });
-            panel.appendChild(add(p, ul));
+            add(p, el('span', { class: 'cap' }, t('mostUsed')), ul);
+            panel.appendChild(p);
             return;
         }
         var i = state.file;
         var f = files[i];
-        var head = add(el('div', { class: 'fhead' }), el('div', { class: 'fn' }, base(f.path)), el('div', { class: 'fp' }, f.path));
+        var x = el('button', { type: 'button', class: 'deselect', id: 'deselect', 'aria-label': t('deselect'), title: t('deselect') }, '×');
+        x.addEventListener('click', deselect);
+        var head = add(el('div', { class: 'fhead' }), add(el('div', { class: 'fhead-top' }), el('div', { class: 'fn' }, base(f.path)), x), el('div', { class: 'fp' }, f.path));
         var chips = el('div', { class: 'chips' });
-        chips.appendChild(el('span', { class: SCOPE_CODE[f.role] ? 'c-cyan' : f.role === 'test' ? 'c-green' : '' }, t('roleNames')[f.role] || f.role));
+        chips.appendChild(el('span', { class: SCOPE_CODE[f.role] ? 'c-cyan' : f.role === 'test' ? 'c-green' : '' }, (t('roleNames')[f.role] || f.role) + (f.lang ? ' · ' + f.lang : '')));
+        if (f.loc !== undefined) chips.appendChild(el('span', null, t('linesN')(num(f.loc))));
+        else chips.appendChild(el('span', { class: 'c-miss' }, t('locMissing')));
         if (f.area >= 0) chips.appendChild(el('span', null, 'Area ' + areas[f.area].id + (areas[f.area].hub === i ? ' (' + t('hub') + ')' : '')));
         if (f.tests.length) chips.appendChild(el('span', { class: 'c-green' }, t('tests')(f.tests.length)));
         chips.appendChild(el('span', null, 'in ' + f.inFiles + ' · out ' + f.outFiles));
         if (f.guesses) chips.appendChild(el('span', { class: 'c-guess' }, t('guesses')(f.guesses)));
-        if (f.loc !== undefined) chips.appendChild(el('span', null, num(f.loc) + ' LOC · ' + f.lang));
-        else chips.appendChild(el('span', { class: 'c-miss' }, t('locMissing')));
         if (f.layer) chips.appendChild(el('span', null, 'Layer ' + f.layer));
         if (f.dead) chips.appendChild(el('span', { class: 'c-dead', title: an.deadBasis || '' }, t('dead')));
-        panel.appendChild(add(head, chips));
+        head.appendChild(chips);
+        if (f.churn !== undefined) {
+            var owners = (f.owners || []).length;
+            var trio = el('div', { class: 'trio' });
+            var ownerV = el('div', { class: 'mono v' }, num(owners));
+            if (f.soleOwner) ownerV.style.color = 'var(--brandText)';
+            add(trio, add(el('div'), el('div', { class: 'mono v' }, num(f.churn)), document.createTextNode(t('commitsWin')(WINDOW))),
+                add(el('div'), el('div', { class: 'mono v' }, f.lastChange || '–'), document.createTextNode(t('lastChange'))),
+                add(el('div'), ownerV, document.createTextNode(f.soleOwner ? t('ownerBus') : t('owners'))));
+            head.appendChild(trio);
+        }
+        panel.appendChild(head);
 
         // Blast radius.
         var w = walk(i, state.scope);
         var bl = el('section', { class: 'blast' });
         var rec = f.blast;
         var level = rec ? rec.level : 'low';
-        var head = add(el('div', { class: 'blast-h' }), el('b', null, t('blastRadius')));
-        if (rec && state.scope === 'code') head.appendChild(el('span', { class: 'level ' + level }, t('levels')[level]));
-        bl.appendChild(head);
+        var bhead = add(el('div', { class: 'blast-h' }), el('b', null, t('blastRadius')));
+        if (rec && state.scope === 'code') bhead.appendChild(el('span', { class: 'level ' + level }, t('levels')[level]));
+        bl.appendChild(bhead);
         var scopes = el('div', { class: 'scopes', role: 'radiogroup', 'aria-label': 'Scope' });
         [['code', t('sCode')], ['tests', '+ ' + t('fTests')], ['all', t('sAllShort')]].forEach(function (o) {
             var b = el('button', { type: 'button', role: 'radio', 'aria-checked': String(state.scope === o[0]) }, o[1]);
@@ -1573,7 +1474,10 @@
             cycLines.push(el('p', null, t('biggest')(sizeOf(0)) + ' · ' + an.cycles[0].slice(0, 4).map(function (x) { return base(files[x].path); }).join(' ↔ ') + (sizeOf(0) > 4 ? ' ↔ …' : '')));
             an.cycles.slice(1, 3).forEach(function (c, k) { cycLines.push(el('p', null, sizeOf(k + 1) + ' · ' + dir(files[c[0]].path))); });
         }
-        p.appendChild(findCard(t('cycles'), num(an.cyclesTotal), 'var(--amberText)', cycLines));
+        var cycCard = findCard(t('cycles'), num(an.cyclesTotal), 'var(--amberText)', cycLines);
+        var sev = cyc.some(function (v) { return v.severity === 'high'; }) ? 'high' : cyc.length ? 'medium' : '';
+        if (sev) cycCard.firstChild.insertBefore(el('span', { class: 'sev ' + sev }, t('levels')[sev]), cycCard.firstChild.lastChild);
+        p.appendChild(cycCard);
         p.appendChild(findCard(t('surprises'), num((an.surprises || []).length), 'var(--amberText)',
             (an.surprises || []).slice(0, 4).map(function (s) { return fileLink(s[0], files[s[0]].path + ' → ' + base(files[s[1]].path)); })));
         if (model.drift) {
@@ -1619,7 +1523,10 @@
             var a = areas[ai];
             p.appendChild(el('div', { class: 'mono' }, a.id + ' · ' + a.name)).style.fontWeight = '600';
             var tiles = el('div', { class: 'atiles' });
-            [[num(a.files.length), t('files')('').trim()], [pct(a.cohesion), t('cohesion')], [pct(a.testShare), t('testShare')]].forEach(function (x) {
+            var aLoc = 0; var aChurn = 0; var aHasLoc = false; var aHasChurn = false;
+            a.files.forEach(function (x) { var r = files[x]; if (r.loc !== undefined) { aHasLoc = true; aLoc += r.loc; } if (r.churn !== undefined) { aHasChurn = true; aChurn += r.churn; } });
+            [[num(a.files.length), t('files')('').trim()], [pct(a.cohesion), t('cohesion')], [pct(a.testShare), t('testShare')],
+                [aHasLoc ? compact(aLoc) : '–', t('tLines')], [aHasChurn ? num(aChurn) : '–', t('commitsShort')], [pct(a.folderMismatch), t('outsideHub')]].forEach(function (x) {
                 tiles.appendChild(add(el('div', { class: 'tile' }), el('div', { class: 'v' }, x[0]), el('div', { class: 'l' }, x[1])));
             });
             p.appendChild(tiles);
@@ -1629,6 +1536,11 @@
             var ul = el('ul', { class: 'plist' });
             top.slice(0, 60).forEach(function (x) { ul.appendChild(fileRow(x, 'in ' + files[x].inFiles)); });
             p.appendChild(ul);
+            if (state.level !== 'area' || state.area !== ai) {
+                var ob = el('button', { type: 'button', class: 'btn', id: 'open-area' }, t('openArea'));
+                ob.addEventListener('click', function () { openArea(ai); });
+                p.appendChild(ob);
+            }
         }
         p.appendChild(el('span', { class: 'cap' }, t('allAreasList') + ' (' + areas.length + ')'));
         var list = el('ul', { class: 'plist' });
@@ -1692,6 +1604,7 @@
         }
         state.file = i;
         state.tab = 'file';
+        remember(i);
         refresh();
     }
 
@@ -1739,6 +1652,7 @@
         } else {
             state.file = hit.idx;
             state.tab = 'file';
+            remember(hit.idx);
         }
         refresh();
     }
@@ -1746,35 +1660,24 @@
     function zoom(f) { state.view.scale = Math.min(8, Math.max(0.4, state.view.scale * f)); $('zoomtxt').textContent = 'Zoom ' + state.view.scale.toFixed(1) + '×'; draw(); }
     var TURN_KEYS = { ArrowLeft: [-0.15, 0], ArrowRight: [0.15, 0], ArrowUp: [0, 0.15], ArrowDown: [0, -0.15] };
     document.addEventListener('keydown', function (e) {
+        if (current.route !== 'code' || document.activeElement === searchInput) return;
         var step = TURN_KEYS[e.key];
-        if (step && state.orb && document.activeElement !== searchInput) { e.preventDefault(); turnTo(state.rot.yaw + step[0], state.rot.pitch + step[1]); return; }
-        if (e.key === '/' && document.activeElement !== searchInput) { e.preventDefault(); searchInput.focus(); return; }
+        if (step && state.orb) { e.preventDefault(); turnTo(state.rot.yaw + step[0], state.rot.pitch + step[1]); return; }
         if (e.key === 'Escape') {
             if (state.fly.left || state.fly.right) { state.fly.left = false; state.fly.right = false; applyPanes(false); return; }
-            if (document.activeElement === searchInput && searchInput.value) { searchInput.value = ''; clear(results); return; }
             if (state.level === 'area') goHome(); else if (state.file >= 0 || state.area >= 0) { state.file = -1; state.area = -1; refresh(); }
         }
     });
-    searchInput.addEventListener('input', function () {
-        clear(results);
-        var q = searchInput.value.trim().toLowerCase();
-        if (q.length < 2) return;
-        var hits = 0;
-        function hit(text, fn) {
-            var b = el('button', { type: 'button' }, text);
-            b.addEventListener('click', function () { clear(results); searchInput.value = ''; fn(); });
-            results.appendChild(add(el('li'), b));
-            hits += 1;
-        }
-        areas.forEach(function (a, i) { if (hits < 30 && (a.name.toLowerCase().indexOf(q) >= 0 || a.id === q)) hit('◎ ' + a.id + ' · ' + a.name, function () { openArea(i); }); });
-        (an.requestPaths || []).forEach(function (r) { if (hits < 30 && r.route.toLowerCase().indexOf(q) >= 0) hit('↳ ' + r.route, function () { openFile(r.handler >= 0 ? r.handler : r.file); }); });
+    // What the header search finds in the Code area; the shell owns the box and the kind presets.
+    function codeSearchHits(q, hit) {
+        areas.forEach(function (a, i) { if (a.name.toLowerCase().indexOf(q) >= 0 || a.id === q) hit('area', '◎ ' + a.id + ' · ' + a.name, function () { openArea(i); }); });
+        (an.requestPaths || []).forEach(function (r) { if (r.route.toLowerCase().indexOf(q) >= 0) hit('route', '↳ ' + r.route, function () { openFile(r.handler >= 0 ? r.handler : r.file); }); });
         files.forEach(function (f, i) {
-            if (hits >= 30) return;
-            if (f.path.toLowerCase().indexOf(q) >= 0) { hit(f.path, function () { openFile(i); }); return; }
+            if (f.path.toLowerCase().indexOf(q) >= 0) { hit('file', f.path, function () { openFile(i); }); return; }
             var sym = f.symbols.filter(function (s) { return s[0].toLowerCase().indexOf(q) >= 0; })[0];
-            if (sym) hit(sym[0] + ' — ' + f.path, function () { openFile(i); });
+            if (sym) hit('symbol', sym[0] + ' — ' + f.path, function () { openFile(i); });
         });
-    });
+    }
 
     function toggle(id, key) {
         var b = $(id);
@@ -1867,34 +1770,7 @@
         if (!limList.hidden && !e.target.closest('.dd')) limOpen(false);
     });
     dim2d.addEventListener('click', function () { setOrb(false); });
-    $('export').addEventListener('click', function () {
-        var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        var a = el('a', { download: 'map.json' });
-        a.href = URL.createObjectURL(blob);
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 0);
-    });
-
-    var theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-    function applyTheme() {
-        document.documentElement.dataset.resolvedTheme = theme;
-        colourCache = Object.create(null);
-        var b = $('theme');
-        var label = theme === 'light' ? t('dark') : t('light');
-        b.setAttribute('aria-label', label);
-        b.setAttribute('title', label);
-        $('theme-sun').hidden = theme === 'light';
-        $('theme-moon').hidden = theme !== 'light';
-    }
-    $('theme').addEventListener('click', function () { theme = theme === 'light' ? 'dark' : 'light'; applyTheme(); refresh(); });
-    $('lang').addEventListener('click', function () { lang = lang === 'de' ? 'en' : 'de'; applyStrings(); refresh(); });
-    function applyStrings() {
-        document.documentElement.lang = lang;
-        searchInput.setAttribute('placeholder', t('search'));
-        searchInput.setAttribute('aria-label', t('search'));
-        $('export').textContent = t('exportBtn');
-        $('lang').textContent = t('langBtn');
+    function applyCodeStrings() {
         $('edges-label').textContent = t('edges');
         $('t-sure').textContent = t('sure');
         $('t-guess').textContent = t('guessed');
@@ -1914,17 +1790,11 @@
         dimButton.textContent = t('d3');
         dimButton.setAttribute('title', t('dimHint'));
         $('back').textContent = t('allAreas');
-        applyTheme();
     }
 
-    applyStrings();
-    renderHeader();
     window.addEventListener('resize', function () { applyPanes(false); resize(); if (state.lens === 'treemap') renderLens(); });
     // The stage also changes size without a window resize (controls appearing, panes, full screen).
     if (window.ResizeObserver) new ResizeObserver(function () {
         var dpr = window.devicePixelRatio || 1, r = canvas.getBoundingClientRect();
         if (r.width && (canvas.width !== Math.max(1, Math.round(r.width * dpr)) || canvas.height !== Math.max(1, Math.round(r.height * dpr)))) resize();
     }).observe(canvas);
-    refresh();
-    resize();
-})();

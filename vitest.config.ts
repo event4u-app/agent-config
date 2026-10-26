@@ -59,6 +59,7 @@ const IMPORTED_BROWSER_SUITES = [
     'tests/scripts/code_graph_map_area_limit.test.ts',
     'tests/scripts/code_graph_map_no_data.test.ts',
     'tests/scripts/code_graph_map_canvas_clear.test.ts',
+    'tests/scripts/code_graph_map_shell.test.ts',
 ];
 const BROWSER_SUITES = [
     'tests/cli/ui_render_asset_profile.test.ts',
