@@ -20,6 +20,7 @@ on:
       - "Taskfile.yml"
       - "taskfiles/**"
       - ".github/workflows/skill-lint.yml"
+      - ".github/actions/setup-task/**"
   push:
     branches:
       - main
@@ -37,6 +38,7 @@ on:
       - "Taskfile.yml"
       - "taskfiles/**"
       - ".github/workflows/skill-lint.yml"
+      - ".github/actions/setup-task/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
