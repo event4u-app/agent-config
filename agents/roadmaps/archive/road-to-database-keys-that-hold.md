@@ -105,13 +105,13 @@ pinned to their current size (`src/config/skill-body-budget.json`).
 
 ## Phase 4 — Hand the rest to its owners
 
-- [ ] **4.1 Land the modeling findings on `-relational-modeling`.** Arrivals
+- [x] **4.1 Land the modeling findings on `-relational-modeling`.** Arrivals
       line; new steps for the relationship → constraint table, DB cascade
       bypassing model events, soft-delete uniqueness, test-engine parity and
       shared-schema tenancy; the `database` description's engine lock joins its
       step 2.1.
       verify: the roadmap carries an `Arrivals:` line and one step per finding.
-- [ ] **4.2 Land the evolution findings on `-evolution-tactics`.** Arrivals
+- [x] **4.2 Land the evolution findings on `-evolution-tactics`.** Arrivals
       line; 4.1 notes that the Laravel substrate now exists and that `SET NOT
       NULL` is a fourth candidate; a step to spike Phase 3's advice rules
       toward gate; the lock-timeout presence check as advice next to 4.4.
@@ -148,8 +148,8 @@ pinned to their current size (`src/config/skill-body-budget.json`).
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The command `schema-review` teaches runs verbatim, and a test fails if it stops running.
-- [ ] AC-2 — `database`, `laravel-migration` and `sql-writing` state the same index, foreign-key and engine rules as their guidelines, each at or below its pinned size.
-- [ ] AC-3 — `lint_persistence` names the engine per connection and counts references judged only by the unknown-engine assumption.
-- [ ] AC-4 — A Laravel migration that drops a column of an existing table produces an F6 advice finding.
-- [ ] AC-5 — Every still-true finding of this round has a closed step here or an open step on `-relational-modeling` or `-evolution-tactics`.
+- [x] AC-1 — The command `schema-review` teaches runs verbatim, and a test fails if it stops running.
+- [x] AC-2 — `database`, `laravel-migration` and `sql-writing` state the same index, foreign-key and engine rules as their guidelines, each at or below its pinned size.
+- [x] AC-3 — `lint_persistence` names the engine per connection and counts references judged only by the unknown-engine assumption.
+- [x] AC-4 — A Laravel migration that drops a column of an existing table produces an F6 advice finding.
+- [x] AC-5 — Every still-true finding of this round has a closed step here or an open step on `-relational-modeling` or `-evolution-tactics`.

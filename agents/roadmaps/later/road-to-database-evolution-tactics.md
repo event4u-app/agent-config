@@ -23,6 +23,9 @@ estate_growth_exempt: "Two blockers were discovered during verification rather t
 > engine-behaviour halves across the campaign are unverifiable offline, which is
 > why this roadmap ends in a measurement phase rather than in an assertion.
 
+> **Arrivals:** 2 — latest `inbox-2026-10-bc` (2026-10-26; adds 4.1's fourth
+> candidate and steps 4.5–4.6); earlier: the 2026-08-26 round above.
+
 ## Goal
 
 A schema change in this package is planned by escalating from the cheapest
@@ -247,7 +250,12 @@ order.
       dialects that have it, and a table alteration that states no algorithm or
       lock mode on the engines that accept one. Each needs a pre-registered pass
       threshold on a frozen corpus, per `docs/spikes/scale-history-spikes.md:21`.
-      A rule without a passed spike ships as advice.
+      A rule without a passed spike ships as advice. Two changes since this
+      was written: Laravel migrations now have a reader
+      (`src/scripts/_lib/persistence/detect_migration_safety_laravel.ts` over
+      the replayed DDL operations), so each candidate can be spiked on Blueprint
+      as well as on raw SQL; and `ALTER COLUMN … SET NOT NULL` without the
+      non-validating path is a fourth candidate of the same constraint family.
       verify: three spike entries exist with pre-registered thresholds and
       frozen corpora, recorded before any rule implementation lands.
 
@@ -274,6 +282,19 @@ order.
       statement will queue behind. Recording the exclusion prevents a later pass
       from adding a rule that cannot work.
       verify: the exclusion and its reason are in Notes.
+
+- [ ] **4.5 Spike the Laravel F6 parity rules toward gate.** Drop of an
+      existing table or column, NOT NULL without a default, `->change()` and an
+      index added on postgres ship as advice on Laravel because S0.3 measured
+      raw SQL only. Pre-register a threshold on a frozen Laravel corpus and
+      promote what passes; raw SQL's `DROP INDEX` without `CONCURRENTLY` joins
+      the same spike.
+      verify: the spike row exists in `docs/spikes/scale-history-spikes.md` with its threshold recorded before any tier change.
+- [ ] **4.6 A lock-timeout guard as advice, next to 4.4.** The queue is runtime,
+      but whether a migration sets a lock timeout before a blocking statement is
+      a static presence check. Ship it as advice; 4.4's exclusion stays for the
+      queue prediction itself.
+      verify: a blocking postgres statement without a preceding `lock_timeout` yields one advice finding and the guarded form none.
 
 ## Phase 5 — Measure, then state
 
