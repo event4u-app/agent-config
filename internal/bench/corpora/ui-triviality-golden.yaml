@@ -272,3 +272,146 @@ tasks:
     label: non-trivial
     label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — extracting overlay primitive creates new component, focus trap adds state, violates preconditions"
     source: synthesized
+  # --- add-control / German / backend counter-probe block -------------------
+  # PRE-REGISTERED 2026-10-26, BEFORE any classifier change
+  # (road-to-a-control-that-matches-its-neighbours step 0.1). Three further
+  # bars, computed by eval_ui_triviality from the `category` and `lang` fields:
+  #   add_control  — every `category: add-control` task routes to neither
+  #                  `ui-trivial` nor `backend`: share == 1.00.
+  #   de_ui_recall — `lang: de` tasks whose category is not `backend` route to a
+  #                  UI or mixed set: share >= 0.80.
+  #   backend      — every `category: backend` task routes to `backend`:
+  #                  share == 1.00 (precision of the backend fall-through).
+  # Tasks without `category` read `trivial` when labelled trivial, otherwise
+  # `ui-other`; tasks without `lang` read `en`.
+  # LABEL PROVENANCE: labelled by the drafting agent against the written
+  # criterion at the top of this file plus one rule — inserting a control of a
+  # role the surface did not have is never trivial (a new control role is new
+  # state). No council: the owner directive of 2026-10-24 reserves it for
+  # irreversible, release and security decisions. Re-labelling is one field.
+  - id: uit-041
+    prompt: "Add a select box for the status filter on the existing orders page."
+    label: non-trivial
+    category: add-control
+    lang: en
+    label_criterion: "new control role (select) on an existing surface"
+    source: inbox-2026-10-az
+  - id: uit-042
+    prompt: "Add a date picker for the due date to the existing task form."
+    label: non-trivial
+    category: add-control
+    lang: en
+    label_criterion: "new control role (date) on an existing surface"
+    source: inbox-2026-10-az
+  - id: uit-043
+    prompt: "Add a 'remember me' checkbox to the existing login form."
+    label: non-trivial
+    category: add-control
+    lang: en
+    label_criterion: "new control role (checkbox) on an existing surface"
+    source: inbox-2026-10-az
+  - id: uit-044
+    prompt: "Add a toggle for email notifications to the existing settings page."
+    label: non-trivial
+    category: add-control
+    lang: en
+    label_criterion: "new control role (switch) on an existing surface"
+    source: inbox-2026-10-az
+  - id: uit-045
+    prompt: "Add a textarea for delivery notes to the existing checkout form."
+    label: non-trivial
+    category: add-control
+    lang: en
+    label_criterion: "new control role (textarea) on an existing surface"
+    source: inbox-2026-10-az
+  - id: uit-046
+    prompt: "Add radio buttons for the shipping speed to the existing checkout page."
+    label: non-trivial
+    category: add-control
+    lang: en
+    label_criterion: "new control role (radio) on an existing surface"
+    source: inbox-2026-10-az
+  - id: uit-047
+    prompt: "Add a confirmation dialog before an item is deleted on the projects page."
+    label: non-trivial
+    category: add-control
+    lang: en
+    label_criterion: "new control role (dialog) on an existing surface"
+    source: inbox-2026-10-az
+  - id: uit-048
+    prompt: "Add a combobox for choosing the assignee to the existing ticket view."
+    label: non-trivial
+    category: add-control
+    lang: en
+    label_criterion: "new control role (combobox) on an existing surface"
+    source: inbox-2026-10-az
+  - id: uit-049
+    prompt: "Füge noch eine Selectbox für den Status hinzu."
+    label: non-trivial
+    category: add-control
+    lang: de
+    label_criterion: "new control role (select) on an existing surface — the reported case"
+    source: inbox-2026-10-az
+  - id: uit-050
+    prompt: "Füg im bestehenden Formular ein Auswahlfeld für das Land hinzu."
+    label: non-trivial
+    category: add-control
+    lang: de
+    label_criterion: "new control role (select) on an existing form"
+    source: inbox-2026-10-az
+  - id: uit-051
+    prompt: "Ändere die Farbe des Speichern-Knopfs auf die Primärfarbe."
+    label: trivial
+    category: trivial
+    lang: de
+    label_criterion: "≤1 file / ≤5 lines / no new component|state|dependency — one colour on one button"
+    source: inbox-2026-10-az
+  - id: uit-052
+    prompt: "Korrigiere den Tippfehler in der Überschrift der Startseite."
+    label: trivial
+    category: trivial
+    lang: de
+    label_criterion: "≤1 file / ≤5 lines / no new component|state|dependency — typo in one heading"
+    source: inbox-2026-10-az
+  - id: uit-053
+    prompt: "Prüf meine Website auf Designfehler."
+    label: non-trivial
+    category: ui-other
+    lang: de
+    label_criterion: "a review of a whole site — the full audit chain"
+    source: inbox-2026-10-az
+  - id: uit-054
+    prompt: "Überarbeite das Layout der Profilseite."
+    label: non-trivial
+    category: ui-other
+    lang: de
+    label_criterion: "a layout rework of a page — the full audit chain"
+    source: inbox-2026-10-az
+  - id: uit-055
+    prompt: "Füge eine Spalte zur Tabelle der Bestellungen hinzu."
+    label: non-trivial
+    category: backend
+    lang: de
+    label_criterion: "a database column — not a UI task"
+    source: inbox-2026-10-az
+  - id: uit-056
+    prompt: "Schreib einen Endpunkt, der die offenen Rechnungen liefert."
+    label: non-trivial
+    category: backend
+    lang: de
+    label_criterion: "an HTTP endpoint — not a UI task"
+    source: inbox-2026-10-az
+  - id: uit-057
+    prompt: "Add a column for the shipping date to the orders table."
+    label: non-trivial
+    category: backend
+    lang: en
+    label_criterion: "a database column — not a UI task"
+    source: inbox-2026-10-az
+  - id: uit-058
+    prompt: "Add a status field to the invoices API response."
+    label: non-trivial
+    category: backend
+    lang: en
+    label_criterion: "an API response field — not a UI task"
+    source: inbox-2026-10-az
