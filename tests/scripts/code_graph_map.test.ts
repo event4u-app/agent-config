@@ -132,12 +132,15 @@ describe('agents/map/ artefacts (Phase 3)', () => {
             expect(fs.existsSync(path.join(root, 'agents', 'map', f)), f).toBe(true);
         }
         expect(r.written.some((w) => w.startsWith('code/areas/'))).toBe(true);
-        // No reader ran on this tree, so no area folder is written; the manifest says why.
-        for (const id of ['data', 'interfaces', 'runtime', 'delivery']) expect(fs.existsSync(path.join(root, 'agents', 'map', id)), id).toBe(false);
+        // Every lane reader ran on this tree and found nothing: each area says so, with its reason.
+        for (const id of ['data', 'interfaces', 'runtime', 'delivery']) {
+            const area = JSON.parse(fs.readFileSync(path.join(root, 'agents', 'map', id, `${id}.json`), 'utf-8'));
+            expect(area[id].empty, id).toMatch(/^no /);
+        }
         const manifest = JSON.parse(fs.readFileSync(path.join(root, 'agents', 'map', 'manifest.json'), 'utf-8'));
         expect(manifest.generation).toBe(r.meta.graph_generation);
         expect(manifest.areas.code).toMatchObject({ path: 'code/map.json', source: 'code-graph', facts: r.model.files.length });
-        expect(manifest.areas.data).toMatchObject({ path: null, freshness: 'absent' });
+        expect(manifest.areas.data).toMatchObject({ path: 'data/data.json', freshness: 'empty' });
         expect(Object.keys(manifest.areas)).toEqual(['code', 'data', 'interfaces', 'runtime', 'delivery', 'impact', 'agent']);
     });
 

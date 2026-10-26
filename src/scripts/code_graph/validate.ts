@@ -27,16 +27,8 @@ export function validateGraph(g: unknown): ValidateResult {
     if (typeof obj['source_checksum'] !== 'string') push('source_checksum must be a string');
     if (!Array.isArray(obj['nodes'])) push('nodes must be an array');
     if (!Array.isArray(obj['edges'])) push('edges must be an array');
-    if (obj['lanes_run'] !== undefined) {
-        if (!Array.isArray(obj['lanes_run'])) push('lanes_run must be an array when present');
-        else
-            (obj['lanes_run'] as unknown[]).forEach((r, i) => {
-                const rr = (typeof r === 'object' && r !== null ? r : {}) as Record<string, unknown>;
-                if (typeof rr['lane'] !== 'string' || !WORD.test(rr['lane'])) push(`lanes_run[${i}].lane invalid: ${String(rr['lane'])}`);
-                if (!Number.isInteger(rr['facts']) || !Number.isInteger(rr['relations'])) push(`lanes_run[${i}] facts and relations must be integers`);
-                if (rr['error'] !== undefined && typeof rr['error'] !== 'string') push(`lanes_run[${i}].error must be a string when present`);
-            });
-    }
+    const lr = obj['lanes_run'] as Array<{ lane?: unknown; facts?: unknown; relations?: unknown; error?: unknown }> | undefined;
+    if (lr && !(Array.isArray(lr) && lr.every((r) => WORD.test(String(r?.lane)) && [r.facts, r.relations].every(Number.isInteger) && typeof (r.error ?? '') == 'string'))) push('bad lanes_run');
     if (errors.length) return { ok: false, errors };
 
     const nodes = obj['nodes'] as unknown[];

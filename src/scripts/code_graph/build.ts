@@ -1181,7 +1181,8 @@ export function runLaneReaders(
     const first = mergeLaneOutputs(graph, outputs);
     const flows = run('flows', () => buildFlows(first.graph, { root }));
     const second = flows ? mergeLaneOutputs(first.graph, [flows]) : { graph: first.graph, refused: [] };
-    const lanes_run = runs.map((r) => ({ lane: r.lane, facts: r.facts, relations: r.relations, ...(r.error !== undefined ? { error: r.error } : {}) }));
+    // No timing in the graph: a rebuild of the same tree stays byte-identical.
+    const lanes_run = runs.map(({ ms: _m, skipped: _s, outside: _o, ...r }) => r);
     return { graph: { ...second.graph, lanes_run }, summary: { runs, refused: [...first.refused, ...second.refused], ms: Date.now() - started } };
 }
 
