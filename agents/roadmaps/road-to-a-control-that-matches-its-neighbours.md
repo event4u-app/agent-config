@@ -147,7 +147,7 @@ and is never reported as visually verified without render evidence.
 
 ## Phase 3 — The check that would have caught it (shadow first)
 
-- [ ] **3.1 Two registry rules** in `design_slop_rules.ts`, reached by
+- [x] **3.1 Two registry rules** in `design_slop_rules.ts`, Done 2026-10-26 as `src/scripts/lint_design_consistency.ts`, not in the registry (D11). <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/continuity-surface.json --> reached by
       `lint_design_slop`, `design_slop_hook` and (through the linter)
       `design_pass_hook`: `consistency-raw-control` (raw element of a role that
       has a component canonical in `control_roles`) and
@@ -155,17 +155,17 @@ and is never reported as visually verified without render evidence.
       role or sibling canonical, Tailwind static). Severity P1, suppressible with
       a reason.
       verify: 0.2(a) with a raw select fires `consistency-raw-control`; 0.2(c) does not.
-- [ ] **3.2 Near-miss corpus per rule.** A deliberately native select in a
+- [x] **3.2 Near-miss corpus per rule.** Done 2026-10-26: native select without a primitive and a dense `operate` table, both clean in `tests/scripts/lint_design_consistency.test.ts`; neutralising the local-sibling rule reds the table case. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/continuity-surface.json --> A deliberately native select in a
       project without a primitive; siblings with intentionally different density
       in an `operate` table. Both rules must pass the sibling roadmap's
       near-miss gate before leaving shadow.
       verify: both near-miss fixtures stay clean under the two rules.
-- [ ] **3.3 Shadow window** per `docs/contracts/concern-activation-policy.md:31`:
+- [x] **3.3 Shadow window** Done 2026-10-26: `--shadow` records `would_fire` at 0/2/4 px to `design-consistency-shadow.jsonl`; `task bench:design-consistency-shadow` runs it over `src/ui` (first reading: 2 raw-control rows, `WorkspacePage.tsx:407,521` beside `src/ui/forms/Textarea.tsx`). Per <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/continuity-surface.json --> `docs/contracts/concern-activation-policy.md:31`:
       emit nothing, record `would_fire` at ±0/2/4 px tolerance, threshold from
       P99+1 of the legitimate distribution. The CI linter variant runs
       report-only from day one.
       verify: the shadow record carries `would_fire` per tolerance and emits nothing to the user.
-- [ ] **3.4 Sibling reference mode for `ui_conformance_probe`.**
+- [x] **3.4 Sibling reference mode for `ui_conformance_probe`.** Done 2026-10-26: `--subject` + `--reference-sibling` (+ `--tolerance`), `captureSiblingPair` / `compareSiblingBoxes`; live test in `tests/scripts/ui_conformance_probe_sibling.test.ts`.
       `--reference-sibling <selector>` compares a node against a sibling on the
       same page (today only `--target`/`--reference` whole files and
       `data-probe-id` matching, `src/scripts/ui_conformance_probe.ts:1140-1147`).
@@ -197,7 +197,9 @@ and is never reported as visually verified without render evidence.
 - [ ] **3.8 Default on, once the data says so.** When 3.3's shadow meets all
       four conditions of the activation policy, flip `hooks.design_pass`
       (post_tool_use) to default-on for consumers with the consistency rules
-      enabled, per the owner's turn-2/turn-3 words (D2).
+      enabled, per the owner's turn-2/turn-3 words (D2). The consistency check
+      reaches the hook as a conditional chunk (as `svg_rules`), because the
+      dispatch bundle has no headroom for it inline (D11).
       verify: the settings template default and a CLAIMS line change in one
       commit that cites the shadow reading.
 
@@ -287,6 +289,7 @@ and is never reported as visually verified without render evidence.
 | D7 | reversible-technical | agent | Tighten the trivial lane (1.1-1.3); do not abolish it. | Real micro-tweaks stay fast; the defect is the missing role check. | 0.1's add-control bar fails after Phase 1. |
 | D8 | reversible-technical | agent | Kept from the drafted plan's kill register: no cloned vendor-look design skill and no default "look"; no one-sentence initial response pattern; no text copied from the source; no advisory nudge as the fix (measured advisory null, `concern-activation-policy.md:41`); no new slash command (ADR-041); no 0-10 design scores. | Drafted plan § 6, K1-K7. | — |
 | D9 | reversible-technical | agent | Declined from the external plans: blind A/B judge with multi-run scoring, lite/standard/deep tiers, a scored assessment JSON, a 12-20 task benchmark, variant generation, an upstream watcher, a feedback loop and a web-vitals track. | The defect is deterministic and P0 measures it; `design-variations` and the release runbook's upstream watchlist exist; tiers are covered by the 1.1-1.3 classification; scores are D8. | P0's bars cannot be met without a judged signal. |
+| D11 | reversible-technical | agent | The two consistency findings live in `lint_design_consistency`, not in `design_slop_rules.ts`; their shadow carrier is `--shadow` plus a task, not `design_pass_hook`, and no workflow step is added. | A registry rule is a `backed` catalog claim (`lint_design_antipattern_parity` check C) that the sibling roadmap's near-miss gate has not measured; the dispatch bundle has 55 B of headroom (`check_hook_bundle_composition`, 1,556,615 / 1,556,670) and `design_pass` ships default-off; a workflow edit is a governance surface (`check_kernel_edit_ratified`). The hook wiring is part of 3.8, where the default flip is decided. | 3.8 flips the default; the near-miss gate promotes the rules. |
 | D10 | deterministic | evidence | Closure pass ran 2026-10-26: no open decision beyond D1-D9. The three `ambiguous-acceptance` hits (the C2 context row, 1.2, 1.4) are wording; each step carries a command-shaped `verify:`. | `closure_scan` over this file. | a step is executed and its oracle cannot be checked. |
 
 ## What verification changed
