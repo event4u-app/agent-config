@@ -39,6 +39,7 @@ import {
     outcomeScores,
     prOverlap,
 } from './map_model.js';
+import { DECLARATIONS_FILE, ORACLE_DIR, SNAPSHOT_DIR } from './lanes/data/read_data.js';
 import { produceAreas } from './map_area_payloads.js';
 import { nodeOwner } from './verify/owner_index.js';
 import { type Overlay, readOverlay } from './verify/overlay.js';
@@ -96,6 +97,19 @@ export function mapJsonPath(dir: string): string {
 /** A map has been drawn into `dir` — not merely its `.build/` created by a graph build. */
 export function hasMap(dir: string): boolean {
     return fs.existsSync(mapJsonPath(dir));
+}
+
+/** What the user puts into `data/` before the first map exists: a snapshot, oracle output, declarations. */
+const DATA_USER_INPUTS: ReadonlySet<string> = new Set([SNAPSHOT_DIR, ORACLE_DIR, DECLARATIONS_FILE].map((p) => path.posix.basename(p)));
+
+/** A folder that holds only the user's own data inputs is a map folder waiting for its first map, not someone else's directory. */
+export function holdsOnlyMapInputs(dir: string): boolean {
+    const entries = fs.readdirSync(dir).filter((e) => e !== '.build');
+    if (entries.length === 0) return true;
+    if (entries.length !== 1 || entries[0] !== 'data') return false;
+    const data = path.join(dir, 'data');
+    if (!fs.statSync(data).isDirectory()) return false;
+    return fs.readdirSync(data).every((e) => DATA_USER_INPUTS.has(e));
 }
 
 /** The generation a drawn map records, or null when it records none (an older map) or cannot be read. */
@@ -369,7 +383,7 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
     if (
         opts.outDir !== undefined &&
         fs.existsSync(outDir) &&
-        fs.readdirSync(outDir).some((e) => e !== '.build') &&
+        !holdsOnlyMapInputs(outDir) &&
         !hasMap(outDir)
     ) {
         throw new Error(`refusing to write a map into ${outDir}: it is not empty and holds no map.json`);

@@ -465,6 +465,32 @@ describe('review findings, pinned', () => {
         expect(fs.existsSync(path.join(foreign, 'areas', 'keep.md'))).toBe(true);
     });
 
+    it('accepts an --out directory that holds only the user\'s data inputs, and keeps them', async () => {
+        const out = path.join(root, 'tmp-map-inputs');
+        write('tmp-map-inputs/data/snapshot/default.sql', 'CREATE TABLE t (id int);\n');
+        write('tmp-map-inputs/data/oracle/T.json', '{}\n');
+        write('tmp-map-inputs/data/declarations.json', '{}\n');
+        const r = await buildMap(root, { outDir: out });
+        expect(fs.existsSync(path.join(r.outDir, 'index.html'))).toBe(true);
+        expect(fs.readFileSync(path.join(out, 'data', 'snapshot', 'default.sql'), 'utf-8')).toContain('CREATE TABLE');
+        expect(fs.existsSync(path.join(out, 'data', 'oracle', 'T.json'))).toBe(true);
+        expect(fs.existsSync(path.join(out, 'data', 'declarations.json'))).toBe(true);
+        fs.rmSync(out, { recursive: true, force: true });
+    });
+
+    it('still refuses a data folder that holds anything besides the inputs', async () => {
+        const out = path.join(root, 'tmp-map-other');
+        write('tmp-map-other/data/declarations.json', '{}\n');
+        write('tmp-map-other/data/notes.md', '# mine\n');
+        await expect(buildMap(root, { outDir: out })).rejects.toThrow(/not empty and holds no map\.json/);
+        write('tmp-map-other2/data/declarations.json', '{}\n');
+        write('tmp-map-other2/README.md', '# mine\n');
+        await expect(buildMap(root, { outDir: path.join(root, 'tmp-map-other2') })).rejects.toThrow(/not empty and holds no map\.json/);
+        expect(fs.existsSync(path.join(out, 'data', 'notes.md'))).toBe(true);
+        fs.rmSync(out, { recursive: true, force: true });
+        fs.rmSync(path.join(root, 'tmp-map-other2'), { recursive: true, force: true });
+    });
+
     it('reads a map of another shape as no map at all', async () => {
         write('agents/map/map.json', '{}');
         expect(readMap(root)).toBeNull();
