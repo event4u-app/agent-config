@@ -16,6 +16,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { write_atomic } from '../_lib/fs_atomic.js';
+import { gitVisibleFiles, visibleDir } from '../_lib/git_visible_files.js';
 import { gitProbe } from '../_lib/spawn_env.js';
 import { readData } from './lanes/data/read_data.js';
 import { readDecisions } from './lanes/decisions/decisions.js';
@@ -117,7 +118,8 @@ function walkFiles(root: string, accept: (name: string) => boolean): string[] {
         return [];
     }
     const out: string[] = [];
-    const walk = (dir: string): void => {
+    const visible = gitVisibleFiles(abs);
+    const walk = (dir: string, filtered: boolean): void => {
         let entries: fs.Dirent[];
         try {
             entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -127,13 +129,16 @@ function walkFiles(root: string, accept: (name: string) => boolean): string[] {
         for (const e of entries.sort((a, b) => (a.name < b.name ? -1 : 1))) {
             const full = path.join(dir, e.name);
             if (e.isSymbolicLink()) continue; // never follow symlinks
+            const rel = path.relative(abs, full).split(path.sep).join('/');
             if (e.isDirectory()) {
                 if (IGNORE_DIRS.has(e.name) || e.name.startsWith('.')) continue;
-                if (GENERATED_DIRS.has(path.relative(abs, full).split(path.sep).join('/'))) continue;
-                walk(full);
+                if (GENERATED_DIRS.has(rel)) continue;
+                const verdict = filtered && visible ? visibleDir(visible, rel) : 'all';
+                if (verdict !== 'skip') walk(full, verdict === 'enter');
                 continue;
             }
             if (!e.isFile()) continue;
+            if (filtered && visible && !visible.files.has(rel)) continue;
             if (!accept(e.name)) continue;
             let real: string;
             try {
@@ -145,7 +150,7 @@ function walkFiles(root: string, accept: (name: string) => boolean): string[] {
             out.push(full);
         }
     };
-    walk(abs);
+    walk(abs, true);
     return out.sort();
 }
 
@@ -270,6 +275,9 @@ function idJoin(dir: string, rel: string): string {
  * TS source imports `./types.js` and the file on disk is `types.ts`, so the
  * runtime extension is stripped before the candidate list is tried.
  */
+/** A POSIX, `file://` or drive-letter absolute path. */
+const ABSOLUTE_SPEC = /^(?:\/|file:|[A-Za-z]:[\\/])/;
+
 function resolveSpecifier(fromFile: string, spec: string, fileIds: ReadonlySet<string>): string | null {
     if (!spec.startsWith('.')) return null;
     const base = idJoin(idDirname(fromFile), spec);
@@ -557,8 +565,11 @@ export function buildGraph(
                 // repository's same-named symbol. `import * as path from
                 // 'node:path'` ends here, which is the whole of 1.1.
                 const named = r.importKind === 'named';
+                // An absolute path names one machine's disk, and would carry its
+                // user's home directory into every map built from this graph.
+                const mod = ABSOLUTE_SPEC.test(spec) ? '<absolute>' : spec;
                 imports.set(local, {
-                    target: named ? `external:${spec}#${r.targetName}` : `external:${spec}`,
+                    target: named ? `external:${mod}#${r.targetName}` : `external:${mod}`,
                     exact: true,
                     via: 'import-specifier',
                 });
