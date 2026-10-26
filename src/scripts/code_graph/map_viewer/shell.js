@@ -113,6 +113,8 @@ function renderRoute() {
     renderNav();
     renderBanner();
     window.__mapRoute = { route: r, item: current.item };
+    // Whatever the last page lent out comes back first, so every page draws from a whole shell.
+    releaseShellNodes();
     if (code) { refresh(); resize(); return; }
     var overview = r === 'overview';
     $('av-main').className = 'av-main' + (overview ? ' ov' : '');
@@ -122,8 +124,6 @@ function renderRoute() {
         $('av-bar').hidden = true;
         $('av-body').classList.add('no-side', 'no-left');
         $('av-body').classList.remove('paged');
-        $('av-body').appendChild($('av-open-left'));
-        $('av-body').appendChild($('av-open'));
         renderOverview();
         applyAvPanes();
         return;

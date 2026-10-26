@@ -357,6 +357,18 @@ function areaMetaLine(id, own) {
     return m;
 }
 
+/**
+ * The rail open buttons are the shell's, but a page lends them to its bar or
+ * head row, which the next render clears. Held by reference from the first
+ * render on and handed back to the area body before anything is cleared, so no
+ * route ever looks them up after they were dropped with a cleared row.
+ */
+var shellOwned = null;
+function releaseShellNodes() {
+    if (!shellOwned) shellOwned = [$('av-open-left'), $('av-open')];
+    shellOwned.forEach(function (n) { $('av-body').appendChild(n); });
+}
+
 /** The compact reader line of a page head: the module's own summary first, then completeness; the reader's name is its tooltip. */
 function pageMetaLine(id, own) {
     var p = KA[id];
@@ -378,9 +390,7 @@ function renderAreaPage(id, key) {
     var bar = $('av-bar');
     var main = $('av-main');
     var body = $('av-body');
-    // The open buttons may sit in the bar or the head row; rescue them before either is cleared.
-    body.appendChild($('av-open-left'));
-    body.appendChild($('av-open'));
+    releaseShellNodes();
     clear(bar);
     clear(main);
     clear($('av-left-body'));
