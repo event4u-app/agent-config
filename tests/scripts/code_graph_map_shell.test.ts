@@ -136,14 +136,14 @@ describe('an area with a payload renders its facts with their witnesses', () => 
         const main = (await page.locator('#av-main').textContent()) ?? '';
         expect(main).toContain('users');
         expect(main).toContain('comments');
-        expect(await page.locator('#av-main .av-head').textContent()).toMatch(/partial read — every count is a lower bound/);
+        expect(await page.locator('#av-main .av-head .av-barmeta .st').getAttribute('title')).toMatch(/partial read — every count is a lower bound/);
         await page.locator('.db-col', { hasText: 'email' }).click();
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === 'column/users.email');
         const detail = (await page.locator('#av-right-body').textContent()) ?? '';
         expect(detail).toContain('database/migrations/0001_create_users.php:14');
         expect(detail).toContain('changed');
-        expect(await page.locator('#av-main .av-crumbs').textContent()).toContain('users.email');
-        await page.locator('#av-main .av-crumbs button', { hasText: 'Data' }).click();
+        expect(await page.locator('#av-right-body .ttl').textContent()).toContain('users.email');
+        await page.locator('#av-right-body .deselect').click();
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === '');
         expect(await page.locator('#av-left-body').textContent()).toContain('DR-1');
         await page.close();

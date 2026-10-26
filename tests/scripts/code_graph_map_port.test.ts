@@ -25,7 +25,8 @@ async function drawn(withAreas: boolean): Promise<string> {
     fs.mkdirSync(path.join(root, 'src'));
     fs.writeFileSync(path.join(root, 'src', 'order_service.ts'), 'export const a = 1;\n');
     for (const n of ['b', 'c', 'd']) fs.writeFileSync(path.join(root, 'src', `${n}.ts`), `import { a } from './order_service';\nexport const ${n} = a;\n`);
-    const res = await buildMap(root, withAreas ? { areas: sampleAreas() } : {});
+    // Without areas no reader's payload is drawn: every knowledge layer is one no reader ran for.
+    const res = await buildMap(root, { areas: withAreas ? sampleAreas() : {} });
     return path.join(res.outDir, 'index.html');
 }
 
