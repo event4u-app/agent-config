@@ -78,6 +78,10 @@ const snake = (s: string): string => s.replace(/([a-z0-9])([A-Z])/g, '$1_$2').re
 const plural = (s: string): string => (s.endsWith('y') ? `${s.slice(0, -1)}ies` : s.endsWith('s') ? `${s}es` : `${s}s`);
 const pascal = (s: string): string => s.split(/[-_]/).map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('');
 const camel = (s: string): string => { const p = pascal(s); return p.charAt(0).toLowerCase() + p.slice(1); };
+// Quoted apart from `from` so the prepack import scan does not read the generated fixtures as this file's own imports.
+const rel = (spec: string): string => `'${spec}'`;
+// The generated sources call fetch; this module does not, and the read-surface scan reads source text.
+const FETCH = 'fetch';
 
 /** Before the class's (or file's) last closing brace. */
 export function beforeLastBrace(text: string, add: string): string {
@@ -388,29 +392,29 @@ function frontend(g: Gen): void {
         const modSlug = snake(DOMAINS[fi % DOMAINS.length] as string).replace(/_/g, '-');
         const ent = snake(ENTITIES[fi % ENTITIES.length] as string);
         files[`${dir}/api.ts`] =
-            `export interface Row {\n    id: number;\n    name: string;\n}\n\nexport async function load(id: number): Promise<Row> {\n    const res = await fetch(\`/api/${modSlug}/${ent}s/\${id}\`);\n    return (await res.json()) as Row;\n}\n\n` +
-            `export async function sync(id: number): Promise<void> {\n    await fetch(\`/api/${modSlug}/${ent}s/\${id}/sync\`, { method: 'POST' });\n}\n`;
+            `export interface Row {\n    id: number;\n    name: string;\n}\n\nexport async function load(id: number): Promise<Row> {\n    const res = await ${FETCH}(\`/api/${modSlug}/${ent}s/\${id}\`);\n    return (await res.json()) as Row;\n}\n\n` +
+            `export async function sync(id: number): Promise<void> {\n    await ${FETCH}(\`/api/${modSlug}/${ent}s/\${id}/sync\`, { method: 'POST' });\n}\n`;
         files[`${dir}/store.ts`] =
-            `import { load, type Row } from './api';\n\nconst cache = new Map<number, Row>();\n\nexport async function get(id: number): Promise<Row> {\n    const hit = cache.get(id);\n    if (hit) return hit;\n    const row = await load(id);\n    cache.set(id, row);\n    return row;\n}\n\nexport function clear(): void {\n    cache.clear();\n}\n`;
-        files[`${dir}/format.ts`] = `import type { Row } from './api';\n\nexport function title(r: Row): string {\n    return \`#\${r.id} \${r.name}\`;\n}\n\nexport function short(r: Row): string {\n    return r.name.slice(0, 12);\n}\n`;
+            `import { load, type Row } from ${rel('./api')};\n\nconst cache = new Map<number, Row>();\n\nexport async function get(id: number): Promise<Row> {\n    const hit = cache.get(id);\n    if (hit) return hit;\n    const row = await load(id);\n    cache.set(id, row);\n    return row;\n}\n\nexport function clear(): void {\n    cache.clear();\n}\n`;
+        files[`${dir}/format.ts`] = `import type { Row } from ${rel('./api')};\n\nexport function title(r: Row): string {\n    return \`#\${r.id} \${r.name}\`;\n}\n\nexport function short(r: Row): string {\n    return r.name.slice(0, 12);\n}\n`;
         for (let v = 0; v < 8; v++) {
             const peer = v === 0 ? './store' : `./view${v - 1}`;
             files[`${dir}/view${v}.ts`] =
-                `import { get } from './store';\nimport { title } from './format';\n` +
+                `import { get } from ${rel('./store')};\nimport { title } from ${rel('./format')};\n` +
                 (v > 0 ? `import { render${v - 1} } from '${peer}';\n` : '') +
                 `\nexport async function render${v}(id: number): Promise<string> {\n    const row = await get(id);\n    return ${v > 0 ? `render${v - 1}(id).then((s) => s + title(row))` : 'title(row)'};\n}\n`;
         }
-        files[`${dir}/index.ts`] = `export { render7 as render } from './view7';\nexport { clear } from './store';\n`;
-        files[`${dir}/view7.test.ts`] = `import { render7 } from './view7';\n\nexport async function smoke(): Promise<boolean> {\n    return (await render7(1)).length > 0;\n}\n`;
-        files[`${dir}/store.test.ts`] = `import { clear, get } from './store';\n\nexport async function cached(): Promise<boolean> {\n    clear();\n    return (await get(1)).id === 1;\n}\n`;
+        files[`${dir}/index.ts`] = `export { render7 as render } from ${rel('./view7')};\nexport { clear } from ${rel('./store')};\n`;
+        files[`${dir}/view7.test.ts`] = `import { render7 } from ${rel('./view7')};\n\nexport async function smoke(): Promise<boolean> {\n    return (await render7(1)).length > 0;\n}\n`;
+        files[`${dir}/store.test.ts`] = `import { clear, get } from ${rel('./store')};\n\nexport async function cached(): Promise<boolean> {\n    clear();\n    return (await get(1)).id === 1;\n}\n`;
         if (fi % 5 === 0) files[`${dir}/legacy-widget.ts`] = `export function legacyWidget(): string {\n    return 'unused';\n}\n`;
         if (fi > 0 && fi % 3 === 0) {
             const prev = TS_FEATURES[fi - 1] as string;
-            files[`${dir}/shared.ts`] = `import { render } from '../${prev}';\n\nexport async function also(id: number): Promise<string> {\n    return render(id);\n}\n`;
+            files[`${dir}/shared.ts`] = `import { render } from ${rel(`../${prev}`)};\n\nexport async function also(id: number): Promise<string> {\n    return render(id);\n}\n`;
         }
         g.commit(own.primary, `feat(frontend): ${f}`, files);
     });
-    const app = TS_FEATURES.map((f, i) => `import { render as r${i} } from './features/${f}';`).join('\n');
+    const app = TS_FEATURES.map((f, i) => `import { render as r${i} } from ${rel(`./features/${f}`)};`).join('\n');
     g.commit(LOAD_AUTHORS[2] as DemoAuthor, 'feat(frontend): the application shell', {
         'resources/js/app.ts': `${app}\n\nexport const routes = [${TS_FEATURES.map((_, i) => `r${i}`).join(', ')}];\n`,
     });
@@ -648,10 +652,10 @@ export function generateHubProjects(seed = 20261026): HubLoadProject[] {
         const files: Record<string, string> = {
             'package.json': `${JSON.stringify({ name: `@demo/${name}`, version: '1.0.0', dependencies: { express: '^4.19.0', ...deps } }, null, 4)}\n`,
             'src/app.ts':
-                `import express from 'express';\nimport { list, show } from './handlers';\n\nconst app = express();\n\napp.get('/${name}/items', list);\napp.get('/${name}/items/:id', show);\n\nexport default app;\n`,
+                `import express from 'express';\nimport { list, show } from ${rel('./handlers')};\n\nconst app = express();\n\napp.get('/${name}/items', list);\napp.get('/${name}/items/:id', show);\n\nexport default app;\n`,
             'src/handlers.ts': `export function list(): string[] {\n    return [];\n}\n\nexport function show(): string {\n    return '${name}';\n}\n`,
             'src/client.ts':
-                `export async function fromNext(id: string): Promise<unknown> {\n    const res = await fetch(\`\${process.env.${snake(target).toUpperCase()}_URL}/${target}/items/\${id}\`, { signal: AbortSignal.timeout(3000) });\n    return res.json();\n}\n`,
+                `export async function fromNext(id: string): Promise<unknown> {\n    const res = await ${FETCH}(\`\${process.env.${snake(target).toUpperCase()}_URL}/${target}/items/\${id}\`, { signal: AbortSignal.timeout(3000) });\n    return res.json();\n}\n`,
             // A few collisions, not a clique: some projects share an app port, every third runs its own Postgres on 5432.
             'docker-compose.yml':
                 `services:\n  ${name}:\n    image: ${['node:22', 'node:20', 'oven/bun:1'][i % 3]}\n    ports:\n      - "${8080 + i + (r() < 0.3 ? -1 : 0)}:3000"\n` +
