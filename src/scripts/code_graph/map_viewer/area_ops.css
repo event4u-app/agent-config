@@ -137,3 +137,10 @@ line.pe-shared { stroke: var(--violet); stroke-width: 2px; stroke-dasharray: 4 3
 .ops-title.plain { color: var(--text); font-size: 15px; }
 .top-row:first-child:has(.hub-chip) { flex-wrap: wrap; }
 .hub-banner .mono { overflow-wrap: anywhere; min-width: 0; }
+.st.ops-ok, .st.ops-rep, .st.ops-bad, .st.ops-drift { border: 0; }
+.ops-rail .ops-fbox.wide { padding: 10px; }
+#av-left-body .ops-rail { gap: 14px; }
+.av-main:has(.ops-elegend) { padding: 16px; gap: 12px; }
+.av-bar.owned:has(> .ops-mark) { padding: 12px 20px; gap: 10px; }
+.ops-mark { display: none; }
+.ops-legend.wide { gap: 8px 16px; }

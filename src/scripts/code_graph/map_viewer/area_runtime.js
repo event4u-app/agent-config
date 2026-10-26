@@ -138,6 +138,7 @@ function rtChip(p, r) {
 }
 
 function rtBar(p, view, key, bar) {
+    bar.appendChild(el('span', { class: 'ops-mark' }));
     bar.appendChild(viewTabs('runtime', key, AREA_MODULES.runtime.tabs));
     if (view === 'topo') {
         var n = rtHiddenLinks(p).length;
@@ -274,6 +275,7 @@ function rtRail(p, key, right) {
     var fs = rtFindings(p, r);
     if (!fs.length) pad.appendChild(findBox(t('rNoFinding'), null, t('rNoFindingText')));
     findingBoxes('runtime', fs).forEach(function (b) { pad.appendChild(b); });
+    Array.prototype.forEach.call(pad.querySelectorAll('.ops-fbox'), function (b) { b.classList.add('wide'); });
     pad.appendChild(el('span', { class: 'ops-railnote' }, t('rRailNote')));
     right.appendChild(pad);
 }

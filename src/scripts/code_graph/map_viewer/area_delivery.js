@@ -204,6 +204,7 @@ function svcSelected(key) {
 }
 
 function dlBar(p, view, key, bar, tabList) {
+    bar.appendChild(el('span', { class: 'ops-mark' }));
     bar.appendChild(viewTabs('delivery', key, tabList));
     if (view === 'ci') {
         var rg = add(el('div', { class: 'ops-scen', role: 'radiogroup', 'aria-label': t('lScenario').replace(':', '') }), el('span', { class: 'muted' }, t('lScenario')));
@@ -228,7 +229,7 @@ function localView(sel, main) {
     var files = [];
     services.forEach(function (s) { if (files.indexOf(s.witness.file) < 0) files.push(s.witness.file); });
     var wrap = el('div', { class: 'ops-col' });
-    wrap.appendChild(add(el('div', { class: 'ops-legend' }),
+    wrap.appendChild(add(el('div', { class: 'ops-legend wide' }),
         add(el('span'), document.createTextNode(files.join(' + ') + ' · ' + t('lProfiles') + ' '), ndTag(t('lProfilesWhy'))),
         add(el('span'), opsChip(t('lDeclared'), 'none'), document.createTextNode(' ' + t('lFromYaml'))),
         add(el('span'), opsChip(t('lObserved'), 'unk'), document.createTextNode(' '), ndTag(t('lObservedWhy'), true))));
@@ -270,7 +271,7 @@ function ciView(p, sel, main) {
     p.workflows.forEach(function (w, wi) {
         var jobs = p.jobs.filter(function (j) { return j.workflow === w.file; });
         var block = el('div', { class: 'ops-col tight' });
-        var head = add(el('div', { class: 'ops-legend' }), el('span', { class: 'mono', title: wloc(w.witness) }, w.file));
+        var head = add(el('div', { class: 'ops-legend wide' }), el('span', { class: 'mono', title: wloc(w.witness) }, w.file));
         if (wi === 0) {
             add(head, opsChip(t('lRun').ok, 'ok'), opsChip(t('lRun').off, 'off'), add(el('span'), opsChip(t('lRun').unk, 'unkA'), document.createTextNode(' ' + t('lUnkHelp'))),
                 el('span', { class: 'muted' }, t('lNoInvent')));

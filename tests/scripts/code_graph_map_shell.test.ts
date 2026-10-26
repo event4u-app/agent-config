@@ -96,7 +96,11 @@ describe('the router', () => {
 describe('an area without data is shown, says so and names the reason', () => {
     it('every knowledge area with no reader run', async () => {
         const page = await open(empty, '#/overview');
-        for (const id of KNOWLEDGE_AREA_IDS) {
+        // The agent area's verb list is written on every map, so only the others can be without a reader.
+        const written = await page.evaluate(() => Object.keys((JSON.parse(document.getElementById('map-data')!.textContent!) as { areas: object }).areas));
+        const unread = KNOWLEDGE_AREA_IDS.filter((id) => !written.includes(id));
+        expect(unread.length).toBeGreaterThanOrEqual(KNOWLEDGE_AREA_IDS.length - 1);
+        for (const id of unread) {
             expect(await page.locator(`#areanav a[data-route="${id}"]`).getAttribute('class')).toContain('empty');
             await page.evaluate((r) => { location.hash = `#/${r}`; }, id);
             await page.waitForFunction((r) => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === r, id);
