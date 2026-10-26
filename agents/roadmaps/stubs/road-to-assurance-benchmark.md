@@ -5,6 +5,11 @@ review_by: 2026-09-25
 
 # Road to an assurance benchmark — stub
 
+> **Answer on record (2026-10-26):** the capped pilot against S4 ran —
+> `docs/benchmark.md` § Neighbour pilot against S4: both primary comparisons
+> underpowered, direction favouring this package at ~13x the neighbour's tokens.
+> A sixth arrival meets that number and the cheap confirmation run it proposes.
+>
 > **Arrivals:** 5 (at least) - latest `inbox-2026-10-au` (2026-10-25): a third
 > comparison against deny group S4 closes on "no winner until a shared benchmark
 > runs" and plans its head-to-head KPIs on this stub; put to the owner as OQ-17, who chose a capped pilot (`road-to-a-pilot-benchmark-against-s4`).

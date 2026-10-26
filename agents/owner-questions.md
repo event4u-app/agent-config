@@ -179,7 +179,7 @@ and the run that applies it links its PR.
 - **Blocks:** every head-to-head KPI in the round's master plan.
 - **Partly answered 2026-10-25:** the owner chose the pilot — "3" (both the
   roadmap for the unreached exports and this pilot), after "Ok, mach genau das".
-  The plan is `agents/roadmaps/road-to-a-pilot-benchmark-against-s4.md`. **Still
+  The plan is `agents/roadmaps/archive/road-to-a-pilot-benchmark-against-s4.md`. **Still
   open: the spend cap** — no figure was given and `cost.budgets` is set nowhere;
   it gates the pilot's steps 1.4 and 3.1.
 - **Answered 2026-10-25:** "1" — option 1 of the follow-up: a **$150** cap for

@@ -104,3 +104,24 @@ describe('bench_ab_task_runner — snapshot_clone over a temp tree', () => {
         expect(Object.keys(snap)).toEqual(['shallow.txt']);
     });
 });
+
+describe('live_args — the claude command line one run uses', () => {
+    it('loads a plugin directory for the run when one is given, before the prompt separator', () => {
+        const args = runner.live_args('do it', { setting_sources: 'project,local', plugin_dir: '/tmp/neighbour' });
+        const i = args.indexOf('--plugin-dir');
+        expect(args[i + 1]).toBe('/tmp/neighbour');
+        expect(i).toBeLessThan(args.indexOf('--'));
+        expect(args.slice(-2)).toEqual(['--', 'do it']);
+    });
+
+    it('passes no plugin directory when none is given', () => {
+        expect(runner.live_args('do it', { setting_sources: 'project,local' })).not.toContain('--plugin-dir');
+    });
+});
+
+describe('live_args — strict MCP config', () => {
+    it('adds --strict-mcp-config only when asked', () => {
+        expect(runner.live_args('x', { strict_mcp: true })).toContain('--strict-mcp-config');
+        expect(runner.live_args('x', {})).not.toContain('--strict-mcp-config');
+    });
+});

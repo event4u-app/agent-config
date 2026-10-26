@@ -45,6 +45,7 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -89,87 +90,8 @@ const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
 
 type Dict = Record<string, unknown>;
 
-interface ArmSpec {
-    setting_sources: string | null;
-    inject: string | null; // None | "rdp" | "placebo"
-    recursive?: boolean; // ADR-106 D₂ arm: depth-bounded attempt→critic→re-attempt loop
-    /**
-     * Per-arm override for the footprint-lift audit, or `null` to declare that
-     * lift is **not a valid signal** for this arm.
-     *
-     * `audit_activation`'s cross-arm direction catches a treatment surface that
-     * COLLAPSED to baseline, by requiring the arm's prompt footprint to sit at
-     * least `ACTIVATION_MIN_LIFT_RATIO` above the paired vanilla run. That test
-     * presupposes a treatment surface large enough to move the footprint. An arm
-     * whose treatment is deliberately *minimal* — `bare-principle` is one
-     * sentence — has no lift to detect, so including it would fail legitimate
-     * runs: the exact failure the ratio's own calibration note warns about.
-     *
-     * `null` narrows the audit for that arm to the per-trial TEXT direction,
-     * which is checked both ways (`activation_verdict`: a text arm must carry an
-     * injection, a non-text arm must not). It never leaves the arm unaudited —
-     * and `bench_ab_v2_run.test.ts` pins both halves, so neither an
-     * always-firing nor a never-firing audit passes.
-     */
-    min_lift_ratio?: number | null;
-}
-
-// Arm -> (setting_sources, inject) where inject ∈ {None, "rdp", "placebo"}.
-// `package-recursive` (ADR-106's D₂) reuses the real-plugin `package` config but
-// runs the recursion loop instead of a single --print. It only executes when
-// explicitly selected (`--arms package-recursive`); the four default arms are
-// untouched, so existing runs and their golden-parity outputs are unchanged.
-// `hardened` / `hardened-placebo` (docs/contracts/governance-enforcement-projection.md)
-// are opt-in like `package-recursive`: NOT in the default arm list, so existing
-// runs and golden-parity outputs are unchanged. `hardened` = the real `package`
-// config PLUS the compile-time HARD CONSTRAINT blocks injected via sysprompt;
-// `hardened-placebo` = `package` + inert prose of the SAME length, so the
-// hardened Δ is length-controlled (measures emphasis, not verbosity).
-// `rules-kernel-dc` / `rules-balanced` (cost-factor sweep, 2026-07): plugin OFF
-// + ONLY a rule subset injected via sysprompt, to measure how much of the
-// weak-host discipline lift survives at a fraction of the full package's
-// loaded-context cost. `rules-kernel-dc` = the router kernel (9 Iron-Law rules)
-// + `downstream-changes` (one of the two lift-carrying rules; the other,
-// `scope-control`, is already in the kernel) — the cheapest configuration that
-// contains both. `rules-balanced` = kernel + tier_1 rule bodies, i.e. the
-// shipped `balanced` router profile (which does NOT include downstream-changes
-// — tier_2 — so this arm also tests whether that profile cut loses the lift).
-// Both are opt-in: NOT in the default arm list; existing runs unchanged.
-//
-// `package-ladder` / `bare-principle` (road-to-solution-minimalism Phase 3 — the
-// two arms its Arms step names and `ARMS` lacked). Also opt-in, so existing runs
-// and golden-parity outputs are unchanged.
-//
-// `package-ladder` is NOT redundant with `package`, and the reason is measurable
-// rather than stylistic: the ladder ships inside `improve-before-implement`,
-// which is `type: auto`, `tier: 2b`, `alwaysApply: false`, keyword-triggered on
-// `refactor|implement|migration`, and is absent from `dist/router.json`'s
-// preloaded tier lists. So under `package` the ladder reaches the model only when
-// a task's own wording happens to trip one of those keywords — unmeasured, and
-// per-task. That is finding F1's failure class exactly (an activation gap that a
-// null cannot be distinguished from), which is why the pair is: `package` = the
-// shipped reality, `package-ladder` = the same config with the ladder rule body
-// injected via sysprompt so it is guaranteed in context. The contrast measures
-// the ladder, not the trigger set.
-//
-// `bare-principle` is finding F6's control: the naked principle with NO floors
-// routed, plugin scoped away. Its text is authored HERE and is deliberately not
-// the external source's own prompt — per `code-provenance`, a borrowed prompt is
-// re-derived rather than copied, and the arm's job is to be a floor-free
-// principle statement, not a specific artefact.
-export const ARMS: Record<string, ArmSpec> = {
-    vanilla: { setting_sources: 'project,local', inject: null },
-    package: { setting_sources: null, inject: null },
-    'package-rdp': { setting_sources: null, inject: 'rdp' },
-    placebo: { setting_sources: 'project,local', inject: 'placebo' },
-    'package-recursive': { setting_sources: null, inject: null, recursive: true },
-    hardened: { setting_sources: null, inject: 'hardened' },
-    'hardened-placebo': { setting_sources: null, inject: 'hardened-placebo' },
-    'rules-kernel-dc': { setting_sources: 'project,local', inject: 'rules-kernel-dc' },
-    'rules-balanced': { setting_sources: 'project,local', inject: 'rules-balanced' },
-    'package-ladder': { setting_sources: null, inject: 'ladder' },
-    'bare-principle': { setting_sources: 'project,local', inject: 'bare-principle', min_lift_ratio: null },
-};
+import { ARMS, neighbour_env, neighbour_plugin_dir, type ArmSpec } from './_lib/bench_ab_arms.js';
+export { ARMS, neighbour_env, neighbour_plugin_dir };
 
 /**
  * Deterministic inert prose of ~target_chars — no rules, no discipline cues.
@@ -629,6 +551,9 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
             setting_sources: spec.setting_sources,
             max_budget: opts.max_budget,
             model: opts.model,
+            plugin_dir: neighbour_plugin_dir(spec),
+            strict_mcp: spec.isolate_neighbour === true,
+            env: spec.isolate_neighbour ? neighbour_env(fs.mkdtempSync(path.join(os.tmpdir(), 'bench-neighbour-'))) : null,
         }) as unknown as Dict;
     }
     const score = scoring.score_task_v2(task, {
@@ -1091,6 +1016,13 @@ export function main(argv: string[] | null = null): number {
     for (const a of arms) {
         if (!(a in ARMS)) {
             process.stderr.write(`unknown arm: ${a}\n`);
+            return 1;
+        }
+        try {
+            neighbour_plugin_dir(ARMS[a] as ArmSpec);
+            if ((ARMS[a] as ArmSpec).isolate_neighbour) neighbour_env(os.tmpdir());
+        } catch (e) {
+            process.stderr.write(`arm ${a}: ${(e as Error).message}\n`);
             return 1;
         }
         if (args.host === 'codex' && !CODEX_VALID_ARMS.includes(a)) {

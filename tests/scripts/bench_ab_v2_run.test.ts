@@ -30,6 +30,8 @@ import {
     bare_principle_text,
     ladder_rule_text,
     lift_audit_arms,
+    neighbour_plugin_dir,
+    neighbour_env,
     selftest_run,
     selftest_usage,
     ARMS,
@@ -177,6 +179,40 @@ describe('bench_ab_v2_run — pure helpers', () => {
             inject: 'bare-principle',
             min_lift_ratio: null,
         });
+    });
+
+    it('ARMS: the neighbour arm scopes this package away and loads a plugin from a directory', () => {
+        expect(ARMS['neighbour']).toEqual({
+            setting_sources: 'project,local',
+            inject: null,
+            plugin_dir_env: 'BENCH_NEIGHBOUR_PLUGIN_DIR',
+            isolate_neighbour: true,
+            min_lift_ratio: null,
+        });
+    });
+
+    it('neighbour_env: reads the operator file and puts {data} under the per-run directory', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'nenv-'));
+        const file = path.join(dir, 'env.json');
+        fs.writeFileSync(file, JSON.stringify({ HOOKS_OFF: 'false', STORE: '{data}/store', XDG_DATA_HOME: '{data}/xdg' }));
+        const env = neighbour_env('/tmp/run-1', { BENCH_NEIGHBOUR_ENV_FILE: file });
+        expect(env).toEqual({ HOOKS_OFF: 'false', STORE: '/tmp/run-1/store', XDG_DATA_HOME: '/tmp/run-1/xdg' });
+        expect(() => neighbour_env('/tmp/run-1', {})).toThrow(/BENCH_NEIGHBOUR_ENV_FILE/);
+        fs.writeFileSync(file, JSON.stringify({ N: 1 }));
+        expect(() => neighbour_env('/tmp/run-1', { BENCH_NEIGHBOUR_ENV_FILE: file })).toThrow(/not a string/);
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('neighbour_plugin_dir: resolves an existing directory and refuses a missing one', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'neighbour-'));
+        const spec = ARMS['neighbour']!;
+        expect(neighbour_plugin_dir(spec, { BENCH_NEIGHBOUR_PLUGIN_DIR: dir })).toBe(dir);
+        expect(() => neighbour_plugin_dir(spec, {})).toThrow(/BENCH_NEIGHBOUR_PLUGIN_DIR/);
+        expect(() => neighbour_plugin_dir(spec, { BENCH_NEIGHBOUR_PLUGIN_DIR: path.join(dir, 'nope') })).toThrow(
+            /not a directory/,
+        );
+        expect(neighbour_plugin_dir(ARMS['vanilla']!, {})).toBeNull();
+        fs.rmSync(dir, { recursive: true, force: true });
     });
 
     it('lift_audit_arms: excludes the tiny-treatment arm, keeps every real lift arm', () => {

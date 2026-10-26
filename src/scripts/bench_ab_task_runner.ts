@@ -211,36 +211,17 @@ interface RunLiveOpts {
     max_budget?: number | null;
     model?: string | null;
     effort?: string | null;
+    /** A plugin directory loaded for this run only (`--plugin-dir`), never installed. */
+    plugin_dir?: string | null;
+    /** Load no MCP server from any user or plugin config (`--strict-mcp-config`). */
+    strict_mcp?: boolean;
+    /** Extra environment for the child process, layered over this process's. */
+    env?: Record<string, string> | null;
 }
 
-/**
- * Invoke claude in print/one-shot mode against the task prompt.
- *
- * `setting_sources` (e.g. "project,local") drops the global plugin for the
- * `without` arm while keeping auth. `sysprompt_file` injects extra rules
- * (the `with-rdp` arm). `with` passes neither → the real installed plugin.
- */
-export function run_live(
-    task: Record<string, unknown>,
-    cloneRoot: string,
-    timeoutS: number,
-    opts: RunLiveOpts = {},
-): RunResult {
-    const { sysprompt_file = null, setting_sources = null, max_budget = null, model = null, effort = null } = opts;
-    const binary = claude_executable();
-    if (binary === null) {
-        return {
-            mode: 'live-skipped',
-            reason: 'claude CLI not found; set CLAUDE_CLI or install it',
-            transcript: '',
-            exit_code: null,
-            wall_time_seconds: 0.0,
-            tokens: 0,
-            tokens_breakdown: {},
-            errored: true,
-        };
-    }
-    const prompt = (task['prompt'] as string) ?? '';
+/** The claude command line for one run — pure, so the flags each arm passes are tested. */
+export function live_args(prompt: string, opts: RunLiveOpts = {}): string[] {
+    const { sysprompt_file = null, setting_sources = null, max_budget = null, model = null, effort = null, plugin_dir = null, strict_mcp = false } = opts;
     // --output-format json yields a `usage` block for token counts. The global
     // plugin is dropped per-arm via --setting-sources (NOT --bare, which kills auth).
     // bypassPermissions on EVERY arm: the clone is a throwaway fixture, and this
@@ -269,15 +250,53 @@ export function run_live(
     if (setting_sources) {
         cmd.push('--setting-sources', setting_sources);
     }
+    if (plugin_dir) {
+        cmd.push('--plugin-dir', plugin_dir);
+    }
+    if (strict_mcp) {
+        cmd.push('--strict-mcp-config');
+    }
     if (sysprompt_file !== null) {
         cmd.push('--append-system-prompt-file', sysprompt_file);
     }
     cmd.push('--', prompt);
+    return cmd;
+}
+
+/**
+ * Invoke claude in print/one-shot mode against the task prompt.
+ *
+ * `setting_sources` (e.g. "project,local") drops the global plugin for the
+ * `without` arm while keeping auth. `sysprompt_file` injects extra rules
+ * (the `with-rdp` arm). `with` passes neither → the real installed plugin.
+ */
+export function run_live(
+    task: Record<string, unknown>,
+    cloneRoot: string,
+    timeoutS: number,
+    opts: RunLiveOpts = {},
+): RunResult {
+    const binary = claude_executable();
+    if (binary === null) {
+        return {
+            mode: 'live-skipped',
+            reason: 'claude CLI not found; set CLAUDE_CLI or install it',
+            transcript: '',
+            exit_code: null,
+            wall_time_seconds: 0.0,
+            tokens: 0,
+            tokens_breakdown: {},
+            errored: true,
+        };
+    }
+    const prompt = (task['prompt'] as string) ?? '';
+    const cmd = live_args(prompt, opts);
     const started = _monotonic();
     const result = spawnSync(binary, cmd, {
         cwd: cloneRoot,
         encoding: 'utf-8',
         timeout: timeoutS * 1000,
+        ...(opts.env ? { env: { ...process.env, ...opts.env } } : {}),
     });
     const isTimeout =
         (result.error && (result.error as NodeJS.ErrnoException).code === 'ETIMEDOUT') ||
