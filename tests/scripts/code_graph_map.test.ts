@@ -126,18 +126,25 @@ describe('the map model (Phase 2)', () => {
 });
 
 describe('agents/map/ artefacts (Phase 3)', () => {
-    it('writes index.html, MAP.md, map.json and area pages into agents/map/', async () => {
+    it('writes index.html, MAP.md, manifest.json, code/map.json and code area pages into agents/map/', async () => {
         const r = await buildMap(root);
-        for (const f of ['index.html', 'MAP.md', 'map.json']) {
-            expect(fs.existsSync(path.join(root, 'agents', 'map', f))).toBe(true);
+        for (const f of ['index.html', 'MAP.md', 'manifest.json', 'code/map.json']) {
+            expect(fs.existsSync(path.join(root, 'agents', 'map', f)), f).toBe(true);
         }
-        expect(r.written.some((w) => w.startsWith('areas/'))).toBe(true);
+        expect(r.written.some((w) => w.startsWith('code/areas/'))).toBe(true);
+        // No reader ran on this tree, so no area folder is written; the manifest says why.
+        for (const id of ['data', 'interfaces', 'runtime', 'delivery']) expect(fs.existsSync(path.join(root, 'agents', 'map', id)), id).toBe(false);
+        const manifest = JSON.parse(fs.readFileSync(path.join(root, 'agents', 'map', 'manifest.json'), 'utf-8'));
+        expect(manifest.generation).toBe(r.meta.graph_generation);
+        expect(manifest.areas.code).toMatchObject({ path: 'code/map.json', source: 'code-graph', facts: r.model.files.length });
+        expect(manifest.areas.data).toMatchObject({ path: null, freshness: 'absent' });
+        expect(Object.keys(manifest.areas)).toEqual(['code', 'data', 'interfaces', 'runtime', 'delivery', 'impact', 'agent']);
     });
 
     it('a redraw that fails part-way leaves the previous generation whole', async () => {
         await buildMap(root);
         const dir = path.join(root, 'agents', 'map');
-        const before = fs.readFileSync(path.join(dir, 'map.json'), 'utf-8');
+        const before = fs.readFileSync(path.join(dir, 'code', 'map.json'), 'utf-8');
         write('src/added.ts', 'export const added = 1;\n');
         let n = 0;
         await expect(
@@ -148,10 +155,10 @@ describe('agents/map/ artefacts (Phase 3)', () => {
                 },
             }),
         ).rejects.toThrow(/interrupted/);
-        expect(fs.readFileSync(path.join(dir, 'map.json'), 'utf-8')).toBe(before);
-        // Nothing staged is left behind, in agents/ or in the runtime dir it stages under.
+        expect(fs.readFileSync(path.join(dir, 'code', 'map.json'), 'utf-8')).toBe(before);
+        // Nothing staged is left behind, in agents/ or in the .build/ it stages under.
         expect(fs.readdirSync(path.dirname(dir)).filter((e) => e !== 'map' && e.includes('map'))).toEqual([]);
-        expect(fs.readdirSync(path.join(root, 'agents', 'runtime', 'state')).filter((e) => e.startsWith('.map-'))).toEqual([]);
+        expect(fs.readdirSync(path.join(dir, '.build')).filter((e) => e.startsWith('.map-'))).toEqual([]);
     });
 
     it('a failed second rename puts the previous generation back', () => {
@@ -178,7 +185,9 @@ describe('agents/map/ artefacts (Phase 3)', () => {
         const next = path.join(root, 'next');
         const prev = path.join(root, 'prev');
         fs.mkdirSync(live);
+        fs.writeFileSync(path.join(live, 'map.json'), 'old\n');
         fs.mkdirSync(next);
+        fs.writeFileSync(path.join(next, 'map.json'), 'new\n');
         let calls = 0;
         const failing = ((from: fs.PathLike, to: fs.PathLike): void => {
             calls += 1;
@@ -195,17 +204,32 @@ describe('agents/map/ artefacts (Phase 3)', () => {
         expect(results.map((r) => r.status).sort()).toEqual(['fulfilled', 'rejected']);
         const rejected = results.find((r) => r.status === 'rejected') as PromiseRejectedResult;
         expect(String(rejected.reason)).toMatch(/already running in this process/);
-        expect(JSON.parse(fs.readFileSync(path.join(root, 'agents', 'map', 'map.json'), 'utf-8')).meta).toBeTruthy();
+        expect(JSON.parse(fs.readFileSync(path.join(root, 'agents', 'map', 'code', 'map.json'), 'utf-8')).meta).toBeTruthy();
+    });
+
+    it('swaps entry by entry and leaves what it does not write, and .build/, where they are', () => {
+        const live = path.join(root, 'live');
+        const next = path.join(root, 'next');
+        fs.mkdirSync(path.join(live, '.build'), { recursive: true });
+        fs.writeFileSync(path.join(live, '.build', 'code-graph-v1.json'), 'graph\n');
+        fs.writeFileSync(path.join(live, 'layers.yaml'), 'mine\n');
+        fs.writeFileSync(path.join(live, 'map.json'), 'pre-ADR-303\n');
+        fs.mkdirSync(path.join(next, 'code'), { recursive: true });
+        fs.writeFileSync(path.join(next, 'code', 'map.json'), 'new\n');
+        swapIn(next, live, path.join(root, 'prev'));
+        expect(fs.readdirSync(live).sort()).toEqual(['.build', 'code', 'layers.yaml']);
+        expect(fs.readFileSync(path.join(live, '.build', 'code-graph-v1.json'), 'utf-8')).toBe('graph\n');
+        expect(fs.existsSync(path.join(root, 'prev'))).toBe(false);
     });
 
     it('refuses to redraw while another process holds the refresh lock', async () => {
-        const lock = path.join(root, 'agents', 'runtime', 'state', 'code-graph-refresh.lock');
+        const lock = path.join(root, 'agents', 'map', '.build', 'code-graph-refresh.lock');
         fs.mkdirSync(lock, { recursive: true });
         const other = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)'], { stdio: 'ignore' });
         try {
             fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: other.pid, started_at: Date.now(), nonce: 'n' }));
             await expect(buildMap(root)).rejects.toThrow(/another process holds the code-graph refresh lock/);
-            expect(fs.existsSync(path.join(root, 'agents', 'map'))).toBe(false);
+            expect(fs.readdirSync(path.join(root, 'agents', 'map'))).toEqual(['.build']);
         } finally {
             other.kill('SIGKILL');
         }
@@ -213,7 +237,7 @@ describe('agents/map/ artefacts (Phase 3)', () => {
 
     it('drops the previous render check, which described the previous generation', async () => {
         await buildMap(root);
-        const check = path.join(root, 'agents', 'map', 'map-render.json');
+        const check = path.join(root, 'agents', 'map', '.build', 'map-render.json');
         fs.writeFileSync(check, '{"verification":"verified"}\n');
         await buildMap(root);
         expect(fs.existsSync(check)).toBe(false);
@@ -230,7 +254,7 @@ describe('agents/map/ artefacts (Phase 3)', () => {
     it('two builds of the same tree are byte-identical', async () => {
         await buildMap(root);
         const read = (): string[] =>
-            ['index.html', 'MAP.md', 'map.json'].map((f) => fs.readFileSync(path.join(root, 'agents', 'map', f), 'utf-8'));
+            ['index.html', 'MAP.md', 'manifest.json', 'code/map.json'].map((f) => fs.readFileSync(path.join(root, 'agents', 'map', f), 'utf-8'));
         const first = read();
         await buildMap(root);
         expect(read()).toEqual(first);
@@ -268,8 +292,8 @@ describe('agents/map/ artefacts (Phase 3)', () => {
         await buildMap(root);
         const dir = path.join(root, 'agents', 'map');
         const all = [
-            ...['index.html', 'MAP.md', 'map.json'].map((f) => path.join(dir, f)),
-            ...fs.readdirSync(path.join(dir, 'areas')).map((f) => path.join(dir, 'areas', f)),
+            ...['index.html', 'MAP.md', 'manifest.json', 'code/map.json'].map((f) => path.join(dir, f)),
+            ...fs.readdirSync(path.join(dir, 'code', 'areas')).map((f) => path.join(dir, 'code', 'areas', f)),
         ];
         for (const f of all) expect(fs.readFileSync(f, 'utf-8')).not.toContain(root);
     });
@@ -453,7 +477,7 @@ describe('review findings, pinned', () => {
     it('keeps a backtick in a file name from breaking out of its code span', async () => {
         write('src/billing/we`ird.ts', "import { g0 } from './f0.js';\nexport const w = (): number => g0();\n");
         await buildMap(root);
-        const page = fs.readdirSync(path.join(root, 'agents', 'map', 'areas')).map((f) => fs.readFileSync(path.join(root, 'agents', 'map', 'areas', f), 'utf-8')).join('\n');
+        const page = fs.readdirSync(path.join(root, 'agents', 'map', 'code', 'areas')).map((f) => fs.readFileSync(path.join(root, 'agents', 'map', 'code', 'areas', f), 'utf-8')).join('\n');
         expect(page).toContain("`src/billing/we'ird.ts`");
         expect(page).not.toContain('we`ird');
     });
@@ -462,6 +486,10 @@ describe('review findings, pinned', () => {
         expect(() => recordOutcome(root, path.join(os.tmpdir()), 'useful')).toThrow(/not a file inside/);
         write('agents/runtime/state/map-outcomes.jsonl', 'null\n{not json\n{"path":"src/a.ts","outcome":"useful","at":"2026-01-01T00:00:00Z"}\n');
         expect(readOutcomes(root)).toEqual([{ path: 'src/a.ts', outcome: 'useful', at: '2026-01-01T00:00:00Z' }]);
+        // New entries land in .build/; the log an older release kept still counts beside them.
+        recordOutcome(root, path.join(root, 'src', 'billing', 'f0.ts'), 'dead-end', new Date('2026-02-01T00:00:00Z'));
+        expect(fs.existsSync(path.join(root, 'agents', 'map', '.build', 'map-outcomes.jsonl'))).toBe(true);
+        expect(readOutcomes(root).map((e) => e.path)).toEqual(['src/a.ts', 'src/billing/f0.ts']);
     });
 });
 

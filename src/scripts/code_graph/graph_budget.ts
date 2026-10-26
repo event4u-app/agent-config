@@ -1,7 +1,7 @@
 /**
  * The storage budget for user-global graph homes (ADR-299, council O4).
  *
- * Only directories under `runtime/graphs/` are ever evicted — a graph under a
+ * Only per-repository homes in the hub (and their pre-ADR-303 places) are ever evicted — a graph under a
  * repository's own `agents/` is the project's, not this machine's cache.
  * Eviction is least-recently-QUERIED first: a query touches its home's
  * `.last-query` marker, a build or refresh records it in the registry, and a
@@ -14,7 +14,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { readRegistry, updateRegistry } from '../_lib/project_registry.js';
-import { graphHome, graphsRoot } from './graph_home.js';
+import { graphHome, homeDirs } from './graph_home.js';
 import { isStale, STALE_LOCK_MS } from './refresh_lock.js';
 
 const MB = 1024 * 1024;
@@ -24,8 +24,8 @@ const LAST_QUERY = '.last-query';
 export function touchHome(root: string): void {
     try {
         const home = graphHome(root);
-        if (home.kind !== 'global' || !fs.existsSync(home.dir)) return;
-        const marker = path.join(home.dir, LAST_QUERY);
+        if (home.kind !== 'global' || !fs.existsSync(home.buildDir)) return;
+        const marker = path.join(home.buildDir, LAST_QUERY);
         const now = new Date();
         try {
             fs.utimesSync(marker, now, now);
@@ -47,7 +47,7 @@ interface Walk {
 
 const TEMP_RE = /\.refresh-tmp-|\.tmp-/;
 
-function walk(dir: string, top: boolean, acc: Walk = { bytes: 0, newest: 0, temp: false }): Walk {
+function walk(dir: string, acc: Walk = { bytes: 0, newest: 0, temp: false }): Walk {
     let entries: fs.Dirent[];
     try {
         entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -63,8 +63,8 @@ function walk(dir: string, top: boolean, acc: Walk = { bytes: 0, newest: 0, temp
         } catch {
             continue;
         }
-        if (!(top && e.name === LAST_QUERY)) acc.newest = Math.max(acc.newest, st.mtimeMs);
-        if (e.isDirectory()) walk(p, false, acc);
+        if (e.name !== LAST_QUERY) acc.newest = Math.max(acc.newest, st.mtimeMs);
+        if (e.isDirectory()) walk(p, acc);
         else acc.bytes += st.size;
     }
     return acc;
@@ -84,13 +84,6 @@ export interface HomeUsage {
 
 /** Every user-global graph home with its size and why it may or may not go. */
 export function homeUsage(): HomeUsage[] {
-    const base = graphsRoot();
-    let names: string[];
-    try {
-        names = fs.readdirSync(base);
-    } catch {
-        return [];
-    }
     const reg = readRegistry();
     const owner = new Map<string, { id: string; pinned: boolean; at: number }>();
     for (const [id, e] of Object.entries(reg.projects)) {
@@ -98,8 +91,7 @@ export function homeUsage(): HomeUsage[] {
     }
     const out: HomeUsage[] = [];
     const now = Date.now();
-    for (const name of names) {
-        const dir = path.join(base, name);
+    for (const dir of homeDirs()) {
         let st: fs.Stats;
         try {
             st = fs.statSync(dir);
@@ -107,15 +99,17 @@ export function homeUsage(): HomeUsage[] {
             continue;
         }
         if (!st.isDirectory()) continue;
+        // A home in the hub keeps its marker and lock under `.build/`; one an older release wrote, under `state/`.
+        const own = fs.existsSync(path.join(dir, '.build')) ? path.join(dir, '.build') : path.join(dir, 'state');
         let queried = 0;
         try {
-            queried = fs.statSync(path.join(dir, LAST_QUERY)).mtimeMs;
+            queried = fs.statSync(path.join(own, LAST_QUERY)).mtimeMs;
         } catch {
             queried = 0;
         }
         const o = owner.get(dir);
-        const lock = path.join(dir, 'state', 'code-graph-refresh.lock');
-        const w = walk(dir, true);
+        const lock = path.join(own, 'code-graph-refresh.lock');
+        const w = walk(dir);
         out.push({
             dir,
             bytes: w.bytes,

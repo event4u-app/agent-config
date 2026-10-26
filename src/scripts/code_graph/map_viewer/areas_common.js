@@ -10,10 +10,14 @@
  *           pickable fact; search, the detail rail and the Overview read these
  *   meta    (payload) → the one-line summary in the bar
  *   render  (payload, view, main) — draws one view
+ *   extra   () → true when the area has facts to show from ANOTHER area's
+ *           payload (Delivery's local environment reads Runtime's services);
+ *           then the area is live without a payload of its own, `tabsFor`
+ *           (payload) narrows the views, and `extraItems` () adds the picks
  */
 extendStrings({
     en: {
-        areaNames: { overview: 'Overview', code: 'Code', data: 'Data', interfaces: 'Interfaces', runtime: 'Runtime', delivery: 'Delivery', impact: 'Impact', agent: 'Agent' },
+        areaNames: { overview: 'Overview', code: 'Code', data: 'Data', interfaces: 'Interfaces', runtime: 'Runtime', delivery: 'Delivery', impact: 'Impact', agent: 'Agent', projects: 'Projects' },
         navLabel: 'Areas', noDataYet: 'No data yet', willShow: 'What this area shows once its reader ran',
         foundNothing: function (r) { return r + ' ran and found nothing'; }, reader: 'reader', completenessL: 'completeness',
         lowerBound: 'partial read — every count is a lower bound', unknownRead: 'unknown coverage — every count is a lower bound',
@@ -30,7 +34,7 @@ extendStrings({
         bannerLabel: 'Freshness'
     },
     de: {
-        areaNames: { overview: 'Übersicht', code: 'Code', data: 'Data', interfaces: 'Interfaces', runtime: 'Runtime', delivery: 'Delivery', impact: 'Impact', agent: 'Agent' },
+        areaNames: { overview: 'Übersicht', code: 'Code', data: 'Data', interfaces: 'Interfaces', runtime: 'Runtime', delivery: 'Delivery', impact: 'Impact', agent: 'Agent', projects: 'Projekte' },
         navLabel: 'Ebenen', noDataYet: 'Noch keine Daten', willShow: 'Was diese Ebene zeigt, sobald ihr Leser gelaufen ist',
         foundNothing: function (r) { return r + ' ist gelaufen und hat nichts gefunden'; }, reader: 'Leser', completenessL: 'Vollständigkeit',
         lowerBound: 'teilweise gelesen — jede Zahl ist eine Untergrenze', unknownRead: 'Abdeckung unbekannt — jede Zahl ist eine Untergrenze',
@@ -50,14 +54,15 @@ extendStrings({
 
 extendStrings({
     en: {
-        areaTitle: { data: 'Data · tables, keys, relations', interfaces: 'Interfaces · services and operations', runtime: 'Runtime · infrastructure and environments', delivery: 'Delivery · local environment and pipelines', impact: 'Impact · what a change reaches', agent: 'Agent · verbs and context pack' },
+        areaTitle: { data: 'Data · tables, keys, relations', interfaces: 'Interfaces · services and operations', runtime: 'Runtime · infrastructure and environments', delivery: 'Delivery · local environment and pipelines', impact: 'Impact · what a change reaches', agent: 'Agent · verbs and context pack', projects: 'Projects · this machine' },
         areaWhat: {
             data: 'Tables, columns, keys and delete rules from migrations and models; ORM relations beside real foreign keys; drift between code, intended and actual schema — each fact with the file and line it was read from.',
             interfaces: 'External services the code calls, their operations and parameters, the configuration names they are bound through, every call site, and drift against a contract in the tree.',
             runtime: 'Infrastructure resources from IaC files, which environment declares them, services with their images, ports and networks, and drift such as port collisions.',
             delivery: 'Workflows and jobs with their needs, the environments they deploy to, and the build → image → deploy chain.',
             impact: 'For a working diff: the affected code, tests, columns, operations, resources and pipelines, each with its confirm state, and the review-risk terms.',
-            agent: 'The graph verbs an agent calls — each with the question it answers and its CLI and MCP name — and the context pack it receives before it acts.'
+            agent: 'The graph verbs an agent calls — each with the question it answers and its CLI and MCP name — and the context pack it receives before it acts.',
+            projects: 'The projects registered on this machine, the links between them, host ports two of them publish, images and services they share, and which call of one lands on a route of another — names and paths only, never in a project map.'
         },
         noReader: {
             data: 'No schema reader ran on this tree: migrations, models and SQL dumps are not read into map.json yet.',
@@ -65,18 +70,20 @@ extendStrings({
             runtime: 'No runtime reader ran: Compose files, Dockerfiles, Terraform and Kubernetes manifests are not read into map.json yet.',
             delivery: 'No delivery reader ran: CI workflows are not read into map.json yet.',
             impact: 'No change preview was written: this map was drawn without a working diff to preview.',
-            agent: 'No agent payload was written: the verb list and the context pack are not read into map.json yet.'
+            agent: 'No agent payload was written: the verb list and the context pack are not read into map.json yet.',
+            projects: 'No project is registered on this machine yet: a `code-graph build` or `code-graph projects add <path>` registers one.'
         }
     },
     de: {
-        areaTitle: { data: 'Data · Tabellen, Schlüssel, Beziehungen', interfaces: 'Interfaces · Dienste und Operationen', runtime: 'Runtime · Infrastruktur und Umgebungen', delivery: 'Delivery · lokale Umgebung und Pipelines', impact: 'Impact · was eine Änderung erreicht', agent: 'Agent · Verben und Context-Pack' },
+        areaTitle: { data: 'Data · Tabellen, Schlüssel, Beziehungen', interfaces: 'Interfaces · Dienste und Operationen', runtime: 'Runtime · Infrastruktur und Umgebungen', delivery: 'Delivery · lokale Umgebung und Pipelines', impact: 'Impact · was eine Änderung erreicht', agent: 'Agent · Verben und Context-Pack', projects: 'Projekte · dieser Rechner' },
         areaWhat: {
             data: 'Tabellen, Spalten, Schlüssel und Löschregeln aus Migrationen und Models; ORM-Beziehungen neben echten Fremdschlüsseln; Drift zwischen Code, geplantem und tatsächlichem Schema — jeder Fakt mit Datei und Zeile, aus der er gelesen wurde.',
             interfaces: 'Externe Dienste, die der Code aufruft, ihre Operationen und Parameter, die Konfigurationsnamen, über die sie gebunden sind, jede Aufrufstelle und Drift gegen einen Vertrag im Baum.',
             runtime: 'Infrastruktur-Ressourcen aus IaC-Dateien, welche Umgebung sie deklariert, Dienste mit Images, Ports und Netzen, und Drift wie Port-Kollisionen.',
             delivery: 'Workflows und Jobs mit ihren needs, die Umgebungen, in die sie ausrollen, und die Kette Build → Image → Deploy.',
             impact: 'Für einen Arbeits-Diff: betroffener Code, Tests, Spalten, Operationen, Ressourcen und Pipelines, jeweils mit Bestätigungszustand, und die Review-Risiko-Terme.',
-            agent: 'Die Graph-Verben, die ein Agent aufruft — jedes mit der Frage, die es beantwortet, und seinem CLI- und MCP-Namen — und das Context-Pack, das er vor dem Handeln bekommt.'
+            agent: 'Die Graph-Verben, die ein Agent aufruft — jedes mit der Frage, die es beantwortet, und seinem CLI- und MCP-Namen — und das Context-Pack, das er vor dem Handeln bekommt.',
+            projects: 'Die auf diesem Rechner registrierten Projekte, die Verbindungen zwischen ihnen, Host-Ports, die zwei von ihnen veröffentlichen, gemeinsame Images und Dienste, und welcher Aufruf des einen auf einer Route des anderen landet — nur Namen und Pfade, nie in einer Projekt-Map.'
         },
         noReader: {
             data: 'Auf diesem Baum ist kein Schema-Leser gelaufen: Migrationen, Models und SQL-Dumps werden noch nicht in map.json gelesen.',
@@ -84,7 +91,8 @@ extendStrings({
             runtime: 'Kein Runtime-Leser ist gelaufen: Compose-Dateien, Dockerfiles, Terraform und Kubernetes-Manifeste werden noch nicht in map.json gelesen.',
             delivery: 'Kein Delivery-Leser ist gelaufen: CI-Workflows werden noch nicht in map.json gelesen.',
             impact: 'Es wurde keine Änderungsvorschau geschrieben: Diese Karte wurde ohne Arbeits-Diff gezeichnet.',
-            agent: 'Es wurde kein Agent-Payload geschrieben: Verbliste und Context-Pack werden noch nicht in map.json gelesen.'
+            agent: 'Es wurde kein Agent-Payload geschrieben: Verbliste und Context-Pack werden noch nicht in map.json gelesen.',
+            projects: 'Auf diesem Rechner ist noch kein Projekt registriert: `code-graph build` oder `code-graph projects add <Pfad>` registriert eines.'
         }
     }
 });
@@ -126,8 +134,10 @@ function witnessList(ws) {
 function areaItems(id) {
     var p = KA[id];
     var mod = AREA_MODULES[id];
-    if (!p || !mod || p.empty) return [];
-    var out = mod.items(p);
+    if (!mod) return [];
+    var out = mod.extraItems ? mod.extraItems() : [];
+    if (!p || p.empty) return out;
+    out = out.concat(mod.items(p));
     (p.findings || []).forEach(function (f, i) {
         out.push({ key: 'finding/' + i, kind: 'finding', label: f.id + ' · ' + f.subject, sub: f.message, finding: f,
             rows: [[t('colRule'), f.id], [t('colSeverity'), stChip(t('sevNames')[f.severity] || f.severity, SEV_CLASS[f.severity])], [t('colSubject'), f.subject], ['engine', f.engine], [t('completenessL'), t('completeNames')[f.completeness]]],
@@ -193,8 +203,8 @@ function avPick(id, key) { location.hash = '#/' + id + (key ? '/' + encodeURICom
 function avCrumbs(id, item) {
     var c = el('nav', { class: 'crumbs av-crumbs', 'aria-label': 'Breadcrumb' });
     function link(text, fn) { var b = el('button', { type: 'button' }, text); if (fn) b.addEventListener('click', fn); else b.disabled = true; return b; }
-    c.appendChild(link(t('crumbMap'), id === 'overview' ? null : function () { go('overview'); }));
-    if (id !== 'overview') {
+    c.appendChild(link(t('crumbMap'), id === HOME ? null : function () { go(HOME); }));
+    if (id !== HOME) {
         c.appendChild(el('span', { 'aria-hidden': 'true' }, '›'));
         c.appendChild(link(t('areaNames')[id], item ? function () { avPick(id, ''); } : null));
     }
@@ -286,15 +296,18 @@ function renderAreaPage(id, key) {
     clear(main);
     var p = KA[id];
     var mod = AREA_MODULES[id];
-    var live = !!(p && mod && !p.empty);
+    var own = !!(p && mod && !p.empty);
+    var live = own || !!(mod && mod.extra && mod.extra());
+    var tabList = !mod ? [] : mod.tabsFor ? mod.tabsFor(own ? p : null) : mod.tabs;
     var item = live && key ? itemByKey(id, key) : null;
     bar.appendChild(avCrumbs(id, item));
     var row = el('div', { class: 'av-row' });
     row.appendChild(el('h1', { class: 'av-title' }, t('areaTitle')[id]));
     if (live) {
-        var view = avState.view[id] || mod.tabs[0][0];
+        if (!tabList.some(function (o) { return o[0] === avState.view[id]; })) avState.view[id] = tabList[0][0];
+        var view = avState.view[id];
         var tabs = el('div', { class: 'lenses', role: 'tablist', 'aria-label': t('views') });
-        mod.tabs.forEach(function (o) {
+        tabList.forEach(function (o) {
             var b = el('button', { type: 'button', role: 'tab', class: 'lens', 'aria-selected': String(view === o[0]) }, t(o[1]));
             b.addEventListener('click', function () { avState.view[id] = o[0]; renderAreaPage(id, key); });
             tabs.appendChild(b);
@@ -304,10 +317,11 @@ function renderAreaPage(id, key) {
     bar.appendChild(row);
     if (p) {
         var meta2 = add(el('div', { class: 'av-meta mono' }), el('span', null, t('reader') + ': ' + p.reader), stChip(t('completeNames')[p.completeness] || p.completeness, COMPLETE_CLASS[p.completeness]));
-        if (live) meta2.appendChild(el('span', null, mod.meta(p)));
+        if (own) meta2.appendChild(el('span', null, mod.meta(p)));
         if (p.completeness !== 'complete') meta2.appendChild(el('span', { class: 'muted' }, p.completeness === 'partial' ? t('lowerBound') : t('unknownRead')));
         bar.appendChild(meta2);
     }
+    if (live && mod.metaExtra && mod.extra()) bar.appendChild(add(el('div', { class: 'av-meta mono' }), el('span', null, mod.metaExtra())));
     var body = $('av-body');
     body.classList.toggle('no-side', !live);
     if (!live) main.appendChild(noDataCard(id));
@@ -316,9 +330,9 @@ function renderAreaPage(id, key) {
         legend.appendChild(el('span', { class: 'muted' }, t('confirmLegend')));
         ['confirmed', 'moved', 'changed', 'gone', 'added', 'unconfirmed'].forEach(function (s) { legend.appendChild(confirmChip(s)); });
         main.appendChild(legend);
-        var v = avState.view[id] || mod.tabs[0][0];
+        var v = avState.view[id];
         if (v === 'findings') findingsView(id, main);
-        else mod.render(p, v, main);
+        else mod.render(own ? p : null, v, main);
     }
     renderAvDetail(id, item);
     if (item) avState.fly = true;

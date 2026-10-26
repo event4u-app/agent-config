@@ -166,7 +166,12 @@ export function heldByThisProcess(root: string): boolean {
  * `afterStaleCheck` and `afterReclaimCheck` exist for the interleaving tests only.
  */
 export function acquire(root: string, afterStaleCheck?: () => void, afterReclaimCheck?: () => void): (() => void) | null {
-    const lock = graphHome(root).lockPath;
+    const home = graphHome(root);
+    // A release before ADR-303 locks under the old directory and writes the old cache there;
+    // while its lock is live, this one would race it for the same project.
+    const legacy = path.join(home.legacyDir, path.basename(home.lockPath));
+    if (fs.existsSync(legacy) && !isStale(legacy)) return null;
+    const lock = home.lockPath;
     fs.mkdirSync(path.dirname(lock), { recursive: true });
     try {
         fs.mkdirSync(lock);

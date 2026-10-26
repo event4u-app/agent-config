@@ -322,7 +322,7 @@ describe('5.2 — the map readers over the wire', () => {
         const root = await consumerRig();
         const cache = new ToolCache();
         await buildMap(root);
-        const doc = JSON.parse(fs.readFileSync(path.join(root, 'agents/map/map.json'), 'utf-8')) as { model: { health: unknown; files: Array<{ path: string; blast?: { direct: number; transitive: number } }> } };
+        const doc = JSON.parse(fs.readFileSync(path.join(root, 'agents/map/code/map.json'), 'utf-8')) as { model: { health: unknown; files: Array<{ path: string; blast?: { direct: number; transitive: number } }> } };
         const r = await cache.dispatch('graph_map_status', { file: 'src/service.ts' }, root);
         expect(r['health']).toEqual(doc.model.health);
         expect((r['findings'] as { cycles: number }).cycles).toBeTypeOf('number');

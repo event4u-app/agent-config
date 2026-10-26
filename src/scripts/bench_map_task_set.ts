@@ -66,8 +66,8 @@ export interface MapArmSpec {
 }
 
 export const MAP_CONFIRM_TEXT = [
-    'This repository carries a prebuilt map of itself: agents/map/MAP.md and agents/map/map.json,',
-    'and a code-graph index under agents/runtime/state/ that the graph_* tools and',
+    'This repository carries a prebuilt map of itself: agents/map/MAP.md and agents/map/code/map.json,',
+    'and a code-graph index under agents/map/.build/ that the graph_* tools and',
     '`agent-config code-graph` read.',
     'Use the map to find every place a change affects. The map is an index, not the truth:',
     'before relying on a place it names, re-read its witness with `agent-config code-graph confirm <id…>`',
@@ -111,7 +111,7 @@ export function build_map(clone: string): { ok: boolean; ms: number; detail: str
         encoding: 'utf-8',
         timeout: 180_000,
     });
-    const ok = r.status === 0 && fs.existsSync(path.join(clone, 'agents', 'map', 'map.json'));
+    const ok = r.status === 0 && fs.existsSync(path.join(clone, 'agents', 'map', 'code', 'map.json'));
     const tail = `${r.stdout ?? ''}${r.stderr ?? ''}`.trim().split('\n').slice(-2).join(' | ');
     return { ok, ms: Date.now() - t0, detail: ok ? 'map drawn' : `exit=${r.status ?? 'null'} ${tail}` };
 }

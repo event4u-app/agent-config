@@ -3,12 +3,15 @@
  *
  * IO around the pure projection in `map_model.ts`: read the engine's graph
  * (building or refreshing it first when needed), derive the model, and write
- * four artefacts a person or an agent reads (ADR-297):
+ * one generation of the map folder (ADR-297, ADR-303):
  *
- *   agents/map/index.html        one self-contained offline file
- *   agents/map/MAP.md            the same picture in words, budgeted
- *   agents/map/areas/<id>.md     one page per area of five or more files
- *   agents/map/map.json          the model and the area payloads the other three are rendered from
+ *   agents/map/index.html             one self-contained offline file
+ *   agents/map/MAP.md                 the same picture in words, budgeted
+ *   agents/map/manifest.json          generation, sources and freshness per area
+ *   agents/map/code/map.json          the model and the area payloads the pages are rendered from
+ *   agents/map/code/areas/<id>.md     one page per code area of five or more files
+ *   agents/map/<area>/<area>.json     data, interfaces, runtime, delivery: that area's payload
+ *   agents/map/.build/                graph cache, twin, lock, staging — the only gitignored part
  *
  * Same tree in, same bytes out: nothing written here carries a timestamp, a
  * host path or anything else that differs between two builds of one commit.
@@ -36,7 +39,7 @@ import {
     outcomeScores,
     prOverlap,
 } from './map_model.js';
-import { areaProblems, areaSummaryLines, type MapAreas } from './map_areas.js';
+import { areaProblems, areaSummaryLines, KNOWLEDGE_AREA_IDS, type MapAreas, witnessesOf } from './map_areas.js';
 import { loadGraph } from './query.js';
 import type { CodeGraph } from './types.js';
 import { dead, repoEntryPoints } from './verbs.js';
@@ -73,10 +76,28 @@ export function graphGeneration(cachePath: string): string | null {
     }
 }
 
+/** Payload folders of the knowledge areas that have one in the map folder (ADR-303). */
+export const AREA_FOLDERS = ['data', 'interfaces', 'runtime', 'delivery'] as const;
+
+/**
+ * `code/map.json` in a map folder, or the top-level `map.json` a release before
+ * ADR-303 wrote when only that one exists.
+ */
+export function mapJsonPath(dir: string): string {
+    const now = path.join(dir, 'code', 'map.json');
+    const old = path.join(dir, 'map.json');
+    return fs.existsSync(now) || !fs.existsSync(old) ? now : old;
+}
+
+/** A map has been drawn into `dir` — not merely its `.build/` created by a graph build. */
+export function hasMap(dir: string): boolean {
+    return fs.existsSync(mapJsonPath(dir));
+}
+
 /** The generation a drawn map records, or null when it records none (an older map) or cannot be read. */
 export function mapGeneration(outDir: string): string | null {
     try {
-        const doc = JSON.parse(fs.readFileSync(path.join(outDir, 'map.json'), 'utf-8')) as { meta?: { graph_generation?: unknown } };
+        const doc = JSON.parse(fs.readFileSync(mapJsonPath(outDir), 'utf-8')) as { meta?: { graph_generation?: unknown } };
         return typeof doc.meta?.graph_generation === 'string' ? doc.meta.graph_generation : null;
     } catch {
         return null;
@@ -186,6 +207,7 @@ function isGitRepo(root: string): boolean {
 async function loadOrBuildGraph(
     root: string,
     cachePath: string,
+    buildPath: string,
     noBuild: boolean,
 ): Promise<{ graph: CodeGraph; built: boolean }> {
     const verdict = computeVerdict(root, cachePath).verdict;
@@ -202,7 +224,7 @@ async function loadOrBuildGraph(
         if (!fs.existsSync(cachePath)) throw new Error('no graph to draw (--no-build)');
         return { graph: JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as CodeGraph, built: false };
     }
-    const { graph } = await buildFromRepo(root, cachePath, { update: fs.existsSync(cachePath) });
+    const { graph } = await buildFromRepo(root, buildPath, { update: fs.existsSync(buildPath) });
     return { graph, built: true };
 }
 
@@ -227,15 +249,18 @@ export function diffFiles(root: string, rev: string): string[] | null {
 
 /** Where `code-graph outcome` records which files a session found useful — local, never sent anywhere. */
 export function outcomesPath(root: string): string {
-    return path.join(graphHome(root).stateDir, 'map-outcomes.jsonl');
+    return path.join(graphHome(root).buildDir, 'map-outcomes.jsonl');
 }
 
 export function readOutcomes(root: string): OutcomeEvent[] {
-    let text: string;
-    try {
-        text = fs.readFileSync(outcomesPath(root), 'utf-8');
-    } catch {
-        return [];
+    // A log an older release appended to under the old state directory still counts.
+    let text = '';
+    for (const p of [path.join(graphHome(root).legacyDir, 'map-outcomes.jsonl'), outcomesPath(root)]) {
+        try {
+            text += `${fs.readFileSync(p, 'utf-8')}\n`;
+        } catch {
+            /* never recorded there */
+        }
     }
     // Line by line: one malformed line costs that line, not the whole log.
     const out: OutcomeEvent[] = [];
@@ -315,16 +340,17 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
     if (
         opts.outDir !== undefined &&
         fs.existsSync(outDir) &&
-        fs.readdirSync(outDir).length > 0 &&
-        !fs.existsSync(path.join(outDir, 'map.json'))
+        fs.readdirSync(outDir).some((e) => e !== '.build') &&
+        !hasMap(outDir)
     ) {
         throw new Error(`refusing to write a map into ${outDir}: it is not empty and holds no map.json`);
     }
     const areas = opts.areas ?? {};
     const problems = areaProblems(areas);
     if (problems.length) throw new Error(`refusing to draw the map: the areas section is unsafe or unreadable — ${problems.slice(0, 5).join('; ')}`);
-    const cachePath = opts.cachePath ?? home.cachePath;
-    const { graph, built } = await loadOrBuildGraph(root, cachePath, opts.noBuild === true);
+    const { graph, built } = await loadOrBuildGraph(root, opts.cachePath ?? home.cachePath, opts.cachePath ?? home.buildCachePath, opts.noBuild === true);
+    // After a build the current file is the one to read, whatever an older release left beside it.
+    const cachePath = opts.cachePath ?? graphHome(root).cachePath;
     let diff: { rev: string; changed: string[] } | undefined;
     if (opts.diffRev !== undefined) {
         const changed = diffFiles(root, opts.diffRev);
@@ -360,33 +386,39 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
         `${model.files.length} files · ${model.areas.length} areas · ` +
         `${model.analyses.trustedEdges} trusted links · guess share ${pct(model.analyses.guessShare)}`;
 
-    // One generation at a time: everything is written into a sibling directory,
-    // which then replaces the live one, so a reader never sees `map.json` of one
-    // build beside pages of another, and a failed redraw leaves the last one whole.
-    // The default map stages under the gitignored runtime dir, so a killed redraw
-    // leaves nothing in agents/ itself; a chosen --out stages beside itself.
+    // One generation at a time: everything is written into a staging directory
+    // under the gitignored `.build/`, and each entry then replaces its live
+    // counterpart, so a failed redraw leaves the last one whole and a killed one
+    // leaves nothing outside `.build/`. `.build/` itself is never swapped: it
+    // holds the graph and the lock this very redraw runs under.
+    const build = path.join(outDir, '.build');
     const suffix = `${process.pid}-${randomBytes(4).toString('hex')}`;
-    const stage = opts.outDir === undefined ? home.stateDir : path.dirname(outDir);
-    fs.mkdirSync(stage, { recursive: true });
-    const next = path.join(stage, `.map-next-${suffix}`);
-    const prev = path.join(stage, `.map-prev-${suffix}`);
+    fs.mkdirSync(build, { recursive: true });
+    const next = path.join(build, `.map-next-${suffix}`);
+    const prev = path.join(build, `.map-prev-${suffix}`);
     const written: string[] = [];
     try {
         const write = (rel: string, content: string): void => {
             const p = path.join(next, rel);
             fs.mkdirSync(path.dirname(p), { recursive: true });
             write_atomic(p, content);
-            written.push(rel);
+            written.push(rel.split(path.sep).join('/'));
             opts._afterWrite?.(rel);
         };
-        write('map.json', `${JSON.stringify({ meta, model, areas })}\n`);
-        write('MAP.md', renderMapMd(model, meta, areas));
+        write(path.join('code', 'map.json'), `${JSON.stringify({ meta, model, areas })}\n`);
         for (const [i, a] of model.areas.entries()) {
-            if (a.files.length >= AREA_PAGE_MIN_FILES) write(path.join('areas', `${a.id}.md`), renderAreaMd(model, i, meta));
+            if (a.files.length >= AREA_PAGE_MIN_FILES) write(path.join('code', 'areas', `${a.id}.md`), renderAreaMd(model, i, meta));
         }
+        for (const id of AREA_FOLDERS) {
+            const payload = areas[id];
+            if (payload) write(path.join(id, `${id}.json`), `${JSON.stringify({ generation: meta.graph_generation ?? '', [id]: payload })}\n`);
+        }
+        write('MAP.md', renderMapMd(model, meta, areas));
+        write('manifest.json', `${JSON.stringify(mapManifest(model, meta, areas), null, 2)}\n`);
         write('index.html', renderHtml(model, meta, areas));
-        carryForeignEntries(outDir, next);
         swapIn(next, outDir, prev);
+        // The render check described the generation it checked, not this one.
+        fs.rmSync(path.join(build, 'map-render.json'), { force: true });
     } finally {
         fs.rmSync(next, { recursive: true, force: true });
     }
@@ -488,46 +520,55 @@ function markDead(root: string, cachePath: string, graph: CodeGraph, model: MapM
 }
 
 /**
- * What a map generation consists of; anything else in the directory is someone else's and is
- * carried over. `map-render.json` belongs to a generation although `buildMap` does not write it:
- * it is `code-graph map`'s render check OF that generation, written after the swap, so the
- * previous one's is dropped rather than left describing pages it never saw.
+ * What a release before ADR-303 wrote at the top of the map folder. A redraw in
+ * the current layout moves them out with the previous generation, so no reader
+ * finds a stale model beside a fresh page.
  */
-const GENERATION_ENTRIES = new Set(['map.json', 'MAP.md', 'index.html', 'areas', 'map-render.json']);
+const LEGACY_ENTRIES = ['map.json', 'areas', 'map-render.json'] as const;
 
-/** Copy entries the writer does not produce into the new generation, so the swap drops nothing. */
-function carryForeignEntries(live: string, next: string): void {
-    if (!fs.existsSync(live)) return;
-    for (const entry of fs.readdirSync(live)) {
-        if (GENERATION_ENTRIES.has(entry)) continue;
-        fs.cpSync(path.join(live, entry), path.join(next, entry), { recursive: true, verbatimSymlinks: true });
-    }
+/** `index.html` lands last: a reader opening the page finds the data it was rendered from. */
+function swapOrder(names: string[]): string[] {
+    const rank = (n: string): number => (n === 'index.html' ? 2 : n === 'manifest.json' ? 1 : 0);
+    return [...names].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
 }
 
 /**
- * Replace `live` by `next` with two renames; on a failed second rename the old generation goes
- * back. Consistent, not atomic: between the renames `live` is briefly absent, and a process
- * killed there leaves the old generation at `prev` (under the gitignored runtime dir for the
- * default map) — a reader sees no map, never a mixed one.
+ * Replace each entry `next` holds in `live`, one rename pair per entry; entries
+ * of `live` that `next` does not hold — someone else's notes, a lineage view,
+ * `layers.yaml`, `.build/` — stay where they are. On a failed rename every entry
+ * already swapped goes back. Consistent per entry, not atomic: between a pair of
+ * renames that entry is briefly absent, and a process killed there leaves the old
+ * entries at `prev` (under the gitignored `.build/`).
  */
 export function swapIn(next: string, live: string, prev: string, rename: typeof fs.renameSync = fs.renameSync): void {
-    fs.mkdirSync(path.dirname(live), { recursive: true });
-    const hadLive = fs.existsSync(live);
-    if (hadLive) rename(live, prev);
+    fs.mkdirSync(live, { recursive: true });
+    fs.mkdirSync(prev, { recursive: true });
+    const incoming = fs.readdirSync(next);
+    const names = swapOrder([...new Set([...incoming, ...LEGACY_ENTRIES.filter((e) => fs.existsSync(path.join(live, e)))])]);
+    const done: Array<{ name: string; hadLive: boolean; placed: boolean }> = [];
     try {
-        rename(next, live);
-    } catch (e) {
-        if (!hadLive) throw e;
-        try {
-            rename(prev, live);
-        } catch {
-            throw new Error(`map swap failed and the restore failed too; the previous generation is at ${prev}`, {
-                cause: e,
-            });
+        for (const name of names) {
+            const step = { name, hadLive: fs.existsSync(path.join(live, name)), placed: false };
+            done.push(step);
+            if (step.hadLive) rename(path.join(live, name), path.join(prev, name));
+            if (incoming.includes(name)) {
+                rename(path.join(next, name), path.join(live, name));
+                step.placed = true;
+            }
         }
+    } catch (e) {
+        try {
+            for (const step of done.reverse()) {
+                if (step.placed) fs.rmSync(path.join(live, step.name), { recursive: true, force: true });
+                if (step.hadLive && fs.existsSync(path.join(prev, step.name))) rename(path.join(prev, step.name), path.join(live, step.name));
+            }
+        } catch {
+            throw new Error(`map swap failed and the restore failed too; the previous generation is at ${prev}`, { cause: e });
+        }
+        fs.rmSync(prev, { recursive: true, force: true });
         throw e;
     }
-    if (hadLive) fs.rmSync(prev, { recursive: true, force: true });
+    fs.rmSync(prev, { recursive: true, force: true });
 }
 
 function pct(x: number): string {
@@ -620,7 +661,7 @@ export function renderMapMd(m: MapModel, meta: MapMeta, areas: MapAreas = {}): s
                 row('Guessed edges', h.parts.guesses, pct),
                 row('Hotspot files', h.parts.hotspots, pct),
                 '',
-                'Formula: `health.formula` in `map.json`.',
+                'Formula: `health.formula` in `code/map.json`.',
                 '',
                 'Top findings:',
                 '',
@@ -635,7 +676,7 @@ export function renderMapMd(m: MapModel, meta: MapMeta, areas: MapAreas = {}): s
         [
             '## Knowledge areas',
             '',
-            'Beside Code, each area is filled by its own reader. Every fact carries a witness (file, line, hash) and its confirm state in `map.json` → `areas`.',
+            'Beside Code, each area is filled by its own reader. Every fact carries a witness (file, line, hash) and its confirm state in `code/map.json` → `areas`, and data, interfaces, runtime and delivery also in a folder each.',
             '',
             ...areaSummaryLines(areas).map((l) => `- ${md(l.slice(2))}`),
             '',
@@ -703,7 +744,7 @@ export function renderMapMd(m: MapModel, meta: MapMeta, areas: MapAreas = {}): s
             .slice(0, 3)
             .map((x) => `${code(path.posix.basename(f[x]?.path ?? ''))}`)
             .join(', ');
-        const page = a.files.length >= AREA_PAGE_MIN_FILES ? `[${a.id}](areas/${a.id}.md)` : a.id;
+        const page = a.files.length >= AREA_PAGE_MIN_FILES ? `[${a.id}](code/areas/${a.id}.md)` : a.id;
         return `| ${page} | ${md(a.name)} | ${a.files.length} | ${pct(a.cohesion)} | ${pct(a.testShare)} | ${pct(a.folderMismatch)} | ${top} |`;
     });
     sections.push([
@@ -719,7 +760,7 @@ export function renderMapMd(m: MapModel, meta: MapMeta, areas: MapAreas = {}): s
             '|---|---|---|---|---|---|---|',
             ...areaRows,
             ...(m.areas.length > AREA_ROWS
-                ? ['', `${m.areas.length - AREA_ROWS} smaller areas are listed in \`map.json\` and in \`index.html\`.`]
+                ? ['', `${m.areas.length - AREA_ROWS} smaller areas are listed in \`code/map.json\` and in \`index.html\`.`]
                 : []),
             '',
         ].join('\n'),
@@ -891,7 +932,7 @@ export function renderMapMd(m: MapModel, meta: MapMeta, areas: MapAreas = {}): s
     if (cut.length) {
         out +=
             `> Budget of ${MAP_TOKEN_BUDGET} tokens reached — cut: ${cut.join(', ')}. ` +
-            'They are in `map.json`, in the per-area pages and in `index.html`.\n';
+            'They are in `code/map.json`, in the per-area pages and in `index.html`.\n';
     }
     return out;
 }
@@ -960,14 +1001,16 @@ export const VIEWER_SCRIPTS = [
     'area_agent.js',
     'shell.js',
 ] as const;
+/** The hub's parts: a project map's plus the Projects area, which no project map carries — not even as code. */
+export const HUB_SCRIPTS = [...VIEWER_SCRIPTS.slice(0, -1), 'area_projects.js', 'shell.js'] as const;
 export const VIEWER_STYLES = ['viewer.css', 'shell.css'] as const;
 
 /**
  * The one inline script: every part inside one function scope. Joined BEFORE
  * the page hashes it, so the Content-Security-Policy pins exactly what runs.
  */
-export function viewerScript(): string {
-    return `(function () {\n'use strict';\n${VIEWER_SCRIPTS.map(readViewer).join('\n')}\n})();\n`;
+export function viewerScript(parts: readonly string[] = VIEWER_SCRIPTS): string {
+    return `(function () {\n'use strict';\n${parts.map(readViewer).join('\n')}\n})();\n`;
 }
 
 export function viewerStyle(): string {
@@ -975,6 +1018,16 @@ export function viewerStyle(): string {
 }
 
 const AREA_NAV = ['overview', 'code', 'data', 'interfaces', 'runtime', 'delivery', 'impact', 'agent'] as const;
+
+/**
+ * What the shell routes between when a page is not a project map. Only the
+ * hub sets it; there `routes` is `['projects']`, the one area no project map has.
+ */
+export interface MapShell {
+    routes: string[];
+    home: string;
+    hub?: { projects: number; indexed: number };
+}
 
 /** Escape every `<` so no file or symbol name can close the data block. */
 export function embedJson(value: unknown): string {
@@ -995,9 +1048,15 @@ function sha256(s: string): string {
  * the page cannot load anything, so "offline" is enforced rather than hoped.
  */
 export function renderHtml(m: MapModel, meta: MapMeta, areas: MapAreas = {}): string {
+    return renderPage(m, meta, areas);
+}
+
+/** The page behind {@link renderHtml}; the hub passes its own `areas` section and a {@link MapShell}. */
+export function renderPage(m: MapModel, meta: MapMeta, areas: object, shell?: MapShell): string {
     const css = viewerStyle();
-    const js = viewerScript();
-    const data = embedJson({ meta, model: m, areas });
+    const js = viewerScript(shell?.hub ? HUB_SCRIPTS : VIEWER_SCRIPTS);
+    const data = embedJson(shell ? { meta, model: m, areas, shell } : { meta, model: m, areas });
+    const nav: readonly string[] = shell?.routes ?? AREA_NAV;
     const csp = [
         "default-src 'none'",
         `script-src 'sha256-${sha256(js)}'`,
@@ -1041,7 +1100,7 @@ export function renderHtml(m: MapModel, meta: MapMeta, areas: MapAreas = {}): st
             '<rect x="30.75" y="118.75" width="57.5" height="29.5" rx="3" fill="#04070d" stroke="url(#acTerm)" stroke-width="1.3" filter="url(#acGlow)"/><path d="M40.75 129.5 L47.75 134.5 L40.75 139.5 M51.75 139.75 H61.75" fill="none" stroke="#ffb43c" stroke-width="1.8" stroke-linecap="round"/></svg>',
         '<div class="brand-name"><b>AGENT CONFIG</b><span>KNOWLEDGE MAP</span></div>',
         '</div>',
-        `<nav class="areanav" id="areanav" aria-label="Areas">${AREA_NAV.map((r) => `<a href="#/${r}" data-route="${r}">${r}</a>`).join('')}</nav>`,
+        `<nav class="areanav" id="areanav" aria-label="Areas">${nav.map((r) => `<a href="#/${r}" data-route="${r}">${r}</a>`).join('')}</nav>`,
         '</div>',
         '<div class="top-row row2">',
         '<div class="pins mono"><span class="chip" id="pin-commit"></span><span class="chip fresh" id="pin-fresh"></span></div>',
@@ -1125,13 +1184,68 @@ export function renderHtml(m: MapModel, meta: MapMeta, areas: MapAreas = {}): st
     ].join('\n');
 }
 
+/** One area's line in `manifest.json`: where its payload is, what read it, and how far to trust it. */
+export interface ManifestArea {
+    /** Map-folder-relative file holding the payload; null when no reader wrote one. */
+    path: string | null;
+    /** The reader that wrote the payload. */
+    source: string | null;
+    /** `fresh`, `behind:<n>`, `edited` or `absent` for Code; for the others `fresh`, `stale`, `contradicted`, `incomplete`, `unverifiable`, `empty` or `absent`. */
+    freshness: string;
+    completeness?: string;
+    /** Witnesses (Code: files) the payload carries — a lower bound when the read was partial. */
+    facts: number;
+    findings?: number;
+    /** Why there is nothing, or why the state is not fresh. */
+    reason?: string;
+}
+
+export interface MapManifest {
+    schema: 1;
+    generation: string;
+    commit: string;
+    state: string;
+    areas: Record<string, ManifestArea>;
+}
+
+/** What this generation of the map folder holds, area by area; no timestamp, so a redraw of one tree writes the same bytes. */
+export function mapManifest(m: MapModel, meta: MapMeta, areas: MapAreas): MapManifest {
+    const graph = meta.state === 'fresh' ? 'fresh' : meta.state === 'absent' || meta.state === '' ? 'unverifiable' : 'stale';
+    const out: Record<string, ManifestArea> = {
+        code: { path: 'code/map.json', source: 'code-graph', freshness: meta.state, facts: m.files.length },
+    };
+    const folders: readonly string[] = AREA_FOLDERS;
+    for (const id of KNOWLEDGE_AREA_IDS) {
+        const p = areas[id];
+        if (!p) {
+            out[id] = { path: null, source: null, freshness: 'absent', facts: 0, reason: 'no reader for this area ran on this tree' };
+            continue;
+        }
+        const ws = witnessesOf({ [id]: p });
+        const off = ws.filter(([, w]) => w.confirm === 'changed' || w.confirm === 'gone').length;
+        const freshness = p.empty !== undefined ? 'empty' : off > 0 ? 'contradicted' : p.completeness !== 'complete' ? 'incomplete' : graph;
+        const reason =
+            p.empty !== undefined ? p.empty : off > 0 ? `${off} witness(es) changed or gone since they were read` : freshness === 'incomplete' ? 'the reader saw only part of its population' : freshness === 'fresh' ? undefined : `graph state ${meta.state || 'absent'}`;
+        out[id] = {
+            path: folders.includes(id) ? `${id}/${id}.json` : 'code/map.json',
+            source: p.reader,
+            freshness,
+            completeness: p.completeness,
+            facts: ws.length,
+            findings: p.findings.length,
+            ...(reason ? { reason } : {}),
+        };
+    }
+    return { schema: 1, generation: meta.graph_generation ?? '', commit: meta.commit, state: meta.state, areas: out };
+}
+
 /** The map a previous `code-graph map` wrote, or null when there is none. */
 export function readMap(root: string): { meta: MapMeta; model: MapModel } | null {
     return readMapAt(graphHome(root).mapDir);
 }
 
 function readMapAt(dir: string): { meta: MapMeta; model: MapModel } | null {
-    const p = path.join(dir, 'map.json');
+    const p = mapJsonPath(dir);
     try {
         const parsed = JSON.parse(fs.readFileSync(p, 'utf-8')) as { meta?: MapMeta; model?: Partial<MapModel> } | null;
         const m = parsed?.model;
@@ -1233,6 +1347,6 @@ export function areaReport(
             .sort((x, y) => y[1] - x[1] || x[0] - y[0])
             .slice(0, cap)
             .map(([ai, w]) => ({ area: `${m.areas[ai]?.id ?? ''} ${m.areas[ai]?.name ?? ''}`, links: w })),
-        page: a.files.length >= AREA_PAGE_MIN_FILES ? path.posix.join(pageDir, 'areas', `${a.id}.md`) : null,
+        page: a.files.length >= AREA_PAGE_MIN_FILES ? path.posix.join(pageDir, 'code', 'areas', `${a.id}.md`) : null,
     };
 }
