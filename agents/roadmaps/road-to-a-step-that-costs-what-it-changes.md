@@ -214,7 +214,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 - **Resolved when:** OQ-4 and OQ-5 sit under `## Answered` in `agents/owner-questions.md`, a `## Decisions` row resolved by `owner` names this blocker with the date, and Status reads resolved.
 
 ### blocker: largest-roadmap-drain-under-forty-kb
-- **Status:** open — 2026-10-27, re-read over the 11 stores of this repository (312 transcripts, 70 closed steps since 2026-10-21): the largest active roadmap is now `road-to-a-setup-that-decides-itself` (79 KB) and no closed step of it is visible; the drains of 2026-10-24/25 on it and of 2026-10-26/27 on `road-to-routing-assurance-live-floors` show no checkbox `Edit` in any lane transcript, so `--steps` cannot join them to a step. Was: 2026-10-25, no drain has run over the largest active roadmap (`road-to-self-modification-that-a-council-must-pass`, 136 KB; one step at 90.3 KB before the § 5 step-1 change), and one step of `road-to-an-update-that-installs-itself-only-when-it-is-safe` read 50.1 KB on 2026-10-24
+- **Status:** open — 2026-10-27, with git-recorded flips joined to lane transcripts (D20): over the 11 stores of this repository (312 transcripts, 125 closed steps since 2026-10-21) the largest active roadmap, `road-to-a-setup-that-decides-itself` (79 KB), shows 5 closed steps from its 2026-10-24/25 drain, maximum 75.0 KB (4.10, one whole-file `Read`), then 68.2 KB (3.3+3.6+4.6c), 9.9 KB (4.9), 9.6 KB (4.7), 0.3 KB (5.1). Two steps read over 40 KB, so § 5 step 1 was not followed on that drain. Was: 2026-10-25, no drain
 - **Class:** 0
 - **Owner:** agent
 - **Blocks:** step 1.3
@@ -238,7 +238,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 - **Resolved when:** 4.1 is ticked with a committed `flip.reading`, and Status reads resolved.
 
 ### blocker: five-drains-on-the-flipped-table
-- **Status:** open — 2026-10-27, `--flip-readiness` reads R0 7, R1 0 (unchanged), and no receipt in the tree carries `active`: every R0/R1 tick merged since the flip touched a path outside the D18 scope, so no step has yet run at lowered depth. Was: 2026-10-25, the table went `active` (4.1, D19)
+- **Status:** open — 2026-10-27, the window has not started (D21): `--flip-readiness` reads R0 7, R1 0 (unchanged), and no receipt in the tree carries `active`: every R0/R1 tick merged since the flip touched a path outside the D18 scope, so no step has yet run at lowered depth. Was: 2026-10-25, the table went `active` (4.1, D19)
 - **Class:** 0
 - **Owner:** agent
 - **Blocks:** steps 4.2, 5.1, 5.2; AC-2, AC-3, AC-4
@@ -247,7 +247,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 - **Recommendation:** count drains from 2026-10-25; at five, read 5.1 against D14 (1) and (4) and decide 4.2 on the same data.
 - **If you do nothing:** the flipped table keeps running under 4.3's audit; Phase 5 stays open.
 - **What to do:** (1) at each drain re-run the **Run:** commands; (2) after the fifth, write the 5.1 Decisions row with both figures; (3) put 4.2's mechanism to the owner with that row; (4) run 5.2.
-- **Resolved when:** five drains on the active table are read in a Decisions row and 5.1 is ticked.
+- **Resolved when:** five drains on the active table, each with at least one step carrying an `active` receipt and counted from the first such receipt (D21), are read in a Decisions row and 5.1 is ticked. If safe-scope steps alone cannot fill that window, widening D18's scope is an owner question; nothing here acts on it.
 
 ## Decisions
 
@@ -272,6 +272,8 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 | D15 | reversible-technical | agent | Steps 1.1 and 1.2 are measured and not built; both are put to the owner for cancellation. | Async telemetry would move ~1.2 ms of a ~68 ms dispatch off the foreground for a second node start per call; a stored Stop ordinal would save ~15 ms per turn on a correctness surface. The supplied plan's hook and Stop costs (D9, D10 there) are real but not where a step's time goes: the 0.2 reading puts 53.5 % in waits and 30.3 % in model time. | a reading shows post_tool_use or Stop above 250 ms p50 on a real session. |
 | D10 | deterministic | evidence | Closure pass ran 2026-10-21: no open decision beyond the blocker. The `typed-op` hits are mentions of the word merge (a sibling slug, the `pr/merge` path, "after merge", red-after-merge); no step here merges, deploys or publishes. Prose verifies on 0.3, 1.2, 1.3 and 3.2 are made command-shaped when each step runs. | `closure_scan` listed six `typed-op` and four `unfalsifiable-verify` rows, the latter non-blocking by its own contract. | a step is executed with its prose oracle unchanged. |
 | D19 | product-owned | owner | 2026-10-25, OQ-1 (a), OQ-4 (a), OQ-5 (a), OQ-6 (a): the R0/R1 flip is active now on D18's scope with the 4.3 audit as its guard; 1.1 and 1.2 are cancelled; 4.2 waits for the flip data. | `agents/evidence/owner-directives/2026-10-25-step-costs-oq-1-4-5-6.md` | 4.3 rolls a class back, or five drains miss D14 (1). |
+| D20 | reversible-technical | agent | Orchestrator decision, 2026-10-27: fix the tool and keep the blocker's Resolved-when. `probe_turnaround --steps` now closes a lane's step from the git commit that flipped its box, when the lane's transcript flips none itself (`parseGitFlips`, `assignGitFlips`, `readSteps(…, flips)` in `src/scripts/_lib/step_anatomy.ts`). Rejected alternative: re-word the blocker around the blind spot. | Lanes under an orchestrator never `Edit` a checkbox; the orchestrator flips with `sed` and commits, so 1.3's reading saw no step of any lane-run drain. Lane rows carry the parent's cwd and branch, so the join is the dispatch prompt naming the roadmap file, not the branch. 4 tests seen red first. | a lane dispatch stops naming its roadmap file, or a flip commit lands more than 3 h after the lane's last row. |
+| D21 | reversible-technical | agent | Orchestrator decision, 2026-10-27: a drain counts toward 5.1's five only if at least one of its steps carries an `active` receipt; the window starts at the first such receipt. Tightens the blocker, weakens nothing. | `--flip-readiness` read R0 7, R1 0 on 2026-10-27 and no receipt in the tree carries `active`, so a drain since the flip compared uniform depth with uniform depth. | safe-scope steps cannot fill five drains, which puts D18's scope to the owner. |
 
 ## What verification changed
 
