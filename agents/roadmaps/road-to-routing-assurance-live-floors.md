@@ -240,7 +240,11 @@ Offered by round `inbox-2026-10-at`, same terms:
 
 ### blocker: b-live-baseline-independence
 
-- **Status:** open
+- **Status:** resolved — 2026-10-27, option (a). A session that authored no
+  corpus file froze the protocol in
+  `agents/evidence/preregistration/routing-baseline-protocol-20261027.md`,
+  committed before the first corpus case ran; the baseline artefact landed in a
+  later commit and names that file's sha256.
 - **Owner:** implementer — a session that did not author the Phase-2 corpus;
   the 2026-10-26 owner decision (OQ-15) already settled spend and scope.
 - **Blocks:** every step in this roadmap.

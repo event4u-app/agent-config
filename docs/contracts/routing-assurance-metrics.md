@@ -54,6 +54,12 @@ prompts, identical floors.
 **Unit:** a signed ratio; **0 is parity**, negative means the MCP path selects
 worse.
 
+**Correction, 2026-10-27 — the sign sentence above is inverted, kept as
+registered.** `native − mcp` is POSITIVE when the MCP path selects worse
+(0.9 − 0.8 = +0.1). The null below is unambiguous ("may not undercut … by more
+than epsilon"), so the gate reads it, not the sentence: breach iff
+`native − mcp > epsilon` (`parityVerdict` in `src/scripts/_lib/catalogue_pressure.ts`).
+
 ## Coverage ratios — the Phase 0.3 ratchet seeds, measured 2026-08-25
 
 ```bash
@@ -88,7 +94,7 @@ are different artefacts.
 
 ## Floors
 
-**Not set here, deliberately.** Phase 0.4 says each per-unit floor is its Phase
+**Not set at registration (2026-08-25), deliberately** — they are now derived, see § The floors, derived 2026-10-27 below. Phase 0.4 says each per-unit floor is its Phase
 0.2 baseline value minus a fixed tolerance, and the 0.2 baseline is a live
 harness run that has not happened. Writing floors now would be inventing them —
 the exact move 0.4 forbids in its own title (*"Derive the floors, never invent
@@ -105,6 +111,42 @@ cannot choose a tolerance after seeing the numbers:
 **Tolerance, fixed now: 0.10 absolute recall.** A unit whose baseline recall is
 0.80 gets a floor of 0.70. Chosen before any baseline exists, so it cannot be
 tuned to a result.
+
+### The floors, derived 2026-10-27
+
+The 0.2 baseline exists: `agents/evidence/metrics/routing-baseline-20261027.json`,
+captured on the host evaluator under the protocol frozen BEFORE it in
+`agents/evidence/preregistration/routing-baseline-protocol-20261027.md` (whose
+sha256 the artefact names). The floors are its units with the rule above
+applied and nothing else:
+
+```bash
+./scripts-run src/scripts/compile_trigger_evals \
+  --derive-floors agents/evidence/metrics/routing-baseline-20261027.json \
+  --tolerance 0.10 --floors docs/contracts/routing-assurance-floors.json
+```
+
+**The floors live in `docs/contracts/routing-assurance-floors.json`**, one per
+measured unit: 135 of the 179 units with a positive (the run's cost ceiling
+stopped it in hash order), 73 at 0.90 and 62 at 0. A recall figure from one run
+per unit is 0 or 1, so a 0.90 floor reads "must fire on its baseline prompt" and
+a 0 floor gates nothing — what one run per unit buys, as the protocol stated in
+advance. `tests/contracts/routing_floors_trace.test.ts` re-derives the file from
+the baseline and fails on any floor that does not trace to a row.
+
+### The floors restated as rates (6.2)
+
+A floor compares a **rate**: per unit, the fraction of repeated runs that fired
+(`trigger_rates` in `src/scripts/trigger_eval_rotation.ts`). The single-run
+baseline above is a rate with one run. The restatement introduces no new
+constant, deliberately — it is written by a session that has seen the baseline,
+so a per-tier threshold chosen now would be chosen after the numbers:
+
+- **every tier, the same rule:** `rate(unit) ≥ baseline_rate(unit) − 0.10`;
+- `baseline_rate` is re-measured at the repetition count of the first
+  rate-gated run before that run gates, and the floor follows from it by this
+  rule alone;
+- a unit with no measured baseline rate has no floor, in every tier.
 
 ## The two null hypotheses, quoted verbatim
 
@@ -139,6 +181,15 @@ live harness does, and the live harness is not PR-affordable.
 Recorded here so a green Phase-1 gate is never read as evidence that production
 routing works. It is evidence that a description did not get *less*
 distinguishable.
+
+**Measured 2026-10-27 (5.4):** `agents/evidence/metrics/routing-proxy-fidelity.json`
+— the checker's would-load verdict against what 135 host-evaluator sessions
+actually invoked on corpus positives: agreement **0.474**, with every
+disagreement in one direction (the session consulted the unit, the checker did
+not). The wired backend is the name-substring `dry` backend, so the figure
+measures that backend; none of this machine's own session prompts matched a
+corpus query. That report is the reference: a later one more than 0.10 below
+it downgrades the checker's verdicts to advisory (`applyFidelity`).
 
 The same limitation is carried in the checker's own module docstring
 (`src/scripts/description_route_check.ts`, § THE PROXY GAP) rather than only
