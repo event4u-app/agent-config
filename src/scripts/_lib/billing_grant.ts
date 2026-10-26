@@ -165,3 +165,27 @@ export function currentRunId(env: NodeJS.ProcessEnv = process.env): string | nul
     }
     return null;
 }
+
+/** Credentials that turn an Anthropic CLI child from plan quota into metered spend. */
+export const METERED_CREDENTIAL_VARS: readonly string[] = ['ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN'];
+
+/**
+ * The spawn env of a vendor-CLI seat booked as unmetered (`billable=false`).
+ *
+ * A key in the parent env makes `claude -p` bill at API rates — reported
+ * publicly, without the approval step an interactive login shows — while the
+ * seat is booked as subscription and skips every USD gate. So the key goes
+ * unless the run holds a billing grant; a user who wants API-billed seats keeps
+ * them through the grant or `mode: api`. If the stripping is unnecessary
+ * because the host would have used the subscription anyway, nothing is lost.
+ */
+export function withoutUngrantedCredentials(
+    env: NodeJS.ProcessEnv,
+    billable: boolean,
+    repoRoot: string,
+): NodeJS.ProcessEnv {
+    if (billable || hasBillingGrant(repoRoot, env)) return env;
+    const out: NodeJS.ProcessEnv = { ...env };
+    for (const name of METERED_CREDENTIAL_VARS) delete out[name];
+    return out;
+}

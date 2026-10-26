@@ -860,28 +860,28 @@ describe('quorum_min_present — config validation (ADR-224)', () => {
     });
 });
 
-// === road-to-always-on-orchestration Phase 3.4 — cli_call_budget per-provider defaults ===
+// === cli_call_budget per-provider caps — only a written cap is a cap (ADR-279 addendum) ===
 
-describe('cli_call_budget.max_calls_per_day — generous per-provider defaults (Phase 3.4)', () => {
-    it('ships every known provider populated (50/day) when the block is entirely absent', () => {
+describe('cli_call_budget.max_calls_per_day — no shipped default', () => {
+    it('caps no provider when the block is entirely absent', () => {
         const tmp = make_tmp();
         const c = cfg.load_council_config(write_yaml(tmp, MINIMAL_VALID));
         const caps = c.cli_call_budget.max_calls_per_day;
-        expect(caps.get('anthropic')).toBe(50);
-        expect(caps.get('openai')).toBe(50);
-        expect(caps.get('gemini')).toBe(50);
-        expect(caps.get('xai')).toBe(50);
-        expect(caps.get('perplexity')).toBe(50);
+        expect(caps.get('anthropic')).toBeUndefined();
+        expect(caps.get('openai')).toBeUndefined();
+        expect(caps.get('gemini')).toBeUndefined();
+        expect(caps.get('xai')).toBeUndefined();
+        expect(caps.get('perplexity')).toBeUndefined();
     });
 
-    it('an explicit per-provider entry overrides just that provider, leaving the rest at the default', () => {
+    it('an explicit per-provider entry caps just that provider', () => {
         const tmp = make_tmp();
         const payload = `${MINIMAL_VALID}cli_call_budget:\n  max_calls_per_day:\n    anthropic: 5\n`;
         const c = cfg.load_council_config(write_yaml(tmp, payload));
         const caps = c.cli_call_budget.max_calls_per_day;
         expect(caps.get('anthropic')).toBe(5);
-        expect(caps.get('openai')).toBe(50);
-        expect(caps.get('perplexity')).toBe(50);
+        expect(caps.get('openai')).toBeUndefined();
+        expect(caps.get('perplexity')).toBeUndefined();
     });
 
     it('an explicit 0 (deliberately no calls allowed) is honoured, not treated as "use the default"', () => {
@@ -918,27 +918,25 @@ describe('cli_call_budget.max_calls_per_day — generous per-provider defaults (
 describe('resolve_cli_call_caps — the single cap authority', () => {
     const PROVIDERS = ['anthropic', 'openai', 'gemini', 'xai', 'perplexity'] as const;
 
-    it('an absent block yields the DEFAULTS, never uncapped', () => {
-        // The raw-dict case that produced the live overrun. `undefined`, `{}`,
-        // and a non-dict must all land on the same guarded state — omission is
-        // not a way to switch the cap off.
+    it('an absent block yields no cap — counted, never refused (ADR-279 addendum)', () => {
         for (const raw of [undefined, null, {}, 'nonsense', 42]) {
             const caps = cfg.resolve_cli_call_caps(raw);
-            for (const p of PROVIDERS) {
-                expect(caps[p], `${p} for raw=${JSON.stringify(raw)}`).toBe(
-                    cfg.DEFAULT_CLI_CALLS_PER_DAY,
-                );
-            }
+            expect(caps, `raw=${JSON.stringify(raw)}`).toEqual({});
+            expect(caps['anthropic']).toBeUndefined();
+            expect(caps['openai']).toBeUndefined();
+            expect(caps['gemini']).toBeUndefined();
+            expect(caps['xai']).toBeUndefined();
+            expect(caps['perplexity']).toBeUndefined();
         }
     });
 
-    it('an explicit entry overrides just that provider', () => {
+    it('an explicit entry caps just that provider', () => {
         const caps = cfg.resolve_cli_call_caps({ anthropic: 5 });
         expect(caps['anthropic']).toBe(5);
-        expect(caps['openai']).toBe(cfg.DEFAULT_CLI_CALLS_PER_DAY);
+        expect(caps['openai']).toBeUndefined();
     });
 
-    it('an explicit 0 is honoured, not read as "use the default"', () => {
+    it('an explicit 0 is honoured, not read as "uncapped"', () => {
         expect(cfg.resolve_cli_call_caps({ anthropic: 0 })['anthropic']).toBe(0);
     });
 
@@ -954,10 +952,10 @@ describe('resolve_cli_call_caps — the single cap authority', () => {
             gemini: true,
             xai: 7,
         });
-        expect(caps['xai']).toBe(7);
-        expect(caps['anthropic']).toBe(cfg.DEFAULT_CLI_CALLS_PER_DAY);
-        expect(caps['openai']).toBe(cfg.DEFAULT_CLI_CALLS_PER_DAY);
-        expect(caps['gemini']).toBe(cfg.DEFAULT_CLI_CALLS_PER_DAY);
+        expect(caps).toEqual({ xai: 7 });
+        expect(caps['anthropic']).toBeUndefined();
+        expect(caps['openai']).toBeUndefined();
+        expect(caps['gemini']).toBeUndefined();
         expect(caps).not.toHaveProperty('bogus');
     });
 

@@ -78,14 +78,14 @@ afterEach(() => {
   }
 });
 
-function run(envelope: unknown): { stdout: string; stderr: string; status: number | null } {
+function run(envelope: unknown, globalRoot: string = makeGlobalRoot()): { stdout: string; stderr: string; status: number | null } {
   const r = spawnSync(TSX_BIN, [TS_SCRIPT], {
     encoding: "utf8",
     cwd: REPO_ROOT,
     input: typeof envelope === "string" ? envelope : JSON.stringify(envelope),
     // Pin the user-global root so the dev machine's real
     // ~/.event4u/agent-config/ never leaks into these tests.
-    env: { ...process.env, EVENT4U_CONFIG_HOME: makeGlobalRoot() },
+    env: { ...process.env, EVENT4U_CONFIG_HOME: globalRoot },
   });
   expect(r.status).not.toBeNull();
   return { stdout: r.stdout as string, stderr: r.stderr as string, status: r.status };
@@ -514,6 +514,49 @@ describe("delegation_nudge_hook — end-to-end (Phase 4.4)", () => {
     expect(parsed.additional_context).toContain("inherit tier");
     expect(parsed.additional_context).not.toContain("model:");
     expect(parsed.reason).toContain("delegation-nudge");
+  });
+
+  it("(a3) a stale pressure verdict changes nothing", () => {
+    const root = makeWorkspace(null);
+    const globalRoot = makeGlobalRoot();
+    fs.mkdirSync(path.join(globalRoot, "state", "quota"), { recursive: true });
+    fs.writeFileSync(
+      path.join(globalRoot, "state", "quota", "pressure.json"),
+      JSON.stringify({ at: Date.now() - 11 * 60_000, state: "hot", line: "5h window 84 %" }),
+    );
+    const { stdout } = run(
+      { event: "user_prompt_submit", platform: "claude", workspace_root: root, prompt: "fix the failing tests in these 6 files: a.ts b.ts c.ts d.ts e.ts f.ts" },
+      globalRoot,
+    );
+    expect(stdout).toContain("do-in-parallel");
+  });
+
+  it("(a2) at a hot plan window the fan-out push is replaced by the in-session line", () => {
+    const root = makeWorkspace(null);
+    const globalRoot = makeGlobalRoot();
+    const now = Date.now();
+    const resets = Math.trunc(now / 1000) + 3 * 3600;
+    void resets;
+    fs.mkdirSync(path.join(globalRoot, "state", "quota"), { recursive: true });
+    fs.writeFileSync(
+      path.join(globalRoot, "state", "quota", "pressure.json"),
+      JSON.stringify({ at: now, state: "hot", line: "5h window 84 % · resets 15:05" }),
+    );
+    const { stdout, status } = run(
+      {
+        event: "user_prompt_submit",
+        platform: "claude",
+        workspace_root: root,
+        prompt: "fix the failing tests in these 6 files: a.ts b.ts c.ts d.ts e.ts f.ts",
+      },
+      globalRoot,
+    );
+    expect(status).toBe(2);
+    const parsed = JSON.parse(stdout.trim()) as { additional_context: string; reason: string };
+    expect(parsed.additional_context).toMatch(/plan 5h window 84 %/);
+    expect(parsed.additional_context).toContain("in-session");
+    expect(parsed.additional_context).not.toContain("do-in-parallel");
+    expect(parsed.reason).toContain("fan-out withheld");
   });
 
   it("(b) an ordinary prompt injects nothing", () => {

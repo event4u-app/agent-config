@@ -58,6 +58,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { probeHostCapabilities } from '../_lib/host_capability.js';
+import { hotWindowLine } from '../_lib/pressure_state.js';
 import { recentHostMarker } from '../_lib/quota_parked.js';
 import { shadowReuseVerdict, type ReuseContext, type WorkerState } from '../_lib/worker_reuse.js';
 import {
@@ -171,6 +172,7 @@ export const RESUME_ADMISSION_OBSERVED: ReadonlySet<string> = new Set(['claude']
  */
 export interface ShadowDeps {
     host_resume?: boolean;
+    plan_window_hot?: boolean;
     workers?: readonly WorkerState[] | null;
     context?: ReuseContext | null;
 }
@@ -320,6 +322,8 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string, deps:
             ...(reuse === null ? {} : { reuse }),
             // A recent host-sourced rate marker: a new spawn would have waited.
             ...(isResume ? {} : { rate_window: recentHostMarker(consumerRoot) ? 'would_wait' : 'clear' }),
+            // A plan window projected to run out before its reset: same verdict, before the cliff.
+            ...(isResume ? {} : { plan_window: (deps.plan_window_hot ?? hotWindowLine() !== null) ? 'would_wait' : 'clear' }),
             // Shadow posture is a property of this file, not of a setting —
             // there is no code path here that can deny.
             posture: 'shadow',

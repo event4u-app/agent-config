@@ -663,6 +663,37 @@ concerns:
     fail_closed: false
     severity: advisory
     effect: notification
+  # What the user is told about plan quota and paid tokens (owner directive
+  # 2026-10-22, road-to-a-quota-the-user-sees-coming Phase 3-4). Reads the
+  # machine-wide quota ledger the status-line tap writes and emits through the
+  # user channel: one notice per (window, state, reset) on the machine at warm /
+  # hot / exhausted, one per session at 80 % context fill, one per session that
+  # may bill per token. Bound on `claude` alone for the reason `update-notice`
+  # gives. Claim files dedup across sessions. Never blocks.
+  # Kill switch: `AGENT_CONFIG_NO_QUOTA_NOTICE=1`.
+  quota-notice:
+    script: src/scripts/quota_notice_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    effect: notification
+  # The ask before AC fans out on metered money. In a session that may bill per
+  # token, with no billing grant, an Agent/Task spawn gets the host's native
+  # `ask` until the user has allowed one: the ask marks that call (hashed
+  # tool_use_id) pending, and only that call's own post_tool_use approves the
+  # session — a "no", or a spawn that ran without an ask, approves nothing. Never a
+  # deny, never an amount. `effect: confirmation` is the only effect whose `ask`
+  # the dispatcher hands to the host. CI and print mode do not silence it: an
+  # unanswered ask keeps the spawn from running (observed on 2.1.310), so a
+  # headless paid fan-out needs a billing grant. Kill switch: `AGENT_CONFIG_NO_SPAWN_ASK=1`. Same
+  # script as `quota-notice`.
+  metered-spawn-ask:
+    script: src/scripts/quota_notice_hook.ts
+    args: ['--ask']
+    fail_closed: false
+    severity: advisory
+    effect: confirmation
+    tools: [Agent, Task]
   # road-to-install-path-convergence Phase 4 — duplicate-surface probe.
   # Reads src/config/surface-matrix.yml, existence-checks declared duplicate
   # classes, nudges ONCE per day (state: agents/runtime/state/
@@ -1682,7 +1713,7 @@ platforms:
     # was not restored at all.
     session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush, journal-record]
     stop:             [chat-history, verify-before-complete, team-review-gate, end-review-nudge, obligation-settle, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, design-pass-stop, suggestion-capture, journal-record]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject, suggestion-capture, journal-record]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject, suggestion-capture, journal-record, quota-notice]
     # `rule-inject` was bound here and is not any more
     # (road-to-delivery-for-every-host 3.2, owner ruling E2). E2's strategy is
     # `user_prompt_submit` + `pre_compact`; this slot is the hottest one in the
@@ -1706,8 +1737,8 @@ platforms:
     # (+16,329 GPT tok, +69 % on the thin rule layer) are in
     # `project_thin_rules.path_only_ids`; the receiver is
     # `agents/roadmaps/stubs/road-to-a-path-route-under-delivery.md`.
-    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-plumbing-writes, block-config-weakening, block-speaking-inbox-dir, block-credential-reads, one-question-per-ask, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate, memory-recall]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, mcp-usage-observation, tool-result-bytes, edit-shape, comment-discipline, language-mirror, design-pass, journal-record, spawn-guard-shadow]
+    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-plumbing-writes, block-config-weakening, block-speaking-inbox-dir, block-credential-reads, one-question-per-ask, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, metered-spawn-ask, source-first-gate, memory-recall]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, mcp-usage-observation, tool-result-bytes, edit-shape, comment-discipline, language-mirror, design-pass, journal-record, spawn-guard-shadow, metered-spawn-ask]
     # `language-mirror` — round-5 § 6.1. `pre_compact` sets a pin-lost marker;
     # the `post_tool_use` entry above re-emits the pin exactly once while that
     # marker is set, then clears it. One extra injection per compaction EVENT —

@@ -1186,6 +1186,26 @@ describe('clients — quota gate + cli-calls counter', () => {
         expect(r.metadata).toMatchObject({ quota_source: QUOTA_SOURCE_LOCAL_BUDGET });
     });
 
+    // Owner ruling 2026-10-22 (ADR-279 addendum): with no written cap the count
+    // is a counter, never a refusal — the 51st, 100th and 1,000th call run.
+    it.each([50, 99, 999])('an uncapped client admits the call after %i booked ones', (booked) => {
+        const p = path.join(mkTmp(), 'cli-calls.json');
+        const today = new Date().toISOString().slice(0, 10);
+        fs.writeFileSync(p, JSON.stringify({ date: today, counts: { anthropic: booked } }));
+        expect(load_cli_call_counts(p)).toEqual({ anthropic: booked });
+        let spawned = false;
+        const Sub = class extends AnthropicCliClient {
+            protected override _runSubprocess(): SubprocessResult {
+                spawned = true;
+                return { returncode: 1, stdout: '', stderr: 'some unrelated explosion' };
+            }
+        };
+        const r = new Sub({ binary: '/bin/echo', cli_calls_path: p }).ask('s', 'u', 1);
+        expect(spawned).toBe(true);
+        expect(r.error).not.toBe('cli_quota_exhausted');
+        expect(load_cli_call_counts(p)).toEqual({ anthropic: booked + 1 });
+    });
+
     // `road-to-council-quota-accounting-truth` Phase 2 — `cli_quota_exhausted`
     // names two events with OPPOSITE remedies (raise/reset our cap versus wait
     // out the vendor's window). The string alone cannot tell them apart, so the

@@ -943,15 +943,15 @@ ai_team:
   # sufficient — this key must ALSO be true before delegation is reachable.
   allow_delegate: false
 
-  # Per-day cap on team calls. Team calls count into the EXISTING
+  # Optional per-day cap on team calls. Team calls count into the EXISTING
   # cli_call_budget openai bucket (~/.event4u/agent-config/cli-calls.json,
-  # daily UTC reset) — the counter tracks MACHINE-WIDE spend across ALL
+  # daily UTC reset) — the counter tracks MACHINE-WIDE use across ALL
   # subscriptions/profiles on this machine (an `agent-switch` profile
   # switch does NOT get its own counter; the bucket is deliberately one
-  # per machine, never parallel counts). This key is the team-side
-  # ceiling read against that shared bucket. 0 = block all team calls;
-  # raise if you review heavily.
-  max_calls_per_day: 50
+  # per machine, never parallel counts). Unset (default) = counted, never
+  # refused — the provider's own quota is the limit. A number is a
+  # team-side ceiling read against that shared bucket; 0 = block all team calls.
+  # max_calls_per_day: 50
 
   # Managed governance of the codex plugin's Stop-hook Review Gate
   # (road-to-team-mode Phase 4). The gate itself stays upstream's; these

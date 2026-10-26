@@ -371,8 +371,8 @@ export interface TeamReviewQuota {
     readonly provider: string;
     /** Today's call count in that bucket AFTER this run. */
     readonly used: number;
-    /** `ai_team.max_calls_per_day` — the team-side ceiling on the shared bucket. */
-    readonly ceiling: number;
+    /** `ai_team.max_calls_per_day` — the team-side ceiling on the shared bucket; `null` = none. */
+    readonly ceiling: number | null;
 }
 
 export interface TeamReviewEnvelope {
@@ -600,10 +600,10 @@ function _envelope_from_response(
             blocking_reason =
                 response.metadata?.['quota_source'] === QUOTA_SOURCE_PROVIDER
                     ? `the ${quota.provider} CLI refused the call as over its own quota ` +
-                      `(local bucket ${quota.used}/${quota.ceiling}) — the provider's window ` +
+                      `(local bucket ${quota.used}/${quota.ceiling ?? 'uncapped'}) — the provider's window ` +
                       'governs, not ours. No review was produced.'
                     : `daily cli-call quota exhausted for the shared ${quota.provider} bucket ` +
-                      `(${quota.used}/${quota.ceiling}) — resets at UTC midnight, or clear it with ` +
+                      `(${quota.used}/${quota.ceiling ?? 'uncapped'}) — resets at UTC midnight, or clear it with ` +
                       '`agent-config council:quota --reset <provider> --confirm`. ' +
                       'No review was produced.';
         } else {

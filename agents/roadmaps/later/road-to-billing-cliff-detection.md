@@ -13,6 +13,13 @@ execution:
 > here rather than linked). Original inbox note:
 > `agents/tmp.old/agent-cost-limits.txt`.
 >
+> **Arrivals:** 2 — latest `inbox-2026-10-ax` (2026-10-25): the owner reports
+> that AC no longer warns at the plan limit and asks for a warning and an ask
+> before paid tokens, but rules out stopping. The warning half went to
+> `road-to-a-quota-the-user-sees-coming` (status-line `rate_limits`, now a
+> documented host field); the stop-and-ask at the credits cliff stays here and
+> is superseded in spirit by that ruling — reconcile the Goal before resuming.
+>
 > **Owner:** maintainer. **Review by:** 2027-02-22. Both are here because the
 > council's one refinement on the carry disposition was that a `later/`
 > roadmap without a named owner and a review date is how contingent work

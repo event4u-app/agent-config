@@ -47,6 +47,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { vendorPrefix } from '../_lib/egress_rules.js';
+import { withoutUngrantedCredentials } from '../_lib/billing_grant.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { boundFor, lightLaunchFor } from './cli_agency_bounds.js';
 import { _cliVersion, _subagentModelCeiling } from './cli_launch_env.js';
@@ -1368,13 +1369,18 @@ export abstract class CliClient extends ExternalAIClient {
             // (probed live 2026-08-10; see _lib/session_role.ts).
             // The optional model ceiling (subagents.model_ceiling, class C)
             // rides the same spawn: a spend cap the human set per install.
-            env: hardenedSpawnEnv({
-                [SESSION_ROLE_ENV]: 'worker',
-                ...((): Record<string, string> => {
-                    const ceiling = _subagentModelCeiling();
-                    return ceiling !== null ? { CLAUDE_CODE_SUBAGENT_MODEL: ceiling } : {};
-                })(),
-            }),
+            // An unmetered seat loses an Anthropic key it holds no grant for.
+            env: withoutUngrantedCredentials(
+                hardenedSpawnEnv({
+                    [SESSION_ROLE_ENV]: 'worker',
+                    ...((): Record<string, string> => {
+                        const ceiling = _subagentModelCeiling();
+                        return ceiling !== null ? { CLAUDE_CODE_SUBAGENT_MODEL: ceiling } : {};
+                    })(),
+                }),
+                this.billable,
+                process.cwd(),
+            ),
         };
         if (stdinPayload !== null) {
             spawnOpts.input = stdinPayload;

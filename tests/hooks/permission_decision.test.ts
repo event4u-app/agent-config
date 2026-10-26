@@ -100,8 +100,45 @@ describe('_permission_for — four gates, each sufficient to withhold', () => {
         expect(_permission_for('pre_tool_use', READ, 0, ['allow', 'deny'])).toBeNull();
     });
 
-    it('withholds when a concern asked', () => {
-        expect(_permission_for('pre_tool_use', READ, 0, ['allow', 'ask'])).toBeNull();
+    it('a confirmation concern that asked gets the host ask, carrying its own reason', () => {
+        const verdict = _concern_permission_verdict(0, { decision: 'ask', reason: 'this session may bill per token' }, 'confirmation');
+        const p = _permission_for('pre_tool_use', READ, 0, ['allow', verdict]);
+        expect(p).toEqual({ decision: 'ask', reason: 'this session may bill per token' });
+    });
+
+    it('an ask from any other effect still only withholds the allow', () => {
+        const verdict = _concern_permission_verdict(0, { decision: 'ask', reason: 'please' }, 'notification');
+        expect(verdict).toBe('ask');
+        expect(_permission_for('pre_tool_use', READ, 0, ['allow', verdict])).toBeNull();
+    });
+
+    it('the reason reaches the host as one bounded line without control characters', () => {
+        const hostile = `line one\n\u001b[31mred\u0007\r\n${'x'.repeat(500)}`;
+        const verdict = _concern_permission_verdict(0, { decision: 'ask', reason: hostile }, 'confirmation');
+        const reason = _permission_for('pre_tool_use', READ, 0, [verdict])?.reason ?? '';
+        expect(reason).toMatch(/^line one \[31mred x+$/);
+        expect(reason.length).toBeLessThanOrEqual(300);
+    });
+
+    it('an empty confirmation reason emits nothing, and several reasons stay under 600 characters', () => {
+        const empty = _concern_permission_verdict(0, { decision: 'ask', reason: ' \n\t ' }, 'confirmation');
+        expect(_permission_for('pre_tool_use', READ, 0, [empty])).toBeNull();
+        const many = [1, 2, 3, 4].map(() => _concern_permission_verdict(0, { decision: 'ask', reason: 'y'.repeat(300) }, 'confirmation'));
+        expect(_permission_for('pre_tool_use', READ, 0, many)?.reason.length).toBe(600);
+    });
+
+    it('a reason belongs to its dispatch only', () => {
+        _concern_permission_verdict(0, { decision: 'ask', reason: 'first' }, 'confirmation');
+        _permission_for('post_tool_use', READ, 0, ['ask']);
+        expect(_permission_for('pre_tool_use', READ, 0, ['ask'])).toBeNull();
+    });
+
+    it('an ask on any event but pre_tool_use is not emitted', () => {
+        expect(_permission_for('post_tool_use', READ, 0, ['ask'])).toBeNull();
+    });
+
+    it('deny beside an ask is still withheld, never turned into an ask', () => {
+        expect(_permission_for('pre_tool_use', READ, 0, ['ask', 'deny'])).toBeNull();
     });
 
     it('withholds when the reduced severity is not allow', () => {

@@ -103,6 +103,7 @@ import { classifyLadder, type LadderRung } from "../_lib/judgment_ladder.js";
 import { resolveSessionRole } from "../_lib/session_role.js";
 import { resolveSubagentRouting, type Tier } from "../_lib/subagent_routing.js";
 import { isSyntheticPrompt } from "../_lib/prompt_shape.js";
+import { hotWindowLine } from "../_lib/pressure_state.js";
 import { handKindFromPrompt, type HandKind } from "../_lib/hand_kinds.js";
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 import { councilConfigPath, freeRungFor } from "../ai_council/free_rung.js";
@@ -597,6 +598,20 @@ function _workspaceRoot(envelope: JsonObject): string {
   return process.cwd();
 }
 
+/**
+ * Near the end of a plan window the nudge stops pushing fan-out — the owner's
+ * "throttle subagents at the end of the limit", without refusing anything.
+ * `null` unless a fresh verdict reads `hot` or worse, so an unknown or quiet
+ * window changes nothing.
+ */
+export function windowPressureLine(hotWindow: string | null): string | null {
+  if (hotWindow === null) return null;
+  return (
+    `agent-config: plan ${hotWindow}. Do this in-session or by resuming a worker you already ` +
+    "have — a fresh fan-out pays a full context per worker from what is left of the window."
+  );
+}
+
 export function main(): number {
   let envelope: JsonValue = {};
   try {
@@ -631,6 +646,13 @@ export function main(): number {
   });
   if (!result) {
     return EXIT_ALLOW; // anti-canary default: no verdict → no output
+  }
+  const window = windowPressureLine(hotWindowLine());
+  if (window !== null) {
+    process.stdout.write(
+      `${JSON.stringify({ decision: "warn", reason: "delegation-nudge: fan-out withheld, plan window under pressure", additional_context: window })}\n`,
+    );
+    return EXIT_WARN;
   }
 
   process.stdout.write(

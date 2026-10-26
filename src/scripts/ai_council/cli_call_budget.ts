@@ -60,13 +60,6 @@ export const CLI_CONSUMER_UNKNOWN = 'unknown';
 export const QUOTA_SOURCE_LOCAL_BUDGET = 'local_budget';
 export const QUOTA_SOURCE_PROVIDER = 'provider';
 
-/**
- * Generous per-provider daily guard for `mode: cli` / `mode: auto` members.
- * Sized as a guard against silent quota exhaustion on an always-on pass, not as
- * a brake on normal use.
- */
-export const DEFAULT_CLI_CALLS_PER_DAY = 50;
-
 /** Attribution sidecar path beside a counter-state path. */
 export function attributionPath(target: string): string {
     return `${target}${CLI_CALLS_ATTRIBUTION_SUFFIX}`;
@@ -76,12 +69,11 @@ export function attributionPath(target: string): string {
  * Resolve the per-provider daily cap map — the SINGLE authority for that
  * question, used by both the gate and the report.
  *
- * Seeds every known provider with the default, then applies the caller's
- * overrides. An absent, empty, or malformed mapping therefore yields the
- * DEFAULTS, never "uncapped": omission is not a way to switch the guard off.
- * That was the live defect — a raw `.ai-council.yml` dict with a commented-out
- * `cli_call_budget:` block left the map empty, the per-member lookup fell back to
- * `null`, and `ask()` reads `null` as uncapped while still booking.
+ * Only a cap the user wrote is a cap. An absent, empty, or malformed mapping
+ * yields NO entry for that provider, which the gate reads as uncapped: the call
+ * is booked into the counter and never refused on count. The owner removed the
+ * shipped 50-per-day default on 2026-10-22 (ADR-279 addendum) — a count is the
+ * wrong unit for plan quota, and the provider's own refusal is the real limit.
  *
  * Deliberately LENIENT where the strict config builder throws: it skips an
  * unknown provider or a bad value instead of raising, because two consumers are
@@ -94,13 +86,10 @@ export function resolveCliCallCaps(
     validProviders: Iterable<string>,
 ): Record<string, number> {
     const out: Record<string, number> = {};
-    for (const provider of validProviders) {
-        out[provider] = DEFAULT_CLI_CALLS_PER_DAY;
-    }
     if (!_isObject(raw)) {
         return out;
     }
-    const known = new Set(Object.keys(out));
+    const known = new Set(validProviders);
     for (const [provider, value] of Object.entries(raw)) {
         if (!known.has(provider)) {
             continue;
