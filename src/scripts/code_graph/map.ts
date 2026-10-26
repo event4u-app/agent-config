@@ -36,7 +36,8 @@ import {
     outcomeScores,
     prOverlap,
 } from './map_model.js';
-import { areaProblems, areaSummaryLines, type MapAreas } from './map_areas.js';
+import { produceAreas } from './map_area_payloads.js';
+import { areaProblems, areaSummaryLines, type MapAreas, type MapTour } from './map_areas.js';
 import { loadGraph } from './query.js';
 import type { CodeGraph } from './types.js';
 import { dead, repoEntryPoints } from './verbs.js';
@@ -320,11 +321,16 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
     ) {
         throw new Error(`refusing to write a map into ${outDir}: it is not empty and holds no map.json`);
     }
-    const areas = opts.areas ?? {};
-    const problems = areaProblems(areas);
-    if (problems.length) throw new Error(`refusing to draw the map: the areas section is unsafe or unreadable — ${problems.slice(0, 5).join('; ')}`);
+    if (opts.areas) {
+        const given = areaProblems(opts.areas);
+        if (given.length) throw new Error(`refusing to draw the map: the areas section is unsafe or unreadable — ${given.slice(0, 5).join('; ')}`);
+    }
     const cachePath = opts.cachePath ?? home.cachePath;
     const { graph, built } = await loadOrBuildGraph(root, cachePath, opts.noBuild === true);
+    const produced = opts.areas ? { areas: opts.areas, erd: [] } : produceAreas(root, graph, { ...(opts.diffRev !== undefined ? { diffRev: opts.diffRev } : {}), previousTours: previousTours(outDir) });
+    const areas = produced.areas;
+    const problems = areaProblems(areas);
+    if (problems.length) throw new Error(`refusing to draw the map: the areas section is unsafe or unreadable — ${problems.slice(0, 5).join('; ')}`);
     let diff: { rev: string; changed: string[] } | undefined;
     if (opts.diffRev !== undefined) {
         const changed = diffFiles(root, opts.diffRev);
@@ -386,6 +392,10 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
         }
         write('index.html', renderHtml(model, meta, areas));
         carryForeignEntries(outDir, next);
+        // ERD pages share data/ with the user's snapshot and oracle files: replace only the pages.
+        const dataDir = path.join(next, 'data');
+        if (fs.existsSync(dataDir)) for (const f of fs.readdirSync(dataDir)) if (/^schema-.*\.md$/.test(f)) fs.rmSync(path.join(dataDir, f));
+        for (const page of produced.erd) write(page.file, page.content);
         swapIn(next, outDir, prev);
     } finally {
         fs.rmSync(next, { recursive: true, force: true });
@@ -1128,6 +1138,16 @@ export function renderHtml(m: MapModel, meta: MapMeta, areas: MapAreas = {}): st
 /** The map a previous `code-graph map` wrote, or null when there is none. */
 export function readMap(root: string): { meta: MapMeta; model: MapModel } | null {
     return readMapAt(graphHome(root).mapDir);
+}
+
+/** The tours of the map in `dir`, so a step whose input changed since is marked stale. */
+function previousTours(dir: string): MapTour[] {
+    try {
+        const parsed = JSON.parse(fs.readFileSync(path.join(dir, 'map.json'), 'utf-8')) as { areas?: { tours?: MapTour[] } };
+        return Array.isArray(parsed.areas?.tours) ? parsed.areas.tours : [];
+    } catch {
+        return [];
+    }
 }
 
 function readMapAt(dir: string): { meta: MapMeta; model: MapModel } | null {

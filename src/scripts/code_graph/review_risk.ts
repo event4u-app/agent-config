@@ -80,7 +80,7 @@ export function diffHunks(root: string, rev: string): Hunk[] | null {
     if (rev.startsWith('-')) return null;
     let out: string;
     try {
-        out = gitProbe(root, ['-c', 'core.quotePath=false', 'diff', '-U0', '--no-color', '--no-ext-diff', rev, '--'], { maxBuffer: 256 * 1024 * 1024 });
+        out = gitProbe(root, ['-c', 'core.quotePath=false', 'diff', '-U0', '--relative', '--no-color', '--no-ext-diff', rev, '--'], { maxBuffer: 256 * 1024 * 1024 });
     } catch {
         return null;
     }

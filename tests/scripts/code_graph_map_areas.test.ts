@@ -67,7 +67,7 @@ describe('the areas payload contract', () => {
 
 describe('map.json carries the areas section', () => {
     it('writes an empty section when no reader ran, and the page says so per area', async () => {
-        const res = await buildMap(root);
+        const res = await buildMap(root, { areas: {} });
         const doc = JSON.parse(fs.readFileSync(path.join(res.outDir, 'map.json'), 'utf-8')) as { areas?: unknown; model?: unknown };
         expect(doc.areas).toEqual({});
         expect(fs.readFileSync(path.join(res.outDir, 'MAP.md'), 'utf-8')).toMatch(/## Knowledge areas[\s\S]*- data: no data yet/);

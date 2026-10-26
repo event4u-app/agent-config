@@ -75,6 +75,12 @@ export interface DataColumn {
     nullable: boolean;
     key?: 'pk' | 'fk' | 'uk' | 'ix';
     witness: Witness;
+    /**
+     * The column as the actual schema (a T3 snapshot or T4 oracle file) has it;
+     * `null` when that schema covers the table and lacks the column. Absent when
+     * no actual schema covers the table.
+     */
+    actual?: { type: string; nullable: boolean; witness: Witness } | null;
 }
 
 export interface DataTable {
@@ -107,6 +113,10 @@ export interface DataRelation {
 
 export interface DataPayload extends AreaPayloadBase {
     engine?: string;
+    /** Files the actual schema was read from (T3 snapshots, T4 oracle output). */
+    actualSources?: string[];
+    /** One Mermaid ERD page per cluster of tables joined by foreign keys. */
+    erd?: Array<{ cluster: string; file: string; tables: string[] }>;
     tables: DataTable[];
     foreignKeys: DataForeignKey[];
     relations: DataRelation[];
@@ -321,7 +331,10 @@ function witnessesOf(areas: MapAreas): Array<[string, Witness]> {
     if (d) {
         for (const t of d.tables) {
             push(`data table ${t.name}`, t.witness);
-            for (const c of t.columns) push(`data column ${t.name}.${c.name}`, c.witness);
+            for (const c of t.columns) {
+                push(`data column ${t.name}.${c.name}`, c.witness);
+                push(`data actual column ${t.name}.${c.name}`, c.actual?.witness);
+            }
         }
         for (const k of d.foreignKeys) push(`data fk ${k.from.table}.${k.from.column}`, k.witness);
         for (const r of d.relations) push(`data relation ${r.from} → ${r.to}`, r.witness);
