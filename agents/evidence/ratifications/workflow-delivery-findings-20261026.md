@@ -76,3 +76,17 @@ commit (a later merge must itself pass the same check, so this is policy, not a
 bypass); and the lane's directory listing falls back to the manifest on a
 filesystem error instead of reporting it (the strict gate reads tracked files
 and does not share that fallback).
+
+## Gain, risk, rollback — for the owner's merge decision
+
+- **Gain:** an edit to `.github/actions/setup-task` alone now runs the eight
+  workflow triggers that use it, including the required Consistency check; no
+  deploy job runs without a verification job before it.
+- **Risk:** Consistency runs on more pull requests (those touching only the
+  setup action), which costs runner minutes and cannot block a pull request it
+  did not block before for any other reason than a real red. The new release
+  check refuses a release when `main` is not the merge commit of a pull request
+  with green required checks, or moves between verification and release; the
+  remedy in both cases is re-running the workflow.
+- **Rollback:** revert the pull request; every change is in workflow files,
+  the lane, one gate and this evidence, with no state written anywhere.
