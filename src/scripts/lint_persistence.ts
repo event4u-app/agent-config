@@ -103,6 +103,7 @@ export function run_lint(dir: string, stacks: StackId[], audit_scope_file?: stri
         }
     }
 
+    const judged = stacks.includes('eloquent') || stacks.includes('prisma') ? index_parity() : null;
     const active = findings.filter((f) => !f.waived);
     return {
         findings,
@@ -111,8 +112,8 @@ export function run_lint(dir: string, stacks: StackId[], audit_scope_file?: stri
         waived_count: findings.filter((f) => f.waived).length,
         empty_reason_waivers,
         stacks,
-        engines: parity?.engines ?? {},
-        engine_unverified: parity?.engine_unverified ?? 0,
+        engines: judged?.engines ?? {},
+        engine_unverified: judged?.engine_unverified ?? 0,
     };
 }
 
