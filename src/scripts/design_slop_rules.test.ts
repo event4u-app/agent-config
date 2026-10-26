@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { SLOP_RULES, type DesignContext } from "./design_slop_rules.js";
+import { ALL_SLOP_RULES, scanRender } from "./design_slop_render_rules.js";
 import { scanFile } from "./lint_design_slop.js";
+import type { StyleRow } from "./design_slop_rules.js";
 
 // Context with no DESIGN.md → all gates OFF, every rule active.
 const NO_CTX: DesignContext = { raw: "", has: () => false };
@@ -179,9 +181,9 @@ function findingsFor(ruleId: string, content: string, ext: string, ctx = NO_CTX)
 
 describe("design-slop rule registry", () => {
   it("every rule has a unique id + a catalog id", () => {
-    const ids = SLOP_RULES.map((r) => r.id);
+    const ids = ALL_SLOP_RULES.map((r) => r.id);
     expect(new Set(ids).size).toBe(ids.length);
-    for (const r of SLOP_RULES) {
+    for (const r of ALL_SLOP_RULES) {
       expect(r.id).toMatch(/^slop-/);
       expect(r.catalogId).toMatch(/^[A-Z]+\d+$/);
       expect(r.engines.length).toBeGreaterThan(0);
@@ -189,11 +191,12 @@ describe("design-slop rule registry", () => {
   });
 
   it("no untested tell — every registry rule has a +/- fixture", () => {
-    for (const r of SLOP_RULES) {
-      expect(FIXTURES[r.id], `missing fixture for ${r.id}`).toBeDefined();
+    for (const r of ALL_SLOP_RULES) {
+      const fixture = r.engines.includes("render") ? RENDER_FIXTURES[r.id] : FIXTURES[r.id];
+      expect(fixture, `missing fixture for ${r.id}`).toBeDefined();
     }
     // and no orphan fixtures
-    const ids = new Set(SLOP_RULES.map((r) => r.id));
+    const ids = new Set(ALL_SLOP_RULES.map((r) => r.id));
     for (const k of Object.keys(FIXTURES)) {
       expect(ids.has(k), `orphan fixture ${k}`).toBe(true);
     }
@@ -209,6 +212,96 @@ describe("design-slop rule registry", () => {
       });
     }
   });
+});
+
+/**
+ * Render-engine rules read `ui:render` rows, so their unit fixtures are rows:
+ * no browser, so they run in CI. The rendered corpus lives in
+ * `internal/bench/corpora/design-slop-render/` (browser-gated bench).
+ */
+const row = (i: number, o: Partial<StyleRow> & { rect: string }): StyleRow => ({
+  index: String(i),
+  selector: "div",
+  visible: "1",
+  parents: "",
+  class: "",
+  "background-color": "rgb(255, 255, 255)",
+  "border-top-width": "0px",
+  "border-left-width": "0px",
+  "border-radius": "0px",
+  "box-shadow": "none",
+  "overflow-x": "visible",
+  "overflow-y": "visible",
+  position: "static",
+  "font-size": "16px",
+  ...o,
+});
+const HTML = row(0, { selector: "html", rect: "0,0,1440,900" });
+const card = (i: number, rect: string, parents: string, extra: Partial<StyleRow> = {}) =>
+  row(i, { rect, parents, "border-top-width": "1px", "border-radius": "12px", ...extra });
+
+export const RENDER_FIXTURES: Record<string, { positive: StyleRow[]; negative: StyleRow[] }> = {
+  "slop-l7-overflow": {
+    positive: [HTML, row(1, { rect: "0,0,1600,80", parents: "0" })],
+    negative: [
+      HTML,
+      row(1, { rect: "0,0,800,300", parents: "0", "overflow-x": "auto" }),
+      row(2, { selector: "table", rect: "0,0,1600,300", parents: "1,0" }),
+      row(3, { selector: "a", rect: "-10000,0,120,20", parents: "0" }),
+    ],
+  },
+  "slop-l6-clipped-popover": {
+    positive: [
+      HTML,
+      row(1, { rect: "40,40,480,56", parents: "0", "overflow-x": "hidden", "overflow-y": "hidden" }),
+      row(2, { rect: "308,84,200,180", parents: "1,0", position: "absolute" }),
+    ],
+    negative: [
+      HTML,
+      row(1, { rect: "40,40,320,300", parents: "0", "overflow-x": "hidden", "overflow-y": "hidden" }),
+      row(2, { rect: "60,90,212,180", parents: "1,0", position: "absolute" }),
+      row(3, { rect: "60,90,212,180", parents: "1,0", position: "fixed" }),
+    ],
+  },
+  "slop-v7-nested-cards": {
+    positive: [HTML, card(1, "32,32,900,500", "0"), card(2, "56,80,850,400", "1,0"), card(3, "80,130,800,200", "2,1,0")],
+    negative: [
+      HTML,
+      row(1, { rect: "32,32,900,500", parents: "0", "background-color": "rgb(243, 244, 246)", "box-shadow": "0px 0px 0px 1px rgb(0, 0, 0)" }),
+      card(2, "56,80,850,400", "1,0", { "background-color": "rgb(229, 231, 235)" }),
+      card(3, "80,130,800,200", "2,1,0", { "box-shadow": "rgba(0, 0, 0, 0.1) 0px 2px 8px 0px" }),
+    ],
+  },
+  "slop-l2-identical-cards": {
+    positive: [HTML, row(1, { rect: "48,100,1344,200", parents: "0" }), card(2, "48,100,432,180", "1,0"), card(3, "504,100,432,180", "1,0"), card(4, "960,100,432,180", "1,0")],
+    negative: [HTML, row(1, { rect: "48,100,300,700", parents: "0" }), card(2, "48,100,300,180", "1,0"), card(3, "48,300,300,180", "1,0"), card(4, "48,500,300,180", "1,0")],
+  },
+  "slop-l1-hero-metric": {
+    positive: [
+      HTML,
+      row(1, { rect: "0,0,1440,400", parents: "0", "background-image": "linear-gradient(135deg, rgb(79, 70, 229), rgb(147, 51, 234))" }),
+      row(2, { selector: "p", rect: "48,48,400,90", parents: "1,0", "font-size": "72px", text: "$48,210" }),
+      row(3, { rect: "48,250,120,36", parents: "1,0", "font-size": "28px", text: "1,204" }),
+      row(4, { rect: "216,250,120,36", parents: "1,0", "font-size": "28px", text: "98.4%" }),
+      row(5, { rect: "384,250,120,36", parents: "1,0", "font-size": "28px", text: "312" }),
+    ],
+    negative: [
+      HTML,
+      row(2, { selector: "p", rect: "48,48,400,90", parents: "0", "font-size": "64px", text: "99.95%" }),
+      row(3, { rect: "900,60,200,36", parents: "0", "font-size": "28px", text: "412 ms" }),
+      row(4, { rect: "900,120,200,36", parents: "0", "font-size": "28px", text: "3" }),
+      row(5, { rect: "900,180,200,36", parents: "0", "font-size": "28px", text: "0.02%" }),
+    ],
+  },
+};
+
+describe("render-engine rules fire on their positive rows and stay clean on the negative", () => {
+  for (const [id, fx] of Object.entries(RENDER_FIXTURES)) {
+    it(id, () => {
+      expect(scanRender(fx.positive, "p", NO_CTX).filter((f) => f.rule === id).length, "positive must fire").toBeGreaterThan(0);
+      expect(scanRender(fx.negative, "n", NO_CTX).filter((f) => f.rule === id), "negative must be clean").toEqual([]);
+    });
+  }
 });
 
 describe("context gates suppress when DESIGN.md declares intent", () => {

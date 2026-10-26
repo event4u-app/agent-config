@@ -253,7 +253,7 @@ are listed in § Quality floors.
 | V4 | backed | |
 | V5 | judgment-only | icon register collision is a visual-style comparison |
 | V6 | judgment-only | demoted 2026-10-26 at M1 = 1 on the near-miss holdout split: hatching that marks unavailable calendar slots is a state, not a background texture; not tuned against the holdout split |
-| V7 | judgment-only | DOM-structure nesting depth, measured too false-positive-prone |
+| V7 | backed | promoted 2026-10-26 (render engine): three nested surfaces of the same weight; a hierarchy whose levels differ in weight stays clean |
 | V8 | backed | |
 | V9 | backed | promoted 2026-10-26: M1 = 0 on both near-miss splits; grain on a flat colour stays clean, only grain composed with a gradient in one rule fires |
 | C1 | judgment-only | the tell is the combination *as the primary scheme*; which colours are primary is a judgment |
@@ -264,8 +264,8 @@ are listed in § Quality floors.
 | C6 | judgment-only | demoted 2026-08-13 at M1 = 4 of 32 clean files; the rule counted every saturated hue, so one accent plus a semantic danger colour reached its threshold — which is correct design, not the tell this entry describes |
 | C7 | judgment-only | theme inversion may be deliberate emphasis |
 | T1 | judgment-only | requires comparing optical weight across the document |
-| T2 | judgment-only | requires knowing which element is the hero |
-| T3 | judgment-only | icon-tile stack; DOM-structure analysis, too false-positive-prone |
+| T2 | judgment-only | own analysis 2026-10-26: the override is a documented rationale, which no render shows; an italic serif hero renders the same either way |
+| T3 | judgment-only | own analysis 2026-10-26: the override (custom icons that carry meaning) differs from the tell only in where an icon came from, which no render shows |
 | T4 | backed | |
 | T5 | judgment-only | copy phrase-list; that mechanism is council-rejected |
 | T6 | backed | |
@@ -275,13 +275,13 @@ are listed in § Quality floors.
 | T10 | backed | |
 | T11 | witness | `ui:render --profile asset` reports `geometry/font-synthesised`; fixture `missing-weight-reads-synthesised` |
 | T12 | backed | |
-| L1 | judgment-only | composite structural template |
-| L2 | judgment-only | three-identical-card grid; DOM-structure analysis |
+| L1 | backed | promoted 2026-10-26 (render engine): a giant number with a row of three or four stats on a gradient; a primary metric with context in a varied arrangement stays clean |
+| L2 | backed | promoted 2026-10-26 (render engine) after one tuning: three or more identical surfaces side by side in a row; a stacked list of equal cards and varied tiers stay clean |
 | L3 | deferred | spacing-multiple uniformity is a design-system opinion |
 | L4 | backed | |
 | L5 | floor | line length, Q3 |
-| L6 | judgment-only | requires an ancestor relation a flat text pass cannot establish |
-| L7 | judgment-only | requires a render |
+| L6 | backed | promoted 2026-10-26 (render engine): an absolutely positioned box cut by an overflow-clipping ancestor; a contained menu and a fixed one stay clean |
+| L7 | backed | promoted 2026-10-26 (render engine): M1 = 0 on the rendered near-misses, which are scoped to the viewport they were written for; reads every viewport, so it also finds overflow at 375 and 320 px |
 | L8 | backed | |
 | L9 | backed | |
 | L10 | backed | |

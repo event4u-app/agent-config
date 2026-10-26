@@ -7,7 +7,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
 import type { Severity } from "./design_slop_rules.js";
-import { loadDesignContext, scanFile, scanRender, suppressions, wouldHaveSuppressed, type Finding } from "./lint_design_slop.js";
+import { scanRender } from "./design_slop_render_rules.js";
+import { loadDesignContext, scanFile, suppressions, wouldHaveSuppressed, type Finding } from "./lint_design_slop.js";
 
 interface ProjectConfig {
   ignoreRules?: string[];

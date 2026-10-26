@@ -53,6 +53,15 @@ tasks:
       in internal/bench/corpora/design-slop-nearmiss-PREREG.md.
     cmd: npx tsx internal/bench/design-slop-nearmiss/run.ts {{.CLI_ARGS}}
 
+  bench:design-slop-render:
+    silent: true
+    desc: |
+      Renders the render-engine near-misses and positives in Chromium and checks
+      the bar: no render rule fires on a near-miss (at the viewport it was
+      written for), every render rule fires on its positive. Browser-gated;
+      skips where no Chromium resolves.
+    cmd: npx vitest run tests/scripts/design_slop_render_bench.test.ts
+
   bench:design-consistency-shadow:
     silent: true
     desc: |

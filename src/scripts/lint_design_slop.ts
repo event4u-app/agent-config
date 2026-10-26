@@ -45,7 +45,6 @@ import {
   type DesignContext,
   type Engine,
   type Severity,
-  type StyleRow,
 } from "./design_slop_rules.js";
 import { ignoreReason } from "./_lib/ignore_reason.js";
 
@@ -164,36 +163,6 @@ function parseIgnores(lines: string[]): Map<string, Map<number, string | null>> 
     if (cur && cur[1]) add(cur[1].toLowerCase(), i + 1, reason);
   }
   return ignores;
-}
-
-/**
- * Run the `render`-engine rules over one viewport's captured rows. A text scan
- * never reaches them: they need a rendered page, which only `ui:render` makes.
- */
-export function scanRender(rows: StyleRow[], relPath: string, ctx: DesignContext): Finding[] {
-  const out: Finding[] = [];
-  for (const rule of SLOP_RULES) {
-    if (!rule.engines.includes("render")) continue;
-    if (rule.gated && rule.gated(ctx)) continue;
-    let hits;
-    try {
-      hits = rule.detect({ content: "", lines: [], ext: ".render", ctx, rows });
-    } catch {
-      continue;
-    }
-    for (const h of hits) {
-      out.push({
-        rule: rule.id,
-        catalogId: rule.catalogId,
-        severity: rule.severity,
-        file: relPath,
-        line: h.line,
-        snippet: h.snippet,
-        message: rule.message,
-      });
-    }
-  }
-  return out;
 }
 
 export function scanFile(

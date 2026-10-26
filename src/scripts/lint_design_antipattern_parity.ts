@@ -38,6 +38,8 @@ const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
 const CATALOG = path.join(REPO, 'docs', 'guidelines', 'design-antipatterns.md');
 const REGISTRY = path.join(REPO, 'src', 'scripts', 'design_slop_rules.ts');
+// The render-engine rules live apart so the hook bundle does not carry them.
+const RENDER_REGISTRY = path.join(REPO, 'src', 'scripts', 'design_slop_render_rules.ts');
 
 /** The six statuses § Detector status may use. */
 export const STATUSES = ['backed', 'floor', 'judgment-only', 'deferred', 'candidate', 'witness'] as const;
@@ -274,7 +276,7 @@ export function main(): number {
     try {
         assertWatchlistResolves({
             gate: 'lint_design_antipattern_parity',
-            candidates: [path.relative(REPO, CATALOG), path.relative(REPO, REGISTRY), ...WITNESS_SOURCES],
+            candidates: [path.relative(REPO, CATALOG), path.relative(REPO, REGISTRY), path.relative(REPO, RENDER_REGISTRY), ...WITNESS_SOURCES],
             repoRoot: REPO,
         });
     } catch (exc) {
@@ -286,7 +288,7 @@ export function main(): number {
     }
 
     const catalogMd = fs.readFileSync(CATALOG, 'utf-8');
-    const registryTs = fs.readFileSync(REGISTRY, 'utf-8');
+    const registryTs = [REGISTRY, RENDER_REGISTRY].map((p) => fs.readFileSync(p, 'utf-8')).join('\n');
     const witnessTs = WITNESS_SOURCES.map((rel) => fs.readFileSync(path.join(REPO, rel), 'utf-8')).join('\n');
     const findings = parityFindings(catalogMd, registryTs, witnessTs);
 

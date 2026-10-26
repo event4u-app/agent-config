@@ -1,8 +1,11 @@
 // road-to-tells-a-near-miss-can-refute Phase 1: every shipped rule stays at
 // M1 = 0 on the near-miss splits, and every shipped rule has a near-miss.
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { isBodySubject, SLOP_RULES } from '../../src/scripts/design_slop_rules.js';
+import { RENDER_RULES } from '../../src/scripts/design_slop_render_rules.js';
 import { loadLabels, scoreAll } from '../../internal/bench/design-slop-nearmiss/run.js';
 import { scanFile } from '../../src/scripts/lint_design_slop.js';
 
@@ -15,6 +18,17 @@ describe('the near-miss bar', () => {
 
     it('every shipped rule has a near-miss it could have failed on', () => {
         expect(result.uncovered_catalog_ids).toEqual([]);
+    });
+
+    it('every render-engine rule has a rendered near-miss', () => {
+        const render = JSON.parse(
+            fs.readFileSync(path.join('internal', 'bench', 'corpora', 'design-slop-render', 'LABELS.json'), 'utf8'),
+        ) as { files: Record<string, { catalog_id: string }> };
+        const covered = new Set(Object.values(render.files).map((f) => f.catalog_id));
+        expect(RENDER_RULES.length).toBeGreaterThan(0);
+        for (const r of RENDER_RULES) {
+            expect(covered.has(r.catalogId), r.id).toBe(true);
+        }
     });
 
     it('every label states its signal, basis and author', () => {

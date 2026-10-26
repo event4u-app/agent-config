@@ -75,6 +75,7 @@ export const CAPTURED_PROPERTIES = [
     'opacity',
     'position',
     'z-index',
+    'background-image',
 ] as const;
 
 export interface ViewportCapture {
@@ -488,6 +489,14 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
                     }
                     rec['parents'] = chain.join(',');
                     rec['class'] = el.getAttribute('class') ?? '';
+                    // The element's own text, short — enough for a rule to tell a
+                    // number from a sentence, never a copy of the page.
+                    const own = Array.from(el.childNodes)
+                        .filter((n) => n.nodeType === Node.TEXT_NODE)
+                        .map((n) => n.textContent ?? '')
+                        .join('')
+                        .trim();
+                    if (own !== '') rec['text'] = own.slice(0, 40);
                     // `<style>` and `<script>` carry text and paint none of it.
                     const NO_PAINT = ['style', 'script', 'title', 'head', 'noscript', 'template'];
                     const ownText =

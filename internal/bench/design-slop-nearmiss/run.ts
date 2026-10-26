@@ -165,7 +165,9 @@ export function scoreAll(dir: string = CORPUS_DIR): NearMissResult {
     const labels = loadLabels(dir);
     const rels = Object.keys(labels).filter((r) => fs.existsSync(path.join(dir, r)));
     const covered = [...new Set(rels.map((r) => labels[r]!.catalog_id))].sort();
-    const registry = [...new Set(SLOP_RULES.map((r) => r.catalogId))].sort();
+    // Render-engine rules are measured on rendered near-misses
+    // (internal/bench/corpora/design-slop-render/), not here.
+    const registry = [...new Set(SLOP_RULES.filter((r) => !r.engines.includes('render')).map((r) => r.catalogId))].sort();
     return {
         corpus_digest: digest(dir, rels),
         rule_count: SLOP_RULES.length,
