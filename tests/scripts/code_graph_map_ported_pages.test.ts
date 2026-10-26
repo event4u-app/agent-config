@@ -124,6 +124,8 @@ afterAll(async () => {
 describe('Interfaces', () => {
     it('lists every service in the left rail and every shown operation in the table; hiding a service hides its operations', async () => {
         const { page, errors } = await open(html, '#/interfaces');
+        expect(await page.locator('[role="tab"][aria-selected="true"]').textContent()).toBe('Flow');
+        await page.locator('[role="tab"]', { hasText: 'Operations' }).click();
         const ops = interfaces.services.reduce((n, s) => n + s.operations.length, 0);
         expect(await page.locator('#av-left-body .if-svc').count()).toBe(interfaces.services.length);
         expect(await page.locator('#av-main .if-orow:not(.if-ohead)').count()).toBe(ops);
@@ -139,10 +141,11 @@ describe('Interfaces', () => {
 
     it('the state of an operation is its worst finding, then whether anything calls it', async () => {
         const { page } = await open(html, '#/interfaces');
+        await page.locator('[role="tab"]', { hasText: 'Operations' }).click();
         const row = (name: string) => page.locator('#av-main .if-orow', { hasText: name }).locator('.st');
         expect(await row('GetStock').textContent()).toBe('breaking-risk');
         expect(await row('POST /orders').textContent()).toBe('needs-review');
-        expect(await row('GET /items').textContent()).toBe('not called');
+        expect(await row('GET /items').textContent()).toBe('no caller');
         await page.close();
     });
 
@@ -159,7 +162,6 @@ describe('Interfaces', () => {
 
     it('the flow ends in no-data steps where the reader stops, and the contract view lists the findings with a contract witness', async () => {
         const { page } = await open(html, '#/interfaces/' + encodeURIComponent('operation/shop/POST /orders'));
-        await page.locator('[role="tab"]', { hasText: 'Flow' }).click();
         expect(await page.locator('.if-node').count()).toBe(6);
         expect(await page.locator('.if-node.nodata').count()).toBe(3);
         await page.locator('[role="tab"]', { hasText: 'Contract change' }).click();

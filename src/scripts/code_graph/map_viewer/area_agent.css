@@ -36,11 +36,11 @@
 .ag-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
 
 .ag-tbl { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--panel); }
-.ag-prow { display: grid; grid-template-columns: 104px minmax(0, 1.5fr) minmax(0, 1.2fr) 100px 60px; width: 100%; border: 0; border-top: 1px solid var(--line); font-size: 12px; color: var(--text); align-items: center; background: transparent; padding: 0; }
+.ag-prow { display: grid; grid-template-columns: 104px minmax(0, 1.5fr) minmax(0, 1.2fr) 100px 60px; width: 100%; border: 0; border-top: 1px solid var(--line); font-size: 12px; color: var(--text); align-items: center; background: transparent; padding: 1px 6px; }
 .ag-prow > span { padding: 9px 12px; }
 .ag-prow .ag-pst { padding: 8px 12px; }
 .ag-prow.on { background: var(--brandTint); box-shadow: inset 3px 0 0 var(--brand); }
-.ag-phead { border-top: 0; font-size: 11px; color: var(--muted); background: var(--raise); }
+.ag-phead { padding: 0; align-items: normal; border-top: 0; font-size: 11px; color: var(--muted); background: var(--raise); }
 .ag-phead > span:last-child, .ag-ptok { text-align: right; }
 .ag-pitem { text-align: left; min-width: 0; }
 .ag-pname { font-weight: 600; }
@@ -57,7 +57,7 @@
 .ag-rrow { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 110px 70px; width: 100%; border: 0; border-top: 1px solid var(--line); font-size: 12px; color: var(--text); align-items: center; background: transparent; padding: 0; text-align: left; }
 .ag-rrow > span { padding: 9px 12px; }
 .ag-rrow.on { background: var(--brandTint); box-shadow: inset 3px 0 0 var(--brand); }
-.ag-rh { border-top: 0; font-size: 11px; color: var(--muted); background: var(--raise); }
+.ag-rh { align-items: normal; border-top: 0; font-size: 11px; color: var(--muted); background: var(--raise); }
 .ag-rh > span:last-child { text-align: right; }
 .ag-rterm { font-family: var(--sans); font-size: 13px; }
 .ag-rv { text-align: right; font-weight: 600; }
@@ -78,7 +78,8 @@
 .ag-iname { font-size: 16px; font-weight: 600; }
 .ag-itext { font-size: 13px; }
 .ag-ikv { display: grid; grid-template-columns: 110px 1fr; gap: 6px 10px; font-size: 12px; }
-.ag-todo { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 10px; font-size: 13px; }
+.ag-todo { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 10px; }
+.ag-todo > span:last-child { font-size: 13px; }
 .ag-todo .cap { color: inherit; }
 .ag-todo.t-green { background: var(--greenTint); color: var(--greenText); }
 .ag-todo.t-cyan { background: var(--cyanTint); color: var(--cyanText); }

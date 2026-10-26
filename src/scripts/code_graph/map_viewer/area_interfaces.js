@@ -17,7 +17,7 @@ extendStrings({
         iOpsMeta: function (o, c) { return o + ' op. · ' + c + ' call.'; }, iFindN: function (n) { return n + (n === 1 ? ' finding' : ' findings'); },
         iColOp: 'Operation', iColContract: 'Contract', iColCallers: 'Callers', iColState: 'State',
         iProtoRead: 'read', iProtoNone: 'none', iProtoNoneT: 'the reader looks for it; none is in this tree',
-        iState: { breaking: 'breaking-risk', review: 'needs-review', uncalled: 'not called' },
+        iState: { breaking: 'breaking-risk', review: 'needs-review', uncalled: 'no caller' },
         iFlowIntro: 'From the call in the code to the database column. Each edge says how AC knows it – an edge without a witness stays open.',
         iFlowCode: 'Code', iFlowCall: function (p) { return p.toUpperCase() + ' call'; }, iFlowOp: 'Operation', iFlowDto: 'DTO', iFlowMapper: 'Mapper', iFlowColumn: 'Column',
         iFlowNoContract: 'no contract found', iFlowNoCaller: 'no call site in this tree', iFlowBeyond: 'the interfaces reader does not follow a response into DTOs, mappers or columns yet',
@@ -42,7 +42,7 @@ extendStrings({
         iOpsMeta: function (o, c) { return o + ' Op. · ' + c + ' Aufr.'; }, iFindN: function (n) { return n + (n === 1 ? ' Befund' : ' Befunde'); },
         iColOp: 'Operation', iColContract: 'Vertrag', iColCallers: 'Aufrufer', iColState: 'Zustand',
         iProtoRead: 'gelesen', iProtoNone: 'keine', iProtoNoneT: 'der Leser sucht danach; in diesem Baum gibt es keine',
-        iState: { breaking: 'breaking-risk', review: 'needs-review', uncalled: 'nicht aufgerufen' },
+        iState: { breaking: 'breaking-risk', review: 'needs-review', uncalled: 'kein Aufruf' },
         iFlowIntro: 'Vom Aufruf im Code bis zur Datenbank-Spalte. Jede Kante zeigt, woher AC sie kennt – unbelegte Kanten bleiben offen.',
         iFlowCode: 'Code', iFlowCall: function (p) { return p.toUpperCase() + '-Aufruf'; }, iFlowOp: 'Operation', iFlowDto: 'DTO', iFlowMapper: 'Mapper', iFlowColumn: 'Spalte',
         iFlowNoContract: 'kein Vertrag gefunden', iFlowNoCaller: 'keine Aufrufstelle in diesem Baum', iFlowBeyond: 'der Schnittstellen-Leser verfolgt eine Antwort noch nicht in DTOs, Mapper oder Spalten',
@@ -61,6 +61,8 @@ extendStrings({
 var IF_PROTOCOLS = [['rest', 'REST · OpenAPI'], ['soap', 'SOAP · WSDL'], ['sdk', 'SDK'], ['graphql', 'GraphQL'], ['grpc', 'gRPC · proto'], ['webhook', 'Webhooks · Queues']];
 var IF_PROTO_SHORT = { rest: 'REST', soap: 'SOAP', sdk: 'SDK', graphql: 'GraphQL', grpc: 'gRPC', webhook: 'Webhook', unknown: '?' };
 var ifState = { q: '', mode: 'all', hidden: Object.create(null) };
+// The handover opens the page on the flow of the picked operation.
+if (!avState.view.interfaces) avState.view.interfaces = 'flow';
 
 function ifOpKey(s, o) { return 'operation/' + s.name + '/' + o.name; }
 function ifEndsWith(s, end) { return s.length >= end.length && s.lastIndexOf(end) === s.length - end.length; }

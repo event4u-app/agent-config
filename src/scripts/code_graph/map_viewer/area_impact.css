@@ -1,6 +1,6 @@
 /* Impact page: values from the Change Preview handover. */
 .av-bar.im-bar { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--rail); }
-.im-chg { flex: 1 1 320px; max-width: 520px; height: 40px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--brandLine); background: var(--bg); color: var(--text); font-size: 13px; text-overflow: ellipsis; }
+.im-chg { flex: 1 1 320px; max-width: 520px; height: 42px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--brandLine); background: var(--bg); color: var(--text); font-size: 13px; text-overflow: ellipsis; }
 .im-why { font-size: 12px; color: var(--muted); }
 .av-main.im-main { padding: 18px 20px; gap: 16px; }
 

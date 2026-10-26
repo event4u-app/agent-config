@@ -16,7 +16,7 @@
 .if-list { display: flex; flex-direction: column; gap: 4px; max-height: 300px; overflow: auto; padding-right: 2px; }
 .if-svc { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 8px; border-radius: 8px; font-size: 12px; color: var(--text); border: 1px solid var(--line); background: transparent; }
 .if-svc.on { border-color: var(--brandLine); background: var(--brandTint); }
-.if-tick { width: 16px; height: 16px; flex: none; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--onColor); border: 1px solid var(--line2); background: transparent; }
+.if-tick { width: 18px; height: 18px; flex: none; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--onColor); border: 1px solid var(--line2); background: transparent; }
 .if-svc.on .if-tick { border-color: var(--brand); background: var(--brand); }
 .if-svc-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; text-align: left; }
 .if-svc-row { display: flex; align-items: center; gap: 6px; }
@@ -28,12 +28,12 @@
 .if-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
 .if-chip { height: 26px; padding: 0 8px; border-radius: 13px; border: 1px solid var(--cyan); background: var(--cyanTint); color: var(--cyanText); font-size: 11px; display: inline-flex; align-items: center; gap: 5px; }
 .if-tbl { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--panel); }
-.if-orow { display: grid; grid-template-columns: 34px minmax(0, 1.6fr) minmax(0, 1fr) 70px 120px; width: 100%; border: 0; border-top: 1px solid var(--line); font-size: 12px; color: var(--text); background: transparent; padding: 0; }
+.if-orow { display: grid; grid-template-columns: 34px minmax(0, 1.6fr) minmax(0, 1fr) 70px 120px; width: 100%; border: 0; border-top: 1px solid var(--line); font-size: 12px; color: var(--text); background: transparent; padding: 1px 6px; }
 .if-orow > span { padding: 10px; text-align: left; }
 .if-orow > span:first-child { text-align: center; }
 .if-orow .if-stcell { padding: 9px 10px; }
 .if-orow.on { background: var(--brandTint); box-shadow: inset 3px 0 0 var(--brand); }
-.if-ohead { border-top: 0; cursor: default; }
+.if-ohead { border-top: 0; cursor: default; padding: 0; }
 .if-ohead > span { background: var(--raise); color: var(--muted); }
 .if-opcell b { font-weight: 600; }
 
