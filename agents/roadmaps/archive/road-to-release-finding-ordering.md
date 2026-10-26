@@ -168,17 +168,19 @@ the evidence rather than as one already taken.
 
 ## Phase 1 — the ordering mechanism
 
+> **Cancelled 2026-10-26 by the owner: the consumer this step served, the `finding-dispositions` job, was removed by the owner decision of 2026-10-22 (#2591, `e1dde822d0`) — a release waits for no review ledger — so there is no read left to order.** Steps 1.1–2.3 and AC-1 to AC-4 are cancelled with it.
+
 The producer and consumer live in **different workflow files**, so `needs:` is
 not expressible between them — the roadmap's own second option was impossible
 as written. The four candidates and their costs are under § Mechanism options.
 
-- [ ] **1.1 Decide the mechanism, and record why the other three lost.** The
+- [-] **1.1 Decide the mechanism, and record why the other three lost.** The
       four candidates and what each costs are listed under § Mechanism options;
       both council seats chose (b).
       verify: the decision names the mechanism, the three rejected options and
       the cost that rejected each; the required-check name is stated as changed
       or unchanged.
-- [ ] **1.2 Make the wait terminal-state-aware, which is the half both seats
+- [-] **1.2 Make the wait terminal-state-aware, which is the half both seats
       added.** A missing artifact has three causes that a naive `allowEmpty`
       cannot tell apart: the producer is still running, the producer completed
       with no findings, or the producer legitimately skipped (it is
@@ -187,7 +189,7 @@ as written. The four candidates and their costs are under § Mechanism options.
       fail-open path being fixed, one level down.
       verify: each of the three states is distinguished, and the keyless-release
       case has an explicit written policy rather than falling through.
-- [ ] **1.3 Emit a completion manifest the consumer can wait ON.** The
+- [-] **1.3 Emit a completion manifest the consumer can wait ON.** The
       artifact's absence cannot be the signal, because absence is ambiguous per
       1.2. A manifest that is always produced — carrying the run id, the head
       SHA and a findings count that may be zero — makes "the producer finished
@@ -197,7 +199,7 @@ as written. The four candidates and their costs are under § Mechanism options.
 
 ## Phase 2 — the demonstration, and the fixture path it needs
 
-- [ ] **2.1 Add a fail-closed fixture-injection flag.** There is no way to plant
+- [-] **2.1 Add a fail-closed fixture-injection flag.** There is no way to plant
       a finding today: findings come from a live model call, so a demonstration
       would need real spend with a non-deterministic result. A
       `--findings-in <file>` flag makes the demonstration deterministic, and it
@@ -207,7 +209,7 @@ as written. The four candidates and their costs are under § Mechanism options.
       would be a worse defect than the one being demonstrated.
       verify: the flag refuses on a real `release/X.Y.Z` branch, a test asserts
       the refusal, and the refusal is not bypassable by argument order.
-- [ ] **2.2 Demonstrate it once, end to end, with a human present.** Touch a
+- [-] **2.2 Demonstrate it once, end to end, with a human present.** Touch a
       path that triggers both workflows on a synthetic `release/*` branch; run
       the producer with the fixture finding; confirm its terminal manifest;
       confirm the unchanged `finding-dispositions` check is RED while the
@@ -215,7 +217,7 @@ as written. The four candidates and their costs are under § Mechanism options.
       goes green.
       verify: the job timings show the read happened after the finding existed,
       and both the red and the green state are recorded with their run ids.
-- [ ] **2.3 Cover the three states 1.2 names, not only the happy path.** The
+- [-] **2.3 Cover the three states 1.2 names, not only the happy path.** The
       producer still running, the manifest missing, the producer failing, and
       the keyless run. Those four are where the fail-open risk actually lives;
       a demonstration of the findings path alone would leave them unmeasured.
@@ -228,13 +230,14 @@ Each is dispositioned `accepted_risk` in
 `agents/evidence/release-findings/14.15.0.json` with its reason, and named here
 so the disposition points somewhere rather than expiring.
 
-- [ ] **3.1 `9b91a14e9d35` — MCP tool descriptions are absent from the
+- [x] **3.1 `9b91a14e9d35` — MCP tool descriptions are absent from the <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       attack-surface inventory** of `src/skills/agent-security-review/SKILL.md`,
       while the ADR its council cited names tool poisoning. Real, and no phase
       of the parent roadmap touched that skill.
       verify: the inventory names tool descriptions as a surface, or states why
       they are out of scope for that skill.
-- [ ] **3.2 `0687468c0d65` — no measurement that target-bound grants are safer
+      Landed 2026-10-26: already resolved in the tree — `src/skills/agent-security-review/SKILL.md:42,60,113` names MCP tool descriptions, tool poisoning and rug-pull as surfaces.
+- [x] **3.2 `0687468c0d65` — no measurement that target-bound grants are safer <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       than the 30-minute window.** The argument for the change was structural,
       not empirical, and the ADR does not claim otherwise. Closing this is a
       measurement design: it needs a corpus of real authorization turns and a
@@ -242,17 +245,19 @@ so the disposition points somewhere rather than expiring.
       authorized-but-unintended one.
       verify: either the measurement exists with its corpus and definition, or
       the ADR states that its basis is structural.
-- [ ] **3.3 `26c9fdbcedc2` — a deferred note in an ADR's evidence table.**
+      Landed 2026-10-26: already resolved — ADR-252 states its basis is structural, under "What no evidence establishes" at lines 194 and 246.
+- [x] **3.3 `26c9fdbcedc2` — a deferred note in an ADR's evidence table.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       Low/style. Editing an accepted decision record for presentational reasons
       is a worse trade than the archaeology it saves, which is why it was
       accepted rather than fixed.
       verify: the note is resolved, or the decision to leave it stands with a
       stated reason.
+      Landed 2026-10-26: resolved — ADR-252's evidence row now cites `src/scripts/git_authorization_hook.ts`, not the deferred `release_env.ts` note. The `_splitlines` copies are a separate, older debt across 62 files, not this record's.
 
 ## Blockers
 
 ### blocker: release-pr-demonstration-owner-call
-- **Status:** open — posed 2026-10-01 at the fourth arrival, as a blockquote; restated in this shape 2026-10-07 with the question unchanged.
+- **Status:** resolved — 2026-10-26. The owner first chose (1), "Freigegeben. Mach es" ("Approved. Do it"); shown that the `finding-dispositions` consumer was removed by his decision of 2026-10-22 (#2591), he then chose to cancel Phases 1–2 and AC-1 to AC-4 as overtaken, which is option (3) here. No synthetic `release/*` pull request was created. Posed 2026-10-01 at the fourth arrival; restated in this shape 2026-10-07.
 - **Owner:** owner
 - **Blocks:** step 2.2, AC-2, and the `review_by` date that passed on 2026-09-20
 - **What to do:** pick one — (1) authorize one synthetic `release/*` pull request so AC-2 can be demonstrated; (2) move `review_by` with a reason naming what changes by then; (3) cancel AC-2 and record why the ordering guarantee is not owed.
@@ -272,17 +277,17 @@ so the disposition points somewhere rather than expiring.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The disposition check cannot read findings before they exist: the
+- [-] AC-1 — The disposition check cannot read findings before they exist: the
       mechanism is chosen with its three rejected alternatives and their costs
       recorded, and the required-check name is stated as changed or unchanged.
-- [ ] AC-2 — A release pull request whose self-review reports a high-severity
+- [-] AC-2 — A release pull request whose self-review reports a high-severity
       security or claim finding cannot show a green `finding-dispositions` check
       while that finding is absent from the ledger, demonstrated once end to end
       on a synthetic branch, with the job timings recorded.
-- [ ] AC-3 — Producer-still-running, manifest-missing, producer-failed and
+- [-] AC-3 — Producer-still-running, manifest-missing, producer-failed and
       keyless-run each have a recorded outcome, and none is green with an
       undispositioned blocking finding.
-- [ ] AC-4 — Fixture injection refuses on a real `release/X.Y.Z` branch, with a
+- [-] AC-4 — Fixture injection refuses on a real `release/X.Y.Z` branch, with a
       test.
-- [ ] AC-5 — The three carried findings each reach one of: resolved, or a stated
+- [x] AC-5 — The three carried findings each reach one of: resolved, or a stated
       decision to leave them with a reason.
