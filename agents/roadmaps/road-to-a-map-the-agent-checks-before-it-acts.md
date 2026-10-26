@@ -341,7 +341,7 @@ renders from real facts or says why it has none.
 
 ## Phase 6 — Measure
 
-- [ ] **6.1 Task set T.** 20–30 planted in-repo tasks across code, data,
+- [x] **6.1 Task set T.** 20–30 planted in-repo tasks across code, data,
       interfaces, runtime and delivery, each with its affected set and a hidden
       check.
       verify: every task's hidden check fails on the unmodified fixture.
