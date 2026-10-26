@@ -423,6 +423,8 @@ export const SLOP_RULES: SlopRule[] = [
     catalogId: "CP1",
     severity: "P2",
     engines: ["copy"],
+    // The catalog's override: an editorial voice that uses em dashes on purpose.
+    gated: (ctx) => ctx.has("em dash", "em-dash"),
     description: "Em-dash overuse in visible copy (> 2 per 500 words)",
     message: "Em-dash density above ~2 per 500 words is the #1 LLM syntactic tell (CP1).",
     detect: ({ content, ext }) => {

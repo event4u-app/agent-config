@@ -450,7 +450,6 @@ code {
 /* Review summary — "What happens on Finish" (Phase 3.3). */
 .ac-review-summary {
     border: 1px solid var(--color-border);
-    border-left: 3px solid var(--color-accent);
     border-radius: var(--radius-md);
     padding: var(--space-3) var(--space-4);
     background: var(--color-surface);
@@ -523,7 +522,6 @@ code {
     padding: var(--space-2) var(--space-3);
     background: transparent;
     border: 1px solid var(--color-border);
-    border-left: 3px solid var(--color-success);
     border-radius: var(--radius-md);
     color: var(--color-text);
     font-size: var(--font-size-sm);
@@ -532,7 +530,7 @@ code {
     transition: background var(--duration-fast) var(--easing-standard),
                 border-color var(--duration-fast) var(--easing-standard);
 }
-.ac-wizard__review-nav-button:hover { background: var(--color-surface); border-color: var(--color-accent); border-left-color: var(--color-success); }
+.ac-wizard__review-nav-button:hover { background: var(--color-surface); border-color: var(--color-accent); }
 .ac-wizard__review-nav-button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 .ac-wizard__review-nav-index {
     display: inline-flex;
@@ -563,8 +561,9 @@ code {
     background: var(--color-danger-soft, rgba(239, 68, 68, 0.12));
     color: var(--color-danger);
 }
+/* The stripe is the error channel: only a step with an error carries it. */
 .ac-wizard__review-nav-button--error {
-    border-left-color: var(--color-danger);
+    border-left: 3px solid var(--color-danger);
 }
 .ac-wizard__review-nav-button--error:hover { border-color: var(--color-accent); border-left-color: var(--color-danger); }
 

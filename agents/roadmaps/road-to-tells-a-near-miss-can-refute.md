@@ -293,7 +293,7 @@ The gate for every later promotion.
 
 ## Phase 8 — Currency and the mirror
 
-- [ ] **8.1 The 2026-Q4 review the catalog scheduled.** Re-date the
+- [x] **8.1 The 2026-Q4 review the catalog scheduled.** Done 2026-10-26: the section is re-dated (reviewed 2026-10-26, next 2027-Q2; the 2026-07 generation note re-confirmed). D14's thirteen tells are recorded as watched, none added: two independent sources could not be shown from the tree (the round's provenance annex stays out of it), and a grep over `src/ui/` and `site/src/` found zero occurrences (control: the same grep reaches `app.css`). The badge-above-the-h1 tell already landed under T4 (2.6). Parity green. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Re-date the
       current-generation section; add D14's tells only where ≥ 2 independent
       sources name them or the dogfood split shows them, each as `candidate` or
       `judgment-only`, never `backed`.

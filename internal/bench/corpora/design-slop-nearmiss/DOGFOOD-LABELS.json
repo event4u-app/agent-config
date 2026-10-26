@@ -4,7 +4,7 @@
   "findings": [
     {
       "file": "src/ui/app.css",
-      "line": 160,
+      "line": 162,
       "rule": "slop-v1-side-stripe",
       "catalog_id": "V1",
       "label": "near-miss",
@@ -13,7 +13,7 @@
     },
     {
       "file": "src/ui/app.css",
-      "line": 184,
+      "line": 185,
       "rule": "slop-v1-side-stripe",
       "catalog_id": "V1",
       "label": "near-miss",
@@ -22,16 +22,7 @@
     },
     {
       "file": "src/ui/app.css",
-      "line": 448,
-      "rule": "slop-v1-side-stripe",
-      "catalog_id": "V1",
-      "label": "tp",
-      "basis": "decorative accent stripe on a summary card; no state is carried",
-      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
-    },
-    {
-      "file": "src/ui/app.css",
-      "line": 497,
+      "line": 498,
       "rule": "slop-v1-side-stripe",
       "catalog_id": "V1",
       "label": "near-miss",
@@ -40,16 +31,7 @@
     },
     {
       "file": "src/ui/app.css",
-      "line": 517,
-      "rule": "slop-v1-side-stripe",
-      "catalog_id": "V1",
-      "label": "tp",
-      "basis": "success-coloured stripe on every review navigation button, regardless of state",
-      "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
-    },
-    {
-      "file": "src/ui/app.css",
-      "line": 739,
+      "line": 740,
       "rule": "slop-v1-side-stripe",
       "catalog_id": "V1",
       "label": "near-miss",
@@ -58,7 +40,7 @@
     },
     {
       "file": "src/ui/app.css",
-      "line": 848,
+      "line": 849,
       "rule": "slop-v1-side-stripe",
       "catalog_id": "V1",
       "label": "near-miss",
@@ -175,7 +157,7 @@
     },
     {
       "file": "site/src/styles/custom.css",
-      "line": 15,
+      "line": 17,
       "rule": "slop-v1-side-stripe",
       "catalog_id": "V1",
       "label": "near-miss",
@@ -307,6 +289,16 @@
       "label": "tp",
       "basis": "copy written by agents, dash density above the CP1 cap, and no voice exception declared",
       "labeller": "claude/host (the run that authored step 1.4; own judgement, not an independent label)"
+    },
+    {
+      "file": "src/ui/app.css",
+      "line": 564,
+      "rule": "slop-v1-side-stripe",
+      "catalog_id": "V1",
+      "label": "near-miss",
+      "basis": "review step with an error: the danger stripe is the error channel and appears only on that variant",
+      "labeller": "claude/host (road-to-tells-a-near-miss-can-refute 8.2; own judgement, not an independent label)"
     }
-  ]
+  ],
+  "relabelled_at": "2026-10-26: lines moved by the cssBlocks line fix (3.1); the two decorative stripes (448 summary card, 517 review nav button) were removed in 8.2 and their rows dropped; the review-nav error variant now carries the stripe alone"
 }
