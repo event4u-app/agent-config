@@ -1,14 +1,14 @@
 {
   "schema": 1,
-  "generation": "cd4017f15db46545",
-  "commit": "76125623dd58",
+  "generation": "36eb5b1973482ba7",
+  "commit": "2efd5be1444a",
   "state": "fresh",
   "areas": {
     "code": {
       "path": "code/map.json",
       "source": "code-graph",
       "freshness": "fresh",
-      "facts": 11599
+      "facts": 11614
     },
     "data": {
       "path": "data/data.json",
@@ -24,8 +24,8 @@
       "source": "systems lane (lockfiles, manifests, version files, images, CI)",
       "freshness": "fresh",
       "completeness": "complete",
-      "facts": 1842,
-      "findings": 77
+      "facts": 1836,
+      "findings": 66
     },
     "interfaces": {
       "path": "interfaces/interfaces.json",
@@ -54,10 +54,11 @@
     "impact": {
       "path": "code/map.json",
       "source": "review-risk over the working diff",
-      "freshness": "fresh",
+      "freshness": "empty",
       "completeness": "complete",
       "facts": 0,
-      "findings": 0
+      "findings": 0,
+      "reason": "no change against HEAD"
     },
     "agent": {
       "path": "code/map.json",
