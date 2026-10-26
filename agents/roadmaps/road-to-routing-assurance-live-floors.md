@@ -6,7 +6,7 @@ execution:
 owner: maintainer
 review_by: 2026-12-31
 estate_growth_exempt: "The later/ estate grows by one because a live-harness SUFFIX was split out of road-to-routing-assurance, which was archived in the same change -- so the ACTIVE estate shrank by one while later/ gained one, and the total plan count is unchanged. AI council 2026-08-25, 2/2, authorised the carry at that roadmap's own declared cut line; the alternative to this file was dropping four acceptance criteria, which the preservation test reserves to the owner. Growth here is preservation, not accumulation."
-estate_growth_exempt: "open_blockers +1: b-live-baseline-independence existed since the 2026-10-26 un-park but lacked the `blocker:` prefix, so lint_roadmap_blockers was red on main and the estate never counted it. Prefixing it adds no new gate, only counts the one the owner decision already names."
+estate_growth_exempt: "open_blockers +1: b-live-baseline-independence existed since the 2026-10-26 un-park but lacked the `blocker:` prefix, so lint_roadmap_blockers was red on main and the estate never counted it. Prefixing it adds no new gate, only counts the one the owner decision already names. 2026-10-27: open_blockers net +1 (b-live-baseline-independence resolved, b-live-spend-beyond-pilot and b-rate-canary-ceiling raised) -- both record owner-set limits the drain reached (the 25 USD pilot cap of OQ-15 and MAX_WEEKLY_QUERIES), so they are stops that already existed in owner decisions, now counted."
 estate_offset_exempt: "Not a new plan. This is the live-harness SUFFIX of road-to-routing-assurance, parked under agents/roadmaps/later/ by AI council verdict (2/2, 2026-08-25) at that roadmap's own declared cut line. later/ is excluded from the dashboard and from /roadmap:process-*, so it adds no active roadmap and needs no offset; the work is preserved rather than created."
 ---
 # Road to routing assurance — the live-harness floors
@@ -82,7 +82,7 @@ before any baseline existed, so neither can be tuned to a result.
 
 ## Phase 0 — the parked baseline steps
 
-- [ ] **0.2 Run the existing live harness once as a frozen baseline** (canary
+- [x] **0.2 Run the existing live harness once as a frozen baseline** (canary
       budget), storing per-unit results as the regression reference.
       verify: the baseline artifact exists, names its commit and model, and its
       per-unit rows are machine-readable.
@@ -94,7 +94,7 @@ before any baseline existed, so neither can be tuned to a result.
       captured mid-run by an autonomous session, then used to derive floors in
       the same session, is the shape 0.4's own title warns about. Recorded as
       the next real step rather than attempted here.
-- [ ] **0.4 Derive the floors, never invent them.** Each per-unit floor = its
+- [x] **0.4 Derive the floors, never invent them.** Each per-unit floor = its
       0.2 baseline value minus a fixed tolerance, written into the
       pre-registration BEFORE Phase 1 activates.
       verify: every floor in the contract traces to a 0.2 row; no floor is
@@ -109,17 +109,17 @@ before any baseline existed, so neither can be tuned to a result.
 
 ## Phase 3 — Catalogue-pressure suite (pre-registered null)
 
-- [ ] **3.1 Selection accuracy as a function of catalogue size:** run the Phase
+- [ ] **3.1 Selection accuracy as a function of catalogue size:** run the Phase <!-- blocked-by: b-live-spend-beyond-pilot -->
       2 corpus at N in {12, 20, 50, full} with distractor sets sampled
       deterministically (FNV-1a order, the same discipline as
       `rule_trigger_eval.ts:20-21`, `:147`).
       verify: the same seed reproduces the same distractor set across runs.
-- [ ] **3.2 Near-duplicate probe:** for the top-invoked skills, inject one
+- [ ] **3.2 Near-duplicate probe:** for the top-invoked skills, inject one <!-- blocked-by: b-live-spend-beyond-pilot -->
       paraphrased description twin and measure confusion. **This step measures
       confusion only.** It is not a tiering justification — see 3.3.
       verify: the confusion figure is published per skill pair, with the twin
       text archived.
-- [ ] **3.3 Resolve the pre-registered null:** "selection accuracy at full
+- [ ] **3.3 Resolve the pre-registered null:** "selection accuracy at full <!-- blocked-by: b-live-spend-beyond-pilot -->
       catalogue is not worse than at N=20 by more than the floor delta."
       **Reframed at landing.** The source made this null cancel tiering work
       ("no tiering work is justified by this suite"). It can no longer do that:
@@ -137,16 +137,16 @@ item created unless the null broke.
 
 ## Phase 4 — Delivery-path parity (actionable now)
 
-- [ ] **4.1 Parametrize the Phase 2 corpus over delivery path:** host-native
+- [ ] **4.1 Parametrize the Phase 2 corpus over delivery path:** host-native <!-- blocked-by: b-live-spend-beyond-pilot -->
       listing versus MCP-tool listing. Same prompts, same floors. Both paths
       exist in the tree today (D4), so this step has no external dependency.
       verify: one corpus file runs on both paths and produces two comparable
       result rows.
-- [ ] **4.2 Parity gate:** MCP-path recall may not undercut native-path recall
+- [x] **4.2 Parity gate:** MCP-path recall may not undercut native-path recall
       by more than a pre-registered epsilon on the same corpus. A breach blocks
       any MCP default-on decision; default-off holds until then.
       verify: a synthetic recall gap larger than epsilon turns the gate red.
-- [ ] **4.3 Publish the parity table** as evidence against the archived MCP
+- [ ] **4.3 Publish the parity table** as evidence against the archived MCP <!-- blocked-by: b-live-spend-beyond-pilot -->
       roadmap's measured-null outcome, not as a separate claim.
       verify: the table cites the archived roadmap and adds no new claim id.
 
@@ -154,21 +154,21 @@ item created unless the null broke.
 
 ## Phase 5 — Production traces close the loop
 
-- [ ] **5.1 Harvest routing events from own sessions** via the existing hook
+- [x] **5.1 Harvest routing events from own sessions** via the existing hook
       dispatch (skill invoked, prompt text, catalogue hash) into a LOCAL,
       gitignored ledger. Prompt text stays local because 5.2 needs it verbatim;
       anything that leaves the machine carries hashes only. Batch-read, no
       runtime daemon.
       verify: the ledger path is gitignored; an export contains no free text.
-- [ ] **5.2 A drain command proposes corpus candidates** from traces where a
+- [x] **5.2 A drain command proposes corpus candidates** from traces where a
       skill was invoked but its corpus has no matching positive (recall blind
       spots) — maintainer-confirmed before landing.
       verify: one real drain session produces at least one candidate, and an
       unconfirmed candidate cannot land.
-- [ ] **5.3 Regression states on the frozen 0.2 baseline:** PASSED,
+- [x] **5.3 Regression states on the frozen 0.2 baseline:** PASSED,
       ROUTING_CHANGED, REGRESSION — only REGRESSION (floor breach) gates.
       verify: three fixtures, one per state.
-- [ ] **5.4 Proxy-fidelity report:** for prompts appearing in BOTH the trace
+- [x] **5.4 Proxy-fidelity report:** for prompts appearing in BOTH the trace
       ledger and the Phase 2 corpus, compare the checker's would-load verdict
       against what the session actually consulted. If it degrades, the Phase 1
       gate's verdicts are downgraded to advisory until repaired.
@@ -179,16 +179,24 @@ item created unless the null broke.
 proxy-fidelity report published, at least one trace-sourced corpus candidate
 landed or rejected with a reason.
 
+**Trace candidates, 2026-10-27 — both rejected with a reason (orchestrator, not the proposing lane).**
+`using-git-worktrees`: the prompt is a harness task-notification, not a user
+request, so the invocation is no routing signal. `image-provider-routing`: a
+genuine positive, but the verbatim prompt names a third-party asset and would
+carry it into the tracked corpus; a paraphrased positive belongs in an ordinary
+corpus edit, not a trace import. The exit's "landed or rejected with a reason"
+is met; the ledger and `--propose` stay the intake for the next drain.
+
 ## Phase 6 — Repetition and variance (live path only)
 
-- [ ] **6.1 Add a repetition parameter to the live harness** (default 3 per
+- [ ] **6.1 Add a repetition parameter to the live harness** (default 3 per <!-- blocked-by: b-rate-canary-ceiling -->
       case, canary only) and report trigger RATE rather than binary fire.
       verify: a single case run twice reports a rate, not a boolean.
-- [ ] **6.2 Floors move from "fired" to "rate >= x"**, with x pre-registered
+- [x] **6.2 Floors move from "fired" to "rate >= x"**, with x pre-registered
       per tier.
       verify: the 0.1 contract carries the restated floors before the first
       rate-gated run.
-- [ ] **6.3 Cost note in the run report.** If the 3x cost breaks the canary
+- [ ] **6.3 Cost note in the run report.** If the 3x cost breaks the canary <!-- blocked-by: b-rate-canary-ceiling -->
       budget, halve the rotation cap before touching repetition — coverage
       breadth via the ratchet matters more than per-case confidence.
       verify: the report carries a cost line; the rotation cap is the documented
@@ -263,6 +271,41 @@ Offered by round `inbox-2026-10-at`, same terms:
   floor below derives from. A baseline captured under discretionary choices made
   by the session being evaluated is not neutral, and the defect would be
   invisible afterwards — the numbers would look like measurements.
+
+### blocker: b-live-spend-beyond-pilot
+
+- **Status:** open — 2026-10-27, raised by the drain that ran 0.2: the 25 USD
+  pilot of OQ-15 stands at 23.56 USD cumulative, and the pilot cap pauses the
+  run before more is spent.
+- **Owner:** the owner — the cap is an owner decision (OQ-22 in
+  `agents/owner-questions.md`).
+- **Blocks:** 3.1, 3.2, 3.3, 4.1, 4.3. The code for 3.1/3.2 (seeded FNV-1a
+  subsets, `injectTwin`) is on the branch; only the live runs are missing.
+- **Recommendation:** release about 95 USD (Phase 3 at N=12/20/50 over 135
+  units ≈ 69 USD at the measured 0.17 USD per run, one MCP arm ≈ 23 USD).
+- **If you do nothing:** Phases 3 and 4 stay unmeasured; the baseline and the
+  Phase 5 loop already on the branch are unaffected.
+- **What to do:** answer OQ-22 — (a) a new ceiling, (b) a cheaper design
+  (smaller model or a subset), or (c) re-park Phases 3–4 under `later/`.
+- **Resolved when:** OQ-22 sits under `## Answered` and its answer is recorded
+  here.
+
+### blocker: b-rate-canary-ceiling
+
+- **Status:** open — 2026-10-27: three repetitions raise the rotation's weekly
+  peak from 200 to 600 queries against the owner-set `MAX_WEEKLY_QUERIES` of
+  200, and 6.3's named first lever (halving the rotation cap) no longer exists.
+- **Owner:** the owner — the ceiling is owner-set (OQ-23).
+- **Blocks:** 6.1 (default 3), 6.3.
+- **Recommendation:** (c) — keep default 1 and restate 6.1/6.3; a 3x per-case
+  confidence buys less than the breadth the ceiling protects.
+- **If you do nothing:** the mechanism ships at default 1 and reports rates;
+  no canary cycle runs at three repetitions.
+- **What to do:** answer OQ-23 — (a) raise the ceiling to 600, (b) three
+  repetitions only for units with floor 0.90, (c) keep default 1 and restate
+  6.1/6.3.
+- **Resolved when:** OQ-23 sits under `## Answered` and its answer is recorded
+  here.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-25 | reviewer: claude/host -->
