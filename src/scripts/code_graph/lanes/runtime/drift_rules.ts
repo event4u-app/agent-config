@@ -1,11 +1,11 @@
 /**
- * Runtime drift classes RT-1 … RT-6, as data for `evaluateRules`. All are
+ * Runtime drift classes RT-1 … RT-6, as data for the one drift engine (`../../drift.ts`). All are
  * `advice`: none gates until its precision on planted fixtures is recorded.
  *
  * RT-2 compares against the data lane: it expects a data-lane fact of kind
  * `connection` carrying the engine the schema is written for in `engine`.
  */
-import type { DriftRule } from './rules_eval.js';
+import type { DriftRule } from '../../drift.js';
 
 export const RUNTIME_RULES: readonly DriftRule[] = [
     {
@@ -45,7 +45,8 @@ export const RUNTIME_RULES: readonly DriftRule[] = [
         tier: 'advice',
         match: 'fact',
         select: { lane: 'runtime', rung: ['T1'], kind: 'port', where: { is_published: true, local_only: false, db_engine: { exists: true } } },
-        context: 'context',
+        counter: 'context',
+        counter_required: true,
         message: 'the {attr.db_engine} port {attr.published} of {attr.service} is published on every host interface',
     },
     {
@@ -54,7 +55,8 @@ export const RUNTIME_RULES: readonly DriftRule[] = [
         tier: 'advice',
         match: 'fact',
         select: { lane: 'runtime', rung: ['T1'], kind: 'image', where: { tag: 'latest' } },
-        context: 'context',
+        counter: 'context',
+        counter_required: true,
         message: '{attr.repo} runs on `latest` for {other.name}; the image can change under the same configuration',
     },
     {

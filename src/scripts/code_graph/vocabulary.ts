@@ -15,7 +15,7 @@
  */
 
 /** Bump on any change to a kind, a relation or a direction. */
-export const VOCABULARY_VERSION = 1;
+export const VOCABULARY_VERSION = 2;
 
 /** Maximum kinds and relations a lane may own. */
 export const LANE_CAP = { kinds: 14, relations: 18 } as const;
@@ -46,7 +46,7 @@ export const VOCABULARY = {
         },
     },
     data: {
-        kinds: ['table', 'column'],
+        kinds: ['table', 'column', 'connection'],
         relations: {
             migrates: { from: ['*'], to: ['table'] },
             persists: { from: ['*'], to: ['table'] },

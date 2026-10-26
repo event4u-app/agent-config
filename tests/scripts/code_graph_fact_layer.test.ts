@@ -248,7 +248,7 @@ describe('2.3 — one drift engine', () => {
     it('finds DR-1 on comments.post_id, DR-3 on Tag and DR-4 on post_tag in the P1 fixture', () => {
         const r = evaluateDrift(graph, DRIFT_RULES);
         expect(r.refused).toEqual([]);
-        expect(r.findings.map((f) => `${f.rule} ${f.subject}`)).toEqual([
+        expect(r.findings.filter((f) => ['DR-1', 'DR-3', 'DR-4'].includes(f.rule)).map((f) => `${f.rule} ${f.subject}`)).toEqual([
             'DR-1 column:comments.post_id',
             'DR-3 app/Models/Tag.php#Tag',
             'DR-4 table:post_tag',
@@ -262,16 +262,16 @@ describe('2.3 — one drift engine', () => {
         expect(f.completeness).toBe('complete');
         expect(f.witnesses[0].at).toMatch(/^app\/Models\/(Comment|Post)\.php:\d+$/);
         expect(f.witnesses[1]).toMatchObject({ id: 'column:comments.post_id', at: expect.stringMatching(/create_comments_table\.php:\d+$/) });
-        expect(f.witnesses[1].hash).toMatch(/^[0-9a-f]{8}$/);
+        expect(f.witnesses[1]!.hash).toMatch(/^[0-9a-f]{8}$/);
     });
 
     it('does not flag a relation a foreign key backs', () => {
-        expect(evaluateDrift(graph, DRIFT_RULES).findings.some((f) => f.subject === 'column:posts.user_id')).toBe(false);
+        expect(evaluateDrift(graph, DRIFT_RULES).findings.some((f) => f.rule === 'DR-1' && f.subject === 'column:posts.user_id')).toBe(false);
     });
 
     it('prints its basis first', () => {
         const lines = renderDrift(evaluateDrift(graph, DRIFT_RULES));
-        expect(lines[0]).toMatch(new RegExp(`^basis: graph ${graph.source_checksum.slice(0, 12)} · vocabulary v\\d+ · 3 rule\\(s\\) · 0 waiver\\(s\\)$`));
+        expect(lines[0]).toMatch(new RegExp(`^basis: graph ${graph.source_checksum.slice(0, 12)} · vocabulary v\\d+ · ${new Set(DRIFT_RULES.map((x) => x.id)).size} rule\\(s\\) · 0 waiver\\(s\\)$`));
     });
 
     it('honours a waiver with a reason, and refuses one without', () => {

@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { evaluateDrift, INTERFACE_DRIFT_RULES, type DriftRule } from '../../../src/scripts/code_graph/lanes/interfaces/drift.js';
+import { evaluateDrift, type DriftRule } from '../../../src/scripts/code_graph/drift.js';
+import { INTERFACE_DRIFT_RULES } from '../../../src/scripts/code_graph/lanes/interfaces/drift_rules.js';
 import { readInterfaces } from '../../../src/scripts/code_graph/lanes/interfaces/index.js';
 
 const FIX = path.resolve(__dirname, '..', '..', 'fixtures', 'code-graph', 'interfaces');
@@ -112,9 +113,9 @@ describe('interface drift — rules are data', () => {
             title: 'guessed service',
             tier: 'advice',
             handoff: null,
-            on: { record: 'relation', relation: 'calls-out' },
-            when: { protocol: { eq: 'soap' } },
-            counterWitness: 'client_witness',
+            match: 'fact',
+            select: { edge: 'calls-out', where: { protocol: { eq: 'soap' } } },
+            counter: 'client_witness',
             message: 'soap call {method}',
         };
         const report = evaluateDrift(p5, [...INTERFACE_DRIFT_RULES, extra]);

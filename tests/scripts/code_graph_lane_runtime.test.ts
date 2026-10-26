@@ -226,7 +226,7 @@ describe('runtime drift RT-1 … RT-6', () => {
             expect(h.tier).toBe('advice');
             expect(h.witnesses).toHaveLength(2);
             expect(h.subjects[0]).not.toBe(h.subjects[1]);
-            for (const w of h.witnesses) expect(w.file).not.toBe('');
+            for (const w of h.witnesses) expect(w!.file).not.toBe('');
         }
     });
 

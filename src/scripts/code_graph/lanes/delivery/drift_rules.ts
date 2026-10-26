@@ -1,5 +1,5 @@
 /**
- * Delivery drift classes DL-1 … DL-5, as data for `evaluateRules`. All are
+ * Delivery drift classes DL-1 … DL-5, as data for the one drift engine (`../../drift.ts`). All are
  * `advice` until their precision on planted fixtures is recorded.
  *
  * DL-3 "protection reference" means a stated mechanism in the repository that
@@ -8,7 +8,7 @@
  * pull-request event, or a committed `.github/settings.yml` environment entry
  * with a protection key. Dynamic (per-branch review) environments are exempt.
  */
-import type { DriftRule } from '../runtime/rules_eval.js';
+import type { DriftRule } from '../../drift.js';
 
 export const DELIVERY_RULES: readonly DriftRule[] = [
     {
@@ -17,7 +17,8 @@ export const DELIVERY_RULES: readonly DriftRule[] = [
         tier: 'advice',
         match: 'fact',
         select: { lane: 'delivery', kind: 'action', where: { pinned: false, local: false } },
-        context: 'context',
+        counter: 'context',
+        counter_required: true,
         message: '{attr.ref} in {other.name} is referenced by a movable tag, not a commit SHA',
     },
     {
@@ -26,7 +27,8 @@ export const DELIVERY_RULES: readonly DriftRule[] = [
         tier: 'advice',
         match: 'fact',
         select: { lane: 'delivery', kind: 'job', where: { permissions: 'write-all' } },
-        context: 'context',
+        counter: 'context',
+        counter_required: true,
         message: 'job {name} in {other.name} runs with write-all token permissions',
     },
     {
@@ -35,7 +37,8 @@ export const DELIVERY_RULES: readonly DriftRule[] = [
         tier: 'advice',
         match: 'fact',
         select: { lane: 'delivery', kind: 'environment', where: { protected: false } },
-        context: 'context',
+        counter: 'context',
+        counter_required: true,
         message: 'environment {name} is deployed by {other.name} with no manual gate, branch restriction or protection entry',
     },
     {
@@ -54,7 +57,8 @@ export const DELIVERY_RULES: readonly DriftRule[] = [
         tier: 'advice',
         match: 'fact',
         select: { lane: 'delivery', kind: 'trigger', where: { self_triggering: false } },
-        context: 'context',
+        counter: 'context',
+        counter_required: true,
         message: 'the {attr.event} filter of {other.name} excludes its own pipeline files ({attr.excluded}); an edit to them never runs it',
     },
 ];
