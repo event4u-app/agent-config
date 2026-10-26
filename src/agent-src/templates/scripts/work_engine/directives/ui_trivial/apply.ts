@@ -7,7 +7,9 @@
  * The short-circuit path for micro UI edits that provably cannot warrant the
  * full audit / design / review / polish loop. Hard preconditions enforced on
  * every rebound: ≤ 1 file, ≤ 5 changed lines, no new component, no new state,
- * no new dependency. Any precondition violation BLOCKS with a
+ * no new dependency, no new control role. The control role is COMPUTED from the
+ * file against `git show HEAD:<file>` (`_lib/control_roles.ts`); the envelope
+ * cannot override it. Any precondition violation BLOCKS with a
  * `reclassify-to-ui-improve` halt; the orchestrator promotes
  * `state.directive_set` to `"ui-improve"` and re-invokes the engine.
  */
@@ -18,6 +20,7 @@ import {
     StepResult,
     agent_directive,
 } from '../../delivery_state.js';
+import { newControlRolesForFiles } from '../../_lib/control_roles.js';
 
 /** Edit-surface ceiling — single-file edits only. */
 export const MAX_FILES = 1;
@@ -35,7 +38,7 @@ export const AMBIGUITIES: ReadonlyArray<Record<string, string>> = [
     },
     {
         code: 'trivial_preconditions_violated',
-        trigger: 'edit touches >1 file, >5 lines, adds component/state/dependency',
+        trigger: 'edit touches >1 file, >5 lines, adds component/state/dependency/control role',
         resolution:
             'agent directive `reclassify-to-ui-improve` → ' +
             "orchestrator promotes directive_set='ui-improve' and re-runs " +
@@ -102,6 +105,7 @@ export function run(state: DeliveryState): StepResult {
     }
 
     const violations = _check_preconditions(envelope);
+    violations.push(..._control_role_violations(envelope));
     if (violations.length > 0) {
         return _halt_reclassify(state, violations);
     }
@@ -155,6 +159,24 @@ function _check_preconditions(envelope: Record<string, Any>): string[] {
     }
 
     return violations;
+}
+
+/**
+ * `new_control_role:<file>:<roles>` per file whose edit introduced a control
+ * role. Computed from the files on disk; an envelope `new_control_roles` value
+ * is ignored because it is the self-report this check replaces. A listed file
+ * that cannot be read is not judged here — the files check above already
+ * reports a missing list, and an unreadable path leaves nothing to compute.
+ */
+function _control_role_violations(envelope: Record<string, Any>): string[] {
+    const files = envelope['files'];
+    if (!Array.isArray(files)) return [];
+    const names = files.filter((f): f is string => typeof f === 'string');
+    const { perFile } = newControlRolesForFiles(names);
+    envelope['new_control_roles'] = perFile.flatMap((f) => f.roles);
+    return perFile
+        .filter((f) => f.roles.length > 0)
+        .map((f) => `new_control_role:${f.file}:${f.roles.join('+')}`);
 }
 
 /** First-pass halt — delegate to the agent for the single-file edit. */
