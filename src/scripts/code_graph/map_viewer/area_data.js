@@ -20,15 +20,14 @@ extendStrings({
         srcLmeta: function (f) { return 'saved schema file · ' + f; }, srcLnone: 'no schema file saved', srcLno: 'save a schema-only snapshot under agents/map/data/snapshot/',
         srcQmeta: function (n) { return n + ' column(s) named in queries'; }, srcQno: 'no query names a column literally',
         covOf: function (a, b) { return a + ' of ' + b + ' tables'; },
-        dbEdges: 'Edges', edgePhys: 'physical FK (L/M)', edgeOrm: 'ORM relation (C)', edgeRule: 'delete rule as label', edgeNote: 'An ORM relation is never a FK. A missing FK is a hint, not an error.',
+        dbEdges: 'Edges', edgePhys: 'physical FK (L/M)', edgeOrm: 'ORM relation (C)', edgeRule: 'delete rule as an icon on the line', edgeNote: 'An ORM relation is never a FK. A missing FK is a hint, not an error.',
         dbFindings: 'Findings', dbNoFindings: 'No findings.',
         dbMeta: function (t2, r) { return t2 + ' tables · ' + r + ' relations'; }, dbSnap: function (f) { return 'snapshot ' + f; },
         lines: 'Lines', lAll: 'All', lFocus: 'Focus', lOff: 'Off', lAllT: 'every relation', lFocusT: 'only the edges of the picked table, the rest dimmed', lOffT: 'no lines',
         cols: 'Columns', cAll: 'All', cKeys: 'Keys', cAllT: 'every column', cKeysT: 'only PK, FK, index and *_id',
         layout: 'Layout', yGrid: 'Grid', yDomain: 'By domain', yGridT: 'free arrangement', yDomainT: 'grouped by cluster of keys',
         fitB: 'Fit', resetPos: 'Reset arrangement', zoomL: function (z) { return 'Zoom ' + z + '×'; },
-        erdHelp: 'Drag cards by their head, drag the background to move, mouse wheel or − / + to zoom. A large schema starts the ERD with “Focus” and “Keys only”: it shows only the edges of the picked table, every other table stays dimmed.',
-        ormOnly: 'ORM only · no FK', fkCascade: 'FK · ON DELETE CASCADE', fkAct: function (a) { return 'FK · ' + a; },
+        erdHelp: function (k) { return 'Hold ' + k + ' to move and zoom: then drag a card, drag the background, or use the wheel. Without it the page scrolls; − / + / Fit always work. Lines start on “Focus”: only the edges of the picked table, the rest stays calm. A large schema also starts with “Keys”.'; },
         moreCols: function (n) { return '+ ' + n + (n === 1 ? ' more column' : ' more columns'); }, noTable: 'named by code, no table',
         driftIntro: function (c) { return 'Intended state (M, commit ' + c + ') against the observed state (L) of the saved schema file. A pending migration is not drift.'; },
         driftEl: 'Element', driftM: 'M · Migration', driftL: function (f) { return 'L · ' + f; }, driftOther: 'L · other environments', driftClass: 'Classification',
@@ -42,7 +41,11 @@ extendStrings({
         acNote: 'AC only proposes. No automatic DDL, no “add FK” button.', whyNo: 'the rule names no fix for this finding', indexedNo: 'the map records no index date',
         links: 'Links', lModels: 'Model files', lPaths: 'Request paths', lReads: 'Read in', lWrites: 'Written in', lTable: 'Table', notOnMap: 'not on the Code map', openCode: 'open in Code',
         tableSum: function (c, m, r) { return c + ' column(s) · ' + m + ' model file(s) · ' + r + ' request path(s)'; }, nRW: function (r, w) { return 'read ×' + r + ' · written ×' + w; },
-        actualT: 'actual', absentActual: 'absent in actual', notCovered: 'not in the saved schema file', notUsed: 'not named in code', pickTable: 'Pick a table or a finding.'
+        actualT: 'actual', absentActual: 'absent in actual', notCovered: 'not in the saved schema file', notUsed: 'not named in code', pickTable: 'Pick a table or a finding.',
+        icons: { fk: 'foreign key declared in the database', cascade: 'delete cascades', setnull: 'delete sets null', restrict: 'delete is restricted', soft: 'code only · no FK in the database', implied: 'same name, nothing states it (suggestion)', finding: 'a drift finding is attached' },
+        iconsHead: 'Lines', iconOpen: function (what) { return 'Relation ' + what + ' — open details'; }, popKind: { fk: 'foreign key (database)', soft: 'soft relation (code only)', implied: 'implied by name (suggestion)', orm: 'ORM relation' },
+        popRules: 'rules', popVia: 'known from', viaNames: { schema: 'schema', orm: 'ORM relation', query: 'query join', name: 'matching name' }, popSelect: 'Show in the detail rail', popClose: 'Close',
+        linksHead: { fk: 'Foreign keys (database)', soft: 'Soft relations (code only · no FK in the database)', implied: 'Implied keys (suggestion)' }, missingFk: 'The database has no constraint for this relation.', linkTo: function (n) { return n + ' linked'; }
     },
     de: {
         dbSchema: 'Schema', dbErd: 'ERD', dbDrift: 'Drift M ↔ L', dbMig: 'Migrationen',
@@ -55,15 +58,14 @@ extendStrings({
         srcLmeta: function (f) { return 'gespeicherte Schema-Datei · ' + f; }, srcLnone: 'keine Schema-Datei gespeichert', srcLno: 'einen Schema-Snapshot unter agents/map/data/snapshot/ ablegen',
         srcQmeta: function (n) { return n + ' Spalte(n) in Queries benannt'; }, srcQno: 'keine Query nennt eine Spalte wörtlich',
         covOf: function (a, b) { return a + ' von ' + b + ' Tabellen'; },
-        dbEdges: 'Kanten', edgePhys: 'physischer FK (L/M)', edgeOrm: 'ORM-Beziehung (C)', edgeRule: 'Löschregel als Label', edgeNote: 'Eine ORM-Beziehung ist nie ein FK. Fehlt ein FK, ist das ein Hinweis, kein Fehler.',
+        dbEdges: 'Kanten', edgePhys: 'physischer FK (L/M)', edgeOrm: 'ORM-Beziehung (C)', edgeRule: 'Löschregel als Symbol auf der Linie', edgeNote: 'Eine ORM-Beziehung ist nie ein FK. Fehlt ein FK, ist das ein Hinweis, kein Fehler.',
         dbFindings: 'Befunde', dbNoFindings: 'Keine Befunde.',
         dbMeta: function (t2, r) { return t2 + ' Tabellen · ' + r + ' Beziehungen'; }, dbSnap: function (f) { return 'Snapshot ' + f; },
         lines: 'Linien', lAll: 'Alle', lFocus: 'Fokus', lOff: 'Aus', lAllT: 'alle Beziehungen', lFocusT: 'nur Kanten der gewählten Tabelle, Rest gedimmt', lOffT: 'keine Linien',
         cols: 'Spalten', cAll: 'Alle', cKeys: 'Schlüssel', cAllT: 'alle Spalten', cKeysT: 'nur PK, FK, Index und *_id',
         layout: 'Layout', yGrid: 'Raster', yDomain: 'Nach Domäne', yGridT: 'freie Anordnung', yDomainT: 'gruppiert nach Schlüssel-Cluster',
         fitB: 'Einpassen', resetPos: 'Anordnung zurücksetzen', zoomL: function (z) { return 'Zoom ' + z + '×'; },
-        erdHelp: 'Karten am Kopf ziehen, Hintergrund ziehen zum Verschieben, Mausrad oder − / + zum Zoomen. Bei großen Schemas startet das ERD mit „Fokus“ und „nur Schlüssel“: Es zeigt nur die Kanten der gewählten Tabelle, alle anderen Tabellen bleiben gedimmt.',
-        ormOnly: 'ORM only · kein FK', fkCascade: 'FK · ON DELETE CASCADE', fkAct: function (a) { return 'FK · ' + a; },
+        erdHelp: function (k) { return k + ' halten zum Verschieben und Zoomen: dann Karte ziehen, Hintergrund ziehen oder Mausrad. Ohne die Taste scrollt die Seite; − / + / Einpassen gehen immer. Linien starten auf „Fokus“: nur die Kanten der gewählten Tabelle, der Rest bleibt ruhig. Große Schemas starten zusätzlich mit „Schlüssel“.'; },
         moreCols: function (n) { return '+ ' + n + (n === 1 ? ' weitere Spalte' : ' weitere Spalten'); }, noTable: 'vom Code benannt, keine Tabelle',
         driftIntro: function (c) { return 'Gewünschter Stand (M, Commit ' + c + ') gegen beobachteten Stand (L) der gespeicherten Schema-Datei. Offene Migration ist kein Drift.'; },
         driftEl: 'Element', driftM: 'M · Migration', driftL: function (f) { return 'L · ' + f; }, driftOther: 'L · weitere Umgebungen', driftClass: 'Einordnung',
@@ -77,7 +79,11 @@ extendStrings({
         acNote: 'AC schlägt nur vor. Kein automatisches DDL, kein „FK hinzufügen“-Knopf.', whyNo: 'die Regel nennt für diesen Befund keinen Fix', indexedNo: 'die Karte hält kein Index-Datum fest',
         links: 'Verknüpfungen', lModels: 'Model-Dateien', lPaths: 'Request-Pfade', lReads: 'Gelesen in', lWrites: 'Geschrieben in', lTable: 'Tabelle', notOnMap: 'nicht auf der Code-Karte', openCode: 'im Code öffnen',
         tableSum: function (c, m, r) { return c + ' Spalte(n) · ' + m + ' Model-Datei(en) · ' + r + ' Request-Pfad(e)'; }, nRW: function (r, w) { return 'gelesen ×' + r + ' · geschrieben ×' + w; },
-        actualT: 'tatsächlich', absentActual: 'fehlt tatsächlich', notCovered: 'nicht in der gespeicherten Schema-Datei', notUsed: 'im Code nicht benannt', pickTable: 'Tabelle oder Befund wählen.'
+        actualT: 'tatsächlich', absentActual: 'fehlt tatsächlich', notCovered: 'nicht in der gespeicherten Schema-Datei', notUsed: 'im Code nicht benannt', pickTable: 'Tabelle oder Befund wählen.',
+        icons: { fk: 'Fremdschlüssel in der Datenbank deklariert', cascade: 'Löschen kaskadiert', setnull: 'Löschen setzt NULL', restrict: 'Löschen ist eingeschränkt', soft: 'nur im Code · FK fehlt in der DB', implied: 'gleicher Name, nichts belegt es (Vorschlag)', finding: 'ein Drift-Befund hängt daran' },
+        iconsHead: 'Linien', iconOpen: function (what) { return 'Beziehung ' + what + ' — Details öffnen'; }, popKind: { fk: 'Fremdschlüssel (Datenbank)', soft: 'weiche Beziehung (nur im Code)', implied: 'per Name vermutet (Vorschlag)', orm: 'ORM-Beziehung' },
+        popRules: 'Regeln', popVia: 'bekannt aus', viaNames: { schema: 'Schema', orm: 'ORM-Beziehung', query: 'Query-Join', name: 'gleicher Name' }, popSelect: 'In der Detail-Leiste zeigen', popClose: 'Schließen',
+        linksHead: { fk: 'Fremdschlüssel (Datenbank)', soft: 'Weiche Beziehungen (nur im Code · FK fehlt in der DB)', implied: 'Vermutete Schlüssel (Vorschlag)' }, missingFk: 'Die Datenbank hat für diese Beziehung keinen Constraint.', linkTo: function (n) { return n + ' verknüpft'; }
     }
 });
 
@@ -166,6 +172,43 @@ function dColumnLinks(tb, c) {
     out.push([t('lTable'), { label: tb.name, go: function () { avPick('data', 'table/' + tb.name); } }]);
     return out;
 }
+/** One glyph per kind of line annotation, drawn inline so the CSP never has to allow an image. */
+var DB_ICONS = {
+    fk: ['M2.5 8a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0', 'M7.5 8H14', 'M12 8v3'],
+    cascade: ['M4 3.5l4 4l4 -4', 'M4 8.5l4 4l4 -4'],
+    setnull: ['M3 8a5 5 0 1 0 10 0a5 5 0 1 0 -10 0', 'M4.5 11.5l7 -7'],
+    restrict: ['M3 8a5 5 0 1 0 10 0a5 5 0 1 0 -10 0', 'M5.5 8h5'],
+    soft: ['M6.5 5H4.5a3 3 0 0 0 0 6h2', 'M9.5 5h2a3 3 0 0 1 0 6h-2', 'M7.2 8h1.6'],
+    implied: ['M3 6.5c1.6 -1.6 3.4 -1.6 5 0s3.4 1.6 5 0', 'M3 10.5c1.6 -1.6 3.4 -1.6 5 0s3.4 1.6 5 0'],
+    finding: ['M8 2.5l6 10.5H2z', 'M8 6.5v3', 'M8 11.2v.3']
+};
+function dIcon(kind) {
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    [['width', '14'], ['height', '14'], ['viewBox', '0 0 16 16'], ['fill', 'none'], ['stroke', 'currentColor'], ['stroke-width', '1.6'], ['stroke-linecap', 'round'], ['stroke-linejoin', 'round'], ['aria-hidden', 'true']].forEach(function (a) { svg.setAttribute(a[0], a[1]); });
+    (DB_ICONS[kind] || []).forEach(function (d) { var pa = document.createElementNS(ns, 'path'); pa.setAttribute('d', d); svg.appendChild(pa); });
+    return svg;
+}
+/** The icon a delete rule draws on its foreign key. */
+function dRuleIcon(onDelete) {
+    var r = String(onDelete || '').toLowerCase();
+    return /cascade/.test(r) ? 'cascade' : /set\s*null/.test(r) ? 'setnull' : /restrict|no\s*action/.test(r) ? 'restrict' : 'fk';
+}
+/** The picked column and the links it takes part in, when the pick is a column with links. */
+function dLinkSel(p, key) {
+    if (key.indexOf('column/') !== 0) return null;
+    var full = key.slice(7);
+    var tn = full.replace(/\.[^.]*$/, '');
+    var tb = dTable(p, tn);
+    var col = tb ? tb.columns.filter(function (c) { return tn + '.' + c.name === full; })[0] : null;
+    if (!col || !(col.links || []).length) return null;
+    var tables = Object.create(null);
+    var cols = Object.create(null);
+    tables[tn] = true;
+    col.links.forEach(function (l) { tables[l.to.table] = true; cols[l.to.table + '.' + l.to.column] = l.kind; });
+    return { table: tn, column: col.name, links: col.links, tables: tables, cols: cols };
+}
+
 function dSev(f) { return stChip(t('sevNames')[f.severity] || f.severity, SEV_CLASS[f.severity] === 'bad' ? 'red' : SEV_CLASS[f.severity]); }
 
 AREA_MODULES.data = {
@@ -273,7 +316,7 @@ function dLeft(p, sel, left) {
     }
     add(edges, add(el('div', { class: 'db-edge' }), svgLine(''), document.createTextNode(t('edgePhys'))),
         add(el('div', { class: 'db-edge' }), svgLine('orm'), document.createTextNode(t('edgeOrm'))),
-        add(el('div', { class: 'db-edge' }), stChip('CASCADE', 'red'), document.createTextNode(t('edgeRule'))),
+        add(el('div', { class: 'db-edge' }), add(el('span', { class: 'db-badge cascade', 'aria-hidden': 'true' }), dIcon('cascade')), document.createTextNode(t('edgeRule'))),
         el('span', { class: 'db-note' }, t('edgeNote')));
     wrap.appendChild(edges);
 
@@ -405,7 +448,7 @@ function dGrid(names, adj, ncols) {
 
 function dErd(p, sel, bodyEl) {
     var big = p.tables.length > DB_BIG;
-    var lines = dbState.lines || (big ? 'focus' : 'all');
+    var lines = dbState.lines || 'focus';
     var cols = dbState.cols || (big ? 'keys' : 'all');
     var src = dbState.src;
     var rerender = function () { renderAreaPage('data', current.item); };
@@ -447,12 +490,14 @@ function dErd(p, sel, bodyEl) {
     p.foreignKeys.forEach(function (k) { if (k.from.table === sel.focus) near[k.to.table] = true; if (k.to.table === sel.focus) near[k.from.table] = true; });
     rels.forEach(function (r) { if (r.from === sel.focus) near[r.to] = true; if (r.to === sel.focus) near[r.from] = true; });
 
+    var link = dLinkSel(p, current.item);
     var cards = Object.create(null);
     p.tables.forEach(function (tb) {
         var card = el('div', { class: 'db-table', role: 'button', tabindex: '0', 'data-table': tb.name, 'aria-label': tb.name });
         if (sel.hot[tb.name]) card.classList.add('hot');
         else if (sel.focus === tb.name) card.classList.add('focus');
-        if (lines === 'focus' && !near[tb.name]) card.classList.add('faded');
+        if (link ? !link.tables[tb.name] : lines === 'focus' && !near[tb.name]) card.classList.add('faded');
+        if (link && link.tables[tb.name] && link.table !== tb.name) card.classList.add('linked');
         var covered = tb.columns.some(function (c) { return c.actual !== undefined; });
         var coded = tb.models.length > 0 || rels.some(function (r) { return r.from === tb.name || r.to === tb.name; });
         var head = el('div', { class: 'db-thead' });
@@ -460,9 +505,11 @@ function dErd(p, sel, bodyEl) {
         [['C', coded], ['M', true], ['L', covered]].forEach(function (s2) { bd.appendChild(el('span', { class: 'db-src ' + s2[0] + (src[s2[0]] && s2[1] ? '' : ' off') }, s2[0])); });
         add(head, el('span', { class: 'tn', title: tb.name }, tb.name), bd);
         card.appendChild(head);
-        var list = cols === 'keys' ? tb.columns.filter(function (c) { return c.key || /_id$/.test(c.name); }) : tb.columns;
+        var list = cols === 'keys' ? tb.columns.filter(function (c) { return c.key || /_id$/.test(c.name) || (link && link.cols[tb.name + '.' + c.name]); }) : tb.columns;
         list.forEach(function (c) {
-            var row = el('button', { type: 'button', class: 'db-col', title: tb.name + '.' + c.name + ' · ' + c.type + (c.nullable ? ' · nullable' : '') });
+            var row = el('button', { type: 'button', class: 'db-col', 'data-col': c.name, title: tb.name + '.' + c.name + ' · ' + c.type + (c.nullable ? ' · nullable' : '') });
+            if (link && link.cols[tb.name + '.' + c.name]) row.classList.add('linked', 'lk-' + link.cols[tb.name + '.' + c.name]);
+            if ((c.links || []).length) row.classList.add('haslinks');
             var st = dActualState(c);
             var typeText = c.type + (c.nullable ? '?' : '');
             if (src.L && st === 'absent') row.classList.add('gone');
@@ -485,7 +532,7 @@ function dErd(p, sel, bodyEl) {
     });
     ghosts.forEach(function (g) {
         var card = el('div', { class: 'db-table ghost', 'data-table': g.id });
-        if (lines === 'focus' && !near[g.id]) card.classList.add('faded');
+        if (link || (lines === 'focus' && !near[g.id])) card.classList.add('faded');
         add(card, add(el('div', { class: 'db-thead' }), el('span', { class: 'tn', title: g.label }, g.label)), el('div', { class: 'db-tnote' }, t('noTable')));
         cards[g.id] = card;
     });
@@ -556,9 +603,17 @@ function dErd(p, sel, bodyEl) {
         zb(t('fitB'), t('fitB'), 'fit', function () { dFit(stage); }), reset);
     var zl = el('span', { class: 'db-zl' });
     add(stage, zoom, zl);
-    erd.appendChild(el('div', { class: 'db-help' }, t('erdHelp')));
+    var legend = add(el('div', { class: 'db-legend', 'aria-label': t('iconsHead') }), el('span', { class: 'cap' }, t('iconsHead')));
+    ['fk', 'cascade', 'setnull', 'restrict', 'soft', 'implied', 'finding'].forEach(function (k) {
+        legend.appendChild(add(el('span', { class: 'db-leg', 'data-icon': k }), add(el('span', { class: 'db-badge ' + k + (k === 'finding' ? ' has-finding' : ''), 'aria-hidden': 'true' }), dIcon(k)), el('span', null, t('icons')[k])));
+    });
+    erd.appendChild(legend);
+    erd.appendChild(el('div', { class: 'db-help' }, t('erdHelp')(dModKeyName())));
 
-    stage.db = { world: world, svg: svg, labels: labels, cards: cards, zl: zl, p: p, rels: rels, fkPair: fkPair, lines: lines, src: src, sel: sel };
+    stage.db = { world: world, svg: svg, labels: labels, cards: cards, zl: zl, p: p, rels: rels, fkPair: fkPair, lines: lines, src: src, sel: sel, link: link };
+    dBindKeys();
+    dBindModifier();
+    dClosePopup();
     dEdges(stage);
     dInteract(stage);
     dApply(stage);
@@ -578,12 +633,97 @@ function dClip(r, tx, ty) {
     return [cx + dx * f, cy + dy * f];
 }
 
+/**
+ * A line annotation: one icon badge on the line instead of a text label. It is a
+ * button; it opens a popup with everything the label would have said and more.
+ */
+function dBadge(stage, x, y, icon, info) {
+    var b = el('button', { type: 'button', class: 'db-badge ' + icon + (info.finding ? ' has-finding' : ''), 'data-icon': icon, 'aria-label': t('iconOpen')(info.title), title: t('icons')[icon] });
+    b.appendChild(dIcon(icon));
+    // Two badges never cover each other: a later one steps down until it is clear.
+    var placed = stage.db.badges || (stage.db.badges = []);
+    for (var guard = 0; guard < 12 && placed.some(function (q) { return Math.abs(q[0] - x) < 24 && Math.abs(q[1] - y) < 24; }); guard++) y += 24;
+    placed.push([x, y]);
+    b.style.left = x.toFixed(0) + 'px';
+    b.style.top = y.toFixed(0) + 'px';
+    b.addEventListener('pointerdown', function (ev) { ev.stopPropagation(); });
+    b.addEventListener('click', function (ev) { ev.stopPropagation(); dPopup(stage, b, info); });
+    stage.db.labels.appendChild(b);
+    return b;
+}
+
+function dClosePopup() {
+    var old = document.getElementById('db-pop');
+    if (old) old.remove();
+}
+/** The popup a badge opens: both ends, the kind, the rules, where it was read, the finding and its fix. */
+function dPopup(stage, badge, info) {
+    var open = document.getElementById('db-pop');
+    var same = open && open.getAttribute('data-for') === info.title;
+    dClosePopup();
+    if (same) return;
+    var pop = el('div', { class: 'db-pop', id: 'db-pop', role: 'dialog', 'aria-label': info.title, 'data-for': info.title });
+    var head = add(el('div', { class: 'db-pop-h' }), add(el('span', { class: 'db-badge ' + info.icon, 'aria-hidden': 'true' }), dIcon(info.icon)), el('b', { class: 'mono' }, info.title));
+    var x = el('button', { type: 'button', class: 'deselect', 'aria-label': t('popClose'), title: t('popClose') }, '×');
+    x.addEventListener('click', dClosePopup);
+    head.appendChild(x);
+    pop.appendChild(head);
+    var kv = el('div', { class: 'db-kv mono' });
+    add(kv, el('span', { class: 'k' }, t('dKind')), el('span', null, t('popKind')[info.kind] || info.kind));
+    if (info.via && info.via.length) add(kv, el('span', { class: 'k' }, t('popVia')), el('span', null, info.via.map(function (v) { return t('viaNames')[v] || v; }).join(', ')));
+    if (info.rules) add(kv, el('span', { class: 'k' }, t('popRules')), el('span', null, info.rules));
+    pop.appendChild(kv);
+    if (info.kind === 'soft') pop.appendChild(el('p', { class: 'db-pop-miss' }, t('missingFk')));
+    if (info.witnesses.length) pop.appendChild(dEvidence(info.witnesses));
+    var f = info.finding;
+    if (f) {
+        var fb = el('button', { type: 'button', class: 'db-find' });
+        add(fb, el('span', { class: 'id' }, f.f.id), el('span', { class: 'sh' }, f.f.title || f.f.message), dSev(f.f));
+        fb.addEventListener('click', function () { dClosePopup(); avPick('data', 'finding/' + f.i); });
+        pop.appendChild(fb);
+        if (f.f.fix) pop.appendChild(el('pre', { class: 'db-cmd' }, f.f.fix));
+    }
+    if (info.pick) {
+        var pb = el('button', { type: 'button', class: 'db-pop-pick' }, t('popSelect'));
+        pb.addEventListener('click', function () { dClosePopup(); avPick('data', info.pick); });
+        pop.appendChild(pb);
+    }
+    pop.addEventListener('pointerdown', function (ev) { ev.stopPropagation(); });
+    stage.appendChild(pop);
+    var sr = stage.getBoundingClientRect();
+    var br = badge.getBoundingClientRect();
+    var left = Math.min(Math.max(8, br.right - sr.left + 6), Math.max(8, stage.clientWidth - pop.offsetWidth - 8));
+    var top = Math.min(Math.max(8, br.top - sr.top - 8), Math.max(8, stage.clientHeight - pop.offsetHeight - 8));
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+    var focusable = pop.querySelector('button');
+    if (focusable) focusable.focus();
+}
+var dbKeysBound = false;
+function dBindKeys() {
+    if (dbKeysBound) return;
+    dbKeysBound = true;
+    document.addEventListener('keydown', function (ev) {
+        if (ev.key !== 'Escape' || current.route !== 'data') return;
+        if (document.getElementById('db-pop')) { dClosePopup(); return; }
+        if (current.item.indexOf('column/') === 0) avPick('data', '');
+    });
+    document.addEventListener('pointerdown', function (ev) { if (!ev.target.closest('#db-pop, .db-badge')) dClosePopup(); });
+}
+
+function dFindingFor(p, ids, rule) {
+    var list = p.findings || [];
+    for (var i = 0; i < list.length; i++) if (list[i].id === rule && ids.indexOf(String(list[i].subject).replace(/^column:/, '')) >= 0) return { f: list[i], i: i };
+    return null;
+}
+
 /** The edges as the cards stand now; drawn again after every drag. */
 function dEdges(stage) {
     var e = stage.db;
     var svgNS = 'http://www.w3.org/2000/svg';
     while (e.svg.firstChild) e.svg.removeChild(e.svg.firstChild);
     clear(e.labels);
+    e.badges = [];
     var maxX = 0;
     var maxY = 0;
     Object.keys(e.cards).forEach(function (n) { var r = dRect(e.cards[n]); maxX = Math.max(maxX, r.x + r.w); maxY = Math.max(maxY, r.y + r.h); });
@@ -592,9 +732,12 @@ function dEdges(stage) {
     e.world.style.height = (maxY + 24) + 'px';
     e.svg.setAttribute('width', String(maxX + 24));
     e.svg.setAttribute('height', String(maxY + 24));
+    function title(el2, text) { var tt = document.createElementNS(svgNS, 'title'); tt.textContent = text; el2.appendChild(tt); }
+    if (e.link) { dLinkLines(stage); return; }
     if (e.lines === 'off') return;
     var phys = e.src.L || e.src.M;
-    function edge(a, b, cls, off, text, lcls, title, selected) {
+    var badged = Object.create(null);
+    function edge(a, b, cls, off, info, selected) {
         var ca = e.cards[a];
         var cb = e.cards[b];
         if (!ca || !cb || a === b) return;
@@ -612,33 +755,25 @@ function dEdges(stage) {
         l.setAttribute('x1', (p1[0] + ox).toFixed(1)); l.setAttribute('y1', (p1[1] + oy).toFixed(1));
         l.setAttribute('x2', (p2[0] + ox).toFixed(1)); l.setAttribute('y2', (p2[1] + oy).toFixed(1));
         l.setAttribute('class', cls + (selected ? ' sel' : ''));
-        var tt = document.createElementNS(svgNS, 'title');
-        tt.textContent = title;
-        l.appendChild(tt);
+        title(l, info ? info.title : '');
         e.svg.appendChild(l);
-        if (!text) return;
-        var mx = (p1[0] + p2[0]) / 2 + 8;
-        var my = (p1[1] + p2[1]) / 2 - 10;
-        if (Math.abs(bc[0] - ac[0]) > Math.abs(bc[1] - ac[1])) { mx = (p1[0] + p2[0]) / 2; my = Math.min(ra.y, rb.y) - 14; }
-        // A second labelled edge between the same two cards stacks its label below the first.
+        if (!info) return;
+        // Badges of one pair of cards sit apart along the line.
         var pair = a < b ? a + '|' + b : b + '|' + a;
-        my += (labelled[pair] || 0) * 18;
-        labelled[pair] = (labelled[pair] || 0) + 1;
-        var lb = el('div', { class: 'db-elabel ' + lcls, title: title }, text);
-        lb.style.left = mx.toFixed(0) + 'px';
-        lb.style.top = my.toFixed(0) + 'px';
-        e.labels.appendChild(lb);
+        var n = badged[pair] = (badged[pair] || 0) + 1;
+        var f = n === 1 ? 0.5 : n === 2 ? 0.32 : 0.68;
+        dBadge(stage, p1[0] + (p2[0] - p1[0]) * f + ox, p1[1] + (p2[1] - p1[1]) * f + oy, info.icon, info);
     }
     var hot = e.sel.hot;
-    var labelled = Object.create(null);
     if (phys) {
         e.p.foreignKeys.forEach(function (k) {
             var cascade = /cascade/i.test(k.onDelete || '');
             var acts = [];
             if (k.onDelete) acts.push('ON DELETE ' + k.onDelete.toUpperCase());
             if (k.onUpdate) acts.push('ON UPDATE ' + k.onUpdate.toUpperCase());
-            var title = k.from.table + '.' + k.from.column + ' → ' + k.to.table + '.' + k.to.column + (acts.length ? ' · ' + acts.join(' · ') : '');
-            edge(k.from.table, k.to.table, cascade ? 'cascade' : '', 0, cascade ? t('fkCascade') : acts.length ? t('fkAct')(acts.join(' · ')) : '', cascade ? 'cascade' : 'act', title, hot[k.from.table] && hot[k.to.table]);
+            var name = k.from.table + '.' + k.from.column + ' → ' + k.to.table + '.' + k.to.column;
+            edge(k.from.table, k.to.table, cascade ? 'cascade' : '', 0,
+                { title: name, icon: dRuleIcon(k.onDelete), kind: 'fk', via: ['schema'], rules: acts.join(' · '), witnesses: [k.witness], pick: 'fk/' + name }, hot[k.from.table] && hot[k.to.table]);
         });
     }
     if (e.src.C) {
@@ -649,10 +784,66 @@ function dEdges(stage) {
             if (seen[key]) return;
             seen[key] = true;
             var noFk = !e.fkPair[r.from + '|' + r.to];
-            var kinds = e.rels.filter(function (x) { return pk(x) === key; }).map(function (x) { return x.r.from + ' → ' + x.r.to + ' · ' + x.r.kind; });
-            edge(r.from, r.to, 'orm', phys && !noFk ? 7 : 0, noFk ? t('ormOnly') : '', 'orm', kinds.join('\n'), (hot[r.from] || /^model:/.test(r.from)) && (hot[r.to] || /^model:/.test(r.to)));
+            var same = e.rels.filter(function (x) { return pk(x) === key; });
+            var name = r.from.replace(/^model:/, '') + ' ↔ ' + r.to.replace(/^model:/, '');
+            var keyed = same.filter(function (x) { return x.r.key; }).map(function (x) { return [x.from + '.' + x.r.key, x.to + '.' + x.r.key]; });
+            var finding = null;
+            keyed.forEach(function (k2) { finding = finding || dFindingFor(e.p, k2, 'DR-1'); });
+            var info = noFk ? { title: name, icon: 'soft', kind: 'soft', via: ['orm'], rules: same.map(function (x) { return x.r.from + ' → ' + x.r.to + ' · ' + x.r.kind; }).join('; '), witnesses: same.map(function (x) { return x.r.witness; }), finding: finding, pick: 'rel/' + r.r.kind + '/' + r.r.from + ' → ' + r.r.to } : null;
+            edge(r.from, r.to, 'orm', phys && !noFk ? 7 : 0, info, (hot[r.from] || /^model:/.test(r.from)) && (hot[r.to] || /^model:/.test(r.to)));
         });
     }
+}
+
+/** With a key column picked: one line from it to every column it links to, styled by kind, each with its badge. */
+function dLinkLines(stage) {
+    var e = stage.db;
+    var svgNS = 'http://www.w3.org/2000/svg';
+    var link = e.link;
+    function anchor(table, column, towards) {
+        var card = e.cards[table];
+        if (!card) return null;
+        var r = dRect(card);
+        var row = card.querySelector('.db-col[data-col="' + column.replace(/"/g, '') + '"]');
+        var y = row ? r.y + row.offsetTop + row.offsetHeight / 2 : r.y + r.h / 2;
+        var right = towards > r.x + r.w / 2;
+        return { x: right ? r.x + r.w : r.x, y: y, dir: right ? 1 : -1 };
+    }
+    var self = e.cards[link.table];
+    if (!self) return;
+    var sr = dRect(self);
+    var counts = Object.create(null);
+    link.links.forEach(function (l) {
+        var other = e.cards[l.to.table];
+        if (!other) return;
+        var or = dRect(other);
+        var a = anchor(link.table, link.column, or.x + or.w / 2);
+        var b = anchor(l.to.table, l.to.column, sr.x + sr.w / 2);
+        if (!a || !b) return;
+        if (l.to.table === link.table) { b.x = a.x; b.dir = a.dir; }
+        var bend = Math.max(36, Math.abs(b.x - a.x) * 0.35);
+        var c1 = [a.x + a.dir * bend, a.y];
+        var c2 = [b.x + b.dir * bend, b.y];
+        var path = document.createElementNS(svgNS, 'path');
+        path.setAttribute('d', 'M' + a.x.toFixed(1) + ' ' + a.y.toFixed(1) + ' C' + c1[0].toFixed(1) + ' ' + c1[1].toFixed(1) + ' ' + c2[0].toFixed(1) + ' ' + c2[1].toFixed(1) + ' ' + b.x.toFixed(1) + ' ' + b.y.toFixed(1));
+        var cascade = l.kind === 'fk' && /cascade/i.test(l.onDelete || '');
+        path.setAttribute('class', 'db-link ' + l.kind + (cascade ? ' cascade' : ''));
+        path.setAttribute('data-kind', l.kind);
+        var name = (l.direction === 'out' ? link.table + '.' + link.column + ' → ' + l.to.table + '.' + l.to.column : l.to.table + '.' + l.to.column + ' → ' + link.table + '.' + link.column);
+        var tt = document.createElementNS(svgNS, 'title');
+        tt.textContent = name;
+        path.appendChild(tt);
+        e.svg.appendChild(path);
+        var mx = (a.x + 3 * c1[0] + 3 * c2[0] + b.x) / 8;
+        var my = (a.y + 3 * c1[1] + 3 * c2[1] + b.y) / 8;
+        var k = l.to.table + '|' + l.kind;
+        my += (counts[k] = (counts[k] || 0) + 1) > 1 ? (counts[k] - 1) * 22 : 0;
+        var acts = [];
+        if (l.onDelete) acts.push('ON DELETE ' + l.onDelete.toUpperCase());
+        if (l.onUpdate) acts.push('ON UPDATE ' + l.onUpdate.toUpperCase());
+        var f = l.finding !== undefined && e.p.findings[l.finding] ? { f: e.p.findings[l.finding], i: l.finding } : null;
+        dBadge(stage, mx, my, l.kind === 'fk' ? dRuleIcon(l.onDelete) : l.kind, { title: name, icon: l.kind === 'fk' ? dRuleIcon(l.onDelete) : l.kind, kind: l.kind, via: l.via, rules: acts.join(' · '), witnesses: l.witnesses, finding: f, pick: 'column/' + l.to.table + '.' + l.to.column });
+    });
 }
 
 function dApply(stage) {
@@ -682,9 +873,32 @@ function dFit(stage, onlyShrink) {
     dApply(stage);
 }
 
+/** The key that unlocks moving and zooming, named as the platform names it. */
+function dModKeyName() { return /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || '') ? '⌘' : lang === 'de' ? 'Strg' : 'Ctrl'; }
+function dMod(ev) { return !!(ev.ctrlKey || ev.metaKey); }
+
+/**
+ * Moving and zooming need Ctrl / ⌘ held, so the page scrolls freely over the
+ * stage: a plain drag does nothing, a plain wheel scrolls, clicks still pick.
+ * Touch has no modifier: two fingers pinch and pan, one finger scrolls the page.
+ */
 function dInteract(stage) {
+    var touches = Object.create(null);
+    var pinch = null;
     stage.addEventListener('pointerdown', function (ev) {
-        if (ev.button !== 0 || ev.target.closest('.db-zoom')) return;
+        if (ev.target.closest('.db-zoom, .db-badge, #db-pop')) return;
+        if (ev.pointerType === 'touch') {
+            touches[ev.pointerId] = [ev.clientX, ev.clientY];
+            var ids = Object.keys(touches);
+            if (ids.length === 2) {
+                var a = touches[ids[0]];
+                var b = touches[ids[1]];
+                pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, mx: (a[0] + b[0]) / 2, my: (a[1] + b[1]) / 2, z: dbState.z, px: dbState.panX, py: dbState.panY };
+            }
+            return;
+        }
+        if (ev.button !== 0 || !dMod(ev)) return;
+        ev.preventDefault();
         var card = ev.target.closest('.db-table');
         var sx = ev.clientX;
         var sy = ev.clientY;
@@ -723,7 +937,48 @@ function dInteract(stage) {
         window.addEventListener('pointermove', move);
         window.addEventListener('pointerup', up);
     });
-    stage.addEventListener('wheel', function (ev) { ev.preventDefault(); dZoom(stage, ev.deltaY < 0 ? 1.12 : 1 / 1.12); }, { passive: false });
+    stage.addEventListener('pointermove', function (ev) {
+        if (ev.pointerType !== 'touch') { stage.classList.toggle('mod', dMod(ev)); return; }
+        if (!touches[ev.pointerId]) return;
+        touches[ev.pointerId] = [ev.clientX, ev.clientY];
+        var ids = Object.keys(touches);
+        if (!pinch || ids.length !== 2) return;
+        var a = touches[ids[0]];
+        var b = touches[ids[1]];
+        var d = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1;
+        var r = stage.getBoundingClientRect();
+        var nz = Math.max(0.4, Math.min(3, pinch.z * d / pinch.d));
+        var cx = pinch.mx - r.left;
+        var cy = pinch.my - r.top;
+        dbState.panX = cx - (cx - pinch.px) * nz / pinch.z + ((a[0] + b[0]) / 2 - pinch.mx);
+        dbState.panY = cy - (cy - pinch.py) * nz / pinch.z + ((a[1] + b[1]) / 2 - pinch.my);
+        dbState.z = nz;
+        dApply(stage);
+    });
+    var lift = function (ev) { delete touches[ev.pointerId]; if (Object.keys(touches).length < 2) pinch = null; };
+    stage.addEventListener('pointerup', lift);
+    stage.addEventListener('pointercancel', lift);
+    stage.addEventListener('pointerleave', function (ev) { if (ev.pointerType !== 'touch') stage.classList.remove('mod'); });
+    // A click on the empty stage clears a picked key; on a card, a key or an icon it picks as before.
+    stage.addEventListener('click', function (ev) {
+        if (stage.moved || ev.target.closest('.db-table, .db-zoom, .db-badge, #db-pop')) return;
+        if (current.item.indexOf('column/') === 0) avPick('data', '');
+    });
+    stage.addEventListener('wheel', function (ev) {
+        if (!dMod(ev)) return;
+        ev.preventDefault();
+        dZoom(stage, ev.deltaY < 0 ? 1.12 : 1 / 1.12);
+    }, { passive: false });
+}
+var dbModBound = false;
+/** The stage shows grab and move cursors while the modifier is down, even before the pointer moves. */
+function dBindModifier() {
+    if (dbModBound) return;
+    dbModBound = true;
+    var set = function (on) { var st = document.getElementById('db-stage'); if (st) st.classList.toggle('mod', on); };
+    document.addEventListener('keydown', function (ev) { if (ev.key === 'Control' || ev.key === 'Meta') set(true); });
+    document.addEventListener('keyup', function (ev) { if (ev.key === 'Control' || ev.key === 'Meta') set(false); });
+    window.addEventListener('blur', function () { set(false); });
 }
 
 // ---- Drift and Migrations lenses ----------------------------------------------------------
@@ -859,6 +1114,30 @@ function dDetail(p, key, sel, right) {
             t('actualT') + ': ' + (col.actual ? col.actual.type + (col.actual.nullable ? ' · nullable' : '') : col.actual === null ? t('absentActual') : t('notCovered')) + '\n' +
             (col.code ? t('nRW')(col.code.reads.length, col.code.writes.length) : t('notUsed'))));
         if (st !== 'uncovered') d.appendChild(add(el('span'), stChip(t(DRIFT_LABEL[st]), DRIFT_CLASS[st])));
+        ['fk', 'soft', 'implied'].forEach(function (kind) {
+            var group = (col.links || []).filter(function (l) { return l.kind === kind; });
+            if (!group.length) return;
+            var sec = add(el('div', { class: 'db-sec tight db-links', 'data-kind': kind }), el('span', { class: 'cap' }, t('linksHead')[kind] + ' (' + group.length + ')'));
+            group.forEach(function (l) {
+                var icon = kind === 'fk' ? dRuleIcon(l.onDelete) : kind;
+                var b = el('button', { type: 'button', class: 'db-find' });
+                add(b, add(el('span', { class: 'db-badge ' + icon, 'aria-hidden': 'true' }), dIcon(icon)), el('span', { class: 'sh mono' }, (l.direction === 'out' ? '→ ' : '← ') + l.to.table + '.' + l.to.column),
+                    el('span', { class: 'muted' }, l.via.map(function (v) { return t('viaNames')[v] || v; }).join(', ') + (l.onDelete ? ' · ON DELETE ' + l.onDelete.toUpperCase() : '')));
+                b.addEventListener('click', function () { avPick('data', 'column/' + l.to.table + '.' + l.to.column); });
+                sec.appendChild(b);
+                if (kind === 'soft') sec.appendChild(el('span', { class: 'db-note' }, t('missingFk')));
+                sec.appendChild(dEvidence(l.witnesses));
+                var f = l.finding !== undefined ? p.findings[l.finding] : null;
+                if (f) {
+                    var fb = el('button', { type: 'button', class: 'db-find' });
+                    add(fb, el('span', { class: 'id' }, f.id), el('span', { class: 'sh' }, f.title || f.message), dSev(f));
+                    fb.addEventListener('click', function () { avPick('data', 'finding/' + l.finding); });
+                    sec.appendChild(fb);
+                    if (f.fix) sec.appendChild(el('pre', { class: 'db-cmd' }, f.fix));
+                }
+            });
+            d.appendChild(sec);
+        });
     }
     if (!tb && item.rows) d.appendChild(kvGrid(item.rows));
     var codeFrom = col ? 1 + (col.actual ? 1 : 0) : Infinity;

@@ -130,7 +130,7 @@ describe('the Schema rail', () => {
         expect(text).toMatch(/connection\s*default · pgsql/);
         expect(text).toMatch(/environment\s*no data/);
         expect(text).toContain('1 of 3 tables');
-        expect(text).toMatch(/physical FK \(L\/M\)[\s\S]*ORM relation \(C\)[\s\S]*CASCADE/);
+        expect(text).toMatch(/physical FK \(L\/M\)[\s\S]*ORM relation \(C\)[\s\S]*delete rule as an icon on the line/);
         expect(await left.locator('.db-find').allTextContents()).toEqual([expect.stringContaining('DR-1'), expect.stringContaining('DR-3')]);
         expect(await left.locator('.db-find[aria-pressed="true"]').textContent()).toContain('DR-1');
         await left.locator('.db-find', { hasText: 'DR-3' }).click();
@@ -152,9 +152,10 @@ describe('the ERD', () => {
         expect(await page.locator('.db-table').evaluateAll((cs) => cs.map((c) => c.getAttribute('data-table')).sort())).toEqual(['customers', 'invoices', 'model:Tag', 'orders']);
         expect(await page.locator('.db-table[data-table="customers"] .db-col .k.PK').count()).toBe(1);
         expect(await page.locator('.db-table[data-table="invoices"] .db-col .k.FK').count()).toBe(1);
+        await page.click('.db-seg[aria-label="Lines"] button[data-v="all"]');
         expect(await page.locator('.db-edges line.cascade').count()).toBe(1);
-        expect(await page.locator('.db-elabel.cascade').textContent()).toBe('FK · ON DELETE CASCADE');
-        expect(await page.locator('.db-elabel.orm').allTextContents()).toEqual(['ORM only · no FK', 'ORM only · no FK']);
+        expect(await page.locator('.db-world button.db-badge[data-icon="cascade"]').count()).toBe(1);
+        expect(await page.locator('.db-world button.db-badge[data-icon="soft"]').count()).toBe(2);
         expect(await page.locator('.db-table.ghost').textContent()).toContain('named by code, no table');
         // The column the picked finding is about is marked, its table carries the finding colour.
         expect(await page.locator('.db-table[data-table="orders"]').getAttribute('class')).toContain('hot');
