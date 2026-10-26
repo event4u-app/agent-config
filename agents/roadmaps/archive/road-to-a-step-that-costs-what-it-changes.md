@@ -108,7 +108,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
       file shrank.
       verify: detector verdicts identical on a 30-session replay; Stop p95
       lower; the fallback path covered by a test.
-- [ ] **1.3 Read the current phase, `## Decisions` and `## Blockers` per step.** Contract changed 2026-10-21, verify pending: `--steps` counts roadmap text returned to `Read` and to shell reads per step (R2 finding 4 — an early tick on `Read` alone was withdrawn). Over 242 steps p50 0 KB, p90 33.7 KB; but the largest active roadmap had a step read 86.2 KB and the second 46.8 KB, over the target. The loop's § 5 step 1 now says: the step's own section by `grep -n` plus a ranged read, never the whole roadmap. Closes on the first drain over the largest roadmap reading < 40 KB per step; none since 2026-10-21 (2026-10-24). <!-- blocked-by: largest-roadmap-drain-under-forty-kb -->
+- [~] **1.3 Read the current phase, `## Decisions` and `## Blockers` per step.** Contract changed 2026-10-21, verify pending: `--steps` counts roadmap text returned to `Read` and to shell reads per step (R2 finding 4 — an early tick on `Read` alone was withdrawn). Over 242 steps p50 0 KB, p90 33.7 KB; but the largest active roadmap had a step read 86.2 KB and the second 46.8 KB, over the target. The loop's § 5 step 1 now says: the step's own section by `grep -n` plus a ranged read, never the whole roadmap. Closes on the first drain over the largest roadmap reading < 40 KB per step; none since 2026-10-21 (2026-10-24). <!-- blocked-by: largest-roadmap-drain-under-forty-kb --> <!-- deferred-resolution: carried-to=road-to-a-step-that-costs-what-it-changes-carried -->
       Other sections are read on demand. Decisions stay whole, as
       `roadmap-process-loop.md:162-173` requires.
       verify: a drain over the largest active roadmap reads < 40 KB of it per
@@ -164,7 +164,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
       `scope=safe` from 2026-10-21 on). On 2026-10-24 it read R0 7, R1 0, once undated `scope=safe` ticks counted.
       verify: the D18 owner row exists before the flip commit; that commit
       names the reading in `flip.reading`.
-- [ ] **4.2 Rule depth by class, behind an A/B.** Waits per OQ-6 (a) (D19): mechanism and paid A/B are decided with the flip data in hand. R0/R1 steps receive the <!-- blocked-by: five-drains-on-the-flipped-table -->
+- [~] **4.2 Rule depth by class, behind an A/B.** Waits per OQ-6 (a) (D19): mechanism and paid A/B are decided with the flip data in hand. R0/R1 steps receive the <!-- blocked-by: five-drains-on-the-flipped-table --> <!-- deferred-resolution: carried-to=road-to-a-step-that-costs-what-it-changes-carried -->
       kernel plus rules whose triggers match the changed paths; R2/R3 keep
       today's delivery. Paired A/B on the benchmark's frozen tasks: discipline
       score not below the full arm's lower CI bound. No settings key.
@@ -180,10 +180,10 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 
 ## Phase 5 — Prove both halves
 
-- [ ] **5.1 Read the Goal over five drains.** Speed and escape rate together; <!-- blocked-by: five-drains-on-the-flipped-table -->
+- [~] **5.1 Read the Goal over five drains.** Speed and escape rate together; <!-- blocked-by: five-drains-on-the-flipped-table --> <!-- deferred-resolution: carried-to=road-to-a-step-that-costs-what-it-changes-carried -->
       neither alone closes the roadmap.
       verify: a Decisions row with both figures.
-- [ ] **5.2 Independent review of the reading.** One round. <!-- blocked-by: five-drains-on-the-flipped-table -->
+- [~] **5.2 Independent review of the reading.** One round. <!-- blocked-by: five-drains-on-the-flipped-table --> <!-- deferred-resolution: carried-to=road-to-a-step-that-costs-what-it-changes-carried -->
       verify: findings or an honest null over denominators and windows.
 
 ## Blockers
@@ -210,11 +210,11 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 - **Question:** Cancel 1.1 (async telemetry concerns, ~1.2 ms of a ~68 ms dispatch) and 1.2 (Stop ordinal from stored state, ~15 ms a turn on the turn-end gate)? Cancelling is a `[-]`, which drops scope and is owner-reserved.
 - **Recommendation:** (a) for both — the measured gain is below the cost each adds (a second node start per call; a new failure mode in the gate that refuses unfinished turns).
 - **If you do nothing:** both steps stay open, nothing else here waits on them, and the roadmap cannot archive.
-- **What to do:** pick per step — (a) cancel it as `[-]` in `agents/roadmaps/road-to-a-step-that-costs-what-it-changes.md` with the answer moved to `## Answered` in `agents/owner-questions.md`; or (b) keep it open and have the next run build it against its `verify:` line.
+- **What to do:** pick per step — (a) cancel it as `[-]` in `agents/roadmaps/archive/road-to-a-step-that-costs-what-it-changes.md` with the answer moved to `## Answered` in `agents/owner-questions.md`; or (b) keep it open and have the next run build it against its `verify:` line.
 - **Resolved when:** OQ-4 and OQ-5 sit under `## Answered` in `agents/owner-questions.md`, a `## Decisions` row resolved by `owner` names this blocker with the date, and Status reads resolved.
 
 ### blocker: largest-roadmap-drain-under-forty-kb
-- **Status:** open — 2026-10-27, with git-recorded flips joined to lane transcripts (D20): over the 11 stores of this repository (312 transcripts, 125 closed steps since 2026-10-21) the largest active roadmap, `road-to-a-setup-that-decides-itself` (79 KB), shows 5 closed steps from its 2026-10-24/25 drain, maximum 75.0 KB (4.10, one whole-file `Read`), then 68.2 KB (3.3+3.6+4.6c), 9.9 KB (4.9), 9.6 KB (4.7), 0.3 KB (5.1). Two steps read over 40 KB, so § 5 step 1 was not followed on that drain. Was: 2026-10-25, no drain
+- **Status:** resolved — carried, still open, to `road-to-a-step-that-costs-what-it-changes-carried` with the steps it blocks (was: open — 2026-10-27, with git-recorded flips joined to lane transcripts (D20): over the 11 stores of this repository (312 transcripts, 125 closed steps since 2026-10-21) the largest active roadmap, `road-to-a-setup-that-decides-itself` (79 KB), shows 5 closed steps from its 2026-10-24/25 drain, maximum 75.0 KB (4.10, one whole-file `Read`), then 68.2 KB (3.3+3.6+4.6c), 9.9 KB (4.9), 9.6 KB (4.7), 0.3 KB (5.1). Two steps read over 40 KB, so § 5 step 1 was not followed on that drain. Was: 2026-10-25, no drain)
 - **Class:** 0
 - **Owner:** agent
 - **Blocks:** step 1.3
@@ -238,7 +238,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 - **Resolved when:** 4.1 is ticked with a committed `flip.reading`, and Status reads resolved.
 
 ### blocker: five-drains-on-the-flipped-table
-- **Status:** open — 2026-10-27, the window has not started (D21): `--flip-readiness` reads R0 7, R1 0 (unchanged), and no receipt in the tree carries `active`: every R0/R1 tick merged since the flip touched a path outside the D18 scope, so no step has yet run at lowered depth. Was: 2026-10-25, the table went `active` (4.1, D19)
+- **Status:** resolved — carried, still open, to `road-to-a-step-that-costs-what-it-changes-carried` with the steps it blocks (was: open — 2026-10-27, the window has not started (D21): `--flip-readiness` reads R0 7, R1 0 (unchanged), and no receipt in the tree carries `active`: every R0/R1 tick merged since the flip touched a path outside the D18 scope, so no step has yet run at lowered depth. Was: 2026-10-25, the table went `active` (4.1, D19))
 - **Class:** 0
 - **Owner:** agent
 - **Blocks:** steps 4.2, 5.1, 5.2; AC-2, AC-3, AC-4
@@ -274,6 +274,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 | D19 | product-owned | owner | 2026-10-25, OQ-1 (a), OQ-4 (a), OQ-5 (a), OQ-6 (a): the R0/R1 flip is active now on D18's scope with the 4.3 audit as its guard; 1.1 and 1.2 are cancelled; 4.2 waits for the flip data. | `agents/evidence/owner-directives/2026-10-25-step-costs-oq-1-4-5-6.md` | 4.3 rolls a class back, or five drains miss D14 (1). |
 | D20 | reversible-technical | agent | Orchestrator decision, 2026-10-27: fix the tool and keep the blocker's Resolved-when. `probe_turnaround --steps` now closes a lane's step from the git commit that flipped its box, when the lane's transcript flips none itself (`parseGitFlips`, `assignGitFlips`, `readSteps(…, flips)` in `src/scripts/_lib/step_anatomy.ts`). Rejected alternative: re-word the blocker around the blind spot. | Lanes under an orchestrator never `Edit` a checkbox; the orchestrator flips with `sed` and commits, so 1.3's reading saw no step of any lane-run drain. Lane rows carry the parent's cwd and branch, so the join is the dispatch prompt naming the roadmap file, not the branch. 4 tests seen red first. | a lane dispatch stops naming its roadmap file, or a flip commit lands more than 3 h after the lane's last row. |
 | D21 | reversible-technical | agent | Orchestrator decision, 2026-10-27: a drain counts toward 5.1's five only if at least one of its steps carries an `active` receipt; the window starts at the first such receipt. Tightens the blocker, weakens nothing. | `--flip-readiness` read R0 7, R1 0 on 2026-10-27 and no receipt in the tree carries `active`, so a drain since the flip compared uniform depth with uniform depth. | safe-scope steps cannot fill five drains, which puts D18's scope to the owner. |
+| D22 | reversible-technical | agent | Orchestrator decision, 2026-10-27: 1.3 waits for the next drain over the largest active roadmap; § 5 step 1 of `roadmap-process-loop.md` is not changed now. With that, 1.3, 4.2, 5.1, 5.2 and AC-2..AC-4 wait on observations no run can produce, so they are carried with both open blockers into `later/road-to-a-step-that-costs-what-it-changes-carried` and this roadmap archives. | The rule already says a step reads its own section by `grep -n` and a ranged read; one drain (setup, 2026-10-24/25: 75.0 KB and 68.2 KB) not following it is one instance, not yet a pattern. | the next drain over the largest active roadmap also reads a step at 40 KB or more. |
 
 ## What verification changed
 
@@ -304,6 +305,6 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 ## Acceptance Criteria
 
 - [x] AC-1 — The Phase 0 reading is committed after its pre-registered thresholds.
-- [ ] AC-2 — No R3 change ran below today's depth; receipts show it.
-- [ ] AC-3 — Over five drains after the flip, p50 step wall-clock ≤ 50 % of the Phase 0 baseline and the escape rate on lowered classes ≤ the 0.2 threshold.
-- [ ] AC-4 — Required CI red-after-merge rate over the same drains is not above the Phase 0 window.
+- [~] AC-2 — No R3 change ran below today's depth; receipts show it. <!-- deferred-resolution: carried-to=road-to-a-step-that-costs-what-it-changes-carried -->
+- [~] AC-3 — Over five drains after the flip, p50 step wall-clock ≤ 50 % of the Phase 0 baseline and the escape rate on lowered classes ≤ the 0.2 threshold. <!-- deferred-resolution: carried-to=road-to-a-step-that-costs-what-it-changes-carried -->
+- [~] AC-4 — Required CI red-after-merge rate over the same drains is not above the Phase 0 window. <!-- deferred-resolution: carried-to=road-to-a-step-that-costs-what-it-changes-carried -->
