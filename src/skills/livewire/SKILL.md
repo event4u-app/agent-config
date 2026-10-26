@@ -60,6 +60,7 @@ Do NOT use when:
    - v2: `$layout`, `$listeners`, method-based hooks.
 2. Check existing components — `app/Livewire/` or `app/Http/Livewire/`.
 3. Check views — `resources/views/livewire/`.
+4. **Control roles.** For every control you add, look up its role in the `control_roles` of `agent-config ui:audit` (re-run it when the artefact is older than your last UI edit): use the canonical implementation and the siblings' box metrics. Role missing or tied → ask before inventing a control kind; a native control beside an existing primitive needs a stated `native_control_reason`.
 
 ### Step 1: Create component class
 

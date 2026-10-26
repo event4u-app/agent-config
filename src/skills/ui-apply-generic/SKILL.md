@@ -80,6 +80,7 @@ Every item is a hard requirement, and none of them is framework-specific:
    anything. In a run that has already added components, re-read the component
    directories — the audit inventory is computed once per state-file and does
    not refresh (see `existing-ui-audit` § Gotchas).
+   **Control roles.** For every control you add, look up its role in the `control_roles` of `agent-config ui:audit` (re-run it when the artefact is older than your last UI edit): use the canonical implementation and the siblings' box metrics. Role missing or tied → ask before inventing a control kind; a native control beside an existing primitive needs a stated `native_control_reason`.
 4. **a11y floor.** Semantic elements over `div` + role; every interactive
    element reachable and labelled; focus visible; contrast meets the project's
    stated level, AA when unstated.

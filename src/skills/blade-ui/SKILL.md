@@ -75,6 +75,7 @@ Do NOT use when:
 3. Render validation errors consistently.
 4. Preserve user input with `old()` or project conventions.
 5. Reuse existing field components — don't duplicate.
+6. **Control roles.** For every control you add, look up its role in the `control_roles` of `agent-config ui:audit` (re-run it when the artefact is older than your last UI edit): use the canonical implementation and the siblings' box metrics. Role missing or tied → ask before inventing a control kind; a native control beside an existing primitive needs a stated `native_control_reason`.
 
 ### Step 3: Validate
 
