@@ -52,7 +52,7 @@ Check for: full table scans (`type=ALL`), missing indexes (`key=NULL`), filesort
 
 ### Step 2: Fix
 
-- Add missing indexes (most selective column first in composites)
+- Add missing indexes (composites: equality columns first, then the one range column, then sort-only columns; selectivity only breaks ties within a group)
 - Rewrite anti-patterns (subquery → JOIN, `OFFSET` → cursor, `SELECT *` → specific columns)
 - Add eager loading for N+1 queries
 - Always paginate list endpoints
