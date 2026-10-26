@@ -100,7 +100,7 @@ extendStrings({
 var AREA_MODULES = Object.create(null);
 var KNOWLEDGE_IDS = ['data', 'interfaces', 'runtime', 'delivery', 'impact', 'agent'];
 var ROW_CAP = 200;
-var avState = { view: Object.create(null), pin: null, fly: false };
+var avState = { view: Object.create(null), pin: null, fly: false, pinL: null, flyL: false };
 
 var CONFIRM_CLASS = { confirmed: 'ok', moved: 'cyan', changed: 'warn', gone: 'bad', added: 'violet', unconfirmed: 'dash' };
 var SEV_CLASS = { high: 'bad', medium: 'warn', low: 'dash', info: 'cyan' };
@@ -224,18 +224,63 @@ function noDataCard(id) {
     return card;
 }
 
+function isAvPinned(side) {
+    var mode = paneMode();
+    var p = side === 'left' ? avState.pinL : avState.pin;
+    return mode !== 'phone' && (p !== null ? p : mode === 'wide');
+}
+/** Both rails of an area page: pinned beside the centre on a wide window, a flyout with a scrim below it, never pinned on a phone. */
 function applyAvPanes() {
     var body = $('av-body');
     var mode = paneMode();
-    var pinned = mode !== 'phone' && (avState.pin !== null ? avState.pin : mode === 'wide');
     var noSide = body.classList.contains('no-side');
-    body.className = 'av-body mode-' + mode + (noSide ? ' no-side' : '') + (pinned ? ' pin-right' : avState.fly ? ' fly-right' : '');
-    $('av-scrim').hidden = noSide || pinned || !avState.fly;
-    var pin = $('av-pin');
-    pin.setAttribute('aria-pressed', String(pinned));
-    pin.textContent = pinned ? t('unpin') : t('pin');
-    $('av-open').textContent = t('openRight');
+    var noLeft = body.classList.contains('no-left');
+    var paged = body.classList.contains('paged');
+    var pinR = isAvPinned('right');
+    var pinL = isAvPinned('left');
+    var c = 'av-body mode-' + mode + (noSide ? ' no-side' : '') + (noLeft ? ' no-left' : '') + (paged ? ' paged' : '');
+    c += pinR ? ' pin-right' : avState.fly ? ' fly-right' : '';
+    c += pinL ? ' pin-left' : avState.flyL ? ' fly-left' : '';
+    body.className = c;
+    var flyOpen = (!noSide && !pinR && avState.fly) || (!noLeft && !pinL && avState.flyL);
+    $('av-scrim').hidden = !flyOpen;
+    [['av-pin', pinR], ['av-pin-left', pinL]].forEach(function (b) {
+        var pin = $(b[0]);
+        pin.setAttribute('aria-pressed', String(b[1]));
+        pin.textContent = b[1] ? t('unpin') : t('pin');
+    });
+    var titles = avRailTitles();
+    $('av-open').textContent = (titles[1] || t('openRight').replace(/\s*☰$/, '')) + ' ☰';
+    $('av-open-left').textContent = '☰ ' + (titles[0] || '');
     $('av-close').setAttribute('aria-label', t('closePane'));
+    $('av-close-left').setAttribute('aria-label', t('closePane'));
+}
+var avRailTitleKeys = [null, 'detail'];
+function avRailTitles() { return avRailTitleKeys.map(function (k) { return k ? t(k) : null; }); }
+/** Opening one flyout closes the other: the centre is never covered twice. */
+function avFly(side, open) {
+    if (side === 'left') { avState.flyL = open; if (open) avState.fly = false; } else { avState.fly = open; if (open) avState.flyL = false; }
+    applyAvPanes();
+}
+
+/** The view tablist an area page draws; a module that owns its bar puts this into it. */
+function viewTabs(id, key, tabList) {
+    var view = avState.view[id];
+    var tabs = el('div', { class: 'lenses', role: 'tablist', 'aria-label': t('views') });
+    tabList.forEach(function (o) {
+        var b = el('button', { type: 'button', role: 'tab', class: 'lens', 'aria-selected': String(view === o[0]) }, t(o[1]));
+        b.addEventListener('click', function () { avState.view[id] = o[0]; renderAreaPage(id, key); });
+        tabs.appendChild(b);
+    });
+    return tabs;
+}
+/** One rail section with its capitalised head and an optional count beside it. */
+function railSection(title, count) {
+    var sec = el('section', { class: 'rsec' });
+    var h = add(el('div', { class: 'rsec-h' }), el('span', { class: 'cap' }, title));
+    if (count != null) h.appendChild(el('span', { class: 'mono muted' }, String(count)));
+    sec.appendChild(h);
+    return sec;
 }
 
 function renderAvDetail(id, item) {
@@ -288,42 +333,87 @@ function renderAvDetail(id, item) {
     }
 }
 
-/** One knowledge area page: its bar, its main column, and the detail rail. */
+/** The reader line of an area: which reader ran, how complete, what it saw. */
+function areaMetaLine(id, own) {
+    var p = KA[id];
+    var mod = AREA_MODULES[id];
+    if (!p) return null;
+    var m = add(el('div', { class: 'av-meta mono' }), el('span', null, t('reader') + ': ' + p.reader), stChip(t('completeNames')[p.completeness] || p.completeness, COMPLETE_CLASS[p.completeness]));
+    if (own) m.appendChild(el('span', null, mod.meta(p)));
+    if (p.completeness !== 'complete') m.appendChild(el('span', { class: 'muted' }, p.completeness === 'partial' ? t('lowerBound') : t('unknownRead')));
+    return m;
+}
+
+/**
+ * One knowledge area page. A module with `page` lays out both rails and the
+ * centre itself: page(payload|null, view, key, { bar, left, main, right });
+ * one without it gets the bar, the main column and the witness detail rail.
+ */
 function renderAreaPage(id, key) {
     var bar = $('av-bar');
     var main = $('av-main');
+    var body = $('av-body');
+    // The open buttons may sit in the bar or the head row; rescue them before either is cleared.
+    body.appendChild($('av-open-left'));
+    body.appendChild($('av-open'));
     clear(bar);
     clear(main);
+    clear($('av-left-body'));
+    clear($('av-right-body'));
     var p = KA[id];
     var mod = AREA_MODULES[id];
     var own = !!(p && mod && !p.empty);
     var live = own || !!(mod && mod.extra && mod.extra());
     var tabList = !mod ? [] : mod.tabsFor ? mod.tabsFor(own ? p : null) : mod.tabs;
     var item = live && key ? itemByKey(id, key) : null;
+    if (live && tabList.length && !tabList.some(function (o) { return o[0] === avState.view[id]; })) avState.view[id] = tabList[0][0];
+    var paged = !!(mod && mod.page);
+    avRailTitleKeys = paged && mod.railTitles ? mod.railTitles : [null, 'detail'];
+    $('av-left-title').textContent = avRailTitleKeys[0] ? t(avRailTitleKeys[0]) : '';
+    $('av-right-title').textContent = avRailTitleKeys[1] ? t(avRailTitleKeys[1]) : '';
+    body.classList.toggle('no-left', !paged || !avRailTitleKeys[0]);
+    body.classList.toggle('no-side', !live || (paged && !avRailTitleKeys[1]));
+    body.classList.toggle('paged', paged);
+    $('av-detail').hidden = paged;
+    $('av-right-body').hidden = !paged;
+    if (paged) {
+        bar.hidden = false;
+        var centre = main;
+        if (!mod.ownsBar) {
+            var head = el('div', { class: 'av-head' });
+            add(head, avCrumbs(id, item));
+            if (live && tabList.length) head.appendChild(viewTabs(id, key, tabList));
+            var m = areaMetaLine(id, own);
+            if (m) { m.classList.add('av-barmeta'); head.appendChild(m); }
+            main.appendChild(head);
+            centre = el('div', { class: 'av-page' });
+            main.appendChild(centre);
+        }
+        if (!live) {
+            centre.appendChild(noDataCard(id));
+            var why = p ? p.empty : t('noReader')[id];
+            if (avRailTitleKeys[0]) $('av-left-body').appendChild(add(el('div', { class: 'pad' }), el('span', { class: 'nodata-tag' }, t('noDataShort')), el('p', { class: 'reason' }, why)));
+        } else mod.page(own ? p : null, avState.view[id], key, { bar: bar, left: $('av-left-body'), main: centre, right: $('av-right-body') });
+        // The open buttons sit at the ends of whichever row heads the page, so a flown rail stays reachable.
+        var ends = mod.ownsBar ? bar : main.firstChild;
+        ends.insertBefore($('av-open-left'), ends.firstChild);
+        ends.appendChild($('av-open'));
+        bar.classList.toggle('owned', !!mod.ownsBar);
+        bar.hidden = !mod.ownsBar;
+        if (item) avFly('right', true); else applyAvPanes();
+        avRailButtons();
+        return;
+    }
+    bar.classList.remove('owned');
+    bar.hidden = false;
     bar.appendChild(avCrumbs(id, item));
     var row = el('div', { class: 'av-row' });
     row.appendChild(el('h1', { class: 'av-title' }, t('areaTitle')[id]));
-    if (live) {
-        if (!tabList.some(function (o) { return o[0] === avState.view[id]; })) avState.view[id] = tabList[0][0];
-        var view = avState.view[id];
-        var tabs = el('div', { class: 'lenses', role: 'tablist', 'aria-label': t('views') });
-        tabList.forEach(function (o) {
-            var b = el('button', { type: 'button', role: 'tab', class: 'lens', 'aria-selected': String(view === o[0]) }, t(o[1]));
-            b.addEventListener('click', function () { avState.view[id] = o[0]; renderAreaPage(id, key); });
-            tabs.appendChild(b);
-        });
-        row.appendChild(tabs);
-    }
+    if (live) row.appendChild(viewTabs(id, key, tabList));
     bar.appendChild(row);
-    if (p) {
-        var meta2 = add(el('div', { class: 'av-meta mono' }), el('span', null, t('reader') + ': ' + p.reader), stChip(t('completeNames')[p.completeness] || p.completeness, COMPLETE_CLASS[p.completeness]));
-        if (own) meta2.appendChild(el('span', null, mod.meta(p)));
-        if (p.completeness !== 'complete') meta2.appendChild(el('span', { class: 'muted' }, p.completeness === 'partial' ? t('lowerBound') : t('unknownRead')));
-        bar.appendChild(meta2);
-    }
+    var meta2 = areaMetaLine(id, own);
+    if (meta2) bar.appendChild(meta2);
     if (live && mod.metaExtra && mod.extra()) bar.appendChild(add(el('div', { class: 'av-meta mono' }), el('span', null, mod.metaExtra())));
-    var body = $('av-body');
-    body.classList.toggle('no-side', !live);
     if (!live) main.appendChild(noDataCard(id));
     else {
         var legend = el('div', { class: 'av-legend' });
@@ -337,4 +427,13 @@ function renderAreaPage(id, key) {
     renderAvDetail(id, item);
     if (item) avState.fly = true;
     applyAvPanes();
+    avRailButtons();
+}
+/** The open buttons show only for a rail that exists and is not pinned. */
+function avRailButtons() {
+    var body = $('av-body');
+    var l = $('av-open-left');
+    var r = $('av-open');
+    l.classList.toggle('gone', body.classList.contains('no-left') || isAvPinned('left'));
+    r.classList.toggle('gone', body.classList.contains('no-side') || isAvPinned('right'));
 }
