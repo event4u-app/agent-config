@@ -10,19 +10,6 @@ and the run that applies it links its PR.
 
 None open.
 
-### OQ-20 — Third-party test data as attributed splits (`external-test-data-licence`)
-
-- **Context:** round `inbox-2026-10-az` measures the design and prose tell
-  detectors only on corpora this repo wrote. Two external corpora would judge
-  them from outside: an external design source's should-pass fixtures
-  (Apache-2.0) and an external humanizer corpus's before/after pairs (MIT). Both
-  would be reported only as their own split, never in a headline number.
-- **Options:** (a) accept both as attributed separate splits; (b) accept the MIT
-  pairs only; (c) accept neither and cancel the two steps.
-- **Recommendation:** (a) — both licences allow it with attribution, and without
-  them every precision figure stays self-judged.
-- **Blocks:** steps 1.5 and 5.1 of `road-to-tells-a-near-miss-can-refute`.
-
 ### OQ-21 — How consumers get a browser for `ui:render`
 
 - **Context:** `@playwright/test` is a devDependency, so no consumer install can
@@ -118,6 +105,20 @@ None open.
   (`road-to-a-memory-that-names-its-moment` § Decisions E12).
 
 ## Answered
+
+### OQ-20 — Third-party test data as attributed splits (`external-test-data-licence`)
+
+- **Context:** round `inbox-2026-10-az` measures the design and prose tell
+  detectors only on corpora this repo wrote. Two external corpora would judge
+  them from outside: an external design source's should-pass fixtures
+  (Apache-2.0) and an external humanizer corpus's before/after pairs (MIT). Both
+  would be reported only as their own split, never in a headline number.
+- **Options:** (a) accept both as attributed separate splits; (b) accept the MIT
+  pairs only; (c) accept neither and cancel the two steps.
+- **Recommendation:** (a) — both licences allow it with attribution, and without
+  them every precision figure stays self-judged.
+- **Blocks:** steps 1.5 and 5.1 of `road-to-tells-a-near-miss-can-refute`.
+- **Answered 2026-10-26:** "1, wenn es sein muss. aber können wir das nicht umgehen, ändern oder anpassen? gehe in den ai council. wir wollen das verhindern, wenn möglich", then, after the council, "1, mach das und schließ die Roadmap ab" — neither corpus is imported. AI council 2026-10-26 (anthropic + openai, 2/2): independence comes from who selects, labels and tunes, not from where a file lives; for detectors that only advise, self-checks plus holdout discipline suffice. Applied: 1.5 and 5.1 became metamorphic relations, the zero is reported as a near-miss false-alarm rate with its upper bound, and 8.3 (the external differential oracle) is cancelled with it. Reopen if a detector ever blocks or a public precision figure is wanted. <!-- md-language-check: ignore -->
 
 ### OQ-14 — Reopen ADR-263 for a package-side run basis
 
