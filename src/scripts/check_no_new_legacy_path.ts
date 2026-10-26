@@ -330,8 +330,11 @@ function main(): number {
         // additions (robust locally and where the working tree is the branch tip).
         let proc: ReturnType<typeof spawnSync>;
         try {
+            // A branch diff passes Node's 1 MiB default output cap long before it
+            // is unreasonable to scan; the default turned a large PR into ENOBUFS.
             proc = spawnSync('git', ['diff', base, '--', 'src/', 'tests/'], {
                 encoding: 'utf-8',
+                maxBuffer: 256 * 1024 * 1024,
             });
         } catch (exc) {
             const msg = exc instanceof Error ? exc.message : String(exc);

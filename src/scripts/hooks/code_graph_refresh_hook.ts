@@ -42,7 +42,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { usableCli } from '../code_graph/refresh_cli.js';
-import { hasProjectHome, projectHome } from '../code_graph/graph_home.js';
+import { hasProjectHome, projectBuildPaths } from '../code_graph/graph_home.js';
 import { isStale, recordRefreshIn } from '../code_graph/refresh_lock.js';
 import { EXIT_ALLOW } from './exit_codes.js';
 import { readHookStdin } from './hook_stdin.js';
@@ -111,12 +111,12 @@ export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn): RefreshO
     const root = repoRoot(cwd);
     // `auto-refresh on` refuses a root without a project home (ADR-299).
     if (root === null || !hasProjectHome(root)) return 'not-opted-in';
-    const home = projectHome(root);
+    const home = projectBuildPaths(root);
     if (!fs.existsSync(home.autoRefreshPath)) return 'not-opted-in';
     // A repository-committed opt-in is refused before anything is written into the tree.
     if (anyTracked(root, [home.autoRefreshPath, home.cachePath].map((p) => path.relative(root, p)))) return 'tracked';
     const done = (outcome: RefreshOutcome, detail?: string): RefreshOutcome => {
-        recordRefreshIn(home.stateDir, { by: 'session-start', outcome, detail });
+        recordRefreshIn(home.buildDir, { by: 'session-start', outcome, detail });
         return outcome;
     };
     if (!fs.existsSync(home.cachePath)) return done('no-cache');

@@ -1,0 +1,35 @@
+// schema-erd fixture: a Prisma schema whose physical names match current.sql,
+// so @map / @@map resolution is observable — a Prisma-derived IR must be
+// comparable with a DDL-derived one, or every mapped field reads as renamed.
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  active
+  pending
+  banned
+}
+
+model User {
+  id        BigInt     @id @default(autoincrement())
+  email     String     @unique @db.VarChar(255)
+  fullName  String     @map("name") @db.VarChar(191)
+  status    UserStatus @default(pending)
+  createdAt DateTime?  @map("created_at")
+  orders    Order[]
+
+  @@map("users")
+}
+
+model Order {
+  id         BigInt  @id @default(autoincrement())
+  userId     BigInt  @map("user_id")
+  totalCents BigInt  @map("total_cents") @default(0)
+  note       String? @db.Text
+  user       User    @relation(fields: [userId], references: [id], onDelete: Restrict, map: "orders_user_id_foreign")
+
+  @@index([userId], map: "orders_user_id_index")
+  @@map("orders")
+}

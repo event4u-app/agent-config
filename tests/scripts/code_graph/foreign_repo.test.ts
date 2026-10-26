@@ -56,7 +56,7 @@ describe('a repository without agents/ (ADR-299, 2.5)', () => {
         expect(h.kind).toBe('global');
         expect(h.cachePath.startsWith(graphsRoot({ EVENT4U_CONFIG_HOME: home }))).toBe(true);
         expect(fs.existsSync(h.cachePath)).toBe(true);
-        expect(fs.existsSync(path.join(h.mapDir, 'map.json'))).toBe(true);
+        expect(fs.existsSync(path.join(h.mapDir, 'code', 'map.json'))).toBe(true);
         expect(build.stdout).toContain(`cache: ${h.cachePath}`);
     }, 120_000);
 

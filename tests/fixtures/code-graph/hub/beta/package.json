@@ -1,0 +1,7 @@
+{
+    "name": "fixture-hub-beta",
+    "private": true,
+    "dependencies": {
+        "express": "^4.19.0"
+    }
+}

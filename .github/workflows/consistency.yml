@@ -41,6 +41,9 @@ on:
       # Any workflow-file change must trigger the REQUIRED Consistency check
       # too, or a workflow-only PR deadlocks on "Expected — Waiting for status".
       - ".github/workflows/**"
+      # The local composite action this workflow uses — an edit to it alone
+      # must run the check that depends on it.
+      - ".github/actions/setup-task/**"
       # Dependency manifests ANYWHERE, for the same deadlock reason — and
       # deliberately as a `**` glob rather than two more literal directories.
       # `.github/dependabot.yml` runs four ecosystems: npm at `/`, `/site` and
@@ -93,6 +96,9 @@ on:
       # Any workflow-file change must trigger the REQUIRED Consistency check
       # too, or a workflow-only PR deadlocks on "Expected — Waiting for status".
       - ".github/workflows/**"
+      # The local composite action this workflow uses — an edit to it alone
+      # must run the check that depends on it.
+      - ".github/actions/setup-task/**"
       # Dependency manifests anywhere — mirrors the pull_request list above so
       # a merged dependency bump is measured on `main` the same way it was on
       # the PR. See that list for why this is a glob and not two directories.

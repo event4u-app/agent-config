@@ -133,31 +133,29 @@
 # decision records in agents/decisions/.
 /agents/runtime/
 
-# Agent config — code-graph index, its derived SQLite twin, and the
-# single-flight refresh lock. REDUNDANT with the /agents/runtime/ catch-all
-# above, and named anyway rather than left implicit — do not delete as
-# duplication:
+# Agent config — the code map and its build folder (`agent-config code-graph
+# map`, ADR-297 + ADR-303). agents/map/ is one folder per project: the map
+# itself (index.html, MAP.md, manifest.json, code/, data/, interfaces/,
+# runtime/, delivery/) is deterministic — same tree in, same bytes out — and
+# may be committed. Only its .build/ is local: the code-graph index, its SQLite
+# twin and extracts sidecar, the single-flight refresh lock, the auto-refresh
+# opt-in and the redraw staging. Named rather than left to a wider pattern:
 #
 #   · Some hosts key a prompt cache on a hash of the workspace file list. After
 #     `agent-config code-graph auto-refresh on` the index is rewritten at every
 #     agent session start (the `code-graph-refresh` hook concern), so it is the
 #     most frequently-changing file a consumer never edits. An entry a reader
-#     can find by grepping the index's own name is what makes that cost
+#     can find by grepping the folder's own name is what makes that cost
 #     traceable.
-#   · The twin and the lock are created beside the index by machinery a
-#     consumer never invokes directly; naming them says they are ours.
 #
-# All three are derived and disposable (ADR-129): rollback is `rm`, and the
-# next build or refresh re-creates them.
+# Everything in .build/ is derived and disposable (ADR-129): rollback is `rm`,
+# and the next build or refresh re-creates it. The three agents/runtime/state/
+# lines are where a release before ADR-303 kept the index; it is still read
+# from there for one release, so it stays ignored there too.
+/agents/map/.build/
 /agents/runtime/state/code-graph-v1.json
 /agents/runtime/state/code-graph-v1.sqlite3
 /agents/runtime/state/code-graph-refresh.lock/
-
-# Agent config — the code-graph map (`agent-config code-graph map`): a
-# derived, rebuildable view of the index under agents/runtime/state/, rewritten
-# on every refresh. Local-only by default (ADR-297); a project that wants to
-# commit its map removes this line.
-/agents/map/
 
 # Agent config — Tier 1 hook + wizard runtime state (machine-generated,
 # regenerated on demand, never committed). Holds the dispatcher lock,

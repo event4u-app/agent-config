@@ -68,8 +68,8 @@ beforeEach(() => {
     root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cg-refresh-hook-')));
     outside = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cg-refresh-path-')));
     git('init', '-q');
-    fs.writeFileSync(path.join(root, '.gitignore'), '/agents/runtime/\n');
-    fs.mkdirSync(path.join(root, 'agents', 'runtime', 'state'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.gitignore'), '/agents/runtime/\n/agents/map/.build/\n');
+    fs.mkdirSync(path.join(root, 'agents', 'map', '.build'), { recursive: true });
     calls = [];
     savedPath = process.env['PATH'];
     delete process.env['AGENT_CONFIG_CODE_GRAPH_REFRESH'];
@@ -140,6 +140,17 @@ describe('code-graph-refresh session concern', () => {
         fs.rmSync(path.join(root, CACHE_REL));
         expect(refreshFor(root, fakeSpawn)).toBe('no-cache');
         expect(calls).toHaveLength(0);
+    });
+
+    it('still serves a project whose opt-in and cache an older release left in agents/runtime/state/', () => {
+        const legacy = path.join(root, 'agents', 'runtime', 'state');
+        fs.mkdirSync(legacy, { recursive: true });
+        fs.writeFileSync(path.join(legacy, path.basename(CACHE_REL)), '{}');
+        fs.writeFileSync(path.join(legacy, path.basename(AUTO_REFRESH_REL)), '{}');
+        writeCli(path.join(outside, 'bin'));
+        process.env['PATH'] = [path.join(outside, 'bin'), GIT_DIR].join(path.delimiter);
+        expect(refreshFor(root, fakeSpawn)).toBe('spawned');
+        expect(calls).toHaveLength(1);
     });
 
     it('refuses an opt-in and a cache the REPOSITORY committed', () => {

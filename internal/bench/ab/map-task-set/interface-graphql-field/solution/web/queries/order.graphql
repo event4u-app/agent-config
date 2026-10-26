@@ -1,0 +1,6 @@
+query OrderView($id: ID!) {
+  order(id: $id) {
+    id
+    totalAmount
+  }
+}

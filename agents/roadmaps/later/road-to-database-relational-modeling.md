@@ -3,19 +3,25 @@ complexity: structural
 status: later
 execution:
   mode: phase-checkpoints
+entry_condition:
+  what: "road-to-a-map-the-agent-checks-before-it-acts is archived; its Phase 0 folded the ERD capability and its data lane carries the schema model this roadmap's modeling skill would build on"
+  when: "the PR that closes that roadmap merges; checkable with `test -f agents/roadmaps/archive/road-to-a-map-the-agent-checks-before-it-acts.md`"
+  who: "the agent that runs the next roadmap screen; re-scope against the shipped data lane before waking"
 estate_offset_exempt: "One of four siblings split from a single inbox drop carrying 24 verified defect claims. This one holds the capability work and the ownership question the council refused to settle without evidence; rule 11 forbids folding it into the advice-correction sibling, which changes existing text and adds no capability. No roadmap in the current estate covers database modeling."
 estate_growth_exempt: "later_roadmaps +1: this roadmap is parked. Step 1.3 was executed and measured the highest scope overlap in the 34-skill backend-data family at 25 percent against a 70 percent threshold, so a new skill is architecturally warranted -- and inadmissible, because the per-spawn preamble payload has 4 tokens of headroom against a skill catalogue cost of 53. A 2/2-convergent council required the overlap number to be produced anyway rather than writing a budget-forced extend verdict into the admissions ledger. Two of three blockers are resolved and the third is resolved as deferred verification, so open_blockers falls; skill_count is unchanged and active_roadmaps falls by one."
 estate_growth_exempt: "Three blockers were discovered during verification, not proposed by the inbox artifact: the new skill's admission burden against 34 existing backend-data skills, a frontmatter key three proposals depend on that the skill schema forbids, and the fact that an ownership map placed in docs/ is unreachable by any agent in a consumer install."
 ---
 # Road to database relational modeling
 
-> **Resume when** a modeling skill is admissible: `check_preamble_payload_budget`
-> reports at least 53 tokens of headroom below `ci_delivery.grace_ceiling` on
-> `origin/main`, **and** `check_estate_count`'s `skill_count` allowance is
-> explicitly allocated across this roadmap and `road-to-database-erd-landing`.
-> Parked 2026-08-27 by AI council with Phase 1 discharged — the ownership
-> question is answered on evidence and only the capacity is missing. See
-> `## Notes` § Parked.
+> **Resume when** `road-to-a-map-the-agent-checks-before-it-acts` is archived
+> (2026-10-26: the old wake rule read a preamble-payload ceiling and a
+> `road-to-database-erd-landing` allocation; that sibling is now folded and
+> archived, so the rule could no longer fire). Parked 2026-08-27 by AI council
+> with Phase 1 discharged. See `## Notes` § Parked.
+>
+> Historical wake rule, superseded 2026-10-26 and no longer read: a modeling
+> skill admissible once the preamble payload had 53 tokens of headroom below the
+> historical `ci_delivery.grace_ceiling` and the skill allowance was allocated.
 
 > **Source:** `agents/tmp.old/database-structure/` — four database roadmap
 > proposals from two parallel external LLM sessions plus two competing
@@ -590,8 +596,8 @@ One seat set the precondition this change honours: run Phase 1.3 and 1.4 **only
 if independently executable today**, park at 0/34 otherwise. 1.3 was
 independently executable — it is a read over the tree — so it ran.
 
-**Revisit-if:** `check_preamble_payload_budget` reports at least 53 tokens of
-headroom below `ci_delivery.grace_ceiling` on `origin/main`, via a rules
+**Revisit-if (historical, superseded 2026-10-26 by the `entry_condition` above):** `check_preamble_payload_budget` reports at least 53 tokens of
+headroom below the historical `ci_delivery.grace_ceiling` on `origin/main`, via a rules
 reduction rather than a catalogue trim, **and** the `skill_count` allowance is
 explicitly allocated across this roadmap and `-erd-landing`.
 **The second trigger this paragraph used to carry is DELETED, not merely stale
@@ -601,7 +607,7 @@ second trigger: after it the design ceiling of 107,646 applies and the gap is
 in the tree enforced `grace_end_date`, and the key no longer exists. A wake
 condition on an event no code produces is a park with no exit, so it is removed
 rather than re-dated. The first trigger above is unaffected and is now the only
-one: `ci_delivery.grace_ceiling` survives at 138,490, enforced and undated.
+one: the historical `ci_delivery.grace_ceiling` survived at 138,490, enforced and undated.
 Evidence:
 `agents/evidence/analysis/grace-ceiling-expiry-is-unenforced-2026-09-10.md`.
 

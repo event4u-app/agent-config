@@ -92,8 +92,74 @@ permissions:
   actions: write
 
 jobs:
+  # The release job builds from `main`, and its own wait (release.ts step 6)
+  # covers the release PR it opens. This job makes the other half explicit:
+  # the commit `main` stands on is the merge commit of a pull request whose
+  # required checks — main's live ruleset, not a copied list, matched by name
+  # and, where the ruleset binds one, by the app that must report it — finished
+  # green. Latest run per check wins, so a re-run that went green counts and one
+  # that went red does not. It outputs the commit it verified, and `release`
+  # refuses to run on any other. Read-only token; nothing here can release.
+  verify-source-checks:
+    name: Verify source checks
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'release') || contains(github.event.pull_request.labels.*.name, 'release:major') || contains(github.event.pull_request.labels.*.name, 'release:minor') || contains(github.event.pull_request.labels.*.name, 'release:patch')))
+    permissions:
+      contents: read
+      checks: read
+      pull-requests: read
+      statuses: read
+    outputs:
+      sha: ${{ steps.verify.outputs.sha }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+    steps:
+      - name: Required checks of the commit being released are green
+        id: verify
+        run: |
+          set -euo pipefail
+          TIP=$(gh api "repos/$REPO/commits/main" --jq .sha)
+          export TIP
+          # shellcheck disable=SC2016 # $ENV.TIP is jq, not shell
+          head=$(gh api "repos/$REPO/commits/$TIP/pulls" --jq '[.[] | select(.merged_at != null and .merge_commit_sha == $ENV.TIP)][0].head.sha // empty')
+          if [ -z "$head" ]; then
+            echo "::error title=No source checks::main at $TIP is not the merge commit of a pull request, so it has no pull-request checks to verify. Nothing was released."
+            exit 1
+          fi
+          required=$(gh api "repos/$REPO/rules/branches/main" --jq '[.[] | select(.type == "required_status_checks") | .parameters.required_status_checks[] | [.context, ((.integration_id // "") | tostring)] | @tsv] | unique | .[]')
+          if [ -z "$required" ]; then
+            echo "::error title=No required checks::main declares no required checks, so there is nothing to verify the release against. Nothing was released."
+            exit 1
+          fi
+          runs=$(gh api --paginate "repos/$REPO/commits/$head/check-runs?per_page=100" --jq '.check_runs[] | [.id, .name, .status, (.conclusion // "none"), ((.app.id // "") | tostring)] | @tsv')
+          statuses=$(gh api --paginate "repos/$REPO/commits/$head/statuses?per_page=100" --jq '.[] | [.id, .context, .state] | @tsv')
+          echo "main $TIP — merged from pull-request head $head"
+          failed=0
+          while IFS=$'\t' read -r ctx app; do
+            run=$(printf '%s\n' "$runs" | awk -F'\t' -v n="$ctx" -v a="$app" '$2 == n && (a == "" || $5 == a)' | sort -n -k1,1 | tail -n 1)
+            if [ -n "$run" ]; then
+              verdict=$(printf '%s' "$run" | awk -F'\t' '{ print $3 "/" $4 }')
+            elif [ -z "$app" ]; then
+              state=$(printf '%s\n' "$statuses" | awk -F'\t' -v n="$ctx" '$2 == n' | sort -n -k1,1 | tail -n 1 | cut -f3)
+              verdict="status/${state:-missing}"
+            else
+              verdict="missing-from-app-$app"
+            fi
+            case "$verdict" in
+              completed/success|completed/skipped|status/success) echo "  ok    $ctx ($verdict)" ;;
+              *) echo "::error title=Required check not green::$ctx is $verdict on $head"; failed=1 ;;
+            esac
+          done <<< "$required"
+          if [ "$failed" -ne 0 ]; then
+            echo "Nothing was released."
+            exit 1
+          fi
+          echo "sha=$TIP" >> "$GITHUB_OUTPUT"
+
   release:
     name: Release
+    needs: verify-source-checks
     runs-on: ubuntu-latest
     # PR path: only a MERGED pull_request carrying one of the exact release
     # labels — `contains(array, item)` against the labels array, never a
@@ -149,6 +215,16 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
           token: ${{ env.GH_TOKEN }}
+
+      - name: Release exactly the commit that was verified
+        env:
+          VERIFIED: ${{ needs.verify-source-checks.outputs.sha }}
+        run: |
+          actual=$(git rev-parse HEAD)
+          if [ -z "$VERIFIED" ] || [ "$actual" != "$VERIFIED" ]; then
+            echo "::error title=main moved::verify-source-checks verified ${VERIFIED:-nothing}, but main is now $actual. Nothing was released; re-run this workflow to verify the new tip."
+            exit 1
+          fi
 
       - name: Configure git identity for the release bump commit
         run: |

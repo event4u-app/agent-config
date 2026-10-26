@@ -1,12 +1,14 @@
 /**
- * Render check for `agents/map/index.html`.
+ * Render check for `agents/map/index.html` and the hub page.
  *
  * The map draws its labels on a canvas, so a DOM overflow check passes while a
  * label is cut off or sits on top of another. This opens the page in a real
  * browser at the three widths `ui:render` uses and asks the viewer itself for
  * the boxes it placed (`window.__mapLabelBoxes`), in the overview and inside
- * the largest area. It also fails on a page error, on any request that is not
- * the file itself, and on horizontal scroll.
+ * the largest area. A project map opens on its Overview, so the check goes to
+ * the Code area (`#/code`) where those labels are; the hub passes `#/projects`.
+ * It also fails on a page error, on any request that is not the file itself,
+ * and on horizontal scroll.
  *
  * Playwright is a devDependency: a consumer usually has no browser, and then
  * the result is `unverified` with the reason — never a pass.
@@ -120,7 +122,7 @@ export function labelProblems(boxes: readonly Box[], width: number, height: numb
     return { outside, overlapping };
 }
 
-export async function verifyMap(htmlPath: string): Promise<MapRenderCheck> {
+export async function verifyMap(htmlPath: string, opts: { hash?: string } = {}): Promise<MapRenderCheck> {
     let chromium: PwChromium;
     try {
         // Through a variable: a literal specifier lets every bundle that reaches
@@ -148,9 +150,9 @@ export async function verifyMap(htmlPath: string): Promise<MapRenderCheck> {
                 pageErrors += 1;
             });
             page.on('request', (r) => {
-                if (r.url() !== url) externalRequests += 1;
+                if (r.url().split('#')[0] !== url) externalRequests += 1;
             });
-            await page.goto(url);
+            await page.goto(url + (opts.hash ?? '#/code'));
             await page.waitForFunction(() => (window as unknown as { __mapLabelBoxes?: unknown }).__mapLabelBoxes !== undefined);
             const read = async (view: string): Promise<{ view: string; labels: number; outside: number; overlapping: number; orb?: OrbSpread }> => {
                 const r = (await page.evaluate(() => (window as unknown as { __mapLabelBoxes: { boxes: Box[]; width: number; height: number } }).__mapLabelBoxes)) as {
@@ -185,7 +187,7 @@ export async function verifyMap(htmlPath: string): Promise<MapRenderCheck> {
             // The orb, as it opens and turned half a revolution: the far side's labels
             // must stay hidden and the near side's must still fit and not overlap.
             const orb = page.locator('#dim');
-            if ((await orb.count()) > 0) {
+            if ((await orb.count()) > 0 && (await orb.isVisible())) {
                 await orb.click();
                 views.push(await read('overview-orb'));
                 await page.evaluate(() => {
@@ -196,7 +198,7 @@ export async function verifyMap(htmlPath: string): Promise<MapRenderCheck> {
             }
             const firstArea = page.locator('#panel .plist button').first();
             if ((await opener.count()) > 0 && (await opener.isVisible())) await opener.click();
-            if ((await firstArea.count()) > 0) {
+            if ((await firstArea.count()) > 0 && (await firstArea.isVisible())) {
                 await firstArea.click();
                 views.push(await read('largest-area'));
             }

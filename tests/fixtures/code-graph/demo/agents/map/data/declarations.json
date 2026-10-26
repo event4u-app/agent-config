@@ -1,0 +1,5 @@
+{
+    "virtual_relations": [
+        { "subject": "column:orders.shop_id", "reason": "shops live in a separate service; the id is a reference by convention" }
+    ]
+}

@@ -9,10 +9,10 @@ name: Site
 # — which has published the site to GitHub Pages on every push to `main` since
 # 2026-07-05 — additionally fires on the canonical docs that `site/sync-docs.mjs`
 # projects into the site (`docs/proof.md`, `docs/benchmark.md`, `docs/CLAIMS.md`,
-# `docs/catalog.md`, `docs/media/**`). That difference has a cost, stated rather
-# than implied: a change to one of those docs deploys without this link check
-# running, and is only link-checked on the next site-workspace push. Widening
-# this filter to match the deploy filter is the fix when that gap bites.
+# `docs/catalog.md`, `docs/media/**`). That difference no longer lets a broken
+# link ship: `deploy-site.yml`'s build job runs the same link check before its
+# artifact is published. What it still costs is timing — a broken link in one
+# of those docs is caught at deploy on `main`, not on the pull request.
 on:
   pull_request:
     branches: [main, master]

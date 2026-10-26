@@ -1,0 +1,17 @@
+stages: [test, deploy]
+
+unit-test:
+  stage: test
+  script:
+    - npm test
+  rules:
+    - changes:
+        - src/**/*
+        - .gitlab-ci.yml
+
+deploy-prod:
+  stage: deploy
+  when: manual
+  environment: production
+  script:
+    - kubectl apply -f k8s/

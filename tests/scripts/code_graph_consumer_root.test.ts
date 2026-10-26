@@ -46,13 +46,13 @@ describe('code-graph in a consumer project (D1, D2)', () => {
 
     it('writes the cache under the project, where detect and MCP read it', () => {
         expect(run(['build'], project).status).toBe(0);
-        expect(fs.existsSync(path.join(project, 'agents', 'runtime', 'state', 'code-graph-v1.json'))).toBe(true);
+        expect(fs.existsSync(path.join(project, 'agents', 'map', '.build', 'code-graph-v1.json'))).toBe(true);
         const detect = run(['detect', '--format', 'json'], project);
         expect(JSON.parse(detect.stdout).verdict).toBe('FRESH');
     });
 
     it('never writes into the package tree when run for another project', () => {
-        const pkgCache = path.join(REPO_ROOT, 'agents', 'runtime', 'state', 'code-graph-v1.json');
+        const pkgCache = path.join(REPO_ROOT, 'agents', 'map', '.build', 'code-graph-v1.json');
         const before = fs.existsSync(pkgCache) ? fs.statSync(pkgCache).mtimeMs : null;
         expect(run(['build'], project).status).toBe(0);
         const after = fs.existsSync(pkgCache) ? fs.statSync(pkgCache).mtimeMs : null;

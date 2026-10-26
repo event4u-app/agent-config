@@ -48,9 +48,18 @@ export interface ConventionProvider {
     id: string;
     /** Basenames of marker files whose presence the probe should record (an entry script). */
     markers?: readonly string[];
+    /** Repo-relative paths, outside the code set, whose text the probe reads for this provider (schema files). */
+    reads?: RegExp;
     /** Package roots this provider applies to; empty when it does not. */
     detect(probe: ProjectProbe): string[];
     build(input: ProviderInput): ProviderResult;
     /** A role the map gives a file by this provider's conventions. */
     roleOf?(path: string): FileRole | undefined;
+    /**
+     * Classes whose static calls leave the repository — framework facades and
+     * SDK clients — by fully-qualified name, plus the bare global aliases the
+     * framework registers for them. A call on one is never bound to an in-repo
+     * method of the same name; it stays an external call for the interface reader.
+     */
+    heldReceivers?: readonly string[];
 }

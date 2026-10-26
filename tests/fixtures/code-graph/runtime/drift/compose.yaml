@@ -1,0 +1,38 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      - DB_HOST=db
+      - APP_TOKEN=fixture-placeholder-value
+    env_file: .env
+    depends_on:
+      - db
+      - queue
+    networks: [backend]
+    volumes:
+      - appdata:/var/app
+  db:
+    image: postgres:16.4
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: fixture-placeholder-value
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    networks: [backend]
+  cache:
+    image: redis
+    ports:
+      - "10.20.30.40:6379:6379"
+  proxy:
+    image: 123456789012.dkr.ecr.eu-central-1.amazonaws.com/edge-proxy:2.1
+    ports:
+      - target: 8080
+        published: 8080
+        protocol: tcp
+networks:
+  backend: {}
+volumes:
+  dbdata: {}

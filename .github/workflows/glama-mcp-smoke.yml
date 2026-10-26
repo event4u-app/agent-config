@@ -36,6 +36,7 @@ on:
       - ".dockerignore"
       - "taskfiles/mcp.yml"
       - ".github/workflows/glama-mcp-smoke.yml"
+      - ".github/actions/setup-task/**"
   schedule:
     # Weekly bitrot guard on the default branch: pinned toolchain
     # (node 24 / uv / python 3.11 / debian trixie) rots upstream.

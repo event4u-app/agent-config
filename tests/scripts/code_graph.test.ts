@@ -6,6 +6,7 @@
  * (golden-checksum), schema validation, and the structural no-network
  * guarantee. Integration tests load the real vendored WASM grammars.
  */
+import { RELATIONS as VOCAB_RELATIONS } from '../../src/scripts/code_graph/vocabulary.js';
 import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -501,17 +502,20 @@ describe('3.1 — graph_node answers about one node, or refuses', () => {
         expect(deep.out.every((e) => e.hops >= 1 && e.hops <= 3)).toBe(true);
     });
 
-    it('is registered as a read-only MCP tool whose relation enum IS the closed vocabulary', () => {
+    it('is registered as a read-only MCP tool that checks relations against the closed vocabulary', () => {
         const t = GRAPH_TOOLS['graph_node'];
         expect(t).toBeDefined();
         expect(t?.side_effect).toBe('ro');
         const props = (t as BuiltinTool).input_schema['properties'] as Record<string, { enum?: string[] }>;
+        // The handler validates against the vocabulary file; the schema carries no
+        // 40-name enum, which would cost every host the payload on each tools/list.
+        expect(props['relation']?.enum).toBeUndefined();
         // Pinned against the union in types.ts, which erases at compile time —
-        // an enum that silently lost a value would reject a legal filter.
+        // a vocabulary that silently lost a value would reject a legal filter.
         const declared = fs.readFileSync(path.join(CODE_GRAPH_DIR, 'types.ts'), 'utf-8');
         const union = /export type Relation =\s*([^;]+);/.exec(declared)?.[1] ?? '';
         const vocab = [...union.matchAll(/'([a-z-]+)'/g)].map((m) => m[1] as string).sort();
         expect(vocab.length).toBeGreaterThan(0);
-        expect([...(props['relation']?.enum ?? [])].sort()).toStrictEqual(vocab);
+        expect([...VOCAB_RELATIONS.keys()].sort()).toStrictEqual(vocab);
     });
 });

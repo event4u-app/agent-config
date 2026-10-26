@@ -1,0 +1,8 @@
+@shop = https://shop.example-host.test
+
+### list products
+GET {{shop}}/products?page=1
+Authorization: Bearer this-header-must-never-be-read
+
+### one product
+GET {{shop}}/products/{{id}}

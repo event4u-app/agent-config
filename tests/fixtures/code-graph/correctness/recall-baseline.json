@@ -1,0 +1,6 @@
+{
+    "note": "Must-exist facts each fixture's expectation lists. A count may only rise: removing an expected fact, or the graph losing one, fails the ratchet.",
+    "p1-blog": 20,
+    "p2-tenant": 11,
+    "p5-partner": 3
+}

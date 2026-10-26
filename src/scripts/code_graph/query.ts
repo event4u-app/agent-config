@@ -15,6 +15,7 @@ import {
     INDEXED_READ_MIN_EDGES,
     openGraphIndex,
 } from './sqlite_store.js';
+import type { ConfirmState } from './map_areas.js';
 import type { CodeEdge, CodeGraph, CodeNode, Relation } from './types.js';
 import { validateGraph } from './validate.js';
 import { adaptForeignGraph, looksForeign } from './foreign.js';
@@ -82,6 +83,8 @@ export interface LoadedGraph {
      * in-memory path the corpus is already in hand and this just returns it.
      */
     lex(): LexicalIndex;
+    /** Nodes of one kind in the whole graph: the population a filtered or empty answer is stated against. */
+    kindCount(kind: string): number;
     /** Release any handle the store holds. No-op for the in-memory path. */
     close(): void;
 }
@@ -97,7 +100,7 @@ export interface LoadedGraph {
  * same label repeatedly while rendering edge lines, and that repetition is
  * cheap to remove and expensive to leave.
  */
-function indexBackedGraph(index: GraphIndex, source: string, answeredBy: string): LoadedGraph {
+export function indexBackedGraph(index: GraphIndex, source: string, answeredBy: string): LoadedGraph {
     const nodeCache = new Map<string, CodeNode | undefined>();
     const readNode = (id: string): CodeNode | undefined => {
         if (nodeCache.has(id)) return nodeCache.get(id);
@@ -120,8 +123,18 @@ function indexBackedGraph(index: GraphIndex, source: string, answeredBy: string)
             lexical ??= new LexicalIndex(index.lexicalCorpus());
             return lexical;
         },
+        kindCount: (kind) => index.countKind(kind),
         close: () => index.close(),
     };
+}
+
+/**
+ * The edge count above which reads go through the SQLite index.
+ * `AGENT_CONFIG_GRAPH_INDEXED_MIN_EDGES` lowers it so a small fixture graph can
+ * be answered through the real twin, which is how that path is tested.
+ */
+function indexedReadMinEdges(): number {
+    return Number(process.env['AGENT_CONFIG_GRAPH_INDEXED_MIN_EDGES'] ?? INDEXED_READ_MIN_EDGES);
 }
 
 export function loadGraph(graphPath: string, source = graphPath): LoadedGraph {
@@ -135,7 +148,7 @@ export function loadGraph(graphPath: string, source = graphPath): LoadedGraph {
     // is stale, absent or corrupt — so a handle here means it needs no re-emit.
     const twinCurrent = index !== null;
     if (index) {
-        if (index.edgeCount >= INDEXED_READ_MIN_EDGES) return indexBackedGraph(index, source, graphPath);
+        if (index.edgeCount >= indexedReadMinEdges()) return indexBackedGraph(index, source, graphPath);
         // Small graph: the in-memory path is cheaper. Release the handle rather
         // than leaking a database for the life of the process.
         index.close();
@@ -197,6 +210,7 @@ export function loadGraph(graphPath: string, source = graphPath): LoadedGraph {
         },
         allNodeIds: () => graph.nodes.map((n) => n.id).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
         lex: () => lex,
+        kindCount: (kind) => graph.nodes.filter((x) => x.kind === kind).length,
         close: () => {
             /* nothing held */
         },
@@ -519,6 +533,8 @@ export interface NodeOptions {
     depth?: number;
     /** Restrict to one relation of the closed vocabulary. */
     relation?: Relation;
+    /** List only far ends of this node kind; the walk still passes through others. */
+    kind?: string;
 }
 
 /** Hard cap per direction, so one hub node cannot return an unbounded payload. */
@@ -537,6 +553,7 @@ function walkDirection(
     dir: 'in' | 'out',
     depth: number,
     relation: Relation | undefined,
+    kind?: string,
 ): { lines: NodeEdgeLine[]; truncated: boolean } {
     const lines: NodeEdgeLine[] = [];
     const seen = new Set<string>([start]);
@@ -551,6 +568,13 @@ function walkDirection(
                 if (lines.length >= NODE_EDGE_CAP) {
                     truncated = true;
                     break;
+                }
+                if (kind !== undefined && g.byId.get(other)?.kind !== kind) {
+                    if (!seen.has(other)) {
+                        seen.add(other);
+                        next.push(other);
+                    }
+                    continue;
                 }
                 lines.push({
                     id: sanitizeLabel(other),
@@ -616,9 +640,9 @@ export function node(g: LoadedGraph, seed: string, opts: NodeOptions = {}): Node
     const direction = opts.direction ?? 'both';
     const depth = Math.min(3, Math.max(1, Math.trunc(opts.depth ?? 1)));
     const inWalk =
-        direction === 'out' ? { lines: [], truncated: false } : walkDirection(g, id, 'in', depth, opts.relation);
+        direction === 'out' ? { lines: [], truncated: false } : walkDirection(g, id, 'in', depth, opts.relation, opts.kind);
     const outWalk =
-        direction === 'in' ? { lines: [], truncated: false } : walkDirection(g, id, 'out', depth, opts.relation);
+        direction === 'in' ? { lines: [], truncated: false } : walkDirection(g, id, 'out', depth, opts.relation, opts.kind);
     const degreeOf = (edges: readonly CodeEdge[] | undefined): number =>
         opts.relation === undefined ? (edges?.length ?? 0) : (edges ?? []).filter((e) => e.relation === opts.relation).length;
     return {
@@ -633,4 +657,119 @@ export function node(g: LoadedGraph, seed: string, opts: NodeOptions = {}): Node
         out: outWalk.lines,
         truncated: inWalk.truncated || outWalk.truncated,
     };
+}
+
+/** Options of the filtered, tree-shaped answer. */
+export interface TreeOptions {
+    /** Report only nodes of these kinds (the walk still passes through others). */
+    kinds?: readonly string[];
+    /** Follow only edges of these relations. */
+    relations?: readonly string[];
+    direction?: 'in' | 'out' | 'both';
+    /** Hops, 1-3. */
+    depth?: number;
+    /** Items returned at most; the rest is counted. */
+    limit?: number;
+    /** A state the caller already knows for an id (a working-tree overlay's `added`); the rest stay `unconfirmed`. */
+    stateOf?: (id: string) => ConfirmState | undefined;
+}
+
+export interface TreeItem {
+    id: string;
+    label: string;
+    kind: string;
+    /** The relation that reached it, read in its stated direction. */
+    relation: string;
+    direction: 'in' | 'out';
+    depth: number;
+    /** The node it was reached from. */
+    via: string;
+    /** `file:line` the fact was read at, when the graph knows one. */
+    at: string | null;
+    hash: string | null;
+    /** Whether the witness still holds in the working tree; `unconfirmed` until `confirm` re-reads it. */
+    confirm: ConfirmState;
+}
+
+export interface TreeResult {
+    source: string;
+    seeds: string[];
+    /** What an empty or filtered answer is stated against. */
+    population: string;
+    returned: number;
+    total: number;
+    hasMore: boolean;
+    /** Compact indented lines, one per item, with the relation label. */
+    tree: string[];
+    items: TreeItem[];
+}
+
+function witnessOf(n: CodeNode | undefined, e: CodeEdge): { at: string | null; hash: string | null } {
+    const w = e.fact?.witness ?? n?.fact?.witness;
+    if (w) return { at: `${w.file}:${w.line}`, hash: w.hash };
+    const line = n?.source_location[0];
+    if (n && n.source_file) return { at: line ? `${n.source_file}:${line}` : n.source_file, hash: null };
+    return { at: null, hash: null };
+}
+
+/**
+ * The neighbourhood of a seed as a filtered tree: walk up to `depth` hops along
+ * the chosen relations and directions, report the nodes of the chosen kinds
+ * with the witness each fact was read at. Every list says how many it returned
+ * of how many it found, and an empty answer names the population it searched.
+ */
+export function tree(g: LoadedGraph, seed: string, opts: TreeOptions = {}): TreeResult {
+    const resolution = resolveSeedsTiered(g, seed);
+    const seeds = resolution.ids;
+    const depth = Math.min(3, Math.max(1, Math.floor(opts.depth ?? 1)));
+    const limit = Math.max(1, Math.floor(opts.limit ?? 50));
+    const dir = opts.direction ?? 'both';
+    const kinds = opts.kinds && opts.kinds.length ? new Set(opts.kinds) : null;
+    const rels = opts.relations && opts.relations.length ? new Set(opts.relations) : null;
+    const seen = new Set(seeds);
+    const found: TreeItem[] = [];
+    const walked: Array<{ id: string; via: string }> = [];
+    let frontier = [...seeds];
+    for (let d = 1; d <= depth && frontier.length; d++) {
+        const next: string[] = [];
+        for (const cur of frontier) {
+            const steps: Array<[CodeEdge, 'in' | 'out']> = [];
+            if (dir !== 'in') for (const e of g.out.get(cur) ?? []) steps.push([e, 'out']);
+            if (dir !== 'out') for (const e of g.in.get(cur) ?? []) steps.push([e, 'in']);
+            for (const [e, way] of steps) {
+                if (rels && !rels.has(e.relation)) continue;
+                const far = way === 'out' ? e.target : e.source;
+                if (seen.has(far)) continue;
+                seen.add(far);
+                next.push(far);
+                const n = g.byId.get(far);
+                const kind = n?.kind ?? 'external';
+                walked.push({ id: far, via: cur });
+                if (kinds && !kinds.has(kind)) continue;
+                found.push({ id: far, label: n?.label ?? far, kind, relation: e.relation, direction: way, depth: d, via: cur, ...witnessOf(n, e), confirm: opts.stateOf?.(far) ?? 'unconfirmed' });
+            }
+        }
+        frontier = next;
+    }
+    // Depth-first order, so each item sits under the node it was reached from.
+    const children = new Map<string, string[]>();
+    for (const w of walked) children.set(w.via, [...(children.get(w.via) ?? []), w.id]);
+    const byId = new Map(found.map((it) => [it.id, it] as const));
+    const ordered: TreeItem[] = [];
+    const visit = (id: string): void => {
+        for (const c of children.get(id) ?? []) {
+            const it = byId.get(c);
+            if (it) ordered.push(it);
+            visit(c);
+        }
+    };
+    for (const s0 of seeds) visit(s0);
+    const items = ordered.slice(0, limit);
+    const kindNote = kinds ? [...kinds].sort().map((k) => `${g.kindCount(k)} ${k}`).join(', ') : null;
+    const scope = `${depth} hop${depth > 1 ? 's' : ''} ${dir === 'both' ? 'in and out' : dir === 'in' ? 'in' : 'out'}${rels ? ` along ${[...rels].sort().join(', ')}` : ''}`;
+    const population = seeds.length === 0
+        ? `no node matches "${seed}"${kindNote ? `; the graph holds ${kindNote} node(s)` : ''}`
+        : `${found.length} found within ${scope} of ${seeds.map((s) => label(g, s)).join(', ')}${kindNote ? `; the graph holds ${kindNote} node(s)` : ''}`;
+    const lines = items.map((it) => `${'  '.repeat(it.depth - 1)}${it.direction === 'out' ? '-' : '<-'}${it.relation}${it.direction === 'out' ? '->' : '-'} ${it.label} [${it.kind}]${it.at ? ` at=${it.at}` : ''} (${it.confirm})`);
+    return { source: g.source, seeds: seeds.map((s) => label(g, s)), population, returned: items.length, total: found.length, hasMore: found.length > items.length, tree: lines, items };
 }

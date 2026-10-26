@@ -1,0 +1,13 @@
+{
+    "fixture": "p5-partner",
+    "must_exist": [
+        "edge app/Services/PartnerClient.php#PartnerClient::sync calls external:Illuminate\\Support\\Facades\\Http::post",
+        "edge app/Services/PartnerClient.php#PartnerClient::ping calls external:Illuminate\\Support\\Facades\\Http::post",
+        "edge app/Services/PartnerClient.php#PartnerClient::sync reads config/services.php"
+    ],
+    "must_not_exist": [
+        "edge app/Services/PartnerClient.php#PartnerClient::sync calls app/Models/Comment.php#Comment::post",
+        "edge app/Services/PartnerClient.php#PartnerClient::ping calls app/Models/Comment.php#Comment::post",
+        "edge app/Services/PartnerClient.php#PartnerClient::stock calls app/Models/Comment.php#Comment::post"
+    ]
+}
