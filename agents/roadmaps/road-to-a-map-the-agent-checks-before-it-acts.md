@@ -373,22 +373,22 @@ renders from real facts or says why it has none.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The P1, P2 and P5 fixtures produce the expected facts: `User`
+- [x] AC-1 — The P1, P2 and P5 fixtures produce the expected facts: `User`
       persists to `users`, `invoices` on `tenant`, no dropped table, DR-1 on
       `comments.post_id`, DR-3 on `Tag`, DR-4 on `post_tag`, service `partner`
       with `PARTNER_URL`, operation `GetStock`, no `Comment::post` edge.
-- [ ] AC-2 — Deleting a migrated column without a rebuild yields `gone` with a
+- [x] AC-2 — Deleting a migrated column without a rebuild yields `gone` with a
       tombstone, and an added column shows as `added`.
-- [ ] AC-3 — `confirm` p95 ≤ 50 ms for ≤ 20 witnesses on this repository, with no
+- [x] AC-3 — `confirm` p95 ≤ 50 ms for ≤ 20 witnesses on this repository, with no
       full-graph load on its path.
-- [ ] AC-4 — Every graph, map and cache sits in one of the two layouts; the writer
+- [x] AC-4 — Every graph, map and cache sits in one of the two layouts; the writer
       gate is green on the tree and red on a planted writer.
-- [ ] AC-5 — The map renders the eight areas from real facts or with "no data
+- [x] AC-5 — The map renders the eight areas from real facts or with "no data
       yet" and a reason, at three widths and both themes; the DEC-2 decisions
       are unchanged.
-- [ ] AC-6 — No code path opens a network connection to a database, cloud,
+- [x] AC-6 — No code path opens a network connection to a database, cloud,
       daemon or external endpoint, or reads a `.env` value.
-- [ ] AC-7 — The recall ratchet runs in CI with must-exist and must-not-exist
+- [x] AC-7 — The recall ratchet runs in CI with must-exist and must-not-exist
       facts; every `graph_*` tool has a test against the real SQLite twin.
 - [ ] AC-8 — Task set T exists with a recorded three-arm result.
-- [ ] AC-9 — Gated catalogue delta ≤ 0 and MCP tool count unchanged.
+- [x] AC-9 — Gated catalogue delta ≤ 0 and MCP tool count unchanged.
