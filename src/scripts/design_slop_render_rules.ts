@@ -5,7 +5,7 @@
  * registry to scan written files and would carry these for nothing. The
  * catalog parity gate reads both files.
  */
-import type { DesignContext, RawHit, SlopRule, StyleRow } from "./design_slop_rules.js";
+import type { DesignContext, RawHit, Severity, SlopRule, StyleRow } from "./design_slop_rules.js";
 import { SLOP_RULES } from "./design_slop_rules.js";
 
 // ---------------------------------------------------------------------------
@@ -180,7 +180,7 @@ export const ALL_SLOP_RULES: SlopRule[] = [...SLOP_RULES, ...RENDER_RULES];
 export interface RenderFinding {
   rule: string;
   catalogId: string;
-  severity: string;
+  severity: Severity;
   file: string;
   line: number;
   snippet: string;
