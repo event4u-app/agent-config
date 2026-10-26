@@ -43,7 +43,7 @@ hierarchy to exactly one owner is stated; and SCIP supersedes by node id.
 
 ## Phase 0 — Measure before changing
 
-- [ ] **0.1 An edge census.** `internal/bench/code-graph/edge_census.ts` reads a built
+- [x] **0.1 An edge census.** `internal/bench/code-graph/edge_census.ts` reads a built
       graph and prints, as JSON, the name-lookup call edges with more than one
       candidate, their top labels, `symbol:` targets and AMBIGUOUS among them, and
       `suppressed_edge_counts`. A report, not a gate: a measurement is not a gate
@@ -53,18 +53,18 @@ hierarchy to exactly one owner is stated; and SCIP supersedes by node id.
 - [ ] **0.2 Baseline published.** The census at `700c41137b` and after Phase 1 land in
       `agents/evidence/analysis/code-graph-edge-census-2026-10-26.md`.
       verify: `grep -c 'after Phase 1.*name_lookup_multi: 0' agents/evidence/analysis/code-graph-edge-census-2026-10-26.md` -> /^1$/
-- [ ] **0.3 The grammar count is true.** `loader.ts:9` and
+- [x] **0.3 The grammar count is true.** `loader.ts:9` and
       `src/config/agent-settings.template.yml:1393` say "three loadable grammars";
       `src/vendor/grammars/` ships eight.
       verify: `grep -c 'three loadable grammars' src/scripts/code_graph/loader.ts src/config/agent-settings.template.yml` -> 1
 
 ## Phase 1 — Fewer false edges
 
-- [ ] **1.1 Closure locals leave the repo-wide name index.** A function-valued
+- [x] **1.1 Closure locals leave the repo-wide name index.** A function-valued
       declarator below module level stays a node (same-file resolution still finds
       it) but no longer enters `sym.byName`, so it can never be a repo-wide target.
       verify: `npx vitest run tests/scripts/code_graph_resolution_discipline.test.ts -t 'closure local'` -> 0
-- [ ] **1.2 More than one candidate is AMBIGUOUS, never a winner.** The repo-wide rung
+- [x] **1.2 More than one candidate is AMBIGUOUS, never a winner.** The repo-wide rung
       (`build.ts:617`, and the import fallback at `:520`) binds only when exactly one
       candidate survives after test files are set aside for a non-test caller;
       otherwise the edge is AMBIGUOUS with `candidates[]` and

@@ -1390,7 +1390,7 @@ hooks:
   # of 2026-08-22, which the 2026-07-28 figures predate.
   #
   # The engine ships to consumers. `web-tree-sitter` is a runtime dependency
-  # (package.json) and the three loadable grammars are vendored at
+  # (package.json) and the eight loadable grammars are vendored at
   # src/vendor/grammars/, so there is no separate parser install to perform and
   # no ABI pair to line up by hand. Build the cache with
   # `agent-config code-graph build`.
