@@ -141,7 +141,8 @@ and is never reported as visually verified without render evidence.
       siblings' `box_metrics`; role missing → ask before inventing a control
       kind. Choosing a native control although a primitive exists records a
       `native_control_reason` in the step output.
-      verify: `grep -lF 'Control roles.' src/skills/fe-design/SKILL.md src/skills/ui-apply-generic/SKILL.md src/skills/blade-ui/SKILL.md src/skills/livewire/SKILL.md src/skills/react-shadcn-ui/SKILL.md src/skills/flux/SKILL.md | wc -l` -> /^\s*6$/, with identical wording.
+      verify: `grep -lF 'Control roles.' src/skills/fe-design/SKILL.md src/skills/ui-apply-generic/SKILL.md src/skills/blade-ui/SKILL.md src/skills/livewire/SKILL.md src/skills/react-shadcn-ui/SKILL.md src/skills/flux/SKILL.md | wc -l` -> /^\s*6$/
+      (identical wording in all six).
 - [x] **2.5 Native-select canon** Done 2026-10-26: § Native select in `design-patterns.md`. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> in `fe-design/references/design-patterns.md`
       § Component Architecture: a project primitive is always used; without one,
       a native `<select>` with `appearance: base-select` and `::picker(select)`

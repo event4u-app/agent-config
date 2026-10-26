@@ -98,7 +98,8 @@ deterministic proof where a claim is made.
       26-rule run as a new epoch reported as the null it is, keeping the
       2026-08-13 figure as history; the settings comment at
       `agent-settings.template.yml:1317` names what actually runs.
-      verify: `task check-claims` -> 0; `grep -c "universal gate" src/config/agent-settings.template.yml` -> /^0$/
+      verify: `task check-claims` -> 0
+      verify: `grep -c "universal gate" src/config/agent-settings.template.yml` -> /^0$/
       (the corrected wording no longer claims a gate).
 
 ## Phase 1 — A corpus that can say no
@@ -242,8 +243,8 @@ The gate for every later promotion.
       command.
 - [x] **5.4 Reach.** Done 2026-10-26: two outbound links in the humanizer and three inbound (doc-coauthoring, readme-writing, readme-writing-package) now name the neighbour in prose; `lint_pack_boundaries` 120 → 115, no `suggests` edge added. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Replace the humanizer's cross-pack links with
       named-not-linked prose (the convention `logo-generation` uses).
-      verify: `./scripts-run src/scripts/lint_pack_boundaries` -> 0, five humanizer rows fewer, no new
-      `suggests` edge.
+      verify: `./scripts-run src/scripts/lint_pack_boundaries` -> 0
+      (five humanizer rows fewer, no new suggests edge).
 
 ## Phase 6 — Product truth that survives a second skill
 
