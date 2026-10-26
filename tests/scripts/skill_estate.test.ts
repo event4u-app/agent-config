@@ -172,9 +172,13 @@ describe('the live corpus', () => {
         // whole-app question so it routes (road-to-security-answer-that-names-
         // what-it-checked 2.1), claimed by estate_growth_exempt; the per-spawn
         // payload stays at zero net growth.
+        //
+        // 11492 -> 11487 on 2026-10-27: `database` and `sql-writing` stop naming
+        // MariaDB/MySQL as their only engine and `database` claims schema design
+        // (road-to-database-relational-modeling 2.1/2.6). Shrink direction.
         const e = measureSkillEstate(REPO);
         expect(e.skill_count).toBe(301);
-        expect(e.skill_description_tokens).toBe(11492);
+        expect(e.skill_description_tokens).toBe(11487);
         expect(e.deprecated_count).toBe(0);
     });
 

@@ -1,0 +1,53 @@
+{
+    "skill": "migration-architect",
+    "last_eval": "2026-10-27",
+    "description": "4 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-27 under road-to-database-relational-modeling 2.2, which removed this skill from the trigger-eval grandfather list. Exemplars cover the rollout-shaping request in its explicit forms (phases, dual-write, deprecation) and a German phrasing. Near-misses are the three neighbours the skill's own body routes away to: authoring a single additive migration (laravel-migration), reviewing a migration diff for scale hazards (schema-review), and designing the target schema itself (database, relational modeling reference). Counterexamples guard the 'migration' homonym (data migration between hosting providers, a package major-version upgrade).",
+    "queries": [
+        {
+            "q": "plan the rollout for splitting the users.name column into first_name and last_name without downtime",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "we need a dual-write window while we move orders to a new table — how do we sequence the cutover?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "design the deprecation cycle for the legacy status column that three services still read",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "wie rollen wir die Schemaänderung über mehrere Deploys aus, ohne die Consumer zu brechen?",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "create a migration that adds a nullable notes column to invoices",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "review this migration diff for missing indexes before I merge",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "how should I model users that belong to several projects with a role each?",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "migrate our hosting from Heroku to AWS",
+            "trigger": false,
+            "class": "counterexample"
+        },
+        {
+            "q": "upgrade the project from Laravel 11 to Laravel 12",
+            "trigger": false,
+            "class": "counterexample"
+        }
+    ]
+}

@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  b3853ea1ba436f9c2879001426945ba1160208479771213b87e10e0f2c3e95b0
+SET-SHA256  b1ec359f4be67adf05fe8e5470a9a266a633c14428852969487366b5651aa079
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1064,6 +1064,7 @@ open and which this file does not settle.
 | `logo-generation` | `fcf30c295c85f8b24f0ee6cb374229c39dbe87959469d7b04b19660e727e9a08` |
 | `market-entry-analysis` | `9fb6ee850d5eb06e96439505bb5f47835edbc9a025cf97f2ad1a952337fea264` |
 | `merge-conflicts` | `61fbce06e0429a65e76532d51f3bafa3d27341b4c42943cc952cbc4dbc304189` |
+| `multi-tenancy` | `56dde082cfd04972656f1e2d61f639c6de63d64b578fc8c294bfab84114780d3` |
 | `overbuild-review-lens` | `32ef2f64da160c5cbc5fef3b4e3d38d83e8f39b918ba4574e43e2f9256ae69f2` |
 | `php-coder` | `25950ef2e90e4055ba30de21b32204727dd953275a681f99ac60c5a59592be83` |
 | `playbook-authoring` | `e615f614da3c14439fca70f3477272a8323e579ac4961ce2ce83c3c0f099949b` |
@@ -1240,7 +1241,7 @@ open and which this file does not settle.
 | `corpus-grounding` | `f87d7497f5705b0ef84bd61137623984faaac39f202bf9f5fea206855fbd6c3f` |
 | `customer-research` | `be1760092dfc0e70006ac1313709d8acdd48a62b1e3b81f354590df95e23fbc6` |
 | `data-flow-mapper` | `535e42defa307b3a40d68cdcd6eeeef101c120d5c5c1b9740330199a5acc2203` |
-| `database` | `07b320a1bcde1f8565aa1cae12d383b765fd1a9d0289703fccfa79f7486b5688` |
+| `database` | `4f066dcd06cd6e60f5fa26ccf95dbbf9f3b48b214100f64f232e30f1d9581e46` |
 | `dependency-upgrade` | `1ed820d9d1b49e83332dc456704b5466db1b53f4a1b5be1e632e5e6c6b3e1053` |
 | `description-assist` | `529c0051f8a8fb9d125b4c977e1fe8e7731e28d885c486d297070261ec7a85ab` |
 | `design-intelligence` | `81361d4cd038b77ae78ddc988e3fdc247b93112f217ed455ce9437ac3576ac21` |
@@ -1293,6 +1294,7 @@ open and which this file does not settle.
 | `logging-monitoring` | `5e8406b3c814db3d1e100a1c817a9fce388afd40f4f3caa8230cd8f69e44f0f4` |
 | `markitdown` | `663ee4c4f9d5c707ff96208d1723d9817639fca7c00b346e43be2cb557610f6a` |
 | `mcp-builder` | `ae92b28ec126c62dbfd8520f94103b8d56edc44f86e544eecffc4d8d8489f503` |
+| `migration-architect` | `910b3b176164d69a3a4b59b3cd898fbc3716318f5e731606dc4d7c8e5dffdb55` |
 | `messaging-architecture` | `884739cdfadce5039917772df035f19a4ca8f5863fd1ab57bcb023aa183421b0` |
 | `monorepo-workspace` | `766a958aae4898bd938e493be8597b6d8b9ee38914ed95ab87ed867422e38233` |
 | `motion-choreographer` | `8c252805f97ee03e9ff3513172a8b04d7700e6d4f1ad12b0c9cfaefd326df454` |
@@ -1913,6 +1915,48 @@ The set is now 179 files, 39 of them sealed, which is unchanged.
 `routing-body-signal-verdict.json`: still `harmful` on the false-activation
 guard (**+5.08 pp** against +2.0 pp). `delivery-set-measurement-2026-08-31.json`:
 recall loss **38.36 pp**, the ceiling stays **BREACHED**; context cost **231**
+tokens against the 500 target, still **MET**. Neither verdict changes in kind.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.
+
+## Growth — 2026-10-27, three corpora for the database family; one seals
+
+```
+TWO ROWS ARE NEW — ONE SEALS, ONE TRAINS — AND ONE TRAIN ROW IS RE-HASHED.
+NO PRE-EXISTING HOLDOUT FILE WAS EDITED. BOTH TRAIN-SIDE MEASUREMENTS WERE
+RE-TAKEN AFTER THE CORPORA WERE ON DISK.
+```
+
+**What changed.** `road-to-database-relational-modeling` 2.2 gave
+`migration-architect` a corpus and removed its grandfather line: nine cases,
+four exemplars of which one is German, three near-misses (authoring an additive
+migration, reviewing a diff, modeling the target schema) and two
+counterexamples for `migration` in unrelated senses. Step 2.6 made `database`
+the owner of relational modeling, so its corpus gained two exemplars measuring
+that claim, one of them German. Step 4.8 named both tenancy modes in
+`multi-tenancy`, so `check_routing_coverage` required its corpus too: nine
+cases, four exemplars of which one is German, three near-misses (an ownership
+check, a single-tenant schema, a rollout) and two counterexamples. Its
+grandfather line is gone.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `migration-architect` | train | `0x36` = 54 ≥ 51 | new |
+| `database` | train | `0x35` = 53 ≥ 51 | re-hashed |
+| `multi-tenancy` | holdout | `0x12` = 18 < 51 | new |
+
+**One row seals, and nobody chose it.** The sealed set moves **39 -> 40**, the
+train set **140 -> 141**, the set **179 -> 181**. AC-6 still rests on the same
+18 rows, so it is now 18 of 40; a proposer evaluated against this holdout must
+exclude `multi-tenancy` or say it is using a row whose seal is younger than the
+evaluation.
+`SET-SHA256` moves because it is computed over every row: `b3853ea1…` → `b1ec359f…`.
+
+**Both train-side measurements were re-taken on this tree.**
+`routing-body-signal-verdict.json`: still `harmful` on the false-activation
+guard (**+4.90 pp** against +2.0 pp). `delivery-set-measurement-2026-08-31.json`:
+recall loss **38.75 pp**, the ceiling stays **BREACHED**; context cost **231**
 tokens against the 500 target, still **MET**. Neither verdict changes in kind.
 
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`

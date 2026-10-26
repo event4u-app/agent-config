@@ -1,0 +1,53 @@
+{
+    "skill": "multi-tenancy",
+    "last_eval": "2026-10-27",
+    "description": "4 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-27 under road-to-database-relational-modeling 4.8, which named both tenancy modes in this skill and so brought it into check_routing_coverage's touched-skill scope; its grandfather line is gone. `last_eval` carries the authoring date — no live trigger eval ran. Exemplars cover the database-per-tenant switch this body owns, a tenant-leak check, the shared-schema composite-key question the new reference owns, and a German phrasing. Near-misses share tenant vocabulary and belong elsewhere: a per-request ownership check on an endpoint (authz-review), designing the tables of a single-tenant module (database), and a migration rollout across services (migration-architect). Counterexamples guard the 'tenant' homonym in property management and a hosting plan question.",
+    "queries": [
+        {
+            "q": "this job runs after the request ends — how do I make it switch to the right customer database?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "check this repository class for cross-tenant leaks before we ship it",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "all tenants share one schema with a tenant_id column — how do foreign keys stop a project pointing at another tenant's customer?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "wie stelle ich sicher, dass ein Mandant nie die Daten eines anderen Mandanten sieht?",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "add an ownership check so a user cannot load another user's invoice by id",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "design the tables for a single-tenant booking module",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "plan the rollout for renaming the customers table across three services",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "draft a lease agreement for a new tenant of our apartment building",
+            "trigger": false,
+            "class": "counterexample"
+        },
+        {
+            "q": "which hosting plan gives us more database connections?",
+            "trigger": false,
+            "class": "counterexample"
+        }
+    ]
+}
