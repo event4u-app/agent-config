@@ -115,6 +115,25 @@ describe('stamp — the artefact knows what it was computed from', () => {
         expect(lookupControlRoles(dir).select).toMatchObject({ canonical: 'x-select', uses: 1 });
     });
 
+    it('a box measured by ui:render --interact outranks the class-parsed one', () => {
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ui-audit-render-'));
+        fs.mkdirSync(path.join(dir, 'components'), { recursive: true });
+        fs.writeFileSync(path.join(dir, 'components', 'form.tsx'), 'export const F = () => <x-input name="a" class="h-9 px-3" />;');
+        const render = path.join(dir, 'agents', 'runtime', 'state', 'render', 'form');
+        fs.mkdirSync(render, { recursive: true });
+        fs.writeFileSync(
+            path.join(render, 'manifest.json'),
+            JSON.stringify({
+                generated_at: '2026-10-26T00:00:00Z',
+                interactions: [
+                    { role: 'input', box: { height_px: 40, padding_x_px: 14, padding_y_px: 0, radius_px: 4, font_size_px: 15, border_px: 1 } },
+                ],
+            }),
+        );
+        const a = computeUiAudit(dir, dir);
+        expect(a.control_roles.input!.box_metrics).toMatchObject({ height_px: 40, padding_x_px: 14, source: 'render' });
+    });
+
     it('an artefact without a stamp is stale', () => {
         expect(isUiAuditStale(os.tmpdir(), {})).toBe(true);
     });

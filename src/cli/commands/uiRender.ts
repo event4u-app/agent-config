@@ -40,6 +40,7 @@ import * as path from 'node:path';
 import type { chromium as Chromium } from '@playwright/test';
 
 import { runAssetRender } from './uiRenderAsset.js';
+import { interactWith, type InteractionReading } from './uiRenderInteract.js';
 import type { AssetClass, AssetReading, Registration } from './uiRenderAsset.js';
 import { scanHostHtml, scanSvg } from '../../scripts/lint_svg_asset.js';
 import { EXIT_RENDERER_ABSENT, RENDER_REL, renderSlug } from '../../scripts/_lib/asset_render_record.js';
@@ -94,6 +95,8 @@ export interface RenderManifest {
      */
     profile?: 'asset';
     asset?: AssetReading;
+    /** `--interact`: the open state of each named control. Optional, page profile only. */
+    interactions?: InteractionReading[];
     /**
      * WHY the verification is not `verified`, as a token rather than as prose,
      * and only when the COMMAND can say why.
@@ -276,6 +279,8 @@ export interface UiRenderOptions {
     /** Step 2.6: the other render of the same frame. */
     compareTo?: string | undefined;
     registration?: Registration | undefined;
+    /** Selectors of controls to open, focus and operate (page profile). */
+    interact?: readonly string[] | undefined;
 }
 
 export async function runUiRender(opts: UiRenderOptions): Promise<number> {
@@ -346,6 +351,7 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
     }
 
     const captures: ViewportCapture[] = [];
+    const interactions: InteractionReading[] = [];
     const allStyles: Array<Record<string, string>> = [];
     let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null;
 
@@ -438,6 +444,21 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
                 horizontal_overflow: scrollWidth > vp.width + 1,
             });
         }
+        if (opts.interact && opts.interact.length > 0) {
+            const vp = VIEWPORTS[0];
+            for (const [i, selector] of opts.interact.entries()) {
+                // A fresh page per control, so one popup left open cannot hide
+                // the next control's open state.
+                const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
+                await page.goto(isUrl ? abs : `file://${abs}`, { waitUntil: 'load', timeout: 30_000 });
+                const reading = await interactWith(page, selector, outDir, i);
+                await page.close();
+                interactions.push({
+                    ...reading,
+                    screenshot: reading.screenshot === null ? null : path.relative(projectRoot, reading.screenshot).split(path.sep).join('/'),
+                });
+            }
+        }
     } catch (err) {
         const manifest: RenderManifest = {
             schema: 1,
@@ -468,6 +489,7 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
         palette: collectPalette(allStyles),
         type_families: collectTypeFamilies(allStyles),
         verification: 'verified',
+        ...(interactions.length > 0 ? { interactions } : {}),
     };
     writeManifest(outDir, manifest);
 
@@ -477,7 +499,16 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
         process.stdout.write(
             `✅  ui:render — ${manifest.captures.length} viewport(s), ${manifest.palette.length} colour(s), ` +
                 `${manifest.type_families.length} family(ies)\n    ${path.relative(projectRoot, outDir)}\n` +
-                (overflow.length ? `    ⚠️  horizontal overflow at: ${overflow.join(', ')}\n` : ''),
+                (overflow.length ? `    ⚠️  horizontal overflow at: ${overflow.join(', ')}\n` : '') +
+                interactions
+                    .map(
+                        (r) =>
+                            `    ${r.open_state === 'captured' ? '✅' : '⚠️ '} ${r.selector}: open state ${r.open_state}` +
+                            (r.popup.clipped_by ? `, clipped by ${r.popup.clipped_by}` : '') +
+                            (r.reason ? ` — ${r.reason}` : '') +
+                            '\n',
+                    )
+                    .join(''),
         );
     }
     return 0;

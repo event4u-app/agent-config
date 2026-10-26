@@ -29,7 +29,7 @@ import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { buildControlRoles, type ControlRole, type RoleEntry } from '../../scripts/_lib/control_roles.js';
+import { buildControlRoles, type BoxMetrics, type ControlRole, type RoleEntry } from '../../scripts/_lib/control_roles.js';
 import { isUiPath, isUiTreePath } from '../../scripts/_lib/ui_surface.js';
 
 /**
@@ -402,11 +402,59 @@ function readPairs(projectRoot: string, target: string): { pairs: Array<readonly
     return { pairs, unreadable };
 }
 
+/**
+ * Box metrics MEASURED by `ui:render --interact`, newest manifest first, keyed by
+ * control role. A rendered box outranks one parsed from class names: the class
+ * parser cannot see CSS modules, Blade attribute bags or a theme override.
+ */
+export function renderedBoxMetrics(projectRoot: string): Partial<Record<ControlRole, BoxMetrics & { source: 'render' }>> {
+    const dir = path.join(projectRoot, 'agents', 'runtime', 'state', 'render');
+    const out: Partial<Record<ControlRole, BoxMetrics & { source: 'render' }>> = {};
+    let manifests: Array<{ at: string; interactions: Array<{ role: ControlRole | null; box: Record<string, number> | null }> }> = [];
+    try {
+        for (const slug of fs.readdirSync(dir)) {
+            try {
+                const m = JSON.parse(fs.readFileSync(path.join(dir, slug, 'manifest.json'), 'utf8'));
+                if (Array.isArray(m.interactions)) manifests.push({ at: String(m.generated_at), interactions: m.interactions });
+            } catch {
+                // a capture without a readable manifest contributes nothing
+            }
+        }
+    } catch {
+        return out;
+    }
+    manifests = manifests.sort((x, y) => y.at.localeCompare(x.at));
+    for (const m of manifests) {
+        for (const r of m.interactions) {
+            if (r.role === null || r.box === null || out[r.role]) continue;
+            const b = r.box;
+            out[r.role] = {
+                height_px: b['height_px'] ?? null,
+                padding_x_px: b['padding_x_px'] ?? null,
+                padding_y_px: b['padding_y_px'] ?? null,
+                radius_px: b['radius_px'] ?? null,
+                font_size_px: b['font_size_px'] ?? null,
+                border_px: b['border_px'] ?? null,
+                source: 'render',
+            } as BoxMetrics & { source: 'render' };
+        }
+    }
+    return out;
+}
+
 /** Compute the artefact for `target` under `projectRoot`, stamped with git HEAD. */
 export function computeUiAudit(projectRoot: string, target: string): UiAuditArtefact {
     const { pairs, unreadable } = readPairs(projectRoot, target);
     let artefact = buildArtefact(path.relative(projectRoot, target).split(path.sep).join('/') || '.', pairs);
     artefact = { ...artefact, stamp: { ...artefact.stamp, head: gitHead(projectRoot) } };
+    const rendered = renderedBoxMetrics(projectRoot);
+    for (const [role, box] of Object.entries(rendered) as Array<[ControlRole, BoxMetrics]>) {
+        const entry = artefact.control_roles[role];
+        if (entry) {
+            entry.box_metrics = box;
+            delete entry.box_metrics_reason;
+        }
+    }
     if (unreadable > 0) {
         artefact = {
             ...artefact,

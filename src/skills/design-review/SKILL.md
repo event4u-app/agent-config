@@ -179,7 +179,7 @@ collapsed or overlapping layout, no missing region, no unstyled flash; **no prob
 covers it**, because a computed style can be correct on a node nobody can see; (2) pixel
 comparison against a baseline where one exists, element-scoped, dynamic content masked. No
 render capability → scope the verdict and say so per the gate at the top of this skill;
-degrading is reported, never a pass. What a clean render does *not* answer:
+degrading is reported, never a pass. An added control (select, menu, dialog, tooltip) is reviewed OPEN — `ui:render <page> --interact <selector>` records open state, popup bounds and clipping. What a clean render does *not* answer:
 [`references/verification-automation.md`](references/verification-automation.md) § Appearance verification.
 
 ## Reviewer posture

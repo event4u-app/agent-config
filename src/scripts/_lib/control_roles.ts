@@ -158,7 +158,7 @@ export interface BoxMetrics {
     radius_px: number | null;
     font_size_px: number | null;
     border_px: number | null;
-    source: 'static';
+    source: 'static' | 'render';
 }
 
 const SPACING_PX = (n: string): number | null => {

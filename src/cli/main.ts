@@ -155,6 +155,7 @@ async function main(rawArgv: readonly string[]): Promise<number> {
         .option('--icon-set <paths>', 'Comma-separated incumbent icon SVGs, read for their own grid')
         .option('--compare <file>', 'Second render of the same frame to compare against')
         .option('--registration <spec>', 'Raster source region as x,y,w,h[@scale]')
+        .option('--interact <selectors>', 'Comma-separated controls to open, focus and operate; records the open state')
         .action(
             async (
                 target: string,
@@ -169,6 +170,7 @@ async function main(rawArgv: readonly string[]): Promise<number> {
                     iconSet?: string;
                     compare?: string;
                     registration?: string;
+                    interact?: string;
                 },
             ) => {
                 // Validated, not cast. A cast let `--class Icon` through as an
@@ -212,6 +214,9 @@ async function main(rawArgv: readonly string[]): Promise<number> {
                     ...(opts.thresholds === undefined ? {} : { thresholds: opts.thresholds }),
                     ...(opts.iconSet === undefined ? {} : { iconSet: opts.iconSet.split(',').map((s) => s.trim()) }),
                     ...(opts.compare === undefined ? {} : { compareTo: opts.compare }),
+                    ...(opts.interact === undefined
+                        ? {}
+                        : { interact: opts.interact.split(',').map((s) => s.trim()).filter(Boolean) }),
                     ...(parseRegistration(opts.registration) === null
                         ? {}
                         : { registration: parseRegistration(opts.registration) as Registration }),
