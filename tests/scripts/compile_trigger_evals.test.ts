@@ -21,6 +21,7 @@ import {
     partitionOf,
     printRunCommand,
     readCorpus,
+    skillInputPattern,
     type CompiledCase,
 } from '../../src/scripts/compile_trigger_evals.js';
 
@@ -141,13 +142,39 @@ describe('compileCorpus — one case per query, 2.1', () => {
             const c = cases.find((x) => x.id === id) as CompiledCase;
             return fs.readFileSync(path.join(out, c.dir, 'graders', 'criteria.md'), 'utf8');
         };
+        // A deterministic tool_used check on the Skill call, never an llm judge:
+        // the judge's default focus is the last message, which cannot show a
+        // skill invocation.
+        expect(read('a1')).toMatch(/^type: tool_used$/m);
+        expect(read('a1')).toMatch(/^tool: Skill$/m);
+        expect(read('a1')).not.toMatch(/^type: llm$/m);
+        expect(read('a1')).toContain(skillInputPattern('alpha-skill'));
+        expect(read('a1')).not.toMatch(/^max: 0$/m);
         // Risk 3: a negative query may rightly trigger a NEIGHBOUR skill, so the
         // grader asserts the named skill's absence and never a bare "no skill".
-        expect(read('a1')).toMatch(/\balpha-skill\b/);
-        expect(read('a1')).toMatch(/\bused\b/i);
-        expect(read('a2')).toMatch(/\bnot\b/i);
-        expect(read('a2')).toMatch(/\balpha-skill\b/);
-        expect(read('a2')).not.toMatch(/no skill at all|any skill/i);
+        expect(read('a2')).toContain(skillInputPattern('alpha-skill'));
+        expect(read('a2')).toMatch(/^min: 0$/m);
+        expect(read('a2')).toMatch(/^max: 0$/m);
+        // arm: both keeps the check scored under ablation, not display-only.
+        expect(read('a2')).toMatch(/^arm: both$/m);
+    });
+
+    it('anchors the input pattern on the whole skill name', () => {
+        const re = new RegExp(skillInputPattern('code-review'));
+        expect(re.test('{"skill":"ac:code-review"}')).toBe(true);
+        expect(re.test('{"skill":"code-review"}')).toBe(true);
+        expect(re.test('{"skill":"ac:requesting-code-review"}')).toBe(false);
+        expect(re.test('{"skill":"ac:code-review-extra"}')).toBe(false);
+    });
+
+    it('writes the tags into the prompt frontmatter, where the host reads them', () => {
+        const { out, cases } = compileFixture();
+        const a3 = cases.find((c) => c.id === 'a3') as CompiledCase;
+        const body = fs.readFileSync(path.join(out, a3.dir, 'prompt.md'), 'utf8');
+        const fm = body.split('---')[1] as string;
+        expect(fm).toMatch(/^tags: \[.*"skill:alpha-skill".*\]$/m);
+        expect(fm).toContain('"class:near-miss"');
+        expect(fs.existsSync(path.join(out, a3.dir, 'tags.txt'))).toBe(false);
     });
 
     it('tags the skill, the class and the partition', () => {
@@ -262,6 +289,8 @@ describe('print-run — prints, never runs, 3.1', () => {
         runs: 3,
         maxCostUsd: 5,
         protocol: 'agents/evidence/analysis/trigger-eval-protocol.md',
+        model: 'claude-opus-5-5',
+        ablation: 'none' as const,
     };
 
     it('print-run: prints a command carrying every required part', () => {
@@ -271,6 +300,17 @@ describe('print-run — prints, never runs, 3.1', () => {
         expect(cmd).toContain('--runs 3');
         expect(cmd).toContain('--max-cost-usd 5');
         expect(cmd).toContain('partition:train');
+        expect(cmd).toContain('--model claude-opus-5-5');
+        expect(cmd).toContain('--ablation none');
+    });
+
+    it('print-run: refuses without an explicit model or ablation', () => {
+        // The host's defaults (its current model; with-without whenever a
+        // plugin resolves) are not decisions anybody recorded.
+        expect(() => printRunCommand({ ...complete, model: '' })).toThrow(/model/i);
+        expect(() =>
+            printRunCommand({ ...complete, ablation: '' as unknown as 'none' }),
+        ).toThrow(/ablation/i);
     });
 
     it('print-run: refuses without the keep-local flag, a run count, a cost cap or a protocol', () => {
