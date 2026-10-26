@@ -100,7 +100,7 @@ no absolute local path.
       is no package anyway.
       verify: a test with an absolute import finds no `/` at the start of any
       external in the map model.
-- [ ] **0.3 Commit the map.** Rebuild `agents/map/`, assert no listed path is
+- [x] **0.3 Commit the map.** Rebuild `agents/map/`, assert no listed path is
       ignored and no `/Users/` or `/home/` string remains, and commit it.
       verify: `git check-ignore` over the map's file list prints nothing.
 
