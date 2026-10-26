@@ -251,7 +251,7 @@ The gate for every later promotion.
       one section).
       verify: template diff; `design-system-capture/evals/evals.json` gains a case
       reading an external-format file.
-- [ ] **6.3 Wire the dead authority level.** A reader produces
+- [x] **6.3 Wire the dead authority level.** Done 2026-10-26: `src/scripts/_lib/doc_authority.ts` (`declaredRegister` — frontmatter `register:` or the first word under `## Register`; `readDocAuthority`); `design_sync reconcile` is the non-test producer and passes `design_md`/`product_md` into `resolveUiAuthority`; T7 is gated by a declared product register. T8 has no rule (catalog status `deferred`), so only T7 consumes it. `tests/scripts/doc_authority.test.ts` (declared product lifts T7 on Inter, undeclared and brand do not; producer → resolver end to end); `ui_authority.test.ts` green. Hook bundle 238 B under its ceiling after this step. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/design_sync_reconcile.ts --> A reader produces
       `design_md`/`product_md` `{present, register}` from declared fields only
       (0.2's reader) and passes them to `resolveUiAuthority`; T7/T8 consume the
       stated register.

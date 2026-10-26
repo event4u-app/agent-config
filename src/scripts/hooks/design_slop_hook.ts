@@ -157,7 +157,9 @@ export function main(): number {
     const high = (content: string) =>
       scanFile(content, ex.file, ctx).filter((f) => f.severity === "P0" || f.severity === "P1");
     // Say only what this write introduced (road-to-tells-a-near-miss-can-refute 3.1).
-    const split = attribute(high(ex.content), high(ex.replaced ?? committedBlob(root, ex.file)));
+    // A clean write pays no baseline scan.
+    const found = high(ex.content);
+    const split = attribute(found, found.length ? high(ex.replaced ?? committedBlob(root, ex.file)) : []);
     findings = split.introduced;
     incumbent = split.incumbent;
   } catch {
