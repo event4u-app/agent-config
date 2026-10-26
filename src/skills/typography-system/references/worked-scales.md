@@ -77,6 +77,27 @@ row:
   (`font-optical-sizing: auto`) so small and display sizes each get the cut
   drawn for them; pin it only to match a measured comp.
 
+## Tracking and leading by size
+
+One fixed `letter-spacing` is wrong somewhere: large text drawn at its default
+spacing looks loose, small text drawn tight closes up. Spacing follows size, and
+every step of a scale carries its own value. If the family has an `opsz` axis,
+`font-optical-sizing: auto` comes first — the optical cut already adjusts
+spacing, and the ladder below then needs only half its value or none.
+
+| Step size | `letterSpacing` | Line-height |
+|---|---|---|
+| ≥ 48 px (display) | −0.025 em | 1.05–1.15 |
+| 32–47 px | −0.015 em | 1.15–1.25 |
+| 20–31 px | −0.01 em | 1.25–1.35 |
+| 15–19 px (body) | 0 | 1.4–1.7 (the body authority) |
+| 12–14 px (small) | +0.01 em | 1.4–1.5 |
+| all-caps labels, any size | +0.03 to +0.05 em | as the step |
+
+The ends stay inside the detectors: display never tighter than −0.04 em (T6)
+and body text never wider than 0.05 em (T10, `src/scripts/design_slop_rules.ts`).
+A scale's tokens emit one `letterSpacing` per step — see `design-tokens`.
+
 ## The arbitrary scale this replaces
 
 `16, 20, 24, 28` is not a scale: its steps grow by a fixed 4 px, so the ratio
