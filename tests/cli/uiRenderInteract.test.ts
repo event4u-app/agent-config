@@ -4,6 +4,7 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import type { Page } from '@playwright/test';
 import { afterAll, describe, expect, it } from 'vitest';
 
 import { interactWith } from '../../src/cli/commands/uiRenderInteract.js';
@@ -32,7 +33,7 @@ describe('interactWith — live', () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'interact-'));
     afterAll(() => fs.rmSync(dir, { recursive: true, force: true }));
 
-    async function withPage<T>(fn: (page: import('@playwright/test').Page) => Promise<T>): Promise<T> {
+    async function withPage<T>(fn: (page: Page) => Promise<T>): Promise<T> {
         const { chromium } = await import('@playwright/test');
         const browser = await chromium.launch();
         try {
