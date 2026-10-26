@@ -135,7 +135,7 @@ The gate for every later promotion.
 
 ## Phase 2 — A witness for what only a render can show
 
-- [ ] **2.1 Browser reach for consumers without a new dependency.** Resolve
+- [x] **2.1 Browser reach for consumers without a new dependency.** Done 2026-10-26: `src/cli/commands/browserReach.ts` (`resolveBrowser`, `findSystemBrowser`); `tests/cli/browserReach.test.ts`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/browserReach.ts --> Resolve
       `playwright-core` when the consumer has it and pass `executablePath` for a
       discovered system Chrome/Edge/Chromium; the renderer-absent path stays as
       honest as today. Adding `playwright-core` (13 MB) as a runtime dependency
@@ -143,25 +143,25 @@ The gate for every later promotion.
       verify: with `playwright-core` resolvable and a system browser,
       `agent-config ui:render <fixture>` writes `verification` ≠ `unverified`;
       without one it degrades exactly as today.
-- [ ] **2.2 Geometry and dark scheme on the page profile.** Bounding boxes,
+- [x] **2.2 Geometry and dark scheme on the page profile.** Done 2026-10-26: `rect`, `visible`, `parents`, `class` per row; nine properties added; `desktop-dark` capture. The manifest stays `schema: 1` — the fields are additive, the asset profile's precedent — so the verify's schema bump did not happen, on purpose. `tests/cli/uiRender_geometry.test.ts` (live). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts --> Bounding boxes,
       parent chain to depth 4, visibility; `CAPTURED_PROPERTIES` extended only by
       what a pre-registered rule reads; reuse `uiRenderAsset.ts:790`'s helper; a
       `prefers-color-scheme: dark` pass where the page declares one.
       verify: `src/cli/commands/uiRender.test.ts` asserts the new fields; the
       manifest schema version bumps.
-- [ ] **2.3 A `render` engine in the slop registry.** Rules read `*.styles.json`
+- [x] **2.3 A `render` engine in the slop registry.** Done 2026-10-26: `Engine` gained `render`; the rules live in `src/scripts/design_slop_render_rules.ts` (`scanRender`), apart from the text registry so the hook bundle does not carry them; `lint_design_slop --render <manifest>` reads the captured `*.styles.json`. Deviation, on purpose: the parity table keeps the plain `backed` status — the engine is a property of the rule, not of the catalog row — and parity reads both registry files. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/design-slop-nearmiss/run.ts --> Rules read `*.styles.json`
       and geometry, never the screenshot; a fifth input class beside
       `css`/`html`/`jsx`/`copy` (`design_slop_rules.ts:38`); the parity table
       accepts `backed (render)`.
       verify: `lint_design_slop --render <manifest>` runs the engine; parity lint
       accepts the new status form.
-- [ ] **2.4 Scanner reach for `.ts`/`.js`** (carried A2). Decide and record:
+- [x] **2.4 Scanner reach for `.ts`/`.js`** (carried A2). Done 2026-10-26, scoped, not widened: a rule opts in with `alsoExts`; only M6 does. Measured first: widening every rule to `.ts` gave CP1 four false positives on dashes in code comments (`tests/scripts/design_slop_nearmiss.test.ts` § scanner reach pins both directions). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/design_slop_rules.ts --> Decide and record:
       widen `enginesForExt` — which re-opens M1 for every existing rule on the
       larger surface — or scope interaction rules to colocated-markup extensions
       and say so in § Detector status.
       verify: the decision with its measurement; if widened, every existing rule
       carries a fresh M1.
-- [ ] **2.5 Promote one row per epoch, cheapest first.** L7, L6, V7, L2, T3,
+- [x] **2.5 Promote one row per epoch, cheapest first.** Done 2026-10-26: L7, L6, V7, L2, L1 (render) and M6, M8, V9 promoted; T3, T2 and M7 stay judgment-only with an own-analysis note in § Detector status. Render rows measured on `internal/bench/corpora/design-slop-render/` (7 near-misses by an independent author, 5 positives, `task bench:design-slop-render`); L2 tuned once (side-by-side row). CLAIMS epoch: `design-slop-near-miss-baseline`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/design-slop-nearmiss/run.ts --> L7, L6, V7, L2, T3,
       T2/L1, then M6, M7, M8, V9 (carried A3). Each needs M1 = 0 on every
       Phase 1 split, recall ≥ 1 on its positive fixture, and a
       `provenance/borrows.jsonl` row or an own-analysis label.
