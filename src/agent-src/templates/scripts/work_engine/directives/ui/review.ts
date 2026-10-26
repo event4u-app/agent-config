@@ -291,7 +291,10 @@ function _delegate_to_review_skill(state: DeliveryState): StepResult {
             '> Consistency: run `lint_design_consistency` over the changed ' +
                 'files and `ui:render --interact` on every control a change ' +
                 'added (see `new_control_roles` on `state.changes`); write ' +
-                '`consistency: {findings: [...], open_state: {<role>: "captured"}}`.',
+                '`consistency: {findings: [...], open_state: {<role>: "captured"}}`. ' +
+                'Where an approved baseline exists, `ui:render --region <changed region>` ' +
+                'compares against it; each delta is a finding, so the polish loop repairs ' +
+                'it within its two rounds and reports what remains.',
             '> 1. Continue — run the review and write ' +
                 '`{findings: [...], review_clean: bool}` into ' +
                 '`state.ui_review`',

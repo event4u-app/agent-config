@@ -41,6 +41,7 @@ import type { chromium as Chromium } from '@playwright/test';
 
 import { runAssetRender } from './uiRenderAsset.js';
 import { interactWith, type InteractionReading } from './uiRenderInteract.js';
+import { BASELINE_REL, regionReading, type RegionReading } from './uiRenderRegion.js';
 import type { AssetClass, AssetReading, Registration } from './uiRenderAsset.js';
 import { scanHostHtml, scanSvg } from '../../scripts/lint_svg_asset.js';
 import { EXIT_RENDERER_ABSENT, RENDER_REL, renderSlug } from '../../scripts/_lib/asset_render_record.js';
@@ -97,6 +98,8 @@ export interface RenderManifest {
     asset?: AssetReading;
     /** `--interact`: the open state of each named control. Optional, page profile only. */
     interactions?: InteractionReading[];
+    /** `--region`: the changed region against its approved baseline. Optional, page profile only. */
+    region?: RegionReading;
     /**
      * WHY the verification is not `verified`, as a token rather than as prose,
      * and only when the COMMAND can say why.
@@ -281,6 +284,12 @@ export interface UiRenderOptions {
     registration?: Registration | undefined;
     /** Selectors of controls to open, focus and operate (page profile). */
     interact?: readonly string[] | undefined;
+    /** Selector of the changed region to compare against its approved baseline. */
+    region?: string | undefined;
+    /** Baseline file; defaults to `agents/runtime/state/render-baselines/<slug>.json`. */
+    baseline?: string | undefined;
+    /** Write the current region as the approved baseline instead of comparing. */
+    approve?: boolean | undefined;
 }
 
 export async function runUiRender(opts: UiRenderOptions): Promise<number> {
@@ -352,6 +361,7 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
 
     const captures: ViewportCapture[] = [];
     const interactions: InteractionReading[] = [];
+    let region: RegionReading | undefined;
     const allStyles: Array<Record<string, string>> = [];
     let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null;
 
@@ -459,6 +469,14 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
                 });
             }
         }
+        if (opts.region !== undefined) {
+            const vp = VIEWPORTS[0];
+            const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
+            await page.goto(isUrl ? abs : `file://${abs}`, { waitUntil: 'load', timeout: 30_000 });
+            const baselinePath = path.resolve(projectRoot, opts.baseline ?? path.join(BASELINE_REL, `${slug}.json`));
+            region = await regionReading(page, opts.region, baselinePath, opts.approve === true);
+            await page.close();
+        }
     } catch (err) {
         const manifest: RenderManifest = {
             schema: 1,
@@ -490,6 +508,7 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
         type_families: collectTypeFamilies(allStyles),
         verification: 'verified',
         ...(interactions.length > 0 ? { interactions } : {}),
+        ...(region === undefined ? {} : { region }),
     };
     writeManifest(outDir, manifest);
 
@@ -508,7 +527,13 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
                             (r.reason ? ` — ${r.reason}` : '') +
                             '\n',
                     )
-                    .join(''),
+                    .join('') +
+                (region === undefined
+                    ? ''
+                    : `    ${region.status === 'pass' ? '✅' : '⚠️ '} region ${region.selector}: ${region.status}` +
+                      (region.deltas.length ? ` (${region.deltas.length} delta(s))` : '') +
+                      (region.status === 'no-baseline' ? ' — approve one with --approve, or compare a sibling' : '') +
+                      '\n'),
         );
     }
     return 0;

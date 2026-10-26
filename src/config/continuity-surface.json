@@ -485,6 +485,13 @@
             "reason": "UI audit output. Analysis result."
         },
         {
+            "id": "render-baselines",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/cli/commands/uiRenderRegion.ts:21",
+            "reason": "Approved computed-style signatures of a page region, written only by `ui:render --approve` and read by the next `--region` comparison. A reference for a check, not state a successor session resumes."
+        },
+        {
             "id": "design-consistency-shadow.jsonl",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",

@@ -156,6 +156,9 @@ async function main(rawArgv: readonly string[]): Promise<number> {
         .option('--compare <file>', 'Second render of the same frame to compare against')
         .option('--registration <spec>', 'Raster source region as x,y,w,h[@scale]')
         .option('--interact <selectors>', 'Comma-separated controls to open, focus and operate; records the open state')
+        .option('--region <selector>', 'Changed region to compare against its approved baseline (computed styles)')
+        .option('--baseline <file>', 'Approved region baseline (default under agents/runtime/state/render-baselines/)')
+        .option('--approve', 'Write the current region as the approved baseline')
         .action(
             async (
                 target: string,
@@ -171,6 +174,9 @@ async function main(rawArgv: readonly string[]): Promise<number> {
                     compare?: string;
                     registration?: string;
                     interact?: string;
+                    region?: string;
+                    baseline?: string;
+                    approve?: boolean;
                 },
             ) => {
                 // Validated, not cast. A cast let `--class Icon` through as an
@@ -217,6 +223,9 @@ async function main(rawArgv: readonly string[]): Promise<number> {
                     ...(opts.interact === undefined
                         ? {}
                         : { interact: opts.interact.split(',').map((s) => s.trim()).filter(Boolean) }),
+                    ...(opts.region === undefined ? {} : { region: opts.region }),
+                    ...(opts.baseline === undefined ? {} : { baseline: opts.baseline }),
+                    ...(opts.approve === undefined ? {} : { approve: opts.approve }),
                     ...(parseRegistration(opts.registration) === null
                         ? {}
                         : { registration: parseRegistration(opts.registration) as Registration }),
