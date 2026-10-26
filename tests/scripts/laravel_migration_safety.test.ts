@@ -8,7 +8,11 @@ import * as path from 'node:path';
 
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { scan_dir } from '../../src/scripts/_lib/persistence/detect_migration_safety_laravel.js';
+import { scan_dir as scan } from '../../src/scripts/_lib/persistence/detect_migration_safety_laravel.js';
+import { analyze } from '../../src/scripts/_lib/persistence/detect_index_parity.js';
+import { run_lint } from '../../src/scripts/lint_persistence.js';
+
+const scan_dir = (dir: string) => scan(dir).findings;
 
 const tmp: string[] = [];
 afterAll(() => {
@@ -92,6 +96,78 @@ describe('Laravel migration safety (R-A6, advice)', () => {
             'mysql',
         );
         expect(scan_dir(dir)).toEqual([]);
+    });
+
+    it('reports a guarded drop as conditional instead of skipping it', () => {
+        const dir = project({
+            '2024_01_01_000001_create.php': CREATE,
+            '2024_02_01_000001_guarded.php': `        if (Schema::hasColumn('invoices', 'legacy_total')) {
+            Schema::table('invoices', function (Blueprint $table) {
+                $table->dropColumn('legacy_total');
+            });
+        }
+`,
+        });
+        const f = scan_dir(dir);
+        expect(f).toHaveLength(1);
+        expect(f[0]!.message).toMatch(/conditional/);
+    });
+
+    it('does not flag columns the database fills: useCurrent, storedAs', () => {
+        const dir = project({
+            '2024_01_01_000001_create.php': CREATE,
+            '2024_02_01_000001_ok.php': ALTER(
+                `$table->timestamp('issued_at')->useCurrent();\n            $table->string('slug')->storedAs('lower(number)');`,
+            ),
+        });
+        expect(scan_dir(dir)).toEqual([]);
+    });
+
+    it('treats ->default(null) on a NOT NULL column as no default', () => {
+        const dir = project({
+            '2024_01_01_000001_create.php': CREATE,
+            '2024_02_01_000001_null.php': ALTER(`$table->string('x')->default(null);`),
+        });
+        expect(scan_dir(dir).map((x) => x.message)).toEqual([expect.stringMatching(/data-dependent/)]);
+    });
+
+    it('does not borrow the default engine for a connection the config does not name', () => {
+        const dir = project({
+            '2024_01_01_000001_create.php': CREATE,
+            '2024_02_01_000001_other.php': `        Schema::connection('other')->table('events', function (Blueprint $table) {
+            $table->index('kind');
+        });
+`,
+        });
+        expect(scan_dir(dir)).toEqual([]);
+    });
+
+    it('follows a rename inside the creating migration', () => {
+        const dir = project({
+            '2024_01_01_000001_create.php':
+                `        Schema::create('tmp', function (Blueprint $table) { $table->id(); $table->string('x'); });\n        Schema::rename('tmp', 'orders');\n` +
+                `        Schema::table('orders', function (Blueprint $table) { $table->index('x'); });\n`,
+        });
+        expect(scan_dir(dir)).toEqual([]);
+    });
+
+    it('keeps a service that drops a temporary table a query file for index parity', () => {
+        const dir = project({ '2024_01_01_000001_create.php': CREATE });
+        fs.mkdirSync(path.join(dir, 'app', 'Services'), { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, 'app', 'Services', 'Cleanup.php'),
+            `<?php\nnamespace App\\Services;\nuse App\\Models\\Invoice;\nclass Cleanup { public function run() {\n    Invoice::where('number', 'x')->get();\n    Schema::dropIfExists('tmp_export');\n} }\n`,
+        );
+        expect(analyze(dir).refs.some((r) => r.column === 'number')).toBe(true);
+        expect(scan_dir(dir)).toEqual([]);
+    });
+
+    it('fails the run on a migration-unsafe waiver with no reason', () => {
+        const dir = project({
+            '2024_01_01_000001_create.php': CREATE,
+            '2024_02_01_000001_drop.php': ALTER(`// migration-unsafe:\n            $table->dropColumn('legacy_total');`),
+        });
+        expect(run_lint(dir, ['eloquent']).empty_reason_waivers).toHaveLength(1);
     });
 
     it('counts a migration-unsafe waiver as waived', () => {

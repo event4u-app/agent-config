@@ -90,7 +90,9 @@ export function run_lint(dir: string, stacks: StackId[], audit_scope_file?: stri
             findings.push(...index_parity().findings);
             findings.push(...scan_offload_dir(dir, 'eloquent'));
             findings.push(...scan_bounded_dir(dir));
-            findings.push(...scan_laravel_migration_dir(dir));
+            const migration = scan_laravel_migration_dir(dir);
+            findings.push(...migration.findings);
+            empty_reason_waivers.push(...migration.waivers.filter((w) => w.reason === ''));
             const scope_file = audit_scope_file ?? path.join(dir, 'audit-scope.json');
             if (fs.existsSync(scope_file)) {
                 const scope = JSON.parse(fs.readFileSync(scope_file, 'utf8'));

@@ -1,4 +1,4 @@
-/** R-A6(c'): DROP INDEX without CONCURRENTLY on postgres is advice; the concurrent form and other dialects stay silent. */
+/** R-A6(c'): DROP INDEX without CONCURRENTLY is advice on postgres and on an unknown dialect; the concurrent and MySQL forms stay silent. */
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -33,7 +33,13 @@ describe('DROP INDEX on postgres', () => {
         expect(dropIndex(sql('CREATE INDEX CONCURRENTLY a_idx ON a (x);\nDROP INDEX CONCURRENTLY b_idx;\n'))).toEqual([]);
     });
 
-    it('stays silent when the dialect is not postgres', () => {
+    it('stays silent on the MySQL form, which names its table', () => {
         expect(dropIndex(sql('DROP INDEX b_idx ON a;\n'))).toEqual([]);
+    });
+
+    it('fires as dialect-unknown advice when nothing marks the file as postgres', () => {
+        const f = dropIndex(sql('DROP INDEX b_idx;\n'));
+        expect(f).toHaveLength(1);
+        expect(f[0]!.message).toMatch(/dialect unknown/);
     });
 });

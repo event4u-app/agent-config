@@ -26,7 +26,7 @@ import { join, relative } from 'node:path';
 import { readLaravelSchema } from '../schema/readers/laravel_migrations.js';
 import { readPrismaSchema } from '../schema/readers/prisma_schema.js';
 import { leadingIndexState, replay, type ConnectionSchema, type Engine } from '../schema/replay.js';
-import { type Finding, parse_waiver, is_ignored_dir } from './types';
+import { type Finding, parse_waiver, is_ignored_dir, is_laravel_migration_source } from './types';
 
 // ---------------------------------------------------------------------------
 // Public result types
@@ -151,8 +151,9 @@ function add_connection(schema: SchemaMap, c: ConnectionSchema, key_of: (table: 
             }
             for (const fk of t.foreign_keys) {
                 const state = leadingIndexState(t, fk.columns, c.engine);
-                if (state === 'implicit' || state === 'engine-unknown') entry.indexed.add(fk.columns[0]!);
-                if (state === 'engine-unknown') (entry.engine_assumed ??= new Set()).add(fk.columns[0]!);
+                const lead = fk.columns[0]!;
+                if (state === 'engine-unknown' && !entry.indexed.has(lead)) (entry.engine_assumed ??= new Set()).add(lead);
+                if (state === 'implicit' || state === 'engine-unknown') entry.indexed.add(lead);
             }
         }
     }
@@ -516,7 +517,7 @@ export function analyze(dir: string, opts: AnalyzeOptions = {}): IndexParityResu
             const text = readFileSync(f, 'utf8');
             const posix = rel.split('\\').join('/');
             if (posix === 'config/database.php') config = text;
-            if (/Schema::(?:connection\([^)]*\)\s*->\s*)?(?:create|table|drop|dropIfExists|rename)\(/.test(text)) {
+            if (is_laravel_migration_source(posix, text)) {
                 migrations.push({ path: /(^|\/)migrations\//.test(posix) ? posix : `migrations/${posix}`, source: text });
             } else query_files.push({ rel, text, lang: 'php' });
         } else if (f.endsWith('.ts')) {

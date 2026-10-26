@@ -343,9 +343,17 @@ function scan_one_file(file: string, text: string): FileFindings {
             );
         }
 
-        // R-A6(c') — DROP INDEX without CONCURRENTLY on postgres (advice: unspiked).
-        if (is_pg && /^DROP INDEX\b/.test(norm) && !/\bCONCURRENTLY\b/.test(norm)) {
-            push('R-A6', stmt.line, 'DROP INDEX without CONCURRENTLY on postgres — blocks reads and writes on the table while it runs', 'advice');
+        // R-A6(c') — DROP INDEX without CONCURRENTLY (advice: unspiked). MySQL's
+        // `DROP INDEX … ON t` names its table and is not a postgres statement.
+        if (/^DROP INDEX\b/.test(norm) && !/\bCONCURRENTLY\b/.test(norm) && !/\bON\b/.test(norm)) {
+            push(
+                'R-A6',
+                stmt.line,
+                is_pg
+                    ? 'DROP INDEX without CONCURRENTLY on postgres — blocks reads and writes on the table while it runs'
+                    : 'DROP INDEX without CONCURRENTLY (dialect unknown) — on postgres it blocks the table; verify lock behaviour',
+                'advice',
+            );
         }
 
         // R-A6(d) — column type change.

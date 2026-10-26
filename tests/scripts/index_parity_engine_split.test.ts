@@ -54,8 +54,12 @@ describe('S0.2 oracle per engine', () => {
 
     it('unstated engine: no finding, but every such reference is counted', () => {
         const dir = withEngine(null);
+        const open = (d: string) => analyze(d).findings.filter((f) => !f.waived).map((f) => `${f.file}:${f.line}`);
+        const mysql = new Set(open(withEngine('mysql')));
+        const onlyOnPostgres = open(withEngine('pgsql')).filter((k) => !mysql.has(k));
         expect(fkFindings(dir)).toBe(0);
-        expect(analyze(dir).engine_unverified).toBeGreaterThan(0);
+        expect(onlyOnPostgres.length).toBeGreaterThan(0);
+        expect(analyze(dir).engine_unverified).toBe(onlyOnPostgres.length);
         expect(analyze(dir).engines['default']).toBe('unknown');
     });
 });
