@@ -28,6 +28,7 @@
         "edge table:comments references table:posts",
         "edge column:comments.post_id references column:posts.id",
         "attr column:posts.author_id index=\"declared\"",
-        "edge app/Models/Tag.php#Tag persists table:tags"
+        "edge app/Models/Tag.php#Tag persists table:tags",
+        "edge database/migrations/2024_02_01_000001_drop_posts_author_index.php#down calls app/Http/Controllers/CommentController.php#CommentController::index"
     ]
 }

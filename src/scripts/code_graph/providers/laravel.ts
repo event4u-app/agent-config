@@ -647,7 +647,14 @@ export function buildLaravelOverlay(
     const dropEdge = (e: CodeEdge): boolean => {
         if (e.relation !== 'calls' || e.resolved_via === 'same-file') return false;
         const src = nodeById.get(e.source);
-        if (!src || !routesFiles.has(src.source_file)) return false;
+        if (!src) return false;
+        // Inside a migration, `$table->index()` and its kin are schema-builder
+        // calls; one that name lookup bound to an in-repo method is false.
+        if (isMigrationPath(src.source_file) && e.resolved_via === 'dynamic' && !e.target.startsWith('symbol:')) {
+            stats.builderCallsDropped += 1;
+            return true;
+        }
+        if (!routesFiles.has(src.source_file)) return false;
         const target = nodeById.get(e.target);
         const name = target ? target.label : e.target.replace(/^symbol:/, '');
         if (!ROUTE_BUILDER_METHODS.has(name)) return false;

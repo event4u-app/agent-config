@@ -57,6 +57,10 @@
  * project in the user-global registry, resolved to its root and graph home
  * (ADR-299). Only a registered project resolves.
  *
+ * query/explain/affected also take [--kind K,..] [--relation R,..] [--direction
+ * in|out|both] [--depth 1-3] [--limit N]: any of them answers a filtered tree,
+ * each item with its witness, `returned of total`, and the population searched.
+ *
  * Query subcommands (query/path/explain/affected) are added by the Phase-3
  * query tier. Deterministic, LLM-free, no network. Exit codes:
  * 0 ok · 1 not-found / validation-failed / refresh-budget-exceeded ·
@@ -127,6 +131,7 @@ import {
     path as graphPath,
     query,
     type QueryResult,
+    tree,
 } from './query.js';
 import { openGraphIndex, sqliteTwinPath } from './sqlite_store.js';
 import type { CodeGraph } from './types.js';
@@ -438,6 +443,24 @@ function cmdQuery(kind: 'query' | 'explain' | 'affected' | 'path', argv: string[
             return 2;
         }
         return render(graphPath(r.g, a, b, budget), r.note);
+    }
+    const kinds = flag(argv, '--kind');
+    const relation = flag(argv, '--relation');
+    const dir = flag(argv, '--direction');
+    if (kinds || relation || dir || flag(argv, '--depth')) {
+        const t = tree(r.g, a, {
+            ...(kinds ? { kinds: kinds.split(',').map((k) => k.trim()).filter(Boolean) } : {}),
+            ...(relation ? { relations: relation.split(',').map((k) => k.trim()).filter(Boolean) } : {}),
+            direction: dir === 'in' || dir === 'out' ? dir : kind === 'affected' ? 'in' : kind === 'query' ? 'out' : 'both',
+            depth: Number(flag(argv, '--depth') ?? (kind === 'query' ? 1 : 2)),
+            limit: Number(flag(argv, '--limit') ?? 50),
+        });
+        process.stdout.write(`source: ${t.source}${r.note}\n`);
+        if (t.seeds.length) process.stdout.write(`seeds: ${t.seeds.join(', ')}\n`);
+        process.stdout.write(`population: ${t.population}\n`);
+        for (const l of t.tree) process.stdout.write(`  ${l}\n`);
+        process.stdout.write(`returned ${t.returned} of ${t.total}${t.hasMore ? ' (more — raise --limit)' : ''}\n`);
+        return 0;
     }
     const fn = kind === 'query' ? query : kind === 'explain' ? explain : affected;
     return render(fn(r.g, a, budget), r.note);

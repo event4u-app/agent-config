@@ -1036,6 +1036,7 @@ function factJson(f: FactMeta): Record<string, unknown> {
         rung: f.rung,
     };
     if (f.resolved_via) out['resolved_via'] = f.resolved_via;
+    if (f.lane) out['lane'] = f.lane;
     if (f.attrs) out['attrs'] = Object.fromEntries(Object.entries(f.attrs).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
     return out;
 }

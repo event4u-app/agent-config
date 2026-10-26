@@ -85,7 +85,7 @@ export const VOCABULARY = {
     decisions: {
         kinds: ['decision'],
         relations: {
-            governs: { from: ['decision'], to: ['*'] },
+            governs: { from: ['decision'], to: ['*', 'table', 'column', 'service', 'operation', 'resource', 'environment', 'workflow', 'job'] },
             supersedes: { from: ['decision'], to: ['decision'] },
         },
     },

@@ -121,6 +121,8 @@ export type ResolvedVia =
     | 'fs-route'
     /** A request-call URL literal ending in exactly one route's path (the default pass, off by default). */
     | 'literal-url'
+    /** Stated by a lane reader's record of a file it read (`lanes/merge.ts`). */
+    | 'lane-read'
     /** Stated by a compiler-grade SCIP index the project ships (`scip_reader.ts`). */
     | 'compiler-index'
     /** C#: the one type of that name in the namespaces the file can see (its own, their parents, its `using`s). */
@@ -180,7 +182,7 @@ export type EdgeProvider =
 // One space-separated string per list: this module ships in the hook bundle,
 // where an array literal costs a line per entry. `Words` splits it in the type.
 const STATED_WORDS =
-    'same-file import-specifier path-alias psr4 route-table directive-scan schema-call orm-relation di-binding compiler-index namespace-scope test-import literal-path literal-dotted fs-route literal-url' as const;
+    'same-file import-specifier path-alias psr4 route-table directive-scan schema-call orm-relation di-binding lane-read compiler-index namespace-scope test-import literal-path literal-dotted fs-route literal-url' as const;
 const GUESS_WORDS = 'name-lookup dynamic foreign' as const;
 type Words<S extends string> = S extends `${infer H} ${infer T}` ? H | Words<T> : S;
 /** Mechanisms in neither list; must be `never` (a test asserts it). */
@@ -235,6 +237,8 @@ export interface FactMeta {
     rung: SourceRung;
     /** How a node was reached; edges carry `resolved_via` on the edge itself. */
     resolved_via?: ResolvedVia;
+    /** The lane reader that produced it; a re-merge of that lane replaces exactly these. */
+    lane?: string;
     attrs?: Record<string, string | number | boolean | string[] | null>;
 }
 
