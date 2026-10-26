@@ -1943,11 +1943,53 @@
         }
     });
     // What the header search finds in the Code area; the shell owns the box and the kind presets.
+    // A hit that holds others (folder, area, file) carries `kids`, which the search can step into.
+    function folderNode(dirPath) {
+        var n = tree;
+        if (dirPath) dirPath.split('/').forEach(function (seg) { n = n && n.kids[seg]; });
+        return n;
+    }
+    function revealFolder(dirPath) {
+        go('code');
+        var acc = '';
+        dirPath.split('/').forEach(function (seg) { acc = acc ? acc + '/' + seg : seg; state.open[acc] = true; });
+        state.scopeDir = dirPath;
+        refresh();
+    }
+    function symbolHits(i) {
+        return files[i].symbols.map(function (sy) { return { kind: 'symbol', text: sy[0] + ' — L' + sy[2], fn: function () { go('code'); openFile(i); } }; });
+    }
+    function fileHit(i, text) {
+        var n = files[i].symbols.length;
+        return { kind: 'file', text: text || files[i].path, fn: function () { go('code'); openFile(i); }, count: n || null, crumb: base(files[i].path), kids: n ? function () { return symbolHits(i); } : null };
+    }
+    function folderHit(dirPath, text) {
+        var n = folderNode(dirPath);
+        return { kind: 'folder', text: text || dirPath + '/', fn: function () { revealFolder(dirPath); }, count: n.n, crumb: base(dirPath), kids: function () { return folderKids(dirPath); } };
+    }
+    function folderKids(dirPath) {
+        var n = folderNode(dirPath);
+        if (!n) return [];
+        var out = Object.keys(n.kids).sort().map(function (k) { return folderHit(dirPath ? dirPath + '/' + k : k, k + '/'); });
+        return out.concat(n.files.slice().sort(function (a, b) { return files[a].path < files[b].path ? -1 : 1; }).map(function (i) { return fileHit(i, base(files[i].path)); }));
+    }
     function codeSearchHits(q, hit) {
-        areas.forEach(function (a, i) { if (a.name.toLowerCase().indexOf(q) >= 0 || a.id === q) hit('area', '◎ ' + a.id + ' · ' + a.name, function () { openArea(i); }); });
+        var dirs = 0;
+        (function walkDirs(node, prefix) {
+            Object.keys(node.kids).sort().forEach(function (k) {
+                if (dirs >= 200) return;
+                var p = prefix ? prefix + '/' + k : k;
+                if (k.toLowerCase().indexOf(q) >= 0) { var h = folderHit(p); hit('folder', h.text, h.fn, h); dirs += 1; }
+                walkDirs(node.kids[k], p);
+            });
+        })(tree, '');
+        areas.forEach(function (a, i) {
+            if (a.name.toLowerCase().indexOf(q) < 0 && a.id !== q) return;
+            hit('area', '◎ ' + a.id + ' · ' + a.name, function () { openArea(i); }, { count: a.files.length, crumb: a.id, kids: function () { return a.files.map(function (f) { return fileHit(f); }); } });
+        });
         (an.requestPaths || []).forEach(function (r) { if (r.route.toLowerCase().indexOf(q) >= 0) hit('route', '↳ ' + r.route, function () { openFile(r.handler >= 0 ? r.handler : r.file); }); });
         files.forEach(function (f, i) {
-            if (f.path.toLowerCase().indexOf(q) >= 0) { hit('file', f.path, function () { openFile(i); }); return; }
+            if (f.path.toLowerCase().indexOf(q) >= 0) { var h = fileHit(i); hit('file', h.text, function () { openFile(i); }, h); return; }
             var sym = f.symbols.filter(function (s) { return s[0].toLowerCase().indexOf(q) >= 0; })[0];
             if (sym) hit('symbol', sym[0] + ' — ' + f.path, function () { openFile(i); });
         });

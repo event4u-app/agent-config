@@ -1172,7 +1172,8 @@ export function renderPage(m: MapModel, meta: MapMeta, areas: object, shell?: Ma
         '<div class="pins mono"><span class="chip" id="pin-commit"></span><span class="chip fresh" id="pin-fresh"></span></div>',
         '<div class="search"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="5"></circle><path d="M11 11l3.5 3.5"></path></svg>' +
             '<input id="search" type="search" autocomplete="off"><span class="kbd mono">/</span>' +
-            '<div class="pop" id="pop" hidden><div class="kinds" id="kinds" role="group"></div><ul class="results" id="results"></ul></div></div>',
+            '<span class="sr-only" id="search-live" aria-live="polite"></span>' +
+            '<div class="pop" id="pop" hidden><div class="kinds" id="kinds" role="group"></div><div class="scrumb" id="searchcrumb" hidden></div><ul class="results" id="results"></ul></div></div>',
         '<div class="actions">',
         '<button type="button" class="btn" id="export"></button>',
         '<button type="button" class="btn icon" id="theme"><svg id="theme-sun" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="3"></circle><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1"></path></svg>' +

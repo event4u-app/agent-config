@@ -8,17 +8,19 @@
  */
 extendStrings({
     en: {
-        kindNames: { file: 'Files', symbol: 'Symbols', route: 'Routes', area: 'Code areas', table: 'Tables', column: 'Columns', fk: 'Foreign keys', rel: 'ORM relations',
+        kindNames: { folder: 'Folders', file: 'Files', symbol: 'Symbols', route: 'Routes', area: 'Code areas', table: 'Tables', column: 'Columns', fk: 'Foreign keys', rel: 'ORM relations',
             service: 'Services', operation: 'Operations', resource: 'Resources', workflow: 'Workflows', job: 'Jobs', chain: 'Build / deploy', affected: 'Affected', risk: 'Risk terms',
             verb: 'Verbs', pack: 'Context pack', finding: 'Findings' },
-        allKinds: 'All kinds', kindsLabel: 'Kinds', generation: function (g) { return 'Generation ' + g; }, noHits: 'Nothing found.',
+        allKinds: 'All kinds', kindsLabel: 'Kinds', searchUp: 'Up one level', searchEnter: 'Step into (→)',
+        searchCount: function (n) { return n + ' hits'; }, searchCountIn: function (n, p) { return n + ' hits in ' + p; }, generation: function (g) { return 'Generation ' + g; }, noHits: 'Nothing found.',
         hubChip: 'HUB · this machine only', hubChipT: 'Never committed, never inside a repository map', hubCount: function (i, n) { return i + ' of ' + n + ' indexed'; }
     },
     de: {
-        kindNames: { file: 'Dateien', symbol: 'Symbole', route: 'Routen', area: 'Code-Areas', table: 'Tabellen', column: 'Spalten', fk: 'Fremdschlüssel', rel: 'ORM-Beziehungen',
+        kindNames: { folder: 'Ordner', file: 'Dateien', symbol: 'Symbole', route: 'Routen', area: 'Code-Areas', table: 'Tabellen', column: 'Spalten', fk: 'Fremdschlüssel', rel: 'ORM-Beziehungen',
             service: 'Dienste', operation: 'Operationen', resource: 'Ressourcen', workflow: 'Workflows', job: 'Jobs', chain: 'Build / Deploy', affected: 'Betroffen', risk: 'Risiko-Terme',
             verb: 'Verben', pack: 'Context-Pack', finding: 'Befunde' },
-        allKinds: 'Alle Arten', kindsLabel: 'Arten', generation: function (g) { return 'Generation ' + g; }, noHits: 'Nichts gefunden.',
+        allKinds: 'Alle Arten', kindsLabel: 'Arten', searchUp: 'Eine Ebene höher', searchEnter: 'Hineingehen (→)',
+        searchCount: function (n) { return n + ' Treffer'; }, searchCountIn: function (n, p) { return n + ' Treffer in ' + p; }, generation: function (g) { return 'Generation ' + g; }, noHits: 'Nichts gefunden.',
         hubChip: 'HUB · nur dieser Rechner', hubChipT: 'Nie committet, nie in einer Projekt-Map', hubCount: function (i, n) { return i + ' von ' + n + ' indiziert'; }
     }
 });
@@ -113,6 +115,8 @@ function renderRoute() {
     renderNav();
     renderBanner();
     window.__mapRoute = { route: r, item: current.item };
+    // Whatever the last page lent out comes back first, so every page draws from a whole shell.
+    releaseShellNodes();
     if (code) { refresh(); resize(); return; }
     var overview = r === 'overview';
     $('av-main').className = 'av-main' + (overview ? ' ov' : '');
@@ -122,8 +126,6 @@ function renderRoute() {
         $('av-bar').hidden = true;
         $('av-body').classList.add('no-side', 'no-left');
         $('av-body').classList.remove('paged');
-        $('av-body').appendChild($('av-open-left'));
-        $('av-body').appendChild($('av-open'));
         renderOverview();
         applyAvPanes();
         return;
@@ -139,24 +141,80 @@ function onHash() {
 }
 
 // Search over every kind the map holds; the presets above the hits only narrow the kind.
+// The list is an ARIA combobox: the arrow keys move one active row that the
+// pointer shares, → steps into a hit that holds others, ← and Backspace on an
+// empty query step back out.
 var searchKind = 'all';
 var SEARCH_CAP = 30;
-function runSearch() {
+var SEARCH_PAGE = 8;
+var searchStack = [];
+var searchShown = [];
+var searchActive = -1;
+
+/** What an area item holds, as hits one level down; null for a leaf. */
+function areaItemKids(id, it) {
+    var all = areaItems(id);
+    var kids = null;
+    if (it.kind === 'table') kids = all.filter(function (x) { return x.key.indexOf('column/' + it.label + '.') === 0; });
+    else if (it.key.indexOf('service/') === 0) kids = all.filter(function (x) { return x.kind === 'operation' && x.label.indexOf(it.label + ' · ') === 0; });
+    else if (it.kind === 'workflow') kids = all.filter(function (x) { return x.kind === 'job' && x.sub === it.sub; });
+    else if (it.kind === 'project') kids = all.filter(function (x) { return x.key.indexOf('edge/') === 0 && x.label.indexOf(it.label) >= 0; });
+    if (!kids || !kids.length) return null;
+    return kids.map(function (k) { return areaItemHit(id, k, k.label); });
+}
+function areaItemHit(id, it, text) {
+    var kids = areaItemKids(id, it);
+    return { kind: it.key.split('/')[0], text: text, fn: function () { avPick(id, it.key); }, count: kids ? kids.length : null, crumb: it.label, kids: kids ? function () { return kids; } : null };
+}
+function rootHits(q) {
+    var hits = [];
+    function hit(kind, text, fn, extra) {
+        if (hits.length >= 2000) return;
+        var h = { kind: kind, text: text, fn: function () { go('code'); fn(); } };
+        if (extra) { h.count = extra.count; h.crumb = extra.crumb; h.kids = extra.kids; }
+        hits.push(h);
+    }
+    codeSearchHits(q, hit);
+    ROUTES.filter(function (r) { return !!AREA_MODULES[r]; }).forEach(function (id) {
+        areaItems(id).forEach(function (it) {
+            if (hits.length >= 2000) return;
+            if (it.label.toLowerCase().indexOf(q) < 0 && String(it.sub || '').toLowerCase().indexOf(q) < 0) return;
+            hits.push(areaItemHit(id, it, t('areaNames')[id] + ' · ' + it.label));
+        });
+    });
+    return hits;
+}
+function searchOpen(open) {
+    $('pop').hidden = !open;
+    searchInput.setAttribute('aria-expanded', String(open));
+    if (!open) { searchInput.removeAttribute('aria-activedescendant'); searchActive = -1; }
+}
+function setActive(i) {
+    var rows = results.querySelectorAll('[role="option"]');
+    if (!rows.length) { searchActive = -1; searchInput.removeAttribute('aria-activedescendant'); return; }
+    searchActive = i < -1 ? rows.length - 1 : (i + rows.length) % rows.length;
+    Array.prototype.forEach.call(rows, function (r, k) { r.setAttribute('aria-selected', String(k === searchActive)); });
+    var row = rows[searchActive];
+    searchInput.setAttribute('aria-activedescendant', row.id);
+    if (row.scrollIntoView) row.scrollIntoView({ block: 'nearest' });
+}
+function runSearch(keep) {
     var kinds = $('kinds');
     clear(results);
     clear(kinds);
+    var crumbRow = $('searchcrumb');
+    clear(crumbRow);
     var q = searchInput.value.trim().toLowerCase();
-    $('pop').hidden = q.length < 2;
-    if (q.length < 2) return;
-    var hits = [];
-    function hit(kind, text, fn) { if (hits.length < 2000) hits.push({ kind: kind, text: text, fn: fn }); }
-    codeSearchHits(q, function (kind, text, fn) { hit(kind, text, function () { go('code'); fn(); }); });
-    ROUTES.filter(function (r) { return !!AREA_MODULES[r]; }).forEach(function (id) {
-        areaItems(id).forEach(function (it) {
-            if (it.label.toLowerCase().indexOf(q) < 0 && String(it.sub || '').toLowerCase().indexOf(q) < 0) return;
-            hit(it.key.split('/')[0], t('areaNames')[id] + ' · ' + it.label, function () { avPick(id, it.key); });
-        });
-    });
+    var level = searchStack[searchStack.length - 1];
+    if (!level && q.length < 2) { searchShown = []; searchOpen(false); $('search-live').textContent = ''; return; }
+    var hits = level ? level.kids().filter(function (h) { return !q || h.text.toLowerCase().indexOf(q) >= 0; }) : rootHits(q);
+    if (level) {
+        crumbRow.hidden = false;
+        var up = el('button', { type: 'button', class: 'scrumb-up', 'aria-label': t('searchUp') }, '‹');
+        up.addEventListener('mousedown', function (e) { e.preventDefault(); });
+        up.addEventListener('click', function () { searchLeave(); });
+        add(crumbRow, up, el('span', { class: 'mono' }, searchStack.map(function (l) { return l.crumb; }).join(' › ') + ' ›'));
+    } else crumbRow.hidden = true;
     var counts = Object.create(null);
     var order = [];
     hits.forEach(function (h) { if (!counts[h.kind]) { counts[h.kind] = 0; order.push(h.kind); } counts[h.kind] += 1; });
@@ -171,24 +229,102 @@ function runSearch() {
             kinds.appendChild(b);
         });
     }
-    var shown = hits.filter(function (h) { return searchKind === 'all' || h.kind === searchKind; }).slice(0, SEARCH_CAP);
-    shown.forEach(function (h) {
-        var b = el('button', { type: 'button', title: t('kindNames')[h.kind] || h.kind }, h.text);
-        b.addEventListener('click', function () { closeSearch(); h.fn(); });
-        results.appendChild(add(el('li'), b));
+    var matching = hits.filter(function (h) { return searchKind === 'all' || h.kind === searchKind; });
+    searchShown = matching.slice(0, SEARCH_CAP);
+    searchShown.forEach(function (h, i) {
+        var li = el('li', { role: 'option', id: 'sr-' + i, class: 'srow' + (h.kids ? ' holds' : ''), 'aria-selected': 'false' });
+        var b = el('button', { type: 'button', tabindex: '-1', title: t('kindNames')[h.kind] || h.kind }, h.text);
+        li.appendChild(b);
+        if (h.kids) add(li, el('span', { class: 'scount mono', 'aria-hidden': 'true' }, h.count != null ? num(h.count) : ''), el('span', { class: 'schev', 'aria-hidden': 'true', title: t('searchEnter') }, '›'));
+        li.addEventListener('mousedown', function (e) { e.preventDefault(); });
+        li.addEventListener('mousemove', function () { if (searchActive !== i) setActive(i); });
+        li.addEventListener('click', function (e) {
+            if (h.kids && e.target.classList.contains('schev')) { searchEnter(i); return; }
+            searchPick(i, false);
+        });
+        results.appendChild(li);
     });
-    if (!shown.length) kinds.appendChild(el('span', { class: 'muted' }, t('noHits')));
+    if (!searchShown.length) kinds.appendChild(el('span', { class: 'muted' }, t('noHits')));
+    $('search-live').textContent = level ? t('searchCountIn')(num(matching.length), searchStack.map(function (l) { return l.crumb; }).join('/')) : t('searchCount')(num(matching.length));
+    searchOpen(true);
+    // No row is active until the reader moves; stepping back out re-activates the container left.
+    searchActive = -1;
+    searchInput.removeAttribute('aria-activedescendant');
+    if (keep != null && searchShown.length) setActive(Math.min(keep, searchShown.length - 1));
 }
-function closeSearch() { searchInput.value = ''; clear(results); clear($('kinds')); $('pop').hidden = true; }
-searchInput.addEventListener('input', runSearch);
-document.addEventListener('pointerdown', function (e) { if (!$('pop').hidden && !e.target.closest('.search')) $('pop').hidden = true; });
-searchInput.addEventListener('focus', function () { if (searchInput.value.trim().length >= 2) runSearch(); });
+function searchPick(i, stay) {
+    var h = searchShown[i];
+    if (!h) return;
+    if (!stay) closeSearch();
+    h.fn();
+    if (stay) searchInput.focus();
+}
+function searchEnter(i) {
+    var h = searchShown[i];
+    if (!h || !h.kids) return;
+    searchStack.push({ crumb: h.crumb || h.text, kids: h.kids, query: searchInput.value, index: i, kind: searchKind });
+    searchKind = 'all';
+    searchInput.value = '';
+    runSearch();
+}
+function searchLeave() {
+    var level = searchStack.pop();
+    if (!level) return;
+    searchInput.value = level.query;
+    searchKind = level.kind;
+    runSearch(level.index);
+    searchInput.focus();
+}
+function closeSearch() { searchInput.value = ''; searchStack = []; searchShown = []; clear(results); clear($('kinds')); clear($('searchcrumb')); $('searchcrumb').hidden = true; searchOpen(false); }
+searchInput.setAttribute('role', 'combobox');
+searchInput.setAttribute('aria-autocomplete', 'list');
+searchInput.setAttribute('aria-controls', 'results');
+searchInput.setAttribute('aria-expanded', 'false');
+results.setAttribute('role', 'listbox');
+searchInput.addEventListener('input', function () { runSearch(); });
+searchInput.addEventListener('keydown', function (e) {
+    var open = !$('pop').hidden && searchShown.length > 0;
+    var atStart = searchInput.selectionStart === 0 && searchInput.selectionEnd === 0;
+    var atEnd = searchInput.selectionStart === searchInput.value.length && searchInput.selectionEnd === searchInput.value.length;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if ($('pop').hidden) { runSearch(); return; }
+        if (open) setActive(searchActive < 0 && e.key === 'ArrowUp' ? -2 : searchActive + (e.key === 'ArrowDown' ? 1 : -1));
+    } else if (open && (e.key === 'PageDown' || e.key === 'PageUp')) {
+        e.preventDefault();
+        setActive(Math.max(0, Math.min(searchShown.length - 1, searchActive + (e.key === 'PageDown' ? SEARCH_PAGE : -SEARCH_PAGE))));
+    } else if (open && (e.key === 'Home' || e.key === 'End')) {
+        e.preventDefault();
+        setActive(e.key === 'Home' ? 0 : searchShown.length - 1);
+    } else if (e.key === 'Enter') {
+        if (!open) return;
+        e.preventDefault();
+        searchPick(searchActive < 0 ? 0 : searchActive, e.metaKey || e.ctrlKey);
+    } else if (e.key === 'ArrowRight') {
+        if (!open || !atEnd || searchActive < 0 || !searchShown[searchActive].kids) return;
+        e.preventDefault();
+        searchEnter(searchActive);
+    } else if (e.key === 'ArrowLeft') {
+        if (!searchStack.length || !(atStart || !searchInput.value)) return;
+        e.preventDefault();
+        searchLeave();
+    } else if (e.key === 'Backspace') {
+        if (searchInput.value || !searchStack.length) return;
+        e.preventDefault();
+        searchLeave();
+    } else if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!$('pop').hidden) searchOpen(false); else closeSearch();
+    }
+});
+document.addEventListener('pointerdown', function (e) { if (!$('pop').hidden && !e.target.closest('.search')) searchOpen(false); });
+searchInput.addEventListener('focus', function () { if (searchStack.length || searchInput.value.trim().length >= 2) runSearch(); });
 
 document.addEventListener('keydown', function (e) {
     if (e.key === '/' && document.activeElement !== searchInput) { e.preventDefault(); searchInput.focus(); return; }
     if (e.key !== 'Escape') return;
     if ($('areamenu') && $('areanav').classList.contains('open')) { setAreaMenu(false); $('areamenu').focus(); return; }
-    if (document.activeElement === searchInput && searchInput.value) { closeSearch(); return; }
     if (current.route !== 'code' && (avState.fly || avState.flyL)) { avState.fly = false; avState.flyL = false; applyAvPanes(); }
 });
 
