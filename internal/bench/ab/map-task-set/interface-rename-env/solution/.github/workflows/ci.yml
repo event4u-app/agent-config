@@ -1,0 +1,10 @@
+name: ci
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      PAYMENTS_BASE_URL: http://localhost:8080
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm test

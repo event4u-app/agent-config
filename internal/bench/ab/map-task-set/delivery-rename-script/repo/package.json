@@ -1,0 +1,8 @@
+{
+  "name": "web",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build:prod": "vite build --mode production"
+  }
+}

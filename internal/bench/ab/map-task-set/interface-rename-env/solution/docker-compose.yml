@@ -1,0 +1,7 @@
+services:
+  app:
+    build: .
+    environment:
+      PAYMENTS_BASE_URL: http://payments-mock:8080
+  payments-mock:
+    image: wiremock/wiremock:3.5.2
