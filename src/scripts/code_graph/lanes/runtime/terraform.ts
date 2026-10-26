@@ -116,14 +116,99 @@ function addressOf(b: Block): string {
     return `provider.${b.name}`;
 }
 
-/** Read every `.tf` file of one directory as one module scope. */
-export function readTerraformDir(em: Emitter, dir: string, files: string[]): void {
-    const blocks: { b: Block; file: string }[] = [];
+type DirBlocks = { b: Block; file: string }[];
+
+function parseDir(em: Emitter, files: string[]): DirBlocks {
+    const blocks: DirBlocks = [];
     for (const file of files) {
         const text = em.read(file);
         if (text === null) continue;
         for (const b of parseTerraform(text)) blocks.push({ b, file });
     }
+    return blocks;
+}
+
+const ENV_PARENTS = new Set(['envs', 'environments', 'env']);
+/** Var-file stems that name a layer of settings rather than an environment. */
+const NOT_ENV_STEMS = new Set(['terraform', 'common', 'shared', 'default', 'defaults', 'variables', 'vars', 'secrets', 'backend', 'global', 'base', 'locals', 'example']);
+
+/** The environment a directory path names: the segment after `envs/`, `environments/` or `env/`. */
+export function envOfDir(dir: string): string | null {
+    const segs = dir.split('/');
+    for (let i = 0; i < segs.length - 1; i++) if (ENV_PARENTS.has(segs[i] as string)) return segs[i + 1] as string;
+    return null;
+}
+
+/** The environment a var file name names — `dev.tfvars`, `terraform.prod.tfvars`; auto-loaded and default files name none. */
+export function envOfVarFile(name: string): string | null {
+    if (/\.auto\.tfvars(\.json)?$/.test(name)) return null;
+    const m = /^(?:terraform\.)?([\w-]+)\.tfvars(?:\.json)?$/.exec(name);
+    if (!m || NOT_ENV_STEMS.has((m[1] as string).toLowerCase())) return null;
+    return m[1] as string;
+}
+
+const dirOf = (f: string): string => (path.posix.dirname(f) === '.' ? '' : path.posix.dirname(f));
+
+/**
+ * The environments each Terraform directory belongs to, by name only: an env
+ * directory (`infra/envs/<env>/`), env-named var files in a root module's
+ * directory or a direct child of it (one root, one var file per workspace),
+ * and — transitively — every environment whose directory instantiates a local
+ * module, so a shared module's resources land in each caller's column.
+ */
+export function terraformEnvironments(parsed: ReadonlyMap<string, DirBlocks>, varFiles: readonly string[]): Map<string, string[]> {
+    const envs = new Map<string, Set<string>>();
+    const add = (dir: string, env: string): boolean => {
+        const set = envs.get(dir) ?? new Set<string>();
+        envs.set(dir, set);
+        if (set.has(env)) return false;
+        set.add(env);
+        return true;
+    };
+    for (const dir of parsed.keys()) {
+        const own = envOfDir(dir);
+        if (own) add(dir, own);
+    }
+    for (const f of varFiles) {
+        const env = envOfVarFile(path.posix.basename(f));
+        if (!env) continue;
+        const d = dirOf(f);
+        if (envOfDir(d)) continue;
+        if (parsed.has(d)) add(d, env);
+        else if (parsed.has(dirOf(d)) && d !== '') add(dirOf(d), env);
+    }
+    const calls: Array<[string, string]> = [];
+    for (const [dir, blocks] of parsed) {
+        for (const { b } of blocks) {
+            if (b.type !== 'module') continue;
+            const src = /"([^"]+)"/.exec(b.args.get('source')?.text ?? '')?.[1];
+            if (!src || !/^\.\.?\//.test(src)) continue;
+            const target = path.posix.normalize(path.posix.join(dir === '' ? '.' : dir, src)).replace(/\/$/, '');
+            const key = target === '.' ? '' : target;
+            if (key !== dir && parsed.has(key)) calls.push([dir, key]);
+        }
+    }
+    for (let changed = true; changed; ) {
+        changed = false;
+        for (const [from, to] of calls) for (const env of envs.get(from) ?? []) if (add(to, env)) changed = true;
+    }
+    return new Map([...envs].map(([d, set]) => [d, [...set].sort()] as const));
+}
+
+/** Read every `.tf` file, one directory per module scope, with the environments each directory belongs to. */
+export function readTerraform(em: Emitter, tfFiles: readonly string[], varFiles: readonly string[]): void {
+    const parsed = new Map<string, DirBlocks>();
+    for (const [dir, tfs] of terraformDirs([...tfFiles])) parsed.set(dir, parseDir(em, tfs));
+    const envs = terraformEnvironments(parsed, varFiles);
+    for (const [dir, blocks] of parsed) emitDir(em, dir, blocks, envs.get(dir) ?? []);
+}
+
+/** Read every `.tf` file of one directory as one module scope. */
+export function readTerraformDir(em: Emitter, dir: string, files: string[], environments: readonly string[] = []): void {
+    emitDir(em, dir, parseDir(em, files), environments);
+}
+
+function emitDir(em: Emitter, dir: string, blocks: DirBlocks, environments: readonly string[]): void {
     const scope = dir === '' ? '.' : dir;
     const idOf = (address: string): string => `resource:tf:${scope}:${address}`;
     const declared = new Set(blocks.map(({ b }) => addressOf(b)));
@@ -159,6 +244,7 @@ export function readTerraformDir(em: Emitter, dir: string, files: string[]): voi
             address,
             provider: b.type === 'provider' ? b.name : b.type === 'module' ? null : provArg ? provArg.split('.')[0]! : providerOf(b.label),
             dir: scope,
+            ...(environments.length ? { environments: [...environments] } : {}),
         };
         if (b.type === 'provider') {
             const alias = /"([^"]+)"/.exec(b.args.get('alias')?.text ?? '');
