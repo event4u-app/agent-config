@@ -365,7 +365,8 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // touched-skill reason; `readme-writing-package` (0x02) seals (38 -> 39),
         // `readme-writing` (0x78) trains (138 -> 139); both train-side
         // measurements are re-taken.
-        expect(all.length).toBe(178);
+        // 178 -> 179 on 2026-10-26: `laravel-migration` (0x94) trains (139 -> 140).
+        expect(all.length).toBe(179);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(39);
     });
 });
@@ -434,7 +435,8 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 135 -> 136 on 2026-10-24: `mcp-builder` (see the 173 line).
         // 136 -> 138 on 2026-10-25: two judges train (see the 176 line).
         // 138 -> 139 on 2026-10-26: `readme-writing` trains (see the 178 line).
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(139);
+        // 139 -> 140 on 2026-10-26: `laravel-migration` trains (see the 179 line).
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(140);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

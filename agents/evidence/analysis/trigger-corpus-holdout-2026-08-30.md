@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  8948e51d0e5274073e494879f67d1b0a7990792879be8e695b47cc6977f8bd45
+SET-SHA256  b3853ea1ba436f9c2879001426945ba1160208479771213b87e10e0f2c3e95b0
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1280,6 +1280,7 @@ open and which this file does not settle.
 | `judge-code-quality` | `ee38885bf15f7510e1a483a4e505e69480dc8ba81720942bb0910902eb95ef78` |
 | `judge-security-auditor` | `b1915f90c4e7648f8cca7de9e43c73eb08616382827d69ee359dd3fa33b5f72f` |
 | `judge-synthesis` | `378e0eec013fbf2a96cda58a6ba318884fc141fc0f722fae23a488a8a7ca6155` |
+| `laravel-migration` | `db7084fa6f09745f3d802fafe568af9b25f56e91b63183697895fdf2cc01505d` |
 | `launch-readiness` | `6de2444a376a49d7ac29affc839a1cd8ef157cee0071b17ef64277b744debc34` |
 | `learning-to-rule-or-skill` | `954cea1f3b230004cff27ad4d138a442869ad6ad65281514edbb907340380240` |
 | `learning-tutor` | `3facfb90fa1ee593cf779862bfc79f88f70a915dc9638dc4af6ef5bbf98d9fd7` |
@@ -1883,6 +1884,36 @@ pp bar), McNemar p **0.4522**. `delivery-set-measurement-2026-08-31.json`:
 precision@5 **80.762 %**, recall loss **38.551 pp**, the ceiling stays
 **BREACHED**; context cost **231.3** tokens against the 500 target, still
 **MET**. Neither verdict changes in kind.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.
+
+## Growth — 2026-10-26b, `laravel-migration` corpus; the seal does not move
+
+```
+ONE ROW IS NEW, ON THE TRAIN SIDE. NO HOLDOUT FILE WAS ADDED OR EDITED.
+BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN IN THE SAME CHANGE.
+```
+
+**What changed.** `road-to-database-keys-that-hold` 1.3 corrected the
+`laravel-migration` template, and `check_routing_coverage` requires every
+touched skill to carry a corpus. It got eleven cases: six exemplars, one of them
+German, three near-misses — a rollout plan across consumers, a schema-diff
+review, a raw `ALTER TABLE` — and two counterexamples for `migration` in
+unrelated senses. Its line in `trigger_eval_grandfather.json` is gone.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `laravel-migration` | train | `0x94` = 148 ≥ 51 | new |
+
+The set is now 179 files, 39 of them sealed, which is unchanged.
+`SET-SHA256` moves because it is computed over every row: `8948e51d…` → `b3853ea1…`.
+
+**Both train-side measurements were re-taken on this tree.**
+`routing-body-signal-verdict.json`: still `harmful` on the false-activation
+guard (**+5.08 pp** against +2.0 pp). `delivery-set-measurement-2026-08-31.json`:
+recall loss **38.36 pp**, the ceiling stays **BREACHED**; context cost **231**
+tokens against the 500 target, still **MET**. Neither verdict changes in kind.
 
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
 and `routing_signal_measurement.test.ts` § 5.1.
