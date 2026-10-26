@@ -76,8 +76,8 @@ export interface TellRule {
   match?: TellMatcher;
 }
 
-/** Em/en-dash density cap per 500 words (CP1 parity). */
-export const DEFAULT_MAX_DASH_DENSITY = 2;
+/** Em/en-dash density cap per 500 words, shared with design-slop CP1. */
+export { DEFAULT_MAX_DASH_DENSITY } from "./_lib/dash_density.js";
 /** Weighted cluster-score cap per 500 words. */
 export const DEFAULT_MAX_CLUSTER_SCORE = 3;
 /** Hard-hit cap. */

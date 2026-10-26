@@ -33,6 +33,7 @@
  * A rule is suppressed when the consumer's DESIGN.md declares the pattern as
  * intentional (the context gate), via inline-ignore, or via .design-quality.json.
  */
+import { DEFAULT_MAX_DASH_DENSITY } from "./_lib/dash_density.js";
 
 export type Severity = "P0" | "P1" | "P2" | "P3";
 /**
@@ -425,7 +426,8 @@ export const SLOP_RULES: SlopRule[] = [
       const text = visibleText(content, ext);
       const words = (text.match(/\S+/g) ?? []).length;
       const dashes = (text.match(/—/g) ?? []).length;
-      if (words >= 80 && dashes > Math.max(2, Math.round((words / 500) * 2))) {
+      const cap = DEFAULT_MAX_DASH_DENSITY;
+      if (words >= 80 && dashes > Math.max(cap, Math.round((words / 500) * cap))) {
         return [{ line: 1, snippet: `${dashes} em-dashes in ~${words} words` }];
       }
       return [];

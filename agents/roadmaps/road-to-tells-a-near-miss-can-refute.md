@@ -182,7 +182,7 @@ The gate for every later promotion.
       count, never a block. No pre-hook needed.
       verify: a fixture with a pre-existing and a new side-stripe reports
       `introduced: 1, incumbent: 1`; P0 floors still block when introduced.
-- [ ] **3.2 Measure before keeping it.** Replay the hook over the diffs of the
+- [x] **3.2 Measure before keeping it.** Done 2026-10-26, kept: `task bench:design-slop-attribution` (`internal/bench/design-slop-attribution/run.ts`). The corpus has incumbent files, not diffs, so every UI file is replayed through a neutral edit and an edit adding one side-stripe. 64 files (32 corpus, the rest `src/ui` + `site/`): neutral edits surface 8 incumbent P0/P1 findings without attribution, 0 with it; injected findings 67 without, 59 with — every one of the 59 introduced is still surfaced, none hidden. The corpus incumbents alone carry zero P0/P1 findings, so on them attribution is neutral; the 8 come from `src/ui/app.css` (7) and `site/src/styles/custom.css` (1). Five Blade files are out of the probe's reach (no shipped P0/P1 rule reads a `.blade.php` style block). `tests/scripts/design_slop_attribution_replay.test.ts` pins both directions. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/design-slop-attribution/run.ts --> Replay the hook over the diffs of the
       `tests/eval/frontend-corpus/cases/` and count stop-pass findings with and
       without attribution.
       verify: a numbers table in the PR; if attribution hides an introduced P0 in
