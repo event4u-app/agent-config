@@ -128,6 +128,7 @@ tasks:
       - task: lint-code-comments
       - task: check-step-receipts
       - task: check-step-production-reach
+      - task: check-graph-writers
       - task: lint-deferral-integrity
       - task: lint-never-silent
       - task: lint-example-fences

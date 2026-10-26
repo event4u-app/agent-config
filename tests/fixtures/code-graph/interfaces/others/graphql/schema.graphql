@@ -1,0 +1,12 @@
+type Query {
+  stock(sku: String!, warehouse: String): Stock
+  products(first: Int): [Product!]!
+}
+
+type Mutation {
+  reserve(sku: String!, qty: Int!): Reservation @deprecated(reason: "use reserveMany")
+}
+
+type Stock {
+  qty: Int
+}

@@ -1,0 +1,30 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'src/**'
+permissions: write-all
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm test
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/build-push-action@0123456789abcdef0123456789abcdef01234567
+        with:
+          push: true
+          tags: ghcr.io/acme/shop:${{ github.sha }}
+  deploy:
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://shop.client-corp.com
+    steps:
+      - run: kubectl set image deployment/shop shop=ghcr.io/acme/shop:${{ github.sha }}

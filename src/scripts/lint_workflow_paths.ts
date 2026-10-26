@@ -60,6 +60,8 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { GateLedger } from './_lib/gate_ledger.js';
+import { globMatchesAny, globToRegExp, parsePipeline } from './_lib/infra_files/pipeline.js';
+import { excludedOwnFiles, ownPipelineFiles } from './code_graph/lanes/delivery/self_trigger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
@@ -75,46 +77,12 @@ export interface PathFinding {
     readonly file: string;
     readonly line: number;
     readonly glob: string;
-    readonly why: 'no-match' | 'thin-reason';
+    readonly why: 'no-match' | 'thin-reason' | 'excludes-own';
 }
 
-/**
- * Translate the subset of glob syntax GitHub path filters use into a RegExp.
- *
- * `**` crosses directory separators, `*` and `?` do not. Everything else is a
- * literal — no brace expansion, no character classes, because GitHub does not
- * document them for this field and guessing at unsupported syntax would make
- * the gate disagree with the thing it is auditing.
- */
-export function globToRegExp(glob: string): RegExp {
-    let out = '';
-    for (let i = 0; i < glob.length; i += 1) {
-        const c = glob[i] as string;
-        if (c === '*') {
-            if (glob[i + 1] === '*') {
-                out += '.*';
-                i += 1;
-                if (glob[i + 1] === '/') {
-                    i += 1;
-                }
-            } else {
-                out += '[^/]*';
-            }
-        } else if (c === '?') {
-            out += '[^/]';
-        } else {
-            out += c.replace(/[.+^${}()|[\]\\]/g, '\\$&');
-        }
-    }
-    return new RegExp(`^${out}$`);
-}
-
-/** Does `glob` match at least one path in `tracked`? */
-export function globMatchesAny(glob: string, tracked: readonly string[]): boolean {
-    const re = globToRegExp(glob);
-    const prefix = `${glob.replace(/\/?\*\*$/, '').replace(/\/$/, '')}/`;
-    return tracked.some((t) => re.test(t) || t === glob || t.startsWith(prefix));
-}
+// Glob semantics are owned by the shared pipeline model so the delivery lane
+// and this gate can never disagree about what a filter matches.
+export { globMatchesAny, globToRegExp };
 
 /**
  * Extract every `paths:` / `paths-ignore:` list entry from one workflow body.
@@ -220,6 +188,7 @@ export function scanWorkflowDir(
                 findings.push({ file: f, line: entry.line, glob: entry.glob, why: 'no-match' });
             }
         }
+        findings.push(...ownFileExclusions(`.github/workflows/${f}`, f, body, opts.tracked));
         if (findings.length > before) {
             ledger.fail(f, `${String(findings.length - before)} dead path filter(s)`);
         } else {
@@ -227,6 +196,36 @@ export function scanWorkflowDir(
         }
     }
     return findings;
+}
+
+/**
+ * The second way a filter stops firing: it matches files, but not the
+ * workflow's own — the workflow file, or a local action it uses. An edit to
+ * that file alone then never runs the workflow that depends on it. Same
+ * semantics as the delivery lane's DL-5, from the same function.
+ */
+export function ownFileExclusions(
+    workflowPath: string,
+    file: string,
+    body: string,
+    tracked: readonly string[],
+): PathFinding[] {
+    const model = parsePipeline(body, 'github');
+    if (model.error !== null) {
+        return [];
+    }
+    const own = ownPipelineFiles(workflowPath, model, (dir) => tracked.filter((t) => t.startsWith(`${dir}/`)));
+    const out: PathFinding[] = [];
+    for (const t of model.triggers) {
+        if (t.paths.length === 0 && t.pathsIgnore.length === 0) {
+            continue;
+        }
+        const line = t.paths[0]?.line ?? t.pathsIgnore[0]?.line ?? t.line;
+        for (const excluded of excludedOwnFiles(t.paths.map((p) => p.glob), t.pathsIgnore.map((p) => p.glob), own)) {
+            out.push({ file, line, glob: `${t.event} → ${excluded}`, why: 'excludes-own' });
+        }
+    }
+    return out;
 }
 
 interface Args {
@@ -253,11 +252,17 @@ function _parseArgs(argv: readonly string[]): Args {
 
 function _selfTest(): number {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lwp-selftest-'));
-    const mkRepo = (name: string, workflow: string): string => {
+    const mkRepo = (name: string, workflow: string, extra: Record<string, string> = {}): string => {
         const repo = path.join(tmp, name);
         fs.mkdirSync(path.join(repo, '.github', 'workflows'), { recursive: true });
+        fs.mkdirSync(path.join(repo, '.github', 'actions', 'setup'), { recursive: true });
         fs.mkdirSync(path.join(repo, 'src'), { recursive: true });
         fs.writeFileSync(path.join(repo, 'src', 'real.ts'), '// real\n');
+        fs.writeFileSync(path.join(repo, '.github', 'actions', 'setup', 'action.yml'), 'runs:\n  using: composite\n  steps: []\n');
+        for (const [rel, body] of Object.entries(extra)) {
+            fs.mkdirSync(path.dirname(path.join(repo, rel)), { recursive: true });
+            fs.writeFileSync(path.join(repo, rel), body);
+        }
         execFileSync('git', ['init', '-q'], { cwd: repo });
         execFileSync('git', ['add', '-A'], { cwd: repo });
         fs.writeFileSync(path.join(repo, '.github', 'workflows', 'w.yml'), workflow, 'utf-8');
@@ -272,7 +277,8 @@ function _selfTest(): number {
             REAL_REPO_ROOT,
         );
 
-    const HEAD = 'on:\n  pull_request:\n    paths:\n';
+    // Every fixture names its own file, so only the case under test can fire.
+    const HEAD = 'on:\n  pull_request:\n    paths:\n      - ".github/workflows/w.yml"\n';
     try {
         const dead = mkRepo('dead', `${HEAD}      - "retired/tree/**"\n`);
         const live = mkRepo('live', `${HEAD}      - "src/**"\n`);
@@ -282,10 +288,21 @@ function _selfTest(): number {
         );
         const thin = mkRepo('thin', `${HEAD}      - "future/tree/**"  # workflow-path-allow: soon\n`);
         const bareDir = mkRepo('baredir', `${HEAD}      - "src"\n`);
+        const USES = 'jobs:\n  j:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ./.github/actions/setup\n';
+        const actionExcluded = mkRepo('actionexcluded', `${HEAD}      - "src/**"\n${USES}`);
+        const manifestOnly = mkRepo(
+            'manifestonly',
+            `${HEAD}      - "src/**"\n      - ".github/actions/setup/action.yml"\n${USES}`,
+            { '.github/actions/setup/run.sh': 'echo setup\n' },
+        );
+        const actionCovered = mkRepo(
+            'actioncovered',
+            `${HEAD}      - "src/**"\n      - ".github/actions/setup/**"\n${USES}`,
+        );
         return runSelfTest({
             gate: 'lint_workflow_paths',
-            minCases: 4,
-            minRejectCases: 2,
+            minCases: 7,
+            minRejectCases: 4,
             cases: [
                 {
                     name: 'a filter naming a retired tree is rejected',
@@ -307,6 +324,21 @@ function _selfTest(): number {
                     name: 'a one-word reason is rejected — an unclassifiable exception is boilerplate',
                     expect: 'reject',
                     run: () => run(thin),
+                },
+                {
+                    name: 'a filter that excludes a local action the workflow uses is rejected',
+                    expect: 'reject',
+                    run: () => run(actionExcluded),
+                },
+                {
+                    name: 'a filter naming only the manifest misses the rest of the action and is rejected',
+                    expect: 'reject',
+                    run: () => run(manifestOnly),
+                },
+                {
+                    name: 'a filter that covers the local action directory passes',
+                    expect: 'accept',
+                    run: () => run(actionCovered),
                 },
             ],
         });
@@ -334,13 +366,16 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             const why =
                 f.why === 'no-match'
                     ? 'matches no tracked file'
-                    : 'workflow-path-allow reason is too thin to classify';
+                    : f.why === 'excludes-own'
+                      ? 'the filter excludes this pipeline file — an edit to it alone never runs the workflow'
+                      : 'workflow-path-allow reason is too thin to classify';
             process.stdout.write(
                 `  ${f.file}:${String(f.line)}  ${f.glob}\n      ${why}\n`,
             );
         }
         process.stdout.write(
             '\n  Fix: delete the entry if the tree is retired, or repoint it if the path moved.\n' +
+                '  For an excluded pipeline file, add it (a local action as `<dir>/**`) to the filter.\n' +
                 '  A filter that matches nothing does not over-trigger — it never triggers.\n',
         );
     }

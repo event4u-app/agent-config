@@ -1,0 +1,50 @@
+/* Impact page: values from the Change Preview handover. */
+.av-bar.im-bar { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--rail); }
+.im-chg { flex: 1 1 320px; max-width: 520px; height: 42px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--brandLine); background: var(--bg); color: var(--text); font-size: 13px; text-overflow: ellipsis; }
+.im-why { font-size: 12px; color: var(--muted); }
+.av-main.im-main { padding: 18px 20px; gap: 16px; }
+
+.im-layers { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.im-layer { display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); }
+.im-layer.unk { border-style: dashed; border-color: var(--line2); }
+.im-lhead { display: flex; justify-content: space-between; gap: 6px; align-items: center; }
+.im-lname { font-weight: 600; }
+.im-lcount { font-size: 17px; font-weight: 600; }
+.im-ltext { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.im-litems { font-size: 11px; color: var(--soft); }
+.im-ilink { border: 0; padding: 0; background: none; color: inherit; font: inherit; text-align: left; overflow-wrap: anywhere; }
+.im-ilink:hover, .im-ilink.on { color: var(--brandText); text-decoration: underline; }
+
+.im-proto { display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+.im-phead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+.im-ptitle { font-weight: 600; font-size: 15px; }
+.im-pbtns { display: flex; gap: 6px; }
+.im-reset { height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--raise); color: var(--text); font-size: 12px; }
+.im-next { height: 34px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--brand); background: var(--brand); color: var(--onColor); font-size: 12px; font-weight: 600; }
+.im-next:disabled { opacity: 0.5; }
+.im-step { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); }
+.im-step.run { border-color: var(--brandLine); background: var(--brandTint); }
+.im-dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--monof); font-size: 12px; font-weight: 600; background: var(--raise); color: var(--muted); }
+.im-step.ok .im-dot { background: var(--green); color: #0d1522; }
+.im-step.run .im-dot { background: var(--brand); color: #0d1522; }
+.im-stxt { display: flex; flex-direction: column; gap: 2px; }
+.im-stitle { font-weight: 600; }
+.im-sres { font-size: 12px; color: var(--muted); }
+
+.im-rpad { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.im-rtitle { font-weight: 600; font-size: 16px; }
+.im-tally { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.im-tile { display: flex; flex-direction: column; gap: 2px; padding: 10px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line); }
+.im-tile.b-green { border-color: var(--green); }
+.im-tile.b-cyan { border-color: var(--cyan); }
+.im-tile.b-amber { border-color: var(--amber); }
+.im-tv { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.im-tk { font-size: 11px; color: var(--muted); }
+.im-grp { display: flex; flex-direction: column; gap: 6px; }
+.im-line { font-size: 12px; }
+.im-advice { font-size: 13px; color: var(--soft); }
+.im-tests { font-size: 12px; color: var(--soft); }
+.im-sep { font-size: 11px; color: var(--muted); }
+.im-picked { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--brandLine); background: var(--panel); }
+.im-pname { font-weight: 600; }
+.im-picked .deselect { border: 0; background: none; color: var(--muted); font-size: 16px; }

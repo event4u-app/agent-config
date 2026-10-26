@@ -16,10 +16,20 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { write_atomic } from '../_lib/fs_atomic.js';
+import { gitProbe } from '../_lib/spawn_env.js';
+import { readData } from './lanes/data/read_data.js';
+import { readDecisions } from './lanes/decisions/decisions.js';
+import { readDelivery } from './lanes/delivery/index.js';
+import { buildFlows } from './lanes/flows/flows.js';
+import { readHistory } from './lanes/history/history.js';
+import { readInterfaces } from './lanes/interfaces/index.js';
+import type { LaneOutput } from './lanes/lane_fact.js';
+import { type MergeRefusal, mergeLaneOutputs } from './lanes/merge.js';
+import { readRuntime } from './lanes/runtime/index.js';
 import { extractFile, type FileExtract, type RawEdge } from './extract.js';
 import { grammarWasmPath } from './loader.js';
 import { type PassReport, runPasses } from './passes.js';
-import { EMPTY_PROBE, PROBE_MARKERS, type ProjectProbe } from './providers/index.js';
+import { EMPTY_PROBE, heldReceivers, PROBE_MARKERS, PROBE_READS, type ProjectProbe } from './providers/index.js';
 import {
     ALIAS_VIA,
     aliasRulesFrom,
@@ -40,10 +50,12 @@ import {
     type CodeGraph,
     type EdgeConfidence,
     EXPECTED_GRAMMAR_ABI,
+    type FactMeta,
     EXT_LANG,
     GRAMMAR_WASM,
     isStatedResolution,
     type Lang,
+    MAX_FILE_BYTES,
     type ResolvedVia,
     SCHEMA_VERSION,
 } from './types.js';
@@ -150,12 +162,13 @@ export function readProjectProbe(root: string): ProjectProbe {
         const rel = toPosixRel(abs, full);
         paths.push(rel);
         const name = path.basename(full);
-        if (!MANIFEST_NAME.test(name) && !PROBE_MARKERS.has(name)) continue;
+        if (!MANIFEST_NAME.test(name) && !PROBE_MARKERS.has(name) && !PROBE_READS.some((r) => r.test(rel))) continue;
         if (PROBE_MARKERS.has(name)) {
             markers.add(rel);
             continue;
         }
         try {
+            if (fs.statSync(full).size > MAX_FILE_BYTES) continue;
             manifests.set(rel, fs.readFileSync(full, 'utf-8'));
         } catch {
             continue;
@@ -463,6 +476,15 @@ export function buildGraph(
         for (const r of ex.rawEdges) if (r.relation === 'imports' && r.importKind === 'namespace' && !r.localName && r.moduleSpecifier) seen.add(r.moduleSpecifier);
         csVisible.set(ex.file, [...seen]);
     }
+    // Fully-qualified names of `use` imports, per file: what a static receiver
+    // really is when no in-repo class answers to it.
+    const importFq = new Map<string, Map<string, string>>();
+    const held = heldReceivers(probe);
+    for (const ex of extracts) {
+        const fqs = new Map<string, string>();
+        for (const r of ex.rawEdges) if (r.relation === 'imports' && r.moduleSpecifier === undefined && r.fqName) fqs.set(r.localName ?? r.targetName, r.fqName.replace(/^\\/, ''));
+        if (fqs.size) importFq.set(ex.file, fqs);
+    }
     for (const ex of extracts) {
         const locals = new Map<string, string[]>();
         for (const n of ex.nodes) if (n.kind !== 'file') push(locals, n.label, n.id);
@@ -759,6 +781,26 @@ export function buildGraph(
             }
             return;
         }
+        // A static call on a framework facade or an SDK client leaves the
+        // repository: it is held as an external call and never bound by name to
+        // an in-repo method that happens to share the method's name.
+        const heldName = r.callStyle === 'scoped' ? r.scopeName : r.callStyle === 'dynamic' ? r.chainHead : undefined;
+        if (heldName && held.size > 0) {
+            const inRepo = resolveInScope(ex.file, heldName, 'any', ex.lang, true);
+            const fq = importFq.get(ex.file)?.get(heldName);
+            const receiver = fq !== undefined ? (held.has(fq) ? fq : null) : held.has(heldName) ? heldName : null;
+            if (receiver !== null && !(inRepo && isStatedResolution(inRepo.via))) {
+                emit({
+                    source: r.sourceId,
+                    target: `external:${receiver}::${r.targetName}`,
+                    relation: 'calls',
+                    confidence: 'EXTRACTED',
+                    resolved_via: fq !== undefined ? 'import-specifier' : 'name-lookup',
+                    provider: 'native',
+                });
+                return;
+            }
+        }
         // scoped `C::m()` whose class the file binds by a stated mechanism
         // (an import, PSR-4, a local declaration, a C# namespace): the class
         // is known, so a method it declares or inherits is the target, and the
@@ -996,6 +1038,19 @@ export function isTestFile(relPath: string): boolean {
     return false;
 }
 
+/** A fact's fields in a fixed order, attributes sorted, so equal facts serialize to equal bytes. */
+function factJson(f: FactMeta): Record<string, unknown> {
+    const out: Record<string, unknown> = {
+        owner: f.owner,
+        witness: { file: f.witness.file, line: f.witness.line, hash: f.witness.hash },
+        rung: f.rung,
+    };
+    if (f.resolved_via) out['resolved_via'] = f.resolved_via;
+    if (f.lane) out['lane'] = f.lane;
+    if (f.attrs) out['attrs'] = Object.fromEntries(Object.entries(f.attrs).sort((a, b) => (a[0] < b[0] ? -1 : 1)));
+    return out;
+}
+
 export function serializeGraph(g: CodeGraph): string {
     const key_order: (keyof CodeGraph)[] = [
         'schema_version',
@@ -1005,6 +1060,7 @@ export function serializeGraph(g: CodeGraph): string {
         'edge_confidence_counts',
         'suppressed_edge_counts',
         'providers',
+        'lanes_run',
         'nodes',
         'edges',
     ];
@@ -1014,6 +1070,7 @@ export function serializeGraph(g: CodeGraph): string {
         kind: n.kind,
         source_file: n.source_file,
         source_location: n.source_location,
+        ...(n.fact ? { fact: factJson(n.fact) } : {}),
     });
     const edge = (e: CodeEdge) => {
         const base: Record<string, unknown> = {
@@ -1034,6 +1091,7 @@ export function serializeGraph(g: CodeGraph): string {
         if (e.ambiguity_reason) base['ambiguity_reason'] = e.ambiguity_reason;
         if (e.candidates) base['candidates'] = e.candidates;
         if (e.provider_id) base['provider_id'] = e.provider_id;
+        if (e.fact) base['fact'] = factJson(e.fact);
         return base;
     };
     const ordered: Record<string, unknown> = {};
@@ -1051,6 +1109,81 @@ export interface BuildResult {
     fileCount: number;
     reExtracted: number;
     reused: number;
+    /** Set when the lane readers ran: what each read, what failed, what the merge refused. */
+    lanes?: LaneSummary;
+}
+
+export interface LaneRun {
+    lane: LaneOutput['lane'];
+    ms: number;
+    facts: number;
+    relations: number;
+    skipped: number;
+    /** Relations about files the graph does not hold (co-changes of docs and configs), left out before the merge. */
+    outside?: number;
+    /** The reader threw: its lane is left out of the graph, the build goes on. */
+    error?: string;
+}
+
+export interface LaneSummary {
+    runs: LaneRun[];
+    refused: MergeRefusal[];
+    ms: number;
+}
+
+/** Bounds the history lane's one `git log` pass, so a huge history cannot stall a build. */
+const HISTORY_GIT_TIMEOUT_MS = 20_000;
+
+/**
+ * Run every lane reader over the tree and merge their facts into `graph`.
+ *
+ * A reader that throws is recorded in the summary and its lane is left out;
+ * it never fails the build. Flows walk the merged graph, so they run last.
+ * The runtime lane runs before the data lane, which takes a connection's
+ * engine from the runtime's database service when the project states none.
+ */
+export function runLaneReaders(
+    root: string,
+    graph: CodeGraph,
+    opts: { readers?: Partial<Record<LaneOutput['lane'], (root: string) => LaneOutput>> } = {},
+): { graph: CodeGraph; summary: LaneSummary } {
+    const started = Date.now();
+    const runs: LaneRun[] = [];
+    const run = (lane: LaneOutput['lane'], read: () => LaneOutput): LaneOutput | null => {
+        const t0 = Date.now();
+        try {
+            const replaced = opts.readers?.[lane];
+            const out = replaced ? replaced(root) : read();
+            runs.push({ lane, ms: Date.now() - t0, facts: out.facts.length, relations: out.relations.length, skipped: out.skipped.length });
+            return out;
+        } catch (e) {
+            runs.push({ lane, ms: Date.now() - t0, facts: 0, relations: 0, skipped: 0, error: (e as Error).message });
+            return null;
+        }
+    };
+    const runtime = run('runtime', () => readRuntime(root));
+    const nodeIds = new Set(graph.nodes.map((n) => n.id));
+    const history = run('history', () => readHistory(root, { git: (r, a) => gitProbe(r, a, { maxBuffer: 512 * 1024 * 1024, timeout: HISTORY_GIT_TIMEOUT_MS }) }));
+    if (history) {
+        const kept = history.relations.filter((r) => nodeIds.has(r.from) && nodeIds.has(r.to));
+        const rec = runs.find((r) => r.lane === 'history');
+        if (rec) Object.assign(rec, { relations: kept.length, outside: history.relations.length - kept.length });
+        history.relations = kept;
+    }
+    const outputs = [
+        runtime,
+        run('interfaces', () => readInterfaces(root)),
+        run('delivery', () => readDelivery(root)),
+        history,
+        run('decisions', () => readDecisions(root)),
+        run('data', () => readData(root, graph, runtime ? { runtime } : {})),
+    ].filter((o): o is LaneOutput => o !== null);
+    const first = mergeLaneOutputs(graph, outputs);
+    const flows = run('flows', () => buildFlows(first.graph, { root }));
+    const second = flows ? mergeLaneOutputs(first.graph, [flows]) : { graph: first.graph, refused: [] };
+    // No timing in the graph: a rebuild of the same tree stays byte-identical.
+    const lanes_run = runs.map(({ ms: _m, skipped: _s, outside: _o, ...r }) => r);
+    return { graph: { ...second.graph, lanes_run }, summary: { runs, refused: [...first.refused, ...second.refused], ms: Date.now() - started } };
 }
 
 function contentHash(s: string): string {
@@ -1128,7 +1261,7 @@ function readSidecar(p: string, fingerprint: string): ExtractSidecar | null {
 export async function buildFromRepo(
     root: string,
     cachePath: string | null,
-    opts: { update?: boolean; fingerprint?: string } = {},
+    opts: { update?: boolean; fingerprint?: string; sidecarFrom?: string; lanes?: boolean } = {},
 ): Promise<BuildResult> {
     const abs = path.resolve(root);
     const fullPaths = discoverFiles(abs);
@@ -1145,7 +1278,9 @@ export async function buildFromRepo(
     }
 
     const fingerprint = opts.fingerprint ?? extractorFingerprint();
-    const prior = opts.update && cachePath ? readSidecar(sidecarPath(cachePath), fingerprint) : null;
+    // `sidecarFrom` lets an in-memory build (`cachePath` null) reuse a cache's extracts without writing it.
+    const priorPath = opts.sidecarFrom ?? (cachePath ? sidecarPath(cachePath) : null);
+    const prior = opts.update && priorPath ? readSidecar(priorPath, fingerprint) : null;
     const priorFiles = prior?.files ?? {};
     const nextSidecar: ExtractSidecar = { version: SCHEMA_VERSION, fingerprint, files: {} };
     const extracts: FileExtract[] = [];
@@ -1185,8 +1320,10 @@ export async function buildFromRepo(
         }
     }
     const report: { passes?: PassReport } = {};
-    const graph = buildGraph(files, extracts, readResolutionConfig(root), scip, docs, readProjectProbe(abs), report);
+    const core = buildGraph(files, extracts, readResolutionConfig(root), scip, docs, readProjectProbe(abs), report);
     for (const f of report.passes?.failures ?? []) process.stderr.write(`code-graph: pass ${f.pass} failed — ${f.reason}\n`);
+    const laned = opts.lanes ? runLaneReaders(abs, core) : null;
+    const graph = laned?.graph ?? core;
     const json = serializeGraph(graph);
     if (cachePath) {
         write_atomic(cachePath, json);
@@ -1195,5 +1332,5 @@ export async function buildFromRepo(
         // canonical JSON — never fails the build, no-op on old Node.
         emitSqliteTwin(graph, cachePath);
     }
-    return { graph, json, fileCount: files.length, reExtracted, reused };
+    return { graph, json, fileCount: files.length, reExtracted, reused, ...(laned ? { lanes: laned.summary } : {}) };
 }

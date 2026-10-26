@@ -30,11 +30,11 @@ function seeded(name: string, ageDays: number): { root: string; dir: string } {
     const root = path.join(tmp, name);
     fs.mkdirSync(root, { recursive: true });
     const home = graphHome(root);
-    fs.mkdirSync(home.stateDir, { recursive: true });
-    fs.writeFileSync(home.cachePath, Buffer.alloc(400 * 1024, 1));
+    fs.mkdirSync(home.buildDir, { recursive: true });
+    fs.writeFileSync(home.buildCachePath, Buffer.alloc(400 * 1024, 1));
     const at = new Date(Date.now() - ageDays * 86_400_000);
     recordProject(root, { usedHome: home.dir }, { now: at });
-    for (const p of [home.cachePath, home.stateDir, home.dir]) fs.utimesSync(p, at, at);
+    for (const p of [home.buildCachePath, home.buildDir, home.dir]) fs.utimesSync(p, at, at);
     return { root, dir: home.dir };
 }
 
@@ -85,7 +85,7 @@ describe('storage budget (6.1)', () => {
 
     it('never touches a graph under a repository\'s own agents/', () => {
         const proj = path.join(tmp, 'proj');
-        fs.mkdirSync(path.join(proj, 'agents', 'runtime', 'state'), { recursive: true });
+        fs.mkdirSync(graphHome(proj).buildDir, { recursive: true });
         fs.writeFileSync(graphHome(proj).cachePath, Buffer.alloc(900 * 1024, 1));
         recordProject(proj, { graph_home: graphHome(proj).dir });
         seeded('foreign', 50);
@@ -101,12 +101,12 @@ describe('storage budget (6.1)', () => {
         const writing = seeded('writing', 40);
         const temp = seeded('temp', 39);
         const idle = seeded('idle', 38);
-        fs.writeFileSync(path.join(writing.dir, 'state', 'code-graph-v1.json.sqlite3.tmp-1'), Buffer.alloc(10, 1));
-        const stale = path.join(temp.dir, 'state', '.code-graph-v1.json.refresh-tmp-1-ab.json');
+        fs.writeFileSync(path.join(writing.dir, '.build', 'code-graph-v1.json.sqlite3.tmp-1'), Buffer.alloc(10, 1));
+        const stale = path.join(temp.dir, '.build', '.code-graph-v1.json.refresh-tmp-1-ab.json');
         fs.writeFileSync(stale, '');
         const old = new Date(Date.now() - 39 * 86_400_000);
         fs.utimesSync(stale, old, old);
-        fs.utimesSync(path.join(temp.dir, 'state'), old, old);
+        fs.utimesSync(path.join(temp.dir, '.build'), old, old);
         updateRegistry((reg) => {
             reg.budget_mb = 0.1;
         });

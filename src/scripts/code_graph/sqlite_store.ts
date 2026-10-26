@@ -30,7 +30,7 @@ import {
     readUserVersion,
     stampUserVersion,
 } from '../_lib/sqlite_guard.js';
-import type { CodeEdge, CodeGraph, CodeNode } from './types.js';
+import type { CodeEdge, CodeGraph, CodeNode, FactMeta } from './types.js';
 
 /**
  * Bump on ANY table/column change — a mismatch sends readers to the JSON.
@@ -55,8 +55,10 @@ import type { CodeEdge, CodeGraph, CodeNode } from './types.js';
  *
  * 4 → 5 (`road-to-graph-providers-for-every-stack` 2.1): `edges` gained
  * `provider_id`, the convention provider that drew a convention edge.
+ *
+ * 6 → 7: `nodes` and `edges` gained `fact`, the witness and provenance as JSON.
  */
-export const GRAPH_STORE_VERSION = 6;
+export const GRAPH_STORE_VERSION = 7;
 
 /**
  * Edge count at or above which the indexed read path replaces the blob path.
@@ -102,8 +104,8 @@ export function emitSqliteTwin(graph: CodeGraph, jsonPath: string): boolean {
             db.exec('PRAGMA journal_mode = MEMORY');
             db.exec(
                 'CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);' +
-                    'CREATE TABLE nodes (id TEXT PRIMARY KEY, label TEXT NOT NULL, kind TEXT, source_file TEXT, l0 INTEGER, l1 INTEGER, l2 INTEGER, l3 INTEGER);' +
-                    'CREATE TABLE edges (source TEXT NOT NULL, target TEXT NOT NULL, relation TEXT NOT NULL, confidence TEXT NOT NULL, candidates TEXT, ambiguity_reason TEXT, resolved_via TEXT, provider TEXT, provider_id TEXT);' +
+                    'CREATE TABLE nodes (id TEXT PRIMARY KEY, label TEXT NOT NULL, kind TEXT, source_file TEXT, l0 INTEGER, l1 INTEGER, l2 INTEGER, l3 INTEGER, fact TEXT);' +
+                    'CREATE TABLE edges (source TEXT NOT NULL, target TEXT NOT NULL, relation TEXT NOT NULL, confidence TEXT NOT NULL, candidates TEXT, ambiguity_reason TEXT, resolved_via TEXT, provider TEXT, provider_id TEXT, fact TEXT);' +
                     'CREATE INDEX edges_source ON edges(source);' +
                     'CREATE INDEX edges_target ON edges(target);' +
                     // Seed resolution and the changed-file seed set are the two
@@ -125,7 +127,7 @@ export function emitSqliteTwin(graph: CodeGraph, jsonPath: string): boolean {
             meta.run('node_count', String(graph.nodes.length));
             meta.run('edge_count', String(graph.edges.length));
             const insNode = db.prepare(
-                'INSERT INTO nodes (id, label, kind, source_file, l0, l1, l2, l3) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO nodes (id, label, kind, source_file, l0, l1, l2, l3, fact) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
             );
             for (const n of graph.nodes) {
                 const loc = n.source_location ?? [];
@@ -138,11 +140,12 @@ export function emitSqliteTwin(graph: CodeGraph, jsonPath: string): boolean {
                     (loc[1] as number | undefined) ?? null,
                     (loc[2] as number | undefined) ?? null,
                     (loc[3] as number | undefined) ?? null,
+                    n.fact ? JSON.stringify(n.fact) : null,
                 );
             }
             const insEdge = db.prepare(
-                'INSERT INTO edges (source, target, relation, confidence, candidates, ambiguity_reason, resolved_via, provider, provider_id) ' +
-                    'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO edges (source, target, relation, confidence, candidates, ambiguity_reason, resolved_via, provider, provider_id, fact) ' +
+                    'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             );
             for (const e of graph.edges) {
                 insEdge.run(
@@ -155,6 +158,7 @@ export function emitSqliteTwin(graph: CodeGraph, jsonPath: string): boolean {
                     e.resolved_via,
                     e.provider,
                     e.provider_id ?? null,
+                    e.fact ? JSON.stringify(e.fact) : null,
                 );
             }
             db.exec('COMMIT');
@@ -245,6 +249,8 @@ export interface GraphIndex {
     /** Every node id, sorted. A whole-table read, for `dead` only — see
      * `LoadedGraph.allNodeIds`. */
     allNodeIds(): string[];
+    /** How many nodes of one kind the graph holds — the population an absence answer names. */
+    countKind(kind: string): number;
     /** Every node's id + searchable text. The ONLY whole-table read, and it
      * exists because a BM25 fallback genuinely needs the corpus. Callers reach
      * it only after an exact id AND an exact label both missed. */
@@ -252,7 +258,7 @@ export interface GraphIndex {
     close(): void;
 }
 
-interface NodeRow {
+export interface NodeRow {
     id: string;
     label: string;
     kind: string | null;
@@ -261,9 +267,10 @@ interface NodeRow {
     l1: number | null;
     l2: number | null;
     l3: number | null;
+    fact?: string | null;
 }
 
-interface EdgeRow {
+export interface EdgeRow {
     source: string;
     target: string;
     relation: string;
@@ -273,31 +280,36 @@ interface EdgeRow {
     resolved_via: string | null;
     provider: string | null;
     provider_id: string | null;
+    fact?: string | null;
 }
 
-function toNode(r: NodeRow): CodeNode {
+export function toNode(r: NodeRow): CodeNode {
     const loc = [r.l0, r.l1, r.l2, r.l3].filter((v): v is number => typeof v === 'number');
-    return {
+    const n: CodeNode = {
         id: r.id,
         label: r.label,
         kind: (r.kind ?? 'file') as CodeNode['kind'],
         source_file: r.source_file ?? '',
         source_location: loc,
     };
+    if (r.fact) n.fact = JSON.parse(r.fact) as FactMeta;
+    return n;
 }
 
-function toEdge(r: EdgeRow): CodeEdge {
+/**
+ * The SQL columns are nullable, the TypeScript fields are not. A null
+ * `resolved_via` can only come from a twin emitted before these fields existed,
+ * which GRAPH_STORE_VERSION already refuses — so its coalesce is unreachable
+ * in a healthy tree and is written to fail READABLE rather than to fabricate:
+ * `name-lookup` is the weakest mechanism, so a mislabelled edge is
+ * under-trusted rather than over-trusted by Phase 3's filter.
+ */
+export function toEdge(r: EdgeRow): CodeEdge {
     const e: CodeEdge = {
         source: r.source,
         target: r.target,
         relation: r.relation as CodeEdge['relation'],
         confidence: r.confidence as CodeEdge['confidence'],
-        // The SQL columns are nullable, the TypeScript fields are not. A null
-        // can only come from a twin emitted before these fields existed, which
-        // GRAPH_STORE_VERSION already refuses — so this coalesce is unreachable
-        // in a healthy tree and is written to fail READABLE rather than to
-        // fabricate: `name-lookup` is the weakest mechanism, so a mislabelled
-        // edge is under-trusted rather than over-trusted by Phase 3's filter.
         resolved_via: (r.resolved_via ?? 'name-lookup') as CodeEdge['resolved_via'],
         provider: (r.provider ?? 'native') as CodeEdge['provider'],
     };
@@ -306,6 +318,7 @@ function toEdge(r: EdgeRow): CodeEdge {
         e.ambiguity_reason = r.ambiguity_reason;
     }
     if (r.provider_id) e.provider_id = r.provider_id;
+    if (r.fact) e.fact = JSON.parse(r.fact) as FactMeta;
     return e;
 }
 
@@ -392,6 +405,9 @@ export function openGraphIndex(jsonPath: string): GraphIndex | null {
                         for (const r of stmt.all(...slice) as { id: string }[]) out.push(r.id);
                     }
                     return out;
+                },
+                countKind(kind) {
+                    return (db.prepare('SELECT COUNT(*) AS c FROM nodes WHERE kind = ?').get(kind) as { c: number }).c;
                 },
                 allNodeIds() {
                     return (db.prepare('SELECT id FROM nodes ORDER BY id').all() as { id: string }[]).map(

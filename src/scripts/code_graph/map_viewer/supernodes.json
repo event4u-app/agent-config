@@ -1,0 +1,54 @@
+{
+    "collapseAbove": 50,
+    "expandBelow": 40,
+    "zoomExpand": 2,
+    "zoomCollapse": 1.5,
+    "measured": {
+        "date": "2026-10-26",
+        "what": "Code area at area level, 1440x900, labels the canvas could place without overlap divided by nodes drawn; median per bucket of nodes drawn",
+        "this repository": {
+            "areas": 60,
+            "maxNodes": 461,
+            "maxDrawMs": 4.4,
+            "labelled": {
+                "0-30": 0.68,
+                "30-40": 0.6,
+                "40-50": 0.52,
+                "50-60": 0.43,
+                "60-80": 0.35,
+                "80-120": 0.29,
+                "120+": 0.23
+            }
+        },
+        "Laravel application (5,845 files: app, config, database, routes, views, tests)": {
+            "areas": 51,
+            "maxNodes": 371,
+            "maxDrawMs": 2.7,
+            "labelled": {
+                "0-30": 1.0,
+                "30-40": 0.51,
+                "50-60": 0.38,
+                "60-80": 0.34,
+                "80-120": 0.26,
+                "120+": 0.14
+            }
+        },
+        "reading": "Below half of the nodes carry a label from about 50 nodes on in both trees; draw time never binds. Folding starts above 50 and lifts only at 40 or fewer, so a filter that moves the count across one line does not flip the view.",
+        "after folding": {
+            "this repository": {
+                "areasAbove50": 33,
+                "maxNodesDrawn": 33,
+                "medianLabelled": 0.58,
+                "minLabelled": 0.3,
+                "maxDrawMs": 5.4
+            },
+            "Laravel application": {
+                "areasAbove50": 20,
+                "maxNodesDrawn": 47,
+                "medianLabelled": 0.44,
+                "minLabelled": 0.27,
+                "maxDrawMs": 3.6
+            }
+        }
+    }
+}

@@ -1,0 +1,34 @@
+{
+    "fixture": "p1-blog",
+    "must_exist": [
+        "node table:users",
+        "node table:posts",
+        "node table:comments",
+        "node column:comments.post_id",
+        "edge app/Models/User.php#User persists table:users",
+        "edge app/Models/User.php#User::posts relates app/Models/Post.php#Post",
+        "edge-attr app/Models/User.php#User::posts relates app/Models/Post.php#Post kind=\"1:n\"",
+        "edge-attr app/Models/Post.php#Post::comments relates app/Models/Comment.php#Comment key=\"post_id\"",
+        "edge-attr app/Models/Post.php#Post::tags relates app/Models/Tag.php#Tag kind=\"n:m\"",
+        "edge-attr app/Models/Post.php#Post::tags relates app/Models/Tag.php#Tag pivot=\"post_tag\"",
+        "edge app/Models/Comment.php#Comment::post uses column:comments.post_id",
+        "edge column:posts.user_id references column:users.id",
+        "edge-attr column:posts.user_id references column:users.id on_delete=\"cascade\"",
+        "edge-attr column:posts.user_id references column:users.id index=\"missing\"",
+        "edge table:posts references table:users",
+        "edge app/Http/Controllers/CommentController.php#CommentController::index reads column:comments.post_id",
+        "edge routes/web.php#route:GET /posts/{post}/comments routes-to app/Http/Controllers/CommentController.php#CommentController::index",
+        "attr column:posts.author_id index=\"missing\"",
+        "attr table:posts engine=\"pgsql\"",
+        "attr table:posts completeness=\"complete\""
+    ],
+    "must_not_exist": [
+        "node table:tags",
+        "node table:post_tag",
+        "edge table:comments references table:posts",
+        "edge column:comments.post_id references column:posts.id",
+        "attr column:posts.author_id index=\"declared\"",
+        "edge app/Models/Tag.php#Tag persists table:tags",
+        "edge database/migrations/2024_02_01_000001_drop_posts_author_index.php#down calls app/Http/Controllers/CommentController.php#CommentController::index"
+    ]
+}

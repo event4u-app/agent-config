@@ -251,3 +251,14 @@ tasks:
       - '{{if .DRY}}./scripts-run src/scripts/check_branch_freshness{{if .PR_BASE}} --base {{shellQuote .PR_BASE}}{{end}} || echo "  → not current (see above); the real run would stop here"{{else}}./scripts-run src/scripts/check_branch_freshness{{if .PR_BASE}} --base {{shellQuote .PR_BASE}}{{end}}{{end}}'
       - 'echo "6 push"'
       - 'echo "  → NOT run here. Review the merge, then push deliberately."'
+
+  map:demo:
+    desc: |
+      Draw the knowledge map and the hub from the demo fixture
+      (tests/fixtures/code-graph/demo/) into agents/map/.build/demo/ —
+      sample data in every area, for frontend work on the map pages.
+      Extra flags after `--` reach the command (`--open`, `--out DIR`,
+      `--no-verify`).
+      Usage:
+      task map:demo -- --open
+    cmd: ./scripts-run src/scripts/code_graph/cli map --demo {{.CLI_ARGS}}

@@ -20,6 +20,7 @@ on:
       - "docs/comparison.yaml"
       - "docs/proof.md"
       - ".github/workflows/proof-demo.yml"
+      - ".github/actions/setup-task/**"
   push:
     branches: [main, master]
     paths:
@@ -33,6 +34,7 @@ on:
       - "docs/comparison.yaml"
       - "docs/proof.md"
       - ".github/workflows/proof-demo.yml"
+      - ".github/actions/setup-task/**"
   workflow_dispatch:
 
 concurrency:

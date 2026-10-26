@@ -6,6 +6,7 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
@@ -208,3 +209,30 @@ describe('check_no_new_legacy_path — existing hardcoded scan roots', () => {
 
 // --- Golden parity on the REAL REPO -----------------------------------------
 
+
+describe('check_no_new_legacy_path — a branch diff larger than the default spawn buffer', () => {
+    it('scans a diff over 1 MiB instead of failing with ENOBUFS', () => {
+        const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'legacy-path-big-diff-'));
+        const git = (...args: string[]): void => {
+            const r = spawnSync('git', ['-c', 'core.hooksPath=/dev/null', '-c', 'user.email=t@t', '-c', 'user.name=t', ...args], { cwd: repo, encoding: 'utf-8' });
+            if (r.status !== 0) throw new Error(r.stderr);
+        };
+        try {
+            git('init', '-q');
+            fs.mkdirSync(path.join(repo, 'src'));
+            fs.writeFileSync(path.join(repo, 'src', 'a.txt'), 'base\n');
+            git('add', '.');
+            git('commit', '-q', '-m', 'base');
+            fs.writeFileSync(path.join(repo, 'src', 'big.txt'), 'line of ordinary text\n'.repeat(120_000));
+            git('add', '.');
+            git('commit', '-q', '-m', 'big');
+            const script = path.join(REPO_ROOT, 'src', 'scripts', 'check_no_new_legacy_path.ts');
+            const tsx = path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
+            const r = spawnSync(tsx, [script, '--base', 'HEAD~1'], { cwd: repo, encoding: 'utf-8' });
+            expect(r.stdout).not.toMatch(/ENOBUFS/);
+            expect(r.stdout).not.toMatch(/git diff failed/);
+        } finally {
+            fs.rmSync(repo, { recursive: true, force: true });
+        }
+    });
+});

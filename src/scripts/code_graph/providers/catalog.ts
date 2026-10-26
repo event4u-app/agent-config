@@ -255,6 +255,28 @@ export const CATALOG: readonly CatalogRow[] = [
         usage: SO,
         limits: 'resource (singular), nested resources, scope/concerns, an explicit render, config/initializers/inflections and models outside app/models are not followed.',
     },
+    {
+        id: 'sql-ddl',
+        name: 'SQL schema files',
+        language: 'SQL',
+        markers: 'schema.sql or structure.sql, or *.sql under a migrations/ or migrate/ directory (not under a test, fixture or benchmark directory)',
+        relations: ['migrates', 'member', 'references'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/sql-ddl',
+        usage: 'road-to-a-map-the-agent-checks-before-it-acts step 1.3 (one schema model per stack)',
+        limits: 'Statements are replayed in path order on one default connection; views, triggers, types and functions are counted as gaps; a framework schema dump under database/schema/ is not read.',
+    },
+    {
+        id: 'prisma',
+        name: 'Prisma',
+        language: 'Prisma schema',
+        markers: 'a schema.prisma file, or *.prisma under prisma/schema/ (not under a test, fixture or benchmark directory)',
+        relations: ['migrates', 'member', 'references'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/prisma',
+        usage: 'road-to-a-map-the-agent-checks-before-it-acts step 1.3 (one schema model per stack)',
+        limits: 'The schema is read as declared state; prisma/migrations SQL and client-side model queries are not followed.',
+    },
     ...(
         [
             ['kotlin', 'Kotlin', 'Kotlin'],
@@ -262,7 +284,6 @@ export const CATALOG: readonly CatalogRow[] = [
             ['c-cpp', 'C / C++', 'C / C++'],
             ['swift', 'Swift', 'Swift'],
             ['dart', 'Dart', 'Dart'],
-            ['sql', 'SQL schema files', 'SQL'],
             ['react-native', 'React Native / Expo', 'JavaScript / TypeScript'],
             ['flutter', 'Flutter', 'Dart'],
             ['swiftui', 'SwiftUI', 'Swift'],
@@ -275,9 +296,7 @@ export const CATALOG: readonly CatalogRow[] = [
             ['drupal', 'Drupal', 'PHP'],
             ['quarkus', 'Quarkus', 'Java'],
             ['micronaut', 'Micronaut', 'Java'],
-            ['prisma', 'Prisma', 'Prisma schema'],
             ['drizzle', 'Drizzle', 'TypeScript'],
-            ['infrastructure', 'Docker, Kubernetes, Terraform, CI', 'YAML / HCL'],
         ] as const
     ).map(
         ([id, name, language]): CatalogRow => ({
@@ -291,6 +310,18 @@ export const CATALOG: readonly CatalogRow[] = [
             usage: 'coverage list in road-to-graph-providers-for-every-stack (kill register K7)',
         }),
     ),
+    {
+        id: 'infrastructure',
+        name: 'Docker, Kubernetes, Terraform, CI',
+        language: 'YAML / HCL',
+        markers: 'compose files, Dockerfiles, .devcontainer, Makefile/Taskfile, *.tf, Kubernetes manifests, .github/workflows, .gitlab-ci.yml',
+        relations: [],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/runtime tests/fixtures/code-graph/delivery',
+        usage: 'coverage list in road-to-graph-providers-for-every-stack (kill register K7)',
+        limits:
+            'Read by the runtime and delivery lane readers, not a framework provider, so no code-graph relation is listed. Terraform by line rules: no expression evaluation, no state, count/for_each instances are one node, references resolve within one directory only. Kubernetes: Helm/Go-templated manifests are skipped; label selectors match pod-template labels in the same namespace only. Compose: one file per read plus same-directory siblings, no profiles or extends; interpolated values stay unresolved unless a user-produced `docker compose config` file is present. CI: GitHub Actions and GitLab CI only; GitLab includes are recorded by name, never followed; composite actions are not opened.',
+    },
 ];
 
 /** The catalog row for a provider id, if any. */

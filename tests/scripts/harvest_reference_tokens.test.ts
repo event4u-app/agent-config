@@ -352,6 +352,10 @@ describe('4.1 census — the estate figures the roadmap pinned', () => {
     // census; a disposition change moves a file between levels and must move
     // these two numbers together. A revision that changed only one of them
     // would be describing an estate that does not exist.
+    //
+    // Re-derived 2026-10-26: `road-to-database-erd-landing.md` moved from
+    // `later/` to `archive/` with its two tokens - `archive` 57 -> 58 and
+    // `later` 7 -> 6, the other figures unchanged, the same level move as above.
     // Updating this block costs no sensitivity: per the header above, the census
     // is NOT the sensitive test of the extraction bound; the fixtures are, and
     // none of them is touched here.
@@ -360,8 +364,8 @@ describe('4.1 census — the estate figures the roadmap pinned', () => {
         expect(c.occurrences).toBe(151);
         expect(c.uniqueTokens).toBe(119);
         expect(c.files).toBe(64);
-        expect(c.byLevel.archive).toBe(57);
-        expect(c.byLevel.later).toBe(7);
+        expect(c.byLevel.archive).toBe(58);
+        expect(c.byLevel.later).toBe(6);
         expect(c.byLevel.active).toBe(0);
     });
 });

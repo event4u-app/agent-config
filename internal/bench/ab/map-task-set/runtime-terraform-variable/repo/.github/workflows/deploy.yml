@@ -1,0 +1,10 @@
+name: deploy
+on:
+  workflow_dispatch: {}
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: terraform -chdir=infra init
+      - run: terraform -chdir=infra plan -var-file=prod.tfvars -var instance_type=t3.medium

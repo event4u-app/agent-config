@@ -132,6 +132,15 @@ describe('4.1 — a fixture session, dispatched through the real ToolCache', () 
         const nRefused = await cache.dispatch('graph_node', { id: 'handle something' }, root);
         expect(nRefused['status']).toBe('refused');
 
+        // The relation vocabulary is validated in the handler, not as a schema enum.
+        const nCalls = await cache.dispatch('graph_node', { id: 'src/service.ts#handle', relation: 'imports' }, root);
+        expect(nCalls['status']).toBe('ok');
+        const nBadRel = await cache.dispatch('graph_node', { id: 'src/service.ts#handle', relation: 'callz' }, root);
+        expect(nBadRel['status']).toBe('error');
+        expect(String(nBadRel['error'])).toContain('calls');
+        const qBadRel = await cache.dispatch('graph_query', { symbol: 'src/service.ts#handle', relation: 'callz' }, root);
+        expect(qBadRel['status']).toBe('error');
+
         const t = await cache.dispatch('graph_tests_for', { symbol: 'src/service.ts#handle' }, root);
         expect(t['status']).toBe('ok');
         expect(t['tests']).toStrictEqual(['tests/service.test.ts']);
@@ -313,7 +322,7 @@ describe('5.2 — the map readers over the wire', () => {
         const root = await consumerRig();
         const cache = new ToolCache();
         await buildMap(root);
-        const doc = JSON.parse(fs.readFileSync(path.join(root, 'agents/map/map.json'), 'utf-8')) as { model: { health: unknown; files: Array<{ path: string; blast?: { direct: number; transitive: number } }> } };
+        const doc = JSON.parse(fs.readFileSync(path.join(root, 'agents/map/code/map.json'), 'utf-8')) as { model: { health: unknown; files: Array<{ path: string; blast?: { direct: number; transitive: number } }> } };
         const r = await cache.dispatch('graph_map_status', { file: 'src/service.ts' }, root);
         expect(r['health']).toEqual(doc.model.health);
         expect((r['findings'] as { cycles: number }).cycles).toBeTypeOf('number');

@@ -16,8 +16,10 @@ import { laravelProvider } from './laravel.js';
 import { nestjsProvider } from './nestjs.js';
 import { nextjsProvider } from './nextjs.js';
 import { nuxtProvider } from './nuxt.js';
+import { prismaProvider } from './prisma.js';
 import { reactRouterProvider } from './react-router.js';
 import { springProvider } from './spring.js';
+import { sqlDdlProvider } from './sql_ddl.js';
 import { sqlalchemyProvider } from './sqlalchemy.js';
 import { railsProvider } from './rails.js';
 import { sveltekitProvider } from './sveltekit.js';
@@ -53,7 +55,12 @@ export const PROVIDERS: readonly ConventionProvider[] = [
     typeormProvider,
     aspnetcoreProvider,
     railsProvider,
+    sqlDdlProvider,
+    prismaProvider,
 ];
+
+/** Every path pattern a registered provider asks the probe to read. */
+export const PROBE_READS: readonly RegExp[] = PROVIDERS.flatMap((p) => (p.reads ? [p.reads] : []));
 
 /** Every marker basename a registered provider asks the probe to record. */
 export const PROBE_MARKERS: ReadonlySet<string> = new Set(PROVIDERS.flatMap((p) => p.markers ?? []));
@@ -71,6 +78,11 @@ export function activeProviders(probe: ProjectProbe, registry: readonly Conventi
         if (roots.length > 0) out.push({ provider, roots });
     }
     return out;
+}
+
+/** Every held receiver (facade or SDK client) of the providers that apply to this project. */
+export function heldReceivers(probe: ProjectProbe, registry: readonly ConventionProvider[] = PROVIDERS): ReadonlySet<string> {
+    return new Set(activeProviders(probe, registry).flatMap(({ provider }) => provider.heldReceivers ?? []));
 }
 
 /**

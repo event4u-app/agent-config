@@ -51,7 +51,8 @@ __pycache__/
 /.tmp/
 /agents/tmp/
 /agents/tmp.old/
-/agents/map/
+# The code map is committed-safe (ADR-303); only its build folder is local.
+/agents/map/.build/
 
 # Evidence-discipline ephemeral session cache (Evidence Reports, raw probe /
 # introspection dumps, absence-search logs). Overwritten each task; never
