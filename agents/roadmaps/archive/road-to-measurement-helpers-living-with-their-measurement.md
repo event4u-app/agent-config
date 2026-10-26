@@ -37,6 +37,7 @@ own path never reaches.
 - [x] **1.2 Apply the chosen shape.** For (a): move the code and its tests, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/turn_end_refusals.ts -->
       leave `turn_end_refusals.ts` exporting nothing the gate path does not use.
       verify: `npx vitest run tests/scripts/turn_end_refusals.test.ts tests/scripts/measure_turn_end_gate.test.ts` -> 0
+      production entry: src/scripts/measure_turn_end_gate.ts
 - [x] **1.3 Prove the reach finding is gone.** A fixture step naming <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/turn_end_refusals.ts -->
       `src/scripts/_lib/turn_end_refusals.ts` passes the reach check.
       verify: `grep -rn 'collectShadowStats' src/scripts/_lib/turn_end_refusals.ts` -> /^$/
