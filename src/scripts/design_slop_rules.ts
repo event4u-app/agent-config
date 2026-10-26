@@ -45,8 +45,18 @@ export interface RawHit {
 export interface DesignContext {
   /** lowercased DESIGN.md text, or "" when absent */
   raw: string;
-  /** true when DESIGN.md mentions any of the given keywords */
+  /**
+   * True when DESIGN.md DECLARES one of the keywords as intentional: in a
+   * frontmatter `intent:` list or an `## Intentional` section, word-bounded,
+   * never inside a negated sentence. A mention elsewhere is not a declaration.
+   */
   has(...keywords: string[]): boolean;
+  /**
+   * The pre-0.2 free-text test (a raw substring anywhere in DESIGN.md), kept for
+   * one minor version so a run can report what it WOULD have suppressed. It
+   * suppresses nothing. Absent on a hand-built context.
+   */
+  legacyHas?(...keywords: string[]): string | null;
 }
 
 export interface RuleInput {
