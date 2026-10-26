@@ -208,7 +208,7 @@ renders from real facts or says why it has none.
       confirm with the source, update after the change; its routing evals gain
       "fresh graph, missed dynamic usage".
       verify: the rule text and its eval fixture carry the three-step order.
-- [ ] **3.9 Record the principle.** A new ADR: the graph is an index, never the
+- [x] **3.9 Record the principle.** A new ADR: the graph is an index, never the
       truth; one folder per home; amends ADR-297 and ADR-299 wording; quotes the
       owner's turn 13.
       verify: the ADR exists, links both, and passes the ADR evidence gate.
