@@ -177,6 +177,15 @@ K1 oracle never an arm or provider · K2 no hidden benchmark inputs · K3 no LLM
 obligation inference in any pack/selection verb · K7 no external flow-analyzer adapters (S9 class; ingested findings only) ·
 K8 no Fact-IR rewrite before a second provider emits the same edge family.
 
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-10-26 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | The corpus is fitted to the engine after the fact | implementation | Questions or oracle truth written after the engine has seen the subject repositories would score what the engine already answers, and repeat the lost-inputs failure of the 2026-08-28 registration | Registration, with SHA pins and every input tracked, lands before any measurement (Phase 2; K2) | Phase 2 — Registration, then measurement |
+| 2 | A tie is reported as a win | product | The in-repo v2 corpus tied on every class against a 0.917-recall grep; a weak bar would let graph-first wording ship on noise | The null path is stated now: fewer than 4 of 6 classes winning withholds the wording | Phase 2 — Registration, then measurement |
+| 3 | Breadth outruns reach | implementation | A language or framework added without a fixture and a corpus class widens the claim without evidence | K5 forbids it; each Phase 1 language carries both | Phase 1 — Reach, scoped (each language with fixture + corpus class) |
+
 ## Acceptance Criteria
 - [ ] AC-1 Corpus v3 and the F task suite are tracked in-tree with hashes before the engine sees the subject repos.
 - [ ] AC-2 The report publishes every class in both directions with the calibration diagnostic.
