@@ -79,9 +79,12 @@ EXISTING-UI-AUDIT RUNS FIRST. ALWAYS.
 
 Skip only when **all** hold:
 
-- ≤ 1 file, ≤ 5 changed lines, no new component, no new state.
+- ≤ 1 file, ≤ 5 changed lines, no new component, no new state, no new control
+  role — no element or component of a role the file lacked (select, input,
+  textarea, checkbox, radio, switch, date/time, dialog, details, popover,
+  combobox, menu, menu-button, tooltip, tabs, table). A native `<select>` is new.
 - Inside the work engine, `directive_set == "ui-trivial"` — the dispatcher
-  states it directly. Outside it, the same four conditions are read **off the
+  states it directly. Outside it, the same conditions are read **off the
   diff**, which is observable without any dispatcher state.
 
 The `directive_set` check used to be an additional *requirement* rather than

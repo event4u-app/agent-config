@@ -88,7 +88,8 @@ The verdict is gated on evidence, not on having run a skill:
 
 Skip only when **all** hold:
 
-- ≤ 1 file, ≤ 5 changed lines, no new component, no new state, no new dependency.
+- ≤ 1 file, ≤ 5 changed lines, no new component, no new state, no new dependency,
+  no new control role (the `ui-audit-gate` role list).
 - Inside the work engine, `directive_set == "ui-trivial"` — the dispatcher states
   it directly. Outside it, the same conditions are read **off the diff**, which
   is observable without any dispatcher state.

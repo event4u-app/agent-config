@@ -38,14 +38,15 @@ this skill and then writing the UI from priors is the failure it exists to
 prevent — the loop below is not optional context, it is the work.
 
 **Skip only when the change is `ui-trivial`, decidable off the diff:** ≤ 1 file,
-≤ 5 changed lines, no new component, no new state, no new dependency. Anything
-else runs the loop.
+≤ 5 changed lines, no new component, no new state, no new dependency, no new
+control role. Anything else runs the loop.
 
 ### The loop
 
 1. **Audit first** — run [`existing-ui-audit`](../existing-ui-audit/SKILL.md).
    What already exists (components, tokens, layout conventions) outranks every
    heuristic below. Reinventing an existing component is the #1 failure mode.
+   **Control roles.** For every control you add, look up its role in the `control_roles` of `agent-config ui:audit` (re-run it when the artefact is older than your last UI edit): use the canonical implementation and the siblings' box metrics. Role missing or tied → ask before inventing a control kind; a native control beside an existing primitive needs a stated `native_control_reason`.
 2. **Brief** — seven keys before any code. Five are the ones the engine gates
    (`REQUIRED_BRIEF_KEYS`): `layout`, `components`, `states`, `microcopy`,
    `a11y`. `states` means all five of `empty`, `loading`, `error`, `success`,
@@ -205,6 +206,7 @@ implementation skill, not from here.
 Load the reference file whose sections the task needs — never all of them by default:
 
 - [`references/design-patterns.md`](references/design-patterns.md) — Component Architecture · Form Design · Table Design · Responsive Strategy · Accessibility (a11y) · Motion — decision-tree and rationale · UX Principles · Craft details — typography & imagery · Presenting variants
+- [`references/gesture-mechanics.md`](references/gesture-mechanics.md) — Respond at contact, not at release · Follow the hand 1:1 · Hand the motion back to physics · Edges and symmetry · Accessibility
 - [`references/design-read-and-memory.md`](references/design-read-and-memory.md) — Cross-task design memory — read DESIGN.md / PRODUCT.md first · Register — brand vs product · Design Read — articulate intent before generating · Aesthetic direction
 
 ## Procedure

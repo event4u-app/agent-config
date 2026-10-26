@@ -15,6 +15,7 @@ import {
     StepResult,
     agent_directive,
 } from '../../delivery_state.js';
+import { annotateControlRoles } from '../../_lib/control_roles.js';
 import {
     is_ambiguous_stack,
     bundle_line,
@@ -154,6 +155,9 @@ export function partition_artifact_covered(findings: ReadonlyArray<Any>): {
 
 /** Apply the polish-loop gate. */
 export function run(state: DeliveryState): StepResult {
+    // A previous round's fix is on disk by now; a control role it introduced is
+    // recorded on its change entry like one introduced at apply.
+    annotateControlRoles(state.changes as Array<Record<string, Any>>);
     const review = _pyTruthy(state.ui_review) ? (state.ui_review as Record<string, Any>) : {};
     let findings = 'findings' in review ? review['findings'] : [];
     if (!Array.isArray(findings)) {

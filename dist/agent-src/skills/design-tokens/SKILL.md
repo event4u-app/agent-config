@@ -60,7 +60,10 @@ Rules: components never reference primitives directly; dark mode lives
 under `dark.semantic.*` overriding the same semantic names (emitted as a
 `.dark { … }` block); every value is a `{"$value": …, "$type": …}` pair
 (DTCG; 2025.10 colour/dimension/duration objects read — a composite such
-as shadow or typography fails `generate` by design, naming the token). Start from
+as shadow or typography fails `generate` by design, naming the token). Every
+`fontSize` step has a `letterSpacing` sibling, per `typography-system`'s
+tracking ladder, written in `rem` as the step's font size × its `em` value,
+since DTCG dimension objects allow only `px` and `rem`. Start from
 [the bundled starter template](templates/design-tokens-starter.json).
 
 ## Toolchain (`scripts/tokens.ts` — skill-relative, any cwd)
