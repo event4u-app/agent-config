@@ -239,7 +239,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         side_effect: 'shell',
         description:
             'What a diff can break: callers, dependents and test files reaching the ' +
-            'changed symbols, over stated-fact edges only (refused guesses reported). ' +
+            'changed symbols, over stated-fact edges only. ' +
             'Runs `git diff` for the rev.',
         input_schema: {
             type: 'object',
@@ -274,7 +274,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         side_effect: 'ro',
         description:
             'Test files that exercise a symbol: a test file imports it or its module. ' +
-            'Empty means none does — a finding, not an error.',
+            'Empty is a finding, not an error.',
         input_schema: {
             type: 'object',
             required: ['symbol'],
@@ -296,7 +296,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         side_effect: 'ro',
         description:
             'Symbols no accepted reference and no declared entry point names. REFUSES ' +
-            '(status `refused`) while a source is unreadable: without recorded exportedness ' +
+            'while a source is unreadable: without recorded exportedness ' +
             'an exported-but-unimported symbol looks dead. Never a deletion recommendation.',
         input_schema: {
             type: 'object',
@@ -370,22 +370,20 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         name: 'graph_query',
         side_effect: 'ro',
         description:
-            "A symbol's direct outgoing relations (calls, imports, uses, inherits), each " +
-            'with its confidence and resolution mechanism: "what does this touch" before reading a file. ' +
-            'With kind, relation, direction or depth: a filtered tree, each item with its witness. ' +
-            'mode=pack: symbol is a task; its confirmed facts.',
+            "A symbol's outgoing relations with confidence and mechanism. " +
+            'kind/relation/direction/depth: a tree with witnesses. mode=pack: facts for a task.',
         input_schema: {
             type: 'object',
             required: ['symbol'],
             properties: {
                 symbol: { type: 'string', description: 'Node id, label, or free text.' },
-                mode: { type: 'string', enum: ['relations', 'pack'], default: 'relations' },
-                budget: { type: 'integer', minimum: 1, default: 1500 },
-                kind: { type: 'string', description: 'Tree mode: only these node kinds (comma-separated).' },
-                relation: { type: 'string', enum: RELATIONS, description: 'Tree mode: only this relation.' },
-                direction: { type: 'string', enum: ['in', 'out', 'both'], default: 'both' },
-                depth: { type: 'integer', minimum: 1, maximum: 3, default: 1 },
-                limit: { type: 'integer', minimum: 1, default: 50 },
+                mode: { type: 'string', enum: ['relations', 'pack'] },
+                budget: { type: 'integer' },
+                kind: { type: 'string', description: 'Comma-separated kinds.' },
+                relation: { type: 'string' },
+                direction: { type: 'string', enum: ['in', 'out', 'both'] },
+                depth: { type: 'integer', maximum: 3 },
+                limit: { type: 'integer' },
             },
             additionalProperties: false,
         },
@@ -409,7 +407,10 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             if (kinds.length > 0 || relation !== '' || args['direction'] !== undefined || args['depth'] !== undefined) {
                 const opts: TreeOptions = { depth: num(args, 'depth', 1), limit: num(args, 'limit', 50) };
                 if (kinds.length > 0) opts.kinds = kinds;
-                if ((RELATIONS as readonly string[]).includes(relation)) opts.relations = [relation];
+                if (relation !== '' && !(RELATIONS as readonly string[]).includes(relation)) {
+                    return { status: 'error', error: `unknown relation: ${relation}; one of ${RELATIONS.join(', ')}` };
+                }
+                if (relation !== '') opts.relations = [relation];
                 const dir = str(args, 'direction');
                 if (dir === 'in' || dir === 'out' || dir === 'both') opts.direction = dir;
                 return withGraph(root, (g) => {
@@ -430,28 +431,23 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         name: 'graph_node',
         side_effect: 'ro',
         description:
-            'One symbol in full: where it is declared, what reaches it, what it reaches, ' +
-            'how connected it is. Resolves EXACTLY (node id, then label) and refuses ' +
-            'anything else — never scores free text. mode=confirm re-reads its witness.',
+            'One symbol in full: its declaration, what reaches it, what it reaches. Resolves ' +
+            'EXACTLY (node id, then label), never free text. mode=confirm re-reads its witness.',
         input_schema: {
             type: 'object',
             required: ['id'],
             properties: {
                 id: { type: 'string', description: 'Node id `<relpath>#<sym>` or an exact label.' },
-                mode: { type: 'string', enum: ['node', 'confirm'], default: 'node' },
+                mode: { type: 'string', enum: ['node', 'confirm'] },
                 direction: {
                     type: 'string',
                     enum: ['in', 'out', 'both'],
                     default: 'both',
-                    description: '`in` = who reaches it, `out` = what it reaches.',
+                    description: 'in = who reaches it, out = what it reaches.',
                 },
-                depth: { type: 'integer', minimum: 1, maximum: 3, default: 1, description: 'Hop limit.' },
-                relation: {
-                    type: 'string',
-                    enum: RELATIONS,
-                    description: 'One relation only; omit for all.',
-                },
-                kind: { type: 'string', description: 'List only far ends of this node kind.' },
+                depth: { type: 'integer', maximum: 3 },
+                relation: { type: 'string', description: 'One relation only.' },
+                kind: { type: 'string', description: 'Far ends of this kind only.' },
             },
             additionalProperties: false,
         },
@@ -467,7 +463,10 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             // two places enforcing one band is how they drift apart.
             opts.depth = num(args, 'depth', 1);
             const rel = str(args, 'relation');
-            if ((RELATIONS as readonly string[]).includes(rel)) opts.relation = rel as Relation;
+            if (rel !== '' && !(RELATIONS as readonly string[]).includes(rel)) {
+                return { status: 'error', error: `unknown relation: ${rel}; one of ${RELATIONS.join(', ')}` };
+            }
+            if (rel !== '') opts.relation = rel as Relation;
             const kind = str(args, 'kind');
             if (kind !== '') opts.kind = kind;
             if (str(args, 'mode') === 'confirm') return confirmNode(root, id, staleness, args['direction'] === undefined ? undefined : opts.direction);
@@ -490,7 +489,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             properties: {
                 from: { type: 'string', description: 'Start node id, label, or free text.' },
                 to: { type: 'string', description: 'Goal node id, label, or free text.' },
-                budget: { type: 'integer', minimum: 1, default: 1500 },
+                budget: { type: 'integer' },
             },
             additionalProperties: false,
         },
