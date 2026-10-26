@@ -1,0 +1,11 @@
+/* Shared by the Interfaces, Impact and Agent pages: the design's chip tones and controls. */
+.st.rl-line { border: 1px solid var(--line2); color: var(--soft); }
+.st.rl-udash { border: 1px dashed var(--amber); color: var(--amberText); }
+.st.rl-rev { border: 1px solid var(--cyan); color: var(--cyanText); }
+.st.rl-brand { background: var(--brandTint); color: var(--brandText); }
+.rl-nd { margin-left: 0; font-family: var(--sans); color: var(--muted); align-self: center; }
+.rl-mini { height: 22px; padding: 0 8px; border-radius: 11px; border: 1px solid var(--line); background: var(--raise); color: var(--soft); font-size: 11px; }
+.rl-btn { height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--raise); color: var(--text); font-size: 12px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+.rl-btn.brand { border-color: var(--brandLine); background: var(--brandTint); font-weight: 600; }
+.rl-btn.nodata { color: var(--muted); }
+button.rl-btn:disabled { cursor: not-allowed; }
