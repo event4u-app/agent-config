@@ -105,13 +105,14 @@ async function open(file: string, hash = '#/data', width = 1440, scheme: 'dark' 
     await page.waitForFunction(() => (window as unknown as { __mapRoute?: unknown }).__mapRoute !== undefined);
     return page;
 }
-const item = (page: Page): Promise<string> => page.evaluate(() => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item);
 const waitItem = (page: Page, v: string): Promise<unknown> => page.waitForFunction((x) => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === x, v);
 
 beforeAll(async () => {
     html = await draw({ data: payload() });
     const p = payload();
-    bare = await draw({ data: { ...p, engine: undefined, actualSources: undefined, findings: [], tables: p.tables.map((tb) => ({ ...tb, columns: tb.columns.map((c) => ({ ...c, actual: undefined, code: undefined })) })) } as DataPayload });
+    const { engine: _e, actualSources: _a, ...rest } = p;
+    const stripped: DataPayload = { ...rest, findings: [], tables: p.tables.map((tb) => ({ ...tb, columns: tb.columns.map(({ actual: _x, code: _y, ...c }) => c) })) };
+    bare = await draw({ data: stripped });
     const { chromium } = await import('@playwright/test');
     browser = await chromium.launch({ headless: true });
 }, 120_000);
