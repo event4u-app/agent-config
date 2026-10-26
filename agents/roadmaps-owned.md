@@ -13,6 +13,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-setup-that-decides-itself | active | ready | A consumer never sets, reads or reasons about how the package loads its rule layer. |
 | road-to-a-step-that-costs-what-it-changes | active | ready | A roadmap step costs in proportion to its change, and nothing a step needs is skipped. |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe | active | ready | A global install stays on a supported, patched release without ever mutating a running session, moving a team's pin, or … |
+| road-to-edges-that-earn-their-target | active | ready | The native code graph stops stating guesses as facts. |
 | road-to-routing-assurance-live-floors | active | ready | Road to routing assurance — the live-harness floors |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
 | road-to-17-0-follow-ups | later | later | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
