@@ -352,7 +352,8 @@ renders from real facts or says why it has none.
       only, implied) are small icons on the line with a legend below the
       stage; clicking an icon opens a popup with the full information. Moving
       cards, panning and wheel-zoom work only while Ctrl/Cmd is held, so the
-      page scrolls normally; the zoom buttons work without it.
+      page scrolls normally; the zoom buttons work without it. The line mode
+      opens on "Fokus".
       verify: a browser test clicks a key with one FK, one soft and one implied
       link and finds the three highlighted columns with their line styles, no
       inline edge text, one icon per annotated edge and a popup that opens.
