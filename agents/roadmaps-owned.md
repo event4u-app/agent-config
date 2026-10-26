@@ -10,6 +10,7 @@ and keep the full search — this file only adds candidates to it.
 | slug | dir | status | owns |
 |---|---|---|---|
 | road-to-a-graph-that-wins | active | ready | Register before measuring; measure on repositories in the owner's stack that this repository does not own; publish both directions; and … |
+| road-to-a-map-the-agent-checks-before-it-acts | active | ready | AC keeps one map of a project — code, data, external interfaces, runtime, delivery — in one folder, `agents/map/`, rendered … |
 | road-to-a-setup-that-decides-itself | active | ready | A consumer never sets, reads or reasons about how the package loads its rule layer. |
 | road-to-a-step-that-costs-what-it-changes | active | ready | A roadmap step costs in proportion to its change, and nothing a step needs is skipped. |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe | active | ready | A global install stays on a supported, patched release without ever mutating a running session, moving a team's pin, or … |
