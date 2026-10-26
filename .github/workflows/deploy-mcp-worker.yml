@@ -40,7 +40,9 @@ jobs:
     permissions:
       contents: read
     outputs:
-      ref: ${{ steps.ref.outputs.ref }}
+      # The commit, not the name: a tag or branch that moves after this job
+      # cannot hand `deploy` code this job did not test.
+      sha: ${{ steps.sha.outputs.sha }}
     steps:
       - name: Resolve target ref
         id: ref
@@ -58,6 +60,10 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ steps.ref.outputs.ref }}
+
+      - name: Record the commit under test
+        id: sha
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
@@ -95,7 +101,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
-          ref: ${{ needs.verify.outputs.ref }}
+          ref: ${{ needs.verify.outputs.sha }}
           fetch-depth: 0
 
       - name: Setup Node
