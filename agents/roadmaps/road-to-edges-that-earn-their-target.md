@@ -108,9 +108,12 @@ more than one SCIP index is read.
       name, another source, or a stated mechanism are not.
       `corrected-from-reproduction`.
       verify: `npx vitest run tests/scripts/code_graph_resolution_discipline.test.ts -t 'compiler index'` -> 0
-- [ ] **2.2 More than one index.** Besides `<root>/index.scip`, read every `*.scip`
-      under a configured directory (one index per package in a monorepo), keeping
-      only documents whose path lies inside the root.
+- [x] **2.2 More than one index.** Besides `<root>/index.scip`, read every `*.scip`
+      the tree walk finds (one index per package in a monorepo), re-rooting each
+      document path at its index's directory and dropping any that lands outside
+      the root. Discovered by convention rather than a new settings key, which
+      `external-code-graph-interop` already names (`*.scip`).
+      `corrected-from-reproduction` — the supplied step said "configured directory".
       verify: `npx vitest run tests/scripts/code_graph_resolution_discipline.test.ts -t 'several scip'` -> 0
 
 ## Not carried here

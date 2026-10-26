@@ -5,9 +5,12 @@
  * reached by name from another file, a repo-wide lookup that bound the first of
  * several same-named declarations. Every test fails on that build.
  */
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { buildGraph, type SourceFile } from '../../src/scripts/code_graph/build.js';
+import { buildGraph, readScipIndexes, type SourceFile } from '../../src/scripts/code_graph/build.js';
 import { extractFile } from '../../src/scripts/code_graph/extract.js';
 import type { CodeGraph, Lang } from '../../src/scripts/code_graph/types.js';
 import { supersededByScip } from '../../src/scripts/code_graph/scip_reader.js';
@@ -208,5 +211,44 @@ describe('supersede by the compiler index (2.1)', () => {
         expect(superseded(edge('s.ts#go', 'c.ts#other', 'name-lookup'))).toBe(false);
         expect(superseded(edge('c.ts#other', 'b.ts#run', 'name-lookup'))).toBe(false);
         expect(superseded(edge('s.ts#go', 'b.ts#run', 'import-specifier', 'EXTRACTED'))).toBe(false);
+    });
+});
+
+describe('several scip indexes (2.2)', () => {
+    // Minimal protobuf for the SCIP subset the reader consumes: Index.documents
+    // (2) → Document.relative_path (1) + occurrences (2) → range (1), symbol (2).
+    const varint = (n: number): number[] => {
+        const out: number[] = [];
+        let v = n;
+        while (v > 0x7f) {
+            out.push((v & 0x7f) | 0x80);
+            v = Math.floor(v / 128);
+        }
+        out.push(v);
+        return out;
+    };
+    const field = (num: number, wire: number, payload: number[]): number[] => [
+        ...varint(num * 8 + wire),
+        ...(wire === 2 ? varint(payload.length) : []),
+        ...payload,
+    ];
+    const str = (t: string): number[] => [...Buffer.from(t, 'utf-8')];
+    const index = (docPaths: string[]): Buffer => {
+        const occ = [...field(1, 2, [0, 0, 5]), ...field(2, 2, str('sym x.'))];
+        const bytes = [...field(1, 2, str('metadata'))];
+        for (const p of docPaths) bytes.push(...field(2, 2, [...field(1, 2, str(p)), ...field(2, 2, occ)]));
+        return Buffer.from(bytes);
+    };
+
+    it('reads one index per package, re-rooted, and drops a path that escapes the root', () => {
+        const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cg-scips-')));
+        try {
+            fs.mkdirSync(path.join(root, 'packages', 'a'), { recursive: true });
+            fs.writeFileSync(path.join(root, 'index.scip'), index(['src/root.ts', '../outside.ts']));
+            fs.writeFileSync(path.join(root, 'packages', 'a', 'index.scip'), index(['src/x.ts']));
+            expect(readScipIndexes(root).map((d) => d.path)).toEqual(['src/root.ts', 'packages/a/src/x.ts']);
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
     });
 });

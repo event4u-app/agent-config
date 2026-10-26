@@ -1330,6 +1330,29 @@ export function extractorFingerprint(): string {
     return _fingerprint;
 }
 
+/**
+ * Every SCIP index in the tree, merged: the root `index.scip` and one per
+ * package in a monorepo. A SCIP document path is relative to its index's
+ * directory, so it is re-rooted there; one that would land outside the root
+ * is dropped, never followed.
+ */
+export function readScipIndexes(abs: string): ScipDocument[] {
+    const out: ScipDocument[] = [];
+    for (const full of discoverFiles(abs, new Set(['.scip'])).sort()) {
+        const dir = toPosixRel(abs, path.dirname(full));
+        try {
+            for (const d of readScipIndex(fs.readFileSync(full))) {
+                const p = path.posix.normalize(dir === '' ? d.path : `${dir}/${d.path}`);
+                if (p.startsWith('../') || p === '..' || path.posix.isAbsolute(p)) continue;
+                out.push({ ...d, path: p });
+            }
+        } catch (e) {
+            process.stderr.write(`code-graph: ${toPosixRel(abs, full)} not read — ${(e as Error).message}\n`);
+        }
+    }
+    return out;
+}
+
 /** Exported so `refresh` (cli.ts) can locate/seed/promote the sidecar next to
  * a temp `--out` path without duplicating the naming convention. */
 export function sidecarPath(cachePath: string): string {
@@ -1396,15 +1419,7 @@ export async function buildFromRepo(
         nextSidecar.files[f.path] = { hash, extract };
     }
 
-    const scipPath = path.join(abs, 'index.scip');
-    let scip: ScipDocument[] = [];
-    if (fs.existsSync(scipPath)) {
-        try {
-            scip = readScipIndex(fs.readFileSync(scipPath));
-        } catch (e) {
-            process.stderr.write(`code-graph: index.scip not read — ${(e as Error).message}\n`);
-        }
-    }
+    const scip = readScipIndexes(abs);
     const docs: SourceFile[] = [];
     for (const full of discoverFiles(abs, DOC_EXTS)) {
         try {
