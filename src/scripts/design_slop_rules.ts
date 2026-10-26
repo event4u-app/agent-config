@@ -35,7 +35,16 @@
  */
 
 export type Severity = "P0" | "P1" | "P2" | "P3";
-export type Engine = "css" | "html" | "jsx" | "copy";
+/**
+ * `render` reads the computed-style rows `ui:render` writes (`*.styles.json`,
+ * with box, visibility and ancestor chain), never a screenshot — the input
+ * class for tells only a rendered page shows (road-to-tells-a-near-miss-can-
+ * refute 2.3).
+ */
+export type Engine = "css" | "html" | "jsx" | "copy" | "render";
+
+/** One element of a `ui:render` styles capture. */
+export type StyleRow = Record<string, string>;
 
 export interface RawHit {
   line: number;
@@ -64,6 +73,8 @@ export interface RuleInput {
   lines: string[];
   ext: string; // e.g. ".css"
   ctx: DesignContext;
+  /** Present for the `render` engine only: the captured rows of one viewport. */
+  rows?: StyleRow[];
 }
 
 export interface SlopRule {
@@ -76,6 +87,13 @@ export interface SlopRule {
   message: string;
   /** suppress the rule entirely for this file when DESIGN.md declares intent */
   gated?: (ctx: DesignContext) => boolean;
+  /**
+   * Extensions this rule reads beyond its engines' own. The global engine map
+   * stays closed to `.ts` / `.js` (widening it put CP1 on code comments,
+   * measured 2026-10-26); a rule whose signal is code — an observer, a
+   * handler — opts in here (road-to-tells-a-near-miss-can-refute 2.4).
+   */
+  alsoExts?: string[];
   detect: (input: RuleInput) => RawHit[];
 }
 
@@ -616,5 +634,66 @@ export const SLOP_RULES: SlopRule[] = [
         .filter((b) => /\bimg\b/i.test(b.selector) && /:hover|:focus-within/i.test(b.selector))
         .filter((b) => /(?:^|[;{\s])(?:transform|filter)\s*:/i.test(b.body))
         .map((b) => ({ line: b.line, snippet: b.selector.slice(0, 80) })),
+  },
+  {
+    id: "slop-m6-scroll-reveal",
+    catalogId: "M6",
+    severity: "P2",
+    engines: ["jsx"],
+    alsoExts: [".ts", ".js", ".mjs"],
+    description: "IntersectionObserver used to fade or slide content into view on scroll",
+    message:
+      "A per-section reveal delays what the reader already scrolled to. Keep it only for a stepped narrative or a progress cue (M6).",
+    gated: (ctx) => ctx.has("scroll reveal", "stepped narrative"),
+    detect: ({ content }) => {
+      if (!/\bIntersectionObserver\b/.test(content)) return [];
+      // The reveal signature: the observer's effect is a visibility class or an
+      // opacity / transform change. Lazy-loading (setting a src) and a
+      // table-of-contents highlight set neither.
+      const reveal =
+        /classList\.(?:add|toggle)\(\s*["'`][\w-]*(?:reveal|visible|in-view|inview|fade|animate|show)[\w-]*["'`]/i.test(content) ||
+        /\.style\.(?:opacity|transform)\s*=/.test(content) ||
+        /data-(?:reveal|animate|aos)\b/i.test(content);
+      if (!reveal) return [];
+      const idx = content.search(/\bIntersectionObserver\b/);
+      return [{ line: lineOf(content, idx), snippet: "IntersectionObserver driving a reveal" }];
+    },
+  },
+  {
+    id: "slop-m8-hover-fade",
+    catalogId: "M8",
+    severity: "P2",
+    engines: ["css"],
+    description: "An interactive control that lowers its own opacity on hover",
+    message:
+      "A hover fade makes the target retreat at the moment of commitment. Respond with colour, weight or elevation instead (M8).",
+    detect: ({ content }) =>
+      cssBlocks(content)
+        .filter((b) => /:hover\b/.test(b.selector))
+        // A disabled or dismissed state may fade — the catalog's override.
+        .filter((b) => !/:disabled|\[aria-disabled|\[disabled|is-disabled|--disabled|dismiss|removing/i.test(b.selector))
+        .filter((b) => /\b(?:a|button|btn|link|\[role=["']?button|input|select|card|tab|chip)\b/i.test(b.selector))
+        .filter((b) => {
+          const m = /(?:^|[;{\s])opacity\s*:\s*(0?\.\d+|0)\b/i.exec(b.body);
+          return m !== null;
+        })
+        .map((b) => ({ line: b.line, snippet: b.selector.slice(0, 80) })),
+  },
+  {
+    id: "slop-v9-grain-over-gradient",
+    catalogId: "V9",
+    severity: "P3",
+    engines: ["css"],
+    description: "Noise or grain texture laid over a gradient surface",
+    message:
+      "Grain over a gradient is the generated-CSS-art 'premium' default. Keep it only as a documented brand surface (V9).",
+    gated: (ctx) => ctx.has("grain", "noise texture", "print-inspired"),
+    detect: ({ content }) => {
+      const grain = /feTurbulence|\bgrain\b|\bnoise\b/i;
+      const gradient = /(?:linear|radial|conic)-gradient\s*\(/i;
+      return cssBlocks(content)
+        .filter((b) => grain.test(b.body) && gradient.test(b.body))
+        .map((b) => ({ line: b.line, snippet: b.selector.slice(0, 80) }));
+    },
   },
 ];

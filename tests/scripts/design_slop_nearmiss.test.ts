@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { isBodySubject, SLOP_RULES } from '../../src/scripts/design_slop_rules.js';
 import { loadLabels, scoreAll } from '../../internal/bench/design-slop-nearmiss/run.js';
+import { scanFile } from '../../src/scripts/lint_design_slop.js';
 
 describe('the near-miss bar', () => {
     const result = scoreAll();
@@ -26,6 +27,20 @@ describe('the near-miss bar', () => {
 
     it('the registry is what the bar measured', () => {
         expect(result.rule_count).toBe(SLOP_RULES.length);
+    });
+});
+
+describe('scanner reach (2.4): code-signal rules read .ts, the rest do not', () => {
+    const ctx = { raw: '', has: () => false };
+    it('a reveal hook in a .ts file is M6', () => {
+        const hook =
+            "export function useReveal() { const io = new IntersectionObserver((es) => es.forEach((e) => e.target.classList.add('reveal-in'))); return io; }";
+        expect(scanFile(hook, 'useReveal.ts', ctx).map((f) => f.rule)).toEqual(['slop-m6-scroll-reveal']);
+    });
+
+    it('dashes in a .ts code comment are not copy', () => {
+        const code = '// one — two — three — four — five — six — seven — eight — nine — ten\nexport const x = 1;\n';
+        expect(scanFile(code, 'util.ts', ctx)).toEqual([]);
     });
 });
 

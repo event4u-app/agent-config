@@ -255,7 +255,7 @@ are listed in § Quality floors.
 | V6 | judgment-only | demoted 2026-10-26 at M1 = 1 on the near-miss holdout split: hatching that marks unavailable calendar slots is a state, not a background texture; not tuned against the holdout split |
 | V7 | judgment-only | DOM-structure nesting depth, measured too false-positive-prone |
 | V8 | backed | |
-| V9 | judgment-only | texture-over-gradient is a compositional judgment, and the pre-registered clean corpus contains no grain-over-gradient near-miss, so an M1 = 0 for a detector here would be a vacuous pass rather than measured precision |
+| V9 | backed | promoted 2026-10-26: M1 = 0 on both near-miss splits; grain on a flat colour stays clean, only grain composed with a gradient in one rule fires |
 | C1 | judgment-only | the tell is the combination *as the primary scheme*; which colours are primary is a judgment |
 | C2 | backed | |
 | C3 | backed | |
@@ -290,9 +290,9 @@ are listed in § Quality floors.
 | M3 | backed | |
 | M4 | backed | |
 | M5 | floor | reduced-motion alternative, Q4 |
-| M6 | judgment-only | two independent reasons, both measured: the scanner classifies no engine for plain `.ts` / `.js` (`lint_design_slop.ts` § enginesForExt), which is where a reveal hook normally lives; and the clean corpus contains zero `IntersectionObserver`, so an M1 = 0 would measure nothing. Promotion needs both closed first: a corpus carrying a legitimate near-miss for the signal, and a recorded decision on whether the scanner reaches `.ts` / `.js` |
-| M7 | judgment-only | same two reasons as M6: no engine for `.ts` / `.js`, and zero `mousemove` and zero `radial-gradient` in the clean corpus |
-| M8 | judgment-only | the corpus carries no `:hover { opacity }` at all, and its only `opacity` occurrences sit inside a `@keyframes` block, so it cannot separate a hover fade from a legitimate transition |
+| M6 | backed | promoted 2026-10-26: M1 = 0 on both near-miss splits (lazy-loading and table-of-contents observers stay clean); reads .ts/.js through the rule's own extension list, not a widened engine map — widening put CP1 on 4 code-comment files of this tree |
+| M7 | judgment-only | measured 2026-10-26: the near-miss corpus's inspection loupe (the override, "a canvas inspection tool") is a mousemove handler feeding a radial gradient — the same code an ambient spotlight is, so a detector cannot tell them apart |
+| M8 | backed | promoted 2026-10-26: M1 = 0 on both near-miss splits; a :disabled / aria-disabled / dismissing hover is the override and is not read |
 | CP1 | backed | |
 | CP2 | judgment-only | demoted 2026-10-26 at M1 = 1 on the near-miss tune split: "robust" and "leverage" as statistical terms pass the delete-test this entry names, and a phrase list cannot tell a term of art from a buzzword |
 | CP3 | judgment-only | copy phrase-list; that mechanism is council-rejected |

@@ -147,6 +147,25 @@ const FIXTURES: Record<string, { ext: string; positive: string; negative: string
       '@font-face{font-family:"Brand";src:url(/f/brand.woff2) format("woff2");font-display:swap}\n' +
       '@font-face{font-family:"Brand Fallback";src:local("Arial");size-adjust:104%;ascent-override:92%;descent-override:24%}',
   },
+  "slop-m6-scroll-reveal": {
+    ext: "jsx",
+    positive:
+      "useEffect(() => { const io = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && e.target.classList.add('is-visible'))); document.querySelectorAll('section').forEach((s) => io.observe(s)); }, []);",
+    // lazy-loading: the observer only sets a src
+    negative:
+      "useEffect(() => { const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) setSrc(props.src); }); io.observe(ref.current); }, []);",
+  },
+  "slop-m8-hover-fade": {
+    ext: "css",
+    positive: ".btn:hover { opacity: 0.7; }",
+    negative: ".btn:hover { background: var(--accent-hover); }\n.btn:disabled:hover { opacity: 0.45; }",
+  },
+  "slop-v9-grain-over-gradient": {
+    ext: "css",
+    positive:
+      ".hero { background-image: url(\"data:image/svg+xml,%3Csvg%3E%3CfeTurbulence/%3E%3C/svg%3E\"), linear-gradient(135deg, #1e1b4b, #7c3aed); }",
+    negative: ".paper { background-color: #f4efe6; background-image: url(\"data:image/svg+xml,%3CfeTurbulence/%3E\"); }",
+  },
   "slop-m3-img-hover-transform": {
     ext: "css",
     positive: ".tile:hover img{transform:scale(1.05)}",

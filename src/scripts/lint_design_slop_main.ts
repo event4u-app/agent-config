@@ -7,7 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
 import type { Severity } from "./design_slop_rules.js";
-import { loadDesignContext, scanFile, suppressions, wouldHaveSuppressed, type Finding } from "./lint_design_slop.js";
+import { loadDesignContext, scanFile, scanRender, suppressions, wouldHaveSuppressed, type Finding } from "./lint_design_slop.js";
 
 interface ProjectConfig {
   ignoreRules?: string[];
@@ -46,6 +46,31 @@ export function main(): void {
   const failIdx = args.indexOf("--fail-on");
   const failOn = (failIdx >= 0 ? args[failIdx + 1] : undefined) as Severity | undefined;
 
+  // --render <manifest.json>: the render-engine rules over a `ui:render` capture.
+  const renderIdx = args.indexOf("--render");
+  if (renderIdx >= 0) {
+    const manifestPath = path.resolve(args[renderIdx + 1] ?? "");
+    let manifest: { captures?: Array<{ viewport: string; styles: string }> };
+    try {
+      manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
+    } catch {
+      process.stderr.write(`[lint_design_slop] cannot read render manifest: ${manifestPath}\n`);
+      process.exit(1);
+    }
+    const ctx = loadDesignContext(process.cwd());
+    const findings: Finding[] = [];
+    for (const c of manifest.captures ?? []) {
+      const rows = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), c.styles), "utf-8"));
+      findings.push(...scanRender(rows, `${c.styles}`, ctx));
+    }
+    if ((manifest.captures ?? []).length === 0) {
+      process.stderr.write("[lint_design_slop] the render manifest holds no capture — nothing was checked\n");
+      process.exit(1);
+    }
+    process.stdout.write(jsonMode ? `${JSON.stringify({ findings }, null, 2)}\n` : findings.map((f) => `• [${f.severity} ${f.catalogId}] ${f.file}:${f.line} (${f.rule}) — ${f.message}\n     ${f.snippet}`).join("\n") + (findings.length ? "\n" : `✅  lint_design_slop --render: no render-engine tells in ${(manifest.captures ?? []).length} capture(s).\n`));
+    process.exit(0);
+  }
+
   if (!fs.existsSync(scanDir)) {
     if (!quiet) {
       process.stderr.write(`[lint_design_slop] scan directory not found: ${scanDir}\n`);
@@ -60,7 +85,7 @@ export function main(): void {
   const ignoreGlobs = config.ignoreFiles ?? [];
 
   const files: string[] = [];
-  for (const f of walkDir(scanDir, /\.(html|htm|css|scss|sass|less|vue|svelte|astro|jsx|tsx|md|mdx)$/i)) {
+  for (const f of walkDir(scanDir, /\.(html|htm|css|scss|sass|less|vue|svelte|astro|jsx|tsx|md|mdx|ts|js|mjs)$/i)) {
     if (!ignoreGlobs.some((g) => f.includes(g.replace("**", "")))) files.push(f);
   }
 

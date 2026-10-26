@@ -45,6 +45,7 @@ import {
   type DesignContext,
   type Engine,
   type Severity,
+  type StyleRow,
 } from "./design_slop_rules.js";
 import { ignoreReason } from "./_lib/ignore_reason.js";
 
@@ -165,6 +166,36 @@ function parseIgnores(lines: string[]): Map<string, Map<number, string | null>> 
   return ignores;
 }
 
+/**
+ * Run the `render`-engine rules over one viewport's captured rows. A text scan
+ * never reaches them: they need a rendered page, which only `ui:render` makes.
+ */
+export function scanRender(rows: StyleRow[], relPath: string, ctx: DesignContext): Finding[] {
+  const out: Finding[] = [];
+  for (const rule of SLOP_RULES) {
+    if (!rule.engines.includes("render")) continue;
+    if (rule.gated && rule.gated(ctx)) continue;
+    let hits;
+    try {
+      hits = rule.detect({ content: "", lines: [], ext: ".render", ctx, rows });
+    } catch {
+      continue;
+    }
+    for (const h of hits) {
+      out.push({
+        rule: rule.id,
+        catalogId: rule.catalogId,
+        severity: rule.severity,
+        file: relPath,
+        line: h.line,
+        snippet: h.snippet,
+        message: rule.message,
+      });
+    }
+  }
+  return out;
+}
+
 export function scanFile(
   content: string,
   relPath: string,
@@ -173,12 +204,13 @@ export function scanFile(
   const lines = content.split("\n");
   const ext = path.extname(relPath).toLowerCase();
   const fileEngines = enginesForExt(ext);
-  if (fileEngines.size === 0) return [];
+  const codeOnly = SLOP_RULES.some((r) => r.alsoExts?.includes(ext));
+  if (fileEngines.size === 0 && !codeOnly) return [];
   const ignores = parseIgnores(lines);
 
   const out: Finding[] = [];
   for (const rule of SLOP_RULES) {
-    if (!rule.engines.some((e) => fileEngines.has(e))) continue;
+    if (!rule.engines.some((e) => fileEngines.has(e)) && !rule.alsoExts?.includes(ext)) continue;
     if (rule.gated && rule.gated(ctx)) continue; // DESIGN.md declares intent → suppress
     if (rule.gated && ctx.legacyHas && rule.gated({ ...ctx, has: (...k: string[]) => ctx.legacyHas!(...k) !== null })) {
       // Report-only for one minor version: the old substring gate would have
