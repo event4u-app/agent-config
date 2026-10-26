@@ -33,16 +33,16 @@ planted, instead of being true only because nobody has written one.
 
 ## Phase 1 — Memory recall emits data, not instructions
 
-- [x] **1.1 Frame the quoted description as stored data.** `buildEmission`
+- [x] **1.1 Frame the quoted description as stored data.** `buildEmission` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/memory_recall_hook.ts -->
       quotes the memory's `description:` line after `It says:` with nothing
       telling the agent the text is data. Its siblings already do this
       (`hot_context_hook.ts:22`, `handoff_context_hook.ts:10`). Change the
       quote's lead-in so the emitted line names the text as stored data and not
       an instruction, inside the existing `CAP_BYTES` budget.
-      verify: `npx vitest run tests/scripts/memory_recall_hook.test.ts` — a
-      case asserts the framing words precede the quoted description, and the
+      verify: `npx vitest run tests/scripts/memory_recall_hook.test.ts` -> 0
+      — a case asserts the framing words precede the quoted description, and the
       existing cap test still holds.
-- [x] **1.2 Withhold an injection-shaped description.** Screen the description
+- [x] **1.2 Withhold an injection-shaped description.** Screen the description <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/memory_recall_hook.ts -->
       with the scanner the `injection-scan` concern already uses (`_scan` in
       `src/scripts/injection_scan_hook.ts`), not a second pattern list. On a
       hit, emit the pointer and the why-now, drop the quote, and say it was
@@ -51,21 +51,22 @@ planted, instead of being true only because nobody has written one.
       instruction yields an emission without that text and with the withheld
       note; neutralising the screen turns that test red (sensitivity), and
       restoring it turns it green.
-- [x] **1.3 Fit inside the hook-bundle ceiling without a raise.** The bundle
+- [x] **1.3 Fit inside the hook-bundle ceiling without a raise.** The bundle <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/memory_recall_hook.ts -->
       sat 55 bytes under its ceiling at `f9af88efe0`; offset this change's
       bytes inside the touched concern rather than adding a `raise_log` entry.
-      verify: `./scripts-run src/scripts/check_hook_bundle_composition` passes
-      with `max_bytes` unchanged.
+      verify: `./scripts-run src/scripts/check_hook_bundle_composition` -> 0
+      — with `max_bytes` unchanged.
 
 ## Phase 2 — The MCP server's no-listener property is pinned
 
-- [x] **2.1 Add a source invariant test for the MCP server.** Today nothing
+- [x] **2.1 Add a source invariant test for the MCP server.** Today nothing <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       fails if a network listener lands under `src/scripts/mcp_server/`: the
       only listener-shaped code in the MCP tests is a mock worker in
       `tests/scripts/mcp_parity_smoke.test.ts:90-103`. Add a test that scans
       the server's source files for a network bind (`listen(`, `createServer`,
       `0.0.0.0`) and fails on any hit.
-      verify: `npx vitest run` on the new test passes on the tree; planting a
+      verify: `npx vitest run tests/scripts/mcp_server_no_listener.test.ts` -> 0
+      on the tree; planting a
       `createServer(` line in a temporary copy of a server file turns it red.
 
 ## Decisions
