@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **632**
-- Edges (incl. self-WRITE): **2413**
+- Edges (incl. self-WRITE): **2414**
 
 ## READ_ONLY edges
 
@@ -911,6 +911,7 @@
 | `.agent-src.uncondensed/skills/data-flow-mapper/SKILL.md` | `.agent-src.uncondensed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/data-handling-judgment/SKILL.md` | `.agent-src.uncondensed/skills/contracts-cognition/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/data-handling-judgment/SKILL.md` | `.agent-src.uncondensed/skills/privacy-review/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/database/SKILL.md` | `.agent-src.uncondensed/skills/code-intelligence/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/database/SKILL.md` | `.agent-src.uncondensed/skills/source-discovery/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/dcf-modeling/SKILL.md` | `.agent-src.uncondensed/skills/okr-tree-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/dcf-modeling/SKILL.md` | `.agent-src.uncondensed/skills/rice-prioritization/SKILL.md` | `body_link` | 1 |

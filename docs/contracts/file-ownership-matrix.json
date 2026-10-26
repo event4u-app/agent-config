@@ -12314,6 +12314,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/database/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/code-intelligence/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/database/SKILL.md",
       "target": ".agent-src.uncondensed/skills/database/SKILL.md",
       "type": "WRITE",
       "via": "self",
