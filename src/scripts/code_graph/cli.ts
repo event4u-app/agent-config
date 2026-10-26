@@ -57,6 +57,12 @@
  *                                             partners, areas, columns,
  *                                             operations, pipelines), each fact
  *                                             with its witness
+ *   why <package[@version]>                   every path from a declaration to the
+ *                                             package, from the lockfiles (offline)
+ *   usage <package>                           the public names the code uses, of how
+ *                                             many — only with the package installed
+ *   remove-plan <package>                     call sites, non-import uses, dependents
+ *                                             and packages leaving with it: a proposal
  *   tests-for <symbol>                        test files importing the symbol
  *   untested  --diff <rev>                    changed symbols no test imports
  *   dead      [--entry-points F]              zero accepted in-edges, minus
@@ -170,6 +176,17 @@ import {
 } from './verbs.js';
 import { main as lineageMain } from './lineage_cli.js';
 import { graphChecksum } from './verify/owner_index.js';
+import {
+    removePlan as systemsRemovePlan,
+    type RemovePlan,
+    renderRemovePlan,
+    renderUsage as renderPackageUsage,
+    renderWhy,
+    usage as systemsUsage,
+    type UsageAnswer,
+    why as systemsWhy,
+    type WhyAnswer,
+} from './lanes/systems/verbs.js';
 import { overlayState, overlayView, readOverlay } from './verify/overlay.js';
 import { headSha, verifyPaths } from './verify/paths.js';
 import { renderShrink, shrinkCheck } from './verify/shrink_guard.js';
@@ -627,6 +644,36 @@ function cmdImpact(argv: string[]): number {
  * terms, each counted fact listed with its witness. Without `--diff` the
  * working tree is set against HEAD.
  */
+/** `why` / `usage` / `remove-plan <package>` — the systems lane's package answers. */
+function cmdSystems(sub: 'why' | 'usage' | 'remove-plan', argv: string[]): number {
+    const positional = argv.filter((a) => !a.startsWith('--') && !isFlagValue(argv, a));
+    const query = positional[0];
+    if (!query) {
+        process.stderr.write(`usage: code_graph/cli.ts ${sub} <package[@version]> [--json] [--graph P]\n`);
+        return 2;
+    }
+    const root = resolveRoot(argv);
+    const graphPath = flag(argv, '--graph') ?? cacheFor(root);
+    let g: CodeGraph;
+    try {
+        g = JSON.parse(fs.readFileSync(graphPath, 'utf-8')) as CodeGraph;
+    } catch {
+        process.stderr.write(`code-graph: no graph at ${shown(root, graphPath)} — run \`code-graph build\` first\n`);
+        return 1;
+    }
+    if (!g.nodes.some((n) => n.kind === 'package')) {
+        process.stderr.write('code-graph: the graph holds no package facts — no lockfile or manifest was read, or it was built without lanes\n');
+        return 1;
+    }
+    const answer = sub === 'why' ? systemsWhy(g, query) : sub === 'usage' ? systemsUsage(g, root, query) : systemsRemovePlan(g, query);
+    if (argv.includes('--json')) process.stdout.write(`${JSON.stringify(answer, null, 2)}\n`);
+    else {
+        const lines = sub === 'why' ? renderWhy(answer as WhyAnswer[]) : sub === 'usage' ? renderPackageUsage(answer as UsageAnswer[]) : renderRemovePlan(answer as RemovePlan[]);
+        process.stdout.write(`${lines.join('\n')}\n`);
+    }
+    return answer.length ? 0 : 1;
+}
+
 function cmdReviewRisk(argv: string[]): number {
     const root = resolveRoot(argv);
     const rev = flag(argv, '--diff') ?? 'HEAD';
@@ -1362,6 +1409,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'impact') return cmdImpact(argv.slice(1));
         if (sub === 'tests-for') return cmdTestsFor(argv.slice(1));
         if (sub === 'review-risk') return cmdReviewRisk(argv.slice(1));
+        if (sub === 'why' || sub === 'usage' || sub === 'remove-plan') return cmdSystems(sub, argv.slice(1));
         if (sub === 'untested') return cmdUntested(argv.slice(1));
         if (sub === 'dead') return cmdDead(argv.slice(1));
         if (sub === 'suggest-verb') return cmdSuggestVerb(argv.slice(1));
@@ -1375,7 +1423,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'estate') return estateMain(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|review-risk|tests-for|untested|dead|confirm|pack|rebuild-diff|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
+                'impact|review-risk|why|usage|remove-plan|tests-for|untested|dead|confirm|pack|rebuild-diff|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
         );
         return 2;
     } catch (e) {

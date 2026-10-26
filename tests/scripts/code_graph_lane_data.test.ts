@@ -181,7 +181,7 @@ describe('the actual-schema readers', () => {
 describe('the build runs every lane and survives a failing one', () => {
     it('reports each lane and merges their facts', async () => {
         const r = await buildFromRepo(DRIFT, null, { lanes: true });
-        expect(r.lanes?.runs.map((x) => x.lane).sort()).toEqual(['data', 'decisions', 'delivery', 'flows', 'history', 'interfaces', 'runtime']);
+        expect(r.lanes?.runs.map((x) => x.lane).sort()).toEqual(['data', 'decisions', 'delivery', 'flows', 'history', 'interfaces', 'runtime', 'systems']);
         expect(r.lanes?.runs.every((x) => x.error === undefined)).toBe(true);
         expect(r.graph.nodes.some((n) => n.kind === 'connection')).toBe(true);
     });

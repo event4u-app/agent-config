@@ -17,7 +17,7 @@
  */
 extendStrings({
     en: {
-        areaNames: { overview: 'Overview', code: 'Code', data: 'Data', interfaces: 'Interfaces', runtime: 'Runtime', delivery: 'Delivery', impact: 'Impact', agent: 'Agent', projects: 'Projects' },
+        areaNames: { overview: 'Overview', code: 'Code', data: 'Data', systems: 'Systems', interfaces: 'Interfaces', runtime: 'Runtime', delivery: 'Delivery', impact: 'Impact', agent: 'Agent', projects: 'Projects' },
         navLabel: 'Areas', noDataYet: 'No data yet', willShow: 'What this area shows once its reader ran',
         foundNothing: function (r) { return r + ' ran and found nothing'; }, reader: 'reader', completenessL: 'completeness',
         lowerBound: 'partial read — every count is a lower bound', unknownRead: 'unknown coverage — every count is a lower bound',
@@ -34,7 +34,7 @@ extendStrings({
         bannerLabel: 'Freshness'
     },
     de: {
-        areaNames: { overview: 'Übersicht', code: 'Code', data: 'Data', interfaces: 'Interfaces', runtime: 'Runtime', delivery: 'Delivery', impact: 'Impact', agent: 'Agent', projects: 'Projekte' },
+        areaNames: { overview: 'Übersicht', code: 'Code', data: 'Data', systems: 'Systeme', interfaces: 'Interfaces', runtime: 'Runtime', delivery: 'Delivery', impact: 'Impact', agent: 'Agent', projects: 'Projekte' },
         navLabel: 'Ebenen', noDataYet: 'Noch keine Daten', willShow: 'Was diese Ebene zeigt, sobald ihr Leser gelaufen ist',
         foundNothing: function (r) { return r + ' ist gelaufen und hat nichts gefunden'; }, reader: 'Leser', completenessL: 'Vollständigkeit',
         lowerBound: 'teilweise gelesen — jede Zahl ist eine Untergrenze', unknownRead: 'Abdeckung unbekannt — jede Zahl ist eine Untergrenze',
@@ -54,9 +54,10 @@ extendStrings({
 
 extendStrings({
     en: {
-        areaTitle: { data: 'Data · tables, keys, relations', interfaces: 'Interfaces · services and operations', runtime: 'Runtime · infrastructure and environments', delivery: 'Delivery · local environment and pipelines', impact: 'Impact · what a change reaches', agent: 'Agent · verbs and context pack', projects: 'Projects · this machine' },
+        areaTitle: { data: 'Data · tables, keys, relations', systems: 'Systems · runtimes, frameworks, packages', interfaces: 'Interfaces · services and operations', runtime: 'Runtime · infrastructure and environments', delivery: 'Delivery · local environment and pipelines', impact: 'Impact · what a change reaches', agent: 'Agent · verbs and context pack', projects: 'Projects · this machine' },
         areaWhat: {
             data: 'Tables, columns, keys and delete rules from migrations and models; ORM relations beside real foreign keys; drift between code, intended and actual schema — each fact with the file and line it was read from.',
+            systems: 'Runtimes with every witness side by side, frameworks and packages in their locked versions, why each package is installed, which files use it, uses without an import, and drift such as an unused or undeclared package.',
             interfaces: 'External services the code calls, their operations and parameters, the configuration names they are bound through, every call site, and drift against a contract in the tree.',
             runtime: 'Infrastructure resources from IaC files, which environment declares them, services with their images, ports and networks, and drift such as port collisions.',
             delivery: 'Workflows and jobs with their needs, the environments they deploy to, and the build → image → deploy chain.',
@@ -66,6 +67,7 @@ extendStrings({
         },
         noReader: {
             data: 'No schema reader ran on this tree: migrations, models and SQL dumps are not read into map.json yet.',
+            systems: 'No systems reader ran: lockfiles, manifests, version files and images are not read into map.json yet.',
             interfaces: 'No interface reader ran: HTTP clients, SOAP, GraphQL, gRPC and the contracts in the tree are not read into map.json yet.',
             runtime: 'No runtime reader ran: Compose files, Dockerfiles, Terraform and Kubernetes manifests are not read into map.json yet.',
             delivery: 'No delivery reader ran: CI workflows are not read into map.json yet.',
@@ -75,9 +77,10 @@ extendStrings({
         }
     },
     de: {
-        areaTitle: { data: 'Data · Tabellen, Schlüssel, Beziehungen', interfaces: 'Interfaces · Dienste und Operationen', runtime: 'Runtime · Infrastruktur und Umgebungen', delivery: 'Delivery · lokale Umgebung und Pipelines', impact: 'Impact · was eine Änderung erreicht', agent: 'Agent · Verben und Context-Pack', projects: 'Projekte · dieser Rechner' },
+        areaTitle: { data: 'Data · Tabellen, Schlüssel, Beziehungen', systems: 'Systeme · Runtimes, Frameworks, Pakete', interfaces: 'Interfaces · Dienste und Operationen', runtime: 'Runtime · Infrastruktur und Umgebungen', delivery: 'Delivery · lokale Umgebung und Pipelines', impact: 'Impact · was eine Änderung erreicht', agent: 'Agent · Verben und Context-Pack', projects: 'Projekte · dieser Rechner' },
         areaWhat: {
             data: 'Tabellen, Spalten, Schlüssel und Löschregeln aus Migrationen und Models; ORM-Beziehungen neben echten Fremdschlüsseln; Drift zwischen Code, geplantem und tatsächlichem Schema — jeder Fakt mit Datei und Zeile, aus der er gelesen wurde.',
+            systems: 'Runtimes mit jedem Nachweis nebeneinander, Frameworks und Pakete in ihrer gelockten Version, warum jedes Paket installiert ist, welche Dateien es nutzen, Nutzungen ohne Import und Drift wie ungenutzte oder nicht deklarierte Pakete.',
             interfaces: 'Externe Dienste, die der Code aufruft, ihre Operationen und Parameter, die Konfigurationsnamen, über die sie gebunden sind, jede Aufrufstelle und Drift gegen einen Vertrag im Baum.',
             runtime: 'Infrastruktur-Ressourcen aus IaC-Dateien, welche Umgebung sie deklariert, Dienste mit Images, Ports und Netzen, und Drift wie Port-Kollisionen.',
             delivery: 'Workflows und Jobs mit ihren needs, die Umgebungen, in die sie ausrollen, und die Kette Build → Image → Deploy.',
@@ -87,6 +90,7 @@ extendStrings({
         },
         noReader: {
             data: 'Auf diesem Baum ist kein Schema-Leser gelaufen: Migrationen, Models und SQL-Dumps werden noch nicht in map.json gelesen.',
+            systems: 'Kein Systems-Leser ist gelaufen: Lockfiles, Manifeste, Versionsdateien und Images werden noch nicht in map.json gelesen.',
             interfaces: 'Kein Schnittstellen-Leser ist gelaufen: HTTP-Clients, SOAP, GraphQL, gRPC und die Verträge im Baum werden noch nicht in map.json gelesen.',
             runtime: 'Kein Runtime-Leser ist gelaufen: Compose-Dateien, Dockerfiles, Terraform und Kubernetes-Manifeste werden noch nicht in map.json gelesen.',
             delivery: 'Kein Delivery-Leser ist gelaufen: CI-Workflows werden noch nicht in map.json gelesen.',
@@ -98,7 +102,7 @@ extendStrings({
 });
 
 var AREA_MODULES = Object.create(null);
-var KNOWLEDGE_IDS = ['data', 'interfaces', 'runtime', 'delivery', 'impact', 'agent'];
+var KNOWLEDGE_IDS = ['data', 'systems', 'interfaces', 'runtime', 'delivery', 'impact', 'agent'];
 var ROW_CAP = 200;
 var avState = { view: Object.create(null), pin: null, fly: false, pinL: null, flyL: false };
 

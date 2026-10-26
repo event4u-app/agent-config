@@ -43,6 +43,8 @@ import type {
     MapTour,
     RuntimePayload,
     SourceRung,
+    SystemsPackage,
+    SystemsPayload,
     Witness,
 } from './map_areas.js';
 import { loadGraph } from './query.js';
@@ -76,7 +78,7 @@ export interface ProduceOptions {
     cachePath?: string;
 }
 
-const LANES_OF_AREA = { data: 'data', interfaces: 'interfaces', runtime: 'runtime', delivery: 'delivery' } as const;
+const LANES_OF_AREA = { data: 'data', systems: 'systems', interfaces: 'interfaces', runtime: 'runtime', delivery: 'delivery' } as const;
 
 /** Whether a lane's reader ran in the build the graph came from, and why it merged nothing when it failed. */
 interface LaneState {
@@ -579,6 +581,93 @@ function runtimePayload(c: Ctx, findings: AreaFinding[], st: LaneState): Runtime
     };
 }
 
+// ---- systems -------------------------------------------------------------------
+
+const USED_BY_CAP = 20;
+
+function systemsPayload(c: Ctx, findings: AreaFinding[], st: LaneState): SystemsPayload | null {
+    const pkgs = c.graph.nodes.filter((n) => n.kind === 'package' && n.fact?.lane === 'systems');
+    const rts = c.graph.nodes.filter((n) => n.kind === 'runtime' && n.fact?.lane === 'systems');
+    if (!st.ran && pkgs.length === 0 && rts.length === 0) return null;
+    const label = (n: CodeNode | undefined): string => (n ? `${String(attr(n, 'name') ?? n.label)}@${String(attr(n, 'version') ?? '')}` : '?');
+    const reqOut = new Map<string, string[]>();
+    const reqIn = new Map<string, string[]>();
+    for (const e of c.graph.edges) {
+        if (e.relation !== 'requires') continue;
+        reqOut.set(e.source, [...(reqOut.get(e.source) ?? []), e.target]);
+        reqIn.set(e.target, [...(reqIn.get(e.target) ?? []), e.source]);
+    }
+    const shortestPath = (id: string): string[] => {
+        const prev = new Map<string, string | null>([[id, null]]);
+        const queue = [id];
+        while (queue.length) {
+            const cur = queue.shift() as string;
+            if (attr(c.byId.get(cur), 'direct') === true) {
+                const chain: string[] = [];
+                for (let x: string | null | undefined = cur; x; x = prev.get(x)) chain.push(label(c.byId.get(x)));
+                return chain;
+            }
+            for (const from of reqIn.get(cur) ?? []) {
+                if (prev.has(from)) continue;
+                prev.set(from, cur);
+                queue.push(from);
+            }
+        }
+        return [];
+    };
+    const packages: SystemsPackage[] = [];
+    for (const n of pkgs) {
+        const w = nodeWitness(c, n);
+        if (!w) continue;
+        const uses = (c.inn.get(n.id) ?? []).filter((e) => e.relation === 'uses');
+        const usedBy: SystemsPackage['usedBy'] = [];
+        for (const e of uses.slice(0, USED_BY_CAP)) {
+            const uw = edgeWitness(c, e);
+            if (uw) usedBy.push({ file: e.source, names: strs(e.fact?.attrs?.['names']), witness: uw });
+        }
+        packages.push({
+            id: n.id,
+            ecosystem: String(attr(n, 'ecosystem') ?? ''),
+            name: String(attr(n, 'name') ?? n.label),
+            version: String(attr(n, 'version') ?? ''),
+            dev: attr(n, 'dev') === true,
+            direct: attr(n, 'direct') === true,
+            framework: attr(n, 'framework') === true,
+            locked: attr(n, 'locked') !== false,
+            declared: strs(attr(n, 'declared')),
+            path: shortestPath(n.id),
+            requiredBy: (reqIn.get(n.id) ?? []).map((x) => label(c.byId.get(x))).sort(),
+            requires: (reqOut.get(n.id) ?? []).map((x) => label(c.byId.get(x))).sort(),
+            usedBy: usedBy.sort((a, b) => (a.file < b.file ? -1 : 1)),
+            usedByTotal: uses.length,
+            nonimport: strs(attr(n, 'nonimport')),
+            witness: w,
+        });
+    }
+    const runtimes: SystemsPayload['runtimes'] = [];
+    for (const n of rts) {
+        const ws: SystemsPayload['runtimes'][number]['witnesses'] = [];
+        for (const raw of strs(attr(n, 'witnesses'))) {
+            const m = /^(.*):(\d+) (\S+) (.*)$/.exec(raw);
+            if (!m) continue;
+            const w = witness(c, { file: m[1] as string, line: Number(m[2]), hash: null }, 'T1');
+            if (w) ws.push({ kind: m[3] as string, value: m[4] as string, witness: w });
+        }
+        if (ws.length) runtimes.push({ name: n.label, witnesses: ws, disagrees: attr(n, 'disagrees') === true });
+    }
+    const lockfiles = [...new Set(pkgs.flatMap((n) => strs(attr(n, 'lockfiles'))))].sort();
+    const order = (k: SystemsPackage): number => (k.framework ? 0 : k.direct ? 1 : 2);
+    return {
+        reader: 'systems lane (lockfiles, manifests, version files, images, CI)',
+        completeness: st.error !== undefined ? 'unknown' : 'complete',
+        ...(packages.length === 0 && runtimes.length === 0 ? { empty: emptyReason(st, 'no lockfile, manifest, version file or image was found') } : {}),
+        findings,
+        runtimes: runtimes.sort((a, b) => (a.name < b.name ? -1 : 1)),
+        packages: packages.sort((a, b) => order(a) - order(b) || (a.name < b.name ? -1 : a.name > b.name ? 1 : a.version < b.version ? -1 : 1)),
+        lockfiles,
+    };
+}
+
 // ---- delivery ------------------------------------------------------------------
 
 function deliveryPayload(c: Ctx, findings: AreaFinding[], st: LaneState): DeliveryPayload | null {
@@ -709,6 +798,9 @@ export const AGENT_VERBS: readonly AgentVerb[] = [
     { name: 'untested', answers: 'Changed symbols no test imports', cli: 'agent-config code-graph untested --diff <rev>', mcp: 'graph_impact (untested_only)', input: '--diff <rev>', output: 'changed symbols no test imports', guarantee: 'absence is reported against the indexed tests only' },
     { name: 'dead', answers: 'Symbols nothing reaches, refused where the graph cannot tell', cli: 'agent-config code-graph dead', mcp: 'graph_dead', input: 'the whole graph', output: 'symbols nothing reaches', guarantee: 'refuses where the graph cannot tell' },
     { name: 'review-risk', answers: 'A diff as a sum of terms — callers, entry points, flows, co-change partners, areas, columns, operations, pipelines — each fact with its witness', cli: 'agent-config code-graph review-risk [--diff <rev>]', mcp: 'graph_impact (review_risk)', input: '--diff <rev>', output: 'terms, count × weight, the sum', guarantee: 'every term is a fact with its witness; no model, no hidden term' },
+    { name: 'why', answers: 'Every path from a declaration to a package, read from the lockfiles', cli: 'agent-config code-graph why <package>', input: 'a package name, optionally @version', output: 'one line per path, root declaration first', guarantee: 'lockfiles only; no package manager runs' },
+    { name: 'usage', answers: 'Which of a package\'s public names the code uses, of how many', cli: 'agent-config code-graph usage <package>', input: 'a package name', output: 'the share, the call sites and the flows reaching them', guarantee: 'a share only with the package installed; otherwise "surface unknown"' },
+    { name: 'remove-plan', answers: 'What removing a package touches: call sites, non-import uses, dependents, packages leaving with it, tests', cli: 'agent-config code-graph remove-plan <package>', input: 'a package name', output: 'a proposal with witnesses', guarantee: 'never a verdict: dynamic use is invisible to a file reader' },
     { name: 'confirm', answers: 'Whether the witnesses of an answer still hold in the working tree: confirmed, moved, changed or gone', cli: 'agent-config code-graph confirm <id…>', mcp: 'graph_node (confirm)', input: 'fact ids, or --from-query <symbol>', output: 'confirmed, moved, changed or gone per witness', guarantee: 'reads the working tree, not the index' },
     { name: 'pack', answers: 'A verified context pack for a task within a token budget, each item at file:line', cli: 'agent-config code-graph pack "<task>"', mcp: 'graph_query (pack)', input: 'a task in words, a token budget', output: 'items with rank, reason and file:line, cut by rank at the budget', guarantee: 'each item re-read against the working tree before it is returned' },
 ];
@@ -848,6 +940,8 @@ export function produceAreas(root: string, graph: CodeGraph, opts: ProduceOption
     const dataLane = lane(LANES_OF_AREA.data);
     const data = dataPayload(c, byLane(LANES_OF_AREA.data), dataLane);
     if (data && (dataLane.ran || data.payload.tables.length)) areas.data = data.payload;
+    const systems = systemsPayload(c, byLane(LANES_OF_AREA.systems), lane(LANES_OF_AREA.systems));
+    if (systems) areas.systems = systems;
     const interfaces = interfacesPayload(c, byLane(LANES_OF_AREA.interfaces), lane(LANES_OF_AREA.interfaces));
     if (interfaces) areas.interfaces = interfaces;
     const runtime = runtimePayload(c, byLane(LANES_OF_AREA.runtime), lane(LANES_OF_AREA.runtime));

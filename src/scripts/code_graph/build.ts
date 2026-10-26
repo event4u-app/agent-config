@@ -27,6 +27,7 @@ import { readInterfaces } from './lanes/interfaces/index.js';
 import type { LaneOutput } from './lanes/lane_fact.js';
 import { type MergeRefusal, mergeLaneOutputs } from './lanes/merge.js';
 import { readRuntime } from './lanes/runtime/index.js';
+import { readSystems } from './lanes/systems/index.js';
 import { extractFile, type FileExtract, type RawEdge } from './extract.js';
 import { grammarWasmPath } from './loader.js';
 import { type PassReport, runPasses } from './passes.js';
@@ -526,7 +527,21 @@ export function buildGraph(
                 const hit =
                     sym.classByName.get(k(ex.lang, r.targetName)) ??
                     (sym.byName.get(k(ex.lang, r.targetName)) ?? []).find((id) => id.includes('#') && !id.includes('::'));
-                if (hit) imports.set(local, { target: hit, exact: false, via: 'name-lookup' });
+                // A namespace outside every PSR-4 prefix the project declares is
+                // not the same class as a same-named one inside a PSR-4 directory,
+                // whose name the directory fixes.
+                const bare = fq.replace(/^\\+/, '');
+                const foreign =
+                    ex.lang === 'php' &&
+                    bare.includes('\\') &&
+                    resolution.psr4.length > 0 &&
+                    !resolution.psr4.some((rule) => bare.startsWith(rule.prefix)) &&
+                    (!hit || resolution.psr4.some((rule) => rule.dirs.some((d) => (hit.split('#')[0] as string).startsWith(d))));
+                if (hit && !foreign) imports.set(local, { target: hit, exact: false, via: 'name-lookup' });
+                // A qualified name nothing in the tree declares is a vendor class:
+                // bind it by name, as a JS import binds its package, so the
+                // systems lane can tell which package the file uses.
+                else if (ex.lang === 'php' && bare.includes('\\') && (!hit || foreign)) imports.set(local, { target: `external:${bare}`, exact: true, via: 'import-specifier' });
                 continue;
             }
             if (ex.lang === 'csharp' && (namespaceFiles.get(spec)?.length ?? 0) > 1) continue;
@@ -800,7 +815,7 @@ export function buildGraph(
             const inRepo = resolveInScope(ex.file, heldName, 'any', ex.lang, true);
             const fq = importFq.get(ex.file)?.get(heldName);
             const receiver = fq !== undefined ? (held.has(fq) ? fq : null) : held.has(heldName) ? heldName : null;
-            if (receiver !== null && !(inRepo && isStatedResolution(inRepo.via))) {
+            if (receiver !== null && !(inRepo && isStatedResolution(inRepo.via) && !inRepo.target.startsWith('external:'))) {
                 emit({
                     source: r.sourceId,
                     target: `external:${receiver}::${r.targetName}`,
@@ -818,6 +833,19 @@ export function buildGraph(
         // edge is exactly as trustworthy as the class binding.
         if ((r.callStyle === 'scoped' || r.callStyle === 'dynamic') && r.scopeName) {
             const cls = resolveInScope(ex.file, r.scopeName, 'any', ex.lang, true);
+            // The file imports the class from outside the tree: the call leaves
+            // the repository, whatever in-repo method shares its name.
+            if (cls && isStatedResolution(cls.via) && cls.target.startsWith('external:')) {
+                emit({
+                    source: r.sourceId,
+                    target: `${cls.target.split('#')[0]}::${r.targetName}`,
+                    relation: 'calls',
+                    confidence: 'EXTRACTED',
+                    resolved_via: cls.via,
+                    provider: 'native',
+                });
+                return;
+            }
             const kind = cls ? nodeKind.get(cls.target) : undefined;
             if (cls && isStatedResolution(cls.via) && (kind === 'class' || kind === 'interface' || kind === 'enum')) {
                 const m = resolveHierMethod(cls.target, r.targetName);
@@ -1188,6 +1216,7 @@ export function runLaneReaders(
         history,
         run('decisions', () => readDecisions(root)),
         run('data', () => readData(root, graph, runtime ? { runtime } : {})),
+        run('systems', () => readSystems(root, { graph })),
     ].filter((o): o is LaneOutput => o !== null);
     const first = mergeLaneOutputs(graph, outputs);
     const flows = run('flows', () => buildFlows(first.graph, { root }));

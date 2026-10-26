@@ -15,6 +15,7 @@ import type { DriftRule } from './drift.js';
 import { DELIVERY_RULES } from './lanes/delivery/drift_rules.js';
 import { INTERFACE_DRIFT_RULES } from './lanes/interfaces/drift_rules.js';
 import { RUNTIME_RULES } from './lanes/runtime/drift_rules.js';
+import { SYSTEMS_RULES } from './lanes/systems/drift_rules.js';
 
 const FK_COLUMNS = { edge: 'references', kind: 'column', to_kind: 'column' } as const;
 
@@ -212,4 +213,4 @@ export const DRIFT_RULES: readonly DriftRule[] = [
 ];
 
 /** Every lane's table, in family order. */
-export const ALL_DRIFT_RULES: readonly DriftRule[] = [...DRIFT_RULES, ...INTERFACE_DRIFT_RULES, ...RUNTIME_RULES, ...DELIVERY_RULES];
+export const ALL_DRIFT_RULES: readonly DriftRule[] = [...DRIFT_RULES, ...INTERFACE_DRIFT_RULES, ...RUNTIME_RULES, ...DELIVERY_RULES, ...SYSTEMS_RULES];

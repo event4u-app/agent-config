@@ -68,7 +68,7 @@ export interface LaneAnnotation {
 }
 
 export interface LaneOutput {
-    lane: 'data' | 'interfaces' | 'runtime' | 'delivery' | 'history' | 'decisions' | 'flows';
+    lane: 'data' | 'interfaces' | 'runtime' | 'delivery' | 'history' | 'decisions' | 'flows' | 'systems';
     facts: LaneFact[];
     relations: LaneRelation[];
     annotations?: LaneAnnotation[];

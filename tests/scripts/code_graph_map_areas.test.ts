@@ -58,9 +58,10 @@ describe('the areas payload contract', () => {
         const lines = areaSummaryLines(sampleAreas());
         expect(lines).toHaveLength(KNOWLEDGE_AREA_IDS.length);
         expect(lines[0]).toMatch(/^- data: 2 tables, 1 foreign key, 1 relation, 1 finding — migration replay \(partial read: counts are lower bounds\)$/);
-        expect(lines[1]).toMatch(/^- interfaces: 1 service, 1 operation, 0 findings — http clients$/);
-        expect(lines[2]).toBe('- runtime: compose found nothing — no compose file in this tree');
-        expect(lines[4]).toBe('- impact: no data yet — no reader for this area ran on this tree');
+        expect(lines[1]).toBe('- systems: no data yet — no reader for this area ran on this tree');
+        expect(lines[2]).toMatch(/^- interfaces: 1 service, 1 operation, 0 findings — http clients$/);
+        expect(lines[3]).toBe('- runtime: compose found nothing — no compose file in this tree');
+        expect(lines[5]).toBe('- impact: no data yet — no reader for this area ran on this tree');
         expect(areaSummaryLines({}).every((l) => /no data yet/.test(l))).toBe(true);
     });
 });
@@ -214,9 +215,9 @@ describe('the shipped decisions stay in place under the new shell', () => {
         expect(html).not.toMatch(/Global ↗|\.event4u|estate/i);
     });
 
-    it('the wordmark is KNOWLEDGE MAP and the nav names the eight areas in order', () => {
+    it('the wordmark is KNOWLEDGE MAP and the nav names the nine areas in order', () => {
         expect(html).toContain('<div class="brand-name"><b>AGENT CONFIG</b><span>KNOWLEDGE MAP</span></div>');
         const routes = [...html.matchAll(/<a href="#\/(\w+)" data-route="\w+">/g)].map((m) => m[1]);
-        expect(routes).toEqual(['overview', 'code', 'data', 'interfaces', 'runtime', 'delivery', 'impact', 'agent']);
+        expect(routes).toEqual(['overview', 'code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'impact', 'agent']);
     });
 });

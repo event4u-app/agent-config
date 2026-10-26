@@ -423,6 +423,24 @@ function hubRail(p, sel, right) {
     right.appendChild(pad);
 }
 
+extendStrings({
+    en: { pVersions: 'Versions across projects', pVersionsNote: 'Direct packages and runtimes two or more projects run, as each one locks or declares them.', pDiffers: 'differs', pSame: 'same', pSubject: 'package / runtime' },
+    de: { pVersions: 'Versionen über Projekte', pVersionsNote: 'Direkte Pakete und Runtimes, die zwei oder mehr Projekte nutzen, so wie jedes sie lockt oder deklariert.', pDiffers: 'abweichend', pSame: 'gleich', pSubject: 'Paket / Runtime' }
+});
+/** The version matrix: one row per shared package or runtime, one column per registered project. */
+function hubVersions(p, main) {
+    var rows = p.versions || [];
+    if (!rows.length) return;
+    var sec = add(el('div', { class: 'ops-col tight' }), el('span', { class: 'cap' }, t('pVersions') + ' (' + rows.length + ')'), el('span', { class: 'ops-note' }, t('pVersionsNote')));
+    var ids = p.projects.map(function (x) { return x.id; });
+    main.appendChild(sec);
+    sec.appendChild(factTable('projects', [t('pSubject')].concat(ids.map(function (id) { return projName(p, id); })).concat(['']), rows.map(function (r) {
+        var at = Object.create(null);
+        r.uses.forEach(function (u) { at[u.project] = (at[u.project] ? at[u.project] + ', ' : '') + u.name; });
+        return { cells: [el('span', { class: 'mono' }, r.subject)].concat(ids.map(function (id) { return at[id] || '–'; })).concat([stChip(r.differs ? t('pDiffers') : t('pSame'), r.differs ? 'warn' : 'ok')]) };
+    })));
+}
+
 AREA_MODULES.projects = {
     tabs: [],
     railTitles: ['pRegistry', 'pEdge'],
@@ -439,12 +457,13 @@ AREA_MODULES.projects = {
         return out;
     },
     meta: function (p) { return t('pCount')(num(p.projects.length), num(p.projects.filter(function (x) { return x.indexed; }).length)); },
-    render: function (p, view, main) { hubGraph(p, {}, main); },
+    render: function (p, view, main) { hubGraph(p, {}, main); hubVersions(p, main); },
     page: function (p, view, key, c) {
         c.bar.classList.add('ops-empty');
         var sel = hubSelected(p, key);
         hubRegistry(p, c.left);
         hubGraph(p, sel, c.main);
+        hubVersions(p, c.main);
         hubRail(p, sel, c.right);
     }
 };

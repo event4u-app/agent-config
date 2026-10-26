@@ -54,21 +54,24 @@ export interface OverlayResult {
     lanes: { ran: string[]; failed: string[] };
 }
 
-type LaneReader = (root: string) => LaneOutput;
+type LaneReader = (root: string, graph?: CodeGraph) => LaneOutput;
 
 /** File-reading lanes, loaded on demand so a caller that never overlays never imports them. */
 async function laneReaders(): Promise<Record<string, LaneReader>> {
-    const [ifc, rt, dl, dc] = await Promise.all([
+    const [ifc, rt, dl, dc, sy] = await Promise.all([
         import('../lanes/interfaces/index.js'),
         import('../lanes/runtime/index.js'),
         import('../lanes/delivery/index.js'),
         import('../lanes/decisions/decisions.js'),
+        import('../lanes/systems/index.js'),
     ]);
     return {
         interfaces: (r) => ifc.readInterfaces(r),
         runtime: (r) => rt.readRuntime(r),
         delivery: (r) => dl.readDelivery(r),
         decisions: (r) => dc.readDecisions(r),
+        // the working graph's imports decide which packages the changed files use
+        systems: (r, g) => sy.readSystems(r, g ? { graph: g } : {}),
     };
 }
 
@@ -151,7 +154,7 @@ async function overlayOver(
             const read = readers[lane];
             if (!read) continue;
             try {
-                outputs.push(read(root));
+                outputs.push(read(root, wt));
                 lanes.ran.push(lane);
             } catch {
                 lanes.failed.push(lane);

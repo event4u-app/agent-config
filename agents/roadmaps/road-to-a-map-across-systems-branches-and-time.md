@@ -104,44 +104,44 @@ no absolute local path.
 
 ## Phase 1 — Systems: what runs and why
 
-- [ ] **1.1 Package graph from lockfiles.** npm v2/v3 (`dependencies`,
+- [x] **1.1 Package graph from lockfiles.** npm v2/v3 (`dependencies`,
       `optionalDependencies`, `peerDependencies`, dev flag), Composer
       (`require`, `require-dev`), pnpm (`importers`, `packages`/`snapshots`),
       yarn v1 and berry, `bun.lock`; `bun.lockb` and npm v1 are skipped with a
       reason. Facts `package:<eco>:<name>@<version>`; `requires` between
       packages; `declares` from the manifest that roots a package, with scope.
       verify: fixtures for each lockfile give the expected edges.
-- [ ] **1.2 Runtimes and frameworks.** One `runtime` fact per runtime with
+- [x] **1.2 Runtimes and frameworks.** One `runtime` fact per runtime with
       every witness side by side (declared, lockfile platform, image, CI,
       version file), never merged; a framework is a package flagged from a
       fixed list with its locked version.
       verify: a fixture with Dockerfile PHP 8.2 and `composer.json` `^8.3`
       yields both witnesses and one disagreement finding.
-- [ ] **1.3 Why installed.** `code-graph why <package>` lists every path from a
+- [x] **1.3 Why installed.** `code-graph why <package>` lists every path from a
       root declaration to the package, shortest first, bounded, offline.
       verify: the fixture answers a transitive package with its two paths.
-- [ ] **1.4 Where used.** JS through `external:`; PHP through each locked
+- [x] **1.4 Where used.** JS through `external:`; PHP through each locked
       package's `autoload` prefixes matched against the file's `use` names;
       non-import uses from manifest scripts, CI `run` lines naming a package
       binary, tool-config files and framework auto-discovery
       (`extra.laravel.providers`).
       verify: a package used only in a CI step is not reported unused.
-- [ ] **1.5 How much is used.** `code-graph usage <package>`: with the package
+- [x] **1.5 How much is used.** `code-graph usage <package>`: with the package
       installed, distinct used names ÷ public surface (JS type declarations or
       exports, PHP public classes under its autoload roots), with call sites
       and the flows reaching them; without, `surface unknown`.
       verify: installed and not-installed fixtures give a share and
       `surface unknown`.
-- [ ] **1.6 Removal plan.** `code-graph remove-plan <package>`: call sites,
+- [x] **1.6 Removal plan.** `code-graph remove-plan <package>`: call sites,
       config and script references, dependents that require it, packages that
       would leave with it — a proposal with witnesses, never a verdict.
       verify: the fixture lists the orphaned transitive package.
-- [ ] **1.7 Systems drift rules.** Used but undeclared, declared but unused
+- [x] **1.7 Systems drift rules.** Used but undeclared, declared but unused
       (after non-import uses), dev package in production code, runtime
       witnesses that disagree, one package in two majors across workspaces —
       as data in the one drift engine.
       verify: each rule has a red and a green fixture.
-- [ ] **1.8 Systems area and hub matrix.** A Systems area (runtimes →
+- [x] **1.8 Systems area and hub matrix.** A Systems area (runtimes →
       frameworks → packages → paths and call sites) and, in the hub, a version
       matrix across projects from name + version facts.
       verify: the map renders the area from the fixture; the hub test shows two

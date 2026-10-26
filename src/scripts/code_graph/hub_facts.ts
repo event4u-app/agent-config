@@ -2,7 +2,8 @@
  * Facts that only exist across projects (ADR-299, ADR-303): which registered
  * projects publish the same host port, run the same image, reach the same
  * external service, and which HTTP call in one project lands on a route of
- * another.
+ * another — and, from each project's lockfiles, which version of a package or
+ * a runtime each project runs.
  *
  * Everything here is read from files — each project's Compose files and code
  * through the runtime and interfaces lane readers, its routes from its own graph
@@ -18,6 +19,7 @@ import { graphHome } from './graph_home.js';
 import { readInterfaces } from './lanes/interfaces/index.js';
 import { type LaneOutput, spanHash, type Witness } from './lanes/lane_fact.js';
 import { readRuntime } from './lanes/runtime/index.js';
+import { readSystems } from './lanes/systems/index.js';
 
 export interface HubProjectInput {
     id: string;
@@ -70,8 +72,21 @@ export interface HubCall {
     candidates?: number;
 }
 
+/** One package or runtime two or more projects run, with each project's version. */
+export interface HubVersionRow {
+    /** `npm:<name>`, `composer:<name>` or `runtime:<name>` */
+    subject: string;
+    framework: boolean;
+    /** the uses' `name` is the version as that project locks or declares it */
+    uses: HubUse[];
+    /** true when the projects do not all run the same version */
+    differs: boolean;
+}
+
 export interface HubFacts {
     ports: HubPortCollision[];
+    /** absent in a hub written before the systems lane */
+    versions?: HubVersionRow[];
     images: HubSharedImage[];
     services: HubSharedService[];
     calls: HubCall[];
@@ -91,6 +106,8 @@ export interface HubReaders {
     runtime(root: string): LaneOutput;
     interfaces(root: string): LaneOutput;
     routes(project: HubProjectInput): HubRoute[];
+    /** absent in a reader set that predates the systems lane: no version rows */
+    systems?(root: string): LaneOutput;
 }
 
 const PARAM = /\{[^}]*\}|\$\{[^}]*\}|<[^>]*>|:[A-Za-z_]\w*/g;
@@ -187,6 +204,7 @@ export const DEFAULT_READERS: HubReaders = {
     runtime: (root) => readRuntime(root, { codeEnv: false }),
     interfaces: (root) => readInterfaces(root),
     routes: graphRoutes,
+    systems: (root) => readSystems(root),
 };
 
 function str(v: unknown): string | null {
@@ -205,6 +223,7 @@ export function hubFacts(projects: readonly HubProjectInput[], readers: HubReade
     const ports = new Map<string, HubPortCollision>();
     const images = new Map<string, HubSharedImage>();
     const services = new Map<string, HubSharedService>();
+    const versions = new Map<string, HubVersionRow>();
     const calls: HubCall[] = [];
     const routes: HubRoute[] = [];
     const skipped: HubFacts['skipped'] = [];
@@ -237,6 +256,21 @@ export function hubFacts(projects: readonly HubProjectInput[], readers: HubReade
                 if (!row.refs.includes(f.name)) row.refs.push(f.name);
                 images.set(repo, row);
             }
+        }
+        let sys: LaneOutput | null = null;
+        try {
+            sys = readers.systems ? readers.systems(p.root) : null;
+        } catch {
+            sys = null;
+        }
+        for (const f of sys?.facts ?? []) {
+            const direct = f.kind === 'package' && f.attrs['direct'] === true;
+            if (!direct && f.kind !== 'runtime') continue;
+            const subject = f.kind === 'runtime' ? `runtime:${f.name}` : `${String(f.attrs['ecosystem'])}:${String(f.attrs['name'])}`;
+            const version = f.kind === 'runtime' ? (Array.isArray(f.attrs['values']) ? (f.attrs['values'] as string[]).join(' / ') : '') : String(f.attrs['version'] ?? '');
+            const row = versions.get(subject) ?? { subject, framework: f.attrs['framework'] === true, uses: [], differs: false };
+            if (!row.uses.some((u) => u.project === p.id && u.name === version)) row.uses.push({ project: p.id, name: version, witness: f.witness });
+            versions.set(subject, row);
         }
         const ops = new Map<string, { service: string; method: string; path: string; protocol: string }>();
         for (const f of itf.facts) {
@@ -275,5 +309,7 @@ export function hubFacts(projects: readonly HubProjectInput[], readers: HubReade
         }
     }
     calls.sort((a, b) => a.project.localeCompare(b.project) || a.witness.file.localeCompare(b.witness.file) || a.witness.line - b.witness.line);
-    return { ports: grouped(ports), images: grouped(images), services: grouped(services), calls, skipped };
+    const versionRows = grouped(versions).map((r) => ({ ...r, differs: new Set(r.uses.map((u) => u.name)).size > 1 }));
+    versionRows.sort((a, b) => Number(b.framework) - Number(a.framework) || Number(b.differs) - Number(a.differs) || a.subject.localeCompare(b.subject));
+    return { ports: grouped(ports), versions: versionRows, images: grouped(images), services: grouped(services), calls, skipped };
 }

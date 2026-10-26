@@ -80,7 +80,8 @@ export type Relation =
     | 'contains'
     | 'builds'
     | 'delivers'
-    | 'consumes';
+    | 'consumes'
+    | 'requires';
 
 /** Fails to compile while `Relation` and the vocabulary file disagree. */
 type InSync<T extends true> = T;

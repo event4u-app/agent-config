@@ -15,12 +15,12 @@
  */
 
 /** Bump on any change to a kind, a relation or a direction. */
-export const VOCABULARY_VERSION = 2;
+export const VOCABULARY_VERSION = 3;
 
 /** Maximum kinds and relations a lane may own. */
 export const LANE_CAP = { kinds: 14, relations: 18 } as const;
 
-export const LANES = ['code', 'data', 'interfaces', 'runtime', 'delivery', 'history', 'decisions', 'flows'] as const;
+export const LANES = ['code', 'data', 'interfaces', 'runtime', 'delivery', 'history', 'decisions', 'flows', 'systems'] as const;
 export type Lane = (typeof LANES)[number];
 
 interface RelationDef {
@@ -34,7 +34,7 @@ export const VOCABULARY = {
         relations: {
             calls: { from: ['*', 'job', 'workflow'], to: ['*', 'workflow', 'action'] },
             imports: { from: ['*'], to: ['*'] },
-            uses: { from: ['*', 'job', 'workflow'], to: ['*', 'column', 'action', 'image'] },
+            uses: { from: ['*', 'job', 'workflow'], to: ['*', 'column', 'action', 'image', 'package'] },
             inherits: { from: ['*'], to: ['*'] },
             member: { from: ['*', 'table', 'service'], to: ['*', 'route', 'column', 'operation'] },
             tests: { from: ['*'], to: ['*'] },
@@ -107,6 +107,12 @@ export const VOCABULARY = {
     flows: {
         kinds: ['flow'],
         relations: {},
+    },
+    systems: {
+        kinds: ['package', 'runtime'],
+        relations: {
+            requires: { from: ['package'], to: ['package'] },
+        },
     },
 } as const satisfies Record<Lane, { kinds: readonly string[]; relations: Record<string, RelationDef> }>;
 

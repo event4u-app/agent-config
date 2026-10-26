@@ -52,7 +52,7 @@ describe('the Overview carries the design layers', () => {
     it('nine cards with the four rows each, in the design order', async () => {
         const page = await open(full, '#/overview');
         const names = await page.locator('.ocard > .between b').allTextContents();
-        expect(names).toEqual(['Code', 'Database', 'Integrations', 'Environment', 'CI/CD', 'Infrastructure', 'Knowledge · Memory', 'Impact', 'Projects']);
+        expect(names).toEqual(['Code', 'Database', 'Systems', 'Integrations', 'Environment', 'CI/CD', 'Infrastructure', 'Knowledge · Memory', 'Impact', 'Projects']);
         for (const card of await page.locator('.ocard').all()) {
             expect(await card.locator('.okv > span.muted').allTextContents()).toEqual(['indexed', 'source checked', 'coverage', 'findings']);
         }

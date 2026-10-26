@@ -12,9 +12,9 @@ extendStrings({
         oStateLegend: 'State per fact', oRungLegend: 'Provenance:', oRungs: 'T1 code · T2 dump/contract · T3 snapshot · T4 oracle', oFilters: { all: 'All layers', live: 'With data', none: 'Planned' },
         oIndexed: 'indexed', oConfirmed: 'source checked', oCoverage: 'coverage', oFindings: 'findings', oNever: 'never (index only)',
         oBadge: { live: 'active', empty: 'read, empty', none: 'no data yet', scope: 'own scope' },
-        oLayer: { code: 'Code', data: 'Database', interfaces: 'Integrations', env: 'Environment', ci: 'CI/CD', infra: 'Infrastructure', knowledge: 'Knowledge · Memory', impact: 'Impact', projects: 'Projects' },
+        oLayer: { code: 'Code', data: 'Database', systems: 'Systems', interfaces: 'Integrations', env: 'Environment', ci: 'CI/CD', infra: 'Infrastructure', knowledge: 'Knowledge · Memory', impact: 'Impact', projects: 'Projects' },
         oWhat: {
-            data: 'Tables, columns, FKs from code (C), migration (M), live (L), query (Q)', interfaces: 'REST, SOAP, GraphQL, webhooks, queues – callers, contracts, DTOs',
+            data: 'Tables, columns, FKs from code (C), migration (M), live (L), query (Q)', systems: 'Runtimes, frameworks, packages – why installed, where used', interfaces: 'REST, SOAP, GraphQL, webhooks, queues – callers, contracts, DTOs',
             env: 'Docker, Compose, ports, networks – declared vs. observed', ci: 'Workflows, jobs, needs, conditions (true/false/unknown)',
             infra: 'Terraform/HCL, plan, resources, review/stage/prod', knowledge: 'Roadmaps, contracts, memory, provenance – redacted',
             impact: 'Change preview across every layer with an evidence report', projects: 'Other projects – only in the global viewer, never in this file'
@@ -45,9 +45,9 @@ extendStrings({
         oStateLegend: 'Zustand je Fakt', oRungLegend: 'Herkunft:', oRungs: 'T1 Code · T2 Dump/Vertrag · T3 Snapshot · T4 Orakel', oFilters: { all: 'Alle Ebenen', live: 'Mit Daten', none: 'Geplant' },
         oIndexed: 'indiziert', oConfirmed: 'Quelle geprüft', oCoverage: 'Abdeckung', oFindings: 'Befunde', oNever: 'nie (nur Index)',
         oBadge: { live: 'aktiv', empty: 'gelesen, leer', none: 'noch keine Daten', scope: 'eigener Scope' },
-        oLayer: { code: 'Code', data: 'Database', interfaces: 'Integrations', env: 'Umgebung', ci: 'CI/CD', infra: 'Infrastruktur', knowledge: 'Knowledge · Memory', impact: 'Impact', projects: 'Projects' },
+        oLayer: { code: 'Code', data: 'Database', systems: 'Systems', interfaces: 'Integrations', env: 'Umgebung', ci: 'CI/CD', infra: 'Infrastruktur', knowledge: 'Knowledge · Memory', impact: 'Impact', projects: 'Projects' },
         oWhat: {
-            data: 'Tabellen, Spalten, FKs aus Code (C), Migration (M), Live (L), Query (Q)', interfaces: 'REST, SOAP, GraphQL, Webhooks, Queues – Aufrufer, Verträge, DTOs',
+            data: 'Tabellen, Spalten, FKs aus Code (C), Migration (M), Live (L), Query (Q)', systems: 'Runtimes, Frameworks, Pakete – warum installiert, wo genutzt', interfaces: 'REST, SOAP, GraphQL, Webhooks, Queues – Aufrufer, Verträge, DTOs',
             env: 'Docker, Compose, Ports, Netze – deklariert vs. beobachtet', ci: 'Workflows, Jobs, needs, Bedingungen (true/false/unbekannt)',
             infra: 'Terraform/HCL, Plan, Ressourcen, Review/Stage/Prod', knowledge: 'Roadmaps, Verträge, Memory, Provenienz – redigiert',
             impact: 'Change Preview über alle Ebenen mit Nachweisbericht', projects: 'Andere Projekte – nur im globalen Viewer, nie in dieser Datei'
@@ -126,6 +126,7 @@ function factState(counts, payload) {
 var OV_LAYERS = [
     { key: 'code', route: 'code' },
     { key: 'data', route: 'data', area: 'data' },
+    { key: 'systems', route: 'systems', area: 'systems' },
     { key: 'interfaces', route: 'interfaces', area: 'interfaces' },
     { key: 'env', route: 'delivery', area: 'runtime', prefix: 'service/', ids: ['service'] },
     { key: 'ci', route: 'delivery', area: 'delivery' },
