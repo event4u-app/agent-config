@@ -1,0 +1,57 @@
+{
+  "skill": "readme-writing-package",
+  "last_eval": "2026-10-26",
+  "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers a README for a reusable package or library: install, minimal usage, compatibility (EN + DE phrasings). Should-not-trigger covers the near-miss neighbors: an application README (readme-writing), reviewing a README (readme-reviewer), package publishing mechanics, API reference docs, and a changelog.",
+  "queries": [
+    {
+      "q": "write the README for our npm package",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "this composer library needs a README with install and a minimal example",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "rewrite the library README so a developer can get started in five minutes",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "schreib eine README für unser Paket mit Installation und Kompatibilität",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "document which PHP and Laravel versions the package supports in its README",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "write a README for our web app repository",
+      "trigger": false,
+      "class": "near-miss"
+    },
+    {
+      "q": "check this README for invented features",
+      "trigger": false,
+      "class": "near-miss"
+    },
+    {
+      "q": "publish the package to npm",
+      "trigger": false,
+      "class": "near-miss"
+    },
+    {
+      "q": "generate the API reference from the TypeScript types",
+      "trigger": false,
+      "class": "near-miss"
+    },
+    {
+      "q": "write the changelog for version 2.0",
+      "trigger": false,
+      "class": "near-miss"
+    }
+  ]
+}
