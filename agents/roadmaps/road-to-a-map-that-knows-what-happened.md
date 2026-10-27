@@ -309,12 +309,14 @@ signals are user-owned local files; disable per kind (O20). K.1-K.3 run before D
       frontmatter is locked; add `working_style` (when, do, don't, evidence
       count, last seen) by an ADR amendment before any code reads it.
       verify: `grep -c "working_style" docs/decisions/ADR-138-global-user-profile-layer.md` -> /^[1-9]/
+      > note: open: amending ADR-138 is a decision this lane does not take (the v1 profile frontmatter is locked); it needs the owner or the council.
 - [ ] **K.4b A place for working style** (H52). User: the profile's
       `working_style` list. Project and team: curated memory entries with paths
       plus `locked_keys` (O19). Promotion is always reviewed (O18); where a
       learning can be a deterministic check or script, that is the preferred
       target over prompt text.
       verify: `npx vitest run tests/scripts/working_style_accept.test.ts` -> 0
+      > note: open: waits on K.4a — no code may read `working_style` before the ADR-138 amendment exists.
 - [~] **K.5 Working style reaches the agent** (after D). Through the existing
       session-start loader and `ask`, ≤ 400 tok, ranked by recency ×
       corroboration; project entries only in their repo. Blocked by
@@ -333,6 +335,7 @@ signals are user-owned local files; disable per kind (O20). K.1-K.3 run before D
       derived index (FTS SQLite, twin); revoked items vanish from FTS; each
       kind can be switched off; message text is never stored.
       verify: `npx vitest run tests/scripts/user_delete_propagation.test.ts` -> 0
+      > note: open: view/export/delete with FTS propagation, tombstones, per-kind switches and the no-text guard ship for the user-home layout (`_lib/user_data_control.ts`); today's chat history and global observations are not yet moved there, so they are not covered, and no user-facing CLI exposes it yet.
 - [~] **K.8 Where it is seen** (after D). User learnings go into the
       machine-local hub payload (ADR-299); project learnings into the project
       map payload. The pages are `road-to-map-views-from-the-handover` Phases 5
