@@ -106,7 +106,7 @@ provenance `kind` field; `.build/bugs/` is disposable.
       signal. Always a candidate with method and witnesses, never ranked by
       author.
       verify: `npx vitest run tests/scripts/code_graph_bug_inducers.test.ts` -> 0
-- [ ] **H.5 Regression hypotheses through the graph** (owner's case). For a
+- [x] **H.5 Regression hypotheses through the graph** (owner's case). For a
       bug first seen in release R: changes merged in the window whose changed
       symbols reach the top in-app frames within k hops over `calls`, `uses`
       and `writes`→`reads` (O10). Ranked by hop distance, time to first seen,
