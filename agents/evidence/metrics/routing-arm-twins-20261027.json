@@ -1,0 +1,430 @@
+{
+  "schema": "routing-baseline/v1",
+  "captured_at": "2026-10-27T08:12:03.318Z",
+  "commit": "9e226440b6653348d409dab743b47439ab6c670c",
+  "host_version": "2.1.311",
+  "model": "claude-opus-5-5",
+  "protocol": {
+    "path": "agents/evidence/preregistration/routing-arms-protocol-20261027.md",
+    "sha256": "44a415ee1ba008eebff1488c7c1c152630db354224b0b89446a0cb0ad3992c53"
+  },
+  "catalogue_sha256": "1c967b175fc6d5d682db730ff12295e7a347126c107a50913ee8917f03577293",
+  "cost_usd": 5.3484542,
+  "partial": false,
+  "cases": [
+    {
+      "case": "001-analysis-autonomous-mode-q1",
+      "skill": "analysis-autonomous-mode",
+      "query_sha256": "ddbf78b4c7233a881f9426b6209635c64ab10b1f537d5e2eb31f21e90a17f72d",
+      "verdict": "fired",
+      "cost_usd": 0.161612,
+      "invoked": [
+        "analysis-autonomous-mode"
+      ],
+      "id": "q1",
+      "skill_sha256": "b4d050f641dbcb376b5756225c92bd5182cc052b83c6f9648f0226df26900278"
+    },
+    {
+      "case": "002-analysis-autonomous-mode-q2",
+      "skill": "analysis-autonomous-mode",
+      "query_sha256": "3f7cdd9c7786242912ec2f66cdc57992abb9308d50e425dcb96391c46bd09265",
+      "verdict": "fired",
+      "cost_usd": 0.1740394,
+      "invoked": [
+        "analysis-autonomous-mode"
+      ],
+      "id": "q2",
+      "skill_sha256": "b4d050f641dbcb376b5756225c92bd5182cc052b83c6f9648f0226df26900278"
+    },
+    {
+      "case": "003-analysis-autonomous-mode-q3",
+      "skill": "analysis-autonomous-mode",
+      "query_sha256": "926b057109461b001925bcd20737d8fa6780d117c4f0c9f26c01e4b79df8128b",
+      "verdict": "not-fired",
+      "cost_usd": 0.1309702,
+      "invoked": [],
+      "id": "q3",
+      "skill_sha256": "b4d050f641dbcb376b5756225c92bd5182cc052b83c6f9648f0226df26900278"
+    },
+    {
+      "case": "004-brand-q3",
+      "skill": "brand",
+      "query_sha256": "f85e7666546180e10fcfcd0b4350563bf055ab8c7716ba8ea24cc787bdc5468b",
+      "verdict": "fired",
+      "cost_usd": 0.2025324,
+      "invoked": [
+        "brand"
+      ],
+      "id": "q3",
+      "skill_sha256": "2f14fb9a3a607a724ee53621891412728d9baa328587fd50aa546344af47d7e2"
+    },
+    {
+      "case": "005-brand-q5",
+      "skill": "brand",
+      "query_sha256": "c5b32602aff89b041d3bfb28be615819537a54156df6c43847b510aa8d796d46",
+      "verdict": "fired",
+      "cost_usd": 0.2197122,
+      "invoked": [
+        "brand"
+      ],
+      "id": "q5",
+      "skill_sha256": "2f14fb9a3a607a724ee53621891412728d9baa328587fd50aa546344af47d7e2"
+    },
+    {
+      "case": "006-brand-q2",
+      "skill": "brand",
+      "query_sha256": "e9a08d00cfde55f15f051d650d6ac233acb92a74c79ef47957a4b558bceb6ed3",
+      "verdict": "fired",
+      "cost_usd": 0.2676722,
+      "invoked": [
+        "brand"
+      ],
+      "id": "q2",
+      "skill_sha256": "2f14fb9a3a607a724ee53621891412728d9baa328587fd50aa546344af47d7e2"
+    },
+    {
+      "case": "007-condense-memory-q1",
+      "skill": "condense-memory",
+      "query_sha256": "1eed7310c89eefecbac06bb6bda2594651ed74a5cc25d6faba1fcf5eb810cdad",
+      "verdict": "fired",
+      "cost_usd": 0.2201114,
+      "invoked": [
+        "condense-memory"
+      ],
+      "id": "q1",
+      "skill_sha256": "79c2dee9daed653d4ddd37257bcf07026bc9d4e0479f0ded0e16996eebe6b724"
+    },
+    {
+      "case": "008-condense-memory-q2",
+      "skill": "condense-memory",
+      "query_sha256": "cb9762a54aebe83a4c28c6af7109ea433d97fc0926d4dc3c151fffffd655f258",
+      "verdict": "fired",
+      "cost_usd": 0.1909444,
+      "invoked": [
+        "condense-memory"
+      ],
+      "id": "q2",
+      "skill_sha256": "79c2dee9daed653d4ddd37257bcf07026bc9d4e0479f0ded0e16996eebe6b724"
+    },
+    {
+      "case": "009-condense-memory-q3",
+      "skill": "condense-memory",
+      "query_sha256": "3445f2248e0e517654b79cc9ee04a7b48c2b52d0cbf52971497022d11f3139ae",
+      "verdict": "fired",
+      "cost_usd": 0.18884700000000001,
+      "invoked": [
+        "condense-memory"
+      ],
+      "id": "q3",
+      "skill_sha256": "79c2dee9daed653d4ddd37257bcf07026bc9d4e0479f0ded0e16996eebe6b724"
+    },
+    {
+      "case": "010-dashboard-design-dd-e1",
+      "skill": "dashboard-design",
+      "query_sha256": "76ab9041557baaab1c32613b3b537547d66dcad13e6a0afd77e3d3d8d12cfb61",
+      "verdict": "fired",
+      "cost_usd": 0.1967768,
+      "invoked": [
+        "dashboard-design"
+      ],
+      "id": "dd-e1",
+      "skill_sha256": "f8a53c6b3e6dc17cbfceea263d281e5fb7d423010b803aa63f545914d1a4120b"
+    },
+    {
+      "case": "011-dashboard-design-dd-e6",
+      "skill": "dashboard-design",
+      "query_sha256": "6b0d9182c43d4fb46d1a368aa90e1f31f28b97de4345ae32ae87fcb9a44d8347",
+      "verdict": "fired",
+      "cost_usd": 0.20686279999999999,
+      "invoked": [
+        "dashboard-design"
+      ],
+      "id": "dd-e6",
+      "skill_sha256": "f8a53c6b3e6dc17cbfceea263d281e5fb7d423010b803aa63f545914d1a4120b"
+    },
+    {
+      "case": "012-dashboard-design-dd-e4",
+      "skill": "dashboard-design",
+      "query_sha256": "cb8514429212cf68f15da36379867b1e6d2dffddc1ee73b254902905f3622d11",
+      "verdict": "fired",
+      "cost_usd": 0.1777782,
+      "invoked": [
+        "dashboard-design"
+      ],
+      "id": "dd-e4",
+      "skill_sha256": "f8a53c6b3e6dc17cbfceea263d281e5fb7d423010b803aa63f545914d1a4120b"
+    },
+    {
+      "case": "013-judge-injection-defense-q5",
+      "skill": "judge-injection-defense",
+      "query_sha256": "d67c80c130b0e8c1680f3527f2e4a6d34a6777e07ed08fe5fe69fa5bb0da1ef8",
+      "verdict": "fired",
+      "cost_usd": 0.15374480000000001,
+      "invoked": [
+        "judge-injection-defense"
+      ],
+      "id": "q5",
+      "skill_sha256": "0dece99cc4ddd5b7800e726b5460d407c9e5341266f4934d99eec5c85a7c1ca6"
+    },
+    {
+      "case": "014-judge-injection-defense-q3",
+      "skill": "judge-injection-defense",
+      "query_sha256": "11f9af63b0f30df5244a8e4a53897594224203220598861f7db3828f7bf7aa45",
+      "verdict": "not-fired",
+      "cost_usd": 0.1308444,
+      "invoked": [],
+      "id": "q3",
+      "skill_sha256": "0dece99cc4ddd5b7800e726b5460d407c9e5341266f4934d99eec5c85a7c1ca6"
+    },
+    {
+      "case": "015-judge-injection-defense-q1",
+      "skill": "judge-injection-defense",
+      "query_sha256": "b22866696a64cc7b2fe9573d10ba82ef6986a2d84a2b75f5d86646a8fac4886a",
+      "verdict": "not-fired",
+      "cost_usd": 0.13194820000000002,
+      "invoked": [],
+      "id": "q1",
+      "skill_sha256": "0dece99cc4ddd5b7800e726b5460d407c9e5341266f4934d99eec5c85a7c1ca6"
+    },
+    {
+      "case": "016-market-entry-analysis-mea-e1",
+      "skill": "market-entry-analysis",
+      "query_sha256": "847c36f5748174305f424d43feaa990560e6224ddec86ce013c29c180eefb2fb",
+      "verdict": "fired",
+      "cost_usd": 0.192904,
+      "invoked": [
+        "market-entry-analysis"
+      ],
+      "id": "mea-e1",
+      "skill_sha256": "8d2f5c7481037ef05000e913e554000ec0269ed72fc6196a1445ac49d4686eba"
+    },
+    {
+      "case": "017-market-entry-analysis-mea-e2",
+      "skill": "market-entry-analysis",
+      "query_sha256": "0626e608308cea5bfe422b7d7e6e85b714d28570de4732f8c183e65cd3940a28",
+      "verdict": "not-fired",
+      "cost_usd": 0.143564,
+      "invoked": [],
+      "id": "mea-e2",
+      "skill_sha256": "8d2f5c7481037ef05000e913e554000ec0269ed72fc6196a1445ac49d4686eba"
+    },
+    {
+      "case": "018-market-entry-analysis-mea-e3",
+      "skill": "market-entry-analysis",
+      "query_sha256": "7502dad22831ed463fff976094699e845f5e8b1ab073eed44c17a73a1d926274",
+      "verdict": "fired",
+      "cost_usd": 0.18491280000000002,
+      "invoked": [
+        "market-entry-analysis"
+      ],
+      "id": "mea-e3",
+      "skill_sha256": "8d2f5c7481037ef05000e913e554000ec0269ed72fc6196a1445ac49d4686eba"
+    },
+    {
+      "case": "019-positioning-strategy-ps-e2",
+      "skill": "positioning-strategy",
+      "query_sha256": "0fcb3c18657e2cb387f20ef50d24e27b54544cddee6cf6f7265fa10e5e5e39d8",
+      "verdict": "fired",
+      "cost_usd": 0.1697222,
+      "invoked": [
+        "positioning-strategy"
+      ],
+      "id": "ps-e2",
+      "skill_sha256": "bce74bad2987761e9c2dc5a075ac2dc1cb8fd5d0a7389b8f5deadbb626495727"
+    },
+    {
+      "case": "020-positioning-strategy-ps-e4",
+      "skill": "positioning-strategy",
+      "query_sha256": "367b5cb2aba2df319215328718d8e982881282ef6202e8c846f06b198c8e94f0",
+      "verdict": "not-fired",
+      "cost_usd": 0.1396058,
+      "invoked": [],
+      "id": "ps-e4",
+      "skill_sha256": "bce74bad2987761e9c2dc5a075ac2dc1cb8fd5d0a7389b8f5deadbb626495727"
+    },
+    {
+      "case": "021-positioning-strategy-ps-e1",
+      "skill": "positioning-strategy",
+      "query_sha256": "008a63ae98205a903245e8ac146e0223d170b22aa2e3e637f9bb205e4c8363e2",
+      "verdict": "fired",
+      "cost_usd": 0.1733208,
+      "invoked": [
+        "positioning-strategy"
+      ],
+      "id": "ps-e1",
+      "skill_sha256": "bce74bad2987761e9c2dc5a075ac2dc1cb8fd5d0a7389b8f5deadbb626495727"
+    },
+    {
+      "case": "022-roadmap-management-q2",
+      "skill": "roadmap-management",
+      "query_sha256": "12d44654162f6fcd10b93a93ddfc3dac484a3ba600a1a9b7403cf98a3433fa62",
+      "verdict": "fired",
+      "cost_usd": 0.18277720000000003,
+      "invoked": [
+        "roadmap-management"
+      ],
+      "id": "q2",
+      "skill_sha256": "0685c88b6871e23e981105c62b5e482d2165b52ff5bcc8ab725fc02401c6e11d"
+    },
+    {
+      "case": "023-roadmap-management-q4",
+      "skill": "roadmap-management",
+      "query_sha256": "876fe4daba572e88a76edaff8b2bbe1b26bdd5507325d1265bc1f3dab4ddb710",
+      "verdict": "fired",
+      "cost_usd": 0.2288448,
+      "invoked": [
+        "roadmap-management"
+      ],
+      "id": "q4",
+      "skill_sha256": "0685c88b6871e23e981105c62b5e482d2165b52ff5bcc8ab725fc02401c6e11d"
+    },
+    {
+      "case": "024-roadmap-management-q3",
+      "skill": "roadmap-management",
+      "query_sha256": "6f5debaa9a825adc28103d5f3fee3da9005edad106023ca26c9162ffb92e6e34",
+      "verdict": "fired",
+      "cost_usd": 0.17789919999999998,
+      "invoked": [
+        "roadmap-management"
+      ],
+      "id": "q3",
+      "skill_sha256": "0685c88b6871e23e981105c62b5e482d2165b52ff5bcc8ab725fc02401c6e11d"
+    },
+    {
+      "case": "025-schema-review-q4",
+      "skill": "schema-review",
+      "query_sha256": "8fdcdaf608316e91b365f0b438880f37f6f7d3555c5a03d557cfc8ffe0db1c24",
+      "verdict": "fired",
+      "cost_usd": 0.163366,
+      "invoked": [
+        "schema-review"
+      ],
+      "id": "q4",
+      "skill_sha256": "00b55f85a67a3a85ef16b40b34d2457c357da4e9ef56c0f2fda710d8ceeba9cb"
+    },
+    {
+      "case": "026-schema-review-q3",
+      "skill": "schema-review",
+      "query_sha256": "8839b9bac5cb0e74a594257655985aa4214606527febf476059e8f2816826e67",
+      "verdict": "not-fired",
+      "cost_usd": 0.153015,
+      "invoked": [],
+      "id": "q3",
+      "skill_sha256": "00b55f85a67a3a85ef16b40b34d2457c357da4e9ef56c0f2fda710d8ceeba9cb"
+    },
+    {
+      "case": "027-schema-review-q1",
+      "skill": "schema-review",
+      "query_sha256": "3c93cad823430f99e67a302f3468aa1c7f5e10d4c563dbe3bb142be084dd79e7",
+      "verdict": "not-fired",
+      "cost_usd": 0.13931919999999998,
+      "invoked": [],
+      "id": "q1",
+      "skill_sha256": "00b55f85a67a3a85ef16b40b34d2457c357da4e9ef56c0f2fda710d8ceeba9cb"
+    },
+    {
+      "case": "028-worktree-lifecycle-q2",
+      "skill": "worktree-lifecycle",
+      "query_sha256": "6c93b84f50e8ae204e4aaa4185916ab7355cc914541732dfa58ad3227c5fac79",
+      "verdict": "fired",
+      "cost_usd": 0.21742800000000004,
+      "invoked": [
+        "worktree-lifecycle"
+      ],
+      "id": "q2",
+      "skill_sha256": "05cbc409d0d1941d6b3709252a381c0f64fb79cebea2aff772f6ae474ee4469b"
+    },
+    {
+      "case": "029-worktree-lifecycle-q5",
+      "skill": "worktree-lifecycle",
+      "query_sha256": "6849e561ac0e8bd0f2441186af00b415906fd97e7dc13ded04a87bf0ed4d3db8",
+      "verdict": "not-fired",
+      "cost_usd": 0.157864,
+      "invoked": [],
+      "id": "q5",
+      "skill_sha256": "05cbc409d0d1941d6b3709252a381c0f64fb79cebea2aff772f6ae474ee4469b"
+    },
+    {
+      "case": "030-worktree-lifecycle-q4",
+      "skill": "worktree-lifecycle",
+      "query_sha256": "c608b5720e1cd9fc68ba37d928bcfca68cff2c43968cb7a0b5e5790e9e124f2c",
+      "verdict": "not-fired",
+      "cost_usd": 0.16951480000000002,
+      "invoked": [],
+      "id": "q4",
+      "skill_sha256": "05cbc409d0d1941d6b3709252a381c0f64fb79cebea2aff772f6ae474ee4469b"
+    }
+  ],
+  "units": [
+    {
+      "unit": "analysis-autonomous-mode",
+      "n": 3,
+      "fired": 2,
+      "unknown": 0,
+      "recall": 0.6666666666666666
+    },
+    {
+      "unit": "brand",
+      "n": 3,
+      "fired": 3,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "condense-memory",
+      "n": 3,
+      "fired": 3,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "dashboard-design",
+      "n": 3,
+      "fired": 3,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "judge-injection-defense",
+      "n": 3,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 0.3333333333333333
+    },
+    {
+      "unit": "market-entry-analysis",
+      "n": 3,
+      "fired": 2,
+      "unknown": 0,
+      "recall": 0.6666666666666666
+    },
+    {
+      "unit": "positioning-strategy",
+      "n": 3,
+      "fired": 2,
+      "unknown": 0,
+      "recall": 0.6666666666666666
+    },
+    {
+      "unit": "roadmap-management",
+      "n": 3,
+      "fired": 3,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "schema-review",
+      "n": 3,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 0.3333333333333333
+    },
+    {
+      "unit": "worktree-lifecycle",
+      "n": 3,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 0.3333333333333333
+    }
+  ]
+}
