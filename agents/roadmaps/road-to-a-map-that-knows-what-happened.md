@@ -184,11 +184,13 @@ database stays closed (ADR-094, T3).
       into the layout; keep the collector parked; decide
       `session_memory_index` and the second-brain store per O12.
       verify: `./scripts-run src/scripts/check_source_registry --orphans` -> 0
+      > note: open: `--orphans` exits 1 on runtime-journal (written, never read), whose disposition is O12 (owner-reserved, b-owner-reserved-stores); the intake-stream merge and the quarantine move change the agents-layout contract and the three writers, left for a dedicated change.
 - [ ] **I.5b Retire stores — owner-reserved part.** Retire the journal, any
       store O12 names for retirement; show `map-outcomes` through J.9.
       Executes only after the owner decides O12. Blocked by
       `b-owner-reserved-stores`.
       verify: `./scripts-run src/scripts/check_source_registry --count` -> /stores: \d+ \(-\d+\)/
+      > note: open: blocked by b-owner-reserved-stores (O12 is owner-reserved); `--count` prints the active and retired store counts once rows are retired.
 - [~] **I.6 Memory in the map** (after D and I.2). Per file: memory entries
       about it, validity, lookup hits; the Overview's fixed string becomes a
       measured state. Blocked by `b-stage-d-measurement`.
@@ -207,7 +209,7 @@ are ≤ 2,000 tok. Rollback: the envelope is additive; revert per verb. J.1-J.6,
 J.7a and J.9 run before D (P-3 exception O17); J.4 must exist because D's arms
 use it.
 
-- [ ] **J.1 One answer envelope** (H49). `answer`, `counts{shown,total,
+- [x] **J.1 One answer envelope** (H49). `answer`, `counts{shown,total,
       text_only}`, `complete`, `truncated_by`, `confidence`, `witness{generation,
       commit,staleness,confirm}`, `evidence` (≤ 5 `file:line`), `next` (≤ 3
       commands), and a content-addressed `packet_id` with TTL for hand-off to
