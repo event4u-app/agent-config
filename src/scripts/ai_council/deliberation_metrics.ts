@@ -1,7 +1,8 @@
 /**
- * Two per-run deliberation measurements, both computed from outputs the run has
- * already paid for: a per-correction stage attribution, and the
- * `zero_marginal_value_call_rate`.
+ * Per-run deliberation measurements, all computed from outputs the run has
+ * already paid for: a per-correction stage attribution, the
+ * `zero_marginal_value_call_rate`, and a count of stance changes that name no
+ * reason.
  *
  * Pure and offline. No model call, no new similarity measure — every judgement
  * below reuses `is_near_duplicate` from `debate_gates.ts`, which is the
@@ -47,6 +48,7 @@
  */
 import type { CouncilResponse } from './clients.js';
 import { is_near_duplicate, NOVELTY_DUP_THRESHOLD } from './debate_gates.js';
+import { parse_stance_line } from './stance_tally.js';
 
 /**
  * Objection markers. Deliberately the same vocabulary the shipped dissent
@@ -254,6 +256,87 @@ export function zeroMarginalValueRate(
     };
 }
 
+/** One member's change of `STANCE:` label between two of its calls. */
+export interface StanceFlip {
+    readonly member: string;
+    readonly fromStage: string;
+    readonly toStage: string;
+    readonly from: string;
+    readonly to: string;
+    /** True when the flipping call restates a correction a PEER raised earlier. */
+    readonly reasoned: boolean;
+}
+
+export interface StanceFlipReading {
+    readonly flips: number;
+    readonly unreasoned_flips: number;
+    readonly per_member: Readonly<Record<string, { flips: number; unreasoned_flips: number }>>;
+    readonly events: readonly StanceFlip[];
+}
+
+/**
+ * Count the seats that changed stance, and how many did so without naming a
+ * reason.
+ *
+ * The council prompt tells a seat to name a flaw before changing position;
+ * nothing counted the changes that name none. A flip is a change of the parsed
+ * `STANCE:` label between two of one member's calls. It is reasoned when the
+ * flipping call carries a correction sentence that near-duplicates one a
+ * different member raised earlier — the seat moved because of an objection it
+ * can point at. Calls without a parseable stance line are skipped, never read
+ * as a stance.
+ *
+ * Same honest scope as the two readings above: a text reading, not a judgement
+ * of whether the flip was right.
+ */
+export function stanceFlips(
+    calls: readonly DeliberationCall[],
+    threshold: number = NOVELTY_DUP_THRESHOLD,
+): StanceFlipReading {
+    const last = new Map<string, { label: string; stage: string }>();
+    const peerCorrections: { member: string; sentence: string }[] = [];
+    const events: StanceFlip[] = [];
+
+    for (const call of calls) {
+        if (!_usable(call)) continue;
+        const own = correctionSentences(call.text);
+        const stance = parse_stance_line(call.text);
+        if (stance) {
+            const prev = last.get(call.member);
+            if (prev && prev.label !== stance.label) {
+                const reasoned = own.some((s) =>
+                    peerCorrections.some(
+                        (p) => p.member !== call.member && (p.sentence === s || is_near_duplicate(p.sentence, s, threshold)),
+                    ),
+                );
+                events.push({
+                    member: call.member,
+                    fromStage: prev.stage,
+                    toStage: call.stage,
+                    from: prev.label,
+                    to: stance.label,
+                    reasoned,
+                });
+            }
+            last.set(call.member, { label: stance.label, stage: call.stage });
+        }
+        for (const sentence of own) peerCorrections.push({ member: call.member, sentence });
+    }
+
+    const per_member: Record<string, { flips: number; unreasoned_flips: number }> = {};
+    for (const e of events) {
+        const m = (per_member[e.member] ??= { flips: 0, unreasoned_flips: 0 });
+        m.flips += 1;
+        if (!e.reasoned) m.unreasoned_flips += 1;
+    }
+    return {
+        flips: events.length,
+        unreasoned_flips: events.filter((e) => !e.reasoned).length,
+        per_member,
+        events,
+    };
+}
+
 /** Everything this module emits for one run, ready to serialise. */
 export interface DeliberationMetrics {
     readonly zero_marginal_value_call_rate: number | null;
@@ -264,9 +347,10 @@ export interface DeliberationMetrics {
     readonly novelty_threshold: number;
     readonly stage_outputs: readonly StageProduction[];
     readonly correction_attributions: readonly CorrectionAttribution[];
+    readonly stance_flips: StanceFlipReading;
 }
 
-/** Compute both measurements in one pass over the run's calls. */
+/** Compute every reading over the run's calls. */
 export function measureDeliberation(
     calls: readonly DeliberationCall[],
     threshold: number = NOVELTY_DUP_THRESHOLD,
@@ -282,6 +366,7 @@ export function measureDeliberation(
         novelty_threshold: zmv.threshold,
         stage_outputs: stageProduction(calls, attributions),
         correction_attributions: attributions,
+        stance_flips: stanceFlips(calls, threshold),
     };
 }
 

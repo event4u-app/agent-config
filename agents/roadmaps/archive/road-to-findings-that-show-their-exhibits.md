@@ -96,7 +96,7 @@ gated-surface list. Those live in `later/road-to-a-court-at-the-stops`.
 
 ## Phase 4 — Stance changes that name no reason
 
-- [ ] **4.1 Add `unreasonedFlips` to `deliberation_metrics`.** Per member, read
+- [x] **4.1 Add `unreasonedFlips` to `deliberation_metrics`.** Per member, read
       the `STANCE:` label of each stage with the existing parser; a change of
       label is a flip; it is reasoned when the flipping call carries a
       correction sentence that near-duplicates a peer's earlier correction
@@ -118,10 +118,10 @@ gated-surface list. Those live in `later/road-to-a-court-at-the-stops`.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The schema accepts typed exhibits and a `line`, and every existing
+- [x] AC-1 — The schema accepts typed exhibits and a `line`, and every existing
       finding shape still validates.
-- [ ] AC-2 — A finding id does not change when only its line suffix changes.
-- [ ] AC-3 — Every exhibit type resolves to one of three verdicts, with a
+- [x] AC-2 — A finding id does not change when only its line suffix changes.
+- [x] AC-3 — Every exhibit type resolves to one of three verdicts, with a
       sabotage-proven test, and no code path derives a disposition from it.
-- [ ] AC-4 — The ledgers' precision prints from a script.
-- [ ] AC-5 — A council run's metrics name its unreasoned stance changes.
+- [x] AC-4 — The ledgers' precision prints from a script.
+- [x] AC-5 — A council run's metrics name its unreasoned stance changes.
