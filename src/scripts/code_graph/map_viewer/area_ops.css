@@ -160,3 +160,9 @@ line.pe-shared { stroke: var(--violet); stroke-width: 2px; stroke-dasharray: 4 3
 .ops-mark { display: none; }
 .ops-legend.wide { gap: 8px 16px; }
 @media (max-width: 700px) { .ops-graph { min-width: 0; } .ops-pnode { width: 116px; padding: 6px; } .ops-pname { font-size: 13px; } }
+
+/* Runtime without resources: the handover's empty zone frame. */
+.ops-zempty { position: relative; min-height: 260px; border-radius: 12px; border: 1px dashed var(--line2); background: var(--bg); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr)); gap: 12px; padding: 16px; align-content: start; }
+.ops-zcell { border-radius: 10px; border: 1px dashed var(--line2); padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.ops-zcell .cap { font-size: 10px; }
+.ops-zcell .muted { font-size: 12px; }

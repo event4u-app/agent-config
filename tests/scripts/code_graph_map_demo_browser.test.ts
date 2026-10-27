@@ -159,6 +159,7 @@ describe('the demo map in a browser', () => {
     it('the Runtime environment comparison stays readable on a phone: no word broken mid-letter, no chip overlapping', async () => {
         for (const width of [375, 1440]) {
             const { page, errors } = await open(demo.page, '#/runtime', width);
+            await page.locator('#av [role="tab"]', { hasText: /^(Environment comparison|Umgebungsvergleich)$/ }).click();
             const r = await page.evaluate(() => {
                 const inside = (a: DOMRect, b: DOMRect): boolean => a.left >= b.left - 0.5 && a.right <= b.right + 0.5 && a.top >= b.top - 0.5 && a.bottom <= b.bottom + 0.5;
                 const cells = Array.from(document.querySelectorAll('.ops-cmpgrid .ops-cell, .ops-cmpgrid .ops-cmpname, .ops-cmpgrid .ops-th'));

@@ -124,8 +124,8 @@ afterAll(async () => {
 describe('Interfaces', () => {
     it('lists every service in the left rail and every shown operation in the table; hiding a service hides its operations', async () => {
         const { page, errors } = await open(html, '#/interfaces');
-        expect(await page.locator('[role="tab"][aria-selected="true"]').textContent()).toBe('Flow');
-        await page.locator('[role="tab"]', { hasText: 'Operations' }).click();
+        // A real map opens on Operations (2026-10-bf handover); the demo opens on the flow.
+        expect(await page.locator('[role="tab"][aria-selected="true"]').textContent()).toBe('Operations');
         const ops = interfaces.services.reduce((n, s) => n + s.operations.length, 0);
         expect(await page.locator('#av-left-body .if-svc').count()).toBe(interfaces.services.length);
         expect(await page.locator('#av-main .if-orow:not(.if-ohead)').count()).toBe(ops);
@@ -162,6 +162,7 @@ describe('Interfaces', () => {
 
     it('the flow ends in no-data steps where the reader stops, and the contract view lists the findings with a contract witness', async () => {
         const { page } = await open(html, '#/interfaces/' + encodeURIComponent('operation/shop/POST /orders'));
+        await page.locator('[role="tab"]', { hasText: 'Flow' }).click();
         expect(await page.locator('.if-node').count()).toBe(6);
         expect(await page.locator('.if-node.nodata').count()).toBe(3);
         await page.locator('[role="tab"]', { hasText: 'Contract change' }).click();
@@ -257,6 +258,30 @@ describe('Agent', () => {
         expect(await page.locator('.ag-pempty .nodata-tag').count()).toBe(1);
         await page.locator('[role="tab"]', { hasText: 'Review risk' }).click();
         expect(await page.locator('.ag-pempty .nodata-tag').count()).toBe(1);
+        await page.close();
+    });
+});
+
+describe('the small deltas of the 2026-10-bf handover', () => {
+    it('interfaces runtime: Interfaces opens on Operationen with "n von m angezeigt"; Runtime without resources opens on Topologie with its empty zones and the findings outside a resource', async () => {
+        // A runtime reader that ran over Compose only: services, no IaC resource, one finding tied to none.
+        const runtime = { reader: 'runtime lane', completeness: 'complete', environments: [], resources: [], services: [], links: [], findings: [{ id: 'RT-4', severity: 'low', subject: 'compose.yaml', message: 'a port is published twice', completeness: 'complete', witnesses: [wit('compose.yaml', 3)] }] };
+        const file = await drawn({ ...sampleAreas(), interfaces, runtime } as unknown as MapAreas);
+        const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark', locale: 'de-DE' });
+        await page.goto(pathToFileURL(file).href + '#/interfaces');
+        await page.waitForFunction(() => (window as unknown as { __mapRoute?: unknown }).__mapRoute !== undefined);
+        expect(await page.locator('#av [role="tab"][aria-selected="true"]').first().textContent()).toBe('Operationen');
+        expect(await page.locator('#av-left').textContent()).toContain(`Dienste · ${interfaces.services.length} von ${interfaces.services.length} angezeigt`);
+        await page.evaluate(() => { location.hash = '#/runtime'; });
+        await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'runtime');
+        expect(await page.locator('#av [role="tab"][aria-selected="true"]').first().textContent()).toBe('Topologie');
+        expect(await page.locator('#rt-zones .cap').allTextContents()).toEqual(['Netz / VPC', 'Rechenleistung', 'Daten']);
+        expect(await page.locator('#rt-zones .muted').allTextContents()).toEqual(['keine Ressource', 'keine Ressource', 'keine Ressource']);
+        expect(await page.locator('#rt-zones').evaluate((e) => getComputedStyle(e).borderTopStyle)).toBe('dashed');
+        expect(await page.locator('#av-main').textContent()).toContain('Befunde außerhalb einer Ressource · 1');
+        // Sensitivity: the comparison lens draws no zone frame.
+        await page.locator('#av [role="tab"]', { hasText: 'Umgebungsvergleich' }).click();
+        expect(await page.locator('#rt-zones').count()).toBe(0);
         await page.close();
     });
 });

@@ -235,7 +235,7 @@ revert `area_systems.js` and the new CSS; payload additions are additive.
       legend, footer), not the `noDataCard`; 2D/3D and Spalten become
       radiogroups; aside labels Schema / Nachweisbericht.
       verify: `npx vitest run tests/scripts/code_graph_map_no_data.test.ts -t skeleton --reporter=verbose` -> /✓.*skeleton/
-- [ ] **4.2 Interfaces, Runtime.** Interfaces opens on Operationen, caption
+- [x] **4.2 Interfaces, Runtime.** Interfaces opens on Operationen, caption
       "Dienste · n von m angezeigt"; Runtime opens on Topologie and draws the
       zone caps even when empty, with "Befunde außerhalb einer Ressource · N".
       verify: `npx vitest run tests/scripts/code_graph_map_ported_pages.test.ts -t "interfaces runtime" --reporter=verbose` -> /✓.*interfaces runtime/

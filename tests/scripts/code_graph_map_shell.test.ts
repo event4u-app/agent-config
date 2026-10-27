@@ -315,6 +315,9 @@ describe('the Runtime page is the design\'s Infrastruktur page', () => {
     it('zones per folder, the raw switch, the environment grid, and the resource rail with its finding', async () => {
         const page = await open((await drawn({ runtime: iac() })).html, '#/runtime');
         expect(await page.locator('#av-bar [role="tab"]').allTextContents()).toEqual(['Topology', 'Environment comparison']);
+        // The page opens on Topology (2026-10-bf handover).
+        expect(await page.locator('#av-bar [role="tab"][aria-selected="true"]').textContent()).toBe('Topology');
+        await page.click('#av-bar [role="tab"]:has-text("Environment comparison")');
         // The comparison: one column per environment, the stands the map cannot read tagged with why.
         expect(await page.locator('#av-main .ops-th').allTextContents()).toEqual(['Resource', 'shop']);
         expect(await page.locator('#av-main').textContent()).toMatch(/P, R and O need a plan file/);
