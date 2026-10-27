@@ -202,6 +202,52 @@ describe('repetition — the bill carries the product (6.3)', () => {
         expect(line).toContain(`${String(summary.queries_issued)} provider queries`);
         expect(line).toContain('× 2 repetitions');
         expect(line).toContain(`weekly ceiling ${String(MAX_WEEKLY_QUERIES)}`);
+        expect(line).toMatch(/projected weekly peak \d+/);
+        expect(line).toMatch(/estimate ~\$[0-9.]+/);
+        expect(line).toContain('first lever: --repetitions');
         for (const o of summary.outcomes) expect(o.rates.every((r) => r.runs === 2)).toBe(true);
+    });
+});
+
+// OQ-23 (c): repetition stays opt-in, and a run whose projected weekly peak
+// exceeds the ceiling is refused unless explicitly overridden, with the
+// override recorded.
+describe('the weekly ceiling guard (6.1)', () => {
+    // A live run with an injected router: the guard is exercised, nothing is paid.
+    const live = { name: 'stub', route: (): [string[], number, number] => [[], 1, 1] };
+    it('refuses a run projected over MAX_WEEKLY_QUERIES', async () => {
+        const outDir = join(tmpdir(), `rot-guard-${process.pid}-${Date.now()}`);
+        const projected = rotation_plan(list_trigger_suites(), ROTATION_CYCLE_WEEKS, 3).peakWeeklyQueries;
+        expect(projected).toBeGreaterThan(MAX_WEEKLY_QUERIES);
+        await expect(run_rotation({ week: 3, outDir, repetitions: 3, router: live })).rejects.toThrow(
+            /projected weekly peak .* exceeds .*ceiling/i,
+        );
+    });
+
+    it('runs over the ceiling only with a recorded override reason', async () => {
+        const outDir = join(tmpdir(), `rot-guard-ok-${process.pid}-${Date.now()}`);
+        const summary = await run_rotation({
+            week: 3,
+            outDir,
+            repetitions: 3,
+            router: live,
+            ceilingOverride: 'measured once for the variance study',
+        });
+        expect(summary.ceiling_override).toMatchObject({ reason: 'measured once for the variance study' });
+        expect(summary.projected_weekly_peak).toBeGreaterThan(MAX_WEEKLY_QUERIES);
+    });
+
+    it('an empty override reason is not an override', async () => {
+        const outDir = join(tmpdir(), `rot-guard-empty-${process.pid}-${Date.now()}`);
+        await expect(
+            run_rotation({ week: 3, outDir, repetitions: 3, router: live, ceilingOverride: '  ' }),
+        ).rejects.toThrow(/ceiling/i);
+    });
+
+    it('the default of one repetition stays within the ceiling and records no override', async () => {
+        const outDir = join(tmpdir(), `rot-guard-one-${process.pid}-${Date.now()}`);
+        const summary = await run_rotation({ week: 3, outDir, router: live });
+        expect(summary.projected_weekly_peak).toBeLessThanOrEqual(MAX_WEEKLY_QUERIES);
+        expect(summary.ceiling_override).toBeNull();
     });
 });

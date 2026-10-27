@@ -37,6 +37,7 @@ import {
     MockRouter,
     Query,
     compute_metrics,
+    estimate_cost,
     load_skill_metas,
     write_result,
     type EvalResult,
@@ -340,6 +341,13 @@ export interface RotationOptions {
      * cost line report the product, so a raise is visible before it is billed.
      */
     repetitions?: number;
+    /**
+     * Reason for running a projected weekly peak above `MAX_WEEKLY_QUERIES`.
+     * Only a live run is guarded: a dry run issues no paid query.
+     * Without one such a run is refused; with one it runs and the summary
+     * records the override. A blank reason is not an override.
+     */
+    ceilingOverride?: string;
 }
 
 export interface RotationSuiteOutcome {
@@ -366,6 +374,11 @@ export interface RotationSummary {
     repetitions: number;
     /** Provider queries this run actually issued: Σ queries × repetitions. */
     queries_issued: number;
+    /** Busiest-week queries the suite list implies at this repetition count. */
+    projected_weekly_peak: number;
+    /** The harness's own USD estimate for the tokens this run used. */
+    cost_usd_estimate: number;
+    ceiling_override: { reason: string; projected_weekly_peak: number } | null;
 }
 
 export async function run_rotation(opts: RotationOptions = {}): Promise<RotationSummary> {
@@ -378,6 +391,14 @@ export async function run_rotation(opts: RotationOptions = {}): Promise<Rotation
     const repetitions = opts.repetitions ?? 1;
 
     const suites = list_trigger_suites(skillsDir);
+    const projected = rotation_plan(suites, cycleWeeks, repetitions).peakWeeklyQueries;
+    const overrideReason = opts.ceilingOverride?.trim() ?? '';
+    if (!dryRun && projected > MAX_WEEKLY_QUERIES && overrideReason === '') {
+        throw new Error(
+            `projected weekly peak ${String(projected)} queries exceeds the ${String(MAX_WEEKLY_QUERIES)} ceiling ` +
+                `at ${String(repetitions)} repetition(s) — lower --repetitions first, or pass --override-ceiling "<reason>"`,
+        );
+    }
     const picked = pick_rotation(suites, week, cycleWeeks);
     const catalogue = load_skill_metas();
 
@@ -395,6 +416,7 @@ export async function run_rotation(opts: RotationOptions = {}): Promise<Rotation
 
     const outcomes: RotationSuiteOutcome[] = [];
     let queriesIssued = 0;
+    let costEstimate = 0;
     for (const skill of picked) {
         const triggersPath = path.join(skillsDir, skill, 'evals', 'triggers.json');
         const [skillName, queries] = load_triggers_any(triggersPath, skill);
@@ -418,6 +440,7 @@ export async function run_rotation(opts: RotationOptions = {}): Promise<Rotation
             rates: trigger_rates(result),
         });
         queriesIssued += result.queries.length;
+        costEstimate += estimate_cost(model, result.input_tokens, result.output_tokens);
     }
 
     return {
@@ -429,6 +452,9 @@ export async function run_rotation(opts: RotationOptions = {}): Promise<Rotation
         breaches: outcomes.filter((o) => !o.passed).length,
         repetitions,
         queries_issued: queriesIssued,
+        projected_weekly_peak: projected,
+        cost_usd_estimate: Math.round(costEstimate * 1e6) / 1e6,
+        ceiling_override: !dryRun && projected > MAX_WEEKLY_QUERIES ? { reason: overrideReason, projected_weekly_peak: projected } : null,
     };
 }
 
@@ -437,11 +463,15 @@ export async function run_rotation(opts: RotationOptions = {}): Promise<Rotation
  * the weekly ceiling they are measured against. Repetition multiplies the
  * bill, so the line names the product rather than the per-suite count.
  */
-export function cost_line(summary: Pick<RotationSummary, 'queries_issued' | 'repetitions'>): string {
+export function cost_line(
+    summary: Pick<RotationSummary, 'queries_issued' | 'repetitions' | 'projected_weekly_peak' | 'cost_usd_estimate'>,
+): string {
     return (
         `cost · ${String(summary.queries_issued)} provider queries ` +
         `(× ${String(summary.repetitions)} repetition${summary.repetitions === 1 ? '' : 's'}) · ` +
-        `weekly ceiling ${String(MAX_WEEKLY_QUERIES)}`
+        `projected weekly peak ${String(summary.projected_weekly_peak)} · ` +
+        `weekly ceiling ${String(MAX_WEEKLY_QUERIES)} · ` +
+        `estimate ~$${summary.cost_usd_estimate.toFixed(4)} · first lever: --repetitions`
     );
 }
 
@@ -463,6 +493,7 @@ function parse_args(argv: string[]): RotationOptions & { help?: boolean } {
         else if (a === '--out-dir') out.outDir = path.resolve(take());
         else if (a === '--model') out.model = take();
         else if (a === '--repetitions') out.repetitions = Number(take());
+        else if (a === '--override-ceiling') out.ceilingOverride = take();
         else if (a === '-h' || a === '--help') out.help = true;
         else {
             process.stderr.write(`trigger_eval_rotation: error: unrecognized arguments: ${a}\n`);
@@ -489,7 +520,8 @@ export async function main(argv?: string[]): Promise<number> {
     if (opts.help) {
         process.stdout.write(
             'usage: trigger_eval_rotation [--week N] [--cycle-weeks N] [--dry-run]\n' +
-                '                             [--out-dir DIR] [--model MODEL] [--repetitions N]\n',
+                '                             [--out-dir DIR] [--model MODEL] [--repetitions N]\n' +
+                '                             [--override-ceiling REASON]\n',
         );
         return 0;
     }
@@ -506,6 +538,12 @@ export async function main(argv?: string[]): Promise<number> {
             `${summary.dry_run ? ' · DRY-RUN (floors advisory)' : ''}\n`,
     );
     process.stdout.write(cost_line(summary) + '\n');
+    if (summary.ceiling_override !== null) {
+        process.stdout.write(
+            `⚠️  ceiling overridden: projected weekly peak ${String(summary.ceiling_override.projected_weekly_peak)} > ` +
+                `${String(MAX_WEEKLY_QUERIES)} — reason: ${summary.ceiling_override.reason}\n`,
+        );
+    }
     for (const o of summary.outcomes) {
         const mark = o.passed ? '✅' : '❌';
         if (!o.answered) {
