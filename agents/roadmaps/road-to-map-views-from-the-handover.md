@@ -129,7 +129,7 @@ Exit: 0.1–0.3 green. Rollback: revert `viewer.css`; aliases keep every caller 
       Operation, Ressource, Anfrage, Item, Nachweisbericht, Filter, Bug,
       Registry, Kante).
       verify: `npx vitest run tests/scripts/code_graph_map_shell_overflow.test.ts` -> 0
-- [ ] **1.6 Shell matrix.** `agents/evidence/reviews/map-shell-fidelity.md`:
+- [x] **1.6 Shell matrix.** `agents/evidence/reviews/map-shell-fidelity.md`:
       landmark/aria diff design vs build for header and nav at 1440/375/320 in
       both themes, computed styles at `nav a`, `[aria-current]`, each chip, and
       a 375 probe showing `scrollWidth > clientWidth` on the nav with no

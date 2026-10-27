@@ -47,6 +47,8 @@ export async function launch(): Promise<Browser> {
 
 async function offline(page: Page): Promise<void> {
     await page.route(/^(https?|wss?):/, (r) => r.abort());
+    // tsx keeps function names with an `__name` helper that the page does not have.
+    await page.addInitScript('window.__name = function (f) { return f; };');
 }
 
 /** A built map page, German, at a width and theme, once the router has drawn a route. */
@@ -108,11 +110,12 @@ export async function computedAt(page: Page, selectors: readonly string[], props
 }
 
 /** Landmarks and widget roles that are visible: tag[role] "aria-label" and, for options, their text and state. */
-export async function landmarks(page: Page): Promise<{ groups: string[]; roles: string[] }> {
-    return page.evaluate(() => {
+export async function landmarks(page: Page, scope = 'body'): Promise<{ groups: string[]; roles: string[] }> {
+    return page.evaluate((root) => {
         const vis = (e: Element) => { const r = e.getBoundingClientRect(); const s = getComputedStyle(e); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none'; };
         const txt = (e: Element) => ((e as HTMLElement).innerText || e.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim().slice(0, 50);
-        const q = (s: string) => Array.from(document.querySelectorAll(s)).filter(vis);
+        const base = document.querySelector(root) ?? document.body;
+        const q = (s: string) => [base, ...Array.from(base.querySelectorAll(s))].filter((e) => e.matches(s)).filter(vis);
         return {
             groups: q('header,nav,main,aside,footer,[role=tablist],[role=radiogroup],[role=group],[role=switch]').map((e) => `${e.tagName.toLowerCase()}${e.getAttribute('role') ? `[${e.getAttribute('role')}]` : ''} "${e.getAttribute('aria-label') ?? ''}"`),
             roles: q('[role=tab],[role=radio],[role=checkbox],[role=switch]').map((e) => {
@@ -120,7 +123,7 @@ export async function landmarks(page: Page): Promise<{ groups: string[]; roles: 
                 return `${e.getAttribute('role')}:${txt(e)}${on === 'true' ? '*' : ''}`;
             }),
         };
-    });
+    }, scope);
 }
 
 /** Whether the document scrolls sideways, and a named element's scroll and client width. */
@@ -159,7 +162,38 @@ async function probeTokens(browser: Browser, built: Built): Promise<unknown> {
     return out;
 }
 
-export const PROBES: Record<string, (b: Browser, built: Built) => Promise<unknown>> = { tokens: probeTokens };
+const STYLE_PROPS = ['height', 'padding', 'border-radius', 'font-size', 'font-weight', 'color', 'background-color', 'box-shadow', 'border', 'font-family', 'white-space', 'gap'] as const;
+
+/** Probe `shell`: header and nav of the handover's Übersicht page against the built map's, three widths, both themes. */
+async function probeShell(browser: Browser, built: Built): Promise<unknown> {
+    const design = { nav: 'nav[aria-label="Ebenen"]', link: 'nav[aria-label="Ebenen"] a:not([aria-current])', current: 'nav[aria-label="Ebenen"] a[aria-current]', empty: 'nav[aria-label="Ebenen"] a[title]',
+        commit: 'header span[title^="Map gezeichnet"]', fresh: 'header span[title^="HEAD"]', snap: 'header span[title^="Committete"]', header: 'header' };
+    const build = { nav: '#areanav', link: '#areanav a:not([aria-current]):not(.empty)', current: '#areanav a[aria-current]', empty: '#areanav a.empty', commit: '#pin-commit', fresh: '#pin-fresh', snap: '#pin-snap', header: 'header' };
+    const out: Record<string, unknown> = {};
+    for (const theme of ['dark', 'light'] as const) {
+        for (const width of WIDTHS) {
+            const d = await openDesign(browser, 'p12/Overview.dc.html', width, theme);
+            const b = await openBuilt(browser, built.real, '#/overview', width, theme);
+            const row: Record<string, unknown> = {};
+            for (const [side, page, sel] of [['design', d, design], ['build', b, build]] as const) {
+                row[side] = {
+                    landmarks: await landmarks(page, 'header'),
+                    styles: width === 1440 ? await computedAt(page, [sel.link, sel.current, sel.empty, sel.commit, sel.fresh, sel.snap], STYLE_PROPS) : undefined,
+                    nav: await overflowAt(page, sel.nav),
+                    headerHeight: await page.evaluate((s) => Math.round(document.querySelector(s)!.getBoundingClientRect().height), sel.header),
+                    navTexts: await page.evaluate((s) => Array.from(document.querySelectorAll(s + ' a')).map((a) => (a.textContent ?? '').trim()), sel.nav),
+                    titles: await page.evaluate((s) => Array.from(document.querySelectorAll(s + ' a[title]')).map((a) => `${(a.textContent ?? '').trim()}=${a.getAttribute('title')}`), sel.nav),
+                };
+            }
+            out[`${theme}_${width}`] = row;
+            await d.close();
+            await b.close();
+        }
+    }
+    return out;
+}
+
+export const PROBES: Record<string, (b: Browser, built: Built) => Promise<unknown>> = { tokens: probeTokens, shell: probeShell };
 
 if (process.argv[1] && /map_fidelity_probe\.ts$/.test(process.argv[1])) {
     const [name, out] = process.argv.slice(2);
