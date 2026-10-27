@@ -134,6 +134,22 @@ describe('stamp — the artefact knows what it was computed from', () => {
         expect(a.control_roles.input!.box_metrics).toMatchObject({ height_px: 40, padding_x_px: 14, source: 'render' });
     });
 
+    // A full read of every file cost 11.6 s on a consumer repository with a
+    // vendor tree; the artefact needs the text of UI files and a few named
+    // documents only, so nothing else is opened.
+    it.skipIf(process.platform === 'win32')('a file whose text is never needed is never read', () => {
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ui-audit-lazy-'));
+        fs.mkdirSync(path.join(dir, 'components'), { recursive: true });
+        fs.writeFileSync(path.join(dir, 'components', 'form.tsx'), 'export const F = () => <Input name="a" />;');
+        fs.mkdirSync(path.join(dir, 'storage'), { recursive: true });
+        const upload = path.join(dir, 'storage', 'upload.bin');
+        fs.writeFileSync(upload, 'x');
+        fs.chmodSync(upload, 0o000);
+        const a = computeUiAudit(dir, dir);
+        expect(a.verification).toBe('verified');
+        expect(a.control_roles.input).toMatchObject({ uses: 1 });
+    });
+
     it('an artefact without a stamp is stale', () => {
         expect(isUiAuditStale(os.tmpdir(), {})).toBe(true);
     });

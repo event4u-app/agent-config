@@ -342,7 +342,7 @@ export function inputsDigest(files: ReadonlyArray<readonly [string, string]>): s
     return h.digest('hex').slice(0, 16);
 }
 
-function gitHead(cwd: string): string | null {
+export function gitHead(cwd: string): string | null {
     try {
         return execFileSync('git', ['rev-parse', 'HEAD'], {
             cwd,
@@ -392,9 +392,16 @@ function readPairs(projectRoot: string, target: string): { pairs: Array<readonly
     const pairs: Array<readonly [string, string]> = [];
     let unreadable = 0;
     for (const abs of absFiles) {
+        const rel = path.relative(projectRoot, abs).split(path.sep).join('/');
+        // Every other file is read by its path alone (system markers), so its
+        // text is never opened: a vendor tree made a full read cost seconds.
+        if (!(isUiPath(rel) || isUiTreePath(rel) || /(^|\/)(components\.json|DESIGN\.md|PRODUCT\.md)$/.test(rel))) {
+            pairs.push([rel, '']);
+            continue;
+        }
         try {
             if (fs.statSync(abs).size > 2_000_000) continue;
-            pairs.push([path.relative(projectRoot, abs).split(path.sep).join('/'), fs.readFileSync(abs, 'utf8')]);
+            pairs.push([rel, fs.readFileSync(abs, 'utf8')]);
         } catch {
             unreadable++;
         }
