@@ -40,7 +40,11 @@ import {
     recordDisposition,
 } from './retro_queue.js';
 import { discoverSessions, forgePrState, renderStatus, retroStatus, runDailySweep } from './retro_sweep.js';
+import type { TopicSignal } from './_lib/feedback_candidates.js';
+import { type HeldReport, foldSignals, heldOrRecurred, readUserSignals, retroDigest, withFeedback } from './_lib/learning_inputs.js';
+import { repoIdentity } from './code_graph/repo_identity.js';
 import {
+    ANALYSE_AT,
     MAX_INTAKE_SIGNALS_PER_UNIT,
     TARGETS,
     triagePr,
@@ -120,6 +124,8 @@ export interface Recurrence {
     verdict: RecurrenceVerdict;
     /** Fingerprints that are active again — empty unless the verdict is `recurred`. */
     active: string[];
+    /** Feedback signals on the target before and after its learning was accepted, when any were read. */
+    feedback?: HeldReport;
 }
 
 export interface ComposeInput {
@@ -128,6 +134,9 @@ export interface ComposeInput {
     candidate: Candidate | null;
     /** Workspace whose self-repair store holds the recurrence counts. */
     root: string;
+    /** The user's feedback signals for this repository; triage and recurrence read them. */
+    signals?: readonly TopicSignal[];
+    now?: string;
 }
 
 function none(base: Omit<RetroOutput, 'learning' | 'target' | 'reason' | 'subject' | 'counter_hypothesis' | 'falsifier' | 'recurrence'>, reason: string): RetroOutput {
@@ -145,7 +154,9 @@ function none(base: Omit<RetroOutput, 'learning' | 'target' | 'reason' | 'subjec
 
 export function composeRetro(input: ComposeInput): RetroOutput {
     const { key, facts, candidate, root } = input;
-    const triage = facts.unit === 'pr' ? triagePr(facts) : triageSession(facts);
+    const signals = input.signals ?? [];
+    const digest = retroDigest(foldSignals('retro', signals));
+    const triage = withFeedback(facts.unit === 'pr' ? triagePr(facts) : triageSession(facts), digest, ANALYSE_AT);
     const base = { unit_key: key, facts, triage };
     if (triage.class !== 'analyse') return none(base, `triage ${triage.class} (score ${triage.score})`);
     if (candidate === null) return none(base, 'the synthesis found no learning');
@@ -160,7 +171,7 @@ export function composeRetro(input: ComposeInput): RetroOutput {
 
     let recurrence: RetroOutput['recurrence'] = null;
     if (candidate.asset_target !== undefined) {
-        recurrence = readRecurrence(root, candidate.asset_target);
+        recurrence = readRecurrence(root, candidate.asset_target, { signals, now: input.now ?? new Date().toISOString() });
     }
     return {
         ...base,
@@ -181,16 +192,21 @@ export function composeRetro(input: ComposeInput): RetroOutput {
  * neither should re-derive the rule — two readings of "did it hold" is the
  * same defect class as two readings of "what is the brand".
  */
-export function readRecurrence(root: string, target: string): Recurrence {
+export function readRecurrence(root: string, target: string, opts: { signals?: readonly TopicSignal[]; acceptedAt?: string; now?: string } = {}): Recurrence {
     const hit = targetCounts(root).find((t) => t.target === target);
     const active = listRecords(root)
         .filter((r) => (r.target ?? []).includes(target) && ACTIVE_STATUSES.includes(r.status))
         .map((r) => r.fingerprint)
         .sort();
     const records = hit?.records.length ?? 0;
-    const verdict: RecurrenceVerdict =
+    let verdict: RecurrenceVerdict =
         records === 0 ? 'first' : active.length > 0 ? 'recurred' : 'held';
-    return { target, occurrences: hit?.occurrences ?? 0, records, verdict, active };
+    const onTarget = (opts.signals ?? []).filter((s) => s.topic === target);
+    // The split point is when the learning was accepted: given, or the last sighting of a record that is no longer active.
+    const accepted = opts.acceptedAt ?? listRecords(root).filter((r) => (r.target ?? []).includes(target) && !ACTIVE_STATUSES.includes(r.status)).map((r) => r.last_seen).sort().at(-1);
+    const feedback = onTarget.length && accepted ? heldOrRecurred(onTarget, target, accepted, opts.now ?? new Date().toISOString()) : undefined;
+    if (feedback?.verdict === 'recurred' && verdict === 'held') verdict = 'recurred';
+    return { target, occurrences: hit?.occurrences ?? 0, records, verdict, active, ...(feedback ? { feedback } : {}) };
 }
 
 /**
@@ -685,7 +701,7 @@ export function main(
             out('retro record: origin is not a GitHub repository; PR facts cannot be read');
             return 2;
         }
-        const composed = composeRetro({ key, facts, candidate, root });
+        const composed = composeRetro({ key, facts, candidate, root, signals: readUserSignals(repoIdentity(root).repoId) });
         const sessionId = process.env['CLAUDE_CODE_SESSION_ID'];
         const res = recordRetro(root, composed, candidate, now, {
             dryRun,

@@ -131,7 +131,7 @@ straight to Step 4.
 
 ```
 EXPLORE THE CODEBASE BEFORE THE FIRST QUESTION.
-NEVER ASK WHAT `grep`, `view`, OR `codebase-retrieval` ANSWERS IN SECONDS.
+NEVER ASK WHAT `grep`, `view`, OR code-graph ask ANSWERS IN SECONDS.
 ```
 
 1. **Read the seed.** The user's first message (or
@@ -403,7 +403,7 @@ If the user wants any other follow-up, they invoke it explicitly. The
   `personal.autonomy: auto`, the trigger still consents on its own —
   the user explicitly opted in by typing it.
 - **Codebase first** — Step 0 forbids asking what `grep`, `view`, or
-  `codebase-retrieval` would answer in seconds.
+  `code-graph ask` would answer in seconds.
 - **Welcome once** — render the welcome only on the first no-body
   invocation per session.
 - **Mirror the user's language** — the question blocks and pitch use

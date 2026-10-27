@@ -692,6 +692,24 @@ function code(s: string): string {
  * line naming every section that was cut, so a reader knows what is missing.
  */
 export function renderMapMd(m: MapModel, meta: MapMeta, areas: MapAreas = {}): string {
+    const { head, sections } = mapMdParts(m, meta, areas);
+    const budget = MAP_TOKEN_BUDGET * CHARS_PER_TOKEN;
+    let out = head;
+    const cut: string[] = [];
+    for (const [name, body] of sections) {
+        if (out.length + body.length <= budget) out += `${body}\n`;
+        else cut.push(name);
+    }
+    if (cut.length) {
+        out +=
+            `> Budget of ${MAP_TOKEN_BUDGET} tokens reached — cut: ${cut.join(', ')}. ` +
+            'Read one with `agent-config code-graph map --section <name>`; never open `code/map.json` for it.\n';
+    }
+    return out;
+}
+
+/** The MAP.md header and its sections in priority order, before the budget cuts any. */
+export function mapMdParts(m: MapModel, meta: MapMeta, areas: MapAreas = {}): { head: string; sections: Array<[string, string]> } {
     const f = m.files;
     const head = [
         `# ${md(meta.title)}`,
@@ -1001,19 +1019,7 @@ export function renderMapMd(m: MapModel, meta: MapMeta, areas: MapAreas = {}): s
         ].join('\n'),
     ]);
 
-    const budget = MAP_TOKEN_BUDGET * CHARS_PER_TOKEN;
-    let out = head;
-    const cut: string[] = [];
-    for (const [name, body] of sections) {
-        if (out.length + body.length <= budget) out += `${body}\n`;
-        else cut.push(name);
-    }
-    if (cut.length) {
-        out +=
-            `> Budget of ${MAP_TOKEN_BUDGET} tokens reached — cut: ${cut.join(', ')}. ` +
-            'They are in `code/map.json`, in the per-area pages and in `index.html`.\n';
-    }
-    return out;
+    return { head, sections };
 }
 
 export function renderAreaMd(m: MapModel, i: number, meta: MapMeta): string {

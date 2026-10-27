@@ -186,7 +186,6 @@ import {
     entryPointsFromFile,
     impact,
     repoEntryPoints,
-    testsForAnswer,
     untested,
     type UntestedResult,
 } from './verbs.js';
@@ -202,6 +201,12 @@ import { writeTombstones } from './verify/tombstones.js';
 import { usageLowerBound, verifyMain } from './verify/verify_cli.js';
 
 import { buildCacheFor, cacheFor, flag, isFlagValue, resolveRoot, shown, UsageError } from './cli_args.js';
+import { pageReads } from './answer_budget.js';
+import { noEntryLine, testsForModuleAnswer } from './answer_correctness.js';
+import { askMain } from './cli_ask.js';
+import { mapSection } from './map_sections.js';
+import { scanMain } from './scan.js';
+import { bugsMain } from './cli_bugs.js';
 import { cmdBranchDiff, cmdBranches, cmdOnBranches, cmdProvenance, cmdSystems } from './cli_knowledge.js';
 
 export { buildCacheFor, cacheFor } from './cli_args.js';
@@ -376,6 +381,8 @@ function withOverlay(g: LoadedGraph): LoadedGraph {
     return overlayView(g, readOverlay(g.answeredBy, graphChecksum(g)));
 }
 
+let readsPage = 1;
+
 function render(r: QueryResult, staleNote: string): number {
     process.stdout.write(`source: ${r.source}${staleNote}\n`);
     if (r.seeds.length) process.stdout.write(`seeds: ${r.seeds.join(', ')}\n`);
@@ -383,8 +390,10 @@ function render(r: QueryResult, staleNote: string): number {
     if (r.truncated) process.stdout.write('  … (budget reached — narrow the seed or raise --budget)\n');
     if (!r.lines.length) process.stdout.write('  (no matching relations)\n');
     if (r.recommended_reads.length) {
-        process.stdout.write('recommended reads (dropped by the budget, or a low-confidence seed match):\n');
-        for (const rr of r.recommended_reads) process.stdout.write(`  ${rr.path}${rr.lines ? `:${rr.lines[0]}-${rr.lines[1]}` : ''}\n`);
+        const pg = pageReads(r.recommended_reads, readsPage);
+        process.stdout.write(`recommended reads (dropped by the budget, or a low-confidence seed match) — ${pg.items.length} of ${pg.total}, page ${pg.page}/${pg.pages}:\n`);
+        for (const rr of pg.items) process.stdout.write(`  ${rr.path}${rr.lines ? `:${rr.lines[0]}-${rr.lines[1]}` : ''}\n`);
+        if (pg.pages > pg.page) process.stdout.write(`  … next page: --reads-page ${pg.page + 1}\n`);
     }
     return 0;
 }
@@ -437,6 +446,7 @@ function cmdQuery(kind: 'query' | 'explain' | 'affected' | 'path', argv: string[
     const positional = argv.filter((a) => !a.startsWith('--') && !isFlagValue(argv, a));
     const budget = budgetOf(argv);
     const walk = { includeGuesses: argv.includes('--include-guesses') };
+    readsPage = Math.max(1, Number(flag(argv, '--reads-page') ?? 1) || 1);
     if (kind === 'affected' && flag(argv, '--since')) {
         const root = resolveRoot(argv);
         const seeds = changedNodeSeeds(r.g, root, flag(argv, '--since') as string);
@@ -485,8 +495,8 @@ function cmdQuery(kind: 'query' | 'explain' | 'affected' | 'path', argv: string[
         if (t.items.some((i) => i.direction === 'in')) renderUsage(r.g, argv, a);
         return 0;
     }
-    const fn = kind === 'query' ? query : kind === 'explain' ? explain : affected;
-    const rc = render(kind === 'affected' ? affected(r.g, a, 2, budget, walk) : fn(r.g, a, budget, walk), r.note);
+    const answer = kind === 'affected' ? affected(r.g, a, 2, budget, walk) : kind === 'explain' ? explain(r.g, a, budget, walk) : query(r.g, a, budget, walk);
+    const rc = render(answer, r.note);
     if (kind === 'affected') renderUsage(r.g, argv, a);
     return rc;
 }
@@ -669,7 +679,7 @@ function cmdTestsFor(argv: string[]): number {
         return 1;
     }
     try {
-        const res = capAnswer(testsForAnswer(r.g, symbol, stateOf(argv, r.g.answeredBy)), ['tests', 'lines', 'recommended_reads'], parseDetail(flag(argv, '--detail')));
+        const res = capAnswer(testsForModuleAnswer(r.g, symbol, stateOf(argv, r.g.answeredBy)), ['tests', 'lines', 'recommended_reads'], parseDetail(flag(argv, '--detail')));
         renderEnvelope(res);
         process.stdout.write(`seeds: ${res.seeds.join(', ') || '(none)'}\n`);
         if (res.partial_files.length) process.stdout.write(`partial files (parsed with errors, not complete): ${res.partial_files.join(', ')}\n`);
@@ -677,6 +687,7 @@ function cmdTestsFor(argv: string[]): number {
         if (res.uncertainty) process.stdout.write(`  ${res.uncertainty}\n`);
         for (const t of res.tests) process.stdout.write(`  ${t}\n`);
         renderOmitted(res.omitted);
+        if (res.seeds.length === 0) process.stdout.write(`${noEntryLine(symbol, 'tests-for')}\n`);
         renderReads(res.recommended_reads);
         return 0;
     } finally {
@@ -1204,6 +1215,13 @@ function mapIsBehind(root: string, cache: string): boolean {
 async function cmdMap(argv: string[]): Promise<number> {
     if (argv.includes('--estate')) return estateMapMain(argv);
     if (argv.includes('--demo')) return cmdMapDemo(argv);
+    const section = flag(argv, '--section');
+    if (section !== null) {
+        const out = flag(argv, '--out');
+        const r = mapSection(out ? path.resolve(out) : graphHome(resolveRoot(argv)).mapDir, section);
+        process.stdout.write(r.ok ? `${r.body}\n` : `code-graph: ${r.reason}${r.names.length ? ` — sections: ${r.names.join(', ')}` : ''}\n`);
+        return r.ok ? 0 : 1;
+    }
     const root = resolveRoot(argv);
     if (!fs.existsSync(root)) {
         process.stderr.write(`code-graph: root not found: ${root}\n`);
@@ -1423,9 +1441,12 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'auto-refresh') return cmdAutoRefresh(argv.slice(1));
         if (sub === 'projects') return projectsMain(argv.slice(1));
         if (sub === 'estate') return estateMain(argv.slice(1));
+        if (sub === 'bugs') return bugsMain(argv.slice(1));
+        if (sub === 'ask') return askMain(argv.slice(1));
+        if (sub === 'scan') return scanMain(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|review-risk|why|usage|remove-plan|provenance|branches|branch-diff|on-branches|tests-for|untested|dead|confirm|pack|rebuild-diff|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
+                'impact|review-risk|why|usage|remove-plan|provenance|branches|branch-diff|on-branches|tests-for|untested|dead|confirm|pack|rebuild-diff|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage|bugs|ask|scan> [options]\n',
         );
         return 2;
     } catch (e) {

@@ -55,6 +55,7 @@ import {
     not_implemented_envelope,
 } from './catalog.js';
 import { GRAPH_TOOLS } from './graph_tools.js';
+import { LISTING_PAGE_PROPS, pageListing } from './listing_page.js';
 import { resolvePath as _resolvePath, strip as _strip } from './path_util.js';
 import { type Outcome, record_call } from './telemetry.js';
 import type { PromptCache } from './prompts.js';
@@ -478,7 +479,7 @@ async function _memoryLookupHandler(
     // Mirror the Python `os.chdir(consumer_root)` scoping: memory_lookup
     // resolves `agents/memory` relative to CWD, so the consumer root is
     // applied via a chdir window that is always restored.
-    const detailRaw = args.detail ?? 'full';
+    const detailRaw = args.detail ?? 'index';
     if (detailRaw !== 'full' && detailRaw !== 'index') {
         throw new Error("'detail' must be 'index' or 'full'");
     }
@@ -1126,7 +1127,7 @@ async function _listSkillsHandler(
             wire_name: to_mcp_prompt_meta(p).name as string,
         }));
     items.sort((a, b) => _strCmp(a.name, b.name));
-    return { count: items.length, skills: items, errors: [...errors] };
+    return { ...pageListing(items, _args, 'skills', ['name', 'wire_name']), errors: [...errors] };
 }
 
 /** Phase 3 L2 — enumerate command prompts (kind=='command'). */
@@ -1165,7 +1166,7 @@ async function _listRulesHandler(
             source: r.source,
         }));
     items.sort((a, b) => _strCmp(a.uri, b.uri));
-    return { count: items.length, rules: items, errors: [...errors] };
+    return { ...pageListing(items, _args, 'rules', ['uri', 'name']), errors: [...errors] };
 }
 
 /** Phase 3 L2 — fetch the rendered body of a resource URI. */
@@ -1401,12 +1402,12 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
                 detail: {
                     type: 'string',
                     enum: ['index', 'full'],
-                    default: 'full',
+                    default: 'index',
                     description:
-                        "'index' returns compact priced rows (id, title, " +
-                        "tokens_estimate) instead of full bodies — call " +
-                        "this first, then memory_get the ids you need. " +
-                        "'full' (default) returns complete entries.",
+                        "'index' (default): priced rows (id, title, " +
+                        "tokens_estimate), then memory_get the ids " +
+                        "you need. 'full': complete entries. Call " +
+                        "index first.",
                 },
                 token_budget: {
                     type: 'integer',
@@ -1466,14 +1467,14 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
         name: 'list_skills',
         side_effect: 'ro',
         description:
-            'Enumerate every skill the server currently exposes as a ' +
-            'prompt, each with its name, description, and source. Use to ' +
-            'discover which skills are available before suggesting or ' +
-            'invoking one. Read-only manifest view, takes no arguments. ' +
-            'Returns a `count` plus a `skills` array.',
+            'Skills exposed as prompts, to discover one ' +
+            'before suggesting or invoking it. Read-only. ' +
+            'Pages of 50 names; detail:"full" adds the ' +
+            'description and source; `count` is the ' +
+            'total.',
         input_schema: {
             type: 'object',
-            properties: {},
+            properties: LISTING_PAGE_PROPS,
             additionalProperties: false,
         },
         handler: _listSkillsHandler,
@@ -1498,15 +1499,14 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
         name: 'list_rules',
         side_effect: 'ro',
         description:
-            'Enumerate every behavioral rule the server exposes as a ' +
-            'resource, each with its URI, name, and description. Use to ' +
-            'discover which rules are in effect, then fetch a body with ' +
-            '`read_resource_body` or `resources/read`. Read-only manifest ' +
-            'view, takes no arguments. Returns a `count` plus a `rules` ' +
-            'array.',
+            'Rules exposed as resources; fetch a body ' +
+            'with `read_resource_body`. Read-only. Pages ' +
+            'of 50 URIs and names; detail:"full" adds the ' +
+            'description and source; `count` is the ' +
+            'total.',
         input_schema: {
             type: 'object',
-            properties: {},
+            properties: LISTING_PAGE_PROPS,
             additionalProperties: false,
         },
         handler: _listRulesHandler,

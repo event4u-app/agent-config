@@ -32,7 +32,7 @@ export function capAnswer<T extends object>(
     detail: Detail,
     dropInMinimal: readonly (keyof T & string)[] = [],
 ): T & { detail: Detail; omitted: Record<string, number> } {
-    const out: Record<string, unknown> = { ...r };
+    const out = { ...r } as Record<string, unknown>;
     const omitted: Record<string, number> = {};
     for (const f of fields) {
         const list = out[f];
@@ -53,7 +53,7 @@ export function capAnswer<T extends object>(
 export function capReviewRisk<T extends { seeds: unknown[]; terms: Array<{ term: string; items: unknown[] }> }>(
     r: T,
     detail: Detail,
-): T & { detail: Detail; omitted: Record<string, number> } {
+): Omit<T, 'terms'> & { terms: Array<T['terms'][number] & { count: number }>; detail: Detail; omitted: Record<string, number> } {
     const omitted: Record<string, number> = {};
     const seeds = budgetList(r.seeds, rendered, DETAIL_BUDGET[detail]);
     if (seeds.omitted) omitted['seeds'] = seeds.omitted;

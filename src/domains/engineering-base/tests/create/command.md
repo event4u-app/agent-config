@@ -53,7 +53,7 @@ the style and conventions already in use (assertion shape, naming, fixtures).
 
 ### 3. Understand the code before writing tests
 
-- Use `codebase-retrieval` to understand the classes, their dependencies, and how they're used.
+- Use `code-graph ask` to understand the classes, their dependencies, and how they're used.
 - Read existing tests for the same or related classes to match patterns.
 - Understand what the method is supposed to do, not just what it does.
 

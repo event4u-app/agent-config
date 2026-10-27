@@ -179,6 +179,7 @@ describe('5.1 — three deterministic checks', () => {
         const g: CodeGraph = {
             schema_version: 3, source_checksum: 'hand', languages: ['typescript'], grammar_abi: 14,
             edge_confidence_counts: { EXTRACTED: 0, INFERRED: 0, AMBIGUOUS: 0 },
+            suppressed_edge_counts: { dynamic_no_candidate: 0 },
             nodes: [
                 { id: 'a.ts#direct', label: 'direct', kind: 'function', source_file: 'a.ts', source_location: [1, 1, 2, 1] },
                 { id: 'a.ts#inner', label: 'inner', kind: 'function', source_file: 'a.ts', source_location: [4, 1, 5, 1] },

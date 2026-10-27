@@ -41,6 +41,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { DEFAULT_ANSWER_BUDGET, budgetImpactReport } from '../code_graph/answer_budget.js';
 import { changedFiles } from '../code_graph/cli.js';
 import { detectSources, graphState, pickSource } from '../code_graph/detect.js';
 import { graphHome } from '../code_graph/graph_home.js';
@@ -254,6 +255,8 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
                 },
                 review_risk: { type: 'boolean' },
                 detail: { type: 'string', enum: ['minimal', 'standard'], default: 'standard', description: 'Capped lists; what is left out is counted in `omitted`.' },
+                budget: { type: 'integer', minimum: 250 },
+                page: { type: 'integer', minimum: 1 },
             },
             additionalProperties: false,
         },
@@ -275,15 +278,20 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             return withGraph(root, (g) =>
                 args['untested_only'] === true
                     ? { ...capAnswer(untested(g, files, state), ['untested', 'tested', 'recommended_reads'], detail), changed_files: files.length }
-                    : {
-                          ...capAnswer(
-                              impact(g, files, state, num(args, 'depth', 2), isTestFile, diffHunks(root, `${rev}..HEAD`) ?? undefined),
-                              ['dependents', 'reached', 'test_files', 'producing_edges', 'lines', 'recommended_reads'],
-                              detail,
-                              ['reached', 'producing_edges', 'lines'],
-                          ),
-                          changed_files: files.length,
-                      },
+                    : budgetImpactReport(
+                          g,
+                          {
+                              ...capAnswer(
+                                  impact(g, files, state, num(args, 'depth', 2), isTestFile, diffHunks(root, `${rev}..HEAD`) ?? undefined),
+                                  ['dependents', 'reached', 'test_files', 'producing_edges', 'lines', 'recommended_reads'],
+                                  detail,
+                                  ['reached', 'producing_edges', 'lines'],
+                              ),
+                              changed_files: files.length,
+                          },
+                          num(args, 'budget', DEFAULT_ANSWER_BUDGET),
+                          num(args, 'page', 1),
+                      ),
             );
         },
     },

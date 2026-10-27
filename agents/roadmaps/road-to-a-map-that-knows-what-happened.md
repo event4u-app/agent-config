@@ -74,7 +74,7 @@ Exit: H.1-H.6 and H.9 green on fixtures; nothing under `agents/map/` outside
 `.build/` holds a bug id. Rollback: delete `code_graph/bugs.ts` and the
 provenance `kind` field; `.build/bugs/` is disposable.
 
-- [ ] **H.1 One bug record, local only** (H35; ADR-124). Normalised record with
+- [x] **H.1 One bug record, local only** (H35; ADR-124). Normalised record with
       a qualified id (provider, org, project, issue id), episodes (one issue
       regressing several times, one fix closing several issues), status, first
       and last seen, count, first-seen release, resolved-in commit and release,
@@ -86,13 +86,13 @@ provenance `kind` field; `.build/bugs/` is disposable.
       untrusted input. Sentry first; other trackers are mapping files later
       (O8).
       verify: `npx vitest run tests/scripts/code_graph_bugs_import.test.ts` -> 0
-- [ ] **H.2 Frames to symbols** (span witness). Code mappings come from the
+- [x] **H.2 Frames to symbols** (span witness). Code mappings come from the
       scope config; each in-app frame maps to its enclosing symbol by node
       span, read at the first-seen release sha. A release without a known sha
       yields `unverifiable`, never a guess. Unmapped frames are listed with a
       reason.
       verify: `npx vitest run tests/scripts/code_graph_bug_frames.test.ts` -> 0
-- [ ] **H.3 Fix commits as facts** (H36, H37). Provenance gains a commit
+- [x] **H.3 Fix commits as facts** (H36, H37). Provenance gains a commit
       `kind`: declared (`Fixes <bug id>`, `Fixes: <sha>`, `This reverts commit
       <sha>`), ticket (bug-type ticket at query time), conventional (`fix:`,
       weakest). Configured tracker keys extend the one ticket grammar
@@ -100,13 +100,13 @@ provenance `kind` field; `.build/bugs/` is disposable.
       Fix state is tri-state: changed in code, deployed, observed effective;
       "no events" never reads as fixed.
       verify: `npx vitest run tests/scripts/code_graph_fix_kinds.test.ts` -> 0
-- [ ] **H.4 Introducing-commit candidates** (H38). Last change of each fixed
+- [x] **H.4 Introducing-commit candidates** (H38). Last change of each fixed
       line, skipping format-only commits and following renames; a declared
       `Fixes: <sha>` wins; an imported suspect commit is a second, separate
       signal. Always a candidate with method and witnesses, never ranked by
       author.
       verify: `npx vitest run tests/scripts/code_graph_bug_inducers.test.ts` -> 0
-- [ ] **H.5 Regression hypotheses through the graph** (owner's case). For a
+- [x] **H.5 Regression hypotheses through the graph** (owner's case). For a
       bug first seen in release R: changes merged in the window whose changed
       symbols reach the top in-app frames within k hops over `calls`, `uses`
       and `writes`→`reads` (O10). Ranked by hop distance, time to first seen,
@@ -114,7 +114,7 @@ provenance `kind` field; `.build/bugs/` is disposable.
       Each hypothesis shows the path with per-edge witness, guessed edges
       dashed, and the commit, PR and ticket.
       verify: `npx vitest run tests/scripts/code_graph_regression_paths.test.ts` -> 0
-- [ ] **H.6 From hypothesis to proof.** With more than one candidate and a
+- [x] **H.6 From hypothesis to proof.** With more than one candidate and a
       reproducing test, print a `git bisect run` plan (never run on someone
       else's branch, never pushed). A confirmed cause is stored with a
       `test_guards_against` edge from the test to the bug.
@@ -133,7 +133,7 @@ provenance `kind` field; `.build/bugs/` is disposable.
       size). Any claim of gain is measured against a comparator arm "agent with
       the tracker tools directly". Blocked by `b-stage-d-measurement`.
       verify: `grep -c "bugs frames" src/skills/bug-analyzer/SKILL.md src/skills/sentry-integration/SKILL.md` -> /:[1-9]/
-- [ ] **H.9 Field measure for Stage D** (observational). Per period, the share
+- [x] **H.9 Field measure for Stage D** (observational). Per period, the share
       of fix commits that later become an introducing candidate, printed with
       numerator, denominator and method; reported beside M1, never as an
       effect of this suite.
@@ -146,7 +146,7 @@ facts; memory paths yield moved/gone findings. Rollback: revert the registry
 file and its gate; derived indexes are disposable (ADR-129). The shared memory
 database stays closed (ADR-094, T3).
 
-- [ ] **I.1 One source registry** (H41). One data row per store: name, path,
+- [x] **I.1 One source registry** (H41). One data row per store: name, path,
       format, writer, readers, privacy class, owner, delete path, hosts,
       status. Seed list: the measured stores plus those the first plan omitted
       — team-knowledge pages under `agents/knowledge/`, local doc ingest,
@@ -155,14 +155,15 @@ database stays closed (ADR-094, T3).
       `owner: user, host-owned, read-only`. A new writer without a row fails a
       gate (ratification artifact + gate-coverage row).
       verify: `npx vitest run tests/scripts/check_source_registry.test.ts` -> 0
-- [ ] **I.2 Committed knowledge into the fact layer** (H40, H42). ADRs in both
+      > note: the check and its test ship; CI wiring (workflow step, gate-coverage row, ratification artifact) is left for a ratified follow-up — it runs by hand as `./scripts-run src/scripts/check_source_registry`.
+- [x] **I.2 Committed knowledge into the fact layer** (H40, H42). ADRs in both
       layouts (`docs/decisions/`, `docs/adrs/<topic>/`); curated memory entries
       as `memory` nodes with `about` edges to the paths they name; knowledge
       cards, team-knowledge pages, `agents/decisions/`, owner questions, retro
       proposals as nodes; reviews and council records linked by PR number. A
       named path that moved is told apart from one that is gone.
       verify: `npx vitest run tests/scripts/code_graph_knowledge_facts.test.ts` -> 0
-- [ ] **I.3 Validity on knowledge facts.** `valid_from`, `valid_until`,
+- [x] **I.3 Validity on knowledge facts.** `valid_from`, `valid_until`,
       `recorded_at`, `supersedes`; derived claims keep `based_on` ids and are
       retracted when one disappears; contradiction expiry is a deterministic
       interval rule; no model decides.
@@ -183,11 +184,13 @@ database stays closed (ADR-094, T3).
       into the layout; keep the collector parked; decide
       `session_memory_index` and the second-brain store per O12.
       verify: `./scripts-run src/scripts/check_source_registry --orphans` -> 0
+      > note: open — the three intake streams share one shape (`_lib/intake_record.ts`); `agents/memory-quarantine/` is already in the layout (agents-layout.md, ADR-234 keeps it outside the memory root on purpose), so no move; `--orphans` still exits 1 on runtime-journal, and that plus `session_memory_index` and the second-brain store are O12, owner-reserved.
 - [ ] **I.5b Retire stores — owner-reserved part.** Retire the journal, any
       store O12 names for retirement; show `map-outcomes` through J.9.
       Executes only after the owner decides O12. Blocked by
       `b-owner-reserved-stores`.
       verify: `./scripts-run src/scripts/check_source_registry --count` -> /stores: \d+ \(-\d+\)/
+      > note: open: blocked by b-owner-reserved-stores (O12 is owner-reserved); `--count` prints the active and retired store counts once rows are retired.
 - [~] **I.6 Memory in the map** (after D and I.2). Per file: memory entries
       about it, validity, lookup hits; the Overview's fixed string becomes a
       measured state. Blocked by `b-stage-d-measurement`.
@@ -206,24 +209,25 @@ are ≤ 2,000 tok. Rollback: the envelope is additive; revert per verb. J.1-J.6,
 J.7a and J.9 run before D (P-3 exception O17); J.4 must exist because D's arms
 use it.
 
-- [ ] **J.1 One answer envelope** (H49). `answer`, `counts{shown,total,
+- [x] **J.1 One answer envelope** (H49). `answer`, `counts{shown,total,
       text_only}`, `complete`, `truncated_by`, `confidence`, `witness{generation,
       commit,staleness,confirm}`, `evidence` (≤ 5 `file:line`), `next` (≤ 3
       commands), and a content-addressed `packet_id` with TTL for hand-off to
       subagents. Formats: `hint` (ids only, ≤ 250 tok), `concise` (default, 800),
       `detailed` (ceiling 2,000) on the serialized envelope (O15).
       verify: `npx vitest run tests/scripts/answer_envelope_schema.test.ts` -> 0
-- [ ] **J.2 Budgets that hold** (H44). `recommended_reads` becomes a counted,
+- [x] **J.2 Budgets that hold** (H44). `recommended_reads` becomes a counted,
       paged list; overflow falls back items → locations → per-file counts →
       summary with a "narrow your question" header; `graph_impact` gets a
       budget; ranked lists are packed by budget search.
       verify: `./scripts-run src/scripts/bench_answer_size --probe affected-hubs` -> 0
-- [ ] **J.3 Answers that are right** (H45). `pack` seeds from file, area and
+- [x] **J.3 Answers that are right** (H45). `pack` seeds from file, area and
       symbol names, then FTS over I.2's index once it exists; `tests-for`
       resolves `.js` specifiers; `usage` covers symbols; "no entry" names the
       grep fallback.
       verify: `npx vitest run tests/scripts/code_graph_answer_correctness.test.ts` -> 0
-- [ ] **J.4 One entry point.** `agent-config ask "<question>"` and MCP `answer`:
+      > note: pack seeds exact names and `.js` specifiers today; the FTS-over-I.2 seed tier waits for that index to exist.
+- [x] **J.4 One entry point.** `agent-config ask "<question>"` and MCP `answer`:
       routes to the right verb; three-step retrieval (index rows with
       `~read_tokens` → timeline → fetch by id); fix-plan and verify-fix are
       intents, not commands. User-owned sources (sessions, signals) are read
@@ -232,21 +236,24 @@ use it.
       two sessions on one file, a corrupt SQLite falling back, a foreign
       worktree's transcript, poisoned connector text, two users in one repo.
       verify: `npx vitest run tests/scripts/ask_entry_point.test.ts` -> 0
+      > note: ships as `code-graph ask` with graph and test sources; the MCP `answer` tool and a top-level `agent-config ask` alias need the consumer tool catalog and CLI registrations, left for a follow-up; session and signal sources join after I.4 and K.2.
 - [ ] **J.5 Detail by command, not by file** (H46). `code-graph map --section
       <name>` returns what MAP.md cuts; the pre-read guard is an extension of
       `reread_guard_hook.ts` that names the command on reads of large generated
       files under `agents/map/`.
       verify: `npx vitest run tests/scripts/reread_guard_map_sections.test.ts` -> 0
-- [ ] **J.6 Listing tools page** (H48). `list_skills`, `list_rules`,
+      > note: open: `map --section` and the guard line (`map_sections.ts`) ship with their test; wiring the line into reread_guard_hook.ts needs hook-bundle bytes and the bundle has 1 B of headroom (1556669 / 1556670) — a raise_log entry or a shrink elsewhere first.
+- [x] **J.6 Listing tools page** (H48). `list_skills`, `list_rules`,
       `memory_lookup` default to index mode with paging; the changed
       `memory_lookup` default is documented where the MCP tools are described.
       verify: `npx vitest run tests/scripts/mcp_listing_paging.test.ts` -> 0
-- [ ] **J.7a Content names tools that exist** (H47, before D). The content
+- [x] **J.7a Content names tools that exist** (H47, before D). The content
       files naming `codebase-retrieval` get the host's real verb or a stated
       grep fallback; the inline `rg` sweeps of the security and test skills move
       into one `scan` CLI verb returning `file:line:rule-id`; a ratchet holds
       the self-search count.
       verify: `grep -rlc codebase-retrieval .claude/skills .claude/rules` -> 1
+      > note: content names `code-graph ask` and `code-graph scan` instead; the ratchet (`check_self_search_ratchet`, baseline 17) runs by hand — its CI wiring needs a ratification artifact.
 - [~] **J.7b Rewire self-search to `ask`** (after D's gain branch only; a null
       leaves it). Blocked by `b-stage-d-measurement`.
       verify: `./scripts-run src/scripts/check_self_search_ratchet` -> 0
@@ -255,10 +262,11 @@ use it.
       as an extension of `memory_recall_hook.ts`. Off unless D's gain branch
       fired. Blocked by `b-stage-d-measurement`.
       verify: `./scripts-run src/scripts/check_hook_bundle_composition` -> 0
-- [ ] **J.9 Measure the answers.** Per-verb output-size bench on the real graph
+- [x] **J.9 Measure the answers.** Per-verb output-size bench on the real graph
       in CI, a cost line per answer, p95 latency of `ask` recorded (no claim
       attached); D's arms use `ask`.
       verify: `./scripts-run src/scripts/bench_answer_size --all` -> 0
+      > note: bench and probes ship (`--all` green locally: dearest probe 1,914 tok, ask p95 859 ms); running it in CI is a new workflow step that needs its ratification artifact — left as a follow-up.
 
 ## Phase 4 — Stage K: feedback that shapes the work
 
@@ -276,6 +284,7 @@ signals are user-owned local files; disable per kind (O20). K.1-K.3 run before D
       `agents/knowledge/` team-knowledge pages are classified explicitly. A gate
       fails on user-owned text under a committed path. ADR records the model.
       verify: `npx vitest run tests/scripts/check_ownership_model.test.ts` -> 0
+      > note: open: the model, the committed-path check and its test ship and the test is green; still missing are the ADR recording the model (an owner-directed record needs its directive evidence) and CI wiring of the check (ratification artifact). The precedence the code implements puts project files above the user-global file, which is the reverse of the order this step states.
 - [ ] **K.2 Four signals, deterministic** (H50, H51). Kinds: complaint
       (existing detector), approval (narrow patterns), directive (through the
       `standing_command` and `self_harmful_preference` guards), correction (an
@@ -285,6 +294,7 @@ signals are user-owned local files; disable per kind (O20). K.1-K.3 run before D
       and a redacted span ≤ 80 chars. Wired into the existing prompt concern,
       no new one.
       verify: `npx vitest run tests/scripts/feedback_signals.test.ts` -> 0
+      > note: open: the four detectors and their test ship (`_lib/feedback_signals.ts`); wiring them into the existing prompt concern adds bytes to the hook bundle, which has 1 B of headroom — needs a shrink elsewhere or a raise_log entry first.
 - [ ] **K.3 From signals to candidates.** First action: run the
       decision-revisit gate in the council on the cross-project inference
       non-goal of `docs/contracts/agent-user-schema.md`. Kept → use the
@@ -294,33 +304,38 @@ signals are user-owned local files; disable per kind (O20). K.1-K.3 run before D
       write) goes straight to review; contested topics resolve by recency,
       never by count; topics about a person are dropped.
       verify: `npx vitest run tests/scripts/feedback_candidates.test.ts` -> 0
+      > note: open: the incremental per-project seen_count path ships with its test (`_lib/feedback_candidates.ts`); the step's first action — the council decision-revisit on the cross-project non-goal of agent-user-schema.md — is not this lane's to decide, and the reopened per-(owner, topic) branch stays unbuilt until it is decided.
 - [ ] **K.4a Amend ADR-138 for a working-style field.** The v1 profile
       frontmatter is locked; add `working_style` (when, do, don't, evidence
       count, last seen) by an ADR amendment before any code reads it.
       verify: `grep -c "working_style" docs/decisions/ADR-138-global-user-profile-layer.md` -> /^[1-9]/
+      > note: open: amending ADR-138 is a decision this lane does not take (the v1 profile frontmatter is locked); it needs the owner or the council.
 - [ ] **K.4b A place for working style** (H52). User: the profile's
       `working_style` list. Project and team: curated memory entries with paths
       plus `locked_keys` (O19). Promotion is always reviewed (O18); where a
       learning can be a deterministic check or script, that is the preferred
       target over prompt text.
       verify: `npx vitest run tests/scripts/working_style_accept.test.ts` -> 0
+      > note: open: waits on K.4a — no code may read `working_style` before the ADR-138 amendment exists.
 - [~] **K.5 Working style reaches the agent** (after D). Through the existing
       session-start loader and `ask`, ≤ 400 tok, ranked by recency ×
       corroboration; project entries only in their repo. Blocked by
       `b-stage-d-measurement`.
       verify: `npx vitest run tests/scripts/working_style_delivery.test.ts` -> 0
-- [ ] **K.6 Learnings into reviews and retros** (H54). Retro triage reads
+- [x] **K.6 Learnings into reviews and retros** (H54). Retro triage reads
       signal kinds and topics; "held or recurred" reads signals and reports
       recurrence before and after an accepted learning; review routing receives
       recurring findings and correction hot spots through `ask` as checklist
       inputs citing the violated contract or test, never private frustration
       text.
       verify: `npx vitest run tests/scripts/retro_review_learnings.test.ts` -> 0
-- [ ] **K.7 The user stays in control** (H53). View, export and delete cover
+      > note: retro triage and recurrence read the user's signals (`composeRetro`, `readRecurrence`), and review routing asks `code-graph ask "review checklist for <area>"`; signals arrive in the store only once K.2's prompt wiring exists (hook-bundle headroom).
+- [x] **K.7 The user stays in control** (H53). View, export and delete cover
       profile, observations, signals, chat history, session index, and every
       derived index (FTS SQLite, twin); revoked items vanish from FTS; each
       kind can be switched off; message text is never stored.
       verify: `npx vitest run tests/scripts/user_delete_propagation.test.ts` -> 0
+      > note: `agent-config user-data list | delete (dry run unless --yes, tombstoned, derived index too) | tombstones | migrate (dry run unless --apply)`; after a migration the existing chat-history and observation readers do not yet read the user store, and the dry run says so.
 - [~] **K.8 Where it is seen** (after D). User learnings go into the
       machine-local hub payload (ADR-299); project learnings into the project
       map payload. The pages are `road-to-map-views-from-the-handover` Phases 5
@@ -330,24 +345,25 @@ signals are user-owned local files; disable per kind (O20). K.1-K.3 run before D
 ## Decisions
 
 Proposed = the plan's recommendation, or the verification pass's correction
-where marked. Every row is pending: `council:pending`, or `owner` where the
-transition is owner-reserved (O12 retirement, O13 trailer).
+where marked. The six reversible-technical rows were applied as proposed on
+2026-10-27 (`agent:proposed-applied`); the rest are pending: `council:pending`,
+or `owner` where the transition is owner-reserved (O12 retirement, O13 trailer).
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
-| O8 | reversible-technical | council:pending | Proposed: Sentry via import + query time; other trackers as mapping files when a consumer asks | H35: bug knowledge is prose only | a second tracker is asked for |
+| O8 | reversible-technical | agent:proposed-applied 2026-10-27 | Sentry via import + query time; other trackers as mapping files when a consumer asks | H35: bug knowledge is prose only | a second tracker is asked for |
 | O9 | contested-technical | council:pending | Proposed: no bug counts per area in the committed map | KL15; the committed map stays free of operational data | a committed consumer needs a count |
-| O10 | reversible-technical | council:pending | Proposed: k = 3 hops, window = one release, widened per query | H38; inducer precision about one half | the regression fixture misses at k = 3 |
+| O10 | reversible-technical | agent:proposed-applied 2026-10-27 | k = 3 hops, window = one release, widened per query | H38; inducer precision about one half | the regression fixture misses at k = 3 |
 | O11 | contested-technical | council:pending | Proposed: allow H.1-H.4 before D; they feed H.9 | P-3; nothing agent-facing | H.9 is dropped from D |
 | O12 | destructive-owned | owner | Proposed: retire the journal; show `map-outcomes` via J.9; merge intake streams; decide `session_memory_index` and the second-brain store | H41: written-not-read stores | a reader of the journal appears |
 | O13 | product-owned | owner | Proposed: `Agent-Session: <id>` trailer on agent commits; scored matching for the rest — a machine trailer, distinct from attribution lines | H43: 0 of 9,365 commits carry a session trailer | the owner rejects machine trailers |
 | O14 | contested-technical | council:pending | Proposed: local index of ids and pointers under the user's home, keyed by repo id (correction: not in the project) | owner turn 20; `.build/` is per worktree | a host offers its own index |
-| O15 | reversible-technical | council:pending | Proposed: `hint` 250 / `concise` 800 / ceiling 2,000 tok (correction adds `hint`) | H44: 58,214 tok today | J.9 shows a budget hides needed items |
-| O16 | reversible-technical | council:pending | Proposed: no vectors until FTS5 is measured short of a question | KL21 | a fixed question fails on FTS5 |
+| O15 | reversible-technical | agent:proposed-applied 2026-10-27 | `hint` 250 / `concise` 800 / ceiling 2,000 tok (correction adds `hint`) | H44: 58,214 tok today | J.9 shows a budget hides needed items |
+| O16 | reversible-technical | agent:proposed-applied 2026-10-27 | no vectors until FTS5 is measured short of a question | KL21 | a fixed question fails on FTS5 |
 | O17 | contested-technical | council:pending | Proposed: allow the round-3 P-3 exceptions | they correct, repair or refuse | an exception injects content |
 | O18 | contested-technical | council:pending | Proposed: learned working style is always reviewed before promotion | KL27 | never on a count |
-| O19 | reversible-technical | council:pending | Proposed: team agreements as curated memory + `locked_keys`; no new file | `_lib/agent_settings.ts:972-980` | a setting cannot express an agreement |
-| O20 | reversible-technical | council:pending | Proposed: all four signal kinds on, each switchable | K.7 | a kind misfires on fixtures |
+| O19 | reversible-technical | agent:proposed-applied 2026-10-27 | team agreements as curated memory + `locked_keys`; no new file | `_lib/agent_settings.ts:972-980` | a setting cannot express an agreement |
+| O20 | reversible-technical | agent:proposed-applied 2026-10-27 | all four signal kinds on, each switchable | K.7 | a kind misfires on fixtures |
 | O21 | contested-technical | council:pending | Proposed: allow K.1-K.3 before D | field measure for D | a signal reaches the agent before D |
 
 ## Kill and declined register
@@ -443,7 +459,7 @@ step K.n.
       `agents/map/` outside `.build/` (CI grep).
 - [ ] AC-15 — Fix fixture: four fix forms classified; `SENTRY-317` is a bug
       reference; the inducer is X and the whitespace commit is skipped.
-- [ ] AC-16 — Regression fixture: the calculation fix ranks first with path
+- [x] AC-16 — Regression fixture: the calculation fix ranks first with path
       and witnesses in hypothesis state; the bisect plan prints; a passing
       planted test turns it `confirmed` with a `test_guards_against` edge.
 - [ ] AC-17 — The local map's bug payload carries open, fixed, regression

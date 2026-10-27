@@ -76,7 +76,7 @@ instead of restating the table.
 
 | Severity | Examples | Verification action |
 |---|---|---|
-| **High — load-bearing** | "Method `X::y()` exists at `path/to/file.php:142`", "version 12.4.1 added the API", "this test passes" | MUST verify with `view`, `grep`, `codebase-retrieval`, or fresh command output **before** claiming. Too expensive → ask. |
+| **High — load-bearing** | "Method `X::y()` exists at `path/to/file.php:142`", "version 12.4.1 added the API", "this test passes" | MUST verify with `view`, `grep`, `code-graph ask`, or fresh command output **before** claiming. Too expensive → ask. |
 | **Medium — project-shape** | "This project uses Pest for testing", "controllers live under `app/Http/Controllers`" | Verify if one tool call reaches it; otherwise hedge: *"I'd guess X — not checked"*. |
 | **Low — well-known idioms** | "PHP `array_map` returns a new array", "git tags are immutable", "JS arrays are zero-indexed" | Inference acceptable. Mark as inference if not 100% sure. |
 

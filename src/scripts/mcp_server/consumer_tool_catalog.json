@@ -357,6 +357,14 @@
             "default": "standard",
             "description": "Capped lists; what is left out is counted in `omitted`."
           },
+          "budget": {
+            "type": "integer",
+            "minimum": 250
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
           "project": {
             "type": "string"
           }
@@ -618,14 +626,26 @@
     },
     {
       "name": "list_rules",
-      "description": "Enumerate every behavioral rule the server exposes as a resource, each with its URI, name, and description. Use to discover which rules are in effect, then fetch a body with `read_resource_body` or `resources/read`. Read-only manifest view, takes no arguments. Returns a `count` plus a `rules` array.",
+      "description": "Rules exposed as resources; fetch a body with `read_resource_body`. Read-only. Pages of 50 URIs and names; detail:\"full\" adds the description and source; `count` is the total.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"
       ],
       "input_schema": {
         "type": "object",
-        "properties": {},
+        "properties": {
+          "detail": {
+            "type": "string",
+            "enum": [
+              "index",
+              "full"
+            ]
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
         "additionalProperties": false
       },
       "annotations": {
@@ -634,14 +654,26 @@
     },
     {
       "name": "list_skills",
-      "description": "Enumerate every skill the server currently exposes as a prompt, each with its name, description, and source. Use to discover which skills are available before suggesting or invoking one. Read-only manifest view, takes no arguments. Returns a `count` plus a `skills` array.",
+      "description": "Skills exposed as prompts, to discover one before suggesting or invoking it. Read-only. Pages of 50 names; detail:\"full\" adds the description and source; `count` is the total.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"
       ],
       "input_schema": {
         "type": "object",
-        "properties": {},
+        "properties": {
+          "detail": {
+            "type": "string",
+            "enum": [
+              "index",
+              "full"
+            ]
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
         "additionalProperties": false
       },
       "annotations": {
@@ -713,8 +745,8 @@
               "index",
               "full"
             ],
-            "default": "full",
-            "description": "'index' returns compact priced rows (id, title, tokens_estimate) instead of full bodies — call this first, then memory_get the ids you need. 'full' (default) returns complete entries."
+            "default": "index",
+            "description": "'index' (default): priced rows (id, title, tokens_estimate), then memory_get the ids you need. 'full': complete entries. Call index first."
           },
           "token_budget": {
             "type": "integer",

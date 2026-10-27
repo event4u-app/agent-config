@@ -92,7 +92,7 @@ Gather all available evidence before forming any hypothesis:
 - **Error message** → search the codebase for the message string.
 - **Branch name** → auto-detect ticket ID, fetch if found.
 - **Stacktrace** → start from top frame (crash site), trace down to entry point.
-- Use `codebase-retrieval` to find the relevant code.
+- Use `code-graph ask` to find the relevant code.
 - Read each file in the call chain to understand the data flow.
 - Check existing context docs (`agents/settings/contexts/`) for the affected area.
 - **Consult engineering memory.** Via
@@ -163,7 +163,7 @@ Once the root cause is confirmed, sweep for variants before closing:
 
 1. **Extract the signature** — the minimal code shape that makes the bug
    (e.g. "optional relation accessed without null check after `first()`").
-2. **Sweep** — grep/`codebase-retrieval` for the shape, not the symptom:
+2. **Sweep** — grep/`code-graph ask` for the shape, not the symptom:
    the same API misuse, the same copy-pasted block, the same missing guard.
 3. **Verify each hit through the false-positive gate** (§ 4 proactive mode)
    — a matching shape whose inputs cannot reach the bad state is a rejected
