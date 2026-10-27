@@ -24,9 +24,13 @@ triggers:
 
 Use this skill when working with tenant-specific data, customer database connections, or any code that touches the dual-database architecture.
 
+Two tenancy modes exist: database-per-tenant (this body) and shared-schema
+(`tenant_id` in every tenant table: child foreign keys carry `tenant_id`, the
+parent is `UNIQUE (tenant_id, id)`) — the full key rules are in
+[`references/shared-schema-integrity.md`](references/shared-schema-integrity.md).
 
 Do NOT use when:
-- Single-database applications
+- Single-tenant applications (no tenant database, no `tenant_id`)
 - Frontend-only changes
 
 ## Procedure: Work with multi-tenancy

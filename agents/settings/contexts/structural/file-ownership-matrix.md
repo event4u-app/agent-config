@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **638**
-- Edges (incl. self-WRITE): **2422**
+- Files indexed: **641**
+- Edges (incl. self-WRITE): **2443**
 
 ## READ_ONLY edges
 
@@ -913,9 +913,19 @@
 | `.agent-src.uncondensed/skills/data-flow-mapper/SKILL.md` | `.agent-src.uncondensed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/data-handling-judgment/SKILL.md` | `.agent-src.uncondensed/skills/contracts-cognition/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/data-handling-judgment/SKILL.md` | `.agent-src.uncondensed/skills/privacy-review/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/database/SKILL.md` | `.agent-src.uncondensed/skills/database/references/consumer-census.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/database/SKILL.md` | `.agent-src.uncondensed/skills/database/references/map-schema-facts.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/database/SKILL.md` | `.agent-src.uncondensed/skills/database/references/relational-modeling.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/database/SKILL.md` | `.agent-src.uncondensed/skills/source-discovery/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/database/references/consumer-census.md` | `.agent-src.uncondensed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/database/references/consumer-census.md` | `.agent-src.uncondensed/skills/migration-architect/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/database/references/map-schema-facts.md` | `.agent-src.uncondensed/skills/code-intelligence/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/database/references/relational-modeling.md` | `.agent-src.uncondensed/rules/prefer-enums-over-literals.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/database/references/relational-modeling.md` | `.agent-src.uncondensed/skills/authz-review/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/database/references/relational-modeling.md` | `.agent-src.uncondensed/skills/laravel-migration/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/database/references/relational-modeling.md` | `.agent-src.uncondensed/skills/migration-architect/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/database/references/relational-modeling.md` | `.agent-src.uncondensed/skills/multi-tenancy/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/database/references/relational-modeling.md` | `.agent-src.uncondensed/skills/schema-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/dcf-modeling/SKILL.md` | `.agent-src.uncondensed/skills/okr-tree-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/dcf-modeling/SKILL.md` | `.agent-src.uncondensed/skills/rice-prioritization/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/dcf-modeling/SKILL.md` | `.agent-src.uncondensed/skills/unit-economics-modeling/SKILL.md` | `body_link` | 1 |
@@ -1315,13 +1325,19 @@
 | `.agent-src.uncondensed/skills/messaging-architecture/SKILL.md` | `.agent-src.uncondensed/skills/gtm-launch/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/messaging-architecture/SKILL.md` | `.agent-src.uncondensed/skills/positioning-strategy/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/messaging-architecture/SKILL.md` | `.agent-src.uncondensed/skills/voice-and-tone-design/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/migration-architect/SKILL.md` | `.agent-src.uncondensed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/migration-architect/SKILL.md` | `.agent-src.uncondensed/skills/data-flow-mapper/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/migration-architect/SKILL.md` | `.agent-src.uncondensed/skills/database/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/migration-architect/SKILL.md` | `.agent-src.uncondensed/skills/database/references/consumer-census.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/migration-architect/SKILL.md` | `.agent-src.uncondensed/skills/decision-record/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/migration-architect/SKILL.md` | `.agent-src.uncondensed/skills/laravel-migration/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/monorepo-workspace/SKILL.md` | `.agent-src.uncondensed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/monorepo-workspace/SKILL.md` | `.agent-src.uncondensed/skills/standards-from-config/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/monorepo-workspace/SKILL.md` | `.agent-src.uncondensed/skills/workspace-link/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/motion-choreographer/SKILL.md` | `.agent-src.uncondensed/skills/scene-expander/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/multi-tenancy/SKILL.md` | `.agent-src.uncondensed/skills/multi-tenancy/references/shared-schema-integrity.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/multi-tenancy/references/shared-schema-integrity.md` | `.agent-src.uncondensed/skills/authz-review/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/multi-tenancy/references/shared-schema-integrity.md` | `.agent-src.uncondensed/skills/multi-tenancy/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/nda-triage/SKILL.md` | `.agent-src.uncondensed/skills/contract-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/nda-triage/SKILL.md` | `.agent-src.uncondensed/skills/contracts-cognition/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/nda-triage/SKILL.md` | `.agent-src.uncondensed/skills/dpa-review/SKILL.md` | `body_link` | 1 |
@@ -1553,6 +1569,8 @@
 | `.agent-src.uncondensed/skills/scenario-modeling/SKILL.md` | `.agent-src.uncondensed/skills/unit-economics-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/scene-expander/SKILL.md` | `.agent-src.uncondensed/skills/motion-choreographer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/scene-expander/SKILL.md` | `.agent-src.uncondensed/skills/pixar-storyteller/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/schema-review/SKILL.md` | `.agent-src.uncondensed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/schema-review/SKILL.md` | `.agent-src.uncondensed/skills/database/references/consumer-census.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/screenshot-hygiene/SKILL.md` | `.agent-src.uncondensed/rules/doc-screenshot-hygiene.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/screenshot-hygiene/SKILL.md` | `.agent-src.uncondensed/rules/domain-safety-pii.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/screenshot-hygiene/SKILL.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
@@ -1804,5 +1822,5 @@
 | `context` | 79 |
 | `persona` | 36 |
 | `rule` | 122 |
-| `skill` | 401 |
+| `skill` | 404 |
 

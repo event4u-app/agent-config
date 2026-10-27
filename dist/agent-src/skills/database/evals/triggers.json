@@ -1,7 +1,7 @@
 {
     "skill": "database",
-    "last_eval": "2026-10-10",
-    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-10 under road-to-corpus-refresh-cadence-shape 1.2c, which stamped this skill's grounding corpus and so brought it into check_routing_coverage's touched-skill scope. `last_eval` carries the authoring date, not a live eval result — the convention this tree already follows (see 1.2a's and 1.2b's notes on the same field); no live trigger eval ran for this file. Exemplars cover the explicit tuning request and the implicit one this skill's own description names verbatim ('this query is slow'), plus indexing strategy, a multi-connection question, and the German equivalent. Near-misses are three neighbours that share database vocabulary and are still somebody else's job: two are named in this skill's SKILL.md 'Do NOT use when' block — ORM model work and a migration-only ask — and the third, schema review against the persistence rule surface, is included because it reads as a database question and routes to schema-review. Counterexamples guard the 'database' homonym: a vector store used as an embedding index rather than a relational engine, and a hosting/billing question that names the database without asking anything about its behaviour.",
+    "last_eval": "2026-10-27",
+    "description": "7 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-10 under road-to-corpus-refresh-cadence-shape 1.2c, which stamped this skill's grounding corpus and so brought it into check_routing_coverage's touched-skill scope. `last_eval` carries the authoring date, not a live eval result — the convention this tree already follows (see 1.2a's and 1.2b's notes on the same field); no live trigger eval ran for this file. Exemplars cover the explicit tuning request and the implicit one this skill's own description names verbatim ('this query is slow'), plus indexing strategy, a multi-connection question, and the German equivalent. Near-misses are three neighbours that share database vocabulary and are still somebody else's job: two are named in this skill's SKILL.md 'Do NOT use when' block — ORM model work and a migration-only ask — and the third, schema review against the persistence rule surface, is included because it reads as a database question and routes to schema-review. Counterexamples guard the 'database' homonym: a vector store used as an embedding index rather than a relational engine, and a hosting/billing question that names the database without asking anything about its behaviour. Extended 2026-10-27 under road-to-database-relational-modeling 2.1/2.6, which made this skill the owner of relational modeling: two exemplars measure that claim, an explicit n-n modeling question and its German form.",
     "queries": [
         {
             "q": "this query is slow",
@@ -26,6 +26,18 @@
         },
         {
             "q": "die Abfrage auf der Bestelltabelle ist viel zu langsam — welcher Index fehlt da?",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "how should I model users that belong to several projects with a role per membership?",
+            "trigger": true,
+            "class": "exemplar",
+            "note": "relational modeling, owned here through references/relational-modeling.md"
+        },
+        {
+            "q": "wie modelliere ich eine n:m-Beziehung zwischen Kunden und Produkten mit eigenem Preis pro Zuordnung?",
             "trigger": true,
             "class": "exemplar",
             "language": "de"

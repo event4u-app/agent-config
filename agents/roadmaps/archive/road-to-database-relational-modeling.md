@@ -1,27 +1,18 @@
 ---
 complexity: structural
-status: later
+status: ready
 execution:
   mode: phase-checkpoints
-entry_condition:
-  what: "road-to-a-map-the-agent-checks-before-it-acts is archived; its Phase 0 folded the ERD capability and its data lane carries the schema model this roadmap's modeling skill would build on"
-  when: "the PR that closes that roadmap merges; checkable with `test -f agents/roadmaps/archive/road-to-a-map-the-agent-checks-before-it-acts.md`"
-  who: "the agent that runs the next roadmap screen; re-scope against the shipped data lane before waking"
-estate_offset_exempt: "One of four siblings split from a single inbox drop carrying 24 verified defect claims. This one holds the capability work and the ownership question the council refused to settle without evidence; rule 11 forbids folding it into the advice-correction sibling, which changes existing text and adds no capability. No roadmap in the current estate covers database modeling."
-estate_growth_exempt: "later_roadmaps +1: this roadmap is parked. Step 1.3 was executed and measured the highest scope overlap in the 34-skill backend-data family at 25 percent against a 70 percent threshold, so a new skill is architecturally warranted -- and inadmissible, because the per-spawn preamble payload has 4 tokens of headroom against a skill catalogue cost of 53. A 2/2-convergent council required the overlap number to be produced anyway rather than writing a budget-forced extend verdict into the admissions ledger. Two of three blockers are resolved and the third is resolved as deferred verification, so open_blockers falls; skill_count is unchanged and active_roadmaps falls by one."
-estate_growth_exempt: "Three blockers were discovered during verification, not proposed by the inbox artifact: the new skill's admission burden against 34 existing backend-data skills, a frontmatter key three proposals depend on that the skill schema forbids, and the fact that an ownership map placed in docs/ is unreachable by any agent in a consumer install."
+estate_offset_exempt: "Woken from later/ on 2026-10-27 by the owner's choice of option 1 in the inbox session that found the db-keys round already consumed (inbox-2026-10-bc, PR #2712). Its entry condition holds: road-to-a-map-the-agent-checks-before-it-acts is archived on origin/main. No active roadmap owns relational modeling; the five active ones are code-graph, setup, step-cost, update-safety and routing-assurance. The owner named this roadmap in the invocation, which is the WIP-cap exception the 2026-10-24 throughput directive allows, and it is processed to closure and archived in the same change."
+estate_growth_exempt: "active_roadmaps +1 while this branch is open, later_roadmaps -1: woken from later/ on 2026-10-27 at the owner's explicit request and archived in the same PR once every step is closed, so the merged estate change is later_roadmaps -1 and archive +1. skill_count is unchanged: the owner chose extending database over a new skill because check_preamble_payload_budget measured ceiling 135834 = base 135834, zero headroom, on 2026-10-27."
 ---
 # Road to database relational modeling
 
-> **Resume when** `road-to-a-map-the-agent-checks-before-it-acts` is archived
-> (2026-10-26: the old wake rule read a preamble-payload ceiling and a
-> `road-to-database-erd-landing` allocation; that sibling is now folded and
-> archived, so the rule could no longer fire). Parked 2026-08-27 by AI council
-> with Phase 1 discharged. See `## Notes` § Parked.
->
-> Historical wake rule, superseded 2026-10-26 and no longer read: a modeling
-> skill admissible once the preamble payload had 53 tokens of headroom below the
-> historical `ci_delivery.grace_ceiling` and the skill allowance was allocated.
+> **Woken 2026-10-27** from `later/`: the entry condition holds
+> (`road-to-a-map-the-agent-checks-before-it-acts` is archived), and the owner
+> chose to process this roadmap rather than re-analyze the already-consumed
+> db-keys round. Re-scoped the same day against `origin/main` `f82e3bdff1` — see
+> `## Decisions`.
 
 > **Source:** `agents/tmp.old/database-structure/` — four database roadmap
 > proposals from two parallel external LLM sessions plus two competing
@@ -171,7 +162,7 @@ corpus follows the ownership decision, not the other way round.
 
 ## Phase 1 — Decide the owner on evidence, not on preference
 
-- [ ] **1.1 Write the modeling contract before choosing where it lives.**
+- [x] **1.1 Write the modeling contract before choosing where it lives.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       State the triggers, the outputs, and the explicit exclusions for
       relational modeling as a capability: what a user says that should reach
       it, what it emits, and what it must refuse and route elsewhere.
@@ -179,7 +170,7 @@ corpus follows the ownership decision, not the other way round.
       triggers/outputs/exclusions list, and it names at least three phrasings a
       user would actually type.
 
-- [ ] **1.2 Write the same contract for each candidate host.**
+- [x] **1.2 Write the same contract for each candidate host.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/routing-coverage-seed.json -->
       `database`, `schema-review` and `migration-architect`, read off their
       current text rather than their names. Record what each one owns today and
       what it explicitly does not.
@@ -202,25 +193,24 @@ corpus follows the ownership decision, not the other way round.
       skill's whole subtree, not its description, so it is biased **toward**
       finding overlap.
 
-- [~] **1.4 Apply the threshold and record the verdict.**
+- [x] **1.4 Apply the threshold and record the verdict.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/routing-coverage-seed.json -->
       Above roughly 70% overlap with one host, the modeling procedure extends
       that host. Below it, the admission gate is the obstacle rather than the
       architecture, and the honest path is a new skill with a truthful
       `why_not_extend`. Record the verdict, the number it rests on, and the
       alternative rejected.
-      verify: **half discharged, half deferred — `[~]`.** The verdict and its
-      number are in `## Notes` § Parked: 25 % against a 70 % threshold, so a new
-      skill is architecturally warranted and `why_not_extend` can be answered
-      truthfully. The second half — the `agents/decisions/skill-admissions.jsonl`
-      line and `check_skill_admissions` exiting 0 — is **not** done, and is not
-      attempted: the skill cannot be admitted while the preamble payload has 4
-      tokens of headroom against a 53-token catalogue cost. Writing the ledger
-      line for a skill that cannot land would put a record in the tree for an
-      artefact that does not exist.
+      verify: re-scoped 2026-10-27 (`## Decisions` D1). The 25 % verdict stands,
+      and a new skill stays inadmissible: the preamble ratchet measured
+      ceiling 135834 = base 135834, zero headroom —
+      `./scripts-run src/scripts/check_preamble_payload_budget` -> /zero net growth/. The owner chose the
+      extend branch: `database` owns modeling through
+      `references/relational-modeling.md`. No admissions-ledger line is written
+      because no skill is admitted. Verify: `## Decisions` D1 carries the
+      verdict, the number, and the alternative rejected.
 
 ## Phase 2 — Routing authority, and a map generated from it
 
-- [ ] **2.1 Make dialect and hosting a detection step rather than a default.**
+- [x] **2.1 Make dialect and hosting a detection step rather than a default.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `database/SKILL.md:40` detects the engine from `.env` and
       `docker-compose.yml`, which presumes self-hosted. Add hosting detection
       and the managed-service guardrail the tree has zero hits for: on a managed
@@ -234,7 +224,7 @@ corpus follows the ownership decision, not the other way round.
       guardrail line, and a fixture describing a managed instance produces no
       instruction requiring server-level access.
 
-- [ ] **2.2 Give the four DB skills trigger evals and delete their grandfather lines.**
+- [x] **2.2 Give the four DB skills trigger evals and delete their grandfather lines.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: src/skills/migration-architect/evals/triggers.json -->
       `database`, `sql-writing`, `laravel-migration` and `migration-architect`
       each get `evals/triggers.json` meeting the corpus floor — at least three
       positives, two near-misses, and one German positive — and their four
@@ -246,40 +236,36 @@ corpus follows the ownership decision, not the other way round.
       the gate to cite: it is diff-scoped and forced to exit 0 under `--dry`,
       which is how it runs locally and on pull requests.
 
-- [ ] **2.3 Establish routing metadata as the single ownership authority.**
+- [x] **2.3 Establish routing metadata as the single ownership authority.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       Each DB-family skill's own scope and trigger metadata states what it owns
       and what it refuses. No prose document restates it.
       verify: for each of the DB-family skills, the owns/does-not-own statement
       is in its own frontmatter or scope lines, and no two skills claim the same
       concept.
 
-- [ ] **2.4 Generate the ownership map into a projected context.**
-      Derive it from 2.3's metadata and emit it under
-      `dist/agent-src/contexts/` so a consumer install can read it. A
-      hand-authored map is a second control plane and is explicitly out.
-      verify: the generator exists, the projected file is byte-identical to a
-      fresh run of it, and `ls dist/agent-src/contexts/` shows the file.
+- [x] **2.4 Do not generate an ownership map — the council's fallback applies.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/routing-coverage-seed.json -->
+      Re-scoped 2026-10-27 (D2): the 2026-08-27 council resolved
+      `projected-context-reachability-unknown` as fallback (b) — omit the
+      canonical map and rely on the per-skill routing metadata of 2.3. A map
+      generated anyway would be documentation described as routing.
+      verify: no ownership-map file exists under `src/agent-src/contexts/` or
+      `dist/agent-src/contexts/`, and D2 records the fallback.
 
-- [ ] **2.5 Prove the map is reachable before it is relied on.**
-      Establish whether a context under `dist/agent-src/contexts/` is consulted
-      before skill selection on at least one host. If it is not, the map is
-      documentation and the ownership statements in 2.3 are the whole mechanism
-      — record that and do not claim routing.
-      verify: either a recorded host observation showing the context reaching
-      the model before selection, or a one-line statement that it does not, with
-      the host named.
+- [x] **2.5 Record that the map is not a routing input, with the host named.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/routing-coverage-seed.json -->
+      verify: the `## Notes` section carries the one-line fallback statement naming the
+      host (claude), and no artifact claims the map routes.
 
-- [ ] **2.6 Narrow `database` only after 2.3–2.5 land.**
-      `database/SKILL.md:28` currently claims schema design. Narrow the
-      description to context, dialect, evidence and query/index work once
-      modeling has an owner and the ownership statements are in place — not
-      before, or the concept is claimed by nothing.
-      verify: `grep -n "designing schemas" src/skills/database/SKILL.md` returns
-      nothing, and the modeling owner from 1.4 claims it.
+- [x] **2.6 Make `database`'s schema-design claim true instead of removing it.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+      Re-scoped 2026-10-27 (D1): the narrowing was premised on a new owner for
+      modeling. With `database` as the owner, removing "designing schemas"
+      would leave the concept claimed by nothing — the exact failure Risk 2
+      names. The claim stays and now routes to the procedure.
+      verify: `grep -n "designing schemas" src/skills/database/SKILL.md` -> /Use when designing schemas/
+      — and the next paragraph routes to `references/relational-modeling.md`.
 
 ## Phase 3 — The modeling procedure
 
-- [ ] **3.1 Author the procedure in the artifact Phase 1 selected.**
+- [x] **3.1 Author the procedure in `src/skills/database/references/relational-modeling.md`.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       Ordered, and the order is the content: invariants first (what must always
       hold — uniqueness, lifecycle, ownership), then entity candidates, then a
       cardinality interrogation (1-1, 1-n, n-n, optional versus mandatory,
@@ -291,7 +277,7 @@ corpus follows the ownership decision, not the other way round.
       ("users can belong to several projects with a role per membership")
       produces a junction table with the role attribute on it.
 
-- [ ] **3.2 Extend the existing junction naming convention rather than restating it.**
+- [x] **3.2 Extend the existing junction naming convention rather than restating it.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `docs/guidelines/php/naming.md:36` already specifies alphabetical,
       singular, `project_user`. Reference it and add only what it lacks: when a
       junction table earns its own primary key and additional attributes, and
@@ -300,7 +286,7 @@ corpus follows the ownership decision, not the other way round.
       `grep -c "project_user" ` across the new text is 0 — the convention is
       cited, not copied.
 
-- [ ] **3.3 Add the primary-key type decision, scoped to the interlock that exists.**
+- [x] **3.3 Add the primary-key type decision, scoped to the interlock that exists.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       Default BIGINT for internal keys. `authz-review:123` requires UUID/ULID for
       **sensitive resources** exposed publicly — that is the interlock, and it is
       narrower than "all public identifiers". State the two-key pattern
@@ -310,7 +296,7 @@ corpus follows the ownership decision, not the other way round.
       verify: the decision exists, cites `authz-review:123` with its actual
       scope, and contains no unsourced numeric cost multiplier.
 
-- [ ] **3.4 Add the index method decision tree.**
+- [x] **3.4 Add the index method decision tree.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       B-tree, Hash, GIN, GiST, SP-GiST and BRIN, plus partial, expression and
       covering variants, as a tree keyed on the access pattern — not a list.
       Each leaf states which engines support it, using `compatibility`, never
@@ -318,7 +304,7 @@ corpus follows the ownership decision, not the other way round.
       verify: the tree exists, every leaf names its engines, and
       `./scripts-run src/scripts/validate_frontmatter` exits 0.
 
-- [ ] **3.5 State what an index proposal must contain.**
+- [x] **3.5 State what an index proposal must contain.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       An index recommendation is not a name. It states the access pattern it
       serves, the existing index it overlaps or replaces, its write and storage
       cost, and the plan change expected. "No new index" is a valid outcome and
@@ -328,17 +314,19 @@ corpus follows the ownership decision, not the other way round.
 
 ## Phase 4 — Enum and referential action, as decisions with costs
 
-- [ ] **4.1 Extend the enum rule with selection criteria.**
-      `src/rules/prefer-enums-over-literals.md:49` already names native enum,
-      `CHECK`-constrained column and lookup table. Add the criteria it lacks:
-      internal state machines take the constrained form; values that live in the
-      product's own vocabulary — labels, ordering, soft-deletion, user-facing
-      dropdowns — take the lookup table. Note that evolution cost differs sharply
-      by engine and defer the engine specifics to `-evolution-tactics`.
-      verify: the criteria are stated, the rule is extended rather than
-      duplicated, and no engine-version claim appears without a source.
+- [x] **4.1 Add enum selection criteria next to the rule's option set.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+      Re-scoped 2026-10-27 (D3): `src/rules/prefer-enums-over-literals.md` is
+      standing per-spawn payload with zero headroom, so the criteria go into
+      the modeling reference, which cites the rule's three-way option set
+      rather than restating it. Internal state machines take the constrained
+      form; values in the product's own vocabulary — labels, ordering,
+      soft-deletion, user-facing dropdowns — take the lookup table. Engine
+      evolution cost is deferred to `-evolution-tactics`.
+      verify: the reference cites the rule by path and line, states the
+      criteria, the rule file is unchanged, and no engine-version claim appears
+      without a source.
 
-- [ ] **4.2 Build the referential-action matrix on three axes.**
+- [x] **4.2 Build the referential-action matrix on three axes.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       Semantics by child value (expendable → cascade, self-valued → restrict,
       surviving → set null), operational cost (a parent delete cascading across
       a very large child table holds locks for as long as it runs; the
@@ -350,31 +338,31 @@ corpus follows the ownership decision, not the other way round.
       verify: the matrix has three axes, and a fixture — cascade on a foreign
       key to an invoice table — is rejected with the semantic reason.
 
-- [ ] **4.3 Add the cost fixture the semantic matrix would pass.**
+- [x] **4.3 Add the cost fixture the semantic matrix would pass.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       A cascade that is semantically correct and operationally unacceptable: an
       expendable child table with a very large row count. The correct answer is
       a batched delete plan, not `ON DELETE CASCADE`.
       verify: the fixture exists and the expected answer is the batched plan.
 
-- [ ] **4.4 Relationship → constraint table in `php/eloquent.md`.**
+- [x] **4.4 Relationship → constraint table in `php/eloquent.md`.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       belongsTo ↔ foreign key plus its index on engines that do not create one;
       hasOne ↔ unique foreign key; belongsToMany ↔ pivot with a composite
       primary or unique key `(a, b)` and an index on `(b)`; morphTo ↔ no foreign
       key possible, so an exclusive-arc CHECK, per-type tables, or a waiver.
       The guideline has zero hits for foreign, cascade, pivot or morph today.
       verify: the table exists and names the engine wherever the index half differs.
-- [ ] **4.5 State that a database cascade bypasses model events.** Cascade only
+- [x] **4.5 State that a database cascade bypasses model events.** Cascade only <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       children with no domain events or delete hooks; otherwise delete in a
       transaction through the model. DR-9 detects the conflict; nothing teaches it.
       verify: `php/eloquent.md` carries the rule next to the 4.4 table.
-- [ ] **4.6 Unique constraints under soft delete.** A partial unique index on
+- [x] **4.6 Unique constraints under soft delete.** A partial unique index on <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       postgres, a generated-column form on MySQL, cross-linked from the
       soft-delete line in `laravel-migration`.
       verify: both engine forms are stated with their engine named.
-- [ ] **4.7 Test-engine parity.** SQLite tests prove cascade semantics, not lock
+- [x] **4.7 Test-engine parity.** SQLite tests prove cascade semantics, not lock <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       cost or index use; say so where the guideline discusses tests.
       verify: the sentence exists in `php/database.md` or `php/eloquent.md`.
-- [ ] **4.8 Shared-schema tenancy integrity.** `multi-tenancy` covers
+- [x] **4.8 Shared-schema tenancy integrity.** `multi-tenancy` covers <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: src/skills/multi-tenancy/SKILL.md -->
       database-per-tenant only. Add the shared-schema half: foreign keys between
       tenant tables carry `tenant_id` in the key, the parent is unique on
       `(id, tenant_id)`, and a cross-tenant reference fixture is rejected.
@@ -382,7 +370,7 @@ corpus follows the ownership decision, not the other way round.
 
 ## Phase 5 — The consumer census, wired rather than rebuilt
 
-- [ ] **5.1 Route the DB family to the checklist that already exists.**
+- [x] **5.1 Route the DB family to the checklist that already exists.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `blast-radius-analyzer` enumerates foreign keys, indexes, views, triggers,
       then migrations, seeders and reports. **No** DB-family skill references it.
       Make the census a required step in `migration-architect` and
@@ -390,7 +378,7 @@ corpus follows the ownership decision, not the other way round.
       verify: `grep -rn "blast-radius-analyzer" src/skills/migration-architect/ src/skills/schema-review/`
       returns a routing line in each, and neither skill restates the checklist.
 
-- [ ] **5.2 Add only the database-side half that is genuinely missing.**
+- [x] **5.2 Add only the database-side half that is genuinely missing.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       The dependency graph: foreign-key graph from the catalog, views, triggers
       and functions that depend on an object **before** any drop, redundant
       indexes by prefix relation, orphan rows. The unused-index audit is already
@@ -399,7 +387,7 @@ corpus follows the ownership decision, not the other way round.
       -index case, and a fixture with a view depending on a drop candidate
       surfaces the view before the plan.
 
-- [ ] **5.3 Give the census a per-consumer compatibility question set.**
+- [x] **5.3 Give the census a per-consumer compatibility question set.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       For each consumer found: does it read the old shape, write the old shape,
       read the new, write the new, does it constrain rollout order, and is there
       a characterization test. Six answers per consumer, because a consumer list
@@ -409,7 +397,7 @@ corpus follows the ownership decision, not the other way round.
 
 ## Phase 6 — One corpus, typed
 
-- [ ] **6.1 Add design-decision rows to the existing corpus.**
+- [x] **6.1 Add design-decision rows to the existing corpus.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: src/skills/database/data/query-tuning.csv -->
       `src/skills/database/data/query-tuning.csv` is 13 lines and entirely
       query tuning. Add design rows in the same shape — each with a verification
       probe and an engine/version column — covering the decisions Phases 3–5
@@ -419,7 +407,7 @@ corpus follows the ownership decision, not the other way round.
       verify: `./scripts-run src/scripts/check_corpus_staleness` exits 0, and
       five design symptoms retrieve the correct row via `ground search`.
 
-- [ ] **6.2 Add misconception rows to the same corpus, typed — not a second CSV.**
+- [x] **6.2 Add misconception rows to the same corpus, typed — not a second CSV.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: src/skills/database/data/query-tuning.csv -->
       The council decided one corpus: both row kinds answer the same retrieval
       intent, and two registries can go stale independently. Each misconception
       row's symptom is the folklore itself — full scan is always bad, most
@@ -431,7 +419,7 @@ corpus follows the ownership decision, not the other way round.
       `check_corpus_staleness` exits 0, and five folklore prompts retrieve the
       corrective row.
 
-- [ ] **6.3 Record the condition under which the corpus splits.**
+- [x] **6.3 Record the condition under which the corpus splits.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/routing-coverage-seed.json -->
       The council's revisit condition, written where a future reader finds it: a
       versioned retrieval benchmark showing at least five percentage points
       better recall for a split corpus, without losing precision.
@@ -519,21 +507,82 @@ corpus follows the ownership decision, not the other way round.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A 34-row overlap table for `family: backend-data` exists with a per-row verdict and a stated maximum overlap figure, and the ownership verdict in Notes cites that figure.
-- [ ] AC-2 — One artifact owns relational modeling, states it in its own scope metadata, and no other DB-family skill claims the same concept.
-- [ ] AC-3 — `grep -n "designing schemas" src/skills/database/SKILL.md` returns nothing, and the concept is claimed by the artifact from AC-2.
-- [ ] AC-4 — `database`, `sql-writing`, `laravel-migration` and `migration-architect` each carry `evals/triggers.json` passing the corpus floor, and none of the four appears in `src/scripts/trigger_eval_grandfather.json`.
-- [ ] AC-5 — The modeling procedure answers the junction fixture with a junction table carrying its extra attribute, the no-new-index fixture with no new index and four filled fields, and the invoice-cascade fixture with a rejection and a semantic reason.
-- [ ] AC-6 — `./scripts-run src/scripts/validate_frontmatter` exits 0 and `grep -rn "min_version:" src/skills/` returns nothing.
-- [ ] AC-7 — `query-tuning.csv` carries both design-decision and misconception rows, distinguished by a declared column, with `check_corpus_staleness` green; no second CSV was added.
-- [ ] AC-8 — `migration-architect` and `schema-review` both route to `blast-radius-analyzer`, and neither restates its checklist.
-- [ ] AC-9 — No artifact this roadmap adds states a version-specific engine behaviour without either a pinned upstream citation or a live-engine measurement.
-- [ ] AC-10 — Either a projected context is shown to reach the model before skill selection on a named host, or the fallback is recorded and no routing claim is made for the map.
+- [x] AC-1 — A 34-row overlap table for `family: backend-data` exists with a per-row verdict and a stated maximum overlap figure, and the ownership verdict in Notes cites that figure.
+- [x] AC-2 — One artifact owns relational modeling, states it in its own scope metadata, and no other DB-family skill claims the same concept.
+- [x] AC-3 — `grep -n "designing schemas" src/skills/database/SKILL.md` returns the When-to-use line, and the paragraph after it routes to `references/relational-modeling.md` (re-scoped 2026-10-27, D1: the claim is made true rather than removed).
+- [x] AC-4 — `database`, `sql-writing`, `laravel-migration` and `migration-architect` each carry `evals/triggers.json` passing the corpus floor, and none of the four appears in `src/scripts/trigger_eval_grandfather.json`.
+- [x] AC-5 — The modeling procedure answers the junction fixture with a junction table carrying its extra attribute, the no-new-index fixture with no new index and four filled fields, and the invoice-cascade fixture with a rejection and a semantic reason.
+- [x] AC-6 — `./scripts-run src/scripts/validate_frontmatter` exits 0 and `grep -rn "min_version:" src/skills/` returns nothing.
+- [x] AC-7 — `query-tuning.csv` carries both design-decision and misconception rows, distinguished by a declared column, with `check_corpus_staleness` green; no second CSV was added.
+- [x] AC-8 — `migration-architect` and `schema-review` both route to `blast-radius-analyzer`, and neither restates its checklist.
+- [x] AC-9 — No artifact this roadmap adds states a version-specific engine behaviour without either a pinned upstream citation or a live-engine measurement.
+- [x] AC-10 — Either a projected context is shown to reach the model before skill selection on a named host, or the fallback is recorded and no routing claim is made for the map.
+
+## Decisions
+
+| ID | Decision | Alternatives | Reason | Revisit-if |
+|---|---|---|---|---|
+| D1 | `database` owns relational modeling through `references/relational-modeling.md`; 1.4 takes the extend branch and 2.6 keeps the schema-design claim | a new relational-modeling skill (architecturally warranted at 25 % overlap); hosting in `schema-review` or `migration-architect` (council rejected both on substance) | owner, 2026-10-27, option 1 "ohne neuen Skill, Erweiterung bestehender Skills"; the preamble payload has zero headroom (ceiling 135834 = base 135834), so a new skill cannot land | the preamble ratchet shows ≥ 53 tokens headroom via a rules reduction — then re-measure whether the reference should become its own skill |
+| D2 | no ownership map is generated; per-skill routing metadata is the whole mechanism | a generated map under `dist/agent-src/contexts/` | AI council 2026-08-27, 2/2 convergent, fallback (b): no host observation shows a projected context reaching the model before skill selection | a reproducible host trace shows a projected context consulted before skill selection |
+| D3 | enum selection criteria live in the modeling reference, which cites the rule's option set | extending `prefer-enums-over-literals.md` itself | the rule is standing per-spawn payload and the ratchet has zero headroom | the preamble ratchet gains headroom from a rules reduction |
 
 ## Notes
 
-The reachability observation from 2.5 and the corpus-split revisit threshold
-from 6.3 belong here once established. The ownership verdict from 1.4 is below.
+The ownership verdict from 1.4 is below and in `## Decisions` D1.
+
+### 1.2 — host contracts, read off their text (2026-10-27)
+
+| Host | Owns today | Explicitly does not own |
+|---|---|---|
+| `database` | schema design, query and index tuning, engine/hosting detection, multi-connection (`src/skills/database/SKILL.md:4`, `:29`, `:31`) | ORM model work, migration authoring, diff review, rollout sequencing (`:36`–`:39`) |
+| `schema-review` | reviewing a migration diff or schema change for scale hazards (`src/skills/schema-review/SKILL.md:21`) | live-traffic performance, authoring a migration, designing the schema (`:27`–`:31`) |
+| `migration-architect` | rollout shape and phase sequencing of a multi-deploy change (`src/skills/migration-architect/SKILL.md:18`, `:26`) | a single additive migration, the target schema, writing DDL (`:35`, `:39`, `:125`) |
+
+### 2.5 — the map is not a routing input
+
+Host: claude. No observation shows a `dist/agent-src/contexts/` file reaching the
+model before skill selection, so no ownership map is generated and none is
+claimed to route (D2). Ownership lives in each skill's own scope lines above.
+
+### Closure — 2026-10-27, against `f82e3bdff1`
+
+| Steps | Where it landed | Evidence |
+|---|---|---|
+| 1.1, 3.1–3.5, 4.1–4.3 | `src/skills/database/references/relational-modeling.md` | ownership contract with six phrasings (one German); numbered procedure; worked examples for the membership junction, no-new-index and both cascade fixtures; `grep -c project_user` = 0; no `min_version` in `src/skills/` |
+| 1.2, 1.4, 2.4, 2.5 | this file, `## Decisions` D1–D2 and the Notes above | host table with `file:line`; extend verdict on a measured zero preamble headroom; no ownership map under `contexts/` |
+| 2.1 | `database` and `sql-writing` | hosting detection and the `ALTER SYSTEM` guardrail at `database/SKILL.md:51`; `MariaDB/MySQL` count in both descriptions = 0 |
+| 2.2 | `migration-architect/evals/triggers.json` | grandfather list 122 → 120 (`multi-tenancy` also gained a corpus, because 4.8 touched it; it seals, 0x12); `check_trigger_eval_presence`, `lint_skill_trigger_corpus` and `check_routing_coverage` green; `database` evals gain two modeling exemplars; the trigger-corpus holdout pin and both train-side measurements are re-taken (still `harmful`, +4.90 pp; recall loss 38.75 pp) |
+| 2.3, 2.6 | the five DB-family `SKILL.md` scope lines | `database` claims modeling; `schema-review` and `migration-architect` route schema design to it |
+| 4.4–4.7 | `docs/guidelines/php/eloquent.md`, `php/database.md` | relationship → constraint table, cascade-bypasses-model-events, unique-under-soft-delete per engine, SQLite parity note; `laravel-migration` cross-links 4.6 |
+| 4.8 | `multi-tenancy` + `references/shared-schema-integrity.md` | both tenancy modes named; composite `(tenant_id, id)` key — the brief's `(id, tenant_id)` order is refused by MySQL against `REFERENCES (tenant_id, id)`, which the reference states |
+| 5.1–5.3 | `database/references/consumer-census.md` | routing lines in `schema-review` and `migration-architect`; catalog queries per engine with confidence marks; view-before-plan and two-consumer/twelve-answer examples |
+| 6.1, 6.2 | `query-tuning.csv` | `Type` and `Engine` columns declared in the manifest; 8 design + 7 misconception rows; ten retrieval probes rank the intended row first; `check_corpus_staleness` green. One pre-existing row (`JOIN explosion`) had 9 fields against an 8-field header and was repaired |
+
+The fixture verifies are worked examples, not executed agent runs; they were
+read by an independent reviewer before merge rather than asserted by a test
+written to pass. Engine facts carry a version-pinned upstream URL — in the
+references inline, in the corpus at the end of each row's Verification — or are
+stated as a question with a detection step (MariaDB and PostgreSQL trigger firing
+on cascades, MySQL/MariaDB constraint-check timing, enum evolution cost).
+
+The independent review (2026-10-27, fresh context, whole delta) returned 15
+findings, none high. Fixed in the same change: the shared-schema reference
+claimed the composite FK indexes itself on PostgreSQL; a source link one level
+short; uncited engine facts in six corpus rows; hosting detection that let a dev
+compose file mask a managed production database; the composite-key rule missing
+from `multi-tenancy`; the redundant-index query comparing `INCLUDE` columns and
+non-B-tree methods; four wording errors in the modeling reference; and the
+pre-existing corpus claim that MySQL has no skip scan (it has one since 8.0.13).
+Left as is: the archived file's `status: ready` (the archive gate reads the
+directory) and two naming nits. Risk 3 is moot under D2 — no map is generated.
+
+### 6.3 — when the corpus splits
+
+`query-tuning.csv` stays one corpus with typed rows. It splits into a tuning and
+a design corpus only when a versioned retrieval benchmark shows the split
+recalling the intended row **at least five percentage points** more often,
+with no loss of precision (AI council 2026-08-26, Q1). No such benchmark exists
+today.
 
 ## Parked — 2026-08-27, AI council, with Phase 1's number produced first
 
@@ -642,7 +691,7 @@ one: the historical `ci_delivery.grace_ceiling` survived at 138,490, enforced an
 Evidence:
 `agents/evidence/analysis/grace-ceiling-expiry-is-unenforced-2026-09-10.md`.
 
-### What is NOT claimed
+### What is NOT claimed (as of the 2026-08-27 park; superseded by the 2026-10-27 wake)
 
 Steps 1.1, 1.2 and all of Phases 2 through 6 are untouched and unchecked — 32 of
 34 boxes remain open, and all acceptance criteria remain unmet. Step 1.4 is `[~]`

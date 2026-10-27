@@ -182,7 +182,9 @@ Two consequences worth stating because they are the ones missed:
 Soft deletes do **not** interact with this: `onDelete` fires on a real `DELETE`,
 so a soft-deleting parent never triggers it. If the model soft-deletes, the
 referential action describes what happens on a force-delete or a purge, and that
-is the case to decide against.
+is the case to decide against. A unique column on a soft-deleting table needs the
+engine-specific form in
+[`eloquent.md` § Unique constraints under soft delete](../../../docs/guidelines/php/eloquent.md#unique-constraints-under-soft-delete).
 
 ## Gotcha
 

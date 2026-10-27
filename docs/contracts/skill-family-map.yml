@@ -191,7 +191,7 @@ skills:
     activation_scope: core
   database:
     family: backend-data
-    primary_use: 'Use when working with database architecture, MariaDB/MySQL tuning, indexing strategies, slow queries, or multi'
+    primary_use: 'Use when designing schemas and relations, tuning queries or indexes on any SQL engine, or multi-connection pat'
     activation_scope: core
   dcf-modeling:
     family: finance
@@ -803,7 +803,7 @@ skills:
     activation_scope: ai-video
   sql-writing:
     family: backend-data
-    primary_use: 'Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement'
+    primary_use: 'Use when writing raw SQL — dialect-aware syntax, parameterization, raw migrations, seeders with `DB::statement'
     activation_scope: core
   stakeholder-tradeoff:
     family: ai-council-decision
