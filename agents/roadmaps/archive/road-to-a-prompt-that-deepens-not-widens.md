@@ -44,7 +44,7 @@ completion) are parked behind their measurement, not built on belief.
 
 - [x] **1.1 One evidence table, host-neutral.** `verification-mechanics.md` becomes the <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       single authority with stack-neutral wording; `verify-completion-evidence` cites it
-      instead of carrying a second, drifted copy.
+      instead of carrying a second, drifted copy. Landed inverted: the table lives in `verify-completion-evidence` and `verification-mechanics` points to it, because the kernel rule `verify-before-complete` loads the mechanics file and its always-rule closure ratchet only moves down.
       verify: `grep -c PHPStan src/agent-src/contexts/execution/verification-mechanics.md` -> /^0$/ (positive control: 5 at `ac6c60802a`).
 - [x] **1.2 Rows for work that is not code.** Documentation, analysis with numbers, <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       research, rendered artifacts and media each name their required evidence and an

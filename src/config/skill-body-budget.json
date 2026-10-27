@@ -317,7 +317,7 @@
     "upstream-contribute": 12143,
     "using-git-worktrees": 11846,
     "validate-feature-fit": 4252,
-    "verify-completion-evidence": 9220,
+    "verify-completion-evidence": 10451,
     "verify-repair-loop": 15727,
     "video-director": 5818,
     "vision-articulation": 10198,
@@ -873,6 +873,12 @@
       "old": 12077,
       "new": 12449,
       "reason": "road-to-a-prompt-that-deepens-not-widens 1.3: a bare role becomes the fourth de-inflation pattern and step 5 names methods and instruments instead of assigning a role."
+    },
+    {
+      "skill": "verify-completion-evidence",
+      "old": 9612,
+      "new": 10451,
+      "reason": "road-to-a-prompt-that-deepens-not-widens 1.1-1.2: the per-task evidence table moves here as the single authority, adding non-code rows and an oracle-class column; verification-mechanics, loaded by a kernel rule, keeps a pointer so the always-rule closure shrinks."
     }
   ]
 }
