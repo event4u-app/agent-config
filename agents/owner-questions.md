@@ -153,7 +153,8 @@ and the run that applies it links its PR.
 ### OQ-23 — Repetitions against the canary query ceiling
 
 - **Context:** three repetitions per case raise the rotation's weekly peak from
-  200 to 600 queries; `MAX_WEEKLY_QUERIES` is 200 and owner-set, and the lever
+  200 to 600 queries; `MAX_WEEKLY_QUERIES` is owner-set (200, raised to 220 on
+  2026-10-27 when the peak reached 210, so three repetitions now mean 630), and the lever
   6.3 names first no longer exists. Blocker `b-rate-canary-ceiling`.
 - **Options:** (a) raise the ceiling to 600; (b) three repetitions only for
   units with floor 0.90 (peak ≈ 420, still above 200); (c) keep default 1 and

@@ -102,13 +102,19 @@ export const QUERIES_PER_SUITE = 10;
  * "a new suite moves no other") and decoupling coverage from the paid replay
  * (the largest change). Reopen when a slot reaches 20 suites.
  *
+ * **Raised to 220 by the repository owner on 2026-10-27** (PR #2727, the
+ * reopen above). Measured that day: 187 suites, slots 3 and 7 at 20 and
+ * slot 10 at 21 once `context-document` gained its corpus, a peak of 210. 220
+ * leaves room for one more suite in slot 10 and two in slots 3 and 7. The two
+ * options rejected on 2026-10-14 stay rejected; reopen when a slot reaches 22.
+ *
  * The number nobody can lower by tuning: a 90-day window over N suites costs
  * `N × QUERIES_PER_SUITE` every 90 days, whatever the schedule. The scheme this
  * replaced looked cheaper only because it never completed a pass — `batch = 5`
  * over 102 suites is a 21-week cycle, which misses the 90-day window by 57 days.
  * Cheapness was the symptom of the defect, not a property worth preserving.
  */
-export const MAX_WEEKLY_QUERIES = 200;
+export const MAX_WEEKLY_QUERIES = 220;
 
 /**
  * FNV-1a over the suite id. Any stable hash works; what matters is that a
