@@ -243,7 +243,7 @@ use it.
       files under `agents/map/`.
       verify: `npx vitest run tests/scripts/reread_guard_map_sections.test.ts` -> 0
       > note: open: `map --section` and the guard line (`map_sections.ts`) ship with their test; wiring the line into reread_guard_hook.ts needs hook-bundle bytes and the bundle has 1 B of headroom (1556669 / 1556670) — a raise_log entry or a shrink elsewhere first.
-- [ ] **J.6 Listing tools page** (H48). `list_skills`, `list_rules`,
+- [x] **J.6 Listing tools page** (H48). `list_skills`, `list_rules`,
       `memory_lookup` default to index mode with paging; the changed
       `memory_lookup` default is documented where the MCP tools are described.
       verify: `npx vitest run tests/scripts/mcp_listing_paging.test.ts` -> 0
