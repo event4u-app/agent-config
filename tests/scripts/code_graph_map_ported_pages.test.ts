@@ -284,4 +284,55 @@ describe('the small deltas of the 2026-10-bf handover', () => {
         expect(await page.locator('#rt-zones').count()).toBe(0);
         await page.close();
     });
+
+    it('delivery agent code: the third scenario is the repository\'s own trigger, verbs are plain buttons, Code 2D/3D is the Darstellung radiogroup and Flow reads "n. A."', async () => {
+        const delivery = {
+            reader: 'workflows', completeness: 'complete', findings: [], environments: [], chain: [],
+            workflows: [
+                { file: '.github/workflows/ci.yml', name: 'ci', triggers: ['push', 'pull_request'], events: [{ event: 'push', branches: ['main'], paths: false }, { event: 'pull_request', branches: [], paths: false }], witness: wit('.github/workflows/ci.yml', 1) },
+                { file: '.github/workflows/release.yml', name: 'release', triggers: ['release'], events: [{ event: 'release', branches: [], paths: false }], witness: wit('.github/workflows/release.yml', 1) },
+            ],
+            jobs: [
+                { id: '.github/workflows/ci.yml#test', workflow: '.github/workflows/ci.yml', name: 'test', needs: [], uses: [], witness: wit('.github/workflows/ci.yml', 10) },
+                { id: '.github/workflows/release.yml#publish', workflow: '.github/workflows/release.yml', name: 'publish', needs: [], uses: [], witness: wit('.github/workflows/release.yml', 8) },
+            ],
+        };
+        const file = await drawn({ ...sampleAreas(), interfaces, impact, agent, delivery } as unknown as MapAreas);
+        const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark', locale: 'de-DE' });
+        await page.goto(pathToFileURL(file).href + '#/delivery');
+        await page.waitForFunction(() => (window as unknown as { __mapRoute?: unknown }).__mapRoute !== undefined);
+        const ci = page.locator('#av [role="tab"]', { hasText: /CI\/CD/ });
+        if (await ci.count()) await ci.first().click();
+        const radios = page.locator('.ops-scen [role="radio"]');
+        expect(await radios.allTextContents()).toEqual(['push → main', 'pull_request', 'release']);
+        expect(await page.locator('.ops-scen [role="radio"][aria-checked="true"]').textContent()).toBe('push → main');
+        const evalOf = (name: string) => page.locator('.ops-job', { hasText: name }).first().getAttribute('class');
+        expect(await evalOf('publish')).toContain('ev-off');
+        await radios.filter({ hasText: 'release' }).click();
+        expect(await evalOf('publish')).toContain('ev-ok');
+        expect(await evalOf('test')).toContain('ev-off');
+        await page.evaluate(() => { location.hash = '#/agent'; });
+        await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'agent');
+        expect(await page.locator('.ag-verb').count()).toBeGreaterThan(0);
+        expect(await page.locator('.ag-verb[aria-pressed]').count()).toBe(0);
+        expect(await page.locator('#av-left').getAttribute('aria-label')).toBe('Anfrage');
+        expect(await page.locator('#av-side').getAttribute('aria-label')).toBe('Item');
+        await page.evaluate(() => { location.hash = '#/code'; });
+        await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'code');
+        expect(await page.locator('#dimseg').getAttribute('role')).toBe('radiogroup');
+        expect(await page.locator('#dimseg').getAttribute('aria-label')).toBe('Darstellung');
+        expect(await page.locator('#dimseg [role="radio"]').allTextContents()).toEqual(['2D', '3D Orb']);
+        await page.click('#dim');
+        expect(await page.locator('#dim').getAttribute('aria-checked')).toBe('true');
+        // A radio stays chosen on a second click; the other radio takes it back.
+        await page.click('#dim');
+        expect(await page.locator('#dim').getAttribute('aria-checked')).toBe('true');
+        await page.click('#dim2d');
+        expect(await page.locator('#dim2d').getAttribute('aria-checked')).toBe('true');
+        expect(await page.locator('#lenses button', { hasText: 'Flow' }).textContent()).toContain('n. A.');
+        // Decision D3 stays owner-pending: the shipped Domäne option is kept (see the code matrix).
+        expect(await page.locator('#colorby [role="radio"]', { hasText: 'Domäne' }).count()).toBe(1);
+        await page.close();
+    });
 });
+

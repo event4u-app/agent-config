@@ -362,10 +362,12 @@ describe('the Delivery CI/CD view judges each job per scenario, never inventing 
     it('push → main runs, a tag skips the branch-filtered workflow, a condition is unknown; findings land on the job', async () => {
         const page = await open((await drawn({ delivery: ci() })).html, '#/delivery');
         expect(await page.locator('#av-bar [role="radio"]').allTextContents()).toEqual(['push → main', 'pull_request', 'tag v1.2.0']);
-        expect(await runs(page)).toEqual({ test: 'skipped', deploy: 'skipped', gate: 'skipped' });
-        await page.click('#av-bar [role="radio"]:has-text("push → main")');
+        // The handover opens on push → main; a tag skips the branch-filtered workflow.
         expect(await page.locator('#av-bar [role="radio"][aria-checked="true"]').textContent()).toBe('push → main');
         expect(await runs(page)).toEqual({ test: 'runs', deploy: 'runs', gate: 'unknown' });
+        await page.click('#av-bar [role="radio"]:has-text("tag v1.2.0")');
+        expect(await runs(page)).toEqual({ test: 'skipped', deploy: 'skipped', gate: 'skipped' });
+        await page.click('#av-bar [role="radio"]:has-text("push → main")');
         expect(await page.locator('#av-main').textContent()).toMatch(/Check[\s\S]*test[\s\S]*gate[\s\S]*Production · Clean up[\s\S]*deploy/);
         await page.locator('#av-main .ops-job', { hasText: 'deploy' }).click();
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === 'job/.github/workflows/ci.yml#deploy');

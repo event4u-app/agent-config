@@ -239,7 +239,7 @@ revert `area_systems.js` and the new CSS; payload additions are additive.
       "Dienste · n von m angezeigt"; Runtime opens on Topologie and draws the
       zone caps even when empty, with "Befunde außerhalb einer Ressource · N".
       verify: `npx vitest run tests/scripts/code_graph_map_ported_pages.test.ts -t "interfaces runtime" --reporter=verbose` -> /✓.*interfaces runtime/
-- [ ] **4.3 Delivery, Agent, Code.** Delivery's third scenario is labelled from
+- [x] **4.3 Delivery, Agent, Code.** Delivery's third scenario is labelled from
       the repository's own trigger in `workflows[].events`; Agent verb list and
       aside labels Anfrage / Item; Code 2D/3D and Scope as radiogroups, the
       "Flow · n. A." label; Code keeps "Domäne" per Decision D3.

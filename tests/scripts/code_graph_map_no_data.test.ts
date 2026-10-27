@@ -71,7 +71,7 @@ describe('controls without data are labelled, never hidden', () => {
         const page = await open(await mapOf(false));
         const flow = page.locator('#lenses button', { hasText: 'Flow' });
         expect(await flow.isVisible()).toBe(true);
-        expect(await flow.textContent()).toMatch(/no view yet/i);
+        expect(await flow.textContent()).toMatch(/n\/a/i);
         await page.click('#lenses button:has-text("Knowledge")');
         // Knowledge needs a file: mark one through search.
         await page.fill('#search', 'a.ts');
