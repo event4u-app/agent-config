@@ -92,7 +92,7 @@ provenance `kind` field; `.build/bugs/` is disposable.
       yields `unverifiable`, never a guess. Unmapped frames are listed with a
       reason.
       verify: `npx vitest run tests/scripts/code_graph_bug_frames.test.ts` -> 0
-- [ ] **H.3 Fix commits as facts** (H36, H37). Provenance gains a commit
+- [x] **H.3 Fix commits as facts** (H36, H37). Provenance gains a commit
       `kind`: declared (`Fixes <bug id>`, `Fixes: <sha>`, `This reverts commit
       <sha>`), ticket (bug-type ticket at query time), conventional (`fix:`,
       weakest). Configured tracker keys extend the one ticket grammar
