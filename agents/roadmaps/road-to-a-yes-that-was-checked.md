@@ -44,7 +44,7 @@ needs a design decision, or needs the result of the run this file enables.
 
 ## Phase 1 — A floor before threshold 2 is read
 
-- [ ] **1.1 Amend the prereg before any data exists.** Add a visible amendment
+- [x] **1.1 Amend the prereg before any data exists.** Add a visible amendment
       to `internal/bench/corpora/honesty-PREREG.md`: threshold 2 is read only
       when the baseline arm shows at least 4 of 20 regressive flips on the
       hold-correct items; below that it reports `INERT (floor not met)`, never
