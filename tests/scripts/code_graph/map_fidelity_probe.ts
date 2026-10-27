@@ -347,7 +347,39 @@ async function probeSystemsPaths(browser: Browser, built: Built): Promise<unknow
     return steps;
 }
 
-export const PROBES: Record<string, (b: Browser, built: Built) => Promise<unknown>> = { tokens: probeTokens, shell: probeShell, overview: probeOverview, pages: probePages, systems: probeSystems, systemsPaths: probeSystemsPaths };
+/** Probe `projects`: the hub of the demo fixture against the handover's Projects page, both lenses. */
+async function probeProjects(browser: Browser, built: Built): Promise<unknown> {
+    const out: Record<string, unknown> = {};
+    const sel = { design: { tab: '[role="tablist"] [role="tab"][aria-selected="true"]', cap: 'aside .cap', note: '[role="tablist"] + span.mono' }, build: { tab: '#av-bar [role="tab"][aria-selected="true"]', cap: '#av aside .cap', note: '#av-bar .hub-note' } };
+    for (const theme of ['dark', 'light'] as const) {
+        for (const width of WIDTHS) {
+            const d = await openDesign(browser, 'p07/Estate.dc.html', width, theme);
+            const b = await openBuilt(browser, built.hub, '#/projects', width, theme);
+            const cell: Record<string, unknown> = {};
+            for (const [lens, label] of [['proj', 'Projekte'], ['me', 'Ich · Lernen']] as const) {
+                await d.locator('[role="tablist"] [role="tab"]', { hasText: label }).first().click();
+                await b.locator(`#av-bar [data-lens="${lens}"]`).click();
+                await d.waitForTimeout(150);
+                const row: Record<string, unknown> = {};
+                for (const [side, page] of [['design', d], ['build', b]] as const) {
+                    row[side] = {
+                        overflow: await overflowAt(page),
+                        landmarks: width === 1440 && theme === 'dark' ? await pageLandmarks(page) : undefined,
+                        styles: width === 1440 ? await computedAt(page, Object.values(sel[side]), STYLE_PROPS) : undefined,
+                        note: await page.evaluate((s2) => document.querySelector(s2)?.textContent ?? null, sel[side].note),
+                    };
+                }
+                cell[lens] = row;
+            }
+            out[`${theme}_${width}`] = cell;
+            await d.close();
+            await b.close();
+        }
+    }
+    return out;
+}
+
+export const PROBES: Record<string, (b: Browser, built: Built) => Promise<unknown>> = { projects: probeProjects, tokens: probeTokens, shell: probeShell, overview: probeOverview, pages: probePages, systems: probeSystems, systemsPaths: probeSystemsPaths };
 
 if (process.argv[1] && /map_fidelity_probe\.ts$/.test(process.argv[1])) {
     const [name, out] = process.argv.slice(2);

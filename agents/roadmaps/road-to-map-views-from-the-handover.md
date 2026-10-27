@@ -258,7 +258,7 @@ Exit: 4.1–4.4 green. Rollback: per-page revert; each page is independent.
       "← Projekt-Map"; Ich · Lernen renders empty with reason until sibling
       Stage K data exists, then its KPIs from that data.
       verify: `npx vitest run tests/scripts/code_graph_map_projects_page.test.ts` -> 0
-- [ ] **5.2 Projects matrix.** `agents/evidence/reviews/map-projects-fidelity.md`.
+- [x] **5.2 Projects matrix.** `agents/evidence/reviews/map-projects-fidelity.md`.
       verify: `npx vitest run tests/scripts/code_graph_map_fidelity_matrices.test.ts -t projects --reporter=verbose` -> /✓.*projects/
 
 Exit: 5.1–5.2 green. Rollback: revert `area_projects.js`.
