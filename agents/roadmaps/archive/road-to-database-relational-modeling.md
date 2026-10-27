@@ -252,7 +252,7 @@ corpus follows the ownership decision, not the other way round.
       `dist/agent-src/contexts/`, and D2 records the fallback.
 
 - [x] **2.5 Record that the map is not a routing input, with the host named.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/routing-coverage-seed.json -->
-      verify: `## Notes` carries the one-line fallback statement naming the
+      verify: the `## Notes` section carries the one-line fallback statement naming the
       host (claude), and no artifact claims the map routes.
 
 - [x] **2.6 Make `database`'s schema-design claim true instead of removing it.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
@@ -260,9 +260,8 @@ corpus follows the ownership decision, not the other way round.
       modeling. With `database` as the owner, removing "designing schemas"
       would leave the concept claimed by nothing — the exact failure Risk 2
       names. The claim stays and now routes to the procedure.
-      verify: `grep -n "designing schemas" src/skills/database/SKILL.md` ->
-      /Use when designing schemas/, and the next paragraph routes to
-      `references/relational-modeling.md`.
+      verify: `grep -n "designing schemas" src/skills/database/SKILL.md` -> /Use when designing schemas/
+      — and the next paragraph routes to `references/relational-modeling.md`.
 
 ## Phase 3 — The modeling procedure
 
