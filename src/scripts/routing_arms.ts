@@ -14,7 +14,7 @@
  *
  * Usage:
  *   routing_arms --pressure --baseline ART.json --catalogue DIR --n N --seed S --out DIR
- *   routing_arms --twins --baseline ART.json --catalogue DIR --twins TWINS.json --per-unit K --out DIR
+ *   routing_arms --twins --baseline ART.json --catalogue DIR --twins-file TWINS.json --per-unit K --out DIR
  *   routing_arms --mcp --baseline ART.json --catalogue DIR --server-command CMD [--server-arg A]... --out DIR
  *   routing_arms --merge --plan PLAN.json --results DIR --out AGGREGATE.json
  */
@@ -307,9 +307,9 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             return 0;
         }
         if (argv.includes('--twins')) {
-            const a = need(argv, ['baseline', 'catalogue', 'twins', 'per-unit', 'out']);
+            const a = need(argv, ['baseline', 'catalogue', 'twins-file', 'per-unit', 'out']);
             if (a === null) return 2;
-            const twins = JSON.parse(fs.readFileSync(a['twins'] as string, 'utf8')) as Record<string, string>;
+            const twins = JSON.parse(fs.readFileSync(a['twins-file'] as string, 'utf8')) as Record<string, string>;
             const plan = buildTwinArm({ art: readArt(a['baseline'] as string), skillsRoot, catalogueRoot: a['catalogue'] as string, twins, perUnit: Number(a['per-unit']), outRoot: a['out'] as string });
             process.stdout.write(`routing_arms: ${String(plan.rows.length)} twin case(s) over ${String(plan.units)} pair(s) -> ${a['out'] as string}\n`);
             return 0;
