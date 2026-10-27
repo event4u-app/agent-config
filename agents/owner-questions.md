@@ -33,7 +33,7 @@ and the run that applies it links its PR.
 - **Recommendation:** (a) — it works today, costs no consumer anything, and Phase 1 of
   `road-to-the-question-only-the-owner-can-answer` makes the sentence actually reach the
   interview and fence the run.
-- **Blocks:** step 3.1 of that roadmap.
+- **Blocks:** step 3.1 of `road-to-the-question-only-the-owner-can-answer-carried` (`later/`).
 
 ### OQ-23 — Make the interview reachable outside the maintainer workspace
 
@@ -42,7 +42,7 @@ and the run that applies it links its PR.
 - **Options:** (a) add `engineering` and `product` to their workspaces; (b) add the
   `product-reasoning` pack to `engineering`'s optional packs; (c) leave it.
 - **Recommendation:** (a) — optional packs are opt-in, so (b) still misses most users.
-- **Blocks:** step 3.2 of `road-to-the-question-only-the-owner-can-answer`.
+- **Blocks:** step 3.2 of `road-to-the-question-only-the-owner-can-answer-carried` (`later/`).
 
 ### OQ-24 — The prompt optimizer's "Lyra" persona
 
@@ -51,7 +51,7 @@ and the run that applies it links its PR.
 - **Options:** (a) keep the name, drop the role-play welcome; (b) drop the persona entirely;
   (c) keep both.
 - **Recommendation:** (a).
-- **Blocks:** step 2.1 of `road-to-a-prompt-that-deepens-not-widens`.
+- **Blocks:** step 2.1 of `road-to-a-prompt-that-deepens-not-widens-carried` (`later/`).
 
 ## Not owner questions — waits, or already settled in the tree
 

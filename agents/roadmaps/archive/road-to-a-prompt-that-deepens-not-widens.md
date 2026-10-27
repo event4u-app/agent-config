@@ -42,15 +42,15 @@ completion) are parked behind their measurement, not built on belief.
 
 ## Phase 1 — Measurement-free fixes
 
-- [ ] **1.1 One evidence table, host-neutral.** `verification-mechanics.md` becomes the
+- [x] **1.1 One evidence table, host-neutral.** `verification-mechanics.md` becomes the
       single authority with stack-neutral wording; `verify-completion-evidence` cites it
       instead of carrying a second, drifted copy.
       verify: `grep -c PHPStan src/agent-src/contexts/execution/verification-mechanics.md` → 0 (positive control: 5 at `ac6c60802a`).
-- [ ] **1.2 Rows for work that is not code.** Documentation, analysis with numbers,
+- [x] **1.2 Rows for work that is not code.** Documentation, analysis with numbers,
       research, rendered artifacts and media each name their required evidence and an
       oracle class (tool / data / external artifact / other model / self).
       verify: `grep -c 'No verification needed' src/agent-src/contexts/execution/verification-mechanics.md` → 0.
-- [ ] **1.3 Methods, not roles, in the optimizer.** "Assign role" becomes "name the
+- [x] **1.3 Methods, not roles, in the optimizer.** "Assign role" becomes "name the
       methods and instruments the task needs; a role label only alongside them", and a
       bare role becomes the fourth de-inflation pattern (own analysis: a role names
       vocabulary, not a method — the in-tree example is the performance persona, whose
@@ -59,22 +59,22 @@ completion) are parked behind their measurement, not built on belief.
 
 ## Phase 2 — Parked: owner decision and measured depth
 
-- [~] **2.1 The optimizer's Lyra role-play welcome (supplied 1.4).** <!-- blocked-by: lyra-persona-is-a-taste-decision | asked: no — queued as OQ-24 in agents/owner-questions.md per the 2026-10-24 directive -->
+- [~] **2.1 The optimizer's Lyra role-play welcome (supplied 1.4).** <!-- blocked-by: lyra-persona-is-a-taste-decision | asked: no — queued as OQ-24 in agents/owner-questions.md per the 2026-10-24 directive --> <!-- deferred-resolution: carried-to=road-to-a-prompt-that-deepens-not-widens-carried -->
       verify: OQ-24 answered and applied in both files.
-- [~] **2.2 Depth corpus with script oracles and pre-registered arms (supplied Phase 0).** <!-- blocked-by: depth-block-waits-on-a-scripted-corpus -->
+- [~] **2.2 Depth corpus with script oracles and pre-registered arms (supplied Phase 0).** <!-- blocked-by: depth-block-waits-on-a-scripted-corpus --> <!-- deferred-resolution: carried-to=road-to-a-prompt-that-deepens-not-widens-carried -->
       verify: a lint fails a corpus prompt without an oracle command.
-- [~] **2.3 Opt-in `depth:` block with witnesses and the deeper-not-bigger invariant (supplied Phase 2).** <!-- blocked-by: depth-block-waits-on-a-scripted-corpus -->
+- [~] **2.3 Opt-in `depth:` block with witnesses and the deeper-not-bigger invariant (supplied Phase 2).** <!-- blocked-by: depth-block-waits-on-a-scripted-corpus --> <!-- deferred-resolution: carried-to=road-to-a-prompt-that-deepens-not-widens-carried -->
       verify: an invariant test with a positive control that adds a deliverable.
-- [~] **2.4 Instruments and an oracle line on the seven review personas (supplied Phase 3).** <!-- blocked-by: depth-block-waits-on-a-scripted-corpus -->
+- [~] **2.4 Instruments and an oracle line on the seven review personas (supplied Phase 3).** <!-- blocked-by: depth-block-waits-on-a-scripted-corpus --> <!-- deferred-resolution: carried-to=road-to-a-prompt-that-deepens-not-widens-carried -->
       verify: a warn-only lint names personas without a runnable instrument.
-- [~] **2.5 Run the arms; the intake oracle runs before the judges (supplied Phases 4–5).** <!-- blocked-by: depth-block-waits-on-a-scripted-corpus -->
+- [~] **2.5 Run the arms; the intake oracle runs before the judges (supplied Phases 4–5).** <!-- blocked-by: depth-block-waits-on-a-scripted-corpus --> <!-- deferred-resolution: carried-to=road-to-a-prompt-that-deepens-not-widens-carried -->
       verify: the bench report carries every pre-registered metric.
 
 ## Blockers
 
 ### blocker: lyra-persona-is-a-taste-decision
 
-- **Status:** open — raised 2026-10-27 by inbox round `inbox-2026-10-be`.
+- **Status:** resolved — carried, still open, to `road-to-a-prompt-that-deepens-not-widens-carried` with the steps it blocks (was: open — raised 2026-10-27 by inbox round `inbox-2026-10-be`.)
 - **Class:** 3 — owner-reserved taste.
 - **Owner:** user — `agents/owner-questions.md` OQ-24.
 - **Run:** `grep -n 'OQ-24' agents/owner-questions.md`
@@ -86,7 +86,7 @@ completion) are parked behind their measurement, not built on belief.
 
 ### blocker: depth-block-waits-on-a-scripted-corpus
 
-- **Status:** open — raised 2026-10-27.
+- **Status:** resolved — carried, still open, to `road-to-a-prompt-that-deepens-not-widens-carried` with the steps it blocks (was: open — raised 2026-10-27.)
 - **Class:** 1 — a measurement, no decision owed.
 - **Owner:** the next run of this roadmap's carry.
 - **Run:** `ls tests/eval/depth-corpus.yaml`
@@ -106,5 +106,5 @@ completion) are parked behind their measurement, not built on belief.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — one per-task evidence table exists, stack-neutral, with rows for non-code work.
-- [ ] AC-2 — the optimizer no longer prescribes a bare role.
+- [x] AC-1 — one per-task evidence table exists, stack-neutral, with rows for non-code work.
+- [x] AC-2 — the optimizer no longer prescribes a bare role.

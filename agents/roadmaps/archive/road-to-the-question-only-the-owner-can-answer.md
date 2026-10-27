@@ -54,12 +54,12 @@ question, never silently dropped.
 
 ## Phase 1 — "Interview me" reaches the interview and is fenced
 
-- [ ] **1.1 Interview phrasings in the challenge-me / grill-me triggers (D1).** Add EN and
+- [x] **1.1 Interview phrasings in the challenge-me / grill-me triggers (D1).** Add EN and
       DE interview phrasings ("interview me", "ask me follow-up questions", "stell mir
       Rückfragen", "interview mich", "frag mich aus") to both `trigger_description` lines.
       verify: `npx vitest run tests/scripts/command_suggester_interview_triggers.test.ts`
       — each phrasing tops at `challenge-me` or `grill-me` with confidence ≥ 0.6.
-- [ ] **1.2 German and recipe phrasings fence as owner-consulted (D3, marker half).** Add
+- [x] **1.2 German and recipe phrasings fence as owner-consulted (D3, marker half).** Add
       "interview me", "interview mich", "rückfragen", "stell mir fragen", "bevor du
       loslegst" to `_USER_FENCE_MARKERS` in `src/scripts/ai_council/necessity.ts`.
       verify: a test asserts `classify_impact` returns `user_required` for the five
@@ -67,20 +67,20 @@ question, never silently dropped.
 
 ## Phase 2 — The intake reads German fairly and asks in one form
 
-- [ ] **2.1 German action verbs in the intake scorer (D4).** Add German imperative stems
+- [x] **2.1 German action verbs in the intake scorer (D4).** Add German imperative stems
       beside the English set in `confidence.ts` `_ACTION_VERBS`.
       verify: `npx vitest run tests/scripts/work_engine/scoring_confidence.test.ts` with
       ≥ 10 EN/DE pairs landing in the same band.
-- [ ] **2.2 The interview speaks Iron Law 1 (D7).** Replace the bold-option-1 rule in
+- [x] **2.2 The interview speaks Iron Law 1 (D7).** Replace the bold-option-1 rule in
       `src/domains/meta/challenge-me/vision/command.md` with a neutral option block plus
       exactly one recommendation line under it; on a native host the recommendation is the
       first option. Drop the self-rated `~XX%` display.
       verify: `grep -c 'always \*\*option 1\*\* and labelled \*\*bold\*\*' src/domains/meta/challenge-me/vision/command.md` → 0.
-- [ ] **2.3 One check that picker declarations agree (D8, check half).** A test asserts
+- [x] **2.3 One check that picker declarations agree (D8, check half).** A test asserts
       that `hook_manifest.yaml` `ask: native` holds for exactly the hosts whose
       `host_capability` row reads `structured_ask: true`.
       verify: the test fails when one `ask:` row is flipped (sensitivity shown once).
-- [ ] **2.4 Intake pass on a plain prompt, model-carried (D12).** A section in
+- [x] **2.4 Intake pass on a plain prompt, model-carried (D12).** A section in
       `cheap-question-mechanics.md`: look up facts, decide and state technical choices
       as the agent's call, and put one owner question before work only when a product,
       business or taste gap remains.
@@ -88,22 +88,22 @@ question, never silently dropped.
 
 ## Phase 3 — Parked: owner decisions, measurements, headroom
 
-- [~] **3.1 Append the interview sentence automatically (owner demand).** <!-- blocked-by: interview-suffix-form-is-an-owner-decision | asked: no — queued as OQ-22/OQ-23 in agents/owner-questions.md per the 2026-10-24 directive -->
+- [~] **3.1 Append the interview sentence automatically (owner demand).** <!-- blocked-by: interview-suffix-form-is-an-owner-decision | asked: no — queued as OQ-22/OQ-23 in agents/owner-questions.md per the 2026-10-24 directive --> <!-- deferred-resolution: carried-to=road-to-the-question-only-the-owner-can-answer-carried -->
       verify: OQ-22 answered and the chosen form ships with a fixture.
-- [~] **3.2 Interview reachable outside the maintainer workspace (D2).** <!-- blocked-by: interview-suffix-form-is-an-owner-decision | asked: no — queued as OQ-22/OQ-23 in agents/owner-questions.md per the 2026-10-24 directive -->
+- [~] **3.2 Interview reachable outside the maintainer workspace (D2).** <!-- blocked-by: interview-suffix-form-is-an-owner-decision | asked: no — queued as OQ-22/OQ-23 in agents/owner-questions.md per the 2026-10-24 directive --> <!-- deferred-resolution: carried-to=road-to-the-question-only-the-owner-can-answer-carried -->
       verify: OQ-23 answered; `lint_discovery_vocabulary` green.
-- [~] **3.3 Absence scored as unknown, plus a taste dimension (D5).** <!-- blocked-by: intake-band-shift-needs-a-baseline -->
+- [~] **3.3 Absence scored as unknown, plus a taste dimension (D5).** <!-- blocked-by: intake-band-shift-needs-a-baseline --> <!-- deferred-resolution: carried-to=road-to-the-question-only-the-owner-can-answer-carried -->
       verify: G4 fixtures — "make it better", a taste-gap prompt and a full prompt land on three distinct outcomes.
-- [~] **3.4 Skill-level `effort` lowering, benched on ≤ 3 skills (D13).** <!-- blocked-by: intake-band-shift-needs-a-baseline -->
+- [~] **3.4 Skill-level `effort` lowering, benched on ≤ 3 skills (D13).** <!-- blocked-by: intake-band-shift-needs-a-baseline --> <!-- deferred-resolution: carried-to=road-to-the-question-only-the-owner-can-answer-carried -->
       verify: a CLAIMS row stays `unbacked` until the bench lands.
-- [~] **3.5 The contact ledger counts native picker calls (D9).** <!-- blocked-by: ledger-change-needs-hook-bundle-headroom -->
+- [~] **3.5 The contact ledger counts native picker calls (D9).** <!-- blocked-by: ledger-change-needs-hook-bundle-headroom --> <!-- deferred-resolution: carried-to=road-to-the-question-only-the-owner-can-answer-carried -->
       verify: a transcript with a picker `tool_use` records class `native`.
 
 ## Blockers
 
 ### blocker: interview-suffix-form-is-an-owner-decision
 
-- **Status:** open — raised 2026-10-27 by inbox round `inbox-2026-10-be`.
+- **Status:** resolved — carried, still open, to `road-to-the-question-only-the-owner-can-answer-carried` with the steps it blocks (was: open — raised 2026-10-27 by inbox round `inbox-2026-10-be`.)
 - **Class:** 3 — owner-reserved: product reach and a possible new settings key.
 - **Owner:** user — `agents/owner-questions.md` OQ-22 and OQ-23.
 - **Run:** `grep -n 'OQ-22\|OQ-23' agents/owner-questions.md`
@@ -115,7 +115,7 @@ question, never silently dropped.
 
 ### blocker: intake-band-shift-needs-a-baseline
 
-- **Status:** open — raised 2026-10-27.
+- **Status:** resolved — carried, still open, to `road-to-the-question-only-the-owner-can-answer-carried` with the steps it blocks (was: open — raised 2026-10-27.)
 - **Class:** 1 — a measurement, no decision owed.
 - **Owner:** the next run of this roadmap's carry.
 - **Run:** `ls agents/evidence/analysis/ | grep owner-question-baseline`
@@ -127,7 +127,7 @@ question, never silently dropped.
 
 ### blocker: ledger-change-needs-hook-bundle-headroom
 
-- **Status:** open — raised 2026-10-27.
+- **Status:** resolved — carried, still open, to `road-to-the-question-only-the-owner-can-answer-carried` with the steps it blocks (was: open — raised 2026-10-27.)
 - **Class:** 1 — a size budget, no decision owed.
 - **Owner:** the next run of this roadmap's carry.
 - **Run:** `./scripts-run src/scripts/check_hook_bundle_freshness`
@@ -147,6 +147,6 @@ question, never silently dropped.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — "interview me" and "stell mir Rückfragen" both route to the interview and fence as `user_required`.
-- [ ] AC-2 — German and English prompts of the same content land in the same band.
-- [ ] AC-3 — the interview command's question block has one recommendation line and no bold inline tag.
+- [x] AC-1 — "interview me" and "stell mir Rückfragen" both route to the interview and fence as `user_required`.
+- [x] AC-2 — German and English prompts of the same content land in the same band.
+- [x] AC-3 — the interview command's question block has one recommendation line and no bold inline tag.
