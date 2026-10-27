@@ -1102,7 +1102,8 @@ export function viewerStyle(): string {
     return VIEWER_STYLES.map(readViewer).join('\n');
 }
 
-const AREA_NAV = ['overview', 'code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'impact', 'agent'] as const;
+/** The handover's nav order (inbox round 2026-10-bf): Bugs and Wissen sit between Delivery and Impact. */
+export const AREA_NAV = ['overview', 'code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'bugs', 'knowledge', 'impact', 'agent'] as const;
 
 /**
  * What the shell routes between when a page is not a project map. Only the

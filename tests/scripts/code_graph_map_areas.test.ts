@@ -215,9 +215,9 @@ describe('the shipped decisions stay in place under the new shell', () => {
         expect(html).not.toMatch(/Global ↗|\.event4u|estate/i);
     });
 
-    it('the wordmark is KNOWLEDGE MAP and the nav names the nine areas in order', () => {
+    it('the wordmark is KNOWLEDGE MAP and the nav names the eleven areas in the handover order', () => {
         expect(html).toContain('<div class="brand-name"><b>AGENT CONFIG</b><span>KNOWLEDGE MAP</span></div>');
         const routes = [...html.matchAll(/<a href="#\/(\w+)" data-route="\w+">/g)].map((m) => m[1]);
-        expect(routes).toEqual(['overview', 'code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'impact', 'agent']);
+        expect(routes).toEqual(['overview', 'code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'bugs', 'knowledge', 'impact', 'agent']);
     });
 });

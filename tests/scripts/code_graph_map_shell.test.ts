@@ -99,6 +99,29 @@ describe('the router', () => {
     });
 });
 
+describe('the shell of the 2026-10-bf handover', () => {
+    it('nav order: eleven routes, Bugs and Wissen before Impact, no-data entries carry the handover title', async () => {
+        const page = await open(full, '#/overview');
+        const nav = await page.evaluate(() => Array.from(document.querySelectorAll('#areanav a')).map((a) => ({ r: a.getAttribute('data-route'), text: a.textContent, title: a.getAttribute('title'), empty: a.classList.contains('empty') })));
+        expect(nav.map((n) => n.r)).toEqual(['overview', 'code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'bugs', 'knowledge', 'impact', 'agent']);
+        expect(nav.find((n) => n.r === 'bugs')).toMatchObject({ text: 'Bugs', empty: true, title: 'Bug data is local – never in the committed map' });
+        for (const n of nav) {
+            if (n.r === 'overview' || n.r === 'code') expect(n.title, n.r!).toBeNull();
+            else if (n.empty && n.r !== 'bugs') expect(n.title, n.r!).toBe('no data yet in the real map');
+            else if (!n.empty) expect(n.title, n.r!).toBeNull();
+        }
+        await page.close();
+        const de = await browser.newPage({ locale: 'de-DE', colorScheme: 'dark' });
+        await de.goto(pathToFileURL(empty).href + '#/bugs');
+        await de.waitForFunction(() => (window as unknown as { __mapRoute?: { route: string } }).__mapRoute?.route === 'bugs');
+        expect(await de.locator('#areanav a[data-route="knowledge"]').textContent()).toBe('Wissen');
+        expect(await de.locator('#areanav a[data-route="bugs"]').getAttribute('title')).toBe('Bug-Daten sind lokal – nie in der committeten Map');
+        expect(await de.locator('#areanav a[data-route="data"]').getAttribute('title')).toBe('noch keine Daten in der echten Map');
+        expect(await de.locator('#nodata-bugs').isVisible()).toBe(true);
+        await de.close();
+    });
+});
+
 describe('an area without data is shown, says so and names the reason', () => {
     it('every knowledge area with no reader run', async () => {
         const page = await open(empty, '#/overview');

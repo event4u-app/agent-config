@@ -17,7 +17,8 @@
  */
 extendStrings({
     en: {
-        areaNames: { overview: 'Overview', code: 'Code', data: 'Data', systems: 'Systems', interfaces: 'Interfaces', runtime: 'Runtime', delivery: 'Delivery', impact: 'Impact', agent: 'Agent', projects: 'Projects' },
+        areaNames: { overview: 'Overview', code: 'Code', data: 'Data', systems: 'Systems', interfaces: 'Interfaces', runtime: 'Runtime', delivery: 'Delivery', bugs: 'Bugs', knowledge: 'Knowledge', impact: 'Impact', agent: 'Agent', projects: 'Projects' },
+        navNoData: 'no data yet in the real map', navBugsLocal: 'Bug data is local – never in the committed map',
         navLabel: 'Areas', noDataYet: 'No data yet', willShow: 'What this area shows once its reader ran',
         foundNothing: function (r) { return r + ' ran and found nothing'; }, reader: 'reader', completenessL: 'completeness',
         lowerBound: 'partial read — every count is a lower bound', unknownRead: 'unknown coverage — every count is a lower bound',
@@ -34,7 +35,8 @@ extendStrings({
         bannerLabel: 'Freshness'
     },
     de: {
-        areaNames: { overview: 'Übersicht', code: 'Code', data: 'Data', systems: 'Systeme', interfaces: 'Interfaces', runtime: 'Runtime', delivery: 'Delivery', impact: 'Impact', agent: 'Agent', projects: 'Projekte' },
+        areaNames: { overview: 'Übersicht', code: 'Code', data: 'Data', systems: 'Systeme', interfaces: 'Interfaces', runtime: 'Runtime', delivery: 'Delivery', bugs: 'Bugs', knowledge: 'Wissen', impact: 'Impact', agent: 'Agent', projects: 'Projekte' },
+        navNoData: 'noch keine Daten in der echten Map', navBugsLocal: 'Bug-Daten sind lokal – nie in der committeten Map',
         navLabel: 'Ebenen', noDataYet: 'Noch keine Daten', willShow: 'Was diese Ebene zeigt, sobald ihr Leser gelaufen ist',
         foundNothing: function (r) { return r + ' ist gelaufen und hat nichts gefunden'; }, reader: 'Leser', completenessL: 'Vollständigkeit',
         lowerBound: 'teilweise gelesen — jede Zahl ist eine Untergrenze', unknownRead: 'Abdeckung unbekannt — jede Zahl ist eine Untergrenze',
@@ -54,7 +56,7 @@ extendStrings({
 
 extendStrings({
     en: {
-        areaTitle: { data: 'Data · tables, keys, relations', systems: 'Systems · runtimes, frameworks, packages', interfaces: 'Interfaces · services and operations', runtime: 'Runtime · infrastructure and environments', delivery: 'Delivery · local environment and pipelines', impact: 'Impact · what a change reaches', agent: 'Agent · verbs and context pack', projects: 'Projects · this machine' },
+        areaTitle: { data: 'Data · tables, keys, relations', systems: 'Systems · runtimes, frameworks, packages', interfaces: 'Interfaces · services and operations', runtime: 'Runtime · infrastructure and environments', delivery: 'Delivery · local environment and pipelines', impact: 'Impact · what a change reaches', agent: 'Agent · verbs and context pack', projects: 'Projects · this machine', bugs: 'Bugs & Fixes · local', knowledge: 'Knowledge · sources, memory, decisions' },
         areaWhat: {
             data: 'Tables, columns, keys and delete rules from migrations and models; ORM relations beside real foreign keys; drift between code, intended and actual schema — each fact with the file and line it was read from.',
             systems: 'Runtimes with every witness side by side, frameworks and packages in their locked versions, why each package is installed, which files use it, uses without an import, and drift such as an unused or undeclared package.',
@@ -63,6 +65,8 @@ extendStrings({
             delivery: 'Workflows and jobs with their needs, the environments they deploy to, and the build → image → deploy chain.',
             impact: 'For a working diff: the affected code, tests, columns, operations, resources and pipelines, each with its confirm state, and the review-risk terms.',
             agent: 'The graph verbs an agent calls — each with the question it answers and its CLI and MCP name — and the context pack it receives before it acts.',
+            bugs: 'Bugs from the local bug lane — status, source, environment, cause, the fix commits and the commit that may have introduced each one. Local only: never written into the committed map.',
+            knowledge: 'Every knowledge source of the repository — Markdown, ADRs, roadmaps, contracts, memory stores — who owns it, whether the map reads it, and the decisions and sessions it holds.',
             projects: 'The projects registered on this machine, the links between them, host ports two of them publish, images and services they share, and which call of one lands on a route of another — names and paths only, never in a project map.'
         },
         noReader: {
@@ -73,11 +77,13 @@ extendStrings({
             delivery: 'No delivery reader ran: CI workflows are not read into map.json yet.',
             impact: 'No change preview was written: this map was drawn without a working diff to preview.',
             agent: 'No agent payload was written: the verb list and the context pack are not read into map.json yet.',
+            bugs: 'No bug lane in this map: bug data is read locally into .build/bugs/ and never reaches the committed map.',
+            knowledge: 'No knowledge source index was written: stores, owners, read-by and decisions are not read into map.json yet.',
             projects: 'No project is registered on this machine yet: a `code-graph build` or `code-graph projects add <path>` registers one.'
         }
     },
     de: {
-        areaTitle: { data: 'Data · Tabellen, Schlüssel, Beziehungen', systems: 'Systeme · Runtimes, Frameworks, Pakete', interfaces: 'Interfaces · Dienste und Operationen', runtime: 'Runtime · Infrastruktur und Umgebungen', delivery: 'Delivery · lokale Umgebung und Pipelines', impact: 'Impact · was eine Änderung erreicht', agent: 'Agent · Verben und Context-Pack', projects: 'Projekte · dieser Rechner' },
+        areaTitle: { data: 'Data · Tabellen, Schlüssel, Beziehungen', systems: 'Systeme · Runtimes, Frameworks, Pakete', interfaces: 'Interfaces · Dienste und Operationen', runtime: 'Runtime · Infrastruktur und Umgebungen', delivery: 'Delivery · lokale Umgebung und Pipelines', impact: 'Impact · was eine Änderung erreicht', agent: 'Agent · Verben und Context-Pack', projects: 'Projekte · dieser Rechner', bugs: 'Bugs & Fixes · lokal', knowledge: 'Wissen · Quellen, Memory, Entscheidungen' },
         areaWhat: {
             data: 'Tabellen, Spalten, Schlüssel und Löschregeln aus Migrationen und Models; ORM-Beziehungen neben echten Fremdschlüsseln; Drift zwischen Code, geplantem und tatsächlichem Schema — jeder Fakt mit Datei und Zeile, aus der er gelesen wurde.',
             systems: 'Runtimes mit jedem Nachweis nebeneinander, Frameworks und Pakete in ihrer gelockten Version, warum jedes Paket installiert ist, welche Dateien es nutzen, Nutzungen ohne Import und Drift wie ungenutzte oder nicht deklarierte Pakete.',
@@ -86,6 +92,8 @@ extendStrings({
             delivery: 'Workflows und Jobs mit ihren needs, die Umgebungen, in die sie ausrollen, und die Kette Build → Image → Deploy.',
             impact: 'Für einen Arbeits-Diff: betroffener Code, Tests, Spalten, Operationen, Ressourcen und Pipelines, jeweils mit Bestätigungszustand, und die Review-Risiko-Terme.',
             agent: 'Die Graph-Verben, die ein Agent aufruft — jedes mit der Frage, die es beantwortet, und seinem CLI- und MCP-Namen — und das Context-Pack, das er vor dem Handeln bekommt.',
+            bugs: 'Bugs aus der lokalen Bug-Lane — Status, Quelle, Umgebung, Ursache, die Fix-Commits und der Commit, der jeden vermutlich eingeführt hat. Nur lokal: nie in die committete Map geschrieben.',
+            knowledge: 'Jede Wissensquelle des Repositories — Markdown, ADRs, Roadmaps, Verträge, Memory-Stores — wem sie gehört, ob die Map sie liest, und die Entscheidungen und Sessions darin.',
             projects: 'Die auf diesem Rechner registrierten Projekte, die Verbindungen zwischen ihnen, Host-Ports, die zwei von ihnen veröffentlichen, gemeinsame Images und Dienste, und welcher Aufruf des einen auf einer Route des anderen landet — nur Namen und Pfade, nie in einer Projekt-Map.'
         },
         noReader: {
@@ -96,6 +104,8 @@ extendStrings({
             delivery: 'Kein Delivery-Leser ist gelaufen: CI-Workflows werden noch nicht in map.json gelesen.',
             impact: 'Es wurde keine Änderungsvorschau geschrieben: Diese Karte wurde ohne Arbeits-Diff gezeichnet.',
             agent: 'Es wurde kein Agent-Payload geschrieben: Verbliste und Context-Pack werden noch nicht in map.json gelesen.',
+            bugs: 'Keine Bug-Lane in dieser Map: Bug-Daten werden lokal nach .build/bugs/ gelesen und erreichen die committete Map nie.',
+            knowledge: 'Es wurde kein Wissensquellen-Index geschrieben: Stores, Besitzer, Leser und Entscheidungen werden noch nicht in map.json gelesen.',
             projects: 'Auf diesem Rechner ist noch kein Projekt registriert: `code-graph build` oder `code-graph projects add <Pfad>` registriert eines.'
         }
     }
@@ -103,6 +113,8 @@ extendStrings({
 
 var AREA_MODULES = Object.create(null);
 var KNOWLEDGE_IDS = ['data', 'systems', 'interfaces', 'runtime', 'delivery', 'impact', 'agent'];
+/** The nav of a project map in the handover's order; Bugs and Wissen are routes without a reader of their own yet. */
+var NAV_ROUTES = ['overview', 'code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'bugs', 'knowledge', 'impact', 'agent'];
 var ROW_CAP = 200;
 var avState = { view: Object.create(null), pin: null, fly: false, pinL: null, flyL: false };
 

@@ -102,7 +102,7 @@ Exit: 0.1–0.3 green. Rollback: revert `viewer.css`; aliases keep every caller 
 
 ## Phase 1 — Shell
 
-- [ ] **1.1 Nav order and two new routes.** Übersicht · Code · Data · Systeme ·
+- [x] **1.1 Nav order and two new routes.** Übersicht · Code · Data · Systeme ·
       Interfaces · Runtime · Delivery · Bugs · Wissen · Impact · Agent in
       `areas_common.js` and `shell.js`; no-data entries carry the handover's
       `title` text; Bugs is always no-data in a committed map.

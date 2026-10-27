@@ -28,7 +28,7 @@ extendStrings({
 });
 
 var SHELL = data.shell || {};
-var ROUTES = SHELL.routes || ['overview', 'code'].concat(KNOWLEDGE_IDS);
+var ROUTES = SHELL.routes || NAV_ROUTES;
 var HOME = SHELL.home || 'overview';
 var current = { route: HOME, item: '' };
 
@@ -75,7 +75,10 @@ function renderNav() {
         a.textContent = t('areaNames')[r];
         if (r === current.route) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
         var p = KA[r];
-        a.classList.toggle('empty', r !== 'overview' && r !== 'code' && (!p || !!p.empty));
+        var empty = r !== 'overview' && r !== 'code' && (!p || !!p.empty);
+        a.classList.toggle('empty', empty);
+        // The handover names why an entry is dim; Bugs is local data, never in a committed map.
+        if (empty) a.setAttribute('title', r === 'bugs' ? t('navBugsLocal') : t('navNoData')); else a.removeAttribute('title');
     });
     // On a phone the nav folds into one menu button that names the open area.
     var menu = $('areamenu');
