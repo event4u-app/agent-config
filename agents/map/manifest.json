@@ -1,14 +1,14 @@
 {
   "schema": 1,
-  "generation": "36eb5b1973482ba7",
-  "commit": "2efd5be1444a",
+  "generation": "22c5e900963010d9",
+  "commit": "5d25a8f2b0a1",
   "state": "fresh",
   "areas": {
     "code": {
       "path": "code/map.json",
       "source": "code-graph",
       "freshness": "fresh",
-      "facts": 11614
+      "facts": 11652
     },
     "data": {
       "path": "data/data.json",
