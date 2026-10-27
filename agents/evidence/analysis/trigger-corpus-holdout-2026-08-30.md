@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  0bb592465c2c542d7cb63ab5aa2d9ca8064357985d20ad32777d9250ada9ef57
+SET-SHA256  3a86e3ffac5e706fa5112fa37e24e5f7722b88bb699dcca2007d1315bb779057
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1063,6 +1063,7 @@ open and which this file does not settle.
 | `license-compliance-borrow-check` | `2c23f14c168f6de1f99689e420e29b2b86bbd27e0fdfff68dcdf80b483aa2d0f` |
 | `logo-generation` | `fcf30c295c85f8b24f0ee6cb374229c39dbe87959469d7b04b19660e727e9a08` |
 | `market-entry-analysis` | `9fb6ee850d5eb06e96439505bb5f47835edbc9a025cf97f2ad1a952337fea264` |
+| `mcp` | `841036d591163b49db74e9339555c4f926d93af506fa0e873f5197279fd63f73` |
 | `merge-conflicts` | `61fbce06e0429a65e76532d51f3bafa3d27341b4c42943cc952cbc4dbc304189` |
 | `multi-tenancy` | `56dde082cfd04972656f1e2d61f639c6de63d64b578fc8c294bfab84114780d3` |
 | `overbuild-review-lens` | `32ef2f64da160c5cbc5fef3b4e3d38d83e8f39b918ba4574e43e2f9256ae69f2` |
@@ -1076,6 +1077,7 @@ open and which this file does not settle.
 | `roadmap-management` | `e3b7b1e506b713a88fc9c8f4b0ee4854efda2b8dd7c54fc940a8989e242aa0dd` |
 | `schema-review` | `7c98b3409de8ebb6ef3ee999a46e9c07f69574809c42283b25d2ab384f6cd53f` |
 | `skill-improvement-pipeline` | `67e8594b0bbe6427ec2ad12d46e5910345725dd8ab8436b47a1bfa078a173135` |
+| `systematic-debugging` | `813588ad18ebd0e26a0d203e7e7116487b8fb092e817502ca947f127246ef935` |
 | `tailwind-engineer` | `7b925bfdaca4a4f315bea04c1ae63a9a98a4e6766d7ce951a7c1c56fbd2e5014` |
 | `test-performance` | `67d425384f8507688fdbe18d18d8235fa3dcf7fd1e2d4213a8e581f27fd80152` |
 | `testing-anti-patterns` | `66240715be7873af8ae59d00c416bd048e9699672ea00d0a604957fd6b6d8762` |
@@ -1237,6 +1239,7 @@ open and which this file does not settle.
 | `composer-packages` | `355be75e10e1ff5daf7852250ef360582efa17936dccd48283b5d6552796c2c9` |
 | `content-funnel-design` | `ff3ef395d13b32818a54bffd7eefa3eb4258c2f97c578c649c5a673f039171b1` |
 | `context-authoring` | `0c3412f197fb3b5210496e39bfe5dc286b1348651fa132c4ade4cb43617f05b7` |
+| `context-document` | `68c8e95ae31329b6d4a6f0c0732b66224a68c30e33798b963af8bb8a255c4661` |
 | `contract-review` | `9b5e4a70563ed2e07e463d59a1f179b79f44d37f38323b23013227bbd5aec73b` |
 | `corpus-grounding` | `f87d7497f5705b0ef84bd61137623984faaac39f202bf9f5fea206855fbd6c3f` |
 | `customer-research` | `be1760092dfc0e70006ac1313709d8acdd48a62b1e3b81f354590df95e23fbc6` |
@@ -1327,6 +1330,7 @@ open and which this file does not settle.
 | `security` | `7e2c5b70d7d42d0fa53ce71e5f664f89c3afe943e198389eecebfd82a0ef61d3` |
 | `security-audit` | `4d59d72af3793f7d949f38604408a24e71ba0b5ee4b3849145b2d12214fd3529` |
 | `security-maturity-assessment` | `071894293d4c9a1997843d9bfc78f69b2fc64c0e5306544756cb6853bfd31b30` |
+| `sentry-integration` | `a18e4192843d5e6ca5e297c89c467a2285ec0c4ae207ba30b0937c2df9e25ac3` |
 | `server-hardening` | `8301bedcbcd9129f8c55d3640e66164baec4753e92a55a8b56df54449e3f3f46` |
 | `skill-reviewer` | `86b4abf170034661be4a9136bdfa51f2f00f5e9a3db0b579d4946c1f091108f7` |
 | `skill-writing` | `d2beba3976f5918450cc4fa5c96f7fdae488ef5ffebe1f3b05fe3519acbb8a26` |
@@ -1985,6 +1989,43 @@ neighbour skill, and two counterexamples.
 **Re-taken.** `routing-body-signal-verdict.json` stays **harmful**, false
 activation now +4.97 pp (was +4.90 pp). `delivery-set-measurement-2026-08-31.json`
 recall loss is now 39.05 pp (was 38.75 pp). Neither verdict changes in kind.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.
+
+## Growth — 2026-10-27, four corpora from inbox round 2026-10-bf; two seal
+
+```
+FOUR ROWS ARE NEW — TWO SEAL, TWO TRAIN. NO PRE-EXISTING HOLDOUT FILE WAS
+EDITED. BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN AFTER THE CORPORA WERE ON DISK.
+```
+
+**What changed.** Inbox round 2026-10-bf step J.7a edited `context-document`,
+`mcp`, `sentry-integration` and `systematic-debugging`, so
+`check_routing_coverage` required their corpora and all four grandfather lines
+are gone. Each corpus carries exemplars, near-misses naming the sibling skill
+that should win, and counterexamples.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `context-document` | train | `0x56` = 86 ≥ 51 | new |
+| `mcp` | holdout | `0x10` = 16 < 51 | new |
+| `sentry-integration` | train | `0xee` = 238 ≥ 51 | new |
+| `systematic-debugging` | holdout | `0x1e` = 30 < 51 | new |
+
+**Two rows seal, and nobody chose them.** The sealed set moves **40 -> 42**, the
+train set **143 -> 145**, the set **183 -> 187**. AC-6 still rests on the same
+18 rows, so it is now 18 of 42; a proposer evaluated against this holdout must
+exclude `mcp` and `systematic-debugging` or say it is using rows whose seal is
+younger than the evaluation.
+`SET-SHA256` moves because it is computed over every row: `0bb59246…` → `3a86e3ff…`.
+
+**Both train-side measurements were re-taken on this tree.**
+`routing-body-signal-verdict.json`: still `harmful` on the false-activation
+guard (**+4.76 pp** against +2.0 pp; was +4.97 pp).
+`delivery-set-measurement-2026-08-31.json`: recall loss **39.11 pp** (was
+39.05 pp), the ceiling stays **BREACHED**; context cost **231.4** tokens against
+the 500 target, still **MET**. Neither verdict changes in kind.
 
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
 and `routing_signal_measurement.test.ts` § 5.1.

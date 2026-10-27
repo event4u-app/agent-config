@@ -179,8 +179,11 @@ describe('the live tree', () => {
         // 172 of 301 skills covered; rules 103 of 107) narrowed the gap to 0.39,
         // reproducible from `readSeed`/`measureSkills` — the roadmap's goal
         // moving, not the finding's shape. The skills surface still trails far.
+        // 0.35 -> 0.3 on 2026-10-27, deliberately: inbox round 2026-10-bf took
+        // skills to 187 of 301 (0.6213) against rules 103 of 107 (0.9626), a
+        // gap of 0.3413 — the roadmap's goal moving again, not the shape.
         const s = readSeed(REPO);
-        expect(s.rules - s.skills).toBeGreaterThan(0.35);
+        expect(s.rules - s.skills).toBeGreaterThan(0.3);
     });
 
     it('measures 107 routed rules and 301 routed skills', () => {
