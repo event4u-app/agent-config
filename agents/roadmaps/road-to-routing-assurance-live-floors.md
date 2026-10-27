@@ -91,6 +91,7 @@ before any baseline existed, so neither can be tuned to a result.
       verify: the baseline artifact exists, names its commit and model, and its
       per-unit rows are machine-readable.
       production entry: src/scripts/compile_trigger_evals.ts
+      reach exempt: the step ships the baseline artefact and the grader fix compile_trigger_evals uses; classifyRow in the same module is step 5.3, which stays open until something calls it.
 
       **Open, and it gates 0.4.** This is a live LLM run against the canary
       budget. Token spend is authorised for this drain run, but a *frozen
@@ -173,10 +174,10 @@ item created unless the null broke.
       verify: one real drain session produces at least one candidate, and an
       unconfirmed candidate cannot land.
       production entry: src/scripts/routing_trace_ledger.ts
-- [x] **5.3 Regression states on the frozen 0.2 baseline:** PASSED, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/routing_baseline.ts -->
+- [ ] **5.3 Regression states on the frozen 0.2 baseline:** PASSED,
       ROUTING_CHANGED, REGRESSION — only REGRESSION (floor breach) gates.
       verify: three fixtures, one per state.
-      production entry: src/scripts/compile_trigger_evals.ts
+      Built, not wired (2026-10-27): `classifyRow` and its four fixtures are green, but no rotation or gate calls it yet; it is ticked when the canary run classifies its rows against the frozen baseline.
 - [x] **5.4 Proxy-fidelity report:** for prompts appearing in BOTH the trace <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/proxy_fidelity.ts -->
       ledger and the Phase 2 corpus, compare the checker's would-load verdict
       against what the session actually consulted. If it degrades, the Phase 1
