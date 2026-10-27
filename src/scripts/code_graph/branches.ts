@@ -49,6 +49,8 @@ export interface BranchManifest {
     facts: { code: string[]; systems: string | null; data: string | null };
     /** Stored form only: the manifest this one is a delta against (7.3). `files` is then absent on disk. */
     parent?: string;
+    /** digest of the parent's `files` the delta was diffed from; another base would read the parent's newer blobs as this branch's */
+    base?: string;
     delta?: { set: Record<string, string>; removed: string[] };
 }
 
@@ -218,6 +220,8 @@ export async function indexBranch(root: string, buildDir: string, ref: string, o
         }
     }
     const manifest: BranchManifest = { version: BRANCH_STORE_VERSION, ref, commit, seen: opts.day ?? today(), files, facts: { code: codeKeys.map(([, , k]) => k), systems, data } };
+    const old = readManifest(buildDir, ref);
+    if (old && filesDigest(old.files) !== filesDigest(files)) rewriteChildrenWhole(buildDir, ref);
     writeJson(manifestFile(dir, ref), storedForm(root, buildDir, manifest));
     return { manifest, written };
 }
@@ -233,6 +237,26 @@ function manifestParent(root: string, ref: string): string | null {
     return p && p !== ref ? p : null;
 }
 
+const filesDigest = (files: Record<string, string>): string => hash(Object.entries(files).sort(([a], [b]) => (a < b ? -1 : 1)).map(([p, s]) => `${p}:${s}`).join('\n'));
+const whole = (m: BranchManifest): BranchManifest => (({ parent: _p, base: _b, delta: _d, ...rest }) => rest)(m);
+
+/** Before `ref`'s files change or its manifest goes, every delta stored against it is rewritten whole from the base it was diffed from. */
+function rewriteChildrenWhole(buildDir: string, ref: string): void {
+    const d = path.join(storeDir(buildDir), 'manifests');
+    let names: string[];
+    try {
+        names = fs.readdirSync(d).filter((n) => n.endsWith('.json'));
+    } catch {
+        return;
+    }
+    for (const n of names) {
+        const raw = readJson<BranchManifest>(path.join(d, n));
+        if (raw?.parent !== ref) continue;
+        const m = materialize(buildDir, raw);
+        if (m) writeJson(path.join(d, n), whole(m));
+    }
+}
+
 /** A manifest as written: a delta against its parent's when the parent is indexed, else whole. */
 function storedForm(root: string, buildDir: string, m: BranchManifest): BranchManifest | Omit<BranchManifest, 'files'> {
     const parentRef = manifestParent(root, m.ref);
@@ -242,7 +266,7 @@ function storedForm(root: string, buildDir: string, m: BranchManifest): BranchMa
     for (const [f, sha] of Object.entries(m.files)) if (parent.files[f] !== sha) set[f] = sha;
     const removed = Object.keys(parent.files).filter((f) => !(f in m.files)).sort();
     const { files: _files, ...rest } = m;
-    return { ...rest, parent: parent.ref, delta: { set, removed } };
+    return { ...rest, parent: parent.ref, base: filesDigest(parent.files), delta: { set, removed } };
 }
 
 /** A stored manifest with its `files` rebuilt from the parent chain; `null` when a parent is missing. */
@@ -251,6 +275,8 @@ function materialize(buildDir: string, m: BranchManifest | null, seen: Set<strin
     if (seen.has(m.ref)) return null;
     const parent = materialize(buildDir, readJson<BranchManifest>(manifestFile(storeDir(buildDir), m.parent)), new Set([...seen, m.ref]));
     if (!parent) return null;
+    // A delta read against a base it was not diffed from would hand this branch the parent's newer blobs.
+    if (m.base !== undefined && filesDigest(parent.files) !== m.base) return null;
     const files = { ...parent.files, ...m.delta.set };
     for (const f of m.delta.removed) delete files[f];
     return { ...m, files };
@@ -468,10 +494,7 @@ export function gcBranches(root: string, buildDir: string, opts: { day?: string;
         const gone = !refExists(root, m.ref) && !resolves(root, m.ref);
         if (gone || m.seen < cutoff) {
             // A child stored as a delta against this manifest is rewritten whole first.
-            for (const child of all) {
-                const raw = readJson<BranchManifest>(manifestFile(dir, child.ref));
-                if (raw?.parent === m.ref) writeJson(manifestFile(dir, child.ref), (({ parent: _p, delta: _d, ...whole }) => whole)(child));
-            }
+            rewriteChildrenWhole(buildDir, m.ref);
             fs.rmSync(manifestFile(dir, m.ref), { force: true });
             dropped.push({ ref: m.ref, why: gone ? 'the local branch is gone' : `unseen since ${m.seen}` });
             continue;
