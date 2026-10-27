@@ -20,7 +20,7 @@ evidence:
     - agents/evidence/council/node-floor-raise-20261018.md
     - agents/evidence/council/node-floor-raise-20261018.question.md
     - agents/evidence/council/owner-blocker-routing-20261016.md
-    - agents/roadmaps/road-to-an-update-that-installs-itself-only-when-it-is-safe.md
+    - agents/roadmaps/archive/road-to-an-update-that-installs-itself-only-when-it-is-safe.md
     - SECURITY.md
     - package.json
 review_trigger: >-

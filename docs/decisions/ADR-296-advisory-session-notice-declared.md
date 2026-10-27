@@ -20,7 +20,7 @@ evidence:
     - agents/evidence/council/advisory-session-notice-20261021.md
     - agents/evidence/council/advisories-worktree-run-design-20261021.md
     - agents/roadmaps/archive/road-to-advisories-heard-the-same-day.md
-    - agents/roadmaps/road-to-an-update-that-installs-itself-only-when-it-is-safe.md
+    - agents/roadmaps/archive/road-to-an-update-that-installs-itself-only-when-it-is-safe.md
 review_trigger: >-
   Reopened if the notice is found to carry fetched text into session context, if
   a session start is measured past its latency baseline because of it, or if a
