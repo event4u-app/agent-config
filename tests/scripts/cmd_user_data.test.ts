@@ -44,6 +44,14 @@ describe('user-data', () => {
         expect(JSON.parse(out.join(''))).toMatchObject({ signals: { count: 2, ids: ['sig-1', 'sig-2'] } });
     });
 
+    it('export prints the rows of a kind as JSON', () => {
+        expect(run('export', '--kind', 'signals')).toBe(0);
+        expect(JSON.parse(out.join(''))).toEqual({ signals: [{ id: 'sig-1', kind: 'complaint' }, { id: 'sig-2', kind: 'approval' }] });
+        out.length = 0;
+        expect(run('export')).toBe(0);
+        expect(Object.keys(JSON.parse(out.join('')))).toEqual(['profile', 'observations', 'signals', 'chat-history', 'sessions']);
+    });
+
     it('delete is a dry run without --yes, then removes, tombstones and clears the derived index', () => {
         const { DatabaseSync } = loadSqliteSync('test');
         const db = new DatabaseSync(path.join(dir, DERIVED_INDEX));

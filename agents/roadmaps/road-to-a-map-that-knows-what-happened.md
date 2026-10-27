@@ -330,12 +330,12 @@ signals are user-owned local files; disable per kind (O20). K.1-K.3 run before D
       text.
       verify: `npx vitest run tests/scripts/retro_review_learnings.test.ts` -> 0
       > note: retro triage and recurrence read the user's signals (`composeRetro`, `readRecurrence`), and review routing asks `code-graph ask "review checklist for <area>"`; signals arrive in the store only once K.2's prompt wiring exists (hook-bundle headroom).
-- [x] **K.7 The user stays in control** (H53). View, export and delete cover
+- [ ] **K.7 The user stays in control** (H53). View, export and delete cover
       profile, observations, signals, chat history, session index, and every
       derived index (FTS SQLite, twin); revoked items vanish from FTS; each
       kind can be switched off; message text is never stored.
       verify: `npx vitest run tests/scripts/user_delete_propagation.test.ts` -> 0
-      > note: `agent-config user-data list | delete (dry run unless --yes, tombstoned, derived index too) | tombstones | migrate (dry run unless --apply)`; after a migration the existing chat-history and observation readers do not yet read the user store, and the dry run says so.
+      > note: wired — `agent-config user-data list | export [--kind K] | delete (dry run unless --yes, tombstoned) | tombstones | migrate (dry run unless --apply)`; message text is refused at write. Remaining: (1) the derived-index delete only reaches `index.sqlite3` beside the user store, which no writer produces yet, so no real FTS table or twin is covered; (2) no setting switches a kind off — `appendUserRow` takes an `enabled` predicate, but nothing reads one from settings (`chat_history.enabled` governs the project log, not the user store); (3) after a migration the existing chat-history and observation readers do not yet read the user store, and the dry run says so.
 - [~] **K.8 Where it is seen** (after D). User learnings go into the
       machine-local hub payload (ADR-299); project learnings into the project
       map payload. The pages are `road-to-map-views-from-the-handover` Phases 5

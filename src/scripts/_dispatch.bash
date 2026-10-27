@@ -361,7 +361,7 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              session claim, conflicting records and worktree pressure.
                              Read-only; no disposal path by design.
                              Flags: --from <dir>, --json, --strict
-  user-data                  Your own data for this repository, under your home: list,
+  user-data                  Your own data for this repository, under your home: list, export,
                              delete (dry run unless --yes; tombstoned), tombstones,
                              migrate (dry run unless --apply) of chat history + observations.
                              Flags: --kind K, --id ID, --yes, --apply, --json

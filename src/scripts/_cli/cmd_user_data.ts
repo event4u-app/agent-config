@@ -4,6 +4,7 @@
  * their home (`<user-global>/user/projects/<repo-id>/`), never in the project.
  *
  *   user-data list [--kind K] [--json]              counts and ids per kind (never content)
+ *   user-data export [--kind K …]                   the stored rows of each kind, as JSON
  *   user-data delete --kind K [--id ID …] [--yes]   dry run unless --yes; tombstones what it removes,
  *                                                   and removes the ids from the derived index
  *   user-data tombstones [--json]
@@ -25,7 +26,7 @@ import { USER_KINDS, type UserKind, type UserRow, appendUserRow, deleteUserData,
 import { resolveGlobalObservationsPath } from '../_lib/user_global_observations.js';
 import { repoIdentity } from '../code_graph/repo_identity.js';
 
-const USAGE = 'usage: agent-config user-data list [--kind K] [--json] | delete --kind K [--id ID …] [--yes] | tombstones [--json] | migrate [--apply] [--root P]\n';
+const USAGE = 'usage: agent-config user-data list [--kind K] [--json] | export [--kind K] | delete --kind K [--id ID …] [--yes] | tombstones [--json] | migrate [--apply] [--root P]\n';
 /** The derived index a user store may have beside it; deletes reach it too. */
 export const DERIVED_INDEX = 'index.sqlite3';
 const CHAT_POINTER_FIELDS = new Set(['s', 't', 'type', 'ts', 'phase', 'kind', 'n']);
@@ -141,6 +142,12 @@ export function main(argv: readonly string[] = process.argv.slice(2), opts: { ro
             process.stdout.write(`user data for this repository: ${dir}\n`);
             for (const k of shown) process.stdout.write(`  ${k}: ${counts[k]}${counts[k] ? ` — ${all[k].slice(0, 10).map((r) => r.id).join(', ')}${counts[k] > 10 ? ', …' : ''}` : ''}\n`);
         }
+        return 0;
+    }
+    if (sub === 'export') {
+        const all = exportUserData(dir);
+        const shown = (kinds.length ? kinds : [...USER_KINDS]) as UserKind[];
+        process.stdout.write(`${JSON.stringify(Object.fromEntries(shown.map((k) => [k, all[k]])), null, 1)}\n`);
         return 0;
     }
     if (sub === 'delete') {
