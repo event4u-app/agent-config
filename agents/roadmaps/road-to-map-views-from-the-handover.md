@@ -118,7 +118,7 @@ Exit: 0.1–0.3 green. Rollback: revert `viewer.css`; aliases keep every caller 
       buttons separated by `›`, a 24px `←` only when history exists; no back
       button and no crumb chips. Used by Systeme and Bugs.
       verify: `npx vitest run tests/scripts/code_graph_map_history_crumbs.test.ts` -> 0
-- [ ] **1.4 Provenance footer.** A shared footer line per page naming the
+- [x] **1.4 Provenance footer.** A shared footer line per page naming the
       source file and commit ("Echte Daten · systems.json @ 2efd5be1").
       verify: `npx vitest run tests/scripts/code_graph_map_shell.test.ts -t provenance --reporter=verbose` -> /✓.*provenance/
 - [ ] **1.5 Breakpoints, scroll strip, flyouts.** Breakpoints 700 and 1000 per

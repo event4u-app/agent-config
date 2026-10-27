@@ -32,7 +32,8 @@ extendStrings({
         colMessage: 'Finding', colWitness: 'Witness', views: 'View', moreRows: function (n) { return '+ ' + n + ' more rows'; }, hashT: 'hash of the span as read',
         bannerStale: { behind: function (n) { return 'The graph is ' + n + ' commit(s) behind HEAD'; }, edited: 'An indexed file has uncommitted edits', absent: 'No graph index was found', other: function (s) { return 'Graph state: ' + s; } },
         bannerWhy: { behind: 'Facts may describe code that has changed since. Confirm a witness before acting on it, or redraw with `agent-config code-graph map`.', edited: 'The map shows the committed version of those files; confirm the witnesses you act on.', absent: 'Nothing on this map was read from an index; every fact is unverifiable.', other: 'Confirm a witness before acting on it.' },
-        bannerLabel: 'Freshness', histLabel: 'History', histBack: 'Back'
+        bannerLabel: 'Freshness', histLabel: 'History', histBack: 'Back',
+        provReal: 'Real data', provDemo: 'Sample data · Fixture', provUnconfirmed: 'Witnesses unconfirmed', provNoBugLane: 'no bug lane', provDemoHint: 'Demo map with full areas: code-graph map --demo'
     },
     de: {
         areaNames: { overview: 'Übersicht', code: 'Code', data: 'Data', systems: 'Systeme', interfaces: 'Interfaces', runtime: 'Runtime', delivery: 'Delivery', bugs: 'Bugs', knowledge: 'Wissen', impact: 'Impact', agent: 'Agent', projects: 'Projekte' },
@@ -50,7 +51,8 @@ extendStrings({
         colMessage: 'Befund', colWitness: 'Nachweis', views: 'Ansicht', moreRows: function (n) { return '+ ' + n + ' weitere Zeilen'; }, hashT: 'Hash der Stelle beim Lesen',
         bannerStale: { behind: function (n) { return 'Der Graph liegt ' + n + ' Commit(s) hinter HEAD'; }, edited: 'Eine indizierte Datei hat nicht committete Änderungen', absent: 'Es wurde kein Graph-Index gefunden', other: function (s) { return 'Graph-Zustand: ' + s; } },
         bannerWhy: { behind: 'Fakten können Code beschreiben, der sich seither geändert hat. Vor dem Handeln einen Nachweis bestätigen oder mit `agent-config code-graph map` neu zeichnen.', edited: 'Die Karte zeigt die committete Fassung dieser Dateien; die Nachweise bestätigen, auf die du dich stützt.', absent: 'Nichts auf dieser Karte stammt aus einem Index; jeder Fakt ist unüberprüfbar.', other: 'Vor dem Handeln einen Nachweis bestätigen.' },
-        bannerLabel: 'Frische', histLabel: 'Verlauf', histBack: 'Zurück'
+        bannerLabel: 'Frische', histLabel: 'Verlauf', histBack: 'Zurück',
+        provReal: 'Echte Daten', provDemo: 'Beispieldaten · Fixture', provUnconfirmed: 'Witnesses unconfirmed', provNoBugLane: 'keine Bug-Lane', provDemoHint: 'Demo-Map mit vollen Bereichen: code-graph map --demo'
     }
 });
 
@@ -257,6 +259,22 @@ function pageHistory(o) {
 }
 // A seam for the browser suite: the component is drawn and driven there without a page around it.
 window.__mapPageHistory = pageHistory;
+
+/** Where each page's facts were read from, as the handover's footers name it. */
+var PROV_SOURCE = { overview: 'manifest.json + code/map.json', data: 'data.json', systems: 'systems.json', interfaces: 'interfaces.json', runtime: 'runtime.json',
+    delivery: 'delivery.json + runtime.json', impact: 'code/map.json → areas.impact', agent: 'code/map.json → areas.agent', knowledge: 'map.json', bugs: 'agents/map' };
+/** The provenance footer of a page: real or sample data, the source file, the commit, and what the witnesses are. */
+function provenanceLine(id) {
+    // The hub is no repository map: there is no commit to name.
+    if (SHELL.hub) return null;
+    var pin = model.pin || { commit: meta.commit };
+    var parts = [(meta.demo ? t('provDemo') : t('provReal')) + ' · ' + (PROV_SOURCE[id] || 'map.json') + ' @ ' + String(pin.commit || meta.commit || '').slice(0, 8)];
+    if (id === 'bugs' && !(KA.bugs && !KA.bugs.empty)) parts.push(t('provNoBugLane'));
+    var c = AREA_MODULES[id] ? confirmCounts(id) : null;
+    if (c && c.total && c.unconfirmed === c.total) parts.push(t('provUnconfirmed'));
+    if (id === 'overview' && !meta.demo) parts.push(t('provDemoHint'));
+    return el('span', { class: 'prov mono', id: 'prov' }, parts.join(' · '));
+}
 
 function avPick(id, key) { location.hash = '#/' + id + (key ? '/' + encodeURIComponent(key) : ''); }
 
@@ -491,6 +509,7 @@ function renderAreaPage(id, key) {
         var ends = mod.ownsBar ? bar : main.firstChild;
         ends.insertBefore($('av-open-left'), ends.firstChild);
         ends.appendChild($('av-open'));
+        add(main, provenanceLine(id));
         bar.classList.toggle('owned', !!mod.ownsBar);
         bar.hidden = !mod.ownsBar;
         if (item) avFly('right', true); else applyAvPanes();
@@ -518,6 +537,7 @@ function renderAreaPage(id, key) {
         else if (v === 'findings') findingsView(id, main);
         else mod.render(own ? p : null, v, main);
     }
+    add(main, provenanceLine(id));
     renderAvDetail(id, item);
     if (item) avState.fly = true;
     applyAvPanes();

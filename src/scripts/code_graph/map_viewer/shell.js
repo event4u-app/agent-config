@@ -143,6 +143,7 @@ function renderRoute() {
         $('av-body').classList.add('no-side', 'no-left');
         $('av-body').classList.remove('paged');
         renderOverview();
+        add($('av-main'), provenanceLine('overview'));
         applyAvPanes();
         return;
     }

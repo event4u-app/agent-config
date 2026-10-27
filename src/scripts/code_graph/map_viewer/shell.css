@@ -390,3 +390,4 @@ button.db-badge:hover, button.db-badge:focus-visible { border-color: var(--brand
 .hist-sep { color: var(--faint); }
 .hist-step { height: 24px; padding: 0 4px; border: 0; background: transparent; font-family: var(--monof); font-size: 12px; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 400; color: var(--muted); text-decoration: underline dotted; text-underline-offset: 3px; }
 .hist-step[aria-current='page'] { cursor: default; font-weight: 600; color: var(--text); text-decoration: none; }
+.prov { font-size: 11px; color: var(--faint); }

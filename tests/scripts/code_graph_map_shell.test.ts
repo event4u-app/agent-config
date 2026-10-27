@@ -146,6 +146,27 @@ describe('the shell of the 2026-10-bf handover', () => {
     });
 });
 
+describe('the provenance footer', () => {
+    it('provenance: every page names its source file and the commit, German wording, none on the hub', async () => {
+        const page = await browser.newPage({ locale: 'de-DE', colorScheme: 'dark' });
+        await page.goto(pathToFileURL(full).href + '#/overview');
+        await page.waitForFunction(() => (window as unknown as { __mapRoute?: unknown }).__mapRoute !== undefined);
+        const sha = await page.evaluate(() => String((JSON.parse(document.getElementById('map-data')!.textContent!) as { model: { pin: { commit: string } } }).model.pin.commit).slice(0, 8));
+        const want: Record<string, string> = { overview: 'manifest.json + code/map.json', data: 'data.json', systems: 'systems.json', interfaces: 'interfaces.json', runtime: 'runtime.json', delivery: 'delivery.json + runtime.json', impact: 'code/map.json → areas.impact', agent: 'code/map.json → areas.agent', knowledge: 'map.json', bugs: 'agents/map' };
+        for (const [r, src] of Object.entries(want)) {
+            await page.evaluate((x) => { location.hash = `#/${x}`; }, r);
+            await page.waitForFunction((x) => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === x, r);
+            const text = (await page.locator('#prov').textContent()) ?? '';
+            expect(text, r).toMatch(new RegExp(`^Echte Daten · ${src.replace(/[.+]/g, '\\$&')} @ ${sha}`));
+            expect(await page.locator('#prov').evaluate((e) => getComputedStyle(e).fontSize)).toBe('11px');
+        }
+        await page.evaluate(() => { location.hash = '#/bugs'; });
+        await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'bugs');
+        expect(await page.locator('#prov').textContent()).toBe(`Echte Daten · agents/map @ ${sha} · keine Bug-Lane`);
+        await page.close();
+    });
+});
+
 describe('an area without data is shown, says so and names the reason', () => {
     it('every knowledge area with no reader run', async () => {
         const page = await open(empty, '#/overview');
