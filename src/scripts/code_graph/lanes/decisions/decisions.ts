@@ -19,6 +19,8 @@ import { spanHash, type LaneFact, type LaneOutput, type LaneRelation, type Witne
 export interface ReadDecisionsOptions {
     /** Repository-relative files to resolve mentions against; defaults to `git ls-files`, then a bounded walk. */
     files?: readonly string[];
+    /** Node ids of the graph the lane merges into: a mention of a file outside it is unresolved, never a dangling `governs`. */
+    nodes?: ReadonlySet<string>;
 }
 
 export interface DecisionsOutput extends LaneOutput {
@@ -330,6 +332,10 @@ export function readDecisions(root: string, opts: ReadDecisionsOptions = {}): De
                 const target = hits[0] as string;
                 // A record naming itself or another record is a citation, not governance.
                 if (target === r.file || isDecisionFile(target) || seen.has(target)) continue;
+                if (opts.nodes && !opts.nodes.has(target)) {
+                    output.dropped.unresolved++;
+                    continue;
+                }
                 seen.add(target);
                 governs.push({
                     relation: 'governs',

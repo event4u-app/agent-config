@@ -74,7 +74,7 @@ export function runLaneReaders(
         run('interfaces', () => readInterfaces(root)),
         run('delivery', () => readDelivery(root)),
         history,
-        run('decisions', () => readDecisions(root)),
+        run('decisions', () => readDecisions(root, { nodes: nodeIds })),
         run('data', () => readData(root, graph, runtime ? { runtime } : {})),
         run('systems', () => readSystems(root, { graph })),
     ].filter((o): o is LaneOutput => o !== null);

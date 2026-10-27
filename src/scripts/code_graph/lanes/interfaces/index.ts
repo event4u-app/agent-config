@@ -207,6 +207,11 @@ const LOCAL_SUFFIX = /\.(?:localhost|local|test)$/;
  * service name, or any dotless literal name (a container or cluster-internal
  * service — no public host is dotless). A templated host is never local.
  */
+/** The runtime lane's id for an env name read in code (`lanes/runtime/read_runtime.ts`): one scheme, so the edge lands on a node. */
+export function envVarId(file: string, name: string): string {
+    return `env-var:code:${file}#${name}`;
+}
+
 export function isLocalHost(host: string, composeHosts: ReadonlySet<string> = new Set()): boolean {
     const h = host.toLowerCase();
     if (LOCAL_NAME.test(h)) return true;
@@ -515,10 +520,10 @@ function flatten(m: Model, config: ConfigIndex, skipped: LaneOutput['skipped']):
         });
         for (const n of baseNames) {
             const w = s.baseNames.get(n) as Witness;
-            relations.push({ relation: 'configured-by', from: id, to: `env:${n}`, attrs: { role: 'base' }, witness: w, rung: 'T1', owner: w.file, guess: false });
+            relations.push({ relation: 'configured-by', from: id, to: envVarId(w.file, n), attrs: { role: 'base' }, witness: w, rung: 'T1', owner: w.file, guess: false });
         }
         for (const [n, w] of s.configNames) {
-            relations.push({ relation: 'configured-by', from: id, to: `env:${n}`, attrs: { role: 'setting' }, witness: w, rung: 'T1', owner: w.file, guess: false });
+            relations.push({ relation: 'configured-by', from: id, to: envVarId(w.file, n), attrs: { role: 'setting' }, witness: w, rung: 'T1', owner: w.file, guess: false });
         }
     }
     const callsByOp = new Map<string, CallRec[]>();

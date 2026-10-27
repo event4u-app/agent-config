@@ -11,6 +11,7 @@
  * map's is `stale`. Nothing here writes a file; ERD pages are returned for the
  * map writer to place.
  */
+import { excludedOwnFiles } from './lanes/delivery/self_trigger.js';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -864,6 +865,19 @@ function diffPack(c: Ctx, cachePath: string, changed: readonly string[]): NonNul
 
 const hashOf = (parts: unknown[]): string => createHash('sha256').update(JSON.stringify(parts)).digest('hex').slice(0, 12);
 
+/** The first workflow (by file) one of whose path filters lets a file of the flow through; an unfiltered trigger says nothing about the flow. */
+function workflowOnPaths(c: Ctx, areas: MapAreas, flowFiles: ReadonlySet<string>): DeliveryPayload['workflows'][number] | undefined {
+    const files = [...flowFiles];
+    return areas.delivery?.workflows.find((wf) => {
+        const ids = new Set(c.graph.nodes.filter((n) => n.kind === 'workflow' && n.fact?.owner === wf.file).map((n) => n.id));
+        return c.graph.nodes.some((t) => {
+            if (t.kind !== 'trigger' || !ids.has(String(attr(t, 'context') ?? ''))) return false;
+            const paths = strs(attr(t, 'paths'));
+            return paths.length > 0 && files.some((file) => excludedOwnFiles(paths, strs(attr(t, 'paths_ignore')), [file]).length === 0);
+        });
+    });
+}
+
 function tours(c: Ctx, areas: MapAreas, previous: readonly MapTour[] = []): MapTour[] {
     const flows = c.graph.nodes
         .filter((n) => n.kind === 'flow')
@@ -904,7 +918,7 @@ function tours(c: Ctx, areas: MapAreas, previous: readonly MapTour[] = []): MapT
                 state: 'fresh',
             });
         }
-        const wf = areas.delivery?.workflows[0];
+        const wf = workflowOnPaths(c, areas, new Set([entry?.source_file, ...strs(attr(f, 'nodes')).map((id) => c.byId.get(id)?.source_file)].filter((x): x is string => !!x)));
         if (wf) {
             const jobs = (areas.delivery?.jobs ?? []).filter((j) => j.workflow === wf.file);
             steps.push({
