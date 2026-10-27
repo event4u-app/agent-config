@@ -4,12 +4,12 @@ status: later
 execution:
   mode: phase-checkpoints
 entry_condition:
-  what: road-to-a-yes-that-was-checked is archived (the generator, dry run, estimate and floor exist), and OQ-22 is answered for the Phase 2 runs
+  what: road-to-a-yes-that-was-checked is archived (the generator, dry run, estimate and floor exist), and OQ-24 is answered for the Phase 2 runs
   when: after that roadmap closes; Phase 1 needs no answer and can start then
   who: an implementer for Phase 1 and the detector; the owner for the Phase 2 spend; the AI council for decision H1
 review_by: 2027-01-31
 estate_offset_exempt: "Parked under later/ in the same change that adds its active sibling road-to-a-yes-that-was-checked; later/ is excluded from the dashboard and from /roadmap:process-*, so it adds no active roadmap. Owner search over the estate for bench_honesty, honesty-PREREG and capitulat found no owner."
-estate_growth_exempt: "open_blockers +1: honesty-bench-spend is a new owner-reserved spend decision this round created (OQ-22); later_roadmaps +1 is this file."
+estate_growth_exempt: "open_blockers +1: honesty-bench-spend is a new owner-reserved spend decision this round created (OQ-24); later_roadmaps +1 is this file."
 relates:
   - slug: road-to-a-yes-that-was-checked
     relation: depends
@@ -114,10 +114,10 @@ from a measured arm rather than from the source synthesis.
 ### blocker: honesty-bench-spend
 
 - **Status:** open — raised 2026-10-27 by the inbox round that planned Phase 2.
-- **Owner:** the owner (`agents/owner-questions.md` OQ-22) — spend is owner-reserved.
+- **Owner:** the owner (`agents/owner-questions.md` OQ-24) — spend is owner-reserved.
 - **Blocks:** 2.1, 2.2, 4.1 and 4.2.
 - **What to do:** pick exactly one — (a) fund the floor probe only (computed at about 1 USD; `./scripts-run src/scripts/bench_honesty_run --estimate` prints the real figure first); (b) fund the probe and, if the floor is met, the full run (computed at about 20-30 USD); or (c) decline, and the honesty rules stay unmeasured.
-- **Resolved when:** OQ-22 moves to `## Answered` in `agents/owner-questions.md`.
+- **Resolved when:** OQ-24 moves to `## Answered` in `agents/owner-questions.md`.
 - **Recommendation:** (a) — it is the cheapest falsifier, and its result decides whether (b) is worth paying for.
 - **If you do nothing:** the generator and floor exist and the bench stays unrun; the honesty rules keep shipping with no behavioural measurement, which is today's state.
 

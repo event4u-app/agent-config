@@ -4,12 +4,12 @@ status: later
 execution:
   mode: phase-checkpoints
 entry_condition:
-  what: road-to-findings-that-show-their-exhibits is archived (typed exhibits, check_finding_exhibits, the precision report and the flip metric exist), and OQ-22 is answered for the Phase 4 runs
+  what: road-to-findings-that-show-their-exhibits is archived (typed exhibits, check_finding_exhibits, the precision report and the flip metric exist), and OQ-24 is answered for the Phase 4 runs
   when: after that roadmap closes; Phases 1 and 2 need no answer and can start then
   who: an implementer for Phases 1-3; the owner for the Phase 4 spend; the AI council for decisions C1-C3
 review_by: 2027-01-31
 estate_offset_exempt: "Parked under later/ in the same change that adds its active sibling road-to-findings-that-show-their-exhibits; later/ is excluded from the dashboard and from /roadmap:process-*, so it adds no active roadmap. Owner search over the estate for findingId, review-findings.schema, exhibit and admissib found no owner."
-estate_growth_exempt: "open_blockers +1: court-measurement-spend is a new owner-reserved spend decision this round created (OQ-22); it is not a duplicate of any open blocker. later_roadmaps +1 is this file."
+estate_growth_exempt: "open_blockers +1: court-measurement-spend is a new owner-reserved spend decision this round created (OQ-24); it is not a duplicate of any open blocker. later_roadmaps +1 is this file."
 relates:
   - slug: road-to-findings-that-show-their-exhibits
     relation: depends
@@ -124,10 +124,10 @@ labelled unmeasured until the precision claim passes.
 ### blocker: court-measurement-spend
 
 - **Status:** open — raised 2026-10-27 by the inbox round that planned Phase 4.
-- **Owner:** the owner (`agents/owner-questions.md` OQ-22) — spend is owner-reserved.
+- **Owner:** the owner (`agents/owner-questions.md` OQ-24) — spend is owner-reserved.
 - **Blocks:** 4.1 and 4.2, and through 4.2 the default-on half of 5.2.
 - **What to do:** pick exactly one — (a) fund one run per arm on the ledger corpus with one producer, estimate printed by `./scripts-run src/scripts/bench_adversarial_council --estimate` before any call; or (b) decline, and admissibility stays a label permanently.
-- **Resolved when:** OQ-22 moves to `## Answered` in `agents/owner-questions.md`.
+- **Resolved when:** OQ-24 moves to `## Answered` in `agents/owner-questions.md`.
 - **Recommendation:** (a), after Phase 3.1, so the paid run's findings can be re-asked later without paying again.
 - **If you do nothing:** exhibits are recorded and checked but never filter anything; that is a valid end state.
 

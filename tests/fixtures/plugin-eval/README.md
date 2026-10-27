@@ -41,3 +41,12 @@ Risk 2 of that roadmap: a host update can change the case schema and every
 compiled case is then silently ignored. The parity test is the detector; this
 file is how you tell which host version the fixture was taken from when it
 fires.
+
+## The compiled grader is not the scaffold's grader
+
+The pinned `case-grader.md` is the scaffold's blank `type: llm` grader. The
+compiler emits `type: tool_used` instead (`compile_trigger_evals.graderBody`):
+an `llm` grader's default focus is the last message, which never shows whether
+a skill was invoked. The file layout is the pin; the grader type is the
+compiler's, and `tool_used` with `input_match` was verified on host 2.1.311
+(`road-to-routing-assurance-live-floors` 0.2 protocol).
