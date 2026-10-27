@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
-export const BASELINE_REL = 'src/config/self-search-baseline.json';
+export const BASELINE_REL = 'src/config/self-search-ceiling.json';
 export const CONTENT_ROOTS = ['src/skills', 'src/rules', 'src/domains', 'src/agent-src', 'docs/guidelines'];
 
 const SWEEP = /^\s*(?:rg|grep -r[a-zA-Z]*) /;
