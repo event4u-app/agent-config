@@ -13,8 +13,10 @@ const pkg = (name: string) => out.facts.find((f) => f.kind === 'package' && f.at
 
 beforeAll(async () => {
     root = writeAuditPhpFixture();
-    const edit = (rel: string, f: (d: Record<string, any>) => void): void => {
-        const d = JSON.parse(fs.readFileSync(path.join(root, rel), 'utf-8'));
+    type PkgEntry = Record<string, unknown> & { name: string };
+    type Manifest = { require: Record<string, string>; extra?: unknown; packages: PkgEntry[] };
+    const edit = (rel: string, f: (d: Manifest) => void): void => {
+        const d = JSON.parse(fs.readFileSync(path.join(root, rel), 'utf-8')) as Manifest;
         f(d);
         fs.writeFileSync(path.join(root, rel), JSON.stringify(d, null, 4));
     };
@@ -23,8 +25,8 @@ beforeAll(async () => {
         d.extra = { unused: ['acme/ignored'] };
     });
     edit('composer.lock', (d) => {
-        const legacy = d.packages.find((p: { name: string }) => p.name === 'acme/legacy');
-        legacy.require = { 'acme/core': '^1.0' };
+        const legacy = d.packages.find((p) => p.name === 'acme/legacy')!;
+        legacy['require'] = { 'acme/core': '^1.0' };
         d.packages.push({ name: 'acme/core', version: '1.0.0', autoload: { 'psr-4': { 'Acme\\Core\\': 'src/' } } });
         d.packages.push({ name: 'acme/ignored', version: '1.0.0', autoload: { 'psr-4': { 'Acme\\Ignored\\': 'src/' } } });
         d.packages.push({ name: 'acme/meta', version: '1.0.0', type: 'metapackage', require: { 'acme/core': '^1.0' } });
