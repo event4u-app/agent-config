@@ -253,6 +253,7 @@ use it.
       into one `scan` CLI verb returning `file:line:rule-id`; a ratchet holds
       the self-search count.
       verify: `grep -rlc codebase-retrieval .claude/skills .claude/rules` -> 1
+      > note: open: 12 source files (14 mentions) name codebase-retrieval; the rewrite needs net-neutral skill edits, task sync + generate-tools for the host trees the verify reads, the `scan` verb and a ratified ratchet — not reached in this run.
 - [~] **J.7b Rewire self-search to `ask`** (after D's gain branch only; a null
       leaves it). Blocked by `b-stage-d-measurement`.
       verify: `./scripts-run src/scripts/check_self_search_ratchet` -> 0
@@ -261,10 +262,11 @@ use it.
       as an extension of `memory_recall_hook.ts`. Off unless D's gain branch
       fired. Blocked by `b-stage-d-measurement`.
       verify: `./scripts-run src/scripts/check_hook_bundle_composition` -> 0
-- [ ] **J.9 Measure the answers.** Per-verb output-size bench on the real graph
+- [x] **J.9 Measure the answers.** Per-verb output-size bench on the real graph
       in CI, a cost line per answer, p95 latency of `ask` recorded (no claim
       attached); D's arms use `ask`.
       verify: `./scripts-run src/scripts/bench_answer_size --all` -> 0
+      > note: bench and probes ship (`--all` green locally: dearest probe 1,914 tok, ask p95 859 ms); running it in CI is a new workflow step that needs its ratification artifact — left as a follow-up.
 
 ## Phase 4 — Stage K: feedback that shapes the work
 

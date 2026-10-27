@@ -4,7 +4,7 @@
  * answer size, the budgeted size, the grade the budget chose and a cost line;
  * the run is red when a budgeted answer exceeds its budget.
  *
- *   --probe <name>   one probe (affected-hubs, graph-impact, ask-latency)
+ *   --probe <name>   one probe (affected-hubs, graph-impact, ask-size, ask-latency)
  *   --all            every probe
  *   --graph P        graph cache (default: this repository's)
  *   --json           machine output
@@ -18,6 +18,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { ask } from './code_graph/ask.js';
+import { graphSources } from './code_graph/cli_ask.js';
 import { DEFAULT_ANSWER_BUDGET, budgetImpactReport, budgetQueryReport, tokensOf } from './code_graph/answer_budget.js';
 import { changedFiles } from './code_graph/cli.js';
 import { graphHome } from './code_graph/graph_home.js';
@@ -73,7 +75,41 @@ export const PROBES: Record<string, Probe> = {
         const r = impact(g, files, 'fresh', 2);
         return [row('graph-impact', 'graph_impact HEAD~1', r, budgetImpactReport(g, r as never, DEFAULT_ANSWER_BUDGET))];
     },
+    'ask-latency': (g, root) => {
+        const sources = graphSources(g, 'bench');
+        const scope = { repoId: 'bench', branch: 'bench', worktree: root, user: 'bench' };
+        const ms: number[] = [];
+        for (const q of ASK_QUESTIONS) {
+            const t = performance.now();
+            ask(q, sources, scope);
+            ms.push(Math.round(performance.now() - t));
+        }
+        return { probe: 'ask-latency', questions: ASK_QUESTIONS.length, p95_ms: p95(ms) };
+    },
+    'ask-size': (g, root) => {
+        const sources = graphSources(g, 'bench');
+        const scope = { repoId: 'bench', branch: 'bench', worktree: root, user: 'bench' };
+        return ASK_QUESTIONS.map((q) => {
+            const r = ask(q, sources, scope);
+            const tokens = tokensOf(r.envelope);
+            return { probe: 'ask-size', case: `ask "${q}"`, raw_tokens: tokensOf(r), tokens, budget: DEFAULT_ANSWER_BUDGET, level: r.envelope.format, shown: r.envelope.counts.shown, total: r.envelope.counts.total, ok: tokens <= DEFAULT_ANSWER_BUDGET };
+        });
+    },
 };
+
+/** The fixed questions `ask` is measured on. */
+export const ASK_QUESTIONS = [
+    'which tests cover rule_inject_hook.ts',
+    'what breaks if I change gpt_tokens',
+    'who uses readProvenance',
+    'explain contextPack',
+    'which PR introduced bugReferences',
+    'how should we fix the error in checkSubject',
+    'did the fix in testsFor hold',
+    'what calls resolveSeeds',
+    'where is graphHome used',
+    'what does budgetAnswer return',
+];
 
 /** Optional late-bound probes (the `ask` entry point registers its latency probe here). */
 export function registerProbe(name: string, probe: Probe): void {

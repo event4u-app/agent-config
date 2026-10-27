@@ -73,3 +73,29 @@ describe('bench_answer_size', () => {
         expect(p95([5, 1, 9, 3, 7, 2, 8, 4, 6, 10])).toBe(10);
     });
 });
+
+describe('bench_answer_size is red over budget', () => {
+    it('exits 1 when a probe row is over its budget, 0 when within, and records ask latency without failing', async () => {
+        const { main, registerProbe } = await import('../../src/scripts/bench_answer_size.js');
+        const fs = await import('node:fs');
+        const os = await import('node:os');
+        const path = await import('node:path');
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bench-size-'));
+        const file = path.join(dir, 'g.json');
+        fs.writeFileSync(file, JSON.stringify({ schema_version: 7, source_checksum: 'x', languages: [], grammar_abi: 14, edge_confidence_counts: { EXTRACTED: 0, INFERRED: 0, AMBIGUOUS: 0 }, suppressed_edge_counts: { dynamic_no_candidate: 0 }, nodes: [], edges: [] }));
+        const r = (ok: boolean) => [{ probe: 't', case: 'c', raw_tokens: 1, tokens: ok ? 1 : 3000, budget: 2000, level: 'items', shown: 1, total: 1, ok }];
+        registerProbe('t-over', () => r(false));
+        registerProbe('t-ok', () => r(true));
+        registerProbe('t-latency', () => ({ probe: 'ask-latency', questions: 1, p95_ms: 9999 }));
+        const write = process.stdout.write.bind(process.stdout);
+        process.stdout.write = (() => true) as typeof process.stdout.write;
+        try {
+            expect(await main(['--probe', 't-over', '--graph', file], dir)).toBe(1);
+            expect(await main(['--probe', 't-ok', '--graph', file], dir)).toBe(0);
+            expect(await main(['--probe', 't-latency', '--graph', file], dir)).toBe(0);
+        } finally {
+            process.stdout.write = write;
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+});
