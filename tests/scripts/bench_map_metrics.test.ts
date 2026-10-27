@@ -234,8 +234,8 @@ describe('dry-run plumbing', () => {
     it('keeps one arm per stub behaviour', () => {
         expect(Object.keys(DRY_RUN_STUB).sort()).toEqual(Object.keys(MAP_ARMS).sort());
         expect(new Set(Object.values(DRY_RUN_STUB)).size).toBe(3);
-        expect(MAP_ARMS['ac-map']?.map).toBe(true);
-        expect(MAP_ARMS['ac']?.map).toBe(false);
+        expect(MAP_ARMS['ac-lean-map']?.map).toBe(true);
+        expect(MAP_ARMS['ac-lean']?.map).toBe(false);
         expect(MAP_ARMS['vanilla']?.setting_sources).toBe('project,local');
     });
 
@@ -255,9 +255,9 @@ describe('dry-run plumbing', () => {
         const sums = Object.fromEntries(Object.keys(MAP_ARMS).map((arm) => [arm, summarise_arm(arm, records, 300_000)]));
         expect(dry_run_problems(sums, tasks, 1)).toEqual([]);
 
-        const naiveAsPass = records.map((r) => (r.arm === 'ac' ? { ...r, success: true } : r));
+        const naiveAsPass = records.map((r) => (r.arm === 'ac-lean' ? { ...r, success: true } : r));
         const broken = Object.fromEntries(Object.keys(MAP_ARMS).map((arm) => [arm, summarise_arm(arm, naiveAsPass, 300_000)]));
-        expect(dry_run_problems(broken, tasks, 1).some((p) => p.startsWith('ac:'))).toBe(true);
+        expect(dry_run_problems(broken, tasks, 1).some((p) => p.startsWith('ac-lean:'))).toBe(true);
     });
 
     it('rejects an unknown arm or flag', () => {

@@ -64,6 +64,10 @@ export interface MapArmSpec {
     setting_sources: string | null;
     map: boolean;
     inject: string | null;
+    /** The package form installed into the clone from the tree under test; `null` = no package. */
+    install: 'lean' | 'full' | null;
+    /** Not in the default arm list; selected with `--arms`. */
+    optional?: boolean;
 }
 
 export const MAP_CONFIRM_TEXT = [
@@ -94,17 +98,43 @@ function branchCliShim(): string {
     return bin;
 }
 
+/**
+ * Five arms, so a payload effect and a map effect read apart (H29): the map with
+ * its note on a bare host, and the same pair on the package's lean form. No arm
+ * reads user scope — the package an arm runs is the one installed into its clone
+ * from the tree under test, never whatever the operator has installed.
+ */
 export const MAP_ARMS: Record<string, MapArmSpec> = {
-    vanilla: { setting_sources: 'project,local', map: false, inject: null },
-    ac: { setting_sources: null, map: false, inject: null },
-    'ac-map': { setting_sources: null, map: true, inject: MAP_CONFIRM_TEXT },
+    vanilla: { setting_sources: 'project,local', map: false, inject: null, install: null },
+    'vanilla-map': { setting_sources: 'project,local', map: true, inject: MAP_CONFIRM_TEXT, install: null },
+    'ac-lean': { setting_sources: 'project,local', map: false, inject: null, install: 'lean' },
+    'ac-lean-map': { setting_sources: 'project,local', map: true, inject: MAP_CONFIRM_TEXT, install: 'lean' },
+    'ac-full': { setting_sources: 'project,local', map: false, inject: null, install: 'full', optional: true },
 };
+
+export const DEFAULT_MAP_ARMS: readonly string[] = Object.entries(MAP_ARMS)
+    .filter(([, s]) => !s.optional)
+    .map(([a]) => a);
+
+/**
+ * Copy the `<form>/.claude` projection of the tree under test into the clone.
+ * `BENCH_AC_TREE_DIR` names a directory holding `lean/` and `full/` projections
+ * the operator generated from that tree; nothing here guesses one.
+ */
+export function install_into_clone(clone: string, form: 'lean' | 'full', treeDir: string | undefined = process.env['BENCH_AC_TREE_DIR']): void {
+    if (!treeDir) throw new Error('BENCH_AC_TREE_DIR is not set; it must name the lean/ and full/ projections of the tree under test');
+    const from = path.join(treeDir, form, '.claude');
+    if (!fs.existsSync(from)) throw new Error(`no ${form} projection at ${from}`);
+    fs.cpSync(from, path.join(clone, '.claude'), { recursive: true });
+}
 
 /** What the dry-run stub does per arm — three distinct behaviours, so every metric branch runs. */
 export const DRY_RUN_STUB: Record<string, StubBehaviour> = {
     vanilla: 'none',
-    ac: 'naive',
-    'ac-map': 'reference',
+    'vanilla-map': 'naive',
+    'ac-lean': 'naive',
+    'ac-lean-map': 'reference',
+    'ac-full': 'reference',
 };
 
 type Dict = Record<string, unknown>;
@@ -121,11 +151,11 @@ export interface MapTrial extends MapRunRecord {
     trace?: TrialTrace;
 }
 
-/** The package version an arm runs under; `none` for an arm that drops it. */
+/** The package version an arm runs under, with its form; `none` for an arm without the package. */
 export function acVersion(spec: MapArmSpec): string {
-    if (spec.setting_sources === 'project,local') return 'none';
+    if (!spec.install) return 'none';
     try {
-        return String((JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf-8')) as { version?: string }).version ?? 'unknown');
+        return `${String((JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf-8')) as { version?: string }).version ?? 'unknown')} ${spec.install}`;
     } catch {
         return 'unknown';
     }
@@ -184,6 +214,7 @@ export function run_trial(task: MapTask, arm: string, opts: TrialOpts): MapTrial
     const spec = MAP_ARMS[arm] as MapArmSpec;
     const [clone] = reset_fixture({ id: task.id, fixture: task.fixture }, arm, opts.seed);
     let map_build: MapTrial['map_build'] = null;
+    if (spec.install && !opts.dry_run) install_into_clone(clone, spec.install);
     if (spec.map && opts.map_build) {
         map_build = build_map(clone);
     }
@@ -304,13 +335,14 @@ interface Args {
     rescore: string | null;
     /** Fail unless every trial carries every trace field. */
     check_trace_fields: boolean;
+    print_arms: boolean;
 }
 
 class UsageError extends Error {}
 
 export function parse_args(argv: string[]): Args {
     const a: Args = {
-        arms: Object.keys(MAP_ARMS),
+        arms: [...DEFAULT_MAP_ARMS],
         seeds: 1,
         tasks: [],
         limit: 0,
@@ -325,6 +357,7 @@ export function parse_args(argv: string[]): Args {
         fresh: false,
         rescore: null,
         check_trace_fields: false,
+        print_arms: false,
     };
     const num = (flag: string, v: string | undefined): number => {
         const n = Number(v);
@@ -351,6 +384,7 @@ export function parse_args(argv: string[]): Args {
             case '--fresh': a.fresh = true; break;
             case '--rescore': a.rescore = next() ?? null; break;
             case '--check-trace-fields': a.check_trace_fields = true; break;
+            case '--print-arms': a.print_arms = true; break;
             default: throw new UsageError(`unknown argument: ${flag}`);
         }
     }
@@ -415,6 +449,11 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     } catch (e) {
         process.stderr.write(`bench_map_task_set: ${(e as Error).message}\n`);
         return 1;
+    }
+    if (a.print_arms) {
+        const rows = Object.entries(MAP_ARMS).map(([arm, s]) => `  ${arm.padEnd(12)} package ${s.install ?? 'none'} · map ${s.map ? 'yes + note' : 'no'}${s.optional ? ' · optional' : ''}`);
+        process.stdout.write(`${Object.keys(MAP_ARMS).length} arms (default: ${DEFAULT_MAP_ARMS.join(', ')})\n${rows.join('\n')}\n`);
+        return 0;
     }
     if (a.rescore) {
         if (!fs.existsSync(a.rescore)) {
