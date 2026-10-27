@@ -240,8 +240,7 @@ staleness — so a narrow answer is distinguishable from a decoupled one:
   lists is a deletion recommendation.
 
 These answers reach an agent over MCP without shelling out, and the mapping is
-**not** one tool per verb — corrected after an independent review found this
-paragraph claiming "the same five answers" directly after a list of four:
+**not** one tool per verb:
 
 | MCP tool | answers |
 |---|---|
@@ -292,6 +291,8 @@ and `references`), and § Measured twice still governs that question.
   courtesy).
 - Do NOT block or defer a read waiting on the graph — it is an accelerator, not
   a gate.
+- Do NOT paste graph output beside a diff as prose: a review gets
+  `review-risk` checks and `recommended_reads` as lists.
 - Do NOT trust the rebuildable cache as truth —
   [confirm a fact](references/find-confirm-act-update.md) first.
 

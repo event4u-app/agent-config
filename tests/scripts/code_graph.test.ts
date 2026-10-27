@@ -18,21 +18,30 @@ import * as os from 'node:os';
 
 import { GRAPH_TOOLS } from '../../src/scripts/mcp_server/graph_tools.js';
 import type { BuiltinTool } from '../../src/scripts/mcp_server/tools.js';
-import { buildFromRepo, buildGraph, serializeGraph, type SourceFile } from '../../src/scripts/code_graph/build.js';
+import { buildFromRepo, buildGraph, isTestFile, serializeGraph, type SourceFile } from '../../src/scripts/code_graph/build.js';
 import { pickSource, type SourceVerdict } from '../../src/scripts/code_graph/detect.js';
 import { extractFile } from '../../src/scripts/code_graph/extract.js';
 import { GRAMMAR_ABI_PIN, loadLanguage } from '../../src/scripts/code_graph/loader.js';
 import {
     affected,
+    explain,
     loadGraph,
     node as graphNode,
     path as graphPath,
     query,
+    type ReadRegion,
+    REGION_FILE_SHARE,
+    regionReads,
     resolveExactNode,
     resolveSeeds,
 } from '../../src/scripts/code_graph/query.js';
 import { sanitizeLabel } from '../../src/scripts/code_graph/sanitize.js';
-import { EXPECTED_GRAMMAR_ABI, type Lang } from '../../src/scripts/code_graph/types.js';
+import { type CodeEdge, type CodeGraph, type CodeNode, EXPECTED_GRAMMAR_ABI, type Lang } from '../../src/scripts/code_graph/types.js';
+import { reviewRisk } from '../../src/scripts/code_graph/review_risk.js';
+import { contextPack } from '../../src/scripts/code_graph/verify/pack.js';
+import { impact, testsForAnswer } from '../../src/scripts/code_graph/verbs.js';
+import { capAnswer, capReviewRisk, DETAIL_BUDGET } from '../../src/scripts/code_graph/answer_detail.js';
+import { LANGUAGE_GAPS, UNCERTAINTY_MAX_CHARS, uncertaintySentence } from '../../src/scripts/code_graph/uncertainty.js';
 import { validateGraph } from '../../src/scripts/code_graph/validate.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -203,7 +212,8 @@ describe('query tier (Phase 3)', () => {
 
     it('query returns a seed’s direct relations with source attribution', async () => {
         const g = await loadedFixture();
-        const r = query(g, 'app/Foo.php#Foo::handle', 2000);
+        // The fixture's in-repo calls resolve by name lookup, a guess, so they show only behind the flag (3.1).
+        const r = query(g, 'app/Foo.php#Foo::handle', 2000, { includeGuesses: true });
         expect(r.source).toBe('native:fixture');
         expect(r.lines.some((l) => l.includes('--calls-->'))).toBe(true);
         expect(r.lines.some((l) => l.includes('INFERRED') && l.includes('Base::shared'))).toBe(true);
@@ -211,7 +221,7 @@ describe('query tier (Phase 3)', () => {
 
     it('affected does reverse BFS (who references the target)', async () => {
         const g = await loadedFixture();
-        const r = affected(g, 'app/Base.php#Base::shared', 2, 2000);
+        const r = affected(g, 'app/Base.php#Base::shared', 2, 2000, { includeGuesses: true });
         // Foo::handle calls Base::shared (INFERRED) → must appear as a caller
         expect(r.lines.some((l) => l.includes('Foo::handle') && l.includes('Base::shared'))).toBe(true);
     });
@@ -238,7 +248,7 @@ describe('query tier (Phase 3)', () => {
     describe('D4 recommended_reads (Phase 9)', () => {
         it('names the dropped edges’ target files instead of silently truncating', async () => {
             const g = await loadedFixture();
-            const tiny = query(g, 'app/Foo.php#Foo', 1); // 1 token → ~4 chars → every edge drops
+            const tiny = query(g, 'app/Foo.php#Foo', 1, { includeGuesses: true }); // 1 token → ~4 chars → every edge drops
             expect(tiny.truncated).toBe(true);
             expect(tiny.recommended_reads.length).toBeGreaterThan(0);
             // Foo inherits Base (app/Base.php) and declares handle() (app/Foo.php) —
@@ -521,5 +531,240 @@ describe('3.1 — graph_node answers about one node, or refuses', () => {
         const vocab = [...union.matchAll(/'([a-z-]+)'/g)].map((m) => m[1] as string).sort();
         expect(vocab.length).toBeGreaterThan(0);
         expect([...VOCAB_RELATIONS.keys()].sort()).toStrictEqual(vocab);
+    });
+});
+
+/** A hand-built graph on disk, so a test names exactly the edges it reasons about. */
+function handGraph(nodes: Array<Partial<CodeNode> & { id: string }>, edges: Array<Partial<CodeEdge> & { source: string; target: string }>): { root: string; file: string; graph: CodeGraph } {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-hand-'));
+    const graph: CodeGraph = {
+        schema_version: 3,
+        source_checksum: 'hand',
+        languages: ['typescript'],
+        grammar_abi: EXPECTED_GRAMMAR_ABI,
+        edge_confidence_counts: { EXTRACTED: 0, INFERRED: 0, AMBIGUOUS: 0 },
+        nodes: nodes.map((n) => ({ label: n.id, kind: 'function', source_file: n.id.split('#')[0] as string, source_location: [1, 1, 3, 1], ...n })) as CodeNode[],
+        edges: edges.map((e) => ({ relation: 'calls', confidence: 'INFERRED', resolved_via: 'import-specifier', provider: 'native', ...e })) as CodeEdge[],
+    } as CodeGraph;
+    const file = path.join(root, 'graph.json');
+    fs.writeFileSync(file, JSON.stringify(graph));
+    return { root, file, graph };
+}
+
+describe('3.1 — the edge acceptance policy in every consumer', () => {
+    const fx = () =>
+        handGraph(
+            [{ id: 't.ts#Target', label: 'Target' }, { id: 'c1.ts#CallerOne', label: 'CallerOne' }, { id: 'c2.ts#CallerTwo', label: 'CallerTwo' }, { id: 'c3.ts#CallerThree', label: 'CallerThree' }],
+            [
+                { source: 'c1.ts#CallerOne', target: 't.ts#Target', resolved_via: 'name-lookup' },
+                { source: 'c2.ts#CallerTwo', target: 't.ts#Target', resolved_via: 'dynamic', confidence: 'AMBIGUOUS' },
+                { source: 'c3.ts#CallerThree', target: 't.ts#Target', relation: 'imports', resolved_via: 'import-specifier' },
+            ],
+        );
+    const callers = ['CallerOne', 'CallerTwo', 'CallerThree'];
+
+    it('guess edges withheld by every consumer', () => {
+        const { root, file, graph } = fx();
+        const g = loadGraph(file, 'native:hand');
+        const only3 = (lines: string[]): void => {
+            expect(lines.some((l) => l.includes('CallerThree'))).toBe(true);
+            expect(lines.some((l) => l.includes('CallerOne') || l.includes('CallerTwo'))).toBe(false);
+        };
+        only3(callers.flatMap((c) => query(g, c).lines));
+        only3(callers.flatMap((c) => explain(g, c).lines));
+        only3(affected(g, 'Target').lines);
+        only3(callers.flatMap((c) => graphPath(g, c, 'Target').lines.filter((l) => !l.includes('no path'))));
+        only3(reviewRisk(root, graph, 'HEAD', [{ file: 't.ts', from: 1, to: 1 }]).terms.find((t) => t.term === 'callers')!.items.map((i) => i.id));
+        only3(contextPack(g, root, file, 'Target').items.filter((i) => i.direction !== 'seed').map((i) => i.id));
+
+        // Behind the flag the guesses come back, each one marked on its line.
+        const all = affected(g, 'Target', 2, 1500, { includeGuesses: true }).lines;
+        expect(all).toHaveLength(3);
+        expect(all.filter((l) => /\(guess: (name-lookup|dynamic)\)/.test(l))).toHaveLength(2);
+        expect(reviewRisk(root, graph, 'HEAD', [{ file: 't.ts', from: 1, to: 1 }], undefined, { includeGuesses: true }).terms.find((t) => t.term === 'callers')!.items).toHaveLength(3);
+        expect(contextPack(g, root, file, 'Target', { includeGuesses: true }).items.filter((i) => i.relation.includes('(guess:'))).toHaveLength(2);
+        g.close();
+    });
+});
+
+describe('4.1 — a partial parse is visible', () => {
+    async function partialFixture() {
+        const files: SourceFile[] = [
+            { path: 'app/broken.ts', source: 'export function brokenFn() { return 1; }\nexport function half( {\n' },
+            { path: 'app/ok.ts', source: "import { brokenFn } from './broken';\nexport function okFn() { return brokenFn(); }\n" },
+            { path: 'tests/broken.test.ts', source: "import { brokenFn } from '../app/broken';\nbrokenFn();\n" },
+        ];
+        const extracts = [];
+        for (const f of files) extracts.push(await extractFile(f.path, f.source, 'typescript'));
+        const graph = buildGraph(files, extracts);
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-partial-'));
+        const file = path.join(root, 'graph.json');
+        fs.writeFileSync(file, serializeGraph(graph));
+        return { root, graph, g: loadGraph(file, 'native:partial'), extracts };
+    }
+
+    it('partial_files names the file that parsed with errors in impact, tests-for and review-risk', async () => {
+        const { root, graph, g, extracts } = await partialFixture();
+        expect(extracts[0]?.parseError).toBe(true);
+        expect(graph.nodes.find((n) => n.id === 'app/broken.ts')?.partial).toBe(true);
+        expect(graph.nodes.find((n) => n.id === 'app/ok.ts')?.partial).toBeUndefined();
+
+        const hit = impact(g, ['app/broken.ts'], 'fresh');
+        expect(hit.partial_files).toEqual(['app/broken.ts']);
+        expect(hit.complete).toBe(false);
+        expect(testsForAnswer(g, 'brokenFn', 'fresh').partial_files).toEqual(['app/broken.ts']);
+        const risk = reviewRisk(root, graph, 'HEAD', [{ file: 'app/broken.ts', from: 1, to: 2 }]);
+        expect(risk.partial_files).toEqual(['app/broken.ts']);
+        expect(risk.complete).toBe(false);
+
+        // A file whose own parse was clean, and which reaches nothing partial, is complete.
+        const clean = impact(g, ['tests/broken.test.ts'], 'fresh');
+        expect(clean.partial_files).toEqual([]);
+        expect(clean.complete).toBe(true);
+        g.close();
+    });
+});
+
+describe('4.3 — one uncertainty sentence for empty answers', () => {
+    it('uncertainty sentence only on empty', () => {
+        const { file } = handGraph(
+            [
+                { id: 'a.ts', kind: 'file', label: 'a.ts', source_location: [] },
+                { id: 'a.ts#used', label: 'used' },
+                { id: 'b.ts#user', label: 'user' },
+                { id: 'broken.ts', kind: 'file', label: 'broken.ts', source_location: [], partial: true },
+                { id: 'broken.ts#lonely', label: 'lonely' },
+                { id: 'pkg/x.go#GoThing', label: 'GoThing' },
+            ],
+            [{ source: 'b.ts#user', target: 'a.ts#used' }],
+        );
+        const g = loadGraph(file, 'native:hand');
+        // Non-empty: no sentence, not even an empty key, so the answer's bytes are unchanged.
+        const full = impact(g, ['a.ts'], 'edited');
+        expect(full.dependents).toEqual(['b.ts#user']);
+        expect(Object.keys(full)).not.toContain('uncertainty');
+
+        // The fixed order: not indexed, then partial parse, then the index behind, then the language row.
+        expect(impact(g, ['README.md', 'broken.ts'], 'edited').uncertainty).toBe('empty, but README.md is in a language the graph does not index');
+        expect(impact(g, ['broken.ts'], 'edited').uncertainty).toMatch(/^empty, but broken\.ts parsed with errors/);
+        expect(impact(g, ['b.ts'], 'behind:3').uncertainty).toBe('empty, but the index is behind the working tree (behind:3)');
+        expect(impact(g, ['b.ts'], 'fresh').uncertainty).toBeUndefined();
+        expect(testsForAnswer(g, 'GoThing', 'fresh').uncertainty).toBe(`empty, but ${LANGUAGE_GAPS.go!['tests-for']}`);
+
+        const long = uncertaintySentence({ verb: 'impact', empty: true, state: 'fresh', not_indexed: [`${'d/'.repeat(90)}x.md`], partial: [], files: [] });
+        expect(long!.length).toBeLessThanOrEqual(UNCERTAINTY_MAX_CHARS);
+        g.close();
+    });
+
+    it('every language row states a test file isTestFile really misses', () => {
+        const misses: Record<string, string> = { go: 'pkg/foo_test.go', python: 'pkg/test_foo.py', java: 'src/FooTest.java', csharp: 'src/FooTests.cs', ruby: 'lib/foo_spec.rb' };
+        for (const lang of Object.keys(LANGUAGE_GAPS)) {
+            expect(misses[lang], lang).toBeDefined();
+            expect(isTestFile(misses[lang] as string), lang).toBe(false);
+        }
+    });
+});
+
+describe('4.4 — hunk seeds in impact', () => {
+    it('impact seeds from hunks, and marks the file fallback', () => {
+        const { file } = handGraph(
+            [
+                { id: 'a.ts', kind: 'file', label: 'a.ts', source_location: [] },
+                { id: 'a.ts#first', label: 'first', source_location: [1, 1, 3, 1] },
+                { id: 'a.ts#second', label: 'second', source_location: [5, 1, 8, 1] },
+                { id: 'x.ts#callsFirst', label: 'callsFirst' },
+                { id: 'y.ts#callsSecond', label: 'callsSecond' },
+            ],
+            [
+                { source: 'x.ts#callsFirst', target: 'a.ts#first' },
+                { source: 'y.ts#callsSecond', target: 'a.ts#second' },
+            ],
+        );
+        const g = loadGraph(file, 'native:hand');
+        const byHunk = impact(g, ['a.ts'], 'fresh', 2, () => false, [{ file: 'a.ts', from: 6, to: 6 }]);
+        expect(byHunk.seeds).toEqual(['a.ts#second']);
+        expect(byHunk.dependents).toEqual(['y.ts#callsSecond']);
+        expect(byHunk.file_seeded).toEqual([]);
+
+        // No hunk for the file: every symbol it declares, and the answer says so.
+        const noHunk = impact(g, ['a.ts'], 'fresh', 2, () => false, []);
+        expect(noHunk.dependents).toEqual(['x.ts#callsFirst', 'y.ts#callsSecond']);
+        expect(noHunk.file_seeded).toEqual(['a.ts']);
+        expect(impact(g, ['a.ts'], 'fresh').file_seeded).toEqual(['a.ts']);
+        g.close();
+    });
+});
+
+describe('4.5 — detail levels and caps', () => {
+    it('omitted counted not truncated', () => {
+        const callers = Array.from({ length: 400 }, (_, i) => `c${String(i).padStart(3, '0')}.ts#caller${i}`);
+        const { file } = handGraph(
+            [{ id: 'hub.ts#hub', label: 'hub' }, ...callers.map((id) => ({ id, label: id.split('#')[1] as string }))],
+            callers.map((source) => ({ source, target: 'hub.ts#hub' })),
+        );
+        const g = loadGraph(file, 'native:hand');
+        const full = impact(g, ['hub.ts'], 'fresh');
+        expect(full.dependents).toHaveLength(400);
+        for (const detail of ['standard', 'minimal'] as const) {
+            const capped = capAnswer(full, ['dependents', 'producing_edges', 'reached'], detail, ['reached']);
+            // Every item is either returned or counted — none disappears.
+            expect(capped.dependents.length + (capped.omitted['dependents'] ?? 0)).toBe(400);
+            expect(capped.producing_edges.length + (capped.omitted['producing_edges'] ?? 0)).toBe(full.producing_edges.length);
+            expect(capped.dependents.join('\n').length).toBeLessThanOrEqual(DETAIL_BUDGET[detail] * 4);
+            expect(capped.detail).toBe(detail);
+        }
+        const minimal = capAnswer(full, ['dependents', 'reached'], 'minimal', ['reached']);
+        expect(minimal.reached).toEqual([]);
+        expect(minimal.omitted['reached']).toBe(400);
+        expect(capAnswer(full, ['dependents'], 'minimal').dependents.length).toBeLessThan(capAnswer(full, ['dependents'], 'standard').dependents.length);
+
+        const risk = reviewRisk(path.dirname(file), JSON.parse(fs.readFileSync(file, 'utf-8')) as CodeGraph, 'HEAD', [{ file: 'hub.ts', from: 1, to: 1 }]);
+        const callersTerm = risk.terms.find((t) => t.term === 'callers')!;
+        const cappedRisk = capReviewRisk(risk, 'minimal');
+        const cappedTerm = cappedRisk.terms.find((t) => t.term === 'callers')!;
+        expect(cappedTerm.count).toBe(callersTerm.items.length);
+        expect(cappedTerm.contribution).toBe(callersTerm.contribution);
+        expect(cappedTerm.items.length + (cappedRisk.omitted['callers'] ?? 0)).toBe(callersTerm.items.length);
+        g.close();
+    });
+});
+
+describe('4.7 — a region read list', () => {
+    it('recommended_reads region budget', () => {
+        const regions: ReadRegion[] = [
+            { path: 'a.ts', lines: [1, 60], risk: 9, definition: true },
+            { path: 'a.ts', lines: [100, 139], risk: 8, definition: true },
+            { path: 'a.ts', lines: [200, 239], risk: 7, definition: true },
+            { path: 'a.ts', lines: [300, 339], risk: 6, definition: true },
+            { path: 'a.ts', lines: [400, 439], risk: 5, definition: true },
+            { path: 'b.ts', lines: [10, 20], risk: 1 },
+        ];
+        const reads = regionReads(regions, 200);
+        const kept = reads.filter((r) => r.reason === undefined);
+        const rest = reads.filter((r) => r.reason !== undefined);
+        const size = (r: { lines: [number, number] | null }): number => (r.lines ? r.lines[1] - r.lines[0] + 1 : 0);
+        // Round-robin: the low-risk file gets its turn before the risky file's second region.
+        expect(kept.map((r) => r.path).slice(0, 2)).toEqual(['a.ts', 'b.ts']);
+        // A long definition is read for its first 40 lines; the tail is counted, not lost.
+        expect(kept[0]?.lines).toEqual([1, 40]);
+        expect(rest).toContainEqual({ path: 'a.ts', lines: [41, 60], reason: 'definition longer than 40 lines' });
+        // No file above 40 % of the budget; the total within it.
+        expect(kept.filter((r) => r.path === 'a.ts').reduce((n, r) => n + size(r), 0)).toBeLessThanOrEqual(200 * REGION_FILE_SHARE);
+        expect(kept.reduce((n, r) => n + size(r), 0)).toBeLessThanOrEqual(200);
+        // Every input line is either kept or named with a reason.
+        expect(kept.reduce((n, r) => n + size(r), 0) + rest.reduce((n, r) => n + size(r), 0)).toBe(regions.reduce((n, r) => n + size(r), 0));
+        // Line ranges only: no source text in graph output.
+        for (const r of reads) expect(Object.keys(r).every((k) => ['path', 'lines', 'reason'].includes(k))).toBe(true);
+
+        // review-risk carries the list under the existing name, changed symbol first.
+        const { root, graph } = handGraph(
+            [{ id: 't.ts#Target', label: 'Target', source_location: [5, 1, 9, 1] }, { id: 'c.ts#Caller', label: 'Caller', source_location: [1, 1, 2, 1] }],
+            [{ source: 'c.ts#Caller', target: 't.ts#Target' }],
+        );
+        const risk = reviewRisk(root, graph, 'HEAD', [{ file: 't.ts', from: 6, to: 6 }]);
+        expect(risk.recommended_reads).toEqual([
+            { path: 't.ts', lines: [5, 9] },
+            { path: 'c.ts', lines: [1, 2] },
+        ]);
     });
 });

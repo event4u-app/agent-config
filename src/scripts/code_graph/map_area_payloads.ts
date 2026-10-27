@@ -763,7 +763,7 @@ function impactPayload(c: Ctx, opts: ProduceOptions): ImpactPayload | null {
     for (const i of termItems('area crossings')) if (i.why.startsWith('runtime:')) add('runtime', i);
     return {
         reader,
-        completeness: 'complete',
+        completeness: r.terms.some((t) => t.unknown) || !r.complete ? 'partial' : 'complete',
         findings: [],
         rev,
         changed: r.changed,
@@ -771,6 +771,7 @@ function impactPayload(c: Ctx, opts: ProduceOptions): ImpactPayload | null {
         risk: {
             total: r.total,
             terms: r.terms.map((t) => {
+                if (t.unknown) return { term: t.term, fact: `unknown (${t.unknown})`, contribution: 0 };
                 const w = t.items[0]?.witness ? witness(c, t.items[0].witness) : null;
                 return {
                     term: t.term,

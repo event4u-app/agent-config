@@ -70,6 +70,7 @@ import {
     tree as graphTreeVerb,
     type TreeOptions,
 } from '../code_graph/query.js';
+import { capAnswer, capReviewRisk, parseDetail } from '../code_graph/answer_detail.js';
 import { diffHunks, reviewRisk } from '../code_graph/review_risk.js';
 import type { CodeGraph, Relation } from '../code_graph/types.js';
 import { RELATIONS as VOCAB_RELATIONS } from '../code_graph/vocabulary.js';
@@ -78,7 +79,7 @@ import {
     entryPointsFromFile,
     impact,
     repoEntryPoints,
-    testsFor,
+    testsForAnswer,
     untested,
 } from '../code_graph/verbs.js';
 import { areaReport, graphGeneration, readMap } from '../code_graph/map.js';
@@ -252,26 +253,37 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
                     description: 'Instead return changed symbols no test imports.',
                 },
                 review_risk: { type: 'boolean' },
+                detail: { type: 'string', enum: ['minimal', 'standard'], default: 'standard', description: 'Capped lists; what is left out is counted in `omitted`.' },
             },
             additionalProperties: false,
         },
         handler: async (args, root) => {
             const rev = str(args, 'diff');
             if (rev === '') return { status: 'error', error: 'diff must be a non-empty git rev' };
+            const detail = parseDetail(args['detail']);
             if (args['review_risk'] === true) {
                 const hunks = diffHunks(root, rev);
                 if (hunks === null) return { status: 'error', error: `cannot resolve rev '${rev}' in ${root}` };
                 const cache = graphHome(root).cachePath;
                 if (!fs.existsSync(cache)) return { status: 'error', error: 'no graph yet — run `code-graph build`' };
-                return { status: 'ok', ...reviewRisk(root, JSON.parse(fs.readFileSync(cache, 'utf-8')) as CodeGraph, rev, hunks) };
+                const risk = reviewRisk(root, JSON.parse(fs.readFileSync(cache, 'utf-8')) as CodeGraph, rev, hunks);
+                return { status: 'ok', ...capReviewRisk(risk, detail) };
             }
             const files = changedFiles(root, rev);
             if (files === null) return { status: 'error', error: `cannot resolve rev '${rev}' in ${root}` };
             const state = graphState(root, graphHome(root).cachePath);
             return withGraph(root, (g) =>
                 args['untested_only'] === true
-                    ? { ...untested(g, files, state), changed_files: files.length }
-                    : { ...impact(g, files, state, num(args, 'depth', 2), isTestFile), changed_files: files.length },
+                    ? { ...capAnswer(untested(g, files, state), ['untested', 'tested', 'recommended_reads'], detail), changed_files: files.length }
+                    : {
+                          ...capAnswer(
+                              impact(g, files, state, num(args, 'depth', 2), isTestFile, diffHunks(root, `${rev}..HEAD`) ?? undefined),
+                              ['dependents', 'reached', 'test_files', 'producing_edges', 'lines', 'recommended_reads'],
+                              detail,
+                              ['reached', 'producing_edges', 'lines'],
+                          ),
+                          changed_files: files.length,
+                      },
             );
         },
     },
@@ -287,6 +299,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             required: ['symbol'],
             properties: {
                 symbol: { type: 'string', description: 'Node id, label, or free text.' },
+                detail: { type: 'string', enum: ['minimal', 'standard'], default: 'standard', description: 'Capped lists; what is left out is counted in `omitted`.' },
             },
             additionalProperties: false,
         },
@@ -294,7 +307,14 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             const symbol = str(args, 'symbol');
             if (symbol === '') return { status: 'error', error: 'symbol must be a non-empty string' };
             const state = graphState(root, graphHome(root).cachePath);
-            return withGraph(root, (g) => ({ ...testsFor(g, symbol, state) }));
+            const detail = parseDetail(args['detail']);
+            return withGraph(root, (g) => ({
+                ...capAnswer(testsForAnswer(g, symbol, state), ['tests', 'accepted_edges', 'rejected_edges', 'lines', 'recommended_reads'], detail, [
+                    'accepted_edges',
+                    'rejected_edges',
+                    'lines',
+                ]),
+            }));
         },
     },
 
@@ -317,6 +337,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
                     default: false,
                     description: 'Answer anyway, accepting the gap. Never a default.',
                 },
+                detail: { type: 'string', enum: ['minimal', 'standard'], default: 'standard', description: 'Capped lists; what is left out is counted in `omitted`.' },
             },
             additionalProperties: false,
         },
@@ -361,7 +382,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
                 // question a caller actually has ("was this source read, and did
                 // it have anything in it") without shipping the contents.
                 return {
-                    ...r,
+                    ...capAnswer(r, ['dead', 'excluded', 'lines', 'recommended_reads'], parseDetail(args['detail']), ['excluded', 'lines']),
                     sources: r.sources.map((srcRow) => ({
                         name: srcRow.name,
                         status: srcRow.status,

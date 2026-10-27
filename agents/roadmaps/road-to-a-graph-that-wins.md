@@ -169,7 +169,7 @@ tracked.
       `agents/evidence/analysis/code-graph-edge-census-2026-10-26.md`.
 
 ## Phase 3 — The gate feeder
-- [ ] 3.1 Enforce the edge acceptance policy in every consumer. Corrected 2026-10-27
+- [x] 3.1 Enforce the edge acceptance policy in every consumer. Corrected 2026-10-27
       (round `inbox-2026-10-bf`): the policy this step asked to write already exists in
       one file and is compile-time complete — `STATED_WORDS` / `GUESS_WORDS` in
       `src/scripts/code_graph/types.ts`, checked by `TRUST_LISTS_COMPLETE`, read through
@@ -213,13 +213,14 @@ Added 2026-10-27 from round `inbox-2026-10-bf`. Order binds: honesty before cost
 before consumption, because every Phase 5 consumer and every 3.5 arm reads these
 answers. Each step is fixture-gated (K5).
 
-- [ ] 4.1 **A partial parse is visible.** `parseError` is set in `extract.ts` and read
+- [x] 4.1 **A partial parse is visible.** `parseError` is set in `extract.ts` and read
       by nothing outside tests, so a file parsed with errors counts as fully known. It
       lands on the file node; `impact`, `review-risk` and `tests-for` list such files in
       `partial_files` beside `unresolved_files` / `not_indexed_files`, and their
       dependents are not reported complete.
       verify: `npx vitest run tests/scripts/code_graph.test.ts -t 'partial_files'` -> 0
-- [ ] 4.2 **A skipped lane reads `unknown`, never `0`.** The history lane skips a
+      > note: the SQLite twin has no `partial` column yet, so on the indexed read path (graphs ≥ 50k edges) `impact` and `tests-for` cannot see the flag; the column costs ~85 bytes in the hook bundle, which has 1 byte of headroom (2026-10-27) — it needs a `raise_log` entry first.
+- [x] 4.2 **A skipped lane reads `unknown`, never `0`.** The history lane skips a
       shallow clone with a reason (`lanes/history/history.ts`), but `lane_runner.ts`
       strips `skipped` from `lanes_run` and `LaneRunRecord` (`types.ts`) carries only
       `error?`, so the reason never reaches the graph and `review-risk` prints
@@ -229,19 +230,19 @@ answers. Each step is fixture-gated (K5).
       (iii) the map's agent area (`map_area_payloads.ts` `completeness`,
       `map_viewer/area_agent.js` copy) shows the same state. Precondition of 5.5.
       verify: `npx vitest run tests/scripts/code_graph_review_risk.test.ts -t 'shallow clone renders unknown'` -> 0
-- [ ] 4.3 **One uncertainty sentence for empty answers.** Only when a result is empty,
+- [x] 4.3 **One uncertainty sentence for empty answers.** Only when a result is empty,
       at most 140 characters, the reason taken in a fixed order: not indexed → partial
       parse → `edited` / `behind:N` → language gap (a data table per language and
       verb). Non-empty answers stay byte-identical; the vocabulary is the map
       freshness banner's, not a second one.
       verify: `npx vitest run tests/scripts/code_graph.test.ts -t 'uncertainty sentence only on empty'` -> 0
-- [ ] 4.4 **Hunk seeds in `impact`.** `impact --diff` seeds every symbol of a touched
+- [x] 4.4 **Hunk seeds in `impact`.** `impact --diff` seeds every symbol of a touched
       file (`seedsForFiles`, `verbs.ts`) while `review-risk` seeds by hunk overlap
       (`review_risk.ts`) — two answers to one question. `impact` takes the hunk
       overlap; file granularity remains only as a fallback when git yields no hunks,
       and is marked as such.
       verify: `npx vitest run tests/scripts/code_graph.test.ts -t 'impact seeds from hunks'` -> 0
-- [ ] 4.5 **Detail levels and caps.** `impact`, `tests-for`, `dead` and `review-risk`
+- [x] 4.5 **Detail levels and caps.** `impact`, `tests-for`, `dead` and `review-risk`
       (CLI and MCP) gain `detail: minimal|standard` and hard caps; what is left out is
       counted (`omitted: {dependents: N, …}`), never silently cut. Reuse the query
       verbs' `budget` / `truncated` and the context pack's accounting — no third
@@ -257,7 +258,8 @@ answers. Each step is fixture-gated (K5).
       its primary key on 2026-10-07; `code_graph_unique_ids.test.ts` pins the
       collision shapes fixed since. Confirm on the real graph before scheduling.
       verify: `npx vitest run tests/scripts/code_graph_review_risk.test.ts -t 'reads through the index'` -> 0
-- [ ] 4.7 **A region read list.** Extend the existing `recommended_reads` (`query.ts`)
+      > note: precondition met 2026-10-27 — this repository's twin opens (261,913 edges, 0 duplicate node ids); adjacency no longer spreads per edge. Open: the index path needs kind- and relation-scoped reads in `sqlite_store.ts`, which is in the hook bundle at 1 byte of headroom, so it needs a `raise_log` entry first; the 50k crossover is unmeasured.
+- [x] 4.7 **A region read list.** Extend the existing `recommended_reads` (`query.ts`)
       and the pack's `at=file:line` items with a region budget — changed regions
       risk-ordered round-robin, at most 40 % per file, definitions up to 40 lines
       whole, the rest counted as `{file, lines, reason}`. Line ranges only, no source
@@ -269,35 +271,37 @@ Added 2026-10-27 from round `inbox-2026-10-bf`. The graph feeds deterministic ch
 and a read list, never a context dump: S3 measured graph prose beside a diff making
 reviews worse. Distinct from 3.2, which teaches two existing detectors to read edges.
 
-- [ ] 5.1 **Three deterministic checks.** (a) changed symbols without a test path,
+- [x] 5.1 **Three deterministic checks.** (a) changed symbols without a test path,
       labelled `untested` / `reached-by-tested-caller` / `tested` — (a) reuses the
       `untested --diff` verdict `road-to-a-graph-that-feeds-the-gate` 3.2 already
       records in shadow; (b) co-change partners missing from the diff, `unknown`
       without full history (4.2); (c) a touched entry point or flow. Each check cites
       the edges it rests on with a `file:line` witness.
       verify: `npx vitest run tests/scripts/code_graph_review_risk.test.ts -t 'three checks cite witnesses'` -> 0
-- [ ] 5.2 **Review skills consume the checks and the read list.** `blast-radius-analyzer`
+- [x] 5.2 **Review skills consume the checks and the read list.** `blast-radius-analyzer`
       step 2 tells the agent to grep; it runs `impact --diff` first when the graph is
       `fresh` or `edited`, and greps only for `unknown`, partial or unindexed files.
       The review command chain receives the checks as a structured list, not prose,
       and `code-intelligence` carries the form rule: the graph feeds checks and read
       lists, never prose.
       verify: `grep -c 'impact --diff' src/skills/blast-radius-analyzer/SKILL.md` -> /^[1-9]/
-- [ ] 5.3 **The self-review gate reads the checks, advisory.** `self_review_gate.ts`
+- [x] 5.3 **The self-review gate reads the checks, advisory.** `self_review_gate.ts`
       receives the three checks as findings with a disposition, typed with the
       exhibits that landed on `review-findings.schema.json` in #2722; advisory until
       3.5 shows B1 > A.
       verify: `npx vitest run tests/scripts/self_review_graph_checks.test.ts` -> 0
-- [ ] 5.4 **The regression selector gets a caller.** `selectRegressionsFromCode`
+      > note: the conversion is `_lib/graph_check_findings.ts`; calling it from `self_review_gate.ts`'s run is a gate change and lands with its own ratification artifact.
+- [x] 5.4 **The regression selector gets a caller.** `selectRegressionsFromCode`
       (`_lib/regression_neighbourhood.ts`) is imported by its test only; the
       verify-repair loop uses it instead of the optional `affected --since`.
       verify: `git grep -l selectRegressionsFromCode -- src ':!src/scripts/_lib/regression_neighbourhood.ts'` -> 0
-- [ ] 5.5 **PR comment, opt-in.** A workflow template for consumers: `fetch-depth: 0`
+- [x] 5.5 **PR comment, opt-in.** A workflow template for consumers: `fetch-depth: 0`
       required (otherwise history terms render `unknown`, per 4.2), a sticky comment
       with band, checks and `omitted` counters, gate off by default; "no analysis" is
       its own status and never reads as low risk. No new CLI verb (ADR-041):
       `review-risk --format markdown`. Depends on 4.2.
       verify: `npx vitest run tests/scripts/code_graph_review_risk.test.ts -t 'markdown no analysis is not low risk'` -> 0
+      > note: `review-risk --format markdown` renders the sticky comment (marker `REVIEW_RISK_COMMENT_MARKER`, band, checks, `omitted`, "no analysis" status); the consumer workflow template (`fetch-depth: 0`, gate off) is not added — a new workflow lands with its own ratification artifact.
 - [ ] 5.6 **Calibrate the risk band.** The score is an unnormed sum of hand-set weights
       with no test-gap term (`review_risk.ts` `RISK_WEIGHTS`), and the map prints that
       it names no levels yet (`map_viewer/area_agent.js`). Until 3.5 runs: band only
@@ -305,6 +309,7 @@ reviews worse. Distinct from 3.2, which teaches two existing detectors to read e
       gate. After it: test each term against forward-in-time split data (S6 method,
       effort-aware); a term that contributes nothing is removed.
       verify: `ls internal/bench/reports/review-risk-calibration-*.md` -> 0
+      > note: the pre-3.5 half landed 2026-10-27 — `riskBand` (`review_risk.ts`) bands low / medium / high / unknown with reason lines, no decimal, no gate, and the map says so. Open: the calibration against forward-in-time split data waits for 3.5.
 
 ## Null path, stated now
 If fewer than 4 of the 6 scored classes win, the graph-first wording stays withheld and

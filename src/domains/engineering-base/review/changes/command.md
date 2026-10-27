@@ -116,7 +116,9 @@ behind a benign one.
 ### 4. Dispatch to the seven judges
 
 Each judge receives **the same diff plus the task context** (ticket,
-PR body, commit messages) and runs independently. The judges are:
+PR body, commit messages) and runs independently. With a code graph `fresh` or
+`edited`, add `code-graph review-risk --diff origin/main --json`'s `checks` and
+`recommended_reads` as a structured list — never graph output as prose. The judges are:
 
 | Sub-skill | Focus |
 |---|---|

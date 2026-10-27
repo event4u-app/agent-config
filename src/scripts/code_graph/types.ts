@@ -237,6 +237,8 @@ export interface CodeNode {
      */
     kind: VocabKind;
     source_file: string;
+    /** File nodes only: the file parsed with errors, so what it declares is a lower bound. */
+    partial?: true;
     /** 1-based [startLine, startCol, endLine, endCol]; [] for synthetic nodes. */
     source_location: readonly number[];
     /** Witness and provenance, on facts a lane reader or schema replay produced. */
@@ -321,6 +323,8 @@ export interface LaneRunRecord {
     relations: number;
     /** The reader threw; its lane holds no facts from this build. */
     error?: string;
+    /** The reader declined the whole tree (a shallow clone, no history): its terms are unknown, not zero. */
+    skipped_reason?: string;
 }
 
 export interface CodeGraph {
