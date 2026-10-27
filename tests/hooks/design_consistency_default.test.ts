@@ -10,6 +10,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { dirtyPrimitives } from '../../src/scripts/_lib/design_consistency_pass.js';
 import { consistencyFor } from '../../src/scripts/hooks/design_pass_hook.js';
 import {
     consistencySpecifier,
@@ -125,6 +126,25 @@ describe('the role map follows uncommitted primitives', () => {
         const r = run(dir, 'app/filters.tsx');
         expect(r.status).toBe(2);
         expect(r.stdout).toContain("this project's select is Select");
+    });
+});
+
+describe('the stamp of uncommitted primitives', () => {
+    it('a modified file that loses its last primitive still changes the stamp', () => {
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-consistency-stamp-'));
+        const file = path.join(dir, 'components', 'ui', 'select.tsx');
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, 'export function Select(props) {\n  return <div {...props} />;\n}\n');
+        const git = (...a: string[]) =>
+            spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@example.com', ...a], { cwd: dir, encoding: 'utf8' });
+        git('init', '-q');
+        git('add', '-A');
+        git('commit', '-q', '-m', 'init');
+        const clean = dirtyPrimitives(dir);
+        fs.writeFileSync(file, 'export function Panel(props) {\n  return <div {...props} />;\n}\n');
+        const after = dirtyPrimitives(dir);
+        expect(after).not.toEqual(clean);
+        expect(after).toEqual(['components/ui/select.tsx:']);
     });
 });
 

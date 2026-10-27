@@ -34,9 +34,10 @@ export interface ConsistencyNotice {
 const CACHE_REL = path.join('agents', 'runtime', 'state', 'design-consistency-roles.json');
 
 /**
- * The uncommitted UI files that define a control-role component, with the
- * components they define. Adding, removing or renaming a project primitive
- * changes it without moving HEAD. Null outside a git work tree.
+ * Every uncommitted UI file, with the control-role components it defines (an
+ * empty list included). Adding, removing or renaming a project primitive, and
+ * a file becoming dirty or clean, change it without moving HEAD. Null outside
+ * a git work tree.
  */
 export function dirtyPrimitives(root: string): string[] | null {
     let status: string;
@@ -64,18 +65,21 @@ export function dirtyPrimitives(root: string): string[] | null {
             out.push(`${rel}:removed`);
             continue;
         }
+        // Every dirty UI file enters, with an empty list too: a file that lost
+        // its last primitive must change the stamp as much as one that gained one.
         const defs = definedComponents(rel, text).filter((t) => roleOfTag(t, '') !== null);
-        if (defs.length) out.push(`${rel}:${defs.sort().join(',')}`);
+        out.push(`${rel}:${defs.sort().join(',')}`);
     }
     return out.sort();
 }
 
 /**
- * The role map, recomputed when HEAD moves or an uncommitted primitive
- * appears, changes its name or goes away. Not on every write: the content
- * digest `ui:audit` uses would recompute on each one. The accepted bound is
- * usage drift — uncommitted uses of an existing component that would shift
- * which implementation is most used — which waits for the next commit.
+ * The role map, recomputed when HEAD moves, a UI file becomes dirty or clean,
+ * or a dirty file's primitives change. Not on every write: the content digest
+ * `ui:audit` uses would recompute on each one. The accepted bound is usage
+ * drift inside a file that is already dirty — further uses of an existing
+ * component that would shift which implementation is most used — which waits
+ * for the next stamp change.
  */
 function roles(root: string): UiAuditArtefact['control_roles'] {
     const cache = path.join(root, CACHE_REL);
