@@ -507,6 +507,8 @@ function renderAreaPage(id, key) {
             // A reader that ran and found nothing keeps the page: its one tab, its reader line, its legend (the handover's real state).
             var et = el('div', { class: 'lenses', role: 'tablist', 'aria-label': t('views') });
             et.appendChild(el('button', { type: 'button', role: 'tab', class: 'lens', 'aria-selected': 'true' }, t(mod.emptyTab)));
+            // The handover's real state draws no aside beside it.
+            body.classList.add('no-left', 'no-side');
             if (mod.ownsBar) add(bar, et, pageMetaLine(id, false));
             else main.firstChild.insertBefore(et, main.firstChild.firstChild);
             mod.emptyPage(p, centre);

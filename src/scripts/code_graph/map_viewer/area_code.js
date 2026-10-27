@@ -2242,6 +2242,7 @@
         $('z-fit').textContent = t('fit');
         dim2d.textContent = t('d2');
         $('dimseg').setAttribute('aria-label', t('dimRole'));
+        $('lenses').setAttribute('aria-label', t('views'));
         $('open-left').textContent = t('openLeft');
         $('open-right').textContent = t('openRight');
         $('title-left').textContent = t('repository');

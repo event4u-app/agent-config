@@ -50,8 +50,8 @@ extendStrings({
 });
 
 var rtState = { raw: false };
-// The 2026-10-bf handover opens Runtime on Topologie.
-if (!avState.view.runtime) avState.view.runtime = 'topo';
+// The 2026-10-bf handover opens a real map's Runtime on Topologie, its demo data on the comparison.
+if (!avState.view.runtime) avState.view.runtime = meta.demo ? 'cmp' : 'topo';
 
 /** The "no data yet" tag; the reason shows beside it, or as its title where space is short. */
 function ndTag(reason, inline) {
@@ -141,7 +141,7 @@ function rtChip(p, r) {
 function rtBar(p, view, key, bar) {
     bar.appendChild(el('span', { class: 'ops-mark' }));
     bar.appendChild(viewTabs('runtime', key, AREA_MODULES.runtime.tabs));
-    if (view === 'topo') {
+    if (view === 'topo' && p.resources.length) {
         var n = rtHiddenLinks(p).length;
         var sw = el('button', { type: 'button', role: 'switch', class: 'ops-switch' + (rtState.raw ? ' on' : ''), 'aria-checked': String(rtState.raw) }, rtState.raw ? t('rRawOn')(num(n)) : t('rClean')(num(n)));
         sw.addEventListener('click', function () { rtState.raw = !rtState.raw; renderAreaPage('runtime', key); });
