@@ -284,6 +284,7 @@ signals are user-owned local files; disable per kind (O20). K.1-K.3 run before D
       `agents/knowledge/` team-knowledge pages are classified explicitly. A gate
       fails on user-owned text under a committed path. ADR records the model.
       verify: `npx vitest run tests/scripts/check_ownership_model.test.ts` -> 0
+      > note: open: the model, the committed-path check and its test ship and the test is green; still missing are the ADR recording the model (an owner-directed record needs its directive evidence) and CI wiring of the check (ratification artifact). The precedence the code implements puts project files above the user-global file, which is the reverse of the order this step states.
 - [ ] **K.2 Four signals, deterministic** (H50, H51). Kinds: complaint
       (existing detector), approval (narrow patterns), directive (through the
       `standing_command` and `self_harmful_preference` guards), correction (an
