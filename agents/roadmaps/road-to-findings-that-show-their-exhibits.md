@@ -69,7 +69,7 @@ gated-surface list. Those live in `later/road-to-a-court-at-the-stops`.
 
 ## Phase 2 — Admissibility, deterministic and zero-spend
 
-- [ ] **2.1 Build `check_finding_exhibits`.** A pure reader over a findings
+- [x] **2.1 Build `check_finding_exhibits`.** A pure reader over a findings
       file (or the schema's array) that resolves each exhibit at its `commit`
       through `git show`/`git grep`: `presence` holds when the quote occurs
       within ±3 lines of `line`; `absence` holds when the match count over the
@@ -79,7 +79,7 @@ gated-surface list. Those live in `later/road-to-a-court-at-the-stops`.
       verify: fixtures per type against a temporary git repository, plus a
       sabotage case — shifting a quote by one character flips the verdict to
       `inadmissible`.
-- [ ] **2.2 Admissibility informs, it never filters.** The checker writes no
+- [x] **2.2 Admissibility informs, it never filters.** The checker writes no
       disposition and drops no finding.
       verify: a test greps the checker's source for every disposition status
       literal and the ledger directory and finds none.
