@@ -299,5 +299,5 @@ iter2 fixes A, breaks B, 92% → "PASS"      ✗ regression ignored
   runtime-free constraint this loop honors.
 * Optional impact pre-step (when a code-graph is present, ADR-124): run
   `agent-config code-graph impact --diff <ref> --regressions <registry>` to pick
-  the regressions a change reaches before choosing verdict sources; a refusal
-  means run them all. Unchanged when no graph exists.
+  the regressions a change reaches before choosing verdict sources; on a
+  refusal run them all. Unchanged without a graph.
