@@ -28,3 +28,50 @@ export function writeAuditFixture(): string {
     git('commit', '-qm', AUDIT_SUBJECTS[5]);
     return root;
 }
+
+/**
+ * The audit fixture with a PHP dependency tree (step 6.1 of
+ * road-to-a-map-that-holds-on-the-real-repo): a classmap-only package used by a
+ * root-namespace `use Dompdf;`, a PSR-4 package used through an alias, a
+ * classmap class referenced fully qualified (`new \Parsedown()`), a declared but
+ * unused package, and one declared in composer.json and never installed.
+ * `withVendor: false` leaves `vendor/` out, as a fresh clone has it.
+ */
+export function writeAuditPhpFixture(opts: { withVendor?: boolean } = {}): string {
+    const root = writeAuditFixture();
+    const w = (rel: string, body: string): void => {
+        fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+        fs.writeFileSync(path.join(root, rel), body);
+    };
+    w('composer.json', JSON.stringify({ require: { 'laravel/framework': '^11.0', 'dompdf/dompdf': '^2.0', 'acme/legacy': '^1.0', 'erusev/parsedown': '^1.7', 'acme/unused': '^1.0', 'ghost/missing': '^1.0' } }, null, 4));
+    const pkg = (name: string, autoload: object): object => ({ name, version: '1.0.0', autoload, 'notification-url': 'https://packagist.org/downloads/' });
+    w(
+        'composer.lock',
+        JSON.stringify(
+            {
+                packages: [
+                    pkg('laravel/framework', { 'psr-4': { 'Illuminate\\': 'src/Illuminate/' } }),
+                    pkg('dompdf/dompdf', { classmap: ['lib/'] }),
+                    pkg('acme/legacy', { 'psr-4': { 'Acme\\Legacy\\': 'src/' } }),
+                    pkg('erusev/parsedown', { classmap: ['Parsedown.php'] }),
+                    pkg('acme/unused', { 'psr-4': { 'Acme\\Unused\\': 'src/' } }),
+                ],
+                'packages-dev': [],
+            },
+            null,
+            4,
+        ),
+    );
+    w('app/Report.php', "<?php\nnamespace App;\n\nuse Dompdf;\nuse Acme\\Legacy\\Thing as LegacyThing;\n\nclass Report\n{\n    public function run(): void\n    {\n        $pdf = new Dompdf();\n        $t = new LegacyThing();\n        $md = new \\Parsedown();\n    }\n}\n");
+    if (opts.withVendor !== false) {
+        w('vendor/composer/autoload_classmap.php', "<?php\n\n$vendorDir = dirname(__DIR__);\n$baseDir = dirname($vendorDir);\n\nreturn array(\n    'Dompdf' => $vendorDir . '/dompdf/dompdf/lib/Dompdf.php',\n    'Parsedown' => $vendorDir . '/erusev/parsedown/Parsedown.php',\n    'Composer\\\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',\n);\n");
+        w('vendor/composer/autoload_psr4.php', "<?php\n\n$vendorDir = dirname(__DIR__);\n$baseDir = dirname($vendorDir);\n\nreturn array(\n    'Illuminate\\\\' => array($vendorDir . '/laravel/framework/src/Illuminate'),\n    'Acme\\\\Unused\\\\' => array($vendorDir . '/acme/unused/src'),\n    'Acme\\\\Legacy\\\\' => array($vendorDir . '/acme/legacy/src'),\n    'App\\\\' => array($baseDir . '/app'),\n);\n");
+        w('vendor/composer/autoload_namespaces.php', "<?php\n\nreturn array(\n);\n");
+        w('vendor/composer/autoload_files.php', "<?php\n\nreturn array(\n);\n");
+        w(
+            'vendor/composer/installed.json',
+            JSON.stringify({ packages: ['laravel/framework', 'dompdf/dompdf', 'acme/legacy', 'erusev/parsedown', 'acme/unused'].map((name) => ({ name, version: '1.0.0', 'install-path': `../${name}` })) }, null, 4),
+        );
+    }
+    return root;
+}

@@ -15,6 +15,7 @@
  *
  * Offline: files only, no package manager, no registry (K25).
  */
+import { phpClassRefs, phpOwner, readComposerAutoload } from './php_autoload.js';
 import { scopeOf } from '../../scope.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -96,6 +97,8 @@ interface Pkg {
     lockfile: string;
     nonimport: string[];
     users: Map<string, { names: Set<string>; line: number }>;
+    /** composer only: whether `vendor/` autoload maps bound its classes, or only the lockfile's PSR maps */
+    binding?: 'complete' | 'partial';
 }
 
 const factKey = (eco: Ecosystem, key: string): string => `${eco}:${key}`;
@@ -197,6 +200,7 @@ export function readSystems(root: string, opts: SystemsOptions = {}): LaneOutput
     };
 
     usesFromGraph(root, opts.graph, pkgs, preferred, read);
+    phpUses(root, em, walk, read, pkgs, preferred);
     nonImportUses(walk, read, pkgs, byName, preferred);
 
     for (const k of pkgs.values()) emitPackage(em, k, read);
@@ -248,6 +252,7 @@ function emitPackage(em: Emitter, k: Pkg, read: (rel: string) => string | null):
         private: k.p.private,
         used_by: users.length,
         nonimport: [...new Set(k.nonimport)].sort(),
+        ...(k.binding ? { binding: k.binding } : {}),
     };
     if (direct && users.length === 0 && k.nonimport.length === 0) {
         attrs['unused'] = true;
@@ -262,6 +267,46 @@ function emitPackage(em: Emitter, k: Pkg, read: (rel: string) => string | null):
         attrs['dev_in_prod_ref'] = ref(prodUser[0], prodUser[1].line);
     }
     em.fact('package', factKey(k.eco, k.p.key), `${k.p.name}@${k.p.version}`, attrs, k.lockfile, Math.max(1, k.p.line));
+}
+
+/**
+ * PHP classes bound to composer packages from the autoload maps read as data
+ * (6.1, H10): a classmap-only package, a root-namespace `use Dompdf;` and an
+ * aliased import all bind. Without `vendor/` only the lockfile's PSR maps can,
+ * and every composer package says its binding is partial.
+ */
+function phpUses(
+    root: string,
+    em: Emitter,
+    walk: (match: (name: string, rel: string) => boolean) => string[],
+    read: (rel: string) => string | null,
+    pkgs: Map<string, Pkg>,
+    preferred: (eco: Ecosystem, name: string) => Pkg | undefined,
+): void {
+    const composer = [...pkgs.values()].filter((k) => k.eco === 'composer');
+    if (composer.length === 0) return;
+    const vendor = readComposerAutoload(root);
+    const autoload = vendor ?? {
+        classOwner: new Map<string, string>(),
+        namespaces: composer.flatMap((k) => k.p.namespaces.map((ns) => [ns, k.p.name] as [string, string])).sort((a, b) => b[0].length - a[0].length),
+    };
+    const state = vendor ? 'complete' : 'partial';
+    for (const k of composer) k.binding = state;
+    if (!vendor) em.skip('vendor/composer', 'binding partial: no vendor/composer/installed.json — classmap-only packages cannot bind; PSR maps from composer.lock only');
+    for (const file of walk((n) => n.endsWith('.php'))) {
+        if (file.startsWith('vendor/')) continue;
+        const text = read(file);
+        if (text === null) continue;
+        for (const ref of phpClassRefs(text)) {
+            const owner = phpOwner(ref.name, autoload);
+            const k = owner ? preferred('composer', owner) : undefined;
+            if (!k) continue;
+            const u = k.users.get(file) ?? { names: new Set<string>(), line: ref.line };
+            u.names.add(ref.name.slice(ref.name.lastIndexOf('\\') + 1));
+            u.line = Math.min(u.line, ref.line);
+            k.users.set(file, u);
+        }
+    }
 }
 
 /** Imports the code graph already bound to `external:<specifier>`. */

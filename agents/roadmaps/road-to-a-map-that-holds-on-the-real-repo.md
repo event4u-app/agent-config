@@ -223,8 +223,7 @@ Before any agent-facing addition.
 
 Before the Systems view of `road-to-map-views-from-the-handover`.
 
-- [ ] **6.1 [E.1] Offline PHP binding.** Read `vendor/composer/autoload_{classmap,psr4,namespaces,files}.php` and `installed.json` as data, map files to packages by `install-path`, resolve `use` aliases including root-namespace names; without `vendor/`, fall back to lockfile PSR maps and state "binding partial". Extends the audit fixture from 1.3. verify: `npx vitest run tests/scripts/code_graph_systems_php_binding.test.ts` -> 0
-  > note: not done: Phase 6 not started in this run.
+- [x] **6.1 [E.1] Offline PHP binding.** Read `vendor/composer/autoload_{classmap,psr4,namespaces,files}.php` and `installed.json` as data, map files to packages by `install-path`, resolve `use` aliases including root-namespace names; without `vendor/`, fall back to lockfile PSR maps and state "binding partial". Extends the audit fixture from 1.3. verify: `npx vitest run tests/scripts/code_graph_systems_php_binding.test.ts` -> 0
 - [ ] **6.2 [E.2] Verdict states.** `used`, `used-through <pkg>`, `unused-candidate`, `not-installed`, `virtual/meta`, `ignored (reason)`; SY-1 only on `unused-candidate` in product scope. verify: `npx vitest run tests/scripts/code_graph_systems_verdicts.test.ts` -> 0
   > note: not done: Phase 6 not started in this run.
 - [ ] **6.3 [E.3] JS non-import uses as typed inputs.** Five plugins: package.json scripts, CI `run` steps, tsconfig, eslint, vite/vitest; extends the existing `nonImportUses`. verify: `npx vitest run tests/scripts/code_graph_systems_nonimport.test.ts` -> 0
