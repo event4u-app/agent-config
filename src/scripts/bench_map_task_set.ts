@@ -202,6 +202,7 @@ export function run_trial(task: MapTask, arm: string, opts: TrialOpts): MapTrial
         seed: opts.seed,
         errored,
         success: !errored && check.pass,
+        check_passed: check.pass,
         broken_dependents: check.broken_dependents,
         affected: score_affected(task, parse_affected_section(transcript)),
         tokens: total_tokens(breakdown),
@@ -269,6 +270,8 @@ interface Args {
     map_build: boolean;
     out_dir: string | null;
     fresh: boolean;
+    /** Re-score a stored report: no clone, no model call, no spend. */
+    rescore: string | null;
 }
 
 class UsageError extends Error {}
@@ -288,6 +291,7 @@ export function parse_args(argv: string[]): Args {
         map_build: true,
         out_dir: null,
         fresh: false,
+        rescore: null,
     };
     const num = (flag: string, v: string | undefined): number => {
         const n = Number(v);
@@ -312,6 +316,7 @@ export function parse_args(argv: string[]): Args {
             case '--no-map-build': a.map_build = false; break;
             case '--out-dir': a.out_dir = next() ?? null; break;
             case '--fresh': a.fresh = true; break;
+            case '--rescore': a.rescore = next() ?? null; break;
             default: throw new UsageError(`unknown argument: ${flag}`);
         }
     }
@@ -343,6 +348,32 @@ function load_checkpoint(file: string): Map<string, MapTrial> {
     return done;
 }
 
+/**
+ * Re-score a stored report with today's grading: the outcome from `errored` and
+ * the recorded check failures, M2 from the preserved transcript when it is still
+ * on disk (else the stored score). Prints one line per arm and area.
+ */
+export function rescore_report(file: string, budget_tokens_per_run?: number): { lines: string[]; summaries: Record<string, ArmSummary> } {
+    const report = JSON.parse(fs.readFileSync(file, 'utf-8')) as { arms: string[]; budget_tokens_per_run?: number; records: Array<MapRunRecord & { check_failures?: string[]; transcript_path?: string | null }> };
+    const tasks = new Map(load_map_tasks().map((t) => [t.id, t] as const));
+    const records: MapRunRecord[] = report.records.map((r) => {
+        const task = tasks.get(r.task_id);
+        const tp = r.transcript_path;
+        const affected = task && tp && fs.existsSync(tp) ? score_affected(task, parse_affected_section(fs.readFileSync(tp, 'utf-8'))) : r.affected;
+        const check_passed = (r.check_failures ?? []).length === 0;
+        return { ...r, affected, check_passed, success: !r.errored && check_passed };
+    });
+    const budget = budget_tokens_per_run ?? report.budget_tokens_per_run ?? 1_500_000;
+    const summaries: Record<string, ArmSummary> = {};
+    const lines: string[] = [];
+    for (const arm of report.arms) {
+        const s = (summaries[arm] = summarise_arm(arm, records, budget));
+        lines.push(`${arm}: ${s.successes}/${s.runs} success · ${s.errored_check_passed} errored, check passed · M2 recall ${s.m2_mean_recall?.toFixed(3) ?? '–'}`);
+        for (const [area, v] of Object.entries(s.by_area).sort()) lines.push(`${arm} ${area} ${v.checks_passed}/${v.runs} checks passed (${v.successes} clean)`);
+    }
+    return { lines, summaries };
+}
+
 export function main(argv: string[] = process.argv.slice(2)): number {
     let a: Args;
     try {
@@ -350,6 +381,14 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     } catch (e) {
         process.stderr.write(`bench_map_task_set: ${(e as Error).message}\n`);
         return 1;
+    }
+    if (a.rescore) {
+        if (!fs.existsSync(a.rescore)) {
+            process.stderr.write(`bench_map_task_set: no report at ${a.rescore}\n`);
+            return 1;
+        }
+        process.stdout.write(`${rescore_report(a.rescore).lines.join('\n')}\n`);
+        return 0;
     }
     let tasks = load_map_tasks();
     if (a.tasks.length) {
