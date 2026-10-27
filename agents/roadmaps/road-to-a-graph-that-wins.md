@@ -258,6 +258,7 @@ answers. Each step is fixture-gated (K5).
       its primary key on 2026-10-07; `code_graph_unique_ids.test.ts` pins the
       collision shapes fixed since. Confirm on the real graph before scheduling.
       verify: `npx vitest run tests/scripts/code_graph_review_risk.test.ts -t 'reads through the index'` -> 0
+      > note: precondition met 2026-10-27 — this repository's twin opens (261,913 edges, 0 duplicate node ids); adjacency no longer spreads per edge. Open: the index path needs kind- and relation-scoped reads in `sqlite_store.ts`, which is in the hook bundle at 1 byte of headroom, so it needs a `raise_log` entry first; the 50k crossover is unmeasured.
 - [ ] 4.7 **A region read list.** Extend the existing `recommended_reads` (`query.ts`)
       and the pack's `at=file:line` items with a region budget — changed regions
       risk-ordered round-robin, at most 40 % per file, definitions up to 40 lines

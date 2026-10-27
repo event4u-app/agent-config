@@ -148,9 +148,15 @@ export function reviewRisk(
     const byId = new Map(graph.nodes.map((n) => [n.id, n] as const));
     const inn = new Map<string, CodeEdge[]>();
     const out = new Map<string, CodeEdge[]>();
+    // Push, never spread: a spread per edge copies the list each time, quadratic on a hub.
+    const push = (m: Map<string, CodeEdge[]>, k: string, e: CodeEdge): void => {
+        const list = m.get(k);
+        if (list) list.push(e);
+        else m.set(k, [e]);
+    };
     for (const e of graph.edges) {
-        inn.set(e.target, [...(inn.get(e.target) ?? []), e]);
-        out.set(e.source, [...(out.get(e.source) ?? []), e]);
+        push(inn, e.target, e);
+        push(out, e.source, e);
     }
     const lines = new Map<string, string[] | null>();
     const witnessOf = (n: CodeNode | undefined, e?: CodeEdge): RiskWitness | null => {
