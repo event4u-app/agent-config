@@ -65,9 +65,9 @@ from a measured arm rather than from the source synthesis.
       and 3 of `direct-answers` although the prereg names the Iron Law 1 class.
       Either extract the named sections or amend the arms table to say whole
       files, before the first scored run.
-      verify: `bench_honesty_run --dry-run` records a different `surface_hash`
-      for `prohibitions-only` than for `evidence-rules`, and the arms table
-      states what each surface contains.
+      verify: a dry run of `bench_honesty_run` records a different
+      `surface_hash` for `prohibitions-only` than for `evidence-rules`, and the
+      arms table states what each surface contains.
 
 ## Phase 2 — The runs
 

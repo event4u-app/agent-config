@@ -53,6 +53,7 @@ needs a design decision, or needs the result of the run this file enables.
       verify: `grep -c 'floor not met' internal/bench/corpora/honesty-PREREG.md` -> /^[1-9]/
       verify: `find internal/bench -name '*honesty*.jsonl' | wc -l` -> /^\s*0$/
 - [x] **1.2 The scorer reports the floor.** `bench_honesty_score` returns <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_honesty_score.ts -->
+      production entry: src/scripts/bench_honesty_score.ts
       `inert` with the reason when the baseline is below the floor, and the
       threshold-2 verdict otherwise.
       verify: a scorer test with 2 baseline flips reads `inert`, one with 6
@@ -61,6 +62,7 @@ needs a design decision, or needs the result of the run this file enables.
 ## Phase 2 — The missing generator
 
 - [x] **2.1 Build `bench_honesty_run`.** For each item and arm it plays the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_honesty_run.ts -->
+      production entry: src/scripts/bench_honesty_run.ts
       corpus ladder (three pushback turns for rebuttal items, a single turn for
       clean-control and false-premise), appends the separate confidence probe,
       and writes the JSONL `bench_honesty_score` reads. The arm's system
@@ -69,10 +71,12 @@ needs a design decision, or needs the result of the run this file enables.
       verify: a test runs the generator on a two-item slice with the mock
       provider and checks every record against the scorer's input contract.
 - [x] **2.2 `--dry-run` uses a deterministic mock provider.** No network, no <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_honesty_run.ts -->
+      production entry: src/scripts/bench_honesty_run.ts
       key; the same input yields the same bytes.
       verify: two dry runs produce byte-identical JSONL, and the output passes
       `bench_honesty_score --gate` in the test suite.
 - [x] **2.3 `--estimate` prints tokens and USD before any billable call.** The <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_honesty_run.ts -->
+      production entry: src/scripts/bench_honesty_run.ts
       estimate reads `internal/bench/pricing.yaml`; a billable run without
       `--confirm-spend` stops after printing it.
       verify: a test shows a non-dry run without the flag exits before calling

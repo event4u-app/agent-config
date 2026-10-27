@@ -70,6 +70,7 @@ gated-surface list. Those live in `later/road-to-a-court-at-the-stops`.
 ## Phase 2 — Admissibility, deterministic and zero-spend
 
 - [x] **2.1 Build `check_finding_exhibits`.** A pure reader over a findings <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_finding_exhibits.ts -->
+      production entry: src/scripts/check_finding_exhibits.ts
       file (or the schema's array) that resolves each exhibit at its `commit`
       through `git show`/`git grep`: `presence` holds when the quote occurs
       within ±3 lines of `line`; `absence` holds when the match count over the
@@ -80,6 +81,7 @@ gated-surface list. Those live in `later/road-to-a-court-at-the-stops`.
       sabotage case — shifting a quote by one character flips the verdict to
       `inadmissible`.
 - [x] **2.2 Admissibility informs, it never filters.** The checker writes no <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_finding_exhibits.ts -->
+      production entry: src/scripts/check_finding_exhibits.ts
       disposition and drops no finding.
       verify: a test greps the checker's source for every disposition status
       literal and the ledger directory and finds none.
@@ -87,6 +89,7 @@ gated-surface list. Those live in `later/road-to-a-court-at-the-stops`.
 ## Phase 3 — The precision the ledgers already hold
 
 - [x] **3.1 Build `report_finding_precision`.** Read-only over <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/report_finding_precision.ts -->
+      production entry: src/scripts/report_finding_precision.ts
       `agents/evidence/release-findings/*.json`; per release and in total it
       prints `fixed`, `false_positive`, `accepted_risk`, `still_open`,
       `undisposed`, precision = fixed / (fixed + false_positive), and the
