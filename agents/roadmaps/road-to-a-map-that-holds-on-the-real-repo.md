@@ -152,7 +152,7 @@ a one-line revert.
 
 - [x] **1.1 [F.2a] Drop subjects from the committed commit tuple.** `map_knowledge.ts:150` stores sha, date, author name, PR number and ticket keys only; subjects stay in `.build/`. verify: `npx vitest run tests/scripts/code_graph_provenance_privacy.test.ts` -> 0
 - [ ] **1.2 Redraw the committed map without subjects.** verify: `git grep -cE '\(#[0-9]{3,5}\)' -- agents/map/code/map.json` -> 1
-- [ ] **1.3 Build the audit fixture and its regression test.** A fixture repo with a squash commit `feat: status (#9)` and a migration rename (the second archived roadmap's AC-6 shape); the test asserts the subject appears nowhere under `agents/map/` outside `.build/`. verify: the test above fails when step 1.1 is reverted, and `npx vitest run tests/scripts/code_graph_provenance_privacy.test.ts` -> 0
+- [x] **1.3 Build the audit fixture and its regression test.** A fixture repo with a squash commit `feat: status (#9)` and a migration rename (the second archived roadmap's AC-6 shape); the test asserts the subject appears nowhere under `agents/map/` outside `.build/`. verify: the test above fails when step 1.1 is reverted, and `npx vitest run tests/scripts/code_graph_provenance_privacy.test.ts` -> 0
 
 ## Phase 2 — One scope, one integrity contract [A]
 
