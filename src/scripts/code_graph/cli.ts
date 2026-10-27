@@ -196,6 +196,7 @@ import { usageLowerBound, verifyMain } from './verify/verify_cli.js';
 
 import { buildCacheFor, cacheFor, flag, isFlagValue, resolveRoot, shown, UsageError } from './cli_args.js';
 import { pageReads } from './answer_budget.js';
+import { noEntryLine } from './answer_correctness.js';
 import { bugsMain } from './cli_bugs.js';
 import { cmdBranchDiff, cmdBranches, cmdOnBranches, cmdProvenance, cmdSystems } from './cli_knowledge.js';
 
@@ -658,6 +659,7 @@ function cmdTestsFor(argv: string[]): number {
         process.stdout.write(`seeds: ${res.seeds.join(', ') || '(none)'}\n`);
         process.stdout.write(`tests (${res.tests.length}):\n`);
         for (const t of res.tests) process.stdout.write(`  ${t}\n`);
+        if (res.seeds.length === 0) process.stdout.write(`${noEntryLine(symbol, 'tests-for')}\n`);
         renderReads(res.recommended_reads);
         return 0;
     } finally {

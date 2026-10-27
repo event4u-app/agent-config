@@ -17,6 +17,8 @@ import {
     type WhyAnswer,
 } from './lanes/systems/verbs.js';
 import { cachedProvenance } from './provenance.js';
+import { loadGraph } from './query.js';
+import { noEntryLine, symbolUsage } from './answer_correctness.js';
 import { provenanceAnswer } from './provenance_verbs.js';
 import type { CodeGraph } from './types.js';
 
@@ -47,6 +49,16 @@ export async function cmdSystems(sub: 'why' | 'usage' | 'remove-plan', argv: str
             process.stderr.write(`code-graph: no graph at ${shown(root, graphPath)} — run \`code-graph build\` first\n`);
             return 1;
         }
+    }
+    if (sub === 'usage' && !systemsUsage(g, root, query).length) {
+        const u = symbolUsage(loadGraph(graphPath, `native:${shown(root, graphPath)}`), query);
+        if (u === null) {
+            process.stdout.write(`${noEntryLine(query, 'packages or symbols')}\n`);
+            return 1;
+        }
+        if (argv.includes('--json')) process.stdout.write(`${JSON.stringify(u, null, 2)}\n`);
+        else process.stdout.write(`symbol ${u.symbol}: ${u.users} user(s) within 2 hops over stated edges, in ${u.files.length} file(s)\n${u.files.slice(0, 20).map((f) => `  ${f}`).join('\n')}\n`);
+        return 0;
     }
     if (!g.nodes.some((n) => n.kind === 'package')) {
         process.stderr.write('code-graph: the graph holds no package facts — no lockfile or manifest was read, or it was built without lanes\n');

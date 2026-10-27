@@ -221,11 +221,12 @@ use it.
       summary with a "narrow your question" header; `graph_impact` gets a
       budget; ranked lists are packed by budget search.
       verify: `./scripts-run src/scripts/bench_answer_size --probe affected-hubs` -> 0
-- [ ] **J.3 Answers that are right** (H45). `pack` seeds from file, area and
+- [x] **J.3 Answers that are right** (H45). `pack` seeds from file, area and
       symbol names, then FTS over I.2's index once it exists; `tests-for`
       resolves `.js` specifiers; `usage` covers symbols; "no entry" names the
       grep fallback.
       verify: `npx vitest run tests/scripts/code_graph_answer_correctness.test.ts` -> 0
+      > note: pack seeds exact names and `.js` specifiers today; the FTS-over-I.2 seed tier waits for that index to exist.
 - [ ] **J.4 One entry point.** `agent-config ask "<question>"` and MCP `answer`:
       routes to the right verb; three-step retrieval (index rows with
       `~read_tokens` → timeline → fetch by id); fix-plan and verify-fix are

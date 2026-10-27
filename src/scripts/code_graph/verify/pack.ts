@@ -98,7 +98,10 @@ export function contextPack(g: LoadedGraph, root: string, cachePath: string, tas
     let unmatched = 0;
     const words = seedWords(task);
     for (const w of words) {
-        const r = resolveExactNode(g, w);
+        // A `.js` import specifier names the `.ts` file it compiles from.
+        const alt = w.replace(/\.(m?)js$/, '.$1ts');
+        let r = resolveExactNode(g, w);
+        if (r.id === null && r.ambiguous.length === 0 && alt !== w) r = resolveExactNode(g, alt);
         if (r.id !== null) {
             if (!fromTask.includes(r.id)) fromTask.push(r.id);
         } else if (r.ambiguous.length > 0) refused.push({ word: w, candidates: r.ambiguous, more: r.more });
