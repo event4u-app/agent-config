@@ -181,7 +181,8 @@ the decision-revisit gate first.
 
 ## Phase 4 — The committed map as a generated artifact [C]
 
-- [ ] **4.1 [C.1] Hooks never touch tracked files.** Background refresh in `install-hooks.sh:676-703` writes to `.build/` only. verify: after a commit with hooks installed, `git status --porcelain agents/map` -> /^$/
+- [x] **4.1 [C.1] Hooks never touch tracked files.** Background refresh in `install-hooks.sh:676-703` writes to `.build/` only. verify: after a commit with hooks installed, `git status --porcelain agents/map` -> /^$/
+  > note: verified on the rendered hooks (`npx vitest run tests/scripts/code_graph_git_freshness.test.ts`, 13/13; red 5/13 before the edit) — reinstalling the shared `.git/hooks` was out of bounds for this lane. The consumer session concern (`hooks/code_graph_refresh_hook.ts`, `REFRESH_ARGS`) still passes `--map`; it is no git hook and stays as it is.
 - [ ] **4.2 [C.2] Deterministic, sharded, diffable.** Sorted keys, pretty JSON, stable order, no volatile values; shards per area and per top-level directory for code; `linguist-generated` in `.gitattributes`; `index.html` committed or not per O1. verify: `npx vitest run tests/scripts/code_graph_map_determinism.test.ts` -> 0
 - [ ] **4.3 [C.3] CI diff check.** CI redraws on PRs touching the tree and compares; outcome per O2. Workflow, with ratification artifact. verify: a fixture PR that changes a route without redrawing gets the configured outcome, and `npx vitest run tests/scripts/code_graph_map_diff_check.test.ts` -> 0
 - [ ] **4.4 [C.4] Honest freshness and name.** Page and MAP.md say "built at", then the build sha and date, and compute nothing about HEAD; title from `repo_identity.ts`, never the folder. verify: `grep -c 'built at' agents/map/MAP.md` -> /^[1-9]/
