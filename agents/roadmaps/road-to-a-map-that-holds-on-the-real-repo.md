@@ -152,7 +152,7 @@ a one-line revert.
 
 - [x] **1.1 [F.2a] Drop subjects from the committed commit tuple.** `map_knowledge.ts:150` stores sha, date, author name, PR number and ticket keys only; subjects stay in `.build/`. verify: `npx vitest run tests/scripts/code_graph_provenance_privacy.test.ts` -> 0 <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map_knowledge.ts -->
 - [x] **1.2 Redraw the committed map without subjects.** verify: `git grep -cE '\(#[0-9]{3,5}\)' -- agents/map/code/map.json` -> 1 <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: agents/map/MAP.md -->
-- [x] **1.3 Build the audit fixture and its regression test.** A fixture repo with a squash commit `feat: status (#9)` and a migration rename (the second archived roadmap's AC-6 shape); the test asserts the subject appears nowhere under `agents/map/` outside `.build/`. verify: the test above fails when step 1.1 is reverted, and `npx vitest run tests/scripts/code_graph_provenance_privacy.test.ts` -> 0 <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **1.3 Build the audit fixture and its regression test.** A fixture repo with a squash commit `feat: status (#9)` and a migration rename (the second archived roadmap's AC-6 shape); the test asserts the subject appears nowhere under `agents/map/` outside `.build/`. verify: the test above fails when step 1.1 is reverted, and `npx vitest run tests/scripts/code_graph_provenance_privacy.test.ts` -> 0 <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 
 ## Phase 2 — One scope, one integrity contract [A]
 
@@ -186,7 +186,7 @@ the decision-revisit gate first.
   > note: not done: gate change that conflicts with the `roadmap_verify_share.ts` docstring; goes through the decision-revisit gate and the council first.
 - [ ] **3.3 [B.3] Measurement steps need a threshold or an owner null record.** verify: a planted measurement step with neither makes `./scripts-run src/scripts/archive_completed_roadmaps --dry-run` refuse it, and the fixture test `npx vitest run tests/scripts/archive_measurement_threshold.test.ts` -> 0
   > note: not done: gate change, needs council ratification.
-- [x] **3.4 [B.4] Erratum on the two archived map roadmaps.** One appended section each listing the reopened steps (H12–H20) with this file's step IDs; H21 deferred to 5.6. verify: `grep -c '^## Erratum' agents/roadmaps/archive/road-to-a-map-the-agent-checks-before-it-acts.md` -> /^1$/ <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **3.4 [B.4] Erratum on the two archived map roadmaps.** One appended section each listing the reopened steps (H12–H20) with this file's step IDs; H21 deferred to 5.6. verify: `grep -c '^## Erratum' agents/roadmaps/archive/road-to-a-map-the-agent-checks-before-it-acts.md` -> /^1$/ <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 
 ## Phase 4 — The committed map as a generated artifact [C]
 
