@@ -1383,37 +1383,32 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
                     minItems: 1,
                     description:
                         'Memory types to scan, e.g. `historical-patterns`, ' +
-                        '`incident-learnings`, `ownership`. At least one ' +
-                        'required.',
+                        '`incident-learnings`, `ownership`.',
                 },
                 keys: {
                     type: 'array',
                     items: { type: 'string' },
                     description:
-                        'Optional anchor paths or globs to match entries ' +
+                        'Anchor paths or globs to match entries ' +
                         'against (e.g. a file you are about to edit).',
                 },
                 limit: {
                     type: 'integer',
                     minimum: 1,
                     default: 5,
-                    description: 'Maximum entries to return per type. Defaults to 5.',
+                    description: 'Maximum entries to return per type.',
                 },
                 detail: {
                     type: 'string',
                     enum: ['index', 'full'],
                     default: 'index',
-                    description:
-                        "'index' (default): priced rows (id, title, " +
-                        "tokens_estimate), then memory_get the ids " +
-                        "you need. 'full': complete entries. Call " +
-                        "index first.",
+                    description: "'full': complete entries.",
                 },
                 token_budget: {
                     type: 'integer',
                     minimum: 1,
                     description:
-                        'Optional: render compact rows (id, type, confidence, ' +
+                        'Render compact rows (id, type, confidence, ' +
                         '`line`) hard-cut at token_budget × 4 chars; omitted ' +
                         'hits yield a top-level `truncation` hint.',
                 },
@@ -1432,7 +1427,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
             'detail:"index" first, pick the ids whose title/tokens_estimate ' +
             'justify the fetch, then fetch them here in ONE batched call. ' +
             'Unknown ids are reported per-id (ids[<id>]="unknown"), never ' +
-            'failing the batch. Read-only.',
+            'failing the batch.',
         input_schema: {
             type: 'object',
             properties: {
@@ -1454,7 +1449,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
         description:
             'Report the memory backend status. Memory is entirely ' +
             'file-backed (`agents/memory/`); there is no external backend. ' +
-            'Read-only, takes no arguments. Returns a `status` (`file`), ' +
+            'Takes no arguments. Returns a `status` (`file`), ' +
             'the active `backend` (`file`), and a short `reason`.',
         input_schema: {
             type: 'object',
@@ -1468,7 +1463,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
         side_effect: 'ro',
         description:
             'Skills exposed as prompts, to discover one ' +
-            'before suggesting or invoking it. Read-only. ' +
+            'before suggesting or invoking it. ' +
             'Pages of 50 names; detail:"full" adds the ' +
             'description and source; `count` is the ' +
             'total.',
@@ -1486,7 +1481,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
             'Enumerate every slash command the server currently exposes ' +
             'as a prompt, each with its name and description. Use to ' +
             'discover available commands before routing a user request to ' +
-            'one. Read-only manifest view, takes no arguments. Returns a ' +
+            'one. Takes no arguments. Returns a ' +
             '`count` plus a `commands` array.',
         input_schema: {
             type: 'object',
@@ -1500,7 +1495,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
         side_effect: 'ro',
         description:
             'Rules exposed as resources; fetch a body ' +
-            'with `read_resource_body`. Read-only. Pages ' +
+            'with `read_resource_body`. Pages ' +
             'of 50 URIs and names; detail:"full" adds the ' +
             'description and source; `count` is the ' +
             'total.',
@@ -1519,7 +1514,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
             'guideline, or context document) in one call, without the ' +
             'two-step `resources/list` + `resources/read` handshake. Use ' +
             'when you already know the URI and want to inline its content ' +
-            'into a tool-call result. Read-only. Returns the resource ' +
+            'into a tool-call result. Returns the resource ' +
             '`uri`, `name`, `description`, and full text `body`.',
         input_schema: {
             type: 'object',
@@ -1644,7 +1639,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
             'Run the consumer-project doctor diagnostic and return a ' +
             'structured health report (install drift, hook wiring, ' +
             'settings schema, discovery manifest freshness). Use to triage ' +
-            'a misbehaving install. Read-only.',
+            'a misbehaving install.',
         input_schema: {
             type: 'object',
             properties: {},
@@ -1659,7 +1654,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
             'Run the consumer conformance contract (`doctor --ci` plus ' +
             'installed-and-firing checks) and return pass/fail per check. ' +
             "Use to verify a consumer project's install is fully wired " +
-            'before relying on it. Read-only.',
+            'before relying on it.',
         input_schema: {
             type: 'object',
             properties: {},
@@ -1674,7 +1669,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
             'Return the artefact-engagement telemetry report — essential ' +
             '/ useful / retirement-candidate skills and rules ranked by ' +
             'recorded consult+apply signals over a rolling window. Use to ' +
-            'see which artifacts are actually load-bearing. Read-only. ' +
+            'see which artifacts are actually load-bearing. ' +
             'No-op (empty report) when telemetry recording is disabled.',
         input_schema: {
             type: 'object',
@@ -1697,7 +1692,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
             'Estimate the token cost of an AI-council debate over a given ' +
             'input (roadmap, diff, prompt, or file set) without spending ' +
             '— no network call, no billing. Use before deciding whether ' +
-            'to authorize a real council run. Read-only.',
+            'to authorize a real council run.',
         input_schema: {
             type: 'object',
             properties: {

@@ -236,6 +236,9 @@ function withProjectParam(tools: Record<string, BuiltinTool>): Record<string, Bu
     return out;
 }
 
+// Its meaning is stated once, in `graph_estate`'s description.
+const DETAIL_PROP = { type: 'string', enum: ['minimal', 'standard'], default: 'standard' } as const;
+
 export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
     graph_impact: {
         name: 'graph_impact',
@@ -254,7 +257,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
                     description: 'Instead return changed symbols no test imports.',
                 },
                 review_risk: { type: 'boolean' },
-                detail: { type: 'string', enum: ['minimal', 'standard'], default: 'standard', description: 'Capped lists; what is left out is counted in `omitted`.' },
+                detail: DETAIL_PROP,
                 budget: { type: 'integer', minimum: 250 },
                 page: { type: 'integer', minimum: 1 },
             },
@@ -307,7 +310,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             required: ['symbol'],
             properties: {
                 symbol: { type: 'string', description: 'Node id, label, or free text.' },
-                detail: { type: 'string', enum: ['minimal', 'standard'], default: 'standard', description: 'Capped lists; what is left out is counted in `omitted`.' },
+                detail: DETAIL_PROP,
             },
             additionalProperties: false,
         },
@@ -345,7 +348,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
                     default: false,
                     description: 'Answer anyway, accepting the gap. Never a default.',
                 },
-                detail: { type: 'string', enum: ['minimal', 'standard'], default: 'standard', description: 'Capped lists; what is left out is counted in `omitted`.' },
+                detail: DETAIL_PROP,
             },
             additionalProperties: false,
         },
@@ -609,7 +612,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         side_effect: 'ro',
         description:
             'Estate index across registered projects: package users, where a name is used, advisory ' +
-            'reach. Other graph tools take `project`.',
+            'reach. Other graph tools take `project`; their lists are capped by `detail`, the rest counted in `omitted`.',
         input_schema: {
             type: 'object',
             required: ['query'],
