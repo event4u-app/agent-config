@@ -191,6 +191,10 @@ export interface MapDomains {
     /** null when `domain_allow` is undeclared: crossings are counted, never judged */
     breaches: number | null;
     violations: Array<{ kind: 'domain' | 'domain-public' | 'domain-cycle' | 'domain-overlap' | 'domain-table'; files: number[]; domains: string[]; table?: string }>;
+    /** route label → the domain of its handler's file (7.1) */
+    routes?: Record<string, string>;
+    /** ticket key → the domains of the files its commits introduced or last changed (7.1) */
+    tickets?: Record<string, string[]>;
 }
 
 export interface MapDomainProposals {

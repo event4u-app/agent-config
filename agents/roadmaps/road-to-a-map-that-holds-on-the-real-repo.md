@@ -237,7 +237,7 @@ Before the Systems view of `road-to-map-views-from-the-handover`.
 ## Phase 7 — Close what was ticked thin [F]
 
 - [ ] **7.1 [F.1] Domains complete.** Routes get their handler's domain, tickets the domains they touched; domain rules move into the drift engine with `confirm`; the pack resolver uses the map's filters. verify: `npx vitest run tests/scripts/code_graph_domains.test.ts` -> 0
-  > note: not done: waits on Phase 6 per the Order block.
+  > note: two of three parts built and tested (`tests/scripts/code_graph_domains.test.ts`, 3/3): routes carry their handler's domain, tickets the domains their commits touched, and the pack resolver uses the map's filters. Open: moving the domain rules into the drift engine with `confirm` — domains are assigned after `produceAreas` runs the drift engine, so the move needs the domain assignment ahead of it; not started.
 - [x] **7.2 [F.2b] Provenance renames.** The timeline uses the history lane's rename pairs, not `--follow` (`provenance_verbs.ts:84`); authors and last change read renames (`map_answers.ts:330`). verify: in the audit fixture the migration timeline has no create commit, and `npx vitest run tests/scripts/code_graph_provenance_renames.test.ts` -> 0
   > note: done ahead of Phase 6 — it depends only on the audit fixture of 1.3. "No create commit" read as: no commit that created a different file (`--follow` walked the renamed status migration back into `create_orders`' `add orders`); its own `(#9)` stays.
 - [x] **7.3 [F.3] Branches clean themselves.** gc inside `refresh`, bounded in time; remote-tracking branches expire unless pinned; a manifest stores a delta against its parent's. verify: `npx vitest run tests/scripts/code_graph_branches_gc.test.ts` -> 0
