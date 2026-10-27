@@ -34,7 +34,7 @@ Visible landmarks and widget roles below the header, 1440 px, dark.
 | selected tab | `border` | `0px none` | `0px none` | = |
 | selected tab | `white-space` | `normal` | `normal` | = |
 | selected tab | `gap` | `normal` | `normal` | = |
-| reason card | `height` | `167.156px` | `223.344px` || Δ 18 px taller drawn box: the build's command chips sit on their own wrapped row (`.sy-chips`); padding, radius, border and colours are equal |
+| reason card | `height` | `167.156px` | `223.344px` | Δ 18 px taller drawn box: the build's command chips sit on their own wrapped row (`.sy-chips`); padding, radius, border and colours are equal |
 | reason card | `padding` | `18px` | `18px` | = |
 | reason card | `border-radius` | `12px` | `12px` | = |
 | reason card | `font-size` | `14px` | `14px` | = |
@@ -45,7 +45,7 @@ Visible landmarks and widget roles below the header, 1440 px, dark.
 | reason card | `border` | `1px dashed rgb(42, 52, 69)` | `1px dashed rgb(42, 52, 69)` | = |
 | reason card | `white-space` | `normal` | `normal` | = |
 | reason card | `gap` | `10px` | `10px` | = |
-| first why-empty tile | `height` | `55.7812px` | `81.7812px` || = drawn box: content-box + 2×12px padding + 2×1px border |
+| first why-empty tile | `height` | `55.7812px` | `81.7812px` | = drawn box: content-box + 2×12px padding + 2×1px border |
 | first why-empty tile | `padding` | `12px` | `12px` | = |
 | first why-empty tile | `border-radius` | `10px` | `10px` | = |
 | first why-empty tile | `font-size` | `14px` | `14px` | = |
@@ -74,7 +74,7 @@ Visible landmarks and widget roles below the header, 1440 px, dark.
 | selected tab | `border` | `0px none` | `0px none` | = |
 | selected tab | `white-space` | `normal` | `normal` | = |
 | selected tab | `gap` | `normal` | `normal` | = |
-| reason card | `height` | `167.156px` | `223.344px` || Δ 18 px taller drawn box: the build's command chips sit on their own wrapped row (`.sy-chips`); padding, radius, border and colours are equal |
+| reason card | `height` | `167.156px` | `223.344px` | Δ 18 px taller drawn box: the build's command chips sit on their own wrapped row (`.sy-chips`); padding, radius, border and colours are equal |
 | reason card | `padding` | `18px` | `18px` | = |
 | reason card | `border-radius` | `12px` | `12px` | = |
 | reason card | `font-size` | `14px` | `14px` | = |
@@ -85,7 +85,7 @@ Visible landmarks and widget roles below the header, 1440 px, dark.
 | reason card | `border` | `1px dashed rgb(195, 204, 217)` | `1px dashed rgb(195, 204, 217)` | = |
 | reason card | `white-space` | `normal` | `normal` | = |
 | reason card | `gap` | `10px` | `10px` | = |
-| first why-empty tile | `height` | `55.7812px` | `81.7812px` || = drawn box: content-box + 2×12px padding + 2×1px border |
+| first why-empty tile | `height` | `55.7812px` | `81.7812px` | = drawn box: content-box + 2×12px padding + 2×1px border |
 | first why-empty tile | `padding` | `12px` | `12px` | = |
 | first why-empty tile | `border-radius` | `10px` | `10px` | = |
 | first why-empty tile | `font-size` | `14px` | `14px` | = |
