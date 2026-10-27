@@ -89,7 +89,8 @@ describe('the Systeme page', () => {
         const npmShown = ns[0]! - systems.packages.filter((k) => k.ecosystem === 'composer').length;
         await left.locator('[role="checkbox"][data-eco="npm"]').click();
         expect((await count(page))[0]).toBe(ns[0]! - npmShown);
-        expect(await page.locator('#sy-bar .sy-active').allTextContents()).toEqual(['ohne npm ×']);
+        // The handover shows the fixtures workspace that is off by default as an active chip too.
+        expect(await page.locator('#sy-bar .sy-active').allTextContents()).toEqual(['ohne npm ×', 'ohne tests/fixtures/* ×']);
         await page.locator('.sy-reset').click();
         expect((await count(page))[0]).toBe(ns[0]);
         expect(errors).toEqual([]);

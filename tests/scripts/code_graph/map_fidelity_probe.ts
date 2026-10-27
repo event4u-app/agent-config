@@ -286,7 +286,46 @@ async function probePages(browser: Browser, built: Built): Promise<unknown> {
     return out;
 }
 
-export const PROBES: Record<string, (b: Browser, built: Built) => Promise<unknown>> = { tokens: probeTokens, shell: probeShell, overview: probeOverview, pages: probePages };
+const SY_LENSES: Array<[string, string]> = [['overview', 'Übersicht'], ['pk', 'Pakete'], ['deps', 'Abhängigkeiten'], ['rt', 'Runtimes'], ['find', 'Befunde'], ['br', 'Branches']];
+const SY_SEL = {
+    design: { tab: '[role="tablist"][aria-label="Ansicht"] [role="tab"][aria-selected="true"]', pm: 'aside[aria-label="Filter"] [role="checkbox"]', st: '[role="radiogroup"][aria-label="Status"] [aria-checked="true"]', seg: '[role="radiogroup"][aria-label="Scope"] [aria-checked="true"]',
+        sw: 'aside[aria-label="Filter"] [role="switch"]', kpi: 'main div[style*="minmax(104px"] > button', row: 'main button.pkgrid', hop: 'main button[style*="2px solid var(--brand)"]', card: 'main div[style*="border-radius: 12px"]', back: 'nav[aria-label="Verlauf"] button[aria-label="Zurück"]', step: 'nav[aria-label="Verlauf"] button[aria-current="page"]', count: 'main span.mono[style*="font-weight: 600"]' },
+    build: { tab: '#av-bar [role="tab"][aria-selected="true"]', pm: '#av-left [role="checkbox"]', st: '#av-left [role="radiogroup"][aria-label="Status"] [aria-checked="true"]', seg: '#av-left [role="radiogroup"][aria-label="Scope"] [aria-checked="true"]',
+        sw: '#av-left [role="switch"]', kpi: '#sy-kpis .sy-kpi', row: '#sy-list .gt-row', hop: '#sy-why .sy-hop.last', card: '#av-main .sy-box', back: '#sy-bar .hist-back', step: '#sy-bar .hist-step[aria-current="page"]', count: '#sy-count' },
+};
+/** Probe `systems`: the Systeme page per lens against the handover, which was drawn from this repository's own systems.json. */
+async function probeSystems(browser: Browser, built: Built): Promise<unknown> {
+    const out: Record<string, unknown> = {};
+    for (const theme of ['dark', 'light'] as const) {
+        for (const width of WIDTHS) {
+            const d = await openDesign(browser, 'p08/Systems.dc.html', width, theme);
+            const b = await openBuilt(browser, built.real, '#/systems', width, theme);
+            const cell: Record<string, unknown> = {};
+            for (const [lensId, label] of SY_LENSES) {
+                await d.locator('[role="tablist"][aria-label="Ansicht"] [role="tab"]', { hasText: label }).first().click();
+                await b.locator(`[data-lens="${lensId}"]`).click();
+                await d.waitForTimeout(150);
+                const row: Record<string, unknown> = {};
+                for (const [side, page] of [['design', d], ['build', b]] as const) {
+                    const sel = SY_SEL[side];
+                    row[side] = {
+                        overflow: await overflowAt(page),
+                        landmarks: width === 1440 && theme === 'dark' ? await pageLandmarks(page) : undefined,
+                        styles: width === 1440 ? await computedAt(page, Object.values(sel), STYLE_PROPS) : undefined,
+                        text: width === 1440 && theme === 'dark' ? await page.evaluate((s) => { const m = document.querySelector(s); return m ? (m as HTMLElement).innerText.replace(/\s+/g, ' ').slice(0, 1600) : null; }, side === 'design' ? 'main' : '#av-main') : undefined,
+                    };
+                }
+                cell[lensId] = row;
+            }
+            out[`${theme}_${width}`] = cell;
+            await d.close();
+            await b.close();
+        }
+    }
+    return out;
+}
+
+export const PROBES: Record<string, (b: Browser, built: Built) => Promise<unknown>> = { tokens: probeTokens, shell: probeShell, overview: probeOverview, pages: probePages, systems: probeSystems };
 
 if (process.argv[1] && /map_fidelity_probe\.ts$/.test(process.argv[1])) {
     const [name, out] = process.argv.slice(2);

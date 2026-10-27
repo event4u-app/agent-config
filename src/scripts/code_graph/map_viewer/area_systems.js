@@ -49,7 +49,7 @@ extendStrings({
         sFxNoteOn: function (a, b) { return 'All ' + a + ' findings including ' + b + ' from test fixtures (sample repositories, no product code).'; }, sFxNoteOff: function (b, a, c) { return b + ' of ' + a + ' findings come from test fixtures and are hidden. Shown: ' + c + ' from the product.'; },
         sFxShow: 'Show fixtures', sFxHide: 'Hide fixtures', sAdvice: 'advice', sCandAdvice: 'candidate · advice', sProduct: 'Product', sProposal: function (f) { return 'Proposal: ' + f; },
         sMapKind: 'Map kind', sCommitted: 'Committed map', sLocal: 'Local with --branches', sBrNote: 'Branch is a global context – shown here because only Systems, Code and Data have branch facts.',
-        sSnapH: function (c) { return 'Snapshot of commit ' + c + ' · branch state not included'; }, sSnapB: 'Branch names and dates are state of this machine. So they stay out of a map that is committed (D17). Locally: ', sSnapB2: ' adds them. The commands ', sSnapB3: ' always answer.',
+        sSnapH: function (c) { return 'Snapshot of commit ' + c + ' · branch state not included'; }, sSnapB: 'Branch names and dates are state of this machine. So they stay out of a map that is committed (D17). Locally: ', sSnapB2: ' adds them. The commands ', sSnapB3: ' always answer.', sAnd: ' and ',
         sCan: 'Can show branch differences', sCanT: 'Code: files, symbols · Systems: direct packages ± and versions · Data: tables, columns', sCannot: 'No branch facts', sCannotT: 'Edges, areas, use in code, findings, runtimes, interfaces, runtime, delivery',
         sDetailOpen: 'Open dependencies & use →', sFixNever: function (f) { return 'Proposal, never applied: ' + f; }, sWitnessCap: 'Witness', sIndexOnly: 'index only', sWitnessNote: 'Not yet confirmed against the file. Rung T1 = read from the lockfile or manifest.',
         sOnBranches: 'On branches', sOnBranchesNone: 'needs a local map with --branches (the branch list is not in this map)',
@@ -99,7 +99,7 @@ extendStrings({
         sFxNoteOn: function (a, b) { return 'Alle ' + a + ' Befunde inklusive ' + b + ' aus Test-Fixtures (Beispiel-Repos, kein Produktcode).'; }, sFxNoteOff: function (b, a, c) { return b + ' von ' + a + ' Befunden stammen aus Test-Fixtures und sind ausgeblendet. Gezeigt: ' + c + ' aus dem Produkt.'; },
         sFxShow: 'Fixtures einblenden', sFxHide: 'Fixtures ausblenden', sAdvice: 'advice', sCandAdvice: 'Kandidat · advice', sProduct: 'Produkt', sProposal: function (f) { return 'Vorschlag: ' + f; },
         sMapKind: 'Map-Art', sCommitted: 'Committete Map', sLocal: 'Lokal mit --branches', sBrNote: 'Branch ist ein globaler Kontext – hier gezeigt, weil nur Systeme, Code und Data Branch-Fakten haben.',
-        sSnapH: function (c) { return 'Snapshot von Commit ' + c + ' · Branch-Zustand nicht enthalten'; }, sSnapB: 'Branch-Namen und -Daten sind Zustand dieses Rechners. Darum bleiben sie aus einer Map, die committet wird (D17). Lokal: ', sSnapB2: ' nimmt sie auf. Die Befehle ', sSnapB3: ' antworten immer.',
+        sSnapH: function (c) { return 'Snapshot von Commit ' + c + ' · Branch-Zustand nicht enthalten'; }, sSnapB: 'Branch-Namen und -Daten sind Zustand dieses Rechners. Darum bleiben sie aus einer Map, die committet wird (D17). Lokal: ', sSnapB2: ' nimmt sie auf. Die Befehle ', sSnapB3: ' antworten immer.', sAnd: ' und ',
         sCan: 'Kann Branch-Unterschiede zeigen', sCanT: 'Code: Dateien, Symbole · Systeme: direkte Pakete ± und Versionen · Data: Tabellen, Spalten', sCannot: 'Keine Branch-Fakten', sCannotT: 'Kanten, Areas, Nutzung im Code, Befunde, Runtimes, Interfaces, Runtime, Delivery',
         sDetailOpen: 'Abhängigkeiten & Nutzung öffnen →', sFixNever: function (f) { return 'Vorschlag, nie angewendet: ' + f; }, sWitnessCap: 'Zeuge', sIndexOnly: 'index only', sWitnessNote: 'Noch nicht gegen die Datei bestätigt. Stufe T1 = aus Lockfile oder Manifest gelesen.',
         sOnBranches: 'Auf Branches', sOnBranchesNone: 'braucht eine lokale Map mit --branches (die Branch-Liste steht nicht in dieser Map)',
@@ -164,7 +164,8 @@ function syRowsOf(p) {
     syCache = { p: p, rows: rows, byLabel: byLabel };
     return rows;
 }
-function syWorkspaces(rows) { var s = []; rows.forEach(function (r) { if (s.indexOf(r.ws) < 0) s.push(r.ws); }); return s.sort(function (a, b) { return a === '.' ? -1 : b === '.' ? 1 : a === SY_FXW ? 1 : b === SY_FXW ? -1 : a < b ? -1 : 1; }); }
+/** Workspaces by package count, as the handover lists them; the test fixtures last. */
+function syWorkspaces(rows) { var n = Object.create(null); rows.forEach(function (r) { n[r.ws] = (n[r.ws] || 0) + 1; }); return Object.keys(n).sort(function (a, b) { return (a === SY_FXW) - (b === SY_FXW) || n[b] - n[a] || (a < b ? -1 : 1); }); }
 /** npm first, then Composer, then any other ecosystem by name — the handover's order. */
 function syEcos(rows) { var s = []; rows.forEach(function (r) { if (s.indexOf(r.eco) < 0) s.push(r.eco); }); var rank = { npm: 0, composer: 1 }; return s.sort(function (a, b) { return (a in rank ? rank[a] : 2) - (b in rank ? rank[b] : 2) || (a < b ? -1 : 1); }); }
 
@@ -297,9 +298,8 @@ function syFilter(p, rows, left) {
 
 function syActiveChips(rows, f) {
     var out = [];
-    var f0 = syF0(rows);
     Object.keys(f.pm).forEach(function (k) { if (!f.pm[k]) out.push([t('sWithout')((SY_PM[k] || [0, k])[1]), function () { var m = Object.assign({}, syState.f.pm); m[k] = true; sySetF({ pm: m }); }]); });
-    Object.keys(f.ws).forEach(function (w) { if (!f.ws[w] && f0.ws[w]) out.push([t('sWithout')(w), function () { var m = Object.assign({}, syState.f.ws); m[w] = true; sySetF({ ws: m }); }]); });
+    Object.keys(f.ws).forEach(function (w) { if (!f.ws[w]) out.push([t('sWithout')(w), function () { var m = Object.assign({}, syState.f.ws); m[w] = true; sySetF({ ws: m }); }]); });
     var lab = { scope: { prod: 'prod', dev: 'dev' }, origin: { direct: t('sDirectS'), trans: t('sTransS') }, lock: { locked: t('sLocked'), unlocked: t('sUnlockedS') },
         depth: { '1': t('sDepth').split(' (')[0] + ' 1', '2': t('sDepth').split(' (')[0] + ' 2', '3': t('sDepth').split(' (')[0] + ' 3', '4': t('sDepth').split(' (')[0] + ' ≥ 4' }, by: { '0': '0', '1': '1', '2': '2–4', '5': '≥ 5' } };
     Object.keys(lab).forEach(function (k) { if (f[k] !== 'all') out.push([k === 'by' ? t('sBy').split(' …')[0] + ' ' + lab.by[f.by] : lab[k][f[k]], function () { var x = {}; x[k] = 'all'; sySetF(x); }]); });
@@ -664,12 +664,13 @@ function syFindings(p, rows, main) {
     var fb = el('button', { type: 'button', class: 'sy-btn' }, fxOn ? t('sFxHide') : t('sFxShow'));
     fb.addEventListener('click', function () { var m = Object.assign({}, syState.f.ws); m[SY_FXW] = !fxOn; sySetF({ ws: m }); });
     main.appendChild(add(note, fb));
-    if (!syState.open) { syState.open = {}; var first = groups.filter(function (g) { return g.id !== 'SY-1'; })[0]; if (first) syState.open[first.id] = true; }
+    // The handover opens the largest group that is not the removal candidates.
+    if (!syState.open) { syState.open = {}; var big = groups.filter(function (g) { return g.id !== 'SY-1'; }).sort(function (a, b) { return b.items.length - a.items.length; })[0]; if (big) syState.open[big.id] = true; }
     groups.forEach(function (g) {
         var open = !!syState.open[g.id];
         var box = el('div', { class: 'sy-box sy-fgrp', 'data-rule': g.id });
         var h = el('button', { type: 'button', class: 'sy-fgh', 'aria-expanded': String(open) });
-        add(h, el('span', { class: 'mono sy-b' }, g.id), el('span', { class: 'sy-flex' }, g.title), stChip(g.id === 'SY-1' ? t('sCandAdvice') : (t('sevNames')[g.sev] || g.sev) + ' · ' + t('sAdvice'), g.id === 'SY-1' ? 'sy-line' : 'warn'), el('span', { class: 'mono sy-fgn' }, num(g.items.length)), el('span', { class: 'muted', 'aria-hidden': 'true' }, open ? '▾' : '▸'));
+        add(h, el('span', { class: 'mono sy-b' }, g.id), el('span', { class: 'sy-flex' }, g.title), stChip(g.id === 'SY-1' ? t('sCandAdvice') : g.sev + ' · ' + t('sAdvice'), g.id === 'SY-1' ? 'sy-line' : 'warn'), el('span', { class: 'mono sy-fgn' }, num(g.items.length)), el('span', { class: 'muted', 'aria-hidden': 'true' }, open ? '▾' : '▸'));
         h.addEventListener('click', function () { syState.open[g.id] = !open; renderAreaPage('systems', current.item); });
         box.appendChild(h);
         if (open) {
@@ -701,7 +702,7 @@ function syBranches(main) {
     if (!local) {
         var pin = model.pin || { commit: meta.commit };
         var card = add(el('div', { class: 'sy-snap', id: 'sy-snap' }), el('b', null, t('sSnapH')(String(pin.commit || '').slice(0, 8))),
-            add(el('span', { class: 'soft' }), document.createTextNode(t('sSnapB')), el('span', { class: 'mono' }, 'code-graph map --branches'), document.createTextNode(t('sSnapB2')), el('span', { class: 'mono' }, 'branches'), document.createTextNode(', '), el('span', { class: 'mono' }, 'branch-diff A B'), document.createTextNode(' · '), el('span', { class: 'mono' }, 'on-branches <paket>'), document.createTextNode(t('sSnapB3'))));
+            add(el('span', { class: 'soft' }), document.createTextNode(t('sSnapB')), el('span', { class: 'mono' }, 'code-graph map --branches'), document.createTextNode(t('sSnapB2')), el('span', { class: 'mono' }, 'branches'), document.createTextNode(', '), el('span', { class: 'mono' }, 'branch-diff A B'), document.createTextNode(t('sAnd')), el('span', { class: 'mono' }, 'on-branches <paket>'), document.createTextNode(t('sSnapB3'))));
         card.appendChild(add(el('div', { class: 'sy-snapgrid' }), add(el('div', { class: 'yes' }), el('b', null, t('sCan')), el('br'), el('span', { class: 'soft' }, t('sCanT'))), add(el('div', { class: 'no' }), el('b', null, t('sCannot')), el('br'), el('span', { class: 'soft' }, t('sCannotT')))));
         main.appendChild(card);
         return;
