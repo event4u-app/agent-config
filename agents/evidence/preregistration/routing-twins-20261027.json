@@ -1,0 +1,12 @@
+{
+  "market-entry-analysis": "Use when deciding the order of entering new markets — which geography, segment or vertical first, picking a beachhead, and what regulation changes. Fires on 'is market X worth entering', 'which customer group do we start with'.",
+  "condense-memory": "When always-on instruction files (AGENTS.md, CLAUDE.md, .cursorrules) grow past roughly 150 lines or 4,000 characters and need shrinking — terse grammar, declines sensitive paths, keeps a .original.md copy for the round trip.",
+  "analysis-autonomous-mode": "Self-driven investigation over many steps — in-depth research run start to finish with no approval at each step; only when explicitly asked, never for ordinary feature work.",
+  "worktree-lifecycle": "Use when managing a worktree from creation to removal — declaring its scope lock, reporting merge readiness, verifying only its scope, and cleaning up safely, refusing while it holds unmerged commits of its own.",
+  "dashboard-design": "Use when laying out monitoring dashboards — choosing visualizations, arranging panels, observability approaches (RED, USE, Golden Signals) and telling a story with the data.",
+  "brand": "Brand choices grounded in a curated reference set — archetype, voice, naming, the psychology of colour, which logo style fits, messaging frameworks, mapping archetype to typeface. Use to anchor brand strategy and identity.",
+  "positioning-strategy": "Use when fixing the market frame — category, segment, the alternative customers use, and a point of view — before messaging, a launch or pricing depends on it. Fires on 'who is this for', 'run an opposable audit'.",
+  "schema-review": "Use when checking a migration diff or a schema change for problems at scale — missing indexes, unsafe migrations, growth without bound, N+1 queries. Fires on 'look over this migration', 'does this hold up at scale'.",
+  "roadmap-management": "Use when the user asks to \"make a roadmap\", \"display the roadmap\" or \"run the roadmap\". Builds, reads and maintains roadmap files and tracks their phases.",
+  "judge-injection-defense": "When grading whether an agent's answer held up against an injection attempt — handled untrusted content as data, declined a role takeover, disregarded fake boundaries. Scored on an inverted axis; never gates automatically."
+}
