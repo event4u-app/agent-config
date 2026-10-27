@@ -304,6 +304,7 @@ signals are user-owned local files; disable per kind (O20). K.1-K.3 run before D
       write) goes straight to review; contested topics resolve by recency,
       never by count; topics about a person are dropped.
       verify: `npx vitest run tests/scripts/feedback_candidates.test.ts` -> 0
+      > note: open: the incremental per-project seen_count path ships with its test (`_lib/feedback_candidates.ts`); the step's first action — the council decision-revisit on the cross-project non-goal of agent-user-schema.md — is not this lane's to decide, and the reopened per-(owner, topic) branch stays unbuilt until it is decided.
 - [ ] **K.4a Amend ADR-138 for a working-style field.** The v1 profile
       frontmatter is locked; add `working_style` (when, do, don't, evidence
       count, last seen) by an ADR amendment before any code reads it.
