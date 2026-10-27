@@ -128,7 +128,7 @@
             "entry": "src/scripts/_lib/design_consistency_pass.ts",
             "max_bytes": 43000,
             "registered_at": "2026-10-27",
-            "derivation": "Measured 39,360 bytes on 2026-10-27: the consistency check `design-pass` runs on a UI write (the `ui:audit` computation, the control-role parser, the two consistency rules, the shadow recorder, and the uncommitted-primitive stamp ratification round 5 asked for, which took it from 36,545 B). The ceiling is that reading plus about 9 %, rounded, with no growth queued: no further consistency rule is planned, and the box-metrics rule already ships in it. Required on a UI write alone, so no other dispatch parses it; the bundle carries only its loader and two call sites, the 2026-10-27 raise of `max_bytes`. A missing or mis-digested chunk costs the consistency finding, never the event (`design_consistency_loader.ts`)."
+            "derivation": "Measured 39,343 bytes on 2026-10-27: the consistency check `design-pass` runs on a UI write (the `ui:audit` computation, the control-role parser, the two consistency rules, the shadow recorder, and the uncommitted-primitive stamp ratification round 5 asked for, which took it from 36,545 B). The ceiling is that reading plus about 9 %, rounded, with no growth queued: no further consistency rule is planned, and the box-metrics rule already ships in it. Required on a UI write alone, so no other dispatch parses it; the bundle carries only its loader and two call sites, the 2026-10-27 raise of `max_bytes`. A missing or mis-digested chunk costs the consistency finding, never the event (`design_consistency_loader.ts`)."
         },
         {
             "entry": "src/scripts/chat_history.ts",
