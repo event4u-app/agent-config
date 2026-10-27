@@ -47,13 +47,19 @@ describe('regressionHypotheses', () => {
     ];
     const hs = regressionHypotheses({ edges }, ['cart#checkout'], changes, '2026-09-10');
 
-    it('ranks by hop distance, then time to first seen, then fix-induced', () => {
+    it('ranks by hop distance, then time to first seen, then fix-induced: the calculation fix ranks first', () => {
         expect(hs.map((h) => [h.sha, h.hops])).toEqual([
-            ['dddd04', 1],
             ['bbbb02', 2],
             ['cccc03', 2],
+            ['dddd04', 2],
             ['aaaa01', 3],
         ]);
+    });
+
+    it('a read→write join costs two hops, so it is cut where a call path of the same length is not', () => {
+        expect(reach(edges, 'cart#checkout', 1).has('import#save')).toBe(false);
+        expect(reach(edges, 'cart#checkout', 1).has('calc#total')).toBe(true);
+        expect(regressionHypotheses({ edges }, ['cart#checkout'], changes, '2026-09-10').find((h) => h.sha === 'dddd04')?.path.map((p) => p.relation)).toEqual(['reads', 'writes']);
     });
 
     it('drops changes beyond k hops and changes the frames never reach', () => {

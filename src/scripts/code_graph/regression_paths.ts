@@ -53,7 +53,7 @@ const days = (from: string, to: string): number | null => {
     return Number.isFinite(d) ? Math.round(d) : null;
 };
 
-/** Shortest path from `start` to every node within `k` hops; one hop is one call/use or one read→write join. */
+/** Shortest path from `start` to every node within `k` hops; a call or use is one hop, a read→write join two. */
 export function reach(edges: readonly CodeEdge[], start: string, k: number): Map<string, PathStep[]> {
     const out = new Map<string, CodeEdge[]>();
     const readsOf = new Map<string, CodeEdge[]>();
@@ -63,27 +63,29 @@ export function reach(edges: readonly CodeEdge[], start: string, k: number): Map
         else if (e.relation === 'reads') (readsOf.get(e.source) ?? readsOf.set(e.source, []).get(e.source))?.push(e);
         else if (e.relation === 'writes') (writersOf.get(e.target) ?? writersOf.set(e.target, []).get(e.target))?.push(e);
     }
+    // A hop is one edge walked, so a read→write join through data costs two:
+    // coupling through a table is weaker evidence than a direct call.
     const seen = new Map<string, PathStep[]>([[start, []]]);
-    let frontier = [start];
-    for (let hop = 1; hop <= k && frontier.length; hop++) {
-        const next: string[] = [];
-        for (const n of frontier) {
+    const buckets: string[][] = [[start]];
+    for (let cost = 0; cost < k && cost < buckets.length; cost++) {
+        for (const n of buckets[cost] ?? []) {
             const base = seen.get(n) as PathStep[];
+            if (base.length !== cost) continue;
             const moves: Array<[string, PathStep[]]> = [];
             for (const e of out.get(n) ?? []) moves.push([e.target, [step(e)]]);
             for (const r of readsOf.get(n) ?? []) for (const w of writersOf.get(r.target) ?? []) moves.push([w.source, [step(r), step(w)]]);
             for (const [to, steps] of moves) {
-                if (seen.has(to)) continue;
+                const c = cost + steps.length;
+                if (c > k || (seen.has(to) && (seen.get(to) as PathStep[]).length <= c)) continue;
                 seen.set(to, [...base, ...steps]);
-                next.push(to);
+                (buckets[c] ??= []).push(to);
             }
         }
-        frontier = next;
     }
     return seen;
 }
 
-const hopsOf = (p: PathStep[]): number => p.filter((s) => s.relation !== 'writes').length;
+const hopsOf = (p: PathStep[]): number => p.length;
 
 export function regressionHypotheses(graph: { edges: readonly CodeEdge[] }, frameSymbols: readonly string[], changes: readonly ChangeInWindow[], firstSeen: string, k = DEFAULT_HOPS): RegressionHypothesis[] {
     const best = new Map<string, RegressionHypothesis>();
