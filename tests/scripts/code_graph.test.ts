@@ -36,6 +36,7 @@ import { sanitizeLabel } from '../../src/scripts/code_graph/sanitize.js';
 import { type CodeEdge, type CodeGraph, type CodeNode, EXPECTED_GRAMMAR_ABI, type Lang } from '../../src/scripts/code_graph/types.js';
 import { reviewRisk } from '../../src/scripts/code_graph/review_risk.js';
 import { contextPack } from '../../src/scripts/code_graph/verify/pack.js';
+import { impact, testsForAnswer } from '../../src/scripts/code_graph/verbs.js';
 import { validateGraph } from '../../src/scripts/code_graph/validate.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -577,6 +578,44 @@ describe('3.1 — the edge acceptance policy in every consumer', () => {
         expect(all.filter((l) => /\(guess: (name-lookup|dynamic)\)/.test(l))).toHaveLength(2);
         expect(reviewRisk(root, graph, 'HEAD', [{ file: 't.ts', from: 1, to: 1 }], undefined, { includeGuesses: true }).terms.find((t) => t.term === 'callers')!.items).toHaveLength(3);
         expect(contextPack(g, root, file, 'Target', { includeGuesses: true }).items.filter((i) => i.relation.includes('(guess:'))).toHaveLength(2);
+        g.close();
+    });
+});
+
+describe('4.1 — a partial parse is visible', () => {
+    async function partialFixture() {
+        const files: SourceFile[] = [
+            { path: 'app/broken.ts', source: 'export function brokenFn() { return 1; }\nexport function half( {\n' },
+            { path: 'app/ok.ts', source: "import { brokenFn } from './broken';\nexport function okFn() { return brokenFn(); }\n" },
+            { path: 'tests/broken.test.ts', source: "import { brokenFn } from '../app/broken';\nbrokenFn();\n" },
+        ];
+        const extracts = [];
+        for (const f of files) extracts.push(await extractFile(f.path, f.source, 'typescript'));
+        const graph = buildGraph(files, extracts);
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-partial-'));
+        const file = path.join(root, 'graph.json');
+        fs.writeFileSync(file, serializeGraph(graph));
+        return { root, graph, g: loadGraph(file, 'native:partial'), extracts };
+    }
+
+    it('partial_files names the file that parsed with errors in impact, tests-for and review-risk', async () => {
+        const { root, graph, g, extracts } = await partialFixture();
+        expect(extracts[0]?.parseError).toBe(true);
+        expect(graph.nodes.find((n) => n.id === 'app/broken.ts')?.partial).toBe(true);
+        expect(graph.nodes.find((n) => n.id === 'app/ok.ts')?.partial).toBeUndefined();
+
+        const hit = impact(g, ['app/broken.ts'], 'fresh');
+        expect(hit.partial_files).toEqual(['app/broken.ts']);
+        expect(hit.complete).toBe(false);
+        expect(testsForAnswer(g, 'brokenFn', 'fresh').partial_files).toEqual(['app/broken.ts']);
+        const risk = reviewRisk(root, graph, 'HEAD', [{ file: 'app/broken.ts', from: 1, to: 2 }]);
+        expect(risk.partial_files).toEqual(['app/broken.ts']);
+        expect(risk.complete).toBe(false);
+
+        // A file whose own parse was clean, and which reaches nothing partial, is complete.
+        const clean = impact(g, ['tests/broken.test.ts'], 'fresh');
+        expect(clean.partial_files).toEqual([]);
+        expect(clean.complete).toBe(true);
         g.close();
     });
 });

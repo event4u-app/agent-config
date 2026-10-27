@@ -213,12 +213,13 @@ Added 2026-10-27 from round `inbox-2026-10-bf`. Order binds: honesty before cost
 before consumption, because every Phase 5 consumer and every 3.5 arm reads these
 answers. Each step is fixture-gated (K5).
 
-- [ ] 4.1 **A partial parse is visible.** `parseError` is set in `extract.ts` and read
+- [x] 4.1 **A partial parse is visible.** `parseError` is set in `extract.ts` and read
       by nothing outside tests, so a file parsed with errors counts as fully known. It
       lands on the file node; `impact`, `review-risk` and `tests-for` list such files in
       `partial_files` beside `unresolved_files` / `not_indexed_files`, and their
       dependents are not reported complete.
       verify: `npx vitest run tests/scripts/code_graph.test.ts -t 'partial_files'` -> 0
+      > note: the SQLite twin has no `partial` column yet, so on the indexed read path (graphs ≥ 50k edges) `impact` and `tests-for` cannot see the flag; the column costs ~85 bytes in the hook bundle, which has 1 byte of headroom (2026-10-27) — it needs a `raise_log` entry first.
 - [ ] 4.2 **A skipped lane reads `unknown`, never `0`.** The history lane skips a
       shallow clone with a reason (`lanes/history/history.ts`), but `lane_runner.ts`
       strips `skipped` from `lanes_run` and `LaneRunRecord` (`types.ts`) carries only

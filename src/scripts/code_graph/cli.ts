@@ -182,8 +182,7 @@ import {
     impact,
     type ImpactResult,
     repoEntryPoints,
-    testsFor,
-    type TestsForResult,
+    testsForAnswer,
     untested,
     type UntestedResult,
 } from './verbs.js';
@@ -569,6 +568,7 @@ function cmdImpact(argv: string[]): number {
         process.stdout.write(`changed files: ${files.length} · seeds: ${res.seeds.length}\n`);
         if (res.unresolved_files.length)
             process.stdout.write(`unresolved changed files (no node in the graph): ${res.unresolved_files.join(', ')}\n`);
+        if (res.partial_files.length) process.stdout.write(`partial files (parsed with errors, not complete): ${res.partial_files.join(', ')}\n`);
         process.stdout.write(`dependents (${res.dependents.length}):\n`);
         for (const d of res.dependents) process.stdout.write(`  ${d}\n`);
         process.stdout.write(`test files (${res.test_files.length}):\n`);
@@ -651,9 +651,10 @@ function cmdTestsFor(argv: string[]): number {
         return 1;
     }
     try {
-        const res: TestsForResult = testsFor(r.g, symbol, stateOf(argv, r.g.answeredBy));
+        const res = testsForAnswer(r.g, symbol, stateOf(argv, r.g.answeredBy));
         renderEnvelope(res);
         process.stdout.write(`seeds: ${res.seeds.join(', ') || '(none)'}\n`);
+        if (res.partial_files.length) process.stdout.write(`partial files (parsed with errors, not complete): ${res.partial_files.join(', ')}\n`);
         process.stdout.write(`tests (${res.tests.length}):\n`);
         for (const t of res.tests) process.stdout.write(`  ${t}\n`);
         renderReads(res.recommended_reads);

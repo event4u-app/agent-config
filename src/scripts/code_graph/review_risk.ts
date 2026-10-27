@@ -72,6 +72,10 @@ export interface ReviewRisk {
     seeds: RiskItem[];
     terms: Array<{ term: RiskTerm; weight: number; contribution: number; items: RiskItem[] }>;
     total: number;
+    /** Changed or calling files that parsed with errors: their facts are a lower bound. */
+    partial_files: string[];
+    /** False while any file the sum rests on is partial. */
+    complete: boolean;
     /** What the sum was computed from. */
     basis: { graph_checksum: string; weights: Readonly<Record<RiskTerm, number>> };
 }
@@ -264,6 +268,9 @@ export function reviewRisk(
         pipelines,
     };
     const terms = RISK_TERMS.map((term) => ({ term, weight: weights[term], items: lists[term], contribution: lists[term].length * weights[term] }));
+    const partial = [...new Set([...changed, ...[...callers.keys()].map((id) => byId.get(id)?.source_file ?? '')])]
+        .filter((f) => byId.get(f)?.partial === true)
+        .sort();
     return {
         rev,
         changed,
@@ -271,6 +278,8 @@ export function reviewRisk(
         seeds,
         terms,
         total: terms.reduce((n, t) => n + t.contribution, 0),
+        partial_files: partial,
+        complete: partial.length === 0,
         basis: { graph_checksum: graph.source_checksum, weights },
     };
 }
@@ -281,6 +290,7 @@ export function renderReviewRisk(r: ReviewRisk, listCap = 20): string[] {
     const lines = [
         `review risk vs ${r.rev}: ${r.total} = ${r.terms.map((t) => `${t.term} ${t.items.length}×${t.weight}`).join(' + ')}`,
         `basis: graph ${r.basis.graph_checksum.slice(0, 12)} · ${r.changed.length} changed file(s) · ${r.seeds.length} changed symbol(s)`,
+        ...(r.partial_files.length ? [`partial files (parsed with errors, facts are a lower bound): ${r.partial_files.join(', ')}`] : []),
         `changed symbols (${r.seeds.length}):`,
         ...r.seeds.slice(0, listCap).map((s) => `  ${s.label}  at ${at(s.witness)}`),
     ];

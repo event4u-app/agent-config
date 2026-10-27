@@ -78,7 +78,7 @@ import {
     entryPointsFromFile,
     impact,
     repoEntryPoints,
-    testsFor,
+    testsForAnswer,
     untested,
 } from '../code_graph/verbs.js';
 import { areaReport, graphGeneration, readMap } from '../code_graph/map.js';
@@ -294,7 +294,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             const symbol = str(args, 'symbol');
             if (symbol === '') return { status: 'error', error: 'symbol must be a non-empty string' };
             const state = graphState(root, graphHome(root).cachePath);
-            return withGraph(root, (g) => ({ ...testsFor(g, symbol, state) }));
+            return withGraph(root, (g) => ({ ...testsForAnswer(g, symbol, state) }));
         },
     },
 

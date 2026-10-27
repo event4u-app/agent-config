@@ -1226,6 +1226,7 @@ export function serializeGraph(g: CodeGraph): string {
         kind: n.kind,
         source_file: n.source_file,
         source_location: n.source_location,
+        ...(n.partial ? { partial: true } : {}),
         ...(n.fact ? { fact: factJson(n.fact) } : {}),
     });
     const edge = (e: CodeEdge) => {

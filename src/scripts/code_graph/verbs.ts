@@ -188,6 +188,10 @@ export interface ImpactResult extends VerbReport {
     unresolved_files: string[];
     /** Touched files in a language the engine does not index. Not a gap. */
     not_indexed_files: string[];
+    /** Changed or reached files that parsed with errors: what they declare is a lower bound. */
+    partial_files: string[];
+    /** False while any file the answer rests on is partial, unresolved or refused. */
+    complete: boolean;
     /** Reverse-reachable callers/dependents over accepted edges, sorted. */
     dependents: string[];
     /**
@@ -274,6 +278,8 @@ export function impact(
             seeds: [],
             unresolved_files: [],
             not_indexed_files: [],
+            partial_files: [],
+            complete: false,
             dependents: [],
             reached: [],
             test_files: [],
@@ -316,6 +322,7 @@ export function impact(
     const deps = [...reached.keys()].sort();
     const fileOf = (id: string): string => g.byId.get(id)?.source_file ?? '';
     const testFiles = [...new Set(deps.map(fileOf).filter((f) => f !== '' && isTest(f)))].sort();
+    const partial = partialFiles(g, [...files, ...deps.map(fileOf)]);
     return {
         source: g.source,
         state,
@@ -326,6 +333,8 @@ export function impact(
         seeds,
         unresolved_files: unresolved,
         not_indexed_files: not_indexed,
+        partial_files: partial,
+        complete: partial.length === 0 && unresolved.length === 0,
         dependents: deps,
         reached: deps.map((d) => reached.get(d) as ReachedNode),
         test_files: testFiles,
@@ -333,6 +342,21 @@ export function impact(
         lines: deps.map((d) => `${d}`),
         recommended_reads: dedupeReads(deps.map((d) => readFor(g, d))),
     };
+}
+
+/** The files among `files` whose file node parsed with errors, sorted and unique. */
+export function partialFiles(g: LoadedGraph, files: readonly string[]): string[] {
+    return [...new Set(files)].filter((f) => f !== '' && g.byId.get(f)?.partial === true).sort();
+}
+
+/**
+ * `tests-for` as the CLI and the MCP tool answer it: {@link testsFor} plus the
+ * partial files it rests on. A wrapper, so the walk `untested` reuses stays as it is.
+ */
+export function testsForAnswer(g: LoadedGraph, symbol: string, state: GraphState): TestsForResult & { partial_files: string[]; complete: boolean } {
+    const r = testsFor(g, symbol, state);
+    const partial = partialFiles(g, [...r.seeds, ...r.tests].map((id) => g.byId.get(id)?.source_file ?? ''));
+    return { ...r, partial_files: partial, complete: partial.length === 0 };
 }
 
 function renderEdge(e: CodeEdge): string {
