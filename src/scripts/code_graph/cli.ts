@@ -113,6 +113,8 @@
  *                                               links and the facts they share, under the
  *                                               user-global map/; refused inside a git work tree
  *
+ *   scope    <path…> [--root P]                which scope a path is in and the rule
+ *                                               that decided (`scope.ts`, `layers.yaml` scope:)
  *   suggest-verb "<question>"                  (Phase 9 D3) print the verb
  *                                               (query/affected/path/explain)
  *                                               a regex table thinks best
@@ -121,6 +123,7 @@
  *                                               never auto-run against a
  *                                               graph.
  */
+import { explainScope, readScopeRules } from './scope.js';
 import { spawnSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
 import * as fs from 'node:fs';
@@ -1362,6 +1365,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'untested') return cmdUntested(argv.slice(1));
         if (sub === 'dead') return cmdDead(argv.slice(1));
         if (sub === 'suggest-verb') return cmdSuggestVerb(argv.slice(1));
+        if (sub === 'scope') return cmdScope(argv.slice(1));
         if (sub === 'lineage' || (sub === 'map' && argv.includes('--lineage')))
             return await lineageMain(sub === 'lineage' ? argv.slice(1) : ['map', ...argv.slice(1)]);
         if (sub === 'map') return await cmdMap(argv.slice(1));
@@ -1372,7 +1376,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'estate') return estateMain(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|review-risk|why|usage|remove-plan|provenance|branches|branch-diff|on-branches|tests-for|untested|dead|confirm|pack|rebuild-diff|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
+                'impact|review-risk|why|usage|remove-plan|provenance|branches|branch-diff|on-branches|tests-for|untested|dead|confirm|pack|rebuild-diff|suggest-verb|scope|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
         );
         return 2;
     } catch (e) {
@@ -1383,6 +1387,17 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         process.stderr.write(`code-graph: internal error: ${(e as Error).message}\n`);
         return 3;
     }
+}
+
+/** `scope <path…> [--root P]` — one line per path: its scope and the rule that decided. */
+function cmdScope(argv: string[]): number {
+    const at = argv.indexOf('--root');
+    const root = at >= 0 ? path.resolve(argv[at + 1] ?? '.') : process.cwd();
+    const paths = argv.filter((a, i) => a !== '--root' && argv[i - 1] !== '--root');
+    if (paths.length === 0) throw new UsageError('scope needs at least one path');
+    const overrides = readScopeRules(path.join(root, 'agents', 'map', 'layers.yaml'));
+    for (const p of paths) process.stdout.write(`${explainScope(path.isAbsolute(p) ? path.relative(root, p) : p, overrides)}\n`);
+    return 0;
 }
 
 const _invokedDirectly = (() => {

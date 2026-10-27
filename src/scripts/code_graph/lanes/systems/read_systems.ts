@@ -15,6 +15,7 @@
  *
  * Offline: files only, no package manager, no registry (K25).
  */
+import { scopeOf } from '../../scope.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -70,12 +71,12 @@ export const FRAMEWORKS: ReadonlySet<string> = new Set([
 const LOCK_NAMES = new Set(['package-lock.json', 'composer.lock', 'pnpm-lock.yaml', 'yarn.lock', 'bun.lock', 'bun.lockb']);
 const DEPTH = 6;
 
-/** A file only tests, fixtures or tooling load: a dev package used there is fine. */
+/** A file only tests, fixtures or tooling load: a dev package used there is fine. Scope decides the first half; the tooling half is no scope. */
 export const isDevPath = (file: string): boolean =>
-    /(^|\/)(tests?|__tests__|spec|specs|e2e|fixtures?|stories|\.storybook|scripts|tools|bin|database\/(seeders|factories))\//.test(file) ||
-    /\.(test|spec|stories|e2e)\.[cm]?[jt]sx?$/.test(file) ||
-    /(^|\/)[^/]*\.config\.[cm]?[jt]s$/.test(file) ||
-    /Test\.php$/.test(file);
+    scopeOf(file) !== 'product' ||
+    /(^|\/)(e2e|stories|\.storybook|scripts|tools|bin|database\/(seeders|factories))\//.test(file) ||
+    /\.(stories|e2e)\.[cm]?[jt]sx?$/.test(file) ||
+    /(^|\/)[^/]*\.config\.[cm]?[jt]s$/.test(file);
 
 const CONFIG_FILE =
     /(^|\/)(\.eslintrc(\.\w+)?|eslint\.config\.\w+|\.prettierrc(\.\w+)?|prettier\.config\.\w+|babel\.config\.\w+|\.babelrc(\.\w+)?|postcss\.config\.\w+|tailwind\.config\.\w+|\.stylelintrc(\.\w+)?|stylelint\.config\.\w+|jest\.config\.\w+|vitest\.config\.\w+|vite\.config\.\w+|webpack\.config\.\w+|rollup\.config\.\w+|tsconfig[\w.-]*\.json|commitlint\.config\.\w+|\.commitlintrc(\.\w+)?|\.lintstagedrc(\.\w+)?|lint-staged\.config\.\w+|phpstan\.neon(\.dist)?|psalm\.xml(\.dist)?|rector\.php|ecs\.php|\.php-cs-fixer(\.dist)?\.php|phpunit\.xml(\.dist)?|playwright\.config\.\w+|nuxt\.config\.\w+|next\.config\.\w+|astro\.config\.\w+|svelte\.config\.\w+|\.mocharc(\.\w+)?|nodemon\.json|\.swcrc|deptrac\.ya?ml|infection\.json(5)?(\.dist)?)$/;

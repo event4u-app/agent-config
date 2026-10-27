@@ -11,7 +11,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { parseCompose } from '../../../_lib/infra_files/compose.js';
 import { isComposeName } from '../../../_lib/infra_files/walk.js';
-import { isDocOrExamplePath, isFixturePath } from '../../fixture_paths.js';
+import { isDocOrExamplePath, isFixturePath } from '../../scope.js';
 import type { LaneFact, LaneOutput, LaneRelation, Witness } from '../lane_fact.js';
 import { scanFile, scanGraphqlDocument, scanSdk, signatureCheckIn, type RawCall, type WebhookRoute } from './call_sites.js';
 import { emptyConfig, isSecretEnvFile, readExampleEnvNames, readLaravelConfig, readSpringConfig, siblingEntries, EXAMPLE_ENV_FILE, type ConfigIndex } from './config.js';

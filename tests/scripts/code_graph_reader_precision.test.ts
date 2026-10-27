@@ -4,7 +4,7 @@ import * as path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 
 import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
-import { isDocOrExamplePath, isFixturePath } from '../../src/scripts/code_graph/fixture_paths.js';
+import { isDocOrExamplePath, isFixturePath } from '../../src/scripts/code_graph/scope.js';
 import { DELIVERY_RULES, readDelivery } from '../../src/scripts/code_graph/lanes/delivery/index.js';
 import { generatedMatcher, readHistory } from '../../src/scripts/code_graph/lanes/history/history.js';
 import { isLocalHost, readInterfaces } from '../../src/scripts/code_graph/lanes/interfaces/index.js';

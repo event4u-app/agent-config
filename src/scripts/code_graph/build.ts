@@ -10,6 +10,7 @@
  * Path confinement: every candidate file is resolved and asserted under the
  * repo root; symlinks are skipped; ids are POSIX-relative. No network, no LLM.
  */
+import { isTestFile } from './scope.js';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -1162,37 +1163,8 @@ function ambiguousTarget(candidates: readonly string[], targetName: string): str
     return `symbol:${targetName}`;
 }
 
-/**
- * Is `relPath` a test file?
- *
- * A deterministic PATH predicate — no content read, no heuristic on the file's
- * body. It is the input to the derived `tests` relation (3.2), so it has to be
- * conservative in one direction only: a subject wrongly classified as a test
- * silently loses its `tests` edges, while a test wrongly classified as a
- * subject would make a test file look like a tested surface. Both are wrong;
- * the second is worse, because `untested` would then report a real subject as
- * covered.
- *
- * The four conventions are the ones this launch set actually uses, and each is
- * anchored rather than substring-matched so a directory called
- * `src/latest/thing.ts` is not a test:
- *
- *   · a `tests/` or `test/` path segment (this repository's own layout);
- *   · a `__tests__/` segment (the JS convention);
- *   · a `.test.` / `.spec.` filename infix (Vitest / Jest / Pest-JS);
- *   · a `Test.php` / `test.php` filename suffix, or a `_test.php` infix
- *     (PHPUnit's `*Test.php` and Go-style `_test` both appear in PHP trees).
- */
-export function isTestFile(relPath: string): boolean {
-    const p = relPath.split(path.sep).join('/');
-    const segments = p.split('/');
-    if (segments.some((seg) => seg === 'tests' || seg === 'test' || seg === '__tests__')) return true;
-    const base = segments[segments.length - 1] ?? '';
-    if (/\.(test|spec)\./i.test(base)) return true;
-    if (/(^|[._-])test\.php$/i.test(base)) return true;
-    if (/Test\.php$/.test(base)) return true;
-    return false;
-}
+/** One classifier decides what a test is (`scope.ts`); re-exported under the name its callers import. */
+export { isTestFile };
 
 /** A fact's fields in a fixed order, attributes sorted, so equal facts serialize to equal bytes. */
 function factJson(f: FactMeta): Record<string, unknown> {

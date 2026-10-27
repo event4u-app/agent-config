@@ -10,6 +10,7 @@
  * What it deliberately does NOT do (road-to-a-map-that-draws-itself K1-K4):
  * no model call, no network, no physics left for the browser.
  */
+import { isTestFile } from './scope.js';
 import * as path from 'node:path';
 
 import Graph from 'graphology';
@@ -332,12 +333,8 @@ function byPath(a: string, b: string): number {
 }
 
 
-export function isTestPath(p: string): boolean {
-    const segments = p.split('/');
-    if (segments.some((s) => s === 'tests' || s === 'test' || s === '__tests__')) return true;
-    const base = segments[segments.length - 1] ?? '';
-    return /\.(test|spec)\./i.test(base) || /(^|[._-])test\.php$/i.test(base) || /Test\.php$/.test(base);
-}
+/** A test, fixture or benchmark path, by the one scope classifier. */
+export const isTestPath = isTestFile;
 
 const CONFIG_BASENAME =
     /^(?:[\w.-]+\.config\.(?:[cm]?[jt]s)|\.eslintrc\.(?:[cm]?js)|\.prettierrc\.(?:[cm]?js)|server\.php)$/i;
