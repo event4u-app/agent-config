@@ -72,7 +72,7 @@ import {
     type TreeOptions,
 } from '../code_graph/query.js';
 import { capAnswer, capReviewRisk, parseDetail } from '../code_graph/answer_detail.js';
-import { withDeclaringFileTests } from '../code_graph/answer_correctness.js';
+import { noEntryLine, testsForModuleAnswer, withDeclaringFileTests } from '../code_graph/answer_correctness.js';
 import { diffHunks, reviewRisk } from '../code_graph/review_risk.js';
 import type { CodeGraph, Relation } from '../code_graph/types.js';
 import { RELATIONS as VOCAB_RELATIONS } from '../code_graph/vocabulary.js';
@@ -81,7 +81,6 @@ import {
     entryPointsFromFile,
     impact,
     repoEntryPoints,
-    testsForAnswer,
     untested,
 } from '../code_graph/verbs.js';
 import { areaReport, graphGeneration, readMap } from '../code_graph/map.js';
@@ -317,13 +316,13 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             if (symbol === '') return { status: 'error', error: 'symbol must be a non-empty string' };
             const state = graphState(root, graphHome(root).cachePath);
             const detail = parseDetail(args['detail']);
-            return withGraph(root, (g) => ({
-                ...capAnswer(testsForAnswer(g, symbol, state), ['tests', 'accepted_edges', 'rejected_edges', 'lines', 'recommended_reads'], detail, [
-                    'accepted_edges',
-                    'rejected_edges',
-                    'lines',
-                ]),
-            }));
+            return withGraph(root, (g) => {
+                const r = testsForModuleAnswer(g, symbol, state);
+                return {
+                    ...capAnswer(r, ['tests', 'accepted_edges', 'rejected_edges', 'lines', 'recommended_reads'], detail, ['accepted_edges', 'rejected_edges', 'lines']),
+                    ...(r.seeds.length === 0 ? { no_entry: noEntryLine(symbol, 'tests-for') } : {}),
+                };
+            });
         },
     },
 
