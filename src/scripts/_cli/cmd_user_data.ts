@@ -31,7 +31,7 @@ import { repoIdentity } from '../code_graph/repo_identity.js';
 
 const USAGE = 'usage: agent-config user-data list [--kind K] [--json] | export [--kind K] | delete --kind K [--id ID …] [--yes] | tombstones [--json] | migrate [--apply] [--root P]\n';
 /** The derived index a user store may have beside it; deletes reach it too. */
-export const DERIVED_INDEX = 'index.sqlite3';
+export const DERIVED_INDEX = 'index-v1.sqlite3';
 const CHAT_POINTER_FIELDS = new Set(['s', 't', 'type', 'ts', 'phase', 'kind', 'n']);
 
 function flagValues(argv: readonly string[], name: string): string[] {
