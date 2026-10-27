@@ -90,6 +90,10 @@ describe('the chunk boundary', () => {
     it('a missing chunk costs the finding, never the event', () => {
         const root = project();
         expect(consistencyFor(root, 'app/filters.tsx', () => null)).toEqual([]);
+        const throwing = () => {
+            throw new Error('loader broke');
+        };
+        expect(consistencyFor(root, 'app/filters.tsx', throwing)).toEqual([]);
     });
 
     it('bundled, the check is the sibling chunk; from source, the module', () => {

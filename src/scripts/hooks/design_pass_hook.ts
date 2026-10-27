@@ -164,9 +164,9 @@ export function enabled(root: string, key = 'design_pass', fallback = false): bo
 
 /** Raw-control findings for one UI file, from the conditional chunk. */
 export function consistencyFor(root: string, rel: string, load = loadConsistencyPass): Finding[] {
-    const run = load();
-    if (!run) return [];
     try {
+        const run = load();
+        if (!run) return [];
         const abs = path.resolve(root, rel);
         return run(root, rel, fs.readFileSync(abs, 'utf-8')).map((n) => ({
             file: rel,

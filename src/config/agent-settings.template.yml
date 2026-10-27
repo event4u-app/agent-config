@@ -1357,8 +1357,9 @@ hooks:
   # cannot render the component (a server template, a handover prototype) is
   # not measured. Turned on after a retroactive shadow window met all four
   # conditions of docs/contracts/concern-activation-policy.md. The box-metrics
-  # half stays in shadow: every UI write adds a row to
+  # half stays in shadow: while this is enabled, every UI write adds a row to
   # agents/runtime/state/design-consistency-shadow.jsonl and nothing is shown.
+  # Disabled, nothing runs and nothing is recorded.
   design_consistency:
     enabled: true
 
