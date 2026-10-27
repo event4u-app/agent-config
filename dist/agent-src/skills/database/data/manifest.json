@@ -20,7 +20,9 @@
         "Code Good",
         "Anti-Pattern",
         "Verification",
-        "Severity"
+        "Severity",
+        "Type",
+        "Engine"
       ],
       "max_results": 3
     }
