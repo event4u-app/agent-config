@@ -69,8 +69,8 @@ question, never silently dropped.
 
 - [x] **2.1 German action verbs in the intake scorer (D4).** Add German imperative stems <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/templates/scripts/work_engine/scoring/confidence.ts -->
       beside the English set in `confidence.ts` `_ACTION_VERBS`.
-      verify: `npx vitest run tests/scripts/work_engine/scoring_confidence.test.ts` -> 0, with
-      ≥ 10 EN/DE pairs landing in the same band.
+      verify: `npx vitest run tests/scripts/work_engine/scoring_confidence.test.ts` -> 0
+      (ten EN/DE pairs land in the same band).
 - [x] **2.2 The interview speaks Iron Law 1 (D7).** Replace the bold-option-1 rule in <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `src/domains/meta/challenge-me/vision/command.md` with a neutral option block plus
       exactly one recommendation line under it; on a native host the recommendation is the
