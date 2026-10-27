@@ -2,22 +2,25 @@
  * `code-graph ask "<question>" [--format hint|concise|detailed] [--fetch <id>] [--json]`
  *
  * The graph-backed sources of the one entry point: symbols and files the
- * question names, and the tests that cover them. Further sources (sessions,
+ * question names, their callers and dependents, and the tests that cover them.
+ * A fetch returns the location and the lines it spans. Further sources (sessions,
  * signals, bugs, knowledge facts) join through the same `AskSource` shape.
  */
 import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 import { type AnswerFormat, FORMAT_BUDGET } from './answer_envelope.js';
 import { type AskRow, type AskSource, type Scope, ask, fetchById } from './ask.js';
 import { flag, resolveRoot } from './cli_args.js';
 import { graphHome } from './graph_home.js';
-import { type LoadedGraph, loadGraph, resolveSeeds } from './query.js';
+import { type LoadedGraph, loadGraph, resolveSeeds, tree } from './query.js';
 import { repoIdentity } from './repo_identity.js';
 import { gitProbe } from '../_lib/spawn_env.js';
 import { testsForModule } from './answer_correctness.js';
 import { correctionSignals, foldSignals, readUserSignals, reviewChecklist } from '../_lib/learning_inputs.js';
 
 const TOKENS_PER_LINE = 10;
+const SNIPPET_LINES = 40;
 
 /**
  * Review checklist inputs from the asker's own feedback signals: recurring
@@ -36,7 +39,26 @@ export function reviewSources(root: string, g: LoadedGraph, scope: Scope, storeO
     return [{ name: 'feedback', owner: 'user', intents: ['review'], rows: (q) => rowsFor(area(q)).map((r) => r.row), lookup: (id) => (id.startsWith('review:') ? (rowsFor(id.split(':')[1] ?? '.').find((r) => r.row.id === id) ?? null) : null) }];
 }
 
-export function graphSources(g: LoadedGraph, repoId: string): AskSource[] {
+/** A fetched node: where it is, and the lines it spans when the file is readable under `root`. */
+function nodeBody(g: LoadedGraph, id: string, root: string | null): string | null {
+    const n = g.byId.get(id);
+    if (!n) return null;
+    const loc = n.source_location;
+    const from = loc.length ? (loc[0] as number) : 1;
+    const to = loc.length >= 3 ? (loc[2] as number) : from;
+    const head = `${n.source_file}:${from}${to !== from ? `-${to}` : ''} — ${n.kind} ${n.label}`;
+    if (!root || !loc.length) return head;
+    const file = path.resolve(root, n.source_file);
+    if (!file.startsWith(path.resolve(root) + path.sep)) return head;
+    try {
+        const lines = fs.readFileSync(file, 'utf-8').split('\n').slice(from - 1, Math.min(to, from + SNIPPET_LINES - 1));
+        return `${head}\n${lines.join('\n')}`;
+    } catch {
+        return head;
+    }
+}
+
+export function graphSources(g: LoadedGraph, repoId: string, root: string | null = null): AskSource[] {
     const rowOf = (id: string): AskRow | null => {
         const n = g.byId.get(id);
         if (!n) return null;
@@ -48,13 +70,27 @@ export function graphSources(g: LoadedGraph, repoId: string): AskSource[] {
     const symbols: AskSource = {
         name: 'graph',
         owner: 'project',
-        intents: ['query', 'explain', 'affected', 'path', 'usage', 'fix-plan', 'verify-fix', 'bugs'],
+        intents: ['query', 'explain', 'path', 'fix-plan', 'verify-fix', 'bugs'],
         rows: (q) => words(q).flatMap((w) => resolveSeeds(g, w, 5)).map(rowOf).filter((r): r is AskRow => r !== null),
         lookup: (id) => {
             const r = rowOf(id);
-            return r ? { row: r, body: r.title } : null;
+            const body = r ? nodeBody(g, id, root) : null;
+            return r && body ? { row: r, body } : null;
         },
     };
+    // Callers and dependents are the in-edges of the named symbol, never the symbol itself.
+    const reaching = (name: string, intent: 'usage' | 'affected', depth: number): AskSource => ({
+        name,
+        owner: 'project',
+        intents: [intent],
+        rows: (q) => {
+            const seeds = words(q).flatMap((w) => resolveSeeds(g, w, 5));
+            const ids = new Set(seeds.flatMap((s) => tree(g, s, { direction: 'in', depth, limit: 200 }).items.map((i) => i.id)));
+            for (const s of seeds) ids.delete(s);
+            return [...ids].map(rowOf).filter((r): r is AskRow => r !== null);
+        },
+        lookup: symbols.lookup,
+    });
     const tests: AskSource = {
         name: 'tests',
         owner: 'project',
@@ -62,7 +98,7 @@ export function graphSources(g: LoadedGraph, repoId: string): AskSource[] {
         rows: (q) => words(q).flatMap((w) => testsForModule(g, w, 'fresh').tests).map(rowOf).filter((r): r is AskRow => r !== null),
         lookup: symbols.lookup,
     };
-    return [symbols, tests];
+    return [symbols, reaching('callers', 'usage', 1), reaching('dependents', 'affected', 2), tests];
 }
 
 export function askMain(argv: string[]): number {
@@ -87,7 +123,7 @@ export function askMain(argv: string[]): number {
     const scope: Scope = { repoId: repoIdentity(root).repoId, branch: git(['rev-parse', '--abbrev-ref', 'HEAD']), worktree: root, user: process.env['USER'] ?? '' };
     const g = loadGraph(cache, 'native');
     try {
-        const sources = [...graphSources(g, scope.repoId), ...reviewSources(root, g, scope)];
+        const sources = [...graphSources(g, scope.repoId, root), ...reviewSources(root, g, scope)];
         const id = flag(argv, '--fetch');
         if (id) {
             const r = fetchById(id, sources, scope);
