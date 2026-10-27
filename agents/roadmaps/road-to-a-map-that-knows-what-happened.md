@@ -146,7 +146,7 @@ facts; memory paths yield moved/gone findings. Rollback: revert the registry
 file and its gate; derived indexes are disposable (ADR-129). The shared memory
 database stays closed (ADR-094, T3).
 
-- [ ] **I.1 One source registry** (H41). One data row per store: name, path,
+- [x] **I.1 One source registry** (H41). One data row per store: name, path,
       format, writer, readers, privacy class, owner, delete path, hosts,
       status. Seed list: the measured stores plus those the first plan omitted
       — team-knowledge pages under `agents/knowledge/`, local doc ingest,
@@ -155,6 +155,7 @@ database stays closed (ADR-094, T3).
       `owner: user, host-owned, read-only`. A new writer without a row fails a
       gate (ratification artifact + gate-coverage row).
       verify: `npx vitest run tests/scripts/check_source_registry.test.ts` -> 0
+      > note: the check and its test ship; CI wiring (workflow step, gate-coverage row, ratification artifact) is left for a ratified follow-up — it runs by hand as `./scripts-run src/scripts/check_source_registry`.
 - [ ] **I.2 Committed knowledge into the fact layer** (H40, H42). ADRs in both
       layouts (`docs/decisions/`, `docs/adrs/<topic>/`); curated memory entries
       as `memory` nodes with `about` edges to the paths they name; knowledge
