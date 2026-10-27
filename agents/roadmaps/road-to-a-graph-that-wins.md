@@ -285,11 +285,12 @@ reviews worse. Distinct from 3.2, which teaches two existing detectors to read e
       and `code-intelligence` carries the form rule: the graph feeds checks and read
       lists, never prose.
       verify: `grep -c 'impact --diff' src/skills/blast-radius-analyzer/SKILL.md` -> /^[1-9]/
-- [ ] 5.3 **The self-review gate reads the checks, advisory.** `self_review_gate.ts`
+- [x] 5.3 **The self-review gate reads the checks, advisory.** `self_review_gate.ts`
       receives the three checks as findings with a disposition, typed with the
       exhibits that landed on `review-findings.schema.json` in #2722; advisory until
       3.5 shows B1 > A.
       verify: `npx vitest run tests/scripts/self_review_graph_checks.test.ts` -> 0
+      > note: the conversion is `_lib/graph_check_findings.ts`; calling it from `self_review_gate.ts`'s run is a gate change and lands with its own ratification artifact.
 - [ ] 5.4 **The regression selector gets a caller.** `selectRegressionsFromCode`
       (`_lib/regression_neighbourhood.ts`) is imported by its test only; the
       verify-repair loop uses it instead of the optional `affected --since`.
