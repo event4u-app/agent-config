@@ -658,9 +658,13 @@ function systemsPayload(c: Ctx, findings: AreaFinding[], st: LaneState): Systems
         if (!w) continue;
         const uses = (c.inn.get(n.id) ?? []).filter((e) => e.relation === 'uses');
         const usedBy: SystemsPackage['usedBy'] = [];
+        const countsOf = (e: CodeEdge): Record<string, number> => Object.fromEntries(strs(e.fact?.attrs?.['counts']).map((x) => [x.slice(0, x.lastIndexOf(':')), Number(x.slice(x.lastIndexOf(':') + 1))]));
+        const functions: Record<string, number> = {};
+        for (const e of uses) for (const [fn, n] of Object.entries(countsOf(e))) functions[fn] = (functions[fn] ?? 0) + n;
         for (const e of uses.slice(0, USED_BY_CAP)) {
             const uw = edgeWitness(c, e);
-            if (uw) usedBy.push({ file: e.source, names: strs(e.fact?.attrs?.['names']), witness: uw });
+            const counts = countsOf(e);
+            if (uw) usedBy.push({ file: e.source, names: strs(e.fact?.attrs?.['names']), ...(Object.keys(counts).length ? { counts } : {}), witness: uw });
         }
         packages.push({
             id: n.id,
@@ -680,6 +684,7 @@ function systemsPayload(c: Ctx, findings: AreaFinding[], st: LaneState): Systems
             requires: (reqOut.get(n.id) ?? []).map((x) => label(c.byId.get(x))).sort(),
             usedBy: usedBy.sort((a, b) => (a.file < b.file ? -1 : 1)),
             usedByTotal: uses.length,
+            ...(Object.keys(functions).length ? { functions: Object.fromEntries(Object.entries(functions).sort(([a], [b]) => (a < b ? -1 : 1))) } : {}),
             nonimport: strs(attr(n, 'nonimport')),
             witness: w,
         });

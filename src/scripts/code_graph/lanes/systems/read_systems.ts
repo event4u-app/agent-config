@@ -96,7 +96,7 @@ interface Pkg {
     roots: LockRoot[];
     lockfile: string;
     nonimport: string[];
-    users: Map<string, { names: Set<string>; line: number }>;
+    users: Map<string, { names: Set<string>; line: number; callers?: Map<string, Set<string>> }>;
     /** composer only: whether `vendor/` autoload maps bound its classes, or only the lockfile's PSR maps */
     binding?: 'complete' | 'partial';
     /** declared beside a lockfile that does not hold it */
@@ -234,7 +234,9 @@ export function readSystems(root: string, opts: SystemsOptions = {}): LaneOutput
     for (const k of pkgs.values()) {
         for (const [file, u] of k.users) {
             read(file);
-            em.rel('uses', file, k.id, { names: [...u.names].sort().slice(0, 50), package: k.p.name }, file, u.line);
+            // Per name, the symbols that call it; an import with no call counts once.
+            const counts = [...u.names].sort().slice(0, 50).map((n) => `${n}:${Math.max(1, u.callers?.get(n)?.size ?? 0)}`);
+            em.rel('uses', file, k.id, { names: [...u.names].sort().slice(0, 50), counts, package: k.p.name }, file, u.line);
         }
     }
     runtimes(root, em, graphs);
@@ -439,7 +441,13 @@ function usesFromGraph(
         }
         if (!k) continue;
         const u = k.users.get(at.file) ?? { names: new Set<string>(), line: at.line };
-        if (used) u.names.add(used);
+        if (used) {
+            u.names.add(used);
+            const callers = (u.callers ??= new Map());
+            const set = callers.get(used) ?? new Set<string>();
+            if (e.relation === 'calls') set.add(e.source);
+            callers.set(used, set);
+        }
         u.line = Math.min(u.line, at.line);
         k.users.set(at.file, u);
     }

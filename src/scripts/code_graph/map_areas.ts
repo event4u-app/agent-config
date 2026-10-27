@@ -229,8 +229,10 @@ export interface SystemsPackage {
     requiredBy: string[];
     requires: string[];
     /** files that import it, each at its import */
-    usedBy: Array<{ file: string; names: string[]; witness: Witness }>;
+    usedBy: Array<{ file: string; names: string[]; counts?: Record<string, number>; witness: Witness }>;
     usedByTotal: number;
+    /** function → symbols calling it, summed over every file that uses the package */
+    functions?: Record<string, number>;
     nonimport: string[];
     /** Domains of the files that use it */
     domains?: string[];

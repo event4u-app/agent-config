@@ -231,8 +231,8 @@ Before the Systems view of `road-to-map-views-from-the-handover`.
   > note: importer rows ride as JSON strings in `importers` (fact attrs hold scalars and string lists); the payload and the page read them in the sibling views roadmap.
 - [x] **6.5 [E.5] Why and who, precomputed and bounded.** Chains ≤ 20 per package with the spec at each hop, dependent counts, subtree size; payload growth linear in packages, budget measured then fixed. verify: `npx vitest run tests/scripts/code_graph_systems_why.test.ts -t express` -> 0
   > note: measured on this repo: +1.79 MB on the systems payload (1,368 B per package, 9,115 chains over 1,310 packages); budget fixed as the bound (20 chains × 15 hops), cost in `agents/evidence/analysis/code-graph-systems-why-cost.md`.
-- [ ] **6.6 [E.6] Functions per file with counts.** verify: `npx vitest run tests/scripts/code_graph_systems_functions.test.ts` -> 0
-  > note: not done: Phase 6 not started in this run.
+- [x] **6.6 [E.6] Functions per file with counts.** verify: `npx vitest run tests/scripts/code_graph_systems_functions.test.ts` -> 0
+  > note: a count is the number of symbols that call the function in that file (an import with no call counts once); the core graph keeps one call edge per caller, so repeated calls inside one function count once.
 
 ## Phase 7 — Close what was ticked thin [F]
 
