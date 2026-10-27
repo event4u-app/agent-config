@@ -187,3 +187,21 @@ describe('5.1 — three deterministic checks', () => {
         expect(r.checks[0]!.status).toBe('pass');
     });
 });
+
+describe('5.4 — the regression selector has a caller', () => {
+    it('impact --regressions selects the registry entries the diff reaches', () => {
+        const reg = path.join(root, 'agents', 'regressions.json');
+        fs.writeFileSync(reg, JSON.stringify([{ id: 'guards-partner', guards: ['app/Services/PartnerClient.php'] }, { id: 'guards-nothing', guards: ['nowhere.ts'] }]));
+        let out = '';
+        try {
+            out = execFileSync(path.resolve(__dirname, '../../node_modules/.bin/tsx'), [path.resolve(__dirname, '../../src/scripts/code_graph/cli.ts'), 'impact', '--diff', 'HEAD~1', '--root', root, '--graph', graphHome(root).cachePath, '--regressions', reg], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] });
+        } catch (e) {
+            out = (e as { stdout?: string }).stdout ?? '';
+        }
+        const r = JSON.parse(out) as { graph: string; selected: Array<{ id: string; reason: string }>; skipped: string[]; refusal: string[] | null };
+        expect(r.graph).toBe('code');
+        expect(r.selected.map((x) => x.id)).toEqual(['guards-partner']);
+        expect(r.selected[0]!.reason).toBe('touched');
+        expect(r.skipped).toEqual(['guards-nothing']);
+    }, 60_000);
+});

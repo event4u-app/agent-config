@@ -52,6 +52,8 @@
  *   impact    --diff <rev> [--depth N]      callers/dependents/test files
  *                                             reachable from the changed
  *                                             symbols over ACCEPTED edges
+ *             [--regressions F]               the registry's regressions whose
+ *                                             guards that neighbourhood reaches
  *   review-risk [--diff <rev>] [--json]       the diff as a sum of terms (callers,
  *                                             entry points, flows, co-change
  *                                             partners, areas, columns,
@@ -134,6 +136,7 @@ import { fileURLToPath } from 'node:url';
 
 import { gitProbe, hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { buildFromRepo, discoverFiles, isTestFile, type LaneSummary, sidecarPath } from './build.js';
+import { selectionVerdict, selectRegressionsFromCode, type RegressionSpec } from '../_lib/regression_neighbourhood.js';
 import { capAnswer, capReviewRisk, parseDetail } from './answer_detail.js';
 import { diffHunks, renderReviewRisk, reviewRisk } from './review_risk.js';
 import { DOC_EXTS } from './docs_layer.js';
@@ -541,7 +544,7 @@ function renderReads(reads: readonly { path: string; lines: [number, number] | n
 function cmdImpact(argv: string[]): number {
     const ref = flag(argv, '--diff');
     if (ref === null) {
-        process.stderr.write('usage: code_graph/cli.ts impact --diff <rev> [--graph P] [--depth N]\n');
+        process.stderr.write('usage: code_graph/cli.ts impact --diff <rev> [--graph P] [--depth N] [--detail minimal|standard] [--regressions F]\n');
         return 2;
     }
     const root = resolveRoot(argv);
@@ -557,6 +560,8 @@ function cmdImpact(argv: string[]): number {
     }
     try {
         const depth = Number(flag(argv, '--depth'));
+        const registryFile = flag(argv, '--regressions');
+        if (registryFile !== null) return renderRegressions(r.g, ref, files, registryFile, stateOf(argv, r.g.answeredBy), Number.isFinite(depth) && depth > 0 ? depth : 2);
         const res = capAnswer(
             impact(r.g, files, stateOf(argv, r.g.answeredBy), Number.isFinite(depth) && depth > 0 ? depth : 2, isTestFile, diffHunks(root, `${ref}..HEAD`) ?? undefined),
             ['dependents', 'reached', 'test_files', 'producing_edges', 'lines', 'recommended_reads'],
@@ -744,6 +749,26 @@ function cmdDead(argv: string[]): number {
     } finally {
         r.g.close();
     }
+}
+
+/**
+ * `impact --diff <rev> --regressions <registry.json>` — the existing regressions
+ * whose guards the diff's neighbourhood reaches, from a `[{ id, guards }]` file.
+ * The verify-repair loop's regression scope; fail-closed through `selectionVerdict`.
+ */
+function renderRegressions(g: LoadedGraph, ref: string, files: string[], registryFile: string, state: GraphState, depth: number): number {
+    let registry: RegressionSpec[];
+    try {
+        registry = JSON.parse(fs.readFileSync(registryFile, 'utf-8')) as RegressionSpec[];
+        if (!Array.isArray(registry) || !registry.every((x) => typeof x?.id === 'string' && Array.isArray(x.guards))) throw new Error('expected [{ id, guards: [] }]');
+    } catch (e) {
+        process.stderr.write(`code-graph: cannot read regression registry ${registryFile}: ${(e as Error).message}\n`);
+        return 1;
+    }
+    const report = selectRegressionsFromCode(g, { id: `diff:${ref}`, touches: files }, registry, depth, isTestFile, state);
+    const refusal = selectionVerdict(report);
+    process.stdout.write(`${JSON.stringify({ ...report, selected: report.selected.map((x) => ({ id: x.spec.id, matched: x.matched, reason: x.reason })), refusal })}\n`);
+    return refusal === null ? 0 : 1;
 }
 
 /** What a capped answer left out, counted per list (`answer_detail.ts`). */
