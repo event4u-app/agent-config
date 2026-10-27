@@ -116,7 +116,7 @@ export function ask(question: string, sources: readonly AskSource[], scope: Scop
             items: rows.map((r) => ({ id: r.id, text: `${r.title} (~${r.read_tokens} tok, ${r.source})` })),
             confidence: degraded.length ? 'low' : rows.length ? 'medium' : 'low',
             witness: { generation: null, commit: opts.commit ?? null, staleness: 'unknown', confirm: null },
-            next: rows.length ? (SAFE_ID.test(rows[0]?.id ?? '') ? [`ask --fetch ${rows[0]?.id}`] : []) : [`grep -rn -- '${question.replace(/'/g, "'\\''").slice(0, 60)}' .`],
+            next: rows.length ? (SAFE_ID.test(rows[0]?.id ?? '') ? [`agent-config code-graph ask --fetch ${rows[0]?.id}`] : []) : [`grep -rn -- '${question.slice(0, 60).replace(/'/g, "'\\''")}' .`],
         },
         opts.format ?? 'concise',
     );

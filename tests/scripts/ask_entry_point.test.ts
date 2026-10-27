@@ -38,7 +38,7 @@ describe('three-step retrieval', () => {
         expect(r.envelope.answer.map((a) => a.id)).toEqual(['c2', 'c1']);
         expect(r.envelope.answer[0]?.text).toMatch(/~50 tok/);
         expect(r.timeline.map((t) => t.id)).toEqual(['c2', 'c1']);
-        expect(r.envelope.next).toEqual(['ask --fetch c2']);
+        expect(r.envelope.next).toEqual(['agent-config code-graph ask --fetch c2']);
         expect(fetchById('c1', [s], scope)).toEqual({ ok: true, source: 'prov', body: 'body of c1' });
     });
 });
@@ -86,5 +86,14 @@ describe('negative fixtures', () => {
         const s = source('signals', 'user', rows);
         expect(ask('my sessions', [s], scope).envelope.answer.map((a) => a.id)).toEqual(['mine']);
         expect(fetchById('theirs', [s], scope)).toEqual({ ok: false, reason: 'refused: owned by another user' });
+    });
+});
+
+describe('the empty-answer fallback', () => {
+    it('cuts the question before quoting it, so an escape is never split', () => {
+        const q = `${'x'.repeat(58)}'' tail`;
+        const r = ask(q, [], scope);
+        const cmd = r.envelope.next[0] as string;
+        expect(cmd).toBe(`grep -rn -- '${'x'.repeat(58)}'\\'''\\''' .`);
     });
 });
