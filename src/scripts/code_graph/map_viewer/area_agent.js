@@ -107,7 +107,8 @@ function agLeft(p, key, left) {
     var vl = add(el('div', { class: 'ag-grp' }), rlCap(t('gVerbs')));
     p.verbs.forEach(function (v) {
         var on = verb && v.name === verb.name;
-        var b = el('button', { type: 'button', class: 'ag-verb' + (on ? ' on' : ''), 'aria-pressed': String(!!on) });
+        // The handover's verb list is plain buttons; the picked one is marked by its style and aria-current.
+        var b = el('button', { type: 'button', class: 'ag-verb' + (on ? ' on' : ''), 'aria-current': on ? 'true' : null });
         add(b, add(el('span', { class: 'ag-vrow' }), el('span', { class: 'mono ag-vname' }, v.name), rlSt(t('gLive'), 'live')), el('span', { class: 'ag-vshort' }, v.answers));
         b.addEventListener('click', function () {
             agState.verb = v.name;

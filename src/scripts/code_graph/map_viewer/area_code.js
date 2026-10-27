@@ -117,7 +117,7 @@
     var labelHits = [];
     var superList = [];
     var superOf = Object.create(null);
-    function paneMode() { var w = window.innerWidth; return w <= 720 ? 'phone' : w < 1240 ? 'tablet' : 'wide'; }
+    function paneMode() { var w = window.innerWidth; return w <= 700 ? 'phone' : w < 1240 ? 'tablet' : 'wide'; }
     function isPinned(side) {
         var mode = paneMode();
         if (mode === 'phone' || state.full) return false;
@@ -1103,7 +1103,7 @@
         [['graph', 'lGraph', ''], ['layers', 'lLayers', 'hLayers'], ['matrix', 'lMatrix', 'hMatrix'], ['knowledge', 'lKnowledge', 'hKnowledge'],
             ['treemap', 'lTreemap', hasLoc ? 'hTreemap' : 'hTreemapMissing', !hasLoc], ['flow', 'lFlow', 'hFlow', true]].forEach(function (o) {
             var b = el('button', { type: 'button', role: 'tab', class: 'lens', 'aria-selected': String(state.lens === o[0]), disabled: !!o[3], title: o[2] ? t(o[2]) : '' }, t(o[1]));
-            if (o[3]) markNoData(b, o[0] === 'flow' ? t('noViewShort') : t('noDataShort'), t(o[2]));
+            if (o[3]) markNoData(b, o[0] === 'flow' ? t('noViewAbbr') : t('noDataShort'), t(o[2]));
             b.addEventListener('click', function () { if (!o[3] && state.lens !== o[0]) { step(); state.lens = o[0]; refresh(); } });
             bar.appendChild(b);
         });
@@ -2172,12 +2172,13 @@
     var dimButton = $('dim');
     function setOrb(on) {
         state.orb = on;
-        dimButton.setAttribute('aria-pressed', String(on));
-        dim2d.setAttribute('aria-pressed', String(!on));
+        dimButton.setAttribute('aria-checked', String(on));
+        dim2d.setAttribute('aria-checked', String(!on));
         resetView();
         refresh();
     }
-    dimButton.addEventListener('click', function () { setOrb(!state.orb); });
+    // One choice of two (the handover's Darstellung radiogroup): 3D selects the orb, 2D the plane.
+    dimButton.addEventListener('click', function () { setOrb(true); });
     // The area limit is a listbox, not a <select>: a native select opens the system's own list.
     var limButton = $('lim');
     var limList = $('limlist');
@@ -2240,6 +2241,8 @@
         $('z-out').setAttribute('aria-label', t('zoomOut'));
         $('z-fit').textContent = t('fit');
         dim2d.textContent = t('d2');
+        $('dimseg').setAttribute('aria-label', t('dimRole'));
+        $('lenses').setAttribute('aria-label', t('views'));
         $('open-left').textContent = t('openLeft');
         $('open-right').textContent = t('openRight');
         $('title-left').textContent = t('repository');

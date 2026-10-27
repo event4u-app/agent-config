@@ -10,8 +10,9 @@
     --amber: #ffc14d; --amberText: #ffc14d; --sand: #f5e08a; --d3: #a7c46b;
     --node: #2a3445; --nodeStroke: #3a4760; --edge: rgba(200, 214, 235, 0.17); --grid: rgba(62, 197, 255, 0.055);
     --doc: #6b7280; --violet: #c9a2ff; --onColor: #0d1522; --blastBg: #120d08; --glow: 0.9;
-    --alert: #ff5d6c; --alertText: #e0414f; --alertChip: #ff8a95; --alertTint: rgba(255, 93, 108, 0.14);
-    --amberTint: rgba(255, 193, 77, 0.14); --violetText: #d9bdff; --violetTint: rgba(201, 162, 255, 0.14);
+    --red: #ff5d6c; --redText: #ff8a95; --redTint: rgba(255, 93, 108, 0.14);
+    --amberTint: rgba(255, 193, 77, 0.14); --violetText: #d9bdff; --violetTint: rgba(201, 162, 255, 0.16);
+    --logoBg: #0b1220; --logoText: #f4f7fb;
     --orb-light: rgba(62, 197, 255, 0.10); --orb-dark: rgba(7, 11, 18, 0);
     color-scheme: dark;
 }
@@ -25,11 +26,13 @@
     --node: #cdd5e1; --nodeStroke: #aab5c6; --edge: rgba(30, 41, 59, 0.17); --grid: rgba(14, 165, 233, 0.09);
     --doc: #9aa3b2; --violet: #8b5cf6; --onColor: #0d1522; --blastBg: #fff8ef; --glow: 0.35;
     --orb-light: rgba(14, 165, 233, 0.12); --orb-dark: rgba(243, 245, 249, 0);
-    --alert: #e11d48; --alertText: #be123c; --alertChip: #be123c; --alertTint: rgba(225, 29, 72, 0.1);
-    --amberTint: rgba(245, 179, 36, 0.16); --violetText: #6d28d9; --violetTint: rgba(139, 92, 246, 0.12);
+    --red: #e11d48; --redText: #be123c; --redTint: rgba(225, 29, 72, 0.1);
+    --amberTint: rgba(245, 179, 36, 0.16); --violetText: #6d28d9; --violetTint: rgba(124, 58, 237, 0.10);
+    --logoBg: #0d1522; --logoText: #ffffff;
     color-scheme: light;
 }
-:root { --sbThumb: color-mix(in srgb, var(--muted) 45%, transparent); --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; --monof: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; --display: 'Anton', Impact, 'Arial Narrow', sans-serif; }
+:root { --alert: var(--red); --alertText: var(--redText); --alertChip: var(--redText); --alertTint: var(--redTint); }
+:root { --sbThumb: color-mix(in srgb, var(--muted) 45%, transparent); --sbThumbHover: var(--brand); --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; --monof: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; --display: 'Anton', Impact, 'Arial Narrow', sans-serif; }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; }
@@ -43,7 +46,13 @@ button:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visibl
 .muted { color: var(--muted); }
 .soft { color: var(--soft); }
 [hidden] { display: none !important; }
-* { scrollbar-width: thin; scrollbar-color: var(--sbThumb) transparent; }
+@supports not selector(::-webkit-scrollbar) { * { scrollbar-width: thin; scrollbar-color: var(--sbThumb) transparent; } }
+::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--sbThumb); border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--sbThumbHover); background-clip: padding-box; }
+::-webkit-scrollbar-corner { background: transparent; }
 
 /* Header */
 .top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 10px 20px; border-bottom: 1px solid var(--line); background: var(--panel); }
@@ -53,11 +62,13 @@ button:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visibl
 .brand-name b { font-family: var(--display); font-weight: 400; font-size: 20px; line-height: 1; letter-spacing: 0.02em; }
 .brand-name span { font-size: 10px; font-weight: 600; letter-spacing: 0.32em; color: var(--brandText); }
 .pins { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; }
-.chip { padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--soft); }
+.chip { padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--soft); white-space: nowrap; }
 .chip.fresh { border: 0; background: var(--greenTint); color: var(--greenText); display: inline-flex; align-items: center; gap: 6px; }
-.chip.stale { border: 0; background: var(--brandTint); color: var(--brandText); display: inline-flex; align-items: center; gap: 6px; }
+.chip.stale { border: 0; background: var(--amberTint); color: var(--amberText); display: inline-flex; align-items: center; gap: 6px; }
+.chip.snap { border: 1px dashed var(--line2); color: var(--muted); }
 .chip.demo { border: 0; background: var(--amberTint); color: var(--amberText); white-space: nowrap; }
 .chip.fresh::before, .chip.stale::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.chip.stale::before { background: var(--amber); }
 .search { position: relative; flex: 1 1 260px; display: flex; align-items: center; gap: 8px; min-width: 220px; max-width: 520px; margin-left: auto; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
 .search svg { color: var(--muted); flex: none; }
 .search input { flex: 1; min-width: 0; height: 34px; background: transparent; border: 0; color: var(--text); font: inherit; font-size: 13px; outline: none; }
@@ -72,7 +83,7 @@ button:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visibl
 .actions .btn { height: 34px; font-size: 12px; }
 
 /* Frame */
-.wb { flex: 1; display: flex; flex-wrap: nowrap; align-items: stretch; min-height: 0; }
+.wb { flex: 1; display: flex; flex-wrap: nowrap; align-items: stretch; min-height: 0; position: relative; }
 .rail { flex: 1 1 280px; max-width: 320px; min-width: 260px; border-right: 1px solid var(--line); background: var(--rail); display: flex; flex-direction: column; }
 .rail section, .side section.sec { padding: 16px 18px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; }
 .rail section:last-child { border-bottom: 0; flex: 1; }
@@ -160,20 +171,14 @@ body { height: 100vh; height: 100dvh; }
 .wb.pin-left #open-left, .wb.pin-right #open-right { display: none; }
 .wb.pin-left #close-left, .wb.pin-right #close-right { display: none; }
 .wb.mode-phone .pane-pin { display: none; }
-.wb:not(.pin-left) #pane-left, .wb:not(.pin-right) #pane-right {
-    position: fixed; top: 0; bottom: 0; z-index: 40; min-width: 0; max-width: none;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35); visibility: hidden;
-    transition: transform 0.2s ease, visibility 0.2s;
-}
-.wb:not(.pin-left) #pane-left { left: 0; width: min(320px, 88vw); transform: translateX(-105%); }
-.wb:not(.pin-right) #pane-right { right: 0; width: min(440px, 92vw); transform: translateX(105%); border-left: 1px solid var(--line); }
-.wb.fly-left:not(.pin-left) #pane-left, .wb.fly-right:not(.pin-right) #pane-right { transform: none; visibility: visible; }
+/* The handover's flyout: absolute inside the page body, shadow towards the centre, no animation. */
+.wb:not(.pin-left) #pane-left, .wb:not(.pin-right) #pane-right { position: absolute; top: 0; bottom: 0; z-index: 30; min-width: 0; max-width: 92vw; }
+.wb:not(.pin-left) #pane-left { left: 0; width: 320px; box-shadow: 12px 0 40px rgba(0, 0, 0, 0.35); }
+.wb:not(.pin-right) #pane-right { right: 0; width: 400px; box-shadow: -12px 0 40px rgba(0, 0, 0, 0.35); border-left: 1px solid var(--line); }
+.wb:not(.pin-left):not(.fly-left) #pane-left, .wb:not(.pin-right):not(.fly-right) #pane-right { display: none; }
 body.full .top, body.full .crumbs, body.full .legend, body.full .foot { display: none; }
-.scrim { position: fixed; inset: 0; z-index: 39; background: rgba(5, 10, 20, 0.45); }
+.scrim { position: absolute; inset: 0; z-index: 25; background: rgba(4, 8, 14, 0.45); }
 .scrim[hidden] { display: none; }
-@media (prefers-reduced-motion: reduce) {
-    .wb:not(.pin-left) #pane-left, .wb:not(.pin-right) #pane-right { transition: none; }
-}
 .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .overlay { position: absolute; left: 12px; top: 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; z-index: 2; }
 .seg { display: flex; gap: 2px; padding: 3px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); }
@@ -182,7 +187,7 @@ body.full .top, body.full .crumbs, body.full .legend, body.full .foot { display:
 .seg button[aria-checked='true'], .seg button[aria-pressed='true'] { background: var(--brandTint); box-shadow: inset 0 0 0 1px var(--brandLine); color: var(--text); }
 .dimseg { gap: 4px; padding: 4px; border-radius: 10px; }
 .dimseg button { height: 34px; padding: 0 14px; border-radius: 7px; font-size: 13px; font-weight: 500; }
-.dimseg button[aria-pressed='true'] { font-weight: 600; }
+.dimseg button[aria-pressed='true'], .dimseg button[aria-checked='true'] { font-weight: 600; }
 .seg .z { width: 32px; padding: 0; font-size: 16px; font-weight: 400; color: var(--text); }
 .seg .fit { font-weight: 400; color: var(--text); }
 .dd { position: relative; }
@@ -349,7 +354,7 @@ body.full .top, body.full .crumbs, body.full .legend, body.full .foot { display:
 .atiles .tile .v { font-size: 18px; }
 .atiles .tile .l { font-size: 11px; color: var(--muted); }
 
-@media (max-width: 720px) {
+@media (max-width: 700px) {
     /* On a phone the page scrolls, as the design's stacked layout does, so the stage keeps a usable height. */
     body { height: auto; min-height: 100dvh; }
     .wb { flex: none; }
@@ -369,3 +374,14 @@ body.full .top, body.full .crumbs, body.full .legend, body.full .foot { display:
 .nodata-tag { margin-left: 6px; padding: 0 5px; border-radius: 4px; border: 1px dashed currentColor; font-size: 10px; font-weight: 600; letter-spacing: 0.02em; opacity: 0.85; white-space: nowrap; }
 .opt.nodata { white-space: normal; height: auto; min-height: 34px; padding-top: 4px; padding-bottom: 4px; line-height: 1.25; }
 .opt.nodata .nodata-tag { display: inline-block; margin-left: 4px; margin-top: 2px; }
+
+/* The handover's 1000 px breakpoint: the page grows with its content, the body wraps and an open flyout joins the flow. */
+@media (max-width: 1000px) {
+    body { height: auto; min-height: 100vh; }
+    .wb, .av-body { flex-wrap: wrap; overflow: visible; }
+    .wb > aside, .wb > main, .av-body > aside, .av-body > main { overflow: visible; max-width: none; }
+    .wb.fly-left:not(.pin-left) #pane-left, .wb.fly-right:not(.pin-right) #pane-right,
+    .av-body.fly-left:not(.pin-left) .av-left, .av-body.fly-right:not(.pin-right) .av-side { position: static; }
+    /* An in-flow rail must stay reachable: the scrim would lie over it. */
+    .scrim { display: none !important; }
+}

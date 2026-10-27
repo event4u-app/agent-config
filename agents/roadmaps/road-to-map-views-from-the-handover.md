@@ -76,7 +76,7 @@ knowledge and learning data (Stages I, K).
 
 ## Phase 0 — Tokens
 
-- [ ] **0.1 Matrix shape gate.** Add `tests/scripts/code_graph_map_fidelity_matrices.test.ts`:
+- [x] **0.1 Matrix shape gate.** Add `tests/scripts/code_graph_map_fidelity_matrices.test.ts`:
       for each page id in a fixed list (tokens, shell, overview, code, data,
       systems, interfaces, runtime, delivery, impact, agent, projects, knowledge,
       bugs) it requires `agents/evidence/reviews/map-{page}-fidelity.md` once that
@@ -84,14 +84,14 @@ knowledge and learning data (Stages I, K).
       Computed styles (light), Overflow 1440/375/320, Behaviour, Not implemented,
       and fails on a matrix missing any of them.
       verify: `npx vitest run tests/scripts/code_graph_map_fidelity_matrices.test.ts` -> 0
-- [ ] **0.2 Port the token diff.** In `viewer.css`: `--red`, `--redText`,
+- [x] **0.2 Port the token diff.** In `viewer.css`: `--red`, `--redText`,
       `--redTint` as the handover names (the `--alert*` names stay as aliases),
       dark `--redText` #ff8a95, `--violetTint` dark rgba(201,162,255,.16) and
       light rgba(124,58,237,.10), new `--logoBg`/`--logoText`, `--sbThumbHover`,
       the WebKit scrollbar block with its `@supports not` fallback; the hub
       grid reads `--grid`.
       verify: `npx vitest run tests/scripts/code_graph_map_tokens.test.ts` -> 0
-- [ ] **0.3 Token matrix.** A probe dumps `getComputedStyle(document.documentElement)`
+- [x] **0.3 Token matrix.** A probe dumps `getComputedStyle(document.documentElement)`
       for every handover token in both themes into
       `agents/evidence/reviews/map-tokens-fidelity.md`; the test compares each
       value to the handover table and fails when one token is mutated
@@ -102,26 +102,26 @@ Exit: 0.1–0.3 green. Rollback: revert `viewer.css`; aliases keep every caller 
 
 ## Phase 1 — Shell
 
-- [ ] **1.1 Nav order and two new routes.** Übersicht · Code · Data · Systeme ·
+- [x] **1.1 Nav order and two new routes.** Übersicht · Code · Data · Systeme ·
       Interfaces · Runtime · Delivery · Bugs · Wissen · Impact · Agent in
       `areas_common.js` and `shell.js`; no-data entries carry the handover's
       `title` text; Bugs is always no-data in a committed map.
       verify: `npx vitest run tests/scripts/code_graph_map_shell.test.ts -t "nav order" --reporter=verbose` -> /✓.*nav order/
-- [ ] **1.2 Header chips.** Commit chip "gebaut bei" + short sha + date, with the
+- [x] **1.2 Header chips.** Commit chip "gebaut bei" + short sha + date, with the
       sha12 + generation title; freshness chip lowercase on amber tint; new
       dashed "Snapshot · ohne Branch-Stand" chip in a committed map; the search
       up button reads "← eine Ebene hoch". The freshness chip renders
       `pin.freshness` as built (Decision D4).
       verify: `npx vitest run tests/scripts/code_graph_map_shell.test.ts -t "header chips" --reporter=verbose` -> /✓.*header chips/
-- [ ] **1.3 History breadcrumbs.** One shared `nav aria-label="Verlauf"`
+- [x] **1.3 History breadcrumbs.** One shared `nav aria-label="Verlauf"`
       component: a stack of up to 50 states {lens, sel, filters, limit}, trail
       buttons separated by `›`, a 24px `←` only when history exists; no back
       button and no crumb chips. Used by Systeme and Bugs.
       verify: `npx vitest run tests/scripts/code_graph_map_history_crumbs.test.ts` -> 0
-- [ ] **1.4 Provenance footer.** A shared footer line per page naming the
+- [x] **1.4 Provenance footer.** A shared footer line per page naming the
       source file and commit ("Echte Daten · systems.json @ 2efd5be1").
       verify: `npx vitest run tests/scripts/code_graph_map_shell.test.ts -t provenance --reporter=verbose` -> /✓.*provenance/
-- [ ] **1.5 Breakpoints, scroll strip, flyouts.** Breakpoints 700 and 1000 per
+- [x] **1.5 Breakpoints, scroll strip, flyouts.** Breakpoints 700 and 1000 per
       the handover replace 720/400; at ≤700 the nav and every tablist are one
       horizontal scroll strip (the ☰ menu goes, Decision D6); asides become
       `position:absolute` flyouts with `±12px 0 40px` shadows and the handover's
@@ -129,7 +129,7 @@ Exit: 0.1–0.3 green. Rollback: revert `viewer.css`; aliases keep every caller 
       Operation, Ressource, Anfrage, Item, Nachweisbericht, Filter, Bug,
       Registry, Kante).
       verify: `npx vitest run tests/scripts/code_graph_map_shell_overflow.test.ts` -> 0
-- [ ] **1.6 Shell matrix.** `agents/evidence/reviews/map-shell-fidelity.md`:
+- [x] **1.6 Shell matrix.** `agents/evidence/reviews/map-shell-fidelity.md`:
       landmark/aria diff design vs build for header and nav at 1440/375/320 in
       both themes, computed styles at `nav a`, `[aria-current]`, each chip, and
       a 375 probe showing `scrollWidth > clientWidth` on the nav with no
@@ -141,23 +141,23 @@ Exit: 1.1–1.6 green on the demo map and this repo's map. Rollback: revert
 
 ## Phase 2 — Übersicht
 
-- [ ] **2.1 Filter and behind banner.** The state filter becomes a radiogroup
+- [x] **2.1 Filter and behind banner.** The state filter becomes a radiogroup
       "Alle Ebenen / Mit Daten / Geplant · leer"; the banner shows the behind
       chip (Decision D4), "code-graph refresh", the snapshot chip and the
       witness count "N Zeugen · M erneut gelesen" from the model.
       verify: `npx vitest run tests/scripts/code_graph_map_overview_page.test.ts -t banner --reporter=verbose` -> /✓.*banner/
-- [ ] **2.2 Eleven cards.** Grid `auto-fill minmax(min(300px,100%),1fr)` with
+- [x] **2.2 Eleven cards.** Grid `auto-fill minmax(min(300px,100%),1fr)` with
       Code, Datenbank, Systeme, Integrations, Environment, CI/CD, Infrastruktur,
       Wissen · Memory, Impact, Bugs & Fixes, Projects; the amber warn box when
       the manifest says `empty` but carries facts or findings; the
       "Branch-Unterschiede" chip row; planned cards dashed.
       verify: `npx vitest run tests/scripts/code_graph_map_overview_page.test.ts -t cards --reporter=verbose` -> /✓.*cards/
-- [ ] **2.3 Lower row.** Health card (grade chip, A/B/C scale, four bars, the
+- [x] **2.3 Lower row.** Health card (grade chip, A/B/C scale, four bars, the
       "Größter Hebel" sentence from the model's health parts), Zustände card
       (seven states), "Hinweise zu dieser Map" (notes 1–2 derived, 3–4 handover
       copy); Gate G0, Check protocol and Tours leave the page (Decision D2).
       verify: `npx vitest run tests/scripts/code_graph_map_overview_page.test.ts -t "lower row" --reporter=verbose` -> /✓.*lower row/
-- [ ] **2.4 Overview matrix.** `agents/evidence/reviews/map-overview-fidelity.md`
+- [x] **2.4 Overview matrix.** `agents/evidence/reviews/map-overview-fidelity.md`
       with the 11-card × field table, landmark diff, computed styles both
       themes, overflow at three widths, a sensitivity probe on the warn box.
       verify: `npx vitest run tests/scripts/code_graph_map_fidelity_matrices.test.ts -t overview --reporter=verbose` -> /✓.*overview/
@@ -169,19 +169,19 @@ Exit: 2.1–2.4 green. Rollback: revert `area_overview.js` and its CSS.
 Entry: sibling A.2, E.2, E.4, E.5, E.6 closed. Until then the page renders the
 empty-with-reason form for each missing field, never a guessed value.
 
-- [ ] **3.1 Uncapped usage per area.** The Systems payload emits, per package,
+- [x] **3.1 Uncapped usage per area.** The Systems payload emits, per package,
       `byArea` file counts and the top used names over ALL uses, beyond the
       20-file `USED_BY_CAP` sample (the sample stays for the file list).
       verify: `npx vitest run tests/scripts/code_graph_map_area_payloads.test.ts -t byArea --reporter=verbose` -> /✓.*byArea/
-- [ ] **3.2 Ecosystem presence probe.** The generator records, per ecosystem it
+- [x] **3.2 Ecosystem presence probe.** The generator records, per ecosystem it
       does not read (pnpm, Yarn, Bun, pip/Poetry, Cargo, Go, Maven/Gradle,
       Bundler, NuGet), whether a lockfile or manifest is present, so the page
       can say "nicht gelesen" vs "kein Lockfile gefunden" truthfully (Decision D5).
       verify: `npx vitest run tests/scripts/code_graph_map_area_payloads.test.ts -t "ecosystem probe" --reporter=verbose` -> /✓.*ecosystem probe/
-- [ ] **3.3 Autoload-read flag.** The payload states whether the Composer
+- [x] **3.3 Autoload-read flag.** The payload states whether the Composer
       autoload maps were read, so status "unk · Autoload" is derivable.
       verify: `npx vitest run tests/scripts/code_graph_map_area_payloads.test.ts -t autoload --reporter=verbose` -> /✓.*autoload/
-- [ ] **3.4 Lens bar and Filter aside.** Six tabs (Übersicht · Pakete ·
+- [x] **3.4 Lens bar and Filter aside.** Six tabs (Übersicht · Pakete ·
       Abhängigkeiten · Runtimes · Befunde · N · Branches); the Filter aside with
       search, package-manager checkbox rows with `.pm` badge, count and lockfile
       caption, the unread-ecosystem chips, workspace checkboxes (fixtures off by
@@ -190,35 +190,35 @@ empty-with-reason form for each missing field, never a guessed value.
       "Nur zeigen" switches, "Filter zurücksetzen". Every count equals the
       payload's.
       verify: `npx vitest run tests/scripts/code_graph_map_systems_page.test.ts -t filters --reporter=verbose` -> /✓.*filters/
-- [ ] **3.5 Übersicht lens.** Seven KPI tiles that each apply a filter, PM cards
+- [x] **3.5 Übersicht lens.** Seven KPI tiles that each apply a filter, PM cards
       with stacked dev/direct/locked bars, Workspaces × Paketmanager grid,
       Frameworks tiles, Befunde nach Art rows.
       verify: `npx vitest run tests/scripts/code_graph_map_systems_page.test.ts -t overview --reporter=verbose` -> /✓.*overview/
-- [ ] **3.6 Pakete list on the shared table.** Sort radiogroup (Befund zuerst ·
+- [x] **3.6 Pakete list on the shared table.** Sort radiogroup (Befund zuerst ·
       benötigt · Nutzung · Tiefe · Name), "Nach Name gruppieren" switch, the
       9-column grid, paging "Weitere 60 zeigen", columns 4–8 hidden ≤700px;
       built on one table component reused by Interfaces, Delivery and Befunde
       (sibling G.1); every payload row reachable by scroll and filter.
       verify: `npx vitest run tests/scripts/code_graph_map_systems_page.test.ts -t "every row reachable" --reporter=verbose` -> /✓.*every row reachable/
-- [ ] **3.7 Abhängigkeiten lens.** Head, KPI row, Nachbarschaft SVG (left
+- [x] **3.7 Abhängigkeiten lens.** Head, KPI row, Nachbarschaft SVG (left
       required-by, right requires, clickable), "Warum installiert? · N Wege" with
       every chain and clickable hops, Benötigt von · N / Benötigt selbst · N with
       direct and transitive counts, functions per file with call counts, "Nach
       Code-Area" chips, "Nutzung ohne Import", and the "Was die Map hier nicht
       weiß" block.
       verify: `npx vitest run tests/scripts/code_graph_map_systems_page.test.ts -t dependencies --reporter=verbose` -> /✓.*dependencies/
-- [ ] **3.8 Runtimes, Befunde, Branches lenses and Detail aside.** Runtimes as
+- [x] **3.8 Runtimes, Befunde, Branches lenses and Detail aside.** Runtimes as
       one card per runtime grouped by source kind with disagreement; Befunde as
       collapsible groups by rule with "Vorschlag, nie angewendet"; Branches with
       the Map-Art radiogroup (committed: explanation and commands; local: chain
       card and 7-column table); Detail aside with kv rows, finding cards, "Auf
       Branches" chips and the "index only" witness chip.
       verify: `npx vitest run tests/scripts/code_graph_map_systems_page.test.ts -t "lenses and detail" --reporter=verbose` -> /✓.*lenses and detail/
-- [ ] **3.9 Crumbs and back.** Every filter, sort and selection pushes a
+- [x] **3.9 Crumbs and back.** Every filter, sort and selection pushes a
       history state; `←` restores the previous one exactly; a sensitivity probe
       that skips the push turns the spec red.
       verify: `npx vitest run tests/scripts/code_graph_map_systems_page.test.ts -t crumbs --reporter=verbose` -> /✓.*crumbs/
-- [ ] **3.10 Systems matrix and click paths.** `agents/evidence/reviews/map-systems-fidelity.md`
+- [x] **3.10 Systems matrix and click paths.** `agents/evidence/reviews/map-systems-fidelity.md`
       per component (strip, filters, list, dependencies, runtimes, findings,
       branches, detail), plus the §9.1 questions of the brief answered by click
       path on this repository and the brief §6 ask-to-step mapping table
@@ -230,21 +230,21 @@ revert `area_systems.js` and the new CSS; payload additions are additive.
 
 ## Phase 4 — Small deltas on the existing pages
 
-- [ ] **4.1 Data, Impact empty state.** A real map with no data renders the
+- [x] **4.1 Data, Impact empty state.** A real map with no data renders the
       page skeleton (single tab "ERD · noch keine Daten" / "Änderung · keine",
       legend, footer), not the `noDataCard`; 2D/3D and Spalten become
       radiogroups; aside labels Schema / Nachweisbericht.
       verify: `npx vitest run tests/scripts/code_graph_map_no_data.test.ts -t skeleton --reporter=verbose` -> /✓.*skeleton/
-- [ ] **4.2 Interfaces, Runtime.** Interfaces opens on Operationen, caption
+- [x] **4.2 Interfaces, Runtime.** Interfaces opens on Operationen, caption
       "Dienste · n von m angezeigt"; Runtime opens on Topologie and draws the
       zone caps even when empty, with "Befunde außerhalb einer Ressource · N".
       verify: `npx vitest run tests/scripts/code_graph_map_ported_pages.test.ts -t "interfaces runtime" --reporter=verbose` -> /✓.*interfaces runtime/
-- [ ] **4.3 Delivery, Agent, Code.** Delivery's third scenario is labelled from
+- [x] **4.3 Delivery, Agent, Code.** Delivery's third scenario is labelled from
       the repository's own trigger in `workflows[].events`; Agent verb list and
       aside labels Anfrage / Item; Code 2D/3D and Scope as radiogroups, the
       "Flow · n. A." label; Code keeps "Domäne" per Decision D3.
       verify: `npx vitest run tests/scripts/code_graph_map_ported_pages.test.ts -t "delivery agent code" --reporter=verbose` -> /✓.*delivery agent code/
-- [ ] **4.4 Seven matrices.** One `map-{page}-fidelity.md` each for data,
+- [x] **4.4 Seven matrices.** One `map-{page}-fidelity.md` each for data,
       interfaces, runtime, delivery, impact, agent, code, covering real and demo
       map.
       verify: `npx vitest run tests/scripts/code_graph_map_fidelity_matrices.test.ts -t "small deltas" --reporter=verbose` -> /✓.*small deltas/
@@ -253,26 +253,26 @@ Exit: 4.1–4.4 green. Rollback: per-page revert; each page is independent.
 
 ## Phase 5 — Projects "Ich · Lernen"
 
-- [ ] **5.1 Second lens.** `area_projects.js` gains the tablist Projekte /
+- [x] **5.1 Second lens.** `area_projects.js` gains the tablist Projekte /
       Ich · Lernen, the Registry aside with the BUDGET cap, the Kante aside and
       "← Projekt-Map"; Ich · Lernen renders empty with reason until sibling
       Stage K data exists, then its KPIs from that data.
       verify: `npx vitest run tests/scripts/code_graph_map_projects_page.test.ts` -> 0
-- [ ] **5.2 Projects matrix.** `agents/evidence/reviews/map-projects-fidelity.md`.
+- [x] **5.2 Projects matrix.** `agents/evidence/reviews/map-projects-fidelity.md`.
       verify: `npx vitest run tests/scripts/code_graph_map_fidelity_matrices.test.ts -t projects --reporter=verbose` -> /✓.*projects/
 
 Exit: 5.1–5.2 green. Rollback: revert `area_projects.js`.
 
 ## Phase 6 — Wissen
 
-- [ ] **6.1 New route.** `area_knowledge.js` and CSS: lenses Quellen · Memory ·
+- [x] **6.1 New route.** `area_knowledge.js` and CSS: lenses Quellen · Memory ·
       Entscheidungen · Sessions · Arbeitsweise; Filter aside with Besitzer and
       "Liest die Map?" groups; KPI buttons; store table with format caps;
       "Wem gehört was"; Detail aside. Each figure comes from the knowledge
       source index (sibling Stages I and K); a figure without a payload field
       is a not-implemented row, never a hard-coded audit number.
       verify: `npx vitest run tests/scripts/code_graph_map_knowledge_page.test.ts` -> 0
-- [ ] **6.2 Wissen matrix.** `agents/evidence/reviews/map-knowledge-fidelity.md`,
+- [x] **6.2 Wissen matrix.** `agents/evidence/reviews/map-knowledge-fidelity.md`,
       each real-count row tied to a payload field.
       verify: `npx vitest run tests/scripts/code_graph_map_fidelity_matrices.test.ts -t knowledge --reporter=verbose` -> /✓.*knowledge/
 
@@ -280,20 +280,20 @@ Exit: 6.1–6.2 green. Rollback: drop the route from 1.1's list.
 
 ## Phase 7 — Bugs (local only)
 
-- [ ] **7.1 New route, local map.** `area_bugs.js` and CSS: lenses Übersicht ·
+- [x] **7.1 New route, local map.** `area_bugs.js` and CSS: lenses Übersicht ·
       Bugs · Behoben · Regressionspfade · Zeitleiste; Filter aside (Status,
       Quelle with "kein Adapter" for missing adapters, Umgebung, Area, Ursache,
       Symbolisierung); Verlauf crumbs; Bug detail with fix commits, timeline,
       frames, hypotheses, the introducing-commit candidate. Data from the local
       bug lane (sibling Stage H, `.build/bugs/`).
       verify: `npx vitest run tests/scripts/code_graph_map_bugs_page.test.ts -t local --reporter=verbose` -> /✓.*local/
-- [ ] **7.2 Committed map stays empty.** The committed map renders only the
+- [x] **7.2 Committed map stays empty.** The committed map renders only the
       "keine Daten" tab, the "warum leer" card and the local-data chip; a test
       plants a bug id, title and message in the local lane and asserts none of
       them appears in any file under `agents/map/` outside `.build/` (AC-17 view
       half).
       verify: `npx vitest run tests/scripts/code_graph_map_bugs_page.test.ts -t committed --reporter=verbose` -> /✓.*committed/
-- [ ] **7.3 Bugs matrix.** `agents/evidence/reviews/map-bugs-fidelity.md` for
+- [x] **7.3 Bugs matrix.** `agents/evidence/reviews/map-bugs-fidelity.md` for
       both the committed and the local map.
       verify: `npx vitest run tests/scripts/code_graph_map_fidelity_matrices.test.ts -t bugs --reporter=verbose` -> /✓.*bugs/
 
@@ -326,9 +326,9 @@ Design deviations the analysis found. Strict mode: the default is the handover,
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — All fourteen `map-{page}-fidelity.md` matrices exist and
+- [x] AC-1 — All fourteen `map-{page}-fidelity.md` matrices exist and
       `code_graph_map_fidelity_matrices.test.ts` passes over them.
-- [ ] AC-2 — Every route renders at 1440/375/320 in both themes with no
+- [x] AC-2 — Every route renders at 1440/375/320 in both themes with no
       document overflow, on this repository's map and the demo map.
 - [ ] AC-3 — Systeme: every payload row is reachable; filter counts equal the
       payload's; a package detail answers why installed (all chains), direct vs

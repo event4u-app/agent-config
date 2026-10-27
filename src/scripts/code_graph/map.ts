@@ -1109,11 +1109,13 @@ export const VIEWER_SCRIPTS = [
     'area_delivery.js',
     'area_impact.js',
     'area_agent.js',
+    'area_knowledge.js',
+    'area_bugs.js',
     'shell.js',
 ] as const;
 /** The hub's parts: a project map's plus the Projects area, which no project map carries — not even as code. */
 export const HUB_SCRIPTS = [...VIEWER_SCRIPTS.slice(0, -1), 'area_projects.js', 'shell.js'] as const;
-export const VIEWER_STYLES = ['viewer.css', 'shell.css', 'area_kit.css', 'area_interfaces.css', 'area_impact.css', 'area_agent.css', 'area_ops.css'] as const;
+export const VIEWER_STYLES = ['viewer.css', 'shell.css', 'area_kit.css', 'area_interfaces.css', 'area_impact.css', 'area_agent.css', 'area_ops.css', 'area_systems.css', 'area_knowledge.css', 'area_bugs.css'] as const;
 
 /**
  * The one inline script: every part inside one function scope. Joined BEFORE
@@ -1129,7 +1131,8 @@ export function viewerStyle(): string {
     return VIEWER_STYLES.map(readViewer).join('\n');
 }
 
-const AREA_NAV = ['overview', 'code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'impact', 'agent'] as const;
+/** The handover's nav order (inbox round 2026-10-bf): Bugs and Wissen sit between Delivery and Impact. */
+export const AREA_NAV = ['overview', 'code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'bugs', 'knowledge', 'impact', 'agent'] as const;
 
 /**
  * What the shell routes between when a page is not a project map. Only the
@@ -1214,11 +1217,10 @@ export function renderPage(m: MapModel, meta: MapMeta, areas: object, shell?: Ma
         shell?.hub ? '<div class="brand-name hub"><b>AGENT CONFIG</b><span>ESTATE MAP</span></div>' : '<div class="brand-name"><b>AGENT CONFIG</b><span>KNOWLEDGE MAP</span></div>',
         '</div>',
         ...(shell?.hub ? ['<span class="chip mono hub-chip" id="hub-chip"></span><span class="hub-back" id="hub-back"></span>'] : []),
-        ...(shell?.hub ? [] : ['<button type="button" class="areamenu" id="areamenu" aria-haspopup="true" aria-expanded="false" aria-controls="areanav"></button>']),
         `<nav class="areanav" id="areanav" aria-label="Areas"${shell?.hub ? ' hidden' : ''}>${nav.map((r) => `<a href="#/${r}" data-route="${r}">${r}</a>`).join('')}</nav>`,
         '</div>',
         '<div class="top-row row2">',
-        `<div class="pins mono"><span class="chip" id="pin-commit"></span><span class="chip fresh" id="pin-fresh"></span>${meta.demo ? '<span class="chip demo" id="pin-demo"></span>' : ''}</div>`,
+        `<div class="pins mono"><span class="chip" id="pin-commit"></span><span class="chip fresh" id="pin-fresh"></span>${shell?.hub ? '' : '<span class="chip snap" id="pin-snap" hidden></span>'}${meta.demo ? '<span class="chip demo" id="pin-demo"></span>' : ''}</div>`,
         '<div class="search"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="5"></circle><path d="M11 11l3.5 3.5"></path></svg>' +
             '<input id="search" type="search" autocomplete="off"><span class="kbd mono">/</span>' +
             '<span class="sr-only" id="search-live" aria-live="polite"></span>' +
@@ -1261,7 +1263,7 @@ export function renderPage(m: MapModel, meta: MapMeta, areas: object, shell?: Ma
         '<div class="overlay">',
         '<div class="seg dd"><button type="button" id="lim" class="lim" aria-haspopup="listbox" aria-expanded="false" aria-controls="limlist" data-value="15"><span id="limtxt">15</span><span class="chev" aria-hidden="true"></span></button>' +
             '<ul id="limlist" class="ddlist" role="listbox" hidden>' + ['15', '30', '50', '100', 'all'].map((v) => `<li role="option" tabindex="-1" data-value="${v}" aria-selected="${v === '15'}">${v}</li>`).join('') + '</ul></div>' +
-            '<div class="seg dimseg" role="group" aria-label="2D / 3D"><button type="button" id="dim2d" aria-pressed="true"></button><button type="button" id="dim" aria-pressed="false"></button></div>',
+            '<div class="seg dimseg" role="radiogroup" aria-label="2D / 3D" id="dimseg"><button type="button" role="radio" id="dim2d" aria-checked="true"></button><button type="button" role="radio" id="dim" aria-checked="false"></button></div>',
         '<div class="seg"><button type="button" class="z" id="z-out">−</button><button type="button" class="z" id="z-in">+</button><button type="button" class="fit" id="z-fit"></button></div>',
         '<button type="button" class="backbtn" id="back" hidden></button>',
         '</div>',

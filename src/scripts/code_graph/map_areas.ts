@@ -236,13 +236,29 @@ export interface SystemsPackage {
     nonimport: string[];
     /** Domains of the files that use it */
     domains?: string[];
+    /** Files using it per top-level folder, over every use — `usedBy` stays a sample of 20. */
+    byArea?: Record<string, number>;
+    /** The imported names most used, over every use: `[name, files]`, at most ten. */
+    topNames?: Array<[string, number]>;
     witness: Witness;
+}
+
+/** An ecosystem the systems lane does or does not read, and the files of it present in the tree. */
+export interface SystemsEcosystem {
+    name: string;
+    read: boolean;
+    /** Repository-relative lockfiles and manifests found, at most five. */
+    files: string[];
 }
 
 export interface SystemsPayload extends AreaPayloadBase {
     runtimes: SystemsRuntime[];
     packages: SystemsPackage[];
     lockfiles: string[];
+    /** Presence per ecosystem, so "not read" and "no lockfile found" are told apart (Decision D5). */
+    ecosystems?: SystemsEcosystem[];
+    /** Whether the Composer autoload maps were read (from `composer.lock`): makes "unk · Autoload" derivable. */
+    autoloadRead?: boolean;
 }
 
 // Runtime — infrastructure resources, environments, services and ports.

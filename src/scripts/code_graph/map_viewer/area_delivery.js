@@ -53,7 +53,19 @@ extendStrings({
     }
 });
 
-var dlState = { scen: 'tag' };
+// The handover opens on push → main.
+var dlState = { scen: 'push' };
+var DL_PLAIN = ['push', 'pull_request', 'pull_request_target', 'workflow_call', 'workflow_run'];
+/** The third scenario is the repository's own trigger beside push and pull_request (`release` …); a tag when it declares none. */
+function dlThirdScenario(p) {
+    var seen = [];
+    (p.workflows || []).forEach(function (w) {
+        (w.events || (w.triggers || []).map(function (ev) { return { event: ev }; })).forEach(function (e) { if (DL_PLAIN.indexOf(e.event) < 0 && seen.indexOf(e.event) < 0) seen.push(e.event); });
+    });
+    if (!seen.length) return 'tag';
+    return 'ev:' + (seen.indexOf('release') >= 0 ? 'release' : seen.sort()[0]);
+}
+function dlScenLabel(s) { return s.indexOf('ev:') === 0 ? s.slice(3) : t('lScen')[s]; }
 if (!avState.view.delivery) avState.view.delivery = 'ci';
 
 function wfBase(f) { var i = f.lastIndexOf('/'); return i < 0 ? f : f.slice(i + 1); }
@@ -103,16 +115,17 @@ function jobEval(p, j, scen) {
     p.workflows.forEach(function (w) { if (w.file === j.workflow) wf = w; });
     var declared = wf ? wf.events || wf.triggers.map(function (ev) { return { event: ev, branches: [], paths: false }; }) : [];
     var events = declared.filter(function (e) { return !e.job || e.job === j.id; });
+    var own = scen.indexOf('ev:') === 0 ? scen.slice(3) : null;
     var res;
     if (j.system === 'gitlab') {
-        if (scen === 'pr') return ['unk', 'gitlabMr'];
+        if (scen === 'pr' || own) return ['unk', 'gitlabMr'];
         var br = j.branches || [];
         if (scen === 'tag') res = br.length ? ['off', 'tagBranch'] : ['ok', 'fires'];
         else res = !br.length || br.indexOf('<default>') >= 0 || br.indexOf('main') >= 0 ? ['ok', 'fires'] : ['off', 'jobBranch'];
         if (res[0] === 'ok' && events.some(function (e) { return e.paths; })) return ['unk', 'paths'];
         return res[0] === 'ok' && j.condition ? ['unk', 'cond'] : res;
     }
-    var want = scen === 'pr' ? ['pull_request', 'pull_request_target'] : ['push'];
+    var want = own ? [own] : scen === 'pr' ? ['pull_request', 'pull_request_target'] : ['push'];
     var hits = events.filter(function (e) { return want.indexOf(e.event) >= 0; });
     if (!hits.length) {
         if (events.some(function (e) { return e.event === 'workflow_call' || e.event === 'workflow_run'; })) return ['unk', 'called'];
@@ -126,7 +139,7 @@ function jobEval(p, j, scen) {
     if (!fire.length) return ['off', scen === 'tag' ? 'tagBranch' : 'branch'];
     if (fire.every(function (e) { return e.paths; })) return ['unk', 'paths'];
     var jb = j.branches || [];
-    if (jb.length && (scen !== 'push' || (jb.indexOf('main') < 0 && jb.indexOf('<default>') < 0))) return ['off', 'jobBranch'];
+    if (jb.length && !own && (scen !== 'push' || (jb.indexOf('main') < 0 && jb.indexOf('<default>') < 0))) return ['off', 'jobBranch'];
     if (j.condition) return ['unk', 'cond'];
     return ['ok', 'fires'];
 }
@@ -208,8 +221,10 @@ function dlBar(p, view, key, bar, tabList) {
     bar.appendChild(viewTabs('delivery', key, tabList));
     if (view === 'ci') {
         var rg = add(el('div', { class: 'ops-scen', role: 'radiogroup', 'aria-label': t('lScenario').replace(':', '') }), el('span', { class: 'muted' }, t('lScenario')));
-        ['push', 'pr', 'tag'].forEach(function (s) {
-            var b = el('button', { type: 'button', role: 'radio', class: 'mono' + (dlState.scen === s ? ' on' : ''), 'aria-checked': String(dlState.scen === s) }, t('lScen')[s]);
+        var third = dlThirdScenario(p);
+        if (dlState.scen !== 'push' && dlState.scen !== 'pr' && dlState.scen !== third) dlState.scen = 'push';
+        ['push', 'pr', third].forEach(function (s) {
+            var b = el('button', { type: 'button', role: 'radio', class: 'mono' + (dlState.scen === s ? ' on' : ''), 'aria-checked': String(dlState.scen === s), 'data-scen': s }, dlScenLabel(s));
             b.addEventListener('click', function () { dlState.scen = s; renderAreaPage('delivery', key); });
             rg.appendChild(b);
         });
@@ -343,7 +358,7 @@ function dlRail(p, view, key, right) {
     if (!j) { right.appendChild(add(pad, el('span', { class: 'soft' }, t('pickItem')))); return; }
     var ev = jobEval(p, j, dlState.scen);
     add(pad, railHead(t('lJobKicker')(wfBase(j.workflow)), j.name, opsChip(t('lRun')[ev[0]], EVAL_CLASS[ev[0]])),
-        railRows([[t('lCond'), jobCond(j)], [t('lDepends'), jobMeta(p, j)], [t('lScenK'), t('lScen')[dlState.scen]], [t('lEvalK'), t('lRun')[ev[0]] + ' — ' + t('lWhy')[ev[1]]],
+        railRows([[t('lCond'), jobCond(j)], [t('lDepends'), jobMeta(p, j)], [t('lScenK'), dlScenLabel(dlState.scen)], [t('lEvalK'), t('lRun')[ev[0]] + ' — ' + t('lWhy')[ev[1]]],
             [t('lSourceK'), add(el('span'), document.createTextNode(wloc(j.witness) + ' '), confirmChip(j.witness.confirm))]]));
     railFindings(pad, 'delivery', jobFindings(p, j), t('lNoFindJob'));
     pad.appendChild(el('span', { class: 'ops-railnote' }, t('lJobNote')));

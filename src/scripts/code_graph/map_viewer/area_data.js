@@ -24,6 +24,9 @@ extendStrings({
         dbFindings: 'Findings', dbNoFindings: 'No findings.',
         dbMeta: function (t2, r) { return t2 + ' tables · ' + r + ' relations'; }, dbSnap: function (f) { return 'snapshot ' + f; },
         lines: 'Lines', lAll: 'All', lFocus: 'Focus', lOff: 'Off', lAllT: 'every relation', lFocusT: 'only the edges of the picked table, the rest dimmed', lOffT: 'no lines',
+        dbEmptyTab: 'ERD · no data yet', dbEmptyHead: function (r) { return 'No data yet: ' + r + '.'; }, dbEmptyWhat: 'Once a source exists this view shows: tables with columns and keys, FKs (solid), relations shown in code without an FK (dashed), keys of the same name (dotted), drift model ↔ migration and the migration timeline. Preview: the demo map.',
+        dbRungs: [['T1', 'migrations, SQL in the repository'], ['T2', 'committed dump'], ['T3', 'agents/map/data/snapshot/<conn>.sql'], ['T4', 'agents/map/data/oracle/*.json (artisan model:show)']], dbNeverLive: 'Never a live database.',
+        dbFoundAnyway: function (n) { return 'Found anyway · ' + n + ' findings'; }, dbEmptyFacts: function (f, n, fx) { return 'The manifest reports “empty” with ' + f + ' facts and ' + n + ' findings' + (fx ? ' – all from test fixtures' : ''); },
         cols: 'Columns', cAll: 'All', cKeys: 'Keys', cAllT: 'every column', cKeysT: 'only PK, FK, index and *_id',
         layout: 'Layout', yGrid: 'Grid', yDomain: 'By domain', yGridT: 'free arrangement', yDomainT: 'grouped by cluster of keys',
         fitB: 'Fit', resetPos: 'Reset arrangement', zoomL: function (z) { return 'Zoom ' + z + '×'; },
@@ -63,6 +66,9 @@ extendStrings({
         dbFindings: 'Befunde', dbNoFindings: 'Keine Befunde.',
         dbMeta: function (t2, r) { return t2 + ' Tabellen · ' + r + ' Beziehungen'; }, dbSnap: function (f) { return 'Snapshot ' + f; },
         lines: 'Linien', lAll: 'Alle', lFocus: 'Fokus', lOff: 'Aus', lAllT: 'alle Beziehungen', lFocusT: 'nur Kanten der gewählten Tabelle, Rest gedimmt', lOffT: 'keine Linien',
+        dbEmptyTab: 'ERD · noch keine Daten', dbEmptyHead: function (r) { return 'Noch keine Daten: ' + r + '.'; }, dbEmptyWhat: 'Diese Ansicht zeigt, sobald eine Quelle da ist: Tabellen mit Spalten und Schlüsseln, FKs (durchgezogen), im Code belegte Beziehungen ohne FK (gestrichelt), gleichnamige Schlüssel (gepunktet), Drift Model ↔ Migration und die Migrations-Zeitleiste. Vorschau: die Demo-Map.',
+        dbRungs: [['T1', 'Migrationen, SQL im Repo'], ['T2', 'committeter Dump'], ['T3', 'agents/map/data/snapshot/<conn>.sql'], ['T4', 'agents/map/data/oracle/*.json (artisan model:show)']], dbNeverLive: 'Nie eine Live-Datenbank.',
+        dbFoundAnyway: function (n) { return 'Trotzdem gefunden · ' + n + ' Befunde'; }, dbEmptyFacts: function (f, n, fx) { return 'Manifest meldet „empty“ mit ' + f + ' Fakten und ' + n + ' Befunden' + (fx ? ' – alle aus Test-Fixtures' : ''); },
         cols: 'Spalten', cAll: 'Alle', cKeys: 'Schlüssel', cAllT: 'alle Spalten', cKeysT: 'nur PK, FK, Index und *_id',
         layout: 'Layout', yGrid: 'Raster', yDomain: 'Nach Domäne', yGridT: 'freie Anordnung', yDomainT: 'gruppiert nach Schlüssel-Cluster',
         fitB: 'Einpassen', resetPos: 'Anordnung zurücksetzen', zoomL: function (z) { return 'Zoom ' + z + '×'; },
@@ -220,9 +226,35 @@ function dLinkSel(p, key) {
 
 function dSev(f) { return stChip(t('sevNames')[f.severity] || f.severity, SEV_CLASS[f.severity] === 'bad' ? 'red' : SEV_CLASS[f.severity]); }
 
+/** The handover's real state of an empty data lane: the reason, what the view will show, the four rungs, and what was found anyway. */
+function dbEmptyPage(p, main) {
+    var card = el('div', { class: 'empty-page dbempty', id: 'nodata-data' });
+    add(card, add(el('span', { class: 'ep-chips' }), stChip('empty', 'dash'), stChip('completeness: ' + p.completeness, 'dash')),
+        el('span', { class: 'ep-head' }, t('dbEmptyHead')(p.empty)), el('span', { class: 'ep-what' }, t('dbEmptyWhat')));
+    var rungs = el('div', { class: 'ep-rungs' });
+    t('dbRungs').forEach(function (r) { rungs.appendChild(add(el('div'), el('b', { class: 'mono' }, r[0]), el('br'), el('span', null, r[1]))); });
+    add(card, rungs, el('span', { class: 'ep-note' }, t('dbNeverLive')));
+    main.appendChild(card);
+    var fl = p.findings || [];
+    if (!fl.length) return;
+    var fx = fl.every(function (f) { return String(f.subject).indexOf('tests/fixtures/') === 0; });
+    main.appendChild(add(el('div', { class: 'ep-found' }), el('span', { class: 'ep-foundh' }, t('dbFoundAnyway')(num(fl.length))), el('span', { class: 'ep-facts' }, t('dbEmptyFacts')(num(payloadWitnesses(p, []).length), num(fl.length), fx))));
+    var list = el('div', { class: 'ep-list' });
+    fl.forEach(function (f) {
+        var sub = String(f.subject);
+        var cut = sub.indexOf('#');
+        var row = el('div', { class: 'ep-row' });
+        add(row, el('span', { class: 'mono ep-id' }, f.id), el('span', { class: 'mono ep-model' }, cut < 0 ? sub : sub.slice(cut + 1)), el('span', { class: 'mono ep-file', title: cut < 0 ? '' : sub.slice(0, cut) }, cut < 0 ? ((f.witnesses || [])[0] || {}).file || '–' : sub.slice(0, cut)));
+        list.appendChild(row);
+    });
+    main.appendChild(list);
+}
+
 AREA_MODULES.data = {
     tabs: [['erd', 'dbErd'], ['drift', 'dbDrift'], ['mig', 'dbMig']],
     railTitles: ['dbSchema', 'dbDetail'],
+    emptyTab: 'dbEmptyTab',
+    emptyPage: dbEmptyPage,
     items: function (p) {
         var out = [];
         p.tables.forEach(function (tb) {
@@ -463,9 +495,10 @@ function dErd(p, sel, bodyEl) {
     var rerender = function () { renderAreaPage('data', current.item); };
     var erd = el('div', { class: 'db-erd' });
     var ctl = el('div', { class: 'db-ctls' });
-    var dim = el('div', { class: 'seg dimseg', role: 'group', 'aria-label': t('dimLabel') });
+    // The handover's 2D / 3D is one choice of two: a radiogroup.
+    var dim = el('div', { class: 'seg dimseg', role: 'radiogroup', 'aria-label': t('dimLabel') });
     [['2d', t('d2')], ['3d', t('dim3')]].forEach(function (o) {
-        var b = el('button', { type: 'button', 'aria-pressed': String(dbState.dim === o[0]), 'data-dim': o[0] }, o[1]);
+        var b = el('button', { type: 'button', role: 'radio', 'aria-checked': String(dbState.dim === o[0]), 'data-dim': o[0] }, o[1]);
         b.addEventListener('click', function () { dbState.dim = o[0]; rerender(); });
         dim.appendChild(b);
     });
@@ -565,7 +598,7 @@ function dErd(p, sel, bodyEl) {
     function join(a, b) { if (adj[a] && adj[b] && a !== b) { adj[a].push(b); adj[b].push(a); } }
     p.foreignKeys.forEach(function (k) { join(k.from.table, k.to.table); });
     rels.forEach(function (r) { join(r.from, r.to); });
-    var phone = window.innerWidth <= 720;
+    var phone = window.innerWidth <= 700;
     var groups = [];
     if (dbState.layout === 'domain') {
         groups = dClusters(p);

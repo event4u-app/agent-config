@@ -64,7 +64,8 @@ describe('the demo map in a browser', () => {
                 const { page, errors } = await open(demo.page, `#/${r}`, width);
                 expect((await page.evaluate(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route)), r).toBe(r);
                 expect(await page.locator('.empty-card').count(), `${r} @${width}`).toBe(0);
-                expect(await page.locator('#areanav a.empty').count(), `${r} @${width}`).toBe(0);
+                // Bugs is local data, never in a map file: the one dim entry (Wissen draws its Markdown figure from the code model).
+                expect(await page.locator('#areanav a.empty').evaluateAll((as) => as.map((a) => a.getAttribute('data-route'))), `${r} @${width}`).toEqual(['bugs']);
                 expect(await page.locator('#pin-demo').isVisible(), r).toBe(true);
                 expect(await page.locator('#pin-demo').textContent()).toBe('Sample data · Fixture');
                 expect(errors, r).toEqual([]);
@@ -75,8 +76,8 @@ describe('the demo map in a browser', () => {
 
     it('every Overview layer card with an area is live, Environment included', async () => {
         const { page } = await open(demo.page, '#/overview');
-        expect(await page.locator('.ocard.empty, .ocard.none').count()).toBe(0);
-        expect(await page.locator('#ov-env.live').count()).toBe(1);
+        expect(await page.locator('.ocard.empty').count()).toBe(0);
+        expect(await page.locator('#ov-env.data').count()).toBe(1);
         await page.close();
     }, 60_000);
 
@@ -139,7 +140,7 @@ describe('the demo map in a browser', () => {
             const e = await erd(page);
             expect(e.tables.length, `@${width}`).toBeGreaterThan(100);
             expect(e.lines).toBe('focus');
-            expect(await page.locator('.dimseg button[data-dim="2d"]').getAttribute('aria-pressed')).toBe('true');
+            expect(await page.locator('.dimseg button[data-dim="2d"]').getAttribute('aria-checked')).toBe('true');
             expect(e.z, `@${width}`).toBeGreaterThanOrEqual(0.9);
             const stage = (await page.locator('#db-stage').boundingBox())!;
             const card = (await page.locator(`.db-table[data-table="${e.focus}"]`).boundingBox())!;
@@ -158,6 +159,7 @@ describe('the demo map in a browser', () => {
     it('the Runtime environment comparison stays readable on a phone: no word broken mid-letter, no chip overlapping', async () => {
         for (const width of [375, 1440]) {
             const { page, errors } = await open(demo.page, '#/runtime', width);
+            await page.locator('#av [role="tab"]', { hasText: /^(Environment comparison|Umgebungsvergleich)$/ }).click();
             const r = await page.evaluate(() => {
                 const inside = (a: DOMRect, b: DOMRect): boolean => a.left >= b.left - 0.5 && a.right <= b.right + 0.5 && a.top >= b.top - 0.5 && a.bottom <= b.bottom + 0.5;
                 const cells = Array.from(document.querySelectorAll('.ops-cmpgrid .ops-cell, .ops-cmpgrid .ops-cmpname, .ops-cmpgrid .ops-th'));
