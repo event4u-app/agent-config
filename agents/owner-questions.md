@@ -21,18 +21,6 @@ and the run that applies it links its PR.
   matters once Phase 2.5 has promoted a row, and (a) changes every install.
 - **Blocks:** nothing now; consumer reach of the render engine (Phase 2).
 
-### OQ-23 — Repetitions against the canary query ceiling
-
-- **Context:** three repetitions per case raise the rotation's weekly peak from
-  200 to 600 queries; `MAX_WEEKLY_QUERIES` is 200 and owner-set, and the lever
-  6.3 names first no longer exists. Blocker `b-rate-canary-ceiling`.
-- **Options:** (a) raise the ceiling to 600; (b) three repetitions only for
-  units with floor 0.90 (peak ≈ 420, still above 200); (c) keep default 1 and
-  restate 6.1/6.3.
-- **Recommendation:** (c) — breadth over per-case confidence, as 6.3 itself
-  argues.
-- **Blocks:** steps 6.1 (default 3) and 6.3.
-
 ## Not owner questions — waits, or already settled in the tree
 
 - `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
@@ -115,6 +103,20 @@ and the run that applies it links its PR.
   (`road-to-a-memory-that-names-its-moment` § Decisions E12).
 
 ## Answered
+
+### OQ-23 — Repetitions against the canary query ceiling
+
+- **Context:** three repetitions per case raise the rotation's weekly peak from
+  200 to 600 queries; `MAX_WEEKLY_QUERIES` is 200 and owner-set, and the lever
+  6.3 names first no longer exists. Blocker `b-rate-canary-ceiling`.
+- **Options:** (a) raise the ceiling to 600; (b) three repetitions only for
+  units with floor 0.90 (peak ≈ 420, still above 200); (c) keep default 1 and
+  restate 6.1/6.3.
+- **Recommendation:** (c) — breadth over per-case confidence, as 6.3 itself
+  argues.
+- **Blocks:** steps 6.1 (default 3) and 6.3.
+- **Answered 2026-10-27:** "Und Empfehlung 3 - Aber kläre das gerne im ai council" — the owner recommended (c) and delegated to the AI council, which converged 2/2 (anthropic + openai) on (c). Applied in `agents/roadmaps/road-to-routing-assurance-live-floors.md` (6.1/6.3 restated, blocker `b-rate-canary-ceiling` resolved). <!-- md-language-check: ignore -->
+
 
 ### OQ-22 — Spend beyond the 25 USD routing pilot
 

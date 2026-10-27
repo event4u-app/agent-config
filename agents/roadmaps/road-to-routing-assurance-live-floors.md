@@ -113,17 +113,17 @@ before any baseline existed, so neither can be tuned to a result.
 
 ## Phase 3 — Catalogue-pressure suite (pre-registered null)
 
-- [ ] **3.1 Selection accuracy as a function of catalogue size:** run the Phase <!-- blocked-by: b-live-spend-beyond-pilot -->
+- [ ] **3.1 Selection accuracy as a function of catalogue size:** run the Phase
       2 corpus at N in {12, 20, 50, full} with distractor sets sampled
       deterministically (FNV-1a order, the same discipline as
       `rule_trigger_eval.ts:20-21`, `:147`).
       verify: the same seed reproduces the same distractor set across runs.
-- [ ] **3.2 Near-duplicate probe:** for the top-invoked skills, inject one <!-- blocked-by: b-live-spend-beyond-pilot -->
+- [ ] **3.2 Near-duplicate probe:** for the top-invoked skills, inject one
       paraphrased description twin and measure confusion. **This step measures
       confusion only.** It is not a tiering justification — see 3.3.
       verify: the confusion figure is published per skill pair, with the twin
       text archived.
-- [ ] **3.3 Resolve the pre-registered null:** "selection accuracy at full <!-- blocked-by: b-live-spend-beyond-pilot -->
+- [ ] **3.3 Resolve the pre-registered null:** "selection accuracy at full
       catalogue is not worse than at N=20 by more than the floor delta."
       **Reframed at landing.** The source made this null cancel tiering work
       ("no tiering work is justified by this suite"). It can no longer do that:
@@ -141,7 +141,7 @@ item created unless the null broke.
 
 ## Phase 4 — Delivery-path parity (actionable now)
 
-- [ ] **4.1 Parametrize the Phase 2 corpus over delivery path:** host-native <!-- blocked-by: b-live-spend-beyond-pilot -->
+- [ ] **4.1 Parametrize the Phase 2 corpus over delivery path:** host-native
       listing versus MCP-tool listing. Same prompts, same floors. Both paths
       exist in the tree today (D4), so this step has no external dependency.
       verify: one corpus file runs on both paths and produces two comparable
@@ -150,7 +150,7 @@ item created unless the null broke.
       by more than a pre-registered epsilon on the same corpus. A breach blocks
       any MCP default-on decision; default-off holds until then.
       verify: a synthetic recall gap larger than epsilon turns the gate red.
-- [ ] **4.3 Publish the parity table** as evidence against the archived MCP <!-- blocked-by: b-live-spend-beyond-pilot -->
+- [ ] **4.3 Publish the parity table** as evidence against the archived MCP
       roadmap's measured-null outcome, not as a separate claim.
       verify: the table cites the archived roadmap and adds no new claim id.
 
@@ -193,18 +193,27 @@ is met; the ledger and `--propose` stay the intake for the next drain.
 
 ## Phase 6 — Repetition and variance (live path only)
 
-- [ ] **6.1 Add a repetition parameter to the live harness** (default 3 per <!-- blocked-by: b-rate-canary-ceiling -->
-      case, canary only) and report trigger RATE rather than binary fire.
-      verify: a single case run twice reports a rate, not a boolean.
+- [ ] **6.1 Add a repetition parameter to the live harness** (default 1;
+      repetitions are opt-in per run, canary only) and report trigger RATE
+      rather than binary fire. A run whose projected weekly peak exceeds
+      `MAX_WEEKLY_QUERIES` is refused unless explicitly overridden, and the
+      override is recorded.
+      verify: a single case run twice reports a rate, not a boolean; a test
+      shows a run projected over the ceiling refused.
+      Was (restated 2026-10-27 per OQ-23 (c)): "(default 3 per case, canary only)".
 - [x] **6.2 Floors move from "fired" to "rate >= x"**, with x pre-registered
       per tier.
       verify: the 0.1 contract carries the restated floors before the first
       rate-gated run.
-- [ ] **6.3 Cost note in the run report.** If the 3x cost breaks the canary <!-- blocked-by: b-rate-canary-ceiling -->
+- [ ] **6.3 Cost note in the run report.** The report carries projected and
+      actual queries and the CLI's own USD estimate. The first lever is the
+      repetition count: the rotation cap can no longer be halved (the 12-week
+      cycle is bound to the 90-day window).
+      verify: the report carries a cost line; the repetition count is the
+      documented first lever.
+      Was (restated 2026-10-27 per OQ-23 (c)): "If the 3x cost breaks the canary
       budget, halve the rotation cap before touching repetition — coverage
-      breadth via the ratchet matters more than per-case confidence.
-      verify: the report carries a cost line; the rotation cap is the documented
-      first lever.
+      breadth via the ratchet matters more than per-case confidence."
 
 **Exit:** floors restated as rates in the pre-registration, one canary cycle
 completed at the new measurement.
@@ -299,9 +308,17 @@ Offered by round `inbox-2026-10-at`, same terms:
 
 ### blocker: b-rate-canary-ceiling
 
-- **Status:** open — 2026-10-27: three repetitions raise the rotation's weekly
-  peak from 200 to 600 queries against the owner-set `MAX_WEEKLY_QUERIES` of
-  200, and 6.3's named first lever (halving the rotation cap) no longer exists.
+- **Status:** resolved — 2026-10-27, option (c): the owner recommended (c) and
+  sent it to the AI council, which converged 2/2 (anthropic + openai) on (c):
+  default 1, repetitions opt-in, the ceiling stays 200, 6.1/6.3 restated. Its
+  additions are in the restated steps: a run projected over the ceiling is
+  refused unless overridden, and the cost line names the repetition count as
+  the first lever. Revisit only when the owner raises the ceiling AND a
+  controlled variance study (firing, non-firing and the 44 unbaselined units,
+  host/model/CLI pinned) shows n=1 produces materially wrong ratchet or
+  regression decisions. Was: open — three repetitions raise the weekly peak
+  from 200 to 600 queries against the owner-set `MAX_WEEKLY_QUERIES` of 200,
+  and 6.3's named first lever no longer exists.
 - **Owner:** the owner — the ceiling is owner-set (OQ-23).
 - **Blocks:** 6.1 (default 3), 6.3.
 - **Recommendation:** (c) — keep default 1 and restate 6.1/6.3; a 3x per-case
