@@ -193,7 +193,7 @@ is met; the ledger and `--propose` stay the intake for the next drain.
 
 ## Phase 6 — Repetition and variance (live path only)
 
-- [ ] **6.1 Add a repetition parameter to the live harness** (default 1;
+- [x] **6.1 Add a repetition parameter to the live harness** (default 1; <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/trigger_eval_rotation.ts -->
       repetitions are opt-in per run, canary only) and report trigger RATE
       rather than binary fire. A run whose projected weekly peak exceeds
       `MAX_WEEKLY_QUERIES` is refused unless explicitly overridden, and the
@@ -205,7 +205,7 @@ is met; the ledger and `--propose` stay the intake for the next drain.
       per tier.
       verify: the 0.1 contract carries the restated floors before the first
       rate-gated run.
-- [ ] **6.3 Cost note in the run report.** The report carries projected and
+- [x] **6.3 Cost note in the run report.** The report carries projected and <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/trigger_eval_rotation.ts -->
       actual queries and the CLI's own USD estimate. The first lever is the
       repetition count: the rotation cap can no longer be halved (the 12-week
       cycle is bound to the 90-day window).
