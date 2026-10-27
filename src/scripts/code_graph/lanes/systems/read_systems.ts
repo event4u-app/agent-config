@@ -427,6 +427,36 @@ function usesFromGraph(
     for (const k of pkgs.values()) for (const f of [...k.users.keys()]) if (!fs.existsSync(path.join(root, f)) || read(f) === null) k.users.delete(f);
 }
 
+/** Which tool a config file belongs to: the typed input it is read as. */
+function configKind(file: string): 'tsconfig' | 'eslint' | 'vite' | 'config' {
+    const base = file.slice(file.lastIndexOf('/') + 1);
+    if (/^tsconfig[\w.-]*\.json$/.test(base)) return 'tsconfig';
+    if (/eslint/.test(base)) return 'eslint';
+    if (/^(vite|vitest)\.config\./.test(base)) return 'vite';
+    return 'config';
+}
+
+/**
+ * The packages a tool config reaches by a name that is not the package name:
+ * tsconfig `types: ["node"]` → `@types/node` and `extends` of a package, a
+ * vitest coverage `provider: 'v8'` → `@vitest/coverage-v8`.
+ */
+function typedConfigInputs(kind: string, body: string): Array<{ pkg: string; line: number; what: string }> {
+    const out: Array<{ pkg: string; line: number; what: string }> = [];
+    const lineAt = (i: number): number => body.slice(0, i).split('\n').length;
+    if (kind === 'tsconfig') {
+        const types = /"types"\s*:\s*\[([^\]]*)\]/.exec(body);
+        if (types) for (const m of (types[1] as string).matchAll(/"([^"]+)"/g)) out.push({ pkg: `@types/${(m[1] as string).replace(/^@([^/]+)\//, '$1__')}`, line: lineAt(types.index), what: `types ${m[1]}` });
+        const ext = /"extends"\s*:\s*"((?:@[^/"]+\/)?[^./"][^/"]*)/.exec(body);
+        if (ext) out.push({ pkg: ext[1] as string, line: lineAt(ext.index), what: `extends ${ext[1]}` });
+    }
+    if (kind === 'vite') {
+        const prov = /provider\s*:\s*['"](v8|istanbul)['"]/.exec(body);
+        if (prov) out.push({ pkg: `@vitest/coverage-${prov[1]}`, line: lineAt(prov.index), what: `coverage provider ${prov[1]}` });
+    }
+    return out;
+}
+
 function nonImportUses(
     walk: (match: (name: string, rel: string) => boolean) => string[],
     read: (rel: string) => string | null,
@@ -490,22 +520,24 @@ function nonImportUses(
         });
     }
 
-    // Tool configs that name a package or its short plugin form.
+    // Tool configs that name a package or its short plugin form, typed by the tool (6.3).
     const configs = walk((_n, rel) => CONFIG_FILE.test(posix(rel)));
     const npmPkgs = [...pkgs.values()].filter((k) => k.eco === 'npm');
     for (const cfg of configs) {
         const body = read(cfg);
         if (body === null) continue;
+        const kind = configKind(cfg);
         for (const k of npmPkgs) {
             for (const form of shortForms(k.p.name)) {
                 const re = new RegExp(`["'\`]${form.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}(?:["'\`/:]|$)`);
                 const m = re.exec(body);
                 if (m) {
-                    note(k, `config ${cfg}:${body.slice(0, m.index).split('\n').length} ${form}`);
+                    note(k, `${kind} ${cfg}:${body.slice(0, m.index).split('\n').length} ${form}`);
                     break;
                 }
             }
         }
+        for (const t of typedConfigInputs(kind, body)) note(preferred('npm', t.pkg), `${kind} ${cfg}:${t.line} ${t.what}`);
         if (cfg.endsWith('.php') || cfg.endsWith('.neon') || cfg.endsWith('.neon.dist') || /\.xml(\.dist)?$/.test(cfg)) {
             for (const k of pkgs.values()) {
                 if (k.eco !== 'composer') continue;
