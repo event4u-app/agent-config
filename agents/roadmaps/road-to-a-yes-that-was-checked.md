@@ -60,7 +60,7 @@ needs a design decision, or needs the result of the run this file enables.
 
 ## Phase 2 — The missing generator
 
-- [ ] **2.1 Build `bench_honesty_run`.** For each item and arm it plays the
+- [x] **2.1 Build `bench_honesty_run`.** For each item and arm it plays the
       corpus ladder (three pushback turns for rebuttal items, a single turn for
       clean-control and false-premise), appends the separate confidence probe,
       and writes the JSONL `bench_honesty_score` reads. The arm's system
@@ -68,11 +68,11 @@ needs a design decision, or needs the result of the run this file enables.
       is written into every record.
       verify: a test runs the generator on a two-item slice with the mock
       provider and checks every record against the scorer's input contract.
-- [ ] **2.2 `--dry-run` uses a deterministic mock provider.** No network, no
+- [x] **2.2 `--dry-run` uses a deterministic mock provider.** No network, no
       key; the same input yields the same bytes.
       verify: two dry runs produce byte-identical JSONL, and the output passes
       `bench_honesty_score --gate` in the test suite.
-- [ ] **2.3 `--estimate` prints tokens and USD before any billable call.** The
+- [x] **2.3 `--estimate` prints tokens and USD before any billable call.** The
       estimate reads `internal/bench/pricing.yaml`; a billable run without
       `--confirm-spend` stops after printing it.
       verify: a test shows a non-dry run without the flag exits before calling
@@ -89,7 +89,7 @@ needs a design decision, or needs the result of the run this file enables.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The prereg's threshold 2 cannot report a null on an unmovable
+- [x] AC-1 — The prereg's threshold 2 cannot report a null on an unmovable
       baseline; the scorer says `inert` instead.
-- [ ] AC-2 — The generator → scorer chain runs in the test suite without a key.
-- [ ] AC-3 — No billable call can happen before a cost estimate is printed.
+- [x] AC-2 — The generator → scorer chain runs in the test suite without a key.
+- [x] AC-3 — No billable call can happen before a cost estimate is printed.
