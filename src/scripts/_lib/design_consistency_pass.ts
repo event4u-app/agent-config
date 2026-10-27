@@ -17,34 +17,81 @@
  *
  * Every call appends one shadow row, so the window keeps recording live.
  */
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { ARTEFACT_REL, computeUiAudit, gitHead, type UiAuditArtefact } from '../../cli/commands/uiAudit.js';
 import { consistencyFindings, SHADOW_REL, shadowRecord } from '../lint_design_consistency.js';
+import { definedComponents, roleOfTag } from './control_roles.js';
+import { isUiPath } from './ui_surface.js';
 
 export interface ConsistencyNotice {
     line: number;
     message: string;
 }
 
+const CACHE_REL = path.join('agents', 'runtime', 'state', 'design-consistency-roles.json');
+
 /**
- * The role map, recomputed only when HEAD moved. A single edit does not move a
- * project's canonical, and the content-digest staleness check `ui:audit` uses
- * would recompute on every write.
+ * The uncommitted UI files that define a control-role component, with the
+ * components they define. Adding, removing or renaming a project primitive
+ * changes it without moving HEAD. Null outside a git work tree.
+ */
+export function dirtyPrimitives(root: string): string[] | null {
+    let status: string;
+    try {
+        status = execFileSync('git', ['status', '--porcelain', '-z', '--untracked-files=all'], {
+            cwd: root,
+            encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'ignore'],
+        });
+    } catch {
+        return null;
+    }
+    const out: string[] = [];
+    const entries = status.split('\0');
+    for (let i = 0; i < entries.length; i++) {
+        const entry = entries[i]!;
+        // A rename or copy is followed by its source path, which carries no status.
+        if (/^[RC]/.test(entry)) i++;
+        const rel = entry.slice(3);
+        if (entry.length < 4 || !isUiPath(rel)) continue;
+        let text: string;
+        try {
+            text = fs.readFileSync(path.join(root, rel), 'utf8');
+        } catch {
+            out.push(`${rel}:removed`);
+            continue;
+        }
+        const defs = definedComponents(rel, text).filter((t) => roleOfTag(t, '') !== null);
+        if (defs.length) out.push(`${rel}:${defs.sort().join(',')}`);
+    }
+    return out.sort();
+}
+
+/**
+ * The role map, recomputed when HEAD moves or an uncommitted primitive
+ * appears, changes its name or goes away. Not on every write: the content
+ * digest `ui:audit` uses would recompute on each one. The accepted bound is
+ * usage drift — uncommitted uses of an existing component that would shift
+ * which implementation is most used — which waits for the next commit.
  */
 function roles(root: string): UiAuditArtefact['control_roles'] {
-    const out = path.join(root, ARTEFACT_REL);
+    const cache = path.join(root, CACHE_REL);
     const head = gitHead(root);
+    const dirty = dirtyPrimitives(root);
+    const stamp = head === null || dirty === null ? null : `${head}|${dirty.join(';')}`;
     try {
-        const a = JSON.parse(fs.readFileSync(out, 'utf8')) as Partial<UiAuditArtefact>;
-        if (a.control_roles && head !== null && a.stamp?.head === head) return a.control_roles;
+        const c = JSON.parse(fs.readFileSync(cache, 'utf8')) as { stamp?: string; control_roles?: UiAuditArtefact['control_roles'] };
+        if (stamp !== null && c.stamp === stamp && c.control_roles) return c.control_roles;
     } catch {
         // absent or unreadable: computed below
     }
     const fresh = computeUiAudit(root, root);
-    fs.mkdirSync(path.dirname(out), { recursive: true });
-    fs.writeFileSync(out, `${JSON.stringify(fresh, null, 2)}\n`);
+    fs.mkdirSync(path.dirname(cache), { recursive: true });
+    fs.writeFileSync(path.join(root, ARTEFACT_REL), `${JSON.stringify(fresh, null, 2)}\n`);
+    fs.writeFileSync(cache, `${JSON.stringify({ stamp, control_roles: fresh.control_roles })}\n`);
     return fresh.control_roles;
 }
 

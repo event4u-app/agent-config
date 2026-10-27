@@ -103,6 +103,31 @@ describe('the consistency check ships on', () => {
     });
 });
 
+describe('the role map follows uncommitted primitives', () => {
+    it('a primitive added without a commit is seen on the next write', () => {
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-consistency-git-'));
+        const w = (rel: string, text: string) => {
+            fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+            fs.writeFileSync(path.join(dir, rel), text);
+        };
+        const git = (...a: string[]) =>
+            spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@example.com', ...a], { cwd: dir, encoding: 'utf8' });
+        w('app/home.tsx', 'export const H = () => <main />;\n');
+        git('init', '-q');
+        git('add', '-A');
+        git('commit', '-q', '-m', 'init');
+        // The first write caches a map with no select role at this HEAD.
+        expect(run(dir, 'app/home.tsx').status).toBe(0);
+        // Uncommitted: the project gains its own Select and two uses of it.
+        w('components/ui/select.tsx', 'export function Select(props) {\n  return <div {...props} />;\n}\n');
+        w('app/orders.tsx', 'export const O = () => <><Select name="a" /><Select name="b" /></>;\n');
+        w('app/filters.tsx', 'export const F = () => <select name="status"><option>Open</option></select>;\n');
+        const r = run(dir, 'app/filters.tsx');
+        expect(r.status).toBe(2);
+        expect(r.stdout).toContain("this project's select is Select");
+    });
+});
+
 describe('the chunk boundary', () => {
     it('a missing chunk costs the finding, never the event', () => {
         const root = project();
