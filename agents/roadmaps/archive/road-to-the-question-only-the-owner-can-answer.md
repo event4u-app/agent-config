@@ -43,11 +43,11 @@ question, never silently dropped.
 ## Point ledger (inbox round)
 
 - **Owner demand (transcript turn 3):** "Können wir diesen Satz auch automatisch
-  anhängen? Mit einem Hook oder so?" → `owner-decision` (OQ-22, step 3.1): the form —
+  anhängen? Mit einem Hook oder so?" → `owner-decision` (OQ-25, step 3.1): the form —
   personal hook vs. shipped opt-in concern — is a product choice, and a shipped opt-in key
   collides with the 2026-10-12 owner line against new form settings (ADR-293).
 - **Supplied plan D1–D13:** D1, D3 (fence half), D4, D7, D8 (check half), D12 → steps
-  1.1–2.3 here. D2 → owner-decision (OQ-23). D5, D9, D13 → `[~]` here. D6, D10 → arrival
+  1.1–2.3 here. D2 → owner-decision (OQ-26). D5, D9, D13 → `[~]` here. D6, D10 → arrival
   on `road-to-decision-closure`. D11 → arrival on `road-to-typed-grants-that-persist`.
 - **Kill register K1–K10 of the plan:** adopted as written (no suffix by default, no
   ambiguity hook, no new `/interview` command, no subagent asks).
@@ -88,10 +88,10 @@ question, never silently dropped.
 
 ## Phase 3 — Parked: owner decisions, measurements, headroom
 
-- [~] **3.1 Append the interview sentence automatically (owner demand).** <!-- blocked-by: interview-suffix-form-is-an-owner-decision | asked: no — queued as OQ-22/OQ-23 in agents/owner-questions.md per the 2026-10-24 directive --> <!-- deferred-resolution: carried-to=road-to-the-question-only-the-owner-can-answer-carried -->
-      verify: OQ-22 answered and the chosen form ships with a fixture.
-- [~] **3.2 Interview reachable outside the maintainer workspace (D2).** <!-- blocked-by: interview-suffix-form-is-an-owner-decision | asked: no — queued as OQ-22/OQ-23 in agents/owner-questions.md per the 2026-10-24 directive --> <!-- deferred-resolution: carried-to=road-to-the-question-only-the-owner-can-answer-carried -->
-      verify: OQ-23 answered; `lint_discovery_vocabulary` green.
+- [~] **3.1 Append the interview sentence automatically (owner demand).** <!-- blocked-by: interview-suffix-form-is-an-owner-decision | asked: no — queued as OQ-25/OQ-26 in agents/owner-questions.md per the 2026-10-24 directive --> <!-- deferred-resolution: carried-to=road-to-the-question-only-the-owner-can-answer-carried -->
+      verify: OQ-25 answered and the chosen form ships with a fixture.
+- [~] **3.2 Interview reachable outside the maintainer workspace (D2).** <!-- blocked-by: interview-suffix-form-is-an-owner-decision | asked: no — queued as OQ-25/OQ-26 in agents/owner-questions.md per the 2026-10-24 directive --> <!-- deferred-resolution: carried-to=road-to-the-question-only-the-owner-can-answer-carried -->
+      verify: OQ-26 answered; `lint_discovery_vocabulary` green.
 - [~] **3.3 Absence scored as unknown, plus a taste dimension (D5).** <!-- blocked-by: intake-band-shift-needs-a-baseline --> <!-- deferred-resolution: carried-to=road-to-the-question-only-the-owner-can-answer-carried -->
       verify: G4 fixtures — "make it better", a taste-gap prompt and a full prompt land on three distinct outcomes.
 - [~] **3.4 Skill-level `effort` lowering, benched on ≤ 3 skills (D13).** <!-- blocked-by: intake-band-shift-needs-a-baseline --> <!-- deferred-resolution: carried-to=road-to-the-question-only-the-owner-can-answer-carried -->
@@ -105,12 +105,12 @@ question, never silently dropped.
 
 - **Status:** resolved — carried, still open, to `road-to-the-question-only-the-owner-can-answer-carried` with the steps it blocks (was: open — raised 2026-10-27 by inbox round `inbox-2026-10-be`.)
 - **Class:** 3 — owner-reserved: product reach and a possible new settings key.
-- **Owner:** user — `agents/owner-questions.md` OQ-22 and OQ-23.
-- **Run:** `grep -n 'OQ-22\|OQ-23' agents/owner-questions.md`
+- **Owner:** user — `agents/owner-questions.md` OQ-25 and OQ-26.
+- **Run:** `grep -n 'OQ-25\|OQ-26' agents/owner-questions.md`
 - **Blocks:** 3.1, 3.2.
-- **What to do:** answer OQ-22 (options a / b / c) and OQ-23 (options a / b / c) in `agents/owner-questions.md`.
+- **What to do:** answer OQ-25 (options a / b / c) and OQ-26 (options a / b / c) in `agents/owner-questions.md`.
 - **Resolved when:** both rows sit under `## Answered`.
-- **Recommendation:** OQ-22 (a) the personal hook, zero package change; OQ-23 (a) widen.
+- **Recommendation:** OQ-25 (a) the personal hook, zero package change; OQ-26 (a) widen.
 - **If you do nothing:** the suffix stays a manual tool; Phase 1 still routes it.
 
 ### blocker: intake-band-shift-needs-a-baseline

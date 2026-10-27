@@ -11,6 +11,7 @@ import {
     runCallsFrom,
     RUN_STAGES,
     stageProduction,
+    stanceFlips,
     zeroMarginalValueRate,
     type DeliberationCall,
 } from '../../../src/scripts/ai_council/deliberation_metrics.js';
@@ -207,5 +208,55 @@ describe('measureDeliberation', () => {
             { stage: 'deliberation', produced: 1, calls: 1 },
             { stage: 'peer-review', produced: 0, calls: 1 },
         ]);
+    });
+});
+
+describe('stanceFlips — stance changes that name no reason', () => {
+    const stance = (label: string) => `\n\nSTANCE: ${label} | CONFIDENCE: high | DEALBREAKER: no`;
+    const PEER =
+        'I disagree with option A because its rollback path drops the audit rows written during the window.';
+
+    it('a seat that adopts a peer objection before flipping is a reasoned flip', () => {
+        const out = stanceFlips([
+            call('r1', 'a/m', `Option A is fine.${stance('A')}`),
+            call('r1', 'b/m', `${PEER}${stance('B')}`),
+            call('r2', 'a/m', `${PEER}${stance('B')}`),
+        ]);
+        expect(out.flips).toBe(1);
+        expect(out.unreasoned_flips).toBe(0);
+        expect(out.events[0]).toMatchObject({ member: 'a/m', from: 'a', to: 'b', reasoned: true });
+    });
+
+    it('a seat that flips with no objection it can point at is unreasoned', () => {
+        const out = stanceFlips([
+            call('r1', 'a/m', `Option A is fine.${stance('A')}`),
+            call('r1', 'b/m', `${PEER}${stance('B')}`),
+            call('r2', 'a/m', `On reflection B looks better.${stance('B')}`),
+        ]);
+        expect(out.unreasoned_flips).toBe(1);
+        expect(out.per_member['a/m']).toEqual({ flips: 1, unreasoned_flips: 1 });
+    });
+
+    it('a seat restating its OWN objection is not reasoned by a peer', () => {
+        const out = stanceFlips([
+            call('r1', 'a/m', `${PEER}${stance('A')}`),
+            call('r2', 'a/m', `${PEER}${stance('B')}`),
+        ]);
+        expect(out.unreasoned_flips).toBe(1);
+    });
+
+    it('a stable seat, a failed call and a call with no stance line yield no flip', () => {
+        const out = stanceFlips([
+            call('r1', 'a/m', `x${stance('A')}`),
+            call('r2', 'a/m', 'no stance line here'),
+            call('r2', 'a/m', `x${stance('B')}`, true),
+            call('r3', 'a/m', `x${stance('A')}`),
+        ]);
+        expect(out.flips).toBe(0);
+    });
+
+    it('measureDeliberation carries the reading', () => {
+        const m = measureDeliberation([call('r1', 'a/m', `x${stance('A')}`), call('r2', 'a/m', `y${stance('B')}`)]);
+        expect(m.stance_flips.unreasoned_flips).toBe(1);
     });
 });

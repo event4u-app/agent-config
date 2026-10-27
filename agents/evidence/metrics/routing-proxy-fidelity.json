@@ -1,0 +1,16 @@
+{
+  "schema": "routing-proxy-fidelity/v1",
+  "backend": "dry",
+  "n": 135,
+  "agree": 64,
+  "agreement": 0.474,
+  "checker_only": 0,
+  "session_only": 71,
+  "reference_agreement": 0.474,
+  "tolerance": 0.1,
+  "status": "ok",
+  "sources": {
+    "own-sessions": 0,
+    "baseline-runs": 135
+  }
+}

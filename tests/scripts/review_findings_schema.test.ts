@@ -187,3 +187,49 @@ describe('assurance_override — the escape hatch has a shape', () => {
         expect(props['assurance_override']?.['pattern']).toBeTypeOf('string');
     });
 });
+
+describe('review-findings schema — typed exhibits and line', () => {
+    const base = { severity: 'high', kind: 'correctness', title: 't', file: 'src/x.ts' };
+    const withExhibit = (exhibit: Record<string, unknown>, extra: Record<string, unknown> = {}) => ({
+        schema_version: 1,
+        findings: [{ ...base, ...extra, exhibits: [exhibit] }],
+    });
+    const COMMIT = 'ac6c60802a';
+
+    it.each([
+        ['presence', { type: 'presence', path: 'src/x.ts', line: 3, quote: 'const a = 1;', commit: COMMIT }],
+        ['absence', { type: 'absence', path_glob: 'src/**/*.ts', pattern: 'guardX', commit: COMMIT, expected: 0 }],
+        [
+            'pair',
+            {
+                type: 'pair',
+                legs: [
+                    { type: 'presence', path: 'a.ts', line: 1, quote: 'x', commit: COMMIT },
+                    { type: 'presence', path: 'b.ts', line: 2, quote: 'y', commit: COMMIT },
+                ],
+            },
+        ],
+        ['executed', { type: 'executed', command: 'npm test', exit_code: 1, output_digest: 'sha256:ab' }],
+    ])('a %s exhibit validates', (_name, exhibit) => {
+        expect(errs(withExhibit(exhibit, { line: 3 }))).toEqual([]);
+    });
+
+    it.each([
+        ['an exhibit without a type', { path: 'src/x.ts' }, 'required'],
+        ['an exhibit with an unknown type', { type: 'hunch' }, 'enum'],
+        ['a presence line below 1', { type: 'presence', line: 0 }, 'minimum'],
+        ['a commit that is not hex', { type: 'presence', commit: 'HEAD~1' }, 'pattern'],
+        ['a non-integer expected count', { type: 'absence', expected: 1.5 }, 'type'],
+    ])('rejects %s', (_name, exhibit, rule) => {
+        const errors = validate(withExhibit(exhibit) as never, schema() as never);
+        expect(errors.map((e) => e.rule)).toContain(rule);
+    });
+
+    it('rejects a finding line below 1', () => {
+        const errors = validate(
+            { schema_version: 1, findings: [{ ...base, line: 0 }] } as never,
+            schema() as never,
+        );
+        expect(errors.map((e) => e.rule)).toContain('minimum');
+    });
+});

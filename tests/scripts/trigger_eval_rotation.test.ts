@@ -6,12 +6,16 @@ import {
     MAX_WEEKLY_QUERIES,
     QUERIES_PER_SUITE,
     ROTATION_CYCLE_WEEKS,
+    cost_line,
     list_trigger_suites,
     pick_rotation,
     rotation_plan,
+    run_eval_async,
     run_rotation,
+    trigger_rates,
     week_index,
 } from '../../src/scripts/trigger_eval_rotation.js';
+import { Query } from '../../src/scripts/skill_trigger_eval.js';
 import { DEFAULT_FLOOR, DOMAIN_FLOORS, floor_for } from '../../src/scripts/_lib/trigger_eval_floors.js';
 
 describe('pick_rotation — deterministic weekly selection by suite identity', () => {
@@ -143,5 +147,107 @@ describe('run_rotation — a suite with no answered call is not a score', () => 
             expect(o.answered).toBe(false);
             expect(o.passed).toBe(false);
         }
+    });
+});
+
+// road-to-routing-assurance-live-floors 6.1 and 6.3: firing is stochastic, so a
+// case is repeated and reported as a RATE; repetition multiplies the bill, so
+// the plan and the run report carry the product.
+describe('repetition — a rate, not a boolean (6.1)', () => {
+    it('a single case run twice reports a rate', async () => {
+        let call = 0;
+        const flaky = {
+            name: 'flaky',
+            route: (): [string[], number, number] => {
+                call += 1;
+                return [call % 2 === 1 ? ['alpha'] : [], 10, 2];
+            },
+        };
+        const result = await run_eval_async('alpha', [Query('use alpha', true)], flaky, [], 'm', 2);
+        expect(result.queries).toHaveLength(2);
+        const [rate] = trigger_rates(result);
+        expect(rate).toEqual({ q: 'use alpha', expected: true, runs: 2, fired: 1, rate: 0.5 });
+        expect(typeof rate?.rate).toBe('number');
+        // Recall over the repeated runs IS the rate, not "fired at least once".
+        expect(result.metrics.recall).toBe(0.5);
+    });
+
+    it('defaults to one run, the behaviour before repetition existed', async () => {
+        const once = { name: 'once', route: (): [string[], number, number] => [['alpha'], 1, 1] };
+        const result = await run_eval_async('alpha', [Query('use alpha', true)], once, [], 'm');
+        expect(result.queries).toHaveLength(1);
+    });
+
+    it('refuses a repetition count below one', async () => {
+        const once = { name: 'once', route: (): [string[], number, number] => [['alpha'], 1, 1] };
+        await expect(run_eval_async('alpha', [Query('q', true)], once, [], 'm', 0)).rejects.toThrow(/repetitions/);
+    });
+});
+
+describe('repetition — the bill carries the product (6.3)', () => {
+    it('rotation_plan multiplies the peak by the repetition factor', () => {
+        const suites = Array.from({ length: 40 }, (_, i) => `s${i}`);
+        const one = rotation_plan(suites, ROTATION_CYCLE_WEEKS);
+        const three = rotation_plan(suites, ROTATION_CYCLE_WEEKS, 3);
+        expect(three.peakWeeklyQueries).toBe(one.peakWeeklyQueries * 3);
+    });
+
+    it('the run report carries a cost line naming queries, repetitions and the ceiling', async () => {
+        const outDir = join(tmpdir(), `rot-reps-${process.pid}-${Date.now()}`);
+        const summary = await run_rotation({ dryRun: true, week: 3, cycleWeeks: 64, outDir, repetitions: 2 });
+        expect(summary.repetitions).toBe(2);
+        const single = await run_rotation({ dryRun: true, week: 3, cycleWeeks: 64, outDir });
+        expect(summary.queries_issued).toBe(single.queries_issued * 2);
+        const line = cost_line(summary);
+        expect(line).toContain(`${String(summary.queries_issued)} provider queries`);
+        expect(line).toContain('× 2 repetitions');
+        expect(line).toContain(`weekly ceiling ${String(MAX_WEEKLY_QUERIES)}`);
+        expect(line).toMatch(/projected weekly peak \d+/);
+        expect(line).toMatch(/estimate ~\$[0-9.]+/);
+        expect(line).toContain('first lever: --repetitions');
+        for (const o of summary.outcomes) expect(o.rates.every((r) => r.runs === 2)).toBe(true);
+    });
+});
+
+// OQ-23 (c): repetition stays opt-in, and a run whose projected weekly peak
+// exceeds the ceiling is refused unless explicitly overridden, with the
+// override recorded.
+describe('the weekly ceiling guard (6.1)', () => {
+    // A live run with an injected router: the guard is exercised, nothing is paid.
+    const live = { name: 'stub', route: (): [string[], number, number] => [[], 1, 1] };
+    it('refuses a run projected over MAX_WEEKLY_QUERIES', async () => {
+        const outDir = join(tmpdir(), `rot-guard-${process.pid}-${Date.now()}`);
+        const projected = rotation_plan(list_trigger_suites(), ROTATION_CYCLE_WEEKS, 3).peakWeeklyQueries;
+        expect(projected).toBeGreaterThan(MAX_WEEKLY_QUERIES);
+        await expect(run_rotation({ week: 3, outDir, repetitions: 3, router: live })).rejects.toThrow(
+            /projected weekly peak .* exceeds .*ceiling/i,
+        );
+    });
+
+    it('runs over the ceiling only with a recorded override reason', async () => {
+        const outDir = join(tmpdir(), `rot-guard-ok-${process.pid}-${Date.now()}`);
+        const summary = await run_rotation({
+            week: 3,
+            outDir,
+            repetitions: 3,
+            router: live,
+            ceilingOverride: 'measured once for the variance study',
+        });
+        expect(summary.ceiling_override).toMatchObject({ reason: 'measured once for the variance study' });
+        expect(summary.projected_weekly_peak).toBeGreaterThan(MAX_WEEKLY_QUERIES);
+    });
+
+    it('an empty override reason is not an override', async () => {
+        const outDir = join(tmpdir(), `rot-guard-empty-${process.pid}-${Date.now()}`);
+        await expect(
+            run_rotation({ week: 3, outDir, repetitions: 3, router: live, ceilingOverride: '  ' }),
+        ).rejects.toThrow(/ceiling/i);
+    });
+
+    it('the default of one repetition stays within the ceiling and records no override', async () => {
+        const outDir = join(tmpdir(), `rot-guard-one-${process.pid}-${Date.now()}`);
+        const summary = await run_rotation({ week: 3, outDir, router: live });
+        expect(summary.projected_weekly_peak).toBeLessThanOrEqual(MAX_WEEKLY_QUERIES);
+        expect(summary.ceiling_override).toBeNull();
     });
 });

@@ -8,6 +8,19 @@ and the run that applies it links its PR.
 
 ## Open
 
+### OQ-24 — Fund the two measurement runs inbox round 2026-10-bd planned
+
+- **Context:** two parked roadmaps end in a paid run. `later/road-to-a-court-at-the-stops`
+  Phase 4 measures whether typed exhibits raise review precision on the ledger corpus
+  (`court-measurement-spend`). `later/road-to-a-challenge-the-bench-has-measured`
+  Phase 2 runs the honesty bench, pre-registered since 2026-07-27 and never run
+  (`honesty-bench-spend`). Both print an estimate before any billable call.
+- **Options:** (a) fund the honesty floor probe only (computed at about 1 USD);
+  (b) fund (a) plus the full honesty run if the floor is met (about 20-30 USD) and
+  one court run per arm; (c) fund neither.
+- **Recommendation:** (a) now; decide (b) on the probe's result.
+- **Blocks:** the two blockers named above; nothing in an active roadmap.
+
 ### OQ-21 — How consumers get a browser for `ui:render`
 
 - **Context:** `@playwright/test` is a devDependency, so no consumer install can
@@ -21,7 +34,7 @@ and the run that applies it links its PR.
   matters once Phase 2.5 has promoted a row, and (a) changes every install.
 - **Blocks:** nothing now; consumer reach of the render engine (Phase 2).
 
-### OQ-22 — How the "interview me" sentence gets appended automatically
+### OQ-25 — How the "interview me" sentence gets appended automatically
 
 - **Context:** your own question in inbox round `inbox-2026-10-be`: "Können wir diesen Satz
   auch automatisch anhängen?" A `user_prompt_submit` hook can add the sentence as context.
@@ -35,7 +48,7 @@ and the run that applies it links its PR.
   interview and fence the run.
 - **Blocks:** step 3.1 of `road-to-the-question-only-the-owner-can-answer-carried` (`later/`).
 
-### OQ-23 — Make the interview reachable outside the maintainer workspace
+### OQ-26 — Make the interview reachable outside the maintainer workspace
 
 - **Context:** `challenge-me`, `grill-me` and `refine-prompt` are fenced to
   `agent-config-maintainer`; a consumer typing "interview me" gets nothing routed.
@@ -44,7 +57,7 @@ and the run that applies it links its PR.
 - **Recommendation:** (a) — optional packs are opt-in, so (b) still misses most users.
 - **Blocks:** step 3.2 of `road-to-the-question-only-the-owner-can-answer-carried` (`later/`).
 
-### OQ-24 — The prompt optimizer's "Lyra" persona
+### OQ-27 — The prompt optimizer's "Lyra" persona
 
 - **Context:** `/optimize prompt` greets with "Hi! I'm Lyra"; a role names vocabulary, not a
   method, and the same change drops "assign a role" from the skill.
@@ -135,6 +148,35 @@ and the run that applies it links its PR.
   (`road-to-a-memory-that-names-its-moment` § Decisions E12).
 
 ## Answered
+
+### OQ-23 — Repetitions against the canary query ceiling
+
+- **Context:** three repetitions per case raise the rotation's weekly peak from
+  200 to 600 queries; `MAX_WEEKLY_QUERIES` is 200 and owner-set, and the lever
+  6.3 names first no longer exists. Blocker `b-rate-canary-ceiling`.
+- **Options:** (a) raise the ceiling to 600; (b) three repetitions only for
+  units with floor 0.90 (peak ≈ 420, still above 200); (c) keep default 1 and
+  restate 6.1/6.3.
+- **Recommendation:** (c) — breadth over per-case confidence, as 6.3 itself
+  argues.
+- **Blocks:** steps 6.1 (default 3) and 6.3.
+- **Answered 2026-10-27:** "Und Empfehlung 3 - Aber kläre das gerne im ai council" — the owner recommended (c) and delegated to the AI council, which converged 2/2 (anthropic + openai) on (c). Applied in `agents/roadmaps/road-to-routing-assurance-live-floors.md` (6.1/6.3 restated, blocker `b-rate-canary-ceiling` resolved). <!-- md-language-check: ignore -->
+
+
+### OQ-22 — Spend beyond the 25 USD routing pilot
+
+- **Context:** the drain of `road-to-routing-assurance-live-floors` froze the
+  protocol and captured the baseline (0.2) for 23.56 USD of the 25 USD pilot.
+  Phases 3–4 need live runs: about 69 USD for N=12/20/50, about 23 USD per MCP
+  arm. Blocker `b-live-spend-beyond-pilot`.
+- **Options:** (a) release a new ceiling (≈ 95 USD covers both phases);
+  (b) a cheaper design — smaller model or a unit subset; (c) re-park Phases 3–4
+  under `later/`.
+- **Recommendation:** (a) — the instrument is fixed and calibrated; the
+  remaining cost is runs, not design.
+- **Blocks:** steps 3.1, 3.2, 3.3, 4.1, 4.3.
+- **Answered 2026-10-27:** "1" — option (a): a new ceiling of about 95 USD for Phases 3–4, cumulative on top of the 23.56 USD the pilot spent. Applied in `agents/roadmaps/road-to-routing-assurance-live-floors.md` (blocker `b-live-spend-beyond-pilot` resolved). Narrowed the same day by the owner: "Wir wollen ja aber immer die CLI first nutzen [...] bei CLI brauchen wir keine Budget Frage" — CLI runs need no budget question; the ceiling binds only an arm that must use the API (AC-7 of that roadmap). <!-- md-language-check: ignore -->
+
 
 ### OQ-20 — Third-party test data as attributed splits (`external-test-data-licence`)
 

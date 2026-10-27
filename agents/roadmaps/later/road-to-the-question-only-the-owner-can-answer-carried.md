@@ -29,10 +29,10 @@ left to read as finished.
 
 ## Phase 1 — Deferred steps carried from road-to-the-question-only-the-owner-can-answer
 
-- [ ] **3.1 Append the interview sentence automatically (owner demand).** <!-- blocked-by: interview-suffix-form-is-an-owner-decision | asked: no — queued as OQ-22/OQ-23 in agents/owner-questions.md per the 2026-10-24 directive -->
-      verify: OQ-22 answered and the chosen form ships with a fixture.
-- [ ] **3.2 Interview reachable outside the maintainer workspace (D2).** <!-- blocked-by: interview-suffix-form-is-an-owner-decision | asked: no — queued as OQ-22/OQ-23 in agents/owner-questions.md per the 2026-10-24 directive -->
-      verify: OQ-23 answered; `lint_discovery_vocabulary` green.
+- [ ] **3.1 Append the interview sentence automatically (owner demand).** <!-- blocked-by: interview-suffix-form-is-an-owner-decision | asked: no — queued as OQ-25/OQ-26 in agents/owner-questions.md per the 2026-10-24 directive -->
+      verify: OQ-25 answered and the chosen form ships with a fixture.
+- [ ] **3.2 Interview reachable outside the maintainer workspace (D2).** <!-- blocked-by: interview-suffix-form-is-an-owner-decision | asked: no — queued as OQ-25/OQ-26 in agents/owner-questions.md per the 2026-10-24 directive -->
+      verify: OQ-26 answered; `lint_discovery_vocabulary` green.
 - [ ] **3.3 Absence scored as unknown, plus a taste dimension (D5).** <!-- blocked-by: intake-band-shift-needs-a-baseline -->
       verify: G4 fixtures — "make it better", a taste-gap prompt and a full prompt land on three distinct outcomes.
 - [ ] **3.4 Skill-level `effort` lowering, benched on ≤ 3 skills (D13).** <!-- blocked-by: intake-band-shift-needs-a-baseline -->
@@ -46,12 +46,12 @@ left to read as finished.
 
 - **Status:** open — raised 2026-10-27 by inbox round `inbox-2026-10-be`.
 - **Class:** 3 — owner-reserved: product reach and a possible new settings key.
-- **Owner:** user — `agents/owner-questions.md` OQ-22 and OQ-23.
-- **Run:** `grep -n 'OQ-22\|OQ-23' agents/owner-questions.md`
+- **Owner:** user — `agents/owner-questions.md` OQ-25 and OQ-26.
+- **Run:** `grep -n 'OQ-25\|OQ-26' agents/owner-questions.md`
 - **Blocks:** 3.1, 3.2.
-- **What to do:** answer OQ-22 (options a / b / c) and OQ-23 (options a / b / c) in `agents/owner-questions.md`.
+- **What to do:** answer OQ-25 (options a / b / c) and OQ-26 (options a / b / c) in `agents/owner-questions.md`.
 - **Resolved when:** both rows sit under `## Answered`.
-- **Recommendation:** OQ-22 (a) the personal hook, zero package change; OQ-23 (a) widen.
+- **Recommendation:** OQ-25 (a) the personal hook, zero package change; OQ-26 (a) widen.
 - **If you do nothing:** the suffix stays a manual tool; Phase 1 still routes it.
 
 ### blocker: intake-band-shift-needs-a-baseline

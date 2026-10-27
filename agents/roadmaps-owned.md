@@ -15,8 +15,10 @@ and keep the full search — this file only adds candidates to it.
 | road-to-17-0-follow-ups | later | later | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
 | road-to-a-byte-bound-and-a-public-figure | later | later | Two numbers this tree can now produce and cannot yet bound. |
 | road-to-a-canvas-the-code-owns | later | later | The repository is the only store of the design system. |
+| road-to-a-challenge-the-bench-has-measured | later | later | The honesty bench measures both directions of each failure (caving and stubbornness, over-criticism and under-criticism), it has run once on … |
 | road-to-a-cold-start-paid-once-carried | later | later | Every step road-to-a-cold-start-paid-once deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-control-that-matches-its-neighbours | later | later | Every UI change — including a one-line follow-up with no command — that adds an interactive control uses the project's … |
+| road-to-a-court-at-the-stops | later | later | The deterministic exhibit check runs automatically at the three moments the tree already stops (plan, roadmap, review); a fresh-subagent prosecutor … |
 | road-to-a-graph-that-feeds-the-gate | later | later | The code graph reaches the searches an agent actually runs and feeds a gate decision in shadow. |
 | road-to-a-hard-floor-the-shell-cannot-talk-past | later | later | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |
 | road-to-a-knowledge-atlas | later | later | The Workbench page answers four questions about one selection, not one: how the code is built (done by the parent), … |

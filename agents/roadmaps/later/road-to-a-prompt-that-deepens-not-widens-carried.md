@@ -29,8 +29,8 @@ left to read as finished.
 
 ## Phase 1 — Deferred steps carried from road-to-a-prompt-that-deepens-not-widens
 
-- [ ] **2.1 The optimizer's Lyra role-play welcome (supplied 1.4).** <!-- blocked-by: lyra-persona-is-a-taste-decision | asked: no — queued as OQ-24 in agents/owner-questions.md per the 2026-10-24 directive -->
-      verify: OQ-24 answered and applied in both files.
+- [ ] **2.1 The optimizer's Lyra role-play welcome (supplied 1.4).** <!-- blocked-by: lyra-persona-is-a-taste-decision | asked: no — queued as OQ-27 in agents/owner-questions.md per the 2026-10-24 directive -->
+      verify: OQ-27 answered and applied in both files.
 - [ ] **2.2 Depth corpus with script oracles and pre-registered arms (supplied Phase 0).** <!-- blocked-by: depth-block-waits-on-a-scripted-corpus -->
       verify: a lint fails a corpus prompt without an oracle command.
 - [ ] **2.3 Opt-in `depth:` block with witnesses and the deeper-not-bigger invariant (supplied Phase 2).** <!-- blocked-by: depth-block-waits-on-a-scripted-corpus -->
@@ -46,11 +46,11 @@ left to read as finished.
 
 - **Status:** open — raised 2026-10-27 by inbox round `inbox-2026-10-be`.
 - **Class:** 3 — owner-reserved taste.
-- **Owner:** user — `agents/owner-questions.md` OQ-24.
-- **Run:** `grep -n 'OQ-24' agents/owner-questions.md`
+- **Owner:** user — `agents/owner-questions.md` OQ-27.
+- **Run:** `grep -n 'OQ-27' agents/owner-questions.md`
 - **Blocks:** 2.1.
-- **What to do:** answer OQ-24 (options a / b / c) in `agents/owner-questions.md`.
-- **Resolved when:** OQ-24 sits under `## Answered`.
+- **What to do:** answer OQ-27 (options a / b / c) in `agents/owner-questions.md`.
+- **Resolved when:** OQ-27 sits under `## Answered`.
 - **Recommendation:** keep the name, drop the role-play welcome.
 - **If you do nothing:** the welcome stays; nothing else depends on it.
 
