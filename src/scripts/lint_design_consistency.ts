@@ -53,12 +53,24 @@ export const SHADOW_REL = path.join('agents', 'runtime', 'state', 'design-consis
  */
 export const SHADOW_TOLERANCES_PX = [0, 2, 4] as const;
 
+/** What fired on a write, kept so it can be classified after the file has moved on. */
+export interface ShadowFinding {
+    rule: ConsistencyFinding['rule'];
+    line: number;
+    message: string;
+    /** The source line, trimmed and capped at 200 characters. */
+    context: string;
+}
+
 export interface ShadowRecord {
     at: string;
     file: string;
     would_fire: Record<string, number>;
     raw_control: number;
     deviations_px: number[];
+    findings?: ShadowFinding[];
+    /** The git HEAD the write was made on, when the caller knows it. */
+    head?: string | null;
 }
 
 /** One shadow row for a file: counts per tolerance, never a finding shown to anyone. */
@@ -68,12 +80,20 @@ export function shadowRecord(content: string, relPath: string, roles: ControlRol
     for (const t of SHADOW_TOLERANCES_PX) {
         would_fire[`tolerance_${t}px`] = consistencyFindings(content, relPath, roles, t).length;
     }
+    const lines = content.split('\n');
+    const raw = all.filter((f) => f.rule === 'consistency-raw-control');
     return {
         at: now.toISOString(),
         file: relPath,
         would_fire,
-        raw_control: all.filter((f) => f.rule === 'consistency-raw-control').length,
+        raw_control: raw.length,
         deviations_px: all.flatMap((f) => (f.deviation_px === undefined ? [] : [f.deviation_px])),
+        findings: raw.map((f) => ({
+            rule: f.rule,
+            line: f.line,
+            message: f.message,
+            context: (lines[f.line - 1] ?? '').trim().slice(0, 200),
+        })),
     };
 }
 
@@ -83,6 +103,8 @@ export interface ShadowWindow {
     writes: number;
     firing: number;
     files: Array<{ file: string; firing_writes: number }>;
+    /** Every firing write in the window, one entry each, for classification. */
+    firings: Array<{ at: string; file: string; head: string | null; findings: ShadowFinding[] }>;
 }
 
 /**
@@ -94,23 +116,24 @@ export interface ShadowWindow {
 export function shadowWindow(rows: readonly ShadowRecord[], now: Date, days = 14): ShadowWindow {
     const since = new Date(now.getTime() - days * 86_400_000);
     const files = new Map<string, number>();
+    const firings: ShadowWindow['firings'] = [];
     let writes = 0;
-    let firing = 0;
     for (const r of rows) {
         const at = Date.parse(r.at);
         if (Number.isNaN(at) || at < since.getTime() || at > now.getTime()) continue;
         writes++;
         if (r.raw_control > 0) {
-            firing++;
             files.set(r.file, (files.get(r.file) ?? 0) + 1);
+            firings.push({ at: r.at, file: r.file, head: r.head ?? null, findings: r.findings ?? [] });
         }
     }
     return {
         since: since.toISOString(),
         days,
         writes,
-        firing,
+        firing: firings.length,
         files: [...files].sort((a, b) => b[1] - a[1]).map(([file, firing_writes]) => ({ file, firing_writes })),
+        firings,
     };
 }
 
@@ -265,8 +288,11 @@ export function main(args: string[]): number {
         if (json) process.stdout.write(`${JSON.stringify(w, null, 2)}\n`);
         else {
             process.stdout.write(`design-consistency shadow, ${w.days} days since ${w.since}: ${w.writes} UI write(s), ${w.firing} firing.\n`);
-            for (const f of w.files) process.stdout.write(`  ${f.firing_writes}\t${f.file}\n`);
-            process.stdout.write('Classify each firing file as real or false; false / writes above 1 % returns the rule to shadow.\n');
+            for (const f of w.firings) {
+                process.stdout.write(`  ${f.at}  ${f.file}${f.head ? `  @${f.head.slice(0, 10)}` : ''}\n`);
+                for (const x of f.findings) process.stdout.write(`      L${x.line}  ${x.message}\n      | ${x.context}\n`);
+            }
+            process.stdout.write('Classify each firing write as real or false; false / writes above 1 % returns the rule to shadow.\n');
         }
         return 0;
     }

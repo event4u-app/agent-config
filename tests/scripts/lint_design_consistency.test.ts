@@ -126,6 +126,38 @@ describe('shadow window report', () => {
     it('a row it cannot read is skipped, not counted', () => {
         expect(shadowWindow([{ at: 'not a date', file: 'x.tsx', raw_control: 1 } as never], now, 14).writes).toBe(0);
     });
+
+    it('every firing write is listed with what fired, so it can be classified later', () => {
+        const r = {
+            ...row('2026-11-02T00:00:00Z', 'app/b.tsx', 1),
+            head: 'abc123',
+            findings: [{ rule: 'consistency-raw-control', line: 3, message: 'raw select', context: '<select name="s">' }],
+        };
+        const w = shadowWindow([r, { ...r, at: '2026-11-03T00:00:00Z' }], now, 14);
+        expect(w.firings).toHaveLength(2);
+        expect(w.firings[0]).toEqual({
+            at: '2026-11-02T00:00:00Z',
+            file: 'app/b.tsx',
+            head: 'abc123',
+            findings: [{ rule: 'consistency-raw-control', line: 3, message: 'raw select', context: '<select name="s">' }],
+        });
+    });
+});
+
+describe('a shadow row carries what fired', () => {
+    it('rule, line, message and the source line of each raw-control finding', () => {
+        const roles = { select: { canonical: 'Select', uses: 2, implementations: { Select: 2 }, outliers: [], defined: ['Select'], box_metrics: null } };
+        const text = 'export const F = () => (\n  <select name="status"></select>\n);';
+        const r = shadowRecord(text, 'app/f.tsx', roles, new Date(0));
+        expect(r.findings).toEqual([
+            {
+                rule: 'consistency-raw-control',
+                line: 2,
+                message: "raw select — this project's select is Select",
+                context: '<select name="status"></select>',
+            },
+        ]);
+    });
 });
 
 // The six false-alarm classes a retroactive window over two private consumer

@@ -90,12 +90,14 @@ manual control because classifying a firing write as false takes a reading.
   of `road-to-a-control-that-matches-its-neighbours`).
 - **Reading.** In each project where the check runs, from the project root:
   `npx tsx <agent-config>/src/scripts/lint_design_consistency.ts --shadow-report --days 14`.
-  It prints the UI writes in the window (the denominator), the firing writes,
-  and the firing files. It prints no rate, because it cannot tell a real
-  finding from a false one.
-- **Classification.** Open each firing file at the reported write and mark it
-  real (a raw control beside the project's own) or false (anything else). The
-  rate is false firing writes over all UI writes in the window.
+  It prints the UI writes in the window (the denominator) and then every
+  firing write on its own: when, which file, the git HEAD it was made on, and
+  per finding the line, the message and the source line as written. It prints
+  no rate, because it cannot tell a real finding from a false one.
+- **Classification.** Read each firing write from what the row recorded, not
+  from the file as it is now, and mark it real (a raw control beside the
+  project's own) or false (anything else). The rate is false firing writes
+  over all UI writes in the window.
 - **Record.** One dated row in the roadmap's Decisions table: window,
   denominator, real, false, rate, outcome.
 - **Rollback.** Above 1 %: set `hooks.design_consistency.shadow` to `true`

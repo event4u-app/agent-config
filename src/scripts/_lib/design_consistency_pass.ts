@@ -105,7 +105,8 @@ export function consistencyPass(root: string, file: string, content: string): Co
     const shadow = path.join(root, SHADOW_REL);
     fs.mkdirSync(path.dirname(shadow), { recursive: true });
     // A live row is stamped with the wall clock on purpose; `asOf` would warn on every write.
-    fs.appendFileSync(shadow, `${JSON.stringify(shadowRecord(content, rel, map, new Date()))}\n`);
+    const row = { ...shadowRecord(content, rel, map, new Date()), head: gitHead(root) };
+    fs.appendFileSync(shadow, `${JSON.stringify(row)}\n`);
     return consistencyFindings(content, rel, map)
         .filter((f) => f.rule === 'consistency-raw-control')
         .map((f) => ({ line: f.line, message: f.message }));
