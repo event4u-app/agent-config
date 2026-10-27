@@ -167,8 +167,8 @@ export interface MapThresholds {
  */
 export interface MapProvenance {
     head: string;
-    /** `[short sha, date, author, pr | '', tickets, subject]`, oldest first */
-    commits: Array<[string, string, string, string, string[], string]>;
+    /** `[short sha, date, author, pr | '', tickets]`, oldest first; a squash subject is the PR title, so subjects stay in `.build/` */
+    commits: Array<[string, string, string, string, string[]]>;
     /** file path → `[introduced | -1, last, changes]` as commit indexes */
     files: Record<string, [number, number, number]>;
     /** route label → `[introduced | -1, last, declaring file]`; a route outside the budget is absent */

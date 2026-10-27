@@ -147,7 +147,7 @@ export function mapProvenance(root: string, buildDir: string, graph: CodeGraph, 
         const known = at.get(c.sha);
         if (known !== undefined) return known;
         at.set(c.sha, commits.length);
-        commits.push([c.sha, c.date, c.author, c.pr ?? '', c.tickets, c.subject]);
+        commits.push([c.sha, c.date, c.author, c.pr ?? '', c.tickets]);
         return commits.length - 1;
     };
     const fromIndex = (i: number | null): number => (i === null || i < 0 ? -1 : add(index.commits[i] as CommitRef));
