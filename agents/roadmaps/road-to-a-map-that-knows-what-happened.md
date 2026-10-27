@@ -86,7 +86,7 @@ provenance `kind` field; `.build/bugs/` is disposable.
       untrusted input. Sentry first; other trackers are mapping files later
       (O8).
       verify: `npx vitest run tests/scripts/code_graph_bugs_import.test.ts` -> 0
-- [ ] **H.2 Frames to symbols** (span witness). Code mappings come from the
+- [x] **H.2 Frames to symbols** (span witness). Code mappings come from the
       scope config; each in-app frame maps to its enclosing symbol by node
       span, read at the first-seen release sha. A release without a known sha
       yields `unverifiable`, never a guess. Unmapped frames are listed with a
