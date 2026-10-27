@@ -206,8 +206,8 @@ the decision-revisit gate first.
 
 Before any agent-facing addition.
 
-- [ ] **5.1 [D.1] Trace capture.** `stream-json --verbose`; per trial: turns, wall time, models, subtype, tool calls by name, reads under `agents/map/**`, `code-graph` and `graph_*` runs, files read before the first edit, the tool/MCP list, AC version, payload hash; traces kept redacted beside the report. verify: `./scripts-run src/scripts/bench_map_task_set --dry-run --tasks 1 --check-trace-fields` -> 0
-  > note: not done: trace capture in the bench runner; not started in this run.
+- [x] **5.1 [D.1] Trace capture.** `stream-json --verbose`; per trial: turns, wall time, models, subtype, tool calls by name, reads under `agents/map/**`, `code-graph` and `graph_*` runs, files read before the first edit, the tool/MCP list, AC version, payload hash; traces kept redacted beside the report. verify: `./scripts-run src/scripts/bench_map_task_set --dry-run --tasks 1 --check-trace-fields` -> 0
+  > note: offline half verified (dry run, 3/3 trials carry every field). A live trial asks for `stream-json --verbose` and parses the same events; whether a real run's events carry each field is a paid field check, left for the first 5.5 run. Traces ride on each report record (`trace`), redacted by construction: tool names, paths, counts, model ids, no text.
 - [x] **5.2 [D.2] Grading fixed.** "Errored, check passed" is its own outcome; M2 matches on token boundaries. Re-scoring spends nothing. verify: `./scripts-run src/scripts/bench_map_task_set --rescore internal/bench/reports/map-task-set/2026-10-26T07-12-04Z-map-task-set.json` -> /ac-map delivery 2\/4/
   > note: re-scored 2026-10-27, no spend: vanilla 18 · ac 14 · ac-map 15 of 20 clean, ac-map 1 errored with its check passed; token-boundary M2 recall vanilla 0.825→0.805, ac 0.738, ac-map 0.743.
 - [ ] **5.3 [D.3] Arms that separate payload from map.** Installed from the tree under test into the clone: vanilla; vanilla + map + note; AC lean; AC lean + map; AC full optional. verify: `./scripts-run src/scripts/bench_map_task_set --dry-run --print-arms` -> /5 arms/

@@ -50,6 +50,7 @@ import {
     type MapRunRecord,
     type MapTask,
 } from './_lib/bench_map_metrics.js';
+import { missingTraceFields, parseTrace, type TrialTrace } from './_lib/bench_map_trace.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -116,6 +117,30 @@ export interface MapTrial extends MapRunRecord {
     workspace: string;
     transcript_path: string | null;
     synthetic: boolean;
+    /** What the agent did, redacted (`_lib/bench_map_trace.ts`); absent on records older than 5.1. */
+    trace?: TrialTrace;
+}
+
+/** The package version an arm runs under; `none` for an arm that drops it. */
+export function acVersion(spec: MapArmSpec): string {
+    if (spec.setting_sources === 'project,local') return 'none';
+    try {
+        return String((JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf-8')) as { version?: string }).version ?? 'unknown');
+    } catch {
+        return 'unknown';
+    }
+}
+
+/** The stream a stub agent would have produced: reads of the task's primary files (and the map, for a map arm), then edits. */
+export function stub_stream(task: MapTask, behaviour: StubBehaviour, spec: MapArmSpec): string {
+    const ev = (o: unknown): string => JSON.stringify(o);
+    const use = (name: string, input: Record<string, string>): string => ev({ type: 'assistant', message: { model: 'stub', content: [{ type: 'tool_use', name, input }] } });
+    const lines = [ev({ type: 'system', subtype: 'init', model: 'stub', tools: ['Bash', 'Edit', 'Read'], mcp_servers: [] })];
+    if (spec.map) lines.push(use('Read', { file_path: 'agents/map/MAP.md' }), use('Bash', { command: 'agent-config code-graph affected' }));
+    for (const f of task.primary) lines.push(use('Read', { file_path: f }));
+    if (behaviour !== 'none') for (const f of task.primary) lines.push(use('Edit', { file_path: f }));
+    lines.push(ev({ type: 'result', subtype: 'success', num_turns: lines.length, modelUsage: { stub: {} } }));
+    return lines.join('\n');
 }
 
 /** Draw the map into the working copy with the shipped CLI, the way a user's project gets one. */
@@ -166,6 +191,7 @@ export function run_trial(task: MapTask, arm: string, opts: TrialOpts): MapTrial
     let breakdown: TokensBreakdown | Record<string, never> = {};
     let errored = false;
     let reason: string | null = null;
+    let trace: TrialTrace | undefined;
     if (map_build && !map_build.ok) {
         errored = true;
         reason = `map build failed: ${map_build.detail}`;
@@ -176,6 +202,7 @@ export function run_trial(task: MapTask, arm: string, opts: TrialOpts): MapTrial
         }
         transcript = stub_transcript(task, behaviour);
         breakdown = stub_usage(behaviour, opts.seed);
+        trace = parseTrace(stub_stream(task, behaviour, spec), { wall_s: 0, ac_version: acVersion(spec), payload: spec.inject });
     } else {
         let sp_file: string | null = null;
         if (spec.inject) {
@@ -188,7 +215,9 @@ export function run_trial(task: MapTask, arm: string, opts: TrialOpts): MapTrial
             setting_sources: spec.setting_sources,
             max_budget: opts.max_budget,
             model: opts.model,
+            stream: true,
         }) as unknown as Dict;
+        trace = parseTrace(String(run['stream'] ?? ''), { wall_s: Number(run['wall_time_seconds'] ?? 0), ac_version: acVersion(spec), payload: spec.inject, clone });
         transcript = String(run['transcript'] ?? '');
         breakdown = (run['tokens_breakdown'] ?? {}) as TokensBreakdown | Record<string, never>;
         errored = Boolean(run['errored']);
@@ -214,6 +243,7 @@ export function run_trial(task: MapTask, arm: string, opts: TrialOpts): MapTrial
         workspace: clone,
         transcript_path: opts.dry_run ? null : preserve_transcript(clone, transcript),
         synthetic: opts.dry_run,
+        ...(trace ? { trace } : {}),
     };
 }
 
@@ -272,6 +302,8 @@ interface Args {
     fresh: boolean;
     /** Re-score a stored report: no clone, no model call, no spend. */
     rescore: string | null;
+    /** Fail unless every trial carries every trace field. */
+    check_trace_fields: boolean;
 }
 
 class UsageError extends Error {}
@@ -292,6 +324,7 @@ export function parse_args(argv: string[]): Args {
         out_dir: null,
         fresh: false,
         rescore: null,
+        check_trace_fields: false,
     };
     const num = (flag: string, v: string | undefined): number => {
         const n = Number(v);
@@ -317,6 +350,7 @@ export function parse_args(argv: string[]): Args {
             case '--out-dir': a.out_dir = next() ?? null; break;
             case '--fresh': a.fresh = true; break;
             case '--rescore': a.rescore = next() ?? null; break;
+            case '--check-trace-fields': a.check_trace_fields = true; break;
             default: throw new UsageError(`unknown argument: ${flag}`);
         }
     }
@@ -391,6 +425,11 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         return 0;
     }
     let tasks = load_map_tasks();
+    // `--tasks N` with a bare count takes the first N tasks.
+    if (a.tasks.length === 1 && /^\d+$/.test(a.tasks[0] as string)) {
+        a.limit = Number(a.tasks[0]);
+        a.tasks = [];
+    }
     if (a.tasks.length) {
         const unknown = a.tasks.filter((id) => !tasks.some((t) => t.id === id));
         if (unknown.length) {
@@ -513,6 +552,14 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     if (aborted) {
         process.stderr.write(`bench_map_task_set: ${aborted}\n`);
         return 2;
+    }
+    if (a.check_trace_fields) {
+        const short = records.map((r) => [`${r.task_id}|${r.arm}|${r.seed}`, missingTraceFields(r.trace)] as const).filter(([, m]) => m.length);
+        if (short.length) {
+            for (const [k, m] of short) process.stderr.write(`  ${k}: no ${m.join(', ')}\n`);
+            return 1;
+        }
+        process.stdout.write(`trace fields: complete on ${records.length} trial(s)\n`);
     }
     if (problems.length) {
         process.stderr.write(`bench_map_task_set: DRY RUN FAILED — ${problems.length} plumbing problem(s)\n`);
