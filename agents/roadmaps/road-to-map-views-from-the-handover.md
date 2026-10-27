@@ -84,7 +84,7 @@ knowledge and learning data (Stages I, K).
       Computed styles (light), Overflow 1440/375/320, Behaviour, Not implemented,
       and fails on a matrix missing any of them.
       verify: `npx vitest run tests/scripts/code_graph_map_fidelity_matrices.test.ts` -> 0
-- [ ] **0.2 Port the token diff.** In `viewer.css`: `--red`, `--redText`,
+- [x] **0.2 Port the token diff.** In `viewer.css`: `--red`, `--redText`,
       `--redTint` as the handover names (the `--alert*` names stay as aliases),
       dark `--redText` #ff8a95, `--violetTint` dark rgba(201,162,255,.16) and
       light rgba(124,58,237,.10), new `--logoBg`/`--logoText`, `--sbThumbHover`,

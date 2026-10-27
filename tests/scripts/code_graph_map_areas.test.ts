@@ -209,9 +209,9 @@ describe('the shipped decisions stay in place under the new shell', () => {
         expect(js).toContain('state.treePath = state.treePath ? state.treePath + \'/\' + it.name : it.name;');
     });
 
-    it('13 red is the --alert token, and no link leads to the user-global hub', () => {
-        expect(css).toMatch(/--alert: #[0-9a-f]{6}; --alertText:/);
-        expect(css).not.toMatch(/--red\b/);
+    it('13 red is the handover --red token, --alert* stay aliases, and no link leads to the user-global hub', () => {
+        expect(css).toMatch(/--red: #[0-9a-f]{6}; --redText: #[0-9a-f]{6}; --redTint:/);
+        expect(css).toContain('--alert: var(--red); --alertText: var(--redText);');
         expect(html).not.toMatch(/Global ↗|\.event4u|estate/i);
     });
 
