@@ -8,19 +8,6 @@ and the run that applies it links its PR.
 
 ## Open
 
-### OQ-24 — Fund the two measurement runs inbox round 2026-10-bd planned
-
-- **Context:** two parked roadmaps end in a paid run. `later/road-to-a-court-at-the-stops`
-  Phase 4 measures whether typed exhibits raise review precision on the ledger corpus
-  (`court-measurement-spend`). `later/road-to-a-challenge-the-bench-has-measured`
-  Phase 2 runs the honesty bench, pre-registered since 2026-07-27 and never run
-  (`honesty-bench-spend`). Both print an estimate before any billable call.
-- **Options:** (a) fund the honesty floor probe only (computed at about 1 USD);
-  (b) fund (a) plus the full honesty run if the floor is met (about 20-30 USD) and
-  one court run per arm; (c) fund neither.
-- **Recommendation:** (a) now; decide (b) on the probe's result.
-- **Blocks:** the two blockers named above; nothing in an active roadmap.
-
 ### OQ-21 — How consumers get a browser for `ui:render`
 
 - **Context:** `@playwright/test` is a devDependency, so no consumer install can
@@ -148,6 +135,20 @@ and the run that applies it links its PR.
   (`road-to-a-memory-that-names-its-moment` § Decisions E12).
 
 ## Answered
+
+### OQ-24 — Fund the two measurement runs inbox round 2026-10-bd planned
+
+- **Context:** two parked roadmaps end in a paid run. `later/road-to-a-court-at-the-stops`
+  Phase 4 measures whether typed exhibits raise review precision on the ledger corpus
+  (`court-measurement-spend`). `later/road-to-a-challenge-the-bench-has-measured`
+  Phase 2 runs the honesty bench, pre-registered since 2026-07-27 and never run
+  (`honesty-bench-spend`). Both print an estimate before any billable call.
+- **Options:** (a) fund the honesty floor probe only (computed at about 1 USD);
+  (b) fund (a) plus the full honesty run if the floor is met (about 20-30 USD) and
+  one court run per arm; (c) fund neither.
+- **Recommendation:** (a) now; decide (b) on the probe's result.
+- **Blocks:** the two blockers named above; nothing in an active roadmap.
+- **Answered 2026-10-27:** "Ja, alle freigegeben" — the owner funded every run: the honesty floor probe, the full honesty run, and one court run per arm (option (b) in full). Applied in `later/road-to-a-court-at-the-stops` (`court-measurement-spend` resolved) and `later/road-to-a-challenge-the-bench-has-measured` (`honesty-bench-spend` resolved). <!-- md-language-check: ignore -->
 
 ### OQ-23 — Repetitions against the canary query ceiling
 
