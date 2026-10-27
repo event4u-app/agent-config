@@ -169,16 +169,16 @@ Exit: 2.1–2.4 green. Rollback: revert `area_overview.js` and its CSS.
 Entry: sibling A.2, E.2, E.4, E.5, E.6 closed. Until then the page renders the
 empty-with-reason form for each missing field, never a guessed value.
 
-- [ ] **3.1 Uncapped usage per area.** The Systems payload emits, per package,
+- [x] **3.1 Uncapped usage per area.** The Systems payload emits, per package,
       `byArea` file counts and the top used names over ALL uses, beyond the
       20-file `USED_BY_CAP` sample (the sample stays for the file list).
       verify: `npx vitest run tests/scripts/code_graph_map_area_payloads.test.ts -t byArea --reporter=verbose` -> /✓.*byArea/
-- [ ] **3.2 Ecosystem presence probe.** The generator records, per ecosystem it
+- [x] **3.2 Ecosystem presence probe.** The generator records, per ecosystem it
       does not read (pnpm, Yarn, Bun, pip/Poetry, Cargo, Go, Maven/Gradle,
       Bundler, NuGet), whether a lockfile or manifest is present, so the page
       can say "nicht gelesen" vs "kein Lockfile gefunden" truthfully (Decision D5).
       verify: `npx vitest run tests/scripts/code_graph_map_area_payloads.test.ts -t "ecosystem probe" --reporter=verbose` -> /✓.*ecosystem probe/
-- [ ] **3.3 Autoload-read flag.** The payload states whether the Composer
+- [x] **3.3 Autoload-read flag.** The payload states whether the Composer
       autoload maps were read, so status "unk · Autoload" is derivable.
       verify: `npx vitest run tests/scripts/code_graph_map_area_payloads.test.ts -t autoload --reporter=verbose` -> /✓.*autoload/
 - [ ] **3.4 Lens bar and Filter aside.** Six tabs (Übersicht · Pakete ·

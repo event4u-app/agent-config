@@ -44,6 +44,7 @@ import type {
     RuntimePayload,
     SourceRung,
     SystemsPackage,
+    SystemsEcosystem,
     SystemsPayload,
     Witness,
 } from './map_areas.js';
@@ -657,7 +658,7 @@ function systemsPayload(c: Ctx, findings: AreaFinding[], st: LaneState): Systems
     }
     const lockfiles = [...new Set(pkgs.flatMap((n) => strs(attr(n, 'lockfiles'))))].sort();
     const order = (k: SystemsPackage): number => (k.framework ? 0 : k.direct ? 1 : 2);
-    return {
+    return systemsExtras(c, packages, lockfiles, {
         reader: 'systems lane (lockfiles, manifests, version files, images, CI)',
         completeness: st.error !== undefined ? 'unknown' : 'complete',
         ...(packages.length === 0 && runtimes.length === 0 ? { empty: emptyReason(st, 'no lockfile, manifest, version file or image was found') } : {}),
@@ -665,7 +666,70 @@ function systemsPayload(c: Ctx, findings: AreaFinding[], st: LaneState): Systems
         runtimes: runtimes.sort((a, b) => (a.name < b.name ? -1 : 1)),
         packages: packages.sort((a, b) => order(a) - order(b) || (a.name < b.name ? -1 : a.name > b.name ? 1 : a.version < b.version ? -1 : 1)),
         lockfiles,
+    });
+}
+
+/**
+ * Ecosystems the Systeme page names, with the files that mark each and whether
+ * the systems lane reads them (it reads npm, pnpm, Yarn, text Bun and Composer).
+ */
+const ECOSYSTEM_FILES: ReadonlyArray<readonly [string, boolean, RegExp]> = [
+    ['npm', true, /^package-lock\.json$/],
+    ['Composer', true, /^composer\.lock$/],
+    ['pnpm', true, /^pnpm-lock\.yaml$/],
+    ['Yarn', true, /^yarn\.lock$/],
+    ['Bun', true, /^bun\.lockb?$/],
+    ['pip/Poetry', false, /^(requirements[\w.-]*\.txt|Pipfile(\.lock)?|poetry\.lock|pyproject\.toml)$/],
+    ['Cargo', false, /^Cargo\.(toml|lock)$/],
+    ['Go', false, /^go\.(mod|sum)$/],
+    ['Maven/Gradle', false, /^(pom\.xml|build\.gradle(\.kts)?)$/],
+    ['Bundler', false, /^Gemfile(\.lock)?$/],
+    ['NuGet', false, /^(packages\.lock\.json|packages\.config|[^/]+\.csproj)$/],
+];
+const PROBE_SKIP = new Set(['node_modules', 'vendor', '.git', '.build', 'dist', 'target', '.venv', 'venv', '__pycache__']);
+const PROBE_LIMIT = 20_000;
+
+/** Lockfiles and manifests per ecosystem in the tree; a bounded walk that skips installed dependency folders. */
+function probeEcosystems(root: string): SystemsEcosystem[] {
+    const found = new Map<string, string[]>(ECOSYSTEM_FILES.map(([n]) => [n, []]));
+    let seen = 0;
+    const walk = (dir: string): void => {
+        let entries: fs.Dirent[];
+        try {
+            entries = fs.readdirSync(path.join(root, dir), { withFileTypes: true });
+        } catch {
+            return;
+        }
+        for (const e of entries) {
+            if (++seen > PROBE_LIMIT) return;
+            const rel = dir ? `${dir}/${e.name}` : e.name;
+            if (e.isDirectory()) {
+                if (!PROBE_SKIP.has(e.name)) walk(rel);
+            } else if (e.isFile()) {
+                for (const [n, , re] of ECOSYSTEM_FILES) if (re.test(e.name)) found.get(n)?.push(rel);
+            }
+        }
     };
+    walk('');
+    return ECOSYSTEM_FILES.map(([name, read]) => ({ name, read, files: (found.get(name) ?? []).sort().slice(0, 5) }));
+}
+
+/** What the Systeme page needs beyond the lane's sample: uses over ALL importing files, ecosystem presence, the autoload flag. */
+function systemsExtras(c: Ctx, packages: SystemsPackage[], lockfiles: string[], payload: SystemsPayload): SystemsPayload {
+    for (const k of packages) {
+        const uses = (c.inn.get(k.id) ?? []).filter((e) => e.relation === 'uses');
+        if (!uses.length) continue;
+        const byArea: Record<string, number> = {};
+        const names = new Map<string, number>();
+        for (const e of uses) {
+            const top = e.source.includes('/') ? e.source.slice(0, e.source.indexOf('/')) : '.';
+            byArea[top] = (byArea[top] ?? 0) + 1;
+            for (const n of new Set(strs(e.fact?.attrs?.['names']))) names.set(n, (names.get(n) ?? 0) + 1);
+        }
+        k.byArea = byArea;
+        k.topNames = [...names].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).slice(0, 10);
+    }
+    return { ...payload, ecosystems: probeEcosystems(c.root), autoloadRead: lockfiles.some((f) => /(^|\/)composer\.lock$/.test(f)) };
 }
 
 // ---- delivery ------------------------------------------------------------------

@@ -97,7 +97,7 @@ describe('a lane that ran and found nothing keeps its page (the 2026-10-bf real 
         data.empty = 'no migration, schema file, committed dump or snapshot was found';
         data.tables = [];
         data.findings = data.findings.map((f, i) => ({ ...f, subject: `tests/fixtures/app/Models/M${i}.php#M${i}` }));
-        areas.impact = { reader: 'review-risk over the working diff', completeness: 'complete', empty: 'no change against HEAD', findings: [], rev: 'HEAD', changed: [], affected: [] } as unknown as MapAreas['impact'];
+        areas.impact = { reader: 'review-risk over the working diff', completeness: 'complete', empty: 'no change against HEAD', findings: [], rev: 'HEAD', changed: [], affected: [] } as unknown as NonNullable<MapAreas['impact']>;
         html = path.join(res.outDir, 'skel.html');
         fs.writeFileSync(html, renderHtml(doc.model, doc.meta, areas));
     });
