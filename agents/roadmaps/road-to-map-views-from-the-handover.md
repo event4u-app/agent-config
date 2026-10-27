@@ -76,7 +76,7 @@ knowledge and learning data (Stages I, K).
 
 ## Phase 0 — Tokens
 
-- [ ] **0.1 Matrix shape gate.** Add `tests/scripts/code_graph_map_fidelity_matrices.test.ts`:
+- [x] **0.1 Matrix shape gate.** Add `tests/scripts/code_graph_map_fidelity_matrices.test.ts`:
       for each page id in a fixed list (tokens, shell, overview, code, data,
       systems, interfaces, runtime, delivery, impact, agent, projects, knowledge,
       bugs) it requires `agents/evidence/reviews/map-{page}-fidelity.md` once that
