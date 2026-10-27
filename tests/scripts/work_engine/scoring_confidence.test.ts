@@ -112,3 +112,33 @@ const PROMPTS: Array<{ raw: string; ac: string[] | null; assumptions: string[] |
     { raw: 'tune the redis cache', ac: null, assumptions: null },
     { raw: 'document the webhook handler in handler.ts', ac: ['must explain payload'], assumptions: null },
 ];
+
+describe('scoring/confidence — German and English score alike', () => {
+    // Same content, two languages: the band must not depend on the language.
+    const PAIRS: Array<[string, string]> = [
+        ['Add rate limiting to the login endpoint', 'Füge Rate-Limiting zum Login-Endpoint hinzu'],
+        ['Create a settings page for notifications', 'Erstelle eine Einstellungsseite für Benachrichtigungen'],
+        ['Implement CSV export for the invoice list', 'Implementiere einen CSV-Export für die Rechnungsliste'],
+        ['Fix the broken pagination on the user list', 'Behebe die kaputte Paginierung in der Benutzerliste'],
+        ['Remove the unused payment adapter', 'Entferne den ungenutzten Zahlungsadapter'],
+        ['Update the mailer to the new SMTP settings', 'Aktualisiere den Mailer auf die neuen SMTP-Einstellungen'],
+        ['Migrate the sessions table to UUID keys', 'Migriere die Sessions-Tabelle auf UUID-Schlüssel'],
+        ['Optimize the dashboard query for large tenants', 'Optimiere die Dashboard-Abfrage für große Mandanten'],
+        ['Document the webhook retry behaviour', 'Dokumentiere das Retry-Verhalten der Webhooks'],
+        ['Configure the queue worker for the reports job', 'Konfiguriere den Queue-Worker für den Reports-Job'],
+    ];
+    const AC = ['the new behaviour is covered by a test'];
+
+    for (const [en, de] of PAIRS) {
+        it(`${en} ⇔ ${de}`, () => {
+            const e = score({ raw: en, ac: AC });
+            const d = score({ raw: de, ac: AC });
+            expect(d.dimensions.goal_clarity).toBe(e.dimensions.goal_clarity);
+            expect(d.band).toBe(e.band);
+        });
+    }
+
+    it('a vague German prompt stays goal-less', () => {
+        expect(score({ raw: 'mach es irgendwie schöner' }).dimensions.goal_clarity).toBe(0);
+    });
+});
