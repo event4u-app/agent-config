@@ -113,7 +113,7 @@ from a measured arm rather than from the source synthesis.
 
 ### blocker: honesty-bench-spend
 
-- **Status:** open — raised 2026-10-27 by the inbox round that planned Phase 2.
+- **Status:** resolved — 2026-10-27, the owner funded every run (OQ-24, `## Answered`); raised the same day by the inbox round that planned Phase 2.
 - **Owner:** the owner (`agents/owner-questions.md` OQ-24) — spend is owner-reserved.
 - **Blocks:** 2.1, 2.2, 4.1 and 4.2.
 - **What to do:** pick exactly one — (a) fund the floor probe only (computed at about 1 USD; `./scripts-run src/scripts/bench_honesty_run --estimate` prints the real figure first); (b) fund the probe and, if the floor is met, the full run (computed at about 20-30 USD); or (c) decline, and the honesty rules stay unmeasured.
