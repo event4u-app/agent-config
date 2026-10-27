@@ -110,7 +110,7 @@ before any baseline existed, so neither can be tuned to a result.
 
 ## Phase 3 — Catalogue-pressure suite (pre-registered null)
 
-- [x] **3.1 Selection accuracy as a function of catalogue size:** run the Phase
+- [x] **3.1 Selection accuracy as a function of catalogue size:** run the Phase <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/routing_arms.ts -->
       2 corpus at N in {12, 20, 50, full} with distractor sets sampled
       deterministically (FNV-1a order, the same discipline as
       `rule_trigger_eval.ts:20-21`, `:147`).
@@ -118,14 +118,14 @@ before any baseline existed, so neither can be tuned to a result.
       production entry: src/scripts/routing_arms.ts
       Done 2026-10-27: recall 0.793 / 0.785 / 0.741 / 0.541 at N=12 / 20 / 50 / full
       over 135 units (`agents/evidence/metrics/routing-arms-20261027.md`).
-- [x] **3.2 Near-duplicate probe:** for the top-invoked skills, inject one
+- [x] **3.2 Near-duplicate probe:** for the top-invoked skills, inject one <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/routing_arms.ts -->
       paraphrased description twin and measure confusion. **This step measures
       confusion only.** It is not a tiering justification — see 3.3.
       verify: the confusion figure is published per skill pair, with the twin
       text archived.
       production entry: src/scripts/routing_arms.ts
       Done 2026-10-27: confusion 0 on all ten pairs, 30 runs.
-- [x] **3.3 Resolve the pre-registered null:** "selection accuracy at full
+- [x] **3.3 Resolve the pre-registered null:** "selection accuracy at full <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/routing_arms.ts -->
       catalogue is not worse than at N=20 by more than the floor delta."
       **Reframed at landing.** The source made this null cancel tiering work
       ("no tiering work is justified by this suite"). It can no longer do that:
@@ -146,20 +146,20 @@ item created unless the null broke.
 
 ## Phase 4 — Delivery-path parity (actionable now)
 
-- [x] **4.1 Parametrize the Phase 2 corpus over delivery path:** host-native
+- [x] **4.1 Parametrize the Phase 2 corpus over delivery path:** host-native <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/routing_arms.ts -->
       listing versus MCP-tool listing. Same prompts, same floors. Both paths
       exist in the tree today (D4), so this step has no external dependency.
       verify: one corpus file runs on both paths and produces two comparable
       result rows.
       production entry: src/scripts/routing_arms.ts
-- [x] **4.2 Parity gate:** MCP-path recall may not undercut native-path recall
+- [x] **4.2 Parity gate:** MCP-path recall may not undercut native-path recall <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/routing_arms.ts -->
       by more than a pre-registered epsilon on the same corpus. A breach blocks
       any MCP default-on decision; default-off holds until then.
       verify: a synthetic recall gap larger than epsilon turns the gate red.
       production entry: src/scripts/routing_arms.ts
       Done 2026-10-27: `routing_arms --report` calls `parityVerdict`; on the real
       rows it is **breached** (native 0.552, MCP 0.448, delta 0.103).
-- [x] **4.3 Publish the parity table** as evidence against the archived MCP
+- [x] **4.3 Publish the parity table** as evidence against the archived MCP <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/routing_arms.ts -->
       roadmap's measured-null outcome, not as a separate claim.
       verify: the table cites the archived roadmap and adds no new claim id.
       production entry: src/scripts/routing_arms.ts
