@@ -81,6 +81,7 @@ const IMPORTED_BROWSER_SUITES = [
     'tests/scripts/code_graph_map_history.test.ts',
     'tests/scripts/code_graph_map_domains_page.test.ts',
     'tests/scripts/code_graph_map_branches_page.test.ts',
+    'tests/scripts/code_graph_map_history_crumbs.test.ts',
 ];
 // Suites whose live cases skip without Chromium; the browser job runs them whole,
 // so a node shard without a browser does not collect them as skipped duplicates.

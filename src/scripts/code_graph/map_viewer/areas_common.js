@@ -32,7 +32,7 @@ extendStrings({
         colMessage: 'Finding', colWitness: 'Witness', views: 'View', moreRows: function (n) { return '+ ' + n + ' more rows'; }, hashT: 'hash of the span as read',
         bannerStale: { behind: function (n) { return 'The graph is ' + n + ' commit(s) behind HEAD'; }, edited: 'An indexed file has uncommitted edits', absent: 'No graph index was found', other: function (s) { return 'Graph state: ' + s; } },
         bannerWhy: { behind: 'Facts may describe code that has changed since. Confirm a witness before acting on it, or redraw with `agent-config code-graph map`.', edited: 'The map shows the committed version of those files; confirm the witnesses you act on.', absent: 'Nothing on this map was read from an index; every fact is unverifiable.', other: 'Confirm a witness before acting on it.' },
-        bannerLabel: 'Freshness'
+        bannerLabel: 'Freshness', histLabel: 'History', histBack: 'Back'
     },
     de: {
         areaNames: { overview: 'Übersicht', code: 'Code', data: 'Data', systems: 'Systeme', interfaces: 'Interfaces', runtime: 'Runtime', delivery: 'Delivery', bugs: 'Bugs', knowledge: 'Wissen', impact: 'Impact', agent: 'Agent', projects: 'Projekte' },
@@ -50,7 +50,7 @@ extendStrings({
         colMessage: 'Befund', colWitness: 'Nachweis', views: 'Ansicht', moreRows: function (n) { return '+ ' + n + ' weitere Zeilen'; }, hashT: 'Hash der Stelle beim Lesen',
         bannerStale: { behind: function (n) { return 'Der Graph liegt ' + n + ' Commit(s) hinter HEAD'; }, edited: 'Eine indizierte Datei hat nicht committete Änderungen', absent: 'Es wurde kein Graph-Index gefunden', other: function (s) { return 'Graph-Zustand: ' + s; } },
         bannerWhy: { behind: 'Fakten können Code beschreiben, der sich seither geändert hat. Vor dem Handeln einen Nachweis bestätigen oder mit `agent-config code-graph map` neu zeichnen.', edited: 'Die Karte zeigt die committete Fassung dieser Dateien; die Nachweise bestätigen, auf die du dich stützt.', absent: 'Nichts auf dieser Karte stammt aus einem Index; jeder Fakt ist unüberprüfbar.', other: 'Vor dem Handeln einen Nachweis bestätigen.' },
-        bannerLabel: 'Frische'
+        bannerLabel: 'Frische', histLabel: 'Verlauf', histBack: 'Zurück'
     }
 });
 
@@ -215,6 +215,48 @@ function findingsView(id, main) {
         return { key: 'finding/' + i, cells: [f.id, stChip(t('sevNames')[f.severity] || f.severity, SEV_CLASS[f.severity]), f.subject, f.message, cell] };
     })));
 }
+
+/**
+ * The shared history of one page's states (Systeme, Bugs): up to 50 snapshots
+ * of what `snap` returns — {lens, sel, filters, limit} — drawn as a trail of
+ * the last five distinct steps with `›` between them, and a 24px ← only while
+ * there is history. No back button and no crumb chips: the trail is the way back.
+ *   o.snap()      → the current state      o.apply(state) restores one and redraws
+ *   o.key(state)  → the label of a step
+ * A page calls `nav(change)` for every filter, sort and selection: it pushes the
+ * state as it was, then applies the change.
+ */
+var HIST_CAP = 50;
+function pageHistory(o) {
+    var h = { stack: [] };
+    h.push = function () { h.stack = h.stack.concat([o.snap()]).slice(-HIST_CAP); };
+    h.nav = function (change) { h.push(); change(); };
+    h.back = function () { var last = h.stack.pop(); if (last) o.apply(last); };
+    h.node = function () {
+        var nav = el('nav', { class: 'histcrumbs mono', 'aria-label': t('histLabel') });
+        if (h.stack.length) {
+            var b = el('button', { type: 'button', class: 'hist-back', 'aria-label': t('histBack'), title: t('histBack') }, '←');
+            b.addEventListener('click', h.back);
+            nav.appendChild(b);
+        }
+        var trail = [];
+        h.stack.concat([o.snap()]).forEach(function (s, i) {
+            var k = o.key(s);
+            if (!trail.length || trail[trail.length - 1].key !== k) trail.push({ key: k, idx: i });
+        });
+        trail.slice(-5).forEach(function (step, i, shown) {
+            var last = i === shown.length - 1;
+            if (i > 0) nav.appendChild(el('span', { class: 'hist-sep', 'aria-hidden': 'true' }, '›'));
+            var s = el('button', { type: 'button', class: 'hist-step', 'aria-current': last ? 'page' : 'false', title: step.key }, step.key);
+            if (!last) s.addEventListener('click', function () { var target = h.stack[step.idx]; h.stack = h.stack.slice(0, step.idx); o.apply(target); });
+            nav.appendChild(s);
+        });
+        return nav;
+    };
+    return h;
+}
+// A seam for the browser suite: the component is drawn and driven there without a page around it.
+window.__mapPageHistory = pageHistory;
 
 function avPick(id, key) { location.hash = '#/' + id + (key ? '/' + encodeURIComponent(key) : ''); }
 

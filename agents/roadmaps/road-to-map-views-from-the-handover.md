@@ -113,7 +113,7 @@ Exit: 0.1–0.3 green. Rollback: revert `viewer.css`; aliases keep every caller 
       up button reads "← eine Ebene hoch". The freshness chip renders
       `pin.freshness` as built (Decision D4).
       verify: `npx vitest run tests/scripts/code_graph_map_shell.test.ts -t "header chips" --reporter=verbose` -> /✓.*header chips/
-- [ ] **1.3 History breadcrumbs.** One shared `nav aria-label="Verlauf"`
+- [x] **1.3 History breadcrumbs.** One shared `nav aria-label="Verlauf"`
       component: a stack of up to 50 states {lens, sel, filters, limit}, trail
       buttons separated by `›`, a 24px `←` only when history exists; no back
       button and no crumb chips. Used by Systeme and Bugs.
