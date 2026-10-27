@@ -218,7 +218,7 @@ empty-with-reason form for each missing field, never a guessed value.
       history state; `←` restores the previous one exactly; a sensitivity probe
       that skips the push turns the spec red.
       verify: `npx vitest run tests/scripts/code_graph_map_systems_page.test.ts -t crumbs --reporter=verbose` -> /✓.*crumbs/
-- [ ] **3.10 Systems matrix and click paths.** `agents/evidence/reviews/map-systems-fidelity.md`
+- [x] **3.10 Systems matrix and click paths.** `agents/evidence/reviews/map-systems-fidelity.md`
       per component (strip, filters, list, dependencies, runtimes, findings,
       branches, detail), plus the §9.1 questions of the brief answered by click
       path on this repository and the brief §6 ask-to-step mapping table

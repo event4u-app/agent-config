@@ -379,7 +379,7 @@ button.db-badge:hover, button.db-badge:focus-visible { border-color: var(--brand
 
 /* The shared Verlauf trail (Systeme, Bugs): the handover's crumb bar, with ← only while history exists. */
 .histcrumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-width: 0; font-size: 12px; color: var(--muted); }
-.hist-back { width: 24px; height: 24px; padding: 0; border-radius: 6px; border: 1px solid var(--brandLine); background: var(--brandTint); color: var(--text); font-size: 13px; display: inline-flex; align-items: center; justify-content: center; }
+.hist-back { width: 24px; height: 24px; padding: 1px 6px; border-radius: 6px; border: 1px solid var(--brandLine); background: var(--brandTint); color: var(--text); font-size: 13px; display: inline-flex; align-items: center; justify-content: center; }
 .hist-sep { color: var(--faint); }
 .hist-step { height: 24px; padding: 0 4px; border: 0; background: transparent; font-family: var(--monof); font-size: 12px; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 400; color: var(--muted); text-decoration: underline dotted; text-underline-offset: 3px; }
 .hist-step[aria-current='page'] { cursor: default; font-weight: 600; color: var(--text); text-decoration: none; }

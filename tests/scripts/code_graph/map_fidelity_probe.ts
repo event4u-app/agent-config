@@ -291,7 +291,7 @@ const SY_SEL = {
     design: { tab: '[role="tablist"][aria-label="Ansicht"] [role="tab"][aria-selected="true"]', pm: 'aside[aria-label="Filter"] [role="checkbox"]', st: '[role="radiogroup"][aria-label="Status"] [aria-checked="true"]', seg: '[role="radiogroup"][aria-label="Scope"] [aria-checked="true"]',
         sw: 'aside[aria-label="Filter"] [role="switch"]', kpi: 'main div[style*="minmax(104px"] > button', row: 'main button.pkgrid', hop: 'main button[style*="2px solid var(--brand)"]', card: 'main div[style*="border-radius: 12px"]', back: 'nav[aria-label="Verlauf"] button[aria-label="Zurück"]', step: 'nav[aria-label="Verlauf"] button[aria-current="page"]', count: 'main span.mono[style*="font-weight: 600"]' },
     build: { tab: '#av-bar [role="tab"][aria-selected="true"]', pm: '#av-left [role="checkbox"]', st: '#av-left [role="radiogroup"][aria-label="Status"] [aria-checked="true"]', seg: '#av-left [role="radiogroup"][aria-label="Scope"] [aria-checked="true"]',
-        sw: '#av-left [role="switch"]', kpi: '#sy-kpis .sy-kpi', row: '#sy-list .gt-row', hop: '#sy-why .sy-hop.last', card: '#av-main .sy-box', back: '#sy-bar .hist-back', step: '#sy-bar .hist-step[aria-current="page"]', count: '#sy-count' },
+        sw: '#av-left [role="switch"]', kpi: '#sy-kpis .sy-kpi', row: '#sy-list .gt-row', hop: '#sy-nb .sy-nbnode.main', card: '#av-main .sy-box', back: '#sy-bar .hist-back', step: '#sy-bar .hist-step[aria-current="page"]', count: '#sy-count' },
 };
 /** Probe `systems`: the Systeme page per lens against the handover, which was drawn from this repository's own systems.json. */
 async function probeSystems(browser: Browser, built: Built): Promise<unknown> {
@@ -325,7 +325,29 @@ async function probeSystems(browser: Browser, built: Built): Promise<unknown> {
     return out;
 }
 
-export const PROBES: Record<string, (b: Browser, built: Built) => Promise<unknown>> = { tokens: probeTokens, shell: probeShell, overview: probeOverview, pages: probePages, systems: probeSystems };
+/** Probe `systemsPaths`: the brief's §9.1 package questions, answered by clicking on this repository's map. */
+async function probeSystemsPaths(browser: Browser, built: Built): Promise<unknown> {
+    const page = await openBuilt(browser, built.real, '#/systems', 1440, 'dark');
+    const txt = (sel: string) => page.evaluate((s) => Array.from(document.querySelectorAll(s)).map((e) => (e as HTMLElement).innerText.replace(/\s+/g, ' ').trim()), sel);
+    const steps: Array<{ q: string; path: string; answer: unknown }> = [];
+    await page.click('[data-lens="pk"]');
+    await page.fill('#sy-q', 'argparse');
+    await page.press('#sy-q', 'Enter');
+    await page.locator('#sy-list .gt-row').first().click();
+    await page.click('#sy-open');
+    steps.push({ q: 'Is it direct?', path: 'Pakete › search "argparse" › row › "Abhängigkeiten & Nutzung öffnen →"', answer: await txt('.sy-verdict') });
+    steps.push({ q: 'Why is it here (all chains)?', path: 'Abhängigkeiten › "Warum installiert?"', answer: await txt('#sy-why .sy-chain') });
+    steps.push({ q: 'Who requires it, how many?', path: 'Abhängigkeiten › "Benötigt von · N"', answer: await txt('#sy-reqby .sy-boxh, #sy-reqby .sy-ln') });
+    steps.push({ q: 'What does it pull in?', path: 'Abhängigkeiten › "Benötigt selbst · N" and KPI "zieht insgesamt nach"', answer: [...(await txt('#sy-reqs .sy-boxh')), ...(await txt('#sy-dkpis .sy-dkpi'))] });
+    steps.push({ q: 'Who in our code uses it, which names, in which files and areas?', path: 'Abhängigkeiten › "Nutzung im Code" › file rows, "Nach Ordner", "Meistgenutzt"', answer: await txt('#sy-use .sy-boxh, #sy-use .sy-urow, #sy-byarea, #sy-top') });
+    steps.push({ q: 'What else uses it without importing?', path: 'Abhängigkeiten › "Nutzung ohne Import" / Detail › "ohne Import"', answer: await txt('#sy-detail .sy-kv') });
+    steps.push({ q: 'Findings?', path: 'Detail › finding card', answer: await txt('#sy-detail .sy-fcard') });
+    steps.push({ q: 'Can it go?', path: 'Abhängigkeiten › "Was die Map hier nicht weiß" › "Kann es weg?"', answer: await txt('#sy-unknown span') });
+    await page.close();
+    return steps;
+}
+
+export const PROBES: Record<string, (b: Browser, built: Built) => Promise<unknown>> = { tokens: probeTokens, shell: probeShell, overview: probeOverview, pages: probePages, systems: probeSystems, systemsPaths: probeSystemsPaths };
 
 if (process.argv[1] && /map_fidelity_probe\.ts$/.test(process.argv[1])) {
     const [name, out] = process.argv.slice(2);
