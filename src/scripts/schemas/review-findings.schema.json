@@ -112,7 +112,44 @@
           },
           "file": {
             "type": "string",
-            "description": "Repo-relative path. Optional because a finding can be about the change as a whole; findingId() folds an absent file to the empty string so the id stays stable either way."
+            "description": "Repo-relative path. Optional because a finding can be about the change as a whole; findingId() folds an absent file to the empty string so the id stays stable either way. A trailing `:<n>` or `:<n>-<m>` is a line reference smuggled into the path; findingId() strips it before hashing and parseFindings() lifts it into `line`."
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "1-based line the finding points at, kept out of `file` so a moved line does not mint a new finding id."
+          },
+          "exhibits": {
+            "type": "array",
+            "description": "Typed evidence that pins the finding to the reviewed text, resolved by check_finding_exhibits.ts at the exhibit's commit. Optional: a finding without one is unchanged. The per-type required fields are enforced in that checker, not here, because the subset validator resolves no `oneOf`/`if`. Types: `presence` (path, line, quote of at most 300 chars, commit), `absence` (path_glob, pattern, commit, expected), `pair` (legs: two presence exhibits), `executed` (command, exit_code, output_digest — recorded, never re-run).",
+            "items": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "additionalProperties": true,
+              "properties": {
+                "type": {
+                  "enum": [
+                    "presence",
+                    "absence",
+                    "pair",
+                    "executed"
+                  ]
+                },
+                "path": { "type": "string" },
+                "line": { "type": "integer", "minimum": 1 },
+                "quote": { "type": "string", "minLength": 1, "maxLength": 300 },
+                "commit": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+                "path_glob": { "type": "string" },
+                "pattern": { "type": "string", "minLength": 1 },
+                "expected": { "type": "integer", "minimum": 0 },
+                "legs": { "type": "array", "items": { "type": "object" } },
+                "command": { "type": "string" },
+                "exit_code": { "type": "integer" },
+                "output_digest": { "type": "string" }
+              }
+            }
           },
           "status": {
             "enum": [

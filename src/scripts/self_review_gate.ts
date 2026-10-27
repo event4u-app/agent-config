@@ -42,6 +42,7 @@ import {
     type ExternalAIClient,
     load_anthropic_key,
 } from './ai_council/clients.js';
+import { type Exhibit, splitLineSuffix, wellFormedExhibit } from './_lib/finding_exhibits.js';
 import { independenceFields } from './_lib/review_independence.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -57,6 +58,10 @@ export interface Finding {
     title: string;
     detail: string;
     file?: string;
+    /** 1-based line, kept out of `file` so a moved line keeps the finding id. */
+    line?: number;
+    /** Typed evidence, resolved by `check_finding_exhibits.ts`; never decides a disposition. */
+    exhibits?: Exhibit[];
     /**
      * Set when the tree mechanically DISPROVES the finding's premise — today
      * only for the deletion class: the finding says an artifact was removed,
@@ -73,11 +78,13 @@ export interface Finding {
  * (release-truth Phase 3). The id keys the disposition ledger
  * (`agents/evidence/release-findings/<version>.json`): the 9.14.0 symlink
  * finding merged with no traceable disposition precisely because findings
- * carried no identity that outlived the PR comment.
+ * carried no identity that outlived the PR comment. A `:<n>` line suffix on
+ * `file` is stripped first, so a finding whose line moved keeps its id.
  */
 export function findingId(f: Pick<Finding, 'kind' | 'title' | 'file'>): string {
+    const file = f.file === undefined ? '' : splitLineSuffix(f.file).path;
     return createHash('sha256')
-        .update(`${f.kind}|${f.title}|${f.file ?? ''}`)
+        .update(`${f.kind}|${f.title}|${file}`)
         .digest('hex')
         .slice(0, 12);
 }
@@ -913,7 +920,7 @@ export function buildPlan(baseRef: string, cwd: string = REPO_ROOT, opts: PlanOp
 }
 
 // ── Live review ───────────────────────────────────────────────────────
-function parseFindings(text: string): Finding[] {
+export function parseFindings(text: string): Finding[] {
     const start = text.indexOf('{');
     const end = text.lastIndexOf('}');
     if (start < 0 || end <= start) return [];
@@ -930,13 +937,23 @@ function parseFindings(text: string): Finding[] {
     return arr
         .filter((f): f is Record<string, unknown> => typeof f === 'object' && f !== null)
         .filter((f) => sev.has(f.severity as Severity) && kind.has(f.kind as FindingKind))
-        .map((f) => ({
-            severity: f.severity as Severity,
-            kind: f.kind as FindingKind,
-            title: String(f.title ?? '').slice(0, 300),
-            detail: String(f.detail ?? '').slice(0, 2000),
-            ...(typeof f.file === 'string' ? { file: f.file } : {}),
-        }));
+        .map((f) => {
+            const split = typeof f.file === 'string' ? splitLineSuffix(f.file) : undefined;
+            const line =
+                typeof f.line === 'number' && Number.isInteger(f.line) && f.line >= 1 ? f.line : split?.line;
+            const exhibits = Array.isArray(f.exhibits)
+                ? f.exhibits.map(wellFormedExhibit).filter((e): e is Exhibit => e !== null)
+                : [];
+            return {
+                severity: f.severity as Severity,
+                kind: f.kind as FindingKind,
+                title: String(f.title ?? '').slice(0, 300),
+                detail: String(f.detail ?? '').slice(0, 2000),
+                ...(split ? { file: split.path } : {}),
+                ...(line !== undefined ? { line } : {}),
+                ...(exhibits.length > 0 ? { exhibits } : {}),
+            };
+        });
 }
 
 /**

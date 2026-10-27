@@ -30,6 +30,10 @@ depends:
 > that cannot close inside one run. Parked by the owner directive of 2026-10-24
 > (`agents/evidence/owner-directives/2026-10-24-throughput-over-ceremony.md`).
 
+> **Arrivals:** 1 — latest `inbox-2026-10-bd` (2026-10-27): a review proposal
+> found that `council-vs-solo-baseline` cannot tell debate from more samples;
+> landed here as step 1.2a, because this file owns that run.
+
 ## Goal
 
 The open dispatch measurements are run or dated; a PR that moves a policy row without a
@@ -48,6 +52,14 @@ tracked is written by the learner, and floors never move.
 - [ ] **1.2 Council rows:** `council-vs-solo-baseline` (pre-registered) and a
       `min_rounds` 2-vs-1 pair; light-seat (`--safe-mode`) verdict agreement.
       verify: three claims decided or dated; the council rows cite them.
+- [ ] **1.2a Third arm before the first baseline run.** Amend
+      `docs/design/council-vs-solo-baseline.md` with arm C: the same members as
+      independent single shots, the same total call count as arm B, aggregated
+      by majority with ties to the stricter answer and abstention never counting
+      as approval. A debate claim must beat C, not only A. Lands before any run
+      commit, so it is an amendment rather than a retrofit.
+      verify: the design doc lists three arms at a commit older than the first
+      run commit.
 - [ ] **1.3 Windows:** read `rate-limit-stops-per-drain` and `fresh-spawns-per-drain`
       at their `review_by` (`warm-worker-cold-start-relief` and `resume-non-inferiority`
       are backed on one manufactured window; a real drain window re-reads them).
