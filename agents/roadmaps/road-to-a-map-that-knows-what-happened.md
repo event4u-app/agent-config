@@ -163,7 +163,7 @@ database stays closed (ADR-094, T3).
       proposals as nodes; reviews and council records linked by PR number. A
       named path that moved is told apart from one that is gone.
       verify: `npx vitest run tests/scripts/code_graph_knowledge_facts.test.ts` -> 0
-- [ ] **I.3 Validity on knowledge facts.** `valid_from`, `valid_until`,
+- [x] **I.3 Validity on knowledge facts.** `valid_from`, `valid_until`,
       `recorded_at`, `supersedes`; derived claims keep `based_on` ids and are
       retracted when one disappears; contradiction expiry is a deterministic
       interval rule; no model decides.
