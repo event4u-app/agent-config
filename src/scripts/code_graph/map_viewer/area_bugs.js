@@ -13,7 +13,7 @@ extendStrings({
     en: {
         bNoDataTab: 'Bugs & Fixes · no data', bReader: 'bugs lane · Stage H · planned', bNotCommitted: 'not in a committed map', bAbsent: function (c) { return 'areas.bugs: absent · committed map @ ' + c; },
         bHead: 'Bug data is local – this map holds none.', bWhy: 'Error events carry personal data. So nothing about bugs lands in the committed map – no titles, no ids, not even counts (K15 · O9). A local map shows open bugs here, fixed bugs with commit, PR, ticket and release, and regression paths through the graph.',
-        bPlanned: 'Both commands are planned (Stage H.1), not in the CLI yet.', bWhyEmpty: 'Why empty – the reason is always shown',
+        bPlanned: 'The import stores a local snapshot; no local bug view is drawn from it yet (H.7).', bWhyEmpty: 'Why empty – the reason is always shown',
         bTiles: [['Committed map', 'never holds bug data. This case applies here.'], ['Not connected', 'no import, no tracker – locally: import a snapshot.'], ['No permission', 'the tracker answers 403 – a scope is missing.'], ['No events', 'connected, empty time window – not “all good”.'], ['Sync failed', 'the old state stays, marked stale.']],
         bLenses: [['overview', 'Overview'], ['bugs', 'Bugs'], ['fixed', 'Fixed'], ['paths', 'Regression paths'], ['time', 'Timeline']], bFilter: 'Filter', bBug: 'Bug',
         bGroups: [['status', 'Status'], ['source', 'Source'], ['env', 'Environment'], ['area', 'Area'], ['cause', 'Cause'], ['symbolicated', 'Symbolication']], bNoAdapter: 'no adapter',
@@ -23,7 +23,7 @@ extendStrings({
     de: {
         bNoDataTab: 'Bugs & Fixes · keine Daten', bReader: 'bugs lane · Stage H · geplant', bNotCommitted: 'nicht in committeter Map', bAbsent: function (c) { return 'areas.bugs: nicht vorhanden · committete Map @ ' + c; },
         bHead: 'Bug-Daten sind lokal – diese Map enthält keine.', bWhy: 'Fehler-Events tragen Personendaten. Darum landet nichts über Bugs in der committeten Map – keine Titel, keine IDs, nicht einmal Zählwerte (K15 · O9). Eine lokale Map zeigt hier offene Bugs, behobene Bugs mit Commit, PR, Ticket und Release, und Regressionspfade durch den Graphen.',
-        bPlanned: 'Beide Befehle sind geplant (Stage H.1), noch nicht im CLI.', bWhyEmpty: 'Warum leer – der Grund steht immer da',
+        bPlanned: 'Der Import legt einen lokalen Snapshot ab; eine lokale Bug-Ansicht daraus ist noch nicht verdrahtet (H.7).', bWhyEmpty: 'Warum leer – der Grund steht immer da',
         bTiles: [['Committete Map', 'enthält nie Bug-Daten. Dieser Fall gilt hier.'], ['Nicht verbunden', 'kein Import, kein Tracker – lokal: Snapshot importieren.'], ['Keine Berechtigung', 'Tracker antwortet 403 – Scope fehlt.'], ['Keine Events', 'verbunden, Zeitfenster leer – kein „alles gut“.'], ['Sync fehlgeschlagen', 'alter Stand bleibt, markiert als veraltet.']],
         bLenses: [['overview', 'Übersicht'], ['bugs', 'Bugs'], ['fixed', 'Behoben'], ['paths', 'Regressionspfade'], ['time', 'Zeitleiste']], bFilter: 'Filter', bBug: 'Bug',
         bGroups: [['status', 'Status'], ['source', 'Quelle'], ['env', 'Umgebung'], ['area', 'Area'], ['cause', 'Ursache'], ['symbolicated', 'Symbolisierung']], bNoAdapter: 'kein Adapter',
@@ -50,7 +50,7 @@ function bCommitted(bar, main) {
     var pin = model.pin || { commit: meta.commit };
     var card = el('div', { class: 'empty-page b-empty', id: 'nodata-bugs' });
     add(card, add(el('span', { class: 'ep-chips' }), stChip('no data', 'dash'), el('span', { class: 'mono ep-rev' }, t('bAbsent')(String(pin.commit || '').slice(0, 8)))), el('span', { class: 'ep-head b-head' }, t('bHead')), el('span', { class: 'ep-what' }, t('bWhy')),
-        add(el('div', { class: 'sy-chips' }), el('span', { class: 'mono st sy-line b-cmd' }, 'code-graph bugs import <sentry-export.json>'), el('span', { class: 'mono st sy-line b-cmd' }, 'code-graph map --local')), el('span', { class: 'ep-note' }, t('bPlanned')));
+        add(el('div', { class: 'sy-chips' }), el('span', { class: 'mono st sy-line b-cmd' }, 'code-graph bugs import <sentry-export.json>')), el('span', { class: 'ep-note' }, t('bPlanned')));
     main.appendChild(card);
     var tiles = el('div', { class: 'b-tiles', id: 'b-why' });
     t('bTiles').forEach(function (x, i) { tiles.appendChild(add(el('div', { class: 'b-tile' + (i === 0 ? ' on' : '') }), el('b', null, x[0]), el('span', null, x[1]))); });
