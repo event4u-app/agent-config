@@ -1356,9 +1356,10 @@ hooks:
   # advisory line naming the project's control; it never blocks. A file that
   # cannot render the component (a server template, a handover prototype) is
   # not measured. Turned on after a retroactive shadow window met all four
-  # conditions of docs/contracts/concern-activation-policy.md. The box-metrics
-  # half stays in shadow: while this is enabled, every UI write adds a row to
-  # agents/runtime/state/design-consistency-shadow.jsonl and nothing is shown.
+  # conditions of docs/contracts/concern-activation-policy.md. The second rule,
+  # box metrics, stays in shadow: its findings are only recorded, never shown.
+  # While this is enabled, every UI write adds a row to
+  # agents/runtime/state/design-consistency-shadow.jsonl.
   # Disabled, nothing runs and nothing is recorded. shadow: true keeps the
   # check running and recording but delivers nothing: the reverse trigger's
   # rollback (internal/bench/corpora/design-consistency-shadow-window.md).

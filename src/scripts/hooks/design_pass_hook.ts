@@ -655,6 +655,8 @@ function main(): number {
 
     const slotArg = process.argv.includes('--slot') ? process.argv[process.argv.indexOf('--slot') + 1] : undefined;
     const slot: PassResult['slot'] = slotArg === 'stop' ? 'stop' : 'post_tool_use';
+    // The manifest binds the post pass without `--slot`; any other slot name is not a write.
+    const post = slotArg === undefined || slotArg === 'post_tool_use';
 
     let payload: unknown = null;
     try {
@@ -663,7 +665,7 @@ function main(): number {
         return EXIT_ALLOW; // fail_closed: false — an unparsable payload is not a block
     }
     if (!pass) {
-        const t = slot === 'stop' ? null : targetPath(payload);
+        const t = post ? targetPath(payload) : null;
         const only = t && isUiSurface(t) ? consistencyFor(root, t) : [];
         if (!only.length || shadow) return EXIT_ALLOW;
         const r: PassResult = { slot, findings: only, blocked: [], audit_missing: [], verification: 'verified' };
@@ -708,7 +710,7 @@ function main(): number {
                 else findings.push(...svgFindings(scan(content, rel) as SvgRuleFinding[], rel));
             }
             // One shadow row per write: the stop pass re-reads the same files.
-            if (consistency && slot === 'post_tool_use' && isUiSurface(rel)) {
+            if (consistency && post && isUiSurface(rel)) {
                 const c = consistencyFor(root, rel);
                 if (!shadow) findings.push(...c);
             }

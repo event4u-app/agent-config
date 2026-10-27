@@ -96,6 +96,20 @@ describe('the consistency check ships on', () => {
         expect(JSON.parse(rows[0]!)).toMatchObject({ file: 'app/clean.tsx', raw_control: 0 });
     });
 
+    it('any slot other than post_tool_use never runs the check', () => {
+        const root = project();
+        for (const slot of ['stop', 'pre_tool_use', 'session_start']) {
+            const r = spawnSync('npx', ['tsx', HOOK, '--slot', slot], {
+                cwd: REPO,
+                env: { ...process.env, CLAUDE_PROJECT_DIR: root },
+                input: JSON.stringify({ tool_input: { file_path: 'app/filters.tsx' } }),
+                encoding: 'utf8',
+            });
+            expect({ slot, status: r.status, stdout: r.stdout }).toEqual({ slot, status: 0, stdout: '' });
+        }
+        expect(fs.existsSync(path.join(root, SHADOW))).toBe(false);
+    });
+
     it('a non-UI write never loads the check', () => {
         const root = project();
         fs.writeFileSync(path.join(root, 'notes.md'), '<select>');
