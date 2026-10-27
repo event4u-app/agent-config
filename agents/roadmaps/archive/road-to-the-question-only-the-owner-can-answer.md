@@ -71,6 +71,7 @@ question, never silently dropped.
       beside the English set in `confidence.ts` `_ACTION_VERBS`.
       verify: `npx vitest run tests/scripts/work_engine/scoring_confidence.test.ts` -> 0
       (ten EN/DE pairs land in the same band).
+      production entry: `src/agent-src/templates/scripts/work_engine/__main__.ts` (`/work` runs the engine; refine scores intake through it).
 - [x] **2.2 The interview speaks Iron Law 1 (D7).** Replace the bold-option-1 rule in <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `src/domains/meta/challenge-me/vision/command.md` with a neutral option block plus
       exactly one recommendation line under it; on a native host the recommendation is the
