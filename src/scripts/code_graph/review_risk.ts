@@ -22,6 +22,7 @@ import * as path from 'node:path';
 
 import { gitProbe } from '../_lib/spawn_env.js';
 import { spanHash } from './lanes/lane_fact.js';
+import { admitEdge, type WalkOptions } from './query.js';
 import type { CodeEdge, CodeGraph, CodeNode } from './types.js';
 import { laneOfKind } from './vocabulary.js';
 
@@ -118,7 +119,14 @@ function lineText(root: string, file: string, line: number, cache: Map<string, s
     return cache.get(file)?.[line - 1] ?? null;
 }
 
-export function reviewRisk(root: string, graph: CodeGraph, rev: string, hunks: readonly Hunk[], weights: Readonly<Record<RiskTerm, number>> = RISK_WEIGHTS): ReviewRisk {
+export function reviewRisk(
+    root: string,
+    graph: CodeGraph,
+    rev: string,
+    hunks: readonly Hunk[],
+    weights: Readonly<Record<RiskTerm, number>> = RISK_WEIGHTS,
+    opts: WalkOptions = {},
+): ReviewRisk {
     const files = new Map<string, Hunk[]>();
     for (const h of hunks) files.set(h.file, [...(files.get(h.file) ?? []), h]);
     const changed = [...files.keys()].sort();
@@ -165,8 +173,9 @@ export function reviewRisk(root: string, graph: CodeGraph, rev: string, hunks: r
         const next: string[] = [];
         for (const id of frontier) {
             for (const e of inn.get(id) ?? []) {
-                if (!CALLER_RELATIONS.has(e.relation) || e.confidence === 'AMBIGUOUS' || seedIds.has(e.source) || callers.has(e.source)) continue;
-                callers.set(e.source, item(e.source, `${e.relation} ${byId.get(id)?.label ?? id} (hop ${hop})`, e));
+                if (!CALLER_RELATIONS.has(e.relation) || !admitEdge(e, opts) || seedIds.has(e.source) || callers.has(e.source)) continue;
+                const guess = admitEdge(e) ? '' : `, guess: ${e.resolved_via}`;
+                callers.set(e.source, item(e.source, `${e.relation} ${byId.get(id)?.label ?? id} (hop ${hop}${guess})`, e));
                 next.push(e.source);
             }
         }

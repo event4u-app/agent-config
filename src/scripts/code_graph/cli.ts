@@ -57,6 +57,10 @@
  *                                             partners, areas, columns,
  *                                             operations, pipelines), each fact
  *                                             with its witness
+ *   --include-guesses                         query, explain, affected, path,
+ *                                             review-risk and pack walk stated
+ *                                             edges only; this adds the guesses,
+ *                                             each marked `(guess: <via>)`
  *   why <package[@version]>                   every path from a declaration to the
  *                                             package, from the lockfiles (offline)
  *   usage <package>                           the public names the code uses, of how
@@ -429,13 +433,14 @@ function cmdQuery(kind: 'query' | 'explain' | 'affected' | 'path', argv: string[
     }
     const positional = argv.filter((a) => !a.startsWith('--') && !isFlagValue(argv, a));
     const budget = budgetOf(argv);
+    const walk = { includeGuesses: argv.includes('--include-guesses') };
     if (kind === 'affected' && flag(argv, '--since')) {
         const root = resolveRoot(argv);
         const seeds = changedNodeSeeds(r.g, root, flag(argv, '--since') as string);
         const merged: QueryResult = { source: r.g.source, seeds: [], lines: [], truncated: false, recommended_reads: [] };
         const perSeed: QueryResult[] = [];
         for (const s of seeds) {
-            const one = affected(r.g, s, 2, budget);
+            const one = affected(r.g, s, 2, budget, walk);
             merged.seeds.push(...one.seeds);
             merged.lines.push(...one.lines);
             merged.truncated = merged.truncated || one.truncated;
@@ -455,7 +460,7 @@ function cmdQuery(kind: 'query' | 'explain' | 'affected' | 'path', argv: string[
             process.stderr.write('usage: code_graph/cli.ts path <a> <b>\n');
             return 2;
         }
-        return render(graphPath(r.g, a, b, budget), r.note);
+        return render(graphPath(r.g, a, b, budget, walk), r.note);
     }
     const kinds = flag(argv, '--kind');
     const relation = flag(argv, '--relation');
@@ -478,7 +483,7 @@ function cmdQuery(kind: 'query' | 'explain' | 'affected' | 'path', argv: string[
         return 0;
     }
     const fn = kind === 'query' ? query : kind === 'explain' ? explain : affected;
-    const rc = render(fn(r.g, a, budget), r.note);
+    const rc = render(kind === 'affected' ? affected(r.g, a, 2, budget, walk) : fn(r.g, a, budget, walk), r.note);
     if (kind === 'affected') renderUsage(r.g, argv, a);
     return rc;
 }
@@ -596,7 +601,7 @@ function cmdReviewRisk(argv: string[]): number {
         return 1;
     }
     const graph = JSON.parse(fs.readFileSync(p, 'utf-8')) as CodeGraph;
-    const r = reviewRisk(root, graph, rev, hunks);
+    const r = reviewRisk(root, graph, rev, hunks, undefined, { includeGuesses: argv.includes('--include-guesses') });
     // Whose work the diff touches — informational, never a weighted term of the sum.
     const prov = readCachedProvenance(root, path.dirname(p));
     const tickets = prov ? ticketsTouched(prov, r.changed) : null;

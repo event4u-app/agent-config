@@ -169,7 +169,7 @@ tracked.
       `agents/evidence/analysis/code-graph-edge-census-2026-10-26.md`.
 
 ## Phase 3 — The gate feeder
-- [ ] 3.1 Enforce the edge acceptance policy in every consumer. Corrected 2026-10-27
+- [x] 3.1 Enforce the edge acceptance policy in every consumer. Corrected 2026-10-27
       (round `inbox-2026-10-bf`): the policy this step asked to write already exists in
       one file and is compile-time complete — `STATED_WORDS` / `GUESS_WORDS` in
       `src/scripts/code_graph/types.ts`, checked by `TRUST_LISTS_COMPLETE`, read through

@@ -15,7 +15,7 @@ import * as path from 'node:path';
 import type { ConfirmState } from '../map_areas.js';
 import { domainResolver } from '../domains.js';
 import { introducedNote, readCachedProvenance } from '../provenance.js';
-import { type LoadedGraph, resolveExactNode } from '../query.js';
+import { admitEdge, type LoadedGraph, resolveExactNode } from '../query.js';
 import type { CodeEdge } from '../types.js';
 import { confirmIds, type ConfirmResult } from './confirm.js';
 import defaults from './defaults.json';
@@ -56,6 +56,8 @@ export interface PackOptions {
     diffFiles?: readonly string[];
     budget?: number;
     depth?: number;
+    /** Walk guess edges too, each marked; off by default (the edge acceptance policy). */
+    includeGuesses?: boolean;
 }
 
 const STOPWORDS = new Set(
@@ -124,13 +126,14 @@ export function contextPack(g: LoadedGraph, root: string, cachePath: string, tas
                 ...(g.out.get(cur) ?? []).map((e) => [e, 'out'] as [CodeEdge, 'out']),
             ];
             for (const [e, way] of steps) {
+                if (!admitEdge(e, opts)) continue;
                 const far = way === 'in' ? e.source : e.target;
                 if (seen.has(far)) continue;
                 const n = g.byId.get(far);
                 if (!n) continue;
                 seen.add(far);
                 next.push(far);
-                found.push({ id: far, label: n.label, kind: n.kind, relation: e.relation, direction: way, via: cur, depth: d, at: atOf(g, far, e), confirm: 'unconfirmed' });
+                found.push({ id: far, label: n.label, kind: n.kind, relation: admitEdge(e) ? e.relation : `${e.relation} (guess: ${e.resolved_via})`, direction: way, via: cur, depth: d, at: atOf(g, far, e), confirm: 'unconfirmed' });
             }
         }
         frontier = next;

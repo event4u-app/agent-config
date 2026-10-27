@@ -24,6 +24,7 @@ import { extractFile } from '../../src/scripts/code_graph/extract.js';
 import { GRAMMAR_ABI_PIN, loadLanguage } from '../../src/scripts/code_graph/loader.js';
 import {
     affected,
+    explain,
     loadGraph,
     node as graphNode,
     path as graphPath,
@@ -32,7 +33,9 @@ import {
     resolveSeeds,
 } from '../../src/scripts/code_graph/query.js';
 import { sanitizeLabel } from '../../src/scripts/code_graph/sanitize.js';
-import { EXPECTED_GRAMMAR_ABI, type Lang } from '../../src/scripts/code_graph/types.js';
+import { type CodeEdge, type CodeGraph, type CodeNode, EXPECTED_GRAMMAR_ABI, type Lang } from '../../src/scripts/code_graph/types.js';
+import { reviewRisk } from '../../src/scripts/code_graph/review_risk.js';
+import { contextPack } from '../../src/scripts/code_graph/verify/pack.js';
 import { validateGraph } from '../../src/scripts/code_graph/validate.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -203,7 +206,8 @@ describe('query tier (Phase 3)', () => {
 
     it('query returns a seed’s direct relations with source attribution', async () => {
         const g = await loadedFixture();
-        const r = query(g, 'app/Foo.php#Foo::handle', 2000);
+        // The fixture's in-repo calls resolve by name lookup, a guess, so they show only behind the flag (3.1).
+        const r = query(g, 'app/Foo.php#Foo::handle', 2000, { includeGuesses: true });
         expect(r.source).toBe('native:fixture');
         expect(r.lines.some((l) => l.includes('--calls-->'))).toBe(true);
         expect(r.lines.some((l) => l.includes('INFERRED') && l.includes('Base::shared'))).toBe(true);
@@ -211,7 +215,7 @@ describe('query tier (Phase 3)', () => {
 
     it('affected does reverse BFS (who references the target)', async () => {
         const g = await loadedFixture();
-        const r = affected(g, 'app/Base.php#Base::shared', 2, 2000);
+        const r = affected(g, 'app/Base.php#Base::shared', 2, 2000, { includeGuesses: true });
         // Foo::handle calls Base::shared (INFERRED) → must appear as a caller
         expect(r.lines.some((l) => l.includes('Foo::handle') && l.includes('Base::shared'))).toBe(true);
     });
@@ -238,7 +242,7 @@ describe('query tier (Phase 3)', () => {
     describe('D4 recommended_reads (Phase 9)', () => {
         it('names the dropped edges’ target files instead of silently truncating', async () => {
             const g = await loadedFixture();
-            const tiny = query(g, 'app/Foo.php#Foo', 1); // 1 token → ~4 chars → every edge drops
+            const tiny = query(g, 'app/Foo.php#Foo', 1, { includeGuesses: true }); // 1 token → ~4 chars → every edge drops
             expect(tiny.truncated).toBe(true);
             expect(tiny.recommended_reads.length).toBeGreaterThan(0);
             // Foo inherits Base (app/Base.php) and declares handle() (app/Foo.php) —
@@ -521,5 +525,58 @@ describe('3.1 — graph_node answers about one node, or refuses', () => {
         const vocab = [...union.matchAll(/'([a-z-]+)'/g)].map((m) => m[1] as string).sort();
         expect(vocab.length).toBeGreaterThan(0);
         expect([...VOCAB_RELATIONS.keys()].sort()).toStrictEqual(vocab);
+    });
+});
+
+/** A hand-built graph on disk, so a test names exactly the edges it reasons about. */
+function handGraph(nodes: Array<Partial<CodeNode> & { id: string }>, edges: Array<Partial<CodeEdge> & { source: string; target: string }>): { root: string; file: string; graph: CodeGraph } {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-hand-'));
+    const graph: CodeGraph = {
+        schema_version: 3,
+        source_checksum: 'hand',
+        languages: ['typescript'],
+        grammar_abi: EXPECTED_GRAMMAR_ABI,
+        edge_confidence_counts: { EXTRACTED: 0, INFERRED: 0, AMBIGUOUS: 0 },
+        nodes: nodes.map((n) => ({ label: n.id, kind: 'function', source_file: n.id.split('#')[0] as string, source_location: [1, 1, 3, 1], ...n })) as CodeNode[],
+        edges: edges.map((e) => ({ relation: 'calls', confidence: 'INFERRED', resolved_via: 'import-specifier', provider: 'native', ...e })) as CodeEdge[],
+    } as CodeGraph;
+    const file = path.join(root, 'graph.json');
+    fs.writeFileSync(file, JSON.stringify(graph));
+    return { root, file, graph };
+}
+
+describe('3.1 — the edge acceptance policy in every consumer', () => {
+    const fx = () =>
+        handGraph(
+            [{ id: 't.ts#Target', label: 'Target' }, { id: 'c1.ts#CallerOne', label: 'CallerOne' }, { id: 'c2.ts#CallerTwo', label: 'CallerTwo' }, { id: 'c3.ts#CallerThree', label: 'CallerThree' }],
+            [
+                { source: 'c1.ts#CallerOne', target: 't.ts#Target', resolved_via: 'name-lookup' },
+                { source: 'c2.ts#CallerTwo', target: 't.ts#Target', resolved_via: 'dynamic', confidence: 'AMBIGUOUS' },
+                { source: 'c3.ts#CallerThree', target: 't.ts#Target', relation: 'imports', resolved_via: 'import-specifier' },
+            ],
+        );
+    const callers = ['CallerOne', 'CallerTwo', 'CallerThree'];
+
+    it('guess edges withheld by every consumer', () => {
+        const { root, file, graph } = fx();
+        const g = loadGraph(file, 'native:hand');
+        const only3 = (lines: string[]): void => {
+            expect(lines.some((l) => l.includes('CallerThree'))).toBe(true);
+            expect(lines.some((l) => l.includes('CallerOne') || l.includes('CallerTwo'))).toBe(false);
+        };
+        only3(callers.flatMap((c) => query(g, c).lines));
+        only3(callers.flatMap((c) => explain(g, c).lines));
+        only3(affected(g, 'Target').lines);
+        only3(callers.flatMap((c) => graphPath(g, c, 'Target').lines.filter((l) => !l.includes('no path'))));
+        only3(reviewRisk(root, graph, 'HEAD', [{ file: 't.ts', from: 1, to: 1 }]).terms.find((t) => t.term === 'callers')!.items.map((i) => i.id));
+        only3(contextPack(g, root, file, 'Target').items.filter((i) => i.direction !== 'seed').map((i) => i.id));
+
+        // Behind the flag the guesses come back, each one marked on its line.
+        const all = affected(g, 'Target', 2, 1500, { includeGuesses: true }).lines;
+        expect(all).toHaveLength(3);
+        expect(all.filter((l) => /\(guess: (name-lookup|dynamic)\)/.test(l))).toHaveLength(2);
+        expect(reviewRisk(root, graph, 'HEAD', [{ file: 't.ts', from: 1, to: 1 }], undefined, { includeGuesses: true }).terms.find((t) => t.term === 'callers')!.items).toHaveLength(3);
+        expect(contextPack(g, root, file, 'Target', { includeGuesses: true }).items.filter((i) => i.relation.includes('(guess:'))).toHaveLength(2);
+        g.close();
     });
 });

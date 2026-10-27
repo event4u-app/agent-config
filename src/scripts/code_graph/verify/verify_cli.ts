@@ -144,6 +144,7 @@ async function cmdPack(argv: string[], root: string, cachePath: string): Promise
             diffFiles: [...new Set(diffFiles)],
             ...(flag(argv, '--budget') ? { budget: Number(flag(argv, '--budget')) } : {}),
             ...(flag(argv, '--depth') ? { depth: Number(flag(argv, '--depth')) } : {}),
+            includeGuesses: argv.includes('--include-guesses'),
         });
         if (json) {
             write(`${JSON.stringify(p)}\n`);
