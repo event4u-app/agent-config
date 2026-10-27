@@ -93,13 +93,8 @@ before any baseline existed, so neither can be tuned to a result.
       production entry: src/scripts/compile_trigger_evals.ts
       reach exempt: the step ships the baseline artefact and the grader fix compile_trigger_evals uses; classifyRow in the same module is step 5.3, which stays open until something calls it.
 
-      **Open, and it gates 0.4.** This is a live LLM run against the canary
-      budget. Token spend is authorised for this drain run, but a *frozen
-      baseline* is only worth freezing if it is taken on the surface and model
-      the regression reference will be compared against later — and a baseline
-      captured mid-run by an autonomous session, then used to derive floors in
-      the same session, is the shape 0.4's own title warns about. Recorded as
-      the next real step rather than attempted here.
+      Done 2026-10-27: `agents/evidence/metrics/routing-baseline-20261027.json`
+      (135 of 179 units), the protocol frozen by a non-authoring session first.
 - [x] **0.4 Derive the floors, never invent them.** Each per-unit floor = its <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       0.2 baseline value minus a fixed tolerance, written into the
       pre-registration BEFORE Phase 1 activates.
