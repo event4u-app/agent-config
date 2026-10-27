@@ -345,24 +345,25 @@ signals are user-owned local files; disable per kind (O20). K.1-K.3 run before D
 ## Decisions
 
 Proposed = the plan's recommendation, or the verification pass's correction
-where marked. Every row is pending: `council:pending`, or `owner` where the
-transition is owner-reserved (O12 retirement, O13 trailer).
+where marked. The six reversible-technical rows were applied as proposed on
+2026-10-27 (`agent:proposed-applied`); the rest are pending: `council:pending`,
+or `owner` where the transition is owner-reserved (O12 retirement, O13 trailer).
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
-| O8 | reversible-technical | council:pending | Proposed: Sentry via import + query time; other trackers as mapping files when a consumer asks | H35: bug knowledge is prose only | a second tracker is asked for |
+| O8 | reversible-technical | agent:proposed-applied 2026-10-27 | Sentry via import + query time; other trackers as mapping files when a consumer asks | H35: bug knowledge is prose only | a second tracker is asked for |
 | O9 | contested-technical | council:pending | Proposed: no bug counts per area in the committed map | KL15; the committed map stays free of operational data | a committed consumer needs a count |
-| O10 | reversible-technical | council:pending | Proposed: k = 3 hops, window = one release, widened per query | H38; inducer precision about one half | the regression fixture misses at k = 3 |
+| O10 | reversible-technical | agent:proposed-applied 2026-10-27 | k = 3 hops, window = one release, widened per query | H38; inducer precision about one half | the regression fixture misses at k = 3 |
 | O11 | contested-technical | council:pending | Proposed: allow H.1-H.4 before D; they feed H.9 | P-3; nothing agent-facing | H.9 is dropped from D |
 | O12 | destructive-owned | owner | Proposed: retire the journal; show `map-outcomes` via J.9; merge intake streams; decide `session_memory_index` and the second-brain store | H41: written-not-read stores | a reader of the journal appears |
 | O13 | product-owned | owner | Proposed: `Agent-Session: <id>` trailer on agent commits; scored matching for the rest — a machine trailer, distinct from attribution lines | H43: 0 of 9,365 commits carry a session trailer | the owner rejects machine trailers |
 | O14 | contested-technical | council:pending | Proposed: local index of ids and pointers under the user's home, keyed by repo id (correction: not in the project) | owner turn 20; `.build/` is per worktree | a host offers its own index |
-| O15 | reversible-technical | council:pending | Proposed: `hint` 250 / `concise` 800 / ceiling 2,000 tok (correction adds `hint`) | H44: 58,214 tok today | J.9 shows a budget hides needed items |
-| O16 | reversible-technical | council:pending | Proposed: no vectors until FTS5 is measured short of a question | KL21 | a fixed question fails on FTS5 |
+| O15 | reversible-technical | agent:proposed-applied 2026-10-27 | `hint` 250 / `concise` 800 / ceiling 2,000 tok (correction adds `hint`) | H44: 58,214 tok today | J.9 shows a budget hides needed items |
+| O16 | reversible-technical | agent:proposed-applied 2026-10-27 | no vectors until FTS5 is measured short of a question | KL21 | a fixed question fails on FTS5 |
 | O17 | contested-technical | council:pending | Proposed: allow the round-3 P-3 exceptions | they correct, repair or refuse | an exception injects content |
 | O18 | contested-technical | council:pending | Proposed: learned working style is always reviewed before promotion | KL27 | never on a count |
-| O19 | reversible-technical | council:pending | Proposed: team agreements as curated memory + `locked_keys`; no new file | `_lib/agent_settings.ts:972-980` | a setting cannot express an agreement |
-| O20 | reversible-technical | council:pending | Proposed: all four signal kinds on, each switchable | K.7 | a kind misfires on fixtures |
+| O19 | reversible-technical | agent:proposed-applied 2026-10-27 | team agreements as curated memory + `locked_keys`; no new file | `_lib/agent_settings.ts:972-980` | a setting cannot express an agreement |
+| O20 | reversible-technical | agent:proposed-applied 2026-10-27 | all four signal kinds on, each switchable | K.7 | a kind misfires on fixtures |
 | O21 | contested-technical | council:pending | Proposed: allow K.1-K.3 before D | field measure for D | a signal reaches the agent before D |
 
 ## Kill and declined register
