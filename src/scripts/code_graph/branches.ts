@@ -11,9 +11,11 @@
  *
  * Clean-up (D11): a manifest goes when its local branch is gone or it was not
  * seen for the window; the default branch, the checked-out branch, `release/*`
- * and branches with a remote-tracking ref are pinned; unreferenced facts are
- * swept in the same pass. No git ref is ever deleted, and an offline remote
- * never counts as gone.
+ * and branches named in the store's `pins.json` are kept — a remote-tracking ref
+ * no longer pins (H16). Unreferenced facts are swept in the same pass, and a
+ * refresh runs it within a time budget. A manifest is stored as a delta against
+ * its parent's when the parent is indexed. No git ref is ever deleted, and an
+ * offline remote never counts as gone.
  */
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
@@ -21,7 +23,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { write_atomic } from '../_lib/fs_atomic.js';
-import { chainOf, currentBranch, defaultBranch } from '../_lib/branch_parents.js';
+import { chainOf, currentBranch, defaultBranch, recordedParent } from '../_lib/branch_parents.js';
 import { gitProbe, gitProbeInput } from '../_lib/spawn_env.js';
 import { buildFromRepo, extractorFingerprint, walkedPath } from './build.js';
 import { extractFile } from './extract.js';
@@ -45,6 +47,9 @@ export interface BranchManifest {
     seen: string;
     files: Record<string, string>;
     facts: { code: string[]; systems: string | null; data: string | null };
+    /** Stored form only: the manifest this one is a delta against (7.3). `files` is then absent on disk. */
+    parent?: string;
+    delta?: { set: Record<string, string>; removed: string[] };
 }
 
 interface CodeFact {
@@ -213,8 +218,51 @@ export async function indexBranch(root: string, buildDir: string, ref: string, o
         }
     }
     const manifest: BranchManifest = { version: BRANCH_STORE_VERSION, ref, commit, seen: opts.day ?? today(), files, facts: { code: codeKeys.map(([, , k]) => k), systems, data } };
-    writeJson(manifestFile(dir, ref), manifest);
+    writeJson(manifestFile(dir, ref), storedForm(root, buildDir, manifest));
     return { manifest, written };
+}
+
+/** The parent a branch's manifest is stored against: its recorded parent, else the default branch; never itself. */
+function manifestParent(root: string, ref: string): string | null {
+    let p: string | null = null;
+    try {
+        p = recordedParent(root, ref) ?? defaultBranch(root);
+    } catch {
+        p = null;
+    }
+    return p && p !== ref ? p : null;
+}
+
+/** A manifest as written: a delta against its parent's when the parent is indexed, else whole. */
+function storedForm(root: string, buildDir: string, m: BranchManifest): BranchManifest | Omit<BranchManifest, 'files'> {
+    const parentRef = manifestParent(root, m.ref);
+    const parent = parentRef ? readManifest(buildDir, parentRef) : null;
+    if (!parent) return m;
+    const set: Record<string, string> = {};
+    for (const [f, sha] of Object.entries(m.files)) if (parent.files[f] !== sha) set[f] = sha;
+    const removed = Object.keys(parent.files).filter((f) => !(f in m.files)).sort();
+    const { files: _files, ...rest } = m;
+    return { ...rest, parent: parent.ref, delta: { set, removed } };
+}
+
+/** A stored manifest with its `files` rebuilt from the parent chain; `null` when a parent is missing. */
+function materialize(buildDir: string, m: BranchManifest | null, seen: Set<string> = new Set()): BranchManifest | null {
+    if (!m || !m.delta || !m.parent) return m;
+    if (seen.has(m.ref)) return null;
+    const parent = materialize(buildDir, readJson<BranchManifest>(manifestFile(storeDir(buildDir), m.parent)), new Set([...seen, m.ref]));
+    if (!parent) return null;
+    const files = { ...parent.files, ...m.delta.set };
+    for (const f of m.delta.removed) delete files[f];
+    return { ...m, files };
+}
+
+const pinsFile = (buildDir: string): string => path.join(storeDir(buildDir), 'pins.json');
+
+/** Keep a branch's manifest through every gc, whatever its age. */
+export function pinBranch(buildDir: string, ref: string): void {
+    const pins = new Set(readJson<string[]>(pinsFile(buildDir)) ?? []);
+    pins.add(ref);
+    writeJson(pinsFile(buildDir), [...pins].sort());
 }
 
 export function listManifests(buildDir: string): BranchManifest[] {
@@ -226,19 +274,20 @@ export function listManifests(buildDir: string): BranchManifest[] {
         return [];
     }
     return names
-        .map((n) => readJson<BranchManifest>(path.join(d, n)))
+        .map((n) => materialize(buildDir, readJson<BranchManifest>(path.join(d, n))))
         .filter((m): m is BranchManifest => m !== null && m.version === BRANCH_STORE_VERSION)
         .sort((a, b) => (a.ref < b.ref ? -1 : 1));
 }
 
 export function readManifest(buildDir: string, ref: string): BranchManifest | null {
-    return readJson<BranchManifest>(manifestFile(storeDir(buildDir), ref));
+    return materialize(buildDir, readJson<BranchManifest>(manifestFile(storeDir(buildDir), ref)));
 }
 
 /** Mark a branch as seen today: asking about a branch keeps it. */
 export function touchManifest(buildDir: string, m: BranchManifest, day = today()): void {
     if (m.seen === day) return;
-    writeJson(manifestFile(storeDir(buildDir), m.ref), { ...m, seen: day });
+    const stored = readJson<BranchManifest>(manifestFile(storeDir(buildDir), m.ref)) ?? m;
+    writeJson(manifestFile(storeDir(buildDir), m.ref), { ...stored, seen: day });
 }
 
 export interface BranchFacts {
@@ -367,16 +416,6 @@ function refExists(root: string, branch: string): boolean {
     }
 }
 
-/** `refs/remotes/<remote>/<branch>` exactly: a glob's `*` would also match `origin/feat/<branch>`. */
-function hasRemoteTracking(root: string, branch: string): boolean {
-    try {
-        const remotes = gitProbe(root, ['remote']).split('\n').map((r) => r.trim()).filter(Boolean);
-        const refs = new Set(gitProbe(root, ['for-each-ref', '--format=%(refname)', 'refs/remotes']).split('\n').map((r) => r.trim()));
-        return remotes.some((r) => refs.has(`refs/remotes/${r}/${branch}`));
-    } catch {
-        return false;
-    }
-}
 
 /** A manifest made for a tag, a SHA or a remote ref is gone only when that name no longer resolves. */
 function resolves(root: string, ref: string): boolean {
@@ -395,11 +434,16 @@ export interface GcResult {
     dropped: Array<{ ref: string; why: string }>;
     kept: Array<{ ref: string; why: string }>;
     swept: number;
+    /** the sweep stopped at its time budget; the next gc continues it */
+    bounded: boolean;
 }
 
 /** Drop stale manifests and the facts nothing references any more; never touches a git ref. */
-export function gcBranches(root: string, buildDir: string, opts: { day?: string; unseenDays?: number; now?: number } = {}): GcResult {
+export function gcBranches(root: string, buildDir: string, opts: { day?: string; unseenDays?: number; now?: number; budgetMs?: number } = {}): GcResult {
     const now = opts.now ?? Date.now();
+    const deadline = opts.budgetMs === undefined ? Infinity : Date.now() + opts.budgetMs;
+    let bounded = false;
+    const pins = new Set(readJson<string[]>(pinsFile(buildDir)) ?? []);
     const dir = storeDir(buildDir);
     const day = opts.day ?? today();
     const cutoff = new Date(new Date(`${day}T00:00:00Z`).getTime() - (opts.unseenDays ?? UNSEEN_DAYS) * 86_400_000).toISOString().slice(0, 10);
@@ -408,8 +452,14 @@ export function gcBranches(root: string, buildDir: string, opts: { day?: string;
     const dropped: GcResult['dropped'] = [];
     const kept: GcResult['kept'] = [];
     const live: BranchManifest[] = [];
-    for (const m of listManifests(buildDir)) {
-        const pin = m.ref === def ? 'default branch' : m.ref === cur ? 'checked out' : /^release\//.test(m.ref) ? 'release line' : hasRemoteTracking(root, m.ref) ? 'has a remote-tracking ref' : null;
+    const all = listManifests(buildDir);
+    for (const m of all) {
+        if (Date.now() >= deadline) {
+            bounded = true;
+            break;
+        }
+        // A remote-tracking ref pins nothing any more: every other branch expires unless pinned (H16).
+        const pin = m.ref === def ? 'default branch' : m.ref === cur ? 'checked out' : /^release\//.test(m.ref) ? 'release line' : pins.has(m.ref) ? 'pinned' : null;
         if (pin) {
             kept.push({ ref: m.ref, why: pin });
             live.push(m);
@@ -417,6 +467,11 @@ export function gcBranches(root: string, buildDir: string, opts: { day?: string;
         }
         const gone = !refExists(root, m.ref) && !resolves(root, m.ref);
         if (gone || m.seen < cutoff) {
+            // A child stored as a delta against this manifest is rewritten whole first.
+            for (const child of all) {
+                const raw = readJson<BranchManifest>(manifestFile(dir, child.ref));
+                if (raw?.parent === m.ref) writeJson(manifestFile(dir, child.ref), (({ parent: _p, delta: _d, ...whole }) => whole)(child));
+            }
             fs.rmSync(manifestFile(dir, m.ref), { force: true });
             dropped.push({ ref: m.ref, why: gone ? 'the local branch is gone' : `unseen since ${m.seen}` });
             continue;
@@ -431,6 +486,7 @@ export function gcBranches(root: string, buildDir: string, opts: { day?: string;
         if (m.facts.data) referenced.data.add(m.facts.data);
     }
     let swept = 0;
+    if (bounded) return { dropped, kept, swept, bounded };
     for (const kind of ['code', 'systems', 'data'] as const) {
         const d = path.join(dir, 'facts', kind);
         let names: string[];
@@ -447,11 +503,12 @@ export function gcBranches(root: string, buildDir: string, opts: { day?: string;
             } catch {
                 continue;
             }
+            if (Date.now() >= deadline) return { dropped, kept, swept, bounded: true };
             fs.rmSync(path.join(d, n), { force: true });
             swept++;
         }
     }
-    return { dropped, kept, swept };
+    return { dropped, kept, swept, bounded };
 }
 
 /** Bytes the store holds, for the cost reading (6.2). */

@@ -130,6 +130,7 @@
  *                                               never auto-run against a
  *                                               graph.
  */
+import { gcBranches } from './branches.js';
 import { fixtureScopeProblems, produceAreas } from './map_area_payloads.js';
 import { lintGraph } from './lint.js';
 import { explainScope, readScopeRules } from './scope.js';
@@ -1012,6 +1013,9 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
  * when another refresh holds it. `--map` redraws `agents/map/` afterwards, only
  * when the project already has one and it is older than the cache.
  */
+/** How long a refresh may spend on branch gc. */
+const BRANCH_GC_BUDGET_MS = 2_000;
+
 async function cmdRefresh(argv: string[]): Promise<number> {
     const root = resolveRoot(argv);
     const out = flag(argv, '--out') ?? buildCacheFor(root);
@@ -1059,6 +1063,13 @@ async function cmdRefresh(argv: string[]): Promise<number> {
             return rc;
         }
         if (out === buildCacheFor(root)) registerUse(root, null, git(root, 'rev-parse', 'HEAD'));
+        // Branch gc rides on every refresh, bounded in time; a store it cannot read is no reason to fail one.
+        try {
+            const g = gcBranches(root, path.dirname(out), { budgetMs: BRANCH_GC_BUDGET_MS });
+            process.stdout.write(`branch gc: ${g.dropped.length} dropped, ${g.swept} fact file(s) swept${g.bounded ? ' — stopped at its time budget, the next refresh continues' : ''}\n`);
+        } catch {
+            /* the branch store is optional */
+        }
         if (argv.includes('--map') && mapIsBehind(root, out)) {
             const mrc = await drawMap(['--root', root, '--no-build', '--no-verify']);
             record(mrc === 0 ? 'refreshed-with-map' : 'map-failed', mrc === 0 ? undefined : `map exited ${mrc}`);

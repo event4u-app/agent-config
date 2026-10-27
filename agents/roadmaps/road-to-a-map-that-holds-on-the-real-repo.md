@@ -240,8 +240,8 @@ Before the Systems view of `road-to-map-views-from-the-handover`.
   > note: not done: waits on Phase 6 per the Order block.
 - [x] **7.2 [F.2b] Provenance renames.** The timeline uses the history lane's rename pairs, not `--follow` (`provenance_verbs.ts:84`); authors and last change read renames (`map_answers.ts:330`). verify: in the audit fixture the migration timeline has no create commit, and `npx vitest run tests/scripts/code_graph_provenance_renames.test.ts` -> 0
   > note: done ahead of Phase 6 — it depends only on the audit fixture of 1.3. "No create commit" read as: no commit that created a different file (`--follow` walked the renamed status migration back into `create_orders`' `add orders`); its own `(#9)` stays.
-- [ ] **7.3 [F.3] Branches clean themselves.** gc inside `refresh`, bounded in time; remote-tracking branches expire unless pinned; a manifest stores a delta against its parent's. verify: `npx vitest run tests/scripts/code_graph_branches_gc.test.ts` -> 0
-  > note: not done: not started in this run.
+- [x] **7.3 [F.3] Branches clean themselves.** gc inside `refresh`, bounded in time; remote-tracking branches expire unless pinned; a manifest stores a delta against its parent's. verify: `npx vitest run tests/scripts/code_graph_branches_gc.test.ts` -> 0
+  > note: pinning is `pinBranch` into the store's `pins.json`; no CLI verb for it yet (`branches pin <ref>` is a one-line follow-up).
 - [ ] **7.4 [F.4] A chain that knows its parent.** post-checkout records the parent and its SHA from the reflog; merged parents detected offline and children re-parented with a report; "ours" needs ≥ 1 own commit or an author match; foreign branches frozen. Hook edit in `install-hooks.sh`. verify: `npx vitest run tests/scripts/branch_chain_parent.test.ts` -> 0
   > note: not done: not started in this run (hook edit in `install-hooks.sh`).
 - [ ] **7.5 [F.5] Semantic early warning.** Overlap on tables, columns, packages, routes, not paths. verify: `npx vitest run tests/scripts/branch_chain_semantic_overlap.test.ts` -> 0
