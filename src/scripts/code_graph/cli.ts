@@ -198,6 +198,7 @@ import { pageReads } from './answer_budget.js';
 import { noEntryLine, testsForModule } from './answer_correctness.js';
 import { askMain } from './cli_ask.js';
 import { mapSection } from './map_sections.js';
+import { scanMain } from './scan.js';
 import { bugsMain } from './cli_bugs.js';
 import { cmdBranchDiff, cmdBranches, cmdOnBranches, cmdProvenance, cmdSystems } from './cli_knowledge.js';
 
@@ -1389,9 +1390,10 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'estate') return estateMain(argv.slice(1));
         if (sub === 'bugs') return bugsMain(argv.slice(1));
         if (sub === 'ask') return askMain(argv.slice(1));
+        if (sub === 'scan') return scanMain(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|review-risk|why|usage|remove-plan|provenance|branches|branch-diff|on-branches|tests-for|untested|dead|confirm|pack|rebuild-diff|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage|bugs|ask> [options]\n',
+                'impact|review-risk|why|usage|remove-plan|provenance|branches|branch-diff|on-branches|tests-for|untested|dead|confirm|pack|rebuild-diff|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage|bugs|ask|scan> [options]\n',
         );
         return 2;
     } catch (e) {
