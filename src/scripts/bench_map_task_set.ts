@@ -30,6 +30,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { buildFromRepo, serializeGraph } from './code_graph/build.js';
+import { affected, loadGraph } from './code_graph/query.js';
 import * as v1 from './bench_ab_task_runner.js';
 import { SweepBudget, cost_usd, is_bare_alias, tier_for_model, type TierRates, type TokensBreakdown } from './_lib/bench_ab_activation.js';
 import { preserve_transcript, reset_fixture } from './_lib/bench_ab_workspace.js';
@@ -149,6 +151,55 @@ export interface MapTrial extends MapRunRecord {
     synthetic: boolean;
     /** What the agent did, redacted (`_lib/bench_map_trace.ts`); absent on records older than 5.1. */
     trace?: TrialTrace;
+}
+
+export interface TaskCoverage {
+    task_id: string;
+    /** planted places the offline graph answer names */
+    covered: string[];
+    uncovered: string[];
+}
+
+/**
+ * Does the offline map reach the planted affected set? `code-graph affected` on
+ * each primary file of a fresh clone, two hops, no budget cut; a planted place is
+ * covered when the answer names it on a token boundary. A task the map cannot
+ * reach cannot show a map effect, so it is reported apart, never pooled.
+ */
+export async function coverageOf(task: MapTask): Promise<TaskCoverage> {
+    const [clone] = reset_fixture({ id: task.id, fixture: task.fixture }, 'coverage', 0);
+    const { graph } = await buildFromRepo(clone, null, { lanes: true });
+    const file = path.join(os.tmpdir(), `map-coverage-${process.pid}-${task.id}.json`);
+    fs.writeFileSync(file, serializeGraph(graph));
+    try {
+        const g = loadGraph(file, file);
+        const text = task.primary
+            .map((p) => {
+                const r = affected(g, p, 2, 1_000_000);
+                return [...r.seeds, ...r.lines, ...r.recommended_reads.map((x) => x.path)].join('\n');
+            })
+            .join('\n');
+        const hit = (k: string): boolean => new RegExp(`(?<![\\w-])${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w-])`, 'i').test(text);
+        const covered: string[] = [];
+        const uncovered: string[] = [];
+        for (const a of task.affected) ([a.id, ...(a.aliases ?? [])].some(hit) ? covered : uncovered).push(a.id);
+        return { task_id: task.id, covered, uncovered };
+    } finally {
+        fs.rmSync(file, { force: true });
+    }
+}
+
+export function coverageSummary(rows: readonly TaskCoverage[]): { tasks: number; covered_tasks: string[]; uncovered_tasks: string[]; places: number; covered_places: number; covered_share: number } {
+    const covered_tasks = rows.filter((r) => r.uncovered.length === 0).map((r) => r.task_id);
+    const places = rows.reduce((a, r) => a + r.covered.length + r.uncovered.length, 0);
+    return {
+        tasks: rows.length,
+        covered_tasks,
+        uncovered_tasks: rows.filter((r) => r.uncovered.length > 0).map((r) => r.task_id),
+        places,
+        covered_places: rows.reduce((a, r) => a + r.covered.length, 0),
+        covered_share: rows.length ? Math.round((covered_tasks.length / rows.length) * 1000) / 1000 : 0,
+    };
 }
 
 /** The package version an arm runs under, with its form; `none` for an arm without the package. */
@@ -336,6 +387,7 @@ interface Args {
     /** Fail unless every trial carries every trace field. */
     check_trace_fields: boolean;
     print_arms: boolean;
+    coverage: boolean;
 }
 
 class UsageError extends Error {}
@@ -358,6 +410,7 @@ export function parse_args(argv: string[]): Args {
         rescore: null,
         check_trace_fields: false,
         print_arms: false,
+        coverage: false,
     };
     const num = (flag: string, v: string | undefined): number => {
         const n = Number(v);
@@ -385,6 +438,7 @@ export function parse_args(argv: string[]): Args {
             case '--rescore': a.rescore = next() ?? null; break;
             case '--check-trace-fields': a.check_trace_fields = true; break;
             case '--print-arms': a.print_arms = true; break;
+            case '--coverage': a.coverage = true; break;
             default: throw new UsageError(`unknown argument: ${flag}`);
         }
     }
@@ -622,6 +676,32 @@ function isCliEntry(): boolean {
     }
 }
 
+/**
+ * `--coverage`: the offline coverage of the selected tasks, before any spend.
+ * A live run with `--coverage` prints the same and then runs; covered and
+ * uncovered tasks are reported apart in its summary.
+ */
+export async function coverageMain(argv: string[] = process.argv.slice(2)): Promise<number> {
+    let a: Args;
+    try {
+        a = parse_args(argv);
+    } catch (e) {
+        process.stderr.write(`bench_map_task_set: ${(e as Error).message}\n`);
+        return 1;
+    }
+    let tasks = load_map_tasks();
+    if (a.tasks.length === 1 && /^\d+$/.test(a.tasks[0] as string)) tasks = tasks.slice(0, Number(a.tasks[0]));
+    else if (a.tasks.length) tasks = tasks.filter((t) => a.tasks.includes(t.id));
+    else if (a.limit > 0) tasks = tasks.slice(0, a.limit);
+    const rows: TaskCoverage[] = [];
+    for (const t of tasks) rows.push(await coverageOf(t));
+    const s = coverageSummary(rows);
+    for (const r of rows) process.stdout.write(`  ${r.uncovered.length ? 'uncovered' : 'covered  '} ${r.task_id}${r.uncovered.length ? ` — not reached: ${r.uncovered.join(', ')}` : ''}\n`);
+    process.stdout.write(`covered share ${s.covered_share.toFixed(3)} (${s.covered_tasks.length}/${s.tasks} tasks, ${s.covered_places}/${s.places} places)\n`);
+    return a.dry_run ? 0 : main(argv.filter((x) => x !== '--coverage'));
+}
+
 if (isCliEntry()) {
-    process.exitCode = main();
+    if (process.argv.includes('--coverage')) void coverageMain().then((rc) => (process.exitCode = rc));
+    else process.exitCode = main();
 }
