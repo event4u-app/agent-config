@@ -280,14 +280,14 @@ Exit: 6.1–6.2 green. Rollback: drop the route from 1.1's list.
 
 ## Phase 7 — Bugs (local only)
 
-- [ ] **7.1 New route, local map.** `area_bugs.js` and CSS: lenses Übersicht ·
+- [x] **7.1 New route, local map.** `area_bugs.js` and CSS: lenses Übersicht ·
       Bugs · Behoben · Regressionspfade · Zeitleiste; Filter aside (Status,
       Quelle with "kein Adapter" for missing adapters, Umgebung, Area, Ursache,
       Symbolisierung); Verlauf crumbs; Bug detail with fix commits, timeline,
       frames, hypotheses, the introducing-commit candidate. Data from the local
       bug lane (sibling Stage H, `.build/bugs/`).
       verify: `npx vitest run tests/scripts/code_graph_map_bugs_page.test.ts -t local --reporter=verbose` -> /✓.*local/
-- [ ] **7.2 Committed map stays empty.** The committed map renders only the
+- [x] **7.2 Committed map stays empty.** The committed map renders only the
       "keine Daten" tab, the "warum leer" card and the local-data chip; a test
       plants a bug id, title and message in the local lane and asserts none of
       them appears in any file under `agents/map/` outside `.build/` (AC-17 view

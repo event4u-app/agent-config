@@ -1083,11 +1083,12 @@ export const VIEWER_SCRIPTS = [
     'area_impact.js',
     'area_agent.js',
     'area_knowledge.js',
+    'area_bugs.js',
     'shell.js',
 ] as const;
 /** The hub's parts: a project map's plus the Projects area, which no project map carries — not even as code. */
 export const HUB_SCRIPTS = [...VIEWER_SCRIPTS.slice(0, -1), 'area_projects.js', 'shell.js'] as const;
-export const VIEWER_STYLES = ['viewer.css', 'shell.css', 'area_kit.css', 'area_interfaces.css', 'area_impact.css', 'area_agent.css', 'area_ops.css', 'area_systems.css', 'area_knowledge.css'] as const;
+export const VIEWER_STYLES = ['viewer.css', 'shell.css', 'area_kit.css', 'area_interfaces.css', 'area_impact.css', 'area_agent.css', 'area_ops.css', 'area_systems.css', 'area_knowledge.css', 'area_bugs.css'] as const;
 
 /**
  * The one inline script: every part inside one function scope. Joined BEFORE
