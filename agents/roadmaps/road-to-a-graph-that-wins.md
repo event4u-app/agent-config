@@ -278,7 +278,7 @@ reviews worse. Distinct from 3.2, which teaches two existing detectors to read e
       without full history (4.2); (c) a touched entry point or flow. Each check cites
       the edges it rests on with a `file:line` witness.
       verify: `npx vitest run tests/scripts/code_graph_review_risk.test.ts -t 'three checks cite witnesses'` -> 0
-- [ ] 5.2 **Review skills consume the checks and the read list.** `blast-radius-analyzer`
+- [x] 5.2 **Review skills consume the checks and the read list.** `blast-radius-analyzer`
       step 2 tells the agent to grep; it runs `impact --diff` first when the graph is
       `fresh` or `edited`, and greps only for `unknown`, partial or unindexed files.
       The review command chain receives the checks as a structured list, not prose,
