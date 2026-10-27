@@ -237,6 +237,7 @@ use it.
       worktree's transcript, poisoned connector text, two users in one repo.
       verify: `npx vitest run tests/scripts/ask_entry_point.test.ts` -> 0
       > note: ships as `code-graph ask` with graph and test sources; the MCP `answer` tool and a top-level `agent-config ask` alias need the consumer tool catalog and CLI registrations, left for a follow-up; session and signal sources join after I.4 and K.2.
+      > note: the branch-scope fixture holds on synthetic rows only — every real source (`graphSources`, `reviewSources`) sets `branch: null` and the asker's repository id, so the branch-scope guard cannot fire on a real answer yet.
 - [ ] **J.5 Detail by command, not by file** (H46). `code-graph map --section
       <name>` returns what MAP.md cuts; the pre-read guard is an extension of
       `reread_guard_hook.ts` that names the command on reads of large generated
