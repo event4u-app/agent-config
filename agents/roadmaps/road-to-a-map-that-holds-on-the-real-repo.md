@@ -244,8 +244,8 @@ Before the Systems view of `road-to-map-views-from-the-handover`.
   > note: pinning is `pinBranch` into the store's `pins.json`; no CLI verb for it yet (`branches pin <ref>` is a one-line follow-up).
 - [x] **7.4 [F.4] A chain that knows its parent.** post-checkout records the parent and its SHA from the reflog; merged parents detected offline and children re-parented with a report; "ours" needs ≥ 1 own commit or an author match; foreign branches frozen. Hook edit in `install-hooks.sh`. verify: `npx vitest run tests/scripts/branch_chain_parent.test.ts` -> 0
   > note: verified on the rendered hook (the test renders `install-hooks.sh` into a scratch dir); the shared `.git/hooks` were not reinstalled. Merge detection is ancestry only: a squash-merged parent is not seen offline.
-- [ ] **7.5 [F.5] Semantic early warning.** Overlap on tables, columns, packages, routes, not paths. verify: `npx vitest run tests/scripts/branch_chain_semantic_overlap.test.ts` -> 0
-  > note: not done: not started in this run.
+- [x] **7.5 [F.5] Semantic early warning.** Overlap on tables, columns, packages, routes, not paths. verify: `npx vitest run tests/scripts/branch_chain_semantic_overlap.test.ts` -> 0
+  > note: read from the `+` lines of each side's diff since the merge base (Laravel and SQL DDL, JSON manifests, Laravel and Express routes); a Laravel `$table->x('col')` names the column only, since the table sits on another line.
 - [ ] **7.6 [F.6] Surface what is computed.** Hidden dependencies (after 2.5) in the Code rail, review-risk and a verb; the flow lens draws product-scope flows; decisions in the detail panel. Waits on Phases 2 and 5 (P-3). verify: `npx vitest run tests/scripts/code_graph_surface_computed.test.ts` -> 0
   > note: waits on Phases 2 and 5 (P-3).
 - [ ] **7.7 [F.7] Nightly rebuild-diff with lanes.** Workflow, with ratification artifact. verify: `gh workflow view code-graph-rebuild-diff.yml` -> 0
