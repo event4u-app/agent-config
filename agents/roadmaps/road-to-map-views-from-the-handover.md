@@ -326,9 +326,9 @@ Design deviations the analysis found. Strict mode: the default is the handover,
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — All fourteen `map-{page}-fidelity.md` matrices exist and
+- [x] AC-1 — All fourteen `map-{page}-fidelity.md` matrices exist and
       `code_graph_map_fidelity_matrices.test.ts` passes over them.
-- [ ] AC-2 — Every route renders at 1440/375/320 in both themes with no
+- [x] AC-2 — Every route renders at 1440/375/320 in both themes with no
       document overflow, on this repository's map and the demo map.
 - [ ] AC-3 — Systeme: every payload row is reachable; filter counts equal the
       payload's; a package detail answers why installed (all chains), direct vs
