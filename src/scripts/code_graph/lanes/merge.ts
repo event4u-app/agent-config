@@ -23,6 +23,7 @@
  * `applyLaneOutputs` does the same on a graph file and re-derives its SQLite
  * twin, so a query sees the merged facts through either store.
  */
+import { declaredUnresolved } from '../lint.js';
 import * as fs from 'node:fs';
 
 import { write_atomic } from '../../_lib/fs_atomic.js';
@@ -30,7 +31,7 @@ import { serializeGraph } from '../build.js';
 import { emitSqliteTwin } from '../sqlite_store.js';
 import type { CodeEdge, CodeGraph, CodeNode, FactMeta } from '../types.js';
 import { directionError, KINDS, LANE_CAP, RELATIONS } from '../vocabulary.js';
-import type { LaneOutput } from './lane_fact.js';
+import type { LaneOutput, LaneRelation } from './lane_fact.js';
 
 export interface MergeRefusal {
     lane: string;
@@ -135,7 +136,7 @@ export function mergeLaneOutputs(graph: CodeGraph, outputs: readonly LaneOutput[
                 confidence: r.guess ? 'INFERRED' : 'EXTRACTED',
                 resolved_via: r.guess ? 'name-lookup' : 'lane-read',
                 provider: 'native',
-                fact: { owner: r.owner, witness: { ...r.witness }, rung: r.rung, lane: o.lane, attrs: { ...r.attrs } },
+                fact: { owner: r.owner, witness: { ...r.witness }, rung: r.rung, lane: o.lane, attrs: endpointState(r.attrs, to !== undefined, r.to) },
             };
             edges.push(edge);
             mergedEdges += 1;
@@ -151,6 +152,18 @@ export function mergeLaneOutputs(graph: CodeGraph, outputs: readonly LaneOutput[
     const counts = { EXTRACTED: 0, INFERRED: 0, AMBIGUOUS: 0 };
     for (const e of edges) counts[e.confidence] += 1;
     return { graph: { ...graph, nodes, edges, edge_confidence_counts: counts }, merged: { nodes: mergedNodes, edges: mergedEdges }, refused };
+}
+
+/**
+ * The endpoint contract: an edge hits a node, or it is typed `unresolved` with a
+ * reason — the lane's own when it gave one, else that the target is no node of
+ * this graph. Never a silent dangling edge, never a deletion of a fact a lane
+ * read. A target that resolved drops a lane's pre-declared state.
+ */
+function endpointState(attrs: LaneRelation['attrs'], hit: boolean, target: string): LaneRelation['attrs'] {
+    const { relation_state: _s, reason: _r, ...rest } = attrs;
+    if (hit) return rest;
+    return declaredUnresolved(attrs) ? { ...attrs } : { ...rest, relation_state: 'unresolved', reason: `target ${target} is not a node of this graph` };
 }
 
 /** Merge into the graph file at `jsonPath`, write it back atomically, and re-derive its SQLite twin. */

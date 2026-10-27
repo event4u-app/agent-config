@@ -90,7 +90,10 @@ function emitCompose(em: Emitter, { file, model }: ComposeRead, all: ComposeRead
         }
         if (s.build !== null) {
             const df = path.posix.normalize(path.posix.join(dir, s.build, s.dockerfile ?? 'Dockerfile'));
-            em.rel('uses-image', id, `image:built:${df}`, { mechanism: 'build', target_name: df }, file, s.line, { rung });
+            // The Dockerfile is its own `image:built:` fact only when this tree holds it.
+            const inTree = !df.startsWith('../') && em.read(df) !== null;
+            const state = inTree ? {} : { relation_state: 'unresolved', reason: `the Dockerfile ${df} is not in this tree` };
+            em.rel('uses-image', id, `image:built:${df}`, { mechanism: 'build', target_name: df, ...state }, file, s.line, { rung });
         }
         for (const p of s.ports) {
             const pub = p.published !== null && !p.published.includes('$');
