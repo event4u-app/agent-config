@@ -63,20 +63,29 @@ export function parentTip(git: Git, branch: string): string | null {
   return local ?? remote;
 }
 
-/** Every commit on `branch` since `parent` is authored by the current git user. */
+/**
+ * Ours: at least one commit on `branch` since `parent`, and every one authored by
+ * the current git user — by e-mail, or by name where the e-mail differs. A branch
+ * with no own commit is not ours: it holds nothing of ours to integrate (H17).
+ */
 export function ownedBy(git: Git, branch: string, parentRef: string): boolean {
-  const me = tryGit(git, ["config", "--get", "user.email"]);
-  if (!me) return false;
+  const me = tryGit(git, ["config", "--get", "user.email"])?.toLowerCase();
+  const myName = tryGit(git, ["config", "--get", "user.name"])?.toLowerCase();
+  if (!me && !myName) return false;
   const authors = tryGit(git, [
     "log",
-    "--format=%ae",
+    "--format=%ae%x09%an",
     `${parentRef}..refs/heads/${branch}`,
   ]);
   if (authors === null) return false;
-  return authors
-    .split("\n")
-    .filter(Boolean)
-    .every((a) => a.toLowerCase() === me.toLowerCase());
+  const rows = authors.split("\n").filter(Boolean);
+  return (
+    rows.length > 0 &&
+    rows.every((r) => {
+      const [email = "", name = ""] = r.toLowerCase().split("\t");
+      return email === me || (!!myName && name === myName);
+    })
+  );
 }
 
 function changedSince(git: Git, base: string, tip: string): Set<string> {

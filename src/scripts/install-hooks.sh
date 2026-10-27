@@ -688,6 +688,12 @@ EOF
 if [ "${3:-1}" = "0" ]; then
     exit 0
 fi
+# A branch just made with `checkout -b` records its parent and the parent's SHA
+# from the reflog (road-to-a-map-that-holds-on-the-real-repo 7.4); a recorded
+# parent is never overwritten. Local git config only, never a tracked file.
+if [ -x ./scripts-run ] && [ -f src/scripts/branch_chain.ts ]; then
+    ./scripts-run src/scripts/branch_chain parent --from-reflog </dev/null >/dev/null 2>&1 || true
+fi
 EOF
     fi
     if [ "$name" = "post-rewrite" ]; then
