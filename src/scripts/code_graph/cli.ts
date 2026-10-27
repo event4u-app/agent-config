@@ -563,9 +563,11 @@ function cmdImpact(argv: string[]): number {
             stateOf(argv, r.g.answeredBy),
             Number.isFinite(depth) && depth > 0 ? depth : 2,
             isTestFile,
+            diffHunks(root, `${ref}..HEAD`) ?? undefined,
         );
         renderEnvelope(res);
         process.stdout.write(`changed files: ${files.length} · seeds: ${res.seeds.length}\n`);
+        if (res.file_seeded.length) process.stdout.write(`seeded by whole file (git gave no hunk): ${res.file_seeded.join(', ')}\n`);
         if (res.unresolved_files.length)
             process.stdout.write(`unresolved changed files (no node in the graph): ${res.unresolved_files.join(', ')}\n`);
         if (res.partial_files.length) process.stdout.write(`partial files (parsed with errors, not complete): ${res.partial_files.join(', ')}\n`);

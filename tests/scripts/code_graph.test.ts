@@ -660,3 +660,33 @@ describe('4.3 — one uncertainty sentence for empty answers', () => {
         }
     });
 });
+
+describe('4.4 — hunk seeds in impact', () => {
+    it('impact seeds from hunks, and marks the file fallback', () => {
+        const { file } = handGraph(
+            [
+                { id: 'a.ts', kind: 'file', label: 'a.ts', source_location: [] },
+                { id: 'a.ts#first', label: 'first', source_location: [1, 1, 3, 1] },
+                { id: 'a.ts#second', label: 'second', source_location: [5, 1, 8, 1] },
+                { id: 'x.ts#callsFirst', label: 'callsFirst' },
+                { id: 'y.ts#callsSecond', label: 'callsSecond' },
+            ],
+            [
+                { source: 'x.ts#callsFirst', target: 'a.ts#first' },
+                { source: 'y.ts#callsSecond', target: 'a.ts#second' },
+            ],
+        );
+        const g = loadGraph(file, 'native:hand');
+        const byHunk = impact(g, ['a.ts'], 'fresh', 2, () => false, [{ file: 'a.ts', from: 6, to: 6 }]);
+        expect(byHunk.seeds).toEqual(['a.ts#second']);
+        expect(byHunk.dependents).toEqual(['y.ts#callsSecond']);
+        expect(byHunk.file_seeded).toEqual([]);
+
+        // No hunk for the file: every symbol it declares, and the answer says so.
+        const noHunk = impact(g, ['a.ts'], 'fresh', 2, () => false, []);
+        expect(noHunk.dependents).toEqual(['x.ts#callsFirst', 'y.ts#callsSecond']);
+        expect(noHunk.file_seeded).toEqual(['a.ts']);
+        expect(impact(g, ['a.ts'], 'fresh').file_seeded).toEqual(['a.ts']);
+        g.close();
+    });
+});

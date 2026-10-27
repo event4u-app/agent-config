@@ -271,7 +271,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             return withGraph(root, (g) =>
                 args['untested_only'] === true
                     ? { ...untested(g, files, state), changed_files: files.length }
-                    : { ...impact(g, files, state, num(args, 'depth', 2), isTestFile), changed_files: files.length },
+                    : { ...impact(g, files, state, num(args, 'depth', 2), isTestFile, diffHunks(root, `${rev}..HEAD`) ?? undefined), changed_files: files.length },
             );
         },
     },

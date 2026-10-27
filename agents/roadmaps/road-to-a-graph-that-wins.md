@@ -236,7 +236,7 @@ answers. Each step is fixture-gated (K5).
       verb). Non-empty answers stay byte-identical; the vocabulary is the map
       freshness banner's, not a second one.
       verify: `npx vitest run tests/scripts/code_graph.test.ts -t 'uncertainty sentence only on empty'` -> 0
-- [ ] 4.4 **Hunk seeds in `impact`.** `impact --diff` seeds every symbol of a touched
+- [x] 4.4 **Hunk seeds in `impact`.** `impact --diff` seeds every symbol of a touched
       file (`seedsForFiles`, `verbs.ts`) while `review-risk` seeds by hunk overlap
       (`review_risk.ts`) — two answers to one question. `impact` takes the hunk
       overlap; file granularity remains only as a fallback when git yields no hunks,

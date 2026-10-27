@@ -195,6 +195,12 @@ export interface ImpactResult extends VerbReport {
     complete: boolean;
     /** Only on an empty answer: why the graph may not know (`uncertainty.ts`). */
     uncertainty?: string;
+    /**
+     * Changed files seeded with every symbol they declare, because git gave no
+     * hunk for them (or no hunks were passed): the file-granularity fallback,
+     * named so it is never mistaken for a hunk answer.
+     */
+    file_seeded: string[];
     /** Reverse-reachable callers/dependents over accepted edges, sorted. */
     dependents: string[];
     /**
@@ -268,6 +274,7 @@ export function impact(
     state: GraphState,
     depth = 2,
     isTest: (relPath: string) => boolean = () => false,
+    hunks?: readonly ChangedHunk[],
 ): ImpactResult {
     const foreign = foreignRefusal(g);
     if (foreign !== null) {
@@ -283,6 +290,7 @@ export function impact(
             not_indexed_files: [],
             partial_files: [],
             complete: false,
+            file_seeded: [],
             dependents: [],
             reached: [],
             test_files: [],
@@ -291,7 +299,9 @@ export function impact(
             recommended_reads: [],
         };
     }
-    const { seeds, unresolved, not_indexed } = seedsForFiles(g, files);
+    const byFile = seedsForFiles(g, files);
+    const { unresolved, not_indexed } = byFile;
+    const { seeds, file_seeded } = hunks === undefined ? { seeds: byFile.seeds, file_seeded: [...files].sort() } : seedsForHunks(g, files, hunks, byFile.seeds);
     const accepted: CodeEdge[] = [];
     const rejected: CodeEdge[] = [];
     const seen = new Set(seeds);
@@ -339,6 +349,7 @@ export function impact(
         not_indexed_files: not_indexed,
         partial_files: partial,
         complete: partial.length === 0 && unresolved.length === 0,
+        file_seeded,
         dependents: deps,
         reached: deps.map((d) => reached.get(d) as ReachedNode),
         test_files: testFiles,
@@ -347,6 +358,47 @@ export function impact(
         recommended_reads: dedupeReads(deps.map((d) => readFor(g, d))),
         ...(why ? { uncertainty: why } : {}),
     };
+}
+
+/** A changed line range, 1-based inclusive — the shape `review_risk.ts` parses from `git diff -U0`. */
+export interface ChangedHunk {
+    file: string;
+    from: number;
+    to: number;
+}
+
+/**
+ * Seeds by hunk overlap, the way `review-risk` seeds: the symbols whose span a
+ * hunk touches, else the file node. A file git gave no hunk for keeps every
+ * symbol it declares and is listed in `file_seeded`.
+ */
+export function seedsForHunks(
+    g: LoadedGraph,
+    files: readonly string[],
+    hunks: readonly ChangedHunk[],
+    fileSeeds: readonly string[],
+): { seeds: string[]; file_seeded: string[] } {
+    const seeds = new Set<string>();
+    const fallback: string[] = [];
+    for (const f of files) {
+        const hs = hunks.filter((h) => h.file === f);
+        const inFile = fileSeeds.filter((id) => id === f || g.byId.get(id)?.source_file === f);
+        if (hs.length === 0) {
+            fallback.push(f);
+            for (const id of inFile) seeds.add(id);
+            continue;
+        }
+        const hit = inFile.filter((id) => {
+            const loc = g.byId.get(id)?.source_location ?? [];
+            const start = loc[0];
+            if (id === f || start === undefined) return false;
+            const end = loc[2] ?? start;
+            return hs.some((h) => h.from <= end && h.to >= start);
+        });
+        if (hit.length) for (const id of hit) seeds.add(id);
+        else if (g.byId.has(f)) seeds.add(f);
+    }
+    return { seeds: [...seeds].sort(), file_seeded: fallback.sort() };
 }
 
 /** The files among `files` whose file node parsed with errors, sorted and unique. */
