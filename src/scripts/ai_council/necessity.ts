@@ -575,6 +575,8 @@ const _USER_FENCE_MARKERS: readonly string[] = [
     'ask me', 'review first', 'plan only', "don't decide", 'do not decide',
     'wait for me', "I'll decide", 'i will decide', 'let me decide',
     'frag mich', 'warte auf mich',
+    'interview me', 'interview mich', 'rückfragen', 'stell mir fragen',
+    'bevor du loslegst',
 ];
 
 // Trigger words per impact class. Whole-word match via `_count_matches`.
