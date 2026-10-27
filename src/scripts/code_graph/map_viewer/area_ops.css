@@ -117,7 +117,6 @@
 .brand-name.hub span { color: var(--violetText); }
 .hub-chip { font-size: 12px; padding: 4px 8px; border-radius: 6px; white-space: nowrap; border: 1px solid var(--violet); color: var(--violetText); }
 .hub-back { min-height: 34px; max-width: 100%; flex-wrap: wrap; padding: 0 14px; border-radius: 7px; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--soft); border: 1px solid var(--line); }
-.av-bar.ops-empty:not(:has(.pane-open:not(.gone))) { display: none; }
 
 /* Projects (hub): registry, link graph, link rail */
 .ops-reg { display: flex; flex-direction: column; gap: 4px; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); }
@@ -166,3 +165,20 @@ line.pe-shared { stroke: var(--violet); stroke-width: 2px; stroke-dasharray: 4 3
 .ops-zcell { border-radius: 10px; border: 1px dashed var(--line2); padding: 10px; display: flex; flex-direction: column; gap: 6px; }
 .ops-zcell .cap { font-size: 10px; }
 .ops-zcell .muted { font-size: 12px; }
+
+/* Projects (hub): the two lenses and Ich · Lernen */
+.hub-lenses .lens[aria-selected='true'] { background: var(--violetTint); box-shadow: inset 0 0 0 1px var(--violet); }
+.hub-note { margin-left: auto; font-size: 12px; color: var(--muted); }
+.hub-me-only { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--violet); background: var(--violetTint); font-size: 13px; }
+.hub-me-only b { font-weight: 600; }
+.hub-me-only .mono { font-size: 12px; }
+.hub-me-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); gap: 8px; }
+.hub-me-kpi { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); }
+.hub-me-kpi .mono:first-child { font-size: 20px; font-weight: 600; }
+.hub-me-kpi span:nth-child(2) { font-size: 12px; }
+.hub-me-kpi .muted { font-size: 10px; }
+.hub-me-sec { display: flex; flex-direction: column; gap: 6px; }
+.hub-me-sec > .between b { font-weight: 600; font-size: 15px; }
+.hub-me-sec > .between .muted { font-size: 12px; }
+.hub-me-cand, .hub-me-sig { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); }
+.hub-me-sig { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; }

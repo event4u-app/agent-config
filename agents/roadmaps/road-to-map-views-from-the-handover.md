@@ -253,7 +253,7 @@ Exit: 4.1–4.4 green. Rollback: per-page revert; each page is independent.
 
 ## Phase 5 — Projects "Ich · Lernen"
 
-- [ ] **5.1 Second lens.** `area_projects.js` gains the tablist Projekte /
+- [x] **5.1 Second lens.** `area_projects.js` gains the tablist Projekte /
       Ich · Lernen, the Registry aside with the BUDGET cap, the Kante aside and
       "← Projekt-Map"; Ich · Lernen renders empty with reason until sibling
       Stage K data exists, then its KPIs from that data.
