@@ -103,6 +103,8 @@ interface Pkg {
     notInstalled?: boolean;
     /** 6.2: `used`, `used-through <pkg>`, `unused-candidate`, `not-installed`, `virtual/meta`, `ignored (<reason>)` */
     verdict?: string;
+    /** 6.4: one JSON row per importer — {lockfile, workspace, specifier, relation, scope} */
+    importers?: string[];
 }
 
 const factKey = (eco: Ecosystem, key: string): string => `${eco}:${key}`;
@@ -269,6 +271,7 @@ function emitPackage(em: Emitter, k: Pkg, read: (rel: string) => string | null):
         used_by: users.length,
         nonimport: [...new Set(k.nonimport)].sort(),
         ...(k.binding ? { binding: k.binding } : {}),
+        ...(k.importers?.length ? { importers: k.importers } : {}),
     };
     if (k.verdict) attrs['verdict'] = k.verdict;
     // SY-1 reads `unused`: only an unused candidate a product manifest declares.
@@ -318,6 +321,23 @@ function assignVerdicts(graphs: readonly LockGraph[], pkgs: Map<string, Pkg>, re
         }
     }
     const used = (k: Pkg): boolean => k.users.size > 0 || k.nonimport.length > 0;
+    const dirOf = (f: string): string => (f.includes('/') ? f.slice(0, f.lastIndexOf('/')) : '');
+    for (const k of pkgs.values()) {
+        const rows: Array<Record<string, string>> = [];
+        for (const r of k.roots) {
+            const lock = [...k.lockfiles].find((l) => dirOf(l) === dirOf(r.manifest)) ?? (k.locked ? k.lockfile : '');
+            rows.push({ lockfile: lock, workspace: dirOf(r.manifest), specifier: r.range, relation: r.kind, scope: scopeOf(r.manifest) });
+        }
+        for (const g of graphs) {
+            if (!k.lockfiles.has(g.file) || k.roots.some((r) => dirOf(r.manifest) === dirOf(g.file))) continue;
+            for (const p of g.packages.values()) {
+                const req = p.requires.find((q) => q.to === k.p.key);
+                if (req) rows.push({ lockfile: g.file, workspace: dirOf(g.file), specifier: req.range, relation: `transitive via ${p.name}`, scope: scopeOf(g.file) });
+            }
+        }
+        rows.sort((a, b) => (`${a.lockfile} ${a.relation}` < `${b.lockfile} ${b.relation}` ? -1 : 1));
+        k.importers = rows.map((r) => JSON.stringify({ lockfile: r.lockfile, workspace: r.workspace, specifier: r.specifier, relation: r.relation, scope: r.scope }));
+    }
     const memo = new Map<string, Set<string>>();
     for (const k of pkgs.values()) {
         const ignored = k.eco === 'composer' && k.roots.find((r) => ignoredBy(r.manifest, read, memo).has(k.p.name.toLowerCase()));

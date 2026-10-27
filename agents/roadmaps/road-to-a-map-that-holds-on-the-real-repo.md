@@ -227,8 +227,8 @@ Before the Systems view of `road-to-map-views-from-the-handover`.
 - [x] **6.2 [E.2] Verdict states.** `used`, `used-through <pkg>`, `unused-candidate`, `not-installed`, `virtual/meta`, `ignored (reason)`; SY-1 only on `unused-candidate` in product scope. verify: `npx vitest run tests/scripts/code_graph_systems_verdicts.test.ts` -> 0
   > note: `ignored` reads composer's `extra.unused` (the composer-unused convention); `virtual/meta` is a composer metapackage or an npm `@types/*`; `not-installed` is a root declared beside a lockfile that does not hold it.
 - [x] **6.3 [E.3] JS non-import uses as typed inputs.** Five plugins: package.json scripts, CI `run` steps, tsconfig, eslint, vite/vitest; extends the existing `nonImportUses`. verify: `npx vitest run tests/scripts/code_graph_systems_nonimport.test.ts` -> 0
-- [ ] **6.4 [E.4] Per-workspace identity.** Package node = (ecosystem, name, version) with an importer table {lockfile, workspace, specifier, relation, scope}. verify: `npx vitest run tests/scripts/code_graph_systems_importers.test.ts` -> 0
-  > note: not done: Phase 6 not started in this run.
+- [x] **6.4 [E.4] Per-workspace identity.** Package node = (ecosystem, name, version) with an importer table {lockfile, workspace, specifier, relation, scope}. verify: `npx vitest run tests/scripts/code_graph_systems_importers.test.ts` -> 0
+  > note: importer rows ride as JSON strings in `importers` (fact attrs hold scalars and string lists); the payload and the page read them in the sibling views roadmap.
 - [ ] **6.5 [E.5] Why and who, precomputed and bounded.** Chains ≤ 20 per package with the spec at each hop, dependent counts, subtree size; payload growth linear in packages, budget measured then fixed. verify: `npx vitest run tests/scripts/code_graph_systems_why.test.ts -t express` -> 0
   > note: not done: Phase 6 not started in this run.
 - [ ] **6.6 [E.6] Functions per file with counts.** verify: `npx vitest run tests/scripts/code_graph_systems_functions.test.ts` -> 0
