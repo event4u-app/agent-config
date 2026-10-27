@@ -14,7 +14,7 @@ import { graphHome } from './graph_home.js';
 import { type LoadedGraph, loadGraph, resolveSeeds } from './query.js';
 import { repoIdentity } from './repo_identity.js';
 import { gitProbe } from '../_lib/spawn_env.js';
-import { testsFor } from './verbs.js';
+import { testsForModule } from './answer_correctness.js';
 
 const TOKENS_PER_LINE = 10;
 
@@ -41,7 +41,7 @@ export function graphSources(g: LoadedGraph, repoId: string): AskSource[] {
         name: 'tests',
         owner: 'project',
         intents: ['tests-for', 'verify-fix'],
-        rows: (q) => words(q).flatMap((w) => testsFor(g, w, 'fresh').tests).map(rowOf).filter((r): r is AskRow => r !== null),
+        rows: (q) => words(q).flatMap((w) => testsForModule(g, w, 'fresh').tests).map(rowOf).filter((r): r is AskRow => r !== null),
         fetch: symbols.fetch,
     };
     return [symbols, tests];

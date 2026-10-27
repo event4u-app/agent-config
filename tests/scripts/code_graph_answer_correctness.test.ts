@@ -9,11 +9,10 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { noEntryLine, symbolUsage } from '../../src/scripts/code_graph/answer_correctness.js';
+import { noEntryLine, symbolUsage, testsForModule } from '../../src/scripts/code_graph/answer_correctness.js';
 import { type LoadedGraph, loadGraph } from '../../src/scripts/code_graph/query.js';
 import type { CodeEdge, CodeGraph, CodeNode } from '../../src/scripts/code_graph/types.js';
 import { contextPack } from '../../src/scripts/code_graph/verify/pack.js';
-import { testsFor } from '../../src/scripts/code_graph/verbs.js';
 
 const n = (id: string, kind: CodeNode['kind'] = 'function'): CodeNode => {
     const file = id.split('#')[0] as string;
@@ -54,11 +53,11 @@ afterEach(() => {
 
 describe('tests-for', () => {
     it('a module seed lists the tests of the symbols it declares', () => {
-        expect(testsFor(g, 'inject_hook.ts', 'fresh').tests).toEqual(['tests/a.test.ts', 'tests/b.test.ts', 'tests/c.test.ts']);
+        expect(testsForModule(g, 'inject_hook.ts', 'fresh').tests).toEqual(['tests/a.test.ts', 'tests/b.test.ts', 'tests/c.test.ts']);
     });
 
     it('a .js specifier resolves to its .ts source', () => {
-        expect(testsFor(g, 'src/hooks/inject_hook.js', 'fresh').tests).toHaveLength(3);
+        expect(testsForModule(g, 'src/hooks/inject_hook.js', 'fresh').tests).toHaveLength(3);
     });
 });
 

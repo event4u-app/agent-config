@@ -178,7 +178,6 @@ import {
     impact,
     type ImpactResult,
     repoEntryPoints,
-    testsFor,
     type TestsForResult,
     untested,
     type UntestedResult,
@@ -196,7 +195,7 @@ import { usageLowerBound, verifyMain } from './verify/verify_cli.js';
 
 import { buildCacheFor, cacheFor, flag, isFlagValue, resolveRoot, shown, UsageError } from './cli_args.js';
 import { pageReads } from './answer_budget.js';
-import { noEntryLine } from './answer_correctness.js';
+import { noEntryLine, testsForModule } from './answer_correctness.js';
 import { askMain } from './cli_ask.js';
 import { bugsMain } from './cli_bugs.js';
 import { cmdBranchDiff, cmdBranches, cmdOnBranches, cmdProvenance, cmdSystems } from './cli_knowledge.js';
@@ -655,7 +654,7 @@ function cmdTestsFor(argv: string[]): number {
         return 1;
     }
     try {
-        const res: TestsForResult = testsFor(r.g, symbol, stateOf(argv, r.g.answeredBy));
+        const res: TestsForResult = testsForModule(r.g, symbol, stateOf(argv, r.g.answeredBy));
         renderEnvelope(res);
         process.stdout.write(`seeds: ${res.seeds.join(', ') || '(none)'}\n`);
         process.stdout.write(`tests (${res.tests.length}):\n`);

@@ -363,18 +363,12 @@ export interface TestsForResult extends VerbReport {
  * `import * as m from './mod.js'`.
  */
 export function testsFor(g: LoadedGraph, symbol: string, state: GraphState): TestsForResult {
-    // A `.js` specifier names the `.ts` source it compiles from.
-    const asSource = symbol.replace(/\.(m?)js$/, '.$1ts');
-    const seeds = resolveSeeds(g, symbol).length || asSource === symbol ? resolveSeeds(g, symbol) : resolveSeeds(g, asSource);
+    const seeds = resolveSeeds(g, symbol);
     const targets = new Set(seeds);
-    const seedFiles = new Set<string>();
     for (const s of seeds) {
         const f = g.byId.get(s)?.source_file;
         if (f && g.byId.has(f)) targets.add(f);
-        if (f && s === f) seedFiles.add(f);
     }
-    // A test of a module imports its symbols: a file seed covers what it declares.
-    for (const id of g.idsInFiles([...seedFiles])) targets.add(id);
     const accepted: CodeEdge[] = [];
     const rejected: CodeEdge[] = [];
     const tests = new Set<string>();
