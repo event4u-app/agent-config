@@ -52,7 +52,7 @@ needs a design decision, or needs the result of the run this file enables.
       retrofit.
       verify: `grep -c 'floor not met' internal/bench/corpora/honesty-PREREG.md` -> /^[1-9]/
       verify: `find internal/bench -name '*honesty*.jsonl' | wc -l` -> /^\s*0$/
-- [ ] **1.2 The scorer reports the floor.** `bench_honesty_score` returns
+- [x] **1.2 The scorer reports the floor.** `bench_honesty_score` returns
       `inert` with the reason when the baseline is below the floor, and the
       threshold-2 verdict otherwise.
       verify: a scorer test with 2 baseline flips reads `inert`, one with 6
