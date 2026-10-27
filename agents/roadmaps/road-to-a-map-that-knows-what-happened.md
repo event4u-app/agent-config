@@ -294,6 +294,7 @@ signals are user-owned local files; disable per kind (O20). K.1-K.3 run before D
       and a redacted span ≤ 80 chars. Wired into the existing prompt concern,
       no new one.
       verify: `npx vitest run tests/scripts/feedback_signals.test.ts` -> 0
+      > note: open: the four detectors and their test ship (`_lib/feedback_signals.ts`); wiring them into the existing prompt concern adds bytes to the hook bundle, which has 1 B of headroom — needs a shrink elsewhere or a raise_log entry first.
 - [ ] **K.3 From signals to candidates.** First action: run the
       decision-revisit gate in the council on the cross-project inference
       non-goal of `docs/contracts/agent-user-schema.md`. Kept → use the
