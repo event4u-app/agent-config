@@ -671,8 +671,10 @@ echo "✅  Auto-sync block appended to post-merge / post-checkout hooks." >&2
 #     exists. Building a graph for someone who never asked for one is the pure
 #     cost Risk 1 names; refreshing one they built is the service.
 #
-# `--map` redraws agents/map/ under the same lock, only for a project that has
-# one (ADR-297).
+# No `--map`: the hooks refresh the gitignored graph cache under `.build/` and
+# never redraw `agents/map/`. The committed map is a generated artifact drawn on
+# purpose and checked in CI; a background redraw dirtied the tracked tree after
+# every commit (road-to-a-map-that-holds-on-the-real-repo, step 4.1).
 
 append_code_graph_refresh_block() {
     local name="$1"
@@ -686,6 +688,12 @@ EOF
 if [ "${3:-1}" = "0" ]; then
     exit 0
 fi
+# A branch just made with `checkout -b` records its parent and the parent's SHA
+# from the reflog (road-to-a-map-that-holds-on-the-real-repo 7.4); a recorded
+# parent is never overwritten. Local git config only, never a tracked file.
+if [ -x ./scripts-run ] && [ -f src/scripts/branch_chain.ts ]; then
+    ./scripts-run src/scripts/branch_chain parent --from-reflog </dev/null >/dev/null 2>&1 || true
+fi
 EOF
     fi
     if [ "$name" = "post-rewrite" ]; then
@@ -698,7 +706,7 @@ EOF
     fi
     cat >> "$HOOKS_DIR/$name" << 'EOF'
 if { [ -f agents/map/.build/code-graph-v1.json ] || [ -f agents/runtime/state/code-graph-v1.json ]; } && [ -x ./agent-config ]; then
-    ./agent-config code-graph refresh --single-flight --map --budget-seconds 60 \
+    ./agent-config code-graph refresh --single-flight --budget-seconds 60 \
         </dev/null >/dev/null 2>&1 &
 fi
 exit 0

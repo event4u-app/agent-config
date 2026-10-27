@@ -33,7 +33,7 @@ describe('interfaces lane — P5 fixture', () => {
         const partner = fact(out, 'service:partner');
         expect(partner?.attrs['base_names']).toEqual(['PARTNER_URL']);
         expect(partner?.attrs['config_names']).toEqual(['PARTNER_KEY']);
-        const bind = rels(out, 'configured-by').find((r) => r.from === 'service:partner' && r.to === 'env:PARTNER_URL');
+        const bind = rels(out, 'configured-by').find((r) => r.from === 'service:partner' && r.to === 'env-var:code:config/services.php#PARTNER_URL');
         expect(bind?.witness.file).toBe('config/services.php');
         const line = fs.readFileSync(path.join(P5, 'config/services.php'), 'utf8').split('\n')[(bind?.witness.line ?? 0) - 1];
         expect(line).toContain("env('PARTNER_URL')");

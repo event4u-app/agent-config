@@ -320,10 +320,21 @@ export function ownerFromCodeowners(owners: (p: string) => string | null, files:
 export function domainResolver(mapDir: string): ((p: string) => string | null) | null {
     const declared = readDomainRules(path.join(mapDir, 'layers.yaml'));
     if (declared) return (p) => declared.domains.find((d) => d.match.some((r) => r.test(p)))?.name ?? null;
+    // The map's own filters (7.1): a structural name is a domain only when it is no NOT_A_DOMAIN word and,
+    // where a drawn map exists, only when the map lists it — the same set the map drew.
+    let listed: Set<string> | null = null;
+    try {
+        const m = JSON.parse(fs.readFileSync(path.join(mapDir, 'code', 'map.json'), 'utf-8')) as { model?: { domains?: { list?: Array<{ name: string }> } } };
+        if (m.model?.domains?.list) listed = new Set(m.model.domains.list.map((d) => d.name));
+    } catch {
+        listed = null;
+    }
     return (p) => {
         for (const re of STRUCTURE) {
             const m = re.exec(p);
-            if (m) return m[1] as string;
+            if (!m) continue;
+            const name = m[1] as string;
+            return NOT_A_DOMAIN.test(name) || (listed !== null && !listed.has(name)) ? null : name;
         }
         return null;
     };

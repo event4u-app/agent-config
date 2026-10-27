@@ -327,11 +327,15 @@ export function readGitHistory(root: string, days = GIT_WINDOW_DAYS): Map<string
     let out: string;
     try {
         // `--relative` makes paths root-relative when root is a package inside a larger repository.
-        out = git(['-c', 'core.quotePath=false', 'log', `--since=${since}`, '--no-merges', '--no-renames', '--relative', '--name-only', '--format=%x1e%aN%x1f%cs', '--', '.']);
+        // `-M`: a renamed file keeps its history under the name it carries today.
+        out = git(['-c', 'core.quotePath=false', 'log', `--since=${since}`, '--no-merges', '-M', '--relative', '--name-status', '--format=%x1e%aN%x1f%cs', '--', '.']);
     } catch {
         return null;
     }
     const acc = new Map<string, { churn: number; authors: Map<string, number>; last: string }>();
+    // Newest → oldest: an older mention of `old` is the file now called alias(new).
+    const alias = new Map<string, string>();
+    const canonical = (p: string): string => alias.get(p) ?? p;
     for (const rec of out.split('\x1e')) {
         if (!rec.trim()) continue;
         const [header, ...files] = rec.split('\n');
@@ -339,7 +343,16 @@ export function readGitHistory(root: string, days = GIT_WINDOW_DAYS): Map<string
         // A name configured as an address is an address: it never reaches the map.
         const author = rawAuthor.includes('@') ? '(name withheld)' : rawAuthor;
         for (const f of files) {
-            const p = f.trim();
+            const cols = f.split('\t');
+            if (cols.length < 2) continue;
+            const status = cols[0] ?? '';
+            let p: string;
+            if ((status.startsWith('R') || status.startsWith('C')) && cols.length >= 3) {
+                p = canonical((cols[2] as string).trim());
+                if (status.startsWith('R')) alias.set((cols[1] as string).trim(), p);
+            } else {
+                p = canonical((cols[1] as string).trim());
+            }
             if (!p) continue;
             const a = acc.get(p) ?? { churn: 0, authors: new Map<string, number>(), last: '' };
             a.churn++;

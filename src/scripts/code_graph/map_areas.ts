@@ -71,6 +71,8 @@ export interface AreaPayloadBase {
     /** Set when the reader ran and found nothing; shown as the area's reason. */
     empty?: string;
     findings: AreaFinding[];
+    /** Findings left out of the default view because every witness sits outside product scope: the "+N in fixtures" count. */
+    fixture_findings?: number;
 }
 
 // Data — tables, columns, keys, ORM relations.
@@ -218,11 +220,19 @@ export interface SystemsPackage {
     declared: string[];
     /** the shortest path from a declaration, as `name@version` steps */
     path: string[];
+    /** up to 20 chains from a declaration to this package, each hop `name@version (spec it was required by)` */
+    why: string[][];
+    /** packages that require it, transitively */
+    dependents: number;
+    /** packages it requires, transitively */
+    subtree: number;
     requiredBy: string[];
     requires: string[];
     /** files that import it, each at its import */
-    usedBy: Array<{ file: string; names: string[]; witness: Witness }>;
+    usedBy: Array<{ file: string; names: string[]; counts?: Record<string, number>; witness: Witness }>;
     usedByTotal: number;
+    /** function → symbols calling it, summed over every file that uses the package */
+    functions?: Record<string, number>;
     nonimport: string[];
     /** Domains of the files that use it */
     domains?: string[];

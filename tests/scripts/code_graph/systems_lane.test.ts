@@ -47,7 +47,7 @@ describe('systems lane — packages from lockfiles', () => {
     it('counts uses without an import', () => {
         const ni = (id: string) => (attrs(id)['nonimport'] as string[]).join(' | ');
         expect(ni('package:npm:vitest@1.6.0')).toMatch(/^script package\.json:\d+ test/);
-        expect(ni('package:npm:eslint-plugin-react@7.34.1')).toMatch(/config \.eslintrc\.json:\d+ react/);
+        expect(ni('package:npm:eslint-plugin-react@7.34.1')).toMatch(/eslint \.eslintrc\.json:\d+ react/);
         expect(ni('package:composer:phpunit/phpunit@11.1.3')).toMatch(/script composer\.json/);
         expect(ni('package:composer:spatie/laravel-ray@1.36.0')).toMatch(/auto-discovery/);
         expect(ni('package:npm:eslint@8.57.0')).toMatch(/ci \.github\/workflows\/ci\.yml:8 eslint/);

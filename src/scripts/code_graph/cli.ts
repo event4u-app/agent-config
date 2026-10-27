@@ -4,6 +4,8 @@
  *
  *   build    [--root P] [--out P] [--force]   (re)build the deterministic graph
  *            [--no-lanes]                      and merge every lane reader's facts
+ *            [--check-fixture-findings]        exit 1 when a default-view finding or a
+ *                                               tour lies outside product scope
  *   validate [--graph P]                       schema-gate a graph.json
  *   detect   [--root P] [--format json]        three-state freshness verdict
  *   refresh  [--root P] [--out P] [--budget-seconds N]
@@ -120,6 +122,13 @@
  *                                               links and the facts they share, under the
  *                                               user-global map/; refused inside a git work tree
  *
+ *   verify   --all [--min-rate R] [--json]     confirm rate per lane over every lane
+ *                                               fact and edge, witness read by its kind
+ *   lint     [--root P] [--graph P]           the endpoint contract: duplicate ids,
+ *                                               invalid spans, dangling sources and
+ *                                               targets; exit 1 on any (`lint.ts`)
+ *   scope    <path…> [--root P]                which scope a path is in and the rule
+ *                                               that decided (`scope.ts`, `layers.yaml` scope:)
  *   suggest-verb "<question>"                  (Phase 9 D3) print the verb
  *                                               (query/affected/path/explain)
  *                                               a regex table thinks best
@@ -128,6 +137,10 @@
  *                                               never auto-run against a
  *                                               graph.
  */
+import { gcBranches } from './branches.js';
+import { fixtureScopeProblems, produceAreas } from './map_area_payloads.js';
+import { lintGraph } from './lint.js';
+import { explainScope, readScopeRules } from './scope.js';
 import { spawnSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
 import * as fs from 'node:fs';
@@ -202,7 +215,7 @@ import { usageLowerBound, verifyMain } from './verify/verify_cli.js';
 
 import { buildCacheFor, cacheFor, flag, isFlagValue, resolveRoot, shown, UsageError } from './cli_args.js';
 import { pageReads } from './answer_budget.js';
-import { noEntryLine, testsForModuleAnswer } from './answer_correctness.js';
+import { noEntryLine, testsForModuleAnswer, withDeclaringFileTests } from './answer_correctness.js';
 import { askMain } from './cli_ask.js';
 import { mapSection } from './map_sections.js';
 import { scanMain } from './scan.js';
@@ -253,6 +266,12 @@ async function cmdBuild(argv: string[]): Promise<number> {
             (out ? `    cache: ${shown(root, out)}\n` : '') +
             legacyCacheNotice(root),
     );
+    if (argv.includes('--check-fixture-findings')) {
+        const problems = fixtureScopeProblems(produceAreas(root, graph).areas);
+        for (const p of problems) process.stdout.write(`    fixture scope: ${p}\n`);
+        process.stdout.write(`    fixture scope check: ${problems.length} problem(s)\n`);
+        return problems.length === 0 ? 0 : 1;
+    }
     return 0;
 }
 
@@ -574,7 +593,7 @@ function cmdImpact(argv: string[]): number {
         const registryFile = flag(argv, '--regressions');
         if (registryFile !== null) return renderRegressions(r.g, ref, files, registryFile, stateOf(argv, r.g.answeredBy), Number.isFinite(depth) && depth > 0 ? depth : 2);
         const res = capAnswer(
-            impact(r.g, files, stateOf(argv, r.g.answeredBy), Number.isFinite(depth) && depth > 0 ? depth : 2, isTestFile, diffHunks(root, `${ref}..HEAD`) ?? undefined),
+            withDeclaringFileTests(r.g, impact(r.g, files, stateOf(argv, r.g.answeredBy), Number.isFinite(depth) && depth > 0 ? depth : 2, isTestFile, diffHunks(root, `${ref}..HEAD`) ?? undefined), isTestFile),
             ['dependents', 'reached', 'test_files', 'producing_edges', 'lines', 'recommended_reads'],
             parseDetail(flag(argv, '--detail')),
             ['reached', 'producing_edges', 'lines'],
@@ -1058,6 +1077,9 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
  * when another refresh holds it. `--map` redraws `agents/map/` afterwards, only
  * when the project already has one and it is older than the cache.
  */
+/** How long a refresh may spend on branch gc. */
+const BRANCH_GC_BUDGET_MS = 2_000;
+
 async function cmdRefresh(argv: string[]): Promise<number> {
     const root = resolveRoot(argv);
     const out = flag(argv, '--out') ?? buildCacheFor(root);
@@ -1105,6 +1127,13 @@ async function cmdRefresh(argv: string[]): Promise<number> {
             return rc;
         }
         if (out === buildCacheFor(root)) registerUse(root, null, git(root, 'rev-parse', 'HEAD'));
+        // Branch gc rides on every refresh, bounded in time; a store it cannot read is no reason to fail one.
+        try {
+            const g = gcBranches(root, path.dirname(out), { budgetMs: BRANCH_GC_BUDGET_MS });
+            process.stdout.write(`branch gc: ${g.dropped.length} dropped, ${g.swept} fact file(s) swept${g.bounded ? ' — stopped at its time budget, the next refresh continues' : ''}\n`);
+        } catch {
+            /* the branch store is optional */
+        }
         if (argv.includes('--map') && mapIsBehind(root, out)) {
             const mrc = await drawMap(['--root', root, '--no-build', '--no-verify']);
             record(mrc === 0 ? 'refreshed-with-map' : 'map-failed', mrc === 0 ? undefined : `map exited ${mrc}`);
@@ -1418,7 +1447,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'detect') return cmdDetect(argv.slice(1));
         if (sub === 'refresh' && argv.includes('--touched')) return await verifyMain('refresh', argv.slice(1), resolveRoot(argv.slice(1)), flag(argv, '--graph') ?? cacheFor(resolveRoot(argv.slice(1))));
         if (sub === 'refresh') return await cmdRefresh(argv.slice(1));
-        if (sub === 'confirm' || sub === 'pack' || sub === 'rebuild-diff')
+        if (sub === 'confirm' || sub === 'pack' || sub === 'rebuild-diff' || sub === 'verify')
             return await verifyMain(sub, argv.slice(1), resolveRoot(argv.slice(1)), flag(argv, '--graph') ?? cacheFor(resolveRoot(argv.slice(1))));
         if (sub === 'query' || sub === 'explain' || sub === 'affected' || sub === 'path')
             return cmdQuery(sub, argv.slice(1));
@@ -1433,6 +1462,8 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'untested') return cmdUntested(argv.slice(1));
         if (sub === 'dead') return cmdDead(argv.slice(1));
         if (sub === 'suggest-verb') return cmdSuggestVerb(argv.slice(1));
+        if (sub === 'scope') return cmdScope(argv.slice(1));
+        if (sub === 'lint') return cmdLint(argv.slice(1));
         if (sub === 'lineage' || (sub === 'map' && argv.includes('--lineage')))
             return await lineageMain(sub === 'lineage' ? argv.slice(1) : ['map', ...argv.slice(1)]);
         if (sub === 'map') return await cmdMap(argv.slice(1));
@@ -1446,7 +1477,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'scan') return scanMain(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|review-risk|why|usage|remove-plan|provenance|branches|branch-diff|on-branches|tests-for|untested|dead|confirm|pack|rebuild-diff|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage|bugs|ask|scan> [options]\n',
+                'impact|review-risk|why|usage|remove-plan|provenance|branches|branch-diff|on-branches|tests-for|untested|dead|confirm|pack|rebuild-diff|verify|suggest-verb|scope|lint|map|open|outcome|auto-refresh|projects|estate|lineage|bugs|ask|scan> [options]\n',
         );
         return 2;
     } catch (e) {
@@ -1457,6 +1488,33 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         process.stderr.write(`code-graph: internal error: ${(e as Error).message}\n`);
         return 3;
     }
+}
+
+/** `lint [--root P] [--graph P]` — nodes, then edges; one line per problem, exit 1 when there is any. */
+function cmdLint(argv: string[]): number {
+    const opt = (name: string): string | undefined => {
+        const i = argv.indexOf(name);
+        return i >= 0 ? argv[i + 1] : undefined;
+    };
+    const root = path.resolve(opt('--root') ?? '.');
+    const file = opt('--graph') ?? graphHome(root).cachePath;
+    if (!fs.existsSync(file)) throw new UsageError(`no graph at ${file} — run \`code-graph build\` first`);
+    const g = JSON.parse(fs.readFileSync(file, 'utf-8')) as CodeGraph;
+    const problems = lintGraph(g);
+    for (const p of problems) process.stdout.write(`${p.kind}: ${p.item} — ${p.detail}\n`);
+    process.stdout.write(`code-graph lint: ${g.nodes.length} nodes, ${g.edges.length} edges, ${problems.length} problem(s)\n`);
+    return problems.length === 0 ? 0 : 1;
+}
+
+/** `scope <path…> [--root P]` — one line per path: its scope and the rule that decided. */
+function cmdScope(argv: string[]): number {
+    const at = argv.indexOf('--root');
+    const root = at >= 0 ? path.resolve(argv[at + 1] ?? '.') : process.cwd();
+    const paths = argv.filter((a, i) => a !== '--root' && argv[i - 1] !== '--root');
+    if (paths.length === 0) throw new UsageError('scope needs at least one path');
+    const overrides = readScopeRules(path.join(root, 'agents', 'map', 'layers.yaml'));
+    for (const p of paths) process.stdout.write(`${explainScope(path.isAbsolute(p) ? path.relative(root, p) : p, overrides)}\n`);
+    return 0;
 }
 
 const _invokedDirectly = (() => {

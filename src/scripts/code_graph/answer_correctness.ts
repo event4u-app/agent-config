@@ -6,7 +6,7 @@
  * symbol — then the knowledge index, when it holds the words.
  */
 import type { GraphState } from './detect.js';
-import type { LoadedGraph } from './query.js';
+import type { LoadedGraph, RecommendedRead } from './query.js';
 import { resolveExactNode, resolveSeeds, tree } from './query.js';
 import type { CodeEdge } from './types.js';
 import { partialFiles, type TestsForResult, isAcceptedEdge, testsFor } from './verbs.js';
@@ -80,4 +80,25 @@ export function testsForModuleAnswer(
     const partial = partialFiles(g, [...seedFiles, ...r.tests.map((id) => g.byId.get(id)?.source_file ?? '')]);
     const why = uncertaintySentence({ verb: 'tests-for', empty: r.tests.length === 0, state, not_indexed: [], partial, files: seedFiles });
     return { ...r, partial_files: partial, complete: partial.length === 0, ...(why ? { uncertainty: why } : {}) };
+}
+
+/**
+ * An impact seeded from hunks reaches the changed symbols' dependents, not the
+ * tests of the file they live in — a new function has no dependent yet, while
+ * its file's tests are still the ones to re-run. Adds the test files whose
+ * accepted `tests` edge points at a seed's declaring file or at anything it declares. Kept outside
+ * `verbs.ts`, which ships in the hook bundle.
+ */
+export function withDeclaringFileTests<T extends { seeds: string[]; test_files: string[]; recommended_reads: RecommendedRead[] }>(g: LoadedGraph, r: T, isTest: (relPath: string) => boolean): T {
+    const files = new Set(r.seeds.map((s) => g.byId.get(s)?.source_file).filter((f): f is string => !!f && g.byId.has(f)));
+    const tests = new Set(r.test_files);
+    for (const id of [...files, ...g.idsInFiles([...files])]) {
+        for (const e of g.in.get(id) ?? []) {
+            if (e.relation !== 'tests' || !isAcceptedEdge(e)) continue;
+            const src = g.byId.get(e.source)?.source_file ?? e.source;
+            if (isTest(src)) tests.add(src);
+        }
+    }
+    const added = [...tests].filter((t) => !r.test_files.includes(t) && !r.recommended_reads.some((x) => x.path === t));
+    return { ...r, test_files: [...tests].sort(), recommended_reads: [...r.recommended_reads, ...added.sort().map((path) => ({ path, lines: null }))] };
 }

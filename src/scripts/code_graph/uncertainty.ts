@@ -22,10 +22,7 @@ export const UNCERTAINTY_MAX_CHARS = 140;
  * true fails there rather than misleading an agent.
  */
 export const LANGUAGE_GAPS: Readonly<Partial<Record<Lang, Partial<Record<UncertaintyVerb, string>>>>> = {
-    go: { 'tests-for': 'Go _test.go files outside a tests/ folder are not read as tests' },
     python: { 'tests-for': 'Python test_*.py files outside a tests/ folder are not read as tests' },
-    java: { 'tests-for': 'Java *Test.java files outside a test/ folder are not read as tests' },
-    csharp: { 'tests-for': 'C# *Tests.cs files outside a tests/ folder are not read as tests' },
     ruby: { 'tests-for': 'Ruby *_spec.rb files outside a tests/ folder are not read as tests' },
 };
 

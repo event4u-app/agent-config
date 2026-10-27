@@ -12,7 +12,10 @@
  * Single-flight is the engine's job since the hook stopped holding its own
  * shell lock (one lock protocol, not two): it is tested where it lives, in
  * `code_graph_refresh.test.ts` and `code_graph_refresh_lock.test.ts`. Here the
- * hook is held to calling `refresh --single-flight --map` on the right events.
+ * hook is held to calling `refresh --single-flight` on the right events — never
+ * `--map`: the committed map is a generated artifact, and a background redraw
+ * dirtied the tracked tree after every commit (step 4.1 of
+ * road-to-a-map-that-holds-on-the-real-repo).
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -23,7 +26,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const CACHE_REL = path.join('agents', 'runtime', 'state', 'code-graph-v1.json');
-const EXPECTED = 'code-graph refresh --single-flight --map --budget-seconds 60';
+const EXPECTED = 'code-graph refresh --single-flight --budget-seconds 60';
 
 let stage: string;
 
@@ -69,7 +72,7 @@ function calls(dir: string): string[] {
 }
 
 describe('the refresh block', () => {
-    it('post-commit asks the engine for a single-flight refresh that also redraws the map', () => {
+    it('post-commit asks the engine for a single-flight refresh that leaves the tracked map alone', () => {
         const dir = rig(true);
         runHook('post-commit', dir);
         expect(calls(dir)).toEqual([EXPECTED]);

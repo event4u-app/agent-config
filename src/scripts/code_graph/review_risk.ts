@@ -190,7 +190,7 @@ export function reviewRisk(
     const lines = new Map<string, string[] | null>();
     const witnessOf = (n: CodeNode | undefined, e?: CodeEdge): RiskWitness | null => {
         const w = e?.fact?.witness ?? n?.fact?.witness;
-        if (w) return { file: w.file, line: w.line, hash: w.hash };
+        if (w && w.kind !== 'file') return { file: w.file, line: w.line, hash: w.hash };
         const line = n?.source_location[0] ?? (n?.kind === 'file' ? 1 : undefined);
         if (!n?.source_file || !line) return null;
         const text = lineText(root, n.source_file, line, lines);

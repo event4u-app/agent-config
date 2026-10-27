@@ -72,6 +72,7 @@ import {
     type TreeOptions,
 } from '../code_graph/query.js';
 import { capAnswer, capReviewRisk, parseDetail } from '../code_graph/answer_detail.js';
+import { withDeclaringFileTests } from '../code_graph/answer_correctness.js';
 import { diffHunks, reviewRisk } from '../code_graph/review_risk.js';
 import type { CodeGraph, Relation } from '../code_graph/types.js';
 import { RELATIONS as VOCAB_RELATIONS } from '../code_graph/vocabulary.js';
@@ -282,7 +283,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
                           g,
                           {
                               ...capAnswer(
-                                  impact(g, files, state, num(args, 'depth', 2), isTestFile, diffHunks(root, `${rev}..HEAD`) ?? undefined),
+                                  withDeclaringFileTests(g, impact(g, files, state, num(args, 'depth', 2), isTestFile, diffHunks(root, `${rev}..HEAD`) ?? undefined), isTestFile),
                                   ['dependents', 'reached', 'test_files', 'producing_edges', 'lines', 'recommended_reads'],
                                   detail,
                                   ['reached', 'producing_edges', 'lines'],

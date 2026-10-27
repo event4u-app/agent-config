@@ -126,6 +126,30 @@ export function domainsOnAreas(areas: MapAreas, model: MapModel, graph: CodeGrap
         const ds = into.get(k.id);
         if (ds?.size) k.domains = [...ds].sort();
     }
+    if (!model.domains) return;
+    // A route belongs to the domain of the code that handles it, else of the file that declares it.
+    const byId = new Map(graph.nodes.map((n) => [n.id, n] as const));
+    const routes: Record<string, string> = {};
+    for (const n of graph.nodes) {
+        if (n.kind !== 'route') continue;
+        const handler = graph.edges.find((e) => e.source === n.id && e.relation === 'routes-to');
+        const d = domainOf.get(byId.get(handler?.target ?? '')?.source_file ?? '') ?? domainOf.get(n.source_file);
+        if (d) routes[n.label] = d;
+    }
+    // A ticket touched the domains of the files its commits introduced or last changed.
+    const tickets: Record<string, string[]> = {};
+    const pv = model.provenance;
+    if (pv) {
+        for (const [key, commits] of Object.entries(pv.tickets)) {
+            const ids = new Set(commits);
+            const ds = new Set<string>();
+            for (const [file, [intro, last]] of Object.entries(pv.files)) if (ids.has(intro) || ids.has(last)) ds.add(domainOf.get(file) ?? '');
+            ds.delete('');
+            if (ds.size) tickets[key] = [...ds].sort();
+        }
+    }
+    if (Object.keys(routes).length) model.domains.routes = Object.fromEntries(Object.entries(routes).sort(([a], [b]) => (a < b ? -1 : 1)));
+    if (Object.keys(tickets).length) model.domains.tickets = Object.fromEntries(Object.entries(tickets).sort(([a], [b]) => (a < b ? -1 : 1)));
 }
 
 /** Routes whose introduction is read per build: a count, not a clock, so a redraw of one tree writes the same bytes. */
@@ -147,7 +171,7 @@ export function mapProvenance(root: string, buildDir: string, graph: CodeGraph, 
         const known = at.get(c.sha);
         if (known !== undefined) return known;
         at.set(c.sha, commits.length);
-        commits.push([c.sha, c.date, c.author, c.pr ?? '', c.tickets, c.subject]);
+        commits.push([c.sha, c.date, c.author, c.pr ?? '', c.tickets]);
         return commits.length - 1;
     };
     const fromIndex = (i: number | null): number => (i === null || i < 0 ? -1 : add(index.commits[i] as CommitRef));

@@ -634,7 +634,7 @@ describe('4.3 — one uncertainty sentence for empty answers', () => {
                 { id: 'b.ts#user', label: 'user' },
                 { id: 'broken.ts', kind: 'file', label: 'broken.ts', source_location: [], partial: true },
                 { id: 'broken.ts#lonely', label: 'lonely' },
-                { id: 'pkg/x.go#GoThing', label: 'GoThing' },
+                { id: 'pkg/x.py#PyThing', label: 'PyThing' },
             ],
             [{ source: 'b.ts#user', target: 'a.ts#used' }],
         );
@@ -649,7 +649,7 @@ describe('4.3 — one uncertainty sentence for empty answers', () => {
         expect(impact(g, ['broken.ts'], 'edited').uncertainty).toMatch(/^empty, but broken\.ts parsed with errors/);
         expect(impact(g, ['b.ts'], 'behind:3').uncertainty).toBe('empty, but the index is behind the working tree (behind:3)');
         expect(impact(g, ['b.ts'], 'fresh').uncertainty).toBeUndefined();
-        expect(testsForAnswer(g, 'GoThing', 'fresh').uncertainty).toBe(`empty, but ${LANGUAGE_GAPS.go!['tests-for']}`);
+        expect(testsForAnswer(g, 'PyThing', 'fresh').uncertainty).toBe(`empty, but ${LANGUAGE_GAPS.python!['tests-for']}`);
 
         const long = uncertaintySentence({ verb: 'impact', empty: true, state: 'fresh', not_indexed: [`${'d/'.repeat(90)}x.md`], partial: [], files: [] });
         expect(long!.length).toBeLessThanOrEqual(UNCERTAINTY_MAX_CHARS);

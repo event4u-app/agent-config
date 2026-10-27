@@ -10,6 +10,9 @@
  * Path confinement: every candidate file is resolved and asserted under the
  * repo root; symlinks are skipped; ids are POSIX-relative. No network, no LLM.
  */
+import { spanHash } from './lanes/lane_fact.js';
+import { graphHome } from './graph_home.js';
+import { isTestFile, readScopeRules, stampScope } from './scope.js';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -1162,43 +1165,41 @@ function ambiguousTarget(candidates: readonly string[], targetName: string): str
     return `symbol:${targetName}`;
 }
 
+/** One classifier decides what a test is (`scope.ts`); re-exported under the name its callers import. */
+export { isTestFile };
+
+/** Core kinds that carry fact metadata: measured at +2.7 % of this repository's graph (`agents/evidence/analysis/code-graph-core-fact-cost.md`). */
+const CORE_FACT_KINDS: ReadonlySet<string> = new Set(['file', 'class', 'method', 'route']);
+
 /**
- * Is `relPath` a test file?
- *
- * A deterministic PATH predicate — no content read, no heuristic on the file's
- * body. It is the input to the derived `tests` relation (3.2), so it has to be
- * conservative in one direction only: a subject wrongly classified as a test
- * silently loses its `tests` edges, while a test wrongly classified as a
- * subject would make a test file look like a tested surface. Both are wrong;
- * the second is worse, because `untested` would then report a real subject as
- * covered.
- *
- * The four conventions are the ones this launch set actually uses, and each is
- * anchored rather than substring-matched so a directory called
- * `src/latest/thing.ts` is not a test:
- *
- *   · a `tests/` or `test/` path segment (this repository's own layout);
- *   · a `__tests__/` segment (the JS convention);
- *   · a `.test.` / `.spec.` filename infix (Vitest / Jest / Pest-JS);
- *   · a `Test.php` / `test.php` filename suffix, or a `_test.php` infix
- *     (PHPUnit's `*Test.php` and Go-style `_test` both appear in PHP trees).
+ * Owner file, witness and rung T1 on the core nodes a reader confirms: a file by
+ * its existence, a class, method or route by the trimmed text of its first line.
+ * A node a lane or provider already gave a fact keeps it.
  */
-export function isTestFile(relPath: string): boolean {
-    const p = relPath.split(path.sep).join('/');
-    const segments = p.split('/');
-    if (segments.some((seg) => seg === 'tests' || seg === 'test' || seg === '__tests__')) return true;
-    const base = segments[segments.length - 1] ?? '';
-    if (/\.(test|spec)\./i.test(base)) return true;
-    if (/(^|[._-])test\.php$/i.test(base)) return true;
-    if (/Test\.php$/.test(base)) return true;
-    return false;
+export function withCoreFacts(g: CodeGraph, files: readonly SourceFile[]): CodeGraph {
+    const text = new Map(files.map((f) => [f.path, f.source] as const));
+    const lines = new Map<string, string[]>();
+    const lineOf = (file: string, n: number): string | null => {
+        if (!lines.has(file)) lines.set(file, (text.get(file) ?? '').split('\n'));
+        const l = lines.get(file)?.[n - 1];
+        return l === undefined ? null : l.trim();
+    };
+    const nodes = g.nodes.map((n) => {
+        if (n.fact || !CORE_FACT_KINDS.has(n.kind) || !n.source_file) return n;
+        if (n.kind === 'file') return { ...n, fact: { owner: n.source_file, witness: { file: n.source_file, line: 0, hash: '', kind: 'file' as const }, rung: 'T1' as const } };
+        const line = n.source_location[0] ?? 0;
+        const t = line > 0 ? lineOf(n.source_file, line) : null;
+        if (t === null) return n;
+        return { ...n, fact: { owner: n.source_file, witness: { file: n.source_file, line, hash: spanHash(t) }, rung: 'T1' as const } };
+    });
+    return { ...g, nodes };
 }
 
 /** A fact's fields in a fixed order, attributes sorted, so equal facts serialize to equal bytes. */
 function factJson(f: FactMeta): Record<string, unknown> {
     const out: Record<string, unknown> = {
         owner: f.owner,
-        witness: { file: f.witness.file, line: f.witness.line, hash: f.witness.hash },
+        witness: { file: f.witness.file, line: f.witness.line, hash: f.witness.hash, ...(f.witness.kind ? { kind: f.witness.kind } : {}) },
         rung: f.rung,
     };
     if (f.resolved_via) out['resolved_via'] = f.resolved_via;
@@ -1228,6 +1229,7 @@ export function serializeGraph(g: CodeGraph): string {
         source_location: n.source_location,
         ...(n.partial ? { partial: true } : {}),
         ...(n.fact ? { fact: factJson(n.fact) } : {}),
+        ...(n.scope ? { scope: n.scope } : {}),
     });
     const edge = (e: CodeEdge) => {
         const base: Record<string, unknown> = {
@@ -1424,8 +1426,8 @@ export async function buildFromRepo(
     const report: { passes?: PassReport } = {};
     const core = buildGraph(files, extracts, readResolutionConfig(root), scip, docs, readProjectProbe(abs), report);
     for (const f of report.passes?.failures ?? []) process.stderr.write(`code-graph: pass ${f.pass} failed — ${f.reason}\n`);
-    const laned = opts.lanes ? runLaneReaders(abs, core) : null;
-    const graph = laned?.graph ?? core;
+    const laned = opts.lanes ? runLaneReaders(abs, withCoreFacts(core, files)) : null;
+    const graph = stampScope(laned?.graph ?? withCoreFacts(core, files), readScopeRules(path.join(graphHome(abs).mapDir, 'layers.yaml')));
     const json = serializeGraph(graph);
     if (cachePath) {
         write_atomic(cachePath, json);
