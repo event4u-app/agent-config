@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  b1ec359f4be67adf05fe8e5470a9a266a633c14428852969487366b5651aa079
+SET-SHA256  0bb592465c2c542d7cb63ab5aa2d9ca8064357985d20ad32777d9250ada9ef57
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1310,6 +1310,7 @@ open and which this file does not settle.
 | `project-analyzer` | `fbbec0a0941da77d517fca42a3de9056ca019d272c04b5dc9cb53e7aa502b76a` |
 | `prompt-engineering-image` | `d00e1aeb325be93ad2b510e3438f54368b9130eb0688f177dd5c68e473f87237` |
 | `prompt-engineering-patterns` | `4c7db08fbc25fdca01a72f2175785d5b8e0d805c1479a7b18bd972968e6d4240` |
+| `prompt-optimizer` | `5c3cc1c021ab46a50586c0c1690abdd775c75ffcf95f1cbc68d840a7e3fc4a4c` |
 | `prompt-validator` | `daeecf1063775e3c4671de74f3b292fe30fb6d3e4ce8e1c490c2935ef5e5af07` |
 | `react-shadcn-ui` | `e6d4b560f29a896c9332bdc629ef8e7b39a3129046a6f512b98458b2e012cfb6` |
 | `readme-writing` | `7aa1d17f117d9f36e18ba1e29fed45d73ddbc77e82f03e9b08198dd8fb483506` |
@@ -1345,6 +1346,7 @@ open and which this file does not settle.
 | `universal-project-analysis` | `969eb38cf45fbd0f85b81ac0656bdff36a20a5946b911ead54449da0bb05b61c` |
 | `upstream-contribute` | `563a1ab0381b7a96f9a993381119403f81064426d7b3aaf17fbf81467534cdea` |
 | `using-git-worktrees` | `66f8a8709d975f3c98103341469ea0af34b909ce1ca7042170690707a61878da` |
+| `verify-completion-evidence` | `1491f6906471112e38ddc4af3961c49a0b178c1e7b9a4819c21391475a5e2e51` |
 | `verify-repair-loop` | `0e66da5e7daac823b400f9493cc2865f9521a40dc7a01bf74ed81702680cb47b` |
 | `voice-and-tone-design` | `46bb583e7a1f37eb25c2b19033deef99bf70f8273197e477998989285e5296e7` |
 | `wireframe` | `a8d5417a0cdc00557cbc7e55db8184943d971f60d279b4d68eb549cb2ab6a77a` |
@@ -1958,6 +1960,31 @@ evaluation.
 guard (**+4.90 pp** against +2.0 pp). `delivery-set-measurement-2026-08-31.json`:
 recall loss **38.75 pp**, the ceiling stays **BREACHED**; context cost **231**
 tokens against the 500 target, still **MET**. Neither verdict changes in kind.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.
+
+## Growth — 2026-10-27, two corpora from inbox round 2026-10-be; both train
+
+```
+TWO ROWS ARE NEW AND BOTH TRAIN. NO HOLDOUT FILE WAS EDITED.
+BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN AFTER THE CORPORA WERE ON DISK.
+```
+
+**What changed.** `road-to-a-prompt-that-deepens-not-widens` 1.1-1.3 edited
+`prompt-optimizer` and `verify-completion-evidence`, so `check_routing_coverage`
+required their corpora and both grandfather lines are gone. Each corpus holds
+ten cases: five exemplars of which one is German, three near-misses naming the
+neighbour skill, and two counterexamples.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `prompt-optimizer` | train | `0x94` = 148 ≥ 51 | new |
+| `verify-completion-evidence` | train | `0xcd` = 205 ≥ 51 | new |
+
+**Re-taken.** `routing-body-signal-verdict.json` stays **harmful**, false
+activation now +4.97 pp (was +4.90 pp). `delivery-set-measurement-2026-08-31.json`
+recall loss is now 39.05 pp (was 38.75 pp). Neither verdict changes in kind.
 
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
 and `routing_signal_measurement.test.ts` § 5.1.

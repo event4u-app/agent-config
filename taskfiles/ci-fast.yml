@@ -1702,7 +1702,7 @@ tasks:
 
   lint-commit-subjects:
     silent: true
-    desc: Reject sloppy commit subjects (< 10 chars after Conventional-Commits prefix, or blocklist tokens wip/leftover/temp/tmp/fixup) feeding the auto-generated changelog (ADR-033 + road-to-distribution-identity Phase 3)
+    desc: Reject sloppy commit subjects (no Conventional-Commits prefix, < 10 chars after it, or blocklist tokens wip/leftover/temp/tmp/fixup) feeding the auto-generated changelog (ADR-033 + road-to-distribution-identity Phase 3)
     cmd: |
       ./scripts-run src/scripts/lint_commit_subjects \
         --base "${LINT_BASE:-origin/main}" \

@@ -125,6 +125,16 @@ Why cheap — [`commit-policy § Always split into logical chunks`](../../rules/
 
 Real architectural / scope trade-off · vague-request trigger ([`ask-when-uncertain`](../../rules/ask-when-uncertain.md)) · security-sensitive ([`security-sensitive-stop`](../../rules/security-sensitive-stop.md)) · Hard Floor ([`non-destructive-by-default`](../../rules/non-destructive-by-default.md)) · two genuinely-equivalent paths where user preference is the tiebreaker.
 
+## Intake pass — the positive twin of "never ask what context answers"
+
+Before the first write on a task prompt, sort every gap the prompt leaves:
+
+1. **A fact** (where a thing lives, what a value is, which version runs) — look it up. Never a question.
+2. **A technical choice** (approach, library already in the tree, naming, file layout) — decide it and state it in the hand-back as your call. Never present it as something the user agreed to.
+3. **An owner-owned gap** (product meaning, a business constraint, taste — "what bothers you about the cut") — ask **one** question before the work, in the host's native picker where `ask: native`, with one recommendation. Keep looking up the other gaps while the question waits; a lookup is never a reason to delay it.
+
+No owner-owned gap → proceed, and list the stated assumptions in the hand-back. A user who asked to be interviewed ("interview me", "stell mir Rückfragen") has reserved the run's open decisions for themselves: ask them, one at a time, until they release it ("just do it", "mach einfach").
+
 ## See also
 
 - [`no-cheap-questions`](../../rules/no-cheap-questions.md) — the rule.

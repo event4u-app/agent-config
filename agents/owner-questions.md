@@ -8,19 +8,6 @@ and the run that applies it links its PR.
 
 ## Open
 
-### OQ-24 — Fund the two measurement runs inbox round 2026-10-bd planned
-
-- **Context:** two parked roadmaps end in a paid run. `later/road-to-a-court-at-the-stops`
-  Phase 4 measures whether typed exhibits raise review precision on the ledger corpus
-  (`court-measurement-spend`). `later/road-to-a-challenge-the-bench-has-measured`
-  Phase 2 runs the honesty bench, pre-registered since 2026-07-27 and never run
-  (`honesty-bench-spend`). Both print an estimate before any billable call.
-- **Options:** (a) fund the honesty floor probe only (computed at about 1 USD);
-  (b) fund (a) plus the full honesty run if the floor is met (about 20-30 USD) and
-  one court run per arm; (c) fund neither.
-- **Recommendation:** (a) now; decide (b) on the probe's result.
-- **Blocks:** the two blockers named above; nothing in an active roadmap.
-
 ### OQ-21 — How consumers get a browser for `ui:render`
 
 - **Context:** `@playwright/test` is a devDependency, so no consumer install can
@@ -33,6 +20,38 @@ and the run that applies it links its PR.
 - **Recommendation:** (c) until a render rule is `backed` — the witness tier only
   matters once Phase 2.5 has promoted a row, and (a) changes every install.
 - **Blocks:** nothing now; consumer reach of the render engine (Phase 2).
+
+### OQ-25 — How the "interview me" sentence gets appended automatically
+
+- **Context:** your own question in inbox round `inbox-2026-10-be`: "Können wir diesen Satz
+  auch automatisch anhängen?" A `user_prompt_submit` hook can add the sentence as context.
+  Claude already runs 14 concerns in that slot, and the 2026-10-12 line (ADR-293) rules out
+  new form settings.
+- **Options:** (a) a personal hook in your `~/.claude/settings.json`, firing on every
+  prompt, zero package change; (b) a shipped concern, off by default, firing only on task
+  prompts behind a new opt-in key; (c) both.
+- **Recommendation:** (a) — it works today, costs no consumer anything, and Phase 1 of
+  `road-to-the-question-only-the-owner-can-answer` makes the sentence actually reach the
+  interview and fence the run.
+- **Blocks:** step 3.1 of `road-to-the-question-only-the-owner-can-answer-carried` (`later/`).
+
+### OQ-26 — Make the interview reachable outside the maintainer workspace
+
+- **Context:** `challenge-me`, `grill-me` and `refine-prompt` are fenced to
+  `agent-config-maintainer`; a consumer typing "interview me" gets nothing routed.
+- **Options:** (a) add `engineering` and `product` to their workspaces; (b) add the
+  `product-reasoning` pack to `engineering`'s optional packs; (c) leave it.
+- **Recommendation:** (a) — optional packs are opt-in, so (b) still misses most users.
+- **Blocks:** step 3.2 of `road-to-the-question-only-the-owner-can-answer-carried` (`later/`).
+
+### OQ-27 — The prompt optimizer's "Lyra" persona
+
+- **Context:** `/optimize prompt` greets with "Hi! I'm Lyra"; a role names vocabulary, not a
+  method, and the same change drops "assign a role" from the skill.
+- **Options:** (a) keep the name, drop the role-play welcome; (b) drop the persona entirely;
+  (c) keep both.
+- **Recommendation:** (a).
+- **Blocks:** step 2.1 of `road-to-a-prompt-that-deepens-not-widens-carried` (`later/`).
 
 ## Not owner questions — waits, or already settled in the tree
 
@@ -116,6 +135,20 @@ and the run that applies it links its PR.
   (`road-to-a-memory-that-names-its-moment` § Decisions E12).
 
 ## Answered
+
+### OQ-24 — Fund the two measurement runs inbox round 2026-10-bd planned
+
+- **Context:** two parked roadmaps end in a paid run. `later/road-to-a-court-at-the-stops`
+  Phase 4 measures whether typed exhibits raise review precision on the ledger corpus
+  (`court-measurement-spend`). `later/road-to-a-challenge-the-bench-has-measured`
+  Phase 2 runs the honesty bench, pre-registered since 2026-07-27 and never run
+  (`honesty-bench-spend`). Both print an estimate before any billable call.
+- **Options:** (a) fund the honesty floor probe only (computed at about 1 USD);
+  (b) fund (a) plus the full honesty run if the floor is met (about 20-30 USD) and
+  one court run per arm; (c) fund neither.
+- **Recommendation:** (a) now; decide (b) on the probe's result.
+- **Blocks:** the two blockers named above; nothing in an active roadmap.
+- **Answered 2026-10-27:** "Ja, alle freigegeben" — the owner funded every run: the honesty floor probe, the full honesty run, and one court run per arm (option (b) in full). Applied in `later/road-to-a-court-at-the-stops` (`court-measurement-spend` resolved) and `later/road-to-a-challenge-the-bench-has-measured` (`honesty-bench-spend` resolved). <!-- md-language-check: ignore -->
 
 ### OQ-23 — Repetitions against the canary query ceiling
 

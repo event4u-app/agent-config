@@ -25,6 +25,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-learner-the-measurements-gate | later | later | The open dispatch measurements are run or dated; a PR that moves a policy row without a measurement pinned to … |
 | road-to-a-memory-the-consumer-owns | later | later | A consumer's own memories and knowledge pages decide when they are recalled, the profile lives in one file per layer … |
 | road-to-a-menu-whose-precision-is-measured | later | later | Routing precision is a number with an interval on a labelled corpus large enough to carry one (≥ 100 prompts, … |
+| road-to-a-prompt-that-deepens-not-widens-carried | later | later | Every step road-to-a-prompt-that-deepens-not-widens deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-ranker-whose-ties-break-on-signal | later | later | When two skills score the same, the order between them comes from something the ranker measured, not from their names … |
 | road-to-a-release-record-that-says-what-it-reviewed-carried | later | later | Every step road-to-a-release-record-that-says-what-it-reviewed deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-retro-the-merge-runs | later | later | After every merged pull request, and on the first session of every new day, the package examines finished work that … |
@@ -135,6 +136,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-surface-consolidation | later | later | Cut the proactive command-suggestion surface from ~160 self-suggesting commands to the cluster-head journeys (+ genuine standalone entry points), fold the … |
 | road-to-svg-witness-provenance | later | later | The blocking SVG turn-end obligation is discharged only by a render the hook itself saw succeed. |
 | road-to-ten-across-the-board | later | draft | Every rubric category in the declared manifest of `agents/evidence/ac-capability-scorecard.yaml` reaches `ten`, `measured-null`, or `max-boundary` under the six-dimension definition frozen in … |
+| road-to-the-question-only-the-owner-can-answer-carried | later | later | Every step road-to-the-question-only-the-owner-can-answer deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-thin-flip-under-anchor-scoring | later | later | Road to a Thin Flip Under Anchor-Scoring |
 | road-to-token-economy-cache-followup | later | later | Close the census-gated remainder of the parent: idempotency gates on the measured top repeat-slot concerns, plus the data-halves of the … |
 | road-to-token-economy-dispatch-followup | later | later | Follow-up to road-to-token-economy-dispatch — the data-window and blocker-gated remainder |

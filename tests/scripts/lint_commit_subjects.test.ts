@@ -21,6 +21,7 @@ describe('lint_commit_subjects.check_subject — clean', () => {
         'refactor: split parse_frontmatter into loader + injector helpers',
         'feat!: drop Composer surface; npm-primary per ADR-033',
         'chore: bump @event4u/agent-config to 5.1.0',
+        'release: 18.2.0 with the routing floors',
     ])('passes: %s', (subject) => {
         expect(lcs.check_subject(subject)).toEqual([]);
     });
@@ -77,3 +78,25 @@ describe('lint_commit_subjects.check_subject — carve-outs', () => {
 
 // --- Golden parity on the REAL REPO ----------------------------------------
 
+
+// --- Conventional prefix is required, not only stripped. ---
+describe('lint_commit_subjects.check_subject — prefix required', () => {
+    it.each([
+        'Interview phrasings reach the interview, German scores like English',
+        'Routing assurance live floors: frozen baseline, derived floors',
+        'Update the dashboard after archiving the roadmap',
+    ])('flags a subject without a Conventional-Commits prefix: %s', (subject) => {
+        const issues = lcs.check_subject(subject);
+        expect(issues.some((i) => i.includes('Conventional-Commits prefix missing'))).toBe(true);
+    });
+});
+
+// --- A PR title is a commit subject: the repo squash-merges with the PR title. ---
+describe('lint_commit_subjects — PR title', () => {
+    it('a prose PR title fails the CLI', () => {
+        expect(lcs.main(['--base', 'HEAD', '--head', 'HEAD', '--quiet', '--title', 'Interview phrasings reach the interview'])).toBe(1);
+    });
+    it('a conventional PR title passes the CLI', () => {
+        expect(lcs.main(['--base', 'HEAD', '--head', 'HEAD', '--quiet', '--title', 'feat(interview): interview phrasings reach the interview'])).toBe(0);
+    });
+});

@@ -1,0 +1,2513 @@
+{
+  "schema": "routing-baseline/v1",
+  "captured_at": "2026-10-27T06:00:12.541Z",
+  "commit": "9e226440b6653348d409dab743b47439ab6c670c",
+  "host_version": "2.1.311",
+  "model": "claude-opus-5-5",
+  "protocol": {
+    "path": "agents/evidence/preregistration/routing-arms-protocol-20261027.md",
+    "sha256": "44a415ee1ba008eebff1488c7c1c152630db354224b0b89446a0cb0ad3992c53"
+  },
+  "catalogue_sha256": "1c967b175fc6d5d682db730ff12295e7a347126c107a50913ee8917f03577293",
+  "cost_usd": 17.494350400000005,
+  "partial": false,
+  "cases": [
+    {
+      "case": "001-market-entry-analysis-mea-e1",
+      "skill": "market-entry-analysis",
+      "query_sha256": "847c36f5748174305f424d43feaa990560e6224ddec86ce013c29c180eefb2fb",
+      "verdict": "fired",
+      "cost_usd": 0.13849660000000003,
+      "invoked": [
+        "market-entry-analysis"
+      ],
+      "id": "mea-e1",
+      "skill_sha256": "8d2f5c7481037ef05000e913e554000ec0269ed72fc6196a1445ac49d4686eba"
+    },
+    {
+      "case": "002-condense-memory-q1",
+      "skill": "condense-memory",
+      "query_sha256": "1eed7310c89eefecbac06bb6bda2594651ed74a5cc25d6faba1fcf5eb810cdad",
+      "verdict": "fired",
+      "cost_usd": 0.16465419999999997,
+      "invoked": [
+        "condense-memory"
+      ],
+      "id": "q1",
+      "skill_sha256": "79c2dee9daed653d4ddd37257bcf07026bc9d4e0479f0ded0e16996eebe6b724"
+    },
+    {
+      "case": "003-judge-spec-compliance-q1",
+      "skill": "judge-spec-compliance",
+      "query_sha256": "116b5edd18c0b37b3a09da5a234d61dba57e05ce02bf4a104d47c41381f4f09c",
+      "verdict": "fired",
+      "cost_usd": 0.12014599999999999,
+      "invoked": [
+        "judge-spec-compliance"
+      ],
+      "id": "q1",
+      "skill_sha256": "b3ff66ce9c8b7d9f87c7f4faea04a0864ba0731f5055be46a8126edece94e885"
+    },
+    {
+      "case": "004-analysis-autonomous-mode-q1",
+      "skill": "analysis-autonomous-mode",
+      "query_sha256": "ddbf78b4c7233a881f9426b6209635c64ab10b1f537d5e2eb31f21e90a17f72d",
+      "verdict": "not-fired",
+      "cost_usd": 0.0859244,
+      "invoked": [],
+      "id": "q1",
+      "skill_sha256": "b4d050f641dbcb376b5756225c92bd5182cc052b83c6f9648f0226df26900278"
+    },
+    {
+      "case": "005-readme-writing-package-q5",
+      "skill": "readme-writing-package",
+      "query_sha256": "016f0377cd7fedbd54e99907110a2c60c9af77ed7dfd9e06d67e128241a8d96a",
+      "verdict": "not-fired",
+      "cost_usd": 0.096722,
+      "invoked": [],
+      "id": "q5",
+      "skill_sha256": "eadf6c65b0d53ae1c56cce70e88b7a9a25090ab5d7f4f1aa3f59d954f2b7dc2d"
+    },
+    {
+      "case": "006-worktree-lifecycle-q2",
+      "skill": "worktree-lifecycle",
+      "query_sha256": "6c93b84f50e8ae204e4aaa4185916ab7355cc914541732dfa58ad3227c5fac79",
+      "verdict": "fired",
+      "cost_usd": 0.162888,
+      "invoked": [
+        "worktree-lifecycle"
+      ],
+      "id": "q2",
+      "skill_sha256": "05cbc409d0d1941d6b3709252a381c0f64fb79cebea2aff772f6ae474ee4469b"
+    },
+    {
+      "case": "007-dashboard-design-dd-e1",
+      "skill": "dashboard-design",
+      "query_sha256": "76ab9041557baaab1c32613b3b537547d66dcad13e6a0afd77e3d3d8d12cfb61",
+      "verdict": "fired",
+      "cost_usd": 0.1410218,
+      "invoked": [
+        "dashboard-design"
+      ],
+      "id": "dd-e1",
+      "skill_sha256": "f8a53c6b3e6dc17cbfceea263d281e5fb7d423010b803aa63f545914d1a4120b"
+    },
+    {
+      "case": "008-brand-q3",
+      "skill": "brand",
+      "query_sha256": "f85e7666546180e10fcfcd0b4350563bf055ab8c7716ba8ea24cc787bdc5468b",
+      "verdict": "fired",
+      "cost_usd": 0.1554994,
+      "invoked": [
+        "brand"
+      ],
+      "id": "q3",
+      "skill_sha256": "2f14fb9a3a607a724ee53621891412728d9baa328587fd50aa546344af47d7e2"
+    },
+    {
+      "case": "009-positioning-strategy-ps-e2",
+      "skill": "positioning-strategy",
+      "query_sha256": "0fcb3c18657e2cb387f20ef50d24e27b54544cddee6cf6f7265fa10e5e5e39d8",
+      "verdict": "fired",
+      "cost_usd": 0.1307364,
+      "invoked": [
+        "positioning-strategy"
+      ],
+      "id": "ps-e2",
+      "skill_sha256": "bce74bad2987761e9c2dc5a075ac2dc1cb8fd5d0a7389b8f5deadbb626495727"
+    },
+    {
+      "case": "010-authz-review-q3",
+      "skill": "authz-review",
+      "query_sha256": "5688f229863be043c0477af29efab1f5903667d26500f7c84cf6a8e62da5e03e",
+      "verdict": "not-fired",
+      "cost_usd": 0.09662799999999999,
+      "invoked": [],
+      "id": "q3",
+      "skill_sha256": "55041d00a0d0a04594bc3614007c1d6fe49885b71f88e0de8934957ea37b616b"
+    },
+    {
+      "case": "011-schema-review-q4",
+      "skill": "schema-review",
+      "query_sha256": "8fdcdaf608316e91b365f0b438880f37f6f7d3555c5a03d557cfc8ffe0db1c24",
+      "verdict": "fired",
+      "cost_usd": 0.1210748,
+      "invoked": [
+        "schema-review"
+      ],
+      "id": "q4",
+      "skill_sha256": "00b55f85a67a3a85ef16b40b34d2457c357da4e9ef56c0f2fda710d8ceeba9cb"
+    },
+    {
+      "case": "012-roadmap-management-q2",
+      "skill": "roadmap-management",
+      "query_sha256": "12d44654162f6fcd10b93a93ddfc3dac484a3ba600a1a9b7403cf98a3433fa62",
+      "verdict": "fired",
+      "cost_usd": 0.13682,
+      "invoked": [
+        "roadmap-management"
+      ],
+      "id": "q2",
+      "skill_sha256": "0685c88b6871e23e981105c62b5e482d2165b52ff5bcc8ab725fc02401c6e11d"
+    },
+    {
+      "case": "013-judge-injection-defense-q5",
+      "skill": "judge-injection-defense",
+      "query_sha256": "d67c80c130b0e8c1680f3527f2e4a6d34a6777e07ed08fe5fe69fa5bb0da1ef8",
+      "verdict": "fired",
+      "cost_usd": 0.1094976,
+      "invoked": [
+        "judge-injection-defense"
+      ],
+      "id": "q5",
+      "skill_sha256": "0dece99cc4ddd5b7800e726b5460d407c9e5341266f4934d99eec5c85a7c1ca6"
+    },
+    {
+      "case": "014-test-performance-q6",
+      "skill": "test-performance",
+      "query_sha256": "815e321e67b5381e5394dc6e018a7c703f7e0b6ce257d36618941f1825193e37",
+      "verdict": "not-fired",
+      "cost_usd": 0.083512,
+      "invoked": [],
+      "id": "q6",
+      "skill_sha256": "82a2b86e28aa71fdb3d6373fc39ba3568ffc34c4643654b781967ae6766d32cf"
+    },
+    {
+      "case": "015-license-compliance-borrow-check-q3",
+      "skill": "license-compliance-borrow-check",
+      "query_sha256": "81b852175df134cbf63273b1d27e2b33674b0c86ef20292efeb19d3a7fe13a5c",
+      "verdict": "fired",
+      "cost_usd": 0.1384308,
+      "invoked": [
+        "license-compliance-borrow-check"
+      ],
+      "id": "q3",
+      "skill_sha256": "19ef2b4dde0a06e795345ad2bf6ede6fcfa0c081798a4cd53ce5c0b2fb365b9e"
+    },
+    {
+      "case": "016-deep-reading-analyst-q3",
+      "skill": "deep-reading-analyst",
+      "query_sha256": "8bbbdb539c5249e71acc05ca7cb9736566f2a140dc5ff7f9f583927e31208172",
+      "verdict": "fired",
+      "cost_usd": 0.1391322,
+      "invoked": [
+        "deep-reading-analyst"
+      ],
+      "id": "q3",
+      "skill_sha256": "5900d0d849d876f54cf35e87cceb6974d13d372bf6e3670780e422c5bc5e2c93"
+    },
+    {
+      "case": "017-judge-test-coverage-jtc-e3",
+      "skill": "judge-test-coverage",
+      "query_sha256": "5118216800e6c6e869503e1cdb7b505d729cfac8150d76a5c7272d1574d421cc",
+      "verdict": "not-fired",
+      "cost_usd": 0.085038,
+      "invoked": [],
+      "id": "jtc-e3",
+      "skill_sha256": "2de6dde2d0def8a3b48b2b1fd4f06522c5230f5999ee4a91cefc864531285365"
+    },
+    {
+      "case": "018-image-generation-q5",
+      "skill": "image-generation",
+      "query_sha256": "661366ddc132ceab7e79b31172e3e70a10afd8b143fc08e52e7f96db8431ba68",
+      "verdict": "fired",
+      "cost_usd": 0.1144016,
+      "invoked": [
+        "image-generation"
+      ],
+      "id": "q5",
+      "skill_sha256": "b0a2d0b4ff0d329d89f7e27e79d121e30029c18e5997f3a699a7a2c41181231a"
+    },
+    {
+      "case": "019-design-review-q5",
+      "skill": "design-review",
+      "query_sha256": "dcd2036762488bbd112d878147808b7301e736f19fbd2c275e5cd3176aa73bc3",
+      "verdict": "fired",
+      "cost_usd": 0.17566199999999998,
+      "invoked": [
+        "design-review"
+      ],
+      "id": "q5",
+      "skill_sha256": "873c68ba9bb03aa3a2c8522ab87daaa4493551e4c8c7c82d6d54e69827293bed"
+    },
+    {
+      "case": "020-playbook-authoring-q3",
+      "skill": "playbook-authoring",
+      "query_sha256": "903fb7b59af402726cf30603240664942c7e2a352f73d95851a1f1ae1b621a7d",
+      "verdict": "fired",
+      "cost_usd": 0.145452,
+      "invoked": [
+        "playbook-authoring"
+      ],
+      "id": "q3",
+      "skill_sha256": "36c58f43ec5fd54cd0ae44aab88e4b0aa4e9514c2f5dfe8cf0876ddde55cf7f3"
+    },
+    {
+      "case": "021-quality-tools-q3",
+      "skill": "quality-tools",
+      "query_sha256": "2896459614c944a411cd6efa694693cac9280d179dc994fdf367ccd99cceee99",
+      "verdict": "fired",
+      "cost_usd": 0.1272812,
+      "invoked": [
+        "quality-tools"
+      ],
+      "id": "q3",
+      "skill_sha256": "2f422ec0bf7a8ddfe5bdf2b33f68c364c1aac7da230b827fb14fa1c8bc05269b"
+    },
+    {
+      "case": "022-competitive-positioning-q2",
+      "skill": "competitive-positioning",
+      "query_sha256": "3d11c8bfd1cf711690dae04bd71d23daec3b4b13eb826f6643b265a48b068bb7",
+      "verdict": "fired",
+      "cost_usd": 0.1194916,
+      "invoked": [
+        "competitive-positioning"
+      ],
+      "id": "q2",
+      "skill_sha256": "72bf63588636142d316d0c8dfe0f4bbf534d8a5fa4e766148f824877a7d9b203"
+    },
+    {
+      "case": "023-react-native-setup-rns-e5",
+      "skill": "react-native-setup",
+      "query_sha256": "52d700dcecb70f0474e1f60dd95f7fa725be1068ac557d2a6321e0f02cd452c7",
+      "verdict": "fired",
+      "cost_usd": 0.1584914,
+      "invoked": [
+        "react-native-setup"
+      ],
+      "id": "rns-e5",
+      "skill_sha256": "395f4c9e6e4fd8d494b13f0378f3c4ed2827119dd0a6b500db130cd0838a7009"
+    },
+    {
+      "case": "024-php-coder-q2",
+      "skill": "php-coder",
+      "query_sha256": "df0acc57106ce4afed2fb88a47d8719653713b709be04dfb4202403724e23c1b",
+      "verdict": "not-fired",
+      "cost_usd": 0.124184,
+      "invoked": [],
+      "id": "q2",
+      "skill_sha256": "94184edf3ec8271e3d54d33ce583648085663c01fbade868e345605279da059c"
+    },
+    {
+      "case": "025-merge-conflicts-q3",
+      "skill": "merge-conflicts",
+      "query_sha256": "7e4b7cb9a52312da6d82e3fc8302048da7c895216d2ba15ab23b153fba71e835",
+      "verdict": "not-fired",
+      "cost_usd": 0.08684440000000002,
+      "invoked": [],
+      "id": "q3",
+      "skill_sha256": "d058fcd0ceab98011b3df3cb06e3044e77bbe8faae47f89de6327009ff7e6abf"
+    },
+    {
+      "case": "026-gtm-launch-q1",
+      "skill": "gtm-launch",
+      "query_sha256": "6a44fe80e13769b31fe0ff8126d23dcfa84581c1632fab5a158fd2a9cd835c06",
+      "verdict": "fired",
+      "cost_usd": 0.1309698,
+      "invoked": [
+        "gtm-launch"
+      ],
+      "id": "q1",
+      "skill_sha256": "6bc814f74a8fd421694643a9620ac4f4998042d4c6dbf6bbc20e0a72a415a5ef"
+    },
+    {
+      "case": "027-review-routing-q1",
+      "skill": "review-routing",
+      "query_sha256": "a51a0ab32adbdf6aa8e1b443966df56e6c842cfbe1116c1942b2357ca5f2532b",
+      "verdict": "fired",
+      "cost_usd": 0.1242986,
+      "invoked": [
+        "review-routing"
+      ],
+      "id": "q1",
+      "skill_sha256": "177c079acb6cb380afec68f7bcd48927bce7892ddb64792b72c2967774733ec9"
+    },
+    {
+      "case": "028-testing-anti-patterns-q2",
+      "skill": "testing-anti-patterns",
+      "query_sha256": "13c2d5525117b5e59faa8d228e04465a1df779ccff893c7ff95f3d9e2ef5c072",
+      "verdict": "fired",
+      "cost_usd": 0.14860659999999998,
+      "invoked": [
+        "testing-anti-patterns"
+      ],
+      "id": "q2",
+      "skill_sha256": "5ab0b92a49bc86429fd48679332ab693cfb60da0194de14d90d06ebdd9dd78c3"
+    },
+    {
+      "case": "029-skill-improvement-pipeline-q2",
+      "skill": "skill-improvement-pipeline",
+      "query_sha256": "961b024fb1a90d262ea1f84e82dff8e4319427032a140054ab8ff0baefa7f74f",
+      "verdict": "fired",
+      "cost_usd": 0.13182980000000002,
+      "invoked": [
+        "skill-improvement-pipeline"
+      ],
+      "id": "q2",
+      "skill_sha256": "c3c8f50e896f255142417f9d67098a3b5154d038232ca55697a168fcb7e955d5"
+    },
+    {
+      "case": "030-overbuild-review-lens-q3",
+      "skill": "overbuild-review-lens",
+      "query_sha256": "f13718a5cbbc9f66c2b628c9287cf23980c1aaa7e7964ceceb7abd515dea5b99",
+      "verdict": "not-fired",
+      "cost_usd": 0.0860896,
+      "invoked": [],
+      "id": "q3",
+      "skill_sha256": "cc94557690d08e1f8835567d5f2ad05360be4f04f6bfcc9725d1d08545826d96"
+    },
+    {
+      "case": "031-code-intelligence-q5",
+      "skill": "code-intelligence",
+      "query_sha256": "ca9f9ab1b242e5f4e11bded0281805f4f7040280850754505184c198362c1641",
+      "verdict": "not-fired",
+      "cost_usd": 0.0854072,
+      "invoked": [],
+      "id": "q5",
+      "skill_sha256": "64e78e5715a037eb8b5b14f2faf25789715b8ed95aa3b4490aeac04850bac1a8"
+    },
+    {
+      "case": "032-tailwind-engineer-q2",
+      "skill": "tailwind-engineer",
+      "query_sha256": "f8fbee3e13a339cbf61be8528f249951cfacbf041a068b7135d1ff5c46c9daf4",
+      "verdict": "fired",
+      "cost_usd": 0.13653400000000002,
+      "invoked": [
+        "tailwind-engineer"
+      ],
+      "id": "q2",
+      "skill_sha256": "08f5c2395bb665c259b555c5871b813efb53f57eade26dbd009ab822229100c4"
+    },
+    {
+      "case": "033-accessibility-auditor-q3",
+      "skill": "accessibility-auditor",
+      "query_sha256": "ecfb542cb73ebca9304118bed82e11da12e6f9c3a3159bcc40737445db40e0ab",
+      "verdict": "fired",
+      "cost_usd": 0.15148499999999998,
+      "invoked": [
+        "accessibility-auditor"
+      ],
+      "id": "q3",
+      "skill_sha256": "81f1c46465d94e75ed300f5f2496fcb7e3f5fc3288fdf02ac76deb6c7ab259be"
+    },
+    {
+      "case": "034-conventional-commits-writing-q2",
+      "skill": "conventional-commits-writing",
+      "query_sha256": "68d84c5dcaa700452201c92ef12fdb9417602ced349147a4f0634a544076a7ea",
+      "verdict": "fired",
+      "cost_usd": 0.19818799999999998,
+      "invoked": [
+        "conventional-commits-writing"
+      ],
+      "id": "q2",
+      "skill_sha256": "90557fa29d839b19e081282a180919151f39256f65b142a6764e49ca0aeb113d"
+    },
+    {
+      "case": "035-canvas-design-q5",
+      "skill": "canvas-design",
+      "query_sha256": "24b72ea38192eda43661d12ff3e3b84d224330f5b9dac7579562384aeccf6e52",
+      "verdict": "fired",
+      "cost_usd": 0.12233100000000001,
+      "invoked": [
+        "canvas-design"
+      ],
+      "id": "q5",
+      "skill_sha256": "0b44c8e4d3fd768afc6cae4ae414726ddb4f9da98dfe90a691935dd6ded55eb1"
+    },
+    {
+      "case": "036-threat-modeling-q1",
+      "skill": "threat-modeling",
+      "query_sha256": "ee8fffdf65b17c5a040c824a897a6498263d3a9b1f7fd0c67937750819c1518a",
+      "verdict": "fired",
+      "cost_usd": 0.1344008,
+      "invoked": [
+        "threat-modeling"
+      ],
+      "id": "q1",
+      "skill_sha256": "597556cef5a433caf02aa62c8ab3ff9a2d2946242aca0b8c03c3e76eaaf432e7"
+    },
+    {
+      "case": "037-decision-record-q14",
+      "skill": "decision-record",
+      "query_sha256": "7080794cc60c8d1e3d92421697b83d6d42ddff6bed7ef1b2a4c8294324db8bb5",
+      "verdict": "fired",
+      "cost_usd": 0.134467,
+      "invoked": [
+        "decision-record"
+      ],
+      "id": "q14",
+      "skill_sha256": "d67cceb74c612df29b295c404d89e6ef0324da57873747b14dd3c267b1ca9b17"
+    },
+    {
+      "case": "038-logo-generation-q5",
+      "skill": "logo-generation",
+      "query_sha256": "13551bcfaf1006f432bc8e9a02fac7362c0402f2a3794ac6c541a77fd7201c89",
+      "verdict": "fired",
+      "cost_usd": 0.1230964,
+      "invoked": [
+        "logo-generation"
+      ],
+      "id": "q5",
+      "skill_sha256": "9f2048c70abcd2841201f5d39ee52c267e29de8b7b4aa523edbaf7c2c061fb02"
+    },
+    {
+      "case": "039-fe-design-q13",
+      "skill": "fe-design",
+      "query_sha256": "a48df228830a1f54d17ae396f988e613f3313b4e90db201a5f057fff52b0a61e",
+      "verdict": "fired",
+      "cost_usd": 0.1559812,
+      "invoked": [
+        "fe-design"
+      ],
+      "id": "q13",
+      "skill_sha256": "176f3e8d9ce29d6bd171ab9db683bde34330ab8e140c0cf1ed58c0612befcad4"
+    },
+    {
+      "case": "040-brand-identity-q4",
+      "skill": "brand-identity",
+      "query_sha256": "9cd9c82e1c723b8a48bec2c63aca5042514eeccd990e568374c4a592d9fad6ad",
+      "verdict": "fired",
+      "cost_usd": 0.1310978,
+      "invoked": [
+        "brand-identity"
+      ],
+      "id": "q4",
+      "skill_sha256": "964742728bc7b393ccb115e78712cfc708376ac1cb577ed5cb2acf2d35675548"
+    },
+    {
+      "case": "041-database-q3",
+      "skill": "database",
+      "query_sha256": "b08817c57c4ca9a68ca9981b6abbe82a5e5b1636e1055a6b1d00c47482c73404",
+      "verdict": "not-fired",
+      "cost_usd": 0.098248,
+      "invoked": [],
+      "id": "q3",
+      "skill_sha256": "20f4e073a79304c623fc3dc3a4c3e57a1472025b8e33c795815867579fa63cc9"
+    },
+    {
+      "case": "042-image-creator-q3",
+      "skill": "image-creator",
+      "query_sha256": "1699d7e57db0c75cd48441af7ab67fd3458a30dcf479a9661a83e398e4c4b3b7",
+      "verdict": "fired",
+      "cost_usd": 0.1864912,
+      "invoked": [
+        "image-creator"
+      ],
+      "id": "q3",
+      "skill_sha256": "d0ab52a88a914636acb02b4f3d8099aebdf92a64c5f32c642d80d55938874c48"
+    },
+    {
+      "case": "043-repomix-packer-q2",
+      "skill": "repomix-packer",
+      "query_sha256": "b1edbe56ae2b2fc33179b67a8875bdabd92d7eb4778606a77f772a69eca8fdaa",
+      "verdict": "fired",
+      "cost_usd": 0.10646800000000001,
+      "invoked": [
+        "repomix-packer"
+      ],
+      "id": "q2",
+      "skill_sha256": "e0404646b7989a0fbc3ce0d6d66cac4054e007ee81ecdc4ce234457eb844425e"
+    },
+    {
+      "case": "044-operational-readiness-q1",
+      "skill": "operational-readiness",
+      "query_sha256": "fa0f80dee4b456c1a80c66158c838ec3b3bb5444ebfaf48ac8350632926bf22c",
+      "verdict": "fired",
+      "cost_usd": 0.129534,
+      "invoked": [
+        "operational-readiness"
+      ],
+      "id": "q1",
+      "skill_sha256": "83972d87b80f5a23fd019fa47797b0db01f38eb6ae52ec5a70f7afe321e120b4"
+    },
+    {
+      "case": "045-git-workflow-q1",
+      "skill": "git-workflow",
+      "query_sha256": "d9c0f7c8ec4ef613354ad4d4922a2508af2f1340439602cf5b8097bfafd6cea5",
+      "verdict": "fired",
+      "cost_usd": 0.1566862,
+      "invoked": [
+        "git-workflow"
+      ],
+      "id": "q1",
+      "skill_sha256": "97b439af3012ab853827e1a13f6059921758e5980abe60708c883930988c3edb"
+    },
+    {
+      "case": "046-agents-md-thin-root-q1",
+      "skill": "agents-md-thin-root",
+      "query_sha256": "69729d80a712709cb391f90f0d39e1eb0e0b3e6c4c0f08f34334542df3b94e55",
+      "verdict": "fired",
+      "cost_usd": 0.146667,
+      "invoked": [
+        "agents-md-thin-root"
+      ],
+      "id": "q1",
+      "skill_sha256": "8535dbc20785c1b1f897e22b385e431f4d984571135e2ca7649f72dd75034ea7"
+    },
+    {
+      "case": "047-image-provider-routing-q1",
+      "skill": "image-provider-routing",
+      "query_sha256": "51b6502b427278b4a5b825daffd56005a745119053e4df17d0dd0becb1d43135",
+      "verdict": "fired",
+      "cost_usd": 0.10581,
+      "invoked": [
+        "image-provider-routing"
+      ],
+      "id": "q1",
+      "skill_sha256": "fb62e34a5b52112a122ab79bf0bb11f9c407cb76145e36cd4b21c9e31c3de480"
+    },
+    {
+      "case": "048-api-endpoint-ae-e1",
+      "skill": "api-endpoint",
+      "query_sha256": "269d474be839fdc6f64729086e8ad4698cb1d176cf20efaf70a88dc8e2e4e76f",
+      "verdict": "fired",
+      "cost_usd": 0.1227198,
+      "invoked": [
+        "api-endpoint"
+      ],
+      "id": "ae-e1",
+      "skill_sha256": "28b6d6cc3231720d8fa58e3d8e6112cf0480ad5cdd2fef9911cb4fd336f96979"
+    },
+    {
+      "case": "049-image-analyser-q3",
+      "skill": "image-analyser",
+      "query_sha256": "55251be1fe7358c0394d908e12eb73b612f701c2297b07e05f4b1c985d65b878",
+      "verdict": "fired",
+      "cost_usd": 0.1128936,
+      "invoked": [
+        "image-analyser"
+      ],
+      "id": "q3",
+      "skill_sha256": "d1d8ebccd3fd1632b5134c95d25a1720ec50afe6420ea4e4c1bdb64f3daa730f"
+    },
+    {
+      "case": "050-type-design-q5",
+      "skill": "type-design",
+      "query_sha256": "00f4d46883654eb6a64c3d13dceb5e5a9f532744b618ca972f798bcae818f330",
+      "verdict": "fired",
+      "cost_usd": 0.1261264,
+      "invoked": [
+        "type-design"
+      ],
+      "id": "q5",
+      "skill_sha256": "a717d21d40274641ec1d1de34fb613e421dd0e5201810ec6048d207a466a0017"
+    },
+    {
+      "case": "051-legal-practice-profile-q5",
+      "skill": "legal-practice-profile",
+      "query_sha256": "7a5008f02c6d66f297ff45e074b9e20fa94bd8752b92ca4b233612ee13bcd241",
+      "verdict": "fired",
+      "cost_usd": 0.14627400000000002,
+      "invoked": [
+        "legal-practice-profile"
+      ],
+      "id": "q5",
+      "skill_sha256": "7d577b61dae04692aa9e747195dfae2b63d671e0ba7cb31ff4d24709ab969be6"
+    },
+    {
+      "case": "052-feature-planning-q1",
+      "skill": "feature-planning",
+      "query_sha256": "86a625ead9e3f2c22b92d5c49ce1f601a9a202dcd5d461782c0627023ec213b2",
+      "verdict": "fired",
+      "cost_usd": 0.14691300000000002,
+      "invoked": [
+        "feature-planning"
+      ],
+      "id": "q1",
+      "skill_sha256": "0a236307dc842f17a34cb1200f292f403aa0ef31f9f7251e45461062b1af7cf1"
+    },
+    {
+      "case": "053-forensics-report-q3",
+      "skill": "forensics-report",
+      "query_sha256": "2d01a6adbb728361c294270214fd6b50fe6e4e535d4a90d9c8d5825900fd0dd5",
+      "verdict": "fired",
+      "cost_usd": 0.12198819999999999,
+      "invoked": [
+        "forensics-report"
+      ],
+      "id": "q3",
+      "skill_sha256": "8baa6cb659a2f83a389bc324c3a57936bf31350219484d845639e239f287e76c"
+    },
+    {
+      "case": "054-test-driven-development-q3",
+      "skill": "test-driven-development",
+      "query_sha256": "59af7a23a1dbfe66eb4612c7ee9466385666d26866998184c69d0dfe0103f057",
+      "verdict": "not-fired",
+      "cost_usd": 0.0850408,
+      "invoked": [],
+      "id": "q3",
+      "skill_sha256": "fc3ec6da7e31a5daa8ba03361a2bd49bb9b342efd96e3c82335572138c04cd60"
+    },
+    {
+      "case": "055-react-shadcn-ui-rsu-e2",
+      "skill": "react-shadcn-ui",
+      "query_sha256": "9f1472e03b44b4560b328ac7d60671d4f905102e52bf60b7d262d532052b43c5",
+      "verdict": "fired",
+      "cost_usd": 0.17553559999999999,
+      "invoked": [
+        "react-shadcn-ui"
+      ],
+      "id": "rsu-e2",
+      "skill_sha256": "f7d54bd8f76ff08a9df44a4b582e2ff93dc50566d1e3073061767d6a123c8931"
+    },
+    {
+      "case": "056-messaging-architecture-q4",
+      "skill": "messaging-architecture",
+      "query_sha256": "3be93b5cfff532c3d3428613032ddb30e116f515a1fd900d43613ad383639179",
+      "verdict": "fired",
+      "cost_usd": 0.13827520000000001,
+      "invoked": [
+        "messaging-architecture"
+      ],
+      "id": "q4",
+      "skill_sha256": "03717e40da8325e59c2f80099b580d2dad311f5f32e8f76d8f1198f9660ef079"
+    },
+    {
+      "case": "057-content-funnel-design-q4",
+      "skill": "content-funnel-design",
+      "query_sha256": "687b280f88680bdc8229d792143c3e03bc282f9f0da4c7dff293ac6ea0c3cfb9",
+      "verdict": "fired",
+      "cost_usd": 0.1455426,
+      "invoked": [
+        "content-funnel-design"
+      ],
+      "id": "q4",
+      "skill_sha256": "4d443ad5bc042120c22f239f660cf4faceac6de7293fd59bf2810ac80ce00cd5"
+    },
+    {
+      "case": "058-brand-to-tokens-q6",
+      "skill": "brand-to-tokens",
+      "query_sha256": "eb1301256e0cbba499902bf432e5d4b534e3117c05889ba06c8be7ca2a3dc276",
+      "verdict": "fired",
+      "cost_usd": 0.11733120000000001,
+      "invoked": [
+        "brand-to-tokens"
+      ],
+      "id": "q6",
+      "skill_sha256": "3d79f8feb53270773f401c6589ce68b1bb2ddb36450bf54c42d68226cfac6b6b"
+    },
+    {
+      "case": "059-skill-reviewer-q2",
+      "skill": "skill-reviewer",
+      "query_sha256": "53cfa028a9594338adc393d5d000d1c75209121214950bd0291f855f64422006",
+      "verdict": "fired",
+      "cost_usd": 0.16322640000000002,
+      "invoked": [
+        "skill-reviewer"
+      ],
+      "id": "q2",
+      "skill_sha256": "f0e37be3cf34ee8001b7310d07824ef39941054f0756ad9354d7f19e9a14a9e2"
+    },
+    {
+      "case": "060-description-assist-q3",
+      "skill": "description-assist",
+      "query_sha256": "3fb1dd05188267430bdfd763056b440286f45aac5ff5b0653bed91336bfd8d45",
+      "verdict": "not-fired",
+      "cost_usd": 0.1149744,
+      "invoked": [],
+      "id": "q3",
+      "skill_sha256": "f7555e15e9bad3d7211d481790075aef1731c1073fe999adcea7ed354f5d9c23"
+    },
+    {
+      "case": "061-dpa-review-q1",
+      "skill": "dpa-review",
+      "query_sha256": "1ebebbc0fd9469746a9cc33e0a329c27fa35a44d53ff54d5672666c98216f3d3",
+      "verdict": "fired",
+      "cost_usd": 0.12565720000000002,
+      "invoked": [
+        "dpa-review"
+      ],
+      "id": "q1",
+      "skill_sha256": "79072eb3b3598d50c74468c799e3d780bb7c43d53a3374f63a9667be2b198f59"
+    },
+    {
+      "case": "062-ai-council-q3",
+      "skill": "ai-council",
+      "query_sha256": "345daba9bc6d03dac4e407bec46c84c56f99f606efa00e31da7ea1c36e9b4c3b",
+      "verdict": "not-fired",
+      "cost_usd": 0.079292,
+      "invoked": [],
+      "id": "q3",
+      "skill_sha256": "18ca572b59cac165b12fbfdfa35ce2fe6b76ab979ef22c53645436e0c68d3f41"
+    },
+    {
+      "case": "063-composer-packages-q4",
+      "skill": "composer-packages",
+      "query_sha256": "0ed62e16bc4a9a4703e5ca58bb4cf253cf6a2602506f0a5aa85b969d00cda6f9",
+      "verdict": "not-fired",
+      "cost_usd": 0.09777799999999999,
+      "invoked": [],
+      "id": "q4",
+      "skill_sha256": "410065378c1e19f0e0d02d0d6d05b2d1a17c52c1b35f8a997600dd423a11ea89"
+    },
+    {
+      "case": "064-contract-review-q4",
+      "skill": "contract-review",
+      "query_sha256": "a56cb6a4c658e279a250d8b9a72566b92127ceaa3e2d3d1b82bce6ff20af84fc",
+      "verdict": "fired",
+      "cost_usd": 0.11991399999999999,
+      "invoked": [
+        "contract-review"
+      ],
+      "id": "q4",
+      "skill_sha256": "60ef3dcba6c24a9836384139adf1aec90bafb46c9e253fe95d696993041826e5"
+    },
+    {
+      "case": "065-frontend-render-security-q4",
+      "skill": "frontend-render-security",
+      "query_sha256": "ffeccbd1d0208293cf769d9aecdc8d9fb140fc793bddefe428316f1db1f5cf94",
+      "verdict": "fired",
+      "cost_usd": 0.14135019999999998,
+      "invoked": [
+        "frontend-render-security"
+      ],
+      "id": "q4",
+      "skill_sha256": "decf43ba3373ba114e00e7deb65d56d7939a5e84267c8866100481ac34a59e72"
+    },
+    {
+      "case": "066-voice-and-tone-design-q3",
+      "skill": "voice-and-tone-design",
+      "query_sha256": "4f25f4a9725bba382c4d1f165c082ad6cb8977ac28e7fbb93f527ff70503301d",
+      "verdict": "fired",
+      "cost_usd": 0.1399986,
+      "invoked": [
+        "voice-and-tone-design"
+      ],
+      "id": "q3",
+      "skill_sha256": "633e84af4407eef0ade14e7c108891d11ee6f8b625e22a451de7271be84558a8"
+    },
+    {
+      "case": "067-dependency-upgrade-q2",
+      "skill": "dependency-upgrade",
+      "query_sha256": "a65abcd1fe88d57848c199e2377abadf079d09cbffead1e3d62763ade3f0321a",
+      "verdict": "fired",
+      "cost_usd": 0.1781544,
+      "invoked": [
+        "dependency-upgrade"
+      ],
+      "id": "q2",
+      "skill_sha256": "8d44c96c58980031b1782659a456e87a68961b4e4cab29a651cbb688a3eb721a"
+    },
+    {
+      "case": "068-skill-writing-q1",
+      "skill": "skill-writing",
+      "query_sha256": "b5b12e22589f21f4684ea6cdc62d7317c3b9ef52d717c64132f532f8adb38e8c",
+      "verdict": "fired",
+      "cost_usd": 0.18947779999999997,
+      "invoked": [
+        "skill-writing"
+      ],
+      "id": "q1",
+      "skill_sha256": "1f38f86905c32a66513a5fc41dd6a117953024777adebb548a20dc7717d38d70"
+    },
+    {
+      "case": "069-test-case-discovery-q8",
+      "skill": "test-case-discovery",
+      "query_sha256": "69e0150880bc466b65cb744249bc456c8d6107e8eeaf73dbf2086fafadbeeed6",
+      "verdict": "not-fired",
+      "cost_usd": 0.1002442,
+      "invoked": [],
+      "id": "q8",
+      "skill_sha256": "bcdb10196099cec6d609dc06afccad8a8b1ce189d3555c96fa022106ac8eb1f1"
+    },
+    {
+      "case": "070-form-handler-fh-e3",
+      "skill": "form-handler",
+      "query_sha256": "ff906a1d3f80e167491c096fbc272fe399e454e882de9702d1a27b0d4cbf25a1",
+      "verdict": "fired",
+      "cost_usd": 0.1212276,
+      "invoked": [
+        "form-handler"
+      ],
+      "id": "fh-e3",
+      "skill_sha256": "1e2d95a5ccec2631fb76f1afbebd74ddca6fc00bf3ef80141d4ddc3618e8f16e"
+    },
+    {
+      "case": "071-security-q8",
+      "skill": "security",
+      "query_sha256": "5e6f1ea30da2ec1862fa2c4dd22cf294d10fda7576c6f9b33c6055003384bae7",
+      "verdict": "not-fired",
+      "cost_usd": 0.09675879999999999,
+      "invoked": [],
+      "id": "q8",
+      "skill_sha256": "9740e94a318944d4c071813d49e27a4f276351005cf6bfc11ac72e71a579d38a"
+    },
+    {
+      "case": "072-po-discovery-q2",
+      "skill": "po-discovery",
+      "query_sha256": "22a5e8d55abee5cf7091d76e205269a3c415c51a0caf6fb7126d035fed976f7b",
+      "verdict": "not-fired",
+      "cost_usd": 0.07937999999999999,
+      "invoked": [],
+      "id": "q2",
+      "skill_sha256": "87ea195a4e0cb4148a68a5f44ef0ae4a533ff107cd09f9faa718faf127fe2a49"
+    },
+    {
+      "case": "073-playwright-testing-q3",
+      "skill": "playwright-testing",
+      "query_sha256": "31d3288bf2376c59000eafd03d3566556165aba59ac42f7ec8609f807316aafa",
+      "verdict": "not-fired",
+      "cost_usd": 0.09851159999999999,
+      "invoked": [],
+      "id": "q3",
+      "skill_sha256": "2690f6572cab0fb84b515babb5a4aed65a418edbc9b3772a2a9066ed4f1b9025"
+    },
+    {
+      "case": "074-receiving-code-review-q1",
+      "skill": "receiving-code-review",
+      "query_sha256": "2dfef55a1c829af157da25cf64447311f70b76f31cfc5affd94267ab0baa3a03",
+      "verdict": "fired",
+      "cost_usd": 0.1328144,
+      "invoked": [
+        "receiving-code-review"
+      ],
+      "id": "q1",
+      "skill_sha256": "f6d2936022fbc06bee19a7214db775cc295a30103c9391aeb7dacbdd65ee940d"
+    },
+    {
+      "case": "075-api-testing-q10",
+      "skill": "api-testing",
+      "query_sha256": "8aac507625672ef69d22010b87adeffaecb27f491391729edb3afb3e0705f053",
+      "verdict": "not-fired",
+      "cost_usd": 0.09266880000000001,
+      "invoked": [],
+      "id": "q10",
+      "skill_sha256": "21456e909ee1628b429c0d95652431d26edcc2f49695cf5017669f98e09888b5"
+    },
+    {
+      "case": "076-persona-improvement-q3",
+      "skill": "persona-improvement",
+      "query_sha256": "29bd911275dc2427131b699d62fa3960ebb860d94aac2ec44a4872b621ea28b3",
+      "verdict": "fired",
+      "cost_usd": 0.12220920000000002,
+      "invoked": [
+        "persona-improvement"
+      ],
+      "id": "q3",
+      "skill_sha256": "a18740dcbf07e3f0ca58dcdb7d090f5a1c5b880fe814952afd1d793aaa7cdcc9"
+    },
+    {
+      "case": "077-architecture-review-lens-q2",
+      "skill": "architecture-review-lens",
+      "query_sha256": "e2065b1a1cd4eae9e586f4be0d4e120b597a0093886455a50232b84cf07fbc2f",
+      "verdict": "fired",
+      "cost_usd": 0.10485320000000001,
+      "invoked": [
+        "architecture-review-lens"
+      ],
+      "id": "q2",
+      "skill_sha256": "0b6fb12c1704c0981836798abb4ebc38221274c31074f7211a5a9bbcfb4340c6"
+    },
+    {
+      "case": "078-pdf-tools-q3",
+      "skill": "pdf-tools",
+      "query_sha256": "4ed47b271b6ed2022ab44cee7b7b05356a43b3bfcd2783abb22d311858ab096c",
+      "verdict": "fired",
+      "cost_usd": 0.1114622,
+      "invoked": [
+        "pdf-tools"
+      ],
+      "id": "q3",
+      "skill_sha256": "0ef687b0da05bfee33b8692555e61938316cfc205b83a5c4927e8f9172c615c0"
+    },
+    {
+      "case": "079-prediction-pool-optimizer-q3",
+      "skill": "prediction-pool-optimizer",
+      "query_sha256": "a6729f5368c769c95ca424424ca63376b54b42c637285bdfcc6c2aa306716d71",
+      "verdict": "fired",
+      "cost_usd": 0.1524442,
+      "invoked": [
+        "prediction-pool-optimizer"
+      ],
+      "id": "q3",
+      "skill_sha256": "59121dd22207c14ba70448925e3e88ec502a26105748781383fcb21f36a84436"
+    },
+    {
+      "case": "080-evaluate-llm-feature-q5",
+      "skill": "evaluate-llm-feature",
+      "query_sha256": "6007c8eb16bd7370892754b31ce0b3c9bcb2aee21b825beb4a907f8e7ecfffbb",
+      "verdict": "fired",
+      "cost_usd": 0.131081,
+      "invoked": [
+        "evaluate-llm-feature"
+      ],
+      "id": "q5",
+      "skill_sha256": "5978520572aa21dd9aa55f45ea3aac36d8aac1980beef3a0ae1842aaa21ad1ef"
+    },
+    {
+      "case": "081-reasoning-orchestrator-q3",
+      "skill": "reasoning-orchestrator",
+      "query_sha256": "72ba6a798b595132aa09483016c74863f789b3addf09d072474665866e98a7bd",
+      "verdict": "not-fired",
+      "cost_usd": 0.0944078,
+      "invoked": [],
+      "id": "q3",
+      "skill_sha256": "f1960fd309a789a216edec429dbcce3c89f921b941d7619a2f8de59cc8f74e6e"
+    },
+    {
+      "case": "082-launch-readiness-lr-e1",
+      "skill": "launch-readiness",
+      "query_sha256": "c1df25854d686c8c220300827dd53f00ebb4a55b0f488faf1290b15de9fc0a46",
+      "verdict": "fired",
+      "cost_usd": 0.1354758,
+      "invoked": [
+        "launch-readiness"
+      ],
+      "id": "lr-e1",
+      "skill_sha256": "0f79de6acc14362db8bd1b82ccaf764aebcc2749444c9605e779684d702885b1"
+    },
+    {
+      "case": "083-code-review-q3",
+      "skill": "code-review",
+      "query_sha256": "0f4cfc9a8852bccb39d9b091e1b8c82a7dc594c89d12dc7aff67ac097a92d404",
+      "verdict": "fired",
+      "cost_usd": 0.1760252,
+      "invoked": [
+        "code-review"
+      ],
+      "id": "q3",
+      "skill_sha256": "2a618296e458098233a265b8ce68876ee657e38559f9fa222f3db4f05aec15c7"
+    },
+    {
+      "case": "084-gated-reach-q4",
+      "skill": "gated-reach",
+      "query_sha256": "1ecaadd71f20dac54793485b27ec5837fb9739b4fb9fd1326a0ace3a8a8ed1b5",
+      "verdict": "not-fired",
+      "cost_usd": 0.073752,
+      "invoked": [],
+      "id": "q4",
+      "skill_sha256": "829f474e67c96d5434a7b5189467727ee8028f0b40c2f356b221f846e00fb564"
+    },
+    {
+      "case": "085-judge-bug-hunter-jbh-e5",
+      "skill": "judge-bug-hunter",
+      "query_sha256": "500e7a7042c2fda890e1f3c65527fc190dee02a5529312d8237ef2363c3699d2",
+      "verdict": "fired",
+      "cost_usd": 0.1334912,
+      "invoked": [
+        "judge-bug-hunter"
+      ],
+      "id": "jbh-e5",
+      "skill_sha256": "32cf2ba0a4fa1cef688faa8db751a373d6f463f0ace86b61c5f1061d090c9bbb"
+    },
+    {
+      "case": "086-svg-authoring-q7",
+      "skill": "svg-authoring",
+      "query_sha256": "57e4da1443ea304bf933ce6608fdbd0cb0f2266a39ec61abcd0b9cea684fb85c",
+      "verdict": "fired",
+      "cost_usd": 0.6712266,
+      "invoked": [
+        "svg-authoring"
+      ],
+      "id": "q7",
+      "skill_sha256": "17d2c600cb75d4329b1ecf66adc4abf41460755ed5c6ade6155f511b0697f354"
+    },
+    {
+      "case": "087-blade-ui-bu-e2",
+      "skill": "blade-ui",
+      "query_sha256": "6b8a4d060cc785a13378051c3c7ca9b91f20efaf3d05f77f3b884324c6e859fb",
+      "verdict": "not-fired",
+      "cost_usd": 0.0977746,
+      "invoked": [],
+      "id": "bu-e2",
+      "skill_sha256": "2c095cd4f38c2d3c59c80964ffa4c0adc60d4156c5a0c499659fa9a19e55bebb"
+    },
+    {
+      "case": "088-incident-commander-q1",
+      "skill": "incident-commander",
+      "query_sha256": "f3011e1ecd025874f263501a64e0dcd60ebf7e65c79404e833ee13a8e541c65e",
+      "verdict": "fired",
+      "cost_usd": 0.1150682,
+      "invoked": [
+        "incident-commander"
+      ],
+      "id": "q1",
+      "skill_sha256": "8a5ba02dd21468871e0605dc1b0a37ee285cb1a2db00f717837ecde1e19edad0"
+    },
+    {
+      "case": "089-readme-writing-q2",
+      "skill": "readme-writing",
+      "query_sha256": "ae33b4513176685f28b80658bf134d140d7bc3cba36cb87a3102bf80c73e0c54",
+      "verdict": "fired",
+      "cost_usd": 0.1281118,
+      "invoked": [
+        "readme-writing"
+      ],
+      "id": "q2",
+      "skill_sha256": "b881cbf960064530750fc0a5c1656030fd4c116aa4ae892da03fc6439fca6339"
+    },
+    {
+      "case": "090-markitdown-q1",
+      "skill": "markitdown",
+      "query_sha256": "ea4b5591cacf5170c8bb2b2e59c0ad381b39b4b7908bdadef3120e64e05d2bd9",
+      "verdict": "not-fired",
+      "cost_usd": 0.08069239999999998,
+      "invoked": [],
+      "id": "q1",
+      "skill_sha256": "d29040290a126ca3c793dcb27c6aa2a34916dfc1153a03ee56dc22a72f6b6dd3"
+    },
+    {
+      "case": "091-prompt-engineering-image-q2",
+      "skill": "prompt-engineering-image",
+      "query_sha256": "fafc9cfaef4485fd2ebbf12262d27a51594c178efd4d6a9af6fcfb3dfa63f5f6",
+      "verdict": "fired",
+      "cost_usd": 0.1185864,
+      "invoked": [
+        "prompt-engineering-image"
+      ],
+      "id": "q2",
+      "skill_sha256": "a94c9c320769c8d273cf2862e32bfdac453d8792ead38548c7ac173215f11743"
+    },
+    {
+      "case": "092-mcp-builder-q1",
+      "skill": "mcp-builder",
+      "query_sha256": "b9493280fdf75d660830bec693cacb5471941c1c2a342f964fe06eba9ac44fcc",
+      "verdict": "fired",
+      "cost_usd": 0.1242646,
+      "invoked": [
+        "mcp-builder"
+      ],
+      "id": "q1",
+      "skill_sha256": "c4d06946fd337f23b63b7bb6321baead6d5caeeebc49b3498aa4852c8e9b1bc1"
+    },
+    {
+      "case": "093-spreadsheet-authoring-q2",
+      "skill": "spreadsheet-authoring",
+      "query_sha256": "0eea6cca1cd7c74de3bafab5f725ddebb0a3a786dd3564f25727aee23eaed8bd",
+      "verdict": "fired",
+      "cost_usd": 0.1128632,
+      "invoked": [
+        "spreadsheet-authoring"
+      ],
+      "id": "q2",
+      "skill_sha256": "d6082fcbcc09ef1b85f5a82d90a6bb9470538bb006a85345964d7b0d1760f763"
+    },
+    {
+      "case": "094-screenshot-hygiene-q1",
+      "skill": "screenshot-hygiene",
+      "query_sha256": "0f9638e9db08df3333f02739670c72fec81afa965fc7fc01adadd71e80538189",
+      "verdict": "fired",
+      "cost_usd": 0.1306328,
+      "invoked": [
+        "screenshot-hygiene"
+      ],
+      "id": "q1",
+      "skill_sha256": "8bc9c0ab38ad2a756e6463b3f2046b434f160ca6264da8bc000700ff46603202"
+    },
+    {
+      "case": "095-subagent-orchestration-q5",
+      "skill": "subagent-orchestration",
+      "query_sha256": "50058f6d6445e47230a987c330c438e10fa0959fa92c93cc15525cc07e37f138",
+      "verdict": "not-fired",
+      "cost_usd": 0.0879592,
+      "invoked": [],
+      "id": "q5",
+      "skill_sha256": "7b1b98bede7319a345d262ffea8125b6a105fcfd318d1ee799238db70a548594"
+    },
+    {
+      "case": "096-motion-choreographer-q4",
+      "skill": "motion-choreographer",
+      "query_sha256": "9a902779ef83fad1ed343d9c2840ace5e67f95588529382845eda7025d19686d",
+      "verdict": "fired",
+      "cost_usd": 0.1309204,
+      "invoked": [
+        "motion-choreographer"
+      ],
+      "id": "q4",
+      "skill_sha256": "d35837e5598ab3c95589525ea24e7f5472de842a45ca8ee3fd4a507010dae882"
+    },
+    {
+      "case": "097-adr-create-q2",
+      "skill": "adr-create",
+      "query_sha256": "e32a27ae3de12e41eafae13f7396b90b0777da87889ff59368c92fe874063114",
+      "verdict": "fired",
+      "cost_usd": 0.1561076,
+      "invoked": [
+        "adr-create"
+      ],
+      "id": "q2",
+      "skill_sha256": "c862d2d10a31fbcafb1b2142d284937f39f4fc9e941d67bfd3f016a6a5102cad"
+    },
+    {
+      "case": "098-adversarial-review-q1",
+      "skill": "adversarial-review",
+      "query_sha256": "9e00d7309ed073727d96855e2b6c2fd6e3a9d68fe23588d3c84afb655740bf98",
+      "verdict": "fired",
+      "cost_usd": 0.1140652,
+      "invoked": [
+        "adversarial-review"
+      ],
+      "id": "q1",
+      "skill_sha256": "99f8332c43aa43d2cfa76662fbdace6eadfc1463b15dd7a780fd658eb5f1f93a"
+    },
+    {
+      "case": "099-judge-artifact-completeness-q2",
+      "skill": "judge-artifact-completeness",
+      "query_sha256": "dfc8cdd9b520d520b4cbe45077189c9aa07c6abe93f39a09a88e590947bf7e61",
+      "verdict": "not-fired",
+      "cost_usd": 0.08734360000000001,
+      "invoked": [],
+      "id": "q2",
+      "skill_sha256": "72f1dbbe065d8b8515014a560a5ac645b73a75048e5e078877a52c71bf5bc322"
+    },
+    {
+      "case": "100-server-hardening-q5",
+      "skill": "server-hardening",
+      "query_sha256": "9460bcf9674c1640595d8a3cad41405df16c9041ee353161c79db64d18ed6e1b",
+      "verdict": "fired",
+      "cost_usd": 0.13920320000000003,
+      "invoked": [
+        "server-hardening"
+      ],
+      "id": "q5",
+      "skill_sha256": "a17b1ca685c5f4f3d672259b75bdc8136a49155c0094b6e36876349e26a66395"
+    },
+    {
+      "case": "101-competitive-moat-analysis-q2",
+      "skill": "competitive-moat-analysis",
+      "query_sha256": "a422148c8a4fbb66369eeb73986c2dec0a385052c7e35b63d304190472f3092f",
+      "verdict": "fired",
+      "cost_usd": 0.126164,
+      "invoked": [
+        "competitive-moat-analysis"
+      ],
+      "id": "q2",
+      "skill_sha256": "1d3b26424cece0e8cff7d7be1c9cb5c94f9f2dd7b9c9486956808c2ecd66ccfb"
+    },
+    {
+      "case": "102-security-audit-q5",
+      "skill": "security-audit",
+      "query_sha256": "1283957b8c6aea79c321bf38dfbeb6574cd00eb4b1b9aae6864fb5e750ca4d1f",
+      "verdict": "fired",
+      "cost_usd": 0.13760299999999998,
+      "invoked": [
+        "security-audit"
+      ],
+      "id": "q5",
+      "skill_sha256": "56aa17289c1d72d2c9fb4715f386817b58d10a8fa7299a7d54a702e56cb72d11"
+    },
+    {
+      "case": "103-design-system-capture-q3",
+      "skill": "design-system-capture",
+      "query_sha256": "01b4f82296f2d14e2955a6e1836a8ce30289672cde9295f6f74fd116956af73b",
+      "verdict": "fired",
+      "cost_usd": 0.15414640000000002,
+      "invoked": [
+        "design-system-capture"
+      ],
+      "id": "q3",
+      "skill_sha256": "e8e166a8cc8e971804df0bf745a8e6f36abf2d3fab351a3b3035fea14d4a50d9"
+    },
+    {
+      "case": "104-monorepo-workspace-q2",
+      "skill": "monorepo-workspace",
+      "query_sha256": "b9db35d907329c4dd2b6816537597611ceea69e90f0f5455c68463a1984f4b30",
+      "verdict": "fired",
+      "cost_usd": 0.1301128,
+      "invoked": [
+        "monorepo-workspace"
+      ],
+      "id": "q2",
+      "skill_sha256": "0fb30b5ccfc0366c9685dd81ef9f753eaba03f4243ad03c2da423a98dc524d1c"
+    },
+    {
+      "case": "105-jira-integration-q1",
+      "skill": "jira-integration",
+      "query_sha256": "0596d720226e702cb137afbd8c286b08741a7a95b5183b0f9c10ff1544eeed9a",
+      "verdict": "fired",
+      "cost_usd": 0.107276,
+      "invoked": [
+        "jira-integration"
+      ],
+      "id": "q1",
+      "skill_sha256": "43ad38bd67d18926a99e3f2c143e95a213345dbb043316add2e2676050d91c27"
+    },
+    {
+      "case": "106-laravel-migration-lm-e5",
+      "skill": "laravel-migration",
+      "query_sha256": "22d80d29772efba94e9ccc52816421358400bd0ac54cb9ff319be6f7f5b93a54",
+      "verdict": "not-fired",
+      "cost_usd": 0.1010916,
+      "invoked": [],
+      "id": "lm-e5",
+      "skill_sha256": "67fd8ae576ea12881d6e519e218e1c64583930677336eb562113311976b2c8bf"
+    },
+    {
+      "case": "107-judge-synthesis-q4",
+      "skill": "judge-synthesis",
+      "query_sha256": "0f62cb2bbf6862548d93e9eda7eff41403e3e01615786a6ce73fbda8d0a7af03",
+      "verdict": "fired",
+      "cost_usd": 0.1362788,
+      "invoked": [
+        "judge-synthesis"
+      ],
+      "id": "q4",
+      "skill_sha256": "75da825200e0430004c8e4f4d1db65b1a491bda8cf5f2c596e86cebcf502a4bf"
+    },
+    {
+      "case": "108-wireframe-q3",
+      "skill": "wireframe",
+      "query_sha256": "d8dd55807b05c9371d486178b7b13c9a701e1975d715693e12acaf4631576933",
+      "verdict": "fired",
+      "cost_usd": 0.11287080000000001,
+      "invoked": [
+        "wireframe"
+      ],
+      "id": "q3",
+      "skill_sha256": "d8f2301c42cbac5198508c3aec35876a4065b176ec695b71a103d7b6c32219d9"
+    },
+    {
+      "case": "109-project-analysis-hypothesis-driven-q1",
+      "skill": "project-analysis-hypothesis-driven",
+      "query_sha256": "2c4931576462adfa50cb8217136dab92f4bf0801333de0c021315ac64cc546a0",
+      "verdict": "fired",
+      "cost_usd": 0.12859299999999999,
+      "invoked": [
+        "project-analysis-hypothesis-driven"
+      ],
+      "id": "q1",
+      "skill_sha256": "d6d2a2b802c284c96ae93d7061361ac7f6b0b536bcafe3ccafee12c9f4588cb3"
+    },
+    {
+      "case": "110-universal-project-analysis-q2",
+      "skill": "universal-project-analysis",
+      "query_sha256": "654e0f36b6ad39fc10c20c48dd9e1ebd1b57aac4d8e27dee0be3f0288e2e2078",
+      "verdict": "fired",
+      "cost_usd": 0.12248460000000001,
+      "invoked": [
+        "universal-project-analysis"
+      ],
+      "id": "q2",
+      "skill_sha256": "cb5febcb15ac1def76745286097bb06ec11ee64a18570e0fafc778021fbf247d"
+    },
+    {
+      "case": "111-js-library-packaging-q4",
+      "skill": "js-library-packaging",
+      "query_sha256": "c8b2ef5e3380da195ab66b3d837c5683fd38f0819ea25c4a879501d95fe67537",
+      "verdict": "fired",
+      "cost_usd": 0.1268052,
+      "invoked": [
+        "js-library-packaging"
+      ],
+      "id": "q4",
+      "skill_sha256": "ecdb9ffcf512e27962db0fced432cf83fa9670cb8c579a5a685b706e4552ee6a"
+    },
+    {
+      "case": "112-alerting-doctrine-q2",
+      "skill": "alerting-doctrine",
+      "query_sha256": "da471ac0028dbdd30f2313b55ce99739857776fbdb7ab0b4dec95b072932daae",
+      "verdict": "fired",
+      "cost_usd": 0.13950159999999998,
+      "invoked": [
+        "alerting-doctrine"
+      ],
+      "id": "q2",
+      "skill_sha256": "5c88381330d5aa4c880e0ae476637a76e6b99aa76dd1f839ef8aba614210435d"
+    },
+    {
+      "case": "113-design-tokens-q5",
+      "skill": "design-tokens",
+      "query_sha256": "de42d54ece30ff0f003f59cccf81e3bf57c7b11c6000f8eaa2c247bd75140216",
+      "verdict": "fired",
+      "cost_usd": 0.1442234,
+      "invoked": [
+        "design-tokens"
+      ],
+      "id": "q5",
+      "skill_sha256": "842cd0444bb90118e5d1cfff3eb3ea580f1d61ae68c56cd37c9a063ab870fc29"
+    },
+    {
+      "case": "114-bug-analyzer-q2",
+      "skill": "bug-analyzer",
+      "query_sha256": "047afd43ecb9dc9835e38ea235e91748a2c43f7a788621729794bbecc2bfce72",
+      "verdict": "not-fired",
+      "cost_usd": 0.0866682,
+      "invoked": [],
+      "id": "q2",
+      "skill_sha256": "29329e0946e7343d5261eed0a04199f9b6415b77e8092d41554f22bfa1fa4e7f"
+    },
+    {
+      "case": "115-design-intelligence-q1",
+      "skill": "design-intelligence",
+      "query_sha256": "7303e806d46497aabc0c0dc0297b1930a1e8e2bf76a370f77f4a082a27f638e0",
+      "verdict": "fired",
+      "cost_usd": 0.24395499999999998,
+      "invoked": [
+        "design-intelligence"
+      ],
+      "id": "q1",
+      "skill_sha256": "4a6010ef90cafb07ec8cf07933be24fe5c43817ee855eff37d7e25b4324162e6"
+    },
+    {
+      "case": "116-workspace-link-q4",
+      "skill": "workspace-link",
+      "query_sha256": "368061f5b1410aa19d1da34dfcf19465a8bccf6f5dfb1b91e79b7d93c8bdf050",
+      "verdict": "not-fired",
+      "cost_usd": 0.092212,
+      "invoked": [],
+      "id": "q4",
+      "skill_sha256": "65f59e9c661bb9c7b94fd681b1e9f7efb9902545f97770c0fb065e050c667b02"
+    },
+    {
+      "case": "117-flux-fx-e4",
+      "skill": "flux",
+      "query_sha256": "a71186af98c950be8008c8d5cfd9739c839379ca64ced6dabec826956cc94a2e",
+      "verdict": "fired",
+      "cost_usd": 0.1421012,
+      "invoked": [
+        "flux"
+      ],
+      "id": "fx-e4",
+      "skill_sha256": "fe11fd7d0b0a43f509dc539a284ac35a63e756fce5e78565826e08505843f354"
+    },
+    {
+      "case": "118-agent-security-review-q3",
+      "skill": "agent-security-review",
+      "query_sha256": "940c8cd7b98d0584db78ab2546d82f049ba975497c85d9600bf4d7f8e0c09986",
+      "verdict": "fired",
+      "cost_usd": 0.1373306,
+      "invoked": [
+        "agent-security-review"
+      ],
+      "id": "q3",
+      "skill_sha256": "08737e0564ebb41987e74fab50e4901a92474a29b0b59f6a06a8d51726438f80"
+    },
+    {
+      "case": "119-upstream-contribute-uc-e2",
+      "skill": "upstream-contribute",
+      "query_sha256": "7d525adfbf942b4357279e1f50bcb62f10d0d51c8ddac16d268163528a8c8550",
+      "verdict": "fired",
+      "cost_usd": 0.157397,
+      "invoked": [
+        "upstream-contribute"
+      ],
+      "id": "uc-e2",
+      "skill_sha256": "c68c8814bfc3f5277e5704db67eb313fc6a3616b093d404e5098846801463c2d"
+    },
+    {
+      "case": "120-history-design-q2",
+      "skill": "history-design",
+      "query_sha256": "11aef2e69e292ad9b793befbab14afee2984a8d410e9ac4119631fda66d1178b",
+      "verdict": "fired",
+      "cost_usd": 0.12458599999999999,
+      "invoked": [
+        "history-design"
+      ],
+      "id": "q2",
+      "skill_sha256": "4eb65b971dd92f3ace23575a5bbd4508e5f7d80be76157a3b03fd64d6dfd264e"
+    },
+    {
+      "case": "121-verify-repair-loop-q2",
+      "skill": "verify-repair-loop",
+      "query_sha256": "7e8528a9365ad283fb9dd19c638b761b0a90fdf7ace44105997bab6bd1a82751",
+      "verdict": "fired",
+      "cost_usd": 0.1464438,
+      "invoked": [
+        "verify-repair-loop"
+      ],
+      "id": "q2",
+      "skill_sha256": "557b9481a88742eeb4c215514cdc80363e9f0a51c60059f349880d9ea401fcf7"
+    },
+    {
+      "case": "122-storybook-workshop-q4",
+      "skill": "storybook-workshop",
+      "query_sha256": "2a56252f7ce193246ddbb0c228f4586d195b6008ca49e5d3d4848fc08315174d",
+      "verdict": "fired",
+      "cost_usd": 0.1463568,
+      "invoked": [
+        "storybook-workshop"
+      ],
+      "id": "q4",
+      "skill_sha256": "6da50b7e80f5395929c66d3165639b6f4b9e1508c78343b418ebc8b2d86758da"
+    },
+    {
+      "case": "123-existing-ui-audit-q5",
+      "skill": "existing-ui-audit",
+      "query_sha256": "86f0001cef60f607fcecb925993e568d6a44a15e2fd28d5f13b8bf8a6f66022c",
+      "verdict": "not-fired",
+      "cost_usd": 0.09129720000000001,
+      "invoked": [],
+      "id": "q5",
+      "skill_sha256": "a15d71993d9c26557faab16cbf8c17013a3109775c790082cfb876709c760297"
+    },
+    {
+      "case": "124-ui-apply-generic-q3",
+      "skill": "ui-apply-generic",
+      "query_sha256": "3fa2211f7f54223a77d9f77aac72c59162d4396af620dba6dbc51808bb716bdf",
+      "verdict": "not-fired",
+      "cost_usd": 0.10133919999999999,
+      "invoked": [],
+      "id": "q3",
+      "skill_sha256": "8fe3107d892b977c0949316c1c0e08ba557304d9e96156ed25697da642c4fadb"
+    },
+    {
+      "case": "125-iconography-q1",
+      "skill": "iconography",
+      "query_sha256": "102c30fb4746d0f5eb02a811d316c2b4d5a7588c00f38d18455372ada2cbf6a7",
+      "verdict": "not-fired",
+      "cost_usd": 0.080264,
+      "invoked": [],
+      "id": "q1",
+      "skill_sha256": "f8b40c1e489689d1781a747d8bf21d6e2596a01a922817d8f9db26be08f47eef"
+    },
+    {
+      "case": "126-prompt-validator-q4",
+      "skill": "prompt-validator",
+      "query_sha256": "6fade773eb1915dbcbf3bd1b1b68dc08c60e59e4bb0e318febadcc9e3a3a3c5f",
+      "verdict": "fired",
+      "cost_usd": 0.1262108,
+      "invoked": [
+        "prompt-validator"
+      ],
+      "id": "q4",
+      "skill_sha256": "324200d06147912548778b32e1c72a9794d4c56594f7ce9d4372776ba8c94127"
+    },
+    {
+      "case": "127-security-maturity-assessment-q1",
+      "skill": "security-maturity-assessment",
+      "query_sha256": "fed11658f2aecb02bb606a239320e25ef86f68f3426a830f7f1bbb2ca6c755b2",
+      "verdict": "fired",
+      "cost_usd": 0.1256942,
+      "invoked": [
+        "security-maturity-assessment"
+      ],
+      "id": "q1",
+      "skill_sha256": "d16254bf7d3c4711ca26d540d1247e205eaee251fc33a9291568fa49d920745f"
+    },
+    {
+      "case": "128-command-routing-q2",
+      "skill": "command-routing",
+      "query_sha256": "bb9728817d1e74245a00f6c135628fd1d2f9486cd2adfeffd77d91a8bbf8f981",
+      "verdict": "fired",
+      "cost_usd": 0.1150726,
+      "invoked": [
+        "command-routing"
+      ],
+      "id": "q2",
+      "skill_sha256": "48b4197de634dd48750bd9ef734f6d675535b314e29bf651992981137e6d2483"
+    },
+    {
+      "case": "129-roadmap-writing-q3",
+      "skill": "roadmap-writing",
+      "query_sha256": "08b86d230853b68db2ca6a7aa8c40780e4dbb87648cd108f6271ed5b985a192f",
+      "verdict": "fired",
+      "cost_usd": 0.16843799999999998,
+      "invoked": [
+        "roadmap-writing"
+      ],
+      "id": "q3",
+      "skill_sha256": "10b5e347cfce67245ca30bca79b33db9a096c6fe62c991bf63cdea0316668487"
+    },
+    {
+      "case": "130-eloquent-q7",
+      "skill": "eloquent",
+      "query_sha256": "1936c8ee9b729ebbe4af6df33869234622ef8c689f40f59412aa3c9fce2cf2bc",
+      "verdict": "not-fired",
+      "cost_usd": 0.09971360000000001,
+      "invoked": [],
+      "id": "q7",
+      "skill_sha256": "dc7c8a6dbe409982d2d4a0b1258c490fa89231468718d8aa649b899bbae16fb7"
+    },
+    {
+      "case": "131-project-analysis-core-q1",
+      "skill": "project-analysis-core",
+      "query_sha256": "181aa5f3c1f6986f929931ac12127b823ee32262805c7051451011838119c894",
+      "verdict": "not-fired",
+      "cost_usd": 0.10929440000000001,
+      "invoked": [],
+      "id": "q1",
+      "skill_sha256": "0da621b0435546f429b4f6a5aebd20274616d40983f4704bbd0503bd9e5b8d09"
+    },
+    {
+      "case": "132-using-git-worktrees-q4",
+      "skill": "using-git-worktrees",
+      "query_sha256": "10d85b0f5023c8c0a714abb1dbf145f153bdaaa9e4603c60e473a03b6149ace0",
+      "verdict": "not-fired",
+      "cost_usd": 0.079484,
+      "invoked": [],
+      "id": "q4",
+      "skill_sha256": "0bea9f459e535cff88c54b88c9101607220e77c630232e8fe3f4c710c3291bd0"
+    },
+    {
+      "case": "133-api-design-q3",
+      "skill": "api-design",
+      "query_sha256": "ed19356c84b6afa11e2be1dd13171bf55e5e4ec810fed3043b7b075eaef7fa3a",
+      "verdict": "not-fired",
+      "cost_usd": 0.0879694,
+      "invoked": [],
+      "id": "q3",
+      "skill_sha256": "511c8158dd3ed63dec88d42e527d61f10c14a24140e570e7d3b38a20e4c2a338"
+    },
+    {
+      "case": "134-design-variations-q1",
+      "skill": "design-variations",
+      "query_sha256": "9fe464885937cbac0680263b72079958315c4ed4cf269a25d75ca41ea8e3ea21",
+      "verdict": "fired",
+      "cost_usd": 0.11055599999999999,
+      "invoked": [
+        "design-variations"
+      ],
+      "id": "q1",
+      "skill_sha256": "bc02b0f70f962f8a1518fb9c39f925d248f201aa4b7667c885009a2da7f9a363"
+    },
+    {
+      "case": "135-code-refactoring-q2",
+      "skill": "code-refactoring",
+      "query_sha256": "b0dee92803bb0bd4b36c70cc68edf3b5be3d5fb01439c195b01575abfda2f5c0",
+      "verdict": "fired",
+      "cost_usd": 0.1320072,
+      "invoked": [
+        "code-refactoring"
+      ],
+      "id": "q2",
+      "skill_sha256": "a4763d9e1992274879da1cd6e4b87b45e0510257418c50db6acc92edb35ee07e"
+    }
+  ],
+  "units": [
+    {
+      "unit": "accessibility-auditor",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "adr-create",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "adversarial-review",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "agent-security-review",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "agents-md-thin-root",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "ai-council",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "alerting-doctrine",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "analysis-autonomous-mode",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "api-design",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "api-endpoint",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "api-testing",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "architecture-review-lens",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "authz-review",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "blade-ui",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "brand",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "brand-identity",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "brand-to-tokens",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "bug-analyzer",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "canvas-design",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "code-intelligence",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "code-refactoring",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "code-review",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "command-routing",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "competitive-moat-analysis",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "competitive-positioning",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "composer-packages",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "condense-memory",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "content-funnel-design",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "contract-review",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "conventional-commits-writing",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "dashboard-design",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "database",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "decision-record",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "deep-reading-analyst",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "dependency-upgrade",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "description-assist",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "design-intelligence",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "design-review",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "design-system-capture",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "design-tokens",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "design-variations",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "dpa-review",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "eloquent",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "evaluate-llm-feature",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "existing-ui-audit",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "fe-design",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "feature-planning",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "flux",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "forensics-report",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "form-handler",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "frontend-render-security",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "gated-reach",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "git-workflow",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "gtm-launch",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "history-design",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "iconography",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "image-analyser",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "image-creator",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "image-generation",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "image-provider-routing",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "incident-commander",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "jira-integration",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "js-library-packaging",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "judge-artifact-completeness",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "judge-bug-hunter",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "judge-injection-defense",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "judge-spec-compliance",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "judge-synthesis",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "judge-test-coverage",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "laravel-migration",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "launch-readiness",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "legal-practice-profile",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "license-compliance-borrow-check",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "logo-generation",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "market-entry-analysis",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "markitdown",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "mcp-builder",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "merge-conflicts",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "messaging-architecture",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "monorepo-workspace",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "motion-choreographer",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "operational-readiness",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "overbuild-review-lens",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "pdf-tools",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "persona-improvement",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "php-coder",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "playbook-authoring",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "playwright-testing",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "po-discovery",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "positioning-strategy",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "prediction-pool-optimizer",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "project-analysis-core",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "project-analysis-hypothesis-driven",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "prompt-engineering-image",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "prompt-validator",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "quality-tools",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "react-native-setup",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "react-shadcn-ui",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "readme-writing",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "readme-writing-package",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "reasoning-orchestrator",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "receiving-code-review",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "repomix-packer",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "review-routing",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "roadmap-management",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "roadmap-writing",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "schema-review",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "screenshot-hygiene",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "security",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "security-audit",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "security-maturity-assessment",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "server-hardening",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "skill-improvement-pipeline",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "skill-reviewer",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "skill-writing",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "spreadsheet-authoring",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "storybook-workshop",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "subagent-orchestration",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "svg-authoring",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "tailwind-engineer",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "test-case-discovery",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "test-driven-development",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "test-performance",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "testing-anti-patterns",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "threat-modeling",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "type-design",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "ui-apply-generic",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "universal-project-analysis",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "upstream-contribute",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "using-git-worktrees",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "verify-repair-loop",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "voice-and-tone-design",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "wireframe",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "workspace-link",
+      "n": 1,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "worktree-lifecycle",
+      "n": 1,
+      "fired": 1,
+      "unknown": 0,
+      "recall": 1
+    }
+  ]
+}
