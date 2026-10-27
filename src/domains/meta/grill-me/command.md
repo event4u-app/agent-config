@@ -9,7 +9,7 @@ cluster: challenge-me
 type: orchestrator
 suggestion:
   eligible: true
-  trigger_description: "grill me, grill me on this, grill me on this plan, grill me through this, grill me on the idea, grill me until it's clear, grill me hard"
+  trigger_description: "grill me, grill me on this, grill me on this plan, grill me through this, grill me on the idea, grill me until it's clear, grill me hard, interview me, ask me follow-up questions, stell mir Rückfragen, interview mich, frag mich aus"
   trigger_context: "user has a fuzzy plan/idea/feature draft and wants it sharpened interactively rather than reconstructed in one shot"
 workspaces:
   - agent-config-maintainer

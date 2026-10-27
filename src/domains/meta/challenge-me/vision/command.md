@@ -154,17 +154,19 @@ writing the block, validate the question against the load-bearing test:
 not ask** — close the branch and move to the next.
 
 ````markdown
-**Question N · confidence ~XX%**
+**Question N**
 
 <one-sentence question, anchored to a specific decision>
 
 **Why it matters:** <one line — which AC, scope boundary, or hard
 constraint this unblocks>.
 
-1. **<recommended option>** — recommended because <one line>.
-2. <alternative option>
-3. <alternative option>
+1. <option>
+2. <option>
+3. <option>
 4. Skip / not relevant
+
+**Recommendation: <number> — <option>**, because <one line>.
 
 > Reply with a number, a free-form answer, or one of:
 > **`!pitch`** — emit pitch and hand back ·
@@ -177,7 +179,16 @@ constraint this unblocks>.
 
 - One question per turn — non-negotiable, per
   [`ask-when-uncertain`](../../rules/ask-when-uncertain.md) Iron Law.
-- The recommended option is always **option 1** and labelled **bold**.
+- The option block stays neutral; exactly one recommendation line sits
+  directly under it, per [`user-interaction`](../../rules/user-interaction.md)
+  Iron Law 1. No bold option, no inline "recommended" tag.
+- On a host whose ask is `native`, put the question through the host's picker
+  instead of this text block: one picker call per turn, the recommended option
+  first with a localized `(recommended)` / `(empfohlen)` marker on its label,
+  and its description saying what changes if it is chosen. The text block is
+  the fallback.
+- No self-rated confidence percentage in the question — the stop conditions
+  above decide when to stop.
 - 3–4 options total. More than 4 means the question is too broad — split it.
 - "Skip / not relevant" must always be present so the user can prune dead
   branches.

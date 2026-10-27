@@ -23,7 +23,7 @@ applies when `true`.
 
 ## When to run what — timing matters (`local_auto_run: true`)
 
-**Quality tools (PHPStan, Rector, ECS) run ONCE at the very end** — not after every edit.
+**Quality tools (type-checker / static analyser, auto-refactor, linter) run ONCE at the very end** — not after every edit.
 Do NOT run quality checks between tasks if you have more work to do.
 Only run the full quality pipeline when you are about to finish all work in the current conversation.
 
@@ -38,21 +38,14 @@ Only run the full quality pipeline when you are about to finish all work in the 
 
 1. All code changes are done
 2. Run tests — targeted first (`--filter`), full suite only if targeted passes
-3. Run quality pipeline (PHPStan → Rector → ECS → PHPStan)
+3. Run the quality pipeline (type-checker → auto-refactor dry-run → linter/formatter → type-checker); the exact commands per stack live in `quality-tools` and the project's task runner
 4. Fix any issues from step 2-3
 5. ONLY THEN claim completion or suggest commit/push/PR
 
 ## Minimum verification per task type
 
-| Task | Required evidence |
-|---|---|
-| Code change | Tests + PHPStan |
-| New feature | Tests + PHPStan + smoke test |
-| Bug fix | Regression test + full suite |
-| Refactoring | Full suite + PHPStan + Rector |
-| Config/migration | Relevant tests or command output |
-| API endpoint | curl/HTTP response output |
-| Documentation only | No verification needed |
+One table, kept in [`verify-completion-evidence`](../../../skills/verify-completion-evidence/SKILL.md#minimum-evidence-per-task-type):
+required evidence and oracle class per task type, code and non-code alike.
 
 **Never accept** as proof: "should work", "looks correct", "logic is sound".
 No captured output = not verified.

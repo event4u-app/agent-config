@@ -90,7 +90,6 @@
     "project-analysis-symfony",
     "project-analysis-zend-laminas",
     "project-docs",
-    "prompt-optimizer",
     "readme-reviewer",
     "recursive-verification",
     "refine-prompt",
@@ -121,7 +120,6 @@
     "traefik",
     "unit-economics-modeling",
     "validate-feature-fit",
-    "verify-completion-evidence",
     "video-director",
     "vision-articulation",
     "voc-extract"

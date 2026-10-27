@@ -39,7 +39,7 @@ packs:
    - *Educational* → few-shot examples + clear structure (template: **Few-Shot** or **RISEN**)
    - *Complex / multi-step* → chain-of-thought + systematic framing (template: **CoT** or **ReAct**)
    - *Image AI (Midjourney / SD / DALL·E)* → **Visual Descriptor** or **Reference-Image-Edit**
-   - Assign an AI role/expertise; layer context; add logical structure.
+   - Name the methods and instruments the task needs (a role label only alongside them); layer context; add logical structure.
    - Full template catalogue + when-to-pick rubric: [`docs/guidelines/prompt-templates.md`](../../../docs/guidelines/prompt-templates.md).
 4. **Deliver** — output the optimized prompt + a short "what changed" + (DETAIL only) techniques applied + one pro-tip.
 
@@ -91,15 +91,16 @@ Identify each slot in the rough prompt: intent · entities · output shape · co
 
 #### 3b. De-inflate before you sharpen
 
-Diagnose asks what is *missing*. The de-inflation pass asks what must **go** — because sharpening a premise the target model will confabulate around makes the output worse, not better. Strip exactly these three, and nothing else:
+Diagnose asks what is *missing*. The de-inflation pass asks what must **go** — because sharpening a premise the target model will confabulate around makes the output worse, not better. Strip exactly these four, and nothing else:
 
 | Pattern | What it looks like | What it costs |
 |---|---|---|
 | **Grandiose persona** | "You are the world's foremost / legendary / 10× expert in X" | Tokens without behaviour change — a superlative is not a constraint, and the model cannot act on it |
 | **Presupposed canon** | "Apply the 7 laws of X", "use the standard X framework" for a body of knowledge that may not exist | The model invents a canon to satisfy the presupposition, and the confabulation reads as authority |
 | **Scope stuffing** | One prompt demanding analysis *and* strategy *and* copy *and* a checklist | An answer to a question nobody asked, at the cost of the one that was |
+| **Bare role** | "You are a senior X" with no method, source or check attached | Vocabulary changes, method does not |
 
-Strip only these three. Anything else the author wrote is a requirement, not inflation — see § Gotcha for the failure mode on both sides. A stripped persona is replaced by the concrete role the task actually needs ("a senior X" is a role; "the world's foremost X" is decoration), and a presupposed canon becomes a question in DETAIL mode or a stated assumption in BASIC. **This is own analysis, not adopted material** — the three patterns are named here rather than cited from an external collection.
+Strip only these four. Anything else the author wrote is a requirement, not inflation — see § Gotcha for the failure mode on both sides. A stripped persona or role is replaced by the methods and the check it stood in for ("profile it, compare p95" over "you are a senior performance engineer"). A presupposed canon becomes a question in DETAIL mode or a stated assumption in BASIC. **This is own analysis, not adopted material** — the four patterns are named here rather than cited from an external collection.
 
 ### 4a. BASIC path
 
@@ -111,7 +112,7 @@ Ask **one** question for the highest-leverage missing slot. Order: target AI →
 
 ### 5. Develop
 
-Pick techniques per request type (see § 4-D step 3). Assign role ("You are a senior X…"), layer context, add structure (numbered steps, bullet headers, output format spec, length cap), and inject specificity (concrete numbers, named formats, explicit success criteria — replace "good", "professional", "high-quality" with measurable criteria).
+Pick techniques per request type (see § 4-D step 3). Name the methods and instruments the task needs — a role label only alongside them, never instead of them — layer context, add structure (numbered steps, bullet headers, output format spec, length cap), and inject specificity (concrete numbers, named formats, explicit success criteria — replace "good", "professional", "high-quality" with measurable criteria).
 
 ### 6. Deliver
 
@@ -121,7 +122,7 @@ Format per § Output format. Do **not** execute the optimized prompt yourself un
 
 1. **Optimized prompt** — fenced code block, ready to copy. Top line names the target AI if known.
 2. **What changed** — 3-5 bullets, each ≤ 12 words.
-3. **Techniques applied** *(DETAIL only)* — bullet list naming the techniques (e.g. "few-shot", "chain-of-thought", "role assignment").
+3. **Techniques applied** *(DETAIL only)* — bullet list naming the techniques (e.g. "few-shot", "chain-of-thought", "method naming").
 4. **Pro tip** — one sentence, platform-specific when target AI is known (e.g. "Claude responds well to XML tags"; "ChatGPT honors length caps in the system message").
 
 ## Gotcha
@@ -132,10 +133,11 @@ Format per § Output format. Do **not** execute the optimized prompt yourself un
 - The model tends to over-engineer BASIC mode — for a one-line ask, the optimized prompt should still be short. No 800-word system prompts for "help with my resume".
 - Don't drift into German welcome text. The optimized prompt mirrors the user's source-language preference; the skill's own scaffolding stays English (per `language-and-tone` for `.md`).
 - The model tends to **mix languages** in the optimized prompt when the user wrote in German but named an English-speaking target audience — pick one language for the whole optimized prompt body (default: source-language of the rough prompt unless the user explicitly named the target audience's language).
-- The model tends to **polish a grandiose persona instead of removing it** — "you are the world's foremost expert in X" gets tightened into a better-written superlative. It is decoration either way: replace it with the concrete role the task needs, or drop it.
+- The model tends to **polish a grandiose persona instead of removing it** — "you are the world's foremost expert in X" gets tightened into a better-written superlative. It is decoration either way: replace it with the methods the task needs, or drop it.
 - The model tends to **preserve a presupposed canon while sharpening around it** — asked to improve "apply the 7 laws of X", it produces a cleaner prompt that still presupposes seven laws, and the target model then invents them. Turn the presupposition into a DETAIL question or a stated BASIC assumption; never carry it through polished.
 - The model tends to **keep every demand in a scope-stuffed prompt** because each one came from the author — four deliverables in one prompt produce four shallow answers. Name the primary deliverable, and surface the rest as a numbered option rather than silently answering all of them.
-- The model tends to **over-apply de-inflation once it has the concept** — stripping a constraint the author meant, because it read as verbose. Exactly three patterns are strippable (§ 3b); everything else the author wrote is a requirement. Removing a requirement is the worse failure of the two, and it is silent.
+- The model tends to **over-apply de-inflation once it has the concept** — stripping a constraint the author meant, because it read as verbose. Exactly four patterns are strippable (§ 3b); everything else the author wrote is a requirement. Removing a requirement is the worse failure of the two, and it is silent.
+- The model tends to **treat a role as a method** — name the instrument (profiler, benchmark, `EXPLAIN ANALYZE`) instead.
 - The model tends to inherit upstream dogma that "only 5 techniques are safe" (few-shot, role, structured-output, constraint-based, chain-of-thought). That claim travels with an external prompt-collection and is **rejected here** — CO-STAR, RISEN, CRISPE, ReAct, and the image-AI templates land in [`docs/guidelines/prompt-templates.md`](../../../docs/guidelines/prompt-templates.md) and are first-class. Pick by request type, not by upstream whitelist.
 
 ## Do NOT

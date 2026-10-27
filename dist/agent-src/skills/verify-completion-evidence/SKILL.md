@@ -115,17 +115,26 @@ Do not run the full quality pipeline between intermediate edits — it burns tim
 
 ## Minimum evidence per task type
 
-| Task type | Required evidence |
-|---|---|
-| Code change (logic) | Targeted tests + project's type-checker on changed scope |
-| New feature | Tests (new + suite) + type-checker + smoke check (curl / UI / integration probe) |
-| Bug fix | Regression test (RED → GREEN) + full suite |
-| Refactoring | Full suite + type-checker + auto-refactor dry-run if available |
-| Config / env change | Relevant command or service output (not just file diff) |
-| Migration | Migration run output + rollback dry-run + tests |
-| API endpoint | HTTP response body + status + content-type |
-| Frontend component | Rendered state (Playwright or manual) + unit tests |
-| Documentation only | No verification needed |
+The single authority for this table; `verification-mechanics` points here.
+The oracle class names what judges the result: a **tool**, the **data**
+itself, an **external artifact**, **another model**, or the model's own
+reading (**self**). Self is never enough on its own.
+
+| Task type | Required evidence | Oracle class |
+|---|---|---|
+| Code change (logic) | Targeted tests + the project's type-checker on the changed scope | tool |
+| New feature | Tests (new + suite) + type-checker + smoke check (curl / UI / integration probe) | tool |
+| Bug fix | Regression test (RED → GREEN) + full suite | tool |
+| Refactoring | Full suite + type-checker + auto-refactor dry-run if available | tool |
+| Config / env change | Relevant command or service output (not just the file diff) | tool |
+| Migration | Migration run output + rollback dry-run + tests | tool |
+| API endpoint | HTTP response body + status + content-type | tool |
+| Frontend component | Rendered state (Playwright or manual) + unit tests | tool |
+| Documentation | Links resolve and embedded commands run (the reference and claims checks) | tool |
+| Analysis or report with numbers | A script recomputes every figure from the raw input; each figure traces to a source row | data |
+| Research or summary | Each claim maps to a fetched primary source, or is marked secondary | external artifact |
+| Rendered artifact (page, SVG, deck) | Rendered and inspected; overflow and alignment checked | tool |
+| Media | Probe output (duration, streams) + key frames inspected | tool |
 
 **Never accept** as proof: "should work", "looks correct", "the logic
 is sound", "compiles" (unless compilation itself is the contract).
