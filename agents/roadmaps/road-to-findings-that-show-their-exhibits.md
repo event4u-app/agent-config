@@ -86,7 +86,7 @@ gated-surface list. Those live in `later/road-to-a-court-at-the-stops`.
 
 ## Phase 3 — The precision the ledgers already hold
 
-- [ ] **3.1 Build `report_finding_precision`.** Read-only over
+- [x] **3.1 Build `report_finding_precision`.** Read-only over
       `agents/evidence/release-findings/*.json`; per release and in total it
       prints `fixed`, `false_positive`, `accepted_risk`, `still_open`,
       `undisposed`, precision = fixed / (fixed + false_positive), and the

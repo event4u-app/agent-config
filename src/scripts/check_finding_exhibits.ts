@@ -18,8 +18,8 @@
  * It INFORMS, it never filters. Nothing here writes a disposition or drops a
  * finding: a zero-spend pilot found that a naive presence check holds for more
  * false positives than real defects (real defects often name a missing thing),
- * so filtering on it would discard real defects first. Whether admissibility
- * may ever filter is a measurement owned by `later/road-to-a-court-at-the-stops`.
+ * so filtering on it would discard real defects first. Admissibility may filter
+ * only once a measured precision lift says it should.
  *
  * Usage:
  *   ./scripts-run src/scripts/check_finding_exhibits --findings <file.json> [--cwd <repo>] [--json]
