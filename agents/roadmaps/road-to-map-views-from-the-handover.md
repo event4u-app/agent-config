@@ -181,7 +181,7 @@ empty-with-reason form for each missing field, never a guessed value.
 - [x] **3.3 Autoload-read flag.** The payload states whether the Composer
       autoload maps were read, so status "unk · Autoload" is derivable.
       verify: `npx vitest run tests/scripts/code_graph_map_area_payloads.test.ts -t autoload --reporter=verbose` -> /✓.*autoload/
-- [ ] **3.4 Lens bar and Filter aside.** Six tabs (Übersicht · Pakete ·
+- [x] **3.4 Lens bar and Filter aside.** Six tabs (Übersicht · Pakete ·
       Abhängigkeiten · Runtimes · Befunde · N · Branches); the Filter aside with
       search, package-manager checkbox rows with `.pm` badge, count and lockfile
       caption, the unread-ecosystem chips, workspace checkboxes (fixtures off by
@@ -190,31 +190,31 @@ empty-with-reason form for each missing field, never a guessed value.
       "Nur zeigen" switches, "Filter zurücksetzen". Every count equals the
       payload's.
       verify: `npx vitest run tests/scripts/code_graph_map_systems_page.test.ts -t filters --reporter=verbose` -> /✓.*filters/
-- [ ] **3.5 Übersicht lens.** Seven KPI tiles that each apply a filter, PM cards
+- [x] **3.5 Übersicht lens.** Seven KPI tiles that each apply a filter, PM cards
       with stacked dev/direct/locked bars, Workspaces × Paketmanager grid,
       Frameworks tiles, Befunde nach Art rows.
       verify: `npx vitest run tests/scripts/code_graph_map_systems_page.test.ts -t overview --reporter=verbose` -> /✓.*overview/
-- [ ] **3.6 Pakete list on the shared table.** Sort radiogroup (Befund zuerst ·
+- [x] **3.6 Pakete list on the shared table.** Sort radiogroup (Befund zuerst ·
       benötigt · Nutzung · Tiefe · Name), "Nach Name gruppieren" switch, the
       9-column grid, paging "Weitere 60 zeigen", columns 4–8 hidden ≤700px;
       built on one table component reused by Interfaces, Delivery and Befunde
       (sibling G.1); every payload row reachable by scroll and filter.
       verify: `npx vitest run tests/scripts/code_graph_map_systems_page.test.ts -t "every row reachable" --reporter=verbose` -> /✓.*every row reachable/
-- [ ] **3.7 Abhängigkeiten lens.** Head, KPI row, Nachbarschaft SVG (left
+- [x] **3.7 Abhängigkeiten lens.** Head, KPI row, Nachbarschaft SVG (left
       required-by, right requires, clickable), "Warum installiert? · N Wege" with
       every chain and clickable hops, Benötigt von · N / Benötigt selbst · N with
       direct and transitive counts, functions per file with call counts, "Nach
       Code-Area" chips, "Nutzung ohne Import", and the "Was die Map hier nicht
       weiß" block.
       verify: `npx vitest run tests/scripts/code_graph_map_systems_page.test.ts -t dependencies --reporter=verbose` -> /✓.*dependencies/
-- [ ] **3.8 Runtimes, Befunde, Branches lenses and Detail aside.** Runtimes as
+- [x] **3.8 Runtimes, Befunde, Branches lenses and Detail aside.** Runtimes as
       one card per runtime grouped by source kind with disagreement; Befunde as
       collapsible groups by rule with "Vorschlag, nie angewendet"; Branches with
       the Map-Art radiogroup (committed: explanation and commands; local: chain
       card and 7-column table); Detail aside with kv rows, finding cards, "Auf
       Branches" chips and the "index only" witness chip.
       verify: `npx vitest run tests/scripts/code_graph_map_systems_page.test.ts -t "lenses and detail" --reporter=verbose` -> /✓.*lenses and detail/
-- [ ] **3.9 Crumbs and back.** Every filter, sort and selection pushes a
+- [x] **3.9 Crumbs and back.** Every filter, sort and selection pushes a
       history state; `←` restores the previous one exactly; a sensitivity probe
       that skips the push turns the spec red.
       verify: `npx vitest run tests/scripts/code_graph_map_systems_page.test.ts -t crumbs --reporter=verbose` -> /✓.*crumbs/
