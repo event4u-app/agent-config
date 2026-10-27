@@ -13,7 +13,8 @@
  * `<prev-tag>..HEAD` into `CHANGELOG.md`. A sloppy subject becomes a
  * sloppy public changelog line. This lint is the CI-enforced gate.
  *
- * Rules (range `<base>..<head>`):
+ * Rules (range `<base>..<head>`, plus the PR title given with `--title`):
+ *   - Subject must start with a Conventional-Commits prefix.
  *   - Subject body after the Conventional-Commits prefix must be ≥ 10 chars.
  *   - Subject must not contain blocklist words as whole tokens.
  *
@@ -42,9 +43,10 @@ const BLOCKLIST: ReadonlySet<string> = new Set([
 ]);
 const MIN_SUBJECT_LEN = 10;
 
-// Conventional Commits prefix — `type(scope)!?: message`.
+// Conventional Commits prefix — `type(scope)!?: message`. `release` is this
+// repo's own type: `src/scripts/release.ts` commits and titles `release: X.Y.Z`.
 const CONVENTIONAL_PREFIX =
-    /^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?:\s+/i;
+    /^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert|release)(\([^)]+\))?!?:\s+/i;
 
 // Skip lines — GitHub-generated merge subjects and revert commits.
 const SKIP_PREFIXES = [
@@ -114,6 +116,9 @@ function check_subject(subject: string): string[] {
         return [];
     }
     const issues: string[] = [];
+    if (!CONVENTIONAL_PREFIX.test(subject)) {
+        issues.push(`Conventional-Commits prefix missing (type(scope): …): ${_pyReprStr(subject)}`);
+    }
     const body = subject.replace(CONVENTIONAL_PREFIX, '');
     if (body.length < MIN_SUBJECT_LEN) {
         issues.push(
@@ -139,12 +144,14 @@ interface ParsedArgs {
     base: string;
     head: string;
     quiet: boolean;
+    title: string | null;
 }
 
 function parse_args(argv: readonly string[]): ParsedArgs {
     let base = 'origin/main';
     let head = 'HEAD';
     let quiet = false;
+    let title: string | null = null;
     for (let i = 0; i < argv.length; i++) {
         const arg = argv[i]!;
         if (arg === '--base') {
@@ -163,16 +170,24 @@ function parse_args(argv: readonly string[]): ParsedArgs {
             head = v;
         } else if (arg.startsWith('--head=')) {
             head = arg.slice('--head='.length);
+        } else if (arg === '--title') {
+            const v = argv[++i];
+            if (v === undefined) {
+                _argparse_error('argument --title: expected one argument');
+            }
+            title = v;
+        } else if (arg.startsWith('--title=')) {
+            title = arg.slice('--title='.length);
         } else if (arg === '--quiet') {
             quiet = true;
         } else if (arg === '-h' || arg === '--help') {
-            process.stdout.write('usage: lint_commit_subjects [-h] [--base BASE] [--head HEAD] [--quiet]\n');
+            process.stdout.write('usage: lint_commit_subjects [-h] [--base BASE] [--head HEAD] [--title TITLE] [--quiet]\n');
             process.exit(0);
         } else {
             _argparse_error(`unrecognized arguments: ${arg}`);
         }
     }
-    return { base, head, quiet };
+    return { base, head, quiet, title };
 }
 
 function _argparse_error(message: string): never {
@@ -184,6 +199,11 @@ function main(argv?: readonly string[]): number {
     const args = parse_args(argv ?? process.argv.slice(2));
 
     const subjects = fetch_subjects(args.base, args.head);
+    // The repo squash-merges with the PR title as the commit subject, so the
+    // title reaches the trunk and the changelog exactly like a commit does.
+    if (args.title !== null) {
+        subjects.push(args.title);
+    }
     assertScanned({
         gate: 'lint_commit_subjects',
         scanned: subjects.length,
@@ -225,7 +245,8 @@ function main(argv?: readonly string[]): number {
                 'src/scripts/release.py — sloppy subjects become sloppy public ' +
                 'changelog lines. Per ADR-033 + ' +
                 'agents/roadmaps/road-to-distribution-identity.md § Phase 3.\n' +
-                'Fix: rewrite the offending commits (e.g. `git rebase -i ' +
+                'Fix: a PR title is fixed with `gh pr edit <n> --title "<type>(<scope>): …"`; ' +
+                'rewrite the offending commits (e.g. `git rebase -i ' +
                 `${args.base}` +
                 '` and `r`eword) with descriptive subjects, ' +
                 'then re-push.\n',
