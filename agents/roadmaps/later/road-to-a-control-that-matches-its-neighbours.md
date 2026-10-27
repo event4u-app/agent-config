@@ -3,9 +3,9 @@ complexity: structural
 status: later
 review_by: 2027-01-26
 entry_condition:
-  what: "agents/runtime/state/design-consistency-shadow.jsonl holds the shadow window the 3.3 activation policy names — all four conditions readable off the curve that `task bench:design-consistency-shadow` records; then 3.8 flips the default and AC-2 reads the box tolerance from the same curve"
-  when: "after enough UI edits have run with the consistency rules in shadow; no date is promised"
-  who: "maintainer (runs the bench over real edits); the council confirms the threshold read off the curve, per D2"
+  what: "agents/runtime/state/design-consistency-shadow.jsonl holds box-metric comparisons with a value on both sides, enough for the 3.3 activation policy's four conditions — then AC-2 reads the box tolerance off that curve. 3.8 shipped the raw-control half on 2026-10-27; the metric half had no comparison in the retroactive window, because the static parser cannot read sizes set through cn() or variants"
+  when: "after render-sourced box metrics (ui:render --interact) have run on real UI work; no date is promised"
+  who: "maintainer (runs ui:render on real edits); the council confirms the threshold read off the curve, per D2"
 execution:
   mode: phase-checkpoints
 relates:
@@ -204,7 +204,7 @@ and is never reported as visually verified without render evidence.
       silently accepted.
       verify: fixture 0.2(a) with a wrong padding is repaired or reported within
       two rounds.
-- [ ] **3.8 Default on, once the data says so.** When 3.3's shadow meets all
+- [x] **3.8 Default on, once the data says so.** Done 2026-10-27 for `consistency-raw-control`, under its own key `hooks.design_consistency.enabled` (default `true`), not `hooks.design_pass` (D13). A retroactive window of 1,565 UI writes from two private consumer repositories (`internal/bench/corpora/design-consistency-shadow-window.md`) first read 16.2 % / 4.1 % false alarms; six rule defects were fixed with a test each, and the same window then met all four conditions: 5 real, 3 false (0.19 %). The box-metrics rule had no comparison in the window and stays shadow (AC-2). Check in `design_consistency.chunk.cjs`; CLAIMS `design-consistency-default-on`. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/design_pass_hook.ts --> When 3.3's shadow meets all
       four conditions of the activation policy, flip `hooks.design_pass`
       (post_tool_use) to default-on for consumers with the consistency rules
       enabled, per the owner's turn-2/turn-3 words (D2). The consistency check
@@ -303,6 +303,7 @@ and is never reported as visually verified without render evidence.
 | D11 | reversible-technical | agent | The two consistency findings live in `lint_design_consistency`, not in `design_slop_rules.ts`; their shadow carrier is `--shadow` plus a task, not `design_pass_hook`, and no workflow step is added. | A registry rule is a `backed` catalog claim (`lint_design_antipattern_parity` check C) that the sibling roadmap's near-miss gate has not measured; the dispatch bundle has 55 B of headroom (`check_hook_bundle_composition`, 1,556,615 / 1,556,670) and `design_pass` ships default-off; a workflow edit is a governance surface (`check_kernel_edit_ratified`). The hook wiring is part of 3.8, where the default flip is decided. | 3.8 flips the default; the near-miss gate promotes the rules. |
 | D12 | reversible-technical | agent | Page regression (3.7) compares a computed-style signature of the changed region against an approved baseline, not pixels; a font-only difference reads `degraded`. | A pixel verdict is a per-machine verdict through anti-aliasing and font rasterisation — the reason `uiRenderAssetCompare` refuses one; the asset compare itself is SVG-geometry-specific and does not extend to a page. | A consumer needs a pixel diff that a style signature provably misses. |
 | D10 | deterministic | evidence | Closure pass ran 2026-10-26: no open decision beyond D1-D9. The three `ambiguous-acceptance` hits (the C2 context row, 1.2, 1.4) are wording; each step carries a command-shaped `verify:`. | `closure_scan` over this file. | a step is executed and its oracle cannot be checked. |
+| D13 | product-owned | owner | The default flip of 3.8 is a retroactive window over two of the owner's private repositories, then the flip in one PR: `hooks.design_consistency.enabled` defaults to `true`, read independently of `hooks.design_pass`, which stays `false`. Only the raw-control rule is delivered; the box-metrics rule records in shadow. | The owner's turns of 2026-10-27: option 3 (retroactive now, live recorder alongside) with the two repository paths, then option 1 ("fix the six classes, re-measure the same window, at most 1 % → recorder and flip, all in one PR"). The window met the four conditions at 0.19 % (`internal/bench/corpora/design-consistency-shadow-window.md`). The flip covers the window's subject: flipping `design_pass` would expose every slop rule, which this window did not measure. | False positives above 1 % in any two-week window of the live recorder, or no fire in eight weeks (the policy's reverse trigger). |
 
 ## What verification changed
 
