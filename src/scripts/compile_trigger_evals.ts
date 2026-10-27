@@ -161,7 +161,7 @@ export interface CompiledCase {
 }
 
 /** A filesystem-safe fragment of an arbitrary corpus id. */
-function slug(s: string): string {
+export function slug(s: string): string {
     return s.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'case';
 }
 
@@ -204,11 +204,11 @@ export function graderBody(skill: string, trigger: boolean): string {
  * Tags live in the frontmatter because that is where the host reads them —
  * `--tag` filters on it (verified on 2.1.311); a side file is ignored.
  */
-function promptBody(query: string, tags: readonly string[]): string {
+function promptBody(query: string, tags: readonly string[], extraTools: readonly string[] = []): string {
     return [
         '---',
         'max_turns: 10',
-        'allowed_tools: [Read, Glob, Grep, Skill]',
+        `allowed_tools: [${['Read', 'Glob', 'Grep', 'Skill', ...extraTools].join(', ')}]`,
         `tags: [${tags.map((t) => JSON.stringify(t)).join(', ')}]`,
         '---',
         '',
@@ -226,7 +226,7 @@ function promptBody(query: string, tags: readonly string[]): string {
  * nothing to commit, so only the inside case is checked — and `git` deciding
  * is deliberate, because a path list here would drift from `.gitignore`.
  */
-function refuseTrackedOutput(outDir: string): void {
+export function refuseTrackedOutput(outDir: string): void {
     const abs = path.resolve(outDir);
     const rel = path.relative(REPO_ROOT, abs);
     if (rel.startsWith('..') || path.isAbsolute(rel)) return;
@@ -262,6 +262,7 @@ export function compileQueries(
     queries: readonly LabelledQuery[],
     outDir: string,
     dirOf: (q: LabelledQuery, i: number) => string = (q) => path.join(slug(q.skill), slug(q.id)),
+    opts: { grader?: (q: LabelledQuery) => string; extraTools?: readonly string[] } = {},
 ): CompiledCase[] {
     refuseTrackedOutput(outDir);
     const cases: CompiledCase[] = [];
@@ -277,8 +278,11 @@ export function compileQueries(
         if (q.cls !== null) tags.push(`class:${q.cls}`);
         const abs = path.join(outDir, dir);
         fs.mkdirSync(path.join(abs, 'graders'), { recursive: true });
-        fs.writeFileSync(path.join(abs, 'prompt.md'), promptBody(q.query, tags));
-        fs.writeFileSync(path.join(abs, 'graders', 'criteria.md'), graderBody(q.skill, q.trigger));
+        fs.writeFileSync(path.join(abs, 'prompt.md'), promptBody(q.query, tags, opts.extraTools));
+        fs.writeFileSync(
+            path.join(abs, 'graders', 'criteria.md'),
+            opts.grader === undefined ? graderBody(q.skill, q.trigger) : opts.grader(q),
+        );
         cases.push({ skill: q.skill, id: q.id, dir, tags });
     });
     return cases;
