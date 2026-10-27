@@ -158,7 +158,12 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // edited the two README skills, which then owed a corpus.
         // `readme-writing-package` is 0x02 = 2 and seals. The claim's scope
         // moves to 18 of 39.
-        expect(sealed.length).toBe(39);
+        //
+        // 39 -> 40 on 2026-10-27: road-to-database-relational-modeling 4.8
+        // named both tenancy modes in `multi-tenancy`, which then owed a corpus.
+        // `multi-tenancy` is 0x12 = 18 and seals. The claim's scope moves to
+        // 18 of 40.
+        expect(sealed.length).toBe(40);
     });
 
     it('the loader`s partition agrees with every published holdout row', () => {
@@ -366,8 +371,10 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // `readme-writing` (0x78) trains (138 -> 139); both train-side
         // measurements are re-taken.
         // 178 -> 179 on 2026-10-26: `laravel-migration` (0x94) trains (139 -> 140).
-        expect(all.length).toBe(179);
-        expect(all.filter((r) => r.partition === 'holdout').length).toBe(39);
+        // 179 -> 181 on 2026-10-27: `migration-architect` trains (140 -> 141),
+        // `multi-tenancy` (0x12 = 18) seals (39 -> 40).
+        expect(all.length).toBe(181);
+        expect(all.filter((r) => r.partition === 'holdout').length).toBe(40);
     });
 });
 
@@ -436,7 +443,8 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 136 -> 138 on 2026-10-25: two judges train (see the 176 line).
         // 138 -> 139 on 2026-10-26: `readme-writing` trains (see the 178 line).
         // 139 -> 140 on 2026-10-26: `laravel-migration` trains (see the 179 line).
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(140);
+        // 140 -> 141 on 2026-10-27: `migration-architect` trains (see the 180 line).
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(141);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

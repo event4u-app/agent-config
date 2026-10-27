@@ -20,7 +20,7 @@ evidence:
     - agents/evidence/council/auto-default-existing-installs-20261018.md
     - agents/evidence/council/auto-default-existing-installs-20261018.question.md
     - agents/evidence/council/owner-blocker-routing-20261016.md
-    - agents/roadmaps/road-to-an-update-that-installs-itself-only-when-it-is-safe.md
+    - agents/roadmaps/archive/road-to-an-update-that-installs-itself-only-when-it-is-safe.md
     - agents/evidence/analysis/mid-session-swap-probe-2026-10-18.md
 review_trigger: >-
   Reopened if a ring-0 or later unattended release rolls back or breaks a live

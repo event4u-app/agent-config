@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: database
-description: "Use when working with database architecture, MariaDB/MySQL tuning, indexing strategies, slow queries, or multi-connection patterns — even when the user just says 'this query is slow'."
+description: "Use when designing schemas and relations, tuning queries or indexes on any SQL engine, or multi-connection patterns — even when the user just says 'this query is slow'."
 personas:
   - eloquent-tamer
 domain: engineering
@@ -28,9 +28,15 @@ packs:
 
 Use when designing schemas, optimizing queries, adding indexes, or troubleshooting database performance.
 
+This skill owns relational modeling — invariants, cardinality, keys, junction
+tables, index method, enum representation, referential actions. Designing or
+extending a schema → [`references/relational-modeling.md`](references/relational-modeling.md).
+Dropping or renaming anything → [`references/consumer-census.md`](references/consumer-census.md) first.
+
 Do NOT use when:
 - Writing framework-specific ORM models (use the matching skill — e.g. `eloquent` for Laravel, `symfony-workflow` for Doctrine, framework-native skill for Prisma / TypeORM / SQLAlchemy / GORM / Diesel)
 - Creating migrations only — use the framework-specific migration skill (`laravel-migration` for Laravel, framework-native for others)
+- Reviewing a migration diff → `schema-review`; sequencing a multi-deploy rollout → `migration-architect`
 
 ## Procedure: Optimize a query
 
@@ -39,6 +45,13 @@ Do NOT use when:
 1. Read project docs in `agents/reference/docs/` for database architecture.
 2. Check `config/database.php` for connection definitions.
 3. Detect engine: check `.env` driver and `docker-compose.yml`.
+4. Detect hosting per environment: a `docker-compose.yml` service describes
+   local/dev only; an RDS, Cloud SQL, Azure, PlanetScale or Neon host or
+   Terraform resource marks production as managed and wins; no production marker
+   → production hosting is unknown, never assumed self-hosted.
+   **Managed guardrail:** no `ALTER SYSTEM`, no `postgresql.conf` / `my.cnf`
+   edit, no OS access — server settings go through the provider's parameter
+   group or control-plane CLI.
 
 ### Step 1: Diagnose
 
@@ -137,6 +150,8 @@ engine is unknown rather than assuming.
 - database
 - MariaDB
 - MySQL
+- PostgreSQL
+- schema design
 - migration
 - indexing
 - query optimization

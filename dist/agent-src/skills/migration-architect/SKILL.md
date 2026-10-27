@@ -36,6 +36,8 @@ Do NOT use when:
   route to [`laravel-migration`](../laravel-migration/SKILL.md) (or framework-native equivalent).
 - The decision is *whether* to migrate at all → route to
   [`decision-record`](../decision-record/SKILL.md) first.
+- The question is what the target schema should be → route to
+  [`database`](../database/SKILL.md), which owns relational modeling.
 - The concern is data correctness during the migration → route to
   [`data-flow-mapper`](../data-flow-mapper/SKILL.md) and feed
   findings back here.
@@ -52,7 +54,10 @@ ripe — stop.
 
 List every service, queue, batch job, third-party consumer, and
 client that reads or writes the affected schema. A system you
-forget is a cutover surprise.
+forget is a cutover surprise. The census is required, not recalled:
+app side via [`blast-radius-analyzer`](../blast-radius-analyzer/SKILL.md),
+catalog side plus the six-question compatibility set via
+[`consumer-census`](../database/references/consumer-census.md).
 
 ### 3. Pick a rollout shape
 

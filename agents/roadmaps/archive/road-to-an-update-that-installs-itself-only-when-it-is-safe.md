@@ -212,7 +212,7 @@ None of this is rebuilt here.
       a change. The record carries one machine-readable line,
       `ring-0-exit: no`, written by a human after reading the table and
       recomputed by nothing, and that line is what 4.3's gate reads.
-- [ ] **4.3 Ask once, at a moment that earned it.** After the ring-0 exit, one
+- [~] **4.3 Ask once, at a moment that earned it.** After the ring-0 exit, one <!-- blocked-by: ring-0-exit-pending --> <!-- deferred-resolution: carried-to=road-to-an-update-that-installs-itself-only-when-it-is-safe-carried -->
       host-native question in the `stop` slot, after a turn that ended on a
       verified success. It carries a permanent "never". Existing installs are
       **asked**, never flipped.
@@ -415,8 +415,8 @@ None of this is rebuilt here.
 
 ### blocker: ring-0-exit-pending
 
-- **Status:** open — raised 2026-10-25 by a `/roadmap:process-full` run that
-  found 4.3 the only open step and could not close it in a change.
+- **Status:** resolved — carried, still open, to `road-to-an-update-that-installs-itself-only-when-it-is-safe-carried` with the steps it blocks (was: open — raised 2026-10-25 by a `/roadmap:process-full` run that
+  found 4.3 the only open step and could not close it in a change.)
 - **Class:** 3 — human-only, and time-gated rather than a decision: the exit
   needs four consecutive releases installed unattended, which no single change
   can produce, and the `ring-0-exit:` line is written by a human after reading
@@ -469,6 +469,7 @@ None of this is rebuilt here.
 | D14 | reversible-technical | agent | Split the lazy-concern chunk out of this change, and gate `update-auto-invite` on `update.mode: ask` | the chunk touches four ratification-watched files (`hook_manifest.{yaml,json}`, `dispatch_hook.ts`, `hook-bundle-budget.json`) and only made room for two concerns the council refused; the round to ratify it alone could not run, both seats being quota-exhausted. Without it the rest fits the unchanged ceiling — 1,549,984 of 1,550,000 B, base 1,549,699 B. The `ask` gate is the council's (d) taken literally: a value only a human can write stands in front of the rollout switch | the next council round reads ADR-291's "an existing install is asked once" as requiring the question without an opt-in, in which case the gate moves back behind ring-0 |
 | D15 | critical-technical | council:agents/evidence/council/dsse-trust-root-20261024.md | Blocker `dsse-trust-root` → (a): `@sigstore/verify` in process, exact `trusted_root.json` and npm `keys.json` embedded per release with recorded digests, no online refresh, full issuer/repository/workflow/predicate policy, certificate time at signing, the tarball SHA-512 as the binding, fail closed with no fallback | AI council 2026-10-24, `anthropic` + `openai`, prompt mode, two rounds, 2/2, $0.00; measured: 948 KB installed and 0.3–9 ms pinned for (a), a 16 MB second download and 5.8 s plus no identity policy for (b) | npm's attestation format or sigstore's bundle format changes incompatibly |
 | D16 | reversible-technical | agent | 3.1's delivery path is a user-addressed dispatcher field, `user_notice`, emitted as Claude Code's `systemMessage` and only from `effect: notification` concerns; `update-notice` binds on claude `session_start` alone | the host documents `systemMessage` as "Display a message to the user" (2.1.310 binary); it is the one verified field that reaches the user and adds nothing to model context, and binding only where it exists answers round 10's "says nothing anywhere" by construction; reproduced on the real host (`agents/evidence/analysis/system-message-probe-2026-10-24.md`). Costs 2,945 B in the dispatch bundle (raise_log 2026-10-24) | a second host documents a user-only field, or claude stops honouring `systemMessage` |
+| D17 | reversible-technical | agent | Orchestrator decision D-carry, 2026-10-27: step 4.3 and AC-10 are carried, still open, with blocker `ring-0-exit-pending` into `later/road-to-an-update-that-installs-itself-only-when-it-is-safe-carried`, and this roadmap archives — the same disposition PR #2718 took for `road-to-a-step-that-costs-what-it-changes`. No criterion is dropped or weakened. | Re-read 2026-10-27: `agents/evidence/analysis/ring-0-unattended-record-2026-10-20.md:55` reads `ring-0-exit: no`, and `npm view @event4u/agent-config dist-tags` returns `latest` only, so there is no `next` release to install unattended. AC-10: `task ci` on this branch exits non-zero at `check-reach-staleness` (`channels[youtube]` `last_verified` 95 days old, over the 90-day floor), a wall-clock check outside this roadmap. | the ring-0 record reads `ring-0-exit: yes`, or `task ci` is green on a branch that closes 4.3 |
 
 D6 closes a deferral, not a design: what was decided is that the register
 question is settled by the Phase 1.1 probe's error count rather than by
@@ -543,7 +544,7 @@ had already happened.
       and the concern exits 0 writing to stderr, so nothing it emits is model
       context on any host.
 - [x] **AC-9** `grep -c "'--to'" src/scripts/_cli/cmd_upgrade.ts` returns 0.
-- [ ] **AC-10** `task ci` green.
+- [~] **AC-10** `task ci` green. <!-- blocked-by: ring-0-exit-pending --> <!-- deferred-resolution: carried-to=road-to-an-update-that-installs-itself-only-when-it-is-safe-carried -->
 
 ## Provenance
 

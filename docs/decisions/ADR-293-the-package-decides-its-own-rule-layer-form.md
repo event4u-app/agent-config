@@ -24,7 +24,7 @@ evidence:
   basis:
     - agents/evidence/council/setup-key-removal-release-class-20261020.md
     - agents/evidence/council/setup-key-removal-release-class-20261018.md
-    - agents/roadmaps/road-to-a-setup-that-decides-itself.md
+    - agents/roadmaps/archive/road-to-a-setup-that-decides-itself.md
     - src/scripts/_lib/layer_form_decision.ts
     - src/scripts/_lib/layer_form_evidence.ts
     - src/scripts/_lib/settings_removed_keys.ts
@@ -223,7 +223,7 @@ never a permission it grants.
   consumer's absent key classifies as `carried_removals` rather than as an
   untombstoned removal.
 - **`ADR-290`** for the Node floor this rides, and
-  `agents/roadmaps/road-to-a-setup-that-decides-itself.md` for the step-level
+  `agents/roadmaps/archive/road-to-a-setup-that-decides-itself.md` for the step-level
   record of what was removed and in which order.
 
 **What the evidence does NOT establish**, stated because the grade invites the
