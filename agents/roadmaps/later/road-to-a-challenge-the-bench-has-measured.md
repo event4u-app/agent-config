@@ -145,8 +145,9 @@ kept with the session record under `agents/runtime/council/responses/`.
       counts-only, per H1, which made it default-off: it counts only where
       `AGENT_CONFIG_CAPITULATION_COUNT=1` is set, writes one number to
       `<session>.advisory.json`, and never refuses. The bundle sat 1 B under
-      its ceiling when measured before writing; the detector costs 1,730 B
-      after trimming, recorded as a `raise_log` entry in
+      its ceiling when measured before writing; the detector costs 1,864 B
+      after trimming and the per-turn deduplication ratification round 1
+      asked for, recorded as a `raise_log` entry in
       `src/config/hook-bundle-budget.json`.
       verify: the contract table in `docs/contracts/turn-end-detector-demotion.md` and `DetectorId` both list seven detectors, and the gate test "opted in: one count, no stored text, exit 0" passes.
 
