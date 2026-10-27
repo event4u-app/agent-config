@@ -42,20 +42,20 @@ completion) are parked behind their measurement, not built on belief.
 
 ## Phase 1 — Measurement-free fixes
 
-- [x] **1.1 One evidence table, host-neutral.** `verification-mechanics.md` becomes the
+- [x] **1.1 One evidence table, host-neutral.** `verification-mechanics.md` becomes the <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       single authority with stack-neutral wording; `verify-completion-evidence` cites it
       instead of carrying a second, drifted copy.
-      verify: `grep -c PHPStan src/agent-src/contexts/execution/verification-mechanics.md` → 0 (positive control: 5 at `ac6c60802a`).
-- [x] **1.2 Rows for work that is not code.** Documentation, analysis with numbers,
+      verify: `grep -c PHPStan src/agent-src/contexts/execution/verification-mechanics.md` -> /^0$/ (positive control: 5 at `ac6c60802a`).
+- [x] **1.2 Rows for work that is not code.** Documentation, analysis with numbers, <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       research, rendered artifacts and media each name their required evidence and an
       oracle class (tool / data / external artifact / other model / self).
-      verify: `grep -c 'No verification needed' src/agent-src/contexts/execution/verification-mechanics.md` → 0.
-- [x] **1.3 Methods, not roles, in the optimizer.** "Assign role" becomes "name the
+      verify: `grep -c 'No verification needed' src/agent-src/contexts/execution/verification-mechanics.md` -> /^0$/
+- [x] **1.3 Methods, not roles, in the optimizer.** "Assign role" becomes "name the <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/skill-body-budget.json -->
       methods and instruments the task needs; a role label only alongside them", and a
       bare role becomes the fourth de-inflation pattern (own analysis: a role names
       vocabulary, not a method — the in-tree example is the performance persona, whose
       workflow reasons about a diff and never profiles).
-      verify: `grep -c 'Assign role' src/skills/prompt-optimizer/SKILL.md` → 0.
+      verify: `grep -c 'Assign role' src/skills/prompt-optimizer/SKILL.md` -> /^0$/
 
 ## Phase 2 — Parked: owner decision and measured depth
 

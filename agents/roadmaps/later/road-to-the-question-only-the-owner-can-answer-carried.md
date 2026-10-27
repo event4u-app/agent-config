@@ -32,7 +32,7 @@ left to read as finished.
 - [ ] **3.1 Append the interview sentence automatically (owner demand).** <!-- blocked-by: interview-suffix-form-is-an-owner-decision | asked: no — queued as OQ-25/OQ-26 in agents/owner-questions.md per the 2026-10-24 directive -->
       verify: OQ-25 answered and the chosen form ships with a fixture.
 - [ ] **3.2 Interview reachable outside the maintainer workspace (D2).** <!-- blocked-by: interview-suffix-form-is-an-owner-decision | asked: no — queued as OQ-25/OQ-26 in agents/owner-questions.md per the 2026-10-24 directive -->
-      verify: OQ-26 answered; `lint_discovery_vocabulary` green.
+      verify: `./scripts-run src/scripts/lint_discovery_vocabulary` -> 0 once OQ-26 is answered and applied.
 - [ ] **3.3 Absence scored as unknown, plus a taste dimension (D5).** <!-- blocked-by: intake-band-shift-needs-a-baseline -->
       verify: G4 fixtures — "make it better", a taste-gap prompt and a full prompt land on three distinct outcomes.
 - [ ] **3.4 Skill-level `effort` lowering, benched on ≤ 3 skills (D13).** <!-- blocked-by: intake-band-shift-needs-a-baseline -->
