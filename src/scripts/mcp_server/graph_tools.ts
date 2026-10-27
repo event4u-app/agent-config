@@ -41,6 +41,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { DEFAULT_ANSWER_BUDGET, budgetImpactReport } from '../code_graph/answer_budget.js';
 import { changedFiles } from '../code_graph/cli.js';
 import { detectSources, graphState, pickSource } from '../code_graph/detect.js';
 import { graphHome } from '../code_graph/graph_home.js';
@@ -252,6 +253,8 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
                     description: 'Instead return changed symbols no test imports.',
                 },
                 review_risk: { type: 'boolean' },
+                budget: { type: 'integer', minimum: 250, default: 2000, description: 'Token ceiling on the answer; over it the answer falls back to locations, per-file counts, then a summary.' },
+                page: { type: 'integer', minimum: 1, default: 1, description: 'Page of recommended_reads.' },
             },
             additionalProperties: false,
         },
@@ -271,7 +274,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             return withGraph(root, (g) =>
                 args['untested_only'] === true
                     ? { ...untested(g, files, state), changed_files: files.length }
-                    : { ...impact(g, files, state, num(args, 'depth', 2), isTestFile), changed_files: files.length },
+                    : budgetImpactReport(g, { ...impact(g, files, state, num(args, 'depth', 2), isTestFile), changed_files: files.length }, num(args, 'budget', DEFAULT_ANSWER_BUDGET), num(args, 'page', 1)),
             );
         },
     },

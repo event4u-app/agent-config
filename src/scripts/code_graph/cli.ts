@@ -195,6 +195,7 @@ import { writeTombstones } from './verify/tombstones.js';
 import { usageLowerBound, verifyMain } from './verify/verify_cli.js';
 
 import { buildCacheFor, cacheFor, flag, isFlagValue, resolveRoot, shown, UsageError } from './cli_args.js';
+import { pageReads } from './answer_budget.js';
 import { bugsMain } from './cli_bugs.js';
 import { cmdBranchDiff, cmdBranches, cmdOnBranches, cmdProvenance, cmdSystems } from './cli_knowledge.js';
 
@@ -370,6 +371,8 @@ function withOverlay(g: LoadedGraph): LoadedGraph {
     return overlayView(g, readOverlay(g.answeredBy, graphChecksum(g)));
 }
 
+let readsPage = 1;
+
 function render(r: QueryResult, staleNote: string): number {
     process.stdout.write(`source: ${r.source}${staleNote}\n`);
     if (r.seeds.length) process.stdout.write(`seeds: ${r.seeds.join(', ')}\n`);
@@ -377,8 +380,10 @@ function render(r: QueryResult, staleNote: string): number {
     if (r.truncated) process.stdout.write('  … (budget reached — narrow the seed or raise --budget)\n');
     if (!r.lines.length) process.stdout.write('  (no matching relations)\n');
     if (r.recommended_reads.length) {
-        process.stdout.write('recommended reads (dropped by the budget, or a low-confidence seed match):\n');
-        for (const rr of r.recommended_reads) process.stdout.write(`  ${rr.path}${rr.lines ? `:${rr.lines[0]}-${rr.lines[1]}` : ''}\n`);
+        const pg = pageReads(r.recommended_reads, readsPage);
+        process.stdout.write(`recommended reads (dropped by the budget, or a low-confidence seed match) — ${pg.items.length} of ${pg.total}, page ${pg.page}/${pg.pages}:\n`);
+        for (const rr of pg.items) process.stdout.write(`  ${rr.path}${rr.lines ? `:${rr.lines[0]}-${rr.lines[1]}` : ''}\n`);
+        if (pg.pages > pg.page) process.stdout.write(`  … next page: --reads-page ${pg.page + 1}\n`);
     }
     return 0;
 }
@@ -430,6 +435,7 @@ function cmdQuery(kind: 'query' | 'explain' | 'affected' | 'path', argv: string[
     }
     const positional = argv.filter((a) => !a.startsWith('--') && !isFlagValue(argv, a));
     const budget = budgetOf(argv);
+    readsPage = Math.max(1, Number(flag(argv, '--reads-page') ?? 1) || 1);
     if (kind === 'affected' && flag(argv, '--since')) {
         const root = resolveRoot(argv);
         const seeds = changedNodeSeeds(r.g, root, flag(argv, '--since') as string);

@@ -216,7 +216,7 @@ use it.
       subagents. Formats: `hint` (ids only, ≤ 250 tok), `concise` (default, 800),
       `detailed` (ceiling 2,000) on the serialized envelope (O15).
       verify: `npx vitest run tests/scripts/answer_envelope_schema.test.ts` -> 0
-- [ ] **J.2 Budgets that hold** (H44). `recommended_reads` becomes a counted,
+- [x] **J.2 Budgets that hold** (H44). `recommended_reads` becomes a counted,
       paged list; overflow falls back items → locations → per-file counts →
       summary with a "narrow your question" header; `graph_impact` gets a
       budget; ranked lists are packed by budget search.
