@@ -474,15 +474,6 @@ local_only:
       than wired: there is no remote equivalent to write, which is the distinction
       this list exists to record. Sibling `check_branch_freshness` is a no-op in
       CI for the same reason — the forge owns mergeability there.
-  - id: branch_chain
-    class: git-hook-scoped
-    reason: >
-      Invoked by the POST-CHECKOUT hook that `install-hooks.sh` writes, to record
-      a new branch's parent from the reflog (road-to-a-map-that-holds-on-the-real-repo
-      7.4). It is not a gate: it writes the local branch chain and always exits 0.
-      CI never checks a branch out of another one, so there is no reflog entry to
-      read and no remote equivalent to wire it into; the chain logic itself is
-      covered by its vitest suites, which run remotely.
   - id: roadmap_progress_hook
     class: git-hook-scoped
     reason: >

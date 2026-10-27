@@ -62,11 +62,14 @@ describe('a chain that knows its parent (7.4, H17)', () => {
         expect(ownedBy(g, 'mine', 'foreign')).toBe(true);
     });
 
-    it('the post-checkout hook records the parent', () => {
+    // Withdrawn from the hook on 2026-10-27: a hook-invoked script is local-only
+    // for the CI/local parity gate, and the recorded decision of 2026-08-13 keeps
+    // that list from growing. Recording at checkout waits for a CLI verb (7.4).
+    it('the post-checkout hook does not call branch_chain', () => {
         const stage = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-chain-hooks-'));
         const r = spawnSync('bash', [path.join(REPO, 'src/scripts/install-hooks.sh')], { cwd: REPO, encoding: 'utf-8', env: { ...process.env, AGENT_CONFIG_HOOKS_DIR: stage } });
         expect(r.status, r.stderr).toBe(0);
-        expect(fs.readFileSync(path.join(stage, 'post-checkout'), 'utf-8')).toMatch(/branch_chain parent --from-reflog/);
+        expect(fs.readFileSync(path.join(stage, 'post-checkout'), 'utf-8')).not.toMatch(/branch_chain/);
         fs.rmSync(stage, { recursive: true, force: true });
     }, 60_000);
 });
