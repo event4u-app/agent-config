@@ -37,6 +37,7 @@ import { type CodeEdge, type CodeGraph, type CodeNode, EXPECTED_GRAMMAR_ABI, typ
 import { reviewRisk } from '../../src/scripts/code_graph/review_risk.js';
 import { contextPack } from '../../src/scripts/code_graph/verify/pack.js';
 import { impact, testsForAnswer } from '../../src/scripts/code_graph/verbs.js';
+import { capAnswer, capReviewRisk, DETAIL_BUDGET } from '../../src/scripts/code_graph/answer_detail.js';
 import { LANGUAGE_GAPS, UNCERTAINTY_MAX_CHARS, uncertaintySentence } from '../../src/scripts/code_graph/uncertainty.js';
 import { validateGraph } from '../../src/scripts/code_graph/validate.js';
 
@@ -687,6 +688,40 @@ describe('4.4 — hunk seeds in impact', () => {
         expect(noHunk.dependents).toEqual(['x.ts#callsFirst', 'y.ts#callsSecond']);
         expect(noHunk.file_seeded).toEqual(['a.ts']);
         expect(impact(g, ['a.ts'], 'fresh').file_seeded).toEqual(['a.ts']);
+        g.close();
+    });
+});
+
+describe('4.5 — detail levels and caps', () => {
+    it('omitted counted not truncated', () => {
+        const callers = Array.from({ length: 400 }, (_, i) => `c${String(i).padStart(3, '0')}.ts#caller${i}`);
+        const { file } = handGraph(
+            [{ id: 'hub.ts#hub', label: 'hub' }, ...callers.map((id) => ({ id, label: id.split('#')[1] as string }))],
+            callers.map((source) => ({ source, target: 'hub.ts#hub' })),
+        );
+        const g = loadGraph(file, 'native:hand');
+        const full = impact(g, ['hub.ts'], 'fresh');
+        expect(full.dependents).toHaveLength(400);
+        for (const detail of ['standard', 'minimal'] as const) {
+            const capped = capAnswer(full, ['dependents', 'producing_edges', 'reached'], detail, ['reached']);
+            // Every item is either returned or counted — none disappears.
+            expect(capped.dependents.length + (capped.omitted['dependents'] ?? 0)).toBe(400);
+            expect(capped.producing_edges.length + (capped.omitted['producing_edges'] ?? 0)).toBe(full.producing_edges.length);
+            expect(capped.dependents.join('\n').length).toBeLessThanOrEqual(DETAIL_BUDGET[detail] * 4);
+            expect(capped.detail).toBe(detail);
+        }
+        const minimal = capAnswer(full, ['dependents', 'reached'], 'minimal', ['reached']);
+        expect(minimal.reached).toEqual([]);
+        expect(minimal.omitted['reached']).toBe(400);
+        expect(capAnswer(full, ['dependents'], 'minimal').dependents.length).toBeLessThan(capAnswer(full, ['dependents'], 'standard').dependents.length);
+
+        const risk = reviewRisk(path.dirname(file), JSON.parse(fs.readFileSync(file, 'utf-8')) as CodeGraph, 'HEAD', [{ file: 'hub.ts', from: 1, to: 1 }]);
+        const callersTerm = risk.terms.find((t) => t.term === 'callers')!;
+        const cappedRisk = capReviewRisk(risk, 'minimal');
+        const cappedTerm = cappedRisk.terms.find((t) => t.term === 'callers')!;
+        expect(cappedTerm.count).toBe(callersTerm.items.length);
+        expect(cappedTerm.contribution).toBe(callersTerm.contribution);
+        expect(cappedTerm.items.length + (cappedRisk.omitted['callers'] ?? 0)).toBe(callersTerm.items.length);
         g.close();
     });
 });

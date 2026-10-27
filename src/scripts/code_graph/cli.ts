@@ -134,6 +134,7 @@ import { fileURLToPath } from 'node:url';
 
 import { gitProbe, hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { buildFromRepo, discoverFiles, isTestFile, type LaneSummary, sidecarPath } from './build.js';
+import { capAnswer, capReviewRisk, parseDetail } from './answer_detail.js';
 import { diffHunks, renderReviewRisk, reviewRisk } from './review_risk.js';
 import { DOC_EXTS } from './docs_layer.js';
 import {
@@ -180,7 +181,6 @@ import {
     type DeadResult,
     entryPointsFromFile,
     impact,
-    type ImpactResult,
     repoEntryPoints,
     testsForAnswer,
     untested,
@@ -557,13 +557,11 @@ function cmdImpact(argv: string[]): number {
     }
     try {
         const depth = Number(flag(argv, '--depth'));
-        const res: ImpactResult = impact(
-            r.g,
-            files,
-            stateOf(argv, r.g.answeredBy),
-            Number.isFinite(depth) && depth > 0 ? depth : 2,
-            isTestFile,
-            diffHunks(root, `${ref}..HEAD`) ?? undefined,
+        const res = capAnswer(
+            impact(r.g, files, stateOf(argv, r.g.answeredBy), Number.isFinite(depth) && depth > 0 ? depth : 2, isTestFile, diffHunks(root, `${ref}..HEAD`) ?? undefined),
+            ['dependents', 'reached', 'test_files', 'producing_edges', 'lines', 'recommended_reads'],
+            parseDetail(flag(argv, '--detail')),
+            ['reached', 'producing_edges', 'lines'],
         );
         renderEnvelope(res);
         process.stdout.write(`changed files: ${files.length} · seeds: ${res.seeds.length}\n`);
@@ -578,6 +576,7 @@ function cmdImpact(argv: string[]): number {
         for (const t of res.test_files) process.stdout.write(`  ${t}\n`);
         process.stdout.write(`producing edges (${res.producing_edges.length}):\n`);
         for (const e of res.producing_edges) process.stdout.write(`  ${e}\n`);
+        renderOmitted(res.omitted);
         renderReads(res.recommended_reads);
         return 0;
     } finally {
@@ -608,9 +607,12 @@ function cmdReviewRisk(argv: string[]): number {
     // Whose work the diff touches — informational, never a weighted term of the sum.
     const prov = readCachedProvenance(root, path.dirname(p));
     const tickets = prov ? ticketsTouched(prov, r.changed) : null;
-    if (argv.includes('--json')) process.stdout.write(`${JSON.stringify(tickets ? { ...r, tickets } : r)}\n`);
-    else {
-        const lines = renderReviewRisk(r);
+    const detail = parseDetail(flag(argv, '--detail'));
+    if (argv.includes('--json')) {
+        const capped = capReviewRisk(r, detail);
+        process.stdout.write(`${JSON.stringify(tickets ? { ...capped, tickets } : capped)}\n`);
+    } else {
+        const lines = renderReviewRisk(r, detail === 'minimal' ? 5 : 20);
         const domainOf = domainResolver(path.dirname(path.dirname(p)));
         if (domainOf) {
             const crossings = new Set<string>();
@@ -654,13 +656,14 @@ function cmdTestsFor(argv: string[]): number {
         return 1;
     }
     try {
-        const res = testsForAnswer(r.g, symbol, stateOf(argv, r.g.answeredBy));
+        const res = capAnswer(testsForAnswer(r.g, symbol, stateOf(argv, r.g.answeredBy)), ['tests', 'lines', 'recommended_reads'], parseDetail(flag(argv, '--detail')));
         renderEnvelope(res);
         process.stdout.write(`seeds: ${res.seeds.join(', ') || '(none)'}\n`);
         if (res.partial_files.length) process.stdout.write(`partial files (parsed with errors, not complete): ${res.partial_files.join(', ')}\n`);
         process.stdout.write(`tests (${res.tests.length}):\n`);
         if (res.uncertainty) process.stdout.write(`  ${res.uncertainty}\n`);
         for (const t of res.tests) process.stdout.write(`  ${t}\n`);
+        renderOmitted(res.omitted);
         renderReads(res.recommended_reads);
         return 0;
     } finally {
@@ -732,18 +735,24 @@ function cmdDead(argv: string[]): number {
             );
             patched.push(supplied);
             const res: DeadResult = dead(r.g, patched, stateOf(argv, r.g.answeredBy));
-            return renderDead(res);
+            return renderDead(capAnswer(res, ['dead', 'excluded', 'lines', 'recommended_reads'], parseDetail(flag(argv, '--detail'))));
         }
         const res: DeadResult = dead(r.g, sources, stateOf(argv, r.g.answeredBy), {
             acceptMissingExports: argv.includes('--accept-missing-exports'),
         });
-        return renderDead(res);
+        return renderDead(capAnswer(res, ['dead', 'excluded', 'lines', 'recommended_reads'], parseDetail(flag(argv, '--detail'))));
     } finally {
         r.g.close();
     }
 }
 
-function renderDead(res: DeadResult): number {
+/** What a capped answer left out, counted per list (`answer_detail.ts`). */
+function renderOmitted(omitted: Record<string, number>): void {
+    const parts = Object.entries(omitted).map(([k, n]) => `${k} ${n}`);
+    if (parts.length) process.stdout.write(`omitted by --detail cap: ${parts.join(' · ')}\n`);
+}
+
+function renderDead(res: DeadResult & { omitted: Record<string, number> }): number {
     // The envelope FIRST, on both branches. It used to print only after the
     // refusal check, so the default invocation in this repository — where
     // `exports` is always unavailable — printed neither histogram nor the
@@ -764,6 +773,7 @@ function renderDead(res: DeadResult): number {
     process.stdout.write(`excluded as declared entry points: ${res.excluded.length}\n`);
     process.stdout.write(`dead (${res.dead.length}):\n`);
     for (const d of res.dead) process.stdout.write(`  ${d}\n`);
+    renderOmitted(res.omitted);
     renderReads(res.recommended_reads);
     return 0;
 }

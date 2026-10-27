@@ -378,6 +378,23 @@ function budgetedLines(
     return { source, seeds, lines: kept, truncated, recommended_reads: [...recommended.values()] };
 }
 
+/**
+ * The same budget as {@link budgetedLines}, for any list: keep items while their
+ * rendered characters fit, count the rest. Used by the gate verbs' caps
+ * (`answer_detail.ts`), so a capped answer and a truncated query spend tokens alike.
+ */
+export function budgetList<T>(items: readonly T[], text: (t: T) => string, budget: number): { kept: T[]; omitted: number } {
+    const cap = budget * APPROX_CHARS_PER_TOKEN;
+    let used = 0;
+    let i = 0;
+    for (; i < items.length; i += 1) {
+        const n = text(items[i] as T).length;
+        if (used + n > cap) break;
+        used += n + 1;
+    }
+    return { kept: items.slice(0, i), omitted: items.length - i };
+}
+
 function weakSeedReads(g: LoadedGraph, resolution: SeedResolution): RecommendedRead[] {
     if (!resolution.weak) return [];
     const out: RecommendedRead[] = [];

@@ -242,7 +242,7 @@ answers. Each step is fixture-gated (K5).
       overlap; file granularity remains only as a fallback when git yields no hunks,
       and is marked as such.
       verify: `npx vitest run tests/scripts/code_graph.test.ts -t 'impact seeds from hunks'` -> 0
-- [ ] 4.5 **Detail levels and caps.** `impact`, `tests-for`, `dead` and `review-risk`
+- [x] 4.5 **Detail levels and caps.** `impact`, `tests-for`, `dead` and `review-risk`
       (CLI and MCP) gain `detail: minimal|standard` and hard caps; what is left out is
       counted (`omitted: {dependents: N, …}`), never silently cut. Reuse the query
       verbs' `budget` / `truncated` and the context pack's accounting — no third
