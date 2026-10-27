@@ -161,13 +161,18 @@ Blocks every later phase.
 - [x] **2.1 [A.1] One scope classifier.** New `code_graph/scope.ts` with values `product | test | fixture | bench | doc | vendored | generated`, defaults from today's union of predicates, overrides from a `scope:` section of `layers.yaml` read by the one reader that already serves `readLayerRules` and `readDomainRules`; replaces `fixture_paths.ts`, `isTestFile`, `isTestPath`, `isDevPath`, `RUNTIME_SKIP` and the five walk skip lists. New verb `code-graph scope <path>`. verify: `agent-config code-graph scope internal/bench/x.ts` -> /bench \(default rule bench\/\)/
   > note: verified through the worktree CLI (`./scripts-run src/scripts/code_graph/cli scope internal/bench/x.ts`); the installed `agent-config` picks the verb up on the next release. The `isDevPath` tooling half (scripts/, tools/, bin/, seeders) stays local: it is no scope.
 - [ ] **2.2 [A.2] Scope on every fact.** Stamped on nodes at discovery and on lane facts in merge; drift, flows, tours, payloads and manifest filter in one place; fixtures are a counted toggle "+N in fixtures" (O5). verify: `agent-config code-graph build --lanes --check-fixture-findings` -> 0
+  > note: not done in this run: stamping scope on every fact and filtering drift, flows, tours, payloads and manifest in one place spans the payload builder and the page (views lane); `scope.ts` (2.1) and decision O5 are in place, the `--check-fixture-findings` build flag is not built.
 - [ ] **2.3 [A.3] Lint: no path regex in `lanes/**` or `providers/**`.** Registered with its ratification artifact. verify: a planted regex makes `./scripts-run src/scripts/lint_code_graph_scope_regex` exit 1 naming `scope.ts`, and on the clean tree `./scripts-run src/scripts/lint_code_graph_scope_regex` -> 0
+  > note: not done: the lint needs a ratification artifact to register, and `lanes/**` still holds scope-like regexes (`read_runtime.ts` test-file name filter, `read_systems.ts` tooling dirs) that must move into `scope.ts` first.
 - [x] **2.4 [A.4] Endpoint contract.** Lane edges hit a node or carry `relation_state: unresolved` with a reason; merge refuses the rest; new verb `code-graph lint` runs nodes then edges and fails on dangling endpoints, duplicate ids, invalid spans. verify: `agent-config code-graph lint` -> 0
   > note: verified through the worktree CLI after a lane build (71,142 nodes, 261,975 edges, 0 problems). Deviation for council review: merge types an undeclared dangling lane edge `unresolved` with the reason "target … is not a node of this graph" instead of refusing it — the runtime and interfaces drift fixtures read 10 such edges (missing volumes, services, Terraform and k8s refs, contract files) that refusal would delete (Risk 2). Refusal still applies to an unknown source; `lint` still fails a planted dangling edge that carries no state.
 - [ ] **2.5 [A.5] Witness kind.** `witness.kind ∈ {span, name, commit, file}` with a fixed hash form per kind; `confirm` per kind (a commit by object existence); edges get a confirm path; new `verify --all` prints the rate per lane. verify: `agent-config code-graph verify --all --min-rate 0.99` -> 0
+  > note: not done: witness kinds, per-kind confirm, edge confirm and `verify --all` are a fact-schema change across every lane; not started.
 - [x] **2.6 [A.6] Readers fixed at the cause.** Interfaces skips comments and string literals and uses the `env-var:` id scheme; a tour gets a delivery step only when a flow file lies on a workflow's paths; decisions `governs` only node paths, else unresolved. verify: `npx vitest run tests/scripts/code_graph_readers_at_cause.test.ts` -> 0
 - [ ] **2.7 [A.7] Fact metadata on core nodes.** Owner file, `span` witness and rung T1 on file, class, method and route nodes; measure size first, budget ≤ 10 % on this repo, else only files carry witnesses. verify: the cost line exists in `agents/evidence/analysis/code-graph-core-fact-cost.md`, and `agent-config code-graph confirm file:src/scripts/code_graph/map.ts` -> /state:/
+  > note: not done: needs the 2.5 witness kinds and a size measurement on this repo first.
 - [ ] **2.8 [A.8] The real repository in CI.** One job on PRs touching `src/scripts/code_graph/**` builds this repo with lanes and asserts 0 product-view fixture findings, 0 dangling lane edges, per-lane confirm ≥ 0.99, tours in product scope, no `empty` area with facts. New workflow, with ratification artifact. verify: `gh run list --workflow code-graph-real-repo.yml --limit 1 --json conclusion -q '.[0].conclusion'` -> /success/
+  > note: blocked by bounds: a new workflow in `.github/workflows` needs its ratification artifact, and its assertions need 2.2, 2.5 and 2.7.
 
 ## Phase 3 — Closing on evidence [B]
 
@@ -176,8 +181,11 @@ Gate changes; each needs council ratification. Step 3.2 conflicts with the
 the decision-revisit gate first.
 
 - [ ] **3.1 [B.1] Receipt per step.** Computed from the commits that flipped that step (range, touched paths, verify output); the checker reads archived moves and content. verify: `npx vitest run tests/scripts/check_step_receipts.test.ts` -> 0
+  > note: not done: gate change, needs council ratification (Phase 3 header).
 - [ ] **3.2 [B.2] Falsifiable verify at archive.** Every `verify:` names a command and an expected result; ratchet from the share at adoption (93/230 command, 6/230 expectation). verify: `./scripts-run src/scripts/archive_completed_roadmaps --dry-run --check-verify agents/roadmaps/archive/road-to-a-map-the-agent-checks-before-it-acts.md` -> 1
+  > note: not done: gate change that conflicts with the `roadmap_verify_share.ts` docstring; goes through the decision-revisit gate and the council first.
 - [ ] **3.3 [B.3] Measurement steps need a threshold or an owner null record.** verify: a planted measurement step with neither makes `./scripts-run src/scripts/archive_completed_roadmaps --dry-run` refuse it, and the fixture test `npx vitest run tests/scripts/archive_measurement_threshold.test.ts` -> 0
+  > note: not done: gate change, needs council ratification.
 - [x] **3.4 [B.4] Erratum on the two archived map roadmaps.** One appended section each listing the reopened steps (H12–H20) with this file's step IDs; H21 deferred to 5.6. verify: `grep -c '^## Erratum' agents/roadmaps/archive/road-to-a-map-the-agent-checks-before-it-acts.md` -> /^1$/
 
 ## Phase 4 — The committed map as a generated artifact [C]
@@ -185,23 +193,30 @@ the decision-revisit gate first.
 - [x] **4.1 [C.1] Hooks never touch tracked files.** Background refresh in `install-hooks.sh:676-703` writes to `.build/` only. verify: after a commit with hooks installed, `git status --porcelain agents/map` -> /^$/
   > note: verified on the rendered hooks (`npx vitest run tests/scripts/code_graph_git_freshness.test.ts`, 13/13; red 5/13 before the edit) — reinstalling the shared `.git/hooks` was out of bounds for this lane. The consumer session concern (`hooks/code_graph_refresh_hook.ts`, `REFRESH_ARGS`) still passes `--map`; it is no git hook and stays as it is.
 - [ ] **4.2 [C.2] Deterministic, sharded, diffable.** Sorted keys, pretty JSON, stable order, no volatile values; shards per area and per top-level directory for code; `linguist-generated` in `.gitattributes`; `index.html` committed or not per O1. verify: `npx vitest run tests/scripts/code_graph_map_determinism.test.ts` -> 0
+  > note: not done: sharding and determinism of the writer; open, and O1 (contested) decides whether `index.html` is committed.
 - [ ] **4.3 [C.3] CI diff check.** CI redraws on PRs touching the tree and compares; outcome per O2. Workflow, with ratification artifact. verify: a fixture PR that changes a route without redrawing gets the configured outcome, and `npx vitest run tests/scripts/code_graph_map_diff_check.test.ts` -> 0
+  > note: blocked by bounds: CI workflow needs its ratification artifact; O2 is applied (tolerant on PRs, strict on release cuts) and waits on 4.2.
 - [x] **4.4 [C.4] Honest freshness and name.** Page and MAP.md say "built at", then the build sha and date, and compute nothing about HEAD; title from `repo_identity.ts`, never the folder. verify: `grep -c 'built at' agents/map/MAP.md` -> /^[1-9]/
   > note: MAP.md now opens `# Map of agent-config` / `Map built at <sha> · <date>`. The page's own header (`area_agent.js`, `area_overview.js`, `areas_common.js` banner) still reads `meta.state`; it belongs to the views lane (`road-to-map-views-from-the-handover`).
 - [x] **4.5 [C.5] Cache key includes the lane set** (`map.ts:236-242`). verify: `npx vitest run tests/scripts/code_graph_map_cache_lanes.test.ts` -> 0
 - [ ] **4.6 [C.6] Procedures skip generated files.** The archive and rename procedures (`roadmap-management` SKILL, `archive_completed_roadmaps`) skip paths with the generated attribute. verify: after archiving a fixture roadmap, `git status --porcelain agents/map` -> /^$/
+  > note: not done: waits on the `linguist-generated` attribute of 4.2.
 
 ## Phase 5 — A measure that can answer [D]
 
 Before any agent-facing addition.
 
 - [ ] **5.1 [D.1] Trace capture.** `stream-json --verbose`; per trial: turns, wall time, models, subtype, tool calls by name, reads under `agents/map/**`, `code-graph` and `graph_*` runs, files read before the first edit, the tool/MCP list, AC version, payload hash; traces kept redacted beside the report. verify: `./scripts-run src/scripts/bench_map_task_set --dry-run --tasks 1 --check-trace-fields` -> 0
+  > note: not done: trace capture in the bench runner; not started in this run.
 - [x] **5.2 [D.2] Grading fixed.** "Errored, check passed" is its own outcome; M2 matches on token boundaries. Re-scoring spends nothing. verify: `./scripts-run src/scripts/bench_map_task_set --rescore internal/bench/reports/map-task-set/2026-10-26T07-12-04Z-map-task-set.json` -> /ac-map delivery 2\/4/
   > note: re-scored 2026-10-27, no spend: vanilla 18 · ac 14 · ac-map 15 of 20 clean, ac-map 1 errored with its check passed; token-boundary M2 recall vanilla 0.825→0.805, ac 0.738, ac-map 0.743.
 - [ ] **5.3 [D.3] Arms that separate payload from map.** Installed from the tree under test into the clone: vanilla; vanilla + map + note; AC lean; AC lean + map; AC full optional. verify: `./scripts-run src/scripts/bench_map_task_set --dry-run --print-arms` -> /5 arms/
+  > note: not done: arm redesign; not started in this run.
 - [ ] **5.4 [D.4] Coverage gate before spend.** Offline `pack`/`affected` per task must contain the planted affected set; covered and uncovered reported apart. verify: `./scripts-run src/scripts/bench_map_task_set --dry-run --coverage` -> /covered share/
+  > note: not done: coverage gate; not started in this run.
 - [~] **5.5 [D.5] Task set v2 on real repositories, then the paid runs.** Pinned SHAs (this repo plus pinned open repositories; the corpus of `road-to-a-graph-that-wins` is read, never edited), hundreds to thousands of files, traps a single grep cannot close, vanilla calibrated to 50–70 %, size from a power analysis (starting estimate ≈ 70 paired trials for a 15-point effect at 80 % power), ≥ 2 seeds, clean worktree per trial; pre-registration committed before the first paid run. Deferred on blocker `b-map-remeasure-spend`. verify: `git log --format=%H -1 -- agents/evidence/preregistration/map-remeasure-v2.md` names a commit older than the first paid report.
 - [ ] **5.6 [D.6] Decision rule before the run.** Gain on covered tasks ≥ the minimum effect on M1 or M2 at ≤ the O4 margin on M3 → hook delivery of the pack (H21) is built behind the same gate; null → the map stays a human view and on-request tool, the hook stays state-only, the consequence recorded (O7). A null is an owner decision (P-4). verify: `grep -cE '^- \*\*Branch taken:\*\* (gain|null)' agents/evidence/decisions/map-remeasure-decision.md` -> /^1$/
+  > note: open by rule: the branch taken is an owner decision (P-4) after 5.5, which waits on `b-map-remeasure-spend`; O7 (contested) is not decided here.
 - [~] **5.7 [D.7] Spend cap value and record.** `--max-usd` exists (`bench_map_task_set.ts:308`); only the value per run and its record are missing. Deferred on blocker `b-map-remeasure-budget` (owner-reserved O4). verify: a paid report whose `sweep_cap_usd` equals the value the owner set.
 
 ## Phase 6 — Systems that are right [E]
@@ -209,22 +224,34 @@ Before any agent-facing addition.
 Before the Systems view of `road-to-map-views-from-the-handover`.
 
 - [ ] **6.1 [E.1] Offline PHP binding.** Read `vendor/composer/autoload_{classmap,psr4,namespaces,files}.php` and `installed.json` as data, map files to packages by `install-path`, resolve `use` aliases including root-namespace names; without `vendor/`, fall back to lockfile PSR maps and state "binding partial". Extends the audit fixture from 1.3. verify: `npx vitest run tests/scripts/code_graph_systems_php_binding.test.ts` -> 0
+  > note: not done: Phase 6 not started in this run.
 - [ ] **6.2 [E.2] Verdict states.** `used`, `used-through <pkg>`, `unused-candidate`, `not-installed`, `virtual/meta`, `ignored (reason)`; SY-1 only on `unused-candidate` in product scope. verify: `npx vitest run tests/scripts/code_graph_systems_verdicts.test.ts` -> 0
+  > note: not done: Phase 6 not started in this run.
 - [ ] **6.3 [E.3] JS non-import uses as typed inputs.** Five plugins: package.json scripts, CI `run` steps, tsconfig, eslint, vite/vitest; extends the existing `nonImportUses`. verify: `npx vitest run tests/scripts/code_graph_systems_nonimport.test.ts` -> 0
+  > note: not done: Phase 6 not started in this run.
 - [ ] **6.4 [E.4] Per-workspace identity.** Package node = (ecosystem, name, version) with an importer table {lockfile, workspace, specifier, relation, scope}. verify: `npx vitest run tests/scripts/code_graph_systems_importers.test.ts` -> 0
+  > note: not done: Phase 6 not started in this run.
 - [ ] **6.5 [E.5] Why and who, precomputed and bounded.** Chains ≤ 20 per package with the spec at each hop, dependent counts, subtree size; payload growth linear in packages, budget measured then fixed. verify: `npx vitest run tests/scripts/code_graph_systems_why.test.ts -t express` -> 0
+  > note: not done: Phase 6 not started in this run.
 - [ ] **6.6 [E.6] Functions per file with counts.** verify: `npx vitest run tests/scripts/code_graph_systems_functions.test.ts` -> 0
+  > note: not done: Phase 6 not started in this run.
 
 ## Phase 7 — Close what was ticked thin [F]
 
 - [ ] **7.1 [F.1] Domains complete.** Routes get their handler's domain, tickets the domains they touched; domain rules move into the drift engine with `confirm`; the pack resolver uses the map's filters. verify: `npx vitest run tests/scripts/code_graph_domains.test.ts` -> 0
+  > note: not done: waits on Phase 6 per the Order block.
 - [x] **7.2 [F.2b] Provenance renames.** The timeline uses the history lane's rename pairs, not `--follow` (`provenance_verbs.ts:84`); authors and last change read renames (`map_answers.ts:330`). verify: in the audit fixture the migration timeline has no create commit, and `npx vitest run tests/scripts/code_graph_provenance_renames.test.ts` -> 0
   > note: done ahead of Phase 6 — it depends only on the audit fixture of 1.3. "No create commit" read as: no commit that created a different file (`--follow` walked the renamed status migration back into `create_orders`' `add orders`); its own `(#9)` stays.
 - [ ] **7.3 [F.3] Branches clean themselves.** gc inside `refresh`, bounded in time; remote-tracking branches expire unless pinned; a manifest stores a delta against its parent's. verify: `npx vitest run tests/scripts/code_graph_branches_gc.test.ts` -> 0
+  > note: not done: not started in this run.
 - [ ] **7.4 [F.4] A chain that knows its parent.** post-checkout records the parent and its SHA from the reflog; merged parents detected offline and children re-parented with a report; "ours" needs ≥ 1 own commit or an author match; foreign branches frozen. Hook edit in `install-hooks.sh`. verify: `npx vitest run tests/scripts/branch_chain_parent.test.ts` -> 0
+  > note: not done: not started in this run (hook edit in `install-hooks.sh`).
 - [ ] **7.5 [F.5] Semantic early warning.** Overlap on tables, columns, packages, routes, not paths. verify: `npx vitest run tests/scripts/branch_chain_semantic_overlap.test.ts` -> 0
+  > note: not done: not started in this run.
 - [ ] **7.6 [F.6] Surface what is computed.** Hidden dependencies (after 2.5) in the Code rail, review-risk and a verb; the flow lens draws product-scope flows; decisions in the detail panel. Waits on Phases 2 and 5 (P-3). verify: `npx vitest run tests/scripts/code_graph_surface_computed.test.ts` -> 0
+  > note: waits on Phases 2 and 5 (P-3).
 - [ ] **7.7 [F.7] Nightly rebuild-diff with lanes.** Workflow, with ratification artifact. verify: `gh workflow view code-graph-rebuild-diff.yml` -> 0
+  > note: blocked by bounds: nightly workflow needs its ratification artifact.
 
 ## Order
 
@@ -267,9 +294,9 @@ the row closes when the council's record replaces it.
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
 | O1 | contested-technical | council:pending | Proposed (a): commit JSON shards + MAP.md + manifest; draw `index.html` locally on `open`. Options: (a); (b) also commit `index.html`; (c) commit nothing, CI artifact | `index.html` is 9,500,554 B of embedded copy of the shards (`git ls-tree -l`) | a consumer needs the page without a local draw |
-| O2 | reversible-technical | council:pending | Proposed: tolerant on PRs (the map states "behind N"), strict on release cuts. Options: strict / tolerant | H22: no CI job draws or checks the map today | tolerant PRs leave the map more than one release behind |
-| O3 | reversible-technical | council:pending | Proposed: no subjects; PR number and ticket keys only — implemented early by Phase 1, one-line revert. Options: none / only when no PR exists / all (today) | H13: ≥ 37 squash subjects with `(#NNNN)` in `agents/map/code/map.json` | a reader needs the subject and `.build/` cannot serve it |
-| O5 | reversible-technical | council:pending | Proposed: fixtures hidden behind a counted toggle "+N in fixtures". Options: hidden with a counted toggle / shown greyed | H2/H3: 18 of 18 data and 50 of 66 systems findings sit on fixture paths | a product file is found misclassified as fixture |
+| O2 | reversible-technical | agent:proposed-applied 2026-10-27 | Proposed: tolerant on PRs (the map states "behind N"), strict on release cuts. Options: strict / tolerant | H22: no CI job draws or checks the map today | tolerant PRs leave the map more than one release behind |
+| O3 | reversible-technical | agent:proposed-applied 2026-10-27 | Proposed: no subjects; PR number and ticket keys only — implemented early by Phase 1, one-line revert. Options: none / only when no PR exists / all (today) | H13: ≥ 37 squash subjects with `(#NNNN)` in `agents/map/code/map.json` | a reader needs the subject and `.build/` cannot serve it |
+| O5 | reversible-technical | agent:proposed-applied 2026-10-27 | Proposed: fixtures hidden behind a counted toggle "+N in fixtures". Options: hidden with a counted toggle / shown greyed | H2/H3: 18 of 18 data and 50 of 66 systems findings sit on fixture paths | a product file is found misclassified as fixture |
 | O7 | contested-technical | council:pending | Proposed: a null in 5.6 ends hook delivery only; agent-facing verbs stay on request. Options: hook delivery only / also agent-facing verbs | P-4; the three-arm reading (vanilla 18 · ac 14 · ac-map 15 of 20) cannot separate payload from map | a covered-task null also shows the verbs cost more than grep |
 
 O4 (re-measure budget and the M3 margin for a gain) is owner-reserved spend and
