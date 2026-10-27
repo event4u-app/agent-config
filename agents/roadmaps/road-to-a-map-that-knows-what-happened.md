@@ -133,7 +133,7 @@ provenance `kind` field; `.build/bugs/` is disposable.
       size). Any claim of gain is measured against a comparator arm "agent with
       the tracker tools directly". Blocked by `b-stage-d-measurement`.
       verify: `grep -c "bugs frames" src/skills/bug-analyzer/SKILL.md src/skills/sentry-integration/SKILL.md` -> /:[1-9]/
-- [ ] **H.9 Field measure for Stage D** (observational). Per period, the share
+- [x] **H.9 Field measure for Stage D** (observational). Per period, the share
       of fix commits that later become an introducing candidate, printed with
       numerator, denominator and method; reported beside M1, never as an
       effect of this suite.
