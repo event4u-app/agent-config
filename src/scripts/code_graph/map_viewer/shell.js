@@ -84,7 +84,8 @@ function renderNav() {
         a.textContent = t('areaNames')[r];
         if (r === current.route) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
         var p = KA[r];
-        var empty = r !== 'overview' && r !== 'code' && (!p || !!p.empty);
+        var mod = AREA_MODULES[r];
+        var empty = r !== 'overview' && r !== 'code' && (!p || !!p.empty) && !(mod && mod.extra && mod.extra());
         a.classList.toggle('empty', empty);
         // The handover names why an entry is dim; Bugs is local data, never in a committed map.
         if (empty) a.setAttribute('title', r === 'bugs' ? t('navBugsLocal') : t('navNoData')); else a.removeAttribute('title');

@@ -21,7 +21,7 @@ Landmarks and widget roles inside `<header>`, visible ones only, identical at ev
 |---|---|---|---|
 | 1440 · 375 · 320, dark and light | `header ""`, `nav "Ebenen"`; no tab, radio, checkbox or switch | `header ""`, `nav "Ebenen"`; no tab, radio, checkbox or switch | = |
 | nav entries, 1440 | Übersicht · Code · Data · Systeme · Interfaces · Runtime · Delivery · Bugs · Wissen · Impact · Agent | the same eleven, same order | = |
-| no-data titles | Data, Bugs, Impact: "noch keine Daten in der echten Map" / "Bug-Daten sind lokal – nie in der committeten Map" | Data, Bugs, Impact, **Wissen** with the same two texts | Δ data: Wissen has no knowledge-source payload yet (Phase 6), the handover drew it from Markdown counts |
+| no-data titles | Data, Bugs, Impact: "noch keine Daten in der echten Map" / "Bug-Daten sind lokal – nie in der committeten Map" | Data, Bugs, Impact with the same two texts (measured when this matrix was taken: Wissen too; since step 6.1 the Wissen page draws its Markdown figure from the code model and is live — `code_graph_map_knowledge_page.test.ts` asserts it) | = |
 | header height (px) 1440 / 375 / 320 | 109 / 273 / 305 | 109 / 271 / 271 | = at 1440 and 375; at 320 the handover's search row wraps once more (its `min-width: 180px` search beside three chips), the build's chips fit |
 | ☰ area menu | none | none (`#areamenu` removed, Decision D6) | = |
 
@@ -177,7 +177,7 @@ Landmarks and widget roles inside `<header>`, visible ones only, identical at ev
 
 | Width | Handover nav sw / cw · overflow-x | Build nav sw / cw · overflow-x | Document overflow handover / build | Status |
 |---|---|---|---|---|
-| 1440 | 894 / 894 · visible | 908 / 908 · visible | 0 / 0 | = (the build's 14 px: the Wissen dot) |
+| 1440 | 894 / 894 · visible | 908 / 908 · visible | 0 / 0 | = (the build's 14 px at measuring time: the Wissen dot, live since 6.1) |
 | 375 | 894 / 333 · auto | 908 / 349 · auto | 0 / 0 | = scroll strip, `scrollWidth > clientWidth`, no page scroll |
 | 320 | 894 / 278 · auto | 908 / 294 · auto | 0 / 0 | = |
 | every route × 1440/375/320 × dark/light, sample and demo map | — | no document overflow | — | ✓ `code_graph_map_shell_overflow.test.ts` › "every route … has no document overflow" (4 cases) |

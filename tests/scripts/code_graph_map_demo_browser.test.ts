@@ -64,8 +64,8 @@ describe('the demo map in a browser', () => {
                 const { page, errors } = await open(demo.page, `#/${r}`, width);
                 expect((await page.evaluate(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route)), r).toBe(r);
                 expect(await page.locator('.empty-card').count(), `${r} @${width}`).toBe(0);
-                // Bugs is local data, never in a map file; Wissen has no reader yet: only those two are dim.
-                expect(await page.locator('#areanav a.empty').evaluateAll((as) => as.map((a) => a.getAttribute('data-route'))), `${r} @${width}`).toEqual(['bugs', 'knowledge']);
+                // Bugs is local data, never in a map file: the one dim entry (Wissen draws its Markdown figure from the code model).
+                expect(await page.locator('#areanav a.empty').evaluateAll((as) => as.map((a) => a.getAttribute('data-route'))), `${r} @${width}`).toEqual(['bugs']);
                 expect(await page.locator('#pin-demo').isVisible(), r).toBe(true);
                 expect(await page.locator('#pin-demo').textContent()).toBe('Sample data · Fixture');
                 expect(errors, r).toEqual([]);

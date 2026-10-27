@@ -1216,3 +1216,4 @@ import '../scripts/code_graph_map_history_crumbs.test.js';
 import '../scripts/code_graph_map_shell_overflow.test.js';
 import '../scripts/code_graph_map_overview_page.test.js';
 import '../scripts/code_graph_map_projects_page.test.js';
+import '../scripts/code_graph_map_knowledge_page.test.js';

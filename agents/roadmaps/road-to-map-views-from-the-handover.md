@@ -265,7 +265,7 @@ Exit: 5.1–5.2 green. Rollback: revert `area_projects.js`.
 
 ## Phase 6 — Wissen
 
-- [ ] **6.1 New route.** `area_knowledge.js` and CSS: lenses Quellen · Memory ·
+- [x] **6.1 New route.** `area_knowledge.js` and CSS: lenses Quellen · Memory ·
       Entscheidungen · Sessions · Arbeitsweise; Filter aside with Besitzer and
       "Liest die Map?" groups; KPI buttons; store table with format caps;
       "Wem gehört was"; Detail aside. Each figure comes from the knowledge
