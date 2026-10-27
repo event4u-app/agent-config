@@ -1,6 +1,4 @@
 
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -8,22 +6,8 @@ import {
     BAND_MEDIUM_MIN,
     DIMENSION_NAMES,
     MAX_PER_DIMENSION,
-    type ConfidenceScore,
     score,
 } from '../../../src/agent-src/templates/scripts/work_engine/scoring/confidence.js';
-
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-
-/** asdict-equivalent projection in Python field order. */
-function asdict(c: ConfidenceScore): Record<string, unknown> {
-    return {
-        band: c.band,
-        score: c.score,
-        dimensions: c.dimensions,
-        reasons: c.reasons,
-        ui_intent: c.ui_intent,
-    };
-}
 
 describe('scoring/confidence — exported constants', () => {
     it('thresholds + rubric shape', () => {
@@ -78,40 +62,6 @@ describe('scoring/confidence — score shape', () => {
         }).toThrow();
     });
 });
-
-// A corpus that exercises each rubric branch: verbs/no-verbs, questions,
-// conjunction splits, file paths, PHP namespaces, camelCase, domain nouns,
-// stack/data with+without target, irreversible + config + code-only.
-const PROMPTS: Array<{ raw: string; ac: string[] | null; assumptions: string[] | null }> = [
-    { raw: '', ac: null, assumptions: null },
-    { raw: 'fix the login bug in `auth/session.py`', ac: null, assumptions: null },
-    { raw: 'How does the dashboard work?', ac: null, assumptions: null },
-    { raw: 'add a button and then refactor the user model', ac: null, assumptions: null },
-    {
-        raw: 'create UserProfileCard component',
-        ac: ['should mount', 'must show the avatar', 'then load posts'],
-        assumptions: ['react'],
-    },
-    { raw: 'rename App\\Models\\User to Account', ac: [], assumptions: null },
-    { raw: 'optimize Foo::bar performance', ac: ['expect faster'], assumptions: null },
-    { raw: 'drop the users table', ac: null, assumptions: null },
-    { raw: 'add a migration for the orders column', ac: null, assumptions: null },
-    { raw: 'migrate the schema table `orders`', ac: null, assumptions: null },
-    { raw: 'update the .env config for deploy', ac: null, assumptions: null },
-    { raw: 'refactor the checkout flow', ac: ['given a cart', 'when paid'], assumptions: null },
-    {
-        raw: 'this is a very long prompt that just keeps going on and on well past the forty word boundary so that the goal clarity scorer must fall back to the borderline length branch instead of the clean two point branch because length matters here ok',
-        ac: null,
-        assumptions: null,
-    },
-    { raw: 'implement caching for the search api', ac: null, assumptions: null },
-    { raw: 'redesign the colour theme to dark mode', ac: null, assumptions: null },
-    { raw: 'charge the customer billing account', ac: null, assumptions: null },
-    { raw: 'write tests for `report.py`', ac: ['should pass', 'must cover edges'], assumptions: null },
-    { raw: 'add an endpoint', ac: null, assumptions: null },
-    { raw: 'tune the redis cache', ac: null, assumptions: null },
-    { raw: 'document the webhook handler in handler.ts', ac: ['must explain payload'], assumptions: null },
-];
 
 describe('scoring/confidence — German and English score alike', () => {
     // Same content, two languages: the band must not depend on the language.
