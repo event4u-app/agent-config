@@ -21,7 +21,8 @@
         {
             "q": "kannst du meinen Prompt für Midjourney verbessern?",
             "trigger": true,
-            "class": "exemplar"
+            "class": "exemplar",
+            "language": "de"
         },
         {
             "q": "my prompt says 'you are the world's best copywriter' — sharpen it",

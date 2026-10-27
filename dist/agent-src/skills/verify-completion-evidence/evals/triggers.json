@@ -21,7 +21,8 @@
         {
             "q": "fertig, kannst du pushen?",
             "trigger": true,
-            "class": "exemplar"
+            "class": "exemplar",
+            "language": "de"
         },
         {
             "q": "before you say it works, show me the evidence for this migration",
