@@ -34,14 +34,17 @@ extendStrings({
         oCodeWhat: function (f, e, g) { return f + ' files · ' + e + ' trusted edges · ' + g + ' guessed'; }, oCodeCov: function (l, p) { return l + ' languages · ' + p + ' providers'; },
         oProviders: function (v, p) { return v + ' verified, ' + p + ' providers partial'; }, oGraphWide: 'freshness holds for the whole graph',
         oConfirmedShare: function (a, b) { return a + ' of ' + b; }, oLocalOptIn: 'local, opt-in',
-        oGate: 'Reliability baseline · Gate G0', oGateChip: 'Blocks new layers', oGateNote: 'No phase moves on while R1–R6 are not filed with a reproducer, commit and regression test.',
-        oGates: ['Laravel model User is skipped (MODEL_BASES contains "User")', 'Three migration readers contradict each other', 'Drops and renames not modelled',
-            'FK index assumed independent of the engine', 'HTTP calls mapped wrongly (Http::post → Comment::post)', 'Edges collected but not used for queries'],
-        oGateWhy: 'no reliability record: the map does not carry the state of R1–R6',
-        oTours: 'Tours', oStepStale: 'input changed', oProtocol: 'Check protocol before every change',
-        oSteps: ['Candidates from the index – never completeness', 'Resolve the scope: commit, tenant, connection, environment, API version', 'Read the fresh source',
-            'Search independently: rg, AST, dynamic places', 'Reconcile: confirmed · stale · contradictory · inaccessible · ambiguous', 'Change and test in a targeted way',
-            'Regenerate only the touched layers, the rest keeps its badge']
+        oHealthParts: { dead: 'Dead files', cycles: 'File cycles', guesses: 'Guessed edges', hotspots: 'Hotspots' }, oHealthScale: 'A ≥ 80 · B ≥ 60 · C ≥ 40',
+        oLever: function (part, v, pts) { return 'Largest lever: ' + part + ' (' + v + ') – ' + pts + ' points open. The grade is withheld while a part is missing.'; },
+        oStatesTitle: 'States · one language for every area',
+        oStatesList: [['fresh', 'Index matches the drawn state'], ['behind:n', 'n commits behind HEAD (code only)'], ['stale', 'The source changed since the index'], ['contradicted', 'Facts contradict the source'],
+            ['incomplete', 'The reader could not read everything'], ['unverifiable', 'Source not readable – a hint only'], ['empty', 'Nothing found – with a reason']],
+        oStatesNote: 'Witness: confirmed · moved · changed · gone · added · unconfirmed – rung T1 code/migration · T2 dump/contract · T3 snapshot · T4 framework oracle.',
+        oNotesTitle: 'Notes on this map',
+        oNoteTitle: function (t) { return 'The map is titled “' + t + '” – that is the folder name of the checkout, not a project name. A real repository name is missing in meta.'; },
+        oNoteWitness: function (n, r) { return r ? r + ' of ' + n + ' witnesses were re-read. Confirm: code-graph confirm.' : 'Witnesses were never re-read (all ' + n + ' unconfirmed). Confirm: code-graph confirm.'; },
+        oNoteSince: '“Since the last map” in Code compares with the map that was in the folder before – that may have been another branch.',
+        oNoteDelivery: 'Delivery assumes main for the push scenario. The branch chain (.build/branch-chain.json) is written but not shown yet.'
     },
     de: {
         oTitle: 'Was weiß AC – und wie sicher?',
@@ -72,14 +75,17 @@ extendStrings({
         oCodeWhat: function (f, e, g) { return f + ' Dateien · ' + e + ' sichere Kanten · ' + g + ' geraten'; }, oCodeCov: function (l, p) { return l + ' Sprachen · ' + p + ' Provider'; },
         oProviders: function (v, p) { return v + ' verifiziert, ' + p + ' Provider teilweise'; }, oGraphWide: 'gilt für den ganzen Graphen',
         oConfirmedShare: function (a, b) { return a + ' von ' + b; }, oLocalOptIn: 'lokal, opt-in',
-        oGate: 'Reliability-Baseline · Gate G0', oGateChip: 'Blocker für neue Ebenen', oGateNote: 'Keine Phase rückt vor, solange R1–R6 nicht mit Reproducer, Commit und Regressionstest eingeordnet sind.',
-        oGates: ['Laravel-Model User wird übersprungen (MODEL_BASES enthält "User")', 'Drei Migrations-Leser widersprechen sich', 'Drops und Renames nicht modelliert',
-            'FK-Index unabhängig von der Engine angenommen', 'HTTP-Aufrufe falsch zugeordnet (Http::post → Comment::post)', 'Kanten gesammelt, aber nicht für Abfragen genutzt'],
-        oGateWhy: 'kein Reliability-Datensatz: die Karte trägt den Stand von R1–R6 nicht',
-        oTours: 'Touren', oStepStale: 'Eingabe geändert', oProtocol: 'Prüf-Protokoll vor jeder Änderung',
-        oSteps: ['Kandidaten aus dem Index – nie Vollständigkeit', 'Scope auflösen: Commit, Tenant, Connection, Umgebung, API-Version', 'Frische Quelle lesen',
-            'Unabhängig suchen: rg, AST, dynamische Stellen', 'Abgleichen: confirmed · stale · contradictory · inaccessible · ambiguous', 'Ändern und gezielt testen',
-            'Nur berührte Ebenen neu erzeugen, Rest bleibt mit Badge']
+        oHealthParts: { dead: 'Tote Dateien', cycles: 'Datei-Zyklen', guesses: 'Geratene Kanten', hotspots: 'Hotspots' }, oHealthScale: 'A ≥ 80 · B ≥ 60 · C ≥ 40',
+        oLever: function (part, v, pts) { return 'Größter Hebel: ' + part + ' (' + v + ') – ' + pts + ' Punkte offen. Note wird zurückgehalten, solange ein Teil fehlt.'; },
+        oStatesTitle: 'Zustände · eine Sprache für alle Bereiche',
+        oStatesList: [['fresh', 'Index entspricht dem gezeichneten Stand'], ['behind:n', 'n Commits hinter HEAD (nur Code)'], ['stale', 'Quelle hat sich seit dem Index geändert'], ['contradicted', 'Fakten widersprechen der Quelle'],
+            ['incomplete', 'Leser konnte nicht alles lesen'], ['unverifiable', 'Quelle nicht lesbar – nur Hinweis'], ['empty', 'Nichts gefunden – mit Grund']],
+        oStatesNote: 'Zeuge: confirmed · moved · changed · gone · added · unconfirmed – Stufe T1 Code/Migration · T2 Dump/Vertrag · T3 Snapshot · T4 Framework-Orakel.',
+        oNotesTitle: 'Hinweise zu dieser Map',
+        oNoteTitle: function (t) { return 'Der Titel der Map lautet „' + t + '“ – das ist der Ordnername des Checkouts, kein Projektname. Ein echter Repo-Name fehlt in meta.'; },
+        oNoteWitness: function (n, r) { return r ? r + ' von ' + n + ' Witnesses wurden erneut gelesen. Bestätigen: code-graph confirm.' : 'Witnesses wurden nie erneut gelesen (alle ' + n + ' unconfirmed). Bestätigen: code-graph confirm.'; },
+        oNoteSince: '„Seit der letzten Map“ in Code vergleicht mit der Map, die vorher im Ordner lag – das kann ein anderer Branch gewesen sein.',
+        oNoteDelivery: 'Delivery nimmt für das Push-Szenario main an. Branch-Kette (.build/branch-chain.json) wird geschrieben, aber noch nicht angezeigt.'
     }
 });
 
@@ -288,6 +294,59 @@ function ovBanner(pin) {
     return b;
 }
 
+var STATE_TONE = { fresh: 'ok', 'behind:n': 'warn', stale: 'warn', contradicted: 'bad', incomplete: 'amberline', unverifiable: 'dash', empty: 'dash' };
+var HEALTH_ORDER = ['dead', 'cycles', 'guesses', 'hotspots'];
+/** A part's value the way the handover writes it: a share in per cent, cycles as a count. */
+function healthValue(k, v) { return k === 'cycles' ? num(v) : pct(v); }
+function dec(x) { return Number(x).toLocaleString(lang === 'de' ? 'de-DE' : 'en-US', { maximumFractionDigits: 1 }); }
+/**
+ * The lower row (Decision D2): Health from the model's own parts, the seven
+ * states, and the notes — two derived from this map, two the handover's copy.
+ * Gate G0, the check protocol and the tours are not on the handover's page.
+ */
+function ovLower() {
+    var lower = el('div', { class: 'ov-lower' });
+    var h = model.health || { parts: {} };
+    var parts = h.parts || {};
+    var grade = h.grade ? stChip(h.grade + ' · ' + dec(h.score) + ' / 100', h.grade === 'A' || h.grade === 'B' ? 'ok' : h.grade === 'C' ? 'warn' : 'bad')
+        : stChip(t('noGrade')(num(HEALTH_ORDER.filter(function (k) { return !parts[k]; }).length)), 'dash');
+    grade.classList.add('ograde');
+    var hc = add(el('section', { class: 'card ohealth', id: 'ov-health' }), add(el('div', { class: 'ohead' }), el('b', null, t('health')), grade, el('span', { class: 'oscale' }, t('oHealthScale'))));
+    var lever = null;
+    HEALTH_ORDER.forEach(function (k) {
+        var part = parts[k];
+        var pts = part ? part.points : null;
+        var row = el('div', { class: 'ohrow' });
+        var bar = el('div', { class: 'ohbar' });
+        var fill = el('div');
+        fill.style.width = (pts == null ? 0 : pts / 25 * 100) + '%';
+        fill.style.background = pts == null ? 'transparent' : pts >= 15 ? 'var(--green)' : pts >= 8 ? 'var(--amber)' : 'var(--red)';
+        bar.appendChild(fill);
+        add(row, el('span', null, t('oHealthParts')[k]), el('span', { class: 'mono soft ohv' }, part ? healthValue(k, part.value) : '–'), el('span', { class: 'mono ohp' }, (pts == null ? '–' : dec(pts)) + ' / 25'), bar);
+        hc.appendChild(row);
+        if (part && (!lever || 25 - part.points > 25 - lever[1].points)) lever = [k, part];
+    });
+    if (lever) hc.appendChild(el('span', { class: 'onote' }, t('oLever')(t('oHealthParts')[lever[0]], healthValue(lever[0], lever[1].value), dec(Math.round((25 - lever[1].points) * 10) / 10))));
+    lower.appendChild(hc);
+    var sc = add(el('section', { class: 'card ostates', id: 'ov-states' }), el('b', null, t('oStatesTitle')));
+    t('oStatesList').forEach(function (r) {
+        var chip = stChip(r[0], STATE_TONE[r[0]]);
+        chip.classList.add('oskey');
+        sc.appendChild(add(el('div', { class: 'osrow' }), chip, el('span', { class: 'soft' }, r[1])));
+    });
+    sc.appendChild(el('span', { class: 'onote' }, t('oStatesNote')));
+    lower.appendChild(sc);
+    var nc = add(el('section', { class: 'card onotes', id: 'ov-notes' }), el('b', null, t('oNotesTitle')));
+    var ws = mapWitnesses();
+    var notes = [];
+    if (/^Map of /.test(String(meta.title || ''))) notes.push(t('oNoteTitle')(meta.title));
+    if (ws.length) notes.push(t('oNoteWitness')(num(ws.length), ws.filter(function (w) { return w.confirm && w.confirm !== 'unconfirmed'; }).length ? num(ws.filter(function (w) { return w.confirm && w.confirm !== 'unconfirmed'; }).length) : 0));
+    notes.push(t('oNoteSince'), t('oNoteDelivery'));
+    notes.forEach(function (n) { nc.appendChild(add(el('div', { class: 'onoterow' }), el('span', { class: 'odot' }, '•'), el('span', { class: 'soft' }, n))); });
+    lower.appendChild(nc);
+    return lower;
+}
+
 function renderOverview() {
     var main = $('av-main');
     var head = el('div', { class: 'ov-head' });
@@ -324,34 +383,5 @@ function renderOverview() {
     });
     main.appendChild(grid);
 
-    var lower = el('div', { class: 'ov-lower' });
-    var gate = add(el('section', { class: 'card ogate' }), add(el('div', { class: 'between' }), el('b', null, t('oGate')), stChip(t('oGateChip'), 'bad')));
-    var rows = el('div', { class: 'gates' });
-    t('oGates').forEach(function (text, i) {
-        var tag = el('span', { class: 'nodata-tag', title: t('noDataTitle')(t('oGateWhy')) }, t('noDataShort'));
-        rows.appendChild(add(el('div', { class: 'gate' }), el('span', { class: 'mono gid' }, 'R' + (i + 1)), el('span', null, text), tag));
-    });
-    add(gate, rows, el('span', { class: 'onote' }, t('oGateNote')));
-    lower.appendChild(gate);
-    var proto = add(el('section', { class: 'card oproto' }), el('b', null, t('oProtocol')));
-    var steps = el('ol', { class: 'steps' });
-    t('oSteps').forEach(function (s) { steps.appendChild(el('li', null, s)); });
-    proto.appendChild(steps);
-    lower.appendChild(proto);
-    main.appendChild(lower);
-
-    if (KA.tours && KA.tours.length) {
-        var tc = add(el('section', { class: 'card otours' }), el('b', null, t('oTours')));
-        KA.tours.forEach(function (tour) {
-            tc.appendChild(el('span', { class: 'cap' }, tour.title));
-            var ol = el('ol', { class: 'tour' });
-            tour.steps.forEach(function (s) {
-                var b = el('a', { href: '#/' + s.area + (s.item ? '/' + encodeURIComponent(s.item) : ''), class: 'frow' });
-                add(b, el('span', null, s.text), s.state === 'stale' ? stChip(t('oStepStale'), 'warn', s.inputHash) : null);
-                ol.appendChild(add(el('li'), b));
-            });
-            tc.appendChild(ol);
-        });
-        main.appendChild(tc);
-    }
+    main.appendChild(ovLower());
 }

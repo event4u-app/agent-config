@@ -152,7 +152,7 @@ Exit: 1.1–1.6 green on the demo map and this repo's map. Rollback: revert
       the manifest says `empty` but carries facts or findings; the
       "Branch-Unterschiede" chip row; planned cards dashed.
       verify: `npx vitest run tests/scripts/code_graph_map_overview_page.test.ts -t cards --reporter=verbose` -> /✓.*cards/
-- [ ] **2.3 Lower row.** Health card (grade chip, A/B/C scale, four bars, the
+- [x] **2.3 Lower row.** Health card (grade chip, A/B/C scale, four bars, the
       "Größter Hebel" sentence from the model's health parts), Zustände card
       (seven states), "Hinweise zu dieser Map" (notes 1–2 derived, 3–4 handover
       copy); Gate G0, Check protocol and Tours leave the page (Decision D2).

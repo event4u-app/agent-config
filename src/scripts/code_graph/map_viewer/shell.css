@@ -170,15 +170,20 @@
 .st.violet-tint { background: var(--violetTint); color: var(--violetText); }
 .st.cyanline { border: 1px solid var(--cyan); color: var(--cyanText); }
 .reason { margin: 0; font-size: 12px; color: var(--soft); }
-.ov-lower { display: flex; flex-wrap: wrap; gap: 12px; }
-.ov-lower > .card { min-width: 0; }
-.ogate { flex: 1 1 520px; }
-.oproto { flex: 1 1 380px; }
-.ogate .between, .oproto > b { font-size: 14px; color: var(--text); }
-.gates { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
-.gate { display: grid; grid-template-columns: 36px 1fr auto; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); }
-.gate .gid { font-weight: 600; color: var(--brandText); }
-.steps, .tour { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--soft); }
+.ov-lower { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 12px; }
+.ov-lower > .card b { font-weight: 600; }
+.ograde { font-size: 13px; white-space: normal; }
+.ov-lower .ohead { flex-wrap: wrap; }
+.oscale { margin-left: auto; font-size: 11px; color: var(--muted); }
+.ohrow { display: grid; grid-template-columns: 1fr 70px 80px; gap: 8px; align-items: center; font-size: 12px; }
+.ohv, .ohp { text-align: right; }
+.ohbar { grid-column: 1 / -1; height: 5px; border-radius: 3px; background: var(--line); }
+.ohbar > div { height: 100%; border-radius: 3px; }
+.osrow { display: flex; align-items: baseline; gap: 10px; font-size: 12px; }
+.osrow .oskey { min-width: 96px; justify-content: center; }
+.ov-lower > .onotes { gap: 8px; }
+.onoterow { display: flex; gap: 8px; font-size: 12px; }
+.odot { color: var(--amberText); }
 
 /* Data — the handed-over Database page, port of its inline styles */
 .db-rail { padding: 16px; display: flex; flex-direction: column; gap: 16px; }

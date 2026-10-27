@@ -49,10 +49,10 @@ afterAll(async () => {
 });
 
 describe('the Overview carries the design layers', () => {
-    it('nine cards with the four rows each, in the design order', async () => {
+    it('eleven cards with the four rows each, in the design order', async () => {
         const page = await open(full, '#/overview');
-        const names = await page.locator('.ocard > .between b').allTextContents();
-        expect(names).toEqual(['Code', 'Database', 'Systems', 'Integrations', 'Environment', 'CI/CD', 'Infrastructure', 'Knowledge · Memory', 'Impact', 'Projects']);
+        const names = await page.locator('.ocard .otitle').allTextContents();
+        expect(names).toEqual(['Code', 'Database', 'Systems', 'Integrations', 'Environment', 'CI/CD', 'Infrastructure', 'Knowledge · Memory', 'Impact', 'Bugs & Fixes', 'Projects']);
         for (const card of await page.locator('.ocard').all()) {
             expect(await card.locator('.okv > span.muted').allTextContents()).toEqual(['indexed', 'source checked', 'coverage', 'findings']);
         }
@@ -62,7 +62,7 @@ describe('the Overview carries the design layers', () => {
     it('a layer without a reader keeps its card, says "no data yet" and why', async () => {
         const page = await open(empty, '#/overview');
         const data = page.locator('#ov-data');
-        expect(await data.locator('.nodata-tag').textContent()).toBe('no data yet');
+        expect(await data.locator('.obadge').textContent()).toBe('no data yet');
         expect(await data.textContent()).toMatch(/No schema reader ran/);
         expect(await data.locator('.okv > span:not(.muted)').allTextContents()).toEqual(['–', '–', '–', '–']);
         await page.close();
@@ -77,12 +77,10 @@ describe('the Overview carries the design layers', () => {
         await page.close();
     });
 
-    it('the reliability baseline shows R1–R6 without a state the map does not hold', async () => {
+    it('the 2026-10-bf handover leaves out the reliability baseline and the check protocol (Decision D2)', async () => {
         const page = await open(full, '#/overview');
-        const rows = page.locator('.gate');
-        expect(await rows.count()).toBe(6);
-        expect(await rows.locator('.nodata-tag').count()).toBe(6);
-        expect(await page.locator('.oproto li').count()).toBe(7);
+        expect(await page.locator('.gate').count()).toBe(0);
+        expect(await page.locator('#ov-health').count()).toBe(1);
         await page.close();
     });
 });

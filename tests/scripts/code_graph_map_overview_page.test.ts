@@ -128,4 +128,38 @@ describe('Übersicht', () => {
         expect(await warn.locator('#ov-code').count()).toBe(0);
         await warn.close();
     });
+
+    it('lower row: Health from the model parts with the largest lever, seven states, the notes; no Gate G0, protocol or tours', async () => {
+        const page = await open(full);
+        const doc = await page.evaluate(() => JSON.parse(document.getElementById('map-data')!.textContent!) as { meta: { title: string }; model: { health: { grade: string | null; score: number; parts: Record<string, { value: number; points: number } | null> } } });
+        const h = doc.model.health;
+        const de = (x: number) => x.toLocaleString('de-DE', { maximumFractionDigits: 1 });
+        const chip = (await page.locator('#ov-health .ograde').textContent()) ?? '';
+        if (h.grade) expect(chip).toBe(`${h.grade} · ${de(h.score)} / 100`);
+        else expect(chip).toMatch(/^Kein Grade, solange \d von 4 Teilwerten fehlen$/);
+        expect(await page.locator('#ov-health .oscale').textContent()).toBe('A ≥ 80 · B ≥ 60 · C ≥ 40');
+        const rows = await page.locator('#ov-health .ohrow').evaluateAll((rs) => rs.map((r) => Array.from(r.children).slice(0, 3).map((c) => c.textContent)));
+        expect(rows.map((r) => r[0])).toEqual(['Tote Dateien', 'Datei-Zyklen', 'Geratene Kanten', 'Hotspots']);
+        const order = ['dead', 'cycles', 'guesses', 'hotspots'];
+        rows.forEach((r, i) => {
+            const part = h.parts[order[i]!];
+            expect(r[2]).toBe(part ? `${de(part.points)} / 25` : '– / 25');
+        });
+        const present = order.filter((k) => h.parts[k]);
+        if (present.length) {
+            const worst = present.reduce((a, b) => (25 - h.parts[b]!.points > 25 - h.parts[a]!.points ? b : a));
+            const names: Record<string, string> = { dead: 'Tote Dateien', cycles: 'Datei-Zyklen', guesses: 'Geratene Kanten', hotspots: 'Hotspots' };
+            expect(await page.locator('#ov-health .onote').textContent()).toContain(`Größter Hebel: ${names[worst]} (`);
+            expect(await page.locator('#ov-health .onote').textContent()).toContain(`${de(Math.round((25 - h.parts[worst]!.points) * 10) / 10)} Punkte offen`);
+        }
+        expect(await page.locator('#ov-states .oskey').allTextContents()).toEqual(['fresh', 'behind:n', 'stale', 'contradicted', 'incomplete', 'unverifiable', 'empty']);
+        const notes = await page.locator('#ov-notes .onoterow').allTextContents();
+        expect(notes.length).toBe(4);
+        expect(notes[0]).toContain(`„${doc.meta.title}“`);
+        expect(notes[1]).toMatch(/Witnesses/);
+        const main = (await page.locator('#av-main').textContent()) ?? '';
+        for (const gone of ['Gate G0', 'Prüf-Protokoll', 'Touren']) expect(main).not.toContain(gone);
+        expect(await page.locator('.ov-lower').evaluate((e) => getComputedStyle(e).display)).toBe('grid');
+        await page.close();
+    });
 });

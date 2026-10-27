@@ -473,7 +473,8 @@ describe('the overview', () => {
         await page.click('.ov-filters button:has-text("Planned")');
         expect(await page.locator('#ov-impact').count()).toBe(1);
         expect(await page.locator('#ov-code').count()).toBe(0);
-        expect(await page.locator('#av-main').textContent()).toMatch(/Then the partner service\s*input changed/);
+        // Tours are not on the handover's Übersicht (Decision D2).
+        expect(await page.locator('#av-main').textContent()).not.toMatch(/Then the partner service/);
         await page.click('#ov-impact .otitle');
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'impact');
         await page.close();
