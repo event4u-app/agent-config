@@ -27,7 +27,7 @@
    "delete_path": "delete the jsonl file; the FTS index rebuilds",
    "hosts": "all",
    "status": "active",
-   "note": "one of three learning-intake streams (I.5a)"
+   "note": "one of three learning-intake streams, all in the shared intake shape of _lib/intake_record.ts"
   },
   {
    "name": "knowledge-intake",
@@ -40,7 +40,7 @@
    "delete_path": "delete the jsonl file",
    "hosts": "all",
    "status": "active",
-   "note": "one of three learning-intake streams (I.5a)"
+   "note": "one of three learning-intake streams, all in the shared intake shape of _lib/intake_record.ts"
   },
   {
    "name": "memory-archive",
