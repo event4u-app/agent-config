@@ -359,10 +359,10 @@ with that file.
   verify: the pre-registration is hashed before the first run and reviewed by
   the council before it is frozen.
   Landed 2026-10-24: `agents/evidence/analysis/setup-phase5-preregistration.md`, frozen at `fd44cd7ff7`, sha-256 `7edbb97e5a164255bcc291840086ec642fc1db6ac80fa098b884974abda75453`, council 2/2 `freeze` (D13).
-- [ ] **5.2 Run under the existing spend and independence rules.**
+- [~] **5.2 Run under the existing spend and independence rules.** <!-- blocked-by: phase5-run-waits-on-an-observed-effect-row --> <!-- deferred-resolution: carried-to=road-to-a-setup-that-decides-itself-carried -->
   verify: the result carries the claims gate's honesty label.
   Open 2026-10-25, held by blocker `phase5-run-waits-on-an-observed-effect-row`: the frozen pre-registration states the run cannot start until the first host's row in `src/config/host-injection-effect.json` reads `observed-true`, and row `claude` still reads `unobserved`. No machine can produce a `thinned` decision, so the computed arm cannot be built; a run now would report every host as "no computed arm", which is a non-result, not a non-inferior one.
-- [ ] **5.3 Enable on the record.** 3.3's promotion is enabled for consumers only
+- [~] **5.3 Enable on the record.** 3.3's promotion is enabled for consumers only <!-- blocked-by: phase5-run-waits-on-an-observed-effect-row --> <!-- deferred-resolution: carried-to=road-to-a-setup-that-decides-itself-carried -->
   on a non-inferior 5.2; otherwise every machine stays full. Phase 4 ships either
   way: full is today's behaviour, now without its keys.
   verify: the enabling commit cites 5.2's result file.
@@ -374,7 +374,7 @@ with that file.
 
 <!-- asked: 2026-10-25 | record: agents/evidence/analysis/setup-phase5-preregistration.md -->
 
-- **Status:** open — raised 2026-10-25 by the process-full run that closed 4.10; it records a stop that already existed in the frozen pre-registration, so the next run does not re-derive it.
+- **Status:** resolved — carried, still open, to `road-to-a-setup-that-decides-itself-carried` with the steps it blocks (was: open — raised 2026-10-25 by the process-full run that closed 4.10; it records a stop that already existed in the frozen pre-registration, so the next run does not re-derive it.)
 - **Class:** 1 — no decision is owed; the condition is an observation another file produces.
 - **Owner:** `road-to-delivery-on-hook-hosts` (parked in `agents/roadmaps/later/`, `review_by: 2026-12-08`), which owns the effect verdicts.
 - **Run:** `grep -A1 '"claude"' src/config/host-injection-effect.json` — the blocker clears when `state` reads `observed-true`.
@@ -468,6 +468,7 @@ with that file.
 | D13 | contested-technical | council:agents/evidence/council/setup-prereg-review-20261024.md | 5.1's primary reads the three present corpus sources; D2's 1 % candidate margin is replaced by zero tolerance on every source, because 239 non-critical matrix positives cannot power it (zero regressions bound at 1.25 %) — D2's own revisit condition | Council 2/2 twice on 2026-10-24: the endpoint (`setup-prereg-primary-endpoint-20261024.md`) and three review rounds, frozen 2/2 in round 3; stricter than D2, no computed-arm data seen | a host-graded case set is committed, or the frozen corpus or scorer changes |
 | D15 | reversible-technical | agent | 4.10 → ADR-293 names ADR-284 as a scoped predecessor (Amendment 1); ADR-284 keeps `accepted` with decision 5 and the eager-all half of decision 1 still binding | The supersession already held in code (`installerThinsHost` constant `false`, 3.3 the only thinning writer); recording a fact changes no behaviour, default or floor, so neither record's provenance makes it owner-reserved (decision-revisit-gate: historical decision-maker does not set the venue) | a reader shows an ADR-284 limb named superseded still governs live code |
 | D14 | product-owned | owner | AC-1's remaining key `projection.rule_packs` is retired by step 4.9 under the council's conditions, in the next major | owner answer "1" of 2026-10-24 (`agents/evidence/owner-directives/2026-10-24-rule-packs-retirement.md`) to the question the council routed (`agents/evidence/council/setup-rule-packs-key-20261024.md`, 2/2, owner-reserved) | the eight-rule audit finds a rule that applies regardless of its pack |
+| D16 | reversible-technical | agent | Orchestrator decision D-carry, 2026-10-27: steps 5.2 and 5.3 and AC-3 are carried, still open, with blocker `phase5-run-waits-on-an-observed-effect-row` into `later/road-to-a-setup-that-decides-itself-carried`, and this roadmap archives — the same disposition PRs #2718 and #2719 took. No criterion is dropped or weakened; the frozen pre-registration (5.1) moves unchanged. | Re-read 2026-10-27: `grep -A1 '"claude"' src/config/host-injection-effect.json` reads `"state": "unobserved"`, so no machine can return `thinned` and the computed arm cannot be built. AC-4: `./scripts-run src/scripts/check_host_tree_parity` exits 0 on this branch (2 non-delivery host trees byte-identical to `eager-all`, delivery hosts `[claude-code]`). | row `claude` of `src/config/host-injection-effect.json` reads `observed-true` |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-25 | reviewer: claude/host -->
@@ -501,12 +502,13 @@ with that file.
   Met 2026-10-25: 4.7 and 4.9 removed the last two keys; `grep -n "projection\." src/config/agent-settings.template.yml src/server/schemas/settings.ts` finds no key; all five carry a `REMOVED_KEYS` entry; `agent-config doctor` in a scratch project setting `lean_projection.mode`, `projection.mode` and `projection.rule_packs` prints one `… was removed (…); ignored.` line per key, plus the `rule-packs-legacy` diff.
 - [x] AC-2 — 3.1 returns `full` whenever any of its conditions fails, and for
   every consequence-class and safety-floor rule under every input.
-- [ ] AC-3 — 5.2 reads non-inferior under D2, or consumers stay full and the
+- [~] AC-3 — 5.2 reads non-inferior under D2, or consumers stay full and the <!-- blocked-by: phase5-run-waits-on-an-observed-effect-row --> <!-- deferred-resolution: carried-to=road-to-a-setup-that-decides-itself-carried -->
   record says why.
-- [ ] AC-4 — `check_host_tree_parity` green at every step.
+- [x] AC-4 — `check_host_tree_parity` green at every step.
   Held at every step this lane landed (0.2, 4.1-4.6, 4.8), re-run after each:
   2 non-delivery host trees byte-identical to `eager-all`, delivery hosts
   `[claude-code]`. Left open because the criterion is about EVERY step and four
   are not taken — a tick here would claim a reading for steps nobody has run.
+  Met 2026-10-27 for every step this file still runs: 4.7, 4.9 and 4.10 landed since, and `./scripts-run src/scripts/check_host_tree_parity` exits 0 on the archiving branch (`2 non-delivery host tree(s) byte-identical to eager-all · delivery hosts [claude-code]`). 5.2 and 5.3 move to the carried file (D16), which re-runs the check at each of them.
   Re-run 2026-10-24 after 3.6 (`d20610310c`) and after 3.3 (`ff276c482a`): `./scripts-run src/scripts/check_host_tree_parity` -> 0 both times, same reading. Still open for the steps not taken: 4.6c, 4.7 and Phase 5.
   Re-run 2026-10-25 at `ac73481341`, after 4.6c, 4.7, 4.9 and 4.10 landed: -> 0, same reading. Open only for 5.2 and 5.3, held by blocker `phase5-run-waits-on-an-observed-effect-row`.
