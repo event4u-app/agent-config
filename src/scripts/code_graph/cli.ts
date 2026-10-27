@@ -439,7 +439,7 @@ export function changedFiles(root: string, ref: string): string[] | null {
     // exit 0 (probed 2026-09-09). A rev never begins with `-`.
     if (ref.startsWith('-')) return null;
     try {
-        return gitProbe(root, ['diff', '--name-only', `${ref}..HEAD`])
+        return gitProbe(root, ['diff', '--name-only', '--relative', `${ref}..HEAD`])
             .split('\n')
             .map((s) => s.trim())
             .filter(Boolean);
