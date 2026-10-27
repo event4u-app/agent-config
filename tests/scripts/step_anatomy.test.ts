@@ -9,8 +9,10 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { runInProc } from '../_lib/run_in_process.js';
 import { classifyBlockingCall, main } from '../../src/scripts/probe_turnaround.js';
 import {
+    assignGitFlips,
     classifyCall,
     closedStep,
+    parseGitFlips,
     readSteps,
     stepSumError,
     summariseSteps,
@@ -184,6 +186,90 @@ describe('step anatomy', () => {
         const res = runInProc(main, ['--steps', '--json', '--include-current', '--store', store]);
         expect(res.status).toBe(0);
         expect((JSON.parse(res.stdout) as { steps: number }).steps).toBe(4);
+    });
+
+
+    // A lane under an orchestrator never flips a checkbox: the orchestrator does,
+    // with a shell edit, in a commit. The step is then known only from git.
+    function laneFixture(): { store: string; lane: string; session: string } {
+        const top = fixture();
+        const store = path.dirname(top);
+        const sub = path.join(store, 'sess', 'subagents');
+        fs.mkdirSync(sub, { recursive: true });
+        const rows: unknown[] = [{ type: 'user', isSidechain: true, timestamp: at(0), message: { role: 'user', content: 'Run /roadmap:process-full on agents/roadmaps/road-to-x.md' } }];
+        const read = call(5, 'Read', { file_path: ROADMAP });
+        rows.push(read.row, { type: 'user', timestamp: at(7), message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: read.id, content: 'r'.repeat(2048) }] } });
+        const edit = call(10, 'Edit', { file_path: `${CWD}/src/x.ts`, old_string: 'a', new_string: 'b' });
+        rows.push(edit.row, result(40, edit.id));
+        const edit2 = call(50, 'Edit', { file_path: `${CWD}/src/y.ts`, old_string: 'a', new_string: 'b' });
+        rows.push(edit2.row, result(70, edit2.id));
+        const lane = path.join(sub, 'agent-lane.jsonl');
+        fs.writeFileSync(lane, rows.map((r) => JSON.stringify(r)).join('\n') + '\n');
+        return { store, lane, session: top };
+    }
+
+    it('parses the checkbox flips a git log recorded, one entry per commit and roadmap', () => {
+        const log = [
+            '@@commit 1761040800',
+            'diff --git a/agents/roadmaps/road-to-x.md b/agents/roadmaps/road-to-x.md',
+            '--- a/agents/roadmaps/road-to-x.md',
+            '+++ b/agents/roadmaps/road-to-x.md',
+            '-- [ ] **1.1 Do it.**',
+            '+- [x] **1.1 Do it.** Done.',
+            '-- [ ] **1.2 Next.**',
+            '+- [~] **1.2 Next.** Deferred.',
+            '-- [x] **0.9 Old.** Done.',
+            '+- [x] **0.9 Old.** Done, reworded.',
+            '@@commit 1761044400',
+            'diff --git a/src/x.ts b/src/x.ts',
+            '+- [x] **9.9 not a roadmap**',
+        ].join('\n');
+        expect(parseGitFlips(log)).toEqual([{ roadmap: 'road-to-x', steps: ['1.1', '1.2'], at: 1761040800_000 }]);
+    });
+
+    it('closes a lane step from a git-recorded flip when the transcript flips nothing itself', () => {
+        const { lane } = laneFixture();
+        const flips = [{ roadmap: 'road-to-x', steps: ['1.1'], at: T0 + 300_000 }];
+        expect(readSteps(lane, classifyBlockingCall)).toEqual([]);
+        const [step, extra] = readSteps(lane, classifyBlockingCall, flips);
+        expect(extra).toBeUndefined();
+        expect(step?.step).toBe('1.1');
+        expect(step?.roadmap).toBe('road-to-x');
+        expect(step?.totalMs).toBe(70_000);
+        expect(step?.roadmapReadBytes).toBe(2048);
+        expect(step?.riskClass).toBe('R2');
+        expect(step !== undefined && stepSumError(step)).toBeNull();
+    });
+
+    it('splits a lane transcript at a flip that lands while the lane still runs', () => {
+        const { lane } = laneFixture();
+        const flips = [
+            { roadmap: 'road-to-x', steps: ['1.1'], at: T0 + 45_000 },
+            { roadmap: 'road-to-x', steps: ['1.2', '1.3'], at: T0 + 400_000 },
+        ];
+        const [a, b] = readSteps(lane, classifyBlockingCall, flips);
+        expect(a?.step).toBe('1.1');
+        expect(a?.totalMs).toBe(40_000);
+        expect(b?.step).toBe('1.2+1.3');
+        expect(b?.totalMs).toBe(30_000);
+        expect(b?.roadmapReadBytes).toBe(0);
+    });
+
+    it('gives a git flip only to the subagent transcript that worked that roadmap in the window before it', () => {
+        const { lane, session } = laneFixture();
+        const flip11 = { roadmap: 'road-to-x', steps: ['1.1'], at: T0 + 300_000 };
+        const late = { roadmap: 'road-to-x', steps: ['2.1'], at: T0 + 5 * 3600_000 };
+        const other = { roadmap: 'road-to-y', steps: ['1.1'], at: T0 + 300_000 };
+        const got = assignGitFlips([lane, session], [flip11, late, other]);
+        expect(got.get(lane)).toEqual([flip11]);
+        // The session file flips its own boxes, and is not a lane.
+        expect(got.get(session)).toBeUndefined();
+        // A reviewer that only reads the roadmap was not dispatched to run it.
+        const reviewer = path.join(path.dirname(lane), 'agent-reviewer.jsonl');
+        const rows = fs.readFileSync(lane, 'utf8').trim().split('\n');
+        rows[0] = JSON.stringify({ type: 'user', timestamp: at(0), message: { role: 'user', content: 'Review the diff.' } });
+        fs.writeFileSync(reviewer, `${rows.join('\n')}\n`);
+        expect(assignGitFlips([reviewer], [flip11]).get(reviewer)).toBeUndefined();
     });
 
     it('summarises per class and per change class, unknown always present', () => {

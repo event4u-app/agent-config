@@ -81,7 +81,7 @@ import {
 } from './_lib/turnaround_throughput.js';
 import { defaultStore, isInjectedBody, userText } from './conformance_scan.js';
 import { upsertFinding } from './_lib/self_repair_store.js';
-import { readSteps, STEP_CLASSES, storeTranscripts, summariseSteps } from './_lib/step_anatomy.js';
+import { assignGitFlips, gitFlips, readSteps, STEP_CLASSES, storeTranscripts, summariseSteps } from './_lib/step_anatomy.js';
 import { countSessionCalls, currentTranscript, readDaily, renderDaily } from './_lib/estate_daily.js';
 import { screenEstate } from './roadmap_drain_queue.js';
 
@@ -729,8 +729,11 @@ export function queueRegression(root: string, verdict: string, now: Date): void 
  * gate; exit 1 only when a step's classes do not sum to its total, because then
  * the split itself is wrong and no row of it can be read.
  */
-function reportSteps(files: readonly string[], store: string, json: boolean): number {
-    const readings = files.flatMap((f) => readSteps(f, classifyBlockingCall));
+function reportSteps(files: readonly string[], store: string, json: boolean, ref: string): number {
+    // Lanes under an orchestrator flip no box; the flip commit on `ref` closes their step.
+    const oldest = Math.min(...files.map((f) => fs.statSync(f).mtimeMs));
+    const assigned = files.length === 0 ? new Map() : assignGitFlips(files, gitFlips(REPO_ROOT, ref, oldest - 14 * 86_400_000));
+    const readings = files.flatMap((f) => readSteps(f, classifyBlockingCall, assigned.get(f) ?? []));
     const s = summariseSteps(readings);
     if (json) {
         process.stdout.write(`${JSON.stringify({ store, sessions: files.length, ...s }, null, 2)}\n`);
@@ -850,7 +853,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             .sort((a, b) => b.m - a.m)
             .slice(0, limit)
             .map(({ f }) => f);
-        return reportSteps(stepFiles, store, argv.includes('--json'));
+        return reportSteps(stepFiles, store, argv.includes('--json'), arg('--ref', 'HEAD'));
     }
     const files = recentSessions(store, limit, argv.includes('--include-current'));
     const detailed = files.length === 0 ? null : measureDetailed(files);
