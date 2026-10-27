@@ -156,7 +156,7 @@ database stays closed (ADR-094, T3).
       gate (ratification artifact + gate-coverage row).
       verify: `npx vitest run tests/scripts/check_source_registry.test.ts` -> 0
       > note: the check and its test ship; CI wiring (workflow step, gate-coverage row, ratification artifact) is left for a ratified follow-up — it runs by hand as `./scripts-run src/scripts/check_source_registry`.
-- [ ] **I.2 Committed knowledge into the fact layer** (H40, H42). ADRs in both
+- [x] **I.2 Committed knowledge into the fact layer** (H40, H42). ADRs in both
       layouts (`docs/decisions/`, `docs/adrs/<topic>/`); curated memory entries
       as `memory` nodes with `about` edges to the paths they name; knowledge
       cards, team-knowledge pages, `agents/decisions/`, owner questions, retro
