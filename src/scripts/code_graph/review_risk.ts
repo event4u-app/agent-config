@@ -397,3 +397,42 @@ export function renderReviewRisk(r: ReviewRisk, listCap = 20): string[] {
     }
     return lines;
 }
+
+/**
+ * The band a reader sees instead of the unnormed sum, until the counterfactual
+ * review (roadmap 3.5) calibrates it. PROVISIONAL and uncalibrated: the cut
+ * points are stated, not measured, and no gate reads the band. A term that
+ * could not be counted, or a partial parse, makes the band `unknown` — an
+ * incomplete sum is not a low one.
+ */
+export const RISK_BAND_CUTS = { medium: 6, high: 16 } as const;
+export type RiskBand = 'low' | 'medium' | 'high' | 'unknown';
+
+export function riskBand(r: ReviewRisk): { band: RiskBand; reasons: string[] } {
+    const unknown = r.terms.filter((t) => t.unknown).map((t) => `${t.term}: ${t.unknown}`);
+    const partial = r.partial_files.length ? [`partial parse: ${r.partial_files.join(', ')}`] : [];
+    if (unknown.length || partial.length) return { band: 'unknown', reasons: [...unknown, ...partial] };
+    const band: RiskBand = r.total >= RISK_BAND_CUTS.high ? 'high' : r.total >= RISK_BAND_CUTS.medium ? 'medium' : 'low';
+    const reasons = r.terms.filter((t) => t.contribution > 0).map((t) => `${t.term}: ${t.items.length} × ${t.weight}`);
+    return { band, reasons: reasons.length ? reasons : ['no term counted a fact'] };
+}
+
+/** The hidden marker a sticky PR comment is found and replaced by. */
+export const REVIEW_RISK_COMMENT_MARKER = '<!-- code-graph review-risk -->';
+
+/**
+ * `review-risk --format markdown`: the sticky PR comment. `null` means the
+ * analysis did not run, which is its own status and never reads as low risk.
+ */
+export function renderReviewRiskMarkdown(r: ReviewRisk | null, why = 'no graph or no diff', omitted: Record<string, number> = {}): string {
+    if (r === null) return [REVIEW_RISK_COMMENT_MARKER, '### Code graph review', '', `**Status: no analysis** — ${why}. This is not a low-risk result.`, ''].join('\n');
+    const { band, reasons } = riskBand(r);
+    const lines = [REVIEW_RISK_COMMENT_MARKER, '### Code graph review', '', `**Band: ${band}** (provisional, uncalibrated; no gate reads it)`, ''];
+    for (const reason of reasons) lines.push(`- ${reason}`);
+    lines.push('', '| Check | Status | Items |', '|---|---|---|');
+    for (const c of r.checks) lines.push(`| ${c.id} | ${c.status}${c.reason ? ` (${c.reason})` : ''} | ${c.items.length} |`);
+    const left = Object.entries(omitted).filter(([, n]) => n > 0);
+    if (left.length) lines.push('', `Omitted by the cap: ${left.map(([k, n]) => `${k} ${n}`).join(' · ')}`);
+    lines.push('');
+    return lines.join('\n');
+}

@@ -295,12 +295,13 @@ reviews worse. Distinct from 3.2, which teaches two existing detectors to read e
       (`_lib/regression_neighbourhood.ts`) is imported by its test only; the
       verify-repair loop uses it instead of the optional `affected --since`.
       verify: `git grep -l selectRegressionsFromCode -- src ':!src/scripts/_lib/regression_neighbourhood.ts'` -> 0
-- [ ] 5.5 **PR comment, opt-in.** A workflow template for consumers: `fetch-depth: 0`
+- [x] 5.5 **PR comment, opt-in.** A workflow template for consumers: `fetch-depth: 0`
       required (otherwise history terms render `unknown`, per 4.2), a sticky comment
       with band, checks and `omitted` counters, gate off by default; "no analysis" is
       its own status and never reads as low risk. No new CLI verb (ADR-041):
       `review-risk --format markdown`. Depends on 4.2.
       verify: `npx vitest run tests/scripts/code_graph_review_risk.test.ts -t 'markdown no analysis is not low risk'` -> 0
+      > note: `review-risk --format markdown` renders the sticky comment (marker `REVIEW_RISK_COMMENT_MARKER`, band, checks, `omitted`, "no analysis" status); the consumer workflow template (`fetch-depth: 0`, gate off) is not added — a new workflow lands with its own ratification artifact.
 - [ ] 5.6 **Calibrate the risk band.** The score is an unnormed sum of hand-set weights
       with no test-gap term (`review_risk.ts` `RISK_WEIGHTS`), and the map prints that
       it names no levels yet (`map_viewer/area_agent.js`). Until 3.5 runs: band only

@@ -10,7 +10,18 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
 import { graphHome } from '../../src/scripts/code_graph/graph_home.js';
-import { diffHunks, parseUnifiedZero, renderReviewRisk, RISK_TERMS, RISK_WEIGHTS, type ReviewRisk, reviewRisk } from '../../src/scripts/code_graph/review_risk.js';
+import {
+    diffHunks,
+    parseUnifiedZero,
+    renderReviewRisk,
+    renderReviewRiskMarkdown,
+    REVIEW_RISK_COMMENT_MARKER,
+    RISK_TERMS,
+    RISK_WEIGHTS,
+    type ReviewRisk,
+    reviewRisk,
+    riskBand,
+} from '../../src/scripts/code_graph/review_risk.js';
 import { validateGraph } from '../../src/scripts/code_graph/validate.js';
 import type { CodeGraph } from '../../src/scripts/code_graph/types.js';
 import { GRAPH_TOOLS } from '../../src/scripts/mcp_server/graph_tools.js';
@@ -204,4 +215,25 @@ describe('5.4 — the regression selector has a caller', () => {
         expect(r.selected[0]!.reason).toBe('touched');
         expect(r.skipped).toEqual(['guards-nothing']);
     }, 60_000);
+});
+
+describe('5.5 — the PR comment, opt-in', () => {
+    it('markdown no analysis is not low risk', () => {
+        const none = renderReviewRiskMarkdown(null, 'no code graph has been built');
+        expect(none.startsWith(REVIEW_RISK_COMMENT_MARKER)).toBe(true);
+        expect(none).toContain('**Status: no analysis**');
+        expect(none).not.toMatch(/Band: low/);
+
+        const r = reviewRisk(root, graph, 'HEAD', diffHunks(root, 'HEAD')!);
+        const md = renderReviewRiskMarkdown(r, undefined, { callers: 3 });
+        expect(md).toContain(`**Band: ${riskBand(r).band}**`);
+        expect(md).not.toMatch(/\d\.\d/); // no decimal
+        for (const c of r.checks) expect(md).toContain(`| ${c.id} | ${c.status}`);
+        expect(md).toContain('Omitted by the cap: callers 3');
+
+        // A skipped lane makes the band unknown, never low.
+        const skipped = reviewRisk(root, { ...graph, lanes_run: [...(graph.lanes_run ?? []).filter((l) => l.lane !== 'history'), { lane: 'history', facts: 0, relations: 0, skipped_reason: 'shallow clone' }] }, 'HEAD', diffHunks(root, 'HEAD')!);
+        expect(riskBand(skipped)).toMatchObject({ band: 'unknown', reasons: ['missing partners: shallow clone'] });
+        expect(renderReviewRiskMarkdown(skipped)).toContain('**Band: unknown**');
+    });
 });

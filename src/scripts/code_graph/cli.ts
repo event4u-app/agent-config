@@ -55,6 +55,7 @@
  *             [--regressions F]               the registry's regressions whose
  *                                             guards that neighbourhood reaches
  *   review-risk [--diff <rev>] [--json]       the diff as a sum of terms (callers,
+ *               [--format markdown]           (markdown: the sticky PR comment)
  *                                             entry points, flows, co-change
  *                                             partners, areas, columns,
  *                                             operations, pipelines), each fact
@@ -138,7 +139,7 @@ import { gitProbe, hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { buildFromRepo, discoverFiles, isTestFile, type LaneSummary, sidecarPath } from './build.js';
 import { selectionVerdict, selectRegressionsFromCode, type RegressionSpec } from '../_lib/regression_neighbourhood.js';
 import { capAnswer, capReviewRisk, parseDetail } from './answer_detail.js';
-import { diffHunks, renderReviewRisk, reviewRisk } from './review_risk.js';
+import { diffHunks, renderReviewRisk, renderReviewRiskMarkdown, reviewRisk } from './review_risk.js';
 import { DOC_EXTS } from './docs_layer.js';
 import {
     computeVerdict,
@@ -597,13 +598,16 @@ function cmdImpact(argv: string[]): number {
 function cmdReviewRisk(argv: string[]): number {
     const root = resolveRoot(argv);
     const rev = flag(argv, '--diff') ?? 'HEAD';
+    const markdown = flag(argv, '--format') === 'markdown';
     const hunks = diffHunks(root, rev);
     if (hunks === null) {
+        if (markdown) process.stdout.write(renderReviewRiskMarkdown(null, `the rev '${rev}' does not resolve`));
         process.stderr.write(`code-graph: cannot resolve rev '${rev}' in ${root}\n`);
         return 1;
     }
     const p = flag(argv, '--graph') ?? cacheFor(root);
     if (!fs.existsSync(p)) {
+        if (markdown) process.stdout.write(renderReviewRiskMarkdown(null, 'no code graph has been built'));
         process.stderr.write(`code-graph: graph not found: ${p} — run \`code-graph build\` first\n`);
         return 1;
     }
@@ -613,6 +617,10 @@ function cmdReviewRisk(argv: string[]): number {
     const prov = readCachedProvenance(root, path.dirname(p));
     const tickets = prov ? ticketsTouched(prov, r.changed) : null;
     const detail = parseDetail(flag(argv, '--detail'));
+    if (markdown) {
+        process.stdout.write(renderReviewRiskMarkdown(r, undefined, capReviewRisk(r, detail).omitted));
+        return 0;
+    }
     if (argv.includes('--json')) {
         const capped = capReviewRisk(r, detail);
         process.stdout.write(`${JSON.stringify(tickets ? { ...capped, tickets } : capped)}\n`);
