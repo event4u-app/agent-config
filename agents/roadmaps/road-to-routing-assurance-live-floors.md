@@ -274,9 +274,9 @@ Offered by round `inbox-2026-10-at`, same terms:
 
 ### blocker: b-live-spend-beyond-pilot
 
-- **Status:** open — 2026-10-27, raised by the drain that ran 0.2: the 25 USD
-  pilot of OQ-15 stands at 23.56 USD cumulative, and the pilot cap pauses the
-  run before more is spent.
+- **Status:** resolved — 2026-10-27, the owner answered OQ-22 (a): a new
+  ceiling of about 95 USD for Phases 3–4, cumulative. Was: open, the 25 USD
+  pilot of OQ-15 stood at 23.56 USD and the cap paused the run.
 - **Owner:** the owner — the cap is an owner decision (OQ-22 in
   `agents/owner-questions.md`).
 - **Blocks:** 3.1, 3.2, 3.3, 4.1, 4.3. The code for 3.1/3.2 (seeded FNV-1a

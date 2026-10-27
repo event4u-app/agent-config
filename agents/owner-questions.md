@@ -21,19 +21,6 @@ and the run that applies it links its PR.
   matters once Phase 2.5 has promoted a row, and (a) changes every install.
 - **Blocks:** nothing now; consumer reach of the render engine (Phase 2).
 
-### OQ-22 — Spend beyond the 25 USD routing pilot
-
-- **Context:** the drain of `road-to-routing-assurance-live-floors` froze the
-  protocol and captured the baseline (0.2) for 23.56 USD of the 25 USD pilot.
-  Phases 3–4 need live runs: about 69 USD for N=12/20/50, about 23 USD per MCP
-  arm. Blocker `b-live-spend-beyond-pilot`.
-- **Options:** (a) release a new ceiling (≈ 95 USD covers both phases);
-  (b) a cheaper design — smaller model or a unit subset; (c) re-park Phases 3–4
-  under `later/`.
-- **Recommendation:** (a) — the instrument is fixed and calibrated; the
-  remaining cost is runs, not design.
-- **Blocks:** steps 3.1, 3.2, 3.3, 4.1, 4.3.
-
 ### OQ-23 — Repetitions against the canary query ceiling
 
 - **Context:** three repetitions per case raise the rotation's weekly peak from
@@ -128,6 +115,21 @@ and the run that applies it links its PR.
   (`road-to-a-memory-that-names-its-moment` § Decisions E12).
 
 ## Answered
+
+### OQ-22 — Spend beyond the 25 USD routing pilot
+
+- **Context:** the drain of `road-to-routing-assurance-live-floors` froze the
+  protocol and captured the baseline (0.2) for 23.56 USD of the 25 USD pilot.
+  Phases 3–4 need live runs: about 69 USD for N=12/20/50, about 23 USD per MCP
+  arm. Blocker `b-live-spend-beyond-pilot`.
+- **Options:** (a) release a new ceiling (≈ 95 USD covers both phases);
+  (b) a cheaper design — smaller model or a unit subset; (c) re-park Phases 3–4
+  under `later/`.
+- **Recommendation:** (a) — the instrument is fixed and calibrated; the
+  remaining cost is runs, not design.
+- **Blocks:** steps 3.1, 3.2, 3.3, 4.1, 4.3.
+- **Answered 2026-10-27:** "1" — option (a): a new ceiling of about 95 USD for Phases 3–4, cumulative on top of the 23.56 USD the pilot spent. Applied in `agents/roadmaps/road-to-routing-assurance-live-floors.md` (blocker `b-live-spend-beyond-pilot` resolved).
+
 
 ### OQ-20 — Third-party test data as attributed splits (`external-test-data-licence`)
 
