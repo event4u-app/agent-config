@@ -115,17 +115,10 @@ Do not run the full quality pipeline between intermediate edits — it burns tim
 
 ## Minimum evidence per task type
 
-| Task type | Required evidence |
-|---|---|
-| Code change (logic) | Targeted tests + project's type-checker on changed scope |
-| New feature | Tests (new + suite) + type-checker + smoke check (curl / UI / integration probe) |
-| Bug fix | Regression test (RED → GREEN) + full suite |
-| Refactoring | Full suite + type-checker + auto-refactor dry-run if available |
-| Config / env change | Relevant command or service output (not just file diff) |
-| Migration | Migration run output + rollback dry-run + tests |
-| API endpoint | HTTP response body + status + content-type |
-| Frontend component | Rendered state (Playwright or manual) + unit tests |
-| Documentation only | No verification needed |
+The per-task table — required evidence and the oracle class that judges it,
+code and non-code work alike — lives once, in
+[`verification-mechanics`](../../agent-src/contexts/execution/verification-mechanics.md#minimum-verification-per-task-type).
+Read it there; this skill does not keep a second copy.
 
 **Never accept** as proof: "should work", "looks correct", "the logic
 is sound", "compiles" (unless compilation itself is the contract).
