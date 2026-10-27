@@ -227,7 +227,7 @@ use it.
       grep fallback.
       verify: `npx vitest run tests/scripts/code_graph_answer_correctness.test.ts` -> 0
       > note: pack seeds exact names and `.js` specifiers today; the FTS-over-I.2 seed tier waits for that index to exist.
-- [ ] **J.4 One entry point.** `agent-config ask "<question>"` and MCP `answer`:
+- [x] **J.4 One entry point.** `agent-config ask "<question>"` and MCP `answer`:
       routes to the right verb; three-step retrieval (index rows with
       `~read_tokens` → timeline → fetch by id); fix-plan and verify-fix are
       intents, not commands. User-owned sources (sessions, signals) are read
@@ -236,6 +236,7 @@ use it.
       two sessions on one file, a corrupt SQLite falling back, a foreign
       worktree's transcript, poisoned connector text, two users in one repo.
       verify: `npx vitest run tests/scripts/ask_entry_point.test.ts` -> 0
+      > note: ships as `code-graph ask` with graph and test sources; the MCP `answer` tool and a top-level `agent-config ask` alias need the consumer tool catalog and CLI registrations, left for a follow-up; session and signal sources join after I.4 and K.2.
 - [ ] **J.5 Detail by command, not by file** (H46). `code-graph map --section
       <name>` returns what MAP.md cuts; the pre-read guard is an extension of
       `reread_guard_hook.ts` that names the command on reads of large generated
