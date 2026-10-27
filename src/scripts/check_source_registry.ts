@@ -21,6 +21,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { reportScanned } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 export const REGISTRY_REL = 'src/config/source-registry.json';
@@ -142,7 +144,9 @@ export function storeWrites(text: string): string[] {
 
 const OWNERS: ReadonlySet<string> = new Set(['user', 'project', 'team', 'machine']);
 
-export function check(root: string, scanDirs: readonly string[] = ['src/scripts', 'src/shared', 'src/cli', 'src/mcp']): Finding[] {
+export const SCAN_DIRS: readonly string[] = ['src/scripts', 'src/shared', 'src/cli', 'src/mcp'];
+
+export function check(root: string, scanDirs: readonly string[] = SCAN_DIRS): Finding[] {
     const doc = readDoc(root);
     const rows = doc.stores;
     const notWriters = doc.reviewed_not_writers ?? [];
@@ -189,6 +193,11 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
         return 0;
     }
     const findings = argv.includes('--orphans') ? orphans(rows) : check(root);
+    if (!json && !argv.includes('--orphans')) {
+        const files: string[] = [];
+        for (const d of SCAN_DIRS) walk(path.join(root, d), files);
+        reportScanned({ gate: 'check_source_registry', scanned: files.length, units: 'file(s)', roots: SCAN_DIRS });
+    }
     if (json) process.stdout.write(`${JSON.stringify(findings, null, 1)}\n`);
     else for (const f of findings) process.stdout.write(`❌  [${f.kind}] ${f.file}: ${f.detail}\n`);
     if (!json && findings.length === 0) process.stdout.write(`✅  source registry: ${rows.length} stores, no unregistered writer\n`);

@@ -15,6 +15,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { reportScanned } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 export const BASELINE_REL = 'src/config/self-search-ceiling.json';
@@ -37,11 +39,17 @@ function walk(dir: string, out: string[]): void {
     }
 }
 
-export function selfSearchLines(root: string): string[] {
+/** The Markdown files the ratchet reads, sorted. */
+export function contentFiles(root: string): string[] {
     const files: string[] = [];
     for (const r of CONTENT_ROOTS) walk(path.join(root, r), files);
+    return files.sort();
+}
+
+export function selfSearchLines(root: string): string[] {
+    const files = contentFiles(root);
     const out: string[] = [];
-    for (const f of files.sort()) {
+    for (const f of files) {
         const rel = path.relative(root, f).split(path.sep).join('/');
         fs.readFileSync(f, 'utf-8')
             .split('\n')
@@ -72,6 +80,7 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
         process.stdout.write(`self-search baseline: ${baseline} → ${next}\n`);
         return 0;
     }
+    reportScanned({ gate: 'check_self_search_ratchet', scanned: contentFiles(root).length, units: 'file(s)', roots: CONTENT_ROOTS });
     if (lines.length > baseline) {
         process.stdout.write(`❌  self-search lines: ${lines.length} > baseline ${baseline} — move the sweep into \`code-graph scan\` (run --list to see them)\n`);
         return 1;
