@@ -100,7 +100,7 @@ provenance `kind` field; `.build/bugs/` is disposable.
       Fix state is tri-state: changed in code, deployed, observed effective;
       "no events" never reads as fixed.
       verify: `npx vitest run tests/scripts/code_graph_fix_kinds.test.ts` -> 0
-- [ ] **H.4 Introducing-commit candidates** (H38). Last change of each fixed
+- [x] **H.4 Introducing-commit candidates** (H38). Last change of each fixed
       line, skipping format-only commits and following renames; a declared
       `Fixes: <sha>` wins; an imported suspect commit is a second, separate
       signal. Always a candidate with method and witnesses, never ranked by
