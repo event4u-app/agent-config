@@ -197,6 +197,7 @@ import { buildCacheFor, cacheFor, flag, isFlagValue, resolveRoot, shown, UsageEr
 import { pageReads } from './answer_budget.js';
 import { noEntryLine, testsForModule } from './answer_correctness.js';
 import { askMain } from './cli_ask.js';
+import { mapSection } from './map_sections.js';
 import { bugsMain } from './cli_bugs.js';
 import { cmdBranchDiff, cmdBranches, cmdOnBranches, cmdProvenance, cmdSystems } from './cli_knowledge.js';
 
@@ -1160,6 +1161,13 @@ function mapIsBehind(root: string, cache: string): boolean {
 async function cmdMap(argv: string[]): Promise<number> {
     if (argv.includes('--estate')) return estateMapMain(argv);
     if (argv.includes('--demo')) return cmdMapDemo(argv);
+    const section = flag(argv, '--section');
+    if (section !== null) {
+        const out = flag(argv, '--out');
+        const r = mapSection(out ? path.resolve(out) : graphHome(resolveRoot(argv)).mapDir, section);
+        process.stdout.write(r.ok ? `${r.body}\n` : `code-graph: ${r.reason}${r.names.length ? ` — sections: ${r.names.join(', ')}` : ''}\n`);
+        return r.ok ? 0 : 1;
+    }
     const root = resolveRoot(argv);
     if (!fs.existsSync(root)) {
         process.stderr.write(`code-graph: root not found: ${root}\n`);
