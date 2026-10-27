@@ -49,7 +49,7 @@ gated-surface list. Those live in `later/road-to-a-court-at-the-stops`.
 
 ## Phase 1 — A typed exhibit in the finding schema
 
-- [ ] **1.1 Add optional `line` and `exhibits[]` to `review-findings.schema.json`.**
+- [x] **1.1 Add optional `line` and `exhibits[]` to `review-findings.schema.json`.**
       `line` is an integer ≥ 1. Each exhibit has a `type` from the closed set
       `presence` (`path`, `line`, `quote` ≤ 300 chars, `commit`), `absence`
       (`path_glob`, `pattern`, `commit`, `expected: 0`), `pair` (two presence
@@ -57,12 +57,12 @@ gated-surface list. Those live in `later/road-to-a-court-at-the-stops`.
       Both fields are optional, so every existing producer stays valid.
       verify: the schema test carries one valid row per exhibit type and one
       invalid row per required field.
-- [ ] **1.2 Keep `findingId()` stable across line moves.** Strip a trailing
+- [x] **1.2 Keep `findingId()` stable across line moves.** Strip a trailing
       `:<n>` or `:<n>-<m>` from `file` before hashing, and lift it into `line`
       where the finding is parsed.
       verify: a unit test shows two findings that differ only in the line
       suffix share one id, and a finding without a suffix keeps its old id.
-- [ ] **1.3 Keep exhibits through `parseFindings`.** A model reply carrying
+- [x] **1.3 Keep exhibits through `parseFindings`.** A model reply carrying
       `exhibits` keeps them on the parsed finding; a malformed exhibit is
       dropped with the finding kept.
       verify: a parse test over a reply with one good and one malformed exhibit.
