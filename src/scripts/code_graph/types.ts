@@ -323,6 +323,8 @@ export interface LaneRunRecord {
     relations: number;
     /** The reader threw; its lane holds no facts from this build. */
     error?: string;
+    /** The reader declined the whole tree (a shallow clone, no history): its terms are unknown, not zero. */
+    skipped_reason?: string;
 }
 
 export interface CodeGraph {

@@ -22,6 +22,8 @@ export interface LaneRun {
     outside?: number;
     /** The reader threw: its lane is left out of the graph, the build goes on. */
     error?: string;
+    /** The reader declined the whole tree and said why; persisted, so an empty lane reads unknown. */
+    skipped_reason?: string;
 }
 
 export interface LaneSummary {
@@ -53,7 +55,9 @@ export function runLaneReaders(
         try {
             const replaced = opts.readers?.[lane];
             const out = replaced ? replaced(root) : read();
-            runs.push({ lane, ms: Date.now() - t0, facts: out.facts.length, relations: out.relations.length, skipped: out.skipped.length });
+            // A lane-wide skip is the reader's `.git` entry with nothing read beside it.
+            const whole = out.facts.length + out.relations.length === 0 ? out.skipped.find((s) => s.file === '.git') : undefined;
+            runs.push({ lane, ms: Date.now() - t0, facts: out.facts.length, relations: out.relations.length, skipped: out.skipped.length, ...(whole ? { skipped_reason: whole.reason } : {}) });
             return out;
         } catch (e) {
             runs.push({ lane, ms: Date.now() - t0, facts: 0, relations: 0, skipped: 0, error: (e as Error).message });

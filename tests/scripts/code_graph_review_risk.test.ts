@@ -10,7 +10,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
 import { graphHome } from '../../src/scripts/code_graph/graph_home.js';
-import { diffHunks, parseUnifiedZero, RISK_TERMS, RISK_WEIGHTS, type ReviewRisk, reviewRisk } from '../../src/scripts/code_graph/review_risk.js';
+import { diffHunks, parseUnifiedZero, renderReviewRisk, RISK_TERMS, RISK_WEIGHTS, type ReviewRisk, reviewRisk } from '../../src/scripts/code_graph/review_risk.js';
+import { validateGraph } from '../../src/scripts/code_graph/validate.js';
 import type { CodeGraph } from '../../src/scripts/code_graph/types.js';
 import { GRAPH_TOOLS } from '../../src/scripts/mcp_server/graph_tools.js';
 
@@ -118,5 +119,33 @@ describe('review-risk boundaries', () => {
             { file: 'x.ts', from: 4, to: 5 },
             { file: 'gone.ts', from: 1, to: 5 },
         ]);
+    });
+});
+
+describe('4.2 — a skipped lane reads unknown, never 0', () => {
+    it('shallow clone renders unknown', async () => {
+        const shallow = fs.mkdtempSync(path.join(os.tmpdir(), 'review-risk-shallow-'));
+        try {
+            execFileSync('git', ['clone', '-q', '--depth', '1', `file://${root}`, shallow]);
+            const built = await buildFromRepo(shallow, graphHome(shallow).cachePath, { lanes: true });
+            const history = built.graph.lanes_run?.find((l) => l.lane === 'history');
+            expect(history?.skipped_reason).toBe('shallow clone');
+            // Persisted through the serialized cache and accepted by the schema gate.
+            const reread = JSON.parse(fs.readFileSync(graphHome(shallow).cachePath, 'utf-8')) as CodeGraph;
+            expect(reread.lanes_run?.find((l) => l.lane === 'history')?.skipped_reason).toBe('shallow clone');
+            expect(validateGraph(reread).ok).toBe(true);
+
+            fs.appendFileSync(path.join(shallow, 'app/Services/PartnerClient.php'), '// edit\n');
+            const r = reviewRisk(shallow, reread, 'HEAD', diffHunks(shallow, 'HEAD')!);
+            const partners = r.terms.find((t) => t.term === 'missing partners')!;
+            expect(partners.unknown).toBe('shallow clone');
+            expect(partners.contribution).toBe(0);
+            expect(r.total).toBe(r.terms.filter((t) => !t.unknown).reduce((n, t) => n + t.contribution, 0));
+            const text = renderReviewRisk(r).join('\n');
+            expect(text).toContain('missing partners unknown (shallow clone)');
+            expect(text).not.toMatch(/missing partners 0×/);
+        } finally {
+            fs.rmSync(shallow, { recursive: true, force: true });
+        }
     });
 });

@@ -65,12 +65,23 @@ export interface Hunk {
     to: number;
 }
 
+/** The lane whose facts a term counts; a term the graph derives on its own has none. */
+const TERM_LANE: Partial<Record<RiskTerm, string>> = {
+    'entry points': 'flows',
+    flows: 'flows',
+    'missing partners': 'history',
+    columns: 'data',
+    operations: 'interfaces',
+    pipelines: 'delivery',
+};
+
 export interface ReviewRisk {
     rev: string;
     changed: string[];
     hunks: Hunk[];
     seeds: RiskItem[];
-    terms: Array<{ term: RiskTerm; weight: number; contribution: number; items: RiskItem[] }>;
+    /** `unknown` names why a term could not be counted (its lane was skipped or failed); it is then left out of the sum. */
+    terms: Array<{ term: RiskTerm; weight: number; contribution: number; items: RiskItem[]; unknown: string | null }>;
     total: number;
     /** Changed or calling files that parsed with errors: their facts are a lower bound. */
     partial_files: string[];
@@ -267,7 +278,12 @@ export function reviewRisk(
         operations: [...operations.values()].sort((a, b) => (a.id < b.id ? -1 : 1)),
         pipelines,
     };
-    const terms = RISK_TERMS.map((term) => ({ term, weight: weights[term], items: lists[term], contribution: lists[term].length * weights[term] }));
+    const laneState = new Map((graph.lanes_run ?? []).map((l) => [l.lane, l.skipped_reason ?? (l.error !== undefined ? `lane failed: ${l.error}` : null)] as const));
+    const terms = RISK_TERMS.map((term) => {
+        const lane = TERM_LANE[term];
+        const unknown = lane ? (laneState.get(lane) ?? null) : null;
+        return { term, weight: weights[term], items: unknown ? [] : lists[term], contribution: unknown ? 0 : lists[term].length * weights[term], unknown };
+    });
     const partial = [...new Set([...changed, ...[...callers.keys()].map((id) => byId.get(id)?.source_file ?? '')])]
         .filter((f) => byId.get(f)?.partial === true)
         .sort();
@@ -288,13 +304,15 @@ export function reviewRisk(
 export function renderReviewRisk(r: ReviewRisk, listCap = 20): string[] {
     const at = (w: RiskWitness | null): string => (w ? `${w.file}:${w.line}` : 'no witness');
     const lines = [
-        `review risk vs ${r.rev}: ${r.total} = ${r.terms.map((t) => `${t.term} ${t.items.length}×${t.weight}`).join(' + ')}`,
+        `review risk vs ${r.rev}: ${r.total} = ${r.terms.filter((t) => !t.unknown).map((t) => `${t.term} ${t.items.length}×${t.weight}`).join(' + ')}`,
+        ...r.terms.filter((t) => t.unknown).map((t) => `${t.term} unknown (${t.unknown}), not part of the sum`),
         `basis: graph ${r.basis.graph_checksum.slice(0, 12)} · ${r.changed.length} changed file(s) · ${r.seeds.length} changed symbol(s)`,
         ...(r.partial_files.length ? [`partial files (parsed with errors, facts are a lower bound): ${r.partial_files.join(', ')}`] : []),
         `changed symbols (${r.seeds.length}):`,
         ...r.seeds.slice(0, listCap).map((s) => `  ${s.label}  at ${at(s.witness)}`),
     ];
     for (const t of r.terms) {
+        if (t.unknown) continue;
         lines.push(`${t.term} (${t.items.length} × ${t.weight} = ${t.contribution}):`);
         for (const i of t.items.slice(0, listCap)) lines.push(`  ${i.label} — ${i.why}  at ${at(i.witness)}`);
         if (t.items.length > listCap) lines.push(`  … ${t.items.length - listCap} more`);
