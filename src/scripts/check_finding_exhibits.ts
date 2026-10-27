@@ -32,6 +32,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { type Exhibit, type PresenceExhibit, wellFormedExhibit } from './_lib/finding_exhibits.js';
+import { reportScanned } from './_lib/scan_scope.js';
 
 export type ExhibitVerdict = 'admissible' | 'inadmissible' | 'unverifiable';
 
@@ -136,7 +137,20 @@ function main(argv: readonly string[]): number {
     }
     const findings = Array.isArray(doc) ? doc : ((doc as { findings?: unknown[] })?.findings ?? []);
     const results = checkFindingExhibits(at('--cwd') ?? process.cwd(), findings);
-    if (argv.includes('--json')) {
+    const json = argv.includes('--json');
+    // In --json mode the count goes to stderr so stdout stays one parseable document.
+    reportScanned(
+        {
+            gate: 'check_finding_exhibits',
+            scanned: findings.length,
+            units: 'finding(s)',
+            roots: [file],
+            allowEmpty:
+                'EMPTY_VALID: a review that found nothing writes an empty findings array, which is an honest null, not a moved root.',
+        },
+        json ? process.stderr.write.bind(process.stderr) : undefined,
+    );
+    if (json) {
         process.stdout.write(`${JSON.stringify(results, null, 2)}\n`);
         return 0;
     }
