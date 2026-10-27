@@ -14,9 +14,10 @@ import { type AnswerEnvelope, type AnswerFormat, makeEnvelope } from './answer_e
 import { suggestVerb } from './intent.js';
 import { sanitizeLabel } from './sanitize.js';
 
-export type Intent = 'tests-for' | 'usage' | 'affected' | 'explain' | 'path' | 'query' | 'provenance' | 'bugs' | 'fix-plan' | 'verify-fix' | 'sessions' | 'knowledge';
+export type Intent = 'review' | 'tests-for' | 'usage' | 'affected' | 'explain' | 'path' | 'query' | 'provenance' | 'bugs' | 'fix-plan' | 'verify-fix' | 'sessions' | 'knowledge';
 
 const INTENTS: ReadonlyArray<readonly [Intent, RegExp]> = [
+    ['review', /\breview checklist\b|\bchecklist for\b|\bwhat should (the )?review(er)? check\b/i],
     ['verify-fix', /\b(did|does|is)\b.*\bfix(ed)?\b.*\b(work|hold|stick)|\bverify (the )?fix\b/i],
     ['fix-plan', /\b(how (do|should|can) (i|we) fix|fix plan|plan (a|the) fix)\b/i],
     ['bugs', /\b(bug|bugs|error|crash|regress(ion|ed)?|sentry|exception)\b/i],

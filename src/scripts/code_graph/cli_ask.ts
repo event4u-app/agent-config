@@ -15,8 +15,26 @@ import { type LoadedGraph, loadGraph, resolveSeeds } from './query.js';
 import { repoIdentity } from './repo_identity.js';
 import { gitProbe } from '../_lib/spawn_env.js';
 import { testsForModule } from './answer_correctness.js';
+import { correctionSignals, foldSignals, readUserSignals, reviewChecklist } from '../_lib/learning_inputs.js';
 
 const TOKENS_PER_LINE = 10;
+
+/**
+ * Review checklist inputs from the asker's own feedback signals: recurring
+ * findings and correction hot spots, each citing a contract or a test. The rows
+ * belong to the account whose home holds the store, and `ask` shows them only to it.
+ */
+export function reviewSources(root: string, g: LoadedGraph, scope: Scope, storeOwner: string = process.env['USER'] ?? ''): AskSource[] {
+    const signals = readUserSignals(scope.repoId);
+    const fold = foldSignals(scope.repoId, signals);
+    const area = (q: string): string => /(?:for|in|of)\s+([\w./-]+)/.exec(q)?.[1] ?? '.';
+    const rowsFor = (a: string): Array<{ row: AskRow; body: string }> =>
+        reviewChecklist(root, fold, correctionSignals(signals, (t) => (t.includes('/') ? t.split(':').pop() ?? null : null)), a, (x) => testsForModule(g, x, 'fresh').tests).map((c, i) => ({
+            row: { id: `review:${a}:${i}`, source: 'feedback', title: `${c.item} — cites ${c.cites}`, read_tokens: 40, at: null, repo_id: scope.repoId, branch: null, user: storeOwner, worktree: null },
+            body: `${c.item}\ncites: ${c.cites}\nseen in ${c.evidence.sessions} session(s): ${c.evidence.at.join(', ')}`,
+        }));
+    return [{ name: 'feedback', owner: 'user', intents: ['review'], rows: (q) => rowsFor(area(q)).map((r) => r.row), fetch: (id) => (id.startsWith('review:') ? (rowsFor(id.split(':')[1] ?? '.').find((r) => r.row.id === id) ?? null) : null) }];
+}
 
 export function graphSources(g: LoadedGraph, repoId: string): AskSource[] {
     const rowOf = (id: string): AskRow | null => {
@@ -69,7 +87,7 @@ export function askMain(argv: string[]): number {
     const scope: Scope = { repoId: repoIdentity(root).repoId, branch: git(['rev-parse', '--abbrev-ref', 'HEAD']), worktree: root, user: process.env['USER'] ?? '' };
     const g = loadGraph(cache, 'native');
     try {
-        const sources = graphSources(g, scope.repoId);
+        const sources = [...graphSources(g, scope.repoId), ...reviewSources(root, g, scope)];
         const id = flag(argv, '--fetch');
         if (id) {
             const r = fetchById(id, sources, scope);

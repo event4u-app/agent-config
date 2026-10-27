@@ -47,3 +47,57 @@ describe('review checklist', () => {
         expect(reviewChecklist(ROOT, f, [], 'src')).toEqual([]);
     });
 });
+
+describe('wiring: retro triage, recurrence and review routing read the library', () => {
+    it('retro triage lifts a low-signal unit when a feedback topic is a candidate', async () => {
+        const { withFeedback } = await import('../../src/scripts/_lib/learning_inputs.js');
+        const base = { class: 'skip:low-signal', score: 1, signals: ['20 turns +1'] };
+        const lifted = withFeedback(base, retroDigest(fold), 3);
+        expect(lifted).toMatchObject({ class: 'analyse', score: 3 });
+        expect(lifted.signals.at(-1)).toBe('feedback: rule:commit-policy candidate +2');
+        expect(withFeedback(base, [], 3)).toBe(base);
+    });
+
+    it('composeRetro and readRecurrence read signals; a complaint after acceptance is recurred', async () => {
+        const { composeRetro, readRecurrence } = await import('../../src/scripts/retro.js');
+        const fs = await import('node:fs');
+        const os = await import('node:os');
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'retro-fb-'));
+        try {
+            const r = readRecurrence(root, 'rule:commit-policy', { signals: sigs, acceptedAt: '2026-09-10', now: '2026-10-01' });
+            expect(r.feedback).toEqual({ topic: 'rule:commit-policy', accepted_at: '2026-09-10', before: 2, after: 1, verdict: 'recurred' });
+            expect(readRecurrence(root, 'rule:commit-policy').feedback).toBeUndefined();
+            expect(typeof composeRetro).toBe('function');
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    it('review routing: ask answers a review-checklist question from the user signals, cited, only for that user', async () => {
+        const fs = await import('node:fs');
+        const os = await import('node:os');
+        const { vi } = await import('vitest');
+        const { ask, fetchById, routeIntent } = await import('../../src/scripts/code_graph/ask.js');
+        const { reviewSources } = await import('../../src/scripts/code_graph/cli_ask.js');
+        const { appendUserRow } = await import('../../src/scripts/_lib/user_data_control.js');
+        const { userProjectDir } = await import('../../src/scripts/_lib/ownership_model.js');
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'review-home-'));
+        vi.stubEnv('EVENT4U_CONFIG_HOME', home);
+        try {
+            const dir = userProjectDir('repo-r');
+            for (const [i, s] of sigs.slice(0, 2).entries()) appendUserRow(dir, 'signals', { id: `s${i}`, ...s });
+            const g = { byId: new Map(), in: new Map(), out: new Map(), idsInFiles: () => [], idsByLabel: () => [] } as never;
+            const scope = { repoId: 'repo-r', branch: 'main', worktree: ROOT, user: 'u1' };
+            expect(routeIntent('review checklist for src/scripts')).toBe('review');
+            const r = ask('review checklist for src/scripts', reviewSources(ROOT, g, scope, 'u1'), scope);
+            expect(r.envelope.answer.map((a) => a.text)).toEqual([expect.stringContaining('cites src/rules/commit-policy.md')]);
+            expect(JSON.stringify(r)).not.toMatch(/frustrat/);
+            const id = r.envelope.answer[0]?.id as string;
+            expect(fetchById(id, reviewSources(ROOT, g, scope, 'u1'), scope)).toMatchObject({ ok: true });
+            expect(fetchById(id, reviewSources(ROOT, g, { ...scope, user: 'u2' }, 'u1'), { ...scope, user: 'u2' })).toEqual({ ok: false, reason: 'refused: owned by another user' });
+        } finally {
+            vi.unstubAllEnvs();
+            fs.rmSync(home, { recursive: true, force: true });
+        }
+    });
+});

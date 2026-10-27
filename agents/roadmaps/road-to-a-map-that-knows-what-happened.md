@@ -322,14 +322,14 @@ signals are user-owned local files; disable per kind (O20). K.1-K.3 run before D
       corroboration; project entries only in their repo. Blocked by
       `b-stage-d-measurement`.
       verify: `npx vitest run tests/scripts/working_style_delivery.test.ts` -> 0
-- [ ] **K.6 Learnings into reviews and retros** (H54). Retro triage reads
+- [x] **K.6 Learnings into reviews and retros** (H54). Retro triage reads
       signal kinds and topics; "held or recurred" reads signals and reports
       recurrence before and after an accepted learning; review routing receives
       recurring findings and correction hot spots through `ask` as checklist
       inputs citing the violated contract or test, never private frustration
       text.
       verify: `npx vitest run tests/scripts/retro_review_learnings.test.ts` -> 0
-      > note: open: the digest, held-or-recurred and the cited checklist ship with their test (`_lib/learning_inputs.ts`); retro triage and review routing do not read them yet, and nothing feeds them until K.2 is wired.
+      > note: retro triage and recurrence read the user's signals (`composeRetro`, `readRecurrence`), and review routing asks `code-graph ask "review checklist for <area>"`; signals arrive in the store only once K.2's prompt wiring exists (hook-bundle headroom).
 - [ ] **K.7 The user stays in control** (H53). View, export and delete cover
       profile, observations, signals, chat history, session index, and every
       derived index (FTS SQLite, twin); revoked items vanish from FTS; each
