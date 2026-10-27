@@ -43,7 +43,15 @@ describe('scope on every fact (2.2, H1–H4)', () => {
         const { areas } = produceAreas(root, graph);
         const sys = areas.systems!;
         expect(sys.findings.every((f) => f.witnesses.some((x) => scopeOf(x.file) === 'product'))).toBe(true);
-        expect(sys.fixture_findings ?? 0).toBeGreaterThan(0);
+        // Since 6.2 the systems lane raises no SY-1 on a fixture manifest at all; a graph that still
+        // carries one (an older lane build) is filtered here and counted.
+        const legacy: CodeGraph = {
+            ...graph,
+            nodes: graph.nodes.map((n) => (n.fact?.lane === 'systems' && n.fact.attrs?.['name'] === 'left-pad' ? { ...n, fact: { ...n.fact, attrs: { ...n.fact.attrs, unused: true, unused_ref: 'tests/fixtures/demo/package.json:1:00000000' } } } : n)),
+        };
+        const old = produceAreas(root, legacy).areas.systems!;
+        expect(old.findings.some((f) => f.subject.includes('left-pad'))).toBe(false);
+        expect(old.fixture_findings).toBe(1);
     });
 
     it('starts every tour in product scope', () => {

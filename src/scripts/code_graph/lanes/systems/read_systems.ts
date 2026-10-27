@@ -99,6 +99,10 @@ interface Pkg {
     users: Map<string, { names: Set<string>; line: number }>;
     /** composer only: whether `vendor/` autoload maps bound its classes, or only the lockfile's PSR maps */
     binding?: 'complete' | 'partial';
+    /** declared beside a lockfile that does not hold it */
+    notInstalled?: boolean;
+    /** 6.2: `used`, `used-through <pkg>`, `unused-candidate`, `not-installed`, `virtual/meta`, `ignored (<reason>)` */
+    verdict?: string;
 }
 
 const factKey = (eco: Ecosystem, key: string): string => `${eco}:${key}`;
@@ -168,6 +172,17 @@ export function readSystems(root: string, opts: SystemsOptions = {}): LaneOutput
         for (const r of g.roots) {
             const id = r.to ? pkgId(g.ecosystem, r.to) : null;
             if (id && pkgs.has(id)) pkgs.get(id)!.roots.push(r);
+            if (r.to === null && r.manifest.slice(0, r.manifest.lastIndexOf('/') + 1) === g.file.slice(0, g.file.lastIndexOf('/') + 1)) {
+                // Declared beside this lockfile, and the lockfile does not hold it: not installed.
+                const key = `${r.name}@not-installed`;
+                const nid = pkgId(g.ecosystem, key);
+                const known = pkgs.get(nid);
+                if (known) known.roots.push(r);
+                else {
+                    const p: LockPackage = { key, name: r.name, version: 'not-installed', line: r.line, dev: r.kind === 'dev', optional: r.kind === 'optional', requires: [], bins: [], namespaces: [], autoloadFiles: false, classmap: false, providers: [], peers: [], private: false };
+                    pkgs.set(nid, { id: nid, eco: g.ecosystem, p, locked: false, lockfiles: new Set([g.file]), roots: [r], lockfile: r.manifest, nonimport: [], users: new Map(), notInstalled: true });
+                }
+            }
         }
     }
     const lockedManifests = new Set(graphs.flatMap((g) => g.roots.map((r) => r.manifest)));
@@ -203,6 +218,7 @@ export function readSystems(root: string, opts: SystemsOptions = {}): LaneOutput
     phpUses(root, em, walk, read, pkgs, preferred);
     nonImportUses(walk, read, pkgs, byName, preferred);
 
+    assignVerdicts(graphs, pkgs, read);
     for (const k of pkgs.values()) emitPackage(em, k, read);
     for (const g of graphs) {
         for (const p of g.packages.values()) {
@@ -254,7 +270,9 @@ function emitPackage(em: Emitter, k: Pkg, read: (rel: string) => string | null):
         nonimport: [...new Set(k.nonimport)].sort(),
         ...(k.binding ? { binding: k.binding } : {}),
     };
-    if (direct && users.length === 0 && k.nonimport.length === 0) {
+    if (k.verdict) attrs['verdict'] = k.verdict;
+    // SY-1 reads `unused`: only an unused candidate a product manifest declares.
+    if (direct && k.verdict === 'unused-candidate' && k.roots.some((r) => scopeOf(r.manifest) === 'product')) {
         attrs['unused'] = true;
         attrs['unused_ref'] = ref(k.roots[0]!.manifest, k.roots[0]!.line);
     }
@@ -267,6 +285,55 @@ function emitPackage(em: Emitter, k: Pkg, read: (rel: string) => string | null):
         attrs['dev_in_prod_ref'] = ref(prodUser[0], prodUser[1].line);
     }
     em.fact('package', factKey(k.eco, k.p.key), `${k.p.name}@${k.p.version}`, attrs, k.lockfile, Math.max(1, k.p.line));
+}
+
+/** The `extra.unused` list of a composer manifest (the composer-unused convention), read once per manifest. */
+function ignoredBy(manifest: string, read: (rel: string) => string | null, memo: Map<string, Set<string>>): Set<string> {
+    let set = memo.get(manifest);
+    if (!set) {
+        set = new Set();
+        try {
+            const doc = JSON.parse(read(manifest) ?? '{}') as { extra?: { unused?: unknown[] } };
+            for (const n of doc.extra?.unused ?? []) if (typeof n === 'string') set.add(n.toLowerCase());
+        } catch {
+            /* an unreadable manifest ignores nothing */
+        }
+        memo.set(manifest, set);
+    }
+    return set;
+}
+
+/** One verdict per package, from its uses, its dependents' uses, the lockfile and the manifest (6.2). */
+function assignVerdicts(graphs: readonly LockGraph[], pkgs: Map<string, Pkg>, read: (rel: string) => string | null): void {
+    const dependents = new Map<string, Set<string>>();
+    for (const g of graphs) {
+        for (const p of g.packages.values()) {
+            for (const r of p.requires) {
+                if (!r.to) continue;
+                const to = pkgId(g.ecosystem, r.to);
+                const set = dependents.get(to) ?? new Set<string>();
+                set.add(pkgId(g.ecosystem, p.key));
+                dependents.set(to, set);
+            }
+        }
+    }
+    const used = (k: Pkg): boolean => k.users.size > 0 || k.nonimport.length > 0;
+    const memo = new Map<string, Set<string>>();
+    for (const k of pkgs.values()) {
+        const ignored = k.eco === 'composer' && k.roots.find((r) => ignoredBy(r.manifest, read, memo).has(k.p.name.toLowerCase()));
+        const through = [...(dependents.get(k.id) ?? [])].map((id) => pkgs.get(id)).filter((d): d is Pkg => !!d && used(d)).map((d) => d.p.name).sort()[0];
+        k.verdict = used(k)
+            ? 'used'
+            : k.notInstalled
+              ? 'not-installed'
+              : ignored
+                ? `ignored (${ignored.manifest} extra.unused)`
+                : k.p.meta || k.p.name.startsWith('@types/')
+                  ? 'virtual/meta'
+                  : through
+                    ? `used-through ${through}`
+                    : 'unused-candidate';
+    }
 }
 
 /**
