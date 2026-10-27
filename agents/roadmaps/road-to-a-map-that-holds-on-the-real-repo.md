@@ -177,7 +177,7 @@ the decision-revisit gate first.
 - [ ] **3.1 [B.1] Receipt per step.** Computed from the commits that flipped that step (range, touched paths, verify output); the checker reads archived moves and content. verify: `npx vitest run tests/scripts/check_step_receipts.test.ts` -> 0
 - [ ] **3.2 [B.2] Falsifiable verify at archive.** Every `verify:` names a command and an expected result; ratchet from the share at adoption (93/230 command, 6/230 expectation). verify: `./scripts-run src/scripts/archive_completed_roadmaps --dry-run --check-verify agents/roadmaps/archive/road-to-a-map-the-agent-checks-before-it-acts.md` -> 1
 - [ ] **3.3 [B.3] Measurement steps need a threshold or an owner null record.** verify: a planted measurement step with neither makes `./scripts-run src/scripts/archive_completed_roadmaps --dry-run` refuse it, and the fixture test `npx vitest run tests/scripts/archive_measurement_threshold.test.ts` -> 0
-- [ ] **3.4 [B.4] Erratum on the two archived map roadmaps.** One appended section each listing the reopened steps (H12–H20) with this file's step IDs; H21 deferred to 5.6. verify: `grep -c '^## Erratum' agents/roadmaps/archive/road-to-a-map-the-agent-checks-before-it-acts.md` -> /^1$/
+- [x] **3.4 [B.4] Erratum on the two archived map roadmaps.** One appended section each listing the reopened steps (H12–H20) with this file's step IDs; H21 deferred to 5.6. verify: `grep -c '^## Erratum' agents/roadmaps/archive/road-to-a-map-the-agent-checks-before-it-acts.md` -> /^1$/
 
 ## Phase 4 — The committed map as a generated artifact [C]
 
