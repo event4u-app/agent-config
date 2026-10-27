@@ -30,7 +30,7 @@ const ROOT = path.resolve(__dirname, '..', '..');
 const CORPUS_DIR = path.join(ROOT, 'internal', 'bench', 'corpora');
 const REPORTS_DIR = path.join(ROOT, 'internal', 'bench', 'reports');
 
-type WriteSpy = ReturnType<typeof vi.spyOn<typeof process.stdout, 'write'>>;
+type WriteSpy = { mock: { calls: readonly (readonly unknown[])[] }; mockRestore(): void; mockClear(): void };
 
 function written(spy: WriteSpy): string {
     return spy.mock.calls.map((c) => String(c[0])).join('');
