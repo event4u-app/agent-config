@@ -121,7 +121,7 @@ Exit: 0.1–0.3 green. Rollback: revert `viewer.css`; aliases keep every caller 
 - [x] **1.4 Provenance footer.** A shared footer line per page naming the
       source file and commit ("Echte Daten · systems.json @ 2efd5be1").
       verify: `npx vitest run tests/scripts/code_graph_map_shell.test.ts -t provenance --reporter=verbose` -> /✓.*provenance/
-- [ ] **1.5 Breakpoints, scroll strip, flyouts.** Breakpoints 700 and 1000 per
+- [x] **1.5 Breakpoints, scroll strip, flyouts.** Breakpoints 700 and 1000 per
       the handover replace 720/400; at ≤700 the nav and every tablist are one
       horizontal scroll strip (the ☰ menu goes, Decision D6); asides become
       `position:absolute` flyouts with `±12px 0 40px` shadows and the handover's

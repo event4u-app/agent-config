@@ -1188,7 +1188,6 @@ export function renderPage(m: MapModel, meta: MapMeta, areas: object, shell?: Ma
         shell?.hub ? '<div class="brand-name hub"><b>AGENT CONFIG</b><span>ESTATE MAP</span></div>' : '<div class="brand-name"><b>AGENT CONFIG</b><span>KNOWLEDGE MAP</span></div>',
         '</div>',
         ...(shell?.hub ? ['<span class="chip mono hub-chip" id="hub-chip"></span><span class="hub-back" id="hub-back"></span>'] : []),
-        ...(shell?.hub ? [] : ['<button type="button" class="areamenu" id="areamenu" aria-haspopup="true" aria-expanded="false" aria-controls="areanav"></button>']),
         `<nav class="areanav" id="areanav" aria-label="Areas"${shell?.hub ? ' hidden' : ''}>${nav.map((r) => `<a href="#/${r}" data-route="${r}">${r}</a>`).join('')}</nav>`,
         '</div>',
         '<div class="top-row row2">',

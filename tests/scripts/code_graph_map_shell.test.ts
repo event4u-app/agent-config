@@ -585,14 +585,14 @@ describe('the area detail rail follows the Code rails', () => {
             const el = document.getElementById('av-side') as HTMLElement;
             const r = el.getBoundingClientRect();
             const cs = getComputedStyle(el);
-            return { fixed: cs.position === 'fixed', visible: cs.visibility !== 'hidden' && r.right > 1 && r.left < window.innerWidth - 1 };
+            return { fixed: cs.position === 'absolute', visible: cs.display !== 'none' && cs.visibility !== 'hidden' && r.right > 1 && r.left < window.innerWidth - 1 };
         });
 
-    it('pinned at 1440, a flyout with a scrim at 1000, never pinned on a phone', async () => {
+    it('pinned at 1440, a flyout with a scrim at 1100, in the flow and never pinned on a phone', async () => {
         const wide = await open(full, '#/data', { width: 1440 });
         expect(await side(wide)).toMatchObject({ fixed: false, visible: true });
         await wide.close();
-        const tablet = await open(full, '#/data', { width: 1000 });
+        const tablet = await open(full, '#/data', { width: 1100 });
         expect(await side(tablet)).toMatchObject({ visible: false });
         await tablet.click('#av-open');
         expect(await side(tablet)).toMatchObject({ fixed: true, visible: true });
@@ -602,7 +602,7 @@ describe('the area detail rail follows the Code rails', () => {
         await tablet.close();
         const phone = await open(full, '#/data', { width: 375, height: 812 });
         await phone.click('#av-open');
-        expect(await side(phone)).toMatchObject({ fixed: true, visible: true });
+        expect(await side(phone)).toMatchObject({ fixed: false, visible: true });
         expect(await phone.locator('#av-pin').isVisible()).toBe(false);
         await phone.close();
     });

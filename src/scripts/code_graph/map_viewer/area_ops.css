@@ -55,7 +55,7 @@
 .ops-cell { padding: 9px 12px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 /* A phone has no room for a name column beside the environments: the name takes a row of its own and stays in
    view while the environment cells beneath it scroll sideways at a width their chips fit in. */
-@media (max-width: 720px) {
+@media (max-width: 700px) {
     .ops-cmp { overflow-x: auto; }
     .ops-cmpgrid { grid-template-columns: repeat(var(--envs, 1), minmax(132px, 1fr)) !important; }
     .ops-th0 { display: none; }
@@ -159,4 +159,4 @@ line.pe-shared { stroke: var(--violet); stroke-width: 2px; stroke-dasharray: 4 3
 .av-bar.owned:has(> .ops-mark) { padding: 12px 20px; gap: 10px; }
 .ops-mark { display: none; }
 .ops-legend.wide { gap: 8px 16px; }
-@media (max-width: 720px) { .ops-graph { min-width: 0; } .ops-pnode { width: 116px; padding: 6px; } .ops-pname { font-size: 13px; } }
+@media (max-width: 700px) { .ops-graph { min-width: 0; } .ops-pnode { width: 116px; padding: 6px; } .ops-pname { font-size: 13px; } }

@@ -482,6 +482,9 @@ function renderAreaPage(id, key) {
     avRailTitleKeys = paged && mod.railTitles ? mod.railTitles : [null, 'detail'];
     $('av-left-title').textContent = avRailTitleKeys[0] ? t(avRailTitleKeys[0]) : '';
     $('av-right-title').textContent = avRailTitleKeys[1] ? t(avRailTitleKeys[1]) : '';
+    // Each aside is named for what it holds on this page, as the handover labels it.
+    $('av-left').setAttribute('aria-label', avRailTitleKeys[0] ? t(avRailTitleKeys[0]) : t('detail'));
+    $('av-side').setAttribute('aria-label', avRailTitleKeys[1] ? t(avRailTitleKeys[1]) : t('detail'));
     body.classList.toggle('no-left', !paged || !avRailTitleKeys[0]);
     body.classList.toggle('no-side', !live || (paged && !avRailTitleKeys[1]));
     body.classList.toggle('paged', paged);

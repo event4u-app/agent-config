@@ -565,7 +565,7 @@ function dErd(p, sel, bodyEl) {
     function join(a, b) { if (adj[a] && adj[b] && a !== b) { adj[a].push(b); adj[b].push(a); } }
     p.foreignKeys.forEach(function (k) { join(k.from.table, k.to.table); });
     rels.forEach(function (r) { join(r.from, r.to); });
-    var phone = window.innerWidth <= 720;
+    var phone = window.innerWidth <= 700;
     var groups = [];
     if (dbState.layout === 'domain') {
         groups = dClusters(p);

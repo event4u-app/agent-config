@@ -89,20 +89,10 @@ function renderNav() {
         // The handover names why an entry is dim; Bugs is local data, never in a committed map.
         if (empty) a.setAttribute('title', r === 'bugs' ? t('navBugsLocal') : t('navNoData')); else a.removeAttribute('title');
     });
-    // On a phone the nav folds into one menu button that names the open area.
-    var menu = $('areamenu');
-    if (!menu) return;
-    menu.textContent = '☰ ' + (t('areaNames')[current.route] || current.route);
-    menu.setAttribute('aria-label', t('navLabel') + ': ' + (t('areaNames')[current.route] || current.route));
-    setAreaMenu(false);
+    // On a phone the nav is one horizontal strip (Decision D6): the open area scrolls into view.
+    var on = $('areanav').querySelector('a[aria-current]');
+    if (on && $('areanav').scrollWidth > $('areanav').clientWidth) $('areanav').scrollLeft = Math.max(0, on.offsetLeft - 8);
 }
-function setAreaMenu(open) {
-    if (!$('areamenu')) return;
-    $('areamenu').setAttribute('aria-expanded', String(open));
-    $('areanav').classList.toggle('open', open);
-}
-if ($('areamenu')) $('areamenu').addEventListener('click', function () { setAreaMenu($('areamenu').getAttribute('aria-expanded') !== 'true'); });
-document.addEventListener('pointerdown', function (e) { if ($('areanav').classList.contains('open') && !e.target.closest('#areanav, #areamenu')) setAreaMenu(false); });
 /**
  * While the graph is not level with HEAD the header's freshness chip carries
  * the reason and what to do, as its tooltip: the design draws no banner row.
@@ -343,7 +333,6 @@ searchInput.addEventListener('focus', function () { if (searchStack.length || se
 document.addEventListener('keydown', function (e) {
     if (e.key === '/' && document.activeElement !== searchInput) { e.preventDefault(); searchInput.focus(); return; }
     if (e.key !== 'Escape') return;
-    if ($('areamenu') && $('areanav').classList.contains('open')) { setAreaMenu(false); $('areamenu').focus(); return; }
     if (current.route !== 'code' && (avState.fly || avState.flyL)) { avState.fly = false; avState.flyL = false; applyAvPanes(); }
 });
 

@@ -159,11 +159,13 @@ describe('the shipped decisions stay in place under the new shell', () => {
         expect(html).toMatch(/img-src 'none'/);
     });
 
-    it('3–4 side panels pin only from 1240 px, fly out with a scrim below it, never pin on a phone, and animate unless motion is reduced', () => {
-        expect(js).toContain("return w <= 720 ? 'phone' : w < 1240 ? 'tablet' : 'wide';");
+    it('3–4 side panels pin only from 1240 px, fly out inside the body with a scrim below it, never pin on a phone', () => {
+        expect(js).toContain("return w <= 700 ? 'phone' : w < 1240 ? 'tablet' : 'wide';");
         expect(html).toContain('<div class="scrim" id="scrim" hidden></div>');
         expect(html).toContain('<div class="scrim" id="av-scrim" hidden></div>');
-        expect(css).toMatch(/transition: transform 0\.2s ease, visibility 0\.2s;[\s\S]*prefers-reduced-motion: reduce/);
+        // The 2026-10-bf handover draws its flyouts without an animation.
+        expect(css).toContain('.av-body:not(.pin-right) .av-side { position: absolute; top: 0; bottom: 0; right: 0; z-index: 30; width: 400px; max-width: 92vw; min-width: 0; box-shadow: -12px 0 40px rgba(0, 0, 0, 0.35); }');
+        expect(css).not.toContain('transition: transform 0.2s ease, visibility 0.2s;');
         expect(css).toContain('.wb.mode-phone .pane-pin { display: none; }');
         expect(css).toContain('.av-body.mode-phone #av-pin { display: none; }');
     });

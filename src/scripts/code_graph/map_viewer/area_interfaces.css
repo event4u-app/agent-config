@@ -48,7 +48,7 @@
 .if-node.nodata { opacity: 1; }
 .if-nname { font-weight: 600; font-size: 12px; }
 .if-nloc { font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
-@media (max-width: 720px) { .if-node { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
+@media (max-width: 700px) { .if-node { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
 .if-arrow { display: flex; align-items: center; gap: 10px; height: 34px; padding-left: 52px; }
 .if-line { display: block; width: 0; height: 100%; border-left: 2px solid var(--line2); }
 .if-line.dash { border-left-style: dashed; border-left-color: var(--amber); }

@@ -117,7 +117,7 @@
     var labelHits = [];
     var superList = [];
     var superOf = Object.create(null);
-    function paneMode() { var w = window.innerWidth; return w <= 720 ? 'phone' : w < 1240 ? 'tablet' : 'wide'; }
+    function paneMode() { var w = window.innerWidth; return w <= 700 ? 'phone' : w < 1240 ? 'tablet' : 'wide'; }
     function isPinned(side) {
         var mode = paneMode();
         if (mode === 'phone' || state.full) return false;

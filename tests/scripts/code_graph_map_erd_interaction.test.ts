@@ -444,6 +444,8 @@ describe('3D: a plain drag turns, the wheel zooms, a click picks', () => {
                     const x = r.left + r.width / 2;
                     const y = r.top + r.height / 2;
                     if (x < st.left + 20 || x > st.right - 20 || y < st.top + 60 || y > st.bottom - 20) continue;
+                    // At the handover's 1000 px breakpoint the page scrolls, not the main column: a dot below the fold is not under a hand.
+                    if (y > window.innerHeight - 20) continue;
                     if (document.elementFromPoint(x, y)?.closest('.db-table, .db-overlay, .db-badge')) continue;
                     const hit = document.elementFromPoint(x + 5, y)?.closest('.db-3dot, .db-table, .db-badge');
                     if (!hit) out.push(el.getAttribute('data-table')!);
