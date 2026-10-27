@@ -71,6 +71,8 @@ export interface AreaPayloadBase {
     /** Set when the reader ran and found nothing; shown as the area's reason. */
     empty?: string;
     findings: AreaFinding[];
+    /** Findings left out of the default view because every witness sits outside product scope: the "+N in fixtures" count. */
+    fixture_findings?: number;
 }
 
 // Data — tables, columns, keys, ORM relations.

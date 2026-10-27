@@ -24,6 +24,7 @@
  * twin, so a query sees the merged facts through either store.
  */
 import { declaredUnresolved } from '../lint.js';
+import { stampScope } from '../scope.js';
 import * as fs from 'node:fs';
 
 import { write_atomic } from '../../_lib/fs_atomic.js';
@@ -151,7 +152,8 @@ export function mergeLaneOutputs(graph: CodeGraph, outputs: readonly LaneOutput[
     });
     const counts = { EXTRACTED: 0, INFERRED: 0, AMBIGUOUS: 0 };
     for (const e of edges) counts[e.confidence] += 1;
-    return { graph: { ...graph, nodes, edges, edge_confidence_counts: counts }, merged: { nodes: mergedNodes, edges: mergedEdges }, refused };
+    // A lane fact carries the scope of the file that owns it, like a core node.
+    return { graph: stampScope({ ...graph, nodes, edges, edge_confidence_counts: counts }), merged: { nodes: mergedNodes, edges: mergedEdges }, refused };
 }
 
 /**

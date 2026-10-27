@@ -7,6 +7,7 @@
  * of the shape. Deterministic + LLM-free + no network: identical source →
  * identical graph bytes (enforced by the golden-checksum test).
  */
+import type { Scope } from './scope.js';
 import type { SourceRung, Witness } from './lanes/lane_fact.js';
 import type { VocabKind, VocabRelation } from './vocabulary.js';
 
@@ -241,6 +242,8 @@ export interface CodeNode {
     source_location: readonly number[];
     /** Witness and provenance, on facts a lane reader or schema replay produced. */
     fact?: FactMeta;
+    /** What the node's file is to the project (`scope.ts`); absent means `product`. */
+    scope?: Exclude<Scope, 'product'>;
 }
 
 /**

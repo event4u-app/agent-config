@@ -10,7 +10,8 @@
  * Path confinement: every candidate file is resolved and asserted under the
  * repo root; symlinks are skipped; ids are POSIX-relative. No network, no LLM.
  */
-import { isTestFile } from './scope.js';
+import { graphHome } from './graph_home.js';
+import { isTestFile, readScopeRules, stampScope } from './scope.js';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -1199,6 +1200,7 @@ export function serializeGraph(g: CodeGraph): string {
         source_file: n.source_file,
         source_location: n.source_location,
         ...(n.fact ? { fact: factJson(n.fact) } : {}),
+        ...(n.scope ? { scope: n.scope } : {}),
     });
     const edge = (e: CodeEdge) => {
         const base: Record<string, unknown> = {
@@ -1396,7 +1398,7 @@ export async function buildFromRepo(
     const core = buildGraph(files, extracts, readResolutionConfig(root), scip, docs, readProjectProbe(abs), report);
     for (const f of report.passes?.failures ?? []) process.stderr.write(`code-graph: pass ${f.pass} failed — ${f.reason}\n`);
     const laned = opts.lanes ? runLaneReaders(abs, core) : null;
-    const graph = laned?.graph ?? core;
+    const graph = stampScope(laned?.graph ?? core, readScopeRules(path.join(graphHome(abs).mapDir, 'layers.yaml')));
     const json = serializeGraph(graph);
     if (cachePath) {
         write_atomic(cachePath, json);

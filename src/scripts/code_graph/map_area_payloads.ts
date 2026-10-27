@@ -11,6 +11,7 @@
  * map's is `stale`. Nothing here writes a file; ERD pages are returned for the
  * map writer to place.
  */
+import { scopeOf } from './scope.js';
 import { excludedOwnFiles } from './lanes/delivery/self_trigger.js';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
@@ -880,7 +881,7 @@ function workflowOnPaths(c: Ctx, areas: MapAreas, flowFiles: ReadonlySet<string>
 
 function tours(c: Ctx, areas: MapAreas, previous: readonly MapTour[] = []): MapTour[] {
     const flows = c.graph.nodes
-        .filter((n) => n.kind === 'flow')
+        .filter((n) => n.kind === 'flow' && !c.byId.get(String(attr(n, 'entry') ?? ''))?.scope && !n.scope)
         .sort((a, b) => Number(attr(b, 'size') ?? 0) - Number(attr(a, 'size') ?? 0) || (a.id < b.id ? -1 : 1))
         .slice(0, 3);
     const out: MapTour[] = [];
@@ -940,6 +941,25 @@ function tours(c: Ctx, areas: MapAreas, previous: readonly MapTour[] = []): MapT
     return out;
 }
 
+/** A finding with no witness, or with one in product scope, belongs to the default view. */
+function inProductScope(f: AreaFinding): boolean {
+    return f.witnesses.length === 0 || f.witnesses.some((w) => scopeOf(w.file) === 'product');
+}
+
+/** What `build --check-fixture-findings` refuses: a default-view finding or a tour outside product scope. */
+export function fixtureScopeProblems(areas: MapAreas): string[] {
+    const out: string[] = [];
+    for (const [id, p] of Object.entries(areas)) {
+        const findings = (p as { findings?: AreaFinding[] } | undefined)?.findings ?? [];
+        for (const f of findings) if (!inProductScope(f)) out.push(`${id}: ${f.id} ${f.subject} has no witness in product scope`);
+    }
+    for (const t of areas.tours ?? []) {
+        const item = t.steps[0]?.item;
+        if (item && scopeOf(item) !== 'product') out.push(`tour ${t.id} starts outside product scope at ${item}`);
+    }
+    return out;
+}
+
 /** Every knowledge area the merged graph can fill, with its ERD pages. */
 export function produceAreas(root: string, graph: CodeGraph, opts: ProduceOptions = {}): AreaBuild {
     const c: Ctx = { root, graph, byId: new Map(graph.nodes.map((n) => [n.id, n] as const)), out: new Map(), inn: new Map(), lines: new Map(), added: new Set(opts.added ?? []) };
@@ -950,7 +970,14 @@ export function produceAreas(root: string, graph: CodeGraph, opts: ProduceOption
     const legacyRan = graph.nodes.some((n) => n.fact?.lane !== undefined) || graph.edges.some((e) => e.fact?.lane !== undefined);
     const lane = (id: string): LaneState => laneState(c, id, legacyRan);
     const report = evaluateDrift(graph, ALL_DRIFT_RULES, readDeclaredWaivers(root));
-    const byLane = (lane: string): AreaFinding[] => report.findings.filter((f) => f.lane === lane).map((f) => toAreaFinding(c, f));
+    // The one scope filter: a finding is in the default view when a witness of it lies in product scope.
+    const hidden = new Map<string, number>();
+    const byLane = (lane: string): AreaFinding[] => {
+        const all = report.findings.filter((f) => f.lane === lane).map((f) => toAreaFinding(c, f));
+        const shown = all.filter(inProductScope);
+        if (all.length > shown.length) hidden.set(lane, all.length - shown.length);
+        return shown;
+    };
     const areas: MapAreas = {};
     const dataLane = lane(LANES_OF_AREA.data);
     const data = dataPayload(c, byLane(LANES_OF_AREA.data), dataLane);
@@ -972,6 +999,11 @@ export function produceAreas(root: string, graph: CodeGraph, opts: ProduceOption
     const impact = isRepo || opts.hunks ? impactPayload(c, opts) : null;
     if (impact) areas.impact = impact;
     areas.agent = agentPayload(c, opts.cachePath, impact?.changed ?? []);
+    for (const [id, lane] of Object.entries(LANES_OF_AREA)) {
+        const p = areas[id as keyof typeof LANES_OF_AREA];
+        const n = hidden.get(lane);
+        if (p && n) p.fixture_findings = n;
+    }
     const t = tours(c, areas, opts.previousTours);
     if (t.length) areas.tours = t;
     return { areas, erd: areas.data ? (data?.erd ?? []) : [] };

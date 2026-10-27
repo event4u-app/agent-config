@@ -1312,6 +1312,8 @@ export interface ManifestArea {
     /** Witnesses (Code: files) the payload carries — a lower bound when the read was partial. */
     facts: number;
     findings?: number;
+    /** Findings outside product scope, kept out of `findings` and the default view. */
+    fixture_findings?: number;
     /** Why there is nothing, or why the state is not fresh. */
     reason?: string;
 }
@@ -1349,6 +1351,7 @@ export function mapManifest(m: MapModel, meta: MapMeta, areas: MapAreas): MapMan
             completeness: p.completeness,
             facts: ws.length,
             findings: p.findings.length,
+            ...(p.fixture_findings ? { fixture_findings: p.fixture_findings } : {}),
             ...(reason ? { reason } : {}),
         };
     }

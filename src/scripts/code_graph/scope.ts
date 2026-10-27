@@ -13,6 +13,7 @@ import fs from 'node:fs';
 import { parse as parseYaml } from 'yaml';
 
 import { globToRegExp } from './map_answers.js';
+import type { CodeGraph } from './types.js';
 
 export const SCOPES = ['product', 'test', 'fixture', 'bench', 'doc', 'vendored', 'generated'] as const;
 export type Scope = (typeof SCOPES)[number];
@@ -110,4 +111,19 @@ export const isFixturePath = isTestFile;
 /** Documentation or an example: a doc/example tree, or a prose file anywhere outside the other scopes. */
 export function isDocOrExamplePath(rel: string): boolean {
     return scopeOf(rel) === 'doc';
+}
+
+/**
+ * Stamps every node with the scope of the file that owns it — a lane fact by its
+ * owner, a core node by its source file — so every reader filters on one field.
+ * `product` is the absent value: the graph stays the size it was for a product tree.
+ */
+export function stampScope<G extends Pick<CodeGraph, 'nodes'>>(g: G, overrides: readonly ScopeRule[] = []): G {
+    const nodes = g.nodes.map((n) => {
+        const file = n.fact?.owner ?? n.source_file;
+        const s = file ? scopeOf(file, overrides) : 'product';
+        const { scope: _old, ...rest } = n;
+        return s === 'product' ? rest : { ...rest, scope: s };
+    });
+    return { ...g, nodes };
 }

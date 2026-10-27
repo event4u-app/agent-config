@@ -4,6 +4,8 @@
  *
  *   build    [--root P] [--out P] [--force]   (re)build the deterministic graph
  *            [--no-lanes]                      and merge every lane reader's facts
+ *            [--check-fixture-findings]        exit 1 when a default-view finding or a
+ *                                               tour lies outside product scope
  *   validate [--graph P]                       schema-gate a graph.json
  *   detect   [--root P] [--format json]        three-state freshness verdict
  *   refresh  [--root P] [--out P] [--budget-seconds N]
@@ -126,6 +128,7 @@
  *                                               never auto-run against a
  *                                               graph.
  */
+import { fixtureScopeProblems, produceAreas } from './map_area_payloads.js';
 import { lintGraph } from './lint.js';
 import { explainScope, readScopeRules } from './scope.js';
 import { spawnSync } from 'node:child_process';
@@ -248,6 +251,12 @@ async function cmdBuild(argv: string[]): Promise<number> {
             (out ? `    cache: ${shown(root, out)}\n` : '') +
             legacyCacheNotice(root),
     );
+    if (argv.includes('--check-fixture-findings')) {
+        const problems = fixtureScopeProblems(produceAreas(root, graph).areas);
+        for (const p of problems) process.stdout.write(`    fixture scope: ${p}\n`);
+        process.stdout.write(`    fixture scope check: ${problems.length} problem(s)\n`);
+        return problems.length === 0 ? 0 : 1;
+    }
     return 0;
 }
 
