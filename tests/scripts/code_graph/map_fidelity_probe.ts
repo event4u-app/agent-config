@@ -193,7 +193,44 @@ async function probeShell(browser: Browser, built: Built): Promise<unknown> {
     return out;
 }
 
-export const PROBES: Record<string, (b: Browser, built: Built) => Promise<unknown>> = { tokens: probeTokens, shell: probeShell };
+/** Visible text lines of each element matching a selector. */
+async function textLines(page: Page, selector: string): Promise<string[][]> {
+    return page.evaluate((s) => Array.from(document.querySelectorAll(s)).map((e) => (e as HTMLElement).innerText.split('\n').map((l) => l.trim()).filter(Boolean)), selector);
+}
+
+/** Probe `overview`: the Übersicht page of the handover against this repository's map. */
+async function probeOverview(browser: Browser, built: Built): Promise<unknown> {
+    const design = { card: 'main div[style*="auto-fill"] > div', radio: '[role="radio"][aria-checked="true"]', radioOff: '[role="radio"][aria-checked="false"]', banner: 'main > div[style*="inset 4px"]',
+        warn: 'main div[style*="auto-fill"] span[style*="amberTint"]', kv: 'main div[style*="auto-fill"] > div > div.mono', bar: 'main div[style*="auto-fill"] > div > div[style*="height: 5px"]',
+        legend: 'main > div:nth-child(2)', lower: 'main div[style*="340px"] > div', h1: 'main h1', prov: 'main > span.mono' };
+    const build = { card: '.ogrid > .ocard', radio: '.ov-legend [role="radio"][aria-checked="true"]', radioOff: '.ov-legend [role="radio"][aria-checked="false"]', banner: '#ov-banner',
+        warn: '.owarn', kv: '.ocard .okv', bar: '.ocard .obar', legend: '.ov-legend', lower: '.ov-lower > .card', h1: '.ov-intro h1', prov: '#prov' };
+    const out: Record<string, unknown> = {};
+    for (const theme of ['dark', 'light'] as const) {
+        for (const width of WIDTHS) {
+            const d = await openDesign(browser, 'p12/Overview.dc.html', width, theme);
+            const b = await openBuilt(browser, built.real, '#/overview', width, theme);
+            const row: Record<string, unknown> = {};
+            for (const [side, page, sel] of [['design', d, design], ['build', b, build]] as const) {
+                row[side] = {
+                    landmarks: await landmarks(page, side === 'design' ? 'main' : '#av-main'),
+                    overflow: await overflowAt(page),
+                    styles: width === 1440 ? await computedAt(page, [sel.card, sel.radio, sel.radioOff, sel.banner, sel.warn, sel.kv, sel.bar, sel.legend, sel.lower, sel.h1, sel.prov], [...STYLE_PROPS, 'grid-template-columns', 'border-top-style', 'padding-top', 'min-height', 'letter-spacing', 'text-transform', 'font-family']) : undefined,
+                    cards: width === 1440 && theme === 'dark' ? await textLines(page, sel.card) : undefined,
+                    lower: width === 1440 && theme === 'dark' ? await textLines(page, sel.lower) : undefined,
+                    banner: width === 1440 && theme === 'dark' ? await textLines(page, sel.banner) : undefined,
+                    gridCols: width === 1440 ? await page.evaluate((s) => getComputedStyle(document.querySelector(s)!.parentElement!).gridTemplateColumns, sel.card) : undefined,
+                };
+            }
+            out[`${theme}_${width}`] = row;
+            await d.close();
+            await b.close();
+        }
+    }
+    return out;
+}
+
+export const PROBES: Record<string, (b: Browser, built: Built) => Promise<unknown>> = { tokens: probeTokens, shell: probeShell, overview: probeOverview };
 
 if (process.argv[1] && /map_fidelity_probe\.ts$/.test(process.argv[1])) {
     const [name, out] = process.argv.slice(2);

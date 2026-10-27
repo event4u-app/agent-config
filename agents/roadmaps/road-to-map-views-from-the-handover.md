@@ -157,7 +157,7 @@ Exit: 1.1–1.6 green on the demo map and this repo's map. Rollback: revert
       (seven states), "Hinweise zu dieser Map" (notes 1–2 derived, 3–4 handover
       copy); Gate G0, Check protocol and Tours leave the page (Decision D2).
       verify: `npx vitest run tests/scripts/code_graph_map_overview_page.test.ts -t "lower row" --reporter=verbose` -> /✓.*lower row/
-- [ ] **2.4 Overview matrix.** `agents/evidence/reviews/map-overview-fidelity.md`
+- [x] **2.4 Overview matrix.** `agents/evidence/reviews/map-overview-fidelity.md`
       with the 11-card × field table, landmark diff, computed styles both
       themes, overflow at three widths, a sensitivity probe on the warn box.
       verify: `npx vitest run tests/scripts/code_graph_map_fidelity_matrices.test.ts -t overview --reporter=verbose` -> /✓.*overview/

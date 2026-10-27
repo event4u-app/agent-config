@@ -69,7 +69,7 @@ extendStrings({
         oBugsReader: 'bugs lane (Stage H) geplant · Fehler-Events tragen Personendaten – darum nie in dieser Datei, nicht einmal Zählwerte', oProjReader: 'Hub auf diesem Rechner · nie im Git',
         states: { fresh: 'fresh', stale: 'stale', contradicted: 'contradicted', unverifiable: 'unverifiable', incomplete: 'incomplete' },
         stateWhy: {
-            fresh: 'der Graph ist auf HEAD-Stand', stale: 'der Graph liegt hinter dem Arbeitsbaum', unverifiable: 'es wurde kein Graph-Index gefunden',
+            fresh: 'der Graph steht auf HEAD', stale: 'der Graph liegt hinter dem Arbeitsbaum', unverifiable: 'es wurde kein Graph-Index gefunden',
             contradicted: function (n) { return n + ' Nachweis(e) geändert oder weg, seit sie gelesen wurden'; }, incomplete: 'der Leser hat nur einen Teil seiner Grundgesamtheit gesehen'
         },
         oCodeWhat: function (f, e, g) { return f + ' Dateien · ' + e + ' sichere Kanten · ' + g + ' geraten'; }, oCodeCov: function (l, p) { return l + ' Sprachen · ' + p + ' Provider'; },

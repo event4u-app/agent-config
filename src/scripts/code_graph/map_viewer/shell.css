@@ -140,7 +140,7 @@
 /* Overview */
 .ov-head { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between; }
 .ov-intro { display: flex; flex-direction: column; gap: 6px; max-width: 760px; }
-.ov-intro h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 32px; line-height: 1.1; letter-spacing: 0.01em; text-transform: uppercase; overflow-wrap: anywhere; }
+.ov-intro h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 30px; letter-spacing: 0.01em; text-transform: uppercase; overflow-wrap: anywhere; }
 .ov-intro p { margin: 0; }
 .manifest { padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
 .manifest .kv { grid-template-columns: auto minmax(0, auto); gap: 4px 14px; }
