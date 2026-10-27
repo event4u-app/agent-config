@@ -131,7 +131,7 @@ export interface PassResult {
 }
 
 /** Minimal settings reader — mirrors design_slop_hook rather than adding a parser. */
-export function enabled(root: string, key = 'design_pass', fallback = false): boolean {
+export function enabled(root: string, key = 'design_pass', fallback = false, field = 'enabled'): boolean {
     let text: string;
     try {
         text = fs.readFileSync(path.join(root, SETTINGS_FILE), 'utf-8');
@@ -155,7 +155,7 @@ export function enabled(root: string, key = 'design_pass', fallback = false): bo
             continue;
         }
         if (inKey) {
-            const m4 = /^ {4}enabled\s*:\s*(\S+)/.exec(line);
+            const m4 = new RegExp(`^ {4}${field}\\s*:\\s*(\\S+)`).exec(line);
             if (m4) return /^(true|yes|on)$/i.test(m4[1]!);
         }
     }
@@ -649,6 +649,8 @@ function main(): number {
     // The consistency check ships ON (3.8); the rest of the pass ships OFF.
     const pass = enabled(root);
     const consistency = enabled(root, 'design_consistency', true);
+    // The reverse trigger's rollback: still recorded, never delivered.
+    const shadow = enabled(root, 'design_consistency', false, 'shadow');
     if (!pass && !consistency) return EXIT_ALLOW;
 
     const slotArg = process.argv.includes('--slot') ? process.argv[process.argv.indexOf('--slot') + 1] : undefined;
@@ -663,7 +665,7 @@ function main(): number {
     if (!pass) {
         const t = slot === 'stop' ? null : targetPath(payload);
         const only = t && isUiSurface(t) ? consistencyFor(root, t) : [];
-        if (!only.length) return EXIT_ALLOW;
+        if (!only.length || shadow) return EXIT_ALLOW;
         const r: PassResult = { slot, findings: only, blocked: [], audit_missing: [], verification: 'verified' };
         process.stdout.write(`${JSON.stringify({ reason: render(r) })}\n`);
         return EXIT_WARN;
@@ -706,7 +708,10 @@ function main(): number {
                 else findings.push(...svgFindings(scan(content, rel) as SvgRuleFinding[], rel));
             }
             // One shadow row per write: the stop pass re-reads the same files.
-            if (consistency && slot === 'post_tool_use' && isUiSurface(rel)) findings.push(...consistencyFor(root, rel));
+            if (consistency && slot === 'post_tool_use' && isUiSurface(rel)) {
+                const c = consistencyFor(root, rel);
+                if (!shadow) findings.push(...c);
+            }
             for (const f of scanFile(content, rel, ctx)) {
                 findings.push({
                     file: rel,

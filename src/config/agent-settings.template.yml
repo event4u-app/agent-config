@@ -1359,9 +1359,12 @@ hooks:
   # conditions of docs/contracts/concern-activation-policy.md. The box-metrics
   # half stays in shadow: while this is enabled, every UI write adds a row to
   # agents/runtime/state/design-consistency-shadow.jsonl and nothing is shown.
-  # Disabled, nothing runs and nothing is recorded.
+  # Disabled, nothing runs and nothing is recorded. shadow: true keeps the
+  # check running and recording but delivers nothing: the reverse trigger's
+  # rollback (internal/bench/corpora/design-consistency-shadow-window.md).
   design_consistency:
     enabled: true
+    shadow: false
 
   # PreToolUse UI-route nudge (road-to-frontend-skill-application Phase 4).
   # Default-OFF. When enabled, a Write/Edit to a UI surface with no design

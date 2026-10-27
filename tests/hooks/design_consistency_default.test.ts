@@ -74,6 +74,19 @@ describe('the consistency check ships on', () => {
         expect(r.stdout).toBe('');
     });
 
+    it('shadow: true is the rollback — it records and says nothing', () => {
+        const root = project('hooks:\n  design_consistency:\n    enabled: true\n    shadow: true\n');
+        expect(run(root, 'app/filters.tsx')).toEqual({ status: 0, stdout: '' });
+        const rows = fs.readFileSync(path.join(root, SHADOW), 'utf8').trim().split('\n');
+        expect(JSON.parse(rows[0]!)).toMatchObject({ file: 'app/filters.tsx', raw_control: 1 });
+    });
+
+    it('shadow: true also keeps the finding out of the full pass', () => {
+        const root = project('hooks:\n  design_pass:\n    enabled: true\n  design_consistency:\n    enabled: true\n    shadow: true\n');
+        expect(run(root, 'app/filters.tsx').stdout).not.toContain('raw select');
+        expect(fs.existsSync(path.join(root, SHADOW))).toBe(true);
+    });
+
     it('a clean write says nothing and still records a shadow row', () => {
         const root = project();
         expect(run(root, 'app/clean.tsx')).toEqual({ status: 0, stdout: '' });

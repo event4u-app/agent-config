@@ -98,9 +98,12 @@ manual control because classifying a firing write as false takes a reading.
   rate is false firing writes over all UI writes in the window.
 - **Record.** One dated row in the roadmap's Decisions table: window,
   denominator, real, false, rate, outcome.
-- **Rollback.** Above 1 %: set `hooks.design_consistency.enabled` to `false`
-  in `src/config/agent-settings.template.yml` and the default in
-  `src/server/schemas/settings.ts`, in one PR, which returns the rule to
-  shadow for every new install. An existing install turns it off with
-  `enabled: false` in its own `.agent-settings.yml`. No fire in eight weeks
+- **Rollback.** Above 1 %: set `hooks.design_consistency.shadow` to `true`
+  in `src/config/agent-settings.template.yml` and as the default in
+  `src/server/schemas/settings.ts`, in one PR. The rule then keeps running and
+  recording on every UI write but delivers nothing, which is the shadow the
+  policy returns it to, and the next window is measured the same way. An
+  existing install does the same with `shadow: true` in its own
+  `.agent-settings.yml`; `enabled: false` turns the check off entirely and
+  stops the recording, so it is not the rollback. No fire in eight weeks
   opens a removal review instead.
