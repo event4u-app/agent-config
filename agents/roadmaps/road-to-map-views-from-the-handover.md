@@ -244,7 +244,7 @@ revert `area_systems.js` and the new CSS; payload additions are additive.
       aside labels Anfrage / Item; Code 2D/3D and Scope as radiogroups, the
       "Flow · n. A." label; Code keeps "Domäne" per Decision D3.
       verify: `npx vitest run tests/scripts/code_graph_map_ported_pages.test.ts -t "delivery agent code" --reporter=verbose` -> /✓.*delivery agent code/
-- [ ] **4.4 Seven matrices.** One `map-{page}-fidelity.md` each for data,
+- [x] **4.4 Seven matrices.** One `map-{page}-fidelity.md` each for data,
       interfaces, runtime, delivery, impact, agent, code, covering real and demo
       map.
       verify: `npx vitest run tests/scripts/code_graph_map_fidelity_matrices.test.ts -t "small deltas" --reporter=verbose` -> /✓.*small deltas/

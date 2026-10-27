@@ -230,7 +230,63 @@ async function probeOverview(browser: Browser, built: Built): Promise<unknown> {
     return out;
 }
 
-export const PROBES: Record<string, (b: Browser, built: Built) => Promise<unknown>> = { tokens: probeTokens, shell: probeShell, overview: probeOverview };
+/** The seven pages of Phase 4: handover file and route. */
+export const SMALL_PAGES: Record<string, { file: string; route: string }> = {
+    data: { file: 'p03/Database.dc.html', route: 'data' }, interfaces: { file: 'p06/Integrations.dc.html', route: 'interfaces' }, runtime: { file: 'p05/Infra.dc.html', route: 'runtime' },
+    delivery: { file: 'p09/EnvCI.dc.html', route: 'delivery' }, impact: { file: 'p04/Impact.dc.html', route: 'impact' }, agent: { file: 'p01/Agent.dc.html', route: 'agent' }, code: { file: 'p11/Main.dc.html', route: 'code' },
+};
+const PAGE_SEL = {
+    design: { tablist: '[role="tablist"][aria-label="Ansicht"], [role="tablist"]', tab: '[role="tab"][aria-selected="true"]', tabOff: '[role="tab"][aria-selected="false"]', cap: 'aside .cap', prov: 'main span.mono[style*="faint"]', radio: '[role="radio"][aria-checked="true"]:not([aria-label])' },
+    build: { tablist: '#av [role="tablist"], #wb [role="tablist"]', tab: '#av [role="tab"][aria-selected="true"], #wb [role="tab"][aria-selected="true"]', tabOff: '#av [role="tab"][aria-selected="false"], #wb [role="tab"][aria-selected="false"]', cap: '#av aside .cap, #wb aside .cap', prov: '#prov', radio: '#av [role="radio"][aria-checked="true"], #wb [role="radio"][aria-checked="true"]' },
+};
+/** Landmarks below the header, which the shell matrix already holds. */
+async function pageLandmarks(page: Page): Promise<{ groups: string[]; roles: string[] }> {
+    const lm = await landmarks(page, 'body');
+    const head = await landmarks(page, 'header');
+    const drop = (xs: string[], ys: string[]) => { const left = [...ys]; return xs.filter((x) => { const i = left.indexOf(x); if (i >= 0) { left.splice(i, 1); return false; } return true; }); };
+    return { groups: drop(lm.groups, head.groups), roles: drop(lm.roles, head.roles) };
+}
+async function toDemo(page: Page): Promise<boolean> {
+    const demo = page.locator('[role="radiogroup"][aria-label="Datenquelle"] [role="radio"]', { hasText: 'Demo' });
+    if (!(await demo.count())) return false;
+    await demo.first().click();
+    await page.waitForTimeout(300);
+    return true;
+}
+
+/** Probe `pages`: the seven small-delta pages, real and demo, against their handovers. */
+async function probePages(browser: Browser, built: Built): Promise<unknown> {
+    const out: Record<string, unknown> = {};
+    for (const [id, spec] of Object.entries(SMALL_PAGES)) {
+        const row: Record<string, unknown> = {};
+        for (const data of ['real', 'demo'] as const) {
+            for (const theme of ['dark', 'light'] as const) {
+                for (const width of WIDTHS) {
+                    const d = await openDesign(browser, spec.file, width, theme);
+                    if (data === 'demo') await toDemo(d);
+                    const b = await openBuilt(browser, data === 'real' ? built.real : built.demo, '#/' + spec.route, width, theme);
+                    const cell: Record<string, unknown> = {};
+                    for (const [side, page] of [['design', d], ['build', b]] as const) {
+                        const sel = PAGE_SEL[side];
+                        cell[side] = {
+                            overflow: await overflowAt(page),
+                            landmarks: width === 1440 && theme === 'dark' ? await pageLandmarks(page) : undefined,
+                            styles: width === 1440 ? await computedAt(page, [sel.tablist, sel.tab, sel.tabOff, sel.cap, sel.prov, sel.radio], STYLE_PROPS) : undefined,
+                            prov: width === 1440 && theme === 'dark' ? await page.evaluate((s) => document.querySelector(s)?.textContent ?? null, sel.prov) : undefined,
+                        };
+                    }
+                    row[`${data}_${theme}_${width}`] = cell;
+                    await d.close();
+                    await b.close();
+                }
+            }
+        }
+        out[id] = row;
+    }
+    return out;
+}
+
+export const PROBES: Record<string, (b: Browser, built: Built) => Promise<unknown>> = { tokens: probeTokens, shell: probeShell, overview: probeOverview, pages: probePages };
 
 if (process.argv[1] && /map_fidelity_probe\.ts$/.test(process.argv[1])) {
     const [name, out] = process.argv.slice(2);
