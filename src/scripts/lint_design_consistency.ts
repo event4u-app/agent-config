@@ -26,6 +26,7 @@
  * Usage:
  *   npx tsx lint_design_consistency.ts --dir <ui src> [--audit <artefact>] [--tolerance <px>] [--json]
  *   npx tsx lint_design_consistency.ts --dir <ui src> --shadow   (records, prints nothing)
+ *   npx tsx lint_design_consistency.ts --shadow-report [--days 14] [--json]   (the reverse trigger's reading)
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -73,6 +74,43 @@ export function shadowRecord(content: string, relPath: string, roles: ControlRol
         would_fire,
         raw_control: all.filter((f) => f.rule === 'consistency-raw-control').length,
         deviations_px: all.flatMap((f) => (f.deviation_px === undefined ? [] : [f.deviation_px])),
+    };
+}
+
+export interface ShadowWindow {
+    since: string;
+    days: number;
+    writes: number;
+    firing: number;
+    files: Array<{ file: string; firing_writes: number }>;
+}
+
+/**
+ * The live rows of the last `days`, as the reverse trigger reads them
+ * (`internal/bench/corpora/design-consistency-shadow-window.md` § The reverse
+ * trigger). Counts only: whether a firing write is a false positive is a
+ * human classification, so this never prints a rate.
+ */
+export function shadowWindow(rows: readonly ShadowRecord[], now: Date, days = 14): ShadowWindow {
+    const since = new Date(now.getTime() - days * 86_400_000);
+    const files = new Map<string, number>();
+    let writes = 0;
+    let firing = 0;
+    for (const r of rows) {
+        const at = Date.parse(r.at);
+        if (Number.isNaN(at) || at < since.getTime() || at > now.getTime()) continue;
+        writes++;
+        if (r.raw_control > 0) {
+            firing++;
+            files.set(r.file, (files.get(r.file) ?? 0) + 1);
+        }
+    }
+    return {
+        since: since.toISOString(),
+        days,
+        writes,
+        firing,
+        files: [...files].sort((a, b) => b[1] - a[1]).map(([file, firing_writes]) => ({ file, firing_writes })),
     };
 }
 
@@ -212,6 +250,26 @@ function arg(args: string[], name: string): string | undefined {
 
 export function main(args: string[]): number {
     const json = args.includes('--json');
+    if (args.includes('--shadow-report')) {
+        let rows: ShadowRecord[] = [];
+        try {
+            rows = fs
+                .readFileSync(path.resolve(SHADOW_REL), 'utf8')
+                .split('\n')
+                .filter((l) => l.trim() !== '')
+                .map((l) => JSON.parse(l) as ShadowRecord);
+        } catch {
+            rows = [];
+        }
+        const w = shadowWindow(rows, asOf(), Number(arg(args, '--days') ?? '14'));
+        if (json) process.stdout.write(`${JSON.stringify(w, null, 2)}\n`);
+        else {
+            process.stdout.write(`design-consistency shadow, ${w.days} days since ${w.since}: ${w.writes} UI write(s), ${w.firing} firing.\n`);
+            for (const f of w.files) process.stdout.write(`  ${f.firing_writes}\t${f.file}\n`);
+            process.stdout.write('Classify each firing file as real or false; false / writes above 1 % returns the rule to shadow.\n');
+        }
+        return 0;
+    }
     const dir = path.resolve(arg(args, '--dir') ?? 'src');
     const audit = path.resolve(arg(args, '--audit') ?? AUDIT_ARTEFACT_REL);
     const tolerance = Number(arg(args, '--tolerance') ?? '0');

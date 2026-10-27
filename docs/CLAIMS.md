@@ -842,8 +842,10 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
   The 0.19 % is in-sample: the six false-alarm classes the first reading
   surfaced were fixed and then measured on the same window. The live recorder
   (`agents/runtime/state/design-consistency-shadow.jsonl`, one row per UI
-  write) is the out-of-sample check, and the policy's reverse trigger applies:
-  above 1 % in any two-week window, the rule returns to shadow.
+  write) is the out-of-sample check. The reverse trigger is a manual control
+  with a named owner, a two-week cadence (first review 2026-11-10), a report
+  command and a stated rollback: above 1 % false in a window, the rule
+  returns to shadow (the evidence file, § The reverse trigger).
 
 ### claim: design-slop-false-positive-baseline
 - claim: On a 32-file labelled clean-UI corpus (digest `90544389b05c1d0b`), all 23 shipped text-engine design-slop rules produce zero false positives (the five render-engine rules read rendered pages and are measured on their own corpus, see design-slop-near-miss-baseline) (26 before the 2026-10-26 near-miss demotions and promotions) — which the pre-registration reads as the corpus failing to discriminate, not as precision. History: the 2026-08-13 epoch ran 19 rules, 18 at zero, and the nineteenth (`slop-c6-lock-colour`, catalog C6) fired on 4 of the 32 files and was demoted to judgment-only rather than tuned.

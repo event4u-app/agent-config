@@ -1,7 +1,7 @@
 ---
 complexity: structural
 status: later
-review_by: 2027-01-26
+review_by: 2026-11-10
 entry_condition:
   what: "agents/runtime/state/design-consistency-shadow.jsonl holds box-metric comparisons with a value on both sides, enough for the 3.3 activation policy's four conditions — then AC-2 reads the box tolerance off that curve. 3.8 shipped the raw-control half on 2026-10-27; the metric half had no comparison in the retroactive window, because the static parser cannot read sizes set through cn() or variants"
   when: "after render-sourced box metrics (ui:render --interact) have run on real UI work; no date is promised"
@@ -212,6 +212,13 @@ and is never reported as visually verified without render evidence.
       dispatch bundle has no headroom for it inline (D11).
       verify: the settings template default and a CLAIMS line change in one
       commit that cites the shadow reading.
+- [ ] **3.9 The first reverse-trigger review, due 2026-11-10.** Run the
+      reading of `internal/bench/corpora/design-consistency-shadow-window.md`
+      § The reverse trigger over the two weeks since the flip, classify every
+      firing write, and record window, denominator, real, false, rate and
+      outcome as a dated row in Decisions. Above 1 % false: the rollback
+      named there. The review then repeats every two weeks.
+      verify: a dated Decisions row with the six figures and an outcome exists.
 
 ## Phase 4 — Review before rebuild
 

@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 
 import { buildArtefact } from '../../src/cli/commands/uiAudit.js';
 import type { RoleEntry } from '../../src/scripts/_lib/control_roles.js';
-import { consistencyFindings, shadowRecord } from '../../src/scripts/lint_design_consistency.js';
+import { consistencyFindings, shadowRecord, shadowWindow } from '../../src/scripts/lint_design_consistency.js';
 
 const REPO = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const CASES = path.join(REPO, 'tests', 'eval', 'frontend-corpus', 'cases');
@@ -89,6 +89,42 @@ describe('consistency-sibling-metrics', () => {
 
     it('no box metrics on either side → no finding, never a guessed one', () => {
         expect(consistencyFindings('<input name="q">', 'callback.html', NATIVE)).toEqual([]);
+    });
+});
+
+// The reverse trigger's reading: what the last two weeks of live rows hold.
+describe('shadow window report', () => {
+    const now = new Date('2026-11-10T12:00:00Z');
+    const row = (at: string, file: string, raw: number) => ({
+        at,
+        file,
+        would_fire: { tolerance_0px: raw },
+        raw_control: raw,
+        deviations_px: [],
+    });
+
+    it('counts writes and firing writes inside the window only', () => {
+        const w = shadowWindow(
+            [
+                row('2026-10-20T00:00:00Z', 'app/old.tsx', 1),
+                row('2026-11-01T00:00:00Z', 'app/a.tsx', 0),
+                row('2026-11-02T00:00:00Z', 'app/b.tsx', 2),
+                row('2026-11-03T00:00:00Z', 'app/b.tsx', 1),
+                row('2026-11-09T00:00:00Z', 'app/c.tsx', 0),
+            ],
+            now,
+            14,
+        );
+        expect(w).toMatchObject({ writes: 4, firing: 2, since: '2026-10-27T12:00:00.000Z' });
+        expect(w.files).toEqual([{ file: 'app/b.tsx', firing_writes: 2 }]);
+    });
+
+    it('an empty window is reported as empty, never as a 0 % rate', () => {
+        expect(shadowWindow([], now, 14)).toMatchObject({ writes: 0, firing: 0, files: [] });
+    });
+
+    it('a row it cannot read is skipped, not counted', () => {
+        expect(shadowWindow([{ at: 'not a date', file: 'x.tsx', raw_control: 1 } as never], now, 14).writes).toBe(0);
     });
 });
 

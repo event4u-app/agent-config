@@ -74,8 +74,33 @@ All four hold for **consistency-raw-control**, which ships on.
   measured on it, so the rate is an upper bound on what was seen rather than a
   forecast. The live recorder is the out-of-sample check: every UI write adds
   a row to `agents/runtime/state/design-consistency-shadow.jsonl`.
-- **The reverse trigger applies from day one.** Per the activation policy:
-  false positives above 1 % in any two-week window return the rule to shadow,
-  and no fire in eight weeks is reviewed for removal.
+- **The reverse trigger is a manual control, not code.** A false positive
+  needs a human reading, so no automated evaluator can apply the threshold.
+  How it runs is stated below.
 - **Two repositories, one owner.** Neither is a third-party corpus. A third
   repository would widen the sample, not change its kind.
+
+## The reverse trigger
+
+Per `docs/contracts/concern-activation-policy.md` § Reverse trigger, run as a
+manual control because classifying a firing write as false takes a reading.
+
+- **Owner.** The maintainer of this repository.
+- **Cadence.** Every two weeks. The first review is due 2026-11-10 (step 3.9
+  of `road-to-a-control-that-matches-its-neighbours`).
+- **Reading.** In each project where the check runs, from the project root:
+  `npx tsx <agent-config>/src/scripts/lint_design_consistency.ts --shadow-report --days 14`.
+  It prints the UI writes in the window (the denominator), the firing writes,
+  and the firing files. It prints no rate, because it cannot tell a real
+  finding from a false one.
+- **Classification.** Open each firing file at the reported write and mark it
+  real (a raw control beside the project's own) or false (anything else). The
+  rate is false firing writes over all UI writes in the window.
+- **Record.** One dated row in the roadmap's Decisions table: window,
+  denominator, real, false, rate, outcome.
+- **Rollback.** Above 1 %: set `hooks.design_consistency.enabled` to `false`
+  in `src/config/agent-settings.template.yml` and the default in
+  `src/server/schemas/settings.ts`, in one PR, which returns the rule to
+  shadow for every new install. An existing install turns it off with
+  `enabled: false` in its own `.agent-settings.yml`. No fire in eight weeks
+  opens a removal review instead.

@@ -6,12 +6,16 @@ import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { consistencyFor } from '../../src/scripts/hooks/design_pass_hook.js';
-import { consistencySpecifier, CONSISTENCY_CHUNK } from '../../src/scripts/hooks/design_consistency_loader.js';
+import {
+    consistencySpecifier,
+    CONSISTENCY_CHUNK,
+    loadConsistencyPass,
+} from '../../src/scripts/hooks/design_consistency_loader.js';
 
 const REPO = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const HOOK = path.join(REPO, 'src', 'scripts', 'hooks', 'design_pass_hook.ts');
@@ -94,6 +98,21 @@ describe('the chunk boundary', () => {
             throw new Error('loader broke');
         };
         expect(consistencyFor(root, 'app/filters.tsx', throwing)).toEqual([]);
+    });
+
+    it('bundled: an absent, a throwing or an export-less chunk loads as null', () => {
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-consistency-chunk-'));
+        // One directory per case: `require` caches a module by its path.
+        const load = (name: string, chunk?: string) => {
+            const d = path.join(dir, name);
+            fs.mkdirSync(d);
+            if (chunk !== undefined) fs.writeFileSync(path.join(d, CONSISTENCY_CHUNK), chunk);
+            return loadConsistencyPass(pathToFileURL(path.join(d, 'dispatch.js')).href, true);
+        };
+        expect(load('absent')).toBeNull();
+        expect(load('throwing', 'throw new Error("broken chunk");')).toBeNull();
+        expect(load('no-export', 'module.exports = { somethingElse: 1 };')).toBeNull();
+        expect(load('valid', 'module.exports = { consistencyPass: () => [] };')).toBeTypeOf('function');
     });
 
     it('bundled, the check is the sibling chunk; from source, the module', () => {
