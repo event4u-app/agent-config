@@ -136,10 +136,10 @@ export function budgetQueryReport(g: LocatableGraph, r: { source: string; seeds:
     return budgetAnswer({ header: { source: r.source, seeds: r.seeds, walk_truncated: r.truncated }, ids: r.lines, locate: (l) => locateIn(g, lineSubject(l)), reads: r.recommended_reads, page }, budget);
 }
 
-/** `graph_impact` under a budget: dependents ranked as returned, the producing edges counted. */
+/** `graph_impact` under a budget: dependents ranked as returned, the producing edges counted; `test_files` and `seeds` stay whole, as a caller acts on them. */
 export function budgetImpactReport(g: LocatableGraph, r: Record<string, unknown> & { dependents: string[]; recommended_reads: Read[] }, budget = DEFAULT_ANSWER_BUDGET, page = 1): ReturnType<typeof budgetAnswer> {
     const { dependents, recommended_reads, lines: _lines, reached: _reached, producing_edges, ...rest } = r as Record<string, unknown> & { dependents: string[]; recommended_reads: Read[]; producing_edges?: unknown[] };
     const short = (v: unknown): unknown => (Array.isArray(v) && v.length > 10 ? { first: v.slice(0, 10), total: v.length } : v);
-    const header = { ...Object.fromEntries(Object.entries(rest).map(([k, v]) => [k, short(v)])), producing_edges: Array.isArray(producing_edges) ? producing_edges.length : 0 };
+    const header = { ...Object.fromEntries(Object.entries(rest).map(([k, v]) => [k, k === 'test_files' || k === 'seeds' ? v : short(v)])), producing_edges: Array.isArray(producing_edges) ? producing_edges.length : 0 };
     return budgetAnswer({ header, ids: dependents, locate: (id) => locateIn(g, id), reads: recommended_reads, page }, budget);
 }

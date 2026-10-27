@@ -244,8 +244,8 @@ These answers reach an agent over MCP without shelling out, and the mapping is
 
 | MCP tool | answers |
 |---|---|
-| `graph_impact` | `impact --diff`, **and** `untested --diff` via `untested_only: true` |
-| `graph_tests_for` | `tests-for` |
+| `graph_impact` | `impact --diff` as `answer` + `budget`, long lists `{first,total}`, `test_files`/`seeds` whole; `untested_only: true` → `untested` |
+| `graph_tests_for` | `tests-for`; empty adds `no_entry` |
 | `graph_dead` | `dead` |
 | `graph_query` | `query` |
 | `graph_path` | `path` |
@@ -256,9 +256,8 @@ These answers reach an agent over MCP without shelling out, and the mapping is
 
 Every other tool takes `project` (a registered repo id, name or path).
 
-`untested` has no tool of its own; it is a flag on `graph_impact`, because the
-two answer the same question over the same diff and a separate tool would have
-cost standing context for a boolean. `graph_impact` is the only one that is not
+`untested` is a flag on `graph_impact`: same question, same diff.
+`graph_impact` is the only one that is not
 read-only — it runs `git diff --name-only` to resolve its rev — and
 `graph_dead`'s refusal arrives as `status: "refused"`, never as `status: "ok"`
 with an empty list.

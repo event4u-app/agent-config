@@ -49,4 +49,14 @@ describe('MCP graph answers match the CLI', () => {
         const none = await cache.dispatch('graph_tests_for', { symbol: 'nothingLikeThis' }, root);
         expect(String(none['no_entry'])).toMatch(/no entry for 'nothingLikeThis'.*grep -rn/);
     }, 60_000);
+
+    it('graph_impact keeps test_files and seeds whole in the budgeted header', async () => {
+        const root = await rig();
+        const cache = new ToolCache();
+        const i = await cache.dispatch('graph_impact', { diff: 'HEAD~1' }, root);
+        expect(i['status']).toBe('ok');
+        expect(Array.isArray(i['test_files'])).toBe(true);
+        expect((i['test_files'] as string[]).length).toBe(TESTS);
+        expect(Array.isArray(i['seeds'])).toBe(true);
+    }, 60_000);
 });

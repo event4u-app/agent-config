@@ -70,4 +70,6 @@ keep-beta-until: 2026-08-14
 - **Transports** — `stdio` (`scripts/mcp_server/`) · `worker` (`internal/workers/mcp/`). A tool may live on both.
 - **Stub** — catalog-listed for discovery; returns the `not_implemented` envelope from
   [`mcp-tool-stub-envelope.md`](mcp-tool-stub-envelope.md) until promoted.
+- **Budgeted answer** — `graph_impact` returns `answer` (or `locations` / `per_file`), `budget` (level, shown, total) and
+  `recommended_reads`; header arrays over 10 entries become `{first, total}`, except `test_files` and `seeds`, which stay whole.
 
