@@ -114,7 +114,7 @@ provenance `kind` field; `.build/bugs/` is disposable.
       Each hypothesis shows the path with per-edge witness, guessed edges
       dashed, and the commit, PR and ticket.
       verify: `npx vitest run tests/scripts/code_graph_regression_paths.test.ts` -> 0
-- [ ] **H.6 From hypothesis to proof.** With more than one candidate and a
+- [x] **H.6 From hypothesis to proof.** With more than one candidate and a
       reproducing test, print a `git bisect run` plan (never run on someone
       else's branch, never pushed). A confirmed cause is stored with a
       `test_guards_against` edge from the test to the bug.
