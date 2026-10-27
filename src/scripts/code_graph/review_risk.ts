@@ -75,6 +75,32 @@ const TERM_LANE: Partial<Record<RiskTerm, string>> = {
     pipelines: 'delivery',
 };
 
+/** A changed symbol's test verdict, as `untested --diff` reaches it: a stated `tests` edge into it or its file. */
+export type TestVerdict = 'tested' | 'reached-by-tested-caller' | 'untested';
+
+/** One fact a check rests on: the node, and the edge it was read from with its witness. */
+export interface CheckItem {
+    id: string;
+    label: string;
+    verdict?: TestVerdict;
+    /** `file:line` the fact was read at; `null` only when the graph holds no location at all. */
+    witness: string | null;
+    /** The edges the item rests on, rendered `source --relation/via--> target`. */
+    edges: string[];
+}
+
+/**
+ * The three deterministic checks a review consumes (roadmap 5.1). `unknown` is
+ * its own status, never a pass: a check whose lane was skipped did not run.
+ */
+export interface ReviewCheck {
+    id: 'untested-change' | 'missing-co-change' | 'touched-entry-point';
+    status: 'pass' | 'finding' | 'unknown';
+    /** Why the check could not run, when `unknown`. */
+    reason?: string;
+    items: CheckItem[];
+}
+
 export interface ReviewRisk {
     rev: string;
     changed: string[];
@@ -89,6 +115,7 @@ export interface ReviewRisk {
     complete: boolean;
     /** Changed symbols, then their callers, as line ranges under the region budget (`regionReads`). */
     recommended_reads: RecommendedRead[];
+    checks: ReviewCheck[];
     /** What the sum was computed from. */
     basis: { graph_checksum: string; weights: Readonly<Record<RiskTerm, number>> };
 }
@@ -302,6 +329,36 @@ export function reviewRisk(
         ...[...seedIds].map((id) => span(id, 1 + (inn.get(id) ?? []).filter((e) => admitEdge(e, opts)).length)),
         ...[...callers.keys()].map((id) => span(id, 0)),
     ].filter((r): r is ReadRegion => r !== null);
+    const at = (w: RiskWitness | null): string | null => (w ? `${w.file}:${w.line}` : null);
+    const via = (e: CodeEdge): string => `${e.source} --${e.relation}/${e.resolved_via}--> ${e.target}`;
+    // (a) The tests rule of `testsFor`: a stated `tests` edge into the symbol or into its declaring file.
+    const testEdges = (id: string): CodeEdge[] => {
+        const file = byId.get(id)?.source_file;
+        return [id, ...(file && file !== id ? [file] : [])].flatMap((t) => (inn.get(t) ?? []).filter((e) => e.relation === 'tests' && admitEdge(e)));
+    };
+    const changedSymbols = seeds.filter((sd) => byId.get(sd.id)?.kind !== 'file');
+    const untestedItems: CheckItem[] = changedSymbols.map((sd) => {
+        const own = testEdges(sd.id);
+        if (own.length) return { id: sd.id, label: sd.label, verdict: 'tested', witness: at(sd.witness), edges: own.map(via) };
+        const callerEdges = (inn.get(sd.id) ?? []).filter((e) => CALLER_RELATIONS.has(e.relation) && e.relation !== 'tests' && admitEdge(e) && testEdges(e.source).length > 0);
+        if (callerEdges.length) return { id: sd.id, label: sd.label, verdict: 'reached-by-tested-caller', witness: at(witnessOf(byId.get(sd.id), callerEdges[0])), edges: callerEdges.map(via) };
+        return { id: sd.id, label: sd.label, verdict: 'untested', witness: at(sd.witness), edges: [] };
+    });
+    const untestedCheck: ReviewCheck = {
+        id: 'untested-change',
+        status: untestedItems.some((i) => i.verdict === 'untested') ? 'finding' : 'pass',
+        items: untestedItems,
+    };
+    const fromTerm = (id: ReviewCheck['id'], names: RiskTerm[]): ReviewCheck => {
+        const unknown = names.map((n) => terms.find((t) => t.term === n)?.unknown).find((u) => u);
+        if (unknown) return { id, status: 'unknown', reason: unknown, items: [] };
+        const items = names.flatMap((n) => lists[n]).map((i) => ({ id: i.id, label: i.label, witness: at(i.witness), edges: [i.why] }));
+        return { id, status: items.length ? 'finding' : 'pass', items };
+    };
+    // (b) Without full history a missing partner cannot be told from none: the term's lane decides.
+    const partnerCheck = fromTerm('missing-co-change', ['missing partners']);
+    // (c) A touched entry point or flow.
+    const entryCheck = fromTerm('touched-entry-point', ['entry points', 'flows']);
     const partial = [...new Set([...changed, ...[...callers.keys()].map((id) => byId.get(id)?.source_file ?? '')])]
         .filter((f) => byId.get(f)?.partial === true)
         .sort();
@@ -315,6 +372,7 @@ export function reviewRisk(
         partial_files: partial,
         complete: partial.length === 0,
         recommended_reads: regionReads(regions),
+        checks: [untestedCheck, partnerCheck, entryCheck],
         basis: { graph_checksum: graph.source_checksum, weights },
     };
 }
@@ -326,6 +384,7 @@ export function renderReviewRisk(r: ReviewRisk, listCap = 20): string[] {
         `review risk vs ${r.rev}: ${r.total} = ${r.terms.filter((t) => !t.unknown).map((t) => `${t.term} ${t.items.length}×${t.weight}`).join(' + ')}`,
         ...r.terms.filter((t) => t.unknown).map((t) => `${t.term} unknown (${t.unknown}), not part of the sum`),
         `basis: graph ${r.basis.graph_checksum.slice(0, 12)} · ${r.changed.length} changed file(s) · ${r.seeds.length} changed symbol(s)`,
+        ...r.checks.map((c) => `check ${c.id}: ${c.status}${c.reason ? ` (${c.reason})` : ''}${c.items.length ? ` · ${c.items.length} item(s)` : ''}`),
         ...(r.partial_files.length ? [`partial files (parsed with errors, facts are a lower bound): ${r.partial_files.join(', ')}`] : []),
         `changed symbols (${r.seeds.length}):`,
         ...r.seeds.slice(0, listCap).map((s) => `  ${s.label}  at ${at(s.witness)}`),

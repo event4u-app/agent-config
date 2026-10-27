@@ -271,7 +271,7 @@ Added 2026-10-27 from round `inbox-2026-10-bf`. The graph feeds deterministic ch
 and a read list, never a context dump: S3 measured graph prose beside a diff making
 reviews worse. Distinct from 3.2, which teaches two existing detectors to read edges.
 
-- [ ] 5.1 **Three deterministic checks.** (a) changed symbols without a test path,
+- [x] 5.1 **Three deterministic checks.** (a) changed symbols without a test path,
       labelled `untested` / `reached-by-tested-caller` / `tested` — (a) reuses the
       `untested --diff` verdict `road-to-a-graph-that-feeds-the-gate` 3.2 already
       records in shadow; (b) co-change partners missing from the diff, `unknown`

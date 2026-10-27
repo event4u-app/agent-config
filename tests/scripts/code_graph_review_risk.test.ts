@@ -149,3 +149,41 @@ describe('4.2 — a skipped lane reads unknown, never 0', () => {
         }
     });
 });
+
+describe('5.1 — three deterministic checks', () => {
+    it('three checks cite witnesses', () => {
+        const r = reviewRisk(root, graph, 'HEAD', diffHunks(root, 'HEAD')!);
+        expect(r.checks.map((c) => c.id)).toEqual(['untested-change', 'missing-co-change', 'touched-entry-point']);
+        const byId = Object.fromEntries(r.checks.map((c) => [c.id, c]));
+        const untested = byId['untested-change']!;
+        expect(untested.items.find((i) => i.label === 'warehouseStock')?.verdict).toBe('untested');
+        expect(untested.status).toBe('finding');
+        expect(byId['missing-co-change']!.items.map((i) => i.label)).toEqual(['config/services.php']);
+        expect(byId['touched-entry-point']!.items.map((i) => i.label)).toContain('GET /stock/{sku}');
+        for (const c of r.checks) for (const i of c.items) expect(i.witness, `${c.id} ${i.id}`).toMatch(/^[^:]+:\d+$/);
+        for (const c of r.checks.slice(1)) for (const i of c.items) expect(i.edges.length).toBeGreaterThan(0);
+    });
+
+    it('labels a change reached by a tested caller, and cites the tests edge of a tested one', () => {
+        const g: CodeGraph = {
+            schema_version: 3, source_checksum: 'hand', languages: ['typescript'], grammar_abi: 14,
+            edge_confidence_counts: { EXTRACTED: 0, INFERRED: 0, AMBIGUOUS: 0 },
+            nodes: [
+                { id: 'a.ts#direct', label: 'direct', kind: 'function', source_file: 'a.ts', source_location: [1, 1, 2, 1] },
+                { id: 'a.ts#inner', label: 'inner', kind: 'function', source_file: 'a.ts', source_location: [4, 1, 5, 1] },
+                { id: 'b.ts#outer', label: 'outer', kind: 'function', source_file: 'b.ts', source_location: [1, 1, 3, 1] },
+                { id: 't.test.ts', label: 't.test.ts', kind: 'file', source_file: 't.test.ts', source_location: [] },
+            ],
+            edges: [
+                { source: 't.test.ts', target: 'a.ts#direct', relation: 'tests', confidence: 'INFERRED', resolved_via: 'test-import', provider: 'native' },
+                { source: 't.test.ts', target: 'b.ts#outer', relation: 'tests', confidence: 'INFERRED', resolved_via: 'test-import', provider: 'native' },
+                { source: 'b.ts#outer', target: 'a.ts#inner', relation: 'calls', confidence: 'INFERRED', resolved_via: 'import-specifier', provider: 'native' },
+            ],
+        } as CodeGraph;
+        const r = reviewRisk(root, g, 'HEAD', [{ file: 'a.ts', from: 1, to: 5 }]);
+        const items = r.checks[0]!.items;
+        expect(items.find((i) => i.id === 'a.ts#direct')).toMatchObject({ verdict: 'tested', edges: ['t.test.ts --tests/test-import--> a.ts#direct'] });
+        expect(items.find((i) => i.id === 'a.ts#inner')).toMatchObject({ verdict: 'reached-by-tested-caller', edges: ['b.ts#outer --calls/import-specifier--> a.ts#inner'] });
+        expect(r.checks[0]!.status).toBe('pass');
+    });
+});
