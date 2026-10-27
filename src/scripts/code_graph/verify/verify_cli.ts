@@ -16,7 +16,11 @@
  * The cache path is the caller's: it comes from the graph home, so these verbs
  * follow the cache wherever the home puts it.
  */
+import * as fs from 'node:fs';
+
 import { DRIFT_RULES } from '../drift_rules.js';
+import type { CodeGraph } from '../types.js';
+import { verifyAll } from './verify_all.js';
 import { renderDrift } from '../drift.js';
 import { loadGraph, type LoadedGraph, tree, type TreeOptions } from '../query.js';
 import { openGraphIndex } from '../sqlite_store.js';
@@ -34,7 +38,7 @@ function flag(argv: readonly string[], name: string): string | null {
     return i >= 0 && i + 1 < argv.length ? (argv[i + 1] as string) : null;
 }
 
-const VALUE_FLAGS = new Set(['--from-query', '--kind', '--relation', '--direction', '--depth', '--limit', '--neighbours', '--risk-depth', '--since', '--budget', '--root', '--project', '--graph', '--out']);
+const VALUE_FLAGS = new Set(['--min-rate', '--from-query', '--kind', '--relation', '--direction', '--depth', '--limit', '--neighbours', '--risk-depth', '--since', '--budget', '--root', '--project', '--graph', '--out']);
 
 function positionals(argv: readonly string[]): string[] {
     const out: string[] = [];
@@ -199,10 +203,30 @@ async function cmdRebuildDiff(argv: string[], root: string, cachePath: string): 
     return d.same ? 0 : 1;
 }
 
+/** `verify --all [--min-rate R] [--json]` — the confirm rate per lane; exit 1 when a lane is below R. */
+function cmdVerifyAll(argv: string[], root: string, cachePath: string): number {
+    if (!argv.includes('--all')) {
+        process.stderr.write('usage: code-graph verify --all [--min-rate R] [--json]\n');
+        return 2;
+    }
+    if (!fs.existsSync(cachePath)) {
+        process.stderr.write(`code-graph: no graph at ${cachePath} — run \`code-graph build\` first\n`);
+        return 1;
+    }
+    const min = Number(flag(argv, '--min-rate') ?? '0');
+    const rates = verifyAll(root, JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as CodeGraph);
+    if (argv.includes('--json')) write(`${JSON.stringify(rates, null, 2)}\n`);
+    else for (const r of rates) write(`${r.lane}: ${r.confirmed}/${r.facts + r.edges} confirmed (${r.facts} facts, ${r.edges} edges) · rate ${r.rate}${r.misses.length ? ` · e.g. ${r.misses.join('; ')}` : ''}\n`);
+    const low = rates.filter((r) => r.rate < min);
+    if (low.length) write(`below ${min}: ${low.map((r) => r.lane).join(', ')}\n`);
+    return low.length ? 1 : 0;
+}
+
 export async function verifyMain(sub: string, argv: string[], root: string, cachePath: string): Promise<number> {
     if (sub === 'confirm') return cmdConfirm(argv, root, cachePath);
     if (sub === 'pack') return cmdPack(argv, root, cachePath);
     if (sub === 'rebuild-diff') return cmdRebuildDiff(argv, root, cachePath);
     if (sub === 'refresh') return cmdRefreshTouched(argv, root, cachePath);
+    if (sub === 'verify') return cmdVerifyAll(argv, root, cachePath);
     return 2;
 }

@@ -1171,7 +1171,7 @@ export { isTestFile };
 function factJson(f: FactMeta): Record<string, unknown> {
     const out: Record<string, unknown> = {
         owner: f.owner,
-        witness: { file: f.witness.file, line: f.witness.line, hash: f.witness.hash },
+        witness: { file: f.witness.file, line: f.witness.line, hash: f.witness.hash, ...(f.witness.kind ? { kind: f.witness.kind } : {}) },
         rung: f.rung,
     };
     if (f.resolved_via) out['resolved_via'] = f.resolved_via;

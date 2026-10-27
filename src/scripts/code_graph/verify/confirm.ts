@@ -28,7 +28,9 @@ import defaults from './defaults.json';
 import { type LowerBound, lowerBound } from './lower_bound.js';
 import { readOverlay, type Overlay } from './overlay.js';
 import { headSha, verifyPaths } from './paths.js';
-import { checkWitness, FileCache, nameToken, type WitnessResult } from './witness_check.js';
+import type { WitnessKind } from '../lanes/lane_fact.js';
+import { existingCommits } from './verify_all.js';
+import { checkWitness, FileCache, nameToken, type WitnessResult, witnessKind } from './witness_check.js';
 import { readTombstones, type Tombstone, tombstoneFor, writeTombstones } from './tombstones.js';
 
 export type ConfirmDepth = 'none' | 'witness' | 'text' | 'full';
@@ -76,9 +78,9 @@ export interface ConfirmOptions {
     index?: GraphIndex;
 }
 
-function witnessOf(n: CodeNode): { file: string; line: number; hash: string | null } | null {
+function witnessOf(n: CodeNode): { file: string; line: number; hash: string | null; kind?: WitnessKind } | null {
     const w = n.fact?.witness;
-    if (w) return { file: w.file, line: w.line, hash: w.hash || null };
+    if (w) return { file: w.file, line: w.line, hash: w.hash || null, ...(w.kind ? { kind: w.kind } : {}) };
     if (!n.source_file) return null;
     return { file: n.source_file, line: (n.source_location[0] as number | undefined) ?? 0, hash: null };
 }
@@ -86,11 +88,16 @@ function witnessOf(n: CodeNode): { file: string; line: number; hash: string | nu
 function checkNode(files: FileCache, n: CodeNode): { result: WitnessResult | null; at: string | null } {
     const w = witnessOf(n);
     if (!w) return { result: null, at: null };
-    if (n.kind === 'file') {
+    const kind = witnessKind(w);
+    if (n.kind === 'file' || kind === 'file') {
         const exists = files.lines(w.file) !== null;
         return { result: { state: exists ? 'confirmed' : 'gone', at: w.file, by: 'name' }, at: w.file };
     }
-    const result = checkWitness(files, { file: w.file, line: w.line, hash: w.hash, name: nameToken(n.label) });
+    if (kind === 'commit') {
+        const at = `${w.file}@${w.hash ?? ''}`;
+        return { result: { state: existingCommits(files.root, [w.hash ?? '']).size ? 'confirmed' : 'gone', at, by: 'hash' }, at };
+    }
+    const result = checkWitness(files, { file: w.file, line: w.line, hash: kind === 'name' ? null : w.hash, name: nameToken(n.label) });
     return { result, at: result.at };
 }
 

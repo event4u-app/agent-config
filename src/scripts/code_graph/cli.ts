@@ -115,6 +115,8 @@
  *                                               links and the facts they share, under the
  *                                               user-global map/; refused inside a git work tree
  *
+ *   verify   --all [--min-rate R] [--json]     confirm rate per lane over every lane
+ *                                               fact and edge, witness read by its kind
  *   lint     [--root P] [--graph P]           the endpoint contract: duplicate ids,
  *                                               invalid spans, dangling sources and
  *                                               targets; exit 1 on any (`lint.ts`)
@@ -1363,7 +1365,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'detect') return cmdDetect(argv.slice(1));
         if (sub === 'refresh' && argv.includes('--touched')) return await verifyMain('refresh', argv.slice(1), resolveRoot(argv.slice(1)), flag(argv, '--graph') ?? cacheFor(resolveRoot(argv.slice(1))));
         if (sub === 'refresh') return await cmdRefresh(argv.slice(1));
-        if (sub === 'confirm' || sub === 'pack' || sub === 'rebuild-diff')
+        if (sub === 'confirm' || sub === 'pack' || sub === 'rebuild-diff' || sub === 'verify')
             return await verifyMain(sub, argv.slice(1), resolveRoot(argv.slice(1)), flag(argv, '--graph') ?? cacheFor(resolveRoot(argv.slice(1))));
         if (sub === 'query' || sub === 'explain' || sub === 'affected' || sub === 'path')
             return cmdQuery(sub, argv.slice(1));
@@ -1390,7 +1392,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'estate') return estateMain(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|review-risk|why|usage|remove-plan|provenance|branches|branch-diff|on-branches|tests-for|untested|dead|confirm|pack|rebuild-diff|suggest-verb|scope|lint|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
+                'impact|review-risk|why|usage|remove-plan|provenance|branches|branch-diff|on-branches|tests-for|untested|dead|confirm|pack|rebuild-diff|verify|suggest-verb|scope|lint|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
         );
         return 2;
     } catch (e) {
