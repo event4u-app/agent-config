@@ -120,6 +120,30 @@ describe('the shell of the 2026-10-bf handover', () => {
         expect(await de.locator('#nodata-bugs').isVisible()).toBe(true);
         await de.close();
     });
+
+    it('header chips: "built at" commit chip, lowercase freshness, amber when behind, the snapshot chip in a committed map', async () => {
+        const page = await open(full, '#/overview');
+        const pin = await page.evaluate(() => (JSON.parse(document.getElementById('map-data')!.textContent!) as { model: { pin: { commit: string; generation: string } } }).model.pin);
+        expect(await page.locator('#pin-commit').textContent()).toMatch(new RegExp(`^built at ${pin.commit.slice(0, 8)}( · \\d+/\\d+)?$`));
+        expect(await page.locator('#pin-commit').getAttribute('title')).toBe(`Map drawn at ${pin.commit.slice(0, 12)} · Generation ${pin.generation.slice(0, 16)}`);
+        expect(await page.locator('#pin-fresh').textContent()).toBe('fresh');
+        expect(await page.locator('#pin-snap').isVisible()).toBe(true);
+        expect(await page.locator('#pin-snap').textContent()).toBe('Snapshot · no branch state');
+        expect(await page.locator('#pin-snap').getAttribute('title')).toContain('code-graph map --branches');
+        expect(await page.locator('#pin-snap').evaluate((e) => getComputedStyle(e).borderTopStyle)).toBe('dashed');
+        await page.close();
+        const late = await open(behind, '#/overview');
+        expect(await late.locator('#pin-fresh').textContent()).toBe('behind:3');
+        const tint = await late.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--amberTint').trim());
+        expect(await late.locator('#pin-fresh').evaluate((e) => getComputedStyle(e).backgroundColor)).toBe(tint.replace(/\s+/g, '').replace(/,/g, ', '));
+        await late.close();
+        const de = await browser.newPage({ locale: 'de-DE', colorScheme: 'dark' });
+        await de.goto(pathToFileURL(full).href + '#/overview');
+        await de.waitForFunction(() => (window as unknown as { __mapRoute?: unknown }).__mapRoute !== undefined);
+        expect(await de.locator('#pin-commit').textContent()).toMatch(/^gebaut bei \S+/);
+        expect(await de.locator('#pin-snap').textContent()).toBe('Snapshot · ohne Branch-Stand');
+        await de.close();
+    });
 });
 
 describe('an area without data is shown, says so and names the reason', () => {
@@ -469,7 +493,7 @@ describe('the freshness reason', () => {
         for (const hash of ['', '#/overview', '#/data', '#/code']) {
             const page = await open(behind, hash);
             expect(await page.locator('#banner').isVisible()).toBe(false);
-            expect(await page.locator('#pin-fresh').textContent()).toBe('BEHIND:3');
+            expect(await page.locator('#pin-fresh').textContent()).toBe('behind:3');
             expect(await page.locator('#pin-fresh').getAttribute('title')).toMatch(/3 commit\(s\) behind HEAD[\s\S]*Confirm a witness/);
             await page.close();
         }

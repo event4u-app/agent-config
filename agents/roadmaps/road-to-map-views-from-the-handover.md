@@ -107,7 +107,7 @@ Exit: 0.1–0.3 green. Rollback: revert `viewer.css`; aliases keep every caller 
       `areas_common.js` and `shell.js`; no-data entries carry the handover's
       `title` text; Bugs is always no-data in a committed map.
       verify: `npx vitest run tests/scripts/code_graph_map_shell.test.ts -t "nav order" --reporter=verbose` -> /✓.*nav order/
-- [ ] **1.2 Header chips.** Commit chip "gebaut bei" + short sha + date, with the
+- [x] **1.2 Header chips.** Commit chip "gebaut bei" + short sha + date, with the
       sha12 + generation title; freshness chip lowercase on amber tint; new
       dashed "Snapshot · ohne Branch-Stand" chip in a committed map; the search
       up button reads "← eine Ebene hoch". The freshness chip renders

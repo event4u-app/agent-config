@@ -11,19 +11,23 @@ extendStrings({
         kindNames: { folder: 'Folders', file: 'Files', symbol: 'Symbols', route: 'Routes', area: 'Code areas', table: 'Tables', column: 'Columns', fk: 'Foreign keys', rel: 'ORM relations',
             service: 'Services', operation: 'Operations', resource: 'Resources', workflow: 'Workflows', job: 'Jobs', chain: 'Build / deploy', affected: 'Affected', risk: 'Risk terms',
             verb: 'Verbs', pack: 'Context pack', finding: 'Findings', ticket: 'Tickets', pr: 'Pull requests', package: 'Packages', runtime: 'Runtimes', domain: 'Domains' },
-        allKinds: 'All kinds', kindsLabel: 'Kinds', searchUp: 'Up one level', searchEnter: 'Step into (→)',
+        allKinds: 'All kinds', kindsLabel: 'Kinds', searchUp: 'up one level', searchEnter: 'Step into (→)',
         searchCount: function (n) { return n + ' hits'; }, searchCountIn: function (n, p) { return n + ' hits in ' + p; }, generation: function (g) { return 'Generation ' + g; }, noHits: 'Nothing found.',
         hubChip: 'HUB · this machine only', hubChipT: 'Never committed, never inside a repository map', hubCount: function (i, n) { return i + ' of ' + n + ' indexed'; },
-        demoChip: 'Sample data · Fixture', demoChipT: 'Drawn from the demo fixture, not from a repository of yours'
+        demoChip: 'Sample data · Fixture', demoChipT: 'Drawn from the demo fixture, not from a repository of yours',
+        builtAt: 'built at', drawnAt: function (c, g) { return 'Map drawn at ' + c + ' · Generation ' + g; },
+        snapChip: 'Snapshot · no branch state', snapChipT: 'Committed map: branch state not included (D17). Locally: code-graph map --branches'
     },
     de: {
         kindNames: { folder: 'Ordner', file: 'Dateien', symbol: 'Symbole', route: 'Routen', area: 'Code-Areas', table: 'Tabellen', column: 'Spalten', fk: 'Fremdschlüssel', rel: 'ORM-Beziehungen',
             service: 'Dienste', operation: 'Operationen', resource: 'Ressourcen', workflow: 'Workflows', job: 'Jobs', chain: 'Build / Deploy', affected: 'Betroffen', risk: 'Risiko-Terme',
             verb: 'Verben', pack: 'Context-Pack', finding: 'Befunde', ticket: 'Tickets', pr: 'Pull Requests', package: 'Pakete', runtime: 'Runtimes', domain: 'Domänen' },
-        allKinds: 'Alle Arten', kindsLabel: 'Arten', searchUp: 'Eine Ebene höher', searchEnter: 'Hineingehen (→)',
+        allKinds: 'Alle Arten', kindsLabel: 'Arten', searchUp: 'eine Ebene hoch', searchEnter: 'Hineingehen (→)',
         searchCount: function (n) { return n + ' Treffer'; }, searchCountIn: function (n, p) { return n + ' Treffer in ' + p; }, generation: function (g) { return 'Generation ' + g; }, noHits: 'Nichts gefunden.',
         hubChip: 'HUB · nur dieser Rechner', hubChipT: 'Nie committet, nie in einer Projekt-Map', hubCount: function (i, n) { return i + ' von ' + n + ' indiziert'; },
-        demoChip: 'Beispieldaten · Fixture', demoChipT: 'Aus der Demo-Fixture gezeichnet, nicht aus einem deiner Repositories'
+        demoChip: 'Beispieldaten · Fixture', demoChipT: 'Aus der Demo-Fixture gezeichnet, nicht aus einem deiner Repositories',
+        builtAt: 'gebaut bei', drawnAt: function (c, g) { return 'Map gezeichnet bei ' + c + ' · Generation ' + g; },
+        snapChip: 'Snapshot · ohne Branch-Stand', snapChipT: 'Committete Map: Branch-Zustand nicht enthalten (D17). Lokal: code-graph map --branches'
     }
 });
 
@@ -60,12 +64,17 @@ function renderHeader() {
     var pin = model.pin || { commit: meta.commit, freshness: meta.state, generation: meta.graph_generation || '' };
     var commit = $('pin-commit');
     clear(commit);
-    add(commit, document.createTextNode(shortCommit(pin.commit)), pin.date ? el('span', { class: 'pin-date' }, ' · ' + shortDate(pin.date, true)) : null);
-    commit.setAttribute('title', t('generation')(String(pin.generation || '').slice(0, 8)));
+    add(commit, document.createTextNode(t('builtAt') + ' ' + shortCommit(pin.commit)), pin.date ? el('span', { class: 'pin-date' }, ' · ' + shortDate(pin.date, true)) : null);
+    commit.setAttribute('title', t('drawnAt')(String(pin.commit || '').slice(0, 12), String(pin.generation || '').slice(0, 16)));
+    // The state as built (Decision D4): a static file cannot know how far HEAD moved since.
     var fresh = $('pin-fresh');
     var st = String(pin.freshness || meta.state || '');
-    fresh.textContent = st === 'fresh' ? 'FRESH' : st.toUpperCase();
+    fresh.textContent = st.toLowerCase();
     fresh.className = 'chip ' + (st === 'fresh' ? 'fresh' : 'stale');
+    var snap = $('pin-snap');
+    snap.hidden = !!model.branches;
+    snap.textContent = t('snapChip');
+    snap.setAttribute('title', t('snapChipT'));
 }
 function renderNav() {
     var links = $('areanav').querySelectorAll('a[data-route]');
@@ -219,7 +228,7 @@ function runSearch(keep) {
     var hits = level ? level.kids().filter(function (h) { return !q || h.text.toLowerCase().indexOf(q) >= 0; }) : rootHits(q);
     if (level) {
         crumbRow.hidden = false;
-        var up = el('button', { type: 'button', class: 'scrumb-up', 'aria-label': t('searchUp') }, '‹');
+        var up = el('button', { type: 'button', class: 'scrumb-up' }, '← ' + t('searchUp'));
         up.addEventListener('mousedown', function (e) { e.preventDefault(); });
         up.addEventListener('click', function () { searchLeave(); });
         add(crumbRow, up, el('span', { class: 'mono' }, searchStack.map(function (l) { return l.crumb; }).join(' › ') + ' ›'));

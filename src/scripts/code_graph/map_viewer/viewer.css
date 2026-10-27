@@ -62,11 +62,13 @@ button:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visibl
 .brand-name b { font-family: var(--display); font-weight: 400; font-size: 20px; line-height: 1; letter-spacing: 0.02em; }
 .brand-name span { font-size: 10px; font-weight: 600; letter-spacing: 0.32em; color: var(--brandText); }
 .pins { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; }
-.chip { padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--soft); }
+.chip { padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--soft); white-space: nowrap; }
 .chip.fresh { border: 0; background: var(--greenTint); color: var(--greenText); display: inline-flex; align-items: center; gap: 6px; }
-.chip.stale { border: 0; background: var(--brandTint); color: var(--brandText); display: inline-flex; align-items: center; gap: 6px; }
+.chip.stale { border: 0; background: var(--amberTint); color: var(--amberText); display: inline-flex; align-items: center; gap: 6px; }
+.chip.snap { border: 1px dashed var(--line2); color: var(--muted); }
 .chip.demo { border: 0; background: var(--amberTint); color: var(--amberText); white-space: nowrap; }
 .chip.fresh::before, .chip.stale::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.chip.stale::before { background: var(--amber); }
 .search { position: relative; flex: 1 1 260px; display: flex; align-items: center; gap: 8px; min-width: 220px; max-width: 520px; margin-left: auto; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
 .search svg { color: var(--muted); flex: none; }
 .search input { flex: 1; min-width: 0; height: 34px; background: transparent; border: 0; color: var(--text); font: inherit; font-size: 13px; outline: none; }

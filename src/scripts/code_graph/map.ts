@@ -1192,7 +1192,7 @@ export function renderPage(m: MapModel, meta: MapMeta, areas: object, shell?: Ma
         `<nav class="areanav" id="areanav" aria-label="Areas"${shell?.hub ? ' hidden' : ''}>${nav.map((r) => `<a href="#/${r}" data-route="${r}">${r}</a>`).join('')}</nav>`,
         '</div>',
         '<div class="top-row row2">',
-        `<div class="pins mono"><span class="chip" id="pin-commit"></span><span class="chip fresh" id="pin-fresh"></span>${meta.demo ? '<span class="chip demo" id="pin-demo"></span>' : ''}</div>`,
+        `<div class="pins mono"><span class="chip" id="pin-commit"></span><span class="chip fresh" id="pin-fresh"></span>${shell?.hub ? '' : '<span class="chip snap" id="pin-snap" hidden></span>'}${meta.demo ? '<span class="chip demo" id="pin-demo"></span>' : ''}</div>`,
         '<div class="search"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="5"></circle><path d="M11 11l3.5 3.5"></path></svg>' +
             '<input id="search" type="search" autocomplete="off"><span class="kbd mono">/</span>' +
             '<span class="sr-only" id="search-live" aria-live="polite"></span>' +
