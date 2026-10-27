@@ -144,9 +144,15 @@
 .ov-intro p { margin: 0; }
 .manifest { padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
 .manifest .kv { grid-template-columns: auto minmax(0, auto); gap: 4px 14px; }
-.ov-filters { display: flex; flex-wrap: wrap; gap: 6px; }
-.ov-filters .fbtn { height: 32px; padding: 0 12px; border-radius: 8px; font-weight: 600; background: transparent; }
-.ov-filters .fbtn[aria-selected='true'] { border-color: var(--brandLine); background: var(--brandTint); color: var(--text); }
+.ov-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); font-size: 12px; }
+.ov-legend > b { font-weight: 600; }
+.ov-filters { margin-left: auto; display: flex; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.oseg { height: 34px; padding: 0 14px; border-radius: 7px; border: 0; font-size: 13px; font-weight: 500; background: transparent; box-shadow: none; color: var(--soft); }
+.oseg[aria-checked='true'] { font-weight: 600; background: var(--brandTint); box-shadow: inset 0 0 0 1px var(--brandLine); color: var(--text); }
+.st.amberline { border: 1px solid var(--amber); color: var(--amberText); }
+.ov-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); box-shadow: inset 4px 0 0 var(--amber); font-size: 13px; }
+.ov-banner.fresh { box-shadow: inset 4px 0 0 var(--green); }
+.ov-btext { flex: 1; min-width: 260px; }
 .ogrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; }
 .av-main .card.ocard, .ov-lower > .card, .otours { gap: 10px; padding: 16px; border-radius: 12px; }
 .ocard { color: var(--text); text-decoration: none; min-width: 0; }

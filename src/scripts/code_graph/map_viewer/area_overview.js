@@ -9,7 +9,9 @@ extendStrings({
         oTitle: 'What does AC know – and how sure is it?',
         oIntro: 'The graph is an index, not the truth. Each layer shows when it was indexed, when its source was last checked and how much it covers. Without a complete scan the answer is "unknown", never "missing".',
         oManifest: 'manifest', oCommit: 'commit', oGeneration: 'generation', oExport: 'export', oNoGlobal: 'without global data ✓',
-        oStateLegend: 'State per fact', oRungLegend: 'Provenance:', oRungs: 'T1 code · T2 dump/contract · T3 snapshot · T4 oracle', oFilters: { all: 'All layers', live: 'With data', none: 'Planned' },
+        oStateLegend: 'State per fact', oRungLegend: 'Provenance:', oRungs: 'T1 code · T2 dump/contract · T3 snapshot · T4 oracle', oFilters: { all: 'All layers', data: 'With data', planned: 'Planned · empty' },
+        oDrawn: function (c, st) { var m = /^behind:(\d+)$/.exec(st); return 'Drawn at ' + c + (st === 'fresh' ? ', the graph is level with HEAD.' : m ? ', HEAD is ' + m[1] + ' commits ahead.' : ', graph state: ' + st + '.'); },
+        oSnapFacts: 'The facts hold for the snapshot. Redraw: ', oWitnesses: function (n, r) { return n + ' witnesses · ' + r + ' re-read'; },
         oIndexed: 'indexed', oConfirmed: 'source checked', oCoverage: 'coverage', oFindings: 'findings', oNever: 'never (index only)',
         oBadge: { live: 'active', empty: 'read, empty', none: 'no data yet', scope: 'own scope' },
         oLayer: { code: 'Code', data: 'Database', systems: 'Systems', interfaces: 'Integrations', env: 'Environment', ci: 'CI/CD', infra: 'Infrastructure', knowledge: 'Knowledge · Memory', impact: 'Impact', projects: 'Projects' },
@@ -42,7 +44,9 @@ extendStrings({
         oTitle: 'Was weiß AC – und wie sicher?',
         oIntro: 'Der Graph ist ein Index, keine Wahrheit. Jede Ebene zeigt, wann sie indiziert wurde, wann die Quelle zuletzt geprüft wurde und wie viel sie abdeckt. Ohne vollständigen Scan heißt es „unbekannt“, nie „fehlt“.',
         oManifest: 'manifest', oCommit: 'commit', oGeneration: 'generation', oExport: 'export', oNoGlobal: 'ohne globale Daten ✓',
-        oStateLegend: 'Zustand je Fakt', oRungLegend: 'Herkunft:', oRungs: 'T1 Code · T2 Dump/Vertrag · T3 Snapshot · T4 Orakel', oFilters: { all: 'Alle Ebenen', live: 'Mit Daten', none: 'Geplant' },
+        oStateLegend: 'Zustand je Fakt', oRungLegend: 'Herkunft:', oRungs: 'T1 Code · T2 Dump/Vertrag · T3 Snapshot · T4 Orakel', oFilters: { all: 'Alle Ebenen', data: 'Mit Daten', planned: 'Geplant · leer' },
+        oDrawn: function (c, st) { var m = /^behind:(\d+)$/.exec(st); return 'Gezeichnet bei ' + c + (st === 'fresh' ? ', der Graph steht auf HEAD.' : m ? ', HEAD ist ' + m[1] + ' Commits weiter.' : ', Graph-Zustand: ' + st + '.'); },
+        oSnapFacts: 'Die Fakten gelten für den Snapshot. Neu zeichnen: ', oWitnesses: function (n, r) { return n + ' Zeugen · ' + r + ' erneut gelesen'; },
         oIndexed: 'indiziert', oConfirmed: 'Quelle geprüft', oCoverage: 'Abdeckung', oFindings: 'Befunde', oNever: 'nie (nur Index)',
         oBadge: { live: 'aktiv', empty: 'gelesen, leer', none: 'noch keine Daten', scope: 'eigener Scope' },
         oLayer: { code: 'Code', data: 'Database', systems: 'Systems', interfaces: 'Integrations', env: 'Umgebung', ci: 'CI/CD', infra: 'Infrastruktur', knowledge: 'Knowledge · Memory', impact: 'Impact', projects: 'Projects' },
@@ -73,7 +77,7 @@ extendStrings({
     }
 });
 
-var STATE_CLASS = { fresh: 'ok', stale: 'warn', contradicted: 'bad', unverifiable: 'dash', incomplete: 'violet' };
+var STATE_CLASS = { fresh: 'ok', stale: 'warn', contradicted: 'bad', unverifiable: 'dash', incomplete: 'amberline' };
 var STATE_GLYPH = { fresh: '●', stale: '◐', contradicted: '✕', unverifiable: '?', incomplete: '◌' };
 var ovFilter = 'all';
 
@@ -234,6 +238,36 @@ function ovCard(spec) {
     return a;
 }
 
+/** Every witness a payload carries, its findings' included: what the map could re-read. */
+function payloadWitnesses(v, out) {
+    if (!v || typeof v !== 'object') return out;
+    if (Array.isArray(v)) { v.forEach(function (x) { payloadWitnesses(x, out); }); return out; }
+    if (typeof v.file === 'string' && typeof v.line === 'number' && v.hash !== undefined) { out.push(v); return out; }
+    Object.keys(v).forEach(function (k) { payloadWitnesses(v[k], out); });
+    return out;
+}
+function mapWitnesses() {
+    var all = [];
+    KNOWLEDGE_IDS.forEach(function (id) { if (KA[id]) payloadWitnesses(KA[id], all); });
+    return all;
+}
+/**
+ * The handover's state banner: the freshness as built (Decision D4), the
+ * sentence that says what it means, the redraw command, the snapshot chip and
+ * how many witnesses the map holds and how many were re-read since.
+ */
+function ovBanner(pin) {
+    var st = String(pin.freshness || meta.state || '');
+    var ws = mapWitnesses();
+    var reread = ws.filter(function (w) { return w.confirm && w.confirm !== 'unconfirmed'; }).length;
+    var b = el('div', { class: 'ov-banner ' + (st === 'fresh' ? 'fresh' : 'behind'), id: 'ov-banner' });
+    var text = el('span', { class: 'ov-btext' });
+    add(text, el('b', null, t('oDrawn')(shortCommit(pin.commit), st)), document.createTextNode(' '),
+        add(el('span', { class: 'soft' }), document.createTextNode(t('oSnapFacts')), el('span', { class: 'mono' }, 'agent-config code-graph refresh'), document.createTextNode('.')));
+    add(b, stChip(st, st === 'fresh' ? 'ok' : 'warn'), text, model.branches ? null : stChip(t('snapChip'), 'dash', t('snapChipT')), stChip(t('oWitnesses')(num(ws.length), num(reread)), 'dash'));
+    return b;
+}
+
 function renderOverview() {
     var main = $('av-main');
     var head = el('div', { class: 'ov-head' });
@@ -245,26 +279,27 @@ function renderOverview() {
         [t('oGeneration'), String(pin.generation || '').slice(0, 8)], [t('oExport'), nog]])));
     main.appendChild(head);
 
-    var legend = add(el('div', { class: 'legend ov-legend' }), el('b', null, t('oStateLegend')));
+    var legend = add(el('div', { class: 'ov-legend' }), el('b', null, t('oStateLegend')));
     ['fresh', 'stale', 'contradicted', 'unverifiable', 'incomplete'].forEach(function (s) { legend.appendChild(stChip(STATE_GLYPH[s] + ' ' + t('states')[s], STATE_CLASS[s])); });
     var rl = el('span', { class: 'muted' }, t('oRungLegend'));
     rl.style.marginLeft = '8px';
     legend.appendChild(rl);
     legend.appendChild(el('span', { class: 'mono soft', title: ['T1', 'T2', 'T3', 'T4'].map(function (r) { return t('rungNames')[r]; }).join(' · ') }, t('oRungs')));
-    main.appendChild(legend);
-
-    var tabs = el('div', { class: 'ov-filters', role: 'tablist', 'aria-label': 'Filter' });
-    ['all', 'live', 'none'].forEach(function (f) {
-        var b = el('button', { type: 'button', role: 'tab', class: 'fbtn', 'aria-selected': String(ovFilter === f) }, t('oFilters')[f]);
+    // The handover's filter is a radiogroup at the end of the legend row: one choice, not views.
+    var radios = el('div', { class: 'ov-filters', role: 'radiogroup', 'aria-label': 'Filter' });
+    ['all', 'data', 'planned'].forEach(function (f) {
+        var b = el('button', { type: 'button', role: 'radio', class: 'oseg', 'aria-checked': String(ovFilter === f) }, t('oFilters')[f]);
         b.addEventListener('click', function () { ovFilter = f; renderRoute(); });
-        tabs.appendChild(b);
+        radios.appendChild(b);
     });
-    main.appendChild(tabs);
+    legend.appendChild(radios);
+    main.appendChild(legend);
+    main.appendChild(ovBanner(pin));
     var grid = el('div', { class: 'ogrid' });
     OV_LAYERS.forEach(function (spec) {
         var live = layerLive(spec);
-        if (ovFilter === 'live' && !live) return;
-        if (ovFilter === 'none' && live) return;
+        if (ovFilter === 'data' && !live) return;
+        if (ovFilter === 'planned' && live) return;
         grid.appendChild(ovCard(spec));
     });
     main.appendChild(grid);

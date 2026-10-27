@@ -1214,3 +1214,4 @@ import '../scripts/code_graph_map_domains_page.test.js';
 import '../scripts/code_graph_map_branches_page.test.js';
 import '../scripts/code_graph_map_history_crumbs.test.js';
 import '../scripts/code_graph_map_shell_overflow.test.js';
+import '../scripts/code_graph_map_overview_page.test.js';

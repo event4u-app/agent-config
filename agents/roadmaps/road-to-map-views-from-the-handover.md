@@ -141,7 +141,7 @@ Exit: 1.1–1.6 green on the demo map and this repo's map. Rollback: revert
 
 ## Phase 2 — Übersicht
 
-- [ ] **2.1 Filter and behind banner.** The state filter becomes a radiogroup
+- [x] **2.1 Filter and behind banner.** The state filter becomes a radiogroup
       "Alle Ebenen / Mit Daten / Geplant · leer"; the banner shows the behind
       chip (Decision D4), "code-graph refresh", the snapshot chip and the
       witness count "N Zeugen · M erneut gelesen" from the model.
