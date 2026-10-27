@@ -54,9 +54,27 @@ The same window, with the six defects fixed, against
 2. **False positives at most 1 %.** Three writes of one Storybook story that
    builds a fake field from a raw `<input>`: 3 of 1,560 legitimate writes,
    **0.19 %**. Nothing fires in A.
-3. **The economics favour it.** The check never blocks: a false positive costs
-   one advisory line, while a missed raw control costs a review round. This is
-   the failure the roadmap was opened for.
+3. **The economics favour it.** Friction and benefit, each measured where it
+   can be:
+   - *Latency on every UI write.* Timed on the shipped chunk on 2026-10-27
+     (Darwin arm64, n = 30): with the cached role map p50 111 ms and p95
+     118 ms, of which the porcelain status call is about 95 ms in this
+     package's own tree and about 25 ms in the larger consumer repository B;
+     293 ms when the map is recomputed, once per HEAD move or dirty-set
+     change. Inside the 250 ms p95 budget of `src/config/hook-latency-budget.json`
+     for a hook event. Non-UI writes never load the chunk.
+   - *A false positive.* One advisory line of about 150 characters (about 40
+     tokens), never a block: the concern is `severity: advisory`, which the
+     dispatcher enforces as a ceiling. Its findings carry `design-pass`'s
+     priority label P1; in that pass only a P0 can ever be reported as
+     would-block, and only at `stop`, which this check does not run on.
+     Three such lines in 1,560 legitimate writes.
+   - *A missed raw control.* Not measured in tokens. It is the failure this
+     roadmap was opened for: a raw `<select>` reached review beside the
+     project's own `Select`, and the correction was a further review and
+     rework round. Five such writes were in the window.
+   The trade is about 120 tokens of noise and 0.1 s per UI write against five
+   review findings caught at write time.
 4. **The window is met.** 1,565 observations over six months, against a floor
    of 100 or two weeks, and the targeted shape is in it.
 

@@ -81,9 +81,8 @@ export function dirtyPrimitives(root: string): string[] | null {
  * component that would shift which implementation is most used — which waits
  * for the next stamp change.
  */
-function roles(root: string): UiAuditArtefact['control_roles'] {
+function roles(root: string, head: string | null): UiAuditArtefact['control_roles'] {
     const cache = path.join(root, CACHE_REL);
-    const head = gitHead(root);
     const dirty = dirtyPrimitives(root);
     const stamp = head === null || dirty === null ? null : `${head}|${dirty.join(';')}`;
     try {
@@ -101,11 +100,12 @@ function roles(root: string): UiAuditArtefact['control_roles'] {
 
 export function consistencyPass(root: string, file: string, content: string): ConsistencyNotice[] {
     const rel = path.relative(root, path.resolve(root, file)).split(path.sep).join('/');
-    const map = roles(root);
+    const head = gitHead(root);
+    const map = roles(root, head);
     const shadow = path.join(root, SHADOW_REL);
     fs.mkdirSync(path.dirname(shadow), { recursive: true });
     // A live row is stamped with the wall clock on purpose; `asOf` would warn on every write.
-    const row = { ...shadowRecord(content, rel, map, new Date()), head: gitHead(root) };
+    const row = { ...shadowRecord(content, rel, map, new Date()), head };
     fs.appendFileSync(shadow, `${JSON.stringify(row)}\n`);
     return consistencyFindings(content, rel, map)
         .filter((f) => f.rule === 'consistency-raw-control')
