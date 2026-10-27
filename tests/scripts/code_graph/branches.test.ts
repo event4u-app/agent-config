@@ -110,4 +110,13 @@ describe('the branch verbs', () => {
         expect(cli('usage', 'react', '--branch', 'feat-x').code).toBe(1);
         expect(cli('branches', 'list').out).toMatch(/feat-x[\s\S]*main/);
     }, 120_000);
+
+    it('branches pin keeps a branch through gc', () => {
+        const pin = cli('branches', 'pin', 'feat-x');
+        expect(pin.code).toBe(0);
+        expect(pin.out).toMatch(/pinned feat-x/);
+        expect(JSON.parse(fs.readFileSync(path.join(root, '.cache', 'branches', 'pins.json'), 'utf-8'))).toContain('feat-x');
+        expect(cli('branches', 'gc').out).toMatch(/kept {4}feat-x — pinned/);
+        expect(cli('branches', 'pin').code).toBe(2);
+    }, 120_000);
 });

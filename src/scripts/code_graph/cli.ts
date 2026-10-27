@@ -74,10 +74,10 @@
  *                                             and packages leaving with it: a proposal
  *   provenance <ticket|#pr|file|symbol>       since when, by which commit, PR and
  *                                             ticket — from the local history only
- *   branches [index [ref…] | gc | list]       facts per branch without a checkout:
+ *   branches [index [ref…] | pin <ref…> | gc | list]  facts per branch without a checkout:
  *                                             index the default set (current, its
  *                                             parent chain, recently checked out) or
- *                                             named refs; gc drops stale branches
+ *                                             named refs; gc drops stale, unpinned branches
  *   branch-diff <a> [<b>]                     files, symbols, packages, tables and
  *                                             columns that differ (b = current)
  *   on-branches <package|table.column|symbol|file>  the indexed branches holding it
