@@ -309,6 +309,7 @@ reviews worse. Distinct from 3.2, which teaches two existing detectors to read e
       gate. After it: test each term against forward-in-time split data (S6 method,
       effort-aware); a term that contributes nothing is removed.
       verify: `ls internal/bench/reports/review-risk-calibration-*.md` -> 0
+      > note: the pre-3.5 half landed 2026-10-27 — `riskBand` (`review_risk.ts`) bands low / medium / high / unknown with reason lines, no decimal, no gate, and the map says so. Open: the calibration against forward-in-time split data waits for 3.5.
 
 ## Null path, stated now
 If fewer than 4 of the 6 scored classes win, the graph-first wording stays withheld and
