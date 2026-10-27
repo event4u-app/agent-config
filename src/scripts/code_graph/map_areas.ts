@@ -220,6 +220,12 @@ export interface SystemsPackage {
     declared: string[];
     /** the shortest path from a declaration, as `name@version` steps */
     path: string[];
+    /** up to 20 chains from a declaration to this package, each hop `name@version (spec it was required by)` */
+    why: string[][];
+    /** packages that require it, transitively */
+    dependents: number;
+    /** packages it requires, transitively */
+    subtree: number;
     requiredBy: string[];
     requires: string[];
     /** files that import it, each at its import */

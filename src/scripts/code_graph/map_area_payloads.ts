@@ -588,6 +588,10 @@ function runtimePayload(c: Ctx, findings: AreaFinding[], st: LaneState): Runtime
 
 const USED_BY_CAP = 20;
 
+/** Chains kept per package: the page lists them, the full set stays one `code-graph why` away. */
+export const WHY_CHAIN_CAP = 20;
+const WHY_DEPTH = 15;
+
 function systemsPayload(c: Ctx, findings: AreaFinding[], st: LaneState): SystemsPayload | null {
     const pkgs = c.graph.nodes.filter((n) => n.kind === 'package' && n.fact?.lane === 'systems');
     const rts = c.graph.nodes.filter((n) => n.kind === 'runtime' && n.fact?.lane === 'systems');
@@ -595,11 +599,41 @@ function systemsPayload(c: Ctx, findings: AreaFinding[], st: LaneState): Systems
     const label = (n: CodeNode | undefined): string => (n ? `${String(attr(n, 'name') ?? n.label)}@${String(attr(n, 'version') ?? '')}` : '?');
     const reqOut = new Map<string, string[]>();
     const reqIn = new Map<string, string[]>();
+    const rangeOf = new Map<string, string>();
     for (const e of c.graph.edges) {
         if (e.relation !== 'requires') continue;
         reqOut.set(e.source, [...(reqOut.get(e.source) ?? []), e.target]);
         reqIn.set(e.target, [...(reqIn.get(e.target) ?? []), e.source]);
+        rangeOf.set(`${e.source}\0${e.target}`, String(e.fact?.attrs?.['range'] ?? ''));
     }
+    const declaredRange = (id: string): string => (strs(attr(c.byId.get(id), 'declared'))[0] ?? '').split(' ').slice(2).join(' ');
+    /** Chains from a declaration down to `id`, at most WHY_CHAIN_CAP, none longer than WHY_DEPTH hops. */
+    const whyChains = (id: string): string[][] => {
+        const out: string[][] = [];
+        const up = (cur: string, below: string[], seen: Set<string>): void => {
+            if (out.length >= WHY_CHAIN_CAP || seen.size > WHY_DEPTH) return;
+            const hop = (spec: string): string => `${label(c.byId.get(cur))} (${spec})`;
+            if (attr(c.byId.get(cur), 'direct') === true) out.push([hop(declaredRange(cur)), ...below]);
+            for (const from of [...(reqIn.get(cur) ?? [])].sort()) {
+                if (seen.has(from)) continue;
+                up(from, [hop(rangeOf.get(`${from}\0${cur}`) ?? ''), ...below], new Set([...seen, from]));
+            }
+        };
+        up(id, [], new Set([id]));
+        return out.sort((a, b) => a.length - b.length || (a.join(' ') < b.join(' ') ? -1 : 1));
+    };
+    const reach = (id: string, adj: Map<string, string[]>): number => {
+        const seen = new Set<string>([id]);
+        const stack = [id];
+        while (stack.length) {
+            for (const n of adj.get(stack.pop() as string) ?? []) {
+                if (seen.has(n)) continue;
+                seen.add(n);
+                stack.push(n);
+            }
+        }
+        return seen.size - 1;
+    };
     const shortestPath = (id: string): string[] => {
         const prev = new Map<string, string | null>([[id, null]]);
         const queue = [id];
@@ -639,6 +673,9 @@ function systemsPayload(c: Ctx, findings: AreaFinding[], st: LaneState): Systems
             locked: attr(n, 'locked') !== false,
             declared: strs(attr(n, 'declared')),
             path: shortestPath(n.id),
+            why: whyChains(n.id),
+            dependents: reach(n.id, reqIn),
+            subtree: reach(n.id, reqOut),
             requiredBy: (reqIn.get(n.id) ?? []).map((x) => label(c.byId.get(x))).sort(),
             requires: (reqOut.get(n.id) ?? []).map((x) => label(c.byId.get(x))).sort(),
             usedBy: usedBy.sort((a, b) => (a.file < b.file ? -1 : 1)),
