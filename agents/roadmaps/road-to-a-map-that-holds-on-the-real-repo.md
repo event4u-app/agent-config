@@ -247,7 +247,7 @@ Before the Systems view of `road-to-map-views-from-the-handover`.
 - [x] **7.5 [F.5] Semantic early warning.** Overlap on tables, columns, packages, routes, not paths. verify: `npx vitest run tests/scripts/branch_chain_semantic_overlap.test.ts` -> 0
   > note: read from the `+` lines of each side's diff since the merge base (Laravel and SQL DDL, JSON manifests, Laravel and Express routes); a Laravel `$table->x('col')` names the column only, since the table sits on another line.
 - [ ] **7.6 [F.6] Surface what is computed.** Hidden dependencies (after 2.5) in the Code rail, review-risk and a verb; the flow lens draws product-scope flows; decisions in the detail panel. Waits on Phases 2 and 5 (P-3). verify: `npx vitest run tests/scripts/code_graph_surface_computed.test.ts` -> 0
-  > note: waits on Phases 2 and 5 (P-3).
+  > note: blocked by P-3: Phase 2 is closed except its ratification-gated 2.3 and the workflow 2.8, and Phase 5 cannot close while 5.5–5.7 wait on the owner's spend blockers (`b-map-remeasure-spend`, `b-map-remeasure-budget`).
 - [ ] **7.7 [F.7] Nightly rebuild-diff with lanes.** Workflow, with ratification artifact. verify: `gh workflow view code-graph-rebuild-diff.yml` -> 0
   > note: blocked by bounds: nightly workflow needs its ratification artifact.
 
