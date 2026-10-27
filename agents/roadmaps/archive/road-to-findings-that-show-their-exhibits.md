@@ -49,7 +49,7 @@ gated-surface list. Those live in `later/road-to-a-court-at-the-stops`.
 
 ## Phase 1 — A typed exhibit in the finding schema
 
-- [x] **1.1 Add optional `line` and `exhibits[]` to `review-findings.schema.json`.**
+- [x] **1.1 Add optional `line` and `exhibits[]` to `review-findings.schema.json`.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       `line` is an integer ≥ 1. Each exhibit has a `type` from the closed set
       `presence` (`path`, `line`, `quote` ≤ 300 chars, `commit`), `absence`
       (`path_glob`, `pattern`, `commit`, `expected: 0`), `pair` (two presence
@@ -57,19 +57,19 @@ gated-surface list. Those live in `later/road-to-a-court-at-the-stops`.
       Both fields are optional, so every existing producer stays valid.
       verify: the schema test carries one valid row per exhibit type and one
       invalid row per required field.
-- [x] **1.2 Keep `findingId()` stable across line moves.** Strip a trailing
+- [x] **1.2 Keep `findingId()` stable across line moves.** Strip a trailing <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/self_review_gate.ts -->
       `:<n>` or `:<n>-<m>` from `file` before hashing, and lift it into `line`
       where the finding is parsed.
       verify: a unit test shows two findings that differ only in the line
       suffix share one id, and a finding without a suffix keeps its old id.
-- [x] **1.3 Keep exhibits through `parseFindings`.** A model reply carrying
+- [x] **1.3 Keep exhibits through `parseFindings`.** A model reply carrying <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/self_review_gate.ts -->
       `exhibits` keeps them on the parsed finding; a malformed exhibit is
       dropped with the finding kept.
       verify: a parse test over a reply with one good and one malformed exhibit.
 
 ## Phase 2 — Admissibility, deterministic and zero-spend
 
-- [x] **2.1 Build `check_finding_exhibits`.** A pure reader over a findings
+- [x] **2.1 Build `check_finding_exhibits`.** A pure reader over a findings <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_finding_exhibits.ts -->
       file (or the schema's array) that resolves each exhibit at its `commit`
       through `git show`/`git grep`: `presence` holds when the quote occurs
       within ±3 lines of `line`; `absence` holds when the match count over the
@@ -79,14 +79,14 @@ gated-surface list. Those live in `later/road-to-a-court-at-the-stops`.
       verify: fixtures per type against a temporary git repository, plus a
       sabotage case — shifting a quote by one character flips the verdict to
       `inadmissible`.
-- [x] **2.2 Admissibility informs, it never filters.** The checker writes no
+- [x] **2.2 Admissibility informs, it never filters.** The checker writes no <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_finding_exhibits.ts -->
       disposition and drops no finding.
       verify: a test greps the checker's source for every disposition status
       literal and the ledger directory and finds none.
 
 ## Phase 3 — The precision the ledgers already hold
 
-- [x] **3.1 Build `report_finding_precision`.** Read-only over
+- [x] **3.1 Build `report_finding_precision`.** Read-only over <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/report_finding_precision.ts -->
       `agents/evidence/release-findings/*.json`; per release and in total it
       prints `fixed`, `false_positive`, `accepted_risk`, `still_open`,
       `undisposed`, precision = fixed / (fixed + false_positive), and the
@@ -96,7 +96,7 @@ gated-surface list. Those live in `later/road-to-a-court-at-the-stops`.
 
 ## Phase 4 — Stance changes that name no reason
 
-- [x] **4.1 Add `unreasonedFlips` to `deliberation_metrics`.** Per member, read
+- [x] **4.1 Add `unreasonedFlips` to `deliberation_metrics`.** Per member, read <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/deliberation_metrics.ts -->
       the `STANCE:` label of each stage with the existing parser; a change of
       label is a flip; it is reasoned when the flipping call carries a
       correction sentence that near-duplicates a peer's earlier correction
