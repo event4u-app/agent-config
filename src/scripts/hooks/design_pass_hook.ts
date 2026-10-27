@@ -93,6 +93,7 @@ import { trigger_matches, type Trigger } from '../_lib/router_match.js';
 import { HANDOVER_SHAPES, isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
 import { loadDesignContext, scanFile } from '../lint_design_slop.js';
 import { readHookStdin } from './hook_stdin.js';
+import { loadConsistencyPass } from './design_consistency_loader.js';
 import { CHUNK_BASENAME, loadSvgScan } from './svg_rules_loader.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
@@ -130,12 +131,12 @@ export interface PassResult {
 }
 
 /** Minimal settings reader — mirrors design_slop_hook rather than adding a parser. */
-export function enabled(root: string, key = 'design_pass'): boolean {
+export function enabled(root: string, key = 'design_pass', fallback = false): boolean {
     let text: string;
     try {
         text = fs.readFileSync(path.join(root, SETTINGS_FILE), 'utf-8');
     } catch {
-        return false;
+        return fallback;
     }
     let inHooks = false;
     let inKey = false;
@@ -158,7 +159,26 @@ export function enabled(root: string, key = 'design_pass'): boolean {
             if (m4) return /^(true|yes|on)$/i.test(m4[1]!);
         }
     }
-    return false;
+    return fallback;
+}
+
+/** Raw-control findings for one UI file, from the conditional chunk. */
+export function consistencyFor(root: string, rel: string, load = loadConsistencyPass): Finding[] {
+    const run = load();
+    if (!run) return [];
+    try {
+        const abs = path.resolve(root, rel);
+        return run(root, rel, fs.readFileSync(abs, 'utf-8')).map((n) => ({
+            file: rel,
+            severity: 'P1',
+            catalogId: 'consistency',
+            rule: 'consistency-raw-control',
+            line: n.line,
+            message: n.message,
+        }));
+    } catch {
+        return [];
+    }
 }
 
 /**
@@ -626,7 +646,10 @@ export function render(result: PassResult, conformance?: string): string {
 
 function main(): number {
     const root = process.env['CLAUDE_PROJECT_DIR'] ?? process.cwd();
-    if (!enabled(root)) return EXIT_ALLOW;
+    // The consistency check ships ON (3.8); the rest of the pass ships OFF.
+    const pass = enabled(root);
+    const consistency = enabled(root, 'design_consistency', true);
+    if (!pass && !consistency) return EXIT_ALLOW;
 
     const slotArg = process.argv.includes('--slot') ? process.argv[process.argv.indexOf('--slot') + 1] : undefined;
     const slot: PassResult['slot'] = slotArg === 'stop' ? 'stop' : 'post_tool_use';
@@ -636,6 +659,14 @@ function main(): number {
         payload = JSON.parse(readHookStdin() || 'null');
     } catch {
         return EXIT_ALLOW; // fail_closed: false — an unparsable payload is not a block
+    }
+    if (!pass) {
+        const t = slot === 'stop' ? null : targetPath(payload);
+        const only = t && isUiSurface(t) ? consistencyFor(root, t) : [];
+        if (!only.length) return EXIT_ALLOW;
+        const r: PassResult = { slot, findings: only, blocked: [], audit_missing: [], verification: 'verified' };
+        process.stdout.write(`${JSON.stringify({ reason: render(r) })}\n`);
+        return EXIT_WARN;
     }
 
     const state = readState(root);
@@ -674,6 +705,8 @@ function main(): number {
                 if (scan === null) svgRulesUnavailable = true;
                 else findings.push(...svgFindings(scan(content, rel) as SvgRuleFinding[], rel));
             }
+            // One shadow row per write: the stop pass re-reads the same files.
+            if (consistency && slot === 'post_tool_use' && isUiSurface(rel)) findings.push(...consistencyFor(root, rel));
             for (const f of scanFile(content, rel, ctx)) {
                 findings.push({
                     file: rel,
