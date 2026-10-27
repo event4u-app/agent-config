@@ -153,7 +153,8 @@ function witness(c: Ctx, w: { file: string | null; line: number | null; hash: st
 
 function nodeWitness(c: Ctx, n: CodeNode | undefined): Witness | null {
     if (!n) return null;
-    if (n.fact) {
+    // A file witness names the file, not a line: the payload reads the file's first line, as before.
+    if (n.fact && n.fact.witness.kind !== 'file') {
         const w = witness(c, n.fact.witness, n.fact.rung);
         return w && c.added.has(n.id) ? { ...w, confirm: 'added' } : w;
     }
