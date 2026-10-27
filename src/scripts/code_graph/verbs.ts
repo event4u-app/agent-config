@@ -36,6 +36,7 @@ import type { LoadedGraph, RecommendedRead } from './query.js';
 import { resolveSeeds } from './query.js';
 import { sanitizeLabel } from './sanitize.js';
 import { type CodeEdge, EXT_LANG, GUESS_RESOLVED_VIA, isStatedResolution, type ResolvedVia } from './types.js';
+import { uncertaintySentence } from './uncertainty.js';
 
 /**
  * Mechanisms a gate-facing verb refuses to walk.
@@ -192,6 +193,8 @@ export interface ImpactResult extends VerbReport {
     partial_files: string[];
     /** False while any file the answer rests on is partial, unresolved or refused. */
     complete: boolean;
+    /** Only on an empty answer: why the graph may not know (`uncertainty.ts`). */
+    uncertainty?: string;
     /** Reverse-reachable callers/dependents over accepted edges, sorted. */
     dependents: string[];
     /**
@@ -323,6 +326,7 @@ export function impact(
     const fileOf = (id: string): string => g.byId.get(id)?.source_file ?? '';
     const testFiles = [...new Set(deps.map(fileOf).filter((f) => f !== '' && isTest(f)))].sort();
     const partial = partialFiles(g, [...files, ...deps.map(fileOf)]);
+    const why = uncertaintySentence({ verb: 'impact', empty: deps.length === 0, state, not_indexed, partial, files });
     return {
         source: g.source,
         state,
@@ -341,6 +345,7 @@ export function impact(
         producing_edges: accepted.map(renderEdge).sort(),
         lines: deps.map((d) => `${d}`),
         recommended_reads: dedupeReads(deps.map((d) => readFor(g, d))),
+        ...(why ? { uncertainty: why } : {}),
     };
 }
 
@@ -353,10 +358,16 @@ export function partialFiles(g: LoadedGraph, files: readonly string[]): string[]
  * `tests-for` as the CLI and the MCP tool answer it: {@link testsFor} plus the
  * partial files it rests on. A wrapper, so the walk `untested` reuses stays as it is.
  */
-export function testsForAnswer(g: LoadedGraph, symbol: string, state: GraphState): TestsForResult & { partial_files: string[]; complete: boolean } {
+export function testsForAnswer(
+    g: LoadedGraph,
+    symbol: string,
+    state: GraphState,
+): TestsForResult & { partial_files: string[]; complete: boolean; uncertainty?: string } {
     const r = testsFor(g, symbol, state);
-    const partial = partialFiles(g, [...r.seeds, ...r.tests].map((id) => g.byId.get(id)?.source_file ?? ''));
-    return { ...r, partial_files: partial, complete: partial.length === 0 };
+    const seedFiles = r.seeds.map((id) => g.byId.get(id)?.source_file ?? '');
+    const partial = partialFiles(g, [...seedFiles, ...r.tests.map((id) => g.byId.get(id)?.source_file ?? '')]);
+    const why = uncertaintySentence({ verb: 'tests-for', empty: r.tests.length === 0, state, not_indexed: [], partial, files: seedFiles });
+    return { ...r, partial_files: partial, complete: partial.length === 0, ...(why ? { uncertainty: why } : {}) };
 }
 
 function renderEdge(e: CodeEdge): string {

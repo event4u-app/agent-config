@@ -230,7 +230,7 @@ answers. Each step is fixture-gated (K5).
       (iii) the map's agent area (`map_area_payloads.ts` `completeness`,
       `map_viewer/area_agent.js` copy) shows the same state. Precondition of 5.5.
       verify: `npx vitest run tests/scripts/code_graph_review_risk.test.ts -t 'shallow clone renders unknown'` -> 0
-- [ ] 4.3 **One uncertainty sentence for empty answers.** Only when a result is empty,
+- [x] 4.3 **One uncertainty sentence for empty answers.** Only when a result is empty,
       at most 140 characters, the reason taken in a fixed order: not indexed → partial
       parse → `edited` / `behind:N` → language gap (a data table per language and
       verb). Non-empty answers stay byte-identical; the vocabulary is the map

@@ -18,7 +18,7 @@ import * as os from 'node:os';
 
 import { GRAPH_TOOLS } from '../../src/scripts/mcp_server/graph_tools.js';
 import type { BuiltinTool } from '../../src/scripts/mcp_server/tools.js';
-import { buildFromRepo, buildGraph, serializeGraph, type SourceFile } from '../../src/scripts/code_graph/build.js';
+import { buildFromRepo, buildGraph, isTestFile, serializeGraph, type SourceFile } from '../../src/scripts/code_graph/build.js';
 import { pickSource, type SourceVerdict } from '../../src/scripts/code_graph/detect.js';
 import { extractFile } from '../../src/scripts/code_graph/extract.js';
 import { GRAMMAR_ABI_PIN, loadLanguage } from '../../src/scripts/code_graph/loader.js';
@@ -37,6 +37,7 @@ import { type CodeEdge, type CodeGraph, type CodeNode, EXPECTED_GRAMMAR_ABI, typ
 import { reviewRisk } from '../../src/scripts/code_graph/review_risk.js';
 import { contextPack } from '../../src/scripts/code_graph/verify/pack.js';
 import { impact, testsForAnswer } from '../../src/scripts/code_graph/verbs.js';
+import { LANGUAGE_GAPS, UNCERTAINTY_MAX_CHARS, uncertaintySentence } from '../../src/scripts/code_graph/uncertainty.js';
 import { validateGraph } from '../../src/scripts/code_graph/validate.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -617,5 +618,45 @@ describe('4.1 — a partial parse is visible', () => {
         expect(clean.partial_files).toEqual([]);
         expect(clean.complete).toBe(true);
         g.close();
+    });
+});
+
+describe('4.3 — one uncertainty sentence for empty answers', () => {
+    it('uncertainty sentence only on empty', () => {
+        const { file } = handGraph(
+            [
+                { id: 'a.ts', kind: 'file', label: 'a.ts', source_location: [] },
+                { id: 'a.ts#used', label: 'used' },
+                { id: 'b.ts#user', label: 'user' },
+                { id: 'broken.ts', kind: 'file', label: 'broken.ts', source_location: [], partial: true },
+                { id: 'broken.ts#lonely', label: 'lonely' },
+                { id: 'pkg/x.go#GoThing', label: 'GoThing' },
+            ],
+            [{ source: 'b.ts#user', target: 'a.ts#used' }],
+        );
+        const g = loadGraph(file, 'native:hand');
+        // Non-empty: no sentence, not even an empty key, so the answer's bytes are unchanged.
+        const full = impact(g, ['a.ts'], 'edited');
+        expect(full.dependents).toEqual(['b.ts#user']);
+        expect(Object.keys(full)).not.toContain('uncertainty');
+
+        // The fixed order: not indexed, then partial parse, then the index behind, then the language row.
+        expect(impact(g, ['README.md', 'broken.ts'], 'edited').uncertainty).toBe('empty, but README.md is in a language the graph does not index');
+        expect(impact(g, ['broken.ts'], 'edited').uncertainty).toMatch(/^empty, but broken\.ts parsed with errors/);
+        expect(impact(g, ['b.ts'], 'behind:3').uncertainty).toBe('empty, but the index is behind the working tree (behind:3)');
+        expect(impact(g, ['b.ts'], 'fresh').uncertainty).toBeUndefined();
+        expect(testsForAnswer(g, 'GoThing', 'fresh').uncertainty).toBe(`empty, but ${LANGUAGE_GAPS.go!['tests-for']}`);
+
+        const long = uncertaintySentence({ verb: 'impact', empty: true, state: 'fresh', not_indexed: [`${'d/'.repeat(90)}x.md`], partial: [], files: [] });
+        expect(long!.length).toBeLessThanOrEqual(UNCERTAINTY_MAX_CHARS);
+        g.close();
+    });
+
+    it('every language row states a test file isTestFile really misses', () => {
+        const misses: Record<string, string> = { go: 'pkg/foo_test.go', python: 'pkg/test_foo.py', java: 'src/FooTest.java', csharp: 'src/FooTests.cs', ruby: 'lib/foo_spec.rb' };
+        for (const lang of Object.keys(LANGUAGE_GAPS)) {
+            expect(misses[lang], lang).toBeDefined();
+            expect(isTestFile(misses[lang] as string), lang).toBe(false);
+        }
     });
 });
