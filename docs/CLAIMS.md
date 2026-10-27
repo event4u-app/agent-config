@@ -832,6 +832,19 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
   (`src/scripts/design_slop_rules.test.ts`). Their first run found one real
   defect, a CSS comment above a block read as part of its selector.
 
+### claim: design-consistency-default-on
+- claim: The design-consistency check ships on by default (`hooks.design_consistency.enabled`): a raw select, input or textarea written beside the project's own component is delivered as one advisory line, never a block. In a retroactive shadow window of 1,565 UI writes from two private consumer repositories it fired on 8: 5 on the failure it targets and 3 false positives (0.19 %), meeting all four conditions of the activation policy. Its box-metrics half stays in shadow because the window held no metric comparison at all.
+- kind: quant
+- evidence: internal/bench/corpora/design-consistency-shadow-window.md#The four conditions
+- status: backed
+- last_verified: 2026-10-27
+
+  The 0.19 % is in-sample: the six false-alarm classes the first reading
+  surfaced were fixed and then measured on the same window. The live recorder
+  (`agents/runtime/state/design-consistency-shadow.jsonl`, one row per UI
+  write) is the out-of-sample check, and the policy's reverse trigger applies:
+  above 1 % in any two-week window, the rule returns to shadow.
+
 ### claim: design-slop-false-positive-baseline
 - claim: On a 32-file labelled clean-UI corpus (digest `90544389b05c1d0b`), all 23 shipped text-engine design-slop rules produce zero false positives (the five render-engine rules read rendered pages and are measured on their own corpus, see design-slop-near-miss-baseline) (26 before the 2026-10-26 near-miss demotions and promotions) — which the pre-registration reads as the corpus failing to discriminate, not as precision. History: the 2026-08-13 epoch ran 19 rules, 18 at zero, and the nineteenth (`slop-c6-lock-colour`, catalog C6) fired on 4 of the 32 files and was demoted to judgment-only rather than tuned.
 - kind: quant
