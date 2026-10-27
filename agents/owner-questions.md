@@ -8,8 +8,6 @@ and the run that applies it links its PR.
 
 ## Open
 
-None open.
-
 ### OQ-21 — How consumers get a browser for `ui:render`
 
 - **Context:** `@playwright/test` is a devDependency, so no consumer install can
@@ -22,6 +20,38 @@ None open.
 - **Recommendation:** (c) until a render rule is `backed` — the witness tier only
   matters once Phase 2.5 has promoted a row, and (a) changes every install.
 - **Blocks:** nothing now; consumer reach of the render engine (Phase 2).
+
+### OQ-22 — How the "interview me" sentence gets appended automatically
+
+- **Context:** your own question in inbox round `inbox-2026-10-be`: "Können wir diesen Satz
+  auch automatisch anhängen?" A `user_prompt_submit` hook can add the sentence as context.
+  Claude already runs 14 concerns in that slot, and the 2026-10-12 line (ADR-293) rules out
+  new form settings.
+- **Options:** (a) a personal hook in your `~/.claude/settings.json`, firing on every
+  prompt, zero package change; (b) a shipped concern, off by default, firing only on task
+  prompts behind a new opt-in key; (c) both.
+- **Recommendation:** (a) — it works today, costs no consumer anything, and Phase 1 of
+  `road-to-the-question-only-the-owner-can-answer` makes the sentence actually reach the
+  interview and fence the run.
+- **Blocks:** step 3.1 of that roadmap.
+
+### OQ-23 — Make the interview reachable outside the maintainer workspace
+
+- **Context:** `challenge-me`, `grill-me` and `refine-prompt` are fenced to
+  `agent-config-maintainer`; a consumer typing "interview me" gets nothing routed.
+- **Options:** (a) add `engineering` and `product` to their workspaces; (b) add the
+  `product-reasoning` pack to `engineering`'s optional packs; (c) leave it.
+- **Recommendation:** (a) — optional packs are opt-in, so (b) still misses most users.
+- **Blocks:** step 3.2 of `road-to-the-question-only-the-owner-can-answer`.
+
+### OQ-24 — The prompt optimizer's "Lyra" persona
+
+- **Context:** `/optimize prompt` greets with "Hi! I'm Lyra"; a role names vocabulary, not a
+  method, and the same change drops "assign a role" from the skill.
+- **Options:** (a) keep the name, drop the role-play welcome; (b) drop the persona entirely;
+  (c) keep both.
+- **Recommendation:** (a).
+- **Blocks:** step 2.1 of `road-to-a-prompt-that-deepens-not-widens`.
 
 ## Not owner questions — waits, or already settled in the tree
 
