@@ -31,6 +31,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { asOf } from './_lib/as_of.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { isHandoverShape } from './_lib/ui_surface.js';
 
 import {
     boxMetricsFromClasses,
@@ -105,6 +106,22 @@ export function loadControlRoles(artefactPath: string): ControlRoleMap | null {
 }
 
 /**
+ * Whether a file of this kind can render the canonical at all. A server
+ * template cannot use a JSX `Select`, nor a `.tsx` file a Blade `x-select`;
+ * measuring one against the other is a false alarm on every edit to it.
+ */
+export function canRender(relPath: string, canonical: string): boolean {
+    if (canonical.startsWith('native:')) return true;
+    if (canonical.startsWith('x-') || canonical.includes(':')) return /\.blade\.php$/i.test(relPath);
+    return /\.(jsx|tsx|vue|svelte|astro|mdx)$/i.test(relPath);
+}
+
+/** A design handover or an agent's reference copy is not the product's UI. */
+function isProductUi(relPath: string): boolean {
+    return !isHandoverShape(relPath) && !/(^|\/)agents\//.test(relPath.replace(/\\/g, '/'));
+}
+
+/**
  * Pure core. `tolerancePx` applies to sibling metrics only; the raw-control
  * check has no tolerance — an element either is the project's control or not.
  */
@@ -114,6 +131,7 @@ export function consistencyFindings(
     roles: ControlRoleMap,
     tolerancePx = 0,
 ): ConsistencyFinding[] {
+    if (!isProductUi(relPath)) return [];
     const definesRole = new Set(
         definedComponents(relPath, content)
             .map((t) => occurrences(`<${t}>`)[0]?.role)
@@ -126,7 +144,7 @@ export function consistencyFindings(
         // The file that implements a role's primitive is the primitive.
         if (definesRole.has(o.role)) continue;
         const entry = roles[o.role];
-        if (!entry || entry.canonical === null) continue;
+        if (!entry || entry.canonical === null || !canRender(relPath, entry.canonical)) continue;
 
         if (o.impl.startsWith('native:') && !entry.canonical.startsWith('native:')) {
             out.push({

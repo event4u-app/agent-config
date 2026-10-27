@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { buildArtefact } from '../../src/cli/commands/uiAudit.js';
+import type { RoleEntry } from '../../src/scripts/_lib/control_roles.js';
 import { consistencyFindings, shadowRecord } from '../../src/scripts/lint_design_consistency.js';
 
 const REPO = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -88,5 +89,84 @@ describe('consistency-sibling-metrics', () => {
 
     it('no box metrics on either side → no finding, never a guessed one', () => {
         expect(consistencyFindings('<input name="q">', 'callback.html', NATIVE)).toEqual([]);
+    });
+});
+
+// The six false-alarm classes a retroactive window over two private consumer
+// repositories surfaced (road-to-a-control-that-matches-its-neighbours 3.8).
+// Each case is synthetic in the shape of what fired; each class keeps a
+// positive control so the fix cannot pass by going quiet.
+describe('false alarms from the retroactive shadow window', () => {
+    const entry = (canonical: string): RoleEntry => ({
+        canonical,
+        uses: 3,
+        implementations: { [canonical]: 3 },
+        outliers: [],
+        defined: [canonical],
+        box_metrics: null,
+    });
+    const ROLES = {
+        select: entry('Select'),
+        input: entry('Input'),
+        textarea: entry('Textarea'),
+        checkbox: entry('Checkbox'),
+        popover: entry('Popover'),
+    };
+    const rules = (text: string, rel: string, roles: typeof ROLES | Record<string, RoleEntry> = ROLES) =>
+        consistencyFindings(text, rel, roles).map((f) => f.rule);
+
+    it('a server template cannot render a JSX component, so it is not measured against one', () => {
+        const select = '<select name="year"><option>2026</option></select>';
+        expect(rules(select, 'core/Templates/Export.view.php')).toEqual([]);
+        expect(rules(`$html .= '<input type="checkbox" name="hide">';`, 'mods/time/list.php')).toEqual([]);
+        expect(rules(select, 'public/export.html')).toEqual([]);
+        expect(rules(select, 'app/export.tsx')).toEqual(['consistency-raw-control']);
+    });
+
+    it('a Blade component canonical binds Blade views only', () => {
+        const blade = { select: entry('x-select') };
+        const select = '<select name="year"></select>';
+        expect(rules(select, 'resources/views/orders/index.blade.php', blade)).toEqual(['consistency-raw-control']);
+        expect(rules(select, 'resources/js/orders.tsx', blade)).toEqual([]);
+    });
+
+    it('markup inside a comment is prose, not a control', () => {
+        const tsx = [
+            '/**',
+            ' * Sorting shipped as a bare `<select>`, which this file replaces.',
+            ' */',
+            '// a page-size <select> used to drive this',
+            'export function Pager() {',
+            '  return <textarea name="note" />;',
+            '}',
+        ].join('\n');
+        const f = consistencyFindings(tsx, 'app/pager.tsx', ROLES);
+        expect(f.map((x) => [x.rule, x.line])).toEqual([['consistency-raw-control', 6]]);
+    });
+
+    it('a TypeScript type argument is not an element', () => {
+        expect(rules('} satisfies Meta<typeof Popover>;', 'stories/Popover.stories.tsx')).toEqual([]);
+    });
+
+    it('a file input has no Input primitive to compare with, even after an arrow attribute', () => {
+        expect(rules('<input type="file" onChange={(e) => upload(e)} />', 'app/upload.tsx')).toEqual([]);
+        const late = '<input className="sr-only" multiple onChange={(event) => { pick(event); }} type="file" />';
+        expect(rules(late, 'app/prompt.tsx')).toEqual([]);
+        expect(rules('<input onChange={(e) => set(e.target.value)} type="text" />', 'app/login.tsx')).toEqual([
+            'consistency-raw-control',
+        ]);
+    });
+
+    it('a primitive exported through an export list is still the primitive', () => {
+        const textarea = 'function Textarea(props) {\n  return <textarea {...props} />;\n}\n\nexport { Textarea };';
+        expect(rules(textarea, 'packages/ui/src/components/textarea.tsx')).toEqual([]);
+        const native = 'function NativeSelect(props) {\n  return <select {...props} />;\n}\n\nexport { NativeSelect };';
+        expect(rules(native, 'packages/ui/src/components/native-select.tsx')).toEqual([]);
+    });
+
+    it('a design handover or agent reference is not product UI', () => {
+        expect(rules('<textarea value="x"></textarea>', 'apps/web/agents/references/prototype/ToDo.dc.html')).toEqual([]);
+        expect(rules('<textarea name="x" />', 'agents/references/prototype/page.tsx')).toEqual([]);
+        expect(rules('<textarea name="x" />', 'apps/web/src/agents-panel.tsx')).toEqual(['consistency-raw-control']);
     });
 });

@@ -32,7 +32,7 @@ export const CONTROL_ROLES = [
 export type ControlRole = (typeof CONTROL_ROLES)[number];
 
 const NAME: Record<ControlRole, string> = {
-    select: 'select|selectbox|listbox|native-select',
+    select: 'select|selectbox|listbox|native-?select',
     input: 'input|text-?field|text-?input',
     textarea: 'textarea',
     checkbox: 'checkbox',
@@ -68,7 +68,8 @@ const INPUT_TYPE_ROLE: Record<string, ControlRole> = {
     month: 'date',
     week: 'date',
 };
-const INPUT_TYPES_NOT_A_CONTROL = new Set(['hidden', 'submit', 'button', 'reset', 'image']);
+// `file` is a control, but no role here has a primitive to compare it with.
+const INPUT_TYPES_NOT_A_CONTROL = new Set(['hidden', 'submit', 'button', 'reset', 'image', 'file']);
 
 export interface Occurrence {
     role: ControlRole;
@@ -79,7 +80,18 @@ export interface Occurrence {
     classes: string;
 }
 
-const TAG_RE = /<([A-Za-z][\w:.-]*)([^<>]*?)\/?>/g;
+// `=>` is consumed whole: a JSX arrow attribute would otherwise end the tag
+// before a later `type="file"` is read.
+const TAG_RE = /<([A-Za-z][\w:.-]*)((?:=>|[^<>])*?)\/?>/g;
+
+/** Comments blanked, not removed: offsets and line numbers hold. */
+function blankComments(text: string): string {
+    const blank = (c: string) => c.replace(/[^\n]/g, ' ');
+    return text
+        .replace(/\/\*[^]*?\*\//g, blank)
+        .replace(/<!--[^]*?-->/g, blank)
+        .replace(/^[ \t]*\/\/.*$/gm, blank);
+}
 
 function lineOf(text: string, index: number): number {
     let n = 1;
@@ -112,14 +124,15 @@ export function roleOfTag(tag: string, attrs: string): ControlRole | null {
         const segment = last.replace(/^(?:x|ui|v|el|n|q|a|b)-/i, '');
         if (new RegExp(`^(?:${NAME[role]})$`, 'i').test(segment)) return role;
     }
-    if (isNative && /\bpopover\b/i.test(attrs)) return 'popover';
+    // Case-sensitive on purpose: `Meta<typeof Popover>` is a type argument.
+    if (isNative && /(?:^|\s)popover(?=[\s=]|$)/.test(attrs)) return 'popover';
     return null;
 }
 
 /** Every control occurrence in a file's markup. */
 export function occurrences(text: string): Occurrence[] {
     const out: Occurrence[] = [];
-    for (const m of text.matchAll(TAG_RE)) {
+    for (const m of blankComments(text).matchAll(TAG_RE)) {
         const tag = m[1]!;
         const attrs = m[2] ?? '';
         const role = roleOfTag(tag, attrs);
@@ -148,6 +161,13 @@ export function definedComponents(rel: string, text: string): string[] {
         out.push(m[1]!);
     }
     for (const m of text.matchAll(/export\s+const\s+([A-Z][A-Za-z0-9_]*)\s*=/g)) out.push(m[1]!);
+    // `function Textarea(…) {…}` followed by `export { Textarea }`.
+    for (const m of text.matchAll(/export\s*\{([^}]*)\}/g)) {
+        for (const part of m[1]!.split(',')) {
+            const name = part.trim().split(/\s+as\s+/).pop()!.trim();
+            if (/^[A-Z][A-Za-z0-9_]*$/.test(name)) out.push(name);
+        }
+    }
     return [...new Set(out)];
 }
 
