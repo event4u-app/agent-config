@@ -184,7 +184,7 @@ database stays closed (ADR-094, T3).
       into the layout; keep the collector parked; decide
       `session_memory_index` and the second-brain store per O12.
       verify: `./scripts-run src/scripts/check_source_registry --orphans` -> 0
-      > note: open: `--orphans` exits 1 on runtime-journal (written, never read), whose disposition is O12 (owner-reserved, b-owner-reserved-stores); the intake-stream merge and the quarantine move change the agents-layout contract and the three writers, left for a dedicated change.
+      > note: open — the three intake streams share one shape (`_lib/intake_record.ts`); `agents/memory-quarantine/` is already in the layout (agents-layout.md, ADR-234 keeps it outside the memory root on purpose), so no move; `--orphans` still exits 1 on runtime-journal, and that plus `session_memory_index` and the second-brain store are O12, owner-reserved.
 - [ ] **I.5b Retire stores — owner-reserved part.** Retire the journal, any
       store O12 names for retirement; show `map-outcomes` through J.9.
       Executes only after the owner decides O12. Blocked by
