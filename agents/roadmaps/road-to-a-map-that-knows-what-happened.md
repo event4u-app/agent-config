@@ -74,7 +74,7 @@ Exit: H.1-H.6 and H.9 green on fixtures; nothing under `agents/map/` outside
 `.build/` holds a bug id. Rollback: delete `code_graph/bugs.ts` and the
 provenance `kind` field; `.build/bugs/` is disposable.
 
-- [x] **H.1 One bug record, local only** (H35; ADR-124). Normalised record with <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/bugs.ts -->
+- [ ] **H.1 One bug record, local only** (H35; ADR-124). Normalised record with <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/bugs.ts -->
       a qualified id (provider, org, project, issue id), episodes (one issue
       regressing several times, one fix closing several issues), status, first
       and last seen, count, first-seen release, resolved-in commit and release,
@@ -86,12 +86,14 @@ provenance `kind` field; `.build/bugs/` is disposable.
       untrusted input. Sentry first; other trackers are mapping files later
       (O8).
       verify: `npx vitest run tests/scripts/code_graph_bugs_import.test.ts` -> 0
-- [x] **H.2 Frames to symbols** (span witness). Code mappings come from the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/bug_frames.ts -->
+      > note: built, not wired — `code-graph bugs import` writes the store, but no shipped verb reads it back (`readStore`), and the query-time source (`fromQueryTime`) has no caller that reaches the user's connection.
+- [ ] **H.2 Frames to symbols** (span witness). Code mappings come from the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/bug_frames.ts -->
       scope config; each in-app frame maps to its enclosing symbol by node
       span, read at the first-seen release sha. A release without a known sha
       yields `unverifiable`, never a guess. Unmapped frames are listed with a
       reason.
       verify: `npx vitest run tests/scripts/code_graph_bug_frames.test.ts` -> 0
+      > note: built, not wired — `bug_frames.ts` has no production caller; a `code-graph bugs` verb that maps a stored bug's frames to symbols is missing.
 - [x] **H.3 Fix commits as facts** (H36, H37). Provenance gains a commit <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/git_convention_grammar.ts -->
       `kind`: declared (`Fixes <bug id>`, `Fixes: <sha>`, `This reverts commit
       <sha>`), ticket (bug-type ticket at query time), conventional (`fix:`,
@@ -106,7 +108,7 @@ provenance `kind` field; `.build/bugs/` is disposable.
       signal. Always a candidate with method and witnesses, never ranked by
       author.
       verify: `npx vitest run tests/scripts/code_graph_bug_inducers.test.ts` -> 0
-- [x] **H.5 Regression hypotheses through the graph** (owner's case). For a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/regression_paths.ts -->
+- [ ] **H.5 Regression hypotheses through the graph** (owner's case). For a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/regression_paths.ts -->
       bug first seen in release R: changes merged in the window whose changed
       symbols reach the top in-app frames within k hops over `calls`, `uses`
       and `writes`→`reads` (O10). Ranked by hop distance, time to first seen,
@@ -114,11 +116,13 @@ provenance `kind` field; `.build/bugs/` is disposable.
       Each hypothesis shows the path with per-edge witness, guessed edges
       dashed, and the commit, PR and ticket.
       verify: `npx vitest run tests/scripts/code_graph_regression_paths.test.ts` -> 0
-- [x] **H.6 From hypothesis to proof.** With more than one candidate and a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/bisect_plan.ts -->
+      > note: built, not wired — `regression_paths.ts` has no production caller; no verb prints the hypotheses for a stored bug.
+- [ ] **H.6 From hypothesis to proof.** With more than one candidate and a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/bisect_plan.ts -->
       reproducing test, print a `git bisect run` plan (never run on someone
       else's branch, never pushed). A confirmed cause is stored with a
       `test_guards_against` edge from the test to the bug.
       verify: `npx vitest run tests/scripts/code_graph_bisect_plan.test.ts` -> 0
+      > note: built, not wired — `bisect_plan.ts` has no production caller; no verb prints the `git bisect run` plan or records a confirmed cause.
 - [~] **H.7 The bug payload for the view** (after D). The local map's bug
       area payload: open bugs by area and route, fixed bugs as a timeline,
       regression paths, per-route timeline of features, fixes and bugs, and a
@@ -146,7 +150,7 @@ facts; memory paths yield moved/gone findings. Rollback: revert the registry
 file and its gate; derived indexes are disposable (ADR-129). The shared memory
 database stays closed (ADR-094, T3).
 
-- [x] **I.1 One source registry** (H41). One data row per store: name, path, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/source-registry.json -->
+- [ ] **I.1 One source registry** (H41). One data row per store: name, path, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/source-registry.json -->
       format, writer, readers, privacy class, owner, delete path, hosts,
       status. Seed list: the measured stores plus those the first plan omitted
       — team-knowledge pages under `agents/knowledge/`, local doc ingest,
@@ -155,19 +159,21 @@ database stays closed (ADR-094, T3).
       `owner: user, host-owned, read-only`. A new writer without a row fails a
       gate (ratification artifact + gate-coverage row).
       verify: `npx vitest run tests/scripts/check_source_registry.test.ts` -> 0
-      > note: the check and its test ship; CI wiring (workflow step, gate-coverage row, ratification artifact) is left for a ratified follow-up — it runs by hand as `./scripts-run src/scripts/check_source_registry`.
-- [x] **I.2 Committed knowledge into the fact layer** (H40, H42). ADRs in both <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/knowledge_facts.ts -->
+      > note: built, not wired — the check and its test ship and run by hand as `./scripts-run src/scripts/check_source_registry`; no CI step runs it, so a new writer without a row fails nothing yet (workflow step, gate-coverage row and ratification artifact missing).
+- [ ] **I.2 Committed knowledge into the fact layer** (H40, H42). ADRs in both <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/knowledge_facts.ts -->
       layouts (`docs/decisions/`, `docs/adrs/<topic>/`); curated memory entries
       as `memory` nodes with `about` edges to the paths they name; knowledge
       cards, team-knowledge pages, `agents/decisions/`, owner questions, retro
       proposals as nodes; reviews and council records linked by PR number. A
       named path that moved is told apart from one that is gone.
       verify: `npx vitest run tests/scripts/code_graph_knowledge_facts.test.ts` -> 0
-- [x] **I.3 Validity on knowledge facts.** `valid_from`, `valid_until`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/knowledge_validity.ts -->
+      > note: built, not wired — `collectKnowledge` has no production caller; the build does not add knowledge nodes to the fact layer yet.
+- [ ] **I.3 Validity on knowledge facts.** `valid_from`, `valid_until`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/knowledge_validity.ts -->
       `recorded_at`, `supersedes`; derived claims keep `based_on` ids and are
       retracted when one disappears; contradiction expiry is a deterministic
       interval rule; no model decides.
       verify: `npx vitest run tests/scripts/code_graph_knowledge_validity.test.ts` -> 0
+      > note: built, not wired — `resolveFacts` has no production caller; it waits on I.2's knowledge nodes reaching the build.
 - [~] **I.4 Sessions, local and user-owned** (H43; after D and I.3). Index
       under the user's home, keyed by a stable repo id shared across worktrees
       (`~/.event4u/agent-config/user/projects/<repo-id>/sessions/`), never in
@@ -216,6 +222,7 @@ use it.
       subagents. Formats: `hint` (ids only, ≤ 250 tok), `concise` (default, 800),
       `detailed` (ceiling 2,000) on the serialized envelope (O15).
       verify: `npx vitest run tests/scripts/answer_envelope_schema.test.ts` -> 0
+      reach exempt: validateEnvelope is the schema oracle the test checks envelopes against; the envelope itself ships through makeEnvelope in code-graph ask.
 - [x] **J.2 Budgets that hold** (H44). `recommended_reads` becomes a counted, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_answer_size.ts -->
       paged list; overflow falls back items → locations → per-file counts →
       summary with a "narrow your question" header; `graph_impact` gets a
