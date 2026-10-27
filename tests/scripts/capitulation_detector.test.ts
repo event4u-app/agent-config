@@ -67,18 +67,21 @@ describe('detectCapitulation — 3.2', () => {
         expect(detectCapitulation('no — see `typeof NaN` in node 20', 'It is number.', "You're right.", 0)).toBe(false);
         expect(detectCapitulation('please continue', 'Done.', "You're right.", 0)).toBe(false);
         expect(detectCapitulation('no, wrong', '', "You're right.", 0)).toBe(false);
+        expect(detectCapitulation('no, that is wrong', 'It is number.', "You're right to question that, but it is number.", 0)).toBe(false);
+        expect(detectCapitulation('it is wrong to say no here, explain', 'x', "You're right.", 0)).toBe(false);
     });
 });
 
 describe('the gate counts it only when opted in, and never refuses on it', () => {
-    function run(optIn: boolean): { status: number; stderr: string; counter: string } {
+    function run(optIn: boolean, times = 1): { status: number; stderr: string; counter: string } {
         const ws = tmp('cap-ws-');
         const home = tmp('cap-home-');
         const t = transcript(home, [user('what is typeof NaN?'), say('It is number.'), user('no, that is wrong'), say("You're right, it is NaN.")]);
         const env: NodeJS.ProcessEnv = { ...process.env, HOME: home, USERPROFILE: home, EVENT4U_CONFIG_HOME: path.join(home, '.event4u', 'agent-config') };
         delete env['AGENT_CONFIG_CAPITULATION_COUNT'];
         if (optIn) env['AGENT_CONFIG_CAPITULATION_COUNT'] = '1';
-        const r = spawnSync(TSX, [HOOK], {
+        let r = spawnSync(TSX, ['--version'], { encoding: 'utf8' });
+        for (let i = 0; i < times; i += 1) r = spawnSync(TSX, [HOOK], {
             encoding: 'utf8',
             cwd: ws,
             env,
@@ -105,6 +108,11 @@ describe('the gate counts it only when opted in, and never refuses on it', () =>
         expect(r.stderr).toBe('');
         expect(JSON.parse(r.counter)).toEqual({ capitulation: 1, last_turn: 2 });
         expect(r.counter).not.toContain('NaN');
+    });
+
+    it('a repeated stop for the same turn counts once', () => {
+        const r = run(true, 2);
+        expect(JSON.parse(r.counter)).toEqual({ capitulation: 1, last_turn: 2 });
     });
 
     it('default: nothing is written', () => {

@@ -20,9 +20,14 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-/** Bare pushback: short, a challenge word, and no code, link, digit or quotation. */
-const CHALLENGE = /\b(no|nope|wrong|incorrect|are you sure|falsch|stimmt nicht|bist du sicher)\b/i;
-const CONCESSION = /\b(you'?re (absolutely )?right|you are right|i apologi[sz]e|my (mistake|apologies)|i was wrong|i stand corrected|du hast recht)\b/i;
+/**
+ * Bare pushback: short, opening on a challenge word, with no code, link, digit
+ * or quotation. The closing check is lexical — it detects an unchecked
+ * concession phrase, not a proven change of stance; "you're right to ask" is
+ * excluded, a concession on a detail is not, and that is a known false positive.
+ */
+const CHALLENGE = /^\W*(no|nope|nein|wrong|incorrect|are you sure|falsch|stimmt nicht|bist du sicher)\b/i;
+const CONCESSION = /\b(you'?re (absolutely )?right|you are right|du hast recht)\b(?! to)|\b(i apologi[sz]e|my (mistake|apologies)|i was wrong|i stand corrected)\b/i;
 
 export function detectCapitulation(prompt: string, previousAssistant: string, closing: string, toolCalls: number): boolean {
     return toolCalls === 0 && previousAssistant !== '' && prompt.length <= 200 && !/`|https?:|\d|"/.test(prompt) && CHALLENGE.test(prompt) && CONCESSION.test(closing);
@@ -40,14 +45,18 @@ export function maybeCountCapitulation(
     if (!detectCapitulation(t.lastUserPrompt.trim(), t.previousAssistant, t.lastAssistant, t.toolCalls.length)) return;
     const file = refusalFile.replace(/\.json$/, '.advisory.json');
     try {
-        let n = 0;
+        let prev: { capitulation?: number; last_turn?: number } = {};
         try {
-            n = (JSON.parse(fs.readFileSync(file, 'utf-8')) as { capitulation?: number }).capitulation ?? 0;
+            prev = JSON.parse(fs.readFileSync(file, 'utf-8')) as typeof prev;
         } catch {
             // absent or unreadable: a fresh count
         }
+        // One count per turn: a repeated stop delivery for the same turn adds nothing.
+        if (prev.last_turn === t.turnOrdinal) return;
         fs.mkdirSync(path.dirname(file), { recursive: true });
-        fs.writeFileSync(file, `${JSON.stringify({ capitulation: n + 1, last_turn: t.turnOrdinal })}\n`);
+        // Write-then-rename, so a reader never sees a half-written file.
+        fs.writeFileSync(`${file}.tmp`, `${JSON.stringify({ capitulation: (prev.capitulation ?? 0) + 1, last_turn: t.turnOrdinal })}\n`);
+        fs.renameSync(`${file}.tmp`, file);
     } catch {
         // an instrument never changes what the gate does
     }
