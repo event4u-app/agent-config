@@ -90,6 +90,7 @@ before any baseline existed, so neither can be tuned to a result.
       budget), storing per-unit results as the regression reference.
       verify: the baseline artifact exists, names its commit and model, and its
       per-unit rows are machine-readable.
+      production entry: src/scripts/compile_trigger_evals.ts
 
       **Open, and it gates 0.4.** This is a live LLM run against the canary
       budget. Token spend is authorised for this drain run, but a *frozen
@@ -146,10 +147,11 @@ item created unless the null broke.
       exist in the tree today (D4), so this step has no external dependency.
       verify: one corpus file runs on both paths and produces two comparable
       result rows.
-- [x] **4.2 Parity gate:** MCP-path recall may not undercut native-path recall <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/catalogue_pressure.ts -->
+- [ ] **4.2 Parity gate:** MCP-path recall may not undercut native-path recall
       by more than a pre-registered epsilon on the same corpus. A breach blocks
       any MCP default-on decision; default-off holds until then.
       verify: a synthetic recall gap larger than epsilon turns the gate red.
+      Built, not wired (2026-10-27): `parityVerdict` exists and its synthetic test is green, but nothing calls it until 4.1's MCP arm produces real rows; it is ticked when 4.3 wires it into the parity table.
 - [ ] **4.3 Publish the parity table** as evidence against the archived MCP
       roadmap's measured-null outcome, not as a separate claim.
       verify: the table cites the archived roadmap and adds no new claim id.
@@ -164,20 +166,24 @@ item created unless the null broke.
       anything that leaves the machine carries hashes only. Batch-read, no
       runtime daemon.
       verify: the ledger path is gitignored; an export contains no free text.
+      production entry: src/scripts/routing_trace_ledger.ts
 - [x] **5.2 A drain command proposes corpus candidates** from traces where a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/routing_trace_ledger.ts -->
       skill was invoked but its corpus has no matching positive (recall blind
       spots) — maintainer-confirmed before landing.
       verify: one real drain session produces at least one candidate, and an
       unconfirmed candidate cannot land.
+      production entry: src/scripts/routing_trace_ledger.ts
 - [x] **5.3 Regression states on the frozen 0.2 baseline:** PASSED, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/routing_baseline.ts -->
       ROUTING_CHANGED, REGRESSION — only REGRESSION (floor breach) gates.
       verify: three fixtures, one per state.
+      production entry: src/scripts/compile_trigger_evals.ts
 - [x] **5.4 Proxy-fidelity report:** for prompts appearing in BOTH the trace <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/proxy_fidelity.ts -->
       ledger and the Phase 2 corpus, compare the checker's would-load verdict
       against what the session actually consulted. If it degrades, the Phase 1
       gate's verdicts are downgraded to advisory until repaired.
       verify: one report published; the downgrade path is executable and
       demonstrated on a synthetic degradation.
+      production entry: src/scripts/routing_trace_ledger.ts
 
 **Exit:** ledger populated from at least one real drain session, one
 proxy-fidelity report published, at least one trace-sourced corpus candidate
