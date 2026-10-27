@@ -74,7 +74,7 @@ Exit: H.1-H.6 and H.9 green on fixtures; nothing under `agents/map/` outside
 `.build/` holds a bug id. Rollback: delete `code_graph/bugs.ts` and the
 provenance `kind` field; `.build/bugs/` is disposable.
 
-- [x] **H.1 One bug record, local only** (H35; ADR-124). Normalised record with
+- [x] **H.1 One bug record, local only** (H35; ADR-124). Normalised record with <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/bugs.ts -->
       a qualified id (provider, org, project, issue id), episodes (one issue
       regressing several times, one fix closing several issues), status, first
       and last seen, count, first-seen release, resolved-in commit and release,
@@ -86,13 +86,13 @@ provenance `kind` field; `.build/bugs/` is disposable.
       untrusted input. Sentry first; other trackers are mapping files later
       (O8).
       verify: `npx vitest run tests/scripts/code_graph_bugs_import.test.ts` -> 0
-- [x] **H.2 Frames to symbols** (span witness). Code mappings come from the
+- [x] **H.2 Frames to symbols** (span witness). Code mappings come from the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/bug_frames.ts -->
       scope config; each in-app frame maps to its enclosing symbol by node
       span, read at the first-seen release sha. A release without a known sha
       yields `unverifiable`, never a guess. Unmapped frames are listed with a
       reason.
       verify: `npx vitest run tests/scripts/code_graph_bug_frames.test.ts` -> 0
-- [x] **H.3 Fix commits as facts** (H36, H37). Provenance gains a commit
+- [x] **H.3 Fix commits as facts** (H36, H37). Provenance gains a commit <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/git_convention_grammar.ts -->
       `kind`: declared (`Fixes <bug id>`, `Fixes: <sha>`, `This reverts commit
       <sha>`), ticket (bug-type ticket at query time), conventional (`fix:`,
       weakest). Configured tracker keys extend the one ticket grammar
@@ -100,13 +100,13 @@ provenance `kind` field; `.build/bugs/` is disposable.
       Fix state is tri-state: changed in code, deployed, observed effective;
       "no events" never reads as fixed.
       verify: `npx vitest run tests/scripts/code_graph_fix_kinds.test.ts` -> 0
-- [x] **H.4 Introducing-commit candidates** (H38). Last change of each fixed
+- [x] **H.4 Introducing-commit candidates** (H38). Last change of each fixed <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/bug_inducers.ts -->
       line, skipping format-only commits and following renames; a declared
       `Fixes: <sha>` wins; an imported suspect commit is a second, separate
       signal. Always a candidate with method and witnesses, never ranked by
       author.
       verify: `npx vitest run tests/scripts/code_graph_bug_inducers.test.ts` -> 0
-- [x] **H.5 Regression hypotheses through the graph** (owner's case). For a
+- [x] **H.5 Regression hypotheses through the graph** (owner's case). For a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/regression_paths.ts -->
       bug first seen in release R: changes merged in the window whose changed
       symbols reach the top in-app frames within k hops over `calls`, `uses`
       and `writes`→`reads` (O10). Ranked by hop distance, time to first seen,
@@ -114,7 +114,7 @@ provenance `kind` field; `.build/bugs/` is disposable.
       Each hypothesis shows the path with per-edge witness, guessed edges
       dashed, and the commit, PR and ticket.
       verify: `npx vitest run tests/scripts/code_graph_regression_paths.test.ts` -> 0
-- [x] **H.6 From hypothesis to proof.** With more than one candidate and a
+- [x] **H.6 From hypothesis to proof.** With more than one candidate and a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/bisect_plan.ts -->
       reproducing test, print a `git bisect run` plan (never run on someone
       else's branch, never pushed). A confirmed cause is stored with a
       `test_guards_against` edge from the test to the bug.
@@ -133,7 +133,7 @@ provenance `kind` field; `.build/bugs/` is disposable.
       size). Any claim of gain is measured against a comparator arm "agent with
       the tracker tools directly". Blocked by `b-stage-d-measurement`.
       verify: `grep -c "bugs frames" src/skills/bug-analyzer/SKILL.md src/skills/sentry-integration/SKILL.md` -> /:[1-9]/
-- [x] **H.9 Field measure for Stage D** (observational). Per period, the share
+- [x] **H.9 Field measure for Stage D** (observational). Per period, the share <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/cli_bugs.ts -->
       of fix commits that later become an introducing candidate, printed with
       numerator, denominator and method; reported beside M1, never as an
       effect of this suite.
@@ -146,7 +146,7 @@ facts; memory paths yield moved/gone findings. Rollback: revert the registry
 file and its gate; derived indexes are disposable (ADR-129). The shared memory
 database stays closed (ADR-094, T3).
 
-- [x] **I.1 One source registry** (H41). One data row per store: name, path,
+- [x] **I.1 One source registry** (H41). One data row per store: name, path, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/source-registry.json -->
       format, writer, readers, privacy class, owner, delete path, hosts,
       status. Seed list: the measured stores plus those the first plan omitted
       — team-knowledge pages under `agents/knowledge/`, local doc ingest,
@@ -156,14 +156,14 @@ database stays closed (ADR-094, T3).
       gate (ratification artifact + gate-coverage row).
       verify: `npx vitest run tests/scripts/check_source_registry.test.ts` -> 0
       > note: the check and its test ship; CI wiring (workflow step, gate-coverage row, ratification artifact) is left for a ratified follow-up — it runs by hand as `./scripts-run src/scripts/check_source_registry`.
-- [x] **I.2 Committed knowledge into the fact layer** (H40, H42). ADRs in both
+- [x] **I.2 Committed knowledge into the fact layer** (H40, H42). ADRs in both <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/knowledge_facts.ts -->
       layouts (`docs/decisions/`, `docs/adrs/<topic>/`); curated memory entries
       as `memory` nodes with `about` edges to the paths they name; knowledge
       cards, team-knowledge pages, `agents/decisions/`, owner questions, retro
       proposals as nodes; reviews and council records linked by PR number. A
       named path that moved is told apart from one that is gone.
       verify: `npx vitest run tests/scripts/code_graph_knowledge_facts.test.ts` -> 0
-- [x] **I.3 Validity on knowledge facts.** `valid_from`, `valid_until`,
+- [x] **I.3 Validity on knowledge facts.** `valid_from`, `valid_until`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/knowledge_validity.ts -->
       `recorded_at`, `supersedes`; derived claims keep `based_on` ids and are
       retracted when one disappears; contradiction expiry is a deterministic
       interval rule; no model decides.
@@ -209,25 +209,25 @@ are ≤ 2,000 tok. Rollback: the envelope is additive; revert per verb. J.1-J.6,
 J.7a and J.9 run before D (P-3 exception O17); J.4 must exist because D's arms
 use it.
 
-- [x] **J.1 One answer envelope** (H49). `answer`, `counts{shown,total,
+- [x] **J.1 One answer envelope** (H49). `answer`, `counts{shown,total, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/answer_envelope.ts -->
       text_only}`, `complete`, `truncated_by`, `confidence`, `witness{generation,
       commit,staleness,confirm}`, `evidence` (≤ 5 `file:line`), `next` (≤ 3
       commands), and a content-addressed `packet_id` with TTL for hand-off to
       subagents. Formats: `hint` (ids only, ≤ 250 tok), `concise` (default, 800),
       `detailed` (ceiling 2,000) on the serialized envelope (O15).
       verify: `npx vitest run tests/scripts/answer_envelope_schema.test.ts` -> 0
-- [x] **J.2 Budgets that hold** (H44). `recommended_reads` becomes a counted,
+- [x] **J.2 Budgets that hold** (H44). `recommended_reads` becomes a counted, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_answer_size.ts -->
       paged list; overflow falls back items → locations → per-file counts →
       summary with a "narrow your question" header; `graph_impact` gets a
       budget; ranked lists are packed by budget search.
       verify: `./scripts-run src/scripts/bench_answer_size --probe affected-hubs` -> 0
-- [x] **J.3 Answers that are right** (H45). `pack` seeds from file, area and
+- [x] **J.3 Answers that are right** (H45). `pack` seeds from file, area and <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/answer_correctness.ts -->
       symbol names, then FTS over I.2's index once it exists; `tests-for`
       resolves `.js` specifiers; `usage` covers symbols; "no entry" names the
       grep fallback.
       verify: `npx vitest run tests/scripts/code_graph_answer_correctness.test.ts` -> 0
       > note: pack seeds exact names and `.js` specifiers today; the FTS-over-I.2 seed tier waits for that index to exist.
-- [x] **J.4 One entry point.** `agent-config ask "<question>"` and MCP `answer`:
+- [x] **J.4 One entry point.** `agent-config ask "<question>"` and MCP `answer`: <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/ask.ts -->
       routes to the right verb; three-step retrieval (index rows with
       `~read_tokens` → timeline → fetch by id); fix-plan and verify-fix are
       intents, not commands. User-owned sources (sessions, signals) are read
@@ -244,11 +244,11 @@ use it.
       files under `agents/map/`.
       verify: `npx vitest run tests/scripts/reread_guard_map_sections.test.ts` -> 0
       > note: open: `map --section` and the guard line (`map_sections.ts`) ship with their test; wiring the line into reread_guard_hook.ts needs hook-bundle bytes and the bundle has 1 B of headroom (1556669 / 1556670) — a raise_log entry or a shrink elsewhere first.
-- [x] **J.6 Listing tools page** (H48). `list_skills`, `list_rules`,
+- [x] **J.6 Listing tools page** (H48). `list_skills`, `list_rules`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/mcp_server/graph_tools.ts -->
       `memory_lookup` default to index mode with paging; the changed
       `memory_lookup` default is documented where the MCP tools are described.
       verify: `npx vitest run tests/scripts/mcp_listing_paging.test.ts` -> 0
-- [x] **J.7a Content names tools that exist** (H47, before D). The content
+- [x] **J.7a Content names tools that exist** (H47, before D). The content <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/self-search-baseline.json -->
       files naming `codebase-retrieval` get the host's real verb or a stated
       grep fallback; the inline `rg` sweeps of the security and test skills move
       into one `scan` CLI verb returning `file:line:rule-id`; a ratchet holds
@@ -263,7 +263,7 @@ use it.
       as an extension of `memory_recall_hook.ts`. Off unless D's gain branch
       fired. Blocked by `b-stage-d-measurement`.
       verify: `./scripts-run src/scripts/check_hook_bundle_composition` -> 0
-- [x] **J.9 Measure the answers.** Per-verb output-size bench on the real graph
+- [x] **J.9 Measure the answers.** Per-verb output-size bench on the real graph <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_answer_size.ts -->
       in CI, a cost line per answer, p95 latency of `ask` recorded (no claim
       attached); D's arms use `ask`.
       verify: `./scripts-run src/scripts/bench_answer_size --all` -> 0
@@ -323,7 +323,7 @@ signals are user-owned local files; disable per kind (O20). K.1-K.3 run before D
       corroboration; project entries only in their repo. Blocked by
       `b-stage-d-measurement`.
       verify: `npx vitest run tests/scripts/working_style_delivery.test.ts` -> 0
-- [x] **K.6 Learnings into reviews and retros** (H54). Retro triage reads
+- [x] **K.6 Learnings into reviews and retros** (H54). Retro triage reads <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/learning_inputs.ts -->
       signal kinds and topics; "held or recurred" reads signals and reports
       recurrence before and after an accepted learning; review routing receives
       recurring findings and correction hot spots through `ask` as checklist
