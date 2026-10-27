@@ -60,6 +60,14 @@ from a measured arm rather than from the source synthesis.
       negative control).
       verify: the arms table lists seven arms and each system surface is hashed
       into the report.
+- [ ] **1.6** Narrow the arm surfaces to the prereg's classes. The generator
+      loads whole rule files, so `prohibitions-only` also carries Iron Laws 2
+      and 3 of `direct-answers` although the prereg names the Iron Law 1 class.
+      Either extract the named sections or amend the arms table to say whole
+      files, before the first scored run.
+      verify: `bench_honesty_run --dry-run` records a different `surface_hash`
+      for `prohibitions-only` than for `evidence-rules`, and the arms table
+      states what each surface contains.
 
 ## Phase 2 — The runs
 
