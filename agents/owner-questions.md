@@ -128,7 +128,7 @@ and the run that applies it links its PR.
 - **Recommendation:** (a) — the instrument is fixed and calibrated; the
   remaining cost is runs, not design.
 - **Blocks:** steps 3.1, 3.2, 3.3, 4.1, 4.3.
-- **Answered 2026-10-27:** "1" — option (a): a new ceiling of about 95 USD for Phases 3–4, cumulative on top of the 23.56 USD the pilot spent. Applied in `agents/roadmaps/road-to-routing-assurance-live-floors.md` (blocker `b-live-spend-beyond-pilot` resolved).
+- **Answered 2026-10-27:** "1" — option (a): a new ceiling of about 95 USD for Phases 3–4, cumulative on top of the 23.56 USD the pilot spent. Applied in `agents/roadmaps/road-to-routing-assurance-live-floors.md` (blocker `b-live-spend-beyond-pilot` resolved). Narrowed the same day by the owner: "Wir wollen ja aber immer die CLI first nutzen [...] bei CLI brauchen wir keine Budget Frage" — CLI runs need no budget question; the ceiling binds only an arm that must use the API (AC-7 of that roadmap). <!-- md-language-check: ignore -->
 
 
 ### OQ-20 — Third-party test data as attributed splits (`external-test-data-licence`)

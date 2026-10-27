@@ -17,7 +17,11 @@ estate_offset_exempt: "Not a new plan. This is the live-harness SUFFIX of road-t
 > with option (1) below and one pilot on the host evaluator capped at **25 USD**
 > (`agents/evidence/owner-directives/2026-10-26-owner-questions-14-15-16.md`).
 > The cap is for the pilot run, cumulative; crossing it pauses the run and
-> reports before spending more. Blocker `b-live-baseline-independence` still
+> reports before spending more.
+>
+> **Owner, 2026-10-27 (OQ-22):** CLI first. Runs through the host CLI need no
+> budget question; the USD figures the CLI prints are estimates, not API
+> billing. A USD ceiling applies only to an arm that must use the API (AC-7). Blocker `b-live-baseline-independence` still
 > holds: the protocol is frozen by a session that did not author the corpus
 > before any baseline is captured.
 
@@ -274,9 +278,12 @@ Offered by round `inbox-2026-10-at`, same terms:
 
 ### blocker: b-live-spend-beyond-pilot
 
-- **Status:** resolved — 2026-10-27, the owner answered OQ-22 (a): a new
-  ceiling of about 95 USD for Phases 3–4, cumulative. Was: open, the 25 USD
-  pilot of OQ-15 stood at 23.56 USD and the cap paused the run.
+- **Status:** resolved — 2026-10-27, the owner answered OQ-22 (a), then
+  narrowed it the same day: runs go CLI first (`claude plugin eval`), and a
+  CLI run needs no budget question — the USD the CLI prints is its own
+  estimate, not API billing. A USD ceiling (about 95 USD for Phases 3–4)
+  applies only to an arm that has to go through the API (AC-7). Was: open, the
+  25 USD pilot of OQ-15 stood at 23.56 USD and the cap paused the run.
 - **Owner:** the owner — the cap is an owner decision (OQ-22 in
   `agents/owner-questions.md`).
 - **Blocks:** 3.1, 3.2, 3.3, 4.1, 4.3. The code for 3.1/3.2 (seeded FNV-1a
@@ -318,7 +325,7 @@ Offered by round `inbox-2026-10-at`, same terms:
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The 0.2 baseline artifact exists, names its commit, model and
+- [x] AC-1 — The 0.2 baseline artifact exists, names its commit, model and
       frozen protocol, and its per-unit rows are machine-readable.
 - [ ] AC-2 — Every floor in `routing-assurance-metrics.md` traces to a 0.2 row,
       and no floor was raised in the same PR that changed what it measures.
@@ -326,8 +333,13 @@ Offered by round `inbox-2026-10-at`, same terms:
       and its text claims no authority over tiering.
 - [ ] AC-4 — A parity table exists for the full Phase 2 corpus on both delivery
       paths, citing the archived MCP roadmap rather than raising a new claim.
-- [ ] AC-5 — One proxy-fidelity report is published, and the
+- [x] AC-5 — One proxy-fidelity report is published, and the
       downgrade-to-advisory path has been demonstrated on a synthetic
       degradation.
-- [ ] AC-6 — Every floor is restated as a rate in the pre-registration before
+- [x] AC-6 — Every floor is restated as a rate in the pre-registration before
       the first rate-gated canary cycle.
+- [ ] AC-7 — CLI first: every live run of this roadmap goes through the host
+      CLI (`claude plugin eval`, or the print-only command of
+      `road-to-a-trigger-suite-the-host-grades`), and its record names the CLI
+      version. A direct API path is used only for an arm the CLI cannot run,
+      the record says why, and only such an arm is held to a USD ceiling.
