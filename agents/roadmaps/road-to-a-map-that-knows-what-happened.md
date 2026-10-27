@@ -459,7 +459,7 @@ step K.n.
       `agents/map/` outside `.build/` (CI grep).
 - [ ] AC-15 — Fix fixture: four fix forms classified; `SENTRY-317` is a bug
       reference; the inducer is X and the whitespace commit is skipped.
-- [ ] AC-16 — Regression fixture: the calculation fix ranks first with path
+- [x] AC-16 — Regression fixture: the calculation fix ranks first with path
       and witnesses in hypothesis state; the bisect plan prints; a passing
       planted test turns it `confirmed` with a `test_guards_against` edge.
 - [ ] AC-17 — The local map's bug payload carries open, fixed, regression
