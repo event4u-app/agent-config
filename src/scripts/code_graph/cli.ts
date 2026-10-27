@@ -195,6 +195,7 @@ import { writeTombstones } from './verify/tombstones.js';
 import { usageLowerBound, verifyMain } from './verify/verify_cli.js';
 
 import { buildCacheFor, cacheFor, flag, isFlagValue, resolveRoot, shown, UsageError } from './cli_args.js';
+import { bugsMain } from './cli_bugs.js';
 import { cmdBranchDiff, cmdBranches, cmdOnBranches, cmdProvenance, cmdSystems } from './cli_knowledge.js';
 
 export { buildCacheFor, cacheFor } from './cli_args.js';
@@ -1370,9 +1371,10 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'auto-refresh') return cmdAutoRefresh(argv.slice(1));
         if (sub === 'projects') return projectsMain(argv.slice(1));
         if (sub === 'estate') return estateMain(argv.slice(1));
+        if (sub === 'bugs') return bugsMain(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|review-risk|why|usage|remove-plan|provenance|branches|branch-diff|on-branches|tests-for|untested|dead|confirm|pack|rebuild-diff|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
+                'impact|review-risk|why|usage|remove-plan|provenance|branches|branch-diff|on-branches|tests-for|untested|dead|confirm|pack|rebuild-diff|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage|bugs> [options]\n',
         );
         return 2;
     } catch (e) {

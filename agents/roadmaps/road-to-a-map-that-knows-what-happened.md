@@ -74,7 +74,7 @@ Exit: H.1-H.6 and H.9 green on fixtures; nothing under `agents/map/` outside
 `.build/` holds a bug id. Rollback: delete `code_graph/bugs.ts` and the
 provenance `kind` field; `.build/bugs/` is disposable.
 
-- [ ] **H.1 One bug record, local only** (H35; ADR-124). Normalised record with
+- [x] **H.1 One bug record, local only** (H35; ADR-124). Normalised record with
       a qualified id (provider, org, project, issue id), episodes (one issue
       regressing several times, one fix closing several issues), status, first
       and last seen, count, first-seen release, resolved-in commit and release,
