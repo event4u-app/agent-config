@@ -158,7 +158,7 @@
    "name": "chat-history",
    "path": "agents/runtime/.agent-chat-history",
    "format": "jsonl",
-   "writer": ["src/scripts/chat_history.ts"],
+   "writer": ["src/scripts/chat_history.ts", "src/scripts/_cli/cmd_user_data.ts"],
    "readers": ["src/scripts/mine_session.ts"],
    "privacy": "personal",
    "owner": "user",
@@ -213,6 +213,18 @@
    "privacy": "secret",
    "owner": "user",
    "delete_path": "delete .build/bugs/; disposable",
+   "hosts": "all",
+   "status": "active"
+  },
+  {
+   "name": "user-project-store",
+   "path": "~/.event4u/agent-config/user/projects/<repo-id>",
+   "format": "jsonl per kind + tombstones.jsonl, 0600",
+   "writer": ["src/scripts/_lib/user_data_control.ts"],
+   "readers": ["src/scripts/_cli/cmd_user_data.ts", "src/scripts/_lib/learning_inputs.ts"],
+   "privacy": "personal",
+   "owner": "user",
+   "delete_path": "agent-config user-data delete --kind <kind> --yes",
    "hosts": "all",
    "status": "active"
   },
