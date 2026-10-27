@@ -13,11 +13,14 @@
  *
  * The migration keeps pointers only: a chat-history line becomes its session,
  * type and time; message text is dropped and the dry run names every dropped
- * field. `--apply` copies, then renames each source to `*.migrated-<date>`, so
- * it can be undone by renaming back.
+ * field. A migrated row's id is a hash of its source line, so a re-run skips
+ * what the store already holds. `--apply` keeps a `*.migrated-<date>` copy of
+ * each source and removes from it only the rows the store now holds; a row
+ * refused or revoked stays in its source and is reported.
  *
  * Exit codes: 0 ok · 1 nothing to do or refused · 2 usage.
  */
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -40,9 +43,12 @@ function flagValues(argv: readonly string[], name: string): string[] {
 }
 
 export interface MigrationPlan {
-    chat: { source: string; rows: UserRow[]; dropped_fields: string[] } | null;
-    observations: { source: string; rows: UserRow[]; kept_global: number } | null;
+    /** `lines[i]` is the 0-based source line `rows[i]` came from */
+    chat: { source: string; rows: UserRow[]; lines: number[]; dropped_fields: string[] } | null;
+    observations: { source: string; rows: UserRow[]; lines: number[]; kept_global: number } | null;
 }
+
+const recordId = (prefix: string, line: string): string => `${prefix}:${createHash('sha256').update(line).digest('hex').slice(0, 16)}`;
 
 /** What `migrate` would move, computed without writing anything. */
 export function planMigration(root: string, opts: { chatFile?: string; observationsFile?: string } = {}): MigrationPlan {
@@ -51,6 +57,7 @@ export function planMigration(root: string, opts: { chatFile?: string; observati
     if (fs.existsSync(chatFile)) {
         const dropped = new Set<string>();
         const rows: UserRow[] = [];
+        const lines: number[] = [];
         fs.readFileSync(chatFile, 'utf-8')
             .split('\n')
             .forEach((line, i) => {
@@ -62,20 +69,22 @@ export function planMigration(root: string, opts: { chatFile?: string; observati
                     return;
                 }
                 if (i === 0 && !('s' in e)) return;
-                const kept: UserRow = { id: `chat:${i + 1}` };
+                const kept: UserRow = { id: recordId('chat', line) };
                 for (const [k, v] of Object.entries(e)) {
                     if (CHAT_POINTER_FIELDS.has(k) && (typeof v === 'string' || typeof v === 'number')) kept[k] = v;
                     else dropped.add(k);
                 }
                 rows.push(kept);
+                lines.push(i);
             });
-        chat = { source: chatFile, rows, dropped_fields: [...dropped].sort() };
+        chat = { source: chatFile, rows, lines, dropped_fields: [...dropped].sort() };
     }
     const obsFile = opts.observationsFile ?? resolveGlobalObservationsPath();
     let observations: MigrationPlan['observations'] = null;
     if (obsFile && fs.existsSync(obsFile)) {
         const here = fs.realpathSync(root);
         const rows: UserRow[] = [];
+        const lines: number[] = [];
         let keptGlobal = 0;
         fs.readFileSync(obsFile, 'utf-8')
             .split('\n')
@@ -90,35 +99,63 @@ export function planMigration(root: string, opts: { chatFile?: string; observati
                     } catch {
                         mine = false;
                     }
-                    if (mine) rows.push({ id: `obs:${i + 1}`, ...o });
-                    else keptGlobal++;
+                    if (mine) {
+                        rows.push({ ...o, id: recordId('obs', line) });
+                        lines.push(i);
+                    } else keptGlobal++;
                 } catch {
                     keptGlobal++;
                 }
             });
-        observations = { source: obsFile, rows, kept_global: keptGlobal };
+        observations = { source: obsFile, rows, lines, kept_global: keptGlobal };
     }
     return { chat, observations };
 }
 
-export function applyMigration(dir: string, plan: MigrationPlan, now: Date = new Date()): { chat: number; observations: number } {
+export interface MigrationResult {
+    chat: number;
+    observations: number;
+    /** rows the store already held: skipped, and removed from the source */
+    already: number;
+    /** ids a tombstone refused: kept in their source */
+    revoked: string[];
+    /** ids refused for another reason (message text, kind off): kept in their source */
+    refused: string[];
+}
+
+export function applyMigration(dir: string, plan: MigrationPlan, now: Date = new Date()): MigrationResult {
     const stamp = now.toISOString().slice(0, 10);
-    let chat = 0;
-    let obs = 0;
-    if (plan.chat?.rows.length) {
-        for (const r of plan.chat.rows) if (appendUserRow(dir, 'chat-history', r) === 'stored') chat++;
-        fs.renameSync(plan.chat.source, `${plan.chat.source}.migrated-${stamp}`);
-    }
-    if (plan.observations?.rows.length) {
-        for (const r of plan.observations.rows) if (appendUserRow(dir, 'observations', r) === 'stored') obs++;
-        // Only this project's rows leave the global file; the rest stay where they were.
-        const src = plan.observations.source;
-        const moved = new Set(plan.observations.rows.map((r) => Number(String(r.id).split(':')[1]) - 1));
-        const all = fs.readFileSync(src, 'utf-8').split('\n');
-        fs.copyFileSync(src, `${src}.migrated-${stamp}`);
-        fs.writeFileSync(src, all.filter((_, i) => !moved.has(i)).join('\n'));
-    }
-    return { chat, observations: obs };
+    const out: MigrationResult = { chat: 0, observations: 0, already: 0, revoked: [], refused: [] };
+    const held = exportUserData(dir);
+    const move = (kind: 'chat-history' | 'observations', part: NonNullable<MigrationPlan['chat']> | NonNullable<MigrationPlan['observations']>, key: 'chat' | 'observations'): void => {
+        const have = new Set(held[kind].map((r) => r.id));
+        const moved = new Set<number>();
+        part.rows.forEach((r, i) => {
+            const line = part.lines[i] as number;
+            if (have.has(r.id)) {
+                out.already++;
+                moved.add(line);
+                return;
+            }
+            const res = appendUserRow(dir, kind, r);
+            if (res === 'stored') {
+                out[key]++;
+                have.add(r.id);
+                moved.add(line);
+            } else if (res === 'revoked') out.revoked.push(r.id);
+            else out.refused.push(r.id);
+        });
+        const all = fs.readFileSync(part.source, 'utf-8').split('\n');
+        fs.copyFileSync(part.source, `${part.source}.migrated-${stamp}`);
+        // The chat log's header line is not a row; once every row has moved, the log goes.
+        const header = kind === 'chat-history' && !part.lines.includes(0) ? 0 : -1;
+        const left = all.filter((l, i) => l.trim() && !moved.has(i) && i !== header);
+        if (kind === 'chat-history' && left.length === 0) fs.rmSync(part.source);
+        else fs.writeFileSync(part.source, all.filter((_, i) => !moved.has(i)).join('\n'));
+    };
+    if (plan.chat?.rows.length) move('chat-history', plan.chat, 'chat');
+    if (plan.observations?.rows.length) move('observations', plan.observations, 'observations');
+    return out;
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2), opts: { root?: string; dir?: string } = {}): number {
@@ -191,7 +228,9 @@ export function main(argv: readonly string[] = process.argv.slice(2), opts: { ro
             return chatN + obsN ? 0 : 1;
         }
         const r = applyMigration(dir, plan);
-        process.stdout.write(`migrated ${r.chat} chat pointer(s) and ${r.observations} observation(s); sources renamed to *.migrated-<date>\n`);
+        process.stdout.write(`migrated ${r.chat} chat pointer(s) and ${r.observations} observation(s); ${r.already} already held; sources copied to *.migrated-<date>\n`);
+        if (r.revoked.length) process.stdout.write(`revoked, kept in the source: ${r.revoked.join(', ')}\n`);
+        if (r.refused.length) process.stdout.write(`refused, kept in the source: ${r.refused.join(', ')}\n`);
         return 0;
     }
     process.stderr.write(USAGE);

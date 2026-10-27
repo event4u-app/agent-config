@@ -9,9 +9,9 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { DERIVED_INDEX, main, planMigration } from '../../src/scripts/_cli/cmd_user_data.js';
+import { DERIVED_INDEX, applyMigration, main, planMigration } from '../../src/scripts/_cli/cmd_user_data.js';
 import { loadSqliteSync } from '../../src/scripts/_lib/sqlite_guard.js';
-import { appendUserRow, exportUserData, tombstones } from '../../src/scripts/_lib/user_data_control.js';
+import { appendUserRow, deleteUserData, exportUserData, tombstones } from '../../src/scripts/_lib/user_data_control.js';
 
 let home: string;
 let root: string;
@@ -76,7 +76,7 @@ describe('user-data', () => {
         const obs = path.join(home, 'user', 'observations.jsonl');
         fs.writeFileSync(obs, [JSON.stringify({ ts: 't1', field: 'language', suggest: 'de', context: { project_path: root } }), JSON.stringify({ ts: 't2', field: 'role', suggest: 'dev' })].join('\n'));
         const plan = planMigration(root);
-        expect(plan.chat).toMatchObject({ rows: [{ id: 'chat:2', s: 'abc', t: 'user', ts: '2026-10-01' }], dropped_fields: ['text'] });
+        expect(plan.chat).toMatchObject({ rows: [{ s: 'abc', t: 'user', ts: '2026-10-01' }], dropped_fields: ['text'] });
         expect(plan.observations).toMatchObject({ rows: [{ field: 'language' }], kept_global: 1 });
 
         expect(run('migrate')).toBe(0);
@@ -92,5 +92,34 @@ describe('user-data', () => {
         expect(fs.readdirSync(path.dirname(chat)).some((f) => f.startsWith('.agent-chat-history.migrated-'))).toBe(true);
         expect(fs.readFileSync(obs, 'utf-8')).not.toContain('language');
         expect(fs.readFileSync(obs, 'utf-8')).toContain('role');
+    });
+
+    it('migration ids come from the record, so a re-run neither duplicates nor shifts', () => {
+        const obs = path.join(home, 'user', 'observations.jsonl');
+        const mine = JSON.stringify({ ts: 't1', field: 'language', suggest: 'de', context: { project_path: root } });
+        fs.writeFileSync(obs, [JSON.stringify({ ts: 't0', field: 'role', suggest: 'dev' }), mine].join('\n'));
+        const first = planMigration(root, { observationsFile: obs });
+        fs.writeFileSync(obs, [mine, JSON.stringify({ ts: 't0', field: 'role', suggest: 'dev' })].join('\n'));
+        const moved = planMigration(root, { observationsFile: obs });
+        expect(moved.observations?.rows.map((r) => r.id)).toEqual(first.observations?.rows.map((r) => r.id));
+        applyMigration(dir, moved);
+        fs.writeFileSync(obs, mine);
+        const again = applyMigration(dir, planMigration(root, { observationsFile: obs }));
+        expect(again.observations).toBe(0);
+        expect(exportUserData(dir).observations).toHaveLength(1);
+    });
+
+    it('a revoked row is reported and stays in its source', () => {
+        const obs = path.join(home, 'user', 'observations.jsonl');
+        const mine = JSON.stringify({ ts: 't1', field: 'language', suggest: 'de', context: { project_path: root } });
+        fs.writeFileSync(obs, mine);
+        const plan = planMigration(root, { observationsFile: obs });
+        const id = plan.observations?.rows[0]?.id as string;
+        appendUserRow(dir, 'observations', { id });
+        deleteUserData(dir, { kinds: ['observations'], ids: [id] });
+        const r = applyMigration(dir, plan);
+        expect(r.observations).toBe(0);
+        expect(r.revoked).toEqual([id]);
+        expect(fs.readFileSync(obs, 'utf-8')).toContain('language');
     });
 });
