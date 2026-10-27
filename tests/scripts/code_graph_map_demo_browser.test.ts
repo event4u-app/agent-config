@@ -140,7 +140,7 @@ describe('the demo map in a browser', () => {
             const e = await erd(page);
             expect(e.tables.length, `@${width}`).toBeGreaterThan(100);
             expect(e.lines).toBe('focus');
-            expect(await page.locator('.dimseg button[data-dim="2d"]').getAttribute('aria-pressed')).toBe('true');
+            expect(await page.locator('.dimseg button[data-dim="2d"]').getAttribute('aria-checked')).toBe('true');
             expect(e.z, `@${width}`).toBeGreaterThanOrEqual(0.9);
             const stage = (await page.locator('#db-stage').boundingBox())!;
             const card = (await page.locator(`.db-table[data-table="${e.focus}"]`).boundingBox())!;

@@ -7,6 +7,9 @@
  */
 extendStrings({
     en: {
+        mEmptyTab: 'Change · none', mEmptyClean: 'No change against HEAD – the working tree is clean.', mEmptyHead: function (r) { return 'No data yet: ' + r + '.'; },
+        mEmptyWhat: 'Impact runs review-risk over the working diff: what a change reaches across Code, Data, Systems, Interfaces, Runtime and Delivery – with the check protocol and an evidence report.',
+        mEmptyHow: 'How content appears: change a file (uncommitted) or ', mEmptyHow2: '. A preview with a sample change: the demo map.',
         mChange: 'Change', mChangeVal: function (n, r, files) { return n + (n === 1 ? ' file changed since ' : ' files changed since ') + r + ': ' + files; },
         mRiskChip: function (v) { return 'Review risk · ' + v; }, mRiskLevel: 'level', mRiskLevelT: 'review-risk sums its terms but names no levels yet, so the page cannot say low, medium or high',
         mRiskNote: 'The sum of the review-risk terms; each term is a fact on the Agent page.',
@@ -34,6 +37,9 @@ extendStrings({
         mMeta: function (a, c) { return a + ' affected · ' + c + ' changed'; }
     },
     de: {
+        mEmptyTab: 'Änderung · keine', mEmptyClean: 'Keine Änderung gegen HEAD – der Arbeitsbaum ist sauber.', mEmptyHead: function (r) { return 'Noch keine Daten: ' + r + '.'; },
+        mEmptyWhat: 'Impact rechnet review-risk über den Arbeits-Diff: Was eine Änderung über Code, Data, Systeme, Interfaces, Runtime und Delivery erreicht – mit Prüf-Protokoll und Nachweisbericht.',
+        mEmptyHow: 'So entsteht Inhalt: Datei ändern (uncommitted) oder ', mEmptyHow2: '. Vorschau mit einer Beispiel-Änderung: die Demo-Map.',
         mChange: 'Änderung', mChangeVal: function (n, r, files) { return n + (n === 1 ? ' Datei geändert seit ' : ' Dateien geändert seit ') + r + ': ' + files; },
         mRiskChip: function (v) { return 'Review-Risiko · ' + v; }, mRiskLevel: 'Stufe', mRiskLevelT: 'review-risk summiert seine Terme, nennt aber noch keine Stufen; die Seite kann daher nicht niedrig, mittel oder hoch sagen',
         mRiskNote: 'Die Summe der Review-Risiko-Terme; jeder Term ist ein Fakt auf der Agent-Seite.',
@@ -190,9 +196,21 @@ function imReport(p, key, right) {
     right.appendChild(pad);
 }
 
+/** The handover's real state of an empty change preview: the revision line, the clean-tree sentence, how content appears. */
+function impactEmptyPage(p, main) {
+    var card = el('div', { class: 'empty-page', id: 'nodata-impact' });
+    var clean = !(p.changed || []).length && !(p.affected || []).length;
+    var how = add(el('span', { class: 'ep-what' }), document.createTextNode(t('mEmptyHow')), el('span', { class: 'mono' }, 'code-graph map --diff <rev>'), document.createTextNode(t('mEmptyHow2')));
+    add(card, add(el('span', { class: 'ep-chips' }), stChip('empty', 'dash'), el('span', { class: 'mono ep-rev' }, 'rev: ' + (p.rev || 'HEAD') + ' · changed: ' + num((p.changed || []).length) + ' · affected: ' + num((p.affected || []).length))),
+        el('span', { class: 'ep-head' }, clean && /HEAD/.test(String(p.empty)) ? t('mEmptyClean') : t('mEmptyHead')(p.empty)), el('span', { class: 'ep-what' }, t('mEmptyWhat')), how);
+    main.appendChild(card);
+}
+
 AREA_MODULES.impact = {
     tabs: [],
     railTitles: [null, 'mReport'],
+    emptyTab: 'mEmptyTab',
+    emptyPage: impactEmptyPage,
     ownsBar: true,
     items: function (p) {
         var out = p.affected.map(function (a, i) {

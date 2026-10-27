@@ -503,7 +503,14 @@ function renderAreaPage(id, key) {
             centre = el('div', { class: 'av-page' });
             main.appendChild(centre);
         }
-        if (!live) {
+        if (!live && p && mod.emptyPage) {
+            // A reader that ran and found nothing keeps the page: its one tab, its reader line, its legend (the handover's real state).
+            var et = el('div', { class: 'lenses', role: 'tablist', 'aria-label': t('views') });
+            et.appendChild(el('button', { type: 'button', role: 'tab', class: 'lens', 'aria-selected': 'true' }, t(mod.emptyTab)));
+            if (mod.ownsBar) add(bar, et, pageMetaLine(id, false));
+            else main.firstChild.insertBefore(et, main.firstChild.firstChild);
+            mod.emptyPage(p, centre);
+        } else if (!live) {
             centre.appendChild(noDataCard(id));
             var why = p ? p.empty : t('noReader')[id];
             if (avRailTitleKeys[0]) $('av-left-body').appendChild(add(el('div', { class: 'pad' }), el('span', { class: 'nodata-tag' }, t('noDataShort')), el('p', { class: 'reason' }, why)));

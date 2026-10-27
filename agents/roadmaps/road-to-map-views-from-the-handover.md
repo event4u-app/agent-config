@@ -230,7 +230,7 @@ revert `area_systems.js` and the new CSS; payload additions are additive.
 
 ## Phase 4 — Small deltas on the existing pages
 
-- [ ] **4.1 Data, Impact empty state.** A real map with no data renders the
+- [x] **4.1 Data, Impact empty state.** A real map with no data renders the
       page skeleton (single tab "ERD · noch keine Daten" / "Änderung · keine",
       legend, footer), not the `noDataCard`; 2D/3D and Spalten become
       radiogroups; aside labels Schema / Nachweisbericht.

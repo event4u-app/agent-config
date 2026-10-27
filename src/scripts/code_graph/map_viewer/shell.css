@@ -384,3 +384,22 @@ button.db-badge:hover, button.db-badge:focus-visible { border-color: var(--brand
 .hist-step { height: 24px; padding: 0 4px; border: 0; background: transparent; font-family: var(--monof); font-size: 12px; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 400; color: var(--muted); text-decoration: underline dotted; text-underline-offset: 3px; }
 .hist-step[aria-current='page'] { cursor: default; font-weight: 600; color: var(--text); text-decoration: none; }
 .prov { font-size: 11px; color: var(--faint); }
+
+/* The real state of a lane that ran and found nothing (Data, Impact): the page keeps its shape. */
+.empty-page { padding: 18px; border-radius: 12px; border: 1px dashed var(--line2); background: var(--panel); display: flex; flex-direction: column; gap: 8px; max-width: 820px; }
+.empty-page.dbempty { box-shadow: inset 4px 0 0 var(--line2); }
+.ep-chips { display: flex; align-items: center; gap: 8px; }
+.ep-rev { font-size: 12px; color: var(--muted); }
+.ep-head { font-weight: 600; font-size: 16px; }
+.ep-what { font-size: 13px; color: var(--soft); }
+.ep-rungs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr)); gap: 8px; margin-top: 4px; }
+.ep-rungs > div { padding: 10px; border-radius: 8px; border: 1px solid var(--line); }
+.ep-rungs span { font-size: 12px; color: var(--soft); }
+.ep-note { font-size: 12px; color: var(--muted); }
+.ep-found { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 6px; }
+.ep-foundh { font-weight: 600; }
+.ep-facts { font-size: 12px; color: var(--amberText); }
+.ep-list { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--panel); }
+.ep-row { display: grid; grid-template-columns: 52px minmax(0, 0.8fr) minmax(0, 1.4fr); gap: 10px; padding: 8px 12px; border-top: 1px solid var(--line); font-size: 12px; align-items: center; }
+.ep-id, .ep-model { font-weight: 600; }
+.ep-file { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
