@@ -309,6 +309,64 @@ export function admitEdge(e: CodeEdge, opts: WalkOptions = {}): boolean {
 export interface RecommendedRead {
     path: string;
     lines: [number, number] | null;
+    /** Set only on a region the read budget left out: why, so it is counted, never dropped. */
+    reason?: string;
+}
+
+/** A changed or reached span worth reading, with how much rides on it. */
+export interface ReadRegion {
+    path: string;
+    lines: [number, number];
+    /** Higher reads first. */
+    risk: number;
+    /** A definition up to {@link REGION_DEFINITION_WHOLE} lines is read whole; a longer one is cut there. */
+    definition?: boolean;
+}
+
+/** Read lines per answer, and the share one file may take of them. */
+export const REGION_BUDGET_LINES = 400;
+export const REGION_FILE_SHARE = 0.4;
+export const REGION_DEFINITION_WHOLE = 40;
+
+/**
+ * The region budget behind `recommended_reads`: regions risk-ordered and taken
+ * round-robin across files, no file above {@link REGION_FILE_SHARE} of the
+ * budget, definitions up to {@link REGION_DEFINITION_WHOLE} lines whole. What
+ * does not fit stays in the list with a `reason`, so the reader sees every
+ * region and which ones the budget skipped. Line ranges only — never source text.
+ */
+export function regionReads(regions: readonly ReadRegion[], budget = REGION_BUDGET_LINES): RecommendedRead[] {
+    const perFile = Math.floor(budget * REGION_FILE_SHARE);
+    const byFile = new Map<string, ReadRegion[]>();
+    const ordered = [...regions].sort((a, b) => b.risk - a.risk || (a.path < b.path ? -1 : a.path > b.path ? 1 : a.lines[0] - b.lines[0]));
+    for (const r of ordered) byFile.set(r.path, [...(byFile.get(r.path) ?? []), r]);
+    const queues = [...byFile.values()];
+    const usedIn = new Map<string, number>();
+    const kept: RecommendedRead[] = [];
+    const rest: RecommendedRead[] = [];
+    let used = 0;
+    for (let round = 0; queues.some((q) => q.length > round); round += 1) {
+        for (const q of queues) {
+            const r = q[round];
+            if (!r) continue;
+            const from = r.lines[0];
+            let to = r.lines[1];
+            if (r.definition && to - from + 1 > REGION_DEFINITION_WHOLE) {
+                rest.push({ path: r.path, lines: [from + REGION_DEFINITION_WHOLE, to], reason: `definition longer than ${REGION_DEFINITION_WHOLE} lines` });
+                to = from + REGION_DEFINITION_WHOLE - 1;
+            }
+            const n = to - from + 1;
+            const fileUsed = usedIn.get(r.path) ?? 0;
+            if (fileUsed + n > perFile) rest.push({ path: r.path, lines: [from, to], reason: 'per-file share reached' });
+            else if (used + n > budget) rest.push({ path: r.path, lines: [from, to], reason: 'read budget reached' });
+            else {
+                kept.push({ path: r.path, lines: [from, to] });
+                used += n;
+                usedIn.set(r.path, fileUsed + n);
+            }
+        }
+    }
+    return [...kept, ...rest];
 }
 
 export interface QueryResult {

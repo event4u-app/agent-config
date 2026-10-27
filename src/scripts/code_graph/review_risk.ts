@@ -22,7 +22,7 @@ import * as path from 'node:path';
 
 import { gitProbe } from '../_lib/spawn_env.js';
 import { spanHash } from './lanes/lane_fact.js';
-import { admitEdge, type WalkOptions } from './query.js';
+import { admitEdge, type ReadRegion, type RecommendedRead, regionReads, type WalkOptions } from './query.js';
 import type { CodeEdge, CodeGraph, CodeNode } from './types.js';
 import { laneOfKind } from './vocabulary.js';
 
@@ -87,6 +87,8 @@ export interface ReviewRisk {
     partial_files: string[];
     /** False while any file the sum rests on is partial. */
     complete: boolean;
+    /** Changed symbols, then their callers, as line ranges under the region budget (`regionReads`). */
+    recommended_reads: RecommendedRead[];
     /** What the sum was computed from. */
     basis: { graph_checksum: string; weights: Readonly<Record<RiskTerm, number>> };
 }
@@ -290,6 +292,16 @@ export function reviewRisk(
         const unknown = lane ? (laneState.get(lane) ?? null) : null;
         return { term, weight: weights[term], items: unknown ? [] : lists[term], contribution: unknown ? 0 : lists[term].length * weights[term], unknown };
     });
+    const span = (id: string, risk: number): ReadRegion | null => {
+        const n = byId.get(id);
+        const [start, , end] = n?.source_location ?? [];
+        return n && start ? { path: n.source_file, lines: [start, end ?? start], risk, definition: true } : null;
+    };
+    // A changed symbol ranks by how many stated callers reach it; a caller after every changed symbol.
+    const regions = [
+        ...[...seedIds].map((id) => span(id, 1 + (inn.get(id) ?? []).filter((e) => admitEdge(e, opts)).length)),
+        ...[...callers.keys()].map((id) => span(id, 0)),
+    ].filter((r): r is ReadRegion => r !== null);
     const partial = [...new Set([...changed, ...[...callers.keys()].map((id) => byId.get(id)?.source_file ?? '')])]
         .filter((f) => byId.get(f)?.partial === true)
         .sort();
@@ -302,6 +314,7 @@ export function reviewRisk(
         total: terms.reduce((n, t) => n + t.contribution, 0),
         partial_files: partial,
         complete: partial.length === 0,
+        recommended_reads: regionReads(regions),
         basis: { graph_checksum: graph.source_checksum, weights },
     };
 }

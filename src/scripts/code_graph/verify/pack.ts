@@ -15,7 +15,7 @@ import * as path from 'node:path';
 import type { ConfirmState } from '../map_areas.js';
 import { domainResolver } from '../domains.js';
 import { introducedNote, readCachedProvenance } from '../provenance.js';
-import { admitEdge, type LoadedGraph, resolveExactNode } from '../query.js';
+import { admitEdge, type LoadedGraph, type ReadRegion, type RecommendedRead, regionReads, resolveExactNode } from '../query.js';
 import type { CodeEdge } from '../types.js';
 import { confirmIds, type ConfirmResult } from './confirm.js';
 import defaults from './defaults.json';
@@ -50,6 +50,8 @@ export interface PackResult {
     domains?: string[];
     confirm: Pick<ConfirmResult, 'status' | 'counts' | 'risk' | 'ms' | 'error'>;
     lines: string[];
+    /** The returned items' spans under the region budget, seeds first (`regionReads`). */
+    recommended_reads: RecommendedRead[];
 }
 
 export interface PackOptions {
@@ -200,5 +202,12 @@ export function contextPack(g: LoadedGraph, root: string, cachePath: string, tas
             ? { status: confirmed.status, counts: confirmed.counts, risk: confirmed.risk, ms: confirmed.ms, ...(confirmed.error ? { error: confirmed.error } : {}) }
             : { status: 'ok', counts: {}, risk: { class: 'R0', reason: 'nothing to confirm', depth_chosen: 'none', depth_ran: 'none' }, ms: 0 },
         lines: [...items.map(itemLine), ...(spans.length > 1 ? [`the change crosses domains: ${spans.join(', ')}`] : [])],
+        recommended_reads: regionReads(
+            items.flatMap((it): ReadRegion[] => {
+                const n = g.byId.get(it.id);
+                const [start, , end] = n?.source_location ?? [];
+                return n && start ? [{ path: n.source_file, lines: [start, end ?? start], risk: 3 - Math.min(3, it.depth), definition: true }] : [];
+            }),
+        ),
     };
 }

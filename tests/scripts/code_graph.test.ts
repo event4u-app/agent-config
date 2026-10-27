@@ -29,6 +29,9 @@ import {
     node as graphNode,
     path as graphPath,
     query,
+    type ReadRegion,
+    REGION_FILE_SHARE,
+    regionReads,
     resolveExactNode,
     resolveSeeds,
 } from '../../src/scripts/code_graph/query.js';
@@ -723,5 +726,45 @@ describe('4.5 — detail levels and caps', () => {
         expect(cappedTerm.contribution).toBe(callersTerm.contribution);
         expect(cappedTerm.items.length + (cappedRisk.omitted['callers'] ?? 0)).toBe(callersTerm.items.length);
         g.close();
+    });
+});
+
+describe('4.7 — a region read list', () => {
+    it('recommended_reads region budget', () => {
+        const regions: ReadRegion[] = [
+            { path: 'a.ts', lines: [1, 60], risk: 9, definition: true },
+            { path: 'a.ts', lines: [100, 139], risk: 8, definition: true },
+            { path: 'a.ts', lines: [200, 239], risk: 7, definition: true },
+            { path: 'a.ts', lines: [300, 339], risk: 6, definition: true },
+            { path: 'a.ts', lines: [400, 439], risk: 5, definition: true },
+            { path: 'b.ts', lines: [10, 20], risk: 1 },
+        ];
+        const reads = regionReads(regions, 200);
+        const kept = reads.filter((r) => r.reason === undefined);
+        const rest = reads.filter((r) => r.reason !== undefined);
+        const size = (r: { lines: [number, number] | null }): number => (r.lines ? r.lines[1] - r.lines[0] + 1 : 0);
+        // Round-robin: the low-risk file gets its turn before the risky file's second region.
+        expect(kept.map((r) => r.path).slice(0, 2)).toEqual(['a.ts', 'b.ts']);
+        // A long definition is read for its first 40 lines; the tail is counted, not lost.
+        expect(kept[0]?.lines).toEqual([1, 40]);
+        expect(rest).toContainEqual({ path: 'a.ts', lines: [41, 60], reason: 'definition longer than 40 lines' });
+        // No file above 40 % of the budget; the total within it.
+        expect(kept.filter((r) => r.path === 'a.ts').reduce((n, r) => n + size(r), 0)).toBeLessThanOrEqual(200 * REGION_FILE_SHARE);
+        expect(kept.reduce((n, r) => n + size(r), 0)).toBeLessThanOrEqual(200);
+        // Every input line is either kept or named with a reason.
+        expect(kept.reduce((n, r) => n + size(r), 0) + rest.reduce((n, r) => n + size(r), 0)).toBe(regions.reduce((n, r) => n + size(r), 0));
+        // Line ranges only: no source text in graph output.
+        for (const r of reads) expect(Object.keys(r).every((k) => ['path', 'lines', 'reason'].includes(k))).toBe(true);
+
+        // review-risk carries the list under the existing name, changed symbol first.
+        const { root, graph } = handGraph(
+            [{ id: 't.ts#Target', label: 'Target', source_location: [5, 1, 9, 1] }, { id: 'c.ts#Caller', label: 'Caller', source_location: [1, 1, 2, 1] }],
+            [{ source: 'c.ts#Caller', target: 't.ts#Target' }],
+        );
+        const risk = reviewRisk(root, graph, 'HEAD', [{ file: 't.ts', from: 6, to: 6 }]);
+        expect(risk.recommended_reads).toEqual([
+            { path: 't.ts', lines: [5, 9] },
+            { path: 'c.ts', lines: [1, 2] },
+        ]);
     });
 });
