@@ -165,15 +165,27 @@ describe('every area is drawn from facts, every fact with a witness', () => {
 describe('tours are templates over facts', () => {
     it('walk entry, flow and data; a step turns stale when its input fact changes', async () => {
         const tour = areas.tours!.find((t) => t.steps.some((s) => s.area === 'data'))!;
-        expect(tour.steps.map((s) => s.area)).toEqual(['code', 'code', 'data', 'delivery']);
+        // The fixture's workflow filters on `src/**` and the flow lives under `app/`,
+        // so no workflow is shown to ship it: no delivery step (audit W2).
+        expect(tour.steps.map((s) => s.area)).toEqual(['code', 'code', 'data']);
         expect(tour.steps.every((s) => s.state === 'fresh')).toBe(true);
         const { graph } = await buildFromRepo(root, null, { lanes: true });
         const flow = graph.nodes.find((n) => n.kind === 'flow' && tour.title === `Follow ${n.label}`)!;
         const changed: CodeGraph = { ...graph, nodes: graph.nodes.map((n) => (n.id === flow.id ? { ...n, fact: { ...n.fact!, attrs: { ...n.fact!.attrs, tables: ['comments', 'invoices'] } } } : n)) };
         const again = produceAreas(root, changed, { previousTours: areas.tours!, hunks: [] }).areas.tours!.find((t) => t.id === tour.id)!;
-        expect(again.steps.map((s) => s.state)).toEqual(['fresh', 'fresh', 'stale', 'fresh']);
+        expect(again.steps.map((s) => s.state)).toEqual(['fresh', 'fresh', 'stale']);
         const same = produceAreas(root, graph, { previousTours: areas.tours!, hunks: [] }).areas.tours!.find((t) => t.id === tour.id)!;
         expect(same.steps.every((s) => s.state === 'fresh')).toBe(true);
+    }, 60_000);
+
+    it('adds the delivery step only for a workflow whose path filter lets a flow file through', async () => {
+        const dir = plant();
+        fs.writeFileSync(path.join(dir, '.github/workflows/app.yml'), "name: App\non:\n  push:\n    paths:\n      - 'app/**'\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - run: composer test\n");
+        const { graph } = await buildFromRepo(dir, null, { lanes: true });
+        const tour = produceAreas(dir, graph, { hunks: [] }).areas.tours!.find((t) => t.steps.some((s) => s.area === 'data'))!;
+        const last = tour.steps[tour.steps.length - 1]!;
+        expect(last.area).toBe('delivery');
+        expect(last.item).toBe('workflow/.github/workflows/app.yml');
     }, 60_000);
 });
 
