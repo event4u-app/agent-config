@@ -247,13 +247,13 @@ use it.
       `memory_lookup` default to index mode with paging; the changed
       `memory_lookup` default is documented where the MCP tools are described.
       verify: `npx vitest run tests/scripts/mcp_listing_paging.test.ts` -> 0
-- [ ] **J.7a Content names tools that exist** (H47, before D). The content
+- [x] **J.7a Content names tools that exist** (H47, before D). The content
       files naming `codebase-retrieval` get the host's real verb or a stated
       grep fallback; the inline `rg` sweeps of the security and test skills move
       into one `scan` CLI verb returning `file:line:rule-id`; a ratchet holds
       the self-search count.
       verify: `grep -rlc codebase-retrieval .claude/skills .claude/rules` -> 1
-      > note: open: 12 source files (14 mentions) name codebase-retrieval; the rewrite needs net-neutral skill edits, task sync + generate-tools for the host trees the verify reads, the `scan` verb and a ratified ratchet — not reached in this run.
+      > note: content names `code-graph ask` and `code-graph scan` instead; the ratchet (`check_self_search_ratchet`, baseline 17) runs by hand — its CI wiring needs a ratification artifact.
 - [~] **J.7b Rewire self-search to `ask`** (after D's gain branch only; a null
       leaves it). Blocked by `b-stage-d-measurement`.
       verify: `./scripts-run src/scripts/check_self_search_ratchet` -> 0

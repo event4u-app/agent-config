@@ -125,7 +125,7 @@ Should I build on this or create a new feature?
 
 Before asking detailed questions, **proactively research**:
 
-- Use `codebase-retrieval` to find:
+- Use `code-graph ask` to find:
   - Existing code related to the feature
   - Affected modules, models, services, controllers
   - Similar patterns already implemented

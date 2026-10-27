@@ -26,7 +26,7 @@ Do NOT use when:
 1. **Read the agent docs** — check `agents/reference/docs/` and `agents/settings/contexts/` for the area you're refactoring.
    For modules, also read the project's module-docs directory (path varies by stack — Laravel: `app/Modules/{Module}/agents/`; Nx: `apps/{app}/docs/`; mono-repo: per-package `docs/`). See the `project-docs` skill for the mapping.
 2. **Understand the scope** — what exactly needs to change and why?
-3. **Find ALL references** — use `codebase-retrieval` and `view` with `search_query_regex` to find every
+3. **Find ALL references** — use `code-graph ask` and `view` with `search_query_regex` to find every
    caller, implementation, test, and configuration that references the code being changed.
    **If the change is to a closed set** — an enum, union, literal type, state
    machine, role or permission set — identifier search is not enough: the

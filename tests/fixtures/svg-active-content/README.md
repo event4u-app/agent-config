@@ -1,10 +1,10 @@
 # `svg-active-content` — three planted SVGs and one clean twin
 
-Read by `tests/skills/frontend_render_security_svg_grep.test.ts`, which pulls the
-backstop grep out of `src/skills/frontend-render-security/SKILL.md` § Backstop
-greps and runs THAT pattern — not a copy of it — over this directory. A grep
-documented in prose and a grep pinned in a test are two copies of one fact, and
-this fixture exists so there is only one.
+Read by `tests/skills/frontend_render_security_svg_grep.test.ts`, which takes the
+`svg-active-content` rule from `src/scripts/code_graph/scan.ts` — the rule the
+skill's `code-graph scan --pack frontend` runs — and applies THAT pattern, not a
+copy of it, over this directory. A pattern documented in prose and one pinned in
+a test are two copies of one fact, and this fixture exists so there is only one.
 
 | File | What it plants |
 |---|---|
