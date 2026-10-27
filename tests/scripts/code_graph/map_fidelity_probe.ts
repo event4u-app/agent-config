@@ -381,7 +381,41 @@ async function probeProjects(browser: Browser, built: Built): Promise<unknown> {
     return out;
 }
 
-export const PROBES: Record<string, (b: Browser, built: Built) => Promise<unknown>> = { projects: probeProjects, tokens: probeTokens, shell: probeShell, overview: probeOverview, pages: probePages, newPages: (b, built) => probePages(b, built, NEW_PAGES), systems: probeSystems, systemsPaths: probeSystemsPaths };
+/** A local map's bug lane, the shape of sibling Stage H, for the `bugs` probe. */
+const LOCAL_BUGS = {
+    reader: 'bugs lane · local', completeness: 'complete', findings: [], adapters: { Sentry: true, Linear: true, Bugsnag: false },
+    bugs: [
+        { id: 'B-1', title: 'Checkout total off by one', status: 'open', source: 'Sentry', env: 'prod', area: 'checkout', cause: 'logic', symbolicated: true, fixes: [], timeline: [{ at: '2026-10-20', kind: 'seen', text: 'first seen' }], frames: [{ file: 'src/cart.ts', line: 41, fn: 'total' }], hypotheses: ['rounding before tax'], introducedBy: { sha: 'abc12345', why: 'touched total() last' } },
+        { id: 'B-2', title: 'Login loop on Safari', status: 'fixed', source: 'Linear', env: 'prod', area: 'auth', cause: 'config', symbolicated: false, fixes: [{ sha: 'def67890', title: 'fix cookie SameSite' }], timeline: [], frames: [], hypotheses: [] },
+    ],
+};
+/** Probe `bugs`: the committed state against the handover's real state, a local map against its demo state. */
+async function probeBugs(browser: Browser, built: Built): Promise<unknown> {
+    const doc = JSON.parse(fs.readFileSync(path.join(ROOT, 'agents/map/code/map.json'), 'utf-8')) as { meta: Parameters<typeof renderHtml>[1]; model: Parameters<typeof renderHtml>[0] };
+    const local = path.join(path.dirname(built.real), 'bugs-local.html');
+    fs.writeFileSync(local, renderHtml(doc.model, doc.meta, { bugs: LOCAL_BUGS } as unknown as Parameters<typeof renderHtml>[2]));
+    const sel = { design: { tab: '[role="tab"][aria-selected="true"]', card: 'main > div[style*="dashed"]', tile: 'main div[style*="brandLine"]', cap: 'aside .cap' }, build: { tab: '#av-bar [role="tab"][aria-selected="true"]', card: '#nodata-bugs, #b-list', tile: '#b-why .b-tile.on', cap: '#av aside .cap' } };
+    const out: Record<string, unknown> = {};
+    for (const data of ['committed', 'local'] as const) {
+        for (const theme of ['dark', 'light'] as const) {
+            for (const width of WIDTHS) {
+                const d = await openDesign(browser, 'p02/Bugs.dc.html', width, theme);
+                if (data === 'local') await toDemo(d);
+                const b = await openBuilt(browser, data === 'committed' ? built.real : local, '#/bugs', width, theme);
+                const cell: Record<string, unknown> = {};
+                for (const [side, page] of [['design', d], ['build', b]] as const) {
+                    cell[side] = { overflow: await overflowAt(page), landmarks: width === 1440 && theme === 'dark' ? await pageLandmarks(page) : undefined, styles: width === 1440 ? await computedAt(page, Object.values(sel[side]), STYLE_PROPS) : undefined };
+                }
+                out[`${data}_${theme}_${width}`] = cell;
+                await d.close();
+                await b.close();
+            }
+        }
+    }
+    return out;
+}
+
+export const PROBES: Record<string, (b: Browser, built: Built) => Promise<unknown>> = { bugs: probeBugs, projects: probeProjects, tokens: probeTokens, shell: probeShell, overview: probeOverview, pages: probePages, newPages: (b, built) => probePages(b, built, NEW_PAGES), systems: probeSystems, systemsPaths: probeSystemsPaths };
 
 if (process.argv[1] && /map_fidelity_probe\.ts$/.test(process.argv[1])) {
     const [name, out] = process.argv.slice(2);

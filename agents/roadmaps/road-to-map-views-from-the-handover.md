@@ -293,7 +293,7 @@ Exit: 6.1–6.2 green. Rollback: drop the route from 1.1's list.
       them appears in any file under `agents/map/` outside `.build/` (AC-17 view
       half).
       verify: `npx vitest run tests/scripts/code_graph_map_bugs_page.test.ts -t committed --reporter=verbose` -> /✓.*committed/
-- [ ] **7.3 Bugs matrix.** `agents/evidence/reviews/map-bugs-fidelity.md` for
+- [x] **7.3 Bugs matrix.** `agents/evidence/reviews/map-bugs-fidelity.md` for
       both the committed and the local map.
       verify: `npx vitest run tests/scripts/code_graph_map_fidelity_matrices.test.ts -t bugs --reporter=verbose` -> /✓.*bugs/
 
