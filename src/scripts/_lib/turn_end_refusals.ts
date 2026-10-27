@@ -717,7 +717,9 @@ export function pruneAgedRefusalState(
         // Left to the branch below it would land in `kept` FOREVER — the
         // unbounded growth this pruner exists to stop, reintroduced by the
         // instrument step 2.1 added. Its own clock is `last_at`.
-        if (name.endsWith(SHADOW_SUFFIX)) {
+        // An advisory counter (`.advisory.json`) is measurement too, so it
+        // takes the shadow branch, ages out on its mtime, and never stays forever.
+        if (name.endsWith(SHADOW_SUFFIX) || name.endsWith('.advisory.json')) {
             let shadow: ShadowRecord | null = null;
             try {
                 shadow = parseShadowRecord(fs.readFileSync(file, 'utf-8'));

@@ -255,7 +255,8 @@ export type DetectorId =
     | 'verification'
     | 'completion'
     | 'pending-decision'
-    | 'untested';
+    | 'untested'
+    | 'capitulation';
 
 export interface Finding {
     detector: DetectorId;
@@ -1057,6 +1058,7 @@ function markRefusedTurn(
 // `tests/scripts/turn_end_gate_hook.test.ts` addresses all three names at
 // this path.
 import { readTranscriptTail, type ToolCall } from '../_lib/turn_end_transcript.js';
+import { maybeCountCapitulation } from '../_lib/capitulation_detector.js';
 
 export {
     extractToolCalls,
@@ -1097,6 +1099,8 @@ interface DetectorInputs {
     turnOrdinal: number;
     promptId: string;
     lastAssistant: string;
+    lastUserPrompt: string;
+    previousAssistant: string;
     toolCalls: ToolCall[];
     turnTexts: string[];
     closingFromPayload: boolean;
@@ -1159,7 +1163,7 @@ function assembleDetectorInputs(
     // in production while its comment claimed it was enforced — the same
     // fixed-the-definition-not-the-caller shape as two other findings in that
     // round, which is why this line exists rather than a default parameter.
-    const { lastAssistant, turnOrdinal, toolCalls, assistantTurnTexts } = readTranscriptTail(
+    const { lastAssistant, turnOrdinal, toolCalls, assistantTurnTexts, lastUserPrompt, previousAssistant } = readTranscriptTail(
         transcriptPath,
         { maxBytes: TRANSCRIPT_READ_MAX_BYTES },
     );
@@ -1215,6 +1219,8 @@ function assembleDetectorInputs(
         turnOrdinal,
         promptId,
         lastAssistant,
+        lastUserPrompt,
+        previousAssistant,
         toolCalls,
         turnTexts,
         closingFromPayload,
@@ -1433,6 +1439,8 @@ export function main(): number {
     // turn the gate allows and a turn it refuses are both in the record — a
     // recall reading needs the allowed turns as its negative arm.
     recordGraphFeeder(inputs, findings, 'live');
+    // Detector G: advisory, counts-only, default-off (H1). Never in `findings`.
+    if (!is_replay_mode()) maybeCountCapitulation(sessionStateFile(inputs.workspaceRoot, inputs.sessionKey), inputs);
     if (findings.length === 0) return EXIT_ALLOW;
 
     markRefusedTurn(
