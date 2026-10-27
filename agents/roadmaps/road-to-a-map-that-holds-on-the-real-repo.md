@@ -186,7 +186,7 @@ the decision-revisit gate first.
 - [ ] **4.2 [C.2] Deterministic, sharded, diffable.** Sorted keys, pretty JSON, stable order, no volatile values; shards per area and per top-level directory for code; `linguist-generated` in `.gitattributes`; `index.html` committed or not per O1. verify: `npx vitest run tests/scripts/code_graph_map_determinism.test.ts` -> 0
 - [ ] **4.3 [C.3] CI diff check.** CI redraws on PRs touching the tree and compares; outcome per O2. Workflow, with ratification artifact. verify: a fixture PR that changes a route without redrawing gets the configured outcome, and `npx vitest run tests/scripts/code_graph_map_diff_check.test.ts` -> 0
 - [ ] **4.4 [C.4] Honest freshness and name.** Page and MAP.md say "built at", then the build sha and date, and compute nothing about HEAD; title from `repo_identity.ts`, never the folder. verify: `grep -c 'built at' agents/map/MAP.md` -> /^[1-9]/
-- [ ] **4.5 [C.5] Cache key includes the lane set** (`map.ts:236-242`). verify: `npx vitest run tests/scripts/code_graph_map_cache_lanes.test.ts` -> 0
+- [x] **4.5 [C.5] Cache key includes the lane set** (`map.ts:236-242`). verify: `npx vitest run tests/scripts/code_graph_map_cache_lanes.test.ts` -> 0
 - [ ] **4.6 [C.6] Procedures skip generated files.** The archive and rename procedures (`roadmap-management` SKILL, `archive_completed_roadmaps`) skip paths with the generated attribute. verify: after archiving a fixture roadmap, `git status --porcelain agents/map` -> /^$/
 
 ## Phase 5 — A measure that can answer [D]

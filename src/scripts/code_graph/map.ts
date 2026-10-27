@@ -225,7 +225,15 @@ function isGitRepo(root: string): boolean {
     }
 }
 
-/** The graph the map is drawn from: built when absent, updated when behind. */
+/** The lanes a map is drawn from; a cache whose `lanes_run` lacks one of them is not the map's cache (H24). */
+export const MAP_LANES = ['runtime', 'interfaces', 'delivery', 'history', 'decisions', 'data', 'systems', 'flows'] as const;
+
+function hasLaneSet(g: CodeGraph): boolean {
+    const ran = new Set((g.lanes_run ?? []).map((r) => r.lane));
+    return MAP_LANES.every((l) => ran.has(l));
+}
+
+/** The graph the map is drawn from: built when absent, updated when behind or drawn without lanes. */
 async function loadOrBuildGraph(
     root: string,
     cachePath: string,
@@ -234,17 +242,18 @@ async function loadOrBuildGraph(
     mapDir?: string,
 ): Promise<{ graph: CodeGraph; built: boolean; overlay?: Overlay }> {
     const verdict = computeVerdict(root, cachePath).verdict;
+    const cached = verdict === 'FRESH' && fs.existsSync(cachePath) ? (JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as CodeGraph) : null;
     // `edited` — an uncommitted change to an indexed file — reads FRESH to the
     // commit-based verdict, and a map drawn from it would show the old code.
     // Outside a git repository there is nothing to compare against at all, so
     // freshness is unknowable and the incremental build decides per file.
-    if (verdict === 'FRESH' && fs.existsSync(cachePath) && isGitRepo(root)) {
+    if (cached && hasLaneSet(cached) && isGitRepo(root)) {
         const state = graphState(root, cachePath);
-        if (state === 'fresh') return { graph: JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as CodeGraph, built: false };
+        if (state === 'fresh') return { graph: cached, built: false };
         // Uncommitted edits that `refresh --touched` already re-read: the committed
         // index seen through its overlay, with no rebuild.
         if (state === 'edited') {
-            const committed = JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as CodeGraph;
+            const committed = cached;
             const ov = readOverlay(cachePath, committed.source_checksum);
             const changes = workingChanges(root);
             // The map's own output is never a source the overlay has to have re-read.
