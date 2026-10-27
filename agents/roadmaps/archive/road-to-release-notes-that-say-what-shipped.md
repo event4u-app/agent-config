@@ -117,7 +117,7 @@ orientation-map `TIE` — so the 17.1.0 and 17.2.0 heads read `Honest nulls: non
       `supersedes` names only ADR-267 and ADR-278. Marking it superseded here
       would rewrite an owner-and-council record from an inbox claim, so the
       finding is carried as step 4.10 of `road-to-a-setup-that-decides-itself`.
-      verify: `grep -c '4.10 Record what ADR-293 did to ADR-284' agents/roadmaps/road-to-a-setup-that-decides-itself.md` -> /^1$/
+      verify: `grep -c '4.10 Record what ADR-293 did to ADR-284' agents/roadmaps/archive/road-to-a-setup-that-decides-itself.md` -> /^1$/
 
 ## Phase 5 — Purge keeps what the user changed
 
