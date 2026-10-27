@@ -86,7 +86,7 @@ before any baseline existed, so neither can be tuned to a result.
 
 ## Phase 0 — the parked baseline steps
 
-- [x] **0.2 Run the existing live harness once as a frozen baseline** (canary
+- [x] **0.2 Run the existing live harness once as a frozen baseline** (canary <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/routing_baseline.ts -->
       budget), storing per-unit results as the regression reference.
       verify: the baseline artifact exists, names its commit and model, and its
       per-unit rows are machine-readable.
@@ -98,7 +98,7 @@ before any baseline existed, so neither can be tuned to a result.
       captured mid-run by an autonomous session, then used to derive floors in
       the same session, is the shape 0.4's own title warns about. Recorded as
       the next real step rather than attempted here.
-- [x] **0.4 Derive the floors, never invent them.** Each per-unit floor = its
+- [x] **0.4 Derive the floors, never invent them.** Each per-unit floor = its <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       0.2 baseline value minus a fixed tolerance, written into the
       pre-registration BEFORE Phase 1 activates.
       verify: every floor in the contract traces to a 0.2 row; no floor is
@@ -146,7 +146,7 @@ item created unless the null broke.
       exist in the tree today (D4), so this step has no external dependency.
       verify: one corpus file runs on both paths and produces two comparable
       result rows.
-- [x] **4.2 Parity gate:** MCP-path recall may not undercut native-path recall
+- [x] **4.2 Parity gate:** MCP-path recall may not undercut native-path recall <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/catalogue_pressure.ts -->
       by more than a pre-registered epsilon on the same corpus. A breach blocks
       any MCP default-on decision; default-off holds until then.
       verify: a synthetic recall gap larger than epsilon turns the gate red.
@@ -158,21 +158,21 @@ item created unless the null broke.
 
 ## Phase 5 — Production traces close the loop
 
-- [x] **5.1 Harvest routing events from own sessions** via the existing hook
+- [x] **5.1 Harvest routing events from own sessions** via the existing hook <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/routing_trace_ledger.ts -->
       dispatch (skill invoked, prompt text, catalogue hash) into a LOCAL,
       gitignored ledger. Prompt text stays local because 5.2 needs it verbatim;
       anything that leaves the machine carries hashes only. Batch-read, no
       runtime daemon.
       verify: the ledger path is gitignored; an export contains no free text.
-- [x] **5.2 A drain command proposes corpus candidates** from traces where a
+- [x] **5.2 A drain command proposes corpus candidates** from traces where a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/routing_trace_ledger.ts -->
       skill was invoked but its corpus has no matching positive (recall blind
       spots) — maintainer-confirmed before landing.
       verify: one real drain session produces at least one candidate, and an
       unconfirmed candidate cannot land.
-- [x] **5.3 Regression states on the frozen 0.2 baseline:** PASSED,
+- [x] **5.3 Regression states on the frozen 0.2 baseline:** PASSED, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/routing_baseline.ts -->
       ROUTING_CHANGED, REGRESSION — only REGRESSION (floor breach) gates.
       verify: three fixtures, one per state.
-- [x] **5.4 Proxy-fidelity report:** for prompts appearing in BOTH the trace
+- [x] **5.4 Proxy-fidelity report:** for prompts appearing in BOTH the trace <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/proxy_fidelity.ts -->
       ledger and the Phase 2 corpus, compare the checker's would-load verdict
       against what the session actually consulted. If it degrades, the Phase 1
       gate's verdicts are downgraded to advisory until repaired.
@@ -201,7 +201,7 @@ is met; the ledger and `--propose` stay the intake for the next drain.
       verify: a single case run twice reports a rate, not a boolean; a test
       shows a run projected over the ceiling refused.
       Was (restated 2026-10-27 per OQ-23 (c)): "(default 3 per case, canary only)".
-- [x] **6.2 Floors move from "fired" to "rate >= x"**, with x pre-registered
+- [x] **6.2 Floors move from "fired" to "rate >= x"**, with x pre-registered <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       per tier.
       verify: the 0.1 contract carries the restated floors before the first
       rate-gated run.
