@@ -130,9 +130,10 @@ export function collectKnowledge(root: string, opts: { git: Git }): KnowledgeFac
     const exists = (p: string): boolean => fs.existsSync(path.join(root, p));
     let renames: Map<string, string> | null = null;
     for (const f of list(path.join(root, 'agents', 'memory'), /\.ya?ml$/)) {
-        let doc: { entries?: Array<Record<string, unknown>> } | null = null;
+        type MemoryDoc = { entries?: Array<Record<string, unknown>> } | null;
+        let doc: MemoryDoc;
         try {
-            doc = parseYaml(read(f)) as typeof doc;
+            doc = parseYaml(read(f)) as MemoryDoc;
         } catch {
             continue;
         }
