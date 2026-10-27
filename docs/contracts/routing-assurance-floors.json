@@ -1,0 +1,683 @@
+{
+  "schema": "routing-floors/v1",
+  "baseline": "agents/evidence/metrics/routing-baseline-20261027.json",
+  "baseline_sha256": "510d1a2a54dc4c6d7022199861c762e2b9dd5e79bdc4fb83a69507f92c5aefcd",
+  "tolerance": 0.1,
+  "floors": [
+    {
+      "unit": "accessibility-auditor",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "adr-create",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "adversarial-review",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "agent-security-review",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "agents-md-thin-root",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "ai-council",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "alerting-doctrine",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "analysis-autonomous-mode",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "api-design",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "api-endpoint",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "api-testing",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "architecture-review-lens",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "authz-review",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "blade-ui",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "brand",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "brand-identity",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "brand-to-tokens",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "bug-analyzer",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "canvas-design",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "code-intelligence",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "code-refactoring",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "code-review",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "command-routing",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "competitive-moat-analysis",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "competitive-positioning",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "composer-packages",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "condense-memory",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "content-funnel-design",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "contract-review",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "conventional-commits-writing",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "dashboard-design",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "database",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "decision-record",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "deep-reading-analyst",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "dependency-upgrade",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "description-assist",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "design-intelligence",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "design-review",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "design-system-capture",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "design-tokens",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "design-variations",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "dpa-review",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "eloquent",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "evaluate-llm-feature",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "existing-ui-audit",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "fe-design",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "feature-planning",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "flux",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "forensics-report",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "form-handler",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "frontend-render-security",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "gated-reach",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "git-workflow",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "gtm-launch",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "history-design",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "iconography",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "image-analyser",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "image-creator",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "image-generation",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "image-provider-routing",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "incident-commander",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "jira-integration",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "js-library-packaging",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "judge-artifact-completeness",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "judge-bug-hunter",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "judge-injection-defense",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "judge-spec-compliance",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "judge-synthesis",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "judge-test-coverage",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "laravel-migration",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "launch-readiness",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "legal-practice-profile",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "license-compliance-borrow-check",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "logo-generation",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "market-entry-analysis",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "markitdown",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "mcp-builder",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "merge-conflicts",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "messaging-architecture",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "monorepo-workspace",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "motion-choreographer",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "operational-readiness",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "overbuild-review-lens",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "pdf-tools",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "persona-improvement",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "php-coder",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "playbook-authoring",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "playwright-testing",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "po-discovery",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "positioning-strategy",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "prediction-pool-optimizer",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "project-analysis-core",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "project-analysis-hypothesis-driven",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "prompt-engineering-image",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "prompt-validator",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "quality-tools",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "react-native-setup",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "react-shadcn-ui",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "readme-writing",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "readme-writing-package",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "reasoning-orchestrator",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "receiving-code-review",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "repomix-packer",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "review-routing",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "roadmap-management",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "roadmap-writing",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "schema-review",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "screenshot-hygiene",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "security",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "security-audit",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "security-maturity-assessment",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "server-hardening",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "skill-improvement-pipeline",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "skill-reviewer",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "skill-writing",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "spreadsheet-authoring",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "storybook-workshop",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "subagent-orchestration",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "svg-authoring",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "tailwind-engineer",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "test-case-discovery",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "test-driven-development",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "test-performance",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "testing-anti-patterns",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "threat-modeling",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "type-design",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "ui-apply-generic",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "universal-project-analysis",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "upstream-contribute",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "using-git-worktrees",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "verify-repair-loop",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "voice-and-tone-design",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "wireframe",
+      "baseline_recall": 1,
+      "floor": 0.9
+    },
+    {
+      "unit": "workspace-link",
+      "baseline_recall": 0,
+      "floor": 0
+    },
+    {
+      "unit": "worktree-lifecycle",
+      "baseline_recall": 1,
+      "floor": 0.9
+    }
+  ]
+}
