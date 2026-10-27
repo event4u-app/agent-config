@@ -272,7 +272,7 @@ Exit: 5.1–5.2 green. Rollback: revert `area_projects.js`.
       source index (sibling Stages I and K); a figure without a payload field
       is a not-implemented row, never a hard-coded audit number.
       verify: `npx vitest run tests/scripts/code_graph_map_knowledge_page.test.ts` -> 0
-- [ ] **6.2 Wissen matrix.** `agents/evidence/reviews/map-knowledge-fidelity.md`,
+- [x] **6.2 Wissen matrix.** `agents/evidence/reviews/map-knowledge-fidelity.md`,
       each real-count row tied to a payload field.
       verify: `npx vitest run tests/scripts/code_graph_map_fidelity_matrices.test.ts -t knowledge --reporter=verbose` -> /✓.*knowledge/
 

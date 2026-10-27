@@ -255,9 +255,11 @@ async function toDemo(page: Page): Promise<boolean> {
 }
 
 /** Probe `pages`: the seven small-delta pages, real and demo, against their handovers. */
-async function probePages(browser: Browser, built: Built): Promise<unknown> {
+/** Phases 6 and 7: the two new routes, measured the same way. */
+export const NEW_PAGES: Record<string, { file: string; route: string }> = { knowledge: { file: 'p10/Wissen.dc.html', route: 'knowledge' }, bugs: { file: 'p02/Bugs.dc.html', route: 'bugs' } };
+async function probePages(browser: Browser, built: Built, pages: Record<string, { file: string; route: string }> = SMALL_PAGES): Promise<unknown> {
     const out: Record<string, unknown> = {};
-    for (const [id, spec] of Object.entries(SMALL_PAGES)) {
+    for (const [id, spec] of Object.entries(pages)) {
         const row: Record<string, unknown> = {};
         for (const data of ['real', 'demo'] as const) {
             for (const theme of ['dark', 'light'] as const) {
@@ -379,7 +381,7 @@ async function probeProjects(browser: Browser, built: Built): Promise<unknown> {
     return out;
 }
 
-export const PROBES: Record<string, (b: Browser, built: Built) => Promise<unknown>> = { projects: probeProjects, tokens: probeTokens, shell: probeShell, overview: probeOverview, pages: probePages, systems: probeSystems, systemsPaths: probeSystemsPaths };
+export const PROBES: Record<string, (b: Browser, built: Built) => Promise<unknown>> = { projects: probeProjects, tokens: probeTokens, shell: probeShell, overview: probeOverview, pages: probePages, newPages: (b, built) => probePages(b, built, NEW_PAGES), systems: probeSystems, systemsPaths: probeSystemsPaths };
 
 if (process.argv[1] && /map_fidelity_probe\.ts$/.test(process.argv[1])) {
     const [name, out] = process.argv.slice(2);
