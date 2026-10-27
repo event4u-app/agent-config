@@ -24,6 +24,10 @@ describe('pageListing', () => {
         expect((pageListing(items, { detail: 'full' }, 'skills', ['name'])['skills'] as Array<Record<string, unknown>>)[0]?.['description']).toBeDefined();
     });
 
+    it('a page past the last is empty and still says how many there are', () => {
+        expect(pageListing(items, { page: 9 }, 'skills', ['name'])).toEqual({ count: 120, skills: [], page: 9, pages: 3, detail: 'index' });
+    });
+
     it('rejects a bad page or detail', () => {
         expect(() => pageListing(items, { page: 0 }, 'skills', ['name'])).toThrow(/page/);
         expect(() => pageListing(items, { detail: 'all' }, 'skills', ['name'])).toThrow(/detail/);

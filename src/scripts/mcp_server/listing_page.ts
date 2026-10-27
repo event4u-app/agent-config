@@ -15,10 +15,10 @@ export const LISTING_PAGE_PROPS = {
 export function pageListing<T extends Record<string, unknown>>(items: readonly T[], args: Record<string, unknown>, key: string, indexFields: readonly (keyof T & string)[]): Record<string, unknown> {
     const detail = args['detail'] ?? 'index';
     if (detail !== 'index' && detail !== 'full') throw new Error("'detail' must be 'index' or 'full'");
-    const raw = args['page'] ?? 1;
-    if (typeof raw !== 'number' || !Number.isInteger(raw) || raw < 1) throw new Error("'page' must be a positive integer");
+    const page = args['page'] ?? 1;
+    if (typeof page !== 'number' || !Number.isInteger(page) || page < 1) throw new Error("'page' must be a positive integer");
     const pages = Math.max(1, Math.ceil(items.length / LISTING_PAGE_SIZE));
-    const page = Math.min(raw, pages);
+    // A page past the last is empty, never the last page again: a caller walking pages stops on it.
     const slice = items.slice((page - 1) * LISTING_PAGE_SIZE, page * LISTING_PAGE_SIZE);
     const rows = detail === 'full' ? slice : slice.map((it) => Object.fromEntries(indexFields.map((f) => [f, it[f]])));
     return { count: items.length, [key]: rows, page, pages, detail };
