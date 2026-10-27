@@ -91,7 +91,7 @@ knowledge and learning data (Stages I, K).
       the WebKit scrollbar block with its `@supports not` fallback; the hub
       grid reads `--grid`.
       verify: `npx vitest run tests/scripts/code_graph_map_tokens.test.ts` -> 0
-- [ ] **0.3 Token matrix.** A probe dumps `getComputedStyle(document.documentElement)`
+- [x] **0.3 Token matrix.** A probe dumps `getComputedStyle(document.documentElement)`
       for every handover token in both themes into
       `agents/evidence/reviews/map-tokens-fidelity.md`; the test compares each
       value to the handover table and fails when one token is mutated
