@@ -76,8 +76,8 @@ describe('the demo map in a browser', () => {
 
     it('every Overview layer card with an area is live, Environment included', async () => {
         const { page } = await open(demo.page, '#/overview');
-        expect(await page.locator('.ocard.empty, .ocard.none').count()).toBe(0);
-        expect(await page.locator('#ov-env.live').count()).toBe(1);
+        expect(await page.locator('.ocard.empty').count()).toBe(0);
+        expect(await page.locator('#ov-env.data').count()).toBe(1);
         await page.close();
     }, 60_000);
 

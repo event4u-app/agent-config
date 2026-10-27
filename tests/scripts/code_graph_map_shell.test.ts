@@ -17,7 +17,7 @@ import { sampleAreas, wit } from './code_graph_map_areas_fixture.js';
 
 // The Overview draws the design's nine layer cards: Code, Database, Integrations,
 // Environment, CI/CD, Infrastructure, Knowledge, Impact and Projects.
-const OVERVIEW_LAYERS = 10;
+const OVERVIEW_LAYERS = 11;
 
 let browser: Browser;
 let empty: string;
@@ -474,7 +474,7 @@ describe('the overview', () => {
         expect(await page.locator('#ov-impact').count()).toBe(1);
         expect(await page.locator('#ov-code').count()).toBe(0);
         expect(await page.locator('#av-main').textContent()).toMatch(/Then the partner service\s*input changed/);
-        await page.click('#ov-impact');
+        await page.click('#ov-impact .otitle');
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'impact');
         await page.close();
     });

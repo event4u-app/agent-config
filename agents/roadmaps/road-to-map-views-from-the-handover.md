@@ -146,7 +146,7 @@ Exit: 1.1–1.6 green on the demo map and this repo's map. Rollback: revert
       chip (Decision D4), "code-graph refresh", the snapshot chip and the
       witness count "N Zeugen · M erneut gelesen" from the model.
       verify: `npx vitest run tests/scripts/code_graph_map_overview_page.test.ts -t banner --reporter=verbose` -> /✓.*banner/
-- [ ] **2.2 Eleven cards.** Grid `auto-fill minmax(min(300px,100%),1fr)` with
+- [x] **2.2 Eleven cards.** Grid `auto-fill minmax(min(300px,100%),1fr)` with
       Code, Datenbank, Systeme, Integrations, Environment, CI/CD, Infrastruktur,
       Wissen · Memory, Impact, Bugs & Fixes, Projects; the amber warn box when
       the manifest says `empty` but carries facts or findings; the

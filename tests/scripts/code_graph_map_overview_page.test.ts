@@ -17,6 +17,7 @@ import { sampleAreas } from './code_graph_map_areas_fixture.js';
 let browser: Browser;
 let full: string;
 let behind: string;
+let emptyData: string;
 const roots: string[] = [];
 
 async function open(html: string, hash = '#/overview', locale = 'de-DE', width = 1440): Promise<Page> {
@@ -46,6 +47,13 @@ beforeAll(async () => {
     doc.model.pin = { ...(doc.model.pin ?? { commit: '', date: '', generation: '' }), freshness: 'behind:3' };
     behind = path.join(res.outDir, 'behind.html');
     fs.writeFileSync(behind, renderHtml(doc.model, { ...doc.meta, state: 'behind:3' }, doc.areas));
+    // The data reader ran and said "empty", yet its payload still carries findings with witnesses.
+    const areas = sampleAreas();
+    const data = areas.data as unknown as { empty?: string; findings: Array<{ subject: string }> };
+    data.empty = 'no migration was found';
+    data.findings = data.findings.map((f) => ({ ...f, subject: `tests/fixtures/${f.subject}` }));
+    emptyData = path.join(res.outDir, 'empty-data.html');
+    fs.writeFileSync(emptyData, renderHtml(doc.model, doc.meta, areas));
     const { chromium } = await import('@playwright/test');
     browser = await chromium.launch({ headless: true });
 }, 120_000);
@@ -86,5 +94,38 @@ describe('Übersicht', () => {
         expect(ft).not.toContain('Commits weiter');
         expect(await fresh.locator('#ov-banner').evaluate((e) => getComputedStyle(e).boxShadow)).toBe('rgb(61, 220, 132) 4px 0px 0px 0px inset');
         await fresh.close();
+    });
+
+    it('cards: eleven in the handover order on an auto-fill grid, solid with data, dashed otherwise, the branch row, the warn box', async () => {
+        const page = await open(full);
+        const cards = page.locator('.ogrid > .ocard');
+        expect(await cards.locator('.otitle').allTextContents()).toEqual(['Code', 'Datenbank', 'Systeme', 'Integrations', 'Environment', 'CI/CD', 'Infrastruktur', 'Wissen · Memory', 'Impact', 'Bugs & Fixes', 'Projects']);
+        expect(await page.locator('.ogrid').evaluate((e) => getComputedStyle(e).gridTemplateColumns.split(' ').length)).toBe(4);
+        for (const id of ['ov-code', 'ov-interfaces']) expect(await page.locator(`#${id}`).evaluate((e) => getComputedStyle(e).borderTopStyle), id).toBe('solid');
+        for (const id of ['ov-impact', 'ov-bugs', 'ov-projects']) expect(await page.locator(`#${id}`).evaluate((e) => getComputedStyle(e).borderTopStyle), id).toBe('dashed');
+        expect(await page.locator('#ov-bugs .obadge').textContent()).toBe('nur lokal');
+        expect(await page.locator('#ov-projects .obadge').textContent()).toBe('eigener Scope');
+        expect(await page.locator('#ov-bugs .obranch').count()).toBe(0);
+        expect(await page.locator('#ov-code .obranch').textContent()).toBe('Branch-Unterschiede:Dateien, Symbole');
+        expect(await page.locator('#ov-interfaces .obranch').textContent()).toBe('Branch-Unterschiede:keine Branch-Fakten');
+        expect(await page.locator('#ov-code .okv').evaluate((e) => getComputedStyle(e).gridTemplateColumns.split(' ')[0])).toBe('110px');
+        expect(await page.locator('#ov-code .obar').evaluate((e) => getComputedStyle(e).height)).toBe('5px');
+        // A payload that is not "empty" draws no warn box (sensitivity half).
+        expect(await page.locator('.owarn').count()).toBe(0);
+        expect(await page.locator('#ov-bugs .otitle').getAttribute('href')).toBe('#/bugs');
+        await page.close();
+        const warn = await open(emptyData);
+        const data = await warn.evaluate(() => JSON.parse(document.getElementById('map-data')!.textContent!) as { areas: { data: { findings: unknown[] } } });
+        const facts = witnesses(data.areas.data).length;
+        expect(await warn.locator('#ov-data .obadge').textContent()).toBe('gelesen, leer');
+        expect(await warn.locator('#ov-data .owarn').textContent()).toBe(`Manifest: „empty“, aber ${facts} Fakten und ${data.areas.data.findings.length} Befunde (Test-Fixtures).`);
+        expect(await warn.locator('#ov-data .owarn').evaluate((e) => getComputedStyle(e).backgroundColor)).toBe('rgba(255, 193, 77, 0.14)');
+        await warn.locator('.ov-legend [role="radio"]', { hasText: 'Mit Daten' }).click();
+        expect(await warn.locator('#ov-data').count()).toBe(0);
+        expect(await warn.locator('#ov-code').count()).toBe(1);
+        await warn.locator('.ov-legend [role="radio"]', { hasText: 'Geplant · leer' }).click();
+        expect(await warn.locator('#ov-data').count()).toBe(1);
+        expect(await warn.locator('#ov-code').count()).toBe(0);
+        await warn.close();
     });
 });

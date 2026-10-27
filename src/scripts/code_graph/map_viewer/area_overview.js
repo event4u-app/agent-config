@@ -13,14 +13,19 @@ extendStrings({
         oDrawn: function (c, st) { var m = /^behind:(\d+)$/.exec(st); return 'Drawn at ' + c + (st === 'fresh' ? ', the graph is level with HEAD.' : m ? ', HEAD is ' + m[1] + ' commits ahead.' : ', graph state: ' + st + '.'); },
         oSnapFacts: 'The facts hold for the snapshot. Redraw: ', oWitnesses: function (n, r) { return n + ' witnesses · ' + r + ' re-read'; },
         oIndexed: 'indexed', oConfirmed: 'source checked', oCoverage: 'coverage', oFindings: 'findings', oNever: 'never (index only)',
-        oBadge: { live: 'active', empty: 'read, empty', none: 'no data yet', scope: 'own scope' },
-        oLayer: { code: 'Code', data: 'Database', systems: 'Systems', interfaces: 'Integrations', env: 'Environment', ci: 'CI/CD', infra: 'Infrastructure', knowledge: 'Knowledge · Memory', impact: 'Impact', projects: 'Projects' },
+        oBadge: { live: 'active', empty: 'read, empty', none: 'no data yet', scope: 'own scope', markdown: 'Markdown only', local: 'local only' },
+        oLayer: { code: 'Code', data: 'Database', systems: 'Systems', interfaces: 'Integrations', env: 'Environment', ci: 'CI/CD', infra: 'Infrastructure', knowledge: 'Knowledge · Memory', impact: 'Impact', bugs: 'Bugs & Fixes', projects: 'Projects' },
         oWhat: {
             data: 'Tables, columns, FKs from code (C), migration (M), live (L), query (Q)', systems: 'Runtimes, frameworks, packages – why installed, where used', interfaces: 'REST, SOAP, GraphQL, webhooks, queues – callers, contracts, DTOs',
             env: 'Docker, Compose, ports, networks – declared vs. observed', ci: 'Workflows, jobs, needs, conditions (true/false/unknown)',
-            infra: 'Terraform/HCL, plan, resources, review/stage/prod', knowledge: 'Roadmaps, contracts, memory, provenance – redacted',
-            impact: 'Change preview across every layer with an evidence report', projects: 'Other projects – only in the global viewer, never in this file'
+            infra: 'Terraform/HCL, plan, resources, review/stage/prod', knowledge: 'Docs, ADRs, memory, decisions, sessions, ways of working – who owns what',
+            impact: 'Change preview across every layer with an evidence report', bugs: 'Open and fixed bugs, fix commits, regression paths through the graph', projects: 'Other projects – only in the global viewer, never in this file'
         },
+        oBranchDiff: 'Branch differences:', oBranch: { code: 'files, symbols', data: 'tables, columns', systems: 'direct packages, versions', impact: 'working tree against HEAD', none: 'no branch facts' },
+        oWarnEmpty: function (f, n, fx) { return 'Manifest: “empty”, but ' + f + ' facts and ' + n + ' findings' + (fx ? ' (test fixtures)' : '') + '.'; },
+        oRanEmpty: function (r, why) { return r + ' ran and found nothing' + (why ? ': ' + why : ''); },
+        oKnowCovMd: function (n) { return n + ' Markdown · memory, JSONL, sessions not read'; }, oKnowReader: 'Doc nodes from Markdown · memory, decision facts and sessions missing',
+        oBugsReader: 'bugs lane (Stage H) planned · error events carry personal data – so never in this file, not even counts', oProjReader: 'Hub on this machine · never in git',
         states: { fresh: 'fresh', stale: 'stale', contradicted: 'contradicted', unverifiable: 'unverifiable', incomplete: 'incomplete' },
         stateWhy: {
             fresh: 'the graph is level with HEAD', stale: 'the graph is behind the working tree', unverifiable: 'no graph index was found',
@@ -28,9 +33,7 @@ extendStrings({
         },
         oCodeWhat: function (f, e, g) { return f + ' files · ' + e + ' trusted edges · ' + g + ' guessed'; }, oCodeCov: function (l, p) { return l + ' languages · ' + p + ' providers'; },
         oProviders: function (v, p) { return v + ' verified, ' + p + ' providers partial'; }, oGraphWide: 'freshness holds for the whole graph',
-        oConfirmedShare: function (a, b) { return a + ' of ' + b; }, oKnowCov: function (d) { return (d ? 'doc links yes' : 'doc links no') + ', memory no'; },
-        oKnowNote: 'Knowledge lens in the Code view · memory: collector missing', oProjIndexed: 'local, opt-in', oProjCov: 'index off by default',
-        oProjNote: 'Own trust scope: the projects hub on this machine, never in a project map',
+        oConfirmedShare: function (a, b) { return a + ' of ' + b; }, oLocalOptIn: 'local, opt-in',
         oGate: 'Reliability baseline · Gate G0', oGateChip: 'Blocks new layers', oGateNote: 'No phase moves on while R1–R6 are not filed with a reproducer, commit and regression test.',
         oGates: ['Laravel model User is skipped (MODEL_BASES contains "User")', 'Three migration readers contradict each other', 'Drops and renames not modelled',
             'FK index assumed independent of the engine', 'HTTP calls mapped wrongly (Http::post → Comment::post)', 'Edges collected but not used for queries'],
@@ -48,24 +51,27 @@ extendStrings({
         oDrawn: function (c, st) { var m = /^behind:(\d+)$/.exec(st); return 'Gezeichnet bei ' + c + (st === 'fresh' ? ', der Graph steht auf HEAD.' : m ? ', HEAD ist ' + m[1] + ' Commits weiter.' : ', Graph-Zustand: ' + st + '.'); },
         oSnapFacts: 'Die Fakten gelten für den Snapshot. Neu zeichnen: ', oWitnesses: function (n, r) { return n + ' Zeugen · ' + r + ' erneut gelesen'; },
         oIndexed: 'indiziert', oConfirmed: 'Quelle geprüft', oCoverage: 'Abdeckung', oFindings: 'Befunde', oNever: 'nie (nur Index)',
-        oBadge: { live: 'aktiv', empty: 'gelesen, leer', none: 'noch keine Daten', scope: 'eigener Scope' },
-        oLayer: { code: 'Code', data: 'Database', systems: 'Systems', interfaces: 'Integrations', env: 'Umgebung', ci: 'CI/CD', infra: 'Infrastruktur', knowledge: 'Knowledge · Memory', impact: 'Impact', projects: 'Projects' },
+        oBadge: { live: 'aktiv', empty: 'gelesen, leer', none: 'noch keine Daten', scope: 'eigener Scope', markdown: 'nur Markdown', local: 'nur lokal' },
+        oLayer: { code: 'Code', data: 'Datenbank', systems: 'Systeme', interfaces: 'Integrations', env: 'Environment', ci: 'CI/CD', infra: 'Infrastruktur', knowledge: 'Wissen · Memory', impact: 'Impact', bugs: 'Bugs & Fixes', projects: 'Projects' },
         oWhat: {
             data: 'Tabellen, Spalten, FKs aus Code (C), Migration (M), Live (L), Query (Q)', systems: 'Runtimes, Frameworks, Pakete – warum installiert, wo genutzt', interfaces: 'REST, SOAP, GraphQL, Webhooks, Queues – Aufrufer, Verträge, DTOs',
-            env: 'Docker, Compose, Ports, Netze – deklariert vs. beobachtet', ci: 'Workflows, Jobs, needs, Bedingungen (true/false/unbekannt)',
-            infra: 'Terraform/HCL, Plan, Ressourcen, Review/Stage/Prod', knowledge: 'Roadmaps, Verträge, Memory, Provenienz – redigiert',
-            impact: 'Change Preview über alle Ebenen mit Nachweisbericht', projects: 'Andere Projekte – nur im globalen Viewer, nie in dieser Datei'
+            env: 'Docker, Compose, Ports, Netze – deklariert vs. beobachtet', ci: 'Workflows, Jobs, needs, Bedingungen (wahr/falsch/unbekannt)',
+            infra: 'Terraform/HCL, Plan, Ressourcen, review/stage/prod', knowledge: 'Doku, ADRs, Memory, Entscheidungen, Sessions, Arbeitsweise – wem gehört was',
+            impact: 'Änderungsvorschau über jede Ebene mit Nachweisbericht', bugs: 'Offene und behobene Bugs, Fix-Commits, Regressionspfade durch den Graphen', projects: 'Andere Projekte – nur im globalen Viewer, nie in dieser Datei'
         },
+        oBranchDiff: 'Branch-Unterschiede:', oBranch: { code: 'Dateien, Symbole', data: 'Tabellen, Spalten', systems: 'direkte Pakete, Versionen', impact: 'Arbeitsbaum gegen HEAD', none: 'keine Branch-Fakten' },
+        oWarnEmpty: function (f, n, fx) { return 'Manifest: „empty“, aber ' + f + ' Fakten und ' + n + ' Befunde' + (fx ? ' (Test-Fixtures)' : '') + '.'; },
+        oRanEmpty: function (r, why) { return r + ' lief und fand nichts' + (why ? ': ' + why : ''); },
+        oKnowCovMd: function (n) { return n + ' Markdown · Memory, JSONL, Sessions nicht gelesen'; }, oKnowReader: 'Doku-Knoten aus Markdown · Memory, Entscheidungs-Fakten und Sessions fehlen',
+        oBugsReader: 'bugs lane (Stage H) geplant · Fehler-Events tragen Personendaten – darum nie in dieser Datei, nicht einmal Zählwerte', oProjReader: 'Hub auf diesem Rechner · nie im Git',
         states: { fresh: 'fresh', stale: 'stale', contradicted: 'contradicted', unverifiable: 'unverifiable', incomplete: 'incomplete' },
         stateWhy: {
             fresh: 'der Graph ist auf HEAD-Stand', stale: 'der Graph liegt hinter dem Arbeitsbaum', unverifiable: 'es wurde kein Graph-Index gefunden',
             contradicted: function (n) { return n + ' Nachweis(e) geändert oder weg, seit sie gelesen wurden'; }, incomplete: 'der Leser hat nur einen Teil seiner Grundgesamtheit gesehen'
         },
         oCodeWhat: function (f, e, g) { return f + ' Dateien · ' + e + ' sichere Kanten · ' + g + ' geraten'; }, oCodeCov: function (l, p) { return l + ' Sprachen · ' + p + ' Provider'; },
-        oProviders: function (v, p) { return v + ' verified, ' + p + ' Provider partial'; }, oGraphWide: 'Freshness gilt für den ganzen Graph',
-        oConfirmedShare: function (a, b) { return a + ' von ' + b; }, oKnowCov: function (d) { return (d ? 'Doku-Links ja' : 'Doku-Links nein') + ', Memory nein'; },
-        oKnowNote: 'Knowledge-Linse im Code-Viewer · Memory: Collector fehlt', oProjIndexed: 'lokal, opt-in', oProjCov: 'Index standardmäßig aus',
-        oProjNote: 'Eigener Vertrauens-Scope: der Projekt-Hub auf diesem Rechner, nie in einer Projekt-Map',
+        oProviders: function (v, p) { return v + ' verifiziert, ' + p + ' Provider teilweise'; }, oGraphWide: 'gilt für den ganzen Graphen',
+        oConfirmedShare: function (a, b) { return a + ' von ' + b; }, oLocalOptIn: 'lokal, opt-in',
         oGate: 'Reliability-Baseline · Gate G0', oGateChip: 'Blocker für neue Ebenen', oGateNote: 'Keine Phase rückt vor, solange R1–R6 nicht mit Reproducer, Commit und Regressionstest eingeordnet sind.',
         oGates: ['Laravel-Model User wird übersprungen (MODEL_BASES enthält "User")', 'Drei Migrations-Leser widersprechen sich', 'Drops und Renames nicht modelliert',
             'FK-Index unabhängig von der Engine angenommen', 'HTTP-Aufrufe falsch zugeordnet (Http::post → Comment::post)', 'Kanten gesammelt, aber nicht für Abfragen genutzt'],
@@ -124,33 +130,25 @@ function factState(counts, payload) {
 }
 
 /**
- * The nine layer cards. Each names the area it opens and where its facts come
- * from: a whole payload, or the part of one that holds the layer's kind of item.
+ * The eleven layer cards of the handover. Each names the area it opens and
+ * where its facts come from: a whole payload, or the part of one that holds the
+ * layer's kind of item. `branch` is what the layer can tell apart between
+ * branches; `planned` cards have no data in a map file by design.
  */
 var OV_LAYERS = [
-    { key: 'code', route: 'code' },
-    { key: 'data', route: 'data', area: 'data' },
-    { key: 'systems', route: 'systems', area: 'systems' },
+    { key: 'code', route: 'code', branch: 'code' },
+    { key: 'data', route: 'data', area: 'data', branch: 'data' },
+    { key: 'systems', route: 'systems', area: 'systems', branch: 'systems' },
     { key: 'interfaces', route: 'interfaces', area: 'interfaces' },
     { key: 'env', route: 'delivery', area: 'runtime', prefix: 'service/', ids: ['service'] },
     { key: 'ci', route: 'delivery', area: 'delivery' },
     { key: 'infra', route: 'runtime', area: 'runtime', prefix: 'resource/', ids: ['resource'] },
-    { key: 'knowledge', route: 'code' },
-    { key: 'impact', route: 'impact', area: 'impact' },
-    { key: 'projects' }
+    { key: 'knowledge', route: 'knowledge' },
+    { key: 'impact', route: 'impact', area: 'impact', branch: 'impact' },
+    { key: 'bugs', route: 'bugs', planned: true },
+    { key: 'projects', planned: true }
 ];
 
-function ovBar(parts) {
-    var b = el('div', { class: 'stack obar' });
-    parts.forEach(function (p) {
-        if (!p[0]) return;
-        var i = el('i', { class: p[1] === 'hatch' ? 'hatch' : '' });
-        i.style.width = p[0] + '%';
-        if (p[1] !== 'hatch') i.style.background = p[1];
-        b.appendChild(i);
-    });
-    return b;
-}
 function ovRows(indexed, verified, coverage, findings) {
     var g = el('div', { class: 'okv mono' });
     [[t('oIndexed'), indexed], [t('oConfirmed'), verified], [t('oCoverage'), coverage], [t('oFindings'), findings]].forEach(function (r) {
@@ -161,16 +159,25 @@ function ovRows(indexed, verified, coverage, findings) {
     return g;
 }
 function never() { var n = el('span', null, t('oNever')); n.style.color = 'var(--amberText)'; return n; }
+/** The handover's coverage bar: one fill, green from 90 % on, amber below. */
+function ovBar(share) {
+    var b = el('div', { class: 'obar' });
+    var i = el('div');
+    i.style.width = Math.max(0, Math.min(1, share)) * 100 + '%';
+    i.style.background = share >= 0.9 ? 'var(--green)' : 'var(--amber)';
+    b.appendChild(i);
+    return b;
+}
 function knowledgeShare() {
     var code = 0;
     var known = 0;
     files.forEach(function (f) { if (SCOPE_CODE[f.role]) { code += 1; if (f.knows && f.knows.total) known += 1; } });
-    var docs = files.some(function (f) { return f.knowledge; });
+    var docs = files.filter(function (f) { return f.role === 'doc'; }).length;
     return { share: code ? known / code : 0, docs: docs };
 }
 function layerFindings(spec) {
     var p = KA[spec.area];
-    if (!p || p.empty) return [];
+    if (!p) return [];
     var list = p.findings || [];
     if (!spec.ids) return list;
     var names = Object.create(null);
@@ -179,63 +186,76 @@ function layerFindings(spec) {
 }
 function layerLive(spec) {
     if (spec.key === 'code') return true;
-    if (spec.key === 'knowledge') return knowledgeShare().docs;
-    if (spec.key === 'projects' || !KA[spec.area] || KA[spec.area].empty) return false;
+    if (spec.key === 'knowledge') return knowledgeShare().docs > 0;
+    if (spec.planned || !KA[spec.area] || KA[spec.area].empty) return false;
     return !spec.prefix || layerCounts(spec.area, spec.prefix).total > 0;
 }
+var COMPLETE_SHARE = { complete: 1, partial: 0.5, unknown: 0.25 };
+/** A reader's name without its parenthesised list of what it reads: "systems lane". */
+function readerName(r) { return String(r || '').split(' (')[0]; }
 
 function ovCard(spec) {
     var key = spec.key;
-    var kind = key === 'projects' ? 'ownscope' : layerLive(spec) ? 'live' : spec.area && KA[spec.area] ? 'empty' : 'none';
-    var a = el(spec.route ? 'a' : 'div', { class: 'card ocard ' + kind, id: 'ov-' + (spec.area && !spec.prefix ? spec.area : key) });
-    if (spec.route) a.setAttribute('href', '#/' + spec.route);
-    var badge = kind === 'live' ? stChip(t('oBadge').live, 'ok') : kind === 'ownscope' ? stChip(t('oBadge').scope, 'cyanline') : el('span', { class: 'nodata-tag' }, t('oBadge')[kind]);
-    add(a, add(el('div', { class: 'between' }), el('b', null, t('oLayer')[key]), badge));
+    var live = layerLive(spec);
+    var kind = spec.planned ? 'planned' : live ? 'data' : 'empty';
+    var card = el('div', { class: 'card ocard ' + kind, id: 'ov-' + (spec.area && !spec.prefix ? spec.area : key) });
+    var title = el(spec.route ? 'a' : 'span', { class: 'otitle' }, t('oLayer')[key]);
+    if (spec.route) title.setAttribute('href', '#/' + spec.route);
+    var badge = key === 'projects' ? stChip(t('oBadge').scope, 'violetline') : key === 'bugs' ? stChip(t('oBadge').local, 'violetline')
+        : key === 'knowledge' && live ? stChip(t('oBadge').markdown, 'ok') : live ? stChip(t('oBadge').live, 'ok') : stChip(t('oBadge')[spec.area && KA[spec.area] ? 'empty' : 'none'], 'dash');
+    badge.classList.add('obadge');
+    add(card, add(el('div', { class: 'ohead' }), title, badge));
     var pin = model.pin || { commit: meta.commit, date: '' };
     var indexed = shortDate(pin.date, true) || shortCommit(pin.commit);
     var gs = graphFactState();
+    var p = spec.area ? KA[spec.area] : null;
+    var share = 0;
+    var reader = '';
     if (key === 'code') {
         var provs = model.providers || [];
-        a.appendChild(el('span', { class: 'what' }, t('oCodeWhat')(num(files.length), num(an.trustedEdges), pct(an.guessShare))));
-        a.appendChild(ovRows(indexed, never(), t('oCodeCov')(num((model.languages || []).length), num(provs.length)), num(codeFindingCount())));
-        var tot = an.trustedEdges + an.guessEdgeCount || 1;
-        a.appendChild(ovBar([[an.trustedEdges / tot * 100, 'var(--green)'], [an.guessEdgeCount / tot * 100, 'hatch']]));
-        var verified = provs.filter(function (p) { return p.status === 'verified' || p.status === 'deep'; });
-        var partial = provs.filter(function (p) { return p.status === 'partial'; }).length;
-        var vText = verified.length <= 2 ? verified.map(function (p) { return p.name; }).join(', ') || '0' : num(verified.length);
-        a.appendChild(el('span', { class: 'onote' }, t('oProviders')(vText, num(partial)) + ' · ' + t('states')[gs] + ': ' + t('oGraphWide')));
-        return a;
+        card.appendChild(el('span', { class: 'what' }, t('oCodeWhat')(num(files.length), num(an.trustedEdges), pct(an.guessShare))));
+        card.appendChild(ovRows(indexed, never(), t('oCodeCov')(num((model.languages || []).length), num(provs.length)), num(codeFindingCount())));
+        share = 1 - (an.guessShare || 0);
+        var verified = provs.filter(function (q) { return q.status === 'verified' || q.status === 'deep'; });
+        var partial = provs.filter(function (q) { return q.status === 'partial'; }).length;
+        var vText = verified.length <= 2 ? verified.map(function (q) { return q.name; }).join(', ') || '0' : num(verified.length);
+        reader = t('oProviders')(vText, num(partial)) + ' · ' + t('states')[gs] + ': ' + t('oGraphWide');
+    } else {
+        card.appendChild(el('span', { class: 'what' }, t('oWhat')[key]));
+        if (key === 'knowledge') {
+            var ks = knowledgeShare();
+            card.appendChild(ovRows(live ? indexed : '–', '–', live ? t('oKnowCovMd')(num(ks.docs)) : '–', '–'));
+            share = ks.share;
+            reader = t('oKnowReader');
+        } else if (spec.planned) {
+            card.appendChild(ovRows(t('oLocalOptIn'), '–', '–', '–'));
+            reader = key === 'bugs' ? t('oBugsReader') : t('oProjReader');
+        } else if (!live) {
+            card.appendChild(ovRows('–', '–', '–', '–'));
+            reader = !p ? t('noReader')[spec.area] : t('oRanEmpty')(readerName(p.reader), p.empty);
+        } else {
+            var c = layerCounts(spec.area, spec.prefix);
+            var reread = c.total - c.unconfirmed;
+            card.appendChild(ovRows(indexed, reread ? t('oConfirmedShare')(num(reread), num(c.total)) : never(), t('completeNames')[p.completeness], num(layerFindings(spec).length)));
+            share = COMPLETE_SHARE[p.completeness] || 0;
+            var st = factState(c, p);
+            reader = readerName(p.reader) + ' · ' + t('states')[st[0]] + ': ' + st[1];
+        }
     }
-    a.appendChild(el('span', { class: 'what' }, t('oWhat')[key]));
-    if (key === 'knowledge') {
-        var ks = knowledgeShare();
-        a.appendChild(ovRows(ks.docs ? indexed : '–', '–', t('oKnowCov')(ks.docs), '–'));
-        a.appendChild(ovBar([[ks.share * 100, 'var(--green)']]));
-        a.appendChild(el('span', { class: 'onote' }, t('oKnowNote')));
-        return a;
+    card.appendChild(ovBar(share));
+    card.appendChild(el('span', { class: 'onote' }, reader));
+    // The payload says "empty" yet carries facts or findings: the handover names the contradiction.
+    if (p && p.empty) {
+        var facts = payloadWitnesses(p, []).length;
+        var fl = p.findings || [];
+        var fx = fl.length > 0 && fl.every(function (f) { return String(f.subject).indexOf('tests/fixtures/') === 0; });
+        if (facts || fl.length) card.appendChild(el('span', { class: 'owarn' }, t('oWarnEmpty')(num(facts), num(fl.length), fx)));
     }
-    if (key === 'projects') {
-        a.appendChild(ovRows(t('oProjIndexed'), '–', t('oProjCov'), '–'));
-        a.appendChild(ovBar([]));
-        a.appendChild(el('span', { class: 'onote' }, t('oProjNote')));
-        return a;
+    if (!spec.planned) {
+        var known = spec.branch ? t('oBranch')[spec.branch] : t('oBranch').none;
+        add(card, add(el('div', { class: 'obranch' }), el('span', null, t('oBranchDiff')), stChip(known, spec.branch && spec.branch !== 'impact' ? 'violet-tint' : 'dash')));
     }
-    var p = KA[spec.area];
-    if (kind !== 'live') {
-        a.appendChild(ovRows('–', '–', '–', '–'));
-        a.appendChild(ovBar([]));
-        var why = !p ? t('noReader')[spec.area] : p.empty ? t('foundNothing')(p.reader) + ': ' + p.empty : t('foundNothing')(p.reader);
-        a.appendChild(el('span', { class: 'onote reason' }, why));
-        return a;
-    }
-    var c = layerCounts(spec.area, spec.prefix);
-    var reread = c.total - c.unconfirmed;
-    a.appendChild(ovRows(indexed, reread ? t('oConfirmedShare')(num(reread), num(c.total)) : never(), t('completeNames')[p.completeness], num(layerFindings(spec).length)));
-    var tc = c.total || 1;
-    a.appendChild(ovBar([[c.confirmed / tc * 100, 'var(--green)'], [(c.moved + c.changed + c.added) / tc * 100, 'hatch'], [c.gone / tc * 100, 'var(--alert)']]));
-    var st = factState(c, p);
-    a.appendChild(el('span', { class: 'onote' }, p.reader + ' · ' + t('states')[st[0]] + ': ' + st[1]));
-    return a;
+    return card;
 }
 
 /** Every witness a payload carries, its findings' included: what the map could re-read. */
