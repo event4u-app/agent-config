@@ -510,6 +510,7 @@ rather than as a ninth roadmap.
       and install receipt print one line per window. On this machine: 294.3 % of
       the 200K figure, 235.4 % of the 1M figure.
       verify: `npx vitest run tests/scripts/installed_layer_report.test.ts -t window` -> 0
+      production entry: src/scripts/installed_layer_report.ts
 - [x] **6.2 Maintainer-machine reading.** 106 files / 367,904 B under <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/host-injection-effect.json -->
       `~/.claude/rules`, ten arrival sessions on host 2.1.312, 104 user rules
       loaded at start, shadow decision `full (delivery-unobserved)`.
