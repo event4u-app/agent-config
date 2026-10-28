@@ -1074,6 +1074,18 @@ concerns:
     severity: advisory
     effect: context
     nudge_rank: 2
+  # Owner decision OQ-25 (2026-10-28): on a task prompt, one line naming the
+  # intake pass — sort the prompt's gaps, ask the owner only the one that is
+  # theirs. Shipped on, no settings key (ADR-293); the agent judges the gap,
+  # the hook never rewrites the prompt. Silent on questions, continuations,
+  # slash commands and prompts already asking for an interview.
+  # Kill switch: `AGENT_CONFIG_NO_INTAKE_PASS=1`.
+  intake-pass:
+    script: src/scripts/hooks/intake_pass_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    effect: context
   # road-to-trigger-delivered-rule-bodies Phase 1 — the DELIVERY twin of
   # `skill-route` above: same two slots, opposite payload policy. `skill-route`
   # ships pointers because a skill is invoked; this ships BODIES because a rule
@@ -1671,7 +1683,7 @@ roles:
     # contacts, so a worker turn that ends in a question to its orchestrator
     # would be recorded as a contact that never reached a human, inflating the
     # exact baseline Phase 0 pre-registers.
-    drop: [delegation-nudge, skill-route, end-review-nudge, review-baseline, council-availability, team-review-gate, self-repair, session-eol, interruption-ledger]
+    drop: [delegation-nudge, skill-route, intake-pass, end-review-nudge, review-baseline, council-availability, team-review-gate, self-repair, session-eol, interruption-ledger]
 
 platforms:
   # `ask:` — the SHAPE of this host's user-facing question primitive.
@@ -1713,7 +1725,7 @@ platforms:
     # was not restored at all.
     session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush, journal-record]
     stop:             [chat-history, verify-before-complete, team-review-gate, end-review-nudge, obligation-settle, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, design-pass-stop, suggestion-capture, journal-record]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject, suggestion-capture, journal-record, quota-notice]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject, suggestion-capture, journal-record, quota-notice, intake-pass]
     # `rule-inject` was bound here and is not any more
     # (road-to-delivery-for-every-host 3.2, owner ruling E2). E2's strategy is
     # `user_prompt_submit` + `pre_compact`; this slot is the hottest one in the
@@ -1788,7 +1800,7 @@ platforms:
     # weight: the concern still runs (git diff, transcript scan, classifier),
     # still costs the dispatch, and its entire output is thrown away.
     stop:             [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register, intake-pass]
     pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-plumbing-writes, block-config-weakening, block-speaking-inbox-dir, block-credential-reads, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate, memory-recall]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, mcp-usage-observation, tool-result-bytes, edit-shape, comment-discipline, design-pass, spawn-guard-shadow]
     # subagent-ledger IS bound here, unlike the two nudges above, and the
@@ -1814,7 +1826,7 @@ platforms:
     session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register, code-graph-refresh]
     session_end:        [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
     stop:               [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register, intake-pass]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, mcp-usage-observation, tool-result-bytes, edit-shape, comment-discipline, design-pass]
 
   # Phase 7.6 — Cline. Hooks live under `.clinerules/hooks/<HookName>`
@@ -1830,7 +1842,7 @@ platforms:
     session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register, code-graph-refresh]
     session_end:        [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
     stop:               [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register, intake-pass]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, mcp-usage-observation, tool-result-bytes, edit-shape, comment-discipline, design-pass]
 
   # Phase 7.7 — Windsurf (Cascade). Hooks live at `.windsurf/hooks.json`
@@ -1851,7 +1863,7 @@ platforms:
     stop:               [chat-history, verify-before-complete, self-repair, session-register, design-pass-stop]
     # language-mirror IS bound here: unlike minimal-safe-diff it needs only the
     # user_prompt_submit slot, which Windsurf has.
-    user_prompt_submit: [chat-history, verify-before-complete, language-mirror, git-authorization, session-canary, self-repair, session-register]
+    user_prompt_submit: [chat-history, verify-before-complete, language-mirror, git-authorization, session-canary, self-repair, session-register, intake-pass]
 
   # Phase 7.8 — Gemini CLI. Hooks live at `.gemini/settings.json`
   # (project) or `~/.gemini/settings.json` (user). Per Gemini docs
@@ -1868,7 +1880,7 @@ platforms:
     session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register, code-graph-refresh]
     session_end:        [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
     stop:               [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register, intake-pass]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, mcp-usage-observation, tool-result-bytes, edit-shape, comment-discipline, design-pass]
 
   # Phase 7.9 — this package binds no hook on Copilot and has measured none
