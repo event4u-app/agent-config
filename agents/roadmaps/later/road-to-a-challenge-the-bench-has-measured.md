@@ -118,8 +118,11 @@ kept with the session record under `agents/runtime/council/responses/`.
       full run. <!-- blocked-by: honesty-bench-api-credit -->
       Attempted 2026-10-27 after the Phase 1 amendment was committed: estimate
       240 calls, ~$1.19; the first call returned HTTP 400 "Your credit balance
-      is too low to access the Anthropic API". No transcript was produced and
-      nothing was spent.
+      is too low to access the Anthropic API" (request
+      `req_011CgSSW3v2UAfnzZU521TXS`). Retried 2026-10-28 with the same result
+      (`req_011CgTugK7W4K7EAcPXMe9Vo`). The key is the one `load_anthropic_key`
+      resolves under the user-global `~/.event4u/agent-config/` directory. No
+      transcript was produced and nothing was spent.
       verify: the probe report names its floor result.
 - [ ] **2.2** Full scored run: all arms over all sets, three samples, pinned
       model and judge; nulls published with the same prominence. Estimate
