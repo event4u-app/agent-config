@@ -3,10 +3,18 @@ import { describe, expect, it } from 'vitest';
 import { buildArrivalRecord } from '../../src/scripts/_lib/arrival_record.js';
 import { classifyInstructionsLoaded } from '../../src/scripts/_lib/instructions_loaded_classify.js';
 import { FORM_REASONS, decideLayerForm, type FormReason, type LayerFormInput } from '../../src/scripts/_lib/layer_form_decision.js';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { isExclusivelyPackageOnly } from '../../src/install/partitionEligibility.js';
-import { declareLayerForm, userLayerStandingLaws, withMachineEvidence, type MachineEvidence } from '../../src/scripts/_lib/layer_form_evidence.js';
+import {
+    declareLayerForm,
+    readMachineEvidence,
+    userLayerStandingLaws,
+    withMachineEvidence,
+    type MachineEvidence,
+} from '../../src/scripts/_lib/layer_form_evidence.js';
 import { readConsequenceClass } from '../../src/scripts/_lib/rule_consequence_class.js';
 
 const HOME = '/home/dev';
@@ -116,5 +124,29 @@ describe('standing laws are the laws the user layer can carry', () => {
         expect(maintainerOnly.length).toBeGreaterThan(0);
         for (const id of maintainerOnly) expect(laws.has(id)).toBe(false);
         expect(laws.size).toBe(members.length - maintainerOnly.length);
+    });
+
+    it('a pack-gated law the claude deploy did not write is never required', () => {
+        const root = process.cwd();
+        const gated = 'image-likeness-and-rights';
+        expect(readConsequenceClass(root).members).toHaveProperty(gated);
+        const all = userLayerStandingLaws(root);
+        expect(all.has(gated)).toBe(true);
+        const deployed = new Set([...all].filter((id) => id !== gated).map((id) => `rules/${id}.md`));
+        const laws = userLayerStandingLaws(root, deployed);
+        expect(laws.has(gated)).toBe(false);
+        expect(laws.size).toBe(all.size - 1);
+    });
+
+    it('the machine reads the deployed files from its inventory; no recorded deploy requires every user-layer law', () => {
+        const root = process.cwd();
+        const inv = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'standing-laws-')), 'deployed-files.json');
+        const env = { AGENT_CONFIG_DEPLOY_INVENTORY: inv } as NodeJS.ProcessEnv;
+        expect(readMachineEvidence(root, env).standingLaws).toEqual(userLayerStandingLaws(root));
+        const files = [...userLayerStandingLaws(root)].filter((id) => id !== 'image-likeness-and-rights').map((id) => `rules/${id}.md`);
+        fs.writeFileSync(inv, JSON.stringify({ schema_version: 2, tools: { 'claude-code': { anchor: '~/.claude/', files } } }));
+        expect(readMachineEvidence(root, env).standingLaws.has('image-likeness-and-rights')).toBe(false);
+        fs.writeFileSync(inv, JSON.stringify({ schema_version: 2, tools: { 'claude-code': { anchor: '~/.claude/', files: 'x' } } }));
+        expect(readMachineEvidence(root, env).standingLaws).toEqual(userLayerStandingLaws(root));
     });
 });

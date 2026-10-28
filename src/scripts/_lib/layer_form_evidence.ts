@@ -21,6 +21,7 @@ import { isExclusivelyPackageOnly } from '../../install/partitionEligibility.js'
 import { readCarrierState, runtimeRootFor, type CarrierState } from '../../install/stagedRuntime.js';
 import { readUserPin } from '../../install/userPin.js';
 import { arrivalEvidence, arrivalsDirUnder, latestArrivalRecord, readObserverLines, type ArrivalRecord } from './arrival_record.js';
+import { inventory_path, load_inventory } from './global_deploy_inventory.js';
 import { hostVersionFromEnv } from './instructions_loaded_classify.js';
 import { THINNABLE_HOSTS } from './lean_projection_mode.js';
 import { decideLayerForm, gatherShippedEvidence, type LayerFormDecision, type LayerFormInput } from './layer_form_decision.js';
@@ -38,22 +39,35 @@ export interface MachineEvidence {
  * The consequence-class members the USER layer can carry. A member whose
  * `workspaces:` names only the maintainer workspace is never installed there,
  * so requiring it in a user-scope arrival made `arrival-standing-law-missing`
- * permanent on every machine (two such members at 2026-10-28).
+ * permanent on every machine (two such members at 2026-10-28). A member whose
+ * pack is inactive is withheld the same way (`image-likeness-and-rights` without
+ * `ai-image`), so `deployed` — the claude-code deploy's recorded files — narrows
+ * the set to what was written. It is read from the inventory rather than by
+ * re-running the install scope, which would not fit the layer_promotion chunk's
+ * byte budget. `null` (no recorded deploy) keeps every non-maintainer member.
  */
-export function userLayerStandingLaws(packageRoot: string): ReadonlySet<string> {
+export function userLayerStandingLaws(packageRoot: string, deployed: ReadonlySet<string> | null = null): ReadonlySet<string> {
     const rulesDir = path.join(packageRoot, 'dist', 'agent-src', 'rules');
     return new Set(
         Object.keys(readConsequenceClass(packageRoot).members).filter(
-            (id) => !isExclusivelyPackageOnly(path.join(rulesDir, `${id}.md`)),
+            (id) =>
+                !isExclusivelyPackageOnly(path.join(rulesDir, `${id}.md`)) &&
+                (deployed === null || deployed.has(`rules/${id}.md`)),
         ),
     );
+}
+
+function deployedClaudeFiles(env: NodeJS.ProcessEnv): ReadonlySet<string> | null {
+    const tools = load_inventory(inventory_path(env))['tools'] as Record<string, { files?: unknown } | undefined> | undefined;
+    const files = tools?.['claude-code']?.files;
+    return Array.isArray(files) && files.length > 0 ? new Set(files.map(String)) : null;
 }
 
 export function readMachineEvidence(packageRoot: string, env: NodeJS.ProcessEnv = process.env): MachineEvidence {
     const runtimeRoot = runtimeRootFor(env);
     let standingLaws: ReadonlySet<string> = new Set();
     try {
-        standingLaws = userLayerStandingLaws(packageRoot);
+        standingLaws = userLayerStandingLaws(packageRoot, deployedClaudeFiles(env));
     } catch {
         // A sentinel no rule file can be named, so an unreadable class can never read as "every law loaded".
         standingLaws = new Set(['<consequence-class unreadable>']);
