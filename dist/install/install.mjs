@@ -25728,8 +25728,7 @@ function pyRepr(v) {
 function main2(argv) {
   const opts = parse_options(argv);
   state.QUIET = opts.quiet;
-  state.FULL_PIN = opts.full || _legacy_projection_pin();
-  state.ENROL = opts.enrol;
+  Object.assign(state, { FULL_PIN: opts.full || _legacy_projection_pin(), ENROL: opts.enrol });
   if (opts.apply_payload) {
     const payload_path = resolvePath(opts.apply_payload);
     if (!isFile(payload_path)) fail(`--apply-payload path not found: ${payload_path}`);
