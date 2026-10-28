@@ -25,6 +25,7 @@ import {
     promotionEnabled,
     sessionLayerStep,
 } from '../../src/install/layerPromotion.js';
+import { writeEnrolment, writeUserPin } from '../../src/install/userPin.js';
 import { CLAUDE_LAYER_DIRNAME, PACKAGE_STAMP_LINE, readCarrierState, recordCarrierProbe } from '../../src/install/stagedRuntime.js';
 import * as inventory from '../../src/scripts/_lib/global_deploy_inventory.js';
 import { captureInstructionsLoaded } from '../../src/scripts/_lib/instructions_loaded_event.js';
@@ -76,9 +77,15 @@ function freshInstall(opts: { enabled?: boolean; observed?: boolean } = {}): Fix
 
     const effectFile = path.join(stage, 'src/config/host-injection-effect.json');
     const effect = JSON.parse(fs.readFileSync(effectFile, 'utf8')) as Record<string, unknown>;
+    // The decision reads the delivery-mechanics axis (ADR-293 amendment 2026-10-28),
+    // so the fixture states that axis either way instead of inheriting the committed row.
+    const claude = { ...(effect['claude'] as Record<string, unknown>) };
     if (opts.observed !== false) {
-        effect['claude'] = { state: 'observed-true', host_version: '2.1.299', transcript: 'fixture', date: '2026-10-24', reason: 'fixture' };
+        claude['delivery_mechanics'] = { state: 'observed-true', host_version: '2.1.299', transcript: 'fixture', date: '2026-10-24' };
+    } else {
+        delete claude['delivery_mechanics'];
     }
+    effect['claude'] = claude;
     fs.writeFileSync(effectFile, JSON.stringify(effect));
     const switchFile = path.join(stage, PROMOTION_SWITCH_REL);
     fs.writeFileSync(switchFile, JSON.stringify({ ...JSON.parse(fs.readFileSync(switchFile, 'utf8')), enabled: opts.enabled !== false }));
@@ -214,6 +221,26 @@ describe('step 3.3 — promote after proof, never at install', () => {
         arrive(f, 'session-1', '2026-10-24T10:00:00Z', allRules(f));
         expect(step(f)).toEqual({ action: 'none', reason: 'promotion-disabled' });
         expect(stubCount(f)).toBe(0);
+    });
+
+    it('an enrolled machine is promoted with the shipped switch off; the --full pin still wins', () => {
+        const enrolled = freshInstall({ enabled: false });
+        writeEnrolment(enrolled.runtimeRoot);
+        arrive(enrolled, 'session-1', '2026-10-24T10:00:00Z', allRules(enrolled));
+        expect(step(enrolled).action).toBe('promoted');
+        expect(stubCount(enrolled)).toBeGreaterThan(0);
+
+        const pinned = freshInstall({ enabled: false });
+        writeEnrolment(pinned.runtimeRoot);
+        writeUserPin(pinned.runtimeRoot);
+        arrive(pinned, 'session-1', '2026-10-24T10:00:00Z', allRules(pinned));
+        expect(step(pinned)).toEqual({ action: 'none', reason: 'user-pin' });
+        expect(stubCount(pinned)).toBe(0);
+
+        const unobserved = freshInstall({ enabled: false, observed: false });
+        writeEnrolment(unobserved.runtimeRoot);
+        arrive(unobserved, 'session-1', '2026-10-24T10:00:00Z', allRules(unobserved));
+        expect(step(unobserved)).toEqual({ action: 'none', reason: 'delivery-unobserved' });
     });
 
     it('each unmet condition keeps the layer full with its own reason', () => {

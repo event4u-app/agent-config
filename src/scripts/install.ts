@@ -352,7 +352,7 @@ const LEGACY_RENAME_MAP: Record<string, string> = {
 const state = {
     QUIET: false,
     PROGRESS_NDJSON: false,
-    FULL_PIN: false,
+    FULL_PIN: false, ENROL: false,
 };
 
 function _emit_progress(obj: Record<string, unknown>): void {
@@ -1934,8 +1934,8 @@ interface Options {
     interactive: boolean;
     no_ui: boolean;
     dry_run: boolean;
-    /** `--full`: write the sticky user pin into the install receipt (`src/install/userPin.ts`). */
-    full: boolean;
+    /** `--full` / `--enrol`: write the sticky user pin / the enrolment into the install receipt (`src/install/userPin.ts`). */
+    full: boolean; enrol: boolean;
     apply_payload: string | null;
     /**
      * Which rule layer owns the corpus when both `~/.claude/rules/` and
@@ -3014,7 +3014,7 @@ function _deploy_global_content(
             // Steps 1.1 and 1.4 of road-to-an-installed-layer-that-is-thinned;
             // both modules' headers carry the reasoning.
             deployClaudeCarrier({
-                packageRoot: package_root, rulesDir: path.join(anchor, 'rules'), quiet: state.QUIET, info, warn, userPin: state.FULL_PIN,
+                packageRoot: package_root, rulesDir: path.join(anchor, 'rules'), quiet: state.QUIET, info, warn, userPin: state.FULL_PIN, enrol: state.ENROL,
                 wantsThin: installerThinsHost(tool_id, { packageRoot: package_root }),
                 thin: (bodyLinkRoot) => describeThinInstalledLayer(thinInstalledRuleLayer({ rulesDir: path.join(anchor, 'rules'), packageRoot: package_root, preserved: preserved_now, bodyLinkRoot, onWrite: claude_rule_rewrite.onlyDeployed(anchor, current_files, (p) => _log_tx_entry('write', p)) })),
             });
@@ -3669,7 +3669,7 @@ const _STORE_TRUE_FLAGS: Record<string, keyof Options> = {
     '--interactive': 'interactive',
     '--no-ui': 'no_ui',
     '--dry-run': 'dry_run',
-    '--full': 'full',
+    '--full': 'full', '--enrol': 'enrol',
 };
 
 const _VALUE_FLAGS: Record<string, keyof Options> = {
@@ -3719,7 +3719,7 @@ function parse_options(argv: string[]): Options {
         interactive: false,
         no_ui: false,
         dry_run: false,
-        full: false,
+        full: false, enrol: false,
         apply_payload: null,
         layer: null,
     };
@@ -4431,7 +4431,7 @@ function pyRepr(v: unknown): string {
 function main(argv: string[]): number {
     const opts = parse_options(argv);
     state.QUIET = opts.quiet;
-    state.FULL_PIN = opts.full || _legacy_projection_pin();
+    Object.assign(state, { FULL_PIN: opts.full || _legacy_projection_pin(), ENROL: opts.enrol });
 
     if (opts.apply_payload) {
         const payload_path = resolvePath(opts.apply_payload);

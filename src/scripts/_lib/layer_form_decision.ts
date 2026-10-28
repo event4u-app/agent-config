@@ -22,12 +22,13 @@
  * both from the machine, and where either is missing the caller passes `null` /
  * `'unknown'`, so the machine stays on today's full form.
  *
- * `deliveryObserved` IS STRICTER THAN THE STEP'S WORDING, DELIBERATELY. The step
- * asks for "delivery mechanics observed" in `host-injection-effect.json`, but
- * that record carries one axis, the behavioural effect; it has no mechanics
- * field. {@link deliveryObservedFor} therefore requires `observed-true`, which
- * no host carries today. A stricter reading can only keep a machine full, never
- * thin one that should not be.
+ * `deliveryObserved` READS THE DELIVERY-MECHANICS AXIS, as the step's wording
+ * asks ("delivery mechanics observed"). Until 2026-10-28 the record had one
+ * axis, the behavioural effect, and this read `observed-true` on it instead —
+ * a condition only a thinned layer can produce, since on a full layer every
+ * body is already standing, so no machine could ever leave the full form. The
+ * owner's amendment to ADR-293 (2026-10-28) reads "as reliable as today" as
+ * "arrives as today"; the effect stays an outcome measured on both forms.
  *
  * PER RULE, TWO CLASSES ARE NEVER THINNED under any input: the consequence class
  * (`src/config/rule-consequence-class.json`) and the `safety-floor` tier.
@@ -38,7 +39,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { THINNABLE_HOSTS } from './lean_projection_mode.js';
-import { loadRecord, stateFor, type InjectionRecord } from './injection_effect.js';
+import { loadRecord, mechanicsFor, type InjectionRecord } from './injection_effect.js';
 
 export type LayerForm = 'full' | 'thinned';
 
@@ -158,7 +159,7 @@ export function ruleForm(ruleId: string, layer: LayerFormDecision, never: NeverT
 const EFFECT_RECORD_KEY: Readonly<Record<string, string>> = { 'claude-code': 'claude' };
 
 export function deliveryObservedFor(rec: InjectionRecord, host: string): boolean {
-    return stateFor(rec, EFFECT_RECORD_KEY[host] ?? host) === 'observed-true';
+    return mechanicsFor(rec, EFFECT_RECORD_KEY[host] ?? host) === 'observed-true';
 }
 
 export const BRAKES_REL = path.join('src', 'config', 'layer-form-brakes.json');

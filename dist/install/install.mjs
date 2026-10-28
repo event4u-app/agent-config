@@ -13678,6 +13678,22 @@ function readLayer(host, scope, dir, recorded) {
     top
   };
 }
+function positive(n) {
+  return typeof n === "number" && Number.isFinite(n) && n > 0 ? n : null;
+}
+function readWindows(raw) {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return [];
+  const out = [];
+  for (const [window, v] of Object.entries(raw)) {
+    if (typeof v !== "object" || v === null || Array.isArray(v)) continue;
+    const r = v;
+    const combined = positive(r.combined);
+    if (combined === null) continue;
+    const kind = r.combined_kind === "vendor-published" ? "vendor-published" : "reported";
+    out.push({ window, combined, kind });
+  }
+  return out;
+}
 function defaultHostLimitsPath() {
   return path29.join(
     path29.dirname(fileURLToPath5(import.meta.url)),
@@ -13700,11 +13716,11 @@ function loadHostInstructionLimits(file = defaultHostLimitsPath()) {
     if (host.startsWith("_")) continue;
     if (typeof v !== "object" || v === null || Array.isArray(v)) continue;
     const e = v;
-    const n = e.limit;
-    const limit = typeof n === "number" && Number.isFinite(n) && n > 0 ? n : null;
+    const limit = positive(e.limit);
     const k = e.kind;
     const kind = limit === null ? "unpublished" : k === "vendor-published" || k === "reported" ? k : "reported";
-    out.set(host, { limit, kind });
+    const windows = readWindows(e.by_window);
+    out.set(host, windows.length > 0 ? { limit, kind, windows } : { limit, kind });
   }
   return out;
 }
@@ -13735,7 +13751,11 @@ function buildHostLimitRows(layers, limits) {
       package_owned_chars: a.owned,
       foreign_chars: a.foreign,
       fraction,
-      warn: fraction !== null && fraction >= LIMIT_WARN_FRACTION
+      warn: fraction !== null && fraction >= LIMIT_WARN_FRACTION,
+      windows: (e.windows ?? []).map((w) => {
+        const f = a.chars / w.combined;
+        return { ...w, fraction: f, warn: f >= LIMIT_WARN_FRACTION };
+      })
     });
   }
   return rows;
@@ -13837,6 +13857,11 @@ function renderHostLimitRows(rows) {
     out.push(
       `  ${r.host} \u2014 ${split}; ${pct}% of ${String(r.limit)} (${r.kind})` + (r.warn ? ` \u2014 WARNING: at or past ${String(Math.round(LIMIT_WARN_FRACTION * 100))}% of the published limit` : "")
     );
+    for (const w of r.windows) {
+      out.push(
+        `    window ${w.window} \u2014 ${(w.fraction * 100).toFixed(1)}% of ${String(w.combined)} (${w.kind})` + (w.warn ? ` \u2014 WARNING: at or past ${String(Math.round(LIMIT_WARN_FRACTION * 100))}%` : "")
+      );
+    }
   }
   return out;
 }
@@ -14316,6 +14341,26 @@ function writeUserPin(runtimeRoot, now = /* @__PURE__ */ new Date()) {
 function describeUserPin(pin) {
   return pin === null ? null : `rule layer pinned full by \`install --full\` (since ${pin.set_at}) \u2014 the package will not thin it on this machine`;
 }
+var ENROLMENT_FIELD = "enrolment";
+function readEnrolment(runtimeRoot) {
+  const v = readReceipt(runtimeRoot)[ENROLMENT_FIELD];
+  if (v === void 0 || v === null) return null;
+  const o = typeof v === "object" ? v : {};
+  return { set_at: typeof o["set_at"] === "string" ? o["set_at"] : "unknown" };
+}
+function writeEnrolment(runtimeRoot, now = /* @__PURE__ */ new Date()) {
+  fs34.mkdirSync(runtimeRoot, { recursive: true });
+  const receipt = readReceipt(runtimeRoot);
+  const e = { set_at: now.toISOString().slice(0, 10) };
+  receipt[ENROLMENT_FIELD] = e;
+  fs34.writeFileSync(path33.join(runtimeRoot, RECEIPT_FILE), `${JSON.stringify(receipt, null, 2)}
+`);
+  return e;
+}
+function describeEnrolment(e, pinned) {
+  if (e === null) return null;
+  return pinned ? `rule layer enrolled (since ${e.set_at}) but pinned full by \`install --full\` \u2014 the pin wins` : `rule layer enrolled by \`install --enrol\` (since ${e.set_at}) \u2014 a session may thin it once the layer-form decision holds`;
+}
 
 // src/install/stagedRuntime.ts
 var RUNTIME_DIRNAME = "runtime";
@@ -14533,6 +14578,7 @@ function prepareClaudeCarrier(opts) {
     warnings.push(`claude-code: runtime not staged under ${runtimeRoot} \u2014 ${String(e)}`);
   }
   if (opts.userPin === true) writeUserPin(runtimeRoot);
+  if (opts.enrol === true) writeEnrolment(runtimeRoot);
   const pin = readUserPin(runtimeRoot);
   const wantsThin = opts.wantsThin && staged !== null && pin === null;
   const probe = process.platform === "win32" || opts.sessionStartCommand === null ? null : probeHookCommand(opts.sessionStartCommand, env);
@@ -14543,6 +14589,8 @@ function prepareClaudeCarrier(opts) {
   const lines = describeCarrierProbe(readCarrierState(runtimeRoot).probe);
   const pinLine = describeUserPin(pin);
   if (pinLine !== null) lines.push(pinLine);
+  const enrolLine = describeEnrolment(readEnrolment(runtimeRoot), pin !== null);
+  if (enrolLine !== null) lines.push(enrolLine);
   if (next === "demoted") {
     lines.push("hook carrier (claude): machine demoted \u2014 the rule layer stays full until the probe passes");
   }
@@ -14561,7 +14609,8 @@ function deployClaudeCarrier(opts) {
     rulesDir: opts.rulesDir,
     sessionStartCommand: sessionStartCommandFor(opts.packageRoot),
     wantsThin: opts.wantsThin,
-    ...opts.userPin === true ? { userPin: true } : {}
+    ...opts.userPin === true ? { userPin: true } : {},
+    ...opts.enrol === true ? { enrol: true } : {}
   });
   for (const w of carrier.warnings) opts.warn(w);
   if (!opts.quiet) for (const l of carrier.lines) opts.info(l);
@@ -22617,7 +22666,8 @@ var LEGACY_RENAME_MAP = {
 var state = {
   QUIET: false,
   PROGRESS_NDJSON: false,
-  FULL_PIN: false
+  FULL_PIN: false,
+  ENROL: false
 };
 function _emit_progress(obj) {
   if (!state.PROGRESS_NDJSON) return;
@@ -24549,6 +24599,7 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
         info,
         warn,
         userPin: state.FULL_PIN,
+        enrol: state.ENROL,
         wantsThin: installerThinsHost(tool_id, { packageRoot: package_root }),
         thin: (bodyLinkRoot) => describeThinInstalledLayer(thinInstalledRuleLayer({ rulesDir: path38.join(anchor2, "rules"), packageRoot: package_root, preserved: preserved_now, bodyLinkRoot, onWrite: onlyDeployed(anchor2, current_files, (p) => _log_tx_entry("write", p)) }))
       });
@@ -25008,7 +25059,8 @@ var _STORE_TRUE_FLAGS = {
   "--interactive": "interactive",
   "--no-ui": "no_ui",
   "--dry-run": "dry_run",
-  "--full": "full"
+  "--full": "full",
+  "--enrol": "enrol"
 };
 var _VALUE_FLAGS = {
   "--profile": "profile",
@@ -25057,6 +25109,7 @@ function parse_options(argv) {
     no_ui: false,
     dry_run: false,
     full: false,
+    enrol: false,
     apply_payload: null,
     layer: null
   };
@@ -25675,7 +25728,7 @@ function pyRepr(v) {
 function main2(argv) {
   const opts = parse_options(argv);
   state.QUIET = opts.quiet;
-  state.FULL_PIN = opts.full || _legacy_projection_pin();
+  Object.assign(state, { FULL_PIN: opts.full || _legacy_projection_pin(), ENROL: opts.enrol });
   if (opts.apply_payload) {
     const payload_path = resolvePath(opts.apply_payload);
     if (!isFile(payload_path)) fail(`--apply-payload path not found: ${payload_path}`);

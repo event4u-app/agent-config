@@ -14,6 +14,7 @@ import {
     admissibleUnderE3,
     concernBound,
     loadRecord,
+    mechanicsFor,
     recordProblems,
     stateFor,
     type InjectionRecord,
@@ -50,6 +51,28 @@ describe('a binding is never an observation', () => {
         expect(admissibleUnderE3(rec, 'a')).toBe(true);
         expect(admissibleUnderE3(rec, 'b')).toBe(false);
         expect(admissibleUnderE3(rec, 'nobody')).toBe(false);
+    });
+});
+
+describe('the delivery-mechanics axis carries the same citation protocol', () => {
+    const base = { state: 'unobserved', host_version: null, transcript: null, date: null, reason: 'an unobserved row with a long enough reason' } as const;
+    it('an observed mechanics row without a citation is refused', () => {
+        for (const field of ['host_version', 'transcript', 'date'] as const) {
+            const mech = { state: 'observed-true', host_version: '1', transcript: 't', date: '2026-01-01', [field]: null };
+            const problems = recordProblems({ h: { ...base, delivery_mechanics: mech } } as never);
+            expect(problems[0]?.message).toContain('delivery_mechanics');
+        }
+    });
+    it('a cited mechanics row passes and is read by mechanicsFor; the effect state is untouched', () => {
+        const rec = { h: { ...base, delivery_mechanics: { state: 'observed-true', host_version: '1', transcript: 't', date: '2026-01-01' } } } as never;
+        expect(recordProblems(rec)).toEqual([]);
+        expect(mechanicsFor(rec, 'h')).toBe('observed-true');
+        expect(stateFor(rec, 'h')).toBe('unobserved');
+        expect(mechanicsFor({}, 'h')).toBe('unobserved');
+    });
+    it('a mechanics state outside the enum is refused', () => {
+        const rec = { h: { ...base, delivery_mechanics: { state: 'yes' } } } as never;
+        expect(recordProblems(rec)[0]?.message).toContain('not one of');
     });
 });
 

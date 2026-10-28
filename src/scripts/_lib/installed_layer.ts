@@ -153,6 +153,30 @@ export const LIMIT_WARN_FRACTION = 0.8;
 export type HostLimitKind = 'vendor-published' | 'reported' | 'unpublished';
 
 /**
+ * One context-window class of a host's combined limit. The host derives the
+ * combined figure from the session's window, and the window is not known at
+ * install time, so every recorded class is measured and printed.
+ */
+export interface HostWindowLimit {
+    readonly window: string;
+    readonly combined: number;
+    readonly kind: HostLimitKind;
+}
+
+/** A loaded table entry: the flat figure plus any per-window rows. */
+export interface HostLimitEntry {
+    readonly limit: number | null;
+    readonly kind: HostLimitKind;
+    readonly windows?: readonly HostWindowLimit[];
+}
+
+/** One window row measured against the host's combined total. */
+export interface HostWindowReading extends HostWindowLimit {
+    readonly fraction: number;
+    readonly warn: boolean;
+}
+
+/**
  * One host, measured against its published limit — step 3.5's per-host row.
  *
  * The row is per HOST and not per directory, because the limit applies to what
@@ -182,6 +206,8 @@ export interface HostLimitReading {
      * unmeasured.
      */
     readonly warn: boolean;
+    /** One reading per recorded window class, in table order; empty when none is recorded. */
+    readonly windows: readonly HostWindowReading[];
 }
 
 export interface InstalledLayerReport {
@@ -403,6 +429,26 @@ export function readLayer(
 interface RawHostLimit {
     readonly limit?: unknown;
     readonly kind?: unknown;
+    readonly by_window?: unknown;
+}
+
+function positive(n: unknown): number | null {
+    return typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/** Same one-directional tolerance as the flat figure: a malformed row is dropped. */
+function readWindows(raw: unknown): HostWindowLimit[] {
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return [];
+    const out: HostWindowLimit[] = [];
+    for (const [window, v] of Object.entries(raw as Record<string, unknown>)) {
+        if (typeof v !== 'object' || v === null || Array.isArray(v)) continue;
+        const r = v as { combined?: unknown; combined_kind?: unknown };
+        const combined = positive(r.combined);
+        if (combined === null) continue;
+        const kind: HostLimitKind = r.combined_kind === 'vendor-published' ? 'vendor-published' : 'reported';
+        out.push({ window, combined, kind });
+    }
+    return out;
 }
 
 /**
@@ -444,8 +490,8 @@ export function defaultHostLimitsPath(): string {
  */
 export function loadHostInstructionLimits(
     file: string = defaultHostLimitsPath(),
-): ReadonlyMap<string, { limit: number | null; kind: HostLimitKind }> {
-    const out = new Map<string, { limit: number | null; kind: HostLimitKind }>();
+): ReadonlyMap<string, HostLimitEntry> {
+    const out = new Map<string, HostLimitEntry>();
     let raw: unknown;
     try {
         raw = JSON.parse(fs.readFileSync(file, 'utf-8'));
@@ -457,8 +503,7 @@ export function loadHostInstructionLimits(
         if (host.startsWith('_')) continue; // `_comment` and friends are not hosts
         if (typeof v !== 'object' || v === null || Array.isArray(v)) continue;
         const e = v as RawHostLimit;
-        const n = e.limit;
-        const limit = typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : null;
+        const limit = positive(e.limit);
         const k = e.kind;
         const kind: HostLimitKind =
             limit === null
@@ -466,7 +511,8 @@ export function loadHostInstructionLimits(
                 : k === 'vendor-published' || k === 'reported'
                   ? k
                   : 'reported'; // a cited figure with no stated kind is the weaker one
-        out.set(host, { limit, kind });
+        const windows = readWindows(e.by_window);
+        out.set(host, windows.length > 0 ? { limit, kind, windows } : { limit, kind });
     }
     return out;
 }
@@ -480,7 +526,7 @@ export function loadHostInstructionLimits(
  */
 export function buildHostLimitRows(
     layers: readonly LayerReading[],
-    limits: ReadonlyMap<string, { limit: number | null; kind: HostLimitKind }>,
+    limits: ReadonlyMap<string, HostLimitEntry>,
 ): HostLimitReading[] {
     const byHost = new Map<string, { chars: number; owned: number; foreign: number }>();
     for (const l of layers) {
@@ -506,7 +552,7 @@ export function buildHostLimitRows(
     const rows: HostLimitReading[] = [];
     for (const host of [...byHost.keys()].sort()) {
         const a = byHost.get(host) as { chars: number; owned: number; foreign: number };
-        const e = limits.get(host) ?? { limit: null, kind: 'unpublished' as HostLimitKind };
+        const e: HostLimitEntry = limits.get(host) ?? { limit: null, kind: 'unpublished' };
         const fraction = e.limit === null ? null : a.chars / e.limit;
         rows.push({
             host,
@@ -517,6 +563,10 @@ export function buildHostLimitRows(
             foreign_chars: a.foreign,
             fraction,
             warn: fraction !== null && fraction >= LIMIT_WARN_FRACTION,
+            windows: (e.windows ?? []).map((w) => {
+                const f = a.chars / w.combined;
+                return { ...w, fraction: f, warn: f >= LIMIT_WARN_FRACTION };
+            }),
         });
     }
     return rows;
@@ -989,6 +1039,12 @@ export function renderHostLimitRows(rows: readonly HostLimitReading[]): string[]
                     ? ` — WARNING: at or past ${String(Math.round(LIMIT_WARN_FRACTION * 100))}% of the published limit`
                     : ''),
         );
+        for (const w of r.windows) {
+            out.push(
+                `    window ${w.window} — ${(w.fraction * 100).toFixed(1)}% of ${String(w.combined)} (${w.kind})` +
+                    (w.warn ? ` — WARNING: at or past ${String(Math.round(LIMIT_WARN_FRACTION * 100))}%` : ''),
+            );
+        }
     }
     return out;
 }

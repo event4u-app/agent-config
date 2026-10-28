@@ -39,7 +39,7 @@ import * as path from 'node:path';
 
 import { build_claude_hook_matrix } from '../scripts/_lib/claude_settings_hooks.js';
 import { event4u_root } from '../scripts/_lib/user_global_paths.js';
-import { describeUserPin, readUserPin, writeUserPin } from './userPin.js';
+import { describeEnrolment, describeUserPin, readEnrolment, readUserPin, writeEnrolment, writeUserPin } from './userPin.js';
 
 export const RUNTIME_DIRNAME = 'runtime';
 export const CLAUDE_LAYER_DIRNAME = 'claude-rules';
@@ -396,6 +396,8 @@ export function prepareClaudeCarrier(opts: {
     readonly wantsThin: boolean;
     /** `install --full`: write the sticky user pin before anything is decided. */
     readonly userPin?: boolean;
+    /** `install --enrol`: write the enrolment receipt field (`userPin.ts`). */
+    readonly enrol?: boolean;
     readonly env?: NodeJS.ProcessEnv;
 }): ClaudeCarrierPlan {
     const env = opts.env ?? process.env;
@@ -413,6 +415,7 @@ export function prepareClaudeCarrier(opts: {
         warnings.push(`claude-code: runtime not staged under ${runtimeRoot} — ${String(e)}`);
     }
     if (opts.userPin === true) writeUserPin(runtimeRoot);
+    if (opts.enrol === true) writeEnrolment(runtimeRoot);
     const pin = readUserPin(runtimeRoot);
     const wantsThin = opts.wantsThin && staged !== null && pin === null;
     const probe =
@@ -427,6 +430,8 @@ export function prepareClaudeCarrier(opts: {
     const lines = describeCarrierProbe(readCarrierState(runtimeRoot).probe);
     const pinLine = describeUserPin(pin);
     if (pinLine !== null) lines.push(pinLine);
+    const enrolLine = describeEnrolment(readEnrolment(runtimeRoot), pin !== null);
+    if (enrolLine !== null) lines.push(enrolLine);
     if (next === 'demoted') {
         lines.push('hook carrier (claude): machine demoted — the rule layer stays full until the probe passes');
     }
@@ -480,6 +485,7 @@ export function deployClaudeCarrier(opts: {
     readonly rulesDir: string;
     readonly wantsThin: boolean;
     readonly userPin?: boolean;
+    readonly enrol?: boolean;
     readonly quiet: boolean;
     readonly thin: (bodyLinkRoot: string | null) => readonly string[];
     readonly info: (line: string) => void;
@@ -491,6 +497,7 @@ export function deployClaudeCarrier(opts: {
         sessionStartCommand: sessionStartCommandFor(opts.packageRoot),
         wantsThin: opts.wantsThin,
         ...(opts.userPin === true ? { userPin: true } : {}),
+        ...(opts.enrol === true ? { enrol: true } : {}),
     });
     for (const w of carrier.warnings) opts.warn(w);
     if (!opts.quiet) for (const l of carrier.lines) opts.info(l);

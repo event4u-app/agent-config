@@ -45,4 +45,33 @@ export function describeUserPin(pin) {
         ? null
         : `rule layer pinned full by \`install --full\` (since ${pin.set_at}) — the package will not thin it on this machine`;
 }
+/**
+ * `install --enrol`: this machine may be promoted to the thinned layer while
+ * the shipped promotion switch is off — the maintainer arm the frozen
+ * comparison needs (owner decision E2, 2026-10-28). The decision function
+ * still has to say `thinned`; demotion runs unchanged; `--full` wins.
+ */
+export const ENROLMENT_FIELD = 'enrolment';
+export function readEnrolment(runtimeRoot) {
+    const v = readReceipt(runtimeRoot)[ENROLMENT_FIELD];
+    if (v === undefined || v === null)
+        return null;
+    const o = typeof v === 'object' ? v : {};
+    return { set_at: typeof o['set_at'] === 'string' ? o['set_at'] : 'unknown' };
+}
+export function writeEnrolment(runtimeRoot, now = new Date()) {
+    fs.mkdirSync(runtimeRoot, { recursive: true });
+    const receipt = readReceipt(runtimeRoot);
+    const e = { set_at: now.toISOString().slice(0, 10) };
+    receipt[ENROLMENT_FIELD] = e;
+    fs.writeFileSync(path.join(runtimeRoot, RECEIPT_FILE), `${JSON.stringify(receipt, null, 2)}\n`);
+    return e;
+}
+export function describeEnrolment(e, pinned) {
+    if (e === null)
+        return null;
+    return pinned
+        ? `rule layer enrolled (since ${e.set_at}) but pinned full by \`install --full\` — the pin wins`
+        : `rule layer enrolled by \`install --enrol\` (since ${e.set_at}) — a session may thin it once the layer-form decision holds`;
+}
 //# sourceMappingURL=userPin.js.map
