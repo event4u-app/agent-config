@@ -1325,6 +1325,7 @@ configuration. `orphan` — the name survives only in prose; nothing reads it.
 | `AGENT_CONFIG_MEMORY_DIR` | harness | Directory override for memory recall | `hooks/memory_recall_hook.ts:309` |
 | `AGENT_CONFIG_NO_EGRESS_STAGE` | maintainer | Turns the egress stage off whatever `egress.placeholders.mode` says: no detection, no count record, no placeholder view. Every egress channel then publishes `uncovered`, never a stale `replaced` (`docs/contracts/egress-placeholders-v1.md` § Settings) | `hooks/egress_stage.ts:28` |
 | `AGENT_CONFIG_NO_EVENTS_LOG` | maintainer | Short-circuits council / team event-log appends to a no-op | `_lib/env_kill_switch.ts` names it; the readers are `ai_council/events_log.ts:109` and `ai_team/review_gate.ts:56`, both outside the two directories the unit covers |
+| `AGENT_CONFIG_NO_INTAKE_PASS` | operator | `=1` silences the `intake-pass` concern: no intake-pass line on any prompt (owner answer OQ-25 ships it on, with no settings key, so this is its only off switch) | `hooks/intake_pass_hook.ts:78` |
 | `AGENT_CONFIG_NO_PIN_REEXEC` | maintainer | Suppresses the pin re-exec | `_lib/pin_resolver.ts:43` |
 | `AGENT_CONFIG_NO_UPDATE_CHECK` | maintainer | `=1` suppresses the update-availability check | `_lib/update_check.ts:239` |
 | `AGENT_CONFIG_PACKAGE_ROOT` | harness | The package root the dispatcher hands each concern | `hooks/dispatch_hook.ts:647` |
