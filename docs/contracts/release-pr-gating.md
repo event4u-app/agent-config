@@ -93,12 +93,11 @@ hold:
    - `agents/evidence/release-findings/*.json` — an optional
      finding-disposition ledger, committed by hand. No release workflow waits
      for it (owner, 2026-10-22: main is already reviewed); the consistency
-     coverage guard still requires any committed ledger to be valid
-   - `agents/evidence/analysis/evidence-temperature-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md`
-     — the per-release evidence-temperature census written by
-     `taskfiles/content.yml` § `release-prepare`, step 2 of `task release`.
-     The ISO date shape in fnmatch digit classes rather than `?`; the entry in
-     `ALLOWLIST_GLOBS` carries why.
+     coverage guard still requires any committed ledger to be valid.
+     The evidence-temperature census is NOT on this list since 2026-10-28:
+     `release-prepare` no longer writes it, because its header named the HEAD
+     commit and so every new commit on a release branch cost a commit and a
+     full CI cycle that changed nothing.
    - `src/agent-src/templates/agents/agent-project-settings.example.yml`
    - `dist/agent-src/templates/agents/agent-project-settings.example.yml` —
      the project-settings template pin and its regenerated twin, kept in
@@ -112,11 +111,9 @@ hold:
    `.gitignore` globs: `*` becomes `.*` and `?` becomes `.`, both under the `s`
    flag, so each matches a path separator like any other character. Every `*` row
    above therefore admits arbitrary depth — `src/packs/core/installer/pack.yaml`
-   and `agents/evidence/release-findings/a/b/c.json` both pass. And the census
-   row uses digit classes rather than `?` for the same reason: `????-??-??` would
-   admit `evidence-temperature-x/yz-ab-cd.md`, while `[0-9]` cannot match a
-   separator at all. A reader predicting the gate from this list needs both
-   halves; each is pinned in `tests/scripts/check_release_pr_shape.test.ts`.
+   and `agents/evidence/release-findings/a/b/c.json` both pass. A reader
+   predicting the gate from this list needs that; it is pinned in
+   `tests/scripts/check_release_pr_shape.test.ts`.
 
    This list and `ALLOWLIST_GLOBS` are one decision recorded twice, and they
    drifted for months — the contract named `packages/*/pack.yaml` long after
