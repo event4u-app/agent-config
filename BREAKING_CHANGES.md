@@ -67,7 +67,6 @@ and purge rows shipped in 17.0.0 stayed here, and the 17.1.0, 17.2.0, 17.2.1,
 
 | Landed | What changes | Migration |
 |---|---|---|
-| `f069df0ee2` | A leftover `projection.rule_packs` no longer decides the rule layer's pack axis — the derived active-pack set always does, and an explicit empty list no longer switches the axis off. `agent-config doctor --check rule-packs-legacy` is removed. | Delete the key; activate a pack in `runtime.active_packs` to keep its rules. See `docs/MIGRATION.md` § 19.0.0. |
 
 ## Breaking changes by major
 

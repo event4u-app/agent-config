@@ -109,3 +109,29 @@ describe("pre-push — delete-only push", () => {
     expect(out).not.toContain(MARKER);
   });
 });
+
+// A tag names a commit that was already gated on its branch, and the gates read
+// the checked-out tree, not the tag. Measured 2026-10-28 on 19.0.0: the tag push
+// of `task release` step 9 re-ran the gates for minutes with the ssh session
+// open, and GitHub dropped the connection.
+describe("pre-push — tag-only push", () => {
+  const TAG_MARKER = "Tag-only push";
+
+  it("skips every content gate when the only ref is a tag", () => {
+    const out = run(`refs/tags/19.0.0 ${REAL} refs/tags/19.0.0 ${ZERO}\n`);
+    expect(out).toContain(TAG_MARKER);
+    expect(out).not.toContain("Preflight");
+  });
+
+  it("does NOT skip when a branch rides along with the tag", () => {
+    const out = run(
+      `refs/tags/19.0.0 ${REAL} refs/tags/19.0.0 ${ZERO}\nrefs/heads/main ${REAL} refs/heads/main ${ZERO}\n`,
+    );
+    expect(out).not.toContain(TAG_MARKER);
+  });
+
+  it("does NOT skip a branch push whose LOCAL name looks like a tag", () => {
+    const out = run(`refs/tags/19.0.0 ${REAL} refs/heads/main ${ZERO}\n`);
+    expect(out).not.toContain(TAG_MARKER);
+  });
+});
