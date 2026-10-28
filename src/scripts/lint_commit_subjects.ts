@@ -48,6 +48,10 @@ const MIN_SUBJECT_LEN = 10;
 const CONVENTIONAL_PREFIX =
     /^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert|release)(\([^)]+\))?!?:\s+/i;
 
+// The commit `release.ts` writes carries a semver and nothing else, which is
+// shorter than MIN_SUBJECT_LEN by construction and still not a sloppy subject.
+const RELEASE_SUBJECT = /^release: \d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
+
 // Skip lines — GitHub-generated merge subjects and revert commits.
 const SKIP_PREFIXES = [
     'Merge pull request',
@@ -120,7 +124,7 @@ function check_subject(subject: string): string[] {
         issues.push(`Conventional-Commits prefix missing (type(scope): …): ${_pyReprStr(subject)}`);
     }
     const body = subject.replace(CONVENTIONAL_PREFIX, '');
-    if (body.length < MIN_SUBJECT_LEN) {
+    if (body.length < MIN_SUBJECT_LEN && !RELEASE_SUBJECT.test(subject)) {
         issues.push(
             `subject body < ${MIN_SUBJECT_LEN} chars after Conventional-Commits ` +
                 `prefix: ${_pyReprStr(subject)}`,

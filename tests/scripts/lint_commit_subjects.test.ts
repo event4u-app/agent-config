@@ -76,6 +76,20 @@ describe('lint_commit_subjects.check_subject — carve-outs', () => {
     });
 });
 
+// --- The release commit `release.ts` writes is a version, not prose. ---
+describe('lint_commit_subjects.check_subject — release commit', () => {
+    it.each(['release: 19.0.0', 'release: 18.2.1', 'release: 20.0.0-rc.1'])('passes: %s', (subject) => {
+        expect(lcs.check_subject(subject)).toEqual([]);
+    });
+
+    it.each(['release: wip', 'release: 1.0', 'release: 19.0.0 tmp', 'fix: 19.0.0'])(
+        'still flags: %s',
+        (subject) => {
+            expect(lcs.check_subject(subject).length).toBeGreaterThan(0);
+        },
+    );
+});
+
 // --- Golden parity on the REAL REPO ----------------------------------------
 
 
