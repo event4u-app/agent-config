@@ -30,7 +30,7 @@ describe('intake-pass — which prompts are tasks (OQ-25)', () => {
         // Council round 1: a leading acknowledgement does not make a task a continuation.
         'Go ahead and implement the retry policy described in this ticket',
         'ok, then build the CSV export with a month filter',
-        // An embedded question followed by an instruction ends as an instruction.
+        // A non-interrogative-leading embedded question followed by an instruction is a task.
         'The export is slow? Add an index on invoices.created_at and measure it',
         'Add a retry with backoff to the webhook sender.\nCover it with a test and update the changelog.',
     ])('fires on a task prompt: %s', (prompt) => {
@@ -50,6 +50,9 @@ describe('intake-pass — which prompts are tasks (OQ-25)', () => {
         ['a question-form request', 'Could you add retries to the webhook sender and tests for them?'],
         ['a question with a trailing qualifier', 'Why is the webhook sender failing on staging? Please explain'],
         ['a punctuation-free German question', 'Warum schlägt der Export auf Staging immer wieder fehl'],
+        // Council round 3 follow-ups: both boundaries are deliberate and pinned here.
+        ['an interrogative start followed by an instruction', 'Why is the export slow? Add an index and measure it'],
+        ['a resume prefix carrying a further task', 'continue with the roadmap and also add a CSV export for invoices'],
         ['a resume order of any length', 'continue with the next roadmap step and keep the same branch as before'],
         ['a release phrased differently', "Rename the config key everywhere and don't ask me anything"],
         ['a German release', 'Benenne den Schlüssel überall um, ohne Rückfragen und ohne Pause'],
