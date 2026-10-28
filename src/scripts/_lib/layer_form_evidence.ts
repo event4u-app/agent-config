@@ -17,6 +17,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { isExclusivelyPackageOnly } from '../../install/partitionEligibility.js';
 import { readCarrierState, runtimeRootFor, type CarrierState } from '../../install/stagedRuntime.js';
 import { readUserPin } from '../../install/userPin.js';
 import { arrivalEvidence, arrivalsDirUnder, latestArrivalRecord, readObserverLines, type ArrivalRecord } from './arrival_record.js';
@@ -33,11 +34,26 @@ export interface MachineEvidence {
     readonly standingLaws: ReadonlySet<string>;
 }
 
+/**
+ * The consequence-class members the USER layer can carry. A member whose
+ * `workspaces:` names only the maintainer workspace is never installed there,
+ * so requiring it in a user-scope arrival made `arrival-standing-law-missing`
+ * permanent on every machine (two such members at 2026-10-28).
+ */
+export function userLayerStandingLaws(packageRoot: string): ReadonlySet<string> {
+    const rulesDir = path.join(packageRoot, 'dist', 'agent-src', 'rules');
+    return new Set(
+        Object.keys(readConsequenceClass(packageRoot).members).filter(
+            (id) => !isExclusivelyPackageOnly(path.join(rulesDir, `${id}.md`)),
+        ),
+    );
+}
+
 export function readMachineEvidence(packageRoot: string, env: NodeJS.ProcessEnv = process.env): MachineEvidence {
     const runtimeRoot = runtimeRootFor(env);
     let standingLaws: ReadonlySet<string> = new Set();
     try {
-        standingLaws = new Set(Object.keys(readConsequenceClass(packageRoot).members));
+        standingLaws = userLayerStandingLaws(packageRoot);
     } catch {
         // A sentinel no rule file can be named, so an unreadable class can never read as "every law loaded".
         standingLaws = new Set(['<consequence-class unreadable>']);

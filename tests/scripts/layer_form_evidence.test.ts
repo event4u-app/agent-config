@@ -3,7 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { buildArrivalRecord } from '../../src/scripts/_lib/arrival_record.js';
 import { classifyInstructionsLoaded } from '../../src/scripts/_lib/instructions_loaded_classify.js';
 import { FORM_REASONS, decideLayerForm, type FormReason, type LayerFormInput } from '../../src/scripts/_lib/layer_form_decision.js';
-import { declareLayerForm, withMachineEvidence, type MachineEvidence } from '../../src/scripts/_lib/layer_form_evidence.js';
+import * as path from 'node:path';
+
+import { isExclusivelyPackageOnly } from '../../src/install/partitionEligibility.js';
+import { declareLayerForm, userLayerStandingLaws, withMachineEvidence, type MachineEvidence } from '../../src/scripts/_lib/layer_form_evidence.js';
+import { readConsequenceClass } from '../../src/scripts/_lib/rule_consequence_class.js';
 
 const HOME = '/home/dev';
 const ENV = { AI_AGENT: 'claude-code_2-1-299_agent' } as NodeJS.ProcessEnv;
@@ -99,5 +103,18 @@ describe('the declaration doctor prints (step 3.7)', () => {
             'claude layer on disk: full · pinned full by install --full',
         ]);
         expect(declareLayerForm([], { ...MACHINE, arrival: null })[0]).toContain('has not seen a session');
+    });
+});
+
+describe('standing laws are the laws the user layer can carry', () => {
+    it('a consequence-class rule shipped only to the maintainer workspace is never required at user scope', () => {
+        const laws = userLayerStandingLaws(process.cwd());
+        const members = Object.keys(readConsequenceClass(process.cwd()).members);
+        const maintainerOnly = members.filter((id) =>
+            isExclusivelyPackageOnly(path.join(process.cwd(), 'dist', 'agent-src', 'rules', `${id}.md`)),
+        );
+        expect(maintainerOnly.length).toBeGreaterThan(0);
+        for (const id of maintainerOnly) expect(laws.has(id)).toBe(false);
+        expect(laws.size).toBe(members.length - maintainerOnly.length);
     });
 });

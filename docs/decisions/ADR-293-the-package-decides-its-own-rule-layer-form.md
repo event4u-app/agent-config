@@ -174,6 +174,26 @@ ADR-284 keeps `status: accepted`, on the precedent of its own scoped
 supersession of ADR-228: a record with a limb that still binds is narrowed, not
 retired.
 
+## Amendment 2 (2026-10-28) — "as reliable as today" is read as "arrives as today"
+
+Owner decision, given in the session that analysed inbox round
+`inbox-2026-10-bg` (answer: "E1 + E2 jetzt umsetzen").
+
+- **E1.** The layer-form decision's delivery condition reads a second axis of
+  `src/config/host-injection-effect.json`, `delivery_mechanics` — did delivered
+  rule bodies arrive in the model's context — instead of the behavioural effect
+  `state`. The effect was an entry condition no machine could meet: on a full
+  layer every body is already standing, so the sole-source witness it needs
+  exists only on a thinned layer. The effect stays an outcome, measured on both
+  forms, and keeps its owner and value.
+- **E2.** `install --enrol` writes one receipt field beside `--full`'s pin. An
+  enrolled machine may be promoted while the shipped switch is off; the decision
+  function still has to hold, demotion is unchanged, `--full` wins. Not a
+  settings key, consistent with decision 1 above.
+
+The consumer default is unchanged: the shipped switch stays off until the frozen
+comparison has run and its result is cited by the enabling commit.
+
 ## Consequences
 
 - A consumer never sets, reads or reasons about how the package loads its rule
