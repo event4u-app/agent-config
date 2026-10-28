@@ -13,6 +13,8 @@ suggestion:
   trigger_context: "user has a fuzzy plan/idea/feature draft and wants it sharpened interactively rather than reconstructed in one shot"
 workspaces:
   - agent-config-maintainer
+  - engineering
+  - product
 packs:
   - product-reasoning
 ---
