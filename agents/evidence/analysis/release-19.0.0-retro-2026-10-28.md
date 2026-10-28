@@ -23,6 +23,7 @@ and a fix for each in one pull request. It asserts what was true when written.
 | 11 | Tag push died: `Connection reset by peer` after the pre-push hook re-ran the content gates for minutes with the session open | manual resume | hook gated a tag-only push |
 | 12 | A resume after the merge ran the vitest collection again for a footer already written | ~3 min | redundant work on resume |
 | 13 | MCP Registry publish 400: npm accepted 19.0.0 but did not serve it yet | manual re-run | no wait for npm |
+| 14 | After the cut, `pr-risk-review.yml` still installed `@18` and `advisories-daily.yml` `@16`; a test on main went red | a red run on the next PR | the bump rewrote one template pin only |
 
 ## What went well
 
@@ -52,6 +53,7 @@ and a fix for each in one pull request. It asserts what was true when written.
 | 11 | The pre-push hook skips its content gates for a tag-only push, like it already did for a delete-only push | `tests/scripts/prepush_delete_only.test.ts` — seen red against the old hook |
 | 3, 12 | The probe timeout is 600 s; a resume reuses the `Tests:` footer already in the target's changelog section | `_test_trend_line_in_section` tests |
 | 13 | The MCP Registry job waits until npm serves the version (up to 10 min) before publishing | the 19.0.0 failure, re-run green after npm served it |
+| 14 | The version bump rewrites every `@event4u/agent-config@<major>` pin in the shipped workflow templates; both templates are on `@19`; the release-PR shape admits them | `bump_workflow_major_pins` tests, including one that every shipped template carries the current major |
 | 5 | Fixed in #2736 before the cut: the strict `release: X.Y.Z` subject is exempt from the length rule | `tests/scripts/lint_commit_subjects.test.ts` |
 | — | The published `BREAKING_CHANGES.md` Pending row is deleted, per that file's own contract | `lint_breaking_changes_index` |
 | — | `obligation-settle-shadow-bar` gains clause (10): the one-machine corpus is accepted (owner, option (a)), and a passing reading is stated not to be evidence about a consumer; the carried roadmap that held the question is archived | `lint_roadmap_blockers` |

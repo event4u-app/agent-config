@@ -135,7 +135,7 @@ cat > "$HOOKS_DIR/pre-push" << 'EOF'
 #
 # A tag-only push skips them for the same reason: the tag names a commit that
 # already went through these gates on its branch, and the gates read the
-# CHECKED-OUT tree, not the tag. Measured 2026-10-28 on 19.0.0: `task release`
+# CHECKED-OUT tree, not the tag. Measured 2026-10-28 on 19.0.0: the release tool's
 # step 9 pushed the tag, the hook spent minutes re-checking `main` with the ssh
 # session open, and GitHub dropped it (`Connection reset by peer`).
 delete_only=1
