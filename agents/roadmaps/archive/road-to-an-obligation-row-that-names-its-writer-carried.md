@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: later
+status: archived
 execution:
   mode: phase-checkpoints
 parent_roadmap: road-to-an-obligation-row-that-names-its-writer
@@ -38,9 +38,17 @@ left to read as finished.
 
 ## Phase 1 — Deferred steps carried from road-to-an-obligation-row-that-names-its-writer
 
-- [ ] <!-- blocked-by: shadow-corpus-is-one-machine | asked: no — non-interactive process-full run: it reports once at the end and cannot put a question, and the decision amends a pre-registered public claim the claims register itself records as owner-reserved --> **2.2 Resolve the corpus blocker below.** The reporter makes the question
+- [x] **2.2 Resolve the corpus blocker below.** The reporter makes the question
       answerable with a number; the answer is not an agent's to give.
       verify: the blocker's `Status` reads `resolved` with the chosen option named
+
+      **CLOSED 2026-10-28 by the owner: option (a).** Asked in the session that
+      cut 19.0.0, after an external release review listed "null consumer-writer
+      rows after four majors" as the one variable no release moves; the owner
+      answered `1` (accept the one-machine corpus). Written into
+      `docs/CLAIMS.md` § `obligation-settle-shadow-bar` as clause (10), which
+      names the option and its reason; clause (8) now points at it. The bar's
+      numbers are unchanged — only what a reading may be cited for is.
 
       **OPEN, deliberately, and this step is not agent-closable by its own
       terms.** The blocker's owner is `maintainer` and this step says in its own
@@ -186,10 +194,16 @@ left to read as finished.
       4. Then this roadmap archives, and the arming decision in
          `road-to-a-ledger-that-closes-the-loop` unblocks.
 
+## Decisions
+
+| Date | Blocker | Decision | Resolved by | Source |
+|------|---------|----------|-------------|--------|
+| 2026-10-28 | `shadow-corpus-is-one-machine` | Option (a): accept the one-machine corpus; the bar now says a passing reading describes this checkout and is not evidence about a consumer (`docs/CLAIMS.md` clause (10)) | owner | the owner's answer `1` to the three options, in the 19.0.0 release session |
+
 ## Blockers
 
 ### blocker: shadow-corpus-is-one-machine
-- **Status:** open
+- **Status:** resolved — option (a), owner 2026-10-28; `docs/CLAIMS.md` § `obligation-settle-shadow-bar` clause (10)
 - **Owner:** maintainer
 - **Ownership:** business-owned — the decision amends `obligation-settle-shadow-bar`,
   a pre-registered claim in `docs/CLAIMS.md`, and clause (8) of that claim already
@@ -225,4 +239,4 @@ left to read as finished.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No step carried from `road-to-an-obligation-row-that-names-its-writer` is still `[ ]` without a recorded disposition.
+- [x] AC-1 — No step carried from `road-to-an-obligation-row-that-names-its-writer` is still `[ ]` without a recorded disposition.
