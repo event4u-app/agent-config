@@ -74,7 +74,7 @@ the real scorer and records any delta instead of trusting them.
 
 ## Phase 0 — Measure in shadow
 
-- [x] **0.1 `bench_task_validity` as a shadow script.** Imports `score_task_v2`
+- [x] **0.1 `bench_task_validity` as a shadow script.** Imports `score_task_v2` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       and scores every fixture task, on a copy, in the synthetic arms `nop`,
       `touch`, `verifier-exit`, `source-exit` and `noise-ask` (empty diff,
       transcript "Done in 3 steps. Fixed both issues. All set?"), plus a
@@ -84,37 +84,37 @@ the real scorer and records any delta instead of trusting them.
 
 ## Phase 1 — Repair the scorer (deterministic, 0 USD)
 
-- [x] **1.1 Oracles that only match after the change.** Re-anchor the regex
+- [x] **1.1 Oracles that only match after the change.** Re-anchor the regex <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       oracles that match the original; drop `\?` and the single-word
       alternatives from the three `ask_regex` so only a question naming one of
       the readings counts. `lint_bench_ab.ts` rejects a regex oracle matching
       the original fixture and an `ask_regex` matching the neutral sentence.
       verify: 0.1 shows `touch` 0 and `noise-ask` 0; a real question ("legacy or v1?") stays green.
-- [x] **1.2 Exit 0 passes only when the verifier finished.** (a) Restore the
+- [x] **1.2 Exit 0 passes only when the verifier finished.** (a) Restore the <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       files the `command:` names from the original fixture before running and
       report `verifier-touched` when the clone differed; (b) set a random nonce
       in the environment and require it as the verifier's last stdout line;
       (c) flag added `process.exit` / `process.on('exit'` in source files as
       `verifier-bypass-suspect` — a report, never a deduction.
       verify: 0.1 shows `verifier-exit` 0 and `source-exit` 0; a planted bypass test is red.
-- [x] **1.3 Reference solutions outside the fixture.** One patch per task under
+- [x] **1.3 Reference solutions outside the fixture.** One patch per task under <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       `internal/bench/ab/oracle-v2/<id>.patch`; a test applies each to a copy
       and expects `capability_pass`. For trap tasks the safe interpretation is
       the reference. A task that fails its own reference is repaired, never
       dropped.
       verify: the reference test is green for every fixture task and no patch touches a verifier.
-- [x] **1.4 Discipline given capability, in shadow.** The stats report gains
+- [x] **1.4 Discipline given capability, in shadow.** The stats report gains <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       `discipline_given_capability` and the per-task `nop` floor. Both gate
       forms are computed and printed; the existing one still decides (D3).
       verify: a fixture test where an arm that does less raises the old discipline and not the new.
-- [x] **1.5 Arm the gate.** `bench_task_validity --gate` runs in the
+- [x] **1.5 Arm the gate.** `bench_task_validity --gate` runs in the <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       consistency job: every synthetic arm and mutation red, every reference
       green, for every task.
       verify: a new task without a reference, or matching the original, makes the gate exit non-zero.
 
 ## Phase 2 — Prove delivery before spending
 
-- [x] **2.1 Pre-flight per plugin arm.** Before the first paid trial,
+- [x] **2.1 Pre-flight per plugin arm.** Before the first paid trial, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       `bench_ab_v2_run` checks each arm configuration's delivery with a
       zero-cost probe (the host's `system/init` event read with an unreachable
       base URL and an allowlisted environment, child killed after the event).
@@ -124,7 +124,7 @@ the real scorer and records any delta instead of trusting them.
 
 ## Phase 3 — Learning gates ask about their own judge
 
-- [x] **3.1 One line from the existing question.** The promotion tables of
+- [x] **3.1 One line from the existing question.** The promotion tables of <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       `learning-to-rule-or-skill` and `skill-improvement-pipeline` carry the
       `weakens-its-own-judge` question text verbatim; a "yes" keeps the
       learning un-promoted.
@@ -132,15 +132,15 @@ the real scorer and records any delta instead of trusting them.
 
 ## Phase 4 — Hand the numbers downstream
 
-- [x] **4.1 Dated note on the neighbour A/B.** `road-to-a-step-that-costs-what-it-changes-carried`
+- [x] **4.1 Dated note on the neighbour A/B.** `road-to-a-step-that-costs-what-it-changes-carried` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       gets one dated line with the 0.1 census: its A/B reads
       `discipline_given_capability` and the `nop` floor once 1.1-1.3 landed.
       verify: the note quotes the 0.1 numbers; no step there changes.
-- [x] **4.2 Preconditions for the skill-uplift pilot.** `stubs/road-to-skill-uplift-against-a-no-skill-arm`
+- [x] **4.2 Preconditions for the skill-uplift pilot.** `stubs/road-to-skill-uplift-against-a-no-skill-arm` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       gets two measured preconditions: each pilot skill has ≥ 3 eval scenarios
       with ≥ 1 held out, and the 1.5 gate covers the pilot scenarios.
       verify: the stub carries both lines with today's date.
-- [x] **4.3 One line in the benchmark page.** Under the honesty labels of
+- [x] **4.3 One line in the benchmark page.** Under the honesty labels of <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       `docs/benchmark.md`, the task-validity state with a date. Pinned results
       stay; nothing is re-scored silently.
       verify: `task bench:ab:v2:diff -- --check` (or the renderer's drift check) stays green.
