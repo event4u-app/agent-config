@@ -9,6 +9,10 @@
 // The discriminator is pinned in both directions: the transport wordings retry,
 // and a pre-push gate, credentials or protection refusal stays fatal on the first
 // attempt, so a real error is never retried into silence.
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -19,6 +23,9 @@ import {
     _test_trend_line_in_section,
     git_network_env,
 } from '../../src/scripts/release_publication.js';
+import { bump_workflow_major_pins } from '../../src/scripts/release_env.js';
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 afterEach(() => {
     _set_exec_override(null);
@@ -159,5 +166,39 @@ describe('_test_trend_line_in_section — a resume reuses the footer it wrote', 
         const without = CHANGELOG.replace('Tests: 35403 (+1868 since 18.2.0)\n', '');
         expect(_test_trend_line_in_section(without, '19.0.0')).toBeNull();
         expect(_test_trend_line_in_section(CHANGELOG, '20.0.0')).toBeNull();
+    });
+});
+
+// 19.0.0 shipped with `pr-risk-review.yml` still installing `@18` and
+// `advisories-daily.yml` still running `@16`: the cut bumped the settings
+// template's pin and nothing else, so a consumer copying the workflow got the
+// previous major. The bump now rewrites every major pin in the shipped
+// workflow templates.
+describe('bump_workflow_major_pins — the workflow templates follow the major', () => {
+    it('rewrites every npm major pin to the target major', () => {
+        const before = [
+            'run: npm install -g @event4u/agent-config@18',
+            'run: npx --yes @event4u/agent-config@16 audit:deps refresh --force',
+        ].join('\n');
+        expect(bump_workflow_major_pins(before, '19.0.0')).toBe(
+            [
+                'run: npm install -g @event4u/agent-config@19',
+                'run: npx --yes @event4u/agent-config@19 audit:deps refresh --force',
+            ].join('\n'),
+        );
+    });
+
+    it('leaves an exact or prerelease pin, and other packages, alone', () => {
+        const text = 'a: @event4u/agent-config@18.2.0\nb: @event4u/agent-config-extra@18\nc: @other/pkg@18';
+        expect(bump_workflow_major_pins(text, '19.0.0')).toBe(text);
+    });
+
+    it('the shipped workflow templates carry the current major', () => {
+        const pkg = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8')) as { version: string };
+        const dir = path.join(REPO_ROOT, 'src', 'agent-src', 'templates', 'github-workflows');
+        for (const f of fs.readdirSync(dir).filter((n) => n.endsWith('.yml'))) {
+            const text = fs.readFileSync(path.join(dir, f), 'utf8');
+            expect(bump_workflow_major_pins(text, pkg.version), f).toBe(text);
+        }
     });
 });

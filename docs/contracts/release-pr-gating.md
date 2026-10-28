@@ -102,6 +102,10 @@ hold:
    - `dist/agent-src/templates/agents/agent-project-settings.example.yml` —
      the project-settings template pin and its regenerated twin, kept in
      lockstep with `package.json.version`
+   - `src/agent-src/templates/github-workflows/*.yml`
+   - `dist/agent-src/templates/github-workflows/*.yml` — the shipped workflow
+     templates, whose `@event4u/agent-config@<major>` pins follow the major,
+     and their regenerated twins
    - `tests/fixtures/settings_surface_released.json` — the settings surface
      this version ships, rewritten by `release.ts` §
      `writeReleasedSurface` inside the cut and read by the NEXT cut's

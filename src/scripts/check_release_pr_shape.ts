@@ -54,6 +54,11 @@ const ALLOWLIST_GLOBS = [
     // its regenerated dist twin (kept in lockstep with package.json.version).
     'src/agent-src/templates/agents/agent-project-settings.example.yml',
     'dist/agent-src/templates/agents/agent-project-settings.example.yml',
+    // Workflow templates' `@event4u/agent-config@<major>` pins — bumped by
+    // release_env.ts set_workflow_template_pins with the template pin above,
+    // and their regenerated dist twins.
+    'src/agent-src/templates/github-workflows/*.yml',
+    'dist/agent-src/templates/github-workflows/*.yml',
     // Released settings surface — rewritten by release.ts writeReleasedSurface
     // inside the cut, so without this entry the release PR carries a file its
     // own shape step refuses. It is the base the NEXT cut's settings-delta

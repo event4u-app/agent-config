@@ -79,8 +79,7 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
     it('the `*` entries admit any depth — recorded, not endorsed', () => {
         // The denial above holds on the EXTENSION, not on the nesting: `foo.ts`
         // matches no glob at any depth. fnmatch `*` crosses `/`, so the `*`
-        // entries do admit arbitrary depth, which the census entry avoids by
-        // using digit classes. Pinned here so the property is visible rather
+        // entries do admit arbitrary depth. Pinned here so the property is visible rather
         // than discovered, and so narrowing these globs later is a deliberate
         // edit to this assertion rather than a silent behaviour change.
         //
@@ -89,7 +88,7 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
         // neighbour. The count is derived below rather than written down, so
         // adding a seventh wildcard row reds this instead of aging a comment.
         const wildcards = shape.ALLOWLIST_GLOBS.filter((g) => g.includes('*'));
-        expect(wildcards).toHaveLength(6);
+        expect(wildcards).toHaveLength(8);
         expect(shape._matches('src/packs/core/installer/pack.yaml')).toBe(true);
         expect(shape._matches('src/packs/core/installer/README.md')).toBe(true);
         expect(shape._matches('src/domains/a/b/pack.yaml')).toBe(true);
@@ -99,6 +98,8 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
         // separator, so it swallows a segment plus a filename. Same shape as
         // the findings-ledger row above; neither is a superset of the other.
         expect(shape._matches('docs/archive/CHANGELOG-pre-x/evil.md')).toBe(true);
+        expect(shape._matches('src/agent-src/templates/github-workflows/a/b.yml')).toBe(true);
+        expect(shape._matches('dist/agent-src/templates/github-workflows/a/b.yml')).toBe(true);
     });
 
     it('marketplace metadata only passes', () => {
