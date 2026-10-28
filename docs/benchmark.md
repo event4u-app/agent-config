@@ -25,7 +25,7 @@
 > **Task validity (2026-10-28).** Before that date the v2 scorer let a do-nothing or tampering arm pass: a blank-line
 > `touch` passed 10 of 33 capability oracles, `process.exit(0)` in a verifier or in the module it imports passed
 > 15 and 17 of 18, and any `?` counted as a clarifying question (3 of 3). The oracles were re-anchored, verifiers now
-> need a completion nonce, and every task carries a reference solution; `bench_task_validity --gate` holds all
+> need a completion nonce, and every task carries a reference solution; `check_bench_task_validity --gate` holds all
 > synthetic arms at 0 in CI. A `nop` arm still scores discipline 1.0 on 23 of 33 tasks, so the stats report now prints
 > `discipline_given_capability` beside the deciding gate. The pinned results below were scored before this repair
 > and are not re-scored.

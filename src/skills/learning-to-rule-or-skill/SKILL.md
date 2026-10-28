@@ -36,15 +36,13 @@ Use this skill when:
   — the pattern's `count` ≥ 2 already satisfies the repetition gate
 * A comparative analysis handed over a **`### SEED —` block** from its
   `## Seeds` section ([`/analyze:reference`](../../agent-src/commands/analyze/reference.md)
-  § 6). This is an accepted intake shape: the block already carries the
-  proposed name, kind, target template, one-line description, and the
-  `Extends instead?` answer, so step 4's overlap search starts from a stated
-  candidate rather than a blank page — it does **not** skip that search, and a
-  seed whose `Extends instead?` line is missing is incomplete intake, not a
-  shortcut. The repetition gate is satisfied differently here: the evidence is
-  the anchored ADOPT/ADAPT verdict behind the seed rather than a recurrence
-  count — a mechanism confirmed once against a named own-repo defect is not the
-  one-off case the gate exists to filter.
+  § 6). An accepted intake shape: the block carries name, kind, target
+  template, one-line description and the `Extends instead?` answer, so step 4's
+  overlap search starts from a stated candidate — it does **not** skip that
+  search, and a seed missing its `Extends instead?` line is incomplete intake,
+  not a shortcut. The repetition gate is met by the anchored ADOPT/ADAPT verdict
+  behind the seed, not a recurrence count — a mechanism confirmed once against a
+  named own-repo defect is not the one-off case the gate filters.
 
 Do not use this skill when:
 
@@ -62,7 +60,7 @@ Do not use this skill when:
 ## Preconditions
 
 * A concrete learning, mistake, or successful pattern exists
-* The learning can be stated clearly in one or two sentences
+* The learning can be stated in one or two sentences
 * Existing rules and skills can be checked for overlap
 
 ## Decision matrix
@@ -80,10 +78,10 @@ Do not use this skill when:
 
 * Same issue appeared at least twice → strongly consider codifying
 * One-off or too narrow → do not create anything yet
-* Standard tool knowledge (jq, docker, git basics) → **Nothing** — the model knows this
+* Standard tool knowledge (jq, docker, git basics) → **Nothing** — the model knows it
 * If unsure between skill and guideline: does it need step-by-step decisions? → Skill. Just conventions? → Guideline
 * If unsure between guideline and pattern: is it *"how to write code in X"* (prose convention)? → Guideline. Is it *"I have problem P — here's the proven recipe + a verification step + how reliable it is"*? → **Pattern**
-* When a related workflow fires, **surface** a matching `src/patterns/` recipe (never auto-apply) — the human decides whether to use it
+* When a related workflow fires, **surface** a matching `src/patterns/` recipe (never auto-apply) — the human decides
 
 ## Procedure
 
@@ -99,7 +97,7 @@ Before proceeding, the learning MUST pass all gates:
 | Non-duplication | No existing rule/skill/guideline/command covers this? **Verify via § 4 search protocol — a negative grep alone is not proof.** |
 | Scope fit | Fits rule, skill, or guideline? |
 | Minimal | Update existing preferred over creation? |
-| Weakens its own judge (answer must be **no**; a **yes** keeps the learning un-promoted) | Does the change weaken anything that judges it — a test, a gate, a threshold, this review? The standard is quoted rather than paraphrased: the implementer never silently weakens an assertion, deletes, skips or xfails a failing test, lowers a threshold, or changes fixture semantics to fit the code. Does this change do any of those? |
+| Weakens its own judge (passes only on **no**) | Does the change weaken anything that judges it — a test, a gate, a threshold, this review? The standard is quoted rather than paraphrased: the implementer never silently weakens an assertion, deletes, skips or xfails a failing test, lowers a threshold, or changes fixture semantics to fit the code. Does this change do any of those? |
 
 If ANY gate fails → **stop**. Do not create or update anything.
 Memory-entry rejection criteria live in `/memory:add` (see § "When to skip").
@@ -146,10 +144,10 @@ Choose one:
 
 ### 4. Check for overlap — search protocol (mandatory)
 
-A grep that returns zero hits is **not** proof of no overlap. Knowledge in
-this package is distributed across **five surfaces** — `skills/`, `rules/`,
-`docs/guidelines/`, `commands/`, `src/patterns/`. Skip any of them and recall
-drops. Run all the steps before declaring "no overlap":
+A zero-hit grep is **not** proof of no overlap. Knowledge here spans **five
+surfaces** — `skills/`, `rules/`, `docs/guidelines/`, `commands/`,
+`src/patterns/`; skip one and recall drops. Run all steps before declaring "no
+overlap":
 
 **Step 1 — list all five surfaces.** Directory taxonomy is free evidence:
 
@@ -161,10 +159,10 @@ ls src/skills/ \
    src/patterns/
 ```
 
-Sub-directories matter — `docs/guidelines/php/patterns/`, `docs/guidelines/agent-infra/`,
-etc. carry topic taxonomies a flat file scan misses. Always descend one level.
+Sub-directories (`docs/guidelines/php/patterns/`, `docs/guidelines/agent-infra/`,
+…) carry taxonomies a flat scan misses. Always descend one level.
 
-**Step 2 — grep with both vocabularies.** Search for **solution-words** *and*
+**Step 2 — grep with both vocabularies.** Search **solution-words** *and*
 **problem-words**. Solution-only grep is confirmation bias — the existing
 artifact may name the *symptom*, not the cure.
 
@@ -177,18 +175,18 @@ artifact may name the *symptom*, not the cure.
 grep -rl -E "<solution-words>|<problem-words>" src/ docs/guidelines/
 ```
 
-**Step 3 — taxonomy scan.** For any topic with a likely sub-folder
+**Step 3 — taxonomy scan.** For a topic with a likely sub-folder
 (`patterns/`, `php/`, `laravel/`, `agent-infra/`), `ls` that folder
-*before* reading any file. Filename alone often answers the overlap question.
+*before* reading any file. The filename often answers the overlap question.
 
 **Step 4 — sample, do not just list.** On *any* keyword overlap from
-steps 2–3, **open and skim the 3 nearest matches** — read § headings, the
-"When to use" / "Overview" block, and the examples list. Listing filenames
-is not enough; semantic overlap hides behind unrelated keywords.
+steps 2–3, **open and skim the 3 nearest matches** — § headings, the
+"When to use" / "Overview" block, the examples. Filenames are not enough;
+semantic overlap hides behind unrelated keywords.
 
-Only after all four steps return clean → declare "no overlap" and proceed.
-Citation in the proposal: *"Reviewed before drafting: <files skimmed>"* —
-this is the audit trail § 0's Non-duplication gate verifies against.
+Only after all four steps return clean → declare "no overlap", proceed.
+Cite in the proposal: *"Reviewed before drafting: <files skimmed>"* —
+the audit trail § 0's Non-duplication gate verifies against.
 
 → When the parent task is "create a new artifact", `artifact-drafting-protocol`
 Phase B (Research) requires this same protocol — single source of truth.
@@ -251,10 +249,10 @@ to stage `gated`.
 ### 9. Degrade the source to a pointer (when promoted from a knowledge page)
 
 If the learning came from an `agents/knowledge/procedures/skill-candidates.md`
-entry or any other `agents/knowledge/` page (see § "Knowledge-candidate
+entry or any other `agents/knowledge/` page (§ "Knowledge-candidate
 learnings" below), promotion is **not complete** until the source is
-degraded to a pointer — this is what prevents double-maintenance between
-the knowledge page and the new artifact:
+degraded to a pointer — preventing double-maintenance between page and
+artifact:
 
 ```bash
 ./scripts-run src/scripts/degrade_to_pointer \
@@ -264,9 +262,9 @@ the knowledge page and the new artifact:
 ```
 
 This rewrites the source entry to `Promoted to <artifact> on <date>; see
-<path>.` and regenerates `agents/knowledge/INDEX.md`. Skip this step
-only when the learning's source was NOT a knowledge page (e.g. a direct
-user request, an audit-log pattern, or a one-off observation).
+<path>.` and regenerates `agents/knowledge/INDEX.md`. Skip it only when
+the source was NOT a knowledge page (a direct user request, an audit-log
+pattern, a one-off observation).
 
 ## Output format
 
@@ -380,13 +378,12 @@ step):
    ≥ 3-mention threshold — skip straight to §3 (decide the target).
    Overlap check (§4) and proposal draft (§8) remain mandatory.
 2. **Ground the draft in the original session logs, never the
-   consolidated summary alone.** The candidate entry's `Sessions:`
-   list names the chat-history session ids the topic recurred in —
-   read those from the host's native transcript view, or reconstruct
-   them manually from the retained continuity records, before
-   drafting. A skill written purely from the recurrence-counter
-   summary tends to be plausible but wrong; the original transcripts
-   carry the detail the summary dropped.
+   consolidated summary alone.** The entry's `Sessions:` list names
+   the session ids the topic recurred in — read them in the host's
+   transcript view, or reconstruct them from the retained continuity
+   records, before drafting. A skill written from the counter summary
+   alone tends to be plausible but wrong; the transcripts carry the
+   detail the summary dropped.
 3. Set `source_learning` to the knowledge-candidate entry
    (`agents/knowledge/procedures/skill-candidates.md#<topic>`).
 4. **§9 (degrade the source) is mandatory for this source type** —

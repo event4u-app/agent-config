@@ -240,6 +240,7 @@ _The system/admin surface (NOT a flow): memory · analytics · governance · con
 - `team-knowledge` — Team-knowledge orchestrator — routes to consolidate and bootstrap
 - `team-knowledge-bootstrap` — One-shot deterministic seed for a fresh project's knowledge layer — stages template pages from real config/…
 - `team-knowledge-consolidate` — Review pending typed knowledge-observation events and file them into agents/knowledge/ pages as a human-rev…
+- `test-showcase` — Run the with/without showcase benchmark and report it
 - `upstream-contribute` — Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package
 
 ### Domain flow — media

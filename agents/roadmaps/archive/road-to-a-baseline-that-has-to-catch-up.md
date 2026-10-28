@@ -76,7 +76,7 @@ Verified at the pin:
 - [x] **0.1 Claims first.** One `### claim:` per task family in `docs/CLAIMS.md`, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       `status: unbacked`, naming metric, bar, falsification, scope and the
       primary grader. The commit carries claims and no task fixtures.
-      verify: `task check-claims` (or `check_claims`) is green with the new entries.
+      verify: `./scripts-run src/scripts/check_claims --quiet` -> 0
 - [x] **0.2 Predicted-lift map.** `internal/bench/showcase/PREDICTED-LIFT.md` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       lists, per task, the rules and skills that should make a difference
       (`file:line`). A task without a predicted asset is not a showcase task.
@@ -108,7 +108,7 @@ Verified at the pin:
       skeleton, T4b plain-PHP login, T5 PHP CRUD endpoint with a hidden test
       suite, T6 page copy from a frozen in-repo page, T7 mini-app copy (in-repo
       fictional todo app with acceptance tests).
-      verify: `bench:ab:v2 --dry-run` lists all nine tasks for both arms.
+      verify: `./scripts-run src/scripts/bench_ab_v2_run --corpus artifact --mode dry-run --arms package,vanilla --seeds 1` -> /art-app-copy-01\s+arm=vanilla/
 - [x] **2.3 Isolation contract.** Artifact runs use a per-arm temp HOME and <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       config dir, a workspace outside the repo and `network: none` unless the
       task declares `registry`.
@@ -151,7 +151,7 @@ Verified at the pin:
 - [x] **5.1 Taskfile.** `bench:showcase` (full), `bench:showcase:quick` (one <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       host, k=3, T1a/T2/T4a), `bench:showcase:replay` (re-grade kept artifacts
       at 0 USD), `bench:showcase:render`.
-      verify: `task --list` shows the four targets and `:replay` runs green on the fixture bundle.
+      verify: `./scripts-run src/scripts/showcase_replay --bundles tests/fixtures/showcase --allow-fixture` -> /verdict: reproduced/
 - [x] **5.2 Opt-in release step.** `task release` offers `:quick` once with the <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       budget shown and attaches the report to the release PR as advisory;
       `:replay` always runs; a regression on a primary grader opens a release

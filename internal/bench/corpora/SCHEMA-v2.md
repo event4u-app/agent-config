@@ -38,7 +38,7 @@ cannot leak state across tasks.
 
 ### A capability oracle fails when nothing was done
 
-Every fixture task is scored by `src/scripts/bench_task_validity.ts --gate`
+Every fixture task is scored by `src/scripts/check_bench_task_validity.ts --gate`
 (CI: `rule-backstops.yml`; locally: `task lint-bench`) with the real scorer in
 arms that did no work — `nop` (empty diff), `touch` (a blank line appended to
 the target), `verifier-exit` / `source-exit` (`process.exit(0)` atop the

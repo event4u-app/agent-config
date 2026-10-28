@@ -30,12 +30,12 @@ page — never computed, rounded or estimated here.
 
 ### 1. Plan — tier, host, budget
 
-| Form | Target | Spend |
+| Form | Command | Spend |
 |---|---|---|
-| `replay` (default) | `task bench:showcase:replay` | 0 USD — re-grades kept artifacts |
-| `render` | `task bench:showcase:render -- --check` | 0 USD |
-| `quick` | `task bench:showcase:quick -- --max-usd <usd>` | paid — 3 tasks × 2 arms × k=3, host `claude` |
-| `full` | `task bench:showcase -- --max-usd <usd>` | paid — every artifact task, 3 arms |
+| `replay` (default) | `./scripts-run src/scripts/showcase_replay` | 0 USD — re-grades kept artifacts |
+| `render` | `./scripts-run src/scripts/render_showcase --check` | 0 USD |
+| `quick` | `./scripts-run src/scripts/showcase_run --tier quick --max-usd <usd>` | paid — 3 tasks × 2 arms × k=3, host `claude` |
+| `full` | `./scripts-run src/scripts/showcase_run --tier full --max-usd <usd>` | paid — every artifact task, 3 arms |
 
 For a paid form, print the plan first — it spends nothing:
 
@@ -49,7 +49,7 @@ refuses too).
 
 ### 2. Launch
 
-Run the one Taskfile target from the table with the user's budget. Do not
+Run the one command from the table with the user's budget. Do not
 re-implement it, add flags it did not name, or retry a refused run with a
 different budget unasked.
 

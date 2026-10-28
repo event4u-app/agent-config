@@ -1,4 +1,4 @@
-// bench_task_validity — the v2 scorer must fail every arm that did no work,
+// check_bench_task_validity — the v2 scorer must fail every arm that did no work,
 // pass every reference solution, and the gate must notice when either stops
 // being true. Every verdict comes from the real score_task_v2.
 import * as fs from 'node:fs';
@@ -155,11 +155,11 @@ describe('question oracles (1.1)', () => {
 
 describe('CLI and --gate (0.1, 1.5)', () => {
     it('two runs emit identical bytes; --gate is green on the committed corpus', () => {
-        const a = runTs('bench_task_validity.ts', []);
-        const b = runTs('bench_task_validity.ts', []);
+        const a = runTs('check_bench_task_validity.ts', []);
+        const b = runTs('check_bench_task_validity.ts', []);
         expect(a.status, a.stderr).toBe(0);
         expect(b.stdout).toBe(a.stdout);
-        const g = runTs('bench_task_validity.ts', ['--gate']);
+        const g = runTs('check_bench_task_validity.ts', ['--gate']);
         expect(g.status, g.stderr).toBe(0);
         expect(g.stdout).toContain('scanned: 33');
     }, 180_000);
@@ -179,7 +179,7 @@ describe('CLI and --gate (0.1, 1.5)', () => {
     }
 
     it('a new task without a reference makes the gate exit non-zero', () => {
-        const r = runTs('bench_task_validity.ts', seededCorpus(byId('trapA-overeng-01'), false));
+        const r = runTs('check_bench_task_validity.ts', seededCorpus(byId('trapA-overeng-01'), false));
         expect(r.status).toBe(1);
         expect(r.stderr).toContain('new-01: reference missing');
     }, 60_000);
@@ -187,13 +187,13 @@ describe('CLI and --gate (0.1, 1.5)', () => {
     it('a new task whose oracle matches the original makes the gate exit non-zero', () => {
         const task = structuredClone(byId('trapA-overeng-01'));
         (task['capability_oracle'] as Record<string, unknown>)['regex_in_target'] = 'pageSize';
-        const r = runTs('bench_task_validity.ts', seededCorpus(task, true));
+        const r = runTs('check_bench_task_validity.ts', seededCorpus(task, true));
         expect(r.status).toBe(1);
         expect(r.stderr).toContain('new-01: arm touch passes the capability oracle');
     }, 60_000);
 
     it('the same seeded task with its reference and the committed oracle is green', () => {
-        const r = runTs('bench_task_validity.ts', seededCorpus(byId('trapA-overeng-01'), true));
+        const r = runTs('check_bench_task_validity.ts', seededCorpus(byId('trapA-overeng-01'), true));
         expect(r.status, r.stderr).toBe(0);
     }, 60_000);
 });

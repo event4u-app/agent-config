@@ -8,7 +8,7 @@
  * exits 1 when any synthetic arm or mutation passes a capability oracle, or a
  * reference is missing, does not apply, touches a verifier, or is red.
  *
- * Usage: bench_task_validity [--gate] [--json] [--quiet] [--task <id>] [--corpus <yaml>]
+ * Usage: check_bench_task_validity [--gate] [--json] [--quiet] [--task <id>] [--corpus <yaml>]
  *        [--ab-root <dir>] [--oracle-root <dir>] | --self-test
  */
 import * as fs from 'node:fs';
@@ -62,7 +62,7 @@ function parseArgs(argv: readonly string[]): Args | null {
         else if (a === '--oracle-root') out.oracleRoot = path.resolve(next());
         else if (a === '-h' || a === '--help') {
             process.stdout.write(
-                'usage: bench_task_validity [--gate] [--json] [--quiet] [--task <id>] [--corpus <yaml>] [--ab-root <dir>] [--oracle-root <dir>]\n',
+                'usage: check_bench_task_validity [--gate] [--json] [--quiet] [--task <id>] [--corpus <yaml>] [--ab-root <dir>] [--oracle-root <dir>]\n',
             );
             return null;
         } else throw new Error(`unrecognized argument: ${a}`);
@@ -79,7 +79,7 @@ function selfTest(): number {
     const repoRoot = path.resolve(path.dirname(_HERE), '..', '..');
     const source = loadTasks().find((t) => t['id'] === 'trapA-overeng-01');
     if (source === undefined) {
-        process.stderr.write('bench_task_validity --self-test: seed task trapA-overeng-01 is gone\n');
+        process.stderr.write('check_bench_task_validity --self-test: seed task trapA-overeng-01 is gone\n');
         return 1;
     }
     const seeded = (oracle: Record<string, unknown> | null, withReference: boolean): number => {
@@ -95,14 +95,14 @@ function selfTest(): number {
             const task = { ...source, id: 'seed-01', fixture: 'fixtures-v2/seed-01', ...(oracle ? { capability_oracle: oracle } : {}) };
             const corpus = path.join(root, 'corpus.yaml');
             fs.writeFileSync(corpus, toYaml({ tasks: [task] }));
-            return runGateCli(repoRoot, 'src/scripts/bench_task_validity.ts', ['--gate', '--quiet', '--corpus', corpus, '--ab-root', ab, '--oracle-root', oracles], root);
+            return runGateCli(repoRoot, 'src/scripts/check_bench_task_validity.ts', ['--gate', '--quiet', '--corpus', corpus, '--ab-root', ab, '--oracle-root', oracles], root);
         } finally {
             fs.rmSync(root, { recursive: true, force: true });
         }
     };
     const loose = { target_file_modified: 'src/paginate.ts', regex_in_target: 'pageSize' };
     return runSelfTest({
-        gate: 'bench_task_validity',
+        gate: 'check_bench_task_validity',
         minCases: 3,
         minRejectCases: 2,
         cases: [
@@ -119,7 +119,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     try {
         args = parseArgs(argv);
     } catch (exc) {
-        process.stderr.write(`bench_task_validity: ${(exc as Error).message}\n`);
+        process.stderr.write(`check_bench_task_validity: ${(exc as Error).message}\n`);
         return 2;
     }
     if (args === null) return 0;
@@ -136,13 +136,13 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     }
     if (!args.gate) return 0;
     try {
-        reportScanned({ gate: 'bench_task_validity', scanned: rows.length, units: 'fixture tasks', roots: [path.relative(process.cwd(), args.corpus)] });
+        reportScanned({ gate: 'check_bench_task_validity', scanned: rows.length, units: 'fixture tasks', roots: [path.relative(process.cwd(), args.corpus)] });
     } catch (exc) {
         process.stderr.write(`${(exc as Error).message}\n`);
         return 1;
     }
     const findings = gateFindings(rows);
-    for (const f of findings) process.stderr.write(`bench_task_validity: ${f}\n`);
+    for (const f of findings) process.stderr.write(`check_bench_task_validity: ${f}\n`);
     return findings.length > 0 ? 1 : 0;
 }
 

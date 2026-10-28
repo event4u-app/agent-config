@@ -143,7 +143,7 @@ the real scorer and records any delta instead of trusting them.
 - [x] **4.3 One line in the benchmark page.** Under the honesty labels of <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       `docs/benchmark.md`, the task-validity state with a date. Pinned results
       stay; nothing is re-scored silently.
-      verify: `task bench:ab:v2:diff -- --check` (or the renderer's drift check) stays green.
+      verify: `./scripts-run src/scripts/render_benchmark_composite --check` -> 0
 
 ## Decisions
 

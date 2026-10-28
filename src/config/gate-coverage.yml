@@ -3496,7 +3496,7 @@ gates:
       it names must hold on the unmutated copy and fail on the mutated one. The
       canary plants a recipe that changes nothing, which survives.
 
-  - id: bench_task_validity
+  - id: check_bench_task_validity
     argv: ["--gate"]
     min_scanned: 30
     corpus: "every task in `internal/bench/corpora/ab-trackb-v2.yaml` that names an in-repo `fixture` — 33 on 2026-10-28; the pinned-repo task has no fixture and is not scanned. The floor is 30 because tasks are added by ones; a reading far below means the corpus or the fixture root moved."

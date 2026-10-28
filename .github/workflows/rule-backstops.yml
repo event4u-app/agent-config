@@ -55,7 +55,7 @@ on:
       - "src/server/**"
       - "dist/install/**"
       - "internal/bench/reports/kernel-prefix.json"
-      # bench_task_validity scores the v2 corpus against its own fixtures and
+      # check_bench_task_validity scores the v2 corpus against its own fixtures and
       # reference patches; a corpus- or fixture-only change must trigger it.
       - "internal/bench/corpora/ab-trackb-v2.yaml"
       - "internal/bench/ab/**"
@@ -826,7 +826,7 @@ jobs:
       # task's reference patch under internal/bench/ab/oracle-v2/ passes. Here
       # rather than in consistency.yml for the reason the steps above state.
       - name: Bench v2 tasks fail when nothing was done
-        run: ./scripts-run src/scripts/bench_task_validity --gate
+        run: ./scripts-run src/scripts/check_bench_task_validity --gate
 
       # Showcase pages under docs/examples/bench/ are generated from committed
       # bundles; a hand edit or a bundle without its page reds here. Then every
