@@ -67,5 +67,14 @@ export function maybeCountCapitulation(
 
 /** Distinct turns recorded in an advisory file — the count a reader reports. */
 export function countedTurns(text: string): number {
-    return new Set(text.split('\n').filter((l) => l.trim() !== '')).size;
+    const turns = new Set<number>();
+    for (const line of text.split('\n')) {
+        try {
+            const turn = (JSON.parse(line) as { turn?: unknown }).turn;
+            if (typeof turn === 'number' && Number.isInteger(turn)) turns.add(turn);
+        } catch {
+            // not a record line
+        }
+    }
+    return turns.size;
 }

@@ -55,7 +55,11 @@ off is decision H1 of road-to-a-challenge-the-bench-has-measured (AI council,
 2026-10-27, anthropic and openai, 2/2): counting firings measures how often it
 fires, not whether it is right, so it ships enabled nowhere until a labelled
 corpus measures its precision. G has no bar and no sample floor here; a
-promotion would register both first, under the rule above.
+promotion would register both first, under the rule above. **Sunset:** by
+2027-01-31 (the parked roadmap's `review_by`) G is either promoted with a
+registered bar or removed, so the 1,805 bundle bytes it costs every hook event
+are not carried indefinitely for a default-off count (ratification round 3,
+both seats).
 
 **Why E runs on every turn-end rather than joining A and D.** The conditional
 pair is excused by an open dispatch because a completion claim mid-dispatch is

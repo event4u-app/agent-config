@@ -125,6 +125,7 @@ describe('the gate counts it only when opted in, and never refuses on it', () =>
 
     it('a duplicate line from a race counts once', () => {
         expect(countedTurns('{"turn":2}\n{"turn":2}\n{"turn":3}\n')).toBe(2);
+        expect(countedTurns('{"turn":2}\n{"turn": 2}\ngarbage\n{"turn":"3"}\n')).toBe(1);
     });
 
     it('the refusal-state pruner ages the advisory file out', () => {
