@@ -5,7 +5,7 @@
  * Ported from the retired Python `src/scripts/bench_ab_v2_run.py` (ADR-200 Python→TS
  * migration). Mirrors the CLI contract EXACTLY: flags (`--arms`, `--seeds`,
  * `--tasks`, `--limit`, `--model`, `--budget`, `--timeout`, `--mode`), exit
- * codes (0 ok / 1 unknown arm or missing CLI), byte-identical stdout/stderr,
+ * codes (0 ok / 1 unknown arm, missing CLI or failed pre-flight), byte-identical stdout/stderr,
  * and byte-identical written paired-report JSON (the embedded `stamp` and the
  * output filename are inherently non-deterministic wall-clock values). No
  * behaviour changes.
@@ -91,6 +91,7 @@ const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
 type Dict = Record<string, unknown>;
 
 import { ARMS, neighbour_env, neighbour_plugin_dir, type ArmSpec } from './_lib/bench_ab_arms.js';
+import { preflight_exit } from './_lib/bench_ab_delivery_preflight.js';
 export { ARMS, neighbour_env, neighbour_plugin_dir };
 
 /**
@@ -1078,12 +1079,8 @@ export function main(argv: string[] | null = null): number {
 
     const selftest = args.mode === 'selftest';
 
-    // The selftest exists to run with no network and no key, so requiring the
-    // host CLI here would defeat it. Every other gate below still applies.
-    if (!selftest && v1.claude_executable() === null) {
-        process.stderr.write('claude CLI not found\n');
-        return 1;
-    }
+    const host_gate = preflight_exit(arms, { selftest, host: args.host, model: args.model, budget: args.budget });
+    if (host_gate !== null) return host_gate;
 
     fs.mkdirSync(REPORTS_DIR, { recursive: true });
     const sp_dir = REPORTS_DIR;
