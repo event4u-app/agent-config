@@ -331,10 +331,13 @@ describe('step 3.3 — promote after proof, never at install', () => {
 
     it('an interrupted promotion is restored to full by the next session, whatever its arrivals say', () => {
         // Simulate termination at three points: after the markers, after some files, after the pass.
+        // A frozen clock keeps the latency budget out of this test: on a slow runner the first
+        // pass records a `last_thin_ms` that, with real elapsed time, skips the final promotion.
+        const frozen = { now: (): number => 0, startedAt: 0 };
         for (const cut of ['markers', 'partial', 'before-record'] as const) {
             const f = freshInstall();
             arrive(f, 'session-1', '2026-10-24T10:00:00Z', allRules(f));
-            expect(step(f).action).toBe('promoted');
+            expect(step(f, frozen).action).toBe('promoted');
             const stubs = stubCount(f);
             if (cut === 'markers') restoreAll(f);
             if (cut === 'partial') restoreAll(f, 2);
@@ -343,13 +346,13 @@ describe('step 3.3 — promote after proof, never at install', () => {
             if (cut === 'before-record') fs.rmSync(path.join(f.runtimeRoot, PROMOTION_RECORD));
             expect(stubs).toBeGreaterThan(0);
             arrive(f, 'session-2', new Date(Date.now() + 60_000).toISOString(), allRules(f));
-            expect(step(f)).toEqual({ action: 'none', reason: 'promotion-interrupted' });
+            expect(step(f, frozen)).toEqual({ action: 'none', reason: 'promotion-interrupted' });
             expect(stubCount(f)).toBe(0);
             expect(readCarrierState(f.runtimeRoot).layer).toBe('full');
             expect(fs.existsSync(path.join(f.runtimeRoot, PROMOTING_MARKER))).toBe(false);
             expect(ledgerMatchesDisk(f)).toBe(true);
             // And the session after that converges: it promotes again.
-            expect(step(f).action).toBe('promoted');
+            expect(step(f, frozen).action).toBe('promoted');
             expect(fs.existsSync(path.join(f.runtimeRoot, PROMOTING_MARKER))).toBe(false);
         }
     });
