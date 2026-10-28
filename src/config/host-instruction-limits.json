@@ -4,7 +4,22 @@
     "limit": 150000,
     "kind": "reported",
     "source": "agents/roadmaps/later/road-to-an-installed-layer-that-is-thinned.md:7 (`estate_offset_exempt`), and the same figure in the `Source:` header of that file and of road-to-a-rule-carrier-that-works-outside-the-repo and road-to-rule-triggers-and-links-that-hold. All three cite round `inbox-2026-10-c`, which reproduced the host's notice on a fresh install at 102 unconditional files / 338,225 characters.",
-    "note": "MARKED `reported`, NOT `vendor-published`, DELIBERATELY. The round that carries the primary record lived under `agents/tmp.old/inbox-2026-10-c/` and has since been pruned, so what this tree can still show is three roadmap headers citing it and not the notice itself. That is enough to record the figure and not enough to call it read from the host. Checked 2026-10-05: `ls agents/tmp.old/inbox-2026-10-c/` reports no such directory. Promote to `vendor-published` only against the host's own published material, never against another copy of this entry."
+    "note": "MARKED `reported`, NOT `vendor-published`, DELIBERATELY. The round that carries the primary record lived under `agents/tmp.old/inbox-2026-10-c/` and has since been pruned, so what this tree can still show is three roadmap headers citing it and not the notice itself. That is enough to record the figure and not enough to call it read from the host. Checked 2026-10-05: `ls agents/tmp.old/inbox-2026-10-c/` reports no such directory. Promote to `vendor-published` only against the host's own published material, never against another copy of this entry.",
+    "by_window": {
+      "200k": {
+        "combined": 120000,
+        "combined_kind": "reported",
+        "per_file": 40000,
+        "per_file_kind": "vendor-published"
+      },
+      "1m": {
+        "combined": 150000,
+        "combined_kind": "reported",
+        "per_file": 150000,
+        "per_file_kind": "vendor-published"
+      }
+    },
+    "by_window_source": "per_file: the host's published memory documentation, section on the per-file limit for on-demand files, read 2026-10-28 (200K window 40,000 characters; 1M window 150,000 on models after the 4.6 generation, 200,000 on the 4.6 generation; enforced on on-demand files since host 2.1.309). combined: NOT published by the host; recorded as max(120,000, per_file) from external reports of the notice, round inbox-2026-10-bg. The flat `limit` above stays the 1M figure the notice was reproduced at; the receipt prints both window rows because the session window is not known at install time."
   },
   "cursor": {
     "limit": null,
