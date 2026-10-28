@@ -49,6 +49,7 @@ left to read as finished.
       `docs/CLAIMS.md` § `obligation-settle-shadow-bar` as clause (10), which
       names the option and its reason; clause (8) now points at it. The bar's
       numbers are unchanged — only what a reading may be cited for is.
+      reach exempt: an owner decision written into docs/CLAIMS.md; no code changed, and obligations.ts is cited only as evidence the decision read
 
       **OPEN, deliberately, and this step is not agent-closable by its own
       terms.** The blocker's owner is `maintainer` and this step says in its own
