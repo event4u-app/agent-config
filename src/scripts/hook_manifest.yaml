@@ -1079,6 +1079,9 @@ concerns:
   # theirs. Shipped on, no settings key (ADR-293); the agent judges the gap,
   # the hook never rewrites the prompt. Silent on questions, continuations,
   # slash commands and prompts already asking for an interview.
+  # COST, named: about 470 B of context per task prompt, every host binding the
+  # slot, repeated on every task prompt of a session; a false positive adds that
+  # line and may prompt one owner question the task did not need.
   # Kill switch: `AGENT_CONFIG_NO_INTAKE_PASS=1`.
   intake-pass:
     script: src/scripts/hooks/intake_pass_hook.ts

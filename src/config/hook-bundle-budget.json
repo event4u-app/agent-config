@@ -106,7 +106,7 @@
             "from": 1556670,
             "to": 1556764,
             "by": "agent, feat/owner-answers-oq21-27 (owner answer OQ-25, road-to-the-question-only-the-owner-can-answer-carried 3.1)",
-            "what_was_added": "One `LAZY_CONCERNS` row for `intake-pass`, the owner-chosen OQ-25 concern on `user_prompt_submit` (every host that binds the slot): on a task prompt it injects one line naming the intake pass, and its body ships in its own 9,254-byte chunk. Measured by the gate: 1,556,763 B with the row on a base of 1,556,669 B, so +94 B for the row; the ceiling is that reading plus the 1 B of headroom the base had.",
+            "what_was_added": "One `LAZY_CONCERNS` row for `intake-pass`, the owner-chosen OQ-25 concern on `user_prompt_submit` (every host that binds the slot): on a task prompt it injects one line naming the intake pass, and its body ships in its own 9,807-byte chunk. Measured by the gate: 1,556,763 B with the row on a base of 1,556,669 B, so +94 B for the row; the ceiling is that reading plus the 1 B of headroom the base had.",
             "why_it_could_not_be_avoided": "The base sat 1 B under the ceiling, so no concern can be added without either a raise or a removal elsewhere. The concern was built in-bundle first and measured at +2,930 B; moving its body into a lazy chunk cut that to the 94-byte row, which is the smallest form the dispatcher can reach a new concern in. Making room by compacting another module would change code this decision does not own.",
             "what_would_have_caught_it": "Nothing earlier: the owner chose a shipped, default-on concern on 2026-10-28, and any shipped concern costs at least its LAZY_CONCERNS row."
         }
@@ -174,9 +174,9 @@
         },
         {
             "entry": "src/scripts/hooks/intake_pass_hook.ts",
-            "max_bytes": 10200,
+            "max_bytes": 10800,
             "registered_at": "2026-10-28",
-            "derivation": "Measured 9,254 bytes on 2026-10-28 (the intake-pass concern, its task-prompt predicate and the shared `isSyntheticPrompt` reader), no `yaml`. The ceiling is that reading plus about 10 %, rounded, with no growth queued. Bound on `user_prompt_submit` on every host that binds the slot; the dispatch bundle carries only its LAZY_CONCERNS row. A missing chunk falls back to the spawn path and costs latency, never the line."
+            "derivation": "Measured 9,807 bytes on 2026-10-28 (the intake-pass concern, its task-prompt and question predicates after council round 1, and the shared `isSyntheticPrompt` reader), no `yaml`. The ceiling is that reading plus about 10 %, rounded, with no growth queued. Bound on `user_prompt_submit` on every host that binds the slot; the dispatch bundle carries only its LAZY_CONCERNS row. A missing chunk falls back to the spawn path and costs latency, never the line."
         }
     ],
     "chunks_note": "A chunk is loaded only when a caller needs it, so its bytes are not paid by every dispatch; its ceiling exists so that the move out of dispatch.js stays a measured place rather than an unmeasured one. The gate builds each chunk with the exact esbuild segment `build:hook-chunks` uses for its entry.",

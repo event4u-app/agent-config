@@ -27,6 +27,12 @@ describe('intake-pass — which prompts are tasks (OQ-25)', () => {
         'Baue einen CSV-Export für die Rechnungsliste mit Filter nach Monat',
         'Add a retry with backoff to the webhook sender and cover it with a test',
         'Refactor the invoice service so totals are computed in one place',
+        // Council round 1: a leading acknowledgement does not make a task a continuation.
+        'Go ahead and implement the retry policy described in this ticket',
+        'ok, then build the CSV export with a month filter',
+        // An embedded question followed by an instruction ends as an instruction.
+        'The export is slow? Add an index on invoices.created_at and measure it',
+        'Add a retry with backoff to the webhook sender.\nCover it with a test and update the changelog.',
     ])('fires on a task prompt: %s', (prompt) => {
         expect(isTaskPrompt(prompt)).toBe(true);
     });
@@ -39,7 +45,15 @@ describe('intake-pass — which prompts are tasks (OQ-25)', () => {
         ['a slash command', '/roadmap:process-full agents/roadmaps/foo.md and then open the pr'],
         ['an explicit interview request', 'Plan the billing export with me and interview me before you start'],
         ['a release from questions', 'Rename the config key everywhere, just do it without asking'],
-        ['a harness turn', '<task-notification>task finished with output and many more words here</task-notification>'],
+        // Deliberate: a polite request phrased as a question is answered or clarified
+        // first (rule question-not-instruction), so the pass does not fire on it.
+        ['a question-form request', 'Could you add retries to the webhook sender and tests for them?'],
+        ['a question with a trailing qualifier', 'Why is the webhook sender failing on staging? Please explain'],
+        ['a punctuation-free German question', 'Warum schlägt der Export auf Staging immer wieder fehl'],
+        ['a resume order of any length', 'continue with the next roadmap step and keep the same branch as before'],
+        ['a release phrased differently', "Rename the config key everywhere and don't ask me anything"],
+        ['a German release', 'Benenne den Schlüssel überall um, ohne Rückfragen und ohne Pause'],
+        ['a harness turn','<task-notification>task finished with output and many more words here</task-notification>'],
     ])('stays silent on %s', (_label, prompt) => {
         expect(isTaskPrompt(prompt)).toBe(false);
     });

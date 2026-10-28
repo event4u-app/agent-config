@@ -22,24 +22,42 @@ type JsonObject = { [k: string]: JsonValue };
 // Below this many words a prompt is a reply to the agent, not a task.
 export const MIN_TASK_WORDS = 6;
 
-const CONTINUATION = /^(?:mach(?:e)?\s+weiter|weiter|continue|go on|go ahead|ja|yes|ok(?:ay)?|passt|\d+)\b/i;
+// A resume order is a continuation at any length. A short acknowledgement ("ok",
+// "go ahead", "2") falls under MIN_TASK_WORDS; a longer one carries a task.
+const RESUME = /^(?:mach(?:e)?\s+weiter|weiter\b|continue\b|go\s+on\b)/i;
+const INTERROGATIVE = /^(?:why|what|how|which|who|where|when|is|are|does|do|can|could|should|would|warum|wieso|weshalb|was|wie|welche[rsmn]?|wer|wo|wann|ist|sind|gibt|kann|kannst|könntest|sollte|soll|geht)\b/i;
 const INTERVIEW = /\b(?:interview\s+(?:me|mich)|r[üu]ckfragen|frag\s+mich|ask\s+me\s+follow-up|challenge\s+me|grill\s+me)\b/i;
-const RELEASE = /\b(?:just\s+do\s+it|mach\s+einfach|einfach\s+machen|no\s+questions|keine\s+(?:r[üu]ck)?fragen)\b/i;
+const RELEASE = /\b(?:just\s+do\s+it|mach\s+einfach|einfach\s+machen|no\s+questions|don'?t\s+ask|do\s+not\s+ask|without\s+asking|proceed\s+autonomously|keine\s+(?:r[üu]ck)?fragen|ohne\s+(?:r[üu]ck)?(?:fragen|nachfragen)|frag\s+nicht)\b/i;
 
 export const INTAKE_LINE =
   "<intake-pass>Before the first write, sort this prompt's gaps: a fact → look it up; " +
   "a technical choice → decide it and name it as your call in the hand-back; " +
   "an owner-owned gap (product meaning, a business constraint, taste) → ask ONE question first, " +
-  "native picker, one recommendation. No owner gap → proceed and list your assumptions. " +
-  "contexts/execution/cheap-question-mechanics.md § Intake pass.</intake-pass>";
+  "native picker, one recommendation. No owner gap → proceed and list your assumptions.</intake-pass>";
+
+function lastSentence(text: string): string {
+  const parts = text.split(/(?<=[.!?])\s+/).filter((s) => s.trim() !== "");
+  return (parts[parts.length - 1] ?? text).trim();
+}
+
+/**
+ * A question is answered, never worked on (rule `question-not-instruction`), so
+ * the pass stays silent on one — including a polite request phrased as a
+ * question, which the agent answers or clarifies first. A prompt counts as a
+ * question when its last sentence ends in `?` or its first word is interrogative.
+ */
+export function isQuestion(text: string): boolean {
+  return /\?\s*$/.test(lastSentence(text)) || INTERROGATIVE.test(text);
+}
 
 export function isTaskPrompt(prompt: string): boolean {
   const text = prompt.trim();
   if (!text || text.startsWith("/")) return false;
   if (isSyntheticPrompt(text)) return false;
-  if (CONTINUATION.test(text)) return false;
-  if (text.split(/\s+/).length < MIN_TASK_WORDS) return false;
-  if (/\?\s*$/.test(text)) return false;
+  const words = text.split(/\s+/).length;
+  if (RESUME.test(text)) return false;
+  if (words < MIN_TASK_WORDS) return false;
+  if (isQuestion(text)) return false;
   if (INTERVIEW.test(text) || RELEASE.test(text)) return false;
   return true;
 }
