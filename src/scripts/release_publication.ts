@@ -98,6 +98,7 @@ function run(
         : spawnSync(cmd as string, rest, {
               cwd,
               encoding: 'utf-8',
+              env: cmd === 'git' ? git_network_env(process.env, _ssh_command_config()) : process.env,
               // capture_output=True → pipe; else inherit so child writes straight to
               // this process's stdout/stderr (text mode, matching subprocess text=True).
               stdio: capture ? ['ignore', 'pipe', 'pipe'] : ['inherit', 'inherit', 'inherit'],
@@ -125,6 +126,103 @@ function run(
     }
 
     return { returncode, stdout, stderr };
+}
+
+/**
+ * The environment a git subprocess runs with, so a dead connection ENDS.
+ *
+ * Without keepalives an ssh session whose peer vanished — a laptop that slept,
+ * a dropped Wi-Fi — waits forever: on 19.0.0 a `git fetch` sat for 1 h 47 min
+ * with no output and no error. ServerAlive* ends such a session after about a
+ * minute of silence from the server; a live server answers the probes, so a long
+ * but healthy push is unaffected. An ssh command the operator configured, in the
+ * environment or in `core.sshCommand`, is never overridden.
+ */
+export function git_network_env(
+    base: NodeJS.ProcessEnv,
+    configuredSshCommand: string | null,
+): NodeJS.ProcessEnv {
+    const env: NodeJS.ProcessEnv = {
+        GIT_HTTP_LOW_SPEED_LIMIT: '1000',
+        GIT_HTTP_LOW_SPEED_TIME: '60',
+        ...base,
+    };
+    if (base.GIT_SSH_COMMAND === undefined && configuredSshCommand === null) {
+        env.GIT_SSH_COMMAND = 'ssh -o ServerAliveInterval=15 -o ServerAliveCountMax=4 -o ConnectTimeout=30';
+    }
+    return env;
+}
+
+let _ssh_command_cache: string | null | undefined;
+function _ssh_command_config(): string | null {
+    if (_ssh_command_cache === undefined) {
+        const r = spawnSync('git', ['config', '--get', 'core.sshCommand'], { cwd: REPO_ROOT, encoding: 'utf-8' });
+        _ssh_command_cache = r.status === 0 && r.stdout.trim() !== '' ? r.stdout.trim() : null;
+    }
+    return _ssh_command_cache;
+}
+
+/**
+ * True when a git transport call failed because the CONNECTION did — the one
+ * failure class a retry repairs. Wordings pinned from 19.0.0 (2026-10-28).
+ * A missing key prints the same `Could not read from remote repository`, so
+ * `Permission denied` vetoes the match: credentials are never retried.
+ */
+export function _is_transient_network_failure(stderr: string, stdout: string): boolean {
+    const text = `${stderr}\n${stdout}`;
+    if (/Permission denied|denied to |GH0\d\d|\[(?:remote )?rejected\]/i.test(text)) return false;
+    return /(ssh: connect to host|Could not resolve host|Connection reset by peer|Broken pipe|Connection timed out|Operation timed out|Connection refused|unexpected disconnect|the remote end hung up unexpectedly|Failed to connect to|SSL_ERROR_SYSCALL|Timeout, server)/i.test(
+        text,
+    );
+}
+
+let _network_retry_delays_ms: readonly number[] = [5_000, 20_000];
+/** Test seam — `null` restores the real backoff. */
+function _set_network_retry_delays(delays: readonly number[] | null): void {
+    _network_retry_delays_ms = delays ?? [5_000, 20_000];
+}
+
+/**
+ * Run a git transport command, retrying it while the failure is a dropped
+ * connection. Returns the last result; the caller decides what a failure means.
+ */
+export function run_network(args: readonly string[]): RunResult {
+    let r = run(args, { check: false, capture: true });
+    for (const delay of _network_retry_delays_ms) {
+        if (r.returncode === 0 || !_is_transient_network_failure(r.stderr, r.stdout)) return r;
+        process.stdout.write(
+            `↻  ${args.slice(0, 2).join(' ')}: the connection dropped (${r.stderr.trim().split('\n')[0]}) — retrying in ${delay / 1000}s\n`,
+        );
+        _sleep_ms(delay);
+        r = run(args, { check: false, capture: true });
+    }
+    return r;
+}
+
+/** The die() message for a transport call that kept failing on the network. */
+function _network_failure_message(what: string, r: RunResult): string {
+    return (
+        `${what} failed (exit ${r.returncode}) after ${_network_retry_delays_ms.length + 1} attempts — ` +
+        'the network kept dropping, not the release. Check the connection and re-run ' +
+        '`task release -- --resume --yes`; every completed step is skipped.'
+    );
+}
+
+/**
+ * Fetch the remote's branches and tags before the release reads either.
+ * `--force` lets the remote's tag positions win over stale local tags: the
+ * release consumes the remote view as source of truth, and local drift (e.g.
+ * from renamed release-please tags) should not block the fetch.
+ */
+export function fetch_remote_tags(): void {
+    const r = run_network(['git', 'fetch', REMOTE, '--tags', '--prune', '--force']);
+    if (r.returncode === 0) return;
+    process.stderr.write(r.stderr);
+    die(
+        _is_transient_network_failure(r.stderr, r.stdout)
+            ? _network_failure_message(`git fetch ${REMOTE}`, r)
+            : `command failed (${r.returncode}): git fetch ${REMOTE} --tags --prune --force`,
+    );
 }
 
 function git(args: readonly string[], opts: { capture?: boolean } = {}): string {
@@ -825,11 +923,15 @@ function push_release_branch(branch: string): void {
         process.stdout.write(`✅  ${REMOTE}/${branch} already carries this commit — nothing to push\n`);
         return;
     }
-    const first = run(['git', 'push', '-u', REMOTE, branch], { check: false, capture: true });
+    const first = run_network(['git', 'push', '-u', REMOTE, branch]);
     if (first.returncode === 0) {
         process.stdout.write(first.stdout);
         process.stderr.write(first.stderr);
         return;
+    }
+    if (_is_transient_network_failure(first.stderr, first.stdout)) {
+        process.stderr.write(first.stderr);
+        die(_network_failure_message(`push of ${branch}`, first));
     }
 
     // A push can fail for many reasons — a pre-push hook refusing the commit,
@@ -1052,11 +1154,15 @@ function _remote_tag_commit(tag: string): string | null {
  * with the push output as the error.
  */
 function _push_tag(tag: string): void {
-    const first = run(['git', 'push', REMOTE, tag], { check: false, capture: true });
+    const first = run_network(['git', 'push', REMOTE, tag]);
     if (first.returncode === 0) {
         process.stdout.write(first.stdout);
         process.stderr.write(first.stderr);
         return;
+    }
+    if (_is_transient_network_failure(first.stderr, first.stdout)) {
+        process.stderr.write(first.stderr);
+        die(_network_failure_message(`push of tag ${tag}`, first));
     }
     if (_is_tag_already_exists(first.stderr, first.stdout)) {
         const remote = _remote_tag_commit(tag);
@@ -1120,6 +1226,7 @@ export {
     _release_exists,
     _remote_tag_commit,
     _set_exec_override,
+    _set_network_retry_delays,
     _sleep_ms,
     _tag_exists_local,
     _tag_exists_remote,
@@ -1320,7 +1427,8 @@ export function _count_tests_current(): number | null {
         cwd: REPO_ROOT,
         encoding: 'utf-8',
         stdio: ['ignore', 'pipe', 'pipe'],
-        timeout: 180_000,
+        // 180 s timed out twice on 19.0.0: the collection took ~4 min under load.
+        timeout: 600_000,
         maxBuffer: _TEST_LIST_MAX_BUFFER,
     });
     return _count_from_list_result(res);
@@ -1334,8 +1442,14 @@ export function _previous_test_count_from_changelog(prev_tag: string | null): nu
     if (!prev_tag || !fs.existsSync(CHANGELOG)) {
         return null;
     }
-    const text = fs.readFileSync(CHANGELOG, 'utf-8');
-    const heading_re = new RegExp(`^##\\s+\\[?${reEscape(prev_tag)}\\b`, 'm');
+    const section = _changelog_section(fs.readFileSync(CHANGELOG, 'utf-8'), prev_tag);
+    const count_match = section === null ? null : _TEST_COUNT_LINE_RE.exec(section);
+    return count_match ? Number.parseInt(count_match[1] as string, 10) : null;
+}
+
+/** The body of the `## [version]` section of a changelog text, or null. */
+function _changelog_section(text: string, version: string): string | null {
+    const heading_re = new RegExp(`^##\\s+\\[?${reEscape(version)}\\b`, 'm');
     const m = heading_re.exec(text);
     if (!m) {
         return null;
@@ -1343,17 +1457,28 @@ export function _previous_test_count_from_changelog(prev_tag: string | null): nu
     const headEnd = m.index + m[0].length;
     const rest = text.slice(headEnd);
     const next_heading = NEXT_SECTION_RE.exec(rest);
-    const sectionEnd = headEnd + (next_heading ? next_heading.index : rest.length);
-    const section = text.slice(headEnd, sectionEnd);
-    const count_match = _TEST_COUNT_LINE_RE.exec(section);
-    return count_match ? Number.parseInt(count_match[1] as string, 10) : null;
+    return text.slice(headEnd, headEnd + (next_heading ? next_heading.index : rest.length));
+}
+
+/** The `Tests:` footer line of the `version` section, verbatim, or null. */
+export function _test_trend_line_in_section(text: string, version: string): string | null {
+    const section = _changelog_section(text, version);
+    const line = section === null ? null : /^Tests:\s+\d+.*$/m.exec(section);
+    return line ? line[0].trimEnd() : null;
 }
 
 /**
  * Return the `Tests: N (+M since X.Y.Z)` footer line, or null when the current
  * count cannot be determined. Silent on collection errors.
  */
-export function _render_test_trend_line(prev_tag: string | null): string | null {
+export function _render_test_trend_line(prev_tag: string | null, target?: string): string | null {
+    // A resume re-plans the cut, and the section it is about to rewrite already
+    // carries the footer the first run measured: reuse it rather than pay a
+    // full vitest collection again (19.0.0 paid it on a resume after the merge).
+    if (target !== undefined && fs.existsSync(CHANGELOG)) {
+        const written = _test_trend_line_in_section(fs.readFileSync(CHANGELOG, 'utf-8'), target);
+        if (written !== null) return written;
+    }
     const current = _count_tests_current();
     if (current === null) {
         return null;

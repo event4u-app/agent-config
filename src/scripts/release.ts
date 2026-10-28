@@ -211,6 +211,7 @@ import {
     _tag_exists_remote,
     _target_from_branch,
     create_and_push_annotated_tag,
+    fetch_remote_tags,
     guard_publication,
     checkout_release_branch,
     _render_test_trend_line,
@@ -723,11 +724,7 @@ function preflight(target: string, opts: { resume?: boolean; ci?: boolean } = {}
         process.stdout.write(`\u26a0\ufe0f  ${position.notice}\n`);
     }
 
-    // --force lets the remote's tag positions win over stale local tags.
-    // The release consumes the remote view as source of truth, and we're
-    // about to create a new tag anyway — local drift (e.g. from renamed
-    // release-please tags) should not block the fetch.
-    run(['git', 'fetch', REMOTE, '--tags', '--prune', '--force'], { capture: true });
+    fetch_remote_tags();
 
     // The local-in-sync-with-origin check only applies to main; if we're
     // already on the release branch in resume mode, the relevant invariant
@@ -1524,7 +1521,7 @@ function main(argv: readonly string[] | null = null): number {
     // Dry-run stays fast: the trend line costs a full vitest collection
     // (~15s+), which `--dry-run exits 0 without needing …` contracts (and
     // the release test) assume never runs. Real releases compute it.
-    const test_trend_line = args.dry_run ? null : _render_test_trend_line(prev);
+    const test_trend_line = args.dry_run ? null : _render_test_trend_line(prev, target);
     // Derived unconditionally, dry-run included: it is one `git log` (~25 ms),
     // not the trend line's full vitest collection. Skipping it on `--dry-run`
     // made the preview print the `_none_` skeleton while the real run wrote
