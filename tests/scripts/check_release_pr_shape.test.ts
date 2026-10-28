@@ -1,4 +1,5 @@
 
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -258,5 +259,37 @@ describe('check_release_pr_shape — the release pipeline writes no census', () 
         const body = next === -1 ? yml.slice(start) : yml.slice(start, start + 1 + next);
         expect(body).toContain('task: sync');
         expect(body).not.toMatch(/report_evidence_temperature/);
+    });
+
+    it('no tracked automation invokes the census at all', () => {
+        // The direct check above would pass if `sync`, `generate-tools` or a
+        // workflow called the census instead. Every tracked file is scanned —
+        // `git grep` is the index, not a root list — and the census may only be
+        // NAMED there, never run: zero invocations, where this test used to
+        // demand exactly one.
+        const files = execFileSync('sh', ['-c', "git grep -l 'report_evidence_temperature' -- . || true"], {
+            cwd: REPO_ROOT,
+            encoding: 'utf8',
+        })
+            .split('\n')
+            .filter((f) => f !== '')
+            // Markdown is prose; the module and the suites that import it name
+            // it by definition; review artifacts and the code map mirror files.
+            .filter((f) => !f.endsWith('.md'))
+            .filter((f) => f !== 'src/scripts/report_evidence_temperature.ts')
+            .filter((f) => !f.startsWith('tests/'))
+            .filter((f) => !f.startsWith('agents/evidence/'))
+            .filter((f) => !f.startsWith('agents/map/'));
+        const invocations = files
+            .filter((f) => fs.existsSync(path.join(REPO_ROOT, f)))
+            .flatMap((f) =>
+                fs
+                    .readFileSync(path.join(REPO_ROOT, f), 'utf8')
+                    .split('\n')
+                    .map((line) => `${f}: ${line}`),
+            )
+            .map((line) => line.replace(/\/\*.*?\*\//g, '').replace(/(\s|^)(\/\/|#).*$/, '$1'))
+            .filter((line) => /(scripts-run|tsx|node)\s+\S*report_evidence_temperature/.test(line));
+        expect(invocations).toEqual([]);
     });
 });
