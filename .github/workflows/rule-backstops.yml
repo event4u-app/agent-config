@@ -55,6 +55,10 @@ on:
       - "src/server/**"
       - "dist/install/**"
       - "internal/bench/reports/kernel-prefix.json"
+      # bench_task_validity scores the v2 corpus against its own fixtures and
+      # reference patches; a corpus- or fixture-only change must trigger it.
+      - "internal/bench/corpora/ab-trackb-v2.yaml"
+      - "internal/bench/ab/**"
       - ".github/workflows/rule-backstops.yml"
   push:
     branches:
@@ -92,6 +96,8 @@ on:
       - "src/server/**"
       - "dist/install/**"
       - "internal/bench/reports/kernel-prefix.json"
+      - "internal/bench/corpora/ab-trackb-v2.yaml"
+      - "internal/bench/ab/**"
       - ".github/workflows/rule-backstops.yml"
 
 # Superseded PR pushes cancel; `push: main` runs never do. On main this
@@ -806,3 +812,11 @@ jobs:
 
       - name: Every blocker citation resolves to a file and a line
         run: ./scripts-run src/scripts/lint_blocker_citations
+
+      # The v2 bench scorer fails every arm that did no work: a do-nothing,
+      # touch-only, verifier-exit, source-exit or question-shaped-noise arm, and
+      # each tamper mutation, passes 0 capability oracles, and every fixture
+      # task's reference patch under internal/bench/ab/oracle-v2/ passes. Here
+      # rather than in consistency.yml for the reason the steps above state.
+      - name: Bench v2 tasks fail when nothing was done
+        run: ./scripts-run src/scripts/bench_task_validity --gate

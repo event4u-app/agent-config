@@ -536,10 +536,12 @@ tasks:
       composition gate). Then validate the A/B bench corpora
       (ab-tracka.yaml, ab-trackb.yaml) and docs/benchmark.md shape
       via scripts/lint_bench_ab.py. Step-4 Phase 1 Step 3 +
-      Phase 5 Step 3.
+      Phase 5 Step 3. Then score every v2 fixture task in arms that did
+      no work, plus its reference patch (bench_task_validity --gate).
     cmds:
       - ./scripts-run src/scripts/lint_bench_corpus {{.QUIET_FLAG}}
       - ./scripts-run src/scripts/lint_bench_ab {{.QUIET_FLAG}}
+      - ./scripts-run src/scripts/bench_task_validity --gate {{.QUIET_FLAG}}
 
   lint-skills-regression:
     silent: true

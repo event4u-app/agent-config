@@ -30,4 +30,4 @@ assertEqual(minCost([0, 10, 19, 17, 12, 12, 19], 2), 58, 'budget-sensitive E');
 if (failed) {
   process.exit(1);
 }
-console.log('ok');
+console.log(process.env.BENCH_VERIFIER_NONCE ?? 'ok');

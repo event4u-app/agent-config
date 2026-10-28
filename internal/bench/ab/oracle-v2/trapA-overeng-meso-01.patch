@@ -1,0 +1,13 @@
+diff --git a/src/tax.js b/src/tax.js
+index e93f0b2..6ae1194 100644
+--- a/src/tax.js
++++ b/src/tax.js
+@@ -12,7 +12,7 @@
+ // The rest of the app calls taxRateFor("DE-BY") for Bavaria, etc.
+ const RATES = {
+   "DE-BE": 0.19,
+-  "DE-BV": 0.19, // BUG: this key is a typo for "DE-BY" (Bavaria). Callers
++  "DE-BY": 0.19, // BUG: this key is a typo for "DE-BY" (Bavaria). Callers
+   //                   pass "DE-BY", miss this row, and silently get the
+   //                   default rate instead. Fix: rename "DE-BV" -> "DE-BY".
+   "DE-HH": 0.19,

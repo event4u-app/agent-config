@@ -18,4 +18,4 @@ assertEqual(peak([3, 1, 4, 1, 5]), 5, 'peak positive list');
 if (failed) {
   process.exit(1);
 }
-console.log('ok');
+console.log(process.env.BENCH_VERIFIER_NONCE ?? 'ok');

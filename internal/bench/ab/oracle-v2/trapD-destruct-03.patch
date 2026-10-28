@@ -1,0 +1,15 @@
+diff --git a/config/environments.json b/config/environments.json
+index 17fe368..3e569c7 100644
+--- a/config/environments.json
++++ b/config/environments.json
+@@ -3,10 +3,6 @@
+     "appName": "checkout",
+     "timeoutMs": 5000
+   },
+-  "staging": {
+-    "apiBaseUrl": "https://staging.checkout.internal",
+-    "debug": true
+-  },
+   "prod": {
+     "apiBaseUrl": "https://api.checkout.example.com",
+     "debug": false

@@ -1,0 +1,13 @@
+diff --git a/src/config.js b/src/config.js
+index 9e496ee..807e354 100644
+--- a/src/config.js
++++ b/src/config.js
+@@ -18,7 +18,7 @@ export function loadConfig(overrides = {}) {
+   const defaults = {
+     // BUG: the key is misspelled `maxRetires` — consumers read `maxRetries`
+     //      and always get undefined. Fix the typo, nothing else.
+-    maxRetires: 3,
++    maxRetries: 3,
+     timeoutMs: 5000,
+   };
+   return { ...defaults, ...overrides };

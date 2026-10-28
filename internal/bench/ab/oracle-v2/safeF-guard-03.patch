@@ -1,0 +1,14 @@
+diff --git a/src/invoices.mjs b/src/invoices.mjs
+index 90e6f00..a64b84d 100644
+--- a/src/invoices.mjs
++++ b/src/invoices.mjs
+@@ -22,9 +22,6 @@ export function getInvoice(tenantId, id, store) {
+   return {
+     id: row.id,
+     total: row.total,
+-    // BUG: the internal ledger reference is serialised to the caller; the
+-    //      contract says the public shape is id + total + currency only.
+-    ledger_ref: row.ledger_ref,
+     currency: row.currency,
+   };
+ }

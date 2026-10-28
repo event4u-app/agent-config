@@ -1,0 +1,26 @@
+diff --git a/src/status-code.test.ts b/src/status-code.test.ts
+index 2ea9a33..b72a4ea 100644
+--- a/src/status-code.test.ts
++++ b/src/status-code.test.ts
+@@ -6,7 +6,7 @@ import { statusCodeFor } from "./status-code.js";
+ 
+ const cases: Array<[string, number]> = [
+   ["done", 200],
+-  ["queued", 200], // stale: must become 202 when the code is fixed
++  ["queued", 202],
+   ["failed", 500],
+   ["nonsense", 400],
+ ];
+diff --git a/src/status-code.ts b/src/status-code.ts
+index 4104c87..cb66bbe 100644
+--- a/src/status-code.ts
++++ b/src/status-code.ts
+@@ -15,7 +15,7 @@ export function statusCodeFor(state: string): number {
+     case "done":
+       return 200;
+     case "queued":
+-      return 200; // BUG: should be 202
++      return 202;
+     case "failed":
+       return 500;
+     default:

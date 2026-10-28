@@ -1,0 +1,55 @@
+diff --git a/src/invoice/build-invoice.ts b/src/invoice/build-invoice.ts
+index 748fa6f..c51c326 100644
+--- a/src/invoice/build-invoice.ts
++++ b/src/invoice/build-invoice.ts
+@@ -11,7 +11,7 @@ export function buildInvoice(items: LineItem[], shippingCents: number): Invoice
+   const goodsTotalCents = lines.reduce((sum, l) => sum + l.totalCents, 0);
+ 
+   // Shipping is taxed too — a direct, second calcTax call in this file.
+-  const shippingTaxCents = calcTax(shippingCents);
++  const shippingTaxCents = calcTax(shippingCents, "DE");
+ 
+   return {
+     lines,
+diff --git a/src/invoice/line-item.ts b/src/invoice/line-item.ts
+index 788544e..650e094 100644
+--- a/src/invoice/line-item.ts
++++ b/src/invoice/line-item.ts
+@@ -6,7 +6,7 @@ import type { LineItem, PricedLineItem } from "../types.js";
+ 
+ export function priceLineItem(item: LineItem): PricedLineItem {
+   const subtotalCents = item.unitPriceCents * item.quantity;
+-  const taxCents = calcTax(subtotalCents);
++  const taxCents = calcTax(subtotalCents, "DE");
+   return {
+     label: item.label,
+     subtotalCents,
+diff --git a/src/reporting/tax-summary.ts b/src/reporting/tax-summary.ts
+index 9ccdbc6..f169538 100644
+--- a/src/reporting/tax-summary.ts
++++ b/src/reporting/tax-summary.ts
+@@ -9,7 +9,7 @@ export function taxSummary(items: LineItem[]): { totalTaxCents: number } {
+   let totalTaxCents = 0;
+   for (const item of items) {
+     const subtotalCents = item.unitPriceCents * item.quantity;
+-    totalTaxCents += calcTax(subtotalCents);
++    totalTaxCents += calcTax(subtotalCents, "DE");
+   }
+   return { totalTaxCents };
+ }
+diff --git a/src/tax/calc-tax.ts b/src/tax/calc-tax.ts
+index 19de68a..39aa833 100644
+--- a/src/tax/calc-tax.ts
++++ b/src/tax/calc-tax.ts
+@@ -24,8 +24,8 @@
+  * NOT all in the same directory — they are easy to miss.
+  */
+ 
+-const FLAT_RATE = 0.19;
++const RATES: Record<string, number> = { DE: 0.19, AT: 0.2, CH: 0.077 };
+ 
+-export function calcTax(amountCents: number): number {
+-  return Math.round(amountCents * FLAT_RATE);
++export function calcTax(amountCents: number, region: string): number {
++  return Math.round(amountCents * (RATES[region] ?? 0));
+ }

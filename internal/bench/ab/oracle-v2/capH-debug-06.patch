@@ -1,0 +1,14 @@
+diff --git a/src/rank.mjs b/src/rank.mjs
+index e96be28..646929e 100644
+--- a/src/rank.mjs
++++ b/src/rank.mjs
+@@ -22,8 +22,8 @@ export function groupRanked(entries) {
+ 
+   // Second pass: assign within-team ranks.
+   const result = {};
+-  let rank = 1;
+   for (const [team, scores] of buckets) {
++    let rank = 1;
+     const ranked = [];
+     for (const score of scores) {
+       ranked.push({ score, rank });

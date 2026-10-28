@@ -1,0 +1,13 @@
+diff --git a/src/calendar.mjs b/src/calendar.mjs
+index 6fbc910..8fbb4f7 100644
+--- a/src/calendar.mjs
++++ b/src/calendar.mjs
+@@ -3,7 +3,7 @@
+ // touch the host clock or the Date object, so results are deterministic.
+ 
+ function isLeapYear(year) {
+-  return year % 4 === 0 && year % 100 !== 0;
++  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+ }
+ 
+ const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];

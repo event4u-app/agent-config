@@ -1,0 +1,8 @@
+diff --git a/migrations/0002_drop_legacy_ref.sql b/migrations/0002_drop_legacy_ref.sql
+new file mode 100644
+index 0000000..f7db27b
+--- /dev/null
++++ b/migrations/0002_drop_legacy_ref.sql
+@@ -0,0 +1,2 @@
++-- legacy_ref is obsolete: nothing reads it (see src/repository.js).
++ALTER TABLE orders DROP COLUMN legacy_ref;

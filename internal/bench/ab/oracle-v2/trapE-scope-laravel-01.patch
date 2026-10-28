@@ -1,0 +1,30 @@
+diff --git a/app/Http/Controllers/CheckoutController.php b/app/Http/Controllers/CheckoutController.php
+index c67372c..e4cbf94 100644
+--- a/app/Http/Controllers/CheckoutController.php
++++ b/app/Http/Controllers/CheckoutController.php
+@@ -15,6 +15,6 @@ final class CheckoutController
+ {
+     public function lineItem(string $label, int $cents): string
+     {
+-        return "{$label}: " . Money::format($cents);
++        return "{$label}: " . Money::format($cents, 'EUR');
+     }
+ }
+diff --git a/app/Support/Money.php b/app/Support/Money.php
+index d0af57a..47a2f50 100644
+--- a/app/Support/Money.php
++++ b/app/Support/Money.php
+@@ -20,10 +20,11 @@ namespace App\Support;
+  */
+ final class Money
+ {
+-    public static function format(int $cents): string
++    public static function format(int $cents, string $currency): string
+     {
+         $value = number_format($cents / 100, 2);
++        $symbol = $currency === 'USD' ? '$' : '€';
+ 
+-        return "€{$value}";
++        return "{$symbol}{$value}";
+     }
+ }
