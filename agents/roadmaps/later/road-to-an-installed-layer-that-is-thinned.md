@@ -501,7 +501,7 @@ rather than as a ninth roadmap.
 > wrong axis. The layer-form decision required the behavioural effect
 > `observed-true` for `claude`, which only a thinned layer can produce, while a
 > thinned layer required that verdict — so no machine could ever leave the full
-> form. Owner answer 2026-10-28: "E1 + E2 jetzt umsetzen". Reading:
+> form. Owner answer 2026-10-28, translated: "implement E1 + E2 now". Reading:
 > `agents/evidence/analysis/installed-layer-reading-2026-10-28.md`.
 
 - [x] **6.1 Limit rows per window class.** `host-instruction-limits.json` carries <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/host-injection-effect.json -->

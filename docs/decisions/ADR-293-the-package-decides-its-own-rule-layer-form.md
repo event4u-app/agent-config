@@ -177,7 +177,7 @@ retired.
 ## Amendment 2 (2026-10-28) — "as reliable as today" is read as "arrives as today"
 
 Owner decision, given in the session that analysed inbox round
-`inbox-2026-10-bg` (answer: "E1 + E2 jetzt umsetzen").
+`inbox-2026-10-bg` (answer, translated: "implement E1 + E2 now").
 
 - **E1.** The layer-form decision's delivery condition reads a second axis of
   `src/config/host-injection-effect.json`, `delivery_mechanics` — did delivered
