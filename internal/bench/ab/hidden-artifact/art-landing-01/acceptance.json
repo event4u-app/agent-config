@@ -1,0 +1,22 @@
+{
+  "_note": "Held back from both arms; written from the brief's must-have list before any run.",
+  "tests": [
+    { "name": "lang-and-viewport", "steps": [
+      { "expect": "attr", "selector": "html", "attribute": "lang", "match": "^en" },
+      { "expect": "count", "selector": "meta[name=viewport]", "eq": 1 } ] },
+    { "name": "one-h1-naming-product", "steps": [
+      { "expect": "count", "selector": "h1", "eq": 1 },
+      { "expect": "text", "selector": "h1", "match": "Quillpine" } ] },
+    { "name": "primary-cta", "steps": [
+      { "expect": "count", "selector": "a.cta, button.cta", "min": 1 },
+      { "expect": "text", "selector": "a.cta, button.cta", "match": "trial|start|try" } ] },
+    { "name": "three-sections", "steps": [
+      { "expect": "count", "selector": "section", "min": 3 } ] },
+    { "name": "brand-tokens-used", "steps": [
+      { "expect": "source", "match": "#1f5f8b" },
+      { "expect": "source", "match": "#f2a93b" } ] },
+    { "name": "no-external-requests", "steps": [
+      { "expect": "source", "match": "(src|href)\\s*=\\s*[\"']?(https?:)?//|@import|url\\(\\s*[\"']?(https?:)?//", "negate": true },
+      { "expect": "count", "selector": "img[src]:not([src^='data:image/svg'])", "eq": 0 } ] }
+  ]
+}

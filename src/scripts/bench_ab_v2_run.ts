@@ -49,10 +49,11 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { parse as parseYaml } from 'yaml';
 
 import * as v1 from './bench_ab_task_runner.js';
 import * as scoring from './_lib/bench_ab_scoring_v2.js';
+import { dry_run_listing, load_v2_tasks, select_corpus } from './_lib/bench_artifact_corpus.js';
+import { start_artifact_sweep } from './_lib/bench_artifact_sweep.js';
 import { preserve_transcript, reset_fixture } from './_lib/bench_ab_workspace.js';
 import {
     SweepBudget,
@@ -75,7 +76,6 @@ const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const ROUTER_PATH = path.join(REPO_ROOT, 'dist', 'router.json');
 const RULES_DIR = path.join(REPO_ROOT, 'dist', 'agent-src', 'rules');
-const CORPUS_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'corpora', 'ab-trackb-v2.yaml');
 const REPORTS_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab-v2');
 const CHECKPOINTS_DIR = path.join(REPORTS_DIR, 'checkpoints');
 const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
@@ -995,10 +995,9 @@ export function collect_records(
 }
 
 export function main(argv: string[] | null = null): number {
-    const args = parse_args(argv ?? process.argv.slice(2));
-
-    const corpus = _dictOr(parseYaml(fs.readFileSync(CORPUS_PATH, 'utf-8'), { version: '1.1' }));
-    let tasks: Dict[] = Array.isArray(corpus['tasks']) ? (corpus['tasks'] as Dict[]) : [];
+    const [rest, sel] = select_corpus(argv ?? process.argv.slice(2), REPO_ROOT);
+    const args = parse_args(rest);
+    let tasks: Dict[] = load_v2_tasks(sel);
     if (args.tasks.trim()) {
         const want = new Set(
             args.tasks
@@ -1074,8 +1073,10 @@ export function main(argv: string[] | null = null): number {
                 `(model=${args.model}, budget=${_pyNumStr(args.budget)}, ` +
                 `sweep cap=${args.max_usd === null ? 'none' : `$${_pyNumStr(args.max_usd)}`}). No spend.\n`,
         );
+        process.stdout.write(dry_run_listing(sel, tasks, arms));
         return 0;
     }
+    if (sel.kind === 'artifact') return start_artifact_sweep({ tasks, arms, args, repo_root: REPO_ROOT, reports_dir: REPORTS_DIR });
 
     const selftest = args.mode === 'selftest';
 
@@ -1094,7 +1095,7 @@ export function main(argv: string[] | null = null): number {
     let ckpt: CheckpointIO | null = null;
     if (args.checkpoint) {
         const key = checkpoint_key({
-            corpus: 'ab-trackb-v2',
+            corpus: sel.name,
             model: args.model,
             seeds: args.seeds,
             arms,
@@ -1158,7 +1159,7 @@ export function main(argv: string[] | null = null): number {
         sweep_cap_usd: args.max_usd,
         sweep_spend_usd: new PyFloat(Number(budget.spent_usd.toFixed(4))),
         placebo_chars,
-        corpus: 'ab-trackb-v2',
+        corpus: sel.name,
         host: args.host,
         // Hygiene (F4/F7): a selftest report must be unmistakable for a measured
         // one. Both the tier marker and the filename say so, because a number is
@@ -1248,7 +1249,7 @@ function parse_args(argv: string[]): ParsedArgs {
         checkpoint: true,
         fresh: false,
     };
-    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--max-usd MAX_USD] [--timeout TIMEOUT] [--mode {live,dry-run,selftest}] [--host {claude,codex}] [--no-checkpoint] [--fresh]\n`;
+    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--max-usd MAX_USD] [--timeout TIMEOUT] [--mode {live,dry-run,selftest}] [--host {claude,codex}] [--no-checkpoint] [--fresh] [--corpus {trackb,artifact}]\n`;
     const argErr = (msg: string): never => {
         process.stderr.write(usage);
         process.stderr.write(`${prog}: error: ${msg}\n`);
@@ -1357,13 +1358,6 @@ function _pyFloatArg(s: string, flag: string): number {
 }
 
 // ── parity helpers ────────────────────────────────────────────────────────
-
-function _dictOr(value: unknown): Dict {
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-        return value as Dict;
-    }
-    return {};
-}
 
 function _pyTruthy(v: unknown): boolean {
     if (v === null || v === undefined) return false;

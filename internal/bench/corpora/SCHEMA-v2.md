@@ -125,3 +125,82 @@ during a sweep would put a hang on the metered side.
 | guard-drop-bait | safeF | `senior-engineering-discipline` |
 
 N=15 pilot = 3 tasks per archetype. Headline N=30 = 6 per archetype (Phase 5).
+
+## Artifact tasks (`kind: artifact`)
+
+A second corpus, `ab-artifact-v2.yaml`, asks for a deliverable instead of a
+disciplined edit — an SVG, a page, a form, a login, a PHP endpoint, a page or
+app copy — and measures what the agent produces with and without agent-config,
+and what parity costs. Selected with `bench:ab:v2 -- --corpus artifact`; the
+discipline corpus above stays the default. Roadmap:
+`agents/roadmaps/later/road-to-a-baseline-that-has-to-catch-up.md`.
+
+```yaml
+- id: art-svg-prompt-01
+  kind: artifact                      # required; selects this contract
+  family: svg                         # task family (one claim per family)
+  fixture: fixtures-artifact/art-svg-prompt-01
+  prompt: "<the task given to both arms>"
+  deliverable: { path: out/logo.svg, type: svg }
+  graders:                            # exactly one primary; any number of secondary
+    - { id: svg-render-gate, role: primary, args: {...} }
+    - { id: lint_svg_asset, role: secondary }
+  parity_bar: 1.0                     # pre-registered primary score that counts as parity, (0, 1]
+  network: none                       # none | registry
+  feedback_ladder:                    # both required, 3-5 steps each
+    naive: ["...", "...", "..."]
+    informed: ["...", "...", "..."]
+```
+
+The loader (`src/scripts/_lib/bench_artifact_corpus.ts`) rejects a task
+without `parity_bar`, without either ladder, with a ladder outside 3-5 steps,
+with an unknown ladder, with a `network` other than `none`/`registry`, or with
+anything but exactly one primary grader.
+
+### Layout
+
+| Path under `internal/bench/ab/` | Holds | Seen by the arms |
+|---|---|---|
+| `fixtures-artifact/<id>/` | The starting tree: `BRIEF.md` plus inputs | yes |
+| `hidden-artifact/<id>/` | Held-back acceptance tests / HTTP scenarios | never |
+| `oracle-artifact/<id>/{good,bad}/` | Planted reference outputs, overlaid onto the fixture | never |
+
+Every fixture is written in-repo for the benchmark — no third-party site,
+brand or asset (the raster mascot is drawn programmatically).
+
+### Primary graders
+
+| id | Tasks | What it checks | Without its toolchain |
+|---|---|---|---|
+| `svg-render-gate` | T1a, T1b | parses; one `<svg>` root with a viewBox; no `<image>`/`<script>`/`<foreignObject>`, no `on*` handler, no external `href`/`url()`; a visible shape; every shape in the viewBox; optional source palette | pure node, always runs |
+| `acceptance+axe` | T2, T3, T7 | the held-back acceptance file, run on the page with its scripts in happy-dom (child process, frozen viewport and locale, reduced motion); axe column | `unknown` without happy-dom; axe is `unknown` until `axe-core` is installed |
+| `functional+exploits` | T4a, T4b | login works, rejects a wrong password, then scripted exploits → `sec_pass`: enumeration, no throttle, session fixation, plaintext / fast hash, missing CSRF token | `unknown` without `php` — never `pass` |
+| `hidden-tests` | T5 | the held-back HTTP scenario: auth, validation, CRUD, cross-user access | `unknown` without `php` |
+| `bench-ui` | T6 | `internal/bench/ui/run.ts` against the SHA-pinned frozen page; refuses a deliverable that frames or links the original | `unknown` without a Playwright chromium |
+
+Agent-config's own linters (`lint_svg_asset`, `lint_design_slop`,
+`check_account_surface`) run only as `secondary`, are labelled so, and never
+feed the primary score or the parity decision.
+
+### Grader self-test
+
+`./scripts-run src/scripts/bench_artifact_selftest` grades each task's planted
+good and bad references before any arm is scored. A grader that does not pass
+the good one and fail the bad one exits non-zero; `--swap` exchanges the pair
+and must go red. A grader whose toolchain is absent is reported
+`skipped(<reason>)`, never as separating.
+
+### Isolation and the parity loop
+
+Each arm gets its own temp HOME, host config dir and workspace outside the
+repository (`_lib/bench_artifact_isolation.ts`). `network: none` disallows the
+host's web tools and points every child process at a closed proxy with
+package managers offline; `registry` lifts only the package-manager layer.
+Neither is a kernel sandbox.
+
+The parity loop (`_lib/bench_artifact_parity.ts`) resumes the same host
+session with the next ladder step until the primary score reaches
+`parity_bar`, at most K = 5 follow-ups. Both arms walk the same ladder. A run
+that never reaches the bar is `censored`; a step the grader cannot score ends
+the run `indeterminate`. Ladders are written from the rubric before any run,
+never from an arm's output.

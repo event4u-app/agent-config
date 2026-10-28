@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign up</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 28rem; margin: 2rem auto; padding: 0 1rem; }
+  label { display: block; margin-top: 1rem; font-weight: 600; }
+  input, select { width: 100%; padding: .5rem; margin-top: .25rem; }
+  .err { color: #a4161a; margin-top: .5rem; }
+  .row { display: flex; gap: .5rem; margin-top: 1.5rem; }
+</style>
+</head>
+<body>
+<form id="signup" novalidate>
+  <fieldset id="step-1">
+    <legend>Account</legend>
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" autocomplete="email">
+    <label for="password">Password (at least 8 characters)</label>
+    <input id="password" name="password" type="password" autocomplete="new-password">
+    <p class="err" role="alert" id="err-1" hidden></p>
+    <div class="row"><button type="button" id="next-1">Next</button></div>
+  </fieldset>
+  <fieldset id="step-2" hidden>
+    <legend>Profile</legend>
+    <label for="name">Name</label>
+    <input id="name" name="name" autocomplete="name">
+    <label for="plan">Plan</label>
+    <select id="plan" name="plan"><option value="free">free</option><option value="pro">pro</option></select>
+    <p class="err" role="alert" id="err-2" hidden></p>
+    <div class="row"><button type="button" id="back-2">Back</button><button type="button" id="next-2">Next</button></div>
+  </fieldset>
+  <fieldset id="step-3" hidden>
+    <legend>Review</legend>
+    <p id="summary"></p>
+    <div class="row"><button type="button" id="back-3">Back</button><button type="submit" id="submit">Create account</button></div>
+  </fieldset>
+</form>
+<p id="done" hidden></p>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const show = (n) => { for (const i of [1, 2, 3]) $('step-' + i).hidden = i !== n; };
+  const fail = (n, msg) => { $('err-' + n).textContent = msg; $('err-' + n).hidden = false; };
+  $('next-1').addEventListener('click', () => {
+    const okEmail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test($('email').value);
+    const okPw = $('password').value.length >= 8;
+    if (!okEmail || !okPw) return fail(1, !okEmail ? 'Enter a valid email address.' : 'Password needs at least 8 characters.');
+    $('err-1').hidden = true; show(2);
+  });
+  $('back-2').addEventListener('click', () => show(1));
+  $('next-2').addEventListener('click', () => {
+    if ($('name').value.trim() === '') return fail(2, 'Enter your name.');
+    $('err-2').hidden = true;
+    $('summary').textContent = $('email').value + ' · plan: ' + $('plan').value;
+    show(3);
+  });
+  $('back-3').addEventListener('click', () => show(2));
+  $('signup').addEventListener('submit', (e) => {
+    e.preventDefault();
+    $('signup').hidden = true;
+    $('done').textContent = 'Welcome, ' + $('name').value.trim() + '.';
+    $('done').hidden = false;
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tally</title>
+<style>
+body { font-family: system-ui, sans-serif; background: #f6f7f9; margin: 0; }
+.tally { max-width: 32rem; margin: 3rem auto; background: #fff; border-radius: 12px; padding: 1.5rem; }
+#new-todo-form { display: flex; gap: .5rem; align-items: center; }
+#new-todo { flex: 1; padding: .5rem; }
+#list { list-style: none; padding: 0; }
+.todo { display: flex; gap: .5rem; align-items: center; padding: .5rem 0; border-bottom: 1px solid #e5e7eb; }
+.todo.done span { text-decoration: line-through; color: #6b7280; }
+footer { display: flex; justify-content: space-between; margin-top: 1rem; }
+</style>
+</head>
+<body>
+<main class="tally">
+  <h1>Tally</h1>
+  <form id="new-todo-form"><label for="new-todo">New item</label><input id="new-todo" autocomplete="off"><button type="submit">Add</button></form>
+  <ul id="list"></ul>
+  <footer><span id="count"></span>
+    <nav><button data-filter="all">All</button><button data-filter="open">Open</button><button data-filter="done">Done</button></nav>
+  </footer>
+</main>
+<script>
+// Tally store: a list of {id, title, done} kept in localStorage.
+window.TallyStore = (function () {
+  const KEY = 'tally.todos';
+  let items = [];
+  try { items = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { items = []; }
+  const save = () => localStorage.setItem(KEY, JSON.stringify(items));
+  let next = items.reduce((m, t) => Math.max(m, t.id), 0) + 1;
+  return {
+    all: () => items.slice(),
+    add(title) { items.push({ id: next++, title, done: false }); save(); },
+    toggle(id) { items = items.map((t) => (t.id === id ? { ...t, done: !t.done } : t)); save(); },
+    remove(id) { items = items.filter((t) => t.id !== id); save(); },
+  };
+})();
+</script>
+<script>
+// Tally view: renders the store and wires the controls.
+(function () {
+  const store = window.TallyStore;
+  let filter = 'all';
+  const list = document.getElementById('list');
+  const count = document.getElementById('count');
+  function render() {
+    const all = store.all();
+    const open = all.filter((t) => !t.done).length;
+    count.textContent = open + (open === 1 ? ' item left' : ' items left');
+    list.textContent = '';
+    for (const t of all.filter((t) => filter === 'all' || (filter === 'done') === t.done)) {
+      const li = document.createElement('li');
+      li.className = 'todo' + (t.done ? ' done' : '');
+      const box = document.createElement('input');
+      box.type = 'checkbox'; box.className = 'toggle'; box.checked = t.done;
+      box.setAttribute('aria-label', 'Done: ' + t.title);
+      box.addEventListener('change', () => { store.toggle(t.id); render(); });
+      const span = document.createElement('span'); span.textContent = t.title;
+      const del = document.createElement('button'); del.className = 'delete'; del.textContent = 'Delete';
+      del.addEventListener('click', () => { store.remove(t.id); render(); });
+      li.append(box, span, del);
+      list.append(li);
+    }
+  }
+  document.getElementById('new-todo-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = document.getElementById('new-todo');
+    const title = input.value.trim();
+    if (title) store.add(title);
+    input.value = '';
+    render();
+  });
+  for (const b of document.querySelectorAll('[data-filter]')) {
+    b.addEventListener('click', () => { filter = b.dataset.filter; render(); });
+  }
+  render();
+})();
+</script>
+</body>
+</html>
