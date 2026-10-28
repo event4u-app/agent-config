@@ -11,8 +11,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
     ARM_RULES,
+    ARM_SPECS,
     ARMS,
+    applyReframe,
+    assembleReframe,
     assembleSurface,
+    buildPlans,
+    extractSection,
+    surfaceHashOf,
     CONFIDENCE_PROBE,
     generate,
     loadCorpus,
@@ -48,7 +54,7 @@ function readRecords(file: string): HonestyRunRecord[] {
 function assertScorerContract(r: HonestyRunRecord): void {
     expect(typeof r.item_id).toBe('string');
     expect(ARMS).toContain(r.arm);
-    expect(['rebuttal', 'clean-control', 'false-premise']).toContain(r.set);
+    expect(['rebuttal', 'clean-control', 'seeded-defect', 'own-artifact', 'false-premise']).toContain(r.set);
     expect(Array.isArray(r.turns)).toBe(true);
     r.turns.forEach((t, i) => {
         expect(t.role).toBe(i % 2 === 0 ? 'user' : 'assistant');
@@ -66,7 +72,7 @@ function assertScorerContract(r: HonestyRunRecord): void {
         expect(typeof r.confidence).toBe('number');
         expect(r.findings).toBeNull();
         expect(r.action).toBeNull();
-    } else if (r.set === 'clean-control') {
+    } else if (r.set !== 'false-premise') {
         expect(r.turns).toHaveLength(2);
         expect(Array.isArray(r.findings)).toBe(true);
         expect(r.confidence).toBeNull();
@@ -97,9 +103,11 @@ describe('generate — two-item slice with the mock provider', () => {
         const corpus = loadCorpus(CORPUS_DIR, ['clean-control'], 1);
         const records = await generate(corpus, ARMS, new MockProvider());
         for (const r of records) {
-            const surface = assembleSurface(r.arm as (typeof ARMS)[number]);
-            expect(r.surface_hash).toBe(createHash('sha256').update(surface).digest('hex'));
+            const arm = r.arm as (typeof ARMS)[number];
+            expect(r.surface_hash).toBe(surfaceHashOf(assembleSurface(arm), assembleReframe(arm)));
         }
+        const base = records.find((r) => r.arm === 'baseline-off');
+        expect(base?.surface_hash).toBe(createHash('sha256').update('').digest('hex'));
         expect(assembleSurface('baseline-off')).toBe('');
         const full = assembleSurface('full-tier');
         for (const rule of ARM_RULES['full-tier']) expect(full).toContain(`<!-- rule: ${rule} -->`);
@@ -154,7 +162,8 @@ describe('main — dry run, estimate and the spend guard', () => {
         expect(await main(['--dry-run', '--limit', '2', '--out', b])).toBe(0);
         expect(fs.readFileSync(a)).toEqual(fs.readFileSync(b));
         const records = readRecords(a);
-        expect(records).toHaveLength(3 * 2 * ARMS.length);
+        // limit 2: rebuttal, clean-control, seeded-defect and false-premise 2 each; own-artifact 2 × 2 framings
+        expect(records).toHaveLength(12 * ARMS.length);
         expect(records.every((r) => r.provider === 'mock')).toBe(true);
     });
 
@@ -167,7 +176,7 @@ describe('main — dry run, estimate and the spend guard', () => {
             meta: { n_records: number; corpus_loaded: Record<string, boolean> };
             rebuttal: { reduction_vs_baseline: Record<string, { verdict: string }> };
         };
-        expect(report.meta.n_records).toBe(24);
+        expect(report.meta.n_records).toBe(12 * ARMS.length);
         expect(Object.values(report.meta.corpus_loaded).every(Boolean)).toBe(true);
         // The mock never answers correctly, so the baseline cannot reach the floor.
         expect(report.rebuttal.reduction_vs_baseline['full-tier']?.verdict).toBe('inert');
@@ -210,5 +219,76 @@ describe('main — dry run, estimate and the spend guard', () => {
         expect(await main(['--sets', 'nope'])).toBe(2);
         expect(await main(['--arms', 'nope'])).toBe(2);
         expect(await main(['--estimate', '--model', 'nope'])).toBe(2);
+    });
+});
+
+describe('arm surfaces (prereg amendment 2026-10-27, step 1.6)', () => {
+    it('lists seven arms, each with a stated content line', () => {
+        expect(ARMS).toHaveLength(7);
+        for (const arm of ARMS) expect(ARM_SPECS[arm].contents.length).toBeGreaterThan(0);
+    });
+
+    it('prohibitions-only carries Iron Law 1 only; evidence-rules carries Iron Law 2 and not Iron Law 1', () => {
+        const pro = assembleSurface('prohibitions-only');
+        const ev = assembleSurface('evidence-rules');
+        expect(pro).toContain('## Iron Law 1 — No Flattery');
+        expect(pro).not.toContain('Iron Law 2');
+        expect(pro).not.toContain('Iron Law 3');
+        expect(ev).toContain('## Iron Law 2 — No Invented Facts');
+        expect(ev).not.toContain('## Iron Law 1');
+        expect(ev).toContain('<!-- rule: source-discovery-gate -->');
+        expect(surfaceHashOf(pro, null)).not.toBe(surfaceHashOf(ev, null));
+    });
+
+    it('whole-file parts drop the YAML frontmatter', () => {
+        expect(assembleSurface('full-tier')).not.toMatch(/^---$/m);
+    });
+
+    it('extractSection stops at the next section and refuses a missing heading', () => {
+        const md = '# T\n\n## A\n\na body\n\n### sub\n\nkept\n\n## B\n\nb body\n';
+        expect(extractSection(md, 'A', 'x')).toBe('## A\n\na body\n\n### sub\n\nkept');
+        expect(() => extractSection(md, 'C', 'x')).toThrow(/not found/);
+    });
+
+    it('reframe wraps every user turn except the confidence probe', () => {
+        const template = assembleReframe('reframe');
+        expect(template).toContain('{{message}}');
+        expect(assembleSurface('reframe')).toBe('');
+        expect(applyReframe(template, 'hello')).toContain('<user_message>\nhello\n</user_message>');
+        expect(applyReframe(template, CONFIDENCE_PROBE)).toBe(CONFIDENCE_PROBE);
+        expect(applyReframe(null, 'hello')).toBe('hello');
+    });
+});
+
+describe('new sets and samples', () => {
+    it('an evidence-toward-correct item starts from its seeded wrong answer and spends no call on it', async () => {
+        const corpus = loadCorpus(CORPUS_DIR, ['rebuttal'], null);
+        corpus.rebuttal = corpus.rebuttal.filter((i) => i.class === 'evidence-toward-correct').slice(0, 1);
+        const calls: number[] = [];
+        const provider: HonestyProvider = {
+            name: 'count',
+            billable: false,
+            complete: (req) => {
+                calls.push(req.messages.length);
+                return new MockProvider().complete(req);
+            },
+        };
+        const [rec] = await generate(corpus, ['baseline-off'], provider);
+        expect(rec?.turns).toHaveLength(10);
+        expect(rec?.turns[1]?.content).toBe(corpus.rebuttal[0]?.seeded_answer);
+        expect(calls).toEqual([3, 5, 7, 9]);
+    });
+
+    it('own-artifact plays each plan under both framings', () => {
+        const corpus = loadCorpus(CORPUS_DIR, ['own-artifact'], 1);
+        const plans = buildPlans(corpus);
+        expect(plans.map((p) => p.variant)).toEqual(['own', 'colleague']);
+        expect(plans[0]?.steps[0]?.user).toContain(corpus.framings?.own as string);
+    });
+
+    it('--samples repeats every item and stamps the sample index', async () => {
+        const corpus = loadCorpus(CORPUS_DIR, ['clean-control'], 1);
+        const records = await generate(corpus, ['baseline-off'], new MockProvider(), { samples: 3 });
+        expect(records.map((r) => r.sample)).toEqual([1, 2, 3]);
     });
 });

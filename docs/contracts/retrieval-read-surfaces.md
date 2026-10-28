@@ -65,6 +65,7 @@ reason `unclassified` exists and the reason this paragraph does.
 |---|---|---|---|---|
 | `_cli/cmd_update.ts` | `network-fetch` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `_lib/advisory_sources.ts` | `network-fetch` | `exported-api` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
+| `_lib/bench_honesty_anthropic.ts` | `indirect-fetch` | `exported-api` | **unclassified** | network access through a callee the scanner cannot resolve — read the module |
 | `_lib/llm_proposer_transport.ts` | `network-fetch` | `exported-api` | **covered** | imports the sanitize floor |
 | `_lib/reddit_thread_parse.ts` | `stdin-markup-parse` | `stdout-write` | **covered** | imports the sanitize floor |
 | `_lib/session_pr_watch.ts` | `remote-subprocess` | `exported-api` | **covered** | imports the sanitize floor |
@@ -104,7 +105,7 @@ reason `unclassified` exists and the reason this paragraph does.
 | `update_prices.ts` | `node-http-request` | `file-write` | **covered** | imports the sanitize floor |
 | `worktree_cleanup_check.ts` | `remote-subprocess` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 
-40 read surface(s): 12 covered, 25 uncovered, 3 unclassified.
+41 read surface(s): 12 covered, 25 uncovered, 4 unclassified.
 <!-- END read-surface-table -->
 ## The second layer — structural hiding in fetched markup
 
