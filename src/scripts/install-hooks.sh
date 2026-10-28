@@ -132,18 +132,33 @@ cat > "$HOOKS_DIR/pre-push" << 'EOF'
 #   <local ref> <local sha> <remote ref> <remote sha>
 # and a deletion carries the all-zero local sha. Reading stdin is safe here:
 # nothing below consumes it.
+#
+# A tag-only push skips them for the same reason: the tag names a commit that
+# already went through these gates on its branch, and the gates read the
+# CHECKED-OUT tree, not the tag. Measured 2026-10-28 on 19.0.0: `task release`
+# step 9 pushed the tag, the hook spent minutes re-checking `main` with the ssh
+# session open, and GitHub dropped it (`Connection reset by peer`).
 delete_only=1
+tags_only=1
 saw_ref=0
-while read -r _local_ref local_sha _remote_ref _remote_sha; do
+while read -r _local_ref local_sha remote_ref _remote_sha; do
     [ -z "${local_sha:-}" ] && continue
     saw_ref=1
     # Any non-zero character means a real object is being pushed.
     case "$local_sha" in
         *[!0]*) delete_only=0 ;;
     esac
+    case "$remote_ref" in
+        refs/tags/*) ;;
+        *) tags_only=0 ;;
+    esac
 done
 if [ "$saw_ref" = "1" ] && [ "$delete_only" = "1" ]; then
     echo "🗑️  Delete-only push — no ref advances, so the content gates have nothing to check. Skipping."
+    exit 0
+fi
+if [ "$saw_ref" = "1" ] && [ "$tags_only" = "1" ]; then
+    echo "🏷️  Tag-only push — the tagged commit was gated on its branch. Skipping."
     exit 0
 fi
 
