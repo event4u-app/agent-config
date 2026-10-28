@@ -41,6 +41,7 @@ export interface ParityStep {
     score: number | null;
     tokens: number | null;
     turns: number | null;
+    usd: number | null;
 }
 
 export type ParityOutcome = 'reached' | 'censored' | 'indeterminate' | 'errored';
@@ -59,6 +60,7 @@ export interface ParityRun {
     /** Sum over steps, or null as soon as one step's telemetry is missing. */
     tokens_total: number | null;
     turns_total: number | null;
+    usd_total: number | null;
     reason?: string;
 }
 
@@ -90,6 +92,7 @@ export async function parity_loop(args: {
         steps,
         tokens_total: sum(steps.map((s) => s.tokens)),
         turns_total: sum(steps.map((s) => s.turns)),
+        usd_total: sum(steps.map((s) => s.usd)),
         ...(reason ? { reason } : {}),
     });
 
@@ -107,11 +110,11 @@ export async function parity_loop(args: {
         }
         session = turn.session_id ?? session;
         if (turn.errored) {
-            steps.push({ prompt_index: i, prompt, status: 'unknown', score: null, tokens: turn.tokens, turns: turn.turns });
+            steps.push({ prompt_index: i, prompt, status: 'unknown', score: null, tokens: turn.tokens, turns: turn.turns, usd: turn.usd ?? null });
             return finish('errored', turn.reason ?? 'host error');
         }
         const g = await grade();
-        steps.push({ prompt_index: i, prompt, status: g.status, score: g.score, tokens: turn.tokens, turns: turn.turns });
+        steps.push({ prompt_index: i, prompt, status: g.status, score: g.score, tokens: turn.tokens, turns: turn.turns, usd: turn.usd ?? null });
         if (g.score === null) return finish('indeterminate', g.reason ?? 'primary grader returned unknown');
         if (g.score >= task.parity_bar) return finish('reached');
     }

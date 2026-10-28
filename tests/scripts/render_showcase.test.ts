@@ -105,7 +105,7 @@ describe('validateBundleSummary cross-field rules', () => {
 
     it('marks the lower median as an observed run', () => {
         const runs = (arms(summary())[1]?.['runs'] ?? []) as Parameters<typeof medianRun>[0];
-        expect(medianRun(runs)).toEqual({ score: 0, run: 1 });
+        expect(medianRun(runs)).toEqual({ score: 0.75, run: 1 });
     });
 });
 

@@ -30,6 +30,8 @@
 > `discipline_given_capability` beside the deciding gate. The pinned results below were scored before this repair
 > and are not re-scored.
 
+Per-task artifact comparisons with and without agent-config, including the cost of parity: [docs/examples/bench/](examples/bench/index.md).
+
 ## Weak host (`claude-haiku-4-5`) — Gate verdict: **PASS**
 
 <!-- pinned:weak-stats -->

@@ -27,6 +27,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { loadBundle, medianRun, type LoadedBundle, type ShowcaseArm, type ShowcaseRun, type TokenBuckets } from './_lib/showcase_bundle.js';
+import { renderParity } from './_lib/showcase_parity_stats.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -184,21 +185,7 @@ export function renderPage(bundle: LoadedBundle, earlier: readonly LoadedBundle[
         }
     }
     L.push('');
-    L.push('## Cost of parity');
-    L.push('');
-    L.push(
-        `Each arm that missed the bar was resumed with the next step of a feedback ladder written before any run, up to ${s.parity.cap_k} prompts. ` +
-            'Censored runs did not reach the bar within the cap and are not imputed. ' +
-            `The with-agent-config first-shot median is ${fmt(s.parity.with_arm_first_shot_median)} against a bar of ${s.parity.parity_bar}.`,
-    );
-    L.push('');
-    L.push('| Arm | Reached | Censored | Prompts to parity | Turns | Tokens | USD to parity |');
-    L.push('|---|---|---|---|---|---|---|');
-    for (const arm of s.arms) {
-        const p = s.parity.arms[arm.id];
-        if (p === undefined) continue;
-        L.push(`| ${cell(arm.label)} | ${p.reached} | ${p.censored} | ${fmt(p.prompts)} | ${fmt(p.turns)} | ${fmt(p.tokens)} | ${fmt(p.usd_to_parity)} |`);
-    }
+    L.push(...renderParity(s));
     L.push('');
     L.push('## Reproduce');
     L.push('');

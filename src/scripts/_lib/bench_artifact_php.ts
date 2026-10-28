@@ -78,7 +78,7 @@ export class Client {
             payload = json ? JSON.stringify(body) : new URLSearchParams(body as Record<string, string>).toString();
             h['content-type'] = json ? 'application/json' : 'application/x-www-form-urlencoded';
         }
-        const r = await fetch(this.base + p, { method, headers: h, body: payload, redirect: 'manual' });
+        const r = await fetch(this.base + p, { method, headers: h, body: payload ?? null, redirect: 'manual' });
         for (const c of r.headers.getSetCookie()) {
             const [kv] = c.split(';');
             const i = (kv as string).indexOf('=');

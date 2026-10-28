@@ -60,7 +60,7 @@
     },
     "parityArm": {
       "type": "object",
-      "required": ["reached", "censored", "prompts", "turns", "tokens", "usd_to_parity"],
+      "required": ["reached", "censored", "prompts", "turns", "tokens", "usd_to_parity", "tokens_to_target_total"],
       "additionalProperties": false,
       "properties": {
         "reached": { "type": "integer", "minimum": 0 },
@@ -68,7 +68,8 @@
         "prompts": { "$ref": "#/definitions/nullableNumber", "description": "Median prompts to parity over the reached runs." },
         "turns": { "$ref": "#/definitions/nullableNumber" },
         "tokens": { "$ref": "#/definitions/nullableNumber" },
-        "usd_to_parity": { "$ref": "#/definitions/nullableNumber" }
+        "usd_to_parity": { "$ref": "#/definitions/nullableNumber" },
+        "tokens_to_target_total": { "$ref": "#/definitions/nullableNumber", "description": "Tokens summed over every reached or censored run, null when any lacks telemetry: the total an arm spent to reach the bar." }
       }
     }
   },

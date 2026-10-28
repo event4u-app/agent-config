@@ -59,6 +59,11 @@ on:
       # reference patches; a corpus- or fixture-only change must trigger it.
       - "internal/bench/corpora/ab-trackb-v2.yaml"
       - "internal/bench/ab/**"
+      # The showcase pages render from bundles and the artifact graders
+      # self-test on planted pairs; a bundle-, corpus- or page-only change must
+      # trigger both.
+      - "internal/bench/corpora/ab-artifact-v2.yaml"
+      - "internal/bench/showcase/**"
       - ".github/workflows/rule-backstops.yml"
   push:
     branches:
@@ -98,6 +103,8 @@ on:
       - "internal/bench/reports/kernel-prefix.json"
       - "internal/bench/corpora/ab-trackb-v2.yaml"
       - "internal/bench/ab/**"
+      - "internal/bench/corpora/ab-artifact-v2.yaml"
+      - "internal/bench/showcase/**"
       - ".github/workflows/rule-backstops.yml"
 
 # Superseded PR pushes cancel; `push: main` runs never do. On main this
@@ -820,3 +827,14 @@ jobs:
       # rather than in consistency.yml for the reason the steps above state.
       - name: Bench v2 tasks fail when nothing was done
         run: ./scripts-run src/scripts/bench_task_validity --gate
+
+      # Showcase pages under docs/examples/bench/ are generated from committed
+      # bundles; a hand edit or a bundle without its page reds here. Then every
+      # artifact task's primary grader must separate its planted good and bad
+      # reference (the runner has PHP, so the PHP graders run rather than skip).
+      # Both are free: no host, no network. Paid showcase tiers never run in CI.
+      - name: Showcase pages match their bundles
+        run: ./scripts-run src/scripts/render_showcase --check
+
+      - name: Artifact graders separate their planted references
+        run: ./scripts-run src/scripts/bench_artifact_selftest

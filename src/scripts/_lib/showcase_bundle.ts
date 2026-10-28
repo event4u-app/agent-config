@@ -61,6 +61,8 @@ export interface ParityArm {
     turns: number | null;
     tokens: number | null;
     usd_to_parity: number | null;
+    /** Tokens over every run that reached the bar or was censored at K, summed; null when any run lacks telemetry. */
+    tokens_to_target_total: number | null;
 }
 
 export interface ShowcaseSummary {
@@ -233,7 +235,7 @@ export function validateBundleSummary(value: unknown): string[] {
             out.push(`parity.arms.${id}: reached and censored must be integers >= 0`);
             continue;
         }
-        for (const f of ['prompts', 'turns', 'tokens', 'usd_to_parity']) {
+        for (const f of ['prompts', 'turns', 'tokens', 'usd_to_parity', 'tokens_to_target_total']) {
             if (!numOrNull(p[f])) out.push(`parity.arms.${id}.${f} must be a number or null`);
         }
         if (nonNegInt(k) && p['reached'] + p['censored'] > k) out.push(`parity.arms.${id}: reached + censored exceeds k`);

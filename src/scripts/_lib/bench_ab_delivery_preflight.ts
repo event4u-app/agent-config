@@ -55,7 +55,7 @@ export function delivery_preflight(
                 stream: true,
             });
             const extra = spec.isolate_neighbour ? neighbour_env(path.join(cwd, 'data'), env) : null;
-            const res = probe(opts.binary, args, { cwd, env: probe_env(env, extra), timeout_ms: opts.timeout_ms });
+            const res = probe(opts.binary, args, { cwd, env: probe_env(env, extra), ...(opts.timeout_ms === undefined ? {} : { timeout_ms: opts.timeout_ms }) });
             if (!res.ok) return `${arm}: ${res.reason}`;
             const verdict = delivery_verdict(arm, spec.setting_sources, res.init, pkg);
             if (!verdict.ok) return verdict.reason;

@@ -537,11 +537,15 @@ tasks:
       (ab-tracka.yaml, ab-trackb.yaml) and docs/benchmark.md shape
       via scripts/lint_bench_ab.py. Step-4 Phase 1 Step 3 +
       Phase 5 Step 3. Then score every v2 fixture task in arms that did
-      no work, plus its reference patch (bench_task_validity --gate).
+      no work, plus its reference patch (bench_task_validity --gate). Then
+      the showcase pages against their bundles (render_showcase --check) and
+      the artifact graders against their planted pairs (bench_artifact_selftest).
     cmds:
       - ./scripts-run src/scripts/lint_bench_corpus {{.QUIET_FLAG}}
       - ./scripts-run src/scripts/lint_bench_ab {{.QUIET_FLAG}}
       - ./scripts-run src/scripts/bench_task_validity --gate {{.QUIET_FLAG}}
+      - ./scripts-run src/scripts/render_showcase --check
+      - ./scripts-run src/scripts/bench_artifact_selftest
 
   lint-skills-regression:
     silent: true

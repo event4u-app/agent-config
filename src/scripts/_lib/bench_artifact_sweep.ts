@@ -28,7 +28,7 @@ import { parity_loop, type ArtifactHost, type HostTurn } from './bench_artifact_
 interface SweepArgs {
     tasks: Record<string, unknown>[];
     arms: string[];
-    args: { seeds: number; model: string; budget: number; timeout: number; mode: string };
+    args: { seeds: number; model: string; budget: number; timeout: number; mode: string; max_usd?: number | null };
     repo_root: string;
     reports_dir: string;
 }
@@ -74,15 +74,23 @@ export async function run_artifact_sweep(a: SweepArgs): Promise<number> {
     fs.mkdirSync(a.reports_dir, { recursive: true });
     const out = path.join(a.reports_dir, `artifact-${new Date().toISOString().replace(/[:.]/g, '-')}.jsonl`);
     const ab = path.join(a.repo_root, 'internal', 'bench', 'ab');
+    // Belt and braces over the per-call `--budget`: stop once reported spend reaches the sweep cap.
+    const cap = a.args.max_usd ?? null;
+    let spent = 0;
     for (const t of a.tasks as unknown as ArtifactTask[]) {
         for (const arm of a.arms) {
             for (let seed = 0; seed < a.args.seeds; seed += 1) {
                 for (const ladder of LADDER_NAMES) {
+                    if (cap !== null && spent >= cap) {
+                        process.stdout.write(`bench_ab_v2: sweep cap $${cap} reached ($${spent.toFixed(2)} reported) — stopping; later runs were not started → ${path.relative(a.repo_root, out)}\n`);
+                        return 0;
+                    }
                     const iso = isolate_arm(arm, t.id, t.network, { repo_root: a.repo_root });
                     try {
                         seed_workspace(iso, path.join(ab, t.fixture));
                         const host = claude_host(iso, ARMS[arm] as ArmSpec, { ...a.args, repo_root: a.repo_root });
                         const run = await parity_loop({ task: t, arm, ladder, host, grade: () => grade_primary(iso.workspace, t) });
+                        spent += run.usd_total ?? 0;
                         fs.appendFileSync(out, JSON.stringify({ ...run, seed, model: a.args.model }) + '\n');
                         process.stdout.write(`  ${t.id} ${arm} seed=${seed} ladder=${ladder}: ${run.outcome}\n`);
                     } finally {
