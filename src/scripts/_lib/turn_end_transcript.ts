@@ -69,13 +69,6 @@ export interface TranscriptTail {
      * tool activity is not in the prose at all.
      */
     toolCalls: ToolCall[];
-    /**
-     * The current turn's genuine user prompt, and the last assistant text of the
-     * turn before it. Detector `capitulation` compares the two replies across
-     * that prompt. Held in memory only: neither is written anywhere.
-     */
-    lastUserPrompt: string;
-    previousAssistant: string;
 }
 
 /**
@@ -98,8 +91,6 @@ export function readTranscriptTail(
         turnOrdinal: 0,
         toolCalls: [],
         assistantTurnTexts: [],
-        lastUserPrompt: '',
-        previousAssistant: '',
     };
     if (!transcriptPath || !isSafeTranscriptPath(transcriptPath, opts)) return empty;
     let lines: string[];
@@ -121,8 +112,6 @@ export function readTranscriptTail(
     let turnOrdinal = 0;
     let toolCalls: ToolCall[] = [];
     let assistantTurnTexts: string[] = [];
-    let lastUserPrompt = '';
-    let previousAssistant = '';
     for (const rawLine of lines) {
         const line = rawLine.trim();
         if (!line) continue;
@@ -157,8 +146,6 @@ export function readTranscriptTail(
             assistantTurnTexts.push(text);
         } else if (!isSyntheticPrompt(text)) {
             turnOrdinal += 1;
-            lastUserPrompt = text;
-            previousAssistant = lastAssistant;
             // A genuine user prompt starts a new turn, so the previous turn's
             // tool activity stops counting. Without this reset, a verification
             // run three turns ago would vouch for an edit made now — the
@@ -176,8 +163,6 @@ export function readTranscriptTail(
         turnOrdinal,
         toolCalls,
         assistantTurnTexts,
-        lastUserPrompt: lastUserPrompt.trim(),
-        previousAssistant: previousAssistant.trim(),
     };
 }
 

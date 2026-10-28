@@ -25,7 +25,7 @@ NEVER A DEMOTION. FRICTION ALONE NEVER DEMOTES A DETECTOR.
 A BAR SET ON AN UNMEASURABLE QUANTITY IS INERT AND SAYS SO.
 ```
 
-## The seven detectors
+## The six detectors
 
 Read off `DetectorId` in `src/scripts/hooks/turn_end_gate_hook.ts`, never off
 prose — the roadmap that opened this question named three, the tree had four,
@@ -42,24 +42,6 @@ counted alone would have under-reported the gate.
 | D `completion` | a completion claim carries no fresh evidence | the truthfulness of "done" | only when no dispatch is open |
 | E `pending-decision` | an earlier assistant turn in the SAME user turn put numbered options to the user and the closing one carries none | the liveness of an issued decision | every turn-end |
 | F `untested` | a completion claim over production source the turn changed, with no test file touched anywhere in the turn | that "done" means exercised, not merely run | only when no dispatch is open |
-| G `capitulation` | the prompt is a bare challenge (short, a challenge word, no code, link, digit or quotation), the closing reply concedes the reply before that prompt, and the turn made no tool call | that an answer changes because something was checked | only where `AGENT_CONFIG_CAPITULATION_COUNT=1` is set; never refuses |
-
-**G is advisory, counts-only and default-off.** It is never a finding the gate
-refuses on: a firing appends `{"turn":N}` to `<session>.advisory.jsonl` beside
-the refusal record, and the count is the number of distinct turns in that file
-(append-only, so concurrent stops cannot lose a line, and a duplicate counts
-once). No prompt or reply text is stored; the refusal-state pruner ages the file
-out like a shadow record. Its remedy is "check first, then keep or change
-the answer and say why", so the count is never a push toward holding. Default
-off is decision H1 of road-to-a-challenge-the-bench-has-measured (AI council,
-2026-10-27, anthropic and openai, 2/2): counting firings measures how often it
-fires, not whether it is right, so it ships enabled nowhere until a labelled
-corpus measures its precision. G has no bar and no sample floor here; a
-promotion would register both first, under the rule above. **Sunset:** by
-2027-01-31 (the parked roadmap's `review_by`) G is either promoted with a
-registered bar or removed, so the 1,805 bundle bytes it costs every hook event
-are not carried indefinitely for a default-off count (ratification round 3,
-both seats).
 
 **Why E runs on every turn-end rather than joining A and D.** The conditional
 pair is excused by an open dispatch because a completion claim mid-dispatch is
