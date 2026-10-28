@@ -12534,7 +12534,7 @@ var REMOVED_KEYS = /* @__PURE__ */ new Map([
   // 2026-10-24 — road-to-a-setup-that-decides-itself step 4.9 (owner directive, D14)
   // 2026-10-24 — step 4.7 (owner answer OQ-1)
   ["projection.mode", "per host: a host with a listing lever gets every skill, every other host the active profile packs"],
-  ["projection.rule_packs", "the active-pack set; install rule scoping honours an explicit value one release window"]
+  ["projection.rule_packs", "the active-pack set; runtime.active_packs widens it"]
 ]);
 var _warnedRemovedKeys = /* @__PURE__ */ new Set();
 function _readDotted(root, dotted) {
@@ -12556,7 +12556,7 @@ function warnRemovedKeys(merged) {
       continue;
     }
     _warnedRemovedKeys.add(key);
-    process.stderr.write(`${key} was removed (${reason}); ${reason.includes("honours") ? "still honoured" : "ignored"}.
+    process.stderr.write(`${key} was removed (${reason}); ignored.
 `);
   }
 }
@@ -13155,12 +13155,7 @@ function ruleScopeFromSettings(settings, packageRoot) {
   const derivedWorkspaces = packageRoot === void 0 ? null : consumerRuleWorkspaces(packageRoot);
   const proj = settings["projection"];
   const p = typeof proj === "object" && proj !== null && !Array.isArray(proj) ? proj : {};
-  const legacy = legacyRulePacks(p);
-  const packs = packageRoot === void 0 ? legacy === void 0 ? null : _list(legacy) : resolve_rule_pack_scope(
-    legacy === void 0 ? RULE_PACKS_AUTO : legacy,
-    packageRoot,
-    _list(_runtimeActivePacks(settings)) ?? []
-  );
+  const packs = packageRoot === void 0 ? null : resolve_rule_pack_scope(RULE_PACKS_AUTO, packageRoot, _list(_runtimeActivePacks(settings)) ?? []);
   return {
     // DERIVED since ADR-293 step 4.6, not read. `projection.rule_workspaces`
     // carried this list as a settings default — the nine consumer workspace
@@ -13177,9 +13172,6 @@ function ruleScopeFromSettings(settings, packageRoot) {
     packs,
     roles: _list(p["rule_roles"])
   };
-}
-function legacyRulePacks(projection) {
-  return Object.prototype.hasOwnProperty.call(projection, "rule_packs") ? projection["rule_packs"] : void 0;
 }
 function _runtimeActivePacks(settings) {
   const rt = settings["runtime"];
