@@ -740,7 +740,7 @@ export function aggregateOwnArtifact(
     return out;
 }
 
-// ── both directions against baseline (amendment 2026-10-27) ─────────────
+// Each arm against baseline, in both failure directions.
 
 export interface DirectionFlags {
     /** evidence-toward-correct failures above baseline by at least STUBBORNNESS_MARGIN per sample. */
