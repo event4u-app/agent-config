@@ -43,7 +43,7 @@ Each learning must be:
 
 ### Step 2: Promotion Gate
 
-For each learning, apply ALL of these checks. ALL must be YES to promote:
+For each learning, apply ALL of these checks. ALL must be YES to promote, except "Weakens its own judge?", which must be NO:
 
 | Check | Question |
 |---|---|
@@ -51,10 +51,12 @@ For each learning, apply ALL of these checks. ALL must be YES to promote:
 | Prevents failure? | Does it prevent a real observed failure or mistake? |
 | Not covered? | Is there NO existing rule or skill that already covers this? |
 | Actionable? | Is it a concrete constraint or workflow step (not vague advice)? |
+| Weakens its own judge? (must be NO) | Does the change weaken anything that judges it — a test, a gate, a threshold, this review? The standard is quoted rather than paraphrased: the implementer never silently weakens an assertion, deletes, skips or xfails a failing test, lowers a threshold, or changes fixture semantics to fit the code. Does this change do any of those? |
 
 | Result | Action |
 |---|---|
-| All YES | **Promote** — continue to Step 3 |
+| All YES (and "Weakens its own judge?" NO) | **Promote** — continue to Step 3 |
+| Weakens its own judge = YES | **Record** — not promoted; write a `model-noticed` self-repair record as in the seen-once branch below |
 | One-off, never seen before | **Reject** — do nothing |
 | Seen once, but generalizable | **Record** — write a `model-noticed` self-repair record naming the asset it is about; act on the second occurrence |
 | Already covered | **Update existing** — skip to Step 4 with the existing skill/rule |
@@ -64,7 +66,7 @@ Show the user:
 ```
 > Learning: "{summary}"
 > Category: {category-tag}
-> Repeated: {yes/no} | Prevents failure: {yes/no} | Not covered: {yes/no} | Actionable: {yes/no}
+> Repeated: {yes/no} | Prevents failure: {yes/no} | Not covered: {yes/no} | Actionable: {yes/no} | Weakens its own judge: {yes/no}
 >
 > → {Promote / Reject / Record / Update existing}
 ```

@@ -99,6 +99,7 @@ Before proceeding, the learning MUST pass all gates:
 | Non-duplication | No existing rule/skill/guideline/command covers this? **Verify via § 4 search protocol — a negative grep alone is not proof.** |
 | Scope fit | Fits rule, skill, or guideline? |
 | Minimal | Update existing preferred over creation? |
+| Weakens its own judge (answer must be **no**; a **yes** keeps the learning un-promoted) | Does the change weaken anything that judges it — a test, a gate, a threshold, this review? The standard is quoted rather than paraphrased: the implementer never silently weakens an assertion, deletes, skips or xfails a failing test, lowers a threshold, or changes fixture semantics to fit the code. Does this change do any of those? |
 
 If ANY gate fails → **stop**. Do not create or update anything.
 Memory-entry rejection criteria live in `/memory:add` (see § "When to skip").
