@@ -171,7 +171,7 @@ function _ssh_command_config(): string | null {
 export function _is_transient_network_failure(stderr: string, stdout: string): boolean {
     const text = `${stderr}\n${stdout}`;
     if (/Permission denied|denied to |GH0\d\d|\[(?:remote )?rejected\]/i.test(text)) return false;
-    return /(ssh: connect to host|Could not resolve host|Connection reset by peer|Broken pipe|Connection timed out|Operation timed out|Connection refused|unexpected disconnect|the remote end hung up unexpectedly|Failed to connect to|SSL_ERROR_SYSCALL|Timeout, server)/i.test(
+    return /(ssh: connect to host|Could not resolve host|Connection reset by peer|Broken pipe|Connection timed out|Operation timed out|Connection refused|unexpected disconnect|the remote end hung up unexpectedly|Failed to connect to|SSL_ERROR_SYSCALL|Timeout, server|transfer closed|recv error|Connection closed by|closed by remote host|early EOF)/i.test(
         text,
     );
 }
@@ -1449,7 +1449,9 @@ export function _previous_test_count_from_changelog(prev_tag: string | null): nu
 
 /** The body of the `## [version]` section of a changelog text, or null. */
 function _changelog_section(text: string, version: string): string | null {
-    const heading_re = new RegExp(`^##\\s+\\[?${reEscape(version)}\\b`, 'm');
+    // `(?![\\w.-])`, not `\\b`: `\\b` matches between `0` and `-`, so `20.0.0`
+    // would select the `20.0.0-rc.1` section.
+    const heading_re = new RegExp(`^##\\s+\\[?${reEscape(version)}(?![\\w.-])`, 'm');
     const m = heading_re.exec(text);
     if (!m) {
         return null;

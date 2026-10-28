@@ -1521,7 +1521,7 @@ function main(argv: readonly string[] | null = null): number {
     // Dry-run stays fast: the trend line costs a full vitest collection
     // (~15s+), which `--dry-run exits 0 without needing …` contracts (and
     // the release test) assume never runs. Real releases compute it.
-    const test_trend_line = args.dry_run ? null : _render_test_trend_line(prev, target);
+    const test_trend_line = args.dry_run ? null : _render_test_trend_line(prev, args.resume ? target : undefined);
     // Derived unconditionally, dry-run included: it is one `git log` (~25 ms),
     // not the trend line's full vitest collection. Skipping it on `--dry-run`
     // made the preview print the `_none_` skeleton while the real run wrote
