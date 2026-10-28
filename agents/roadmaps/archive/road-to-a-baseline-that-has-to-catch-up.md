@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: later
+status: archived
 tree_pin: 1e3869b03d
 review_by: 2026-11-28
 entry_condition:
