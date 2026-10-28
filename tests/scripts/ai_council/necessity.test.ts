@@ -85,6 +85,21 @@ describe('necessity — classify_impact unit', () => {
         expect(v.impact_class).toBe('user_required');
         expect(v.category).toBe('user_fence');
     });
+    it.each([
+        'Interview me in detail about this before you start',
+        'Wenn du noch mehr Infos brauchst, stell mir Rückfragen und interview mich',
+        'Stell mir Fragen, bevor du loslegst',
+        'Bau das Formular um und interview mich dazu',
+        'Bitte erst Rückfragen, dann umsetzen',
+    ])('interview request fences as user_required: %s', (prompt) => {
+        const v = classify_impact(prompt);
+        expect(v.impact_class).toBe('user_required');
+        expect(v.category).toBe('user_fence');
+    });
+    it('a German task without an interview request is not fenced', () => {
+        const v = classify_impact('Bau das Formular um und benenne die Felder neu');
+        expect(v.category).not.toBe('user_fence');
+    });
     it('high_impact floors confidence at 0.85', () => {
         const v = classify_impact('rotate the secret'); // one high marker
         expect(v.impact_class).toBe('high_impact');

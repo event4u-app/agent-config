@@ -66,7 +66,9 @@ describe('branches on the map', () => {
         await page.locator('[role="tab"]', { hasText: 'Branches' }).click();
         const text = (await page.locator('#av-main').textContent()) ?? '';
         expect(text).toMatch(/against main/);
-        expect(text).toMatch(/feat-x @ \w{8}[\s\S]*npm:react 18\.2\.0 → 19\.0\.0/);
+        // The handover's local table: branch, commit, seen, parent, stand, direct packages against the current one.
+        expect(text).toMatch(/feat-x\w{8}[\s\S]*npm:react 18\.2\.0 → 19\.0\.0/);
+        expect(await page.locator('[role="radiogroup"][aria-label="Map kind"] [aria-checked="true"]').textContent()).toBe('Local with --branches');
         expect(errors).toEqual([]);
         await page.close();
     });
@@ -74,7 +76,7 @@ describe('branches on the map', () => {
     it('a map drawn without --branches holds no branch and says why', async () => {
         const { page, errors } = await open(without, '#/systems');
         await page.locator('[role="tab"]', { hasText: 'Branches' }).click();
-        expect(await page.locator('#av-main').textContent()).toMatch(/Drawn without --branches/);
+        expect(await page.locator('#sy-snap').textContent()).toMatch(/branch state not included[\s\S]*code-graph map --branches/);
         expect(fs.readFileSync(path.join(path.dirname(without), 'code', 'map.json'), 'utf-8')).not.toContain('feat-x');
         expect(errors).toEqual([]);
         await page.close();

@@ -15,7 +15,11 @@ import {
     buildPressureArm,
     buildTwinArm,
     mcpGraderBody,
+    armReport,
     mergeAggregates,
+    pairedRecall,
+    pressureNull,
+    twinConfusion,
 } from '../../src/scripts/routing_arms.js';
 
 const dirs: string[] = [];
@@ -128,5 +132,36 @@ describe('mergeAggregates', () => {
         expect(missing).toEqual(['b']);
         expect(aggregate['partial']).toBe(true);
         expect(aggregate['costUsd']).toBe(0.1);
+    });
+});
+
+describe('armReport — 3.1, 3.3, 3.2 and 4.2/4.3', () => {
+    const u = (unit: string, recall: number | null) => ({ unit, n: recall === null ? 0 : 1, fired: recall === 1 ? 1 : 0, unknown: recall === null ? 1 : 0, recall });
+    it('pairs recall over units measured in both, dropping an UNKNOWN unit from that comparison only', () => {
+        const p = pairedRecall([u('a', 1), u('b', 0), u('c', 1)], [u('a', 1), u('b', 1), u('c', null)]);
+        expect(p).toEqual({ units: 2, baseline: 0.5, arm: 1 });
+    });
+    it('the null holds iff acc(full) >= acc(20) - 0.10, at the boundary and either side of it', () => {
+        expect(pressureNull(0.7, 0.8).holds).toBe(true);
+        expect(pressureNull(0.69, 0.8).holds).toBe(false);
+        expect(pressureNull(0.9, 0.8).holds).toBe(true);
+    });
+    it('parity is breached when the MCP path undercuts native by more than epsilon, and only then', () => {
+        const r = armReport({ baseline: [u('a', 1), u('b', 1)], arms: { mcp: [u('a', 1), u('b', 0)] } });
+        expect(r.parity?.verdict.breached).toBe(true);
+        const ok = armReport({ baseline: [u('a', 1), u('b', 1)], arms: { mcp: [u('a', 1), u('b', 1)] } });
+        expect(ok.parity?.verdict.breached).toBe(false);
+    });
+    it('counts twin confusion per pair from the invoked names, an unread trace being UNKNOWN', () => {
+        const rows = [
+            { skill: 'x', verdict: 'fired' as const, invoked: ['x'] },
+            { skill: 'x', verdict: 'not-fired' as const, invoked: ['x-twin'] },
+            { skill: 'x', verdict: 'fired' as const, invoked: ['x', 'x-twin'] },
+            { skill: 'x', verdict: 'not-fired' as const, invoked: [] },
+            { skill: 'x', verdict: 'fired' as const, invoked: null },
+        ];
+        expect(twinConfusion(rows)).toEqual([
+            { pair: 'x', runs: 4, original_only: 1, twin_only: 1, both: 1, neither: 1, unknown: 1, confusion: 0.5 },
+        ]);
     });
 });

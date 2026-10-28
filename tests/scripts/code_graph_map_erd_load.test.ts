@@ -83,6 +83,9 @@ describe('2D on the demo schema', () => {
             expect(width < 721 ? first.total : first.centred, `open ${width}`).toBeGreaterThan(0);
             expect(first.n, `open ${width}`).toBe(first.total);
             expect(first.clickable + first.covered, `open ${width}`).toBe(first.centred);
+            // The picked table alone is framed, and one of its badges is in the free part of the stage, not at an
+            // edge a few pixels of header height push it past, nor under the stage controls.
+            if (width > 720) expect(first.clickable, `open ${width} clickable`).toBeGreaterThan(0);
             const picks = data.tables.filter((t) => t.columns.some((c) => (c.links ?? []).length)).slice(0, 4).map((t) => t.name);
             for (const name of picks) {
                 await page.evaluate((n) => { location.hash = `#/data/table%2F${encodeURIComponent(n)}`; }, name);

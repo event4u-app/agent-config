@@ -110,7 +110,7 @@ If many exist in specific dirs, add the directory pattern.
 
 Detect the project's own organization namespace from whichever manifest is present.
 Add a negation pattern after the broad ignore so the agent can still index
-first-party packages via `codebase-retrieval`:
+first-party packages via `code-graph ask`:
 
 | Manifest         | Where the org lives                                         | Negation pattern                          |
 |------------------|-------------------------------------------------------------|-------------------------------------------|

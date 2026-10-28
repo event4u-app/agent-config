@@ -21,6 +21,38 @@ and the run that applies it links its PR.
   matters once Phase 2.5 has promoted a row, and (a) changes every install.
 - **Blocks:** nothing now; consumer reach of the render engine (Phase 2).
 
+### OQ-25 — How the "interview me" sentence gets appended automatically
+
+- **Context:** your own question in inbox round `inbox-2026-10-be`: "Können wir diesen Satz
+  auch automatisch anhängen?" A `user_prompt_submit` hook can add the sentence as context.
+  Claude already runs 14 concerns in that slot, and the 2026-10-12 line (ADR-293) rules out
+  new form settings.
+- **Options:** (a) a personal hook in your `~/.claude/settings.json`, firing on every
+  prompt, zero package change; (b) a shipped concern, off by default, firing only on task
+  prompts behind a new opt-in key; (c) both.
+- **Recommendation:** (a) — it works today, costs no consumer anything, and Phase 1 of
+  `road-to-the-question-only-the-owner-can-answer` makes the sentence actually reach the
+  interview and fence the run.
+- **Blocks:** step 3.1 of `road-to-the-question-only-the-owner-can-answer-carried` (`later/`).
+
+### OQ-26 — Make the interview reachable outside the maintainer workspace
+
+- **Context:** `challenge-me`, `grill-me` and `refine-prompt` are fenced to
+  `agent-config-maintainer`; a consumer typing "interview me" gets nothing routed.
+- **Options:** (a) add `engineering` and `product` to their workspaces; (b) add the
+  `product-reasoning` pack to `engineering`'s optional packs; (c) leave it.
+- **Recommendation:** (a) — optional packs are opt-in, so (b) still misses most users.
+- **Blocks:** step 3.2 of `road-to-the-question-only-the-owner-can-answer-carried` (`later/`).
+
+### OQ-27 — The prompt optimizer's "Lyra" persona
+
+- **Context:** `/optimize prompt` greets with "Hi! I'm Lyra"; a role names vocabulary, not a
+  method, and the same change drops "assign a role" from the skill.
+- **Options:** (a) keep the name, drop the role-play welcome; (b) drop the persona entirely;
+  (c) keep both.
+- **Recommendation:** (a).
+- **Blocks:** step 2.1 of `road-to-a-prompt-that-deepens-not-widens-carried` (`later/`).
+
 ## Not owner questions — waits, or already settled in the tree
 
 - `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
@@ -121,7 +153,8 @@ and the run that applies it links its PR.
 ### OQ-23 — Repetitions against the canary query ceiling
 
 - **Context:** three repetitions per case raise the rotation's weekly peak from
-  200 to 600 queries; `MAX_WEEKLY_QUERIES` is 200 and owner-set, and the lever
+  200 to 600 queries; `MAX_WEEKLY_QUERIES` is owner-set (200, raised to 220 on
+  2026-10-27 when the peak reached 210, so three repetitions now mean 630), and the lever
   6.3 names first no longer exists. Blocker `b-rate-canary-ceiling`.
 - **Options:** (a) raise the ceiling to 600; (b) three repetitions only for
   units with floor 0.90 (peak ≈ 420, still above 200); (c) keep default 1 and

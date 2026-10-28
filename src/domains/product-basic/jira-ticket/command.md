@@ -50,7 +50,7 @@ packs:
 
 ### 4. Analyze the codebase
 
-- Use `codebase-retrieval` to find the relevant code based on what the ticket describes.
+- Use `code-graph ask` to find the relevant code based on what the ticket describes.
 - Read the affected files and understand the current behavior.
 - If it's a bug: reproduce the logic mentally by following the code path from the Sentry stacktrace or ticket description.
 - If it's a feature: understand the existing architecture and where the new code should go.

@@ -159,11 +159,13 @@ describe('the shipped decisions stay in place under the new shell', () => {
         expect(html).toMatch(/img-src 'none'/);
     });
 
-    it('3–4 side panels pin only from 1240 px, fly out with a scrim below it, never pin on a phone, and animate unless motion is reduced', () => {
-        expect(js).toContain("return w <= 720 ? 'phone' : w < 1240 ? 'tablet' : 'wide';");
+    it('3–4 side panels pin only from 1240 px, fly out inside the body with a scrim below it, never pin on a phone', () => {
+        expect(js).toContain("return w <= 700 ? 'phone' : w < 1240 ? 'tablet' : 'wide';");
         expect(html).toContain('<div class="scrim" id="scrim" hidden></div>');
         expect(html).toContain('<div class="scrim" id="av-scrim" hidden></div>');
-        expect(css).toMatch(/transition: transform 0\.2s ease, visibility 0\.2s;[\s\S]*prefers-reduced-motion: reduce/);
+        // The 2026-10-bf handover draws its flyouts without an animation.
+        expect(css).toContain('.av-body:not(.pin-right) .av-side { position: absolute; top: 0; bottom: 0; right: 0; z-index: 30; width: 400px; max-width: 92vw; min-width: 0; box-shadow: -12px 0 40px rgba(0, 0, 0, 0.35); }');
+        expect(css).not.toContain('transition: transform 0.2s ease, visibility 0.2s;');
         expect(css).toContain('.wb.mode-phone .pane-pin { display: none; }');
         expect(css).toContain('.av-body.mode-phone #av-pin { display: none; }');
     });
@@ -209,15 +211,15 @@ describe('the shipped decisions stay in place under the new shell', () => {
         expect(js).toContain('state.treePath = state.treePath ? state.treePath + \'/\' + it.name : it.name;');
     });
 
-    it('13 red is the --alert token, and no link leads to the user-global hub', () => {
-        expect(css).toMatch(/--alert: #[0-9a-f]{6}; --alertText:/);
-        expect(css).not.toMatch(/--red\b/);
+    it('13 red is the handover --red token, --alert* stay aliases, and no link leads to the user-global hub', () => {
+        expect(css).toMatch(/--red: #[0-9a-f]{6}; --redText: #[0-9a-f]{6}; --redTint:/);
+        expect(css).toContain('--alert: var(--red); --alertText: var(--redText);');
         expect(html).not.toMatch(/Global ↗|\.event4u|estate/i);
     });
 
-    it('the wordmark is KNOWLEDGE MAP and the nav names the nine areas in order', () => {
+    it('the wordmark is KNOWLEDGE MAP and the nav names the eleven areas in the handover order', () => {
         expect(html).toContain('<div class="brand-name"><b>AGENT CONFIG</b><span>KNOWLEDGE MAP</span></div>');
         const routes = [...html.matchAll(/<a href="#\/(\w+)" data-route="\w+">/g)].map((m) => m[1]);
-        expect(routes).toEqual(['overview', 'code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'impact', 'agent']);
+        expect(routes).toEqual(['overview', 'code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'bugs', 'knowledge', 'impact', 'agent']);
     });
 });

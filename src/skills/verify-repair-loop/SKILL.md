@@ -298,6 +298,6 @@ iter2 fixes A, breaks B, 92% → "PASS"      ✗ regression ignored
 * [`resident-process-governance`](../../../docs/contracts/resident-process-governance.md) — the
   runtime-free constraint this loop honors.
 * Optional impact pre-step (when a code-graph is present, ADR-124): run
-  `agent-config code-graph affected --since <ref>` to scope which symbols a
-  change touches before choosing verdict sources — cited, not duplicated; the
-  loop itself is unchanged when no graph exists.
+  `agent-config code-graph impact --diff <ref> --regressions <registry>` to pick
+  the regressions a change reaches before choosing verdict sources; on a
+  refusal run them all. Unchanged without a graph.

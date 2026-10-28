@@ -163,7 +163,12 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // named both tenancy modes in `multi-tenancy`, which then owed a corpus.
         // `multi-tenancy` is 0x12 = 18 and seals. The claim's scope moves to
         // 18 of 40.
-        expect(sealed.length).toBe(40);
+        //
+        // 40 -> 42 on 2026-10-27: inbox round 2026-10-bf J.7a edited `mcp` and
+        // `systematic-debugging`, which then owed corpora. `mcp` is 0x10 = 16
+        // and `systematic-debugging` is 0x1e = 30; both seal. The claim's scope
+        // moves to 18 of 42.
+        expect(sealed.length).toBe(42);
     });
 
     it('the loader`s partition agrees with every published holdout row', () => {
@@ -373,8 +378,13 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 178 -> 179 on 2026-10-26: `laravel-migration` (0x94) trains (139 -> 140).
         // 179 -> 181 on 2026-10-27: `migration-architect` trains (140 -> 141),
         // `multi-tenancy` (0x12 = 18) seals (39 -> 40).
-        expect(all.length).toBe(181);
-        expect(all.filter((r) => r.partition === 'holdout').length).toBe(40);
+        // 181 -> 183 on 2026-10-27: `prompt-optimizer` and `verify-completion-evidence`
+        // train (141 -> 143); inbox round 2026-10-be.
+        // 183 -> 187 on 2026-10-27: inbox round 2026-10-bf. `context-document`
+        // (0x56) and `sentry-integration` (0xee) train (143 -> 145); `mcp`
+        // (0x10) and `systematic-debugging` (0x1e) seal (40 -> 42).
+        expect(all.length).toBe(187);
+        expect(all.filter((r) => r.partition === 'holdout').length).toBe(42);
     });
 });
 
@@ -444,7 +454,10 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 138 -> 139 on 2026-10-26: `readme-writing` trains (see the 178 line).
         // 139 -> 140 on 2026-10-26: `laravel-migration` trains (see the 179 line).
         // 140 -> 141 on 2026-10-27: `migration-architect` trains (see the 180 line).
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(141);
+        // 141 -> 143 on 2026-10-27: two train corpora from inbox round 2026-10-be.
+        // 143 -> 145 on 2026-10-27: two train corpora from inbox round 2026-10-bf
+        // (see the 187 line).
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(145);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

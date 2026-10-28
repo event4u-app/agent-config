@@ -111,7 +111,7 @@ Before drafting any patch, run every finding from Step 4 through the
 *Critical evaluation* checklist from the
 [`ai-council` skill](../../skills/ai-council/SKILL.md#critical-evaluation--convener-skeptic-stance):
 
-- **Codebase fit** — does the finding match the actual roadmap content, file paths, scripts, contracts cited in the roadmap? (`view` / `codebase-retrieval`)
+- **Codebase fit** — does the finding match the actual roadmap content, file paths, scripts, contracts cited in the roadmap? (`view` / `code-graph ask`)
 - **Locked-decision conflict** — does it contradict an ADR (`docs/decisions/`), a contract (`docs/contracts/`), a kernel rule, or an earlier locked decision in **this** roadmap?
 - **Already addressed** — is the finding already covered by an existing step, AC, or phase in the roadmap?
 - **Cost / benefit** — does the patch's scope vs. roadmap value clear the bar?

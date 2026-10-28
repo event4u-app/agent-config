@@ -10,6 +10,7 @@
  * mention that resolves to exactly one file in the repository; anything looser
  * is a name match, and a name match is not a decision about that file.
  */
+import { WALK_SKIP_DIRS } from '../../scope.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { gitProbe } from '../../../_lib/spawn_env.js';
@@ -18,6 +19,8 @@ import { spanHash, type LaneFact, type LaneOutput, type LaneRelation, type Witne
 export interface ReadDecisionsOptions {
     /** Repository-relative files to resolve mentions against; defaults to `git ls-files`, then a bounded walk. */
     files?: readonly string[];
+    /** Node ids of the graph the lane merges into: a mention of a file outside it is unresolved, never a dangling `governs`. */
+    nodes?: ReadonlySet<string>;
 }
 
 export interface DecisionsOutput extends LaneOutput {
@@ -48,7 +51,7 @@ interface Link {
 }
 
 const NONE = /^(?:—|-|–|none|n\/a|null|~)?$/i;
-const WALK_SKIP = new Set(['.git', 'node_modules', 'vendor', 'dist', '.tscache']);
+const WALK_SKIP = new Set(WALK_SKIP_DIRS);
 const WALK_CAP = 50_000;
 
 export function decisionId(n: number): string {
@@ -329,6 +332,10 @@ export function readDecisions(root: string, opts: ReadDecisionsOptions = {}): De
                 const target = hits[0] as string;
                 // A record naming itself or another record is a citation, not governance.
                 if (target === r.file || isDecisionFile(target) || seen.has(target)) continue;
+                if (opts.nodes && !opts.nodes.has(target)) {
+                    output.dropped.unresolved++;
+                    continue;
+                }
                 seen.add(target);
                 governs.push({
                     relation: 'governs',

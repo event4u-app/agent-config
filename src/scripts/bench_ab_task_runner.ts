@@ -203,9 +203,11 @@ interface RunResult {
     errored?: boolean;
     num_turns?: number;
     subtype?: string;
+    /** The raw stream-json events, present only when the run asked for `stream`. */
+    stream?: string;
 }
 
-interface RunLiveOpts {
+export interface RunLiveOpts {
     sysprompt_file?: string | null;
     setting_sources?: string | null;
     max_budget?: number | null;
@@ -217,6 +219,8 @@ interface RunLiveOpts {
     strict_mcp?: boolean;
     /** Extra environment for the child process, layered over this process's. */
     env?: Record<string, string> | null;
+    /** `--output-format stream-json --verbose`: every event, kept as `stream` on the result for a trace. */
+    stream?: boolean;
 }
 
 /** The claude command line for one run — pure, so the flags each arm passes are tested. */
@@ -227,7 +231,9 @@ export function live_args(prompt: string, opts: RunLiveOpts = {}): string[] {
     // bypassPermissions on EVERY arm: the clone is a throwaway fixture, and this
     // equalizes file-edit capability across arms (else `without`, which excludes
     // user settings, would lack edit perms and fail tasks for the wrong reason).
-    const cmd = ['--print', '--output-format', 'json', '--permission-mode', 'bypassPermissions'];
+    const cmd = opts.stream
+        ? ['--print', '--output-format', 'stream-json', '--verbose', '--permission-mode', 'bypassPermissions']
+        : ['--print', '--output-format', 'json', '--permission-mode', 'bypassPermissions'];
     if (model) {
         // Pin ONE model across every arm. The session default here is Opus-4.8-1M,
         // whose ~$1.78 first-turn cache-creation trips any sane budget cap instantly
@@ -332,7 +338,9 @@ export function run_live(
         cache_creation_input_tokens: 0,
     };
     try {
-        const obj = JSON.parse(stdout) as Record<string, unknown>;
+        // stream-json: the last `result` event carries what json mode prints as one object.
+        const resultLine = opts.stream ? (stdout.split('\n').filter((l) => l.includes('"type":"result"')).pop() ?? stdout) : stdout;
+        const obj = JSON.parse(resultLine) as Record<string, unknown>;
         // Python: `except (json.JSONDecodeError, AttributeError, ValueError)`.
         // JSON.parse of a non-object (string/number/array) parses fine but then
         // `.get` calls would AttributeError in Python — guard by requiring an object.
@@ -427,6 +435,7 @@ export function run_live(
         errored: isError || returncode !== 0,
         num_turns: numTurns,
         subtype,
+        ...(opts.stream ? { stream: stdout } : {}),
     };
 }
 

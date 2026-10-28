@@ -330,7 +330,7 @@ emit the `context_stale` event above it for the consolidation pass.
 * "This looks similar to bug X, so it's the same fix"
 * Suppressing a log, warning, or exception instead of tracing its source
 * **Three consecutive read-only turns** (only `view` / `grep` /
-  `git log` / `codebase-retrieval`, no edits, no test runs) — trips the
+  `git log` / `code-graph ask`, no edits, no test runs) — trips the
   Read-Loop Detection 15-minute warning. See
   [`context-hygiene § Read-Loop Detection`](../../rules/context-hygiene.md#read-loop-detection--the-15--25-rule)
   and run the Debug micro-loop instead: one failing test → read the

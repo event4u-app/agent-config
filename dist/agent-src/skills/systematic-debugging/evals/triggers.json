@@ -1,0 +1,63 @@
+{
+    "skill": "systematic-debugging",
+    "last_eval": "2026-10-27",
+    "description": "5 exemplars (1 de) + 3 near-misses + 2 counterexamples. Exemplars cover the When-to-use list and the description's 'fires even on this is broken / quick fix' clause: an unexplained test failure, a flaky test, staging behaving unexpectedly, a fix that did not hold, and a terse German 'it's broken, quick fix'. Near-misses are the two neighbours this skill's Do-NOT list routes to by name (data-flow-mapper, blast-radius-analyzer) plus the retrospective root-cause analysis of an already-resolved incident (root-cause-frameworks). Counterexamples are the two exclusions the skill states outright: a failure message that already names the fix, and pure lint/formatting.",
+    "queries": [
+        {
+            "q": "the OrderTotalTest fails on CI but passes locally and I don't see why",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "this integration test is flaky — it fails roughly one run in five",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "staging shows the wrong currency on invoices since Tuesday — find the root cause before anyone changes code",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "the fix we shipped last week didn't resolve the duplicate emails, and now some aren't sent at all",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "der Import ist kaputt, mach mal schnell einen Fix",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "trace where the customer email field flows from the signup form to the CRM export",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a static trace of one data element, no failure to reproduce → data-flow-mapper, named in this skill's Do-NOT list"
+        },
+        {
+            "q": "before I rename this service method, list everything that calls it",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "enumerating what a planned change touches → blast-radius-analyzer, named in this skill's Do-NOT list"
+        },
+        {
+            "q": "the outage is resolved — run a 5-whys on why the cache keeps falling over",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "root-cause vocabulary, but retrospective analysis of a resolved incident rather than live reproduce-isolate-verify → root-cause-frameworks"
+        },
+        {
+            "q": "ImportError: cannot import name 'Invoice' — I renamed it to Invoices, update the import",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the failure message already names the fix, which the skill's Do-NOT list excludes"
+        },
+        {
+            "q": "fix the trailing-whitespace lint warnings in the config folder",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "pure lint/formatting, excluded by the skill's Do-NOT list"
+        }
+    ]
+}

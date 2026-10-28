@@ -41,6 +41,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { DEFAULT_ANSWER_BUDGET, budgetImpactReport } from '../code_graph/answer_budget.js';
 import { changedFiles } from '../code_graph/cli.js';
 import { detectSources, graphState, pickSource } from '../code_graph/detect.js';
 import { graphHome } from '../code_graph/graph_home.js';
@@ -70,6 +71,8 @@ import {
     tree as graphTreeVerb,
     type TreeOptions,
 } from '../code_graph/query.js';
+import { capAnswer, capReviewRisk, parseDetail } from '../code_graph/answer_detail.js';
+import { noEntryLine, testsForModuleAnswer, withDeclaringFileTests } from '../code_graph/answer_correctness.js';
 import { diffHunks, reviewRisk } from '../code_graph/review_risk.js';
 import type { CodeGraph, Relation } from '../code_graph/types.js';
 import { RELATIONS as VOCAB_RELATIONS } from '../code_graph/vocabulary.js';
@@ -78,7 +81,6 @@ import {
     entryPointsFromFile,
     impact,
     repoEntryPoints,
-    testsFor,
     untested,
 } from '../code_graph/verbs.js';
 import { areaReport, graphGeneration, readMap } from '../code_graph/map.js';
@@ -234,6 +236,9 @@ function withProjectParam(tools: Record<string, BuiltinTool>): Record<string, Bu
     return out;
 }
 
+// Its meaning is stated once, in `graph_estate`'s description.
+const DETAIL_PROP = { type: 'string', enum: ['minimal', 'standard'], default: 'standard' } as const;
+
 export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
     graph_impact: {
         name: 'graph_impact',
@@ -252,26 +257,44 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
                     description: 'Instead return changed symbols no test imports.',
                 },
                 review_risk: { type: 'boolean' },
+                detail: DETAIL_PROP,
+                budget: { type: 'integer', minimum: 250 },
+                page: { type: 'integer', minimum: 1 },
             },
             additionalProperties: false,
         },
         handler: async (args, root) => {
             const rev = str(args, 'diff');
             if (rev === '') return { status: 'error', error: 'diff must be a non-empty git rev' };
+            const detail = parseDetail(args['detail']);
             if (args['review_risk'] === true) {
                 const hunks = diffHunks(root, rev);
                 if (hunks === null) return { status: 'error', error: `cannot resolve rev '${rev}' in ${root}` };
                 const cache = graphHome(root).cachePath;
                 if (!fs.existsSync(cache)) return { status: 'error', error: 'no graph yet — run `code-graph build`' };
-                return { status: 'ok', ...reviewRisk(root, JSON.parse(fs.readFileSync(cache, 'utf-8')) as CodeGraph, rev, hunks) };
+                const risk = reviewRisk(root, JSON.parse(fs.readFileSync(cache, 'utf-8')) as CodeGraph, rev, hunks);
+                return { status: 'ok', ...capReviewRisk(risk, detail) };
             }
             const files = changedFiles(root, rev);
             if (files === null) return { status: 'error', error: `cannot resolve rev '${rev}' in ${root}` };
             const state = graphState(root, graphHome(root).cachePath);
             return withGraph(root, (g) =>
                 args['untested_only'] === true
-                    ? { ...untested(g, files, state), changed_files: files.length }
-                    : { ...impact(g, files, state, num(args, 'depth', 2), isTestFile), changed_files: files.length },
+                    ? { ...capAnswer(untested(g, files, state), ['untested', 'tested', 'recommended_reads'], detail), changed_files: files.length }
+                    : budgetImpactReport(
+                          g,
+                          {
+                              ...capAnswer(
+                                  withDeclaringFileTests(g, impact(g, files, state, num(args, 'depth', 2), isTestFile, diffHunks(root, `${rev}..HEAD`) ?? undefined), isTestFile),
+                                  ['dependents', 'reached', 'test_files', 'producing_edges', 'lines', 'recommended_reads'],
+                                  detail,
+                                  ['reached', 'producing_edges', 'lines'],
+                              ),
+                              changed_files: files.length,
+                          },
+                          num(args, 'budget', DEFAULT_ANSWER_BUDGET),
+                          num(args, 'page', 1),
+                      ),
             );
         },
     },
@@ -287,6 +310,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             required: ['symbol'],
             properties: {
                 symbol: { type: 'string', description: 'Node id, label, or free text.' },
+                detail: DETAIL_PROP,
             },
             additionalProperties: false,
         },
@@ -294,7 +318,14 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             const symbol = str(args, 'symbol');
             if (symbol === '') return { status: 'error', error: 'symbol must be a non-empty string' };
             const state = graphState(root, graphHome(root).cachePath);
-            return withGraph(root, (g) => ({ ...testsFor(g, symbol, state) }));
+            const detail = parseDetail(args['detail']);
+            return withGraph(root, (g) => {
+                const r = testsForModuleAnswer(g, symbol, state);
+                return {
+                    ...capAnswer(r, ['tests', 'accepted_edges', 'rejected_edges', 'lines', 'recommended_reads'], detail, ['accepted_edges', 'rejected_edges', 'lines']),
+                    ...(r.seeds.length === 0 ? { no_entry: noEntryLine(symbol, 'tests-for') } : {}),
+                };
+            });
         },
     },
 
@@ -317,6 +348,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
                     default: false,
                     description: 'Answer anyway, accepting the gap. Never a default.',
                 },
+                detail: DETAIL_PROP,
             },
             additionalProperties: false,
         },
@@ -361,7 +393,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
                 // question a caller actually has ("was this source read, and did
                 // it have anything in it") without shipping the contents.
                 return {
-                    ...r,
+                    ...capAnswer(r, ['dead', 'excluded', 'lines', 'recommended_reads'], parseDetail(args['detail']), ['excluded', 'lines']),
                     sources: r.sources.map((srcRow) => ({
                         name: srcRow.name,
                         status: srcRow.status,
@@ -580,7 +612,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         side_effect: 'ro',
         description:
             'Estate index across registered projects: package users, where a name is used, advisory ' +
-            'reach. Other graph tools take `project`.',
+            'reach. Other graph tools take `project`; their lists are capped by `detail`, the rest counted in `omitted`.',
         input_schema: {
             type: 'object',
             required: ['query'],

@@ -61,7 +61,7 @@ get_issue_details(organizationSlug='my-org', issueId='PROJECT-123')
 
 - **Top frame** = where it crashed
 - **Bottom frame** = entry point (HTTP request, job, command)
-- Read each file in the call chain using `codebase-retrieval`
+- Read each file in the call chain using `code-graph ask`
 - Identify where data becomes invalid or assumptions break
 
 ### 3. Check distribution
