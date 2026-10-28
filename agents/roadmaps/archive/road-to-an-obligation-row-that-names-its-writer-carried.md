@@ -38,7 +38,7 @@ left to read as finished.
 
 ## Phase 1 — Deferred steps carried from road-to-an-obligation-row-that-names-its-writer
 
-- [x] **2.2 Resolve the corpus blocker below.** The reporter makes the question
+- [x] **2.2 Resolve the corpus blocker below.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/publish-npm.yml --> The reporter makes the question
       answerable with a number; the answer is not an agent's to give.
       verify: the blocker's `Status` reads `resolved` with the chosen option named
 

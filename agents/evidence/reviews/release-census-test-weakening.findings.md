@@ -6,7 +6,8 @@ Independent verdict on the net assertion loss in
 from `task release-prepare`), required by `check_test_weakening`.
 
 - **Reviewer:** AI council, two providers (anthropic, openai), 2/2 present, run 2026-10-28.
-- **Prompt:** `release-census-test-weakening.review-input/prompt.md`, sha256 `48b9f2b9ce87cf4b90c46fee0e16159d06481fc4d048048f3b9dab2fe716192a`.
+- **Prompt:** `release-census-test-weakening.review-input/prompt.md`, sha256 `6dffd3bc9103b499c1e504bdd2e15d8ea5c73648174672599aaff94b7e29b91c`.
+  The committed file carries one line the council did not see: a leading `<!-- check-refs: skip -->`, because the quoted diff names example paths (`a/b/c.json`) that do not exist. Without that line the file hashes to `48b9f2b9ce87cf4b90c46fee0e16159d06481fc4d048048f3b9dab2fe716192a`, the prompt as sent.
   It carries the production diff and the test diff, and asks per file for LEGITIMATE or WEAKENING. It states no expected outcome.
 
 ## Verdict per file
