@@ -21,8 +21,7 @@ packs:
 ## When to use
 
 - A PR is being prepared and the author wants "who should review this?"
-- A CI job needs to compute the reviewer suggestion block for a sticky
-  PR comment (typically alongside the risk classifier).
+- A CI job computes the reviewer block for a sticky PR comment.
 - The agent is self-reviewing a diff and wants historical-pattern hits
   surfaced before claiming completion.
 
@@ -40,9 +39,8 @@ Do NOT use when:
 
 ### 1. Identify the changed file list
 
-Inspect the diff: from git (`git diff --name-only <base>...<head>`) or
-from an explicit list supplied by the caller. If the list is empty,
-stop and report "no changes — routing skipped".
+From git (`git diff --name-only <base>...<head>`) or a caller-supplied
+list. Empty → stop and report "no changes — routing skipped".
 
 ### 2. Load project data (if present)
 
@@ -52,10 +50,9 @@ Check, in order:
 - `.github/historical-bug-patterns.yml` → fallback
   `agents/historical-bug-patterns.yml`
 
-Parse each with YAML. Validate `version: 1` is present. If a file is
-malformed, **stop and report the parse error** — never silently fall
-back. If neither file exists, emit the generic role-based fallback
-using the common role vocabulary below.
+Parse each as YAML; require `version: 1`. A malformed file →
+**stop and report the parse error**, never fall back silently.
+Neither file → the generic role fallback (vocabulary below).
 
 **Also** pull agent-written signals via the shared abstraction (see
 [`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md)):
@@ -65,7 +62,8 @@ agent-config memory:lookup \
   --types ownership,historical-patterns,incident-learnings \
   --key <changed file path> \
   --limit 5
-# Repeat --key per changed path.
+# Repeat --key per changed path; then recurring findings, each citing a contract:
+agent-config code-graph ask "review checklist for <area>"
 ```
 
 Treat `source: "curated"` as equal-trust to the project YAML.

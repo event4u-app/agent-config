@@ -11,6 +11,8 @@
  * map's is `stale`. Nothing here writes a file; ERD pages are returned for the
  * map writer to place.
  */
+import { scopeOf } from './scope.js';
+import { excludedOwnFiles } from './lanes/delivery/self_trigger.js';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -44,6 +46,7 @@ import type {
     RuntimePayload,
     SourceRung,
     SystemsPackage,
+    SystemsEcosystem,
     SystemsPayload,
     Witness,
 } from './map_areas.js';
@@ -151,7 +154,8 @@ function witness(c: Ctx, w: { file: string | null; line: number | null; hash: st
 
 function nodeWitness(c: Ctx, n: CodeNode | undefined): Witness | null {
     if (!n) return null;
-    if (n.fact) {
+    // A file witness names the file, not a line: the payload reads the file's first line, as before.
+    if (n.fact && n.fact.witness.kind !== 'file') {
         const w = witness(c, n.fact.witness, n.fact.rung);
         return w && c.added.has(n.id) ? { ...w, confirm: 'added' } : w;
     }
@@ -585,6 +589,10 @@ function runtimePayload(c: Ctx, findings: AreaFinding[], st: LaneState): Runtime
 
 const USED_BY_CAP = 20;
 
+/** Chains kept per package: the page lists them, the full set stays one `code-graph why` away. */
+export const WHY_CHAIN_CAP = 20;
+const WHY_DEPTH = 15;
+
 function systemsPayload(c: Ctx, findings: AreaFinding[], st: LaneState): SystemsPayload | null {
     const pkgs = c.graph.nodes.filter((n) => n.kind === 'package' && n.fact?.lane === 'systems');
     const rts = c.graph.nodes.filter((n) => n.kind === 'runtime' && n.fact?.lane === 'systems');
@@ -592,11 +600,41 @@ function systemsPayload(c: Ctx, findings: AreaFinding[], st: LaneState): Systems
     const label = (n: CodeNode | undefined): string => (n ? `${String(attr(n, 'name') ?? n.label)}@${String(attr(n, 'version') ?? '')}` : '?');
     const reqOut = new Map<string, string[]>();
     const reqIn = new Map<string, string[]>();
+    const rangeOf = new Map<string, string>();
     for (const e of c.graph.edges) {
         if (e.relation !== 'requires') continue;
         reqOut.set(e.source, [...(reqOut.get(e.source) ?? []), e.target]);
         reqIn.set(e.target, [...(reqIn.get(e.target) ?? []), e.source]);
+        rangeOf.set(`${e.source}\0${e.target}`, String(e.fact?.attrs?.['range'] ?? ''));
     }
+    const declaredRange = (id: string): string => (strs(attr(c.byId.get(id), 'declared'))[0] ?? '').split(' ').slice(2).join(' ');
+    /** Chains from a declaration down to `id`, at most WHY_CHAIN_CAP, none longer than WHY_DEPTH hops. */
+    const whyChains = (id: string): string[][] => {
+        const out: string[][] = [];
+        const up = (cur: string, below: string[], seen: Set<string>): void => {
+            if (out.length >= WHY_CHAIN_CAP || seen.size > WHY_DEPTH) return;
+            const hop = (spec: string): string => `${label(c.byId.get(cur))} (${spec})`;
+            if (attr(c.byId.get(cur), 'direct') === true) out.push([hop(declaredRange(cur)), ...below]);
+            for (const from of [...(reqIn.get(cur) ?? [])].sort()) {
+                if (seen.has(from)) continue;
+                up(from, [hop(rangeOf.get(`${from}\0${cur}`) ?? ''), ...below], new Set([...seen, from]));
+            }
+        };
+        up(id, [], new Set([id]));
+        return out.sort((a, b) => a.length - b.length || (a.join(' ') < b.join(' ') ? -1 : 1));
+    };
+    const reach = (id: string, adj: Map<string, string[]>): number => {
+        const seen = new Set<string>([id]);
+        const stack = [id];
+        while (stack.length) {
+            for (const n of adj.get(stack.pop() as string) ?? []) {
+                if (seen.has(n)) continue;
+                seen.add(n);
+                stack.push(n);
+            }
+        }
+        return seen.size - 1;
+    };
     const shortestPath = (id: string): string[] => {
         const prev = new Map<string, string | null>([[id, null]]);
         const queue = [id];
@@ -621,9 +659,13 @@ function systemsPayload(c: Ctx, findings: AreaFinding[], st: LaneState): Systems
         if (!w) continue;
         const uses = (c.inn.get(n.id) ?? []).filter((e) => e.relation === 'uses');
         const usedBy: SystemsPackage['usedBy'] = [];
+        const countsOf = (e: CodeEdge): Record<string, number> => Object.fromEntries(strs(e.fact?.attrs?.['counts']).map((x) => [x.slice(0, x.lastIndexOf(':')), Number(x.slice(x.lastIndexOf(':') + 1))]));
+        const functions: Record<string, number> = {};
+        for (const e of uses) for (const [fn, n] of Object.entries(countsOf(e))) functions[fn] = (functions[fn] ?? 0) + n;
         for (const e of uses.slice(0, USED_BY_CAP)) {
             const uw = edgeWitness(c, e);
-            if (uw) usedBy.push({ file: e.source, names: strs(e.fact?.attrs?.['names']), witness: uw });
+            const counts = countsOf(e);
+            if (uw) usedBy.push({ file: e.source, names: strs(e.fact?.attrs?.['names']), ...(Object.keys(counts).length ? { counts } : {}), witness: uw });
         }
         packages.push({
             id: n.id,
@@ -636,10 +678,14 @@ function systemsPayload(c: Ctx, findings: AreaFinding[], st: LaneState): Systems
             locked: attr(n, 'locked') !== false,
             declared: strs(attr(n, 'declared')),
             path: shortestPath(n.id),
+            why: whyChains(n.id),
+            dependents: reach(n.id, reqIn),
+            subtree: reach(n.id, reqOut),
             requiredBy: (reqIn.get(n.id) ?? []).map((x) => label(c.byId.get(x))).sort(),
             requires: (reqOut.get(n.id) ?? []).map((x) => label(c.byId.get(x))).sort(),
             usedBy: usedBy.sort((a, b) => (a.file < b.file ? -1 : 1)),
             usedByTotal: uses.length,
+            ...(Object.keys(functions).length ? { functions: Object.fromEntries(Object.entries(functions).sort(([a], [b]) => (a < b ? -1 : 1))) } : {}),
             nonimport: strs(attr(n, 'nonimport')),
             witness: w,
         });
@@ -657,7 +703,7 @@ function systemsPayload(c: Ctx, findings: AreaFinding[], st: LaneState): Systems
     }
     const lockfiles = [...new Set(pkgs.flatMap((n) => strs(attr(n, 'lockfiles'))))].sort();
     const order = (k: SystemsPackage): number => (k.framework ? 0 : k.direct ? 1 : 2);
-    return {
+    return systemsExtras(c, packages, lockfiles, {
         reader: 'systems lane (lockfiles, manifests, version files, images, CI)',
         completeness: st.error !== undefined ? 'unknown' : 'complete',
         ...(packages.length === 0 && runtimes.length === 0 ? { empty: emptyReason(st, 'no lockfile, manifest, version file or image was found') } : {}),
@@ -665,7 +711,70 @@ function systemsPayload(c: Ctx, findings: AreaFinding[], st: LaneState): Systems
         runtimes: runtimes.sort((a, b) => (a.name < b.name ? -1 : 1)),
         packages: packages.sort((a, b) => order(a) - order(b) || (a.name < b.name ? -1 : a.name > b.name ? 1 : a.version < b.version ? -1 : 1)),
         lockfiles,
+    });
+}
+
+/**
+ * Ecosystems the Systeme page names, with the files that mark each and whether
+ * the systems lane reads them (it reads npm, pnpm, Yarn, text Bun and Composer).
+ */
+const ECOSYSTEM_FILES: ReadonlyArray<readonly [string, boolean, RegExp]> = [
+    ['npm', true, /^package-lock\.json$/],
+    ['Composer', true, /^composer\.lock$/],
+    ['pnpm', true, /^pnpm-lock\.yaml$/],
+    ['Yarn', true, /^yarn\.lock$/],
+    ['Bun', true, /^bun\.lockb?$/],
+    ['pip/Poetry', false, /^(requirements[\w.-]*\.txt|Pipfile(\.lock)?|poetry\.lock|pyproject\.toml)$/],
+    ['Cargo', false, /^Cargo\.(toml|lock)$/],
+    ['Go', false, /^go\.(mod|sum)$/],
+    ['Maven/Gradle', false, /^(pom\.xml|build\.gradle(\.kts)?)$/],
+    ['Bundler', false, /^Gemfile(\.lock)?$/],
+    ['NuGet', false, /^(packages\.lock\.json|packages\.config|[^/]+\.csproj)$/],
+];
+const PROBE_SKIP = new Set(['node_modules', 'vendor', '.git', '.build', 'dist', 'target', '.venv', 'venv', '__pycache__']);
+const PROBE_LIMIT = 20_000;
+
+/** Lockfiles and manifests per ecosystem in the tree; a bounded walk that skips installed dependency folders. */
+function probeEcosystems(root: string): SystemsEcosystem[] {
+    const found = new Map<string, string[]>(ECOSYSTEM_FILES.map(([n]) => [n, []]));
+    let seen = 0;
+    const walk = (dir: string): void => {
+        let entries: fs.Dirent[];
+        try {
+            entries = fs.readdirSync(path.join(root, dir), { withFileTypes: true });
+        } catch {
+            return;
+        }
+        for (const e of entries) {
+            if (++seen > PROBE_LIMIT) return;
+            const rel = dir ? `${dir}/${e.name}` : e.name;
+            if (e.isDirectory()) {
+                if (!PROBE_SKIP.has(e.name)) walk(rel);
+            } else if (e.isFile()) {
+                for (const [n, , re] of ECOSYSTEM_FILES) if (re.test(e.name)) found.get(n)?.push(rel);
+            }
+        }
     };
+    walk('');
+    return ECOSYSTEM_FILES.map(([name, read]) => ({ name, read, files: (found.get(name) ?? []).sort().slice(0, 5) }));
+}
+
+/** What the Systeme page needs beyond the lane's sample: uses over ALL importing files, ecosystem presence, the autoload flag. */
+function systemsExtras(c: Ctx, packages: SystemsPackage[], lockfiles: string[], payload: SystemsPayload): SystemsPayload {
+    for (const k of packages) {
+        const uses = (c.inn.get(k.id) ?? []).filter((e) => e.relation === 'uses');
+        if (!uses.length) continue;
+        const byArea: Record<string, number> = {};
+        const names = new Map<string, number>();
+        for (const e of uses) {
+            const top = e.source.includes('/') ? e.source.slice(0, e.source.indexOf('/')) : '.';
+            byArea[top] = (byArea[top] ?? 0) + 1;
+            for (const n of new Set(strs(e.fact?.attrs?.['names']))) names.set(n, (names.get(n) ?? 0) + 1);
+        }
+        k.byArea = byArea;
+        k.topNames = [...names].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).slice(0, 10);
+    }
+    return { ...payload, ecosystems: probeEcosystems(c.root), autoloadRead: lockfiles.some((f) => /(^|\/)composer\.lock$/.test(f)) };
 }
 
 // ---- delivery ------------------------------------------------------------------
@@ -763,7 +872,7 @@ function impactPayload(c: Ctx, opts: ProduceOptions): ImpactPayload | null {
     for (const i of termItems('area crossings')) if (i.why.startsWith('runtime:')) add('runtime', i);
     return {
         reader,
-        completeness: 'complete',
+        completeness: r.terms.some((t) => t.unknown) || !r.complete ? 'partial' : 'complete',
         findings: [],
         rev,
         changed: r.changed,
@@ -771,6 +880,7 @@ function impactPayload(c: Ctx, opts: ProduceOptions): ImpactPayload | null {
         risk: {
             total: r.total,
             terms: r.terms.map((t) => {
+                if (t.unknown) return { term: t.term, fact: `unknown (${t.unknown})`, contribution: 0 };
                 const w = t.items[0]?.witness ? witness(c, t.items[0].witness) : null;
                 return {
                     term: t.term,
@@ -864,9 +974,22 @@ function diffPack(c: Ctx, cachePath: string, changed: readonly string[]): NonNul
 
 const hashOf = (parts: unknown[]): string => createHash('sha256').update(JSON.stringify(parts)).digest('hex').slice(0, 12);
 
+/** The first workflow (by file) one of whose path filters lets a file of the flow through; an unfiltered trigger says nothing about the flow. */
+function workflowOnPaths(c: Ctx, areas: MapAreas, flowFiles: ReadonlySet<string>): DeliveryPayload['workflows'][number] | undefined {
+    const files = [...flowFiles];
+    return areas.delivery?.workflows.find((wf) => {
+        const ids = new Set(c.graph.nodes.filter((n) => n.kind === 'workflow' && n.fact?.owner === wf.file).map((n) => n.id));
+        return c.graph.nodes.some((t) => {
+            if (t.kind !== 'trigger' || !ids.has(String(attr(t, 'context') ?? ''))) return false;
+            const paths = strs(attr(t, 'paths'));
+            return paths.length > 0 && files.some((file) => excludedOwnFiles(paths, strs(attr(t, 'paths_ignore')), [file]).length === 0);
+        });
+    });
+}
+
 function tours(c: Ctx, areas: MapAreas, previous: readonly MapTour[] = []): MapTour[] {
     const flows = c.graph.nodes
-        .filter((n) => n.kind === 'flow')
+        .filter((n) => n.kind === 'flow' && !c.byId.get(String(attr(n, 'entry') ?? ''))?.scope && !n.scope)
         .sort((a, b) => Number(attr(b, 'size') ?? 0) - Number(attr(a, 'size') ?? 0) || (a.id < b.id ? -1 : 1))
         .slice(0, 3);
     const out: MapTour[] = [];
@@ -904,7 +1027,7 @@ function tours(c: Ctx, areas: MapAreas, previous: readonly MapTour[] = []): MapT
                 state: 'fresh',
             });
         }
-        const wf = areas.delivery?.workflows[0];
+        const wf = workflowOnPaths(c, areas, new Set([entry?.source_file, ...strs(attr(f, 'nodes')).map((id) => c.byId.get(id)?.source_file)].filter((x): x is string => !!x)));
         if (wf) {
             const jobs = (areas.delivery?.jobs ?? []).filter((j) => j.workflow === wf.file);
             steps.push({
@@ -926,6 +1049,25 @@ function tours(c: Ctx, areas: MapAreas, previous: readonly MapTour[] = []): MapT
     return out;
 }
 
+/** A finding with no witness, or with one in product scope, belongs to the default view. */
+function inProductScope(f: AreaFinding): boolean {
+    return f.witnesses.length === 0 || f.witnesses.some((w) => scopeOf(w.file) === 'product');
+}
+
+/** What `build --check-fixture-findings` refuses: a default-view finding or a tour outside product scope. */
+export function fixtureScopeProblems(areas: MapAreas): string[] {
+    const out: string[] = [];
+    for (const [id, p] of Object.entries(areas)) {
+        const findings = (p as { findings?: AreaFinding[] } | undefined)?.findings ?? [];
+        for (const f of findings) if (!inProductScope(f)) out.push(`${id}: ${f.id} ${f.subject} has no witness in product scope`);
+    }
+    for (const t of areas.tours ?? []) {
+        const item = t.steps[0]?.item;
+        if (item && scopeOf(item) !== 'product') out.push(`tour ${t.id} starts outside product scope at ${item}`);
+    }
+    return out;
+}
+
 /** Every knowledge area the merged graph can fill, with its ERD pages. */
 export function produceAreas(root: string, graph: CodeGraph, opts: ProduceOptions = {}): AreaBuild {
     const c: Ctx = { root, graph, byId: new Map(graph.nodes.map((n) => [n.id, n] as const)), out: new Map(), inn: new Map(), lines: new Map(), added: new Set(opts.added ?? []) };
@@ -936,7 +1078,14 @@ export function produceAreas(root: string, graph: CodeGraph, opts: ProduceOption
     const legacyRan = graph.nodes.some((n) => n.fact?.lane !== undefined) || graph.edges.some((e) => e.fact?.lane !== undefined);
     const lane = (id: string): LaneState => laneState(c, id, legacyRan);
     const report = evaluateDrift(graph, ALL_DRIFT_RULES, readDeclaredWaivers(root));
-    const byLane = (lane: string): AreaFinding[] => report.findings.filter((f) => f.lane === lane).map((f) => toAreaFinding(c, f));
+    // The one scope filter: a finding is in the default view when a witness of it lies in product scope.
+    const hidden = new Map<string, number>();
+    const byLane = (lane: string): AreaFinding[] => {
+        const all = report.findings.filter((f) => f.lane === lane).map((f) => toAreaFinding(c, f));
+        const shown = all.filter(inProductScope);
+        if (all.length > shown.length) hidden.set(lane, all.length - shown.length);
+        return shown;
+    };
     const areas: MapAreas = {};
     const dataLane = lane(LANES_OF_AREA.data);
     const data = dataPayload(c, byLane(LANES_OF_AREA.data), dataLane);
@@ -958,6 +1107,11 @@ export function produceAreas(root: string, graph: CodeGraph, opts: ProduceOption
     const impact = isRepo || opts.hunks ? impactPayload(c, opts) : null;
     if (impact) areas.impact = impact;
     areas.agent = agentPayload(c, opts.cachePath, impact?.changed ?? []);
+    for (const [id, lane] of Object.entries(LANES_OF_AREA)) {
+        const p = areas[id as keyof typeof LANES_OF_AREA];
+        const n = hidden.get(lane);
+        if (p && n) p.fixture_findings = n;
+    }
     const t = tours(c, areas, opts.previousTours);
     if (t.length) areas.tours = t;
     return { areas, erd: areas.data ? (data?.erd ?? []) : [] };

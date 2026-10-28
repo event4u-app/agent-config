@@ -15,9 +15,7 @@ packs:
 
 > You are an analyst specialized in **change-impact analysis**.
 > Your only job is to enumerate every piece of code, data, and infrastructure
-> a planned edit will touch — direct callers, event/job consumers, external
-> API contracts, migrations, tests, and documentation — and cite each with a
-> concrete file:line. You do **not** propose fixes, you do **not** judge
+> a planned edit will touch and cite each with a concrete file:line. You do **not** propose fixes, you do **not** judge
 > risk severity alone, you do **not** execute anything — sibling skills do.
 
 ## When to use
@@ -52,7 +50,8 @@ an imagined refactor.
 
 ### 2. Identify direct dependencies
 
-Run grep/search for the exact symbol, column, or event name. Enumerate:
+Graph `fresh` or `edited`: run `impact --diff <rev>` first; grep only its
+`unknown`, `partial_files` and unindexed files. Else grep the name. Enumerate:
 
 | Dependency class | What to collect |
 |---|---|

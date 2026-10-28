@@ -1,0 +1,58 @@
+{
+    "skill": "context-document",
+    "last_eval": "2026-10-27",
+    "description": "4 exemplars (1 de) + 3 near-misses + 2 counterexamples. Exemplars are the present-focused snapshot request in the phrasings the skill's description and When-to-use name: 'create context', 'document this area', orientation before a multi-area feature. Near-misses share the 'document' / 'context' vocabulary and belong elsewhere: a forward-looking roadmap (roadmap-management, named in this skill's Do-NOT list), the fixed knowledge-layer templates (context-authoring), and finding docs that already exist (project-docs). Counterexamples guard the 'context' homonym and plain feature work, which the skill excludes.",
+    "queries": [
+        {
+            "q": "create context for the billing module so the next agent can orient itself",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "document this area — key files, tables, endpoints and known issues of the import pipeline",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "I'm about to touch notifications, payments and the queue — write a structured snapshot of how those areas work today first",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "erstell mir ein Context-Dokument für das Auth-Modul, damit ich mich da einarbeiten kann",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "write a roadmap for migrating the billing module to the new payment provider",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "same area, but future- and task-focused rather than a present-state snapshot → roadmap-management, which this skill's Do-NOT list names"
+        },
+        {
+            "q": "fill in the tenant-boundaries and data-sensitivity context files for this project",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "shares the 'context file' vocabulary, but these are the fixed knowledge-layer templates with an interactive walkthrough → context-authoring"
+        },
+        {
+            "q": "is there already a doc somewhere that explains the import pipeline?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "looking up existing documentation, not writing a new snapshot → project-docs"
+        },
+        {
+            "q": "my context window is almost full — summarize this chat for a fresh session",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the 'context' homonym — conversation context, not a codebase-area document"
+        },
+        {
+            "q": "add a CSV export button to the invoices page",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "plain feature work, which the skill explicitly excludes"
+        }
+    ]
+}

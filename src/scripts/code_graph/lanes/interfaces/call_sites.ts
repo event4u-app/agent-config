@@ -11,7 +11,7 @@ import { CREDENTIAL_PREFIXES } from '../../../_lib/egress_prefixes.js';
 import type { Witness } from '../lane_fact.js';
 import { serviceFromConfigKey, type ConfigIndex } from './config.js';
 import { serviceFromEnvName, type Protocol } from './model.js';
-import { callArgs, enclosingSymbol, langOf, literalKeys, literalValue, SourceText, stringLiteral, type Lang } from './text.js';
+import { callArgs, codeMask, enclosingSymbol, langOf, literalKeys, literalValue, SourceText, stringLiteral, type Lang } from './text.js';
 
 export interface BaseRef {
     /** env name or config key the base address comes from */
@@ -473,6 +473,7 @@ export function scanFile(rel: string, text: string, config: ConfigIndex): FileSc
     const src = new SourceText(rel, text);
     const ctx: Ctx = { src, lang, config, vars: assignments(text) };
     const clients = findClients(ctx);
+    const isCode = codeMask(text, lang);
     const push = (
         at: number,
         end: number,
@@ -482,6 +483,7 @@ export function scanFile(rel: string, text: string, config: ConfigIndex): FileSc
         client: Client | null,
         timeout: Pick<RawCall, 'timeout' | 'timeoutSource'>,
     ): void => {
+        if (!isCode(at)) return;
         const target = resolveTarget(urlExpr, client?.baseExpr ?? null, ctx, at, client?.at ?? at);
         const stmt = text.slice(at, end);
         const line = src.lineOf(at);

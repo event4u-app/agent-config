@@ -5,7 +5,7 @@
  */
 import { readPrismaSchema } from '../../_lib/schema/readers/prisma_schema.js';
 import { replay } from '../../_lib/schema/replay.js';
-import { isFixturePath } from '../fixture_paths.js';
+import { isFixturePath } from '../scope.js';
 import { schemaGraph } from './shared/schema_graph.js';
 import type { ConventionProvider } from './types.js';
 

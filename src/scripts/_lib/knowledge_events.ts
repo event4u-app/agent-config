@@ -16,6 +16,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { eventOf, knowledgeEventRecord } from './intake_record.js';
+
 export interface ConventionDetectedEvent {
     type: 'convention_detected';
     ts: string; // ISO-8601
@@ -144,7 +146,7 @@ function monthlyFile(dir: string, ts: string): string {
     return path.join(dir, `events-${ym}.jsonl`);
 }
 
-/** Appends a validated event as one JSONL line to the current month's intake file. Throws if the event fails validation. */
+/** Appends a validated event, in the shared intake shape, as one JSONL line to the current month's intake file. Throws if the event fails validation. */
 export function appendEvent(event: KnowledgeEvent, dir: string = INTAKE_DIR): void {
     const result = validateEvent(event);
     if (!result.valid) {
@@ -152,7 +154,7 @@ export function appendEvent(event: KnowledgeEvent, dir: string = INTAKE_DIR): vo
     }
     fs.mkdirSync(dir, { recursive: true });
     const file = monthlyFile(dir, event.ts);
-    fs.appendFileSync(file, JSON.stringify(event) + '\n', 'utf8');
+    fs.appendFileSync(file, JSON.stringify(knowledgeEventRecord(event)) + '\n', 'utf8');
 }
 
 /** Deletes every `events-*.jsonl` file under `dir` — called by `/team-knowledge consolidate` once a batch has been proposed and approved. All-or-nothing by design: consolidation processes the FULL pending backlog in one pass, so there is no partial-consumption state to track. No-op (never throws) if the dir does not exist or is already empty. */
@@ -185,7 +187,7 @@ export function readAllEvents(dir: string = INTAKE_DIR): KnowledgeEvent[] {
             } catch {
                 continue;
             }
-            const result = validateEvent(parsed);
+            const result = validateEvent(eventOf(parsed));
             if (result.valid) out.push(result.event);
         }
     }

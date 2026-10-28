@@ -51,7 +51,7 @@ depends: [road-to-leading-every-row]
 > corpus. Corrected from the supplied draft where reproduction diverged (tagged
 > `corrected-from-reproduction`).
 
-> **Arrivals:** 3 — latest `inbox-2026-10-bb` (2026-10-26): a comparison round cites measurements that graph neighbours appended to search output beat a graph offered as a separate tool, and asks that the context line carry stated neighbours instead of a freshness notice; landed as step 2.5. Before that: 2 — latest `inbox-2026-10-m` (2026-10-12): 16.4.0 release reviews ask that the feeder's stop-slot cost (p95 up to about 1 s on this repository's graph) fall or move off the stop path before any graph verdict gates, and that graph-selected verification be measured against full verification; the cost is step 3.5 (measured) and the promotion it gates is 3.4, deferred behind 3.3's recall reading, so no step moved. The count before it read: 1 — latest `inbox-2026-10-i` (2026-10-11): an audit lists the code graph's missing CI consumer as a defect and draws no row for it.
+> **Arrivals:** 4 — latest `inbox-2026-10-bf` (2026-10-27): a review-graph comparison round (S1) asks that the context hook's language set come from one source instead of a hard-coded php/ts/js list; it duplicates step 2.5's extension-filter clause, so it was folded there and no step was added. The same round's claim that no gate reads the graph is wrong for the stop gate — 3.2's shadow feeder does — and is corrected in `road-to-a-graph-that-wins`. Before that: 3 — latest `inbox-2026-10-bb` (2026-10-26): a comparison round cites measurements that graph neighbours appended to search output beat a graph offered as a separate tool, and asks that the context line carry stated neighbours instead of a freshness notice; landed as step 2.5. Before that: 2 — latest `inbox-2026-10-m` (2026-10-12): 16.4.0 release reviews ask that the feeder's stop-slot cost (p95 up to about 1 s on this repository's graph) fall or move off the stop path before any graph verdict gates, and that graph-selected verification be measured against full verification; the cost is step 3.5 (measured) and the promotion it gates is 3.4, deferred behind 3.3's recall reading, so no step moved. The count before it read: 1 — latest `inbox-2026-10-i` (2026-10-11): an audit lists the code graph's missing CI consumer as a defect and draws no row for it.
 
 ## Goal
 
@@ -112,7 +112,11 @@ refuses.
       their mechanism) where it now prints a freshness line and verbs; it recommends no
       tool (K5 of `road-to-a-graph-that-wins`). Its extension filter
       (`code_graph_context_hook.ts:51`, php/ts/js only) derives from the vendored
-      grammars. Measure the hook-bundle headroom before writing; default-on or opt-in
+      grammars — concretely from `EXT_LANG` (`src/scripts/code_graph/types.ts`),
+      generated at build time rather than imported, so the hook bundle does not grow by
+      the table; the stale "php / ts / js" comment in `verbs.ts` is corrected with it
+      (folded 2026-10-27 from round `inbox-2026-10-bf`). Measure the hook-bundle
+      headroom before writing; default-on or opt-in
       is decided when this wakes, against an adoption count.
       verify: a fixture search on a fresh graph yields one line naming at most three stated neighbours and no tool name
 

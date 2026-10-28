@@ -101,7 +101,7 @@ READING WITHOUT ACTING IS A LOOP.
 EVERY TURN MUST EDIT, RUN, OR ASK.
 ```
 
-**Read-only turn:** only `view` / `codebase-retrieval` / `grep` /
+**Read-only turn:** only `view` / `code-graph ask` / `grep` /
 `git log` / `git show`. No edit/save, no test/build/quality run, no `git commit`.
 
 **15-min warning (3 read-only turns in a row) — change approach.** The next turn MUST contain at least one of: an edit, a test/build/quality command, or an explicit user question (self-check in the mechanics guideline).

@@ -16,7 +16,7 @@ import {
     openGraphIndex,
 } from './sqlite_store.js';
 import type { ConfirmState } from './map_areas.js';
-import type { CodeEdge, CodeGraph, CodeNode, Relation } from './types.js';
+import { type CodeEdge, type CodeGraph, type CodeNode, isStatedResolution, type Relation } from './types.js';
 import { validateGraph } from './validate.js';
 import { adaptForeignGraph, looksForeign } from './foreign.js';
 
@@ -286,7 +286,18 @@ function label(g: LoadedGraph, id: string): string {
 }
 function edgeLine(g: LoadedGraph, e: CodeEdge): string {
     const cand = e.candidates?.length ? ` [${e.candidates.map((c) => sanitizeLabel(c)).join(', ')}]` : '';
-    return `${e.confidence} ${sanitizeLabel(e.source)} --${e.relation}--> ${sanitizeLabel(e.target)}${cand}`;
+    const guess = isStatedResolution(e.resolved_via) ? '' : ` (guess: ${e.resolved_via})`;
+    return `${e.confidence} ${sanitizeLabel(e.source)} --${e.relation}--> ${sanitizeLabel(e.target)}${cand}${guess}`;
+}
+
+/** What a reading verb walks: stated edges only, unless the caller asked for guesses by name. */
+export interface WalkOptions {
+    includeGuesses?: boolean;
+}
+
+/** The edge acceptance policy every consumer applies — one predicate, read through `isStatedResolution`. */
+export function admitEdge(e: CodeEdge, opts: WalkOptions = {}): boolean {
+    return opts.includeGuesses === true || isStatedResolution(e.resolved_via);
 }
 
 /**
@@ -298,6 +309,64 @@ function edgeLine(g: LoadedGraph, e: CodeEdge): string {
 export interface RecommendedRead {
     path: string;
     lines: [number, number] | null;
+    /** Set only on a region the read budget left out: why, so it is counted, never dropped. */
+    reason?: string;
+}
+
+/** A changed or reached span worth reading, with how much rides on it. */
+export interface ReadRegion {
+    path: string;
+    lines: [number, number];
+    /** Higher reads first. */
+    risk: number;
+    /** A definition up to {@link REGION_DEFINITION_WHOLE} lines is read whole; a longer one is cut there. */
+    definition?: boolean;
+}
+
+/** Read lines per answer, and the share one file may take of them. */
+export const REGION_BUDGET_LINES = 400;
+export const REGION_FILE_SHARE = 0.4;
+export const REGION_DEFINITION_WHOLE = 40;
+
+/**
+ * The region budget behind `recommended_reads`: regions risk-ordered and taken
+ * round-robin across files, no file above {@link REGION_FILE_SHARE} of the
+ * budget, definitions up to {@link REGION_DEFINITION_WHOLE} lines whole. What
+ * does not fit stays in the list with a `reason`, so the reader sees every
+ * region and which ones the budget skipped. Line ranges only — never source text.
+ */
+export function regionReads(regions: readonly ReadRegion[], budget = REGION_BUDGET_LINES): RecommendedRead[] {
+    const perFile = Math.floor(budget * REGION_FILE_SHARE);
+    const byFile = new Map<string, ReadRegion[]>();
+    const ordered = [...regions].sort((a, b) => b.risk - a.risk || (a.path < b.path ? -1 : a.path > b.path ? 1 : a.lines[0] - b.lines[0]));
+    for (const r of ordered) byFile.set(r.path, [...(byFile.get(r.path) ?? []), r]);
+    const queues = [...byFile.values()];
+    const usedIn = new Map<string, number>();
+    const kept: RecommendedRead[] = [];
+    const rest: RecommendedRead[] = [];
+    let used = 0;
+    for (let round = 0; queues.some((q) => q.length > round); round += 1) {
+        for (const q of queues) {
+            const r = q[round];
+            if (!r) continue;
+            const from = r.lines[0];
+            let to = r.lines[1];
+            if (r.definition && to - from + 1 > REGION_DEFINITION_WHOLE) {
+                rest.push({ path: r.path, lines: [from + REGION_DEFINITION_WHOLE, to], reason: `definition longer than ${REGION_DEFINITION_WHOLE} lines` });
+                to = from + REGION_DEFINITION_WHOLE - 1;
+            }
+            const n = to - from + 1;
+            const fileUsed = usedIn.get(r.path) ?? 0;
+            if (fileUsed + n > perFile) rest.push({ path: r.path, lines: [from, to], reason: 'per-file share reached' });
+            else if (used + n > budget) rest.push({ path: r.path, lines: [from, to], reason: 'read budget reached' });
+            else {
+                kept.push({ path: r.path, lines: [from, to] });
+                used += n;
+                usedIn.set(r.path, fileUsed + n);
+            }
+        }
+    }
+    return [...kept, ...rest];
 }
 
 export interface QueryResult {
@@ -367,6 +436,23 @@ function budgetedLines(
     return { source, seeds, lines: kept, truncated, recommended_reads: [...recommended.values()] };
 }
 
+/**
+ * The same budget as {@link budgetedLines}, for any list: keep items while their
+ * rendered characters fit, count the rest. Used by the gate verbs' caps
+ * (`answer_detail.ts`), so a capped answer and a truncated query spend tokens alike.
+ */
+export function budgetList<T>(items: readonly T[], text: (t: T) => string, budget: number): { kept: T[]; omitted: number } {
+    const cap = budget * APPROX_CHARS_PER_TOKEN;
+    let used = 0;
+    let i = 0;
+    for (; i < items.length; i += 1) {
+        const n = text(items[i] as T).length;
+        if (used + n > cap) break;
+        used += n + 1;
+    }
+    return { kept: items.slice(0, i), omitted: items.length - i };
+}
+
 function weakSeedReads(g: LoadedGraph, resolution: SeedResolution): RecommendedRead[] {
     if (!resolution.weak) return [];
     const out: RecommendedRead[] = [];
@@ -378,16 +464,16 @@ function weakSeedReads(g: LoadedGraph, resolution: SeedResolution): RecommendedR
 }
 
 /** `query <seed>` — the seed's direct (1-hop) outgoing relations. */
-export function query(g: LoadedGraph, seed: string, budget = 1500): QueryResult {
+export function query(g: LoadedGraph, seed: string, budget = 1500, opts: WalkOptions = {}): QueryResult {
     const resolution = resolveSeedsTiered(g, seed);
     const seeds = resolution.ids;
     const entries: LineEntry[] = [];
-    for (const s of seeds) for (const e of g.out.get(s) ?? []) entries.push({ text: edgeLine(g, e), focusId: e.target });
+    for (const s of seeds) for (const e of g.out.get(s) ?? []) if (admitEdge(e, opts)) entries.push({ text: edgeLine(g, e), focusId: e.target });
     return budgetedLines(g, g.source, seeds.map((s) => label(g, s)), entries, budget, weakSeedReads(g, resolution));
 }
 
 /** `explain <seed>` — 2-hop neighbourhood (out-edges of seeds + their targets). */
-export function explain(g: LoadedGraph, seed: string, budget = 1500): QueryResult {
+export function explain(g: LoadedGraph, seed: string, budget = 1500, opts: WalkOptions = {}): QueryResult {
     const resolution = resolveSeedsTiered(g, seed);
     const seeds = resolution.ids;
     const seen = new Set<string>();
@@ -399,6 +485,7 @@ export function explain(g: LoadedGraph, seed: string, budget = 1500): QueryResul
             if (seen.has(s)) continue;
             seen.add(s);
             for (const e of g.out.get(s) ?? []) {
+                if (!admitEdge(e, opts)) continue;
                 entries.push({ text: edgeLine(g, e), focusId: e.target });
                 next.push(e.target);
             }
@@ -409,7 +496,7 @@ export function explain(g: LoadedGraph, seed: string, budget = 1500): QueryResul
 }
 
 /** `affected <target>` — reverse BFS: who calls / references the target. */
-export function affected(g: LoadedGraph, target: string, depth = 2, budget = 1500): QueryResult {
+export function affected(g: LoadedGraph, target: string, depth = 2, budget = 1500, opts: WalkOptions = {}): QueryResult {
     const resolution = resolveSeedsTiered(g, target);
     const seeds = resolution.ids;
     const seen = new Set<string>(seeds);
@@ -419,6 +506,7 @@ export function affected(g: LoadedGraph, target: string, depth = 2, budget = 150
         const next: string[] = [];
         for (const t of frontier) {
             for (const e of g.in.get(t) ?? []) {
+                if (!admitEdge(e, opts)) continue;
                 // the newly-discovered node here is the CALLER (e.source) —
                 // e.target is already a known seed, so that side carries no
                 // new read-plan information.
@@ -435,7 +523,7 @@ export function affected(g: LoadedGraph, target: string, depth = 2, budget = 150
 }
 
 /** `path <a> <b>` — shortest undirected path (direction preserved per edge). */
-export function path(g: LoadedGraph, a: string, b: string, budget = 1500): QueryResult {
+export function path(g: LoadedGraph, a: string, b: string, budget = 1500, opts: WalkOptions = {}): QueryResult {
     const startRes = resolveSeedsTiered(g, a, 1);
     const goalRes = resolveSeedsTiered(g, b, 1);
     const starts = startRes.ids;
@@ -449,7 +537,7 @@ export function path(g: LoadedGraph, a: string, b: string, budget = 1500): Query
     while (frontier.length && !hit) {
         const next: string[] = [];
         for (const cur of frontier) {
-            const adj = [...(g.out.get(cur) ?? []), ...(g.in.get(cur) ?? [])];
+            const adj = [...(g.out.get(cur) ?? []), ...(g.in.get(cur) ?? [])].filter((e) => admitEdge(e, opts));
             for (const e of adj) {
                 const nb = e.source === cur ? e.target : e.source;
                 if (seen.has(nb)) continue;
