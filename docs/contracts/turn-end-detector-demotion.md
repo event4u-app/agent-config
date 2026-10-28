@@ -45,9 +45,11 @@ counted alone would have under-reported the gate.
 | G `capitulation` | the prompt is a bare challenge (short, a challenge word, no code, link, digit or quotation), the closing reply concedes the reply before that prompt, and the turn made no tool call | that an answer changes because something was checked | only where `AGENT_CONFIG_CAPITULATION_COUNT=1` is set; never refuses |
 
 **G is advisory, counts-only and default-off.** It is never a finding the gate
-refuses on: a firing adds one to `<session>.advisory.json` beside the refusal
-record (no prompt or reply text is stored; the refusal-state pruner ages the
-file out like a shadow record). Its remedy is "check first, then keep or change
+refuses on: a firing appends `{"turn":N}` to `<session>.advisory.jsonl` beside
+the refusal record, and the count is the number of distinct turns in that file
+(append-only, so concurrent stops cannot lose a line, and a duplicate counts
+once). No prompt or reply text is stored; the refusal-state pruner ages the file
+out like a shadow record. Its remedy is "check first, then keep or change
 the answer and say why", so the count is never a push toward holding. Default
 off is decision H1 of road-to-a-challenge-the-bench-has-measured (AI council,
 2026-10-27, anthropic and openai, 2/2): counting firings measures how often it

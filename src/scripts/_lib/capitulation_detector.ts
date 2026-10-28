@@ -8,9 +8,9 @@
  * Advisory, counts-only and default-off (decision H1, AI council 2026-10-27,
  * 2/2: counting firings cannot establish precision, so it runs only where
  * `AGENT_CONFIG_CAPITULATION_COUNT=1` is set). The gate never refuses on it; a
- * firing adds one to a local per-session counter beside the refusal records,
- * which the refusal-state pruner ages out, and no prompt or reply text is
- * stored. Promotion goes through `docs/contracts/turn-end-detector-demotion.md`.
+ * firing appends one line to a local per-session file beside the refusal
+ * records, which the refusal-state pruner ages out, and no prompt or reply text
+ * is stored. Promotion goes through `docs/contracts/turn-end-detector-demotion.md`.
  *
  * It fires on NOT CHECKING, never on changing: a reply that keeps its answer,
  * and a reply that changes it after a tool call, are both silent. Its remedy,
@@ -35,7 +35,12 @@ export function detectCapitulation(prompt: string, previousAssistant: string, cl
 
 /**
  * The gate's one call. Opt-in via `AGENT_CONFIG_CAPITULATION_COUNT=1`; a firing
- * adds one to `<session>.advisory.json` beside the refusal record. Never throws.
+ * appends `{"turn":N}` to `<session>.advisory.jsonl` beside the refusal record.
+ * Append-only, so two concurrent stops cannot lose each other's line; a repeat
+ * of the turn already last in the file is skipped, and a reader counts DISTINCT
+ * turns, so a duplicate written by a race still counts once. `turnOrdinal` is
+ * counted over the whole transcript (a transcript over the read cap yields no
+ * tail at all, and so no firing). Never throws.
  */
 export function maybeCountCapitulation(
     refusalFile: string,
@@ -43,21 +48,24 @@ export function maybeCountCapitulation(
 ): void {
     if (process.env['AGENT_CONFIG_CAPITULATION_COUNT'] !== '1') return;
     if (!detectCapitulation(t.lastUserPrompt.trim(), t.previousAssistant, t.lastAssistant, t.toolCalls.length)) return;
-    const file = refusalFile.replace(/\.json$/, '.advisory.json');
+    const file = refusalFile.replace(/\.json$/, '.advisory.jsonl');
+    const line = `{"turn":${String(t.turnOrdinal)}}`;
     try {
-        let prev: { capitulation?: number; last_turn?: number } = {};
+        let prev = '';
         try {
-            prev = JSON.parse(fs.readFileSync(file, 'utf-8')) as typeof prev;
+            prev = fs.readFileSync(file, 'utf-8');
         } catch {
-            // absent or unreadable: a fresh count
+            // absent: the first line
         }
-        // One count per turn: a repeated stop delivery for the same turn adds nothing.
-        if (prev.last_turn === t.turnOrdinal) return;
+        if (prev.trimEnd().endsWith(line)) return;
         fs.mkdirSync(path.dirname(file), { recursive: true });
-        // Write-then-rename, so a reader never sees a half-written file.
-        fs.writeFileSync(`${file}.tmp`, `${JSON.stringify({ capitulation: (prev.capitulation ?? 0) + 1, last_turn: t.turnOrdinal })}\n`);
-        fs.renameSync(`${file}.tmp`, file);
+        fs.appendFileSync(file, `${line}\n`);
     } catch {
         // an instrument never changes what the gate does
     }
+}
+
+/** Distinct turns recorded in an advisory file — the count a reader reports. */
+export function countedTurns(text: string): number {
+    return new Set(text.split('\n').filter((l) => l.trim() !== '')).size;
 }

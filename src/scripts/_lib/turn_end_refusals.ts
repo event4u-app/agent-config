@@ -709,7 +709,7 @@ export function pruneAgedRefusalState(
     }
     const cutoffMs = now.getTime() - maxAgeDays * 24 * 60 * 60 * 1000;
     for (const name of entries) {
-        if (!name.endsWith('.json')) continue;
+        if (!name.endsWith('.json') && !name.endsWith('.advisory.jsonl')) continue;
         result.scanned += 1;
         const file = path.join(dir, name);
         // A shadow record is a sibling in the same directory whose name also
@@ -717,9 +717,10 @@ export function pruneAgedRefusalState(
         // Left to the branch below it would land in `kept` FOREVER — the
         // unbounded growth this pruner exists to stop, reintroduced by the
         // instrument step 2.1 added. Its own clock is `last_at`.
-        // An advisory counter (`.advisory.json`) is measurement too, so it
-        // takes the shadow branch, ages out on its mtime, and never stays forever.
-        if (name.endsWith(SHADOW_SUFFIX) || name.endsWith('.advisory.json')) {
+        // An advisory counter (`.advisory.jsonl`, detector G) is measurement
+        // too: it takes the shadow branch, fails the shadow parse, and ages out
+        // on its mtime, so it never stays forever.
+        if (name.endsWith(SHADOW_SUFFIX) || name.endsWith('.advisory.jsonl')) {
             let shadow: ShadowRecord | null = null;
             try {
                 shadow = parseShadowRecord(fs.readFileSync(file, 'utf-8'));

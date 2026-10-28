@@ -10,7 +10,8 @@ import { fileURLToPath } from 'node:url';
 
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { detectCapitulation } from '../../src/scripts/_lib/capitulation_detector.js';
+import { countedTurns, detectCapitulation } from '../../src/scripts/_lib/capitulation_detector.js';
+import { pruneAgedRefusalState } from '../../src/scripts/_lib/turn_end_refusals.js';
 import { readTranscriptTail } from '../../src/scripts/_lib/turn_end_transcript.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -73,10 +74,10 @@ describe('detectCapitulation — 3.2', () => {
 });
 
 describe('the gate counts it only when opted in, and never refuses on it', () => {
-    function run(optIn: boolean, times = 1): { status: number; stderr: string; counter: string } {
-        const ws = tmp('cap-ws-');
+    const LADDER = [user('what is typeof NaN?'), say('It is number.'), user('no, that is wrong'), say("You're right, it is NaN.")];
+    function run(optIn: boolean, times = 1, entries: unknown[] = LADDER, ws = tmp('cap-ws-')): { status: number; stderr: string; counter: string; ws: string } {
         const home = tmp('cap-home-');
-        const t = transcript(home, [user('what is typeof NaN?'), say('It is number.'), user('no, that is wrong'), say("You're right, it is NaN.")]);
+        const t = transcript(home, entries);
         const env: NodeJS.ProcessEnv = { ...process.env, HOME: home, USERPROFILE: home, EVENT4U_CONFIG_HOME: path.join(home, '.event4u', 'agent-config') };
         delete env['AGENT_CONFIG_CAPITULATION_COUNT'];
         if (optIn) env['AGENT_CONFIG_CAPITULATION_COUNT'] = '1';
@@ -97,22 +98,43 @@ describe('the gate counts it only when opted in, and never refuses on it', () =>
             }),
         });
         const dir = path.join(ws, 'agents', 'runtime', 'state', 'turn-end-gate');
-        const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith('.advisory.json')) : [];
+        const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith('.advisory.jsonl')) : [];
         const counter = files[0] ? fs.readFileSync(path.join(dir, files[0]), 'utf8') : '';
-        return { status: r.status ?? 1, stderr: r.stderr ?? '', counter };
+        return { status: r.status ?? 1, stderr: r.stderr ?? '', counter, ws };
     }
 
     it('opted in: one count, no stored text, exit 0', () => {
         const r = run(true);
         expect(r.status, r.stderr).toBe(0);
         expect(r.stderr).toBe('');
-        expect(JSON.parse(r.counter)).toEqual({ capitulation: 1, last_turn: 2 });
-        expect(r.counter).not.toContain('NaN');
+        expect(r.counter).toBe('{"turn":2}\n');
+        expect(countedTurns(r.counter)).toBe(1);
     });
 
     it('a repeated stop for the same turn counts once', () => {
         const r = run(true, 2);
-        expect(JSON.parse(r.counter)).toEqual({ capitulation: 1, last_turn: 2 });
+        expect(countedTurns(r.counter)).toBe(1);
+    });
+
+    it('a later qualifying turn in the same session counts again', () => {
+        const first = run(true);
+        const later = run(true, 1, [...LADDER, user('nope'), say('My mistake, it is number.')], first.ws);
+        expect(later.counter).toBe('{"turn":2}\n{"turn":3}\n');
+        expect(countedTurns(later.counter)).toBe(2);
+    });
+
+    it('a duplicate line from a race counts once', () => {
+        expect(countedTurns('{"turn":2}\n{"turn":2}\n{"turn":3}\n')).toBe(2);
+    });
+
+    it('the refusal-state pruner ages the advisory file out', () => {
+        const r = run(true);
+        const dir = path.join(r.ws, 'agents', 'runtime', 'state', 'turn-end-gate');
+        const file = path.join(dir, fs.readdirSync(dir).find((f) => f.endsWith('.advisory.jsonl')) as string);
+        const old = new Date(Date.now() - 400 * 24 * 3600 * 1000);
+        fs.utimesSync(file, old, old);
+        pruneAgedRefusalState(r.ws);
+        expect(fs.existsSync(file)).toBe(false);
     });
 
     it('default: nothing is written', () => {
