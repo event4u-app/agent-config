@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "fixture": true,
+  "stamp": "20261028T000000Z",
+  "task": {
+    "id": "art-svg-prompt-01",
+    "family": "svg",
+    "title": "SVG from a prompt (FIXTURE)",
+    "prompt": "FIXTURE PROMPT — draw a 64x64 SVG badge of a blue circle on a light square.",
+    "primary_grader": "svg-render-gate",
+    "parity_bar": { "metric": "render_gate_pass", "op": ">=", "value": 1 }
+  },
+  "claim_id": "showcase-svg-render-gate",
+  "host": { "name": "fixture-host", "version": "0.0.0" },
+  "model_id": "fixture-model",
+  "k": 3,
+  "pricing_sourced_on": "2026-10-28",
+  "arms": [
+    {
+      "id": "package",
+      "label": "with agent-config",
+      "infra_errors": 0,
+      "runs": [
+        { "run": 1, "score": 1, "passed": true, "tokens": { "input": 1200, "output": 300, "cache_read": 9000, "cache_write": 800, "coverage": "complete" }, "turns": 4, "model_requests": 4, "tool_calls": 3, "usd": 0.012, "infra_error": null, "thumbnail": "thumbs/package-1.svg", "secondary": { "svg_lint_findings": 0 } },
+        { "run": 2, "score": 0, "passed": false, "tokens": { "input": 1300, "output": 350, "cache_read": 9100, "cache_write": 800, "coverage": "complete" }, "turns": 5, "model_requests": 5, "tool_calls": 4, "usd": 0.014, "infra_error": null, "thumbnail": "thumbs/package-2.svg", "secondary": { "svg_lint_findings": 1 } },
+        { "run": 3, "score": 1, "passed": true, "tokens": { "input": 1250, "output": 320, "cache_read": 9050, "cache_write": 800, "coverage": "complete" }, "turns": 4, "model_requests": 4, "tool_calls": 3, "usd": 0.013, "infra_error": null, "thumbnail": "thumbs/package-3.svg", "secondary": { "svg_lint_findings": 0 } }
+      ]
+    },
+    {
+      "id": "vanilla",
+      "label": "without agent-config",
+      "infra_errors": 1,
+      "runs": [
+        { "run": 1, "score": 0, "passed": false, "tokens": { "input": 400, "output": 250, "cache_read": null, "cache_write": null, "coverage": "partial" }, "turns": 2, "model_requests": 2, "tool_calls": 1, "usd": 0.004, "infra_error": null, "thumbnail": "thumbs/vanilla-1.svg", "secondary": { "svg_lint_findings": 2 } },
+        { "run": 2, "score": 1, "passed": true, "tokens": { "input": 420, "output": 260, "cache_read": null, "cache_write": null, "coverage": "partial" }, "turns": 2, "model_requests": 2, "tool_calls": 1, "usd": 0.004, "infra_error": null, "thumbnail": "thumbs/vanilla-2.svg", "secondary": { "svg_lint_findings": 0 } },
+        { "run": 3, "score": null, "passed": null, "tokens": { "input": null, "output": null, "cache_read": null, "cache_write": null, "coverage": "unknown" }, "turns": null, "model_requests": null, "tool_calls": null, "usd": null, "infra_error": "FIXTURE: host exited before the first turn", "thumbnail": null, "secondary": { "svg_lint_findings": null } }
+      ]
+    }
+  ],
+  "parity": {
+    "parity_bar": 1,
+    "cap_k": 5,
+    "with_arm_first_shot_median": 1,
+    "arms": {
+      "package": { "reached": 3, "censored": 0, "prompts": 1, "turns": 4, "tokens": 11400, "usd_to_parity": 0.013 },
+      "vanilla": { "reached": 1, "censored": 1, "prompts": 3, "turns": 6, "tokens": 2900, "usd_to_parity": 0.011 }
+    }
+  },
+  "verdict": { "kind": "underpowered", "reason": "FIXTURE: 3 pairs cannot reach the paired floor." },
+  "reproduce": "task bench:ab:v2 -- --task art-svg-prompt-01 --arms package,vanilla --k 3"
+}
