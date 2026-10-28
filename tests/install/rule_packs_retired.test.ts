@@ -46,6 +46,31 @@ describe('a leftover legacy value no longer decides (window closed at 19.0.0)', 
         expect(ruleScopeFromSettings({ projection: { rule_packs: [] } }, REPO).packs).toEqual(DERIVED);
     });
 
+    it('a leftover `auto` is ignored like any other value', () => {
+        expect(ruleScopeFromSettings({ projection: { rule_packs: 'auto' } }, REPO).packs).toEqual(DERIVED);
+    });
+
+    it('runtime.active_packs decides even when a leftover list conflicts with it', () => {
+        const active = ['ai-image', 'ai-video'];
+        const expected = resolve_rule_pack_scope(RULE_PACKS_AUTO, REPO, active);
+        expect(expected).not.toEqual(DERIVED);
+        expect(
+            ruleScopeFromSettings({ projection: { rule_packs: ['brand'] }, runtime: { active_packs: active } }, REPO)
+                .packs,
+        ).toEqual(expected);
+    });
+
+    it('runtime.active_packs decides even when a leftover empty list or `auto` is present', () => {
+        const active = ['ai-video'];
+        const expected = resolve_rule_pack_scope(RULE_PACKS_AUTO, REPO, active);
+        for (const leftover of [[], 'auto']) {
+            expect(
+                ruleScopeFromSettings({ projection: { rule_packs: leftover }, runtime: { active_packs: active } }, REPO)
+                    .packs,
+            ).toEqual(expected);
+        }
+    });
+
     it('without a package root a leftover value cannot narrow the scope either', () => {
         expect(ruleScopeFromSettings({ projection: { rule_packs: ['brand'] } }).packs).toBeNull();
     });
@@ -61,6 +86,7 @@ describe('the key is gone from every public surface, with a tombstone', () => {
         const entry = [...REMOVED_KEYS].find(([key]) => key === 'projection.rule_packs');
         expect(entry).toBeDefined();
         expect(entry?.[1]).toContain('active-pack set');
+        expect(entry?.[1]).toContain('runtime.active_packs');
         expect(entry?.[1]).not.toContain('release window');
     });
 });
