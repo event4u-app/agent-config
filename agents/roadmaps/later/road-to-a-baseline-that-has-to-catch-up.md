@@ -73,50 +73,50 @@ Verified at the pin:
 
 ## Phase 0 — Pre-register before any task file exists
 
-- [ ] **0.1 Claims first.** One `### claim:` per task family in `docs/CLAIMS.md`,
+- [x] **0.1 Claims first.** One `### claim:` per task family in `docs/CLAIMS.md`,
       `status: unbacked`, naming metric, bar, falsification, scope and the
       primary grader. The commit carries claims and no task fixtures.
       verify: `task check-claims` (or `check_claims`) is green with the new entries.
-- [ ] **0.2 Predicted-lift map.** `internal/bench/showcase/PREDICTED-LIFT.md`
+- [x] **0.2 Predicted-lift map.** `internal/bench/showcase/PREDICTED-LIFT.md`
       lists, per task, the rules and skills that should make a difference
       (`file:line`). A task without a predicted asset is not a showcase task.
       verify: every task in 2.2 has at least one row.
 
 ## Phase 1 — Evidence that stays in the tree
 
-- [ ] **1.1 Bundle schema.** `internal/bench/showcase/<stamp>-<task>/summary.json`
+- [x] **1.1 Bundle schema.** `internal/bench/showcase/<stamp>-<task>/summary.json`
       (arms, host, model id, k, per-run scores, four token buckets with coverage
       — `unknown` when telemetry is incomplete — turns, model requests, tool
       calls, priced USD with `pricing_sourced_on`, infra errors per arm —
       reported, never dropped from the rate — verdict) plus
       `artifacts.sha256` and size-capped thumbnails. Transcripts stay local.
       verify: a JSON-schema test accepts a fixture bundle and rejects one missing `pricing_sourced_on`.
-- [ ] **1.2 Renderer with drift check.** Bundles render into
+- [x] **1.2 Renderer with drift check.** Bundles render into
       `docs/examples/bench/<task>.md` and an index; `--check` fails when a page
       and its bundle diverge.
       verify: the render test on a fixture bundle is byte-stable and `--check` reds on an edited page.
 
 ## Phase 2 — Artifact tasks in the v2 harness
 
-- [ ] **2.1 `kind: artifact`.** `internal/bench/corpora/SCHEMA-v2.md` and the
+- [x] **2.1 `kind: artifact`.** `internal/bench/corpora/SCHEMA-v2.md` and the
       loader gain `deliverable`, `graders[]`, `parity_bar`, `feedback_ladder[]`,
       `network: none|registry`.
       verify: the corpus loader test parses an artifact task and rejects one without `parity_bar`.
-- [ ] **2.2 Seed tasks, all fixtures written in-repo.** T1a SVG from a prompt,
+- [x] **2.2 Seed tasks, all fixtures written in-repo.** T1a SVG from a prompt,
       T1b SVG from a provided raster mascot (in-repo, original), T2 landing page
       from brief + tokens, T3 multi-step form, T4a login in a PHP framework
       skeleton, T4b plain-PHP login, T5 PHP CRUD endpoint with a hidden test
       suite, T6 page copy from a frozen in-repo page, T7 mini-app copy (in-repo
       fictional todo app with acceptance tests).
       verify: `bench:ab:v2 --dry-run` lists all nine tasks for both arms.
-- [ ] **2.3 Isolation contract.** Artifact runs use a per-arm temp HOME and
+- [x] **2.3 Isolation contract.** Artifact runs use a per-arm temp HOME and
       config dir, a workspace outside the repo and `network: none` unless the
       task declares `registry`.
       verify: a runner test asserts HOME, config dir and workspace differ per arm and lie outside the repo.
 
 ## Phase 3 — Graders agent-config does not own
 
-- [ ] **3.1 Deterministic primary graders.** T1: render gate (parses, no
+- [x] **3.1 Deterministic primary graders.** T1: render gate (parses, no
       raster/script/`foreignObject`, not blank, in canvas). T2/T3/T7: functional
       acceptance tests plus axe violations at three breakpoints when a browser is
       available, otherwise `unknown`. T4: functional tests and scripted exploits
@@ -125,39 +125,39 @@ Verified at the pin:
       appear only in a labelled secondary column. Renders use a frozen
       viewport, font set, locale and reduced motion.
       verify: grader unit tests pass on the planted good and bad references.
-- [ ] **3.2 Grader self-test.** Each grader scores its task's planted good and
+- [x] **3.2 Grader self-test.** Each grader scores its task's planted good and
       bad reference outputs before it scores any arm; a grader that cannot
       separate them does not run.
       verify: a test with a swapped pair makes the self-test exit non-zero.
 
 ## Phase 4 — Cost of parity
 
-- [ ] **4.1 Pre-written ladders.** Per task, two feedback ladders (naive user,
+- [x] **4.1 Pre-written ladders.** Per task, two feedback ladders (naive user,
       informed user), 3-5 steps, written from the rubric before any run and
       never from the with-arm's output.
       verify: every artifact task in 2.2 carries both ladders and the loader rejects a missing one.
-- [ ] **4.2 Parity loop.** The runner resumes the same session with the next
+- [x] **4.2 Parity loop.** The runner resumes the same session with the next
       ladder step until the primary score reaches the task's `parity_bar`, or
       the cap K = 5. Both arms get the same ladder after a miss. Unreached runs
       are censored, never imputed.
       verify: a fake-host test reaches parity on step 3 and records a censored run at K.
-- [ ] **4.3 Parity metrics.** Per task: turns, prompts, tokens and USD to
+- [x] **4.3 Parity metrics.** Per task: turns, prompts, tokens and USD to
       parity, share not reached by K, and total tokens to target for both arms;
       the with-arm's first-shot median is reported beside the bar.
       verify: the stats test renders all metrics for a fixture bundle.
 
 ## Phase 5 — Entry points
 
-- [ ] **5.1 Taskfile.** `bench:showcase` (full), `bench:showcase:quick` (one
+- [x] **5.1 Taskfile.** `bench:showcase` (full), `bench:showcase:quick` (one
       host, k=3, T1a/T2/T4a), `bench:showcase:replay` (re-grade kept artifacts
       at 0 USD), `bench:showcase:render`.
       verify: `task --list` shows the four targets and `:replay` runs green on the fixture bundle.
-- [ ] **5.2 Opt-in release step.** `task release` offers `:quick` once with the
+- [x] **5.2 Opt-in release step.** `task release` offers `:quick` once with the
       budget shown and attaches the report to the release PR as advisory;
       `:replay` always runs; a regression on a primary grader opens a release
       hold, never an automatic block; no data → `INDETERMINATE`, never green.
       verify: a release test with a stubbed runner shows offer, replay and hold paths.
-- [ ] **5.3 The front door.** A command under the approved verb `test` plans
+- [x] **5.3 The front door.** A command under the approved verb `test` plans
       the run (tier, host, budget), launches the Taskfile target, reads the
       bundle and writes a short report; it never produces numbers itself.
       verify: the command-surface lints and the verb allowlist check are green.
@@ -193,6 +193,6 @@ Verified at the pin:
 
 ## Acceptance Criteria
 
-- [ ] AC-1 A clean clone renders every example page from tracked bundles and `--check` is green.
-- [ ] AC-2 `bench:ab:v2 --dry-run` lists the nine artifact tasks, each with a self-tested primary grader and two ladders.
-- [ ] AC-3 `bench:showcase:replay` runs at 0 USD and `task release` offers `:quick` without blocking.
+- [x] AC-1 A clean clone renders every example page from tracked bundles and `--check` is green.
+- [x] AC-2 `bench:ab:v2 --dry-run` lists the nine artifact tasks, each with a self-tested primary grader and two ladders.
+- [x] AC-3 `bench:showcase:replay` runs at 0 USD and `task release` offers `:quick` without blocking.
