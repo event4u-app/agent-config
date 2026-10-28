@@ -1,19 +1,19 @@
 {
     "schema_version": 1,
     "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit — refresh it from a real run.",
-    "recorded_at": "2026-10-27T09:02:48.012Z",
-    "git_sha": "67b3d69ddc4d6d3bd09a50671c2864c03d5ed738",
-    "run_url": "https://github.com/event4u-app/agent-config/actions/runs/40477492736",
+    "recorded_at": "2026-10-28T09:46:13.085Z",
+    "git_sha": "c581e1e936798c35695dbaf7d9f5987a8d194891",
+    "run_url": "https://github.com/event4u-app/agent-config/actions/runs/40666473640",
     "conditions": "Linux/x86_64 · node v22.23.2 · npm 10.9.8 · npm install --omit=dev from a LOCAL tarball (no registry round-trip for the package itself; a real first-touch install adds registry latency)",
     "measurements": {
         "cli_help_command_count": 120,
-        "cli_version_cold_ms": 349,
+        "cli_version_cold_ms": 371,
         "cold_start_conditions": "Linux/x86_64 · node v22.23.2 · npm 10.9.8 · npm install --omit=dev from a LOCAL tarball (no registry round-trip for the package itself; a real first-touch install adds registry latency)",
-        "cold_start_install_to_doctor_ms": 12735,
-        "mcp_boot_to_initialize_ms": 395,
+        "cold_start_install_to_doctor_ms": 12842,
+        "mcp_boot_to_initialize_ms": 442,
         "mcp_public_tool_count": 29,
-        "node_modules_mb": 140,
+        "node_modules_mb": 141,
         "runtime_dep_count": 204,
-        "unpacked_size_mb": 68.821515
+        "unpacked_size_mb": 69.533828
     }
 }
