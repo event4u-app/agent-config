@@ -504,27 +504,27 @@ rather than as a ninth roadmap.
 > form. Owner answer 2026-10-28: "E1 + E2 jetzt umsetzen". Reading:
 > `agents/evidence/analysis/installed-layer-reading-2026-10-28.md`.
 
-- [x] **6.1 Limit rows per window class.** `host-instruction-limits.json` carries
+- [x] **6.1 Limit rows per window class.** `host-instruction-limits.json` carries <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/host-injection-effect.json -->
       `by_window` for `claude-code` — combined 120,000 (200K) / 150,000 (1M),
       `reported`; per-file 40,000 / 150,000, `vendor-published` — and the report
       and install receipt print one line per window. On this machine: 294.3 % of
       the 200K figure, 235.4 % of the 1M figure.
       verify: `npx vitest run tests/scripts/installed_layer_report.test.ts -t window` -> 0
-- [x] **6.2 Maintainer-machine reading.** 106 files / 367,904 B under
+- [x] **6.2 Maintainer-machine reading.** 106 files / 367,904 B under <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/host-injection-effect.json -->
       `~/.claude/rules`, ten arrival sessions on host 2.1.312, 104 user rules
       loaded at start, shadow decision `full (delivery-unobserved)`.
       verify: `grep -c 'host version 2.1.312' agents/evidence/analysis/installed-layer-reading-2026-10-28.md` -> /^[1-9]/
-- [x] **6.3 Read the delivery axis (owner E1).** `host-injection-effect.json` rows
+- [x] **6.3 Read the delivery axis (owner E1).** `host-injection-effect.json` rows <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/host-injection-effect.json -->
       may carry `delivery_mechanics` beside `state`, same citation protocol;
       `deliveryObservedFor` reads it. The `claude` row is seeded from the
       2026-09-10 delivery its own `reason` records (2.1.268, 7,685 B); `state`
       keeps its value and owner. ADR-293 Amendment 2.
       verify: `npx vitest run tests/scripts/injection_effect.test.ts tests/scripts/layer_form_decision.test.ts` -> 0
-- [x] **6.4 `install --enrol` (owner E2).** One receipt field beside `--full`'s pin;
+- [x] **6.4 `install --enrol` (owner E2).** One receipt field beside `--full`'s pin; <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/host-injection-effect.json -->
       an enrolled machine may be promoted with the shipped switch off, `--full`
       wins, demotion unchanged.
       verify: `npx vitest run tests/install/layer_promotion.test.ts -t enrolled` -> 0
-- [x] **6.5 Standing laws the user layer can carry.** Found while running 6.3: two
+- [x] **6.5 Standing laws the user layer can carry.** Found while running 6.3: two <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/host-injection-effect.json -->
       consequence-class members are `workspaces: [agent-config-maintainer]` and
       never installed at user scope, so `arrival-standing-law-missing` held on
       every machine. The arrival check now requires only members the user layer
