@@ -7,7 +7,6 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import * as shape from '../../src/scripts/check_release_pr_shape.js';
-import { censusDateStamp, defaultReportPath } from '../../src/scripts/report_evidence_temperature.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -80,8 +79,7 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
     it('the `*` entries admit any depth — recorded, not endorsed', () => {
         // The denial above holds on the EXTENSION, not on the nesting: `foo.ts`
         // matches no glob at any depth. fnmatch `*` crosses `/`, so the `*`
-        // entries do admit arbitrary depth, which the census entry avoids by
-        // using digit classes. Pinned here so the property is visible rather
+        // entries do admit arbitrary depth. Pinned here so the property is visible rather
         // than discovered, and so narrowing these globs later is a deliberate
         // edit to this assertion rather than a silent behaviour change.
         //
@@ -90,7 +88,7 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
         // neighbour. The count is derived below rather than written down, so
         // adding a seventh wildcard row reds this instead of aging a comment.
         const wildcards = shape.ALLOWLIST_GLOBS.filter((g) => g.includes('*'));
-        expect(wildcards).toHaveLength(6);
+        expect(wildcards).toHaveLength(8);
         expect(shape._matches('src/packs/core/installer/pack.yaml')).toBe(true);
         expect(shape._matches('src/packs/core/installer/README.md')).toBe(true);
         expect(shape._matches('src/domains/a/b/pack.yaml')).toBe(true);
@@ -100,6 +98,8 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
         // separator, so it swallows a segment plus a filename. Same shape as
         // the findings-ledger row above; neither is a superset of the other.
         expect(shape._matches('docs/archive/CHANGELOG-pre-x/evil.md')).toBe(true);
+        expect(shape._matches('src/agent-src/templates/github-workflows/a/b.yml')).toBe(true);
+        expect(shape._matches('dist/agent-src/templates/github-workflows/a/b.yml')).toBe(true);
     });
 
     it('marketplace metadata only passes', () => {
@@ -147,50 +147,16 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
         expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);
     });
 
-    it('the evidence-temperature census release-prepare writes passes', () => {
+    it('a stray evidence-temperature census in a release PR fails', () => {
+        // release-prepare no longer writes the census (2026-10-28): its header
+        // named the HEAD commit, so every new commit on a release branch
+        // produced a one-line diff, a commit and a full CI cycle for nothing.
         const { code } = runCheck([
             'package.json',
             'CHANGELOG.md',
             'agents/evidence/analysis/evidence-temperature-2026-10-05.md',
         ]);
-        expect(code).toBe(0);
-    });
-
-    it('the census glob admits the ISO date shape and nothing else under it', () => {
-        expect(shape._matches('agents/evidence/analysis/evidence-temperature-2026-10-05.md')).toBe(true);
-        // Denials the literal stem and the separators already carry — they hold
-        // under any date spelling, so they do NOT measure the digit classes.
-        expect(shape._matches('agents/evidence/analysis/evidence-temperature-anything.md')).toBe(false);
-        expect(shape._matches('agents/evidence/analysis/evidence-temperature-2026-1-5.md')).toBe(false);
-        expect(shape._matches('agents/evidence/analysis/some-other-report.md')).toBe(false);
-        expect(shape._matches('agents/evidence/analysis/nested/evidence-temperature-2026-10-05.md')).toBe(false);
-    });
-
-    it('the census glob denies a non-digit date — the digit classes, measured', () => {
-        // These are the ONLY assertions in this file that go red if `[0-9]` is
-        // relaxed to `?`: a 4-2-2 shape with the right separators and the wrong
-        // character class. Measured, not assumed — the four denials above stay
-        // green under `????-??-??`, so they prove the stem, never the digits.
-        expect(shape._matches('agents/evidence/analysis/evidence-temperature-aaaa-bb-cc.md')).toBe(false);
-        expect(shape._matches('agents/evidence/analysis/evidence-temperature-20z6-10-05.md')).toBe(false);
-        // fnmatch `?` compiles to `.` under the `s` flag and so crosses `/`;
-        // a digit class cannot. This path is the difference.
-        expect(shape._matches('agents/evidence/analysis/evidence-temperature-x/yz-ab-cd.md')).toBe(false);
-    });
-
-    it('the allowlist admits the path the census writer actually produces', () => {
-        // Directory, prefix and extension come from the writer's own builder,
-        // and the day from the writer's own stamping, so a change to any of
-        // them moves this assertion too.
-        expect(shape._matches(defaultReportPath(censusDateStamp()))).toBe(true);
-        expect(shape._matches(defaultReportPath('2026-10-01'))).toBe(true);
-    });
-
-    it('the census date stamp has the shape the allowlist glob was cut for', () => {
-        // The day is a parameter of `defaultReportPath`, so the link above does
-        // not pin its shape. A time component or `YYYYMMDD` reds here.
-        expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))).toBe('2026-10-05');
-        expect(shape._matches(defaultReportPath(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))))).toBe(true);
+        expect(code).toBe(1);
     });
 });
 
@@ -285,57 +251,46 @@ describe('check_release_pr_shape — contract/code allowlist parity', () => {
     });
 });
 
-describe('check_release_pr_shape — the census writer/pipeline binding', () => {
-    it('every caller lets the writer choose the path it writes', () => {
-        // `main` prefers `--out` over `defaultReportPath`, so a caller passing
-        // one writes a name no test pins — the 16.3.0 drift class, one step
-        // further out.
-        //
-        // Scans EVERY tracked file. Earlier versions scanned a root list, and
-        // each round found another hole in it: a missing root skipped silently,
-        // extensionless files dropped, top-level files discarded, a parent
-        // marked scanned because one child was a root. A reach claim needs
-        // either a check or no reach claim; `git ls-files` removes the question.
-        const BINARY = /\.(mp4|mov|png|jpg|jpeg|gif|webp|pdf|zip|gz|tgz|ico|woff2?|ttf|mp3|wav)$/i;
-        // `git grep -l` narrows to the files that mention the module before any
-        // read: the tracked tree is ~3.4k files and ~160 MB, and reading all of
-        // it to find one line is cost with no coverage behind it. Still every
-        // tracked file — grep is the index, not a root list. `|| true` because
-        // grep exits 1 on no match, which is a legitimate answer here.
-        const files = execFileSync(
-            'sh',
-            ['-c', "git grep -l 'report_evidence_temperature' -- . || true"],
-            { cwd: REPO_ROOT, encoding: 'utf8' },
-        )
+describe('check_release_pr_shape — the release pipeline writes no census', () => {
+    it('release-prepare does not invoke report_evidence_temperature', () => {
+        const yml = fs.readFileSync(path.join(REPO_ROOT, 'taskfiles/content.yml'), 'utf8');
+        const start = yml.indexOf('\n  release-prepare:');
+        expect(start).toBeGreaterThan(-1);
+        const next = yml.slice(start + 1).search(/\n  [\w:-]+:\n/);
+        const body = next === -1 ? yml.slice(start) : yml.slice(start, start + 1 + next);
+        expect(body).toContain('task: sync');
+        expect(body).not.toMatch(/report_evidence_temperature/);
+    });
+
+    it('no tracked automation invokes the census at all', () => {
+        // The direct check above would pass if `sync`, `generate-tools` or a
+        // workflow called the census instead. Every tracked file is scanned —
+        // `git grep` is the index, not a root list — and the census may only be
+        // NAMED there, never run: zero invocations, where this test used to
+        // demand exactly one.
+        const files = execFileSync('sh', ['-c', "git grep -l 'report_evidence_temperature' -- . || true"], {
+            cwd: REPO_ROOT,
+            encoding: 'utf8',
+        })
             .split('\n')
-            .filter((f) => f !== '' && !BINARY.test(f))
-            // Markdown is prose, never an invocation; the module's own file and
-            // the suites that import it name it by definition.
+            .filter((f) => f !== '')
+            // Markdown is prose; the module and the suites that import it name
+            // it by definition; review artifacts and the code map mirror files.
             .filter((f) => !f.endsWith('.md'))
             .filter((f) => f !== 'src/scripts/report_evidence_temperature.ts')
             .filter((f) => !f.startsWith('tests/'))
-            // Review artifacts hold committed diffs of this very file.
             .filter((f) => !f.startsWith('agents/evidence/'))
-            // The committed code map mirrors every file's name and imports.
             .filter((f) => !f.startsWith('agents/map/'));
-        // grep found the module somewhere, so an empty set after filtering means
-        // the filters ate everything — which must not read as "no caller".
-        expect(files.length).toBeGreaterThan(0);
-        // Continuations are joined before matching: a shell or YAML call can
-        // carry `--write` on the matched line and `--out` on the next, which a
-        // line-scoped assertion would pass — the drift this test exists to catch.
-        const joinContinuations = (text: string): string[] =>
-            text.replace(/\\\n\s*/g, ' ').split('\n');
         const invocations = files
             .filter((f) => fs.existsSync(path.join(REPO_ROOT, f)))
-            .flatMap((f) => joinContinuations(fs.readFileSync(path.join(REPO_ROOT, f), 'utf8')))
-            // Strips a trailing comment before testing, so `foo() // …report…`
-            // and `/* …report… */` are not counted as callers.
+            .flatMap((f) =>
+                fs
+                    .readFileSync(path.join(REPO_ROOT, f), 'utf8')
+                    .split('\n')
+                    .map((line) => `${f}: ${line}`),
+            )
             .map((line) => line.replace(/\/\*.*?\*\//g, '').replace(/(\s|^)(\/\/|#).*$/, '$1'))
-            .filter((line) => /report_evidence_temperature(\.ts)?\b/.test(line))
-            .filter((line) => !/^\s*["']?[\w.-]+["']?\s*:\s*$/.test(line));
-        expect(invocations).toHaveLength(1);
-        expect(invocations[0]).toContain('--write');
-        expect(invocations[0]).not.toContain('--out');
+            .filter((line) => /(scripts-run|tsx|node)\s+\S*report_evidence_temperature/.test(line));
+        expect(invocations).toEqual([]);
     });
 });

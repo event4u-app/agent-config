@@ -63,13 +63,13 @@ jobs:
           node-version: 22
       - name: Refresh advisories
         if: steps.visibility.outputs.private == 'true'
-        run: npx --yes @event4u/agent-config@16 audit:deps refresh --force
+        run: npx --yes @event4u/agent-config@19 audit:deps refresh --force
       - name: Open or update the T0 issue (only when the list changed)
         if: steps.visibility.outputs.private == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          body="$(npx --yes @event4u/agent-config@16 audit:deps issue-body)"
+          body="$(npx --yes @event4u/agent-config@19 audit:deps issue-body)"
           [ -z "$body" ] && { echo "no T0 finding today"; exit 0; }
           # The `Checked <time>` line changes on every run; the list is what counts.
           digest="$(printf '%s' "$body" | grep -v '^Checked ' | sha256sum | cut -c1-16)"

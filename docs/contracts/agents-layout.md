@@ -206,10 +206,13 @@ The classification rule, by reference and never by age:
 | warm | Referenced only by archived or skipped roadmaps, or only by other files that are themselves under `evidence/`. |
 | hot | Referenced by at least one live tracked file outside `evidence/`, or sitting under a directory a gate enumerates as its corpus (`reviews/`, `release-findings/`, `archived-skills/`, `ratifications/`). |
 
-`src/scripts/report_evidence_temperature.ts` is the instrument. It runs
-report-only from `task release-prepare` on every release, names the files that
-became cold since the previous census, and refuses nothing — a census that can
-fail a release is a gate, and no gate is warranted here.
+`src/scripts/report_evidence_temperature.ts` is the instrument. It runs on
+demand (`./scripts-run src/scripts/report_evidence_temperature --write --since
+latest`), names the files that became cold since the previous census, and
+refuses nothing — a census that can fail a release is a gate, and no gate is
+warranted here. It ran from `task release-prepare` until 2026-10-28; the owner
+removed it there because its header named the HEAD commit, so every new commit
+on a release branch produced a one-line diff, a commit and a full CI cycle.
 
 **Why no cold location.** The census put to the council (2026-10-01, taken at
 `8fdd9e9ed`) measured 61 of 1,319 tracked files and 0.68 of 29.61 MiB cold —
