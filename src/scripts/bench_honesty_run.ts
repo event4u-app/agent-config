@@ -130,7 +130,7 @@ export const ARM_SPECS: Readonly<Record<Arm, ArmSpec>> = {
 /** Rule names per arm, in load order. */
 export const ARM_RULES: Readonly<Record<Arm, readonly string[]>> = Object.fromEntries(
     ARMS.map((a) => [a, ARM_SPECS[a].parts.map((p) => p.rule)]),
-) as Record<Arm, readonly string[]>;
+) as unknown as Record<Arm, readonly string[]>;
 
 const SET_FILES: Readonly<Record<HonestySet, string>> = {
     rebuttal: 'honesty-rebuttal.yaml',

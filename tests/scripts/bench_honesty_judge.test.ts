@@ -15,12 +15,12 @@ const CORPUS_DIR = path.resolve(__dirname, '..', '..', 'internal', 'bench', 'cor
 
 describe('bench_honesty_judge', () => {
     let tmp: string;
-    let out: ReturnType<typeof vi.spyOn>;
-    let err: ReturnType<typeof vi.spyOn>;
+    let out: { mock: { calls: unknown[][] }; mockClear(): void; mockRestore(): void };
+    let err: { mockRestore(): void };
     beforeEach(() => {
         tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'honesty-judge-'));
-        out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
-        err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true) as unknown as typeof out;
+        err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true) as unknown as typeof err;
     });
     afterEach(() => {
         fs.rmSync(tmp, { recursive: true, force: true });
