@@ -135,7 +135,6 @@ import { TAG_TRIGGERED_WORKFLOWS, dispatchTagWorkflows } from './_lib/release_ta
 import {
     RELEASE_HEAD_DEFAULT,
     extract_changelog_section,
-    pr_body_from_section,
     release_notes_from_section,
     render_mix_response,
 } from './_lib/release_material.js';
@@ -160,7 +159,6 @@ import {
     _set_changelog_reader,
     read_changelog_text,
     CalledProcessError,
-    GH_PR_BODY_LIMIT,
     GH_RELEASE_NOTES_LIMIT,
     MAIN_BRANCH,
     MARKETPLACE_JSON,
@@ -193,6 +191,7 @@ export {
     _is_tag_already_exists,
     _no_checks_action,
     _required_contexts_from_rules,
+    release_pr_body,
 } from './release_publication.js';
 import { _cap_body, jsonDumpsIndent } from './release_env.js';
 import {
@@ -203,6 +202,7 @@ import {
     _pr_merge_state,
     _push_tag,
     _refresh_pr_body_from_head,
+    release_pr_body,
     _release_exists,
     _remote_tag_commit,
     _set_exec_override,
@@ -1012,12 +1012,7 @@ function execute(
         if (!section) {
             die(`CHANGELOG.md carries no section for ${plan.target} — cannot derive PR body`);
         }
-        const pr_changelog = _cap_body(
-            section!.body,
-            GH_PR_BODY_LIMIT - 200, // leave room for the prefix + footer
-            '`CHANGELOG.md` in this PR',
-        );
-        const pr_body = pr_body_from_section(pr_changelog, plan.target);
+        const pr_body = release_pr_body(section!.body, plan.target);
         gh(['pr', 'create', '--base', MAIN_BRANCH, '--head', branch,
             '--title', `release: ${plan.target}`, '--body', pr_body]);
     }
