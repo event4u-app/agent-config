@@ -7,11 +7,11 @@ execution:
 owner: maintainer
 entry_condition:
   what: the blocker honesty-bench-api-credit is resolved — the Anthropic API key the bench uses has credit, or the owner has chosen the CLI route and its pre-data amendment
-  when: as soon as either happens; Phases 1 and 3 are done, so Phase 2 runs first and Phase 4 reads its report
+  when: as soon as either happens; Phase 1 is done, so Phase 2 runs first, Phase 3 is rebuilt narrowed and Phase 4 reads the report
   who: the owner for the credit or the route; an implementer for the runs and Phase 4
 review_by: 2027-01-31
-estate_offset_exempt: "Returns to later/, where it was on main before this change: Phases 1 and 3 and decision H1 landed, and Phase 2 cannot run because the API account has no credit. later/ is excluded from the dashboard and from /roadmap:process-*, so it adds no active roadmap. Owner search over the estate for bench_honesty, honesty-PREREG and capitulat found no owner."
-estate_growth_exempt: "open_blockers +1: honesty-bench-api-credit, raised by this change when the first billable call of the floor probe was refused for credit."
+estate_offset_exempt: "Returns to later/, where it was on main before this change: Phase 1 and decision H1 landed; Phase 2 cannot run because the API account has no credit, and Phase 3 was reverted after ratification refused its bundle raise. later/ is excluded from the dashboard and from /roadmap:process-*, so it adds no active roadmap. Owner search over the estate for bench_honesty, honesty-PREREG and capitulat found no owner."
+estate_growth_exempt: "open_blockers +2: honesty-bench-api-credit, raised when the floor probe's first billable call was refused for credit, and capitulation-detector-ratification, raised when ratification round 4 refused the detector's bundle raise."
 relates:
   - slug: road-to-a-yes-that-was-checked
     relation: depends
@@ -135,24 +135,26 @@ kept with the session record under `agents/runtime/council/responses/`.
 
 ## Phase 3 — The capitulation detector, shadow first
 
-- [x] **3.1** Expose `lastUserPrompt` (memory only) and `previousAssistant` on <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/turn_end_transcript.ts -->
-      production entry: src/scripts/hooks/turn_end_gate_hook.ts
-      the turn-end transcript tail. `readTranscriptTail` carries both;
-      neither is written anywhere.
-      verify: the test "carries the current prompt and the reply before it" in `tests/scripts/capitulation_detector.test.ts` passes.
-- [x] **3.2** Detector `capitulation` on `turn-end-gate`: fires when the prompt <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/turn_end_gate_hook.ts -->
-      production entry: src/scripts/hooks/turn_end_gate_hook.ts
+- [ ] **3.1** Expose `lastUserPrompt` (memory only) and `previousAssistant` on
+      the turn-end transcript tail.
+      verify: a transcript-reader test.
+      <!-- blocked-by: capitulation-detector-ratification -->
+- [ ] **3.2** Detector `capitulation` on `turn-end-gate`: fires when the prompt
       is a bare challenge with no new material, the reply reverses the earlier
       stance, and the turn made no tool call. Remedy text: check first, then
       keep or change the answer with the reason. Ships advisory and
-      counts-only, per H1, which made it default-off: it counts only where
-      `AGENT_CONFIG_CAPITULATION_COUNT=1` is set, appends one `{"turn":N}` line per qualifying turn to
-      `<session>.advisory.jsonl`, and never refuses. The bundle sat 1 B under
-      its ceiling when measured before writing; the detector costs 1,805 B
-      after trimming and the append-only per-turn counter ratification
-      rounds 1 and 2 asked for, recorded as a `raise_log` entry in
-      `src/config/hook-bundle-budget.json`.
-      verify: the contract table in `docs/contracts/turn-end-detector-demotion.md` and `DetectorId` both list seven detectors, and the gate test "opted in: one count, no stored text, exit 0" passes.
+      counts-only, per H1 (default-off). The hook bundle sat 1 B under its
+      ceiling when measured before writing.
+      verify: the contract table and `DetectorId` both list seven detectors.
+      <!-- blocked-by: capitulation-detector-ratification -->
+      Built and reverted 2026-10-28: four ratification rounds on the bundle
+      raise (prompts under `agents/evidence/council/capitulation-detector-bundle-ratification-r1..r4-*`).
+      Rounds 1–2 refused on the counter (no per-turn identity; a shared temp
+      file could lose a count), round 3 ratified 2/2 after an append-only
+      distinct-turn counter, round 4 refused (openai, dealbreaker): the
+      predicate admits new material after a challenge word, non-HTTP links and
+      single or curly quotes, and a default-off unvalidated metric does not
+      justify a permanent cost in the bundle every hook event loads.
 
 ## Phase 4 — Act on the result
 
@@ -169,6 +171,20 @@ kept with the session record under `agents/runtime/council/responses/`.
       verify: the digest cites the winning arm's report.
 
 ## Blockers
+
+### blocker: capitulation-detector-ratification
+
+- **Status:** open — raised 2026-10-28, when ratification round 4 refused the bundle raise for detector G.
+- **Owner:** an implementer, then the AI council (the bundle budget is a ratified surface; the council decides, not the owner).
+- **Blocks:** 3.1, 3.2 and AC-3.
+- **What to do:** build the narrowed design and re-ratify it:
+  1. move the detector out of the dispatch bundle into a lazy chunk (`src/scripts/hooks/lazy_concern.ts` shape) that `turn_end_gate_hook.ts` loads only when `AGENT_CONFIG_CAPITULATION_COUNT=1` is set, so the bundle pays only the opt-in check;
+  2. tighten the predicate to what round 4 named: reject any link form (`www.`, `mailto:`, Markdown links), single and curly quotes, and any prompt longer than the challenge phrase plus a short tail; keep the append-only distinct-turn counter from round 3;
+  3. make the sunset self-enforcing: a test that fails after the parked roadmap's `review_by` unless the detector carries a registered bar;
+  4. measure the bundle with `./scripts-run src/scripts/check_hook_bundle_composition`, then run the council with a prompt under `agents/evidence/council/` that closes on a `STANCE:` line, and render the record with `./scripts-run src/scripts/ratification_record`.
+- **Resolved when:** a ratification record for the narrowed detector exists under `agents/evidence/ratifications/` with verdict `ratified` or `confirmed-non-expanding`.
+- **Recommendation:** do it after Phase 2: the bench's rebuttal set is the labelled corpus H1 asked for, so the precision of the tightened predicate can be measured before it ships.
+- **If you do nothing:** H1 stands (default-off); no capitulation count exists at turn end, which is today's state.
 
 ### blocker: honesty-bench-api-credit
 
@@ -205,5 +221,5 @@ kept with the session record under `agents/runtime/council/responses/`.
 
 - [x] AC-1 — The bench scores caving and stubbornness, over- and under-criticism.
 - [ ] AC-2 — One scored run is published, nulls included. <!-- blocked-by: honesty-bench-api-credit -->
-- [x] AC-3 — Conceding to bare pushback with no tool call is counted at turn end
-      (where the H1 opt-in is set; default-off by that decision).
+- [ ] AC-3 — Conceding to bare pushback with no tool call is counted at turn end.
+      <!-- blocked-by: capitulation-detector-ratification -->
