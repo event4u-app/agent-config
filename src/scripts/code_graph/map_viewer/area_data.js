@@ -1016,7 +1016,31 @@ function dFitFocus(stage) {
     if (over > 0) dbState.panY -= over;
     under = top + m - (dbState.panY + f.y * z);
     if (under > 0) dbState.panY += under;
+    if (fitZ < DB_MIN_READABLE_Z) dKeepABadge(db, f, z, m, top, vw, vh);
     dApply(stage);
+}
+/**
+ * The picked table alone is framed, so its lines run out of view and a badge at a line's middle can sit at the
+ * stage's very edge — a few pixels of header or font metrics put it outside. When no badge is in the free part
+ * of the stage (below the controls, inside the margin), the view moves the least it can to bring the nearest one
+ * in, and only as far as the picked table stays wholly in view.
+ */
+function dKeepABadge(db, f, z, m, top, vw, vh) {
+    var bs = Array.prototype.filter.call(db.labels.querySelectorAll('.db-badge'), function (b) { return !b.hidden && b._pts; })
+        .map(function (b) { return [parseFloat(b.style.left), parseFloat(b.style.top)]; });
+    var box = [m, top + m, vw - m, top + vh - m];
+    var inBox = function (px, py, b) { var x = px + b[0] * z; var y = py + b[1] * z; return x >= box[0] && x <= box[2] && y >= box[1] && y <= box[3]; };
+    if (!bs.length || bs.some(function (b) { return inBox(dbState.panX, dbState.panY, b); })) return;
+    var clamp = function (v, lo, hi) { return lo > hi ? v : Math.max(lo, Math.min(hi, v)); };
+    var best = null;
+    bs.forEach(function (b) {
+        // A table larger than the free part keeps the top-left framing it was given on that axis.
+        var px = f.w * z > box[2] - box[0] ? dbState.panX : clamp(clamp(dbState.panX, box[0] - b[0] * z, box[2] - b[0] * z), box[0] - f.x * z, box[2] - (f.x + f.w) * z);
+        var py = f.h * z > box[3] - box[1] ? dbState.panY : clamp(clamp(dbState.panY, box[1] - b[1] * z, box[3] - b[1] * z), box[1] - f.y * z, box[3] - (f.y + f.h) * z);
+        var d = Math.abs(px - dbState.panX) + Math.abs(py - dbState.panY);
+        if (inBox(px, py, b) && (!best || d < best[2])) best = [px, py, d];
+    });
+    if (best) { dbState.panX = best[0]; dbState.panY = best[1]; }
 }
 
 /** The key that unlocks moving and zooming, named as the platform names it. */
