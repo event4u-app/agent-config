@@ -5,9 +5,9 @@ execution:
   mode: phase-checkpoints
 parent_roadmap: road-to-the-question-only-the-owner-can-answer
 entry_condition:
-  what: the owner resolves blocker(s) interview-suffix-form-is-an-owner-decision, intake-band-shift-needs-a-baseline, ledger-change-needs-hook-bundle-headroom
+  what: the next run resolves blocker(s) intake-band-shift-needs-a-baseline, ledger-change-needs-hook-bundle-headroom
   when: whenever the owner takes the next step
-  who: owner
+  who: agent
 review_by: 2027-01-25
 estate_growth_exempt: >-
   Owner-chosen archive of road-to-the-question-only-the-owner-can-answer: its deferred steps wait on owner
@@ -29,9 +29,9 @@ left to read as finished.
 
 ## Phase 1 — Deferred steps carried from road-to-the-question-only-the-owner-can-answer
 
-- [ ] **3.1 Append the interview sentence automatically (owner demand).** <!-- blocked-by: interview-suffix-form-is-an-owner-decision | asked: no — queued as OQ-25/OQ-26 in agents/owner-questions.md per the 2026-10-24 directive -->
-      verify: OQ-25 answered and the chosen form ships with a fixture.
-- [ ] **3.2 Interview reachable outside the maintainer workspace (D2).** <!-- blocked-by: interview-suffix-form-is-an-owner-decision | asked: no — queued as OQ-25/OQ-26 in agents/owner-questions.md per the 2026-10-24 directive -->
+- [x] **3.1 Append the interview sentence automatically (owner demand).** Done 2026-10-28 per OQ-25: the `intake-pass` concern (`src/scripts/hooks/intake_pass_hook.ts`), on by default on every host's `user_prompt_submit`, names the intake pass on task prompts and leaves the owner-gap judgement to the agent.
+      verify: `npx vitest run tests/hooks/intake_pass_hook.test.ts` -> 0
+- [x] **3.2 Interview reachable outside the maintainer workspace (D2).** Done 2026-10-28 per OQ-26: `workspaces:` widened to `engineering` and `product` on the five consumer-safe interview artefacts; `challenge-me closure` stays maintainer-only (it runs `./scripts-run`).
       verify: `./scripts-run src/scripts/lint_discovery_vocabulary` -> 0 once OQ-26 is answered and applied.
 - [ ] **3.3 Absence scored as unknown, plus a taste dimension (D5).** <!-- blocked-by: intake-band-shift-needs-a-baseline -->
       verify: G4 fixtures — "make it better", a taste-gap prompt and a full prompt land on three distinct outcomes.
@@ -44,7 +44,7 @@ left to read as finished.
 
 ### blocker: interview-suffix-form-is-an-owner-decision
 
-- **Status:** open — raised 2026-10-27 by inbox round `inbox-2026-10-be`.
+- **Status:** resolved — 2026-10-28, OQ-25 and OQ-26 answered and applied (3.1, 3.2).
 - **Class:** 3 — owner-reserved: product reach and a possible new settings key.
 - **Owner:** user — `agents/owner-questions.md` OQ-25 and OQ-26.
 - **Run:** `grep -n 'OQ-25\|OQ-26' agents/owner-questions.md`
