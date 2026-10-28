@@ -7,9 +7,9 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 309
+- **artefacts**: 310
 
-## Commands (162)
+## Commands (163)
 
 - **`agent-design`** — Design orchestrator — routes audit/render/review to the Class-A commands and the six intervention verbs to fe-design with a declared operation
 - **`agent-handoff`** — Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste.
@@ -153,6 +153,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`team-knowledge-consolidate`** — Review pending typed knowledge-observation events and file them into agents/knowledge/ pages as a human-reviewed batch — never writes without approval.
 - **`team-review`** — Thin wrapper — cross-model review of the current diff via the official plugin (/codex:review). Gated on /team availability (codex CLI + auth); fails closed when the plugin is absent.
 - **`team-status`** — Thin wrapper — plugin job status via /codex:status plus a quota block (shared openai counter vs team + council ceilings). Gated on codex CLI/auth availability; fails closed without the plugin.
+- **`test-showcase`** — Run the with/without showcase benchmark and report it
 - **`tests`** — Tests orchestrator — routes to create, execute, e2e-plan, e2e-heal
 - **`tests-create`** — Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
 - **`tests-e2e-heal`** — Find, debug, and fix failing Playwright E2E tests

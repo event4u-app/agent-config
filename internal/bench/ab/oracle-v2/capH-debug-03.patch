@@ -1,0 +1,13 @@
+diff --git a/src/apportion.mjs b/src/apportion.mjs
+index 2960f34..513667e 100644
+--- a/src/apportion.mjs
++++ b/src/apportion.mjs
+@@ -34,7 +34,7 @@ export function apportion(total, weights) {
+     if (ra === rb) {
+       return a - b;
+     }
+-    return ra - rb;
++    return rb - ra;
+   });
+ 
+   const result = base.slice();

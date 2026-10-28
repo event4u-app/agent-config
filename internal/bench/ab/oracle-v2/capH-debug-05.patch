@@ -1,0 +1,25 @@
+diff --git a/src/resolve.mjs b/src/resolve.mjs
+index a84a853..b292417 100644
+--- a/src/resolve.mjs
++++ b/src/resolve.mjs
+@@ -14,8 +14,12 @@
+  */
+ export function resolveOrder(graph, start) {
+   const order = [];
++  const done = new Set();
+ 
+   function visit(node, onPath) {
++    if (done.has(node)) {
++      return;
++    }
+     if (onPath.has(node)) {
+       // Already being expanded above us on this path — a cycle. Stop here.
+       return;
+@@ -28,6 +32,7 @@ export function resolveOrder(graph, start) {
+     }
+ 
+     onPath.delete(node);
++    done.add(node);
+     order.push(node);
+   }
+ 

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="t">
+  <title id="t">Crumb &amp; Co</title>
+  <rect x="0" y="0" width="256" height="256" fill="#fbf3e4"/>
+  <path d="M48 120 C 80 60, 176 60, 208 120 C 176 104, 80 104, 48 120 Z" fill="#c8782f"/>
+  <path d="M88 96 L 104 118 M128 84 L 128 112 M168 96 L 152 118" stroke="#7a4317" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <text x="128" y="190" text-anchor="middle" font-family="serif" font-size="32" fill="#7a4317">Crumb &amp; Co</text>
+</svg>

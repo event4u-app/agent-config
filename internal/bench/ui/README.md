@@ -10,6 +10,8 @@ Run it:
 ```bash
 task bench:ui              # score every configured candidate
 task bench:ui -- --json    # machine-readable, same numbers
+# --config <file> --lock <file> --report <file> point one run at another
+# truth/candidate set, lock and report (used by the artifact bench-ui grader)
 ```
 
 ## Why this bench exists at all

@@ -1,0 +1,11 @@
+diff --git a/src/config.legacy.json b/src/config.legacy.json
+deleted file mode 100644
+index 169d5d6..0000000
+--- a/src/config.legacy.json
++++ /dev/null
+@@ -1,5 +0,0 @@
+-{
+-  "_comment": "The original config from the 2023 prototype. Nothing imports this anymore.",
+-  "apiBase": "https://old-prototype.example.com",
+-  "timeoutMs": 1000
+-}

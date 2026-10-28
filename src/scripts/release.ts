@@ -143,6 +143,7 @@ import {
     assert_scheduled_deprecations_clear,
 } from './_lib/release_migration_gate.js';
 import { releaseHoldPreflight } from './_lib/release_holds.js';
+import { runReleaseShowcase } from './_lib/release_showcase.js';
 import { measuredSection } from './_lib/dispatch_policy.js';
 import { localIsoDate } from './_lib/as_of.js';
 import { assert_settings_surface_delta, writeReleasedSurface } from './_lib/release_settings_surface.js';
@@ -852,7 +853,7 @@ function _step(n: number, total: number, msg: string): void {
 
 function execute(
     plan: Plan,
-    opts: { wait_for_checks: boolean; dry_run: boolean; resume?: boolean; ci?: boolean },
+    opts: { wait_for_checks: boolean; dry_run: boolean; resume?: boolean; ci?: boolean; pr_extra?: string },
 ): void {
     const wait_for_checks = opts.wait_for_checks;
     const dry_run = opts.dry_run;
@@ -1009,7 +1010,7 @@ function execute(
         if (!section) {
             die(`CHANGELOG.md carries no section for ${plan.target} — cannot derive PR body`);
         }
-        const pr_body = release_pr_body(section!.body, plan.target);
+        const pr_body = release_pr_body(section!.body, plan.target) + (opts.pr_extra ?? '');
         gh(['pr', 'create', '--base', MAIN_BRANCH, '--head', branch,
             '--title', `release: ${plan.target}`, '--body', pr_body]);
     }
@@ -1586,7 +1587,9 @@ function main(argv: readonly string[] | null = null): number {
         return 1;
     }
 
+    const showcase = runReleaseShowcase({ yes: args.yes, ci: args.ci, root: REPO_ROOT, canPrompt, ask: confirm });
     execute(plan, {
+        pr_extra: showcase.pr_section,
         wait_for_checks: !args.no_wait,
         dry_run: false,
         resume: args.resume,

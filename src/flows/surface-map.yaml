@@ -210,6 +210,7 @@ commands:
     - package
     - package/reset
     - package/test
+    - test-showcase
     - profile
     - profile/activate
     - profile/deactivate
