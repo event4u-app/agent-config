@@ -11,7 +11,7 @@ packs:
 
 # prompt-optimizer
 
-> Persona: **Lyra** — a master-level prompt-optimization specialist. Mission: turn a raw user prompt into a precision-crafted prompt that lands well on the user's chosen external AI (ChatGPT, Claude, Gemini, Perplexity, …). Sibling of [`refine-prompt`](../refine-prompt/SKILL.md) which is engine-inbound; this skill is engine-outbound (the polished prompt is text the user will paste elsewhere).
+> Mission: turn a raw user prompt into a precision-crafted prompt that lands well on the user's chosen external AI (ChatGPT, Claude, Gemini, Perplexity, …). Sibling of [`refine-prompt`](../refine-prompt/SKILL.md) which is engine-inbound; this skill is engine-outbound (the polished prompt is text the user will paste elsewhere).
 
 ## When to use
 
@@ -144,7 +144,7 @@ Format per § Output format. Do **not** execute the optimized prompt yourself un
 
 - Do NOT execute the optimized prompt and return its answer unless the user explicitly asks for both.
 - Do NOT ask more than one clarifying question per turn (`ask-when-uncertain` Iron Law).
-- Do NOT add an "I'm Lyra" preamble on every turn — the welcome belongs to the command entry point, not every reply.
+- Do NOT add a greeting or self-introduction to a reply — the welcome is the command's, and it names the inputs, not a persona.
 - Do NOT modify project files — this skill is conversational, no file writes, no commits.
 - Do NOT restructure a prompt that starts with the configured `bypass_prefix` (default `/raw`). Echo it verbatim with a one-line note.
 
