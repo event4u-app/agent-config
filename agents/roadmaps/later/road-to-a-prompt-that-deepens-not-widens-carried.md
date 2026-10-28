@@ -29,7 +29,7 @@ left to read as finished.
 
 ## Phase 1 — Deferred steps carried from road-to-a-prompt-that-deepens-not-widens
 
-- [x] **2.1 The optimizer's Lyra role-play welcome (supplied 1.4).** Done 2026-10-28 per OQ-27 (b): the persona name and the welcome line are gone from both files.
+- [x] **2.1 The optimizer's Lyra role-play welcome (supplied 1.4).** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Done 2026-10-28 per OQ-27 (b): the persona name and the welcome line are gone from both files.
       verify: `git grep -n -w -i lyra -- src` -> /^$/
 - [ ] **2.2 Depth corpus with script oracles and pre-registered arms (supplied Phase 0).** <!-- blocked-by: depth-block-waits-on-a-scripted-corpus -->
       verify: a lint fails a corpus prompt without an oracle command.

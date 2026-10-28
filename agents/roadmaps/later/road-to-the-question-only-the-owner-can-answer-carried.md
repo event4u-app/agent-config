@@ -9,10 +9,7 @@ entry_condition:
   when: whenever the owner takes the next step
   who: agent
 review_by: 2027-01-25
-estate_growth_exempt: >-
-  Owner-chosen archive of road-to-the-question-only-the-owner-can-answer: its deferred steps wait on owner
-  blocker(s) interview-suffix-form-is-an-owner-decision, intake-band-shift-needs-a-baseline, ledger-change-needs-hook-bundle-headroom and are parked here instead of left active. The parent
-  is archived in the same change, so the active count drops by one.
+estate_growth_exempt: concern_count +1 for the `intake-pass` hook concern, the owner's own choice in OQ-25 (2026-10-28) of a shipped default-on concern over a personal hook, which no existing concern can carry; earlier reason, kept — Owner-chosen archive of road-to-the-question-only-the-owner-can-answer — its deferred steps wait on owner blocker(s) interview-suffix-form-is-an-owner-decision, intake-band-shift-needs-a-baseline, ledger-change-needs-hook-bundle-headroom and are parked here instead of left active. The parent is archived in the same change, so the active count drops by one.
 ---
 # Road to the question only the owner can answer — carried
 
@@ -29,9 +26,9 @@ left to read as finished.
 
 ## Phase 1 — Deferred steps carried from road-to-the-question-only-the-owner-can-answer
 
-- [x] **3.1 Append the interview sentence automatically (owner demand).** Done 2026-10-28 per OQ-25: the `intake-pass` concern (`src/scripts/hooks/intake_pass_hook.ts`), on by default on every host's `user_prompt_submit`, names the intake pass on task prompts and leaves the owner-gap judgement to the agent.
+- [x] **3.1 Append the interview sentence automatically (owner demand).** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/intake_pass_hook.ts --> Done 2026-10-28 per OQ-25: the `intake-pass` concern (`src/scripts/hooks/intake_pass_hook.ts`), on by default on every host's `user_prompt_submit`, names the intake pass on task prompts and leaves the owner-gap judgement to the agent.
       verify: `npx vitest run tests/hooks/intake_pass_hook.test.ts` -> 0
-- [x] **3.2 Interview reachable outside the maintainer workspace (D2).** Done 2026-10-28 per OQ-26: `workspaces:` widened to `engineering` and `product` on the five consumer-safe interview artefacts; `challenge-me closure` stays maintainer-only (it runs `./scripts-run`).
+- [x] **3.2 Interview reachable outside the maintainer workspace (D2).** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Done 2026-10-28 per OQ-26: `workspaces:` widened to `engineering` and `product` on the five consumer-safe interview artefacts; `challenge-me closure` stays maintainer-only (it runs `./scripts-run`).
       verify: `./scripts-run src/scripts/lint_discovery_vocabulary` -> 0 once OQ-26 is answered and applied.
 - [ ] **3.3 Absence scored as unknown, plus a taste dimension (D5).** <!-- blocked-by: intake-band-shift-needs-a-baseline -->
       verify: G4 fixtures — "make it better", a taste-gap prompt and a full prompt land on three distinct outcomes.
