@@ -895,6 +895,17 @@ function _target_from_branch(branch: string): string {
     return branch.replace(/^release\//u, '');
 }
 
+/**
+ * The release-PR body for a changelog section, capped so the WRAPPED body fits
+ * GitHub's limit. The reserve is the wrapper's measured size, not a guess: a
+ * fixed 200 fell short of the 267-character wrapper and failed the 19.0.0 cut.
+ */
+export function release_pr_body(sectionBody: string, target: string): string {
+    const wrapper = [...pr_body_from_section('', target)].length;
+    const capped = _cap_body(sectionBody, GH_PR_BODY_LIMIT - wrapper, '`CHANGELOG.md` in this PR');
+    return pr_body_from_section(capped, target);
+}
+
 function _refresh_pr_body_from_head(branch: string, target: string): void {
     run(['git', 'pull', '--ff-only', REMOTE, branch], { check: false });
     const changelog = fs.readFileSync(CHANGELOG, 'utf-8');
@@ -902,8 +913,7 @@ function _refresh_pr_body_from_head(branch: string, target: string): void {
     if (!section) {
         die(`CHANGELOG.md at ${branch} head carries no section for ${target} — cannot derive PR body`);
     }
-    const capped = _cap_body(section!.body, GH_PR_BODY_LIMIT - 200, '`CHANGELOG.md` in this PR');
-    const body = pr_body_from_section(capped, target);
+    const body = release_pr_body(section!.body, target);
     const live = gh(['pr', 'view', branch, '--json', 'body', '-q', '.body'], { check: false });
     if (live.returncode === 0 && live.stdout.replace(/\r\n/gu, '\n').trim() === body.trim()) {
         return;
