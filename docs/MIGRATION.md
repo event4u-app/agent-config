@@ -57,6 +57,15 @@ ignored. The removed-keys tombstone still names it on stderr.
   An explicit empty list no longer switches the pack axis off.
 - `agent-config doctor --check rule-packs-legacy` is removed with the window.
 
+### An unset per-day council call cap no longer refuses
+
+`cli_call_budget` no longer seeds 50 calls per provider per day, and
+`ai_team.max_calls_per_day` defaults to `null`. An unset guard counts calls
+and admits them until the provider itself refuses. A written cap, `0`
+included, keeps its contract.
+
+- **To keep a cap:** set `cli_call_budget.max_calls_per_day.<provider>`.
+
 ## 18.0.0 — two projection keys are removed, and the surface is derived
 
 ✋ manual on hosts without a listing lever · 🔄 automatic everywhere else.
