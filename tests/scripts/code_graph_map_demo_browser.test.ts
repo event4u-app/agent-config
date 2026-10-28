@@ -103,6 +103,9 @@ describe('the demo map in a browser', () => {
             const r = await page.evaluate(() => (window as unknown as { __mapLabelBoxes: { boxes: Array<{ x: number; y: number; w: number; h: number }>; width: number; height: number } }).__mapLabelBoxes);
             expect(r.boxes.length, `@${width}`).toBeGreaterThan(3);
             expect(labelProblems(r.boxes, r.width, r.height), `@${width}`).toEqual({ outside: 0, overlapping: 0 });
+            // The labels were placed for the canvas as it stands: a layout made before the asides pinned is a layout for another width.
+            const live = await page.evaluate(() => (document.querySelector('.ops-graph') as HTMLElement).getBoundingClientRect().width);
+            expect(Math.abs(r.width - live), `@${width} drawn ${r.width} live ${live}`).toBeLessThanOrEqual(1);
             // Every label sits inside the visible graph: no sideways scroll hides one on a phone.
             const clipped = await page.evaluate(() => {
                 const view = document.querySelector('.ops-gscroll') as HTMLElement;

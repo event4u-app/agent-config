@@ -503,6 +503,8 @@ function renderAreaPage(id, key) {
             centre = el('div', { class: 'av-page' });
             main.appendChild(centre);
         }
+        // The asides are pinned before the page draws, so a graph measured while drawing gets the width it keeps.
+        applyAvPanes();
         if (!live && p && mod.emptyPage) {
             // A reader that ran and found nothing keeps the page: its one tab, its reader line, its legend (the handover's real state).
             var et = el('div', { class: 'lenses', role: 'tablist', 'aria-label': t('views') });
