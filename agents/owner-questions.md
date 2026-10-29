@@ -8,6 +8,20 @@ and the run that applies it links its PR.
 
 ## Open
 
+### OQ-42 — A preamble grant for the image rights floor
+
+- **Context:** round `inbox-2026-10-bk`. The image rights rule
+  (`image-likeness-and-rights`) is scoped to the `ai-image` pack, so on hosts that
+  ship every skill (claude-code, codex) the six image skills arrive without the
+  rights check they tell the agent to run. Adding `routes_to` for the six skills
+  fixes that and was ratified 2/2 by the council, but costs ~45 tokens in every
+  spawn's preamble, and `main` sits exactly at its zero-growth ceiling.
+- **Options:** (a) grant ~45 tokens in `src/config/preamble-payload-exceptions.json`
+  for this change; (b) name an offset elsewhere; (c) leave the floor pack-scoped.
+- **Recommendation:** (a) — it closes a gap in a rights floor; 45 tokens is the
+  cost of the frontmatter list alone.
+- **Blocks:** `later/road-to-records-that-match-their-code` 1.2.
+
 ### OQ-36 — Where a logging-route answer lives
 
 - **Context:** round `inbox-2026-10-bl`, your turn: the agent may ask at the start

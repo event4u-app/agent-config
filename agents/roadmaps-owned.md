@@ -122,6 +122,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-reach-reddit-session | later | ready | Reach — logged-in `old.reddit` via a human-exported session cookie |
 | road-to-reach-transcribe | later | ready | Reach — audio transcription when no caption track exists |
 | road-to-reach-twitter-login | later | ready | Reach — Twitter beyond a single tweet (timelines, search, threads) |
+| road-to-records-that-match-their-code | later | ready | Every item below ends with the record and the code saying the same thing, and a check that would have … |
 | road-to-regulatory-radar | later | draft | Answer one question with a number instead of an intuition: when someone asks "what do I have to do as … |
 | road-to-release-holds-that-refuse | later | later | A roadmap declares, in a form one evaluator reads, exactly which of its intermediate tree states must not be published … |
 | road-to-residual-interruption-measurement | later | later | Road to the residual-interruption measurement |

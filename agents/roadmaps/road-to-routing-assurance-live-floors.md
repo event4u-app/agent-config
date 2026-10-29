@@ -172,7 +172,7 @@ item created unless the null broke.
       `suggest_skill_for_task` returns the skill body (or a bounded excerpt with its
       id) so the MCP path needs no second `read_skill` call; default-off until the
       4.2 parity gate passes on it.
-      verify: `routing_arms --report` on the Phase 2 corpus shows MCP recall ≥ native − 0.05 and `parityVerdict` not breached.
+      verify: `jq -e '.parity.verdict.breached == false' <the --report --out file>` -> 0 (MCP recall ≥ native − 0.05 on the Phase 2 corpus)
 
 **Exit:** parity table exists for the full Phase 2 corpus on both paths.
 

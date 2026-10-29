@@ -200,7 +200,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`domain-safety-disclaimer`** — Advisory content (legal, medical, financial, consulting) — matching 'not X advice' disclaimer; refuse diagnosis/dosage
 - **`domain-safety-pii`** — Drafts/logs/exports with real customer/candidate data — redact direct IDs, placeholders, flag quasi-ID re-identification
 - **`domain-safety-retention`** — Data retention — jurisdiction gap, longest floor, honor DSR/audit holds; never delete under inquiry
-- **`external-code-graph-interop`** — Repo ships a code-graph index (graph.json-shaped or SCIP) — find with IT first for codebase-structure questions, then confirm with the source and a text search
+- **`external-code-graph-interop`** — Repo ships a code-graph index (graph.json or SCIP) — find with IT first for structure questions, confirm with the source before acting
 - **`external-reference-deep-dive`** — User names an external repo/file/URL as reference — fetch the actual tree and inspect; never summarize from README
 - **`fast-path-marker-visibility`** — Low-impact council fast-path — surface the transparency marker verbatim as the reply opener
 - **`framework-neutrality-in-generic-skills`** — Editing a generic skill/rule/command — no single-stack mandates; carve-out pointers instead

@@ -363,7 +363,7 @@ Readers name sinks and env **names** only — never a value, never a vendor API
 call (kill rows L-K1 to L-K4 below). Vendor names live in the sink catalogue,
 never in the graph core (ADR-298).
 
-- [x] **L.1 Sink catalogue as data.** One row per sink — Sentry, Datadog, New
+- [x] **L.1 Sink catalogue as data.** One row per sink — Sentry, Datadog, New <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/lanes/interfaces/log_sinks.ts -->
       Relic, OTel collector, Slack, Loki, Papertrail, syslog, stderr, file — with
       kind (remote/local), SDK packages per ecosystem, config keys, env names
       (`SENTRY_DSN`, `DD_*`, `NEW_RELIC_*`, `OTEL_*`, `LOG_CHANNEL`, `LOG_STACK`,

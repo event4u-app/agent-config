@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Repo ships a code-graph index (graph.json-shaped or SCIP) — find with IT first for codebase-structure questions, then confirm with the source and a text search"
+description: "Repo ships a code-graph index (graph.json or SCIP) — find with IT first for structure questions, confirm with the source before acting"
 triggers:
   - keyword: "scip"
   - keyword: "code-graph"
