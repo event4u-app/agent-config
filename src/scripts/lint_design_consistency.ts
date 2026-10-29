@@ -93,18 +93,17 @@ export function shadowRecord(content: string, relPath: string, roles: ControlRol
             rule: f.rule,
             line: f.line,
             message: f.message,
-            context: around((lines[f.line - 1] ?? '').trim(), f.message),
+            context: around(lines[f.line - 1] ?? '', f.column),
         })),
     };
 }
 
-/** A window of the line that keeps the control itself, however deep it sits. */
-function around(line: string, message: string): string {
-    if (line.length <= 200) return line;
-    const tag = /^raw (\w+)/.exec(message)?.[1];
-    const at = tag ? line.toLowerCase().indexOf(`<${tag}`) : -1;
-    const start = at < 0 ? 0 : Math.max(0, Math.min(at - 60, line.length - 200));
-    return line.slice(start, start + 200);
+/** At most 200 characters of the line, around this finding's own control. */
+function around(line: string, column: number | undefined): string {
+    if (line.trim().length <= 200) return line.trim();
+    const at = column ?? line.length - line.trimStart().length;
+    const start = Math.max(0, Math.min(at - 60, line.length - 200));
+    return line.slice(start, start + 200).trim();
 }
 
 export interface ShadowWindow {
@@ -149,9 +148,23 @@ export function shadowWindow(rows: readonly ShadowRecord[], now: Date, days = 14
 
 export type ControlRoleMap = Partial<Record<ControlRole, RoleEntry>>;
 
-function isShadowRecord(v: unknown): v is ShadowRecord {
-    const r = v as Partial<ShadowRecord> | null;
-    return typeof r === 'object' && r !== null && typeof r.at === 'string' && typeof r.file === 'string' && typeof r.raw_control === 'number';
+/** Why a parsed row cannot be read as evidence, or null when it can. */
+function rowDefect(v: unknown): string | null {
+    if (typeof v !== 'object' || v === null) return 'not a row';
+    const r = v as Partial<ShadowRecord>;
+    if (typeof r.at !== 'string' || Number.isNaN(Date.parse(r.at))) return '`at` is not a date';
+    if (typeof r.file !== 'string' || r.file === '') return '`file` is missing';
+    if (typeof r.raw_control !== 'number' || !Number.isInteger(r.raw_control) || r.raw_control < 0) return '`raw_control` is not a count';
+    if (r.findings !== undefined) {
+        if (!Array.isArray(r.findings)) return 'a finding is malformed';
+        const ok = (f: unknown) => {
+            const x = f as Partial<ShadowFinding> | null;
+            return typeof x === 'object' && x !== null && typeof x.rule === 'string' && Number.isInteger(x.line) && typeof x.message === 'string' && typeof x.context === 'string';
+        };
+        if (!r.findings.every(ok)) return 'a finding is malformed';
+    }
+    if (r.raw_control > 0 && (r.findings?.length ?? 0) !== r.raw_control) return 'a firing row without its findings';
+    return null;
 }
 
 /**
@@ -169,26 +182,30 @@ export function shadowReport(file: string, now: Date, days: number, json: boolea
         return { out: json ? `${JSON.stringify({ evidence: missing ? 'none' : 'unreadable', file, reason: why }, null, 2)}\n` : `${why}\n`, code: 1 };
     }
     const rows: ShadowRecord[] = [];
-    const rejected: number[] = [];
+    const rejected: Array<{ line: number; reason: string }> = [];
     text.split('\n').forEach((l, i) => {
         if (l.trim() === '') return;
+        let v: unknown;
         try {
-            const v: unknown = JSON.parse(l);
-            if (isShadowRecord(v)) rows.push(v);
-            else rejected.push(i + 1);
+            v = JSON.parse(l);
         } catch {
-            rejected.push(i + 1);
+            rejected.push({ line: i + 1, reason: 'not JSON' });
+            return;
         }
+        const defect = rowDefect(v);
+        if (defect === null) rows.push(v as ShadowRecord);
+        else rejected.push({ line: i + 1, reason: defect });
     });
     const w = shadowWindow(rows, now, days);
     const code = rejected.length > 0 ? 1 : 0;
     if (json) {
         const evidence = code === 0 ? 'complete' : 'incomplete';
-        return { out: `${JSON.stringify({ ...w, evidence, rejected_lines: rejected }, null, 2)}\n`, code };
+        return { out: `${JSON.stringify({ ...w, evidence, rejected_lines: rejected.map((x) => x.line), rejected }, null, 2)}\n`, code };
     }
     let out = `design-consistency shadow, ${w.days} days since ${w.since}: ${w.writes} UI write(s), ${w.firing} firing.\n`;
     if (rejected.length > 0) {
-        out += `${rejected.length} row(s) rejected: lines ${rejected.join(', ')} — the window is incomplete; read those rows before classifying.\n`;
+        out += `${rejected.length} row(s) rejected — the window is incomplete; read those rows before classifying:\n`;
+        for (const x of rejected) out += `  line ${x.line}: ${x.reason}\n`;
     }
     for (const f of w.firings) {
         out += `  ${f.at}  ${f.file}${f.head ? `  @${f.head.slice(0, 10)}` : ''}\n`;
@@ -205,6 +222,8 @@ export interface ConsistencyFinding {
     line: number;
     role: ControlRole;
     message: string;
+    /** Offset of the control's `<` within its line. */
+    column?: number;
     /** For sibling-metrics: the largest deviation in px across the compared metrics. */
     deviation_px?: number;
 }
@@ -272,6 +291,7 @@ export function consistencyFindings(
                 severity: 'P1',
                 file: relPath,
                 line: o.line,
+                column: o.column,
                 role: o.role,
                 message: `raw ${o.impl.slice(7)} — this project's ${o.role} is ${entry.canonical}`,
             });

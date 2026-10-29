@@ -160,6 +160,15 @@ describe('a shadow row carries what fired', () => {
         ]);
     });
 
+    it('two controls on one long line each get the context around their own position', () => {
+        const roles = { input: { canonical: 'Input', uses: 2, implementations: { Input: 2 }, outliers: [], defined: ['Input'], box_metrics: null } };
+        const gap = `<span>${'y '.repeat(200)}</span>`;
+        const r = shadowRecord(`<div><input name="first" />${gap}<input name="second" /></div>`, 'app/f.tsx', roles, new Date(0));
+        expect(r.findings).toHaveLength(2);
+        expect(r.findings![0]!.context).toContain('name="first"');
+        expect(r.findings![1]!.context).toContain('name="second"');
+    });
+
     it('a control deep in a long line stays in the recorded context', () => {
         const roles = { select: { canonical: 'Select', uses: 2, implementations: { Select: 2 }, outliers: [], defined: ['Select'], box_metrics: null } };
         const pad = `<div className="${'x '.repeat(200)}">`;
@@ -206,7 +215,27 @@ describe('the shadow report on the file as recorded', () => {
         const r = shadowReport(at(`${good}\n{not json\n${wrongShape}\n${good}\n`), now, 14, false);
         expect(r.code).toBe(1);
         expect(r.out).toContain('2 UI write(s), 0 firing');
-        expect(r.out).toContain('2 row(s) rejected: lines 2, 3');
+        expect(r.out).toContain('2 row(s) rejected');
+        expect(r.out).toContain('line 2: not JSON');
+        expect(r.out).toContain('line 3: `file` is missing');
+    });
+
+    it('a row that parses but cannot be read is rejected with its reason, never counted as complete', () => {
+        const rows = [
+            good,
+            JSON.stringify({ at: 'not a date', file: 'app/a.tsx', raw_control: 0 }),
+            JSON.stringify({ at: '2026-11-02T00:00:00Z', file: 'app/a.tsx', raw_control: 1 }),
+            JSON.stringify({ at: '2026-11-02T00:00:00Z', file: 'app/a.tsx', raw_control: 1, findings: [null] }),
+            JSON.stringify({ at: '2026-11-02T00:00:00Z', file: 'app/a.tsx', raw_control: -1 }),
+        ];
+        const r = shadowReport(at(`${rows.join('\n')}\n`), now, 14, false);
+        expect(r.code).toBe(1);
+        expect(r.out).toContain('1 UI write(s), 0 firing');
+        expect(r.out).toContain('4 row(s) rejected');
+        expect(r.out).toContain('line 2: `at` is not a date');
+        expect(r.out).toContain('line 3: a firing row without its findings');
+        expect(r.out).toContain('line 4: a finding is malformed');
+        expect(r.out).toContain('line 5: `raw_control` is not a count');
     });
 
     it('--json carries the rejected lines too', () => {

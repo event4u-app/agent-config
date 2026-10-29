@@ -76,6 +76,8 @@ export interface Occurrence {
     /** `native:<tag>` for an HTML element, the tag as written for a component. */
     impl: string;
     line: number;
+    /** Offset of the tag's `<` within its line. */
+    column: number;
     /** The element's `class` / `className` value, when one is written inline. */
     classes: string;
 }
@@ -138,10 +140,12 @@ export function occurrences(text: string): Occurrence[] {
         const role = roleOfTag(tag, attrs);
         if (role === null) continue;
         const isNative = /^[a-z]+$/.test(tag);
+        const at = m.index ?? 0;
         out.push({
             role,
             impl: isNative ? `native:${tag}` : tag,
-            line: lineOf(text, m.index ?? 0),
+            line: lineOf(text, at),
+            column: at - text.lastIndexOf('\n', at - 1) - 1,
             classes: classesOf(attrs),
         });
     }
