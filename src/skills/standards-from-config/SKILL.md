@@ -82,6 +82,11 @@ found", do not fabricate one).
    an inline / per-directory override) give two values, emit **two pointers with
    two values + their scopes** — never one ambiguous merged claim. A visible
    conflict is correct; a hidden flattened guess is the failure mode.
+   Instruction files (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`) are a conflict
+   source too: prose that contradicts a config is a second pointer, not a
+   correction of the first. A user correction repeated against the config
+   ("tabs, for the third time") is asked about — which one should change? —
+   never silently adopted over the config.
 5. **Stamp staleness.** Record each source's `config_mtime` (or content hash).
    The digest is stale when the config file's mtime/hash changes → re-derive. No
    human gate is needed (Class A is deterministic) — the digest is **regenerated
