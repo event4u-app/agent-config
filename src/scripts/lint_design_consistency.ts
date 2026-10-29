@@ -19,7 +19,8 @@
  * artefact → no finding, and the run says so: absence of the map is not
  * evidence of consistency.
  *
- * REPORT-ONLY. Exit 0 whatever it finds; 1 on an internal error. It runs in
+ * REPORT-ONLY. Exit 0 whatever it finds; 1 on an internal error, and for
+ * --shadow-report also when the evidence is missing or incomplete. It runs in
  * shadow (road-to-a-control-that-matches-its-neighbours 3.3) until the
  * activation policy's four conditions hold.
  *
@@ -58,7 +59,7 @@ export interface ShadowFinding {
     rule: ConsistencyFinding['rule'];
     line: number;
     message: string;
-    /** The source line, trimmed and capped at 200 characters. */
+    /** The source line, trimmed, at most 200 characters around the control. */
     context: string;
 }
 
@@ -92,9 +93,18 @@ export function shadowRecord(content: string, relPath: string, roles: ControlRol
             rule: f.rule,
             line: f.line,
             message: f.message,
-            context: (lines[f.line - 1] ?? '').trim().slice(0, 200),
+            context: around((lines[f.line - 1] ?? '').trim(), f.message),
         })),
     };
+}
+
+/** A window of the line that keeps the control itself, however deep it sits. */
+function around(line: string, message: string): string {
+    if (line.length <= 200) return line;
+    const tag = /^raw (\w+)/.exec(message)?.[1];
+    const at = tag ? line.toLowerCase().indexOf(`<${tag}`) : -1;
+    const start = at < 0 ? 0 : Math.max(0, Math.min(at - 60, line.length - 200));
+    return line.slice(start, start + 200);
 }
 
 export interface ShadowWindow {
@@ -138,6 +148,55 @@ export function shadowWindow(rows: readonly ShadowRecord[], now: Date, days = 14
 }
 
 export type ControlRoleMap = Partial<Record<ControlRole, RoleEntry>>;
+
+function isShadowRecord(v: unknown): v is ShadowRecord {
+    const r = v as Partial<ShadowRecord> | null;
+    return typeof r === 'object' && r !== null && typeof r.at === 'string' && typeof r.file === 'string' && typeof r.raw_control === 'number';
+}
+
+/**
+ * The reverse trigger's reading of one shadow file. Missing, unreadable or
+ * partly malformed evidence exits 1 and says so, so it can never be read as a
+ * clean window; valid rows beside a rejected one still count.
+ */
+export function shadowReport(file: string, now: Date, days: number, json: boolean): { out: string; code: number } {
+    let text: string;
+    try {
+        text = fs.readFileSync(file, 'utf8');
+    } catch (exc) {
+        const missing = (exc as NodeJS.ErrnoException).code === 'ENOENT';
+        const why = missing ? `no shadow file at ${file}: nothing was recorded, so there is no window to read` : `shadow file unreadable at ${file}: ${(exc as Error).message}`;
+        return { out: json ? `${JSON.stringify({ evidence: missing ? 'none' : 'unreadable', file, reason: why }, null, 2)}\n` : `${why}\n`, code: 1 };
+    }
+    const rows: ShadowRecord[] = [];
+    const rejected: number[] = [];
+    text.split('\n').forEach((l, i) => {
+        if (l.trim() === '') return;
+        try {
+            const v: unknown = JSON.parse(l);
+            if (isShadowRecord(v)) rows.push(v);
+            else rejected.push(i + 1);
+        } catch {
+            rejected.push(i + 1);
+        }
+    });
+    const w = shadowWindow(rows, now, days);
+    const code = rejected.length > 0 ? 1 : 0;
+    if (json) {
+        const evidence = code === 0 ? 'complete' : 'incomplete';
+        return { out: `${JSON.stringify({ ...w, evidence, rejected_lines: rejected }, null, 2)}\n`, code };
+    }
+    let out = `design-consistency shadow, ${w.days} days since ${w.since}: ${w.writes} UI write(s), ${w.firing} firing.\n`;
+    if (rejected.length > 0) {
+        out += `${rejected.length} row(s) rejected: lines ${rejected.join(', ')} — the window is incomplete; read those rows before classifying.\n`;
+    }
+    for (const f of w.firings) {
+        out += `  ${f.at}  ${f.file}${f.head ? `  @${f.head.slice(0, 10)}` : ''}\n`;
+        for (const x of f.findings) out += `      L${x.line}  ${x.message}\n      | ${x.context}\n`;
+    }
+    out += 'Classify each firing write as real or false; false / writes above 1 % returns the rule to shadow.\n';
+    return { out, code };
+}
 
 export interface ConsistencyFinding {
     rule: 'consistency-raw-control' | 'consistency-sibling-metrics';
@@ -274,27 +333,9 @@ function arg(args: string[], name: string): string | undefined {
 export function main(args: string[]): number {
     const json = args.includes('--json');
     if (args.includes('--shadow-report')) {
-        let rows: ShadowRecord[] = [];
-        try {
-            rows = fs
-                .readFileSync(path.resolve(SHADOW_REL), 'utf8')
-                .split('\n')
-                .filter((l) => l.trim() !== '')
-                .map((l) => JSON.parse(l) as ShadowRecord);
-        } catch {
-            rows = [];
-        }
-        const w = shadowWindow(rows, asOf(), Number(arg(args, '--days') ?? '14'));
-        if (json) process.stdout.write(`${JSON.stringify(w, null, 2)}\n`);
-        else {
-            process.stdout.write(`design-consistency shadow, ${w.days} days since ${w.since}: ${w.writes} UI write(s), ${w.firing} firing.\n`);
-            for (const f of w.firings) {
-                process.stdout.write(`  ${f.at}  ${f.file}${f.head ? `  @${f.head.slice(0, 10)}` : ''}\n`);
-                for (const x of f.findings) process.stdout.write(`      L${x.line}  ${x.message}\n      | ${x.context}\n`);
-            }
-            process.stdout.write('Classify each firing write as real or false; false / writes above 1 % returns the rule to shadow.\n');
-        }
-        return 0;
+        const r = shadowReport(path.resolve(SHADOW_REL), asOf(), Number(arg(args, '--days') ?? '14'), json);
+        process.stdout.write(r.out);
+        return r.code;
     }
     const dir = path.resolve(arg(args, '--dir') ?? 'src');
     const audit = path.resolve(arg(args, '--audit') ?? AUDIT_ARTEFACT_REL);

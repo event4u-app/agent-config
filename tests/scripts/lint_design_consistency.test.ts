@@ -1,13 +1,14 @@
 // road-to-a-control-that-matches-its-neighbours 3.1/3.2: the two consistency
 // findings, each with its positive case and its near-miss.
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { buildArtefact } from '../../src/cli/commands/uiAudit.js';
 import type { RoleEntry } from '../../src/scripts/_lib/control_roles.js';
-import { consistencyFindings, shadowRecord, shadowWindow } from '../../src/scripts/lint_design_consistency.js';
+import { consistencyFindings, shadowRecord, shadowReport, shadowWindow } from '../../src/scripts/lint_design_consistency.js';
 
 const REPO = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const CASES = path.join(REPO, 'tests', 'eval', 'frontend-corpus', 'cases');
@@ -157,6 +158,61 @@ describe('a shadow row carries what fired', () => {
                 context: '<select name="status"></select>',
             },
         ]);
+    });
+
+    it('a control deep in a long line stays in the recorded context', () => {
+        const roles = { select: { canonical: 'Select', uses: 2, implementations: { Select: 2 }, outliers: [], defined: ['Select'], box_metrics: null } };
+        const pad = `<div className="${'x '.repeat(200)}">`;
+        const r = shadowRecord(`${pad}<select name="late"></select></div>`, 'app/f.tsx', roles, new Date(0));
+        expect(r.findings![0]!.context).toContain('<select name="late">');
+        expect(r.findings![0]!.context.length).toBeLessThanOrEqual(200);
+    });
+});
+
+// The reverse trigger must never read missing or damaged evidence as a clean window.
+describe('the shadow report on the file as recorded', () => {
+    const now = new Date('2026-11-10T12:00:00Z');
+    const good = JSON.stringify({ at: '2026-11-02T00:00:00Z', file: 'app/a.tsx', would_fire: {}, raw_control: 0, deviations_px: [] });
+    const at = (text?: string) => {
+        const d = fs.mkdtempSync(path.join(os.tmpdir(), 'shadow-report-'));
+        const f = path.join(d, 'shadow.jsonl');
+        if (text !== undefined) fs.writeFileSync(f, text);
+        return f;
+    };
+
+    it('a clean file reports its window and exits 0', () => {
+        const r = shadowReport(at(`${good}\n${good}\n`), now, 14, false);
+        expect(r.code).toBe(0);
+        expect(r.out).toContain('2 UI write(s), 0 firing');
+    });
+
+    it('a missing file is no evidence, not an empty window', () => {
+        const r = shadowReport(at(), now, 14, false);
+        expect(r.code).toBe(1);
+        expect(r.out).toContain('no shadow file');
+        expect(r.out).not.toContain('0 UI write(s)');
+    });
+
+    it('an unreadable file is reported, not read as empty', () => {
+        const f = at();
+        fs.mkdirSync(f);
+        const r = shadowReport(f, now, 14, false);
+        expect(r.code).toBe(1);
+        expect(r.out).toContain('unreadable');
+    });
+
+    it('a malformed row is rejected by line, and the valid rows still count', () => {
+        const wrongShape = JSON.stringify({ at: '2026-11-03T00:00:00Z' });
+        const r = shadowReport(at(`${good}\n{not json\n${wrongShape}\n${good}\n`), now, 14, false);
+        expect(r.code).toBe(1);
+        expect(r.out).toContain('2 UI write(s), 0 firing');
+        expect(r.out).toContain('2 row(s) rejected: lines 2, 3');
+    });
+
+    it('--json carries the rejected lines too', () => {
+        const r = shadowReport(at(`{bad\n${good}\n`), now, 14, true);
+        expect(r.code).toBe(1);
+        expect(JSON.parse(r.out)).toMatchObject({ writes: 1, rejected_lines: [1], evidence: 'incomplete' });
     });
 });
 
