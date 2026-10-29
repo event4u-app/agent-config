@@ -23,3 +23,16 @@ measurement itself was within the granted ceiling (135,867 = 135,824 + 43).
 - **Who acted:** the repository owner, with `gh pr merge 2754 --squash --admin --match-head-commit <head>`.
 - **Subject:** `ratification_subject --files src/rules/image-likeness-and-rights.md dist/agent-src/rules/image-likeness-and-rights.md --rev 4257d0eb --base-ref 4257d0eb^1` — the same digest the council ratified in round 3 (`agents/evidence/ratifications/image-floor-routes-to-20261029.md`), so the bypass let through exactly the reviewed change.
 - **Consequence that stays open:** the grant remains unverified in the gate, so a later pull request whose payload step runs is refused until an independent approving review exists or the grant is repaid (`later/road-to-records-that-match-their-code` 1.7).
+- **What the bypass did not do:** it did not satisfy the grant's approval
+  requirement. The owner's merge overrode the red check; it is not the
+  independent approving review the ledger asks for, and nothing records it as
+  one. The grant's `approval_event` was corrected on 2026-10-29 to read
+  "NONE VERIFIED" and to cite this record, after the after-the-fact council
+  review pointed out that the original wording described an approval that did
+  not happen.
+- **What later pull requests see:** the gate keeps refusing the unverified
+  grant, so every later pull request whose payload step runs is red on it —
+  by design, not drift. It ends when an independent approving review is
+  verified on a pull request carrying the grant, or when the payload returns to
+  the watermark 135,824 and `repaid_at` is recorded (1.7), before 2027-01-27.
+

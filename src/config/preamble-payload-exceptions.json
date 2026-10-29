@@ -9,7 +9,7 @@
       "granted_tokens": 43,
       "watermark": 135824,
       "reason": "image-likeness-and-rights gains routes_to for the six image skills that tell the agent to run it, so hosts that ship every skill also ship this rights floor. The only offsets available were cuts to other safety rules, which is the unsafe reduction this ledger exists for. Owner answer OQ-42 (a), 2026-10-29: agents/evidence/owner-directives/2026-10-29-oq-42-image-floor-grant.md.",
-      "approval_event": "an approving review, by someone other than its author, on the pull request that adds this entry (feat/oq-42-image-floor-grant)",
+      "approval_event": "NONE VERIFIED. Ordered by the owner (agents/evidence/owner-directives/2026-10-29-oq-42-image-floor-grant.md); no approving review by someone other than the author exists, and PR #2754 was merged under the owner's standing bypass (agents/evidence/bypass-records/2026-10-29-standing-bypass-2754.md). The gate therefore refuses this grant until such a review is verified or the grant is repaid.",
       "approved_at": "2026-10-29",
       "expires_at": "2027-01-27",
       "repaid_at": null
