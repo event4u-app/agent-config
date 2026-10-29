@@ -51,12 +51,20 @@ describe('a safety floor follows the skills it guards', () => {
         const unguarded = fs
             .readdirSync(RULES)
             .filter((f) => f.endsWith('.md') && typeof meta(f)['consequence_class'] === 'string' && guardedSkills(f).length === 0)
-            .filter((f) => Array.isArray(meta(f)['packs']) && excluded.has(f));
+            .filter((f) => Array.isArray(meta(f)['packs']));
         expect(unguarded.length).toBeGreaterThan(0);
+        for (const f of unguarded) expect(excluded.has(f), f).toBe(true);
     });
 
     it('ships the image floor with no pack active, since six skills link it', () => {
         expect(excludedRuleBasenames(RULES, NO_PACKS)).not.toContain('image-likeness-and-rights.md');
+        // Every skill that names the rule is routed, so dropping one route fails here.
+        const naming = fs.readdirSync(SKILLS).filter((d) => {
+            const f = path.join(SKILLS, d, 'SKILL.md');
+            return fs.existsSync(f) && fs.readFileSync(f, 'utf-8').includes('image-likeness-and-rights');
+        });
+        expect(naming.length).toBeGreaterThan(0);
+        expect([...guardedSkills('image-likeness-and-rights.md')].sort()).toEqual(naming.sort());
     });
 
     it('names only skills that exist', () => {
