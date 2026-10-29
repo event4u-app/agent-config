@@ -8,20 +8,6 @@ and the run that applies it links its PR.
 
 ## Open
 
-### OQ-42 — A preamble grant for the image rights floor
-
-- **Context:** round `inbox-2026-10-bk`. The image rights rule
-  (`image-likeness-and-rights`) is scoped to the `ai-image` pack, so on hosts that
-  ship every skill (claude-code, codex) the six image skills arrive without the
-  rights check they tell the agent to run. Adding `routes_to` for the six skills
-  fixes that and was ratified 2/2 by the council, but costs ~45 tokens in every
-  spawn's preamble, and `main` sits exactly at its zero-growth ceiling.
-- **Options:** (a) grant ~45 tokens in `src/config/preamble-payload-exceptions.json`
-  for this change; (b) name an offset elsewhere; (c) leave the floor pack-scoped.
-- **Recommendation:** (a) — it closes a gap in a rights floor; 45 tokens is the
-  cost of the frontmatter list alone.
-- **Blocks:** `later/road-to-records-that-match-their-code` 1.2.
-
 ### OQ-36 — Where a logging-route answer lives
 
 - **Context:** round `inbox-2026-10-bl`, your turn: the agent may ask at the start
@@ -177,6 +163,21 @@ and the run that applies it links its PR.
 - `four-dated-re-checks-are-calendar-bound` (corpus cadence): waits on calendar dates.
 
 ## Answered
+
+### OQ-42 — A preamble grant for the image rights floor
+
+- **Context:** round `inbox-2026-10-bk`. The image rights rule
+  (`image-likeness-and-rights`) is scoped to the `ai-image` pack, so on hosts that
+  ship every skill (claude-code, codex) the six image skills arrive without the
+  rights check they tell the agent to run. Adding `routes_to` for the six skills
+  fixes that and was ratified 2/2 by the council, but costs ~45 tokens in every
+  spawn's preamble, and `main` sits exactly at its zero-growth ceiling.
+- **Options:** (a) grant ~45 tokens in `src/config/preamble-payload-exceptions.json`
+  for this change; (b) name an offset elsewhere; (c) leave the floor pack-scoped.
+- **Recommendation:** (a) — it closes a gap in a rights floor; 45 tokens is the
+  cost of the frontmatter list alone.
+- **Blocks:** `later/road-to-records-that-match-their-code` 1.2.
+- **Answered 2026-10-29:** "OQ-42: a, gib die Tokens frei und setz es um" — option (a). Applied on `feat/oq-42-image-floor-grant`: `routes_to` added, grant `oq-42-image-floor-routes-to` (43 tokens, expires 2027-01-27) recorded; the ledger still needs an independent approving review on that pull request. <!-- md-language-check: ignore -->
 
 ### OQ-32 — May the self-repair loop propose a change to the user's own project?
 

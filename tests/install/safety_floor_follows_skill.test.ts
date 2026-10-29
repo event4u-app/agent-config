@@ -56,6 +56,16 @@ describe('a safety floor follows the skills it guards', () => {
         for (const f of unguarded) expect(excluded.has(f), f).toBe(true);
     });
 
+    it('ships the image floor with no pack active, routed to every skill that names it (OQ-42)', () => {
+        expect(excludedRuleBasenames(RULES, NO_PACKS)).not.toContain('image-likeness-and-rights.md');
+        const naming = fs.readdirSync(SKILLS).filter((d) => {
+            const f = path.join(SKILLS, d, 'SKILL.md');
+            return fs.existsSync(f) && fs.readFileSync(f, 'utf-8').includes('image-likeness-and-rights');
+        });
+        expect(naming.length).toBeGreaterThan(0);
+        expect([...guardedSkills('image-likeness-and-rights.md')].sort()).toEqual(naming.sort());
+    });
+
     it('names only skills that exist', () => {
         for (const f of floors) {
             for (const s of guardedSkills(f)) expect(fs.existsSync(path.join(SKILLS, s, 'SKILL.md')), `${f} -> ${s}`).toBe(true);

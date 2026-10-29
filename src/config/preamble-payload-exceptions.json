@@ -3,7 +3,18 @@
   "schema_version": 1,
   "registered_at": "2026-09-11",
   "owner": "maintainer",
-  "exceptions": [],
+  "exceptions": [
+    {
+      "id": "oq-42-image-floor-routes-to",
+      "granted_tokens": 43,
+      "watermark": 135824,
+      "reason": "image-likeness-and-rights gains routes_to for the six image skills that tell the agent to run it, so hosts that ship every skill also ship this rights floor. The only offsets available were cuts to other safety rules, which is the unsafe reduction this ledger exists for. Owner answer OQ-42 (a), 2026-10-29: agents/evidence/owner-directives/2026-10-29-oq-42-image-floor-grant.md.",
+      "approval_event": "an approving review, by someone other than its author, on the pull request that adds this entry (feat/oq-42-image-floor-grant)",
+      "approved_at": "2026-10-29",
+      "expires_at": "2027-01-27",
+      "repaid_at": null
+    }
+  ],
   "contract": {
     "ceiling_effect": "ceiling = max(design_ceiling, min(payload_at_base_ref, watermark) + granted_tokens, stored_ceiling?). The base is PINNED to the watermark while a grant is live, which is what stops the grant becoming permanent: without the pin, the grant raises the measurement, the next pull request measures the raised base, and the exceptional growth is the new ordinary one merge later.",
     "at_most_one_active": "At most ONE grant may be active at a time. Overlapping grants have no defined composition -- a later watermark can already contain an earlier grant's growth, so summing counts it twice. Repay or expire one before recording the next. (AI council 2026-09-11, blocking finding 1.)",
