@@ -6,12 +6,12 @@ execution:
   mode: phase-checkpoints
 entry_condition:
   what: >
-    A WIP slot is free under the cap of five. Phase 3 additionally waits on
-    OQ-31 (a memory shared across providers vs. the ADR-249 floor).
+    A WIP slot is free under the cap of five. OQ-35 is answered (2026-10-29),
+    so no phase waits on the owner.
   when: >
     The first run with a free slot after road-to-a-memory-that-arrives closes.
   who: >
-    none for Phases 1-2 -- the maintainer moves this file; the owner for Phase 3.
+    none -- the maintainer moves this file to agents/roadmaps/.
 review_by: 2026-12-15
 estate_growth_exempt: "+1 later_roadmaps: parked topic T4 of round inbox-2026-10-bi (worker memory); no owner exists for the worker knowledge slice, writer/taint fields or the audience contract."
 estate_offset_exempt: "Parked, not active. Owner search at 58d43073b7 (grep -rlF for resolveBundle, composeSpawnBrief, knowledge_refs, memory_signal origin over agents/roadmaps, later, stubs) returned nothing; neighbours own fork economics (later/road-to-a-cold-start-paid-once-carried) and graph memory (stubs/road-to-typed-knowledge-graph-memory)."
@@ -65,11 +65,15 @@ and no spawn template has a knowledge slot.
       verify: a fixture naming two curated paths logs `ref_count: 2` and emits
       no context.
 
-## Phase 3 — Delivery (OQ-31)
+## Phase 3 — Delivery, tiered by model (OQ-35)
 
 - [ ] **3.1 Deliver the slice through the proven SubagentStart channel**, in
       its own concern so the safety-floor constraints budget is never crowded,
-      after the shadow has two weeks of counts and OQ-31 is answered.
+      after the shadow has two weeks of counts. Owner answer OQ-35
+      (2026-10-29): own and frontier models get the shared, curated memory;
+      unpaid routes get no shared memory at all, only what the orchestrator
+      hands them for the task. No reopen of ADR-249 — the shared memory is the
+      existing curated store.
       verify: a delivery fixture plus the shadow's measured token delta.
 
 ## Risk Register

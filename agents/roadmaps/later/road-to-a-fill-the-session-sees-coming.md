@@ -72,6 +72,17 @@ continuity record no longer depends on reaching the 800k recycle threshold.
       injects a pointer and digest after `/clear`, not the record body.
       verify: a `/clear` fixture emits the pointer and no body.
 
+## Phase 3 — Credentials in the history expire (OQ-34)
+
+- [ ] **3.1 Placeholders in the history, originals for 7 days.** Owner answer
+      OQ-34 (2026-10-29): chat history stores placeholders for credentials; the
+      original values go to a separate local, untracked store the agent can
+      resolve while it works, and a purge deletes them after 7 days, leaving
+      only the placeholders. Reuse the existing egress rules and placeholder view.
+      verify: `npx vitest run tests/scripts/chat_history_secret_ttl.test.ts` -> 0 —
+      with a fixture where a key is resolvable on day 6 and only its placeholder
+      remains on day 8.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-29 | reviewer: claude/host -->
 

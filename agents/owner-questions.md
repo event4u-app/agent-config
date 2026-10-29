@@ -108,7 +108,18 @@ and the run that applies it links its PR.
   user-data layer, which is the owner's call
   (`road-to-a-memory-that-names-its-moment` § Decisions E12).
 
-### OQ-28 — May the self-repair loop propose a change to the user's own project?
+## Not owner questions — waits, or already settled in the tree
+
+- `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
+  `Resolved when` asks for both seats answering a real round. Councils ran 2/2 on
+  2026-10-24, so it looks settled. The agent verifies and closes it.
+- `default-flip-of-the-installed-layer` (installed-layer): waits on a host
+  observation and states itself "not a question".
+- `four-dated-re-checks-are-calendar-bound` (corpus cadence): waits on calendar dates.
+
+## Answered
+
+### OQ-32 — May the self-repair loop propose a change to the user's own project?
 
 - **Context:** round `inbox-2026-10-bi`. A convention that keeps not arriving
   ("tabs!") can only be fixed in the user's project (`.editorconfig`, a
@@ -121,8 +132,9 @@ and the run that applies it links its PR.
 - **Recommendation:** (a) — the proposal is a diff the user sees and accepts,
   never a silent write.
 - **Blocks:** `later/road-to-a-noted-that-is-a-write` Phase 3.
+- **Answered 2026-10-29:** the owner sent it to the AI council first; it decided 2/2 on (b): the self-repair Iron Law stays unchanged, and a convention that keeps not arriving goes through a separate proposal-only path — a diff the user sees and accepts — outside self-repair. Both seats ruled (a) a governance self-amendment of a recorded law, which the council may not take, while (b) gives the same reviewable diff without widening self-repair's remit. Applied in `later/road-to-a-noted-that-is-a-write` Phase 3.
 
-### OQ-29 — May agent-config read the host's own auto-memory?
+### OQ-33 — May agent-config read the host's own auto-memory?
 
 - **Context:** round `inbox-2026-10-bi`. Claude Code keeps per-project memory
   under `~/.claude/projects/*/memory`; `src/config/source-registry.json` lists it
@@ -133,8 +145,9 @@ and the run that applies it links its PR.
 - **Recommendation:** (a) — read-only, consent asked once, no writes into host
   memory.
 - **Blocks:** nothing executable; a future reader for correction recurrence.
+- **Answered 2026-10-29:** "Ja, es darf lesen, auch ohne zustimmung. AC soll ja so gut wie möglich funktionieren. Aber schreiben darf es da nicht. - und ac bekommt das persönliche ja eh mit, in anderen chats." — read without a consent prompt; never write. The AI council had classed it owner-reserved and recommended (a) with consent. Applied in `later/road-to-a-noted-that-is-a-write` 1.3. <!-- md-language-check: ignore -->
 
-### OQ-30 — Should chat history redact credentials at rest whatever the egress mode?
+### OQ-34 — Should chat history redact credentials at rest whatever the egress mode?
 
 - **Context:** round `inbox-2026-10-bi`. `chat_history` is on by default and
   stores text in plaintext; the placeholder view exists but
@@ -146,8 +159,9 @@ and the run that applies it links its PR.
 - **Recommendation:** (a) — the storage risk exists today without any
   condition.
 - **Blocks:** nothing executable now.
+- **Answered 2026-10-29:** "Es wäre gut, wenn wir diese für eine gewisse zeit woanders speichern und sie dann in regelmäßigen abständen (z.b. nach 7 tagen) gelöscht werden. Ab da ist es dann so gut wie geschwärszt, aber bis dahin arbeitet der agent wie der nutzer es erwartet" — a fourth option: chat history stores placeholders; the original values sit in a separate local, untracked store the agent can resolve, and are purged after 7 days, after which only the placeholders remain. Applied in `later/road-to-a-fill-the-session-sees-coming` 3.1. <!-- md-language-check: ignore -->
 
-### OQ-31 — A memory shared across providers vs. the ADR-249 floor
+### OQ-35 — A memory shared across providers vs. the ADR-249 floor
 
 - **Context:** round `inbox-2026-10-bi`, your demand that subagents, councils
   and unpaid routes share one memory. ADR-249 rules out a cross-session
@@ -158,17 +172,7 @@ and the run that applies it links its PR.
   journal, default off; (c) decline the demand.
 - **Recommendation:** (a) — it serves the demand without a new store.
 - **Blocks:** `later/road-to-a-memory-each-worker-is-handed` Phase 3.
-
-## Not owner questions — waits, or already settled in the tree
-
-- `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
-  `Resolved when` asks for both seats answering a real round. Councils ran 2/2 on
-  2026-10-24, so it looks settled. The agent verifies and closes it.
-- `default-flip-of-the-installed-layer` (installed-layer): waits on a host
-  observation and states itself "not a question".
-- `four-dated-re-checks-are-calendar-bound` (corpus cadence): waits on calendar dates.
-
-## Answered
+- **Answered 2026-10-29:** "kostenlose Modell-Routen sollten ja so wenig wie möglich und nur das nötigste wissen. Also da sollten sie keinen übergreifenden speicher haben, sondern der orchestrator sagt ihnen nur das was sie brauchen. eigene oder die frontier modelle, wo die daten sicher sind (zumindest sicherer), die dürfen den gemeinsamen speicher nutzen" — option (a), tiered by model: unpaid routes get only what the orchestrator hands them for the task; own and frontier models may use the shared, curated file-first memory. No reopen of ADR-249: the shared memory is the existing curated store. Applied in `later/road-to-a-memory-each-worker-is-handed` Phase 3. <!-- md-language-check: ignore -->
 
 ### OQ-27 — The prompt optimizer's "Lyra" persona
 

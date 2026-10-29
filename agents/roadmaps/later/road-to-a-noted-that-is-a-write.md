@@ -7,13 +7,12 @@ execution:
 entry_condition:
   what: >
     road-to-a-correction-that-is-heard is archived (detector vocabulary and
-    subject capture exist), a WIP slot is free under the cap of five, and
-    OQ-28 (project-edit consent) is answered for Phase 3.
+    subject capture exist) and a WIP slot is free under the cap of five.
+    OQ-32 and OQ-33 are answered (2026-10-29), so no phase waits on the owner.
   when: >
     The run that archives road-to-a-correction-that-is-heard.
   who: >
-    none for Phases 1-2 -- the maintainer moves this file to agents/roadmaps/;
-    the owner for Phase 3 (OQ-28).
+    none -- the maintainer moves this file to agents/roadmaps/.
 review_by: 2026-12-15
 estate_growth_exempt: "+1 later_roadmaps: parked owner-gated half of round inbox-2026-10-bi topic T1; its executable half is the active road-to-a-correction-that-is-heard, closed in the same PR."
 estate_offset_exempt: "Parked, not active. Owner search at 58d43073b7 (grep -rlF for persistence-claim, TurnSnapshot, CLAUDE.local.md, detectAgentsMdShadow over agents/roadmaps, later, stubs) returned nothing."
@@ -43,6 +42,13 @@ pin because the detector needs the write paths the turn snapshot does not carry
       `notebook_path` for Edit, Write, MultiEdit and NotebookEdit; measure the
       hook-bundle bytes first (tight headroom).
       verify: a transcript fixture with a Write yields `"Write <path>"`.
+- [ ] **1.3 Read the host's auto-memory as a recurrence source.** Read-only,
+      no consent prompt (owner answer OQ-33, 2026-10-29): a correction the host
+      already recorded under `~/.claude/projects/*/memory` counts as an earlier
+      arrival. Never write there; give `host-memory` in
+      `src/config/source-registry.json` its reader.
+      verify: `npx vitest run tests/scripts/host_memory_reader.test.ts` -> 0 — with a
+      fixture memory dir read and a test that no write reaches it.
 - [ ] **1.2 Subject-count index.** A derived `_subject-index.json` beside the
       target index in `self_repair_store.ts`.
       verify: three records with different fingerprints and one subject count 3.
@@ -71,11 +77,13 @@ pin because the detector needs the write paths the turn snapshot does not carry
       verify: a 30-sentence DE/EN corpus where a too-strong rung is the failing
       direction.
 
-## Phase 3 — Proposing the config change (OQ-28)
+## Phase 3 — Proposing the config change (OQ-32)
 
-- [ ] **3.1 Propose the convention as a project diff.** Only after OQ-28 lets
-      the self-repair loop touch a user's project with consent; the proposal is
-      a diff the user accepts, never a silent write.
+- [ ] **3.1 Propose the convention as a project diff, outside self-repair.**
+      AI council decision OQ-32 (2026-10-29, 2/2, option b): the self-repair
+      Iron Law stays unchanged; a convention that keeps not arriving goes
+      through a separate proposal-only path that emits a diff the user sees and
+      accepts, never a silent write and never from the self-repair loop.
       verify: a fixture where the proposal is emitted and no file changes
       without the accept.
 
