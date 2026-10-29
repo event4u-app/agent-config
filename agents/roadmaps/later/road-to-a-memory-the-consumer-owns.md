@@ -201,7 +201,7 @@ saves them.
 - [ ] **9.6 Repair the 79 clipped bodies.** `check_memory` now warns
       `truncated-at-limit` on 79 curated entries; give each a `description`
       (9.4) or a complete body.
-      verify: `check_memory --path agents/memory` reports 0 `truncated-at-limit`.
+      verify: `./scripts-run src/scripts/check_memory --path agents/memory` -> /^(?![\s\S]*truncated-at-limit)/
 
 ## Decisions
 

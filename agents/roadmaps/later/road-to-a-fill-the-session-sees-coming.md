@@ -58,7 +58,7 @@ continuity record no longer depends on reaching the 800k recycle threshold.
       still describes `quota-notice` as "one per session at 80 % context fill";
       since `road-to-a-memory-that-arrives` 2.1 it repeats every prompt. The
       manifest is hook plumbing, so the edit ships with a ratification artifact.
-      verify: `check_kernel_edit_ratified` green with the artifact in the diff.
+      verify: `./scripts-run src/scripts/check_kernel_edit_ratified --base origin/main` -> 0 with the artifact in the diff.
 - [ ] **1.3 Drop the ×1,500 estimate.** `context-hygiene-mechanics.md` points
       at the measured notice instead of a message-count estimate.
       verify: reference check green.

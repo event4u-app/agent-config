@@ -72,7 +72,7 @@ the pin: 8 of the 10 trigger phrases `recurring-criticism.md` lists do not fire
       convention): propose as a diff" row above Rule; `standards-from-config`
       names instruction-file prose as a conflict source and says that a repeat
       that contradicts the config is asked, never capitulated to.
-      verify: `lint-skills` green on both skills.
+      verify: `task lint-skills` -> 0 on both skills.
 
 ## Decisions
 
