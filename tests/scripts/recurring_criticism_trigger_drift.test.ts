@@ -26,7 +26,7 @@ function triggers(): string[] {
     if (m === null) {
         throw new Error(`no frontmatter in ${RULE}`);
     }
-    const fm = YAML.parse(m[1]) as { triggers?: Array<{ phrase?: string }> };
+    const fm = YAML.parse(m[1] ?? '') as { triggers?: Array<{ phrase?: string }> };
     return (fm.triggers ?? []).map((t) => t.phrase ?? '').filter((p) => p.length > 0);
 }
 
@@ -44,7 +44,7 @@ describe('recurring-criticism triggers stay in step with detectUserReport', () =
 
     it.each(phrases)('trigger %j fires the user-report detector', (phrase) => {
         if (phrase in ALLOWLIST) {
-            expect(ALLOWLIST[phrase].length).toBeGreaterThan(0);
+            expect(ALLOWLIST[phrase]?.length ?? 0).toBeGreaterThan(0);
             return;
         }
         expect(
