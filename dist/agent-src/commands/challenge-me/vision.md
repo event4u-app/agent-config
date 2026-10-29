@@ -12,6 +12,8 @@ suggestion:
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
+  - engineering
+  - product
 packs:
   - product-reasoning
 ---

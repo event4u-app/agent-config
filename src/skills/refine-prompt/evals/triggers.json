@@ -1,0 +1,63 @@
+{
+    "skill": "refine-prompt",
+    "last_eval": "2026-10-29",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-29 when road-to-a-prompt-that-deepens-not-widens-carried changed this skill's guidance. Exemplars are free-form task prompts handed to this agent or to /work that need acceptance criteria, assumptions and a confidence band before planning, in English and German. Near-misses are prompt work owned by a neighbour: rewriting a prompt for another AI (prompt-optimizer), designing prompts inside an LLM application (prompt-engineering-patterns), and refining a Jira ticket (refine-ticket). Counterexamples guard 'prompt' as a shell prompt and a plain question about the codebase.",
+    "queries": [
+        {
+            "q": "/work \"add CSV export to the reports page\"",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "is this prompt clear enough for the engine to plan from: 'make the dashboard faster'",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "turn my rough request into acceptance criteria and assumptions before you start building",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "baue eine Benachrichtigung, wenn ein Import fehlschlägt — ist der Prompt klar genug für die Engine?",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "before planning, reconstruct what I actually want from this one-liner: 'users should be able to share stuff'",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "rewrite my prompt so ChatGPT gives a better answer",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the prompt is for another AI, not this agent's task → prompt-optimizer"
+        },
+        {
+            "q": "design the system prompt and few-shot examples for our support chatbot",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "prompt design inside an LLM application → prompt-engineering-patterns"
+        },
+        {
+            "q": "refine Jira ticket PROJ-123 and tighten its acceptance criteria",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a tracked ticket, not a free-form prompt → refine-ticket"
+        },
+        {
+            "q": "change my zsh prompt to show the git branch",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'prompt' as a shell prompt"
+        },
+        {
+            "q": "where is the CSV export implemented?",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a lookup question, not a task to refine"
+        }
+    ]
+}

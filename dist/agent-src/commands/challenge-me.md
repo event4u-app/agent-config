@@ -13,6 +13,8 @@ suggestion:
   trigger_context: "user has a fuzzy plan/idea/feature draft and wants it sharpened interactively rather than reconstructed in one shot — also reachable via /grill-me alias"
 workspaces:
   - agent-config-maintainer
+  - engineering
+  - product
 packs:
   - product-reasoning
 ---
