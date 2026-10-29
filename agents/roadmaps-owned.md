@@ -49,6 +49,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-agent-throughput-recovery | later | later | A night run carries more finished, merged work, and the reason it stopped is visible in one reading. |
 | road-to-an-installed-layer-that-is-thinned | later | later | The layer a Claude install writes under `~/.claude/rules` is the thinned one, first as an opt-in and then as the … |
 | road-to-an-intake-the-queue-can-carry | later | later | A finding that already has an owner lands as a step and an `Arrivals:` line on that owner instead of … |
+| road-to-an-observation-provider-slot | later | later | `/analyze:reference --transfer=rebuild\|adapt` can take evidence from a runtime, browser or binary observation tool the consumer has configured — a reverse-engineering … |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe-carried | later | later | Every step road-to-an-update-that-installs-itself-only-when-it-is-safe deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-authority-routing-mechanism | later | later | A passing authorisation record always means the authority that produced it was the authority entitled to produce it: three authorities … |
 | road-to-benchmark-obsolescence-lifecycle | later | later | Road to benchmark-obsolescence lifecycle — detect when the model outgrew the rule |

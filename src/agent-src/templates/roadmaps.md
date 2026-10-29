@@ -626,7 +626,7 @@ that was never a judgement call.
     Prose after `verify:` stays legal and reads as MANUAL. Forbidding it
     would invalidate most clauses already in the tree at a stroke, and a
     grammar that reds every producer gets weakened until it finds nothing.
-    One parser reads the arrow (`src/scripts/_lib/verify_clause.ts`) and
+    One parser reads the arrow (`src/agent-src/scripts/verify_clause.ts`) and
     nothing parses it a second time. `closure_scan`'s `unfalsifiable-verify`
     family reports the clauses whose oracle cannot say no, and exits 0
     unconditionally — it is a listing, never a gate. The share per roadmap

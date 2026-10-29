@@ -1,0 +1,292 @@
+/**
+ * The `verify:` clause — one grammar, one parser, two importers.
+ *
+ * THE DEFECT THIS EXISTS TO NAME. A `verify:` clause names a command and never
+ * names what the command must produce. `verify: `cat notes.md`` is a legal,
+ * green, fully-conforming step field whose oracle cannot say no: the step gets
+ * flipped on a command that was never able to fail. Measured 2026-09-29 across
+ * the 22 active roadmaps: 230 clauses, 93 naming a command, and 6 naming an
+ * expectation — so 59.6% of clauses cannot even be RUN, and 97.4% state no
+ * oracle. The absence is the norm, not an outlier.
+ *
+ * The denominator moves with archival and is not the finding. An earlier
+ * reading the same day over 27 roadmaps gave 264 / 100 / 6; five archived in
+ * between, and the count of EXPECTATIONS did not move. That is why the ratio
+ * carries and the raw totals do not.
+ *
+ * ALL SIX predate this parser, and the split is the interesting part. Three sit
+ * in an unrelated roadmap and were written by an author nobody prompted. The
+ * other three are the verify lines of the roadmap that commissioned this work —
+ * which asserted, in the same document, that ZERO clauses carried an
+ * expectation. It was carrying three of them. This grammar therefore DOCUMENTS
+ * a form already in use; it does not introduce one, and the number here is the
+ * measured one so that it carries its producing command:
+ * `./scripts-run src/scripts/roadmap_verify_share`.
+ *
+ * THE GRAMMAR. The expectation half is OPTIONAL and attaches with the arrow
+ * `exec:` evidence already carries — not a new symbol:
+ *
+ *     verify: `<cmd>` -> 0          the command must exit 0
+ *     verify: `<cmd>` -> 2          … or any declared exit code
+ *     verify: `<cmd>` -> /regex/    the command's output must match
+ *     verify: `<cmd>`               runnable, but the oracle is unstated
+ *     verify: <prose>               MANUAL — a human reads it
+ *
+ * Prose stays legal deliberately. Forbidding it would have silently invalidated
+ * the large majority of lines already in the tree, and a grammar change that
+ * reds every existing producer gets weakened until it finds nothing. What the
+ * three shapes buy instead is that they are TELLABLE APART, which is what lets
+ * `closure_scan` report the unfalsifiable share as a number rather than an
+ * impression.
+ *
+ * WHY ONE PARSER. Its importers read this grammar — `roadmap_set_step`, `roadmap_verify_share`,
+ * `check_verify_expectation_delta` and `closure_scan`. A fourth, the
+ * run-continuation hook
+ * (which names the next step and its verify line) and `closure_scan` (which
+ * reports the share that cannot fail). A second copy of the arrow regex is how
+ * those two drift, and a drifted grammar fails silently: an expectation simply
+ * stops being read and the clause reads as unstated. {@link VERIFY_ARROW_SOURCE}
+ * is exported so a duplicate is detectable by a test rather than by a bug
+ * report.
+ */
+
+/** What a clause says the command must produce. */
+export type Expectation =
+    | { readonly kind: 'exit'; readonly code: number }
+    | { readonly kind: 'regex'; readonly source: string };
+
+export interface VerifyClause {
+    /**
+     * The command, or `null` for the prose (MANUAL) form. A clause with no
+     * command cannot be run by anything, which is precisely what makes it
+     * unfalsifiable rather than merely unstated.
+     */
+    readonly command: string | null;
+    /** The `-> 0` / `-> /re/` half, or `null` where the clause carries none. */
+    readonly expect: Expectation | null;
+    /**
+     * The clause body, whitespace-normalised — the clause, never the step.
+     *
+     * For the prose form that is the clause's own paragraph: a detector reading
+     * this must not see text the clause did not write.
+     */
+    readonly raw: string;
+}
+
+/**
+ * The expectation half, as a source string.
+ *
+ * Exported rather than kept private so the "nothing may parse the arrow a
+ * second time" test has something to compare against. Two alternatives only:
+ * a bare exit code, or a slash-delimited regex. A bare word (`-> green`) is
+ * deliberately NOT an expectation — it would read as one while deciding
+ * nothing, which is the defect wearing the fix's clothes.
+ */
+export const VERIFY_ARROW_SOURCE = '(?:->|→)[ \\t]*(\\d+|\\/.+\\/)[ \\t]*$';
+
+/** The arrow alone, anchored at both ends of a clause tail. */
+const ARROW_RE = new RegExp(`^${VERIFY_ARROW_SOURCE}`);
+
+/** A clause body split into its command head and its trailing expectation. */
+const TAIL_RE = new RegExp(`^(.*?)[ \\t]*${VERIFY_ARROW_SOURCE}`);
+
+/** The annotation form. Machine-readable, so it wins when both are present. */
+const HTML_RE = /<!--\s*verify:\s*(.*?)\s*-->/g;
+
+/**
+ * The step's LAST match, not its first.
+ *
+ * A step that DISCUSSES the clause carries the token before the clause that
+ * counts — the roadmap introducing this grammar shows `verify: `<cmd>` -> 0`
+ * in its own prose, two lines above its own verify line. First-match-wins
+ * parsed the illustration and reported its expectation as the step's. The
+ * clause is written last by convention, after the prose, so last wins.
+ */
+function lastMatch(re: RegExp, text: string): RegExpExecArray | null {
+    re.lastIndex = 0;
+    let found: RegExpExecArray | null = null;
+    let m = re.exec(text);
+    while (m !== null) {
+        found = m;
+        if (m.index === re.lastIndex) re.lastIndex += 1;
+        m = re.exec(text);
+    }
+    return found;
+}
+
+/**
+ * The backticked form, plus at most ONE token of expectation after it.
+ *
+ * The label is an ALTERNATION with a lookahead, not two independent optional
+ * backticks. The inherited form — ``` `?verify:`? ``` — let the parser skip the
+ * trailing backtick and use the LABEL's closing backtick to open the command,
+ * so ``` `verify:` stays legal … verify: `cmd` ``` captured the whole
+ * intervening sentence as the command. Nothing failed: a garbage command is
+ * still a string, and the hook printed it into a continuation message as the
+ * step's proof. The alternation alone did not fix it — the bare branch could
+ * start one character later and borrow the same backtick — so the bare branch
+ * carries `(?!`)`: a label followed by a backtick is the delimited form, which
+ * branch one already owns.
+ *
+ * The tail is bounded by the EXPECTATION'S OWN DELIMITERS, not by the end of
+ * the line. A caller may hand this parser a whole step BLOCK already joined
+ * into one line, so "the rest of the line" can mean "the rest of the step": an
+ * end-anchored tail would lose the expectation of any step that carries prose
+ * after its clause. A slash-delimited regex therefore runs to the first
+ * UNESCAPED closing `/` — one not preceded by an odd number of backslashes —
+ * that is followed by whitespace or the end of the text, and an exit code is
+ * one non-space token; both self-terminating, so the step may continue and
+ * `-> /[1-9]/ and then note the result` still yields `[1-9]`.
+ *
+ * The word UNESCAPED is load-bearing and was added on 2026-10-11 (step 1.1 of
+ * `road-to-svg-review-followups`, review claim C4). The tail used to be a lazy
+ * `\/.*?\/(?=\s|$)`, which stops at ANY `/` followed by a space — so a clause
+ * ending in ``-> /a\/ b/`` was cut at the escaped slash and parsed to the
+ * regex source `a\`. A pattern that deliberately matches a path separator is
+ * exactly the case that spells it `\/`, and the truncation was silent: a
+ * shorter regex is still a regex, so nothing reported the loss.
+ *
+ * It was capped at a single non-space token until 2026-10-11, which cost this
+ * form every expectation containing a space: `-> /Icon-only button/` parsed as
+ * a clause with NO expectation, and nothing reported the loss — the step simply
+ * read as unfalsifiable. The two forms now agree on every expectation rather
+ * than only the space-free ones; {@link VERIFY_ARROW_SOURCE} stays the single
+ * `$`-anchored decision about what an expectation IS, and this regex decides
+ * only where the tail ENDS. A bare word stays refused by the constant, so
+ * widening the boundary widened no grammar.
+ */
+const BACKTICKED_RE =
+    /(?:`verify:`|verify:(?!`))\s*`([^`]+)`[ \t]*((?:->|→)[ \t]*(?:\/(?:[^\\/]|\\.)*\/(?=\s|$)|\S+))?/g;
+
+/** Prose after the label. The MANUAL form; the body is bounded separately. */
+const PROSE_RE = /(?:`verify:`|verify:(?!`))[ \t]*/g;
+
+/**
+ * A prose clause runs to the end of its PARAGRAPH — never to the end of the step.
+ *
+ * "To end of line" is too little: a prose clause wraps, and the quantity it
+ * asserts can sit on the wrap. The rest of the step is far too much, and that
+ * was the live defect — a step's evidence block sits under its clause, so a
+ * clause that named no number inherited every number written beneath it, and
+ * `unfalsifiable-verify` reported 46 hits on quantities no clause had written.
+ *
+ * A blank line is the boundary because that is what separates a clause from the
+ * evidence recorded under it in this tree. Input with no newlines at all — a
+ * caller that already joined the block — degrades to the whole string, which is
+ * the previous behaviour and keeps such a caller working rather than silently
+ * truncating it at a boundary that is not there.
+ */
+function proseBody(rest: string): string {
+    const end = rest.search(/\n[ \t]*(?:\r?\n|$)/);
+    return (end === -1 ? rest : rest.slice(0, end)).replace(/\s+/g, ' ').trim();
+}
+
+/** Build an expectation from the already-isolated arrow value. */
+function fromValue(value: string): Expectation | null {
+    if (/^\d+$/.test(value)) return { kind: 'exit', code: Number(value) };
+    const re = /^\/(.+)\/$/.exec(value);
+    if (re === null) return null;
+    const source = re[1] as string;
+    // An expectation that cannot compile is not an oracle — it is a crash
+    // waiting for the first reader that tries to apply it.
+    try {
+        new RegExp(source);
+    } catch {
+        return null;
+    }
+    return { kind: 'regex', source };
+}
+
+/**
+ * Parse an expectation from a clause tail such as `-> 0` or `-> /re/`.
+ *
+ * @returns `null` when the tail carries no arrow, or carries one whose value is
+ * neither an exit code nor a slash-delimited regex.
+ */
+export function parseExpectation(tail: string): Expectation | null {
+    const m = ARROW_RE.exec(tail.trim());
+    return m === null ? null : fromValue(m[1] as string);
+}
+
+/** Split a command-bearing body into its command and its expectation. */
+function splitBody(body: string): { command: string; expect: Expectation | null } {
+    const m = TAIL_RE.exec(body);
+    if (m === null) return { command: body.trim(), expect: null };
+    const expect = fromValue(m[2] as string);
+    // An arrow whose value decides nothing leaves the whole body as the
+    // command, rather than silently truncating it at a `->` that was prose.
+    return expect === null ? { command: body.trim(), expect: null } : { command: (m[1] as string).trim(), expect };
+}
+
+/**
+ * Parse the `verify:` clause carried by `stepText`.
+ *
+ * @param stepText one step block — the line plus its continuation lines, which
+ * is where the tree conventionally writes the clause.
+ * @returns the clause, or `null` when the text carries no `verify:` token.
+ */
+export function parseVerifyClause(stepText: string): VerifyClause | null {
+    const html = lastMatch(HTML_RE, stepText);
+    if (html !== null) {
+        const body = (html[1] as string).trim();
+        // An EMPTY annotation is not a clause and must not mask one. Returning
+        // null here — the inherited behaviour — let `<!-- verify: -->` hide a
+        // real backticked clause further along the same step, and now that two
+        // readers consume this parser it would hide it from the share too.
+        if (body !== '') {
+            const { command, expect } = splitBody(body);
+            return { command: command === '' ? null : command, expect, raw: body };
+        }
+    }
+
+    const backticked = lastMatch(BACKTICKED_RE, stepText);
+    if (backticked !== null) {
+        const command = (backticked[1] as string).trim();
+        if (command !== '') {
+            const tail = (backticked[2] ?? '').trim();
+            return { command, expect: parseExpectation(tail), raw: `\`${command}\`${tail === '' ? '' : ` ${tail}`}` };
+        }
+    }
+
+    const prose = lastMatch(PROSE_RE, stepText);
+    if (prose === null) return null;
+    const body = proseBody(stepText.slice(prose.index + prose[0].length));
+    if (body === '') return null;
+    return { command: null, expect: null, raw: body };
+}
+
+/**
+ * The clause's command half only — `null` where the clause is prose or absent.
+ *
+ * The narrowing the withdrawn run-continuation hook wanted: it rendered a command for the
+ * next step, and a prose clause is not one. Kept here rather than at the call
+ * site so the hook imports a decision rather than re-deriving it.
+ */
+export function commandBearing(stepText: string): VerifyClause | null {
+    const clause = parseVerifyClause(stepText);
+    if (clause === null || clause.command === null) return null;
+    return clause;
+}
+
+/** Render an expectation back to its written form, for messages and evidence. */
+export function formatExpectation(expect: Expectation): string {
+    return expect.kind === 'exit' ? `-> ${String(expect.code)}` : `-> /${expect.source}/`;
+}
+
+/**
+ * The clause as a continuation-message line, empty when there is nothing to say.
+ *
+ * The expectation rides along with the command, and that is the point rather
+ * than a formatting nicety: a re-engagement told only the command can run it,
+ * see exit 0, and flip the box regardless — the whole defect the arrow exists
+ * to close. Told the expectation too, it has an oracle.
+ *
+ * Lives beside the grammar rather than at the one call site so that one module
+ * owns how a clause is read AND how it is written back, which is also what
+ * keeps the over-cap hook from paying these lines.
+ */
+export function renderVerifyLine(clause: VerifyClause | null): string {
+    if (clause === null) return '';
+    const expect = clause.expect === null ? '' : ` ${formatExpectation(clause.expect)}`;
+    return `\n  verify: ${clause.command ?? ''}${expect}`;
+}

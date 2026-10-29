@@ -25,6 +25,11 @@
  *      directory, one nested — resolve NEITHER and name both. Silently choosing
  *      is how a step gets flipped in the wrong plan.
  *
+ * `--verify` (owner question OQ-33, option b): before a flip to `[x]`, run the
+ * step's own `verify:` clause read-only (`verify_run.ts`) and WARN when it is red
+ * or could not be run. It never refuses — a measured window first; whether red
+ * should block is decided on those numbers.
+ *
  * Exit codes: 0 written · 1 refused (ambiguity, invariant, survival) · 2 usage.
  */
 import * as fs from 'node:fs';
@@ -33,6 +38,8 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { isCliEntry } from './_cli_entry.js';
+import { parseVerifyClause } from './verify_clause.js';
+import { type ClauseRun, runClause } from './verify_run.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -98,6 +105,37 @@ export function setGlyphOnLine(content: string, lineIndex: number, glyph: Glyph)
     if (m === null) throw new RoadmapWriteError(`line ${String(lineIndex + 1)} is not a checkbox line`);
     lines[lineIndex] = `${m[1]}${glyph}${m[3]}`;
     return lines.join('\n');
+}
+
+/** The step line plus its continuation lines — every following line indented deeper than the bullet. */
+export function stepBlock(content: string, lineIndex: number): string {
+    const lines = content.split('\n');
+    const head = lines[lineIndex] ?? '';
+    const indent = (head.match(/^\s*/) as RegExpMatchArray)[0].length;
+    const out = [head];
+    for (let i = lineIndex + 1; i < lines.length; i += 1) {
+        const l = lines[i] as string;
+        if (l.trim() === '' || (l.match(/^\s*/) as RegExpMatchArray)[0].length <= indent) break;
+        out.push(l);
+    }
+    return out.join('\n');
+}
+
+export type StepVerify = ClauseRun | { readonly outcome: 'no-command' };
+
+/** Run the step's `verify:` clause read-only. A step without a command-bearing clause reports `no-command`. */
+export function verifyStep(content: string, stepId: string, cwd: string): StepVerify {
+    const clause = parseVerifyClause(stepBlock(content, findStep(content, stepId).line));
+    if (clause === null || clause.command === null) return { outcome: 'no-command' };
+    return runClause({ ...clause, command: clause.command }, cwd);
+}
+
+/** One warning line for anything but a met check, or `null` when the check passed. */
+export function verifyWarning(v: StepVerify): string | null {
+    if (v.outcome === 'met') return null;
+    if (v.outcome === 'unmet') return '⚠️  verify: the step\'s check is RED — flipped anyway (warn-only, OQ-33)';
+    if (v.outcome === 'skipped') return `⚠️  verify: check not run (${v.reason}) — flipped unverified`;
+    return '⚠️  verify: the step names no runnable check — flipped unverified';
 }
 
 /** Acquire an advisory lock, or throw. `O_EXCL` is the exclusion; the mtime is the staleness clock. */
@@ -218,8 +256,9 @@ export function resolvePlan(roots: readonly string[]): string {
 
 export function main(argv: string[] = process.argv.slice(2)): number {
     const usage =
-        'usage: roadmap_set_step --file <roadmap.md> --step <id-prefix> --glyph <x| |~|->\n' +
-        '  Refuses on: an ambiguous step prefix, a changed step count, a write that did not survive.\n';
+        'usage: roadmap_set_step --file <roadmap.md> --step <id-prefix> --glyph <x| |~|-> [--verify]\n' +
+        '  Refuses on: an ambiguous step prefix, a changed step count, a write that did not survive.\n' +
+        '  --verify: before a flip to [x], run the step\'s read-only verify: check and warn on red; never refuses.\n';
     if (argv.includes('-h') || argv.includes('--help')) {
         process.stdout.write(usage);
         return 0;
@@ -236,6 +275,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         return 2;
     }
     try {
+        if (argv.includes('--verify') && glyph === 'x') {
+            const warning = verifyWarning(verifyStep(fs.readFileSync(path.resolve(file), 'utf8'), step, process.cwd()));
+            if (warning !== null) process.stderr.write(`${warning}\n`);
+        }
         const r = setStep(path.resolve(file), step, glyph as Glyph);
         process.stdout.write(
             `✅  ${path.basename(r.file)}:${String(r.line)} [${r.from}] → [${r.to}] · ` +
