@@ -97,7 +97,7 @@ export function ask(
     question: string,
     sources: readonly AskSource[],
     scope: Scope,
-    opts: { format?: AnswerFormat; commit?: string | null; lanes?: readonly LaneRunRecord[] } = {},
+    opts: { format?: AnswerFormat; commit?: string | null; lanes?: readonly LaneRunRecord[] | undefined } = {},
 ): AskResult {
     const intent = routeIntent(question);
     const rows: AskRow[] = [];
