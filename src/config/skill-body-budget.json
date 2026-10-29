@@ -159,7 +159,7 @@
     "laravel-validation": 3325,
     "laravel-websocket": 2519,
     "launch-readiness": 9661,
-    "learning-to-rule-or-skill": 16325,
+    "learning-to-rule-or-skill": 16477,
     "learning-tutor": 10027,
     "legal-intake-triage": 7217,
     "legal-practice-profile": 12921,
@@ -288,7 +288,7 @@
     "spreadsheet-authoring": 5556,
     "sql-writing": 3715,
     "stakeholder-tradeoff": 9443,
-    "standards-from-config": 7565,
+    "standards-from-config": 7915,
     "storybook-workshop": 13536,
     "subagent-orchestration": 19978,
     "supply-chain-intake": 10527,
@@ -879,6 +879,18 @@
       "old": 9612,
       "new": 10451,
       "reason": "road-to-a-prompt-that-deepens-not-widens 1.1-1.2: the per-task evidence table moves here as the single authority, adding non-code rows and an oracle-class column; verification-mechanics, loaded by a kernel rule, keeps a pointer so the always-rule closure shrinks."
+    },
+    {
+      "skill": "learning-to-rule-or-skill",
+      "old": 16325,
+      "new": 16477,
+      "reason": "A config / check rung above Rule: a consumer convention that keeps not arriving is proposed as a project config diff, the strongest carrier, before any prose rule. road-to-a-correction-that-is-heard 2.3."
+    },
+    {
+      "skill": "standards-from-config",
+      "old": 7565,
+      "new": 7915,
+      "reason": "Instruction-file prose named as a conflict source next to configs, and a repeated correction that contradicts the config is asked about, never capitulated to. road-to-a-correction-that-is-heard 2.3."
     }
   ]
 }
