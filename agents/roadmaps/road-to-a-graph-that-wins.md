@@ -333,7 +333,7 @@ obligation inference in any pack/selection verb · K7 no external flow-analyzer 
 K8 no Fact-IR rewrite before a second provider emits the same edge family.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-27 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-29 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -342,6 +342,7 @@ K8 no Fact-IR rewrite before a second provider emits the same edge family.
 | 3 | Breadth outruns reach | implementation | A language or framework added without a fixture and a corpus class widens the claim without evidence | K5 forbids it; each Phase 1 language carries both | Phase 1 — Reach, scoped (each language with fixture + corpus class) |
 | 4 | Honesty changes break the answers consumers already read | implementation | `partial_files`, `unknown` terms and caps change output the map, the stop-gate feeder and the MCP tools consume today | Non-empty answers stay byte-identical (4.3); omitted items are counted, never cut (4.5); the map copy changes in the same step (4.2) | Phase 4 — Answers that say what they do not know |
 | 5 | The graph reaches the review as prose and makes it worse | product | A consumer pastes graph output into the review prompt, the form S3 measured as degrading | Checks and line-range read lists only (5.1, 5.2); prose exists only as arm B2 of 3.5; the self-review gate stays advisory until 3.5 shows B1 > A | Phase 5 — The review reaches the graph |
+| 6 | A lane gap reads as noise and is ignored | product | `ask` lists a failed lane under `degraded`; an agent reading only the answer rows misses it | The answer drops to low confidence, which the envelope surfaces first (4.8) | Phase 4 — Answers that say what they do not know |
 
 ## Acceptance Criteria
 - [ ] AC-1 Corpus v3 and the F task suite are tracked in-tree with hashes before the engine sees the subject repos.

@@ -356,7 +356,7 @@ Offered by round `inbox-2026-10-at`, same terms:
   here.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-27 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-29 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -364,6 +364,7 @@ Offered by round `inbox-2026-10-at`, same terms:
 | 2 | The frozen baseline ages out of comparability | implementation | Model and harness versions move, so a baseline frozen now may not be reproducible against a later run | The un-park condition requires the protocol to be frozen in writing including the provider version, so a later run can state whether it reproduced it or not | Phase 0 — the parked baseline steps |
 | 3 | A null gets resolved by the party that wants an outcome | implementation | Both nulls below are resolvable in a direction that flatters whoever is running the harness | Both are quoted verbatim and may not be paraphrased on resolution; the Phase-3 scope restriction travels inside its own quote | What is preserved verbatim |
 | 4 | CLI-first runs stall on the subscription, not on a budget | product | Runs through the host CLI need no budget question (AC-7), but the CLI draws on the organisation's plan; on 2026-10-27 the org's monthly limit stopped two lanes mid-run, and the CLI's printed USD is an estimate a reader can mistake for billing | Each run record names the CLI version and labels the USD as the CLI's estimate; a run stopped by the plan limit resumes in its worktree from the last recorded unit instead of restarting | Acceptance Criteria |
+| 5 | Returning the body bloats every MCP suggestion | product | 4.4 puts a skill body into the suggestion answer, paid on every call | Only on a unique top hit, a bounded excerpt, default-off until the 4.2 gate passes on it | Phase 4 — Delivery-path parity (actionable now) |
 
 ## Acceptance Criteria
 

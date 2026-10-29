@@ -331,7 +331,7 @@ sits in blocker `b-map-remeasure-budget`, not in this table.
 - **Resolved when:** `agents/owner-questions.md` carries an O4 answer naming a per-run cap and an M3 margin, and 5.7's `--max-usd` value equals that cap.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-27 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-29 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -343,6 +343,7 @@ sits in blocker `b-map-remeasure-budget`, not in this table.
 | 6 | The re-measure costs more than it is worth | product | Real repositories multiply per-run cost | Coverage gate and dry run before spend; cap O4 | Phase 5 — A measure that can answer [D] |
 | 7 | Systems redesigned on wrong data | product | The sibling Systems view is built before verdicts are right | Phase 6 before the sibling's view steps; its design reads Phase 6's payload | Phase 6 — Systems that are right [E] |
 | 8 | Hotfix pre-empts the council on O3 | implementation | Phase 1 implements O3's recommendation before the council rules | 1.1 is a one-line revert; the regression test names the field, not the policy | Phase 1 — Privacy hotfix: no PR title in a committed file |
+| 9 | A credential reaches the committed map | implementation | A reader copies a config value (a DSN, a webhook) into a payload that is committed | 4.8 fails CI on DSN, webhook, token and inline-password shapes in any file under `agents/map/` | Phase 4 — The committed map as a generated artifact [C] |
 
 ## Acceptance Criteria
 

@@ -505,7 +505,7 @@ step K.n.
   stay scored guesses.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-27 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-29 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -518,6 +518,7 @@ step K.n.
 | 7 | The agent over-adapts to one bad day | product | One session's complaint becomes a rule | Distinct sessions and tasks, half-life, reviewed promotion | Phase 4 — Stage K: feedback that shapes the work |
 | 8 | Feedback learning becomes surveillance | product | Signals rank people | Topics never persons (KL28); user-owned and deletable | Phase 4 — Stage K: feedback that shapes the work |
 | 9 | Precedence contradicts the code | implementation | A stated order overrides locked team keys | Precedence copied from `agent_settings.ts`, tested in K.1 | Phase 4 — Stage K: feedback that shapes the work |
+| 10 | A logging reader leaks a value or misreads the default | implementation | L.2 reads `config/logging.php` and env files, where a DSN or webhook sits beside the name; on a project with few call sites the computed default is noise | Readers take names only (L-K1) and map-holds 4.8 fails on a value shape; L.4 says "no clear default" under a floor | Phase 5 — Stage L: where and how a project logs, and why |
 
 ## Acceptance Criteria
 
