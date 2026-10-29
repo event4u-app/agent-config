@@ -5,11 +5,11 @@
  * Pure: takes obligation rows, returns a verdict. A row counts as verified only
  * when every required case carries evidence and its verifier is not analyst
  * inference; `visible-only` never counts, because a screen proves the screen,
- * not the behaviour behind it. No rows is `unknown`, never `closed`.
+ * not the behavior behind it. No rows is `unknown`, never `closed`.
  */
 import type { EvidenceAuthority } from '../analysis_ledger.js';
 
-export const EQUIVALENCE_TIERS = ['inspired-by', 'ux', 'behaviour', 'protocol', 'byte'] as const;
+export const EQUIVALENCE_TIERS = ['inspired-by', 'ux', 'behavior', 'protocol', 'byte'] as const;
 export type EquivalenceTier = (typeof EQUIVALENCE_TIERS)[number];
 
 export const OBLIGATION_STATUSES = ['open', 'visible-only', 'verified', 'waived'] as const;
@@ -17,7 +17,7 @@ export type ObligationStatus = (typeof OBLIGATION_STATUSES)[number];
 
 export interface Obligation {
     id: string;
-    behaviour: string;
+    behavior: string;
     tier: EquivalenceTier;
     required_cases: string[];
     /** Per required case, the evidence ids that show it in the destination. */

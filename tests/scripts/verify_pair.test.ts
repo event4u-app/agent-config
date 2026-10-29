@@ -42,7 +42,7 @@ describe('verify_pair — a green is only a pair when a red came first', () => {
     });
 });
 
-describe('verify_pair — presence is classed wiring, never behaviour', () => {
+describe('verify_pair — presence is classed wiring, never behavior', () => {
     it.each([
         'ls src/scripts/foo.ts',
         'test -f docs/x.md',
@@ -61,7 +61,7 @@ describe('verify_pair — presence is classed wiring, never behaviour', () => {
         'curl -s localhost:8080/health',
         'wc -l src/x.ts',
         'test "$(cat x)" = y',
-    ])('%s is behaviour', (cmd) => {
-        expect(classifyClause(cmd)).toBe('behaviour');
+    ])('%s is behavior', (cmd) => {
+        expect(classifyClause(cmd)).toBe('behavior');
     });
 });

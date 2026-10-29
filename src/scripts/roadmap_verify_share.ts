@@ -55,6 +55,7 @@ import { fileURLToPath } from 'node:url';
 import { units } from './closure_scan.js';
 import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
 import { type Expectation, parseVerifyClause } from './_lib/verify_clause.js';
+import { type ClauseClass, classifyClause } from './_lib/verify_pair.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const _PROG = 'roadmap_verify_share';
@@ -148,6 +149,8 @@ export interface RunHit {
     readonly command: string;
     /** `-> 0` was implied: the clause states no expectation. */
     readonly implied: boolean;
+    /** `wiring` proves presence only, never behavior. */
+    readonly class: ClauseClass;
 }
 
 export interface RunSkip {
@@ -261,7 +264,7 @@ export function runReport(rootAbs: string, rootLabel: string, opts: RunOptions):
                 continue;
             }
             const expect: Expectation = clause.expect ?? { kind: 'exit', code: 0 };
-            if (meets(expect, res.status, res.stdout ?? '')) met.push({ ...at, implied: clause.expect === null });
+            if (meets(expect, res.status, res.stdout ?? '')) met.push({ ...at, implied: clause.expect === null, class: classifyClause(command) });
             else unmet += 1;
         }
     }
@@ -288,7 +291,7 @@ export function renderRun(r: RunReport): string {
     lines.push('');
     lines.push('## met-before-work');
     for (const m of r.met) {
-        lines.push(`- ${m.file}:${String(m.line)}  \`${m.command}\`${m.implied ? ' (no expectation; -> 0 implied)' : ''}`);
+        lines.push(`- ${m.file}:${String(m.line)}  \`${m.command}\` [${m.class}]${m.implied ? ' (no expectation; -> 0 implied)' : ''}`);
     }
     lines.push('');
     lines.push('## skipped (not run)');

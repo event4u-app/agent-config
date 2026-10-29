@@ -12,8 +12,8 @@ import {
 function row(over: Partial<Obligation> = {}): Obligation {
     return {
         id: 'o1',
-        behaviour: 'saving an empty title shows a validation error',
-        tier: 'behaviour',
+        behavior: 'saving an empty title shows a validation error',
+        tier: 'behavior',
         required_cases: ['happy', 'empty', 'too-long'],
         evidence: { happy: ['E1'], empty: ['E2'], 'too-long': ['E3'] },
         verifier: 'tests/feature/title.test.ts',
@@ -25,7 +25,7 @@ function row(over: Partial<Obligation> = {}): Obligation {
 
 describe('reconstruction obligation ledger', () => {
     it('names the equivalence tiers and statuses of the contract', () => {
-        expect(EQUIVALENCE_TIERS).toEqual(['inspired-by', 'ux', 'behaviour', 'protocol', 'byte']);
+        expect(EQUIVALENCE_TIERS).toEqual(['inspired-by', 'ux', 'behavior', 'protocol', 'byte']);
         expect(OBLIGATION_STATUSES).toEqual(['open', 'visible-only', 'verified', 'waived']);
     });
 

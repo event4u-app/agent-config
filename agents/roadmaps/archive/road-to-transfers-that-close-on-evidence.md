@@ -31,28 +31,28 @@ silently "does not exist".
 
 ## Phase 1 — Evidence carries authority and coverage
 
-- [x] **1.1 Authority axis.** `Evidence` in `src/scripts/analysis_ledger.ts`
+- [x] **1.1 Authority axis.** `Evidence` in `src/scripts/analysis_ledger.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/analysis_ledger.ts -->
       gains an optional `authority` (`upstream-artifact | controlled-replay |
       own-tree | external-claim | analyst-inference`), separate from `tier`.
       verify: `npx vitest run tests/scripts/analysis_ledger.test.ts` -> exit 0
-- [x] **1.2 Coverage axis.** `Evidence` gains an optional `coverage`
+- [x] **1.2 Coverage axis.** `Evidence` gains an optional `coverage` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/analysis_ledger.ts -->
       (`complete | partial | unknown`); a helper renders an absence finding as
       `unknown` unless its coverage is `complete`.
       verify: `npx vitest run tests/scripts/analysis_ledger.test.ts` -> exit 0
-- [x] **1.3 Vocabulary.** `analysis-loop.md` names both axes and states they are
+- [x] **1.3 Vocabulary.** `analysis-loop.md` names both axes and states they are <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       not the `evidence_basis` taxonomy (that one grades numbers).
       verify: `grep -c 'coverage' src/agent-src/contexts/execution/analysis-loop.md` -> /^[1-9]/
 
 ## Phase 2 — The obligation ledger
 
-- [x] **2.1 Contract.** `docs/contracts/reconstruction-obligations.md` defines an
-      obligation (behaviour, evidence ids, required cases, verifier, verifier
-      authority, status), the equivalence tiers (inspired-by, UX, behaviour,
+- [x] **2.1 Contract.** `docs/contracts/reconstruction-obligations.md` defines an <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+      obligation (behavior, evidence ids, required cases, verifier, verifier
+      authority, status), the equivalence tiers (inspired-by, UX, behavior,
       protocol, byte), the statuses (`open | visible-only | verified | waived`),
       and the non-goals (no proprietary code or assets, no access-control
       circumvention — the `code-provenance` rule already binds).
       verify: `grep -c 'visible-only' docs/contracts/reconstruction-obligations.md` -> /^[1-9]/
-- [x] **2.2 Validator.** `src/scripts/_lib/reconstruction_ledger.ts` closes an
+- [x] **2.2 Validator.** `src/scripts/_lib/reconstruction_ledger.ts` closes an <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/reconstruction_ledger.ts -->
       obligation only when every required case has evidence and the verifier's
       authority is not `analyst-inference`; an empty ledger reads `unknown`; a
       parity score counts only `verified`.
@@ -60,16 +60,16 @@ silently "does not exist".
 
 ## Phase 3 — Transfer modes on the reference door
 
-- [x] **3.1 Transfer modes.** `analyze/reference/command.md` gets
+- [x] **3.1 Transfer modes.** `analyze/reference/command.md` gets <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       § Transfer modes: `--transfer learn|adapt|rebuild|integrate` (named so it
       does not collide with the free-text `--goal`); for `adapt` and `rebuild`
-      a behaviour spec comes first, the destination is the run's local scope —
+      a behavior spec comes first, the destination is the run's local scope —
       any project, not only AC — and the result closes against the ledger.
       verify: `grep -c -- '--transfer' src/domains/analysis-workbench/analyze/reference/command.md` -> /^[1-9]/
-- [x] **3.2 Provenance link.** `code-provenance` points to the ledger for a
+- [x] **3.2 Provenance link.** `code-provenance` points to the ledger for a <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       conscious rebuild.
       verify: `grep -c 'reconstruction-obligations' src/rules/code-provenance.md` -> /^[1-9]/
-- [x] **3.3 Provenance row.** `provenance/harvests.jsonl` records the adopted
+- [x] **3.3 Provenance row.** `provenance/harvests.jsonl` records the adopted <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: provenance/harvests.jsonl -->
       mechanisms under an opaque source id.
       verify: `npx tsx src/scripts/lint_harvest_provenance.ts` -> exit 0
 

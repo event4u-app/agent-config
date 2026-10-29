@@ -81,11 +81,11 @@ is the run's local scope (§ 1) — any project, not only this package.
 |---|---|---|
 | `learn` (default) | findings and roadmap items, nothing built | the analysis document is written |
 | `adapt` | a mechanism re-derived to the destination's conventions | the obligation ledger closes |
-| `rebuild` | a feature or app reconstructed from its observed behaviour | the obligation ledger closes |
+| `rebuild` | a feature or app reconstructed from its observed behavior | the obligation ledger closes |
 | `integrate` | the reference used as-is — dependency, API, protocol | the interop probe (§ 3b) passes in the destination |
 
-For `adapt` and `rebuild` a **behaviour spec comes first**: before any
-destination code, every behaviour to reproduce becomes one row of the obligation
+For `adapt` and `rebuild` a **behavior spec comes first**: before any
+destination code, every behavior to reproduce becomes one row of the obligation
 ledger (`docs/contracts/reconstruction-obligations.md`),
 with its equivalence tier and required cases. The run closes only when
 `evaluateLedger` (`src/scripts/_lib/reconstruction_ledger.ts`) reads `closed` —

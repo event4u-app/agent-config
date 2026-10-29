@@ -1,6 +1,6 @@
 /**
  * The red-before-green pair for one command, as data — and whether its clause
- * can prove behaviour at all.
+ * can prove behavior at all.
  *
  * Pure: no fs, no spawn, no clock. Order comes from the array, exactly as in
  * `hasRedThenGreen`: the recorder appends, so index order is run order, and
@@ -20,7 +20,7 @@ export interface VerifyPair {
     readonly green_at: number | null;
 }
 
-export type ClauseClass = 'wiring' | 'behaviour';
+export type ClauseClass = 'wiring' | 'behavior';
 
 const norm = (cmd: string): string => cmd.trim().replace(/\s+/g, ' ');
 
@@ -89,5 +89,5 @@ export function classifyClause(cmd: string): ClauseClass {
         const target = tokens[tokens.length - 1] ?? '';
         if (/[cql]/.test(flags) && LISTING_TARGET_RE.test(target)) return 'wiring';
     }
-    return 'behaviour';
+    return 'behavior';
 }

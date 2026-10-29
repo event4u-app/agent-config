@@ -21,12 +21,12 @@ below is own analysis. <!-- harvest:evidence-authority-coverage-and-obligation-l
 
 ## An obligation
 
-One row per behaviour the destination must reproduce.
+One row per behavior the destination must reproduce.
 
 | Field | Means |
 |---|---|
 | `id` | stable identifier of the row |
-| `behaviour` | the behaviour, stated observably — input, action, expected outcome |
+| `behavior` | the behavior, stated observably — input, action, expected outcome |
 | `tier` | the equivalence tier this row claims (below) |
 | `required_cases` | the cases that must each be shown — happy path, boundary, error |
 | `evidence` | per case, the evidence ids that show it in the destination |
@@ -40,9 +40,9 @@ One row per behaviour the destination must reproduce.
 From loosest to strictest. A row names the tier it claims; a ledger never
 claims a stricter tier than its rows prove.
 
-1. **inspired-by** — the idea, re-derived; no behaviour is promised.
+1. **inspired-by** — the idea, re-derived; no behavior is promised.
 2. **ux** — a user meets the same flow and outcomes.
-3. **behaviour** — the same inputs produce the same observable outputs.
+3. **behavior** — the same inputs produce the same observable outputs.
 4. **protocol** — the same wire, file or API shape, interoperable with the source.
 5. **byte** — identical output bytes for the same input.
 
@@ -51,7 +51,7 @@ claims a stricter tier than its rows prove.
 - `open` — not yet shown.
 - `visible-only` — seen in a UI or a screenshot, not checked. **Never counts
   as verified and never counts toward parity.** Something on screen proves the
-  screen, not the behaviour behind it.
+  screen, not the behavior behind it.
 - `verified` — every required case has evidence and the verifier's authority
   is not `analyst-inference`.
 - `waived` — deliberately not reproduced, with a reason. Excluded from parity,
@@ -75,4 +75,4 @@ claims a stricter tier than its rows prove.
   binds: read, close the source, re-derive, record the borrow.
 - No circumvention of access control, licensing checks, DRM or terms that
   forbid reverse engineering.
-- A byte-tier claim is not a licence to reproduce a protected work.
+- A byte-tier claim is not a license to reproduce a protected work.
