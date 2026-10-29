@@ -1,21 +1,12 @@
 ---
 complexity: lightweight
-status: later
+status: ready
 tree_pin: 58d43073b7
 execution:
   mode: phase-checkpoints
-entry_condition:
-  what: >
-    road-to-a-correction-that-is-heard is archived (detector vocabulary and
-    subject capture exist) and a WIP slot is free under the cap of five.
-    OQ-32 and OQ-33 are answered (2026-10-29), so no phase waits on the owner.
-  when: >
-    The run that archives road-to-a-correction-that-is-heard.
-  who: >
-    none -- the maintainer moves this file to agents/roadmaps/.
 review_by: 2026-12-15
-estate_growth_exempt: "+1 later_roadmaps: parked owner-gated half of round inbox-2026-10-bi topic T1; its executable half is the active road-to-a-correction-that-is-heard, closed in the same PR."
-estate_offset_exempt: "Parked, not active. Owner search at 58d43073b7 (grep -rlF for persistence-claim, TurnSnapshot, CLAUDE.local.md, detectAgentsMdShadow over agents/roadmaps, later, stubs) returned nothing."
+estate_growth_exempt: "+1 active_roadmaps, owner-directed 2026-10-29 (\"ziehe die 3 von later in den normalen ordner\"): promoted from later/ with its two siblings of round inbox-2026-10-bi once OQ-32..OQ-35 were answered; this takes the active estate from 5 to 8, over the WIP cap of 5, by the owner's explicit instruction."
+estate_offset_exempt: "Promoted from later/ on owner instruction (2026-10-29); no active roadmap is archived to offset it. Owner search at 58d43073b7 (grep -rlF for persistence-claim, TurnSnapshot, CLAUDE.local.md, detectAgentsMdShadow over agents/roadmaps, later, stubs) returned nothing."
 relates:
   - slug: road-to-a-correction-that-is-heard
     relation: depends

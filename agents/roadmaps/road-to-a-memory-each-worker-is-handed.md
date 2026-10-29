@@ -1,20 +1,12 @@
 ---
 complexity: lightweight
-status: later
+status: ready
 tree_pin: 58d43073b7
 execution:
   mode: phase-checkpoints
-entry_condition:
-  what: >
-    A WIP slot is free under the cap of five. OQ-35 is answered (2026-10-29),
-    so no phase waits on the owner.
-  when: >
-    The first run with a free slot after road-to-a-memory-that-arrives closes.
-  who: >
-    none -- the maintainer moves this file to agents/roadmaps/.
 review_by: 2026-12-15
-estate_growth_exempt: "+1 later_roadmaps: parked topic T4 of round inbox-2026-10-bi (worker memory); no owner exists for the worker knowledge slice, writer/taint fields or the audience contract."
-estate_offset_exempt: "Parked, not active. Owner search at 58d43073b7 (grep -rlF for resolveBundle, composeSpawnBrief, knowledge_refs, memory_signal origin over agents/roadmaps, later, stubs) returned nothing; neighbours own fork economics (later/road-to-a-cold-start-paid-once-carried) and graph memory (stubs/road-to-typed-knowledge-graph-memory)."
+estate_growth_exempt: "+1 active_roadmaps, owner-directed 2026-10-29 (\"ziehe die 3 von later in den normalen ordner\"): promoted from later/ with its two siblings of round inbox-2026-10-bi once OQ-32..OQ-35 were answered; this takes the active estate from 5 to 8, over the WIP cap of 5, by the owner's explicit instruction."
+estate_offset_exempt: "Promoted from later/ on owner instruction (2026-10-29); no active roadmap is archived to offset it. Owner search at 58d43073b7 (grep -rlF for resolveBundle, composeSpawnBrief, knowledge_refs, memory_signal origin over agents/roadmaps, later, stubs) returned nothing; neighbours own fork economics (later/road-to-a-cold-start-paid-once-carried) and graph memory (stubs/road-to-typed-knowledge-graph-memory)."
 relates:
   - slug: road-to-a-cold-start-paid-once-carried
     relation: disjoint
