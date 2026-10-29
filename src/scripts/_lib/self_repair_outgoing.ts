@@ -29,8 +29,8 @@ export function retroBranch(fingerprint: string): string {
  * The body of the pull request and the issue, built from closed fields only:
  * the defect class, the intake source, the fingerprint, the occurrence count,
  * the resolved targets and the principle slug — all shape-validated, none of
- * them prose. The evidence span, the suggested surface, the mechanism and the
- * falsifier are free text whatever their field name, so they stay on the
+ * them prose. The evidence span, the suggested surface, the mechanism, the
+ * falsifier and the report subject are free text whatever their field name, so they stay on the
  * machine (D10 of road-to-one-upstream-that-checks-what-leaves); `renderReport`
  * still carries them for the local and Class-B case. No dates either: when a
  * defect was seen is activity on the reporting machine, not part of the claim.
