@@ -330,10 +330,12 @@ Design deviations the analysis found. Strict mode: the default is the handover,
       `code_graph_map_fidelity_matrices.test.ts` passes over them.
 - [x] AC-2 — Every route renders at 1440/375/320 in both themes with no
       document overflow, on this repository's map and the demo map.
-- [ ] AC-3 — Systeme: every payload row is reachable; filter counts equal the
+- [x] AC-3 — Systeme: every payload row is reachable; filter counts equal the
       payload's; a package detail answers why installed (all chains), direct vs
       transitive, required-by count, and functions per file.
-- [ ] AC-4 — The committed map contains no branch name and no bug id, title or
+      verify: `AGENT_CONFIG_BROWSER_SUITES=1 npx vitest run tests/cli/ui_render_asset_profile.test.ts -t "Systeme page"` -> /8 passed/ ("all chains" seen red against the shortest-path-only viewer, 2026-10-29)
+- [x] AC-4 — The committed map contains no branch name and no bug id, title or
       message.
-- [ ] AC-5 — Every Decisions row either still reads the handover default or
-      carries the owner's dated answer.
+      verify: `npx vitest run tests/scripts/code_graph_committed_map_privacy.test.ts` -> /passed/ (sensitivity: a planted `branches.chain` + bug record turns it red)
+- [x] AC-5 — Every Decisions row either still reads the handover default or
+      carries the owner's dated answer. (2026-10-29: D1–D6 all read "proposed — build 1:1 per handover", the handover default.)
