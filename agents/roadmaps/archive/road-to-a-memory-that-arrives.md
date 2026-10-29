@@ -32,13 +32,13 @@ test pins "a second turn none".
 
 ## Phase 1 — Memory that is skipped says so
 
-- [x] **1.1 `memory_lookup` reports stale skips.** Additive `skipped_stale`
+- [x] **1.1 `memory_lookup` reports stale skips.** Additive `skipped_stale` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/memory_lookup.ts -->
       count in the v1 envelope and the legacy JSON; `check_memory` raises a
       **warning** `store-reachability` when at least half the curated entries
       are stale (today an `info` per entry).
       verify: a fixture with three stale and one fresh entry asserts
       `skipped_stale === 3` and the warning; both fail at the pin.
-- [x] **1.2 `check_memory` flags a clipped body.** Warning
+- [x] **1.2 `check_memory` flags a clipped body.** Warning <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_memory.ts -->
       `truncated-at-limit` when a content field is exactly the one-fact limit
       long and does not end in sentence punctuation or a closing quote.
       verify: a 600-char fixture ending mid-word warns; a 600-char fixture
@@ -46,30 +46,30 @@ test pins "a second turn none".
 
 ## Phase 2 — The fill notice keeps saying it
 
-- [x] **2.1 One context line per prompt while over the band.**
+- [x] **2.1 One context line per prompt while over the band.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/quota_notice_hook.ts -->
       `src/scripts/hooks/quota_notice_hook.ts`: the context line no longer
       claims once per session; it fires on every `user_prompt_submit` while
       `context_used_pct` is at or over the band, at most once per prompt.
       verify: `tests/scripts/quota_notice_hook.test.ts` "a second turn none"
       becomes "a second turn again" (red first); a second hook run for the same
       prompt emits nothing.
-- [x] **2.2 The line names both exits with real numbers.** Text: context N %
+- [x] **2.2 The line names both exits with real numbers.** Text: context N % <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/quota_notice_hook.ts -->
       (used / size) — new task → `/clear`, same task → `/compact`; values from
       the ledger, never an estimate.
       verify: a test asserting `/clear`, `/compact` and the absolute size.
-- [x] **2.3 Pin the binding.** A test that `quota-notice` stays bound to
+- [x] **2.3 Pin the binding.** A test that `quota-notice` stays bound to <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       claude `user_prompt_submit` with a notification effect, so the axis that
       retired the warning once cannot retire it silently again.
       verify: the test fails against a manifest copy with the binding removed.
 
 ## Phase 3 — Quiet where there is nothing to recall, true where it is documented
 
-- [x] **3.1 No recall WARN without a store.** `memory_recall_hook.ts`: when
+- [x] **3.1 No recall WARN without a store.** `memory_recall_hook.ts`: when <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/memory_recall_hook.ts -->
       the store resolves to nothing, return allow and write the diagnostic to
       stderr only, without setting the latch.
       verify: a consumer fixture with an ADR file, an Edit call and no memory
       store produces empty stdout (a WARN at the pin).
-- [x] **3.2 Install-scope docs name the real default.** `README.md` and
+- [x] **3.2 Install-scope docs name the real default.** `README.md` and <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/rule_inject_hook.ts -->
       `docs/contracts/install-scopes.md` say global is the default, as
       `src/install/detect.ts` does; the stale hook-header claims that no hook
       reaches a subagent are corrected to the measured SubagentStart delivery.
