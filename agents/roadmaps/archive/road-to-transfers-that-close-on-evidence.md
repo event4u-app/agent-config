@@ -72,6 +72,8 @@ silently "does not exist".
 - [x] **3.3 Provenance row.** `provenance/harvests.jsonl` records the adopted <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: provenance/harvests.jsonl -->
       mechanisms under an opaque source id.
       verify: `npx tsx src/scripts/lint_harvest_provenance.ts` -> 0
+      reach exempt: the analysis ledger is driven by the analysis doors through command prose (ADR-288), with no TypeScript caller — appendLoop, nextLoop and ledgerSummary were already unreached before this step.
+      reach exempt: the analysis ledger is driven by the analysis doors through command prose (ADR-288), with no TypeScript caller — appendLoop, nextLoop and ledgerSummary were already unreached before this step.
 
 ## Stubs (need a window, network or the owner)
 

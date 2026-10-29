@@ -50,6 +50,9 @@ the judge, or touches the network.
       when it only proves presence (a route listed, a file exists, a menu entry),
       so presence is never read as behavior.
       verify: `npx vitest run tests/scripts/verify_pair.test.ts` -> 0
+      reach exempt: pairOf is the record shape the binding step writer would consume; wiring it is owner question OQ-29, so it stays unwired until that is answered. classifyClause is reached through roadmap_verify_share --run.
+      reach exempt: pairOf is the record shape the binding step writer would consume; wiring it is owner question OQ-29, so it stays unwired until that is answered. classifyClause is reached through roadmap_verify_share --run.
+      production entry: src/scripts/roadmap_verify_share.ts
 
 ## Stubs and owner decisions
 
