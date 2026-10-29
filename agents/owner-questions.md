@@ -8,6 +8,34 @@ and the run that applies it links its PR.
 
 ## Open
 
+### OQ-28 — External observation providers for app and feature reconstruction
+
+- **Context:** inbox round `inbox-2026-10-bj`, your turn: "es geht nicht nur um ac … ich
+  möchte einfach apps oder features aus apps kopieren können … nicht nur rea mechanismen,
+  sondern auch im web/repos". Web and repository research is already in the reference door
+  (ADR-288 D7). Runtime, browser and binary observation (a reverse-engineering MCP, device
+  automation) would install third-party tooling and needs network and a running target.
+  `road-to-transfers-that-close-on-evidence` ships the obligation ledger and the transfer
+  modes without them. <!-- md-language-check: ignore -->
+- **Options:** (a) an optional, opt-in provider slot the reference door uses when the
+  consumer has such a tool configured; (b) document how to feed their output in as
+  evidence, no integration; (c) leave it out.
+- **Recommendation:** (a), opt-in only and never installed by default — it serves your ask
+  without adding a dependency for anyone who does not reconstruct apps.
+- **Blocks:** nothing in the landed roadmap; the runtime/binary half of reconstruction.
+
+### OQ-29 — May `roadmap_set_step --verify` execute a step's check before flipping it?
+
+- **Context:** `road-to-work-that-checks-itself` (inbox round `inbox-2026-10-bj`) now
+  lists vacuous checks and records red-before-green as data. Making the step writer run
+  the `verify:` command and refuse the flip on red would make "done" machine-checked, but
+  it executes roadmap-authored commands; `roadmap-process-loop-run.md` currently says the
+  writer executes nothing.
+- **Options:** (a) run only read-only-allowlisted clauses, refuse on red; (b) run them
+  and warn only; (c) keep the writer model-carried.
+- **Recommendation:** (b) for a measured window, then decide (a) on the numbers.
+- **Blocks:** the binding half of `road-to-work-that-checks-itself`.
+
 ### OQ-21 — How consumers get a browser for `ui:render`
 
 - **Context:** `@playwright/test` is a devDependency, so no consumer install can
