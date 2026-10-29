@@ -161,7 +161,7 @@ and the run that applies it links its PR.
 - **Recommendation:** (a), opt-in only and never installed by default — it serves your ask
   without adding a dependency for anyone who does not reconstruct apps.
 - **Blocks:** nothing in the landed roadmap; the runtime/binary half of reconstruction.
-- **Answered 2026-10-29:** "OQ-28: a" — option (a): an optional, opt-in provider slot the reference door uses when the consumer has such a tool configured; never installed by default. Filed as OQ-28 in #2743, renumbered twice: round `inbox-2026-10-bi` had used OQ-28/29, then renumbered its own to OQ-32 to OQ-35. Planned in `later/road-to-an-observation-provider-slot` (parked: all five active slots are taken). <!-- md-language-check: ignore -->
+- **Answered 2026-10-29:** "OQ-28: a" — option (a): an optional, opt-in provider slot the reference door uses when the consumer has such a tool configured; never installed by default. Filed as OQ-28 in #2743, renumbered twice: round `inbox-2026-10-bi` had used OQ-28/29, then renumbered its own to OQ-32 to OQ-35. Planned in `road-to-an-observation-provider-slot`, activated by the owner above the WIP cap (`agents/evidence/owner-directives/2026-10-29-activate-observation-provider-slot.md`). <!-- md-language-check: ignore -->
 
 ### OQ-37 — May `roadmap_set_step --verify` execute a step's check before flipping it?
 
