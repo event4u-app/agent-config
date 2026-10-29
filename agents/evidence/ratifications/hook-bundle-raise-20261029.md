@@ -2,7 +2,7 @@
 proposed_by: road-to-a-correction-that-is-heard 1.1 and 1.3, owner invocation of inbox-2026-10-bi
 implemented_by: claude-opus-5.5 session on worktree-inbox-2026-10-bi
 reviewed_by: ai-council
-subject: e084c3763db8f932d37891ca5d2e43e38ad0ce0fa2702a47ab299b6a83a6a2a6
+subject: ddcab29f71eb75ba12140514ab9a90234826c38ecd2e5baba2fea6dc49daefa0
 providers: [anthropic, openai]
 verdict: confirmed-non-expanding
 seats:
@@ -17,7 +17,7 @@ effective_after: merge
 
 Hook-bundle ceiling raised 1,556,670 -> 1,557,800 B for the recurrence detector and the local-only subject field; no permission, tool or floor change.
 
-Verdict `confirmed-non-expanding`, derived from each seat's stance line; the prompt every seat answered is `agents/evidence/council/hook-bundle-raise-ratification-r5-20261029.question.md`, committed at `d7900210b395d91317d07fca92a780f0fc09ed99` and naming this record's subject.
+Verdict `confirmed-non-expanding`, derived from each seat's stance line; the prompt every seat answered is `agents/evidence/council/hook-bundle-raise-ratification-r6-20261029.question.md`, committed at `e8c7757d688e90a7a6312387190cbd41b58af8b9` and naming this record's subject.
 
 What this record does not establish: that a council produced the session it was rendered from. That file is the caller’s and council output is not kept, so on that point this record is exactly as trustworthy as a typed one. What it does establish is that the header says no more than the replies below, and that the prompt showed this content.
 
@@ -26,85 +26,80 @@ What this record does not establish: that a council produced the session it was 
 ### anthropic — `confirmed-non-expanding`
 
 ```text
-Matze, reviewing the final content at revision `7476c9da8e`.
+Reading the diff and the two prior critiques:
 
-## Agreement with prior reviewers
+## 1. Agreement with prior points
 
-**Agree with Reviewer A:**
-- No authority expansion - verified through test proof (both `payload-has-only-closed-fields` tests would fail if `subject` leaked) and explicit inclusion in `egressBlockedReason()`
-- Measurements correct: 1,557,734 B final, 66 B headroom
-- Pattern precision improved with first-person requirement
+**Agree with Reviewer A (all main findings):**
+- No authority/permission expansion detected ✓
+- `subject` is explicitly local-only, test-verified, sanitized ✓
+- The raise_log arithmetic is correct (1,557,828 - 1,556,650 = 1,178 B growth; ceiling 1,557,900 leaves 72 B) ✓
+- Re-base accounting is clean ✓
 
 **Agree with Reviewer B:**
-- The 1,128 B → 1,178 B documentation tells the optimization story but could confuse quick readers expecting just final numbers. The raise_log IS accurate (explicitly states "Measured 1,557,734 B on a base of 1,556,556 B"), but the intermediate step makes it denser than typical entries.
-- Subject extraction via "first backticked token anywhere" is imprecise (unrelated tokens could be selected), but this is documented as later work and doesn't block the raise since subject stays local-only.
+- The ceiling arithmetic reconciles internally ✓
+- Detection and safety-floor **coverage** do expand, even though permissions/authority do not ✓
+- The diff alone doesn't establish the mutation-test results or "six-of-ten coverage" claim — those are assertions in the log, not visible artifacts ✓
 
-**Disagree with Reviewer B on allowlist wording:** The phrase "ordinary word without an addressee" is imprecise for `schon mehrfach` (a bare count, not about addressing), but this is a documentation nit, not a technical error. The drift test records the actual reason per phrase.
+## 2. Disagreements
 
-## New points
+**Disagree with Reviewer B's "mixed" framing if it implies this should be refused:**
 
-1. **First-person pattern still matches some ordinary questions**: "How many times should I retry before giving up?" matches `how many times should I`. This is a known edge case - round 3 accepted it as non-blocking after fixing the purely third-person cases ("how many times does it retry?"). The improvement was selective, not perfect.
+Detection coverage expanding without permission expansion is exactly what safe instrumentation looks like. The log correctly names what was added (a combined recurrence pattern + subject capture); the fact that this widens when the detector fires is the feature working, not a hidden authority grant.
 
-2. **Optimization documentation is unusually thorough**: Most raise_logs state final numbers only. This one documents the merging step (1,274 B → 1,128 B) AND the precision fix (+50 B → 1,178 B final). More transparent, but also more complex to parse.
+**Disagree with Reviewer B's "Must fix, medium" requirement:**
 
-3. **Test proof is concrete**: The two must-not-fire cases aren't theoretical - they're the exact phrasings that fired in round 3 and are now pinned as regression guards.
+The raise_log already states "The self-repair user-report detector on the dispatch path: one combined recurrence pattern […] plus a `subject` capture." That IS the explicit disclosure Reviewer B asks for. Requiring a second sentence restating "detection coverage expands" when the log already describes exactly what the detector now catches is redundant.
 
-## Findings
+**Disagree that measurement evidence must be "attached":**
 
-### 1. Authority expansion: None
-- Subject field kept local-only (provably: test failures when probed for upstream inclusion)
-- Detection only, no new commands or git operations
-- Egress guard includes subject in redaction array
+The raise_log cites the gate command (`check_hook_bundle_composition`), the base revision (`965c4db02`), and the swap performed (main's own `self_repair.ts`). That's reproducible. "Attach the measurement" as a blocking requirement would mean every raise needs a second artifact; the log IS the measurement record.
 
-### 2. Raise_log accuracy: Accurate but verbose
-- Final measurements stated correctly: 1,557,734 B, 66 B headroom
-- Scope claim backed by named test failures
-- Round 3 outcome recorded accurately
-- The optimization narrative (1,274 → 1,128 → 1,178) is complete but denser than needed
+## 3. New points not raised in round 1
 
-### 3. Round 3 conditions: Met
-- Wording fixes: ✓ re-measured bundle, scoped claim, round 3 outcome recorded
-- Precision fix: ✓ first-person requirement added, false positives pinned as must-not-fire
+1. **Material procedural context:** This is Round 6 reviewing the exact same code change Round 5 already confirmed as non-expanding (both seats). The only difference is the re-base onto main's 2026-10-28 raise. That history strengthens confidence — two prior seats reviewed this code, neither found expansion.
 
-**Remaining limitations (documented, non-blocking):**
-- Some first-person questions match complaint patterns
-- Subject extraction is imprecise (later work)
-- Raise_log optimization narrative could be simpler
+2. **The pattern merge is subtle but present:** The raise_log claims the narrower `/\bhow many times (do|must|should) i\b/i` pattern was removed as now-subsumed. It's visible in the diff (line 516 is gone), but easy to miss. The new alternation at line 518 does subsume it via `|\bhow many times (do|must|should|have|will) (i|we)\b`.
 
-STANCE: confirmed-non-expanding | CONFIDENCE: high | DEALBREAKER: no
+3. **Reviewer B's `reportSubject()` concern is valid but out of scope:** The "potentially assigning an unrelated subject" issue is a code-quality observation, not a permission/authority finding. It belongs in implementation review, not a ratification gate. The function is bounded and sanitized; whether it picks the *right* token is downstream.
+
+4. **The "falsifier" allowlist reasoning isn't in the diff:** The raise_log claims "the other 4 are allowlisted with a reason (each needs a contextual constraint)." Where is that allowlist? If it's in `COMPLAINT_PATTERN_EXONERATIONS`, that data isn't changing in this diff, so the "4 allowlisted" claim is describing existing behavior, not new work. Worth clarifying but not blocking.
+
+---
+
+**STANCE: confirmed-non-expanding | CONFIDENCE: high | DEALBREAKER: no**
 ```
 
 ### openai — `confirmed-non-expanding`
 
 ```text
-Matze, **mixed: the supplied diff supports scoped non-expansion, but not an unqualified finding that the raise_log is accurate.** I have not independently run the tests or verified the digest.
+**Assessment: mixed.** The diff supports no new permission or outbound authority, but detection coverage and safety-floor reach both expand. The raise arithmetic is consistent; the empirical claims remain unverified from the supplied material.
 
-1. **Strongest supporting argument:** no shown change grants execution authority, permissions, or additional egress. In `egressBlockedReason()`, adding `record.subject` extends screening. The reported mutation tests support exclusion from the tested outgoing payloads and fingerprint.
+1. **Agreement with prior reviewers.** Reviewer B correctly distinguishes authority from behavioral reach: adding `record.subject` to `egressBlockedReason` (`self_repair.ts`, hunk at 273) lets additional content block egress. Reviewer A correctly identifies sanitization, bounding, and the absence of an explicit new outbound field in this diff.
 
-2. **Agreement with prior reviewers:** Reviewer B correctly distinguishes reported test evidence from independent verification, identifies remaining ordinary-question matches, and flags the globally selected backticked subject. Both reviewers correctly calculate final growth as **1,178 B** and headroom as **66 B**. Round 3’s conditions appear met **as summarized**; the original conditions are not supplied.
+2. **Disagreement.** Reviewer A overstates verification by calling the named tests real and their containment behavior established. Neither their contents nor execution results are supplied. Comments declaring “never rendered upstream” express intent; they do not prove every outgoing path excludes `subject`. Reviewer B’s arithmetic is correct: the **ceiling increases 1,136 B**, while **measured source growth is 1,178 B**, consuming 42 B of existing headroom.
 
-3. **Disagreement:** Reviewer A’s statement that screening would block `subject` if someone tried to send it overstates the guard: screening content does not enforce field exclusion. Its “raise_log accuracy: verified” conclusion also overlooks that `why_it_could_not_be_avoided` leaves **1,128 B** unlabeled as an intermediate measurement. Reviewer B’s narrower assessment is better supported.
+3. **Strongest argument.** The visible change adds a detector output and extends an existing blocking check; it introduces no visible authorization or sending operation. That supports a qualified finding of no authority expansion.
 
-4. **Strongest counter-argument and refinement:** first-person grammar does not establish a complaint: “how many times should I retry?” still matches. Also, `mergeRecord()` preserves `existing.subject` preferentially while subject stays outside the fingerprint. Combined with selecting the first backticked token anywhere, an unrelated subject can persist across merges. This is a metadata-quality concern before repeat counting depends on it, not demonstrated authority expansion.
+4. **Strongest counter-argument and new refinement.** The combined regex (`COMPLAINT_PATTERNS`, hunk at 513) recognizes bare `immer noch nicht`, including ordinary status questions such as “Ist der Build immer noch nicht fertig?” The expanded detector can therefore classify additional non-complaints. Also, the reported “first-person precision fix” cannot be assessed without its earlier version: the final regex still contains several alternatives without a first-person constraint. This is a verification gap, not proof that the historical claim is false.
 
-Concrete next steps:
+**Concrete next steps:**
 
-- **Documentation correction:** label 1,128 B as intermediate and 1,178 B as final; replace “each is an ordinary word without an addressee” with “each requires contextual constraints.”
-- **Deferred precision work:** add first-person ordinary-question corpus cases.
-- **Before repeat counting:** test unrelated backticks and conflicting subjects across merges.
-- Any gated-file correction needs a fresh digest; this assessment applies only to the supplied content.
+- **Must verify, medium:** Supply the composition output and mutation-test results tied to the stated revision and digest. Until then, describe the log as internally consistent.
+- **Must clarify, medium:** Record explicitly that permissions do not visibly expand, while detection and protective blocking coverage do.
+- **Deferred, low:** Test neutral recurrence language and unrelated backticked tokens before using `subject` for repeat counting.
 
-Overall: scoped non-expansion is supported; log wording and detector/subject precision remain limited.
+Summary: provisionally confirm no authority expansion; qualify the expanded coverage and unverified evidence claims. RTK.md was unavailable in the supplied working directory.
 
 STANCE: confirmed-non-expanding | CONFIDENCE: med | DEALBREAKER: no
 ```
 
 ## Notes recorded here rather than in the gated file
 
-- The raise_log's "1,274 B to 1,128 B" is the intermediate reading after the
-  pattern merge; the final growth, after round 3's precision fix added 50 B, is
-  1,178 B (1,557,734 − 1,556,556). Correcting it in the gated file would move
-  the digest again; both seats confirmed the final measurement.
+- Rounds 1-5 (2026-10-29) reviewed the same change on the older base; round 5
+  confirmed it 2/2. `main` then landed its own raise (intake-pass, OQ-25), the
+  branch merged it and re-applied this raise on top, and round 6 reviewed the
+  re-based content at subject `ddcab29f…`.
 - Deferred, owned by `later/road-to-a-noted-that-is-a-write` step 1.2: a
   first-person question ("how many times should I retry?") still matches, and
   the subject is the first backticked token anywhere and is kept on merge —
