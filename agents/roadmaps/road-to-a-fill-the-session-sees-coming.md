@@ -9,13 +9,11 @@ estate_growth_exempt: "+1 active_roadmaps, owner-directed 2026-10-29 (\"ziehe di
 estate_offset_exempt: "Promoted from later/ on owner instruction (2026-10-29); no active roadmap is archived to offset it. Owner search at 58d43073b7 (grep -rlF for quota-notice, context_used_pct, statusline:tap, compact-instructions over agents/roadmaps, later, stubs): only stubs/road-to-a-quota-notice-that-earned-its-bands (owns the band VALUES, not these surfaces) and stubs/road-to-compaction-survival-census (live-host census)."
 relates:
   - slug: road-to-a-memory-that-arrives
-    relation: depends
+    relation: extends
     note: "Needs its per-prompt notice (Phase 2)."
   - slug: road-to-a-quota-notice-that-earned-its-bands
     relation: disjoint
     note: "Owns the band values; nothing here changes them."
-depends:
-  - road-to-a-memory-that-arrives
 ---
 # Road to a fill the session sees coming
 

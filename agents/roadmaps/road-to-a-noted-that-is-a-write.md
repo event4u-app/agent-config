@@ -9,10 +9,8 @@ estate_growth_exempt: "+1 active_roadmaps, owner-directed 2026-10-29 (\"ziehe di
 estate_offset_exempt: "Promoted from later/ on owner instruction (2026-10-29); no active roadmap is archived to offset it. Owner search at 58d43073b7 (grep -rlF for persistence-claim, TurnSnapshot, CLAUDE.local.md, detectAgentsMdShadow over agents/roadmaps, later, stubs) returned nothing."
 relates:
   - slug: road-to-a-correction-that-is-heard
-    relation: depends
+    relation: extends
     note: "Needs its subject capture (1.3) for the subject-count index."
-depends:
-  - road-to-a-correction-that-is-heard
 ---
 # Road to a "noted" that is a write
 
