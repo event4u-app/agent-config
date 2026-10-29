@@ -17,7 +17,8 @@
  */
 extendStrings({
     en: {
-        areaNames: { overview: 'Overview', code: 'Code', data: 'Data', systems: 'Systems', interfaces: 'Interfaces', runtime: 'Runtime', delivery: 'Delivery', impact: 'Impact', agent: 'Agent', projects: 'Projects' },
+        areaNames: { overview: 'Overview', code: 'Code', data: 'Data', systems: 'Systems', interfaces: 'Interfaces', runtime: 'Runtime', delivery: 'Delivery', bugs: 'Bugs', knowledge: 'Knowledge', impact: 'Impact', agent: 'Agent', projects: 'Projects' },
+        navNoData: 'no data yet in the real map', navBugsLocal: 'Bug data is local – never in the committed map',
         navLabel: 'Areas', noDataYet: 'No data yet', willShow: 'What this area shows once its reader ran',
         foundNothing: function (r) { return r + ' ran and found nothing'; }, reader: 'reader', completenessL: 'completeness',
         lowerBound: 'partial read — every count is a lower bound', unknownRead: 'unknown coverage — every count is a lower bound',
@@ -31,10 +32,12 @@ extendStrings({
         colMessage: 'Finding', colWitness: 'Witness', views: 'View', moreRows: function (n) { return '+ ' + n + ' more rows'; }, hashT: 'hash of the span as read',
         bannerStale: { behind: function (n) { return 'The graph is ' + n + ' commit(s) behind HEAD'; }, edited: 'An indexed file has uncommitted edits', absent: 'No graph index was found', other: function (s) { return 'Graph state: ' + s; } },
         bannerWhy: { behind: 'Facts may describe code that has changed since. Confirm a witness before acting on it, or redraw with `agent-config code-graph map`.', edited: 'The map shows the committed version of those files; confirm the witnesses you act on.', absent: 'Nothing on this map was read from an index; every fact is unverifiable.', other: 'Confirm a witness before acting on it.' },
-        bannerLabel: 'Freshness'
+        bannerLabel: 'Freshness', histLabel: 'History', histBack: 'Back',
+        provReal: 'Real data', provDemo: 'Sample data · Fixture', provUnconfirmed: 'Witnesses unconfirmed', provNoBugLane: 'no bug lane', provDemoHint: 'Demo map with full areas: code-graph map --demo'
     },
     de: {
-        areaNames: { overview: 'Übersicht', code: 'Code', data: 'Data', systems: 'Systeme', interfaces: 'Interfaces', runtime: 'Runtime', delivery: 'Delivery', impact: 'Impact', agent: 'Agent', projects: 'Projekte' },
+        areaNames: { overview: 'Übersicht', code: 'Code', data: 'Data', systems: 'Systeme', interfaces: 'Interfaces', runtime: 'Runtime', delivery: 'Delivery', bugs: 'Bugs', knowledge: 'Wissen', impact: 'Impact', agent: 'Agent', projects: 'Projekte' },
+        navNoData: 'noch keine Daten in der echten Map', navBugsLocal: 'Bug-Daten sind lokal – nie in der committeten Map',
         navLabel: 'Ebenen', noDataYet: 'Noch keine Daten', willShow: 'Was diese Ebene zeigt, sobald ihr Leser gelaufen ist',
         foundNothing: function (r) { return r + ' ist gelaufen und hat nichts gefunden'; }, reader: 'Leser', completenessL: 'Vollständigkeit',
         lowerBound: 'teilweise gelesen — jede Zahl ist eine Untergrenze', unknownRead: 'Abdeckung unbekannt — jede Zahl ist eine Untergrenze',
@@ -48,13 +51,14 @@ extendStrings({
         colMessage: 'Befund', colWitness: 'Nachweis', views: 'Ansicht', moreRows: function (n) { return '+ ' + n + ' weitere Zeilen'; }, hashT: 'Hash der Stelle beim Lesen',
         bannerStale: { behind: function (n) { return 'Der Graph liegt ' + n + ' Commit(s) hinter HEAD'; }, edited: 'Eine indizierte Datei hat nicht committete Änderungen', absent: 'Es wurde kein Graph-Index gefunden', other: function (s) { return 'Graph-Zustand: ' + s; } },
         bannerWhy: { behind: 'Fakten können Code beschreiben, der sich seither geändert hat. Vor dem Handeln einen Nachweis bestätigen oder mit `agent-config code-graph map` neu zeichnen.', edited: 'Die Karte zeigt die committete Fassung dieser Dateien; die Nachweise bestätigen, auf die du dich stützt.', absent: 'Nichts auf dieser Karte stammt aus einem Index; jeder Fakt ist unüberprüfbar.', other: 'Vor dem Handeln einen Nachweis bestätigen.' },
-        bannerLabel: 'Frische'
+        bannerLabel: 'Frische', histLabel: 'Verlauf', histBack: 'Zurück',
+        provReal: 'Echte Daten', provDemo: 'Beispieldaten · Fixture', provUnconfirmed: 'Witnesses unconfirmed', provNoBugLane: 'keine Bug-Lane', provDemoHint: 'Demo-Map mit vollen Bereichen: code-graph map --demo'
     }
 });
 
 extendStrings({
     en: {
-        areaTitle: { data: 'Data · tables, keys, relations', systems: 'Systems · runtimes, frameworks, packages', interfaces: 'Interfaces · services and operations', runtime: 'Runtime · infrastructure and environments', delivery: 'Delivery · local environment and pipelines', impact: 'Impact · what a change reaches', agent: 'Agent · verbs and context pack', projects: 'Projects · this machine' },
+        areaTitle: { data: 'Data · tables, keys, relations', systems: 'Systems · runtimes, frameworks, packages', interfaces: 'Interfaces · services and operations', runtime: 'Runtime · infrastructure and environments', delivery: 'Delivery · local environment and pipelines', impact: 'Impact · what a change reaches', agent: 'Agent · verbs and context pack', projects: 'Projects · this machine', bugs: 'Bugs & Fixes · local', knowledge: 'Knowledge · sources, memory, decisions' },
         areaWhat: {
             data: 'Tables, columns, keys and delete rules from migrations and models; ORM relations beside real foreign keys; drift between code, intended and actual schema — each fact with the file and line it was read from.',
             systems: 'Runtimes with every witness side by side, frameworks and packages in their locked versions, why each package is installed, which files use it, uses without an import, and drift such as an unused or undeclared package.',
@@ -63,6 +67,8 @@ extendStrings({
             delivery: 'Workflows and jobs with their needs, the environments they deploy to, and the build → image → deploy chain.',
             impact: 'For a working diff: the affected code, tests, columns, operations, resources and pipelines, each with its confirm state, and the review-risk terms.',
             agent: 'The graph verbs an agent calls — each with the question it answers and its CLI and MCP name — and the context pack it receives before it acts.',
+            bugs: 'Bugs from the local bug lane — status, source, environment, cause, the fix commits and the commit that may have introduced each one. Local only: never written into the committed map.',
+            knowledge: 'Every knowledge source of the repository — Markdown, ADRs, roadmaps, contracts, memory stores — who owns it, whether the map reads it, and the decisions and sessions it holds.',
             projects: 'The projects registered on this machine, the links between them, host ports two of them publish, images and services they share, and which call of one lands on a route of another — names and paths only, never in a project map.'
         },
         noReader: {
@@ -73,11 +79,13 @@ extendStrings({
             delivery: 'No delivery reader ran: CI workflows are not read into map.json yet.',
             impact: 'No change preview was written: this map was drawn without a working diff to preview.',
             agent: 'No agent payload was written: the verb list and the context pack are not read into map.json yet.',
+            bugs: 'No bug lane in this map: bug data is read locally into .build/bugs/ and never reaches the committed map.',
+            knowledge: 'No knowledge source index was written: stores, owners, read-by and decisions are not read into map.json yet.',
             projects: 'No project is registered on this machine yet: a `code-graph build` or `code-graph projects add <path>` registers one.'
         }
     },
     de: {
-        areaTitle: { data: 'Data · Tabellen, Schlüssel, Beziehungen', systems: 'Systeme · Runtimes, Frameworks, Pakete', interfaces: 'Interfaces · Dienste und Operationen', runtime: 'Runtime · Infrastruktur und Umgebungen', delivery: 'Delivery · lokale Umgebung und Pipelines', impact: 'Impact · was eine Änderung erreicht', agent: 'Agent · Verben und Context-Pack', projects: 'Projekte · dieser Rechner' },
+        areaTitle: { data: 'Data · Tabellen, Schlüssel, Beziehungen', systems: 'Systeme · Runtimes, Frameworks, Pakete', interfaces: 'Interfaces · Dienste und Operationen', runtime: 'Runtime · Infrastruktur und Umgebungen', delivery: 'Delivery · lokale Umgebung und Pipelines', impact: 'Impact · was eine Änderung erreicht', agent: 'Agent · Verben und Context-Pack', projects: 'Projekte · dieser Rechner', bugs: 'Bugs & Fixes · lokal', knowledge: 'Wissen · Quellen, Memory, Entscheidungen' },
         areaWhat: {
             data: 'Tabellen, Spalten, Schlüssel und Löschregeln aus Migrationen und Models; ORM-Beziehungen neben echten Fremdschlüsseln; Drift zwischen Code, geplantem und tatsächlichem Schema — jeder Fakt mit Datei und Zeile, aus der er gelesen wurde.',
             systems: 'Runtimes mit jedem Nachweis nebeneinander, Frameworks und Pakete in ihrer gelockten Version, warum jedes Paket installiert ist, welche Dateien es nutzen, Nutzungen ohne Import und Drift wie ungenutzte oder nicht deklarierte Pakete.',
@@ -86,6 +94,8 @@ extendStrings({
             delivery: 'Workflows und Jobs mit ihren needs, die Umgebungen, in die sie ausrollen, und die Kette Build → Image → Deploy.',
             impact: 'Für einen Arbeits-Diff: betroffener Code, Tests, Spalten, Operationen, Ressourcen und Pipelines, jeweils mit Bestätigungszustand, und die Review-Risiko-Terme.',
             agent: 'Die Graph-Verben, die ein Agent aufruft — jedes mit der Frage, die es beantwortet, und seinem CLI- und MCP-Namen — und das Context-Pack, das er vor dem Handeln bekommt.',
+            bugs: 'Bugs aus der lokalen Bug-Lane — Status, Quelle, Umgebung, Ursache, die Fix-Commits und der Commit, der jeden vermutlich eingeführt hat. Nur lokal: nie in die committete Map geschrieben.',
+            knowledge: 'Jede Wissensquelle des Repositories — Markdown, ADRs, Roadmaps, Verträge, Memory-Stores — wem sie gehört, ob die Map sie liest, und die Entscheidungen und Sessions darin.',
             projects: 'Die auf diesem Rechner registrierten Projekte, die Verbindungen zwischen ihnen, Host-Ports, die zwei von ihnen veröffentlichen, gemeinsame Images und Dienste, und welcher Aufruf des einen auf einer Route des anderen landet — nur Namen und Pfade, nie in einer Projekt-Map.'
         },
         noReader: {
@@ -96,6 +106,8 @@ extendStrings({
             delivery: 'Kein Delivery-Leser ist gelaufen: CI-Workflows werden noch nicht in map.json gelesen.',
             impact: 'Es wurde keine Änderungsvorschau geschrieben: Diese Karte wurde ohne Arbeits-Diff gezeichnet.',
             agent: 'Es wurde kein Agent-Payload geschrieben: Verbliste und Context-Pack werden noch nicht in map.json gelesen.',
+            bugs: 'Keine Bug-Lane in dieser Map: Bug-Daten werden lokal nach .build/bugs/ gelesen und erreichen die committete Map nie.',
+            knowledge: 'Es wurde kein Wissensquellen-Index geschrieben: Stores, Besitzer, Leser und Entscheidungen werden noch nicht in map.json gelesen.',
             projects: 'Auf diesem Rechner ist noch kein Projekt registriert: `code-graph build` oder `code-graph projects add <Pfad>` registriert eines.'
         }
     }
@@ -103,6 +115,8 @@ extendStrings({
 
 var AREA_MODULES = Object.create(null);
 var KNOWLEDGE_IDS = ['data', 'systems', 'interfaces', 'runtime', 'delivery', 'impact', 'agent'];
+/** The nav of a project map in the handover's order; Bugs and Wissen are routes without a reader of their own yet. */
+var NAV_ROUTES = ['overview', 'code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'bugs', 'knowledge', 'impact', 'agent'];
 var ROW_CAP = 200;
 var avState = { view: Object.create(null), pin: null, fly: false, pinL: null, flyL: false };
 
@@ -202,6 +216,64 @@ function findingsView(id, main) {
         ws.forEach(function (w) { cell.appendChild(add(el('div', { class: 'mono' }, wloc(w) + ' '), confirmChip(w.confirm))); });
         return { key: 'finding/' + i, cells: [f.id, stChip(t('sevNames')[f.severity] || f.severity, SEV_CLASS[f.severity]), f.subject, f.message, cell] };
     })));
+}
+
+/**
+ * The shared history of one page's states (Systeme, Bugs): up to 50 snapshots
+ * of what `snap` returns — {lens, sel, filters, limit} — drawn as a trail of
+ * the last five distinct steps with `›` between them, and a 24px ← only while
+ * there is history. No back button and no crumb chips: the trail is the way back.
+ *   o.snap()      → the current state      o.apply(state) restores one and redraws
+ *   o.key(state)  → the label of a step
+ * A page calls `nav(change)` for every filter, sort and selection: it pushes the
+ * state as it was, then applies the change.
+ */
+var HIST_CAP = 50;
+function pageHistory(o) {
+    var h = { stack: [] };
+    h.push = function () { h.stack = h.stack.concat([o.snap()]).slice(-HIST_CAP); };
+    h.nav = function (change) { h.push(); change(); };
+    h.back = function () { var last = h.stack.pop(); if (last) o.apply(last); };
+    h.node = function () {
+        var nav = el('nav', { class: 'histcrumbs mono', 'aria-label': t('histLabel') });
+        if (h.stack.length) {
+            var b = el('button', { type: 'button', class: 'hist-back', 'aria-label': t('histBack'), title: t('histBack') }, '←');
+            b.addEventListener('click', h.back);
+            nav.appendChild(b);
+        }
+        var trail = [];
+        h.stack.concat([o.snap()]).forEach(function (s, i) {
+            var k = o.key(s);
+            if (!trail.length || trail[trail.length - 1].key !== k) trail.push({ key: k, idx: i });
+        });
+        trail.slice(-5).forEach(function (step, i, shown) {
+            var last = i === shown.length - 1;
+            if (i > 0) nav.appendChild(el('span', { class: 'hist-sep', 'aria-hidden': 'true' }, '›'));
+            var s = el('button', { type: 'button', class: 'hist-step', 'aria-current': last ? 'page' : 'false', title: step.key }, step.key);
+            if (!last) s.addEventListener('click', function () { var target = h.stack[step.idx]; h.stack = h.stack.slice(0, step.idx); o.apply(target); });
+            nav.appendChild(s);
+        });
+        return nav;
+    };
+    return h;
+}
+// A seam for the browser suite: the component is drawn and driven there without a page around it.
+window.__mapPageHistory = pageHistory;
+
+/** Where each page's facts were read from, as the handover's footers name it. */
+var PROV_SOURCE = { overview: 'manifest.json + code/map.json', data: 'data.json', systems: 'systems.json', interfaces: 'interfaces.json', runtime: 'runtime.json',
+    delivery: 'delivery.json + runtime.json', impact: 'code/map.json → areas.impact', agent: 'code/map.json → areas.agent', knowledge: 'map.json', bugs: 'agents/map' };
+/** The provenance footer of a page: real or sample data, the source file, the commit, and what the witnesses are. */
+function provenanceLine(id) {
+    // The hub is no repository map: there is no commit to name.
+    if (SHELL.hub) return null;
+    var pin = model.pin || { commit: meta.commit };
+    var parts = [(meta.demo ? t('provDemo') : t('provReal')) + ' · ' + (PROV_SOURCE[id] || 'map.json') + ' @ ' + String(pin.commit || meta.commit || '').slice(0, 8)];
+    if (id === 'bugs' && !(KA.bugs && !KA.bugs.empty)) parts.push(t('provNoBugLane'));
+    var c = AREA_MODULES[id] ? confirmCounts(id) : null;
+    if (c && c.total && c.unconfirmed === c.total) parts.push(t('provUnconfirmed'));
+    if (id === 'overview' && !meta.demo) parts.push(t('provDemoHint'));
+    return el('span', { class: 'prov mono', id: 'prov' }, parts.join(' · '));
 }
 
 function avPick(id, key) { location.hash = '#/' + id + (key ? '/' + encodeURIComponent(key) : ''); }
@@ -410,6 +482,9 @@ function renderAreaPage(id, key) {
     avRailTitleKeys = paged && mod.railTitles ? mod.railTitles : [null, 'detail'];
     $('av-left-title').textContent = avRailTitleKeys[0] ? t(avRailTitleKeys[0]) : '';
     $('av-right-title').textContent = avRailTitleKeys[1] ? t(avRailTitleKeys[1]) : '';
+    // Each aside is named for what it holds on this page, as the handover labels it.
+    $('av-left').setAttribute('aria-label', avRailTitleKeys[0] ? t(avRailTitleKeys[0]) : t('detail'));
+    $('av-side').setAttribute('aria-label', avRailTitleKeys[1] ? t(avRailTitleKeys[1]) : t('detail'));
     body.classList.toggle('no-left', !paged || !avRailTitleKeys[0]);
     body.classList.toggle('no-side', !live || (paged && !avRailTitleKeys[1]));
     body.classList.toggle('paged', paged);
@@ -428,7 +503,18 @@ function renderAreaPage(id, key) {
             centre = el('div', { class: 'av-page' });
             main.appendChild(centre);
         }
-        if (!live) {
+        // The asides are pinned before the page draws, so a graph measured while drawing gets the width it keeps.
+        applyAvPanes();
+        if (!live && p && mod.emptyPage) {
+            // A reader that ran and found nothing keeps the page: its one tab, its reader line, its legend (the handover's real state).
+            var et = el('div', { class: 'lenses', role: 'tablist', 'aria-label': t('views') });
+            et.appendChild(el('button', { type: 'button', role: 'tab', class: 'lens', 'aria-selected': 'true' }, t(mod.emptyTab)));
+            // The handover's real state draws no aside beside it.
+            body.classList.add('no-left', 'no-side');
+            if (mod.ownsBar) add(bar, et, pageMetaLine(id, false));
+            else main.firstChild.insertBefore(et, main.firstChild.firstChild);
+            mod.emptyPage(p, centre);
+        } else if (!live) {
             centre.appendChild(noDataCard(id));
             var why = p ? p.empty : t('noReader')[id];
             if (avRailTitleKeys[0]) $('av-left-body').appendChild(add(el('div', { class: 'pad' }), el('span', { class: 'nodata-tag' }, t('noDataShort')), el('p', { class: 'reason' }, why)));
@@ -437,6 +523,7 @@ function renderAreaPage(id, key) {
         var ends = mod.ownsBar ? bar : main.firstChild;
         ends.insertBefore($('av-open-left'), ends.firstChild);
         ends.appendChild($('av-open'));
+        add(main, provenanceLine(id));
         bar.classList.toggle('owned', !!mod.ownsBar);
         bar.hidden = !mod.ownsBar;
         if (item) avFly('right', true); else applyAvPanes();
@@ -464,6 +551,7 @@ function renderAreaPage(id, key) {
         else if (v === 'findings') findingsView(id, main);
         else mod.render(own ? p : null, v, main);
     }
+    add(main, provenanceLine(id));
     renderAvDetail(id, item);
     if (item) avState.fly = true;
     applyAvPanes();

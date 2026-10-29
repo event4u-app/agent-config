@@ -17,4 +17,7 @@ function assertEqual(actual, expected, label) {
 
 assertEqual(docTitle('intro.md'), 'Intro', 'docTitle strips the heading marker');
 
-process.exit(failed ? 1 : 0);
+if (failed) {
+  process.exit(1);
+}
+console.log(process.env.BENCH_VERIFIER_NONCE ?? 'ok');

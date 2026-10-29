@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="Bramble the bear">
+  <rect x="0" y="0" width="48" height="48" fill="#ffffff"/>
+  <circle cx="12" cy="10" r="5" fill="#f2a93b"/>
+  <circle cx="36" cy="10" r="5" fill="#f2a93b"/>
+  <ellipse cx="24" cy="26" rx="18" ry="17" fill="#f2a93b"/>
+  <ellipse cx="24" cy="32" rx="9" ry="8" fill="#fff4e0"/>
+  <circle cx="18" cy="21" r="2.2" fill="#3b2a1a"/>
+  <circle cx="30" cy="21" r="2.2" fill="#3b2a1a"/>
+</svg>

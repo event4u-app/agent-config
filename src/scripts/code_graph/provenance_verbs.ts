@@ -11,7 +11,10 @@
  * stored here: the answer names the keys and numbers, and the agent asks the
  * user's own tracker for the text when it needs it.
  */
+import * as path from 'node:path';
+
 import { gitProbe } from '../_lib/spawn_env.js';
+import { parseNameStatusLog } from './lanes/history/history.js';
 import { type CommitRef, commitLine, type ProvenanceIndex, SPAN_DEPTH, spanHistory, ticketKeysOf } from './provenance.js';
 import type { CodeGraph, CodeNode } from './types.js';
 
@@ -43,6 +46,21 @@ function routesIntroducedBy(root: string, g: G, index: ProvenanceIndex, commits:
         if (intro && shas.has(intro.sha)) out.push(`${n.label}  (${n.source_file}:${line})`);
     }
     return out.sort();
+}
+
+/**
+ * The commits that touched `file` under its present and former names, newest
+ * first. Renames come from `-M` over the file's directory, the pairs the history
+ * lane reads (`parseNameStatusLog`); `--follow` guesses a rename from content
+ * similarity and walked a new migration back into its neighbour's create commit.
+ */
+export function renameTimeline(root: string, file: string, n: number): string[] {
+    const dir = path.posix.dirname(file);
+    const out = gitProbe(root, ['-c', 'core.quotePath=false', 'log', '-M', '--no-merges', '--name-status', '--format=\x1e%h\x1f%cs %s', '--', dir === '.' ? file : dir]);
+    return parseNameStatusLog(out, new Set([file]))
+        .filter((c) => c.files.includes(file))
+        .slice(0, n)
+        .map((c) => `${c.sha} ${c.date}`);
 }
 
 export function provenanceAnswer(root: string, g: G, index: ProvenanceIndex, query: string, cacheDir: string): ProvenanceAnswer {
@@ -81,10 +99,10 @@ export function provenanceAnswer(root: string, g: G, index: ProvenanceIndex, que
         lines.push(`  last changed: ${commitLine(index.commits[file.last] as CommitRef)}`);
         lines.push(`  changes:      ${file.changes}`);
         try {
-            const log = gitProbe(root, ['log', '--follow', '-n20', '--format=%h %cs %s', '--', query]).trim();
-            if (log) {
+            const log = renameTimeline(root, query, 20);
+            if (log.length) {
                 lines.push('  timeline (newest first, 20 at most):');
-                for (const l of log.split('\n')) lines.push(`    ${l}`);
+                for (const l of log) lines.push(`    ${l}`);
             }
         } catch {
             /* the index answer stands without a timeline */

@@ -45,4 +45,4 @@ assertEqual(daysBetween('2021-05-10', '2021-05-10'), 0, 'identical dates');
 if (failed) {
   process.exit(1);
 }
-console.log('ok');
+console.log(process.env.BENCH_VERIFIER_NONCE ?? 'ok');

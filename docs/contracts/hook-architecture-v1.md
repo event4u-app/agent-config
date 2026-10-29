@@ -1309,6 +1309,7 @@ configuration. `orphan` — the name survives only in prose; nothing reads it.
 | `AGENT_CONFIG_ALLOW_SPEAKING_INBOX` | maintainer | Lets a write into the speaking-inbox directory through the PreToolUse block | `hooks/block_speaking_inbox_dir.ts:79` |
 | `AGENT_CONFIG_ALLOW_CREDENTIAL_READS` | maintainer | Lets a read of a credential-class file, or a command that prints the environment, through the PreToolUse block | `hooks/block_credential_reads.ts:52` |
 | `AGENT_CONFIG_CODE_GRAPH_REFRESH` | maintainer | `=off` stops the `code-graph-refresh` session concern spawning its background `code-graph refresh --single-flight --map`, even in a project that ran `code-graph auto-refresh on`; the git-hook refresh in this package's own checkout is unaffected | `hooks/code_graph_refresh_hook.ts:108` |
+| `AGENT_CONFIG_SHOWCASE_MAX_USD` | maintainer | USD ceiling that lets an interactive `task release` offer the paid `bench:showcase:quick` run; unset → never offered | `_lib/release_showcase.ts:30` |
 | `AGENT_CONFIG_DEPLOY_INVENTORY` | harness | Path override for the global deploy inventory | `_lib/global_deploy_inventory.ts:61` |
 | `AGENT_CONFIG_DEV_MODE` | maintainer | Maintainer dev mode; forces `--scope=project` and is captured into the corpus manifest | `_lib/corpus_manifest.ts:89` |
 | `AGENT_CONFIG_DISABLE_HOOKS` | maintainer | Bypasses every shim for one command | `_lib/runtime_wiring_checks.ts:315` |
@@ -1325,6 +1326,7 @@ configuration. `orphan` — the name survives only in prose; nothing reads it.
 | `AGENT_CONFIG_MEMORY_DIR` | harness | Directory override for memory recall | `hooks/memory_recall_hook.ts:309` |
 | `AGENT_CONFIG_NO_EGRESS_STAGE` | maintainer | Turns the egress stage off whatever `egress.placeholders.mode` says: no detection, no count record, no placeholder view. Every egress channel then publishes `uncovered`, never a stale `replaced` (`docs/contracts/egress-placeholders-v1.md` § Settings) | `hooks/egress_stage.ts:28` |
 | `AGENT_CONFIG_NO_EVENTS_LOG` | maintainer | Short-circuits council / team event-log appends to a no-op | `_lib/env_kill_switch.ts` names it; the readers are `ai_council/events_log.ts:109` and `ai_team/review_gate.ts:56`, both outside the two directories the unit covers |
+| `AGENT_CONFIG_NO_INTAKE_PASS` | operator | `=1` silences the `intake-pass` concern: no intake-pass line on any prompt (owner answer OQ-25 ships it on, with no settings key, so this is its only off switch) | `hooks/intake_pass_hook.ts:78` |
 | `AGENT_CONFIG_NO_PIN_REEXEC` | maintainer | Suppresses the pin re-exec | `_lib/pin_resolver.ts:43` |
 | `AGENT_CONFIG_NO_UPDATE_CHECK` | maintainer | `=1` suppresses the update-availability check | `_lib/update_check.ts:239` |
 | `AGENT_CONFIG_PACKAGE_ROOT` | harness | The package root the dispatcher hands each concern | `hooks/dispatch_hook.ts:647` |

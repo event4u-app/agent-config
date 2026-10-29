@@ -287,6 +287,38 @@ describe('self-repair — record identity', () => {
     });
 });
 
+describe('self-repair — the subject a recurrence names', () => {
+    it.each([
+        'Claude. Zum dritten Mal: Tabs!',
+        'For the third time: tabs.',
+        'How many times do I have to say it — use `Tabs` please',
+    ])('names the same subject across phrasings: %s', (prompt) => {
+        expect(detectUserReport(prompt)?.subject).toBe('tabs');
+    });
+
+    it('caps the subject at 40 characters and sanitizes it', () => {
+        const f = detectUserReport(`For the third time: see /Users/someone/${'x'.repeat(80)}`)!;
+        expect(f.subject!.length).toBeLessThanOrEqual(40);
+        expect(f.subject).toContain('<home>');
+    });
+
+    it('stays absent when nothing names a subject', () => {
+        expect(detectUserReport('du hast das falsch gemacht')?.subject).toBeUndefined();
+    });
+
+    it('is not part of the fingerprint', () => {
+        const a = detectUserReport('For the third time: tabs.')!;
+        const b = { ...a, subject: 'spaces' };
+        expect(mergeRecord(null, a, NOW).fingerprint).toBe(mergeRecord(null, b, NOW).fingerprint);
+    });
+
+    it('never reaches the upstream body', () => {
+        const rec = mergeRecord(null, { ...detectUserReport('For the third time: tabs.')!, subject: 'subject-line-xyz' }, NOW);
+        expect(rec.subject).toBe('subject-line-xyz');
+        expect(renderUpstreamBody(rec, 'issue')).not.toContain('subject-line-xyz');
+    });
+});
+
 describe('self-repair — claim fields a retro may set', () => {
     const base: DefectRecord = {
         defect_class: 'user-reported',

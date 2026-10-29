@@ -1,0 +1,63 @@
+{
+    "skill": "verify-completion-evidence",
+    "last_eval": "2026-10-27",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-27 under road-to-a-prompt-that-deepens-not-widens 1.1-1.2, which moved the per-task evidence table into this skill. Exemplars are the moments a completion claim is about to be made, in English and German, including non-code work the new table rows cover. Near-misses ask for the pipeline itself (quality-tools), for wrapping up a branch (finishing-a-development-branch) or for writing a test first (test-driven-development). Counterexamples guard 'verify' in an identity or email sense.",
+    "queries": [
+        {
+            "q": "I think the feature is done, can we commit?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "all tests should pass now, ready to open the PR",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "the analysis report is finished — mark the step complete",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "fertig, kannst du pushen?",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "before you say it works, show me the evidence for this migration",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "run PHPStan, Rector and ECS on the project",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "asks for the quality pipeline itself, not the gate on a claim → quality-tools"
+        },
+        {
+            "q": "wrap up this branch and decide whether to merge or open a PR",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "branch finishing workflow → finishing-a-development-branch"
+        },
+        {
+            "q": "write a failing test for this bug before fixing it",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "test-first procedure → test-driven-development"
+        },
+        {
+            "q": "verify the user's email address on signup",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'verify' as an application feature"
+        },
+        {
+            "q": "how do I verify my GitHub account?",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'verify' as account verification"
+        }
+    ]
+}

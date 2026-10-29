@@ -495,8 +495,8 @@ describe('tools — L3 handler shapes', () => {
 
     it('list_skills shape', async () => {
         const cache = new ToolCache();
-        const result = await cache.dispatch('list_skills', {}, REPO_ROOT);
-        expect(new Set(Object.keys(result))).toEqual(new Set(['count', 'skills', 'errors']));
+        const result = await cache.dispatch('list_skills', { detail: 'full' }, REPO_ROOT);
+        expect(new Set(Object.keys(result))).toEqual(new Set(['count', 'skills', 'errors', 'page', 'pages', 'detail']));
         expect(result.count as number).toBeGreaterThanOrEqual(1);
         const sample = (result.skills as Record<string, unknown>[])[0]!;
         for (const key of ['name', 'description', 'source', 'wire_name']) {
@@ -514,7 +514,7 @@ describe('tools — L3 handler shapes', () => {
     it('list_rules shape', async () => {
         const cache = new ToolCache();
         const result = await cache.dispatch('list_rules', {}, REPO_ROOT);
-        expect(new Set(Object.keys(result))).toEqual(new Set(['count', 'rules', 'errors']));
+        expect(new Set(Object.keys(result))).toEqual(new Set(['count', 'rules', 'errors', 'page', 'pages', 'detail']));
         expect(result.count as number).toBeGreaterThanOrEqual(1);
         const sample = (result.rules as Record<string, unknown>[])[0]!;
         expect((sample.uri as string).startsWith('rule://')).toBe(true);

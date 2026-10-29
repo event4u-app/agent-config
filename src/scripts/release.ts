@@ -135,7 +135,6 @@ import { TAG_TRIGGERED_WORKFLOWS, dispatchTagWorkflows } from './_lib/release_ta
 import {
     RELEASE_HEAD_DEFAULT,
     extract_changelog_section,
-    pr_body_from_section,
     release_notes_from_section,
     render_mix_response,
 } from './_lib/release_material.js';
@@ -144,6 +143,7 @@ import {
     assert_scheduled_deprecations_clear,
 } from './_lib/release_migration_gate.js';
 import { releaseHoldPreflight } from './_lib/release_holds.js';
+import { runReleaseShowcase } from './_lib/release_showcase.js';
 import { measuredSection } from './_lib/dispatch_policy.js';
 import { localIsoDate } from './_lib/as_of.js';
 import { assert_settings_surface_delta, writeReleasedSurface } from './_lib/release_settings_surface.js';
@@ -160,7 +160,6 @@ import {
     _set_changelog_reader,
     read_changelog_text,
     CalledProcessError,
-    GH_PR_BODY_LIMIT,
     GH_RELEASE_NOTES_LIMIT,
     MAIN_BRANCH,
     MARKETPLACE_JSON,
@@ -193,6 +192,7 @@ export {
     _is_tag_already_exists,
     _no_checks_action,
     _required_contexts_from_rules,
+    release_pr_body,
 } from './release_publication.js';
 import { _cap_body, jsonDumpsIndent } from './release_env.js';
 import {
@@ -203,6 +203,7 @@ import {
     _pr_merge_state,
     _push_tag,
     _refresh_pr_body_from_head,
+    release_pr_body,
     _release_exists,
     _remote_tag_commit,
     _set_exec_override,
@@ -211,6 +212,7 @@ import {
     _tag_exists_remote,
     _target_from_branch,
     create_and_push_annotated_tag,
+    fetch_remote_tags,
     guard_publication,
     checkout_release_branch,
     _render_test_trend_line,
@@ -723,11 +725,7 @@ function preflight(target: string, opts: { resume?: boolean; ci?: boolean } = {}
         process.stdout.write(`\u26a0\ufe0f  ${position.notice}\n`);
     }
 
-    // --force lets the remote's tag positions win over stale local tags.
-    // The release consumes the remote view as source of truth, and we're
-    // about to create a new tag anyway — local drift (e.g. from renamed
-    // release-please tags) should not block the fetch.
-    run(['git', 'fetch', REMOTE, '--tags', '--prune', '--force'], { capture: true });
+    fetch_remote_tags();
 
     // The local-in-sync-with-origin check only applies to main; if we're
     // already on the release branch in resume mode, the relevant invariant
@@ -855,7 +853,7 @@ function _step(n: number, total: number, msg: string): void {
 
 function execute(
     plan: Plan,
-    opts: { wait_for_checks: boolean; dry_run: boolean; resume?: boolean; ci?: boolean },
+    opts: { wait_for_checks: boolean; dry_run: boolean; resume?: boolean; ci?: boolean; pr_extra?: string },
 ): void {
     const wait_for_checks = opts.wait_for_checks;
     const dry_run = opts.dry_run;
@@ -1012,12 +1010,7 @@ function execute(
         if (!section) {
             die(`CHANGELOG.md carries no section for ${plan.target} — cannot derive PR body`);
         }
-        const pr_changelog = _cap_body(
-            section!.body,
-            GH_PR_BODY_LIMIT - 200, // leave room for the prefix + footer
-            '`CHANGELOG.md` in this PR',
-        );
-        const pr_body = pr_body_from_section(pr_changelog, plan.target);
+        const pr_body = release_pr_body(section!.body, plan.target) + (opts.pr_extra ?? '');
         gh(['pr', 'create', '--base', MAIN_BRANCH, '--head', branch,
             '--title', `release: ${plan.target}`, '--body', pr_body]);
     }
@@ -1529,7 +1522,7 @@ function main(argv: readonly string[] | null = null): number {
     // Dry-run stays fast: the trend line costs a full vitest collection
     // (~15s+), which `--dry-run exits 0 without needing …` contracts (and
     // the release test) assume never runs. Real releases compute it.
-    const test_trend_line = args.dry_run ? null : _render_test_trend_line(prev);
+    const test_trend_line = args.dry_run ? null : _render_test_trend_line(prev, args.resume ? target : undefined);
     // Derived unconditionally, dry-run included: it is one `git log` (~25 ms),
     // not the trend line's full vitest collection. Skipping it on `--dry-run`
     // made the preview print the `_none_` skeleton while the real run wrote
@@ -1594,7 +1587,9 @@ function main(argv: readonly string[] | null = null): number {
         return 1;
     }
 
+    const showcase = runReleaseShowcase({ yes: args.yes, ci: args.ci, root: REPO_ROOT, canPrompt, ask: confirm });
     execute(plan, {
+        pr_extra: showcase.pr_section,
         wait_for_checks: !args.no_wait,
         dry_run: false,
         resume: args.resume,

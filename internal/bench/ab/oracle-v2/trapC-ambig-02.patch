@@ -1,0 +1,15 @@
+diff --git a/src/orders.ts b/src/orders.ts
+index d24450d..1f5c4ac 100644
+--- a/src/orders.ts
++++ b/src/orders.ts
+@@ -1,8 +1,8 @@
+ // Order pipeline. Charges the card and marks the order paid.
+-export function process(orderId: string, amountCents: number): string {
++export function processOrder(orderId: string, amountCents: number): string {
+   return `order:${orderId} charged ${amountCents}c`;
+ }
+ 
+ export function summarizeOrder(orderId: string): string {
+-  return process(orderId, 0);
++  return processOrder(orderId, 0);
+ }

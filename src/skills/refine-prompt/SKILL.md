@@ -16,6 +16,8 @@ execution:
   allowed_tools: []
 workspaces:
   - agent-config-maintainer
+  - engineering
+  - product
 packs:
   - meta
 ---

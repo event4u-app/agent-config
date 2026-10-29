@@ -211,7 +211,7 @@ describe('summarise_arm', () => {
     it('reads the token budget two ways', () => {
         expect(s.success_within_budget_share).toBeCloseTo(1 / 4);
         expect(s.successes_per_budget).toBeCloseTo((2 * 500) / 1350);
-        expect(s.by_area).toEqual({ code: { runs: 2, successes: 2 }, data: { runs: 2, successes: 0 } });
+        expect(s.by_area).toEqual({ code: { runs: 2, successes: 2, checks_passed: 2 }, data: { runs: 2, successes: 0, checks_passed: 0 } });
     });
 
     it('returns nulls, not zeros, for an arm with no runs or no success', () => {
@@ -234,8 +234,8 @@ describe('dry-run plumbing', () => {
     it('keeps one arm per stub behaviour', () => {
         expect(Object.keys(DRY_RUN_STUB).sort()).toEqual(Object.keys(MAP_ARMS).sort());
         expect(new Set(Object.values(DRY_RUN_STUB)).size).toBe(3);
-        expect(MAP_ARMS['ac-map']?.map).toBe(true);
-        expect(MAP_ARMS['ac']?.map).toBe(false);
+        expect(MAP_ARMS['ac-lean-map']?.map).toBe(true);
+        expect(MAP_ARMS['ac-lean']?.map).toBe(false);
         expect(MAP_ARMS['vanilla']?.setting_sources).toBe('project,local');
     });
 
@@ -255,9 +255,9 @@ describe('dry-run plumbing', () => {
         const sums = Object.fromEntries(Object.keys(MAP_ARMS).map((arm) => [arm, summarise_arm(arm, records, 300_000)]));
         expect(dry_run_problems(sums, tasks, 1)).toEqual([]);
 
-        const naiveAsPass = records.map((r) => (r.arm === 'ac' ? { ...r, success: true } : r));
+        const naiveAsPass = records.map((r) => (r.arm === 'ac-lean' ? { ...r, success: true } : r));
         const broken = Object.fromEntries(Object.keys(MAP_ARMS).map((arm) => [arm, summarise_arm(arm, naiveAsPass, 300_000)]));
-        expect(dry_run_problems(broken, tasks, 1).some((p) => p.startsWith('ac:'))).toBe(true);
+        expect(dry_run_problems(broken, tasks, 1).some((p) => p.startsWith('ac-lean:'))).toBe(true);
     });
 
     it('rejects an unknown arm or flag', () => {

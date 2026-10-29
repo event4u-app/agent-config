@@ -529,9 +529,13 @@ function _cross_repo_hits(keys: string[], limit: number): Hit[] {
  * and cross-repo hits are discounted so the project's own truth wins on
  * equal relevance.
  */
+// Set by the last retrieve(): how many curated entries it skipped as stale.
+let _lastSkippedStale = 0;
+
 export function retrieve(types: string[], keys: string[], limit = 5): Hit[] {
     const repo_hits: Hit[] = [];
     const today = _today();
+    _lastSkippedStale = 0;
     for (const mtype of types) {
         if (mtype === KNOWLEDGE_TYPE) {
             for (const [p, entry] of _iter_knowledge_entries()) {
@@ -572,6 +576,7 @@ export function retrieve(types: string[], keys: string[], limit = 5): Hit[] {
             // the exclusion is the behaviour that matters, the report is the
             // richer surface.
             if (_isStale(entry, today)) {
+                _lastSkippedStale += 1;
                 continue;
             }
             repo_hits.push(new Hit(String(entry['id'] ?? ''), mtype, 'curated', String(p), _score(entry, keys), entry));
@@ -641,6 +646,7 @@ export function retrieve_v1(types: string[], keys: string[], limit = 20): Record
     const unknown = types.filter((t) => !_KNOWN_TYPES.has(t));
 
     const hits = retrieve(known, keys, limit);
+    const skipped_stale = _lastSkippedStale;
 
     const slice_counts: Record<string, number> = {};
     for (const t of known) {
@@ -689,6 +695,11 @@ export function retrieve_v1(types: string[], keys: string[], limit = 20): Record
     };
     if (errors.length > 0) {
         envelope['errors'] = errors;
+    }
+    // Additive, and only when non-zero: a stale-skipped entry is otherwise
+    // indistinguishable from an entry that never existed.
+    if (skipped_stale > 0) {
+        envelope['skipped_stale'] = skipped_stale;
     }
     return envelope;
 }
@@ -795,9 +806,10 @@ export function main(): number {
     }
     const hits = retrieve(types, args.key, args.limit);
     if (args.format === 'json') {
-        const payload = {
+        const payload: Record<string, unknown> = {
             hits: hits.map((h) => h.as_dict()),
         };
+        if (_lastSkippedStale > 0) payload['skipped_stale'] = _lastSkippedStale;
         process.stdout.write(`${pyJsonDumps(payload, 2)}\n`);
     } else {
         if (hits.length === 0) {

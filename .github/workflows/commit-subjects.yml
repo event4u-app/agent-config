@@ -48,11 +48,16 @@ jobs:
           npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
             || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
 
+      # The PR title is linted with the commits: the repo squash-merges with the
+      # PR title as the trunk commit subject. It goes through `env:`, never an
+      # inline expansion — a title is untrusted, author-controlled text.
       - name: Run commit-subject lint
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
           ./scripts-run src/scripts/lint_commit_subjects \
             --base "${BASE_SHA}" \
-            --head "${HEAD_SHA}"
+            --head "${HEAD_SHA}" \
+            --title "${PR_TITLE}"

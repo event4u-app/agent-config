@@ -15,6 +15,8 @@
  *
  * Offline: files only, no package manager, no registry (K25).
  */
+import { phpClassRefs, phpOwner, readComposerAutoload } from './php_autoload.js';
+import { scopeOf } from '../../scope.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -70,12 +72,12 @@ export const FRAMEWORKS: ReadonlySet<string> = new Set([
 const LOCK_NAMES = new Set(['package-lock.json', 'composer.lock', 'pnpm-lock.yaml', 'yarn.lock', 'bun.lock', 'bun.lockb']);
 const DEPTH = 6;
 
-/** A file only tests, fixtures or tooling load: a dev package used there is fine. */
+/** A file only tests, fixtures or tooling load: a dev package used there is fine. Scope decides the first half; the tooling half is no scope. */
 export const isDevPath = (file: string): boolean =>
-    /(^|\/)(tests?|__tests__|spec|specs|e2e|fixtures?|stories|\.storybook|scripts|tools|bin|database\/(seeders|factories))\//.test(file) ||
-    /\.(test|spec|stories|e2e)\.[cm]?[jt]sx?$/.test(file) ||
-    /(^|\/)[^/]*\.config\.[cm]?[jt]s$/.test(file) ||
-    /Test\.php$/.test(file);
+    scopeOf(file) !== 'product' ||
+    /(^|\/)(e2e|stories|\.storybook|scripts|tools|bin|database\/(seeders|factories))\//.test(file) ||
+    /\.(stories|e2e)\.[cm]?[jt]sx?$/.test(file) ||
+    /(^|\/)[^/]*\.config\.[cm]?[jt]s$/.test(file);
 
 const CONFIG_FILE =
     /(^|\/)(\.eslintrc(\.\w+)?|eslint\.config\.\w+|\.prettierrc(\.\w+)?|prettier\.config\.\w+|babel\.config\.\w+|\.babelrc(\.\w+)?|postcss\.config\.\w+|tailwind\.config\.\w+|\.stylelintrc(\.\w+)?|stylelint\.config\.\w+|jest\.config\.\w+|vitest\.config\.\w+|vite\.config\.\w+|webpack\.config\.\w+|rollup\.config\.\w+|tsconfig[\w.-]*\.json|commitlint\.config\.\w+|\.commitlintrc(\.\w+)?|\.lintstagedrc(\.\w+)?|lint-staged\.config\.\w+|phpstan\.neon(\.dist)?|psalm\.xml(\.dist)?|rector\.php|ecs\.php|\.php-cs-fixer(\.dist)?\.php|phpunit\.xml(\.dist)?|playwright\.config\.\w+|nuxt\.config\.\w+|next\.config\.\w+|astro\.config\.\w+|svelte\.config\.\w+|\.mocharc(\.\w+)?|nodemon\.json|\.swcrc|deptrac\.ya?ml|infection\.json(5)?(\.dist)?)$/;
@@ -94,7 +96,15 @@ interface Pkg {
     roots: LockRoot[];
     lockfile: string;
     nonimport: string[];
-    users: Map<string, { names: Set<string>; line: number }>;
+    users: Map<string, { names: Set<string>; line: number; callers?: Map<string, Set<string>> }>;
+    /** composer only: whether `vendor/` autoload maps bound its classes, or only the lockfile's PSR maps */
+    binding?: 'complete' | 'partial';
+    /** declared beside a lockfile that does not hold it */
+    notInstalled?: boolean;
+    /** 6.2: `used`, `used-through <pkg>`, `unused-candidate`, `not-installed`, `virtual/meta`, `ignored (<reason>)` */
+    verdict?: string;
+    /** 6.4: one JSON row per importer — {lockfile, workspace, specifier, relation, scope} */
+    importers?: string[];
 }
 
 const factKey = (eco: Ecosystem, key: string): string => `${eco}:${key}`;
@@ -164,6 +174,17 @@ export function readSystems(root: string, opts: SystemsOptions = {}): LaneOutput
         for (const r of g.roots) {
             const id = r.to ? pkgId(g.ecosystem, r.to) : null;
             if (id && pkgs.has(id)) pkgs.get(id)!.roots.push(r);
+            if (r.to === null && r.manifest.slice(0, r.manifest.lastIndexOf('/') + 1) === g.file.slice(0, g.file.lastIndexOf('/') + 1)) {
+                // Declared beside this lockfile, and the lockfile does not hold it: not installed.
+                const key = `${r.name}@not-installed`;
+                const nid = pkgId(g.ecosystem, key);
+                const known = pkgs.get(nid);
+                if (known) known.roots.push(r);
+                else {
+                    const p: LockPackage = { key, name: r.name, version: 'not-installed', line: r.line, dev: r.kind === 'dev', optional: r.kind === 'optional', requires: [], bins: [], namespaces: [], autoloadFiles: false, classmap: false, providers: [], peers: [], private: false };
+                    pkgs.set(nid, { id: nid, eco: g.ecosystem, p, locked: false, lockfiles: new Set([g.file]), roots: [r], lockfile: r.manifest, nonimport: [], users: new Map(), notInstalled: true });
+                }
+            }
         }
     }
     const lockedManifests = new Set(graphs.flatMap((g) => g.roots.map((r) => r.manifest)));
@@ -196,8 +217,10 @@ export function readSystems(root: string, opts: SystemsOptions = {}): LaneOutput
     };
 
     usesFromGraph(root, opts.graph, pkgs, preferred, read);
+    phpUses(root, em, walk, read, pkgs, preferred);
     nonImportUses(walk, read, pkgs, byName, preferred);
 
+    assignVerdicts(graphs, pkgs, read);
     for (const k of pkgs.values()) emitPackage(em, k, read);
     for (const g of graphs) {
         for (const p of g.packages.values()) {
@@ -211,7 +234,9 @@ export function readSystems(root: string, opts: SystemsOptions = {}): LaneOutput
     for (const k of pkgs.values()) {
         for (const [file, u] of k.users) {
             read(file);
-            em.rel('uses', file, k.id, { names: [...u.names].sort().slice(0, 50), package: k.p.name }, file, u.line);
+            // Per name, the symbols that call it; an import with no call counts once.
+            const counts = [...u.names].sort().slice(0, 50).map((n) => `${n}:${Math.max(1, u.callers?.get(n)?.size ?? 0)}`);
+            em.rel('uses', file, k.id, { names: [...u.names].sort().slice(0, 50), counts, package: k.p.name }, file, u.line);
         }
     }
     runtimes(root, em, graphs);
@@ -247,8 +272,12 @@ function emitPackage(em: Emitter, k: Pkg, read: (rel: string) => string | null):
         private: k.p.private,
         used_by: users.length,
         nonimport: [...new Set(k.nonimport)].sort(),
+        ...(k.binding ? { binding: k.binding } : {}),
+        ...(k.importers?.length ? { importers: k.importers } : {}),
     };
-    if (direct && users.length === 0 && k.nonimport.length === 0) {
+    if (k.verdict) attrs['verdict'] = k.verdict;
+    // SY-1 reads `unused`: only an unused candidate a product manifest declares.
+    if (direct && k.verdict === 'unused-candidate' && k.roots.some((r) => scopeOf(r.manifest) === 'product')) {
         attrs['unused'] = true;
         attrs['unused_ref'] = ref(k.roots[0]!.manifest, k.roots[0]!.line);
     }
@@ -261,6 +290,112 @@ function emitPackage(em: Emitter, k: Pkg, read: (rel: string) => string | null):
         attrs['dev_in_prod_ref'] = ref(prodUser[0], prodUser[1].line);
     }
     em.fact('package', factKey(k.eco, k.p.key), `${k.p.name}@${k.p.version}`, attrs, k.lockfile, Math.max(1, k.p.line));
+}
+
+/** The `extra.unused` list of a composer manifest (the composer-unused convention), read once per manifest. */
+function ignoredBy(manifest: string, read: (rel: string) => string | null, memo: Map<string, Set<string>>): Set<string> {
+    let set = memo.get(manifest);
+    if (!set) {
+        set = new Set();
+        try {
+            const doc = JSON.parse(read(manifest) ?? '{}') as { extra?: { unused?: unknown[] } };
+            for (const n of doc.extra?.unused ?? []) if (typeof n === 'string') set.add(n.toLowerCase());
+        } catch {
+            /* an unreadable manifest ignores nothing */
+        }
+        memo.set(manifest, set);
+    }
+    return set;
+}
+
+/** One verdict per package, from its uses, its dependents' uses, the lockfile and the manifest (6.2). */
+function assignVerdicts(graphs: readonly LockGraph[], pkgs: Map<string, Pkg>, read: (rel: string) => string | null): void {
+    const dependents = new Map<string, Set<string>>();
+    for (const g of graphs) {
+        for (const p of g.packages.values()) {
+            for (const r of p.requires) {
+                if (!r.to) continue;
+                const to = pkgId(g.ecosystem, r.to);
+                const set = dependents.get(to) ?? new Set<string>();
+                set.add(pkgId(g.ecosystem, p.key));
+                dependents.set(to, set);
+            }
+        }
+    }
+    const used = (k: Pkg): boolean => k.users.size > 0 || k.nonimport.length > 0;
+    const dirOf = (f: string): string => (f.includes('/') ? f.slice(0, f.lastIndexOf('/')) : '');
+    for (const k of pkgs.values()) {
+        const rows: Array<Record<string, string>> = [];
+        for (const r of k.roots) {
+            const lock = [...k.lockfiles].find((l) => dirOf(l) === dirOf(r.manifest)) ?? (k.locked ? k.lockfile : '');
+            rows.push({ lockfile: lock, workspace: dirOf(r.manifest), specifier: r.range, relation: r.kind, scope: scopeOf(r.manifest) });
+        }
+        for (const g of graphs) {
+            if (!k.lockfiles.has(g.file) || k.roots.some((r) => dirOf(r.manifest) === dirOf(g.file))) continue;
+            for (const p of g.packages.values()) {
+                const req = p.requires.find((q) => q.to === k.p.key);
+                if (req) rows.push({ lockfile: g.file, workspace: dirOf(g.file), specifier: req.range, relation: `transitive via ${p.name}`, scope: scopeOf(g.file) });
+            }
+        }
+        rows.sort((a, b) => (`${a.lockfile} ${a.relation}` < `${b.lockfile} ${b.relation}` ? -1 : 1));
+        k.importers = rows.map((r) => JSON.stringify({ lockfile: r.lockfile, workspace: r.workspace, specifier: r.specifier, relation: r.relation, scope: r.scope }));
+    }
+    const memo = new Map<string, Set<string>>();
+    for (const k of pkgs.values()) {
+        const ignored = k.eco === 'composer' && k.roots.find((r) => ignoredBy(r.manifest, read, memo).has(k.p.name.toLowerCase()));
+        const through = [...(dependents.get(k.id) ?? [])].map((id) => pkgs.get(id)).filter((d): d is Pkg => !!d && used(d)).map((d) => d.p.name).sort()[0];
+        k.verdict = used(k)
+            ? 'used'
+            : k.notInstalled
+              ? 'not-installed'
+              : ignored
+                ? `ignored (${ignored.manifest} extra.unused)`
+                : k.p.meta || k.p.name.startsWith('@types/')
+                  ? 'virtual/meta'
+                  : through
+                    ? `used-through ${through}`
+                    : 'unused-candidate';
+    }
+}
+
+/**
+ * PHP classes bound to composer packages from the autoload maps read as data
+ * (6.1, H10): a classmap-only package, a root-namespace `use Dompdf;` and an
+ * aliased import all bind. Without `vendor/` only the lockfile's PSR maps can,
+ * and every composer package says its binding is partial.
+ */
+function phpUses(
+    root: string,
+    em: Emitter,
+    walk: (match: (name: string, rel: string) => boolean) => string[],
+    read: (rel: string) => string | null,
+    pkgs: Map<string, Pkg>,
+    preferred: (eco: Ecosystem, name: string) => Pkg | undefined,
+): void {
+    const composer = [...pkgs.values()].filter((k) => k.eco === 'composer');
+    if (composer.length === 0) return;
+    const vendor = readComposerAutoload(root);
+    const autoload = vendor ?? {
+        classOwner: new Map<string, string>(),
+        namespaces: composer.flatMap((k) => k.p.namespaces.map((ns) => [ns, k.p.name] as [string, string])).sort((a, b) => b[0].length - a[0].length),
+    };
+    const state = vendor ? 'complete' : 'partial';
+    for (const k of composer) k.binding = state;
+    if (!vendor) em.skip('vendor/composer', 'binding partial: no vendor/composer/installed.json — classmap-only packages cannot bind; PSR maps from composer.lock only');
+    for (const file of walk((n) => n.endsWith('.php'))) {
+        if (file.startsWith('vendor/')) continue;
+        const text = read(file);
+        if (text === null) continue;
+        for (const ref of phpClassRefs(text)) {
+            const owner = phpOwner(ref.name, autoload);
+            const k = owner ? preferred('composer', owner) : undefined;
+            if (!k) continue;
+            const u = k.users.get(file) ?? { names: new Set<string>(), line: ref.line };
+            u.names.add(ref.name.slice(ref.name.lastIndexOf('\\') + 1));
+            u.line = Math.min(u.line, ref.line);
+            k.users.set(file, u);
+        }
+    }
 }
 
 /** Imports the code graph already bound to `external:<specifier>`. */
@@ -306,12 +441,48 @@ function usesFromGraph(
         }
         if (!k) continue;
         const u = k.users.get(at.file) ?? { names: new Set<string>(), line: at.line };
-        if (used) u.names.add(used);
+        if (used) {
+            u.names.add(used);
+            const callers = (u.callers ??= new Map());
+            const set = callers.get(used) ?? new Set<string>();
+            if (e.relation === 'calls') set.add(e.source);
+            callers.set(used, set);
+        }
         u.line = Math.min(u.line, at.line);
         k.users.set(at.file, u);
     }
     // Only files the reader can witness.
     for (const k of pkgs.values()) for (const f of [...k.users.keys()]) if (!fs.existsSync(path.join(root, f)) || read(f) === null) k.users.delete(f);
+}
+
+/** Which tool a config file belongs to: the typed input it is read as. */
+function configKind(file: string): 'tsconfig' | 'eslint' | 'vite' | 'config' {
+    const base = file.slice(file.lastIndexOf('/') + 1);
+    if (/^tsconfig[\w.-]*\.json$/.test(base)) return 'tsconfig';
+    if (/eslint/.test(base)) return 'eslint';
+    if (/^(vite|vitest)\.config\./.test(base)) return 'vite';
+    return 'config';
+}
+
+/**
+ * The packages a tool config reaches by a name that is not the package name:
+ * tsconfig `types: ["node"]` → `@types/node` and `extends` of a package, a
+ * vitest coverage `provider: 'v8'` → `@vitest/coverage-v8`.
+ */
+function typedConfigInputs(kind: string, body: string): Array<{ pkg: string; line: number; what: string }> {
+    const out: Array<{ pkg: string; line: number; what: string }> = [];
+    const lineAt = (i: number): number => body.slice(0, i).split('\n').length;
+    if (kind === 'tsconfig') {
+        const types = /"types"\s*:\s*\[([^\]]*)\]/.exec(body);
+        if (types) for (const m of (types[1] as string).matchAll(/"([^"]+)"/g)) out.push({ pkg: `@types/${(m[1] as string).replace(/^@([^/]+)\//, '$1__')}`, line: lineAt(types.index), what: `types ${m[1]}` });
+        const ext = /"extends"\s*:\s*"((?:@[^/"]+\/)?[^./"][^/"]*)/.exec(body);
+        if (ext) out.push({ pkg: ext[1] as string, line: lineAt(ext.index), what: `extends ${ext[1]}` });
+    }
+    if (kind === 'vite') {
+        const prov = /provider\s*:\s*['"](v8|istanbul)['"]/.exec(body);
+        if (prov) out.push({ pkg: `@vitest/coverage-${prov[1]}`, line: lineAt(prov.index), what: `coverage provider ${prov[1]}` });
+    }
+    return out;
 }
 
 function nonImportUses(
@@ -377,22 +548,24 @@ function nonImportUses(
         });
     }
 
-    // Tool configs that name a package or its short plugin form.
+    // Tool configs that name a package or its short plugin form, typed by the tool (6.3).
     const configs = walk((_n, rel) => CONFIG_FILE.test(posix(rel)));
     const npmPkgs = [...pkgs.values()].filter((k) => k.eco === 'npm');
     for (const cfg of configs) {
         const body = read(cfg);
         if (body === null) continue;
+        const kind = configKind(cfg);
         for (const k of npmPkgs) {
             for (const form of shortForms(k.p.name)) {
                 const re = new RegExp(`["'\`]${form.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}(?:["'\`/:]|$)`);
                 const m = re.exec(body);
                 if (m) {
-                    note(k, `config ${cfg}:${body.slice(0, m.index).split('\n').length} ${form}`);
+                    note(k, `${kind} ${cfg}:${body.slice(0, m.index).split('\n').length} ${form}`);
                     break;
                 }
             }
         }
+        for (const t of typedConfigInputs(kind, body)) note(preferred('npm', t.pkg), `${kind} ${cfg}:${t.line} ${t.what}`);
         if (cfg.endsWith('.php') || cfg.endsWith('.neon') || cfg.endsWith('.neon.dist') || /\.xml(\.dist)?$/.test(cfg)) {
             for (const k of pkgs.values()) {
                 if (k.eco !== 'composer') continue;

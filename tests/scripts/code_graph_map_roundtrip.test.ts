@@ -55,7 +55,7 @@ async function hashTo(page: Page, h: string, route: string): Promise<void> {
     await at(page, route);
 }
 async function overviewDrawn(page: Page): Promise<void> {
-    expect(await page.locator('#av-main .ocard').count()).toBe(10);
+    expect(await page.locator('#av-main .ocard').count()).toBe(11);
     expect(await page.locator('#av-main').isVisible()).toBe(true);
 }
 

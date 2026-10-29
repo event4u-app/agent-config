@@ -80,21 +80,14 @@ export function ruleScopeFromSettings(
     const derivedWorkspaces = packageRoot === undefined ? null : consumerRuleWorkspaces(packageRoot);
     // The PACK axis is derived too since step 4.9 (owner directive 2026-10-24):
     // the active-pack set, the same set the skill/command prune uses, whether or
-    // not a settings file says anything. For one release window an explicitly
-    // written legacy `projection.rule_packs` still wins — see `legacyRulePacks`.
+    // not a settings file says anything. A leftover `projection.rule_packs` is
+    // ignored since 19.0.0; its tombstone in `REMOVED_KEYS` names it on stderr.
     const proj = settings['projection'];
     const p = typeof proj === 'object' && proj !== null && !Array.isArray(proj) ? (proj as Record<string, unknown>) : {};
-    const legacy = legacyRulePacks(p);
     const packs =
         packageRoot === undefined
-            ? legacy === undefined
-                ? null
-                : _list(legacy)
-            : resolve_rule_pack_scope(
-                  legacy === undefined ? RULE_PACKS_AUTO : legacy,
-                  packageRoot,
-                  _list(_runtimeActivePacks(settings)) ?? [],
-              );
+            ? null
+            : resolve_rule_pack_scope(RULE_PACKS_AUTO, packageRoot, _list(_runtimeActivePacks(settings)) ?? []);
     return {
         // DERIVED since ADR-293 step 4.6, not read. `projection.rule_workspaces`
         // carried this list as a settings default — the nine consumer workspace
@@ -111,24 +104,6 @@ export function ruleScopeFromSettings(
         packs,
         roles: _list(p['rule_roles']),
     };
-}
-
-/**
- * The release window in which an explicitly written `projection.rule_packs`
- * still decides (step 4.9). When it closes, delete {@link legacyRulePacks} and
- * its caller's branch; the tombstone in `REMOVED_KEYS` then names the key as
- * ignored.
- */
-export const RULE_PACKS_LEGACY_WINDOW = 'one release window after the 2026-10-24 retirement of projection.rule_packs';
-
-/**
- * The legacy `projection.rule_packs` value while the window is open, or
- * `undefined` when none was written. An explicitly written value wins over the
- * derivation — a consumer who chose a scope does not lose it silently on the
- * upgrade — and `doctor` names how it differs (`rulePacksLegacyCheck`).
- */
-export function legacyRulePacks(projection: Record<string, unknown>): unknown {
-    return Object.prototype.hasOwnProperty.call(projection, 'rule_packs') ? projection['rule_packs'] : undefined;
 }
 
 /** `runtime.active_packs` overlay from an already-parsed settings object. */

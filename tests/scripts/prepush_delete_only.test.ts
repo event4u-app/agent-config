@@ -49,8 +49,8 @@ beforeAll(() => {
  * regenerating the tree. Only the marker is asserted, never the exit code of
  * that later failure.
  */
-function run(refs: string): string {
-  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "prepush-cwd-"));
+function run(refs: string, cwdIn?: string): string {
+  const cwd = cwdIn ?? fs.mkdtempSync(path.join(os.tmpdir(), "prepush-cwd-"));
   try {
     return execFileSync("bash", [hook], {
       input: refs,
@@ -107,5 +107,66 @@ describe("pre-push — delete-only push", () => {
   it("does NOT skip when git passes no refs at all", () => {
     const out = run("");
     expect(out).not.toContain(MARKER);
+  });
+});
+
+// A tag names a commit that was already gated on its branch, and the gates read
+// the checked-out tree, not the tag. Measured 2026-10-28 on 19.0.0: the tag push
+// of the release tool's step 9 re-ran the gates for minutes with the ssh session
+// open, and GitHub dropped the connection. A neutral review then found the first
+// version skipped EVERY tag push — a tag on a local-only commit carries that
+// commit to the remote ungated — so the skip now requires the commit to be on a
+// remote branch already.
+describe("pre-push — tag-only push", () => {
+  const TAG_MARKER = "Tag-only push";
+  let repo: string;
+  let onRemote: string;
+  let localOnly: string;
+
+  beforeAll(() => {
+    repo = fs.mkdtempSync(path.join(os.tmpdir(), "prepush-tags-"));
+    const git = (...args: string[]) =>
+      execFileSync("git", ["-c", "user.email=t@example.com", "-c", "user.name=t", ...args], {
+        cwd: repo,
+        encoding: "utf8",
+      }).trim();
+    git("init", "-q");
+    git("commit", "-q", "--allow-empty", "-m", "gated");
+    onRemote = git("rev-parse", "HEAD");
+    git("update-ref", "refs/remotes/origin/main", onRemote);
+    git("commit", "-q", "--allow-empty", "-m", "never pushed");
+    localOnly = git("rev-parse", "HEAD");
+  });
+
+  it("skips every content gate when the tagged commit is on a remote branch", () => {
+    const out = run(`refs/tags/19.0.0 ${onRemote} refs/tags/19.0.0 ${ZERO}\n`, repo);
+    expect(out).toContain(TAG_MARKER);
+    expect(out).not.toContain("Preflight");
+  });
+
+  it("does NOT skip a tag on a commit no remote branch carries", () => {
+    const out = run(`refs/tags/20.0.0 ${localOnly} refs/tags/20.0.0 ${ZERO}\n`, repo);
+    expect(out).not.toContain(TAG_MARKER);
+  });
+
+  it("does NOT skip when one of several tags is on a local-only commit", () => {
+    const out = run(
+      `refs/tags/19.0.0 ${onRemote} refs/tags/19.0.0 ${ZERO}\nrefs/tags/20.0.0 ${localOnly} refs/tags/20.0.0 ${ZERO}\n`,
+      repo,
+    );
+    expect(out).not.toContain(TAG_MARKER);
+  });
+
+  it("does NOT skip when a branch rides along with the tag", () => {
+    const out = run(
+      `refs/tags/19.0.0 ${onRemote} refs/tags/19.0.0 ${ZERO}\nrefs/heads/main ${onRemote} refs/heads/main ${ZERO}\n`,
+      repo,
+    );
+    expect(out).not.toContain(TAG_MARKER);
+  });
+
+  it("does NOT skip a branch push whose LOCAL name looks like a tag", () => {
+    const out = run(`refs/tags/19.0.0 ${onRemote} refs/heads/main ${ZERO}\n`, repo);
+    expect(out).not.toContain(TAG_MARKER);
   });
 });

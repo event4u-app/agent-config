@@ -147,7 +147,7 @@ The host applies a critical lens to **every finding** (convergence
 
 | Check | Question | Tool |
 |---|---|---|
-| **Codebase fit** | Does the finding match the actual code, files, signatures, conventions? | `view` / `codebase-retrieval` / `grep` |
+| **Codebase fit** | Does the finding match the actual code, files, signatures, conventions? | `view` / `code-graph ask` / `grep` |
 | **Locked-decision conflict** | Does it contradict an ADR, kernel rule, contract under `docs/contracts/`, or `docs/decisions/`? | `view` |
 | **Already addressed** | Is it a generic best-practice already covered by an existing rule, skill, or test? | `view` / `grep` |
 | **Cost / benefit** | Is the change worth the diff size, churn, and review cost vs. the marginal benefit? | reasoning |

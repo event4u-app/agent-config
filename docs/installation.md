@@ -345,6 +345,13 @@ Under the hood:
     thins the layer while it is there. It is sticky — a later `install` or
     upgrade keeps it — and `agent-config uninstall` removes it. It is not a
     setting and has no settings key.
+  - `--enrol` lets a session thin this machine's installed rule layer while
+    the package's own promotion switch is still off: it writes one
+    `enrolment` field into the same receipt. The layer is thinned only when
+    the layer-form decision holds (`agent-config doctor --check layer-form`
+    prints it), and a missing standing law demotes it as usual. `--full`
+    wins over `--enrol`. Meant for maintainer machines that produce the
+    evidence the default flip waits on; not a setting.
 
 A full run creates:
 

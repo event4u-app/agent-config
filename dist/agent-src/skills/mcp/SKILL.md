@@ -143,13 +143,13 @@ Structured problem-solving.
 
 ```
 Bug investigation:
-  Jira (ticket context) + Sentry (stacktrace) + codebase-retrieval (code)
+  Jira (ticket context) + Sentry (stacktrace) + code-graph ask (code)
 
 Feature planning:
-  Jira (requirements) + codebase-retrieval (existing code) + Context7 (library docs)
+  Jira (requirements) + code-graph ask (existing code) + Context7 (library docs)
 
 CI fix:
-  GitHub (failure logs) + codebase-retrieval (failing code) + launch-process (run locally)
+  GitHub (failure logs) + code-graph ask (failing code) + launch-process (run locally)
 
 PR creation:
   GitHub (create PR) + Jira (transition to "In Review")

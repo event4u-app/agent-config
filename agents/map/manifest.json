@@ -1,22 +1,23 @@
 {
   "schema": 1,
-  "generation": "36eb5b1973482ba7",
-  "commit": "2efd5be1444a",
+  "generation": "fdfc2399714682cd",
+  "commit": "8ee69725502a",
   "state": "fresh",
   "areas": {
     "code": {
       "path": "code/map.json",
       "source": "code-graph",
       "freshness": "fresh",
-      "facts": 11614
+      "facts": 11765
     },
     "data": {
       "path": "data/data.json",
       "source": "data lane (migrations, dumps, snapshots)",
       "freshness": "empty",
       "completeness": "unknown",
-      "facts": 36,
-      "findings": 18,
+      "facts": 0,
+      "findings": 0,
+      "fixture_findings": 18,
       "reason": "no migration, schema file, committed dump or snapshot was found"
     },
     "systems": {
@@ -24,16 +25,16 @@
       "source": "systems lane (lockfiles, manifests, version files, images, CI)",
       "freshness": "fresh",
       "completeness": "complete",
-      "facts": 1836,
-      "findings": 66
+      "facts": 1730,
+      "findings": 13
     },
     "interfaces": {
       "path": "interfaces/interfaces.json",
       "source": "interfaces lane (call sites, contracts, configuration names)",
       "freshness": "fresh",
       "completeness": "complete",
-      "facts": 40,
-      "findings": 6
+      "facts": 20,
+      "findings": 2
     },
     "runtime": {
       "path": "runtime/runtime.json",
@@ -54,11 +55,10 @@
     "impact": {
       "path": "code/map.json",
       "source": "review-risk over the working diff",
-      "freshness": "empty",
+      "freshness": "fresh",
       "completeness": "complete",
       "facts": 0,
-      "findings": 0,
-      "reason": "no change against HEAD"
+      "findings": 0
     },
     "agent": {
       "path": "code/map.json",

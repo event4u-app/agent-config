@@ -45,6 +45,7 @@ import { arrivalEvidence, arrivalsDirUnder, latestArrivalRecord, readObserverLin
 import { decideLayerForm, gatherShippedEvidence, ruleForm } from '../scripts/_lib/layer_form_decision.js';
 import { readMachineEvidence, withMachineEvidence } from '../scripts/_lib/layer_form_evidence.js';
 import { readConsequenceClass } from '../scripts/_lib/rule_consequence_class.js';
+import { readEnrolment } from './userPin.js';
 import { thinInstalledRuleLayer } from './installThinLayer.js';
 import { CLAUDE_LAYER_DIRNAME, DEMOTED_MARKER, PACKAGE_STAMP_LINE, THINNED_MARKER, currentRuntimeDir, markClaudeLayer, readCarrierState, runtimeRootFor, } from './stagedRuntime.js';
 export const PROMOTION_SWITCH_REL = path.join('src', 'config', 'layer-form-promotion.json');
@@ -325,8 +326,9 @@ export function sessionLayerStep(opts = {}) {
         }
         if (state.layer === 'demoted')
             return { action: 'none', reason: 'demoted' };
-        if (!promotionEnabled(packageRoot))
+        if (!promotionEnabled(packageRoot) && readEnrolment(runtimeRoot) === null) {
             return { action: 'none', reason: 'promotion-disabled' };
+        }
         const decision = decideClaudeLayer(packageRoot, env);
         if (decision.form !== 'thinned')
             return { action: 'none', reason: decision.reason };

@@ -1,0 +1,26 @@
+diff --git a/src/checkout.ts b/src/checkout.ts
+index 3cbc8a6..765942c 100644
+--- a/src/checkout.ts
++++ b/src/checkout.ts
+@@ -4,5 +4,5 @@
+ import { formatPrice } from "./format-price.js";
+ 
+ export function lineItem(label: string, cents: number): string {
+-  return `${label}: ${formatPrice(cents)}`;
++  return `${label}: ${formatPrice(cents, "EUR")}`;
+ }
+diff --git a/src/format-price.ts b/src/format-price.ts
+index fe2dc1d..1612f5d 100644
+--- a/src/format-price.ts
++++ b/src/format-price.ts
+@@ -13,7 +13,8 @@
+  * broken call site.
+  */
+ 
+-export function formatPrice(cents: number): string {
++export function formatPrice(cents: number, currency: string): string {
+   const value = (cents / 100).toFixed(2);
+-  return `€${value}`;
++  const symbol = currency === "USD" ? "$" : "€";
++  return `${symbol}${value}`;
+ }

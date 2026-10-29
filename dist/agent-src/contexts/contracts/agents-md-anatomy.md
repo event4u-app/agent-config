@@ -60,9 +60,12 @@ ln -s AGENTS.md .cursorrules
 
 ```markdown
 <!-- CLAUDE.md -->
-> See [`AGENTS.md`](AGENTS.md) — single source of truth for agent
-> instructions in this repo.
+@AGENTS.md
 ```
+
+For Claude Code the stub is an `@AGENTS.md` import, not a link sentence:
+the import loads AGENTS.md into context every session, while a "see
+AGENTS.md" link is only opened at the agent's discretion.
 
 Do not duplicate AGENTS.md content into the tool-specific files; the
 agent ends up with two diverging versions and the budget is paid

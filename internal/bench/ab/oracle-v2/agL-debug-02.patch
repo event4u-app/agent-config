@@ -1,0 +1,13 @@
+diff --git a/src/coerce.mjs b/src/coerce.mjs
+index af7ebef..12c3923 100644
+--- a/src/coerce.mjs
++++ b/src/coerce.mjs
+@@ -37,7 +37,7 @@ export function coerceRows(validated) {
+       rateCents = toInt(row.raw.rateCents);
+     } else {
+       // Blank rate: fall back to the most recently used rate.
+-      rateCents = lastRate || defaultRateFor(row.raw.project);
++      rateCents = defaultRateFor(row.raw.project);
+     }
+     lastRate = rateCents;
+ 

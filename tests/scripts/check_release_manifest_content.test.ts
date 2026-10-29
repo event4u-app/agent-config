@@ -8,7 +8,7 @@ import { dirname, join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { main, manifestDifferences } from '../../src/scripts/check_release_manifest_content.js';
+import { main, manifestDifferences, workflowTemplateDifferences } from '../../src/scripts/check_release_manifest_content.js';
 
 function git(cwd: string, args: string[]): void {
     const r = spawnSync('git', args, { cwd, encoding: 'utf8' });
@@ -179,5 +179,32 @@ describe('the impact-map entry the release writes into package.json', () => {
 
     it('allows the entry only in package.json', () => {
         expect(manifestDifferences('.augment-plugin/plugin.json', base(), head({ agentConfig: { impact: { '2.0.0': entry('notice') } } }))).toHaveLength(1);
+    });
+});
+
+// The release-PR shape admits the workflow templates by NAME so the cut can
+// re-pin `@event4u/agent-config@<major>`. A neutral review of #2737 found that
+// this admitted any edit to them — a changed trigger, permission or command —
+// so the content half now requires that nothing but those pins moved.
+describe('workflowTemplateDifferences — a release re-pins, never edits', () => {
+    const BASE = 'on: [pull_request]\njobs:\n  r:\n    steps:\n      - run: npm install -g @event4u/agent-config@18\n';
+
+    it('a pure major re-pin is in shape', () => {
+        expect(workflowTemplateDifferences('t.yml', BASE, BASE.replace('@18', '@19'))).toEqual([]);
+    });
+
+    it('a changed trigger next to the re-pin is refused', () => {
+        const head = BASE.replace('@18', '@19').replace('[pull_request]', '[pull_request_target]');
+        expect(workflowTemplateDifferences('t.yml', BASE, head)).toHaveLength(1);
+    });
+
+    it('an added or removed template is refused', () => {
+        expect(workflowTemplateDifferences('t.yml', null, BASE)).toHaveLength(1);
+        expect(workflowTemplateDifferences('t.yml', BASE, null)).toHaveLength(1);
+    });
+
+    it('a pin moved to an exact version or another package is refused', () => {
+        expect(workflowTemplateDifferences('t.yml', BASE, BASE.replace('@18', '@19.0.0'))).toHaveLength(1);
+        expect(workflowTemplateDifferences('t.yml', BASE, BASE.replace('agent-config@18', 'agent-config-x@18'))).toHaveLength(1);
     });
 });

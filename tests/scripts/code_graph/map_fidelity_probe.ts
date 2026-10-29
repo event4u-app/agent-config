@@ -1,0 +1,436 @@
+/**
+ * The measuring side of the map-views fidelity matrices
+ * (road-to-map-views-from-the-handover): it draws this repository's map and
+ * the demo map from the CURRENT viewer sources, opens them and the handover's
+ * pages in Chromium, and returns what was measured — custom properties,
+ * computed styles at named selectors, landmarks and roles, overflow at a
+ * width. No network: every request but file:// is aborted.
+ *
+ *   npx tsx tests/scripts/code_graph/map_fidelity_probe.ts <probe> <out.json>
+ *
+ * The handover is not in the tree (inbox rounds are local); set
+ * MAP_HANDOVER_DIR to the folder holding p01 … p12.
+ */
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import type { Browser, Page } from '@playwright/test';
+
+import { renderHtml } from '../../../src/scripts/code_graph/map.js';
+import { buildDemoMap } from '../../../src/scripts/code_graph/map_demo.js';
+import { HANDOVER_TOKENS } from './handover_tokens.js';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+export type Theme = 'dark' | 'light';
+export const WIDTHS = [1440, 375, 320] as const;
+
+export interface Built { real: string; demo: string; hub: string }
+
+/** This repository's committed map re-rendered with the current viewer, and the demo map. */
+export async function buildPages(out = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-fidelity-'))): Promise<Built> {
+    const doc = JSON.parse(fs.readFileSync(path.join(ROOT, 'agents/map/code/map.json'), 'utf-8')) as { meta: Parameters<typeof renderHtml>[1]; model: Parameters<typeof renderHtml>[0]; areas: Parameters<typeof renderHtml>[2] };
+    const real = path.join(out, 'real.html');
+    fs.writeFileSync(real, renderHtml(doc.model, doc.meta, doc.areas));
+    process.env['EVENT4U_CONFIG_HOME'] = path.join(out, 'home');
+    const demoRoot = path.join(out, 'demo');
+    fs.mkdirSync(demoRoot, { recursive: true });
+    const demo = await buildDemoMap(demoRoot);
+    return { real, demo: demo.page, hub: demo.hubPage };
+}
+
+export async function launch(): Promise<Browser> {
+    const { chromium } = await import('@playwright/test');
+    return chromium.launch({ headless: true });
+}
+
+async function offline(page: Page): Promise<void> {
+    await page.route(/^(https?|wss?):/, (r) => r.abort());
+    // tsx keeps function names with an `__name` helper that the page does not have.
+    await page.addInitScript('window.__name = function (f) { return f; };');
+}
+
+/** A built map page, German, at a width and theme, once the router has drawn a route. */
+export async function openBuilt(browser: Browser, html: string, hash: string, width: number, theme: Theme): Promise<Page> {
+    const page = await browser.newPage({ viewport: { width, height: 900 }, colorScheme: theme, locale: 'de-DE' });
+    await offline(page);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto(pathToFileURL(html).href + hash);
+    await page.waitForFunction(() => (window as unknown as { __mapRoute?: unknown }).__mapRoute !== undefined);
+    return page;
+}
+
+/** A handover page (`p12/Overview.dc.html` …), switched to the light theme by its own button. */
+export async function openDesign(browser: Browser, rel: string, width: number, theme: Theme): Promise<Page> {
+    const dir = process.env['MAP_HANDOVER_DIR'];
+    if (!dir) throw new Error('MAP_HANDOVER_DIR is not set');
+    const page = await browser.newPage({ viewport: { width, height: 900 }, colorScheme: theme, locale: 'de-DE' });
+    await offline(page);
+    await page.goto(pathToFileURL(path.join(dir, rel)).href, { waitUntil: 'load' });
+    await page.waitForSelector('.ac-dark, .ac-light', { timeout: 15_000 });
+    await page.waitForTimeout(400);
+    // The handover starts in the scheme the browser prefers; its own button switches it.
+    const want = theme === 'light' ? '.ac-light' : '.ac-dark';
+    if (!(await page.$(want))) {
+        await page.locator('button[aria-label="Helles Design"], button[aria-label="Dunkles Design"]').first().click();
+        await page.waitForSelector(want);
+    }
+    return page;
+}
+
+/** Custom properties as the browser computes them at an element (`:root` by default). */
+export async function computedVars(page: Page, names: readonly string[], selector = ':root'): Promise<Record<string, string>> {
+    return page.evaluate(
+        ([n, s]) => {
+            const el = document.querySelector(s as string) ?? document.documentElement;
+            const cs = getComputedStyle(el);
+            return Object.fromEntries((n as string[]).map((k) => [k, cs.getPropertyValue(k).trim()]));
+        },
+        [names, selector] as const,
+    );
+}
+
+/** Computed properties at the first visible element matching each selector; null when none matches. */
+export async function computedAt(page: Page, selectors: readonly string[], props: readonly string[]): Promise<Record<string, Record<string, string> | null>> {
+    return page.evaluate(
+        ([sels, ps]) => {
+            const vis = (e: Element) => { const r = e.getBoundingClientRect(); const s = getComputedStyle(e); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden'; };
+            const out: Record<string, Record<string, string> | null> = {};
+            for (const s of sels as string[]) {
+                const el = Array.from(document.querySelectorAll(s)).find(vis);
+                if (!el) { out[s] = null; continue; }
+                const cs = getComputedStyle(el);
+                out[s] = Object.fromEntries((ps as string[]).map((p) => [p, cs.getPropertyValue(p)]));
+            }
+            return out;
+        },
+        [selectors, props] as const,
+    );
+}
+
+/** Landmarks and widget roles that are visible: tag[role] "aria-label" and, for options, their text and state. */
+export async function landmarks(page: Page, scope = 'body'): Promise<{ groups: string[]; roles: string[] }> {
+    return page.evaluate((root) => {
+        const vis = (e: Element) => { const r = e.getBoundingClientRect(); const s = getComputedStyle(e); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none'; };
+        const txt = (e: Element) => ((e as HTMLElement).innerText || e.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim().slice(0, 50);
+        const base = document.querySelector(root) ?? document.body;
+        const q = (s: string) => [base, ...Array.from(base.querySelectorAll(s))].filter((e) => e.matches(s)).filter(vis);
+        return {
+            groups: q('header,nav,main,aside,footer,[role=tablist],[role=radiogroup],[role=group],[role=switch]').map((e) => `${e.tagName.toLowerCase()}${e.getAttribute('role') ? `[${e.getAttribute('role')}]` : ''} "${e.getAttribute('aria-label') ?? ''}"`),
+            roles: q('[role=tab],[role=radio],[role=checkbox],[role=switch]').map((e) => {
+                const on = e.getAttribute('aria-selected') ?? e.getAttribute('aria-checked');
+                return `${e.getAttribute('role')}:${txt(e)}${on === 'true' ? '*' : ''}`;
+            }),
+        };
+    }, scope);
+}
+
+/** Whether the document scrolls sideways, and a named element's scroll and client width. */
+export async function overflowAt(page: Page, selector?: string): Promise<{ doc: boolean; docSw: number; vw: number; sw?: number; cw?: number; overflowX?: string }> {
+    return page.evaluate((s) => {
+        const d = document.documentElement;
+        const out: { doc: boolean; docSw: number; vw: number; sw?: number; cw?: number; overflowX?: string } = { doc: d.scrollWidth > window.innerWidth, docSw: d.scrollWidth, vw: window.innerWidth };
+        if (s) {
+            const el = document.querySelector(s) as HTMLElement | null;
+            if (el) { out.sw = el.scrollWidth; out.cw = el.clientWidth; out.overflowX = getComputedStyle(el).overflowX; }
+        }
+        return out;
+    }, selector);
+}
+
+const TOKEN_NAMES = Object.keys(HANDOVER_TOKENS);
+
+/** Probe `tokens`: every handover token computed at :root of the built map and of the handover, both themes. */
+async function probeTokens(browser: Browser, built: Built): Promise<unknown> {
+    const out: Record<string, unknown> = {};
+    for (const theme of ['dark', 'light'] as const) {
+        const b = await openBuilt(browser, built.real, '#/overview', 1440, theme);
+        out[`built_${theme}`] = await computedVars(b, TOKEN_NAMES);
+        out[`built_alias_${theme}`] = await computedVars(b, ['--alert', '--alertText', '--alertChip', '--alertTint']);
+        await b.close();
+        const h = await openBuilt(browser, built.hub, '#/projects', 1440, theme);
+        out[`hub_grid_${theme}`] = await computedVars(h, ['--grid'], '.ops-graph');
+        await h.close();
+        const d = await openDesign(browser, 'p08/Systems.dc.html', 1440, theme);
+        out[`design_${theme}`] = await computedVars(d, TOKEN_NAMES, theme === 'dark' ? '.ac-dark' : '.ac-light');
+        await d.close();
+        const m = await openDesign(browser, 'p11/Main.dc.html', 1440, theme);
+        out[`design_main_${theme}`] = await computedVars(m, ['--node', '--nodeStroke', '--edge', '--d3', '--blastBg', '--glow', '--grid'], theme === 'dark' ? '.ac-dark' : '.ac-light');
+        await m.close();
+    }
+    return out;
+}
+
+const STYLE_PROPS = ['height', 'padding', 'border-radius', 'font-size', 'font-weight', 'color', 'background-color', 'box-shadow', 'border', 'font-family', 'white-space', 'gap'] as const;
+
+/** Probe `shell`: header and nav of the handover's Übersicht page against the built map's, three widths, both themes. */
+async function probeShell(browser: Browser, built: Built): Promise<unknown> {
+    const design = { nav: 'nav[aria-label="Ebenen"]', link: 'nav[aria-label="Ebenen"] a:not([aria-current])', current: 'nav[aria-label="Ebenen"] a[aria-current]', empty: 'nav[aria-label="Ebenen"] a[title]',
+        commit: 'header span[title^="Map gezeichnet"]', fresh: 'header span[title^="HEAD"]', snap: 'header span[title^="Committete"]', header: 'header' };
+    const build = { nav: '#areanav', link: '#areanav a:not([aria-current]):not(.empty)', current: '#areanav a[aria-current]', empty: '#areanav a.empty', commit: '#pin-commit', fresh: '#pin-fresh', snap: '#pin-snap', header: 'header' };
+    const out: Record<string, unknown> = {};
+    for (const theme of ['dark', 'light'] as const) {
+        for (const width of WIDTHS) {
+            const d = await openDesign(browser, 'p12/Overview.dc.html', width, theme);
+            const b = await openBuilt(browser, built.real, '#/overview', width, theme);
+            const row: Record<string, unknown> = {};
+            for (const [side, page, sel] of [['design', d, design], ['build', b, build]] as const) {
+                row[side] = {
+                    landmarks: await landmarks(page, 'header'),
+                    styles: width === 1440 ? await computedAt(page, [sel.link, sel.current, sel.empty, sel.commit, sel.fresh, sel.snap], STYLE_PROPS) : undefined,
+                    nav: await overflowAt(page, sel.nav),
+                    headerHeight: await page.evaluate((s) => Math.round(document.querySelector(s)!.getBoundingClientRect().height), sel.header),
+                    navTexts: await page.evaluate((s) => Array.from(document.querySelectorAll(s + ' a')).map((a) => (a.textContent ?? '').trim()), sel.nav),
+                    titles: await page.evaluate((s) => Array.from(document.querySelectorAll(s + ' a[title]')).map((a) => `${(a.textContent ?? '').trim()}=${a.getAttribute('title')}`), sel.nav),
+                };
+            }
+            out[`${theme}_${width}`] = row;
+            await d.close();
+            await b.close();
+        }
+    }
+    return out;
+}
+
+/** Visible text lines of each element matching a selector. */
+async function textLines(page: Page, selector: string): Promise<string[][]> {
+    return page.evaluate((s) => Array.from(document.querySelectorAll(s)).map((e) => (e as HTMLElement).innerText.split('\n').map((l) => l.trim()).filter(Boolean)), selector);
+}
+
+/** Probe `overview`: the Übersicht page of the handover against this repository's map. */
+async function probeOverview(browser: Browser, built: Built): Promise<unknown> {
+    const design = { card: 'main div[style*="auto-fill"] > div', radio: '[role="radio"][aria-checked="true"]', radioOff: '[role="radio"][aria-checked="false"]', banner: 'main > div[style*="inset 4px"]',
+        warn: 'main div[style*="auto-fill"] span[style*="amberTint"]', kv: 'main div[style*="auto-fill"] > div > div.mono', bar: 'main div[style*="auto-fill"] > div > div[style*="height: 5px"]',
+        legend: 'main > div:nth-child(2)', lower: 'main div[style*="340px"] > div', h1: 'main h1', prov: 'main > span.mono' };
+    const build = { card: '.ogrid > .ocard', radio: '.ov-legend [role="radio"][aria-checked="true"]', radioOff: '.ov-legend [role="radio"][aria-checked="false"]', banner: '#ov-banner',
+        warn: '.owarn', kv: '.ocard .okv', bar: '.ocard .obar', legend: '.ov-legend', lower: '.ov-lower > .card', h1: '.ov-intro h1', prov: '#prov' };
+    const out: Record<string, unknown> = {};
+    for (const theme of ['dark', 'light'] as const) {
+        for (const width of WIDTHS) {
+            const d = await openDesign(browser, 'p12/Overview.dc.html', width, theme);
+            const b = await openBuilt(browser, built.real, '#/overview', width, theme);
+            const row: Record<string, unknown> = {};
+            for (const [side, page, sel] of [['design', d, design], ['build', b, build]] as const) {
+                row[side] = {
+                    landmarks: await landmarks(page, side === 'design' ? 'main' : '#av-main'),
+                    overflow: await overflowAt(page),
+                    styles: width === 1440 ? await computedAt(page, [sel.card, sel.radio, sel.radioOff, sel.banner, sel.warn, sel.kv, sel.bar, sel.legend, sel.lower, sel.h1, sel.prov], [...STYLE_PROPS, 'grid-template-columns', 'border-top-style', 'padding-top', 'min-height', 'letter-spacing', 'text-transform', 'font-family']) : undefined,
+                    cards: width === 1440 && theme === 'dark' ? await textLines(page, sel.card) : undefined,
+                    lower: width === 1440 && theme === 'dark' ? await textLines(page, sel.lower) : undefined,
+                    banner: width === 1440 && theme === 'dark' ? await textLines(page, sel.banner) : undefined,
+                    gridCols: width === 1440 ? await page.evaluate((s) => getComputedStyle(document.querySelector(s)!.parentElement!).gridTemplateColumns, sel.card) : undefined,
+                };
+            }
+            out[`${theme}_${width}`] = row;
+            await d.close();
+            await b.close();
+        }
+    }
+    return out;
+}
+
+/** The seven pages of Phase 4: handover file and route. */
+export const SMALL_PAGES: Record<string, { file: string; route: string }> = {
+    data: { file: 'p03/Database.dc.html', route: 'data' }, interfaces: { file: 'p06/Integrations.dc.html', route: 'interfaces' }, runtime: { file: 'p05/Infra.dc.html', route: 'runtime' },
+    delivery: { file: 'p09/EnvCI.dc.html', route: 'delivery' }, impact: { file: 'p04/Impact.dc.html', route: 'impact' }, agent: { file: 'p01/Agent.dc.html', route: 'agent' }, code: { file: 'p11/Main.dc.html', route: 'code' },
+};
+const PAGE_SEL = {
+    design: { tablist: '[role="tablist"][aria-label="Ansicht"], [role="tablist"]', tab: '[role="tab"][aria-selected="true"]', tabOff: '[role="tab"][aria-selected="false"]', cap: 'aside .cap', prov: 'main span.mono[style*="faint"]', radio: '[role="radio"][aria-checked="true"]:not([aria-label])' },
+    build: { tablist: '#av [role="tablist"], #wb [role="tablist"]', tab: '#av [role="tab"][aria-selected="true"], #wb [role="tab"][aria-selected="true"]', tabOff: '#av [role="tab"][aria-selected="false"], #wb [role="tab"][aria-selected="false"]', cap: '#av aside .cap, #wb aside .cap', prov: '#prov', radio: '#av [role="radio"][aria-checked="true"], #wb [role="radio"][aria-checked="true"]' },
+};
+/** Landmarks below the header, which the shell matrix already holds. */
+async function pageLandmarks(page: Page): Promise<{ groups: string[]; roles: string[] }> {
+    const lm = await landmarks(page, 'body');
+    const head = await landmarks(page, 'header');
+    const drop = (xs: string[], ys: string[]) => { const left = [...ys]; return xs.filter((x) => { const i = left.indexOf(x); if (i >= 0) { left.splice(i, 1); return false; } return true; }); };
+    return { groups: drop(lm.groups, head.groups), roles: drop(lm.roles, head.roles) };
+}
+async function toDemo(page: Page): Promise<boolean> {
+    const demo = page.locator('[role="radiogroup"][aria-label="Datenquelle"] [role="radio"]', { hasText: 'Demo' });
+    if (!(await demo.count())) return false;
+    await demo.first().click();
+    await page.waitForTimeout(300);
+    return true;
+}
+
+/** Probe `pages`: the seven small-delta pages, real and demo, against their handovers. */
+/** Phases 6 and 7: the two new routes, measured the same way. */
+export const NEW_PAGES: Record<string, { file: string; route: string }> = { knowledge: { file: 'p10/Wissen.dc.html', route: 'knowledge' }, bugs: { file: 'p02/Bugs.dc.html', route: 'bugs' } };
+async function probePages(browser: Browser, built: Built, pages: Record<string, { file: string; route: string }> = SMALL_PAGES): Promise<unknown> {
+    const out: Record<string, unknown> = {};
+    for (const [id, spec] of Object.entries(pages)) {
+        const row: Record<string, unknown> = {};
+        for (const data of ['real', 'demo'] as const) {
+            for (const theme of ['dark', 'light'] as const) {
+                for (const width of WIDTHS) {
+                    const d = await openDesign(browser, spec.file, width, theme);
+                    if (data === 'demo') await toDemo(d);
+                    const b = await openBuilt(browser, data === 'real' ? built.real : built.demo, '#/' + spec.route, width, theme);
+                    const cell: Record<string, unknown> = {};
+                    for (const [side, page] of [['design', d], ['build', b]] as const) {
+                        const sel = PAGE_SEL[side];
+                        cell[side] = {
+                            overflow: await overflowAt(page),
+                            landmarks: width === 1440 && theme === 'dark' ? await pageLandmarks(page) : undefined,
+                            styles: width === 1440 ? await computedAt(page, [sel.tablist, sel.tab, sel.tabOff, sel.cap, sel.prov, sel.radio], STYLE_PROPS) : undefined,
+                            prov: width === 1440 && theme === 'dark' ? await page.evaluate((s) => document.querySelector(s)?.textContent ?? null, sel.prov) : undefined,
+                        };
+                    }
+                    row[`${data}_${theme}_${width}`] = cell;
+                    await d.close();
+                    await b.close();
+                }
+            }
+        }
+        out[id] = row;
+    }
+    return out;
+}
+
+const SY_LENSES: Array<[string, string]> = [['overview', 'Übersicht'], ['pk', 'Pakete'], ['deps', 'Abhängigkeiten'], ['rt', 'Runtimes'], ['find', 'Befunde'], ['br', 'Branches']];
+const SY_SEL = {
+    design: { tab: '[role="tablist"][aria-label="Ansicht"] [role="tab"][aria-selected="true"]', pm: 'aside[aria-label="Filter"] [role="checkbox"]', st: '[role="radiogroup"][aria-label="Status"] [aria-checked="true"]', seg: '[role="radiogroup"][aria-label="Scope"] [aria-checked="true"]',
+        sw: 'aside[aria-label="Filter"] [role="switch"]', kpi: 'main div[style*="minmax(104px"] > button', row: 'main button.pkgrid', hop: 'main button[style*="2px solid var(--brand)"]', card: 'main div[style*="border-radius: 12px"]', back: 'nav[aria-label="Verlauf"] button[aria-label="Zurück"]', step: 'nav[aria-label="Verlauf"] button[aria-current="page"]', count: 'main span.mono[style*="font-weight: 600"]' },
+    build: { tab: '#av-bar [role="tab"][aria-selected="true"]', pm: '#av-left [role="checkbox"]', st: '#av-left [role="radiogroup"][aria-label="Status"] [aria-checked="true"]', seg: '#av-left [role="radiogroup"][aria-label="Scope"] [aria-checked="true"]',
+        sw: '#av-left [role="switch"]', kpi: '#sy-kpis .sy-kpi', row: '#sy-list .gt-row', hop: '#sy-nb .sy-nbnode.main', card: '#av-main .sy-box', back: '#sy-bar .hist-back', step: '#sy-bar .hist-step[aria-current="page"]', count: '#sy-count' },
+};
+/** Probe `systems`: the Systeme page per lens against the handover, which was drawn from this repository's own systems.json. */
+async function probeSystems(browser: Browser, built: Built): Promise<unknown> {
+    const out: Record<string, unknown> = {};
+    for (const theme of ['dark', 'light'] as const) {
+        for (const width of WIDTHS) {
+            const d = await openDesign(browser, 'p08/Systems.dc.html', width, theme);
+            const b = await openBuilt(browser, built.real, '#/systems', width, theme);
+            const cell: Record<string, unknown> = {};
+            for (const [lensId, label] of SY_LENSES) {
+                await d.locator('[role="tablist"][aria-label="Ansicht"] [role="tab"]', { hasText: label }).first().click();
+                await b.locator(`[data-lens="${lensId}"]`).click();
+                await d.waitForTimeout(150);
+                const row: Record<string, unknown> = {};
+                for (const [side, page] of [['design', d], ['build', b]] as const) {
+                    const sel = SY_SEL[side];
+                    row[side] = {
+                        overflow: await overflowAt(page),
+                        landmarks: width === 1440 && theme === 'dark' ? await pageLandmarks(page) : undefined,
+                        styles: width === 1440 ? await computedAt(page, Object.values(sel), STYLE_PROPS) : undefined,
+                        text: width === 1440 && theme === 'dark' ? await page.evaluate((s) => { const m = document.querySelector(s); return m ? (m as HTMLElement).innerText.replace(/\s+/g, ' ').slice(0, 1600) : null; }, side === 'design' ? 'main' : '#av-main') : undefined,
+                    };
+                }
+                cell[lensId] = row;
+            }
+            out[`${theme}_${width}`] = cell;
+            await d.close();
+            await b.close();
+        }
+    }
+    return out;
+}
+
+/** Probe `systemsPaths`: the brief's §9.1 package questions, answered by clicking on this repository's map. */
+async function probeSystemsPaths(browser: Browser, built: Built): Promise<unknown> {
+    const page = await openBuilt(browser, built.real, '#/systems', 1440, 'dark');
+    const txt = (sel: string) => page.evaluate((s) => Array.from(document.querySelectorAll(s)).map((e) => (e as HTMLElement).innerText.replace(/\s+/g, ' ').trim()), sel);
+    const steps: Array<{ q: string; path: string; answer: unknown }> = [];
+    await page.click('[data-lens="pk"]');
+    await page.fill('#sy-q', 'argparse');
+    await page.press('#sy-q', 'Enter');
+    await page.locator('#sy-list .gt-row').first().click();
+    await page.click('#sy-open');
+    steps.push({ q: 'Is it direct?', path: 'Pakete › search "argparse" › row › "Abhängigkeiten & Nutzung öffnen →"', answer: await txt('.sy-verdict') });
+    steps.push({ q: 'Why is it here (all chains)?', path: 'Abhängigkeiten › "Warum installiert?"', answer: await txt('#sy-why .sy-chain') });
+    steps.push({ q: 'Who requires it, how many?', path: 'Abhängigkeiten › "Benötigt von · N"', answer: await txt('#sy-reqby .sy-boxh, #sy-reqby .sy-ln') });
+    steps.push({ q: 'What does it pull in?', path: 'Abhängigkeiten › "Benötigt selbst · N" and KPI "zieht insgesamt nach"', answer: [...(await txt('#sy-reqs .sy-boxh')), ...(await txt('#sy-dkpis .sy-dkpi'))] });
+    steps.push({ q: 'Who in our code uses it, which names, in which files and areas?', path: 'Abhängigkeiten › "Nutzung im Code" › file rows, "Nach Ordner", "Meistgenutzt"', answer: await txt('#sy-use .sy-boxh, #sy-use .sy-urow, #sy-byarea, #sy-top') });
+    steps.push({ q: 'What else uses it without importing?', path: 'Abhängigkeiten › "Nutzung ohne Import" / Detail › "ohne Import"', answer: await txt('#sy-detail .sy-kv') });
+    steps.push({ q: 'Findings?', path: 'Detail › finding card', answer: await txt('#sy-detail .sy-fcard') });
+    steps.push({ q: 'Can it go?', path: 'Abhängigkeiten › "Was die Map hier nicht weiß" › "Kann es weg?"', answer: await txt('#sy-unknown span') });
+    await page.close();
+    return steps;
+}
+
+/** Probe `projects`: the hub of the demo fixture against the handover's Projects page, both lenses. */
+async function probeProjects(browser: Browser, built: Built): Promise<unknown> {
+    const out: Record<string, unknown> = {};
+    const sel = { design: { tab: '[role="tablist"] [role="tab"][aria-selected="true"]', cap: 'aside .cap', note: '[role="tablist"] + span.mono' }, build: { tab: '#av-bar [role="tab"][aria-selected="true"]', cap: '#av aside .cap', note: '#av-bar .hub-note' } };
+    for (const theme of ['dark', 'light'] as const) {
+        for (const width of WIDTHS) {
+            const d = await openDesign(browser, 'p07/Estate.dc.html', width, theme);
+            const b = await openBuilt(browser, built.hub, '#/projects', width, theme);
+            const cell: Record<string, unknown> = {};
+            for (const [lens, label] of [['proj', 'Projekte'], ['me', 'Ich · Lernen']] as const) {
+                await d.locator('[role="tablist"] [role="tab"]', { hasText: label }).first().click();
+                await b.locator(`#av-bar [data-lens="${lens}"]`).click();
+                await d.waitForTimeout(150);
+                const row: Record<string, unknown> = {};
+                for (const [side, page] of [['design', d], ['build', b]] as const) {
+                    row[side] = {
+                        overflow: await overflowAt(page),
+                        landmarks: width === 1440 && theme === 'dark' ? await pageLandmarks(page) : undefined,
+                        styles: width === 1440 ? await computedAt(page, Object.values(sel[side]), STYLE_PROPS) : undefined,
+                        note: await page.evaluate((s2) => document.querySelector(s2)?.textContent ?? null, sel[side].note),
+                    };
+                }
+                cell[lens] = row;
+            }
+            out[`${theme}_${width}`] = cell;
+            await d.close();
+            await b.close();
+        }
+    }
+    return out;
+}
+
+/** A local map's bug lane, the shape of sibling Stage H, for the `bugs` probe. */
+const LOCAL_BUGS = {
+    reader: 'bugs lane · local', completeness: 'complete', findings: [], adapters: { Sentry: true, Linear: true, Bugsnag: false },
+    bugs: [
+        { id: 'B-1', title: 'Checkout total off by one', status: 'open', source: 'Sentry', env: 'prod', area: 'checkout', cause: 'logic', symbolicated: true, fixes: [], timeline: [{ at: '2026-10-20', kind: 'seen', text: 'first seen' }], frames: [{ file: 'src/cart.ts', line: 41, fn: 'total' }], hypotheses: ['rounding before tax'], introducedBy: { sha: 'abc12345', why: 'touched total() last' } },
+        { id: 'B-2', title: 'Login loop on Safari', status: 'fixed', source: 'Linear', env: 'prod', area: 'auth', cause: 'config', symbolicated: false, fixes: [{ sha: 'def67890', title: 'fix cookie SameSite' }], timeline: [], frames: [], hypotheses: [] },
+    ],
+};
+/** Probe `bugs`: the committed state against the handover's real state, a local map against its demo state. */
+async function probeBugs(browser: Browser, built: Built): Promise<unknown> {
+    const doc = JSON.parse(fs.readFileSync(path.join(ROOT, 'agents/map/code/map.json'), 'utf-8')) as { meta: Parameters<typeof renderHtml>[1]; model: Parameters<typeof renderHtml>[0] };
+    const local = path.join(path.dirname(built.real), 'bugs-local.html');
+    fs.writeFileSync(local, renderHtml(doc.model, doc.meta, { bugs: LOCAL_BUGS } as unknown as Parameters<typeof renderHtml>[2]));
+    const sel = { design: { tab: '[role="tab"][aria-selected="true"]', card: 'main > div[style*="dashed"]', tile: 'main div[style*="brandLine"]', cap: 'aside .cap' }, build: { tab: '#av-bar [role="tab"][aria-selected="true"]', card: '#nodata-bugs, #b-list', tile: '#b-why .b-tile.on', cap: '#av aside .cap' } };
+    const out: Record<string, unknown> = {};
+    for (const data of ['committed', 'local'] as const) {
+        for (const theme of ['dark', 'light'] as const) {
+            for (const width of WIDTHS) {
+                const d = await openDesign(browser, 'p02/Bugs.dc.html', width, theme);
+                if (data === 'local') await toDemo(d);
+                const b = await openBuilt(browser, data === 'committed' ? built.real : local, '#/bugs', width, theme);
+                const cell: Record<string, unknown> = {};
+                for (const [side, page] of [['design', d], ['build', b]] as const) {
+                    cell[side] = { overflow: await overflowAt(page), landmarks: width === 1440 && theme === 'dark' ? await pageLandmarks(page) : undefined, styles: width === 1440 ? await computedAt(page, Object.values(sel[side]), STYLE_PROPS) : undefined };
+                }
+                out[`${data}_${theme}_${width}`] = cell;
+                await d.close();
+                await b.close();
+            }
+        }
+    }
+    return out;
+}
+
+export const PROBES: Record<string, (b: Browser, built: Built) => Promise<unknown>> = { bugs: probeBugs, projects: probeProjects, tokens: probeTokens, shell: probeShell, overview: probeOverview, pages: probePages, newPages: (b, built) => probePages(b, built, NEW_PAGES), systems: probeSystems, systemsPaths: probeSystemsPaths };
+
+if (process.argv[1] && /map_fidelity_probe\.ts$/.test(process.argv[1])) {
+    const [name, out] = process.argv.slice(2);
+    const run = name ? PROBES[name] : undefined;
+    if (!run || !out) {
+        process.stderr.write(`usage: map_fidelity_probe.ts <${Object.keys(PROBES).join('|')}> <out.json>\n`);
+        process.exit(2);
+    }
+    void (async () => {
+        const built = await buildPages();
+        const browser = await launch();
+        try {
+            fs.writeFileSync(out, JSON.stringify(await run(browser, built), null, 1));
+        } finally {
+            await browser.close();
+        }
+    })();
+}

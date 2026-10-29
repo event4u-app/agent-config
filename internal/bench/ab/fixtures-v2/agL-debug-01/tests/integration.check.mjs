@@ -76,4 +76,4 @@ function ok(cond, label) {
 if (failed) {
   process.exit(1);
 }
-console.log('ok');
+console.log(process.env.BENCH_VERIFIER_NONCE ?? 'ok');

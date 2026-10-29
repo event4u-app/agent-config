@@ -53,11 +53,9 @@
  * `lstat` runs only after a build-shaped command has already matched; the
  * store is resolved and the latch touched only after a rule has fired.
  *
- * An unreadable store is not the same answer as no match. When a rule matches
- * and the memory directory cannot be resolved, the concern still emits the
- * pointer (the slug is actionable on its own) and writes a one-line diagnostic
- * to stderr naming the directories it tried. Silence there would report
- * "nothing to recall" for a store that was merely unreachable.
+ * No store, no recall: when a rule matches and the memory directory cannot be
+ * resolved (a consumer install has none), the concern allows, sets no latch,
+ * and writes one stderr line naming the directories it tried.
  *
  * ROBUSTNESS: malformed payload, any fs error, any throw -> exit 0 silently.
  * No network, no writes outside the session latch under `agents/runtime/`.
@@ -494,9 +492,10 @@ export function main(): number {
                 `memory-recall: rule ${rule.id} matched but no memory store was ` +
                     `resolvable; tried ${store.tried.join(', ')}\n`,
             );
+            return EXIT_ALLOW;
         }
-        const description = store.dir === null ? null : readMemoryDescription(store.dir, rule.slug);
-        if (store.dir !== null && description === null) {
+        const description = readMemoryDescription(store.dir, rule.slug);
+        if (description === null) {
             process.stderr.write(
                 `memory-recall: rule ${rule.id} matched but ${rule.slug}.md was ` +
                     `unreadable under ${store.dir}\n`,

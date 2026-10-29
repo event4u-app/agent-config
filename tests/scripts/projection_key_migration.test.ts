@@ -104,7 +104,7 @@ describe('the removed keys carry tombstones (step 4.2)', () => {
         expect(hits).toHaveLength(1); // once per process, not once per call
     });
 
-    it('a removed key still honoured during its window is not reported as ignored', () => {
+    it('projection.rule_packs is reported as ignored now its window has closed', () => {
         const written: string[] = [];
         const real = process.stderr.write.bind(process.stderr);
         process.stderr.write = ((chunk: string) => {
@@ -118,8 +118,8 @@ describe('the removed keys carry tombstones (step 4.2)', () => {
         }
         const hit = written.find((l) => l.startsWith('projection.rule_packs was removed'));
         expect(hit).toBeDefined();
-        expect(hit).not.toContain('ignored');
-        expect(hit).toContain('still honoured');
+        expect(hit).toContain('ignored');
+        expect(hit).not.toContain('still honoured');
     });
 
     it('the keys the migration reads are exactly the keys that have tombstones', () => {

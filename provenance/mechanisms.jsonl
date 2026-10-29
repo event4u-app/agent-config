@@ -16,3 +16,4 @@
 {"mechanism_id":"cold-resume-replays-the-transcript","verdict":"adapt","realised_in":["agents/roadmaps/archive/road-to-a-cold-start-paid-once.md"],"decided_at":"2026-10-14"}
 {"mechanism_id":"script-enforced-skill-step-order","verdict":"adapt","realised_in":["agents/roadmaps/archive/road-to-steps-the-skill-cannot-skip.md"],"decided_at":"2026-10-14"}
 {"mechanism_id":"reference-file-table-of-contents","verdict":"adapt","realised_in":["agents/roadmaps/archive/road-to-steps-the-skill-cannot-skip.md"],"decided_at":"2026-10-14"}
+{"mechanism_id":"evidence-authority-coverage-and-obligation-ledger","verdict":"adapt","realised_in":["docs/contracts/reconstruction-obligations.md"],"decided_at":"2026-10-29"}

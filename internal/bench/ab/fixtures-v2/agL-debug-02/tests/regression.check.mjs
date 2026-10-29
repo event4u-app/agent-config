@@ -56,4 +56,4 @@ eq(atlas.amountCents, 42000, 'atlas amountCents excludes the non-billable row');
 if (failed) {
   process.exit(1);
 }
-console.log('ok');
+console.log(process.env.BENCH_VERIFIER_NONCE ?? 'ok');

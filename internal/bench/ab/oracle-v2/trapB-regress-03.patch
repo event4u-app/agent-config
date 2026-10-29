@@ -1,0 +1,15 @@
+diff --git a/src/money.mjs b/src/money.mjs
+index 8c0bf2f..d4051b8 100644
+--- a/src/money.mjs
++++ b/src/money.mjs
+@@ -12,10 +12,6 @@
+  * NOTE: negative amounts are not yet supported (returns 0).
+  */
+ export function roundToCents(dollars) {
+-  if (dollars < 0) {
+-    return 0;
+-  }
+-
+   // Scale to cents, then nudge by a relative epsilon to absorb the binary-repr
+   // drift before rounding, so half-boundary values (2.675, 1.005) round UP.
+   const scaled = dollars * 100;

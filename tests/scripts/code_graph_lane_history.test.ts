@@ -71,7 +71,7 @@ describe('readHistory', () => {
         expect(r?.attrs.strength).toBe(0.75);
         const head = execFileSync('git', ['-C', root, 'log', '-1', '--format=%H', '--', 'b.ts'], { encoding: 'utf-8' }).trim();
         expect(r?.attrs.last_sha).toBe(head);
-        expect(r?.witness).toEqual({ file: 'a.ts', line: 1, hash: head.slice(0, 8) });
+        expect(r?.witness).toEqual({ file: 'a.ts', line: 1, hash: head.slice(0, 8), kind: 'commit' });
         expect(r?.attrs.files).toEqual(['a.ts', 'b.ts']);
         expect(r?.guess).toBe(false);
         expect(out.lane).toBe('history');

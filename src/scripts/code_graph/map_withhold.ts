@@ -1,7 +1,7 @@
 /**
  * Withholds from the map what the repository's own source-confidentiality gate
  * would block in a tracked file. The map is written into the tracked tree, so a
- * commit subject or an import specifier it copies is republished there: a name
+ * copied import specifier is republished there: a name
  * the gate denies, or a `github.com/<owner>/<repo>` slug, which the gate blocks
  * under `agents/**` where the map lives.
  *
@@ -14,7 +14,6 @@ import { repoSlugHits } from '../_lib/source_shape.js';
 import type { MapModel } from './map_model.js';
 
 export const GATE_CONFIG = 'src/scripts/external_sources_denylist.json';
-export const WITHHELD_SUBJECT = '[subject withheld]';
 
 export type Withheld = (text: string) => boolean;
 
@@ -42,11 +41,5 @@ export function withholdSources(model: MapModel, withheld: Withheld): number {
     const top = model.analyses.externals.filter(([spec]) => !withheld(spec));
     n += model.analyses.externals.length - top.length;
     model.analyses.externals = top;
-    for (const c of model.provenance?.commits ?? []) {
-        if (withheld(c[5])) {
-            c[5] = WITHHELD_SUBJECT;
-            n++;
-        }
-    }
     return n;
 }

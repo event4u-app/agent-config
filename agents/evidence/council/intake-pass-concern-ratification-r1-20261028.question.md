@@ -1,0 +1,369 @@
+<!-- evidence-type: analysis -->
+
+# Ratification review — the `intake-pass` hook concern and its bundle-budget row — round 1
+
+You are an independent reviewer for a change in the `event4u/agent-config` repository. Three files in it are on the ratification gate's list as hook-plumbing sources (`src/scripts/hook_manifest.yaml`, its compiled `src/scripts/hook_manifest.json`, and `src/config/hook-bundle-budget.json`), so the change needs a provider-diverse verdict under ADR-268 § 4: an agent may change them but may not ratify its own change.
+
+subject: cb8d27e9105a70922837fd54702aad9797ee51e93ea9dc9d661f425f72ad3acb
+
+(The digest covers the three gated files at commit `3322a04286`, computed with `./scripts-run src/scripts/ratification_subject`.)
+
+## Background
+
+The repository owner answered open question OQ-25 on 2026-10-28: the reminder to check a task prompt for gaps only the owner can close should be shipped in the package's own hooks, on by default, with no new settings key, firing only on task prompts, and the agent — not the hook — decides whether a gap is owner-owned.
+
+## What the change does
+
+1. A new concern `intake-pass` (`src/scripts/hooks/intake_pass_hook.ts`), `severity: advisory`, `effect: context`, `fail_closed: false`, bound to `user_prompt_submit` on every platform that binds that slot. On a prompt it classifies as a task (not a question, not a continuation, not a slash command, not a harness turn, at least six words, no explicit interview or "just do it" phrase) it emits one `additional_context` line of about 430 bytes naming the intake pass. Otherwise it emits nothing. Kill switch: `AGENT_CONFIG_NO_INTAKE_PASS=1`. It never rewrites the prompt and never blocks.
+2. Workers drop it (role axis `worker.drop`), the same reason `delegation-nudge` is dropped there.
+3. Its body ships as a lazy chunk (`hook_chunks.mjs`, `LAZY_CONCERNS`), not in the dispatch bundle. The dispatch bundle grows by the one `LAZY_CONCERNS` row (+94 B); the base sat 1 B under its ceiling, so `max_bytes` goes 1,556,670 → 1,556,764 with a `raise_log` entry, and a chunk ceiling row (10,200 B over a measured 9,254 B) is added.
+4. Tests: `tests/hooks/intake_pass_hook.test.ts` (14 cases; the question filter was neutralised once and the suite went red, then restored), two existing tests updated for the new concern count and the worker drop list.
+
+Verified locally: the hook-bundle composition gate is green at the new ceiling, `lint_hook_manifest` exit 0, `bench_hook_injection` exit 0, the affected hook and discovery suites pass, `tsc --noEmit` and eslint clean on the touched files.
+
+Not in the diff below: `dist/` projections, the owner-questions and roadmap bookkeeping, the five `workspaces:` frontmatter edits on the interview commands, and the removal of the prompt optimizer's persona — none of them touches a gated file.
+
+## What to answer
+
+1. Does the diff contain a defect — in the concern, its task-prompt predicate, its registration (manifest, lazy chunk, worker drop), or the budget entry? Name file and line for each.
+2. Does the change expand any agent's or hook's authority, or weaken any existing gate, ceiling or floor? The `max_bytes` raise is the one number that moves; judge whether its recorded reason holds.
+3. Is a default-on, per-task-prompt context line on every host's `user_prompt_submit` a cost or risk the record should name that it does not?
+
+End with exactly one verdict line: `VERDICT: ratified`, `VERDICT: confirmed-non-expanding`, or `VERDICT: refused — <reason>`.
+
+## The diff (`git diff origin/main...HEAD` over the concern, its registration and the budget, complete)
+
+```diff
+diff --git a/src/config/hook-bundle-budget.json b/src/config/hook-bundle-budget.json
+index f93d681efa..5b77f0ed02 100644
+--- a/src/config/hook-bundle-budget.json
++++ b/src/config/hook-bundle-budget.json
+@@ -4,7 +4,7 @@
+     "registered_at": "2026-10-01",
+     "owner": "maintainer",
+     "review_by": "2027-10-01",
+-    "max_bytes": 1556670,
++    "max_bytes": 1556764,
+     "max_bytes_derivation": "Measured 1,514,715 bytes on origin/main at 213d87055 (the gate's own reading, APFS-cloned node_modules so no worktree path artefacts). The ceiling is that reading plus ~2.3 % of headroom, rounded to 1,550,000, on the same doctrine as the 2026-10-01 registration: a bundle is rebuilt from source on every run, so an esbuild minor that renames symbols moves the figure by hundreds of bytes with no change to this tree, and a ceiling one byte above the reading would red on that. Composition is healthy at this reading and was checked rather than assumed: one YAML package (258,833 bytes) and 1,238,525 bytes of own source, so the growth is own code, not a re-entered dependency. The 1,564,211-byte pre-swap regression this roadmap closed still cannot reappear under it. RAISED to 1,550,500 on 2026-10-23 for the InstructionsLoaded binding (237 bytes against 51 of headroom); the reasoning and the measured alternative are the `raise_log` entry whose `to` is 1,550,500, so this paragraph describes the 1,550,000 registration and the raise is recorded there rather than restated.",
+     "shrink_only": true,
+     "shrink_only_note": "A RAISE needs a recorded reason in `raise_log` below naming what was added and why it could not be avoided. Enforced since road-to-a-ratification-fence-that-follows-its-imports 3.2: the gate reads `max_bytes` at the base revision, and a working value above it fails unless `raise_log` gained an entry whose `to` equals the new value. A lowering needs no entry. This file is also on the ratification gate's watched set, so a raise carries a record as well as a log entry.",
+@@ -100,6 +100,15 @@
+             "what_was_added": "The owner's 2026-10-22 quota directive on the dispatch path: one LAZY_CONCERNS row shared by `quota-notice` and `metered-spawn-ask` (both bodies live in their own chunk), `permission_gate` emitting a concern's `ask` vote as the host's native ask with its reason, and `_lib/pressure_state` — a ten-line reader of the plan-window verdict the status-line tap leaves behind — used by `delegation-nudge` (no fan-out push into a hot window) and `spawn-guard-shadow` (`plan_window: would_wait`). Measured 1,556,562 B with the change on a base of 1,554,827 B, after ratification rounds 1 and 2 restricted the host ask to `effect: confirmation` concerns, passed that effect from the dispatcher and bounded the reasons. The ceiling, 1,556,670 B, was set at the round-1 reading (1,556,520 B) plus the 150 B of headroom the base had; 108 B remain.",
+             "why_it_could_not_be_avoided": "Room was made first and measured: compacting the LAZY_CONCERNS table and dropping `path.join` from its rows freed 202 B, which carried the shared row and the ask passthrough with 16 B to spare. The two dispatch-path consumers could not follow: reading the ledger and the pressure model there cost 4,984 B, so the model moved to the tap (a CLI process, outside this bundle) and the consumers read its verdict file instead. What remains is the verdict reader and two call sites, which no chunk can carry because both concerns are in-bundle.",
+             "what_would_have_caught_it": "Nothing earlier: the base sat 150 bytes under the ceiling, so any in-bundle consumer of a new state file would have tripped it."
++        },
++        {
++            "date": "2026-10-28",
++            "from": 1556670,
++            "to": 1556764,
++            "by": "agent, feat/owner-answers-oq21-27 (owner answer OQ-25, road-to-the-question-only-the-owner-can-answer-carried 3.1)",
++            "what_was_added": "One `LAZY_CONCERNS` row for `intake-pass`, the owner-chosen OQ-25 concern on `user_prompt_submit` (every host that binds the slot): on a task prompt it injects one line naming the intake pass, and its body ships in its own 9,254-byte chunk. Measured by the gate: 1,556,763 B with the row on a base of 1,556,669 B, so +94 B for the row; the ceiling is that reading plus the 1 B of headroom the base had.",
++            "why_it_could_not_be_avoided": "The base sat 1 B under the ceiling, so no concern can be added without either a raise or a removal elsewhere. The concern was built in-bundle first and measured at +2,930 B; moving its body into a lazy chunk cut that to the 94-byte row, which is the smallest form the dispatcher can reach a new concern in. Making room by compacting another module would change code this decision does not own.",
++            "what_would_have_caught_it": "Nothing earlier: the owner chose a shipped, default-on concern on 2026-10-28, and any shipped concern costs at least its LAZY_CONCERNS row."
+         }
+     ],
+     "chunks": [
+@@ -162,6 +171,12 @@
+             "max_bytes": 22800,
+             "registered_at": "2026-10-25",
+             "derivation": "Measured 20,703 bytes on 2026-10-25 (road-to-a-quota-the-user-sees-coming 3.2-4.3: the quota and metered notices, the metered spawn ask with its per-call pending marker and read-path expiry from ratification rounds 1-5, the quota ledger reader, the pressure model, the billing-class reader and the billing-grant check), no `yaml` (it reads JSON only). The ceiling is that reading plus about 10 %, rounded, with no growth queued. Two manifest concerns share the script (`quota-notice` on claude `user_prompt_submit`, `metered-spawn-ask` on claude `pre_tool_use` for Agent/Task), so the bundle carries one LAZY_CONCERNS row for both; the row fits inside the room the compacted LAZY_CONCERNS table freed, so the dispatch ceiling is not raised. A missing chunk falls back to the spawn path and costs latency, never a notice."
++        },
++        {
++            "entry": "src/scripts/hooks/intake_pass_hook.ts",
++            "max_bytes": 10200,
++            "registered_at": "2026-10-28",
++            "derivation": "Measured 9,254 bytes on 2026-10-28 (the intake-pass concern, its task-prompt predicate and the shared `isSyntheticPrompt` reader), no `yaml`. The ceiling is that reading plus about 10 %, rounded, with no growth queued. Bound on `user_prompt_submit` on every host that binds the slot; the dispatch bundle carries only its LAZY_CONCERNS row. A missing chunk falls back to the spawn path and costs latency, never the line."
+         }
+     ],
+     "chunks_note": "A chunk is loaded only when a caller needs it, so its bytes are not paid by every dispatch; its ceiling exists so that the move out of dispatch.js stays a measured place rather than an unmeasured one. The gate builds each chunk with the exact esbuild segment `build:hook-chunks` uses for its entry.",
+diff --git a/src/scripts/hook_chunks.mjs b/src/scripts/hook_chunks.mjs
+index af7419dac3..086ae575ac 100644
+--- a/src/scripts/hook_chunks.mjs
++++ b/src/scripts/hook_chunks.mjs
+@@ -84,6 +84,11 @@ export const HOOK_CHUNKS = Object.freeze([
+         outfile: 'dist/hooks/layer_promotion.chunk.cjs',
+         external: Object.freeze(['yaml']),
+     }),
++    // OQ-25 intake pass on `user_prompt_submit`; reads no YAML.
++    Object.freeze({
++        entry: 'src/scripts/hooks/intake_pass_hook.ts',
++        outfile: 'dist/hooks/intake_pass.chunk.cjs',
++    }),
+ ]);
+ 
+ /**
+diff --git a/src/scripts/hook_manifest.yaml b/src/scripts/hook_manifest.yaml
+index c08b344840..9097415f74 100644
+--- a/src/scripts/hook_manifest.yaml
++++ b/src/scripts/hook_manifest.yaml
+@@ -1074,6 +1074,18 @@ concerns:
+     severity: advisory
+     effect: context
+     nudge_rank: 2
++  # Owner decision OQ-25 (2026-10-28): on a task prompt, one line naming the
++  # intake pass — sort the prompt's gaps, ask the owner only the one that is
++  # theirs. Shipped on, no settings key (ADR-293); the agent judges the gap,
++  # the hook never rewrites the prompt. Silent on questions, continuations,
++  # slash commands and prompts already asking for an interview.
++  # Kill switch: `AGENT_CONFIG_NO_INTAKE_PASS=1`.
++  intake-pass:
++    script: src/scripts/hooks/intake_pass_hook.ts
++    args: []
++    fail_closed: false
++    severity: advisory
++    effect: context
+   # road-to-trigger-delivered-rule-bodies Phase 1 — the DELIVERY twin of
+   # `skill-route` above: same two slots, opposite payload policy. `skill-route`
+   # ships pointers because a skill is invoked; this ships BODIES because a rule
+@@ -1671,7 +1683,7 @@ roles:
+     # contacts, so a worker turn that ends in a question to its orchestrator
+     # would be recorded as a contact that never reached a human, inflating the
+     # exact baseline Phase 0 pre-registers.
+-    drop: [delegation-nudge, skill-route, end-review-nudge, review-baseline, council-availability, team-review-gate, self-repair, session-eol, interruption-ledger]
++    drop: [delegation-nudge, skill-route, intake-pass, end-review-nudge, review-baseline, council-availability, team-review-gate, self-repair, session-eol, interruption-ledger]
+ 
+ platforms:
+   # `ask:` — the SHAPE of this host's user-facing question primitive.
+@@ -1713,7 +1725,7 @@ platforms:
+     # was not restored at all.
+     session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush, journal-record]
+     stop:             [chat-history, verify-before-complete, team-review-gate, end-review-nudge, obligation-settle, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, design-pass-stop, suggestion-capture, journal-record]
+-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject, suggestion-capture, journal-record, quota-notice]
++    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject, suggestion-capture, journal-record, quota-notice, intake-pass]
+     # `rule-inject` was bound here and is not any more
+     # (road-to-delivery-for-every-host 3.2, owner ruling E2). E2's strategy is
+     # `user_prompt_submit` + `pre_compact`; this slot is the hottest one in the
+@@ -1788,7 +1800,7 @@ platforms:
+     # weight: the concern still runs (git diff, transcript scan, classifier),
+     # still costs the dispatch, and its entire output is thrown away.
+     stop:             [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop]
+-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
++    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register, intake-pass]
+     pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-plumbing-writes, block-config-weakening, block-speaking-inbox-dir, block-credential-reads, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate, memory-recall]
+     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, mcp-usage-observation, tool-result-bytes, edit-shape, comment-discipline, design-pass, spawn-guard-shadow]
+     # subagent-ledger IS bound here, unlike the two nudges above, and the
+@@ -1814,7 +1826,7 @@ platforms:
+     session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register, code-graph-refresh]
+     session_end:        [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
+     stop:               [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop]
+-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
++    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register, intake-pass]
+     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, mcp-usage-observation, tool-result-bytes, edit-shape, comment-discipline, design-pass]
+ 
+   # Phase 7.6 — Cline. Hooks live under `.clinerules/hooks/<HookName>`
+@@ -1830,7 +1842,7 @@ platforms:
+     session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register, code-graph-refresh]
+     session_end:        [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
+     stop:               [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop]
+-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
++    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register, intake-pass]
+     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, mcp-usage-observation, tool-result-bytes, edit-shape, comment-discipline, design-pass]
+ 
+   # Phase 7.7 — Windsurf (Cascade). Hooks live at `.windsurf/hooks.json`
+@@ -1851,7 +1863,7 @@ platforms:
+     stop:               [chat-history, verify-before-complete, self-repair, session-register, design-pass-stop]
+     # language-mirror IS bound here: unlike minimal-safe-diff it needs only the
+     # user_prompt_submit slot, which Windsurf has.
+-    user_prompt_submit: [chat-history, verify-before-complete, language-mirror, git-authorization, session-canary, self-repair, session-register]
++    user_prompt_submit: [chat-history, verify-before-complete, language-mirror, git-authorization, session-canary, self-repair, session-register, intake-pass]
+ 
+   # Phase 7.8 — Gemini CLI. Hooks live at `.gemini/settings.json`
+   # (project) or `~/.gemini/settings.json` (user). Per Gemini docs
+@@ -1868,7 +1880,7 @@ platforms:
+     session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register, code-graph-refresh]
+     session_end:        [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
+     stop:               [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop]
+-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
++    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register, intake-pass]
+     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, mcp-usage-observation, tool-result-bytes, edit-shape, comment-discipline, design-pass]
+ 
+   # Phase 7.9 — this package binds no hook on Copilot and has measured none
+diff --git a/src/scripts/hooks/intake_pass_hook.ts b/src/scripts/hooks/intake_pass_hook.ts
+new file mode 100644
+index 0000000000..4ee17a57fa
+--- /dev/null
++++ b/src/scripts/hooks/intake_pass_hook.ts
+@@ -0,0 +1,94 @@
++/**
++ * intake-pass — one line on a task prompt reminding the agent to sort the
++ * prompt's gaps before the first write, and to ask the owner only the one that
++ * is theirs. Owner decision OQ-25 (2026-10-28): shipped in the package's own
++ * hooks, on by default, no settings key, and the agent decides whether a gap
++ * is owner-owned — the hook never appends "interview me" to the prompt.
++ *
++ * Silent on questions, continuations, slash commands, harness turns and
++ * prompts that already ask for an interview (those route to /challenge-me).
++ * Kill switch: `AGENT_CONFIG_NO_INTAKE_PASS=1`.
++ */
++import fs from "node:fs";
++import path from "node:path";
++import { fileURLToPath, pathToFileURL } from "node:url";
++import { readHookStdin } from "./hook_stdin.js";
++import { isSyntheticPrompt } from "../_lib/prompt_shape.js";
++import { EXIT_ALLOW, EXIT_WARN } from "./exit_codes.js";
++
++type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
++type JsonObject = { [k: string]: JsonValue };
++
++// Below this many words a prompt is a reply to the agent, not a task.
++export const MIN_TASK_WORDS = 6;
++
++const CONTINUATION = /^(?:mach(?:e)?\s+weiter|weiter|continue|go on|go ahead|ja|yes|ok(?:ay)?|passt|\d+)\b/i;
++const INTERVIEW = /\b(?:interview\s+(?:me|mich)|r[üu]ckfragen|frag\s+mich|ask\s+me\s+follow-up|challenge\s+me|grill\s+me)\b/i;
++const RELEASE = /\b(?:just\s+do\s+it|mach\s+einfach|einfach\s+machen|no\s+questions|keine\s+(?:r[üu]ck)?fragen)\b/i;
++
++export const INTAKE_LINE =
++  "<intake-pass>Before the first write, sort this prompt's gaps: a fact → look it up; " +
++  "a technical choice → decide it and name it as your call in the hand-back; " +
++  "an owner-owned gap (product meaning, a business constraint, taste) → ask ONE question first, " +
++  "native picker, one recommendation. No owner gap → proceed and list your assumptions. " +
++  "contexts/execution/cheap-question-mechanics.md § Intake pass.</intake-pass>";
++
++export function isTaskPrompt(prompt: string): boolean {
++  const text = prompt.trim();
++  if (!text || text.startsWith("/")) return false;
++  if (isSyntheticPrompt(text)) return false;
++  if (CONTINUATION.test(text)) return false;
++  if (text.split(/\s+/).length < MIN_TASK_WORDS) return false;
++  if (/\?\s*$/.test(text)) return false;
++  if (INTERVIEW.test(text) || RELEASE.test(text)) return false;
++  return true;
++}
++
++function _isObject(v: JsonValue | undefined): v is JsonObject {
++  return typeof v === "object" && v !== null && !Array.isArray(v);
++}
++
++function _extractPrompt(payload: JsonObject): string {
++  for (const key of ["prompt", "userPrompt", "user_prompt", "message", "text"]) {
++    const v = payload[key];
++    if (typeof v === "string" && v.trim()) return v;
++  }
++  return "";
++}
++
++export function main(): number {
++  if (process.env["AGENT_CONFIG_NO_INTAKE_PASS"] === "1") return EXIT_ALLOW;
++  let envelope: JsonValue = {};
++  try {
++    const raw = readHookStdin();
++    envelope = raw.trim() ? (JSON.parse(raw) as JsonValue) : {};
++  } catch {
++    return EXIT_ALLOW;
++  }
++  const env: JsonObject = _isObject(envelope) ? envelope : {};
++  const event = env["event"];
++  if (typeof event === "string" && event !== "" && event !== "user_prompt_submit") return EXIT_ALLOW;
++  const payload = _isObject(env["payload"]) ? (env["payload"] as JsonObject) : env;
++  if (!isTaskPrompt(_extractPrompt(payload))) return EXIT_ALLOW;
++  process.stdout.write(
++    `${JSON.stringify({ decision: "warn", reason: "intake-pass: task prompt", additional_context: INTAKE_LINE })}\n`,
++  );
++  return EXIT_WARN;
++}
++
++// Bundle-safety: never auto-run when inlined into an esbuild bundle.
++declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
++function _isCliEntry(): boolean {
++  if (typeof __AGENT_CONFIG_BUNDLE__ !== "undefined" && __AGENT_CONFIG_BUNDLE__) return false;
++  if (process.argv[1] === undefined) return false;
++  if (import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) return true;
++  try {
++    return fs.realpathSync(fileURLToPath(import.meta.url)) === fs.realpathSync(path.resolve(process.argv[1]));
++  } catch {
++    return false;
++  }
++}
++
++if (_isCliEntry()) {
++  process.exit(main());
++}
+diff --git a/src/scripts/hooks/lazy_concern.ts b/src/scripts/hooks/lazy_concern.ts
+index f7df6828e7..3d87ff7d0c 100644
+--- a/src/scripts/hooks/lazy_concern.ts
++++ b/src/scripts/hooks/lazy_concern.ts
+@@ -73,6 +73,7 @@ export const LAZY_CONCERNS: Readonly<Record<string, { readonly chunk: string; re
+     'src/scripts/star_ask_hook.ts': lazy('star_ask.chunk.cjs', '../star_ask_hook'),
+     'src/scripts/quota_notice_hook.ts': lazy('quota_notice.chunk.cjs', '../quota_notice_hook'),
+     'src/scripts/hooks/layer_promotion_hook.ts': lazy('layer_promotion.chunk.cjs', 'layer_promotion_hook'),
++    'src/scripts/hooks/intake_pass_hook.ts': lazy('intake_pass.chunk.cjs', 'intake_pass_hook'),
+ });
+ 
+ declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
+diff --git a/tests/hooks/intake_pass_hook.test.ts b/tests/hooks/intake_pass_hook.test.ts
+new file mode 100644
+index 0000000000..208afd5626
+--- /dev/null
++++ b/tests/hooks/intake_pass_hook.test.ts
+@@ -0,0 +1,70 @@
++import { afterEach, describe, expect, it, vi } from 'vitest';
++
++import { clearHookStdinOverride, setHookStdinOverride } from '../../src/scripts/hooks/hook_stdin.js';
++import { INTAKE_LINE, isTaskPrompt, main } from '../../src/scripts/hooks/intake_pass_hook.js';
++
++function run(prompt: string, event = 'user_prompt_submit'): { rc: number; out: string } {
++    let out = '';
++    const spy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk: string | Uint8Array) => {
++        out += String(chunk);
++        return true;
++    });
++    setHookStdinOverride(JSON.stringify({ event, payload: { prompt } }));
++    try {
++        return { rc: main(), out };
++    } finally {
++        spy.mockRestore();
++        clearHookStdinOverride();
++    }
++}
++
++afterEach(() => {
++    delete process.env['AGENT_CONFIG_NO_INTAKE_PASS'];
++});
++
++describe('intake-pass — which prompts are tasks (OQ-25)', () => {
++    it.each([
++        'Baue einen CSV-Export für die Rechnungsliste mit Filter nach Monat',
++        'Add a retry with backoff to the webhook sender and cover it with a test',
++        'Refactor the invoice service so totals are computed in one place',
++    ])('fires on a task prompt: %s', (prompt) => {
++        expect(isTaskPrompt(prompt)).toBe(true);
++    });
++
++    it.each([
++        ['a question', 'Warum ist das kein conventional commit, bzw. pr?'],
++        ['a continuation', 'mach weiter wo du warst, genau an den stellen, mit den subagents'],
++        ['an option pick', '2'],
++        ['a short reply', 'ja passt so'],
++        ['a slash command', '/roadmap:process-full agents/roadmaps/foo.md and then open the pr'],
++        ['an explicit interview request', 'Plan the billing export with me and interview me before you start'],
++        ['a release from questions', 'Rename the config key everywhere, just do it without asking'],
++        ['a harness turn', '<task-notification>task finished with output and many more words here</task-notification>'],
++    ])('stays silent on %s', (_label, prompt) => {
++        expect(isTaskPrompt(prompt)).toBe(false);
++    });
++});
++
++describe('intake-pass — emission', () => {
++    it('injects the intake line on a task prompt and only there', () => {
++        const fired = run('Add a retry with backoff to the webhook sender and cover it with a test');
++        expect(fired.rc).not.toBe(0);
++        const payload = JSON.parse(fired.out.trim());
++        expect(payload.additional_context).toBe(INTAKE_LINE);
++        expect(Buffer.byteLength(fired.out, 'utf8')).toBeLessThan(1024);
++
++        expect(run('Warum schlägt der Test fehl?')).toEqual({ rc: 0, out: '' });
++    });
++
++    it('never rewrites the prompt — the line names the pass, not "interview me"', () => {
++        expect(INTAKE_LINE).not.toMatch(/interview me/i);
++        expect(INTAKE_LINE).toMatch(/owner-owned gap/);
++    });
++
++    it('is silent on other events and under the kill switch', () => {
++        const task = 'Add a retry with backoff to the webhook sender and cover it with a test';
++        expect(run(task, 'stop')).toEqual({ rc: 0, out: '' });
++        process.env['AGENT_CONFIG_NO_INTAKE_PASS'] = '1';
++        expect(run(task)).toEqual({ rc: 0, out: '' });
++    });
++});
+```

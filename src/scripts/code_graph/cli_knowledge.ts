@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { chainOf, currentBranch } from '../_lib/branch_parents.js';
-import { branchPackageGraph, defaultBranchSet, diffBranches, gcBranches, indexBranch, listManifests, onBranches, renderDiff, storeBytes, touchManifest } from './branches.js';
+import { branchPackageGraph, defaultBranchSet, diffBranches, gcBranches, indexBranch, listManifests, onBranches, pinBranch, renderDiff, storeBytes, touchManifest } from './branches.js';
 import { cacheFor, flag, isFlagValue, resolveRoot, shown } from './cli_args.js';
 import {
     removePlan as systemsRemovePlan,
@@ -17,6 +17,8 @@ import {
     type WhyAnswer,
 } from './lanes/systems/verbs.js';
 import { cachedProvenance } from './provenance.js';
+import { loadGraph } from './query.js';
+import { noEntryLine, symbolUsage } from './answer_correctness.js';
 import { provenanceAnswer } from './provenance_verbs.js';
 import type { CodeGraph } from './types.js';
 
@@ -48,6 +50,16 @@ export async function cmdSystems(sub: 'why' | 'usage' | 'remove-plan', argv: str
             return 1;
         }
     }
+    if (sub === 'usage' && !systemsUsage(g, root, query).length) {
+        const u = symbolUsage(loadGraph(graphPath, `native:${shown(root, graphPath)}`), query);
+        if (u === null) {
+            process.stdout.write(`${noEntryLine(query, 'packages or symbols')}\n`);
+            return 1;
+        }
+        if (argv.includes('--json')) process.stdout.write(`${JSON.stringify(u, null, 2)}\n`);
+        else process.stdout.write(`symbol ${u.symbol}: ${u.users} user(s) within 2 hops over stated edges, in ${u.files.length} file(s)\n${u.files.slice(0, 20).map((f) => `  ${f}`).join('\n')}\n`);
+        return 0;
+    }
     if (!g.nodes.some((n) => n.kind === 'package')) {
         process.stderr.write('code-graph: the graph holds no package facts — no lockfile or manifest was read, or it was built without lanes\n');
         return 1;
@@ -66,7 +78,7 @@ export function branchStoreOf(argv: string[]): { root: string; build: string } {
     return { root, build: path.dirname(flag(argv, '--graph') ?? cacheFor(root)) };
 }
 
-/** `branches [index [ref…] | gc | list]` — the per-branch fact store. */
+/** `branches [index [ref…] | pin <ref…> | gc | list]` — the per-branch fact store. */
 export async function cmdBranches(argv: string[]): Promise<number> {
     const { root, build } = branchStoreOf(argv);
     const positional = argv.filter((a) => !a.startsWith('--') && !isFlagValue(argv, a));
@@ -85,6 +97,18 @@ export async function cmdBranches(argv: string[]): Promise<number> {
         process.stdout.write(`store: ${bytes.manifests} B manifests, ${bytes.facts} B facts\n`);
         return 0;
     }
+    if (action === 'pin') {
+        const refs = positional.slice(1);
+        if (!refs.length) {
+            process.stderr.write('usage: code_graph/cli.ts branches pin <ref…>\n');
+            return 2;
+        }
+        for (const ref of refs) {
+            pinBranch(build, ref);
+            process.stdout.write(`pinned ${ref} — kept through every gc\n`);
+        }
+        return 0;
+    }
     if (action === 'gc') {
         const r = gcBranches(root, build);
         for (const d of r.dropped) process.stdout.write(`dropped ${d.ref} — ${d.why}\n`);
@@ -93,7 +117,7 @@ export async function cmdBranches(argv: string[]): Promise<number> {
         return 0;
     }
     if (action !== 'list') {
-        process.stderr.write('usage: code_graph/cli.ts branches [index [ref…] | gc | list]\n');
+        process.stderr.write('usage: code_graph/cli.ts branches [index [ref…] | pin <ref…> | gc | list]\n');
         return 2;
     }
     const list = listManifests(build);

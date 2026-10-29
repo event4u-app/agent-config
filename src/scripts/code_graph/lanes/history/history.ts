@@ -218,7 +218,7 @@ export function generatedMatcher(globs: readonly string[]): (file: string) => bo
 
 /** A commit is the span: the witness names the file and the commit that last coupled it. */
 function commitWitness(file: string, sha: string): Witness {
-    return { file, line: 1, hash: sha.slice(0, 8) };
+    return { file, line: 1, hash: sha.slice(0, 8), kind: 'commit' };
 }
 
 export interface HiddenDependency {

@@ -24,10 +24,10 @@ extendStrings({
         gMoreYes: function (n) { return 'hasMore: true · ' + n + ' more items over budget – cut by rank, not hidden'; }, gMoreNo: function (n) { return 'hasMore: false · all ' + n + ' items within budget'; },
         gNextPage: 'Next page (cursor)', gNoCursor: 'the pack has no cursor paging yet; a larger --budget returns more',
         gNoPack: 'no context pack was written: the map carries one only for a working diff; `agent-config code-graph pack "<task>"` returns one',
-        gNoRisk: 'no review-risk was written: the map was drawn without a working diff', gThresholds: 'Thresholds', gThresholdsT: 'review-risk names no levels yet',
+        gNoRisk: 'no review-risk was written: the map was drawn without a working diff', gThresholds: 'Thresholds', gThresholdsT: 'review-risk names provisional bands only (low / medium / high / unknown), uncalibrated, read by no gate',
         gRiskCol: { term: 'Term', fact: 'Fact from the graph', calc: 'Calculation', contrib: 'Contribution' }, gSum: 'Sum', gFacts: function (n) { return num(n) + (n === 1 ? ' fact' : ' facts'); },
         gFirst: function (x) { return 'first: ' + x; }, gWeight: 'weight',
-        gRiskNote: 'Weights live in RISK_WEIGHTS of review_risk.ts. Every term is a fact with its witness. There is no hidden term and no model judgement. A term without a fact counts 0.',
+        gRiskNote: 'Weights live in RISK_WEIGHTS of review_risk.ts. Every term is a fact with its witness. There is no hidden term and no model judgement. Callers count stated edges only; guess edges stay out. A term whose lane was skipped reads unknown and stays out of the sum; a term without a fact counts 0.',
         gIn: 'in', gOut: 'out', gGuarantee: 'guarantee', gTodo: 'What the agent must do', gHow: 'How it is confirmed',
         gHowText: 'On every answer AC checks each item\'s content hash against the file in the working tree. confirmed: unchanged. moved: same content, another line. changed: content differs, re-read. gone: file or symbol gone, it stays visible as a tombstone.',
         gTodoBy: {
@@ -57,10 +57,10 @@ extendStrings({
         gMoreYes: function (n) { return 'hasMore: true · ' + n + ' weitere Items über Budget – nach Rang abgeschnitten, nicht verschwiegen'; }, gMoreNo: function (n) { return 'hasMore: false · alle ' + n + ' Items im Budget'; },
         gNextPage: 'Nächste Seite (cursor)', gNoCursor: 'das Pack hat noch kein Blättern per Cursor; ein größeres --budget liefert mehr',
         gNoPack: 'es wurde kein Context-Pack geschrieben: die Karte trägt eines nur für einen Arbeits-Diff; `agent-config code-graph pack "<Aufgabe>"` liefert eines',
-        gNoRisk: 'es wurde kein Review-Risiko geschrieben: die Karte wurde ohne Arbeits-Diff gezeichnet', gThresholds: 'Schwellen', gThresholdsT: 'review-risk nennt noch keine Stufen',
+        gNoRisk: 'es wurde kein Review-Risiko geschrieben: die Karte wurde ohne Arbeits-Diff gezeichnet', gThresholds: 'Schwellen', gThresholdsT: 'review-risk nennt nur vorläufige Bänder (low / medium / high / unknown), unkalibriert, von keinem Gate gelesen',
         gRiskCol: { term: 'Term', fact: 'Fakt aus dem Graph', calc: 'Rechnung', contrib: 'Beitrag' }, gSum: 'Summe', gFacts: function (n) { return num(n) + (n === 1 ? ' Fakt' : ' Fakten'); },
         gFirst: function (x) { return 'erster: ' + x; }, gWeight: 'Gewicht',
-        gRiskNote: 'Gewichte stehen in RISK_WEIGHTS von review_risk.ts. Jeder Term ist ein Fakt mit Nachweis. Es gibt keine versteckten Terme und kein Modell-Urteil. Ein Term ohne Fakt zählt 0.',
+        gRiskNote: 'Gewichte stehen in RISK_WEIGHTS von review_risk.ts. Jeder Term ist ein Fakt mit Nachweis. Es gibt keine versteckten Terme und kein Modell-Urteil. Aufrufer zählen nur belegte Kanten; geratene bleiben draußen. Ein Term mit übersprungener Lane heißt unbekannt und bleibt aus der Summe; ein Term ohne Fakt zählt 0.',
         gIn: 'ein', gOut: 'aus', gGuarantee: 'Garantie', gTodo: 'Was der Agent tun muss', gHow: 'Wie bestätigt wird',
         gHowText: 'Bei jeder Antwort prüft AC je Item den Inhalts-Hash gegen die Datei im Worktree. confirmed: unverändert. moved: gleicher Inhalt, andere Zeile. changed: Inhalt anders, neu lesen. gone: Datei oder Symbol weg, bleibt als Tombstone sichtbar.',
         gTodoBy: {
@@ -107,7 +107,8 @@ function agLeft(p, key, left) {
     var vl = add(el('div', { class: 'ag-grp' }), rlCap(t('gVerbs')));
     p.verbs.forEach(function (v) {
         var on = verb && v.name === verb.name;
-        var b = el('button', { type: 'button', class: 'ag-verb' + (on ? ' on' : ''), 'aria-pressed': String(!!on) });
+        // The handover's verb list is plain buttons; the picked one is marked by its style and aria-current.
+        var b = el('button', { type: 'button', class: 'ag-verb' + (on ? ' on' : ''), 'aria-current': on ? 'true' : null });
         add(b, add(el('span', { class: 'ag-vrow' }), el('span', { class: 'mono ag-vname' }, v.name), rlSt(t('gLive'), 'live')), el('span', { class: 'ag-vshort' }, v.answers));
         b.addEventListener('click', function () {
             agState.verb = v.name;

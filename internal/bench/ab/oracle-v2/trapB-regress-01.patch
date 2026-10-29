@@ -1,0 +1,16 @@
+diff --git a/src/stats.mjs b/src/stats.mjs
+index 8018121..c763201 100644
+--- a/src/stats.mjs
++++ b/src/stats.mjs
+@@ -25,7 +25,10 @@ export function average(values) {
+  * Contract: empty list returns 0 (same "no data => 0" convention as average).
+  */
+ export function peak(values) {
+-  let max = 0;
++  if (values.length === 0) {
++    return 0;
++  }
++  let max = values[0];
+   for (const value of values) {
+     if (value > max) {
+       max = value;

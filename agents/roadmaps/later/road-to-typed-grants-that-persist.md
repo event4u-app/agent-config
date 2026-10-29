@@ -32,6 +32,10 @@ capability_gap: none
 > consolidated proposals over them. Verified against `main@399beecab` on 2026-09-08; the
 > proposals' own pin was `e9d5202` and no authority surface moved between the two.
 
+> **Arrivals:** 1 — `inbox-2026-10-be` (2026-10-27): the "ask less" half of
+> `road-to-the-question-only-the-owner-can-answer` stands on step 1.4; the template still
+> ships `autonomy: auto` (`src/config/agent-settings.template.yml:211`). No step moved.
+
 > **Proposal, not adopted — but its authority is decided.** This file is the receiver roadmap
 > for **ADR-260 §§ 2-3**, which the ADR itself records as unauthored, and it carries the
 > 2026-09-08 owner rulings that ADR-260 did not yet know — persistence, the standing-setting

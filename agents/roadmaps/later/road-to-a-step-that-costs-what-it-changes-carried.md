@@ -54,6 +54,10 @@ The parent's full Decisions table (D1-D22) stays in the archived parent.
       kernel plus rules whose triggers match the changed paths; R2/R3 keep
       today's delivery. Paired A/B on the benchmark's frozen tasks: discipline
       score not below the full arm's lower CI bound. No settings key.
+      Note (2026-10-28, `road-to-a-bench-that-fails-when-nothing-was-done` 4.1):
+      on those tasks a do-nothing `nop` arm scores discipline 1.0 on 23 of 33;
+      this A/B reads `discipline_given_capability` and the per-task `nop` floor
+      from `bench_ab_v2_stats`, both printed since that repair.
       verify: the A/B report is committed before the flip commit.
 - [ ] **5.1 Read the Goal over five drains.** Speed and escape rate together; <!-- blocked-by: five-drains-on-the-flipped-table -->
       neither alone closes the roadmap.

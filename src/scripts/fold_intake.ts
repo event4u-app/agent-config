@@ -47,6 +47,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { generatedByQuote } from './_lib/generated_by.js';
+import { intakeKind } from './_lib/intake_record.js';
 
 const PROG = 'fold_intake.ts';
 
@@ -132,7 +133,7 @@ function snippet(raw: string): string {
     }
     const e = parsed as Record<string, unknown>;
     const ts = typeof e.ts === 'string' ? e.ts : '';
-    const type = typeof e.type === 'string' ? e.type : 'event';
+    const type = intakeKind(e);
     // First string field that carries the claim, by event-type precedence.
     const claim =
         [e.pattern, e.correction, e.endpoint, e.observation, e.body, e.text].find(

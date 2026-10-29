@@ -19,6 +19,8 @@ import { AGENT_VERBS, cliVerbs, produceAreas } from '../../src/scripts/code_grap
 import { areaProblems, type MapAreas } from '../../src/scripts/code_graph/map_areas.js';
 import type { CodeGraph } from '../../src/scripts/code_graph/types.js';
 import { validateGraph } from '../../src/scripts/code_graph/validate.js';
+import type { SystemsPayload } from '../../src/scripts/code_graph/map_areas.js';
+import { writeSystemsFixture } from './code_graph/systems_fixture.js';
 import { GRAPH_TOOLS } from '../../src/scripts/mcp_server/graph_tools.js';
 
 const FX = path.resolve(__dirname, '../fixtures/code-graph');
@@ -163,15 +165,27 @@ describe('every area is drawn from facts, every fact with a witness', () => {
 describe('tours are templates over facts', () => {
     it('walk entry, flow and data; a step turns stale when its input fact changes', async () => {
         const tour = areas.tours!.find((t) => t.steps.some((s) => s.area === 'data'))!;
-        expect(tour.steps.map((s) => s.area)).toEqual(['code', 'code', 'data', 'delivery']);
+        // The fixture's workflow filters on `src/**` and the flow lives under `app/`,
+        // so no workflow is shown to ship it: no delivery step (audit W2).
+        expect(tour.steps.map((s) => s.area)).toEqual(['code', 'code', 'data']);
         expect(tour.steps.every((s) => s.state === 'fresh')).toBe(true);
         const { graph } = await buildFromRepo(root, null, { lanes: true });
         const flow = graph.nodes.find((n) => n.kind === 'flow' && tour.title === `Follow ${n.label}`)!;
         const changed: CodeGraph = { ...graph, nodes: graph.nodes.map((n) => (n.id === flow.id ? { ...n, fact: { ...n.fact!, attrs: { ...n.fact!.attrs, tables: ['comments', 'invoices'] } } } : n)) };
         const again = produceAreas(root, changed, { previousTours: areas.tours!, hunks: [] }).areas.tours!.find((t) => t.id === tour.id)!;
-        expect(again.steps.map((s) => s.state)).toEqual(['fresh', 'fresh', 'stale', 'fresh']);
+        expect(again.steps.map((s) => s.state)).toEqual(['fresh', 'fresh', 'stale']);
         const same = produceAreas(root, graph, { previousTours: areas.tours!, hunks: [] }).areas.tours!.find((t) => t.id === tour.id)!;
         expect(same.steps.every((s) => s.state === 'fresh')).toBe(true);
+    }, 60_000);
+
+    it('adds the delivery step only for a workflow whose path filter lets a flow file through', async () => {
+        const dir = plant();
+        fs.writeFileSync(path.join(dir, '.github/workflows/app.yml'), "name: App\non:\n  push:\n    paths:\n      - 'app/**'\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - run: composer test\n");
+        const { graph } = await buildFromRepo(dir, null, { lanes: true });
+        const tour = produceAreas(dir, graph, { hunks: [] }).areas.tours!.find((t) => t.steps.some((s) => s.area === 'data'))!;
+        const last = tour.steps[tour.steps.length - 1]!;
+        expect(last.area).toBe('delivery');
+        expect(last.item).toBe('workflow/.github/workflows/app.yml');
     }, 60_000);
 });
 
@@ -327,3 +341,60 @@ describe('the page shows each area', () => {
         }
     }, 120_000);
 });
+
+// The three Systeme generator extras of road-to-map-views-from-the-handover Phase 3.
+describe('the Systems payload extras', () => {
+    let sys: SystemsPayload;
+    let noComposer: SystemsPayload;
+    const many = 25;
+    beforeAll(async () => {
+        const root = writeSystemsFixture();
+        fs.mkdirSync(path.join(root, 'agents'), { recursive: true });
+        // More importers than the 20-file usedBy sample, in two top-level folders.
+        for (let i = 0; i < many; i++) {
+            const dir = i % 5 === 0 ? 'lib' : 'src/many';
+            fs.mkdirSync(path.join(root, dir), { recursive: true });
+            fs.writeFileSync(path.join(root, dir, `m${i}.ts`), i % 2 ? "import { map } from 'lodash';\nexport const x = map;\n" : "import { map, filter } from 'lodash';\nexport const y = [map, filter];\n");
+        }
+        fs.writeFileSync(path.join(root, 'Cargo.toml'), '[package]\nname = "x"\n');
+        fs.mkdirSync(path.join(root, 'node_modules', 'deep'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'node_modules', 'deep', 'go.mod'), 'module x\n');
+        const { graph: g } = await buildFromRepo(root, null, { lanes: true });
+        sys = produceAreas(root, g, { hunks: [] }).areas.systems as SystemsPayload;
+        fs.rmSync(path.join(root, 'composer.lock'));
+        const { graph: g2 } = await buildFromRepo(root, null, { lanes: true });
+        noComposer = produceAreas(root, g2, { hunks: [] }).areas.systems as SystemsPayload;
+        fs.rmSync(root, { recursive: true, force: true });
+    }, 120_000);
+
+    it('byArea: file counts per top-level folder and the top names over ALL uses, beyond the 20-file sample', () => {
+        const lodash = sys.packages.find((k) => k.name === 'lodash')!;
+        expect(lodash.usedBy.length).toBeLessThanOrEqual(20);
+        expect(lodash.usedByTotal).toBeGreaterThan(20);
+        const sum = Object.values(lodash.byArea ?? {}).reduce((a, b) => a + b, 0);
+        expect(sum).toBe(lodash.usedByTotal);
+        expect(lodash.byArea?.['lib']).toBe(many / 5);
+        expect(lodash.topNames?.[0]).toEqual(['map', many]);
+        expect(lodash.topNames?.find((n) => n[0] === 'filter')?.[1]).toBe(Math.ceil(many / 2));
+        for (const k of sys.packages) {
+            if (!k.usedByTotal) expect(k.byArea).toBeUndefined();
+            else expect(Object.values(k.byArea ?? {}).reduce((a, b) => a + b, 0)).toBe(k.usedByTotal);
+        }
+        expect(areaProblems({ systems: sys } as MapAreas)).toEqual([]);
+    });
+
+    it('ecosystem probe: present-but-unread is told from absent, installed folders are not looked into', () => {
+        const eco = Object.fromEntries((sys.ecosystems ?? []).map((e) => [e.name, e]));
+        expect(Object.keys(eco)).toEqual(['npm', 'Composer', 'pnpm', 'Yarn', 'Bun', 'pip/Poetry', 'Cargo', 'Go', 'Maven/Gradle', 'Bundler', 'NuGet']);
+        expect(eco['npm']).toEqual({ name: 'npm', read: true, files: ['package-lock.json'] });
+        expect(eco['Cargo']).toEqual({ name: 'Cargo', read: false, files: ['Cargo.toml'] });
+        // Sensitivity: a go.mod under node_modules is no Go project.
+        expect(eco['Go']).toEqual({ name: 'Go', read: false, files: [] });
+    });
+
+    it('autoload: the flag says whether composer.lock autoload maps were read', () => {
+        expect(sys.autoloadRead).toBe(true);
+        expect(noComposer.autoloadRead).toBe(false);
+    });
+});
+

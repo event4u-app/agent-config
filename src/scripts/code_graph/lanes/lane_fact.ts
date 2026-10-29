@@ -24,9 +24,17 @@ export interface Witness {
     file: string;
     /** 1-based line of the span's first line */
     line: number;
-    /** short hash of the exact span text that was read; see `spanHash` */
+    /** short hash of the exact span text that was read; see `spanHash` — for a `commit` witness, the commit's sha */
     hash: string;
+    /**
+     * How `hash` is formed and read back: `span` (default with a hash) the text at
+     * `line`, `name` a single name, `commit` a commit sha checked by object
+     * existence, `file` the file itself. Absent = inferred (`witnessKind`).
+     */
+    kind?: WitnessKind;
 }
+
+export type WitnessKind = 'span' | 'name' | 'commit' | 'file';
 
 export interface LaneFact {
     /** a kind from the shared vocabulary file */

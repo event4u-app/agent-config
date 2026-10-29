@@ -1,0 +1,10 @@
+/* Bugs & Fixes — the values of the 2026-10-bf handover's p02/Bugs.dc.html. */
+.b-empty { gap: 10px; max-width: 880px; }
+.b-head { font-size: 17px; }
+.b-cmd { font-size: 12px; padding: 5px 9px; white-space: normal; overflow-wrap: anywhere; }
+.b-whywrap { display: flex; flex-direction: column; gap: 8px; max-width: 880px; }
+.b-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)); gap: 8px; }
+.b-tile { padding: 12px; border-radius: 10px; border: 1px dashed var(--line2); background: transparent; display: flex; flex-direction: column; gap: 4px; }
+.b-tile.on { border: 1px solid var(--brandLine); background: var(--brandTint); }
+.b-tile b { font-weight: 600; font-size: 13px; }
+.b-tile span { font-size: 12px; color: var(--soft); }

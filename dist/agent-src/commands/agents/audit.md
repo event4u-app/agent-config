@@ -87,9 +87,12 @@ Surface candidates with explicit justification. Never auto-apply.
 Run the linter and inspect output:
 
 ```bash
-./scripts-run src/scripts/lint_agents_md
+./scripts-run src/scripts/lint_agents_md --target AGENTS.md
 wc -c AGENTS.md
 ```
+
+`--target` lints the project's own file with the consumer-template caps;
+without it the linter checks the package's root and template, not yours.
 
 Then audit against the **Capability-over-Structure heuristic** (canonical:
 [`agents-md-anatomy § Iron Law`](../../contexts/contracts/agents-md-anatomy.md#iron-law--capability-over-structure)):

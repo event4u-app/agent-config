@@ -1,0 +1,13 @@
+diff --git a/src/window.mjs b/src/window.mjs
+index 7f1c925..8eee357 100644
+--- a/src/window.mjs
++++ b/src/window.mjs
+@@ -18,7 +18,7 @@ export function countBelow(arr, target) {
+ 
+   while (lo <= hi) {
+     const mid = (lo + hi) >> 1;
+-    if (arr[mid] > target) {
++    if (arr[mid] >= target) {
+       ans = mid;
+       hi = mid - 1;
+     } else {

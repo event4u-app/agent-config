@@ -18,6 +18,9 @@ entry_condition:
 > the `fail_closed` guards now actually run; three findings show that is not yet
 > true on every install shape. A major is the place to make it true, so they are
 > release blockers, not accepted risk.
+>
+> **Arrivals:** 1 — `inbox-2026-10-bi` (2026-10-29): session-start context lost
+> on a compact restore (Phase 7). Not un-parked: the active estate is at its cap.
 
 ## Goal
 
@@ -85,6 +88,31 @@ dispositioned in the ledger.
       `agents/evidence/` carry them. Review-input packages stay as recorded.
       verify: `rg -l -F mathiasberg agents/evidence --glob '*.md' --glob '!**/*.review-input/**' --glob '!**/*.question.md' --glob '!**/*prompt*.md' | wc -l` -> /^\s*0$/
       Review-input packages and council prompts are bound to their recorded verdicts and stay as recorded; the placeholder paths (`/Users/<user>/`, `/Users/maintainer/`) are not identities.
+
+## Phase 7 — session-start context that arrives (inbox-2026-10-bi, T3)
+
+Reproduced offline at `58d43073b7` with the real dispatcher: when a sibling
+concern returns WARN on `session_start source: compact`, the dispatcher drops
+every context block (`dispatch_hook.ts` emits context only on a final ALLOW),
+and `handoff_context_hook.ts` has already deleted the handoff file — the
+handoff is lost. The dispatcher is hook plumbing, so this phase ships with a
+ratification artifact.
+
+- [ ] **7.1 Red fixture.** `tests/scripts/hooks/dispatch_session_start_delivery.test.ts`:
+      handoff concern plus a stub concern returning WARN with context, `source:
+      compact`; stdout must parse as one JSON object carrying both texts.
+      verify: red at the pin.
+- [ ] **7.2 Delivery is not a verdict.** On `session_start`, merge each ALLOW
+      concern's context into `additionalContext` regardless of the overall
+      verdict; ALLOW-only output stays byte-identical.
+      verify: 7.1 green; a byte-identity test for the ALLOW-only path.
+- [ ] **7.3 Consume after deliver.** The handoff file and the recycle envelope
+      move to `.pending` and are deleted only after the write succeeded.
+      verify: a throwing writer leaves the file in place.
+- [ ] **7.4 A 10k-character guard in the dispatcher.** Shared
+      `HOST_REPLACE_CHARS`; drop whole blocks lowest priority first and name
+      them on stderr.
+      verify: blocks at their caps exceeding 10,000 chars, plus a multibyte case.
 
 ## Phase 6 — a review that completed, and a ledger with nothing open
 

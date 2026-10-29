@@ -130,6 +130,12 @@ export interface DefectFinding {
     principle?: string;
     /** One bounded line naming how the defect happens. No producer field yet. Free text, so it never leaves. */
     mechanism?: string;
+    /**
+     * What a user report is about (`tabs`), so repeats phrased differently can be
+     * read side by side. Local-only like `mechanism`: outside the fingerprint and
+     * never rendered upstream.
+     */
+    subject?: string;
     /** One bounded line naming what would refute the claim; a retro's `Candidate.falsifier`. Never leaves. */
     falsifier?: string;
     /**
@@ -267,7 +273,7 @@ export function egressBlockedReason(record: DefectRecord, repoRoot?: string | nu
     // Every free value the record carries, not only the two a report renders
     // today — a field the floor never saw must not become sendable later by a
     // renderer change alone.
-    const text = [record.suggested_surface, record.evidence, record.principle, record.mechanism, record.falsifier]
+    const text = [record.suggested_surface, record.evidence, record.principle, record.mechanism, record.falsifier, record.subject]
         .filter((v): v is string => typeof v === 'string' && v.length > 0)
         .join('\n');
     const result = redact_low_impact_entry(text, {
@@ -507,7 +513,9 @@ const COMPLAINT_PATTERNS: readonly RegExp[] = [
     // carries, and matching only the ASCII one is a dead branch on live input.
     /\bi ?(have|['’]ve)? ?already (told|said)\b/i,
     /\b(told|said) (you )?(this|that|it)? ?(\w+|\d+) times?\b/i,
-    /\bhow many times (do|must|should) i\b/i,
+    // An ordinal restates only when punctuation follows it ("Zum dritten Mal: Tabs!",
+    // not "zum dritten Mal gewonnen"); "schon wieder" needs an addressee nearby.
+    /\b(zum (zweiten|dritten|vierten|fünften) mal|for the (second|third|fourth|fifth) time)\s*[:!,—–-]|\bwie oft (noch|muss|soll) ich\b|\bhow many times (do|must|should|have|will) (i|we)\b|\bas i (mentioned|said) (before|earlier)\b|\btold you (this|that)\b|\bimmer noch nicht\b|\bschon wieder\b[^.!?]{0,40}\b(du|you|ihr)\b|\b(du|you|ihr)\b[^.!?]{0,40}\bschon wieder\b/i,
 ];
 
 // Phrasings that MATCH a complaint pattern but are not complaints — a curious
@@ -552,11 +560,35 @@ function spanExonerated(prompt: string, start: number, end: number): boolean {
     return false;
 }
 
+export const MAX_SUBJECT = 40;
+
+/**
+ * A backticked token anywhere in the prompt, else the clause after a colon that
+ * closes the matched marker. Undefined when neither names anything.
+ */
+function reportSubject(prompt: string, matchEnd: number): string | undefined {
+    let raw = /`([^`\n]+)`/.exec(prompt)?.[1];
+    if (raw === undefined) {
+        const colon = /^[^.!?\n:]{0,3}:\s*([^.!?\n]+)/.exec(prompt.slice(matchEnd - 1));
+        raw = colon?.[1];
+    }
+    if (raw === undefined) {
+        return undefined;
+    }
+    const subject = sanitizeEvidence(raw)
+        .toLowerCase()
+        .replace(/^[\s\p{P}]+|[\s\p{P}]+$/gu, '')
+        .slice(0, MAX_SUBJECT)
+        .trim();
+    return subject === '' ? undefined : subject;
+}
+
 /** Intake path 1 — the user says the agent worked wrongly. */
 export function detectUserReport(prompt: string): DefectFinding | null {
     for (const re of COMPLAINT_PATTERNS) {
         const m = re.exec(prompt);
         if (m !== null && !spanExonerated(prompt, m.index, m.index + m[0].length)) {
+            const subject = reportSubject(prompt, m.index + m[0].length);
             return {
                 defect_class: 'user-reported',
                 source: 'user-reported',
@@ -564,6 +596,7 @@ export function detectUserReport(prompt: string): DefectFinding | null {
                 suggested_surface:
                     'Analyse the turn the user is objecting to and name the rule, skill, or ' +
                     'gate whose absence allowed it.',
+                ...(subject !== undefined ? { subject } : {}),
             };
         }
     }
@@ -844,6 +877,7 @@ export function mergeRecord(
             ...(target.length > 0 ? { target } : {}),
             ...(proposes.length > 0 ? { proposes } : {}),
             ...(unitKeys.length > 0 ? { unit_keys: unitKeys } : {}),
+            ...(existing.subject ?? finding.subject ? { subject: existing.subject ?? finding.subject } : {}),
             // A detector-opened record that a retro later names keeps the name.
             ...claimFields(existing, finding),
         };

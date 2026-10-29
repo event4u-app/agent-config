@@ -72,7 +72,7 @@ surface changes.
 4. **Classify documents** — `Architecture / Convention / Pattern / Feature / Context / Module Doc / Override / Unclear`.
 5. **Detect issues**:
    - Structural — files in wrong dirs, naming inconsistencies, kebab-case violations.
-   - Content — verify class/method/path references against the actual codebase via `codebase-retrieval` or file checks; flag stale references.
+   - Content — verify class/method/path references against the actual codebase via `code-graph ask` or file checks; flag stale references.
    - Duplication — `agents/` ↔ `.augment/skills/`, root ↔ `.augment/guidelines/`, root ↔ module docs.
    - Coverage gaps — active modules without docs, complex areas without contexts.
 6. **Display audit report** — sectioned table (Inventory · Module Agents · Overrides · Issues · Duplicates · Gaps) with severity buckets `🔴 Critical`, `🟡 Warning`, `🔵 Info`, `⚪ Clean`.

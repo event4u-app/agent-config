@@ -319,3 +319,26 @@ no absolute local path.
       integrated first, then c; p foreign → c gets a report and no direct
       integration of main; nothing is pushed.
 - [x] AC-13 — Gated catalogue delta ≤ 0 and MCP tool count unchanged.
+
+## Erratum
+
+Added 2026-10-27, after the archive. A re-verification at `92397d6368` found
+steps of the two map roadmaps ticked on fixture-only evidence; on this
+repository they do not hold. The archive stays archived and its boxes stay as
+they were: the work is reopened in `road-to-a-map-that-holds-on-the-real-repo`,
+under that file's step IDs.
+
+| Defect | What does not hold | Reopened as |
+|---|---|---|
+| H12 | Domains only on tables and packages; rules outside the drift engine; pack resolver skips NOT_A_DOMAIN and ≥2 | 7.1 |
+| H13 | Commit subjects (a squash subject is the PR title) in the committed map | 1.1–1.3 (closed) |
+| H14 | Provenance timeline reads `git log --follow` | 7.2 |
+| H15 | Authors and last change read `--no-renames` | 7.2 |
+| H16 | Branch gc only from `branches gc`; remote-tracking branches never expire; full manifests | 7.3 |
+| H17 | Parent recorded only offline; no parent SHA; `ownedBy` true for 0 own commits | 7.4 |
+| H18 | Chain early warning compares file paths only | 7.5 |
+| H19 | `hiddenDependencies` has no production caller; flow lens hard-wired off | 7.6 |
+| H20 | Rebuild-diff scheduled nowhere, compares lane-free builds | 7.7 |
+
+H21 — the pack never reaches the agent through the hook — is deferred to step
+5.6 of that file, behind its measurement.

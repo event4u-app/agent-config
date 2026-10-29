@@ -169,12 +169,20 @@ describe('release brake — 3.4', () => {
 });
 
 describe('deliveryObservedFor', () => {
-    it('reads the record under its own spelling of the first host', () => {
-        expect(deliveryObservedFor({ claude: { state: 'observed-true' } } as never, 'claude-code')).toBe(true);
+    const mech = { state: 'observed-true', host_version: '2.1.268', transcript: 't', date: '2026-09-10' };
+
+    it('reads the delivery-mechanics axis under its own spelling of the first host', () => {
+        expect(deliveryObservedFor({ claude: { state: 'unobserved', delivery_mechanics: mech } } as never, 'claude-code')).toBe(true);
     });
 
-    it('unobserved and absent hosts are not observed', () => {
-        expect(deliveryObservedFor({ claude: { state: 'unobserved' } } as never, 'claude-code')).toBe(false);
+    it('the behavioural effect alone is an outcome, never the entry condition', () => {
+        expect(deliveryObservedFor({ claude: { state: 'observed-true' } } as never, 'claude-code')).toBe(false);
+    });
+
+    it('unobserved mechanics and absent hosts are not observed', () => {
+        expect(
+            deliveryObservedFor({ claude: { state: 'observed-true', delivery_mechanics: { ...mech, state: 'unobserved' } } } as never, 'claude-code'),
+        ).toBe(false);
         expect(deliveryObservedFor({}, 'cursor')).toBe(false);
     });
 });

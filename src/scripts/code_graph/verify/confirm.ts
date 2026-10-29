@@ -28,7 +28,9 @@ import defaults from './defaults.json';
 import { type LowerBound, lowerBound } from './lower_bound.js';
 import { readOverlay, type Overlay } from './overlay.js';
 import { headSha, verifyPaths } from './paths.js';
-import { checkWitness, FileCache, nameToken, type WitnessResult } from './witness_check.js';
+import type { WitnessKind } from '../lanes/lane_fact.js';
+import { existingCommits } from './verify_all.js';
+import { checkWitness, FileCache, nameToken, type WitnessResult, witnessKind } from './witness_check.js';
 import { readTombstones, type Tombstone, tombstoneFor, writeTombstones } from './tombstones.js';
 
 export type ConfirmDepth = 'none' | 'witness' | 'text' | 'full';
@@ -48,6 +50,9 @@ export interface ConfirmItem {
     tombstone?: { reason: Tombstone['reason']; basis: string };
     /** Present at depth `text` and `full`. */
     usage?: LowerBound;
+    /** The fact's owner file and rung, when the node carries fact metadata. */
+    owner?: string;
+    rung?: string;
 }
 
 export interface ConfirmResult {
@@ -76,9 +81,9 @@ export interface ConfirmOptions {
     index?: GraphIndex;
 }
 
-function witnessOf(n: CodeNode): { file: string; line: number; hash: string | null } | null {
+function witnessOf(n: CodeNode): { file: string; line: number; hash: string | null; kind?: WitnessKind } | null {
     const w = n.fact?.witness;
-    if (w) return { file: w.file, line: w.line, hash: w.hash || null };
+    if (w) return { file: w.file, line: w.line, hash: w.hash || null, ...(w.kind ? { kind: w.kind } : {}) };
     if (!n.source_file) return null;
     return { file: n.source_file, line: (n.source_location[0] as number | undefined) ?? 0, hash: null };
 }
@@ -86,11 +91,16 @@ function witnessOf(n: CodeNode): { file: string; line: number; hash: string | nu
 function checkNode(files: FileCache, n: CodeNode): { result: WitnessResult | null; at: string | null } {
     const w = witnessOf(n);
     if (!w) return { result: null, at: null };
-    if (n.kind === 'file') {
+    const kind = witnessKind(w);
+    if (n.kind === 'file' || kind === 'file') {
         const exists = files.lines(w.file) !== null;
         return { result: { state: exists ? 'confirmed' : 'gone', at: w.file, by: 'name' }, at: w.file };
     }
-    const result = checkWitness(files, { file: w.file, line: w.line, hash: w.hash, name: nameToken(n.label) });
+    if (kind === 'commit') {
+        const at = `${w.file}@${w.hash ?? ''}`;
+        return { result: { state: existingCommits(files.root, [w.hash ?? '']).size ? 'confirmed' : 'gone', at, by: 'hash' }, at };
+    }
+    const result = checkWitness(files, { file: w.file, line: w.line, hash: kind === 'name' ? null : w.hash, name: nameToken(n.label) });
     return { result, at: result.at };
 }
 
@@ -143,6 +153,7 @@ export function confirmIds(root: string, cachePath: string, ids: readonly string
             if (!result) return { id, label: n.label, kind: n.kind, state: added ? 'added' : 'unconfirmed', at, by: 'skipped' };
             const item: ConfirmItem = { id, label: n.label, kind: n.kind, state: added ? 'added' : result.state, at, by: n.kind === 'file' ? 'file' : result.by };
             if (result.now_at) item.now_at = result.now_at;
+            if (n.fact) Object.assign(item, { owner: n.fact.owner, rung: n.fact.rung });
             if (result.state === 'gone') {
                 const prior = tombstoneFor(stones, id);
                 const reason: Tombstone['reason'] = files.lines(witnessOf(n)?.file ?? '') === null ? 'owner-deleted' : 'span-gone';
@@ -201,7 +212,8 @@ function lookup(index: GraphIndex, overlay: Overlay | null, id: string): CodeNod
         if (own) return own;
         if (overlay.removed_nodes.includes(id)) return undefined;
     }
-    return index.getNode(id);
+    // `file:<path>` names the file node, whose id is the bare path.
+    return index.getNode(id) ?? (id.startsWith('file:') ? index.getNode(id.slice(5)) : undefined);
 }
 
 function withNeighbours(index: GraphIndex, overlay: Overlay | null, ids: readonly string[], dir: ConfirmOptions['neighbours']): string[] {
@@ -276,7 +288,8 @@ export function renderConfirm(r: ConfirmResult): string[] {
     if (r.status !== 'ok') return [`confirm: ${r.error ?? 'unavailable'}`];
     const lines = r.items.map((i) => {
         const tail = [i.now_at ? `now ${i.now_at}` : '', i.tombstone ? `tombstone ${i.tombstone.reason} at ${i.tombstone.basis}` : '', i.usage ? i.usage.line : ''].filter(Boolean).join('; ');
-        return `${i.state.padEnd(11)} ${i.label} [${i.kind}]${i.at ? ` at=${i.at}` : ''}${tail ? ` — ${tail}` : ''}`;
+        const fact = i.owner ? ` · state: ${i.state}, owner ${i.owner}, rung ${i.rung ?? '?'}` : '';
+        return `${i.state.padEnd(11)} ${i.label} [${i.kind}]${i.at ? ` at=${i.at}` : ''}${tail ? ` — ${tail}` : ''}${fact}`;
     });
     for (const id of r.not_found) lines.push(`not-found   ${id} — no node and no tombstone with this id`);
     for (const f of r.fan_out ?? []) lines.push(`  caller ${f.state.padEnd(11)} ${f.label} [${f.kind}]${f.at ? ` at=${f.at}` : ''}`);

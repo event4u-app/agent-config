@@ -18,12 +18,14 @@ import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+    buildHostLimitRows,
     buildInstalledLayerReport,
     defaultHostLimitsPath,
     isUnconditional,
     LIMIT_WARN_FRACTION,
     loadHostInstructionLimits,
     readLayer,
+    renderHostLimitRows,
     renderInstalledLayerReport,
     TOP_FILES,
 } from '../../src/scripts/_lib/installed_layer.js';
@@ -464,6 +466,53 @@ describe('installed-layer report — one row per host, and an absent limit is ne
     });
 });
 
+describe('installed-layer report — the combined limit depends on the context window', () => {
+    it('reads a per-window row and measures every window, warning on the tighter one first', () => {
+        const limits = loadHostInstructionLimits(
+            stageLimits(mkTmp('ilr-window-cfg-'), {
+                host: {
+                    limit: 150,
+                    kind: 'reported',
+                    source: 'fixture source long enough to count',
+                    by_window: {
+                        '200k': { combined: 120, combined_kind: 'reported', per_file: 40, per_file_kind: 'vendor-published' },
+                        '1m': { combined: 150, combined_kind: 'reported', per_file: 150, per_file_kind: 'vendor-published' },
+                    },
+                },
+            }),
+        );
+        const rows = buildHostLimitRows(
+            [{ host: 'host', present: true, chars: 100, package_owned_chars: 100, foreign_chars: 0 } as never],
+            limits,
+        );
+        const w = rows[0]?.windows ?? [];
+        expect(w.map((x) => x.window)).toEqual(['200k', '1m']);
+        // 100 / 120 = 83 % crosses the 80 % line; 100 / 150 = 67 % does not.
+        expect(w.map((x) => x.warn)).toEqual([true, false]);
+        const lines = renderHostLimitRows(rows);
+        expect(lines.filter((l) => l.includes('window ')).length).toBe(2);
+        expect(lines.some((l) => l.includes('window 200k') && l.includes('WARNING'))).toBe(true);
+    });
+
+    it('a host without a per-window row keeps today\'s single line and no window lines', () => {
+        const limits = loadHostInstructionLimits(
+            stageLimits(mkTmp('ilr-nowindow-cfg-'), { good: { limit: 10, kind: 'vendor-published' } }),
+        );
+        const rows = buildHostLimitRows([], limits);
+        expect(rows[0]?.windows).toEqual([]);
+        expect(renderHostLimitRows(rows).some((l) => l.includes('window '))).toBe(false);
+    });
+
+    it('a malformed window row is dropped rather than believed', () => {
+        const limits = loadHostInstructionLimits(
+            stageLimits(mkTmp('ilr-badwindow-cfg-'), {
+                h: { limit: 10, kind: 'reported', by_window: { '200k': { combined: 0 }, x: 'nope', '1m': { combined: 9 } } },
+            }),
+        );
+        expect(limits.get('h')?.windows?.map((x) => x.window)).toEqual(['1m']);
+    });
+});
+
 describe('installed-layer report — the shipped table states where every figure came from', () => {
     it('every host the global layer map knows has an entry', () => {
         const shipped = JSON.parse(fs.readFileSync(defaultHostLimitsPath(), 'utf-8')) as Record<
@@ -472,6 +521,21 @@ describe('installed-layer report — the shipped table states where every figure
         >;
         for (const host of Object.keys(GLOBAL_RULE_DIRS)) {
             expect(Object.keys(shipped)).toContain(host);
+        }
+    });
+
+    it('every shipped window figure carries a kind and the table cites where they came from', () => {
+        const shipped = JSON.parse(fs.readFileSync(defaultHostLimitsPath(), 'utf-8')) as Record<
+            string,
+            { by_window?: Record<string, Record<string, unknown>>; by_window_source?: unknown }
+        >;
+        for (const [host, e] of Object.entries(shipped)) {
+            if (host.startsWith('_') || e.by_window === undefined) continue;
+            expect(typeof e.by_window_source, `${host} states window figures and must cite them`).toBe('string');
+            for (const row of Object.values(e.by_window)) {
+                expect(['vendor-published', 'reported']).toContain(row.combined_kind);
+                expect(['vendor-published', 'reported']).toContain(row.per_file_kind);
+            }
         }
     });
 

@@ -37,7 +37,7 @@ After editing any file, search for **all** of these:
 
 | What | How to find | What to update |
 |---|---|---|
-| **Callers / call sites** | `codebase-retrieval` + `grep` for the changed method/class name | Update signatures, parameters, return type handling |
+| **Callers / call sites** | `code-graph ask` + `grep` for the changed method/class name | Update signatures, parameters, return type handling |
 | **Interface implementations** | Search for `implements {Interface}` or `extends {Class}` | Match new method signatures in all implementations |
 | **Subclasses** | Search for `extends {Class}` | Override or implement changed methods |
 | **Tests** | Search test directories for the changed class/method name | Update assertions, mocks, method calls |

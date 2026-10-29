@@ -156,7 +156,7 @@ Skip the council and stay in-session for:
   "this file", "one-liner", "small change", "add a getter". Use the
   language skill directly.
 * **Documentation lookup** — "what is X", "how does Y work", "example
-  of Z", "syntax of W". Use `codebase-retrieval` or the docs skill,
+  of Z", "syntax of W". Use `code-graph ask` or the docs skill,
   never the council.
 
 Invoke the council when:

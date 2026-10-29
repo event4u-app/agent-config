@@ -361,6 +361,10 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              session claim, conflicting records and worktree pressure.
                              Read-only; no disposal path by design.
                              Flags: --from <dir>, --json, --strict
+  user-data                  Your own data for this repository, under your home: list, export,
+                             delete (dry run unless --yes; tombstoned), tombstones,
+                             migrate (dry run unless --apply) of chat history + observations.
+                             Flags: --kind K, --id ID, --yes, --apply, --json
   route:explain              Deterministic rule-routing trace for one prompt: matched
                              triggers, tier, injected-vs-pointer disposition, budget
                              consumption, rejected candidates. Trigger-match level only
@@ -1597,6 +1601,10 @@ cmd_route_audit() {
 
 # Deterministic rule-routing trace (trigger-match measurement level only).
 # See scripts/_cli/cmd_route_explain.ts.
+cmd_user_data() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_user_data.ts" "$@"
+}
+
 cmd_route_explain() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_route_explain.ts" "$@"
 }
@@ -1699,6 +1707,7 @@ main() {
     hooks:effect)            cmd_hooks_effect "$@" ;;
     routing:doctor)          cmd_routing_doctor "$@" ;;
     workspace:doctor)        cmd_workspace_doctor "$@" ;;
+    user-data)               cmd_user_data "$@" ;;
     route:explain)           cmd_route_explain "$@" ;;
     route:audit)             cmd_route_audit "$@" ;;
     hooks:replay)            cmd_hooks_replay "$@" ;;

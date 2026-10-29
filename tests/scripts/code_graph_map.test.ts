@@ -271,10 +271,11 @@ describe('agents/map/ artefacts (Phase 3)', () => {
         expect(html).toMatch(/Content-Security-Policy" content="default-src 'none'; script-src 'sha256-/);
     });
 
-    it('offers the 3D view as a toggle that starts off, so the flat map stays the default', async () => {
+    it('offers the 3D view as a radio that starts off, so the flat map stays the default', async () => {
         await buildMap(root);
         const html = fs.readFileSync(path.join(root, 'agents', 'map', 'index.html'), 'utf-8');
-        expect(html).toContain('<button type="button" id="dim" aria-pressed="false">');
+        expect(html).toContain('<button type="button" role="radio" id="dim2d" aria-checked="true">');
+        expect(html).toContain('<button type="button" role="radio" id="dim" aria-checked="false">');
         expect(html).toContain('function orbPoint(');
     });
 

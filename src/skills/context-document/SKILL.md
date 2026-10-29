@@ -27,7 +27,7 @@ Do NOT use when:
 ## Procedure: Manage contexts
 
 1. **Identify scope** — Which area of the codebase needs a context document?
-2. **Research** — Use codebase-retrieval to understand the area (files, patterns, dependencies).
+2. **Research** — Use `code-graph ask` to understand the area (files, patterns, dependencies).
 3. **Write or update** — Create/update the context doc following the template below.
 4. **Verify** — Confirm all referenced files exist and descriptions match current code.
 
@@ -166,7 +166,7 @@ When working on the agent infrastructure itself (skills, commands, rules), check
 
 ### Creating contexts
 
-1. **Always analyze the code first** — use `codebase-retrieval`, `view`, and file listing.
+1. **Always analyze the code first** — use `code-graph ask`, `view`, and file listing.
 2. **Be factual** — describe what IS, not what SHOULD be.
 3. **Be specific** — link to files, name classes, reference tables.
 4. **Ask the user** about anything unclear.

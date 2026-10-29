@@ -785,5 +785,6 @@ export async function extractFile(relPath: string, source: string, lang: Lang): 
     } finally {
         tree.delete(); // delete the tree, never the cached parser (loader.ts)
     }
+    if (out.parseError) for (const n of out.nodes) if (n.kind === 'file') n.partial = true;
     return out;
 }

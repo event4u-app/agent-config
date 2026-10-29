@@ -61,6 +61,20 @@ export interface InjectionObservation {
     readonly date: string | null;
     /** Why it reads the way it does — required always, including for `unobserved`. */
     readonly reason: string;
+    /**
+     * Second axis, beside `state`: did delivered rule bodies ARRIVE in the
+     * model's context on this host (bytes in the transcript), whatever the model
+     * then did with them. `state` stays the behavioural effect and keeps its
+     * owner. Same citation protocol as `state`. Absent reads `unobserved`.
+     */
+    readonly delivery_mechanics?: DeliveryMechanics;
+}
+
+export interface DeliveryMechanics {
+    readonly state: InjectionState;
+    readonly host_version: string | null;
+    readonly transcript: string | null;
+    readonly date: string | null;
 }
 
 export type InjectionRecord = Readonly<Record<string, InjectionObservation>>;
@@ -92,6 +106,19 @@ export function recordProblems(rec: InjectionRecord): InjectionProblem[] {
         }
         if (typeof obs.reason !== 'string' || obs.reason.trim().length < 20) {
             out.push({ host, message: 'reason is missing or shorter than 20 characters — an unexplained row reads as answered' });
+        }
+        const mech = obs.delivery_mechanics;
+        if (mech !== undefined) {
+            if (!(INJECTION_STATES as readonly string[]).includes(mech.state)) {
+                out.push({ host, message: `delivery_mechanics state ${JSON.stringify(mech.state)} is not one of ${INJECTION_STATES.join(' | ')}` });
+            } else if (mech.state !== 'unobserved') {
+                for (const field of ['host_version', 'transcript', 'date'] as const) {
+                    const v = mech[field];
+                    if (typeof v !== 'string' || v.trim() === '') {
+                        out.push({ host, message: `delivery_mechanics ${mech.state} without \`${field}\` — the same citation protocol as \`state\`` });
+                    }
+                }
+            }
         }
         if (obs.state === 'unobserved') continue;
         for (const field of ['host_version', 'transcript', 'date'] as const) {
@@ -127,6 +154,11 @@ export function loadRecord(root: string): InjectionRecord {
  */
 export function stateFor(rec: InjectionRecord, host: string): InjectionState {
     return rec[host]?.state ?? 'unobserved';
+}
+
+/** The delivery-mechanics state for one host — `unobserved` when the row carries none. */
+export function mechanicsFor(rec: InjectionRecord, host: string): InjectionState {
+    return rec[host]?.delivery_mechanics?.state ?? 'unobserved';
 }
 
 /**

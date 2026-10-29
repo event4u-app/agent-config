@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lumen Field Guide — Moths of the heath</title>
+<style>
+  :root { --ink: #22303c; --paper: #f7f4ec; --leaf: #4f7a4a; --dusk: #c56b3d; --gap: 16px; --radius: 10px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Georgia, serif; color: var(--ink); background: var(--paper); line-height: 1.5; }
+  header { background: var(--leaf); color: var(--paper); padding: 32px 24px; }
+  header h1 { margin: 0; font-size: 32px; }
+  header p { margin: 8px 0 0; font-family: system-ui, sans-serif; font-size: 16px; }
+  nav { display: flex; gap: var(--gap); padding: 12px 24px; background: #e9e3d3; font-family: system-ui, sans-serif; font-size: 14px; }
+  nav a { color: var(--ink); text-decoration: none; border-bottom: 2px solid var(--dusk); }
+  main { max-width: 1040px; margin: 0 auto; padding: 24px; }
+  .cards { display: grid; gap: var(--gap); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .card { background: #ffffff; border-radius: var(--radius); padding: var(--gap); border-top: 6px solid var(--dusk); }
+  .card h2 { margin: 0 0 8px; font-size: 20px; }
+  .tag { display: inline-block; font-family: system-ui, sans-serif; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--leaf); color: var(--paper); }
+  footer { margin-top: 32px; padding: 16px 24px; font-family: system-ui, sans-serif; font-size: 12px; background: var(--ink); color: var(--paper); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Moths of the heath</h1>
+  <p>A pocket field guide from the Lumen naturalists' circle.</p>
+</header>
+<nav aria-label="Sections"><a href="#night">Night flyers</a><a href="#day">Day flyers</a><a href="#notes">Recording notes</a></nav>
+<main>
+  <section id="night" class="cards" aria-label="Night flyers">
+    <article class="card"><h2>Ember underwing</h2><span class="tag">July–August</span><p>Rust forewings hide a flash of orange when it settles on heather.</p></article>
+    <article class="card"><h2>Pale lantern</h2><span class="tag">May–June</span><p>Chalk-white, drawn to light traps after midnight on still nights.</p></article>
+    <article class="card"><h2>Gorse dart</h2><span class="tag">June–July</span><p>Fast and low over gorse; look for the dark arrow on each wing.</p></article>
+  </section>
+  <section id="notes" aria-label="Recording notes">
+    <h2>Recording notes</h2>
+    <p>Note the date, the trap type and the wind. Release every moth where it was caught.</p>
+  </section>
+</main>
+<footer>Lumen Field Guide · written for the bench · no real survey data</footer>
+</body>
+</html>

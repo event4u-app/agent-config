@@ -16,6 +16,7 @@
  * Same tree in, same bytes out: nothing written here carries a timestamp, a
  * host path or anything else that differs between two builds of one commit.
  */
+import { repoName } from './repo_identity.js';
 import { execFileSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
 import * as fs from 'node:fs';
@@ -62,6 +63,8 @@ export const AREA_PAGE_MIN_FILES = 5;
 export interface MapMeta {
     title: string;
     commit: string;
+    /** The build commit's date (`YYYY-MM-DD`); `''` outside a git repository. */
+    built?: string;
     state: string;
     summary: string;
     /**
@@ -216,6 +219,14 @@ async function artefactGraph(root: string): Promise<MapInputsArtefacts | null> {
 }
 type MapInputsArtefacts = NonNullable<Parameters<typeof buildMapModel>[1]>['artefacts'];
 
+function commitDate(root: string): string {
+    try {
+        return gitProbe(root, ['log', '-1', '--format=%cs', 'HEAD']).trim();
+    } catch {
+        return '';
+    }
+}
+
 function isGitRepo(root: string): boolean {
     try {
         gitProbe(root, ['rev-parse', '--is-inside-work-tree']);
@@ -225,7 +236,15 @@ function isGitRepo(root: string): boolean {
     }
 }
 
-/** The graph the map is drawn from: built when absent, updated when behind. */
+/** The lanes a map is drawn from; a cache whose `lanes_run` lacks one of them is not the map's cache (H24). */
+export const MAP_LANES = ['runtime', 'interfaces', 'delivery', 'history', 'decisions', 'data', 'systems', 'flows'] as const;
+
+function hasLaneSet(g: CodeGraph): boolean {
+    const ran = new Set((g.lanes_run ?? []).map((r) => r.lane));
+    return MAP_LANES.every((l) => ran.has(l));
+}
+
+/** The graph the map is drawn from: built when absent, updated when behind or drawn without lanes. */
 async function loadOrBuildGraph(
     root: string,
     cachePath: string,
@@ -234,17 +253,18 @@ async function loadOrBuildGraph(
     mapDir?: string,
 ): Promise<{ graph: CodeGraph; built: boolean; overlay?: Overlay }> {
     const verdict = computeVerdict(root, cachePath).verdict;
+    const cached = verdict === 'FRESH' && fs.existsSync(cachePath) ? (JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as CodeGraph) : null;
     // `edited` — an uncommitted change to an indexed file — reads FRESH to the
     // commit-based verdict, and a map drawn from it would show the old code.
     // Outside a git repository there is nothing to compare against at all, so
     // freshness is unknowable and the incremental build decides per file.
-    if (verdict === 'FRESH' && fs.existsSync(cachePath) && isGitRepo(root)) {
+    if (cached && hasLaneSet(cached) && isGitRepo(root)) {
         const state = graphState(root, cachePath);
-        if (state === 'fresh') return { graph: JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as CodeGraph, built: false };
+        if (state === 'fresh') return { graph: cached, built: false };
         // Uncommitted edits that `refresh --touched` already re-read: the committed
         // index seen through its overlay, with no rebuild.
         if (state === 'edited') {
-            const committed = JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as CodeGraph;
+            const committed = cached;
             const ov = readOverlay(cachePath, committed.source_checksum);
             const changes = workingChanges(root);
             // The map's own output is never a source the overlay has to have re-read.
@@ -435,8 +455,9 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
         if (b) model.branches = b;
     }
     const meta: MapMeta = {
-        title: `Map of ${path.basename(root)}`,
+        title: `Map of ${repoName(root)}`,
         commit: gitHead(root),
+        built: commitDate(root),
         state: graphState(root, cachePath),
         summary: '',
         graph_generation: graphGeneration(cachePath) ?? createHash('sha256').update(JSON.stringify(graph)).digest('hex').slice(0, 16),
@@ -692,11 +713,29 @@ function code(s: string): string {
  * line naming every section that was cut, so a reader knows what is missing.
  */
 export function renderMapMd(m: MapModel, meta: MapMeta, areas: MapAreas = {}): string {
+    const { head, sections } = mapMdParts(m, meta, areas);
+    const budget = MAP_TOKEN_BUDGET * CHARS_PER_TOKEN;
+    let out = head;
+    const cut: string[] = [];
+    for (const [name, body] of sections) {
+        if (out.length + body.length <= budget) out += `${body}\n`;
+        else cut.push(name);
+    }
+    if (cut.length) {
+        out +=
+            `> Budget of ${MAP_TOKEN_BUDGET} tokens reached — cut: ${cut.join(', ')}. ` +
+            'Read one with `agent-config code-graph map --section <name>`; never open `code/map.json` for it.\n';
+    }
+    return out;
+}
+
+/** The MAP.md header and its sections in priority order, before the budget cuts any. */
+export function mapMdParts(m: MapModel, meta: MapMeta, areas: MapAreas = {}): { head: string; sections: Array<[string, string]> } {
     const f = m.files;
     const head = [
         `# ${md(meta.title)}`,
         '',
-        `> Generated by \`agent-config code-graph map\` at \`${meta.commit}\` · graph state \`${meta.state}\`.`,
+        `> Map built at \`${meta.commit}\`${meta.built ? ` · ${meta.built}` : ''} by \`agent-config code-graph map\` — this describes that commit; compare it with HEAD yourself.`,
         '> Deterministic, no model call. Rebuild with `agent-config code-graph map`; never edit by hand.',
         '',
         `**${f.length} files · ${m.areas.length} areas · ${m.analyses.trustedEdges} trusted links · guess share ${pct(m.analyses.guessShare)}**`,
@@ -1001,19 +1040,7 @@ export function renderMapMd(m: MapModel, meta: MapMeta, areas: MapAreas = {}): s
         ].join('\n'),
     ]);
 
-    const budget = MAP_TOKEN_BUDGET * CHARS_PER_TOKEN;
-    let out = head;
-    const cut: string[] = [];
-    for (const [name, body] of sections) {
-        if (out.length + body.length <= budget) out += `${body}\n`;
-        else cut.push(name);
-    }
-    if (cut.length) {
-        out +=
-            `> Budget of ${MAP_TOKEN_BUDGET} tokens reached — cut: ${cut.join(', ')}. ` +
-            'They are in `code/map.json`, in the per-area pages and in `index.html`.\n';
-    }
-    return out;
+    return { head, sections };
 }
 
 export function renderAreaMd(m: MapModel, i: number, meta: MapMeta): string {
@@ -1082,11 +1109,13 @@ export const VIEWER_SCRIPTS = [
     'area_delivery.js',
     'area_impact.js',
     'area_agent.js',
+    'area_knowledge.js',
+    'area_bugs.js',
     'shell.js',
 ] as const;
 /** The hub's parts: a project map's plus the Projects area, which no project map carries — not even as code. */
 export const HUB_SCRIPTS = [...VIEWER_SCRIPTS.slice(0, -1), 'area_projects.js', 'shell.js'] as const;
-export const VIEWER_STYLES = ['viewer.css', 'shell.css', 'area_kit.css', 'area_interfaces.css', 'area_impact.css', 'area_agent.css', 'area_ops.css'] as const;
+export const VIEWER_STYLES = ['viewer.css', 'shell.css', 'area_kit.css', 'area_interfaces.css', 'area_impact.css', 'area_agent.css', 'area_ops.css', 'area_systems.css', 'area_knowledge.css', 'area_bugs.css'] as const;
 
 /**
  * The one inline script: every part inside one function scope. Joined BEFORE
@@ -1102,7 +1131,8 @@ export function viewerStyle(): string {
     return VIEWER_STYLES.map(readViewer).join('\n');
 }
 
-const AREA_NAV = ['overview', 'code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'impact', 'agent'] as const;
+/** The handover's nav order (inbox round 2026-10-bf): Bugs and Wissen sit between Delivery and Impact. */
+export const AREA_NAV = ['overview', 'code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'bugs', 'knowledge', 'impact', 'agent'] as const;
 
 /**
  * What the shell routes between when a page is not a project map. Only the
@@ -1187,11 +1217,10 @@ export function renderPage(m: MapModel, meta: MapMeta, areas: object, shell?: Ma
         shell?.hub ? '<div class="brand-name hub"><b>AGENT CONFIG</b><span>ESTATE MAP</span></div>' : '<div class="brand-name"><b>AGENT CONFIG</b><span>KNOWLEDGE MAP</span></div>',
         '</div>',
         ...(shell?.hub ? ['<span class="chip mono hub-chip" id="hub-chip"></span><span class="hub-back" id="hub-back"></span>'] : []),
-        ...(shell?.hub ? [] : ['<button type="button" class="areamenu" id="areamenu" aria-haspopup="true" aria-expanded="false" aria-controls="areanav"></button>']),
         `<nav class="areanav" id="areanav" aria-label="Areas"${shell?.hub ? ' hidden' : ''}>${nav.map((r) => `<a href="#/${r}" data-route="${r}">${r}</a>`).join('')}</nav>`,
         '</div>',
         '<div class="top-row row2">',
-        `<div class="pins mono"><span class="chip" id="pin-commit"></span><span class="chip fresh" id="pin-fresh"></span>${meta.demo ? '<span class="chip demo" id="pin-demo"></span>' : ''}</div>`,
+        `<div class="pins mono"><span class="chip" id="pin-commit"></span><span class="chip fresh" id="pin-fresh"></span>${shell?.hub ? '' : '<span class="chip snap" id="pin-snap" hidden></span>'}${meta.demo ? '<span class="chip demo" id="pin-demo"></span>' : ''}</div>`,
         '<div class="search"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="5"></circle><path d="M11 11l3.5 3.5"></path></svg>' +
             '<input id="search" type="search" autocomplete="off"><span class="kbd mono">/</span>' +
             '<span class="sr-only" id="search-live" aria-live="polite"></span>' +
@@ -1234,7 +1263,7 @@ export function renderPage(m: MapModel, meta: MapMeta, areas: object, shell?: Ma
         '<div class="overlay">',
         '<div class="seg dd"><button type="button" id="lim" class="lim" aria-haspopup="listbox" aria-expanded="false" aria-controls="limlist" data-value="15"><span id="limtxt">15</span><span class="chev" aria-hidden="true"></span></button>' +
             '<ul id="limlist" class="ddlist" role="listbox" hidden>' + ['15', '30', '50', '100', 'all'].map((v) => `<li role="option" tabindex="-1" data-value="${v}" aria-selected="${v === '15'}">${v}</li>`).join('') + '</ul></div>' +
-            '<div class="seg dimseg" role="group" aria-label="2D / 3D"><button type="button" id="dim2d" aria-pressed="true"></button><button type="button" id="dim" aria-pressed="false"></button></div>',
+            '<div class="seg dimseg" role="radiogroup" aria-label="2D / 3D" id="dimseg"><button type="button" role="radio" id="dim2d" aria-checked="true"></button><button type="button" role="radio" id="dim" aria-checked="false"></button></div>',
         '<div class="seg"><button type="button" class="z" id="z-out">−</button><button type="button" class="z" id="z-in">+</button><button type="button" class="fit" id="z-fit"></button></div>',
         '<button type="button" class="backbtn" id="back" hidden></button>',
         '</div>',
@@ -1291,6 +1320,8 @@ export interface ManifestArea {
     /** Witnesses (Code: files) the payload carries — a lower bound when the read was partial. */
     facts: number;
     findings?: number;
+    /** Findings outside product scope, kept out of `findings` and the default view. */
+    fixture_findings?: number;
     /** Why there is nothing, or why the state is not fresh. */
     reason?: string;
 }
@@ -1328,6 +1359,7 @@ export function mapManifest(m: MapModel, meta: MapMeta, areas: MapAreas): MapMan
             completeness: p.completeness,
             facts: ws.length,
             findings: p.findings.length,
+            ...(p.fixture_findings ? { fixture_findings: p.fixture_findings } : {}),
             ...(reason ? { reason } : {}),
         };
     }

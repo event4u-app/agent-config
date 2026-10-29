@@ -1,0 +1,72 @@
+{
+  "skill": "standards-from-config",
+  "last_eval": "2026-10-29",
+  "description": "5 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-29 under road-to-a-correction-that-is-heard step 2.3, which made instruction-file prose a conflict source next to the configs and so brought the skill into check_routing_coverage's touched-skill scope. Exemplars cover the skill's own 'When to use': the enforced style before writing code, the commit convention, a standards card while orienting, and a repeated correction that may contradict the config. Near-misses are neighbours that also read a project but are someone else's job: the concrete shape of a class or schema (source-discovery), turning a recurring mistake into a rule or skill (learning-to-rule-or-skill), and running the formatter itself (quality-tools). Counterexamples guard the words 'standard' and 'config': an industry-standard question and a server configuration request.",
+  "queries": [
+    {
+      "id": "sfc-e1",
+      "q": "before I touch this repo — what indent, line length and quote style does it actually enforce?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "sfc-e2",
+      "q": "what commit message format does this project expect? check the tooling, don't guess",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "sfc-e3",
+      "q": "write a short standards card for this repo from its eslint and prettier config so the next agent doesn't re-derive it",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "sfc-e4",
+      "q": "the user keeps telling me to use tabs but I'm not sure what the editorconfig says — which one wins?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "sfc-e5",
+      "q": "welche Import-Reihenfolge und Namenskonventionen erzwingt dieses Projekt laut seiner Konfiguration?",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "sfc-n1",
+      "q": "which columns does the orders table have and what does the OrderResource return?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "the concrete shape of code, read fresh → source-discovery"
+    },
+    {
+      "id": "sfc-n2",
+      "q": "we forgot the same lint rule three times this week — turn it into something durable",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "a recurring lesson to encode → learning-to-rule-or-skill"
+    },
+    {
+      "id": "sfc-n3",
+      "q": "run the formatter and fix whatever phpstan complains about",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "running the tools, not deriving the standard → quality-tools"
+    },
+    {
+      "id": "sfc-c1",
+      "q": "is OAuth 2.1 already an industry standard or still a draft?",
+      "trigger": false,
+      "class": "counterexample"
+    },
+    {
+      "id": "sfc-c2",
+      "q": "configure nginx to proxy websocket connections to port 6001",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "says config, asks for server configuration rather than a coding standard"
+    }
+  ]
+}

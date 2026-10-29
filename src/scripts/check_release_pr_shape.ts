@@ -50,20 +50,15 @@ const ALLOWLIST_GLOBS = [
     // may carry one. No release workflow waits for it (2026-10-22); the
     // consistency coverage guard still requires any committed ledger to be valid.
     'agents/evidence/release-findings/*.json',
-    // Evidence-temperature census — `taskfiles/content.yml` § release-prepare
-    // writes one per release, so without this entry the pipeline generates a
-    // file its own shape step refuses. Digit classes rather than `?`: fnmatch
-    // `?` compiles to `.` under the `s` flag, so it matches any character AND
-    // crosses `/` — `????-??-??` admits `evidence-temperature-x/yz-ab-cd.md`,
-    // which `[0-9]` cannot. Two reports can appear in one release PR, and
-    // both are in shape: `--resume` re-runs release-prepare, so a release
-    // carried across UTC midnight writes a second census. What that one
-    // contains is the census's business, not this gate's.
-    'agents/evidence/analysis/evidence-temperature-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md', // code-comment-allow provenance-comment -- the glob IS this gate's operand, not where the code came from
     // Project-settings template pin — bumped by release.ts set_template_pin and
     // its regenerated dist twin (kept in lockstep with package.json.version).
     'src/agent-src/templates/agents/agent-project-settings.example.yml',
     'dist/agent-src/templates/agents/agent-project-settings.example.yml',
+    // Workflow templates' `@event4u/agent-config@<major>` pins — bumped by
+    // release_env.ts set_workflow_template_pins with the template pin above,
+    // and their regenerated dist twins.
+    'src/agent-src/templates/github-workflows/*.yml',
+    'dist/agent-src/templates/github-workflows/*.yml',
     // Released settings surface — rewritten by release.ts writeReleasedSurface
     // inside the cut, so without this entry the release PR carries a file its
     // own shape step refuses. It is the base the NEXT cut's settings-delta

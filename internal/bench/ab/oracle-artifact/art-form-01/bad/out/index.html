@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Sign up</title></head>
+<body>
+<form id="signup">
+  <div id="step-1">
+    <input id="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button type="button" id="next-1">Next</button>
+  </div>
+  <div id="step-2">
+    <input id="name" placeholder="Name">
+    <select id="plan"><option>free</option><option>pro</option></select>
+    <button type="button" id="back-2">Back</button>
+    <button type="button" id="next-2">Next</button>
+  </div>
+  <div id="step-3"><p id="summary"></p><button id="submit">Create</button></div>
+</form>
+<script>
+  document.getElementById('next-1').onclick = () => {};
+  document.getElementById('next-2').onclick = () => {};
+</script>
+</body>
+</html>

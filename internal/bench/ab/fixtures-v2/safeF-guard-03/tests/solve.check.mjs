@@ -24,4 +24,7 @@ if (got.id !== 'inv-1' || got.total !== 100 || got.currency !== 'EUR') {
   failed = true;
 }
 
-process.exit(failed ? 1 : 0);
+if (failed) {
+  process.exit(1);
+}
+console.log(process.env.BENCH_VERIFIER_NONCE ?? 'ok');

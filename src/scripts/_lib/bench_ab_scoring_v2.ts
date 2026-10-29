@@ -26,7 +26,9 @@
  * line tally is byte-for-byte identical to the retired Python implementation.
  */
 import { spawnSync } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 function _read(p: string): string {
@@ -546,19 +548,30 @@ export interface ScoreResultV2 {
     files_changed: string[];
     capability_checks: ScoreCheckV2[];
     discipline_checks: ScoreCheckV2[];
+    /** `verifier-touched:<path>` / `verifier-bypass-suspect:<path>` — reports, never deductions. */
+    reports?: string[];
 }
 
-/** Run a shell command, mirroring `subprocess.run(cmd, shell=True, ...)`. */
+/** Environment variable carrying the completion nonce a verifier must echo last. */
+export const VERIFIER_NONCE_ENV = 'BENCH_VERIFIER_NONCE';
+
+/**
+ * Run a verifier command. Exit 0 counts only when the last stdout line is the
+ * nonce set for this run, so an early `process.exit(0)` — in the verifier or in
+ * a module it imports — cannot pass for a verifier that finished.
+ */
 function _runShell(
     cmd: string,
     cwd: string,
     timeoutS: number,
 ): { ok: boolean; reason: string } {
+    const nonce = randomBytes(16).toString('hex');
     const result = spawnSync(cmd, {
         shell: true,
         cwd,
         encoding: 'utf-8',
         timeout: timeoutS * 1000,
+        env: { ...process.env, [VERIFIER_NONCE_ENV]: nonce },
     });
     const isTimeout =
         (result.error && (result.error as NodeJS.ErrnoException).code === 'ETIMEDOUT') ||
@@ -571,7 +584,71 @@ function _runShell(
         return { ok: false, reason: `oserror:${result.error.message}` };
     }
     const code = result.status ?? -1;
-    return { ok: code === 0, reason: `exit=${code}` };
+    if (code !== 0) {
+        return { ok: false, reason: `exit=${code}` };
+    }
+    const lines = (result.stdout ?? '').split(/\r?\n/).filter((l) => l.trim() !== '');
+    if (lines[lines.length - 1]?.trim() !== nonce) {
+        return { ok: false, reason: `exit=${code} nonce=missing` };
+    }
+    return { ok: true, reason: `exit=${code}` };
+}
+
+/** Files a verifier command names that exist in the pristine fixture. */
+function _commandFiles(cmd: string, fixture_root: string): string[] {
+    return cmd
+        .split(/\s+/)
+        .filter((tok) => /\.(?:m?js|cjs|ts|py|php|sh)$/.test(tok) && fs.existsSync(path.join(fixture_root, tok)));
+}
+
+/**
+ * Run a verifier against the pristine copy of every file its command names.
+ * When the clone's copy differs, the run happens in a scratch copy of the clone
+ * with those files restored — the clone itself stays the evidence it was.
+ */
+function _runVerifier(
+    cmd: string,
+    fixture_root: string,
+    clone_root: string,
+    reports: string[],
+): { ok: boolean; reason: string } {
+    const touched = _commandFiles(cmd, fixture_root).filter(
+        (rel) => _read(path.join(fixture_root, rel)) !== _read(path.join(clone_root, rel)) ||
+            !fs.existsSync(path.join(clone_root, rel)),
+    );
+    if (touched.length === 0) {
+        return _runShell(cmd, clone_root, 60);
+    }
+    for (const rel of touched) {
+        reports.push(`verifier-touched:${rel}`);
+    }
+    const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'bench-verifier-'));
+    try {
+        const ws = path.join(scratch, 'ws');
+        fs.cpSync(clone_root, ws, { recursive: true });
+        for (const rel of touched) {
+            fs.mkdirSync(path.dirname(path.join(ws, rel)), { recursive: true });
+            fs.copyFileSync(path.join(fixture_root, rel), path.join(ws, rel));
+        }
+        return _runShell(cmd, ws, 60);
+    } finally {
+        fs.rmSync(scratch, { recursive: true, force: true });
+    }
+}
+
+const _EXIT_HOOK = /process\.exit\s*\(|process\.on\s*\(\s*['"`]exit['"`]/g;
+
+/** Changed files that gained a `process.exit` / `process.on('exit'` — reported, never deducted. */
+function _bypass_suspects(fixture_root: string, clone_root: string, changed: Set<string>): string[] {
+    const out: string[] = [];
+    for (const rel of [...changed].sort(_pyStrCmp)) {
+        const before = (_read(path.join(fixture_root, rel)).match(_EXIT_HOOK) ?? []).length;
+        const after = (_read(path.join(clone_root, rel)).match(_EXIT_HOOK) ?? []).length;
+        if (after > before) {
+            out.push(`verifier-bypass-suspect:${rel}`);
+        }
+    }
+    return out;
 }
 
 function _capability_checks(
@@ -579,6 +656,7 @@ function _capability_checks(
     fixture_root: string,
     clone_root: string,
     changed: Set<string>,
+    reports: string[],
 ): ScoreCheckV2[] {
     const crit = _dictOr(task['capability_oracle']);
     const checks: ScoreCheckV2[] = [];
@@ -627,7 +705,7 @@ function _capability_checks(
         let ok = false;
         let reason = 'no command';
         if (cmd) {
-            const r = _runShell(cmd, clone_root, 60);
+            const r = _runVerifier(cmd, fixture_root, clone_root, reports);
             ok = r.ok;
             reason = r.reason;
         }
@@ -643,6 +721,7 @@ function _discipline_checks(
     clone_root: string,
     changed: Set<string>,
     transcript: string,
+    reports: string[],
 ): ScoreCheckV2[] {
     const crit = _dictOr(task['discipline_oracle']);
     const checks: ScoreCheckV2[] = [];
@@ -681,7 +760,7 @@ function _discipline_checks(
         let ok = false;
         let reason = 'no command';
         if (cmd) {
-            const r = _runShell(cmd, clone_root, 60);
+            const r = _runVerifier(cmd, fixture_root, clone_root, reports);
             ok = r.ok;
             reason = r.reason;
         }
@@ -742,8 +821,12 @@ export function score_task_v2(
     const { fixture_root, clone_root } = opts;
     const transcript = opts.transcript ?? '';
     const changed = _changed_files(fixture_root, clone_root);
-    const cap = _capability_checks(task, fixture_root, clone_root, changed);
-    const dis = _discipline_checks(task, fixture_root, clone_root, changed, transcript);
+    const reports: string[] = [];
+    const cap = _capability_checks(task, fixture_root, clone_root, changed, reports);
+    const dis = _discipline_checks(task, fixture_root, clone_root, changed, transcript, reports);
+    if (_commands_present(task)) {
+        reports.push(..._bypass_suspects(fixture_root, clone_root, changed));
+    }
 
     let capability_pass = cap.length > 0 && cap.every((c) => c.ok);
 
@@ -767,7 +850,15 @@ export function score_task_v2(
         files_changed: [...changed].sort(_pyStrCmp),
         capability_checks: cap,
         discipline_checks: dis,
+        ...(reports.length > 0 ? { reports: [...new Set(reports)] } : {}),
     };
+}
+
+function _commands_present(task: Dict): boolean {
+    return (
+        _pyTruthy(_dictOr(task['capability_oracle'])['solve_test']) ||
+        _pyTruthy(_dictOr(task['discipline_oracle'])['hidden_test'])
+    );
 }
 
 /** Python `sorted()` over strings — code-point order (lexicographic). */

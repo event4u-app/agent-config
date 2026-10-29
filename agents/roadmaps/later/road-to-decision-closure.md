@@ -167,6 +167,14 @@ capability_gap: none
 > interviews with the owner plus three generations of consolidated proposals. Verified against
 > `main@399beecab` on 2026-09-08.
 
+> **Arrivals:** 1 — `inbox-2026-10-be` (2026-10-27): a three-loop plan on "interview me" prompts,
+> re-verified at `ac6c60802a`, finds `ask-when-uncertain.md:12` still routing technical
+> uncertainty to the user ("When in doubt, ask") and the native recommendation slot still
+> undefined (`user-interaction-mechanics.md:276` names a "default option" the observed picker
+> schema lacks). Both belong to step 3.1's packet; proposed wording: the recommendation is
+> `options[0]` with a localized marker, and line 12 narrows to owner-owned decisions. No step
+> moved; the non-kernel half landed in `road-to-the-question-only-the-owner-can-answer`.
+
 > **Proposal, not adopted — but its authority is decided.** Consolidates the two providers'
 > parallel plans for front-loading decisions. ADR-268 is **accepted**, owner-directed on
 > 2026-09-08, so Phase 0 is not waiting on a decision.

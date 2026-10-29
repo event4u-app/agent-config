@@ -45,7 +45,7 @@ roadmap, feature plan, or feature roadmap, or a from-scratch rewrite of one.
 
 Before assessing confidence, run the lookup: existing routes, conventions,
 prior similar features, the seed's cited files. **Never ask what `grep`,
-`view`, or `codebase-retrieval` answers in seconds** — repo findings resolve
+`view`, or `code-graph ask` answers in seconds** — repo findings resolve
 branches silently.
 
 ### 2. Seed-time confidence assessment

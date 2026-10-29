@@ -35,4 +35,4 @@ eq('10 - 2 - 3', 5); // left-assoc subtraction
 if (failed) {
   process.exit(1);
 }
-console.log('ok');
+console.log(process.env.BENCH_VERIFIER_NONCE ?? 'ok');

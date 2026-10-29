@@ -47,6 +47,7 @@ export { cohens_h, mcnemar_exact, wilcoxon };
 
 import { cost_usd, tier_for_model, type TierRates } from './_lib/bench_ab_activation.js';
 import { load_pricing } from './_lib/bench_cost.js';
+import { loadTasks, nopFloor } from './_lib/bench_task_validity.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -151,6 +152,11 @@ export function compare(records: Dict[], arm_t: string, arm_b: string): Dict {
     let capn = 0;
     // Discipline (continuous, Wilcoxon)
     const diffs: number[] = [];
+    // Discipline counted only where capability landed: an arm that did less
+    // cannot buy discipline by not attempting the goal.
+    const dgc_diffs: number[] = [];
+    let dgc_t_sum = 0.0;
+    let dgc_b_sum = 0.0;
     let dis_t_sum = 0.0;
     let dis_b_sum = 0.0;
     let disn = 0.0;
@@ -222,6 +228,11 @@ export function compare(records: Dict[], arm_t: string, arm_b: string): Dict {
             dis_t_sum += dt;
             dis_b_sum += db;
             disn += 1;
+            const gt = t ? dt : 0;
+            const gb = bb ? db : 0;
+            dgc_diffs.push(gt - gb);
+            dgc_t_sum += gt;
+            dgc_b_sum += gb;
 
             const mt = _dictOr(rt['metrics']);
             const mb = _dictOr(rb['metrics']);
@@ -259,6 +270,7 @@ export function compare(records: Dict[], arm_t: string, arm_b: string): Dict {
     const p1 = capn ? cap_t / capn : 0;
     const p2 = capn ? cap_b / capn : 0;
     const wil = wilcoxon(diffs);
+    const wil_dgc = wilcoxon(dgc_diffs);
     return {
         arm_treatment: arm_t,
         arm_baseline: arm_b,
@@ -279,6 +291,14 @@ export function compare(records: Dict[], arm_t: string, arm_b: string): Dict {
             wilcoxon_p: PF(wil.p),
             rank_biserial: PF(wil.rank_biserial),
             n_nonzero: wil.n,
+        },
+        discipline_given_capability: {
+            mean_treatment: disn ? PF(_pyRound(dgc_t_sum / disn, 4)) : 0,
+            mean_baseline: disn ? PF(_pyRound(dgc_b_sum / disn, 4)) : 0,
+            mean_delta: disn ? PF(_pyRound((dgc_t_sum - dgc_b_sum) / disn, 4)) : 0,
+            wilcoxon_p: PF(wil_dgc.p),
+            rank_biserial: PF(wil_dgc.rank_biserial),
+            n_nonzero: wil_dgc.n,
         },
         attrition: {
             pairs_seen,
@@ -645,6 +665,11 @@ export function gate_verdict(analysis: Dict): Dict {
     const bucket_better =
         _errorRate(sb['package']) < _errorRate(sb['vanilla']);
     const passed = cap_sig || dis_sig;
+    // Shadow form (D3): printed beside the deciding gate, never deciding.
+    const dgc = _dictOr(pkg['discipline_given_capability']);
+    const dgc_sig = _pyFloat(dgc['wilcoxon_p']) < 0.05 && _pyFloat(dgc['mean_delta']) > 0;
+    const cap_worse =
+        _pyFloat(cap['mcnemar_p']) < 0.05 && _pyFloat(cap['rate_treatment']) < _pyFloat(cap['rate_baseline']);
     return {
         verdict: passed ? 'PASS' : 'FALSIFIED-OR-INCONCLUSIVE',
         capability_significant: cap_sig,
@@ -660,7 +685,30 @@ export function gate_verdict(analysis: Dict): Dict {
         note:
             'PASS = significant paired discipline/capability lift; ' +
             'FALSIFIED only if also trivial across seeds (inspect n_pairs).',
+        shadow_gate: {
+            decides: false,
+            verdict: dgc_sig && !cap_worse ? 'PASS' : 'FALSIFIED-OR-INCONCLUSIVE',
+            discipline_given_capability_significant: dgc_sig,
+            capability_non_inferior: !cap_worse,
+        },
     };
+}
+
+/** Per-task `nop` discipline floor for the fixture tasks a report covers. */
+export function nop_floor_for(payload: Dict): Dict {
+    const records = Array.isArray(payload['records']) ? (payload['records'] as Dict[]) : [];
+    const ids = new Set(records.map((r) => r['id']));
+    let tasks: Dict[];
+    try {
+        tasks = loadTasks().filter((t) => ids.has(t['id']));
+    } catch {
+        return {};
+    }
+    const out: Dict = {};
+    for (const [id, v] of Object.entries(nopFloor(tasks))) {
+        out[id] = PF(v);
+    }
+    return out;
 }
 
 /** `sb.get(arm, {}).get("error_rate", 1)`. */
@@ -1073,6 +1121,29 @@ function _printStdout(analysis: Dict): void {
         `\nGATE: ${_pyStr(gate['verdict'])} ` +
             `(cap_sig=${_pyStr(gate['capability_significant'])}, dis_sig=${_pyStr(gate['discipline_significant'])})`,
     );
+    const shadow = _dictOr(gate['shadow_gate']);
+    if (Object.keys(shadow).length > 0) {
+        lines.push(
+            `SHADOW GATE (does not decide): ${_pyStr(shadow['verdict'])} ` +
+                `(discipline_given_capability_sig=${_pyStr(shadow['discipline_given_capability_significant'])}, ` +
+                `capability_non_inferior=${_pyStr(shadow['capability_non_inferior'])})`,
+        );
+    }
+    for (const cmp of comparisons) {
+        const dgc = _dictOr(cmp['discipline_given_capability']);
+        lines.push(
+            `  [${_pyStr(cmp['label'])}] discipline_given_capability: ${_fmt3(dgc['mean_baseline'])} -> ${_fmt3(dgc['mean_treatment'])} ` +
+                `(Δ=${_fmtSigned3(dgc['mean_delta'])}, Wilcoxon p=${_pyStr(dgc['wilcoxon_p'])})`,
+        );
+    }
+    const floor = _dictOr(a['nop_floor']);
+    const floorIds = Object.keys(floor).sort();
+    if (floorIds.length > 0) {
+        lines.push(`nop floor (discipline_score of an empty diff, per task):`);
+        for (const id of floorIds) {
+            lines.push(`  ${id}: ${_fmt3(floor[id])}`);
+        }
+    }
     // print() adds a trailing newline per call; join with "\n" then add final "\n".
     process.stdout.write(lines.join('\n') + '\n');
 }
@@ -1163,6 +1234,7 @@ export function main(argv: string[] | null = null): number {
         payload['budget_usd_per_run'] = new PyFloat(payload['budget_usd_per_run'] as number);
     }
     const analysis = analyse(payload);
+    analysis['nop_floor'] = nop_floor_for(payload);
     analysis['gate'] = gate_verdict(analysis);
     if (args.markdown) {
         const out = args.markdown;

@@ -21,10 +21,10 @@ extendStrings({
 function provCommit(i) {
     var pv = model.provenance;
     var c = pv && i >= 0 ? pv.commits[i] : null;
-    return c ? { sha: c[0], date: c[1], author: c[2], pr: c[3], tickets: c[4], subject: c[5] } : null;
+    return c ? { sha: c[0], date: c[1], author: c[2], pr: c[3], tickets: c[4] } : null;
 }
 function commitText(c) {
-    return c.date + ' · ' + c.sha.slice(0, 8) + (c.pr ? ' · ' + c.pr : '') + (c.tickets.length ? ' · ' + c.tickets.join(', ') : '') + ' · ' + c.author + ' — ' + c.subject;
+    return c.date + ' · ' + c.sha.slice(0, 8) + (c.pr ? ' · ' + c.pr : '') + (c.tickets.length ? ' · ' + c.tickets.join(', ') : '') + ' · ' + c.author;
 }
 /** The History section for a file, or for a route when its label is given; null when the map holds none. */
 function historySection(filePath, routeLabel) {

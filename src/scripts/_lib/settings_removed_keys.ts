@@ -162,7 +162,7 @@ export const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
     // 2026-10-24 — road-to-a-setup-that-decides-itself step 4.9 (owner directive, D14)
     // 2026-10-24 — step 4.7 (owner answer OQ-1)
     ['projection.mode', 'per host: a host with a listing lever gets every skill, every other host the active profile packs'],
-    ['projection.rule_packs', 'the active-pack set; install rule scoping honours an explicit value one release window'],
+    ['projection.rule_packs', 'the active-pack set; runtime.active_packs widens it'],
 ]);
 
 /**
@@ -204,7 +204,6 @@ export function warnRemovedKeys(merged: SettingsDict): void {
             continue;
         }
         _warnedRemovedKeys.add(key);
-        // A reason that says the key is still honoured must not end in "ignored".
-        process.stderr.write(`${key} was removed (${reason}); ${reason.includes('honours') ? 'still honoured' : 'ignored'}.\n`);
+        process.stderr.write(`${key} was removed (${reason}); ignored.\n`);
     }
 }

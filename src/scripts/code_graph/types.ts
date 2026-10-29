@@ -7,6 +7,7 @@
  * of the shape. Deterministic + LLM-free + no network: identical source →
  * identical graph bytes (enforced by the golden-checksum test).
  */
+import type { Scope } from './scope.js';
 import type { SourceRung, Witness } from './lanes/lane_fact.js';
 import type { VocabKind, VocabRelation } from './vocabulary.js';
 
@@ -237,10 +238,14 @@ export interface CodeNode {
      */
     kind: VocabKind;
     source_file: string;
+    /** File nodes only: the file parsed with errors, so what it declares is a lower bound. */
+    partial?: true;
     /** 1-based [startLine, startCol, endLine, endCol]; [] for synthetic nodes. */
     source_location: readonly number[];
     /** Witness and provenance, on facts a lane reader or schema replay produced. */
     fact?: FactMeta;
+    /** What the node's file is to the project (`scope.ts`); absent means `product`. */
+    scope?: Exclude<Scope, 'product'>;
 }
 
 /**
@@ -321,6 +326,8 @@ export interface LaneRunRecord {
     relations: number;
     /** The reader threw; its lane holds no facts from this build. */
     error?: string;
+    /** The reader declined the whole tree (a shallow clone, no history): its terms are unknown, not zero. */
+    skipped_reason?: string;
 }
 
 export interface CodeGraph {

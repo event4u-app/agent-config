@@ -40,6 +40,8 @@ const MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
 const WORKER_DROP = [
     'delegation-nudge',
     'skill-route',
+    // OQ-25 (2026-10-28): the intake pass decides what to ask the owner, and a worker never talks to the user.
+    'intake-pass',
     'end-review-nudge',
     // Joined in road-to-a-question-that-survives-the-turn Phase 2, and the first
     // member here for a DERIVED reason rather than a clause of its own: it

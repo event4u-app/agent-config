@@ -134,5 +134,21 @@
         "policy_clarification": "REQUIRED BY BOTH SEATS. This re-anchor admits the itemised C# grammar only. It does NOT authorise the roughly 1.6 MB of headroom the 10 % rule now derives for unrelated growth: the next built re-anchor must itemise every payload addition since this record, and a grammar (Ruby, blocker built-pack-budget-for-grammars in the carried roadmap) is decided on its own. Revisit-if: an addition lands under this line without being itemised here or in a later record, or a maintainer sets an absolute built cap.",
         "measured_at": "2026-10-23",
         "measured_on": "GitHub Actions, PR #2603 head 2c06e7881, required job Sync + Generate Tools Consistency."
+    },
+    "built_surface_measurement_2026_10_27": {
+        "purpose": "Re-measure of the BUILT surface for PR #2727 (inbox round 2026-10-bf: road-to-a-map-that-holds-on-the-real-repo, road-to-map-views-from-the-handover, road-to-a-map-that-knows-what-happened, and the review-graph steps of road-to-a-graph-that-wins). CI measured the built tarball at 17.678 MB against the 17.640 ceiling derived from built_surface_measurement_2026_10_23's 16.036. OWNER-RESERVED under the 2026-10-17 precedent; the owner chose to re-anchor on 2026-10-27 (option 1 of the merge decision for #2727).",
+        "built": {
+            "packed_mb": 17.678,
+            "command": "CI: Sync + Generate Tools Consistency job, check_pack_size on the BUILT surface",
+            "note": "The derived ceiling becomes 19.446 at regression_pct 10. This record admits the itemised additions below only; it does not authorise unrelated growth."
+        },
+        "itemised_additions": {
+            "map_viewer": "The 1:1 port of the 12-page design handover: rebuilt Systeme page (area_systems.js +63 KB, new area_systems.css 18 KB), new Wissen and Bugs routes (area_knowledge.js 15 KB, area_bugs.js 13 KB plus their CSS), Übersicht and shared shell (area_overview.js +8 KB, areas_common.js +7 KB, viewer and shell CSS tokens).",
+            "code_graph": "Scope classifier and code-graph scope/lint/verify --all (scope.ts, lint.ts, cli_graph_checks.ts), Systems verdicts from PHP autoload maps (php_autoload.ts, read_systems.ts +10 KB), offline bug snapshot import and its analysis (bugs.ts 11 KB, bug_frames.ts, fix_kinds.ts, bug_inducers.ts, regression_paths.ts, bisect_plan.ts), budgeted answers and code-graph ask/scan (answer_budget.ts, answer_envelope.ts, answer_correctness.ts, ask.ts, cli_ask.ts, scan.ts), knowledge facts (knowledge_facts.ts), review-graph honesty (uncertainty.ts, answer_detail.ts, review_risk.ts +9 KB).",
+            "cli_and_config": "agent-config user-data (_cli/cmd_user_data.ts 13 KB, _lib/user_data_control.ts, _lib/ownership_model.ts), feedback signals and learning inputs (_lib/feedback_signals.ts, _lib/learning_inputs.ts, _lib/feedback_candidates.ts), source registry (check_source_registry.ts 9 KB, src/config/source-registry.json 9 KB), bench trace and answer-size probes (_lib/bench_map_trace.ts, bench_answer_size.ts, bench_map_task_set.ts +12 KB).",
+            "total": "About 450 KB uncompressed across the packaged source paths of this diff, plus their bundled dist/ copies. Main's own growth since 2026-10-23 is inside the 17.678 reading and is not itemised by this PR."
+        },
+        "measured_at": "2026-10-27",
+        "measured_on": "GitHub Actions, PR #2727 head 3e241b2b0e, required job Sync + Generate Tools Consistency (run 40519493658)."
     }
 }

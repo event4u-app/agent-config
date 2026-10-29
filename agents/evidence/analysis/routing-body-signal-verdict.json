@@ -3,7 +3,7 @@
   "step": "5.1",
   "roadmap": "road-to-governed-harness-evolution",
   "preregistration": "agents/evidence/analysis/routing-signal-preregistration-2026-08-31.md",
-  "measured_at": "2026-10-26",
+  "measured_at": "2026-10-29",
   "proxy_to_real_fidelity": {
     "value": null,
     "status": "unmeasured-by-construction",
@@ -11,14 +11,14 @@
   },
   "body_signal": {
     "verdict": "harmful",
-    "reason": "false activation +4.90 pp breaches the +2.0 pp guard",
+    "reason": "false activation +4.69 pp breaches the +2.0 pp guard",
     "k": 5,
-    "delta_recall_pp": 1.709,
-    "delta_false_activation_pp": 4.896,
-    "p_value": 0.4563,
+    "delta_recall_pp": 1.505,
+    "delta_false_activation_pp": 4.687,
+    "p_value": 0.5107,
     "discordant_positive_pairs": {
-      "gained": 115,
-      "lost": 103
+      "gained": 121,
+      "lost": 110
     },
     "bars": {
       "recall_gain_pp": 5,
@@ -28,36 +28,36 @@
     },
     "arms": {
       "description": {
-        "positives": 702,
-        "positiveHits": 430,
-        "negatives": 674,
+        "positives": 731,
+        "positiveHits": 446,
+        "negatives": 704,
         "negativeHits": 102
       },
       "description+body": {
-        "positives": 702,
-        "positiveHits": 442,
-        "negatives": 674,
+        "positives": 731,
+        "positiveHits": 457,
+        "negatives": 704,
         "negativeHits": 135
       }
     },
     "recall_pp": {
-      "description": 61.254,
-      "description+body": 62.963
+      "description": 61.012,
+      "description+body": 62.517
     },
     "false_activation_pp": {
-      "description": 15.134,
-      "description+body": 20.03
+      "description": 14.489,
+      "description+body": 19.176
     }
   },
   "corpus": {
     "partition": "train",
     "holdout_sealed": true,
-    "train_corpora": 141,
+    "train_corpora": 147,
     "legacy_shaped_corpora": [
       "brand-asset-generation",
       "estimate-ticket"
     ],
-    "cases": 1376,
+    "cases": 1435,
     "catalogue_size": 301
   }
 }

@@ -17,7 +17,7 @@ import { sampleAreas, wit } from './code_graph_map_areas_fixture.js';
 
 // The Overview draws the design's nine layer cards: Code, Database, Integrations,
 // Environment, CI/CD, Infrastructure, Knowledge, Impact and Projects.
-const OVERVIEW_LAYERS = 10;
+const OVERVIEW_LAYERS = 11;
 
 let browser: Browser;
 let empty: string;
@@ -95,6 +95,74 @@ describe('the router', () => {
         await page.click('#areanav a[data-route="overview"]');
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'overview');
         expect(await page.locator('.ocard').count()).toBe(OVERVIEW_LAYERS);
+        await page.close();
+    });
+});
+
+describe('the shell of the 2026-10-bf handover', () => {
+    it('nav order: eleven routes, Bugs and Wissen before Impact, no-data entries carry the handover title', async () => {
+        const page = await open(full, '#/overview');
+        const nav = await page.evaluate(() => Array.from(document.querySelectorAll('#areanav a')).map((a) => ({ r: a.getAttribute('data-route'), text: a.textContent, title: a.getAttribute('title'), empty: a.classList.contains('empty') })));
+        expect(nav.map((n) => n.r)).toEqual(['overview', 'code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'bugs', 'knowledge', 'impact', 'agent']);
+        expect(nav.find((n) => n.r === 'bugs')).toMatchObject({ text: 'Bugs', empty: true, title: 'Bug data is local – never in the committed map' });
+        for (const n of nav) {
+            if (n.r === 'overview' || n.r === 'code') expect(n.title, n.r!).toBeNull();
+            else if (n.empty && n.r !== 'bugs') expect(n.title, n.r!).toBe('no data yet in the real map');
+            else if (!n.empty) expect(n.title, n.r!).toBeNull();
+        }
+        await page.close();
+        const de = await browser.newPage({ locale: 'de-DE', colorScheme: 'dark' });
+        await de.goto(pathToFileURL(empty).href + '#/bugs');
+        await de.waitForFunction(() => (window as unknown as { __mapRoute?: { route: string } }).__mapRoute?.route === 'bugs');
+        expect(await de.locator('#areanav a[data-route="knowledge"]').textContent()).toBe('Wissen');
+        expect(await de.locator('#areanav a[data-route="bugs"]').getAttribute('title')).toBe('Bug-Daten sind lokal – nie in der committeten Map');
+        expect(await de.locator('#areanav a[data-route="data"]').getAttribute('title')).toBe('noch keine Daten in der echten Map');
+        expect(await de.locator('#nodata-bugs').isVisible()).toBe(true);
+        await de.close();
+    });
+
+    it('header chips: "built at" commit chip, lowercase freshness, amber when behind, the snapshot chip in a committed map', async () => {
+        const page = await open(full, '#/overview');
+        const pin = await page.evaluate(() => (JSON.parse(document.getElementById('map-data')!.textContent!) as { model: { pin: { commit: string; generation: string } } }).model.pin);
+        expect(await page.locator('#pin-commit').textContent()).toMatch(new RegExp(`^built at ${pin.commit.slice(0, 8)}( · \\d+/\\d+)?$`));
+        expect(await page.locator('#pin-commit').getAttribute('title')).toBe(`Map drawn at ${pin.commit.slice(0, 12)} · Generation ${pin.generation.slice(0, 16)}`);
+        expect(await page.locator('#pin-fresh').textContent()).toBe('fresh');
+        expect(await page.locator('#pin-snap').isVisible()).toBe(true);
+        expect(await page.locator('#pin-snap').textContent()).toBe('Snapshot · no branch state');
+        expect(await page.locator('#pin-snap').getAttribute('title')).toContain('code-graph map --branches');
+        expect(await page.locator('#pin-snap').evaluate((e) => getComputedStyle(e).borderTopStyle)).toBe('dashed');
+        await page.close();
+        const late = await open(behind, '#/overview');
+        expect(await late.locator('#pin-fresh').textContent()).toBe('behind:3');
+        const tint = await late.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--amberTint').trim());
+        expect(await late.locator('#pin-fresh').evaluate((e) => getComputedStyle(e).backgroundColor)).toBe(tint.replace(/\s+/g, '').replace(/,/g, ', '));
+        await late.close();
+        const de = await browser.newPage({ locale: 'de-DE', colorScheme: 'dark' });
+        await de.goto(pathToFileURL(full).href + '#/overview');
+        await de.waitForFunction(() => (window as unknown as { __mapRoute?: unknown }).__mapRoute !== undefined);
+        expect(await de.locator('#pin-commit').textContent()).toMatch(/^gebaut bei \S+/);
+        expect(await de.locator('#pin-snap').textContent()).toBe('Snapshot · ohne Branch-Stand');
+        await de.close();
+    });
+});
+
+describe('the provenance footer', () => {
+    it('provenance: every page names its source file and the commit, German wording, none on the hub', async () => {
+        const page = await browser.newPage({ locale: 'de-DE', colorScheme: 'dark' });
+        await page.goto(pathToFileURL(full).href + '#/overview');
+        await page.waitForFunction(() => (window as unknown as { __mapRoute?: unknown }).__mapRoute !== undefined);
+        const sha = await page.evaluate(() => String((JSON.parse(document.getElementById('map-data')!.textContent!) as { model: { pin: { commit: string } } }).model.pin.commit).slice(0, 8));
+        const want: Record<string, string> = { overview: 'manifest.json + code/map.json', data: 'data.json', systems: 'systems.json', interfaces: 'interfaces.json', runtime: 'runtime.json', delivery: 'delivery.json + runtime.json', impact: 'code/map.json → areas.impact', agent: 'code/map.json → areas.agent', knowledge: 'map.json', bugs: 'agents/map' };
+        for (const [r, src] of Object.entries(want)) {
+            await page.evaluate((x) => { location.hash = `#/${x}`; }, r);
+            await page.waitForFunction((x) => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === x, r);
+            const text = (await page.locator('#prov').textContent()) ?? '';
+            expect(text, r).toMatch(new RegExp(`^Echte Daten · ${src.replace(/[.+]/g, '\\$&')} @ ${sha}`));
+            expect(await page.locator('#prov').evaluate((e) => getComputedStyle(e).fontSize)).toBe('11px');
+        }
+        await page.evaluate(() => { location.hash = '#/bugs'; });
+        await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'bugs');
+        expect(await page.locator('#prov').textContent()).toBe(`Echte Daten · agents/map @ ${sha} · keine Bug-Lane`);
         await page.close();
     });
 });
@@ -247,6 +315,9 @@ describe('the Runtime page is the design\'s Infrastruktur page', () => {
     it('zones per folder, the raw switch, the environment grid, and the resource rail with its finding', async () => {
         const page = await open((await drawn({ runtime: iac() })).html, '#/runtime');
         expect(await page.locator('#av-bar [role="tab"]').allTextContents()).toEqual(['Topology', 'Environment comparison']);
+        // The page opens on Topology (2026-10-bf handover).
+        expect(await page.locator('#av-bar [role="tab"][aria-selected="true"]').textContent()).toBe('Topology');
+        await page.click('#av-bar [role="tab"]:has-text("Environment comparison")');
         // The comparison: one column per environment, the stands the map cannot read tagged with why.
         expect(await page.locator('#av-main .ops-th').allTextContents()).toEqual(['Resource', 'shop']);
         expect(await page.locator('#av-main').textContent()).toMatch(/P, R and O need a plan file/);
@@ -291,10 +362,12 @@ describe('the Delivery CI/CD view judges each job per scenario, never inventing 
     it('push → main runs, a tag skips the branch-filtered workflow, a condition is unknown; findings land on the job', async () => {
         const page = await open((await drawn({ delivery: ci() })).html, '#/delivery');
         expect(await page.locator('#av-bar [role="radio"]').allTextContents()).toEqual(['push → main', 'pull_request', 'tag v1.2.0']);
-        expect(await runs(page)).toEqual({ test: 'skipped', deploy: 'skipped', gate: 'skipped' });
-        await page.click('#av-bar [role="radio"]:has-text("push → main")');
+        // The handover opens on push → main; a tag skips the branch-filtered workflow.
         expect(await page.locator('#av-bar [role="radio"][aria-checked="true"]').textContent()).toBe('push → main');
         expect(await runs(page)).toEqual({ test: 'runs', deploy: 'runs', gate: 'unknown' });
+        await page.click('#av-bar [role="radio"]:has-text("tag v1.2.0")');
+        expect(await runs(page)).toEqual({ test: 'skipped', deploy: 'skipped', gate: 'skipped' });
+        await page.click('#av-bar [role="radio"]:has-text("push → main")');
         expect(await page.locator('#av-main').textContent()).toMatch(/Check[\s\S]*test[\s\S]*gate[\s\S]*Production · Clean up[\s\S]*deploy/);
         await page.locator('#av-main .ops-job', { hasText: 'deploy' }).click();
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { item: string } }).__mapRoute.item === 'job/.github/workflows/ci.yml#deploy');
@@ -405,8 +478,9 @@ describe('the overview', () => {
         await page.click('.ov-filters button:has-text("Planned")');
         expect(await page.locator('#ov-impact').count()).toBe(1);
         expect(await page.locator('#ov-code').count()).toBe(0);
-        expect(await page.locator('#av-main').textContent()).toMatch(/Then the partner service\s*input changed/);
-        await page.click('#ov-impact');
+        // Tours are not on the handover's Übersicht (Decision D2).
+        expect(await page.locator('#av-main').textContent()).not.toMatch(/Then the partner service/);
+        await page.click('#ov-impact .otitle');
         await page.waitForFunction(() => (window as unknown as { __mapRoute: { route: string } }).__mapRoute.route === 'impact');
         await page.close();
     });
@@ -446,7 +520,7 @@ describe('the freshness reason', () => {
         for (const hash of ['', '#/overview', '#/data', '#/code']) {
             const page = await open(behind, hash);
             expect(await page.locator('#banner').isVisible()).toBe(false);
-            expect(await page.locator('#pin-fresh').textContent()).toBe('BEHIND:3');
+            expect(await page.locator('#pin-fresh').textContent()).toBe('behind:3');
             expect(await page.locator('#pin-fresh').getAttribute('title')).toMatch(/3 commit\(s\) behind HEAD[\s\S]*Confirm a witness/);
             await page.close();
         }
@@ -517,14 +591,14 @@ describe('the area detail rail follows the Code rails', () => {
             const el = document.getElementById('av-side') as HTMLElement;
             const r = el.getBoundingClientRect();
             const cs = getComputedStyle(el);
-            return { fixed: cs.position === 'fixed', visible: cs.visibility !== 'hidden' && r.right > 1 && r.left < window.innerWidth - 1 };
+            return { fixed: cs.position === 'absolute', visible: cs.display !== 'none' && cs.visibility !== 'hidden' && r.right > 1 && r.left < window.innerWidth - 1 };
         });
 
-    it('pinned at 1440, a flyout with a scrim at 1000, never pinned on a phone', async () => {
+    it('pinned at 1440, a flyout with a scrim at 1100, in the flow and never pinned on a phone', async () => {
         const wide = await open(full, '#/data', { width: 1440 });
         expect(await side(wide)).toMatchObject({ fixed: false, visible: true });
         await wide.close();
-        const tablet = await open(full, '#/data', { width: 1000 });
+        const tablet = await open(full, '#/data', { width: 1100 });
         expect(await side(tablet)).toMatchObject({ visible: false });
         await tablet.click('#av-open');
         expect(await side(tablet)).toMatchObject({ fixed: true, visible: true });
@@ -534,7 +608,7 @@ describe('the area detail rail follows the Code rails', () => {
         await tablet.close();
         const phone = await open(full, '#/data', { width: 375, height: 812 });
         await phone.click('#av-open');
-        expect(await side(phone)).toMatchObject({ fixed: true, visible: true });
+        expect(await side(phone)).toMatchObject({ fixed: false, visible: true });
         expect(await phone.locator('#av-pin').isVisible()).toBe(false);
         await phone.close();
     });

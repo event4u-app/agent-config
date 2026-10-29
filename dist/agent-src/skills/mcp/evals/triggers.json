@@ -1,0 +1,58 @@
+{
+    "skill": "mcp",
+    "last_eval": "2026-10-27",
+    "description": "4 exemplars (1 de) + 3 near-misses + 2 counterexamples. Exemplars are the four When-to-use cases: choosing an MCP tool, chaining tools across servers, troubleshooting an MCP tool error, and referencing MCP tools from a skill. Near-misses share the MCP vocabulary and route elsewhere: building a server (mcp-builder), a Sentry investigation that merely runs over MCP tools (sentry-integration, which this skill's Sentry section points to), and vetting a new server before connecting it (supply-chain-intake). Counterexamples guard the 'protocol' / 'server' vocabulary in unrelated work.",
+    "queries": [
+        {
+            "q": "which MCP tool should I use to look up the latest docs for this library?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "chain the Jira and GitHub MCP servers: read the ticket, then find the PR that references it",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "the MCP tool call keeps returning a permission error — what am I doing wrong?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "welche MCP-Tools soll der neue Command referenzieren, und in welcher Reihenfolge ruft er sie auf?",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "build an MCP server in TypeScript that exposes our internal search API as tools",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "authoring a server rather than using existing ones → mcp-builder"
+        },
+        {
+            "q": "here's a Sentry issue URL — find out why it started failing after yesterday's deploy",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "runs over Sentry MCP tools, but the ask is the error investigation → sentry-integration, which this skill's Sentry section points to"
+        },
+        {
+            "q": "is this third-party MCP server safe to connect before we add it to the config?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "intake vetting of a new server and its tool grants, not using a configured one → supply-chain-intake"
+        },
+        {
+            "q": "explain how the TCP three-way handshake works",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "protocol vocabulary with no MCP involvement"
+        },
+        {
+            "q": "restart the staging web server after the config change",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'server' in the ops sense, unrelated to MCP servers"
+        }
+    ]
+}

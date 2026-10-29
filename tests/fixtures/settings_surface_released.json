@@ -1,5 +1,5 @@
 {
-  "version": "18.2.0",
+  "version": "19.0.0",
   "entries": {
     "advisories.egress": {
       "type": "string",
@@ -34,8 +34,7 @@
       "default": false
     },
     "ai_team.max_calls_per_day": {
-      "type": "integer",
-      "default": 50
+      "type": "integer"
     },
     "ai_team.model": {
       "type": "string",

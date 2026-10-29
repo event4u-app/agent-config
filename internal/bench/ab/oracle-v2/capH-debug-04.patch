@@ -1,0 +1,24 @@
+diff --git a/src/climb.mjs b/src/climb.mjs
+index b276ec7..8bbdf27 100644
+--- a/src/climb.mjs
++++ b/src/climb.mjs
+@@ -24,8 +24,8 @@ export function minCost(cost, maxJumps) {
+       return Infinity;
+     }
+ 
+-    if (memo.has(i)) {
+-      return memo.get(i);
++    if (memo.has(`${i},${jumpsLeft}`)) {
++      return memo.get(`${i},${jumpsLeft}`);
+     }
+ 
+     // Single step.
+@@ -39,7 +39,7 @@ export function minCost(cost, maxJumps) {
+       }
+     }
+ 
+-    memo.set(i, result);
++    memo.set(`${i},${jumpsLeft}`, result);
+     return result;
+   }
+ 

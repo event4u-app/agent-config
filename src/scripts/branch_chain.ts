@@ -5,6 +5,10 @@
  *   status [--branch B] [--offline] [--json]   each level against its parent
  *   sync   [--branch B] [--offline]            bring owned levels current, root first
  *   parent --set <parent> [--branch B]         record a branch's parent (local git config)
+ *   parent --from-reflog                       record the current branch's parent and its SHA
+ *                                              from the reflog (the post-checkout hook)
+ *   reparent                                   hand the children of a merged parent to the
+ *                                              grandparent, offline, with a report
  *
  * WHY TOP-DOWN. A child is brought current with its parent only after the
  * parent is current with its own parent. Merging main straight into subdev-123
@@ -31,6 +35,8 @@ import {
   currentBranch,
   type ForgeBase,
   recordParent,
+  recordParentFromReflog,
+  reparentMerged,
 } from "./_lib/branch_parents.js";
 import {
   chainStatus,
@@ -157,7 +163,7 @@ export function chainSync(
       continue;
     }
     const why = !lvl.owned
-      ? `not ours: commits on ${lvl.branch} since ${lvl.parent} are authored by someone else`
+      ? `frozen — not ours: ${lvl.branch} has no commit of ours since ${lvl.parent}, or one authored by someone else`
       : strategy === "rebase"
         ? "the update strategy is rebase: a history rewrite is the owner's call"
         : null;
@@ -266,6 +272,17 @@ export function main(
   const forge: ForgeBase | undefined = offline
     ? undefined
     : (b) => askForgeForBase(b);
+  if (action === "parent" && argv.includes("--from-reflog")) {
+    const r = recordParentFromReflog(root);
+    if (r) process.stdout.write(`recorded: ${r.branch} ← ${r.parent} at ${r.sha.slice(0, 12)} (from the reflog)\n`);
+    return 0;
+  }
+  if (action === "reparent") {
+    const lines = reparentMerged(root);
+    for (const l of lines) process.stdout.write(`${l}\n`);
+    if (!lines.length) process.stdout.write("no recorded parent is merged — nothing re-parented\n");
+    return 0;
+  }
   if (action === "parent") {
     const parent = flag(argv, "--set");
     if (!parent) {
@@ -297,7 +314,7 @@ export function main(
   }
   if (action !== "status") {
     process.stderr.write(
-      "usage: branch_chain <status|sync|parent --set P> [--branch B] [--offline] [--json]\n",
+      "usage: branch_chain <status|sync|reparent|parent --set P|parent --from-reflog> [--branch B] [--offline] [--json]\n",
     );
     return 2;
   }

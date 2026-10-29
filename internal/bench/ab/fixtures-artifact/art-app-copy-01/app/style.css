@@ -1,0 +1,8 @@
+body { font-family: system-ui, sans-serif; background: #f6f7f9; margin: 0; }
+.tally { max-width: 32rem; margin: 3rem auto; background: #fff; border-radius: 12px; padding: 1.5rem; }
+#new-todo-form { display: flex; gap: .5rem; align-items: center; }
+#new-todo { flex: 1; padding: .5rem; }
+#list { list-style: none; padding: 0; }
+.todo { display: flex; gap: .5rem; align-items: center; padding: .5rem 0; border-bottom: 1px solid #e5e7eb; }
+.todo.done span { text-decoration: line-through; color: #6b7280; }
+footer { display: flex; justify-content: space-between; margin-top: 1rem; }

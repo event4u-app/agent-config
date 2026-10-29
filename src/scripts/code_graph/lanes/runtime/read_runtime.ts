@@ -13,7 +13,7 @@ import * as path from 'node:path';
 import { parseCompose, type ComposeModel, type ComposeService } from '../../../_lib/infra_files/compose.js';
 import { parseDockerfile } from '../../../_lib/infra_files/dockerfile.js';
 import { SKIP_DIRS, isComposeName, isDockerfileName, isGithubWorkflowPath, isGitlabCiName, walkFiles } from '../../../_lib/infra_files/walk.js';
-import { isFixturePath } from '../../fixture_paths.js';
+import { isFixturePath } from '../../scope.js';
 import type { LaneOutput } from '../lane_fact.js';
 import { Emitter, posix } from './emit.js';
 import { CODE_EXT, envNamesInExample, envReadsInCode, isEnvExampleName, isPlatformName } from './env_names.js';
@@ -23,7 +23,8 @@ import { redactImage, redactOutput, redactText } from './redact.js';
 import { isMakefileName, isTaskfileName, parseMakefile, parseTaskfile } from './targets.js';
 import { readTerraform } from './terraform.js';
 
-const RUNTIME_SKIP = new Set([...SKIP_DIRS, '.terraform', '.terragrunt-cache', 'tests', 'test', '__tests__', 'fixtures']);
+// Test and fixture trees are walked and dropped by `isFixturePath` below: scope decides, not a second list.
+const RUNTIME_SKIP = new Set([...SKIP_DIRS, '.terraform', '.terragrunt-cache']);
 /** a `docker compose config` output the user saved (rung T3) */
 export const isResolvedComposeName = (n: string): boolean => /^(docker-)?compose[.-](resolved|config)\.ya?ml$/.test(n);
 const MAX_YAML_BYTES = 512 * 1024;
@@ -89,7 +90,10 @@ function emitCompose(em: Emitter, { file, model }: ComposeRead, all: ComposeRead
         }
         if (s.build !== null) {
             const df = path.posix.normalize(path.posix.join(dir, s.build, s.dockerfile ?? 'Dockerfile'));
-            em.rel('uses-image', id, `image:built:${df}`, { mechanism: 'build', target_name: df }, file, s.line, { rung });
+            // The Dockerfile is its own `image:built:` fact only when this tree holds it.
+            const inTree = !df.startsWith('../') && em.read(df) !== null;
+            const state = inTree ? {} : { relation_state: 'unresolved', reason: `the Dockerfile ${df} is not in this tree` };
+            em.rel('uses-image', id, `image:built:${df}`, { mechanism: 'build', target_name: df, ...state }, file, s.line, { rung });
         }
         for (const p of s.ports) {
             const pub = p.published !== null && !p.published.includes('$');

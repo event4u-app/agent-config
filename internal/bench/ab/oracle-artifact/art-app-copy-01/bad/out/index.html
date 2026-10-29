@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Tally</title></head>
+<body>
+<h1>Tally</h1>
+<form id="new-todo-form"><input id="new-todo"><button>Add</button></form>
+<ul id="list"></ul>
+<span id="count"></span>
+<script>
+  const items = [];
+  const list = document.getElementById('list');
+  function render() {
+    list.innerHTML = '';
+    for (const t of items) {
+      const li = document.createElement('li');
+      li.className = 'todo';
+      li.textContent = t;
+      list.append(li);
+    }
+    document.getElementById('count').textContent = items.length + ' items left';
+  }
+  document.getElementById('new-todo-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    items.push(document.getElementById('new-todo').value);
+    render();
+  });
+</script>
+</body>
+</html>

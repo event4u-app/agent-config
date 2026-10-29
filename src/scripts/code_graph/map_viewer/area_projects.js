@@ -450,6 +450,50 @@ function hubGraphThenVersions(p, sel, main) {
     if (vs) main.appendChild(vs);
 }
 
+extendStrings({
+    en: { pLensProj: 'Projects', pLensMe: 'Me · Learning', pNoteProj: 'Projects on this machine', pNoteMe: 'User learnings · K.2–K.8',
+        pMeOnly: 'Only you see this.', pMeWhy: 'No project, no git, no colleagues. Messages are never stored – only kind, topic, reference and at most 80 redacted characters.',
+        pMeEmpty: 'Me · Learning · no data yet', pMeEmptyWhy: 'The user learning lane (Stage K) writes nothing into the hub yet: no signal, no work-style candidate. This lens fills from that data once it exists, never from sample figures.',
+        pMeCands: 'Your work style · candidates', pMeCandsT: 'from 2 sessions on · never automatic – only with /agents user accept', pMeSig: function (n) { return 'Latest signals · ' + n; }, pMeSigT: 'detected deterministically · no model rates mood' },
+    de: { pLensProj: 'Projekte', pLensMe: 'Ich · Lernen', pNoteProj: 'Projekte auf diesem Rechner', pNoteMe: 'Nutzer-Learnings · K.2–K.8',
+        pMeOnly: 'Nur du siehst das.', pMeWhy: 'Kein Projekt, kein Git, keine Kollegen. Nachrichten werden nie gespeichert – nur Art, Thema, Verweis und höchstens 80 geschwärzte Zeichen.',
+        pMeEmpty: 'Ich · Lernen · noch keine Daten', pMeEmptyWhy: 'Die Nutzer-Lernspur (Stage K) schreibt noch nichts in den Hub: kein Signal, kein Arbeitsstil-Kandidat. Diese Linse füllt sich aus diesen Daten, sobald es sie gibt, nie aus Beispielzahlen.',
+        pMeCands: 'Dein Arbeitsstil · Kandidaten', pMeCandsT: 'erst ab 2 Sessions · nie automatisch – nur mit /agents user accept', pMeSig: function (n) { return 'Letzte Signale · ' + n; }, pMeSigT: 'deterministisch erkannt · kein Modell bewertet Stimmung' }
+});
+if (!avState.view.projects) avState.view.projects = 'proj';
+/** The handover's two hub lenses, violet like the hub, in the bar with the scope note. */
+function hubLensBar(p, view, key, bar) {
+    var tabs = el('div', { class: 'lenses hub-lenses', role: 'tablist', 'aria-label': t('views') });
+    [['proj', 'pLensProj'], ['me', 'pLensMe']].forEach(function (o) {
+        var b = el('button', { type: 'button', role: 'tab', class: 'lens', 'aria-selected': String(view === o[0]), 'data-lens': o[0] }, t(o[1]));
+        b.addEventListener('click', function () { avState.view.projects = o[0]; renderAreaPage('projects', key); });
+        tabs.appendChild(b);
+    });
+    add(bar, tabs, el('span', { class: 'mono av-barmeta hub-note' }, view === 'me' ? t('pNoteMe') : t('pNoteProj')));
+}
+/**
+ * Ich · Lernen: the user-scope learning data of sibling Stage K, read from
+ * `p.me` ({ kpis: [{v, l, sub}], candidates: [{title, state, rows: [[k, v]]}], signals: [{kind, topic, span, where}] }).
+ * Without it the lens says so and why — it never draws the handover's sample figures.
+ */
+function hubMe(p, main) {
+    main.appendChild(add(el('div', { class: 'hub-me-only' }), el('b', null, t('pMeOnly')), el('span', { class: 'mono soft' }, '~/.event4u/agent-config/user/'), el('span', { class: 'soft' }, t('pMeWhy'))));
+    var me = p.me;
+    if (!me) {
+        main.appendChild(add(el('div', { class: 'empty-page', id: 'nodata-me' }), add(el('span', { class: 'ep-chips' }), stChip('empty', 'dash')), el('span', { class: 'ep-head' }, t('pMeEmpty')), el('span', { class: 'ep-what' }, t('pMeEmptyWhy'))));
+        return;
+    }
+    var kp = el('div', { class: 'hub-me-kpis', id: 'hub-me-kpis' });
+    (me.kpis || []).forEach(function (k) { kp.appendChild(add(el('div', { class: 'hub-me-kpi' }), el('span', { class: 'mono' }, String(k.v)), el('span', null, k.l), el('span', { class: 'mono muted' }, k.sub || ''))); });
+    main.appendChild(kp);
+    var cs = add(el('section', { class: 'hub-me-sec' }), add(el('div', { class: 'between' }), el('b', null, t('pMeCands')), el('span', { class: 'muted' }, t('pMeCandsT'))));
+    (me.candidates || []).forEach(function (c) { cs.appendChild(add(el('div', { class: 'hub-me-cand' }), add(el('div', { class: 'between' }), el('b', null, c.title), stChip(c.state, 'violet')), kvGrid(c.rows || []))); });
+    main.appendChild(cs);
+    var sg = add(el('section', { class: 'hub-me-sec' }), add(el('div', { class: 'between' }), el('b', null, t('pMeSig')(num((me.signals || []).length))), el('span', { class: 'muted' }, t('pMeSigT'))));
+    (me.signals || []).forEach(function (g) { sg.appendChild(add(el('div', { class: 'hub-me-sig' }), stChip(g.kind, 'dash'), el('span', null, g.topic), el('span', { class: 'mono muted' }, g.span || ''), el('span', { class: 'mono muted' }, g.where || ''))); });
+    main.appendChild(sg);
+}
+
 AREA_MODULES.projects = {
     tabs: [],
     railTitles: ['pRegistry', 'pEdge'],
@@ -468,9 +512,13 @@ AREA_MODULES.projects = {
     meta: function (p) { return t('pCount')(num(p.projects.length), num(p.projects.filter(function (x) { return x.indexed; }).length)); },
     render: function (p, view, main) { hubGraphThenVersions(p, {}, main); },
     page: function (p, view, key, c) {
-        c.bar.classList.add('ops-empty');
+        view = avState.view.projects;
+        hubLensBar(p, view, key, c.bar);
         var sel = hubSelected(p, key);
         hubRegistry(p, c.left);
+        // Ich · Lernen has no Kante aside: the handover hides the right rail there.
+        $('av-body').classList.toggle('no-side', view === 'me');
+        if (view === 'me') { hubMe(p, c.main); return; }
         hubGraphThenVersions(p, sel, c.main);
         hubRail(p, sel, c.right);
     }

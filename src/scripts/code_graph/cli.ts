@@ -4,6 +4,8 @@
  *
  *   build    [--root P] [--out P] [--force]   (re)build the deterministic graph
  *            [--no-lanes]                      and merge every lane reader's facts
+ *            [--check-fixture-findings]        exit 1 when a default-view finding or a
+ *                                               tour lies outside product scope
  *   validate [--graph P]                       schema-gate a graph.json
  *   detect   [--root P] [--format json]        three-state freshness verdict
  *   refresh  [--root P] [--out P] [--budget-seconds N]
@@ -52,11 +54,18 @@
  *   impact    --diff <rev> [--depth N]      callers/dependents/test files
  *                                             reachable from the changed
  *                                             symbols over ACCEPTED edges
+ *             [--regressions F]               the registry's regressions whose
+ *                                             guards that neighbourhood reaches
  *   review-risk [--diff <rev>] [--json]       the diff as a sum of terms (callers,
+ *               [--format markdown]           (markdown: the sticky PR comment)
  *                                             entry points, flows, co-change
  *                                             partners, areas, columns,
  *                                             operations, pipelines), each fact
  *                                             with its witness
+ *   --include-guesses                         query, explain, affected, path,
+ *                                             review-risk and pack walk stated
+ *                                             edges only; this adds the guesses,
+ *                                             each marked `(guess: <via>)`
  *   why <package[@version]>                   every path from a declaration to the
  *                                             package, from the lockfiles (offline)
  *   usage <package>                           the public names the code uses, of how
@@ -65,10 +74,10 @@
  *                                             and packages leaving with it: a proposal
  *   provenance <ticket|#pr|file|symbol>       since when, by which commit, PR and
  *                                             ticket — from the local history only
- *   branches [index [ref…] | gc | list]       facts per branch without a checkout:
+ *   branches [index [ref…] | pin <ref…> | gc | list]  facts per branch without a checkout:
  *                                             index the default set (current, its
  *                                             parent chain, recently checked out) or
- *                                             named refs; gc drops stale branches
+ *                                             named refs; gc drops stale, unpinned branches
  *   branch-diff <a> [<b>]                     files, symbols, packages, tables and
  *                                             columns that differ (b = current)
  *   on-branches <package|table.column|symbol|file>  the indexed branches holding it
@@ -113,6 +122,13 @@
  *                                               links and the facts they share, under the
  *                                               user-global map/; refused inside a git work tree
  *
+ *   verify   --all [--min-rate R] [--json]     confirm rate per lane over every lane
+ *                                               fact and edge, witness read by its kind
+ *   lint     [--root P] [--graph P]           the endpoint contract: duplicate ids,
+ *                                               invalid spans, dangling sources and
+ *                                               targets; exit 1 on any (`lint.ts`)
+ *   scope    <path…> [--root P]                which scope a path is in and the rule
+ *                                               that decided (`scope.ts`, `layers.yaml` scope:)
  *   suggest-verb "<question>"                  (Phase 9 D3) print the verb
  *                                               (query/affected/path/explain)
  *                                               a regex table thinks best
@@ -121,6 +137,8 @@
  *                                               never auto-run against a
  *                                               graph.
  */
+import { gcBranches } from './branches.js';
+import { fixtureScopeProblems, produceAreas } from './map_area_payloads.js';
 import { spawnSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
 import * as fs from 'node:fs';
@@ -130,7 +148,9 @@ import { fileURLToPath } from 'node:url';
 
 import { gitProbe, hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { buildFromRepo, discoverFiles, isTestFile, type LaneSummary, sidecarPath } from './build.js';
-import { diffHunks, renderReviewRisk, reviewRisk } from './review_risk.js';
+import { selectionVerdict, selectRegressionsFromCode, type RegressionSpec } from '../_lib/regression_neighbourhood.js';
+import { capAnswer, capReviewRisk, parseDetail } from './answer_detail.js';
+import { diffHunks, renderReviewRisk, renderReviewRiskMarkdown, reviewRisk } from './review_risk.js';
 import { DOC_EXTS } from './docs_layer.js';
 import {
     computeVerdict,
@@ -140,7 +160,6 @@ import {
     pickSource,
 } from './detect.js';
 import { graphHome } from './graph_home.js';
-import { suggestVerb } from './intent.js';
 import { estateMain } from './estate_cli.js';
 import { estateMapMain } from './estate_map.js';
 import { touchHome } from './graph_budget.js';
@@ -176,10 +195,7 @@ import {
     type DeadResult,
     entryPointsFromFile,
     impact,
-    type ImpactResult,
     repoEntryPoints,
-    testsFor,
-    type TestsForResult,
     untested,
     type UntestedResult,
 } from './verbs.js';
@@ -195,6 +211,13 @@ import { writeTombstones } from './verify/tombstones.js';
 import { usageLowerBound, verifyMain } from './verify/verify_cli.js';
 
 import { buildCacheFor, cacheFor, flag, isFlagValue, resolveRoot, shown, UsageError } from './cli_args.js';
+import { pageReads } from './answer_budget.js';
+import { noEntryLine, testsForModuleAnswer, withDeclaringFileTests } from './answer_correctness.js';
+import { askMain } from './cli_ask.js';
+import { cmdLint, cmdScope, cmdSuggestVerb } from './cli_graph_checks.js';
+import { mapSection } from './map_sections.js';
+import { scanMain } from './scan.js';
+import { bugsMain } from './cli_bugs.js';
 import { cmdBranchDiff, cmdBranches, cmdOnBranches, cmdProvenance, cmdSystems } from './cli_knowledge.js';
 
 export { buildCacheFor, cacheFor } from './cli_args.js';
@@ -241,6 +264,12 @@ async function cmdBuild(argv: string[]): Promise<number> {
             (out ? `    cache: ${shown(root, out)}\n` : '') +
             legacyCacheNotice(root),
     );
+    if (argv.includes('--check-fixture-findings')) {
+        const problems = fixtureScopeProblems(produceAreas(root, graph).areas);
+        for (const p of problems) process.stdout.write(`    fixture scope: ${p}\n`);
+        process.stdout.write(`    fixture scope check: ${problems.length} problem(s)\n`);
+        return problems.length === 0 ? 0 : 1;
+    }
     return 0;
 }
 
@@ -369,6 +398,8 @@ function withOverlay(g: LoadedGraph): LoadedGraph {
     return overlayView(g, readOverlay(g.answeredBy, graphChecksum(g)));
 }
 
+let readsPage = 1;
+
 function render(r: QueryResult, staleNote: string): number {
     process.stdout.write(`source: ${r.source}${staleNote}\n`);
     if (r.seeds.length) process.stdout.write(`seeds: ${r.seeds.join(', ')}\n`);
@@ -376,8 +407,10 @@ function render(r: QueryResult, staleNote: string): number {
     if (r.truncated) process.stdout.write('  … (budget reached — narrow the seed or raise --budget)\n');
     if (!r.lines.length) process.stdout.write('  (no matching relations)\n');
     if (r.recommended_reads.length) {
-        process.stdout.write('recommended reads (dropped by the budget, or a low-confidence seed match):\n');
-        for (const rr of r.recommended_reads) process.stdout.write(`  ${rr.path}${rr.lines ? `:${rr.lines[0]}-${rr.lines[1]}` : ''}\n`);
+        const pg = pageReads(r.recommended_reads, readsPage);
+        process.stdout.write(`recommended reads (dropped by the budget, or a low-confidence seed match) — ${pg.items.length} of ${pg.total}, page ${pg.page}/${pg.pages}:\n`);
+        for (const rr of pg.items) process.stdout.write(`  ${rr.path}${rr.lines ? `:${rr.lines[0]}-${rr.lines[1]}` : ''}\n`);
+        if (pg.pages > pg.page) process.stdout.write(`  … next page: --reads-page ${pg.page + 1}\n`);
     }
     return 0;
 }
@@ -404,7 +437,7 @@ export function changedFiles(root: string, ref: string): string[] | null {
     // exit 0 (probed 2026-09-09). A rev never begins with `-`.
     if (ref.startsWith('-')) return null;
     try {
-        return gitProbe(root, ['diff', '--name-only', `${ref}..HEAD`])
+        return gitProbe(root, ['diff', '--name-only', '--relative', `${ref}..HEAD`])
             .split('\n')
             .map((s) => s.trim())
             .filter(Boolean);
@@ -429,13 +462,15 @@ function cmdQuery(kind: 'query' | 'explain' | 'affected' | 'path', argv: string[
     }
     const positional = argv.filter((a) => !a.startsWith('--') && !isFlagValue(argv, a));
     const budget = budgetOf(argv);
+    const walk = { includeGuesses: argv.includes('--include-guesses') };
+    readsPage = Math.max(1, Number(flag(argv, '--reads-page') ?? 1) || 1);
     if (kind === 'affected' && flag(argv, '--since')) {
         const root = resolveRoot(argv);
         const seeds = changedNodeSeeds(r.g, root, flag(argv, '--since') as string);
         const merged: QueryResult = { source: r.g.source, seeds: [], lines: [], truncated: false, recommended_reads: [] };
         const perSeed: QueryResult[] = [];
         for (const s of seeds) {
-            const one = affected(r.g, s, 2, budget);
+            const one = affected(r.g, s, 2, budget, walk);
             merged.seeds.push(...one.seeds);
             merged.lines.push(...one.lines);
             merged.truncated = merged.truncated || one.truncated;
@@ -455,7 +490,7 @@ function cmdQuery(kind: 'query' | 'explain' | 'affected' | 'path', argv: string[
             process.stderr.write('usage: code_graph/cli.ts path <a> <b>\n');
             return 2;
         }
-        return render(graphPath(r.g, a, b, budget), r.note);
+        return render(graphPath(r.g, a, b, budget, walk), r.note);
     }
     const kinds = flag(argv, '--kind');
     const relation = flag(argv, '--relation');
@@ -477,8 +512,8 @@ function cmdQuery(kind: 'query' | 'explain' | 'affected' | 'path', argv: string[
         if (t.items.some((i) => i.direction === 'in')) renderUsage(r.g, argv, a);
         return 0;
     }
-    const fn = kind === 'query' ? query : kind === 'explain' ? explain : affected;
-    const rc = render(fn(r.g, a, budget), r.note);
+    const answer = kind === 'affected' ? affected(r.g, a, 2, budget, walk) : kind === 'explain' ? explain(r.g, a, budget, walk) : query(r.g, a, budget, walk);
+    const rc = render(answer, r.note);
     if (kind === 'affected') renderUsage(r.g, argv, a);
     return rc;
 }
@@ -537,7 +572,7 @@ function renderReads(reads: readonly { path: string; lines: [number, number] | n
 function cmdImpact(argv: string[]): number {
     const ref = flag(argv, '--diff');
     if (ref === null) {
-        process.stderr.write('usage: code_graph/cli.ts impact --diff <rev> [--graph P] [--depth N]\n');
+        process.stderr.write('usage: code_graph/cli.ts impact --diff <rev> [--graph P] [--depth N] [--detail minimal|standard] [--regressions F]\n');
         return 2;
     }
     const root = resolveRoot(argv);
@@ -553,23 +588,28 @@ function cmdImpact(argv: string[]): number {
     }
     try {
         const depth = Number(flag(argv, '--depth'));
-        const res: ImpactResult = impact(
-            r.g,
-            files,
-            stateOf(argv, r.g.answeredBy),
-            Number.isFinite(depth) && depth > 0 ? depth : 2,
-            isTestFile,
+        const registryFile = flag(argv, '--regressions');
+        if (registryFile !== null) return renderRegressions(r.g, ref, files, registryFile, stateOf(argv, r.g.answeredBy), Number.isFinite(depth) && depth > 0 ? depth : 2);
+        const res = capAnswer(
+            withDeclaringFileTests(r.g, impact(r.g, files, stateOf(argv, r.g.answeredBy), Number.isFinite(depth) && depth > 0 ? depth : 2, isTestFile, diffHunks(root, `${ref}..HEAD`) ?? undefined), isTestFile),
+            ['dependents', 'reached', 'test_files', 'producing_edges', 'lines', 'recommended_reads'],
+            parseDetail(flag(argv, '--detail')),
+            ['reached', 'producing_edges', 'lines'],
         );
         renderEnvelope(res);
         process.stdout.write(`changed files: ${files.length} · seeds: ${res.seeds.length}\n`);
+        if (res.file_seeded.length) process.stdout.write(`seeded by whole file (git gave no hunk): ${res.file_seeded.join(', ')}\n`);
         if (res.unresolved_files.length)
             process.stdout.write(`unresolved changed files (no node in the graph): ${res.unresolved_files.join(', ')}\n`);
+        if (res.partial_files.length) process.stdout.write(`partial files (parsed with errors, not complete): ${res.partial_files.join(', ')}\n`);
         process.stdout.write(`dependents (${res.dependents.length}):\n`);
+        if (res.uncertainty) process.stdout.write(`  ${res.uncertainty}\n`);
         for (const d of res.dependents) process.stdout.write(`  ${d}\n`);
         process.stdout.write(`test files (${res.test_files.length}):\n`);
         for (const t of res.test_files) process.stdout.write(`  ${t}\n`);
         process.stdout.write(`producing edges (${res.producing_edges.length}):\n`);
         for (const e of res.producing_edges) process.stdout.write(`  ${e}\n`);
+        renderOmitted(res.omitted);
         renderReads(res.recommended_reads);
         return 0;
     } finally {
@@ -585,24 +625,34 @@ function cmdImpact(argv: string[]): number {
 function cmdReviewRisk(argv: string[]): number {
     const root = resolveRoot(argv);
     const rev = flag(argv, '--diff') ?? 'HEAD';
+    const markdown = flag(argv, '--format') === 'markdown';
     const hunks = diffHunks(root, rev);
     if (hunks === null) {
+        if (markdown) process.stdout.write(renderReviewRiskMarkdown(null, `the rev '${rev}' does not resolve`));
         process.stderr.write(`code-graph: cannot resolve rev '${rev}' in ${root}\n`);
         return 1;
     }
     const p = flag(argv, '--graph') ?? cacheFor(root);
     if (!fs.existsSync(p)) {
+        if (markdown) process.stdout.write(renderReviewRiskMarkdown(null, 'no code graph has been built'));
         process.stderr.write(`code-graph: graph not found: ${p} — run \`code-graph build\` first\n`);
         return 1;
     }
     const graph = JSON.parse(fs.readFileSync(p, 'utf-8')) as CodeGraph;
-    const r = reviewRisk(root, graph, rev, hunks);
+    const r = reviewRisk(root, graph, rev, hunks, undefined, { includeGuesses: argv.includes('--include-guesses') });
     // Whose work the diff touches — informational, never a weighted term of the sum.
     const prov = readCachedProvenance(root, path.dirname(p));
     const tickets = prov ? ticketsTouched(prov, r.changed) : null;
-    if (argv.includes('--json')) process.stdout.write(`${JSON.stringify(tickets ? { ...r, tickets } : r)}\n`);
-    else {
-        const lines = renderReviewRisk(r);
+    const detail = parseDetail(flag(argv, '--detail'));
+    if (markdown) {
+        process.stdout.write(renderReviewRiskMarkdown(r, undefined, capReviewRisk(r, detail).omitted));
+        return 0;
+    }
+    if (argv.includes('--json')) {
+        const capped = capReviewRisk(r, detail);
+        process.stdout.write(`${JSON.stringify(tickets ? { ...capped, tickets } : capped)}\n`);
+    } else {
+        const lines = renderReviewRisk(r, detail === 'minimal' ? 5 : 20);
         const domainOf = domainResolver(path.dirname(path.dirname(p)));
         if (domainOf) {
             const crossings = new Set<string>();
@@ -646,11 +696,15 @@ function cmdTestsFor(argv: string[]): number {
         return 1;
     }
     try {
-        const res: TestsForResult = testsFor(r.g, symbol, stateOf(argv, r.g.answeredBy));
+        const res = capAnswer(testsForModuleAnswer(r.g, symbol, stateOf(argv, r.g.answeredBy)), ['tests', 'lines', 'recommended_reads'], parseDetail(flag(argv, '--detail')));
         renderEnvelope(res);
         process.stdout.write(`seeds: ${res.seeds.join(', ') || '(none)'}\n`);
+        if (res.partial_files.length) process.stdout.write(`partial files (parsed with errors, not complete): ${res.partial_files.join(', ')}\n`);
         process.stdout.write(`tests (${res.tests.length}):\n`);
+        if (res.uncertainty) process.stdout.write(`  ${res.uncertainty}\n`);
         for (const t of res.tests) process.stdout.write(`  ${t}\n`);
+        renderOmitted(res.omitted);
+        if (res.seeds.length === 0) process.stdout.write(`${noEntryLine(symbol, 'tests-for')}\n`);
         renderReads(res.recommended_reads);
         return 0;
     } finally {
@@ -722,18 +776,44 @@ function cmdDead(argv: string[]): number {
             );
             patched.push(supplied);
             const res: DeadResult = dead(r.g, patched, stateOf(argv, r.g.answeredBy));
-            return renderDead(res);
+            return renderDead(capAnswer(res, ['dead', 'excluded', 'lines', 'recommended_reads'], parseDetail(flag(argv, '--detail'))));
         }
         const res: DeadResult = dead(r.g, sources, stateOf(argv, r.g.answeredBy), {
             acceptMissingExports: argv.includes('--accept-missing-exports'),
         });
-        return renderDead(res);
+        return renderDead(capAnswer(res, ['dead', 'excluded', 'lines', 'recommended_reads'], parseDetail(flag(argv, '--detail'))));
     } finally {
         r.g.close();
     }
 }
 
-function renderDead(res: DeadResult): number {
+/**
+ * `impact --diff <rev> --regressions <registry.json>` — the existing regressions
+ * whose guards the diff's neighbourhood reaches, from a `[{ id, guards }]` file.
+ * The verify-repair loop's regression scope; fail-closed through `selectionVerdict`.
+ */
+function renderRegressions(g: LoadedGraph, ref: string, files: string[], registryFile: string, state: GraphState, depth: number): number {
+    let registry: RegressionSpec[];
+    try {
+        registry = JSON.parse(fs.readFileSync(registryFile, 'utf-8')) as RegressionSpec[];
+        if (!Array.isArray(registry) || !registry.every((x) => typeof x?.id === 'string' && Array.isArray(x.guards))) throw new Error('expected [{ id, guards: [] }]');
+    } catch (e) {
+        process.stderr.write(`code-graph: cannot read regression registry ${registryFile}: ${(e as Error).message}\n`);
+        return 1;
+    }
+    const report = selectRegressionsFromCode(g, { id: `diff:${ref}`, touches: files }, registry, depth, isTestFile, state);
+    const refusal = selectionVerdict(report);
+    process.stdout.write(`${JSON.stringify({ ...report, selected: report.selected.map((x) => ({ id: x.spec.id, matched: x.matched, reason: x.reason })), refusal })}\n`);
+    return refusal === null ? 0 : 1;
+}
+
+/** What a capped answer left out, counted per list (`answer_detail.ts`). */
+function renderOmitted(omitted: Record<string, number>): void {
+    const parts = Object.entries(omitted).map(([k, n]) => `${k} ${n}`);
+    if (parts.length) process.stdout.write(`omitted by --detail cap: ${parts.join(' · ')}\n`);
+}
+
+function renderDead(res: DeadResult & { omitted: Record<string, number> }): number {
     // The envelope FIRST, on both branches. It used to print only after the
     // refusal check, so the default invocation in this repository — where
     // `exports` is always unavailable — printed neither histogram nor the
@@ -754,6 +834,7 @@ function renderDead(res: DeadResult): number {
     process.stdout.write(`excluded as declared entry points: ${res.excluded.length}\n`);
     process.stdout.write(`dead (${res.dead.length}):\n`);
     for (const d of res.dead) process.stdout.write(`  ${d}\n`);
+    renderOmitted(res.omitted);
     renderReads(res.recommended_reads);
     return 0;
 }
@@ -994,6 +1075,9 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
  * when another refresh holds it. `--map` redraws `agents/map/` afterwards, only
  * when the project already has one and it is older than the cache.
  */
+/** How long a refresh may spend on branch gc. */
+const BRANCH_GC_BUDGET_MS = 2_000;
+
 async function cmdRefresh(argv: string[]): Promise<number> {
     const root = resolveRoot(argv);
     const out = flag(argv, '--out') ?? buildCacheFor(root);
@@ -1041,6 +1125,13 @@ async function cmdRefresh(argv: string[]): Promise<number> {
             return rc;
         }
         if (out === buildCacheFor(root)) registerUse(root, null, git(root, 'rev-parse', 'HEAD'));
+        // Branch gc rides on every refresh, bounded in time; a store it cannot read is no reason to fail one.
+        try {
+            const g = gcBranches(root, path.dirname(out), { budgetMs: BRANCH_GC_BUDGET_MS });
+            process.stdout.write(`branch gc: ${g.dropped.length} dropped, ${g.swept} fact file(s) swept${g.bounded ? ' — stopped at its time budget, the next refresh continues' : ''}\n`);
+        } catch {
+            /* the branch store is optional */
+        }
         if (argv.includes('--map') && mapIsBehind(root, out)) {
             const mrc = await drawMap(['--root', root, '--no-build', '--no-verify']);
             record(mrc === 0 ? 'refreshed-with-map' : 'map-failed', mrc === 0 ? undefined : `map exited ${mrc}`);
@@ -1151,6 +1242,13 @@ function mapIsBehind(root: string, cache: string): boolean {
 async function cmdMap(argv: string[]): Promise<number> {
     if (argv.includes('--estate')) return estateMapMain(argv);
     if (argv.includes('--demo')) return cmdMapDemo(argv);
+    const section = flag(argv, '--section');
+    if (section !== null) {
+        const out = flag(argv, '--out');
+        const r = mapSection(out ? path.resolve(out) : graphHome(resolveRoot(argv)).mapDir, section);
+        process.stdout.write(r.ok ? `${r.body}\n` : `code-graph: ${r.reason}${r.names.length ? ` — sections: ${r.names.join(', ')}` : ''}\n`);
+        return r.ok ? 0 : 1;
+    }
     const root = resolveRoot(argv);
     if (!fs.existsSync(root)) {
         process.stderr.write(`code-graph: root not found: ${root}\n`);
@@ -1324,21 +1422,6 @@ function cmdOutcome(argv: string[]): number {
     return 0;
 }
 
-/**
- * `suggest-verb "<question>"` (Phase 9 D3) — print the `code_graph` verb a
- * pure regex table thinks best answers a free-text structure question. A
- * standalone hint only: never resolves a graph, never runs a query itself.
- */
-function cmdSuggestVerb(argv: string[]): number {
-    const question = argv.filter((a) => !a.startsWith('--')).join(' ').trim();
-    if (!question) {
-        process.stderr.write('usage: code_graph/cli.ts suggest-verb "<question>"\n');
-        return 2;
-    }
-    process.stdout.write(`${suggestVerb(question)}\n`);
-    return 0;
-}
-
 export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
     const sub = argv[0];
     try {
@@ -1347,7 +1430,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'detect') return cmdDetect(argv.slice(1));
         if (sub === 'refresh' && argv.includes('--touched')) return await verifyMain('refresh', argv.slice(1), resolveRoot(argv.slice(1)), flag(argv, '--graph') ?? cacheFor(resolveRoot(argv.slice(1))));
         if (sub === 'refresh') return await cmdRefresh(argv.slice(1));
-        if (sub === 'confirm' || sub === 'pack' || sub === 'rebuild-diff')
+        if (sub === 'confirm' || sub === 'pack' || sub === 'rebuild-diff' || sub === 'verify')
             return await verifyMain(sub, argv.slice(1), resolveRoot(argv.slice(1)), flag(argv, '--graph') ?? cacheFor(resolveRoot(argv.slice(1))));
         if (sub === 'query' || sub === 'explain' || sub === 'affected' || sub === 'path')
             return cmdQuery(sub, argv.slice(1));
@@ -1362,6 +1445,8 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'untested') return cmdUntested(argv.slice(1));
         if (sub === 'dead') return cmdDead(argv.slice(1));
         if (sub === 'suggest-verb') return cmdSuggestVerb(argv.slice(1));
+        if (sub === 'scope') return cmdScope(argv.slice(1));
+        if (sub === 'lint') return cmdLint(argv.slice(1));
         if (sub === 'lineage' || (sub === 'map' && argv.includes('--lineage')))
             return await lineageMain(sub === 'lineage' ? argv.slice(1) : ['map', ...argv.slice(1)]);
         if (sub === 'map') return await cmdMap(argv.slice(1));
@@ -1370,9 +1455,12 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'auto-refresh') return cmdAutoRefresh(argv.slice(1));
         if (sub === 'projects') return projectsMain(argv.slice(1));
         if (sub === 'estate') return estateMain(argv.slice(1));
+        if (sub === 'bugs') return bugsMain(argv.slice(1));
+        if (sub === 'ask') return askMain(argv.slice(1));
+        if (sub === 'scan') return scanMain(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|review-risk|why|usage|remove-plan|provenance|branches|branch-diff|on-branches|tests-for|untested|dead|confirm|pack|rebuild-diff|suggest-verb|map|open|outcome|auto-refresh|projects|estate|lineage> [options]\n',
+                'impact|review-risk|why|usage|remove-plan|provenance|branches|branch-diff|on-branches|tests-for|untested|dead|confirm|pack|rebuild-diff|verify|suggest-verb|scope|lint|map|open|outcome|auto-refresh|projects|estate|lineage|bugs|ask|scan> [options]\n',
         );
         return 2;
     } catch (e) {

@@ -29,7 +29,7 @@
  *   active      → the entry is inside its window, or re-verified since.
  *   due         → past `last_validated + review_after_days`. Surfaced, kept.
  *   quarantine  → past due by one more window, or verdict `stale`. Moved to
- *                 `agents/memory/quarantine/<type>.yml`, still inspectable,
+ *                 `agents/memory-quarantine/<type>.yml`, still inspectable,
  *                 no longer injected.
  *   delete      → past due by two more windows while in quarantine.
  *

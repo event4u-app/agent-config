@@ -106,6 +106,17 @@ const _ACTION_VERBS: ReadonlySet<string> = new Set([
     'test', 'validate', 'verify',
     'expose', 'publish', 'deprecate',
     'configure', 'wire', 'connect',
+    // German stems, so a German prompt is not scored as goal-less. A stem
+    // starting with an umlaut never matches: the `\b` in front is ASCII-only.
+    'füg', 'erstell', 'baue', 'implementier', 'schreib',
+    'beheb', 'reparier', 'lös',
+    'refaktorier', 'umbenenn', 'extrahier', 'teile',
+    'entfern', 'lösch',
+    'aktualisier', 'migrier',
+    'optimier', 'verbesser', 'beschleunig',
+    'dokumentier', 'beschreib', 'erklär',
+    'prüf', 'validier',
+    'konfigurier', 'verbind', 'veröffentlich',
 ]);
 
 const _DOMAIN_NOUNS: ReadonlySet<string> = new Set([
@@ -119,7 +130,18 @@ const _DOMAIN_NOUNS: ReadonlySet<string> = new Set([
     'report', 'export', 'import',
 ]);
 
+// German compounds put the domain inside one word ("Benutzerliste"), so these
+// match anywhere in a word rather than on word boundaries.
+const _DOMAIN_STEMS_DE: readonly string[] = [
+    'anmeld', 'benutzer', 'nutzer', 'konto', 'profil',
+    'suche', 'warenkorb', 'zahlung', 'rechnung', 'abrechnung',
+    'einstellung', 'konfiguration', 'schnittstelle', 'webhook', 'warteschlange',
+    'oberfläche', 'ansicht', 'seite', 'formular', 'maske',
+    'datenbank', 'bericht',
+];
+
 const _STACK_DATA_KEYWORDS: ReadonlySet<string> = new Set([
+    'tabelle', 'spalte', 'datenbank', 'abhängigkeit',
     'migration', 'schema', 'table', 'column', 'index',
     'database', 'db', 'postgres', 'mysql', 'mariadb', 'sqlite',
     'redis', 'cache', 'queue',
@@ -132,6 +154,8 @@ const _IRREVERSIBLE_KEYWORDS: ReadonlySet<string> = new Set([
     'drop ', 'delete ', 'purge', 'wipe', 'truncate',
     'send email', 'charge', 'refund', 'billing', 'payment', 'money',
     'production data', 'live database', 'broadcast',
+    'lösche', 'löschen', 'zahlung', 'abrechnung', 'erstattung', 'geld',
+    'e-mail versenden', 'produktionsdaten', 'live-datenbank',
 ]);
 
 const _UI_KEYWORDS: ReadonlySet<string> = new Set([
@@ -237,7 +261,7 @@ function _score_goal_clarity(text: string, text_lower: string): [number, string]
     // `len(text.split())` — Python `str.split()` with no args splits on runs
     // of whitespace and drops empty tokens.
     const word_count = _pySplitWhitespace(text).length;
-    const conjunction_split = /\b(and then|and also|plus)\b/.test(text_lower);
+    const conjunction_split = /\b(and then|and also|plus|und dann|und außerdem|sowie)\b/.test(text_lower);
 
     if (has_verb && !is_question && 4 <= word_count && word_count <= 40 && !conjunction_split) {
         return [2, 'goal_clarity=2: action verb + bounded length + single outcome'];
@@ -259,7 +283,7 @@ function _score_scope_boundary(text: string, text_lower: string): [number, strin
     const has_path = _FILE_PATH_RE.test(text);
     const has_domain = [..._DOMAIN_NOUNS].some((n) =>
         new RegExp(`\\b${_reEscape(n)}\\b`).test(text_lower),
-    );
+    ) || _DOMAIN_STEMS_DE.some((n) => text_lower.includes(n));
     if (has_path) {
         return [2, 'scope_boundary=2: explicit file/class/identifier named'];
     }
@@ -298,7 +322,7 @@ function _score_stack_data(text_lower: string): [number, string] {
     if (!implies_stack) {
         return [2, 'stack_data=2: prompt is behavioural, no stack/data signal'];
     }
-    const has_target = /\b(table|column|index|file|migration)\s+[`"\w]/.test(text_lower);
+    const has_target = /\b(table|column|index|file|migration|tabelle|spalte|datei)\s+[`"\w]/.test(text_lower);
     if (has_target) {
         return [2, 'stack_data=2: stack/data work named with explicit target'];
     }

@@ -1,0 +1,13 @@
+diff --git a/src/config.ts b/src/config.ts
+index f78b7c5..8f9f6ee 100644
+--- a/src/config.ts
++++ b/src/config.ts
+@@ -5,7 +5,7 @@
+  */
+ 
+ export const config = {
+-  timeoutMs: 30, // BUG: should be 30000
++  timeoutMs: 30000,
+   retries: 3,
+   baseUrl: "https://api.example.test",
+ };

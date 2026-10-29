@@ -179,6 +179,41 @@ tasks:
       Use `-- --check` as the drift gate.
     cmd: ./scripts-run src/scripts/render_benchmark_composite {{.CLI_ARGS}}
 
+  bench:showcase:
+    silent: true
+    desc: |
+      Full showcase tier — every artifact task, arms package | vanilla | placebo,
+      k=3, both feedback ladders, via `bench_ab_v2_run --corpus artifact`.
+      COST-BEARING and refused without an explicit budget or in CI:
+        task bench:showcase -- --max-usd 60
+      `-- --plan` prints the plan; `-- --dry-run` lists the runs; neither spends.
+      See agents/roadmaps/later/road-to-a-baseline-that-has-to-catch-up.md.
+    cmd: ./scripts-run src/scripts/showcase_run --tier full {{.CLI_ARGS}}
+
+  bench:showcase:quick:
+    silent: true
+    desc: |
+      Quick showcase tier — one host, k=3, art-svg-prompt-01, art-landing-01,
+      art-login-framework-01, arms package | vanilla. COST-BEARING, refused
+      without an explicit budget or in CI:
+        task bench:showcase:quick -- --max-usd 15
+    cmd: ./scripts-run src/scripts/showcase_run --tier quick {{.CLI_ARGS}}
+
+  bench:showcase:replay:
+    silent: true
+    desc: |
+      Re-grade the artifacts committed showcase bundles kept, at 0 USD — no host,
+      no network. Prints INDETERMINATE when nothing is re-gradable, never a pass.
+      Fixture root: task bench:showcase:replay -- --bundles tests/fixtures/showcase --allow-fixture
+    cmd: ./scripts-run src/scripts/showcase_replay {{.CLI_ARGS}}
+
+  bench:showcase:render:
+    silent: true
+    desc: |
+      Render internal/bench/showcase/ bundles into docs/examples/bench/.
+      `-- --check` is the drift gate. Cost-free.
+    cmd: ./scripts-run src/scripts/render_showcase {{.CLI_ARGS}}
+
   bench:matrix:
     silent: true
     desc: |

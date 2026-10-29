@@ -18,4 +18,7 @@ assertEqual(buildOrderBy('id', 'asc'), 'ORDER BY id ASC', 'asc is upper-cased');
 assertEqual(buildOrderBy('total', 'desc'), 'ORDER BY total DESC', 'desc still works');
 assertEqual(buildOrderBy('name', 'ASC'), 'ORDER BY name ASC', 'an already-upper direction is unchanged');
 
-process.exit(failed ? 1 : 0);
+if (failed) {
+  process.exit(1);
+}
+console.log(process.env.BENCH_VERIFIER_NONCE ?? 'ok');

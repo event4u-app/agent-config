@@ -8,6 +8,10 @@ review_by: 2026-12-31
 estate_growth_exempt: "The later/ estate grows by one because a live-harness SUFFIX was split out of road-to-routing-assurance, which was archived in the same change -- so the ACTIVE estate shrank by one while later/ gained one, and the total plan count is unchanged. AI council 2026-08-25, 2/2, authorised the carry at that roadmap's own declared cut line; the alternative to this file was dropping four acceptance criteria, which the preservation test reserves to the owner. Growth here is preservation, not accumulation."
 estate_growth_exempt: "open_blockers +1: b-live-baseline-independence existed since the 2026-10-26 un-park but lacked the `blocker:` prefix, so lint_roadmap_blockers was red on main and the estate never counted it. Prefixing it adds no new gate, only counts the one the owner decision already names. 2026-10-27: open_blockers net +1 (b-live-baseline-independence resolved, b-live-spend-beyond-pilot and b-rate-canary-ceiling raised) -- both record owner-set limits the drain reached (the 25 USD pilot cap of OQ-15 and MAX_WEEKLY_QUERIES), so they are stops that already existed in owner decisions, now counted."
 estate_offset_exempt: "Not a new plan. This is the live-harness SUFFIX of road-to-routing-assurance, parked under agents/roadmaps/later/ by AI council verdict (2/2, 2026-08-25) at that roadmap's own declared cut line. later/ is excluded from the dashboard and from /roadmap:process-*, so it adds no active roadmap and needs no offset; the work is preserved rather than created."
+relates:
+  - slug: road-to-routing-assurance
+    relation: extends
+    note: "Archived parent. This file is its live-harness suffix, carried at the parent's declared cut line (AI council 2/2, 2026-08-25)."
 ---
 # Road to routing assurance — the live-harness floors
 
@@ -110,17 +114,22 @@ before any baseline existed, so neither can be tuned to a result.
 
 ## Phase 3 — Catalogue-pressure suite (pre-registered null)
 
-- [ ] **3.1 Selection accuracy as a function of catalogue size:** run the Phase
+- [x] **3.1 Selection accuracy as a function of catalogue size:** run the Phase <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/routing_arms.ts -->
       2 corpus at N in {12, 20, 50, full} with distractor sets sampled
       deterministically (FNV-1a order, the same discipline as
       `rule_trigger_eval.ts:20-21`, `:147`).
       verify: the same seed reproduces the same distractor set across runs.
-- [ ] **3.2 Near-duplicate probe:** for the top-invoked skills, inject one
+      production entry: src/scripts/routing_arms.ts
+      Done 2026-10-27: recall 0.793 / 0.785 / 0.741 / 0.541 at N=12 / 20 / 50 / full
+      over 135 units (`agents/evidence/metrics/routing-arms-20261027.md`).
+- [x] **3.2 Near-duplicate probe:** for the top-invoked skills, inject one <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/routing_arms.ts -->
       paraphrased description twin and measure confusion. **This step measures
       confusion only.** It is not a tiering justification — see 3.3.
       verify: the confusion figure is published per skill pair, with the twin
       text archived.
-- [ ] **3.3 Resolve the pre-registered null:** "selection accuracy at full
+      production entry: src/scripts/routing_arms.ts
+      Done 2026-10-27: confusion 0 on all ten pairs, 30 runs.
+- [x] **3.3 Resolve the pre-registered null:** "selection accuracy at full <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/routing_arms.ts -->
       catalogue is not worse than at N=20 by more than the floor delta."
       **Reframed at landing.** The source made this null cancel tiering work
       ("no tiering work is justified by this suite"). It can no longer do that:
@@ -132,25 +141,32 @@ before any baseline existed, so neither can be tuned to a result.
       duplicating it.
       verify: one full pressure run archived with the null verdict either way,
       and the verdict text does not claim authority over tiering.
+      production entry: src/scripts/routing_arms.ts
+      Done 2026-10-27: **broken** — 0.541 < 0.785 − 0.10; recorded as input to
+      the archived MCP roadmap's measurement.
 
 **Exit:** one archived pressure run with a recorded verdict; no follow-up work
 item created unless the null broke.
 
 ## Phase 4 — Delivery-path parity (actionable now)
 
-- [ ] **4.1 Parametrize the Phase 2 corpus over delivery path:** host-native
+- [x] **4.1 Parametrize the Phase 2 corpus over delivery path:** host-native <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/routing_arms.ts -->
       listing versus MCP-tool listing. Same prompts, same floors. Both paths
       exist in the tree today (D4), so this step has no external dependency.
       verify: one corpus file runs on both paths and produces two comparable
       result rows.
-- [ ] **4.2 Parity gate:** MCP-path recall may not undercut native-path recall
+      production entry: src/scripts/routing_arms.ts
+- [x] **4.2 Parity gate:** MCP-path recall may not undercut native-path recall <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/routing_arms.ts -->
       by more than a pre-registered epsilon on the same corpus. A breach blocks
       any MCP default-on decision; default-off holds until then.
       verify: a synthetic recall gap larger than epsilon turns the gate red.
-      Built, not wired (2026-10-27): `parityVerdict` exists and its synthetic test is green, but nothing calls it until 4.1's MCP arm produces real rows; it is ticked when 4.3 wires it into the parity table.
-- [ ] **4.3 Publish the parity table** as evidence against the archived MCP
+      production entry: src/scripts/routing_arms.ts
+      Done 2026-10-27: `routing_arms --report` calls `parityVerdict`; on the real
+      rows it is **breached** (native 0.552, MCP 0.448, delta 0.103).
+- [x] **4.3 Publish the parity table** as evidence against the archived MCP <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/routing_arms.ts -->
       roadmap's measured-null outcome, not as a separate claim.
       verify: the table cites the archived roadmap and adds no new claim id.
+      production entry: src/scripts/routing_arms.ts
 
 **Exit:** parity table exists for the full Phase 2 corpus on both paths.
 
@@ -347,11 +363,11 @@ Offered by round `inbox-2026-10-at`, same terms:
 
 - [x] AC-1 — The 0.2 baseline artifact exists, names its commit, model and
       frozen protocol, and its per-unit rows are machine-readable.
-- [ ] AC-2 — Every floor in `routing-assurance-metrics.md` traces to a 0.2 row,
+- [x] AC-2 — Every floor in `routing-assurance-metrics.md` traces to a 0.2 row,
       and no floor was raised in the same PR that changed what it measures.
-- [ ] AC-3 — The Phase 3 null carries an archived verdict in either direction,
+- [x] AC-3 — The Phase 3 null carries an archived verdict in either direction,
       and its text claims no authority over tiering.
-- [ ] AC-4 — A parity table exists for the full Phase 2 corpus on both delivery
+- [x] AC-4 — A parity table exists for the full Phase 2 corpus on both delivery
       paths, citing the archived MCP roadmap rather than raising a new claim.
 - [x] AC-5 — One proxy-fidelity report is published, and the
       downgrade-to-advisory path has been demonstrated on a synthetic

@@ -41,6 +41,49 @@ export class SourceText {
 
 const OPEN: Record<string, string> = { '(': ')', '[': ']', '{': '}' };
 
+/**
+ * Which offsets of `text` are code: `false` inside a comment or a string
+ * literal. A call named there is prose, never a call site. `#` opens a line
+ * comment in PHP, Python and Ruby; `//` and `/* *\/` in the C-family and PHP.
+ */
+export function codeMask(text: string, lang: Lang): (offset: number) => boolean {
+    const mask = new Uint8Array(text.length).fill(1);
+    const hashComment = lang === 'php' || lang === 'python' || lang === 'ruby';
+    const slashComment = lang !== 'python' && lang !== 'ruby';
+    const off = (from: number, to: number): void => {
+        mask.fill(0, from, Math.min(to, text.length));
+    };
+    let i = 0;
+    while (i < text.length) {
+        const c = text[i] as string;
+        const n = text[i + 1];
+        if ((slashComment && c === '/' && n === '/') || (hashComment && c === '#' && !(lang === 'php' && n === '['))) {
+            const end = text.indexOf('\n', i);
+            const to = end < 0 ? text.length : end;
+            off(i, to);
+            i = to;
+            continue;
+        }
+        if (slashComment && c === '/' && n === '*') {
+            const end = text.indexOf('*/', i + 2);
+            const to = end < 0 ? text.length : end + 2;
+            off(i, to);
+            i = to;
+            continue;
+        }
+        if (c === '"' || c === "'" || c === '`') {
+            const triple = lang === 'python' && text.startsWith(c.repeat(3), i);
+            const close = triple ? text.indexOf(c.repeat(3), i + 3) : -1;
+            const to = triple ? (close < 0 ? text.length : close + 3) : skipString(text, i);
+            off(i, to);
+            i = to;
+            continue;
+        }
+        i++;
+    }
+    return (offset) => mask[offset] === 1;
+}
+
 /** Offset just past the string literal that starts at `i` (quote char at `i`). */
 function skipString(text: string, i: number): number {
     const q = text[i] as string;

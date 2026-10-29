@@ -83,6 +83,26 @@ export function parseTicketKeys(text: string): string[] {
         .filter((k) => KEY.test(k));
 }
 
+/**
+ * The bug-tracker keys from a card's `tracker_keys` line (`SENTRY`, `BUG`). They
+ * extend the same grammar: a token with one of these keys is a bug reference,
+ * so there is never a second bug-id parser.
+ */
+export function parseTrackerKeys(text: string): string[] {
+    const line = /^\s*tracker_keys\s*:(.*)$/m.exec(text)?.[1] ?? '';
+    return line
+        .replace(/[[\]"']/g, ' ')
+        .split(/[\s,]+/)
+        .filter((k) => KEY.test(k));
+}
+
+/** Ticket tokens in `text` whose key is a configured tracker key. */
+export function bugReferences(text: string, ticketKeys: readonly string[] | null, trackerKeys: readonly string[]): string[] {
+    if (trackerKeys.length === 0) return [];
+    const keys = [...new Set([...(ticketKeys ?? []), ...trackerKeys])];
+    return [...new Set(ticketCandidates(text, keys).filter((c) => c.status === 'ticket' && trackerKeys.includes(c.key)).map((c) => c.token))];
+}
+
 /** The keys a commitlint config's `issuePrefixes` names: offered for the card, never written by code. */
 export function commitlintIssuePrefixes(configText: string): string[] {
     const list = /["']?issuePrefixes["']?\s*:\s*\[([^\]]*)\]/.exec(configText)?.[1] ?? '';

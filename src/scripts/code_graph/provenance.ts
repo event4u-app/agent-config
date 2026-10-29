@@ -20,9 +20,10 @@ import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { parseTicketKeys, ticketCandidates } from '../_lib/git_convention_grammar.js';
+import { parseTicketKeys, parseTrackerKeys, ticketCandidates } from '../_lib/git_convention_grammar.js';
 import { defaultBranch } from '../_lib/branch_parents.js';
 import { gitProbe } from '../_lib/spawn_env.js';
+import { type FixKind, classifyFix } from './fix_kinds.js';
 
 export interface CommitRef {
     sha: string;
@@ -31,6 +32,8 @@ export interface CommitRef {
     pr: string | null;
     tickets: string[];
     subject: string;
+    /** present on a fix commit: declared, ticket or conventional (H.3) */
+    kind?: FixKind;
 }
 
 export interface FileProvenance {
@@ -110,6 +113,18 @@ export function ticketKeysOf(root: string): string[] | null {
     return null;
 }
 
+/** The card's `tracker_keys`: bug-tracker keys that extend the ticket grammar. */
+export function trackerKeysOf(root: string): string[] {
+    for (const f of ['.git-convention.yml', '.git-convention.yaml']) {
+        try {
+            return parseTrackerKeys(fs.readFileSync(path.join(root, f), 'utf-8'));
+        } catch {
+            /* no card */
+        }
+    }
+    return [];
+}
+
 export function readProvenance(root: string, opts: { git?: Git; maxCommits?: number } = {}): ProvenanceIndex | null {
     const git = opts.git ?? defaultGit(root);
     const max = opts.maxCommits ?? MAX_COMMITS;
@@ -123,6 +138,7 @@ export function readProvenance(root: string, opts: { git?: Git; maxCommits?: num
         return null;
     }
     const keys = ticketKeysOf(root);
+    const trackerKeys = trackerKeysOf(root);
     let metaOut: string;
     let filesOut: string;
     let current: Set<string>;
@@ -187,6 +203,7 @@ export function readProvenance(root: string, opts: { git?: Git; maxCommits?: num
     const refOf = (r: Raw): CommitRef => {
         const p = prOf.get(r.sha);
         const tickets = ticketsIn(p?.branch ?? null, r.subject, r.body, keys);
+        const kind = classifyFix(r.subject, r.body, { ticketKeys: keys, trackerKeys }).kind;
         return {
             sha: r.sha.slice(0, 12),
             date: r.date,
@@ -194,6 +211,7 @@ export function readProvenance(root: string, opts: { git?: Git; maxCommits?: num
             pr: p?.pr ?? null,
             tickets,
             subject: r.subject.length > SUBJECT_MAX ? `${r.subject.slice(0, SUBJECT_MAX - 1)}…` : r.subject,
+            ...(kind ? { kind } : {}),
         };
     };
 

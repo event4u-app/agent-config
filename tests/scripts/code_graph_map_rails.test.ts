@@ -87,7 +87,7 @@ const shown = (page: Page, id: string) =>
         const n = document.getElementById(x) as HTMLElement;
         const r = n.getBoundingClientRect();
         const cs = getComputedStyle(n);
-        return { fixed: cs.position === 'fixed', visible: cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 0 && r.right > 1 && r.left < window.innerWidth - 1 };
+        return { fixed: cs.position === 'absolute', visible: cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 0 && r.right > 1 && r.left < window.innerWidth - 1 };
     }, id);
 
 describe('a page module lays out both rails and the centre', () => {
@@ -121,8 +121,8 @@ describe('a page module lays out both rails and the centre', () => {
         await page.close();
     });
 
-    it('flies one rail at a time with a scrim at 1000', async () => {
-        const { page } = await open(twoRails, 1000);
+    it('flies one rail at a time with a scrim at 1100', async () => {
+        const { page } = await open(twoRails, 1100);
         expect(await shown(page, 'av-left')).toMatchObject({ visible: false });
         expect(await shown(page, 'av-side')).toMatchObject({ visible: false });
         await page.click('#av-open-left');
@@ -141,7 +141,8 @@ describe('a page module lays out both rails and the centre', () => {
     it('never pins on a phone', async () => {
         const { page } = await open(twoRails, 375);
         await page.click('#av-open-left');
-        expect(await shown(page, 'av-left')).toEqual({ fixed: true, visible: true });
+        // At the handover's 1000 px breakpoint and below an open rail joins the flow.
+        expect(await shown(page, 'av-left')).toEqual({ fixed: false, visible: true });
         expect(await page.locator('#av-pin-left').isVisible()).toBe(false);
         expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
         await page.close();

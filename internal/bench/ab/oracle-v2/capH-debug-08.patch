@@ -1,0 +1,16 @@
+diff --git a/src/calc.mjs b/src/calc.mjs
+index ed2d07e..d9db70a 100644
+--- a/src/calc.mjs
++++ b/src/calc.mjs
+@@ -49,9 +49,9 @@ export function evaluate(src) {
+   // power := atom ('^' atom)*
+   function parsePower() {
+     let value = parseAtom();
+-    while (peek() === '^') {
++    if (peek() === '^') {
+       next();
+-      const rhs = parseAtom();
++      const rhs = parseUnary();
+       value = value ** rhs;
+     }
+     return value;

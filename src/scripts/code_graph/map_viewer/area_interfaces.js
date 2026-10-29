@@ -33,7 +33,7 @@ extendStrings({
     },
     de: {
         iServices: 'Dienste', iOperation: 'Operation', iOperations: 'Operationen', iFlow: 'Fluss', iDiff: 'Vertragsänderung', iProtocols: 'Protokolle',
-        iSvcCount: function (n, m) { return 'Dienste · ' + n + ' von ' + m + ' aktiv'; }, iAll: 'alle', iNone: 'keine', iFilter: 'Dienst filtern …', iFilterL: 'Dienste filtern', iList: 'Liste',
+        iSvcCount: function (n, m) { return 'Dienste · ' + n + ' von ' + m + ' angezeigt'; }, iAll: 'alle', iNone: 'keine', iFilter: 'Dienst filtern …', iFilterL: 'Dienste filtern', iList: 'Liste',
         iModes: { all: 'Alle', find: 'Befund', shown: 'Aktiv', soap: 'SOAP' }, iNoMatch: 'Kein Dienst passt zum Filter.',
         iRules: 'Regeln', iRule1: 'Kein Abruf fremder Dienste, keine .env-Werte. Nur Aufrufstellen, Verträge im Repo und Konfigurations-Namen.',
         iRule2: 'Gleicher Feldname ist keine Verbindung – nur Mapper-, Serializer- oder ORM-Beleg.',
@@ -61,8 +61,8 @@ extendStrings({
 var IF_PROTOCOLS = [['rest', 'REST · OpenAPI'], ['soap', 'SOAP · WSDL'], ['sdk', 'SDK'], ['graphql', 'GraphQL'], ['grpc', 'gRPC · proto'], ['webhook', 'Webhooks · Queues']];
 var IF_PROTO_SHORT = { rest: 'REST', soap: 'SOAP', sdk: 'SDK', graphql: 'GraphQL', grpc: 'gRPC', webhook: 'Webhook', unknown: '?' };
 var ifState = { q: '', mode: 'all', hidden: Object.create(null) };
-// The handover opens the page on the flow of the picked operation.
-if (!avState.view.interfaces) avState.view.interfaces = 'flow';
+// The 2026-10-bf handover opens a real map on Operationen and its demo data on the flow of the picked operation.
+if (!avState.view.interfaces) avState.view.interfaces = meta.demo ? 'flow' : 'ops';
 
 function ifOpKey(s, o) { return 'operation/' + s.name + '/' + o.name; }
 function ifEndsWith(s, end) { return s.length >= end.length && s.lastIndexOf(end) === s.length - end.length; }

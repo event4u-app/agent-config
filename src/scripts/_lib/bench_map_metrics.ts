@@ -226,9 +226,11 @@ function normalise_heading(line: string): string {
         .toUpperCase();
 }
 
+const escapeRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** A place matches on token boundaries: `report` names `src/report.js`, never `src/reporter.ts`. */
 function item_matches(item: AffectedItem, line: string): boolean {
-    const l = line.toLowerCase();
-    return [item.id, ...(item.aliases ?? [])].some((k) => k.length > 0 && l.includes(k.toLowerCase()));
+    return [item.id, ...(item.aliases ?? [])].some((k) => k.length > 0 && new RegExp(`(?<![\\w-])${escapeRe(k)}(?![\\w-])`, 'i').test(line));
 }
 
 export interface AffectedScore {
@@ -285,12 +287,26 @@ export interface MapRunRecord {
     affected: AffectedScore;
     tokens: number;
     usd: number;
+    /** The hidden check passed, whatever the agent's exit; absent on old records, then `success` stands in. */
+    check_passed?: boolean;
 }
+
+export type RunOutcome = 'success' | 'errored-check-passed' | 'errored' | 'failed';
+
+/** "Errored, check passed" is its own outcome: the change is right, the session ended badly. */
+export function runOutcome(errored: boolean, checkPassed: boolean): RunOutcome {
+    if (errored) return checkPassed ? 'errored-check-passed' : 'errored';
+    return checkPassed ? 'success' : 'failed';
+}
+
+const outcomeOf = (r: MapRunRecord): RunOutcome => runOutcome(r.errored, r.check_passed ?? r.success);
 
 export interface ArmSummary {
     arm: string;
     runs: number;
     errored: number;
+    /** Errored runs whose hidden check passed: not a wrong change. */
+    errored_check_passed: number;
     successes: number;
     m1_wrong_change_share: number | null;
     m1_runs_with_broken_dependent: number;
@@ -303,7 +319,7 @@ export interface ArmSummary {
     budget_tokens_per_run: number;
     success_within_budget_share: number | null;
     successes_per_budget: number | null;
-    by_area: Record<string, { runs: number; successes: number }>;
+    by_area: Record<string, { runs: number; successes: number; checks_passed: number }>;
 }
 
 function mean(xs: number[]): number | null {
@@ -311,9 +327,10 @@ function mean(xs: number[]): number | null {
 }
 
 /**
- * Aggregate one arm. An errored run counts as a wrong change: the task stayed
- * undone, and dropping it would let an arm that crashes on hard tasks look
- * more accurate than one that attempts them.
+ * Aggregate one arm. An errored run whose hidden check failed counts as a wrong
+ * change: the task stayed undone, and dropping it would let an arm that crashes
+ * on hard tasks look more accurate than one that attempts them. An errored run
+ * whose check passed is counted apart and is no wrong change.
  *
  * Two budget readings, because one hides what the other shows:
  * `success_within_budget_share` is the share of runs that succeeded without
@@ -324,19 +341,22 @@ export function summarise_arm(arm: string, records: MapRunRecord[], budget_token
     const runs = records.filter((r) => r.arm === arm);
     const successes = runs.filter((r) => r.success).length;
     const tokens = runs.reduce((a, r) => a + r.tokens, 0);
-    const by_area: Record<string, { runs: number; successes: number }> = {};
+    const erroredPassed = runs.filter((r) => outcomeOf(r) === 'errored-check-passed').length;
+    const by_area: Record<string, { runs: number; successes: number; checks_passed: number }> = {};
     for (const r of runs) {
-        const slot = (by_area[r.area] ??= { runs: 0, successes: 0 });
+        const slot = (by_area[r.area] ??= { runs: 0, successes: 0, checks_passed: 0 });
         slot.runs += 1;
         if (r.success) slot.successes += 1;
+        if (r.check_passed ?? r.success) slot.checks_passed += 1;
     }
     const precisions = runs.map((r) => r.affected.precision).filter((p): p is number => p !== null);
     return {
         arm,
         runs: runs.length,
         errored: runs.filter((r) => r.errored).length,
+        errored_check_passed: erroredPassed,
         successes,
-        m1_wrong_change_share: runs.length ? (runs.length - successes) / runs.length : null,
+        m1_wrong_change_share: runs.length ? (runs.length - successes - erroredPassed) / runs.length : null,
         m1_runs_with_broken_dependent: runs.filter((r) => r.broken_dependents.length > 0).length,
         m2_mean_recall: mean(runs.map((r) => r.affected.recall)),
         m2_mean_precision: mean(precisions),

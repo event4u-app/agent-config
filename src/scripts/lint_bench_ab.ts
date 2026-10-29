@@ -20,6 +20,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { loadTasks, oracleFindings } from './_lib/bench_task_validity.js';
 import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -27,6 +28,7 @@ const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const TRACK_A_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'corpora', 'ab-tracka.yaml');
 const TRACK_B_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'corpora', 'ab-trackb.yaml');
+const TRACK_B_V2_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'corpora', 'ab-trackb-v2.yaml');
 const DOCS_PATH = path.join(REPO_ROOT, 'docs', 'benchmark.md');
 
 const REQUIRED_SECTIONS = [
@@ -232,6 +234,17 @@ function lint_track_b(): void {
     }
 }
 
+/** v2 oracles must not pass on the untouched fixture or on a neutral closing line. */
+function lint_track_b_v2(corpusPath: string = TRACK_B_V2_PATH): void {
+    if (!_exists(corpusPath)) {
+        return;
+    }
+    const findings = oracleFindings(loadTasks(corpusPath));
+    if (findings.length) {
+        _fail(corpusPath, findings[0] as string);
+    }
+}
+
 function lint_doc(quiet: boolean): void {
     if (!_exists(DOCS_PATH)) {
         if (!quiet) {
@@ -297,6 +310,7 @@ function main(argv?: readonly string[]): number {
     try {
         lint_track_a();
         lint_track_b();
+        lint_track_b_v2();
         lint_doc(args.quiet);
     } catch (exc) {
         if (exc instanceof LintError) {
@@ -355,11 +369,13 @@ export {
     REPO_ROOT,
     TRACK_A_PATH,
     TRACK_B_PATH,
+    TRACK_B_V2_PATH,
     DOCS_PATH,
     REQUIRED_SECTIONS,
     LintError,
     lint_track_a,
     lint_track_b,
+    lint_track_b_v2,
     lint_doc,
     parse_args,
     main,

@@ -36,9 +36,17 @@
  *   ./scripts-run src/scripts/roadmap_verify_share
  *   ./scripts-run src/scripts/roadmap_verify_share --json
  *   ./scripts-run src/scripts/roadmap_verify_share --root <dir> [--recursive]
+ *   ./scripts-run src/scripts/roadmap_verify_share --run [--json]
+ *
+ * `--run` is the vacuity report: for every OPEN step in a tracked roadmap it
+ * executes the clause — only when the first token is on {@link RUN_ALLOWLIST},
+ * without a shell, under a timeout — and lists the steps whose check is ALREADY
+ * met before any work. A check that passes before the work cannot say no. Every
+ * other clause is named as skipped, never run.
  *
  * Exit codes: 0 always, except 2 for bad argv or a dead scan root.
  */
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
@@ -46,7 +54,8 @@ import { fileURLToPath } from 'node:url';
 
 import { units } from './closure_scan.js';
 import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
-import { parseVerifyClause } from './_lib/verify_clause.js';
+import { type Expectation, parseVerifyClause } from './_lib/verify_clause.js';
+import { type ClauseClass, classifyClause } from './_lib/verify_pair.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const _PROG = 'roadmap_verify_share';
@@ -128,6 +137,168 @@ export function report(rootAbs: string, rootLabel: string, recursive: boolean): 
     };
 }
 
+/** Read-only first tokens; nothing else is ever executed. */
+export const RUN_ALLOWLIST: ReadonlySet<string> = new Set(['grep', 'test', 'ls', 'wc']);
+const RUN_TIMEOUT_MS = 5000;
+
+export type SkipReason = 'not-allowlisted' | 'shell-syntax' | 'timeout' | 'spawn-error';
+
+export interface RunHit {
+    readonly file: string;
+    readonly line: number;
+    readonly command: string;
+    /** `-> 0` was implied: the clause states no expectation. */
+    readonly implied: boolean;
+    /** `wiring` proves presence only, never behavior. */
+    readonly class: ClauseClass;
+}
+
+export interface RunSkip {
+    readonly file: string;
+    readonly line: number;
+    readonly command: string;
+    readonly reason: SkipReason;
+}
+
+export interface RunReport {
+    readonly root: string;
+    readonly files: number;
+    readonly met: readonly RunHit[];
+    readonly unmet: number;
+    readonly skipped: readonly RunSkip[];
+}
+
+export interface RunOptions {
+    readonly cwd: string;
+    /** Keep a roadmap only when this says so; absent keeps every file. */
+    readonly keep?: (abs: string) => boolean;
+}
+
+/**
+ * Split a command into argv the way a shell would for quoting only, or `null`
+ * when it needs anything else a shell does: an unquoted pipe, redirect, `;`,
+ * `&`, variable or glob, or a command substitution outside single quotes.
+ */
+export function argvOf(command: string): string[] | null {
+    const out: string[] = [];
+    let cur = '';
+    let has = false;
+    let quote: "'" | '"' | null = null;
+    for (let i = 0; i < command.length; i += 1) {
+        const ch = command[i] as string;
+        if (quote === "'") {
+            if (ch === "'") quote = null;
+            else cur += ch;
+            continue;
+        }
+        if (ch === '`' || (ch === '$' && command[i + 1] === '(')) return null;
+        if (quote === '"') {
+            if (ch === '"') quote = null;
+            else if (ch === '\\' && i + 1 < command.length) cur += command[++i];
+            else if (ch === '$') return null;
+            else cur += ch;
+            continue;
+        }
+        if (ch === "'" || ch === '"') {
+            quote = ch;
+            has = true;
+        } else if (ch === '\\' && i + 1 < command.length) {
+            cur += command[++i];
+            has = true;
+        } else if (/\s/.test(ch)) {
+            if (has) out.push(cur);
+            cur = '';
+            has = false;
+        } else if ('|&;<>$*?(){}'.includes(ch)) {
+            return null;
+        } else {
+            cur += ch;
+            has = true;
+        }
+    }
+    if (quote !== null) return null;
+    if (has) out.push(cur);
+    return out.length === 0 ? null : out;
+}
+
+/** A regex reads stdout without its trailing newline, so `/^0$/` matches `grep -c`'s `0\n`. */
+function meets(expect: Expectation, status: number | null, stdout: string): boolean {
+    if (expect.kind === 'exit') return status === expect.code;
+    return new RegExp(expect.source).test(stdout.replace(/\n+$/, ''));
+}
+
+export function runReport(rootAbs: string, rootLabel: string, opts: RunOptions): RunReport {
+    const files = markdownFiles(rootAbs, false).filter((f) => opts.keep?.(f) ?? true);
+    assertScanned({ gate: _PROG, scanned: files.length, units: 'roadmap(s)', roots: [rootLabel] });
+    const met: RunHit[] = [];
+    const skipped: RunSkip[] = [];
+    let unmet = 0;
+    for (const f of files) {
+        const file = path.relative(REPO_ROOT, f);
+        for (const u of units(fs.readFileSync(f, 'utf-8').split('\n'))) {
+            if (!u.isOpenStep || !u.hasVerify) continue;
+            const clause = parseVerifyClause(u.blockText);
+            if (clause === null || clause.command === null) continue;
+            const command = clause.command;
+            const at = { file, line: u.line, command };
+            const argv = argvOf(command);
+            if (argv === null) {
+                skipped.push({ ...at, reason: 'shell-syntax' });
+                continue;
+            }
+            if (!RUN_ALLOWLIST.has(argv[0] as string)) {
+                skipped.push({ ...at, reason: 'not-allowlisted' });
+                continue;
+            }
+            const res = spawnSync(argv[0] as string, argv.slice(1), {
+                cwd: opts.cwd,
+                shell: false,
+                input: '',
+                encoding: 'utf-8',
+                timeout: RUN_TIMEOUT_MS,
+                maxBuffer: 4 * 1024 * 1024,
+            });
+            if (res.error !== undefined) {
+                const timedOut = (res.error as NodeJS.ErrnoException).code === 'ETIMEDOUT';
+                skipped.push({ ...at, reason: timedOut ? 'timeout' : 'spawn-error' });
+                continue;
+            }
+            const expect: Expectation = clause.expect ?? { kind: 'exit', code: 0 };
+            if (meets(expect, res.status, res.stdout ?? '')) met.push({ ...at, implied: clause.expect === null, class: classifyClause(command) });
+            else unmet += 1;
+        }
+    }
+    return { root: rootLabel, files: files.length, met, unmet, skipped };
+}
+
+/** Tracked files under the repo, or `null` when git cannot answer. */
+function trackedFiles(): Set<string> | null {
+    const res = spawnSync('git', ['ls-files', '-z'], { cwd: REPO_ROOT, encoding: 'utf-8', shell: false });
+    if (res.status !== 0) return null;
+    return new Set(
+        res.stdout
+            .split('\0')
+            .filter((s) => s !== '')
+            .map((s) => path.join(REPO_ROOT, s)),
+    );
+}
+
+export function renderRun(r: RunReport): string {
+    const lines: string[] = [];
+    lines.push(`root: ${r.root}`);
+    lines.push(`roadmaps scanned: ${String(r.files)}`);
+    lines.push(`met-before-work: ${String(r.met.length)} · unmet: ${String(r.unmet)} · skipped: ${String(r.skipped.length)}`);
+    lines.push('');
+    lines.push('## met-before-work');
+    for (const m of r.met) {
+        lines.push(`- ${m.file}:${String(m.line)}  \`${m.command}\` [${m.class}]${m.implied ? ' (no expectation; -> 0 implied)' : ''}`);
+    }
+    lines.push('');
+    lines.push('## skipped (not run)');
+    for (const s of r.skipped) lines.push(`- ${s.file}:${String(s.line)}  [${s.reason}]  \`${s.command}\``);
+    return lines.join('\n') + '\n';
+}
+
 function pct(n: number, of: number): string {
     return of === 0 ? 'n/a' : `${((n / of) * 100).toFixed(1)}%`;
 }
@@ -152,8 +323,9 @@ export function render(r: ShareReport): string {
 
 function _usage(): string {
     return (
-        `usage: ${_PROG} [-h] [--json] [--root <dir>] [--recursive]\n\n` +
-        `Report the runnable and falsifiable share of \`verify:\` clauses. Gates nothing.\n`
+        `usage: ${_PROG} [-h] [--json] [--root <dir>] [--recursive] [--run]\n\n` +
+        `Report the runnable and falsifiable share of \`verify:\` clauses. Gates nothing.\n` +
+        `--run: list open steps whose read-only check (${[...RUN_ALLOWLIST].join(', ')}) already passes.\n`
     );
 }
 
@@ -161,6 +333,7 @@ export function main(argv?: readonly string[]): number {
     const args = argv ?? process.argv.slice(2);
     let json = false;
     let recursive = false;
+    let run = false;
     let root = DEFAULT_ROOT;
     for (let i = 0; i < args.length; i += 1) {
         const a = args[i] as string;
@@ -169,6 +342,7 @@ export function main(argv?: readonly string[]): number {
             return 0;
         } else if (a === '--json') json = true;
         else if (a === '--recursive') recursive = true;
+        else if (a === '--run') run = true;
         else if (a === '--root') {
             const next = args[i + 1];
             if (next === undefined) {
@@ -184,6 +358,22 @@ export function main(argv?: readonly string[]): number {
     }
 
     const rootAbs = path.isAbsolute(root) ? root : path.join(REPO_ROOT, root);
+    if (run) {
+        const inRepo = !path.relative(REPO_ROOT, rootAbs).startsWith('..');
+        const tracked = inRepo ? trackedFiles() : null;
+        let rr: RunReport;
+        try {
+            rr = runReport(rootAbs, root, tracked === null ? { cwd: REPO_ROOT } : { cwd: REPO_ROOT, keep: (f) => tracked.has(f) });
+        } catch (e) {
+            if (e instanceof DeadScopeError) {
+                process.stderr.write(`${e.message}\n`);
+                return 2;
+            }
+            throw e;
+        }
+        process.stdout.write(json ? JSON.stringify(rr, null, 2) + '\n' : renderRun(rr));
+        return 0;
+    }
     let r: ShareReport;
     try {
         r = report(rootAbs, root, recursive);

@@ -3495,3 +3495,24 @@ gates:
       a scratch copy of the three engine modules, never in place; the invariant
       it names must hold on the unmutated copy and fail on the mutated one. The
       canary plants a recipe that changes nothing, which survives.
+
+  - id: check_bench_task_validity
+    argv: ["--gate"]
+    min_scanned: 30
+    corpus: "every task in `internal/bench/corpora/ab-trackb-v2.yaml` that names an in-repo `fixture` — 33 on 2026-10-28; the pinned-repo task has no fixture and is not scanned. The floor is 30 because tasks are added by ones; a reading far below means the corpus or the fixture root moved."
+    status: enforced
+    ci_invocation: .github/workflows/rule-backstops.yml
+    no_canary_reason: >-
+      The corpus is the task list in the v2 corpus YAML, not a directory a
+      planted file can join: a fixture folder or patch dropped beside the others
+      is never read unless a task names it, so a create-only canary would run
+      the gate green and certify nothing. Discrimination is proven by
+      `--self-test` (3 cases, 2 rejecting), which seeds a copy of a committed
+      task into a scratch corpus and runs the real CLI: with its reference it
+      passes; without the reference, or with an oracle that matches the
+      untouched fixture, it exits 1.
+    note: >-
+      road-to-a-bench-that-fails-when-nothing-was-done 1.5. Every fixture task is
+      scored by the real `score_task_v2` in synthetic arms that did no work and
+      in a mutation catalogue (each must pass 0 capability oracles), and its
+      reference patch under `internal/bench/ab/oracle-v2/` must pass.

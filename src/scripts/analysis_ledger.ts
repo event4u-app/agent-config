@@ -8,7 +8,12 @@
  * and it does not count — re-reading one's own draft is not depth. All three
  * lenses always run; loops 4–5 run only while the loop before added a
  * top-tier item.
+ *
+ * `authority` (who stands behind the evidence) and `coverage` (how complete the
+ * search was) are optional axes beside `tier`. An absence finding is `absent`
+ * only on `complete` coverage; anything else, including no coverage, is `unknown`.
  */
+import type { Completeness } from './_lib/schema/replay.js';
 
 export const LENSES = ['coverage', 'adversary', 'overbuild-sequencing'] as const;
 export type Lens = (typeof LENSES)[number];
@@ -16,6 +21,12 @@ export type Lens = (typeof LENSES)[number];
 export const EVIDENCE_TIERS = ['executed', 'read', 'claimed', 'inferred'] as const;
 export type EvidenceTier = (typeof EVIDENCE_TIERS)[number];
 export const TOP_TIERS: readonly EvidenceTier[] = ['executed', 'read'];
+
+export const EVIDENCE_AUTHORITIES = ['upstream-artifact', 'controlled-replay', 'own-tree', 'external-claim', 'analyst-inference'] as const;
+export type EvidenceAuthority = (typeof EVIDENCE_AUTHORITIES)[number];
+
+export const EVIDENCE_COVERAGES: readonly Completeness[] = ['complete', 'partial', 'unknown'];
+export type EvidenceCoverage = Completeness;
 
 export const MANDATORY_LOOPS: number = LENSES.length;
 export const MAX_LOOPS = 5;
@@ -26,6 +37,8 @@ export interface Evidence {
     method: string;
     claim: 'supported' | 'refuted';
     tier: EvidenceTier;
+    authority?: EvidenceAuthority;
+    coverage?: EvidenceCoverage;
 }
 
 /** `retained` is an item the lens tested and left standing — legal, but no changed conclusion. */
@@ -95,6 +108,12 @@ export function appendLoop(ledger: readonly LoopRow[], input: LoopRowInput): Loo
             if (!EVIDENCE_TIERS.includes(ev.tier)) {
                 throw new LedgerError(`loop ${loop}: item ${item.id} has unknown tier ${String(ev.tier)}`);
             }
+            if (ev.authority !== undefined && !EVIDENCE_AUTHORITIES.includes(ev.authority)) {
+                throw new LedgerError(`loop ${loop}: item ${item.id} has unknown authority ${String(ev.authority)}`);
+            }
+            if (ev.coverage !== undefined && !EVIDENCE_COVERAGES.includes(ev.coverage)) {
+                throw new LedgerError(`loop ${loop}: item ${item.id} has unknown coverage ${String(ev.coverage)}`);
+            }
         }
     }
     const status = input.items.some(changesConclusion) ? 'counted' : 'no-external-signal';
@@ -111,6 +130,11 @@ export function nextLoop(ledger: readonly LoopRow[], loops: number = MANDATORY_L
     const previous = ledger[done - 1] as LoopRow;
     if (!addedTopTier(previous)) return { action: 'stop', reason: 'plateau' };
     return { action: 'run', loop: done + 1, lens: lensForLoop(done + 1) };
+}
+
+/** A search that found nothing proves absence only when it covered everything. */
+export function absenceFinding(evidence: Evidence): 'absent' | 'unknown' {
+    return evidence.coverage === 'complete' ? 'absent' : 'unknown';
 }
 
 export function ledgerSummary(ledger: readonly LoopRow[]): string {

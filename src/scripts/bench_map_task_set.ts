@@ -30,6 +30,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { buildFromRepo, serializeGraph } from './code_graph/build.js';
+import { affected, loadGraph } from './code_graph/query.js';
 import * as v1 from './bench_ab_task_runner.js';
 import { SweepBudget, cost_usd, is_bare_alias, tier_for_model, type TierRates, type TokensBreakdown } from './_lib/bench_ab_activation.js';
 import { preserve_transcript, reset_fixture } from './_lib/bench_ab_workspace.js';
@@ -50,6 +52,7 @@ import {
     type MapRunRecord,
     type MapTask,
 } from './_lib/bench_map_metrics.js';
+import { missingTraceFields, parseTrace, type TrialTrace } from './_lib/bench_map_trace.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -63,6 +66,10 @@ export interface MapArmSpec {
     setting_sources: string | null;
     map: boolean;
     inject: string | null;
+    /** The package form installed into the clone from the tree under test; `null` = no package. */
+    install: 'lean' | 'full' | null;
+    /** Not in the default arm list; selected with `--arms`. */
+    optional?: boolean;
 }
 
 export const MAP_CONFIRM_TEXT = [
@@ -93,17 +100,43 @@ function branchCliShim(): string {
     return bin;
 }
 
+/**
+ * Five arms, so a payload effect and a map effect read apart (H29): the map with
+ * its note on a bare host, and the same pair on the package's lean form. No arm
+ * reads user scope — the package an arm runs is the one installed into its clone
+ * from the tree under test, never whatever the operator has installed.
+ */
 export const MAP_ARMS: Record<string, MapArmSpec> = {
-    vanilla: { setting_sources: 'project,local', map: false, inject: null },
-    ac: { setting_sources: null, map: false, inject: null },
-    'ac-map': { setting_sources: null, map: true, inject: MAP_CONFIRM_TEXT },
+    vanilla: { setting_sources: 'project,local', map: false, inject: null, install: null },
+    'vanilla-map': { setting_sources: 'project,local', map: true, inject: MAP_CONFIRM_TEXT, install: null },
+    'ac-lean': { setting_sources: 'project,local', map: false, inject: null, install: 'lean' },
+    'ac-lean-map': { setting_sources: 'project,local', map: true, inject: MAP_CONFIRM_TEXT, install: 'lean' },
+    'ac-full': { setting_sources: 'project,local', map: false, inject: null, install: 'full', optional: true },
 };
+
+export const DEFAULT_MAP_ARMS: readonly string[] = Object.entries(MAP_ARMS)
+    .filter(([, s]) => !s.optional)
+    .map(([a]) => a);
+
+/**
+ * Copy the `<form>/.claude` projection of the tree under test into the clone.
+ * `BENCH_AC_TREE_DIR` names a directory holding `lean/` and `full/` projections
+ * the operator generated from that tree; nothing here guesses one.
+ */
+export function install_into_clone(clone: string, form: 'lean' | 'full', treeDir: string | undefined = process.env['BENCH_AC_TREE_DIR']): void {
+    if (!treeDir) throw new Error('BENCH_AC_TREE_DIR is not set; it must name the lean/ and full/ projections of the tree under test');
+    const from = path.join(treeDir, form, '.claude');
+    if (!fs.existsSync(from)) throw new Error(`no ${form} projection at ${from}`);
+    fs.cpSync(from, path.join(clone, '.claude'), { recursive: true });
+}
 
 /** What the dry-run stub does per arm — three distinct behaviours, so every metric branch runs. */
 export const DRY_RUN_STUB: Record<string, StubBehaviour> = {
     vanilla: 'none',
-    ac: 'naive',
-    'ac-map': 'reference',
+    'vanilla-map': 'naive',
+    'ac-lean': 'naive',
+    'ac-lean-map': 'reference',
+    'ac-full': 'reference',
 };
 
 type Dict = Record<string, unknown>;
@@ -116,6 +149,79 @@ export interface MapTrial extends MapRunRecord {
     workspace: string;
     transcript_path: string | null;
     synthetic: boolean;
+    /** What the agent did, redacted (`_lib/bench_map_trace.ts`); absent on records older than 5.1. */
+    trace?: TrialTrace;
+}
+
+export interface TaskCoverage {
+    task_id: string;
+    /** planted places the offline graph answer names */
+    covered: string[];
+    uncovered: string[];
+}
+
+/**
+ * Does the offline map reach the planted affected set? `code-graph affected` on
+ * each primary file of a fresh clone, two hops, no budget cut; a planted place is
+ * covered when the answer names it on a token boundary. A task the map cannot
+ * reach cannot show a map effect, so it is reported apart, never pooled.
+ */
+export async function coverageOf(task: MapTask): Promise<TaskCoverage> {
+    const [clone] = reset_fixture({ id: task.id, fixture: task.fixture }, 'coverage', 0);
+    const { graph } = await buildFromRepo(clone, null, { lanes: true });
+    const file = path.join(os.tmpdir(), `map-coverage-${process.pid}-${task.id}.json`);
+    fs.writeFileSync(file, serializeGraph(graph));
+    try {
+        const g = loadGraph(file, file);
+        const text = task.primary
+            .map((p) => {
+                const r = affected(g, p, 2, 1_000_000);
+                return [...r.seeds, ...r.lines, ...r.recommended_reads.map((x) => x.path)].join('\n');
+            })
+            .join('\n');
+        const hit = (k: string): boolean => new RegExp(`(?<![\\w-])${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w-])`, 'i').test(text);
+        const covered: string[] = [];
+        const uncovered: string[] = [];
+        for (const a of task.affected) ([a.id, ...(a.aliases ?? [])].some(hit) ? covered : uncovered).push(a.id);
+        return { task_id: task.id, covered, uncovered };
+    } finally {
+        fs.rmSync(file, { force: true });
+    }
+}
+
+export function coverageSummary(rows: readonly TaskCoverage[]): { tasks: number; covered_tasks: string[]; uncovered_tasks: string[]; places: number; covered_places: number; covered_share: number } {
+    const covered_tasks = rows.filter((r) => r.uncovered.length === 0).map((r) => r.task_id);
+    const places = rows.reduce((a, r) => a + r.covered.length + r.uncovered.length, 0);
+    return {
+        tasks: rows.length,
+        covered_tasks,
+        uncovered_tasks: rows.filter((r) => r.uncovered.length > 0).map((r) => r.task_id),
+        places,
+        covered_places: rows.reduce((a, r) => a + r.covered.length, 0),
+        covered_share: rows.length ? Math.round((covered_tasks.length / rows.length) * 1000) / 1000 : 0,
+    };
+}
+
+/** The package version an arm runs under, with its form; `none` for an arm without the package. */
+export function acVersion(spec: MapArmSpec): string {
+    if (!spec.install) return 'none';
+    try {
+        return `${String((JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf-8')) as { version?: string }).version ?? 'unknown')} ${spec.install}`;
+    } catch {
+        return 'unknown';
+    }
+}
+
+/** The stream a stub agent would have produced: reads of the task's primary files (and the map, for a map arm), then edits. */
+export function stub_stream(task: MapTask, behaviour: StubBehaviour, spec: MapArmSpec): string {
+    const ev = (o: unknown): string => JSON.stringify(o);
+    const use = (name: string, input: Record<string, string>): string => ev({ type: 'assistant', message: { model: 'stub', content: [{ type: 'tool_use', name, input }] } });
+    const lines = [ev({ type: 'system', subtype: 'init', model: 'stub', tools: ['Bash', 'Edit', 'Read'], mcp_servers: [] })];
+    if (spec.map) lines.push(use('Read', { file_path: 'agents/map/MAP.md' }), use('Bash', { command: 'agent-config code-graph affected' }));
+    for (const f of task.primary) lines.push(use('Read', { file_path: f }));
+    if (behaviour !== 'none') for (const f of task.primary) lines.push(use('Edit', { file_path: f }));
+    lines.push(ev({ type: 'result', subtype: 'success', num_turns: lines.length, modelUsage: { stub: {} } }));
+    return lines.join('\n');
 }
 
 /** Draw the map into the working copy with the shipped CLI, the way a user's project gets one. */
@@ -159,6 +265,7 @@ export function run_trial(task: MapTask, arm: string, opts: TrialOpts): MapTrial
     const spec = MAP_ARMS[arm] as MapArmSpec;
     const [clone] = reset_fixture({ id: task.id, fixture: task.fixture }, arm, opts.seed);
     let map_build: MapTrial['map_build'] = null;
+    if (spec.install && !opts.dry_run) install_into_clone(clone, spec.install);
     if (spec.map && opts.map_build) {
         map_build = build_map(clone);
     }
@@ -166,6 +273,7 @@ export function run_trial(task: MapTask, arm: string, opts: TrialOpts): MapTrial
     let breakdown: TokensBreakdown | Record<string, never> = {};
     let errored = false;
     let reason: string | null = null;
+    let trace: TrialTrace | undefined;
     if (map_build && !map_build.ok) {
         errored = true;
         reason = `map build failed: ${map_build.detail}`;
@@ -176,6 +284,7 @@ export function run_trial(task: MapTask, arm: string, opts: TrialOpts): MapTrial
         }
         transcript = stub_transcript(task, behaviour);
         breakdown = stub_usage(behaviour, opts.seed);
+        trace = parseTrace(stub_stream(task, behaviour, spec), { wall_s: 0, ac_version: acVersion(spec), payload: spec.inject });
     } else {
         let sp_file: string | null = null;
         if (spec.inject) {
@@ -188,7 +297,9 @@ export function run_trial(task: MapTask, arm: string, opts: TrialOpts): MapTrial
             setting_sources: spec.setting_sources,
             max_budget: opts.max_budget,
             model: opts.model,
+            stream: true,
         }) as unknown as Dict;
+        trace = parseTrace(String(run['stream'] ?? ''), { wall_s: Number(run['wall_time_seconds'] ?? 0), ac_version: acVersion(spec), payload: spec.inject, clone });
         transcript = String(run['transcript'] ?? '');
         breakdown = (run['tokens_breakdown'] ?? {}) as TokensBreakdown | Record<string, never>;
         errored = Boolean(run['errored']);
@@ -202,6 +313,7 @@ export function run_trial(task: MapTask, arm: string, opts: TrialOpts): MapTrial
         seed: opts.seed,
         errored,
         success: !errored && check.pass,
+        check_passed: check.pass,
         broken_dependents: check.broken_dependents,
         affected: score_affected(task, parse_affected_section(transcript)),
         tokens: total_tokens(breakdown),
@@ -213,6 +325,7 @@ export function run_trial(task: MapTask, arm: string, opts: TrialOpts): MapTrial
         workspace: clone,
         transcript_path: opts.dry_run ? null : preserve_transcript(clone, transcript),
         synthetic: opts.dry_run,
+        ...(trace ? { trace } : {}),
     };
 }
 
@@ -269,13 +382,19 @@ interface Args {
     map_build: boolean;
     out_dir: string | null;
     fresh: boolean;
+    /** Re-score a stored report: no clone, no model call, no spend. */
+    rescore: string | null;
+    /** Fail unless every trial carries every trace field. */
+    check_trace_fields: boolean;
+    print_arms: boolean;
+    coverage: boolean;
 }
 
 class UsageError extends Error {}
 
 export function parse_args(argv: string[]): Args {
     const a: Args = {
-        arms: Object.keys(MAP_ARMS),
+        arms: [...DEFAULT_MAP_ARMS],
         seeds: 1,
         tasks: [],
         limit: 0,
@@ -288,6 +407,10 @@ export function parse_args(argv: string[]): Args {
         map_build: true,
         out_dir: null,
         fresh: false,
+        rescore: null,
+        check_trace_fields: false,
+        print_arms: false,
+        coverage: false,
     };
     const num = (flag: string, v: string | undefined): number => {
         const n = Number(v);
@@ -312,6 +435,10 @@ export function parse_args(argv: string[]): Args {
             case '--no-map-build': a.map_build = false; break;
             case '--out-dir': a.out_dir = next() ?? null; break;
             case '--fresh': a.fresh = true; break;
+            case '--rescore': a.rescore = next() ?? null; break;
+            case '--check-trace-fields': a.check_trace_fields = true; break;
+            case '--print-arms': a.print_arms = true; break;
+            case '--coverage': a.coverage = true; break;
             default: throw new UsageError(`unknown argument: ${flag}`);
         }
     }
@@ -343,6 +470,32 @@ function load_checkpoint(file: string): Map<string, MapTrial> {
     return done;
 }
 
+/**
+ * Re-score a stored report with today's grading: the outcome from `errored` and
+ * the recorded check failures, M2 from the preserved transcript when it is still
+ * on disk (else the stored score). Prints one line per arm and area.
+ */
+export function rescore_report(file: string, budget_tokens_per_run?: number): { lines: string[]; summaries: Record<string, ArmSummary> } {
+    const report = JSON.parse(fs.readFileSync(file, 'utf-8')) as { arms: string[]; budget_tokens_per_run?: number; records: Array<MapRunRecord & { check_failures?: string[]; transcript_path?: string | null }> };
+    const tasks = new Map(load_map_tasks().map((t) => [t.id, t] as const));
+    const records: MapRunRecord[] = report.records.map((r) => {
+        const task = tasks.get(r.task_id);
+        const tp = r.transcript_path;
+        const affected = task && tp && fs.existsSync(tp) ? score_affected(task, parse_affected_section(fs.readFileSync(tp, 'utf-8'))) : r.affected;
+        const check_passed = (r.check_failures ?? []).length === 0;
+        return { ...r, affected, check_passed, success: !r.errored && check_passed };
+    });
+    const budget = budget_tokens_per_run ?? report.budget_tokens_per_run ?? 1_500_000;
+    const summaries: Record<string, ArmSummary> = {};
+    const lines: string[] = [];
+    for (const arm of report.arms) {
+        const s = (summaries[arm] = summarise_arm(arm, records, budget));
+        lines.push(`${arm}: ${s.successes}/${s.runs} success · ${s.errored_check_passed} errored, check passed · M2 recall ${s.m2_mean_recall?.toFixed(3) ?? '–'}`);
+        for (const [area, v] of Object.entries(s.by_area).sort()) lines.push(`${arm} ${area} ${v.checks_passed}/${v.runs} checks passed (${v.successes} clean)`);
+    }
+    return { lines, summaries };
+}
+
 export function main(argv: string[] = process.argv.slice(2)): number {
     let a: Args;
     try {
@@ -351,7 +504,25 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         process.stderr.write(`bench_map_task_set: ${(e as Error).message}\n`);
         return 1;
     }
+    if (a.print_arms) {
+        const rows = Object.entries(MAP_ARMS).map(([arm, s]) => `  ${arm.padEnd(12)} package ${s.install ?? 'none'} · map ${s.map ? 'yes + note' : 'no'}${s.optional ? ' · optional' : ''}`);
+        process.stdout.write(`${Object.keys(MAP_ARMS).length} arms (default: ${DEFAULT_MAP_ARMS.join(', ')})\n${rows.join('\n')}\n`);
+        return 0;
+    }
+    if (a.rescore) {
+        if (!fs.existsSync(a.rescore)) {
+            process.stderr.write(`bench_map_task_set: no report at ${a.rescore}\n`);
+            return 1;
+        }
+        process.stdout.write(`${rescore_report(a.rescore).lines.join('\n')}\n`);
+        return 0;
+    }
     let tasks = load_map_tasks();
+    // `--tasks N` with a bare count takes the first N tasks.
+    if (a.tasks.length === 1 && /^\d+$/.test(a.tasks[0] as string)) {
+        a.limit = Number(a.tasks[0]);
+        a.tasks = [];
+    }
     if (a.tasks.length) {
         const unknown = a.tasks.filter((id) => !tasks.some((t) => t.id === id));
         if (unknown.length) {
@@ -475,6 +646,14 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         process.stderr.write(`bench_map_task_set: ${aborted}\n`);
         return 2;
     }
+    if (a.check_trace_fields) {
+        const short = records.map((r) => [`${r.task_id}|${r.arm}|${r.seed}`, missingTraceFields(r.trace)] as const).filter(([, m]) => m.length);
+        if (short.length) {
+            for (const [k, m] of short) process.stderr.write(`  ${k}: no ${m.join(', ')}\n`);
+            return 1;
+        }
+        process.stdout.write(`trace fields: complete on ${records.length} trial(s)\n`);
+    }
     if (problems.length) {
         process.stderr.write(`bench_map_task_set: DRY RUN FAILED — ${problems.length} plumbing problem(s)\n`);
         for (const p of problems) process.stderr.write(`  ${p}\n`);
@@ -497,6 +676,32 @@ function isCliEntry(): boolean {
     }
 }
 
+/**
+ * `--coverage`: the offline coverage of the selected tasks, before any spend.
+ * A live run with `--coverage` prints the same and then runs; covered and
+ * uncovered tasks are reported apart in its summary.
+ */
+export async function coverageMain(argv: string[] = process.argv.slice(2)): Promise<number> {
+    let a: Args;
+    try {
+        a = parse_args(argv);
+    } catch (e) {
+        process.stderr.write(`bench_map_task_set: ${(e as Error).message}\n`);
+        return 1;
+    }
+    let tasks = load_map_tasks();
+    if (a.tasks.length === 1 && /^\d+$/.test(a.tasks[0] as string)) tasks = tasks.slice(0, Number(a.tasks[0]));
+    else if (a.tasks.length) tasks = tasks.filter((t) => a.tasks.includes(t.id));
+    else if (a.limit > 0) tasks = tasks.slice(0, a.limit);
+    const rows: TaskCoverage[] = [];
+    for (const t of tasks) rows.push(await coverageOf(t));
+    const s = coverageSummary(rows);
+    for (const r of rows) process.stdout.write(`  ${r.uncovered.length ? 'uncovered' : 'covered  '} ${r.task_id}${r.uncovered.length ? ` — not reached: ${r.uncovered.join(', ')}` : ''}\n`);
+    process.stdout.write(`covered share ${s.covered_share.toFixed(3)} (${s.covered_tasks.length}/${s.tasks} tasks, ${s.covered_places}/${s.places} places)\n`);
+    return a.dry_run ? 0 : main(argv.filter((x) => x !== '--coverage'));
+}
+
 if (isCliEntry()) {
-    process.exitCode = main();
+    if (process.argv.includes('--coverage')) void coverageMain().then((rc) => (process.exitCode = rc));
+    else process.exitCode = main();
 }

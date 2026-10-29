@@ -10,6 +10,7 @@
  * What it deliberately does NOT do (road-to-a-map-that-draws-itself K1-K4):
  * no model call, no network, no physics left for the browser.
  */
+import { isTestFile } from './scope.js';
 import * as path from 'node:path';
 
 import Graph from 'graphology';
@@ -167,8 +168,8 @@ export interface MapThresholds {
  */
 export interface MapProvenance {
     head: string;
-    /** `[short sha, date, author, pr | '', tickets, subject]`, oldest first */
-    commits: Array<[string, string, string, string, string[], string]>;
+    /** `[short sha, date, author, pr | '', tickets]`, oldest first; a squash subject is the PR title, so subjects stay in `.build/` */
+    commits: Array<[string, string, string, string, string[]]>;
     /** file path → `[introduced | -1, last, changes]` as commit indexes */
     files: Record<string, [number, number, number]>;
     /** route label → `[introduced | -1, last, declaring file]`; a route outside the budget is absent */
@@ -190,6 +191,10 @@ export interface MapDomains {
     /** null when `domain_allow` is undeclared: crossings are counted, never judged */
     breaches: number | null;
     violations: Array<{ kind: 'domain' | 'domain-public' | 'domain-cycle' | 'domain-overlap' | 'domain-table'; files: number[]; domains: string[]; table?: string }>;
+    /** route label → the domain of its handler's file (7.1) */
+    routes?: Record<string, string>;
+    /** ticket key → the domains of the files its commits introduced or last changed (7.1) */
+    tickets?: Record<string, string[]>;
 }
 
 export interface MapDomainProposals {
@@ -332,12 +337,8 @@ function byPath(a: string, b: string): number {
 }
 
 
-export function isTestPath(p: string): boolean {
-    const segments = p.split('/');
-    if (segments.some((s) => s === 'tests' || s === 'test' || s === '__tests__')) return true;
-    const base = segments[segments.length - 1] ?? '';
-    return /\.(test|spec)\./i.test(base) || /(^|[._-])test\.php$/i.test(base) || /Test\.php$/.test(base);
-}
+/** A test, fixture or benchmark path, by the one scope classifier. */
+export const isTestPath = isTestFile;
 
 const CONFIG_BASENAME =
     /^(?:[\w.-]+\.config\.(?:[cm]?[jt]s)|\.eslintrc\.(?:[cm]?js)|\.prettierrc\.(?:[cm]?js)|server\.php)$/i;

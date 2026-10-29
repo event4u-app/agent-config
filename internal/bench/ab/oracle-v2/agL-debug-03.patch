@@ -1,0 +1,13 @@
+diff --git a/src/store.mjs b/src/store.mjs
+index 339790a..08cd438 100644
+--- a/src/store.mjs
++++ b/src/store.mjs
+@@ -52,7 +52,7 @@ export class TxStore {
+     const mark = this.marks.pop();
+     // Replay every inverse closure registered since this savepoint opened,
+     // newest first, then truncate the log back to the mark.
+-    for (let i = this.undo.length - 1; i > mark; i--) {
++    for (let i = this.undo.length - 1; i >= mark; i--) {
+       this.undo[i].fn();
+     }
+     this.undo.length = mark;

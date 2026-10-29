@@ -1,0 +1,11 @@
+diff --git a/src/leaderboard.mjs b/src/leaderboard.mjs
+index 5229e84..2f04f36 100644
+--- a/src/leaderboard.mjs
++++ b/src/leaderboard.mjs
+@@ -12,5 +12,5 @@
+  * insertion order.
+  */
+ export function rankByScore(entries) {
+-  return [...entries].sort((a, b) => a.score - b.score);
++  return [...entries].sort((a, b) => b.score - a.score);
+ }

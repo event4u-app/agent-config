@@ -292,31 +292,6 @@ export function migrateMcpBridge(
 }
 
 /**
- * The two projection modes.
- *
- * `legacy-all` ships everything and stays the default. `scoped` narrows to the
- * active packs.
- *
- * `tiered` was a third, and it was RETIRED on 2026-10-20 (ADR-293, step 4.5)
- * with the install branch that acted on it. It narrowed the catalogue to the
- * skills predicted to reach the model WITH their description, and its own
- * roadmap closed it at `measured-null`: the split usually came from an
- * ALPHABETICAL fallback order (`agents/runtime/metrics/skill-usage.jsonl` is
- * absent on most machines), and the one real host observation this repo has
- * disagreed with that fallback on four of eight sampled entries. A value that
- * hides skills on a prediction the tree can show to be wrong is strictly worse
- * than the bare-but-listed defect it was meant to fix. The measured null stays
- * in `docs/CLAIMS.md`; a leftover `tiered` now resolves to `legacy-all`, which
- * is the full surface and the safe direction.
- */
-export type ProjectionMode = 'scoped' | 'legacy-all';
-
-/** Resolve a raw `projection.mode` value. Anything unrecognised is `legacy-all`. */
-export function projectionModeOf(raw: unknown): ProjectionMode {
-    return raw === 'scoped' ? 'scoped' : 'legacy-all';
-}
-
-/**
  * Tier B skill names, or `null` when no split exists on this machine.
  *
  * `null` is load-bearing: it means "nobody computed a split here", and a

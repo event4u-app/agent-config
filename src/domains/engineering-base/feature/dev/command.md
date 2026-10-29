@@ -47,7 +47,7 @@ Do NOT use for single-line fixes, trivial changes, or urgent hotfixes.
 
 ### Phase 2: Codebase Exploration
 
-1. Use `codebase-retrieval` to find:
+1. Use `code-graph ask` to find:
    - Similar features already implemented
    - Architecture patterns in the affected area
    - Key files, services, models, routes involved

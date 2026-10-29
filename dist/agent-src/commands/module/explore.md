@@ -89,7 +89,7 @@ Let `{module_dir}` be the selected module's `module_path` from
 - List route / entry-point files and their contents
 
 **Code:**
-- Use `codebase-retrieval` to understand the module's purpose and key classes
+- Use `code-graph ask` to understand the module's purpose and key classes
 - Read `README.md` if it exists
 - Read agent docs (`{module_dir}/{agent_folder}/`) if they exist — features, roadmaps, contexts
 - Read `Docs/` if it exists (human-facing documentation)

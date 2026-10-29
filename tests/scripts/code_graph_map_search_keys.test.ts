@@ -93,6 +93,7 @@ describe('the search list as a combobox', () => {
         await page.keyboard.press('ArrowRight');
         expect(await page.locator('#searchcrumb').isVisible()).toBe(true);
         expect(await page.locator('#searchcrumb').textContent()).toContain('shop ›');
+        expect(await page.locator('#searchcrumb .scrumb-up').textContent()).toBe('← up one level');
         expect(await rows(page)).toEqual(['pay/', 'cart.ts']);
         expect(await page.inputValue('#search')).toBe('');
         expect(await page.locator('#search-live').textContent()).toMatch(/2 hits in shop/);

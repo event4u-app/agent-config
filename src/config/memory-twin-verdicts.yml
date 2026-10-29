@@ -115,9 +115,13 @@ twins:
 
   - file: memory_lookup.ts
     mode: bounded
-    max_changed_lines: 504
+    max_changed_lines: 519
     verdict: keep-duplicated
     reason: >-
+      Raised 504 -> 519 on 2026-10-29 with BOTH sides changed in the same diff:
+      the stale-skip count (`skipped_stale`) was ported to the template, which
+      counts in `retrieve()` because it has no `_retrieve_internal` skipped list
+      to read; the 15 lines are that shape difference, not missing behaviour.
       The one twin that cannot be reconciled, and the ceiling is high because the
       divergence is STRUCTURAL rather than neglect. The dev side depends on FOUR
       modules the template cannot import — `_lib/lexical_index.js`,

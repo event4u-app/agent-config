@@ -37,7 +37,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { build_claude_hook_matrix } from '../scripts/_lib/claude_settings_hooks.js';
 import { event4u_root } from '../scripts/_lib/user_global_paths.js';
-import { describeUserPin, readUserPin, writeUserPin } from './userPin.js';
+import { describeEnrolment, describeUserPin, readEnrolment, readUserPin, writeEnrolment, writeUserPin } from './userPin.js';
 export const RUNTIME_DIRNAME = 'runtime';
 export const CLAUDE_LAYER_DIRNAME = 'claude-rules';
 export const THINNED_MARKER = 'thinned';
@@ -345,6 +345,8 @@ export function prepareClaudeCarrier(opts) {
     }
     if (opts.userPin === true)
         writeUserPin(runtimeRoot);
+    if (opts.enrol === true)
+        writeEnrolment(runtimeRoot);
     const pin = readUserPin(runtimeRoot);
     const wantsThin = opts.wantsThin && staged !== null && pin === null;
     const probe = process.platform === 'win32' || opts.sessionStartCommand === null
@@ -360,6 +362,9 @@ export function prepareClaudeCarrier(opts) {
     const pinLine = describeUserPin(pin);
     if (pinLine !== null)
         lines.push(pinLine);
+    const enrolLine = describeEnrolment(readEnrolment(runtimeRoot), pin !== null);
+    if (enrolLine !== null)
+        lines.push(enrolLine);
     if (next === 'demoted') {
         lines.push('hook carrier (claude): machine demoted — the rule layer stays full until the probe passes');
     }
@@ -414,6 +419,7 @@ export function deployClaudeCarrier(opts) {
         sessionStartCommand: sessionStartCommandFor(opts.packageRoot),
         wantsThin: opts.wantsThin,
         ...(opts.userPin === true ? { userPin: true } : {}),
+        ...(opts.enrol === true ? { enrol: true } : {}),
     });
     for (const w of carrier.warnings)
         opts.warn(w);

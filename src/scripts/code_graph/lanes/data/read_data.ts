@@ -38,7 +38,7 @@ import { laravelEngines } from '../../../_lib/schema/readers/laravel_migrations.
 import { readSqlSchema } from '../../../_lib/schema/readers/sql_ddl.js';
 import { type Engine, replay } from '../../../_lib/schema/replay.js';
 import type { Waiver } from '../../drift.js';
-import { isFixturePath } from '../../fixture_paths.js';
+import { isFixturePath, WALK_SKIP_DIRS } from '../../scope.js';
 import { queryLinks } from './query_links.js';
 import { isSqlSchemaPath } from '../../providers/sql_ddl.js';
 import { columnId, tableId } from '../../providers/shared/schema_graph.js';
@@ -65,7 +65,7 @@ export interface ReadDataOptions {
 
 type Attrs = LaneFact['attrs'];
 
-const SKIP_DIRS = new Set(['.git', 'node_modules', 'vendor', 'dist', 'build', '.tscache', 'coverage']);
+const SKIP_DIRS = new Set([...WALK_SKIP_DIRS, 'build', 'coverage']);
 const SCHEMA_SOURCE = /(?:^|\/)(?:migrations?|migrate)\/|(?:^|\/)(?:schema|structure)\.sql$|\.prisma$/i;
 const DUMP_HEAD = /^--\s*(?:MySQL dump|MariaDB dump|PostgreSQL database dump)|mysqldump|pg_dump/im;
 

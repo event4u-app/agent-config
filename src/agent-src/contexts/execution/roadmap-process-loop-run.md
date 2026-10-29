@@ -11,7 +11,7 @@ when a run reaches that branch; the Iron-Law fences stay in the core.
    parallel:
      - view agents/roadmaps/<file>.md     (the step's section)
      - view <files cited in the step text>
-     - codebase-retrieval (only if the step is vague)
+     - code-graph ask (only if the step is vague)
    ```
 
    Anti-pattern: `view step` → think → `view file A` → think →

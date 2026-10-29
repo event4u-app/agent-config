@@ -18,9 +18,15 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import type { WitnessKind } from '../lanes/lane_fact.js';
 import defaults from './defaults.json';
 
 export type CheckState = 'confirmed' | 'moved' | 'changed' | 'gone';
+
+/** A witness's kind as recorded, else inferred: a hash means a span, no hash a name. */
+export function witnessKind(w: { hash: string | null; kind?: WitnessKind }): WitnessKind {
+    return w.kind ?? (w.hash ? 'span' : 'name');
+}
 
 export interface WitnessInput {
     file: string;

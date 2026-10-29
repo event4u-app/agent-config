@@ -71,6 +71,8 @@ export interface AreaPayloadBase {
     /** Set when the reader ran and found nothing; shown as the area's reason. */
     empty?: string;
     findings: AreaFinding[];
+    /** Findings left out of the default view because every witness sits outside product scope: the "+N in fixtures" count. */
+    fixture_findings?: number;
 }
 
 // Data — tables, columns, keys, ORM relations.
@@ -218,21 +220,45 @@ export interface SystemsPackage {
     declared: string[];
     /** the shortest path from a declaration, as `name@version` steps */
     path: string[];
+    /** up to 20 chains from a declaration to this package, each hop `name@version (spec it was required by)` */
+    why: string[][];
+    /** packages that require it, transitively */
+    dependents: number;
+    /** packages it requires, transitively */
+    subtree: number;
     requiredBy: string[];
     requires: string[];
     /** files that import it, each at its import */
-    usedBy: Array<{ file: string; names: string[]; witness: Witness }>;
+    usedBy: Array<{ file: string; names: string[]; counts?: Record<string, number>; witness: Witness }>;
     usedByTotal: number;
+    /** function → symbols calling it, summed over every file that uses the package */
+    functions?: Record<string, number>;
     nonimport: string[];
     /** Domains of the files that use it */
     domains?: string[];
+    /** Files using it per top-level folder, over every use — `usedBy` stays a sample of 20. */
+    byArea?: Record<string, number>;
+    /** The imported names most used, over every use: `[name, files]`, at most ten. */
+    topNames?: Array<[string, number]>;
     witness: Witness;
+}
+
+/** An ecosystem the systems lane does or does not read, and the files of it present in the tree. */
+export interface SystemsEcosystem {
+    name: string;
+    read: boolean;
+    /** Repository-relative lockfiles and manifests found, at most five. */
+    files: string[];
 }
 
 export interface SystemsPayload extends AreaPayloadBase {
     runtimes: SystemsRuntime[];
     packages: SystemsPackage[];
     lockfiles: string[];
+    /** Presence per ecosystem, so "not read" and "no lockfile found" are told apart (Decision D5). */
+    ecosystems?: SystemsEcosystem[];
+    /** Whether the Composer autoload maps were read (from `composer.lock`): makes "unk · Autoload" derivable. */
+    autoloadRead?: boolean;
 }
 
 // Runtime — infrastructure resources, environments, services and ports.

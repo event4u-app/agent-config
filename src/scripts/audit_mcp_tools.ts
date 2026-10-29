@@ -229,6 +229,8 @@ function _render(
     lines.push('- **Transports** — `stdio` (`scripts/mcp_server/`) · `worker` (`internal/workers/mcp/`). A tool may live on both.');
     lines.push('- **Stub** — catalog-listed for discovery; returns the `not_implemented` envelope from');
     lines.push('  [`mcp-tool-stub-envelope.md`](mcp-tool-stub-envelope.md) until promoted.');
+    lines.push('- **Budgeted answer** — `graph_impact` returns `answer` (or `locations` / `per_file`), `budget` (level, shown, total) and');
+    lines.push('  `recommended_reads`; header arrays over 10 entries become `{first, total}`, except `test_files` and `seeds`, which stay whole.');
     lines.push('');
     return lines.join('\n') + '\n';
 }

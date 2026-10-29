@@ -17,6 +17,7 @@
  *   routing_arms --twins --baseline ART.json --catalogue DIR --twins-file TWINS.json --per-unit K --out DIR
  *   routing_arms --mcp --baseline ART.json --catalogue DIR --server-command CMD [--server-arg A]... --out DIR
  *   routing_arms --merge --plan PLAN.json --results DIR --out AGGREGATE.json
+ *   routing_arms --report --baseline ART.json --arm NAME=ART.json... --out REPORT.json
  */
 
 import { createHash } from 'node:crypto';
@@ -24,8 +25,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { catalogueSubset, injectTwin, type PressureSize } from './_lib/catalogue_pressure.js';
-import { sha256 } from './_lib/routing_baseline.js';
+import { MCP_PARITY_EPSILON, catalogueSubset, injectTwin, parityVerdict, type ParityVerdict, type PressureSize } from './_lib/catalogue_pressure.js';
+import { sha256, type CaseVerdict, type UnitRow } from './_lib/routing_baseline.js';
 import {
     catalogueHash,
     compileQueries,
@@ -276,6 +277,88 @@ export function mergeAggregates(plan: ArmPlan, resultsDir: string): { aggregate:
     };
 }
 
+/** The registered floor delta of the 3.3 null (0.10 absolute recall), fixed before any baseline. */
+export const PRESSURE_NULL_DELTA = 0.1;
+
+const round4 = (x: number): number => Math.round(x * 1e4) / 1e4;
+
+/** Mean recall of both sides over the units measured in both; any other unit drops out of this comparison only. */
+export function pairedRecall(baseline: readonly UnitRow[], arm: readonly UnitRow[]): { units: number; baseline: number; arm: number } {
+    const measured = (rows: readonly UnitRow[]) => new Map(rows.filter((r) => r.recall !== null).map((r) => [r.unit, r.recall as number]));
+    const b = measured(baseline);
+    const a = measured(arm);
+    const both = [...b.keys()].filter((k) => a.has(k));
+    const mean = (m: Map<string, number>) => (both.length === 0 ? 0 : both.reduce((s, k) => s + (m.get(k) as number), 0) / both.length);
+    return { units: both.length, baseline: round4(mean(b)), arm: round4(mean(a)) };
+}
+
+/** 3.3: "selection accuracy at full catalogue is not worse than at N=20 by more than the floor delta." */
+export function pressureNull(accFull: number, acc20: number, delta = PRESSURE_NULL_DELTA): { acc_full: number; acc_20: number; delta: number; holds: boolean } {
+    return { acc_full: accFull, acc_20: acc20, delta, holds: accFull >= round4(acc20 - delta) };
+}
+
+export interface TwinPairRow {
+    pair: string;
+    runs: number;
+    original_only: number;
+    twin_only: number;
+    both: number;
+    neither: number;
+    unknown: number;
+    confusion: number;
+}
+
+/** 3.2: per pair, which of original and `<skill>-twin` each run invoked. Confusion = runs that invoked the twin / runs. */
+export function twinConfusion(rows: readonly { skill: string; verdict: CaseVerdict; invoked: readonly string[] | null }[]): TwinPairRow[] {
+    const by = new Map<string, TwinPairRow>();
+    for (const r of rows) {
+        const p = by.get(r.skill) ?? { pair: r.skill, runs: 0, original_only: 0, twin_only: 0, both: 0, neither: 0, unknown: 0, confusion: 0 };
+        if (r.verdict === 'unknown' || r.invoked === null) p.unknown += 1;
+        else {
+            p.runs += 1;
+            const orig = r.invoked.includes(r.skill);
+            const twin = r.invoked.includes(`${r.skill}-twin`);
+            if (orig && twin) p.both += 1;
+            else if (orig) p.original_only += 1;
+            else if (twin) p.twin_only += 1;
+            else p.neither += 1;
+        }
+        by.set(r.skill, p);
+    }
+    for (const p of by.values()) p.confusion = p.runs === 0 ? 0 : round4((p.twin_only + p.both) / p.runs);
+    return [...by.values()].sort((a, b) => (a.pair < b.pair ? -1 : 1));
+}
+
+export interface ArmReport {
+    pressure: Record<string, { units: number; baseline: number; arm: number }>;
+    null_3_3: ReturnType<typeof pressureNull> | null;
+    parity: { units: number; native: number; mcp: number; epsilon: number; verdict: ParityVerdict } | null;
+    twins: TwinPairRow[] | null;
+}
+
+/** One report over the arms: `nN` arms are pressure, `mcp` is the delivery path, `twins` carries case rows. */
+export function armReport(opts: {
+    baseline: readonly UnitRow[];
+    arms: Record<string, readonly UnitRow[]>;
+    twinRows?: Parameters<typeof twinConfusion>[0];
+}): ArmReport {
+    const pressure: ArmReport['pressure'] = {};
+    for (const [name, rows] of Object.entries(opts.arms)) if (/^n\d+$/.test(name)) pressure[name] = pairedRecall(opts.baseline, rows);
+    const n20 = pressure['n20'];
+    const mcpRows = opts.arms['mcp'];
+    let parity: ArmReport['parity'] = null;
+    if (mcpRows !== undefined) {
+        const p = pairedRecall(opts.baseline, mcpRows);
+        parity = { units: p.units, native: p.baseline, mcp: p.arm, epsilon: MCP_PARITY_EPSILON, verdict: parityVerdict(p.baseline, p.arm, MCP_PARITY_EPSILON) };
+    }
+    return {
+        pressure,
+        null_3_3: n20 === undefined ? null : pressureNull(n20.baseline, n20.arm),
+        parity,
+        twins: opts.twinRows === undefined ? null : twinConfusion(opts.twinRows),
+    };
+}
+
 function arg(argv: readonly string[], name: string): string | null {
     const i = argv.indexOf(`--${name}`);
     return i >= 0 && i + 1 < argv.length ? (argv[i + 1] as string) : null;
@@ -331,11 +414,29 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             process.stdout.write(`routing_arms: merged ${String((aggregate['cases'] as unknown[]).length)} case(s), ${String(missing.length)} missing -> ${a['out'] as string}\n`);
             return 0;
         }
+        if (argv.includes('--report')) {
+            const a = need(argv, ['baseline', 'out']);
+            if (a === null) return 2;
+            const arms: Record<string, UnitRow[]> = {};
+            let twinRows: Parameters<typeof twinConfusion>[0] | undefined;
+            for (const spec of argv.flatMap((v, i) => (v === '--arm' && i + 1 < argv.length ? [argv[i + 1] as string] : []))) {
+                const [name, file] = spec.split('=') as [string, string | undefined];
+                if (file === undefined) throw new Error(`routing_arms: --arm wants NAME=ART.json, got ${spec}`);
+                const art = readArt(file) as BaselineArtifact & { units: UnitRow[]; cases: { skill: string; verdict: CaseVerdict; invoked: string[] | null }[] };
+                if (name === 'twins') twinRows = art.cases;
+                else arms[name] = art.units;
+            }
+            const base = readArt(a['baseline'] as string) as BaselineArtifact & { units: UnitRow[] };
+            const report = armReport({ baseline: base.units, arms, ...(twinRows === undefined ? {} : { twinRows }) });
+            fs.writeFileSync(a['out'] as string, JSON.stringify(report, null, 2) + '\n');
+            process.stdout.write(`routing_arms: report over ${String(Object.keys(arms).length + (twinRows === undefined ? 0 : 1))} arm(s) -> ${a['out'] as string}\n`);
+            return 0;
+        }
     } catch (err) {
         process.stderr.write(`${err instanceof Error ? err.message : String(err)}\n`);
         return 2;
     }
-    process.stderr.write('usage: routing_arms --pressure | --twins | --mcp | --merge (see the module header)\n');
+    process.stderr.write('usage: routing_arms --pressure | --twins | --mcp | --merge | --report (see the module header)\n');
     return 2;
 }
 

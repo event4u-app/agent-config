@@ -47,6 +47,14 @@ export interface HubPayload extends HubFacts {
     edges: XEdge[];
     /** Why there are no links: the estate index is off or empty. */
     edgesReason?: string;
+    /** The user-scope learning data the "Ich · Lernen" lens draws (sibling Stage K); absent until that lane writes it. */
+    me?: HubMe;
+}
+
+export interface HubMe {
+    kpis: Array<{ v: string | number; l: string; sub?: string }>;
+    candidates: Array<{ title: string; state: string; rows: Array<[string, string]> }>;
+    signals: Array<{ kind: string; topic: string; span?: string; where?: string }>;
 }
 
 /** The hub folder. The name stays for callers that knew the estate map. */

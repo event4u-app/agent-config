@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tally</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="tally">
+  <h1>Tally</h1>
+  <form id="new-todo-form"><label for="new-todo">New item</label><input id="new-todo" autocomplete="off"><button type="submit">Add</button></form>
+  <ul id="list"></ul>
+  <footer><span id="count"></span>
+    <nav><button data-filter="all">All</button><button data-filter="open">Open</button><button data-filter="done">Done</button></nav>
+  </footer>
+</main>
+<script src="store.js"></script>
+<script src="view.js"></script>
+</body>
+</html>

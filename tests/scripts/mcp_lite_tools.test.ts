@@ -272,6 +272,18 @@ describe('kernel server standing cost — the Phase 0.2 figures', () => {
     // `graph_estate`), and the graph tools' own descriptions were tightened
     // without dropping a claim. After the trim: descriptions 2,032 and payload
     // 4,896, headroom 4 — the next tool trims first.
+    //
+    // RE-MEASURED 2026-10-27 (inbox round 2026-10-bf): still 29 tools, but
+    // `graph_impact`, `graph_tests_for` and `graph_dead` gained `detail`
+    // (`graph_impact` also `budget` and `page`), `list_skills` / `list_rules`
+    // gained `detail` + `page`, and `memory_lookup`'s `detail` default moved to
+    // `index`. Untrimmed the payload read 5,007, over the ceiling, and this
+    // assertion caught it. Trimmed rather than widened: the graph `detail`
+    // property went in without a description (its meaning is stated once, in
+    // `graph_estate`), `memory_lookup`'s property prose that repeated its tool
+    // description and its own `default` / `minItems` came out, and the
+    // "Read-only" clauses on ten `ro` tools went, since the annotation carries
+    // it. After the trim: descriptions 1,922 and payload 4,897, headroom 3.
     it('has 29 allowlisted tools', () => {
         expect(names.length).toBe(29);
     });

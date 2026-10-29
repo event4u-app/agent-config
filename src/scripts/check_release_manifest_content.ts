@@ -158,6 +158,29 @@ export function manifestDifferences(file: string, base: string | null, head: str
     return out;
 }
 
+/** The shipped workflow templates a release may re-pin, and their dist twins. */
+export const WORKFLOW_TEMPLATE_DIRS = [
+    'src/agent-src/templates/github-workflows',
+    'dist/agent-src/templates/github-workflows',
+] as const;
+
+/** A bare-major pin: `@event4u/agent-config@19`, not `@19.0.0`, not another package. */
+const MAJOR_PIN_RE = /(@event4u\/agent-config@)\d+(?![\w.-])/g;
+
+/**
+ * The differences between `base` and `head` of one workflow template beyond a
+ * re-pin of its bare-major `@event4u/agent-config@<N>` references. The shape
+ * check admits these files by name so the cut can re-pin them; this keeps that
+ * admission from waving through a changed trigger, permission or command.
+ */
+export function workflowTemplateDifferences(file: string, base: string | null, head: string | null): string[] {
+    if (base === null && head === null) return [];
+    if (base === null) return [`${file}: added — absent at the base`];
+    if (head === null) return [`${file}: removed — present at the base`];
+    const normalise = (t: string): string => t.replace(MAJOR_PIN_RE, '$1<major>');
+    return normalise(base) === normalise(head) ? [] : [`${file}: differs beyond its \`@event4u/agent-config@<major>\` pins`];
+}
+
 function _git(args: readonly string[], cwd: string): { status: number; stdout: string } {
     const r = spawnSync('git', args, { cwd, encoding: 'utf8' });
     return { status: r.status ?? 1, stdout: r.stdout ?? '' };
@@ -200,6 +223,18 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         const after = _readHead(root, file);
         if (before !== null || after !== null) scanned += 1;
         findings.push(...manifestDifferences(file, before, after));
+    }
+    for (const dir of WORKFLOW_TEMPLATE_DIRS) {
+        const listed = _git(['ls-tree', '--name-only', `${base}:${dir}`], root);
+        const atBase = listed.status === 0 ? listed.stdout.split('\n').filter((n) => n.endsWith('.yml')) : [];
+        const headDir = path.join(root, dir);
+        const atHead = fs.existsSync(headDir) ? fs.readdirSync(headDir).filter((n) => n.endsWith('.yml')) : [];
+        for (const name of new Set([...atBase, ...atHead])) {
+            const file = `${dir}/${name}`;
+            const shown = _git(['show', `${base}:${file}`], root);
+            scanned += 1;
+            findings.push(...workflowTemplateDifferences(file, shown.status === 0 ? shown.stdout : null, _readHead(root, file)));
+        }
     }
     try {
         reportScanned({ gate: 'check_release_manifest_content', scanned, units: 'manifests', roots: [root] });

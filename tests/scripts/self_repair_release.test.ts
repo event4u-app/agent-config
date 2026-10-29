@@ -471,7 +471,7 @@ describe('the upstream body is synthesised from closed fields (D10)', () => {
     // the evidence span, the suggested surface, the mechanism and the
     // falsifier. Only the class, the targets, the principle slug and the
     // counters leave — in the pull request body and in the issue it degrades to.
-    const LOCAL = ['EVIDENCE-SPAN', 'SURFACE-LINE', 'MECHANISM-LINE', 'FALSIFIER-LINE'];
+    const LOCAL = ['EVIDENCE-SPAN', 'SURFACE-LINE', 'MECHANISM-LINE', 'FALSIFIER-LINE', 'SUBJECT-LINE'];
     function claimRecord(): DefectRecord {
         return {
             ...record(),
@@ -481,6 +481,7 @@ describe('the upstream body is synthesised from closed fields (D10)', () => {
             principle: 'drain/baseline-drift',
             mechanism: 'MECHANISM-LINE in a company term',
             falsifier: 'FALSIFIER-LINE in a company term',
+            subject: 'SUBJECT-LINE',
         };
     }
 

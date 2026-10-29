@@ -1,0 +1,14 @@
+diff --git a/src/toposort.mjs b/src/toposort.mjs
+index 748ed1a..1984b3e 100644
+--- a/src/toposort.mjs
++++ b/src/toposort.mjs
+@@ -25,6 +25,9 @@ export function topoSort(deps) {
+       dependents.set(task, []);
+     }
+     for (const prereq of deps[task]) {
++      if (!inDegree.has(prereq)) {
++        inDegree.set(prereq, 0);
++      }
+       inDegree.set(task, inDegree.get(task) + 1);
+       if (!dependents.has(prereq)) {
+         dependents.set(prereq, []);

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 256 256" onload="init()">
+  <image x="0" y="0" width="256" height="256" xlink:href="https://example.com/croissant.png"/>
+  <script>function init(){}</script>
+  <text x="400" y="190" font-family="serif" font-size="32">Crumb &amp; Co</text>
+</svg>

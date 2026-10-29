@@ -133,11 +133,10 @@
  * which is the whole reason the flip step 2.4 gates on is Claude-only. Run
  * `agent-config hooks:status` for the host you are actually on.
  *
- * SUBAGENTS ARE OUT OF REACH, MEASURED. Neither slot fires inside a spawned
- * child session and the `subagent_start` payload carries no prompt field — see
- * `agents/evidence/investigations/subagent-start-payload-probe.md` (2026-08-23,
- * claude 2.1.241, three verdicts). Delivery is therefore orchestrator-only, and
- * no third binding is added.
+ * SUBAGENTS. A `subagent_start` additionalContext reached the child on claude
+ * 2.1.310 (investigation `subagent-constraint-carrier-live-probe-2026-10-24`);
+ * whether these two slots fire inside a child is unmeasured since 2.1.241
+ * (`subagent-start-payload-probe`). No third binding is added.
  */
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';

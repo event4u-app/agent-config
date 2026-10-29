@@ -11,24 +11,28 @@ extendStrings({
         kindNames: { folder: 'Folders', file: 'Files', symbol: 'Symbols', route: 'Routes', area: 'Code areas', table: 'Tables', column: 'Columns', fk: 'Foreign keys', rel: 'ORM relations',
             service: 'Services', operation: 'Operations', resource: 'Resources', workflow: 'Workflows', job: 'Jobs', chain: 'Build / deploy', affected: 'Affected', risk: 'Risk terms',
             verb: 'Verbs', pack: 'Context pack', finding: 'Findings', ticket: 'Tickets', pr: 'Pull requests', package: 'Packages', runtime: 'Runtimes', domain: 'Domains' },
-        allKinds: 'All kinds', kindsLabel: 'Kinds', searchUp: 'Up one level', searchEnter: 'Step into (→)',
+        allKinds: 'All kinds', kindsLabel: 'Kinds', searchUp: 'up one level', searchEnter: 'Step into (→)',
         searchCount: function (n) { return n + ' hits'; }, searchCountIn: function (n, p) { return n + ' hits in ' + p; }, generation: function (g) { return 'Generation ' + g; }, noHits: 'Nothing found.',
         hubChip: 'HUB · this machine only', hubChipT: 'Never committed, never inside a repository map', hubCount: function (i, n) { return i + ' of ' + n + ' indexed'; },
-        demoChip: 'Sample data · Fixture', demoChipT: 'Drawn from the demo fixture, not from a repository of yours'
+        demoChip: 'Sample data · Fixture', demoChipT: 'Drawn from the demo fixture, not from a repository of yours',
+        builtAt: 'built at', drawnAt: function (c, g) { return 'Map drawn at ' + c + ' · Generation ' + g; },
+        snapChip: 'Snapshot · no branch state', snapChipT: 'Committed map: branch state not included (D17). Locally: code-graph map --branches'
     },
     de: {
         kindNames: { folder: 'Ordner', file: 'Dateien', symbol: 'Symbole', route: 'Routen', area: 'Code-Areas', table: 'Tabellen', column: 'Spalten', fk: 'Fremdschlüssel', rel: 'ORM-Beziehungen',
             service: 'Dienste', operation: 'Operationen', resource: 'Ressourcen', workflow: 'Workflows', job: 'Jobs', chain: 'Build / Deploy', affected: 'Betroffen', risk: 'Risiko-Terme',
             verb: 'Verben', pack: 'Context-Pack', finding: 'Befunde', ticket: 'Tickets', pr: 'Pull Requests', package: 'Pakete', runtime: 'Runtimes', domain: 'Domänen' },
-        allKinds: 'Alle Arten', kindsLabel: 'Arten', searchUp: 'Eine Ebene höher', searchEnter: 'Hineingehen (→)',
+        allKinds: 'Alle Arten', kindsLabel: 'Arten', searchUp: 'eine Ebene hoch', searchEnter: 'Hineingehen (→)',
         searchCount: function (n) { return n + ' Treffer'; }, searchCountIn: function (n, p) { return n + ' Treffer in ' + p; }, generation: function (g) { return 'Generation ' + g; }, noHits: 'Nichts gefunden.',
         hubChip: 'HUB · nur dieser Rechner', hubChipT: 'Nie committet, nie in einer Projekt-Map', hubCount: function (i, n) { return i + ' von ' + n + ' indiziert'; },
-        demoChip: 'Beispieldaten · Fixture', demoChipT: 'Aus der Demo-Fixture gezeichnet, nicht aus einem deiner Repositories'
+        demoChip: 'Beispieldaten · Fixture', demoChipT: 'Aus der Demo-Fixture gezeichnet, nicht aus einem deiner Repositories',
+        builtAt: 'gebaut bei', drawnAt: function (c, g) { return 'Map gezeichnet bei ' + c + ' · Generation ' + g; },
+        snapChip: 'Snapshot · ohne Branch-Stand', snapChipT: 'Committete Map: Branch-Zustand nicht enthalten (D17). Lokal: code-graph map --branches'
     }
 });
 
 var SHELL = data.shell || {};
-var ROUTES = SHELL.routes || ['overview', 'code'].concat(KNOWLEDGE_IDS);
+var ROUTES = SHELL.routes || NAV_ROUTES;
 var HOME = SHELL.home || 'overview';
 var current = { route: HOME, item: '' };
 
@@ -60,12 +64,17 @@ function renderHeader() {
     var pin = model.pin || { commit: meta.commit, freshness: meta.state, generation: meta.graph_generation || '' };
     var commit = $('pin-commit');
     clear(commit);
-    add(commit, document.createTextNode(shortCommit(pin.commit)), pin.date ? el('span', { class: 'pin-date' }, ' · ' + shortDate(pin.date, true)) : null);
-    commit.setAttribute('title', t('generation')(String(pin.generation || '').slice(0, 8)));
+    add(commit, document.createTextNode(t('builtAt') + ' ' + shortCommit(pin.commit)), pin.date ? el('span', { class: 'pin-date' }, ' · ' + shortDate(pin.date, true)) : null);
+    commit.setAttribute('title', t('drawnAt')(String(pin.commit || '').slice(0, 12), String(pin.generation || '').slice(0, 16)));
+    // The state as built (Decision D4): a static file cannot know how far HEAD moved since.
     var fresh = $('pin-fresh');
     var st = String(pin.freshness || meta.state || '');
-    fresh.textContent = st === 'fresh' ? 'FRESH' : st.toUpperCase();
+    fresh.textContent = st.toLowerCase();
     fresh.className = 'chip ' + (st === 'fresh' ? 'fresh' : 'stale');
+    var snap = $('pin-snap');
+    snap.hidden = !!model.branches;
+    snap.textContent = t('snapChip');
+    snap.setAttribute('title', t('snapChipT'));
 }
 function renderNav() {
     var links = $('areanav').querySelectorAll('a[data-route]');
@@ -75,22 +84,17 @@ function renderNav() {
         a.textContent = t('areaNames')[r];
         if (r === current.route) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
         var p = KA[r];
-        a.classList.toggle('empty', r !== 'overview' && r !== 'code' && (!p || !!p.empty));
+        var mod = AREA_MODULES[r];
+        // Bugs stays dim until a local bug lane exists, however its page draws the empty state.
+        var empty = r !== 'overview' && r !== 'code' && (!p || !!p.empty) && (r === 'bugs' || !(mod && mod.extra && mod.extra()));
+        a.classList.toggle('empty', empty);
+        // The handover names why an entry is dim; Bugs is local data, never in a committed map.
+        if (empty) a.setAttribute('title', r === 'bugs' ? t('navBugsLocal') : t('navNoData')); else a.removeAttribute('title');
     });
-    // On a phone the nav folds into one menu button that names the open area.
-    var menu = $('areamenu');
-    if (!menu) return;
-    menu.textContent = '☰ ' + (t('areaNames')[current.route] || current.route);
-    menu.setAttribute('aria-label', t('navLabel') + ': ' + (t('areaNames')[current.route] || current.route));
-    setAreaMenu(false);
+    // On a phone the nav is one horizontal strip (Decision D6): the open area scrolls into view.
+    var on = $('areanav').querySelector('a[aria-current]');
+    if (on && $('areanav').scrollWidth > $('areanav').clientWidth) $('areanav').scrollLeft = Math.max(0, on.offsetLeft - 8);
 }
-function setAreaMenu(open) {
-    if (!$('areamenu')) return;
-    $('areamenu').setAttribute('aria-expanded', String(open));
-    $('areanav').classList.toggle('open', open);
-}
-if ($('areamenu')) $('areamenu').addEventListener('click', function () { setAreaMenu($('areamenu').getAttribute('aria-expanded') !== 'true'); });
-document.addEventListener('pointerdown', function (e) { if ($('areanav').classList.contains('open') && !e.target.closest('#areanav, #areamenu')) setAreaMenu(false); });
 /**
  * While the graph is not level with HEAD the header's freshness chip carries
  * the reason and what to do, as its tooltip: the design draws no banner row.
@@ -131,6 +135,7 @@ function renderRoute() {
         $('av-body').classList.add('no-side', 'no-left');
         $('av-body').classList.remove('paged');
         renderOverview();
+        add($('av-main'), provenanceLine('overview'));
         applyAvPanes();
         return;
     }
@@ -216,7 +221,7 @@ function runSearch(keep) {
     var hits = level ? level.kids().filter(function (h) { return !q || h.text.toLowerCase().indexOf(q) >= 0; }) : rootHits(q);
     if (level) {
         crumbRow.hidden = false;
-        var up = el('button', { type: 'button', class: 'scrumb-up', 'aria-label': t('searchUp') }, '‹');
+        var up = el('button', { type: 'button', class: 'scrumb-up' }, '← ' + t('searchUp'));
         up.addEventListener('mousedown', function (e) { e.preventDefault(); });
         up.addEventListener('click', function () { searchLeave(); });
         add(crumbRow, up, el('span', { class: 'mono' }, searchStack.map(function (l) { return l.crumb; }).join(' › ') + ' ›'));
@@ -330,7 +335,6 @@ searchInput.addEventListener('focus', function () { if (searchStack.length || se
 document.addEventListener('keydown', function (e) {
     if (e.key === '/' && document.activeElement !== searchInput) { e.preventDefault(); searchInput.focus(); return; }
     if (e.key !== 'Escape') return;
-    if ($('areamenu') && $('areanav').classList.contains('open')) { setAreaMenu(false); $('areamenu').focus(); return; }
     if (current.route !== 'code' && (avState.fly || avState.flyL)) { avState.fly = false; avState.flyL = false; applyAvPanes(); }
 });
 

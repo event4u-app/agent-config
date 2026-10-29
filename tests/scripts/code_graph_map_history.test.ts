@@ -43,7 +43,10 @@ describe('history on the map', () => {
         await page.fill('#search', 'app.js');
         await page.locator('#results [role="option"]', { hasText: 'src/app.js' }).first().click();
         const panel = (await page.locator('.hist').first().textContent()) ?? '';
-        expect(panel).toMatch(/introduced[\s\S]*chore: init/);
+        // The committed map carries no commit subject (privacy, step 1.1): the
+        // introducing commit shows by date and short sha, never by its message.
+        expect(panel).toMatch(/introduced\s*\d{4}-\d{2}-\d{2} · [0-9a-f]{7}/);
+        expect(panel).not.toContain('chore: init');
         expect(panel).toMatch(/last changed[\s\S]*#7[\s\S]*ABC-12/);
         expect(panel).toMatch(/Routes declared here \(1\)[\s\S]*POST \/orders[\s\S]*#7/);
         expect(panel).toContain('Ticket and PR text stays in its tracker');

@@ -23,7 +23,7 @@ extendStrings({
         rEvDeclared: 'declared', rEvHidden: 'declared · hidden in the cleaned view',
         rNoFinding: 'No findings', rNoFindingText: 'The reader found no drift for this resource.',
         rRailNote: 'Terraform state is never read and never copied into the map; no cloud is queried.',
-        rMore: 'Findings outside a resource', rTypeCount: function (n) { return n + (n === 1 ? ' resource' : ' resources'); },
+        rMore: 'Findings outside a resource', rZones: ['Network / VPC', 'Compute', 'Data'], rNoResource: 'no resource', rTypeCount: function (n) { return n + (n === 1 ? ' resource' : ' resources'); },
         rNamespace: function (n) { return 'namespace ' + n; }, rModule: function (n) { return 'module ' + n; }
     },
     de: {
@@ -44,13 +44,14 @@ extendStrings({
         rEvDeclared: 'deklariert', rEvHidden: 'deklariert · in der bereinigten Ansicht ausgeblendet',
         rNoFinding: 'Keine Befunde', rNoFindingText: 'Der Leser hat für diese Ressource keine Drift gefunden.',
         rRailNote: 'Terraform-State wird nie gelesen und nie in die Map kopiert; keine Cloud wird abgefragt.',
-        rMore: 'Befunde ohne Ressource', rTypeCount: function (n) { return n + (n === 1 ? ' Ressource' : ' Ressourcen'); },
+        rMore: 'Befunde außerhalb einer Ressource', rZones: ['Netz / VPC', 'Rechenleistung', 'Daten'], rNoResource: 'keine Ressource', rTypeCount: function (n) { return n + (n === 1 ? ' Ressource' : ' Ressourcen'); },
         rNamespace: function (n) { return 'Namespace ' + n; }, rModule: function (n) { return 'Modul ' + n; }
     }
 });
 
 var rtState = { raw: false };
-if (!avState.view.runtime) avState.view.runtime = 'cmp';
+// The 2026-10-bf handover opens a real map's Runtime on Topologie, its demo data on the comparison.
+if (!avState.view.runtime) avState.view.runtime = meta.demo ? 'cmp' : 'topo';
 
 /** The "no data yet" tag; the reason shows beside it, or as its title where space is short. */
 function ndTag(reason, inline) {
@@ -140,7 +141,7 @@ function rtChip(p, r) {
 function rtBar(p, view, key, bar) {
     bar.appendChild(el('span', { class: 'ops-mark' }));
     bar.appendChild(viewTabs('runtime', key, AREA_MODULES.runtime.tabs));
-    if (view === 'topo') {
+    if (view === 'topo' && p.resources.length) {
         var n = rtHiddenLinks(p).length;
         var sw = el('button', { type: 'button', role: 'switch', class: 'ops-switch' + (rtState.raw ? ' on' : ''), 'aria-checked': String(rtState.raw) }, rtState.raw ? t('rRawOn')(num(n)) : t('rClean')(num(n)));
         sw.addEventListener('click', function () { rtState.raw = !rtState.raw; renderAreaPage('runtime', key); });
@@ -267,8 +268,8 @@ function rtLoose(p, main) {
     var tied = Object.create(null);
     p.resources.forEach(function (r) { rtFindings(p, r).forEach(function (fi) { tied[fi[1]] = 1; }); });
     var rest = (p.findings || []).map(function (f, i) { return [f, i]; }).filter(function (fi) { return !tied[fi[1]]; });
-    if (!rest.length) return;
-    var sec = add(el('div', { class: 'ops-col tight' }), el('span', { class: 'cap' }, t('rMore') + ' (' + rest.length + ')'));
+    // Named with its count even at zero, as the handover does.
+    var sec = add(el('div', { class: 'ops-col tight' }), el('span', { class: 'cap' }, t('rMore') + ' · ' + num(rest.length)));
     findingBoxes('runtime', rest).forEach(function (b) { sec.appendChild(b); });
     main.appendChild(sec);
 }
@@ -312,8 +313,16 @@ AREA_MODULES.runtime = {
     page: function (p, view, key, c) {
         rtBar(p, view, key, c.bar);
         var sel = rtSelected(p, key);
-        if (!p.resources.length) c.main.appendChild(ndTag(t('rNoIac'), true));
-        else if (view === 'cmp') rtCompare(p, sel, c.main); else rtTopology(p, sel, c.main);
+        if (!p.resources.length) {
+            c.main.appendChild(ndTag(t('rNoIac'), true));
+            // The zones are drawn even when empty: the frame says where a resource would sit.
+            if (view === 'cmp') rtCompare(p, sel, c.main);
+            else {
+                var zg = el('div', { class: 'ops-zempty', id: 'rt-zones' });
+                t('rZones').forEach(function (z) { zg.appendChild(add(el('div', { class: 'ops-zcell' }), el('span', { class: 'cap' }, z), el('span', { class: 'muted' }, t('rNoResource')))); });
+                c.main.appendChild(zg);
+            }
+        } else if (view === 'cmp') rtCompare(p, sel, c.main); else rtTopology(p, sel, c.main);
         rtLoose(p, c.main);
         rtRail(p, key, c.right);
     }

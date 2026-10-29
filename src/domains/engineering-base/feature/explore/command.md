@@ -119,7 +119,7 @@ Based on the ticket, this is about {summary}. Is that still accurate, or has the
 
 While exploring, proactively research:
 
-- Use `codebase-retrieval` to find related code, existing patterns, and affected areas.
+- Use `code-graph ask` to find related code, existing patterns, and affected areas.
 - Check `agents/features/` for existing feature plans that might overlap.
 - Check the module structure via `enumerate_modules()` (resolves `modules.root_paths`; Laravel shape: `app/Modules/`) for where this would live.
 - Look for existing services, models, or endpoints that could be extended.

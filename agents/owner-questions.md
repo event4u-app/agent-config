@@ -8,27 +8,33 @@ and the run that applies it links its PR.
 
 ## Open
 
-### OQ-21 — How consumers get a browser for `ui:render`
+### OQ-28 — External observation providers for app and feature reconstruction
 
-- **Context:** `@playwright/test` is a devDependency, so no consumer install can
-  render a page (`road-to-tells-a-near-miss-can-refute` D4). Step 2.1 ships the
-  no-new-dependency half: use `playwright-core` when the consumer already has it,
-  plus a discovered system browser.
-- **Options:** (a) add `playwright-core` (13 MB) as a runtime dependency;
-  (b) write a zero-dependency CDP client over Node's global `WebSocket`;
-  (c) keep the optional resolution only.
-- **Recommendation:** (c) until a render rule is `backed` — the witness tier only
-  matters once Phase 2.5 has promoted a row, and (a) changes every install.
-- **Blocks:** nothing now; consumer reach of the render engine (Phase 2).
+- **Context:** inbox round `inbox-2026-10-bj`, your turn: "es geht nicht nur um ac … ich
+  möchte einfach apps oder features aus apps kopieren können … nicht nur rea mechanismen,
+  sondern auch im web/repos". Web and repository research is already in the reference door
+  (ADR-288 D7). Runtime, browser and binary observation (a reverse-engineering MCP, device
+  automation) would install third-party tooling and needs network and a running target.
+  `road-to-transfers-that-close-on-evidence` ships the obligation ledger and the transfer
+  modes without them. <!-- md-language-check: ignore -->
+- **Options:** (a) an optional, opt-in provider slot the reference door uses when the
+  consumer has such a tool configured; (b) document how to feed their output in as
+  evidence, no integration; (c) leave it out.
+- **Recommendation:** (a), opt-in only and never installed by default — it serves your ask
+  without adding a dependency for anyone who does not reconstruct apps.
+- **Blocks:** nothing in the landed roadmap; the runtime/binary half of reconstruction.
 
-## Not owner questions — waits, or already settled in the tree
+### OQ-29 — May `roadmap_set_step --verify` execute a step's check before flipping it?
 
-- `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
-  `Resolved when` asks for both seats answering a real round. Councils ran 2/2 on
-  2026-10-24, so it looks settled. The agent verifies and closes it.
-- `default-flip-of-the-installed-layer` (installed-layer): waits on a host
-  observation and states itself "not a question".
-- `four-dated-re-checks-are-calendar-bound` (corpus cadence): waits on calendar dates.
+- **Context:** `road-to-work-that-checks-itself` (inbox round `inbox-2026-10-bj`) now
+  lists vacuous checks and records red-before-green as data. Making the step writer run
+  the `verify:` command and refuse the flip on red would make "done" machine-checked, but
+  it executes roadmap-authored commands; `roadmap-process-loop-run.md` currently says the
+  writer executes nothing.
+- **Options:** (a) run only read-only-allowlisted clauses, refuse on red; (b) run them
+  and warn only; (c) keep the writer model-carried.
+- **Recommendation:** (b) for a measured window, then decide (a) on the numbers.
+- **Blocks:** the binding half of `road-to-work-that-checks-itself`.
 
 ### OQ-8 — The owner-authority register sits outside this list
 
@@ -102,7 +108,116 @@ and the run that applies it links its PR.
   user-data layer, which is the owner's call
   (`road-to-a-memory-that-names-its-moment` § Decisions E12).
 
+### OQ-28 — May the self-repair loop propose a change to the user's own project?
+
+- **Context:** round `inbox-2026-10-bi`. A convention that keeps not arriving
+  ("tabs!") can only be fixed in the user's project (`.editorconfig`, a
+  formatter config, `AGENTS.md`), but `self-repair-loop`'s Iron Law reads "never
+  'fix' it by editing the user's project". Lowering that floor is yours.
+- **Options:** (a) amend to "never edit the user's project without their
+  consent" — the fix is a proposed diff the user accepts; (b) keep the law and
+  route conventions to a separate proposal-only path outside self-repair;
+  (c) keep it as is.
+- **Recommendation:** (a) — the proposal is a diff the user sees and accepts,
+  never a silent write.
+- **Blocks:** `later/road-to-a-noted-that-is-a-write` Phase 3.
+
+### OQ-29 — May agent-config read the host's own auto-memory?
+
+- **Context:** round `inbox-2026-10-bi`. Claude Code keeps per-project memory
+  under `~/.claude/projects/*/memory`; `src/config/source-registry.json` lists it
+  read-only with no reader. Reading personal data outside the repo is yours to
+  allow.
+- **Options:** (a) a consent-gated, read-only bridge (asked once, class B);
+  (b) never.
+- **Recommendation:** (a) — read-only, consent asked once, no writes into host
+  memory.
+- **Blocks:** nothing executable; a future reader for correction recurrence.
+
+### OQ-30 — Should chat history redact credentials at rest whatever the egress mode?
+
+- **Context:** round `inbox-2026-10-bi`. `chat_history` is on by default and
+  stores text in plaintext; the placeholder view exists but
+  `egress.placeholders.mode` ships `off`. There is no private-section marker.
+  Both options change consumer default behaviour.
+- **Options:** (a) always redact on write with the existing egress rules, plus
+  a private marker; (b) turn placeholders on only where chat history is
+  enabled; (c) leave both to `road-to-placeholders-on-the-wire`.
+- **Recommendation:** (a) — the storage risk exists today without any
+  condition.
+- **Blocks:** nothing executable now.
+
+### OQ-31 — A memory shared across providers vs. the ADR-249 floor
+
+- **Context:** round `inbox-2026-10-bi`, your demand that subagents, councils
+  and unpaid routes share one memory. ADR-249 rules out a cross-session
+  persistent state store, a data-handling floor only you can lower.
+- **Options:** (a) keep the floor and serve the demand through curated,
+  file-first memory cut per audience (`later/road-to-a-memory-each-worker-is-handed`);
+  (b) let the council prepare a reopen record limited to a scoped episodic
+  journal, default off; (c) decline the demand.
+- **Recommendation:** (a) — it serves the demand without a new store.
+- **Blocks:** `later/road-to-a-memory-each-worker-is-handed` Phase 3.
+
+## Not owner questions — waits, or already settled in the tree
+
+- `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
+  `Resolved when` asks for both seats answering a real round. Councils ran 2/2 on
+  2026-10-24, so it looks settled. The agent verifies and closes it.
+- `default-flip-of-the-installed-layer` (installed-layer): waits on a host
+  observation and states itself "not a question".
+- `four-dated-re-checks-are-calendar-bound` (corpus cadence): waits on calendar dates.
+
 ## Answered
+
+### OQ-27 — The prompt optimizer's "Lyra" persona
+
+- **Context:** `/optimize prompt` greets with "Hi! I'm Lyra"; a role names vocabulary, not a
+  method, and the same change drops "assign a role" from the skill.
+- **Options:** (a) keep the name, drop the role-play welcome; (b) drop the persona entirely;
+  (c) keep both.
+- **Recommendation:** (a).
+- **Blocks:** step 2.1 of `road-to-a-prompt-that-deepens-not-widens-carried` (`later/`).
+- **Answered 2026-10-28:** "Persona komplett entfernen" — option (b): the name and the welcome both go (the AI council had recommended the same, 2/2). Applied in `src/domains/meta/optimize/prompt/command.md` and `src/skills/prompt-optimizer/SKILL.md`, `later/road-to-a-prompt-that-deepens-not-widens-carried` 2.1. <!-- md-language-check: ignore -->
+
+### OQ-26 — Make the interview reachable outside the maintainer workspace
+
+- **Context:** `challenge-me`, `grill-me` and `refine-prompt` are fenced to
+  `agent-config-maintainer`; a consumer typing "interview me" gets nothing routed.
+- **Options:** (a) add `engineering` and `product` to their workspaces; (b) add the
+  `product-reasoning` pack to `engineering`'s optional packs; (c) leave it.
+- **Recommendation:** (a) — optional packs are opt-in, so (b) still misses most users.
+- **Blocks:** step 3.2 of `road-to-the-question-only-the-owner-can-answer-carried` (`later/`).
+- **Answered 2026-10-28:** the owner sent it to the AI council first; it converged 2/2 on (a) after a per-skill audit and judged no owner preference needed. The audit found the premise half-wrong: the interview commands already project to consumers (pack `product-reasoning` is active under scoped projection, and the default projection is unscoped), so only the `workspaces:` frontmatter misreported them as maintainer-only. Widened for `challenge-me`, `grill-me`, `challenge-me vision`, `challenge-me with-docs` and `refine-prompt`; `challenge-me closure` stays maintainer-only because it runs `./scripts-run`. Applied in `later/road-to-the-question-only-the-owner-can-answer-carried` 3.2. <!-- md-language-check: ignore -->
+
+### OQ-25 — How the "interview me" sentence gets appended automatically
+
+- **Context:** your own question in inbox round `inbox-2026-10-be`: "Können wir diesen Satz
+  auch automatisch anhängen?" A `user_prompt_submit` hook can add the sentence as context.
+  Claude already runs 14 concerns in that slot, and the 2026-10-12 line (ADR-293) rules out
+  new form settings.
+- **Options:** (a) a personal hook in your `~/.claude/settings.json`, firing on every
+  prompt, zero package change; (b) a shipped concern, off by default, firing only on task
+  prompts behind a new opt-in key; (c) both.
+- **Recommendation:** (a) — it works today, costs no consumer anything, and Phase 1 of
+  `road-to-the-question-only-the-owner-can-answer` makes the sentence actually reach the
+  interview and fence the run.
+- **Blocks:** step 3.1 of `road-to-the-question-only-the-owner-can-answer-carried` (`later/`).
+- **Answered 2026-10-28:** "Geht Option 2, aber mit dem automatismen, bzw. der ERkennung von Option 1? Ich finde es nicht gut, die settings.json immer bearbeiten zu müssen. Es kann ja auch in unseren allgemeinen hooks sein und wir reagieren dann immer so wie es passt und gut ist, oder der agent entscheidet" — a shipped concern in the package's own hooks, on by default, no settings key, firing only on task prompts; the agent decides whether a gap is owner-owned. Applied as the `intake-pass` concern (`src/scripts/hooks/intake_pass_hook.ts`) in `later/road-to-the-question-only-the-owner-can-answer-carried` 3.1. <!-- md-language-check: ignore -->
+
+### OQ-21 — How consumers get a browser for `ui:render`
+
+- **Context:** `@playwright/test` is a devDependency, so no consumer install can
+  render a page (`road-to-tells-a-near-miss-can-refute` D4). Step 2.1 ships the
+  no-new-dependency half: use `playwright-core` when the consumer already has it,
+  plus a discovered system browser.
+- **Options:** (a) add `playwright-core` (13 MB) as a runtime dependency;
+  (b) write a zero-dependency CDP client over Node's global `WebSocket`;
+  (c) keep the optional resolution only.
+- **Recommendation:** (c) until a render rule is `backed` — the witness tier only
+  matters once Phase 2.5 has promoted a row, and (a) changes every install.
+- **Blocks:** nothing now; consumer reach of the render engine (Phase 2).
+- **Answered 2026-10-28:** "versuche sie aber vorher im council zu beantworten" — the owner sent the open questions to the AI council first; it converged 2/2 (anthropic + openai) on (c) and judged that no owner preference is needed. One refinement both seats asked for: reopen when a render-dependent rule becomes a promotion *candidate*, not only once it is promoted, because promotion evidence may itself need consumer rendering. <!-- md-language-check: ignore -->
 
 ### OQ-24 — Fund the two measurement runs inbox round 2026-10-bd planned
 
@@ -121,7 +236,8 @@ and the run that applies it links its PR.
 ### OQ-23 — Repetitions against the canary query ceiling
 
 - **Context:** three repetitions per case raise the rotation's weekly peak from
-  200 to 600 queries; `MAX_WEEKLY_QUERIES` is 200 and owner-set, and the lever
+  200 to 600 queries; `MAX_WEEKLY_QUERIES` is owner-set (200, raised to 220 on
+  2026-10-27 when the peak reached 210, so three repetitions now mean 630), and the lever
   6.3 names first no longer exists. Blocker `b-rate-canary-ceiling`.
 - **Options:** (a) raise the ceiling to 600; (b) three repetitions only for
   units with floor 0.90 (peak ≈ 420, still above 200); (c) keep default 1 and
@@ -130,7 +246,6 @@ and the run that applies it links its PR.
   argues.
 - **Blocks:** steps 6.1 (default 3) and 6.3.
 - **Answered 2026-10-27:** "Und Empfehlung 3 - Aber kläre das gerne im ai council" — the owner recommended (c) and delegated to the AI council, which converged 2/2 (anthropic + openai) on (c). Applied in `agents/roadmaps/road-to-routing-assurance-live-floors.md` (6.1/6.3 restated, blocker `b-rate-canary-ceiling` resolved). <!-- md-language-check: ignore -->
-
 
 ### OQ-22 — Spend beyond the 25 USD routing pilot
 
@@ -145,7 +260,6 @@ and the run that applies it links its PR.
   remaining cost is runs, not design.
 - **Blocks:** steps 3.1, 3.2, 3.3, 4.1, 4.3.
 - **Answered 2026-10-27:** "1" — option (a): a new ceiling of about 95 USD for Phases 3–4, cumulative on top of the 23.56 USD the pilot spent. Applied in `agents/roadmaps/road-to-routing-assurance-live-floors.md` (blocker `b-live-spend-beyond-pilot` resolved). Narrowed the same day by the owner: "Wir wollen ja aber immer die CLI first nutzen [...] bei CLI brauchen wir keine Budget Frage" — CLI runs need no budget question; the ceiling binds only an arm that must use the API (AC-7 of that roadmap). <!-- md-language-check: ignore -->
-
 
 ### OQ-20 — Third-party test data as attributed splits (`external-test-data-licence`)
 

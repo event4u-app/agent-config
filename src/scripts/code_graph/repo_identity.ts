@@ -167,3 +167,18 @@ export function repoIdentity(root: string, env?: EnvMap | null, dir?: string): R
         source,
     };
 }
+
+/**
+ * The repository's display name: the last segment of its `origin` (else first
+ * remote) without `.git`, else the folder of its main checkout. Never the folder
+ * of a linked worktree, and never the owner part of a slug.
+ */
+export function repoName(root: string): string {
+    const real = realpathOr(root);
+    const origin = remoteUrl(real);
+    const fromOrigin = origin === null ? '' : (canonicalOrigin(origin, real).split('/').pop() ?? '').replace(/\.git$/i, '');
+    if (fromOrigin !== '') return fromOrigin;
+    const common = git_common_dir(real);
+    const main = common !== null && path.basename(common) === '.git' ? path.dirname(common) : real;
+    return path.basename(main);
+}

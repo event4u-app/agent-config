@@ -25,8 +25,10 @@ package-shipped templates (`.augment/templates/AGENTS.md` and
 `.augment/templates/copilot-instructions.md`), filling in placeholders
 based on auto-detected stack + user answers.
 
-Tool-agnostic by design — AGENTS.md is the universal entry point
-honoured by Claude Code, Cursor, Codex, Copilot, Augment and Gemini.
+Tool-agnostic by design — AGENTS.md is the shared entry point for
+Cursor, Codex, Copilot, Augment and Gemini. Claude Code reads CLAUDE.md
+instead and loads AGENTS.md only through a CLAUDE.md `@AGENTS.md` import
+or a symlink.
 The `.github/copilot-instructions.md` companion is generated alongside
 because GitHub Copilot reads its own file path. Other tool stubs
 (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`) follow the symlink-or-stub

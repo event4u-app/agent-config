@@ -35,7 +35,7 @@ packs:
 > Please provide the class name (e.g. `UpdateSuperUserRequest`), its namespace, or the file path.
 
 Once provided, locate the file:
-- Try `codebase-retrieval` or a `find` command to resolve the file path.
+- Try `code-graph ask` or a `find` command to resolve the file path.
 - If multiple matches exist, list them and ask the user to pick one (numbered options).
 - If no match is found, tell the user and stop.
 

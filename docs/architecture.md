@@ -1,6 +1,6 @@
 # Architecture
 
-> **agent-config is a governance layer with optional, individually opt-in embedded engines ([ADR-124](decisions/ADR-124-embedded-engine-doctrine.md)) — it ships a deterministic orchestration contract / state machine for host agents, never a resident process.** Engines (code intelligence, gated reach, setup GUI, bench lab) are per-command, terminate on completion, and are never default-on without measured lift.
+> **agent-config is a governance layer with optional, individually opt-in embedded engines ([ADR-124](decisions/ADR-124-embedded-engine-doctrine.md)) — it ships a deterministic orchestration contract / state machine for host agents; a resident process is permitted only under [ADR-249](decisions/ADR-249-supervised-resident-process-permitted-under-governance.md)'s supervision conditions, and none starts by default.** Engines (code intelligence, gated reach, setup GUI, bench lab) are per-command, terminate on completion, and are never default-on without measured lift.
 
 ## System overview
 
@@ -155,7 +155,7 @@ note, package-internal path-swap, description budget, and the
 |---|---|---|
 | **Skills** | 301 | On-demand expertise — stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node), testing, Docker, API design, security, observability, … |
 | **Rules** | 122 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
-| **Commands** | 211 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/condense`, … |
+| **Commands** | 212 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/condense`, … |
 | **Guidelines** | 121 | Reference material cited by skills — PHP patterns, Eloquent, Playwright, agent-infra, … |
 | **Templates** | 7 | Scaffolds for features, roadmaps, contexts, skills, overrides |
 | **Contexts** | 5 | Shared knowledge about the system itself |

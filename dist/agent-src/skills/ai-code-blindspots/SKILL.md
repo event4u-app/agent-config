@@ -87,31 +87,12 @@ pass.
 ### Backstop greps (authoring-time, cross-stack)
 
 ```bash
-# Frontend insecure render / client secrets (React + Vue + vanilla)
-rg -n 'dangerouslySetInnerHTML|v-html|\.innerHTML\s*=|\beval\(|new Function\('
-rg -n 'NEXT_PUBLIC_.*(SECRET|KEY|TOKEN)|VITE_.*(SECRET|KEY)|localStorage\.setItem\([^)]*[Tt]oken'
-# String-built SQL (concatenation / interpolation into a query)
-rg -n 'query\(.*(\+|\$\{|`).*\)|(SELECT|INSERT|UPDATE|DELETE).*(\+|\$\{)'
-# Hardcoded secrets / weak hashing
-rg -n 'AKIA[0-9A-Z]{16}|sk_live_|AIza[0-9A-Za-z_\-]{35}|password\s*=\s*["\x27]|md5\(|sha1\(' .
-# A fast hash over a PASSWORD — any SHA-2 counts, and a hand-rolled salt is
-# the same defect wearing a longer digest. `hash_file`/`hash('sha256', $blob)`
-# over a file or a body is NOT this, which is why the pattern is password-scoped.
-rg -n '(md5|sha1|sha224|sha256|sha384|sha512|hash|hashlib\.\w+)\s*\(\s*[^)]*(password|passwd|pwd)' .
-# A raw comparison on a secret — token, OTP, signature, MAC. Needs a
-# constant-time compare (hash_equals, crypto.timingSafeEqual).
-rg -n '\$?(token|otp|signature|mac|hmac|digest)\s*===?\s*|===?\s*\$?(token|otp|signature|mac|hmac)' .
-# Infra: wildcard IAM / open ingress / disabled TLS
-rg -n '"Action"\s*:\s*"\*"|"Resource"\s*:\s*"\*"|0\.0\.0\.0/0|InsecureSkipVerify|verify=false|curl.*\| *bash' .
-# Raw secret in an agent/MCP/CI config (should be an env-var reference, not a literal)
-rg -n '(sk_live_|sk-[A-Za-z0-9]{20}|AKIA[0-9A-Z]{16}|ghp_[0-9A-Za-z]{36}|AIza[0-9A-Za-z_\-]{35})' --glob '*.mcp.json' --glob '.mcp.json' --glob '*.env' --glob '**/agent*config*' --glob '.github/workflows/*'
-# Upload: client filename into a storage path, mimes without extensions, executable sinks
-rg -n 'getClientOriginalName|getClientOriginalExtension|originalname|getOriginalFilename|storeAs\(|storePubliclyAs\(' .
-rg -n "mimes:" . | rg -v 'extensions:'
-rg -n 'move_uploaded_file\(|phar://|(include|require)(_once)?\s*\(?\s*\$' .
-# Swallowed error (empty catch) / unbounded external call (no timeout arg)
-rg -n 'catch\s*\([^)]*\)\s*\{\s*\}|except[^:]*:\s*pass' .
+agent-config code-graph scan --pack security   # one file:line:rule-id per hit
+agent-config code-graph scan --pack frontend
+agent-config code-graph scan --list            # every rule id and what it flags
 ```
+
+Rules: `string-built-sql`, `hardcoded-secret` (also md5/sha1), `fast-password-hash` (any SHA-2 over a password counts — a hand-rolled salt is the same defect; a hash over a file or body is not, so the rule is password-scoped), `raw-secret-compare` (needs `hash_equals` / `crypto.timingSafeEqual`), `infra-wildcard` (wildcard IAM, open ingress, disabled TLS, `curl | bash`), `config-raw-secret` (agent/MCP/CI configs: an env-var reference, never a literal), `upload-client-name`, `upload-mimes-only`, `upload-exec-sink`, `swallowed-error`; frontend: `render-sink`, `client-secret`.
 
 Stack-specific patterns (the greps name several ecosystems side by side on purpose): keep the ones for the stack in front of you; a hit means read that line, not auto-fix.
 

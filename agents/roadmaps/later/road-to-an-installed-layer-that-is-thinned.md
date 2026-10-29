@@ -492,6 +492,77 @@ rather than as a ninth roadmap.
       reason.
       verify: the step note quotes the output of `./scripts-run src/scripts/check_preamble_payload_budget` taken on or after 2026-11-10.
 
+## Phase 6 — Arrivals from inbox-2026-10-bg
+
+> **Arrivals:** 23 — latest `inbox-2026-10-bg` (2026-10-28); earlier: `inbox-2026-10-as`,
+> `inbox-2026-10-c` and at least twenty rounds this file's header counts.
+>
+> The round's thesis, verified against `main` @ `cf494b8ec`: the gate read the
+> wrong axis. The layer-form decision required the behavioural effect
+> `observed-true` for `claude`, which only a thinned layer can produce, while a
+> thinned layer required that verdict — so no machine could ever leave the full
+> form. Owner answer 2026-10-28, translated: "implement E1 + E2 now". Reading:
+> `agents/evidence/analysis/installed-layer-reading-2026-10-28.md`.
+
+- [x] **6.1 Limit rows per window class.** `host-instruction-limits.json` carries <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/host-injection-effect.json -->
+      `by_window` for `claude-code` — combined 120,000 (200K) / 150,000 (1M),
+      `reported`; per-file 40,000 / 150,000, `vendor-published` — and the report
+      and install receipt print one line per window. On this machine: 294.3 % of
+      the 200K figure, 235.4 % of the 1M figure.
+      verify: `npx vitest run tests/scripts/installed_layer_report.test.ts -t window` -> 0
+      production entry: src/scripts/installed_layer_report.ts
+- [x] **6.2 Maintainer-machine reading.** 106 files / 367,904 B under <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/host-injection-effect.json -->
+      `~/.claude/rules`, ten arrival sessions on host 2.1.312, 104 user rules
+      loaded at start, shadow decision `full (delivery-unobserved)`.
+      verify: `grep -c 'host version 2.1.312' agents/evidence/analysis/installed-layer-reading-2026-10-28.md` -> /^[1-9]/
+- [x] **6.3 Read the delivery axis (owner E1).** `host-injection-effect.json` rows <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/host-injection-effect.json -->
+      may carry `delivery_mechanics` beside `state`, same citation protocol;
+      `deliveryObservedFor` reads it. The `claude` row is seeded from the
+      2026-09-10 delivery its own `reason` records (2.1.268, 7,685 B); `state`
+      keeps its value and owner. ADR-293 Amendment 2.
+      verify: `npx vitest run tests/scripts/injection_effect.test.ts tests/scripts/layer_form_decision.test.ts` -> 0
+- [x] **6.4 `install --enrol` (owner E2).** One receipt field beside `--full`'s pin; <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/host-injection-effect.json -->
+      an enrolled machine may be promoted with the shipped switch off, `--full`
+      wins, demotion unchanged.
+      verify: `npx vitest run tests/install/layer_promotion.test.ts -t enrolled` -> 0
+- [x] **6.5 Standing laws the user layer can carry.** Found while running 6.3: two <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/host-injection-effect.json -->
+      consequence-class members are `workspaces: [agent-config-maintainer]` and
+      never installed at user scope, so `arrival-standing-law-missing` held on
+      every machine. The arrival check now requires only members the user layer
+      ships. With 6.3–6.5 a simulated 2.1.312 session clears every condition up
+      to `version-skew`, which only the worktree-versus-installed measurement caused.
+      verify: `npx vitest run tests/scripts/layer_form_evidence.test.ts -t standing` -> 0
+- [ ] **6.6 Enrol the maintainer machine and refresh the mechanics row.** After the
+      release carrying 6.3–6.5: `agent-config install --enrol`, one fresh session,
+      `agent-config doctor --check layer-form` reads `thinned`, and the next
+      session's promotion writes stubs. Replace the seeded `delivery_mechanics`
+      citation with the first enrolled session that delivers a body.
+      verify: the doctor line quoted in the step note reads `claude-code would-be: thinned`.
+- [ ] **6.7 Promotion uses the law form.** The consequence class projects
+      stub-plus-law on a promoted layer instead of staying whole (`ruleForm` keeps
+      it whole today); `no_stub` members and the safety-floor tier stay whole.
+      Without it a promoted layer stays about 177,000 characters (the round's
+      estimate), over both window figures.
+      verify: the standing-only fixture stays green on a promoted layer.
+- [ ] **6.8 Run the frozen comparison with an arm independent of the decision.**
+      A v2 of `setup-phase5-preregistration.md` differs only in how the computed arm
+      is built (the shipped thin pass with 6.7's form). Council before freezing.
+      verify: a `diff` of v1 and v2 touches only the arm-construction lines.
+- [ ] **6.9 Kernel and law diet.** Mechanics move behind existing `routes_to`
+      guidelines; every obligation sentence stays verbatim. Targets owner-set after
+      a per-member law measurement.
+      verify: an obligation-diff test over old and new bodies.
+- [ ] **6.10 Arrival per host minor line, demotion with a re-probe.** This session
+      ran on 2.1.311 against arrivals on 2.1.312 and read
+      `arrival-host-version-mismatch`; on a host that ships several builds a week a
+      promoted machine falls back after each update.
+      verify: a version-bump fixture stays thinned; a missing-law fixture demotes.
+- [ ] **6.11 Mixed-trigger rules.** All 104 user-layer rules on this machine load
+      unconditionally; a rule with path and keyword triggers gets no `paths:`. Ship
+      a path-scoped twin only once an arrival on the current host shows a user-level
+      rule loading with `load_reason: path_glob_match`.
+      verify: without such an arrival the layer is byte-identical to today.
+
 ## What this roadmap deliberately does not do
 
 - No thinning of any other host (ADR-267).

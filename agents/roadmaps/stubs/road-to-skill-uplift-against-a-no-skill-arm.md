@@ -77,3 +77,14 @@ question this subject keeps arriving with.
 
 Promote when the owner answers (1), or when `_spawn_subagent` gains a real
 implementation for any host for another reason.
+
+## Pilot preconditions (2026-10-28)
+
+From `road-to-a-bench-that-fails-when-nothing-was-done` step 4.2, measured at
+`1e3869b03d`. Before option (1) runs:
+
+- **(a)** Each pilot skill has ≥ 3 eval scenarios, ≥ 1 of them held out.
+  Today 37 of 46 `src/skills/*/evals/evals.json` carry exactly 1 scenario,
+  6 carry 2, and only 3 carry 3 or more.
+- **(b)** The bench task-validity gate (`check_bench_task_validity --gate`) covers
+  the pilot scenarios: a do-nothing arm and a tampered verifier pass none.

@@ -1,0 +1,17 @@
+/* Wissen — the values of the 2026-10-bf handover's p10/Wissen.dc.html. */
+.k-who { display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 10px; border: 1px dashed var(--line2); font-size: 11px; color: var(--soft); }
+.k-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); gap: 8px; }
+.k-kpi { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--text); text-align: left; }
+.k-kv { font-size: 20px; font-weight: 600; }
+.k-kpi span:nth-child(2) { font-size: 12px; }
+.k-kpi .muted { font-size: 10px; }
+.k-note { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 12px; border: 1px dashed var(--amber); font-size: 13px; color: var(--soft); }
+.k-note b { font-weight: 600; color: var(--text); }
+.k-src, .k-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--text); text-align: left; }
+.k-src:first-child, .k-row:first-child { border-top: 0; }
+.k-src.on { background: var(--brandTint); box-shadow: inset 3px 0 0 var(--brand); }
+.k-rowl { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; text-align: left; }
+.k-rowt { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; min-width: 0; }
+.k-rowt .cap { font-size: 10px; }
+.k-rowl .mono.muted { font-size: 11px; overflow-wrap: anywhere; }
+.k-right { flex: none; font-size: 12px; color: var(--soft); text-align: right; max-width: 40%; }

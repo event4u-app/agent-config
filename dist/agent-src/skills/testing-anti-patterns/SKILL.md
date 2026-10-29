@@ -216,7 +216,7 @@ BEFORE editing a test that is currently failing:
 Backstop grep — skip/xfail added to chase green (a hit in a diff that also "fixes" a failure is the smell):
 
 ```bash
-rg -n '\b(it|test|describe)\.skip\b|\.only\b|xit\(|xdescribe\(|@pytest\.mark\.(skip|xfail)|@Disabled|->markTestSkipped\(' .
+agent-config code-graph scan --rule test-skip   # skip, only, xit, xfail, @Disabled, markTestSkipped
 ```
 
 This is the test-surface instance of the `autonomous-execution` allowlist-growth antipattern (bulk `skip`/`xfail` to force green counts as the tool being wrong, not the content) and the `verify-before-complete` floor (green must be *earned*, not manufactured).

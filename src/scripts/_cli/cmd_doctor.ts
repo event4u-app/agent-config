@@ -139,7 +139,6 @@ import { review_gate_doctor_signal } from '../ai_team/review_gate.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
 import { rglob as _rglob_raw, scanForeign } from '../_lib/foreign_scan.js';
 import { runCensus, summaryLine } from './cmd_doctor_neighbours.js';
-import { rulePacksLegacyCheck } from '../../install/rulePacksLegacy.js';
 import {
     LEGACY_ALL,
     excludedRuleBasenames,
@@ -725,7 +724,6 @@ const CHECK_IDS = [
     'stale-orphans',
     'overrides',
     'rule-scope-drift',
-    'rule-packs-legacy',
     'manifest-integrity',
     'lockfile-freshness',
     'bridge-drift',
@@ -759,7 +757,6 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'stale-orphans',
     'overrides',
     'rule-scope-drift',
-    'rule-packs-legacy',
     'mcp-mode',
     'mcp-beta-readiness',
     'offline-readiness',
@@ -2810,7 +2807,6 @@ function _run_checks(
         'stale-orphans': _check_stale_orphans,
         overrides: () => _check_overrides(project_root),
         'rule-scope-drift': () => _check_rule_scope_drift(project_root),
-        'rule-packs-legacy': () => rulePacksLegacyCheck([project_settings_path(project_root), path.join(user_global_paths.event4u_root(), 'settings', '.agent-settings.yml'), path.join(user_global_paths.event4u_root(), '.agent-settings.yml')], _package_root()) as unknown as Dict,
         'manifest-integrity': () => _check_manifest_integrity(manifest),
         'lockfile-freshness': () => _check_lockfile_freshness(manifest),
         'bridge-drift': () =>
@@ -2902,7 +2898,6 @@ function _run_checks_no_manifest(
         // worth the comment because the duplication is easy to miss.
         overrides: () => _check_overrides(project_root),
         'rule-scope-drift': () => _check_rule_scope_drift(project_root),
-        'rule-packs-legacy': () => rulePacksLegacyCheck([project_settings_path(project_root), path.join(user_global_paths.event4u_root(), 'settings', '.agent-settings.yml'), path.join(user_global_paths.event4u_root(), '.agent-settings.yml')], _package_root()) as unknown as Dict,
         'manifest-integrity': () => _skipped_manifest_check('manifest-integrity'),
         'lockfile-freshness': () => _skipped_manifest_check('lockfile-freshness'),
         'bridge-drift': () => _check_bridge_drift_no_manifest(bridge_present),

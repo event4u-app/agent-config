@@ -27,10 +27,12 @@ keep-beta-reason: >-
 
 `event4u/agent-config` may be installed at **one** of two scopes per developer machine:
 
-| Scope | Lives at | Default for | Rationale |
+| Scope | Lives at | Suited to | Rationale |
 |---|---|---|---|
 | **project-local** | `<project-root>/.augment/`, `<project-root>/.claude/skills/`, … | Application repos | The skills, rules, and personas are pinned alongside the code they serve. The install is reproducible from the repo. |
 | **user-global** | `~/.augment/`, `~/.claude/skills/`, … | Tooling repos / dotfiles | The same skills follow the developer across every project they touch. Useful when no specific repo "owns" the install. |
+
+**Installer default:** user-global ([ADR-020](../decisions/ADR-020-global-only-consumer-scope.md)). `detectScope` in `src/install/detect.ts` returns `global` unless the repo already has `.agent-settings.yml` (then `project`) or carries a manifest plus an AI-tool config (then it asks).
 
 Installing at **both** scopes simultaneously is the failure mode the canonical-channel contract prevents — the host harness loads both registrations, and any version drift surfaces as duplicate skills with stale frontmatter (the 2026-05-25 bug).
 

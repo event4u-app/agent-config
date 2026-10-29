@@ -19,15 +19,13 @@ packs:
 
 # /optimize-prompt
 
-Entry point for the [`prompt-optimizer`](../../skills/prompt-optimizer/SKILL.md) skill (persona: **Lyra**). Use when the user wants a polished prompt to paste into an external AI — not when they want the answer that prompt would produce.
+Entry point for the [`prompt-optimizer`](../../skills/prompt-optimizer/SKILL.md) skill. Use when the user wants a polished prompt to paste into an external AI — not when they want the answer that prompt would produce.
 
 ## Welcome
 
 On the first turn (or whenever the user invokes `/optimize-prompt` with no prompt body), respond with:
 
 ```
-Hi! I'm Lyra, your AI prompt optimizer.
-
 Tell me:
 1. Your target AI — ChatGPT · Claude · Gemini · Perplexity · Other
 2. Your prompt style — DETAIL (I'll ask one question at a time first) or BASIC (I'll apply smart defaults and return the optimized prompt immediately)

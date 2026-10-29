@@ -1,0 +1,137 @@
+{
+  "pressure": {
+    "n12": {
+      "units": 135,
+      "baseline": 0.5407,
+      "arm": 0.7926
+    },
+    "n20": {
+      "units": 135,
+      "baseline": 0.5407,
+      "arm": 0.7852
+    },
+    "n50": {
+      "units": 135,
+      "baseline": 0.5407,
+      "arm": 0.7407
+    }
+  },
+  "null_3_3": {
+    "acc_full": 0.5407,
+    "acc_20": 0.7852,
+    "delta": 0.1,
+    "holds": false
+  },
+  "parity": {
+    "units": 116,
+    "native": 0.5517,
+    "mcp": 0.4483,
+    "epsilon": 0.05,
+    "verdict": {
+      "delta": 0.1034,
+      "breached": true
+    }
+  },
+  "twins": [
+    {
+      "pair": "analysis-autonomous-mode",
+      "runs": 3,
+      "original_only": 2,
+      "twin_only": 0,
+      "both": 0,
+      "neither": 1,
+      "unknown": 0,
+      "confusion": 0
+    },
+    {
+      "pair": "brand",
+      "runs": 3,
+      "original_only": 3,
+      "twin_only": 0,
+      "both": 0,
+      "neither": 0,
+      "unknown": 0,
+      "confusion": 0
+    },
+    {
+      "pair": "condense-memory",
+      "runs": 3,
+      "original_only": 3,
+      "twin_only": 0,
+      "both": 0,
+      "neither": 0,
+      "unknown": 0,
+      "confusion": 0
+    },
+    {
+      "pair": "dashboard-design",
+      "runs": 3,
+      "original_only": 3,
+      "twin_only": 0,
+      "both": 0,
+      "neither": 0,
+      "unknown": 0,
+      "confusion": 0
+    },
+    {
+      "pair": "judge-injection-defense",
+      "runs": 3,
+      "original_only": 1,
+      "twin_only": 0,
+      "both": 0,
+      "neither": 2,
+      "unknown": 0,
+      "confusion": 0
+    },
+    {
+      "pair": "market-entry-analysis",
+      "runs": 3,
+      "original_only": 2,
+      "twin_only": 0,
+      "both": 0,
+      "neither": 1,
+      "unknown": 0,
+      "confusion": 0
+    },
+    {
+      "pair": "positioning-strategy",
+      "runs": 3,
+      "original_only": 2,
+      "twin_only": 0,
+      "both": 0,
+      "neither": 1,
+      "unknown": 0,
+      "confusion": 0
+    },
+    {
+      "pair": "roadmap-management",
+      "runs": 3,
+      "original_only": 3,
+      "twin_only": 0,
+      "both": 0,
+      "neither": 0,
+      "unknown": 0,
+      "confusion": 0
+    },
+    {
+      "pair": "schema-review",
+      "runs": 3,
+      "original_only": 1,
+      "twin_only": 0,
+      "both": 0,
+      "neither": 2,
+      "unknown": 0,
+      "confusion": 0
+    },
+    {
+      "pair": "worktree-lifecycle",
+      "runs": 3,
+      "original_only": 1,
+      "twin_only": 0,
+      "both": 0,
+      "neither": 2,
+      "unknown": 0,
+      "confusion": 0
+    }
+  ]
+}

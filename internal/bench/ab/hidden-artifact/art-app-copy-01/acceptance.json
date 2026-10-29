@@ -1,0 +1,52 @@
+{
+  "_note": "Held back from both arms; one test per line of app/ACCEPTANCE.md, written before any run.",
+  "tests": [
+    { "name": "adds-items-ignores-blank", "steps": [
+      { "do": "fill", "selector": "#new-todo", "value": "Buy rope" },
+      { "do": "submit", "selector": "#new-todo-form" },
+      { "do": "fill", "selector": "#new-todo", "value": "   " },
+      { "do": "submit", "selector": "#new-todo-form" },
+      { "do": "fill", "selector": "#new-todo", "value": "Pack map" },
+      { "do": "submit", "selector": "#new-todo-form" },
+      { "expect": "count", "selector": "#list li.todo", "eq": 2 } ] },
+    { "name": "count-pluralises", "steps": [
+      { "do": "fill", "selector": "#new-todo", "value": "One" },
+      { "do": "submit", "selector": "#new-todo-form" },
+      { "expect": "text", "selector": "#count", "match": "^1 item left$" },
+      { "do": "fill", "selector": "#new-todo", "value": "Two" },
+      { "do": "submit", "selector": "#new-todo-form" },
+      { "expect": "text", "selector": "#count", "match": "^2 items left$" } ] },
+    { "name": "toggle-marks-done", "steps": [
+      { "do": "fill", "selector": "#new-todo", "value": "One" },
+      { "do": "submit", "selector": "#new-todo-form" },
+      { "do": "click", "selector": "#list li.todo input.toggle" },
+      { "expect": "count", "selector": "#list li.todo.done", "eq": 1 },
+      { "expect": "text", "selector": "#count", "match": "^0 items left$" } ] },
+    { "name": "delete-removes", "steps": [
+      { "do": "fill", "selector": "#new-todo", "value": "One" },
+      { "do": "submit", "selector": "#new-todo-form" },
+      { "do": "click", "selector": "#list li.todo button.delete" },
+      { "expect": "count", "selector": "#list li.todo", "eq": 0 } ] },
+    { "name": "filters-render-matching-only", "steps": [
+      { "do": "fill", "selector": "#new-todo", "value": "One" },
+      { "do": "submit", "selector": "#new-todo-form" },
+      { "do": "fill", "selector": "#new-todo", "value": "Two" },
+      { "do": "submit", "selector": "#new-todo-form" },
+      { "do": "click", "selector": "#list li.todo input.toggle" },
+      { "do": "click", "selector": "[data-filter=done]" },
+      { "expect": "count", "selector": "#list li.todo", "eq": 1 },
+      { "do": "click", "selector": "[data-filter=open]" },
+      { "expect": "count", "selector": "#list li.todo", "eq": 1 },
+      { "expect": "text", "selector": "#list li.todo", "match": "Two" },
+      { "do": "click", "selector": "[data-filter=all]" },
+      { "expect": "count", "selector": "#list li.todo", "eq": 2 } ] },
+    { "name": "survives-reload", "steps": [
+      { "do": "fill", "selector": "#new-todo", "value": "Keep me" },
+      { "do": "submit", "selector": "#new-todo-form" },
+      { "do": "reload" },
+      { "expect": "count", "selector": "#list li.todo", "eq": 1 },
+      { "expect": "text", "selector": "#list li.todo", "match": "Keep me" } ] },
+    { "name": "self-contained", "steps": [
+      { "expect": "source", "match": "<script[^>]+src=|<link[^>]+stylesheet", "negate": true } ] }
+  ]
+}

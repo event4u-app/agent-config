@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **754 artefacts** in this package.
+Maintainer-facing index of all **755 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -439,7 +439,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (211)
+## Commands (212)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -634,6 +634,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`team-delegate`](../src/domains/meta/team/delegate/command.md) | cluster: team | Thin wrapper — hand a task to the second model as a native worker via the official plugin (/codex:rescue). The only write-access wrapper; double-gated behind ai_team.allow_delegate. |
 | command | [`team-review`](../src/domains/meta/team/review/command.md) | cluster: team | Thin wrapper — cross-model review of the current diff via the official plugin (/codex:review). Gated on /team availability (codex CLI + auth); fails closed when the plugin is absent. |
 | command | [`team-status`](../src/domains/meta/team/status/command.md) | cluster: team | Thin wrapper — plugin job status via /codex:status plus a quota block (shared openai counter vs team + council ceilings). Gated on codex CLI/auth availability; fails closed without the plugin. |
+| command | [`test-showcase`](../src/domains/meta/test-showcase/command.md) | cluster: test-showcase | Run the with/without showcase benchmark and report it |
 | command | [`tests`](../src/domains/engineering-base/tests/command.md) | cluster: tests | Tests orchestrator — routes to create, execute, e2e-plan, e2e-heal |
 | command | [`tests-create`](../src/domains/engineering-base/tests/create/command.md) | cluster: tests | Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …) |
 | command | [`tests-e2e-heal`](../src/domains/engineering-base/tests/e2e-heal/command.md) | cluster: tests | Find, debug, and fix failing Playwright E2E tests |

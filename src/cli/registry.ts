@@ -99,6 +99,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'hooks:effect', disposition: 'delegate', synopsis: 'Does a bound concern actually FIRE here? Sandboxed synthetic dispatch per concern; five per-concern states, four host verdicts (read-only).' },
     { name: 'routing:doctor', disposition: 'delegate', synopsis: 'Live routing diagnosis: per-gate ACTIVE/INACTIVE with reason, chain, freshness, orchestration state (read-only).' },
     { name: 'workspace:doctor', disposition: 'delegate', synopsis: 'Workspace identity with provenance (repo root, main worktree, current worktree, branch, PR base) + session claim and worktree pressure (read-only).' },
+    { name: 'user-data', disposition: 'delegate', synopsis: 'Your own data for this repository under your home: list, delete (dry run unless --yes, with tombstones), tombstones, and migrate (dry run first) of chat history and observations.' },
     { name: 'route:explain', disposition: 'delegate', synopsis: 'Deterministic rule-routing trace for one prompt: matched triggers, tier, disposition, budget, rejected candidates (trigger-match level only). --skills "<task>" ranks SKILLS instead, with each row\'s description, on a host with no MCP server.' },
     { name: 'route:audit', disposition: 'delegate', synopsis: 'Replay the router matcher over the last N chat-history prompts; opt-in recorder + --weekly rolling render (trigger-match level only).' },
     { name: 'hooks:replay', disposition: 'delegate', synopsis: 'Replay a fixture through the universal hook dispatcher (no state writes).' },

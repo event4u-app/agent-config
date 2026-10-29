@@ -12,6 +12,8 @@ suggestion:
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
+  - engineering
+  - product
 packs:
   - product-reasoning
 ---
@@ -87,7 +89,7 @@ in the council prompt.
 
 ```
 EXPLORE THE DOCS AND THE CODEBASE BEFORE THE FIRST QUESTION.
-NEVER WRITE TO DISK IN STEP 0. NEVER ASK WHAT view / grep / codebase-retrieval ANSWERS.
+NEVER WRITE TO DISK IN STEP 0. NEVER ASK WHAT view / grep / code-graph ask ANSWERS.
 ```
 
 1. **Read the seed** (same as `vision`).
@@ -258,7 +260,7 @@ auto-write the patches, never auto-invoke `/work`.
 
 When the user states "X is implemented as Y" AND the claim is
 **load-bearing** (would change an AC, scope boundary, or hard
-constraint), agent runs `view` / `grep` / `codebase-retrieval` to
+constraint), agent runs `view` / `grep` / `code-graph ask` to
 verify. Mismatch → single question block:
 
 > Your seed says X works via Y. The code (`path/to/file:123`) shows

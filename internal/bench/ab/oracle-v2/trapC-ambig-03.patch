@@ -1,0 +1,15 @@
+diff --git a/src/retry.ts b/src/retry.ts
+index 7cd65a1..05e8add 100644
+--- a/src/retry.ts
++++ b/src/retry.ts
+@@ -1,9 +1,7 @@
+ // The retry limit is currently hardcoded.
+ // "Make it configurable" could mean: a function param, an env var, or an
+ // exported constant — and the chosen DEFAULT matters (see client.ts).
+-const maxRetries = 3;
+-
+-export async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
++export async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
+   let lastErr: unknown;
+   for (let attempt = 0; attempt < maxRetries; attempt++) {
+     try {

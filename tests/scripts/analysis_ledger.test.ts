@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    EVIDENCE_AUTHORITIES,
+    EVIDENCE_COVERAGES,
     LedgerError,
+    absenceFinding,
     appendLoop,
     ledgerSummary,
     nextLoop,
@@ -85,5 +88,35 @@ describe('analysis loop ledger', () => {
         ledger = appendLoop(ledger, { lens: 'adversary', items: [item('a2', 'added', 'read')] });
         expect(nextLoop(ledger, 5)).toEqual({ action: 'stop', reason: 'loop-cap' });
         expect(() => appendLoop(ledger, { lens: 'overbuild-sequencing', items: [] })).toThrow(/exceeds the cap/);
+    });
+
+    it('accepts the optional authority and coverage axes, separate from tier', () => {
+        const evidence: Evidence = { ...ev('read'), authority: 'upstream-artifact', coverage: 'partial' };
+        const ledger = appendLoop([], { lens: 'coverage', items: [{ id: 'c1', change: 'added', evidence: [evidence] }] });
+        expect(ledger[0]?.status).toBe('counted');
+        expect(EVIDENCE_AUTHORITIES).toEqual(['upstream-artifact', 'controlled-replay', 'own-tree', 'external-claim', 'analyst-inference']);
+        expect(EVIDENCE_COVERAGES).toEqual(['complete', 'partial', 'unknown']);
+    });
+
+    it('still accepts evidence without authority or coverage — both axes are optional', () => {
+        expect(() => appendLoop([], { lens: 'coverage', items: [item('c1', 'added', 'read')] })).not.toThrow();
+    });
+
+    it('refuses an unknown authority or coverage value', () => {
+        const badAuthority = { ...ev('read'), authority: 'hearsay' } as unknown as Evidence;
+        const badCoverage = { ...ev('read'), coverage: 'most' } as unknown as Evidence;
+        expect(() => appendLoop([], { lens: 'coverage', items: [{ id: 'x', change: 'added', evidence: [badAuthority] }] })).toThrow(
+            /unknown authority hearsay/,
+        );
+        expect(() => appendLoop([], { lens: 'coverage', items: [{ id: 'y', change: 'added', evidence: [badCoverage] }] })).toThrow(
+            /unknown coverage most/,
+        );
+    });
+
+    it('renders an absence finding as unknown unless the search coverage is complete', () => {
+        expect(absenceFinding({ ...ev('read'), coverage: 'complete' })).toBe('absent');
+        expect(absenceFinding({ ...ev('read'), coverage: 'partial' })).toBe('unknown');
+        expect(absenceFinding({ ...ev('read'), coverage: 'unknown' })).toBe('unknown');
+        expect(absenceFinding(ev('executed'))).toBe('unknown');
     });
 });

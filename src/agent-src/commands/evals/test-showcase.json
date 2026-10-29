@@ -1,0 +1,12 @@
+{
+  "command": "test-showcase",
+  "intent": "Run the with/without agent-config showcase benchmark at a stated budget and report what its bundles say",
+  "cases": [
+    { "prompt": "run the showcase benchmark quick tier with a 15 dollar budget", "expected": "test-showcase" },
+    { "prompt": "re-grade the committed showcase bundles", "expected": "test-showcase" },
+    { "prompt": "check that docs/examples/bench matches its bundles", "expected": "test-showcase" },
+    { "prompt": "show me with and without agent-config on the artifact tasks", "expected": "test-showcase" },
+    { "prompt": "the CI run on my PR is red, fix it", "expected": "fix" },
+    { "prompt": "review my changes before I push", "expected": "review" }
+  ]
+}

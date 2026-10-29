@@ -249,7 +249,7 @@ describe('the ERD in 3D', () => {
     const erd3 = (page: Page): Promise<Erd3d> => page.evaluate(() => (window as unknown as { __mapErd3d: Erd3d }).__mapErd3d);
     it('renders from the 2D / 3D toggle, Focus stays the default, and a picked table comes to the front with all its columns', async () => {
         const page = await open();
-        expect(await page.locator('#av-main .dimseg button[aria-pressed="true"]').getAttribute('data-dim')).toBe('2d');
+        expect(await page.locator('#av-main .dimseg button[aria-checked="true"]').getAttribute('data-dim')).toBe('2d');
         await page.click('#av-main .dimseg button[data-dim="3d"]');
         await page.waitForFunction(() => (window as unknown as { __mapErd3d?: unknown }).__mapErd3d !== undefined);
         // The picked table's neighbourhood are cards; every other table is a dot.

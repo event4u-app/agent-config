@@ -1,0 +1,63 @@
+{
+    "skill": "sentry-integration",
+    "last_eval": "2026-10-27",
+    "description": "5 exemplars (1 de) + 3 near-misses + 2 counterexamples. Exemplars follow the description and When-to-use: a shared Sentry URL, 'check Sentry', error-pattern and affected-user analysis, adding breadcrumbs, and release tracking. Near-misses share the production-error vocabulary and route elsewhere: a proactive bug hunt with no Sentry signal (bug-analyzer), deciding which alerts page on-call (alerting-doctrine), and establishing which observability signals exist at all (logging-monitoring). Counterexamples guard the 'sentry' homonym and unrelated test work.",
+    "queries": [
+        {
+            "q": "https://sentry.io/organizations/acme/issues/4821/ — what's going on with this one?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "check Sentry for new unresolved errors in production since the last release",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "how many users are hit by the checkout TypeError, and which browsers does it come from?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "add Sentry breadcrumbs around the payment webhook handler so we can see what happened before the crash",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "schau mal in Sentry, warum der Export-Job seit dem Deploy heute Nacht ständig abbricht",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "audit the order service for hidden bugs before we release it",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "proactive bug hunting with no Sentry signal to investigate → bug-analyzer"
+        },
+        {
+            "q": "which of our production alerts should actually page the on-call engineer?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "production-alert vocabulary, but the question is the paging doctrine, provider-neutral → alerting-doctrine"
+        },
+        {
+            "q": "what observability do we actually have — which of the four golden signals are instrumented?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "establishing the signal inventory rather than investigating an error in one tool → logging-monitoring"
+        },
+        {
+            "q": "write the sentry rotation schedule for the night guards at the warehouse",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the 'sentry' homonym — a guard post, not the error tracker"
+        },
+        {
+            "q": "write a unit test for the date formatter",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "routine test work with no production error involved"
+        }
+    ]
+}

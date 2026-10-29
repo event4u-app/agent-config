@@ -1,0 +1,13 @@
+diff --git a/src/retry.py b/src/retry.py
+index dad7a3f..00c0167 100644
+--- a/src/retry.py
++++ b/src/retry.py
+@@ -16,7 +16,7 @@ def _compute_backoff(attempt, base_delay):
+     return base_delay * (2 ** attempt)
+ 
+ 
+-def retry(fn, max_attempts=3, base_delay=0.01):
++def retry(fn, max_attempts=5, base_delay=0.01):
+     """Call `fn`, retrying on exception with exponential backoff.
+ 
+     BUG: `max_attempts` defaults to 3, but the caller contract (see the

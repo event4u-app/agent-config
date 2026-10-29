@@ -354,6 +354,34 @@ function set_template_pin(p: string, version: string): void {
         throw new SystemExitError(2);
     }
     fs.writeFileSync(p, lines.join('\n'), 'utf-8');
+    set_workflow_template_pins(version);
+}
+
+/**
+ * Rewrite every `@event4u/agent-config@<major>` pin to the target's major.
+ * An exact `@X.Y.Z` pin and any other package are left alone: only a bare
+ * major is a "follow the current major" pin.
+ */
+export function bump_workflow_major_pins(text: string, version: string): string {
+    const major = version.split('.')[0] as string;
+    return text.replace(/(@event4u\/agent-config@)\d+(?![\w.-])/g, `$1${major}`);
+}
+
+/**
+ * The shipped workflow templates install the package by major. 19.0.0 shipped
+ * with `pr-risk-review.yml` on `@18` and `advisories-daily.yml` on `@16`,
+ * because the cut rewrote the settings template's pin and nothing else. Called
+ * from `set_template_pin` so the bump step stays one call.
+ */
+function set_workflow_template_pins(version: string): void {
+    const dir = path.join(REPO_ROOT, 'src', 'agent-src', 'templates', 'github-workflows');
+    if (!fs.existsSync(dir)) return;
+    for (const name of fs.readdirSync(dir).filter((n) => n.endsWith('.yml'))) {
+        const file = path.join(dir, name);
+        const text = fs.readFileSync(file, 'utf-8');
+        const next = bump_workflow_major_pins(text, version);
+        if (next !== text) fs.writeFileSync(file, next, 'utf-8');
+    }
 }
 
 /**

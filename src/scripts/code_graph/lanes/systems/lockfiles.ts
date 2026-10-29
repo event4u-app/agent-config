@@ -45,6 +45,8 @@ export interface LockPackage {
     classmap: boolean;
     /** composer: service providers the framework discovers on its own */
     providers: string[];
+    /** composer `type: metapackage`: installs nothing of its own, only requires */
+    meta?: boolean;
     /** peers it asks the project to install */
     peers: string[];
     private: boolean;
@@ -248,6 +250,7 @@ interface ComposerPkg {
     autoload?: { 'psr-4'?: Record<string, unknown>; 'psr-0'?: Record<string, unknown>; files?: unknown[]; classmap?: unknown[] };
     extra?: { laravel?: { providers?: unknown[] } };
     'notification-url'?: string;
+    type?: string;
 }
 
 export function readComposerLock(file: string, text: string, manifest: Manifest | null): LockGraph | { unread: string } {
@@ -270,6 +273,7 @@ export function readComposerLock(file: string, text: string, manifest: Manifest 
         p.classmap = (c.autoload?.classmap ?? []).length > 0;
         p.providers = (c.extra?.laravel?.providers ?? []).filter((x): x is string => typeof x === 'string');
         p.private = c['notification-url'] !== 'https://packagist.org/downloads/';
+        if (c.type === 'metapackage') p.meta = true;
         g.packages.set(p.key, p);
         byName.set(c.name.toLowerCase(), p.key);
     }

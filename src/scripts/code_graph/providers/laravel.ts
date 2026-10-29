@@ -21,7 +21,7 @@ import type { SourceFile } from '../build.js';
 import type { FileRole } from '../map_model.js';
 import { psr4RulesFrom, resolvePsr4, type ResolutionConfig } from '../resolution_tiers.js';
 import { readLaravelSchema } from '../../_lib/schema/readers/laravel_migrations.js';
-import { isFixturePath } from '../fixture_paths.js';
+import { isFixturePath } from '../scope.js';
 import { replay, tableMap } from '../../_lib/schema/replay.js';
 import { spanHash } from '../lanes/lane_fact.js';
 import type { CodeEdge, CodeNode, FactMeta } from '../types.js';

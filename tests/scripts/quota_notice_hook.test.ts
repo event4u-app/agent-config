@@ -63,10 +63,40 @@ describe('window notices', () => {
 });
 
 describe('context notice', () => {
-    it('context at 85 % of the window gets one notice per session, and a second turn none', () => {
+    it('context at 85 % of the window gets a notice, and a second turn again', () => {
         feed([5], { context_used_pct: 85 });
-        expect(noticeLines(deps())).toEqual([expect.stringMatching(/context is 85 % of its window/)]);
-        expect(noticeLines(deps())).toEqual([]);
+        expect(noticeLines(deps({ promptKey: 'prompt-1' }))).toEqual([expect.stringMatching(/Context 85 %/)]);
+        expect(noticeLines(deps({ promptKey: 'prompt-2' }))).toEqual([expect.stringMatching(/Context 85 %/)]);
+    });
+
+    it('a double hook run in one prompt emits the context line once', () => {
+        feed([5], { context_used_pct: 85 });
+        expect(noticeLines(deps({ promptKey: 'prompt-1' }))).toHaveLength(1);
+        expect(noticeLines(deps({ promptKey: 'prompt-1' }))).toEqual([]);
+    });
+
+    it('the same prompt text in a later turn (a newer snapshot) gets the line again', () => {
+        feed([5], { context_used_pct: 85 });
+        expect(noticeLines(deps({ promptKey: 'weiter' }))).toHaveLength(1);
+        appendQuotaSnapshot({ ts: NOW + 1000, session: hashSessionId('sess-a'), context_used_pct: 86 }, stateEnv);
+        expect(noticeLines(deps({ promptKey: 'weiter', now: NOW + 2000 }))).toEqual([expect.stringMatching(/Context 86 %/)]);
+    });
+
+    it('the line names both exits with the ledger figures', () => {
+        feed([5], { context_used_pct: 85, context_size: 200_000 });
+        const [line] = noticeLines(deps({ promptKey: 'prompt-1' }));
+        expect(line).toBe('AC: Context 85 % (170,000 / 200,000 tokens) — new task → /clear, same task → /compact.');
+    });
+
+    it('without a context size the absolute part is omitted, never estimated', () => {
+        feed([5], { context_used_pct: 85 });
+        const [line] = noticeLines(deps({ promptKey: 'prompt-1' }));
+        expect(line).toBe('AC: Context 85 % — new task → /clear, same task → /compact.');
+    });
+
+    it('below the band there is no context line', () => {
+        feed([5], { context_used_pct: 79, context_size: 200_000 });
+        expect(noticeLines(deps({ promptKey: 'prompt-1' }))).toEqual([]);
     });
 
     it('another session’s context fill is not this session’s', () => {

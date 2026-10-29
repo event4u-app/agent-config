@@ -30,8 +30,8 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 | `evidence.strength` | `E3` | 25 |
 | `evidence.strength` | `E4` | 0 |
 | `provenance.kind` | `human` | 16 |
-| `provenance.kind` | `agentic` | 139 |
-| `provenance.kind` | `mixed` | 34 |
+| `provenance.kind` | `agentic` | 138 |
+| `provenance.kind` | `mixed` | 35 |
 | `provenance.kind` | `unknown` | 61 |
 | frontmatter | absent | 0 |
 
@@ -270,7 +270,7 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 | `docs/decisions/ADR-290-node-floor-22-as-a-major.md` | `agentic` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | council @ ADR-290-node-floor-22-as-a-major.md:37, ADR-290-node-floor-22-as-a-major.md:39, ADR-290-node-floor-22-as-a-major.md:60<br>measurement @ ADR-290-node-floor-22-as-a-major.md:47 | provenance: agentic · evidence: E1 |
 | `docs/decisions/ADR-291-existing-installs-are-asked-never-flipped.md` | `agentic` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | council @ ADR-291-existing-installs-are-asked-never-flipped.md:37, ADR-291-existing-installs-are-asked-never-flipped.md:39, ADR-291-existing-installs-are-asked-never-flipped.md:73<br>measurement @ ADR-291-existing-installs-are-asked-never-flipped.md:46 | provenance: agentic · evidence: E1 |
 | `docs/decisions/ADR-292-retro-switch-and-verb.md` | `human` | `E0` — markers present, none graded: owner (an owner or maintainer declaration is provenance, not evidence) | `incomplete` | owner @ ADR-292-retro-switch-and-verb.md:99 | provenance: human · evidence: E1 |
-| `docs/decisions/ADR-293-the-package-decides-its-own-rule-layer-form.md` | `agentic` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | council @ ADR-293-the-package-decides-its-own-rule-layer-form.md:51, ADR-293-the-package-decides-its-own-rule-layer-form.md:214<br>measurement @ ADR-293-the-package-decides-its-own-rule-layer-form.md:151 | provenance: agentic · evidence: E1 |
+| `docs/decisions/ADR-293-the-package-decides-its-own-rule-layer-form.md` | `mixed` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | council @ ADR-293-the-package-decides-its-own-rule-layer-form.md:51, ADR-293-the-package-decides-its-own-rule-layer-form.md:234<br>measurement @ ADR-293-the-package-decides-its-own-rule-layer-form.md:151<br>owner @ ADR-293-the-package-decides-its-own-rule-layer-form.md:179 | provenance: agentic · evidence: E1 |
 | `docs/decisions/ADR-294-completion-review-round-cap.md` | `mixed` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | owner @ ADR-294-completion-review-round-cap.md:32<br>measurement @ ADR-294-completion-review-round-cap.md:41, ADR-294-completion-review-round-cap.md:49, ADR-294-completion-review-round-cap.md:52, ADR-294-completion-review-round-cap.md:96, ADR-294-completion-review-round-cap.md:109, ADR-294-completion-review-round-cap.md:110<br>council @ ADR-294-completion-review-round-cap.md:42, ADR-294-completion-review-round-cap.md:123, ADR-294-completion-review-round-cap.md:131 | provenance: mixed · evidence: E1 · authority_basis: owner_intent |
 | `docs/decisions/ADR-295-worktree-removal-on-the-proven-set.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: human · evidence: E1 |
 | `docs/decisions/ADR-296-advisory-session-notice-declared.md` | `agentic` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | council @ ADR-296-advisory-session-notice-declared.md:34, ADR-296-advisory-session-notice-declared.md:55, ADR-296-advisory-session-notice-declared.md:99, ADR-296-advisory-session-notice-declared.md:100<br>measurement @ ADR-296-advisory-session-notice-declared.md:92 | provenance: agentic · evidence: E1 |

@@ -50,4 +50,4 @@ for (const [t, w, expectSum] of [
 if (failed) {
   process.exit(1);
 }
-console.log('ok');
+console.log(process.env.BENCH_VERIFIER_NONCE ?? 'ok');

@@ -106,14 +106,14 @@ function r4(n: number): number {
  * outputs are watched, so scoring refuses rather than warns. Extensions are a
  * new set, scored separately — never a revision of this one.
  */
-function verifyLock(files: string[], update: boolean): void {
+function verifyLock(files: string[], update: boolean, lockPath: string = LOCK_PATH): void {
     const actual: Record<string, string> = {};
     for (const rel of files) {
-        actual[rel] = sha256(path.join(REPO, rel));
+        actual[rel] = sha256(path.resolve(REPO, rel));
     }
-    if (update || !fs.existsSync(LOCK_PATH)) {
+    if (update || !fs.existsSync(lockPath)) {
         fs.writeFileSync(
-            LOCK_PATH,
+            lockPath,
             JSON.stringify(
                 {
                     _note:
@@ -129,7 +129,7 @@ function verifyLock(files: string[], update: boolean): void {
         process.stdout.write(`bench:ui — fixture lock written (${files.length} file(s)).\n`);
         return;
     }
-    const lock = readJson<{ files: Record<string, string> }>(LOCK_PATH);
+    const lock = readJson<{ files: Record<string, string> }>(lockPath);
     const drift: string[] = [];
     for (const rel of files) {
         const pinned = lock.files[rel];
@@ -402,15 +402,22 @@ async function runStep(page: Page, step: StepSpec, css: string): Promise<void> {
 // ── Orchestration ─────────────────────────────────────────────────────────
 
 function fileUrl(rel: string): string {
-    return `file://${path.join(REPO, rel)}`;
+    return `file://${path.resolve(REPO, rel)}`;
+}
+
+/** `--flag <value>`; the artifact grader points these at a per-run config, lock and report. */
+function flagValue(argv: string[], flag: string, fallback: string): string {
+    const i = argv.indexOf(flag);
+    return i >= 0 && argv[i + 1] !== undefined ? path.resolve(argv[i + 1] as string) : fallback;
 }
 
 async function main(argv: string[]): Promise<number> {
     const wantJson = argv.includes('--json');
     const updateLock = argv.includes('--update-lock');
-    const config = readJson<BenchConfig>(CONFIG_PATH);
+    const config = readJson<BenchConfig>(flagValue(argv, '--config', CONFIG_PATH));
+    const reportPath = flagValue(argv, '--report', path.join(REPORT_DIR, 'latest.json'));
 
-    verifyLock([config.truth, ...config.candidates], updateLock);
+    verifyLock([config.truth, ...config.candidates], updateLock, flagValue(argv, '--lock', LOCK_PATH));
 
     const browser = await chromium.launch({
         args: [
@@ -492,9 +499,9 @@ async function main(argv: string[]): Promise<number> {
     await browser.close();
 
     const report = { epoch, truth: config.truth, weights: config.weights, reports };
-    fs.mkdirSync(REPORT_DIR, { recursive: true });
+    fs.mkdirSync(path.dirname(reportPath), { recursive: true });
     fs.writeFileSync(
-        path.join(REPORT_DIR, 'latest.json'),
+        reportPath,
         JSON.stringify(report, null, 2) + '\n',
         'utf-8',
     );

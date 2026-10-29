@@ -15,7 +15,7 @@ import * as path from 'node:path';
 import type { ConfirmState } from '../map_areas.js';
 import { domainResolver } from '../domains.js';
 import { introducedNote, readCachedProvenance } from '../provenance.js';
-import { type LoadedGraph, resolveExactNode } from '../query.js';
+import { admitEdge, type LoadedGraph, type ReadRegion, type RecommendedRead, regionReads, resolveExactNode } from '../query.js';
 import type { CodeEdge } from '../types.js';
 import { confirmIds, type ConfirmResult } from './confirm.js';
 import defaults from './defaults.json';
@@ -50,12 +50,16 @@ export interface PackResult {
     domains?: string[];
     confirm: Pick<ConfirmResult, 'status' | 'counts' | 'risk' | 'ms' | 'error'>;
     lines: string[];
+    /** The returned items' spans under the region budget, seeds first (`regionReads`). */
+    recommended_reads: RecommendedRead[];
 }
 
 export interface PackOptions {
     diffFiles?: readonly string[];
     budget?: number;
     depth?: number;
+    /** Walk guess edges too, each marked; off by default (the edge acceptance policy). */
+    includeGuesses?: boolean;
 }
 
 const STOPWORDS = new Set(
@@ -98,7 +102,10 @@ export function contextPack(g: LoadedGraph, root: string, cachePath: string, tas
     let unmatched = 0;
     const words = seedWords(task);
     for (const w of words) {
-        const r = resolveExactNode(g, w);
+        // A `.js` import specifier names the `.ts` file it compiles from.
+        const alt = w.replace(/\.(m?)js$/, '.$1ts');
+        let r = resolveExactNode(g, w);
+        if (r.id === null && r.ambiguous.length === 0 && alt !== w) r = resolveExactNode(g, alt);
         if (r.id !== null) {
             if (!fromTask.includes(r.id)) fromTask.push(r.id);
         } else if (r.ambiguous.length > 0) refused.push({ word: w, candidates: r.ambiguous, more: r.more });
@@ -124,13 +131,14 @@ export function contextPack(g: LoadedGraph, root: string, cachePath: string, tas
                 ...(g.out.get(cur) ?? []).map((e) => [e, 'out'] as [CodeEdge, 'out']),
             ];
             for (const [e, way] of steps) {
+                if (!admitEdge(e, opts)) continue;
                 const far = way === 'in' ? e.source : e.target;
                 if (seen.has(far)) continue;
                 const n = g.byId.get(far);
                 if (!n) continue;
                 seen.add(far);
                 next.push(far);
-                found.push({ id: far, label: n.label, kind: n.kind, relation: e.relation, direction: way, via: cur, depth: d, at: atOf(g, far, e), confirm: 'unconfirmed' });
+                found.push({ id: far, label: n.label, kind: n.kind, relation: admitEdge(e) ? e.relation : `${e.relation} (guess: ${e.resolved_via})`, direction: way, via: cur, depth: d, at: atOf(g, far, e), confirm: 'unconfirmed' });
             }
         }
         frontier = next;
@@ -197,5 +205,12 @@ export function contextPack(g: LoadedGraph, root: string, cachePath: string, tas
             ? { status: confirmed.status, counts: confirmed.counts, risk: confirmed.risk, ms: confirmed.ms, ...(confirmed.error ? { error: confirmed.error } : {}) }
             : { status: 'ok', counts: {}, risk: { class: 'R0', reason: 'nothing to confirm', depth_chosen: 'none', depth_ran: 'none' }, ms: 0 },
         lines: [...items.map(itemLine), ...(spans.length > 1 ? [`the change crosses domains: ${spans.join(', ')}`] : [])],
+        recommended_reads: regionReads(
+            items.flatMap((it): ReadRegion[] => {
+                const n = g.byId.get(it.id);
+                const [start, , end] = n?.source_location ?? [];
+                return n && start ? [{ path: n.source_file, lines: [start, end ?? start], risk: 3 - Math.min(3, it.depth), definition: true }] : [];
+            }),
+        ),
     };
 }
