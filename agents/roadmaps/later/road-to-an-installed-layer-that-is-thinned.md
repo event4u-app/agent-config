@@ -544,24 +544,34 @@ rather than as a ninth roadmap.
       Without it a promoted layer stays about 177,000 characters (the round's
       estimate), over both window figures.
       verify: the standing-only fixture stays green on a promoted layer.
+      **Decided, council 2026-10-29 (anthropic + openai, 2/2, two rounds, $0):** build and evaluate the law form now, on enrolled machines only; consumer promotion with it only after 6.8 reads non-inferior WITH this form. Before the switch: confirm the hook delivers the moved mechanics (`routes_to` reachability), since a law without its mechanics can be unexecutable.
 - [ ] **6.8 Run the frozen comparison with an arm independent of the decision.**
       A v2 of `setup-phase5-preregistration.md` differs only in how the computed arm
       is built (the shipped thin pass with 6.7's form). Council before freezing.
       verify: a `diff` of v1 and v2 touches only the arm-construction lines.
+      **Decided, council 2026-10-29 (anthropic + openai, 2/2, two rounds, $0):** yes — v1 stays unchanged beside v2; v2 records the exact delta, that no comparison result existed when it was drafted, and the hashes of the candidate artefact. The candidate is frozen as ONE composition (6.7 + 6.9 + 6.11 as included); a later substantive change needs an evaluation amendment.
 - [ ] **6.9 Kernel and law diet.** Mechanics move behind existing `routes_to`
       guidelines; every obligation sentence stays verbatim. Targets owner-set after
       a per-member law measurement.
       verify: an obligation-diff test over old and new bodies.
+      **Decided, council 2026-10-29 (anthropic + openai, 2/2, two rounds, $0):** approved as semantics-preserving only — the obligation-diff test plus a review that no obligation depends on a moved definition, exception or ordering. Provisional, advisory budgets: kernel ≤ 12,000 characters, package-owned unconditional total ≤ 100,000 on a promoted default install, counted the host's way including stubs and pointers, and with a check that `routes_to` destinations are not loaded at launch. Binding limits are the owner's.
 - [ ] **6.10 Arrival per host minor line, demotion with a re-probe.** This session
       ran on 2.1.311 against arrivals on 2.1.312 and read
       `arrival-host-version-mismatch`; on a host that ships several builds a week a
       promoted machine falls back after each update.
       verify: a version-bump fixture stays thinned; a missing-law fixture demotes.
+      **Split, council 2026-10-29 (anthropic + openai, 2/2, two rounds, $0):** (i) same-version recovery — a demoted machine re-probes and may promote again on clean arrivals — is council-decidable and approved; (ii) reusing an arrival across host builds relaxes the exact-version evidence and is OWNER-reserved; the 14/7/2/3/30 figures carry no evidence and must be derived or explicitly accepted. **Owner answer 2026-10-29 on (ii):** reuse inside a minor line only — an arrival admits later patch builds of the same `major.minor` for the same installed artefact, within windows derived from the measured release cadence and put to the owner before they are fixed; a minor bump (`2.1` → `2.2`) needs a fresh arrival, as today. Both members also require an arrival to identify the installed artefact (rule set, transform, hook configuration), not only the host version, and a statement of whether a failed arrival restores the CURRENT session or only later ones.
 - [ ] **6.11 Mixed-trigger rules.** All 104 user-layer rules on this machine load
       unconditionally; a rule with path and keyword triggers gets no `paths:`. Ship
       a path-scoped twin only once an arrival on the current host shows a user-level
       rule loading with `load_reason: path_glob_match`.
       verify: without such an arrival the layer is byte-identical to today.
+      **Decided, council 2026-10-29 (anthropic + openai, 2/2, two rounds, $0):** (a), with a full delivery fixture: matching paths load the path twin, non-matching ones do not, keyword delivery still fires, no double delivery, stable across sessions.
+- [ ] **6.12 Per-rule stubs versus one index file.** Measure both forms on identical
+      content with the host-way counter — standing cost and delivery outcome — and
+      keep per-rule stubs until then. **Decided, council 2026-10-29 (anthropic +
+      openai, 2/2, two rounds, $0):** measure first, then decide; council-decidable.
+      verify: both forms appear in one measurement table with the same reachability endpoints.
 
 ## What this roadmap deliberately does not do
 
