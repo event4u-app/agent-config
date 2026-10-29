@@ -540,3 +540,65 @@ describe('check_memory.ts — the five write-side types are all known', () => {
         expect(r.stdout).not.toContain('unknown memory type');
     });
 });
+
+// Store reachability: per-entry `stale:` infos hide that most of the store has
+// stopped reaching retrieval. At >= 50 % stale the store gets one warning.
+// Truncation: a content field of exactly the one-fact limit that stops
+// mid-sentence reads as a cut, not a fact.
+describe('check_memory.ts — store-reachability and truncated-at-limit', () => {
+    const TODAY = new Date().toISOString().slice(0, 10);
+    function entry(id: string, lv: string, extra = ''): string {
+        return [
+            `  - id: ${id}`,
+            '    status: active',
+            '    confidence: high',
+            '    source: ["docs/x.md"]',
+            '    owner: maintainer',
+            `    last_validated: ${lv}`,
+            '    review_after_days: 90',
+            ...(extra ? [extra] : []),
+        ].join('\n');
+    }
+    function writeStore(entries: string[]): string {
+        const memRoot = join(tmp, 'memory');
+        mkdirSync(memRoot, { recursive: true });
+        writeFileSync(join(memRoot, 'domain-invariants.yml'), `version: 1\nentries:\n${entries.join('\n')}\n`, 'utf-8');
+        return memRoot;
+    }
+
+    it('three stale + one fresh warns store-reachability', () => {
+        const root = writeStore([
+            entry('s1', '2020-01-01'),
+            entry('s2', '2020-01-01'),
+            entry('s3', '2020-01-01'),
+            entry('f1', TODAY),
+        ]);
+        const r = runMem(root);
+        expect(r.status, r.stdout + r.stderr).toBe(0);
+        expect(r.stdout).toMatch(/⚠️.*store-reachability: 3 of 4 curated entries are stale/);
+    });
+
+    it('one stale of three does not warn store-reachability', () => {
+        const root = writeStore([entry('s1', '2020-01-01'), entry('f1', TODAY), entry('f2', TODAY)]);
+        expect(runMem(root).stdout).not.toContain('store-reachability');
+    });
+
+    const at600 = (tail: string): string => 'x'.repeat(600 - tail.length) + tail;
+
+    it('a 600-char body ending mid-word warns truncated-at-limit', () => {
+        const root = writeStore([entry('t1', TODAY, `    body: "${at600('abc def')}"`)]);
+        const r = runMem(root);
+        expect(r.status, r.stdout + r.stderr).toBe(0);
+        expect(r.stdout).toMatch(/⚠️.*\[t1\].*truncated-at-limit: `body` is exactly 600 chars/);
+    });
+
+    it('a 600-char body ending with a period does not warn', () => {
+        const root = writeStore([entry('t1', TODAY, `    body: "${at600('the end.')}"`)]);
+        expect(runMem(root).stdout).not.toContain('truncated-at-limit');
+    });
+
+    it('a 600-char body ending with a closing bracket does not warn', () => {
+        const root = writeStore([entry('t1', TODAY, `    body: "${at600('(see x)')}"`)]);
+        expect(runMem(root).stdout).not.toContain('truncated-at-limit');
+    });
+});

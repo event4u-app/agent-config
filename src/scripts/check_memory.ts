@@ -109,6 +109,14 @@ const ONE_FACT_MAX_CHARS = 600;
 const ONE_FACT_FIELDS = ['rule', 'pattern', 'statement', 'observation', 'body', 'decision', 'note'] as const;
 // Per-type entry tally, populated during validation, consumed by main().
 const _TYPE_COUNTS: Record<string, number> = {};
+// Retrieval skips stale entries, so a mostly-stale store answers almost
+// nothing while every entry only earns an `info`. At or above this share of
+// active entries stale, the store as a whole gets one warning.
+const STORE_REACHABILITY_STALE_SHARE = 0.5;
+const _ACTIVE_COUNTS = { total: 0, stale: 0 };
+// A content field of exactly ONE_FACT_MAX_CHARS that stops without closing
+// punctuation reads as a cut made at the limit, not a finished fact.
+const _CLEAN_END = /[.!?…"'”’)\]}»]$/;
 
 // Redaction heuristics — plain-regex, deliberately conservative.
 // False positives are fixed by quoting the line differently; false
@@ -391,8 +399,10 @@ function _validateEntry(
         const age = _dateDiffDays(_today(), lv);
         if (age > days && entry['status'] === 'active') {
             findings.push(new Finding(p, 0, 'info', `stale: last_validated ${age} days ago (limit ${days})`, eidStr));
+            if (criticalCounts !== null) _ACTIVE_COUNTS.stale += 1;
         }
     }
+    if (criticalCounts !== null && entry['status'] === 'active') _ACTIVE_COUNTS.total += 1;
     // Critical-stale guard: a `priority: critical` entry that has not been
     // re-validated within CRITICAL_STALE_DAYS surfaces as a warning, even
     // when the entry's own `review_after_days` is more lenient. Critical
@@ -422,6 +432,21 @@ function _validateEntry(
                     0,
                     'warning',
                     `one-fact: \`${fld}\` is ${_pyLen(val)} chars (limit ${ONE_FACT_MAX_CHARS}) — split into separate durable facts, not a narrative blob`,
+                    eidStr,
+                ),
+            );
+            break;
+        }
+    }
+    for (const fld of ONE_FACT_FIELDS) {
+        const val = entry[fld];
+        if (typeof val === 'string' && _pyLen(val) === ONE_FACT_MAX_CHARS && !_CLEAN_END.test(val.trimEnd())) {
+            findings.push(
+                new Finding(
+                    p,
+                    0,
+                    'warning',
+                    `truncated-at-limit: \`${fld}\` is exactly ${ONE_FACT_MAX_CHARS} chars and ends mid-sentence — it was likely cut at the limit; restore the full fact or split it`,
                     eidStr,
                 ),
             );
@@ -768,6 +793,8 @@ function main(): number {
     for (const key of Object.keys(_TYPE_COUNTS)) {
         delete _TYPE_COUNTS[key];
     }
+    _ACTIVE_COUNTS.total = 0;
+    _ACTIVE_COUNTS.stale = 0;
     for (const yml of ymls) {
         _validateFile(yml, findings, criticalCounts);
     }
@@ -800,6 +827,17 @@ function main(): number {
                 ),
             );
         }
+    }
+    const { total, stale } = _ACTIVE_COUNTS;
+    if (total > 0 && stale / total >= STORE_REACHABILITY_STALE_SHARE) {
+        findings.push(
+            new Finding(
+                root,
+                0,
+                'warning',
+                `store-reachability: ${stale} of ${total} curated entries are stale — retrieval skips them, so the store answers from ${total - stale}; re-validate or archive`,
+            ),
+        );
     }
     return _emit(findings, args.format);
 }
