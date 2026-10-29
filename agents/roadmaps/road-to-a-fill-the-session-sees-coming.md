@@ -29,11 +29,11 @@ continuity record no longer depends on reaching the 800k recycle threshold.
 
 ## Decisions
 
-| # | Question | Disposition |
-|---|---|---|
-| 1 | Bands (one at 80 %, two at 50/70, three at 70/85/95) | Keep one band; the bands stub adjusts the value. Council-decidable, reversible. |
-| 2 | End-of-reply ask gated by `turn-end-gate` | No gate; the per-prompt notice already satisfies the owner's "or". |
-| 3 | Mute | The existing env kill switch only; no persistent opt-out. |
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | reversible-technical | agent | One band at 80 %, as today; the bands stub adjusts the value. Options considered: one band / 50-70 / 70-85-95 | `quota_notice_hook.ts` reads one band; stubs/road-to-a-quota-notice-that-earned-its-bands owns the value | the bands stub measures a better band |
+| D2 | reversible-technical | agent | No end-of-reply ask gated by `turn-end-gate`; the per-prompt notice already meets the owner's "or ask at the end". Options: gate / model hint / none | owner demand of round inbox-2026-10-bi topic T5 is "warn on every message, or ask at the end" | users miss the per-prompt line |
+| D3 | reversible-technical | agent | Mute only through the existing environment kill switch, no persistent opt-out. Options: env switch / "weiter" mutes to the next band / config opt-out | a persistent opt-out is the axis that retired the warning once | a user reports the notice as noise with no way out |
 
 ## Phase 1 — Visible outside the reply
 
