@@ -202,3 +202,22 @@ describe('bump_workflow_major_pins — the workflow templates follow the major',
         }
     });
 });
+
+// Neutral review of #2737, round 2.
+describe('review findings on the release hardening', () => {
+    it.each([
+        'error: RPC failed; curl 18 transfer closed with outstanding read data remaining',
+        'error: RPC failed; curl 56 GnuTLS recv error (-54): Error in the pull function.',
+        'Connection closed by 140.82.121.4 port 22',
+        'Connection to github.com closed by remote host.',
+        'fatal: early EOF',
+    ])('retries the transport drop: %s', (stderr) => {
+        expect(_is_transient_network_failure(stderr, '')).toBe(true);
+    });
+
+    it('a stable version never borrows the footer of its release candidate', () => {
+        const text = '## [20.0.0-rc.1](x) (2026-11-01)\n\nTests: 1 (+1 since 19.0.0)\n';
+        expect(_test_trend_line_in_section(text, '20.0.0')).toBeNull();
+        expect(_test_trend_line_in_section(text, '20.0.0-rc.1')).toBe('Tests: 1 (+1 since 19.0.0)');
+    });
+});

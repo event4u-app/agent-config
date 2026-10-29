@@ -75,3 +75,23 @@ of a long-running command, read its process tree and elapsed time
 take is a hang until shown otherwise. Watching a run's output with a filter that
 matches every terminal state, not only progress, is what made items 11–13
 visible within seconds instead of hours.
+
+## Post-merge review of #2737
+
+A neutral AI-council review (2/2 present) of the merged production diff ran
+after #2737 landed, because the session had mutated code without one. Its
+findings, and what happened to each, in the follow-up PR:
+
+| Finding | Severity | Disposition |
+|---|---|---|
+| The tag-only skip ran for EVERY tag push; a tag on a local-only commit carries that commit to the remote with no gate run | high | Fixed: the skip now requires every tagged commit to be on a remote-tracking branch; tests on a real repository, seen red against the merged hook |
+| Admitting the workflow templates by name let a release PR change their triggers, permissions or commands | medium | Fixed: `check_release_manifest_content` requires the templates to differ only in bare-major `@event4u/agent-config@<N>` pins |
+| Several common transport drops (`transfer closed`, `recv error`, `Connection closed by`, `early EOF`) were not retried | medium | Fixed, pinned by tests |
+| The written `Tests:` footer was reused on a fresh run, not only on resume | low | Fixed: reused only under `--resume` |
+| `20.0.0` matched the `20.0.0-rc.1` changelog section (`\b` matches before `-`) | low | Fixed for both the footer reuse and the previous-count read |
+| The 600 s probe timeout may hide a slow collection | medium | Not changed: the release treats the footer as informational, and a slow collection is visible as wall time |
+
+**Learning.** The production diff of #2737 merged with a council verdict on its
+TEST changes only. The verdict the weakening gate asks for is not a review of the
+code; a session that mutates code still owes one, and it should run before the
+merge, not after.
