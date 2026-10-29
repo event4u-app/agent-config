@@ -25,7 +25,7 @@
  *      directory, one nested — resolve NEITHER and name both. Silently choosing
  *      is how a step gets flipped in the wrong plan.
  *
- * `--verify` (owner question OQ-33, option b): before a flip to `[x]`, run the
+ * `--verify` (owner question OQ-37, option b): before a flip to `[x]`, run the
  * step's own `verify:` clause read-only (`verify_run.ts`) and WARN when it is red
  * or could not be run. It never refuses — a measured window first; whether red
  * should block is decided on those numbers.
@@ -133,7 +133,7 @@ export function verifyStep(content: string, stepId: string, cwd: string): StepVe
 /** One warning line for anything but a met check, or `null` when the check passed. */
 export function verifyWarning(v: StepVerify): string | null {
     if (v.outcome === 'met') return null;
-    if (v.outcome === 'unmet') return '⚠️  verify: the step\'s check is RED — flipped anyway (warn-only, OQ-33)';
+    if (v.outcome === 'unmet') return '⚠️  verify: the step\'s check is RED — flipped anyway (warn-only, OQ-37)';
     if (v.outcome === 'skipped') return `⚠️  verify: check not run (${v.reason}) — flipped unverified`;
     return '⚠️  verify: the step names no runnable check — flipped unverified';
 }

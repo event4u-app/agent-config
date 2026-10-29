@@ -6,14 +6,14 @@ execution:
   mode: phase-checkpoints
 entry_condition:
   what: >
-    A WIP slot is free under the cap of five. The owner answered OQ-32 with
+    A WIP slot is free under the cap of five. The owner answered OQ-36 with
     option (a) on 2026-10-29, so nothing else gates it.
   when: >
     The run that archives one of the five active roadmaps.
   who: >
     none -- the maintainer moves this file to agents/roadmaps/.
 review_by: 2026-12-15
-estate_growth_exempt: "+1 later_roadmaps: the owner's OQ-32 answer (opt-in observation provider slot) needs a home, and the five active slots are full; parked rather than displacing active work."
+estate_growth_exempt: "+1 later_roadmaps: the owner's OQ-36 answer (opt-in observation provider slot) needs a home, and the five active slots are full; parked rather than displacing active work."
 estate_offset_exempt: "Parked, not active. Owner search at d3d5d8dbd4 (grep -rliE 'observation provider|provider slot' over agents/roadmaps, later, stubs) returned nothing."
 relates:
   - slug: road-to-transfers-that-close-on-evidence
@@ -22,7 +22,7 @@ relates:
 ---
 # Road to an observation provider slot
 
-> **Source:** owner answer to OQ-32 (`agents/owner-questions.md`, 2026-10-29),
+> **Source:** owner answer to OQ-36 (`agents/owner-questions.md`, 2026-10-29),
 > raised by round `inbox-2026-10-bj`.
 
 ## Goal

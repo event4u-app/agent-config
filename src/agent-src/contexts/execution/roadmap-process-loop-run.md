@@ -143,7 +143,7 @@ when a run reaches that branch; the Iron-Law fences stay in the core.
    Flip with `./agent-config roadmap:set-step --file <plan> --step <id>
    --glyph x --verify`: the writer re-runs a read-only clause (`grep`,
    `test`, `ls`, `wc`) and warns when it is red or could not be run. It
-   never refuses the flip (owner decision OQ-33, warn-only), so a red
+   never refuses the flip (owner decision OQ-37, warn-only), so a red
    warning is the halt above, raised by you.
 
 6. **Dashboard regen — fixed cadence** (§ 4). Run
