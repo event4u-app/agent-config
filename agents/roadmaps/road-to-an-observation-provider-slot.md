@@ -1,20 +1,11 @@
 ---
 complexity: lightweight
-status: later
+status: ready
 tree_pin: d3d5d8dbd4
 execution:
   mode: phase-checkpoints
-entry_condition:
-  what: >
-    A WIP slot is free under the cap of five. The owner answered OQ-36 with
-    option (a) on 2026-10-29, so nothing else gates it.
-  when: >
-    The run that archives one of the five active roadmaps.
-  who: >
-    none -- the maintainer moves this file to agents/roadmaps/.
-review_by: 2026-12-15
-estate_growth_exempt: "+1 later_roadmaps: the owner's OQ-36 answer (opt-in observation provider slot) needs a home, and the five active slots are full; parked rather than displacing active work."
-estate_offset_exempt: "Parked, not active. Owner search at d3d5d8dbd4 (grep -rliE 'observation provider|provider slot' over agents/roadmaps, later, stubs) returned nothing."
+estate_growth_exempt: "+1 active_roadmaps, owner-directed 2026-10-29: activated above the WIP cap of five per agents/evidence/owner-directives/2026-10-29-activate-observation-provider-slot.md."
+estate_offset_exempt: "Owner-directed above the WIP cap: agents/evidence/owner-directives/2026-10-29-activate-observation-provider-slot.md. Promoted from later/ on owner instruction (2026-10-29); no active roadmap is archived to offset it. Owner search at d3d5d8dbd4 (grep -rliE 'observation provider|provider slot' over agents/roadmaps, later, stubs) returned nothing."
 relates:
   - slug: road-to-transfers-that-close-on-evidence
     relation: extends
@@ -55,6 +46,13 @@ line that runtime evidence was unavailable.
       provider observation into `evaluateLedger` and shows a `behavior` row
       move from `unknown` to `verified`, and the same row stay `unknown`
       without it.
+
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-10-29 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | A provider observation is taken as parity | implementation | A runtime trace of a screen reads like behavior proof and closes a `visible-only` row | The contract names the tiers a provider may verify; the ledger test pins that a provider alone never lifts `visible-only` | Phase 1 — The slot |
 
 ## Acceptance Criteria
 
