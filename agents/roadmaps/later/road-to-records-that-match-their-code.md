@@ -13,9 +13,9 @@ relates:
     note: "Stage L reads how a consumer logs; step 6 here only stops the package from mandating one helper"
 entry_condition:
   what: >
-    The owner answers OQ-42 (a preamble grant for the image floor's routes_to).
+    The image-floor grant nears expiry (2027-01-27) or an offset for it appears.
   when: >
-    On that answer; nothing else in this file is open.
+    Before 2027-01-27; 1.7 is the only open step.
   who: >
     The owner.
 estate_growth_exempt: "THIS CHANGE (2026-10-29) adds one later/ roadmap and one open blocker: later_roadmaps +1, open_blockers +1. Every other item of this roadmap is done in the same change; what is left is one owner decision (b-preamble-grant, OQ-42) on a rights-floor fix that was built and ratified 2/2 and then held back only because the per-spawn preamble on main sits exactly at its zero-growth ceiling. Parking it here keeps the item alive instead of dropping it; it closes on the owner's answer."
@@ -44,20 +44,23 @@ check that would have caught the drift where one is cheap.
       index, find with it and confirm with the source, and that no measured class
       beat grep. The description says the same as the body.
       verify: `grep -c 'do not grep from scratch' src/rules/external-code-graph-interop.md` -> /^0$/
-- [~] **1.2 The image floor follows every skill that names it.**
-      `image-likeness-and-rights` carries `consequence_class` and `packs:
+- [x] **1.2 The image floor follows every skill that names it.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
+      `image-likeness-and-rights` carried `consequence_class` and `packs:
       [ai-image]` but no `routes_to`, so a host that ships every skill whatever
-      the packs (claude-code, codex) installs the six image skills without the
-      rights check they tell the agent to run. The fix — `routes_to` naming all
-      six — was built, tested and ratified 2/2 by the council (questions
-      `agents/evidence/council/image-floor-routes-to-ratification-r1-20261029.question.md`
-      and `-r2-`), then taken back out: it adds 43–57 tokens to the per-spawn
-      preamble, which on `main` sits exactly at its zero-growth ceiling, and the
-      only offsets were cuts to other safety rules. Deferred on blocker
-      `b-preamble-grant`. Measured and declined along the way: reading any
-      Markdown link to `rules/<id>.md` as a dependency flagged 20 skill→rule
-      pairs, nearly all "See also" links — too noisy for a gate.
-      verify: `npx vitest run tests/install/safety_floor_follows_skill.test.ts` -> 0 with a test asserting the rule ships with no pack active and that `routes_to` equals the skills naming it (written, seen red, removed with the change)
+      the packs (claude-code, codex) installed the six image skills without the
+      rights check they tell the agent to run. It now routes to all six, on the
+      owner's answer to OQ-42 (2026-10-29), which grants the +43 tokens of
+      per-spawn preamble this costs (`src/config/preamble-payload-exceptions.json`,
+      `oq-42-image-floor-routes-to`). Measured and declined along the way:
+      reading any Markdown link to `rules/<id>.md` as a dependency flagged 20
+      skill→rule pairs, nearly all "See also" links — too noisy for a gate.
+      verify: `npx vitest run tests/install/safety_floor_follows_skill.test.ts -t "image floor"` -> 0 (red without the `routes_to`)
+- [ ] **1.7 Repay the image-floor grant before it expires.** The grant is a
+      loan against the zero-growth ceiling: by 2027-01-27 the per-spawn
+      preamble returns to its watermark 135,824 through a reduction elsewhere
+      that does not weaken a floor, and `repaid_at` records the measurement —
+      or a fresh grant is approved.
+      verify: `jq -e '.exceptions[] | select(.id=="oq-42-image-floor-routes-to") | .repaid_at != null' src/config/preamble-payload-exceptions.json` -> 0
 - [x] **1.3 A wrapped `Consumer-Impact:` trailer is reported, not dropped.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/consumer_impact.ts -->
       `_lib/consumer_impact.ts` returns no block for a paragraph whose value wraps
       onto an unindented line, so the trailer reads as absent rather than
@@ -107,7 +110,8 @@ check that would have caught the drift where one is cheap.
 
 ### blocker: b-preamble-grant
 
-- **Status:** open — 2026-10-29.
+- **Status:** resolved — 2026-10-29, owner answer OQ-42 (a)
+  (`agents/evidence/owner-directives/2026-10-29-oq-42-image-floor-grant.md`).
 - **Owner:** the owner (a preamble-payload grant is human-approved by
   `src/config/preamble-payload-exceptions.json`'s contract).
 - **Unblocks:** 1.2.
@@ -131,6 +135,6 @@ check that would have caught the drift where one is cheap.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every Phase 1 verify line passes.
+- [x] AC-1 — Every Phase 1 verify line passes.
 - [x] AC-2 — Phase 2 items each carry a council record or stay deferred with
       their blocker named.
