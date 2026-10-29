@@ -101,7 +101,7 @@ test for a given discriminator, do not re-ask on the next branch.
 - Don't introduce new patterns without being asked.
 - Don't refactor code you're not working on.
 - Use `Math` helper for ALL calculations — never raw PHP arithmetic.
-- `MonitoringHelper::captureException()` for Sentry reporting.
+- The project's declared reporting wrapper (e.g. `MonitoringHelper::captureException()`) for Sentry reporting, if it has one.
 
 ## Do NOT
 

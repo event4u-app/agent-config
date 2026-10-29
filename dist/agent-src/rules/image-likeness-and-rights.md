@@ -19,6 +19,13 @@ applies_to_user_types:
 self_contained: true
 workspaces: [agent-config-maintainer, engineering, gtm]
 packs: [ai-image]
+routes_to:
+  - "skill:image-generation"
+  - "skill:image-editing"
+  - "skill:image-provider-routing"
+  - "skill:logo-generation"
+  - "skill:brand-asset-generation"
+  - "skill:prompt-engineering-image"
 collision_ok:
   "/image:": "rights/likeness gate on the image-generation surface"
   "likeness": "its own core subject — the rights gate"

@@ -90,15 +90,16 @@ Only use when you cannot determine the root cause from the stacktrace alone.
 
 ## Error reporting in code
 
-### MonitoringHelper (project convention)
+### A declared reporting wrapper (when the project has one)
 
-Always use the project's `MonitoringHelper` — never the Sentry SDK directly:
+If the project declares a reporting wrapper (here called `MonitoringHelper`), use it
+instead of the Sentry SDK; with no declared wrapper, call the SDK:
 
 ```php
-// ✅ Correct
+// ✅ Where the project declares a wrapper
 MonitoringHelper::captureException($exception);
 
-// ❌ Wrong
+// ❌ Bypassing that declared wrapper
 \Sentry\captureException($exception);
 ```
 
@@ -163,7 +164,7 @@ search_events(organizationSlug='my-org', naturalLanguageQuery='count of database
 
 ## Do NOT
 
-- Do NOT use Sentry SDK directly — use MonitoringHelper.
+- Do NOT bypass the project's declared reporting wrapper, if it has one.
 - Do NOT ignore Sentry errors without investigating root cause.
 - Do NOT expose sensitive data in Sentry error context.
 

@@ -47,7 +47,16 @@ describe('a safety floor follows the skills it guards', () => {
     });
 
     it('keeps a consequence rule that guards no skill on its pack', () => {
-        expect(excludedRuleBasenames(RULES, NO_PACKS)).toContain('image-likeness-and-rights.md');
+        const excluded = new Set(excludedRuleBasenames(RULES, NO_PACKS));
+        const unguarded = fs
+            .readdirSync(RULES)
+            .filter((f) => f.endsWith('.md') && typeof meta(f)['consequence_class'] === 'string' && guardedSkills(f).length === 0)
+            .filter((f) => Array.isArray(meta(f)['packs']) && excluded.has(f));
+        expect(unguarded.length).toBeGreaterThan(0);
+    });
+
+    it('ships the image floor with no pack active, since six skills link it', () => {
+        expect(excludedRuleBasenames(RULES, NO_PACKS)).not.toContain('image-likeness-and-rights.md');
     });
 
     it('names only skills that exist', () => {
