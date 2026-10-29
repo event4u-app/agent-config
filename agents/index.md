@@ -356,7 +356,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`downstream-changes`](../src/rules/downstream-changes.md) | auto | After EVERY code edit, find ALL downstream changes — callers, tests, imports, types, documentation |
 | rule | [`engineering-safety-floor`](../src/rules/engineering-safety-floor.md) | auto | Production/infra/security/external-system output — blast radius + rollback; Hard-Floor never autonomous |
 | rule | [`evaluator-independence`](../src/rules/evaluator-independence.md) | auto | Commissioning a review/judge/blind-pass on your own work — never author the verdict, never narrow the scope, record the prompt with the result |
-| rule | [`external-code-graph-interop`](../src/rules/external-code-graph-interop.md) | auto | Repo ships a code-graph index (graph.json-shaped or SCIP) — query IT first for codebase-structure questions, do not grep from scratch |
+| rule | [`external-code-graph-interop`](../src/rules/external-code-graph-interop.md) | auto | Repo ships a code-graph index (graph.json or SCIP) — find with IT first for structure questions, confirm with the source before acting |
 | rule | [`external-reference-deep-dive`](../src/rules/external-reference-deep-dive.md) | auto | User names an external repo/file/URL as reference — fetch the actual tree and inspect; never summarize from README |
 | rule | [`fast-path-marker-visibility`](../src/rules/fast-path-marker-visibility.md) | auto | Low-impact council fast-path — surface the transparency marker verbatim as the reply opener |
 | rule | [`finance-safety-floor`](../src/rules/finance-safety-floor.md) | auto | Finance-pack output (runway, valuation, DCF, scenarios, unit economics) — never a final invest/raise call; disclosure footer |

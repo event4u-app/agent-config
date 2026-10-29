@@ -26,6 +26,8 @@ depends:
 > applied: precedence follows the tree, user-owned data lives under the user's
 > home, cross-project aggregation and the profile schema go through their
 > locks, hook and skill cost are budgeted.
+>
+> **Arrivals:** 1 — `inbox-2026-10-bl` (2026-10-29): a later version (v7) of the same supplied plan adds Stage L — how a project logs, where it deviates, and why — from one owner turn; landed as Phase 5 below. Its viewer half lands here too, because `road-to-map-views-from-the-handover` closed on 2026-10-29.
 
 ## Goal
 
@@ -350,6 +352,64 @@ signals are user-owned local files; disable per kind (O20). K.1-K.3 run before D
       and 6. Blocked by `b-stage-d-measurement`.
       verify: `npx vitest run tests/scripts/learnings_payload_split.test.ts` -> 0
 
+## Phase 5 — Stage L: where and how a project logs, and why
+
+The owner turn behind this phase: find out how each area of a project writes its
+logs; remote sinks (Sentry, Datadog, New Relic and the like, sometimes Slack) are
+the preferred means and **local logs only make sense when nothing else exists**;
+the agent may ask once — at the start or on a specific unrouted error — and the
+answer is remembered; show the default, the deviations and, when known, the why.
+Readers name sinks and env **names** only — never a value, never a vendor API
+call (kill rows L-K1 to L-K4 below). Vendor names live in the sink catalogue,
+never in the graph core (ADR-298).
+
+- [ ] **L.1 Sink catalogue as data.** One row per sink — Sentry, Datadog, New
+      Relic, OTel collector, Slack, Loki, Papertrail, syslog, stderr, file — with
+      kind (remote/local), SDK packages per ecosystem, config keys, env names
+      (`SENTRY_DSN`, `DD_*`, `NEW_RELIC_*`, `OTEL_*`, `LOG_CHANNEL`, `LOG_STACK`,
+      `LOG_SLACK_WEBHOOK_URL`) and egress hosts. A sibling of
+      `lanes/interfaces/sdk_table.ts`, not a fork.
+      verify: `npx vitest run tests/scripts/code_graph_log_sinks.test.ts` -> 0
+      > note: the catalogue and its pure matcher `sinksOf` are in the tree and tested (`lanes/interfaces/log_sinks.ts`); no production entry reads them yet, so the step stays open until L.2 wires them into a reader.
+- [~] **L.2 Provider readers.** Laravel `config/logging.php` channels, drivers,
+      levels, stacks and the exception handler; Symfony monolog; JS `Sentry.init`,
+      pino, winston; Python `logging.config`; OTel exporter env names; Compose
+      logging drivers; collector configs. Values are never read. Blocked by
+      `b-stage-d-measurement`.
+      verify: `npx vitest run tests/scripts/code_graph_log_readers.test.ts` -> 0
+- [~] **L.3 Call sites and `logs-to` edges.** A wrapper routes to a sink only when
+      the graph shows it calling the SDK. Blocked by `b-stage-d-measurement`.
+      verify: `npx vitest run tests/scripts/code_graph_log_edges.test.ts` -> 0
+- [~] **L.4 Default route, deviations, findings.** The default is computed per
+      level with counts, or "no clear default" under a floor; contradictory
+      policies stay visible; house rules come only from a declared `logging:`
+      section beside `scope:`. Findings are advisory: local-only logging while a
+      remote sink exists, direct SDK use where a wrapper is declared, hard-coded
+      channel names. Blocked by L.2 and L.3.
+      verify: `npx vitest run tests/scripts/code_graph_log_routes.test.ts` -> 0
+- [~] **L.5 The why, when known.** From an ADR, an agreement, or the config line's
+      provenance at the build sha; otherwise "reason unknown". Blocked by L.4.
+      verify: `npx vitest run tests/scripts/code_graph_log_routes.test.ts -t why` -> 0
+- [~] **L.6 Ask once, remember.** Error routing is stored as a project/team
+      agreement with scope; a personal notification wish is user-owned; the same
+      scope is never asked twice; a new external recipient or egress is a
+      this-turn confirmation. Blocked by K.4a, K.4b and owner questions OQ-36/37.
+      verify: `npx vitest run tests/scripts/log_routing_agreement.test.ts` -> 0
+- [~] **L.7 The logging view.** Sinks per environment, area × sink matrix with
+      deviations, channel detail, house rules and findings, empty states that tell
+      not-found from not-instrumented; the committed map is names-only. Blocked by
+      L.4 and D.
+      verify: a fidelity matrix at `agents/evidence/reviews/map-logging-fidelity.md` and the 1440/375/320 render test
+- [~] **L.8 `ask "how do we log in <area>"`** — route, wrapper, levels,
+      agreement, ≤ 5 witnesses within the J.2 budget. Blocked by L.4.
+      verify: `npx vitest run tests/scripts/code_graph_ask.test.ts -t logging` -> 0
+
+Kill rows for this phase: **L-K1** no env value and no vendor API read during a
+build; **L-K2** never recommend local logs where a remote sink exists; **L-K3**
+never ask the same scope twice; **L-K4** no vendor name in the graph core
+(ADR-298); **L-K5** no live provider snapshot or probe event in staging — a live
+read is `later/road-to-an-observation-provider-slot`'s question, not this one's.
+
 ## Decisions
 
 Proposed = the plan's recommendation, or the verification pass's correction
@@ -446,7 +506,7 @@ step K.n.
   stay scored guesses.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-27 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-29 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -459,6 +519,7 @@ step K.n.
 | 7 | The agent over-adapts to one bad day | product | One session's complaint becomes a rule | Distinct sessions and tasks, half-life, reviewed promotion | Phase 4 — Stage K: feedback that shapes the work |
 | 8 | Feedback learning becomes surveillance | product | Signals rank people | Topics never persons (KL28); user-owned and deletable | Phase 4 — Stage K: feedback that shapes the work |
 | 9 | Precedence contradicts the code | implementation | A stated order overrides locked team keys | Precedence copied from `agent_settings.ts`, tested in K.1 | Phase 4 — Stage K: feedback that shapes the work |
+| 10 | A logging reader leaks a value or misreads the default | implementation | L.2 reads `config/logging.php` and env files, where a DSN or webhook sits beside the name; on a project with few call sites the computed default is noise | Readers take names only (L-K1) and map-holds 4.8 fails on a value shape; L.4 says "no clear default" under a floor | Phase 5 — Stage L: where and how a project logs, and why |
 
 ## Acceptance Criteria
 
@@ -518,3 +579,10 @@ step K.n.
       cap; a user entry shows in every repo, a project entry only in its own.
 - [ ] AC-35 — A review on a fixture area lists the recurring finding with its
       pointers and cites a contract or test, never signal text.
+
+- [ ] AC-36 — A fixture repository with a remote sink and a local fallback
+      yields one default route per level, each with witnesses, and no env value.
+- [x] AC-37 — The committed map contains no DSN, webhook URL or token shape.
+      verify: `npx vitest run tests/scripts/code_graph_committed_map_privacy.test.ts -t secret` -> 0 (map-holds 4.8; red on a planted DSN)
+- [ ] AC-38 — A routing question answered once is not asked again for the same
+      scope.

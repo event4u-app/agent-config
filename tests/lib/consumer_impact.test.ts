@@ -115,6 +115,14 @@ describe('parse_impact_trailers — GitHub squash-merge bodies', () => {
         expect(parse_impact_trailers(body)).toEqual({ impact: 'action', recorded: true, invalid: null, security: false });
     });
 
+    it('reports a wrapped Consumer-Impact value as invalid instead of absent, and keeps the impact none', () => {
+        const wrapped = 'feat: thing\n\nConsumer-Impact: action\nbecause the flag was renamed\n\n' + coauthor;
+        const t = parse_impact_trailers(wrapped);
+        expect(t.recorded).toBe(false);
+        expect(t.impact).toBe('none');
+        expect(t.invalid).toMatch(/outside a trailer block/);
+    });
+
     it('does not count a Consumer-Impact line inside prose, a quote or a code fence', () => {
         const prose = 'The squashed PR said Consumer-Impact: action in passing.\n\n' + coauthor;
         const quoted = 'Reviewer wrote:\n> Consumer-Impact: action\nso we kept it.\n\n' + coauthor;

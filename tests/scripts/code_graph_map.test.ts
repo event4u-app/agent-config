@@ -139,6 +139,9 @@ describe('agents/map/ artefacts (Phase 3)', () => {
         }
         const manifest = JSON.parse(fs.readFileSync(path.join(root, 'agents', 'map', 'manifest.json'), 'utf-8'));
         expect(manifest.generation).toBe(r.meta.graph_generation);
+        // The state describes the build's commit, named beside it, never HEAD (map-holds 4.7).
+        expect(manifest.built_at_commit).toBe(r.meta.commit);
+        expect(Object.keys(manifest).indexOf('built_at_commit')).toBeLessThan(Object.keys(manifest).indexOf('state'));
         expect(manifest.areas.code).toMatchObject({ path: 'code/map.json', source: 'code-graph', facts: r.model.files.length });
         expect(manifest.areas.data).toMatchObject({ path: 'data/data.json', freshness: 'empty' });
         expect(Object.keys(manifest.areas)).toEqual(['code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'impact', 'agent']);

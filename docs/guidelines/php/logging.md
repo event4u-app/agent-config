@@ -65,7 +65,7 @@ Log::info('Import completed', ['correlation_id' => $correlationId, ...]);
 
 ## Sentry
 
-- Use `MonitoringHelper::captureException()` — never Sentry SDK directly.
+- If the project declares a reporting wrapper (e.g. `MonitoringHelper::captureException()`), use it rather than the Sentry SDK.
 - Breadcrumbs: use `BreadcrumbType` and `BreadcrumbLevel` enums.
 - Context names: use `ContextName` enum.
 - Sentry has 200KB event size limit — large context gets truncated.
@@ -73,7 +73,7 @@ Log::info('Import completed', ['correlation_id' => $correlationId, ...]);
 ## Do NOT
 
 - Use `var_dump()`, `print_r()`, `dd()` — disallowed by PHPStan.
-- Use Sentry SDK directly — use `MonitoringHelper`.
+- Bypass the project's declared reporting wrapper with direct SDK calls.
 - Hardcode log channel names in business logic — use config.
 - Log at `error` for expected/handled conditions — use `warning` or `info`.
 - Interpolate variables into log messages — use context array.

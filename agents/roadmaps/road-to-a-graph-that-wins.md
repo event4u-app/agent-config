@@ -41,7 +41,7 @@ estate_offset_exempt: "Woken from later/, not added: the AI council decided the 
 > plan — the two benchmark **subjects** ADR-260 § 5 reserves are test subjects the owner
 > names in the corpus header, and this file wakes on that edit.
 
-> **Arrivals:** 6 — latest `inbox-2026-10-bf` (2026-10-27): a review-graph comparison round (S1, literature S3–S14) re-verified at `92397d636` finds the engine mature and the last metre missing — no review skill, no workflow and no merge or self-review gate reads the graph (the stop gate's shadow feeder is the one consumer), the stated/guess rule is applied by four verbs only, and a partial parse or a skipped lane reads as zero; landed as the rewrite of 3.1 (7 → 18 mechanisms, enforcement), amendments to 2.2, 2.4 and 3.5, and new Phases 4 and 5. Its hook-extension item folded into `road-to-a-graph-that-feeds-the-gate` 2.5 and its freshness items into `road-to-code-graph-refresh-during-a-session`. Before that: 5 — latest `inbox-2026-10-bb` (2026-10-26): a comparison round against an external code-graph tool asks for an opt-in oracle producer, per-mechanism edge precision/recall against it, and a same-roots parity run; landed as step 2.6, its correctness half went to `road-to-edges-that-earn-their-target`. Before that: 4 — latest `inbox-2026-10-aw` (2026-10-25): two 18.0.0 reviews read the entry condition as met (parent archived, both benchmark repositories named) and ask for the wake; no detector evaluates `entry_condition`, so it stays parked until someone triages it. Before that: `inbox-2026-10-aj` (2026-10-25): 17.2.0 reviews note both benchmark repositories are now named and the native graph gained SCIP, Laravel overlay and `agents/map/`; they ask for the wake decision, pinned SHAs, and bars that include the new layers and the map (orientation bench 2026-10-23 read TIE). The count before it read: 2 — latest `inbox-2026-10-m` (2026-10-12): 16.4.0 release reviews read the named benchmark repositories and ask that the benchmark finally run; no new fact. The count before it read: 1 — latest `inbox-2026-10-j` (2026-10-11), asking for step 1.2's
+> **Arrivals:** 7 — latest `inbox-2026-10-bk` (2026-10-29): a 19.0.0 release review re-verified at `566cccf600` asks to finish this file rather than open a new graph track; its one gap inside this owner is that the answer verbs never read the lane record, landed as step 4.8. Before that: 6 — latest `inbox-2026-10-bf` (2026-10-27): a review-graph comparison round (S1, literature S3–S14) re-verified at `92397d636` finds the engine mature and the last metre missing — no review skill, no workflow and no merge or self-review gate reads the graph (the stop gate's shadow feeder is the one consumer), the stated/guess rule is applied by four verbs only, and a partial parse or a skipped lane reads as zero; landed as the rewrite of 3.1 (7 → 18 mechanisms, enforcement), amendments to 2.2, 2.4 and 3.5, and new Phases 4 and 5. Its hook-extension item folded into `road-to-a-graph-that-feeds-the-gate` 2.5 and its freshness items into `road-to-code-graph-refresh-during-a-session`. Before that: 5 — latest `inbox-2026-10-bb` (2026-10-26): a comparison round against an external code-graph tool asks for an opt-in oracle producer, per-mechanism edge precision/recall against it, and a same-roots parity run; landed as step 2.6, its correctness half went to `road-to-edges-that-earn-their-target`. Before that: 4 — latest `inbox-2026-10-aw` (2026-10-25): two 18.0.0 reviews read the entry condition as met (parent archived, both benchmark repositories named) and ask for the wake; no detector evaluates `entry_condition`, so it stays parked until someone triages it. Before that: `inbox-2026-10-aj` (2026-10-25): 17.2.0 reviews note both benchmark repositories are now named and the native graph gained SCIP, Laravel overlay and `agents/map/`; they ask for the wake decision, pinned SHAs, and bars that include the new layers and the map (orientation bench 2026-10-23 read TIE). The count before it read: 2 — latest `inbox-2026-10-m` (2026-10-12): 16.4.0 release reviews read the named benchmark repositories and ask that the benchmark finally run; no new fact. The count before it read: 1 — latest `inbox-2026-10-j` (2026-10-11), asking for step 1.2's
 > `route` relation so account-flow entry points (login, reset, OAuth callback)
 > can be classified and graph-backed missing-control checks become decidable;
 > earlier: none.
@@ -265,6 +265,16 @@ answers. Each step is fixture-gated (K5).
       whole, the rest counted as `{file, lines, reason}`. Line ranges only, no source
       text in graph output; no new field name.
       verify: `npx vitest run tests/scripts/code_graph.test.ts -t 'recommended_reads region budget'` -> 0
+- [x] 4.8 **Answers read the lane record.** `ask`, the one entry point, reads
+      `lanes_run` through `laneGaps` (`uncertainty.ts`): a lane with `error` or
+      `skipped_reason` is listed under `degraded` as `<lane> lane failed|skipped
+      (…) — its facts are unknown, not absent`, and the answer drops to low
+      confidence; a lane that ran and found nothing adds no line. The map's area
+      payloads (read by `graph_area`) already carry `completeness: unknown` (4.2);
+      `map_answers` reads the code model and its own git read, which returns null
+      rather than zero; `impact`, `tests-for`, `dead`, `path` and `node` answer
+      from the code lane only, so a non-code lane cannot empty them.
+      verify: `npx vitest run tests/scripts/code_graph_answers_lane_record.test.ts` -> 0 (red before)
 
 ## Phase 5 — The review reaches the graph
 Added 2026-10-27 from round `inbox-2026-10-bf`. The graph feeds deterministic checks
@@ -323,7 +333,7 @@ obligation inference in any pack/selection verb · K7 no external flow-analyzer 
 K8 no Fact-IR rewrite before a second provider emits the same edge family.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-27 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-29 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -332,6 +342,7 @@ K8 no Fact-IR rewrite before a second provider emits the same edge family.
 | 3 | Breadth outruns reach | implementation | A language or framework added without a fixture and a corpus class widens the claim without evidence | K5 forbids it; each Phase 1 language carries both | Phase 1 — Reach, scoped (each language with fixture + corpus class) |
 | 4 | Honesty changes break the answers consumers already read | implementation | `partial_files`, `unknown` terms and caps change output the map, the stop-gate feeder and the MCP tools consume today | Non-empty answers stay byte-identical (4.3); omitted items are counted, never cut (4.5); the map copy changes in the same step (4.2) | Phase 4 — Answers that say what they do not know |
 | 5 | The graph reaches the review as prose and makes it worse | product | A consumer pastes graph output into the review prompt, the form S3 measured as degrading | Checks and line-range read lists only (5.1, 5.2); prose exists only as arm B2 of 3.5; the self-review gate stays advisory until 3.5 shows B1 > A | Phase 5 — The review reaches the graph |
+| 6 | A lane gap reads as noise and is ignored | product | `ask` lists a failed lane under `degraded`; an agent reading only the answer rows misses it | The answer drops to low confidence, which the envelope surfaces first (4.8) | Phase 4 — Answers that say what they do not know |
 
 ## Acceptance Criteria
 - [ ] AC-1 Corpus v3 and the F task suite are tracked in-tree with hashes before the engine sees the subject repos.

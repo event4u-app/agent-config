@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 // checked whenever it exists, so a half-written matrix cannot sit in the tree.
 
 const ROOT = path.resolve(__dirname, '../..');
-const ROADMAP = path.join(ROOT, 'agents/roadmaps/road-to-map-views-from-the-handover.md');
+const ROADMAP = path.join(ROOT, 'agents/roadmaps/archive/road-to-map-views-from-the-handover.md');
 const REVIEWS = path.join(ROOT, 'agents/evidence/reviews');
 
 export const MATRIX_SECTIONS = [

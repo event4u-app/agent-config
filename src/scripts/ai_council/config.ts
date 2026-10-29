@@ -40,11 +40,9 @@
  * 8. `binary:` is only valid when the member's effective mode is `cli` or
  *    `auto` (auto may resolve to the cli rung);
  *    `cli_call_budget.max_calls_per_day.<provider>` keys must be valid
- *    providers. `max_calls_per_day` SHIPS POPULATED with a generous
- *    per-provider default (50/day, road-to-always-on-orchestration
- *    Phase 3.4) for every known provider — a guard against a silent
- *    always-on pass exhausting a subscription's plan quota, not a brake;
- *    an explicit per-provider entry overrides just that provider's default.
+ *    providers. `max_calls_per_day` ships empty: `resolveCliCallCaps`
+ *    seeds no default, so a provider without an entry is uncapped; an
+ *    explicit per-provider entry caps just that provider.
  * 9. `quorum` ∈ {`"majority"`, a positive integer} (default `"majority"`,
  *    road-to-always-on-orchestration Phase 3.3). `"majority"` at n members
  *    resolves to `ceil(n / 2)` — a SIMPLE majority, deliberately NOT

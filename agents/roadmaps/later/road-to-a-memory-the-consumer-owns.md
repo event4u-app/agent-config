@@ -222,6 +222,9 @@ saves them.
   or `agent-config explain`.
 - **A global project registry** keyed by remote, worktree and UUID — the council's
   2026-07-29 cut rejected any global project namespace on the enumeration argument.
+  Later opened in a narrower form by ADR-299 (2026-10-24): a registry recorded by
+  use, never by crawling, machine-local; this decline still holds for the drafts'
+  remote/worktree/UUID namespace.
 - **Vault sync, team sync, device sync** — the files are the vault, and the global
   layer is never synchronised by council lock.
 - **An intent router** classifying prompts — the predicate floor stays; Phase 7
