@@ -36,9 +36,9 @@ describe('the tracked decision ledger is seeded from harvests.jsonl', () => {
     const harvests = parseLedgerText(read('provenance/harvests.jsonl')).parsed.map((p) => p.value as Record<string, string>);
     const mechText = read('provenance/mechanisms.jsonl');
 
-    it('has exactly one row per harvest row — 18 of them', () => {
-        expect(harvests).toHaveLength(18);
-        expect(parseLedgerText(mechText).parsed).toHaveLength(18);
+    it('has exactly one row per harvest row — 19 of them', () => {
+        expect(harvests).toHaveLength(19);
+        expect(parseLedgerText(mechText).parsed).toHaveLength(19);
     });
 
     it('is exactly the seed: id, verdict, stated_in and date carried over, nothing invented', () => {

@@ -76,7 +76,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import type * as YamlModule from 'yaml';
 
 import { build_merge_entries } from './_lib/json_pointers.js';
-import { deepMerge as deep_merge, isPlainObject as _isPlainObject, jsonEqual } from './_lib/json_merge.js';
+import { deepMerge as deep_merge, isPlainObject as _isPlainObject } from './_lib/json_merge.js';
 import { mergeHostConfig, HOOK_SIGNATURES } from './_lib/host_hook_merge.js';
 import { sweepReservedNames } from './_lib/reserved_name_sweep.js';
 import { withHostEnv } from './_lib/host_env_write.js';
@@ -87,6 +87,7 @@ import * as mcp_bridge from './_lib/mcp_bridge.js';
 import * as mcp_consent from './_lib/mcp_consent_residual.js';
 import * as scoped_projection from './_lib/scoped_projection.js';
 import { createConflictTracker } from '../install/conflictTracker.js';
+import { manualSnippet, mergeHostConfigFile, parseHostConfig } from '../install/hostConfigMerge.js';
 import { mkdirp, pathExists, resolvePath, sha256OfFile } from '../install/fsPrimitives.js';
 import { dropGlobalScopeFiles, filesByToolFromBridges as _files_by_tool_from_bridges, filesByToolFromDeploy as _files_by_tool_from_deploy, hydrateRecordedInventories, preservedIndex, readRecordedByTool, reconcileToolFiles, type ManifestFileEntry } from '../install/manifestFiles.js';
 import { EXIT_COMPLETED_WITH_CONFLICTS } from '../install/preserve.js';
@@ -467,19 +468,12 @@ function write_file(p: string, content: string): void {
     writeText(p, content);
 }
 
-function read_json_file(p: string): Record<string, unknown> {
-    let data: unknown;
-    try {
-        data = JSON.parse(readText(p));
-    } catch {
-        warn(`Invalid JSON in ${p}, treating as empty`);
-        return {};
-    }
-    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
-        warn(`Unexpected JSON shape in ${p}, treating as empty`);
-        return {};
-    }
-    return data as Record<string, unknown>;
+/** A strict-JSON object, or `null` (warned) — never a silent `{}` that a write would then replace the file with. */
+function read_json_file(p: string): Record<string, unknown> | null {
+    const parsed = parseHostConfig(readText(p));
+    if (parsed.kind === 'strict') return parsed.data;
+    warn(`${p}: not strict JSON (${parsed.kind === 'jsonc' ? 'comments or trailing commas' : parsed.reason}), left untouched`);
+    return null;
 }
 
 function write_json_file(p: string, data: unknown): void {
@@ -499,24 +493,16 @@ function merge_json_file(
         unknown
     >[];
 
-    if (!pathExists(p)) {
-        write_json_file(p, new_data);
-        success(`${label} created`);
-        return new_entries;
-    }
-
-    const existing = read_json_file(p);
     // Hook arrays are shared with whatever else the consumer installed, so the
     // `hooks` key merges per event by signature instead of being replaced.
-    const merged = mergeHostConfig(existing, new_data, HOOK_SIGNATURES[label] ?? '', deep_merge);
-
-    if (jsonEqual(merged, existing)) {
-        skip(`${label} already configured`);
-        return new_entries;
+    const outcome = mergeHostConfigFile(p, new_data, (existing, incoming) =>
+        mergeHostConfig(existing, incoming, HOOK_SIGNATURES[label] ?? '', deep_merge), { write: write_file });
+    if (outcome.status === 'created' || outcome.status === 'updated') success(`${label} ${outcome.status}`);
+    else if (outcome.status === 'unchanged') skip(`${label} unchanged (already configured)`);
+    else {
+        warn(`${label} ${outcome.status}: ${outcome.detail ?? ''} — add by hand:\n${manualSnippet(new_data)}`);
+        return [];
     }
-
-    write_json_file(p, merged);
-    success(`${label} updated`);
     return new_entries;
 }
 
@@ -934,10 +920,10 @@ const CLAUDE_LEGACY_PLUGIN_IDS: readonly string[] = [
 function _heal_legacy_claude_plugin_ids(p: string): string[] {
     if (!pathExists(p)) return [];
     const data = read_json_file(p);
-    const enabled = data['enabledPlugins'];
+    const enabled = data?.['enabledPlugins'];
     if (!_isPlainObject(enabled)) return [];
     const removed = CLAUDE_LEGACY_PLUGIN_IDS.filter((pid) => pid in enabled);
-    if (removed.length === 0) return [];
+    if (removed.length === 0 || data === null) return [];
     for (const pid of removed) {
         delete (enabled as Record<string, unknown>)[pid];
     }
@@ -1965,6 +1951,7 @@ export const RULE_LAYER_CHOICES: readonly string[] = ['global', 'project', 'both
 function _suppress_rule_layer(project_root: string, suppress_dir: string): void {
     const target = path.join(project_root, '.claude', 'settings.local.json');
     const existing = pathExists(target) ? read_json_file(target) : {};
+    if (existing === null) return;
     // Realpath before building the glob. `claudeMdExcludesGlob` stays pure and
     // only normalizes, and `path.resolve` does NOT dereference symlinks — so on a
     // symlinked home or checkout (macOS `/var` → `/private/var`; the host docs
@@ -2227,30 +2214,6 @@ function prompt_scope_choice(reason: string): string {
     }
     fail('Scope prompt aborted (3 invalid replies); pass --scope=project|global to override');
 }
-
-function prompt_collision_choice(p: string): string {
-    process.stdout.write('\n');
-    warn(`Existing file at ${p}`);
-    info('Choose how to handle the collision:');
-    process.stdout.write('  1) Merge              — append our content, preserve theirs\n');
-    process.stdout.write('  2) Backup and replace — rename existing to .bak.<ts>, write fresh\n');
-    process.stdout.write('  3) Abort              — leave the file untouched, exit non-zero\n');
-    process.stdout.write('\n');
-    let attempts = 0;
-    while (attempts < 3) {
-        const reply = _read_line('Choose [1/2/3]: ');
-        if (reply === null) {
-            fail(`Collision prompt aborted (EOF on stdin) for ${p}`);
-        }
-        if (['1', 'merge', 'm'].includes(reply)) return 'merge';
-        if (['2', 'backup', 'b'].includes(reply)) return 'backup';
-        if (['3', 'abort', 'a'].includes(reply)) return 'abort';
-        attempts += 1;
-        warn(`Invalid choice '${reply}'. Enter 1, 2, or 3.`);
-    }
-    fail(`Collision prompt aborted (3 invalid replies) for ${p}`);
-}
-void prompt_collision_choice;
 
 // --- Manifest / inventory helpers (lazy-import twins are eager static here) ---
 
@@ -4980,6 +4943,8 @@ export {
     ZED_MARKER,
     // ADR-200 py2ts: re-exported for test_install_snapshot.ts twin
     ensure_cursor_bridge,
+    ensure_vscode_bridge,
+    merge_json_file,
     ensure_cline_bridge,
     ensure_mcp_bridge,
     _tier_b_advisory,

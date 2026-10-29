@@ -197,6 +197,30 @@ Per the manifest contract, RFC-6901 pointers target object keys, never array
 indices — except the documented hook-array replacements above, which the
 installer owns wholesale.
 
+### Host-config merge statuses
+
+Every JSON merge above (`merge_json_file` → `src/install/hostConfigMerge.ts`)
+ends in exactly one named status, printed on the install line for that file.
+A file the installer cannot parse as strict JSON is never replaced with `{}`.
+
+| Status | When | File on disk |
+|---|---|---|
+| `created` | file did not exist | written |
+| `updated` | strict JSON, our keys were missing or different | rewritten; backup kept (below) |
+| `unchanged` | our keys already present (strict JSON or JSONC) | untouched |
+| `skipped-jsonc` | parses only after stripping `//` / `/* */` comments and trailing commas, and our keys are missing | untouched — a rewrite would drop the comments; the snippet to add by hand is printed |
+| `skipped-invalid` | not parseable even as JSONC (truncated, top level not an object) | untouched; snippet printed |
+| `skipped-duplicate-key` | a top-level key the merge would touch appears twice (a strict parse silently keeps only the last) | untouched; both line numbers and the snippet printed |
+| `skipped-readback-mismatch` | the rewritten file did not re-parse to the merged value | pre-write bytes restored |
+
+A `skipped-*` status records no `merged_keys` entry, since nothing was written.
+
+**Backup.** Before the first overwrite of an existing file the installer writes
+`<file>.agent-config.bak` with the original bytes. It is written once and never
+refreshed, so it keeps the pre-agent-config original across later installs.
+After every overwrite the file is re-read; on a mismatch the bytes read just
+before the write are put back.
+
 ## Surgical-uninstall pointer schema
 
 An uninstall/prune flow removes exactly what the installer wrote, leaving

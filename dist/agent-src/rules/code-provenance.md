@@ -171,6 +171,7 @@ is why the discipline is the control on both layers.
 
 - [`license-compliance-borrow-check`](../skills/license-compliance-borrow-check/SKILL.md), [`license-compliance-credits`](../skills/license-compliance-credits/SKILL.md), [`license-compliance-audit`](../skills/license-compliance-audit/SKILL.md) — the borrowing / notices / on-demand-scan skill family this rule routes to.
 - `provenance/README.md`, `src/scripts/lint_provenance.ts`, `src/scripts/detect_target_license.ts` — the code ledger, its linter, and the S1.2 policy derivation.
-- `provenance/harvests.jsonl`, `src/scripts/lint_harvest_provenance.ts` — the knowledge ledger and its linter. Neither is `docs/CLAIMS.md` / `check_claims.ts`, which govern public claims this package makes about **itself**; the shared vocabulary is a grep hazard, so `provenance/README.md` states the three-way split.
+- `provenance/harvests.jsonl`, `src/scripts/lint_harvest_provenance.ts` — the knowledge ledger and its linter — not `docs/CLAIMS.md` (claims about **itself**); `provenance/README.md` states the split.
+- `docs/contracts/reconstruction-obligations.md` — the ledger a conscious rebuild closes against.
 - [`secret-vcs-guard`](secret-vcs-guard.md) — sibling detect → ask → act discipline for a different leak class.
 - [`ask-when-uncertain`](ask-when-uncertain.md) — the escalation shape for `conditional`/`unknown` verdicts.
