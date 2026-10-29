@@ -360,7 +360,7 @@ export function main(argv?: readonly string[]): number {
         const tracked = inRepo ? trackedFiles() : null;
         let rr: RunReport;
         try {
-            rr = runReport(rootAbs, root, { cwd: REPO_ROOT, keep: tracked === null ? undefined : (f) => tracked.has(f) });
+            rr = runReport(rootAbs, root, tracked === null ? { cwd: REPO_ROOT } : { cwd: REPO_ROOT, keep: (f) => tracked.has(f) });
         } catch (e) {
             if (e instanceof DeadScopeError) {
                 process.stderr.write(`${e.message}\n`);
