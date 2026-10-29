@@ -47,7 +47,7 @@ pin because the detector needs the write paths the turn snapshot does not carry
       already recorded under `~/.claude/projects/*/memory` counts as an earlier
       arrival. Never write there; give `host-memory` in
       `src/config/source-registry.json` its reader.
-      verify: `npx vitest run tests/scripts/host_memory_reader.test.ts` -> 0, with a
+      verify: `npx vitest run tests/scripts/host_memory_reader.test.ts` -> 0 — with a
       fixture memory dir read and a test that no write reaches it.
 - [ ] **1.2 Subject-count index.** A derived `_subject-index.json` beside the
       target index in `self_repair_store.ts`.

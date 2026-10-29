@@ -79,7 +79,7 @@ continuity record no longer depends on reaching the 800k recycle threshold.
       original values go to a separate local, untracked store the agent can
       resolve while it works, and a purge deletes them after 7 days, leaving
       only the placeholders. Reuse the existing egress rules and placeholder view.
-      verify: `npx vitest run tests/scripts/chat_history_secret_ttl.test.ts` -> 0,
+      verify: `npx vitest run tests/scripts/chat_history_secret_ttl.test.ts` -> 0 —
       with a fixture where a key is resolvable on day 6 and only its placeholder
       remains on day 8.
 
