@@ -15,7 +15,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-map-that-knows-what-happened | active | ready | The map knows what happened to the code, and the agent gets answers instead of files. |
 | road-to-a-memory-each-worker-is-handed | active | ready | A dispatched worker receives a bounded set of memory references cut for its audience, and what a worker writes back … |
 | road-to-a-noted-that-is-a-write | active | ready | When the agent says "noted" or "from now on", a write to a carrier the next session reads has happened … |
-| road-to-map-views-from-the-handover | active | ready | Every page of the map viewer matches the twelve-page design handover of this round 1:1 — tokens, shell, Übersicht, a … |
 | road-to-routing-assurance-live-floors | active | ready | Road to routing assurance — the live-harness floors |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
 | road-to-17-0-follow-ups | later | later | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
