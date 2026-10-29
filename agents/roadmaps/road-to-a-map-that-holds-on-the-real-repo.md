@@ -30,6 +30,8 @@ estate_growth_exempt: "Growth in this change is the three roadmaps of inbox roun
 > `92397d6368`. This file carries the plan's Stages A–F; the views, bug,
 > knowledge, answer and feedback stages went to the two sibling roadmaps in
 > `relates:`. Step IDs keep the plan's stage letters in brackets for traceability.
+>
+> **Arrivals:** 2 — latest `inbox-2026-10-bk` (2026-10-29): a 19.0.0 release review asks to finish this file first (P0) and names one gap it does not hold: the manifest's `state` field still reads `fresh` for a map drawn at another commit (4.7); a later plan version adds secret-shape and pre-registration detail (4.8, 5.8) and a logging stage that went to `road-to-a-map-that-knows-what-happened` Phase 5. Before that: 1 — `inbox-2026-10-bf` (2026-10-28).
 
 ## Context
 
@@ -201,6 +203,8 @@ the decision-revisit gate first.
 - [x] **4.5 [C.5] Cache key includes the lane set** (`map.ts:236-242`). verify: `npx vitest run tests/scripts/code_graph_map_cache_lanes.test.ts` -> 0 <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/map.ts -->
 - [ ] **4.6 [C.6] Procedures skip generated files.** The archive and rename procedures (`roadmap-management` SKILL, `archive_completed_roadmaps`) skip paths with the generated attribute. verify: after archiving a fixture roadmap, `git status --porcelain agents/map` -> /^$/
   > note: not done: waits on the `linguist-generated` attribute of 4.2.
+- [x] **4.7 [C.7] The manifest says what its state describes.** `agents/map/manifest.json` carries `built_at_commit` beside `state`, so the field reads as a property of that commit, never of HEAD; MAP.md already does (4.4). No code in the tree reads the manifest's `state` (grep 2026-10-29), so the field is added rather than renamed — a rename would break an outside reader for no in-tree gain. The committed manifest carries it from the next redraw. verify: `npx vitest run tests/scripts/code_graph_map.test.ts -t "writes index.html"` -> 0 (red before)
+- [x] **4.8 [C.8] No secret shape in the committed map.** A test greps every file under `agents/map/**` for DSN, webhook-URL and token shapes and fails on a hit (risk: a logging config value leaking into a committed payload). verify: `npx vitest run tests/scripts/code_graph_committed_map_privacy.test.ts -t secret` -> 0
 
 ## Phase 5 — A measure that can answer [D]
 
@@ -220,6 +224,7 @@ Before any agent-facing addition.
 - [ ] **5.6 [D.6] Decision rule before the run.** Gain on covered tasks ≥ the minimum effect on M1 or M2 at ≤ the O4 margin on M3 → hook delivery of the pack (H21) is built behind the same gate; null → the map stays a human view and on-request tool, the hook stays state-only, the consequence recorded (O7). A null is an owner decision (P-4). verify: `grep -cE '^- \*\*Branch taken:\*\* (gain|null)' agents/evidence/decisions/map-remeasure-decision.md` -> /^1$/
   > note: open by rule: the branch taken is an owner decision (P-4) after 5.5, which waits on `b-map-remeasure-spend`; O7 (contested) is not decided here.
 - [~] **5.7 [D.7] Spend cap value and record.** `--max-usd` exists (`bench_map_task_set.ts:308`); only the value per run and its record are missing. Deferred on blocker `b-map-remeasure-budget` (owner-reserved O4). verify: a paid report whose `sweep_cap_usd` equals the value the owner set.
+- [~] **5.8 [D.8] The pre-registration fixes its hypotheses and token sub-metrics.** `map-remeasure-v2.md` states, before the first paid run, a cost hypothesis (lean-arm token median vs vanilla), an equivalence band for success, a recall hypothesis on non-code dependents for the `*-map` arms, and M3 decomposed into cache-write, cache-read, output and turns, with orientation and change tasks reported apart; ≥ 1 task checks a logging convention. Deferred with 5.5 on blocker `b-map-remeasure-spend`. verify: `grep -cE '^- \*\*(H-cost|H-equiv|H-recall|M3\.(cache_write|cache_read|output|turns))' agents/evidence/preregistration/map-remeasure-v2.md` -> /^7$/
 
 ## Phase 6 — Systems that are right [E]
 

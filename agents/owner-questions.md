@@ -8,6 +8,79 @@ and the run that applies it links its PR.
 
 ## Open
 
+### OQ-36 — Where a logging-route answer lives
+
+- **Context:** round `inbox-2026-10-bl`, your turn: the agent may ask at the start
+  or on certain errors where logs should go, "und das merken wir uns auch". The
+  answer has to live somewhere: an error-routing rule is about the project, a
+  "tell me on Slack" wish is about you.
+- **Options:** (a) by kind — error routing as a project/team agreement, a
+  notification wish as user-owned data; (b) everything project-scoped; (c)
+  everything user-scoped.
+- **Recommendation:** (a) — it keeps a teammate's checkout correct and your
+  personal wishes out of the repository.
+- **Blocks:** `road-to-a-map-that-knows-what-happened` L.6.
+
+### OQ-37 — When the agent asks about a logging route
+
+- **Context:** same round. Asking at every session start is noise; never asking
+  leaves an unrouted error class unrouted.
+- **Options:** (a) on an unrouted error class, and at project start only when the
+  graph leaves the default open; (b) only on errors; (c) only at project start.
+- **Recommendation:** (a).
+- **Blocks:** `road-to-a-map-that-knows-what-happened` L.6.
+
+### OQ-38 — Stage L before Stage D
+
+- **Context:** same round. Readers L.2–L.5 build on the measured base (Stage D,
+  blocked on `b-map-remeasure-spend`). L.1, the sink catalogue, is pure data and
+  runs now. Taking L.2+ earlier is an exception to "base before breadth".
+- **Options:** (a) wait for Stage D, L.1 now; (b) build L.2–L.5 now on the
+  unmeasured base.
+- **Recommendation:** (a).
+- **Blocks:** `road-to-a-map-that-knows-what-happened` L.2–L.5 ordering.
+
+### OQ-39 — Your council instruction on ADR-303 ("graph as truth?")
+
+- **Context:** round `inbox-2026-10-bk`, your turn: "ADR-303 - Sollten wir den
+  Graphen nicht als Index, sondern als Wahrheit behandeln? Im AI-Council
+  entscheiden und anwenden.", later "Denk an meine Frage und Entscheidung vorhin
+  !!!". Your directive of 2026-10-26 says the graph is a source, not the truth;
+  ADR-303 carries `reopen_policy: owner`, and its review trigger fires when you
+  name a **class of facts** to trust without a witness check. The question names
+  none, and a council round is paid, so the run did not start it on a transcript
+  line.
+- **Options:** (a) keep ADR-303 as is — your 2026-10-26 directive answers it;
+  (b) name the class of facts (e.g. lockfile-derived package edges) and the run
+  sends exactly that to the council, which may then recommend a scoped amendment
+  you ratify; (c) send the open question to the council as written.
+- **Recommendation:** (b) if you have a class in mind, else (a) — the trigger
+  needs a named class, and a scoped amendment is reversible where a blanket
+  "truth" is not.
+- **Blocks:** nothing executable.
+
+### OQ-40 — Map invariants on one external repository
+
+- **Context:** round `inbox-2026-10-bk`: the review asks that the map invariants
+  (0 dangling lane edges, per-lane confirm ≥ 0.99, no fixture findings in product
+  views) hold on a representative external repository, not only on this one.
+  `road-to-a-map-that-holds-on-the-real-repo` 2.8 builds this repository only.
+- **Options:** (a) add step 2.9 running the 2.8 job once on one SHA-pinned subject
+  of the graph-that-wins corpus (read, never edited); (b) leave it to the
+  graph-that-wins measurement; (c) decline.
+- **Recommendation:** (a) — it reuses a repository you already chose.
+- **Blocks:** nothing executable today.
+
+### OQ-41 — May the standing bypass merge a change to the ratification mechanism itself
+
+- **Context:** round `inbox-2026-10-bk`: the external review asked this (J-2) and
+  it stayed unanswered. A change to the ratification mechanism merged under the
+  bypass is governance self-amendment, reserved to you.
+- **Options:** (a) no — such a PR waits for a normal review; (b) yes, recorded
+  like every other bypass.
+- **Recommendation:** (a).
+- **Blocks:** nothing executable; it closes a hole in the bypass directive.
+
 ### OQ-8 — The owner-authority register sits outside this list
 
 - **Context:** `agents/roadmaps/stubs/road-to-owner-authority-decisions.md` holds

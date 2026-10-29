@@ -15,7 +15,7 @@ relates:
 ---
 # Road to routing assurance — the live-harness floors
 
-> **Arrivals:** 5 (at least) — latest `inbox-2026-10-at` (2026-10-25): a plan built on a third party's advice — compare automatic selection with explicit invocation on identical tasks, and investigate loading before adding review agents — reaches this file's question again and recommends option (1); its inputs are under § Inputs for the protocol session. Not un-parked: the active estate is at its cap, and the pilot spend is the owner's (`agents/owner-questions.md` OQ-15). The count before it read: 4 (at least) — latest `inbox-2026-10-an` (2026-10-25): two parallel plans both open with this file's question and recommend option (1); new inputs are listed under § Inputs for the protocol session. Not un-parked by that round: the active estate was at its five-roadmap cap. The count before it read: 3 (at least) — latest `inbox-2026-10-i` (2026-10-11): an audit names the host's own skill evaluator (with/without delta, ablation) as the independent grader this file was parked for. The count before it read: 2 (at least) — latest `inbox-2026-09-l` (2026-09-05); earlier: agents/roadmaps/archive/road-to-routing-assurance.md.
+> **Arrivals:** 6 (at least) — latest `inbox-2026-10-bk` (2026-10-29): a 19.0.0 rescore reads the Phase 4 parity table — MCP recall 0.448 against native 0.552, the MCP path names the skill but never calls `read_skill` — and finds no step that closes it; landed as 4.4. The count before it read: 5 (at least) — latest `inbox-2026-10-at` (2026-10-25): a plan built on a third party's advice — compare automatic selection with explicit invocation on identical tasks, and investigate loading before adding review agents — reaches this file's question again and recommends option (1); its inputs are under § Inputs for the protocol session. Not un-parked: the active estate is at its cap, and the pilot spend is the owner's (`agents/owner-questions.md` OQ-15). The count before it read: 4 (at least) — latest `inbox-2026-10-an` (2026-10-25): two parallel plans both open with this file's question and recommend option (1); new inputs are listed under § Inputs for the protocol session. Not un-parked by that round: the active estate was at its five-roadmap cap. The count before it read: 3 (at least) — latest `inbox-2026-10-i` (2026-10-11): an audit names the host's own skill evaluator (with/without delta, ablation) as the independent grader this file was parked for. The count before it read: 2 (at least) — latest `inbox-2026-09-l` (2026-09-05); earlier: agents/roadmaps/archive/road-to-routing-assurance.md.
 
 > **Owner decision, 2026-10-26 (OQ-15):** un-parked into the free active slot,
 > with option (1) below and one pilot on the host evaluator capped at **25 USD**
@@ -167,6 +167,12 @@ item created unless the null broke.
       roadmap's measured-null outcome, not as a separate claim.
       verify: the table cites the archived roadmap and adds no new claim id.
       production entry: src/scripts/routing_arms.ts
+
+- [ ] **4.4 Close the suggest-without-read gap.** On a unique top hit,
+      `suggest_skill_for_task` returns the skill body (or a bounded excerpt with its
+      id) so the MCP path needs no second `read_skill` call; default-off until the
+      4.2 parity gate passes on it.
+      verify: `routing_arms --report` on the Phase 2 corpus shows MCP recall ≥ native − 0.05 and `parityVerdict` not breached.
 
 **Exit:** parity table exists for the full Phase 2 corpus on both paths.
 
