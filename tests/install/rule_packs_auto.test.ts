@@ -84,8 +84,10 @@ describe('ruleScopeFromSettings with rule_packs: auto', () => {
         expect(ruleScopeFromSettings(SETTINGS).packs).toBeNull();
     });
 
-    it('an explicit empty list keeps the axis inactive during the legacy window (step 4.9)', () => {
-        expect(ruleScopeFromSettings({ projection: { rule_packs: [] } }, REPO).packs).toBeNull();
+    it('a leftover explicit empty list no longer switches the axis off (window closed at 19.0.0)', () => {
+        expect(ruleScopeFromSettings({ projection: { rule_packs: [] } }, REPO).packs).toEqual(
+            resolve_rule_pack_scope(RULE_PACKS_AUTO, REPO),
+        );
     });
 });
 

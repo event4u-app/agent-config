@@ -1,0 +1,12 @@
+diff --git a/src/query.mjs b/src/query.mjs
+index ee7c123..0bb0df4 100644
+--- a/src/query.mjs
++++ b/src/query.mjs
+@@ -19,6 +19,6 @@ export function buildOrderBy(column, direction) {
+   // BUG: the direction is passed through as written, so a caller that sends
+   //      "asc" produces `ORDER BY id asc` where the contract requires the
+   //      keyword upper-cased.
+-  const dir = direction === 'desc' ? 'DESC' : direction;
++  const dir = direction.toUpperCase();
+   return `ORDER BY ${column} ${dir}`;
+ }

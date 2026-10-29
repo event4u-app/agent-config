@@ -41,6 +41,7 @@ import {
     nothing_to_release_ci,
     render_changelog_entry,
     _cap_body,
+    release_pr_body,
     _changelog_line,
     prepend_changelog,
     set_package_version,
@@ -62,6 +63,7 @@ import {
     confirmGate,
     resolve_split_decision,
 } from '../../src/scripts/release.js';
+import { GH_PR_BODY_LIMIT } from '../../src/scripts/release_env.js';
 import {
     CURRENT_ERA_BODY_CAP,
     current_era_accumulated_body_size,
@@ -397,6 +399,25 @@ describe('_cap_body', () => {
         const text = 'x'.repeat(100_000);
         const out = _cap_body(text, 65_536, '`CHANGELOG.md`');
         expect(out).toContain("65,536-character body limit");
+    });
+});
+
+// The cap must budget for the wrapper `pr_body_from_section` adds, which is
+// longer than the fixed 200-character reserve it once assumed.
+
+describe('release_pr_body', () => {
+    it('keeps an oversized section within the GitHub PR-body limit once wrapped', () => {
+        const section = Array.from({ length: 5_000 }, (_, i) => `* bullet ${i} — ${'x'.repeat(20)}`).join('\n');
+        const body = release_pr_body(section, '19.0.0');
+        expect([...body].length).toBeLessThanOrEqual(GH_PR_BODY_LIMIT);
+        expect(body).toContain('Changelog truncated to fit GitHub');
+        expect(body.startsWith('Release 19.0.0.')).toBe(true);
+    });
+
+    it('leaves a section that fits untouched', () => {
+        const body = release_pr_body('* one bullet', '19.0.0');
+        expect(body).not.toContain('Changelog truncated');
+        expect(body).toContain('* one bullet');
     });
 });
 

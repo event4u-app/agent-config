@@ -1,0 +1,13 @@
+diff --git a/src/paginate.ts b/src/paginate.ts
+index e785189..93d83bc 100644
+--- a/src/paginate.ts
++++ b/src/paginate.ts
+@@ -26,7 +26,7 @@ export function paginate<T>(all: T[], page: number, pageSize: number): Page<T> {
+   const start = (page - 1) * pageSize;
+   // BUG: end is off by one — it drops the last item of every page.
+   //      `end` should be `start + pageSize`, not `start + pageSize - 1`.
+-  const end = start + pageSize - 1;
++  const end = start + pageSize;
+   return {
+     items: all.slice(start, end),
+     page,

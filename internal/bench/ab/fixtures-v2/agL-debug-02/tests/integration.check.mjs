@@ -65,4 +65,4 @@ eq(grand, 42000 + 13500 + 75000, 'grand total amountCents');
 if (failed) {
   process.exit(1);
 }
-console.log('ok');
+console.log(process.env.BENCH_VERIFIER_NONCE ?? 'ok');

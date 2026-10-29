@@ -132,18 +132,42 @@ cat > "$HOOKS_DIR/pre-push" << 'EOF'
 #   <local ref> <local sha> <remote ref> <remote sha>
 # and a deletion carries the all-zero local sha. Reading stdin is safe here:
 # nothing below consumes it.
+#
+# A tag-only push skips them when every tagged commit is already on a remote
+# branch: that commit went through these gates there, and the gates read the
+# CHECKED-OUT tree, not the tag. A tag on a local-only commit is gated, because
+# the push would carry that commit to the remote ungated. Measured 2026-10-28 on 19.0.0: the release tool's
+# step 9 pushed the tag, the hook spent minutes re-checking `main` with the ssh
+# session open, and GitHub dropped it (`Connection reset by peer`).
 delete_only=1
+tags_only=1
 saw_ref=0
-while read -r _local_ref local_sha _remote_ref _remote_sha; do
+while read -r _local_ref local_sha remote_ref _remote_sha; do
     [ -z "${local_sha:-}" ] && continue
     saw_ref=1
     # Any non-zero character means a real object is being pushed.
     case "$local_sha" in
         *[!0]*) delete_only=0 ;;
     esac
+    case "$remote_ref" in
+        refs/tags/*)
+            # Only a tag whose commit is already on a remote branch was gated
+            # there. A tag on a local-only commit would carry that commit to the
+            # remote with no gate run, so it is gated like any other push.
+            tag_commit=$(git rev-parse --verify --quiet "${local_sha}^{commit}" 2>/dev/null || true)
+            if [ -z "$tag_commit" ] || [ -z "$(git branch -r --contains "$tag_commit" 2>/dev/null)" ]; then
+                tags_only=0
+            fi
+            ;;
+        *) tags_only=0 ;;
+    esac
 done
 if [ "$saw_ref" = "1" ] && [ "$delete_only" = "1" ]; then
     echo "🗑️  Delete-only push — no ref advances, so the content gates have nothing to check. Skipping."
+    exit 0
+fi
+if [ "$saw_ref" = "1" ] && [ "$tags_only" = "1" ]; then
+    echo "🏷️  Tag-only push of commit(s) already on a remote branch — gated there. Skipping."
     exit 0
 fi
 

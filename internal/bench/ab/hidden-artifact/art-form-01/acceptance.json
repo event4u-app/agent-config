@@ -1,0 +1,47 @@
+{
+  "_note": "Held back from both arms; written from the brief before any run.",
+  "tests": [
+    { "name": "starts-on-step-1", "steps": [
+      { "expect": "visible", "selector": "#step-1" },
+      { "expect": "hidden", "selector": "#step-2" },
+      { "expect": "hidden", "selector": "#step-3" } ] },
+    { "name": "every-input-labelled", "steps": [
+      { "expect": "labelled", "selector": "input:not([type=hidden]), select" } ] },
+    { "name": "blocks-invalid-step-1", "steps": [
+      { "do": "fill", "selector": "#email", "value": "not-an-email" },
+      { "do": "fill", "selector": "#password", "value": "short" },
+      { "do": "click", "selector": "#next-1" },
+      { "expect": "visible", "selector": "#step-1" },
+      { "expect": "hidden", "selector": "#step-2" },
+      { "expect": "count", "selector": "[role=alert]", "min": 1, "visible_only": true } ] },
+    { "name": "advances-and-back-keeps-values", "steps": [
+      { "do": "fill", "selector": "#email", "value": "ada@example.test" },
+      { "do": "fill", "selector": "#password", "value": "long-enough-1" },
+      { "do": "click", "selector": "#next-1" },
+      { "expect": "visible", "selector": "#step-2" },
+      { "expect": "hidden", "selector": "#step-1" },
+      { "do": "click", "selector": "#back-2" },
+      { "expect": "visible", "selector": "#step-1" },
+      { "expect": "value", "selector": "#email", "match": "^ada@example\\.test$" } ] },
+    { "name": "blocks-empty-name", "steps": [
+      { "do": "fill", "selector": "#email", "value": "ada@example.test" },
+      { "do": "fill", "selector": "#password", "value": "long-enough-1" },
+      { "do": "click", "selector": "#next-1" },
+      { "do": "click", "selector": "#next-2" },
+      { "expect": "visible", "selector": "#step-2" },
+      { "expect": "hidden", "selector": "#step-3" } ] },
+    { "name": "review-and-submit", "steps": [
+      { "do": "fill", "selector": "#email", "value": "ada@example.test" },
+      { "do": "fill", "selector": "#password", "value": "long-enough-1" },
+      { "do": "click", "selector": "#next-1" },
+      { "do": "fill", "selector": "#name", "value": "Ada Field" },
+      { "do": "fill", "selector": "#plan", "value": "pro" },
+      { "do": "click", "selector": "#next-2" },
+      { "expect": "visible", "selector": "#step-3" },
+      { "expect": "text", "selector": "#summary", "match": "ada@example\\.test" },
+      { "expect": "text", "selector": "#summary", "match": "pro" },
+      { "do": "click", "selector": "#submit" },
+      { "expect": "visible", "selector": "#done" },
+      { "expect": "text", "selector": "#done", "match": "Ada Field" } ] }
+  ]
+}

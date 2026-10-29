@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Showcase evidence bundle summary",
+  "description": "internal/bench/showcase/<stamp>-<task>/summary.json — one with/without-agent-config artifact run (road-to-a-baseline-that-has-to-catch-up step 1.1). Rendered into docs/examples/bench/ by src/scripts/render_showcase.ts. Validated by src/scripts/_lib/showcase_bundle.ts::validateBundleSummary, which also enforces the cross-field rules this draft cannot express: runs.length equals k on every arm; run numbers are 1..k; a `complete` token coverage carries all four buckets as numbers; infra_errors equals the count of runs carrying an infra_error; parity.arms names exactly the bundle's arms; censored is at most k; with_arm_first_shot_median equals the median first-shot score of the `package` arm; a fixture bundle says so. Transcripts are never part of a bundle.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "fixture",
+    "stamp",
+    "task",
+    "claim_id",
+    "host",
+    "model_id",
+    "k",
+    "pricing_sourced_on",
+    "arms",
+    "parity",
+    "verdict",
+    "reproduce"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "nullableNumber": { "type": ["number", "null"] },
+    "tokens": {
+      "type": "object",
+      "required": ["input", "output", "cache_read", "cache_write", "coverage"],
+      "additionalProperties": false,
+      "properties": {
+        "input": { "$ref": "#/definitions/nullableNumber" },
+        "output": { "$ref": "#/definitions/nullableNumber" },
+        "cache_read": { "$ref": "#/definitions/nullableNumber" },
+        "cache_write": { "$ref": "#/definitions/nullableNumber" },
+        "coverage": {
+          "enum": ["complete", "partial", "unknown"],
+          "description": "`unknown` when the host's telemetry did not report the buckets — never a zero."
+        }
+      }
+    },
+    "run": {
+      "type": "object",
+      "required": ["run", "score", "passed", "tokens", "turns", "model_requests", "tool_calls", "usd", "infra_error", "thumbnail", "secondary"],
+      "additionalProperties": false,
+      "properties": {
+        "run": { "type": "integer", "minimum": 1 },
+        "score": { "$ref": "#/definitions/nullableNumber", "description": "First-shot score on the task's primary grader; null on an infra error." },
+        "passed": { "type": ["boolean", "null"], "description": "First shot reached parity_bar; null on an infra error." },
+        "tokens": { "$ref": "#/definitions/tokens" },
+        "turns": { "$ref": "#/definitions/nullableNumber" },
+        "model_requests": { "$ref": "#/definitions/nullableNumber" },
+        "tool_calls": { "$ref": "#/definitions/nullableNumber" },
+        "usd": { "$ref": "#/definitions/nullableNumber" },
+        "infra_error": { "type": ["string", "null"], "description": "Reported, never dropped from the rate." },
+        "thumbnail": { "type": ["string", "null"], "description": "Bundle-relative path under thumbs/; listed in artifacts.sha256." },
+        "secondary": {
+          "type": "object",
+          "description": "Agent-config-native checks, rendered in a labelled secondary column; never the primary grader.",
+          "additionalProperties": { "$ref": "#/definitions/nullableNumber" }
+        }
+      }
+    },
+    "parityArm": {
+      "type": "object",
+      "required": ["reached", "censored", "prompts", "turns", "tokens", "usd_to_parity", "tokens_to_target_total"],
+      "additionalProperties": false,
+      "properties": {
+        "reached": { "type": "integer", "minimum": 0 },
+        "censored": { "type": "integer", "minimum": 0, "description": "Runs that did not reach parity_bar within cap_k; never imputed." },
+        "prompts": { "$ref": "#/definitions/nullableNumber", "description": "Median prompts to parity over the reached runs." },
+        "turns": { "$ref": "#/definitions/nullableNumber" },
+        "tokens": { "$ref": "#/definitions/nullableNumber" },
+        "usd_to_parity": { "$ref": "#/definitions/nullableNumber" },
+        "tokens_to_target_total": { "$ref": "#/definitions/nullableNumber", "description": "Tokens summed over every reached or censored run, null when any lacks telemetry: the total an arm spent to reach the bar." }
+      }
+    }
+  },
+  "properties": {
+    "schema_version": { "const": 1 },
+    "fixture": { "type": "boolean", "description": "true only for test fixtures; the renderer labels the page and the real evidence tree refuses it." },
+    "stamp": { "type": "string", "pattern": "^[0-9]{8}T[0-9]{6}Z$" },
+    "task": {
+      "type": "object",
+      "required": ["id", "family", "title", "prompt", "primary_grader", "parity_bar"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^art-[a-z0-9-]+$" },
+        "family": { "enum": ["svg", "page-form", "login-security", "php-endpoint", "copy"] },
+        "title": { "type": "string", "minLength": 1 },
+        "prompt": { "type": "string", "minLength": 1, "description": "Verbatim prompt given to every arm." },
+        "primary_grader": { "enum": ["svg-render-gate", "acceptance+axe", "functional+exploits", "hidden-tests", "bench-ui"] },
+        "parity_bar": {
+          "type": "object",
+          "required": ["metric", "op", "value"],
+          "additionalProperties": false,
+          "properties": {
+            "metric": { "type": "string", "minLength": 1 },
+            "op": { "enum": [">=", "<=", "=="] },
+            "value": { "type": "number" }
+          }
+        }
+      }
+    },
+    "claim_id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "host": {
+      "type": "object",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "model_id": { "type": "string", "minLength": 1 },
+    "k": { "type": "integer", "minimum": 1 },
+    "pricing_sourced_on": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "arms": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "infra_errors", "runs"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "enum": ["package", "vanilla", "placebo", "optimized-baseline"] },
+          "label": { "type": "string", "minLength": 1 },
+          "infra_errors": { "type": "integer", "minimum": 0 },
+          "runs": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/run" } }
+        }
+      }
+    },
+    "parity": {
+      "type": "object",
+      "required": ["parity_bar", "cap_k", "with_arm_first_shot_median", "arms"],
+      "additionalProperties": false,
+      "properties": {
+        "parity_bar": { "type": "number" },
+        "cap_k": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "with_arm_first_shot_median": { "$ref": "#/definitions/nullableNumber" },
+        "arms": { "type": "object", "additionalProperties": { "$ref": "#/definitions/parityArm" } }
+      }
+    },
+    "verdict": {
+      "type": "object",
+      "required": ["kind", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["pass", "regression", "no-change", "underpowered"], "description": "The vocabulary of src/scripts/_lib/paired_verdict.ts." },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "reproduce": { "type": "string", "minLength": 1 }
+  }
+}

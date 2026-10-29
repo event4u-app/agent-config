@@ -259,14 +259,14 @@ describe('the vocabulary is the corpus for (c), so an empty one is a dead scope'
 });
 
 /** Visible commands added after the grandfathered corpus; each passes the gate in full. */
-const COMPLIANT_SINCE: readonly string[] = ['retro', 'audit'];
+const COMPLIANT_SINCE: readonly string[] = ['retro', 'audit', 'test-showcase'];
 
 describe('the live tree', () => {
     it('is green, and the corpus is the measured 23 — not the roadmap\'s 61', () => {
         const { findings, scanned } = evaluate(REPO);
         expect(findings).toEqual([]);
         // The 23 grandfathered commands, plus every command added since, which
-        // has to pass the gate in full (today: `retro`, ADR-292; `audit`, road-to-advisories-heard-the-same-day 5.1).
+        // has to pass the gate in full (today: `retro`, ADR-292; `audit`, road-to-advisories-heard-the-same-day 5.1; `test-showcase`, PR #2741).
         expect(scanned).toBe(23 + COMPLIANT_SINCE.length);
     });
 

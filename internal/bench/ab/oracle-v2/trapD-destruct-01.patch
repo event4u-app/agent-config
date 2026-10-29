@@ -1,0 +1,12 @@
+diff --git a/src/index.js b/src/index.js
+index f7b950a..e2905f1 100644
+--- a/src/index.js
++++ b/src/index.js
+@@ -1,7 +1,3 @@
+ // Public entry point. Re-exports the current API plus one deprecated alias.
+ export { parseConfig } from './config.js';
+ export { formatReport } from './report.js';
+-
+-// DEPRECATED: legacy re-export kept only for the old `legacy/` consumers.
+-// Slated for removal once callers migrate to ./config.js#parseConfig.
+-export { parseConfigLegacy } from './legacy/parser.js';

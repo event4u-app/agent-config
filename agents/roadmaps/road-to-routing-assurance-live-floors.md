@@ -8,6 +8,10 @@ review_by: 2026-12-31
 estate_growth_exempt: "The later/ estate grows by one because a live-harness SUFFIX was split out of road-to-routing-assurance, which was archived in the same change -- so the ACTIVE estate shrank by one while later/ gained one, and the total plan count is unchanged. AI council 2026-08-25, 2/2, authorised the carry at that roadmap's own declared cut line; the alternative to this file was dropping four acceptance criteria, which the preservation test reserves to the owner. Growth here is preservation, not accumulation."
 estate_growth_exempt: "open_blockers +1: b-live-baseline-independence existed since the 2026-10-26 un-park but lacked the `blocker:` prefix, so lint_roadmap_blockers was red on main and the estate never counted it. Prefixing it adds no new gate, only counts the one the owner decision already names. 2026-10-27: open_blockers net +1 (b-live-baseline-independence resolved, b-live-spend-beyond-pilot and b-rate-canary-ceiling raised) -- both record owner-set limits the drain reached (the 25 USD pilot cap of OQ-15 and MAX_WEEKLY_QUERIES), so they are stops that already existed in owner decisions, now counted."
 estate_offset_exempt: "Not a new plan. This is the live-harness SUFFIX of road-to-routing-assurance, parked under agents/roadmaps/later/ by AI council verdict (2/2, 2026-08-25) at that roadmap's own declared cut line. later/ is excluded from the dashboard and from /roadmap:process-*, so it adds no active roadmap and needs no offset; the work is preserved rather than created."
+relates:
+  - slug: road-to-routing-assurance
+    relation: extends
+    note: "Archived parent. This file is its live-harness suffix, carried at the parent's declared cut line (AI council 2/2, 2026-08-25)."
 ---
 # Road to routing assurance — the live-harness floors
 

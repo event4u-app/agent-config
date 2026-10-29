@@ -1,0 +1,252 @@
+# Artifact corpus — with vs without agent-config, and the cost of parity.
+#
+# Roadmap: agents/roadmaps/later/road-to-a-baseline-that-has-to-catch-up.md
+# (Phases 2-4). Schema: internal/bench/corpora/SCHEMA-v2.md § Artifact tasks.
+#
+# Selected with `bench:ab:v2 -- --corpus artifact`; the discipline corpus
+# (ab-trackb-v2.yaml) is untouched and stays the default.
+#
+# Every fixture is written in-repo for this benchmark: no third-party site,
+# brand or asset is copied (Kill register K4). Held-back acceptance tests and
+# scenarios live under internal/bench/ab/hidden-artifact/ and are never copied
+# into a workspace. Planted good / bad reference outputs for the grader
+# self-test live under internal/bench/ab/oracle-artifact/<id>/{good,bad}/.
+#
+# Feedback ladders are written from each task's rubric BEFORE any run and never
+# from an arm's output (K8). `naive` is what a user who only sees the result
+# would say; `informed` is what a reviewer who knows the rubric would say. Both
+# arms receive the same ladder after a miss.
+
+tasks:
+  - id: art-svg-prompt-01
+    kind: artifact
+    family: svg
+    fixture: fixtures-artifact/art-svg-prompt-01
+    prompt: "Read BRIEF.md and create out/logo.svg as described there."
+    deliverable: { path: out/logo.svg, type: svg }
+    graders:
+      - { id: svg-render-gate, role: primary }
+      - { id: lint_svg_asset, role: secondary }
+    parity_bar: 1.0
+    network: none
+    feedback_ladder:
+      naive:
+        - "The logo doesn't show up properly when I open it. Can you fix it?"
+        - "It still looks broken or empty in some viewers. Please make it a clean, standalone SVG file."
+        - "Some of it seems to be cut off or missing. Make sure everything is visible on the square canvas."
+      informed:
+        - "The file must be pure vector: remove any <image>, <script>, <foreignObject> and on* event attributes."
+        - "Remove every external reference: href or url() may only point at in-document #ids."
+        - "Every shape must lie inside viewBox 0 0 256 256, and at least one shape must have a visible fill or stroke."
+        - "Check that the file is well-formed XML with a single <svg> root carrying the viewBox."
+
+  - id: art-svg-raster-01
+    kind: artifact
+    family: svg
+    fixture: fixtures-artifact/art-svg-raster-01
+    prompt: "Read BRIEF.md and trace mascot.png into out/mascot.svg as described there."
+    deliverable: { path: out/mascot.svg, type: svg }
+    graders:
+      - id: svg-render-gate
+        role: primary
+        args: { palette: ["#f2a93b", "#3b2a1a", "#fff4e0"], palette_min: 3 }
+      - { id: lint_svg_asset, role: secondary }
+    parity_bar: 1.0
+    network: none
+    feedback_ladder:
+      naive:
+        - "This doesn't look like a real vector version of the bear. Can you redo it?"
+        - "The colours don't match the original picture."
+        - "Parts of the bear look off or missing when I zoom in."
+      informed:
+        - "Do not embed the PNG: the SVG may not contain <image>; draw the bear with shapes."
+        - "Use the three source colours exactly: #f2a93b body, #3b2a1a eyes, #fff4e0 belly."
+        - "Keep viewBox 0 0 48 48 and keep every shape inside it."
+        - "Remove any script, event attribute or external reference."
+
+  - id: art-landing-01
+    kind: artifact
+    family: page
+    fixture: fixtures-artifact/art-landing-01
+    prompt: "Read BRIEF.md and tokens.json and build out/index.html as described in the brief."
+    deliverable: { path: out/index.html, type: html }
+    graders:
+      - id: acceptance+axe
+        role: primary
+        args: { spec: hidden-artifact/art-landing-01/acceptance.json }
+      - { id: lint_design_slop, role: secondary }
+    parity_bar: 1.0
+    network: none
+    feedback_ladder:
+      naive:
+        - "It doesn't quite feel like our brand. Can you look at it again?"
+        - "I'm not sure what I'm supposed to click — make the next step obvious."
+        - "It loads something from the internet; it has to work completely offline."
+        - "The page feels thin. It needs the parts the brief asked for."
+      informed:
+        - "Use the brand colours from tokens.json in the CSS, at least primary #1f5f8b and accent #f2a93b."
+        - "Add exactly one <h1> naming Quillpine and a primary CTA with class cta inviting a free trial."
+        - "Add at least three <section> elements: features, how it works, pricing."
+        - "Set <html lang=\"en\"> and one viewport meta tag; remove every external URL, @import and raster image."
+
+  - id: art-form-01
+    kind: artifact
+    family: form
+    fixture: fixtures-artifact/art-form-01
+    prompt: "Read BRIEF.md and build out/index.html as described there."
+    deliverable: { path: out/index.html, type: html }
+    graders:
+      - id: acceptance+axe
+        role: primary
+        args: { spec: hidden-artifact/art-form-01/acceptance.json }
+      - { id: lint_design_slop, role: secondary }
+    parity_bar: 1.0
+    network: none
+    feedback_ladder:
+      naive:
+        - "I could click through without filling anything in. That shouldn't work."
+        - "When I went back, what I typed was gone."
+        - "I don't see any confirmation after signing up."
+        - "Some fields have no label."
+      informed:
+        - "Only the current step may be visible; the other two steps carry the hidden attribute. Start on #step-1."
+        - "#next-1 must reject an invalid email or a password under 8 characters and show the problem in a visible role=alert element; #next-2 must reject an empty #name."
+        - "#back-2 returns to step 1 with the typed values intact; #summary on step 3 shows the email and the chosen plan."
+        - "Submitting shows #done containing the person's name; every input and select has a <label for>."
+
+  - id: art-login-framework-01
+    kind: artifact
+    family: login
+    fixture: fixtures-artifact/art-login-framework-01
+    prompt: "Read BRIEF.md and add the login it describes."
+    deliverable: { path: config/routes.php, type: php-app }
+    graders:
+      - id: functional+exploits
+        role: primary
+        args:
+          docroot: public
+          router: public/index.php
+          email: demo@example.test
+          password: changeme-bench
+          store_glob: [data/]
+          session_cookie: PHPSESSID
+      - { id: check_account_surface, role: secondary }
+    parity_bar: 1.0
+    network: none
+    feedback_ladder:
+      naive:
+        - "Is this safe to put online? Please harden it."
+        - "Our security reviewer says the login leaks information and can be brute-forced."
+        - "They also say the session and the form can be abused."
+      informed:
+        - "Store only password_hash() output under data/ and check with password_verify(); never md5/sha1 or plaintext."
+        - "Return the same status and message for an unknown email and a wrong password, and refuse further attempts for an email after 5 failures in 15 minutes."
+        - "Call session_regenerate_id(true) on successful login so the session id changes."
+        - "Put a per-session CSRF token in a hidden _token field and reject a POST /login without a matching token."
+
+  - id: art-login-plain-01
+    kind: artifact
+    family: login
+    fixture: fixtures-artifact/art-login-plain-01
+    prompt: "Read BRIEF.md and add the login it describes."
+    deliverable: { path: public/index.php, type: php-app }
+    graders:
+      - id: functional+exploits
+        role: primary
+        args:
+          docroot: public
+          router: public/index.php
+          email: demo@example.test
+          password: changeme-bench
+          store_glob: [data/]
+          session_cookie: PHPSESSID
+      - { id: check_account_surface, role: secondary }
+    parity_bar: 1.0
+    network: none
+    feedback_ladder:
+      naive:
+        - "Is this safe to put online? Please harden it."
+        - "Our security reviewer says the login leaks information and can be brute-forced."
+        - "They also say the session and the form can be abused."
+      informed:
+        - "Store only password_hash() output under data/ and check with password_verify(); never md5/sha1 or plaintext."
+        - "Return the same status and message for an unknown email and a wrong password, and refuse further attempts for an email after 5 failures in 15 minutes."
+        - "Call session_regenerate_id(true) on successful login so the session id changes."
+        - "Put a per-session CSRF token in a hidden _token field and reject a POST /login without a matching token."
+
+  - id: art-php-endpoint-01
+    kind: artifact
+    family: endpoint
+    fixture: fixtures-artifact/art-php-endpoint-01
+    prompt: "Read BRIEF.md and implement the /items API it describes."
+    deliverable: { path: public/index.php, type: php-app }
+    graders:
+      - id: hidden-tests
+        role: primary
+        args: { scenario: hidden-artifact/art-php-endpoint-01/scenario.json }
+      - { id: check_account_surface, role: secondary }
+    parity_bar: 1.0
+    network: none
+    feedback_ladder:
+      naive:
+        - "Our QA says some requests that should fail are accepted."
+        - "Another user could see or change my items, I think."
+        - "Some error responses look wrong."
+      informed:
+        - "Reject a missing or unknown bearer token with 401 on every /items route."
+        - "Validate title as a string of 1-120 characters and done as a boolean, on POST and on PATCH; answer 422 with an errors object."
+        - "Scope every read, update and delete to the caller; another user's item must answer 403 or 404 and stay unchanged."
+        - "POST answers 201 with {id, title, done, owner}; DELETE answers 204; an unknown id answers 404."
+
+  - id: art-page-copy-01
+    kind: artifact
+    family: page-copy
+    fixture: fixtures-artifact/art-page-copy-01
+    prompt: "Read BRIEF.md and reproduce page/index.html as out/index.html."
+    deliverable: { path: out/index.html, type: html }
+    graders:
+      - id: bench-ui
+        role: primary
+        args:
+          truth: fixtures-artifact/art-page-copy-01/page/index.html
+          truth_sha256: 92077be981c1770f2e890a95c77267f34b964d86f628cc51c29326fb35eb2399
+          pass_threshold: 0.85
+      - { id: lint_design_slop, role: secondary }
+    parity_bar: 0.85
+    network: none
+    feedback_ladder:
+      naive:
+        - "It doesn't really look like the original page."
+        - "The colours and spacing feel different."
+        - "Some parts of the page are missing or in the wrong place."
+      informed:
+        - "Match the structure: header, section nav with three links, a grid of three cards, a recording-notes section and a footer."
+        - "Use the original colours #4f7a4a, #c56b3d, #22303c, #f7f4ec and its spacing values (16px gap, 10px radius, 24px padding)."
+        - "Match the type: Georgia serif for body text, system-ui for nav, tags and footer, with the original sizes."
+        - "Check the layout at 375, 768 and 1280 px; the cards must reflow like the original grid."
+
+  - id: art-app-copy-01
+    kind: artifact
+    family: app-copy
+    fixture: fixtures-artifact/art-app-copy-01
+    prompt: "Read BRIEF.md and port the app as described there."
+    deliverable: { path: out/index.html, type: html }
+    graders:
+      - id: acceptance+axe
+        role: primary
+        args: { spec: hidden-artifact/art-app-copy-01/acceptance.json }
+      - { id: lint_design_slop, role: secondary }
+    parity_bar: 1.0
+    network: none
+    feedback_ladder:
+      naive:
+        - "My items disappear when I reload the page."
+        - "The counter at the bottom looks wrong sometimes."
+        - "The filter buttons don't seem to do anything."
+        - "I can add empty items."
+      informed:
+        - "Persist items in localStorage under tally.todos and restore them on load."
+        - "#count reads 'N items left', and '1 item left' for one open item."
+        - "[data-filter=all|open|done] render only the matching li.todo items in #list."
+        - "Ignore empty or whitespace-only input; each li.todo has input.toggle (adds class done) and button.delete."
+        - "Keep it to one file: no <script src> and no external stylesheet."

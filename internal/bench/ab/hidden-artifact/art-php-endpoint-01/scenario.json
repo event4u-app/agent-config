@@ -1,0 +1,37 @@
+{
+  "_note": "Held back from both arms (never copied into a workspace); written from the brief before any run.",
+  "docroot": "public",
+  "router": "public/index.php",
+  "tests": [
+    { "name": "auth-required", "steps": [
+      { "method": "GET", "path": "/items", "expect_status": [401] },
+      { "method": "GET", "path": "/items", "token": "not-a-token", "expect_status": [401] },
+      { "method": "POST", "path": "/items", "json": { "title": "x" }, "expect_status": [401] } ] },
+    { "name": "create-and-list-own", "steps": [
+      { "method": "POST", "path": "/items", "token": "sample-token-alice", "json": { "title": "Rope" }, "expect_status": [201], "expect_json": { "title": "Rope", "done": false, "owner": "alice" } },
+      { "method": "GET", "path": "/items", "token": "sample-token-alice", "expect_status": [200], "expect_array_len": 1 },
+      { "method": "GET", "path": "/items", "token": "sample-token-bob", "expect_status": [200], "expect_array_len": 0 } ] },
+    { "name": "validation", "steps": [
+      { "method": "POST", "path": "/items", "token": "sample-token-alice", "json": {}, "expect_status": [422] },
+      { "method": "POST", "path": "/items", "token": "sample-token-alice", "json": { "title": "" }, "expect_status": [422] },
+      { "method": "POST", "path": "/items", "token": "sample-token-alice", "json": { "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" }, "expect_status": [422] },
+      { "method": "POST", "path": "/items", "token": "sample-token-alice", "json": { "title": "ok", "done": "yes" }, "expect_status": [422] },
+      { "method": "POST", "path": "/items", "token": "sample-token-alice", "json": { "title": 42 }, "expect_status": [422] },
+      { "method": "GET", "path": "/items", "token": "sample-token-alice", "expect_status": [200], "expect_array_len": 0 } ] },
+    { "name": "read-update-delete", "steps": [
+      { "method": "POST", "path": "/items", "token": "sample-token-alice", "json": { "title": "Map" }, "expect_status": [201], "capture": { "id": "id" } },
+      { "method": "GET", "path": "/items/{{id}}", "token": "sample-token-alice", "expect_status": [200], "expect_json": { "title": "Map" } },
+      { "method": "PATCH", "path": "/items/{{id}}", "token": "sample-token-alice", "json": { "done": true }, "expect_status": [200], "expect_json": { "done": true, "title": "Map" } },
+      { "method": "PATCH", "path": "/items/{{id}}", "token": "sample-token-alice", "json": { "title": "" }, "expect_status": [422] },
+      { "method": "DELETE", "path": "/items/{{id}}", "token": "sample-token-alice", "expect_status": [204] },
+      { "method": "GET", "path": "/items/{{id}}", "token": "sample-token-alice", "expect_status": [404] } ] },
+    { "name": "no-cross-user-access", "steps": [
+      { "method": "POST", "path": "/items", "token": "sample-token-alice", "json": { "title": "Private" }, "expect_status": [201], "capture": { "id": "id" } },
+      { "method": "GET", "path": "/items/{{id}}", "token": "sample-token-bob", "expect_status": [403, 404] },
+      { "method": "PATCH", "path": "/items/{{id}}", "token": "sample-token-bob", "json": { "done": true }, "expect_status": [403, 404] },
+      { "method": "DELETE", "path": "/items/{{id}}", "token": "sample-token-bob", "expect_status": [403, 404] },
+      { "method": "GET", "path": "/items/{{id}}", "token": "sample-token-alice", "expect_status": [200], "expect_json": { "done": false } } ] },
+    { "name": "unknown-id", "steps": [
+      { "method": "GET", "path": "/items/999999", "token": "sample-token-alice", "expect_status": [404] } ] }
+  ]
+}

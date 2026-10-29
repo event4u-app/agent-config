@@ -30,14 +30,15 @@
   "removed_2026_08_04": "unpacked_size_mb (max 28) — removed by maintainer decision at the 9.17.0 release: the gate turned every legitimate payload addition into a blocked release (measured 28.22 vs max 28 with all functional gates green), and the maintainer judged tarball size not worth gating. evaluator_umbrella.sh still MEASURES and records unpacked_size_mb as evidence; only the budget enforcement is gone. ADR-204 review_trigger (a) fired and was resolved this way.",
   "budgets": {
     "node_modules_mb": {
-      "max": 140,
-      "last_measured": 127,
-      "last_measured_at": "2026-07-27",
+      "max": 150,
+      "last_measured": 141,
+      "last_measured_at": "2026-10-28",
       "method": "du -sm node_modules after `npm install --omit=dev <tarball>` in a clean project",
       "inputs": [
         "package.json",
         "package-lock.json"
-      ]
+      ],
+      "baseline_note": "127 → 141, max 140 → 150 on 2026-10-28 (release 19.0.0 gate). Measured 141 by the packed-artifact evaluation of release PR #2734 (run 40666473640); the nightly on main had already recorded 140 on 2026-10-27, so the install sat at the cap before this release and the +1 MB is ordinary payload growth, not a new dependency (runtime_dep_count is unchanged at 204). Raised consciously by maintainer decision rather than blocking the release, for the same reason unpacked_size_mb was ungated at 9.17.0. Headroom is 9 MB."
     },
     "runtime_dep_count": {
       "max": 210,

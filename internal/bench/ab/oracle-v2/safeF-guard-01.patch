@@ -1,0 +1,11 @@
+diff --git a/src/docs.mjs b/src/docs.mjs
+index 88964e5..4ea353d 100644
+--- a/src/docs.mjs
++++ b/src/docs.mjs
+@@ -30,5 +30,5 @@ export function docTitle(name) {
+   const firstLine = body.split('\n')[0];
+   // BUG: the heading marker is left on, so the caller gets "# Intro" where it
+   //      asked for "Intro".
+-  return firstLine;
++  return firstLine.replace(/^#+\s*/, '');
+ }

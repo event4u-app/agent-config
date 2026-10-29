@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quillpine — field notes that survive the field</title>
+<style>
+  :root { --primary: #1f5f8b; --accent: #f2a93b; --surface: #ffffff; --text: #1b1b1b; --space: 8px; --radius: 12px; }
+  body { margin: 0; font-family: system-ui, sans-serif; color: var(--text); background: var(--surface); }
+  header { padding: calc(var(--space) * 8) calc(var(--space) * 3); background: var(--primary); color: var(--surface); }
+  h1 { margin: 0 0 calc(var(--space) * 2); font-size: 2.5rem; }
+  .cta { display: inline-block; padding: calc(var(--space) * 1.5) calc(var(--space) * 3); background: var(--accent); color: var(--text); border-radius: var(--radius); text-decoration: none; font-weight: 600; }
+  section { padding: calc(var(--space) * 6) calc(var(--space) * 3); max-width: 960px; margin: 0 auto; }
+  .grid { display: grid; gap: calc(var(--space) * 2); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .card { border: 1px solid #d9e3ea; border-radius: var(--radius); padding: calc(var(--space) * 2); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Quillpine</h1>
+  <p>Offline-first notes for field researchers. Write in the mud, sync in the van.</p>
+  <a class="cta" href="#pricing">Start your free trial</a>
+</header>
+<main>
+  <section id="features" aria-labelledby="f-h">
+    <h2 id="f-h">Features</h2>
+    <div class="grid">
+      <div class="card"><h3>Works offline</h3><p>Every note is stored on the device first.</p></div>
+      <div class="card"><h3>Geotagged entries</h3><p>Each entry keeps where it was written.</p></div>
+      <div class="card"><h3>Plain-text export</h3><p>Your notes leave as Markdown, any time.</p></div>
+    </div>
+  </section>
+  <section id="how" aria-labelledby="h-h">
+    <h2 id="h-h">How it works</h2>
+    <ol><li>Install on your phone.</li><li>Take notes with no signal.</li><li>Sync when you are back online.</li></ol>
+  </section>
+  <section id="pricing" aria-labelledby="p-h">
+    <h2 id="p-h">Pricing</h2>
+    <p>Free for 30 days, then a flat monthly fee per researcher.</p>
+  </section>
+</main>
+</body>
+</html>

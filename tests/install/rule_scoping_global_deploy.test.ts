@@ -40,6 +40,7 @@ const RULES_DIR = path.join(REPO, RULE_SOURCE_REL);
 
 /** A scoped settings doc — the shape a wizard-written global file carries. */
 const SCOPED_SETTINGS = { projection: { rule_workspaces: ['engineering'] } };
+const WIDER_SETTINGS = { ...SCOPED_SETTINGS, runtime: { active_packs: ['ai-image', 'ai-video'] } };
 
 const POLICY: ConflictPolicy = {
     force: false,
@@ -206,18 +207,19 @@ describe('CLI global deploy — rule set equals the wizard plan', () => {
 describe('CLI global deploy — upgrade reaps newly-excluded rules', () => {
     it('deletes rules a narrower re-install newly excludes', () => {
         // The upgrade path. ADR-293 step 4.6 took the WORKSPACE axis out of
-        // settings, so the two states are produced on the PACK axis instead —
-        // the axis that is still a setting, and the same reap code path. The
+        // settings and 19.0.0 closed the `projection.rule_packs` window, so the
+        // two states are produced on the PACK axis through `runtime.active_packs`
+        // — the one input that still moves it, and the same reap code path. The
         // point is unchanged: the newly-excluded rules are GONE from disk, not
         // merely un-refreshed. Filtering the copy without filtering the
         // inventory would leave every one behind, which is worse than shipping
         // them — the user would carry them forever with no way to notice.
-        writeGlobalSettings(SCOPED_SETTINGS);
+        writeGlobalSettings(WIDER_SETTINGS);
         runDeploy();
         const wider = deployedRuleBasenames();
         expect(wider.length).toBeGreaterThan(0);
 
-        writeGlobalSettings({ projection: { rule_packs: ['engineering-base'] } });
+        writeGlobalSettings(SCOPED_SETTINGS);
         runDeploy();
         const narrower = deployedRuleBasenames();
 
@@ -229,9 +231,7 @@ describe('CLI global deploy — upgrade reaps newly-excluded rules', () => {
                 `${name} survived the narrower re-install`,
             ).toBe(false);
         }
-        expect(narrower).toEqual(
-            plannedRuleBasenames(ruleScopeFromSettings({ projection: { rule_packs: ['engineering-base'] } }, REPO)),
-        );
+        expect(narrower).toEqual(plannedRuleBasenames(ruleScopeFromSettings(SCOPED_SETTINGS, REPO)));
     });
 
     it('is idempotent — a second scoped install changes nothing', () => {
