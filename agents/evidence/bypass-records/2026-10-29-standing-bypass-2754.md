@@ -1,0 +1,25 @@
+---
+reason: the per-spawn preamble grant oq-42-image-floor-routes-to (owner answer OQ-42) is honoured only with an approving review by someone other than the author, which a single-maintainer repository cannot produce; the required check "Standing payload delta + budget gate" was red on that alone, and the owner merged PR #2754 under the standing pull-request bypass
+subject: e2ddae32ca4e2354dd06eeab28b62fed083f51b96d252f8dd87ccd42ad85a43b
+time: 2026-10-29T10:12:20+01:00
+commit: 4257d0ebd33bb158d576032fbe2e8e3590a7ec5e
+ruleset_version_before: 54936982
+ruleset_version_after: 54936982
+restore_by: 2026-11-05T10:12:20+01:00
+restored_at: superseded-by-owner-ruling agents/evidence/owner-directives/2026-10-25-standing-pull-request-bypass.md
+council_review: pending
+---
+<!-- evidence-type: bypass-record -->
+
+# Bypass — PR #2754, the image rights floor and its preamble grant
+
+Under the standing actor kept by `2026-10-25-standing-pull-request-bypass.md`
+(ruleset `54936982`, bypass actor unchanged from `54668684`; see its addendum
+of 2026-10-29). Every other required check was green; the one red check was
+"Standing payload delta + budget gate", which refused grant
+`oq-42-image-floor-routes-to` for want of an independent approving review. The
+measurement itself was within the granted ceiling (135,867 = 135,824 + 43).
+
+- **Who acted:** the repository owner, with `gh pr merge 2754 --squash --admin --match-head-commit <head>`.
+- **Subject:** `ratification_subject --files src/rules/image-likeness-and-rights.md dist/agent-src/rules/image-likeness-and-rights.md --rev 4257d0eb --base-ref 4257d0eb^1` — the same digest the council ratified in round 3 (`agents/evidence/ratifications/image-floor-routes-to-20261029.md`), so the bypass let through exactly the reviewed change.
+- **Consequence that stays open:** the grant remains unverified in the gate, so a later pull request whose payload step runs is refused until an independent approving review exists or the grant is repaid (`later/road-to-records-that-match-their-code` 1.7).
