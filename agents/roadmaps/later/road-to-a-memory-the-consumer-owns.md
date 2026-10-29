@@ -32,6 +32,10 @@ relates:
 > **Source:** `agents/tmp.old/inbox-2026-10-aq/` — the structural half of the same
 > round as `road-to-a-memory-that-names-its-moment`. Defect ids D2, D10–D13, D17
 > are the drafts' own numbering, re-verified at `3673d22e2e`.
+>
+> **Arrivals:** 2 — latest `inbox-2026-10-bi` (2026-10-29): recall quality
+> (Phase 9); earlier: `inbox-2026-10-ay` (8.2). Not un-parked: the active estate
+> is at its cap.
 
 ## Goal
 
@@ -163,6 +167,37 @@ what the user is working on and wants to reach.
       capped by lines and bytes. Measurement precondition only; no flip rides on it.
       verify: a fixture fire appends exactly one line with no payload substring, and
       the cap holds on the 1,001st fire.
+
+## Phase 9 — Recall quality the store can reach (inbox-2026-10-bi, T2)
+
+Verified at `58d43073b7`. The reachability half (stale-skip count, clipped-body
+warning) shipped in `road-to-a-memory-that-arrives`; these are the ranking and
+ingest residue. Owner constraint from the round: recall may not raise token use
+noticeably and must buy a benefit — every step here costs zero runtime tokens or
+saves them.
+
+- [ ] **9.1 Make the stale curated entries reachable.** 85 of 86 entries are
+      past `review_after_days` although the semantic ladder recorded
+      `still-true` for them. Count a `semantic_verdict: still-true` newer than
+      `last_validated` as fresh in `_isStale`; revalidate by hand the entries
+      whose verdict is `unverifiable`.
+      verify: a fixture with an old `last_validated` and a newer `still-true`
+      verdict is returned; `check_memory` reports the live stale count.
+- [ ] **9.2 Rerank on ties, not on file count.** BM25 runs whenever two or
+      more hits share the top score; the file-count tripwire stays a second
+      trigger. Amend the known limit in `docs/CLAIMS.md` and run `build_proof`.
+      verify: `memory_lookup_lexical_activation.test.ts` asserts the needed
+      entry uniquely first below the tripwire; single-hit output is byte-identical.
+- [ ] **9.3 Content hash on knowledge ingest.** A repeat hash under the
+      knowledge root refuses unless forced.
+      verify: ingesting one file twice leaves one manifest entry.
+- [ ] **9.4 Optional `description` on curated entries.** Title fallback reads
+      `title`, then `description`, then `key`; `check_memory` warns when the
+      description repeats the id.
+      verify: a title unit test with a description present.
+- [ ] **9.5 One bench number for the tie figure.** Run both scripts behind the
+      3.333 / 4.111 figures, find the divergent input, record one number.
+      verify: a test that both scripts report the same tie set on the frozen corpus.
 
 ## Decisions
 
