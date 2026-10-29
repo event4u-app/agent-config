@@ -99,7 +99,6 @@ describe('what the derived scope actually gates', () => {
     const DROPPED = [
         'media-governance-routing.md',
         'media-sync-ground-truth.md',
-        'image-likeness-and-rights.md',
         'provider-lifecycle-discipline.md',
         'spreadsheet-source-quality.md',
     ];
@@ -111,7 +110,7 @@ describe('what the derived scope actually gates', () => {
 
     // A floor that guards a skill follows that skill, which a listing-lever host
     // receives whatever the packs are (council 2026-10-25).
-    it.each(['finance-safety-floor.md', 'legal-safety-floor.md', 'strategy-safety-floor.md'])(
+    it.each(['finance-safety-floor.md', 'legal-safety-floor.md', 'strategy-safety-floor.md', 'image-likeness-and-rights.md'])(
         'keeps %s — its guarded skills can ship without its pack',
         (name) => {
             expect(ruleFileArrives(ruleFile(name), scope)).toBe(true);
