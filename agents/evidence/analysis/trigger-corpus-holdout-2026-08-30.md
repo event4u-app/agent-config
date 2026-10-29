@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  3a86e3ffac5e706fa5112fa37e24e5f7722b88bb699dcca2007d1315bb779057
+SET-SHA256  e079399ef796f4337d9a5f2e91319da339494eb496caeaf759300c7bd736fc66
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1337,6 +1337,7 @@ open and which this file does not settle.
 | `source-discovery` | `e32a41fdd41414cc4734ebf440a253f592775046f603c9daeec6a28f1b05eee3` |
 | `spreadsheet-authoring` | `959466aba0e7f34aae0d8eb69ee427d94049627d905410b322045ac6be0a1599` |
 | `sql-writing` | `3afe3f13210573d0e6f41be15836f3be0b3c01bc7db3a3625a35fb64e64356df` |
+| `standards-from-config` | `b25987153a9a93450f8a94852fe10cf86d83967a74a2b84a9bb3ead89b68c2c1` |
 | `storybook-workshop` | `3aff4c3fddd06e0e265ca4afbb02cdbce16b000dd2d3fd6405504d015a1efd27` |
 | `subagent-orchestration` | `a450b071cba1e1c54bd00c6879165cf4146174dba54de8266e6a4971aa7634c2` |
 | `supply-chain-intake` | `e61b2fcb6409cf0817ea8527a1fda3b1cdabb35e28264146a0d449991e9fe87c` |
@@ -2025,6 +2026,36 @@ younger than the evaluation.
 guard (**+4.76 pp** against +2.0 pp; was +4.97 pp).
 `delivery-set-measurement-2026-08-31.json`: recall loss **39.11 pp** (was
 39.05 pp), the ceiling stays **BREACHED**; context cost **231.4** tokens against
+the 500 target, still **MET**. Neither verdict changes in kind.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.
+
+## Growth — 2026-10-29, one train corpus (standards-from-config); the seal does not move
+
+```
+ONE ROW IS NEW, ON THE TRAIN SIDE. NO HOLDOUT FILE WAS ADDED OR EDITED.
+BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN AFTER THE CORPUS WAS ON DISK.
+```
+
+**What changed.** `road-to-a-correction-that-is-heard` step 2.3 touched
+`standards-from-config`, and `check_routing_coverage` requires every touched
+skill to carry a corpus, so it got one and its grandfather line is gone.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `standards-from-config` | train | `0x33` = 51 ≥ 51 | new |
+
+The byte sits exactly on the ceiling; the rule is a strict `< 51`, so it trains.
+The set is now 188 files, 42 of them sealed, which is unchanged; the train set
+moves **145 -> 146**. `SET-SHA256` moves because it is computed over every row:
+`3a86e3ff…` → `e079399e…`.
+
+**Both train-side measurements were re-taken on this tree.**
+`routing-body-signal-verdict.json`: still `harmful` on the false-activation
+guard (**+4.72 pp** against +2.0 pp; was +4.76 pp).
+`delivery-set-measurement-2026-08-31.json`: recall loss **39.12 pp** (was
+39.11 pp), the ceiling stays **BREACHED**; context cost **231.3** tokens against
 the 500 target, still **MET**. Neither verdict changes in kind.
 
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
