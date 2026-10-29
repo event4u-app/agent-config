@@ -233,7 +233,7 @@ and the run that applies it links its PR.
 - **Blocks:** `later/road-to-a-memory-each-worker-is-handed` Phase 3.
 - **Answered 2026-10-29:** "kostenlose Modell-Routen sollten ja so wenig wie möglich und nur das nötigste wissen. Also da sollten sie keinen übergreifenden speicher haben, sondern der orchestrator sagt ihnen nur das was sie brauchen. eigene oder die frontier modelle, wo die daten sicher sind (zumindest sicherer), die dürfen den gemeinsamen speicher nutzen" — option (a), tiered by model: unpaid routes get only what the orchestrator hands them for the task; own and frontier models may use the shared, curated file-first memory. No reopen of ADR-249: the shared memory is the existing curated store. Applied in `later/road-to-a-memory-each-worker-is-handed` Phase 3. <!-- md-language-check: ignore -->
 
-### OQ-32 — External observation providers for app and feature reconstruction
+### OQ-36 — External observation providers for app and feature reconstruction
 
 - **Context:** inbox round `inbox-2026-10-bj`, your turn: "es geht nicht nur um ac … ich
   möchte einfach apps oder features aus apps kopieren können … nicht nur rea mechanismen,
@@ -248,9 +248,9 @@ and the run that applies it links its PR.
 - **Recommendation:** (a), opt-in only and never installed by default — it serves your ask
   without adding a dependency for anyone who does not reconstruct apps.
 - **Blocks:** nothing in the landed roadmap; the runtime/binary half of reconstruction.
-- **Answered 2026-10-29:** "OQ-28: a" — option (a): an optional, opt-in provider slot the reference door uses when the consumer has such a tool configured; never installed by default. Filed as OQ-28 in #2743, renumbered because round `inbox-2026-10-bi` had already used OQ-28 and OQ-29. Planned in `later/road-to-an-observation-provider-slot` (parked: all five active slots are taken). <!-- md-language-check: ignore -->
+- **Answered 2026-10-29:** "OQ-28: a" — option (a): an optional, opt-in provider slot the reference door uses when the consumer has such a tool configured; never installed by default. Filed as OQ-28 in #2743, renumbered twice: round `inbox-2026-10-bi` had used OQ-28/29, then renumbered its own to OQ-32 to OQ-35. Planned in `later/road-to-an-observation-provider-slot` (parked: all five active slots are taken). <!-- md-language-check: ignore -->
 
-### OQ-33 — May `roadmap_set_step --verify` execute a step's check before flipping it?
+### OQ-37 — May `roadmap_set_step --verify` execute a step's check before flipping it?
 
 - **Context:** `road-to-work-that-checks-itself` (inbox round `inbox-2026-10-bj`) now
   lists vacuous checks and records red-before-green as data. Making the step writer run
@@ -261,7 +261,7 @@ and the run that applies it links its PR.
   and warn only; (c) keep the writer model-carried.
 - **Recommendation:** (b) for a measured window, then decide (a) on the numbers.
 - **Blocks:** the binding half of `road-to-work-that-checks-itself`.
-- **Answered 2026-10-29:** "OQ-29: b" — option (b): the step writer runs a step's read-only `verify:` clause and warns on red, never refuses; (a) is decided later on the measured numbers. Filed as OQ-29 in #2743, renumbered for the same collision. Applied as `roadmap:set-step --verify` (`src/agent-src/scripts/roadmap_set_step.ts`, runner `src/agent-src/scripts/verify_run.ts`), called from `roadmap-process-loop-run.md` § 5b. <!-- md-language-check: ignore -->
+- **Answered 2026-10-29:** "OQ-29: b" — option (b): the step writer runs a step's read-only `verify:` clause and warns on red, never refuses; (a) is decided later on the measured numbers. Filed as OQ-29 in #2743, renumbered to OQ-37 for the same collision. Applied as `roadmap:set-step --verify` (`src/agent-src/scripts/roadmap_set_step.ts`, runner `src/agent-src/scripts/verify_run.ts`), called from `roadmap-process-loop-run.md` § 5b. <!-- md-language-check: ignore -->
 
 ### OQ-27 — The prompt optimizer's "Lyra" persona
 

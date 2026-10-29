@@ -225,7 +225,7 @@ describe('setStep — a REAL concurrent race', () => {
     }, 60_000);
 });
 
-describe('--verify — warn-only, never refuses (OQ-33 option b)', () => {
+describe('--verify — warn-only, never refuses (OQ-37 option b)', () => {
     let dir: string;
     beforeEach(() => {
         dir = fs.mkdtempSync(path.join(os.tmpdir(), 'set-step-verify-'));
