@@ -27,6 +27,10 @@ detectors:
         note: canonical English complaint
       - text: "Du hast das falsch gemacht"
         note: the shortest real form
+      - text: "Claude. Zum dritten Mal: Wir nutzen Tabs!"
+        note: a recurrence marker followed by punctuation, with no fault word at all
+      - text: "For the third time: we use tabs!"
+        note: the English form of the same recurrence marker
     near-miss-fire:
       - text: "der agent hat nicht richtig gearbeitet"
         note: third person, no "du" — the subject is named, not addressed
@@ -34,6 +38,10 @@ detectors:
         note: complaint about a specific obligation rather than the agent as a whole
       - text: "du übersiehst die Vorgabe schon zum zweiten Mal"
         note: present tense, different verb than the canonical past-tense form
+      - text: "Du hast schon wieder Leerzeichen benutzt"
+        note: >-
+          "schon wieder" with a second-person clause and no fault word — the
+          repetition word alone is not a complaint, the addressed agent makes it one
     must-not-fire:
       - text: "du hast nicht zufällig die Datei noch offen?"
         note: >-
@@ -52,6 +60,10 @@ detectors:
         note: a complaint about the CODE, which is not this detector's subject
       - text: "fix the failing lint rule"
         note: an instruction
+      - text: "Wir haben zum dritten Mal gewonnen"
+        note: an ordinal with no punctuation after it is a count, not a recurrence marker
+      - text: "schon wieder Montag"
+        note: a bare repetition word with nobody addressed
 
   council-availability-claim:
     fire:
