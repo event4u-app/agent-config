@@ -69,12 +69,20 @@ The same window, with the six defects fixed, against
      priority label P1; in that pass only a P0 can ever be reported as
      would-block, and only at `stop`, which this check does not run on.
      Three such lines in 1,560 legitimate writes.
-   - *A missed raw control.* Not measured in tokens. It is the failure this
-     roadmap was opened for: a raw `<select>` reached review beside the
-     project's own `Select`, and the correction was a further review and
-     rework round. Five such writes were in the window.
-   The trade is about 120 tokens of noise and 0.1 s per UI write against five
-   review findings caught at write time.
+   - *A missed raw control.* It is the failure this roadmap was opened for: a
+     raw `<select>` reached review beside the project's own `Select`, and the
+     correction was a further review and rework round. The owner of both
+     repositories puts that round at **about 30 minutes** (owner estimate,
+     2026-10-29; not timed). Five such writes were in the window.
+   The trade, over the whole window of 1,565 UI writes: about 3 minutes of
+   added hook latency (1,565 × 0.11 s) and about 120 tokens of false-positive
+   noise, against up to five rework rounds of about 30 minutes each. The
+   conservative bound assumes only one of the five would have reached review
+   at all: 30 minutes saved against 3 minutes spent, a factor of ten. The
+   benefit side rests on the owner's estimate, not a measurement. The
+   reverse trigger below counts real findings in every window, and no fire
+   in eight weeks opens a removal review, so a benefit that does not
+   materialise live is caught on the same cadence as excess noise.
 4. **The window is met.** 1,565 observations over six months, against a floor
    of 100 or two weeks, and the targeted shape is in it.
 
