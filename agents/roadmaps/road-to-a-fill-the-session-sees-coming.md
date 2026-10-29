@@ -1,30 +1,19 @@
 ---
 complexity: lightweight
-status: later
+status: ready
 tree_pin: 58d43073b7
 execution:
   mode: phase-checkpoints
-entry_condition:
-  what: >
-    road-to-a-memory-that-arrives is archived (the per-prompt fill notice
-    exists) and the recycle-threshold review (src/config/recycle-threshold-budget.json
-    review_by 2026-11-10) has run, so Phase 2 has a measured band to act on.
-  when: >
-    The first run after 2026-11-10 with a free WIP slot.
-  who: >
-    none -- the maintainer moves this file to agents/roadmaps/.
 review_by: 2026-12-15
-estate_growth_exempt: "+1 later_roadmaps: parked residue of round inbox-2026-10-bi topic T5; its executable half (per-prompt notice, binding pin) is the active road-to-a-memory-that-arrives, closed in the same PR."
-estate_offset_exempt: "Parked, not active. Owner search at 58d43073b7 (grep -rlF for quota-notice, context_used_pct, statusline:tap, compact-instructions over agents/roadmaps, later, stubs): only stubs/road-to-a-quota-notice-that-earned-its-bands (owns the band VALUES, not these surfaces) and stubs/road-to-compaction-survival-census (live-host census)."
+estate_growth_exempt: "+1 active_roadmaps, owner-directed 2026-10-29 (\"ziehe die 3 von later in den normalen ordner\"): promoted from later/ with its two siblings of round inbox-2026-10-bi once OQ-32..OQ-35 were answered; this takes the active estate from 5 to 8, over the WIP cap of 5, by the owner's explicit instruction."
+estate_offset_exempt: "Promoted from later/ on owner instruction, agents/evidence/owner-directives/2026-10-29-promote-memory-roadmaps.md (2026-10-29); no active roadmap is archived to offset it. Owner search at 58d43073b7 (grep -rlF for quota-notice, context_used_pct, statusline:tap, compact-instructions over agents/roadmaps, later, stubs): only stubs/road-to-a-quota-notice-that-earned-its-bands (owns the band VALUES, not these surfaces) and stubs/road-to-compaction-survival-census (live-host census)."
 relates:
   - slug: road-to-a-memory-that-arrives
-    relation: depends
+    relation: extends
     note: "Needs its per-prompt notice (Phase 2)."
   - slug: road-to-a-quota-notice-that-earned-its-bands
     relation: disjoint
     note: "Owns the band values; nothing here changes them."
-depends:
-  - road-to-a-memory-that-arrives
 ---
 # Road to a fill the session sees coming
 
@@ -40,11 +29,11 @@ continuity record no longer depends on reaching the 800k recycle threshold.
 
 ## Decisions
 
-| # | Question | Disposition |
-|---|---|---|
-| 1 | Bands (one at 80 %, two at 50/70, three at 70/85/95) | Keep one band; the bands stub adjusts the value. Council-decidable, reversible. |
-| 2 | End-of-reply ask gated by `turn-end-gate` | No gate; the per-prompt notice already satisfies the owner's "or". |
-| 3 | Mute | The existing env kill switch only; no persistent opt-out. |
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | reversible-technical | agent | One band at 80 %, as today; the bands stub adjusts the value. Options considered: one band / 50-70 / 70-85-95 | `quota_notice_hook.ts` reads one band; stubs/road-to-a-quota-notice-that-earned-its-bands owns the value | the bands stub measures a better band |
+| D2 | reversible-technical | agent | No end-of-reply ask gated by `turn-end-gate`; the per-prompt notice already meets the owner's "or ask at the end". Options: gate / model hint / none | owner demand of round inbox-2026-10-bi topic T5 is "warn on every message, or ask at the end" | users miss the per-prompt line |
+| D3 | reversible-technical | agent | Mute only through the existing environment kill switch, no persistent opt-out. Options: env switch / "weiter" mutes to the next band / config opt-out | a persistent opt-out is the axis that retired the warning once | a user reports the notice as noise with no way out |
 
 ## Phase 1 — Visible outside the reply
 
