@@ -1,5 +1,5 @@
 ---
-reason: the per-spawn preamble grant oq-42-image-floor-routes-to (owner answer OQ-42) is honoured only with an approving review by someone other than the author, which a single-maintainer repository cannot produce; the required check "Standing payload delta + budget gate" was red on that alone, and the owner merged PR #2754 under the standing pull-request bypass
+reason: the per-spawn preamble grant oq-42-image-floor-routes-to (owner answer OQ-42) is honoured only with an approving review by someone other than the author, which no one but the author gave on that pull request; the required check "Standing payload delta + budget gate" was red on that alone, and the owner merged PR #2754 under the standing pull-request bypass
 subject: e2ddae32ca4e2354dd06eeab28b62fed083f51b96d252f8dd87ccd42ad85a43b
 time: 2026-10-29T10:12:20+01:00
 commit: 4257d0ebd33bb158d576032fbe2e8e3590a7ec5e
@@ -35,4 +35,37 @@ measurement itself was within the granted ceiling (135,867 = 135,824 + 43).
   by design, not drift. It ends when an independent approving review is
   verified on a pull request carrying the grant, or when the payload returns to
   the watermark 135,824 and `repaid_at` is recorded (1.7), before 2027-01-27.
+
+## Everything the merge changed
+
+`git diff --name-status 4257d0eb^1 4257d0eb` — 18 files. `check_kernel_edit_ratified --rev 4257d0eb --base-ref 4257d0eb^1` names exactly two gated surfaces, both inside the ratified `subject`.
+
+| Status | File | What it is |
+|---|---|---|
+| `M` | `agents/evidence/analysis/standing-payload-by-host-2026-09.md` | generated host census |
+| `A` | `agents/evidence/council/image-floor-routes-to-ratification-r3-20261029.question.md` | evidence or planning record, no runtime effect |
+| `A` | `agents/evidence/council/oq-42-grant-test-change-review-20261029.question.md` | evidence or planning record, no runtime effect |
+| `A` | `agents/evidence/council/oq-42-grant-test-change-review-20261029.responses.md` | evidence or planning record, no runtime effect |
+| `A` | `agents/evidence/owner-directives/2026-10-29-oq-42-image-floor-grant.md` | evidence or planning record, no runtime effect |
+| `A` | `agents/evidence/ratifications/image-floor-routes-to-20261029.md` | evidence or planning record, no runtime effect |
+| `M` | `agents/owner-questions.md` | evidence or planning record, no runtime effect |
+| `M` | `agents/roadmaps/later/road-to-records-that-match-their-code.md` | evidence or planning record, no runtime effect |
+| `M` | `dist/agent-src/rules/image-likeness-and-rights.md` | gated — byte-copied projection, inside the subject |
+| `M` | `dist/router.json` | generated from the rule frontmatter |
+| `M` | `docs/contracts/rule-router.md` | generated host cost table |
+| `M` | `src/config/preamble-payload-exceptions.json` | the grant the red check refused |
+| `M` | `src/packs/ai-image/pack.yaml` | generated token passport (rule size) |
+| `M` | `src/rules/image-likeness-and-rights.md` | gated — the ratified subject |
+| `M` | `tests/install/rule_packs_auto.test.ts` | test — reviewed (rule tests in the ratification; grant-ledger tests in agents/evidence/council/oq-42-grant-test-change-review-20261029.*) |
+| `M` | `tests/install/safety_floor_follows_skill.test.ts` | test — reviewed (rule tests in the ratification; grant-ledger tests in agents/evidence/council/oq-42-grant-test-change-review-20261029.*) |
+| `M` | `tests/scripts/check_preamble_payload_budget.test.ts` | test — reviewed (rule tests in the ratification; grant-ledger tests in agents/evidence/council/oq-42-grant-test-change-review-20261029.*) |
+| `M` | `tests/scripts/measured_payload_ceiling.test.ts` | test — reviewed (rule tests in the ratification; grant-ledger tests in agents/evidence/council/oq-42-grant-test-change-review-20261029.*) |
+
+## `approved_at`
+
+`approved_at: 2026-10-29` is the date the owner ordered the grant (OQ-42). It
+is not the date of an approving review; none exists. The gate does not read
+`approved_at` as approval: it honours a grant only for ids passed as verified
+(`--approved`, `verifiedApprovals`), which the workflow sets only after finding
+an approving review by a non-author.
 
