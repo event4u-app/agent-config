@@ -143,6 +143,44 @@ describe('the role map follows uncommitted primitives', () => {
     });
 });
 
+describe('the role map is recomputed only when a primitive can have changed', () => {
+    const AUDIT = path.join('agents', 'runtime', 'state', 'ui-audit.json');
+    const repo = () => {
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-consistency-recompute-'));
+        const w = (rel: string, text: string) => {
+            fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+            fs.writeFileSync(path.join(dir, rel), text);
+        };
+        const git = (...a: string[]) =>
+            spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@example.com', ...a], { cwd: dir, encoding: 'utf8' });
+        w('components/ui/select.tsx', 'export function Select(props) {\n  return <div {...props} />;\n}\n');
+        w('app/orders.tsx', 'export const O = () => <><Select name="a" /><Select name="b" /></>;\n');
+        git('init', '-q');
+        git('add', '-A');
+        git('commit', '-q', '-m', 'init');
+        expect(run(dir, 'app/orders.tsx').status).toBe(0);
+        expect(fs.existsSync(path.join(dir, AUDIT))).toBe(true);
+        fs.rmSync(path.join(dir, AUDIT));
+        return w;
+    };
+
+    it('a new feature file becoming dirty reuses the cached map', () => {
+        const w = repo();
+        w('app/filters.tsx', 'export const F = () => <select name="status"><option>Open</option></select>;\n');
+        const r = run(dir, 'app/filters.tsx');
+        expect(r.status).toBe(2);
+        expect(fs.existsSync(path.join(dir, AUDIT))).toBe(false);
+    });
+
+    it('a primitive file losing its primitive still recomputes', () => {
+        const w = repo();
+        w('components/ui/select.tsx', 'export function Panel(props) {\n  return <div {...props} />;\n}\n');
+        w('app/filters.tsx', 'export const F = () => <select name="status"><option>Open</option></select>;\n');
+        run(dir, 'app/filters.tsx');
+        expect(fs.existsSync(path.join(dir, AUDIT))).toBe(true);
+    });
+});
+
 describe('the stamp of uncommitted primitives', () => {
     it('a modified file that loses its last primitive still changes the stamp', () => {
         dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-consistency-stamp-'));

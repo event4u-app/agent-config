@@ -67,34 +67,62 @@ export function dirtyPrimitives(root: string): string[] | null {
         }
         // Every dirty UI file enters, with an empty list too: a file that lost
         // its last primitive must change the stamp as much as one that gained one.
-        const defs = definedComponents(rel, text).filter((t) => roleOfTag(t, '') !== null);
-        out.push(`${rel}:${defs.sort().join(',')}`);
+        out.push(`${rel}:${primitiveDefs(rel, text).join(',')}`);
     }
     return out.sort();
 }
 
+function primitiveDefs(rel: string, text: string): string[] {
+    return definedComponents(rel, text)
+        .filter((t) => roleOfTag(t, '') !== null)
+        .sort();
+}
+
 /**
- * The role map, recomputed when HEAD moves, a UI file becomes dirty or clean,
- * or a dirty file's primitives change. Not on every write: the content digest
- * `ui:audit` uses would recompute on each one. The accepted bound is usage
- * drift inside a file that is already dirty — further uses of an existing
- * component that would shift which implementation is most used — which waits
- * for the next stamp change.
+ * The cache key: HEAD plus the dirty files that define a primitive now or did
+ * when the map was last computed. A dirty file that never defined one cannot
+ * change which component a role resolves to except through usage drift, so it
+ * does not force a recompute.
+ */
+function stampOf(head: string | null, dirty: string[] | null, primitiveFiles: ReadonlySet<string>): string | null {
+    if (head === null || dirty === null) return null;
+    const kept = dirty.filter((e) => {
+        const i = e.lastIndexOf(':');
+        const defs = e.slice(i + 1);
+        return (defs !== '' && defs !== 'removed') || primitiveFiles.has(e.slice(0, i));
+    });
+    return `${head}|${kept.join(';')}`;
+}
+
+/**
+ * The role map, recomputed when HEAD moves or a dirty file gains, loses or
+ * changes a primitive. Not on every write: the content digest `ui:audit` uses
+ * would recompute on each one. The accepted bound is usage drift in
+ * uncommitted files — uses of an existing component that would shift which
+ * implementation is most used — which waits for the next stamp change.
  */
 function roles(root: string, head: string | null): UiAuditArtefact['control_roles'] {
     const cache = path.join(root, CACHE_REL);
     const dirty = dirtyPrimitives(root);
-    const stamp = head === null || dirty === null ? null : `${head}|${dirty.join(';')}`;
     try {
-        const c = JSON.parse(fs.readFileSync(cache, 'utf8')) as { stamp?: string; control_roles?: UiAuditArtefact['control_roles'] };
+        const c = JSON.parse(fs.readFileSync(cache, 'utf8')) as {
+            stamp?: string;
+            primitive_files?: string[];
+            control_roles?: UiAuditArtefact['control_roles'];
+        };
+        const stamp = stampOf(head, dirty, new Set(c.primitive_files ?? []));
         if (stamp !== null && c.stamp === stamp && c.control_roles) return c.control_roles;
     } catch {
         // absent or unreadable: computed below
     }
-    const fresh = computeUiAudit(root, root);
+    let primitiveFiles: string[] = [];
+    const fresh = computeUiAudit(root, root, (pairs) => {
+        primitiveFiles = pairs.filter(([rel, text]) => isUiPath(rel) && primitiveDefs(rel, text).length > 0).map(([rel]) => rel);
+    });
+    const stamp = stampOf(head, dirty, new Set(primitiveFiles));
     fs.mkdirSync(path.dirname(cache), { recursive: true });
     fs.writeFileSync(path.join(root, ARTEFACT_REL), `${JSON.stringify(fresh, null, 2)}\n`);
-    fs.writeFileSync(cache, `${JSON.stringify({ stamp, control_roles: fresh.control_roles })}\n`);
+    fs.writeFileSync(cache, `${JSON.stringify({ stamp, primitive_files: primitiveFiles, control_roles: fresh.control_roles })}\n`);
     return fresh.control_roles;
 }
 

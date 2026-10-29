@@ -56,12 +56,17 @@ The same window, with the six defects fixed, against
    **0.19 %**. Nothing fires in A.
 3. **The economics favour it.** Friction and benefit, each measured where it
    can be:
-   - *Latency on every UI write.* Timed on the shipped chunk on 2026-10-27
-     (Darwin arm64, n = 30): with the cached role map p50 111 ms and p95
-     118 ms, of which the porcelain status call is about 95 ms in this
-     package's own tree and about 25 ms in the larger consumer repository B;
-     293 ms when the map is recomputed, once per HEAD move or dirty-set
-     change. Inside the 250 ms p95 budget of `src/config/hook-latency-budget.json`
+   - *Latency on every UI write.* Timed on the shipped chunk (Darwin arm64).
+     Cached map, 2026-10-27, n = 30: p50 111 ms and p95 118 ms, of which the
+     porcelain status call is about 95 ms in this package's own tree and about
+     25 ms in the larger consumer repository B. The map is recomputed only
+     when HEAD moves or a dirty file gains, loses or changes a primitive
+     (293 ms in this package's tree); a newly dirty feature file reuses it.
+     Mixed session, 2026-10-29, every call timed: a scratch repository holding
+     a copy of this package's `src/` and `docs/`, 20 new feature files with
+     three edits each, one primitive change and one commit, n = 83: p50 40 ms,
+     p95 44 ms, max 111 ms (the first call); the two recomputes took 94 and
+     89 ms. Inside the 250 ms p95 budget of `src/config/hook-latency-budget.json`
      for a hook event. Non-UI writes never load the chunk.
    - *A false positive.* One advisory line of about 150 characters (about 40
      tokens), never a block: the concern is `severity: advisory`, which the
