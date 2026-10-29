@@ -198,13 +198,10 @@ saves them.
 - [ ] **9.5 One bench number for the tie figure.** Run both scripts behind the
       3.333 / 4.111 figures, find the divergent input, record one number.
       verify: a test that both scripts report the same tie set on the frozen corpus.
-- [ ] **9.6 Repair the 79 clipped bodies and the diverged consumer template.**
-      `check_memory` now warns `truncated-at-limit` on 79 curated entries; give
-      each a `description` (9.4) or a complete body. The consumer template
-      `src/agent-src/templates/scripts/memory_lookup.ts` has diverged from
-      `src/scripts/memory_lookup.ts` and lacks `skipped_stale`.
-      verify: `check_memory --path agents/memory` reports 0 `truncated-at-limit`;
-      a test that the template's envelope carries `skipped_stale`.
+- [ ] **9.6 Repair the 79 clipped bodies.** `check_memory` now warns
+      `truncated-at-limit` on 79 curated entries; give each a `description`
+      (9.4) or a complete body.
+      verify: `check_memory --path agents/memory` reports 0 `truncated-at-limit`.
 
 ## Decisions
 
