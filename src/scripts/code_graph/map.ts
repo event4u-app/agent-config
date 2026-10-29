@@ -1330,6 +1330,8 @@ export interface MapManifest {
     schema: 1;
     generation: string;
     commit: string;
+    /** The commit `state` describes — the build's, never HEAD's; compare it with HEAD yourself. */
+    built_at_commit: string;
     state: string;
     areas: Record<string, ManifestArea>;
 }
@@ -1363,7 +1365,7 @@ export function mapManifest(m: MapModel, meta: MapMeta, areas: MapAreas): MapMan
             ...(reason ? { reason } : {}),
         };
     }
-    return { schema: 1, generation: meta.graph_generation ?? '', commit: meta.commit, state: meta.state, areas: out };
+    return { schema: 1, generation: meta.graph_generation ?? '', commit: meta.commit, built_at_commit: meta.commit, state: meta.state, areas: out };
 }
 
 /** The map a previous `code-graph map` wrote, or null when there is none. */

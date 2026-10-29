@@ -135,7 +135,7 @@ export function askMain(argv: string[]): number {
             process.stderr.write('usage: code_graph/cli.ts ask "<question>" [--format hint|concise|detailed] [--fetch <id>] [--json]\n');
             return 2;
         }
-        const r = ask(question, sources, { ...scope }, { format: fmt, commit: git(['rev-parse', '--short=12', 'HEAD']) || null });
+        const r = ask(question, sources, { ...scope }, { format: fmt, commit: git(['rev-parse', '--short=12', 'HEAD']) || null, lanes: g.graph?.lanes_run });
         if (argv.includes('--json')) process.stdout.write(`${JSON.stringify(r, null, 1)}\n`);
         else {
             process.stdout.write(`intent: ${r.intent} · ${r.envelope.counts.shown}/${r.envelope.counts.total} shown${r.envelope.notice ? ` — ${r.envelope.notice}` : ''}\n`);
