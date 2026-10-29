@@ -5,9 +5,9 @@ execution:
   mode: phase-checkpoints
 parent_roadmap: road-to-a-prompt-that-deepens-not-widens
 entry_condition:
-  what: the owner resolves blocker(s) lyra-persona-is-a-taste-decision, depth-block-waits-on-a-scripted-corpus
+  what: the next run resolves blocker(s) depth-block-waits-on-a-scripted-corpus
   when: whenever the owner takes the next step
-  who: owner
+  who: agent
 review_by: 2027-01-25
 estate_growth_exempt: >-
   Owner-chosen archive of road-to-a-prompt-that-deepens-not-widens: its deferred steps wait on owner
@@ -29,8 +29,8 @@ left to read as finished.
 
 ## Phase 1 — Deferred steps carried from road-to-a-prompt-that-deepens-not-widens
 
-- [ ] **2.1 The optimizer's Lyra role-play welcome (supplied 1.4).** <!-- blocked-by: lyra-persona-is-a-taste-decision | asked: no — queued as OQ-27 in agents/owner-questions.md per the 2026-10-24 directive -->
-      verify: OQ-27 answered and applied in both files.
+- [x] **2.1 The optimizer's Lyra role-play welcome (supplied 1.4).** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Done 2026-10-28 per OQ-27 (b): the persona name and the welcome line are gone from both files.
+      verify: `git grep -n -w -i lyra -- src` -> /^$/
 - [ ] **2.2 Depth corpus with script oracles and pre-registered arms (supplied Phase 0).** <!-- blocked-by: depth-block-waits-on-a-scripted-corpus -->
       verify: a lint fails a corpus prompt without an oracle command.
 - [ ] **2.3 Opt-in `depth:` block with witnesses and the deeper-not-bigger invariant (supplied Phase 2).** <!-- blocked-by: depth-block-waits-on-a-scripted-corpus -->
@@ -44,7 +44,7 @@ left to read as finished.
 
 ### blocker: lyra-persona-is-a-taste-decision
 
-- **Status:** open — raised 2026-10-27 by inbox round `inbox-2026-10-be`.
+- **Status:** resolved — 2026-10-28, OQ-27 answered (b) and applied (2.1).
 - **Class:** 3 — owner-reserved taste.
 - **Owner:** user — `agents/owner-questions.md` OQ-27.
 - **Run:** `grep -n 'OQ-27' agents/owner-questions.md`

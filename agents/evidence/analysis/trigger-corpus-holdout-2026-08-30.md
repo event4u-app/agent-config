@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  3a86e3ffac5e706fa5112fa37e24e5f7722b88bb699dcca2007d1315bb779057
+SET-SHA256  6dbc36d1365980eb1b83e7455d23d4d4f55925b04b50daaac392e9a81a13ff40
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1319,6 +1319,7 @@ open and which this file does not settle.
 | `readme-writing` | `7aa1d17f117d9f36e18ba1e29fed45d73ddbc77e82f03e9b08198dd8fb483506` |
 | `reasoning-orchestrator` | `a968ef1f04693b46eb3838b43eb83b092429149069599c3aef2c2e4628701b85` |
 | `receiving-code-review` | `7ee75a93ea97aa344ada7d026d6b59f99e0d6823dd46f6877c579f2321806d78` |
+| `refine-prompt` | `8b69a6b8c65caacf8c95ab07e9bb917e5c4c1856bb649e765f9f1ec93104261f` |
 | `refine-ticket` | `bab09021f8664cd0676e9613bd511a3f87d115583ea5f4639fb4800df9715328` |
 | `release-comms` | `d9ca8cc440910c5a91857155379b16a52cbe0f7c33defdfd2a2429ac8f807840` |
 | `repomix-packer` | `62489a82ccd7a01c53d8a4ca265a3f9249782c12d5b74ac7ae2e3d1a12df478e` |
@@ -2025,6 +2026,37 @@ younger than the evaluation.
 guard (**+4.76 pp** against +2.0 pp; was +4.97 pp).
 `delivery-set-measurement-2026-08-31.json`: recall loss **39.11 pp** (was
 39.05 pp), the ceiling stays **BREACHED**; context cost **231.4** tokens against
+the 500 target, still **MET**. Neither verdict changes in kind.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.
+
+## Growth — 2026-10-29, one train corpus; the seal does not move
+
+```
+ONE ROW IS NEW AND IT IS TRAIN. NO HOLDOUT FILE WAS EDITED.
+BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN AFTER THE CORPUS WAS ON DISK.
+```
+
+**What changed.** `road-to-a-prompt-that-deepens-not-widens-carried` edited
+`refine-prompt`, so `check_routing_coverage` required its corpus and its
+grandfather line is gone. The corpus holds ten cases: five exemplars of which one
+is German, three near-misses naming the neighbour skill (`prompt-optimizer`,
+`prompt-engineering-patterns`, `refine-ticket`), and two counterexamples.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `refine-prompt` | train | `0xd7` = 215 ≥ 51 | new |
+
+The sealed set stays **42**, the train set moves **145 -> 146**, the set
+**187 -> 188**. `SET-SHA256` moves because it is computed over every row:
+`3a86e3ff…` → `6dbc36d1…`.
+
+**Both train-side measurements were re-taken on this tree.**
+`routing-body-signal-verdict.json`: still `harmful` on the false-activation
+guard (**+4.72 pp** against +2.0 pp; was +4.76 pp).
+`delivery-set-measurement-2026-08-31.json`: recall loss **38.98 pp** (was
+39.11 pp), the ceiling stays **BREACHED**; context cost **231.4** tokens against
 the 500 target, still **MET**. Neither verdict changes in kind.
 
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`

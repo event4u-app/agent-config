@@ -135,6 +135,8 @@ Before the first write on a task prompt, sort every gap the prompt leaves:
 
 No owner-owned gap → proceed, and list the stated assumptions in the hand-back. A user who asked to be interviewed ("interview me", "stell mir Rückfragen") has reserved the run's open decisions for themselves: ask them, one at a time, until they release it ("just do it", "mach einfach").
 
+On a host that binds `user_prompt_submit`, the `intake-pass` hook concern names this pass on every task prompt (questions, continuations, slash commands and explicit interview requests stay silent; kill switch `AGENT_CONFIG_NO_INTAKE_PASS=1`). It never rewrites the prompt: whether a gap is owner-owned stays your call.
+
 ## See also
 
 - [`no-cheap-questions`](../../rules/no-cheap-questions.md) — the rule.

@@ -18,28 +18,28 @@
     "token_target": 500
   },
   "metrics": {
-    "precision_at_k": 81.146,
-    "recall_at_k": 60.888,
-    "recall_loss_pp": 39.112,
+    "precision_at_k": 81.284,
+    "recall_at_k": 61.019,
+    "recall_loss_pp": 38.981,
     "ceiling_met": false,
     "recall_curve_pp": {
-      "1": 41.609,
-      "3": 53.953,
-      "5": 60.888,
-      "10": 69.071,
-      "20": 75.589
+      "1": 41.598,
+      "3": 53.994,
+      "5": 61.019,
+      "10": 69.146,
+      "20": 75.758
     },
-    "false_activation_at_k": 14.697,
+    "false_activation_at_k": 14.592,
     "context_cost_tokens": 231.4,
     "token_target_met": true,
-    "benefit_unconditional": 60.888,
-    "benefit_conditional_on_activation": 81.146,
-    "adjudicated_deliveries": 541,
-    "unadjudicated_deliveries": 6043,
-    "tie_decided_cut_pp": 82.559
+    "benefit_unconditional": 61.019,
+    "benefit_conditional_on_activation": 81.284,
+    "adjudicated_deliveries": 545,
+    "unadjudicated_deliveries": 6084,
+    "tie_decided_cut_pp": 82.67
   },
   "set_compatibility": {
-    "shared_prompts": 15,
+    "shared_prompts": 16,
     "jointly_wrong_pairs_delivered_at_k": 1,
     "pairs_delivered_at_k": [
       {
@@ -50,8 +50,16 @@
         ]
       }
     ],
-    "jointly_wrong_pairs_in_corpus": 12,
+    "jointly_wrong_pairs_in_corpus": 13,
     "candidates": [
+      {
+        "prompt": "change my zsh prompt to show the git branch",
+        "pair": [
+          "prompt-optimizer",
+          "refine-prompt"
+        ],
+        "jointlyDeliveredAtK": null
+      },
       {
         "prompt": "fix the typo in the README",
         "pair": [
@@ -153,7 +161,7 @@
   "corpus": {
     "partition": "train",
     "holdout_sealed": true,
-    "cases": 1415,
-    "prompts": 1399
+    "cases": 1425,
+    "prompts": 1408
   }
 }
