@@ -46,6 +46,11 @@ pin because the detector needs the write paths the turn snapshot does not carry
 - [ ] **1.2 Subject-count index.** A derived `_subject-index.json` beside the
       target index in `self_repair_store.ts`.
       verify: three records with different fingerprints and one subject count 3.
+      Before it counts, close the two precision gaps the 2026-10-29 council
+      review named: a first-person question ("how many times should I retry?")
+      still fires the detector, and the subject is the first backticked token
+      anywhere and is kept on merge — add must-not-fire rows and a test with
+      an unrelated backtick and a conflicting subject across merges.
 
 ## Phase 2 — "Noted" without a write is a defect
 
