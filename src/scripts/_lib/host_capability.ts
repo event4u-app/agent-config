@@ -285,10 +285,10 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
  *
  *   ARCHIVAL IS NOT WHY IT IS DEAD, and the distinction is load-bearing because
  *   the archival reading implies an ACTIVE copy of the same clause would bite.
- *   It would not. NOTHING IN THIS TREE EXECUTES A `verify:` CLAUSE'S COMMAND,
- *   archived or active: `_lib/verify_clause.ts` is a parser, and its four
- *   importers — `roadmap_verify_share`, `closure_scan`
- *   and `check_verify_expectation_delta` — shell out to nothing but `git`. The
+ *   It would not. NOTHING IN THIS TREE EXECUTES A `verify:` CLAUSE'S COMMAND
+ *   AS A GATE, archived or active: `verify_clause.ts` is a parser, and the two
+ *   runners (`roadmap_verify_share --run`, `roadmap_set_step --verify`) run only
+ *   allowlisted read-only commands and never fail anything on the result. The
  *   step also scoped itself to its own merge ("returns 0 at merge"), which it
  *   did. Its stated successor was to record the first observed row with its
  *   provenance — which is what this block now is.

@@ -20,7 +20,11 @@ import {
     resolvePlan,
     scanSteps,
     setGlyphOnLine,
+    main,
     setStep,
+    stepBlock,
+    verifyStep,
+    verifyWarning,
 } from '../../src/agent-src/scripts/roadmap_set_step.js';
 
 const PLAN = [
@@ -219,4 +223,50 @@ describe('setStep — a REAL concurrent race', () => {
         // shows up here as a step still carrying ' '.
         expect(final.every((s) => s.glyph === 'x')).toBe(true);
     }, 60_000);
+});
+
+describe('--verify — warn-only, never refuses (OQ-33 option b)', () => {
+    let dir: string;
+    beforeEach(() => {
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'set-step-verify-'));
+        fs.writeFileSync(path.join(dir, 'present.txt'), 'needle\n');
+    });
+    afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+    const plan = (clause: string): string =>
+        ['# R', '', '- [ ] **1.1 Step.** Does it.', `      verify: ${clause}`, '- [ ] **1.2 Next.**', ''].join('\n');
+
+    it('reads the clause from the continuation line, not from the next step', () => {
+        const block = stepBlock(plan('`ls x`'), 2);
+        expect(block).toContain('verify: `ls x`');
+        expect(block).not.toContain('1.2');
+    });
+
+    it('a met check gives no warning; a red one and an unrunnable one each warn', () => {
+        const met = verifyStep(plan('`grep -c needle present.txt` -> /^1$/'), '**1.1', dir);
+        const red = verifyStep(plan('`grep -c needle present.txt` -> /^0$/'), '**1.1', dir);
+        const unrunnable = verifyStep(plan('`rm -rf present.txt`'), '**1.1', dir);
+        const prose = verifyStep(plan('the page renders'), '**1.1', dir);
+        expect(met.outcome).toBe('met');
+        expect(verifyWarning(met)).toBeNull();
+        expect(red.outcome).toBe('unmet');
+        expect(verifyWarning(red)).toMatch(/RED/);
+        expect(unrunnable).toEqual({ outcome: 'skipped', reason: 'not-allowlisted' });
+        expect(fs.existsSync(path.join(dir, 'present.txt'))).toBe(true);
+        expect(prose.outcome).toBe('no-command');
+        expect(verifyWarning(prose)).not.toBeNull();
+    });
+
+    it('flips the box even when the check is red', () => {
+        const file = path.join(dir, 'plan.md');
+        fs.writeFileSync(file, plan('`test -f missing.txt`'));
+        const cwd = process.cwd();
+        process.chdir(dir);
+        try {
+            expect(main(['--file', file, '--step', '**1.1', '--glyph', 'x', '--verify'])).toBe(0);
+        } finally {
+            process.chdir(cwd);
+        }
+        expect(findStep(fs.readFileSync(file, 'utf8'), '**1.1').glyph).toBe('x');
+    });
 });
