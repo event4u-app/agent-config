@@ -47,12 +47,12 @@ the judge, or touches the network.
       `{cmd, red_at, green_at}` from verification records; no failing record
       before the green one yields `red: unseen`.
       verify: `npx vitest run tests/scripts/verify_pair.test.ts` -> 0
-      reach exempt: pairOf is the record shape the binding step writer would consume; wiring it is owner question OQ-33, so it stays unwired until that is answered. classifyClause is reached through roadmap_verify_share --run.
+      reach exempt: pairOf is the record shape the binding step writer would consume; wiring it is owner question OQ-37, so it stays unwired until that is answered. classifyClause is reached through roadmap_verify_share --run.
 - [x] **3.2 Wiring-only class.** The same module classes a clause as `wiring` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/verify_pair.ts -->
       when it only proves presence (a route listed, a file exists, a menu entry),
       so presence is never read as behavior.
       verify: `npx vitest run tests/scripts/verify_pair.test.ts` -> 0
-      reach exempt: pairOf is the record shape the binding step writer would consume; wiring it is owner question OQ-33, so it stays unwired until that is answered. classifyClause is reached through roadmap_verify_share --run.
+      reach exempt: pairOf is the record shape the binding step writer would consume; wiring it is owner question OQ-37, so it stays unwired until that is answered. classifyClause is reached through roadmap_verify_share --run.
 
 ## Stubs and owner decisions
 
