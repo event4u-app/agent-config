@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 ## Response-A
 
 *tokens: 10 in / 2061 out · 50987 ms*

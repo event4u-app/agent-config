@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Council question — two record conflicts (road-to-records-that-match-their-code 2.1, 2.2)
 
 Two pairs of records in this repository contradict each other. For each pair,
