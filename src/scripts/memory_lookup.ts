@@ -1011,6 +1011,10 @@ function _retrieve_internal(types: string[], keys: string[], limit: number, toda
     return [hits, skipped];
 }
 
+function _countStale(skipped: SkippedEntry[]): number {
+    return skipped.filter((e) => e.reason === 'stale').length;
+}
+
 /**
  * Return up to `limit` hits across the requested types, highest score first.
  *
@@ -1135,7 +1139,8 @@ export function retrieve_v1(
     const known = types.filter((t) => _KNOWN_TYPES.has(t));
     const unknown = types.filter((t) => !_KNOWN_TYPES.has(t));
 
-    const hits = retrieve(known, keys, limit);
+    const [hits, skippedAll] = _retrieve_internal(known, keys, limit, _today());
+    const skipped_stale = _countStale(skippedAll);
 
     const slice_counts: Record<string, number> = {};
     for (const t of known) {
@@ -1251,6 +1256,11 @@ export function retrieve_v1(
     // default envelope stays byte-identical.
     if (truncation !== null) {
         envelope['truncation'] = truncation;
+    }
+    // Additive, and only when non-zero: a stale-skipped entry is otherwise
+    // indistinguishable from an entry that never existed.
+    if (skipped_stale > 0) {
+        envelope['skipped_stale'] = skipped_stale;
     }
     return envelope;
 }
@@ -1446,11 +1456,13 @@ export function main(): number {
         process.stdout.write(`${pyJsonDumps(envelope, 2)}\n`);
         return 0;
     }
-    const hits = retrieve(types, args.key, args.limit);
+    const [hits, skippedAll] = _retrieve_internal(types, args.key, args.limit, _today());
     if (args.format === 'json') {
-        const payload = {
+        const payload: Record<string, unknown> = {
             hits: hits.map((h) => h.as_dict()),
         };
+        const skipped_stale = _countStale(skippedAll);
+        if (skipped_stale > 0) payload['skipped_stale'] = skipped_stale;
         process.stdout.write(`${pyJsonDumps(payload, 2)}\n`);
     } else {
         if (hits.length === 0) {
