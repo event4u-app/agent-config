@@ -31,24 +31,24 @@ enough to wipe a user's keys.
 - [x] **1.1 Red test first.** A fixture `.vscode/settings.json` carrying a `//` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/install.ts -->
       comment and a user key, merged through the bridge path, must keep the user
       key byte-for-byte or be skipped with a named status. Seen red at the pin.
-      verify: `npx vitest run tests/install/host-config-merge.test.ts` -> exit 0
+      verify: `npx vitest run tests/install/host-config-merge.test.ts` -> 0
 - [x] **1.2 Typed parse result.** `read_json_file` reports a parse failure <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/install.ts -->
       instead of returning `{}`; `merge_json_file` tries a JSONC read (comments and
       trailing commas stripped), and if that also fails it leaves the bytes
       untouched and reports `skipped-invalid` with the snippet to add by hand.
       A JSONC file is not rewritten (rewriting would drop the comments): if our
       keys already match it reports `unchanged`, otherwise `skipped-jsonc`.
-      verify: `npx vitest run tests/install/host-config-merge.test.ts` -> exit 0
+      verify: `npx vitest run tests/install/host-config-merge.test.ts` -> 0
 - [x] **1.3 Backup and readback.** Before overwriting an existing file, write <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/install.ts -->
       `<file>.agent-config.bak` once; after writing, re-parse and restore the
       bytes read just before the write on a mismatch (status
       `skipped-readback-mismatch`); the `.bak` is written once and may be older
       than the file, so restoring it could undo later changes.
-      verify: `npx vitest run tests/install/host-config-merge.test.ts` -> exit 0
+      verify: `npx vitest run tests/install/host-config-merge.test.ts` -> 0
 - [x] **1.4 Duplicate keys refuse.** A duplicated top-level key the merge would <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/install.ts -->
       touch makes the merge refuse with `skipped-duplicate-key`, since a strict
       parse silently keeps only the last occurrence.
-      verify: `npx vitest run tests/install/host-config-merge.test.ts` -> exit 0
+      verify: `npx vitest run tests/install/host-config-merge.test.ts` -> 0
 
 ## Phase 2 — Own-orphans and the contract
 
@@ -59,7 +59,7 @@ enough to wipe a user's keys.
       `skipped-invalid`, `skipped-jsonc`, `skipped-duplicate-key` and the backup file.
       verify: `grep -c 'skipped-invalid' docs/contracts/install-layout.md` -> /^[1-9]/
 - [x] **2.3 Type-check the touched project.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/install.ts -->
-      verify: `npx tsc --noEmit -p .` -> exit 0
+      verify: `npx tsc --noEmit -p .` -> 0
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-29 | reviewer: claude/host -->

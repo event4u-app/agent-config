@@ -34,11 +34,11 @@ silently "does not exist".
 - [x] **1.1 Authority axis.** `Evidence` in `src/scripts/analysis_ledger.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/analysis_ledger.ts -->
       gains an optional `authority` (`upstream-artifact | controlled-replay |
       own-tree | external-claim | analyst-inference`), separate from `tier`.
-      verify: `npx vitest run tests/scripts/analysis_ledger.test.ts` -> exit 0
+      verify: `npx vitest run tests/scripts/analysis_ledger.test.ts` -> 0
 - [x] **1.2 Coverage axis.** `Evidence` gains an optional `coverage` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/analysis_ledger.ts -->
       (`complete | partial | unknown`); a helper renders an absence finding as
       `unknown` unless its coverage is `complete`.
-      verify: `npx vitest run tests/scripts/analysis_ledger.test.ts` -> exit 0
+      verify: `npx vitest run tests/scripts/analysis_ledger.test.ts` -> 0
 - [x] **1.3 Vocabulary.** `analysis-loop.md` names both axes and states they are <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       not the `evidence_basis` taxonomy (that one grades numbers).
       verify: `grep -c 'coverage' src/agent-src/contexts/execution/analysis-loop.md` -> /^[1-9]/
@@ -56,7 +56,7 @@ silently "does not exist".
       obligation only when every required case has evidence and the verifier's
       authority is not `analyst-inference`; an empty ledger reads `unknown`; a
       parity score counts only `verified`.
-      verify: `npx vitest run tests/scripts/reconstruction_ledger.test.ts` -> exit 0
+      verify: `npx vitest run tests/scripts/reconstruction_ledger.test.ts` -> 0
 
 ## Phase 3 — Transfer modes on the reference door
 
@@ -71,7 +71,7 @@ silently "does not exist".
       verify: `grep -c 'reconstruction-obligations' src/rules/code-provenance.md` -> /^[1-9]/
 - [x] **3.3 Provenance row.** `provenance/harvests.jsonl` records the adopted <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: provenance/harvests.jsonl -->
       mechanisms under an opaque source id.
-      verify: `npx tsx src/scripts/lint_harvest_provenance.ts` -> exit 0
+      verify: `npx tsx src/scripts/lint_harvest_provenance.ts` -> 0
 
 ## Stubs (need a window, network or the owner)
 
