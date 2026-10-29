@@ -251,7 +251,7 @@
     "reasoning-orchestrator": 7409,
     "receiving-code-review": 8492,
     "recursive-verification": 9376,
-    "refine-prompt": 13022,
+    "refine-prompt": 13050,
     "refine-ticket": 17500,
     "release-comms": 8198,
     "repomix-packer": 5427,
@@ -879,6 +879,12 @@
       "old": 9612,
       "new": 10451,
       "reason": "road-to-a-prompt-that-deepens-not-widens 1.1-1.2: the per-task evidence table moves here as the single authority, adding non-code rows and an oracle-class column; verification-mechanics, loaded by a kernel rule, keeps a pointer so the always-rule closure shrinks."
+    },
+    {
+      "skill": "refine-prompt",
+      "old": 13022,
+      "new": 13050,
+      "reason": "Owner answer OQ-26 (2026-10-28): the frontmatter lists the consumer workspaces engineering and product, since the skill already projects to consumers and the maintainer-only claim was false. Frontmatter only; no body line changed."
     },
     {
       "skill": "learning-to-rule-or-skill",

@@ -8,60 +8,6 @@ and the run that applies it links its PR.
 
 ## Open
 
-### OQ-21 — How consumers get a browser for `ui:render`
-
-- **Context:** `@playwright/test` is a devDependency, so no consumer install can
-  render a page (`road-to-tells-a-near-miss-can-refute` D4). Step 2.1 ships the
-  no-new-dependency half: use `playwright-core` when the consumer already has it,
-  plus a discovered system browser.
-- **Options:** (a) add `playwright-core` (13 MB) as a runtime dependency;
-  (b) write a zero-dependency CDP client over Node's global `WebSocket`;
-  (c) keep the optional resolution only.
-- **Recommendation:** (c) until a render rule is `backed` — the witness tier only
-  matters once Phase 2.5 has promoted a row, and (a) changes every install.
-- **Blocks:** nothing now; consumer reach of the render engine (Phase 2).
-
-### OQ-25 — How the "interview me" sentence gets appended automatically
-
-- **Context:** your own question in inbox round `inbox-2026-10-be`: "Können wir diesen Satz
-  auch automatisch anhängen?" A `user_prompt_submit` hook can add the sentence as context.
-  Claude already runs 14 concerns in that slot, and the 2026-10-12 line (ADR-293) rules out
-  new form settings.
-- **Options:** (a) a personal hook in your `~/.claude/settings.json`, firing on every
-  prompt, zero package change; (b) a shipped concern, off by default, firing only on task
-  prompts behind a new opt-in key; (c) both.
-- **Recommendation:** (a) — it works today, costs no consumer anything, and Phase 1 of
-  `road-to-the-question-only-the-owner-can-answer` makes the sentence actually reach the
-  interview and fence the run.
-- **Blocks:** step 3.1 of `road-to-the-question-only-the-owner-can-answer-carried` (`later/`).
-
-### OQ-26 — Make the interview reachable outside the maintainer workspace
-
-- **Context:** `challenge-me`, `grill-me` and `refine-prompt` are fenced to
-  `agent-config-maintainer`; a consumer typing "interview me" gets nothing routed.
-- **Options:** (a) add `engineering` and `product` to their workspaces; (b) add the
-  `product-reasoning` pack to `engineering`'s optional packs; (c) leave it.
-- **Recommendation:** (a) — optional packs are opt-in, so (b) still misses most users.
-- **Blocks:** step 3.2 of `road-to-the-question-only-the-owner-can-answer-carried` (`later/`).
-
-### OQ-27 — The prompt optimizer's "Lyra" persona
-
-- **Context:** `/optimize prompt` greets with "Hi! I'm Lyra"; a role names vocabulary, not a
-  method, and the same change drops "assign a role" from the skill.
-- **Options:** (a) keep the name, drop the role-play welcome; (b) drop the persona entirely;
-  (c) keep both.
-- **Recommendation:** (a).
-- **Blocks:** step 2.1 of `road-to-a-prompt-that-deepens-not-widens-carried` (`later/`).
-
-## Not owner questions — waits, or already settled in the tree
-
-- `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
-  `Resolved when` asks for both seats answering a real round. Councils ran 2/2 on
-  2026-10-24, so it looks settled. The agent verifies and closes it.
-- `default-flip-of-the-installed-layer` (installed-layer): waits on a host
-  observation and states itself "not a question".
-- `four-dated-re-checks-are-calendar-bound` (corpus cadence): waits on calendar dates.
-
 ### OQ-8 — The owner-authority register sits outside this list
 
 - **Context:** `agents/roadmaps/stubs/road-to-owner-authority-decisions.md` holds
@@ -185,7 +131,65 @@ and the run that applies it links its PR.
 - **Recommendation:** (a) — it serves the demand without a new store.
 - **Blocks:** `later/road-to-a-memory-each-worker-is-handed` Phase 3.
 
+## Not owner questions — waits, or already settled in the tree
+
+- `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
+  `Resolved when` asks for both seats answering a real round. Councils ran 2/2 on
+  2026-10-24, so it looks settled. The agent verifies and closes it.
+- `default-flip-of-the-installed-layer` (installed-layer): waits on a host
+  observation and states itself "not a question".
+- `four-dated-re-checks-are-calendar-bound` (corpus cadence): waits on calendar dates.
+
 ## Answered
+
+### OQ-27 — The prompt optimizer's "Lyra" persona
+
+- **Context:** `/optimize prompt` greets with "Hi! I'm Lyra"; a role names vocabulary, not a
+  method, and the same change drops "assign a role" from the skill.
+- **Options:** (a) keep the name, drop the role-play welcome; (b) drop the persona entirely;
+  (c) keep both.
+- **Recommendation:** (a).
+- **Blocks:** step 2.1 of `road-to-a-prompt-that-deepens-not-widens-carried` (`later/`).
+- **Answered 2026-10-28:** "Persona komplett entfernen" — option (b): the name and the welcome both go (the AI council had recommended the same, 2/2). Applied in `src/domains/meta/optimize/prompt/command.md` and `src/skills/prompt-optimizer/SKILL.md`, `later/road-to-a-prompt-that-deepens-not-widens-carried` 2.1. <!-- md-language-check: ignore -->
+
+### OQ-26 — Make the interview reachable outside the maintainer workspace
+
+- **Context:** `challenge-me`, `grill-me` and `refine-prompt` are fenced to
+  `agent-config-maintainer`; a consumer typing "interview me" gets nothing routed.
+- **Options:** (a) add `engineering` and `product` to their workspaces; (b) add the
+  `product-reasoning` pack to `engineering`'s optional packs; (c) leave it.
+- **Recommendation:** (a) — optional packs are opt-in, so (b) still misses most users.
+- **Blocks:** step 3.2 of `road-to-the-question-only-the-owner-can-answer-carried` (`later/`).
+- **Answered 2026-10-28:** the owner sent it to the AI council first; it converged 2/2 on (a) after a per-skill audit and judged no owner preference needed. The audit found the premise half-wrong: the interview commands already project to consumers (pack `product-reasoning` is active under scoped projection, and the default projection is unscoped), so only the `workspaces:` frontmatter misreported them as maintainer-only. Widened for `challenge-me`, `grill-me`, `challenge-me vision`, `challenge-me with-docs` and `refine-prompt`; `challenge-me closure` stays maintainer-only because it runs `./scripts-run`. Applied in `later/road-to-the-question-only-the-owner-can-answer-carried` 3.2. <!-- md-language-check: ignore -->
+
+### OQ-25 — How the "interview me" sentence gets appended automatically
+
+- **Context:** your own question in inbox round `inbox-2026-10-be`: "Können wir diesen Satz
+  auch automatisch anhängen?" A `user_prompt_submit` hook can add the sentence as context.
+  Claude already runs 14 concerns in that slot, and the 2026-10-12 line (ADR-293) rules out
+  new form settings.
+- **Options:** (a) a personal hook in your `~/.claude/settings.json`, firing on every
+  prompt, zero package change; (b) a shipped concern, off by default, firing only on task
+  prompts behind a new opt-in key; (c) both.
+- **Recommendation:** (a) — it works today, costs no consumer anything, and Phase 1 of
+  `road-to-the-question-only-the-owner-can-answer` makes the sentence actually reach the
+  interview and fence the run.
+- **Blocks:** step 3.1 of `road-to-the-question-only-the-owner-can-answer-carried` (`later/`).
+- **Answered 2026-10-28:** "Geht Option 2, aber mit dem automatismen, bzw. der ERkennung von Option 1? Ich finde es nicht gut, die settings.json immer bearbeiten zu müssen. Es kann ja auch in unseren allgemeinen hooks sein und wir reagieren dann immer so wie es passt und gut ist, oder der agent entscheidet" — a shipped concern in the package's own hooks, on by default, no settings key, firing only on task prompts; the agent decides whether a gap is owner-owned. Applied as the `intake-pass` concern (`src/scripts/hooks/intake_pass_hook.ts`) in `later/road-to-the-question-only-the-owner-can-answer-carried` 3.1. <!-- md-language-check: ignore -->
+
+### OQ-21 — How consumers get a browser for `ui:render`
+
+- **Context:** `@playwright/test` is a devDependency, so no consumer install can
+  render a page (`road-to-tells-a-near-miss-can-refute` D4). Step 2.1 ships the
+  no-new-dependency half: use `playwright-core` when the consumer already has it,
+  plus a discovered system browser.
+- **Options:** (a) add `playwright-core` (13 MB) as a runtime dependency;
+  (b) write a zero-dependency CDP client over Node's global `WebSocket`;
+  (c) keep the optional resolution only.
+- **Recommendation:** (c) until a render rule is `backed` — the witness tier only
+  matters once Phase 2.5 has promoted a row, and (a) changes every install.
+- **Blocks:** nothing now; consumer reach of the render engine (Phase 2).
+- **Answered 2026-10-28:** "versuche sie aber vorher im council zu beantworten" — the owner sent the open questions to the AI council first; it converged 2/2 (anthropic + openai) on (c) and judged that no owner preference is needed. One refinement both seats asked for: reopen when a render-dependent rule becomes a promotion *candidate*, not only once it is promoted, because promotion evidence may itself need consumer rendering. <!-- md-language-check: ignore -->
 
 ### OQ-24 — Fund the two measurement runs inbox round 2026-10-bd planned
 
@@ -215,7 +219,6 @@ and the run that applies it links its PR.
 - **Blocks:** steps 6.1 (default 3) and 6.3.
 - **Answered 2026-10-27:** "Und Empfehlung 3 - Aber kläre das gerne im ai council" — the owner recommended (c) and delegated to the AI council, which converged 2/2 (anthropic + openai) on (c). Applied in `agents/roadmaps/road-to-routing-assurance-live-floors.md` (6.1/6.3 restated, blocker `b-rate-canary-ceiling` resolved). <!-- md-language-check: ignore -->
 
-
 ### OQ-22 — Spend beyond the 25 USD routing pilot
 
 - **Context:** the drain of `road-to-routing-assurance-live-floors` froze the
@@ -229,7 +232,6 @@ and the run that applies it links its PR.
   remaining cost is runs, not design.
 - **Blocks:** steps 3.1, 3.2, 3.3, 4.1, 4.3.
 - **Answered 2026-10-27:** "1" — option (a): a new ceiling of about 95 USD for Phases 3–4, cumulative on top of the 23.56 USD the pilot spent. Applied in `agents/roadmaps/road-to-routing-assurance-live-floors.md` (blocker `b-live-spend-beyond-pilot` resolved). Narrowed the same day by the owner: "Wir wollen ja aber immer die CLI first nutzen [...] bei CLI brauchen wir keine Budget Frage" — CLI runs need no budget question; the ceiling binds only an arm that must use the API (AC-7 of that roadmap). <!-- md-language-check: ignore -->
-
 
 ### OQ-20 — Third-party test data as attributed splits (`external-test-data-licence`)
 
