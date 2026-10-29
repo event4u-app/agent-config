@@ -39,6 +39,7 @@ the judge, or touches the network.
       `ls`, `wc`), with a timeout, and lists open steps whose check is already met.
       Non-allowlisted clauses are named as skipped. Exits 0.
       verify: `npx vitest run tests/scripts/roadmap_verify_share.test.ts` -> 0
+      production entry: src/scripts/roadmap_verify_share.ts
 
 ## Phase 3 — The pair, as data
 
@@ -46,13 +47,12 @@ the judge, or touches the network.
       `{cmd, red_at, green_at}` from verification records; no failing record
       before the green one yields `red: unseen`.
       verify: `npx vitest run tests/scripts/verify_pair.test.ts` -> 0
+      reach exempt: pairOf is the record shape the binding step writer would consume; wiring it is owner question OQ-29, so it stays unwired until that is answered. classifyClause is reached through roadmap_verify_share --run.
 - [x] **3.2 Wiring-only class.** The same module classes a clause as `wiring` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/verify_pair.ts -->
       when it only proves presence (a route listed, a file exists, a menu entry),
       so presence is never read as behavior.
       verify: `npx vitest run tests/scripts/verify_pair.test.ts` -> 0
       reach exempt: pairOf is the record shape the binding step writer would consume; wiring it is owner question OQ-29, so it stays unwired until that is answered. classifyClause is reached through roadmap_verify_share --run.
-      reach exempt: pairOf is the record shape the binding step writer would consume; wiring it is owner question OQ-29, so it stays unwired until that is answered. classifyClause is reached through roadmap_verify_share --run.
-      production entry: src/scripts/roadmap_verify_share.ts
 
 ## Stubs and owner decisions
 

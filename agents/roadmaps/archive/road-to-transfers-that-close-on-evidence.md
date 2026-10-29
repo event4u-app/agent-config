@@ -35,10 +35,12 @@ silently "does not exist".
       gains an optional `authority` (`upstream-artifact | controlled-replay |
       own-tree | external-claim | analyst-inference`), separate from `tier`.
       verify: `npx vitest run tests/scripts/analysis_ledger.test.ts` -> 0
+      reach exempt: the analysis ledger is driven by the analysis doors through command prose (ADR-288), with no TypeScript caller — appendLoop, nextLoop and ledgerSummary were already unreached before this step.
 - [x] **1.2 Coverage axis.** `Evidence` gains an optional `coverage` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/analysis_ledger.ts -->
       (`complete | partial | unknown`); a helper renders an absence finding as
       `unknown` unless its coverage is `complete`.
       verify: `npx vitest run tests/scripts/analysis_ledger.test.ts` -> 0
+      reach exempt: the analysis ledger is driven by the analysis doors through command prose (ADR-288), with no TypeScript caller — appendLoop, nextLoop and ledgerSummary were already unreached before this step.
 - [x] **1.3 Vocabulary.** `analysis-loop.md` names both axes and states they are <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       not the `evidence_basis` taxonomy (that one grades numbers).
       verify: `grep -c 'coverage' src/agent-src/contexts/execution/analysis-loop.md` -> /^[1-9]/
@@ -72,8 +74,6 @@ silently "does not exist".
 - [x] **3.3 Provenance row.** `provenance/harvests.jsonl` records the adopted <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: provenance/harvests.jsonl -->
       mechanisms under an opaque source id.
       verify: `npx tsx src/scripts/lint_harvest_provenance.ts` -> 0
-      reach exempt: the analysis ledger is driven by the analysis doors through command prose (ADR-288), with no TypeScript caller — appendLoop, nextLoop and ledgerSummary were already unreached before this step.
-      reach exempt: the analysis ledger is driven by the analysis doors through command prose (ADR-288), with no TypeScript caller — appendLoop, nextLoop and ledgerSummary were already unreached before this step.
 
 ## Stubs (need a window, network or the owner)
 
