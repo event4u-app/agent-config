@@ -118,6 +118,34 @@ describe('the consistency check ships on', () => {
     });
 });
 
+// The hook above is run with the host payload on stdin. In production the
+// dispatcher runs it in-process and hands it an envelope instead; this runs
+// the real dispatcher, with the absolute path a host sends.
+describe('through the dispatcher', () => {
+    it('a raw select written by a host is recorded and delivered', () => {
+        const root = project();
+        const r = spawnSync(
+            'npx',
+            ['tsx', path.join(REPO, 'src', 'scripts', 'hooks', 'dispatch_entry.ts'), '--platform', 'claude', '--event', 'post_tool_use', '--project-dir', root],
+            {
+                cwd: REPO,
+                env: { ...process.env, CLAUDE_PROJECT_DIR: root },
+                input: JSON.stringify({
+                    session_id: 'dispatch-test',
+                    cwd: root,
+                    hook_event_name: 'PostToolUse',
+                    tool_name: 'Write',
+                    tool_input: { file_path: path.join(root, 'app', 'filters.tsx') },
+                }),
+                encoding: 'utf8',
+            },
+        );
+        const rows = fs.readFileSync(path.join(root, SHADOW), 'utf8').trim().split('\n');
+        expect(JSON.parse(rows[0]!)).toMatchObject({ file: 'app/filters.tsx', raw_control: 1 });
+        expect(`${r.stdout}${r.stderr}`).toContain("this project's select is Select");
+    });
+});
+
 describe('the role map follows uncommitted primitives', () => {
     it('a primitive added without a commit is seen on the next write', () => {
         dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-consistency-git-'));

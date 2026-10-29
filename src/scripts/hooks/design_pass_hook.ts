@@ -93,6 +93,7 @@ import { trigger_matches, type Trigger } from '../_lib/router_match.js';
 import { HANDOVER_SHAPES, isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
 import { loadDesignContext, scanFile } from '../lint_design_slop.js';
 import { readHookStdin } from './hook_stdin.js';
+import { unwrap } from './envelope.js';
 import { loadConsistencyPass } from './design_consistency_loader.js';
 import { CHUNK_BASENAME, loadSvgScan } from './svg_rules_loader.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
@@ -618,6 +619,14 @@ export function targetPath(payload: unknown): string | null {
     return null;
 }
 
+/** The written path relative to the project root; null when absent or outside it. */
+export function writtenPath(root: string, payload: unknown): string | null {
+    const t = targetPath(payload);
+    if (!t || !path.isAbsolute(t)) return t;
+    const rel = path.relative(root, t).split(path.sep).join('/');
+    return rel === '' || rel.startsWith('../') || path.isAbsolute(rel) ? null : rel;
+}
+
 export function render(result: PassResult, conformance?: string): string {
     const lines: string[] = [];
     if (result.blocked.length) {
@@ -645,7 +654,11 @@ export function render(result: PassResult, conformance?: string): string {
 }
 
 function main(): number {
-    const root = process.env['CLAUDE_PROJECT_DIR'] ?? process.cwd();
+    // In-process the dispatcher hands an envelope; a direct run hands the host
+    // payload. Both carry the write in `payload`, and only the envelope the root.
+    const [envelope, payload] = unwrap(readHookStdin());
+    const ws = envelope['workspace_root'];
+    const root = typeof ws === 'string' && ws ? ws : (process.env['CLAUDE_PROJECT_DIR'] ?? process.cwd());
     // The consistency check ships ON (3.8); the rest of the pass ships OFF.
     const pass = enabled(root);
     const consistency = enabled(root, 'design_consistency', true);
@@ -658,14 +671,8 @@ function main(): number {
     // The manifest binds the post pass without `--slot`; any other slot name is not a write.
     const post = slotArg === undefined || slotArg === 'post_tool_use';
 
-    let payload: unknown = null;
-    try {
-        payload = JSON.parse(readHookStdin() || 'null');
-    } catch {
-        return EXIT_ALLOW; // fail_closed: false — an unparsable payload is not a block
-    }
     if (!pass) {
-        const t = post ? targetPath(payload) : null;
+        const t = post ? writtenPath(root, payload) : null;
         const only = t && isUiSurface(t) ? consistencyFor(root, t) : [];
         if (!only.length || shadow) return EXIT_ALLOW;
         const r: PassResult = { slot, findings: only, blocked: [], audit_missing: [], verification: 'verified' };
@@ -678,7 +685,7 @@ function main(): number {
     if (slot === 'stop') {
         targets = state.touched;
     } else {
-        const t = targetPath(payload);
+        const t = writtenPath(root, payload);
         if (!t || !isPassSurface(t)) return EXIT_ALLOW;
         targets = [t];
         if (!state.touched.includes(t)) state.touched.push(t);

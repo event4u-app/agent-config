@@ -66,8 +66,18 @@ The same window, with the six defects fixed, against
      a copy of this package's `src/` and `docs/`, 20 new feature files with
      three edits each, one primitive change and one commit, n = 83: p50 40 ms,
      p95 44 ms, max 111 ms (the first call); the two recomputes took 94 and
-     89 ms. Inside the 250 ms p95 budget of `src/config/hook-latency-budget.json`
-     for a hook event. Non-UI writes never load the chunk.
+     89 ms. Whole `post_tool_use` events, 2026-10-29, the shipped dispatch
+     bundle spawned as the latency bench spawns it, the same kind of session
+     (15 new files with two edits each and one primitive change, n = 47), the
+     check on against the same session with it off, two runs on a laptop
+     under other load: on p50 138 / 192 ms, p95 211 / 283 ms; off p50 100 /
+     82 ms, p95 120 / 93 ms. In a cold process the check costs about 55 ms
+     (porcelain status about 33 ms, `rev-parse` about 9 ms); the tail is the
+     first UI write after HEAD moves, which recomputes the map. So the p95
+     sits around the 250 ms budget of `src/config/hook-latency-budget.json`
+     for a hook event on this machine, not clearly inside it; that budget is
+     enforced on CI runners for a synthetic Read, which a UI write is not.
+     Non-UI writes never load the chunk.
    - *A false positive.* One advisory line of about 150 characters (about 40
      tokens), never a block: the concern is `severity: advisory`, which the
      dispatcher enforces as a ceiling. Its findings carry `design-pass`'s
