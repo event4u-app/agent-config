@@ -16,6 +16,10 @@ const RULE = path.join(process.cwd(), 'src', 'rules', 'recurring-criticism.md');
 const ALLOWLIST: Record<string, string> = {
     'schon mehrfach':
         'a bare count fires on ordinary prose ("schon mehrfach erfolgreich gelaufen"); the detector requires a saying-verb next to it',
+    'wie oft noch':
+        'an ordinary question ("wie oft noch soll die Schleife laufen?") uses it too; the detector requires "ich" after it',
+    'how many times':
+        'an ordinary question ("how many times does it retry?") uses it too; the detector requires "I/we" after the verb',
     'schon wieder':
         'a bare repetition word ("schon wieder Montag") is not a complaint; the detector requires a second-person clause nearby',
 };

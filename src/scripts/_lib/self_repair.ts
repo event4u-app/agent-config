@@ -515,7 +515,7 @@ const COMPLAINT_PATTERNS: readonly RegExp[] = [
     /\b(told|said) (you )?(this|that|it)? ?(\w+|\d+) times?\b/i,
     // An ordinal restates only when punctuation follows it ("Zum dritten Mal: Tabs!",
     // not "zum dritten Mal gewonnen"); "schon wieder" needs an addressee nearby.
-    /\b(zum (zweiten|dritten|vierten|fünften) mal|for the (second|third|fourth|fifth) time)\s*[:!,—–-]|\bwie oft noch\b|\bhow many times\b|\bas i (mentioned|said) (before|earlier)\b|\btold you (this|that)\b|\bimmer noch nicht\b|\bschon wieder\b[^.!?]{0,40}\b(du|you|ihr)\b|\b(du|you|ihr)\b[^.!?]{0,40}\bschon wieder\b/i,
+    /\b(zum (zweiten|dritten|vierten|fünften) mal|for the (second|third|fourth|fifth) time)\s*[:!,—–-]|\bwie oft (noch|muss|soll) ich\b|\bhow many times (do|must|should|have|will) (i|we)\b|\bas i (mentioned|said) (before|earlier)\b|\btold you (this|that)\b|\bimmer noch nicht\b|\bschon wieder\b[^.!?]{0,40}\b(du|you|ihr)\b|\b(du|you|ihr)\b[^.!?]{0,40}\bschon wieder\b/i,
 ];
 
 // Phrasings that MATCH a complaint pattern but are not complaints — a curious

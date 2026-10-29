@@ -64,6 +64,10 @@ detectors:
         note: an ordinal with no punctuation after it is a count, not a recurrence marker
       - text: "schon wieder Montag"
         note: a bare repetition word with nobody addressed
+      - text: "how many times does it retry?"
+        note: an ordinary question; fired on the first broadened pattern (council round 3, 2026-10-29)
+      - text: "wie oft noch soll die Schleife laufen?"
+        note: an ordinary question; fired on the first broadened pattern (council round 3, 2026-10-29)
 
   council-availability-claim:
     fire:

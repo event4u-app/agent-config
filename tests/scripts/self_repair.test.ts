@@ -291,7 +291,7 @@ describe('self-repair — the subject a recurrence names', () => {
     it.each([
         'Claude. Zum dritten Mal: Tabs!',
         'For the third time: tabs.',
-        'How many times — use `Tabs` please',
+        'How many times do I have to say it — use `Tabs` please',
     ])('names the same subject across phrasings: %s', (prompt) => {
         expect(detectUserReport(prompt)?.subject).toBe('tabs');
     });
