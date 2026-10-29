@@ -18,6 +18,7 @@ entry_condition:
     On that answer; nothing else in this file is open.
   who: >
     The owner.
+estate_growth_exempt: "THIS CHANGE (2026-10-29) adds one later/ roadmap and one open blocker: later_roadmaps +1, open_blockers +1. Every other item of this roadmap is done in the same change; what is left is one owner decision (b-preamble-grant, OQ-42) on a rights-floor fix that was built and ratified 2/2 and then held back only because the per-spawn preamble on main sits exactly at its zero-growth ceiling. Parking it here keeps the item alive instead of dropping it; it closes on the owner's answer."
 estate_offset_exempt: "Owner search run 2026-10-29 for every subject below: grep -rlF over agents/roadmaps/*.md, later/ and stubs/ for 'Consumer-Impact', 'image-likeness-and-rights', 'external-code-graph-interop', 'max_calls_per_day', 'bypass_actors', 'MonitoringHelper', 'OQ-32' returned no roadmap owning any of them (image-likeness appears only as a catalogue row in later/road-to-mixed-trigger-activation-cost). The slot is the one road-to-map-views-from-the-handover freed when it archived in the same change; the active count stays at 5."
 ---
 # Road to records that match their code

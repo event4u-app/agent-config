@@ -363,13 +363,14 @@ Readers name sinks and env **names** only — never a value, never a vendor API
 call (kill rows L-K1 to L-K4 below). Vendor names live in the sink catalogue,
 never in the graph core (ADR-298).
 
-- [x] **L.1 Sink catalogue as data.** One row per sink — Sentry, Datadog, New <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/lanes/interfaces/log_sinks.ts -->
+- [ ] **L.1 Sink catalogue as data.** One row per sink — Sentry, Datadog, New
       Relic, OTel collector, Slack, Loki, Papertrail, syslog, stderr, file — with
       kind (remote/local), SDK packages per ecosystem, config keys, env names
       (`SENTRY_DSN`, `DD_*`, `NEW_RELIC_*`, `OTEL_*`, `LOG_CHANNEL`, `LOG_STACK`,
       `LOG_SLACK_WEBHOOK_URL`) and egress hosts. A sibling of
       `lanes/interfaces/sdk_table.ts`, not a fork.
       verify: `npx vitest run tests/scripts/code_graph_log_sinks.test.ts` -> 0
+      > note: the catalogue and its pure matcher `sinksOf` are in the tree and tested (`lanes/interfaces/log_sinks.ts`); no production entry reads them yet, so the step stays open until L.2 wires them into a reader.
 - [~] **L.2 Provider readers.** Laravel `config/logging.php` channels, drivers,
       levels, stacks and the exception handler; Symfony monolog; JS `Sentry.init`,
       pino, winston; Python `logging.config`; OTel exporter env names; Compose
