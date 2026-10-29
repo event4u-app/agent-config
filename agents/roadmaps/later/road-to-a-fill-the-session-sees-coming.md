@@ -54,6 +54,11 @@ continuity record no longer depends on reaching the 800k recycle threshold.
 - [ ] **1.2 Doctor line.** `hooks:status` / `doctor` print "fill warning: live
       | no status-line tap | not bound on this host".
       verify: a fixture without the tap prints "no status-line tap".
+- [ ] **1.4 Correct the manifest comment.** `src/scripts/hook_manifest.yaml`
+      still describes `quota-notice` as "one per session at 80 % context fill";
+      since `road-to-a-memory-that-arrives` 2.1 it repeats every prompt. The
+      manifest is hook plumbing, so the edit ships with a ratification artifact.
+      verify: `check_kernel_edit_ratified` green with the artifact in the diff.
 - [ ] **1.3 Drop the ×1,500 estimate.** `context-hygiene-mechanics.md` points
       at the measured notice instead of a message-count estimate.
       verify: reference check green.

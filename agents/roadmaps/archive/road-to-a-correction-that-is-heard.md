@@ -27,7 +27,7 @@ the pin: 8 of the 10 trigger phrases `recurring-criticism.md` lists do not fire
 
 ## Phase 1 — The detector hears the repeat
 
-- [ ] **1.1 Extend `COMPLAINT_PATTERNS` with ordinal and repeat markers.**
+- [x] **1.1 Extend `COMPLAINT_PATTERNS` with ordinal and repeat markers.**
       `src/scripts/_lib/self_repair.ts`: an ordinal marker followed by
       punctuation (`zum zweiten…fünften Mal` / `for the second…fifth time`), `wie oft noch`,
       bare `how many times`, `as I mentioned/said before|earlier`,
@@ -38,13 +38,13 @@ the pin: 8 of the 10 trigger phrases `recurring-criticism.md` lists do not fire
       we use tabs!" and the must-not-fire rows "Wir haben zum dritten Mal
       gewonnen" and "schon wieder Montag"; the corpus test is red before the
       pattern change and green after.
-- [ ] **1.2 Pin the rule's trigger vocabulary to the detector.** New
+- [x] **1.2 Pin the rule's trigger vocabulary to the detector.** New
       `tests/scripts/recurring_criticism_trigger_drift.test.ts` parses the
       trigger list of `src/rules/recurring-criticism.md` and asserts each phrase,
       embedded in a complaint sentence, fires `detectUserReport` — or sits in an
       in-test allowlist with a reason.
       verify: red at the pin (8 of 10 miss), green after 1.1.
-- [ ] **1.3 Record what the correction was about.** Optional `subject` on the
+- [x] **1.3 Record what the correction was about.** Optional `subject` on the
       user-report finding: the backticked token, else the clause after the
       recurrence marker's colon; lower-cased, sanitized, capped at 40 chars.
       Local-only like `mechanism` — excluded from the fingerprint and from every
@@ -54,20 +54,20 @@ the pin: 8 of the 10 trigger phrases `recurring-criticism.md` lists do not fire
 
 ## Phase 2 — The instruction-file surface tells the truth
 
-- [ ] **2.1 The CLAUDE.md stub imports `AGENTS.md`.**
+- [x] **2.1 The CLAUDE.md stub imports `AGENTS.md`.**
       `src/agent-src/contexts/contracts/agents-md-anatomy.md` documents the
       Claude stub as `@AGENTS.md` (a link sentence is opened only at the
       agent's discretion); `src/domains/meta/agents/init/command.md` stops
       claiming Claude Code reads `AGENTS.md` unconditionally.
       verify: a test asserting the anatomy's Claude stub contains `@AGENTS.md`
       and the init command names the import or symlink.
-- [ ] **2.2 `lint_agents_md --target <file>` lints a consumer file.** Today the
+- [x] **2.2 `lint_agents_md --target <file>` lints a consumer file.** Today the
       linter resolves its targets from its own location, so `/agents audit`
       step 4 can only ever lint the package. `--target` lints the named file
       with the template thresholds; the audit command uses it.
       verify: a test running `--target` on a fixture reports the fixture, not
       the package root.
-- [ ] **2.3 Skill text routes a convention to its strongest carrier.**
+- [x] **2.3 Skill text routes a convention to its strongest carrier.**
       `learning-to-rule-or-skill` gains a "config / check (consumer
       convention): propose as a diff" row above Rule; `standards-from-config`
       names instruction-file prose as a conflict source and says that a repeat
@@ -92,10 +92,10 @@ the pin: 8 of the 10 trigger phrases `recurring-criticism.md` lists do not fire
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every trigger phrase `recurring-criticism` lists either fires the
+- [x] AC-1 — Every trigger phrase `recurring-criticism` lists either fires the
       detector or is allowlisted with a stated reason, enforced by a test.
-- [ ] AC-2 — The canonical repeat "Zum dritten Mal: Tabs!" produces a record
+- [x] AC-2 — The canonical repeat "Zum dritten Mal: Tabs!" produces a record
       whose local subject reads `tabs`, and nothing about the subject leaves
       the machine.
-- [ ] AC-3 — The documented Claude stub imports `AGENTS.md`, and `/agents audit`
+- [x] AC-3 — The documented Claude stub imports `AGENTS.md`, and `/agents audit`
       can lint the consumer's own file.

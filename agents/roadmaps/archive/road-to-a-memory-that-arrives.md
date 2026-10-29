@@ -32,13 +32,13 @@ test pins "a second turn none".
 
 ## Phase 1 — Memory that is skipped says so
 
-- [ ] **1.1 `memory_lookup` reports stale skips.** Additive `skipped_stale`
+- [x] **1.1 `memory_lookup` reports stale skips.** Additive `skipped_stale`
       count in the v1 envelope and the legacy JSON; `check_memory` raises a
       **warning** `store-reachability` when at least half the curated entries
       are stale (today an `info` per entry).
       verify: a fixture with three stale and one fresh entry asserts
       `skipped_stale === 3` and the warning; both fail at the pin.
-- [ ] **1.2 `check_memory` flags a clipped body.** Warning
+- [x] **1.2 `check_memory` flags a clipped body.** Warning
       `truncated-at-limit` when a content field is exactly the one-fact limit
       long and does not end in sentence punctuation or a closing quote.
       verify: a 600-char fixture ending mid-word warns; a 600-char fixture
@@ -46,30 +46,30 @@ test pins "a second turn none".
 
 ## Phase 2 — The fill notice keeps saying it
 
-- [ ] **2.1 One context line per prompt while over the band.**
+- [x] **2.1 One context line per prompt while over the band.**
       `src/scripts/hooks/quota_notice_hook.ts`: the context line no longer
       claims once per session; it fires on every `user_prompt_submit` while
       `context_used_pct` is at or over the band, at most once per prompt.
       verify: `tests/scripts/quota_notice_hook.test.ts` "a second turn none"
       becomes "a second turn again" (red first); a second hook run for the same
       prompt emits nothing.
-- [ ] **2.2 The line names both exits with real numbers.** Text: context N %
+- [x] **2.2 The line names both exits with real numbers.** Text: context N %
       (used / size) — new task → `/clear`, same task → `/compact`; values from
       the ledger, never an estimate.
       verify: a test asserting `/clear`, `/compact` and the absolute size.
-- [ ] **2.3 Pin the binding.** A test that `quota-notice` stays bound to
+- [x] **2.3 Pin the binding.** A test that `quota-notice` stays bound to
       claude `user_prompt_submit` with a notification effect, so the axis that
       retired the warning once cannot retire it silently again.
       verify: the test fails against a manifest copy with the binding removed.
 
 ## Phase 3 — Quiet where there is nothing to recall, true where it is documented
 
-- [ ] **3.1 No recall WARN without a store.** `memory_recall_hook.ts`: when
+- [x] **3.1 No recall WARN without a store.** `memory_recall_hook.ts`: when
       the store resolves to nothing, return allow and write the diagnostic to
       stderr only, without setting the latch.
       verify: a consumer fixture with an ADR file, an Edit call and no memory
       store produces empty stdout (a WARN at the pin).
-- [ ] **3.2 Install-scope docs name the real default.** `README.md` and
+- [x] **3.2 Install-scope docs name the real default.** `README.md` and
       `docs/contracts/install-scopes.md` say global is the default, as
       `src/install/detect.ts` does; the stale hook-header claims that no hook
       reaches a subagent are corrected to the measured SubagentStart delivery.
@@ -92,9 +92,9 @@ test pins "a second turn none".
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A lookup over a mostly stale store reports the skip count and
+- [x] AC-1 — A lookup over a mostly stale store reports the skip count and
       `check_memory` warns; neither stays silent.
-- [ ] AC-2 — While the session stays over the fill band, every prompt shows the
+- [x] AC-2 — While the session stays over the fill band, every prompt shows the
       notice with `/clear` and `/compact`, and a test fails if the binding goes.
-- [ ] AC-3 — A consumer without a memory store sees no recall warning, and the
+- [x] AC-3 — A consumer without a memory store sees no recall warning, and the
       install-scope contract matches the installer default.
