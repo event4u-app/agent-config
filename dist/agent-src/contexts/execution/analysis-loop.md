@@ -107,6 +107,14 @@ whose tree those gates do not read.
 A loop with no `executed` or `read` evidence tied to a changed conclusion is
 `no-external-signal` and does not count as a loop.
 
+Two optional axes sit beside the tier. **Authority** says who stands behind the
+evidence: `upstream-artifact`, `controlled-replay`, `own-tree`,
+`external-claim`, `analyst-inference`. **Coverage** says how complete the search
+was: `complete`, `partial`, `unknown`. An absence finding reads "does not exist"
+only on `complete` coverage — otherwise, and when coverage is missing, it is
+`unknown` (`absenceFinding()` in `src/scripts/analysis_ledger.ts`). Neither axis
+is the `evidence_basis` taxonomy, which grades numbers, not evidence.
+
 A media source (`analyze:post`) anchors as `S1@01:05 #3` — source, timestamp,
 contact-sheet tile — with at most a 15-word quote; `isMediaAnchor()` in
 `src/scripts/_lib/media_anchor.ts` checks the grammar. A tile the run looked at

@@ -8,7 +8,7 @@ cluster: analyze
 replaces: [analyze-repo, analyze:repo, analyze-reference-repo, analyze:reference-repo]
 skills: [project-analyzer, learning-to-rule-or-skill]
 description: Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
-argument-hint: "<source>… [--emit-prompts] [--mode=plan|execute] [--loops=N] [--focus=<area>] [--deep] [--refresh] [--no-roadmap]"
+argument-hint: "<source>… [--emit-prompts] [--mode=plan|execute] [--loops=N] [--focus=<area>] [--deep] [--refresh] [--no-roadmap] [--transfer=learn|adapt|rebuild|integrate]"
 limits:
   mode_default: plan
   max_iterations: 3
@@ -68,6 +68,30 @@ Optional arguments:
 - `--deep` — bounded deep-verification tier (§ 2b). Read-only clone at a pinned
   SHA, never executed. Requires a non-empty anchor table.
 - `--no-roadmap` — skip the roadmap-draft step.
+- `--transfer=learn|adapt|rebuild|integrate` — what the run carries into the
+  destination (§ Transfer modes). Default: `learn`.
+
+## Transfer modes
+
+`--transfer` says what the analysis is **for**; the free-text `--goal "…"`
+(§ 1a) says what it is about, and the two never share a flag. The destination
+is the run's local scope (§ 1) — any project, not only this package.
+
+| Mode | Carries into the destination | Closes when |
+|---|---|---|
+| `learn` (default) | findings and roadmap items, nothing built | the analysis document is written |
+| `adapt` | a mechanism re-derived to the destination's conventions | the obligation ledger closes |
+| `rebuild` | a feature or app reconstructed from its observed behaviour | the obligation ledger closes |
+| `integrate` | the reference used as-is — dependency, API, protocol | the interop probe (§ 3b) passes in the destination |
+
+For `adapt` and `rebuild` a **behaviour spec comes first**: before any
+destination code, every behaviour to reproduce becomes one row of the obligation
+ledger (`docs/contracts/reconstruction-obligations.md`),
+with its equivalence tier and required cases. The run closes only when
+`evaluateLedger` (`src/scripts/_lib/reconstruction_ledger.ts`) reads `closed` —
+an empty ledger reads `unknown`, a row verified on analyst inference alone is
+refused, and a `visible-only` row never counts toward parity. A conscious
+rebuild is a borrow under `code-provenance`: read, close the source, re-derive.
 
 ## Enforced limits
 
