@@ -148,7 +148,7 @@ shows the wired AIs; [`docs/featured-commands.md`](docs/featured-commands.md)
 lists the end-to-end workflows (`/implement-ticket`, `/work`,
 `/commit`, `/pr:create`). Deeper tour: [2-minute demo](#2-minute-demo--implement-ticket).
 
-**Install scope.** Pick **one** scope per machine — project-local (default, recommended for application repos) or user-global (recommended for tooling repos / dotfiles). The installer refuses a second, conflicting scope via the `scope_guard` pre-flight. Details: [`docs/contracts/install-scopes.md`](docs/contracts/install-scopes.md). Cleanup when needed: `bash src/scripts/cleanup_other_scope.sh --confirm`.
+**Install scope.** Pick **one** scope per machine. **Installer default:** user-global ([ADR-020](docs/decisions/ADR-020-global-only-consumer-scope.md)); a repo with an `.agent-settings.yml` installs project-local. The installer refuses a second, conflicting scope via the `scope_guard` pre-flight. Details: [`docs/contracts/install-scopes.md`](docs/contracts/install-scopes.md). Cleanup when needed: `bash src/scripts/cleanup_other_scope.sh --confirm`.
 
 ## Prove it
 

@@ -1010,6 +1010,7 @@ function _retrieve_internal(types: string[], keys: string[], limit: number, toda
     }
     return [hits, skipped];
 }
+const _staleField = (s: SkippedEntry[]): { skipped_stale?: number } => (s.some((e) => e.reason === 'stale') ? { skipped_stale: s.filter((e) => e.reason === 'stale').length } : {});
 
 /**
  * Return up to `limit` hits across the requested types, highest score first.
@@ -1135,7 +1136,7 @@ export function retrieve_v1(
     const known = types.filter((t) => _KNOWN_TYPES.has(t));
     const unknown = types.filter((t) => !_KNOWN_TYPES.has(t));
 
-    const hits = retrieve(known, keys, limit);
+    const [hits, skippedAll] = _retrieve_internal(known, keys, limit, _today());
 
     const slice_counts: Record<string, number> = {};
     for (const t of known) {
@@ -1243,6 +1244,7 @@ export function retrieve_v1(
         status: envelope_status,
         entries,
         slices,
+        ..._staleField(skippedAll),
     };
     if (errors.length > 0) {
         envelope['errors'] = errors;
@@ -1446,11 +1448,9 @@ export function main(): number {
         process.stdout.write(`${pyJsonDumps(envelope, 2)}\n`);
         return 0;
     }
-    const hits = retrieve(types, args.key, args.limit);
+    const [hits, skippedAll] = _retrieve_internal(types, args.key, args.limit, _today());
     if (args.format === 'json') {
-        const payload = {
-            hits: hits.map((h) => h.as_dict()),
-        };
+        const payload = { hits: hits.map((h) => h.as_dict()), ..._staleField(skippedAll) };
         process.stdout.write(`${pyJsonDumps(payload, 2)}\n`);
     } else {
         if (hits.length === 0) {

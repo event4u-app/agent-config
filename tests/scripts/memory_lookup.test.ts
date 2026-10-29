@@ -7,9 +7,10 @@
 // exercised directly. A trailing golden-parity block runs python3 + tsx —
 // retrieve() via a python3 -c driver and the CLI surfaces on identical
 // fixtures — asserting byte-exact output, skipped without python3.
+import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as ml from '../../src/scripts/memory_lookup.js';
@@ -378,3 +379,63 @@ function _normalizeForCompare(value: unknown): unknown {
     }
     return value;
 }
+
+// Stale-skip reporting: an entry past `review_after_days` is skipped silently
+// unless the count reaches the caller — both the v1 envelope and the legacy
+// CLI JSON carry an additive `skipped_stale`.
+describe('memory_lookup.ts — skipped_stale count', () => {
+    function isoDaysAgo(days: number): string {
+        const now = new Date();
+        const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - days * 86_400_000);
+        return d.toISOString().slice(0, 10);
+    }
+    function writeEntries(ids: Array<[string, number]>): void {
+        const rows = ids
+            .map(([id, age]) =>
+                [
+                    `  - id: "${id}"`,
+                    '    status: "active"',
+                    '    path: "app/Http/Controllers/Billing/**"',
+                    '    owner: "team-payments"',
+                    `    last_validated: "${isoDaysAgo(age)}"`,
+                    '    review_after_days: 90',
+                ].join('\n'),
+            )
+            .join('\n');
+        write(join(tmp, 'agents/memory/ownership.yml'), `version: 1\nentries:\n${rows}\n`);
+    }
+    const THREE_STALE_ONE_FRESH: Array<[string, number]> = [
+        ['own-stale-1', 200],
+        ['own-stale-2', 200],
+        ['own-stale-3', 200],
+        ['own-fresh', 0],
+    ];
+
+    it('v1 envelope reports skipped_stale === 3 for three stale + one fresh', () => {
+        chdirInto(tmp);
+        writeEntries(THREE_STALE_ONE_FRESH);
+        const env = ml.retrieve_v1(['ownership'], ['billing']);
+        expect(env['skipped_stale']).toBe(3);
+        expect((env['entries'] as Array<{ id: string }>).map((e) => e.id)).toEqual(['own-fresh']);
+    });
+
+    it('v1 envelope omits skipped_stale when nothing was stale', () => {
+        chdirInto(tmp);
+        writeEntries([['own-fresh', 0]]);
+        expect('skipped_stale' in ml.retrieve_v1(['ownership'], ['billing'])).toBe(false);
+    });
+
+    it('legacy CLI JSON reports skipped_stale === 3', () => {
+        writeEntries(THREE_STALE_ONE_FRESH);
+        const repo = resolve(import.meta.dirname, '..', '..');
+        const r = spawnSync(
+            join(repo, 'node_modules', '.bin', 'tsx'),
+            [join(repo, 'src', 'scripts', 'memory_lookup.ts'), '--types', 'ownership', '--key', 'billing', '--format', 'json'],
+            { cwd: tmp, encoding: 'utf8' },
+        );
+        expect(r.status, r.stderr).toBe(0);
+        const payload = JSON.parse(r.stdout) as { hits: Array<{ id: string }>; skipped_stale?: number };
+        expect(payload.skipped_stale).toBe(3);
+        expect(payload.hits.map((h) => h.id)).toEqual(['own-fresh']);
+    });
+});

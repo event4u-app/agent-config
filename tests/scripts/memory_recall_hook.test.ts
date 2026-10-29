@@ -550,17 +550,28 @@ describe('per-session per-slug latch', () => {
 });
 
 describe('store diagnostics', () => {
-    it('an unresolvable store still emits the pointer and says so on stderr', () => {
+    it('an unresolvable store allows: empty stdout, the diagnostic on stderr only, no latch', () => {
         const ws = makeSymlinkedWorktree();
         const missing = path.join(mkTmp('memory-recall-absent-'), 'nope');
         const r = run(envelope(ws, bashPayload('npm run build', ws)), ws, missing);
 
-        expect(r.status).toBe(2);
-        const out = parseEmission(r);
-        expect(out.reason).toBe('memory-recall: worktree-build-poisons-install-bundle');
-        expect(out.additional_context).toContain('not resolvable');
+        expect(r.status).toBe(0);
+        expect(r.stdout).toBe('');
         expect(r.stderr).toContain('no memory store was resolvable');
         expect(r.stderr).toContain(missing);
+        expect(fs.existsSync(latchFile(ws, deriveSessionKey({ session_id: 'sess-1' }, {})))).toBe(false);
+        // No latch, so the call after the store appears is still told.
+        expect(run(envelope(ws, bashPayload('npm run build', ws)), ws, makeStore()).status).toBe(2);
+    });
+
+    it('a consumer repo editing docs/adr/ADR-001.md with no memory store gets empty stdout', () => {
+        const ws = makeConsumer();
+        fs.mkdirSync(path.join(ws, 'docs', 'adr'), { recursive: true });
+        fs.writeFileSync(path.join(ws, 'docs', 'adr', 'ADR-001.md'), '# ADR-001\n');
+        const missing = path.join(mkTmp('memory-recall-absent-'), 'nope');
+        const r = run(envelope(ws, editPayload(path.join(ws, 'docs/adr/ADR-001.md'), ws)), ws, missing);
+        expect(r.status).toBe(0);
+        expect(r.stdout).toBe('');
     });
 
     it('a resolvable store missing the file emits the pointer and a second diagnostic', () => {

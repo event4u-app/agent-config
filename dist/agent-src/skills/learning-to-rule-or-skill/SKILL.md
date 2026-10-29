@@ -67,6 +67,7 @@ Do not use this skill when:
 
 | If the learning is... | Then... | Action |
 |---|---|---|
+| A consumer convention a config or check can carry (formatter, linter, CI step) | **Config / check** | Propose the config diff; never encode it as a rule |
 | An always-true constraint ("never X", "always Y") | **Rule** | Create/update rule |
 | A repeatable workflow with steps and validation | **Skill** | Create/update skill |
 | A coding convention or reference material | **Guideline** | Create/update guideline |

@@ -234,7 +234,9 @@ describe('templates/check_memory — intent', () => {
         expect(r.stdout).toMatch(
             /ℹ️ {2}agents\/memory\/domain-invariants\/stale\.yml \[old-1] {2}stale: last_validated \d+ days ago \(limit 1\)/,
         );
-        expect(r.stdout).toContain('Summary: 0 error(s), 0 warning(s), 1 info');
+        // The only entry is stale, so the store as a whole is unreachable too.
+        expect(r.stdout).toContain('store-reachability: 1 of 1 curated entries are stale');
+        expect(r.stdout).toContain('Summary: 0 error(s), 1 warning(s), 1 info');
     });
 
     it('JSON format over mixed findings', () => {

@@ -11,14 +11,14 @@
   },
   "body_signal": {
     "verdict": "harmful",
-    "reason": "false activation +4.72 pp breaches the +2.0 pp guard",
+    "reason": "false activation +4.69 pp breaches the +2.0 pp guard",
     "k": 5,
-    "delta_recall_pp": 1.653,
-    "delta_false_activation_pp": 4.721,
-    "p_value": 0.4664,
+    "delta_recall_pp": 1.505,
+    "delta_false_activation_pp": 4.687,
+    "p_value": 0.5107,
     "discordant_positive_pairs": {
-      "gained": 120,
-      "lost": 108
+      "gained": 121,
+      "lost": 110
     },
     "bars": {
       "recall_gain_pp": 5,
@@ -28,36 +28,36 @@
     },
     "arms": {
       "description": {
-        "positives": 726,
-        "positiveHits": 443,
-        "negatives": 699,
+        "positives": 731,
+        "positiveHits": 446,
+        "negatives": 704,
         "negativeHits": 102
       },
       "description+body": {
-        "positives": 726,
-        "positiveHits": 455,
-        "negatives": 699,
+        "positives": 731,
+        "positiveHits": 457,
+        "negatives": 704,
         "negativeHits": 135
       }
     },
     "recall_pp": {
-      "description": 61.019,
-      "description+body": 62.672
+      "description": 61.012,
+      "description+body": 62.517
     },
     "false_activation_pp": {
-      "description": 14.592,
-      "description+body": 19.313
+      "description": 14.489,
+      "description+body": 19.176
     }
   },
   "corpus": {
     "partition": "train",
     "holdout_sealed": true,
-    "train_corpora": 146,
+    "train_corpora": 147,
     "legacy_shaped_corpora": [
       "brand-asset-generation",
       "estimate-ticket"
     ],
-    "cases": 1425,
+    "cases": 1435,
     "catalogue_size": 301
   }
 }

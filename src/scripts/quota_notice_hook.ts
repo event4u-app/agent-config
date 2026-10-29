@@ -13,7 +13,8 @@
  * ledger the status-line tap writes and emits through the user channel:
  *   - one notice per (window, state, reset) on the whole machine, for the
  *     states warm / hot / exhausted, so five parallel sessions print one line;
- *   - one notice per session when its context reaches 80 % of its window;
+ *   - a context line on every prompt while the session's context is at or
+ *     above 80 % of its window, once per prompt (a double hook run is one);
  *   - one notice per session when the session may bill per token.
  * `metered-spawn-ask` (Agent/Task, `effect: confirmation`, run with `--ask`)
  * returns the host's native ask on a subagent spawn of a possibly-metered
@@ -40,7 +41,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { hasBillingGrant } from './_lib/billing_grant.js';
 import { hostSettingsPaths, readBillingClass, type BillingClassReading } from './_lib/billing_class.js';
 import { atLeast, describeWindow, planPressure, sessionContextFill } from './_lib/pressure.js';
-import { hashSessionId, quotaStateDir, readQuotaLedger } from './_lib/quota_ledger.js';
+import { hashSessionId, quotaStateDir, readQuotaLedger, type QuotaSnapshot } from './_lib/quota_ledger.js';
 import type { EnvMap } from './_lib/user_global_paths.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 import { is_replay_mode } from './hooks/state_io.js';
@@ -56,6 +57,8 @@ export interface QuotaNoticeDeps {
     readonly stateEnv?: EnvMap | null;
     readonly billing: BillingClassReading;
     readonly now: number;
+    /** Identifies this prompt (host prompt id or a prompt hash); `null` disables the per-prompt dedup. */
+    readonly promptKey?: string | null;
 }
 
 function claimDir(stateEnv?: EnvMap | null): string {
@@ -131,10 +134,23 @@ export function noticeLines(deps: QuotaNoticeDeps): string[] {
         lines.push(`AC: ${describeWindow(w)}. ${advice}`);
     }
     const ctx = sessionContextFill(ledger, session, deps.now);
-    if (ctx !== null && ctx >= CONTEXT_NOTICE_PCT && claimOnce(`context|${session}`, deps.stateEnv, deps.now)) {
-        lines.push(`AC: this session's context is ${Math.round(ctx)} % of its window — every turn resends it. /compact now keeps the next turns cheap.`);
+    // The snapshot's ts joins the key: a repeated prompt text ("weiter") in a
+    // later turn follows a fresh status-line snapshot, so it is not a duplicate.
+    const snap = [...ledger].reverse().find((x) => x.session === session && x.context_used_pct !== undefined);
+    const pk = deps.promptKey ?? null;
+    const key = `context|${session}|${pk ?? ''}|${snap?.ts ?? ''}`;
+    if (ctx !== null && ctx >= CONTEXT_NOTICE_PCT && (pk === null || claimOnce(key, deps.stateEnv, deps.now))) {
+        lines.push(contextLine(ctx, snap));
     }
     return lines;
+}
+
+/** Both exits, with the size the status line reported; no size, no absolute figures. */
+function contextLine(pct: number, snap: QuotaSnapshot | undefined): string {
+    const size = snap?.context_size;
+    const n = (x: number): string => Math.round(x).toLocaleString('en-US');
+    const abs = size !== undefined && size > 0 ? ` (${n((pct / 100) * size)} / ${n(size)} tokens)` : '';
+    return `AC: Context ${Math.round(pct)} %${abs} — new task → /clear, same task → /compact.`;
 }
 
 export interface AskDeps extends QuotaNoticeDeps {
@@ -256,7 +272,9 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             if (reason !== null) process.stdout.write(JSON.stringify({ decision: 'ask', reason }));
             return 0;
         }
-        const lines = noticeLines(base);
+        const prompt = field(payload, 'prompt');
+        const promptKey = field(payload, 'prompt_id') ?? (prompt === null ? null : digest(prompt));
+        const lines = noticeLines({ ...base, promptKey });
         if (lines.length > 0) {
             const id = createHash('sha256').update(`${sessionId ?? ''}|${base.now}`).digest('hex').slice(0, 16);
             process.stdout.write(JSON.stringify({ [USER_NOTICE_KEY]: lines.join('\n'), [USER_NOTICE_ID_KEY]: id }));

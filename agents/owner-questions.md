@@ -108,6 +108,57 @@ and the run that applies it links its PR.
   user-data layer, which is the owner's call
   (`road-to-a-memory-that-names-its-moment` § Decisions E12).
 
+### OQ-28 — May the self-repair loop propose a change to the user's own project?
+
+- **Context:** round `inbox-2026-10-bi`. A convention that keeps not arriving
+  ("tabs!") can only be fixed in the user's project (`.editorconfig`, a
+  formatter config, `AGENTS.md`), but `self-repair-loop`'s Iron Law reads "never
+  'fix' it by editing the user's project". Lowering that floor is yours.
+- **Options:** (a) amend to "never edit the user's project without their
+  consent" — the fix is a proposed diff the user accepts; (b) keep the law and
+  route conventions to a separate proposal-only path outside self-repair;
+  (c) keep it as is.
+- **Recommendation:** (a) — the proposal is a diff the user sees and accepts,
+  never a silent write.
+- **Blocks:** `later/road-to-a-noted-that-is-a-write` Phase 3.
+
+### OQ-29 — May agent-config read the host's own auto-memory?
+
+- **Context:** round `inbox-2026-10-bi`. Claude Code keeps per-project memory
+  under `~/.claude/projects/*/memory`; `src/config/source-registry.json` lists it
+  read-only with no reader. Reading personal data outside the repo is yours to
+  allow.
+- **Options:** (a) a consent-gated, read-only bridge (asked once, class B);
+  (b) never.
+- **Recommendation:** (a) — read-only, consent asked once, no writes into host
+  memory.
+- **Blocks:** nothing executable; a future reader for correction recurrence.
+
+### OQ-30 — Should chat history redact credentials at rest whatever the egress mode?
+
+- **Context:** round `inbox-2026-10-bi`. `chat_history` is on by default and
+  stores text in plaintext; the placeholder view exists but
+  `egress.placeholders.mode` ships `off`. There is no private-section marker.
+  Both options change consumer default behaviour.
+- **Options:** (a) always redact on write with the existing egress rules, plus
+  a private marker; (b) turn placeholders on only where chat history is
+  enabled; (c) leave both to `road-to-placeholders-on-the-wire`.
+- **Recommendation:** (a) — the storage risk exists today without any
+  condition.
+- **Blocks:** nothing executable now.
+
+### OQ-31 — A memory shared across providers vs. the ADR-249 floor
+
+- **Context:** round `inbox-2026-10-bi`, your demand that subagents, councils
+  and unpaid routes share one memory. ADR-249 rules out a cross-session
+  persistent state store, a data-handling floor only you can lower.
+- **Options:** (a) keep the floor and serve the demand through curated,
+  file-first memory cut per audience (`later/road-to-a-memory-each-worker-is-handed`);
+  (b) let the council prepare a reopen record limited to a scoped episodic
+  journal, default off; (c) decline the demand.
+- **Recommendation:** (a) — it serves the demand without a new store.
+- **Blocks:** `later/road-to-a-memory-each-worker-is-handed` Phase 3.
+
 ## Not owner questions — waits, or already settled in the tree
 
 - `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its

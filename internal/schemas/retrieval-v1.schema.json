@@ -28,6 +28,11 @@
         "errors": {
           "type": "array",
           "items": { "$ref": "#/$defs/SliceError" }
+        },
+        "skipped_stale": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Optional. Curated entries excluded because last_validated is older than review_after_days. Absent when none were skipped."
         }
       }
     },

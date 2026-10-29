@@ -51,6 +51,7 @@ interface Target {
     fail_at: number;
     warn_at: number;
     template: boolean; // consumer template — relax pointer-target resolution
+    root?: string; // pointer-resolution base; defaults to the package ROOT
 }
 
 const TARGETS: Target[] = [
@@ -82,12 +83,12 @@ function _exists(p: string): boolean {
     }
 }
 
-function _resolve(target_str: string, template: boolean): boolean {
+function _resolve(target_str: string, template: boolean, root: string = ROOT): boolean {
     const raw = target_str.split('#', 1)[0]!.trim();
     if (raw.startsWith('http://') || raw.startsWith('https://')) {
         return true;
     }
-    const candidates = [path.join(ROOT, raw)];
+    const candidates = [path.join(root, raw)];
     // DEAD-ROOT REPAIR (road-to-renewal-foundation Phase 1): the
     // retired-authoring-root fallbacks were unreachable (ADR-051 deleted that
     // tree). They were harmless only while `dist/agent-src/` happened to
@@ -182,7 +183,7 @@ function lint_file(t: Target): [boolean, string[], string[]] {
         }
         const target = m[2]!;
         // (d) target resolves
-        if (!_resolve(target, t.template)) {
+        if (!_resolve(target, t.template, t.root)) {
             errors.push(
                 `${t.label}: broken pointer target \`${target}\` in line: ${ln.trim().slice(0, 100)}`,
             );
@@ -253,7 +254,33 @@ function _fileSize(p: string): number {
     return fs.statSync(p).size;
 }
 
+/**
+ * `--target <file>` lints one consumer file with the template thresholds and
+ * resolves its pointers against that file's own directory. Null = no flag; a
+ * string = the usage error.
+ */
+function _cliTarget(argv: readonly string[]): Target | string | null {
+    const i = argv.indexOf('--target');
+    if (i === -1) {
+        return null;
+    }
+    const file = argv[i + 1];
+    if (file === undefined || file.startsWith('--')) {
+        return '--target needs a file argument';
+    }
+    const abs = path.resolve(file);
+    return { path: abs, label: 'target', fail_at: 2500, warn_at: 2300, template: true, root: path.dirname(abs) };
+}
+
 function main(): number {
+    const cli = _cliTarget(process.argv.slice(2));
+    if (typeof cli === 'string') {
+        process.stdout.write(`  ❌  ${cli}\n`);
+        return 1;
+    }
+    if (cli !== null) {
+        return _report([cli], process.cwd());
+    }
     // No corpus walk — the contract binds two named files, so the watch list IS
     // the scope. `SRC_AGENT()` has already moved once (ADR-051); if it moves
     // again the per-target `not found` errors say nothing about the root.
@@ -272,12 +299,15 @@ function main(): number {
         }
         throw exc;
     }
+    return _report(TARGETS, ROOT);
+}
 
+function _report(targets: readonly Target[], displayRoot: string): number {
     let rc = 0;
-    for (const t of TARGETS) {
+    for (const t of targets) {
         const [ok, errors, warnings] = lint_file(t);
         if (!QUIET || errors.length || warnings.length) {
-            process.stdout.write(`== ${t.label} (${_relPosix(t.path, ROOT)}) ==\n`);
+            process.stdout.write(`== ${t.label} (${_relPosix(t.path, displayRoot)}) ==\n`);
         }
         for (const w of warnings) {
             process.stdout.write(`  ⚠️  ${w}\n`);
