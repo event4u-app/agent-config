@@ -40,6 +40,11 @@ refuses. **Baseline 2026-08-22:** four open, no ruling recorded on any.
 
 ## Disposition — read this before anything else
 
+**Moved 2026-10-30 (OQ-8, option (a), decided by the AI council 2/2).** Every
+open decision below is now its own row, OQ-43 to OQ-53, in
+`agents/owner-questions.md`, the one list of owner decisions. This file stays
+the detailed record; answers go there.
+
 **No floor moved. No authority was widened, narrowed, or conditioned.** Every
 existing constraint remains operative: `commit-policy.md:37`'s one-shot fence,
 ADR-005 § 1's no-auto-merge rule, and the absence of any grade-derived reopen
@@ -61,6 +66,8 @@ condition.
 
 ## Unresolved decision 1 — the commit-policy fence vs the delegation shape
 
+> **Moved 2026-10-30 to OQ-43** of `agents/owner-questions.md`, per OQ-8 (a). Answer it there; this entry stays as the record.
+
 From the parent's step 0B.1.
 
 `src/rules/commit-policy.md:37` reads "A ONE-OFF AUTHORIZATION IS SPENT ON
@@ -74,6 +81,8 @@ EXACTLY THAT OPERATION, ONCE", which interrupts every commit outside a
 excluded list verbatim (trunk, deploy, prod data, irreversible external).
 
 ## Unresolved decision 2 — ADR-005 § 1, auto-merge of ranked candidates
+
+> **Moved 2026-10-30 to OQ-44** of `agents/owner-questions.md`, per OQ-8 (a). Answer it there; this entry stays as the record.
 
 > **ANSWERED — owner ruling, 2026-09-08, accepted.** A merge grant may come from the prompt,
 > an invoked command, ticket text, the roadmap **or** a standing setting; it defaults `off`
@@ -93,6 +102,8 @@ merge even for integration branches.
 > judge-ranked candidates, with trunk staying excluded?
 
 ## Unresolved decision 3 — grade-derived authority, and its kill switch
+
+> **Moved 2026-10-30 to OQ-45** of `agents/owner-questions.md`, per OQ-8 (a). Answer it there; this entry stays as the record.
 
 > **PARTLY ANSWERED — owner ruling, 2026-09-08, accepted.** The *governance self-amendment*
 > half that ADR-255 § 4 refused is decided: the agent may edit its own constitution and extend
@@ -154,6 +165,8 @@ assign the grade and classify the transition as `reversible-internal`.
 
 ## Unresolved decision 4 — five permanence claims that are owner purpose, not mechanism
 
+> **Moved 2026-10-30 to OQ-46** of `agents/owner-questions.md`, per OQ-8 (a). Answer it there; this entry stays as the record.
+
 **Added 2026-08-22 by `road-to-evidence-based-adr-governance` 4.3**, which split
 `lint_provenance_vocabulary:permanence-language` along authority and found the
 split does not follow the row boundary. Six of the eleven hits were mechanism
@@ -196,6 +209,8 @@ entry is the real clock — if the number has not moved by then, the gate fails
 until someone decides whether the doctrine is real.
 
 ## Unresolved decision 5 — the release-placeholder offset
+
+> **Moved 2026-10-30 to OQ-47** of `agents/owner-questions.md`, per OQ-8 (a). Answer it there; this entry stays as the record.
 
 **Added 2026-08-26** by `road-to-inbox-harvest-2026-08-f-owner-decision-queue`
 step 2.2, which registers the owner-reserved decisions that drain run surfaced.
@@ -263,6 +278,8 @@ reachable only by reading two documents that do not cite each other.
 
 ## Unresolved decision 7 — acceptance of ADR-240
 
+> **Moved 2026-10-30 to OQ-48** of `agents/owner-questions.md`, per OQ-8 (a). Answer it there; this entry stays as the record.
+
 **Added 2026-08-26** by the same step. **Surfaced, not decided**, and for a
 reason stronger than convention: the record's own text reserves acceptance to
 the owner, so an agent accepting it would be using the record to authorise
@@ -283,6 +300,8 @@ descriptive, and `decision-revisit-gate`'s statement that *no grade lets an agen
 supersede a record* stays the operative rule with nothing behind it but prose.
 
 ## Unresolved decision 8 — the `CAP = 2` family limit
+
+> **Moved 2026-10-30 to OQ-49** of `agents/owner-questions.md`, per OQ-8 (a). Answer it there; this entry stays as the record.
 
 **Added 2026-08-26** by the same step. **The council DID decide the immediate
 question** (2026-08-26, 2/2 convergent: keep `CAP = 2`), so what is registered
@@ -328,6 +347,8 @@ demonstrably harmed by serialization; or re-proposals continue after the waiting
 state is visible to intake.
 
 ## Unresolved decisions 9-12 — four authorization floors, refused for one round
+
+> **Moved 2026-10-30 to OQ-50 to OQ-53 (9 → 50, 10 → 51, 11 → 52, 12 → 53)** of `agents/owner-questions.md`, per OQ-8 (a). Answer it there; this entry stays as the record.
 
 **Added 2026-09-06** by `road-to-authorization-that-reaches-further`, whose five
 blockers were dispositioned by an AI council (2 seats, unanimous) under the
