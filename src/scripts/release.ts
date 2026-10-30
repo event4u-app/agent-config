@@ -194,6 +194,7 @@ export {
     _required_contexts_from_rules,
     release_pr_body,
 } from './release_publication.js';
+import { refresh_pr_body_and_surface_check } from './_lib/release_surface_check.js';
 import { _cap_body, jsonDumpsIndent } from './release_env.js';
 import {
     _MERGE_UPDATE_ROUNDS,
@@ -202,8 +203,6 @@ import {
     _pr_for_branch,
     _pr_merge_state,
     _push_tag,
-    _refresh_pr_body_from_head,
-    _rerun_stale_surface_check,
     release_pr_body,
     _release_exists,
     _remote_tag_commit,
@@ -1001,8 +1000,7 @@ function execute(
         // this was the 9.14.0 test-count desync (resume re-rendered from a
         // later HEAD while the changelog kept the branch's entry).
         _step(5, total, `PR already open: ${pr_info!['url']} — refresh body from branch head`);
-        _refresh_pr_body_from_head(branch, plan.target);
-        _rerun_stale_surface_check(branch);
+        refresh_pr_body_and_surface_check(branch, plan.target);
     } else {
         _step(5, total, 'Open pull request');
         // Derive the PR body from the CHANGELOG section step 2 just wrote —

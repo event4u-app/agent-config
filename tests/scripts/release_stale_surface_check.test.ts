@@ -6,7 +6,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { _stale_surface_check_jobs } from '../../src/scripts/release_publication.js';
+import { _stale_surface_check_jobs } from '../../src/scripts/_lib/release_surface_check.js';
 
 const NAME = 'PR body equals CHANGELOG entry';
 const link = (run: number, job: number): string =>
