@@ -203,6 +203,7 @@ import {
     _pr_merge_state,
     _push_tag,
     _refresh_pr_body_from_head,
+    _rerun_stale_surface_check,
     release_pr_body,
     _release_exists,
     _remote_tag_commit,
@@ -1001,6 +1002,7 @@ function execute(
         // later HEAD while the changelog kept the branch's entry).
         _step(5, total, `PR already open: ${pr_info!['url']} — refresh body from branch head`);
         _refresh_pr_body_from_head(branch, plan.target);
+        _rerun_stale_surface_check(branch);
     } else {
         _step(5, total, 'Open pull request');
         // Derive the PR body from the CHANGELOG section step 2 just wrote —
