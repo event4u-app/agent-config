@@ -144,6 +144,8 @@ interface ExecResult {
 }
 
 const OK: ExecResult = { status: 0, stdout: '', stderr: '' };
+const SURFACE_JOB_ID = '424242';
+const SURFACE_JOB_LINK = `https://github.com/event4u-app/agent-config/actions/runs/1/job/${SURFACE_JOB_ID}`;
 
 /** Knobs a scenario turns to inject the measured failure modes. */
 interface WorldConfig {
@@ -205,6 +207,13 @@ interface WorldConfig {
     merge_fails_hard?: boolean;
     /** PR checks fail (watch exits non-zero) — the release must die. */
     checks_fail?: boolean;
+    /**
+     * The surface-equality check is red from before the resume's body refresh
+     * (it never re-triggers on a body edit). `rerun-fails` fakes GitHub
+     * refusing the rerun — a run still in progress, or a token without
+     * `actions:write` — which must warn, never kill the resume.
+     */
+    surface_check_stale?: 'rerun-ok' | 'rerun-fails';
     /**
      * Content `git show <target>:CHANGELOG.md` returns.
      *
@@ -364,6 +373,7 @@ class FakeWorld {
     private merge_races_once: boolean;
     private merge_fails_hard: boolean;
     private checks_fail: boolean;
+    private surface_check_stale: 'rerun-ok' | 'rerun-fails' | null;
     private readonly changelog: string;
     /** Working-tree content; see `WorldConfig.changelog_file`. */
     readonly changelog_file: string;
@@ -386,6 +396,7 @@ class FakeWorld {
         this.merge_races_once = cfg.merge_races_once ?? false;
         this.merge_fails_hard = cfg.merge_fails_hard ?? false;
         this.checks_fail = cfg.checks_fail ?? false;
+        this.surface_check_stale = cfg.surface_check_stale ?? null;
         this.pr_merged = cfg.pr_already_merged ?? false;
         this.release_verify_fails = cfg.release_verify_fails ?? false;
     }
@@ -500,6 +511,18 @@ class FakeWorld {
             return this.checks_fail
                 ? { status: 1, stdout: 'some-required-check\tfail\t10s\n', stderr: '' }
                 : { ...OK, stdout: 'all checks pass\n' };
+        }
+        if (cmd === `gh pr checks ${this.branch} --json name,bucket,link`) {
+            // A resume's stale surface-check probe.
+            const stale = this.surface_check_stale === null
+                ? []
+                : [{ name: 'PR body equals CHANGELOG entry', bucket: 'fail', link: SURFACE_JOB_LINK }];
+            return { ...OK, stdout: JSON.stringify(stale) };
+        }
+        if (cmd === `gh run rerun --job ${SURFACE_JOB_ID}`) {
+            return this.surface_check_stale === 'rerun-fails'
+                ? { status: 1, stdout: '', stderr: 'HTTP 403: This workflow run is not completed' }
+                : OK;
         }
         if (cmd === `gh pr checks ${this.branch} --json name,bucket`) {
             return {
@@ -1175,6 +1198,30 @@ const SCENARIOS: Record<string, Scenario> = {
                 'hard merge failure must not be retried',
                 f,
             );
+            return f;
+        },
+    },
+    'surface-check-stale-reruns': {
+        summary: 'step 5: a resume reruns the red surface-equality check its body refresh cannot re-trigger',
+        config: { surface_check_stale: 'rerun-ok' },
+        expect_success: true,
+        verify: (w) => {
+            const f: string[] = [];
+            const rerun = w.calls.indexOf(`gh run rerun --job ${SURFACE_JOB_ID}`);
+            const watch = w.calls.indexOf(`gh pr checks ${w.branch} --watch`);
+            _expect(rerun >= 0, 'stale surface check was not rerun', f);
+            _expect(rerun < watch, 'rerun must precede the checks wait', f);
+            return f;
+        },
+    },
+    'surface-rerun-refused-warns': {
+        summary: 'step 5: GitHub refusing the surface-check rerun warns and the resume carries on',
+        config: { surface_check_stale: 'rerun-fails' },
+        expect_success: true,
+        verify: (w) => {
+            const f: string[] = [];
+            _expect(w.calls.includes(`gh run rerun --job ${SURFACE_JOB_ID}`), 'rerun was not attempted', f);
+            _expect(w.calls.some((c) => c.startsWith('gh pr merge')), 'a refused rerun must not stop the release', f);
             return f;
         },
     },
