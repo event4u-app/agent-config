@@ -11,6 +11,7 @@ import {
     span_surfaces,
     unshipped_pending_rows,
 } from '../../src/scripts/_lib/major_surface.js';
+import { NO_IMPACT_TRAILERS } from '../../src/scripts/_lib/consumer_impact.js';
 import { span_bump } from '../../src/scripts/_lib/impact_bump.js';
 
 describe('parse_name_status', () => {
@@ -33,17 +34,36 @@ describe('parse_name_status', () => {
 });
 
 describe('classify_surfaces — the triggers a diff can decide', () => {
-    it('fires installer-layout when the installer tree gains or loses a file', () => {
+    // Owner ruling 2026-10-30: a major is a breaking change. A consumer-facing
+    // installer path that disappears breaks a consumer; one that appears does
+    // not. The 20.0.0 near-miss was a new internal module under src/install/.
+    it('fires installer-layout only when a consumer-facing installer path is removed', () => {
+        for (const path of ['templates/AGENTS.md', 'bin/agent-config', 'scripts/install.py']) {
+            expect([...classify_surfaces([{ status: 'D', path }])]).toEqual(['installer-layout']);
+            expect([...classify_surfaces([{ status: 'A', path }])]).toEqual([]);
+        }
+    });
+
+    it('never fires installer-layout for installer source code, created or removed', () => {
         for (const path of [
+            'src/install/hostConfigMerge.ts',
             'src/install/wizard-plan.ts',
             'packages/core/installer/index.ts',
-            'templates/AGENTS.md',
-            'bin/agent-config',
-            'scripts/install.py',
         ]) {
-            expect([...classify_surfaces([{ status: 'A', path }])]).toEqual(['installer-layout']);
-            expect([...classify_surfaces([{ status: 'D', path }])]).toEqual(['installer-layout']);
+            expect([...classify_surfaces([{ status: 'A', path }])]).toEqual([]);
+            expect([...classify_surfaces([{ status: 'D', path }])]).toEqual([]);
         }
+    });
+
+    it('numbers a span that only adds an installer module as a minor, not a major', () => {
+        const surfaces = classify_surfaces([{ status: 'A', path: 'src/install/hostConfigMerge.ts' }]);
+        expect(
+            span_bump({
+                commits: [{ breaking: false, trailers: NO_IMPACT_TRAILERS }],
+                has_minor_type: true,
+                surfaces,
+            }),
+        ).toBe('minor');
     });
 
     it('fires rule-or-skill-removal only on a deletion, in source or either projection', () => {
@@ -97,7 +117,7 @@ describe('classify_surfaces — the triggers a diff can decide', () => {
     it('collects every surface a span touched', () => {
         const surfaces = classify_surfaces(
             [
-                { status: 'A', path: 'templates/AGENTS.md' },
+                { status: 'D', path: 'templates/AGENTS.md' },
                 { status: 'D', path: 'src/skills/gone/SKILL.md' },
                 { status: 'D', path: 'src/domains/meta/gone/command.md' },
             ],
@@ -145,12 +165,12 @@ describe('the paths that moved, pinned so the tables cannot go blind again', () 
 
     it('fires installer-layout for the entry point at BOTH roots it has lived at', () => {
         for (const path of ['scripts/install.py', 'src/scripts/install.ts', 'src/scripts/install.sh']) {
-            expect([...classify_surfaces([{ status: 'A', path }])]).toEqual(['installer-layout']);
+            expect([...classify_surfaces([{ status: 'D', path }])]).toEqual(['installer-layout']);
         }
     });
 
     it('leaves build output of the installer alone, because its source is already covered', () => {
-        expect([...classify_surfaces([{ status: 'A', path: 'dist/install/install.mjs' }])]).toEqual([]);
+        expect([...classify_surfaces([{ status: 'D', path: 'dist/install/install.mjs' }])]).toEqual([]);
     });
 
     // The templates tree moved `templates/` -> `src/templates/` inside the
@@ -161,7 +181,6 @@ describe('the paths that moved, pinned so the tables cannot go blind again', () 
     // removes under `src/templates/`), which is exactly why nothing caught it.
     it('fires installer-layout for the templates tree at BOTH roots it has lived at', () => {
         for (const path of ['templates/AGENTS.md', 'src/templates/AGENTS.md']) {
-            expect([...classify_surfaces([{ status: 'A', path }])]).toEqual(['installer-layout']);
             expect([...classify_surfaces([{ status: 'D', path }])]).toEqual(['installer-layout']);
         }
     });
