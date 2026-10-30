@@ -60,6 +60,11 @@
 #   --validate-only   Pre-flight only — permissions, disk floor, conflicts,
 #                     host-detection sanity as typed findings. Writes nothing.
 #                     Exit 0 = clear, 1 = blocking finding, 2 = no runner.
+#   --full            Keep this machine's installed rule layer full-bodied
+#                     (writes `user_pin` into the install receipt; sticky).
+#   --enrol           Let this machine's rule layer be thinned while the
+#                     package's promotion switch is off (writes `enrolment`
+#                     into the install receipt). `--full` wins over it.
 #   --fleet <yaml>    Multi-repo rollout from a fleet.yaml (repos list +
 #                     max_concurrency). Per-repo isolation; aggregate JSON.
 #                     Exit 0 = all green, 1 = any repo failed, 2 = config.
@@ -99,12 +104,14 @@ VALIDATE_ONLY=false
 FLEET_CONFIG=""
 USER_TYPE=""
 NO_UI=false
+FULL=false
+ENROL=false
 
 # Single source of truth for valid tool IDs (also referenced by install.sh / install.ts).
 VALID_TOOLS="claude-code claude-desktop cursor windsurf cline gemini-cli copilot augment aider codex roocode continue kilocode zed jetbrains kiro all"
 
 show_help() {
-    sed -n '3,61p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '3,71p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 list_tools() {
@@ -187,6 +194,8 @@ while [[ $# -gt 0 ]]; do
         --minimal|--settings-only)
                          MINIMAL=true; shift ;;
         --validate-only) VALIDATE_ONLY=true; shift ;;
+        --full)          FULL=true; shift ;;
+        --enrol)         ENROL=true; shift ;;
         --fleet)         FLEET_CONFIG="$2"; shift 2 ;;
         --fleet=*)       FLEET_CONFIG="${1#*=}"; shift ;;
         --help|-h)       show_help; exit 0 ;;
@@ -451,6 +460,8 @@ run_bridges() {
     $OFFLINE && args+=(--offline)
     $MINIMAL && args+=(--minimal)
     $NO_UI && args+=(--no-ui)
+    $FULL && args+=(--full)
+    $ENROL && args+=(--enrol)
     args+=(--tools="$TOOLS")
     "${runner[@]}" "${args[@]}"
 }

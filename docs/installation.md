@@ -352,6 +352,10 @@ Under the hood:
     prints it), and a missing standing law demotes it as usual. `--full`
     wins over `--enrol`. Meant for maintainer machines that produce the
     evidence the default flip waits on; not a setting.
+  - Both reach the receipt through the user-scope install, which is where it
+    lives: `agent-config global --no-ui --full` or
+    `agent-config global --no-ui --enrol`. `agent-config install` opens the
+    browser wizard and takes neither flag.
 
 A full run creates:
 

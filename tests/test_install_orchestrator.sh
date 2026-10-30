@@ -306,6 +306,25 @@ test_global_no_ui_flag_documented_in_help() {
     fi
 }
 
+# `--full` and `--enrol` are bridge-stage flags that write the install receipt;
+# `agent-config init` reaches the bridge stage only through this orchestrator,
+# so a flag it does not forward is a flag no consumer can pass.
+test_global_receipt_flags_reach_the_receipt() {
+    local flag field
+    for flag in --full --enrol; do
+        setup
+        [[ "$flag" == --full ]] && field=user_pin || field=enrolment
+        local out exit_code
+        out="$(AGENT_CONFIG_INSTALLED_LOCK="$TEST_TARGET/installed.lock" \
+            bash "$INSTALL" --target "$TEST_TARGET" --global --no-ui "$flag" --tools=claude-code --quiet 2>&1)"; exit_code=$?
+        assert_true "$flag: exit 0 on global install (rc=$exit_code)" test "$exit_code" -eq 0
+        assert_false "$flag: no 'Unknown argument' error" grep -q "Unknown argument: $flag" <<<"$out"
+        assert_true "$flag: receipt carries '$field'" \
+            grep -q "\"$field\"" "$EVENT4U_CONFIG_HOME/runtime/carrier.json"
+        teardown
+    done
+}
+
 test_source_repo_guard_package_json_marker() {
     setup
     # No .agent-src.uncondensed/, but package.json declares the source name.
@@ -344,6 +363,7 @@ TESTS=(
     test_source_repo_guard_package_json_marker
     test_global_no_ui_flag_accepted
     test_global_no_ui_flag_documented_in_help
+    test_global_receipt_flags_reach_the_receipt
 )
 
 # SHARD=N/M env var: keep only Nth slice of M (1-indexed) before dispatch.

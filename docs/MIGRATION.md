@@ -152,7 +152,7 @@ returns the full layer whenever any of its conditions is missing.
   eager-all` or `legacy-all` — the values that meant *keep the full layer* — is
   read once more and converted into the install receipt's pin. Every other
   value is dropped. Delete the keys at your convenience.
-- **Want the full layer regardless:** run `agent-config install --full`.
+- **Want the full layer regardless:** run `agent-config global --no-ui --full`.
   `agent-config doctor --check layer-form` shows which form each layer is in
   and why.
 
