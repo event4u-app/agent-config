@@ -40,10 +40,23 @@ export interface DiffEntry {
 }
 
 /**
- * Paths whose creation or removal is an installer-layout change. The list is
- * historical on purpose: the installer has lived at three roots over the
- * window this is measured on, and a table naming only today's would score
- * every release before the last relocation as having touched nothing. The
+ * Consumer-facing installer paths whose removal is an installer-layout change:
+ * the templates the install copies into a project, the CLI entry points, and
+ * the install entry-point script a consumer may call directly.
+ *
+ * Only a removal fires (owner ruling 2026-10-30: a major is a breaking change).
+ * A new template or entry point is additive. Installer source code —
+ * `src/install/`, and its earlier root `packages/core/installer/` — is not in
+ * the table at all: a module created or deleted there changes no path a
+ * consumer holds, and a behaviour change it carries is declared through the
+ * `Consumer-Impact:` trailer, which is the axis that decides breaks. Before
+ * this ruling the 19.0.0..20.0.0 span numbered itself a major on a single new
+ * internal module, `src/install/hostConfigMerge.ts`.
+ *
+ * The list is historical on purpose: the templates and the entry point have
+ * each lived at more than one root over the window this is measured on, and a
+ * table naming only today's would score every release before the last
+ * relocation as having touched nothing. The
  * entry-point row carries an optional `src/` prefix for the same reason — the
  * entry point moved from a Python script at the repository root to
  * `src/scripts/install.ts` (ADR-200), and the first version of this table
@@ -56,8 +69,6 @@ export interface DiffEntry {
  * no signal and would fire the surface on a regenerated artifact.
  */
 const INSTALLER_LAYOUT_PATHS: readonly RegExp[] = [
-    /^src\/install\//,
-    /^packages\/core\/installer\//,
     /^(src\/)?templates\//,
     /^bin\//,
     /^(src\/)?scripts\/install\.(py|sh|ts|mjs)$/,
@@ -190,7 +201,7 @@ export function classify_surfaces(
     const out = new Set<MajorSurface>();
     for (const entry of entries) {
         if (!is_create_or_delete(entry.status)) continue;
-        if (matches(entry.path, INSTALLER_LAYOUT_PATHS)) out.add('installer-layout');
+        if (entry.status === 'D' && matches(entry.path, INSTALLER_LAYOUT_PATHS)) out.add('installer-layout');
         if (entry.status === 'D' && matches(entry.path, RULE_OR_SKILL_PATHS)) out.add('rule-or-skill-removal');
         if (entry.status === 'D' && matches(entry.path, COMMAND_PATHS)) out.add('command-removal');
     }

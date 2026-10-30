@@ -113,6 +113,21 @@ routing; the out-of-sample analysis holds the measurement the owner decided on,
 including its stated limit that the impact axis is a consistency check, since
 no historical release carried an author-written trailer.
 
+## Amendment 2026-10-30 — the installer surface fires on a removal only
+
+Owner ruling (`agents/evidence/owner-directives/2026-10-30-major-only-on-a-break.md`):
+a major is a breaking change. `installer-layout` had fired on any file created
+or removed under the installer tree, its templates or its entry points, so the
+span `19.0.0..main` numbered itself 20.0.0 on one new internal module,
+`src/install/hostConfigMerge.ts`, with no breaking commit and no `action`
+trailer. From this amendment the surface fires only when a consumer-facing
+installer path is removed — the templates tree, `bin/`, the install entry-point
+script — and installer source code (`src/install/`, `packages/core/installer/`)
+is no surface at all; a break it carries is declared with
+`Consumer-Impact: action`. The historical majors the out-of-sample analysis
+lists under `installer-layout` (2.0.0, 3.0.0, 6.0.0, 7.0.0, 8.0.0) each also
+declared `action`, so they replay as majors unchanged.
+
 ## References
 
 - `CONTRIBUTING.md` § Versioning policy, `BREAKING_CHANGES.md`.
