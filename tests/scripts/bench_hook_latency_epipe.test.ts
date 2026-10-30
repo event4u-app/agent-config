@@ -14,7 +14,8 @@ import { describe, expect, it } from 'vitest';
 import { dispatchFailure } from '../../src/scripts/bench_hook_latency.js';
 
 function proc(error: (Error & { code?: string }) | undefined, status: number | null): SpawnSyncReturns<string> {
-    return { pid: 1, output: [], stdout: '', stderr: '', status, signal: null, error };
+    const base = { pid: 1, output: [], stdout: '', stderr: '', status, signal: null };
+    return error === undefined ? base : { ...base, error };
 }
 
 function errno(code: string): Error & { code: string } {
