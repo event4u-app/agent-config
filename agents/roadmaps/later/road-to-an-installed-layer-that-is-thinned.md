@@ -533,7 +533,7 @@ rather than as a ninth roadmap.
       to `version-skew`, which only the worktree-versus-installed measurement caused.
       verify: `npx vitest run tests/scripts/layer_form_evidence.test.ts -t standing` -> 0
 - [ ] **6.6 Enrol the maintainer machine and refresh the mechanics row.** After the
-      release carrying 6.3–6.5: `agent-config install --enrol`, one fresh session,
+      release carrying 6.3–6.5: `agent-config global --no-ui --enrol`, one fresh session,
       `agent-config doctor --check layer-form` reads `thinned`, and the next
       session's promotion writes stubs. Replace the seeded `delivery_mechanics`
       citation with the first enrolled session that delivers a body.
