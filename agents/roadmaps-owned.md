@@ -19,6 +19,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-routing-assurance-live-floors | active | ready | Road to routing assurance — the live-harness floors |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
 | road-to-17-0-follow-ups | later | later | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
+| road-to-a-bounded-trial-of-the-user-profile-layer | later | later | Find out whether the global user-profile layer earns its place once it is actually offered. |
 | road-to-a-byte-bound-and-a-public-figure | later | later | Two numbers this tree can now produce and cannot yet bound. |
 | road-to-a-canvas-the-code-owns | later | later | The repository is the only store of the design system. |
 | road-to-a-challenge-the-bench-has-measured | later | later | The honesty bench measures both directions of each failure (caving and stubbornness, over-criticism and under-criticism), it has run once on … |
@@ -106,6 +107,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-mission-catalogue | later | later | Mission catalogue — content + catalogue expansion (mission-mode follow-up) |
 | road-to-mixed-trigger-activation-cost | later | later | Road to mixed-trigger activation cost — the 12.0→12.1 behaviour regression, found and priced |
 | road-to-mod-surfaces-that-read-what-ac-knows | later | later | The one AC module grows surfaces for the state AC already measures, and AC can preview and witness destructive or … |
+| road-to-one-identity-axis | later | later | ADR-010 names `profile.id` as the one answer to "who is the user", and three trees answer it today. |
 | road-to-one-upstream-that-checks-what-leaves-carried | later | later | Every step road-to-one-upstream-that-checks-what-leaves deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-opencode-runtime-probe | later | later | the opencode runtime probe |
 | road-to-originality-gate-and-contributor-funnel | later | later | Every PR that adds or edits skills runs `lint_originality --changed` as a blocking CI gate, contributors can pre-check locally and … |
@@ -134,6 +136,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-skill-ecosystem-executable-payloads | later | later | Road to executable skill payloads — a skill that only describes work cannot be measured doing it |
 | road-to-skill-ecosystem-security-and-conformance | later | later | Road to security and conformance surface — make three unenforced rules detectable |
 | road-to-skill-menu-economy | later | later | The preloaded skills catalog costs no more than the skills a model can actually route to: every skill that is … |
+| road-to-skill-uplift-measured-in-stages | later | later | Answer, for at least one skill, whether invoking it improves the outcome of the task it is for — against … |
 | road-to-skills-that-arrive-when-called-carried | later | later | The owner's answer to whether the fork pilot widens, holds or retires is recorded, and the pilot config says which. |
 | road-to-source-silence-cutover | later | later | Every item the predecessor could not close is closed, and each is here because of a named capability gap rather … |
 | road-to-sparring-critic-spike | later | blocked-for-later | Road to sparring-critic spike — one falsification run decides whether the critic exists |

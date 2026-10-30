@@ -81,6 +81,138 @@ and the run that applies it links its PR.
 - **Recommendation:** (a).
 - **Blocks:** nothing executable; it closes a hole in the bypass directive.
 
+### OQ-43 — Does a single-deliverable delegation pre-clear commit and push for its run?
+
+- **Context:** lifted from Decision 1 of
+  `agents/roadmaps/stubs/road-to-owner-authority-decisions.md` (OQ-8). The
+  one-shot fence in `src/rules/commit-policy.md` interrupts every commit outside
+  a `process-full` run; ADR-237 § 1 pre-clears it only for that run.
+- **Options:** (a) yes — an explicit, this-turn, single-deliverable delegation in
+  a consumer project pre-clears commit/push for that run, inheriting ADR-237's
+  excluded list verbatim (trunk, deploy, prod data, irreversible external);
+  (b) no — the fence stays as written.
+- **Recommendation:** none recorded; it widens agent write authority, so the
+  council reads it before you do.
+- **Blocks:** nothing executable.
+
+### OQ-44 — ADR-005 § 1: may a delegation merge judge-ranked candidates into an integration branch?
+
+- **Context:** lifted from Decision 2 (OQ-8). ADR-268 § 3 settled the
+  mission-delivery merge on 2026-09-08 and scoped itself away from competitive
+  runs, so only ADR-005 § 1 is open: a competitive run still ends at a human
+  merge, even into an integration branch.
+- **Options:** (a) yes, integration branches only, trunk stays excluded;
+  (b) no.
+- **Recommendation:** none recorded.
+- **Blocks:** nothing executable; no judge-ranked run has reached the rule.
+
+### OQ-45 — May an independently validated evidence grade reduce the authorization burden for a reopen?
+
+- **Context:** lifted from Decision 3 (OQ-8). ADR-268 § 4 settled the
+  self-amendment half; the grade half is untouched. The register's own finding
+  argues against it: the party assigning the grade would gain authority from it.
+  Reopening needs all six preconditions the register lists (published Phase 6
+  measurements, four demonstrated preconditions, your ruling, a named
+  re-enabler, a chosen rollback unit, a drilled suspension mechanism).
+- **Options:** (a) yes, under a pre-registered accuracy threshold and rollback
+  unit; (b) no.
+- **Recommendation:** (b) until the six preconditions exist — none does today.
+- **Blocks:** nothing executable.
+
+### OQ-46 — Do the permanence claims in ADR-107 and ADR-108 stand as owner intent?
+
+- **Context:** lifted from Decision 4 (OQ-8). Five lines keep the
+  `permanence-language` ratchet at 5 with zero headroom: ADR-107 `:37` and
+  ADR-108 `:5`, `:12`, `:24`, `:29` (open-source forever, no commercial tier,
+  permanent liability disclaimer). The question is not whether the project stays
+  open-source; it is whether each claim is your intent or a mechanism that should
+  carry a reopen condition. Severable per record.
+- **Options:** per record, (a) owner intent — `authority_basis: owner_intent`,
+  claim intact, lint clear; (b) mechanism — reword to a reopen condition.
+- **Recommendation:** (a) for both — they state what the project is for, and an
+  agent rewording them to clear a lint would change its declared posture.
+- **Blocks:** nothing until the ratchet entry's 56-day expiry.
+
+### OQ-47 — May a run satisfy one-in-one-out with a self-written `estate_offset_exempt`?
+
+- **Context:** lifted from Decision 5 (OQ-8). The party writing the exemption is
+  the party gaining the slot; runs use the key routinely today.
+- **Options:** (a) yes — self-certified exemptions stay legal; (b) no — an
+  offset needs a named counterpart the run did not choose, and a run with none
+  cannot grow the estate.
+- **Recommendation:** none recorded; the register notes (b) is the stricter
+  reading its source stub argued for, and (b) would also bind this file's own
+  roadmaps.
+- **Blocks:** nothing executable.
+
+### OQ-48 — Is ADR-240 accepted, and does its evidence floor bind retroactively?
+
+- **Context:** lifted from Decision 7 (OQ-8). `ADR-240` is still
+  `status: proposed`, and its own text reserves acceptance to you. Retroactive
+  binding would reclassify every existing ADR at once.
+- **Options:** (a) accept, forward-only; (b) accept, retroactive; (c) leave it
+  proposed.
+- **Recommendation:** none recorded; if accepted, (a) is the cheaper half.
+- **Blocks:** nothing executable.
+
+### OQ-49 — Is ADR-215 § D2's reasoning behind `CAP = 2` your position?
+
+- **Context:** lifted from Decision 8 (OQ-8). The council kept `CAP = 2` on
+  2026-08-26; only whether its reasoning (one maintainer holds at most two
+  parallel workstreams per family) is yours is open. The cap binds nothing today.
+- **Options:** (a) yes, the cap stays; (b) no — raise it with a new record
+  amending ADR-215 § D2.
+- **Recommendation:** (a) — the council's verdict, and nothing waits on a slot.
+- **Blocks:** nothing executable.
+
+### OQ-50 — Does a git-authorization gate return?
+
+- **Context:** lifted from Decision 9 (OQ-8). ADR-255 § 1 refused it for one
+  round; ADR-254 stands. Two ledger items wait only on this: object binding as a
+  matching condition, and object-bound grants beyond `pr-merge`.
+- **Options:** (a) yes, in the typed-transition shape ADR-254's `review_trigger`
+  requires; (b) no.
+- **Recommendation:** none recorded.
+- **Blocks:** the two ledger items above.
+
+### OQ-51 — Should `personal.autonomy`'s default or its `auto` semantics change?
+
+- **Context:** lifted from Decision 10 (OQ-8). ADR-255 § 2 left both unchanged
+  for one round: `auto` resolves to `off` until a standing directive.
+- **Options:** (a) change the shipped default; (b) change what `auto` resolves
+  to; (c) keep both.
+- **Recommendation:** none recorded; both options change consumer defaults.
+- **Blocks:** nothing executable.
+
+### OQ-52 — Should the Hard Floor's push/commit rows narrow, or accept a run-scoped grant?
+
+- **Context:** lifted from Decision 11 (OQ-8). ADR-255 § 3 refused both for one
+  round; the floor still needs a this-turn confirmation.
+- **Options:** (a) narrow the rows; (b) accept a run-scoped grant in place of
+  the this-turn confirmation; (c) keep the floor.
+- **Recommendation:** none recorded; it lowers a safety floor.
+- **Blocks:** nothing executable.
+
+### OQ-53 — Rebuild `tool-safety` as consequence-aware and demote the wildcard-grant finding?
+
+- **Context:** lifted from Decision 12 (OQ-8). ADR-255 § 5 kept the floor for
+  one round and took no position on "capability is not risk".
+- **Options:** (a) rebuild the rule and demote the finding in
+  `lint_skill_frontmatter_safety`; (b) keep both.
+- **Recommendation:** none recorded.
+- **Blocks:** nothing executable.
+
+## Not owner questions — waits, or already settled in the tree
+
+- `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
+  `Resolved when` asks for both seats answering a real round. Councils ran 2/2 on
+  2026-10-24, so it looks settled. The agent verifies and closes it.
+- `default-flip-of-the-installed-layer` (installed-layer): waits on a host
+  observation and states itself "not a question".
+- `four-dated-re-checks-are-calendar-bound` (corpus cadence): waits on calendar dates.
+
+## Answered
+
 ### OQ-8 — The owner-authority register sits outside this list
 
 - **Context:** `agents/roadmaps/stubs/road-to-owner-authority-decisions.md` holds
@@ -95,6 +227,7 @@ and the run that applies it links its PR.
 - **Recommendation:** (a) — one list of every owner decision is what this file
   says it is, and lifting rows decides nothing in the owner's name.
 - **Blocks:** nothing executable; the cost is that the decisions are unseen.
+- **Answered 2026-10-30:** you asked that the open questions be settled in the AI council first; it decided 2/2 on (a) — lifting rows decides nothing in your name. Applied here: every open register decision is now its own row, OQ-43 to OQ-53, and each register entry is marked moved.
 
 ### OQ-9 — Which tree owns "who is the user", and what "profile" and "pack" mean
 
@@ -117,6 +250,7 @@ and the run that applies it links its PR.
   touching public names; the renames can follow once the ids are single.
 - **Blocks:** nothing executable; settings key `personal.user_type` and the
   profile ids are public surface, so no run changes them unasked.
+- **Answered 2026-10-30:** "analysiere das uns kläre das im ai council" — the council decided 2/2 after a read of the three trees, on none of (a)-(c) as written: `profile.id` in the seed tree (`src/agent-src/profiles`) is the one identity axis; `src/profiles` stays a separate command view, linked by an explicit `default_command_view_id` and never generated from the seed (generation would lose its `label`, `immutable`, ordered `view` and `--expanded`); `personal.user_type` becomes a deprecated input that only orders recommendations, all seven values stay readable and none is mapped by guess; the extra meanings of "profile" and "pack" are renamed later in small pull requests with aliases. Carried in `later/road-to-one-identity-axis`. <!-- md-language-check: ignore -->
 
 ### OQ-10 — Measure per-skill uplift against a no-skill arm
 
@@ -132,6 +266,7 @@ and the run that applies it links its PR.
 - **Recommendation:** (1) — the stub's own recommendation, and the only option
   that answers the question that keeps arriving.
 - **Blocks:** the stub's promotion; nothing active.
+- **Answered 2026-10-30:** "Ja, gestuft messen" — option (1), staged: repair the runner first, pre-register hypothesis and threshold, then one skill against a no-skill arm with repetitions, then three; published either way, and a run that fails is recorded as not measured. Carried in `later/road-to-skill-uplift-measured-in-stages`. <!-- md-language-check: ignore -->
 
 ### OQ-11 — The ADR-138 teardown review opens on 2026-10-28
 
@@ -152,17 +287,7 @@ and the run that applies it links its PR.
 - **Blocks:** nothing executable; the review's outcome can deprecate a
   user-data layer, which is the owner's call
   (`road-to-a-memory-that-names-its-moment` § Decisions E12).
-
-## Not owner questions — waits, or already settled in the tree
-
-- `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
-  `Resolved when` asks for both seats answering a real round. Councils ran 2/2 on
-  2026-10-24, so it looks settled. The agent verifies and closes it.
-- `default-flip-of-the-installed-layer` (installed-layer): waits on a host
-  observation and states itself "not a question".
-- `four-dated-re-checks-are-calendar-bound` (corpus cadence): waits on calendar dates.
-
-## Answered
+- **Answered 2026-10-30:** "Begrenzter Testlauf" — the recommendation, (b) scoped as (c): inventory the user data first, then offer mining at a natural moment with consent and opt-out, a fixed end and a minimum sample decided in advance; below that sample, (a) archive-first deprecation follows. Carried in `later/road-to-a-bounded-trial-of-the-user-profile-layer`. <!-- md-language-check: ignore -->
 
 ### OQ-42 — A preamble grant for the image rights floor
 
