@@ -439,6 +439,54 @@ An entry belongs under a dated release section, not here — see
 > that forces a new era split (`# Era: 19.2.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [19.1.0](https://github.com/event4u-app/agent-config/compare/19.0.0...19.1.0) (2026-10-30)
+
+### Release highlights
+
+- **Behaviour changes:** the image rights floor routes to its six skills (OQ-42 grant) (#2754) (4257d0e); land inbox rounds 2026-10-bk/-bl on their owners; close map views; records that match their code (#2753) (6ac90a2); host configs survive the install, transfers close on evidence, verify checks that can say no (#2743) (98c42cb); a scorer that fails when nothing was done, and the showcase foundation (#2741) (5c7d7ef).
+- **Default changes + migration:** _none_
+- **Security and correctness:** a major only when a consumer-facing installer path is removed (#2758) (b2792e5); close the gaps a post-merge review found in the release hardening (#2739) (67522fb); require only the standing laws the claude deploy wrote (#2738) (1df9bb3); harden the release against network drops and drop the census commit (#2737) (1e3869b).
+- **Honest nulls:** _none_
+- **Known limitations:** host configs survive the install, transfers close on evidence, verify checks that can say no (#2743) (src/scripts/install.ts declares a residual) (98c42cb); a scorer that fails when nothing was done, and the showcase foundation (#2741) (internal/bench/ui/run.ts declares a residual) (5c7d7ef).
+
+> **Governance mix:** governance-only 8 vs consumer-only 1 (mixed 12, maintenance 1; taxonomy 1.1.0; range 76ed3de29feb..b2792e582976).
+
+### Features
+
+* **rules:** the image rights floor routes to its six skills (OQ-42 grant) (#2754) ([4257d0e](https://github.com/event4u-app/agent-config/commit/4257d0ebd33bb158d576032fbe2e8e3590a7ec5e))
+* land inbox rounds 2026-10-bk/-bl on their owners; close map views; records that match their code (#2753) ([6ac90a2](https://github.com/event4u-app/agent-config/commit/6ac90a2843b14bd6fe9d7bfbebf28ef3239f5f0f))
+* **roadmap:** set-step --verify runs the step's check, warn-only (OQ-33) (#2745) ([566cccf](https://github.com/event4u-app/agent-config/commit/566cccf600b2da355a8470a0710bc36760f7c11f))
+* **memory:** a correction that is heard and a memory that arrives (inbox-2026-10-bi) (#2744) ([d3d5d8d](https://github.com/event4u-app/agent-config/commit/d3d5d8dbd4a67024f8251b24e8d345d013856c99))
+* host configs survive the install, transfers close on evidence, verify checks that can say no (#2743) ([98c42cb](https://github.com/event4u-app/agent-config/commit/98c42cb437e0de601ff5df7d405c8d164ef208dc))
+* **owner:** apply OQ-21 and OQ-25 to OQ-27 — intake-pass hook, consumer-reachable interview, no Lyra (#2730) ([965c4db](https://github.com/event4u-app/agent-config/commit/965c4db02b7a6b7bc7530590b1f751a6787086b3))
+* **bench:** a scorer that fails when nothing was done, and the showcase foundation (#2741) ([5c7d7ef](https://github.com/event4u-app/agent-config/commit/5c7d7ef70df10a7b5dba4f545d10cb7063b91f91))
+
+### Bug Fixes
+
+* **release:** a major only when a consumer-facing installer path is removed (#2758) ([b2792e5](https://github.com/event4u-app/agent-config/commit/b2792e58297696f297721503d3625f840393a061))
+* **gates:** reaffirm the deferral-integrity baseline at its 56-day expiry (#2742) ([fa216c9](https://github.com/event4u-app/agent-config/commit/fa216c9dcd9e2e0d3077e2e5f50659a1ea6f5a3a))
+* **roadmaps:** give routing-assurance-live-floors its relates block (#2740) ([58d4307](https://github.com/event4u-app/agent-config/commit/58d43073b7b0f6cbb9d6d61913e4cbf7ffecbeba))
+* **release:** close the gaps a post-merge review found in the release hardening (#2739) ([67522fb](https://github.com/event4u-app/agent-config/commit/67522fb0755d632b714aa80e869ff77c53606e58))
+* **layer-form:** require only the standing laws the claude deploy wrote (#2738) ([1df9bb3](https://github.com/event4u-app/agent-config/commit/1df9bb335657e7f993eef6e5951182bab1a9f95f))
+* **release:** harden the release against network drops and drop the census commit (#2737) ([1e3869b](https://github.com/event4u-app/agent-config/commit/1e3869b03da24624fcdd85b4280ebc030b07e177))
+
+### Documentation
+
+* **evidence:** bypass record and after-the-fact council review for #2755 (#2757) ([7096ed3](https://github.com/event4u-app/agent-config/commit/7096ed36036dc54847d1f732e696b3227a2ea45b))
+* **evidence:** bypass record and after-the-fact council review for #2754 (#2755) ([36af1af](https://github.com/event4u-app/agent-config/commit/36af1af0866ce9ce50f4119d1edcf2a210869cda))
+* **evidence:** owner directive to promote three memory roadmaps above the active-roadmap cap (#2749) ([c01ee0a](https://github.com/event4u-app/agent-config/commit/c01ee0afa70c8069b90afc558c61bac8487b0988))
+* **roadmap:** council and owner decisions on Phase 6 of the installed layer (#2748) ([73f60ae](https://github.com/event4u-app/agent-config/commit/73f60aea7fca5abf15694a0561e7fa3e65576559))
+* **owner:** record answers OQ-32..OQ-35 for the memory roadmaps (#2746) ([f1dbf37](https://github.com/event4u-app/agent-config/commit/f1dbf37a6271fb8d1ff90344b3cd0b0de4f13a09))
+
+### Chores
+
+* **evaluator:** refresh the nightly measurement record (#2756) ([8e39ff8](https://github.com/event4u-app/agent-config/commit/8e39ff8cb83f0dad7a6416ee8702727b2cd28db7))
+* **roadmaps:** activate road-to-an-observation-provider-slot (OQ-36) (#2752) ([2744e0f](https://github.com/event4u-app/agent-config/commit/2744e0f2fa044328b2a96bde9cbe31f95a45c4f4))
+* **owner:** record the provider-slot activation; renumber OQ-32/33 to OQ-36/37 (#2751) ([0b2f61c](https://github.com/event4u-app/agent-config/commit/0b2f61c300becd345cd0f4fe0c2b6050064e594c))
+* **roadmaps:** promote the three memory roadmaps from later/ on owner instruction (#2750) ([4dc4927](https://github.com/event4u-app/agent-config/commit/4dc4927202604e0b931a480ed2f200bdf2a18e27))
+
+Tests: 35909 (+506 since 19.0.0)
+
 # Era: pre-4.0.0 — archived
 
 > All entries from `3.2.0` and `3.3.0` live in
