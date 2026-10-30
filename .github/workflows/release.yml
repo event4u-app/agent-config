@@ -249,6 +249,14 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
+      # The checkout keeps `persist-credentials: false`, so the pipeline's own
+      # `git push` of the release branch and tag had no credential at all
+      # (19.1.0 dispatch: "could not read Username"). `gh` as the credential
+      # helper reads GH_TOKEN at call time — RELEASE_PR_TOKEN when present —
+      # and writes no token into the checkout.
+      - name: Let git push with GH_TOKEN
+        run: gh auth setup-git
+
       - name: Run release pipeline (--ci)
         # --resume from a fresh `main` checkout inherits the same narrow
         # limitation `task release -- --resume` has when run from main
