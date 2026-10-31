@@ -5,6 +5,8 @@ review_by: 2026-12-24
 
 # Stub: road to task-completion observability
 
+> **Arrivals:** 2 — latest `inbox-2026-10-cb` (2026-10-31): the orchestration bench arms still configure removed keys and run identically; the arm files now say so in a header. The re-cut stays here; halt-as-arm stays rejected.
+
 > **Stub — not active work.** One stub serving **two** roadmaps. Transferred out
 > of [`road-to-orchestration-scope-decision.md`](../road-to-orchestration-scope-decision.md)
 > and [`road-to-subagent-value-realization-followup.md`](../road-to-subagent-value-realization-followup.md)

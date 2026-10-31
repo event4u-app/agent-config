@@ -1,3 +1,9 @@
+# STALE — these arms do not contrast activation. `subagents.enabled` and
+# `subagents.auto` were removed by always-on orchestration; the settings loader
+# ignores them, so both arms resolve the same dispatch behaviour today. The
+# re-cut is owned by agents/roadmaps/stubs/road-to-task-completion-observability.md
+# (halt-as-arm recorded there as rejected). Do not read a result from them as
+# an orchestration contrast.
 # Bench arm: baseline (single-agent, no orchestration)
 # Copy to .agent-settings.yml in the fixture project to run the baseline arm.
 # Telemetry lines will have spawn_count: 0 — use task_size_estimate as the

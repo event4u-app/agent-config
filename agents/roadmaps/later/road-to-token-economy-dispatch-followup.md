@@ -6,6 +6,8 @@ parent_roadmap: road-to-token-economy-dispatch
 
 # Roadmap: Follow-up to road-to-token-economy-dispatch — the data-window and blocker-gated remainder
 
+> **Arrivals:** 1 — `inbox-2026-10-cb` (2026-10-31): the host now forks by default, and a fork inherits the author's conversation — the re-entry argument for a typed reviewer (3.2). The doctrine half (a judge is never a fork) landed in `road-to-a-split-the-task-earns` 1.1.
+
 > The worker/reviewer thin projection ships from measured `rules_used` data,
 > the reviewer tier default gets its quality-floor comparison, and the four
 > review-window acceptance verdicts are recorded — completing what the parent

@@ -20,6 +20,8 @@ relates:
 > [`road-to-roadmaps-finished-before-new-ones-start`](../archive/road-to-roadmaps-finished-before-new-ones-start.md), which closed every other step.
 > Each step below was `[~]` there and is restated verbatim as open work, so
 > archiving the parent buried nothing. Blockers the steps name moved with them.
+>
+> **Arrivals:** 1 — `inbox-2026-10-cb` (2026-10-31): third arrival of the agent work-line demand; the drain queue is that line. 2.1-2.3 of `road-to-a-split-the-task-earns` fixed its prose-hold screen, its emergency halt and its lane re-dispatch; step 6.3 below is handed here.
 
 ## Goal
 
@@ -54,6 +56,13 @@ left to read as finished.
       verify: a sweep test over a fixture roadmap with all steps `[x]` and one
       `[~]` AC refuses `complete`; a fixture carrying a runnable step is refused;
       both seen red with the new check neutralised.
+
+- [ ] **6.3 A checkpoint for every lane at end of life.** `session_eol_hook`
+      writes the checkpoint for `read_claimed_slug` only, so a session holding
+      two lane locks leaves one lane without one. Write one per slug lock the
+      session holds (`read_locks` / `read_holders` in `_lib/roadmap_slug_lock.ts`).
+      Handed from `inbox-2026-10-cb`.
+      verify: `npx vitest run tests/scripts/session_eol_hook.test.ts -t "one checkpoint per lane"` -> 0
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: archive-sweep/auto-carry -->
