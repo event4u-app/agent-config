@@ -1210,9 +1210,9 @@ concerns:
   # survived a pin that had fired 26-35 seconds earlier. Refusal-capable
   # intercepts enforce; context injection requests.
   #
-  # SIX detectors on one guard — promissory closing, language mismatch,
-  # unverified edit, unsettled completion claim, a decision the turn asked
-  # and then dropped, and a change no test exercised. This said "Two" and named the first pair, which was true
+  # FIVE detectors on one guard — promissory closing, language mismatch,
+  # unverified edit, unsettled completion claim, and a decision the turn asked
+  # and then dropped. This said "Two" and named the first pair, which was true
   # of the concern on the day it was registered and of nothing since; the
   # authority is `DetectorId` in the hook, and the demotion contract carries the
   # per-detector bars. Original note, kept because its reason still holds:
