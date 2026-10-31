@@ -46,6 +46,9 @@ continuity record no longer depends on reaching the 800k recycle threshold.
 - [ ] **1.4 Correct the manifest comment.** `src/scripts/hook_manifest.yaml`
       still describes `quota-notice` as "one per session at 80 % context fill";
       since `road-to-a-memory-that-arrives` 2.1 it repeats every prompt. The
+      same edit corrects the turn-end-gate comment from "FIVE detectors" to six
+      (`untested` joined; round inbox-2026-10-bm aligned every other surface).
+      The
       manifest is hook plumbing, so the edit ships with a ratification artifact.
       verify: `./scripts-run src/scripts/check_kernel_edit_ratified --base origin/main` -> 0 with the artifact in the diff.
 - [ ] **1.3 Drop the ×1,500 estimate.** `context-hygiene-mechanics.md` points

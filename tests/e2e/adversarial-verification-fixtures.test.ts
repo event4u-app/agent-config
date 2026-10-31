@@ -144,6 +144,47 @@ describe('T3 — ten failed fixes produce strategy changes, never an owner ask',
         expect(offenders).toEqual(['verify-before-complete.md']);
     });
 
+    it('no run surface outside src/rules still names an N=3 retry bound', () => {
+        // The run commands and execution contexts cite the rule's bound; a copy
+        // that kept "N=3" after the rule moved to `execution.fix_loop_max`
+        // (default 10) tells a run to stop seven attempts early.
+        const roots = [
+            'src/domains/product-basic/roadmap',
+            'src/domains/engineering-base/mission',
+        ];
+        const walk = (rel: string): string[] =>
+            fs.readdirSync(path.join(REPO, rel), { withFileTypes: true }).flatMap((e) => {
+                const child = path.join(rel, e.name);
+                if (e.isDirectory()) return walk(child);
+                return e.name.endsWith('.md') ? [child] : [];
+            });
+        const execDir = 'src/agent-src/contexts/execution';
+        const files = [
+            ...roots.flatMap(walk),
+            ...fs
+                .readdirSync(path.join(REPO, execDir))
+                .filter((f) => f.endsWith('.md'))
+                .map((f) => path.join(execDir, f)),
+        ];
+        // One documented exception: `subagent-steering.md` describes the
+        // subagent spawn budget, which code enforces as
+        // `MAX_ATTEMPTS_PER_TARGET = 3`. The entry is tied to that constant, so
+        // it goes stale — and this test red — the moment the code moves.
+        const steering = fs.readFileSync(
+            path.join(REPO, 'src/scripts/_lib/subagent_steering.ts'),
+            'utf8',
+        );
+        expect(steering).toMatch(/MAX_ATTEMPTS_PER_TARGET = 3;/);
+        const allowed = new Set([path.join(execDir, 'subagent-steering.md')]);
+        const offenders = files
+            .filter((f) => !allowed.has(f))
+            .filter((f) => /\bN\s*=\s*3\b/.test(fs.readFileSync(path.join(REPO, f), 'utf8')));
+        expect(offenders).toEqual([]);
+        expect(flat('src/domains/product-basic/roadmap/process-full/command.md')).toMatch(
+            /execution\.fix_loop_max/,
+        );
+    });
+
     it('the bound is a setting with a default of 10, not a literal 3', () => {
         const body = flat(RULE);
         expect(body).toMatch(/execution\.fix_loop_max/);

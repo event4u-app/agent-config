@@ -52,6 +52,9 @@ import {
     verifyLatestCheckpoint,
 } from './_lib/run_checkpoint.js';
 import { readBudget } from './_lib/unattended_guard.js';
+import { clock, exhaustedResetAt } from './_lib/pressure.js';
+import { readQuotaLedger } from './_lib/quota_ledger.js';
+import type { EnvMap } from './_lib/user_global_paths.js';
 import { findQuotaParked, type QuotaParkedMarker } from './_lib/quota_parked.js';
 import {
     LIVE_SPAWN_REFUSAL,
@@ -210,6 +213,7 @@ export function classify(
     rec: SessionRecord,
     ledger: RelaunchLedger,
     now: Date,
+    env: EnvMap | null = null,
 ): Candidate {
     const base = {
         session_id: rec.session_id,
@@ -261,7 +265,7 @@ export function classify(
             ...base,
             disposition: 'quota-parked',
             open_steps: counts.open,
-            reason: quotaParkedReason(parked, counts.open),
+            reason: quotaParkedReason(parked, counts.open, now, ledgerResetAt(env, now)),
         };
     }
     if (base.relaunches >= MAX_RELAUNCHES_PER_RUN) {
@@ -282,21 +286,38 @@ export function classify(
     };
 }
 
+/** The freshest exhausted window's reset in the quota ledger the status-line tap writes, or null. */
+function ledgerResetAt(env: EnvMap | null, now: Date): number | null {
+    try {
+        return exhaustedResetAt(readQuotaLedger(env, now.getTime()));
+    } catch {
+        return null;
+    }
+}
+
+/** A reset further out than this (the seven-day window) carries its date, not only a clock time. */
+const SAME_DAY_MS = 20 * 3_600_000;
+
 /**
  * The one sentence a human acts on for a parked run.
  *
- * It states the reset time is unknown rather than omitting it, and rather than
- * guessing an interval. There is no reset-time parser and there will not be one
- * until a verified error string exists to pin a fixture against — see
- * `later/road-to-billing-cliff-detection.md`. An omitted unknown reads as "no
+ * The reset time comes only from the host's own status-line `resets_at`, read
+ * from the freshest exhausted window in the quota ledger. Without it
+ * the reason states the reset time is unknown rather than omitting it or
+ * guessing an interval — there is no error-string parser (see
+ * `later/road-to-billing-cliff-detection.md`). An omitted unknown reads as "no
  * wait needed"; a guessed interval reads as a fact.
  */
-export function quotaParkedReason(m: QuotaParkedMarker, open: number): string {
-    return (
+export function quotaParkedReason(m: QuotaParkedMarker, open: number, now: Date = new Date(), resetsAt: number | null = null): string {
+    const head =
         `plan quota exhausted on ${m.providers.join(', ')} since ${m.parked_at} — ` +
-        `${open} open step(s) remain; the run is waiting, not broken. ` +
-        `Reset time unknown (no parser: no verified error string yet).`
-    );
+        `${open} open step(s) remain; the run is waiting, not broken. `;
+    if (resetsAt === null) return `${head}Reset time unknown (no parser: no verified error string yet).`;
+    const resetMs = resetsAt * 1000;
+    if (resetMs <= now.getTime()) return `${head}The reset has passed at ${clock(resetMs)}; the run can continue.`;
+    const d = new Date(resetMs);
+    const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} `;
+    return `${head}The run is parked until ${resetMs - now.getTime() > SAME_DAY_MS ? day : ''}${clock(resetMs)}.`;
 }
 
 export interface ScanOptions {

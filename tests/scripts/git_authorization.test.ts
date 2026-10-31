@@ -500,3 +500,59 @@ describe("a machine wake leaves per-turn state standing", () => {
     expect(ledger().authorized).not.toContain("push");
   });
 });
+
+// ---------------------------------------------------------------------------
+// The host's quota-reset resume (road-to-a-quota-signal-that-tells-the-truth
+// 3.1). It reaches this slot as a plain sentence, no envelope tag, so the wake
+// predicate deliberately answers "human": the ledger is replaced and no earlier
+// authorization rides through the reset. It grants nothing itself, and it
+// spends a pending refusal like any turn: keeping the refusal alive across a
+// turn nobody typed would widen the window in which a later affirmative still
+// authorizes (AI council 2026-10-31, round inbox-2026-10-bm).
+// ---------------------------------------------------------------------------
+
+const QUOTA_RESET =
+  "Your claude.ai usage limit has reset. Continue the task you were working on, " +
+  "or let me know if you want to do something else.";
+
+describe("the host's quota-reset sentence is not an authorization", () => {
+  function plantPending(op: GitOp): string {
+    const pendingPath = path.join(tmp, pendingFileFor("s1"));
+    fs.mkdirSync(path.dirname(pendingPath), { recursive: true });
+    fs.writeFileSync(pendingPath, JSON.stringify({ op, session_id: "s1", refused_at: new Date().toISOString() }));
+    return pendingPath;
+  }
+
+  it("is still read as a human turn by the wake predicate — no authorization is retained across it", () => {
+    expect(humanTypedThisTurn(QUOTA_RESET)).toBe(true);
+    submit("push it");
+    submit(QUOTA_RESET);
+    expect(ledger().authorized).toEqual([]);
+  });
+
+  it("grants nothing, even with a pending refusal waiting", () => {
+    plantPending("push");
+    submit(QUOTA_RESET);
+    expect(ledger().authorized).toEqual([]);
+    expect(classifyAuthorization(QUOTA_RESET).authorized).toEqual([]);
+  });
+
+  it("spends the pending refusal, so a later `ja` after the reset authorizes nothing", () => {
+    const pendingPath = plantPending("push");
+    submit(QUOTA_RESET);
+    expect(fs.existsSync(pendingPath)).toBe(false);
+    submit("ja");
+    expect(ledger().authorized).not.toContain("push");
+  });
+
+  it("the language hook recognises the sentence as synthetic", async () => {
+    const { isSyntheticPrompt } = await import("../../src/scripts/_lib/prompt_shape.js");
+    expect(isSyntheticPrompt(QUOTA_RESET)).toBe(true);
+  });
+
+  it("a human merely quoting the sentence is a normal turn and consumes the refusal as any turn does", () => {
+    const pendingPath = plantPending("push");
+    submit(`why did I get "${QUOTA_RESET}"?`);
+    expect(fs.existsSync(pendingPath)).toBe(false);
+  });
+});

@@ -67,6 +67,55 @@ describe('runTap', () => {
     });
 });
 
+describe('runTap with a chained status line', () => {
+    const warm = JSON.stringify({ rate_limits: { five_hour: { used_percentage: 64, resets_at: Math.trunc(now / 1000) + 3600 } } });
+
+    it('writes the snapshot and the verdict before the chained command runs, so a slow or killed one cannot lose it', async () => {
+        const { hotWindowLine } = await import('../../src/scripts/_lib/pressure_state.js');
+        recordOriginal({ type: 'command', command: 'slow-line' });
+        const hot = JSON.stringify({ rate_limits: { five_hour: { used_percentage: 91, resets_at: Math.trunc(now / 1000) + 3600 } } });
+        let seenAtRun = -1;
+        let verdictAtRun: string | null = null;
+        runTap({
+            stdin: hot,
+            env,
+            now,
+            run: () => {
+                seenAtRun = readQuotaLedger(env, now).length;
+                verdictAtRun = hotWindowLine(env, now);
+                throw new Error('killed by the host timeout');
+            },
+        });
+        expect(seenAtRun).toBe(1);
+        expect(verdictAtRun).toMatch(/^5h window 91 %/);
+    });
+
+    it('at warm the AC segment follows the chained output on its own line', () => {
+        recordOriginal({ type: 'command', command: 'my-line' });
+        const out = runTap({ stdin: warm, env, now, run: () => 'MY LINE' });
+        const lines = out.split('\n');
+        expect(lines[0]).toBe('MY LINE');
+        expect(lines[1]).toMatch(/^AC 5h window 64 %/);
+        expect(lines).toHaveLength(2);
+        expect(lines[1]).not.toMatch(/[\u0000-\u001f\u007f]/);
+    });
+
+    it('a chained output ending in a newline gets no blank line before the segment', () => {
+        recordOriginal({ type: 'command', command: 'my-line' });
+        expect(runTap({ stdin: warm, env, now, run: () => 'MY LINE\n' })).toMatch(/^MY LINE\nAC 5h window 64 %[^\n]*$/);
+    });
+
+    it('the segment still shows when the chained command printed nothing', () => {
+        recordOriginal({ type: 'command', command: 'boom' });
+        expect(runTap({ stdin: warm, env, now, run: () => '' })).toMatch(/^AC 5h window 64 %/);
+    });
+
+    it('below warm the chained output is printed unchanged', () => {
+        recordOriginal({ type: 'command', command: 'my-line' });
+        expect(runTap({ stdin: PAYLOAD, env, now, run: () => 'MY LINE\n' })).toBe('MY LINE\n');
+    });
+});
+
 describe('runTap → pressure verdict', () => {
     it('leaves a fresh verdict the dispatch-path readers can find', async () => {
         const { hotWindowLine } = await import('../../src/scripts/_lib/pressure_state.js');

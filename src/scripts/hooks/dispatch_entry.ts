@@ -12,7 +12,20 @@
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { main } from './dispatch_hook.js';
+import { enableCompileCacheFailOpen } from '../_lib/compile_cache.js';
+import { withDispatchSnapshotScope } from '../_lib/stop_snapshot.js';
+import { main as dispatchMain } from './dispatch_hook.js';
+
+/**
+ * Both invocation paths (direct and the CLI's in-process route) call this
+ * `main`, so it is where one dispatch begins and ends: the compile cache is
+ * requested here and the shared working-tree snapshot lives exactly as long
+ * as this call.
+ */
+export function main(argv?: string[]): number {
+    enableCompileCacheFailOpen();
+    return withDispatchSnapshotScope(() => dispatchMain(argv));
+}
 
 /**
  * Direct-invocation detection. Under the esbuild bundle, EVERY inlined
@@ -33,5 +46,3 @@ const _invokedDirectly =
 if (_invokedDirectly) {
     process.exitCode = main(process.argv.slice(2));
 }
-
-export { main };

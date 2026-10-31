@@ -688,3 +688,67 @@ describe('end_review_nudge_hook — stop-concern E2E (via tsx)', () => {
         expect(readTelemetryLines(dir)).toEqual([]);
     });
 });
+
+// ── One Stop snapshot per dispatch (road-to-a-fleet-that-pays-less-per-event 1.1) ──
+
+describe('Stop snapshot — one git read per dispatch for both Stop concerns', () => {
+    /** A `git` on PATH that logs its subcommand and then runs the real one. */
+    function withCountingGit<T>(fn: (log: string) => T): T {
+        const realGit = spawnSync('sh', ['-c', 'command -v git'], { encoding: 'utf8' }).stdout.trim();
+        const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'counting-git-'));
+        tmp_dirs.push(bin);
+        const log = path.join(bin, 'calls.log');
+        fs.writeFileSync(
+            path.join(bin, 'git'),
+            `#!/bin/sh\necho "$1" >> '${log}'\nexec '${realGit}' "$@"\n`,
+            { mode: 0o755 },
+        );
+        const savedPath = process.env['PATH'];
+        process.env['PATH'] = `${bin}${path.delimiter}${savedPath ?? ''}`;
+        try {
+            return fn(log);
+        } finally {
+            process.env['PATH'] = savedPath;
+        }
+    }
+
+    function calls(log: string): string[] {
+        return fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : [];
+    }
+
+    it(
+        'runs `git diff` and `git ls-files` once for both concerns inside one dispatch scope',
+        async () => {
+            const { withDispatchSnapshotScope } = await import('../../src/scripts/_lib/stop_snapshot.js');
+            const { touchedPaths } = await import('../../src/scripts/hooks/obligation_settle_hook.js');
+            const dir = makeRepo();
+            mutateCodeFile(dir, 3);
+            fs.writeFileSync(path.join(dir, 'fresh.ts'), 'export const fresh = 1;\n');
+            withCountingGit((log) => {
+                const [measure, touched] = withDispatchSnapshotScope(() => [
+                    totalNonDocMutatedLinesWithMeasure(dir),
+                    touchedPaths(dir),
+                ]);
+                expect(measure).toEqual({ lines: 4, measure: 'exact' });
+                expect([...(touched as string[])].sort()).toEqual(['baseline.ts', 'fresh.ts']);
+                expect(calls(log)).toEqual(['diff', 'ls-files']);
+            });
+        },
+    );
+
+    it(
+        'never reuses a snapshot outside its dispatch: a later scope reads the tree again',
+        async () => {
+            const { withDispatchSnapshotScope } = await import('../../src/scripts/_lib/stop_snapshot.js');
+            const dir = makeRepo();
+            withCountingGit((log) => {
+                expect(withDispatchSnapshotScope(() => totalNonDocMutatedLines(dir))).toBe(0);
+                mutateCodeFile(dir, 2);
+                expect(withDispatchSnapshotScope(() => totalNonDocMutatedLines(dir))).toBe(2);
+                // Outside any scope there is no memo at all.
+                expect(totalNonDocMutatedLines(dir)).toBe(2);
+                expect(calls(log)).toEqual(['diff', 'ls-files', 'diff', 'ls-files', 'diff', 'ls-files']);
+            });
+        },
+    );
+});

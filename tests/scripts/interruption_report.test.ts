@@ -550,3 +550,85 @@ describe('per-axis power — the two axes do NOT share a denominator', () => {
         expect(buildReport(root, DEFAULT_WINDOW).power_floor_runs).toBe(20);
     });
 });
+
+describe('termination — a run that ended silently is countable', () => {
+    function writeRoadmap(slug: string, body: string): void {
+        const dir = path.join(root, 'agents', 'roadmaps');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, `${slug}.md`), body, 'utf8');
+    }
+    function writeCheckpoint(runId: string, roadmap: string, open: number): void {
+        const dir = path.join(root, 'agents', 'runtime', 'state', 'checkpoints');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, `${runId}.json`),
+            JSON.stringify({
+                schema_version: 1,
+                run_id: runId,
+                roadmap,
+                open_steps: open,
+                done_steps: 1,
+                parked_steps: 0,
+                next_step: open > 0 ? 'next' : null,
+                head: null,
+                written_at: '2026-10-31T10:00:00Z',
+            }),
+            'utf8',
+        );
+    }
+
+    it('classifies met, blocked and silent runs and counts the silent one', () => {
+        writeLedger([
+            // met: the run's checkpoint has no open step left.
+            { run_id: 'met', turn: 1, kind: 'none', class: 'none', roadmap: 'road-to-met' },
+            // blocked: open work remains, and the run's LAST turn put a question
+            // to the user — it stopped visibly.
+            { run_id: 'blk', turn: 1, kind: 'none', class: 'none', roadmap: 'road-to-blk' },
+            { run_id: 'blk', turn: 2, kind: 'ask', class: 'numbered-options', roadmap: 'road-to-blk' },
+            // silent: open work remains and the run's last turn neither asked
+            // nor handed back — it just ended.
+            { run_id: 'sil', turn: 1, kind: 'ask', class: 'open-question', roadmap: 'road-to-sil' },
+            { run_id: 'sil', turn: 2, kind: 'none', class: 'none', roadmap: 'road-to-sil' },
+        ]);
+        writeCheckpoint('met', 'road-to-met', 0);
+        writeCheckpoint('blk', 'road-to-blk', 2);
+        writeCheckpoint('sil', 'road-to-sil', 3);
+        const report = buildReport(root, 30);
+        const by = (id: string) => report.runs.find((r) => r.run_id === id)!;
+        expect(by('met').termination).toBe('met');
+        expect(by('met').derived_terminal_state).toBe('success');
+        expect(by('blk').termination).toBe('blocked');
+        expect(by('blk').derived_terminal_state).toBe('blocked');
+        expect(by('sil').termination).toBe('unterminated');
+        expect(by('sil').derived_terminal_state).toBeNull();
+        expect(by('sil').open_steps_at_end).toBe(3);
+        expect(report.unterminated_runs).toBe(1);
+        expect(renderText(report)).toMatch(/unterminated/);
+    });
+
+    it('falls back to the live roadmap count, phase spans only, when no checkpoint exists', () => {
+        writeLedger([{ run_id: 'live', turn: 1, kind: 'none', class: 'none', roadmap: 'road-to-live' }]);
+        writeRoadmap(
+            'road-to-live',
+            '# R\n\n## Phase 1\n\n- [x] a\n- [ ] b\n\n## Acceptance Criteria\n\n- [ ] not a step\n',
+        );
+        const run = buildReport(root, 30).runs.find((r) => r.run_id === 'live')!;
+        expect(run.open_steps_at_end).toBe(1);
+        expect(run.open_steps_source).toBe('roadmap');
+        expect(run.termination).toBe('unterminated');
+    });
+
+    it('reports null — not unterminated — for a run with no roadmap or no readable count', () => {
+        writeLedger([
+            { run_id: 'free', turn: 1, kind: 'none', class: 'none', roadmap: null },
+            { run_id: 'gone', turn: 1, kind: 'none', class: 'none', roadmap: 'road-to-missing' },
+        ]);
+        const report = buildReport(root, 30);
+        for (const id of ['free', 'gone']) {
+            const run = report.runs.find((r) => r.run_id === id)!;
+            expect(run.termination).toBeNull();
+            expect(run.open_steps_at_end).toBeNull();
+        }
+        expect(report.unterminated_runs).toBe(0);
+    });
+});

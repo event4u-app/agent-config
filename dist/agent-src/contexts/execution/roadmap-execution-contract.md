@@ -87,7 +87,7 @@ Always active regardless of this contract (never lifted):
   • Hard Floor per-commit diff gate (bulk deletions / infra)
   • Push anywhere except feat/<roadmap-slug>; merge (§ 5)
   • security-sensitive-stop on auth/billing/tenant/secret paths
-  • N=3 validation budget · context-hygiene read-loop abort
+  • fix-loop bound · context-hygiene read-loop abort
   • Deferred-[~] archival gate
 
 1. Accept — run under this contract
@@ -212,7 +212,7 @@ it: an owner auto-merge instruction (ADR-282, `/pr:merge` § 9a).
   prod-trunk anything, deploys, bulk deletions, infra commits.
 - Merging a PR without an owner auto-merge instruction; closing or retargeting one.
 - Lifting [`security-sensitive-stop`](../../rules/security-sensitive-stop.md),
-  the N=3 budget, context-hygiene aborts, or the deferred-`[~]` gate.
+  the fix-loop bound, context-hygiene aborts, or the deferred-`[~]` gate.
 - Work outside the roadmap's scope (halt: scope-out-of-roadmap).
 - Kernel-rule edits' own-PR + 24h-soak guarantee
   ([`kernel-rule-edits`](../authority/kernel-rule-edits.md)).

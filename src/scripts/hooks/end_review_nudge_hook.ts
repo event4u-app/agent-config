@@ -250,6 +250,7 @@ import {
     type BaselineApplication,
     type MutationMeasure,
 } from '../_lib/review_skipped_record.js';
+import { memoInDispatch } from '../_lib/stop_snapshot.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json, is_replay_mode } from './state_io.js';
@@ -365,8 +366,14 @@ export function nonDocMutatedLines(rows: readonly NumstatRow[]): number {
 /**
  * `git diff --numstat HEAD` at `cwd`. Fails closed to `[]` (never throws) —
  * no repo, no HEAD, or `git` missing all read as "nothing to measure".
+ * Inside a dispatch scope the read is shared with `untrackedNonDocFiles`'s
+ * sibling caller in `obligation_settle_hook` (see `_lib/stop_snapshot`).
  */
 export function gitNumstatRows(cwd: string): NumstatRow[] {
+    return [...memoInDispatch(`numstat\0${path.resolve(cwd)}`, () => readGitNumstatRows(cwd))];
+}
+
+function readGitNumstatRows(cwd: string): NumstatRow[] {
     try {
         const r = spawnSync('git', ['diff', '--numstat', 'HEAD'], {
             cwd,
@@ -387,6 +394,10 @@ export function gitNumstatRows(cwd: string): NumstatRow[] {
  * throws), matching `gitNumstatRows`'s own contract.
  */
 export function untrackedNonDocFiles(cwd: string): string[] {
+    return [...memoInDispatch(`untracked\0${path.resolve(cwd)}`, () => readUntrackedNonDocFiles(cwd))];
+}
+
+function readUntrackedNonDocFiles(cwd: string): string[] {
     try {
         const r = spawnSync('git', ['ls-files', '--others', '--exclude-standard'], {
             cwd,

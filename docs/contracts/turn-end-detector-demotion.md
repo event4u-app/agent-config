@@ -603,7 +603,7 @@ right verdict, and both halves of that are worth keeping.
 
 - [`concern-activation-policy`](concern-activation-policy.md) — the ladder, the generic reverse triggers, and the `would_fire` shadow mechanism instrument 1 applies.
 - [`hook-architecture-v1`](hook-architecture-v1.md) — the dispatcher contract, and which hosts carry a `stop` slot at all.
-- `src/scripts/hooks/turn_end_gate_hook.ts` — the gate, its five detectors, and the two re-entrancy layers Q1 dies on.
+- `src/scripts/hooks/turn_end_gate_hook.ts` — the gate, its six detectors, and the two re-entrancy layers Q1 dies on.
 - `src/scripts/_lib/turn_end_refusals.ts` — `DETECTOR_IDS`, `RefusalRecord`, `ShadowRecord`, and the counts Q2 is read from.
 - `src/scripts/measure_turn_end_gate.ts` — `renderQ1`, the shadow-corpus reader, with `collectShadowStats`, `DISPATCH_CENSORED_DETECTORS` and `retryConditionedShare` — the last of which is NOT Q1 and says so in its own docstring. `--q1` prints the retry-conditioned share without a transcript corpus, and states in its header that it is not bar-comparable.
 - [`condensation-default-kill-criterion`](condensation-default-kill-criterion.md) — the sibling shape: one feature's kill criterion, pre-registered with its decision table.
