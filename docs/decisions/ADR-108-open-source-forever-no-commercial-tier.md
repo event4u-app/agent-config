@@ -2,18 +2,25 @@
 adr: 108
 status: accepted
 date: 2026-06-24
-decision: open-source-forever-no-commercial-tier
+decision: open-source-no-commercial-tier
 supersedes: —
 superseded_by: —
 phase: road-to-legal-pack
 type: standing
+authority_basis: owner_intent
 ---
 
-# ADR-108 — The suite is open-source forever; no commercial / Pro tier
+# ADR-108 — The suite is open-source; no commercial / Pro tier
 
 ## Status
 
 **Accepted** · 2026-06-24 · maintainer decision. Standing commitment for the whole `event4u/agent-config` suite, surfaced while resolving the legal pack's conditional product-liability gate (ADR-107 § 0.6).
+
+**Owner intent confirmed 2026-10-31** (owner-questions OQ-46): the open-source,
+no-commercial-tier and permanent-disclaimer claims below are owner purpose, not a
+mechanism decision, and stand verbatim. The `decision:` slug and the title
+dropped the word "forever" the same day (OQ-46 follow-up); the commitment itself
+lives in § Decision, unchanged.
 
 ## Context
 

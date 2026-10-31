@@ -1,6 +1,6 @@
 ---
 adr: 240
-status: proposed
+status: accepted
 date: 2026-08-21
 decision: evidence-based-decision-floor
 supersedes: —
@@ -34,6 +34,13 @@ review_trigger: >-
 # ADR-240 — An ADR's weight comes from its evidence, not from its existence
 
 ## Status
+
+**Accepted 2026-10-31 by the owner, forward-only** (owner-questions OQ-48,
+after an AI-council reading, anthropic + openai, 2/2, 2026-10-30). The evidence
+floor binds records written after acceptance, and an amendment to an existing
+record must meet it as well; an unamended older record keeps its current form
+and is not reclassified. The two paragraphs below record why it shipped
+`proposed`, and are kept as written.
 
 **proposed**, deliberately — and the status is part of the decision rather than
 a step not yet taken.
