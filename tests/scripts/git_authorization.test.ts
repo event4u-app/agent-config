@@ -505,8 +505,10 @@ describe("a machine wake leaves per-turn state standing", () => {
 // The host's quota-reset resume (road-to-a-quota-signal-that-tells-the-truth
 // 3.1). It reaches this slot as a plain sentence, no envelope tag, so the wake
 // predicate deliberately answers "human": the ledger is replaced and no earlier
-// authorization rides through the reset. What it must NOT do is spend the one
-// pending refusal the user is still answering, nor grant anything itself.
+// authorization rides through the reset. It grants nothing itself, and it
+// spends a pending refusal like any turn: keeping the refusal alive across a
+// turn nobody typed would widen the window in which a later affirmative still
+// authorizes (AI council 2026-10-31, round inbox-2026-10-bm).
 // ---------------------------------------------------------------------------
 
 const QUOTA_RESET =
@@ -535,21 +537,17 @@ describe("the host's quota-reset sentence is not an authorization", () => {
     expect(classifyAuthorization(QUOTA_RESET).authorized).toEqual([]);
   });
 
-  it("does not consume the pending refusal, so the user's later `ja` still confirms it", () => {
+  it("spends the pending refusal, so a later `ja` after the reset authorizes nothing", () => {
     const pendingPath = plantPending("push");
     submit(QUOTA_RESET);
-    expect(fs.existsSync(pendingPath), "the reset sentence consumed the pending refusal").toBe(true);
-    submit("ja");
-    expect(ledger().authorized).toContain("push");
     expect(fs.existsSync(pendingPath)).toBe(false);
+    submit("ja");
+    expect(ledger().authorized).not.toContain("push");
   });
 
-  it("the language hook and the ledger recognise the same sentence", async () => {
+  it("the language hook recognises the sentence as synthetic", async () => {
     const { isSyntheticPrompt } = await import("../../src/scripts/_lib/prompt_shape.js");
-    const { isHostLimitResetResume } = await import("../../src/scripts/_lib/machine_wake.js");
     expect(isSyntheticPrompt(QUOTA_RESET)).toBe(true);
-    expect(isHostLimitResetResume(QUOTA_RESET)).toBe(true);
-    expect(isHostLimitResetResume(`why did I get "${QUOTA_RESET}"?`)).toBe(false);
   });
 
   it("a human merely quoting the sentence is a normal turn and consumes the refusal as any turn does", () => {

@@ -77,6 +77,12 @@ with their own status line still sees the AC segment.
       (`prompt_shape.ts`) fed through the git-authorization path consumes no
       pending refusal and grants nothing.
       verify: `npx vitest run tests/scripts/git_authorization_hook.test.ts` with a reset-sentence case seen red first if the defect exists.
+      <!-- outcome 2026-10-31: the sentence grants nothing and retains no earlier
+      authorization; it DOES spend a pending refusal, like any turn. A first fix
+      kept the refusal alive across the reset and was withdrawn: the AI council's
+      anthropic seat refused it as widening the window in which a later
+      affirmative authorizes. The fail-closed behaviour is pinned in
+      tests/scripts/git_authorization.test.ts. -->
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-31 | reviewer: claude/host -->
