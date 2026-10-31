@@ -59,6 +59,10 @@ forces each judge to commit fully to its rubric.
 |---|---|---|
 | Broad solution space (algorithm choice, API shape) | Well-defined problem with one good answer | implementers = same tier (≥2 instances); judge = one tier up |
 
+More than a handful of candidates, or a loss that should be appealable → the
+resumable bracket route `/judge bracket` (script-scored matches, ≤ 2
+second-chance cards per line, size by tier with default 10).
+
 ### Mode 6 — judge-with-debate
 
 | When to use | When not | Model pairing |
