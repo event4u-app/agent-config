@@ -94,13 +94,13 @@ router or a setting.
 
 ## Phase 4 — Hand-offs to the owners (arrivals, no re-planning)
 
-- [x] **4.1 Arrival lines on the held objects.** Payload capture (2), <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **4.1 Arrival lines on the held objects.** Payload capture (2), <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: internal/bench/orchestration/agent-settings.baseline.yml -->
       team telemetry (2), token-economy dispatch follow-up (1), task
       completion observability (2, bench arms), cost-parity-2 (1, verdict
       producer + deterministic ladder replay instead of a 14-day window),
       benchmark-obsolescence lifecycle (rule provenance, 1).
       verify: `grep -q "inbox-2026-10-cb" agents/roadmaps/later/road-to-cost-parity-2-state-aware-dispatch.md` -> 0
-- [x] **4.2 Steps handed to two parked owners.** Per-lane checkpoint at end <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **4.2 Steps handed to two parked owners.** Per-lane checkpoint at end <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: internal/bench/orchestration/agent-settings.baseline.yml -->
       of life → the drain carrier; append-only touched-file readings and the
       stale template pointer (`:1520` → `:1268`) → the touched-files carrier.
       verify: `grep -q "6.3 A checkpoint for every lane" agents/roadmaps/later/road-to-roadmaps-finished-before-new-ones-start-carried.md` -> 0
