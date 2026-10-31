@@ -79,12 +79,13 @@ no lane is dispatched onto a `start` entry while a `continue` entry has no lane.
 session holds one lock per lane, so the second lane no longer overwrites the
 first lane's claim, and the queue lists every lane's roadmap as `claimed`.
 
-**A lane that dies keeps its work.** A spend limit, a rate limit or a watchdog
-stops the lane, not its worktree: the commits and the uncommitted edits stay on
-disk. Before re-dispatching, read the queue — the lane's entry carries
-`salvage: N commit(s) ahead, M uncommitted file(s)` — and send a FRESH lane
-into the SAME worktree with the same brief; a resumed agent loses its isolated
-worktree, a fresh one does not. The same holds when the orchestrator session
+**A lane that dies keeps its work.** A spend or rate limit or a watchdog
+stops the lane, not its worktree: its commits and edits stay on disk. Before
+re-dispatching, read its queue entry —
+`salvage: N commit(s) ahead, M uncommitted file(s)` — run
+`agent-config run:supervise --root <lane worktree> --verify <slug>`, put any
+disagreeing field first in the brief, and send a FRESH lane into the SAME
+worktree; a resumed agent loses its worktree. The same holds when the orchestrator session
 itself dies: its lane locks expire with its register record and the next
 session's queue lists each roadmap as `resume` in the lane's worktree.
 
@@ -169,13 +170,13 @@ Owner directive 2026-10-24
 
 A lane does not flip its own checkboxes: it returns each finished step with its
 evidence, and the orchestrator verifies the return (per `delegation-policy`
-item 4) and makes the bookkeeping commit on the lane's branch. A lane approving
-its own work is one of the actions the host classifier refused as
-"Self-Approval" among the 24 classifier stops in those drains; an orchestrator
-verifying a return is the review the classifier was asking for.
+item 4), flips each box with
+`agent-config roadmap:set-step --file <plan> --step <id> --glyph x --verify`,
+never by hand, and makes the bookkeeping commit on the lane's branch. A lane
+approving its own work was refused as "Self-Approval" among the 24 classifier
+stops in those drains; an orchestrator verifying a return is that review.
 
-**What `--all` can and cannot promise, stated plainly because the honest
-version is weaker than the obvious one.** Nothing in the run
+**What `--all` can and cannot promise.** Nothing in the run
 merges, so the default does not advance because of this run, and every PR after
 the first is mergeable *against the base recorded when it was prepared* rather
 than against the base after its predecessors land. In a repository where every

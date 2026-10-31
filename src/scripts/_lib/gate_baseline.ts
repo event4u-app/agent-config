@@ -250,6 +250,11 @@ export interface RatchetOptions {
      * no merge to judge, which is not the same as a failed resolution.
      */
     targetRef?: string;
+    /**
+     * How to fix a violation, in one line. Emitted as `fix: …` ahead of the
+     * baseline text on a failing verdict only; absent leaves the message as it was.
+     */
+    fix?: string;
 }
 
 /**
@@ -278,6 +283,7 @@ export const TARGET_REF_ENV = 'GATE_BASELINE_TARGET_REF';
 export function checkRatchet(opts: RatchetOptions): BaselineVerdict {
     const { gate, actual } = opts;
     const rel = opts.baselineRel ?? BASELINE_REL;
+    const fixLine = opts.fix === undefined || opts.fix.trim() === '' ? '' : `fix: ${opts.fix.trim()}. `;
     const target = opts.targetRef ?? process.env[TARGET_REF_ENV];
     const file =
         target !== undefined && target !== ''
@@ -295,7 +301,7 @@ export function checkRatchet(opts: RatchetOptions): BaselineVerdict {
             message:
                 actual === 0
                     ? `${gate}: 0 violation(s), no baseline needed.`
-                    : `${gate}: ${actual} violation(s) and no recorded baseline — fix them, or ` +
+                    : `${gate}: ${actual} violation(s) and no recorded baseline — ${fixLine}fix them, or ` +
                       `record the count in ${BASELINE_REL} if this is a scan-root repair ` +
                       'revealing pre-existing debt.',
         };
@@ -315,7 +321,7 @@ export function checkRatchet(opts: RatchetOptions): BaselineVerdict {
             ageDays,
             message:
                 `${gate}: ${actual} violation(s) against a baseline of ${entry.count} — ` +
-                `${actual - entry.count} new. A ratchet only turns one way: fix the new ` +
+                `${actual - entry.count} new. ${fixLine}A ratchet only turns one way: fix the new ` +
                 `violation(s). Raising the baseline in ${BASELINE_REL} is a defect, not a fix.`,
         };
     }

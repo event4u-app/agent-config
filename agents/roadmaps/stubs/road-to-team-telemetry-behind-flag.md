@@ -5,7 +5,7 @@ review_by: 2026-12-24
 
 # Stub: road to team telemetry behind the experimental flag
 
-> **Arrivals:** 1 — latest `inbox-2026-10-i` (2026-10-11): an audit proposes binding the host's team-task completion event to block an untested change from claiming done; still gated on this stub's payload evidence.
+> **Arrivals:** 2 — latest `inbox-2026-10-cb` (2026-10-31): the same proposal to gate done-claims on the team-task completion event, now with the (unverified offline) host note that it also fires from a task update outside teams. Earlier: `inbox-2026-10-i`.
 
 > **Stub — not active work.** Transferred out of
 > `road-to-always-on-orchestration.md` (Phase 5.4 + blocker

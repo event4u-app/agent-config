@@ -20,6 +20,8 @@ estate_growth_exempt: >-
 > [`road-to-touched-files-that-pass-their-own-tools`](../archive/road-to-touched-files-that-pass-their-own-tools.md), which closed every other step.
 > The step below was `[~]` there and is restated verbatim as open work, so
 > archiving the parent buried nothing. The blocker it names moved with it.
+>
+> **Arrivals:** 1 — `inbox-2026-10-cb` (2026-10-31): steps 2.4 (append-only readings) and 2.5 (detector C names the commands, withdrawn on hook-bundle headroom) are handed here.
 
 ## Goal
 
@@ -44,6 +46,22 @@ reason, never left to read as finished.
       `Resolved when` carries both branches; this clause is the falsifiable half.
       verify: `grep -c 'touched_file_quality: "off"' src/config/agent-settings.template.yml` -> /^0$/
 
+- [ ] **2.4 Keep every stop's readings, not the last one.** `quality_runs` is
+      overwritten on each stop (`before_complete_hook.ts`), so a reading of the
+      runner is one stop deep. With the mode not `off`, append one JSONL line per
+      stop next to the state file; with `off` the record stays byte-identical.
+      Handed from `inbox-2026-10-cb`.
+      verify: `npx vitest run tests/scripts/touched_file_quality_journal.test.ts` -> 0
+
+- [ ] **2.5 Detector C names what to run.** A turn-end `verification` refusal
+      appends up to three commands from `resolve_toolchain(root)` (selected
+      runners, then quality), silent when none is declared. Built and tested in
+      `inbox-2026-10-cb` (~350 bytes) and withdrawn there: the hook bundle has
+      ~280 bytes of headroom under `hook-bundle-budget.json`, and a raise needs a
+      ratification artifact. Land it with a raise the owner ratifies, or after a
+      shrink frees the bytes.
+      verify: `npx vitest run tests/scripts/turn_end_gate_hook.test.ts -t names-the-commands` -> 0
+
 ## Blockers
 
 ### blocker: touched-file-quality-default-is-an-owner-call
@@ -52,7 +70,7 @@ reason, never left to read as finished.
 - **Blocks:** 2.3
 - **What to do:** decide the shipped default for
   `hooks.verify_before_complete.touched_file_quality`
-  (`src/config/agent-settings.template.yml:1520`, currently `"off"`) — move it to
+  (`src/config/agent-settings.template.yml:1268`, currently `"off"`) — move it to
   `shadow`, move it to `warn`, or record a dated decision to keep it `off`.
 - **Resolved when:** that line reads a value other than `"off"`, or the release
   record carries a dated decision to keep it `off`.

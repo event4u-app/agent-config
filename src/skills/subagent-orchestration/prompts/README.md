@@ -99,7 +99,9 @@ Claude Code 2.1.302 a background fork read 99.8 % of its first call from the
 parent's cache and kept the parent's tool pool); elsewhere it is unobserved. Never default to "always fork": that
 option was considered and cut ([`../SKILL.md`](../SKILL.md) § Form gate)
 precisely because the cache-sharing benefit cannot be predicted before the
-fork happens, and background mode can erase it outright.
+fork happens, and background mode can erase it outright. A judge, reviewer or
+validator is never forked, whatever the tool fit: the inherited conversation is
+the author's, and independence is what that slice is for.
 
 ## Loading
 
