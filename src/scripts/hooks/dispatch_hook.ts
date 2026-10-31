@@ -252,9 +252,10 @@ interface ConcernDef extends JsonObject {
 /**
  * Per-concern tool filter — the `tools:` key.
  *
- * 13 concerns fire on EVERY tool call (6 pre + 7 post), and three of them
- * already re-read `tool_name` and return early — after the dispatcher has
- * already spawned the work. A concern may now declare which tools it cares
+ * A concern that declares no `tools:` fires on EVERY tool call of its slot
+ * (`hook_manifest.yaml` is the count; it grows, so none is written here), and
+ * some of those re-read `tool_name` and return early — after the dispatcher
+ * has already spawned the work. A concern may now declare which tools it cares
  * about, and the dispatcher skips it in-process for everything else.
  *
  * ## Why the filter is here and not in the generated host config
