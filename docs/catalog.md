@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **754 public artefacts** shipped by
+Consumer-facing catalog of all **755 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -454,7 +454,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (212)
+## Commands (213)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -558,7 +558,8 @@ are excluded.
 | command | [`image-verify`](../dist/agent-src/commands/image/verify.md) | cluster: image | Verify a candidate render against its canon — run the analyser in loop mode, emit the gate verdict + remaining diff, halt-and-surface on non-pass. |
 | command | [`implement-ticket`](../dist/agent-src/commands/implement-ticket.md) |  | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over `work_engine`, block-on-ambiguity, no auto-git, test-first enforced. |
 | command | [`jira-ticket`](../dist/agent-src/commands/jira-ticket.md) |  | Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug |
-| command | [`judge`](../dist/agent-src/commands/judge.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff |
+| command | [`judge`](../dist/agent-src/commands/judge.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff, bracket |
+| command | [`judge-bracket`](../dist/agent-src/commands/judge/bracket.md) | cluster: judge | Run a resumable bracket of competing solutions whose losses can be appealed — AC sizes it (default 10), the script scores, a paid seat plays the second-chance card |
 | command | [`judge-on-diff`](../dist/agent-src/commands/judge/on-diff.md) | cluster: judge | Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user |
 | command | [`judge-solo`](../dist/agent-src/commands/judge/solo.md) | cluster: judge | Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only |
 | command | [`judge-steps`](../dist/agent-src/commands/judge/steps.md) | cluster: judge | Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict |

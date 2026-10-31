@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **755 artefacts** in this package.
+Maintainer-facing index of all **756 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -439,7 +439,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (212)
+## Commands (213)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -543,7 +543,8 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`image-verify`](../src/domains/ai-video/image/verify/command.md) | cluster: image | Verify a candidate render against its canon — run the analyser in loop mode, emit the gate verdict + remaining diff, halt-and-surface on non-pass. |
 | command | [`implement-ticket`](../src/domains/engineering-base/implement-ticket/command.md) |  | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over `work_engine`, block-on-ambiguity, no auto-git, test-first enforced. |
 | command | [`jira-ticket`](../src/domains/product-basic/jira-ticket/command.md) |  | Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug |
-| command | [`judge`](../src/domains/engineering-base/judge/command.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff |
+| command | [`judge`](../src/domains/engineering-base/judge/command.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff, bracket |
+| command | [`judge-bracket`](../src/domains/engineering-base/judge/bracket/command.md) | cluster: judge | Run a resumable bracket of competing solutions whose losses can be appealed — AC sizes it (default 10), the script scores, a paid seat plays the second-chance card |
 | command | [`judge-on-diff`](../src/domains/engineering-base/judge/on-diff/command.md) | cluster: judge | Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user |
 | command | [`judge-solo`](../src/domains/engineering-base/judge/solo/command.md) | cluster: judge | Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only |
 | command | [`judge-steps`](../src/domains/engineering-base/judge/steps/command.md) | cluster: judge | Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict |
