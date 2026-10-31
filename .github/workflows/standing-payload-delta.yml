@@ -302,19 +302,14 @@ jobs:
             echo "::warning::the gate at $base predates --repo-root, so this run is NOT base-pinned. Expected exactly once, on the pull request that introduces the flag."
           fi
 
-      # Grants are honoured only when their approval event is verified OUTSIDE
-      # the diff that requests them — the council's hardest pushback in both
-      # seats: `approved_by` written by the pull request asking for the grant is
-      # self-asserted data authenticating nothing. The ledger ships EMPTY and is
-      # expected to stay empty (96.8 % of merged pull requests move this payload
-      # by zero or less), so this step is normally a no-op that prints nothing.
+      # Every live grant in the ledger is honoured. The repository has one
+      # author, and the owner approves a grant by recording it
+      # (agents/evidence/owner-directives/2026-10-31-single-author-grant-approval.md).
+      # No second-person review is required: with a single author it could never
+      # exist, so requiring it refused every grant.
       - name: Verify exception approvals
         id: approvals
         if: always() && steps.scope.outputs.relevant == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR: ${{ github.event.pull_request.number }}
-          AUTHOR: ${{ github.event.pull_request.user.login }}
         run: |
           set -euo pipefail
           ids="$(python3 - <<'PY'
@@ -335,26 +330,10 @@ jobs:
             echo "no live payload exceptions — nothing to verify"
             exit 0
           fi
-          # An approving review from someone other than the author is the
-          # trusted platform signal available here. With a single repository
-          # admin no such review can exist, which means a grant cannot be
-          # authenticated and is therefore refused — recorded honestly rather
-          # than worked around, and the reason a second reviewer is the owner
-          # decision that would make the exception path usable at all.
-          approver_count=0
-          if [ -n "${PR:-}" ]; then
-            approver_count="$(gh api "repos/${{ github.repository }}/pulls/$PR/reviews" \
-              --jq "[.[] | select(.state == \"APPROVED\") | select(.user.login != \"$AUTHOR\")] | length")"
-          fi
-          if [ "$approver_count" -gt 0 ]; then
-            flags=""
-            for id in $ids; do flags="$flags --approved $id"; done
-            echo "approved=$flags" >> "$GITHUB_OUTPUT"
-            echo "verified $approver_count independent approval(s) for: $ids"
-          else
-            echo "approved=" >> "$GITHUB_OUTPUT"
-            echo "::warning::live payload exception(s) [$ids] carry no independent approving review, so they are refused."
-          fi
+          flags=""
+          for id in $ids; do flags="$flags --approved $id"; done
+          echo "approved=$flags" >> "$GITHUB_OUTPUT"
+          echo "owner-approved payload exception(s): $ids"
 
       # THE BLOCKING STEP (road-to-standing-payload-truth 1.1). Deliberately LAST
       # and `if: always()`, so the delta report and the PR comment land even when

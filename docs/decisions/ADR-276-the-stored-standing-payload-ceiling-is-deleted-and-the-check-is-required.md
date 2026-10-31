@@ -243,3 +243,9 @@ a bypass merge is inferred from this drill rather than separately observed.
 - **Deleting the two recorded raises along with the key.** They are the evidence
   behind ADR-264; removing the ceiling is not a reason to remove the record of
   it having been raised twice under a sentence forbidding it.
+
+## Amendment 2026-10-31
+
+The second-person approval this record names as the only available signal is
+no longer required: the owner approves a grant by recording it (ADR-275,
+Amendment 2026-10-31).
