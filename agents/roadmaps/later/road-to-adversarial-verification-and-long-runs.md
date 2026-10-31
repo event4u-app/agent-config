@@ -852,7 +852,7 @@ before the record is signed.
 
 ## Phase 9 — Long-run continuity
 
-- [x] **9.1 Write the record at every boundary, and never re-ask on restore.** The continuity
+- [ ] **9.1 Write the record at every boundary, and never re-ask on restore.** The continuity
       record carries the mission id, the roadmap, the phase, completed steps, decision
       references, the authority snapshot including `expires` and `revoked_by`, the target
       branch, the PR, the head SHA, the last CI result, the recovery epoch, the attempt count,
@@ -877,6 +877,17 @@ before the record is signed.
       An UNPARSEABLE expiry is treated as EXPIRED — a grant whose lifetime cannot be read is
       not a grant with no lifetime. -->
       <!-- verify: npm run test:ts -- tests/scripts/mission_continuity.test.ts -->
+      <!-- reopened 2026-10-31, round inbox-2026-10-bm (fix-what-you-see: a step marked done
+      whose deliverable is absent is reopened with its evidence). The step's deliverable is
+      the record WRITTEN at each phase boundary and on stop, pre-compact and session end.
+      `_lib/mission_record.ts` is a pure library — no file I/O, no write path — and has no
+      production writer: `grep -rln "mission_record" src tests` names only
+      `src/scripts/_lib/typed_op_grant.ts` (a comment, not an import),
+      `tests/scripts/mission_continuity.test.ts` and
+      `tests/e2e/adversarial-verification-fixtures.test.ts`. No hook binds it. What landed
+      (the shape, `restore`, `clearedBy`, the ledger precedence) stays valid; what closes this
+      step is a production writer at the four boundaries plus a fixture that reads a record
+      a real boundary wrote. -->
 
 ## Phase 10 — Council transport and cost
 

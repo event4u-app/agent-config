@@ -5,6 +5,8 @@ review_by: 2026-09-25
 
 # Stub: road to the per-turn hook-economy host reproduction
 
+> **Arrivals:** 1 - latest `inbox-2026-10-bm` (2026-10-31): the owner reports high RAM and CPU with five sessions and four subagents each. Readings this machine owes, in addition to the ones below: a ten-minute capture at that load split into host, AC dispatchers, AC MCP and other MCP; the cost and rate of one status-line tap refresh across five sessions (three to four process starts per refresh, unmeasured); whether plugin and settings hook carriers double-fire; the host version. The offline savings shipped as `road-to-a-fleet-that-pays-less-per-event`.
+
 > **Stub — not active work.** A **drain-run transfer**, not a demand-gated stub.
 > Created 2026-08-20 when
 > [`road-to-per-turn-hook-economy`](../road-to-per-turn-hook-economy.md) was
