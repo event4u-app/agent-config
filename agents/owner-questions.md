@@ -81,127 +81,6 @@ and the run that applies it links its PR.
 - **Recommendation:** (a).
 - **Blocks:** nothing executable; it closes a hole in the bypass directive.
 
-### OQ-43 — Does a single-deliverable delegation pre-clear commit and push for its run?
-
-- **Context:** lifted from Decision 1 of
-  `agents/roadmaps/stubs/road-to-owner-authority-decisions.md` (OQ-8). The
-  one-shot fence in `src/rules/commit-policy.md` interrupts every commit outside
-  a `process-full` run; ADR-237 § 1 pre-clears it only for that run.
-- **Options:** (a) yes — an explicit, this-turn, single-deliverable delegation in
-  a consumer project pre-clears commit/push for that run, inheriting ADR-237's
-  excluded list verbatim (trunk, deploy, prod data, irreversible external);
-  (b) no — the fence stays as written.
-- **Recommendation:** none recorded; it widens agent write authority, so the
-  council reads it before you do.
-- **Blocks:** nothing executable.
-
-### OQ-44 — ADR-005 § 1: may a delegation merge judge-ranked candidates into an integration branch?
-
-- **Context:** lifted from Decision 2 (OQ-8). ADR-268 § 3 settled the
-  mission-delivery merge on 2026-09-08 and scoped itself away from competitive
-  runs, so only ADR-005 § 1 is open: a competitive run still ends at a human
-  merge, even into an integration branch.
-- **Options:** (a) yes, integration branches only, trunk stays excluded;
-  (b) no.
-- **Recommendation:** none recorded.
-- **Blocks:** nothing executable; no judge-ranked run has reached the rule.
-
-### OQ-45 — May an independently validated evidence grade reduce the authorization burden for a reopen?
-
-- **Context:** lifted from Decision 3 (OQ-8). ADR-268 § 4 settled the
-  self-amendment half; the grade half is untouched. The register's own finding
-  argues against it: the party assigning the grade would gain authority from it.
-  Reopening needs all six preconditions the register lists (published Phase 6
-  measurements, four demonstrated preconditions, your ruling, a named
-  re-enabler, a chosen rollback unit, a drilled suspension mechanism).
-- **Options:** (a) yes, under a pre-registered accuracy threshold and rollback
-  unit; (b) no.
-- **Recommendation:** (b) until the six preconditions exist — none does today.
-- **Blocks:** nothing executable.
-
-### OQ-46 — Do the permanence claims in ADR-107 and ADR-108 stand as owner intent?
-
-- **Context:** lifted from Decision 4 (OQ-8). Five lines keep the
-  `permanence-language` ratchet at 5 with zero headroom: ADR-107 `:37` and
-  ADR-108 `:5`, `:12`, `:24`, `:29` (open-source forever, no commercial tier,
-  permanent liability disclaimer). The question is not whether the project stays
-  open-source; it is whether each claim is your intent or a mechanism that should
-  carry a reopen condition. Severable per record.
-- **Options:** per record, (a) owner intent — `authority_basis: owner_intent`,
-  claim intact, lint clear; (b) mechanism — reword to a reopen condition.
-- **Recommendation:** (a) for both — they state what the project is for, and an
-  agent rewording them to clear a lint would change its declared posture.
-- **Blocks:** nothing until the ratchet entry's 56-day expiry.
-
-### OQ-47 — May a run satisfy one-in-one-out with a self-written `estate_offset_exempt`?
-
-- **Context:** lifted from Decision 5 (OQ-8). The party writing the exemption is
-  the party gaining the slot; runs use the key routinely today.
-- **Options:** (a) yes — self-certified exemptions stay legal; (b) no — an
-  offset needs a named counterpart the run did not choose, and a run with none
-  cannot grow the estate.
-- **Recommendation:** none recorded; the register notes (b) is the stricter
-  reading its source stub argued for, and (b) would also bind this file's own
-  roadmaps.
-- **Blocks:** nothing executable.
-
-### OQ-48 — Is ADR-240 accepted, and does its evidence floor bind retroactively?
-
-- **Context:** lifted from Decision 7 (OQ-8). `ADR-240` is still
-  `status: proposed`, and its own text reserves acceptance to you. Retroactive
-  binding would reclassify every existing ADR at once.
-- **Options:** (a) accept, forward-only; (b) accept, retroactive; (c) leave it
-  proposed.
-- **Recommendation:** none recorded; if accepted, (a) is the cheaper half.
-- **Blocks:** nothing executable.
-
-### OQ-49 — Is ADR-215 § D2's reasoning behind `CAP = 2` your position?
-
-- **Context:** lifted from Decision 8 (OQ-8). The council kept `CAP = 2` on
-  2026-08-26; only whether its reasoning (one maintainer holds at most two
-  parallel workstreams per family) is yours is open. The cap binds nothing today.
-- **Options:** (a) yes, the cap stays; (b) no — raise it with a new record
-  amending ADR-215 § D2.
-- **Recommendation:** (a) — the council's verdict, and nothing waits on a slot.
-- **Blocks:** nothing executable.
-
-### OQ-50 — Does a git-authorization gate return?
-
-- **Context:** lifted from Decision 9 (OQ-8). ADR-255 § 1 refused it for one
-  round; ADR-254 stands. Two ledger items wait only on this: object binding as a
-  matching condition, and object-bound grants beyond `pr-merge`.
-- **Options:** (a) yes, in the typed-transition shape ADR-254's `review_trigger`
-  requires; (b) no.
-- **Recommendation:** none recorded.
-- **Blocks:** the two ledger items above.
-
-### OQ-51 — Should `personal.autonomy`'s default or its `auto` semantics change?
-
-- **Context:** lifted from Decision 10 (OQ-8). ADR-255 § 2 left both unchanged
-  for one round: `auto` resolves to `off` until a standing directive.
-- **Options:** (a) change the shipped default; (b) change what `auto` resolves
-  to; (c) keep both.
-- **Recommendation:** none recorded; both options change consumer defaults.
-- **Blocks:** nothing executable.
-
-### OQ-52 — Should the Hard Floor's push/commit rows narrow, or accept a run-scoped grant?
-
-- **Context:** lifted from Decision 11 (OQ-8). ADR-255 § 3 refused both for one
-  round; the floor still needs a this-turn confirmation.
-- **Options:** (a) narrow the rows; (b) accept a run-scoped grant in place of
-  the this-turn confirmation; (c) keep the floor.
-- **Recommendation:** none recorded; it lowers a safety floor.
-- **Blocks:** nothing executable.
-
-### OQ-53 — Rebuild `tool-safety` as consequence-aware and demote the wildcard-grant finding?
-
-- **Context:** lifted from Decision 12 (OQ-8). ADR-255 § 5 kept the floor for
-  one round and took no position on "capability is not risk".
-- **Options:** (a) rebuild the rule and demote the finding in
-  `lint_skill_frontmatter_safety`; (b) keep both.
-- **Recommendation:** none recorded.
-- **Blocks:** nothing executable.
-
 ## Not owner questions — waits, or already settled in the tree
 
 - `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
@@ -228,6 +107,56 @@ and the run that applies it links its PR.
   says it is, and lifting rows decides nothing in the owner's name.
 - **Blocks:** nothing executable; the cost is that the decisions are unseen.
 - **Answered 2026-10-30:** you asked that the open questions be settled in the AI council first; it decided 2/2 on (a) — lifting rows decides nothing in your name. Applied here: every open register decision is now its own row, OQ-43 to OQ-53, and each register entry is marked moved.
+
+### OQ-47 — May a run satisfy one-in-one-out with a self-written `estate_offset_exempt`?
+
+- **Context:** lifted from Decision 5 (OQ-8). The party writing the exemption is
+  the party gaining the slot; runs use the key routinely today.
+- **Options:** (a) yes — self-certified exemptions stay legal; (b) no — an
+  offset needs a named counterpart the run did not choose.
+- **Answered 2026-10-30 — already decided by you, found in the tree.** The AI
+  council (anthropic + openai, 2/2, one round, at your request) ruled (b) only
+  *absent* an authorizing record, and said removing an expressly granted
+  exemption power would be yours alone. That record exists: `ADR-287` D4 (your
+  ruling, 2026-10-16) keeps `estate_offset_exempt` unbounded "deliberately,
+  because bounding it was option 3 and option 3 was declined". So the answer is
+  (a), dated 2026-10-16; the row was framed before that ruling. Reopens only
+  through `ADR-287`'s own owner-only trigger.
+
+### OQ-49 — Is ADR-215 § D2's reasoning behind `CAP = 2` your position?
+
+- **Context:** lifted from Decision 8 (OQ-8). The council kept `CAP = 2` on
+  2026-08-26; whether its reasoning is yours was open. The cap binds nothing today.
+- **Answered 2026-10-30 by the AI council** (anthropic + openai, 2/2, one round,
+  at your request): keeping the cap is preservation and council-decidable — it
+  stays. The reasoning is recorded as the council's, with your attribution
+  *unestablished*; both seats agreed nothing operational needs that attribution,
+  so it is not put to you. **Revisit-if:** measured demand or capacity evidence,
+  or you say the reasoning is or is not yours.
+
+### OQ-50 — Does a git-authorization gate return?
+
+- **Context:** lifted from Decision 9 (OQ-8). ADR-255 § 1 refused it for one
+  round; ADR-254 stands. Two ledger items name it as their dependency.
+- **Answered 2026-10-30 by the AI council** (anthropic + openai, 2/2, one round,
+  at your request): not decidable as asked — there is no concrete gate to say
+  yes or no to. Current state stays (ADR-254). Both seats: a typed-transition
+  design within ADR-254's trigger would be a mechanism and could be council-
+  decided; openai added that grant representation, matching and blocking are
+  three separable parts, and the two ledger items may need only the first two.
+  **Revisit-if:** a concrete design exists with bounded failure and rollback
+  behaviour; it comes to you only if it weakens a reserved invariant.
+
+### OQ-51 — Should `personal.autonomy`'s default or its `auto` semantics change?
+
+- **Context:** lifted from Decision 10 (OQ-8). ADR-255 § 2 left both unchanged
+  for one round: `auto` resolves to `off` until a standing directive.
+- **Answered 2026-10-30 by the AI council** (anthropic + openai, 2/2, one round,
+  at your request): (c), keep both. "Changes consumer defaults" is not by itself
+  an owner-reserved transition; nothing measured shows a problem. openai: an
+  agent that asks despite sufficient authorization is an implementation defect,
+  fixable without touching either setting. **Revisit-if:** a concrete proposal
+  names what newly happens without asking, or abandonment/adoption data.
 
 ### OQ-9 — Which tree owns "who is the user", and what "profile" and "pack" mean
 
@@ -619,3 +548,118 @@ and the run that applies it links its PR.
 | OQ-6 | 2026-10-25 | How 4.2 narrows the rule load, and its A/B | a — wait for the flip data |
 | OQ-7 self-modification owner act | 2026-10-25 | Land the split-council self-modification work? | 1 — land through the D11 forge bypass; 3.4, 5.2 and 6.2 ride one PR the owner merges with bypass, 4.1 and 4.2 follow in their own change after the writer is on main |
 | OQ-12 self-modification AC-5 | 2026-10-25 | A proposal that passed, or one that landed? | b — amend AC-5: a change that landed through the D11 owner route with its refused record counts; the roadmap closes |
+
+### OQ-43 — Does a single-deliverable delegation pre-clear commit and push for its run?
+
+- **Context:** lifted from Decision 1 of
+  `agents/roadmaps/stubs/road-to-owner-authority-decisions.md` (OQ-8). The
+  one-shot fence in `src/rules/commit-policy.md` interrupts every commit outside
+  a `process-full` run; ADR-237 § 1 pre-clears it only for that run.
+- **Options:** (a) yes — an explicit, this-turn, single-deliverable delegation in
+  a consumer project pre-clears commit/push for that run, inheriting ADR-237's
+  excluded list verbatim (trunk, deploy, prod data, irreversible external);
+  (b) no — the fence stays as written.
+- **Recommendation:** none recorded; it widens agent write authority, so the
+  council reads it before you do.
+- **Council 2026-10-30** (anthropic + openai, 2/2): owner-reserved (governance
+  self-amendment, safety floor); floor preserved meanwhile. Both seats: decide
+  together with OQ-52 — a pre-cleared push still hits the Hard Floor's
+  this-turn confirmation. Recommendation: (b) today.
+- **Blocks:** nothing executable.
+- **Answered 2026-10-30 (you, option 1):** "1" — keep the floor. OQ-43 (b) and OQ-52 (c): the one-shot fence in `commit-policy` and the Hard Floor's this-turn confirmation for push stay as written. Revisit-if: measured interruptions from the fence, or a concrete bounded run-grant proposal.
+
+### OQ-52 — Should the Hard Floor's push/commit rows narrow, or accept a run-scoped grant?
+
+- **Context:** lifted from Decision 11 (OQ-8). ADR-255 § 3 refused both for one
+  round; the floor still needs a this-turn confirmation.
+- **Options:** (a) narrow the rows; (b) accept a run-scoped grant in place of
+  the this-turn confirmation; (c) keep the floor.
+- **Recommendation:** none recorded; it lowers a safety floor.
+- **Council 2026-10-30** (2/2): owner-reserved (lowers a safety floor); (c)
+  meanwhile. Decide with OQ-43. If friction is ever shown, openai would look at a
+  narrow (b) with scope, expiry, revocation and changed-object handling.
+- **Blocks:** nothing executable.
+- **Answered 2026-10-30 (you, option 1):** "1" — keep the floor. OQ-43 (b) and OQ-52 (c): the one-shot fence in `commit-policy` and the Hard Floor's this-turn confirmation for push stay as written. Revisit-if: measured interruptions from the fence, or a concrete bounded run-grant proposal.
+
+### OQ-44 — ADR-005 § 1: may a delegation merge judge-ranked candidates into an integration branch?
+
+- **Context:** lifted from Decision 2 (OQ-8). ADR-268 § 3 settled the
+  mission-delivery merge on 2026-09-08 and scoped itself away from competitive
+  runs, so only ADR-005 § 1 is open: a competitive run still ends at a human
+  merge, even into an integration branch.
+- **Options:** (a) yes, integration branches only, trunk stays excluded;
+  (b) no.
+- **Recommendation:** none recorded.
+- **Council 2026-10-30** (2/2): owner-reserved (governance self-amendment);
+  human merge preserved meanwhile. Recommendation: (b) until a real competitive
+  run reaches the rule. openai: a judge ranking does not show that *combining*
+  candidates yields a valid result.
+- **Blocks:** nothing executable; no judge-ranked run has reached the rule.
+- **Answered 2026-10-30 (you, option 1):** "1" — (b), the human merge stays. ADR-005 § 1 stands: a competitive run ends at a human merge, integration branches included. Revisit-if: a real judge-ranked run reaches the rule.
+
+### OQ-45 — May an independently validated evidence grade reduce the authorization burden for a reopen?
+
+- **Context:** lifted from Decision 3 (OQ-8). ADR-268 § 4 settled the
+  self-amendment half; the grade half is untouched. The register's own finding
+  argues against it: the party assigning the grade would gain authority from it.
+  Reopening needs all six preconditions the register lists (published Phase 6
+  measurements, four demonstrated preconditions, your ruling, a named
+  re-enabler, a chosen rollback unit, a drilled suspension mechanism).
+- **Options:** (a) yes, under a pre-registered accuracy threshold and rollback
+  unit; (b) no.
+- **Recommendation:** (b) until the six preconditions exist — none does today.
+- **Council 2026-10-30** (2/2): owner-reserved; (b). anthropic: (a) is wrong
+  even with the preconditions, because it reverses the self-grading finding
+  without answering it; openai: evidence never creates consent, at most it
+  supports a delegation you grant.
+- **Blocks:** nothing executable.
+- **Answered 2026-10-30 (you, option 1):** "1" — (b), no: an evidence grade never shifts authority. Unconditional — the self-grading objection does not depend on the six preconditions, so meeting them does not reopen this. Reopens only by your explicit ruling.
+
+### OQ-46 — Do the permanence claims in ADR-107 and ADR-108 stand as owner intent?
+
+- **Context:** lifted from Decision 4 (OQ-8). Five lines keep the
+  `permanence-language` ratchet at 5 with zero headroom: ADR-107 `:37` and
+  ADR-108 `:5`, `:12`, `:24`, `:29` (open-source forever, no commercial tier,
+  permanent liability disclaimer). The question is not whether the project stays
+  open-source; it is whether each claim is your intent or a mechanism that should
+  carry a reopen condition. Severable per record.
+- **Options:** per record, (a) owner intent — `authority_basis: owner_intent`,
+  claim intact, lint clear; (b) mechanism — reword to a reopen condition.
+- **Recommendation:** (a) for both — they state what the project is for, and an
+  agent rewording them to clear a lint would change its declared posture.
+- **Council 2026-10-30** (2/2): owner-reserved (purpose, licensing, public
+  liability commitment). Split the five lines rather than answer per record:
+  ADR-108's open-source claim and the liability line are purpose; ADR-107 `:37`
+  repeats ADR-108 and could become a pointer. `authority_basis: owner_intent`
+  does clear the checker (`OWNER_INTENT_ESCAPE` in
+  `lint_provenance_vocabulary.ts`).
+- **Blocks:** nothing until the ratchet entry's 56-day expiry.
+- **Answered 2026-10-30 (you, option 1):** "1" — ADR-108 is owner intent: add `authority_basis: owner_intent`, all four claims stay verbatim. ADR-107 `:37` becomes a plain pointer to ADR-108 instead of repeating "forever". Applied 2026-10-31 (uncommitted): ADR-108 carries `authority_basis: owner_intent`, ADR-107 `:37` points at ADR-108, ratchet 5 -> 2, pinning test updated. Correction to the council reading: the owner escape clears the Decision section only, never the `decision:` slug or `# ` title, so ADR-108's slug and title stayed detected. Follow-up answered the same day (you, option 1): slug is now `open-source-no-commercial-tier`, the title drops "forever", file name unchanged; ratchet 2 -> 0.
+
+### OQ-48 — Is ADR-240 accepted, and does its evidence floor bind retroactively?
+
+- **Context:** lifted from Decision 7 (OQ-8). `ADR-240` is still
+  `status: proposed`, and its own text reserves acceptance to you. Retroactive
+  binding would reclassify every existing ADR at once.
+- **Options:** (a) accept, forward-only; (b) accept, retroactive; (c) leave it
+  proposed.
+- **Recommendation:** none recorded; if accepted, (a) is the cheaper half.
+- **Council 2026-10-30** (2/2): owner-reserved (the record reserves its own
+  acceptance). Recommendation: (a), forward-only. openai: say whether an
+  *amendment* to an old record must meet the floor.
+- **Blocks:** nothing executable.
+- **Answered 2026-10-30 (you, option 1):** "1" — ADR-240 accepted, forward-only: records written after acceptance meet the evidence floor, and an amendment to an existing record must meet it too; unamended older records stay as they are. Applied 2026-10-31 (uncommitted): ADR-240 `status: accepted`, owner-acceptance note in its § Status, `docs/decisions/INDEX.md` regenerated.
+
+### OQ-53 — Rebuild `tool-safety` as consequence-aware and demote the wildcard-grant finding?
+
+- **Context:** lifted from Decision 12 (OQ-8). ADR-255 § 5 kept the floor for
+  one round and took no position on "capability is not risk".
+- **Options:** (a) rebuild the rule and demote the finding in
+  `lint_skill_frontmatter_safety`; (b) keep both.
+- **Recommendation:** none recorded.
+- **Council 2026-10-30** (2/2): demoting the finding is owner-reserved; a
+  consequence-aware rule that is *equivalent or stronger* would be
+  council-decidable. Recommendation: (b), and treat rule redesign and finding
+  demotion as two separate questions.
+- **Blocks:** nothing executable.
+- **Answered 2026-10-31 (you, option 2):** "2" — the wildcard-grant finding stays HIGH. A consequence-aware rebuild of `tool-safety` is allowed and council-decidable, provided it is demonstrably equivalent or stricter; any demotion of the finding stays yours.

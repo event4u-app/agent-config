@@ -408,28 +408,24 @@ describe('lint_provenance_vocabulary — rule 4 escape 2: owner_intent', () => {
 describe('lint_provenance_vocabulary — rule 4 over the real corpus', () => {
     const live = lintAdrPermanence();
 
-    it('the recorded baseline equals the live count', () => {
+    it('the corpus is clean and carries no baseline entry', () => {
+        // Walked to 0 on 2026-10-31 (OQ-46). A zero-count entry is refused by
+        // gate_baseline, so the entry is gone and any new hit reds the gate.
         const baselines = JSON.parse(
             fs.readFileSync(path.join(REPO, 'src/config/gate-violation-baselines.json'), 'utf-8'),
         ) as { gates: Record<string, { count: number } | undefined> };
-        const entry = baselines.gates[PERMANENCE_GATE];
-        expect(entry, `${PERMANENCE_GATE} has no baseline entry`).toBeDefined();
-        // Equality, not `<=`: a baseline ABOVE the live count silently grants
-        // one free regression and the gate still prints green.
-        expect(entry?.count).toBe(live.length);
+        expect(baselines.gates[PERMANENCE_GATE]).toBeUndefined();
+        expect(live).toEqual([]);
     });
 
-    it('still detects the owner-reserved records, which no agent may edit', () => {
-        // These two are owner PURPOSE statements. Their only legitimate fix is
-        // `authority_basis: owner_intent`, which is an owner ruling — so they
-        // stay detected on purpose, and a run that "fixes" them by rewording
-        // the purpose has exceeded its authority.
-        const found = new Set(live.map((v) => v.file.split('/').pop() ?? ''));
-        for (const record of [
-            'ADR-107-legal-domain-pack-adoption.md',
-            'ADR-108-open-source-forever-no-commercial-tier.md',
-        ]) {
-            expect(found.has(record), `${record} should be detected`).toBe(true);
+    it('is silent on ADR-107 and ADR-108 after the owner ruling', () => {
+        // OQ-46 (owner, 2026-10-31): ADR-108's claims are owner intent, cleared by
+        // `authority_basis: owner_intent`; its slug and title were relabelled and
+        // ADR-107 now points at it. Asserting absence keeps the wording from
+        // drifting back at the same total.
+        for (const record of ['ADR-107', 'ADR-108']) {
+            const hits = live.filter((v) => v.file.includes(record));
+            expect(hits.map((v) => `${v.file} ${v.msg}`), `${record} should be clean`).toEqual([]);
         }
     });
 
