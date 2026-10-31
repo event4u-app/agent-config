@@ -265,14 +265,11 @@ stricter gate goes on the action nothing else watches.
 - **One rerun for a known flake class** (`gh run rerun <id> --failed`) before
   red counts as real.
 - **`execution.fix_loop_max` per validation target, six touches per PR per
-  pass — two different units, and whichever is exhausted first binds.** The
-  always-loaded [`autonomous-execution`](../../rules/autonomous-execution.md)
-  bound is `execution.fix_loop_max` failed attempts on ONE target (a named
-  failing test, a lint rule id, one CI job; default 10, worked through its
-  ladder) and it is not lifted here. The six is a per-PR ceiling across all
-  touches in one pass: a PR whose CI peels one failure to reveal a different
-  one may be worked six times, and with the default bound the six binds before
-  any single target's budget does. Exhausting the per-target bound ends the
-  PR's pass immediately, whatever the six says.
+  pass — two units; whichever runs out first binds.** The
+  [`autonomous-execution`](../../rules/autonomous-execution.md) bound is
+  `execution.fix_loop_max` failed attempts on ONE target (a failing test, a
+  lint rule id, one CI job; default 10, via its ladder), not lifted here. The
+  six caps all touches in one pass, so with the default bound it binds first.
+  Exhausting the per-target bound ends the PR's pass, whatever the six says.
   Exhaustion of either posts a diagnosis comment and moves the PR to the end of
   the queue once; a second exhaustion is terminal.

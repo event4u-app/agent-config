@@ -716,7 +716,7 @@ describe('Stop snapshot — one git read per dispatch for both Stop concerns', (
         return fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : [];
     }
 
-    it.skipIf(process.platform === 'win32')(
+    it(
         'runs `git diff` and `git ls-files` once for both concerns inside one dispatch scope',
         async () => {
             const { withDispatchSnapshotScope } = await import('../../src/scripts/_lib/stop_snapshot.js');
@@ -736,7 +736,7 @@ describe('Stop snapshot — one git read per dispatch for both Stop concerns', (
         },
     );
 
-    it.skipIf(process.platform === 'win32')(
+    it(
         'never reuses a snapshot outside its dispatch: a later scope reads the tree again',
         async () => {
             const { withDispatchSnapshotScope } = await import('../../src/scripts/_lib/stop_snapshot.js');
