@@ -82,6 +82,9 @@ export function windowPressure(snapshots: readonly QuotaSnapshot[], window: Wind
     const empty = { window, state: 'unknown' as const, fill: null, burn_per_min: null, eta_full_ms: null, resets_at: null };
     if (latest === undefined) return empty;
     const w = latest[window];
+    // Past its reset the window has already refilled; the last fill describes a
+    // window that no longer exists, so it reads as no reading until a fresh snapshot.
+    if (w.resets_at !== null && w.resets_at * 1000 <= now) return { ...empty, resets_at: w.resets_at };
     if (now - latest.ts > STALE_AFTER_MS) return { ...empty, fill: w.pct, resets_at: w.resets_at };
     // Only points from the same window instance: a reset drops the fill to zero
     // and would read as a negative burn.
@@ -117,6 +120,25 @@ export function readPlanPressure(env?: EnvMap | null, now: number = Date.now()):
     return planPressure(readQuotaLedger(env, now), now);
 }
 
+/**
+ * When the freshest exhausted window resets (epoch seconds), or `null`. Both
+ * windows exhausted in one snapshot → the later reset, since work continues only
+ * once both have refilled. A reset already behind `now` says nothing about when.
+ */
+export function exhaustedResetAt(snapshots: readonly QuotaSnapshot[], now: number): number | null {
+    for (let i = snapshots.length - 1; i >= 0; i--) {
+        const s = snapshots[i];
+        if (s === undefined) continue;
+        const resets = [s.five_hour, s.seven_day]
+            .filter((w): w is QuotaWindow => w !== undefined && w.pct >= 100)
+            .map((w) => w.resets_at);
+        if (resets.length === 0) continue;
+        const known = resets.filter((r): r is number => r !== null && r * 1000 > now);
+        return known.length === resets.length ? Math.max(...known) : null;
+    }
+    return null;
+}
+
 /** The newest context fill this session reported, if it is fresh. */
 export function sessionContextFill(snapshots: readonly QuotaSnapshot[], session: string, now: number): number | null {
     for (let i = snapshots.length - 1; i >= 0; i--) {
@@ -129,7 +151,8 @@ export function sessionContextFill(snapshots: readonly QuotaSnapshot[], session:
 
 const WINDOW_LABEL: Record<WindowName, string> = { five_hour: '5h', seven_day: '7d' };
 
-function clock(ms: number): string {
+/** Local `HH:MM` for an epoch-millisecond instant. */
+export function clock(ms: number): string {
     const d = new Date(ms);
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }

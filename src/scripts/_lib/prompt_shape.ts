@@ -69,10 +69,16 @@
  * honest failure mode: it under-filters back to today's behaviour rather than
  * misfiring on a real turn.
  *
- * It is deliberately NOT added to `machine_wake.ts`. There the same
- * misclassification retains an authorization instead of mis-pinning a reply,
- * and a prose match is too weak a warrant for that consequence — see the
- * asymmetry note below, which this is the first real test of.
+ * It is deliberately NOT added to `machine_wake.ts`'s wake prefixes. There the
+ * same misclassification retains an authorization instead of mis-pinning a
+ * reply, and a prose match is too weak a warrant for that consequence — see the
+ * asymmetry note below, which this is the first real test of. The ledger
+ * therefore still treats the sentence as a human turn and replaces itself; the
+ * one narrower exception is `machine_wake.isHostLimitResetResume`, which keeps
+ * git-authorization from spending a pending refusal on it. That keeps open only
+ * the confirmation the user was already owed (a later affirmative inside the
+ * pending record's own age bound) and grants nothing by itself, so the weak
+ * warrant suffices there.
  *
  * **A SECOND VOCABULARY ANSWERS THIS SAME QUESTION AND THE TWO HAVE DRIFTED.**
  * `_lib/machine_wake.ts`'s `humanTypedThisTurn` guards per-turn STATE on this

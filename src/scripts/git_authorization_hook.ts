@@ -59,7 +59,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { humanTypedThisTurn as _humanTypedThisTurn } from "./_lib/machine_wake.js";
+import { humanTypedThisTurn as _humanTypedThisTurn, isHostLimitResetResume } from "./_lib/machine_wake.js";
 
 import {
   CONSEQUENCE_PHRASES,
@@ -1385,8 +1385,9 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
   const { authorized, evidence } = classifyAuthorization(prompt);
 
   // The answer to the guard's own question. Read (and consume) on EVERY prompt,
-  // so the record cannot outlive the turn it was raised in.
-  const pending = takePending(options.consumer_root, session, Date.now());
+  // so the record cannot outlive the turn it was raised in — except the host's
+  // quota-reset resume, which no human typed and so cannot be that answer.
+  const pending = isHostLimitResetResume(prompt) ? null : takePending(options.consumer_root, session, Date.now());
   if (pending && !authorized.includes(pending.op) && isAffirmative(prompt)) {
     authorized.push(pending.op);
     evidence[pending.op] =

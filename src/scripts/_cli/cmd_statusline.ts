@@ -4,16 +4,18 @@
  * The tap is how AC learns the plan window. Claude Code pipes a JSON payload
  * into the status-line command on every refresh, and that payload is the only
  * official carrier of `rate_limits.five_hour` / `seven_day` and of the context
- * window. The tap sits in front of the user's own status line: it hands the
- * same bytes to the user's command, prints that command's output unchanged,
- * and only then writes one counts-only snapshot to the machine-wide quota
- * ledger. Every error of its own is swallowed — a status line that goes blank
+ * window. The tap sits in front of the user's own status line: it first writes
+ * one counts-only snapshot to the machine-wide quota ledger — before the user's
+ * command, so a slow command the host kills cannot take the snapshot with it —
+ * then hands the same bytes to that command and prints its output unchanged.
+ * While a plan window is warm or worse, AC's own segment follows on a line of
+ * its own. Every error of its own is swallowed — a status line that goes blank
  * because AC failed to write a file is worse than no ledger.
  *
- * `install` records the user's `statusLine` value beside the ledger and points
- * `statusLine` at the tap; `uninstall` puts the recorded value back. The
- * original is stored rather than quoted into a shell line, so no command ever
- * has to survive a second round of quoting.
+ * `install` records the user's `statusLine` value beside the ledger, backs up
+ * `settings.json` once, and points `statusLine` at the tap; `uninstall` puts the
+ * recorded value back. The original is stored rather than quoted into a shell
+ * line, so no command ever has to survive a second round of quoting.
  */
 
 import { spawnSync } from 'node:child_process';
@@ -83,27 +85,18 @@ function runShell(command: string, input: string): string {
     return typeof r.stdout === 'string' ? r.stdout : '';
 }
 
+/** The segment is our own text, but it lands in a terminal: no byte of it may move the cursor or recolour the user's line. */
+function stripControl(text: string): string {
+    return text.replace(/[\u0000-\u001f\u007f-\u009f]/g, '');
+}
+
 /**
- * One tap: the wrapped line's output first, then the snapshot. Returns what is
- * printed. With no wrapped command the tap prints AC's own compact segment, and
- * only while a window is under pressure.
+ * One tap: the snapshot first, then the wrapped line's output, then AC's own
+ * compact segment on its own line while a window is under pressure. Returns
+ * what is printed.
  */
 export function runTap(opts: TapOptions): string {
     const now = opts.now ?? Date.now();
-    let printed = '';
-    let wrapped: string | null = null;
-    try {
-        wrapped = wrappedCommand(opts.env);
-    } catch {
-        wrapped = null;
-    }
-    if (wrapped !== null) {
-        try {
-            printed = (opts.run ?? runShell)(wrapped, opts.stdin);
-        } catch {
-            printed = '';
-        }
-    }
     try {
         const snapshot = snapshotFromStatusPayload(JSON.parse(opts.stdin), now);
         if (snapshot !== null) {
@@ -113,14 +106,28 @@ export function runTap(opts: TapOptions): string {
     } catch {
         // the ledger is best-effort; the line must still print
     }
-    if (wrapped === null) {
+    let wrapped: string | null = null;
+    try {
+        wrapped = wrappedCommand(opts.env);
+    } catch {
+        wrapped = null;
+    }
+    let printed = '';
+    if (wrapped !== null) {
         try {
-            printed = quotaSegment(opts.env, now);
+            printed = (opts.run ?? runShell)(wrapped, opts.stdin);
         } catch {
             printed = '';
         }
     }
-    return printed;
+    let segment = '';
+    try {
+        segment = stripControl(quotaSegment(opts.env, now));
+    } catch {
+        segment = '';
+    }
+    if (segment === '') return printed;
+    return printed === '' || printed.endsWith('\n') ? `${printed}${segment}` : `${printed}\n${segment}`;
 }
 
 export interface InstallResult {
@@ -141,6 +148,24 @@ function writeSettings(file: string, settings: Record<string, unknown>): void {
     write_atomic(file, `${JSON.stringify(settings, null, 2)}\n`);
 }
 
+/** Same name and once-only rule as `hostConfigMerge.ts`, so the backup keeps the pre-agent-config original. */
+const SETTINGS_BACKUP_SUFFIX = '.agent-config.bak';
+
+function backupSettings(file: string): void {
+    const backup = file + SETTINGS_BACKUP_SUFFIX;
+    if (fs.existsSync(backup)) return;
+    let original: string;
+    try {
+        original = fs.readFileSync(file, 'utf-8');
+    } catch {
+        return;
+    }
+    fs.writeFileSync(backup, original, 'utf-8');
+}
+
+/** Display keys of the user's own status line that the tap carries over; `type` and `command` are the tap's. */
+const KEPT_STATUSLINE_KEYS = ['padding', 'refreshInterval'] as const;
+
 export function installTap(env?: EnvMap | null): InstallResult {
     const file = claudeSettingsPath(env);
     const settings = readSettings(file);
@@ -150,7 +175,15 @@ export function installTap(env?: EnvMap | null): InstallResult {
         return { code: 0, message: `statusline:install · already installed in ${file}` };
     }
     write_atomic(originalPath(env), JSON.stringify({ statusLine: current ?? null }));
-    settings['statusLine'] = { type: 'command', command: TAP_COMMAND };
+    const tap: Record<string, unknown> = { type: 'command', command: TAP_COMMAND };
+    if (current !== null && typeof current === 'object') {
+        for (const key of KEPT_STATUSLINE_KEYS) {
+            const v = (current as Record<string, unknown>)[key];
+            if (v !== undefined) tap[key] = v;
+        }
+    }
+    settings['statusLine'] = tap;
+    backupSettings(file);
     writeSettings(file, settings);
     const kept = current === undefined ? 'no previous status line' : 'your status line is chained and keeps printing';
     return { code: 0, message: `statusline:install · tap installed in ${file} (${kept}); undo with agent-config statusline:uninstall` };

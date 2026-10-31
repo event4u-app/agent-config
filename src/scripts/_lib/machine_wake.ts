@@ -62,3 +62,23 @@ export function humanTypedThisTurn(prompt: string): boolean {
     }
     return true;
 }
+
+/**
+ * The host's own resume sentence after a plan-quota reset, anchored at
+ * character zero exactly as in `prompt_shape.isSyntheticPrompt`.
+ *
+ * Deliberately NOT a wake prefix: answering "machine" would leave the ledger
+ * standing, so an authorization from before the limit would ride through the
+ * reset on the strength of a prose match. The turn stays "human" for the
+ * ledger, which is replaced as on any turn. The one thing it must not do is
+ * SPEND the pending refusal: that record exists so the user's answer to the
+ * guard's question confirms it, and a sentence nobody typed is not that answer.
+ * Leaving the record costs nothing it could grant — only an affirmative inside
+ * `PENDING_MAX_AGE_MS` of the original refusal confirms it, and the record still
+ * expires by age.
+ */
+export const HOST_LIMIT_RESET_PREFIX = 'Your claude.ai usage limit has reset';
+
+export function isHostLimitResetResume(prompt: string): boolean {
+    return prompt.trimStart().startsWith(HOST_LIMIT_RESET_PREFIX);
+}

@@ -500,3 +500,61 @@ describe("a machine wake leaves per-turn state standing", () => {
     expect(ledger().authorized).not.toContain("push");
   });
 });
+
+// ---------------------------------------------------------------------------
+// The host's quota-reset resume (road-to-a-quota-signal-that-tells-the-truth
+// 3.1). It reaches this slot as a plain sentence, no envelope tag, so the wake
+// predicate deliberately answers "human": the ledger is replaced and no earlier
+// authorization rides through the reset. What it must NOT do is spend the one
+// pending refusal the user is still answering, nor grant anything itself.
+// ---------------------------------------------------------------------------
+
+const QUOTA_RESET =
+  "Your claude.ai usage limit has reset. Continue the task you were working on, " +
+  "or let me know if you want to do something else.";
+
+describe("the host's quota-reset sentence is not an authorization", () => {
+  function plantPending(op: GitOp): string {
+    const pendingPath = path.join(tmp, pendingFileFor("s1"));
+    fs.mkdirSync(path.dirname(pendingPath), { recursive: true });
+    fs.writeFileSync(pendingPath, JSON.stringify({ op, session_id: "s1", refused_at: new Date().toISOString() }));
+    return pendingPath;
+  }
+
+  it("is still read as a human turn by the wake predicate — no authorization is retained across it", () => {
+    expect(humanTypedThisTurn(QUOTA_RESET)).toBe(true);
+    submit("push it");
+    submit(QUOTA_RESET);
+    expect(ledger().authorized).toEqual([]);
+  });
+
+  it("grants nothing, even with a pending refusal waiting", () => {
+    plantPending("push");
+    submit(QUOTA_RESET);
+    expect(ledger().authorized).toEqual([]);
+    expect(classifyAuthorization(QUOTA_RESET).authorized).toEqual([]);
+  });
+
+  it("does not consume the pending refusal, so the user's later `ja` still confirms it", () => {
+    const pendingPath = plantPending("push");
+    submit(QUOTA_RESET);
+    expect(fs.existsSync(pendingPath), "the reset sentence consumed the pending refusal").toBe(true);
+    submit("ja");
+    expect(ledger().authorized).toContain("push");
+    expect(fs.existsSync(pendingPath)).toBe(false);
+  });
+
+  it("the language hook and the ledger recognise the same sentence", async () => {
+    const { isSyntheticPrompt } = await import("../../src/scripts/_lib/prompt_shape.js");
+    const { isHostLimitResetResume } = await import("../../src/scripts/_lib/machine_wake.js");
+    expect(isSyntheticPrompt(QUOTA_RESET)).toBe(true);
+    expect(isHostLimitResetResume(QUOTA_RESET)).toBe(true);
+    expect(isHostLimitResetResume(`why did I get "${QUOTA_RESET}"?`)).toBe(false);
+  });
+
+  it("a human merely quoting the sentence is a normal turn and consumes the refusal as any turn does", () => {
+    const pendingPath = plantPending("push");
+    submit(`why did I get "${QUOTA_RESET}"?`);
+    expect(fs.existsSync(pendingPath)).toBe(false);
+  });
+});
