@@ -264,13 +264,15 @@ stricter gate goes on the action nothing else watches.
 - **Root-cause fixes only**, inside the PR's own scope.
 - **One rerun for a known flake class** (`gh run rerun <id> --failed`) before
   red counts as real.
-- **N=3 per validation target, six touches per PR per pass — two different
-  units, and the smaller one binds first.** The always-loaded
-  [`autonomous-execution`](../../rules/autonomous-execution.md) cap is
-  three consecutive failed attempts on ONE target (a named failing test, a lint
-  rule id, one CI job) and it is not lifted here. The six is a per-PR ceiling
-  across *distinct* targets: a PR whose CI peels one failure to reveal a
-  different one may be worked six times, never one target four times. Hitting
-  N=3 on a single target ends the PR's pass immediately, whatever the six says.
+- **`execution.fix_loop_max` per validation target, six touches per PR per
+  pass — two different units, and whichever is exhausted first binds.** The
+  always-loaded [`autonomous-execution`](../../rules/autonomous-execution.md)
+  bound is `execution.fix_loop_max` failed attempts on ONE target (a named
+  failing test, a lint rule id, one CI job; default 10, worked through its
+  ladder) and it is not lifted here. The six is a per-PR ceiling across all
+  touches in one pass: a PR whose CI peels one failure to reveal a different
+  one may be worked six times, and with the default bound the six binds before
+  any single target's budget does. Exhausting the per-target bound ends the
+  PR's pass immediately, whatever the six says.
   Exhaustion of either posts a diagnosis comment and moves the PR to the end of
   the queue once; a second exhaustion is terminal.

@@ -257,7 +257,7 @@ observed shapes); any mismatch is a routing bug, not a rounding error.
 
 LLM-based classification — only if the deterministic rules prove too coarse
 **and** the Phase-6 benchmark justifies the meta-call cost. It must be
-budgeted (consume part of the N=3 autonomous budget) and opt-in. Not in v1.
+budgeted (consume part of the `execution.fix_loop_max` budget) and opt-in. Not in v1.
 
 ## Reference implementation
 

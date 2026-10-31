@@ -2171,3 +2171,28 @@ describe('the refusal record counts what actually fired', () => {
         expect(typeof state['first_refused_at']).toBe('string');
     });
 });
+
+describe('the header counts the detectors the gate actually has', () => {
+    // The header said "Three" while the union carried four, then "FIVE" while it
+    // carried six. Pinning the prose to the union is the only way the next
+    // detector cannot be added without the header following it.
+    const source = fs.readFileSync(HOOK, 'utf8');
+    const header = source.slice(0, source.indexOf('## Removal condition'));
+    const union = source.match(/export type DetectorId =([^;]+);/);
+    const ids = [...(union?.[1] ?? '').matchAll(/'([^']+)'/g)].map((m) => m[1]);
+    const WORDS = ['ZERO', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE'];
+
+    it('reads a non-empty DetectorId union', () => {
+        expect(ids.length).toBeGreaterThan(0);
+    });
+
+    it('the stated count equals the number of DetectorId members', () => {
+        const stated = header.match(/\b([A-Z]+) detectors ride on one guard/);
+        expect(stated?.[1]).toBe(WORDS[ids.length]);
+    });
+
+    it('every DetectorId is named in the header, exactly once per lettered row', () => {
+        const rows = [...header.matchAll(/^ \*\s+[A-Z] — .*?\(`([a-z-]+)`/gm)].map((m) => m[1]);
+        expect([...rows].sort()).toEqual([...ids].sort());
+    });
+});

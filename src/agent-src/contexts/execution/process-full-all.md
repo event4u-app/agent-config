@@ -234,7 +234,7 @@ roadmap:
 | 3. Security-sensitive surface | **Ends the run**, same reasoning. |
 | 2. Council-off + genuine ambiguity | Ends the roadmap; the loop records it and continues. |
 | 4. Scope-out-of-roadmap work | Ends the roadmap; the loop records it and continues. |
-| 5. Test / quality red past N=3 | Ends the roadmap; the loop records it and continues. |
+| 5. Test / quality red past `execution.fix_loop_max` | Ends the roadmap; the loop records it and continues. |
 | ~~6. Unenumerated merge conflict in delivery~~ | **RETIRED** — `/pr:merge` § 3 routes it instead of stopping. |
 
 **And the conditions that end the loop without ending a roadmap:**
