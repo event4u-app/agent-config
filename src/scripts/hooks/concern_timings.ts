@@ -20,7 +20,7 @@ import fs from "node:fs";
  * - it is off unless the variable is set, so the cost on a real dispatch is
  *   one `process.env` lookup.
  *
- * It carries a concern name, an integer, an event and a platform. There is no
+ * It carries a concern name, integers, an event and a platform. There is no
  * field that can hold a payload, a path or a prompt — the same shape-level
  * privacy floor `payload_stubs` keeps one row up.
  *
@@ -47,6 +47,44 @@ export interface ConcernTimingSample {
 }
 
 /**
+ * What one dispatch cost the process, beside the wall-clock samples.
+ *
+ * Wall time alone cannot say whether five sessions with four subagents each
+ * leave the machine usable: a fast event that holds 200 MB, or burns CPU while
+ * another session waits, is invisible to it. Both numbers are cumulative for
+ * the process, which for a directly invoked dispatcher IS the dispatch. Taken
+ * once per dispatch and stamped on each of its rows, so a reader keyed on
+ * `concern` still sees one row per concern.
+ */
+export interface ResourceSample {
+  /** Peak resident set size, kilobytes (`process.resourceUsage().maxRSS`). */
+  max_rss_kb: number;
+  /** User + system CPU time, microseconds. */
+  cpu_us: number;
+}
+
+export function readResourceSample(): ResourceSample {
+  const u = process.resourceUsage();
+  return { max_rss_kb: u.maxRSS, cpu_us: u.userCPUTime + u.systemCPUTime };
+}
+
+function resourceColumns(read: () => ResourceSample): Record<string, number> {
+  try {
+    const sample = read();
+    const out: Record<string, number> = {};
+    for (const key of ["max_rss_kb", "cpu_us"] as const) {
+      const value = sample[key];
+      if (typeof value === "number" && Number.isFinite(value)) {
+        out[key] = Math.round(value);
+      }
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+/**
  * Append one JSONL row per concern, when the sink is armed.
  *
  * Never throws and never blocks the dispatch: a measurement sink that can fail
@@ -58,11 +96,13 @@ export function writeConcernTimings(
   platform: string,
   samples: readonly ConcernTimingSample[],
   sinkPath: string | undefined = process.env[TIMINGS_SINK_ENV],
+  readUsage: () => ResourceSample = readResourceSample,
 ): void {
   if (!sinkPath) {
     return;
   }
   try {
+    const resources = resourceColumns(readUsage);
     const lines: string[] = [];
     for (const sample of samples) {
       // A concern the dispatcher never timed is OMITTED rather than recorded
@@ -82,6 +122,7 @@ export function writeConcernTimings(
           duration_us: Math.round(sample.duration_us),
           event,
           platform,
+          ...resources,
         }),
       );
     }
