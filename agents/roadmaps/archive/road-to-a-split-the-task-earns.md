@@ -91,10 +91,6 @@ router or a setting.
       output stays byte-identical. The gate-authoring finding format names
       `fix:` before `suppress:` for new gates.
       verify: `npx vitest run tests/lib/gate_baseline.test.ts -t fix` -> 0
-- [x] **3.3 Detector C names what to run.** A `verification` refusal appends
-      up to three commands from `resolve_toolchain(root)`; silent when the
-      project declares none.
-      verify: `npx vitest run tests/scripts/turn_end_gate_hook.test.ts -t names-the-commands` -> 0
 
 ## Phase 4 — Hand-offs to the owners (arrivals, no re-planning)
 
@@ -121,6 +117,7 @@ router or a setting.
 | Async Stop lane, host matchers, `tools:` on fail-closed guards | recorded council cancellation / rejection; security-sensitive | per-turn-hook-economy carry (archived), council |
 | Model-tier guide weight | ADR-293 has no model axis; needs a refreshed bench (spend) | ADR-293 / installed-layer-thinned |
 | Rule line "a forked evaluator is L0" in `evaluator-independence`; count-free header in `dispatch_hook.ts` (stale "6 pre + 7 post") | both are ratification-gated surfaces (ADR-268 § 4); an agent may not ratify its own edit | owner (ratification artifact) |
+| Detector C names the project's commands on a verification refusal | built and green here, but +~350 bytes against ~280 bytes of hook-bundle headroom; raising `hook-bundle-budget.json` is ratification-gated | `later/road-to-touched-files-that-pass-their-own-tools-carried` 2.5 + owner |
 | Agent work line ("Manufaktur") — third arrival | the drain queue *is* the line; recording that answer durably is the owner's | owner |
 
 ## Kill register
@@ -135,7 +132,5 @@ router or a setting.
 
 - **AC-1** No doctrine surface lets a judge, reviewer or validator run as a fork.
 - **AC-2** The drain queue never offers an owner-held or halted step as next.
-- **AC-3** A turn-end verification refusal names at least one runnable command
-  when the project declares one.
 - **AC-4** Every deferred item sits on a named holder; none is dropped.
 - **AC-5** No hook path blocks that did not block before.

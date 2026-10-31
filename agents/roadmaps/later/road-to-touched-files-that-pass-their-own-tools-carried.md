@@ -21,7 +21,7 @@ estate_growth_exempt: >-
 > The step below was `[~]` there and is restated verbatim as open work, so
 > archiving the parent buried nothing. The blocker it names moved with it.
 >
-> **Arrivals:** 1 — `inbox-2026-10-cb` (2026-10-31): detector C now names the project's commands (`road-to-a-split-the-task-earns` 3.3); step 2.4 below is handed here.
+> **Arrivals:** 1 — `inbox-2026-10-cb` (2026-10-31): steps 2.4 (append-only readings) and 2.5 (detector C names the commands, withdrawn on hook-bundle headroom) are handed here.
 
 ## Goal
 
@@ -52,6 +52,15 @@ reason, never left to read as finished.
       stop next to the state file; with `off` the record stays byte-identical.
       Handed from `inbox-2026-10-cb`.
       verify: `npx vitest run tests/scripts/touched_file_quality_journal.test.ts` -> 0
+
+- [ ] **2.5 Detector C names what to run.** A turn-end `verification` refusal
+      appends up to three commands from `resolve_toolchain(root)` (selected
+      runners, then quality), silent when none is declared. Built and tested in
+      `inbox-2026-10-cb` (~350 bytes) and withdrawn there: the hook bundle has
+      ~280 bytes of headroom under `hook-bundle-budget.json`, and a raise needs a
+      ratification artifact. Land it with a raise the owner ratifies, or after a
+      shrink frees the bytes.
+      verify: `npx vitest run tests/scripts/turn_end_gate_hook.test.ts -t names-the-commands` -> 0
 
 ## Blockers
 

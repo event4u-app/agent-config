@@ -36,7 +36,6 @@ import {
     readLanguagePin,
     readTurnRunState,
     readTranscriptTail,
-    verificationHint,
     visibleProse,
     type ToolCall,
 } from '../../src/scripts/hooks/turn_end_gate_hook.js';
@@ -2195,31 +2194,5 @@ describe('the header counts the detectors the gate actually has', () => {
     it('every DetectorId is named in the header, exactly once per lettered row', () => {
         const rows = [...header.matchAll(/^ \*\s+[A-Z] — .*?\(`([a-z-]+)`/gm)].map((m) => m[1]);
         expect([...rows].sort()).toEqual([...ids].sort());
-    });
-});
-
-describe('detector C — names-the-commands', () => {
-    const mk = (files: Record<string, string>): string => {
-        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'teg-hint-'));
-        for (const [rel, body] of Object.entries(files)) fs.writeFileSync(path.join(root, rel), body);
-        return root;
-    };
-
-    it('names-the-commands the project declares, at most three', () => {
-        const root = mk({
-            'package.json': JSON.stringify({ scripts: { test: 'vitest run', lint: 'eslint .', typecheck: 'tsc --noEmit' } }),
-        });
-        const hint = verificationHint(root);
-        expect(hint).toMatch(/^ {2}This project declares: /);
-        expect(hint.split(' · ').length).toBeLessThanOrEqual(3);
-        expect(hint).toMatch(/test/);
-    });
-
-    it('is silent when the project declares nothing', () => {
-        expect(verificationHint(mk({ 'README.md': '# x\n' }))).toBe('');
-    });
-
-    it('is silent rather than throwing on an unreadable manifest', () => {
-        expect(verificationHint(mk({ 'package.json': '{ not json' }))).toBe('');
     });
 });

@@ -244,27 +244,6 @@ import {
     type ShadowRecord,
 } from '../_lib/turn_end_refusals.js';
 import { EXIT_ALLOW, EXIT_BLOCK } from './exit_codes.js';
-import { resolve_toolchain } from '../../agent-src/templates/scripts/work_engine/stack/runner.js';
-
-const VERIFY_HINT_MAX = 3;
-
-/**
- * Detector C's refusal says *that* the edit is unverified; this names *what* this
- * project declares it runs, so the agent need not guess. Selected runners first,
- * then quality commands, at most three, de-duplicated. Empty — and therefore
- * silent — when the project declares none or the resolver throws.
- */
-export function verificationHint(root: string): string {
-    let commands: string[] = [];
-    try {
-        const tc = resolve_toolchain(root);
-        commands = [...tc.selected.map((r) => r.command), ...tc.quality];
-    } catch {
-        return '';
-    }
-    const unique = [...new Set(commands.map((c) => c.trim()).filter((c) => c !== ''))].slice(0, VERIFY_HINT_MAX);
-    return unique.length === 0 ? '' : `  This project declares: ${unique.join(' · ')}\n`;
-}
 
 /** Dispatcher-internal block code. Pinned to 1 by `concern_block_exit_parity`. */
 
@@ -1477,9 +1456,8 @@ export function main(): number {
     const lines = findings.map(
         (f) => `  · ${f.detector}: ${f.reason}\n    evidence: ${JSON.stringify(f.evidence)}`,
     );
-    const hint = findings.some((f) => f.detector === 'verification') ? verificationHint(inputs.workspaceRoot) : '';
     process.stderr.write(
-        `turn-end-gate: REFUSED — this turn is not finished.\n${lines.join('\n')}\n${hint}` +
+        `turn-end-gate: REFUSED — this turn is not finished.\n${lines.join('\n')}\n` +
             '  Do the promised work now, correct the language, run the ' +
             'verification the edit needs, read the CI verdict before claiming ' +
             'it, or re-present the options block this turn dropped — then end ' +
