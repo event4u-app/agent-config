@@ -214,7 +214,9 @@ implementation context in scope. That is a self-review, and calling it a review 
 defect `road-to-review-independence` exists to close.
 
 So **one further input** is added, and its distinguishing property is a negative one: it
-has **no implementation context**. Not a new mechanism —
+has **no implementation context**. It is therefore dispatched as a named subagent, never
+a fork: a fork inherits the author's conversation, which is exactly the context it must
+not have. Not a new mechanism —
 [`dispatch_r2_reviewer.ts`](../../../../scripts/dispatch_r2_reviewer.ts) already derives
 the scope and persists the prompt it sent:
 

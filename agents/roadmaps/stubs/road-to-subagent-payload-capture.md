@@ -5,7 +5,7 @@ review_by: 2026-12-24
 
 # Stub: road to subagent payload capture
 
-> **Arrivals:** 1 — latest `inbox-2026-09-ab` (2026-09-29).
+> **Arrivals:** 2 — latest `inbox-2026-10-cb` (2026-10-31): a forked evaluator inherits the author's conversation; whether a dispatch was a fork or a typed subagent is a payload-shape question this stub owns, and it is what would let `fresh` be observed instead of declared. Earlier: `inbox-2026-09-ab`.
 
 > **Stub — not active work.** Drain-run transfer, 2026-08-20, from
 > [`road-to-subagent-lifecycle-integrity.md`](../road-to-subagent-lifecycle-integrity.md).
