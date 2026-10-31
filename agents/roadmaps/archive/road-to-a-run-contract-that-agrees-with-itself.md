@@ -42,7 +42,7 @@ done.
       also scans `src/domains/product-basic/roadmap/**`,
       `src/agent-src/contexts/execution/*.md` and `src/domains/engineering-base/mission/**`
       for a stale N=3 retry bound; then the lines are reworded.
-      verify: `npx vitest run tests/e2e/adversarial-verification-fixtures.test.ts` -> 0, seen red before the rewording.
+      verify: `npx vitest run tests/e2e/adversarial-verification-fixtures.test.ts` -> 0 after being seen red before the rewording.
 - [x] **1.2 ADR-118 supersede note.** Rejection 3 carries "N=3 superseded by <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       ADR-268 § 7".
       verify: `./scripts-run src/scripts/adr_cite_check ADR-118` -> 0
