@@ -42,41 +42,41 @@ with their own status line still sees the AC segment.
 
 ## Phase 1 — The signal is right
 
-- [x] **1.1 Plausibility guard.** `src/scripts/_lib/quota_ledger.ts`
+- [x] **1.1 Plausibility guard.** `src/scripts/_lib/quota_ledger.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/quota_ledger.ts -->
       `readWindow` drops non-finite and > 101 values, clamps 100–101.
-      verify: `npx vitest run tests/scripts/quota_ledger.test.ts` with an epoch-sized percentage case.
-- [x] **1.2 Reset edge.** `src/scripts/_lib/pressure.ts` `windowPressure` treats
+      verify: `npx vitest run tests/scripts/quota_ledger.test.ts` -> 0 with an epoch-sized percentage case.
+- [x] **1.2 Reset edge.** `src/scripts/_lib/pressure.ts` `windowPressure` treats <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/pressure.ts -->
       a window whose `resets_at` is in the past as no reading.
-      verify: `npx vitest run tests/scripts/pressure.test.ts` with a case one second past reset.
-- [x] **1.3 Reset time on the park marker.** `QuotaParkedMarker` gains an
+      verify: `npx vitest run tests/scripts/pressure.test.ts` -> 0 with a case one second past reset.
+- [x] **1.3 Reset time on the park marker.** `QuotaParkedMarker` gains an <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/run_supervise.ts -->
       optional `resets_at` (epoch s) from the freshest exhausted window;
       `run_supervise` prints "parked until HH:MM".
-      verify: `npx vitest run tests/scripts/quota_parked.test.ts tests/scripts/run_supervise.test.ts`.
-- [x] **1.4 Non-quota failures never park.** `host_rate_marker_hook.ts` maps
+      verify: `npx vitest run tests/scripts/quota_parked.test.ts tests/scripts/run_supervise.test.ts` -> 0.
+- [x] **1.4 Non-quota failures never park.** `host_rate_marker_hook.ts` maps <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/host_rate_marker_hook.ts -->
       host failure classes through one table; auth/account/org classes write no
       marker.
-      verify: `npx vitest run tests/scripts/host_rate_marker_hook.test.ts` with an `authentication_failed` case.
+      verify: `npx vitest run tests/scripts/host_rate_marker_hook.test.ts` -> 0 with an `authentication_failed` case.
 
 ## Phase 2 — Visible with a chained status line
 
-- [x] **2.1 Snapshot before the user's command.** `cmd_statusline.ts` `runTap`
+- [x] **2.1 Snapshot before the user's command.** `cmd_statusline.ts` `runTap` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/cmd_statusline.ts -->
       writes the snapshot and pressure state first, then runs the chained command.
-      verify: `npx vitest run tests/scripts/statusline_tap.test.ts` with a slow chained command that still leaves a snapshot.
-- [x] **2.2 Quota segment survives chaining.** When pressure is warm or worse,
+      verify: `npx vitest run tests/scripts/statusline_tap.test.ts` -> 0 with a slow chained command that still leaves a snapshot.
+- [x] **2.2 Quota segment survives chaining.** When pressure is warm or worse, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/cmd_statusline.ts -->
       the AC segment is printed on its own, control-character-free line after the
       chained output.
       verify: same test file, chained case at warm.
-- [x] **2.3 Install with a backup.** `installTap` backs up `settings.json`
+- [x] **2.3 Install with a backup.** `installTap` backs up `settings.json` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/cmd_statusline.ts -->
       before writing, as `hostConfigMerge.ts` does, and keeps the original
       `padding` / `refreshInterval`.
-      verify: `npx vitest run tests/scripts/statusline_install.test.ts`.
+      verify: `npx vitest run tests/scripts/statusline_install.test.ts` -> 0.
 
 ## Phase 3 — A reset prompt is not an authorization
 
-- [x] **3.1 Fixture over every prompt concern.** The host's reset sentence
+- [x] **3.1 Fixture over every prompt concern.** The host's reset sentence <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       (`prompt_shape.ts`) fed through the git-authorization path consumes no
       pending refusal and grants nothing.
-      verify: `npx vitest run tests/scripts/git_authorization_hook.test.ts` with a reset-sentence case seen red first if the defect exists.
+      verify: `npx vitest run tests/scripts/git_authorization_hook.test.ts` -> 0 with a reset-sentence case seen red first if the defect exists.
       <!-- outcome 2026-10-31: the sentence grants nothing and retains no earlier
       authorization; it DOES spend a pending refusal, like any turn. A first fix
       kept the refusal alive across the reset and was withdrawn: the AI council's
