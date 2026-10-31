@@ -187,10 +187,7 @@ once on the aggregated result. Parallelism capped by
 
 Multiple implementers produce candidate diffs for the **same** slice.
 Judge picks the winner and rejects the losers. Expensive — use only
-when the solution space is genuinely broad. For more than a handful of
-candidates, or when a lost candidate should be able to appeal, use the
-resumable bracket route [`/judge bracket`](../../commands/judge/bracket.md)
-(default 10 lines, script-scored, ≤ 2 second-chance cards per line).
+when the solution space is genuinely broad.
 
 ### 6. judge-with-debate
 
