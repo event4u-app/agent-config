@@ -62,11 +62,16 @@ function finiteNumber(x: unknown): number | undefined {
     return typeof x === 'number' && Number.isFinite(x) ? x : undefined;
 }
 
+/** Above this a percentage is a misread field (an epoch, a raw count), not a fill; up to it is rounding. */
+const MAX_PLAUSIBLE_PCT = 101;
+
 function readWindow(raw: unknown): QuotaWindow | undefined {
     if (raw === null || typeof raw !== 'object') return undefined;
     const o = raw as Record<string, unknown>;
-    const pct = finiteNumber(o['used_percentage']);
-    if (pct === undefined) return undefined;
+    const rawPct = finiteNumber(o['used_percentage']);
+    if (rawPct === undefined || rawPct > MAX_PLAUSIBLE_PCT) return undefined;
+    // Clamped to exactly 100, so a real exhausted window still classifies as exhausted.
+    const pct = Math.min(rawPct, 100);
     const reset = o['resets_at'];
     let resets_at: number | null = null;
     if (typeof reset === 'number' && Number.isFinite(reset)) {

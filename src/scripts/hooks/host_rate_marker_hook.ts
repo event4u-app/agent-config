@@ -3,10 +3,14 @@
  * host-rate-marker — the host's own `StopFailure` with error class
  * `rate_limit` writes the `quota_parked` marker, tagged host-sourced.
  *
- * Bound on `agent_error`, onto which Claude's `StopFailure` is lowered. Any
- * other failure class is not a rate signal and writes nothing. It records and
- * never acts: nothing here sleeps, retries or relaunches, and the exit is 0 on
- * every path.
+ * Bound on `agent_error`, onto which Claude's `StopFailure` is lowered. Which
+ * failure classes park is one set, {@link HOST_FAILURE_PARKS}: an auth,
+ * account or org failure is not a quota wall, and reading it as one would tell
+ * an operator to wait for a reset that will fix nothing. The reset time is not
+ * looked up here: `run_supervise` reads it from the quota ledger when it reports
+ * the marker, which keeps the ledger and pressure model out of the dispatch
+ * bundle. It records and never acts: nothing here sleeps, retries or relaunches,
+ * and the exit is 0 on every path.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -23,11 +27,17 @@ const isObject = (v: unknown): v is JsonObject => typeof v === 'object' && v !==
 /** The host vendor whose plan window a host-sourced marker describes. */
 const HOST_PROVIDER = 'anthropic';
 
+/**
+ * The host failure classes that park a run. Auth, account, org and every other
+ * class are not a quota wall; a class this set does not name writes nothing.
+ */
+export const HOST_FAILURE_PARKS: ReadonlySet<string> = new Set(['rate_limit']);
+
 function processEnvelope(envelope: unknown, root: string): number {
     try {
         if (!isObject(envelope)) return EXIT_ALLOW;
         const payload = isObject(envelope['payload']) ? envelope['payload'] : envelope;
-        if (payload['hook_event_name'] !== 'StopFailure' || payload['error'] !== 'rate_limit') return EXIT_ALLOW;
+        if (payload['hook_event_name'] !== 'StopFailure' || !HOST_FAILURE_PARKS.has(String(payload['error']))) return EXIT_ALLOW;
         const session = payload['session_id'];
         if (typeof session !== 'string' || session === '') return EXIT_ALLOW;
         writeQuotaParked(root, session, [HOST_PROVIDER], () => new Date(), 'host');

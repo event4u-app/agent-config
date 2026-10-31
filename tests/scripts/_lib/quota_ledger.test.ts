@@ -58,6 +58,18 @@ describe('snapshotFromStatusPayload', () => {
         expect(s?.five_hour).toBeUndefined();
     });
 
+    it('drops an implausible percentage and clamps a rounding overshoot to 100', () => {
+        const at = (pct: number) =>
+            snapshotFromStatusPayload({ rate_limits: { five_hour: { used_percentage: pct, resets_at: 1_761_400_000 } } });
+        expect(at(1_761_400_000)).toBeNull();
+        expect(at(101.5)).toBeNull();
+        expect(at(Number.POSITIVE_INFINITY)).toBeNull();
+        expect(at(100.7)?.five_hour?.pct).toBe(100);
+        expect(at(101)?.five_hour?.pct).toBe(100);
+        expect(at(100)?.five_hour?.pct).toBe(100);
+        expect(at(99.4)?.five_hour?.pct).toBe(99.4);
+    });
+
     it('returns null when nothing quota-relevant is present', () => {
         for (const p of [null, 'x', {}, { rate_limits: {} }, { rate_limits: { five_hour: { used_percentage: 'a' } } }]) {
             expect(snapshotFromStatusPayload(p), JSON.stringify(p)).toBeNull();

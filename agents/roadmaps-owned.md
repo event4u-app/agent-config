@@ -51,6 +51,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-agent-throughput-recovery | later | later | A night run carries more finished, merged work, and the reason it stopped is visible in one reading. |
 | road-to-an-installed-layer-that-is-thinned | later | later | The layer a Claude install writes under `~/.claude/rules` is the thinned one, first as an opt-in and then as the … |
 | road-to-an-intake-the-queue-can-carry | later | later | A finding that already has an owner lands as a step and an `Arrivals:` line on that owner instead of … |
+| road-to-an-mcp-start-without-npm | later | later | An MCP start in a session with a staged runtime runs the staged node and a bundled turnkey server directly, … |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe-carried | later | later | Every step road-to-an-update-that-installs-itself-only-when-it-is-safe deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-authority-routing-mechanism | later | later | A passing authorisation record always means the authority that produced it was the authority entitled to produce it: three authorities … |
 | road-to-benchmark-obsolescence-lifecycle | later | later | Road to benchmark-obsolescence lifecycle — detect when the model outgrew the rule |
@@ -161,6 +162,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-zero-ceremony-host-primitives | later | later | Decide, on probe evidence and inside the governing ADR's own review window, whether tier→host-native-primitive emission is worth its maintenance surface … |
 | orchestrator-spawn-injection | stubs | — | orchestrator-side spawn injection |
 | road-to-a-census-that-refuses-a-partial-store | stubs | — | road to a census that refuses to publish from a partial store |
+| road-to-a-limit-the-host-actually-signals | stubs | — | road to a limit the host actually signals |
 | road-to-a-lineage-gate-that-sees-the-folder | stubs | — | road to a lineage gate that sees the whole inbox folder |
 | road-to-a-path-route-under-delivery | stubs | — | road to a path-activation route under `delivery` |
 | road-to-a-primary-goal-that-is-asked-for | stubs | — | road to a primary goal that is asked for |

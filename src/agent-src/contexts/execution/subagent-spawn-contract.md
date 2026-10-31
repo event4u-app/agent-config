@@ -70,7 +70,7 @@ final). On hit the worker returns a `BLOCKED` envelope whose body is the
 partial-result shape from the
 [response contract](subagent-response-contract.md#budget-hit-partial-result):
 what was found (refs), what remains, suggested next rung. The stop-loss
-**composes** with the N=3 validation budget
+**composes** with the `execution.fix_loop_max` validation budget
 ([`autonomous-execution`](../../rules/autonomous-execution.md)) and the
 ADR-109 response contract — it replaces nothing. Live evidence
 (2026-07-28): four lookup-class workers burned 280–327k tokens each on tasks

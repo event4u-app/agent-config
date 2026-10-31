@@ -109,6 +109,12 @@ maintainer time against a 10-second revert.
 3. **Unattended multi-hour runs without checkpoints.** Loops must remain
    reviewable/haltable on the maintainer's schedule; the existing halt
    conditions and N=3 budgets are the ceiling, not a starting point.
+   *Note 2026-10-31: N=3 superseded by ADR-268 § 7 — the validation budget is
+   now `execution.fix_loop_max` (default 10) worked through its ladder, and no
+   count maps to an owner question. The rejection itself stands: the halt
+   conditions and that budget remain the ceiling. This record was re-read for
+   the change its `review_trigger` names (a termination cap materially
+   raised).*
 4. **Metric-optimizing loops without golden-set anchoring.** No loop whose
    success criterion is "metric goes up" without a golden-set eval anchoring
    what "good" means (Goodhart guard).
