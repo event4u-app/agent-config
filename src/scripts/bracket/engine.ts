@@ -8,7 +8,7 @@
  * scores and a pick, never the winner.
  *
  * The appeal jury is an optional, recorded INPUT and never imported from
- * `jury_aggregate`: that module is pinned shadow-only until its ledger
+ * the shadow jury aggregator: it is pinned shadow-only until its ledger
  * accumulates (AC-9 of its roadmap). The card itself is played by a paid seat.
  */
 import { createHash } from 'node:crypto';
