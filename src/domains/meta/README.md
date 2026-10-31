@@ -7,9 +7,9 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 310
+- **artefacts**: 311
 
-## Commands (163)
+## Commands (164)
 
 - **`agent-design`** — Design orchestrator — routes audit/render/review to the Class-A commands and the six intervention verbs to fe-design with a declared operation
 - **`agent-handoff`** — Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste.
@@ -75,7 +75,8 @@ Artefacts that maintain this package (agent-config itself).
 - **`image-verify`** — Verify a candidate render against its canon — run the analyser in loop mode, emit the gate verdict + remaining diff, halt-and-surface on non-pass.
 - **`implement-ticket`** — Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over `work_engine`, block-on-ambiguity, no auto-git, test-first enforced.
 - **`jira-ticket`** — Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug
-- **`judge`** — Judge orchestrator — routes to solo, steps, on-diff
+- **`judge`** — Judge orchestrator — routes to solo, steps, on-diff, bracket
+- **`judge-bracket`** — Run a resumable bracket of competing solutions whose losses can be appealed — AC sizes it (default 10), the script scores, a paid seat plays the second-chance card
 - **`judge-on-diff`** — Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user
 - **`judge-solo`** — Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only
 - **`judge-steps`** — Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict

@@ -470,7 +470,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-07-08
 
 ### claim: command-count
-- claim: 212 commands.
+- claim: 213 commands.
 - kind: quant
 - evidence: exec:check_artefact_count_messaging -> 0
 - status: backed
@@ -1511,3 +1511,31 @@ is the named exception in the claim itself.
 - evidence: PRE-REGISTERED 2026-10-28 (road-to-a-baseline-that-has-to-catch-up step 0.1), BEFORE any artifact task file, grader or run is committed -- the registering commit carries these entries and no task fixture. TASKS: `art-page-copy-01`, `art-app-copy-01`. PRIMARY GRADERS: `bench-ui` for the page -- the deterministic port-fidelity score of `internal/bench/ui/run.ts` (pixel SSIM, DOM inventory, token recall, interactions; weights pre-registered in its own config, no model in the path) -- and `acceptance+axe` for the app, as defined in claim `showcase-page-form-acceptance`. Both references are written in-repo; no real third-party site is copied (kill K4). METRIC: per arm, the first-shot score of the k runs; then prompts, turns, tokens and priced USD for the arm without agent-config to reach the bar on a pre-written feedback ladder (cap K = 5, censored, never imputed). BAR: the task's `parity_bar`, fixed before any run and never read off the with-arm's output. VERDICT: `pass` / `regression` / `no-change` / `underpowered` per `src/scripts/_lib/paired_verdict.ts`; every outcome is publishable. FALSIFICATION: `no-change` or `regression` on the primary grader is a null or a loss and is published as such. UNDERPOWERED when k cannot reach the paired floor, when the grader cannot separate its planted good and bad references, or when the render is not reproducible on the recorded platform. SCOPE: two fictional references on one host and one model.
 - status: unbacked
 - last_verified: 2026-10-28
+
+### claim: bracket-diversity-source
+- claim: In a `/judge bracket` run, distinct lines after dedupe are compared across three sources — same model without approach angles, same model with angles, and other model families — and angles earn their place only by adding at least 15 percentage points of distinct lines over the angle-free arm.
+- kind: comparative
+- evidence: PRE-REGISTERED 2026-10-31 (road-to-a-loss-that-can-be-appealed step 5.3), BEFORE any live bracket run. METRIC: share of lines surviving near-duplicate dedupe (`debate_gates.is_near_duplicate`, threshold 0.8) per arm, n >= 20 tasks. BAR: angles >= +15 pp over the angle-free arm; other families reported separately. FALSIFICATION: below the bar, angles stay off. Spend-bearing, owner-asked per run.
+- status: unbacked
+- last_verified: 2026-10-31
+
+### claim: appeal-card-live-yield
+- claim: Lines returned by the appeal card win at least one later match against a non-returning line in at least 30 % of cards played in live brackets.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-10-31 (road-to-a-loss-that-can-be-appealed step 5.3), BEFORE any live run; the simulated rescue (C2a) is a fixture reading in `agents/evidence/analysis/bracket-appeal-card-simulation-2026-10-31.md` and is NOT this claim. BAR: >= 30 % of cards. FALSIFICATION: below the bar the card stays on (owner directive) and its signals narrow to pick-overruled plus an inconsistent jury.
+- status: unbacked
+- last_verified: 2026-10-31
+
+### claim: bracket-beats-single-judge
+- claim: At equal N, the bracket winner beats the one-shot `do-competitively` winner in a blind both-orders comparison in at least 60 % of tasks.
+- kind: comparative
+- evidence: PRE-REGISTERED 2026-10-31 (road-to-a-loss-that-can-be-appealed step 5.3), BEFORE any live run. PROTOCOL: same task, same N, final comparison via `judgeBothOrders`; `inconsistent` counts as not-a-win. BAR: >= 60 %, n >= 20. FALSIFICATION: below the bar the bracket stays opt-in only.
+- status: unbacked
+- last_verified: 2026-10-31
+
+### claim: saturation-stop-savings
+- claim: The saturation stop (two consecutive waves under 20 % new lines) saves at least 25 % of spawns at a winner quality not worse than the full-N run under the bracket-beats-single-judge protocol.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-10-31 (road-to-a-loss-that-can-be-appealed step 5.3), BEFORE any live run. BAR: >= 25 % spawns saved, quality non-inferior. FALSIFICATION: below the bar the stop is switched off and N runs to its tier ceiling.
+- status: unbacked
+- last_verified: 2026-10-31

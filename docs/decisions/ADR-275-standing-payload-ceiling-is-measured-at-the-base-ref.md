@@ -224,3 +224,16 @@ touch.
 - **Running the gate log-only for 30 days to collect uncensored data** —
   anthropic listed it so the owner could reject it: it permits unbounded growth
   for the whole window, which is the owner constraint read backwards.
+
+## Amendment 2026-10-31 — the owner approves a grant
+
+By owner ruling
+(`agents/evidence/owner-directives/2026-10-31-single-author-grant-approval.md`),
+the exception path no longer requires an approving review by someone other than
+the author. The repository has one author; the owner approves a grant by
+recording it in `src/config/preamble-payload-exceptions.json`, and the CI step
+passes `--approved` for every live grant. This replaces the consequence above
+that "the exception path is unusable with one repository admin": that reading
+refused every grant, including `oq-42-image-floor-routes-to`, which the owner
+had ordered. Unchanged: at most one active grant, expiry, measured repayment,
+and the shrink-only ratchet.
