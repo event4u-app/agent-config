@@ -123,9 +123,10 @@ export function readPlanPressure(env?: EnvMap | null, now: number = Date.now()):
 /**
  * When the freshest exhausted window resets (epoch seconds), or `null`. Both
  * windows exhausted in one snapshot → the later reset, since work continues only
- * once both have refilled. A reset already behind `now` says nothing about when.
+ * once both have refilled. A reset already behind `now` is returned as it is:
+ * the caller says "the reset has passed", which is the news a parked run needs.
  */
-export function exhaustedResetAt(snapshots: readonly QuotaSnapshot[], now: number): number | null {
+export function exhaustedResetAt(snapshots: readonly QuotaSnapshot[]): number | null {
     for (let i = snapshots.length - 1; i >= 0; i--) {
         const s = snapshots[i];
         if (s === undefined) continue;
@@ -133,7 +134,7 @@ export function exhaustedResetAt(snapshots: readonly QuotaSnapshot[], now: numbe
             .filter((w): w is QuotaWindow => w !== undefined && w.pct >= 100)
             .map((w) => w.resets_at);
         if (resets.length === 0) continue;
-        const known = resets.filter((r): r is number => r !== null && r * 1000 > now);
+        const known = resets.filter((r): r is number => r !== null);
         return known.length === resets.length ? Math.max(...known) : null;
     }
     return null;

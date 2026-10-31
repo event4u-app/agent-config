@@ -116,19 +116,19 @@ describe('planPressure', () => {
 describe('exhaustedResetAt', () => {
     const later = RESET_IN_3H + 3600;
     it('reads the reset of the freshest snapshot with an exhausted window', () => {
-        expect(exhaustedResetAt([snap(30, 100, later), snap(5, 100), snap(0, 40)], NOW)).toBe(RESET_IN_3H);
+        expect(exhaustedResetAt([snap(30, 100, later), snap(5, 100), snap(0, 40)])).toBe(RESET_IN_3H);
     });
 
     it('takes the later reset when both windows of that snapshot are exhausted', () => {
         const both = snap(0, 100, RESET_IN_3H, { seven_day: { pct: 100, resets_at: later } });
-        expect(exhaustedResetAt([both], NOW)).toBe(later);
+        expect(exhaustedResetAt([both])).toBe(later);
     });
 
     it('is null with no exhausted window, an unknown reset, or a reset already passed', () => {
-        expect(exhaustedResetAt([snap(0, 99)], NOW)).toBeNull();
-        expect(exhaustedResetAt([snap(0, 100, null)], NOW)).toBeNull();
-        expect(exhaustedResetAt([snap(0, 100, Math.trunc(NOW / 1000) - 1)], NOW)).toBeNull();
-        expect(exhaustedResetAt([], NOW)).toBeNull();
+        expect(exhaustedResetAt([snap(0, 99)])).toBeNull();
+        expect(exhaustedResetAt([snap(0, 100, null)])).toBeNull();
+        expect(exhaustedResetAt([snap(0, 100, Math.trunc(NOW / 1000) - 1)])).toBe(Math.trunc(NOW / 1000) - 1);
+        expect(exhaustedResetAt([])).toBeNull();
     });
 });
 

@@ -18,9 +18,8 @@
  * no host surface involved. This marker is written from there.
  *
  * PII-exclusion-by-construction, the same shape as `billing_grant`: a record
- * holds a run id, provider names, an ISO stamp and an optional reset epoch.
- * There is no field capable of carrying a prompt, a path, or an error body, so
- * there is no scrubbing pass
+ * holds a run id, provider names, and an ISO stamp. There is no field capable
+ * of carrying a prompt, a path, or an error body, so there is no scrubbing pass
  * here that could fail.
  *
  * **It records, it does not act.** Nothing here sleeps, probes, or relaunches.
@@ -45,8 +44,6 @@ export interface QuotaParkedMarker {
     readonly parked_at: string;
     /** Who established the exhaustion: the council's own seat gate, or the host's `StopFailure`. */
     readonly source: 'council' | 'host';
-    /** Epoch seconds at which the freshest exhausted host window resets, when the quota ledger knew it. */
-    readonly resets_at?: number;
 }
 
 /** Filesystem-safe path for a run's marker. Mirrors `billing_grant.grantFile`. */
@@ -66,9 +63,6 @@ export function markerFile(repoRoot: string, runId: string): string {
  * cliff" survives a round that parks twice. A host park is the exception: it
  * sets its own `source` and refreshes `parked_at`, since the host's rate window
  * starts at its own signal, not at an earlier council park.
- *
- * `resetsAt` falls back to the existing marker's; a reset already behind `now`
- * is dropped, so a marker never names a time that has passed.
  */
 export function writeQuotaParked(
     repoRoot: string,
@@ -76,20 +70,16 @@ export function writeQuotaParked(
     providers: readonly string[],
     now: () => Date = () => new Date(),
     source: 'council' | 'host' = 'council',
-    resetsAt: number | null = null,
 ): QuotaParkedMarker {
     const file = markerFile(repoRoot, runId);
     const existing = readMarker(file);
     const host = source === 'host';
     const merged = [...new Set([...(existing?.providers ?? []), ...providers])].sort();
-    const at = now();
-    const reset = resetsAt ?? existing?.resets_at ?? null;
     const marker: QuotaParkedMarker = {
         run_id: runId,
         providers: merged,
-        parked_at: (host ? null : existing?.parked_at) ?? at.toISOString(),
+        parked_at: (host ? null : existing?.parked_at) ?? now().toISOString(),
         source: host ? source : (existing?.source ?? source),
-        ...(reset !== null && reset * 1000 > at.getTime() ? { resets_at: reset } : {}),
     };
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, `${JSON.stringify(marker, null, 2)}\n`, 'utf8');
@@ -151,14 +141,7 @@ function readMarker(file: string): QuotaParkedMarker | null {
         if (!Array.isArray(o['providers'])) return null;
         const providers = o['providers'].filter((p): p is string => typeof p === 'string');
         const source = o['source'] === 'host' ? 'host' : 'council';
-        const reset = o['resets_at'];
-        return {
-            run_id: o['run_id'],
-            providers,
-            parked_at: o['parked_at'],
-            source,
-            ...(typeof reset === 'number' && Number.isFinite(reset) ? { resets_at: reset } : {}),
-        };
+        return { run_id: o['run_id'], providers, parked_at: o['parked_at'], source };
     } catch {
         return null;
     }
