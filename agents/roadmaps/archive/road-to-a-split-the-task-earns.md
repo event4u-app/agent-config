@@ -45,8 +45,10 @@ router or a setting.
       table of `auto-dispatch-classification.md`: a judge, review, validator
       or council slice is `subagent`, never `fork`, because a fork inherits
       the author's conversation. Mirror one sentence in
-      `subagent-orchestration` (SKILL + prompts README), in
-      `evaluator-independence` and in `/review:changes` § fresh reviewer.
+      `subagent-orchestration` (SKILL + prompts README) and in
+      `/review:changes` § fresh reviewer. The matching line in the
+      high-consequence rule `evaluator-independence` needs a ratification
+      artifact (ADR-268 § 4) and is handed to the owner, not written here.
       Second arrival of this subject (first: `inbox-2026-10-r`, where only
       the resume half landed).
       verify: `npx vitest run tests/scripts/judge_never_fork_doctrine.test.ts` -> 0
@@ -84,10 +86,6 @@ router or a setting.
 
 ## Phase 3 — Sensors say what to run
 
-- [x] **3.1 The dispatcher header carries no stale count.** The "13 concerns
-      … (6 pre + 7 post)" sentence (now 19/19, 13 untooled per slot) becomes
-      count-free and points at the manifest.
-      verify: `grep -c "6 pre + 7 post" src/scripts/hooks/dispatch_hook.ts` -> 0
 - [x] **3.2 A ratchet finding can carry a fix.** `gate_baseline` accepts an
       optional `fix` and emits it ahead of the suppression text; default
       output stays byte-identical. The gate-authoring finding format names
@@ -122,6 +120,7 @@ router or a setting.
 | `max_parallel=3` vs "no hard limits" | owner | owner |
 | Async Stop lane, host matchers, `tools:` on fail-closed guards | recorded council cancellation / rejection; security-sensitive | per-turn-hook-economy carry (archived), council |
 | Model-tier guide weight | ADR-293 has no model axis; needs a refreshed bench (spend) | ADR-293 / installed-layer-thinned |
+| Rule line "a forked evaluator is L0" in `evaluator-independence`; count-free header in `dispatch_hook.ts` (stale "6 pre + 7 post") | both are ratification-gated surfaces (ADR-268 § 4); an agent may not ratify its own edit | owner (ratification artifact) |
 | Agent work line ("Manufaktur") — third arrival | the drain queue *is* the line; recording that answer durably is the owner's | owner |
 
 ## Kill register

@@ -25,7 +25,6 @@ describe('judge-never-fork doctrine', () => {
     it.each([
         ['src/skills/subagent-orchestration/SKILL.md', /judge, reviewer or validator is never a fork/],
         ['src/skills/subagent-orchestration/prompts/README.md', /judge, reviewer or\s+validator is never forked/],
-        ['src/rules/evaluator-independence.md', /forked evaluator inherits the author's conversation/],
         ['src/domains/engineering-base/review/changes/command.md', /named subagent, never\s+a fork/],
     ])('%s carries the mirror sentence', (rel, pattern) => {
         expect(read(rel)).toMatch(pattern);

@@ -74,9 +74,6 @@ The evidence was manufactured anyway. Full record:
 4. **One evaluation per turn per subject.** Re-running with a different prompt or
    scope after an unwelcome verdict selects the answer instead of measuring it.
 
-A forked evaluator inherits the author's conversation: it is L0, never L1 or above,
-whatever model runs it. Dispatch an evaluator as a named subagent.
-
 ## The softer form — stating an expectation without stating the verdict
 
 ```
