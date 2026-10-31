@@ -143,7 +143,7 @@ road-to-a-setup-that-decides-itself, 2026-10-25.
 - [ ] **3.2 The contract form is what every install writes.** Install and
       upgrade write the contract form for the 28 rules and the stub form for the
       thinnable rest, without an opt-in. Consumer-edited files stay as they are.
-      verify: `agent-config upgrade` on a scratch HOME carrying a 19.0.0 layer
+      verify: on a scratch HOME carrying a 19.0.0 layer, an agent-config upgrade run
       yields at most 80,000 chars under `~/.claude/rules`; a file the consumer
       edited is byte-identical afterwards; a second upgrade changes nothing.
 - [ ] **3.3 Replace the benchmark gate on the consumer promotion.** The size
@@ -158,7 +158,7 @@ road-to-a-setup-that-decides-itself, 2026-10-25.
 ## Phase 4 — Close the overlap
 
 - [ ] **4.1 Measure the host notice on a fresh 200K-window session.**
-      verify: a fresh session after `agent-config upgrade` shows no
+      verify: a fresh session after an agent-config upgrade run shows no
       instruction-limit notice in a repository with a project layer of ~13k.
 - [ ] **4.2 Dispose of road-to-an-installed-layer-that-is-thinned.** Its done
       state assumed the thinned form removes the notice; 4.1 settles whether
