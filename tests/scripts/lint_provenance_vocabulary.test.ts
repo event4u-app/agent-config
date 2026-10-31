@@ -408,15 +408,14 @@ describe('lint_provenance_vocabulary — rule 4 escape 2: owner_intent', () => {
 describe('lint_provenance_vocabulary — rule 4 over the real corpus', () => {
     const live = lintAdrPermanence();
 
-    it('the recorded baseline equals the live count', () => {
+    it('the corpus is clean and carries no baseline entry', () => {
+        // Walked to 0 on 2026-10-31 (OQ-46). A zero-count entry is refused by
+        // gate_baseline, so the entry is gone and any new hit reds the gate.
         const baselines = JSON.parse(
             fs.readFileSync(path.join(REPO, 'src/config/gate-violation-baselines.json'), 'utf-8'),
         ) as { gates: Record<string, { count: number } | undefined> };
-        const entry = baselines.gates[PERMANENCE_GATE];
-        expect(entry, `${PERMANENCE_GATE} has no baseline entry`).toBeDefined();
-        // Equality, not `<=`: a baseline ABOVE the live count silently grants
-        // one free regression and the gate still prints green.
-        expect(entry?.count).toBe(live.length);
+        expect(baselines.gates[PERMANENCE_GATE]).toBeUndefined();
+        expect(live).toEqual([]);
     });
 
     it('is silent on ADR-107 and ADR-108 after the owner ruling', () => {
