@@ -60,6 +60,7 @@ done.
       joins a run's roadmap with its open-step count and `RUN_TERMINAL_STATES`
       and reports runs that ended neither complete nor blocked.
       verify: `npx vitest run tests/scripts/interruption_report.test.ts` -> 0 with three runs (met, blocked, silent).
+      production entry: src/scripts/interruption_report.ts
 - [x] **2.2 Reopen a done step with no writer.** If <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json -->
       `_lib/mission_record.ts` has no production writer, long-runs 9.1 goes back
       to `[ ]` with that evidence.
