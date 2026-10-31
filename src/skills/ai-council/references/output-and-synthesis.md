@@ -96,7 +96,7 @@ for evidence quality, and each survivor is named with the property it measures.
 |---|---|---|
 | `confirmed` / `inferred` / `speculative` | **evidence quality** — how well a finding is supported (`confirmed` cites file:line or a metric; `inferred` is plausible from stated context; `speculative` has no citation) | every lens's finding metadata |
 | `CONFIDENCE: high\|med\|low` | **a member's certainty in its own pick** — not how good the evidence is, but how strongly that member backs the option it chose | the stance line |
-| `DEALBREAKER: yes\|no` | **whether the member would block on the alternative** — a veto, not a certainty | the stance line |
+| `DEALBREAKER: yes\|no` | **whether the member would block on the alternative** — a blocking signal the tally counts and reports (`N dealbreaker(s)`), not a veto: it never removes an option by itself | the stance line |
 | `roadmap-ready` / `needs-discovery` | **actionability** — is the finding concrete enough to land as a phase step | Top-10 / Supporting |
 | `needs-verification` | **provenance of the host agent's OWN inference** — the item was reasoned from context rather than read from a member response | Blind spots |
 | `unverified:` | **probe coverage of a mechanism claim** — argued, not measured. An authoring convention with no reader; see `procedure.md` | artefact prose |
