@@ -45,10 +45,10 @@ done.
       verify: `npx vitest run tests/e2e/adversarial-verification-fixtures.test.ts` -> 0, seen red before the rewording.
 - [x] **1.2 ADR-118 supersede note.** Rejection 3 carries "N=3 superseded by <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       ADR-268 § 7".
-      verify: `./scripts-run src/scripts/adr_cite_check ADR-118` -> 0.
+      verify: `./scripts-run src/scripts/adr_cite_check ADR-118` -> 0
 - [x] **1.3 Gate header counts its detectors.** `turn_end_gate_hook.ts` header <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/turn_end_gate_hook.ts -->
       names every `DetectorId`; a test pins header count to the id list.
-      verify: `npx vitest run tests/scripts/turn_end_gate_hook.test.ts` -> 0.
+      verify: `npx vitest run tests/scripts/turn_end_gate_hook.test.ts` -> 0
 - [x] **1.4 process-full row says the invocation is the confirmation.** The <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       scope-delta table in `roadmap-process-loop-close.md` agrees with
       `roadmap-execution-contract.md` for process-full (ADR-237).
@@ -60,10 +60,10 @@ done.
       joins a run's roadmap with its open-step count and `RUN_TERMINAL_STATES`
       and reports runs that ended neither complete nor blocked.
       verify: `npx vitest run tests/scripts/interruption_report.test.ts` -> 0 with three runs (met, blocked, silent).
-- [x] **2.2 Reopen a done step with no writer.** If <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **2.2 Reopen a done step with no writer.** If <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json -->
       `_lib/mission_record.ts` has no production writer, long-runs 9.1 goes back
       to `[ ]` with that evidence.
-      verify: `grep -rn "mission_record" src/scripts --include=*.ts` names the importers; `./agent-config roadmap:progress` green.
+      verify: `grep -rn "mission_record" src/scripts --include=*.ts` -> /typed_op_grant/ names the importers; `./agent-config roadmap:progress` green.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-31 | reviewer: claude/host -->

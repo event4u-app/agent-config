@@ -42,7 +42,7 @@ is buildable.
 - [ ] **1.2 Stage it and point the bridge at it.** The bundle joins
       `STAGED_ENTRIES` in `src/install/stagedRuntime.ts`; `src/scripts/_lib/mcp_bridge.ts`
       writes the staged node plus that bundle when a stage exists, `npx` as fallback.
-      verify: `npx vitest run tests/install/staged_runtime.test.ts tests/scripts/mcp_bridge_pin.test.ts` with a staged and an unstaged case.
+      verify: `npx vitest run tests/install/staged_runtime.test.ts tests/scripts/mcp_bridge_pin.test.ts` -> 0 with a staged and an unstaged case.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-31 | reviewer: claude/host -->

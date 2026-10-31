@@ -51,7 +51,7 @@ with their own status line still sees the AC segment.
 - [x] **1.3 Reset time on the park marker.** `QuotaParkedMarker` gains an <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/run_supervise.ts -->
       optional `resets_at` (epoch s) from the freshest exhausted window;
       `run_supervise` prints "parked until HH:MM".
-      verify: `npx vitest run tests/scripts/quota_parked.test.ts tests/scripts/run_supervise.test.ts` -> 0.
+      verify: `npx vitest run tests/scripts/quota_parked.test.ts tests/scripts/run_supervise.test.ts` -> 0
 - [x] **1.4 Non-quota failures never park.** `host_rate_marker_hook.ts` maps <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/host_rate_marker_hook.ts -->
       host failure classes through one table; auth/account/org classes write no
       marker.
@@ -69,7 +69,7 @@ with their own status line still sees the AC segment.
 - [x] **2.3 Install with a backup.** `installTap` backs up `settings.json` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/cmd_statusline.ts -->
       before writing, as `hostConfigMerge.ts` does, and keeps the original
       `padding` / `refreshInterval`.
-      verify: `npx vitest run tests/scripts/statusline_install.test.ts` -> 0.
+      verify: `npx vitest run tests/scripts/statusline_install.test.ts` -> 0
 
 ## Phase 3 — A reset prompt is not an authorization
 

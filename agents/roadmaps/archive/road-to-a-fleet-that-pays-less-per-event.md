@@ -43,15 +43,15 @@ only wall time.
       verify: `npx vitest run tests/scripts/end_review_nudge_hook.test.ts` -> 0 plus a case counting one git call for both concerns.
 - [x] **1.2 Compile cache.** `dispatch_entry.ts` and the MCP server entry call <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/dispatch_entry.ts -->
       `module.enableCompileCache` when present, failing open.
-      verify: `npx vitest run tests/scripts/dispatch_entry_compile_cache.test.ts` -> 0.
+      verify: `npx vitest run tests/scripts/dispatch_entry_compile_cache.test.ts` -> 0
 - [~] **1.3 MCP without npx.** <!-- deferred-resolution: carried-to=road-to-an-mcp-start-without-npm --> `dist/mcp` joins the staged runtime;
       `mcp_bridge.ts` writes the staged node + server when a stage exists and
       keeps npx as fallback.
-      verify: `npx vitest run tests/install/staged_runtime.test.ts tests/scripts/mcp_bridge_pin.test.ts` -> 0.
+      verify: `npx vitest run tests/install/staged_runtime.test.ts tests/scripts/mcp_bridge_pin.test.ts` -> 0
       <!-- carried 2026-10-31 to later/road-to-an-mcp-start-without-npm: `dist/mcp/server.mjs` bundles the kernel server (src/scripts/mcp_server/__main__.ts), while `.mcp.json` launches the CLI turnkey server (src/cli/commands/mcpServer.ts, with read_skill); pointing at it swaps the tool surface. Blocker: no standalone bundle of the turnkey server exists. Options: new build script for a turnkey bundle (kept, carried) / accept the kernel surface (rejected, regression) / cancel (owner only). Closes when that bundle exists and the staged path is written with npx as fallback. -->
 - [x] **1.4 Honest dedup comment.** `claude_settings_hooks.ts` says the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/claude_settings_hooks.ts -->
       plugin/settings dedup is unverified.
-      verify: `npx vitest run tests/install/claude_settings_hooks.test.ts` -> 0.
+      verify: `npx vitest run tests/install/claude_settings_hooks.test.ts` -> 0
 
 ## Phase 2 — Measured in memory and CPU
 
