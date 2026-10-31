@@ -82,8 +82,10 @@ first lane's claim, and the queue lists every lane's roadmap as `claimed`.
 **A lane that dies keeps its work.** A spend limit, a rate limit or a watchdog
 stops the lane, not its worktree: the commits and the uncommitted edits stay on
 disk. Before re-dispatching, read the queue — the lane's entry carries
-`salvage: N commit(s) ahead, M uncommitted file(s)` — and send a FRESH lane
-into the SAME worktree with the same brief; a resumed agent loses its isolated
+`salvage: N commit(s) ahead, M uncommitted file(s)` — then run
+`agent-config run:supervise --root <lane worktree> --verify <slug>` and put every
+field it reports as disagreeing into the first line of the brief, and send a
+FRESH lane into the SAME worktree with the same brief; a resumed agent loses its isolated
 worktree, a fresh one does not. The same holds when the orchestrator session
 itself dies: its lane locks expire with its register record and the next
 session's queue lists each roadmap as `resume` in the lane's worktree.
@@ -169,7 +171,10 @@ Owner directive 2026-10-24
 
 A lane does not flip its own checkboxes: it returns each finished step with its
 evidence, and the orchestrator verifies the return (per `delegation-policy`
-item 4) and makes the bookkeeping commit on the lane's branch. A lane approving
+item 4), flips each box with
+`agent-config roadmap:set-step --file <plan> --step <id> --glyph x --verify` —
+never a hand edit, which can lose or duplicate a step — and makes the
+bookkeeping commit on the lane's branch. A lane approving
 its own work is one of the actions the host classifier refused as
 "Self-Approval" among the 24 classifier stops in those drains; an orchestrator
 verifying a return is the review the classifier was asking for.
