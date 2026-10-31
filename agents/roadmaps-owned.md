@@ -39,6 +39,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-review-that-ends | later | later | A completion review runs at most N rounds, N set by the owner — round 1 over the scope, each … |
 | road-to-a-run-that-knows-its-skills | later | later | A run — a command, a `/work` run, or a roadmap lane — determines its base skills once at its … |
 | road-to-a-runnable-share-ratchet | later | later | A shrink-only bound on the share of `verify:` clauses that can actually fail. |
+| road-to-a-session-start-under-the-host-limit | later | later | A consumer who runs `agent-config upgrade` and nothing else gets a session-start instruction layer whose package-delivered part is at most … |
 | road-to-a-setup-that-decides-itself-carried | later | later | Every step road-to-a-setup-that-decides-itself deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-step-that-costs-what-it-changes-carried | later | later | Every step road-to-a-step-that-costs-what-it-changes deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-stop-that-holds-carried | later | later | Every step road-to-a-stop-that-holds deferred is either done here or explicitly disposed of — a step that still cannot run is … |
