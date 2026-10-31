@@ -127,6 +127,8 @@ Rules:
   [`prompts/README.md`](prompts/README.md) § Prompt-cache discipline). NEVER
   encode "always fork" — that was proposed and cut (council 2026-07-30):
   the cache-sharing benefit cannot be predicted before the fork happens.
+  A judge, reviewer or validator is never a fork: it would inherit the
+  author's conversation, the context the Iron Law above forbids it.
 - Record the outcome in the telemetry line (`dispatch_mode` field, mode id
   or `none`) so the gate's value is measurable inside the ADR-117
   prove-or-drop window.
