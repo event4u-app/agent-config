@@ -99,6 +99,7 @@ commands:
     - judge/on-diff
     - judge/solo
     - judge/steps
+    - judge/bracket
     - fix/quality
     - review
     - review/changes

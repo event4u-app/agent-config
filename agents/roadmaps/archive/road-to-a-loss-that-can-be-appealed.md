@@ -65,29 +65,29 @@ decided by the paid seat alone meanwhile — ADR-257 holds either way.
 
 ## Phase 0 — Truth surfaces (independent, small)
 
-- [x] **0.1 (F4)** `DEALBREAKER` described as a blocking signal the tally counts, not a veto.
-- [x] **0.2 (F5)** `/council default` Step 3 aligned to ADR-279: both caps `0` → no gate.
-- [x] **0.3 (F6)** Settings description names `/judge bracket` and the real surfaces; a drift
+- [x] **0.1 (F4)** `DEALBREAKER` described as a blocking signal the tally counts, not a veto. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/server/schemas/settings.ts -->
+- [x] **0.2 (F5)** `/council default` Step 3 aligned to ADR-279: both caps `0` → no gate. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/server/schemas/settings.ts -->
+- [x] **0.3 (F6)** Settings description names `/judge bracket` and the real surfaces; a drift <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/server/schemas/settings.ts -->
       test asserts every `/slash` name in settings descriptions resolves to a command.
 
 ## Phase 1 — Bracket substrate
 
-- [x] **1.1** One `bracket.json` per run under `agents/runtime/bracket/<run-id>/`, written
+- [x] **1.1** One `bracket.json` per run under `agents/runtime/bracket/<run-id>/`, written <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bracket/engine.ts -->
       atomically; subcommands `plan | init | next | collect | advance | status | winner`.
-- [x] **1.2** Completion by output-file presence; a missing output is re-requested once,
+- [x] **1.2** Completion by output-file presence; a missing output is re-requested once, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bracket/engine.ts -->
       then recorded `NO OUTPUT`. No waiting on the host.
-- [x] **1.3** Briefs rendered by script; the task is byte-identical across lines (hash in state).
-- [x] **1.4** Scoring in the script: weighted rubric sum; an upheld FATAL loses
+- [x] **1.3** Briefs rendered by script; the task is byte-identical across lines (hash in state). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bracket/engine.ts -->
+- [x] **1.4** Scoring in the script: weighted rubric sum; an upheld FATAL loses <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bracket/engine.ts -->
       lexicographically; judge pick ≠ points → points win, with a note; unreadable verdict
       → re-request, never orchestrator choice.
-- [x] **1.5 (F7)** Every verdict stores its seat's billing class; `collect` refuses a
+- [x] **1.5 (F7)** Every verdict stores its seat's billing class; `collect` refuses a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bracket/engine.ts -->
       verdict carried by `free-quota`.
-- [x] **1.6** Spawn dedupe: near-duplicate solutions (novelty threshold of the debate gate)
+- [x] **1.6** Spawn dedupe: near-duplicate solutions (novelty threshold of the debate gate) <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bracket/engine.ts -->
       merge into one line, recorded `duplicate-of`.
 
 ## Phase 2 — Seats by content class (M3)
 
-- [x] **2.1** `freeSeatAllowance(contentClass, localProven)`: `public-artifact` → up to 50 %
+- [x] **2.1** `freeSeatAllowance(contentClass, localProven)`: `public-artifact` → up to 50 % <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bracket/engine.ts -->
       free competitor seats and up to 4 of 5 jury seats from ≥ 2 families; `project-content`
       with proven local weights → local seats only; otherwise 0, with the reason rendered
       in the plan line. A free route answering 402 becomes `NO OUTPUT`, never a silent paid
@@ -95,38 +95,38 @@ decided by the paid seat alone meanwhile — ADR-257 holds either way.
 
 ## Phase 3 — Appeal and the card (M1)
 
-- [x] **3.1** Appealable when any holds: weighted gap ≤ 5/100; pick ≠ points; loser has
+- [x] **3.1** Appealable when any holds: weighted gap ≤ 5/100; pick ≠ points; loser has <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bracket/engine.ts -->
       higher correctness; loser's only FATAL was rebutted; seeded audit sample.
-- [x] **3.2** A judging error (misread check, unsupported FATAL) is a **correction**: the
+- [x] **3.2** A judging error (misread check, unsupported FATAL) is a **correction**: the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bracket/engine.ts -->
       match is reversed and no card is spent.
-- [x] **3.3** The card: at most 2 per lineage (paraphrase cannot reset — counted on the
+- [x] **3.3** The card: at most 2 per lineage (paraphrase cannot reset — counted on the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bracket/engine.ts -->
       dedupe lineage); card 2 needs new evidence; the returnee faces a **new** opponent;
       the winner stays in (no overturn); no card while an upheld FATAL stands; the next
       judge never sees card state; the card is played only by a paid seat.
-- [x] **3.4** Termination: each line is eliminated at most 3×, so ≤ 3N entries; the bracket
+- [x] **3.4** Termination: each line is eliminated at most 3×, so ≤ 3N entries; the bracket <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bracket/engine.ts -->
       always ends with one line (property test).
-- [x] **3.5** Simulation (C2a): noisy stub judge (15 % flip), known true ranking, 10 000
+- [x] **3.5** Simulation (C2a): noisy stub judge (15 % flip), known true ranking, 10 000 <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bracket/engine.ts -->
       runs — P(true #1 wins) with and without cards, plus mean extra calls. Reported in
       `agents/evidence/analysis/`, pass or honest null.
 
 ## Phase 4 — Size by importance (M2, M4)
 
-- [x] **4.1** Tier table as data: S0 none · S1 10 (default) · S2 20 · S3 ≤ 64 · S4 100;
+- [x] **4.1** Tier table as data: S0 none · S1 10 (default) · S2 20 · S3 ≤ 64 · S4 100; <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bracket/engine.ts -->
       calls `6N − 5` per tier in the plan line.
-- [x] **4.2** `resolveTier`: raise above S2 only from deterministic signals (security-surface
+- [x] **4.2** `resolveTier`: raise above S2 only from deterministic signals (security-surface <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bracket/engine.ts -->
       path hit, owner-reserved transition flag) or the user; the agent may always lower;
       the plan names the signal. S4 prepares an owner decision, never signs it.
-- [x] **4.3** Saturation stop: spawn in waves; two consecutive waves adding < 20 % new
+- [x] **4.3** Saturation stop: spawn in waves; two consecutive waves adding < 20 % new <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bracket/engine.ts -->
       lines after dedupe stop the spawn — N is a ceiling, not a quota.
-- [x] **4.4** S3/S4 always ask once with the plan (paid vs. free calls separated).
+- [x] **4.4** S3/S4 always ask once with the plan (paid vs. free calls separated). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bracket/engine.ts -->
 
 ## Phase 5 — Honest close and surface
 
-- [x] **5.1** Final blind comparison winner vs. rejected baseline in **both** orders
+- [x] **5.1** Final blind comparison winner vs. rejected baseline in **both** orders <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       (`judgeBothOrders`); `inconsistent` → "no clear winner"; never auto-applied.
-- [x] **5.2** `/judge bracket` sub-command (cluster contract + dispatcher row); Mode 5
+- [x] **5.2** `/judge bracket` sub-command (cluster contract + dispatcher row); Mode 5 <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       points to it; the subagent-orchestration skill names it.
-- [x] **5.3** Claims C1–C5 pre-registered in `docs/CLAIMS.md` before any live run.
+- [x] **5.3** Claims C1–C5 pre-registered in `docs/CLAIMS.md` before any live run. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 
 ## Deferred — stubs (need time, spend or an owner gate, not effort here)
 

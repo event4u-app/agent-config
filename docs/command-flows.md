@@ -98,7 +98,8 @@ _Check it. Self-review, judge, fix/quality, and threat-model a change before it 
 - `fix-ci` — Fetch CI errors from GitHub Actions and fix them
 - `fix-quality` — Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files
 - `fix-route` — Classify a vaguely-described problem and dispatch to the right fix sub-command (or name the specialist skil…
-- `judge` — Judge orchestrator — routes to solo, steps, on-diff
+- `judge` — Judge orchestrator — routes to solo, steps, on-diff, bracket
+- `judge-bracket` — Run a resumable bracket of competing solutions whose losses can be appealed — AC sizes it (default 10), the…
 - `judge-on-diff` — Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user
 - `judge-solo` — Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only
 - `judge-steps` — Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict
