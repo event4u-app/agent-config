@@ -21280,7 +21280,7 @@ var settingsSchema = object({
       'Session canary \u2014 the name the agent addresses you with at the start of every new task (e.g. "Alex"). When the greeting silently disappears, the context window is degrading: start a fresh conversation. Also keeps the reply-close markers (end-summary, PR URL as literal last line) alive. Empty = fall back to the user-global canary_name, then to identity.name from the setup wizard; no name anywhere = off. See rules/session-canary.md.'
     ),
     pr_progress_comments: boolean2().default(false).describe(
-      'Permit the agent to post unsolicited progress / status comments on an open PR (e.g. "CI fix iteration #2", "still blocked on workflow scope"). Default off \u2014 most teammates find them noisy. User-invoked flows (/fix:pr-comments, /create-pr, /code-review, explicit "post a comment that \u2026") are NOT gated by this setting. See rules/no-pr-progress-comments.md.'
+      'Permit the agent to post unsolicited progress / status comments on an open PR (e.g. "CI fix iteration #2", "still blocked on workflow scope"). Default off \u2014 most teammates find them noisy. User-invoked flows (/fix:pr-comments, /pr:create, /code-review, explicit "post a comment that \u2026") are NOT gated by this setting. See rules/no-pr-progress-comments.md.'
     ),
     autonomy: autonomyMode.default("auto").describe(
       'How aggressively the agent suppresses trivial workflow questions ("commit now?", "open PR?"). on = silently pick the sensible default. off = always ask. auto (default) = decide per project, on for solo / off when collaborators are involved. The Hard Floor (prod, deploys, bulk deletes) ignores this setting and always asks.'
@@ -21480,7 +21480,7 @@ var settingsSchema = object({
   }).prefault({ identity_allowlist: [], forbid_terminal_capture: true, data_bearing_gate: "on" }),
   verbosity: object({
     offer_council_in_delivery: boolean2().default(false).describe(
-      'Offer "run AI Council on this?" inside delivery commands (/feature-plan, /review-changes, /roadmap-create). Council commands themselves are unaffected.'
+      'Offer "run AI Council on this?" inside delivery commands (/feature:plan, /review:changes, /roadmap:create). Council commands themselves are unaffected.'
     )
   }).prefault({ offer_council_in_delivery: false }),
   code_style: object({
@@ -21514,7 +21514,7 @@ var settingsSchema = object({
       "Session-wide model CEILING for subagents (spend cap). Empty (default) = no ceiling. When set, suite-owned CLI spawn wrappers export CLAUDE_CODE_SUBAGENT_MODEL to the sessions they launch. Class C: a human sets it; the agent never writes or infers one."
     ),
     max_parallel: number2().int().min(1).max(64).default(3).describe(
-      "Limit on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs. On Claude Code the installer also writes it into CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS, the host cap on concurrent new spawns. That cap does not bound a resumed worker: on Claude Code 2.1.306 a resume was admitted past a cap of 1, so a resume is neither bounded by the host nor counted by any package code yet. Raise for faster fan-out, lower if you hit rate limits or want lower token spend."
+      "Limit on subagents running in parallel during parallel and competitive subagent modes (do-in-parallel, do-competitively) and /judge runs, including /judge bracket. On Claude Code the installer also writes it into CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS, the host cap on concurrent new spawns. That cap does not bound a resumed worker: on Claude Code 2.1.306 a resume was admitted past a cap of 1, so a resume is neither bounded by the host nor counted by any package code yet. Raise for faster fan-out, lower if you hit rate limits or want lower token spend."
     ),
     adversarial_council: _enum(["off", "ask", "on"]).default("off").describe(
       "Opt-in adversarial-verification-council mode (subagent-orchestration Mode 9, ADR-122). off (default) = never runs; ask = offer it on an explicit high-risk change; on = auto-run on high-risk changes. Advisory only \u2014 a panel of distinct-model skeptics red-teams a real change for defect FINDING coverage and NEVER auto-gates it (Hard Floor). Stays default-off until the adversarial-council-finding-coverage claim is backed."
@@ -21569,7 +21569,7 @@ var settingsSchema = object({
     }),
     create_pr: object({
       preview_description: boolean2().default(false).describe(
-        "When /create-pr runs, show the generated title and body and wait for confirmation before opening the PR. Off by default (zero-friction PR creation); turn on if you want a last-look gate."
+        "When /pr:create runs, show the generated title and body and wait for confirmation before opening the PR. Off by default (zero-friction PR creation); turn on if you want a last-look gate."
       ),
       detail_level: _enum(["min", "med", "max"]).default("min").describe(
         "Verbosity tier for the generated PR description body. min (default) = title + 2-3 sentence what/why/impact + linked ticket (token-frugal); med = min + grouped changes + tests note; max = med + how-to-test + edge cases + reviewer guidance. Critical info (breaking changes, migrations, security, rollback) is ALWAYS included at every tier \u2014 the tier governs explanatory depth, never whether a critical callout appears."

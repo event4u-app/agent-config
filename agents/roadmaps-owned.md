@@ -175,11 +175,14 @@ and keep the full search — this file only adds candidates to it.
 | road-to-adr-134-expiry | stubs | — | ADR-134 expires 2026-09-15, and ADR-133's freeze re-arms with it |
 | road-to-adr-number-uniqueness | stubs | — | road to an ADR number that cannot be claimed twice |
 | road-to-agents-layout-memory-quarantine | stubs | — | road to a disposition for `agents/memory-quarantine/` |
+| road-to-an-appeal-jury-wired | stubs | — | an appeal jury wired into the bracket |
 | road-to-artefact-family-registry | stubs | — | a declared artefact-family registry |
 | road-to-assurance-benchmark | stubs | — | Road to an assurance benchmark — stub |
 | road-to-batch-elicitation-kernel-delta | stubs | — | road to the batch-elicitation kernel delta |
 | road-to-bench-gate-capability-non-inferiority | stubs | — | the bench gate requires capability non-inferiority |
 | road-to-blocker-parse-visibility | stubs | — | road to a blocker the parser can actually see |
+| road-to-bracket-live-measurements | stubs | — | live bracket measurements |
+| road-to-bracket-write-scope-hook | stubs | — | a write-scope guard for bracket lines |
 | road-to-bus-factor-external-actions | stubs | — | road to bus-factor external actions |
 | road-to-carrier-transition-vocabulary | stubs | — | road to a transition vocabulary for deferral carriers |
 | road-to-central-policy | stubs | — | Road to Central Policy — STUB |
@@ -243,6 +246,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-org-telemetry-sink | stubs | — | road to the org telemetry sink |
 | road-to-override-efficacy-paired-run | stubs | — | the paired-session efficacy run |
 | road-to-owner-authority-decisions | stubs | — | road to the owner-reserved authority decisions |
+| road-to-owner-reserved-table-as-data | stubs | — | the owner-reserved transition table as data |
 | road-to-pack-gate-fixture-seams | stubs | — | road to fixture seams for the three unprovable pack gates |
 | road-to-per-pack-cost-delta-emitter | stubs | — | road to the per-pack cost-delta emitter |
 | road-to-per-repository-install-verification | stubs | — | road to per-repository install verification |
