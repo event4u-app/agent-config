@@ -39,14 +39,9 @@ A task is classified **delegable** when **any** of these holds:
    sequential migrations") — those are ordered plans (signal 2).
 
 AND the **task-size floor** is cleared: the task's estimated size exceeds a
-minimum (trivial one-line edits never delegate — the dispatch overhead
-dwarfs the work). Below the floor → in-session.
-
-The floor binds only prompts on which **no** signal fired: the extractor sets
-`size_estimate` to at least 2 whenever any signal fires, against
-`SIZE_FLOOR = 1`, so a trivial edit written as three numbered lines still
-clears it today. That is the current behaviour, not a target; a trigger moves
-only by an evidence-bearing change, never by rewording this paragraph.
+minimum. Below the floor → in-session. It binds only unsignalled prompts:
+any fired signal sets `size_estimate ≥ 2 > SIZE_FLOOR`, so a trivial
+three-step list still clears it (current behavior, not a target).
 
 ## Not delegable (in-session)
 
@@ -201,15 +196,13 @@ NEVER "ALWAYS FORK" — THE BENEFIT CANNOT BE PREDICTED BEFORE THE FORK HAPPENS.
 
 | Slice shape | `dispatch_primitive` |
 |---|---|
-| Judges, reviews, validates or sits on a council (`judge`, `verify-council`, the R2 fresh reviewer, `production-validator`) | `subagent`, never `fork`, whatever the tool fit — a fork inherits the author's conversation, which removes the independence the slice is paid for |
+| Judges, reviews or validates | `subagent`, never `fork`: a fork inherits the author's conversation |
 | Continues the parent's task under IDENTICAL tools and constraints (no isolation need, no nested dispatch) | `fork` — its first request reads the parent's cache |
 | Needs isolation, a different tool set, or nested dispatch | `subagent` — a fork cannot nest and cannot change tools |
-| Ambiguous / host has no fork primitive | `subagent` — the safe default; a fork is chosen only on the row above it, where the host row reads `fork_shares_cache: true` |
+| Ambiguous / host has no fork primitive | `subagent` (default) |
 
 A fork keeps the parent's prefix and tools where the host row says
-`fork_shares_cache: true`, but it cannot change its tools — so a slice that
-would need a different tool set mid-flight is a `subagent` candidate even when it
-started as a fork candidate. This output never downgrades the form or tier
+`fork_shares_cache: true`, but cannot change its tools. This output never downgrades the form or tier
 decisions above; it only picks the primitive once a `parallel` / `steps` /
 `judge` form has already been selected. See
 [`subagent-orchestration/SKILL.md`](../../skills/subagent-orchestration/SKILL.md)

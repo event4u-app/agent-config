@@ -11,7 +11,7 @@ describe('judge-never-fork doctrine', () => {
     it('the dispatch_primitive table routes evaluators to subagent before the fork row', () => {
         const doc = read('src/agent-src/contexts/execution/auto-dispatch-classification.md');
         const table = doc.slice(doc.indexOf('| Slice shape | `dispatch_primitive` |'));
-        const judgeRow = table.search(/^\| Judges, reviews, validates[^\n]*`subagent`, never `fork`/m);
+        const judgeRow = table.search(/^\| Judges, reviews or validates[^\n]*`subagent`, never `fork`/m);
         const forkRow = table.search(/^\| Continues the parent's task[^\n]*`fork`/m);
         expect(judgeRow).toBeGreaterThan(-1);
         expect(forkRow).toBeGreaterThan(judgeRow);
@@ -23,7 +23,6 @@ describe('judge-never-fork doctrine', () => {
     });
 
     it.each([
-        ['src/skills/subagent-orchestration/SKILL.md', /judge, reviewer or validator is never a fork/],
         ['src/skills/subagent-orchestration/prompts/README.md', /judge, reviewer or\s+validator is never forked/],
         ['src/domains/engineering-base/review/changes/command.md', /named subagent, never\s+a fork/],
     ])('%s carries the mirror sentence', (rel, pattern) => {

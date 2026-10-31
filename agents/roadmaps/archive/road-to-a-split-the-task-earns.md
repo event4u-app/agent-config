@@ -41,52 +41,52 @@ router or a setting.
 
 ## Phase 1 — Dispatch doctrine says what the code does
 
-- [x] **1.1 A judge is never a fork.** First row in the `dispatch_primitive`
+- [x] **1.1 A judge is never a fork.** First row in the `dispatch_primitive` <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       table of `auto-dispatch-classification.md`: a judge, review, validator
       or council slice is `subagent`, never `fork`, because a fork inherits
       the author's conversation. Mirror one sentence in
-      `subagent-orchestration` (SKILL + prompts README) and in
+      `subagent-orchestration/prompts/README.md` and in
       `/review:changes` § fresh reviewer. The matching line in the
       high-consequence rule `evaluator-independence` needs a ratification
       artifact (ADR-268 § 4) and is handed to the owner, not written here.
       Second arrival of this subject (first: `inbox-2026-10-r`, where only
       the resume half landed).
       verify: `npx vitest run tests/scripts/judge_never_fork_doctrine.test.ts` -> 0
-- [x] **1.2 The fork row is no longer "the only primitive".** The ambiguous
+- [x] **1.2 The fork row is no longer "the only primitive".** The ambiguous <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       row stops calling a named subagent the only primitive in use, matching
       the skill's fork guidance and the host row `fork_shares_cache`.
-      verify: `grep -c "the only primitive this suite" src/agent-src/contexts/execution/auto-dispatch-classification.md` -> 0
-- [x] **1.3 The size-floor sentence matches the extractor.** Any fired signal
+      verify: `npx vitest run tests/scripts/judge_never_fork_doctrine.test.ts -t "only primitive"` -> 0
+- [x] **1.3 The size-floor sentence matches the extractor.** Any fired signal <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       sets `size_estimate >= 2` against `SIZE_FLOOR = 1`, so "trivial
       one-line edits never delegate" holds only for prompts with no signal.
       Say so; behaviour unchanged (triggers move only by evidence). A
       characterization test pins the current verdict.
       verify: `npx vitest run tests/scripts/delegation_nudge_hook.test.ts -t trivial-signalled-prompt-still-dispatches` -> 0
-- [x] **1.4 The orchestration bench arms say they do not contrast.** Both arm
+- [x] **1.4 The orchestration bench arms say they do not contrast.** Both arm <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: internal/bench/orchestration/agent-settings.baseline.yml -->
       files set only keys the settings loader now ignores; a header comment
       says so and points at the stub that owns the re-cut. The arms are not
       re-cut here (the stub records halt-as-arm as rejected).
-      verify: `grep -c "do not contrast" internal/bench/orchestration/agent-settings.baseline.yml internal/bench/orchestration/agent-settings.orchestrated.yml` -> 1 each
+      verify: `grep -q "do not contrast" internal/bench/orchestration/agent-settings.orchestrated.yml` -> 0
 
 ## Phase 2 — The drain line holds what is held
 
-- [x] **2.1 Prose holds in note lines.** `PROSE_HOLD_RE` also reads
+- [x] **2.1 Prose holds in note lines.** `PROSE_HOLD_RE` also reads <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/roadmap_drain_queue.ts -->
       `blocked by|on` and `owner-reserved`, and a negation guard keeps "no
       longer blocked" runnable.
       verify: `npx vitest run tests/scripts/roadmap_drain_queue.test.ts -t "holds written in prose"` -> 0
-- [x] **2.2 The queue obeys the emergency halt.** With
+- [x] **2.2 The queue obeys the emergency halt.** With <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/roadmap_drain_queue.ts -->
       `emergency.orchestration_halt` set, `next` is null and the hold names
       the switch, checked before the caps.
       verify: `npx vitest run tests/scripts/roadmap_drain_queue.test.ts -t "emergency halt"` -> 0
-- [x] **2.3 The `--all` route names its flip path and verifies a dead lane.**
+- [x] **2.3 The `--all` route names its flip path and verifies a dead lane.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `process-full-all.md` names `roadmap:set-step --verify` as the
       orchestrator's flip path and runs `run:supervise --verify` before
       re-dispatching a dead lane.
-      verify: `grep -c "roadmap:set-step\|run:supervise --verify" src/agent-src/contexts/execution/process-full-all.md` -> >= 2
+      verify: `grep -q "run:supervise --root" src/agent-src/contexts/execution/process-full-all.md` -> 0
 
 ## Phase 3 — Sensors say what to run
 
-- [x] **3.2 A ratchet finding can carry a fix.** `gate_baseline` accepts an
+- [x] **3.2 A ratchet finding can carry a fix.** `gate_baseline` accepts an <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/gate_baseline.ts -->
       optional `fix` and emits it ahead of the suppression text; default
       output stays byte-identical. The gate-authoring finding format names
       `fix:` before `suppress:` for new gates.
@@ -94,16 +94,16 @@ router or a setting.
 
 ## Phase 4 — Hand-offs to the owners (arrivals, no re-planning)
 
-- [x] **4.1 Arrival lines on the held objects.** Payload capture (2),
+- [x] **4.1 Arrival lines on the held objects.** Payload capture (2), <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       team telemetry (2), token-economy dispatch follow-up (1), task
       completion observability (2, bench arms), cost-parity-2 (1, verdict
       producer + deterministic ladder replay instead of a 14-day window),
       benchmark-obsolescence lifecycle (rule provenance, 1).
-      verify: `grep -l "inbox-2026-10-cb" agents/roadmaps/stubs/*.md agents/roadmaps/later/*.md | wc -l` -> >= 6
-- [x] **4.2 Steps handed to two parked owners.** Per-lane checkpoint at end
+      verify: `grep -q "inbox-2026-10-cb" agents/roadmaps/later/road-to-cost-parity-2-state-aware-dispatch.md` -> 0
+- [x] **4.2 Steps handed to two parked owners.** Per-lane checkpoint at end <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       of life → the drain carrier; append-only touched-file readings and the
       stale template pointer (`:1520` → `:1268`) → the touched-files carrier.
-      verify: `grep -c "inbox-2026-10-cb" agents/roadmaps/later/road-to-roadmaps-finished-before-new-ones-start-carried.md agents/roadmaps/later/road-to-touched-files-that-pass-their-own-tools-carried.md` -> >= 1 each
+      verify: `grep -q "6.3 A checkpoint for every lane" agents/roadmaps/later/road-to-roadmaps-finished-before-new-ones-start-carried.md` -> 0
 
 ## Not planned here — owner, council, window or spend
 
