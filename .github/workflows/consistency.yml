@@ -503,24 +503,24 @@ jobs:
         run: ./scripts-run src/scripts/check_no_conflict_markers
 
       - name: Guard — no new legacy path under src/ (ADR-051)
-        # PR-scoped: pull the diff via the GitHub API (gh) instead of
-        # `git fetch <base>` — the shallow PR-merge checkout races with the
-        # auth extraheader (observed: "could not read Username for github.com").
-        # NOTE: no --patch — that emits a per-commit format-patch series, so a
-        # line added by one commit and fixed by a later commit in the same PR
-        # would fail forever. The guard's contract is the NET diff of the PR.
+        # PR-scoped, and the NET diff of the PR (base...PR head), never a per-commit
+        # series: a line added by one commit and fixed by a later one must not
+        # fail forever. Read from git, not from the GitHub API: `gh pr diff`
+        # refuses a PR over 300 files (HTTP 406), and the files API omits the
+        # patch of a large file and stops at 3000 files, so either turns
+        # "could not read" into "nothing found". The job checks out with
+        # `fetch-depth: 0`, so base and PR head (the two parents of the merge
+        # commit) are present without a `git fetch`. The PR head, not HEAD: HEAD
+        # is the synthetic merge commit, and a line the base added independently
+        # would vanish from a base...merge diff.
         if: github.event_name == 'pull_request'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          # `gh pr diff` refuses a PR over 300 files (HTTP 406); fall back to the
-          # paginated files API, re-headed so the checker's `+++ b/` parser reads it.
-          # A file whose patch GitHub omits as too large contributes no lines.
-          {
-            gh pr diff "${{ github.event.pull_request.number }}" \
-              || gh api --paginate "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
-                   --jq '.[] | "+++ b/\(.filename)\n\(.patch // "")"'
-          } | ./scripts-run src/scripts/check_no_new_legacy_path --stdin
+          set -o pipefail
+          git diff --no-renames "$BASE_SHA...$HEAD_SHA" \
+            | ./scripts-run src/scripts/check_no_new_legacy_path --stdin
 
       - name: Design-token drift — generated CSS matches the canonical source
         # road-to-shared-design-tokens Phase 2: src/ui/tokens.css and the
@@ -857,11 +857,14 @@ jobs:
         # #1059 class, which is the reason this step exists.
         if: github.event_name == 'pull_request'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          # Files API, not `gh pr diff`: the latter refuses a PR over 300 files,
-          # and inside this substitution that failure would lint nothing silently.
-          changed=$(gh api --paginate "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" --jq '.[].filename')
+          # From git, not `gh pr diff`: that refuses a PR over 300 files, and
+          # inside a process substitution the failure linted nothing silently.
+          # A failing `git diff` here stops the step (errexit). Deleted files
+          # are left out: there is nothing left to lint.
+          changed=$(git diff --no-renames --name-only --diff-filter=d "$BASE_SHA...$HEAD_SHA")
           mapfile -t WF < <(grep -E '^\.github/workflows/.*\.ya?ml$' <<<"$changed" || true)
           if [ "${#WF[@]}" -eq 0 ]; then
             echo "No workflow files changed in this PR — nothing to lint."
