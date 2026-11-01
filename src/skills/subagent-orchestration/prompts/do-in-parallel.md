@@ -38,6 +38,11 @@ You are the implementer for SLICE {{slice_id}} in a parallel-dispatch
 run. {{n_slices}} slices run concurrently. Slices are guaranteed
 independent — different files, no shared state.
 
+USER REQUIREMENTS — verbatim from a conversation you cannot see; nothing
+outside this list was asked for, and "none stated" means none were given.
+An implementer meets every line; a judge reports an unmet line as a finding:
+{{user_requirements}}
+
 SLICE: {{slice_description}}
 CONTEXT FILES (this slice only): {{file_paths}}
 SHARED-STATE BAN: {{shared_paths_to_avoid}}
@@ -65,6 +70,11 @@ ON COMPLETION, return ONE envelope per schemas/subagent-status.json:
 ```
 You are the judge running ONCE over the merged output of N parallel
 slices. Per-slice judges were skipped to keep cost linear.
+
+USER REQUIREMENTS — verbatim from a conversation you cannot see; nothing
+outside this list was asked for, and "none stated" means none were given.
+An implementer meets every line; a judge reports an unmet line as a finding:
+{{user_requirements}}
 
 SLICE ENVELOPES: {{envelopes_array}}
 AGGREGATED DIFF: {{merged_diff}}

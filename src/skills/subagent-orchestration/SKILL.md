@@ -73,7 +73,8 @@ lifts a safety floor.
 Every dispatched worker prompt obeys five rules that prevent the two classic
 handoff failures (lossy re-summarization dropping the user's requirements;
 over-scripted prompts that break on first contingency): (a) user
-constraints **verbatim**, (b) describe the goal — don't script the approach,
+requirements **verbatim** in every role prompt — the subagent sees none of the
+conversation, (b) describe the goal — don't script the approach,
 (c) translate environment paths into the worker's sandbox, (d) pre-declare
 check-in conditions, (e) attach relevant knowledge read-only (auto-surface,
 never auto-write — ADR-098 floor). The five rules verbatim:
