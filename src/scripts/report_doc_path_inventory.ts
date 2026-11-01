@@ -22,6 +22,7 @@
  *   ./scripts-run src/scripts/report_doc_path_inventory            # write the report
  *   ./scripts-run src/scripts/report_doc_path_inventory --check    # exit 1 on drift
  */
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -102,7 +103,14 @@ const CONTRACT_TEST_ROOTS = ['tests/contracts/', 'tests/surface-contracts/'];
 const NON_TEST_ROOTS = ['src/scripts/', '.github/', 'src/config/'];
 
 export function render(refs: Map<string, string[]>, named: NamedLists, repo: string = REPO): string {
-    const exists = (p: string): boolean => fs.existsSync(path.join(repo, p));
+    // A git-ignored file (a local site build, a generated page) is absent in CI;
+    // counting it as present would make the report differ per checkout.
+    const candidates = [...new Set([...refs.keys(), ...named.updateCountsTargets, ...named.supervisionPublicSurfaces, ...named.roleDocs])];
+    const ignored = new Set(
+        spawnSync('git', ['-C', repo, 'check-ignore', '--stdin'], { input: candidates.join('\n'), encoding: 'utf8' })
+            .stdout?.split('\n').filter(Boolean) ?? [],
+    );
+    const exists = (p: string): boolean => !ignored.has(p) && fs.existsSync(path.join(repo, p));
     const code = (s: string): string => `\`${s}\``;
     const present = [...refs.entries()].filter(([p]) => exists(p));
     const absent = [...refs.entries()].filter(([p]) => !exists(p));

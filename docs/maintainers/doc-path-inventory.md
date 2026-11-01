@@ -9,8 +9,8 @@ entry for that page in the same change, then regenerates this file;
 
 Scanned: `src/scripts/`, `tests/`, `.github/`, `src/config/gate-coverage.yml`.
 
-- 271 existing doc path(s) named
-- 22 absent path(s) named outside tests (listed below; absent paths named only by tests are fixtures and are omitted)
+- 269 existing doc path(s) named
+- 23 absent path(s) named outside tests (listed below; absent paths named only by tests are fixtures and are omitted)
 - 4 absent ADR-shaped path(s) named outside tests — counted, not listed: `adr_cite_check` owns ADR references
 
 ## Hard-coded lists
@@ -85,6 +85,7 @@ Owner: `src/scripts/check_role_doc_links.ts`.
 - `docs/roadmaps/zz-canary-artifact-location.md` — `src/config/gate-coverage.yml`
 - `docs/x.md` — `src/scripts/check_test_delta.ts`, `src/scripts/lint_rule_norm_pin.ts`, `src/scripts/validate_reach_prescriptions.ts`, `tests/hooks/ship_diff_volume.test.ts`, `tests/scripts/build_linear_digest.test.ts`, `tests/scripts/check_kernel_edit_ratified.test.ts`, `tests/scripts/check_memory.test.ts`, `tests/scripts/check_test_delta.test.ts`, `tests/scripts/classify_merge_risk.test.ts`, `tests/scripts/code_graph_lane_decisions.test.ts`, `tests/scripts/exec_evidence.test.ts`, `tests/scripts/generate_owned_digest.test.ts`, `tests/scripts/hooks/chain_nudge_hook.test.ts`, `tests/scripts/lint_canonical_terms.test.ts`, `tests/scripts/resume_probe.test.ts`, `tests/scripts/step_receipt.test.ts`, `tests/scripts/templates_pr_risk_review.test.ts`, `tests/scripts/turn_end_gate_hook.test.ts`, `tests/scripts/verify_pair.test.ts`
 - `docs/zz-canary-enforcement-count.md` — `src/config/gate-coverage.yml`
+- `site/src/content/docs/generated/claims.md` — `src/scripts/check_artefact_count_messaging.ts`
 
 ## Every existing doc path
 
@@ -356,6 +357,4 @@ Owner: `src/scripts/check_role_doc_links.ts`.
 - `docs/us-vs-the-category.md` (1) — `src/scripts/check_supervision_claim_atomicity.ts`
 - `docs/value.md` (3) — `src/scripts/lint_value_dashboard.ts`, `src/scripts/render_value_md.ts`, `tests/scripts/render_value_md.test.ts`
 - `docs/walkthroughs/daily-workspace-a11y.md` (1) — `tests/e2e/workspace-launcher.spec.ts`
-- `site/src/content/docs/generated/benchmark.md` (1) — `tests/scripts/check_claims.test.ts`
-- `site/src/content/docs/generated/claims.md` (1) — `src/scripts/check_artefact_count_messaging.ts`
 - `site/src/content/docs/index.mdx` (3) — `src/scripts/check_artefact_count_messaging.ts`, `tests/scripts/check_claims.test.ts`, `tests/scripts/report_doc_path_inventory.test.ts`

@@ -2,6 +2,7 @@
  * road-to-docs-that-sell 1.5 — the doc-path inventory: extraction shape,
  * existing-vs-absent split, and byte-identical regeneration.
  */
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -64,6 +65,19 @@ describe('collectReferences + render', () => {
         expect(md).not.toContain('fixture-only');
         expect(md).toContain('- `docs/real.md` — `tests/contracts/c.test.ts`');
         expect(md).toContain('- `docs/real.md` (3) —');
+    });
+
+    it('treats a git-ignored file as absent, so a local build cannot change the report', () => {
+        spawnSync('git', ['init', '-q'], { cwd: tmp });
+        fs.writeFileSync(path.join(tmp, '.gitignore'), 'docs/gone.md\n');
+        fs.writeFileSync(path.join(tmp, 'docs/gone.md'), '# generated locally\n');
+        const md = render(collectReferences(tmp, ['src/scripts', 'tests']), {
+            updateCountsTargets: [],
+            supervisionPublicSurfaces: [],
+            roleDocs: [],
+        }, tmp);
+        expect(md).toContain('- `docs/gone.md` — `src/scripts/a.ts`');
+        expect(md).toContain('- 1 existing doc path(s) named');
     });
 
     it('counts an absent ADR-shaped probe path instead of listing it as a citation', () => {
