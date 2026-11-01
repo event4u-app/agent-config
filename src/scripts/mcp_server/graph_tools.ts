@@ -243,6 +243,8 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
     graph_impact: {
         name: 'graph_impact',
         side_effect: 'shell',
+        effect_shape: 'idempotent',
+        effect_reason: 'spawns only a read-only `git diff`; changes nothing',
         description:
             'What a diff breaks: callers, dependents, tests of changed symbols over stated edges; `review_risk` scores it.',
         input_schema: {

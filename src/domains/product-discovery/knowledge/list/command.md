@@ -45,7 +45,7 @@ sorted by `created_at` ascending. Read-only by default; `--pin` and
 ### 2. Run the implementation
 
 ```bash
-./agent-config knowledge \
+./agent-config knowledge:local \
     list [--format=...] [--pin <id-prefix>] [--unpin <id-prefix>]
 ```
 

@@ -17,6 +17,8 @@ export interface CommandEntry {
     disposition: Disposition;
     /** One-line synopsis surfaced by `--help`. Optional. */
     synopsis?: string;
+    /** Sub-commands the delegate CLI accepts; `lint_documented_commands` checks documented ones against it. */
+    subcommands?: readonly string[];
 }
 
 export const REGISTRY: readonly CommandEntry[] = [
@@ -116,7 +118,8 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'memory:check-proposal', disposition: 'delegate', synopsis: 'Run the admission gate on a memory proposal.' },
     { name: 'memory:learn', disposition: 'delegate', synopsis: 'Aggregate memory intake signals into the local learning sidecar (read-only; --write to emit, --format status for the one-screen view).' },
     { name: 'analytics', disposition: 'delegate', synopsis: 'Local-only workspace analytics: emit|show|prune|migrate (never leaves the machine).' },
-    { name: 'knowledge', disposition: 'delegate', synopsis: 'Global knowledge-card store: list|show|trace|forget|promote|validate|lead-check|purge.' },
+    { name: 'knowledge', disposition: 'delegate', synopsis: 'Global knowledge-card store: list|show|trace|forget|promote|validate|lead-check|purge.', subcommands: ['list', 'show', 'trace', 'forget', 'promote', 'validate', 'lead-check', 'purge'] },
+    { name: 'knowledge:local', disposition: 'delegate', synopsis: 'Local ingest store behind /knowledge: ingest|list|forget.', subcommands: ['ingest', 'list', 'forget'] },
     { name: 'proposal:check', disposition: 'delegate', synopsis: 'Validate a learning/skill/rule proposal markdown.' },
     { name: 'refine-ticket:detect', disposition: 'delegate', synopsis: 'Run the deterministic refine-ticket detection helper.' },
     { name: 'chat-history:hook', disposition: 'delegate', synopsis: 'Platform hook entry point for chat-history capture (JSON via stdin).' },

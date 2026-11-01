@@ -59,6 +59,15 @@ export interface DocsPage {
     readonly docs_digest: string | null;
     readonly expires: string;
     readonly why: string;
+    /**
+     * The literal tokens this row claims the page carries — the frontmatter
+     * keys, paths and file names `why` says this tree reads off it. The watcher
+     * checks them whenever the body's digest moves: all present is CONFIRMED
+     * (green), any absent is ABSENT (red, naming the token). Empty when the row
+     * declares none, in which case a moved body cannot be confirmed and stays a
+     * plain `changed` red.
+     */
+    readonly claims: readonly string[];
 }
 
 export class MalformedDocsPages extends Error {}
@@ -116,7 +125,18 @@ export function parseDocsPages(text: string): Map<string, DocsPage> {
         if (!/^https:\/\//.test(docs_url)) {
             throw new MalformedDocsPages(`page ${id}: docs_url must be an https URL`);
         }
-        out.set(id, { id, docs_url, docs_at, docs_digest, expires, why });
+        const claimsRaw = row['claims'];
+        let claims: string[] = [];
+        if (claimsRaw !== undefined && claimsRaw !== null) {
+            if (
+                !Array.isArray(claimsRaw)
+                || claimsRaw.some((c) => typeof c !== 'string' || c.trim() === '')
+            ) {
+                throw new MalformedDocsPages(`page ${id}: claims must be a list of non-empty strings`);
+            }
+            claims = (claimsRaw as string[]).map((c) => c.trim());
+        }
+        out.set(id, { id, docs_url, docs_at, docs_digest, expires, why, claims });
     }
     if (out.size === 0) {
         // An EMPTY list is refused rather than reported clean. A watcher that

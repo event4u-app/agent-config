@@ -33,7 +33,7 @@ interface CatalogTool {
     name: string;
     description: string;
     implemented_on: string[];
-    annotations?: { readOnlyHint?: boolean };
+    annotations?: Record<string, unknown>;
 }
 
 function _loadCatalogTools(): CatalogTool[] {
@@ -65,10 +65,12 @@ describe('consumer_tool_catalog.json — stub honesty + annotation floor', () =>
         }
     });
 
-    it('100% of implemented tools have annotations with readOnlyHint present', () => {
+    it('100% of implemented tools have all four MCP hints present', () => {
         for (const t of implemented) {
             expect(t.annotations).toBeDefined();
-            expect(typeof t.annotations!.readOnlyHint).toBe('boolean');
+            for (const h of ['readOnlyHint', 'destructiveHint', 'idempotentHint', 'openWorldHint']) {
+                expect(typeof t.annotations![h], `${t.name}.${h}`).toBe('boolean');
+            }
         }
     });
 });

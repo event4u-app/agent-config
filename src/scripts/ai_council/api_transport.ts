@@ -169,6 +169,8 @@ export function normaliseGeminiRest(raw: unknown): {
     text: string;
     model_version: string;
     usage_metadata: { prompt_token_count: number; candidates_token_count: number };
+    /** `candidates[0].finishReason`, verbatim; `''` when the envelope carries none. */
+    finish_reason: string;
 } {
     const env = (raw ?? {}) as Record<string, unknown>;
     const candidates = Array.isArray(env['candidates']) ? (env['candidates'] as unknown[]) : [];
@@ -187,5 +189,6 @@ export function normaliseGeminiRest(raw: unknown): {
             prompt_token_count: num(usage['promptTokenCount']),
             candidates_token_count: num(usage['candidatesTokenCount']),
         },
+        finish_reason: typeof first['finishReason'] === 'string' ? first['finishReason'] : '',
     };
 }

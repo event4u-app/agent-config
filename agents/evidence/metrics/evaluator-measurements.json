@@ -1,12 +1,12 @@
 {
     "schema_version": 1,
     "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit — refresh it from a real run.",
-    "recorded_at": "2026-10-31T09:41:18.207Z",
-    "git_sha": "e076f566d49b2e934973e37a8aa8137c1638f181",
+    "recorded_at": "2026-11-01T16:20:42.675Z",
+    "git_sha": "1255b2348557675f811855fc5d32ea5436b90bcd",
     "run_url": "https://github.com/event4u-app/agent-config/actions/runs/41189573419",
     "conditions": "Linux/x86_64 · node v22.23.2 · npm 10.9.8 · npm install --omit=dev from a LOCAL tarball (no registry round-trip for the package itself; a real first-touch install adds registry latency)",
     "measurements": {
-        "cli_help_command_count": 120,
+        "cli_help_command_count": 121,
         "cli_version_cold_ms": 209,
         "cold_start_conditions": "Linux/x86_64 · node v22.23.2 · npm 10.9.8 · npm install --omit=dev from a LOCAL tarball (no registry round-trip for the package itself; a real first-touch install adds registry latency)",
         "cold_start_install_to_doctor_ms": 8309,

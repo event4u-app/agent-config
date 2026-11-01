@@ -22,7 +22,9 @@ import {
     classify,
     dayBefore,
     digestOf,
+    loweringClaims,
     main,
+    tokenPresent,
     watchable,
     watchablePages,
 } from '../../src/scripts/check_host_docs_digest.js';
@@ -406,5 +408,158 @@ describe('docs digest — the sibling page list', () => {
         // `--quiet` suppresses the per-row lines; what must hold is that the
         // run SUCCEEDS with the second corpus wired in, offline and unwritten.
         expect(fs.readFileSync(PAGES_FILE, 'utf8')).toBe(PAGES_SOURCE);
+    });
+});
+
+// Defect D6 — a sha256 over the whole body reds on every cosmetic vendor edit
+// and names no row and no claim. The digest stays the trigger for a LOOK; the
+// tokens the row itself claims decide the colour.
+describe('docs digest — claim-level drift', () => {
+    const claudeRow = parseHostLowering(SOURCE).get('claude')!.get('any')!;
+    const claims = loweringClaims(claudeRow);
+    // A stand-in for the vendor page that names every event the row binds.
+    const page = (events: readonly string[], prose: string): string =>
+        `# Hooks\n\n${prose}\n\n${events.map((e) => `- \`${e}\``).join('\n')}\n`;
+
+    it('derives a lowering row\'s claims from its own slots, not from any page', () => {
+        expect(claims).toEqual([
+            'SessionStart', 'SessionEnd', 'Stop', 'UserPromptSubmit', 'PreToolUse',
+            'PostToolUse', 'PreCompact', 'SubagentStart', 'SubagentStop',
+        ]);
+        // cline maps one slot onto two native events; both are claimed.
+        const cline = loweringClaims(parseHostLowering(SOURCE).get('cline')!.get('any')!);
+        expect(cline).toContain('TaskStart');
+        expect(cline).toContain('TaskResume');
+        // A row with no slots claims nothing — the case that stays a plain red.
+        expect(loweringClaims(parseHostLowering(SOURCE).get('copilot')!.get('any')!)).toEqual([]);
+    });
+
+    it('a cosmetic change is CONFIRMED (green) and writes nothing', async () => {
+        const before = page(claims, 'Hooks run at lifecycle events.');
+        const after = page(claims, 'Hooks run at **lifecycle** events — now with a new intro paragraph.');
+        const f = classify('claude', 'any', 'u', digestOf(before), after, undefined, claims);
+        expect(f.state).toBe('confirmed');
+        expect(f.missing).toEqual([]);
+        const out = applyFindings(SOURCE, [f], TODAY);
+        expect(out.text).toBe(SOURCE);
+        expect(out.written).toEqual([]);
+        expect(out.expired).toEqual([]);
+    });
+
+    it('a removed event name is ABSENT (red) and names the missing token', () => {
+        const before = page(claims, 'Hooks.');
+        const after = page(claims.filter((c) => c !== 'PreToolUse'), 'Hooks.');
+        const f = classify('claude', 'any', 'u', digestOf(before), after, undefined, claims);
+        expect(f.state).toBe('absent');
+        expect(f.missing).toEqual(['PreToolUse']);
+        // ABSENT is drift: it walks the same expiry chain to the real gate.
+        const { text, expired } = applyFindings(SOURCE, [f], TODAY);
+        expect(expired).toEqual(['claude/any']);
+        expect(gate(text).errors).toHaveLength(1);
+    });
+
+    it('matches on identifier boundaries, so `Stop` inside `SubagentStop` does not count', () => {
+        expect(tokenPresent('only SubagentStop here', 'Stop')).toBe(false);
+        expect(tokenPresent('the `Stop` event', 'Stop')).toBe(true);
+        expect(tokenPresent('see SKILL.md for details', 'SKILL.md')).toBe(true);
+        expect(tokenPresent('see SKILLxmd', 'SKILL.md')).toBe(false);
+        expect(tokenPresent('descriptions only', 'description')).toBe(false);
+    });
+
+    it('page rows carry claims from the list file and are checked the same way', () => {
+        const pages = parseDocsPages(fs.readFileSync(
+            path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'host_docs_pages.yaml'),
+            'utf8',
+        ));
+        for (const r of watchablePages(pages)) expect(r.claims.length, `${r.surface} claims nothing`).toBeGreaterThan(0);
+        const f = classify(PAGES_PSEUDO_HOST, 'x', 'u', digestOf('old'), 'a page with no frontmatter keys', undefined, ['description']);
+        expect(f.state).toBe('absent');
+        expect(f.missing).toEqual(['description']);
+        expect(() => parseDocsPages(
+            'pages:\n  x:\n    docs_url: https://a\n    docs_at: 2026-01-01\n    expires: 2027-01-01\n    claims: [""]\n    why: because\n',
+        )).toThrow(/claims/);
+    });
+
+    it('the CLI prints the row and the missing token on an ABSENT red, and stays green on CONFIRMED', async () => {
+        // Drive `main` end to end with `fetch` stubbed: no network in tests.
+        const table = path.join(tmp, 'host_lowering.yaml');
+        const pagesFile = path.join(tmp, 'pages.yaml');
+        const oldBody = page(['PreToolUse', 'Stop'], 'v1');
+        fs.writeFileSync(table, [
+            'schema_version: 1',
+            'hosts:',
+            '  alpha:',
+            '    surfaces:',
+            '      any:',
+            '        entry_shape: claude-settings-hooks',
+            '        json_shape: none',
+            '        fail_policy: discard',
+            '        timeout_unit: unknown',
+            '        timeout_default: null',
+            '        verified:',
+            '          docs_at: 2026-10-01',
+            '          docs_url: https://alpha.test/hooks.md',
+            `          docs_digest: ${digestOf(oldBody)}`,
+            '          probe_at: null',
+            '          host_version: null',
+            '          expires: 2027-10-01',
+            '        slots:',
+            '          pre_tool_use: { native: PreToolUse, block_exit: null, answered_at: 2026-10-01 }',
+            '          stop:         { native: Stop,       block_exit: null, answered_at: 2026-10-01 }',
+            '',
+        ].join('\n'));
+        fs.writeFileSync(pagesFile, [
+            'pages:',
+            '  beta:',
+            '    docs_url: https://beta.test/skills.md',
+            '    docs_at: 2026-10-01',
+            `    docs_digest: ${digestOf('old SKILL.md')}`,
+            '    expires: 2027-10-01',
+            '    claims: [SKILL.md]',
+            '    why: a fixture page standing in for a vendor skills contract, read by nothing',
+            '',
+        ].join('\n'));
+        const run = async (bodies: Record<string, string>): Promise<{ code: number; out: string }> => {
+            const realFetch = globalThis.fetch;
+            const chunks: string[] = [];
+            const w1 = process.stdout.write.bind(process.stdout);
+            const w2 = process.stderr.write.bind(process.stderr);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const cap = (s: any): boolean => { chunks.push(String(s)); return true; };
+            globalThis.fetch = (async (u: string | URL) =>
+                new Response(bodies[String(u)] ?? '', { status: 200 })) as typeof fetch;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (process.stdout as any).write = cap;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (process.stderr as any).write = cap;
+            try {
+                const code = await main(['--fetch', '--lowering', table, '--pages', pagesFile, '--today', TODAY]);
+                return { code, out: chunks.join('') };
+            } finally {
+                globalThis.fetch = realFetch;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (process.stdout as any).write = w1;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (process.stderr as any).write = w2;
+            }
+        };
+
+        const cosmetic = await run({
+            'https://alpha.test/hooks.md': page(['PreToolUse', 'Stop'], 'v2, reworded'),
+            'https://beta.test/skills.md': 'new SKILL.md prose',
+        });
+        expect(cosmetic.code).toBe(0);
+        expect(cosmetic.out).toContain('alpha/any — confirmed');
+        expect(cosmetic.out).toContain('pages/beta — confirmed');
+
+        const removed = await run({
+            'https://alpha.test/hooks.md': page(['Stop'], 'v3'),
+            'https://beta.test/skills.md': 'new SKILL.md prose',
+        });
+        expect(removed.code).toBe(1);
+        expect(removed.out).toContain('claimed token(s) ABSENT');
+        expect(removed.out).toContain('alpha/any missing PreToolUse');
+        // A read-only run never wrote either fixture.
+        expect(fs.readFileSync(table, 'utf8')).toContain('expires: 2027-10-01');
     });
 });

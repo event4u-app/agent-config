@@ -876,15 +876,19 @@ describe('golden structure — registry + envelopes', () => {
     it('to_mcp_tool_meta emits exactly the wire envelope for every allowlist tool', () => {
         for (const [name, tool] of Object.entries(ALLOWLIST)) {
             const meta = to_mcp_tool_meta(tool);
-            // Phase 3 of road-to-credible-install: every implemented tool
-            // carries an honest `annotations.readOnlyHint` derived from its
-            // own `side_effect` — never a hand-authored duplicate.
+            // Every implemented tool carries all four MCP hints, derived from
+            // its own `side_effect` / `effect_shape` — never hand-authored.
             expect(Object.keys(meta).sort()).toEqual(['annotations', 'description', 'inputSchema', 'name']);
             expect(meta.name).toBe(name);
             expect((meta.description as string).trim()).toBeTruthy();
             expect(meta.inputSchema).toEqual(tool.input_schema);
             const annotations = meta.annotations as Record<string, unknown>;
-            expect(typeof annotations.readOnlyHint).toBe('boolean');
+            expect(Object.keys(annotations).sort()).toEqual([
+                'destructiveHint',
+                'idempotentHint',
+                'openWorldHint',
+                'readOnlyHint',
+            ]);
             expect(annotations.readOnlyHint).toBe(tool.side_effect === 'ro');
             // Canonical JSON round-trip is lossless (wire-safe values only).
             expect(canonical(meta)).toEqual(JSON.parse(JSON.stringify(meta)));

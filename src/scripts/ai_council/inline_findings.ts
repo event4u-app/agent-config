@@ -15,6 +15,7 @@
 import type { ExternalAIClient, CouncilResponse } from './clients.js';
 import type { Finding, FindingsExtraction } from './consensus.js';
 import { _BARE_ARRAY_SRC, _JSON_BLOCK_SRC, parse_findings_outcome } from './consensus.js';
+import { isIncompleteStop } from './stop_class.js';
 import { INLINE_FINDINGS_CONTRACT, STANCE_LINE_CONTRACT } from './prompts.js';
 
 /** Python `str.strip()` parity, as everywhere else in this package. */
@@ -133,7 +134,10 @@ export type RecordedExtractionOutcome =
     | 'empty'
     | 'parse_failed'
     | 'parsed-after-reask'
-    | 'parsed-inline';
+    | 'parsed-inline'
+    // The provider cut the answer short (`stop_class.ts`): an abstention, never
+    // a findings source, and never re-asked or continued.
+    | 'truncated';
 
 /**
  * Phase 1B — harvest the inline findings block out of each deliberation reply.
@@ -218,7 +222,8 @@ export function harvest_inline_findings(
     }
     for (const resp of responses) {
         const model = model_by_name.get(resp.provider);
-        if (model === undefined || resp.error || !_strip(resp.text)) {
+        // A cut-off reply is not harvested: its block may be a prefix of the real one.
+        if (model === undefined || resp.error || !_strip(resp.text) || isIncompleteStop(resp.stop_class)) {
             continue;
         }
         const split = split_inline_findings(resp.text);

@@ -3313,13 +3313,16 @@ gates:
       under `check_kernel_edit_ratified`. Discrimination is proven instead by
       two things that run. `--self-test` drives the real decision functions over
       the real table, including both directions of every state — unchanged vs
-      changed, filled vs missed, 404 (`gone`) vs 503 (`unreachable`), and drift
-      write vs no write. And `tests/scripts/host_docs_digest.test.ts` (20 cases)
+      changed, a moved body whose claimed tokens survive (`confirmed`, green,
+      writes nothing) vs one that lost a token (`absent`, red, names it), filled
+      vs missed, 404 (`gone`) vs 503 (`unreachable`), and drift write vs no
+      write. And `tests/scripts/host_docs_digest.test.ts`
       runs the REAL `lint_hook_manifest._check_host_lowering` over the REAL
       writer's output, so the full drift-to-refusal chain is exercised end to
       end rather than asserted. Both were seen RED deliberately: neutralising
-      `isDrift` fails 4 of 20, and reverting the `gone` write-skip fails the
-      case that pins it. The `filled`-vs-`missed` direction named above is
+      `isDrift` fails 4 of 20, reverting the `gone` write-skip fails the case
+      that pins it, and neutralising the claim check fails the three ABSENT
+      cases. The `filled`-vs-`missed` direction named above is
       asserted in BOTH places — it was credited to `--self-test` before it was
       actually there, which a review caught and which is why the assertion now
       exists rather than the sentence being softened.
