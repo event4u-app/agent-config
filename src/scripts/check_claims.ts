@@ -117,6 +117,9 @@ const PUBLISH_SURFACES = [
     '.github/about.yml',
     '.github/topics.yml',
     '.claude-plugin/marketplace.json',
+    // The docs-site pitch: rendered on GitHub Pages to readers who never open the repo.
+    'site/astro.config.mjs',
+    'site/src/content/docs/index.mdx',
 ];
 
 /**
