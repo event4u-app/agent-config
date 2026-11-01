@@ -411,7 +411,9 @@ describe('the map learns and serves the workflow (Phase 7)', () => {
         const r = await buildMap(root);
         const grew = r.model.drift?.changed.find(([a]) => r.model.areas[a]?.files.some((f) => r.model.files[f]?.path === 'src/billing/f7.ts'));
         expect(grew?.[1]).toBeGreaterThan(0);
-        expect(fs.readFileSync(path.join(root, 'agents', 'map', 'MAP.md'), 'utf-8')).toContain('## Since the last map');
+        // Drift depends on the previous drawing, not on the tree, so the tracked files never carry it.
+        expect(fs.readFileSync(path.join(root, 'agents', 'map', 'MAP.md'), 'utf-8')).not.toContain('## Since the last map');
+        expect(fs.readFileSync(path.join(root, 'agents', 'map', 'code', 'map.json'), 'utf-8')).not.toContain('"drift"');
     });
 
     it('detects a split and a merge by file membership', async () => {
