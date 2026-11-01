@@ -135,11 +135,14 @@
 
 # Agent config — the code map and its build folder (`agent-config code-graph
 # map`, ADR-297 + ADR-303). agents/map/ is one folder per project: the map
-# itself (index.html, MAP.md, manifest.json, code/, data/, interfaces/,
-# runtime/, delivery/) is deterministic — same tree in, same bytes out — and
-# may be committed. Only its .build/ is local: the code-graph index, its SQLite
-# twin and extracts sidecar, the single-flight refresh lock, the auto-refresh
-# opt-in and the redraw staging. Named rather than left to a wider pattern:
+# itself (MAP.md, manifest.json, code/, data/, interfaces/, runtime/,
+# delivery/) is deterministic — same tree in, same bytes out — and may be
+# committed. Local are its .build/ — the code-graph index, its SQLite twin and
+# extracts sidecar, the single-flight refresh lock, the auto-refresh opt-in and
+# the redraw staging — and index.html, the viewer: it embeds all of the data
+# above and changes on every redraw, so it is rendered from the committed data
+# instead (each refresh, `code-graph open`). Named rather than left to a wider
+# pattern:
 #
 #   · Some hosts key a prompt cache on a hash of the workspace file list. After
 #     `agent-config code-graph auto-refresh on` the index is rewritten at every
@@ -153,6 +156,7 @@
 # lines are where a release before ADR-303 kept the index; it is still read
 # from there for one release, so it stays ignored there too.
 /agents/map/.build/
+/agents/map/index.html
 /agents/runtime/state/code-graph-v1.json
 /agents/runtime/state/code-graph-v1.sqlite3
 /agents/runtime/state/code-graph-refresh.lock/

@@ -21,36 +21,31 @@
  *   confirm <id…> | --from-query <symbol>       re-read the witnesses of facts
  *   pack "<task>" [--diff] [--since <rev>]      a verified context pack
  *   rebuild-diff                                incremental vs cold build
- *   auto-refresh on|off|status [--root P]      turn the background refresh
- *                                               on or off; a local `build` or
- *                                               `map` turns it on unless `off`
+ *   auto-refresh on|off|status [--root P]      background refresh on or off; a local
+ *                                               `build` or `map` turns it on unless `off`
  *   projects list|add|remove|prune             the user-global registry of
  *                                               projects this machine works in
  *                                               (ADR-299, `projects_cli.ts`)
  *   estate where-used|projects-using|          estate questions from the local
  *          advisory-impact                     index alone (`estate_cli.ts`)
  *
- * `detect --format json` (Phase 2, road-to-reachable-code-memory) emits a
- * single-line, stable-key-order JSON verdict on stdout — no timestamps, safe
- * to diff or pipe to `jq`:
+ * `detect --format json` emits a single-line, stable-key-order JSON verdict on
+ * stdout — no timestamps, safe to diff or pipe to `jq`:
  *
  *   { "verdict": "ABSENT" | "STALE" | "FRESH",
  *     "behind_commits": <n> | null,
  *     "source": { "kind": "consumer" | "scip" | "native", "path": "…" } | null,
  *     "sources": [ { "kind": …, "path": "…", "present": true, … }, … ] }
  *
- * `refresh` never blocks on a hung build: it spawns the actual `build` in a
- * CHILD process against a temp `--out` path, under a hard wall-clock
- * `--budget-seconds` (default 60, via SIGKILL). The real cache at `--out` is
- * only ever touched by a same-directory atomic rename of that child's
- * completed temp output — on budget-exceeded, build failure, or the child
- * never producing output, the rename never happens and the OLD cache is left
- * byte-for-byte untouched. The cache itself (default
- * `agents/map/.build/code-graph-v1.json`; for a root without `agents/` or a
- * project install, the hub's `map/<repo id>-<checkout>/.build/`, ADR-299 and
- * ADR-303; a cache an older release left at `agents/runtime/state/` is still
- * read) is local-only and disposable — gitignored, rebuildable from source at
- * any time; never a source of truth.
+ * `refresh` never blocks on a hung build: it spawns the actual `build` in a CHILD process against a
+ * temp `--out` path, under a hard wall-clock `--budget-seconds` (default 60, via SIGKILL). The real
+ * cache at `--out` is only ever touched by a same-directory atomic rename of that child's completed
+ * temp output — on budget-exceeded, build failure, or the child never producing output, the rename
+ * never happens and the OLD cache is left byte-for-byte untouched. The cache itself (default
+ * `agents/map/.build/code-graph-v1.json`; for a root without `agents/` or a project install, the
+ * hub's `map/<repo id>-<checkout>/.build/`, ADR-299 and ADR-303; an older release's cache at
+ * `agents/runtime/state/` is still read) is local-only and disposable — gitignored, rebuildable
+ * from source at any time; never a source of truth.
  *
  *   impact    --diff <rev> [--depth N]      callers/dependents/test files
  *                                             reachable from the changed
@@ -169,6 +164,7 @@ import { estateMapMain } from './estate_map.js';
 import { touchHome } from './graph_budget.js';
 import { projectsMain, registerUse } from './projects_cli.js';
 import { buildMap, graphGeneration, hasMap, mapGeneration, recordOutcome } from './map.js';
+import { ensureViewer } from './map_viewer_file.js';
 import { cliPackage, usableCli } from './refresh_cli.js';
 import {
     STALE_LOCK_MS,
@@ -1077,14 +1073,15 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
     return 0;
 }
 
-/**
- * `--single-flight` takes the lock the git-hook refresh block takes and exits 0
- * when another refresh holds it. `--map` redraws `agents/map/` afterwards, only
- * when the project already has one and it is older than the cache.
- */
 /** How long a refresh may spend on branch gc. */
 const BRANCH_GC_BUDGET_MS = 2_000;
 
+/**
+ * `--single-flight` takes the lock the git-hook refresh block takes and exits 0
+ * when another refresh holds it. `--map` redraws `agents/map/` when it is older
+ * than the cache; otherwise its local `index.html` is re-rendered from the
+ * committed data when that changed (a pull, a checkout).
+ */
 async function cmdRefresh(argv: string[]): Promise<number> {
     const root = resolveRoot(argv);
     const out = flag(argv, '--out') ?? buildCacheFor(root);
@@ -1144,6 +1141,7 @@ async function cmdRefresh(argv: string[]): Promise<number> {
             record(mrc === 0 ? 'refreshed-with-map' : 'map-failed', mrc === 0 ? undefined : `map exited ${mrc}`);
             return mrc;
         }
+        if (out === buildCacheFor(root)) ensureViewer(graphHome(root).mapDir);
         record('refreshed');
         return rc;
     } finally {
@@ -1393,8 +1391,8 @@ async function drawMap(argv: string[]): Promise<number> {
 }
 
 /**
- * `open [--root P] [--out DIR]` — show the map that is already drawn, without
- * redrawing it. Resolves the page exactly where `map` writes it.
+ * `open [--root P] [--out DIR]` — show the map that is already drawn, without redrawing it;
+ * the local page is first re-rendered from the committed data when that changed.
  */
 export async function openMap(
     argv: string[],
@@ -1402,7 +1400,9 @@ export async function openMap(
 ): Promise<number> {
     const root = resolveRoot(argv);
     const out = flag(argv, '--out');
-    const page = path.join(out ? path.resolve(out) : graphHome(root).mapDir, 'index.html');
+    const dir = out ? path.resolve(out) : graphHome(root).mapDir;
+    ensureViewer(dir);
+    const page = path.join(dir, 'index.html');
     const relative = path.relative(process.cwd(), page);
     const rel = relative && !relative.startsWith('..') ? relative : page;
     if (!fs.existsSync(page)) {
