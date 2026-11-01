@@ -274,15 +274,15 @@ export function dryRunBool(v) {
 /**
  * The scope a REAL run of the same flags would resolve, as the plan's `scope`
  * line. Mirrors `_resolve_scope` in `scripts/install.ts` without its prompt:
- * no scope flag means `project` (kept for backward compatibility), and a
- * consumer run refuses `project` outside `AGENT_CONFIG_DEV_MODE=1` — so the plan
- * says that and names the flag that works, instead of printing `auto`.
+ * a consumer run with no scope flag (or `--scope=auto`) is global (ADR-020);
+ * only `AGENT_CONFIG_DEV_MODE=1` keeps the old `project` default, and an
+ * explicit `--scope=project` outside it is refused — the plan says so.
  */
 export function dryRunScopeLine(opts, detected, devMode) {
     let scope;
     if (opts.scope === 'project' || opts.scope === 'global' || opts.scope === 'prompt')
         scope = opts.scope;
-    else if (opts.global_install === true)
+    else if (opts.global_install === true || !devMode)
         scope = 'global';
     else if (opts.scope === 'auto')
         scope = detected[0];
@@ -294,7 +294,7 @@ export function dryRunScopeLine(opts, detected, devMode) {
     if (scope === 'project' && !devMode) {
         return {
             scope,
-            line: '  scope:       project — a real run refuses this (installs are global-only); add --global\n',
+            line: '  scope:       project — a real run refuses this outside maintainer mode (installs are global-only)\n',
         };
     }
     return { scope, line: `  scope:       ${scope}\n` };

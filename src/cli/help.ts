@@ -30,7 +30,7 @@ export const HELP_GROUPS: readonly HelpGroup[] = [
     {
         heading: 'Get started:',
         rows: [
-            { name: 'init', text: 'Install for your AI tools (opens the setup wizard; --yes --global stays in the terminal)' },
+            { name: 'init', text: 'Install for your AI tools (opens the setup wizard; --yes stays in the terminal)' },
             { name: 'install', text: 'Same setup wizard as init' },
             { name: 'doctor', text: 'Check the install and name the next fix' },
             { name: 'versions', text: 'List published versions and the one you run' },

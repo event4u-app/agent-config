@@ -9,7 +9,7 @@ Usage:
   agent-config --version
 
 Get started:
-  init                   Install for your AI tools (opens the setup wizard; --yes --global stays in the terminal)
+  init                   Install for your AI tools (opens the setup wizard; --yes stays in the terminal)
   install                Same setup wizard as init
   doctor                 Check the install and name the next fix
   versions               List published versions and the one you run

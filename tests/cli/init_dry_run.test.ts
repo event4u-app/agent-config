@@ -4,8 +4,9 @@
  * Measured before the fix: `--offline` was dropped on the way to the plan
  * (`offline: False` with the flag passed), booleans printed Python-style, the
  * plan named no file per tool, a default-scope plan said `scope: auto` while a
- * real run refuses the project scope, and the output told the user to run
- * `src/scripts/install` — a path inside this repository.
+ * real run refused the project scope, and the output told the user to run
+ * `src/scripts/install` — a path inside this repository. Since the consumer
+ * default scope is global (ADR-020), a plan without a scope flag is global.
  */
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readdirSync, rmSync, statSync } from 'node:fs';
@@ -68,12 +69,13 @@ describe('init --dry-run', () => {
         expect([snapshot(home), snapshot(project)]).toEqual(before);
     });
 
-    it('default scope: says a real run would refuse it, names --global, writes nothing', () => {
+    it('no scope flag: plans the global install, with no project payload sync, writes nothing', () => {
         const before = [snapshot(home), snapshot(project)];
         const r = dryRun(['--offline', '--tools=claude-code']);
         expect(r.status, r.out).toBe(0);
-        expect(r.out).toMatch(/^ {2}scope: +project\b.*--global/m);
-        expect(r.out).not.toMatch(/^ {2}scope: +auto/m);
+        expect(r.out).toMatch(/^ {2}scope: +global$/m);
+        expect(r.out).toContain(join(home, '.claude/rules'));
+        expect(r.out).not.toContain('Syncing agent-config payload');
         expect(r.out).not.toMatch(/src\/scripts\/install|scripts-run/);
         expect([snapshot(home), snapshot(project)]).toEqual(before);
     });

@@ -2066,6 +2066,7 @@ function _resolve_scope(
 ): string {
     if (opts.scope === 'project') return 'project';
     if (opts.scope === 'global') return 'global';
+    if (process.env['AGENT_CONFIG_DEV_MODE'] !== '1' && !custom_path && (!opts.scope || opts.scope === 'auto')) return 'global'; // ADR-020 consumer default
     if (opts.scope === 'prompt') {
         return _run_scope_prompt(opts, detect_reason || 'forced by --scope=prompt', custom_path);
     }
@@ -2078,12 +2079,7 @@ function _resolve_scope(
     if (opts.global_install) return 'global';
 
     if (detected === 'prompt') return _run_scope_prompt(opts, detect_reason, custom_path);
-    if (!state.QUIET) {
-        info(
-            `Scope detection: ${detected} (${detect_reason}). Using project default for ` +
-                'backward compatibility; pass --scope=auto to honor detection.',
-        );
-    }
+    if (!state.QUIET) info(`Scope detection: ${detected} (${detect_reason}). Maintainer mode: project default; --scope=auto honours detection.`);
     return 'project';
 }
 

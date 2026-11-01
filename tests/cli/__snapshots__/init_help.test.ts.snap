@@ -13,7 +13,7 @@ Options:
   --no-ui               Never open the wizard; install from the terminal
   -y, --yes             Do not prompt
   --global              Install into your user-scope tool folders (~/.claude/,
-                        ~/.cursor/, …) — the install a terminal run needs
+                        ~/.cursor/, …) — already the default
   --tools <list>        Comma-separated tool IDs (default: all); --ai is an alias
   --list-tools          Print the tool IDs and what each one installs, then exit
   --profile <name>      Cost profile: minimal, balanced (default) or full
@@ -34,8 +34,8 @@ Wizard options:
 
 Examples:
   agent-config init
-  agent-config init --yes --global --tools=claude-code,cursor
-  agent-config init --dry-run --global --tools=claude-code
+  agent-config init --yes --tools=claude-code,cursor
+  agent-config init --dry-run --tools=claude-code
   agent-config init --project
 
 After installing: agent-config doctor

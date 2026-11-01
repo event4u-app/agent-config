@@ -240,6 +240,19 @@ if [[ "${SCOPE:-}" == "project" && "${AGENT_CONFIG_DEV_MODE:-}" != "1" ]]; then
     exit 1
 fi
 
+# The default scope of a consumer install is global (ADR-020). With no scope
+# flag (or --scope=auto) the old default resolved to `project`: this stage
+# synced the payload into the repository, then the bridge stage refused the
+# project scope — a half-written repository and no install. Decided here,
+# BEFORE anything is written. Maintainers keep the project default under
+# AGENT_CONFIG_DEV_MODE=1; --minimal and --custom-path keep their own paths.
+if [[ "${AGENT_CONFIG_DEV_MODE:-}" != "1" ]] && ! $GLOBAL && ! $MINIMAL && [[ -z "$CUSTOM_PATH" ]] \
+    && [[ -z "${SCOPE:-}" || "${SCOPE:-}" == "auto" ]]; then
+    GLOBAL=true
+    SKIP_SYNC=true
+    SCOPE=""
+fi
+
 # --validate-only — pre-flight only, nothing written (road-to-flow-learnings
 # Phase 0). Read-only by construction, so it runs BEFORE the source-repo
 # guard and the interactive picker. Exit: 0 = no blocking finding,

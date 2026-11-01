@@ -14957,7 +14957,7 @@ function dryRunBool(v) {
 function dryRunScopeLine(opts, detected, devMode) {
   let scope;
   if (opts.scope === "project" || opts.scope === "global" || opts.scope === "prompt") scope = opts.scope;
-  else if (opts.global_install === true) scope = "global";
+  else if (opts.global_install === true || !devMode) scope = "global";
   else if (opts.scope === "auto") scope = detected[0];
   else scope = "project";
   if (scope === "prompt") {
@@ -14967,7 +14967,7 @@ function dryRunScopeLine(opts, detected, devMode) {
   if (scope === "project" && !devMode) {
     return {
       scope,
-      line: "  scope:       project \u2014 a real run refuses this (installs are global-only); add --global\n"
+      line: "  scope:       project \u2014 a real run refuses this outside maintainer mode (installs are global-only)\n"
     };
   }
   return { scope, line: `  scope:       ${scope}
@@ -24177,6 +24177,7 @@ function _gate_rule_layer_overlap(project_root, layer, dry_run) {
 function _resolve_scope(opts, detected, detect_reason, custom_path) {
   if (opts.scope === "project") return "project";
   if (opts.scope === "global") return "global";
+  if (process4.env["AGENT_CONFIG_DEV_MODE"] !== "1" && !custom_path && (!opts.scope || opts.scope === "auto")) return "global";
   if (opts.scope === "prompt") {
     return _run_scope_prompt(opts, detect_reason || "forced by --scope=prompt", custom_path);
   }
@@ -24187,11 +24188,7 @@ function _resolve_scope(opts, detected, detect_reason, custom_path) {
   }
   if (opts.global_install) return "global";
   if (detected === "prompt") return _run_scope_prompt(opts, detect_reason, custom_path);
-  if (!state.QUIET) {
-    info(
-      `Scope detection: ${detected} (${detect_reason}). Using project default for backward compatibility; pass --scope=auto to honor detection.`
-    );
-  }
+  if (!state.QUIET) info(`Scope detection: ${detected} (${detect_reason}). Maintainer mode: project default; --scope=auto honours detection.`);
   return "project";
 }
 function _run_scope_prompt(opts, reason, custom_path) {
