@@ -1,4 +1,4 @@
-<!-- evidence-type: review -->
+<!-- evidence-type: original-review -->
 
 # Independent read — prompt (verbatim, as sent 2026-11-01)
 

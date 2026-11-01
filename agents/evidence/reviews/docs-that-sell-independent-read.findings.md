@@ -1,4 +1,4 @@
-<!-- evidence-type: review -->
+<!-- evidence-type: original-review -->
 
 # Independent read — findings and dispositions (2026-11-01)
 
