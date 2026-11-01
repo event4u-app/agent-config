@@ -149,6 +149,7 @@ starts itself. No new command, no block, no keepalive.
       verify: `tests/scripts/session_eol_report.test.ts` — false-cold split and
       size error; reading in `agents/evidence/analysis/cold-return-calibration-2026-11-01.md`
       (573 returns, 46 % false cold, size error p50 6.3 %).
+      production entry: src/scripts/session_eol_report.ts (its own CLI, run as `./scripts-run src/scripts/session_eol_report`)
 
 ## Blockers
 
