@@ -185,7 +185,7 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         expect(runCli(['map', '--root', tmp, '--no-verify', '--no-build']).status).toBe(0);
         const mapJson = path.join(tmp, 'agents', 'map', 'code', 'map.json');
         const cache = path.join(tmp, 'agents', 'map', '.build', 'code-graph-v1.json');
-        const drawn = JSON.parse(fs.readFileSync(mapJson, 'utf-8')).meta.graph_generation;
+        const drawn = JSON.parse(fs.readFileSync(path.join(path.dirname(path.dirname(mapJson)), 'manifest.json'), 'utf-8')).generation;
         expect(drawn).toMatch(/^[0-9a-f]{16}$/);
         // A map that LOOKS newer than its cache but was drawn from another graph is redrawn.
         fs.writeFileSync(cache, fs.readFileSync(cache, 'utf-8').replace(/"source_checksum": "[0-9a-f]+"/, '"source_checksum": "0000"'));
@@ -222,7 +222,7 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         fs.writeFileSync(path.join(tmp, 'agents', 'map', 'code', 'map.json'), '{}\n');
         const r = runCli(['refresh', '--root', tmp, '--map']);
         expect(r.status, r.stderr).toBe(0);
-        expect(JSON.parse(fs.readFileSync(path.join(tmp, 'agents', 'map', 'code', 'map.json'), 'utf-8')).meta.graph_generation).toMatch(/^[0-9a-f]{16}$/);
+        expect(JSON.parse(fs.readFileSync(path.join(tmp, 'agents', 'map', 'manifest.json'), 'utf-8')).generation).toMatch(/^[0-9a-f]{16}$/);
     });
 
     it('--map redraws a map an older release drew at the top of agents/map/, into the current layout', () => {

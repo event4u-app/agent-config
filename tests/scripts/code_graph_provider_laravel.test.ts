@@ -282,7 +282,8 @@ describe('map areas (carried 2.4)', () => {
         const api = m.files.findIndex((f) => f.path === 'routes/api.php');
         expect(m.areas.map((a) => a.name)).not.toContain('routes/api.php');
         const area = m.areas.find((a) => a.files.includes(api));
-        expect(area?.files.map((i) => m.files[i]?.path).filter((p) => p !== 'routes/api.php').every((p) => p?.startsWith('app/A/'))).toBe(true);
+        // Areas follow folders: the routes file joins the controllers it routes to (app/), never an area of its own.
+        expect(area?.files.map((i) => m.files[i]?.path).filter((p) => p !== 'routes/api.php').every((p) => p?.startsWith('app/'))).toBe(true);
     });
 
     it('puts the routes file in the area of the controllers it routes to, never at the centre of its own', () => {

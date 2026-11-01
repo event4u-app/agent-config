@@ -47,6 +47,7 @@ import { attachDomains, domainsOnAreas, mapBranches, mapProvenance } from './map
 import { nodeOwner } from './verify/owner_index.js';
 import { type Overlay, readOverlay } from './verify/overlay.js';
 import { workingChanges } from './verify/paths.js';
+import { lineJson, readManifestAt, storedAreas, storedMeta, storedModel, withManifest } from './map_stored.js';
 import { areaProblems, areaSummaryLines, KNOWLEDGE_AREA_IDS, type MapAreas, type MapTour, witnessesOf } from './map_areas.js';
 import { loadGraph } from './query.js';
 import type { CodeGraph } from './types.js';
@@ -119,8 +120,10 @@ export function holdsOnlyMapInputs(dir: string): boolean {
     return fs.readdirSync(data).every((e) => DATA_USER_INPUTS.has(e));
 }
 
-/** The generation a drawn map records, or null when it records none (an older map) or cannot be read. */
+/** The generation a drawn map records (manifest first, then an older map's meta), or null. */
 export function mapGeneration(outDir: string): string | null {
+    const fromManifest = readManifestAt(outDir)?.generation;
+    if (fromManifest) return fromManifest;
     try {
         const doc = JSON.parse(fs.readFileSync(mapJsonPath(outDir), 'utf-8')) as { meta?: { graph_generation?: unknown } };
         return typeof doc.meta?.graph_generation === 'string' ? doc.meta.graph_generation : null;
@@ -488,15 +491,17 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
             written.push(rel.split(path.sep).join('/'));
             opts._afterWrite?.(rel);
         };
-        write(path.join('code', 'map.json'), `${JSON.stringify({ meta, model, areas })}\n`);
+        // Every tracked file but the manifest is a function of the tree alone (map_stored.ts).
+        const stored = { meta: storedMeta(meta), model: storedModel(model), areas: storedAreas(areas) };
+        write(path.join('code', 'map.json'), `${lineJson(stored)}\n`);
         for (const [i, a] of model.areas.entries()) {
-            if (a.files.length >= AREA_PAGE_MIN_FILES) write(path.join('code', 'areas', `${a.id}.md`), renderAreaMd(model, i, meta));
+            if (a.files.length >= AREA_PAGE_MIN_FILES) write(path.join('code', 'areas', `${a.id}.md`), renderAreaMd(stored.model, i, stored.meta));
         }
         for (const id of AREA_FOLDERS) {
             const payload = areas[id];
-            if (payload) write(path.join(id, `${id}.json`), `${JSON.stringify({ generation: meta.graph_generation ?? '', [id]: payload })}\n`);
+            if (payload) write(path.join(id, `${id}.json`), `${lineJson({ [id]: payload })}\n`);
         }
-        write('MAP.md', renderMapMd(model, meta, areas));
+        write('MAP.md', renderMapMd(stored.model, stored.meta, stored.areas));
         write('manifest.json', `${JSON.stringify(mapManifest(model, meta, areas), null, 2)}\n`);
         write('index.html', renderHtml(model, meta, areas));
         for (const page of produced.erd) write(page.file, page.content);
@@ -735,7 +740,7 @@ export function mapMdParts(m: MapModel, meta: MapMeta, areas: MapAreas = {}): { 
     const head = [
         `# ${md(meta.title)}`,
         '',
-        `> Map built at \`${meta.commit}\`${meta.built ? ` · ${meta.built}` : ''} by \`agent-config code-graph map\` — this describes that commit; compare it with HEAD yourself.`,
+        '> Built by `agent-config code-graph map`; the commit it describes and its freshness are in `manifest.json` — compare that commit with HEAD yourself.',
         '> Deterministic, no model call. Rebuild with `agent-config code-graph map`; never edit by hand.',
         '',
         `**${f.length} files · ${m.areas.length} areas · ${m.analyses.trustedEdges} trusted links · guess share ${pct(m.analyses.guessShare)}**`,
@@ -870,9 +875,9 @@ export function mapMdParts(m: MapModel, meta: MapMeta, areas: MapAreas = {}): { 
         [
             '## Areas',
             '',
-            'Files grouped by how they are coupled, not by folder. *Outside hub folder* is the share of an',
-            "area's non-test files whose directory differs from its hub's — where the folder layout and the",
-            'actual dependencies disagree.',
+            'Files grouped by folder — a folder above 40 files (or a quarter of them) is split one level deeper — and each',
+            'test joins the area of the file it links to most, so an area changes only when its own files do.',
+            "*Outside hub folder* is the share of an area's non-test files whose directory differs from its hub's.",
             '',
             '| Area | Named after (hub) | Files | Cohesion | Tests | Outside hub folder | Most used |',
             '|---|---|---|---|---|---|---|',
@@ -1059,7 +1064,7 @@ export function renderAreaMd(m: MapModel, i: number, meta: MapMeta): string {
     return [
         `# ${a.id} — ${md(a.name)}`,
         '',
-        `> Part of [${md(meta.title)}](../MAP.md) at \`${meta.commit}\`. Generated; never edit by hand.`,
+        `> Part of [${md(meta.title)}](../MAP.md)${meta.commit ? ` at \`${meta.commit}\`` : ''}. Generated; never edit by hand.`,
         '',
         `${a.files.length} files · cohesion ${pct(a.cohesion)} · tests ${pct(a.testShare)} · outside hub folder ${pct(a.folderMismatch)}`,
         '',
@@ -1330,6 +1335,8 @@ export interface MapManifest {
     schema: 1;
     generation: string;
     commit: string;
+    /** The build commit's date (`YYYY-MM-DD`), moved here from `code/map.json` so only this file changes per commit. */
+    built?: string;
     /** The commit `state` describes — the build's, never HEAD's; compare it with HEAD yourself. */
     built_at_commit: string;
     state: string;
@@ -1365,7 +1372,7 @@ export function mapManifest(m: MapModel, meta: MapMeta, areas: MapAreas): MapMan
             ...(reason ? { reason } : {}),
         };
     }
-    return { schema: 1, generation: meta.graph_generation ?? '', commit: meta.commit, built_at_commit: meta.commit, state: meta.state, areas: out };
+    return { schema: 1, generation: meta.graph_generation ?? '', commit: meta.commit, ...(meta.built ? { built: meta.built } : {}), built_at_commit: meta.commit, state: meta.state, areas: out };
 }
 
 /** The map a previous `code-graph map` wrote, or null when there is none. */
@@ -1402,11 +1409,12 @@ function readMapAt(dir: string): { meta: MapMeta; model: MapModel } | null {
         ) {
             return null;
         }
-        return parsed as { meta: MapMeta; model: MapModel };
+        return { meta: withManifest(parsed.meta, readManifestAt(dir)), model: parsed.model as MapModel };
     } catch {
         return null;
     }
 }
+
 
 export interface AreaReport {
     id: string;

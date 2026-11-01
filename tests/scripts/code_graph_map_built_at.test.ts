@@ -11,6 +11,7 @@ import { writeProvenanceFixture } from './code_graph/provenance_fixture.js';
 let root: string;
 let clone: string;
 let mapMd: string;
+let manifest: { commit?: string; built?: string };
 
 beforeAll(async () => {
     root = writeProvenanceFixture();
@@ -19,7 +20,9 @@ beforeAll(async () => {
     clone = path.join(fs.realpathSync(os.tmpdir()), `cg-folder-${process.pid}-wt`);
     fs.renameSync(root, clone);
     fs.mkdirSync(path.join(clone, 'agents'), { recursive: true });
-    mapMd = fs.readFileSync(path.join((await buildMap(clone, {})).outDir, 'MAP.md'), 'utf-8');
+    const outDir = (await buildMap(clone, {})).outDir;
+    mapMd = fs.readFileSync(path.join(outDir, 'MAP.md'), 'utf-8');
+    manifest = JSON.parse(fs.readFileSync(path.join(outDir, 'manifest.json'), 'utf-8')) as typeof manifest;
 }, 120_000);
 afterAll(() => fs.rmSync(clone, { recursive: true, force: true }));
 
@@ -29,9 +32,11 @@ describe('honest freshness and name (4.4, H24)', () => {
         expect(mapMd).toMatch(/^# Map of shop\n/);
     });
 
-    it('says "built at" with the build sha and its date, and states nothing about HEAD', () => {
+    it('records the build sha and its date in the manifest, points MAP.md there, and states nothing about HEAD', () => {
         const sha = execFileSync('git', ['rev-parse', '--short=12', 'HEAD'], { cwd: clone, encoding: 'utf-8' }).trim();
-        expect(mapMd).toContain(`built at \`${sha}\` · 2026-10-01`);
+        expect(manifest).toMatchObject({ commit: sha, built: '2026-10-01' });
+        expect(mapMd).not.toContain(sha);
+        expect(mapMd).toContain('`manifest.json`');
         expect(mapMd).not.toMatch(/graph state/);
     });
 

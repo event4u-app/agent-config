@@ -70,7 +70,10 @@ describe('the demo map', () => {
     });
 
     it('has a payload with data for every knowledge area, under load', () => {
-        const { model, areas } = readMapJson(demo.outDir);
+        // `impact` reads the working diff, so only the viewer carries it; map.json keeps the tree's areas.
+        const { model } = readMapJson(demo.outDir);
+        const { areas } = pageData(demo.page);
+        expect((readMapJson(demo.outDir).areas as Record<string, unknown>)['impact']).toBeUndefined();
         for (const id of KNOWLEDGE_AREA_IDS) {
             const p = areas[id] as { empty?: string } | undefined;
             expect(p, id).toBeDefined();
@@ -98,8 +101,9 @@ describe('the demo map', () => {
     });
 
     it('reads the scripted history and the working change', () => {
-        const { meta, model, areas } = readMapJson(demo.outDir);
-        expect(meta.state).toBe('edited');
+        const { model } = readMapJson(demo.outDir);
+        const { areas } = pageData(demo.page);
+        expect((JSON.parse(fs.readFileSync(path.join(demo.outDir, 'manifest.json'), 'utf-8')) as { state: string }).state).toBe('edited');
         const authors = new Set(model.files.flatMap((f) => (f.owners ?? []).map((o) => o[0])));
         expect(authors.size).toBeGreaterThanOrEqual(8);
         expect(model.files.filter((f) => (f.owners?.length ?? 0) > 1).length).toBeGreaterThan(50);
