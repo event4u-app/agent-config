@@ -160,6 +160,7 @@ import {
     graphState,
     pickSource,
 } from './detect.js';
+import { withGitVisibleScopeAsync } from '../_lib/git_visible_files.js';
 import { writeContained } from '../_lib/contained_write.js';
 import { enableByUse } from './auto_refresh.js';
 import { graphHome } from './graph_home.js';
@@ -254,7 +255,7 @@ async function cmdBuild(argv: string[]): Promise<number> {
         return 1;
     }
     const update = argv.includes('--update');
-    const { graph, fileCount, reExtracted, reused, lanes } = await buildFromRepo(root, out, { update, lanes: !argv.includes('--no-lanes') });
+    const { graph, fileCount, reExtracted, reused, lanes } = await withGitVisibleScopeAsync(() => buildFromRepo(root, out, { update, lanes: !argv.includes('--no-lanes') }));
     const ownCache = out === buildCacheFor(root);
     if (ownCache) registerUse(root, graph, git(root, 'rev-parse', 'HEAD'));
     const consent = ownCache ? enableByUse(root) : '';
