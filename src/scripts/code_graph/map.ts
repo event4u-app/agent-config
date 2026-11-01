@@ -1391,10 +1391,10 @@ export function storedMeta(meta: MapMeta): MapMeta {
  */
 function storedModel(model: MapModel): MapModel {
     const { drift: _drift, pin: _pin, ...rest } = model as MapModel & { pin?: unknown };
-    const prov = (rest as { provenance?: Record<string, unknown> }).provenance;
+    const prov = (rest as unknown as { provenance?: Record<string, unknown> }).provenance;
     if (prov && typeof prov === 'object') {
         const { head: _head, ...p } = prov;
-        (rest as { provenance?: unknown }).provenance = p;
+        (rest as unknown as { provenance?: unknown }).provenance = p;
     }
     return rest as MapModel;
 }
@@ -1402,10 +1402,10 @@ function storedModel(model: MapModel): MapModel {
 /** The knowledge areas without what reads the working diff (`impact`, the agent's diff pack), not the tree. */
 function storedAreas(areas: MapAreas): MapAreas {
     const { impact: _impact, ...rest } = areas as MapAreas & { impact?: unknown };
-    const agent = (rest as { agent?: Record<string, unknown> }).agent;
+    const agent = (rest as unknown as { agent?: Record<string, unknown> }).agent;
     if (agent && typeof agent === 'object' && 'contextPack' in agent) {
         const { contextPack: _pack, ...a } = agent;
-        (rest as { agent?: unknown }).agent = a;
+        (rest as unknown as { agent?: unknown }).agent = a;
     }
     return rest as MapAreas;
 }
@@ -1461,12 +1461,14 @@ function readMapAt(dir: string): { meta: MapMeta; model: MapModel } | null {
         }
         // A map since 2026-11 keeps commit, date, generation and freshness in its manifest only.
         const man = readManifestAt(dir);
+        const built = parsed.meta.built || man?.built;
+        const generation = parsed.meta.graph_generation || man?.generation;
         const meta: MapMeta = {
             ...parsed.meta,
             commit: parsed.meta.commit || man?.commit || '',
             state: parsed.meta.state || man?.state || '',
-            ...(parsed.meta.built || man?.built ? { built: parsed.meta.built || man?.built } : {}),
-            ...(parsed.meta.graph_generation || man?.generation ? { graph_generation: parsed.meta.graph_generation || man?.generation } : {}),
+            ...(built ? { built } : {}),
+            ...(generation ? { graph_generation: generation } : {}),
         };
         return { meta, model: parsed.model as MapModel };
     } catch {
