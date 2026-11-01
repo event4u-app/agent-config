@@ -31,9 +31,9 @@
  * two or more days old are swept, while admission refuses windows older than two
  * (a clock read at claim time), so deletion trails admission by more than a day.
  * The exactly-once property holds unless a dispatch pauses, or clocks disagree,
- * by more than a day; then a duplicate launch is absorbed by the single-flight
- * refresh lock. A failed launch keeps its claim and the pair retries in the next
- * window.
+ * by more than a day; then a duplicate launch is possible — it backs off on the
+ * single-flight lock while the first runs, and otherwise finds the graph fresh.
+ * A failed launch keeps its claim and the pair retries in the next window.
  *
  * WHEN IT DOES NOTHING — the conditions a ratification round of 2026-10-23
  * (two of two seats, refused the first cut) made load-bearing:
@@ -109,8 +109,9 @@ function windowOf(file: string): number | null {
  * deletion horizon sits a day behind the admission horizon (two windows), so a
  * claim can only be deleted after no dispatch can claim its window any more —
  * unless a dispatch pauses, or clocks disagree, by more than a day. In that case
- * a second launch for the pair is possible and the single-flight refresh lock
- * absorbs it: the second refresh backs off.
+ * a second launch for the pair is possible: the single-flight refresh lock makes
+ * it back off while the first still runs, and a refresh that starts after the
+ * first finished finds the graph fresh and only redraws what changed.
  */
 function sweepSpent(claimsDir: string, today: number): void {
     try {
@@ -222,12 +223,12 @@ export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn, now: numb
     const home = projectBuildPaths(root);
     // The opt-out wins over a marker a concurrent `build` may have written beside it.
     if (!fs.existsSync(home.autoRefreshPath) || fs.existsSync(home.autoRefreshOffPath)) return 'not-opted-in';
-    // A claimed pair returns before the tracked-file probe: the common turn end costs one git call.
+    // A repository-committed opt-in, cache or claim is refused before a claim is read:
+    // a committed claim for a future window would otherwise suppress every refresh.
+    if (anyTracked(root, [home.autoRefreshPath, home.cachePath, path.join(home.buildDir, 'claims')].map((p) => path.relative(root, p)))) return 'tracked';
     const head = headOf(root);
     const file = claimPath(home.buildDir, head, now);
     if (fs.existsSync(file)) return 'fresh';
-    // A repository-committed opt-in is refused before anything is written into the tree.
-    if (anyTracked(root, [home.autoRefreshPath, home.cachePath, path.join(home.buildDir, 'claims')].map((p) => path.relative(root, p)))) return 'tracked';
     const done = (outcome: RefreshOutcome, detail?: string): RefreshOutcome => {
         recordRefreshIn(home.buildDir, { by: 'session-start', outcome, detail, slot, ...(head !== null ? { head } : {}) }, now, root);
         return outcome;

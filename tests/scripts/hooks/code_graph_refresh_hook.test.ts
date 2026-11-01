@@ -494,4 +494,14 @@ describe('turn-end binding — spawn only after HEAD moved (2026-11-01)', () => 
         expect(refreshFor(root, fakeSpawn)).toBe('no-cache');
         expect(fs.readdirSync(path.join(outsideMap, '.build')).filter((f) => f.startsWith('code-graph-refresh.'))).toEqual([]);
     });
+
+    it('a committed claim for a future window is refused, not read as fresh (round 10)', () => {
+        optedIn();
+        commit('one');
+        const head = execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf-8' }).trim();
+        const future = claimPath(path.join(root, 'agents', 'map', '.build'), head, Date.now());
+        plant(future);
+        git('add', '-f', path.relative(root, future));
+        expect(refreshFor(root, fakeSpawn)).toBe('tracked');
+    });
 });

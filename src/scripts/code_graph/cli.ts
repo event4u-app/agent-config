@@ -1196,7 +1196,10 @@ function cmdAutoRefresh(argv: string[]): number {
     if (action === 'off') {
         for (const m of new Set([marker, path.join(home.buildDir, path.basename(marker)), path.join(home.legacyDir, path.basename(marker))])) fs.rmSync(m, { force: true });
         if (home.kind === 'project' && !writeContained(root, home.autoRefreshOffPath, `${JSON.stringify({ disabled_at: new Date().toISOString() })}\n`)) {
-            process.stderr.write(`code-graph: the opt-in is removed, but the opt-out could not be written — a path component under ${root} is a symlink or not a directory\n`);
+            process.stderr.write(
+                `code-graph: the opt-in is removed, but the opt-out could not be written — a path component under ${root} is a symlink or not a directory — so a later build or map may turn auto-refresh on again\n`,
+            );
+            return 1;
         }
         process.stdout.write('auto-refresh off — a later `build` or `map` keeps it off; `auto-refresh on` reverses this\n');
         return 0;

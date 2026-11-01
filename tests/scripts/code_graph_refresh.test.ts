@@ -340,6 +340,15 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         }
     });
 
+    it('auto-refresh off fails when the opt-out cannot be persisted', () => {
+        fs.mkdirSync(path.join(tmp, 'agents', 'map', '.build'), { recursive: true });
+        // A directory where the opt-out file goes makes the O_NOFOLLOW open fail.
+        fs.mkdirSync(path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.off.json'));
+        const r = runCli(['auto-refresh', 'off', '--root', tmp]);
+        expect(r.status).toBe(1);
+        expect(r.stderr).toMatch(/opt-out could not be written/);
+    });
+
     it('a build under CI is not consent', () => {
         const marker = path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.json');
         expect(runCli(['build', '--root', tmp], { CI: 'true' }).status).toBe(0);
