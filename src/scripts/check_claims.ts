@@ -48,6 +48,7 @@ import {
 import { asOf, localIsoDate } from './_lib/as_of.js';
 import { POLICY_REL, checkPolicy, loadPolicy, readSink } from './_lib/dispatch_policy.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
+import { WITNESS_MARKER, settleSiteFindings, siteScannedLine, siteWitnessSurfaces } from './_lib/claims_site_sweep.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 import {
     assertWatchlistResolves,
@@ -77,44 +78,6 @@ const URL_DATED = /^https?:\/\/\S+\s*\(\d{4}-\d{2}-\d{2}\)\s*$/;
  *  not appear as a capability claim. docs/proof.md and docs/comparison.yaml
  *  are structurally witnessed (pointer columns + their own linters). */
 const WITNESS_SURFACES = ['README.md', 'CAPABILITIES.yaml'];
-
-/**
- * The hand-written pages of the docs site (road-to-docs-that-sell 1.4). A number
- * a newcomer reads on the site is the same public claim as one in README, so it
- * owes the same witness. Pages projected by `site/sync-docs.mjs` are excluded:
- * their source under `docs/` is governed where it lives, and those pages are
- * build output that a fresh checkout does not even contain.
- */
-const SITE_CONTENT_ROOT = 'site/src/content/docs';
-const SITE_GENERATED_BANNER = /GENERATED from \S+ by site\/sync-docs\.mjs/;
-/** The gitignored subtree `site/sync-docs.mjs` writes into. */
-const SITE_GENERATED_DIR = 'generated';
-
-/**
- * In `.mdx` an HTML comment is a syntax error, so the marker there is written
- * `{/* claim:ID *\/}`. Both spellings license a figure; nothing else changes.
- */
-const WITNESS_MARKER = /(?:<!--|\{\/\*)\s*claim:([A-Za-z0-9._-]+)\s*(?:-->|\*\/\})/g;
-
-function site_witness_surfaces(): string[] {
-    const root = path.join(REPO, SITE_CONTENT_ROOT);
-    if (!fs.existsSync(root)) return [];
-    const out: string[] = [];
-    const walk = (dir: string): void => {
-        for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-            const full = path.join(dir, e.name);
-            if (e.isDirectory()) {
-                if (dir === root && e.name === SITE_GENERATED_DIR) continue;
-                walk(full);
-            } else if (/\.mdx?$/.test(e.name)) {
-                if (SITE_GENERATED_BANNER.test(fs.readFileSync(full, 'utf-8'))) continue;
-                out.push(path.relative(REPO, full).split(path.sep).join('/'));
-            }
-        }
-    };
-    walk(root);
-    return out.sort();
-}
 
 /**
  * The publish-surface set — and the RULE that decides membership.
@@ -1002,7 +965,7 @@ function main(argv: string[] = process.argv.slice(2)): number {
     // failing outright, because the sweep reaching the site REVEALS figures that
     // were published before any gate looked (road-to-docs-that-sell 1.4).
     const siteFindings: Finding[] = [];
-    const siteSurfaces = new Set(site_witness_surfaces());
+    const siteSurfaces = new Set(siteWitnessSurfaces(REPO));
     for (const rel of [...WITNESS_SURFACES, ...siteSurfaces]) {
         const abs = path.join(REPO, rel);
         let text: string;
@@ -1020,9 +983,7 @@ function main(argv: string[] = process.argv.slice(2)): number {
                 continue;
             }
             if (inFence) continue;
-            // An inline `style` attribute on a site page carries CSS (`max-width:
-            // 100%`), which is markup and never a claim about this package.
-            const scanned = siteSurfaces.has(rel) ? line.replace(/\bstyle\s*=\s*(?:"[^"]*"|'[^']*'|\{\{.*?\}\})/g, '') : line;
+            const scanned = siteSurfaces.has(rel) ? siteScannedLine(line) : line;
             if (!is_quantified_claim(scanned)) continue;
             if (/unverified/i.test(line)) continue;
 
@@ -1047,32 +1008,7 @@ function main(argv: string[] = process.argv.slice(2)): number {
             });
         }
     }
-    {
-        // Same anti-silencing shape as the non-inference ratchet further down: a
-        // tree with NO baselines file is a fixture and every site finding fails;
-        // a repository that records baselines fails only when the count rises
-        // above `check_claims:site-witness`. Findings at or under the baseline
-        // are still printed, so the debt stays visible on every run.
-        const baselines = path.join(REPO, 'src', 'config', 'gate-violation-baselines.json');
-        if (!fs.existsSync(baselines)) {
-            findings.push(...siteFindings);
-        } else {
-            const verdict = checkRatchet({
-                gate: 'check_claims:site-witness',
-                actual: siteFindings.length,
-                repoRoot: REPO,
-            });
-            if (!verdict.ok) {
-                findings.push(...siteFindings);
-                findings.push({ id: 'site-witness', file: SITE_CONTENT_ROOT, reason: verdict.message });
-            } else if (siteFindings.length > 0) {
-                process.stderr.write(
-                    `⚠️  check_claims: ${siteFindings.length} unwitnessed site figure(s), within the recorded baseline:\n`,
-                );
-                for (const f of siteFindings) process.stderr.write(`    ${f.file} — ${f.reason}\n`);
-            }
-        }
-    }
+    findings.push(...settleSiteFindings(siteFindings, REPO));
 
     // A published denominator must match the live ledger.
     //
