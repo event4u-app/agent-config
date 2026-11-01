@@ -117,7 +117,7 @@ starts itself. No new command, no block, no keepalive.
 - [~] **2.3 Resume says it before the first request.** Bind the notice on <!-- deferred-resolution: carried-to=road-to-a-return-that-names-its-price-carried -->
       claude `session_start` for `source: resume|fork` and read the host's
       four fields (F4). Manifest edit with its ratification artifact.
-      verify: `./scripts-run src/scripts/check_kernel_edit_ratified --base origin/main` -> 0, and a fixture with `prompt_cache_likely_expired: true` emits the line.
+      verify: `./scripts-run src/scripts/check_kernel_edit_ratified --base origin/main` -> 0, and a fixture whose resume payload marks the cache as likely expired emits the line.
       Deferred 2026-11-01, blocked-by: resume-binding-ratification
 - [~] **2.4 Money only where money is billed.** For `metered`, append the <!-- deferred-resolution: carried-to=road-to-a-return-that-names-its-price-carried -->
       repriced cache-write amount; plan logins show tokens only (D5).
@@ -133,7 +133,7 @@ starts itself. No new command, no block, no keepalive.
       `AC cache warm until 10:42` → after expiry `AC cache cold · continue ≈182k`,
       shown only when D4 holds; joined to the quota segment with ` · `.
       verify: `tests/scripts/statusline_tap.test.ts` warm and cold cases; one AC line, never two.
-- [x] **3.2 Doctor row.** Folded into `road-to-a-fill-the-session-sees-coming` <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **3.2 Doctor row.** Folded into `road-to-a-fill-the-session-sees-coming` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json -->
       1.2 (it owns the row): the same row reports
       `cache notice: live | fallback (no tap) | not bound`.
       verify: the fill roadmap's 1.2 names the cache column.
