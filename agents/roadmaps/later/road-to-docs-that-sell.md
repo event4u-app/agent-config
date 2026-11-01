@@ -448,8 +448,11 @@ The size gate says "replace, do not grow"; depth moves to the site.
 - [x] **11.2 Independent read.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Prompt and dispositions: `agents/evidence/reviews/docs-that-sell-independent-read.*`. A reviewer session that did not write the copy
       reads README and landing page with a neutral prompt that states no
       expected outcome; the prompt is committed with its findings.
-- [ ] **11.3 Final sweep.** The README, site, claims, language and link gates
+- [x] **11.3 Final sweep.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> The README, site, claims, language and link gates
       run narrowly on the final change and are green.
+      **Done 2026-11-01:** README, positioning, claims and site-link gates green
+      locally on the final change; CI settled green on all 61 checks at
+      `1bdbdabf1f`, merge state clean.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-01 | reviewer: claude/host -->
