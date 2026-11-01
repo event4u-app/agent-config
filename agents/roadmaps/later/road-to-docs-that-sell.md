@@ -185,13 +185,13 @@ Every later phase merges through these gates, so they land before any copy.
 Only pages that survive the 0.7 map are edited; doomed pages are left for
 Phase 8.
 
-- [ ] **2.1 Uninstall is documented.** Replace every "no uninstall command"
+- [x] **2.1 Uninstall is documented.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Replace every "no uninstall command"
       (`docs/installation.md:1050-1058`, the site installation page) with
       `agent-config uninstall` and its flags, plus the one full-removal
       sequence: global purge, project leftovers, the hooks block in
       `~/.claude/settings.json`, removing the npm package. verify: the sequence
       run in a throwaway HOME leaves no agent-config path behind.
-- [ ] **2.2 One scope sentence everywhere.** README L150/L202/L398,
+- [x] **2.2 One scope sentence everywhere.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> README L150/L202/L398,
       `docs/getting-started.md:44`, `docs/installation.md` L239/L784 and the
       site pages carry the 0.5 sentence. verify: a grep for "project-local
       (default" and "Project-installed mode (recommended" returns nothing.
@@ -214,7 +214,7 @@ Phase 8.
       `.github/topics.yml`, the `python` npm keyword, and the homepage mismatch
       between `package.json` and `.github/about.yml`. verify: readme_linter
       and `lint_topics_yaml` green; the three links resolve.
-- [ ] **2.6 What leaves your machine.** One page listing every network call
+- [x] **2.6 What leaves your machine.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> One page listing every network call
       with its default and kill switch: the daily update check (on), advisory
       refresh, upgrade verification, council (own keys), the optional cloud
       MCP; telemetry off. Sourced from `agent-settings.template.yml` and
@@ -377,20 +377,20 @@ The size gate says "replace, do not grow"; depth moves to the site.
 
 ## Phase 8 — docs/ consolidation
 
-- [ ] **8.1 Execute the canonical map.** Each cluster ends with one canonical
+- [x] **8.1 Execute the canonical map.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_supervision_claim_atomicity.ts --> Each cluster ends with one canonical
       page; merged pages become one-line pointer stubs; every move updates its
       1.5 inventory entry and its gate in the same change. Generated files
       (`llms.txt`, `docs/skills-catalog.md`, `docs/catalog.md`, `docs/proof.md`)
       are never hand-edited.
-- [ ] **8.2 Maintainer and record docs move out of the user path.** Censuses,
+- [x] **8.2 Maintainer and record docs move out of the user path.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_supervision_claim_atomicity.ts --> Censuses,
       audits, runbooks and internal reports move under `docs/maintainers/` (or
       stay as records) so `docs/` top level is the user set.
-- [ ] **8.3 Root files.** `ONBOARDING.md` (an internal orchestration report)
+- [x] **8.3 Root files.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_supervision_claim_atomicity.ts --> `ONBOARDING.md` (an internal orchestration report)
       moves to maintainers; root `MIGRATION.md` vs `docs/MIGRATION.md` resolves
       with a check of the npm `files` list and consumer impact; references in
       `check_bundle_path_leakage.ts` and `report_obligation_carriers.ts`
       follow.
-- [ ] **8.4 Per-tool pages fixed at the source.** The 23 `docs/setup/per-ide/`
+- [x] **8.4 Per-tool pages fixed at the source.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_supervision_claim_atomicity.ts --> The 23 `docs/setup/per-ide/`
       pages agree with global-only install, the plugin stance and the real
       layouts, so 6.5 can sync them.
 
