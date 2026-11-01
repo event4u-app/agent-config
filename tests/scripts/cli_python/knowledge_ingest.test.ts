@@ -15,18 +15,10 @@ import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import { _cli as mainKi } from '../../../src/cli/python/knowledge_ingest.js';
 import { runInProc } from '../../_lib/run_in_process.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'cli', 'python', 'knowledge_ingest.ts');
-const TSX_BIN = path.resolve(
-    REPO_ROOT,
-    process.env['TSX_BIN'] ??
-        path.join('node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx'),
-);
 
 
 interface RunResult {
@@ -326,6 +318,7 @@ describe('knowledge_ingest — list', () => {
         // Data row: split on 2-space gutter; check no/yes flags + counts align.
         const tCells = (tLines[1] as string).split(/\s{2,}/).map((c) => c.trim());
         // DOCS, CHUNKS, BYTES, PINNED, REDACTED (indices 1..5).
+        expect([tCells[1], tCells[4], tCells[5]]).toEqual(['1', 'no', 'yes']);
     });
 
     it('empty namespace → (no ingests) table identical', () => {
@@ -410,5 +403,43 @@ describe('knowledge_ingest — forget + pin', () => {
         expect(m1['pinned']).toBe(true);
         const unpinned = runTs(['list', '--unpin', id.slice(0, 8)], root);
         expect(unpinned.stdout).toBe(`unpinned ${id}\n`);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// an ingest that fails mid-walk leaves nothing behind
+// ---------------------------------------------------------------------------
+
+describe('knowledge_ingest — atomic write', () => {
+    it('a non-IngestError mid-walk leaves no chunks and no staging dir', async () => {
+        const { ingest } = await import('../../../src/cli/python/knowledge_ingest.js');
+        const src = fs.mkdtempSync(path.join(os.tmpdir(), 'acki-src-'));
+        const base = fs.mkdtempSync(path.join(os.tmpdir(), 'acki-base-'));
+        fs.writeFileSync(path.join(src, 'a.md'), 'First document.\n');
+        fs.writeFileSync(path.join(src, 'b.md'), 'Second document.\n');
+        fs.chmodSync(path.join(src, 'b.md'), 0o000);
+        try {
+            expect(() => ingest(src, { root: base })).toThrow();
+            expect(fs.readdirSync(base)).toEqual([]);
+        } finally {
+            fs.chmodSync(path.join(src, 'b.md'), 0o644);
+            fs.rmSync(src, { recursive: true, force: true });
+            fs.rmSync(base, { recursive: true, force: true });
+        }
+    });
+
+    it('a successful ingest lands under its final id, not .partial', async () => {
+        const { ingest } = await import('../../../src/cli/python/knowledge_ingest.js');
+        const src = fs.mkdtempSync(path.join(os.tmpdir(), 'acki-src-'));
+        const base = fs.mkdtempSync(path.join(os.tmpdir(), 'acki-base-'));
+        fs.writeFileSync(path.join(src, 'a.md'), 'First document.\n');
+        try {
+            const m = ingest(src, { root: base });
+            expect(fs.readdirSync(base)).toEqual([m.ingest_id]);
+            expect(fs.existsSync(path.join(base, m.ingest_id, 'manifest.json'))).toBe(true);
+        } finally {
+            fs.rmSync(src, { recursive: true, force: true });
+            fs.rmSync(base, { recursive: true, force: true });
+        }
     });
 });

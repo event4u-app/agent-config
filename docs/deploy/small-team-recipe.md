@@ -84,7 +84,7 @@ Anything that surfaces as a file path.
 Each team member runs once:
 
 ```bash
-npx @event4u/agent-config knowledge:ingest /Volumes/team-share/knowledge
+npx @event4u/agent-config knowledge:local ingest /Volumes/team-share/knowledge
 ```
 
 Per-user index. Same content. When new files land on the share,

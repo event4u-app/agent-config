@@ -54,7 +54,7 @@ Run before any file is touched:
 ### 3. Run the implementation
 
 ```bash
-./agent-config knowledge \
+./agent-config knowledge:local \
     ingest <path> [--no-redact] [--markitdown=<bin>]
 ```
 

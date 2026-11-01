@@ -24,6 +24,15 @@ name: Host Docs Digest Watch
 #
 # So: red here means "go read a page", never "something is broken in this repo".
 #
+# A MOVED DIGEST IS NOT ITSELF A RED. The digest is a sha256 over the whole body,
+# so it moves on every cosmetic vendor edit, and a red that fired on all of them
+# named no row and no claim. When the digest moves the checker now asks whether
+# the tokens the ROW claims (its slots' native event names; a page row's
+# `claims:` list) are still on the page: all present is CONFIRMED (green, a note
+# in the log), any absent is ABSENT (red, the log names the row and the missing
+# token). A row that claims no token cannot be confirmed and stays a plain
+# CHANGED red. The class is carried into the tracking issue's title.
+#
 # A RED ROUTES TO AN ISSUE, because a red alone reached nobody. GitHub mails a
 # scheduled failure only to whoever last edited the cron line, and the job went
 # red on main on 2026-10-05 and 2026-10-12 with no row re-established; the drift
@@ -74,6 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       drifted: ${{ steps.fetch.outputs.drifted }}
+      drift_class: ${{ steps.fetch.outputs.drift_class }}
     steps:
       # No `ref: main`. Pinning the ref made the job untestable before it was
       # relied on: a scheduled run already uses the default branch, while a
@@ -110,9 +120,10 @@ jobs:
       - name: Report the watch scope (offline, no egress)
         run: ./scripts-run src/scripts/check_host_docs_digest
 
-      # `drifted` is set only when the checker's own verdict names a changed or
-      # GONE page, so a crash, a timeout or a broken runner stays an ordinary
-      # red and is never routed as "a page moved".
+      # `drifted` is set only when the checker's own verdict names an ABSENT
+      # claim, an unclaimed CHANGED page or a GONE page, so a crash, a timeout
+      # or a broken runner stays an ordinary red and is never routed as "a page
+      # moved". `drift_class` lists which of the three fired, for the issue title.
       - name: Re-fetch each host docs page and compare (read-only)
         id: fetch
         shell: bash
@@ -120,8 +131,15 @@ jobs:
           set +e
           ./scripts-run src/scripts/check_host_docs_digest --fetch 2>&1 | tee digest.log
           rc=${PIPESTATUS[0]}
-          if [ "$rc" -ne 0 ] && grep -qE 'changed since the row was established|are GONE \(404/410\)' digest.log; then
-            echo "drifted=true" >> "$GITHUB_OUTPUT"
+          if [ "$rc" -ne 0 ]; then
+            classes=""
+            grep -q 'claimed token(s) ABSENT' digest.log && classes="${classes:+$classes,}ABSENT"
+            grep -q 'changed since the row was established' digest.log && classes="${classes:+$classes,}CHANGED"
+            grep -qE 'are GONE \(404/410\)' digest.log && classes="${classes:+$classes,}GONE"
+            if [ -n "$classes" ]; then
+              echo "drifted=true" >> "$GITHUB_OUTPUT"
+              echo "drift_class=$classes" >> "$GITHUB_OUTPUT"
+            fi
           fi
           exit "$rc"
 
@@ -140,11 +158,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DRIFT_CLASS: ${{ needs.digest-watch.outputs.drift_class }}
         run: |
-          title="Host Docs Digest Watch is red: read the drifted vendor pages"
-          body="The scheduled run found drift: ${RUN_URL}
+          title="Host Docs Digest Watch is red (${DRIFT_CLASS}): read the drifted vendor pages"
+          body="The scheduled run found drift (${DRIFT_CLASS}): ${RUN_URL}
 
-          A changed digest means a cited page moved; a GONE line means the citation is dead. Read each page the log lists, record what it now says about refusing a tool call, and re-establish the row by hand (docs_at, docs_digest, expires forward). A host_lowering.yaml row also needs the ratification artifact that table requires; a host_docs_pages.yaml row does not. Close this issue once the watch is green."
+          ABSENT means a token the row claims (a slot's native event name, or a page row's claims entry) is no longer on its page, and the log names the row and the token; CHANGED means the page moved and the row claims no token to confirm against; GONE means the citation is dead. A moved page whose claims all survive is CONFIRMED and is not routed. Read each page the log lists, record what it now says about refusing a tool call, and re-establish the row by hand (docs_at, docs_digest, expires forward). A host_lowering.yaml row also needs the ratification artifact that table requires; a host_docs_pages.yaml row does not. Close this issue once the watch is green."
           num=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"${title}\" in:title" --json number,title --jq "map(select(.title == \"${title}\")) | .[0].number // empty")
           if [ -n "$num" ]; then
             gh issue comment "$num" --repo "$GITHUB_REPOSITORY" --body "$body"

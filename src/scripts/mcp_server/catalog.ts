@@ -58,8 +58,8 @@ export interface CatalogEntry {
     readonly implemented_on: readonly string[];
     readonly input_schema: Record<string, unknown>;
     /**
-     * Honest MCP tool-behavior hints (Phase 3 of road-to-credible-install),
-     * e.g. `{ readOnlyHint: true }`. Present only for implemented tools —
+     * The four MCP tool-behavior hints (`readOnlyHint`, `destructiveHint`,
+     * `idempotentHint`, `openWorldHint`). Present only for implemented tools —
      * optional so the field stays backward-compatible with schema_version 1.
      */
     readonly annotations?: Record<string, unknown>;
