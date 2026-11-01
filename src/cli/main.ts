@@ -527,7 +527,7 @@ async function main(rawArgv: readonly string[]): Promise<number> {
     // no CLI tool-picker, one installer. Otherwise fall through to the bash CLI
     // install (road-to-single-install-source-of-truth § Phase 4 follow-up).
     // `init --project` initializes the minimal consumer project surface
-    // (bridge marker + overrides + gitignore block) via the `refresh
+    // (overrides + .gitignore and .gitattributes blocks) via the `refresh
     // --project` writer — never the GUI, never the global install
     // (road-to-setup-experience § Phase 1.3).
     if (head === 'init') {

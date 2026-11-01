@@ -24,8 +24,9 @@ Options:
   --offline             Make no network calls (update check, registry fetches)
   --validate-only       Pre-flight checks only (permissions, disk, conflicts)
   --quiet               Print errors only
-  --project             Set up this project's surface instead (marker,
-                        agents/overrides/, .gitignore block); no global install
+  --project             Set up only this repository: agents/overrides/ plus a
+                        few gitignored bookkeeping files and a block each in
+                        .gitignore and .gitattributes; no global install
 
 Wizard options:
   --port <n>            Port for the local wizard server

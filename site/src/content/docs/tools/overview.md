@@ -26,6 +26,6 @@ On **Claude Code** a few checks can refuse an action — for example ending a tu
 
 Every install goes into your home directory, never into a repository:
 
-`agent-config init` installs into your home directory — the package under `~/.event4u/agent-config/` and each AI tool's user-level folder such as `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into your repository, which only gets an `agents/overrides/` folder for your own changes plus a few gitignored bookkeeping files; `agent-config init --project` creates just that folder in a repository and nothing else.
+`agent-config init` installs into your home directory — the package under `~/.event4u/agent-config/` and each AI tool's user-level folder such as `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into your repository, which only gets an `agents/overrides/` folder for your own changes plus a few gitignored bookkeeping files and a block each in `.gitignore` and `.gitattributes`; `agent-config init --project` creates just those in a repository and nothing else.
 
 Using several tools side by side? [Works with agent-switch](/agent-config/works-with-agent-switch/) covers switching between them.

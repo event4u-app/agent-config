@@ -4,8 +4,9 @@
 > `~/.event4u/agent-config/` and each AI tool's user-level folder such as
 > `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into
 > your repository, which only gets an `agents/overrides/` folder for your own
-> changes plus a few gitignored bookkeeping files; `agent-config init --project`
-> creates just that folder in a repository and nothing else.
+> changes plus a few gitignored bookkeeping files and a block each in
+> `.gitignore` and `.gitattributes`; `agent-config init --project` creates just
+> those in a repository and nothing else.
 
 This page is the install reference: every entry point, what lands where,
 updating and removal. For the short path, start with
@@ -176,9 +177,10 @@ Code the install also registers its hooks in a managed block of
 `~/.claude/settings.json`.
 
 **In a repository.** Your own changes live in `agents/overrides/`, which you
-commit. The gitignored bookkeeping files are:
+commit. Two managed blocks land in tracked files: the `# event4u/agent-config`
+block in `.gitignore` and the memory `merge=union` block in `.gitattributes`.
+The gitignored bookkeeping files are:
 
-- the managed `# event4u/agent-config` block in `.gitignore`;
 - the `./agent-config` wrapper script;
 - the install-mode marker `agents/.agent-state/install-mode.txt`;
 - one pointer file each for the three tools that cannot read a user-level
@@ -186,8 +188,9 @@ commit. The gitignored bookkeeping files are:
   `.clinerules/agent-config.bridge.yml` and `.gemini/agent-config.bridge.yml`.
 
 `agent-config init --project` (the same writer as `agent-config refresh
---project`) creates the `agents/overrides/` folder and the `.gitignore` block
-in the current repository and installs nothing else.
+--project`) creates the `agents/overrides/` folder, the `./agent-config`
+wrapper and the `.gitignore` and `.gitattributes` blocks in the current
+repository and installs nothing else.
 
 To commit a tool's generated config into a repository on purpose, eject it:
 

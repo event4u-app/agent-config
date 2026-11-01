@@ -52,6 +52,14 @@ describe('init --help', () => {
         }
     });
 
+    it('describes --project as the repository surface ruling 0.5 names', () => {
+        const block = INIT_HELP.slice(INIT_HELP.indexOf('  --project'), INIT_HELP.indexOf('Wizard options:'));
+        expect(block).toMatch(/agents\/overrides\//);
+        expect(block).toMatch(/\.gitignore/);
+        expect(block).toMatch(/\.gitattributes/);
+        expect(block).not.toMatch(/marker/);
+    });
+
     it('matches the committed snapshot', () => {
         expect(INIT_HELP).toMatchSnapshot();
     });

@@ -246,13 +246,25 @@ lands in a repository, and whether `init --project` is a user command.
 > `~/.event4u/agent-config/` and each AI tool's user-level folder such as
 > `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into
 > your repository, which only gets an `agents/overrides/` folder for your own
-> changes plus a few gitignored bookkeeping files; `agent-config init --project`
-> creates just that folder in a repository and nothing else.
+> changes plus a few gitignored bookkeeping files and a block each in
+> `.gitignore` and `.gitattributes`; `agent-config init --project` creates just
+> those in a repository and nothing else.
 
 The sentence carries no number and no claim marker. "A few gitignored
-bookkeeping files" is the user-facing name for the `.gitignore` block, the
-install-mode marker and the three per-tool pointer files; installation
-reference pages may list them, but may not restate the sentence.
+bookkeeping files" is the user-facing name for the install-mode marker, the
+`./agent-config` wrapper and the three per-tool pointer files; the two managed
+blocks are named on their own. Installation reference pages may list them, but
+may not restate the sentence.
+
+**Amendment 2026-11-01.** A packed-release check showed that `init --project`
+(the `refresh --project` writer, `src/scripts/_cli/cmd_refresh.ts`) writes a
+managed block into `.gitattributes` as well — the memory `merge=union` block,
+intended — and a managed block into `.gitignore`, which is a tracked file and so
+not a gitignored bookkeeping file. The sentence first ended "…plus a few
+gitignored bookkeeping files; `agent-config init --project` creates just that
+folder in a repository and nothing else." It now names both blocks, and "just
+that folder" became "just those". Every verbatim copy was updated in the same
+change; `agent-config init --help` describes `--project` with the same parts.
 
 **Who ruled.** Host verdict without council input (decided from the tree, as
 the plan scoped).

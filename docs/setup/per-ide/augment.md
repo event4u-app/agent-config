@@ -8,8 +8,9 @@ there.
 > `~/.event4u/agent-config/` and each AI tool's user-level folder such as
 > `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into
 > your repository, which only gets an `agents/overrides/` folder for your own
-> changes plus a few gitignored bookkeeping files; `agent-config init --project`
-> creates just that folder in a repository and nothing else.
+> changes plus a few gitignored bookkeeping files and a block each in
+> `.gitignore` and `.gitattributes`; `agent-config init --project` creates just
+> those in a repository and nothing else.
 
 > **Workspace-guidelines limit.** Augment counts the full body of every
 > rule file against its 49,512-char workspace-guidelines limit. The rule

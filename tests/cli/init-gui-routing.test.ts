@@ -262,6 +262,12 @@ describe('buildProjectInitDelegation', () => {
         expect(buildProjectInitDelegation(['--project'])).toEqual(['refresh', '--project']);
     });
 
+    it('accepts --yes, -y and --no-ui with --project: the project writer never prompts', () => {
+        expect(buildProjectInitDelegation(['--project', '--yes'])).toEqual(['refresh', '--project']);
+        expect(buildProjectInitDelegation(['-y', '--project'])).toEqual(['refresh', '--project']);
+        expect(buildProjectInitDelegation(['--project', '--no-ui', '--yes'])).toEqual(['refresh', '--project']);
+    });
+
     it('forwards remaining args after stripping --project', () => {
         expect(buildProjectInitDelegation(['--project', '--dry-run'])).toEqual([
             'refresh', '--project', '--dry-run',
