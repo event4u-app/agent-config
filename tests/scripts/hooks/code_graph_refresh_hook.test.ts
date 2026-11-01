@@ -467,4 +467,19 @@ describe('turn-end binding — spawn only after HEAD moved (2026-11-01)', () => 
         expect(refreshFor(root, fakeSpawn)).toBe('tracked');
         expect(calls).toHaveLength(0);
     });
+
+    it('never claims or sweeps through a symlinked ancestor such as agents/map (round 8)', () => {
+        const outsideMap = path.join(outside, 'outside-map');
+        fs.mkdirSync(path.join(outsideMap, '.build', 'claims', '1'), { recursive: true });
+        fs.writeFileSync(path.join(outsideMap, '.build', 'claims', '1', 'keep'), 'x');
+        fs.rmSync(path.join(root, 'agents', 'map'), { recursive: true, force: true });
+        fs.symlinkSync(outsideMap, path.join(root, 'agents', 'map'));
+        optedIn();
+        commit('one');
+        const before = fs.readdirSync(path.join(outsideMap, '.build', 'claims')).sort();
+        expect(refreshFor(root, fakeSpawn)).toBe('record-failed');
+        expect(calls).toHaveLength(0);
+        expect(fs.readdirSync(path.join(outsideMap, '.build', 'claims')).sort()).toEqual(before);
+        expect(fs.readFileSync(path.join(outsideMap, '.build', 'claims', '1', 'keep'), 'utf-8')).toBe('x');
+    });
 });

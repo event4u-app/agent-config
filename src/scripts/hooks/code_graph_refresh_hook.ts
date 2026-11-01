@@ -134,14 +134,26 @@ function isRealDir(p: string): boolean {
     }
 }
 
-/** True when `p` exists as anything but a real directory — a symlink or a file planted where a claim folder goes. */
-function blocked(p: string): boolean {
-    try {
-        fs.lstatSync(p);
-    } catch {
-        return false;
+/**
+ * Whether every component from `root` down to `dir` that exists is a real
+ * directory (lstat, never followed). A symlinked `agents/`, `agents/map/`,
+ * `.build/`, `claims/` or day folder — or a file planted at one — would let a
+ * write or a recursive delete land outside the checkout.
+ */
+export function containedPath(root: string, dir: string): boolean {
+    const rel = path.relative(root, dir);
+    if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) return false;
+    let at = root;
+    for (const part of rel.split(path.sep)) {
+        at = path.join(at, part);
+        try {
+            fs.lstatSync(at);
+        } catch {
+            return true; // the rest does not exist yet and will be created as real directories
+        }
+        if (!isRealDir(at)) return false;
     }
-    return !isRealDir(p);
+    return true;
 }
 
 /**
@@ -149,17 +161,17 @@ function blocked(p: string): boolean {
  * pair, or its window is past admission by a clock read at claim time) or
  * `failed`.
  */
-function claim(file: string, clock: () => number): 'won' | 'taken' | 'failed' {
+function claim(root: string, file: string, clock: () => number): 'won' | 'taken' | 'failed' {
     const at = clock();
     const w = windowOf(file);
     if (w !== null && w <= Math.floor(at / THROTTLE_MS) - 2) return 'taken';
     const day = path.dirname(file);
     const claims = path.dirname(day);
-    // Claims are created and swept only inside real directories under `.build/`, never through a symlink.
-    if (blocked(path.dirname(claims)) || blocked(claims) || blocked(day)) return 'failed';
+    // Claims are created and swept only inside real directories from the root down, never through a symlink.
+    if (!containedPath(root, day)) return 'failed';
     try {
         fs.mkdirSync(day, { recursive: true });
-        if (!isRealDir(claims) || !isRealDir(day)) return 'failed';
+        if (!containedPath(root, day) || !isRealDir(day)) return 'failed';
         fs.writeFileSync(file, '', { flag: 'wx' });
     } catch (e) {
         return (e as NodeJS.ErrnoException).code === 'EEXIST' ? 'taken' : 'failed';
@@ -257,7 +269,7 @@ export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn, now: numb
     const verdict = usableCli(root);
     if ('reason' in verdict) return done(verdict.reason, (verdict as { cli?: string }).cli);
     beforeClaim?.();
-    const won = claim(file, clock);
+    const won = claim(root, file, clock);
     if (won === 'taken') return 'fresh';
     if (won === 'failed') return 'record-failed';
     const child = spawnFn(verdict.cli, [...REFRESH_ARGS, '--root', root], {
