@@ -24,6 +24,15 @@ And, on the follow-up design:
 ("I don't want the map to have to be rebuilt completely every time;
 incremental updates are faster than complete ones.")
 
+**Automated local use is in scope, stated rather than implied.** The owner
+asked for the map to update itself while "we" work on a project — the owner
+and the agents working with them. A `build` or `map` an agent runs locally is
+therefore meant to turn auto-refresh on just as one the owner types; the
+exclusions are CI (`CI` set) and the kill switch. Ratification round 3 asked
+for this to be explicit rather than read into the quote; it is recorded here
+as the implementing agent's reading of the owner's request, for the
+ratification to accept or refuse.
+
 What this record does NOT establish: it is written by the agent that
 implements the change, so it is the owner's words as relayed, not a platform
 event. The ratification round that reviews the change decides whether it

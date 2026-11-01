@@ -53,8 +53,6 @@ export interface RefreshRecord {
     head?: string | undefined;
     /** The hook slot that ran the concern (`session_start`, `stop`); the file name predates the second slot. */
     slot?: string | undefined;
-    /** Identifies one spawn attempt, so a failed launch withdraws its own claim and no newer one. */
-    nonce?: string | undefined;
 }
 
 /** One file per side, so the session concern writes without reading or merging anything. */
@@ -68,8 +66,7 @@ export function recordRefresh(root: string, rec: Omit<RefreshRecord, 'at'>): voi
 
 /**
  * For the session concern: its chunk must not carry the user-global resolver.
- * Returns whether the record landed — the concern spawns only after it did, so
- * a record it cannot write can never turn into a spawn per turn.
+ * Creates the build directory when missing. Returns whether the record landed.
  */
 export function recordRefreshIn(stateDir: string, rec: Omit<RefreshRecord, 'at'>, now: number = Date.now()): boolean {
     try {

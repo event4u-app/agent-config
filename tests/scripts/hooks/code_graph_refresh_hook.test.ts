@@ -11,6 +11,7 @@ import {
     REFRESH_ARGS,
     refreshFor,
     repoRoot,
+    claimPath,
     resolveCli,
     slotOf,
     THROTTLE_MS,
@@ -259,21 +260,7 @@ describe('turn-end binding — spawn only after HEAD moved (2026-11-01)', () => 
         expect(calls).toHaveLength(2);
     });
 
-    it('a record dated in the future never covers (clock set back)', () => {
-        optedIn();
-        commit('one');
-        expect(refreshFor(root, fakeSpawn, Date.now() + 60_000)).toBe('spawned');
-        expect(refreshFor(root, fakeSpawn)).toBe('spawned');
-        expect(calls).toHaveLength(2);
-    });
 
-    it('does not spawn when the spawn record cannot be written', () => {
-        optedIn();
-        fs.mkdirSync(path.join(root, 'agents', 'map', '.build', 'code-graph-refresh.session-start.json'));
-        expect(refreshFor(root, fakeSpawn)).toBe('record-failed');
-        expect(refreshFor(root, fakeSpawn)).toBe('record-failed');
-        expect(calls).toHaveLength(0);
-    });
 
     it('the opt-out wins over a marker written beside it', () => {
         optedIn();
@@ -296,53 +283,9 @@ describe('turn-end binding — spawn only after HEAD moved (2026-11-01)', () => 
         expect(calls).toHaveLength(1);
     });
 
-    it('a dispatch finding the admission mutex held does not spawn', () => {
-        optedIn();
-        commit('one');
-        fs.mkdirSync(path.join(root, 'agents', 'map', '.build', 'code-graph-refresh.admission'));
-        expect(refreshFor(root, fakeSpawn)).toBe('locked');
-        expect(calls).toHaveLength(0);
-    });
 
-    it('takes over an admission mutex a crashed dispatch left behind', () => {
-        optedIn();
-        commit('one');
-        const m = path.join(root, 'agents', 'map', '.build', 'code-graph-refresh.admission');
-        fs.mkdirSync(m);
-        const old = (Date.now() - 60_000) / 1000;
-        fs.utimesSync(m, old, old);
-        expect(refreshFor(root, fakeSpawn)).toBe('spawned');
-        expect(fs.existsSync(m)).toBe(false);
-    });
 
-    it('a second dispatch between the first one\'s throttle check and its claim cannot spawn', () => {
-        optedIn();
-        commit('one');
-        let inner: string | null = null;
-        expect(refreshFor(root, fakeSpawn, Date.now(), 'stop', () => {
-            inner = refreshFor(root, fakeSpawn, Date.now(), 'stop');
-        })).toBe('spawned');
-        expect(inner).toBe('locked');
-        expect(calls).toHaveLength(1);
-    });
 
-    it('a launch that errors withdraws its own claim, so the next dispatch spawns', () => {
-        optedIn();
-        commit('one');
-        const errSpawn = ((cmd: string, args: readonly string[], opts: Record<string, unknown>) => {
-            calls.push({ cmd, args, opts });
-            const child = new EventEmitter() as EventEmitter & { unref: () => void };
-            child.unref = () => {};
-            queueMicrotask(() => child.emit('error', new Error('ENOENT')));
-            return child;
-        }) as unknown as typeof spawn;
-        expect(refreshFor(root, errSpawn)).toBe('spawned');
-        return new Promise<void>((resolve) => setTimeout(() => {
-            expect(readRefreshRecords(root)['session-start']?.outcome).toBe('spawn-error');
-            expect(refreshFor(root, fakeSpawn)).toBe('spawned');
-            resolve();
-        }, 10));
-    });
 
     it('records which slot ran it', () => {
         optedIn();
@@ -354,4 +297,81 @@ describe('turn-end binding — spawn only after HEAD moved (2026-11-01)', () => 
         expect(slotOf({ payload: { hook_event_name: 'Stop' } })).toBe('stop');
         expect(slotOf({})).toBeUndefined();
     });
+
+    it('does not spawn when the claim cannot be created', () => {
+        optedIn();
+        commit('one');
+        const build = path.join(root, 'agents', 'map', '.build');
+        fs.chmodSync(build, 0o500);
+        try {
+            expect(refreshFor(root, fakeSpawn)).toBe('record-failed');
+            expect(calls).toHaveLength(0);
+        } finally {
+            fs.chmodSync(build, 0o700);
+        }
+    });
+
+    it('a claim in another window does not block this one, and the winner sweeps it', () => {
+        optedIn();
+        commit('one');
+        const later = Date.now() + 2 * THROTTLE_MS;
+        expect(refreshFor(root, fakeSpawn, later)).toBe('spawned');
+        expect(refreshFor(root, fakeSpawn)).toBe('spawned');
+        const claims = fs.readdirSync(path.join(root, 'agents', 'map', '.build')).filter((f) => f.startsWith('code-graph-refresh.claim-'));
+        expect(claims).toHaveLength(1);
+        expect(calls).toHaveLength(2);
+    });
+
+    it('a dispatch that runs between another one\'s checks and its claim wins once, the other gets fresh', () => {
+        optedIn();
+        commit('one');
+        let inner: string | null = null;
+        const outer = refreshFor(root, fakeSpawn, Date.now(), 'stop', () => {
+            inner = refreshFor(root, fakeSpawn, Date.now(), 'stop');
+        });
+        expect([outer, inner].sort()).toEqual(['fresh', 'spawned']);
+        expect(calls).toHaveLength(1);
+    });
+
+    it('a launch that errors deletes its own claim, so the next dispatch spawns', async () => {
+        optedIn();
+        commit('one');
+        const errSpawn = ((cmd: string, args: readonly string[], opts: Record<string, unknown>) => {
+            calls.push({ cmd, args, opts });
+            const child = new EventEmitter() as EventEmitter & { unref: () => void };
+            child.unref = () => {};
+            queueMicrotask(() => child.emit('error', new Error('ENOENT')));
+            return child;
+        }) as unknown as typeof spawn;
+        expect(refreshFor(root, errSpawn)).toBe('spawned');
+        await new Promise((r) => setTimeout(r, 10));
+        expect(refreshFor(root, fakeSpawn)).toBe('spawned');
+        expect(calls).toHaveLength(2);
+    });
+
+    it('eight concurrent processes released at one instant spawn exactly once', async () => {
+        optedIn();
+        commit('one');
+        const marker = path.join(outside, 'spawned');
+        const at = Date.now() + 3000;
+        const file = path.join(outside, 'race.mts');
+        fs.writeFileSync(
+            file,
+            [
+                `import fs from 'node:fs';`,
+                `import { refreshFor } from ${JSON.stringify(path.resolve('src/scripts/hooks/code_graph_refresh_hook.ts'))};`,
+                `const fake = () => { fs.appendFileSync(${JSON.stringify(marker)}, 'x'); return { on() {}, unref() {} }; };`,
+                `while (Date.now() < ${at}) { /* barrier */ }`,
+                `refreshFor(${JSON.stringify(root)}, fake as never);`,
+            ].join('\n'),
+        );
+        const tsx = path.resolve('node_modules', '.bin', 'tsx');
+        const env = { ...process.env, PATH: [process.env['PATH'], path.dirname(process.execPath)].join(path.delimiter) };
+        const { spawn: realSpawn } = await import('node:child_process');
+        const codes = await Promise.all(
+            Array.from({ length: 8 }, () => new Promise<number | null>((resolve) => realSpawn(tsx, [file], { stdio: 'ignore', env }).on('exit', resolve))),
+        );
+        expect(codes.every((c) => c === 0)).toBe(true);
+        expect(fs.readFileSync(marker, 'utf-8')).toBe('x');
+    }, 60_000);
 });
