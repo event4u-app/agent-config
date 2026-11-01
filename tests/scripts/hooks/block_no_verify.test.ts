@@ -518,11 +518,19 @@ describe('block_no_verify — exec wrappers and config-env forms', () => {
     }
 });
 
-// Stacked wrappers are read through: sixteen of them, then git, is still git.
+// At sixteen stacked wrappers the scan stops, so the segment is refused
+// whatever follows (council round 9: an assignment or `-S` string there was lost).
 describe('block_no_verify — stacked wrappers', () => {
-    it('refuses git behind seventeen wrappers', () => {
-        const many = Array.from({ length: 17 }, () => 'env').join(' ');
-        expect(_check_command(`${many} git commit --no-verify`)[0]).toBe(true);
+    const wrappers = (n: number) => Array.from({ length: n }, () => 'env').join(' ');
+    it('refuses a segment past sixteen wrappers, whatever follows', () => {
+        expect(_check_command(`${wrappers(17)} git commit --no-verify`)[0]).toBe(true);
+        expect(_check_command(`${wrappers(16)} HUSKY=0 git commit -m x`)[0]).toBe(true);
+        expect(_check_command(`${wrappers(17)} -S 'git commit --no-verify'`)[0]).toBe(true);
+        expect(_check_command(`${wrappers(17)} npm test`)[0]).toBe(true);
+    });
+    it('reads fifteen wrappers through', () => {
+        expect(_check_command(`${wrappers(15)} HUSKY=0 git commit -m x`)[0]).toBe(true);
+        expect(_check_command(`${wrappers(15)} git status`)[0]).toBe(false);
     });
 });
 

@@ -320,18 +320,21 @@ export function _unwrap(tokens: string[]): {
     lookup: boolean;
     /** An `env -S` string this guard cannot read (`${VAR}`, an escape other than `\_`). */
     unreadableSplit: string | null;
+    /** More stacked wrappers than the guard reads; nothing after them was interpreted. */
+    exhausted: boolean;
 } {
     let argv = [...tokens];
     let i = 0;
     let hookspathEnv: string | null = null;
     let wrapped = false;
-    const done = (lookup: boolean, unreadableSplit: string | null = null) => ({
+    const done = (lookup: boolean, unreadableSplit: string | null = null, exhausted = false) => ({
         argv,
         start: i,
         hookspathEnv,
         wrapped,
         lookup,
         unreadableSplit,
+        exhausted,
     });
     for (let guard = 0; guard < 16; guard += 1) {
         while (i < argv.length && _is_env_assignment(argv[i] as string)) {
@@ -402,7 +405,10 @@ export function _unwrap(tokens: string[]): {
         }
         i += spec.positional;
     }
-    return done(false);
+    // Sixteen wrappers were peeled and the scan stopped; assignments and `-S`
+    // strings past this point were never read (council round 9). Say so, and
+    // let the caller refuse rather than judge a half-read command.
+    return done(false, null, true);
 }
 
 function _payload_at(tokens: string[], at: number): string | null {
@@ -781,7 +787,13 @@ function _check_command(cmd: string, depth = 0): [boolean, string] {
     }
 
     for (const sub of _split_subcommands(tokens)) {
-        const { hookspathEnv, unreadableSplit } = _unwrap(sub);
+        const { hookspathEnv, unreadableSplit, exhausted } = _unwrap(sub);
+        if (exhausted) {
+            return [
+                true,
+                'sixteen or more stacked command wrappers — the guard did not read past them, fail-closed (git-history-discipline).',
+            ];
+        }
         // `env -S` has its own syntax (council round 7): `\_` is decoded, but
         // `${VAR}` expands and other escapes rewrite characters, which this guard
         // cannot read — refused rather than guessed at.
