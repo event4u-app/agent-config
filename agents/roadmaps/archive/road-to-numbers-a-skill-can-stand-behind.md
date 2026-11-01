@@ -64,6 +64,7 @@ owners, not here.
 - [x] **1.8 No advice to spoof a browser.** `src/scripts/_lib/reddit_thread_parse.ts:542` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/reddit_thread_parse.ts -->
       tells the reader to send "a real browser UA"; name a descriptive agent string
       instead.
+      reach exempt: only the HELP string of a stdin parser a human runs by hand changed; no function behaviour moved
       verify: `grep -c 'real browser' src/scripts/_lib/reddit_thread_parse.ts` -> /^0$/
 - [x] **1.9 DCF hands workbook output to its owner.** `src/skills/dcf-modeling/SKILL.md` <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       never references `spreadsheet-authoring`, whose core rule its markdown tables
