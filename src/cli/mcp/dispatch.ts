@@ -202,7 +202,7 @@ export const LITE_TOOLS: readonly Record<string, unknown>[] = [
             },
             additionalProperties: false,
         },
-        annotations: { readOnlyHint: true },
+        annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
     {
         name: 'read_skill',
@@ -214,7 +214,7 @@ export const LITE_TOOLS: readonly Record<string, unknown>[] = [
             properties: { name: { type: 'string', description: 'Skill name.' } },
             additionalProperties: false,
         },
-        annotations: { readOnlyHint: true },
+        annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
 ];
 

@@ -32,7 +32,8 @@
 //   CATALOG_STUBS, STUB_NAMES, REGISTRY, ToolCache, boot_log_line.
 // TS-only addition (Phase 3 of road-to-credible-install): `ToolSideEffect` +
 // `BuiltinTool.side_effect` — the generated-catalog source of truth for a
-// tool's side-effect classification and `readOnlyHint` annotation.
+// tool's side-effect classification; `effect_shape` / `open_world` complete the
+// four MCP hints (`tool_annotations`).
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -47,6 +48,7 @@ import {
     slice_around as _chSliceAround,
     read_header as _chReadHeaderImpl,
 } from '../chat_history.js';
+import { tool_annotations, type ToolEffectShape } from './annotations.js';
 import { SUGGEST_SKILL_TOOL } from './suggest_skill.js';
 import {
     type CatalogEntry,
@@ -60,6 +62,8 @@ import { resolvePath as _resolvePath, strip as _strip } from './path_util.js';
 import { type Outcome, record_call } from './telemetry.js';
 import type { PromptCache } from './prompts.js';
 import type { ResourceCache } from './resources.js';
+
+export { tool_annotations, type ToolAnnotations, type ToolEffectShape } from './annotations.js';
 
 // Stable transport tag for the stub envelope. Mirrored verbatim by
 // `internal/workers/mcp/src/stubs.ts` with `"worker"`.
@@ -111,6 +115,11 @@ export interface BuiltinTool {
     readonly description: string;
     readonly input_schema: Record<string, unknown>;
     readonly side_effect: ToolSideEffect;
+    readonly effect_shape?: ToolEffectShape;
+    /** True when the tool can reach beyond the local machine (network, external services). */
+    readonly open_world?: boolean;
+    /** One line justifying `effect_shape` / `open_world`; required wherever either is set. */
+    readonly effect_reason?: string;
     readonly handler: ToolHandler;
 }
 
@@ -1236,6 +1245,8 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     chat_history_append: {
         name: 'chat_history_append',
         side_effect: 'fs-write',
+        effect_shape: 'additive',
+        effect_reason: 'appends one JSONL entry; never rewrites or removes existing entries',
         description:
             "Append one structured entry to the consumer project's " +
             'chat-history log (a JSONL file). Use to record a decision, ' +
@@ -1535,6 +1546,8 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     memory_signal: {
         name: 'memory_signal',
         side_effect: 'fs-write',
+        effect_shape: 'additive',
+        effect_reason: 'appends one signal to the monthly intake file; rate-limited duplicates are skipped, nothing is removed',
         description:
             'Record an engineering-memory signal — a short, anchored ' +
             'observation such as a recurring bug pattern or an ownership ' +
@@ -1570,6 +1583,8 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     roadmap_progress: {
         name: 'roadmap_progress',
         side_effect: 'fs-write',
+        effect_shape: 'idempotent',
+        effect_reason: 'regenerates the dashboard deterministically from the roadmap files; same input, same bytes',
         description:
             'Regenerate `agents/roadmaps-progress.md` from the current ' +
             'checkbox state of every active roadmap. Use after landing ' +
@@ -1594,6 +1609,8 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     roadmap_archive: {
         name: 'roadmap_archive',
         side_effect: 'fs-write',
+        effect_shape: 'destructive',
+        effect_reason: "git-mv's completed roadmaps and rewrites inbound references in other files",
         description:
             'Archive every roadmap that has reached `count_open == 0` and ' +
             'was touched on the current branch — `git mv` to ' +
@@ -1611,6 +1628,8 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     capabilities_index: {
         name: 'capabilities_index',
         side_effect: 'fs-write',
+        effect_shape: 'idempotent',
+        effect_reason: 'regenerates CAPABILITIES.yaml deterministically from the package tree',
         description:
             "Regenerate `CAPABILITIES.yaml`, the package's coverage index " +
             'of skills, rules, commands, and guidelines. Use after adding ' +
@@ -1718,6 +1737,9 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
     run_tests: {
         name: 'run_tests',
         side_effect: 'shell',
+        effect_shape: 'additive',
+        open_world: true,
+        effect_reason: "spawns the consumer's vitest suite; tests may write scratch files or reach the network",
         description:
             "Run the consumer project's vitest test suite under a " +
             'compiled safety envelope: fixed argv (no shell ' +
@@ -1754,11 +1776,10 @@ export function to_mcp_tool_meta(tool: BuiltinTool): Record<string, unknown> {
         description: tool.description,
         inputSchema: tool.input_schema,
     };
-    // Annotations are honest MCP tool-behavior hints (Phase 3 of
-    // road-to-credible-install): only the implemented set carries them — a
-    // stub never actually runs, so there is nothing true to annotate.
+    // Only the implemented set carries hints — a stub never runs, so there is
+    // nothing true to annotate.
     if (tool.name in ALLOWLIST) {
-        meta['annotations'] = { readOnlyHint: tool.side_effect === 'ro' };
+        meta['annotations'] = { ...tool_annotations(tool) };
     }
     return meta;
 }

@@ -22,7 +22,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": false
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -88,7 +91,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": false
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
       }
     },
     {
@@ -148,7 +154,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -171,7 +180,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -203,7 +215,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -219,7 +234,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -245,7 +263,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -282,7 +303,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -313,7 +337,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -370,7 +397,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": false
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -393,7 +423,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -449,7 +482,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -484,7 +520,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -543,7 +582,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -578,7 +620,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -602,7 +647,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -618,7 +666,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -646,7 +697,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -674,7 +728,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -702,7 +759,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -757,7 +817,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -791,7 +854,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": false
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
       }
     },
     {
@@ -807,7 +873,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -838,7 +907,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -854,7 +926,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": false
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
       }
     },
     {
@@ -876,7 +951,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": false
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -908,7 +986,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": false
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
       }
     },
     {
@@ -952,7 +1033,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
@@ -989,7 +1073,10 @@
         "additionalProperties": false
       },
       "annotations": {
-        "readOnlyHint": true
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     },
     {
