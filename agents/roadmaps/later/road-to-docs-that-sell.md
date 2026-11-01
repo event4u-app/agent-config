@@ -206,7 +206,7 @@ Phase 8.
 - [x] **2.4 No "zero runtime" on public pages.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Closed 2026-11-01: no product assertion remains on README, user docs or hand-written site pages; the grep still matches technical phrases ("no runtime resolver", "no runtime JS errors") in contracts and guidelines, and the claims ledger, which records the phrase as retired — none is a claim about what the product is. Remove or relabel as policy
       every no-runtime/no-daemon assertion in `site/astro.config.mjs`,
       `index.mdx`, `introduction.md`, `architecture/overview.md`,
-      `docs/us-vs-the-category.md` and `docs/positioning-evidence.md` per the
+      `docs/us-vs-the-category.md` and `docs/maintainers/positioning-evidence.md` per the
       ADR-249 surface test. verify: grep for "zero runtime|no runtime|no
       daemon" outside `docs/decisions/` and `docs/archive/` returns nothing.
 - [x] **2.5 Stale and broken.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/tool_adapter_registry.ts --> "Upgrade to 14.x", the dangling "those four",

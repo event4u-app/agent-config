@@ -39,7 +39,7 @@ turn that changed files without checking them can be stopped."
 
 ### 1. It checks its work
 
-The message: the package changes behaviour, not model intelligence. The agent
+The message: the package changes behavior, not model intelligence. The agent
 is taught to analyse before editing, to test, and to verify by running
 something before it claims done.
 
@@ -191,7 +191,7 @@ Two findings from the same sweep matter for anyone writing their own file:
 - **Content beats length.** A larger rule set that left out the one rule
   carrying the gain produced no gain at all. A short file helps only if it is
   the right short file.
-- **The cost is behaviour.** The smaller rule set cost slightly more per run
+- **The cost is behavior.** The smaller rule set cost slightly more per run
   than the larger null one, because checking its work is what spends the tokens.
 
 What the package adds beyond a static file:

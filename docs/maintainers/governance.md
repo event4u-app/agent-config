@@ -124,5 +124,5 @@ mentions; `internal/` (glama) + `agents/roadmaps/{archive,skipped}` are out of s
 - [`docs/contracts/skill-family-map.yml`](../contracts/skill-family-map.yml) — the spine.
 - [`skills-taxonomy.md`](skills-taxonomy.md) — the family derivation.
 - [`artefact-census.md`](artefact-census.md) — the counted baseline.
-- [`command-category-governance.md`](../contracts/command-category-governance.md) — the deferred command-category hand-off.
+- [`command-category-governance.md`](../contracts/command-category-governance.md) — the deferred command-category handoff.
 - `persona-governance` rule — the persona-side sibling of the lifecycle policy.

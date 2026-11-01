@@ -27,7 +27,7 @@ This runs, in order:
 The linter (`src/scripts/skill_linter.ts`) validates:
 
 - **Required structure** — YAML frontmatter, description, triggers
-- **Frontmatter schema** — Each artefact type has a JSON-Schema in `scripts/schemas/`; violations surface as `schema_<rule>` errors (see [frontmatter contract](../../agents/reference/docs/frontmatter-contract.md))
+- **Frontmatter schema** — Each artifact type has a JSON-Schema in `scripts/schemas/`; violations surface as `schema_<rule>` errors (see [frontmatter contract](../../agents/reference/docs/frontmatter-contract.md))
 - **Anti-patterns** — Procedural rules in behavior rules, overlong skills, scope creep
 - **Condensation quality** — Key sections preserved after condensation
 

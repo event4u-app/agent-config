@@ -800,6 +800,6 @@ are excluded.
 
 ---
 
-Start here: [featured skills](featured-skills.md) · [featured commands](featured-commands.md) · [skills only](skills-catalog.md) · [capability matrix](capability-matrix.md) · [llms.txt](../llms.txt)
+Start here: [featured skills](https://github.com/event4u-app/agent-config/blob/main/docs/featured-skills.md) · [featured commands](https://github.com/event4u-app/agent-config/blob/main/docs/featured-commands.md) · [skills only](https://github.com/event4u-app/agent-config/blob/main/docs/skills-catalog.md) · [capability matrix](https://github.com/event4u-app/agent-config/blob/main/docs/capability-matrix.md) · [llms.txt](../llms.txt)
 
 ← [Back to README](../README.md)

@@ -45,6 +45,7 @@ export const SRC = path.join(ROOT, '.agent-src.uncondensed');
 export const GUIDELINES = path.join(ROOT, 'docs', 'guidelines');
 export const INDEX_PATH = path.join(ROOT, 'agents', 'index.md');
 export const CATALOG_PATH = path.join(ROOT, 'docs', 'catalog.md');
+const DOCS_URL = 'https://github.com/event4u-app/agent-config/blob/main/docs';
 
 // Internal-only rules — excluded from the public catalog.
 export const INTERNAL_RULES = new Set(['source-of-truth', 'augment-portability', 'docs-sync']);
@@ -471,8 +472,12 @@ export function _render_catalog(
         '',
         '---',
         '',
-        'Start here: [featured skills](featured-skills.md) · [featured commands](featured-commands.md) · ' +
-            '[skills only](skills-catalog.md) · [capability matrix](capability-matrix.md) · [llms.txt](../llms.txt)',
+        // Absolute URLs: these docs are not in `package.json#files`, so a relative
+        // link would dangle in the installed package.
+        `Start here: [featured skills](${DOCS_URL}/featured-skills.md) · ` +
+            `[featured commands](${DOCS_URL}/featured-commands.md) · ` +
+            `[skills only](${DOCS_URL}/skills-catalog.md) · ` +
+            `[capability matrix](${DOCS_URL}/capability-matrix.md) · [llms.txt](../llms.txt)`,
         '',
         '← [Back to README](../README.md)',
         '',

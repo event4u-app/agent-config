@@ -53,8 +53,7 @@ export const ADAPTER_REGISTRY: readonly AdapterEntry[] = [
     { tool: 'GitHub Copilot', kind: 'native', roots: ['.github/copilot-instructions.md'] },
     { tool: 'Roo Code', kind: 'agents-md', roots: [] },
     // The install writes `rules/`, `skills/`, `commands/` and `personas/` under
-    // `~/.codex/`; the host reads `skills/` only and no `AGENTS.md` is written
-    // (agents/evidence/analysis/codex-global-delivery-reading-2026-10-18.md).
+    // `~/.codex/`; the host reads `skills/` only and no `AGENTS.md` is written.
     // The skill-finder entry (`codex_skill_finder.ts`) lives in that root too.
     { tool: 'Codex CLI', kind: 'native', roots: ['~/.codex/skills'] },
     { tool: 'Continue.dev', kind: 'agents-md', roots: [] },

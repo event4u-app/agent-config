@@ -513,8 +513,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr diff "${{ github.event.pull_request.number }}" \
-            | ./scripts-run src/scripts/check_no_new_legacy_path --stdin
+          # `gh pr diff` refuses a PR over 300 files (HTTP 406); fall back to the
+          # paginated files API, re-headed so the checker's `+++ b/` parser reads it.
+          # A file whose patch GitHub omits as too large contributes no lines.
+          {
+            gh pr diff "${{ github.event.pull_request.number }}" \
+              || gh api --paginate "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
+                   --jq '.[] | "+++ b/\(.filename)\n\(.patch // "")"'
+          } | ./scripts-run src/scripts/check_no_new_legacy_path --stdin
 
       - name: Design-token drift — generated CSS matches the canonical source
         # road-to-shared-design-tokens Phase 2: src/ui/tokens.css and the
@@ -853,8 +859,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mapfile -t WF < <(gh pr diff "${{ github.event.pull_request.number }}" \
-            --name-only | grep -E '^\.github/workflows/.*\.ya?ml$' || true)
+          # Files API, not `gh pr diff`: the latter refuses a PR over 300 files,
+          # and inside this substitution that failure would lint nothing silently.
+          changed=$(gh api --paginate "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" --jq '.[].filename')
+          mapfile -t WF < <(grep -E '^\.github/workflows/.*\.ya?ml$' <<<"$changed" || true)
           if [ "${#WF[@]}" -eq 0 ]; then
             echo "No workflow files changed in this PR — nothing to lint."
             exit 0
