@@ -21,7 +21,7 @@ const ONE_LINER = 'Teach your AI coding agents to check their work before they s
 // Ruling 0.2 of the docs-that-sell decision note: every embed of the banner carries
 // this caption; an Open Graph image cannot carry a visible caption, so it rides as the alt text.
 const BANNER_CAPTION =
-  'Installs once into your user-level AI tool configuration, not into your repository; it works with 20 AI coding tools — not only Claude and Codex.';
+  'Installs into your user-level AI tool configuration; your repository only gets an `agents/overrides/` folder for your own changes. Works with 20 AI coding tools.';
 
 export default defineConfig({
   site: SITE,

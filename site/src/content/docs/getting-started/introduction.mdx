@@ -7,7 +7,7 @@ import { LinkCard, CardGrid } from '@astrojs/starlight/components';
 import InfoBanner from '../../../components/InfoBanner.astro';
 
 <InfoBanner>
-Installs once into your user-level AI tool configuration, not into your repository; it works with 20 AI coding tools{/* claim:host-agent-count */} — not only Claude and Codex.
+Installs into your user-level AI tool configuration; your repository only gets an `agents/overrides/` folder for your own changes. Works with 20 AI coding tools{/* claim:host-agent-count */}.
 </InfoBanner>
 
 **Agent Config teaches your AI coding agents to check their work before they say done.**
@@ -22,7 +22,7 @@ It installs skills, rules and slash-command workflows into the AI coding tools y
 
 **Before.** You ask your agent to add a CSV export. It writes a handler that returns a hard-coded placeholder, the existing tests stay green and it replies "Done — export implemented." Nothing ever ran the new code.
 
-**After.** In Claude Code you ask `@production-validator` whether the branch is really done. It reads the code that would ship, finds the placeholder and answers **NOT READY** with the exact file and line. On a branch that is really finished it answers **READY** and reports nothing. We measured this on two planted cases: one hollow, one clean. {/* claim:wedge-hollow-detection */}
+**After.** In Claude Code you ask `@production-validator` whether the branch is really done. It reads the code that would ship, finds the placeholder and answers **NOT READY** with the exact file and line. On a branch that is really finished it answers **READY** and reports nothing. We tested this on two cases: one with a placeholder left in, one finished. {/* claim:wedge-hollow-detection */}
 
 On Claude Code the package can also refuse to let a turn end on "done" when the agent changed files and ran nothing to check them. On every other tool that is an instruction the agent is asked to follow, not a block.
 {/* claim:conformance-advisory-vs-blocking */}

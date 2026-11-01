@@ -24,7 +24,8 @@ than an outcome the package guarantees, which is only true where it can block
 (ruling 0.3).
 
 **Sub-line** (when a second line is needed): "Install once. Your AI coding
-tools plan, test and verify before they say done."
+tools are told to plan, test and verify before they say done; on Claude Code a
+turn that changed files without checking them can be stopped."
 
 ## Who we write for
 
@@ -132,8 +133,8 @@ returns a hard-coded placeholder, the existing tests stay green and it replies
 **After.** In Claude Code you ask `@production-validator` whether the branch is
 really done. It reads the code that would ship, finds the placeholder and
 answers **NOT READY** with the exact file and line. On a branch that is really
-finished it answers **READY** and reports nothing. We measured this on two
-planted cases: one hollow, one clean. <!-- claim:wedge-hollow-detection -->
+finished it answers **READY** and reports nothing. We tested this on two cases:
+one with a placeholder left in, one finished. <!-- claim:wedge-hollow-detection -->
 
 On Claude Code the package can also refuse to let a turn end on "done" when the
 agent changed files and ran nothing to check them. On every other tool that is

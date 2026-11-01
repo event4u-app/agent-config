@@ -62,14 +62,23 @@ grant, pending owner; reversible.** The banner stays the hero. Every embed
 (README, landing page, Introduction, Open Graph derivative) carries this
 caption directly below it, byte-identical, with the claim marker:
 
-> Installs once into your user-level AI tool configuration, not into your
-> repository; it works with 20 AI coding tools<!-- claim:host-agent-count -->
-> — not only Claude and Codex.
+> Installs into your user-level AI tool configuration; your repository only
+> gets an `agents/overrides/` folder for your own changes. Works with 20 AI
+> coding tools<!-- claim:host-agent-count -->.
 
 Amended 2026-11-01: the first wording said "writes configuration for 20 AI
 coding tools". `init` writes configuration for the 18 projection hosts only;
 Copilot gets a discovery plugin and Claude Desktop a bundle the user uploads,
 so "works with" is the true verb for the count of 20.
+
+Amended a second time 2026-11-01, after an independent read of the README and
+the docs landing page
+(`agents/evidence/reviews/docs-that-sell-independent-read.findings.md`, rows 2
+and 3). "Not into your repository" contradicted the `agents/overrides/` folder
+the install creates there, so the caption now names what the repository gets.
+"Not only Claude and Codex" overpromised: Codex reads skills only and the tools
+differ in what they receive, so the caption drops the comparison and the
+Supported tools section of the README says what each tier gets.
 
 A re-render (option a) supersedes the caption without any other change; the
 caption is removed in the same change that replaces the image.

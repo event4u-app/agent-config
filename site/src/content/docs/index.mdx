@@ -4,10 +4,10 @@ description: Teach your AI coding agents to check their work before they say don
 template: splash
 hero:
   title: Agent Config
-  tagline: "Teach your AI coding agents to check their work before they say done. Install once: every AI coding tool you use plans, tests and verifies first."
+  tagline: "Install once. Your AI coding tools are told to plan, test and verify before they say done; on Claude Code a turn that changed files without checking them can be stopped."
   actions:
     - text: Get started
-      link: /agent-config/getting-started/introduction/
+      link: /agent-config/getting-started/installation/
       icon: right-arrow
       variant: primary
     - text: View on GitHub
@@ -21,12 +21,14 @@ import InfoBanner from '../../components/InfoBanner.astro';
 import HowItFits from '../../components/HowItFits.astro';
 
 <InfoBanner>
-Installs once into your user-level AI tool configuration, not into your repository; it works with 20 AI coding tools{/* claim:host-agent-count */} — not only Claude and Codex.
+Installs into your user-level AI tool configuration; your repository only gets an `agents/overrides/` folder for your own changes. Works with 20 AI coding tools{/* claim:host-agent-count */}.
 </InfoBanner>
 
 ```bash
 npx -y @event4u/agent-config init
 ```
+
+Free and MIT-licensed. Node 22.6 or newer on macOS, Linux or WSL2. Costs more tokens: about 1.7× to 3.3× on Claude Haiku, not measured on larger models. {/* claim:essential-tier-cost-factor */} [What it costs →](/agent-config/trust/benchmark-and-cost/)
 
 On a desktop this opens a setup wizard in your browser; in CI or with `--yes` it installs from the terminal. [Install options →](/agent-config/getting-started/installation/)
 
@@ -71,17 +73,16 @@ Skills, rules and slash-command workflows installed into the AI coding tools you
 
 **Before.** You ask your agent to add a CSV export. It writes a handler that returns a hard-coded placeholder, the existing tests stay green and it replies "Done — export implemented." Nothing ever ran the new code.
 
-**After.** In Claude Code you ask `@production-validator` whether the branch is really done. It reads the code that would ship, finds the placeholder and answers **NOT READY** with the exact file and line. On a branch that is really finished it answers **READY** and reports nothing. We measured this on two planted cases: one hollow, one clean. {/* claim:wedge-hollow-detection */}
+**After.** In Claude Code you ask `@production-validator` whether the branch is really done. It reads the code that would ship, finds the placeholder and answers **NOT READY** with the exact file and line. On a branch that is really finished it answers **READY** and reports nothing. We tested this on two cases: one with a placeholder left in, one finished. {/* claim:wedge-hollow-detection */}
 
 On Claude Code the package can also refuse to let a turn end on "done" when the agent changed files and ran nothing to check them. On every other tool that is an instruction the agent is asked to follow, not a block. {/* claim:conformance-advisory-vs-blocking */}
 
 ## Why Agent Config
 
-- **It checks its work.** The agent is taught to analyse before editing, to test and to run something before it claims done. On a weaker model this measurably improved discipline; on a strong model the same test was a published null. {/* claim:discipline-lift-weak-host */}
+- **It checks its work.** The agent is taught to analyse before editing, to test and to run something before it claims done. On a weaker model this measurably improved discipline; on a strong model the same test showed no improvement, and we published that. {/* claim:discipline-lift-weak-host */}
 - **Every tool you use.** One install, in each tool's own format: 23 tools are detected and 20 are supported — 18 get their configuration written directly, Copilot gets a plugin and Claude Desktop a bundle. {/* claim:host-agent-count */} [Which install do I get?](/agent-config/tools/overview/)
-- **Blocks where it can, asks where it cannot.** On Claude Code a few checks can refuse an action; on every other tool the rules are instructions. We say which is which. {/* claim:conformance-advisory-vs-blocking */}
 - **Leaves cleanly.** Uninstall removes only its own entries and leaves other tools' config byte-identical. {/* claim:surgical-uninstall */} [Uninstall →](/agent-config/getting-started/uninstall/)
-- **It costs more tokens, and we say how many.** On Claude Haiku the default costs 3.3× a run with no rules on the task family where it helps and about 1.7× over the full corpus; loading everything costs 11.7×. {/* claim:essential-tier-cost-factor */} [Benchmark & cost, explained →](/agent-config/trust/benchmark-and-cost/)
+- **It costs more tokens, and we say how many.** On Claude Haiku the default costs 3.3× a run with no rules on the tasks that test checking discipline and about 1.7× over the full corpus; loading everything costs 11.7×. {/* claim:essential-tier-cost-factor */} [Benchmark & cost, explained →](/agent-config/trust/benchmark-and-cost/)
 
 ## How it fits together
 

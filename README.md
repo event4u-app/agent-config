@@ -1,20 +1,24 @@
 <p align="center"><a href="https://event4u-app.github.io/agent-config/"><img alt="event4u Agent Config" src=".github/assets/info-banner.png"></a></p>
 
-<p align="center"><sub>Installs once into your user-level AI tool configuration, not into your repository; it works with 20 AI coding tools<!-- claim:host-agent-count --> — not only Claude and Codex.</sub></p>
+<p align="center"><sub>
+
+Installs into your user-level AI tool configuration; your repository only gets an `agents/overrides/` folder for your own changes. Works with 20 AI coding tools<!-- claim:host-agent-count -->.
+
+</sub></p>
 
 # Agent Config — teach your AI coding agents to check their work before they say done
 
 [![npm](https://img.shields.io/npm/v/@event4u/agent-config?style=flat-square&label=npm&color=orange)](https://www.npmjs.com/package/@event4u/agent-config) [![downloads](https://img.shields.io/npm/dm/@event4u/agent-config?style=flat-square&label=downloads%2Fmonth&color=orange)](https://www.npmjs.com/package/@event4u/agent-config) [![Smoke](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml) [![Public install smoke (3 OS × 2 Node)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml)
 
-**Install once. Your AI coding tools plan, test and verify before they say done.**
+**Install once. Your AI coding tools are told to plan, test and verify before they say done; on Claude Code a turn that changed files without checking them can be stopped.**
 
 ```bash
 npx -y @event4u/agent-config init
 ```
 
-On a desktop this opens a browser wizard: pick your role and your tools, click Finish. Nothing is written before you do.
+Free and MIT-licensed. Node 22.6 or newer on macOS, Linux or WSL2. Costs more tokens: about 1.7× to 3.3× on Claude Haiku, not measured on larger models. <!-- claim:essential-tier-cost-factor --> [What it costs →](#what-it-costs)
 
-![A real run of the proof page: every "verify it yourself" command passing](docs/media/proof-demo.gif)
+On a desktop this opens a browser wizard: pick your role and your tools, click Finish. Nothing is written before you do.
 
 ## Try it in 30 seconds
 
@@ -38,8 +42,8 @@ returns a hard-coded placeholder, the existing tests stay green and it replies
 **After.** In Claude Code you ask `@production-validator` whether the branch is
 really done. It reads the code that would ship, finds the placeholder and
 answers **NOT READY** with the exact file and line. On a branch that is really
-finished it answers **READY** and reports nothing. We measured this on two
-planted cases: one hollow, one clean. <!-- claim:wedge-hollow-detection -->
+finished it answers **READY** and reports nothing. We tested this on two cases:
+one with a placeholder left in, one finished. <!-- claim:wedge-hollow-detection -->
 
 On Claude Code the package can also refuse to let a turn end on "done" when the
 agent changed files and ran nothing to check them. On every other tool that is
@@ -68,9 +72,9 @@ One install gives the agent you already use a set of skills, agent rules and sla
 
 ## What it costs
 
-- **More tokens.** On Claude Haiku the default setting cost 3.3× a run with no rules on the task family where it helps and about 1.7× over the full 30-task corpus; loading everything cost 11.7×. Measured on Claude Haiku only. <!-- claim:essential-tier-cost-factor -->
+- **More tokens.** On Claude Haiku the default setting cost 3.3× a run with no rules on the tasks that test checking discipline and about 1.7× over the full 30-task corpus; loading everything cost 11.7×. Measured on Claude Haiku only. <!-- claim:essential-tier-cost-factor -->
 - **Blocking on Claude Code only.** Elsewhere the rules are instructions: they cut violations but do not remove them. <!-- claim:conformance-advisory-vs-blocking -->
-- **Network.** A daily update check against the npm registry is on by default and off in CI, without a terminal or with `AGENT_CONFIG_NO_UPDATE_CHECK=1`. Telemetry is off.
+- **Network.** By default nothing leaves your machine except the daily update check against the npm registry and a daily question to GitHub, through your own `gh` login, whether a pull request you pushed has merged. The update check is off in CI, without a terminal or with `AGENT_CONFIG_NO_UPDATE_CHECK=1`. Telemetry is off. The second-opinion feature is off until you set it up; then it sends work to other AI providers with your own API keys, which bill you. [What leaves your machine →](https://event4u-app.github.io/agent-config/trust/network/)
 - **Your machine.** Node 22.6 or newer. Standing cost of the always-on rules per tool: [table](docs/contracts/rule-router.md).
 - **Your way out.** `agent-config uninstall --global` removes only its own entries and leaves other tools' config untouched. <!-- claim:surgical-uninstall -->
 
@@ -113,11 +117,13 @@ When a request is unclear the agent stops and asks with numbered options instead
 
 ## Use it in your project
 
-Install once and every AI tool you picked follows the same habits in every repository you open. Start with the [Quickstart](#quickstart) below; the full walk-through is on the site. [Install →](https://event4u-app.github.io/agent-config/getting-started/installation/)
+Start with the [Quickstart](#quickstart) below; the full walk-through is on the site. [Install →](https://event4u-app.github.io/agent-config/getting-started/installation/)
 
 ## Prove it
 
 Every measured figure in this README carries a marker that points at a recorded, re-runnable piece of evidence. The build fails when one stops resolving. The proof page lists each claim with its evidence, including the runs where the package changed nothing, plus commands you run yourself on a fresh checkout. [Verify it yourself →](https://event4u-app.github.io/agent-config/proof/)
+
+![A real run of the proof page: every "verify it yourself" command passing](docs/media/proof-demo.gif)
 
 ## Contribute
 
@@ -161,19 +167,17 @@ Agent Config is a set of skills, agent rules, slash commands and guidelines that
 
 It is not an agent. Your AI agent still runs the loop, calls the LLM and uses its own tools; the package changes what that agent is told to do. It does not lock you to a model or a vendor.
 
-[Introduction →](https://event4u-app.github.io/agent-config/getting-started/introduction/)
-
 ## What's inside
 
 [![Skills](https://img.shields.io/badge/Skills-301-orange?style=flat-square)](https://github.com/event4u-app/agent-config/tree/main/dist/agent-src/skills) [![Rules](https://img.shields.io/badge/Rules-122-orange?style=flat-square)](https://github.com/event4u-app/agent-config/tree/main/dist/agent-src/rules) [![Commands](https://img.shields.io/badge/Commands-213-orange?style=flat-square)](https://github.com/event4u-app/agent-config/tree/main/dist/agent-src/commands) [![Guidelines](https://img.shields.io/badge/Guidelines-121-orange?style=flat-square)](https://github.com/event4u-app/agent-config/tree/main/docs/guidelines) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](https://github.com/event4u-app/agent-config/tree/main/dist/agent-src/personas) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](https://github.com/event4u-app/agent-config/tree/main/dist/agent-src/personas/advisors) <!-- claim:published-artifact-counts -->
 
-<sub>**How these are counted** — one counter, `update_counts --check`, re-derives all six from the tree and fails the build when one is off by one. **Commands 213** counts every command file recursively (the linked directory holds 63 at its top level) and **Rules 122** counts the source rules, while the linked projection holds 121 because one rule is dormant. **Personas 29** leaves out the directory README. These are counts of files: none of them measures quality or adoption. <!-- claim:published-artifact-counts --></sub>
+<sub>**How these are counted** — one counter, `update_counts --check`, re-derives all six from the tree and fails the build when one is off by one. **Commands 213** counts every command file, including the ones in subfolders; all 213 are listed in the Commands section of the [catalog page](https://event4u-app.github.io/agent-config/catalog/). **Rules 122** counts the source rules, while the linked folder holds 121 because one rule is switched off and not shipped. **Personas 29** leaves out the directory README. These are counts of files: none of them measures quality or adoption. <!-- claim:published-artifact-counts --></sub>
 
 You do not get all of it at once. On tools without a way to hide skills, a new install ships a smaller set chosen for your role; Claude Code and Codex get every skill and show them as needed. <!-- claim:default-install-context-cost --> [Browse the catalog →](https://event4u-app.github.io/agent-config/catalog/)
 
 ## Customize
 
-- **How cautious the agent is.** `--profile minimal | balanced | full` at install decides how many rules load on every task; `balanced` is the default and `full` costs the most tokens.
+- **Rule level.** `--profile minimal | balanced | full` at install sets the rule level: how many rules load on every task. It is separate from the role profile above; `balanced` is the default and `full` costs the most tokens.
 - **Your own changes.** Put them in `agents/overrides/` in your repository instead of editing the installed files.
 - **Settings.** `agent-config config` opens the settings screen with search and reset.
 - **Skill sets for your role.** Add a set of skills for another domain without switching profile.
@@ -182,7 +186,13 @@ You do not get all of it at once. On tools without a way to hide skills, a new i
 
 ## Supported tools
 
-`init` detects 23 AI coding tools and works with 20 of them: 18 get their own format written into their user-level folder, GitHub Copilot gets a discovery plugin and Claude Desktop an uploaded bundle. Aider, Zed and JetBrains are export-only: you add the exported file to their config yourself. <!-- claim:host-agent-count -->
+`init` detects 23 AI coding tools and works with 20 of them. What a tool gets depends on its tier: <!-- claim:host-agent-count -->
+
+- **18 tools** get their own format written into their user-level folder. Which of rules, skills and commands each one reads is in the table below. Only Claude Code can block a turn; on the others the rules are instructions. <!-- claim:conformance-advisory-vs-blocking -->
+- **Codex CLI** is one of those 18 but reads skills only.
+- **GitHub Copilot** gets a discovery plugin: a read-only MCP server that points to the install.
+- **Claude Desktop** gets skill ZIPs that you upload yourself under Settings → Customize → Skills.
+- **Aider, Zed and JetBrains** are export-only: you add the exported file to their config yourself.
 
 | Tool | Rules | Skills | Commands | How it works |
 |---|---|---|---|---|
@@ -197,9 +207,9 @@ You do not get all of it at once. On tools without a way to hide skills, a new i
 | **Continue.dev** | ✅ | — | ☑️ | Auto-discovers `.continue/rules/*.md` + AGENTS.md |
 | **Aider** | 📌 | — | — | Export-only: add the file to `read:` in `.aider.conf.yml` |
 | **Augment** (VSCode/IntelliJ) | 📌 | — | — | Global-only; project writes marker |
-| **Claude Desktop** | 📌 | — | — | Global-only |
+| **Claude Desktop** | — | 📦 | 📦 | Skill ZIPs (commands bundled as skills) that you upload yourself under Settings → Customize → Skills |
 
-✅ native &nbsp; ☑️ text reference (in AGENTS.md, not a native slash command) &nbsp; 📌 marker or export only &nbsp; — not available
+✅ native &nbsp; ☑️ text reference (in AGENTS.md, not a native slash command) &nbsp; 📌 marker or export only &nbsp; 📦 ZIP you upload yourself &nbsp; — not available
 
 **Plugins.** Augment CLI can also install it as a plugin with rules, skills and commands. GitHub Copilot gets a discovery-only plugin: a read-only MCP server and a skill that points to the install, with no hooks. For per-project Copilot instructions run `agent-config export --tool=copilot-instructions --output=.github/copilot-instructions.md`. The Claude Code marketplace plugin is deprecated because the npm install already carries the content and the hooks; `agent-config doctor` flags a leftover plugin.
 

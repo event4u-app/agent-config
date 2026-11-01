@@ -314,10 +314,12 @@ export const TARGETS: ReadonlyArray<[string, ReadonlyArray<[string, string]>]> =
             // hand-typed number fails: silently, and only on some of them.
             // Gated rather than deleted (D1): the sentence answers a real
             // reader question about why the badge and the directory differ.
+            // The top-level command figure left the sub-note on 2026-11-01: the
+            // note now names the catalog page that lists every command instead of
+            // the directory's own listing, so its pattern left with the figure.
             ['(\\*\\*Commands )(\\d+)(\\*\\* counts every command file)', 'commands_active'],
-            ['(holds )(\\d+)( at its top level)', 'commands_toplevel'],
             ['(\\*\\*Rules )(\\d+)(\\*\\* counts the)', 'rules'],
-            ['(projection holds )(\\d+)()', 'rules_projected'],
+            ['(linked folder holds )(\\d+)()', 'rules_projected'],
         ],
     ],
     [
