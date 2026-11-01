@@ -222,29 +222,29 @@ Phase 8.
 
 ## Phase 3 — Message and copy foundation
 
-- [ ] **3.1 Message house.** A maintainer doc (`docs/maintainers/message-house.md`)
+- [x] **3.1 Message house.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> A maintainer doc (`docs/maintainers/message-house.md`)
       with three personas (solo developer, mixed-tool tech lead, non-engineer
       profile user) and their install fear, the 0.3 one-liner, three pillars
       — checks its work, every tool you use, focused and leaves cleanly — each
       bound to a `backed` CLAIMS id, and the honest trade-offs (token cost,
       blocking only on Claude Code). Draft in Appendix A. verify: every
       capability sentence carries a CLAIMS id whose status is `backed`.
-- [ ] **3.2 One before/after, reused.** The narrated scenario grounded in the
+- [x] **3.2 One before/after, reused.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> The narrated scenario grounded in the
       `wedge-hollow-detection` claim: before, the agent says "done" on a stub;
       after, `production-validator` answers NOT READY with file and line. Told
       as a scenario, never as invented terminal output, with the Claude-only
       turn-end block stated as such. Used verbatim on README, landing and
       Introduction.
-- [ ] **3.3 Plain vocabulary.** A docs-voice guide listing the words user copy
+- [x] **3.3 Plain vocabulary.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> A docs-voice guide listing the words user copy
       avoids and their replacements (governed, projection, kernel, wedge,
       judges, council, Iron Law, ADR numbers), the sentence rules (one-sentence
       lead, code first, no serial comma in README), and where jargon is allowed
       (Reference, Maintainers). verify: `./scripts-run src/scripts/lint_readme_jargon` -> 0
-- [ ] **3.4 Day-one commands.** The five commands a newcomer needs, verified
+- [x] **3.4 Day-one commands.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> The five commands a newcomer needs, verified
       against the command registry visibility (`visible`/`advanced`): `/work`,
       `/implement-ticket`, `/review-changes`, `/commit`, and
       `agent-config doctor`. Each with one sentence of what it does for them.
-- [ ] **3.5 The two honest answers.** "Why not a short CLAUDE.md?" answered
+- [x] **3.5 The two honest answers.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> "Why not a short CLAUDE.md?" answered
       from the benchmark row where kernel plus one rule kept most of the lift at
       3.3×, plus what the router and hooks add beyond a static file; "What does
       it cost?" answered per profile from `docs/benchmark.md` with the Haiku
@@ -256,27 +256,27 @@ Phase 8.
 Docs cannot fix a confusing first five minutes; this phase lands before the
 pages that describe the CLI. Each step ships with a test that was red first.
 
-- [ ] **4.1 Help grouped by task.** Default `agent-config --help` groups
+- [x] **4.1 Help grouped by task.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/help.ts --> Default `agent-config --help` groups
       commands by what a user wants (Get started, Daily use, Inspect, Configure,
       Maintain), shows at most 60 lines, keeps internals under `help
       --tier=all`, and drops ADR numbers and implementation labels from
       descriptions. verify: a snapshot test of the default help.
-- [ ] **4.2 `init --help` is about `init`.** It prints `agent-config init`
+- [x] **4.2 `init --help` is about `init`.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/help.ts --> It prints `agent-config init`
       usage and the flags a user passes, not `bash scripts/install`. verify:
       snapshot test.
-- [ ] **4.3 Dry run says what it would do.** `init --dry-run` honours
+- [x] **4.3 Dry run says what it would do.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/help.ts --> `init --dry-run` honours
       `--offline`, lists the files it would write per tool, prints lowercase
       booleans and never suggests a repo-internal path. verify: test on a temp
       HOME asserts the listed paths and that nothing was written.
-- [ ] **4.4 `doctor` before install.** On a machine with no install it reports
+- [x] **4.4 `doctor` before install.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/help.ts --> On a machine with no install it reports
       one neutral "not installed — run agent-config init" state without red
       checks, and in its default mode writes no files and starts no other
       vendors' CLIs, or its help stops calling it read-only. verify: a
       filesystem diff of a temp HOME and project before and after.
-- [ ] **4.5 Small honesty fixes.** `first-run --help` prints help; the
+- [x] **4.5 Small honesty fixes.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/help.ts --> `first-run --help` prints help; the
       unknown-command hint names `agent-config help`; `doctor --help` and
       `code-graph --help` describe their flags and verbs.
-- [ ] **4.6 One line for legacy keys.** Removed-key warnings collapse into one
+- [x] **4.6 One line for legacy keys.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/help.ts --> Removed-key warnings collapse into one
       summary line with the command that cleans them, instead of ~45 lines on
       every invocation. verify: test with a legacy settings fixture.
 
