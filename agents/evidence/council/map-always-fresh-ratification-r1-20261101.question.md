@@ -31,66 +31,11 @@ Verified locally: unit tests for the throttle (same HEAD skips and keeps the rec
 
 End with exactly one verdict line: `VERDICT: ratified`, `VERDICT: confirmed-non-expanding`, or `VERDICT: refused — <reason>`.
 
-## The diff (`git diff origin/main...feat/map-always-fresh`, complete except the compiled `src/scripts/hook_manifest.json`, a single-line projection of the YAML that `check_generator_sync` verifies byte-for-byte)
+## The diff (`git diff origin/main...feat/map-always-fresh`)
+
+Complete for the three gated files and every file the hook or the consent path runs. Left out to fit the council bundle ceiling, and named here so the omission is visible: the compiled `src/scripts/hook_manifest.json` (a single-line projection of the YAML that `check_generator_sync` verifies byte-for-byte), the two lane readers and their test (`src/scripts/code_graph/lanes/{interfaces/index.ts,data/read_data.ts}`, `tests/scripts/code_graph_reader_precision.test.ts` — item 4, which narrows what a lane reads and runs in no hook), and the roadmap files.
 
 ```diff
-diff --git a/agents/roadmaps-owned.md b/agents/roadmaps-owned.md
-index 5041f91c7a..4e86bd53e4 100644
---- a/agents/roadmaps-owned.md
-+++ b/agents/roadmaps-owned.md
-@@ -36,6 +36,7 @@ and keep the full search — this file only adds candidates to it.
- | road-to-a-ranker-whose-ties-break-on-signal | later | later | When two skills score the same, the order between them comes from something the ranker measured, not from their names … |
- | road-to-a-release-record-that-says-what-it-reviewed-carried | later | later | Every step road-to-a-release-record-that-says-what-it-reviewed deferred is either done here or explicitly disposed of — a step that still cannot run is … |
- | road-to-a-retro-the-merge-runs | later | later | After every merged pull request, and on the first session of every new day, the package examines finished work that … |
-+| road-to-a-reverified-youtube-channel | later | later | Road to a re-verified youtube channel |
- | road-to-a-review-that-ends | later | later | A completion review runs at most N rounds, N set by the owner — round 1 over the scope, each … |
- | road-to-a-run-that-knows-its-skills | later | later | A run — a command, a `/work` run, or a roadmap lane — determines its base skills once at its … |
- | road-to-a-runnable-share-ratchet | later | later | A shrink-only bound on the share of `verify:` clauses that can actually fail. |
-diff --git a/agents/roadmaps/later/road-to-a-reverified-youtube-channel.md b/agents/roadmaps/later/road-to-a-reverified-youtube-channel.md
-new file mode 100644
-index 0000000000..47900e4e01
---- /dev/null
-+++ b/agents/roadmaps/later/road-to-a-reverified-youtube-channel.md
-@@ -0,0 +1,39 @@
-+---
-+complexity: lightweight
-+status: later
-+estate_growth_exempt: "Fix-what-you-see disposition (feat/map-always-fresh, 2026-11-01): `check-reach-staleness` went red on the wall clock, not on that branch's diff, and the fix needs `yt-dlp` installed, which the agent may not do silently. +1 later_roadmaps; no active roadmap is added."
-+estate_offset_exempt: "rg -F 'reach-channels' and 'last_verified' over agents/roadmaps found no roadmap owning the reach channel verification dates, so nothing absorbs this item. Parking it in later/ rather than active keeps the active estate unchanged."
-+review_by: 2026-11-15
-+entry_condition:
-+  what: "yt-dlp installed on a maintainer machine (pipx install yt-dlp==2026.7.4)"
-+  when: "before the next PR that must pass `task ci` on the wall clock"
-+  who: owner
-+---
-+# Road to a re-verified youtube channel
-+
-+> Observed during `feat/map-always-fresh` (2026-11-01), `task ci`
-+> step `check-reach-staleness`.
-+
-+## Defect
-+
-+`src/config/reach-channels.yml` → `channels[youtube].last_verified` is
-+`2026-07-24`, 100 days old on 2026-11-01, over the 90-day floor. The gate reads
-+the wall clock, so it is red on `main` and on every branch, regardless of diff.
-+
-+## Evidence
-+
-+```
-+❌  src/config/reach-channels.yml: 1 staleness violation(s):
-+  - [stale-verification] channels[youtube]: `last_verified` is 100 days old (2026-07-24), over the 90-day floor
-+```
-+
-+`./agent-config reach:doctor --deep` on the observing machine:
-+`'yt-dlp' does not resolve on PATH` — the channel cannot be re-verified there,
-+and bumping the date without a run would be a fabricated verification.
-+
-+## Closes when
-+
-+- [ ] `yt-dlp` installed per the channel's pinned prescription
-+- [ ] `./agent-config reach:doctor --deep` reports the youtube channel ready
-+- [ ] `last_verified` updated to the run date — or the channel retired
-+- [ ] `task check-reach-staleness` green without `AC_AS_OF`
 diff --git a/docs/contracts/agents-layout.md b/docs/contracts/agents-layout.md
 index 7d414f5e0f..c6a7a0cc89 100644
 --- a/docs/contracts/agents-layout.md
@@ -361,92 +306,6 @@ index 4721d924aa..699ab0315d 100644
          legacyDir,
          repoId: id,
          instance: inst,
-diff --git a/src/scripts/code_graph/lanes/data/read_data.ts b/src/scripts/code_graph/lanes/data/read_data.ts
-index 8b2fa76f10..e5b1c70adf 100644
---- a/src/scripts/code_graph/lanes/data/read_data.ts
-+++ b/src/scripts/code_graph/lanes/data/read_data.ts
-@@ -34,6 +34,7 @@
- import * as fs from 'node:fs';
- import * as path from 'node:path';
- 
-+import { gitVisibleFiles, type GitVisible, visibleDir } from '../../../_lib/git_visible_files.js';
- import { laravelEngines } from '../../../_lib/schema/readers/laravel_migrations.js';
- import { readSqlSchema } from '../../../_lib/schema/readers/sql_ddl.js';
- import { type Engine, replay } from '../../../_lib/schema/replay.js';
-@@ -73,9 +74,11 @@ function posix(rel: string): string {
-     return rel.split(path.sep).join('/');
- }
- 
-+/** `.sql` files git would show: a gitignored dump is local data, never a fact for the map. */
- function sqlFiles(root: string, cap = 5000): string[] {
-     const out: string[] = [];
--    const walk = (dir: string): void => {
-+    const visible = gitVisibleFiles(root);
-+    const walk = (dir: string, v: GitVisible | null): void => {
-         if (out.length >= cap) return;
-         let entries: fs.Dirent[];
-         try {
-@@ -84,12 +87,15 @@ function sqlFiles(root: string, cap = 5000): string[] {
-             return;
-         }
-         for (const e of entries) {
-+            const rel = posix(path.relative(root, path.join(dir, e.name)));
-             if (e.isDirectory()) {
--                if (!SKIP_DIRS.has(e.name)) walk(path.join(dir, e.name));
--            } else if (e.isFile() && e.name.toLowerCase().endsWith('.sql')) out.push(posix(path.relative(root, path.join(dir, e.name))));
-+                if (SKIP_DIRS.has(e.name)) continue;
-+                const verdict = v ? visibleDir(v, rel) : 'all';
-+                if (verdict !== 'skip') walk(path.join(dir, e.name), verdict === 'all' ? null : v);
-+            } else if (e.isFile() && e.name.toLowerCase().endsWith('.sql') && (!v || v.files.has(rel))) out.push(rel);
-         }
-     };
--    walk(root);
-+    walk(root, visible);
-     return out.sort();
- }
- 
-diff --git a/src/scripts/code_graph/lanes/interfaces/index.ts b/src/scripts/code_graph/lanes/interfaces/index.ts
-index 409d9f6e8d..7317aeb2d5 100644
---- a/src/scripts/code_graph/lanes/interfaces/index.ts
-+++ b/src/scripts/code_graph/lanes/interfaces/index.ts
-@@ -9,6 +9,7 @@
-  */
- import fs from 'node:fs';
- import path from 'node:path';
-+import { gitVisibleFiles, type GitVisible, visibleDir } from '../../../_lib/git_visible_files.js';
- import { parseCompose } from '../../../_lib/infra_files/compose.js';
- import { isComposeName } from '../../../_lib/infra_files/walk.js';
- import { isDocOrExamplePath, isFixturePath } from '../../scope.js';
-@@ -55,7 +56,13 @@ const SKIP_DIRS = new Set([
- const DEFAULT_MAX_BYTES = 1024 * 1024;
- const TEST_PATH = /(?:^|\/)(?:tests?|__tests__|spec|specs)\/|\.(?:test|spec)\.[a-z]+$|_test\.go$|Tests?\.(?:java|cs|php)$/;
- 
--function walk(root: string, rel = '', out: string[] = []): string[] {
-+/**
-+ * Files under `root`, minus what `.gitignore` excludes: build output such as a
-+ * gitignored `dist-test/` otherwise reached the map as interface calls whose
-+ * source the graph (which honours `.gitignore`) never held.
-+ */
-+function walk(root: string, rel = '', out: string[] = [], visible: GitVisible | null | undefined = undefined): string[] {
-+    const v = visible === undefined ? gitVisibleFiles(root) : visible;
-     let entries: fs.Dirent[];
-     try {
-         entries = fs.readdirSync(path.join(root, rel), { withFileTypes: true });
-@@ -65,9 +72,11 @@ function walk(root: string, rel = '', out: string[] = []): string[] {
-     for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
-         const r = rel ? `${rel}/${e.name}` : e.name;
-         if (e.isDirectory()) {
--            if (SKIP_DIRS.has(e.name) || r === 'agents/runtime' || r === 'storage/framework') continue;
--            walk(root, r, out);
--        } else if (e.isFile()) out.push(r);
-+            if (SKIP_DIRS.has(e.name) || r === 'agents/runtime' || r === 'agents/map' || r === 'storage/framework') continue;
-+            const verdict = v ? visibleDir(v, r) : 'all';
-+            if (verdict === 'skip') continue;
-+            walk(root, r, out, verdict === 'all' ? null : v);
-+        } else if (e.isFile() && (!v || v.files.has(r))) out.push(r);
-     }
-     return out;
- }
 diff --git a/src/scripts/code_graph/refresh_lock.ts b/src/scripts/code_graph/refresh_lock.ts
 index aa29103183..2059e142ea 100644
 --- a/src/scripts/code_graph/refresh_lock.ts
@@ -647,43 +506,6 @@ index 5fe10f82bd..0f3a224a12 100644
          return outcome;
      };
      if (!fs.existsSync(home.cachePath)) return done('no-cache');
-diff --git a/tests/scripts/code_graph_reader_precision.test.ts b/tests/scripts/code_graph_reader_precision.test.ts
-index a2d77a9c0f..3c793fa843 100644
---- a/tests/scripts/code_graph_reader_precision.test.ts
-+++ b/tests/scripts/code_graph_reader_precision.test.ts
-@@ -1,4 +1,5 @@
- import * as fs from 'node:fs';
-+import { execFileSync } from 'node:child_process';
- import * as os from 'node:os';
- import * as path from 'node:path';
- import { afterAll, describe, expect, it } from 'vitest';
-@@ -279,3 +280,26 @@ describe('delivery DL-4: a deploy word in a name is outweighed by a checking wor
-         expect(dl4(root)).toEqual([]);
-     });
- });
-+
-+describe('interfaces: a gitignored build output is not read (agent-switch map, 2026-11-01)', () => {
-+    it('reads the tracked client and never the ignored dist-test copy of it', () => {
-+        const root = tree({
-+            '.gitignore': 'dist-test/\n',
-+            'src/api.ts': "export const a = () => fetch('https://api.real-upstream.example.org/v1/profile');\n",
-+            'dist-test/src/api.js': "export const a = () => fetch('https://api.only-in-build-output.example.org/v1/profile');\n",
-+        });
-+        execFileSync('git', ['-C', root, 'init', '-q']);
-+        const services = readInterfaces(root)
-+            .facts.filter((f) => f.kind === 'service')
-+            .map((f) => f.name);
-+        expect(services).toEqual(['api.real-upstream.example.org']);
-+    });
-+
-+    it('still reads every file where git cannot answer (no repository)', () => {
-+        const root = tree({
-+            '.gitignore': 'dist-test/\n',
-+            'dist-test/src/api.js': "export const a = () => fetch('https://api.only-in-build-output.example.org/v1/profile');\n",
-+        });
-+        expect(readInterfaces(root).facts.filter((f) => f.kind === 'service').map((f) => f.name)).toEqual(['api.only-in-build-output.example.org']);
-+    });
-+});
 diff --git a/tests/scripts/code_graph_refresh.test.ts b/tests/scripts/code_graph_refresh.test.ts
 index 9ffb379888..4bd29ff7eb 100644
 --- a/tests/scripts/code_graph_refresh.test.ts
