@@ -498,7 +498,6 @@ function* _iter_knowledge_entries(): Generator<[string, Record<string, unknown>]
         return;
     }
     for (const ingest_dir of _iterdirSorted(KNOWLEDGE_ROOT)) {
-        // `<id>.partial/` is an ingest still being written (or aborted).
         if (!_isDir(ingest_dir) || ingest_dir.endsWith('.partial')) {
             continue;
         }

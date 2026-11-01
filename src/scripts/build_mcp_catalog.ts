@@ -40,7 +40,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { ALLOWLIST, type ToolAnnotations, type ToolSideEffect, tool_annotations } from './mcp_server/tools.js';
+import { type ToolAnnotations, tool_annotations } from './mcp_server/annotations.js';
+import { ALLOWLIST, type ToolSideEffect } from './mcp_server/tools.js';
 import { CATALOG_DESCRIPTION, STUB_TOOLS } from './mcp_server/tool_catalog_source.js';
 
 const _HERE = fileURLToPath(import.meta.url);

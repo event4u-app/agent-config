@@ -63,8 +63,6 @@ import { type Outcome, record_call } from './telemetry.js';
 import type { PromptCache } from './prompts.js';
 import type { ResourceCache } from './resources.js';
 
-export { tool_annotations, type ToolAnnotations, type ToolEffectShape } from './annotations.js';
-
 // Stable transport tag for the stub envelope. Mirrored verbatim by
 // `internal/workers/mcp/src/stubs.ts` with `"worker"`.
 export const STDIO_TRANSPORT = 'stdio';
@@ -116,7 +114,6 @@ export interface BuiltinTool {
     readonly input_schema: Record<string, unknown>;
     readonly side_effect: ToolSideEffect;
     readonly effect_shape?: ToolEffectShape;
-    /** True when the tool can reach beyond the local machine (network, external services). */
     readonly open_world?: boolean;
     /** One line justifying `effect_shape` / `open_world`; required wherever either is set. */
     readonly effect_reason?: string;

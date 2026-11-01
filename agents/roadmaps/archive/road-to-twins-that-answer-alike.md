@@ -43,7 +43,8 @@ carry all four annotation hints, and swallowed input is counted.
 |---|---|---|---|---|
 | E1 | Revive or retire the local `/knowledge` cluster? | **Revive under its own verb `knowledge:local`.** Retiring removes a documented surface (owner-reserved); reviving is additive and makes the existing guide and recipe true. | agent (reversible, additive) | measured zero use over two releases |
 | E2 | Merge the twins or keep parallel copies? | **Dispatcher-level unification first:** `memory:lookup` / `memory:status` resolve a consumer override in `scripts/`, else the package's canonical `src/scripts/` file — the one MCP imports. Template copies stay for consumers that copy scripts; a parity ratchet pins every remaining byte divergence. | agent | a consumer reports a `.augment/templates/scripts` override they rely on |
-| E3 | A truncated answer in quorum? | Counts as `incomplete` (abstention), visible in the record. | agent | — |
+| E3 | A truncated answer in quorum? | Counts as `incomplete` (abstention), visible in the record. | agent (findings, consensus, quorum) | — |
+| E7 | Does a truncated stance abstain in the stance tally? | **Open — owner.** `stance_tally.ts` is a ratification-gated verdict rule; a change needs a ratification artifact under `agents/evidence/ratifications/`. Recommendation: abstain (counts in `w_total`, backs nothing), the fail-safe already applied to unparseable stances. | owner | — |
 | E4 | Does the page hash stay a red trigger? | No. Red only on a claimed token that is absent; the digest stays as evidence. | agent | a real host change slips through with all claimed tokens present |
 | E5 | `run_tests` open-world? | Stays `openWorldHint: true` until the runner is proven offline. | agent | — |
 | E6 | Own stem or fold? | Own stem; no active roadmap owns these surfaces. | agent | — |
@@ -130,7 +131,7 @@ carry all four annotation hints, and swallowed input is counted.
 | D2 | fixed | `knowledge:local` verb; sub-command level in `lint_documented_commands` (proven red on the unfixed tree) |
 | D3 | named | `workspace_analytics.ts` declared maintainer-only in `tests/scripts/dispatch_targets_shipped.test.ts` |
 | D4 | fixed | `<id>.partial/` staging in `knowledge_ingest.ts` |
-| D5 | fixed | `ai_council/stop_class.ts`; truncated answers abstain in tally, findings parse, consensus round and quorum |
+| D5 | fixed, one part with the owner | `ai_council/stop_class.ts`; a truncated answer parses as `truncated` in findings, is recorded without extraction or re-ask in the consensus round, and counts as absent for quorum. The stance tally (`stance_tally.ts`) is the verdict rule ADR-268 reserves to the owner, so whether a truncated stance abstains there is decision E7 |
 | D6 | fixed | claimed-token classification in `check_host_docs_digest.ts`; a live run found `windsurf/any` ABSENT — its row needs a by-hand re-read, which the watcher's own issue routing carries |
 | D7 | fixed | `mcp_server/annotations.ts`; catalog pins four hints. The `tools/list` payload band in `mcp_lite_tools.test.ts` rose ~4,900 → ~5,390 tokens (~17 per tool): a dropped hint brings back the wrong spec default, so the cost was taken over trimming descriptions |
 | D8 | fixed | `skipped_malformed` / `skipped_unreadable` in both twins |

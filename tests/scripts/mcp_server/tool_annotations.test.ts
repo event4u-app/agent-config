@@ -8,12 +8,8 @@ import { describe, expect, it } from 'vitest';
 
 import { _buildEntries, CATALOG_PATH } from '../../../src/scripts/build_mcp_catalog.js';
 import { build_server } from '../../../src/scripts/mcp_server/server.js';
-import {
-    ALLOWLIST,
-    type BuiltinTool,
-    ToolCache,
-    tool_annotations,
-} from '../../../src/scripts/mcp_server/tools.js';
+import { tool_annotations } from '../../../src/scripts/mcp_server/annotations.js';
+import { ALLOWLIST, type BuiltinTool, ToolCache } from '../../../src/scripts/mcp_server/tools.js';
 
 const HINTS = ['destructiveHint', 'idempotentHint', 'openWorldHint', 'readOnlyHint'];
 const ADDITIVE = ['chat_history_append', 'memory_signal'];
