@@ -469,6 +469,9 @@ describe('block_no_verify — exec wrappers and config-env forms', () => {
         // Council round 5 (openai): a shell-looking operand must not mask git.
         'stdbuf --output L git commit --no-verify sh -c HEAD',
         'nohup git commit --no-verify eval x',
+        // Council round 6 (openai): env -S keeps the argument boundaries after it.
+        "env -S 'sh -c' 'git commit --no-verify'",
+        "env -S 'bash -lc' 'git commit -m x --no-verify'",
     ];
     for (const cmd of BYPASSED) {
         it(`blocks: ${cmd}`, () => {
@@ -495,6 +498,7 @@ describe('block_no_verify — exec wrappers and config-env forms', () => {
         'env command -v git commit --no-verify',
         "env -S 'FOO=1' npm test",
         "stdbuf --output L sh -c 'git status'",
+        "env -S 'sh -c' 'git status'",
     ];
     for (const cmd of ALLOWED) {
         it(`allows: ${cmd}`, () => {
@@ -519,6 +523,9 @@ describe('block_no_verify — stacked wrappers', () => {
 describe('block_no_verify — after a wrapper, an unresolved head is fail-closed', () => {
     it('refuses git as a wrapped echo operand (the named false refusal)', () => {
         expect(_check_command('timeout 5 echo git commit --no-verify')[0]).toBe(true);
+    });
+    it('refuses an interpreter-shaped operand of a wrapped command (the second named false refusal)', () => {
+        expect(_check_command("env printf '%s\\n' sh -c 'git commit --no-verify'")[0]).toBe(true);
     });
     it('still allows a wrapped command with no git token, and a bare echo', () => {
         expect(_check_command('timeout 5 echo commit --no-verify')[0]).toBe(false);

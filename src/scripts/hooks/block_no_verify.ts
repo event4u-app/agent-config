@@ -373,6 +373,10 @@ export function _unwrap(tokens: string[]): {
     return { start: i, hookspathEnv, wrapped, lookup: false, splitString };
 }
 
+function _sh_quote(token: string): string {
+    return `'${token.replace(/'/g, `'\\''`)}'`;
+}
+
 function _payload_at(tokens: string[], at: number): string | null {
     const head = _basename(tokens[at] ?? '');
     if (head === 'eval') {
@@ -395,7 +399,10 @@ function _payload_at(tokens: string[], at: number): string | null {
  */
 export function _shell_payload(tokens: string[]): string | null {
     const { start, splitString, wrapped, lookup } = _unwrap(tokens);
-    if (splitString !== null) return [splitString, ...tokens.slice(start)].join(' ');
+    // `env -S` splits only its own string; the arguments after it keep their
+    // boundaries, so they are re-quoted before the payload is parsed again
+    // (council round 6: `env -S 'sh -c' 'git commit --no-verify'`).
+    if (splitString !== null) return [splitString, ...tokens.slice(start).map(_sh_quote)].join(' ');
     const direct = _payload_at(tokens, start);
     if (direct !== null || !wrapped || lookup || _basename(tokens[start] ?? '') === 'git') return direct;
     for (let k = start + 1; k < tokens.length; k += 1) {
