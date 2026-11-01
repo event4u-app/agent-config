@@ -6,8 +6,11 @@
  * same bytes and two branches touching different areas do not collide.
  */
 import type { MapAreas } from './map_areas.js';
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+
+import { write_atomic } from '../_lib/fs_atomic.js';
 
 import type { MapManifest, MapMeta } from './map.js';
 import type { MapModel } from './map_model.js';
@@ -77,4 +80,42 @@ export function withManifest(meta: MapMeta, man: Partial<MapManifest> | null): M
         ...(built ? { built } : {}),
         ...(generation ? { graph_generation: generation } : {}),
     };
+}
+
+/**
+ * The committed bytes `index.html` is rendered from: `code/map.json` and the
+ * manifest. The page itself is local (gitignored); `.build/viewer.json` records
+ * this digest for the copy on disk, so a pull that changes the data re-renders it.
+ */
+export function viewerSource(dir: string): string | null {
+    try {
+        const h = createHash('sha256');
+        h.update(fs.readFileSync(path.join(dir, 'code', 'map.json')));
+        h.update('\0');
+        h.update(fs.readFileSync(path.join(dir, 'manifest.json')));
+        return h.digest('hex');
+    } catch {
+        return null;
+    }
+}
+
+const viewerStampPath = (dir: string): string => path.join(dir, '.build', 'viewer.json');
+
+/** Whether `index.html` was rendered from the committed data as it stands. */
+export function viewerIsCurrent(dir: string): boolean {
+    const source = viewerSource(dir);
+    if (source === null || !fs.existsSync(path.join(dir, 'index.html'))) return false;
+    try {
+        return (JSON.parse(fs.readFileSync(viewerStampPath(dir), 'utf-8')) as { source?: unknown }).source === source;
+    } catch {
+        return false;
+    }
+}
+
+/** Record that `index.html` now matches the committed data. */
+export function stampViewer(dir: string): void {
+    const source = viewerSource(dir);
+    if (source === null) return;
+    fs.mkdirSync(path.dirname(viewerStampPath(dir)), { recursive: true });
+    write_atomic(viewerStampPath(dir), `${JSON.stringify({ source })}\n`);
 }

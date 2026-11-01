@@ -24,6 +24,7 @@ import { openEstate, type XEdge } from './estate_index.js';
 import { graphHome, hasProjectHome, hubDir } from './graph_home.js';
 import { type HubFacts, hubFacts, type HubProjectInput, type HubReaders, DEFAULT_READERS } from './hub_facts.js';
 import { AREA_FOLDERS, hasMap, type MapMeta, type MapShell, renderPage, swapIn } from './map.js';
+import { viewerFromStored } from './map_viewer_file.js';
 import { buildMapModel } from './map_model.js';
 import { verifyMap } from './map_verify.js';
 import { SCHEMA_VERSION, type CodeGraph } from './types.js';
@@ -87,7 +88,7 @@ function pageOf(id: string, e: ProjectEntry, out: string, mirrors: Map<string, s
     if (!fs.existsSync(e.root)) return { page: null, pageReason: 'the project root is gone' };
     if (hasProjectHome(e.root)) {
         const mapDir = graphHome(e.root).mapDir;
-        if (!hasMap(mapDir) || !fs.existsSync(path.join(mapDir, 'index.html'))) return { page: null, pageReason: 'no map drawn yet — `code-graph map` in the project' };
+        if (!hasMap(mapDir)) return { page: null, pageReason: 'no map drawn yet — `code-graph map` in the project' };
         mirrors.set(id, mapDir);
         return { page: `${id}/index.html` };
     }
@@ -194,6 +195,12 @@ export function writeHub(out: string, plan: Plan, demo = false): string {
             for (const entry of MIRRORED) {
                 const from = path.join(mapDir, entry);
                 if (fs.existsSync(from)) fs.cpSync(from, path.join(next, id, entry), { recursive: true });
+            }
+            // The project's page is local and may not be rendered there yet; the mirror renders its own.
+            const page = path.join(next, id, 'index.html');
+            if (!fs.existsSync(page)) {
+                const html = viewerFromStored(path.join(next, id));
+                if (html !== null) write_atomic(page, html);
             }
         }
         write('index.html', renderHub(plan.payload, out, demo));
