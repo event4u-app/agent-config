@@ -23,6 +23,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { withGitVisibleScopeAsync } from '../_lib/git_visible_files.js';
 import { write_atomic } from '../_lib/fs_atomic.js';
 import { gitProbe, hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { buildFromRepo, readProjectProbe } from './build.js';
@@ -396,7 +397,7 @@ export async function buildMap(
     if (release === null) throw new Error('another process holds the code-graph refresh lock');
     drawing = true;
     try {
-        return await drawGeneration(root, opts);
+        return await withGitVisibleScopeAsync(() => drawGeneration(root, opts));
     } finally {
         drawing = false;
         release();

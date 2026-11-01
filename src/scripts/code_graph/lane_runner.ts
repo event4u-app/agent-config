@@ -1,4 +1,5 @@
 /** Runs every lane reader over a tree and merges their facts into the graph. */
+import { withGitVisibleScope } from '../_lib/git_visible_files.js';
 import { gitProbe } from '../_lib/spawn_env.js';
 import { readData } from './lanes/data/read_data.js';
 import { readDecisions } from './lanes/decisions/decisions.js';
@@ -47,6 +48,14 @@ export function runLaneReaders(
     root: string,
     graph: CodeGraph,
     opts: { readers?: Partial<Record<LaneOutput['lane'], (root: string) => LaneOutput>> } = {},
+): { graph: CodeGraph; summary: LaneSummary } {
+    return withGitVisibleScope(() => runLanes(root, graph, opts));
+}
+
+function runLanes(
+    root: string,
+    graph: CodeGraph,
+    opts: { readers?: Partial<Record<LaneOutput['lane'], (root: string) => LaneOutput>> },
 ): { graph: CodeGraph; summary: LaneSummary } {
     const started = Date.now();
     const runs: LaneRun[] = [];
