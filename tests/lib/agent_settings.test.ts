@@ -1278,7 +1278,7 @@ describe('load_agent_settings — removed always-on-orchestration keys deprecati
             });
             expect(spy).toHaveBeenCalledTimes(1);
             expect(String(spy.mock.calls[0]?.[0])).toBe(
-                'subagents.enabled was removed (always-on orchestration); ignored.\n',
+                '1 removed settings key is ignored (subagents.enabled) — see why and delete: agent-config settings:sync --prune-removed [--dry-run]\n',
             );
             spy.mockClear();
             ags.load_agent_settings({
@@ -1317,7 +1317,7 @@ describe('load_agent_settings — removed always-on-orchestration keys deprecati
             });
             expect(spy).toHaveBeenCalledTimes(1);
             expect(String(spy.mock.calls[0]?.[0])).toBe(
-                'ai_team.enabled was removed (always-on orchestration); ignored.\n',
+                '1 removed settings key is ignored (ai_team.enabled) — see why and delete: agent-config settings:sync --prune-removed [--dry-run]\n',
             );
         } finally {
             spy.mockRestore();

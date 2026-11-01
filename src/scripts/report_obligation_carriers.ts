@@ -163,7 +163,7 @@ export const EXCLUDED_CLASSES: readonly ExcludedClass[] = [
     {
         name: 'narrative documentation',
         reason:
-            'ONBOARDING.md, docs/architecture.md and docs/hook-payload-capture.md describe ' +
+            'docs/maintainers/ONBOARDING.md, docs/architecture.md and docs/hook-payload-capture.md describe ' +
             'the system for a reader rather than binding an agent. Withholds 3 files.',
     },
 ];

@@ -1282,7 +1282,10 @@ main() {
     if $is_first_run && ! $QUIET; then
         echo ""
         echo "✅  agent-config payload synced."
-        echo "    Run src/scripts/install (or ./scripts-run src/scripts/install) to render .agent-settings.yml and bridges."
+        # Under the orchestrator the bridge stage runs next on its own; the hint
+        # names a repository path and is only for a direct `bash install.sh` run.
+        [[ "${AGENT_CONFIG_FROM_ORCHESTRATOR:-0}" == "1" ]] || \
+            echo "    Run src/scripts/install (or ./scripts-run src/scripts/install) to render .agent-settings.yml and bridges."
         # step-9 P11 · U1 — airgap detection. Probe DNS for provider hosts;
         # on first-run with no reachable backend, surface the banner so the
         # installer caller can flip defaults.member_mode to `api`.

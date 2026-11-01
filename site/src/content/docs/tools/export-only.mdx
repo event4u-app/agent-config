@@ -1,0 +1,44 @@
+---
+title: Agent Config for Aider, Zed and JetBrains AI
+description: Aider, Zed and JetBrains AI have no folder the installer can write to — agent-config export writes a file you place yourself and point the tool at.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+These tools are export-only: `init` writes nothing for them. Install the package once, then export a file for the tool:
+
+```bash
+npx -y @event4u/agent-config init
+```
+
+<Tabs syncKey="tool">
+  <TabItem label="Aider">
+```bash
+agent-config export --tool=aider --output=agent-config.md
+```
+
+The note documents the wiring: point Aider at it with `--read agent-config.md`, or add it under `read:` in your Aider config.
+
+**Can it block?** No — instructions only. **Reload:** start Aider again.
+  </TabItem>
+  <TabItem label="Zed">
+```bash
+agent-config export --tool=zed --output=.zed/agent-config.md
+```
+
+Zed reads a `.rules` file at the project root as instructions; the exported note explains how to wire it.
+
+**Can it block?** No — instructions only. **Reload:** restart Zed; `.rules` is read on session start.
+  </TabItem>
+  <TabItem label="JetBrains AI">
+```bash
+agent-config export --tool=jetbrains --output=.jetbrains/agent-config.md
+```
+
+The note is written for JetBrains AI Assistant and explains how to make it read the content.
+
+**Can it block?** No — instructions only. **Reload:** reopen the AI Assistant chat.
+  </TabItem>
+</Tabs>
+
+`--output` is required. The exported file is a real file, not a link: re-export after `agent-config upgrade`, and decide yourself whether to commit it.

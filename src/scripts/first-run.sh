@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+case "${1:-}" in
+  -h|--help)
+    cat <<'EOF'
+Usage: agent-config first-run
+
+Prints a first-run checklist for the current project: whether
+.agent-settings.yml exists and which rule_loading_tier it sets, three
+prompts that show the rules working, and where the cost profiles are
+described. Read-only — it writes nothing and changes no setting.
+EOF
+    exit 0
+    ;;
+esac
+
 SETTINGS_FILE=".agent-settings.yml"
 LEGACY_SETTINGS_FILE=".agent-settings"
 

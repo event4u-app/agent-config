@@ -14,8 +14,14 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { buildSync } from 'esbuild';
+
+import { DEFAULT_TEMPLATE as GITATTRIBUTES_TEMPLATE } from '../../../src/scripts/sync_gitattributes.js';
+import { DEFAULT_TEMPLATE as GITIGNORE_TEMPLATE } from '../../../src/scripts/_lib/gitignore_block.js';
+import { template_path as wrapperTemplatePath } from '../../../src/scripts/_lib/cli_wrapper.js';
 
 const REPO_ROOT = process.cwd();
 
@@ -72,6 +78,23 @@ describe('npm files allowlist', () => {
         expect(isShipped(pointed, files)).toBe(true);
     });
 
+    // `init --project` (refresh --project) reads these templates at runtime from
+    // the installed package. Taken from the readers' own exported constants, so
+    // a moved template or a reader pointing outside `files` fails here instead
+    // of on a consumer's machine.
+    const runtimeTemplates: ReadonlyArray<readonly [string, string]> = [
+        ['sync_gitattributes DEFAULT_TEMPLATE', GITATTRIBUTES_TEMPLATE],
+        ['gitignore_block DEFAULT_TEMPLATE', GITIGNORE_TEMPLATE],
+        ['cli_wrapper template_path()', wrapperTemplatePath()],
+    ];
+    for (const [label, abs] of runtimeTemplates) {
+        it(`delivers the template ${label} reads at runtime`, () => {
+            const rel = path.relative(REPO_ROOT, abs).split(path.sep).join('/');
+            expect(fs.existsSync(abs), `${rel} missing from the repo`).toBe(true);
+            expect(isShipped(rel, files), `${rel} not covered by package.json files`).toBe(true);
+        });
+    }
+
     it('covers the example path the wizard seeds the council config from', () => {
         const wizard = fs.readFileSync(
             path.join(REPO_ROOT, 'src', 'server', 'routes', 'wizard.ts'),
@@ -86,5 +109,36 @@ describe('npm files allowlist', () => {
         const rel = segments.join('/');
         expect(fs.existsSync(path.join(REPO_ROOT, rel)), `${rel} missing`).toBe(true);
         expect(isShipped(rel, files), `${rel} not shipped — wizard seeding would fail`).toBe(true);
+    });
+});
+
+/**
+ * The same readers, run from the depth they ship at. `install.ts` is bundled to
+ * `dist/install/install.mjs` — two levels below the root, not three — and the
+ * 2026-11-01 newcomer walkthrough caught `init --project` failing with
+ * `template not found: …/node_modules/@event4u/src/config/gitignore-block.txt`:
+ * three hard-coded hops from the bundle land one directory above the package.
+ */
+describe('runtime template readers from a bundled layout', () => {
+    // sync_gitattributes is left out: it carries a CLI entry guard that fires
+    // inside a bundle, and it already resolves through resolvePackageRoot.
+    it('resolve every template inside the package root', () => {
+        const dir = fs.mkdtempSync(path.join(REPO_ROOT, 'dist', '.template-probe-'));
+        try {
+            const entry = path.join(dir, 'entry.ts');
+            fs.writeFileSync(entry, [
+                `import { DEFAULT_TEMPLATE as a } from ${JSON.stringify(path.join(REPO_ROOT, 'src/scripts/_lib/gitignore_block.ts'))};`,
+                `import { template_path } from ${JSON.stringify(path.join(REPO_ROOT, 'src/scripts/_lib/cli_wrapper.ts'))};`,
+                `import { defaultHostLimitsPath } from ${JSON.stringify(path.join(REPO_ROOT, 'src/scripts/_lib/installed_layer.ts'))};`,
+                'process.stdout.write(JSON.stringify([a, template_path(), defaultHostLimitsPath()]));',
+            ].join('\n'));
+            const out = path.join(dir, 'probe.mjs');
+            buildSync({ entryPoints: [entry], bundle: true, platform: 'node', format: 'esm', packages: 'external', outfile: out, logLevel: 'silent' });
+            const paths = JSON.parse(execFileSync(process.execPath, [out], { encoding: 'utf-8' })) as string[];
+            const outside = paths.filter((p) => !fs.existsSync(p) || path.relative(REPO_ROOT, p).startsWith('..'));
+            expect(outside).toEqual([]);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
     });
 });

@@ -4,27 +4,45 @@ name: Site
 # Astro `build` completes even with dangling internal links, so the build alone
 # is not a link gate; check_site_links.ts scans the built dist for broken links.
 #
-# Path filter, and how it differs from its sibling `deploy-site.yml`: this
-# workflow fires on the site workspace and on the checker itself. `deploy-site.yml`
-# — which has published the site to GitHub Pages on every push to `main` since
-# 2026-07-05 — additionally fires on the canonical docs that `site/sync-docs.mjs`
-# projects into the site (`docs/proof.md`, `docs/benchmark.md`, `docs/CLAIMS.md`,
-# `docs/catalog.md`, `docs/media/**`). That difference no longer lets a broken
-# link ship: `deploy-site.yml`'s build job runs the same link check before its
-# artifact is published. What it still costs is timing — a broken link in one
-# of those docs is caught at deploy on `main`, not on the pull request.
+# Path filter: this workflow fires on the site workspace, on the checker, and on
+# ALL of `docs/**` — every path `site/sync-docs.mjs` reads lives there (the
+# manifest pages, `docs/media/**`). It used to name only `site/**`, so a broken
+# link in a synced doc was caught at deploy on `main` rather than on the pull
+# request, and `docs/guides/works-with-agent-switch.md` was synced into the site
+# while no filter named it at all (road-to-docs-that-sell 1.1;
+# tests/scripts/site_workflow_paths.test.ts pins the coverage). `docs/**` rather
+# than a page list, because the list is the manifest's to grow and a filter that
+# trails it is the gap this closes.
 on:
   pull_request:
     branches: [main, master]
     paths:
       - "site/**"
+      - "docs/**"
+      # The site prebuild also runs site/build-demo-map.mjs, which draws the
+      # demo map with the root code-graph CLI over its fixtures.
+      - "site/docs-manifest.json"
+      - "src/scripts/code_graph/**"
+      - "src/cli/help.ts"
+      - "src/cli/registry.ts"
+      - "tests/fixtures/code-graph/**"
       - "src/scripts/check_site_links.ts"
       - "tests/scripts/check_site_links.test.ts"
+      - "tests/scripts/site_sync_docs.test.ts"
+      - "tests/scripts/site_workflow_paths.test.ts"
       - ".github/workflows/site.yml"
   push:
     branches: [main, master]
     paths:
       - "site/**"
+      - "docs/**"
+      # The site prebuild also runs site/build-demo-map.mjs, which draws the
+      # demo map with the root code-graph CLI over its fixtures.
+      - "site/docs-manifest.json"
+      - "src/scripts/code_graph/**"
+      - "src/cli/help.ts"
+      - "src/cli/registry.ts"
+      - "tests/fixtures/code-graph/**"
       - "src/scripts/check_site_links.ts"
       - ".github/workflows/site.yml"
   workflow_dispatch:

@@ -187,7 +187,11 @@ tasks:
       - task: generate-tools
       - task: compile-router
       - task: compile-corpus
-      # SCOPED to the paths the four regen tasks above actually write AND that
+      # The doc path inventory reads src/scripts, tests and .github, so a merge
+      # from main changes it without touching any file of this branch; without
+      # this step the drift surfaced only as a red test after the push.
+      - task: report-doc-path-inventory
+      # SCOPED to the paths the five regen tasks above actually write AND that
       # git can see (road-to-session-closeout 6.1). It was a bare
       # `git diff --quiet` until 2026-08-20, and the pre-push hook runs ONLY
       # this task — so in a shared checkout a PEER SESSION's unrelated
@@ -196,17 +200,17 @@ tasks:
       # `--no-verify` and went to a clean clone instead. The pathspec is the
       # fix; "be careful" is not one.
       #
-      # THREE paths, not ten, and the difference is a finding rather than an
+      # FOUR paths, not eleven, and the difference is a finding rather than an
       # oversight. `generate-tools` also writes .augment/, .cursor/,
       # .clinerules/, .windsurfrules and GEMINI.md, and `compile-router` also
       # writes dist/router.pretty.json — every one of them is GITIGNORED
       # (`git check-ignore`, measured 2026-08-20), so the bare form never
       # watched them either and listing them here would claim coverage that
       # cannot exist. What this check guarantees before a push is byte-exactness
-      # of dist/agent-src/ (1154 tracked files), dist/router.json and the
-      # decisions lock. The per-tool roots are outside any `git diff`'s reach
+      # of dist/agent-src/ (1154 tracked files), dist/router.json, the
+      # decisions lock and the doc path inventory. The per-tool roots are outside any `git diff`'s reach
       # and need a different mechanism if they are ever to be guarded.
-      - git diff --quiet -- dist/agent-src/ dist/router.json agents/decisions/low-impact-decisions.lock.yaml
+      - git diff --quiet -- dist/agent-src/ dist/router.json agents/decisions/low-impact-decisions.lock.yaml docs/maintainers/doc-path-inventory.md
 
   consistency-fix:
     silent: true
@@ -216,6 +220,7 @@ tasks:
       - task: generate-tools
       - task: compile-router
       - task: compile-corpus
+      - task: report-doc-path-inventory
 
   check-condensation:
     silent: true

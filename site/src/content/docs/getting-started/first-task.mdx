@@ -1,0 +1,74 @@
+---
+title: Your first task
+description: Run your first task with Agent Config — /work takes a request through refine, plan, implement, test and verify, then you check the result with production-validator.
+---
+
+import { Steps, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+
+Your first task runs inside your AI coding tool, on that tool's model. Agent Config itself calls no model: it gives the tool skills, rules and commands, so you need the tool and a model it can use.
+
+No tool set up yet? One thing runs offline from the terminal, with no model and no key — a map of the repository you are in:
+
+```bash
+npx -y @event4u/agent-config code-graph map --open
+```
+
+It shows who calls what, and the tests for a change. See [Code map](/agent-config/features/code-map/), or [open the demo map](/agent-config/demo-map/) to look before installing.
+
+With the tool open in a repository, type one slash command:
+
+```text
+/work "add a CSV export to the orders list"
+```
+
+## What happens
+
+<Steps>
+
+1. **Refine.** The agent restates the request and asks one question if something is ambiguous. It does not guess the missing half of the task.
+
+2. **Plan.** It reads the code it is about to change — the callers, the tests, the data — and writes a short plan with a check for each step.
+
+3. **Implement and test.** It makes the change and writes or updates the tests that prove it, test first where a test makes sense.
+
+4. **Verify.** It runs something that exercises the change — the tests, a request against the endpoint, the build — before it says done. If nothing was run, the report says so.
+
+5. **Report.** You get what changed, what was checked and what is still open. It never commits or pushes for you.
+
+</Steps>
+
+Working from a ticket instead? `/implement-ticket` runs the same loop and refines the ticket first:
+
+```text
+/implement-ticket PROJ-123
+```
+
+## Check that it is really done
+
+In Claude Code, ask the read-only checker before you trust a "done":
+
+```text
+@production-validator is this branch really done?
+```
+
+It reads the code that would ship and answers **READY** or **NOT READY** with the file and line of every placeholder, stub or mock it finds. It changes nothing. [More on the check](/agent-config/workflows/review/#check-that-done-means-done).
+
+## Review and commit
+
+```text
+/review:changes
+/commit
+```
+
+`/review:changes` reviews your local diff with focused reviewers and merges their findings; `/commit` shows you how it will split the changes into Conventional Commits, then commits when you confirm.
+
+<Aside type="note" title="Not seeing the commands?">
+Start a new session in your AI tool after installing, so it reads the new files. Then run `npx -y @event4u/agent-config doctor` — it names anything missing and the command that fixes it.
+</Aside>
+
+## Next
+
+<CardGrid>
+  <LinkCard title="Implement a change" href="/agent-config/workflows/implement/" description="Everything /work and /implement-ticket do, and when to stop them." />
+  <LinkCard title="Choose a profile" href="/agent-config/getting-started/choose-a-profile/" description="Install the skill set for your role." />
+</CardGrid>

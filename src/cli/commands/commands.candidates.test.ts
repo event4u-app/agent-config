@@ -153,8 +153,8 @@ describe('renderCandidates — the honesty band', () => {
     });
 
     it('warns that both census snapshots are dated, not current', () => {
-        expect(text).toContain('docs/SKILL_CENSUS.md');
-        expect(text).toContain('docs/artefact-census.md');
+        expect(text).toContain('docs/maintainers/SKILL_CENSUS.md');
+        expect(text).toContain('docs/maintainers/artefact-census.md');
         expect(text).toMatch(/point-in-time|do not\s+read their numbers as current/i);
     });
 

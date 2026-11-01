@@ -213,7 +213,7 @@ tested on one consumer before anyone argues about routers or byte budgets.
 
 - [x] **2.1 Touched-skill ratchet in `check_routing_coverage`.** A PR that
       touches a skill without `evals/triggers.json` fails; the census lists
-      the remaining 198 by pack in `docs/SKILL_CENSUS.md`.
+      the remaining 198 by pack in `docs/maintainers/SKILL_CENSUS.md`.
       verify: fixture PR touching a corpus-less skill fails; census section exists.
 
       **DONE 2026-09-29.** 198 reproduces exactly (299 skills, 101 with a
@@ -265,7 +265,7 @@ tested on one consumer before anyone argues about routers or byte budgets.
       why the defect survived a green suite. Two committed-fixture cases were
       added to the self-test and four to the unit tests.
 
-      The census section is appended to `docs/SKILL_CENSUS.md` and regenerates
+      The census section is appended to `docs/maintainers/SKILL_CENSUS.md` and regenerates
       from `--census`. Sensitivity probe: dropping the `(no pack declared)`
       bucket reds exactly `buckets a pack-less skill rather than dropping it`
       and `every uncovered skill appears in the rendered table`; returning
@@ -276,7 +276,7 @@ tested on one consumer before anyone argues about routers or byte budgets.
       this step's own mechanism working.** `--self-test` returns `13/13 case(s)
       behaved (9 rejecting, floor 13)` unchanged. The census does not: it reads
       **188 of 299**, where this step recorded 198 on 2026-09-29 and
-      `docs/SKILL_CENSUS.md` carried 197 from 2026-10-01.
+      `docs/maintainers/SKILL_CENSUS.md` carried 197 from 2026-10-01.
 
       That is honest drift in the direction the step was built to produce, and
       the nine names are listed rather than summarised: `accessibility-auditor`,

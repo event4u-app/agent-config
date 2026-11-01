@@ -1,0 +1,53 @@
+---
+title: Introduction
+description: Agent Config teaches your AI coding agents to check their work before they say done — skills, rules and slash-command workflows for the tools you already use.
+---
+
+import { LinkCard, CardGrid } from '@astrojs/starlight/components';
+import InfoBanner from '../../../components/InfoBanner.astro';
+
+<InfoBanner>
+Installs into your user-level AI tool configuration; your repository only gets an `agents/overrides/` folder for your own changes. Works with 20 AI coding tools{/* claim:host-agent-count */}.
+</InfoBanner>
+
+**Agent Config teaches your AI coding agents to check their work before they say done.**
+
+```bash
+npx -y @event4u/agent-config init
+```
+
+It installs skills, rules and slash-command workflows into the AI coding tools you already use — Claude Code, Cursor, Codex, Windsurf and others. Your tool still runs the agent; Agent Config changes what the agent is told to do. It does not make your model smarter: on a weaker model it measurably improved discipline, on a strong model the same test was a null. {/* claim:discipline-lift-weak-host */}
+
+## Before and after
+
+**Before.** You ask your agent to add a CSV export. It writes a handler that returns a hard-coded placeholder, the existing tests stay green and it replies "Done — export implemented." Nothing ever ran the new code.
+
+**After.** In Claude Code you ask `@production-validator` whether the branch is really done. It reads the code that would ship, finds the placeholder and answers **NOT READY** with the exact file and line. On a branch that is really finished it answers **READY** and reports nothing. We tested this on two cases: one with a placeholder left in, one finished. {/* claim:wedge-hollow-detection */}
+
+On Claude Code the package can also refuse to let a turn end on "done" when the agent changed files and ran nothing to check them. On every other tool that is an instruction the agent is asked to follow, not a block.
+{/* claim:conformance-advisory-vs-blocking */}
+
+## What you get
+
+- **Workflows as slash commands.** `/work` takes a request through refine, plan, implement, test and verify; `/implement-ticket` does it for a ticket; `/review:changes` reviews your diff; `/commit` writes Conventional Commits. They never commit or push on their own.
+- **Rules that travel with you.** A small set of always-on rules, plus narrower rules that load only when a task needs them.
+- **Skills for your role.** The setup wizard asks who you are — developer, founder, content creator, agency, finance or ops — and installs a focused set.
+- **Tools you can run yourself.** A code map, a dependency and code security audit, a session cost report and a second opinion from other AI models.
+
+## Where it writes
+
+`agent-config init` installs into your home directory — the package under `~/.event4u/agent-config/` and each AI tool's user-level folder such as `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into your repository, which only gets an `agents/overrides/` folder for your own changes plus a few gitignored bookkeeping files and a block each in `.gitignore` and `.gitattributes`; `agent-config init --project` creates just those in a repository and nothing else.
+
+## Honest limits
+
+- **It costs more tokens.** Checking its work is what spends them. [Benchmark & cost, explained](/agent-config/trust/benchmark-and-cost/) has the measured figures and where they do not apply.
+- **Blocking only on Claude Code.** Everywhere else the rules are instructions the model is asked to follow; they reduce violations but do not remove them. [What each tool can block](/agent-config/trust/enforcement-by-host/).
+- **Node 22.6 or newer**, and a terminal to start the wizard from. [Requirements](/agent-config/getting-started/requirements/).
+- **A daily update check** against the npm registry is on by default. [What leaves your machine](/agent-config/trust/network/).
+
+## Next
+
+<CardGrid>
+  <LinkCard title="Install" href="/agent-config/getting-started/installation/" description="The wizard, the headless path for CI and the curl fallback." />
+  <LinkCard title="Your first task" href="/agent-config/getting-started/first-task/" description="Run /work on a real change and check it with production-validator." />
+</CardGrid>

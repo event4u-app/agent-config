@@ -17,27 +17,17 @@
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
+
+import { resolvePackageRoot } from './package_root.js';
 
 export const SECTION_HEADER = '# event4u/agent-config';
 export const SECTION_FOOTER = '# event4u/agent-config — END';
 export const DEFAULT_GITIGNORE = '.gitignore';
 
-const _HERE = fileURLToPath(import.meta.url);
-// _HERE === <repo>/src/scripts/_lib/gitignore_block.ts, so the repo root is
-// three directories up. The retired Python implementation derived
-// DEFAULT_TEMPLATE = <file>.parent.parent.parent / "src" / "config" /
-// "gitignore-block.txt" from one level higher; the extra `..` here is that
-// same root reached from one level deeper.
-export const DEFAULT_TEMPLATE = path.join(
-    path.dirname(_HERE),
-    '..',
-    '..',
-    '..',
-    'src',
-    'config',
-    'gitignore-block.txt',
-);
+// Anchored on the package marker, not counted in `..` hops: this module also
+// runs bundled into `dist/install/install.mjs`, one level shallower, where the
+// source-layout hop count landed outside the package (`node_modules/@event4u/`).
+export const DEFAULT_TEMPLATE = path.join(resolvePackageRoot(import.meta.url), 'src', 'config', 'gitignore-block.txt');
 
 // Legacy patterns that lived in older versions of src/config/gitignore-block.txt
 // before runtime artefacts moved under /agents/runtime/ (May 2026). They get

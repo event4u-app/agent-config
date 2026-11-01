@@ -1,0 +1,24 @@
+# A settings file from an older install: live keys mixed with keys the
+# package has since deleted (REMOVED_KEYS).
+personal:
+  autonomy: on
+  # the nickname the canary greets
+  canary_name: "Sam"
+subagents:
+  enabled: false
+  downshift: true
+ai_team:
+  enabled: true
+lean_projection:
+  mode: delivery
+  hosts:
+    - claude-code
+    - cursor
+explain:
+  enable_last: true
+consistency:
+  cross_source: auto
+projection:
+  rule_packs: [legal-review-prep]
+quality:
+  local_auto_run: false

@@ -110,13 +110,13 @@ regression, and the docs reach a release-ready baseline.
 - [x] **(follow-up, generator-bug)** Fix `build_rule_trigger_matrix.py` (read `src/rules`, write canonical `agents/settings/contexts/`) and `generate_ownership_matrix.py` (`MD_OUT` → `agents/settings/contexts/structural/`); regenerate both matrices; remove the stray `agents/contexts/` outputs. Verify the regenerated rule-trigger matrix (0 → real rule count) is correct.
       <!-- done: both generators now read `src/` and write the canonical `agents/settings/contexts/` location; stray `agents/contexts/` removed. rule-trigger-matrix went 0 → 79 rules, 0 dead-path (30 newer rules surface as honest "NOT CLASSIFIED" — the hand-curated CLASSIFICATION table predates them; classifying them is a separate audit task). The ownership matrix is location-fixed + regenerated, but its ~748 `.agent-src.uncondensed` cells are EDGE records of links that still exist in ~753 corpus files (skill/rule bodies) — the matrix records existing links faithfully, so those clear only with the broad corpus-prose migration, not the generator fix. They are backtick table cells, not `[](){}` links, so check-refs stays green. -->
 - [~] **(follow-up, corpus-migration)** Broad `.agent-src.uncondensed/` → `src/` prose migration across the ~753 corpus files (skill/rule bodies, `dist/`) with the non-uniform map (`skills`/`rules` → `src/`; `contexts`/`commands`/`personas`/`templates` → `src/agent-src/`). This is the only remaining source of dead-path strings (e.g. the ownership-matrix edge cells). Large mechanical migration — own PR(s), recondense in lockstep.
-      <!-- resolved as DEFER-WITH-GUARD (AI-council 2026-06-09): a large blind sweep was rejected — the literal is the detection subject of the reference linters (a loaded gun), historical ADRs are correct as written, and the prose is inline-code (NOT check-refs-gated, no CI impact). Instead the debt is FROZEN: scripts/check_no_new_legacy_path.py (CI, PR-scoped) fails on any NEW `.agent-src.uncondensed/` reference added under src/ (except the 3 detection/legacy files); existing prose migrates opportunistically when a file is touched. Policy: docs/governance.md § Legacy-path freeze. -->
-- [x] **(follow-up, corpus-migration — regression guard)** Freeze the dead-path debt so it cannot grow: `scripts/check_no_new_legacy_path.py` + CI step + tests + `docs/governance.md` § Legacy-path freeze.
+      <!-- resolved as DEFER-WITH-GUARD (AI-council 2026-06-09): a large blind sweep was rejected — the literal is the detection subject of the reference linters (a loaded gun), historical ADRs are correct as written, and the prose is inline-code (NOT check-refs-gated, no CI impact). Instead the debt is FROZEN: scripts/check_no_new_legacy_path.py (CI, PR-scoped) fails on any NEW `.agent-src.uncondensed/` reference added under src/ (except the 3 detection/legacy files); existing prose migrates opportunistically when a file is touched. Policy: docs/maintainers/governance.md § Legacy-path freeze. -->
+- [x] **(follow-up, corpus-migration — regression guard)** Freeze the dead-path debt so it cannot grow: `scripts/check_no_new_legacy_path.py` + CI step + tests + `docs/maintainers/governance.md` § Legacy-path freeze.
 - [x] Document the `src/` (source of truth) → built/published-artefact convention in `CONTRIBUTING.md`
       so the `.agent-src.uncondensed` naming stops implying a path that no longer exists. Name where the
       condensed output actually lands.
 - [x] Artefact census — count public artefacts per type with a stated methodology, publish
-      `docs/artefact-census.md`. This is the baseline the Phase 3 discovery scan reports against (resolves
+      `docs/maintainers/artefact-census.md`. This is the baseline the Phase 3 discovery scan reports against (resolves
       the 530-vs-560 ambiguity).
 - [x] **7a** — link/path integrity: a dead in-repo `docs/` or `src/` path fails the build.
       `check_references.py` PATH_PATTERN extended to the `docs/` + `src/` roots; illustrative
@@ -156,16 +156,16 @@ maintainer can navigate 227 skills by family — without touching any skill file
 - [x] Skill-family taxonomy doc (`docs/`) grouping the 227 skills into navigable families (engineering,
       review, architecture, testing, security, frontend, content, video, finance, strategy, operations,
       agent-admin, …). Navigation only — no file moves, no description edits, no merges.
-      <!-- done: docs/skills-taxonomy.md — 227 skills, 19 families, 0 uncategorized; heuristic (pack + name-pattern), reproducible, counts match the census. -->
+      <!-- done: docs/maintainers/skills-taxonomy.md — 227 skills, 19 families, 0 uncategorized; heuristic (pack + name-pattern), reproducible, counts match the census. -->
 - [x] Cross-link profile pages ↔ flows ↔ representative skills so the "experience" framing is walkable.
       Verify every new link resolves (`check-refs`).
 - [x] Cross-reference note — record that the experience pages, flow docs, and taxonomy feed the active
       `road-to-employee-product-and-external-proof.md` workstream; coordinate timing, do not duplicate its
       external-proof work here.
-      <!-- recorded: docs/flows.md, docs/experiences/*.md, docs/skills-taxonomy.md are NAVIGATION docs (no case-studies / benchmarks / external proof) — they feed the employee-product workstream's discoverability surface without duplicating its external-proof deliverables. Coordinate any README "Prove it" edits with that roadmap. -->
+      <!-- recorded: docs/flows.md, docs/experiences/*.md, docs/maintainers/skills-taxonomy.md are NAVIGATION docs (no case-studies / benchmarks / external proof) — they feed the employee-product workstream's discoverability surface without duplicating its external-proof deliverables. Coordinate any README "Prove it" edits with that roadmap. -->
 
 > **Phase 1 complete.** README surfaces flows + per-profile experience pages; `docs/flows.md`,
-> `docs/experiences/*.md`, and `docs/skills-taxonomy.md` make the 227-skill surface navigable by
+> `docs/experiences/*.md`, and `docs/maintainers/skills-taxonomy.md` make the 227-skill surface navigable by
 > work-journey, profile, and family — docs only, zero routing risk.
 
 ## Phase 2 — Governance: own, age, and contract the surface
@@ -175,7 +175,7 @@ are honest, and Phase 3's consolidation has a contract to validate against — i
 
 - [~] Skill ownership map (CODEOWNERS-style, or a `SKILL_OWNERS` doc keyed by family) assigning a
       maintainer per family. Group-by-family makes this tractable.
-      <!-- deferred (AI-council 2026-06-09): single maintainer → per-family ownership is ceremony with zero information. Deferred until a 2nd maintainer exists; the `owner:` field then becomes a skill-family-map.yml column, not a separate CODEOWNERS. Recorded in docs/governance.md § Deferred governance. -->
+      <!-- deferred (AI-council 2026-06-09): single maintainer → per-family ownership is ceremony with zero information. Deferred until a 2nd maintainer exists; the `owner:` field then becomes a skill-family-map.yml column, not a separate CODEOWNERS. Recorded in docs/maintainers/governance.md § Deferred governance. -->
 - [x] **Command `category:` lint (from Phase-0 step 7b) — resolved as Option 1 (light).** Introduce the `category:` frontmatter field
       (`flow-entry | state-query | product-surface` per ADR-048), categorize the 125 visible commands
       (after the ownership map assigns owners — avoids one architect making 125 calls), decide the
@@ -186,13 +186,13 @@ are honest, and Phase 3's consolidation has a contract to validate against — i
       <!-- verified 2026-06-11: 0 commands carry category: frontmatter; no routing/analytics/discovery code reads the field. Consumer condition not yet met. -->
 - [x] Skill lifecycle policy — review cadence and active/dormant/sunset states; dormancy triggers
       *review*, not automatic deprecation. Slot it beside `persona-governance` as its skill-side sibling.
-      <!-- done: docs/governance.md § Skill lifecycle policy — commit-based dormancy (git log, no last_reviewed busywork for a solo maintainer); review-not-auto-deprecate; sunset recorded in-commit. -->
+      <!-- done: docs/maintainers/governance.md § Skill lifecycle policy — commit-based dormancy (git log, no last_reviewed busywork for a solo maintainer); review-not-auto-deprecate; sunset recorded in-commit. -->
 - [x] Machine-readable `skill-family-map.yml` — per skill: `family`, `primary_use`, `activation_scope`,
       `overlaps_with`, `candidate_for_merge`, `candidate_for_lens`, `candidate_for_internal`. Governance
       scaffolding consumed as input by the Phase 3 scan. No renames in this step.
-      <!-- done (base fields): docs/contracts/skill-family-map.yml — 227 skills × {family, primary_use, activation_scope}, generated + reproducible. overlaps_with + candidate_for_* are intentionally ABSENT — they are Phase-3 discovery conclusions, not Phase-2 metadata (AI-council 2026-06-09; Single-Source-of-Truth rule in docs/governance.md). Phase 3 populates them. -->
+      <!-- done (base fields): docs/contracts/skill-family-map.yml — 227 skills × {family, primary_use, activation_scope}, generated + reproducible. overlaps_with + candidate_for_* are intentionally ABSENT — they are Phase-3 discovery conclusions, not Phase-2 metadata (AI-council 2026-06-09; Single-Source-of-Truth rule in docs/maintainers/governance.md). Phase 3 populates them. -->
 - [x] **(Phase 3 feeder)** Populate `skill-family-map.yml`'s `overlaps_with` + `candidate_for_{merge,lens,internal}` as outputs of the Phase-3 consolidation scan.
-      <!-- done via docs/skill-duplication-findings.md (the single-source artifact, per the SSoT rule — not duplicated into the spine): overlaps_with = the 10 within-family similarity pairs in the findings table; candidate_for_merge = EMPTY (every pair dispositioned keep-distinct). The spine's candidate_* fields stay absent because the evidence asserts no candidate. -->
+      <!-- done via docs/maintainers/skill-duplication-findings.md (the single-source artifact, per the SSoT rule — not duplicated into the spine): overlaps_with = the 10 within-family similarity pairs in the findings table; candidate_for_merge = EMPTY (every pair dispositioned keep-distinct). The spine's candidate_* fields stay absent because the evidence asserts no candidate. -->
 - [~] **(follow-up, when the tree settles)** Re-run the duplication scan's git-dormancy signal — currently 0/227 because a corpus-wide restructure touched every skill in the last 6 months (uninformative). Meaningful once timestamps settle.
       <!-- verified 2026-06-11: 10 commits to src/skills/ in the last 3 days — tree still active, signal still uninformative. -->
 - [x] Review-lens routing schema — define the metadata a review "lens" carries (context, constraints,
@@ -213,10 +213,10 @@ phase produces a findings report and a validated gate — no skill is merged ins
       this PR", "find security issues", "summarize this diff") plus a log of which skill(s) the host agent
       selects per prompt. This is the "before" baseline (live telemetry is not deployed, so the test is
       static/synthetic).
-      <!-- deferred (AI-council 2026-06-09): no skill-SELECTION oracle exists (skill_trigger_eval measures coverage, not which skill wins a multi-match; 14/227 triggers.json). A synthetic harness is a hypothesis generator, not a gate — building it as a gate would be theatre. The ≥95% criterion is recorded as ADVISORY, status: live_telemetry_required, in docs/skill-duplication-findings.md § Merge gate. -->
+      <!-- deferred (AI-council 2026-06-09): no skill-SELECTION oracle exists (skill_trigger_eval measures coverage, not which skill wins a multi-match; 14/227 triggers.json). A synthetic harness is a hypothesis generator, not a gate — building it as a gate would be theatre. The ≥95% criterion is recorded as ADVISORY, status: live_telemetry_required, in docs/maintainers/skill-duplication-findings.md § Merge gate. -->
 - [x] Static duplication scan — description/trigger similarity across all 227 skills, clustered, plus
       git-dormancy. Consumes `skill-family-map.yml` from Phase 2.
-      <!-- done: docs/skill-duplication-findings.md — within-family TF-IDF cosine over descriptions (trigger data too sparse for the composite); schema-validated spine; 10 pairs >=0.35, 0 dormant (post-restructure). -->
+      <!-- done: docs/maintainers/skill-duplication-findings.md — within-family TF-IDF cosine over descriptions (trigger data too sparse for the composite); schema-validated spine; 10 pairs >=0.35, 0 dormant (post-restructure). -->
 - [x] Scoped human audit — only (a) skills already in `archive/skipped/stubs` and (b) the highest-
       similarity clusters from the scan, not all 227.
       <!-- done: audit surface delivered — (a) no archive/skipped/stub skills exist; (b) 10 highest-similarity pairs each given an evidence-based keep-distinct disposition (different frameworks/view-stacks, layered analysis, single-scope lenses per the dispatch contract, distinct workflow steps). Maintainer may override. -->
@@ -225,7 +225,7 @@ phase produces a findings report and a validated gate — no skill is merged ins
       after consolidation, validated against the Phase 2 lens schema. Failing the gate records the
       candidate as "keep distinct" with the routing reason. Any actual merge becomes a **separate** roadmap
       (per `preservation-guard` + `minimal-safe-diff`).
-      <!-- done: docs/skill-duplication-findings.md. Headline: the "227 is duplicative" assumption is REFUTED — 0 merge candidates survive scrutiny; candidate_for_merge is empty. Gate DEFINITION recorded as advisory (live-telemetry-deferred). -->
+      <!-- done: docs/maintainers/skill-duplication-findings.md. Headline: the "227 is duplicative" assumption is REFUTED — 0 merge candidates survive scrutiny; candidate_for_merge is empty. Gate DEFINITION recorded as advisory (live-telemetry-deferred). -->
 
 > **Phase 3 complete (discovery; merged nothing).** Evidence replaces the
 > duplication assumption: a within-family similarity scan over 227 skills surfaces

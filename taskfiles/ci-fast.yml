@@ -1237,6 +1237,11 @@ tasks:
     desc: "Advisory cross-carrier rule divergence (round-5 Phase 1.3) — which rules the project projection and the machine-global install deliver differently, by name; gates on nothing, because a checkout ahead of its own global install is the normal development state"
     cmd: ./scripts-run src/scripts/report_carrier_divergence {{.CLI_ARGS}}
 
+  report-doc-path-inventory:
+    silent: true
+    desc: "Doc path inventory (road-to-docs-that-sell 1.5) — every docs/README/site-content path named by src/scripts, tests, .github and gate-coverage.yml, regenerated into docs/maintainers/doc-path-inventory.md; pass -- --check to fail on drift"
+    cmd: ./scripts-run src/scripts/report_doc_path_inventory {{.CLI_ARGS}}
+
   lint-settings-classes:
     silent: true
     desc: Every settings-template leaf carries an A/B/C class in docs/contracts/settings-classes.md (road-to-zero-ceremony-settings Phase 1)

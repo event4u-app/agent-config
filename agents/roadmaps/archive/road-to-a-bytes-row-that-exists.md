@@ -159,7 +159,7 @@ could hold one.
       <!-- deferred-resolution: merged-into=road-to-a-byte-bound-and-a-public-figure -->
 - [~] **5.2 Any public statement of what this package moves over the network.**
       Deferred for the same reason: `README.md` carries one incidental hit and
-      `ONBOARDING.md` none, and a first public figure should be a measured one.
+      `docs/maintainers/ONBOARDING.md` none, and a first public figure should be a measured one.
       <!-- deferred-resolution: merged-into=road-to-a-byte-bound-and-a-public-figure -->
 
 ## Deferred items — carried, not dropped

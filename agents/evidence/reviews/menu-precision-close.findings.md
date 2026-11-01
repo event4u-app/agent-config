@@ -8,7 +8,7 @@
 
 The branch `drain/menu-precision-close` changes exactly two files:
 `agents/roadmaps/road-to-a-menu-whose-precision-is-measured.md` and
-`docs/SKILL_CENSUS.md`. Neither is executable, neither is read by a gate as
+`docs/maintainers/SKILL_CENSUS.md`. Neither is executable, neither is read by a gate as
 configuration, and no `src/` path is touched — so no projection regeneration
 was required and none was run.
 

@@ -78,7 +78,7 @@ Each item is quoted exactly as it stands in the parent (where it carries `[-]`).
 
 - **Producer:** the maintainer, adding the `ANTHROPIC_API_KEY` repo secret (with
   a per-PR budget sign-off) and letting one live review run — steps 1 and 4 of
-  `docs/self-review-gate.md` § Arming it.
+  `docs/maintainers/self-review-gate.md` § Arming it.
 - **Probe:** `gh secret list` contains `ANTHROPIC_API_KEY`, **and** a
   `self-review-gate` run exists whose `live-advisory` job did **not** take its
   skip path — i.e. it performed a real review (a posted PR review, or an uploaded

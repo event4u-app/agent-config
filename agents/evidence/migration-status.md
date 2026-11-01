@@ -21,5 +21,5 @@ Tracks remaining tracked `.py` files per roadmap phase of `agents/roadmaps/archi
 
 ## Signals
 
-- Open divergences (`docs/migration/divergences/`): 10
+- Open divergences (`docs/maintainers/migration/divergences/`): 10
 - python2ts sync lag vs origin/main: 0

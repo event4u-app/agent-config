@@ -3,7 +3,7 @@
 > **Quelle:** Unabhängige Code-Review, durchgeführt April 2026  
 > **Reviewer:** Externe Analyse (kein Mitglied des event4u-Teams)  
 > **Basis:** v1.3.3, GitHub-Stand 17. April 2026  
-> **Methode:** Review von README, composer.json, package.json, AGENTS.md, docs/architecture.md, docs/quality.md, docs/installation.md, docs/customization.md, Packagist-Metadaten
+> **Methode:** Review von README, composer.json, package.json, AGENTS.md, docs/architecture.md, docs/maintainers/quality.md, docs/installation.md, docs/customization.md, Packagist-Metadaten
 
 ---
 

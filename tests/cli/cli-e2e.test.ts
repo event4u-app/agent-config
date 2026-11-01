@@ -56,19 +56,19 @@ describe('compiled CLI', () => {
         expect(res.stdout.trim()).toBe(pkgVersion());
     });
 
-    it('--help prints the TS-shell help banner', async () => {
+    it('--help prints the task-grouped help banner', async () => {
         const res = await execa('node', [CLI, '--help'], { reject: false });
         expect(res.exitCode).toBe(0);
         expect(res.stdout).toContain('agent-config');
-        expect(res.stdout).toContain('Native commands');
+        expect(res.stdout).toContain('Get started:');
         expect(res.stdout).toContain('versions');
-        expect(res.stdout).toContain('ui:serve');
+        expect(res.stdout).toContain('agent-config help --tier=all');
     });
 
     it('bare invocation prints the help banner', async () => {
         const res = await execa('node', [CLI], { reject: false });
         expect(res.exitCode).toBe(0);
-        expect(res.stdout).toContain('Native commands');
+        expect(res.stdout).toContain('Get started:');
     });
 
     it('versions --offline returns 0 and prints the current version', async () => {

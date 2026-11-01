@@ -1,73 +1,58 @@
 # Zed Setup
 
-Zed (<https://zed.dev>) reads `.rules` at the project root as
-system-level instructions. The bridge drops a marker under `.zed/`
-and documents the wiring; Zed itself does not auto-discover
-`.zed/agent-config.md`.
+Zed (<https://zed.dev>) is an **export-only host**: it has no user-level
+folder convention the installer can deploy into, so
+`agent-config init --tools=zed` writes nothing for it and only prints a
+hint. You produce the file yourself with `agent-config export`.
+
+> `agent-config init` installs into your home directory — the package under
+> `~/.event4u/agent-config/` and each AI tool's user-level folder such as
+> `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into
+> your repository, which only gets an `agents/overrides/` folder for your own
+> changes plus a few gitignored bookkeeping files and a block each in
+> `.gitignore` and `.gitattributes`; `agent-config init --project` creates just
+> those in a repository and nothing else.
 
 ## Prerequisites
 
 - Zed editor: <https://zed.dev/download>.
-- Node.js ≥ 18 for the install entrypoints.
+- Node.js >= 22.6 (for `npx`).
 
 ## Install
 
-Project scope (default):
-
 ```bash
-npx @event4u/agent-config init --tools=zed
+npx @event4u/agent-config init --tools=zed   # writes nothing; prints the export hint
+npx @event4u/agent-config export --tool=zed --output=<path>
 ```
 
-Global scope (cross-project, deploys the universal skill bundle to
-`~/.config/zed/`):
-
-```bash
-npx @event4u/agent-config init --tools=zed --global
-```
-
-Populates (project):
-
-- `.zed/agent-config.md` — informational marker
-- `AGENTS.md`            — canonical agent self-orientation
-- `.agent-settings.yml`  — per-project knobs
+`export` ejects a real file (no symlink) into the path you choose;
+`--output` is required, `--force` overwrites a drifted file, `--list`
+shows every exportable id.
 
 ## How to use
 
-- After install, append the following line to `.rules` at the
-  project root (create the file if missing):
-
-  ```
-  @.augment/AGENTS.md
-  ```
-
-  Zed reads `.rules` on session start. The `@`-prefix tells Zed to
-  inline the referenced file as part of the system prompt.
-- Zed's Assistant panel honors the inlined rules across all
-  conversation modes.
-- Slash commands and skills live under `.augment/commands/` and
-  `.augment/skills/`. Zed does not register them natively — invoke
-  them by name in chat (e.g. *"run the create-pr command"*).
+- Zed reads `.rules` at the project root as system-level instructions.
+  Reference the exported file from there, or paste its content into
+  `.rules`.
+- Slash commands and skills are not registered natively — name the
+  command in chat (e.g. *"run the create-pr command"*).
 
 ## Verification
 
 ```bash
-test -f .zed/agent-config.md
-test -f AGENTS.md
-grep -q "@.augment/AGENTS.md" .rules
+test -f <path>
 ```
 
-In Zed: open the Assistant panel and ask *"What is this repo?"* —
-the answer should cite the AGENTS.md emergency triage block.
+In Zed: open the Assistant panel and confirm the rules are applied.
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| Assistant ignores rules | Confirm `.rules` exists at project root and contains `@.augment/AGENTS.md`. |
-| `.rules` not auto-loaded | Restart Zed; `.rules` is read on session start. |
-| Inlined skill missing | Replace `@.augment/AGENTS.md` with the specific skill path you need to inline. |
+| `init --tools=zed` changed nothing | Expected — Zed is export-only; run `agent-config export --tool=zed --output=<path>`. |
+| `.rules` not applied | Restart Zed; `.rules` is read on session start. |
 
 ## Cross-references
 
-- [`AGENTS.md`](../../../AGENTS.md) — canonical agent self-orientation.
 - [`docs/installation.md`](../../installation.md) — install matrix index.
+- [Uninstalling](../../installation.md#uninstall) — removal sequence.

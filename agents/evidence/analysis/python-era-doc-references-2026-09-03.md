@@ -72,8 +72,8 @@ A predicate over present-tense enforcement verbs adjacent to a dead `.py` token
 found **35** such claims in `docs/contracts/` alone. Sharpening it twice more —
 adding `blocks|returns|wraps`, then a runnable-command predicate for the class
 seat 1 asked about and seat 2 refused to accept on syntax alone — surfaced a
-tail across `docs/quality.md`, `docs/threat-model.md`, `docs/command-flows.md`,
-`docs/command-naming-audit.md`, `docs/setup/`, `docs/distribution/`,
+tail across `docs/maintainers/quality.md`, `docs/threat-model.md`, `docs/command-flows.md`,
+`docs/maintainers/command-naming-audit.md`, `docs/setup/`, `docs/distribution/`,
 `docs/maintainers/`, `docs/architecture/` and `docs/migration/`.
 
 **Repaired: 94 occurrences across 41 files.** Live-doc count 946 → **852**,

@@ -36,6 +36,14 @@ moved to `accepted`, or a recorded reason it was not pursued. A submission is
 done when the entry is publicly live (owner constraint, transcript turn 3);
 the parent's daily watcher reds any row that drifts from that.
 
+> **Hand-off, 2026-11-01 (road-to-docs-that-sell, step 10.4).** The README,
+> `package.json` description, `.github/about.yml` and the docs site now carry
+> the one-liner "teach your AI coding agents to check their work before they
+> say done", a first-screen install command, honest cost and tool facts, and a
+> landing page at https://event4u-app.github.io/agent-config/ (live once the
+> site deploys from main). Submission packets should quote that one-liner and
+> link the landing page. No submission was made by that roadmap.
+
 ## Phase 1 — Reads after the first release with the CI publish
 
 - [x] **1.1 Official MCP Registry live.** Carries the parent's AC-2 — it

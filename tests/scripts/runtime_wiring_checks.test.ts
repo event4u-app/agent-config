@@ -9,10 +9,11 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
     _routerRuleCount,
+    canaryLivenessCheck,
     checkHookResolution,
     checkInheritedGitEnv,
     checkRouterArtifact,
@@ -161,5 +162,50 @@ describe('checkInheritedGitEnv', () => {
         // The point is visibility, not refusal: `doctor` writes nothing and
         // always exits zero, so a `fail` here would be a claim it cannot back.
         expect(checkInheritedGitEnv({ GIT_WORK_TREE: '/x' }).status).toBe('warn');
+    });
+});
+
+describe('remedy hints a consumer can act on', () => {
+    // `doctor` runs in consumer repositories, where `task` and `./scripts-run`
+    // do not exist. Maintainer commands appear only under AGENT_CONFIG_DEV_MODE=1.
+    const MAINTAINER = /task generate-tools|scripts-run|src\/scripts\//;
+
+    function routerRemedies(): string[] {
+        const out = [checkRouterArtifact(tmp).remedy];
+        fs.mkdirSync(path.join(tmp, 'dist'), { recursive: true });
+        fs.writeFileSync(path.join(tmp, 'dist', 'router.json'), '{ truncated', 'utf8');
+        out.push(checkRouterArtifact(tmp).remedy);
+        fs.writeFileSync(path.join(tmp, 'dist', 'router.json'), '{"rules":[]}', 'utf8');
+        out.push(checkRouterArtifact(tmp).remedy);
+        return out;
+    }
+
+    function canaryRemedy(): string {
+        fs.mkdirSync(path.join(tmp, 'agents', 'runtime', 'state'), { recursive: true });
+        fs.writeFileSync(path.join(tmp, 'agents', 'runtime', 'state', 'canary-liveness.json'), '{"line":"canary red x3"}', 'utf8');
+        const r = canaryLivenessCheck(tmp);
+        expect(r.status).toBe('warn');
+        return r.remedy;
+    }
+
+    afterEach(() => {
+        vi.unstubAllEnvs();
+    });
+
+    it('names only consumer commands without dev mode', () => {
+        vi.stubEnv('AGENT_CONFIG_DEV_MODE', '');
+        const remedies = [...routerRemedies(), canaryRemedy()];
+        expect(remedies).toHaveLength(4);
+        for (const r of remedies) {
+            expect(r, r).not.toBe('');
+            expect(r, r).not.toMatch(MAINTAINER);
+        }
+        for (const r of remedies.slice(0, 3)) expect(r).toContain('agent-config');
+    });
+
+    it('keeps the maintainer command under AGENT_CONFIG_DEV_MODE=1', () => {
+        vi.stubEnv('AGENT_CONFIG_DEV_MODE', '1');
+        for (const r of routerRemedies()) expect(r).toContain('task generate-tools');
+        expect(canaryRemedy()).toContain('./scripts-run src/scripts/canary_liveness --refresh');
     });
 });

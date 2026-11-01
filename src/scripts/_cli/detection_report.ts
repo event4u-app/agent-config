@@ -266,10 +266,7 @@ function fixFor(o: {
     reason: string | null;
 }): string | null {
     if (!o.configPresent) {
-        return (
-            `no council config — copy \`agents/templates/.ai-council.yml.example\` ` +
-            `to ${o.configPath}`
-        );
+        return `no council config (optional) — run \`agent-config setup\` to create ${o.configPath}`;
     }
     if (!o.councilEnabled) {
         return `set \`enabled: true\` in ${o.configPath}`;

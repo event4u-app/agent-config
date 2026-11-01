@@ -32,11 +32,18 @@ describe('codex delivery claim agrees with the codex probe', () => {
         expect(line).toContain('codex-global-delivery-reading-2026-10-18.md');
     });
 
-    it('README project row claims AGENTS.md and no native skills or commands', () => {
+    // The row used to claim rules via a project AGENTS.md and no skills. The
+    // probe above found the opposite for the global install this package now
+    // does: `~/.codex/skills/` is read, rules and commands are not, and no
+    // AGENTS.md is written. The row states that; a project's own AGENTS.md is
+    // still named because the probe found it read (case D).
+    it('README row claims native skills from ~/.codex/skills/ and no rules or commands', () => {
         const line = row('README.md', /\*\*Codex CLI\*\*/);
         const cells = line.split('|').map((c) => c.trim());
-        expect(cells[3]).toBe('—');
-        expect(cells[4]).not.toBe('✅');
-        expect(cells[5]).toContain('`AGENTS.md`');
+        expect(cells[2]).toBe('—');
+        expect(cells[3]).toBe('✅');
+        expect(cells[4]).toBe('—');
+        expect(cells[5]).toContain('`~/.codex/skills/`');
+        expect(cells[5]).toContain('no `AGENTS.md` is written');
     });
 });

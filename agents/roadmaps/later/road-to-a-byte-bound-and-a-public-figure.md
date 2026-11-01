@@ -69,7 +69,7 @@ active would mean carrying two steps nobody can work.
       the note names the date range it was computed over
 - [ ] **1.2 The first public statement of what this package moves over the
       network.** The parent's 5.2. `README.md` carries one incidental hit and
-      `ONBOARDING.md` none, so this would be the first such figure the package
+      `docs/maintainers/ONBOARDING.md` none, so this would be the first such figure the package
       publishes.
       verify: `./scripts-run src/scripts/check_claims` passes with the figure
       markered and a `kind: quant` ledger entry behind it, AND the sentence names

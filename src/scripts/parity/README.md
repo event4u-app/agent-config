@@ -21,7 +21,7 @@ npx tsx src/scripts/parity/replay.ts \
   --case tests/golden/parity/agent_settings/cases/defaults \
   --case tests/golden/parity/agent_settings/cases/modules \
   --normalize none \
-  --divergences docs/migration/divergences
+  --divergences docs/maintainers/migration/divergences
 ```
 
 - `--script` — repo-relative path WITHOUT extension; both `<path>.py` and
@@ -68,7 +68,7 @@ is a regular FAIL.
 
 ## Divergence awareness (the CI divergence check)
 
-With `--divergences docs/migration/divergences`, a script whose comparison
+With `--divergences docs/maintainers/migration/divergences`, a script whose comparison
 fails is still PASS-with-note iff a markdown file in that directory contains
 a line
 
@@ -77,7 +77,7 @@ Script: <repo-relative script path>
 ```
 
 matching the `--script` value (the `.py`/`.ts` extension is tolerated). The
-doc format is `docs/migration/divergences/_template.md` (symptom, root cause,
+doc format is `docs/maintainers/migration/divergences/_template.md` (symptom, root cause,
 verdict, evidence test, approval line). Undocumented mismatches remain
 failures and are listed prominently in the report — this is the Step 9 CI
 check: golden parity red without a divergence doc fails the build.
@@ -116,7 +116,7 @@ for the Phase 2 `_lib` cluster:
       npx tsx src/scripts/parity/replay.ts \
         --script "src/scripts/_lib/${script}" \
         --case tests/golden/parity/_lib/${script}/cases/* \
-        --divergences docs/migration/divergences
+        --divergences docs/maintainers/migration/divergences
     done
 
 - name: Coverage diff (_lib batch)

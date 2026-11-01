@@ -529,6 +529,9 @@ imports working for one minor release; the legacy state filename is
 detected on load and surfaces a one-shot migration hint instead of
 failing silently.
 
+The command-cluster renames of the same release (`/fix-ci` → `/fix ci` and the
+others) are in [`migrations/commands-1.15.0.md`](migrations/commands-1.15.0.md).
+
 ### What changed
 
 | Surface | 1.14.x | 1.15.0 |
@@ -634,3 +637,6 @@ No formal migration was required before 1.15.0. The pre-1.14.0 v0
 state schema (flat `ticket`, `.implement-ticket-state.json`) is
 documented in `docs/contracts/implement-ticket-flow.md` and is
 covered by the same `v0_to_v1` migrator above.
+
+The move from the v1 install to the npx-only runtime is in
+[`migration/v1-to-v2.md`](migration/v1-to-v2.md).

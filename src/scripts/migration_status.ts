@@ -197,11 +197,11 @@ function countByCategory(paths: readonly string[]): Record<Category, number> {
     return counts;
 }
 
-/** Count divergence records: `.md` in docs/migration/divergences/, minus README/_template. */
+/** Count divergence records: `.md` in docs/maintainers/migration/divergences/, minus README/_template. */
 function countDivergences(root: string): number {
     let entries: string[];
     try {
-        entries = readdirSync(resolve(root, 'docs/migration/divergences'));
+        entries = readdirSync(resolve(root, 'docs/maintainers/migration/divergences'));
     } catch {
         return 0;
     }
@@ -269,7 +269,7 @@ function renderDashboard(
     lines.push('');
     lines.push('## Signals');
     lines.push('');
-    lines.push(`- Open divergences (\`docs/migration/divergences/\`): ${divergences}`);
+    lines.push(`- Open divergences (\`docs/maintainers/migration/divergences/\`): ${divergences}`);
     lines.push(`- python2ts sync lag vs origin/main: ${lag}`);
     lines.push('');
     return lines.join('\n');

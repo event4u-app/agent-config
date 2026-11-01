@@ -113,18 +113,21 @@ export function shouldInitLaunchGui(rest: readonly string[]): boolean {
     return true;
 }
 
+const PROJECT_INIT_NO_OPS: ReadonlySet<string> = new Set(['--project', '--yes', '-y', '--no-ui']);
+
 /**
- * `init --project` — project-surface initialization (road-to-setup-experience
- * § Phase 1.3). Writes the minimal ADR-020 consumer surface (bridge marker +
- * overrides scaffold + managed `.gitignore` block) via the `refresh --project`
- * writer instead of opening the GUI or running the global install. Returns
- * the args to forward to the Bash dispatcher (`refresh --project [...]`), or
- * `null` when `--project` is absent. `rest` is argv without the leading
- * `init` token.
+ * `init --project` writes the minimal ADR-020 consumer surface (overrides
+ * scaffold, managed `.gitignore` and `.gitattributes` blocks) via the
+ * `refresh --project` writer instead of opening the GUI or running the global
+ * install. Returns the args to forward to the Bash dispatcher
+ * (`refresh --project [...]`), or `null` when `--project` is absent. `rest` is
+ * argv without the leading `init` token.
  */
 export function buildProjectInitDelegation(rest: readonly string[]): string[] | null {
     if (!rest.includes('--project')) return null;
-    const forwarded = rest.filter((arg) => arg !== '--project');
+    // The project writer never prompts and never opens the wizard, so the
+    // terminal-mode flags are satisfied already; `refresh` would reject them.
+    const forwarded = rest.filter((arg) => !PROJECT_INIT_NO_OPS.has(arg));
     return ['refresh', '--project', ...forwarded];
 }
 

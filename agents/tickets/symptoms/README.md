@@ -72,7 +72,7 @@ and recording it stops the same symptom being re-investigated next quarter.
 
 Two release cycles with zero entries beyond the three backfills → this surface
 has no demand: delete the directory and the lint, and record the null. The
-cautionary precedent is `docs/install-friction-report.md`, an intake instrument
+cautionary precedent is `docs/maintainers/install-friction-report.md`, an intake instrument
 that has read `status: template — awaiting sessions (no real data yet)` across
 every release review since it was created. An instrument nobody feeds is estate
 weight, and it reads as coverage while measuring nothing.

@@ -5,12 +5,14 @@
   "type": "module",
   "description": "Docs + proof site for agent-config (Starlight). Isolated workspace — its deps never touch the package.",
   "scripts": {
-    "sync": "node sync-docs.mjs",
-    "prebuild": "node sync-docs.mjs",
-    "predev": "node sync-docs.mjs",
+    "sync": "node sync-docs.mjs && node gen-cli-reference.mjs",
+    "prebuild": "node sync-docs.mjs && node gen-cli-reference.mjs && node build-demo-map.mjs",
+    "predev": "node sync-docs.mjs && node gen-cli-reference.mjs",
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "demo-map": "node build-demo-map.mjs",
+    "cli-reference": "node gen-cli-reference.mjs"
   },
   "dependencies": {
     "astro": "7.4.4",

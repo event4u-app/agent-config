@@ -61,4 +61,4 @@ DO NOT MERGE ACROSS THE LINE.
 
 - [`/review-changes`](../../src/domains/engineering-base/review/changes/command.md) — the seven-judge dispatcher.
 - [`skill-family-map.yml`](skill-family-map.yml) — `family: review-judging` carries these skills; Phase 3 reads `candidate_*` against this contract.
-- [`governance.md`](../governance.md) — the lifecycle + Single-Source-of-Truth rules these skills age under.
+- [`governance.md`](../maintainers/governance.md) — the lifecycle + Single-Source-of-Truth rules these skills age under.

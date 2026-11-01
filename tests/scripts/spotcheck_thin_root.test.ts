@@ -7,7 +7,7 @@
 // delegated to a `python3` shim importing the still-Python `ai_council.clients`
 // / `ai_council.orchestrator` modules (no TS twin in this wave; a `.ts` cannot
 // import a `.py`) — see
-// `docs/migration/divergences/src-scripts-spotcheck_thin_root.md`.
+// `docs/maintainers/migration/divergences/src-scripts-spotcheck_thin_root.md`.
 //
 // What we CAN assert deterministically: the module imports without a
 // top-level throw and exposes the `main` entry point (the CLI contract

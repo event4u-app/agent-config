@@ -1,65 +1,50 @@
 # Augment Code Setup
 
-Augment Code is **global-only** in this package — content ships from a
-single user-scope tree at `~/.augment/` and the Augment extension
-(VS Code, JetBrains) reads it on every workspace. Per-project
-`.augment/` content is not installed; project `init` writes only the
-`.augment/settings.json` marker that authorizes the plugin for the
-workspace.
+Augment Code (VS Code, JetBrains) reads its content from the user-level
+tree `~/.augment/` on every workspace. The installer deploys the full set
+there.
 
-> **Why global-only?** Augment counts the full body of every file in
-> `.augment/rules/` against its 49,512-char workspace-guidelines limit.
-> The package-wide rule set exceeds that limit on every workspace, so
-> a single user-scope install is the canonical surface and the
-> overflow is a known, accepted trade-off. See
-> [`ADR-007 § Amendment 2026-05-13 — global-only`](../../decisions/ADR-007-agent-discovery-scopes.md#amendment-2026-05-13--augment-global-only).
+> `agent-config init` installs into your home directory — the package under
+> `~/.event4u/agent-config/` and each AI tool's user-level folder such as
+> `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into
+> your repository, which only gets an `agents/overrides/` folder for your own
+> changes plus a few gitignored bookkeeping files and a block each in
+> `.gitignore` and `.gitattributes`; `agent-config init --project` creates just
+> those in a repository and nothing else.
+
+> **Workspace-guidelines limit.** Augment counts the full body of every
+> rule file against its 49,512-char workspace-guidelines limit. The rule
+> set exceeds that limit, so an overflow warning is expected. See
+> [`ADR-007 § Amendment 2026-05-13 — Augment global-only`](../../decisions/ADR-007-agent-discovery-scopes.md#amendment-2026-05-13--augment-global-only).
 
 ## Prerequisites
 
 - Augment Code extension: <https://www.augmentcode.com/>.
-- Node.js ≥ 18 for the install entrypoints.
+- Node.js ≥ 22.6 (for the `npx` entrypoint).
 
 ## Install
 
-Global scope (the only supported path — deploys the full bundle to
-`~/.augment/`):
-
 ```bash
-npx @event4u/agent-config init --tools=augment --global
+npx @event4u/agent-config init --tools=augment
 ```
 
-`--tools=augment` without `--global` is rejected with a directive
-error; `--tools=all` (project scope) silently filters `augment` out.
+Populates `~/.augment/`:
 
-Populates (`~/.augment/`):
-
-- `~/.augment/rules/`     — kernel (9 Iron-Law rules) + tier-1/2 routed rules
-- `~/.augment/skills/`    — domain skills
+- `~/.augment/rules/`     — kernel + routed rules
+- `~/.augment/skills/`    — skills
 - `~/.augment/commands/`  — slash commands
-- `~/.augment/personas/`  — review-lens personas
 - `~/.augment/contexts/`  — knowledge-layer contexts
-- `~/.augment/templates/` — scaffolds for AGENTS.md, copilot-instructions, etc.
-
-A project-scope `init` (any `--tools=…` selection except `augment`)
-still writes:
-
-- `.augment/settings.json` — plugin activation marker for the workspace
-- `AGENTS.md`              — canonical agent self-orientation
-- `.agent-settings.yml`    — per-project knobs
+- `~/.augment/personas/`  — review-lens personas
+- `~/.augment/templates/` — scaffolds
+- `~/.augment/hooks/`     — managed hooks
 
 ## How to use
 
-- Augment auto-discovers `.augment/` on every session — no manual
-  action required.
-- The kernel rules (always-on Iron Laws) load first; tier-1/2
-  rules are routed by the rule-router based on intent.
-- Slash commands (`/work`, `/implement-ticket`, `/commit`,
-  `/create-pr`, `/refine-ticket`, …) are registered as Augment
-  Skills and surfaced in the agent's available-skills list.
-- Personas are review-lens voices; invoke them per `/mode` or by
-  name inside `/work` and `/implement-ticket` plans.
-- `.agent-settings.yml` controls per-project knobs (autonomy
-  default, cost profile, role-mode, learning opt-out).
+- Augment loads `~/.augment/` on every session — no manual action
+  required.
+- The kernel rules load first; the routed rules load by intent.
+- Commands surface as skills in Augment's available-skills list.
+- Personas are review lenses; invoke them by name or via `/mode`.
 
 ## Verification
 
@@ -67,23 +52,19 @@ still writes:
 test -d ~/.augment/rules
 test -d ~/.augment/skills
 test -d ~/.augment/commands
-test -f AGENTS.md
 ```
-
-Open the Augment panel and ask *"What is this repo?"* — the answer
-should cite the AGENTS.md emergency triage block.
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
 | Skills not surfaced | Reload the Augment workspace; skills are indexed on session start. |
-| `~/.augment/rules/` missing | Re-run `npx @event4u/agent-config init --tools=augment --global`. |
-| Workspace-guidelines overflow warning | Expected — the package rule set exceeds Augment's 49,512-char budget. See [`ADR-007 § Amendment 2026-05-13`](../../decisions/ADR-007-agent-discovery-scopes.md#amendment-2026-05-13--augment-global-only). |
-| Iron Laws not firing | Confirm `~/.augment/rules/` contains 9 kernel files. |
+| `~/.augment/rules/` missing | Re-run `npx @event4u/agent-config init --tools=augment --force`. |
+| Workspace-guidelines overflow warning | Expected — see the note above. |
 
 ## Cross-references
 
 - [`AGENTS.md`](../../../AGENTS.md) — canonical agent self-orientation.
 - [`docs/architecture.md`](../../architecture.md) — kernel + router + projection pipeline.
 - [`docs/installation.md`](../../installation.md) — install matrix index.
+- [Uninstall](../../installation.md#uninstall) — removing the global install.

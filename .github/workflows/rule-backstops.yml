@@ -64,6 +64,14 @@ on:
       # trigger both.
       - "internal/bench/corpora/ab-artifact-v2.yaml"
       - "internal/bench/showcase/**"
+      # The README gates read the publish surfaces directly: lint_positioning
+      # (rule-backstops) and check_claims (proof-demo) compare README.md,
+      # package.json and .github/about.yml, so a README-only PR must run them
+      # (road-to-docs-that-sell 1.3).
+      - "README.md"
+      - "package.json"
+      - ".github/about.yml"
+      - ".github/topics.yml"
       - ".github/workflows/rule-backstops.yml"
   push:
     branches:
@@ -105,6 +113,14 @@ on:
       - "internal/bench/ab/**"
       - "internal/bench/corpora/ab-artifact-v2.yaml"
       - "internal/bench/showcase/**"
+      # The README gates read the publish surfaces directly: lint_positioning
+      # (rule-backstops) and check_claims (proof-demo) compare README.md,
+      # package.json and .github/about.yml, so a README-only PR must run them
+      # (road-to-docs-that-sell 1.3).
+      - "README.md"
+      - "package.json"
+      - ".github/about.yml"
+      - ".github/topics.yml"
       - ".github/workflows/rule-backstops.yml"
 
 # Superseded PR pushes cancel; `push: main` runs never do. On main this
@@ -247,6 +263,11 @@ jobs:
       # tree, so nothing saw the 20 dead entries this gate's census found.
       - name: workflow path filters (do they still match anything?)
         run: ./scripts-run src/scripts/lint_workflow_paths
+
+      # `task consistency` regenerates this report before a push; this is the
+      # remote half, so a push that skipped the hook still fails on a stale one.
+      - name: doc path inventory is current
+        run: ./scripts-run src/scripts/report_doc_path_inventory --check
 
       # Rules and skills are capped; the contexts and guidelines they route to
       # were not, which is where the always-loaded budget leaks back in as

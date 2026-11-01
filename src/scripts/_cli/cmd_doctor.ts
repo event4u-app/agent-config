@@ -84,7 +84,8 @@ import * as YAML from 'yaml';
 
 import { _check_overrides } from './doctor_overrides.js';
 import { _is_global_only_consumer } from './doctor_install_mode.js';
-import { classifyOwnership, ledgerModifiedRecords, noProjectInstallLines } from './doctor_ownership_ledger.js';
+import { classifyOwnership, globalInstalledTools, installedOutcome, ledgerModifiedRecords, noProjectInstallLines, notInstalledShortCircuit } from './doctor_ownership_ledger.js';
+import { bridgeDriftNoManifest as _check_bridge_drift_no_manifest, memoryMergeUnion, skippedManifestCheck as _skipped_manifest_check } from './_doctor_hints.js';
 // Forwarded, not re-declared: both names moved to doctor_install_mode.ts and existing
 // importers of cmd_doctor.js keep resolving. `export ... from` rather than an import,
 // because INSTALL_MODE_MARKER_RELATIVE is not referenced here any more and an unused
@@ -105,7 +106,6 @@ import * as runtime_wiring from '../_lib/runtime_wiring_checks.js';
 import * as install_reach from '../_lib/install_reach_checks.js';
 import * as runtime_checks from '../_lib/doctor_runtime_checks.js';
 import { git_common_dir } from '../_lib/git_common_dir.js';
-import * as sync_gitattributes from '../sync_gitattributes.js';
 import {
     PROJECT_ROOT_ENV,
     ROOT_OVERRIDE_ENV,
@@ -139,6 +139,7 @@ import { review_gate_doctor_signal } from '../ai_team/review_gate.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
 import { rglob as _rglob_raw, scanForeign } from '../_lib/foreign_scan.js';
 import { runCensus, summaryLine } from './cmd_doctor_neighbours.js';
+import { DOCTOR_HELP_BODY } from './_doctor_help.js';
 import {
     LEGACY_ALL,
     excludedRuleBasenames,
@@ -2634,61 +2635,6 @@ function _check_settings_review_pending(): Dict {
     };
 }
 
-/**
- * `memory-merge-union` — read-only warn check (road-to-reachable-code-memory
- * Phase 5). The `merge=union` .gitattributes block lets two branches each
- * appending a NEW memory entry (intake JSONL, or the flat curated
- * `agents/memory/<type>.yml` files) merge cleanly instead of conflicting.
- * Without it, ordinary parallel memory writes on separate branches produce a
- * merge conflict the human has to resolve by hand. Never fails the run —
- * this is advisory, same posture as `offline-readiness`.
- */
-function _check_memory_merge_union(project_root: string): Dict {
-    const remedy =
-        'run: npx tsx src/scripts/sync_gitattributes.ts (or `agent-config refresh --project`)';
-    const target = path.join(project_root, sync_gitattributes.DEFAULT_GITATTRIBUTES);
-    if (!pathExists(target)) {
-        return {
-            id: 'memory-merge-union',
-            status: 'warn',
-            message:
-                'no .gitattributes at project root — memory merge-safety attributes not applied',
-            remedy,
-        };
-    }
-    let text: string;
-    try {
-        text = readText(target);
-    } catch (exc) {
-        return {
-            id: 'memory-merge-union',
-            status: 'warn',
-            message: `unreadable .gitattributes at ${target}: ${osErrorStr(exc)}`,
-            remedy,
-        };
-    }
-    const has_block = text.includes(sync_gitattributes.SECTION_HEADER);
-    const has_intake_union = /agents\/memory\/intake\/\*\.jsonl\s+merge=union/.test(text);
-    if (has_block && has_intake_union) {
-        return {
-            id: 'memory-merge-union',
-            status: 'ok',
-            message:
-                '.gitattributes carries the memory merge-safety block (intake JSONL union-merge present)',
-            remedy: '',
-        };
-    }
-    return {
-        id: 'memory-merge-union',
-        status: 'warn',
-        message: has_block
-            ? '.gitattributes has the managed block but is missing the intake merge=union line'
-            : '.gitattributes is missing the memory merge-safety block — parallel-branch ' +
-              'memory writes can conflict instead of merging',
-        remedy,
-    };
-}
-
 interface JsonDecodeError {
     msg: string;
     lineno: number;
@@ -2828,7 +2774,7 @@ function _run_checks(
         'unsupported-combos': () => _check_unsupported_combos(manifest),
         'wizard-state': _check_wizard_state,
         'settings-review-pending': _check_settings_review_pending,
-        'memory-merge-union': () => _check_memory_merge_union(project_root),
+        'memory-merge-union': () => memoryMergeUnion(project_root),
         'duplicate-scope-rules': () => _check_duplicate_scope_rules(project_root),
     };
     const out: Dict[] = [];
@@ -2841,45 +2787,12 @@ function _run_checks(
     return out;
 }
 
-function _skipped_manifest_check(check_id: string): Dict {
-    return {
-        id: check_id,
-        status: 'skipped',
-        message: 'requires a project lockfile (agents/installed-tools.lock)',
-        remedy:
-            'run `agent-config init` to create a project lockfile, ' +
-            'then re-run this check',
-    };
-}
-
-function _check_bridge_drift_no_manifest(bridge_present: boolean): Dict {
-    if (bridge_present) {
-        return {
-            id: 'bridge-drift',
-            status: 'ok',
-            message:
-                'no project lockfile → distributed-tool drift not ' +
-                'applicable (global-only consumer)',
-            remedy: '',
-        };
-    }
-    return {
-        id: 'bridge-drift',
-        status: 'skipped',
-        message:
-            'no project lockfile and no consumer install marker → drift ' +
-            'check not applicable',
-        remedy:
-            'run `agent-config init` (project install) or ' +
-            '`agent-config refresh --project` (global-only consumer)',
-    };
-}
-
 function _run_checks_no_manifest(
     project_root: string,
     bridge_present: boolean,
     only: string | null = null,
 ): Dict[] {
+    const installed = bridge_present || globalInstalledTools().length > 0;
     const runners: Record<string, CheckRunner> = {
         scope: () => _check_scope(project_root),
         'global-binary': () => _check_global_binary(project_root),
@@ -2898,9 +2811,9 @@ function _run_checks_no_manifest(
         // worth the comment because the duplication is easy to miss.
         overrides: () => _check_overrides(project_root),
         'rule-scope-drift': () => _check_rule_scope_drift(project_root),
-        'manifest-integrity': () => _skipped_manifest_check('manifest-integrity'),
-        'lockfile-freshness': () => _skipped_manifest_check('lockfile-freshness'),
-        'bridge-drift': () => _check_bridge_drift_no_manifest(bridge_present),
+        'manifest-integrity': () => _skipped_manifest_check('manifest-integrity', installed),
+        'lockfile-freshness': () => _skipped_manifest_check('lockfile-freshness', installed),
+        'bridge-drift': () => _check_bridge_drift_no_manifest(bridge_present, installed),
         'mcp-mode': () => _check_mcp_mode(project_root),
         'mcp-beta-readiness': () => _check_mcp_beta_readiness(project_root),
         'offline-readiness': () => _check_offline_readiness(),
@@ -2910,10 +2823,10 @@ function _run_checks_no_manifest(
         'council-cli': () => _check_council_cli(project_root),
         'detection': () => _check_detection(project_root),
         team: () => _check_team(project_root),
-        'unsupported-combos': () => _skipped_manifest_check('unsupported-combos'),
+        'unsupported-combos': () => _skipped_manifest_check('unsupported-combos', installed),
         'wizard-state': _check_wizard_state,
         'settings-review-pending': _check_settings_review_pending,
-        'memory-merge-union': () => _check_memory_merge_union(project_root),
+        'memory-merge-union': () => memoryMergeUnion(project_root),
         'duplicate-scope-rules': () => _check_duplicate_scope_rules(project_root),
     };
     const out: Dict[] = [];
@@ -2976,11 +2889,11 @@ function _run_no_manifest(
     }
     const sx = strictExit(opts, checks, false); // no manifest: keep the 2, never soften to 1
     if (sx !== null) return bridge_present ? sx : 2;
-    if (opts.ci && bridge_present) {
-        // Same fold as the manifest path: check failures and ledger drift are red under --ci.
+    if (opts.ci && bridge_present) {  // same fold as the manifest path: check failures and ledger drift are red under --ci
         return fail_check || modified.length > 0 ? 1 : 0;
     }
-    return bridge_present ? (modified.length > 0 ? 1 : 0) : 2;
+    if (opts.json || opts.ci) return bridge_present ? (modified.length > 0 ? 1 : 0) : 2;
+    return installedOutcome(checks, modified.length); // an install exists: notInstalledShortCircuit ran first
 }
 
 function _emit_json(
@@ -3052,9 +2965,8 @@ interface Options {
 
 const PROG = 'agent-config doctor';
 
-// Verbatim argparse usage block (captured from the .py at COLUMNS=80). The
-// per-flag `--help` BODY is a documented divergence — argparse re-wraps it to
-// terminal width; golden tests assert the `usage:` token + exit code only.
+// Verbatim argparse usage block (captured from the .py at COLUMNS=80); the
+// per-flag `--help` body lives in `_doctor_help.ts`.
 const USAGE =
     `usage: ${PROG} [-h] [--project PROJECT] [--json] [--ci] [--check ID]\n` +
     STRICT_USAGE +
@@ -3101,7 +3013,7 @@ function _parse(argv: string[]): Options {
     while (i < argv.length) {
         const a = argv[i] as string;
         if (a === '-h' || a === '--help') {
-            process.stdout.write(USAGE);
+            process.stdout.write(USAGE + DOCTOR_HELP_BODY);
             throw new ArgparseExit(0);
         }
         const eq = a.startsWith('--') ? a.indexOf('=') : -1;
@@ -3352,7 +3264,7 @@ function main(argv: string[] | null = null): number {
     const manifest = installed_tools.read_manifest(manifest_pth);
     if (manifest === null) {
         const bridge_present = _is_global_only_consumer(project_root);
-        return _run_no_manifest(opts, project_root, origin, bridge_present);
+        return notInstalledShortCircuit(opts, bridge_present) ?? _run_no_manifest(opts, project_root, origin, bridge_present);
     }
 
     const [records, known] = _collect_manifest_entries(project_root, manifest);
@@ -3399,7 +3311,7 @@ function main(argv: string[] | null = null): number {
     }
     const strict = strictExit(opts, checks, drift_present);
     if (strict !== null) return strict;
-    return drift_present ? 1 : 0;
+    return opts.json ? (drift_present ? 1 : 0) : installedOutcome(checks, missing.length + modified.length + foreign.length + tag_drift.length);
 }
 
 // --- CLI entry ---

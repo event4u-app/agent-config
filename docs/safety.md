@@ -26,5 +26,6 @@
 
 ## See also
 
+- [`anti-reskin-gate`](anti-reskin-gate.md) — for people who run a skills repository: the gate against re-skinned duplicates.
 - [`non-destructive-by-default`](../.augment/rules/non-destructive-by-default.md) — Hard Floor that overrides every domain-safety carve-out.
 - [`security-sensitive-stop`](../.augment/rules/security-sensitive-stop.md) — threat-model before touching auth / billing / tenant boundaries / uploads.

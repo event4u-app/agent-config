@@ -81,7 +81,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          changed=$(gh pr diff "${{ github.event.pull_request.number }}" --name-only --repo "${{ github.repository }}")
+          # `gh pr diff` refuses a PR over 300 files (HTTP 406); the files API
+          # paginates up to 3000.
+          changed=$(gh api --paginate "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" --jq '.[].filename')
           if grep -qxE '\.github/(topics|about)\.yml' <<<"$changed"; then
             echo "manifests_changed=true" >> "$GITHUB_OUTPUT"
           else
