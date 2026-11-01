@@ -439,6 +439,15 @@ describe('block_no_verify — exec wrappers and config-env forms', () => {
         "GIT_CONFIG_PARAMETERS=\"'core.hooksPath'='/dev/null'\" git commit",
         'env GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null GIT_CONFIG_COUNT=1 git commit',
         'HUSKY=0 git commit -m x',
+        // Council round 1 (openai): composition and option-model gaps.
+        "HUSKY=0 sh -c 'git commit -m x'",
+        "GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null bash -c 'git commit -m x'",
+        'xargs --replace git commit --no-verify',
+        'xargs -I{} git commit --no-verify',
+        "env -S 'git commit --no-verify'",
+        'sudo -U bob git commit --no-verify',
+        "fish -c 'git commit --no-verify'",
+        "csh -c 'git commit --no-verify'",
     ];
     for (const cmd of BYPASSED) {
         it(`blocks: ${cmd}`, () => {
@@ -458,6 +467,9 @@ describe('block_no_verify — exec wrappers and config-env forms', () => {
         'git --config-env=user.name=NAME commit -m y',
         'echo env git commit --no-verify',
         'HUSKY=1 git commit -m x',
+        'command -v git commit --no-verify',
+        'command -V git',
+        "HUSKY=0 sh -c 'npm test'",
     ];
     for (const cmd of ALLOWED) {
         it(`allows: ${cmd}`, () => {

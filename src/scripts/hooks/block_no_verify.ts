@@ -263,27 +263,30 @@ function _split_subcommands(tokens: string[]): string[][] {
 
 /**
  * Commands that run their remaining arguments as a command, with the options
- * that consume a value. Without this, `env git commit --no-verify` put `env` in
- * command position and the guard saw no git (release review 19.2.0, M7).
+ * that consume the NEXT token as their value. An option whose argument is
+ * optional (GNU `xargs --replace`) takes it only attached (`--replace=x`), so
+ * it is deliberately absent here: listing it would swallow the command after it
+ * (council round 1). Without this table, `env git commit --no-verify` put `env`
+ * in command position and the guard saw no git (release review 19.2.0, M7).
  */
 const _EXEC_WRAPPERS: ReadonlyMap<string, { readonly withValue: ReadonlySet<string>; readonly positional: number }> =
     new Map([
-        ['env', { withValue: new Set(['-u', '--unset', '-C', '--chdir']), positional: 0 }],
+        ['env', { withValue: new Set(['-u', '--unset', '-C', '--chdir', '-S', '--split-string']), positional: 0 }],
         ['command', { withValue: new Set<string>(), positional: 0 }],
         ['exec', { withValue: new Set(['-a']), positional: 0 }],
         ['builtin', { withValue: new Set<string>(), positional: 0 }],
         ['nice', { withValue: new Set(['-n', '--adjustment']), positional: 0 }],
         ['nohup', { withValue: new Set<string>(), positional: 0 }],
         ['time', { withValue: new Set(['-f', '--format', '-o', '--output']), positional: 0 }],
-        ['sudo', { withValue: new Set(['-u', '--user', '-g', '--group', '-h', '--host', '-p', '--prompt', '-C', '-D', '--chdir', '-r', '-t', '-T']), positional: 0 }],
+        ['sudo', { withValue: new Set(['-u', '--user', '-g', '--group', '-h', '--host', '-p', '--prompt', '-C', '--close-from', '-D', '--chdir', '-r', '--role', '-t', '--type', '-T', '--command-timeout', '-U', '--other-user']), positional: 0 }],
         ['doas', { withValue: new Set(['-u', '-C']), positional: 0 }],
         ['stdbuf', { withValue: new Set(['-i', '-o', '-e']), positional: 0 }],
         ['timeout', { withValue: new Set(['-s', '--signal', '-k', '--kill-after']), positional: 1 }],
-        ['xargs', { withValue: new Set(['-a', '-d', '-E', '-I', '-L', '-n', '-P', '-s', '--arg-file', '--delimiter', '--max-args', '--max-procs', '--max-chars', '--replace']), positional: 0 }],
+        ['xargs', { withValue: new Set(['-a', '-d', '-E', '-I', '-L', '-n', '-P', '-s', '--arg-file', '--delimiter', '--max-args', '--max-procs', '--max-chars', '--process-slot-var']), positional: 0 }],
     ]);
 
 /** Interpreters whose `-c <payload>` is a command list (`sh -c '…'`). */
-const _SHELL_RE = /^(?:ba|z|k|da)?sh$/;
+const _SHELL_RE = /^(?:ba|z|k|da|c|tc|fi|pw)?sh$/;
 
 /** An assignment that switches hooks off: `GIT_CONFIG_KEY_<n>=core.hooksPath`, a `GIT_CONFIG_PARAMETERS` value naming it, or `HUSKY=0`. */
 function _env_sets_hookspath(token: string): boolean {
@@ -306,30 +309,46 @@ function _basename(token: string): string {
  * Where the command in `tokens` really starts once env assignments and exec
  * wrappers are peeled off, plus any assignment that disables hooks on the way.
  */
-export function _unwrap(tokens: string[]): { start: number; hookspathEnv: string | null } {
+export function _unwrap(tokens: string[]): {
+    start: number;
+    hookspathEnv: string | null;
+    exhausted: boolean;
+    splitString: string | null;
+} {
     let i = 0;
     let hookspathEnv: string | null = null;
-    for (let guard = 0; guard < 16 && i < tokens.length; guard += 1) {
+    let splitString: string | null = null;
+    for (let guard = 0; guard < 16; guard += 1) {
         while (i < tokens.length && _is_env_assignment(tokens[i] as string)) {
             if (hookspathEnv === null && _env_sets_hookspath(tokens[i] as string)) hookspathEnv = tokens[i] as string;
             i += 1;
         }
-        const spec = _EXEC_WRAPPERS.get(_basename(tokens[i] ?? ''));
-        if (spec === undefined) break;
+        const head = _basename(tokens[i] ?? '');
+        const spec = _EXEC_WRAPPERS.get(head);
+        if (spec === undefined) return { start: i, hookspathEnv, exhausted: false, splitString };
+        // `command -v` / `-V` looks a name up; it runs nothing.
+        if (head === 'command' && tokens.slice(i + 1).some((t) => /^-[a-zA-Z]*[vV]/.test(t))) {
+            return { start: i, hookspathEnv, exhausted: false, splitString };
+        }
         i += 1;
         while (i < tokens.length && (tokens[i] as string).startsWith('-')) {
             const opt = tokens[i] as string;
+            if (head === 'env' && (opt === '-S' || opt === '--split-string')) splitString = tokens[i + 1] ?? null;
+            else if (head === 'env' && opt.startsWith('--split-string=')) splitString = opt.slice('--split-string='.length);
             i += spec.withValue.has(opt) ? 2 : 1;
             if (opt === '--') break;
         }
         i += spec.positional;
     }
-    return { start: i, hookspathEnv };
+    // Sixteen stacked wrappers is not a real command; report it rather than stop
+    // reading silently, so the caller can refuse a git found further along.
+    return { start: i, hookspathEnv, exhausted: true, splitString };
 }
 
-/** The payload of `sh -c '<payload>'` or `eval <words…>`, or null. */
+/** The payload of `sh -c '<payload>'`, `eval <words…>` or `env -S '<payload>'`, or null. */
 export function _shell_payload(tokens: string[]): string | null {
-    const { start } = _unwrap(tokens);
+    const { start, splitString } = _unwrap(tokens);
+    if (splitString !== null) return [splitString, ...tokens.slice(start)].join(' ');
     const head = _basename(tokens[start] ?? '');
     if (head === 'eval') {
         const words = tokens.slice(start + 1);
@@ -345,9 +364,13 @@ export function _shell_payload(tokens: string[]): string | null {
 }
 
 function _git_base(tokens: string[]): string[] | null {
-    const { start } = _unwrap(tokens);
+    const { start, exhausted } = _unwrap(tokens);
     if (start < tokens.length && _basename(tokens[start] as string) === 'git') {
         return ['git', ...tokens.slice(start + 1)];
+    }
+    if (exhausted) {
+        const at = tokens.findIndex((t, k) => k >= start && _basename(t) === 'git');
+        if (at !== -1) return ['git', ...tokens.slice(at + 1)];
     }
     return null;
 }
@@ -677,8 +700,14 @@ function _check_command(cmd: string, depth = 0): [boolean, string] {
     }
 
     for (const sub of _split_subcommands(tokens)) {
+        const { hookspathEnv } = _unwrap(sub);
         const payload = depth <= 3 ? _shell_payload(sub) : null;
         if (payload !== null) {
+            // The assignment is inherited by the payload's git, so the pair is
+            // judged together (council round 1: `HUSKY=0 sh -c 'git commit'`).
+            if (hookspathEnv !== null && _looks_like_git_invocation(payload)) {
+                return [true, `'${hookspathEnv}' disables git hooks via hooksPath (git-history-discipline)`];
+            }
             const [blocked, reason] = _check_command(payload, depth + 1);
             if (blocked) {
                 return [true, reason];
@@ -689,7 +718,6 @@ function _check_command(cmd: string, depth = 0): [boolean, string] {
         if (git_tokens === null) {
             continue;
         }
-        const { hookspathEnv } = _unwrap(sub);
         if (hookspathEnv !== null) {
             return [true, `'${hookspathEnv}' disables git hooks via hooksPath (git-history-discipline)`];
         }
