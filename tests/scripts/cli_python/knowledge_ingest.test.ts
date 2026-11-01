@@ -412,3 +412,41 @@ describe('knowledge_ingest — forget + pin', () => {
         expect(unpinned.stdout).toBe(`unpinned ${id}\n`);
     });
 });
+
+// ---------------------------------------------------------------------------
+// an ingest that fails mid-walk leaves nothing behind
+// ---------------------------------------------------------------------------
+
+describe('knowledge_ingest — atomic write', () => {
+    it.skipIf(process.getuid?.() === 0)('a non-IngestError mid-walk leaves no chunks and no staging dir', async () => {
+        const { ingest } = await import('../../../src/cli/python/knowledge_ingest.js');
+        const src = fs.mkdtempSync(path.join(os.tmpdir(), 'acki-src-'));
+        const base = fs.mkdtempSync(path.join(os.tmpdir(), 'acki-base-'));
+        fs.writeFileSync(path.join(src, 'a.md'), 'First document.\n');
+        fs.writeFileSync(path.join(src, 'b.md'), 'Second document.\n');
+        fs.chmodSync(path.join(src, 'b.md'), 0o000);
+        try {
+            expect(() => ingest(src, { root: base })).toThrow();
+            expect(fs.readdirSync(base)).toEqual([]);
+        } finally {
+            fs.chmodSync(path.join(src, 'b.md'), 0o644);
+            fs.rmSync(src, { recursive: true, force: true });
+            fs.rmSync(base, { recursive: true, force: true });
+        }
+    });
+
+    it('a successful ingest lands under its final id, not .partial', async () => {
+        const { ingest } = await import('../../../src/cli/python/knowledge_ingest.js');
+        const src = fs.mkdtempSync(path.join(os.tmpdir(), 'acki-src-'));
+        const base = fs.mkdtempSync(path.join(os.tmpdir(), 'acki-base-'));
+        fs.writeFileSync(path.join(src, 'a.md'), 'First document.\n');
+        try {
+            const m = ingest(src, { root: base });
+            expect(fs.readdirSync(base)).toEqual([m.ingest_id]);
+            expect(fs.existsSync(path.join(base, m.ingest_id, 'manifest.json'))).toBe(true);
+        } finally {
+            fs.rmSync(src, { recursive: true, force: true });
+            fs.rmSync(base, { recursive: true, force: true });
+        }
+    });
+});

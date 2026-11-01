@@ -69,6 +69,7 @@ memory/
 
 - `<ingest-id>` is a uuid7 so timestamps are recoverable from the id; never user-controlled.
 - `manifest.json` is the audit row — used by `/knowledge:list` and by the LRU eviction loop.
+- An ingest is written under `<ingest-id>.partial/` and renamed to `<ingest-id>/` only after its manifest is on disk; a failure removes the staging directory, and `memory_lookup` never reads a `.partial` directory. The shell entry point is `agent-config knowledge:local {ingest|list|forget}`.
 - Chunks are markdown only after the adapter has run; the original binary is never stored.
 
 The MCP tool `memory_retrieve` (existing surface in `agent-memory`) **must** tag retrieved entries from this namespace with `source: knowledge`. The host model decides what to do with user-supplied vs maintainer-curated entries; this contract only requires the tag.

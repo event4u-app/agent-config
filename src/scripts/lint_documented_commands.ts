@@ -85,7 +85,7 @@ const HTML_COMMENT_RE = /<!--[\s\S]*?-->/g;
 const TOKEN_CHARS = 'a-z0-9:_-';
 
 const AGENT_CONFIG_RE = new RegExp(
-    `^(?:\\./agent-config|npx\\s+@event4u/agent-config|npx\\s+agent-config|agent-config)\\s+([a-z][${TOKEN_CHARS}]*)`,
+    `^(?:\\./agent-config|npx\\s+@event4u/agent-config|npx\\s+agent-config|agent-config)\\s+([a-z][${TOKEN_CHARS}]*)(?:\\s+([a-z][a-z0-9-]*)(?=\\s|$))?`,
 );
 const FIRST_TOKEN_RE = /^([a-zA-Z_][\w:-]*)/;
 
@@ -105,6 +105,8 @@ function _isCuratedBareToken(token: string): boolean {
 interface Claim {
     category: Category;
     token: string;
+    /** The word after an `agent-config <verb>`, when it is a bare word. */
+    sub?: string;
 }
 
 /** Split a candidate command string into its shell-separated sub-commands. */
@@ -132,7 +134,7 @@ function _splitSubcommands(text: string): string[] {
 function _classify(subcmd: string): Claim | null {
     const m = AGENT_CONFIG_RE.exec(subcmd);
     if (m) {
-        return { category: 'agent-config', token: m[1]! };
+        return m[2] ? { category: 'agent-config', token: m[1]!, sub: m[2] } : { category: 'agent-config', token: m[1]! };
     }
     const first = FIRST_TOKEN_RE.exec(subcmd);
     if (first && _isCuratedBareToken(first[1]!)) {
@@ -162,6 +164,8 @@ function _claimsIn(text: string): Claim[] {
 
 export interface ResolutionSets {
     registryNames: ReadonlySet<string>;
+    /** Verb → declared sub-commands, for registry entries that declare them. */
+    registrySubcommands: ReadonlyMap<string, ReadonlySet<string>>;
     taskNames: ReadonlySet<string>;
     npmScripts: ReadonlySet<string>;
     mcpToolNames: ReadonlySet<string>;
@@ -192,6 +196,28 @@ function _loadRegistryNames(): Set<string> {
         }
     }
     return names;
+}
+
+const REGISTRY_SUBCOMMANDS_RE = /subcommands:\s*\[([^\]]*)\]/;
+
+function _loadRegistrySubcommands(): Map<string, Set<string>> {
+    const out = new Map<string, Set<string>>();
+    const p = path.join(REPO_ROOT, 'src', 'cli', 'registry.ts');
+    if (!_exists(p)) {
+        return out;
+    }
+    for (const line of fs.readFileSync(p, 'utf8').split('\n')) {
+        const name = REGISTRY_ENTRY_RE.exec(line);
+        const subs = REGISTRY_SUBCOMMANDS_RE.exec(line);
+        if (name && subs) {
+            const list = subs[1]!
+                .split(',')
+                .map((t) => t.trim().replace(/^'|'$/g, ''))
+                .filter((t) => t.length > 0);
+            out.set(name[1]!, new Set(list));
+        }
+    }
+    return out;
 }
 
 function _loadTaskNames(repoRoot: string): Set<string> {
@@ -322,6 +348,7 @@ function _loadSlashCommandNames(repoRoot: string): Set<string> {
 export function loadResolutionSets(repoRoot: string = REPO_ROOT): ResolutionSets {
     return {
         registryNames: _loadRegistryNames(),
+        registrySubcommands: _loadRegistrySubcommands(),
         taskNames: _loadTaskNames(repoRoot),
         npmScripts: _loadNpmScripts(repoRoot),
         mcpToolNames: _loadMcpToolNames(repoRoot),
@@ -336,8 +363,13 @@ function _mcpNormalize(token: string): string {
 
 function _isResolved(claim: Claim, sets: ResolutionSets): boolean {
     switch (claim.category) {
-        case 'agent-config':
-            return sets.registryNames.has(claim.token);
+        case 'agent-config': {
+            if (!sets.registryNames.has(claim.token)) {
+                return false;
+            }
+            const declared = sets.registrySubcommands.get(claim.token);
+            return declared === undefined || claim.sub === undefined || declared.has(claim.sub);
+        }
         case 'task':
             return sets.taskNames.has(claim.token);
         case 'npm-run':
@@ -351,6 +383,15 @@ function _isResolved(claim: Claim, sets: ResolutionSets): boolean {
             }
             return sets.mcpToolNames.has(_mcpNormalize(claim.token));
     }
+}
+
+function _subRejected(claim: Claim, sets: ResolutionSets): boolean {
+    return (
+        claim.category === 'agent-config' &&
+        claim.sub !== undefined &&
+        sets.registryNames.has(claim.token) &&
+        sets.registrySubcommands.get(claim.token)?.has(claim.sub) === false
+    );
 }
 
 function _hint(category: Category): string {
@@ -454,6 +495,7 @@ function _scanFile(p: string, root: string, sets: ResolutionSets): Violation[] {
     const out: Violation[] = [];
     let inFence = false;
     let fenceLang = '';
+    let continued = '';
 
     for (let idx = 0; idx < lines.length; idx++) {
         const n = idx + 1;
@@ -476,8 +518,14 @@ function _scanFile(p: string, root: string, sets: ResolutionSets): Violation[] {
             if (BASH_FENCE_LANGS.has(fenceLang)) {
                 const noComment = rawLine.replace(HTML_COMMENT_RE, '');
                 const withoutPrompt = noComment.replace(/^\s*\$\s*/, '').trim();
-                if (withoutPrompt.length > 0 && !withoutPrompt.startsWith('#')) {
-                    candidates.push(withoutPrompt);
+                if (withoutPrompt.endsWith('\\')) {
+                    continued += withoutPrompt.slice(0, -1) + ' ';
+                    continue;
+                }
+                const joined = continued + withoutPrompt;
+                continued = '';
+                if (joined.trim().length > 0 && !joined.startsWith('#')) {
+                    candidates.push(joined.trim());
                 }
             }
         } else {
@@ -497,9 +545,11 @@ function _scanFile(p: string, root: string, sets: ResolutionSets): Violation[] {
                 out.push({
                     file: rel,
                     line: n,
-                    token: claim.token,
+                    token: _subRejected(claim, sets) ? `${claim.token} ${claim.sub}` : claim.token,
                     category: claim.category,
-                    hint: _hint(claim.category),
+                    hint: _subRejected(claim, sets)
+                        ? `sub-command not declared for '${claim.token}' in src/cli/registry.ts`
+                        : _hint(claim.category),
                 });
             }
         }
