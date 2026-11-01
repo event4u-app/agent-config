@@ -476,6 +476,11 @@ describe('block_no_verify — exec wrappers and config-env forms', () => {
         "env -S 'git\\_commit\\_--no-verify'",
         "env -S 'g${X}it commit --no-verify'",
         "env -S 'git commit \\x2d-no-verify'",
+        // Council round 8 (openai): -S expands in place; a later -S belongs to git.
+        "env -S 'git commit --no-verify' -S 'echo'",
+        "env --split-string='git commit --no-verify' -S echo",
+        "env -S 'HUSKY=0 git' commit -m x",
+        "env -S '-i git' commit --no-verify",
     ];
     for (const cmd of BYPASSED) {
         it(`blocks: ${cmd}`, () => {

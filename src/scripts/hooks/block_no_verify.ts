@@ -285,11 +285,6 @@ const _EXEC_WRAPPERS: ReadonlyMap<string, { readonly withValue: ReadonlySet<stri
         ['xargs', { withValue: new Set(['-a', '-d', '-E', '-I', '-L', '-n', '-P', '-s', '--arg-file', '--delimiter', '--max-args', '--max-procs', '--max-chars', '--process-slot-var']), positional: 0 }],
     ]);
 
-/** `env -S`'s `\_` separates arguments; decode it so the payload parses as env runs it. */
-function _decode_split(raw: string | null): string | null {
-    return raw === null ? null : raw.replace(/\\_/g, ' ');
-}
-
 /** Interpreters whose `-c <payload>` is a command list (`sh -c '…'`). */
 const _SHELL_RE = /^(?:ba|z|k|da|c|tc|fi|pw)?sh$/;
 
@@ -315,58 +310,90 @@ function _basename(token: string): string {
  * wrappers are peeled off, plus any assignment that disables hooks on the way.
  */
 export function _unwrap(tokens: string[]): {
+    /** The argument vector as the command runs it: `env -S` strings expanded in place. */
+    argv: string[];
     start: number;
     hookspathEnv: string | null;
     /** At least one wrapper was peeled, so `start` rests on the option table. */
     wrapped: boolean;
     /** `command -v` / `-V`: a lookup, which runs nothing. */
     lookup: boolean;
-    splitString: string | null;
+    /** An `env -S` string this guard cannot read (`${VAR}`, an escape other than `\_`). */
+    unreadableSplit: string | null;
 } {
+    let argv = [...tokens];
     let i = 0;
     let hookspathEnv: string | null = null;
-    let splitString: string | null = null;
     let wrapped = false;
+    const done = (lookup: boolean, unreadableSplit: string | null = null) => ({
+        argv,
+        start: i,
+        hookspathEnv,
+        wrapped,
+        lookup,
+        unreadableSplit,
+    });
     for (let guard = 0; guard < 16; guard += 1) {
-        while (i < tokens.length && _is_env_assignment(tokens[i] as string)) {
-            if (hookspathEnv === null && _env_sets_hookspath(tokens[i] as string)) hookspathEnv = tokens[i] as string;
+        while (i < argv.length && _is_env_assignment(argv[i] as string)) {
+            if (hookspathEnv === null && _env_sets_hookspath(argv[i] as string)) hookspathEnv = argv[i] as string;
             i += 1;
         }
-        const head = _basename(tokens[i] ?? '');
+        const head = _basename(argv[i] ?? '');
         const spec = _EXEC_WRAPPERS.get(head);
-        if (spec === undefined) return { start: i, hookspathEnv, wrapped, lookup: false, splitString };
+        if (spec === undefined) return done(false);
         // `command -v` / `-V` looks a name up; it runs nothing. Only `command`'s
         // own options count: `-v` after the executable is that program's flag.
         if (head === 'command') {
             let k = i + 1;
             let lookup = false;
-            while (k < tokens.length && (tokens[k] as string).startsWith('-') && tokens[k] !== '--') {
-                if (/^-[a-zA-Z]*[vV]/.test(tokens[k] as string)) lookup = true;
+            while (k < argv.length && (argv[k] as string).startsWith('-') && argv[k] !== '--') {
+                if (/^-[a-zA-Z]*[vV]/.test(argv[k] as string)) lookup = true;
                 k += 1;
             }
-            if (lookup) return { start: i, hookspathEnv, wrapped, lookup: true, splitString };
+            if (lookup) return done(true);
         }
         wrapped = true;
         i += 1;
-        while (i < tokens.length && (tokens[i] as string).startsWith('-')) {
-            const opt = tokens[i] as string;
+        while (i < argv.length && (argv[i] as string).startsWith('-')) {
+            const opt = argv[i] as string;
             if (head === 'env') {
-                // `-S <s>`, `-S<s>`, a bundle ending in S (`-vS <s>`), or
-                // `--split-string[=<s>]` — each consumes its string exactly once.
-                const bundle = opt.startsWith('--') ? null : /^-[a-zA-Z]*S(.*)$/.exec(opt);
+                // GNU env splits an `-S` string into arguments IN PLACE and goes on
+                // parsing them — options, assignments, the command — exactly as if
+                // they had been typed (council rounds 6-8). So the string is
+                // expanded into argv here and the scan continues over it, which
+                // is what makes `-S 'git …' -S echo` and `-S 'sh -c' '…'` read
+                // the way env runs them.
+                const bundle = opt.startsWith('--') ? null : /^-([a-zA-Z]*)S(.*)$/.exec(opt);
+                let raw: string | null = null;
+                let consumed = 0;
+                let keep: string[] = [];
                 if (opt.startsWith('--split-string=')) {
-                    splitString = _decode_split(opt.slice('--split-string='.length));
-                    i += 1;
-                    continue;
+                    raw = opt.slice('--split-string='.length);
+                    consumed = 1;
+                } else if (opt === '--split-string') {
+                    raw = argv[i + 1] ?? '';
+                    consumed = 2;
+                } else if (bundle !== null) {
+                    keep = bundle[1] !== '' ? [`-${bundle[1] as string}`] : [];
+                    raw = bundle[2] !== '' ? (bundle[2] as string) : (argv[i + 1] ?? '');
+                    consumed = bundle[2] !== '' ? 1 : 2;
                 }
-                if (opt === '--split-string' || (bundle !== null && bundle[1] === '')) {
-                    splitString = _decode_split(tokens[i + 1] ?? null);
-                    i += 2;
-                    continue;
-                }
-                if (bundle !== null) {
-                    splitString = _decode_split(bundle[1] as string);
-                    i += 1;
+                if (raw !== null) {
+                    const decoded = raw.replace(/\\_/g, ' ');
+                    if (/\$/.test(decoded) || /\\/.test(decoded)) return done(false, raw);
+                    let split: string[];
+                    try {
+                        split = shlexSplit(decoded);
+                    } catch {
+                        return done(false, raw);
+                    }
+                    argv = [...argv.slice(0, i), ...keep, ...split, ...argv.slice(i + consumed)];
+                    i += keep.length;
+                    // The expanded words may begin with assignments or the command.
+                    while (i < argv.length && _is_env_assignment(argv[i] as string)) {
+                        if (hookspathEnv === null && _env_sets_hookspath(argv[i] as string)) hookspathEnv = argv[i] as string;
+                        i += 1;
+                    }
                     continue;
                 }
             }
@@ -375,21 +402,7 @@ export function _unwrap(tokens: string[]): {
         }
         i += spec.positional;
     }
-    return { start: i, hookspathEnv, wrapped, lookup: false, splitString };
-}
-
-/**
- * `env -S` has its own syntax, not the shell's (council round 7): `\_` separates
- * arguments — decoded in `_unwrap` — while `${VAR}` expands and other backslash
- * escapes rewrite characters. Neither is something this guard can read, so a
- * split string carrying one is refused rather than guessed at.
- */
-function _unreadable_split_string(splitString: string): boolean {
-    return /\$/.test(splitString) || /\\/.test(splitString);
-}
-
-function _sh_quote(token: string): string {
-    return `'${token.replace(/'/g, `'\\''`)}'`;
+    return done(false);
 }
 
 function _payload_at(tokens: string[], at: number): string | null {
@@ -408,29 +421,26 @@ function _payload_at(tokens: string[], at: number): string | null {
 }
 
 /**
- * The payload of `sh -c '<payload>'`, `eval <words…>` or `env -S '<payload>'`,
- * or null. After a wrapper, an interpreter is looked for past an unresolved
- * head the same way `_git_base` looks for git (council round 4).
+ * The payload of `sh -c '<payload>'` or `eval <words…>`, read from the argument
+ * vector as the command runs it (`env -S` expanded), or null. After a wrapper,
+ * an interpreter is looked for past an unresolved head the same way `_git_base`
+ * looks for git (council round 4).
  */
 export function _shell_payload(tokens: string[]): string | null {
-    const { start, splitString, wrapped, lookup } = _unwrap(tokens);
-    // `env -S` splits only its own string; the arguments after it keep their
-    // boundaries, so they are re-quoted before the payload is parsed again
-    // (council round 6: `env -S 'sh -c' 'git commit --no-verify'`).
-    if (splitString !== null) return [splitString, ...tokens.slice(start).map(_sh_quote)].join(' ');
-    const direct = _payload_at(tokens, start);
-    if (direct !== null || !wrapped || lookup || _basename(tokens[start] ?? '') === 'git') return direct;
-    for (let k = start + 1; k < tokens.length; k += 1) {
-        const p = _payload_at(tokens, k);
+    const { argv, start, wrapped, lookup } = _unwrap(tokens);
+    const direct = _payload_at(argv, start);
+    if (direct !== null || !wrapped || lookup || _basename(argv[start] ?? '') === 'git') return direct;
+    for (let k = start + 1; k < argv.length; k += 1) {
+        const p = _payload_at(argv, k);
         if (p !== null) return p;
     }
     return null;
 }
 
 function _git_base(tokens: string[]): string[] | null {
-    const { start, wrapped, lookup } = _unwrap(tokens);
-    if (start < tokens.length && _basename(tokens[start] as string) === 'git') {
-        return ['git', ...tokens.slice(start + 1)];
+    const { argv, start, wrapped, lookup } = _unwrap(tokens);
+    if (start < argv.length && _basename(argv[start] as string) === 'git') {
+        return ['git', ...argv.slice(start + 1)];
     }
     // After a wrapper, `start` is only as good as the option table that found
     // it, and every round of review found a spelling the table missed
@@ -440,8 +450,8 @@ function _git_base(tokens: string[]): string[] | null {
     // refused — and the shared segmenter (later/road-to-a-hard-floor-the-shell-
     // cannot-talk-past Phase 1) is what retires the guess.
     if (wrapped && !lookup) {
-        const at = tokens.findIndex((t, k) => k >= start && _basename(t) === 'git');
-        if (at !== -1) return ['git', ...tokens.slice(at + 1)];
+        const at = argv.findIndex((t, k) => k >= start && _basename(t) === 'git');
+        if (at !== -1) return ['git', ...argv.slice(at + 1)];
     }
     return null;
 }
@@ -771,11 +781,14 @@ function _check_command(cmd: string, depth = 0): [boolean, string] {
     }
 
     for (const sub of _split_subcommands(tokens)) {
-        const { hookspathEnv, splitString } = _unwrap(sub);
-        if (splitString !== null && _unreadable_split_string(splitString)) {
+        const { hookspathEnv, unreadableSplit } = _unwrap(sub);
+        // `env -S` has its own syntax (council round 7): `\_` is decoded, but
+        // `${VAR}` expands and other escapes rewrite characters, which this guard
+        // cannot read — refused rather than guessed at.
+        if (unreadableSplit !== null) {
             return [
                 true,
-                `'env -S' string '${splitString}' uses an expansion or escape this guard cannot read — fail-closed (git-history-discipline). Spell the command out without 'env -S'.`,
+                `'env -S' string '${unreadableSplit}' uses an expansion or escape this guard cannot read — fail-closed (git-history-discipline). Spell the command out without 'env -S'.`,
             ];
         }
         const payload = depth <= 3 ? _shell_payload(sub) : null;
