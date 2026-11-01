@@ -417,7 +417,7 @@ export function main(argv: string[]): number {
                     'edge kinds and no prose cross-references, so a referenced artefact can\n' +
                     'appear here; `check_references.ts` is the cross-reference gate, not this.\n' +
                     'Sunset stays explicit and recorded in the removing commit, with no\n' +
-                    'tombstone files (`docs/governance.md` § Skill lifecycle policy), and the\n' +
+                    'tombstone files (`docs/maintainers/governance.md` § Skill lifecycle policy), and the\n' +
                     'shipped precedent for stale artefacts is archive-not-delete\n' +
                     '(`src/scripts/janitor.ts:10` — never auto-sweeps).\n',
             );

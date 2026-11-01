@@ -19,7 +19,7 @@
  * module ships a hand-rolled Draft-2020-12 subset validator. On a VALID
  * manifest (the only path the real-repo golden parity exercises — and in
  * this worktree `dist/mcp/` is absent so the `missing:` branch fires first)
- * the wording never surfaces. See docs/migration/divergences/.
+ * the wording never surfaces. See docs/maintainers/migration/divergences/.
  */
 
 import * as fs from 'node:fs';

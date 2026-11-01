@@ -20,10 +20,10 @@ import { execFileSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { withGitVisibleScopeAsync } from '../_lib/git_visible_files.js';
 import { write_atomic } from '../_lib/fs_atomic.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 import { gitProbe, hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { buildFromRepo, readProjectProbe } from './build.js';
 import { acquire as acquireRefreshLock, heldByThisProcess } from './refresh_lock.js';
@@ -54,8 +54,7 @@ import { loadGraph } from './query.js';
 import type { CodeGraph } from './types.js';
 import { dead, repoEntryPoints } from './verbs.js';
 
-const _HERE = path.dirname(fileURLToPath(import.meta.url));
-const VIEWER_DIR = path.join(_HERE, 'map_viewer');
+const VIEWER_DIR = path.join(resolvePackageRoot(import.meta.url), 'src', 'scripts', 'code_graph', 'map_viewer');
 
 /** Rough characters-per-token used to hold MAP.md to its budget. */
 const CHARS_PER_TOKEN = 4;
@@ -202,7 +201,7 @@ export function declaredEntryFiles(root: string): string[] {
  * root it would describe the wrong repository.
  */
 async function artefactGraph(root: string): Promise<MapInputsArtefacts | null> {
-    const pkgRoot = path.resolve(_HERE, '..', '..', '..');
+    const pkgRoot = resolvePackageRoot(import.meta.url);
     if (path.resolve(root) !== pkgRoot || !fs.existsSync(path.join(root, 'src', 'skills'))) return null;
     try {
         const dg = await import('../discovery_graph.js');

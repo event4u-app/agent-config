@@ -365,3 +365,29 @@ describe('the default context on this repository changes nothing', () => {
         expect(rows.every(([n]) => !n.includes(':'))).toBe(true);
     });
 });
+
+// The 2026-11-01 newcomer walkthrough: a default `doctor` created an untracked,
+// not-gitignored `agents/reports/neighbour-scan.json` in the user's repository,
+// which no uninstall removed. The cache belongs to this machine, not the repo.
+describe('the neighbour scan cache lives in user-global state', () => {
+    it('is written outside the project, under the user-global root', () => {
+        const project = tmp('nb-cache-project-');
+        const home = tmp('nb-cache-home-');
+        const pkg = tmp('nb-cache-pkg-');
+        write(pkg, 'src/skills/placeholder/SKILL.md', skill('placeholder', 'unrelated', 'nothing'));
+        write(project, '.claude/skills/calm/SKILL.md', skill('calm', 'calm things', 'Plain prose only.'));
+        write(project, 'agents/installed-tools.lock', manifest([path.join(project, 'nothing.md')]));
+
+        runCensus(project, pkg, home);
+
+        const cache = scanCachePath(project);
+        expect(path.relative(project, cache).startsWith('..')).toBe(true);
+        expect(cache.startsWith(path.resolve(process.env['EVENT4U_CONFIG_HOME'] as string))).toBe(true);
+        expect(fs.existsSync(cache)).toBe(true);
+        expect(fs.existsSync(path.join(project, 'agents', 'reports'))).toBe(false);
+    });
+
+    it('keeps two projects apart', () => {
+        expect(scanCachePath(tmp('nb-a-'))).not.toBe(scanCachePath(tmp('nb-b-')));
+    });
+});

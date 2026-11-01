@@ -64,4 +64,7 @@ construction.
 
 - [`profiles.md`](profiles.md) — the six entry profiles that select which packs (and so which flows) surface.
 - [`catalog.md`](catalog.md) — the full command / skill / rule / guideline surface.
+- [`command-flows.md`](command-flows.md) — generated step-by-step flow per command.
+- [`cookbook.md`](cookbook.md) — generated recipes for common tasks.
+- [`end-to-end-walkthroughs.md`](end-to-end-walkthroughs.md) — full sessions, in depth.
 - [`src/flows/README.md`](../src/flows/README.md) — the flow schema and the source stubs.

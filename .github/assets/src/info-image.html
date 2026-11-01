@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Agent Config info image</title>
+<!--
+  Source of .github/assets/info-image.png. Render with:
+    node .github/assets/src/render-info-image.mjs
+  info-image-base.webp is the original artwork with every patch region below
+  already painted out, so no removed text survives in the repository.
+-->
+<style>
+  :root {
+    --orange: #ff8a1f;
+    --cyan: #2fd4ff;
+    --white: #f4f7fb;
+    --soft: #d5dde6;
+    --sans: "Segoe UI", "Open Sans", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --mono: "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #020910; }
+  #stage { position: relative; width: 1774px; height: 887px; overflow: hidden; font-family: var(--sans); color: var(--white); }
+  #base { position: absolute; left: 0; top: 0; width: 1774px; height: 887px; }
+  .patch { position: absolute; filter: blur(3px); }
+  .abs { position: absolute; white-space: nowrap; }
+  .glow { text-shadow: 0 0 6px rgba(255,255,255,.25), 0 1px 2px rgba(0,0,0,.8); }
+
+  /* left column */
+  .sub { font-size: 18px; color: #e9edf2; letter-spacing: .1px; }
+  .sub b { color: var(--orange); font-weight: 700; }
+  .headbar { position: absolute; width: 6px; border-radius: 3px; background: var(--orange); box-shadow: 0 0 10px var(--orange); }
+  .headline { font-size: 29px; font-weight: 800; line-height: 33px; letter-spacing: -.2px; }
+  .headline em { font-style: normal; color: var(--orange); }
+  .para { font-size: 19px; line-height: 24px; color: #e3e8ee; white-space: normal; width: 470px; }
+  .h2 { font-size: 27px; font-weight: 800; color: var(--orange); text-shadow: 0 0 10px rgba(255,138,31,.45); }
+  .li-name { font-size: 22px; font-weight: 800; }
+  .li-desc { font-size: 16px; color: #dfe5ec; }
+  .repo { font-family: var(--mono); font-size: 16px; color: #b9c7d4; }
+  .repo b { color: var(--cyan); font-weight: 600; }
+
+  /* top window */
+  .win { position: absolute; border: 2px solid var(--orange); border-radius: 10px;
+         background: linear-gradient(180deg, rgba(4,16,30,.97), rgba(2,10,20,.97));
+         box-shadow: 0 0 14px rgba(255,138,31,.85), 0 0 2px #ffd2a6, inset 0 0 18px rgba(255,138,31,.18); }
+  .win .bar { position: absolute; left: 0; right: 0; top: 0; height: 40px; border-bottom: 1.5px solid rgba(47,212,255,.75);
+              box-shadow: 0 1px 6px rgba(47,212,255,.35); }
+  .win .title { position: absolute; left: 50px; top: 7px; font-size: 20px; font-weight: 800; letter-spacing: .3px; }
+  .win .btns { position: absolute; right: 16px; top: 6px; font-size: 20px; color: var(--orange); letter-spacing: 10px; font-weight: 700; }
+  .cmd { font-family: var(--mono); font-size: 16.5px; color: var(--orange); font-weight: 600; }
+  .cmd i { font-style: normal; color: var(--cyan); }
+  .desc { font-size: 17px; color: #e2e8ee; }
+
+  /* hexes + cards */
+  .hex { position: absolute; text-align: center; font-size: 19px; font-weight: 800; line-height: 21px; }
+  .ctitle { font-size: 16.5px; font-weight: 700; }
+  .cbody { font-size: 15.5px; color: #e8edf2; }
+  .sev { display: inline-block; min-width: 0; font-weight: 700; }
+  .tab { font-size: 25px; font-weight: 800; }
+
+  /* bottom bar */
+  .install-l { font-size: 25px; font-weight: 800; }
+  .install-c { font-family: var(--mono); font-size: 24px; color: var(--white); font-weight: 600; }
+  .install-c b { color: var(--orange); font-weight: 600; }
+  .install-c i { font-style: normal; color: var(--cyan); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <img id="base" src="info-image-base.webp" alt="">
+  <div id="patches"></div>
+  <div id="content"></div>
+</div>
+
+<script>
+// Every region of the original artwork that is replaced: [x, y, w, h, fill?, blur?] in image pixels.
+// fill = colour stops (left to right) for a horizontal gradient, or { interp: 'v' | 'hv', top? } to
+// interpolate the surrounding pixels across the hole; omitted = boundary median.
+// mask mode paints these flat (boundary-median colour) to produce info-image-base.webp;
+// render mode feathers the same colour back over the seams, then draws the new content.
+window.PATCHES = {
+  tagline:  [145, 78, 405, 32],
+  leftTop:  [0, 110, 552, 180, ['#010a13', '#010a13'], 6],
+  leftMid:  [0, 290, 522, 92, ['#010a13', '#010a13'], 3],
+  leftBot:  [0, 738, 506, 149, ['#010a13', '#010a13'], 6],
+  li1: [137, 388, 312, 56, ['#160d07', '#08090b', '#04121c'], 1.5], li2: [137, 458, 312, 57, ['#160d07', '#08090b', '#04121c'], 1.5], li3: [137, 530, 312, 58, ['#160d07', '#08090b', '#04121c'], 1.5],
+  li4: [137, 601, 312, 58, ['#160d07', '#08090b', '#04121c'], 1.5], li5: [137, 672, 312, 60, ['#160d07', '#08090b', '#04121c'], 1.5],
+  wsA: [594, 14, 662, 222],
+  wsB: [594, 233, 280, 51, { interp: 'v', top: '#03101c' }, 2],
+  archTitle: [1300, 79, 150, 22],
+  graphs:   [1550, 26, 184, 38, ['#2a1206', '#001a2a']],
+  councils: [1618, 200, 112, 32, ['#2a1408', '#00141f']],
+  trust:    [560, 400, 175, 52, { interp: 'hv' }, 2],
+  hex1: [592, 490, 133, 47], hex2: [835, 488, 110, 52], hex3: [1050, 488, 135, 52],
+  hex4: [1288, 490, 118, 50], hex5: [1525, 490, 120, 45],
+  tA: [578, 584, 136, 21], tB: [814, 584, 134, 21], tC: [1052, 584, 130, 21],
+  tD: [1289, 584, 135, 21], tE: [1528, 584, 82, 21],
+  bA: [533, 609, 219, 104], bB: [776, 609, 214, 98], bD: [1260, 608, 208, 68], bE: [1492, 608, 222, 97],
+  bar: [700, 765, 810, 60],
+};
+
+function boundaryMedian(g, [x, y, w, h]) {
+  const r = [], gg = [], b = [];
+  const push = (px, py) => { const d = g.getImageData(px, py, 1, 1).data; r.push(d[0]); gg.push(d[1]); b.push(d[2]); };
+  const W = g.canvas.width, H = g.canvas.height;
+  const cl = (v, m) => Math.max(0, Math.min(m - 1, v));
+  for (let i = 0; i < w; i += 2) { push(cl(x + i, W), cl(y + 1, H)); push(cl(x + i, W), cl(y + h - 2, H)); }
+  for (let j = 0; j < h; j += 2) { push(cl(x + 1, W), cl(y + j, H)); push(cl(x + w - 2, W), cl(y + j, H)); }
+  const med = a => { a.sort((p, q) => p - q); return a[a.length >> 1]; };
+  // darkest-third median: glow lines and text on the boundary must not lift the fill
+  const lowMed = a => { a.sort((p, q) => p - q); return a[Math.floor(a.length / 3)]; };
+  return [lowMed(r), lowMed(gg), lowMed(b)];
+}
+
+// mask mode: called by the render script with the original artwork as a data URL
+window.buildBase = async (dataUrl) => {
+  const im = new Image(); im.src = dataUrl; await im.decode();
+  const c = document.createElement('canvas'); c.width = im.width; c.height = im.height;
+  const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(im, 0, 0);
+  const fills = {};
+  for (const [k, rect] of Object.entries(PATCHES)) fills[k] = boundaryMedian(g, rect);
+  const src = g.getImageData(0, 0, c.width, c.height).data;
+  const px = (X, Y) => { const i = (Y * c.width + X) * 4; return [src[i], src[i + 1], src[i + 2]]; };
+  const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const lerp = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+  for (const [k, [x, y, w, h, cols]] of Object.entries(PATCHES)) {
+    if (cols && cols.interp) {
+      const img = g.createImageData(w, h);
+      for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+        const top = cols.top ? hex(cols.top) : px(x + i, y - 2), bot = px(x + i, y + h + 1);
+        let v = lerp(top, bot, (j + 1) / (h + 1));
+        if (cols.interp === 'hv') v = lerp(v, lerp(px(x - 2, y + j), px(x + w + 1, y + j), (i + 1) / (w + 1)), 0.5);
+        const o = (j * w + i) * 4; img.data[o] = v[0]; img.data[o + 1] = v[1]; img.data[o + 2] = v[2]; img.data[o + 3] = 255;
+      }
+      g.putImageData(img, x, y);
+      continue;
+    }
+    if (cols) { const lg = g.createLinearGradient(x, 0, x + w, 0); cols.forEach((col, i) => lg.addColorStop(i / (cols.length - 1), col)); g.fillStyle = lg; }
+    else g.fillStyle = `rgb(${fills[k].join(',')})`;
+    g.fillRect(x, y, w, h);
+  }
+  return c.toDataURL('image/webp', 0.9);
+};
+
+// render mode
+window.renderOverlay = async () => {
+  const base = document.getElementById('base');
+  await base.decode();
+  const c = document.createElement('canvas'); c.width = 1774; c.height = 887;
+  const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(base, 0, 0);
+  const P = document.getElementById('patches');
+  for (const [k, [x, y, w, h, cols, blur = 3]] of Object.entries(PATCHES)) {
+    const d = g.getImageData(x + (w >> 1), y + (h >> 1), 1, 1).data;
+    const el = document.createElement('div'); el.className = 'patch';
+    if (cols && cols.interp) continue; // interpolated fill is already seamless in the base
+    const bg = cols ? `linear-gradient(90deg, ${cols.join(', ')})` : `rgb(${d[0]},${d[1]},${d[2]})`;
+    Object.assign(el.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px', background: bg, filter: `blur(${blur}px)` });
+    P.appendChild(el);
+  }
+  document.getElementById('content').innerHTML = CONTENT;
+};
+
+const check = (x, y, s = 18) => `<svg class="abs" style="left:${x}px;top:${y}px" width="${s}" height="${s}" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.6" fill="#0c3a22" stroke="#3ddc6e" stroke-width="2"/><path d="M5.6 10.4l3 3 5.8-6.6" fill="none" stroke="#5cf08a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const sevDot = (x, y, col) => `<svg class="abs" style="left:${x}px;top:${y}px" width="18" height="18" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5" fill="${col}" opacity=".95"/><circle cx="10" cy="10" r="8.5" fill="none" stroke="${col}" stroke-width="1" style="filter:drop-shadow(0 0 3px ${col})"/></svg>`;
+
+const CONTENT = `
+  <!-- brand subtitle -->
+  <div class="abs sub" style="left:155px;top:81px">Skills, rules and commands for <b>AI coding agents</b></div>
+
+  <!-- headline -->
+  <div class="headbar" style="left:38px;top:127px;height:62px"></div>
+  <div class="abs headline glow" style="left:58px;top:124px">Make your AI coding agents check<br>their work before they <em>say done</em>.</div>
+  <div class="abs para" style="left:40px;top:206px">A shared suite for the coding agent you already use: a review step before the pull request, a code map, cost tracking and roadmaps.</div>
+  <div class="abs h2" style="left:40px;top:322px">What your agent gets</div>
+
+  <!-- list rows (frames + icons are the original artwork) -->
+  <div class="abs li-name glow" style="left:148px;top:393px">Code review</div>
+  <div class="abs li-desc" style="left:149px;top:420px">checks the diff and asks for evidence</div>
+  <div class="abs li-name glow" style="left:148px;top:464px">Security audit</div>
+  <div class="abs li-desc" style="left:149px;top:491px">threat pass, findings by severity</div>
+  <div class="abs li-name glow" style="left:148px;top:537px">Code map</div>
+  <div class="abs li-desc" style="left:149px;top:564px">who calls what, before you change it</div>
+  <div class="abs li-name glow" style="left:148px;top:608px">Cost report</div>
+  <div class="abs li-desc" style="left:149px;top:635px">token cost of your agent sessions</div>
+  <div class="abs li-name glow" style="left:148px;top:678px">Roadmaps</div>
+  <div class="abs li-desc" style="left:149px;top:705px">plan the work, then do it step by step</div>
+
+  <div class="abs repo" style="left:40px;top:776px">Open source on GitHub</div>
+  <div class="abs repo" style="left:40px;top:800px"><b>event4u-app/agent-config</b></div>
+
+  <!-- top window: slash commands -->
+  <div class="win" style="left:598px;top:20px;width:654px;height:212px">
+    <div class="bar"></div>
+    <svg class="abs" style="left:16px;top:9px" width="26" height="22" viewBox="0 0 26 22"><path d="M2 5.5a2 2 0 0 1 2-2h6l2.5 2.5H22a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z" fill="none" stroke="#2fd4ff" stroke-width="2.2" stroke-linejoin="round" style="filter:drop-shadow(0 0 3px #2fd4ff)"/></svg>
+    <div class="title glow">SLASH COMMANDS</div>
+    <div class="btns">_ □ ×</div>
+    <div class="abs cmd" style="left:24px;top:52px"><i>›</i> /review:changes</div><div class="abs desc" style="left:282px;top:51px">self-review before the pull request</div>
+    <div class="abs cmd" style="left:24px;top:78px"><i>›</i> /project:map</div><div class="abs desc" style="left:282px;top:77px">draw the code map</div>
+    <div class="abs cmd" style="left:24px;top:104px"><i>›</i> /cost:report</div><div class="abs desc" style="left:282px;top:103px">token cost of the session</div>
+    <div class="abs cmd" style="left:24px;top:130px"><i>›</i> /roadmap:create</div><div class="abs desc" style="left:282px;top:129px">plan the work as a roadmap</div>
+    <div class="abs cmd" style="left:24px;top:156px"><i>›</i> /roadmap:process-step</div><div class="abs desc" style="left:282px;top:155px">do the next step, then stop</div>
+    <div class="abs cmd" style="left:24px;top:182px"><i>›</i> /council:default</div><div class="abs desc" style="left:282px;top:181px">second opinion from other models</div>
+  </div>
+
+  <!-- right tabs -->
+  <svg class="abs" style="left:1560px;top:30px" width="34" height="32" viewBox="0 0 34 32"><g fill="none" stroke="#ff8a1f" stroke-width="2.6" stroke-linecap="round" style="filter:drop-shadow(0 0 3px #ff8a1f)"><rect x="5" y="2.5" width="24" height="27" rx="3"/><path d="M11 10h12M11 16h12M11 22h8"/></g></svg>
+  <div class="abs tab glow" style="left:1626px;top:27px">Rules</div>
+  <div class="abs tab glow" style="left:1626px;top:198px">Council</div>
+  <div class="abs" style="left:1306px;top:78px;font-size:18px;color:#e4f4ff">code-map</div>
+
+  <!-- hex labels -->
+  <div class="hex glow" style="left:592px;top:493px;width:133px">Code<br>review</div>
+  <div class="hex glow" style="left:835px;top:493px;width:110px">Security<br>audit</div>
+  <div class="hex glow" style="left:1050px;top:493px;width:135px">Code<br>map</div>
+  <div class="hex glow" style="left:1288px;top:493px;width:118px">Cost<br>report</div>
+  <div class="hex glow" style="left:1525px;top:493px;width:120px">Roadmaps</div>
+
+  <!-- card titles -->
+  <div class="abs ctitle glow" style="left:581px;top:583px">Code review</div>
+  <div class="abs ctitle glow" style="left:817px;top:583px">Security audit</div>
+  <div class="abs ctitle glow" style="left:1055px;top:583px">Code map</div>
+  <div class="abs ctitle glow" style="left:1292px;top:583px">Cost report</div>
+  <div class="abs ctitle glow" style="left:1531px;top:583px">Roadmaps</div>
+
+  <!-- card A: code review -->
+  <svg class="abs" style="left:548px;top:618px" width="18" height="20" viewBox="0 0 18 20"><g fill="none" stroke="#e8edf2" stroke-width="1.8"><path d="M2 1.5h9l5 5V18.5H2z" stroke-linejoin="round"/><path d="M5.5 9.5h7M5.5 13h7"/></g></svg>
+  <div class="abs cbody" style="left:576px;top:618px">Evidence: tests and diff</div>
+  <div class="abs" style="left:548px;top:648px;width:190px;height:56px;border:1px solid rgba(47,212,255,.45);border-radius:6px;background:rgba(0,0,0,.25);font-family:var(--mono);font-size:13px;line-height:17px;padding:2px 8px">
+    <div style="color:#ff7a7a">- if (user) return</div>
+    <div style="color:#6ff09a">+ if (!user) return</div>
+    <div style="color:#6ff09a">+ test: rejects guest</div>
+  </div>
+
+  <!-- card B: security audit -->
+  <div class="abs cbody" style="left:790px;top:615px">Findings by severity</div>
+  ${sevDot(790, 643, '#ff5a5a')}<div class="abs cbody sev" style="left:816px;top:641px;color:#ff7070">High</div>
+  ${sevDot(790, 668, '#ffb020')}<div class="abs cbody sev" style="left:816px;top:666px;color:#ffc04a">Medium</div>
+  ${sevDot(898, 643, '#ffe14d')}<div class="abs cbody sev" style="left:924px;top:641px;color:#ffe766">Low</div>
+  ${sevDot(898, 668, '#2fd4ff')}<div class="abs cbody sev" style="left:924px;top:666px;color:#7fe3ff">Info</div>
+
+  <!-- card D: cost report (chart below is original artwork) -->
+  <svg class="abs" style="left:1272px;top:628px" width="22" height="22" viewBox="0 0 22 22"><g fill="none" stroke="#2fd4ff" stroke-width="2" style="filter:drop-shadow(0 0 2px #2fd4ff)"><circle cx="11" cy="11" r="9"/><path d="M11 5.5v11M7.5 8.5c0-1.6 1.6-2.4 3.5-2.4s3.5.8 3.5 2.4-1.6 2.2-3.5 2.5-3.5.9-3.5 2.5 1.6 2.4 3.5 2.4 3.5-.8 3.5-2.4"/></g></svg>
+  <div class="abs cbody" style="left:1302px;top:628px;font-size:17px;font-weight:600">Tokens per task</div>
+
+  <!-- card E: roadmaps -->
+  ${check(1506, 616)}<div class="abs cbody" style="left:1534px;top:614px;font-size:16.5px">Analyze</div>
+  ${check(1506, 639)}<div class="abs cbody" style="left:1534px;top:637px;font-size:16.5px">Implement</div>
+  ${check(1506, 662)}<div class="abs cbody" style="left:1534px;top:660px;font-size:16.5px">Verify</div>
+  ${check(1506, 685)}<div class="abs cbody" style="left:1534px;top:683px;font-size:16.5px">Roll out</div>
+
+  <!-- bottom bar: install -->
+  <svg class="abs" style="left:767px;top:777px" width="40" height="34" viewBox="0 0 40 34"><g fill="none" stroke="#ff8a1f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 4px #ff8a1f)"><rect x="2" y="2" width="36" height="30" rx="4"/><path d="M9 12l6 5-6 5M19 23h11"/></g></svg>
+  <div class="abs install-l glow" style="left:823px;top:777px">Install</div>
+  <div class="abs" style="left:925px;top:774px;width:2px;height:42px;background:linear-gradient(#2fd4ff00,#2fd4ff,#2fd4ff00)"></div>
+  <div class="abs install-c" style="left:951px;top:779px"><i>$</i> <b>npx</b> -y @event4u/agent-config init</div>
+`;
+</script>
+</body>
+</html>

@@ -428,17 +428,23 @@ function walk_citable(dir: string): string[] {
     return out.sort();
 }
 
-/** Every distinct ADR reference the citation roots name, sorted. */
+/**
+ * Every distinct ADR the citation roots name, sorted — one spelling per decision.
+ * Distinct by normalised id, not by text: `ADR-1` and `ADR-001` are one decision,
+ * and the ledger refuses to resolve a target twice.
+ */
 export function cited_refs(repo_root: string = REPO_ROOT): string[] {
-    const found = new Set<string>();
+    const found = new Map<string, string>();
     for (const root of CITATION_ROOTS) {
         for (const file of walk_citable(path.join(repo_root, root))) {
             for (const m of fs.readFileSync(file, 'utf-8').matchAll(CITATION_RE)) {
-                found.add(m[0]);
+                const key = normalise_ref(m[0])?.id ?? m[0];
+                const seen = found.get(key);
+                if (seen === undefined || m[0] < seen) found.set(key, m[0]);
             }
         }
     }
-    return [...found].sort();
+    return [...found.values()].sort();
 }
 
 /**

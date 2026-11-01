@@ -148,10 +148,10 @@ const PUBLISHED_MD_ROOTS: readonly string[] = [
  *
  * **The class it therefore excludes, named rather than left implicit:
  * tracked-but-unshipped `.md`.** These are public on the forge and readable by
- * anyone, but never installed. `ONBOARDING.md` is the live instance: it is
+ * anyone, but never installed. `docs/maintainers/ONBOARDING.md` is the live instance: it is
  * tracked, it is not in `files[]`, and on 2026-08-26 it carried 37 occurrences
  * of one maintainer's absolute home path. Those were rewritten to repo-relative
- * in the same change (`grep -c '/Users/' ONBOARDING.md` → 0), but that was a
+ * in the same change (`grep -c '/Users/' docs/maintainers/ONBOARDING.md` → 0), but that was a
  * ONE-TIME fix and this gate does not keep it that way.
  *
  * **Why not simply widen.** The sibling test at

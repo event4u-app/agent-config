@@ -39,6 +39,7 @@ import { runPacksLs } from './commands/packs.js';
 import { runCommandsLs, runCommandsExplain, looksLikeCommandTarget } from './commands/commands.js';
 import { logger } from './log/logger.js';
 import { buildHelp } from './help.js';
+import { INIT_HELP } from './initHelp.js';
 import { applyConfigRootFromArgv } from './configRoot.js';
 import { buildVersionReadout } from '../shared/capabilities.js';
 
@@ -487,6 +488,8 @@ async function main(rawArgv: readonly string[]): Promise<number> {
     maybePrintFirstRunNotice(head);
 
     if (head === '--help' || head === '-h') {
+        // `--help --tier=1|all` asks for the full surface, same as `help --tier=…`.
+        if (argv.length > 1) return delegateToBash({ args: ['help', ...argv.slice(1)] });
         process.stdout.write(`${buildHelp()}\n`);
         return 0;
     }
@@ -524,10 +527,15 @@ async function main(rawArgv: readonly string[]): Promise<number> {
     // no CLI tool-picker, one installer. Otherwise fall through to the bash CLI
     // install (road-to-single-install-source-of-truth § Phase 4 follow-up).
     // `init --project` initializes the minimal consumer project surface
-    // (bridge marker + overrides + gitignore block) via the `refresh
+    // (overrides + .gitignore and .gitattributes blocks) via the `refresh
     // --project` writer — never the GUI, never the global install
     // (road-to-setup-experience § Phase 1.3).
     if (head === 'init') {
+        // `init --help` documents `init`, not the bash installer it forwards to.
+        if (argv.includes('--help') || argv.includes('-h')) {
+            process.stdout.write(INIT_HELP);
+            return 0;
+        }
         // `--gui` is the explicit opt-in. It overrides the capability probes
         // (TTY, headless) but never `CI` / `AGENT_CONFIG_NO_UI` / a CLI-mode
         // flag — and an explicit request is never discarded silently, so a

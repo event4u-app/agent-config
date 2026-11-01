@@ -17,10 +17,10 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { updateRegistry } from '../_lib/project_registry.js';
 import { gitProbeWithEnv } from '../_lib/spawn_env.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 import { planHub, writeHub } from './estate_map.js';
 import { graphHome } from './graph_home.js';
 import { buildMap, hasMap, type MapBuildResult } from './map.js';
@@ -28,7 +28,7 @@ import { generateDemoLoad, generateHubProjects } from './demo/map_demo_generate.
 import { registerUse } from './projects_cli.js';
 import type { CodeGraph } from './types.js';
 
-const PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+const PKG_ROOT = resolvePackageRoot(import.meta.url);
 export const DEMO_FIXTURE = path.join(PKG_ROOT, 'tests', 'fixtures', 'code-graph', 'demo');
 export const HUB_FIXTURE = path.join(PKG_ROOT, 'tests', 'fixtures', 'code-graph', 'hub');
 

@@ -15,7 +15,7 @@
  * container literal. Replicating it made every subcommand fail in
  * `_skill_dir()` before doing any work — the twin was byte-faithful to a
  * source that no longer exists and runnable against nothing. Documented per
- * ADR-200 § 6 in `docs/migration/divergences/src-scripts-run_skill_evals.md`;
+ * ADR-200 § 6 in `docs/maintainers/migration/divergences/src-scripts-run_skill_evals.md`;
  * an undocumented difference would be a regression by definition.
  *
  * Sub-agent SPAWNING is per-environment (Claude Code, Augment Code,

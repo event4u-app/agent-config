@@ -112,5 +112,5 @@ serving on `/latest/`.
 
 - Per-client config snippets: [`mcp-client-config.md`](mcp-client-config.md)
 - A0-cloud contract: `docs/contracts/mcp-cloud-scope.md`
-- R2 bootstrap: `docs/setup/mcp-r2-bootstrap.md`
+- R2 bootstrap: `docs/maintainers/mcp-r2-bootstrap.md`
 - Local stdio fallback: `scripts/mcp_server/` (unchanged)

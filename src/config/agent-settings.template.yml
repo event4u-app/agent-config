@@ -95,11 +95,11 @@ discipline_profile: __DISCIPLINE_PROFILE__
 # uncomment, with its cost stated inline. Uncomment the line below to replace
 # the resolved value above:
 #
-#   discipline_profile: essential      # ~3.3x kernel tokens (vs ~11.7x for full)
+#   discipline_profile: essential      # ~3.3x vanilla tokens (vs ~11.7x for full)
 #
-# Read the two factors as what they are: multiples of the kernel-only baseline
+# Read the two factors as what they are: multiples of the no-rules (vanilla) baseline
 # from the cost-factor sweep, NOT the fresh-install census. They answer "what
-# does this tier cost relative to `off`", never "does this tier reach 30k" —
+# does this tier cost relative to running with no rules", never "does this tier reach 30k" —
 # nothing has measured the latter for `essential`, and this comment does not
 # claim it does.
 #

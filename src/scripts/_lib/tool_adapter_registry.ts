@@ -21,7 +21,7 @@ export interface AdapterEntry {
     readonly tool: string;
     /** How the tool consumes the package. */
     readonly kind: 'native' | 'agents-md' | 'marker';
-    /** Generated / written roots this tool reads (repo-relative). Empty for agents-md / marker tools. */
+    /** Generated / written roots this tool reads (repo-relative, or `~/`-prefixed for a user-level root). Empty for agents-md / marker tools. */
     readonly roots: readonly string[];
     /** Tool tag used by GENERATOR_OUTPUT_ROOTS, when the condense pipeline owns a root for it. */
     readonly generator_tag?: string;
@@ -52,7 +52,10 @@ export const ADAPTER_REGISTRY: readonly AdapterEntry[] = [
     { tool: 'Gemini CLI', kind: 'native', roots: ['GEMINI.md'], generator_tag: 'gemini' },
     { tool: 'GitHub Copilot', kind: 'native', roots: ['.github/copilot-instructions.md'] },
     { tool: 'Roo Code', kind: 'agents-md', roots: [] },
-    { tool: 'Codex CLI', kind: 'agents-md', roots: [] },
+    // The install writes `rules/`, `skills/`, `commands/` and `personas/` under
+    // `~/.codex/`; the host reads `skills/` only and no `AGENTS.md` is written.
+    // The skill-finder entry (`codex_skill_finder.ts`) lives in that root too.
+    { tool: 'Codex CLI', kind: 'native', roots: ['~/.codex/skills'] },
     { tool: 'Continue.dev', kind: 'agents-md', roots: [] },
     { tool: 'Aider', kind: 'marker', roots: [] },
     { tool: 'Augment', kind: 'marker', roots: ['.augment'], generator_tag: 'augment' },

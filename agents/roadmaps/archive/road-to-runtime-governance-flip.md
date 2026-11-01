@@ -333,7 +333,7 @@ exhaustive closure stays in Phase 4.
 
 The council (2/2, 2026-08-27) rejected the first draft of this phase, and the
 reason is worth keeping in the file rather than fixing silently. The draft gated
-only 3.3 on the blocker and called `README.md` and `docs/positioning-evidence.md`
+only 3.3 on the blocker and called `README.md` and `docs/maintainers/positioning-evidence.md`
 "internal-facing prose". `README.md:3` is the most public surface this repository
 has. All three carry the same present-tense claim, so all three carry the same
 evidence dependency — and AC-1 as first written could have passed with every one
@@ -375,7 +375,7 @@ is *being established*.
       match its capability-claim pattern. The absence-claim removal itself landed
       earlier, in delivery Group B, where the roadmap put it.
 - [x] **3.2 Replace the positioning story rather than leaving a hole.**
-      `docs/positioning-evidence.md:56`–`:74` records "zero runtime" as the
+      `docs/maintainers/positioning-evidence.md:56`–`:74` records "zero runtime" as the
       load-bearing differentiator and argues explicitly that it is only credible
       *because* it is machine-checked. That argument survives intact; its object
       becomes the supervision contract, stated as the policy this repo adopted.
@@ -480,7 +480,7 @@ is *being established*.
       bounded-window negation heuristic. The gate is a **floor, not a proof**, and
       saying so is cheaper than a regex that pretends otherwise.
 - [-] **3.5 Correct the stale figure only if the rewritten argument uses it.**
-      `docs/positioning-evidence.md` states "261 skills, 93 rules"; the measured
+      `docs/maintainers/positioning-evidence.md` states "261 skills, 93 rules"; the measured
       count is 299 (`find src/skills -name SKILL.md | wc -l`). The first draft
       justified fixing it with "while in the file", and a council seat rejected
       that as a non-boundary — correctly, since a doctrine transition has enough
@@ -755,9 +755,9 @@ Nine criteria, all governance. The daemon's ten live in
 `road-to-supervised-telemetry-collector.md` — the first draft had them here,
 which is how one roadmap came to own two rollbacks.
 
-- [x] AC-1 — `grep -rniIE 'zero.runtime|no runtime daemon' README.md docs/positioning-evidence.md docs/comparison.yaml` returns zero matches, and each of those three files states the governed *policy* under the Phase 3 wording rule. No present-tense supervision guarantee appears on any public surface, full stop — publishing one is the dependent roadmap's business and only after its evidence exists.
+- [x] AC-1 — `grep -rniIE 'zero.runtime|no runtime daemon' README.md docs/maintainers/positioning-evidence.md docs/comparison.yaml` returns zero matches, and each of those three files states the governed *policy* under the Phase 3 wording rule. No present-tense supervision guarantee appears on any public surface, full stop — publishing one is the dependent roadmap's business and only after its evidence exists.
       **The `-E` is the fix, not a detail.** The first draft omitted it, and in a basic regex `|` is a literal pipe — so the pattern matched nothing and the criterion would have passed with the forbidden text still in place. Proved on a one-line fixture before writing this: without `-E`, count 0 and exit 1; with `-E`, count 1. A criterion that cannot fail is not a criterion, which is the failure class this repository names as gates-that-scan-nothing-exit-green. Every other grep-shaped verify in this file was re-read for the same defect; they are single-pattern and clean.
-      **MET.** `grep -rniIE 'zero.runtime|no runtime daemon' README.md docs/positioning-evidence.md docs/comparison.yaml` returns **0**. README states the adopted constraint and labels it a policy; `positioning-evidence.md` carries a dated subsection explaining that the frame survived its object being retired. `docs/comparison.yaml` states the policy in its removal note rather than in a row — deliberately, because step 3.3 forbids a successor row until a lifecycle suite supports one. Where AC-1's "each of those three files" and 3.3 pull apart, 3.3 wins: publishing a row is the thing this phase must not do.
+      **MET.** `grep -rniIE 'zero.runtime|no runtime daemon' README.md docs/maintainers/positioning-evidence.md docs/comparison.yaml` returns **0**. README states the adopted constraint and labels it a policy; `positioning-evidence.md` carries a dated subsection explaining that the frame survived its object being retired. `docs/comparison.yaml` states the policy in its removal note rather than in a row — deliberately, because step 3.3 forbids a successor row until a lifecycle suite supports one. Where AC-1's "each of those three files" and 3.3 pull apart, 3.3 wins: publishing a row is the thing this phase must not do.
 - [x] AC-2 — The Phase 3.4 check exists and has been **seen red** three times on seeded negatives: a public-surface supervision claim, an emptied lifecycle suite, and a suite result from a foreign revision. Green at close.
       **MET.** `check_supervision_claim_atomicity --self-test` → `4/4 case(s) behaved (3 rejecting, floor 4)`. The three seeded negatives each drove the real CLI in a throwaway git repo and each returned exit 1 with a distinct refusal: no evidence at all, an emptied suite (0 run / 12 skipped), and a result recorded against a foreign revision. The fourth case is a positive control proving sufficient evidence still passes. Green on the tree at close.
 - [x] AC-3 — No accepted ADR in `docs/decisions/` prohibits a resident process in core without naming the superseding record. `ADR-124:111` and `ADR-109:28` both resolve to the Phase 1 ADR, whose `supersedes` names both. Whether ADR-124's other provisions survive is answered by the mechanism the `partial-supersession-semantics` blocker chose — and the answer is recorded, not assumed.

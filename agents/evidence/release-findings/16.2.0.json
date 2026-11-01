@@ -953,7 +953,7 @@
         "reason": "the span needs 23 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
       },
       {
-        "path": "docs/SKILL_CENSUS.md",
+        "path": "docs/maintainers/SKILL_CENSUS.md",
         "reason": "the span needs 23 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
       },
       {

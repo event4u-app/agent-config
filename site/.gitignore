@@ -1,0 +1,4 @@
+# Generated at prebuild/predev — never edit, never commit.
+/src/content/docs/generated/
+/public/media/
+/public/demo-map/

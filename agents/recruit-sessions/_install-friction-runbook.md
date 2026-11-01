@@ -64,7 +64,7 @@ recruit's own code. The stopwatch runs from "go" to that first verdict.
 ## Per-session capture (copy this block per recruit)
 
 Store raw per-session notes privately with the recording (not in-repo); only the
-redacted aggregate lands in `docs/install-friction-report.md`.
+redacted aggregate lands in `docs/maintainers/install-friction-report.md`.
 
 ```
 recruit_id:            R1            # R1 / R2 / R3 — no real names
@@ -101,6 +101,6 @@ ITERATE ON THE WEDGE INSTALL BEFORE FINALIZING C2. DO NOT SHIP A FAILED WEDGE.
 
 ## Output
 
-Fill `docs/install-friction-report.md` (median · abandonment · top-3 friction ·
+Fill `docs/maintainers/install-friction-report.md` (median · abandonment · top-3 friction ·
 Gate-C verdict) after **all** sessions are run and redacted. That report is the
 Gate-C input; B9 is done when it carries real numbers for n ≥ 3 recruits.

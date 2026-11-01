@@ -51,10 +51,10 @@ import {
 // existing caller of the census expects one import site.
 export {
     AUTHORED_SKILL_ROOT,
-    SCAN_CACHE_RELATIVE,
     classifyCompat,
     fileDigest,
     makeSkillOriginResolver,
+    neighbourStateDir,
     packageClaimedPaths,
     qualifiedSkillName,
     readScanCache,

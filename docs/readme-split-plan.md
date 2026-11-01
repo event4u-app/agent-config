@@ -100,3 +100,47 @@ telemetry (#25). External links: `CONTRIBUTING.md`, `AGENTS.md`,
 Grep-based test asserts `## Use it in your project`, `## Prove it`,
 `## Contribute` appear in that order. `lint-readme` keeps anchor
 stability for the rows in the Anchor-stability promise table.
+
+## Word budget — the 2026-11 rewrite
+
+Set before drafting. The gate (`lint_readme_size`) allows 4,849 words; this
+budget stops at 4,400 so the README has room to absorb a fix without growing
+past the gate. Words are counted the way the gate counts them: whitespace-separated
+tokens over the whole file, so a badge or a link URL is one word. Depth that
+does not fit moves to the docs site, and every section ends with a link to the
+site page that carries it.
+
+| # | Section | Budget (words) |
+|---|---|---|
+| 1 | Banner and its caption | 40 |
+| 2 | H1 and the one badge row | 60 |
+| 3 | Value sentence, install command, what happens next | 80 |
+| 4 | Proof GIF | 30 |
+| 5 | Try it in 30 seconds | 180 |
+| 6 | What changes (before and after, default-versus-with table) | 380 |
+| 7 | How it fits together (image) | 80 |
+| 8 | What it costs | 120 |
+| 9 | See what a change touches (demo map link) | 70 |
+| 10 | Pick your profile | 220 |
+| 11 | Workflows | 200 |
+| 12 | Use it in your project (router) | 90 |
+| 13 | Prove it (router) | 90 |
+| 14 | Contribute (router) | 70 |
+| 15 | Quickstart | 250 |
+| 16 | What it is and what it is not | 200 |
+| 17 | What's inside (count badges and how they are counted) | 250 |
+| 18 | Customize | 150 |
+| 19 | Supported tools | 450 |
+| 20 | Works with agent-switch | 80 |
+| 21 | Who this is for | 150 |
+| 22 | Legal and safety notes | 110 |
+| 23 | Documentation | 150 |
+| 24 | Troubleshooting | 110 |
+| 25 | Development | 220 |
+| 26 | Requirements | 180 |
+| 27 | Funding, License and the registry marker | 90 |
+| | **Total** | **4,100** |
+
+The three audience sections (12–14) stay ahead of `## Quickstart` as router
+sections of one paragraph and one link each; the anchor-stability promise above
+is unchanged.

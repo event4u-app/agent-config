@@ -349,13 +349,7 @@ agents/runtime/council/sessions/
 # B4 docs site (Starlight) build artifacts
 /site/dist
 /site/.astro
-/site/src/content/docs/proof.md
-/site/src/content/docs/benchmark.md
-/site/src/content/docs/claims.md
-/site/src/content/docs/catalog.md
-/site/src/content/docs/works-with-agent-switch.md
-# Media assets copied from docs/media/ by sync-docs.mjs (source lives in docs/media/).
-/site/public/media/
+# Generated pages, media and the demo map: see site/.gitignore.
 # Ghostwriter profiles hold real-person voices: local-only here as in every
 # consumer (src/config/gitignore-block.txt), README carved out.
 /agents/reference/ghostwriter/**

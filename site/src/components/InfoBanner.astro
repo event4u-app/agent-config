@@ -1,0 +1,17 @@
+---
+// The info-banner with its caption. The caption is passed as children from the
+// page, so its words (and its claim marker) stay in the .mdx that check_claims reads.
+import { Image } from 'astro:assets';
+import banner from '../assets/info-banner.webp';
+---
+
+<figure class="ac-figure ac-banner">
+  <Image
+    src={banner}
+    alt="Agent Config banner: skills, memory and a second opinion around a plan, build, review and merge pipeline that ends in PR ready."
+    widths={[640, 960, 1280, 1774]}
+    sizes="(min-width: 72rem) 68rem, 100vw"
+    loading="eager"
+  />
+  <figcaption><slot /></figcaption>
+</figure>

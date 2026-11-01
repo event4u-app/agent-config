@@ -179,7 +179,7 @@ function readPacks(skillMd: string): string[] {
     return out;
 }
 
-/** Render the census as the markdown section `docs/SKILL_CENSUS.md` carries. */
+/** Render the census as the markdown section `docs/maintainers/SKILL_CENSUS.md` carries. */
 export function renderUncoveredCensus(root: string): string[] {
     const byPack = uncoveredByPack(root);
     const reading = measureSkills(root);

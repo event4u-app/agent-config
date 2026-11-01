@@ -93,7 +93,7 @@ is unchanged between the eras.
 
 ## 5. Divergence ledger — every intentional difference recorded
 
-`docs/migration/divergences/`: **10 documented divergences** (plus
+`docs/maintainers/migration/divergences/`: **10 documented divergences** (plus
 README + template). Each carries symptom, root cause,
 bug-fix-vs-regression verdict, and evidence test per the Phase 1
 process: bench-stats float precision, mcp-telemetry node:sqlite,

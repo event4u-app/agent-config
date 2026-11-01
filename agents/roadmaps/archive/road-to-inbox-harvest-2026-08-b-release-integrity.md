@@ -176,7 +176,7 @@ fix.
       `road-to-surface-consolidation`, `road-to-solution-minimalism` and
       `road-to-tier-removal`. The report names all three and decides nothing.
       **Data source changed, with the reason:** the step pointed at
-      `docs/SKILL_CENSUS.md` and `docs/artefact-census.md`. Both are DATED
+      `docs/maintainers/SKILL_CENSUS.md` and `docs/maintainers/artefact-census.md`. Both are DATED
       point-in-time snapshots — measured 2026-07-13 (237 skills) and
       2026-06-09 (227 skills / 150 commands) against a tree now at 289 / 196 —
       and `check_artefact_count_messaging.ts` excludes them **by design**
@@ -224,7 +224,7 @@ fix.
       **naming** the expected slugs, because re-deriving the implementation's
       own predicate is what let the inversion pass a green suite.
       ORIGINAL TEXT: Over census data already computed
-      in `docs/SKILL_CENSUS.md` and `docs/artefact-census.md`; a flag beats a 197th
+      in `docs/maintainers/SKILL_CENSUS.md` and `docs/maintainers/artefact-census.md`; a flag beats a 197th
       command against a 196-command surface.
       <!-- verify: ./scripts-run src/scripts/check_references -->
 - [-] **3.5 Cancelled: the surface-reduction targets themselves.** Owned by

@@ -85,6 +85,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-deferred-rule-retriever | later | blocked-for-later | Road to deferred-rule retriever — command-invoked Class-A variant of the rejected MCP retrieval server |
 | road-to-delivery-on-hook-hosts | later | later | Every host other than Claude Code is measured for whether hook stdout on `user_prompt_submit` reaches the model's context; hosts where … |
 | road-to-discipline-profile-tiering-followup | later | later | Follow-up to discipline-profile tiering — full-tier disposition |
+| road-to-docs-that-sell | later | later | Truthful docs. |
 | road-to-elicitation-front-door | later | later | When a free-form user turn — one that will never reach a roadmap-execution contract — is plan-shaped and carries deterministic … |
 | road-to-episode-finalizer-and-outcome-attribution-v2 | later | later | Close the observable chain: |
 | road-to-evidence-calibrated-model-orchestration | later | later | For any council-capable task, this package can produce an auditable answer to: why this orchestration shape, why these seats were … |

@@ -41,7 +41,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'settings:set', disposition: 'delegate', synopsis: 'Set one A/B-class setting in the global file; C-class keys are refused.' },
     { name: 'uninstall', disposition: 'delegate', synopsis: 'Remove bridge markers (project) or lockfile entries (global).' },
     { name: 'prune', disposition: 'delegate', synopsis: 'Remove project bridge markers not declared in installed-tools.lock.' },
-    { name: 'doctor', disposition: 'delegate', synopsis: 'Read-only drift report: manifest ↔ filesystem; --anatomy renders the injection anatomy.' },
+    { name: 'doctor', disposition: 'delegate', synopsis: 'Health report: install checks and manifest ↔ filesystem drift, with the next fix; --anatomy renders the injection anatomy.' },
     { name: 'converge', disposition: 'delegate', synopsis: 'Consented cleanup of duplicate install surfaces (surface-matrix driven).' },
     { name: 'conformance', disposition: 'delegate', synopsis: 'Consumer conformance contract: doctor --ci + installed-and-firing checks.' },
     { name: 'conformance:behavior', disposition: 'delegate', synopsis: 'Replay local transcripts through the mechanised conformance checks (report, not gate); --why <id> traces one check.' },

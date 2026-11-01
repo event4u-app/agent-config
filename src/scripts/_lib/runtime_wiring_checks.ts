@@ -106,6 +106,13 @@ export function checkSettingsResolution(
     };
 }
 
+/** `doctor` runs in consumer repositories; `task` and `./scripts-run` exist only in a maintainer checkout. */
+function _remedy(consumer: string, maintainer: string): string {
+    return process.env['AGENT_CONFIG_DEV_MODE'] === '1' ? maintainer : consumer;
+}
+
+const ROUTER_REINSTALL = 'npm install -g @event4u/agent-config, then agent-config refresh --global';
+
 /**
  * Step 3 — the router artifact exists, PARSES, and reports its rule count.
  *
@@ -120,7 +127,7 @@ export function checkRouterArtifact(repoRoot: string, rel = 'dist/router.json'):
             id: 'router-artifact',
             status: 'warn',
             message: `${rel} is absent — no rule router is deployed`,
-            remedy: 'task generate-tools',
+            remedy: _remedy(ROUTER_REINSTALL, 'task generate-tools'),
         };
     }
     let doc: unknown;
@@ -131,7 +138,10 @@ export function checkRouterArtifact(repoRoot: string, rel = 'dist/router.json'):
             id: 'router-artifact',
             status: 'fail',
             message: `${rel} exists but does NOT parse: ${e instanceof Error ? e.message : String(e)}`,
-            remedy: 'task generate-tools (a present-but-unparseable router loads as zero rules)',
+            remedy: _remedy(
+                `${ROUTER_REINSTALL} (a present-but-unparseable router loads as zero rules)`,
+                'task generate-tools (a present-but-unparseable router loads as zero rules)',
+            ),
         };
     }
     const rules = _routerRuleCount(doc);
@@ -140,7 +150,7 @@ export function checkRouterArtifact(repoRoot: string, rel = 'dist/router.json'):
             id: 'router-artifact',
             status: 'warn',
             message: `${rel} parses and carries ZERO rules — a router with no rules routes nothing`,
-            remedy: 'task generate-tools',
+            remedy: _remedy(ROUTER_REINSTALL, 'task generate-tools'),
         };
     }
     return { id: 'router-artifact', status: 'ok', message: `${rel} parses · ${String(rules)} rule(s)`, remedy: '' };
@@ -451,5 +461,13 @@ export function canaryLivenessCheck(projectRoot: string): WiringCheck {
     const line = readCanaryStatusLine(projectRoot);
     return line === null
         ? { id: 'canary-liveness', status: 'ok', message: 'no red streak recorded for the cross-model canary', remedy: '' }
-        : { id: 'canary-liveness', status: 'warn', message: line, remedy: './scripts-run src/scripts/canary_liveness --refresh after the canary is green again' };
+        : {
+              id: 'canary-liveness',
+              status: 'warn',
+              message: line,
+              remedy: _remedy(
+                  'none in this repository — agent-config upgrade once the package canary is green again',
+                  './scripts-run src/scripts/canary_liveness --refresh after the canary is green again',
+              ),
+          };
 }

@@ -80,7 +80,7 @@ none was manufactured to avoid reporting a small number.
 4. `internal/schemas/retrieval-v1.schema.json:5` — *"shared by agent-config and agent-memory"*, citing a source path that does not exist. **The schema itself is live** — consumed by `tests/conformance/retrieval/fixtures.test.ts`.
 5. `tests/fixtures/retrieval/README.md:3,25` — *"both repos"*, linking an absent roadmap.
 6. `docs/decisions/ADR-026-explain-mode-translation.md:17,65,77` — **`status: accepted`, `superseded_by: —`**, depending on *"`explain-v1` … stabilized in `agent-memory` 3.0"*. The sharpest row: a live accepted ADR whose stated dependency is gone. Already flagged **REVIEW-NOW** at `adr-evidence-sweep-2026-08.md:367`.
-7. `docs/migration/divergences/src-scripts-check_memory.md:70` — *"absent **until** `@event4u/agent-memory` … exist"*, framing a completed removal as a pending arrival.
+7. `docs/maintainers/migration/divergences/src-scripts-check_memory.md:70` — *"absent **until** `@event4u/agent-memory` … exist"*, framing a completed removal as a pending arrival.
 8. `src/scripts/check_no_roadmap_refs.ts:69` — a dead illustrative example, `agent-memory/`.
 9. `src/domains/product-basic/roadmap/create/command.md:180` — the same dead example, in a live command.
 10. `internal/workers/mcp/content.json` — a generated bundle carrying #9 verbatim; fixed by regenerating, never by editing.

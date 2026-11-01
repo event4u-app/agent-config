@@ -16,7 +16,7 @@
  * enum/type constraint set and the error LOCATION + sort order; the exact
  * jsonschema message wording is approximated. For a clean repo (the only
  * golden-parity invocation in CI) no violations fire, so the OK summary line
- * is byte-identical. See docs/migration/divergences/src-scripts-validate_agent_settings.md.
+ * is byte-identical. See docs/maintainers/migration/divergences/src-scripts-validate_agent_settings.md.
  *
  * Validates `src/config/agent-settings.template.yml` and any local
  * `.agent-settings.yml` against `scripts/schemas/agent-settings.schema.json`.

@@ -256,7 +256,7 @@ asked for the command-example class, and seat 2 refused "categorical acceptance
 of all 901" on the ground that "backticks often mark executable commands or
 copyable paths — syntax alone cannot establish harmlessness". Adding
 `blocks|returns|wraps` to the present-tense predicate and a runnable-command
-predicate surfaced a tail in `docs/quality.md`, `docs/threat-model.md`,
+predicate surfaced a tail in `docs/maintainers/quality.md`, `docs/threat-model.md`,
 `docs/command-flows.md`, `docs/setup/`, `docs/distribution/`,
 `docs/maintainers/` and `docs/architecture/` that the first pass did not reach.
 Every one of them was a live doc asserting present applicability.

@@ -774,6 +774,19 @@ describe('cited_refs — the CI corpus', () => {
         expect(cited_refs(tree)).toEqual(['ADR-082']);
         fs.rmSync(tree, { recursive: true, force: true });
     });
+
+    it('returns one reference per decision when spellings differ only in padding', () => {
+        // `ADR-1` and `ADR-001` normalise to the same decision; returning both
+        // made the ledger resolve that decision twice and the gate throw.
+        const tree = fs.mkdtempSync(path.join(os.tmpdir(), 'adr-cites-'));
+        fs.mkdirSync(path.join(tree, 'docs'), { recursive: true });
+        fs.writeFileSync(path.join(tree, 'docs', 'a.md'), 'See ADR-001 and ADR-1 and ADR-07 and ADR-7.\n', 'utf-8');
+        const found = cited_refs(tree);
+        const ids = found.map((r) => normalise_ref(r)?.id);
+        expect(new Set(ids).size).toBe(found.length);
+        expect(ids.sort()).toEqual(['ADR-001', 'ADR-007']);
+        fs.rmSync(tree, { recursive: true, force: true });
+    });
 });
 
 describe('the CI gate — exit codes and the scanned: line', () => {

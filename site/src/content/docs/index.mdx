@@ -1,78 +1,102 @@
 ---
-title: agent-config
-description: Skills, rules, slash commands and subagents for AI coding agents, routed by intent — every claim machine-checked.
+title: Agent Config
+description: Skills, rules, slash commands and subagents for AI coding agents — teach them to check their work before they say done.
 template: splash
 hero:
-  tagline: A governed skill/rule/command suite for AI coding tools. Bring your own AI provider — get a deep library of skills, commands and governed rules, compiled into each host agent's native format.
+  title: Agent Config
+  tagline: "Install once. Your AI coding tools are told to plan, test and verify before they say done; on Claude Code a turn that changed files without checking them can be stopped."
   actions:
-    - text: Get Started
-      link: /agent-config/getting-started/introduction/
+    - text: Get started
+      link: /agent-config/getting-started/installation/
       icon: right-arrow
       variant: primary
-    - text: Verify it yourself
-      link: /agent-config/proof/
-      variant: minimal
     - text: View on GitHub
       link: https://github.com/event4u-app/agent-config
       icon: external
       variant: minimal
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import InfoBanner from '../../components/InfoBanner.astro';
+import HowItFits from '../../components/HowItFits.astro';
 
-<div align="center">
-  <a href="https://event4u.app">
-    <img alt="agent-config" src="/agent-config/banner.png" style="max-width: 100%; height: auto; border-radius: 8px;" />
-  </a>
-</div>
+<InfoBanner>
+Installs into your user-level AI tool configuration; your repository only gets an `agents/overrides/` folder for your own changes. Works with 20 AI coding tools{/* claim:host-agent-count */}.
+</InfoBanner>
 
-## Explore the docs
+```bash
+npx -y @event4u/agent-config init
+```
+
+Free and MIT-licensed. Node 22.6 or newer on macOS, Linux or WSL2. Costs more tokens: about 1.7× to 3.3× on Claude Haiku, not measured on larger models. {/* claim:essential-tier-cost-factor */} [What it costs →](/agent-config/trust/benchmark-and-cost/)
+
+On a desktop this opens a setup wizard in your browser; in CI or with `--yes` it installs from the terminal. [Install options →](/agent-config/getting-started/installation/)
+
+## What your agent does with it
+
+Skills, rules and slash-command workflows installed into the AI coding tools you already use. Your tool still runs the agent; Agent Config changes what the agent is told to do.
 
 <CardGrid>
-  <Card title="Getting Started" icon="rocket">
-    [Install](/agent-config/getting-started/installation/), meet the
-    [requirements](/agent-config/getting-started/requirements/), and run the
-    [30-second wedge](/agent-config/getting-started/quick-start/).
+  <Card title="Plan before it codes" icon="list-format">
+    `/feature:plan` turns an idea into a feature document; `/roadmap:create` splits bigger work into steps you can run one at a time.
+
+    [Plan with roadmaps →](/agent-config/workflows/roadmaps/)
   </Card>
-  <Card title="Configuration" icon="setting">
-    The [`.agent-settings.yml`](/agent-config/configuration/overview/) surface —
-    [settings reference](/agent-config/configuration/settings-reference/),
-    [profiles](/agent-config/configuration/profiles/), and
-    [packs](/agent-config/configuration/packs/).
+  <Card title="Implement end to end" icon="rocket">
+    `/work "add a CSV export"` refines, plans, implements, tests and verifies. `/implement-ticket` does the same from a ticket.
+
+    [Implement a change →](/agent-config/workflows/implement/)
   </Card>
-  <Card title="CLI & Agent Commands" icon="seti:powershell">
-    The terminal [`agent-config` / `task` CLI](/agent-config/cli/overview/) and
-    the in-agent [`/slash` commands](/agent-config/agent-commands/overview/).
+  <Card title="Review before the PR" icon="magnifier">
+    `/review:changes` reviews your local diff with focused reviewers for bugs, security, tests, quality, architecture, spec and overbuild.
+
+    [Review before the PR →](/agent-config/workflows/review/)
   </Card>
-  <Card title="Architecture" icon="puzzle">
-    The [content + governance layer](/agent-config/architecture/overview/) —
-    [kernel & router](/agent-config/architecture/kernel-and-router/),
-    [source of truth](/agent-config/architecture/source-of-truth/).
+  <Card title="Check that done means done" icon="approve-check">
+    Ask `@production-validator` whether a branch is really finished. It reads the code that would ship and names the placeholder it finds.
+
+    [How the check works →](/agent-config/workflows/review/#check-that-done-means-done)
+  </Card>
+  <Card title="Map your code" icon="puzzle">
+    `agent-config code-graph map` draws who calls what before you change it, as a page you open in your browser.
+
+    [See the demo map →](/agent-config/features/code-map/)
+  </Card>
+  <Card title="Commit and open the PR" icon="seti:git">
+    `/commit` splits your changes into logical Conventional Commits; `/pr:create` writes the pull request description.
+
+    [Commit and open a PR →](/agent-config/workflows/commit-and-pr/)
   </Card>
 </CardGrid>
 
-## Why this is different
+## Before and after
 
-We sell honesty, so the selling is machine-checked. Every capability or number
-in our public docs binds to resolvable evidence — a test, a benchmark artefact,
-or a `file:line` — and CI fails if an unbacked claim sneaks in.
+**Before.** You ask your agent to add a CSV export. It writes a handler that returns a hard-coded placeholder, the existing tests stay green and it replies "Done — export implemented." Nothing ever ran the new code.
+
+**After.** In Claude Code you ask `@production-validator` whether the branch is really done. It reads the code that would ship, finds the placeholder and answers **NOT READY** with the exact file and line. On a branch that is really finished it answers **READY** and reports nothing. We tested this on two cases: one with a placeholder left in, one finished. {/* claim:wedge-hollow-detection */}
+
+On Claude Code the package can also refuse to let a turn end on "done" when the agent changed files and ran nothing to check them. On every other tool that is an instruction the agent is asked to follow, not a block. {/* claim:conformance-advisory-vs-blocking */}
+
+## Why Agent Config
+
+- **It checks its work.** The agent is taught to analyse before editing, to test and to run something before it claims done. On a weaker model this measurably improved discipline; on a strong model the same test showed no improvement, and we published that. {/* claim:discipline-lift-weak-host */}
+- **Every tool you use.** One install, in each tool's own format: 23 tools are detected and 20 are supported — 18 get their configuration written directly, Copilot gets a plugin and Claude Desktop a bundle. {/* claim:host-agent-count */} [Which install do I get?](/agent-config/tools/overview/)
+- **Leaves cleanly.** Uninstall removes only its own entries and leaves other tools' config byte-identical. {/* claim:surgical-uninstall */} [Uninstall →](/agent-config/getting-started/uninstall/)
+- **It costs more tokens, and we say how many.** On Claude Haiku the default costs 3.3× a run with no rules on the tasks that test checking discipline and about 1.7× over the full corpus; loading everything costs 11.7×. {/* claim:essential-tier-cost-factor */} [Benchmark & cost, explained →](/agent-config/trust/benchmark-and-cost/)
+
+## How it fits together
+
+<HowItFits>
+Slash commands drive the workflows; rules, skills and memory shape how the agent works inside them.
+</HowItFits>
+
+You type a slash command in your AI tool. The command loads the skills it needs, the always-on rules keep the agent honest about what it checked, and the result is evidence you can read: a review with file and line, a map, a cost report, a roadmap with ticked steps.
+
+## Next steps
 
 <CardGrid>
-  <Card title="Claims are bound to code" icon="approve-check">
-    The Claims-Ledger (`docs/CLAIMS.md` + `check_claims` in CI) rejects any
-    public claim that does not resolve to evidence. The anti-example is the
-    unbacked headline number we refuse to ship.
-  </Card>
-  <Card title="We publish the nulls" icon="information">
-    The discipline benchmark shows a measured lift on a weak host **and** a
-    published null on a strong host — the bound, not just the win.
-  </Card>
-  <Card title="No mandatory daemon" icon="setting">
-    Static artifact projection into host agents. No always-on daemon, no vector
-    DB, no auto-write memory — a claim you can check in the source.
-  </Card>
-  <Card title="Try one thing in 30 seconds" icon="rocket">
-    Install the `production-validator` wedge alone — read-only, single-purpose,
-    carries the anti-hallucination identity.
-  </Card>
+  <LinkCard title="Introduction" href="/agent-config/getting-started/introduction/" description="What Agent Config is, in two minutes." />
+  <LinkCard title="Install" href="/agent-config/getting-started/installation/" description="One command, a browser wizard or a CI-friendly flag." />
+  <LinkCard title="Your first task" href="/agent-config/getting-started/first-task/" description="Run /work on a real change and read what comes back." />
+  <LinkCard title="Benchmark & cost, explained" href="/agent-config/trust/benchmark-and-cost/" description="What we measured, what it costs and where it did not help." />
 </CardGrid>

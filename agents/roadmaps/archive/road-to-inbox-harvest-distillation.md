@@ -251,7 +251,7 @@ which 4 skills currently exceed — an existing contract made real, nothing more
       defect it serves; `user-types/*.yml` already shape audience, and a stored
       profile adds a privacy surface for zero verified need.
 - [-] **Single-command installer rework.** The blocker is not the installer.
-      `docs/install-friction-report.md:2` still reads `status: template —
+      `docs/maintainers/install-friction-report.md:2` still reads `status: template —
       awaiting sessions (no real data yet)` — re-verified at HEAD. No installer
       change until that study produces data.
 

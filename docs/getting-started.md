@@ -35,15 +35,22 @@ contributor-only.
 
 ### Keeping current
 
-The suite is global-only (ADR-020) — refresh the global install and every
-project sees the new skills, rules, and hooks at once, no per-repo bump:
+> `agent-config init` installs into your home directory — the package under
+> `~/.event4u/agent-config/` and each AI tool's user-level folder such as
+> `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into
+> your repository, which only gets an `agents/overrides/` folder for your own
+> changes plus a few gitignored bookkeeping files and a block each in
+> `.gitignore` and `.gitattributes`; `agent-config init --project` creates just
+> those in a repository and nothing else.
+
+So refreshing the install in your home directory updates every project at
+once — no per-repository bump:
 
 ```bash
 agent-config upgrade            # fetch + install the latest globally (content + hooks)
 agent-config refresh --global   # idempotent re-install, same version
-agent-config init --project     # initialize a project's minimal surface — bridge
-                                # marker, agents/overrides/, .gitignore (no wizard)
-agent-config refresh --project  # refresh that surface (same writer, idempotent)
+agent-config init --project     # create agents/overrides/ in this repository (no wizard)
+agent-config refresh --project  # recreate that folder (same writer, idempotent)
 agent-config config             # open the configuration GUI (global settings hub)
 agent-config config --project   # open the project configuration surface
 agent-config doctor             # PATH, hook wiring, duplicate surfaces, bridge presence
@@ -266,5 +273,13 @@ and [`scripts/chat_history.py`](../src/scripts/chat_history.ts) for the mechanic
 2. **Try commands** — `/commit`, `/create-pr`, `/fix ci` are great starting points
 3. **Upgrade when ready** — switch to `balanced` to let the runtime dispatcher execute skills that declare a shell command
 4. **Customize** — add [project overrides](customization.md) for your team's specific patterns
+
+## Related pages
+
+- [Installation reference](installation.md) — every install flag, host and layout in detail.
+- [Install wizard](wizard.md) — what the browser wizard asks and how to skip it.
+- [Profiles](profiles.md) — the six entry paths by role.
+- [Laravel quickstart](getting-started-laravel.md) — the stack-specific walkthrough.
+- [Local MCP over stdio](getting-started-local-stdio.md) — run the MCP server on your machine.
 
 → [Full documentation](../README.md#documentation)

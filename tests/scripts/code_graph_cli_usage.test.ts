@@ -12,7 +12,8 @@ describe('code-graph usage', () => {
         } catch (e) {
             err = (e as { stderr?: string }).stderr ?? '';
         }
-        const listed = /<([a-z|-]+)>/.exec(err)?.[1]?.split('|') ?? [];
+        // The usage is the verb table of `--help` (one `  <verb>  <what it answers>` row each).
+        const listed = [...err.matchAll(/^ {2}([a-z][a-z-]*) +\S/gm)].map((m) => m[1] as string);
         for (const v of ['why', 'usage', 'remove-plan', 'provenance', 'branches', 'branch-diff', 'on-branches']) expect(listed).toContain(v);
         const routed = [...cliVerbs(path.resolve('src/scripts/code_graph'))];
         expect(routed.filter((v) => !listed.includes(v))).toEqual([]);

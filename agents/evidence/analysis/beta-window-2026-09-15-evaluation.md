@@ -35,7 +35,7 @@ new deadline by this reading.
 | | Evidence |
 |---|---|
 | 1 | Split. The layout IS exercised on every install: `installed_lock.ts` writes `install_layout_version`, refuses an unreadable lockfile, and carries a migration path that `install.ts:3586` reads. But the contract calls itself "the **frozen source** the install-ABI conformance test (`tests/test_install_layout_contract.py`) guards against" — **that file does not exist**, and `tests/fixtures/install_layout_v1.json` is read by nothing in the tree. |
-| 2 | `BREAKING_CHANGES.md`, `docs/architecture.md`, `docs/contracts/conformance.md`, `docs/positioning-evidence.md`, and the installer itself. |
+| 2 | `BREAKING_CHANGES.md`, `docs/architecture.md`, `docs/contracts/conformance.md`, `docs/maintainers/positioning-evidence.md`, and the installer itself. |
 | 3 | None found. |
 
 The defect is the same class the 2026-09-04 council run repaired on
@@ -51,7 +51,7 @@ against an objectively measurable criterion.
 | | Evidence |
 |---|---|
 | 1 | The `scope_guard` pre-flight and `cleanup_other_scope.sh` are real and shipped. The **safety regression the contract cites is absent** — `tests/test_cleanup_other_scope.py` exists under no extension, which the contract itself records at § 95 ("Safety regression — MISSING"). Restoring it is a named precondition on its own window. |
-| 2 | `README.md:125` (§ Install scope), `ONBOARDING.md` twice, and `install-layout.md` names it as its companion contract. |
+| 2 | `README.md:125` (§ Install scope), `docs/maintainers/ONBOARDING.md` twice, and `install-layout.md` names it as its companion contract. |
 | 3 | **The recorded objection no longer holds.** The `keep-beta-reason` says § 23 "works toward" an invariant "and the work that would achieve it — single-delivery Phase 2 — is recorded HALTED since 2026-08-19". Both `road-to-single-delivery.md` and its closure correction `road-to-single-delivery-closure.md` are now in `agents/roadmaps/archive/`, i.e. closed, and `task generate-tools` reports the partition holding on this tree ("project layer carries only what ~/.claude lacks — host layer verified at 15.0.0"). |
 
 So this contract is held beta by a reason that describes a world from three weeks
@@ -64,7 +64,7 @@ window renews itself on nobody's judgement.
 | | Evidence |
 |---|---|
 | 1 | Diagnostic rather than enforced, which is its nature: it names three host behaviours the package cannot control and gives the probe (`task probe:skills`). But § 94 points at "`agents-md-thin-root` § Tool loading for the pattern" and **that skill has no such section and no mention of deferred tools** — the same defect the 2026-09-04 council run recorded against it, unrepaired. |
-| 2 | `README.md:332`, `ONBOARDING.md` twice (including the first thing a new consumer is told to check), and `src/server/routes/wizard.ts`. Among the four, the strongest consumer reliance. |
+| 2 | `README.md:332`, `docs/maintainers/ONBOARDING.md` twice (including the first thing a new consumer is told to check), and `src/server/routes/wizard.ts`. Among the four, the strongest consumer reliance. |
 | 3 | Its own window names one: "`install-scopes` reaches a non-beta disposition". That is a **borrowed** condition, not a property of this contract — it exists so the install-surface pair is reviewed together. |
 
 Content-wise this is the closest of the four to promotable, which its own

@@ -1,0 +1,79 @@
+---
+title: AI code review that demands evidence
+description: /review:changes reviews your diff with focused reviewers for bugs, security, tests, quality, architecture, spec and overbuild; production-validator checks that done means done.
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Review your local changes before you open the pull request:
+
+```text
+/review:changes
+```
+
+## What it does
+
+`/review:changes` collects everything on your branch that is not yet on `main` and hands it to focused reviewers — **bugs, security, tests, quality, architecture, spec and overbuild** — then merges their findings into one list. Every finding names a file and line, so you can check it before you act on it.
+
+It first brings your branch up to date with its base. If the base cannot be found it stops and says so, rather than quietly reviewing a different diff.
+
+## Check that done means done
+
+```text
+@production-validator is this branch really done?
+```
+
+`production-validator` is a read-only checker for Claude Code. It reads the code that would ship — not the tests — and looks for mocks, stubs, fakes, TODOs and placeholders on the real path and for evidence that the change ran against real systems. It answers **READY** or **NOT READY** with the exact file and line. It changes nothing.
+
+We measured it on two planted cases: on a hollow implementation it answered NOT READY with the file and line; on a clean one it answered READY with no spurious findings. Two cases on Claude Code, not a hit rate. {/* claim:wedge-hollow-detection */}
+
+## When to use it
+
+- Before every pull request — `/review:changes` is cheap compared to a reviewer finding the same bug.
+- Before you trust an agent's "done" — `@production-validator`.
+- When you want people, not just models, to look: `/review:routing` suggests reviewer roles from the paths a change touches.
+
+## What it needs
+
+- `/review:changes`: any [supported AI coding tool](/agent-config/tools/overview/), git and a `main` branch on `origin`.
+- `@production-validator`: Claude Code, which runs it as a subagent.
+
+## Limits
+
+- The reviewers are passes of the model you already use. They catch what a careful read catches; they do not run your application.
+- Treat findings as claims to check. The file and line are there so you can.
+
+## Read the review skill without installing
+
+The review procedure is also available as a skill your AI tool can read over MCP, without the full install. `agent-config mcp-server` is a **read-only** server: it can suggest a skill for a task and return a skill's text. It runs nothing and writes nothing.
+
+<Tabs>
+  <TabItem label="MCP client config">
+```json
+{
+  "mcpServers": {
+    "agent-config": {
+      "command": "npx",
+      "args": ["-y", "@event4u/agent-config", "mcp-server"]
+    }
+  }
+}
+```
+  </TabItem>
+  <TabItem label="Then ask">
+```text
+Use the agent-config read_skill tool to read the code-review skill, then review my staged changes with it.
+```
+  </TabItem>
+</Tabs>
+
+The server offers two tools: `suggest_skill_for_task` ranks skills for a task you describe, and `read_skill` returns one skill by name — here `code-review`. Your agent follows the skill's procedure with its own tools.
+
+<Aside type="note">
+Over MCP you get the procedure as text, not the slash commands, the always-on rules or the checks that can block on Claude Code. For those, [install](/agent-config/getting-started/installation/).
+</Aside>
+
+## Next
+
+- [Commit and open a PR](/agent-config/workflows/commit-and-pr/)
+- [Second opinion from other AI models](/agent-config/features/second-opinion/) — for a pull request, `/council:pr`.

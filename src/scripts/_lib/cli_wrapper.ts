@@ -21,16 +21,12 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-// src/scripts/_lib/cli_wrapper.ts → three levels up is the package root
-// (mirrors the Python module's parents[3] resolution).
-const _PACKAGE_ROOT = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "..",
-  "..",
-);
+import { resolvePackageRoot } from "./package_root.js";
+
+// Marker-anchored root: a hop count from this file is wrong in every bundle
+// that inlines it at another depth (`dist/cli-delegate/`).
+const _PACKAGE_ROOT = resolvePackageRoot(import.meta.url);
 const _TEMPLATE = path.join(
   _PACKAGE_ROOT,
   "src",

@@ -239,9 +239,9 @@ change and stays with the owner.
 
 ## Phase 3 — Say it once, in the place a reader is already looking
 
-- [x] **3.1 Point `ONBOARDING.md` at the new surface in one line.** No second copy of
+- [x] **3.1 Point `docs/maintainers/ONBOARDING.md` at the new surface in one line.** No second copy of
       the table; a pointer, per this repo's thin-root discipline.
-      verify: `ONBOARDING.md` gains exactly one pointer line and no table
+      verify: `docs/maintainers/ONBOARDING.md` gains exactly one pointer line and no table
 
       <!-- done 2026-09-29: the pointer went into
       `src/templates/consumer-settings/ONBOARDING.md` § See also.
@@ -254,8 +254,8 @@ change and stays with the owner.
 
       Exactly one added line, zero added table rows.
 
-      WHICH `ONBOARDING.md` — the roadmap names the file without a path and the tree holds
-      two. The root `ONBOARDING.md` is an internal subagent / role / persona integration
+      WHICH `docs/maintainers/ONBOARDING.md` — the roadmap names the file without a path and the tree holds
+      two. The root `docs/maintainers/ONBOARDING.md` is an internal subagent / role / persona integration
       map; `src/templates/consumer-settings/ONBOARDING.md` is the consumer-facing tour
       that ships to a project. The phase title is "say it once, in the place a reader is
       already looking", and a developer on a metered link is looking at the consumer
@@ -400,7 +400,7 @@ beside it.
   each variable, and two consecutive runs leave the tree byte-identical.
 - On a host where a variable has no documented meaning, its row is present and reads
   `not applicable on this host`.
-- `ONBOARDING.md` carries exactly one pointer line and no duplicate table.
+- `docs/maintainers/ONBOARDING.md` carries exactly one pointer line and no duplicate table.
 - No default is flipped and no value is written into any consumer environment by this
   change.
 

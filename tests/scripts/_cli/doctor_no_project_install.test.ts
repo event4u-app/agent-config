@@ -7,9 +7,9 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { globalInstalledTools, noProjectInstallLines } from '../../../src/scripts/_cli/doctor_ownership_ledger.js';
+import { globalInstalledTools, installedOutcome, noProjectInstallLines } from '../../../src/scripts/_cli/doctor_ownership_ledger.js';
 
 let tmp: string;
 let inventory: string;
@@ -60,5 +60,43 @@ describe('doctor on a project with no project-scope install', () => {
         ledger({ 'claude-code': [] });
         expect(globalInstalledTools(inventory)).toEqual([]);
         expect(noProjectInstallLines('/w', inventory)[0]?.[0]).toBe('err');
+    });
+});
+
+// The 2026-11-01 newcomer walkthrough: a default `doctor` right after a
+// successful global install exited 2 with only optional warnings and no closing
+// line, which a CI script following the Headless tab reads as a failed install.
+describe('a default doctor run with an install closes with one summary line', () => {
+    function run(checks: Array<Record<string, unknown>>, drift: number): { code: number; out: string } {
+        const writes: string[] = [];
+        const spy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk: string | Uint8Array) => {
+            writes.push(String(chunk));
+            return true;
+        });
+        try {
+            return { code: installedOutcome(checks, drift), out: writes.join('') };
+        } finally {
+            spy.mockRestore();
+        }
+    }
+    const warnings = [{ status: 'ok' }, { status: 'warn' }, { status: 'warn' }, { status: 'skipped' }];
+
+    it('warnings only: exit 0, and the line says installed with the warning count', () => {
+        const { code, out } = run(warnings, 0);
+        expect(code).toBe(0);
+        expect(out.trim().split('\n')).toHaveLength(1);
+        expect(out).toMatch(/^agent-config: installed — 2 optional warning\(s\)$/m);
+    });
+
+    it('drift still fails the default run, and the line names it', () => {
+        const { code, out } = run(warnings, 3);
+        expect(code).toBe(1);
+        expect(out).toContain('3 file(s) drifted');
+    });
+
+    it('a failed check is named but does not fail the default run (that is --strict)', () => {
+        const { code, out } = run([...warnings, { status: 'fail' }], 0);
+        expect(code).toBe(0);
+        expect(out).toContain('1 failed check(s)');
     });
 });

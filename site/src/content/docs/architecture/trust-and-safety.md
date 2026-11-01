@@ -35,6 +35,6 @@ Every pack that ships advisory/restricted content also ships at least one
 what the agent must **not** issue (a final investment call, binding legal advice,
 a single-path verdict) and what it must surface instead.
 
-Trust gates **artifacts, not users** — there is no runtime per-action
-authorization. See
+Trust gates **artifacts, not users** — it does not authorize individual
+actions while the agent runs. See
 [`trust-and-safety.md`](https://github.com/event4u-app/agent-config/blob/main/docs/contracts/trust-and-safety.md).

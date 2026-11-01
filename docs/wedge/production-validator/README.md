@@ -5,7 +5,7 @@ A single, self-contained Claude Code subagent that runs the **last gate before
 your shipped code, and that the change was actually exercised against a real
 system — not just green tests over hollow code.
 
-One file. No install of anything else. No runtime, no daemon, no account.
+One file. No install of anything else, no account.
 
 <!-- claim:wedge-hollow-detection -->On its published eval it returned the
 correct verdict on both fixtures — `NOT READY` with the exact `file:line` on a

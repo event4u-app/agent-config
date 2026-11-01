@@ -275,8 +275,10 @@ export function buildPlanFromWizard(inputs: WizardPlanInputs): InstallPlan {
  *
  * A global install has no project target, and printing the cwd here read as
  * "this is where it writes" — under npx the cwd is often the npx cache, so the
- * plan named a directory the install never touches. For global it prints the
- * anchor of each SELECTED tool and which phases would run.
+ * plan named a directory the install never touches. For global it prints, per
+ * SELECTED tool, its anchor and every directory the deploy would write into
+ * ({@link GLOBAL_DEPLOY_SOURCES}), then which phases would run. A tool with no
+ * deploy row gets its anchor and a note that only its bridge files are written.
  */
 export function dryRunTargetLines(global: boolean, tools: Iterable<string>, projectTarget: string): string {
     if (!global) return `  target:      ${projectTarget}\n`;
@@ -284,9 +286,50 @@ export function dryRunTargetLines(global: boolean, tools: Iterable<string>, proj
     for (const tool of tools) {
         const anchor = USER_SCOPE_PATHS[tool];
         if (anchor === undefined) continue;
-        out += `      ${tool} → ${anchor.startsWith('~/') ? join(homedir(), anchor.slice(2)) : anchor}\n`;
+        const root = expandAnchor(anchor);
+        out += `      ${tool} → ${root}\n`;
+        const deploy = GLOBAL_DEPLOY_SOURCES[tool];
+        if (deploy === undefined) {
+            out += '          (bridge files only — no deployed content)\n';
+            continue;
+        }
+        for (const [, sub] of deploy) out += `          ${sub.length === 0 ? root : `${join(root, sub)}/`}\n`;
     }
     out += '  phases:      project payload sync — skipped (global installs write user-scope paths only)\n';
     out += '               host projection + managed hooks — would run\n';
     return out;
+}
+
+/** A plan boolean, lowercase — the plan is read by people, not by Python. */
+export function dryRunBool(v: boolean): string {
+    return v ? 'true' : 'false';
+}
+
+/**
+ * The scope a REAL run of the same flags would resolve, as the plan's `scope`
+ * line. Mirrors `_resolve_scope` in `scripts/install.ts` without its prompt:
+ * a consumer run with no scope flag (or `--scope=auto`) is global (ADR-020);
+ * only `AGENT_CONFIG_DEV_MODE=1` keeps the old `project` default, and an
+ * explicit `--scope=project` outside it is refused — the plan says so.
+ */
+export function dryRunScopeLine(
+    opts: { readonly global_install?: boolean; readonly scope?: string | null },
+    detected: readonly [string, string],
+    devMode: boolean,
+): { readonly scope: string; readonly line: string } {
+    let scope: string;
+    if (opts.scope === 'project' || opts.scope === 'global' || opts.scope === 'prompt') scope = opts.scope;
+    else if (opts.global_install === true || !devMode) scope = 'global';
+    else if (opts.scope === 'auto') scope = detected[0];
+    else scope = 'project';
+    if (scope === 'prompt') {
+        return { scope, line: `  scope:       ask (${detected[1] || 'forced by --scope=prompt'}) — pass --global to decide\n` };
+    }
+    if (scope === 'project' && !devMode) {
+        return {
+            scope,
+            line: '  scope:       project — a real run refuses this outside maintainer mode (installs are global-only)\n',
+        };
+    }
+    return { scope, line: `  scope:       ${scope}\n` };
 }
