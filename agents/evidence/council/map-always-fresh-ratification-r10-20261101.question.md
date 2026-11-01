@@ -44,7 +44,7 @@ End with exactly one verdict line: `VERDICT: ratified`, `VERDICT: confirmed-non-
 
 ## The diff (`git diff -U1 origin/main...feat/map-always-fresh`)
 
-One context line (bundle ceiling). Complete for the three gated files, the hook, its record writer, the graph-home resolver, the consent module, the CLI and the owner directive. Left out, named: the compiled `hook_manifest.json` (byte-checked YAML projection), the lane readers and their test (run in no hook), the two test files (`tests/scripts/hooks/code_graph_refresh_hook.test.ts`, the concern's tests named in the rounds list; `tests/scripts/code_graph_refresh.test.ts`, CLI consent, CI and opt-out), `src/scripts/check_graph_writers.ts`, docs, roadmaps, earlier prompts.
+One context line (bundle ceiling). Complete for the three gated files, the hook, its record writer, the graph-home resolver, the consent module, the CLI and the owner directive. Left out: compiled `hook_manifest.json`, the lane readers and their test (run in no hook), the two test files (`tests/scripts/hooks/code_graph_refresh_hook.test.ts`, the concern's tests named in the rounds list; `tests/scripts/code_graph_refresh.test.ts`, CLI consent, CI and opt-out), `src/scripts/check_graph_writers.ts`, docs, roadmaps, earlier prompts.
 
 ```diff
 diff --git a/agents/evidence/owner-directives/2026-11-01-map-auto-refresh.md b/agents/evidence/owner-directives/2026-11-01-map-auto-refresh.md
