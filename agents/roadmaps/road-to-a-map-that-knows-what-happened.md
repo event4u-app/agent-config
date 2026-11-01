@@ -393,7 +393,7 @@ never in the graph core (ADR-298).
 - [~] **L.6 Ask once, remember.** Error routing is stored as a project/team
       agreement with scope; a personal notification wish is user-owned; the same
       scope is never asked twice; a new external recipient or egress is a
-      this-turn confirmation. Blocked by K.4a, K.4b and owner questions OQ-36/37.
+      this-turn confirmation. Blocked by K.4a, K.4b and owner questions OQ-54/55 (issued as OQ-36/37, renumbered 2026-11-01).
       verify: `npx vitest run tests/scripts/log_routing_agreement.test.ts` -> 0
 - [~] **L.7 The logging view.** Sinks per environment, area × sink matrix with
       deviations, channel detail, house rules and findings, empty states that tell
