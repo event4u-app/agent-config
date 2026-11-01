@@ -30,6 +30,7 @@ import { consult } from './orchestrator.js';
 import type { RunConsensusScoringOptions } from './orchestrator_results.js';
 import { ConsensusResult, CouncilQuestion } from './orchestrator_results.js';
 import { build_extraction_user_prompt, build_scoring_user_prompt } from './prompts.js';
+import { isIncompleteStop } from './stop_class.js';
 
 /** Python `str.strip()` parity, as everywhere else in this package. */
 const _pyStrip = (s: string): string => s.replace(/^\s+|\s+$/g, '');
@@ -93,6 +94,14 @@ export function run_consensus_scoring(
         }
         const source = `${member.name}:${member.model}`;
 
+        // D5 — a deliberation the provider cut short is an abstention: its findings
+        // are not the member's whole answer, so no extraction call, no re-ask, and
+        // no continuation. Recorded so the cut-off is visible, never a silent skip.
+        if (isIncompleteStop(resp.stop_class)) {
+            parse_outcomes.set(source, 'truncated');
+            continue;
+        }
+
         // Phase 1B replaces the second call, it does not delete it: no harvested
         // block → fall through to the extraction call over untouched text.
         if (takeInlineFindings(inline_extractions, source, parse_outcomes, all_findings)) {
@@ -114,7 +123,7 @@ export function run_consensus_scoring(
         if (extracted.length === 0 || extracted[0]!.error) {
             continue;
         }
-        let ex = parse_findings_outcome(extracted[0]!.text, { source });
+        let ex = parse_findings_outcome(extracted[0]!.text, { source, stop_class: extracted[0]!.stop_class });
 
         // Step 2.2 — ONE bounded re-ask on `parse_failed`, and one only.
         //
@@ -146,9 +155,9 @@ export function run_consensus_scoring(
             });
             extraction_responses.push(...retried);
             if (retried.length > 0 && !retried[0]!.error) {
-                ex = parse_findings_outcome(retried[0]!.text, { source });
+                ex = parse_findings_outcome(retried[0]!.text, { source, stop_class: retried[0]!.stop_class });
             }
-            parse_outcomes.set(source, ex.outcome === 'parsed' ? 'parsed-after-reask' : 'parse_failed');
+            parse_outcomes.set(source, ex.outcome === 'parsed' ? 'parsed-after-reask' : ex.outcome === 'truncated' ? 'truncated' : 'parse_failed');
         } else {
             parse_outcomes.set(source, ex.outcome);
         }

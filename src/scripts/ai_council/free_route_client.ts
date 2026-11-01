@@ -9,6 +9,7 @@ import { CouncilResponse, ExternalAIClient } from './clients.js';
 import type { ContentClass } from './content_ceiling.js';
 import { familyOf, servedMatches, type RouteBilling } from './free_route.js';
 import { policyExclusionReason, type PolicyExclusion } from './seat_policy.js';
+import { openAiStopClass } from './stop_class.js';
 
 export interface FreeRouteClientOptions {
     readonly name: string;
@@ -93,6 +94,7 @@ export class FreeRouteClient extends ExternalAIClient {
             input_tokens: num(usage['prompt_tokens']),
             output_tokens: num(usage['completion_tokens']),
             latency_ms: ms,
+            stop_class: openAiStopClass(response),
             metadata: { family: familyOf(served), billing: this.billing, route: this.base_url, billable: this.billable },
         });
     }

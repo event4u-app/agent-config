@@ -67,6 +67,9 @@ import { jsonDumpsIndent2 as _jsonDumpsIndent2 } from './_py_json.js';
 import * as budget from './cli_call_budget.js';
 import { appendEvent } from './events_log.js';
 import { OPENAI_CLI_VENDOR_DEFAULT } from './vendor_defaults.js';
+import { CouncilResponse } from './council_response.js';
+export { CouncilResponse } from './council_response.js';
+import { anthropicStopClass, geminiStopClass, openAiStopClass } from './stop_class.js';
 
 export const ANTHROPIC_KEY_FILENAME = 'anthropic.key';
 export const OPENAI_KEY_FILENAME = 'openai.key';
@@ -227,64 +230,6 @@ export function assertCacheBreakpointOrder(ttls: readonly PromptCacheTtl[]): voi
 function _servedModel(response: unknown, field = 'model'): string {
     const value = _getattr(response, field, '');
     return typeof value === 'string' ? value : '';
-}
-
-/** Normalised output from a single council member (dataclass `CouncilResponse`). */
-export class CouncilResponse {
-    provider: string;
-    model: string;
-    // The model id the provider reported serving, when it reports one. NEVER
-    // overwrites `model`: that is the REQUESTED id, and it is what the tier
-    // decision was made against — keeping both is what makes a silent alias or
-    // provider substitution detectable at all. Attribution-only; no consumer
-    // may route on it. Defaults to '' (the honest value for a transport that
-    // reports no served id, e.g. every CLI client) so existing callers and the
-    // persisted response JSON stay backward-compatible.
-    model_served: string;
-    text: string;
-    /** Pre-rewrite reply; `null` when nothing rewrote `text`. See inline_findings.ts. */
-    raw_text: string | null;
-    input_tokens: number;
-    output_tokens: number;
-    // Prompt-cache accounting (Anthropic). `cache_read_input_tokens` bill at
-    // ~0.1× input; `cache_creation_input_tokens` at 1.25×/2×. Both default 0
-    // (no cache, or a provider that does not report them) so existing callers
-    // and the persisted response JSON stay backward-compatible.
-    cache_creation_input_tokens: number;
-    cache_read_input_tokens: number;
-    latency_ms: number;
-    error: string | null;
-    metadata: Record<string, unknown>;
-
-    constructor(opts: {
-        provider: string;
-        model: string;
-        model_served?: string;
-        text: string;
-        raw_text?: string | null;
-        input_tokens?: number;
-        output_tokens?: number;
-        cache_creation_input_tokens?: number;
-        cache_read_input_tokens?: number;
-        latency_ms?: number;
-        error?: string | null;
-        metadata?: Record<string, unknown>;
-    }) {
-        this.provider = opts.provider;
-        this.model = opts.model;
-        this.model_served = opts.model_served ?? '';
-        this.text = opts.text;
-        this.raw_text = opts.raw_text ?? null;
-        this.input_tokens = opts.input_tokens ?? 0;
-        this.output_tokens = opts.output_tokens ?? 0;
-        this.cache_creation_input_tokens = opts.cache_creation_input_tokens ?? 0;
-        this.cache_read_input_tokens = opts.cache_read_input_tokens ?? 0;
-        this.latency_ms = opts.latency_ms ?? 0;
-        this.error = opts.error ?? null;
-        // Python dataclass uses `field(default_factory=dict)` — each instance
-        // gets its own fresh dict.
-        this.metadata = opts.metadata ?? {};
-    }
 }
 
 // ── monotonic clock seam ──────────────────────────────────────────────
@@ -646,6 +591,7 @@ export class AnthropicClient extends ExternalAIClient {
                 ? (_getattr(usage, 'cache_read_input_tokens', 0) as number)
                 : 0,
             latency_ms,
+            stop_class: anthropicStopClass(response),
         });
     }
 }
@@ -755,6 +701,7 @@ export class OpenAIClient extends ExternalAIClient {
             input_tokens: usage ? (_getattr(usage, 'prompt_tokens', 0) as number) : 0,
             output_tokens: usage ? (_getattr(usage, 'completion_tokens', 0) as number) : 0,
             latency_ms,
+            stop_class: openAiStopClass(response),
         });
     }
 }
@@ -838,6 +785,7 @@ export class GeminiClient extends ExternalAIClient {
             input_tokens: usage ? (_getattr(usage, 'prompt_token_count', 0) as number) : 0,
             output_tokens: usage ? (_getattr(usage, 'candidates_token_count', 0) as number) : 0,
             latency_ms,
+            stop_class: geminiStopClass(response),
         });
     }
 }
@@ -934,6 +882,7 @@ export class _OpenAICompatibleClient extends ExternalAIClient {
             input_tokens: usage ? (_getattr(usage, 'prompt_tokens', 0) as number) : 0,
             output_tokens: usage ? (_getattr(usage, 'completion_tokens', 0) as number) : 0,
             latency_ms,
+            stop_class: openAiStopClass(response),
         });
     }
 }
