@@ -407,3 +407,61 @@ describe('short -n is scoped to the subcommands where it can bypass a hook', () 
         });
     }
 });
+
+// Release reviews 19.1.0 / 19.2.0 (round inbox-2026-11-d): a wrapper in command
+// position hid git from `_git_base`, which only skipped `VAR=x` assignments.
+// Reproduced at 2ccb435632: every BYPASSED line below returned exit 0.
+describe('block_no_verify — exec wrappers and config-env forms', () => {
+    const BYPASSED = [
+        'env git commit --no-verify -m x',
+        'env FOO=1 git commit --no-verify -m x',
+        'env -i git commit --no-verify',
+        'env -u HOME git commit -n -m x',
+        'command git commit --no-verify -m x',
+        'exec git commit --no-verify',
+        'nice git commit --no-verify',
+        'nice -n 5 git commit --no-verify',
+        'nohup git commit --no-verify',
+        'time git commit --no-verify',
+        'sudo git commit --no-verify',
+        'sudo -u bob git commit --no-verify',
+        'timeout 30 git commit --no-verify',
+        'xargs git commit --no-verify',
+        '/usr/bin/git commit --no-verify',
+        'env /usr/bin/git commit --no-verify',
+        "sh -c 'git commit --no-verify'",
+        "bash -c 'git commit --no-verify -m x'",
+        "env bash -lc 'git commit --no-verify'",
+        "eval 'git commit --no-verify'",
+        'git --config-env=core.hooksPath=X commit',
+        'git --config-env core.hooksPath=X commit',
+        'GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null git commit',
+        "GIT_CONFIG_PARAMETERS=\"'core.hooksPath'='/dev/null'\" git commit",
+        'env GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null GIT_CONFIG_COUNT=1 git commit',
+        'HUSKY=0 git commit -m x',
+    ];
+    for (const cmd of BYPASSED) {
+        it(`blocks: ${cmd}`, () => {
+            expect(_check_command(cmd)[0]).toBe(true);
+        });
+    }
+
+    const ALLOWED = [
+        'env git status',
+        'nice -n 5 git log --oneline',
+        'command -v git',
+        'time git fetch',
+        "sh -c 'git status'",
+        "eval 'echo --no-verify'",
+        'env FOO=1 npm test',
+        'GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=user.name GIT_CONFIG_VALUE_0=x git commit -m y',
+        'git --config-env=user.name=NAME commit -m y',
+        'echo env git commit --no-verify',
+        'HUSKY=1 git commit -m x',
+    ];
+    for (const cmd of ALLOWED) {
+        it(`allows: ${cmd}`, () => {
+            expect(_check_command(cmd)[0]).toBe(false);
+        });
+    }
+});
