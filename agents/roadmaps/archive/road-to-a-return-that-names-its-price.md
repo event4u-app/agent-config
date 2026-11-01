@@ -117,7 +117,7 @@ starts itself. No new command, no block, no keepalive.
 - [~] **2.3 Resume says it before the first request.** Bind the notice on <!-- deferred-resolution: carried-to=road-to-a-return-that-names-its-price-carried -->
       claude `session_start` for `source: resume|fork` and read the host's
       four fields (F4). Manifest edit with its ratification artifact.
-      verify: `./scripts-run src/scripts/check_kernel_edit_ratified --base origin/main` -> 0, and a fixture whose resume payload marks the cache as likely expired emits the line.
+      verify: a fixture whose resume payload marks the cache as likely expired emits the line, and `./scripts-run src/scripts/check_kernel_edit_ratified --base origin/main` -> 0
       Deferred 2026-11-01, blocked-by: resume-binding-ratification
 - [~] **2.4 Money only where money is billed.** For `metered`, append the <!-- deferred-resolution: carried-to=road-to-a-return-that-names-its-price-carried -->
       repriced cache-write amount; plan logins show tokens only (D5).
