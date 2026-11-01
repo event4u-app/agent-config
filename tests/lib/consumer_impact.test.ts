@@ -299,3 +299,25 @@ describe('release impact map', () => {
         expect(Object.keys(JSON.parse(fs.readFileSync(p, 'utf-8')) as object)).toEqual(['name', 'version']);
     });
 });
+
+// Release review 19.2.0 (M4): 187 commits, 0 trailers, a new `stop` binding on
+// seven platforms in the hook manifest — and the release entry read `none`.
+describe('a span that touched a consumer surface without any trailer', () => {
+    const sha = 'e'.repeat(40);
+    const c = (body: string): Commit => commit_from_record({ sha, subject: 'feat: x', body });
+
+    it('floors an untrailered span at notice', () => {
+        expect(release_impact_entry([c(''), c('')], { consumerSurfaceTouched: true })).toEqual({ impact: 'notice' });
+        expect(with_release_impact({}, '19.2.0', [c('')], { consumerSurfaceTouched: true })).toEqual({ '19.2.0': { impact: 'notice' } });
+    });
+
+    it('stays none when no consumer surface changed', () => {
+        expect(release_impact_entry([c('')], { consumerSurfaceTouched: false })).toEqual({ impact: 'none' });
+        expect(release_impact_entry([c('')])).toEqual({ impact: 'none' });
+    });
+
+    it('honours a recorded declaration, including an explicit none', () => {
+        expect(release_impact_entry([c('Consumer-Impact: none'), c('')], { consumerSurfaceTouched: true })).toEqual({ impact: 'none' });
+        expect(release_impact_entry([c('Consumer-Impact: action')], { consumerSurfaceTouched: true })).toEqual({ impact: 'action' });
+    });
+});
