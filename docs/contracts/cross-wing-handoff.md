@@ -74,7 +74,7 @@ duration of the chain.
 
 ## § 4 — Lint rules
 
-`scripts/lint_handoffs.py` enforces three rules over the handoff graph
+`src/scripts/lint_handoffs.ts` enforces three rules over the handoff graph
 built from senior-tier skills. The graph is built from the
 `**WHEN to use this**` sub-block of each skill's `## Related Skills`
 section — those links are **composition (delegation) edges**. Links
@@ -89,11 +89,11 @@ MUST NOT be flagged.
 | **No dangling references** | `handoff_dangling` | Every link must resolve to an existing skill file. | WHEN-to-use **and** WHEN-NOT |
 | **No tier mismatch** | `handoff_tier_mismatch` | A senior skill MAY only reference other senior skills (delegate to OR offer as alternative). | WHEN-to-use **and** WHEN-NOT |
 
-Optional rule, **not enforced by anything today**:
+Required by § 2 (MUST), **not enforced by anything today**:
 
 | Rule | Status | Description |
 |---|---|---|
-| Input shape declared | no code, no emitter | Delegated skill SHOULD declare `## Input`. |
+| Input shape declared | no code, no emitter | Delegated skill MUST declare `## Input` (§ 2); no lint checks it yet. |
 
 This row used to name a failure code, `handoff_missing_input`, and call it
 "Warning today; error after Phase 6". `lint_handoffs` has never emitted it —
@@ -141,4 +141,4 @@ Three shipped chains across the suite illustrate the contract:
 - `.agent-src.uncondensed/rules/skill-quality.md` § Senior-Tier
   Required Structure — defines the `## Related Skills` and `## Output`
   blocks the contract reads.
-- `scripts/lint_handoffs.py` — mechanical enforcement.
+- `src/scripts/lint_handoffs.ts` — mechanical enforcement.

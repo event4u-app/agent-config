@@ -232,7 +232,7 @@
 
 - id: finance-advanced
   label: Finance Advanced
-  description: DCF, scenario modelling, comp banding.
+  description: DCF, scenario modelling.
   workspaces: [finance]
   requires: [finance-basic]
   trust_level_default: core

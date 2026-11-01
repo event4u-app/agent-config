@@ -3,7 +3,7 @@ artefact_count: 3
 dependencies:
   rules: []
   skills: []
-description: DCF, scenario modelling, comp banding.
+description: DCF, scenario modelling.
 id: finance-advanced
 label: Finance Advanced
 owner:
@@ -18,6 +18,6 @@ token_passport:
   catalog_tokens: 106
   commands_tokens: 0
   other_tokens: 0
-  rules_tokens: 1191
-  total_tokens: 1297
+  rules_tokens: 1185
+  total_tokens: 1291
 trust_level_default: core

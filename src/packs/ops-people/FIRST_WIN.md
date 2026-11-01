@@ -39,11 +39,6 @@ might not know about?" — moves trust from 15% → ~25%, no cadence change
 needed.
 ```
 
-## Screenshot
-
-`docs/wizard/screenshots/ops-people-first-win.png` _(captured in Phase 5
-of `road-to-role-first-onboarding.md`)_.
-
 ## What this does **not** do
 
 - Does **not** schedule the 1:1s — the agent does not touch your calendar.

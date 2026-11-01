@@ -539,7 +539,7 @@ function _readStdin(): Promise<string> {
 const HELP = `reddit_thread_parse — deterministic old.reddit thread HTML → JSON
 
 Usage:
-  curl -sSL -H 'User-Agent: <a real browser UA>' \\
+  curl -sSL -H 'User-Agent: <tool-name>/<version> (+<contact-url>)' \\
     'https://old.reddit.com/r/<sub>/comments/<id>/' \\
     | tsx src/scripts/_lib/reddit_thread_parse.ts
 

@@ -30,10 +30,12 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-hard-floor-the-shell-cannot-talk-past | later | later | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |
 | road-to-a-knowledge-atlas | later | later | The Workbench page answers four questions about one selection, not one: how the code is built (done by the parent), … |
 | road-to-a-learner-the-measurements-gate | later | later | The open dispatch measurements are run or dated; a PR that moves a policy row without a measurement pinned to … |
+| road-to-a-library-the-agent-can-vouch-for | later | later | In a PHP project that needs DTOs, mapping, accessors or filters, AC writes code against the data-helpers version in the … |
 | road-to-a-memory-the-consumer-owns | later | later | A consumer's own memories and knowledge pages decide when they are recalled, the profile lives in one file per layer … |
 | road-to-a-menu-whose-precision-is-measured | later | later | Routing precision is a number with an interval on a labelled corpus large enough to carry one (≥ 100 prompts, … |
 | road-to-a-prompt-that-deepens-not-widens-carried | later | later | Every step road-to-a-prompt-that-deepens-not-widens deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-ranker-whose-ties-break-on-signal | later | later | When two skills score the same, the order between them comes from something the ranker measured, not from their names … |
+| road-to-a-reason-that-is-still-there | later | later | A safety floor reaches every skill it names; a pack's first-win guide claims only what exists; a recorded reason for … |
 | road-to-a-release-record-that-says-what-it-reviewed-carried | later | later | Every step road-to-a-release-record-that-says-what-it-reviewed deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-retro-the-merge-runs | later | later | After every merged pull request, and on the first session of every new day, the package examines finished work that … |
 | road-to-a-review-that-ends | later | later | A completion review runs at most N rounds, N set by the owner — round 1 over the scope, each … |
@@ -88,6 +90,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-external-proof-upgrade | later | later | External-Proof Upgrade — recruit sessions, beta promotion, v1.0 activation events |
 | road-to-federation-behind-adr-278 | later | later | Once ADR-278 answers ADR-088 § 3 (`docs/decisions/ADR-088-*.md:95-105`), a neighbour's capability can be invoked through one typed boundary and its result … |
 | road-to-first-reference-analysis-observation | later | later | Spend exactly one of the two remaining observation slots of the pre-registered claim `reference-loop-upgrade-value` (`docs/CLAIMS.md:487`) on a valid, atomic upgraded-plus-shadow … |
+| road-to-forecasts-that-know-their-sources | later | later | AC can analyse a market or a match the way a careful analyst does: it knows where each kind of … |
 | road-to-gateway-harvest | later | later | Road to gateway harvest — what the runtime layer could carry, parked behind the freeze (Source B) |
 | road-to-governed-evidence-production | later | later | The four evidence obligations the governed-harness programme could not discharge are owned here, whole and unweakened, and each is either … |
 | road-to-grounding-corpus-catalog-parity | later | later | Road to grounding-corpus / catalog parity |

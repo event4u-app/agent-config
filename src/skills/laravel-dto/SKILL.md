@@ -33,14 +33,15 @@ Use this skill when creating a new DTO for data transfer between layers (DB ↔ 
 
 ### Base class
 
-- Use the project's standard DTO base class (typically `SimpleDto` or `LiteDto`).
-- Never create plain PHP classes for DTOs that map to models — always extend the base class.
+- If the project has a DTO base class (typically `SimpleDto` or `LiteDto`), extend it.
+- Without one, a plain `final readonly class` is fine — never add a dependency just for a base class.
 
 ### Property mapping
 
 - Use `#[Map('db_column')]` attributes to map between DB column names and PHP properties.
+- Put `#[Map]` and validation attributes on **constructor parameters**; on a plain property they are silently ignored.
 - PHP properties: `camelCase`, English names.
-- DB columns: `snake_case`, may be German (legacy) — match what's in the database.
+- DB columns: `snake_case` — match what's in the database.
 
 ### Type casting
 
@@ -71,16 +72,18 @@ use Vendor\DataHelpers\SimpleDto\Attributes\HasModel;
 use Vendor\DataHelpers\SimpleDto\Attributes\Map;
 
 #[HasModel(MyModel::class)]
-class MyModelDto extends SimpleDto
+final class MyModelDto extends SimpleDto
 {
-    #[Map('id_column')]
-    public ?int $id = null;
+    public function __construct(
+        #[Map('id_column')]
+        public readonly ?int $id = null,
 
-    #[Map('name_column')]
-    public string $name = '';
+        #[Map('name_column')]
+        public readonly string $name = '',
 
-    #[Map('amount_column')]
-    public float $amount = 0.0;
+        #[Map('amount_column')]
+        public readonly float $amount = 0.0,
+    ) {}
 }
 ```
 
@@ -99,18 +102,18 @@ Always check `composer.json` for DTO-related packages before choosing the approa
 
 - **Match existing patterns** — if the project already has DTOs, follow their style.
 - **Do NOT create DTOs for trivial data** — if a simple array or typed parameter suffices, don't over-engineer.
-- **Use `Math` helper** for any calculated properties — never raw PHP arithmetic.
+- **Use the project's decimal/precision abstraction** (if one exists) for calculated money values — never `float` arithmetic for money.
 - **`declare(strict_types=1)`** in every new file.
 
 
 ## Output format
 
-1. DTO class extending SimpleDto with typed properties
+1. DTO class per the project's convention, with typed constructor-promoted properties
 2. Static factory method(s) for construction from common sources
 
 ## Gotcha
 
-- DTOs must extend `SimpleDto` — don't create plain PHP classes as DTOs.
+- `#[Map]` on a property without a constructor is silently ignored.
 - The model forgets to add the model linkage (`$modelClass`) when the DTO maps to an Eloquent model.
 - Attribute names in the DTO must match the database column names (snake_case), not the PHP property names.
 
