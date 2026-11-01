@@ -42,7 +42,11 @@ continuity record no longer depends on reaching the 800k recycle threshold.
       verify: `tests/scripts/statusline_tap.test.ts` case at 85 %.
 - [ ] **1.2 Doctor line.** `hooks:status` / `doctor` print "fill warning: live
       | no status-line tap | not bound on this host".
-      verify: a fixture without the tap prints "no status-line tap".
+      The same row carries a cache column, `cache notice: live | fallback
+      (no tap) | not bound` (folded in from `road-to-a-return-that-names-its-price`
+      3.2, round `inbox-2026-11-b`; one row, never two).
+      verify: a fixture without the tap prints "no status-line tap" and
+      "fallback (no tap)".
 - [ ] **1.4 Correct the manifest comment.** `src/scripts/hook_manifest.yaml`
       still describes `quota-notice` as "one per session at 80 % context fill";
       since `road-to-a-memory-that-arrives` 2.1 it repeats every prompt. The
