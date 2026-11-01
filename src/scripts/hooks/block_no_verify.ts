@@ -326,9 +326,16 @@ export function _unwrap(tokens: string[]): {
         const head = _basename(tokens[i] ?? '');
         const spec = _EXEC_WRAPPERS.get(head);
         if (spec === undefined) return { start: i, hookspathEnv, exhausted: false, splitString };
-        // `command -v` / `-V` looks a name up; it runs nothing.
-        if (head === 'command' && tokens.slice(i + 1).some((t) => /^-[a-zA-Z]*[vV]/.test(t))) {
-            return { start: i, hookspathEnv, exhausted: false, splitString };
+        // `command -v` / `-V` looks a name up; it runs nothing. Only `command`'s
+        // own options count: `-v` after the executable is that program's flag.
+        if (head === 'command') {
+            let k = i + 1;
+            let lookup = false;
+            while (k < tokens.length && (tokens[k] as string).startsWith('-') && tokens[k] !== '--') {
+                if (/^-[a-zA-Z]*[vV]/.test(tokens[k] as string)) lookup = true;
+                k += 1;
+            }
+            if (lookup) return { start: i, hookspathEnv, exhausted: false, splitString };
         }
         i += 1;
         while (i < tokens.length && (tokens[i] as string).startsWith('-')) {
@@ -339,10 +346,15 @@ export function _unwrap(tokens: string[]): {
             if (opt === '--') break;
         }
         i += spec.positional;
+        // An option whose argument is optional and attached-only leaves a bare
+        // count in command position when spelled apart (`xargs --max-lines 1
+        // git …`). No program is named by digits alone, so skip it.
+        while (i < tokens.length && /^\d+$/.test(tokens[i] as string)) i += 1;
     }
     // Sixteen stacked wrappers is not a real command; report it rather than stop
     // reading silently, so the caller can refuse a git found further along.
-    return { start: i, hookspathEnv, exhausted: true, splitString };
+    const exhausted = _EXEC_WRAPPERS.has(_basename(tokens[i] ?? ''));
+    return { start: i, hookspathEnv, exhausted, splitString };
 }
 
 /** The payload of `sh -c '<payload>'`, `eval <words…>` or `env -S '<payload>'`, or null. */
