@@ -106,7 +106,7 @@ ADR-108), and any growth target as an acceptance criterion (ADR-286 D2/D4).
 Each ruling is recorded as a dated note under `docs/decisions/` (or an ADR where
 it changes a recorded decision) before any phase that depends on it starts.
 
-- [x] **0.1 info-image.png.** Owner ruling. Facts: the owner asked for it in
+- [x] **0.1 info-image.png.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Owner ruling. Facts: the owner asked for it in
       README and docs; its three percentages have no backed claim, its code
       panel and advice paragraph are not product copy, ADR-249's surface test
       forbids unverified runtime properties on public surfaces. Options:
@@ -200,7 +200,9 @@ Phase 8.
       (shim, not a content channel, per ADR-209); export-only hosts named as
       such; the Codex row checked against `codex_skill_finder.ts` and
       ADAPTER_REGISTRY; "7+ hosts" replaced by the backed host count with its
-      claim marker. verify: `lint_supported_tools_matrix` green, grep clean.
+      claim marker. verify: `./scripts-run src/scripts/lint_supported_tools_matrix` -> 0
+      and the grep for `--tools=gemini` and "7+ host" over README, docs/ and
+      site/ returns nothing.
 - [ ] **2.4 No "zero runtime" on public pages.** Remove or relabel as policy
       every no-runtime/no-daemon assertion in `site/astro.config.mjs`,
       `index.mdx`, `introduction.md`, `architecture/overview.md`,
@@ -237,7 +239,7 @@ Phase 8.
       avoids and their replacements (governed, projection, kernel, wedge,
       judges, council, Iron Law, ADR numbers), the sentence rules (one-sentence
       lead, code first, no serial comma in README), and where jargon is allowed
-      (Reference, Maintainers). verify: `lint_readme_jargon` budget holds.
+      (Reference, Maintainers). verify: `./scripts-run src/scripts/lint_readme_jargon` -> 0
 - [ ] **3.4 Day-one commands.** The five commands a newcomer needs, verified
       against the command registry visibility (`visible`/`advanced`): `/work`,
       `/implement-ticket`, `/review-changes`, `/commit`, and
