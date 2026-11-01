@@ -23,7 +23,9 @@ packs:
 Build the map of the project the user is standing in, then point at it. The map is
 deterministic: no model call, no network, and the same tree draws the same bytes.
 Everything lives in one folder, `agents/map/` (ADR-297, ADR-303); only its <!-- ref-ignore -->
-`.build/` part — the graph cache, its SQLite twin, the refresh lock — is gitignored.
+`.build/` part — the graph cache, its SQLite twin, the refresh lock — and the viewer
+`index.html` are gitignored. The viewer is rendered from the committed data: a redraw
+writes it, and `code-graph refresh` and `code-graph open` re-render it after a pull.
 
 ### 1. Build
 
