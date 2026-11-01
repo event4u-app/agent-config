@@ -10,8 +10,9 @@
  * Prereqs: `npm run build:ui` (the server serves dist/ui verbatim) and the
  * Playwright chromium binary. Dry-run — zero writes under the temp root.
  */
-import { test, expect, type Page } from '@playwright/test';
-import { mkdtempSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { test, expect, type Browser, type Page } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -141,7 +142,7 @@ function snapshotDir(root: string): string[] {
 test.describe('install wizard — browser walk', () => {
     test.use({ viewport: { width: 1280, height: 900 } });
 
-    test('start screen → customize walk → review has no layout overflow', async ({ page }, testInfo) => {
+    test('start screen → customize walk → review has no layout overflow', async ({ page, browser }, testInfo) => {
         test.setTimeout(120_000); // full walk + dry-run installer preview
         const writeRootBefore = snapshotDir(tmpRoot);
         await page.goto(`${baseURL}/?token=test-token#/wizard`);
@@ -154,6 +155,7 @@ test.describe('install wizard — browser walk', () => {
         await expect(recommendedCta).toBeVisible();
         await expectNoPageOverflow(page);
         await page.screenshot({ path: testInfo.outputPath('01-start-screen.png'), fullPage: true });
+        await stripShot(page, testInfo.outputPath('strip-1.png'));
 
         await page.getByRole('button', { name: 'Customize step by step' }).click();
 
@@ -181,6 +183,7 @@ test.describe('install wizard — browser walk', () => {
         await expect(page.getByRole('heading', { name: /Which capability packs/ })).toBeVisible();
         await expect(page.locator('.ac-badge--installed').first()).toBeVisible();
         await page.screenshot({ path: testInfo.outputPath('02-packs-step.png'), fullPage: true });
+        await stripShot(page, testInfo.outputPath('strip-2.png'));
         await clickNext(page);
 
         // ---- Legal consent ----
@@ -206,6 +209,7 @@ test.describe('install wizard — browser walk', () => {
         await expect(page.getByRole('heading', { name: /Review & finish/ })).toBeVisible();
         await expect(page.getByRole('heading', { name: 'What happens on Finish' })).toBeVisible();
         await page.screenshot({ path: testInfo.outputPath('03-review.png'), fullPage: true });
+        await stripShot(page, testInfo.outputPath('strip-3.png'));
 
         // The regression: 23 tool chips rendered as one unbreakable inline
         // run overflowed the summary box. The box AND the page must not
@@ -256,10 +260,59 @@ test.describe('install wizard — browser walk', () => {
         await expect(page.locator('.ac-checklist__cmd', { hasText: 'agent-config config' }).first()).toBeVisible();
         await expectNoPageOverflow(page);
         await page.screenshot({ path: testInfo.outputPath('05-finish-checklist.png'), fullPage: true });
+        await stripShot(page, testInfo.outputPath('strip-4.png'));
 
         // Dry-run hard floor: the whole walk (including Finish + the apply
         // preview) wrote NOTHING under the writeRoot. Before the server-side
         // `opts.dryRun` guard, Finish spawned the REAL installer here.
         expect(snapshotDir(tmpRoot)).toEqual(writeRootBefore);
+
+        if (CAPTURE_STRIP) {
+            await exportWizardStrip(browser, [1, 2, 3, 4].map((n) => testInfo.outputPath(`strip-${n}.png`)), testInfo.outputPath('wizard-strip.png'));
+        }
     });
 });
+
+const CAPTURE_STRIP = process.env['CAPTURE_WIZARD_STRIP'] === '1';
+
+/** A viewport shot from the top of the page for the docs strip; a no-op unless the capture flag is set. */
+async function stripShot(page: Page, path: string): Promise<void> {
+    if (!CAPTURE_STRIP) return;
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.screenshot({ path });
+}
+
+const STRIP_OUT = join(REPO_ROOT, 'docs', 'media', 'install', 'wizard-strip.webp');
+const STRIP_BUDGET = 300 * 1024;
+
+/**
+ * Docs capture, off by default (`CAPTURE_WIZARD_STRIP=1`): the dry-run walk's
+ * screenshots side by side in one horizontal strip for the Install page. The
+ * strip is laid out by a page Chromium renders, so no image library is needed;
+ * `cwebp` turns it into the published WebP. Its embed needs ADR-125 confirmation.
+ */
+async function exportWizardStrip(browser: Browser, shots: string[], png: string): Promise<void> {
+    const tile = { width: 640, height: 450 };
+    const gap = 16;
+    const imgs = shots.map((s) => `<img src="data:image/png;base64,${readFileSync(s).toString('base64')}">`).join('');
+    const page = await browser.newPage({
+        viewport: { width: shots.length * tile.width + (shots.length + 1) * gap, height: tile.height + 2 * gap },
+    });
+    try {
+        await page.setContent(
+            `<style>html,body{margin:0;background:#0b0f17}body{display:flex;gap:${gap}px;padding:${gap}px}` +
+                `img{width:${tile.width}px;height:${tile.height}px;object-fit:cover;object-position:top;` +
+                `border-radius:10px;box-shadow:0 0 0 1px #263043}</style>${imgs}`,
+        );
+        await page.waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth > 0));
+        await page.screenshot({ path: png });
+    } finally {
+        await page.close();
+    }
+    mkdirSync(dirname(STRIP_OUT), { recursive: true });
+    for (const q of [82, 72, 62, 52]) {
+        execFileSync('cwebp', ['-quiet', '-q', String(q), '-m', '6', png, '-o', STRIP_OUT]);
+        if (statSync(STRIP_OUT).size <= STRIP_BUDGET) return;
+    }
+    throw new Error(`${STRIP_OUT} stays above ${STRIP_BUDGET} bytes at quality 52`);
+}
