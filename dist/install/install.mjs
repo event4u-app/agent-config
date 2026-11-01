@@ -10759,6 +10759,20 @@ function dropGlobalScopeFiles(entries, deployed) {
   return entries;
 }
 
+// src/install/exportHint.ts
+var EXPORT_TARGETS = {
+  copilot: ["copilot-instructions", ".github/copilot-instructions.md"],
+  aider: ["aider", ".aider/agent-config.md"],
+  zed: ["zed", ".zed/agent-config.md"],
+  jetbrains: ["jetbrains", ".jetbrains/agent-config.md"]
+};
+var GLOBAL_HINT_TOOLS = Object.keys(EXPORT_TARGETS);
+function exportHintCommand(tool_id) {
+  const target = EXPORT_TARGETS[tool_id];
+  if (target === void 0) return null;
+  return `agent-config export --tool=${target[0]} --output=${target[1]}`;
+}
+
 // src/install/ownershipLedger.ts
 import * as fs14 from "node:fs";
 import * as path13 from "node:path";
@@ -24757,7 +24771,7 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
     }
     const plan = GLOBAL_DEPLOY_SOURCES[tool_id];
     if (plan === void 0) {
-      const status = ["copilot", "aider", "zed", "jetbrains"].includes(tool_id) ? "hint" : "unsupported";
+      const status = GLOBAL_HINT_TOOLS.includes(tool_id) ? "hint" : "unsupported";
       results[tool_id] = [0, 0, status, []];
       continue;
     }
@@ -25132,7 +25146,7 @@ function install_global(tools, force, project_root = null, core_only = false) {
         );
       } else if (status === "hint") {
         process4.stdout.write(
-          `      ${tool_id.padEnd(15)} \u2192 no user-scope convention; use \`agent-config export --tool=${tool_id}\`
+          `      ${tool_id.padEnd(15)} \u2192 no user-scope convention; per project: \`${exportHintCommand(tool_id)}\`
 `
         );
       } else {

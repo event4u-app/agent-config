@@ -91,6 +91,7 @@ import { manualSnippet, mergeHostConfigFile, parseHostConfig } from '../install/
 import { mkdirp, pathExists, resolvePath, sha256OfFile } from '../install/fsPrimitives.js';
 import { dropGlobalScopeFiles, filesByToolFromBridges as _files_by_tool_from_bridges, filesByToolFromDeploy as _files_by_tool_from_deploy, hydrateRecordedInventories, preservedIndex, readRecordedByTool, reconcileToolFiles, type ManifestFileEntry } from '../install/manifestFiles.js';
 import { EXIT_COMPLETED_WITH_CONFLICTS } from '../install/preserve.js';
+import { GLOBAL_HINT_TOOLS, exportHintCommand } from '../install/exportHint.js';
 import { recordGlobalDeploy, retainedFileMessage } from '../install/ownershipLedger.js';
 import * as surface_tiers from './_lib/surface_tiers.js';
 import * as global_deploy_inventory from './_lib/global_deploy_inventory.js';
@@ -2906,9 +2907,7 @@ function _deploy_global_content(
         }
         const plan = GLOBAL_DEPLOY_SOURCES[tool_id];
         if (plan === undefined) {
-            const status = ['copilot', 'aider', 'zed', 'jetbrains'].includes(tool_id)
-                ? 'hint'
-                : 'unsupported';
+            const status = GLOBAL_HINT_TOOLS.includes(tool_id) ? 'hint' : 'unsupported';
             results[tool_id] = [0, 0, status, []];
             continue;
         }
@@ -3420,7 +3419,7 @@ function install_global(
                 );
             } else if (status === 'hint') {
                 process.stdout.write(
-                    `      ${tool_id.padEnd(15)} → no user-scope convention; use \`agent-config export --tool=${tool_id}\`\n`,
+                    `      ${tool_id.padEnd(15)} → no user-scope convention; per project: \`${exportHintCommand(tool_id)}\`\n`,
                 );
             } else {
                 process.stdout.write(

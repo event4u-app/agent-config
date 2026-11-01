@@ -17,6 +17,10 @@ import { describe, expect, it } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { DEFAULT_TEMPLATE as GITATTRIBUTES_TEMPLATE } from '../../../src/scripts/sync_gitattributes.js';
+import { DEFAULT_TEMPLATE as GITIGNORE_TEMPLATE } from '../../../src/scripts/_lib/gitignore_block.js';
+import { template_path as wrapperTemplatePath } from '../../../src/scripts/_lib/cli_wrapper.js';
+
 const REPO_ROOT = process.cwd();
 
 interface PackageJson {
@@ -71,6 +75,23 @@ describe('npm files allowlist', () => {
         expect(fs.existsSync(path.join(REPO_ROOT, pointed))).toBe(true);
         expect(isShipped(pointed, files)).toBe(true);
     });
+
+    // `init --project` (refresh --project) reads these templates at runtime from
+    // the installed package. Taken from the readers' own exported constants, so
+    // a moved template or a reader pointing outside `files` fails here instead
+    // of on a consumer's machine.
+    const runtimeTemplates: ReadonlyArray<readonly [string, string]> = [
+        ['sync_gitattributes DEFAULT_TEMPLATE', GITATTRIBUTES_TEMPLATE],
+        ['gitignore_block DEFAULT_TEMPLATE', GITIGNORE_TEMPLATE],
+        ['cli_wrapper template_path()', wrapperTemplatePath()],
+    ];
+    for (const [label, abs] of runtimeTemplates) {
+        it(`delivers the template ${label} reads at runtime`, () => {
+            const rel = path.relative(REPO_ROOT, abs).split(path.sep).join('/');
+            expect(fs.existsSync(abs), `${rel} missing from the repo`).toBe(true);
+            expect(isShipped(rel, files), `${rel} not covered by package.json files`).toBe(true);
+        });
+    }
 
     it('covers the example path the wizard seeds the council config from', () => {
         const wizard = fs.readFileSync(
