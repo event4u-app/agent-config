@@ -17,7 +17,6 @@ import mermaid from 'astro-mermaid';
 
 const SITE = 'https://event4u-app.github.io';
 const BASE = '/agent-config';
-const ONE_LINER = 'Teach your AI coding agents to check their work before they say done.';
 // Ruling 0.2 of the docs-that-sell decision note: every embed of the banner carries
 // this caption; an Open Graph image cannot carry a visible caption, so it rides as the alt text.
 const BANNER_CAPTION =
@@ -43,7 +42,7 @@ export default defineConfig({
     mermaid({ theme: 'default', autoTheme: true }),
     starlight({
       title: 'Agent Config',
-      description: ONE_LINER,
+      description: 'Skills, rules, slash commands and subagents for AI coding agents — teach them to check their work before they say done.',
       logo: { src: './src/assets/logo.svg', alt: 'Agent Config' },
       favicon: '/favicon.svg',
       head: [

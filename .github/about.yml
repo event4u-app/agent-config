@@ -10,5 +10,5 @@
 # The `description` field is asserted by `src/scripts/lint_positioning.ts`
 # to be consistent with the README tagline and the `package.json`
 # description.
-description: "Agent Config — teach your AI coding agents to check their work before they say done. Skills, rules and commands for Claude Code, Cursor, Copilot, Codex and more AI coding tools."
+description: "Skills, rules, slash commands and subagents for Claude Code, Cursor, Copilot, Codex and more AI coding tools — teach your AI coding agents to check their work before they say done."
 homepage: "https://event4u-app.github.io/agent-config"

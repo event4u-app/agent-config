@@ -23,6 +23,12 @@ Every prompt cites the status taxonomy in
 ends with the **return-envelope** instruction so the subagent's reply
 validates against that schema.
 
+Every role prompt — implementer and judge alike — carries the
+`{{user_requirements}}` slot: the subagent sees none of the conversation, so
+what the user asked for reaches it only through that slot
+([`subagent-spawn-contract`](../../../contexts/execution/subagent-spawn-contract.md)
+§ Worker-prompt rules (a)).
+
 ### UI-shaped slices carry the design context, or name its absence
 
 A delegated worker's context is whatever the dispatch prompt carries. For a

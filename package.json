@@ -2,7 +2,7 @@
     "name": "@event4u/agent-config",
     "mcpName": "io.github.event4u-app/agent-config",
     "version": "19.1.0",
-    "description": "Agent Config — teach your AI coding agents to check their work before they say done. Skills, rules and commands for Claude Code, Cursor, Copilot, Codex and more AI coding tools.",
+    "description": "Skills, rules, slash commands and subagents for Claude Code, Cursor, Copilot, Codex and more AI coding tools — teach your AI coding agents to check their work before they say done.",
     "license": "MIT",
     "private": false,
     "type": "module",

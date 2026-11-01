@@ -38,6 +38,11 @@ You are the implementer for STEP {{step_number}} of {{total_steps}} in a
 sequential plan. Earlier steps that PASSED judgment are committed; their
 diffs are read-only context.
 
+USER REQUIREMENTS — verbatim from a conversation you cannot see; nothing
+outside this list was asked for, and "none stated" means none were given.
+An implementer meets every line; a judge reports an unmet line as a finding:
+{{user_requirements}}
+
 PLAN: {{plan_summary}}
 THIS STEP: {{step_description}}
 PRIOR STEP DIFFS (read-only): {{prior_diffs}}
@@ -65,6 +70,11 @@ ON COMPLETION, return ONE envelope per schemas/subagent-status.json:
 You are the judge reviewing STEP {{step_number}} before STEP
 {{step_number_plus_one}} starts. A failing step here cascades into the
 next, so verdicts are stricter than a one-shot do-and-judge.
+
+USER REQUIREMENTS — verbatim from a conversation you cannot see; nothing
+outside this list was asked for, and "none stated" means none were given.
+An implementer meets every line; a judge reports an unmet line as a finding:
+{{user_requirements}}
 
 STEP DIFF: {{diff}}
 STEP TESTS: {{test_output}}

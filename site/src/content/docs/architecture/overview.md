@@ -1,6 +1,6 @@
 ---
 title: Architecture Overview
-description: How agent-config is built — the artifact types, the authoring-time scope line, and what it deliberately is not.
+description: How agent-config is built — a content + governance layer, its artifact types, the authoring-time scope line and what it deliberately is not.
 ---
 
 agent-config is a **content + governance layer**, not an agent runtime. The
@@ -28,6 +28,15 @@ split into an always-on **kernel** and trigger-activated tiers — see
 ## What stays with the host
 
 - **The agent loop, the model and tool orchestration** stay with the host tool.
+
+The scope line is **authoring-time (in scope) vs runtime (out of scope)**: code
+that runs during prompt construction or on an explicit user command — assembling
+context for the agent to review — belongs; code that executes autonomously
+during agent operation does not.
+
+## What it deliberately is *not*
+
+- **No mandatory or always-on daemon** — the host runs the loop.
 - **No separate state database** — settings, memory and roadmaps are files in
   the user's home folder or the repository.
 - **No self-rewriting memory** — every learned change is human-reviewed.
