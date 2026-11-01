@@ -106,7 +106,7 @@ ADR-108), and any growth target as an acceptance criterion (ADR-286 D2/D4).
 Each ruling is recorded as a dated note under `docs/decisions/` (or an ADR where
 it changes a recorded decision) before any phase that depends on it starts.
 
-- [x] **0.1 info-image.png.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Owner ruling. Facts: the owner asked for it in
+- [x] **0.1 info-image.png.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Owner ruling. Facts: the owner asked for it in
       README and docs; its three percentages have no backed claim, its code
       panel and advice paragraph are not product copy, ADR-249's surface test
       forbids unverified runtime properties on public surfaces. Options:
