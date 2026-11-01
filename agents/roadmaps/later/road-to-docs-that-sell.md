@@ -116,35 +116,35 @@ it changes a recorded decision) before any phase that depends on it starts.
       `.github/assets/info-image.png` (9.1) and is embedded as the "how it fits
       together" visual on README (7.3), landing (6.2) and Introduction — never
       as the hero; alt text names the components it shows.
-- [ ] **0.2 info-banner.png.** Owner ruling on the two false lines ("Stored in
+- [x] **0.2 info-banner.png.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Conservative default pending the owner (caption, keep as hero); ruled in `docs/decisions/docs-that-sell-rulings-2026-11.md`. Owner ruling on the two false lines ("Stored in
       your repo" vs global-only ADR-020; "Built for Claude, Codex & local
       agents" vs 20 written hosts): re-render, or keep with a caption that
       states the truth. It stays the hero on README, landing and Introduction.
-- [ ] **0.3 One-liner.** Pick the H1 tail that becomes byte-identical in
+- [x] **0.3 One-liner.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Ruled in `docs/decisions/docs-that-sell-rulings-2026-11.md`. Pick the H1 tail that becomes byte-identical in
       README, `package.json` description and `.github/about.yml` (≤200 chars,
       no serial comma, no jargon list word). Candidate set and reasoning in
       Appendix A; recommended: "make your AI coding agents check their work
       before they say done". Record the retired tail.
-- [ ] **0.4 README order lock.** Council re-evaluation of
+- [x] **0.4 README order lock.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Ruled in `docs/decisions/docs-that-sell-rulings-2026-11.md`. Council re-evaluation of
       `readme_audience_order.test` and the anchor table in
       `docs/readme-split-plan.md`: keep "Use it → Prove it → Contribute before
       Quickstart" as short router sections, or move Quickstart ahead. Record
       the outcome with a `revisit-if`; if anchors move, the linter change ships
       with 7.2.
-- [ ] **0.5 Install-scope sentence.** One canonical sentence, derived from
+- [x] **0.5 Install-scope sentence.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Ruled in `docs/decisions/docs-that-sell-rulings-2026-11.md`. One canonical sentence, derived from
       ADR-020, ADR-293 and `src/scripts/install.ts:1692-1831`, stating what is
       written globally, what lands in a repo and whether `init --project` is a
       user command. Every later phase copies this sentence; none paraphrases it.
-- [ ] **0.6 Entry-command story.** Which single command the docs teach first
+- [x] **0.6 Entry-command story.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Ruled in `docs/decisions/docs-that-sell-rulings-2026-11.md`. Which single command the docs teach first
       (`init`), and what `install`, `setup`, `first-run`, `config` become in user
       copy (aliases, advanced, hidden). Phase 4 implements it; Phases 6–7
       describe it.
-- [ ] **0.7 Canonical-page map.** For each of the ten duplicate clusters
+- [x] **0.7 Canonical-page map.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Ruled in `docs/decisions/docs-that-sell-rulings-2026-11.md`. For each of the ten duplicate clusters
       (getting started, profiles, flows, catalogs, benchmark, MCP, proof,
       migration, censuses, governance) one canonical page and a fate for every
       other member (merge, pointer stub, move to maintainers, keep generated).
       Phase 2 fixes only surviving pages; Phase 8 executes the map.
-- [ ] **0.8 Feature entry points vs the reach freeze.** Owner ruling: feature
+- [x] **0.8 Feature entry points vs the reach freeze.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Conservative default pending the owner (ZIPs stay in the installation reference); ruled in `docs/decisions/docs-that-sell-rulings-2026-11.md`. Owner ruling: feature
       pages on the docs site are allowed; linking the existing per-skill
       Claude.ai ZIPs (`cloud-release.yml`) for `code-review` and
       `security-audit` as named entry points is a launch-shaped act while
