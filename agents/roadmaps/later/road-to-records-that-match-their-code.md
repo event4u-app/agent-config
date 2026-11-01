@@ -37,8 +37,8 @@ estate_offset_exempt: "Owner search run 2026-10-29 for every subject below: grep
 
 ## Goal
 
-Every item below ends with the record and the code saying the same thing, and a
-check that would have caught the drift where one is cheap.
+Record and code agree. Every item below ends with them saying the same thing,
+and a check that would have caught the drift where one is cheap.
 
 ## Phase 1 — Records a reader acts on
 

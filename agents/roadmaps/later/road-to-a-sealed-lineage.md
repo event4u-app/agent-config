@@ -39,7 +39,7 @@ estate_offset_exempt: "Adds a later/ roadmap only; the active estate is unchange
 
 ## Goal
 
-Encrypted lineage. A maintainer can trace an external
+Sealed. A maintainer can trace an external
 resource to the AC feature it shaped, and an upstream change to the gap it
 opens, with no identifying source metadata in the tracked tree, a public map, a
 log, or a model tool result.
