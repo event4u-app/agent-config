@@ -454,6 +454,12 @@ describe('block_no_verify — exec wrappers and config-env forms', () => {
         'xargs --max-lines=1 git commit --no-verify',
         'nice -n5 git commit --no-verify',
         'nice --adjustment=5 git commit --no-verify',
+        // Council round 3 (openai): option spellings a closed table misses.
+        "env -S'git commit --no-verify'",
+        "env -vS 'git commit --no-verify'",
+        'stdbuf --output L git commit --no-verify',
+        'stdbuf --output=L git commit --no-verify',
+        'timeout --preserve-status --foreground 5 git commit --no-verify',
     ];
     for (const cmd of BYPASSED) {
         it(`blocks: ${cmd}`, () => {
@@ -477,6 +483,7 @@ describe('block_no_verify — exec wrappers and config-env forms', () => {
         'command -V git',
         "HUSKY=0 sh -c 'npm test'",
         'command -pv git',
+        'env command -v git commit --no-verify',
     ];
     for (const cmd of ALLOWED) {
         it(`allows: ${cmd}`, () => {
@@ -485,18 +492,25 @@ describe('block_no_verify — exec wrappers and config-env forms', () => {
     }
 });
 
-// Past sixteen stacked wrappers the guard no longer knows which token is in
-// command position, so it reads the first `git` after them as git. That is
-// fail-closed on purpose: a false refusal costs a rewrite, a false allow costs
-// the hooks. The price is named here rather than hidden.
-describe('block_no_verify — wrapper exhaustion is fail-closed', () => {
-    const many = Array.from({ length: 17 }, () => 'env').join(' ');
-    it('refuses a git found past sixteen wrappers, even as an echo operand', () => {
+// Stacked wrappers are read through: sixteen of them, then git, is still git.
+describe('block_no_verify — stacked wrappers', () => {
+    it('refuses git behind seventeen wrappers', () => {
+        const many = Array.from({ length: 17 }, () => 'env').join(' ');
         expect(_check_command(`${many} git commit --no-verify`)[0]).toBe(true);
-        expect(_check_command(`${many} echo git commit --no-verify`)[0]).toBe(true);
     });
-    it('allows sixteen wrappers or fewer in front of echo', () => {
-        const sixteen = Array.from({ length: 16 }, () => 'env').join(' ');
-        expect(_check_command(`${sixteen} echo git commit --no-verify`)[0]).toBe(false);
+});
+
+// Round 3 changed strategy: after a wrapper the guard does not trust its own
+// option table to find command position. If what it lands on is not git, the
+// first later `git` in the segment is read as git, so an option spelling the
+// table misses can no longer hide it. The table now only decides how many
+// commands are refused that need not be; the price is pinned here.
+describe('block_no_verify — after a wrapper, an unresolved head is fail-closed', () => {
+    it('refuses git as a wrapped echo operand (the named false refusal)', () => {
+        expect(_check_command('timeout 5 echo git commit --no-verify')[0]).toBe(true);
+    });
+    it('still allows a wrapped command with no git token, and a bare echo', () => {
+        expect(_check_command('timeout 5 echo commit --no-verify')[0]).toBe(false);
+        expect(_check_command('echo git commit --no-verify')[0]).toBe(false);
     });
 });

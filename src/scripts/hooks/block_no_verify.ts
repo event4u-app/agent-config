@@ -312,12 +312,16 @@ function _basename(token: string): string {
 export function _unwrap(tokens: string[]): {
     start: number;
     hookspathEnv: string | null;
-    exhausted: boolean;
+    /** At least one wrapper was peeled, so `start` rests on the option table. */
+    wrapped: boolean;
+    /** `command -v` / `-V`: a lookup, which runs nothing. */
+    lookup: boolean;
     splitString: string | null;
 } {
     let i = 0;
     let hookspathEnv: string | null = null;
     let splitString: string | null = null;
+    let wrapped = false;
     for (let guard = 0; guard < 16; guard += 1) {
         while (i < tokens.length && _is_env_assignment(tokens[i] as string)) {
             if (hookspathEnv === null && _env_sets_hookspath(tokens[i] as string)) hookspathEnv = tokens[i] as string;
@@ -325,7 +329,7 @@ export function _unwrap(tokens: string[]): {
         }
         const head = _basename(tokens[i] ?? '');
         const spec = _EXEC_WRAPPERS.get(head);
-        if (spec === undefined) return { start: i, hookspathEnv, exhausted: false, splitString };
+        if (spec === undefined) return { start: i, hookspathEnv, wrapped, lookup: false, splitString };
         // `command -v` / `-V` looks a name up; it runs nothing. Only `command`'s
         // own options count: `-v` after the executable is that program's flag.
         if (head === 'command') {
@@ -335,26 +339,28 @@ export function _unwrap(tokens: string[]): {
                 if (/^-[a-zA-Z]*[vV]/.test(tokens[k] as string)) lookup = true;
                 k += 1;
             }
-            if (lookup) return { start: i, hookspathEnv, exhausted: false, splitString };
+            if (lookup) return { start: i, hookspathEnv, wrapped, lookup: true, splitString };
         }
+        wrapped = true;
         i += 1;
         while (i < tokens.length && (tokens[i] as string).startsWith('-')) {
             const opt = tokens[i] as string;
-            if (head === 'env' && (opt === '-S' || opt === '--split-string')) splitString = tokens[i + 1] ?? null;
-            else if (head === 'env' && opt.startsWith('--split-string=')) splitString = opt.slice('--split-string='.length);
+            if (head === 'env') {
+                // `-S <s>`, `-S<s>`, a bundle ending in S (`-vS <s>`), or `--split-string[=<s>]`.
+                const bundle = /^-[a-zA-Z]*S(.*)$/.exec(opt);
+                if (opt.startsWith('--split-string=')) splitString = opt.slice('--split-string='.length);
+                else if (opt === '--split-string') splitString = tokens[i + 1] ?? null;
+                else if (bundle !== null && !opt.startsWith('--')) {
+                    splitString = bundle[1] !== '' ? (bundle[1] as string) : (tokens[i + 1] ?? null);
+                    if (bundle[1] === '') i += 1;
+                }
+            }
             i += spec.withValue.has(opt) ? 2 : 1;
             if (opt === '--') break;
         }
         i += spec.positional;
-        // An option whose argument is optional and attached-only leaves a bare
-        // count in command position when spelled apart (`xargs --max-lines 1
-        // git …`). No program is named by digits alone, so skip it.
-        while (i < tokens.length && /^\d+$/.test(tokens[i] as string)) i += 1;
     }
-    // Sixteen stacked wrappers is not a real command; report it rather than stop
-    // reading silently, so the caller can refuse a git found further along.
-    const exhausted = _EXEC_WRAPPERS.has(_basename(tokens[i] ?? ''));
-    return { start: i, hookspathEnv, exhausted, splitString };
+    return { start: i, hookspathEnv, wrapped, lookup: false, splitString };
 }
 
 /** The payload of `sh -c '<payload>'`, `eval <words…>` or `env -S '<payload>'`, or null. */
@@ -376,11 +382,18 @@ export function _shell_payload(tokens: string[]): string | null {
 }
 
 function _git_base(tokens: string[]): string[] | null {
-    const { start, exhausted } = _unwrap(tokens);
+    const { start, wrapped, lookup } = _unwrap(tokens);
     if (start < tokens.length && _basename(tokens[start] as string) === 'git') {
         return ['git', ...tokens.slice(start + 1)];
     }
-    if (exhausted) {
+    // After a wrapper, `start` is only as good as the option table that found
+    // it, and every round of review found a spelling the table missed
+    // (`xargs --max-lines 1`, `stdbuf --output L`, `env -S'…'`). So a head that
+    // is not git does not clear the segment: the first later `git` is read as
+    // git. Fail-closed by intent — `timeout 5 echo git commit --no-verify` is
+    // refused — and the shared segmenter (later/road-to-a-hard-floor-the-shell-
+    // cannot-talk-past Phase 1) is what retires the guess.
+    if (wrapped && !lookup) {
         const at = tokens.findIndex((t, k) => k >= start && _basename(t) === 'git');
         if (at !== -1) return ['git', ...tokens.slice(at + 1)];
     }
