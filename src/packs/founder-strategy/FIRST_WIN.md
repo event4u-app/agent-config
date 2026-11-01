@@ -34,11 +34,6 @@ Footer reads:
 
 That footer is non-negotiable — see [`strategy-safety-floor`](../../dist/agent-src/rules/strategy-safety-floor.md).
 
-## Screenshot
-
-`docs/wizard/screenshots/founder-strategy-first-win.png` _(captured in Phase 5
-of `road-to-role-first-onboarding.md`)_.
-
 ## What this does **not** do
 
 - Does **not** value your company — that's `pack-finance-advanced` + `dcf-modeling`.

@@ -43,7 +43,7 @@
  * }
  *
  * Usage:
- *   python3 scripts/prediction-pool/poisson_sim.py teams.json --runs 20000 [--seed 1]
+ *   npx tsx scripts/prediction-pool/poisson_sim.ts teams.json --runs 20000 [--seed 1]
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

@@ -63,7 +63,7 @@
     "data-flow-mapper": 7207,
     "data-handling-judgment": 11444,
     "database": 6906,
-    "dcf-modeling": 4903,
+    "dcf-modeling": 5032,
     "deal-qualification-meddic": 8505,
     "decision-record": 14289,
     "decision-review": 19391,
@@ -146,7 +146,7 @@
     "judge-test-coverage": 7161,
     "laravel": 11631,
     "laravel-api-endpoint": 7252,
-    "laravel-dto": 4066,
+    "laravel-dto": 4352,
     "laravel-horizon": 5036,
     "laravel-mail": 8604,
     "laravel-middleware": 5215,
@@ -215,7 +215,7 @@
     "playwright-testing": 11333,
     "po-discovery": 5282,
     "positioning-strategy": 8375,
-    "prediction-pool-optimizer": 16448,
+    "prediction-pool-optimizer": 16726,
     "premortem": 7456,
     "privacy-review": 11249,
     "project-analysis-core": 5273,
@@ -266,7 +266,7 @@
     "rtk-output-filtering": 8665,
     "rule-refactor": 5370,
     "rule-writing": 16621,
-    "runway-cognition": 10795,
+    "runway-cognition": 10812,
     "scenario-modeling": 10059,
     "scene-expander": 6559,
     "schema-review": 4232,
@@ -897,6 +897,30 @@
       "old": 7565,
       "new": 7915,
       "reason": "Instruction-file prose named as a conflict source next to configs, and a repeated correction that contradicts the config is asked about, never capitulated to. road-to-a-correction-that-is-heard 2.3."
+    },
+    {
+      "skill": "dcf-modeling",
+      "old": 4903,
+      "new": 5032,
+      "reason": "Hand-off line to spreadsheet-authoring for workbook output; dcf-modeling's markdown tables broke that skill's live-formula rule with no pointer. archive/road-to-numbers-a-skill-can-stand-behind 1.9."
+    },
+    {
+      "skill": "laravel-dto",
+      "old": 4066,
+      "new": 4352,
+      "reason": "The example now uses constructor promotion and a gotcha states the rule: the library reads #[Map] only from constructor parameters, so the old property example's mapping was silently ignored. archive/road-to-numbers-a-skill-can-stand-behind 2.1-2.2."
+    },
+    {
+      "skill": "prediction-pool-optimizer",
+      "old": 16448,
+      "new": 16726,
+      "reason": "pool_winsim --holdout-runs: submit only flips a paired sign test confirms on independent runs (unchecked greedy sets regressed on 3 of 10 seeds); plus the seed/runs/method rule. archive/road-to-numbers-a-skill-can-stand-behind 3.1-3.3."
+    },
+    {
+      "skill": "runway-cognition",
+      "old": 10795,
+      "new": 10812,
+      "reason": "The runway example's burn is labelled monthly and its emitted gap is the stated 4.5-7.5 month range instead of a contradicting -5mo. archive/road-to-numbers-a-skill-can-stand-behind 1.4."
     }
   ]
 }

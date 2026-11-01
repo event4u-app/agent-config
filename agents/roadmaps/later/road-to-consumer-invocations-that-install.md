@@ -103,6 +103,12 @@ is prose recording why `ci:settle` became a verb, not an instruction.
       line of surface, but a second naming scheme and an allowlist to keep in
       sync. A mixed answer (verbs for the gate-shaped scripts a command runs,
       the dispatcher for the rest) is a third reading the council may return.
+      (c) **a skill-local bundle** — the script ships as a self-contained `.mjs`
+      inside the skill directory and is invoked by its path, zero registry
+      lines; the mechanism exists (`tests/scripts/skill_script_bundle.test.ts`)
+      and depends on the host exposing the skill directory (see
+      `stubs/road-to-host-primitive-lowering.md` item 5). Added 2026-11-01 from
+      round `inbox-2026-11-a`; the council question carries all three.
       The budget raise either option needs is part of the question, not
       assumed. Record the verdict, the dissent and the budget delta here.
       verify: a `## Decisions` entry in this file citing the council run.
