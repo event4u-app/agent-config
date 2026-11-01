@@ -48,7 +48,7 @@ notes:
   prompt-engineering: "Skill catalogue covers prompt patterns."
   typescript: "CLI + UI shipped as TypeScript."
   agent-skills: "Differentiates from generic `skills` — agent-specific skill execution model."
-  cinematic-ai-video: "Hollywood-grade video pipeline differentiator (`/video:*` commands)."
+  cinematic-ai-video: "The script-to-clip video pipeline (`/video:*` commands); its topic-search rank is tracked by `adoption_report.ts`."
   mcp-server: "The package ships an MCP server (`dist/mcp/server.mjs`) listed in MCP directories."
   agent-rules: "Governed rules compiled into each host's native rule format."
   gemini-cli-extension: "The key the Gemini CLI extension gallery crawler reads; the repo root carries `gemini-extension.json`."
@@ -56,6 +56,11 @@ notes:
   # 2026-10-16: a CI workflow forbids that language under `src/`, so the topic
   # advertised a language the package does not use. `claude-code-plugin` was
   # considered and not added: the README states that plugin is deprecated.
+  # 2026-11-01: `ai-video` and `cinematic-ai-video` were questioned against the
+  # new headline (checking work before "done") and kept. Video is no longer the
+  # headline but is still a shipped capability of the content profile, and
+  # `cinematic-ai-video` is a tracked adoption signal; the README names it in
+  # the profile table rather than in the headline.
 
 equivalents:
   # Optional paraphrase map consumed by `src/scripts/lint_positioning.ts`.
@@ -64,7 +69,9 @@ equivalents:
   # README" check without requiring the literal slug in prose.
   claude-code: ["Claude Code"]
   ai-video: ["AI video", "Cinematic AI video"]
-  agent-governance: ["governance rules", "audit-disciplined"]
+  # The 2026-11 README avoids "governance" in user copy (docs voice guide); the
+  # section it is about is "What your agent is asked to do".
+  agent-governance: ["governance rules", "audit-disciplined", "what your agent is asked to do"]
   ai-agent: ["AI agent", "AI Agent", "host agent"]
   prompt-engineering: ["prompt engineering", "prompt-engineering-patterns", "optimize-prompt", "refine-prompt"]
   typescript: ["TypeScript"]

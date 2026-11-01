@@ -63,7 +63,7 @@ grant, pending owner; reversible.** The banner stays the hero. Every embed
 caption directly below it, byte-identical, with the claim marker:
 
 > Installs once into your user-level AI tool configuration, not into your
-> repository, and works with 20 AI coding tools<!-- claim:host-agent-count -->
+> repository; it works with 20 AI coding tools<!-- claim:host-agent-count -->
 > — not only Claude and Codex.
 
 Amended 2026-11-01: the first wording said "writes configuration for 20 AI
