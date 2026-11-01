@@ -16,9 +16,8 @@ import { graphHome } from './graph_home.js';
  * current is the failure the owner reported on 2026-11-01 (a map 20 commits
  * behind because nobody ever typed `auto-refresh on`). The marker still lands in
  * the gitignored `.build/`, the concern still refuses a tracked one, and
- * `auto-refresh off` leaves an opt-out this never overrides. The owner's
- * directive is recorded in agents/evidence/owner-directives/2026-11-01-map-auto-refresh.md;
- * under `CI` nothing is written.
+ * `auto-refresh off` leaves an opt-out this never overrides, and under `CI`
+ * nothing is written: a pipeline running a build is not a developer asking.
  */
 export function enableByUse(root: string): string {
     // A CI run is a script, not a developer asking for a map; the kill switch also covers the opt-in.
