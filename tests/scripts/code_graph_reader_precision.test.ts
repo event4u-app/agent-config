@@ -209,7 +209,7 @@ describe('history: a pair of two generated files is no hidden dependency', () =>
         .map((i) => `${RS}${'0'.repeat(39)}${i}${US}2026-10-0${i + 1}\n\n${files.map((f) => `M\t${f}`).join('\n')}\n`)
         .join('');
     const git = (_root: string, args: readonly string[]): string => {
-        if (args.includes('-1')) return '2026-10-05T00:00:00Z\n';
+        if (args.includes('-1')) return `${'0'.repeat(40)}${US}2026-10-05T00:00:00Z\n`;
         if (args.includes('--is-shallow-repository')) return 'false\n';
         if (args.includes('ls-files')) return files.join('\0');
         return log;
