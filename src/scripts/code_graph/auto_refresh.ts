@@ -30,5 +30,5 @@ export function enableByUse(root: string): string {
     } catch {
         return '';
     }
-    return '    auto-refresh on — refreshed at session start and at a turn end once HEAD moved or 10 minutes passed; `code-graph auto-refresh off` stops it\n';
+    return '    auto-refresh on — refreshed at session start and at a turn end, at most once per HEAD and 10-minute window; `code-graph auto-refresh off` stops it\n';
 }

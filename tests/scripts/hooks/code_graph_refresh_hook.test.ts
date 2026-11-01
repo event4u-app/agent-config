@@ -311,15 +311,44 @@ describe('turn-end binding — spawn only after HEAD moved (2026-11-01)', () => 
         }
     });
 
-    it('a claim in another window does not block this one, and the winner sweeps it', () => {
+    it('a win never deletes a claim another pair could still hold, and sweeps only spent windows', () => {
         optedIn();
         commit('one');
-        const later = Date.now() + 2 * THROTTLE_MS;
-        expect(refreshFor(root, fakeSpawn, later)).toBe('spawned');
-        expect(refreshFor(root, fakeSpawn)).toBe('spawned');
-        const claims = fs.readdirSync(path.join(root, 'agents', 'map', '.build')).filter((f) => f.startsWith('code-graph-refresh.claim-'));
-        expect(claims).toHaveLength(1);
-        expect(calls).toHaveLength(2);
+        const build = path.join(root, 'agents', 'map', '.build');
+        const now = Date.now();
+        const otherHeadNow = claimPath(build, 'b'.repeat(40), now);
+        const otherHeadPrev = claimPath(build, 'b'.repeat(40), now - THROTTLE_MS);
+        const spent = claimPath(build, 'b'.repeat(40), now - 2 * THROTTLE_MS);
+        for (const f of [otherHeadNow, otherHeadPrev, spent]) fs.writeFileSync(f, '');
+        expect(refreshFor(root, fakeSpawn, now)).toBe('spawned');
+        expect(fs.existsSync(otherHeadNow)).toBe(true);
+        expect(fs.existsSync(otherHeadPrev)).toBe(true);
+        expect(fs.existsSync(spent)).toBe(false);
+    });
+
+    it('a dispatch for another HEAD interleaved before a claim leaves both claims standing', () => {
+        optedIn();
+        commit('one');
+        const build = path.join(root, 'agents', 'map', '.build');
+        const now = Date.now();
+        const elsewhere = claimPath(build, 'c'.repeat(40), now);
+        // Another pair is won between this dispatch's checks and its claim.
+        expect(refreshFor(root, fakeSpawn, now, 'stop', () => fs.writeFileSync(elsewhere, '', { flag: 'wx' }))).toBe('spawned');
+        expect(fs.existsSync(elsewhere)).toBe(true);
+        // And this pair stays claimed against a later dispatch.
+        expect(refreshFor(root, fakeSpawn, now)).toBe('fresh');
+        expect(calls).toHaveLength(1);
+    });
+
+    it('a later window\'s claim is not swept by an earlier-window win (clock set back)', () => {
+        optedIn();
+        commit('one');
+        const build = path.join(root, 'agents', 'map', '.build');
+        const now = Date.now();
+        const future = claimPath(build, 'd'.repeat(40), now + 3 * THROTTLE_MS);
+        fs.writeFileSync(future, '');
+        expect(refreshFor(root, fakeSpawn, now)).toBe('spawned');
+        expect(fs.existsSync(future)).toBe(true);
     });
 
     it('a dispatch that runs between another one\'s checks and its claim wins once, the other gets fresh', () => {

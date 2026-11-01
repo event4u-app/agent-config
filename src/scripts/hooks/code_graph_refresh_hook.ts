@@ -24,10 +24,13 @@
  * exclusive file create: a claim named for the HEAD (or `none` before the first
  * commit) and the current `THROTTLE_MS` window is created with `O_EXCL` right
  * before the spawn. Exactly one dispatch wins a (HEAD, window) pair; every other
- * gets `fresh`. There is no lock to take over, nothing to release and no record
- * another process could overwrite (ratification rounds 1-3, 2026-11-01). A launch
- * that fails deletes only its own claim. A clock set back lands in an older
- * window, which suppresses a refresh for at most one window.
+ * gets `fresh` — so at most one launch per HEAD and fixed window, and two may
+ * fall either side of a window boundary. There is no lock to take over, nothing
+ * to release and no record another process could overwrite (ratification rounds
+ * 1-4, 2026-11-01). Only claims two or more windows old are swept, so a claim is
+ * never deleted while its pair can still be won; a launch that fails deletes only
+ * its own, current-window claim. A clock set back lands in an older window,
+ * which suppresses a refresh for at most one window.
  *
  * WHEN IT DOES NOTHING — the conditions a ratification round of 2026-10-23
  * (two of two seats, refused the first cut) made load-bearing:
@@ -83,6 +86,32 @@ export function claimPath(buildDir: string, head: string | null, now: number): s
     return path.join(buildDir, `code-graph-refresh.claim-${head ?? 'none'}-${Math.floor(now / THROTTLE_MS)}`);
 }
 
+const CLAIM_RE = /^code-graph-refresh\.claim-.+-(\d+)$/;
+
+/** The window a claim file names, or null for a name that is not a claim. */
+function windowOf(file: string): number | null {
+    const m = CLAIM_RE.exec(path.basename(file));
+    return m ? Number(m[1]) : null;
+}
+
+/**
+ * Deletes claims at least two windows older than `current`: no dispatch can
+ * name them again (windows only move forward), so deleting one never frees a
+ * pair someone could still win. Claims of the current and the previous window —
+ * any HEAD — are never touched, so an active claim keeps its owner.
+ */
+function sweepSpent(dir: string, current: number | null): void {
+    if (current === null) return;
+    try {
+        for (const f of fs.readdirSync(dir)) {
+            const w = windowOf(f);
+            if (w !== null && w <= current - 2) fs.rmSync(path.join(dir, f), { force: true });
+        }
+    } catch {
+        /* a spent claim only costs a directory entry */
+    }
+}
+
 /** Creates the claim exclusively: `won`, `taken` (another dispatch holds this pair) or `failed`. */
 function claim(file: string): 'won' | 'taken' | 'failed' {
     try {
@@ -91,13 +120,7 @@ function claim(file: string): 'won' | 'taken' | 'failed' {
     } catch (e) {
         return (e as NodeJS.ErrnoException).code === 'EEXIST' ? 'taken' : 'failed';
     }
-    // Claims of other pairs are spent: a later window or HEAD can never reuse them.
-    try {
-        const own = path.basename(file);
-        for (const f of fs.readdirSync(path.dirname(file))) if (f.startsWith('code-graph-refresh.claim-') && f !== own) fs.rmSync(path.join(path.dirname(file), f), { force: true });
-    } catch {
-        /* a stale claim file only costs a directory entry */
-    }
+    sweepSpent(path.dirname(file), windowOf(file));
     return 'won';
 }
 

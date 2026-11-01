@@ -1176,7 +1176,7 @@ function cmdAutoRefresh(argv: string[]): number {
         fs.rmSync(home.autoRefreshOffPath, { force: true });
         const cli = usableCli(root);
         process.stdout.write(
-            'auto-refresh on — each agent session start, and a turn end once HEAD moved or 10 minutes passed, refreshes the graph\n' +
+            'auto-refresh on — each agent session start and turn end refreshes the graph, at most once per HEAD and 10-minute window,\n' +
                 'and agents/map/ when it exists, in the background (POSIX hosts). `code-graph auto-refresh off` stops it.\n' +
                 'The opt-in is per working tree: run it again in each new git worktree.\n' +
                 (fs.existsSync(cacheFor(root)) ? '' : 'No graph yet: `code-graph build` or `code-graph map` creates one.\n'),

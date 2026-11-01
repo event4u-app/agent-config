@@ -306,7 +306,7 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         expect(runCli(['auto-refresh', 'status', '--root', tmp]).stdout).toMatch(/auto-refresh: off — the next local build or map turns it on/);
         const built = runCli(['build', '--root', tmp], { CI: '' });
         expect(built.status).toBe(0);
-        expect(built.stdout).toMatch(/auto-refresh on — refreshed/);
+        expect(built.stdout).toMatch(/auto-refresh on — refreshed at session start/);
         expect(fs.existsSync(marker)).toBe(true);
         expect(runCli(['auto-refresh', 'off', '--root', tmp]).status).toBe(0);
         expect(fs.existsSync(marker)).toBe(false);
@@ -324,7 +324,7 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         const marker = path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.json');
         const r = runCli(['map', '--root', tmp, '--no-verify'], { CI: '' });
         expect(r.status).toBe(0);
-        expect(r.stdout).toMatch(/auto-refresh on — refreshed/);
+        expect(r.stdout).toMatch(/auto-refresh on — refreshed at session start/);
         expect(fs.existsSync(marker)).toBe(true);
     });
 
