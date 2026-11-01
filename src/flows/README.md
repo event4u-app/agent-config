@@ -54,7 +54,7 @@ tags; `entry_points` / `default_path` are the validated reference fields.
 
 The shape is fixed by [`scripts/schemas/flow.schema.json`](../scripts/schemas/flow.schema.json)
 (Draft-07) and validated on load by
-[`scripts/lint_flows.py`](../scripts/lint_flows.py), which also enforces that
+[`scripts/lint_flows.ts`](../scripts/lint_flows.ts), which also enforces that
 every `entry_points` / `default_path` / `commands` entry resolves to a real
 command, every `skills` slug resolves to a real `skills/<slug>/SKILL.md`, the
 `id` is one of the four closed-set flows and equals the filename stem, and all

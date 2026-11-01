@@ -42,11 +42,6 @@ discovery call #2, the deal is not real for this quarter.
 - Next move: champion to broker CFO intro by <date>.
 ```
 
-## Screenshot
-
-`docs/wizard/screenshots/gtm-sales-first-win.png` _(captured in Phase 5
-of `road-to-role-first-onboarding.md`)_.
-
 ## What this does **not** do
 
 - Does **not** auto-update your CRM — the scorecard stays on your disk.

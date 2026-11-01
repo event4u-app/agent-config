@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **641**
-- Edges (incl. self-WRITE): **2443**
+- Edges (incl. self-WRITE): **2444**
 
 ## READ_ONLY edges
 
@@ -928,6 +928,7 @@
 | `.agent-src.uncondensed/skills/database/references/relational-modeling.md` | `.agent-src.uncondensed/skills/schema-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/dcf-modeling/SKILL.md` | `.agent-src.uncondensed/skills/okr-tree-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/dcf-modeling/SKILL.md` | `.agent-src.uncondensed/skills/rice-prioritization/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/dcf-modeling/SKILL.md` | `.agent-src.uncondensed/skills/spreadsheet-authoring/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/dcf-modeling/SKILL.md` | `.agent-src.uncondensed/skills/unit-economics-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/deal-qualification-meddic/SKILL.md` | `.agent-src.uncondensed/skills/forecast-accuracy/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/deal-qualification-meddic/SKILL.md` | `.agent-src.uncondensed/skills/funnel-analysis/SKILL.md` | `body_link` | 1 |

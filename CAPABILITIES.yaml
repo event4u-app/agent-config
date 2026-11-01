@@ -157,7 +157,7 @@ capability_areas:
   finance:
     - id: finance-advanced
       label: "Finance Advanced"
-      description: "DCF, scenario modelling, comp banding."
+      description: "DCF, scenario modelling."
       size_class: "medium"
       coverage: thin
       skill_count: 2

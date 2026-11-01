@@ -168,7 +168,11 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // `systematic-debugging`, which then owed corpora. `mcp` is 0x10 = 16
         // and `systematic-debugging` is 0x1e = 30; both seal. The claim's scope
         // moves to 18 of 42.
-        expect(sealed.length).toBe(42);
+        //
+        // 42 -> 43 on 2026-11-01: inbox round 2026-11-a edited `laravel-dto`,
+        // which then owed a corpus. `laravel-dto` is 0x13 = 19 and seals. The
+        // claim's scope moves to 18 of 43.
+        expect(sealed.length).toBe(43);
     });
 
     it('the loader`s partition agrees with every published holdout row', () => {
@@ -385,8 +389,10 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // (0x10) and `systematic-debugging` (0x1e) seal (40 -> 42).
         // 187 -> 188 on 2026-10-29: `refine-prompt` (0xd7) trains (145 -> 146).
         // 188 -> 189 on 2026-10-29: `standards-from-config` (0x33) trains (146 -> 147).
-        expect(all.length).toBe(189);
-        expect(all.filter((r) => r.partition === 'holdout').length).toBe(42);
+        // 189 -> 192 on 2026-11-01: inbox round 2026-11-a. `dcf-modeling` (0xbf)
+        // and `runway-cognition` (0x9c) train (147 -> 149); `laravel-dto` (0x13) seals (42 -> 43).
+        expect(all.length).toBe(192);
+        expect(all.filter((r) => r.partition === 'holdout').length).toBe(43);
     });
 });
 
@@ -461,7 +467,8 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // (see the 187 line).
         // 145 -> 146 on 2026-10-29: `refine-prompt` trains (see the 188 line).
         // 146 -> 147 on 2026-10-29: `standards-from-config` trains (see the 189 line).
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(147);
+        // 147 -> 149 on 2026-11-01: two train corpora from inbox round 2026-11-a (see the 192 line).
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(149);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

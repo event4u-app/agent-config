@@ -96,3 +96,5 @@ Do NOT use for revenue forecasting alone, market-sizing, or comp-multiple-only s
 2. **`fcff-projection.md`** — 5-year FCFF + discount factors + PV column + terminal-value PV + bridge to equity value.
 3. **`sensitivity-grid.md`** — 5×5 markdown table (WACC × terminal growth or exit multiple). Bold the cells where equity value flips sign or moves >25% from base.
 4. **`valuation-narrative.md`** — three paragraphs: (a) point estimate + range, (b) the two load-bearing assumptions, (c) cross-check against trading comps with named delta.
+
+Workbook output (`.xlsx`) → [`spreadsheet-authoring`](../spreadsheet-authoring/SKILL.md): live formulas, never pasted values.

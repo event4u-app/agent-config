@@ -14,6 +14,9 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { decidePairedVerdict } from '../../src/scripts/_lib/paired_verdict.js';
+import { evaluateTipsets } from '../../src/scripts/prediction-pool/pool_winsim.js';
+
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'prediction-pool', 'pool_winsim.ts');
 const TSX_BIN =
@@ -521,5 +524,49 @@ describe('pool_winsim — CLI contract (deterministic seed)', () => {
         const ts = runTs([]);
         expect(ts.status).toBe(2);
         expect(ts.stderr).toContain('the following arguments are required: config');
+    });
+
+    describe('--holdout-runs', () => {
+        interface Flip { match: string; to: string }
+        const applyFlips = (ev: string[], flips: Flip[]): string[] =>
+            ev.map((t) => {
+                const m = t.split('=')[0] as string;
+                const f = flips.find((x) => x.match === m);
+                return f ? `${m}=${f.to}` : t;
+            });
+
+        it('leaves every pinned output unchanged when absent', () => {
+            const cfg = writeTmp('pool.json', POOL);
+            const plain = runTs([cfg, '--json']);
+            const zero = runTs([cfg, '--json', '--holdout-runs', '0']);
+            expect(zero.stdout).toBe(plain.stdout);
+            expect(JSON.parse(plain.stdout)).not.toHaveProperty('holdout');
+        });
+
+        it('seeds 1-10 agree, and no confirmed set loses to EV-max on independent fields', () => {
+            const cfgPath = writeTmp('pool.json', POOL);
+            const cfg = JSON.parse(POOL);
+            const confirmedSets: string[] = [];
+            for (let seed = 1; seed <= 10; seed += 1) {
+                const ts = runTs([cfgPath, '--seed', String(seed), '--holdout-runs', '20000', '--json']);
+                expect(ts.status, ts.stderr).toBe(0);
+                const r = JSON.parse(ts.stdout);
+                const ev: string[] = r.ev_max_set;
+                const confirmed = applyFlips(ev, r.holdout.confirmed as Flip[]);
+                confirmedSets.push(confirmed.join(','));
+                const e = evaluateTipsets(cfg, [ev, confirmed], 20000, 1000 + seed);
+                const deltas = (e.wins[1] as number[]).map((w, i) => w - ((e.wins[0] as number[])[i] as number));
+                expect(decidePairedVerdict({ deltas }).kind, `seed ${seed}: ${confirmed.join(',')}`).not.toBe('regression');
+            }
+            expect(new Set(confirmedSets).size).toBe(1);
+        }, 180_000);
+
+        it('prints the held-out verdict in text mode', () => {
+            const cfg = writeTmp('pool.json', POOL);
+            const ts = runTs([cfg, '--holdout-runs', '2000']);
+            expect(ts.status, ts.stderr).toBe(0);
+            expect(ts.stdout).toContain('held-out check (2000 independent runs, field re-drawn every 100');
+            expect(ts.stdout).toContain('P(win) after confirmed flips:');
+        });
     });
 });

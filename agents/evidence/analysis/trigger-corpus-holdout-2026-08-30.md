@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  8cbccbf85e3cc68ce62058000fb83891578d103c747cd37d75f5dfd2aa5ed3bb
+SET-SHA256  6437603f75481f40dff8cb13a19afb46b64693bc1959675734b79c5a27427581
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1060,6 +1060,7 @@ open and which this file does not settle.
 | `judge-injection-defense` | `dad5757b5ee71d78b761467d007d18c18fb3d440d1e1f5eb54ca10b4ce6d156f` |
 | `judge-spec-compliance` | `6d7e5525d88e4c4b26c963103f43f7e95d997337ff3d624fea31a757363f653e` |
 | `judge-test-coverage` | `4041e8283172a78e6bc883726855c613d9e03381a948ffd29e8300f66d10c741` |
+| `laravel-dto` | `32756984981765221cc46a1ae8b538113513236148f94266e9f4e76ec908fdd6` |
 | `license-compliance-borrow-check` | `2c23f14c168f6de1f99689e420e29b2b86bbd27e0fdfff68dcdf80b483aa2d0f` |
 | `logo-generation` | `fcf30c295c85f8b24f0ee6cb374229c39dbe87959469d7b04b19660e727e9a08` |
 | `market-entry-analysis` | `9fb6ee850d5eb06e96439505bb5f47835edbc9a025cf97f2ad1a952337fea264` |
@@ -1245,6 +1246,7 @@ open and which this file does not settle.
 | `customer-research` | `be1760092dfc0e70006ac1313709d8acdd48a62b1e3b81f354590df95e23fbc6` |
 | `data-flow-mapper` | `535e42defa307b3a40d68cdcd6eeeef101c120d5c5c1b9740330199a5acc2203` |
 | `database` | `4f066dcd06cd6e60f5fa26ccf95dbbf9f3b48b214100f64f232e30f1d9581e46` |
+| `dcf-modeling` | `6b5154c7bf04e4a0b4822ca9ce8bed1e7f77b570d74dc4688fda437a2b797b97` |
 | `dependency-upgrade` | `1ed820d9d1b49e83332dc456704b5466db1b53f4a1b5be1e632e5e6c6b3e1053` |
 | `description-assist` | `529c0051f8a8fb9d125b4c977e1fe8e7731e28d885c486d297070261ec7a85ab` |
 | `design-intelligence` | `81361d4cd038b77ae78ddc988e3fdc247b93112f217ed455ce9437ac3576ac21` |
@@ -1327,6 +1329,7 @@ open and which this file does not settle.
 | `roadmap-writing` | `3559ef4117112f053288fb55da5b3ced3cebe2ab914e2e5d82e8f726f20339d2` |
 | `rtk-output-filtering` | `39b3821f591c1b3ca5c5b5792636ba1f8ada85ac997ab91bbb966bade346323f` |
 | `rule-writing` | `c03c83678a07e7c08201aa06fb1109bad1270a0d9883d14508cda496c21dbe0f` |
+| `runway-cognition` | `9fe7ae25e379ff288d11ad04ece6bcd0473918c0bf3afc4510a68e0eda5707c2` |
 | `screenshot-hygiene` | `2493ae6cee8869c659e34610c7ec6a7d7a6f5c76098136c98fa35c90484adb2c` |
 | `security` | `7e2c5b70d7d42d0fa53ce71e5f664f89c3afe943e198389eecebfd82a0ef61d3` |
 | `security-audit` | `4d59d72af3793f7d949f38604408a24e71ba0b5ee4b3849145b2d12214fd3529` |
@@ -2088,6 +2091,41 @@ The sealed set stays **42**, the train set moves **146 -> 147**, the set
 guard (**+4.69 pp** against +2.0 pp; was +4.72 pp).
 `delivery-set-measurement-2026-08-31.json`: recall loss **38.99 pp** (was
 38.98 pp), the ceiling stays **BREACHED**; context cost **231.4** tokens against
+the 500 target, still **MET**. Neither verdict changes in kind.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.
+
+## Growth — 2026-11-01, three corpora from inbox round 2026-11-a; one seals
+
+```
+THREE ROWS ARE NEW — ONE SEALS, TWO TRAIN. NO PRE-EXISTING HOLDOUT FILE WAS
+EDITED. BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN AFTER THE CORPORA WERE ON DISK.
+```
+
+**What changed.** Inbox round 2026-11-a (`archive/road-to-numbers-a-skill-can-stand-behind`)
+edited `dcf-modeling`, `laravel-dto` and `runway-cognition`, so
+`check_routing_coverage` required their corpora and the `laravel-dto`
+grandfather line is gone. Each corpus carries exemplars, near-misses naming the
+sibling skill that should win, and one counterexample.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `dcf-modeling` | train | `0xbf` = 191 ≥ 51 | new |
+| `laravel-dto` | holdout | `0x13` = 19 < 51 | new |
+| `runway-cognition` | train | `0x9c` = 156 ≥ 51 | new |
+
+**One row seals, and nobody chose it.** The sealed set moves **42 -> 43**, the
+train set **147 -> 149**, the set **189 -> 192**. AC-6 still rests on the same
+18 rows; a proposer evaluated against this holdout must exclude `laravel-dto` or
+say it is using a row whose seal is younger than the evaluation.
+`SET-SHA256` moves because it is computed over every row: `8cbccbf8…` → `6437603f…`.
+
+**Both train-side measurements were re-taken on this tree.**
+`routing-body-signal-verdict.json`: still `harmful` on the false-activation
+guard (**+4.90 pp** against +2.0 pp; was +4.69 pp).
+`delivery-set-measurement-2026-08-31.json`: recall loss **38.55 pp**, the
+ceiling stays **BREACHED**; context cost **231.3** tokens against
 the 500 target, still **MET**. Neither verdict changes in kind.
 
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`

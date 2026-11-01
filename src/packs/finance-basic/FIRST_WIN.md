@@ -43,11 +43,6 @@ banner attached by default.
 That trust banner is non-negotiable — see
 [`finance-safety-floor`](../../dist/agent-src/rules/finance-safety-floor.md).
 
-## Screenshot
-
-`docs/wizard/screenshots/finance-basic-first-win.png` _(captured in Phase 5
-of `road-to-role-first-onboarding.md`)_.
-
 ## What this does **not** do
 
 - Does **not** replace your accountant — output is review fuel, not filings.

@@ -6,7 +6,9 @@
  * The CLI contract is pinned — the positional `config` JSON file,
  * `--runs` / `--max-flips` / `--max-opponents` / `--top-flip` / `--seed` /
  * `--json`, exit codes, the stdout/stderr split, and byte-identical text AND
- * `--json` output. No behaviour changes.
+ * `--json` output. No behaviour changes on that contract; `--holdout-runs N`
+ * (default 0, off) is an addition that consumes the RNG only after the pinned
+ * path has finished, so every pinned output is unchanged.
  *
  * RNG parity: `random.Random(seed)` is reproduced bit-for-bit by `PyRandom`
  * (MT19937) in `../_lib/py_random.js`; the only consumer is `rng.random()`
@@ -72,6 +74,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { decidePairedVerdict, type PairedVerdictKind } from '../_lib/paired_verdict.js';
 import { PyRandom } from '../_lib/py_random.js';
 import { _score, ev_table, grid, type EvRow } from './score_ev.js';
 
@@ -231,6 +234,31 @@ interface RunResult {
     p_win_ev_max: PyFloat;
     flips: FlipOut[];
     p_win_after_flips: PyFloat;
+    holdout?: HoldoutOut;
+}
+
+interface HoldoutFlipOut {
+    match: string;
+    to: string;
+    verdict: PairedVerdictKind;
+    wins: PyInt;
+    losses: PyInt;
+    p_win_after: PyFloat;
+}
+
+/**
+ * The flips re-scored on an independent field and scenario draw. Selection and
+ * evaluation on the same draw rewards noise: seeds 1-10 of the fixture picked 10 different
+ * flip sets. A flip is confirmed only when a paired sign test over the held-out
+ * scenarios says it wins more often than it loses; the chain stops at the first
+ * flip that is not confirmed.
+ */
+interface HoldoutOut {
+    runs: PyInt;
+    p_win_ev_max: PyFloat;
+    confirmed: HoldoutFlipOut[];
+    rejected: HoldoutFlipOut[];
+    p_win_after_confirmed: PyFloat;
 }
 
 function run(
@@ -240,6 +268,7 @@ function run(
     max_opponents: number,
     top_flip: number,
     seed: number,
+    holdout_runs = 0,
 ): RunResult {
     const rng = new PyRandom(seed);
     const rule = cfg.rule ?? { exact: 4, diff: 3, tendency: 2 };
@@ -351,6 +380,10 @@ function run(
 
     const lastPwin = flips.length > 0 ? (flips[flips.length - 1] as FlipRecord).pwin : base_pwin;
 
+    const holdout = holdout_runs > 0
+        ? _holdout(per, n_opp, temp, ev_max_set, flips, holdout_runs, my_lead, pe, pd, pt, rng)
+        : undefined;
+
     return {
         participants: new PyInt(n),
         opponents_modelled: new PyInt(n_opp),
@@ -367,6 +400,151 @@ function run(
             p_win_after: new PyFloat(pyRound(fl.pwin, 4)),
         })),
         p_win_after_flips: new PyFloat(pyRound(lastPwin, 4)),
+        ...(holdout === undefined ? {} : { holdout }),
+    };
+}
+
+/**
+ * P(win) of each tip-set over fresh field and scenario draws, paired: every set
+ * faces the same fields and the same scenarios. Tip-sets are
+ * `match=h:a` strings, the shape `ev_max_set` and the flip records print.
+ */
+export function evaluateTipsets(
+    cfg: Config,
+    tipsets: string[][],
+    runs: number,
+    seed: number,
+    max_opponents = 300,
+): { p_win: number[]; wins: number[][] } {
+    const rng = new PyRandom(seed);
+    const rule = cfg.rule ?? { exact: 4, diff: 3, tendency: 2 };
+    const pe = Number(rule.exact);
+    const pd = Number(rule.diff);
+    const pt = Number(rule.tendency);
+    const n = Math.trunc(Number(cfg.participants ?? 20));
+    const my_lead = Number(cfg.my_lead ?? 0);
+    const temp = Number(cfg.field_temperature ?? 0.6);
+    const n_opp = Math.max(0, Math.min(n - 1, max_opponents));
+    const per: PerMatch[] = cfg.matches.map((m) => {
+        const [rows] = ev_table(Number(m.lh), Number(m.la), pe, pd, pt, 6);
+        return { name: m.match ?? '?', rows, flat: _flat_grid(grid(Number(m.lh), Number(m.la))) };
+    });
+    let field_tips: Tip[][] = [];
+    const parsed: Tip[][] = tipsets.map((set) =>
+        per.map((p) => {
+            const hit = set.find((t) => t.startsWith(`${p.name}=`));
+            if (hit === undefined) throw new Error(`tip-set has no tip for match ${p.name}`);
+            const [h, a] = hit.slice(p.name.length + 1).split(':').map(Number);
+            return [h as number, a as number];
+        }),
+    );
+    const total = (tipset: Tip[], sc: Tip[]): number =>
+        tipset.reduce((acc, [th, ta], mi) => {
+            const [ah, aa] = sc[mi] as Tip;
+            return acc + _score(th, ta, ah, aa, pe, pd, pt);
+        }, 0);
+    const wins: number[][] = parsed.map(() => []);
+    for (let i = 0; i < runs; i += 1) {
+        if (i % FIELD_BATCH === 0) field_tips = _draw_field(per, n_opp, temp, rng);
+        const sc = per.map((p) => _sample_outcome(p.flat, rng));
+        let mx = -1e9;
+        for (const opp of field_tips) mx = Math.max(mx, total(opp, sc));
+        parsed.forEach((set, k) => (wins[k] as number[]).push(total(set, sc) + my_lead > mx ? 1 : 0));
+    }
+    return { p_win: wins.map((w) => w.reduce((a, b) => a + b, 0) / runs), wins };
+}
+
+/**
+ * Runs per field draw on the held-out side. The field is itself a random draw
+ * from the field model, and on the test fixture a flip that beat one drawn field
+ * lost to the next often enough that a single fresh field still confirmed
+ * regressions; re-drawing it every 100 runs scores the flip against the field
+ * MODEL rather than one sample of it.
+ */
+const FIELD_BATCH = 100;
+
+function _draw_field(per: PerMatch[], n_opp: number, temp: number, rng: PyRandom): Tip[][] {
+    const field: Tip[][] = [];
+    for (let o = 0; o < n_opp; o += 1) {
+        field.push(per.map((p) => _softmax_pick(p.rows, temp, rng)));
+    }
+    return field;
+}
+
+/** Re-score the greedy chain against fresh fields and fresh scenarios. */
+function _holdout(
+    per: PerMatch[],
+    n_opp: number,
+    temp: number,
+    ev_max_set: Tip[],
+    flips: FlipRecord[],
+    holdout_runs: number,
+    my_lead: number,
+    pe: number,
+    pd: number,
+    pt: number,
+    rng: PyRandom,
+): HoldoutOut {
+    const total = (tipset: Tip[], sc: Tip[]): number => {
+        let tot = 0.0;
+        for (let mi = 0; mi < tipset.length; mi += 1) {
+            const [th, ta] = tipset[mi] as Tip;
+            const [ah, aa] = sc[mi] as Tip;
+            tot += _score(th, ta, ah, aa, pe, pd, pt);
+        }
+        return tot;
+    };
+    let field_tips: Tip[][] = [];
+    const scenarios: Tip[][] = [];
+    const field_max: number[] = [];
+    for (let i = 0; i < holdout_runs; i += 1) {
+        if (i % FIELD_BATCH === 0) field_tips = _draw_field(per, n_opp, temp, rng);
+        const sc = per.map((p) => _sample_outcome(p.flat, rng));
+        scenarios.push(sc);
+        let mx = -1e9;
+        for (const opp of field_tips) {
+            mx = Math.max(mx, total(opp, sc));
+        }
+        field_max.push(mx);
+    }
+    const winVector = (tipset: Tip[]): number[] =>
+        scenarios.map((sc, s) => (total(tipset, sc) + my_lead > (field_max[s] as number) ? 1 : 0));
+    const rate = (v: number[]): number => v.reduce((a, b) => a + b, 0) / holdout_runs;
+
+    let current = ev_max_set.slice();
+    let currentWins = winVector(current);
+    const base = rate(currentWins);
+    const confirmed: HoldoutFlipOut[] = [];
+    const rejected: HoldoutFlipOut[] = [];
+    let stopped = false;
+    for (const fl of flips) {
+        const trial = current.slice();
+        trial[fl.mi] = fl.tip;
+        const trialWins = winVector(trial);
+        const verdict = decidePairedVerdict({ deltas: trialWins.map((w, s) => w - (currentWins[s] as number)) });
+        const out: HoldoutFlipOut = {
+            match: fl.name,
+            to: `${fl.tip[0]}:${fl.tip[1]}`,
+            verdict: verdict.kind,
+            wins: new PyInt(verdict.wins),
+            losses: new PyInt(verdict.losses),
+            p_win_after: new PyFloat(pyRound(rate(trialWins), 4)),
+        };
+        if (!stopped && verdict.kind === 'pass') {
+            confirmed.push(out);
+            current = trial;
+            currentWins = trialWins;
+        } else {
+            stopped = true;
+            rejected.push(out);
+        }
+    }
+    return {
+        runs: new PyInt(holdout_runs),
+        p_win_ev_max: new PyFloat(pyRound(base, 4)),
+        confirmed,
+        rejected,
+        p_win_after_confirmed: new PyFloat(pyRound(rate(currentWins), 4)),
     };
 }
 
@@ -529,6 +707,7 @@ interface Args {
     top_flip: number;
     seed: number;
     json: boolean;
+    holdout_runs: number;
 }
 
 class ArgError extends Error {}
@@ -556,6 +735,7 @@ function parseArgs(argv: string[]): Args {
         top_flip: 4,
         seed: 1,
         json: false,
+        holdout_runs: 0,
     };
     const positionals: string[] = [];
     for (let i = 0; i < argv.length; i += 1) {
@@ -585,6 +765,8 @@ function parseArgs(argv: string[]): Args {
             args.top_flip = _parseIntArg('--top-flip', takeValue('--top-flip'));
         } else if (a === '--seed' || a.startsWith('--seed=')) {
             args.seed = _parseIntArg('--seed', takeValue('--seed'));
+        } else if (a === '--holdout-runs' || a.startsWith('--holdout-runs=')) {
+            args.holdout_runs = _parseIntArg('--holdout-runs', takeValue('--holdout-runs'));
         } else if (a === '--json') {
             args.json = true;
         } else if (a.startsWith('-') && a !== '-') {
@@ -615,7 +797,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     }
 
     const cfg = JSON.parse(fs.readFileSync(args.config as string, 'utf-8')) as Config;
-    const res = run(cfg, args.runs, args.max_flips, args.max_opponents, args.top_flip, args.seed);
+    const res = run(cfg, args.runs, args.max_flips, args.max_opponents, args.top_flip, args.seed, args.holdout_runs);
 
     if (args.json) {
         process.stdout.write(`${_jsonDumps(res, 2)}\n`);
@@ -645,6 +827,21 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             `P(win) after flips: ${pyFixed(res.p_win_after_flips.value, 4)}  ` +
                 `(+${pyFixed(res.p_win_after_flips.value - res.p_win_ev_max.value, 4)})\n`,
         );
+    }
+    if (res.holdout !== undefined) {
+        const h = res.holdout;
+        process.stdout.write(`held-out check (${h.runs.value} independent runs, field re-drawn every ${FIELD_BATCH}, paired sign test):\n`);
+        process.stdout.write(`  P(win) all-EV-max : ${pyFixed(h.p_win_ev_max.value, 4)}\n`);
+        for (const f of h.confirmed) {
+            process.stdout.write(`  confirmed ${f.match} -> ${f.to}  (${f.wins.value} wins / ${f.losses.value} losses)  P(win) ${pyFixed(f.p_win_after.value, 4)}\n`);
+        }
+        for (const f of h.rejected) {
+            process.stdout.write(`  not confirmed ${f.match} -> ${f.to}  (${f.verdict}, ${f.wins.value} wins / ${f.losses.value} losses)\n`);
+        }
+        if (h.confirmed.length === 0) {
+            process.stdout.write('  no flip survives the held-out draw — submit the EV-max set.\n');
+        }
+        process.stdout.write(`  P(win) after confirmed flips: ${pyFixed(h.p_win_after_confirmed.value, 4)}\n`);
     }
     return 0;
 }
