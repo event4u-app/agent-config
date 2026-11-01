@@ -10,5 +10,5 @@
 # The `description` field is asserted by `src/scripts/lint_positioning.ts`
 # to be consistent with the README tagline and the `package.json`
 # description.
-description: "Every claim machine-checked, including the artifact counts in these badges — governed skills, rules and replayable state. One contract, every host agent."
+description: "Skills, rules, slash commands and subagents for Claude Code, routed by intent and compiled into other coding agents — every claim machine-checked, including the artifact counts in these badges."
 homepage: "https://event4u.app"
