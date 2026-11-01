@@ -24,7 +24,27 @@ And, on the follow-up design:
 ("I don't want the map to have to be rebuilt completely every time;
 incremental updates are faster than complete ones.")
 
+**Automated local use is in scope, stated rather than implied.** The owner
+asked for the map to update itself while "we" work on a project — the owner
+and the agents working with them. A `build` or `map` an agent runs locally is
+therefore meant to turn auto-refresh on just as one the owner types; the
+exclusions are CI (`CI` set) and the kill switch. Ratification round 3 asked
+for this to be explicit rather than read into the quote; it is recorded here
+as the implementing agent's reading of the owner's request, for the
+ratification to accept or refuse.
+
+**Confirmed by the owner, 2026-11-01.** Asked in chat whether consent by use —
+including a `build` or `map` an agent runs locally — should turn auto-refresh
+on (option 1) or only an explicit `auto-refresh on` should (option 2), the
+owner answered:
+
+> "1.a und 2.a - also deine vorschläge" <!-- md-language-check: ignore -->
+
+("1.a and 2.a — so your proposals"), choosing consent by local use, agents
+included. (2.a concerns the follow-up map work, not this change.)
+
 What this record does NOT establish: it is written by the agent that
 implements the change, so it is the owner's words as relayed, not a platform
-event. The ratification round that reviews the change decides whether it
-suffices as the policy acknowledgment for consent-by-use.
+event. The ratification round that reviews the change decides whether it suffices as
+the policy acknowledgment for consent-by-use; the owner's answer above is the
+owner's own decision on the policy itself.

@@ -306,7 +306,7 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         expect(runCli(['auto-refresh', 'status', '--root', tmp]).stdout).toMatch(/auto-refresh: off — the next local build or map turns it on/);
         const built = runCli(['build', '--root', tmp], { CI: '' });
         expect(built.status).toBe(0);
-        expect(built.stdout).toMatch(/auto-refresh on — refreshed/);
+        expect(built.stdout).toMatch(/auto-refresh on — refreshed at session start/);
         expect(fs.existsSync(marker)).toBe(true);
         expect(runCli(['auto-refresh', 'off', '--root', tmp]).status).toBe(0);
         expect(fs.existsSync(marker)).toBe(false);
@@ -324,8 +324,29 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         const marker = path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.json');
         const r = runCli(['map', '--root', tmp, '--no-verify'], { CI: '' });
         expect(r.status).toBe(0);
-        expect(r.stdout).toMatch(/auto-refresh on — refreshed/);
+        expect(r.stdout).toMatch(/auto-refresh on — refreshed at session start/);
         expect(fs.existsSync(marker)).toBe(true);
+    });
+
+    it('a build never writes the opt-in through a symlinked agents/map', () => {
+        const outsideMap = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-outside-map-'));
+        try {
+            fs.symlinkSync(outsideMap, path.join(tmp, 'agents', 'map'));
+            runCli(['build', '--root', tmp, '--out', path.join(tmp, 'cache.json')], { CI: '' });
+            runCli(['auto-refresh', 'on', '--root', tmp], { CI: '' });
+            expect(fs.existsSync(path.join(outsideMap, '.build', 'code-graph-auto-refresh.json'))).toBe(false);
+        } finally {
+            fs.rmSync(outsideMap, { recursive: true, force: true });
+        }
+    });
+
+    it('auto-refresh off fails when the opt-out cannot be persisted', () => {
+        fs.mkdirSync(path.join(tmp, 'agents', 'map', '.build'), { recursive: true });
+        // A directory where the opt-out file goes makes the O_NOFOLLOW open fail.
+        fs.mkdirSync(path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.off.json'));
+        const r = runCli(['auto-refresh', 'off', '--root', tmp]);
+        expect(r.status).toBe(1);
+        expect(r.stderr).toMatch(/opt-out could not be written/);
     });
 
     it('a build under CI is not consent', () => {

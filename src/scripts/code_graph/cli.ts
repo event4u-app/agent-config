@@ -160,6 +160,7 @@ import {
     graphState,
     pickSource,
 } from './detect.js';
+import { writeContained } from '../_lib/contained_write.js';
 import { enableByUse } from './auto_refresh.js';
 import { graphHome } from './graph_home.js';
 import { estateMain } from './estate_cli.js';
@@ -1170,13 +1171,15 @@ function cmdAutoRefresh(argv: string[]): number {
             return 1;
         }
         const now = path.join(home.buildDir, path.basename(marker));
-        fs.mkdirSync(home.buildDir, { recursive: true });
-        fs.writeFileSync(now, `${JSON.stringify({ enabled_at: new Date().toISOString() })}\n`);
+        if (!writeContained(root, now, `${JSON.stringify({ enabled_at: new Date().toISOString() })}\n`)) {
+            process.stderr.write(`code-graph: refusing to write the opt-in — a path component under ${root} is a symlink or not a directory\n`);
+            return 1;
+        }
         if (now !== marker) fs.rmSync(marker, { force: true });
         fs.rmSync(home.autoRefreshOffPath, { force: true });
         const cli = usableCli(root);
         process.stdout.write(
-            'auto-refresh on — each agent session start, and a turn end once HEAD moved or 10 minutes passed, refreshes the graph\n' +
+            'auto-refresh on — each agent session start and turn end refreshes the graph, at most once per HEAD and 10-minute window,\n' +
                 'and agents/map/ when it exists, in the background (POSIX hosts). `code-graph auto-refresh off` stops it.\n' +
                 'The opt-in is per working tree: run it again in each new git worktree.\n' +
                 (fs.existsSync(cacheFor(root)) ? '' : 'No graph yet: `code-graph build` or `code-graph map` creates one.\n'),
@@ -1192,9 +1195,11 @@ function cmdAutoRefresh(argv: string[]): number {
     }
     if (action === 'off') {
         for (const m of new Set([marker, path.join(home.buildDir, path.basename(marker)), path.join(home.legacyDir, path.basename(marker))])) fs.rmSync(m, { force: true });
-        if (home.kind === 'project') {
-            fs.mkdirSync(home.buildDir, { recursive: true });
-            fs.writeFileSync(home.autoRefreshOffPath, `${JSON.stringify({ disabled_at: new Date().toISOString() })}\n`);
+        if (home.kind === 'project' && !writeContained(root, home.autoRefreshOffPath, `${JSON.stringify({ disabled_at: new Date().toISOString() })}\n`)) {
+            process.stderr.write(
+                `code-graph: the opt-in is removed, but the opt-out could not be written — a path component under ${root} is a symlink or not a directory — so a later build or map may turn auto-refresh on again\n`,
+            );
+            return 1;
         }
         process.stdout.write('auto-refresh off — a later `build` or `map` keeps it off; `auto-refresh on` reverses this\n');
         return 0;
@@ -1213,7 +1218,7 @@ function cmdAutoRefresh(argv: string[]): number {
     process.stdout.write(
         `auto-refresh: ${fs.existsSync(home.autoRefreshOffPath) ? 'off (opted out)' : fs.existsSync(marker) ? 'on' : 'off — the next local build or map turns it on'}\n` +
             `cli: ${'reason' in cli ? (cli.reason === 'no-cli' ? 'none usable — nothing will run' : `${cli.cli} ${cliPackage(cli.cli)?.version ?? '?'} — too old, nothing will run`) : `${cli.cli} ${cliPackage(cli.cli)?.version ?? '?'}`}\n` +
-            `last concern run (session start or turn end): ${line(last['session-start'])}\n` +
+            `last concern run (session start or turn end; at most one launch per HEAD and 10-minute window, so each new commit may launch one): ${line(last['session-start'])}\n` +
             `last refresh: ${line(last.refresh)}\n` +
             `graph: ${computeVerdict(root, cacheFor(root)).verdict}\n` +
             `map: ${!hasMap(mapDir) ? 'absent' : drawnFrom === null ? 'present (generation unknown — redrawn on the next refresh)' : drawnFrom === gen ? 'present, drawn from the current graph' : 'present, drawn from an older graph'}\n` +

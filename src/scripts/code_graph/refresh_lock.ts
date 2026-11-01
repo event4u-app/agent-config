@@ -20,6 +20,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { writeContained } from '../_lib/contained_write.js';
 import { graphHome } from './graph_home.js';
 
 export const STALE_LOCK_MS = 5 * 60 * 1000;
@@ -53,8 +54,6 @@ export interface RefreshRecord {
     head?: string | undefined;
     /** The hook slot that ran the concern (`session_start`, `stop`); the file name predates the second slot. */
     slot?: string | undefined;
-    /** Identifies one spawn attempt, so a failed launch withdraws its own claim and no newer one. */
-    nonce?: string | undefined;
 }
 
 /** One file per side, so the session concern writes without reading or merging anything. */
@@ -63,18 +62,23 @@ export const refreshRecordPath = (root: string, by: RefreshRecord['by']): string
 
 /** The last outcome of one side, so a refresh that never happens is visible. Best-effort. */
 export function recordRefresh(root: string, rec: Omit<RefreshRecord, 'at'>): void {
-    recordRefreshIn(path.dirname(graphHome(root).lockPath), rec);
+    const home = graphHome(root);
+    recordRefreshIn(path.dirname(home.lockPath), rec, Date.now(), home.kind === 'project' ? root : undefined);
 }
 
 /**
  * For the session concern: its chunk must not carry the user-global resolver.
- * Returns whether the record landed — the concern spawns only after it did, so
- * a record it cannot write can never turn into a spawn per turn.
+ * Creates the build directory when missing. Returns whether the record landed.
+ * With `root` (a project home), the write is contained: no component from the
+ * root down may be a symlink, and the record itself is opened with O_NOFOLLOW.
  */
-export function recordRefreshIn(stateDir: string, rec: Omit<RefreshRecord, 'at'>, now: number = Date.now()): boolean {
+export function recordRefreshIn(stateDir: string, rec: Omit<RefreshRecord, 'at'>, now: number = Date.now(), root?: string): boolean {
+    const file = path.join(stateDir, `code-graph-refresh.${rec.by}.json`);
+    const body = JSON.stringify({ at: new Date(now).toISOString(), ...rec });
+    if (root !== undefined) return writeContained(root, file, body);
     try {
         fs.mkdirSync(stateDir, { recursive: true });
-        fs.writeFileSync(path.join(stateDir, `code-graph-refresh.${rec.by}.json`), JSON.stringify({ at: new Date(now).toISOString(), ...rec }));
+        fs.writeFileSync(file, body);
         return true;
     } catch {
         return false;
