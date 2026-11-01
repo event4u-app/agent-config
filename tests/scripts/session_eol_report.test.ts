@@ -18,6 +18,7 @@ import {
     buildReport,
     percentiles,
     scanCaptureState,
+    coldReturns,
 } from '../../src/scripts/session_eol_report.js';
 
 function line(record: unknown): string {
@@ -148,3 +149,61 @@ describe('percentiles', () => {
         expect(percentiles([])).toBeNull();
     });
 });
+
+describe('coldReturns — 4.1 calibration replay (road-to-a-return-that-names-its-price)', () => {
+    const rec = (ts: string, u: Record<string, unknown>, extra: Record<string, unknown> = {}): string =>
+        JSON.stringify({ type: 'assistant', isSidechain: false, timestamp: ts, message: { usage: u }, ...extra });
+    const oneHour = { input_tokens: 10, cache_read_input_tokens: 0, cache_creation_input_tokens: 100_000, output_tokens: 2_000, cache_creation: { ephemeral_1h_input_tokens: 100_000 } };
+
+    it('a gap past the TTL of the newest write is a cold return: predicted = previous input + output, actual = uncached input', () => {
+        const text = [
+            rec('2026-11-01T09:00:00Z', oneHour),
+            rec('2026-11-01T09:30:00Z', { input_tokens: 50, cache_read_input_tokens: 100_000, cache_creation_input_tokens: 2_000, output_tokens: 10 }),
+            rec('2026-11-01T11:00:00Z', { input_tokens: 100, cache_read_input_tokens: 0, cache_creation_input_tokens: 102_000, output_tokens: 10 }),
+        ].join('\n');
+        expect(coldReturns(text)).toEqual([[50 + 100_000 + 2_000 + 10, 100 + 102_000]]);
+    });
+
+    it('a compaction between two responses is not a cold return, and a warm gap is not either', () => {
+        const text = [
+            rec('2026-11-01T09:00:00Z', oneHour),
+            JSON.stringify({ type: 'system', subtype: 'compact_boundary' }),
+            rec('2026-11-01T11:00:00Z', { input_tokens: 5, cache_creation_input_tokens: 20_000 }),
+            rec('2026-11-01T11:04:00Z', { input_tokens: 5, cache_creation_input_tokens: 0 }),
+        ].join('\n');
+        expect(coldReturns(text)).toEqual([]);
+    });
+
+    it('a 5m session goes cold after five minutes, and sidechain records are ignored', () => {
+        const text = [
+            rec('2026-11-01T09:00:00Z', { input_tokens: 1, cache_creation_input_tokens: 60_000, cache_creation: { ephemeral_5m_input_tokens: 60_000 } }),
+            rec('2026-11-01T09:20:00Z', { input_tokens: 1, cache_creation_input_tokens: 999 }, { isSidechain: true }),
+            rec('2026-11-01T09:06:00Z', { input_tokens: 1, cache_creation_input_tokens: 60_001 }),
+        ].join('\n');
+        expect(coldReturns(text)).toEqual([[60_001, 60_002]]);
+    });
+});
+
+describe('buildReport — cold-return calibration splits false-cold from size error', () => {
+    it('a gap whose request still read the cache counts as false-cold, not as a 99 % size error', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'eol-cold-'));
+        const dir = path.join(root, 'proj');
+        fs.mkdirSync(dir);
+        const rec = (ts: string, u: Record<string, unknown>): string => JSON.stringify({ type: 'assistant', isSidechain: false, timestamp: ts, message: { usage: u } });
+        fs.writeFileSync(
+            path.join(dir, 's.jsonl'),
+            [
+                rec('2026-11-01T09:00:00Z', { input_tokens: 1, cache_creation_input_tokens: 100_000 }),
+                rec('2026-11-01T09:30:00Z', { input_tokens: 1, cache_read_input_tokens: 100_000, cache_creation_input_tokens: 50 }),
+                rec('2026-11-01T11:00:00Z', { input_tokens: 1, cache_creation_input_tokens: 95_000 }),
+            ].join('\n') + '\n',
+        );
+        const cr = buildReport(root).cold_return;
+        fs.rmSync(root, { recursive: true, force: true });
+        expect(cr.returns).toBe(2);
+        expect(cr.false_cold).toBe(1);
+        expect(cr.relative_error?.n).toBe(1);
+        expect(cr.relative_error?.median).toBeCloseTo(((100_051 - 95_001) / 95_001) * 100, 3);
+    });
+});
+

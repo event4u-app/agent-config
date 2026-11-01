@@ -39,6 +39,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-reason-that-is-still-there | later | later | A safety floor reaches every skill it names; a pack's first-win guide claims only what exists; a recorded reason for … |
 | road-to-a-release-record-that-says-what-it-reviewed-carried | later | later | Every step road-to-a-release-record-that-says-what-it-reviewed deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-retro-the-merge-runs | later | later | After every merged pull request, and on the first session of every new day, the package examines finished work that … |
+| road-to-a-return-that-names-its-price-carried | later | later | The cold-cache notice reaches users without the status-line tap and on resume, or those paths are cancelled on the calibration … |
 | road-to-a-reverified-youtube-channel | later | later | Road to a re-verified youtube channel |
 | road-to-a-review-that-ends | later | later | A completion review runs at most N rounds, N set by the owner — round 1 over the scope, each … |
 | road-to-a-run-that-knows-its-skills | later | later | A run — a command, a `/work` run, or a roadmap lane — determines its base skills once at its … |

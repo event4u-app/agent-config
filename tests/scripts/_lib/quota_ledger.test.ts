@@ -12,6 +12,7 @@ import {
     readQuotaLedger,
     snapshotFromStatusPayload,
 } from '../../../src/scripts/_lib/quota_ledger.js';
+import { snapshotWithCache } from '../../../src/scripts/_lib/prompt_cache_reading.js';
 
 let home: string;
 let env: Record<string, string>;
@@ -45,6 +46,39 @@ describe('snapshotFromStatusPayload', () => {
             model: 'claude-opus-5-5',
         });
         expect(JSON.stringify(s)).not.toContain('abc-123');
+    });
+
+    it('keeps the prompt-cache subset as numbers and enums only', () => {
+        const s = snapshotWithCache(
+            {
+                ...PAYLOAD,
+                prompt_cache: {
+                    warm: false,
+                    ttl: '1h',
+                    expires_at: '2026-11-01T10:42:00Z',
+                    recache_tokens_if_cold: 182_000,
+                    hit_ratio: 0.93,
+                    last_miss_cause: 'some host text',
+                },
+            },
+            1000,
+        );
+        expect(s?.cache).toEqual({
+            warm: false,
+            ttl: '1h',
+            expires_at: Date.parse('2026-11-01T10:42:00Z'),
+            recache_tokens_if_cold: 182_000,
+        });
+        expect(JSON.stringify(s)).not.toContain('some host text');
+    });
+
+    it('normalises an epoch-second expiry, drops an unknown ttl, and keeps a cache-only payload', () => {
+        const s = snapshotWithCache({ session_id: 'abc-123', prompt_cache: { warm: true, ttl: '10m', expires_at: 1_761_990_000 } }, 1000);
+        expect(s).toEqual({ ts: 1000, session: hashSessionId('abc-123'), cache: { warm: true, expires_at: 1_761_990_000_000 } });
+    });
+
+    it('ignores a prompt_cache object carrying nothing usable', () => {
+        expect(snapshotWithCache({ prompt_cache: { hit_ratio: 0.5 } })).toBeNull();
     });
 
     it('normalises a millisecond reset to seconds', () => {

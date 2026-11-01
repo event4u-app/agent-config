@@ -34,6 +34,20 @@ protocol in `src/agent-src/contexts/execution/host-capability-manifest.md`
   it on) and the shape of `claude agents --json` for `run_supervise`;
 - the cost of one tap refresh at 0 / 64 / 256 KB ledger, which decides whether
   a single-read / dedup pass is worth doing.
+- (from `road-to-a-return-that-names-its-price`, round `inbox-2026-11-b`)
+  the cold transition: the status-line payload while warm, at the
+  `expires_at` refresh and after the next prompt, comparing
+  `recache_tokens_if_cold` with that request's
+  `cache_creation_input_tokens + input_tokens`;
+- what a `UserPromptSubmit` block leaves behind — prompt text kept in the
+  input, in history, or lost (input for a one-shot cold-return block, owner
+  question, default no);
+- whether `claude --resume` past the TTL hands `SessionStart` the four fields
+  `seconds_since_last_response`, `context_tokens`,
+  `prompt_cache_likely_expired`, `estimated_cache_write_usd`;
+- whether a 1h→5m `prompt_cache.ttl` flip on a plan login coincides with
+  usage-credit draw (candidate input for `later/road-to-billing-cliff-detection`,
+  not a signal until observed).
 
 **Kept out regardless:** no credential or token read, no unofficial endpoint,
 no multi-account routing, no hard limit or start refusal, no dynamic subagent

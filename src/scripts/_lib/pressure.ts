@@ -140,12 +140,16 @@ export function exhaustedResetAt(snapshots: readonly QuotaSnapshot[]): number | 
     return null;
 }
 
-/** The newest context fill this session reported, if it is fresh. */
-export function sessionContextFill(snapshots: readonly QuotaSnapshot[], session: string, now: number): number | null {
+/**
+ * The newest context fill this session reported, whatever its age: an idle
+ * session's context does not change, and the stale guard that once applied here
+ * silenced the line exactly when a returning user needed it. A compaction since
+ * is the caller's check (`cold_return.lastResponse`).
+ */
+export function sessionContextFill(snapshots: readonly QuotaSnapshot[], session: string): number | null {
     for (let i = snapshots.length - 1; i >= 0; i--) {
         const s = snapshots[i];
-        if (s === undefined || s.session !== session || s.context_used_pct === undefined) continue;
-        return now - s.ts <= STALE_AFTER_MS ? s.context_used_pct : null;
+        if (s !== undefined && s.session === session && s.context_used_pct !== undefined) return s.context_used_pct;
     }
     return null;
 }
