@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **641**
-- Edges (incl. self-WRITE): **2444**
+- Edges (incl. self-WRITE): **2445**
 
 ## READ_ONLY edges
 
@@ -1660,6 +1660,7 @@
 | `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncondensed/skills/token-optimizer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncondensed/skills/using-git-worktrees/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/subagent-orchestration/prompts/README.md` | `.agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/subagent-orchestration/prompts/README.md` | `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/subagent-orchestration/prompts/README.md` | `.agent-src.uncondensed/skills/subagent-orchestration/prompts/adversarial-verification-council.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/subagent-orchestration/prompts/README.md` | `.agent-src.uncondensed/skills/subagent-orchestration/prompts/do-and-judge-two-stage.md` | `body_link` | 1 |
