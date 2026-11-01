@@ -130,6 +130,24 @@ describe('check_claims — a retired phrasing may not ship (Phase 2)', () => {
         expect(r.stderr).toContain('.github/about.yml');
     });
 
+    it.each(['site/src/content/docs/index.mdx', 'site/astro.config.mjs'])(
+        'RED on the docs-site pitch %s — GitHub Pages renders it to readers who never open the repo',
+        (rel) => {
+            write('docs/CLAIMS.md', ledger(`- retires_phrasings: ${HISTORICAL}`));
+            write(rel, `description: Every claim machine-checked, including ${HISTORICAL}.\n`);
+            const r = run();
+            expect(r.code).toBe(2);
+            expect(r.stderr).toContain(rel);
+        },
+    );
+
+    it('does not fire on a docs-site page that is not the pitch', () => {
+        write('docs/CLAIMS.md', ledger(`- retires_phrasings: ${HISTORICAL}`));
+        write('site/src/content/docs/history.md', `We used to claim ${HISTORICAL}, and no longer do.\n`);
+        write('site/src/content/docs/index.mdx', 'description: Skills, rules and commands.\n');
+        expect(run().code).toBe(0);
+    });
+
     it('is case-insensitive — capitalising the wording does not clear it', () => {
         write('docs/CLAIMS.md', ledger(`- retires_phrasings: ${HISTORICAL}`));
         write('README.md', '# Agent Config — Zero Runtime Daemon\n');

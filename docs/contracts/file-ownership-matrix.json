@@ -19578,6 +19578,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/README.md",
+      "target": ".agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/README.md",
       "target": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",

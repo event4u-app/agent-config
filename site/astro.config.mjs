@@ -24,7 +24,7 @@ export default defineConfig({
     starlight({
       title: 'agent-config',
       description:
-        'A governed skill/rule/command suite for AI coding tools — every claim machine-checked, including zero runtime.',
+        'Skills, rules, slash commands and subagents for AI coding agents, routed by intent — every claim machine-checked.',
       favicon: '/favicon.svg',
       customCss: ['./src/styles/custom.css'],
       plugins: [starlightThemeRapide()],

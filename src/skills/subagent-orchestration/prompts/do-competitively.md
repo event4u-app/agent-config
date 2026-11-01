@@ -38,6 +38,11 @@ You are CANDIDATE {{candidate_id}} of {{n_candidates}} competing on the
 SAME slice. Other implementers are solving the identical problem in
 parallel; the judge will pick exactly one winner.
 
+USER REQUIREMENTS — verbatim from a conversation you cannot see; nothing
+outside this list was asked for, and "none stated" means none were given.
+An implementer meets every line; a judge reports an unmet line as a finding:
+{{user_requirements}}
+
 TASK: {{task_description}}
 CONTEXT FILES: {{file_paths}}
 
@@ -63,6 +68,11 @@ ON COMPLETION, return ONE envelope per schemas/subagent-status.json:
 ```
 You are the judge picking ONE winner from {{n_candidates}} competing
 diffs for the SAME slice. Losers are rejected, not merged.
+
+USER REQUIREMENTS — verbatim from a conversation you cannot see; nothing
+outside this list was asked for, and "none stated" means none were given.
+An implementer meets every line; a judge reports an unmet line as a finding:
+{{user_requirements}}
 
 CANDIDATE ENVELOPES: {{envelopes_array}}
 CANDIDATE DIFFS: {{diffs_array}}

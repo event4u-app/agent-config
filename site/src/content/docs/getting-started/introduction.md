@@ -1,6 +1,6 @@
 ---
 title: Introduction
-description: What agent-config is — a content + governance layer for AI coding agents, compiled into 7+ host formats with zero runtime daemon.
+description: What agent-config is — a content + governance layer for AI coding agents, compiled into each host agent's native format.
 ---
 
 **agent-config is a content + governance layer for AI coding agents** — a
@@ -33,13 +33,14 @@ for the full mental model.
 
 A content + governance layer, **not a runtime**:
 
-- **No background daemon** — the host tool runs the agent loop.
+- **No mandatory or always-on daemon** — the host tool runs the agent loop.
 - **No separate state database** and **no self-rewriting memory** — every
   learned change is human-reviewed.
 - **No auto-build pipeline** — the same layer stays portable across tools.
 
-"Zero runtime daemon" is itself a machine-checked claim. Every public capability
-or number binds to resolvable evidence — [verify it yourself](/agent-config/proof/).
+Resident processes are permitted only under the [supervision policy](https://github.com/event4u-app/agent-config/blob/main/docs/decisions/ADR-249-supervised-resident-process-permitted-under-governance.md)
+adopted on 2026-08-27 — a rule, not a description of anything running today.
+Every public capability or number binds to resolvable evidence — [verify it yourself](/agent-config/proof/).
 
 ## Honest provenance
 
