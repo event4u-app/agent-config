@@ -219,6 +219,7 @@ import { mapSection } from './map_sections.js';
 import { scanMain } from './scan.js';
 import { bugsMain } from './cli_bugs.js';
 import { cmdBranchDiff, cmdBranches, cmdOnBranches, cmdProvenance, cmdSystems } from './cli_knowledge.js';
+import { CODE_GRAPH_HELP } from './cli_help.js';
 
 export { buildCacheFor, cacheFor } from './cli_args.js';
 
@@ -1439,6 +1440,7 @@ function cmdOutcome(argv: string[]): number {
 export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
     const sub = argv[0];
     try {
+        if (['--help', '-h', 'help'].includes(sub ?? '')) return (process.stdout.write(CODE_GRAPH_HELP), 0); // help, not a verb
         if (sub === 'build') return await cmdBuild(argv.slice(1));
         if (sub === 'validate') return cmdValidate(argv.slice(1));
         if (sub === 'detect') return cmdDetect(argv.slice(1));
@@ -1472,10 +1474,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'bugs') return bugsMain(argv.slice(1));
         if (sub === 'ask') return askMain(argv.slice(1));
         if (sub === 'scan') return scanMain(argv.slice(1));
-        process.stderr.write(
-            'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|review-risk|why|usage|remove-plan|provenance|branches|branch-diff|on-branches|tests-for|untested|dead|confirm|pack|rebuild-diff|verify|suggest-verb|scope|lint|map|open|outcome|auto-refresh|projects|estate|lineage|bugs|ask|scan> [options]\n',
-        );
+        process.stderr.write(CODE_GRAPH_HELP);
         return 2;
     } catch (e) {
         if (e instanceof UsageError) {

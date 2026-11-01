@@ -34,6 +34,7 @@ import { load as parseYaml } from 'js-yaml';
 import * as z from 'zod';
 
 import * as ags from '../../src/scripts/_lib/agent_settings.js';
+import { REMOVED_KEYS } from '../../src/scripts/_lib/settings_removed_keys.js';
 import { settingsSchema } from '../../src/server/schemas/settings.js';
 
 /** dotted path → the YAML an older install would still carry, and the reason string. */
@@ -152,7 +153,11 @@ describe('road-to-zero-settings Phase 2.1 — the five unread `derivable` keys',
                 user_global_path: path.join(tmp, 'missing.yml'),
             });
             expect(spy).toHaveBeenCalledTimes(1);
-            expect(String(spy.mock.calls[0]?.[0])).toBe(`${key} was removed (${reason}); ignored.\n`);
+            expect(String(spy.mock.calls[0]?.[0])).toBe(
+                `1 removed settings key is ignored (${key}) — see why and delete: agent-config settings:sync --prune-removed [--dry-run]\n`,
+            );
+            // The reason is not dropped — it is what `--prune-removed --dry-run` prints.
+            expect(REMOVED_KEYS.get(key)).toBe(reason);
         } finally {
             spy.mockRestore();
         }

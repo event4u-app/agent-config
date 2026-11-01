@@ -12742,18 +12742,25 @@ function _readDotted(root, dotted) {
   }
   return node2;
 }
+var PRUNE_REMOVED_COMMAND = "agent-config settings:sync --prune-removed";
 function warnRemovedKeys(merged) {
-  for (const [key, reason] of REMOVED_KEYS) {
-    if (_warnedRemovedKeys.has(key)) {
-      continue;
-    }
-    if (_readDotted(merged, key) === void 0) {
+  const fresh = [];
+  for (const [key] of REMOVED_KEYS) {
+    if (_warnedRemovedKeys.has(key) || _readDotted(merged, key) === void 0) {
       continue;
     }
     _warnedRemovedKeys.add(key);
-    process.stderr.write(`${key} was removed (${reason}); ignored.
-`);
+    fresh.push(key);
   }
+  if (fresh.length === 0) {
+    return;
+  }
+  const named = fresh.slice(0, 3).join(", ") + (fresh.length > 3 ? `, +${fresh.length - 3} more` : "");
+  const noun = fresh.length === 1 ? "removed settings key is" : "removed settings keys are";
+  process.stderr.write(
+    `${fresh.length} ${noun} ignored (${named}) \u2014 see why and delete: ${PRUNE_REMOVED_COMMAND} [--dry-run]
+`
+  );
 }
 
 // src/scripts/_lib/agent_settings.ts
@@ -14915,6 +14922,13 @@ var GLOBAL_DEPLOY_SOURCES = {
     ["dist/agent-src/personas", "personas"]
   ]
 };
+function expandAnchor(anchor2, home) {
+  const h = home ?? homedir15();
+  if (anchor2 === "~") return h;
+  if (anchor2.startsWith("~/")) return join39(h, anchor2.slice(2));
+  if (isAbsolute7(anchor2)) return anchor2;
+  return resolve20(anchor2);
+}
 function dryRunTargetLines(global, tools, projectTarget) {
   if (!global) return `  target:      ${projectTarget}
 `;
@@ -14922,12 +14936,42 @@ function dryRunTargetLines(global, tools, projectTarget) {
   for (const tool of tools) {
     const anchor2 = USER_SCOPE_PATHS[tool];
     if (anchor2 === void 0) continue;
-    out += `      ${tool} \u2192 ${anchor2.startsWith("~/") ? join39(homedir15(), anchor2.slice(2)) : anchor2}
+    const root = expandAnchor(anchor2);
+    out += `      ${tool} \u2192 ${root}
+`;
+    const deploy = GLOBAL_DEPLOY_SOURCES[tool];
+    if (deploy === void 0) {
+      out += "          (bridge files only \u2014 no deployed content)\n";
+      continue;
+    }
+    for (const [, sub] of deploy) out += `          ${sub.length === 0 ? root : `${join39(root, sub)}/`}
 `;
   }
   out += "  phases:      project payload sync \u2014 skipped (global installs write user-scope paths only)\n";
   out += "               host projection + managed hooks \u2014 would run\n";
   return out;
+}
+function dryRunBool(v) {
+  return v ? "true" : "false";
+}
+function dryRunScopeLine(opts, detected, devMode) {
+  let scope;
+  if (opts.scope === "project" || opts.scope === "global" || opts.scope === "prompt") scope = opts.scope;
+  else if (opts.global_install === true) scope = "global";
+  else if (opts.scope === "auto") scope = detected[0];
+  else scope = "project";
+  if (scope === "prompt") {
+    return { scope, line: `  scope:       ask (${detected[1] || "forced by --scope=prompt"}) \u2014 pass --global to decide
+` };
+  }
+  if (scope === "project" && !devMode) {
+    return {
+      scope,
+      line: "  scope:       project \u2014 a real run refuses this (installs are global-only); add --global\n"
+    };
+  }
+  return { scope, line: `  scope:       ${scope}
+` };
 }
 
 // src/shared/settingsSurface.ts
@@ -25796,22 +25840,22 @@ function _dry_run_summary(opts) {
     opts.custom_path || opts.project || process4.env["PROJECT_ROOT"] || process4.cwd()
   );
   const [will_launch, why_not] = _wizard_should_launch(opts);
+  const scopePlan = dryRunScopeLine(opts, detect_scope(resolvePath(opts.project || process4.env["PROJECT_ROOT"] || process4.cwd())), process4.env["AGENT_CONFIG_DEV_MODE"] === "1");
   process4.stdout.write("\n");
   process4.stdout.write("[dry-run] Plan summary \u2014 no files written, no subprocesses spawned:\n");
   process4.stdout.write(`  profile:     ${opts.profile}
 `);
   process4.stdout.write(`  user-type:   ${opts.user_type || "(none)"}
 `);
-  process4.stdout.write(`  scope:       ${opts.scope || (opts.global_install ? "global" : "auto")}
-`);
+  process4.stdout.write(scopePlan.line);
   process4.stdout.write(`  tools:       ${opts.tools || "all"}
 `);
-  process4.stdout.write(dryRunTargetLines(Boolean(opts.global_install) || opts.scope === "global", _parse_tools(opts.tools || "all"), target));
-  process4.stdout.write(`  minimal:     ${pyBool(opts.minimal)}
+  process4.stdout.write(dryRunTargetLines(scopePlan.scope === "global", _parse_tools(opts.tools || "all"), target));
+  process4.stdout.write(`  minimal:     ${dryRunBool(opts.minimal)}
 `);
-  process4.stdout.write(`  force:       ${pyBool(opts.force)}
+  process4.stdout.write(`  force:       ${dryRunBool(opts.force)}
 `);
-  process4.stdout.write(`  offline:     ${pyBool(opts.offline)}
+  process4.stdout.write(`  offline:     ${dryRunBool(opts.offline)}
 `);
   if (will_launch) {
     process4.stdout.write("  wizard:      Would auto-launch (pass --no-ui to suppress).\n");
@@ -25846,9 +25890,6 @@ function _dry_run_summary(opts) {
   }
   process4.stdout.write("\n");
   return 0;
-}
-function pyBool(v) {
-  return v ? "True" : "False";
 }
 function _apply_payload_preview(payload, opts) {
   const schema_version = payload["schema_version"] ?? "<missing>";
@@ -25889,7 +25930,7 @@ function _apply_payload_preview(payload, opts) {
   }
   process4.stdout.write(`  target:      ${target}
 `);
-  process4.stdout.write(`  dry_run:     ${pyBool(Boolean(payload["dry_run"] ?? opts.dry_run))}
+  process4.stdout.write(`  dry_run:     ${dryRunBool(Boolean(payload["dry_run"] ?? opts.dry_run))}
 `);
   process4.stdout.write("\n");
   return 0;

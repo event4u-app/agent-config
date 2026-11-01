@@ -84,7 +84,7 @@ import * as YAML from 'yaml';
 
 import { _check_overrides } from './doctor_overrides.js';
 import { _is_global_only_consumer } from './doctor_install_mode.js';
-import { classifyOwnership, ledgerModifiedRecords, noProjectInstallLines } from './doctor_ownership_ledger.js';
+import { classifyOwnership, ledgerModifiedRecords, noProjectInstallLines, notInstalledShortCircuit } from './doctor_ownership_ledger.js';
 // Forwarded, not re-declared: both names moved to doctor_install_mode.ts and existing
 // importers of cmd_doctor.js keep resolving. `export ... from` rather than an import,
 // because INSTALL_MODE_MARKER_RELATIVE is not referenced here any more and an unused
@@ -139,6 +139,7 @@ import { review_gate_doctor_signal } from '../ai_team/review_gate.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
 import { rglob as _rglob_raw, scanForeign } from '../_lib/foreign_scan.js';
 import { runCensus, summaryLine } from './cmd_doctor_neighbours.js';
+import { DOCTOR_HELP_BODY } from './_doctor_help.js';
 import {
     LEGACY_ALL,
     excludedRuleBasenames,
@@ -3052,9 +3053,8 @@ interface Options {
 
 const PROG = 'agent-config doctor';
 
-// Verbatim argparse usage block (captured from the .py at COLUMNS=80). The
-// per-flag `--help` BODY is a documented divergence — argparse re-wraps it to
-// terminal width; golden tests assert the `usage:` token + exit code only.
+// Verbatim argparse usage block (captured from the .py at COLUMNS=80); the
+// per-flag `--help` body lives in `_doctor_help.ts`.
 const USAGE =
     `usage: ${PROG} [-h] [--project PROJECT] [--json] [--ci] [--check ID]\n` +
     STRICT_USAGE +
@@ -3101,7 +3101,7 @@ function _parse(argv: string[]): Options {
     while (i < argv.length) {
         const a = argv[i] as string;
         if (a === '-h' || a === '--help') {
-            process.stdout.write(USAGE);
+            process.stdout.write(USAGE + DOCTOR_HELP_BODY);
             throw new ArgparseExit(0);
         }
         const eq = a.startsWith('--') ? a.indexOf('=') : -1;
@@ -3352,7 +3352,7 @@ function main(argv: string[] | null = null): number {
     const manifest = installed_tools.read_manifest(manifest_pth);
     if (manifest === null) {
         const bridge_present = _is_global_only_consumer(project_root);
-        return _run_no_manifest(opts, project_root, origin, bridge_present);
+        return notInstalledShortCircuit(opts, bridge_present) ?? _run_no_manifest(opts, project_root, origin, bridge_present);
     }
 
     const [records, known] = _collect_manifest_entries(project_root, manifest);

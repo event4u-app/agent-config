@@ -1,0 +1,48 @@
+/**
+ * `agent-config init --help` — the flags a user passes to `init`.
+ *
+ * `init` forwards to the bash installer, whose own `--help` documents that
+ * script (`bash scripts/install [OPTIONS]`), a path no consumer has. This page
+ * documents the command the user typed instead; the installer's maintainer
+ * flags (`--source`, `--skip-sync`, `--fleet`, …) are left off on purpose.
+ */
+
+export const INIT_HELP = `Usage: agent-config init [options]
+
+Install agent-config for your AI coding tools. In a terminal with a display
+it opens the setup wizard in your browser. --yes, --no-ui, --tools, --dry-run,
+--list-tools, --validate-only, --quiet and --project keep it in the terminal,
+and so does CI=1 or AGENT_CONFIG_NO_UI=1.
+
+Options:
+  --gui                 Open the setup wizard even without a detected display
+  --no-ui               Never open the wizard; install from the terminal
+  -y, --yes             Do not prompt
+  --global              Install into your user-scope tool folders (~/.claude/,
+                        ~/.cursor/, …) — the install a terminal run needs
+  --tools <list>        Comma-separated tool IDs (default: all); --ai is an alias
+  --list-tools          Print the tool IDs and what each one installs, then exit
+  --profile <name>      Cost profile: minimal, balanced (default) or full
+  --user-type <id>      Filter skills for one user type (developer, founder, …)
+  --force               Overwrite existing files the install manages
+  --dry-run             Print the plan — scope, and per tool where it would
+                        write — and write nothing
+  --offline             Make no network calls (update check, registry fetches)
+  --validate-only       Pre-flight checks only (permissions, disk, conflicts)
+  --quiet               Print errors only
+  --project             Set up this project's surface instead (marker,
+                        agents/overrides/, .gitignore block); no global install
+
+Wizard options:
+  --port <n>            Port for the local wizard server
+  --no-open             Start the wizard server without opening the browser
+  --allow-headless      Start the wizard over SSH or without a display
+
+Examples:
+  agent-config init
+  agent-config init --yes --global --tools=claude-code,cursor
+  agent-config init --dry-run --global --tools=claude-code
+  agent-config init --project
+
+After installing: agent-config doctor
+`;

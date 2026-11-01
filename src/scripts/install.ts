@@ -122,7 +122,7 @@ import { resolveGlobalRuleScope } from '../install/globalRuleScope.js';
 import { deployClaudeCarrier } from '../install/stagedRuntime.js';
 import { mergeToolsAliases as _merge_tools_aliases } from '../install/toolsArg.js';
 import { installerThinsHost } from './_lib/lean_projection_mode.js';
-import { GLOBAL_DEPLOY_SOURCES, RULE_SOURCE_REL, dryRunTargetLines } from '../install/wizard-plan.js';
+import { GLOBAL_DEPLOY_SOURCES, RULE_SOURCE_REL, dryRunBool, dryRunScopeLine, dryRunTargetLines } from '../install/wizard-plan.js';
 import { flattenSurface, computeSurfaceDelta, type SettingsSurface } from '../shared/settingsSurface.js';
 import { settingsSchema } from '../server/schemas/settings.js';
 import { toJsonSchema7 } from '../shared/zodJsonSchema.js';
@@ -4299,16 +4299,17 @@ function _dry_run_summary(opts: Options): number {
         opts.custom_path || opts.project || process.env['PROJECT_ROOT'] || process.cwd(),
     );
     const [will_launch, why_not] = _wizard_should_launch(opts);
+    const scopePlan = dryRunScopeLine(opts, detect_scope(resolvePath(opts.project || process.env['PROJECT_ROOT'] || process.cwd())), process.env['AGENT_CONFIG_DEV_MODE'] === '1');
     process.stdout.write('\n');
     process.stdout.write('[dry-run] Plan summary — no files written, no subprocesses spawned:\n');
     process.stdout.write(`  profile:     ${opts.profile}\n`);
     process.stdout.write(`  user-type:   ${opts.user_type || '(none)'}\n`);
-    process.stdout.write(`  scope:       ${opts.scope || (opts.global_install ? 'global' : 'auto')}\n`);
+    process.stdout.write(scopePlan.line);
     process.stdout.write(`  tools:       ${opts.tools || 'all'}\n`);
-    process.stdout.write(dryRunTargetLines(Boolean(opts.global_install) || opts.scope === 'global', _parse_tools(opts.tools || 'all'), target));
-    process.stdout.write(`  minimal:     ${pyBool(opts.minimal)}\n`);
-    process.stdout.write(`  force:       ${pyBool(opts.force)}\n`);
-    process.stdout.write(`  offline:     ${pyBool(opts.offline)}\n`);
+    process.stdout.write(dryRunTargetLines(scopePlan.scope === 'global', _parse_tools(opts.tools || 'all'), target));
+    process.stdout.write(`  minimal:     ${dryRunBool(opts.minimal)}\n`);
+    process.stdout.write(`  force:       ${dryRunBool(opts.force)}\n`);
+    process.stdout.write(`  offline:     ${dryRunBool(opts.offline)}\n`);
     if (will_launch) {
         process.stdout.write('  wizard:      Would auto-launch (pass --no-ui to suppress).\n');
     } else {
@@ -4341,11 +4342,6 @@ function _dry_run_summary(opts: Options): number {
     return 0;
 }
 
-/** Python `str(bool)` → 'True' / 'False'. */
-function pyBool(v: boolean): string {
-    return v ? 'True' : 'False';
-}
-
 function _apply_payload_preview(payload: Record<string, unknown>, opts: Options): number {
     const schema_version = payload['schema_version'] ?? '<missing>';
     const target = resolvePath(
@@ -4376,7 +4372,7 @@ function _apply_payload_preview(payload: Record<string, unknown>, opts: Options)
         return 2;
     }
     process.stdout.write(`  target:      ${target}\n`);
-    process.stdout.write(`  dry_run:     ${pyBool(Boolean(payload['dry_run'] ?? opts.dry_run))}\n`);
+    process.stdout.write(`  dry_run:     ${dryRunBool(Boolean(payload['dry_run'] ?? opts.dry_run))}\n`);
     process.stdout.write('\n');
     return 0;
 }

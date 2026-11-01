@@ -179,7 +179,11 @@ describe('the 2026-10-09 derivable retirement', () => {
                     user_global_path: path.join(tmp, 'missing.yml'),
                 });
                 const lines = spy.mock.calls.map((c) => String(c[0]));
-                expect(lines).toEqual([`${key} was removed (${REMOVED_KEYS.get(key) ?? ''}); ignored.\n`]);
+                // One summary line names the key and the cleanup command; the
+                // reason is printed by `settings:sync --prune-removed --dry-run`.
+                expect(lines).toEqual([
+                    `1 removed settings key is ignored (${key}) — see why and delete: agent-config settings:sync --prune-removed [--dry-run]\n`,
+                ]);
             } finally {
                 spy.mockRestore();
             }

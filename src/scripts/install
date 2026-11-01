@@ -445,6 +445,9 @@ run_bridges() {
         # nothing but the one stage that does not apply to a global install.
         $GLOBAL && args+=(--global)
         [[ -n "$SCOPE" ]] && args+=(--scope="$SCOPE")
+        $OFFLINE && args+=(--offline)
+        $FORCE && args+=(--force)
+        $MINIMAL && args+=(--minimal)
         args+=(--tools="$TOOLS" --no-ui --dry-run)
         "${runner[@]}" "${args[@]}"
         return $?

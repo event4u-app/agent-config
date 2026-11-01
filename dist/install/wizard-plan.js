@@ -240,8 +240,10 @@ export function buildPlanFromWizard(inputs) {
  *
  * A global install has no project target, and printing the cwd here read as
  * "this is where it writes" — under npx the cwd is often the npx cache, so the
- * plan named a directory the install never touches. For global it prints the
- * anchor of each SELECTED tool and which phases would run.
+ * plan named a directory the install never touches. For global it prints, per
+ * SELECTED tool, its anchor and every directory the deploy would write into
+ * ({@link GLOBAL_DEPLOY_SOURCES}), then which phases would run. A tool with no
+ * deploy row gets its anchor and a note that only its bridge files are written.
  */
 export function dryRunTargetLines(global, tools, projectTarget) {
     if (!global)
@@ -251,10 +253,50 @@ export function dryRunTargetLines(global, tools, projectTarget) {
         const anchor = USER_SCOPE_PATHS[tool];
         if (anchor === undefined)
             continue;
-        out += `      ${tool} → ${anchor.startsWith('~/') ? join(homedir(), anchor.slice(2)) : anchor}\n`;
+        const root = expandAnchor(anchor);
+        out += `      ${tool} → ${root}\n`;
+        const deploy = GLOBAL_DEPLOY_SOURCES[tool];
+        if (deploy === undefined) {
+            out += '          (bridge files only — no deployed content)\n';
+            continue;
+        }
+        for (const [, sub] of deploy)
+            out += `          ${sub.length === 0 ? root : `${join(root, sub)}/`}\n`;
     }
     out += '  phases:      project payload sync — skipped (global installs write user-scope paths only)\n';
     out += '               host projection + managed hooks — would run\n';
     return out;
+}
+/** A plan boolean, lowercase — the plan is read by people, not by Python. */
+export function dryRunBool(v) {
+    return v ? 'true' : 'false';
+}
+/**
+ * The scope a REAL run of the same flags would resolve, as the plan's `scope`
+ * line. Mirrors `_resolve_scope` in `scripts/install.ts` without its prompt:
+ * no scope flag means `project` (kept for backward compatibility), and a
+ * consumer run refuses `project` outside `AGENT_CONFIG_DEV_MODE=1` — so the plan
+ * says that and names the flag that works, instead of printing `auto`.
+ */
+export function dryRunScopeLine(opts, detected, devMode) {
+    let scope;
+    if (opts.scope === 'project' || opts.scope === 'global' || opts.scope === 'prompt')
+        scope = opts.scope;
+    else if (opts.global_install === true)
+        scope = 'global';
+    else if (opts.scope === 'auto')
+        scope = detected[0];
+    else
+        scope = 'project';
+    if (scope === 'prompt') {
+        return { scope, line: `  scope:       ask (${detected[1] || 'forced by --scope=prompt'}) — pass --global to decide\n` };
+    }
+    if (scope === 'project' && !devMode) {
+        return {
+            scope,
+            line: '  scope:       project — a real run refuses this (installs are global-only); add --global\n',
+        };
+    }
+    return { scope, line: `  scope:       ${scope}\n` };
 }
 //# sourceMappingURL=wizard-plan.js.map

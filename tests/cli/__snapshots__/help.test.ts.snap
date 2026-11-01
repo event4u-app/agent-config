@@ -1,0 +1,53 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`default help (agent-config --help) > matches the committed snapshot 1`] = `
+"agent-config — governed skills, rules and commands for your AI coding tools
+
+Usage:
+  agent-config <command> [options]
+  agent-config <command> --help      Flags for one command
+  agent-config --version
+
+Get started:
+  init                   Install for your AI tools (opens the setup wizard; --yes --global stays in the terminal)
+  install                Same setup wizard as init
+  doctor                 Check the install and name the next fix
+  versions               List published versions and the one you run
+
+Daily use:
+  code-graph             Ask about the codebase: callers, impact, tests for a change, the project map
+  handoff                Hand the current session over to a fresh one
+  council:estimate       Preview what a second opinion from other models would cost
+  council:run            Get that second opinion (spends only with --confirm)
+  ci:settle              Wait for a pull request's checks and print the verdict
+  gates                  Open decisions that are waiting for you
+
+Inspect:
+  explain                Trace a decision: config | rule <name> | route "<text>"
+  commands               List the commands your agent can run
+  packs:active           Which packs are active here, and from which file
+  hooks:status           Which hooks are installed and bound, per tool
+  settings:get           Read one setting and the file its value comes from
+  council:status         Whether a council is configured (no spend)
+
+Configure:
+  setup                  Reopen the setup wizard in the browser
+  config                 Open the settings page (global; --project for this project)
+  settings:set           Change one setting from the terminal
+  use                    Switch the active profile
+  keys:install-anthropic  Store an Anthropic API key for the council
+  keys:install-openai    Store an OpenAI API key for the council
+
+Maintain:
+  upgrade                Install the latest version and refresh your install
+  update                 Pin this project to a version
+  refresh                Re-install the current version (--global or --project)
+  settings:sync          Add new setting keys to your settings file (--prune-removed drops retired ones)
+  migrate                Move off an older install layout
+  uninstall              Remove agent-config (--global for the user-scope install)
+
+Global option:
+  --config-root <path>   Config home (else $EVENT4U_CONFIG_HOME, else ~/.event4u/agent-config)
+
+Every command, including advanced and internal ones: agent-config help --tier=all"
+`;

@@ -124,3 +124,31 @@ export function noProjectInstallLines(projectRoot: string, inventoryPath?: strin
         ['err', '      run `agent-config init` (global install) or `agent-config refresh --project` (global-only consumer)'],
     ];
 }
+
+/** The line a default `doctor` run prints on a machine with nothing installed. */
+export const NOT_INSTALLED_LINE = 'agent-config: not installed — run `agent-config init`';
+
+/**
+ * A default `doctor` run on a machine with no install anywhere — no project
+ * lockfile, no project marker, an empty global deploy ledger — prints one
+ * neutral line and exits 0 (road-to-docs-that-sell 4.4).
+ *
+ * The full check list on that machine was ~80 lines with a red hook-wiring row
+ * for hooks nobody had asked for yet, and producing it wrote a neighbour-scan
+ * cache into the project and started other vendors' CLIs for their versions.
+ * None of that answers the only question a fresh machine has.
+ *
+ * Machine and explicit modes (`--json`, `--ci`, `--strict`, `--check`) keep
+ * their full no-install payload and exit codes: a caller that asked for the
+ * contract gets the contract. Returns `null` when the full run should go on.
+ */
+export function notInstalledShortCircuit(
+    opts: { readonly json: boolean; readonly ci: boolean; readonly strict: boolean; readonly check: string | null },
+    bridgePresent: boolean,
+    inventoryPath?: string | null,
+): number | null {
+    if (opts.json || opts.ci || opts.strict || opts.check !== null) return null;
+    if (bridgePresent || globalInstalledTools(inventoryPath).length > 0) return null;
+    process.stdout.write(`${NOT_INSTALLED_LINE}\n`);
+    return 0;
+}

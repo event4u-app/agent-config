@@ -100,7 +100,7 @@ describe('the removed keys carry tombstones (step 4.2)', () => {
         } finally {
             process.stderr.write = real;
         }
-        const hits = written.filter((l) => l.startsWith('lean_projection.mode was removed'));
+        const hits = written.filter((l) => l.includes('lean_projection.mode') && l.includes('ignored'));
         expect(hits).toHaveLength(1); // once per process, not once per call
     });
 
@@ -116,7 +116,7 @@ describe('the removed keys carry tombstones (step 4.2)', () => {
         } finally {
             process.stderr.write = real;
         }
-        const hit = written.find((l) => l.startsWith('projection.rule_packs was removed'));
+        const hit = written.find((l) => l.includes('projection.rule_packs'));
         expect(hit).toBeDefined();
         expect(hit).toContain('ignored');
         expect(hit).not.toContain('still honoured');

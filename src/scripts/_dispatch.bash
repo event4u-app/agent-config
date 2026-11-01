@@ -144,10 +144,10 @@ Tier 1 — power-user (release shape, audit, migration):
                              Hard-floors when lockfile is absent.
                              Flags: --dry-run | --json | --project=<path>
                                     | --all-missing-lock
-  doctor                     Read-only drift report: manifest ↔ filesystem.
-                             Lists missing, modified, and foreign files.
-                             Exits 1 on drift, 2 on missing lockfile.
-                             Flags: --json | --project=<path>
+  doctor                     Health report: install checks and manifest ↔ filesystem
+                             drift (missing, modified, foreign files), with the next fix.
+                             Nothing installed → one line, exit 0. Exits 1 on drift.
+                             Flags: --json | --ci | --check <id> | --project=<path>
   converge                   Consented cleanup of duplicate install surfaces
                              (surface-matrix driven). Never touches
                              user-authored files; persists standing consent
@@ -295,6 +295,9 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              | --dry-run | --check (exit 2 when a write is
                              required — template drift OR duplicate-key repair;
                              the stderr message names which) | --profile.
+                             --prune-removed deletes keys the package removed (from
+                             every settings file the loader reads, or --path);
+                             add --dry-run to list them with the reason each went.
   settings:migrate           Lift project-local .agent-settings.yml / .agent-user.yml into
                              ~/.event4u/agent-config/ (the global-only consumer surface,
                              ADR-020). Idempotent; --force overwrites a non-empty global
@@ -1765,7 +1768,7 @@ main() {
     --version|-V)            print_version ;;
     *)
       echo "❌  agent-config: unknown command: $cmd" >&2
-      echo "    Run \`./agent-config help\` for the command list." >&2
+      echo "    Run \`agent-config help\` for the command list." >&2
       exit 2
       ;;
   esac
