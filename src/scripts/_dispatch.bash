@@ -406,6 +406,8 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              Usage: analytics show [--window 30d|7d|24h] · analytics prune
   knowledge                  Global knowledge-card store (list|show|trace|forget|promote|
                              validate|lead-check|purge). Usage: knowledge list [--json]
+  knowledge:local            Local ingest store behind /knowledge (ingest|list|forget).
+                             Usage: knowledge:local ingest <path> · knowledge:local list
   proposal:check             Validate a learning/skill/rule proposal markdown
   refine-ticket:detect       Run the deterministic refine-ticket detection helper
   chat-history:hook          Platform hook entry point (read JSON from stdin)
@@ -982,9 +984,17 @@ cmd_work() {
   exec_ts "$engine_root/work_engine/__main__.ts" "$@"
 }
 
+# The CLI and the MCP tool `memory_lookup` answer from one implementation:
+# MCP imports src/scripts/memory_lookup.ts, so the CLI resolves the same file.
+# A copy in the consumer's own scripts/ still wins; .augment/ is a package
+# projection, never a consumer override.
 cmd_memory_lookup() {
   local script
-  script="$(resolve_template_script "memory_lookup.ts")" || return 1
+  if [[ -f "$CONSUMER_ROOT/scripts/memory_lookup.ts" ]]; then
+    script="$CONSUMER_ROOT/scripts/memory_lookup.ts"
+  else
+    script="$(resolve_script "src/scripts/memory_lookup.ts")" || return 1
+  fi
   exec_ts "$script" "$@"
 }
 
@@ -1022,6 +1032,15 @@ cmd_analytics() {
 cmd_knowledge() {
   local script
   script="$(resolve_script "src/scripts/knowledge_global_cli.ts")" || return 1
+  exec_ts "$script" "$@"
+}
+
+# `agent-config knowledge:local` — the local ingest store behind /knowledge
+# ingest|list|forget (docs/contracts/local-knowledge-ingestion.md). Its own
+# verb because `knowledge` already owns `list` and `forget` for global cards.
+cmd_knowledge_local() {
+  local script
+  script="$(resolve_script "src/cli/python/knowledge_ingest.ts")" || return 1
   exec_ts "$script" "$@"
 }
 
@@ -1694,6 +1713,7 @@ main() {
     memory:learn)            cmd_memory_learn "$@" ;;
     analytics)               cmd_analytics "$@" ;;
     knowledge)               cmd_knowledge "$@" ;;
+    knowledge:local)         cmd_knowledge_local "$@" ;;
     proposal:check)          cmd_proposal_check "$@" ;;
     refine-ticket:detect)    cmd_refine_ticket_detect "$@" ;;
     chat-history:hook)       cmd_chat_history_hook "$@" ;;

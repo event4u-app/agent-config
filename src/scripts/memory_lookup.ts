@@ -63,6 +63,9 @@ class PyTimestamp {
     toString(): string {
         return this.pyStr;
     }
+    toJSON(): string {
+        return this.pyStr;
+    }
 }
 
 /**
@@ -73,6 +76,9 @@ class PyTimestamp {
  */
 class PyFloat {
     constructor(readonly value: number) {}
+    toJSON(): number {
+        return this.value;
+    }
 }
 
 // Mutable so tests can repoint them at a tmp tree (monkeypatch parity).
@@ -419,6 +425,9 @@ function* _iter_curated_entries_all(mtype: string): Generator<[string, Record<st
 }
 
 /** Yield [file, entry] from intake JSONL, applying supersede chains. */
+/** Input the last retrieval could not use, keyed by location (a file read once per type counts once). */
+let _swallowed = { malformed: new Set<string>(), unreadable: new Set<string>() };
+
 function* _iter_intake_entries(mtype: string): Generator<[string, Record<string, unknown>]> {
     if (!_isDir(INTAKE_ROOT)) {
         return;
@@ -428,7 +437,9 @@ function* _iter_intake_entries(mtype: string): Generator<[string, Record<string,
         const by_id = new Map<string, Record<string, unknown>>();
         const superseded = new Set<string>();
         const content = fs.readFileSync(jsonl, 'utf-8');
+        let lineNo = 0;
         for (let line of content.split(/\n/)) {
+            lineNo += 1;
             line = line.trim();
             if (!line) {
                 continue;
@@ -437,9 +448,11 @@ function* _iter_intake_entries(mtype: string): Generator<[string, Record<string,
             try {
                 obj = JSON.parse(line);
             } catch {
+                _swallowed.malformed.add(`${jsonl}:${lineNo}`);
                 continue;
             }
             if (!_isPlainObject(obj)) {
+                _swallowed.malformed.add(`${jsonl}:${lineNo}`);
                 continue;
             }
             if (obj['type'] === 'supersede') {
@@ -485,7 +498,8 @@ function* _iter_knowledge_entries(): Generator<[string, Record<string, unknown>]
         return;
     }
     for (const ingest_dir of _iterdirSorted(KNOWLEDGE_ROOT)) {
-        if (!_isDir(ingest_dir)) {
+        // `<id>.partial/` is an ingest still being written (or aborted).
+        if (!_isDir(ingest_dir) || ingest_dir.endsWith('.partial')) {
             continue;
         }
         const manifest_path = path.join(ingest_dir, 'manifest.json');
@@ -510,6 +524,7 @@ function* _iter_knowledge_entries(): Generator<[string, Record<string, unknown>]
             try {
                 body = fs.readFileSync(chunk, 'utf-8');
             } catch {
+                _swallowed.unreadable.add(chunk);
                 continue;
             }
             const entry: Record<string, unknown> = {
@@ -890,6 +905,7 @@ function _ftsRecallGapHits(repo_hits: Hit[], keys: string[]): Hit[] {
 }
 
 function _retrieve_internal(types: string[], keys: string[], limit: number, today: Date): [Hit[], SkippedEntry[]] {
+    _swallowed = { malformed: new Set(), unreadable: new Set() };
     const repo_hits: Hit[] = [];
     const skipped: SkippedEntry[] = [];
     for (const mtype of types) {
@@ -1010,6 +1026,10 @@ function _retrieve_internal(types: string[], keys: string[], limit: number, toda
     }
     return [hits, skipped];
 }
+const _swallowedFields = (): { skipped_malformed?: number; skipped_unreadable?: number } => ({
+    ...(_swallowed.malformed.size > 0 ? { skipped_malformed: _swallowed.malformed.size } : {}),
+    ...(_swallowed.unreadable.size > 0 ? { skipped_unreadable: _swallowed.unreadable.size } : {}),
+});
 const _staleField = (s: SkippedEntry[]): { skipped_stale?: number } => (s.some((e) => e.reason === 'stale') ? { skipped_stale: s.filter((e) => e.reason === 'stale').length } : {});
 
 /**
@@ -1246,6 +1266,7 @@ export function retrieve_v1(
         slices,
         ..._staleField(skippedAll),
     };
+    Object.assign(envelope, _swallowedFields());
     if (errors.length > 0) {
         envelope['errors'] = errors;
     }
@@ -1451,6 +1472,7 @@ export function main(): number {
     const [hits, skippedAll] = _retrieve_internal(types, args.key, args.limit, _today());
     if (args.format === 'json') {
         const payload = { hits: hits.map((h) => h.as_dict()), ..._staleField(skippedAll) };
+        Object.assign(payload, _swallowedFields());
         process.stdout.write(`${pyJsonDumps(payload, 2)}\n`);
     } else {
         if (hits.length === 0) {
