@@ -5,7 +5,17 @@ description: Run your first task with Agent Config — /work takes a request thr
 
 import { Steps, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
 
-Open your AI coding tool in a repository and type one slash command:
+Your first task runs inside your AI coding tool, on that tool's model. Agent Config itself calls no model: it gives the tool skills, rules and commands, so you need the tool and a model it can use.
+
+No tool set up yet? One thing runs offline from the terminal, with no model and no key — a map of the repository you are in:
+
+```bash
+npx -y @event4u/agent-config code-graph map --open
+```
+
+It shows who calls what, and the tests for a change. See [Code map](/agent-config/features/code-map/), or [open the demo map](/agent-config/demo-map/) to look before installing.
+
+With the tool open in a repository, type one slash command:
 
 ```text
 /work "add a CSV export to the orders list"

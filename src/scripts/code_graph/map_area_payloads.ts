@@ -16,9 +16,9 @@ import { excludedOwnFiles } from './lanes/delivery/self_trigger.js';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { gitProbe } from '../_lib/spawn_env.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 import type { IrForeignKey, IrTable, SchemaIr } from '../_lib/schema/ir.js';
 import { emptySkipCounters, IR_VERSION } from '../_lib/schema/ir.js';
 import { renderMermaidIr } from '../_lib/schema/render/mermaid.js';
@@ -916,7 +916,7 @@ export const AGENT_VERBS: readonly AgentVerb[] = [
     { name: 'pack', answers: 'A verified context pack for a task within a token budget, each item at file:line', cli: 'agent-config code-graph pack "<task>"', mcp: 'graph_query (pack)', input: 'a task in words, a token budget', output: 'items with rank, reason and file:line, cut by rank at the budget', guarantee: 'each item re-read against the working tree before it is returned' },
 ];
 
-const HERE = path.dirname(fileURLToPath(import.meta.url));
+const HERE = path.join(resolvePackageRoot(import.meta.url), 'src', 'scripts', 'code_graph');
 
 /** The verbs the CLI dispatches, read from its own source: a verb the CLI does not route is not listed. */
 export function cliVerbs(dir: string = HERE): Set<string> {

@@ -16,9 +16,9 @@ import { isTestFile, readScopeRules, stampScope } from './scope.js';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { write_atomic } from '../_lib/fs_atomic.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 import { gitVisibleFiles, visibleDir } from '../_lib/git_visible_files.js';
 import { type LaneSummary, runLaneReaders } from './lane_runner.js';
 import { extractFile, type FileExtract, type RawEdge } from './extract.js';
@@ -1288,7 +1288,8 @@ interface ExtractSidecar {
     files: Record<string, { hash: string; extract: FileExtract }>;
 }
 
-const _BUILD_DIR = path.dirname(fileURLToPath(import.meta.url));
+/** The shipped sources, not this module's directory: in the release bundle that is `dist/cli-delegate/`. */
+const _BUILD_DIR = path.join(resolvePackageRoot(import.meta.url), 'src', 'scripts', 'code_graph');
 let _fingerprint: string | null = null;
 
 /**

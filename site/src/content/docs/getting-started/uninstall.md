@@ -37,18 +37,28 @@ agent-config uninstall --global --tools=cursor,windsurf
 
 ## The repository folder
 
-A repository only holds an `agents/overrides/` folder for your own changes plus a few gitignored bookkeeping files. To remove the per-tool bookkeeping files, run uninstall without `--global` inside the repository (or point `--project` at it):
+With a global install, a repository holds at most an `agents/overrides/` folder for your own changes, plus what `agent-config init --project` added: a block in `.gitignore`, a block in `.gitattributes` and a gitignored `./agent-config` wrapper. There is nothing to uninstall there: `agent-config uninstall` without `--global` is only for a repository with its own install (an `agents/installed-tools.lock`). Run it in any other repository and it exits 1 with `no project lockfile` and changes nothing.
+
+For a repository with its own install, run it inside the repository (or point `--project` at it):
 
 ```bash
 agent-config uninstall
 agent-config uninstall --project ~/code/my-app
 ```
 
-`agents/overrides/` holds your own work, so it is never deleted for you — remove it yourself if you no longer want it.
+Never deleted for you, because they are yours or may be:
+
+- `agents/overrides/` — your own changes.
+- `agents/map/` — the [code map](/agent-config/features/code-map/), drawn here when the repository already has an `agents/` folder.
+- The `# event4u/agent-config` blocks in `.gitignore` and `.gitattributes`.
+
+Remove them yourself if you no longer want them.
 
 ## Everything else
 
-- Your settings live in `~/.event4u/agent-config/`. Delete that folder after uninstalling to remove them too.
+- Your settings, the install records, the code maps of repositories without an `agents/` folder and the cached `doctor` scans live in `~/.event4u/agent-config/`. Delete that folder after uninstalling to remove them too, and `~/.event4u/` if it is then empty.
+- The install creates `~/.claude/settings.json` when it did not exist. Uninstall removes its own keys, so the file can remain as `{}`, and a tool folder the install created (`~/.claude/`, `~/.cursor/`, …) stays, empty. Delete them if you do not use those tools.
+- `doctor` asks each AI tool's CLI it finds for its version. Some of them leave their own temporary files, for example under `~/.codex/tmp/` or `~/.gemini/`.
 - If `upgrade` installed the package globally, remove the binary with `npm uninstall -g @event4u/agent-config`.
 - GitHub Copilot: remove the `agent-config` plugin with Copilot's own plugin command. Claude Desktop: switch the uploaded skills off under **Settings → Customize → Skills** and delete them there.
 

@@ -13,8 +13,9 @@ the next fix for anything wrong.
 On a machine with no install it prints one line — not installed, run
 \`agent-config init\` — and touches nothing. With an install, a default run
 reads the install, asks each detected AI tool's CLI for its version, and
-caches a scan of neighbouring packages under agents/reports/. It never
-changes your settings or your install.
+caches a scan of neighbouring packages under ~/.event4u/agent-config/state/,
+never in your repository. It never changes your settings or your install, and
+ends with one line: installed, plus any drift, failed checks and warnings.
 
 options:
   -h, --help            Show this help and exit
@@ -32,7 +33,7 @@ options:
   --repair ID           Fix one known state; ID: wizard-state
 
 exit codes:
-  0  healthy, or nothing installed yet
+  0  healthy, only optional warnings, or nothing installed yet
   1  drift between the install and the files on disk
   2  no install found (with --json/--ci/--strict), or a usage error
 `;

@@ -39,7 +39,7 @@ npx -y @event4u/agent-config init
        npx -y @event4u/agent-config doctor
        ```
 
-       `doctor` lists anything missing and the command that fixes it.
+       `doctor` lists anything missing and the command that fixes it, and ends with one line such as `agent-config: installed — 4 optional warning(s)`.
 
     5. Start a new session in your AI tool so it reads the new files, then run [your first task](/agent-config/getting-started/first-task/).
 
@@ -65,6 +65,8 @@ npx -y @event4u/agent-config init
        ```bash
        npx -y @event4u/agent-config doctor
        ```
+
+       It exits 0 when the install is in place, warnings included, and 1 when installed files have drifted.
 
     </Steps>
 

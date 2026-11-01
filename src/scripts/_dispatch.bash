@@ -582,14 +582,16 @@ require_tsx() {
 # than it — see cli_delegate_bundle_is_stale.
 cli_delegate_bundle() {
   local ts_abs="$1"
+  local bundle
   case "$ts_abs" in
-    "$PACKAGE_ROOT/src/scripts/_cli/"*) ;;
-    "$PACKAGE_ROOT/dist/agent-src/scripts/"*) ;;
+    "$PACKAGE_ROOT/src/scripts/_cli/"*|"$PACKAGE_ROOT/dist/agent-src/scripts/"*)
+      bundle="$PACKAGE_ROOT/dist/cli-delegate/$(basename "${ts_abs%.ts}").js" ;;
+    # Its own unsplit bundle (build:code-graph-delegate): `cli` is not a unique
+    # basename, and without it every code-graph verb on a release fell to `npx tsx`.
+    "$PACKAGE_ROOT/src/scripts/code_graph/cli.ts")
+      bundle="$PACKAGE_ROOT/dist/cli-delegate/code_graph/cli.js" ;;
     *) return 0 ;;
   esac
-  local name
-  name="$(basename "${ts_abs%.ts}")"
-  local bundle="$PACKAGE_ROOT/dist/cli-delegate/$name.js"
   if [[ -f "$bundle" ]] && command -v node >/dev/null 2>&1; then
     cli_delegate_bundle_is_stale "$bundle" && return 0
     printf '%s' "$bundle"

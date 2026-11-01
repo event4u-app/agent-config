@@ -706,21 +706,28 @@ folders disagree.
 
 1. `agent-config uninstall --global --purge`
 2. Delete the package's own folder: `rm -rf ~/.event4u/agent-config`
-   (deployment ledger, install log, settings state).
+   (deployment ledger, install log, settings state, the code maps of
+   repositories without an `agents/` folder and the cached `doctor`
+   neighbour scans), then `~/.event4u/` if it is empty.
 3. In each repository you used it in: delete the
-   `# event4u/agent-config` … `# event4u/agent-config — END` block from
-   `.gitignore`, the `./agent-config` wrapper,
+   `# event4u/agent-config` … `# event4u/agent-config — END` blocks from
+   `.gitignore` and `.gitattributes`, the `./agent-config` wrapper,
    `agents/.agent-state/install-mode.txt`, any
    `.windsurf/agent-config.bridge.yml`, `.clinerules/agent-config.bridge.yml`
-   and `.gemini/agent-config.bridge.yml`, and `agents/overrides/` if you no
-   longer want your overrides.
+   and `.gemini/agent-config.bridge.yml`, `agents/map/` (the code map, drawn
+   there when the repository has an `agents/` folder), and `agents/overrides/`
+   if you no longer want your overrides. `agent-config uninstall` without
+   `--global` applies only to a repository with its own install
+   (`agents/installed-tools.lock`); with a global-only install it exits 1
+   with `no project lockfile` and changes nothing.
 4. Remove the npm package if you installed it globally:
    `npm uninstall -g @event4u/agent-config`.
 5. If you ever installed the Claude Code plugin:
    `claude plugin uninstall agent-config@event4u-agent-config`.
 
 After these steps no agent-config path remains; a `~/.claude/settings.json`
-the install created stays behind as an empty `{}`.
+the install created stays behind as an empty `{}`, and a tool folder the
+install created (`~/.claude/`, `~/.cursor/`, …) stays, empty.
 
 See also: [docs/troubleshooting.md](troubleshooting.md).
 

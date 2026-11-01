@@ -11,8 +11,8 @@
  * artifact — a label is a report, never a gate.
  *
  * It is no longer read-ONLY, and the two writes are named rather than implied.
- * Both land under `agents/reports/` and both are caches of this run's own
- * findings: `neighbour-scan.json`, the shape-scan verdicts the ranker reads on
+ * Both land in user-global state (`neighbourStateDir`), never in the project,
+ * and both are caches of this run's own findings: `neighbour-scan.json`, the shape-scan verdicts the ranker reads on
  * the hook path, and `neighbour-overlap.json`, the cross-root pairs keyed by the
  * census digest. Nothing outside that directory is touched, and a failed write
  * is not a failed census.
@@ -35,6 +35,7 @@ import {
     census,
     fileDigest,
     gatedEventsFrom,
+    neighbourStateDir,
     scanCachePath,
     type NeighbourCensus,
 } from '../_lib/neighbour_census.js';
@@ -143,7 +144,7 @@ export function runCensus(
             const { pairs } = cachedCrossRootPairs(
                 first.skills.map((s) => s.source),
                 ourRoot,
-                path.join(projectRoot, 'agents', 'reports', CROSS_CACHE_NAME),
+                path.join(neighbourStateDir(projectRoot), CROSS_CACHE_NAME),
                 OVERLAP_THRESHOLD,
             );
             overlaps = crossRootOverlapMap(pairs);

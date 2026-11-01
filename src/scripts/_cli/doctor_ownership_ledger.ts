@@ -152,3 +152,22 @@ export function notInstalledShortCircuit(
     process.stdout.write(`${NOT_INSTALLED_LINE}\n`);
     return 0;
 }
+
+/**
+ * The closing line of a default `doctor` run on an install, and its exit code.
+ *
+ * Optional warnings never fail it: a default run right after a clean global
+ * install exited 2 with only optional warnings and no summary, which a script
+ * reads as a failed install (newcomer walkthrough 2026-11-01). Drift is still
+ * 1; failed checks are named and left to `--strict`, as before.
+ */
+export function installedOutcome(checks: ReadonlyArray<Record<string, unknown>>, drift: number): number {
+    const count = (status: string): number => checks.filter((c) => c['status'] === status).length;
+    const parts = [
+        drift > 0 ? `${drift} file(s) drifted from the install` : '',
+        count('fail') > 0 ? `${count('fail')} failed check(s) (--strict fails on them)` : '',
+        `${count('warn')} optional warning(s)`,
+    ].filter((p) => p !== '');
+    process.stdout.write(`agent-config: installed — ${parts.join(' · ')}\n`);
+    return drift > 0 ? 1 : 0;
+}

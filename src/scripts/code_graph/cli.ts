@@ -143,6 +143,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { gitProbe, hardenedSpawnEnv } from '../_lib/spawn_env.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 import { buildFromRepo, discoverFiles, isTestFile, type LaneSummary, sidecarPath } from './build.js';
 import { selectionVerdict, selectRegressionsFromCode, type RegressionSpec } from '../_lib/regression_neighbourhood.js';
 import { capAnswer, capReviewRisk, parseDetail } from './answer_detail.js';
@@ -222,11 +223,9 @@ import { cmdBranchDiff, cmdBranches, cmdOnBranches, cmdProvenance, cmdSystems } 
 import { CODE_GRAPH_HELP } from './cli_help.js';
 
 export { buildCacheFor, cacheFor } from './cli_args.js';
-
 const _HERE = fileURLToPath(import.meta.url);
-export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
-/** Local `tsx` binary — `refresh` spawns `build` as a child of THIS file
- * through it, so a budget-exceeded kill only ever terminates the child. */
+export const REPO_ROOT = resolvePackageRoot(import.meta.url);
+/** Local `tsx` binary — `refresh` spawns `build` as a child of THIS file, so a budget kill only ends the child. */
 const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 const DEFAULT_BUDGET_SECONDS = 60;
 
@@ -1487,6 +1486,8 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
 }
 
 const _invokedDirectly = (() => {
+    // Release bundle: its banner sets this flag and hides argv[1] from the inlined CLIs' own guards.
+    if ((globalThis as { __AC_CODE_GRAPH_BUNDLE_DIRECT?: boolean }).__AC_CODE_GRAPH_BUNDLE_DIRECT === true) return true;
     if (process.argv[1] === undefined) return false;
     try {
         return fs.realpathSync(path.resolve(process.argv[1])) === fs.realpathSync(_HERE);

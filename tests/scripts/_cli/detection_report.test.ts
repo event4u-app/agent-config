@@ -191,6 +191,9 @@ describe('every unavailable capability carries a non-empty fix', () => {
             council: absentCouncilFacts(CONFIG_PATH),
         });
         expect(rowFor(report, 'anthropic').fix).toContain('no council config');
+        // A consumer has no `agents/templates/` to copy from: the fix is a command.
+        expect(rowFor(report, 'anthropic').fix).toContain('agent-config setup');
+        expect(rowFor(report, 'anthropic').fix).not.toContain('agents/templates');
     });
 
     it('falls to the master switch once a config exists', () => {

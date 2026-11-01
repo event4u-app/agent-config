@@ -13,7 +13,7 @@ npx -y @event4u/agent-config code-graph map --open
 
 ## What it does
 
-`code-graph` builds a local index of your codebase, and `map` draws it into `agents/map/` in your repository: an `index.html` you open in the browser, a `MAP.md` your agent reads, and one page per area of the code. Besides who calls what, it reads — from files only — your migrations and schema files, outbound calls and API contracts, Docker and Terraform setup, CI pipelines and which files change together in git history.
+`code-graph` builds a local index of your codebase, and `map` draws it: an `index.html` you open in the browser, a `MAP.md` your agent reads, and one page per area of the code. The map goes into `agents/map/` when the repository already has an `agents/` folder (for example after `agent-config init --project`), and otherwise into `~/.event4u/agent-config/map/`, so mapping a repository writes nothing into it. `map` prints where it wrote. Besides who calls what, it reads — from files only — your migrations and schema files, outbound calls and API contracts, Docker and Terraform setup, CI pipelines and which files change together in git history.
 
 In your AI tool, `/project:map` draws the same map and points the agent at it.
 
@@ -34,11 +34,11 @@ agent-config code-graph tests-for createInvoice
 
 ## What it needs
 
-- Nothing beyond the install: no API key, no database connection, no running service. It reads files in your repository.
+- Nothing beyond the install: no API key, no database connection, no running service, and no network unless you add `--prs` to read open pull requests through `gh`. It reads files in your repository.
 - A browser to view the map.
 
 ## Limits
 
 - An index is a pointer, not the truth: the agent confirms what it found in the source before it acts on it, and a text search finds what the index missed.
-- It reads files only. Observed state such as a live database schema enters only if you save a dump into `agents/map/data/` yourself.
+- It reads files only. Observed state such as a live database schema enters only if you save a dump into the map's `data/` folder yourself.
 - An area with no facts says "no data yet" and why, rather than being hidden.
