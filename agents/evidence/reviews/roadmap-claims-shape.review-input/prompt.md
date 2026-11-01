@@ -569,7 +569,7 @@ describe('check_verify_expectation_delta — the pointer carve-out', () => {
             'tests/scripts/verification_evidence.test.ts',
             'turn_end_gate_hook.test.ts:1427',
             'docs/CLAIMS.md',
-            'ONBOARDING.md',
+            'docs/maintainers/ONBOARDING.md',
         ]) {
             expect(isPointer(p), p).toBe(true);
         }

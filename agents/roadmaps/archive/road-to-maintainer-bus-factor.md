@@ -98,7 +98,7 @@ maintainer after a gap) ship a correct release without tribal knowledge.
       RECOMMENDS a maintainer `/council:pr` run. Detection is deterministic +
       zero-spend; per blocker `self-review-gate-cost` the paid multi-model
       council stays a run-time-authorized act, never a CI surprise-spend.
-      Documented in docs/self-review-gate.md § Escalation. Remaining
+      Documented in docs/maintainers/self-review-gate.md § Escalation. Remaining
       MAINTAINER-only: (a) the API secret + per-PR budget to run LIVE,
       (b) making it REQUIRED = Phase 2 branch protection. -->
 - [x] Define the gate's teeth: security-sensitive or claim-affecting findings
@@ -121,7 +121,7 @@ maintainer after a gap) ship a correct release without tribal knowledge.
       <!-- OPEN 2026-07-10: the literal "PRs pass a dogfooded AI gate" proof-page
       CLAIM is FALSE while the gate is inert-without-secret (no live run), so
       recording it now would breach check_claims / no-invented-facts. The honest
-      advisory status IS documented in `docs/self-review-gate.md` (gate exists,
+      advisory status IS documented in `docs/maintainers/self-review-gate.md` (gate exists,
       advisory, inert without the secret; how to arm it). The proof-page floor
       CLAIM is the maintainer's to create the moment the gate goes live with the
       secret — not before. -->
@@ -146,7 +146,7 @@ maintainer after a gap) ship a correct release without tribal knowledge.
            baseline. Marked [-] (not doable in this environment),
            NOT cancelled. Missing: the ANTHROPIC_API_KEY repo secret plus one
            live gate run. This step is still REQUIRED and stays maintainer-owned
-           — see docs/self-review-gate.md § Arming it, item 4 ("Record the floor
+           — see docs/maintainers/self-review-gate.md § Arming it, item 4 ("Record the floor
            CLAIM on the proof page once it is live — not before"). Reversible:
            restore to [ ] the moment the secret is armed. -->
 
@@ -337,7 +337,7 @@ trailing-90-day reviewer count is tracked and reported truthfully.
 <!-- risk-review: v1 | reviewed: 2026-08-20 | reviewer: claude/host -->
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | The proof-page claim is recorded while the gate is inert | product | The Phase-1 step records "PRs pass a dogfooded AI adversarial-review + security gate". The gate ships `enforce:false` and is inert without its secret, so recording the claim before a live run states as fact something no run backs — a `check_claims` / no-invented-facts breach on the package's most consumer-visible page | **Revised 2026-08-20.** The claim was never recorded, so the risk never fired. The step is no longer `[ ]`: it is `[-]` and **transferred** (disposition B) to `stubs/road-to-bus-factor-external-actions.md`, which holds the criterion verbatim plus the probe that gates re-entry — `ANTHROPIC_API_KEY` present AND a `live-advisory` run that did not take its skip path. That second clause is the mitigation's new teeth: the workflow already runs and succeeds on every PR with the job skipping, so a run-exists probe would have been a false green and could have licensed exactly this claim. Honest advisory status stays in `docs/self-review-gate.md`; the claim remains the maintainer's to create | Phase 1 |
+| 1 | The proof-page claim is recorded while the gate is inert | product | The Phase-1 step records "PRs pass a dogfooded AI adversarial-review + security gate". The gate ships `enforce:false` and is inert without its secret, so recording the claim before a live run states as fact something no run backs — a `check_claims` / no-invented-facts breach on the package's most consumer-visible page | **Revised 2026-08-20.** The claim was never recorded, so the risk never fired. The step is no longer `[ ]`: it is `[-]` and **transferred** (disposition B) to `stubs/road-to-bus-factor-external-actions.md`, which holds the criterion verbatim plus the probe that gates re-entry — `ANTHROPIC_API_KEY` present AND a `live-advisory` run that did not take its skip path. That second clause is the mitigation's new teeth: the workflow already runs and succeeds on every PR with the job skipping, so a run-exists probe would have been a false green and could have licensed exactly this claim. Honest advisory status stays in `docs/maintainers/self-review-gate.md`; the claim remains the maintainer's to create | Phase 1 |
 | 2 | The `>1` bus-factor target is reported as achieved when it is parked | product | Phase 4's target needs a second human reviewer. An explicit defer can be misread downstream as "phase complete", which would overstate the package's actual bus factor — the precise number this roadmap exists to be honest about | **Revised 2026-08-20 — this risk FIRED and is now structurally contained.** Marking the residue `[-]` left zero `[ ]` and zero `[~]`, so `roadmap:progress` rendered the roadmap at 100 % with all four phases `✅` while the bus factor was still 1: the overstatement this row predicted, arriving through the dashboard rather than through the blocker wording it was watching. Wording alone was the wrong control, because the dashboard does not read prose. Replaced with the outcome-state mechanism from the framework of record: every closure now records one of `satisfied` / `narrowed` / `transferred` / `abandoned`, this roadmap's `## Outcome` section states per criterion which applies (only criterion 4 is `satisfied`), and the >1 target is `transferred` to a stub whose probe is `distinct trailing-90-day reviewers > 1`, baseline 1. `second-reviewer-availability` stays deferred-pending-adoption and still reopens on the same measurement. Phases 1-3 remain solo-achievable | Phase 4 |
 | 3 | Branch protection is armed in the UI and drifts from the documented matrix | implementation | The Phase-2 step is a GitHub Settings action outside the tree, so nothing in CI can observe whether the required-check set matches `branch-protection-policy.md` after it is armed | **Revised 2026-08-20.** Drift was measured rather than assumed: ruleset 17749383 read live matches `branch-protection-policy.md` byte-for-byte (`require_code_owner_review: false`, 0 approvals, one required check), so there is no drift today and nothing to reconcile. The step stays maintainer-owned and is still never closed from a code change — now `[-]` and **transferred**, with the stub carrying the three-condition probe that doubles as the drift detector, since it names the exact field values enforcement must reach. The sibling `-ci-economy` roadmap still owns the required-check matrix, so the two cannot silently disagree. Unchanged in substance: nothing in CI observes the ruleset, so this remains a read-and-compare obligation | Phase 2 |
 | 4 | The runbook passes a dry-run only because its author ran it | implementation | A release runbook read by the person who wrote it exercises their memory, not the document. A gap only shows when someone follows the written steps literally from cold | **Revised 2026-08-20.** Substance unchanged and it held: no simulated pass was recorded this run. Now `[-]` and **transferred**, and the stub hardens the bar the prose only stated — the producer is named as a human who has *not* memorised the runbook (explicitly not its author), and the probe requires a dated cold-dry-run record naming executor and release, with an agent re-read stated as non-satisfying. Baseline: zero such records exist under `agents/evidence/` | Phase 3 |
@@ -367,7 +367,7 @@ trailing-90-day reviewer count is tracked and reported truthfully.
 - **Correctness precondition on the enforcement flip, added 2026-09-04 by
   `road-to-the-unwritten-ledger` Phase 2b.** The cost-and-authority question
   above stays **resolved**; this does not reopen the spend decision. It records a
-  *separate* precondition on arming the teeth (`docs/self-review-gate.md`
+  *separate* precondition on arming the teeth (`docs/maintainers/self-review-gate.md`
   § Arming it, steps 1-2), which that resolution never covered.
 
   **The class.** The gate cannot distinguish a defect a diff **introduces** from

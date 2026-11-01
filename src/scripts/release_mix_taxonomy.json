@@ -105,7 +105,6 @@
     { "prefix": "LICENSES/", "category": "consumer" },
 
     { "prefix": "README.md", "category": "consumer" },
-    { "prefix": "ONBOARDING.md", "category": "consumer" },
     { "prefix": "MIGRATION.md", "category": "consumer" },
     { "prefix": "BREAKING_CHANGES.md", "category": "consumer" },
     { "prefix": "SECURITY.md", "category": "consumer" },

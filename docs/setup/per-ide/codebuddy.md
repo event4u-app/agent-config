@@ -1,42 +1,41 @@
 # CodeBuddy Setup
 
-CodeBuddy (Tencent's AI coding assistant) reads the Anthropic-shaped
-markdown skill bundle from its user-scope anchor `~/.codebuddy/`.
-The package deploys via the universal skill convention; project-scope
-bridge is not yet wired (Phase 2.4 anchor).
+CodeBuddy (Tencent's AI coding assistant) reads a markdown skill bundle
+from its user-level anchor `~/.codebuddy/`. The installer deploys the
+shared bundle there.
+
+> `agent-config init` installs into your home directory — the package under
+> `~/.event4u/agent-config/` and each AI tool's user-level folder such as
+> `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into
+> your repository, which only gets an `agents/overrides/` folder for your own
+> changes plus a few gitignored bookkeeping files; `agent-config init --project`
+> creates just that folder in a repository and nothing else.
 
 ## Prerequisites
 
-- CodeBuddy extension / CLI.
-- Node.js ≥ 18 for the install entrypoints.
+- CodeBuddy extension or CLI.
+- Node.js ≥ 22.6 (for the `npx` entrypoint).
 
 ## Install
 
-Global only (canonical scope):
-
 ```bash
-npx @event4u/agent-config init --tools=codebuddy --global
+npx @event4u/agent-config init --tools=codebuddy
 ```
 
-Populates:
+Populates `~/.codebuddy/`:
 
-- `~/.codebuddy/skills/`   — Anthropic-shaped skill bundle
-- `~/.codebuddy/rules/`    — kernel + tier-1/2 rules
+- `~/.codebuddy/rules/`    — kernel + routed rules
+- `~/.codebuddy/skills/`   — skill bundle
+- `~/.codebuddy/commands/` — slash commands
 - `~/.codebuddy/personas/` — review-lens personas
-
-(Project-scope `--tools=codebuddy` is rejected with exit code 1 —
-CodeBuddy has no documented project-discovery convention yet.)
 
 ## How to use
 
-- CodeBuddy reads the skill bundle from `~/.codebuddy/skills/` on
-  every session — no manual action required.
-- Slash commands (`/work`, `/implement-ticket`, `/commit`,
-  `/create-pr`, …) ship inside the skill bundle as named skills.
-  Invoke them by name in chat.
-- For repository-aware work, open the project root in CodeBuddy
-  so the agent can locate `AGENTS.md` and the project's own
-  `agents/` overlay.
+- CodeBuddy reads the bundle from `~/.codebuddy/` on every session — no
+  manual action required.
+- Commands ship in the bundle; invoke them by name in chat.
+- Open the project root so the agent finds the repository's own
+  `agents/overrides/` folder.
 
 ## Verification
 
@@ -45,19 +44,15 @@ test -d ~/.codebuddy/skills
 test -d ~/.codebuddy/rules
 ```
 
-In CodeBuddy: open the chat panel and ask *"What is this repo?"*
-— the answer should cite the AGENTS.md emergency triage block
-when the workspace is open.
-
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| Skills not listed | Re-run `npx @event4u/agent-config init --tools=codebuddy --global --force`. |
-| `--tools=codebuddy` rejected | Add `--global` (CodeBuddy has global-only scope). |
-| AGENTS.md not picked up | Open the project root in CodeBuddy; the agent reads `AGENTS.md` from the workspace. |
+| Skills not listed | Re-run `npx @event4u/agent-config init --tools=codebuddy --force`, then restart CodeBuddy. |
+| `~/.codebuddy/` missing after install | Check the install summary — it prints the anchor each tool was deployed to. |
 
 ## Cross-references
 
 - [`AGENTS.md`](../../../AGENTS.md) — canonical agent self-orientation.
 - [`docs/installation.md`](../../installation.md) — install matrix index.
+- [Uninstall](../../installation.md#uninstall) — removing the global install.

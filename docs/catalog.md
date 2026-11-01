@@ -800,4 +800,6 @@ are excluded.
 
 ---
 
+Start here: [featured skills](featured-skills.md) · [featured commands](featured-commands.md) · [skills only](skills-catalog.md) · [capability matrix](capability-matrix.md) · [llms.txt](../llms.txt)
+
 ← [Back to README](../README.md)

@@ -13,7 +13,7 @@ with the query that produces them. Window: the trailing 90 days.
 - **Distinct humans who have REVIEWED a merged PR: 1** — `@matze4u`, the
   maintainer. No non-maintainer has reviewed a merged PR, so the project has
   **no independent human review**. An AI self-review gate (advisory, and inert
-  without its secret — see [`self-review-gate.md`](self-review-gate.md)) raises
+  without its secret — see [`self-review-gate.md`](maintainers/self-review-gate.md)) raises
   the floor but is **not** independent human review.
 - **Distinct humans who have MERGED to `main`: 2** — `@matze4u` and `@h3xa2`.
   The second authored *and* self-merged #765 and the 8.1.0 release #767 on

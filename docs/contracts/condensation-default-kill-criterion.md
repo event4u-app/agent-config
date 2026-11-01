@@ -107,7 +107,7 @@ re-litigating condensation on every PR.
 
 - [`internal/bench/reports/telegraph-v1.md`](../../bench/reports/telegraph-v1.md)
   — v1 measurement; canonical baseline this doc cites.
-- [`docs/benchmarks.md`](../benchmarks.md)
+- [`docs/maintainers/benchmarks.md`](../maintainers/benchmarks.md)
   — cadence + when the next bench run is mandatory.
 - [`telegraph-telemetry`](telegraph-telemetry.md)
   — multiplier contract; records the suspended state v2 must lift.

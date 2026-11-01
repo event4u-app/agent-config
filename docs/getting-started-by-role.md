@@ -6,7 +6,7 @@
 
 > **Taglines at a glance →** [`docs/role-experiences.md`](role-experiences.md) — the one-line pitch per role experience, in one table.
 
-> **Quickstart for every role.** Run `npx -y @event4u/agent-config init` — the browser wizard auto-launches and walks you through role, ready-made setup, and identity. Headless install path lives at [`docs/wizard.md`](wizard.md#headless--ci--no-browser). The wizard writes `.agent-settings.yml`, `.augment/`, and `.claude/` atomically; nothing leaves your disk.
+> **Quickstart for every role.** Run `npx -y @event4u/agent-config init` — the browser wizard auto-launches and walks you through role, ready-made setup, and identity. Headless install path lives at [`docs/wizard.md`](wizard.md#headless--ci--no-browser). It installs into your home directory and writes no skills, rules or commands into your repository — see [Installation](installation.md) for exactly what lands where.
 
 > **Eval-gated messaging note.** Until `task bench --corpus non-dev` reports `selection_accuracy >= 0.60` (step-12 Phase 1 exit), this page is documentation, not marketing. The skills listed below are the candidates the corpus tests against; their description quality is what the eval validates.
 
@@ -75,7 +75,7 @@ Cinematic-blueprint approach: the agent expands your script into a 12-block scen
 
 Cross-model review of the real diff (**team mode**, default off) is documented in [Getting Started § Team mode](getting-started.md#team-mode--cross-model-review-default-off).
 
-**Install path:** **CLI.** Run `npx @event4u/agent-config init --tools=claude-code,cursor` in the project root. MCP works too but loses git / file-system tooling that the IDE-integrated path gives you.
+**Install path:** **CLI.** Run `npx @event4u/agent-config init --tools=claude-code,cursor` once on your machine. MCP works too but loses git / file-system tooling that the IDE-integrated path gives you.
 
 ---
 

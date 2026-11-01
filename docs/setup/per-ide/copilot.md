@@ -1,80 +1,72 @@
 # GitHub Copilot Setup
 
-GitHub Copilot Chat (VS Code, JetBrains, Neovim, `gh copilot` CLI)
-reads `.github/copilot-instructions.md` for project-level guidance and
-falls back to `AGENTS.md` where supported.
+`agent-config init` writes nothing for GitHub Copilot — it prints a hint
+instead. Two ways to give Copilot the suite's content:
+
+- **Copilot CLI plugin** — a discovery plugin (a read-only MCP server plus
+  one pointer skill, `install-agent-config`); it is not the full suite.
+- **Export** — Copilot Chat (VS Code, JetBrains, Neovim) reads
+  `.github/copilot-instructions.md` from the repository; you produce that
+  file with `agent-config export`.
+
+> `agent-config init` installs into your home directory — the package under
+> `~/.event4u/agent-config/` and each AI tool's user-level folder such as
+> `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into
+> your repository, which only gets an `agents/overrides/` folder for your own
+> changes plus a few gitignored bookkeeping files; `agent-config init --project`
+> creates just that folder in a repository and nothing else.
 
 ## Prerequisites
 
-- GitHub Copilot subscription (Individual, Business, or Enterprise).
-- Copilot Chat enabled in your IDE.
-- Node.js ≥ 18 for the install entrypoints.
+- GitHub Copilot subscription with Copilot Chat enabled in your IDE.
+- Node.js ≥ 22.6 (for the `npx` entrypoint).
 
-## Install
+## Copilot CLI plugin
 
 ```bash
-npx @event4u/agent-config init --tools=copilot
+copilot marketplace add event4u-app/agent-config
+copilot plugin install agent-config@event4u-agent-config
 ```
 
-Populates:
+## Export
 
-- `.github/copilot-instructions.md` — Copilot's project-level prompt
-- `AGENTS.md`                       — canonical agent self-orientation
-- `.agent-settings.yml`             — per-project knobs
+```bash
+npx @event4u/agent-config init          # installs the package globally
+agent-config export --tool=copilot-instructions --output=.github/copilot-instructions.md
+agent-config export --tool=agents-md --output=AGENTS.md   # optional
+```
 
-The package keeps `.github/copilot-instructions.md` deliberately thin
-(it points back to `AGENTS.md`) so all surfaces share a single source
-of truth.
+`--output` is required. The exported `copilot-instructions.md` is
+deliberately thin and points back to `AGENTS.md`. Commit both files if
+your team wants them. `agent-config export --list` shows every exportable
+id; re-running is idempotent and refuses to overwrite a changed file
+unless you pass `--force`.
 
-## VS Code Copilot Chat
+## Where Copilot reads it
 
-Auto-loads `.github/copilot-instructions.md` once you reload the VS
-Code window after install. Verify in the Copilot Chat panel —
-*"What is this repo?"* should answer using the AGENTS.md emergency
-triage block.
-
-## JetBrains Copilot
-
-JetBrains Copilot 1.5+ reads the same `.github/copilot-instructions.md`
-file. No extra steps; reload the project after install.
-
-## Neovim Copilot
-
-`copilot.lua` and `CopilotChat.nvim` honor
-`.github/copilot-instructions.md`. No extra config needed.
-
-## `gh copilot` CLI
-
-The `gh copilot` plugin (`gh extension install github/gh-copilot`)
-reads the repo context including `AGENTS.md` and
-`.github/copilot-instructions.md` when invoked from the repo root.
-
-## Suppressing Copilot PR review noise
-
-Copilot's PR auto-review can flag the package's own kernel rules as
-"unusual phrasing". The package ships a Copilot-suppression rule
-([`augment-portability`](../../../.augment/rules/augment-portability.md))
-that documents this trade-off.
+- **VS Code / JetBrains / Neovim** (`copilot.lua`, `CopilotChat.nvim`) —
+  read `.github/copilot-instructions.md` from the open repository. Reload
+  the window or project after exporting.
 
 ## Verification
 
 ```bash
 test -f .github/copilot-instructions.md
-test -f AGENTS.md
-gh copilot --version             # if you want CLI plugin
 ```
+
+In Copilot Chat ask *"What is this repo?"* — the answer should draw on
+the exported instructions.
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| Copilot ignores the file | Reload the IDE window after install. |
-| File missing after install | Re-run `npx @event4u/agent-config init --tools=copilot`. |
+| Copilot ignores the file | Reload the IDE window after exporting. |
+| `export` refuses to overwrite | The file changed since the last export — re-run with `--force` to replace it. |
 | Copilot PR review too noisy | See the `copilot-config` skill for suppression patterns. |
 
 ## Cross-references
 
 - [`AGENTS.md`](../../../AGENTS.md) — canonical agent self-orientation.
-- [`.augment/skills/copilot-config/SKILL.md`](../../../.augment/skills/copilot-config/SKILL.md)
-  — tuning Copilot output and suppressing review noise.
 - [`docs/installation.md`](../../installation.md) — install matrix index.
+- [Uninstall](../../installation.md#uninstall) — removing the global install.

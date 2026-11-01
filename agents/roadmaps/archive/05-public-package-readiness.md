@@ -81,7 +81,7 @@ about: Report a problem with installation or agent behavior
 
 ### Diagnose
 
-Laut `docs/quality.md` gibt es Tests:
+Laut `docs/maintainers/quality.md` gibt es Tests:
 ```
 task test          # Run all tests
 task test-install  # Install script tests only (bash)
@@ -104,7 +104,7 @@ Ohne Einsicht in die Test-Implementierung ist unklar, ob folgende Szenarien gete
 Unabhängig von der Implementierung sollte die Test-Matrix öffentlich sein:
 
 ```markdown
-# In docs/quality.md — ergänzen:
+# In docs/maintainers/quality.md — ergänzen:
 
 ## Install Script Test Coverage
 

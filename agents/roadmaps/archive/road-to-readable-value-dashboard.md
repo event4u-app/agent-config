@@ -115,7 +115,7 @@ One renderer, two panels, plain language, honest callouts.
 Make it runnable, documented, and CI-checked.
 
 - [x] **Step 1:** Add task targets in `taskfiles/` — `task value` (assemble JSON + render `docs/value.md` from existing reports, cheap, no API), `task value:refresh` (re-run the cost-axis benches: frugality + telegraph + rtk), `task value:behaviour` (the cost-bearing live Track-B + behaviour run). Mirror the `bench:ab*` naming.
-- [x] **Step 2:** Update `docs/benchmarks.md` cadence table — add the `value` corpus/dashboard row, its refresh triggers (edit to any rung source → re-render), and the rtk-corpus cost envelope.
+- [x] **Step 2:** Update `docs/maintainers/benchmarks.md` cadence table — add the `value` corpus/dashboard row, its refresh triggers (edit to any rung source → re-render), and the rtk-corpus cost envelope.
 - [x] **Step 3:** Add `scripts/lint_value_dashboard.py` — assert `docs/value.md` carries all required sections, every rung cites a `source_report`, no rung claims `measured` without one, and no negative number is labelled "saving". Wire into the lint cadence.
 - [x] **Step 4:** Run `task ci` and confirm green (allowed — `quality.local_auto_run: true`). Capture fresh output as the completion evidence per `verify-before-complete`.
 

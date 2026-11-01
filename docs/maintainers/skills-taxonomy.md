@@ -1,7 +1,7 @@
 # Skill-family taxonomy
 
 A navigable grouping of the **227 skills** into families, so you can find a skill
-by *what it's for* rather than scrolling the flat [catalog](catalog.md). This is a
+by *what it's for* rather than scrolling the flat [catalog](../catalog.md). This is a
 **navigation aid, not a contract** — no file moves, no description edits, no
 merges. A skill appears in exactly one family (its primary use); many are useful
 across families.
@@ -84,7 +84,7 @@ rarely touches these directly.
 
 ## See also
 
-- [`catalog.md`](catalog.md) — the flat, public capability surface (all types).
-- [`flows.md`](flows.md) — the work journeys these skills compose into.
-- [`profiles.md`](profiles.md) · [`experiences/`](experiences/) — which profiles surface which families.
+- [`catalog.md`](../catalog.md) — the flat, public capability surface (all types).
+- [`flows.md`](../flows.md) — the work journeys these skills compose into.
+- [`profiles.md`](../profiles.md) · [`experiences/`](../experiences/) — which profiles surface which families.
 - [`artefact-census.md`](artefact-census.md) — the counted baseline (227 skills).

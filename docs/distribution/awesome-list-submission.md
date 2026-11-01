@@ -20,22 +20,22 @@ Track status in [`registry-submissions.md`](registry-submissions.md).
 gate before "done": it hunts mocks, stubs, and placeholders on the shipped
 (non-test) path and demands real-system evidence, returning a `READY` / `NOT
 READY` verdict with `file:line` citations. One `curl` into `.claude/agents/`, no
-other install, no runtime.
+other install.
 
 - Link: `https://github.com/event4u-app/agent-config/tree/main/docs/wedge/production-validator`
 - One-liner (list-row form): `production-validator — the last-gate-before-done subagent: no mock/stub survives on the shipped path; install in one curl.`
 
 ## Entry B — the suite (secondary)
 
-**event4u/agent-config** — a governed, no-runtime configuration layer for AI
+**event4u/agent-config** — a configuration layer for AI
 coding agents: audited skills, review personas, rules, and commands projected
-into 20 hosts (Claude Code, Cursor, Windsurf, Copilot, Codex, Continue, …). Its distinguishing
+into 20 hosts<!-- claim:host-agent-count --> (Claude Code, Cursor, Windsurf, Copilot, Codex, Continue, …). Its distinguishing
 discipline: **every public claim is machine-checked** — the README binds each
 claim to resolvable evidence in a Claims-Ledger, and a generated proof page lets
 anyone reproduce the checks (`docs/proof.md`). Bring your own model.
 
 - Link: `https://github.com/event4u-app/agent-config`
-- One-liner: `agent-config — governed skills/rules/personas for AI coding agents, with machine-checked claims and a reproducible proof page. No runtime, bring your own model.`
+- One-liner: `agent-config — governed skills/rules/personas for AI coding agents, with machine-checked claims and a reproducible proof page. Bring your own model.`
 
 ## Guardrails for whoever submits this
 

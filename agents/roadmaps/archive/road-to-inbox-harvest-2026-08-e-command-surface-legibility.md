@@ -148,7 +148,7 @@ copy.
 | 2 | Add a new `needs:` field | **Reuse `runtime_requires`** — its vocabulary (`bins`, `env`, `primary_env`, `network`) exists and is described as probeable by `doctor`/`preflight`, with a `$comment` noting zero skills use it. Also recorded: `command.schema.json` is `additionalProperties: false` at `:8`, so any key addition is a schema change plus four regenerations; and **`requires` as a bare key name is reserved** for ADR-015 pack-dependency edges, which the schema's own description states. | `src/scripts/schemas/skill.schema.json:45-89`; `src/scripts/schemas/command.schema.json:8` |
 | 3 | Invent a "why this works" convention | **Adopt the shipped literal `Why it works`** and extend `lint_examples.ts` to commands, rather than creating a parallel convention. | `src/scripts/lint_examples.ts:13-17,88-93`; 4 `*-demos.md` files |
 | 4 | "14 command files invoke external binaries undeclared" | **8 invoking / 14 mentioning, of 202** recursive command files. The denominator was 61 in the source (top-level only) and the invoke/mention distinction was collapsed. | Re-measured at landing; file list in D3 |
-| 5 | `ONBOARDING.md` cleanup as Phase 0 of this roadmap | **Split out** into § Recommended as a separate change — it is a standalone hygiene fix with no dependency on any phase here. The roadmap keeps only the ratchet that stops the class recurring. | See that section |
+| 5 | `docs/maintainers/ONBOARDING.md` cleanup as Phase 0 of this roadmap | **Split out** into § Recommended as a separate change — it is a standalone hygiene fix with no dependency on any phase here. The roadmap keeps only the ratchet that stops the class recurring. | See that section |
 | 6 | (implicit) the file is shipped to npm consumers | It is **not** in the npm payload — `src/config/publish-surface.json` carries **0** `ONBOARDING` references. The exposure is the public git tree, not the package. | Re-measured at landing |
 | 7 | "~20 visible commands" cited from the source | Left deliberately unpinned: measure the exact tier-0/1 count against the live tree when implementing 2.1, never quote it from a proposal. | Source draft's own instruction, kept |
 
@@ -156,7 +156,7 @@ copy.
 
 ## Recommended as a separate change, not a phase here
 
-**`ONBOARDING.md` at the repo root should be resolved in its own change, before
+**`docs/maintainers/ONBOARDING.md` at the repo root should be resolved in its own change, before
 or independently of this roadmap.** It was Phase 0 of the source draft; it is
 split out because it has no dependency on anything else here, and bundling a
 standalone hygiene fix into a structural roadmap delays it for no benefit.
@@ -164,7 +164,7 @@ standalone hygiene fix into a structural roadmap delays it for no benefit.
 Verified at the landing HEAD:
 
 - The file carries **37** occurrences of a local absolute path, including the
-  maintainer's real home directory (`grep -c '/Users/' ONBOARDING.md` → 37,
+  maintainer's real home directory (`grep -c '/Users/' docs/maintainers/ONBOARDING.md` → 37,
   all of them under one real home path).
 - The repository is `private: false`, so the tracked git tree is public.
 - Its content is a subagent-orchestration mapping report, not an onboarding
@@ -655,7 +655,7 @@ proposal's:
 17. No external source is named in the tracked text; references appear only as
     Source A/B/C with `ENC1:` links, and
     `./scripts-run src/scripts/check_no_external_sources` is green.
-18. The `ONBOARDING.md` resolution is **not** part of this roadmap's phases;
+18. The `docs/maintainers/ONBOARDING.md` resolution is **not** part of this roadmap's phases;
     only the recurrence ratchet is.
 
 ---

@@ -31,7 +31,7 @@ duplication assumption is not supported by the evidence.
 | 0.64 | backend-data | `laravel` ↔ `symfony-workflow` | different frameworks; `laravel-routing` / `symfony-routing` rules exist precisely to disambiguate |
 | 0.61 | debugging-analysis | `project-analyzer` ↔ `universal-project-analysis` | layered — single-pass vs deep multi-pass audit (the former's description routes to the latter) |
 | 0.49 | product-discovery | `estimate-ticket` ↔ `refine-ticket` | distinct workflow steps (size vs rewrite/AC) |
-| 0.46 | review-judging | `judge-bug-hunter` ↔ `judge-code-quality` | distinct single-scope **lenses** — merging violates the [review-lens dispatch contract](contracts/review-lens-schema.md) |
+| 0.46 | review-judging | `judge-bug-hunter` ↔ `judge-code-quality` | distinct single-scope **lenses** — merging violates the [review-lens dispatch contract](../contracts/review-lens-schema.md) |
 | 0.46 | frontend-design | `blade-ui` ↔ `livewire` | distinct Laravel view stacks |
 | 0.41 | backend-data | `project-analysis-laravel` ↔ `project-analysis-node-express` | different stacks (analysis carve-outs) |
 | 0.38 | agent-admin | `command-routing` ↔ `command-writing` | routing (dispatch) vs authoring |
@@ -86,6 +86,6 @@ evidence does not support).
 
 ## See also
 
-- [`skill-family-map.yml`](contracts/skill-family-map.yml) · [`skills-taxonomy.md`](skills-taxonomy.md) — the inputs.
-- [`review-lens-schema.md`](contracts/review-lens-schema.md) — the dispatch contract that protects the lens pairs above.
+- [`skill-family-map.yml`](../contracts/skill-family-map.yml) · [`skills-taxonomy.md`](skills-taxonomy.md) — the inputs.
+- [`review-lens-schema.md`](../contracts/review-lens-schema.md) — the dispatch contract that protects the lens pairs above.
 - [`governance.md`](governance.md) — lifecycle + single-source-of-truth rules.

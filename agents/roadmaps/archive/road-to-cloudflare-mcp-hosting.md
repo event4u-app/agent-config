@@ -107,7 +107,7 @@ no consumer code execution surface · single deployment per release.
 - [x] **3.1** New R2 bucket `agent-config-mcp` (Terraform-managed if
   the repo already has TF; otherwise a one-time wrangler bootstrap
   doc + bucket-name pin in `mcp-cloud-scope.md`). *Bootstrap doc:
-  `docs/setup/mcp-r2-bootstrap.md`.*
+  `docs/maintainers/mcp-r2-bootstrap.md`.*
 - [x] **3.2** Content packer script (`scripts/pack_mcp_content.py`)
   that walks `.agent-src/` + `docs/guidelines/` at a given git ref,
   emits a single gzipped JSON blob with `(uri, body)` pairs, plus a
@@ -180,7 +180,7 @@ catalog and `awesome-mcp-servers` accept experimental servers when
 the label is honestly declared in the listing.
 
 - [x] **6.1** Submission package — draft a single source file
-  `docs/setup/mcp-cloud-registry-listing.md` containing: project
+  `docs/maintainers/mcp-cloud-registry-listing.md` containing: project
   one-liner, hosted endpoint URLs (`/latest/sse` + `/v<X.Y.Z>/sse`
   shape), stability statement (*experimental*), wire surface
   (prompts + resources, no tools in MVP-1), license, contact, and

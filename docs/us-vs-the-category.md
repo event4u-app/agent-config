@@ -17,8 +17,10 @@ counter-claimed:
 
 ## What the rows mean for an adopter
 
-- **No runtime.** Nothing to keep alive, nothing that writes state behind
-  you — the whole layer compiles into your host agent's own config surface.
+- **Compiled into your host's config.** The layer is written into your host
+  agent's own config surface; resident processes are permitted only under the
+  [supervision policy](decisions/ADR-249-supervised-resident-process-permitted-under-governance.md)
+  (a policy, not a description of anything running).
 - **Published nulls.** The benchmark page keeps the runs where the package
   changed *nothing* — including the persona-theater question: swapping the
   advisor identities was measured at ~zero effect while the provider choice

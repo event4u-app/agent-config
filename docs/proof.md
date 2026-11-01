@@ -522,3 +522,11 @@ task build-proof-check   # this page is in sync with its sources
 
 If a claim ever loses its binding, or this page drifts from the ledger,
 CI goes red. Reproducibility is the proof.
+
+## Related pages
+
+- [Evaluator guide](evaluator.md) — how to check the claims yourself.
+- [Known weaknesses](known-weaknesses.md) — what this package does not do well.
+- [Us vs the category](us-vs-the-category.md) — how it compares.
+- [Showcase](showcase.md) — worked examples.
+- [Governance advantage](governance-advantage.md) — the governance argument in full.

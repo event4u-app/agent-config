@@ -31,7 +31,7 @@ Changed files:
 - agents/evidence/release-findings/16.3.0.json
 - agents/roadmaps/road-to-findings-that-get-a-disposition.md
 - agents/roadmaps/stubs/road-to-the-16-3-0-findings-residue.md
-- docs/self-review-gate.md
+- docs/maintainers/self-review-gate.md
 - src/scripts/check_finding_dispositions.ts
 - tests/scripts/check_finding_dispositions.test.ts
 

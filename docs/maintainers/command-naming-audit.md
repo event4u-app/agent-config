@@ -8,8 +8,8 @@ records the canonical rule + the alias registry that already exists.
 
 ## The canonical form
 
-Per [ADR-003](decisions/ADR-003-flat-cluster-subs-and-colon-syntax.md) and
-[`command-clusters.md`](contracts/command-clusters.md) §"Colon-canonical
+Per [ADR-003](../decisions/ADR-003-flat-cluster-subs-and-colon-syntax.md) and
+[`command-clusters.md`](../contracts/command-clusters.md) §"Colon-canonical
 invocation": **`/<cluster>:<sub>` is the canonical invocation form
 everywhere** — catalog, docs, cookbook. The frontmatter `name:` field is
 always the hyphen slug (`feature-plan`); the slash form (`/feature/plan`)
@@ -55,6 +55,6 @@ command-surface debt.
 
 ## See also
 
-- [`contracts/command-clusters.md`](contracts/command-clusters.md) — cluster + colon-syntax rules.
-- [`decisions/ADR-003-flat-cluster-subs-and-colon-syntax.md`](decisions/ADR-003-flat-cluster-subs-and-colon-syntax.md).
-- [`contracts/STABILITY.md`](contracts/STABILITY.md) — command stability policy.
+- [`contracts/command-clusters.md`](../contracts/command-clusters.md) — cluster + colon-syntax rules.
+- [`decisions/ADR-003-flat-cluster-subs-and-colon-syntax.md`](../decisions/ADR-003-flat-cluster-subs-and-colon-syntax.md).
+- [`contracts/STABILITY.md`](../contracts/STABILITY.md) — command stability policy.

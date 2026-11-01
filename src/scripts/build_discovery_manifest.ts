@@ -936,7 +936,7 @@ function _deprecation_report(manifest: JsonObject): string {
     return lines.join('\n') + '\n';
 }
 
-/** Dormancy window, in months. `docs/governance.md` § Skill lifecycle policy. */
+/** Dormancy window, in months. `docs/maintainers/governance.md` § Skill lifecycle policy. */
 const _DORMANCY_MONTHS = 6;
 
 /**
@@ -1055,7 +1055,7 @@ function _dormancy_report(manifest: JsonObject, probe: DormancyProbe): string {
     lines.push(`- Window: **${String(_DORMANCY_MONTHS)} months** without a commit`);
     lines.push('');
     lines.push('> Dormancy triggers **review, never auto-deprecation**');
-    lines.push('> (`docs/governance.md` § Skill lifecycle policy). A finished artefact and an');
+    lines.push('> (`docs/maintainers/governance.md` § Skill lifecycle policy). A finished artefact and an');
     lines.push('> abandoned one look identical from commit dates, so this is a prompt to ask');
     lines.push('> "still earning its slot?" — never a removal list, and never a gate.');
     lines.push('');

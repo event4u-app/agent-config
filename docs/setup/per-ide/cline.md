@@ -1,12 +1,19 @@
 # Cline Setup
 
-Cline (formerly Claude Dev) reads `.clinerules` (single-file aggregate)
-and `AGENTS.md`.
+Cline (VS Code extension) reads global rules from
+`~/Documents/Cline/Rules/`. The installer deploys the rules there.
+
+> `agent-config init` installs into your home directory — the package under
+> `~/.event4u/agent-config/` and each AI tool's user-level folder such as
+> `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into
+> your repository, which only gets an `agents/overrides/` folder for your own
+> changes plus a few gitignored bookkeeping files; `agent-config init --project`
+> creates just that folder in a repository and nothing else.
 
 ## Prerequisites
 
 - Cline VS Code extension: <https://github.com/cline/cline>.
-- Node.js ≥ 18.
+- Node.js ≥ 22.6 (for the `npx` entrypoint).
 
 ## Install
 
@@ -16,28 +23,27 @@ npx @event4u/agent-config init --tools=cline
 
 Populates:
 
-- `.clinerules`           — single-file aggregate (rules)
-- `AGENTS.md`             — agent self-orientation
-- `.agent-settings.yml`   — per-project knobs
+- `~/Documents/Cline/Rules/` — the rules, as flat files, plus the managed hooks
+- `.clinerules/agent-config.bridge.yml` — a gitignored pointer in the repository
 
 ## Verification
 
 ```bash
-test -f .clinerules
-test -f AGENTS.md
+ls ~/Documents/Cline/Rules/ | head
 ```
 
-In VS Code: open the Cline panel — it should pick up the rules
-automatically. Run `/help` in the chat to verify rule loading.
+In VS Code open the Cline panel — the global rules should be listed in
+Cline's rules view.
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| Rules not picked up | Reload VS Code window after `task generate-tools`. |
-| `.clinerules` missing | Re-run `npx @event4u/agent-config init --tools=cline`. |
+| Rules not picked up | Reload the VS Code window after install. |
+| `~/Documents/Cline/Rules/` empty | Re-run `npx @event4u/agent-config init --tools=cline --force`. |
 
 ## Cross-references
 
 - [`AGENTS.md`](../../../AGENTS.md) — canonical agent self-orientation.
 - [`docs/installation.md`](../../installation.md) — install matrix index.
+- [Uninstall](../../installation.md#uninstall) — removing the global install.

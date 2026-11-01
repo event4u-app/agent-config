@@ -72,7 +72,7 @@ the source warned against.
       | workspace records under `agents/` | ~12 files (+~8 policies) | roadmaps / evidence / decisions record work ABOUT obligations |
       | `docs/decisions/` | 4 files | an ADR quotes an obligation as evidence, not as a second delivery |
       | templates | 1 file | `templates/rule.md` states a `{placeholder}` |
-      | narrative documentation | 3 files | `ONBOARDING.md`, `docs/architecture.md`, `docs/hook-payload-capture.md` |
+      | narrative documentation | 3 files | `docs/maintainers/ONBOARDING.md`, `docs/architecture.md`, `docs/hook-payload-capture.md` |
 
       The exclusion list is pinned by a test that fails if any entry loses its
       reason (`prints every exclusion with a reason`).

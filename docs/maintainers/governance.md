@@ -61,7 +61,7 @@ States: **active** · **dormant** · **sunset**. Slots beside the
   review-date field spread across 405 artefacts is diff noise on every unrelated
   edit, and the only review-metadata triple the tree actually ships
   (`registered_at` / `owner` / `review_by` in
-  [`recycle-threshold-budget.json`](../src/config/recycle-threshold-budget.json))
+  [`recycle-threshold-budget.json`](../../src/config/recycle-threshold-budget.json))
   is sidecar-shaped on a single config file.
 - **The signal has an instrument.** `build_discovery_manifest.ts` emits
   `dist/discovery/dormancy-report.md` alongside the deprecation, trust and orphan
@@ -96,7 +96,7 @@ they stop being read as one field. Counts re-derived 2026-08-11 against
 |---|---|---|
 | **Skill ownership map** (maintainer per family) | one maintainer → per-family ownership is ceremony with zero information | when a 2nd maintainer exists; `owner:` would then be a spine column, not a separate CODEOWNERS |
 | **`candidate_*` / `overlaps_with`** spine fields | discovery *conclusions*, not metadata | Phase 3 (consolidation scan) |
-| **Command `category:` lint — full 125-command categorization** | product-surface judgment; large | Phase 2b / 3 — see [`command-category-governance.md`](contracts/command-category-governance.md) |
+| **Command `category:` lint — full 125-command categorization** | product-surface judgment; large | Phase 2b / 3 — see [`command-category-governance.md`](../contracts/command-category-governance.md) |
 
 ## Legacy-path freeze (`.agent-src.uncondensed/`)
 
@@ -121,8 +121,8 @@ mentions; `internal/` (glama) + `agents/roadmaps/{archive,skipped}` are out of s
 
 ## See also
 
-- [`docs/contracts/skill-family-map.yml`](contracts/skill-family-map.yml) — the spine.
+- [`docs/contracts/skill-family-map.yml`](../contracts/skill-family-map.yml) — the spine.
 - [`skills-taxonomy.md`](skills-taxonomy.md) — the family derivation.
 - [`artefact-census.md`](artefact-census.md) — the counted baseline.
-- [`command-category-governance.md`](contracts/command-category-governance.md) — the deferred command-category hand-off.
+- [`command-category-governance.md`](../contracts/command-category-governance.md) — the deferred command-category hand-off.
 - `persona-governance` rule — the persona-side sibling of the lifecycle policy.

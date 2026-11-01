@@ -1,76 +1,57 @@
 # JetBrains AI Assistant Setup
 
-JetBrains AI Assistant reads custom prompts and guidelines from
-project-level config (`.idea/`) and user-scope settings. Because
-`.idea/` is team-shared, the canonical scope for this bridge is
-**global** — the project-scope marker is informational only.
+JetBrains AI Assistant is an **export-only host**: it has no user-level
+folder convention the installer can deploy into, so
+`agent-config init --tools=jetbrains` writes nothing for it and only
+prints a hint. You produce the file yourself with `agent-config export`.
+
+> `agent-config init` installs into your home directory — the package under
+> `~/.event4u/agent-config/` and each AI tool's user-level folder such as
+> `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into
+> your repository, which only gets an `agents/overrides/` folder for your own
+> changes plus a few gitignored bookkeeping files; `agent-config init --project`
+> creates just that folder in a repository and nothing else.
 
 ## Prerequisites
 
-- JetBrains IDE (IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, …) with
-  the AI Assistant plugin enabled.
-- Node.js ≥ 18 for the install entrypoints.
+- JetBrains IDE (IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, …) with the
+  AI Assistant plugin enabled.
+- Node.js >= 22.6 (for `npx`).
 
 ## Install
 
-Canonical (global, cross-project):
-
 ```bash
-npx @event4u/agent-config init --tools=jetbrains --global
+npx @event4u/agent-config init --tools=jetbrains   # writes nothing; prints the export hint
+npx @event4u/agent-config export --tool=jetbrains --output=<path>
 ```
 
-Deploys the universal skill bundle to `~/.config/JetBrains/`.
-
-Project-scope marker (informational only):
-
-```bash
-npx @event4u/agent-config init --tools=jetbrains
-```
-
-Populates (global):
-
-- `~/.config/JetBrains/skills/`  — Anthropic-shaped skill bundle
-- `~/.config/JetBrains/rules/`   — kernel + tier-1/2 rules
-- `~/.config/JetBrains/personas/` — review-lens personas
-
-Populates (project, informational):
-
-- `.jetbrains/agent-config.md` — pointer to the global install
-- `AGENTS.md`                  — canonical agent self-orientation
-- `.agent-settings.yml`        — per-project knobs
+`export` ejects a real file (no symlink) into the path you choose;
+`--output` is required, `--force` overwrites a drifted file, `--list`
+shows every exportable id.
 
 ## How to use
 
-- In your JetBrains IDE, open **Settings → Tools → AI Assistant →
-  Prompts** and point the custom-prompts path at
-  `~/.config/JetBrains/` (or copy the relevant rules into your
-  JetBrains profile via the *Import* button).
-- AI Assistant exposes **Chat**, **Ask**, and **inline edits**.
-  Chat is the surface that reads the imported rules; inline edits
-  stay local to the current selection.
-- Slash commands and skills live under `.augment/commands/` and
-  `.augment/skills/`. JetBrains AI does not register them natively
-  — invoke them by name in chat (e.g. *"run the create-pr command"*).
+- In the IDE, open **Settings → Tools → AI Assistant → Prompts** and add
+  the exported file's content as a custom prompt, or import it into your
+  JetBrains profile.
+- Slash commands and skills are not registered natively — name the
+  command in chat (e.g. *"run the create-pr command"*).
 
 ## Verification
 
 ```bash
-test -d ~/.config/JetBrains/skills
-test -f AGENTS.md
+test -f <path>
 ```
-
-In the IDE: open the AI Assistant chat and ask *"What is this repo?"*
-— the answer should cite the AGENTS.md emergency triage block.
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| Custom prompts not shown | Restart the IDE after pointing the prompts path at `~/.config/JetBrains/`. |
-| `.jetbrains/` missing | The project marker is optional; the canonical install is `--global`. |
-| AI Assistant ignores rules | Verify the prompts path under Settings; AI Assistant does not auto-discover `.idea/agent-config.md`. |
+| `init --tools=jetbrains` changed nothing | Expected — JetBrains is export-only; run `agent-config export --tool=jetbrains --output=<path>`. |
+| `export` refuses to overwrite | The target drifted from the shipped content; add `--force`. |
+| Custom prompts not shown | Restart the IDE after adding the prompt. |
 
 ## Cross-references
 
-- [`AGENTS.md`](../../../AGENTS.md) — canonical agent self-orientation.
 - [`docs/installation.md`](../../installation.md) — install matrix index.
+- [Uninstalling](../../installation.md#uninstall) — removal sequence.

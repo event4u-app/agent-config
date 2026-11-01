@@ -243,4 +243,12 @@ split exists on this machine — which is not the same as zero.
   [`agents/settings/contexts/mcp-coverage-strategy.md`](../agents/settings/contexts/mcp-coverage-strategy.md)
   ships, signed payloads.
 
+## Related pages
+
+- [Client compatibility](mcp-client-compat.md) — which MCP clients work and how.
+- [Client configuration](setup/mcp-client-config.md) — the config block per client.
+- [Cloud setup](setup/mcp-cloud-setup.md) and [cloud endpoints](setup/mcp-cloud-endpoints.md) — the optional hosted server.
+- [Docker](setup/mcp-server-docker.md) — run the server in a container.
+- [Registries](mcp-registries.md) — where the server is listed.
+
 ← [Architecture](architecture.md) · [MCP config generation (consumer side)](mcp.md)

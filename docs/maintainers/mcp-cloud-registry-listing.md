@@ -23,7 +23,7 @@ Phase 6.1 of `agents/roadmaps/road-to-cloudflare-mcp-hosting.md`.
 The `<operator-domain>` placeholder reflects the package's design —
 every operator hosts their own Worker. The package upstream does not
 run a public reference deployment; consumers point their Worker at
-their own R2 bucket per `docs/setup/mcp-r2-bootstrap.md`.
+their own R2 bucket per `docs/maintainers/mcp-r2-bootstrap.md`.
 
 ## Wire surface (MVP-1)
 

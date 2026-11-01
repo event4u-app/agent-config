@@ -67,7 +67,7 @@ tests/eval/routing-matrix/README.md
 tests/scripts/verification_evidence.test.ts
 turn_end_gate_hook.test.ts:1427
 docs/CLAIMS.md
-ONBOARDING.md
+docs/maintainers/ONBOARDING.md
 ```
 
 Demanding `-> 0` from `` `docs/CLAIMS.md` `` is nonsense, and a gate that does

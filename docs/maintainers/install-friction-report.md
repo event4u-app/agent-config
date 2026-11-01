@@ -9,7 +9,7 @@ recruits_target: 3
 > **Template — not yet run.** This file carries the Gate-C read for the wedge
 > install. It holds **no real data** until ≥ 3 external Laravel/TS developers
 > have completed the study per
-> [`agents/recruit-sessions/_install-friction-runbook.md`](../agents/recruit-sessions/_install-friction-runbook.md).
+> [`agents/recruit-sessions/_install-friction-runbook.md`](../../agents/recruit-sessions/_install-friction-runbook.md).
 > Do not cite the placeholder numbers below as findings.
 
 ## What this measures
@@ -61,6 +61,6 @@ FAIL  →  iterate on the wedge install before finalizing C2. Do not ship a fail
 
 ## Provenance
 
-- Protocol: [`agents/recruit-sessions/_install-friction-runbook.md`](../agents/recruit-sessions/_install-friction-runbook.md).
-- Consent + redaction: [`agents/recruit-sessions/README.md`](../agents/recruit-sessions/README.md) § "Consent + redaction policy".
+- Protocol: [`agents/recruit-sessions/_install-friction-runbook.md`](../../agents/recruit-sessions/_install-friction-runbook.md).
+- Consent + redaction: [`agents/recruit-sessions/README.md`](../../agents/recruit-sessions/README.md) § "Consent + redaction policy".
 - Recordings + raw per-recruit notes: private (not in-repo), per the redaction policy.

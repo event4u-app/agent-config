@@ -118,12 +118,12 @@ has a pruning heuristic.
 - [x] **F2 (census) — Publish a provisional skill-family census.** Assign every
   skill to one of ~8–12 families (e.g. `engineering`, `review`, `security`,
   `product`, `finance`, `content`, `video`, `agent-admin`, `evidence`,
-  `meta/config`) in `docs/SKILL_CENSUS.md` as a table: `| Skill | Family |
+  `meta/config`) in `docs/maintainers/SKILL_CENSUS.md` as a table: `| Skill | Family |
   Keep / Prune / Merge |`. Mark the whole document `provisional`. This is the
   pruning heuristic the leanness track (`road-to-tier-removal` and the
   command-surface-leanness track) needs and the input that surfaces
   over-represented families.
-- [x] **F2 (census) — Record the token-budget reading.** In `docs/SKILL_CENSUS.md`,
+- [x] **F2 (census) — Record the token-budget reading.** In `docs/maintainers/SKILL_CENSUS.md`,
   note the approximate context cost of a representative per-persona load against
   the 200k budget (Karpathy peer-review's `needs-verification` item), so Phase 2's
   presentation work and the leanness cull share one cost baseline.
@@ -156,7 +156,7 @@ name with documented aliases.
   metadata so invocation accepts aliases but the canonical name is always the one
   logged/documented. Resolve the reviewer's named clashes (`/pr:create` vs
   `/create-pr`, `/fix:ci` vs `/fix-ci`, `/feature:plan` vs `/feature/plan`).
-  <!-- done: implemented as docs/command-naming-audit.md. Deviation from the
+  <!-- done: implemented as docs/maintainers/command-naming-audit.md. Deviation from the
   literal step: NO new `aliases:` field — the alias registry already exists as
   `replaces:`/`superseded_by:` (ADR-090, enforced by lint_command_routing.py); a
   parallel field would re-create the two-sources-of-truth problem this step

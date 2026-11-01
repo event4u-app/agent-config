@@ -16,7 +16,7 @@ complexity: lightweight
 
 > **Adopted 2026-08-12 at tip `1432c7a45`.** Context claims re-verified:
 > `agents/tickets/symptoms/` does not exist, no upstream watchlist exists, and
-> `docs/install-friction-report.md` still reads `status: template — awaiting
+> `docs/maintainers/install-friction-report.md` still reads `status: template — awaiting
 > sessions (no real data yet)`. Program amendments applied inline: Phase 1
 > backfills **all three** 2026-08 operator reports, Phase 3's entry schema gains
 > `kind` (X5), and Phase 2's falsifier ledger records runs 2 and 3.
@@ -36,7 +36,7 @@ step **before** that — a production symptom arriving from an operator. The
 tree; it exists only in this roadmap's Context.
 
 **The one intake instrument that exists has never run.**
-`docs/install-friction-report.md` frontmatter reads `status: template —
+`docs/maintainers/install-friction-report.md` frontmatter reads `status: template —
 awaiting sessions (no real data yet)` — the standing finding across release
 reviews. It is also the wrong shape for this: it measures first-install
 friction with recruited developers, not in-production symptoms from existing
@@ -219,7 +219,7 @@ delete the standalone.
 <!-- risk-review: v1 | reviewed: 2026-08-12 | reviewer: claude/host -->
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | An instrument nobody feeds | product | The estate already has exactly this failure in `docs/install-friction-report.md`, which has read `status: template — awaiting sessions (no real data yet)` across every release review since it was created. A symptom directory that collects three backfilled entries and nothing else is the same artifact with a different name, and it will read as coverage while measuring nothing | Phase 1's falsifier is pre-registered and deletes the directory plus the lint after two release cycles with zero entries beyond the backfill; the backfill itself is excluded from the count so it cannot mask the null | Phase 1 |
+| 1 | An instrument nobody feeds | product | The estate already has exactly this failure in `docs/maintainers/install-friction-report.md`, which has read `status: template — awaiting sessions (no real data yet)` across every release review since it was created. A symptom directory that collects three backfilled entries and nothing else is the same artifact with a different name, and it will read as coverage while measuring nothing | Phase 1's falsifier is pre-registered and deletes the directory plus the lint after two release cycles with zero entries beyond the backfill; the backfill itself is excluded from the count so it cannot mask the null | Phase 1 |
 | 2 | A 130th lint script guarding a three-file directory | implementation | The tree already carries 129 `lint_*` scripts, and each one is a permanent CI surface with its own registration, test, and maintenance cost. A dedicated staleness linter for a directory that may never exceed three files inverts the cost/benefit the solution-minimalism lens exists to protect | Step 2 is scoped to a warning, never an error, and the extend-before-create question is answered explicitly against the existing freshness gates before a new file is written; the Phase-1 falsifier removes the lint together with the directory | Phase 1 Step 2 |
 | 3 | The roadmap-writing skill grows past what a reader loads | implementation | `src/skills/roadmap-writing/SKILL.md` is already 400 lines. Adding a full loop procedure inline risks pushing a routinely-loaded skill past its budget, at which point the new section is paid for on every roadmap authoring turn whether the loop is in play or not | Phase 2 ships the section condensed and measures the file against the token-budget band in the same change; if it does not fit, the procedure moves to a guideline and the skill carries a pointer, which is the established split in this tree | Phase 2 |
 | 4 | The watchlist walk becomes ceremony | product | A recurring checklist line that changes nothing is worse than no line: it consumes release-review attention and trains the reviewer to skip it, which then hides the one walk that would have mattered | Phase 3 is gated on Phase 2 surviving, and its own falsifier folds the watchlist into the sibling roadmaps and deletes the standalone after two consecutive reviews where the walk changes nothing | Phase 3 |

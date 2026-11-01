@@ -115,7 +115,7 @@ Two load-bearing findings for the production port:
   `compile_corpus.py` (and to a lesser degree `session_profiles.py`)
   emit bytes that other tooling or goldens see — handle any
   PyYAML-vs-`yaml.stringify` style differences as documented divergences
-  (`docs/migration/divergences/`) or one-time golden re-baselines.
+  (`docs/maintainers/migration/divergences/`) or one-time golden re-baselines.
 
 ## 4. What the production port (Phase 5) must cover beyond the spike
 

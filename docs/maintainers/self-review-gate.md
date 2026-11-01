@@ -1,10 +1,10 @@
 # Self-review gate (dogfooded PR review)
 
 The package reviews its own PRs with the exact machinery it ships —
-[`adversarial-review`](../src/skills/adversarial-review/SKILL.md) +
-[`agent-security-review`](../src/skills/agent-security-review/SKILL.md) — via
-[`.github/workflows/self-review-gate.yml`](../.github/workflows/self-review-gate.yml)
-and [`src/scripts/self_review_gate.ts`](../src/scripts/self_review_gate.ts).
+[`adversarial-review`](../../src/skills/adversarial-review/SKILL.md) +
+[`agent-security-review`](../../src/skills/agent-security-review/SKILL.md) — via
+[`.github/workflows/self-review-gate.yml`](../../.github/workflows/self-review-gate.yml)
+and [`src/scripts/self_review_gate.ts`](../../src/scripts/self_review_gate.ts).
 
 `road-to-maintainer-bus-factor` Phase 1.
 

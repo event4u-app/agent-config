@@ -1,47 +1,41 @@
 # Antigravity Setup
 
-Antigravity (Google's agentic IDE) reads the Anthropic-shaped
-markdown skill bundle from its user-scope anchor `~/.agents/`. The
-package deploys the universal skill bundle at global scope, the same
-projection its other bundle hosts get (codex, continue, roocode and
-the rest) — global-only by design, not a pending gap.
+Antigravity (Google's agentic IDE) reads a markdown skill bundle from its
+user-level anchor `~/.agents/`. The installer deploys the shared bundle
+there, the same one its other bundle hosts get.
+
+> `agent-config init` installs into your home directory — the package under
+> `~/.event4u/agent-config/` and each AI tool's user-level folder such as
+> `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into
+> your repository, which only gets an `agents/overrides/` folder for your own
+> changes plus a few gitignored bookkeeping files; `agent-config init --project`
+> creates just that folder in a repository and nothing else.
 
 ## Prerequisites
 
 - Antigravity IDE.
-- Node.js ≥ 18 for the install entrypoints.
+- Node.js ≥ 22.6 (for the `npx` entrypoint).
 
 ## Install
 
-Global only (canonical scope):
-
 ```bash
-npx @event4u/agent-config init --tools=antigravity --global
+npx @event4u/agent-config init --tools=antigravity
 ```
 
-Populates:
+Populates `~/.agents/`:
 
-- `~/.agents/skills/`   — Anthropic-shaped skill bundle
-- `~/.agents/rules/`    — kernel + tier-1/2 rules
+- `~/.agents/rules/`    — kernel + routed rules
+- `~/.agents/skills/`   — skill bundle
+- `~/.agents/commands/` — slash commands
 - `~/.agents/personas/` — review-lens personas
-
-(Project-scope `--tools=antigravity` is rejected with exit code 1
-— every bundle host is global-only; the package writes the shared
-bundle to a user-scope anchor, not into the project. Antigravity does
-have a native project `.agents/` convention (`skills/`, `agents.md`,
-`workflows/`), but a project-scope projection is not part of the
-shipped surface.)
 
 ## How to use
 
-- Antigravity reads the skill bundle from `~/.agents/skills/` on
-  every session — no manual action required.
-- Slash commands (`/work`, `/implement-ticket`, `/commit`,
-  `/create-pr`, …) ship inside the skill bundle as named skills.
-  Invoke them by name in chat.
-- Antigravity ships an agent-orchestration surface; point it at
-  the project root so the agent can locate `AGENTS.md` and the
-  project's own `agents/` overlay.
+- Antigravity reads the bundle from `~/.agents/` on every session — no
+  manual action required.
+- Commands ship in the bundle; invoke them by name in chat.
+- Open the project root so the agent finds the repository's own
+  `agents/overrides/` folder.
 
 ## Verification
 
@@ -50,19 +44,15 @@ test -d ~/.agents/skills
 test -d ~/.agents/rules
 ```
 
-In Antigravity: ask *"What is this repo?"* — the answer should
-cite the AGENTS.md emergency triage block when the workspace is
-open.
-
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| Skills not listed | Re-run `npx @event4u/agent-config init --tools=antigravity --global --force`. |
-| `--tools=antigravity` rejected | Add `--global` (Antigravity has global-only scope). |
-| `~/.agents/` collides with another tool | The anchor is shared by convention; coexists with other agents that use the same path. |
+| Skills not listed | Re-run `npx @event4u/agent-config init --tools=antigravity --force`, then restart Antigravity. |
+| `~/.agents/` missing after install | Check the install summary — it prints the anchor each tool was deployed to. |
 
 ## Cross-references
 
 - [`AGENTS.md`](../../../AGENTS.md) — canonical agent self-orientation.
 - [`docs/installation.md`](../../installation.md) — install matrix index.
+- [Uninstall](../../installation.md#uninstall) — removing the global install.

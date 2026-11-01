@@ -1,45 +1,54 @@
 # Gemini CLI Setup
 
-Google's Gemini CLI reads `GEMINI.md` (which is a symlink to `AGENTS.md`
-in the package's projection) for project context.
+Google's Gemini CLI (<https://github.com/google-gemini/gemini-cli>). The
+installer deploys the skill bundle to its user-level folder `~/.gemini/`
+and registers hooks in `~/.gemini/settings.json`.
+
+> `agent-config init` installs into your home directory — the package under
+> `~/.event4u/agent-config/` and each AI tool's user-level folder such as
+> `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into
+> your repository, which only gets an `agents/overrides/` folder for your own
+> changes plus a few gitignored bookkeeping files; `agent-config init --project`
+> creates just that folder in a repository and nothing else.
 
 ## Prerequisites
 
 - Gemini CLI installed: <https://github.com/google-gemini/gemini-cli>.
-- Node.js ≥ 18 (for the install entrypoints).
+- Node.js >= 22.6 (for `npx`).
 
 ## Install
 
 ```bash
-npx @event4u/agent-config init --tools=gemini
+npx @event4u/agent-config init --tools=gemini-cli
 ```
 
-Populates:
+The tool id is `gemini-cli`, not `gemini`.
 
-- `GEMINI.md` → `AGENTS.md` — symlink so Gemini CLI loads the same
-  self-orientation as Codex / Aider / Augment.
-- `AGENTS.md`             — canonical content (single source of truth).
-- `.agent-settings.yml`   — per-project knobs.
+## What lands
+
+Under `~/.gemini/`:
+
+- `rules/`, `skills/`, `commands/`, `personas/` — the skill bundle
+- `settings.json` — managed hooks registered alongside your own settings
+
+In the repository, only a gitignored pointer
+`.gemini/agent-config.bridge.yml` is written (plus `agents/overrides/`).
 
 ## Verification
 
 ```bash
-test -L GEMINI.md && readlink GEMINI.md   # → AGENTS.md
-gemini --version                           # confirm CLI installed
+ls ~/.gemini/skills/ | head -5
+gemini --version          # confirm the CLI is installed
 ```
-
-In a Gemini CLI session: `GEMINI.md` informs every turn — verify by
-asking *"what is this repo?"* and confirming the answer matches
-`AGENTS.md`'s emergency-triage block.
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| Gemini CLI doesn't see `GEMINI.md` | Some Gemini versions require absolute paths — `gemini --context $(pwd)/GEMINI.md`. |
-| Symlink broken on Windows | Re-run installer; on Windows the projection may emit a copy instead of a symlink. |
+| Unknown tool id | The id is `gemini-cli` — the short form `gemini` is not accepted. |
+| `~/.gemini/skills/` missing | Re-run `npx @event4u/agent-config init --tools=gemini-cli`. |
 
 ## Cross-references
 
-- [`AGENTS.md`](../../../AGENTS.md) — canonical agent self-orientation.
 - [`docs/installation.md`](../../installation.md) — install matrix index.
+- [Uninstalling](../../installation.md#uninstall) — removal sequence.

@@ -1,20 +1,16 @@
 # Installation
 
-**Principle:** Global is the only consumer scope. `init` writes to
-user-scope paths (`~/.event4u/agent-config/`, `~/.claude/`,
-`~/.cursor/`, …); the project tree only gets `agents/overrides/`
-(the bridge marker was retired — ADR-020 amendment 2026-07-13; the
-global root resolves from `~/.event4u/agent-config`). Opt-in `export` if a team wants
-a tool's config committed to a repo. No Task, no Make, no build
-tools required.
+> `agent-config init` installs into your home directory — the package under
+> `~/.event4u/agent-config/` and each AI tool's user-level folder such as
+> `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into
+> your repository, which only gets an `agents/overrides/` folder for your own
+> changes plus a few gitignored bookkeeping files; `agent-config init --project`
+> creates just that folder in a repository and nothing else.
 
-> **v2.5+** — `npx @event4u/agent-config init` always installs
-> globally. The `--project` / `--scope=project` flag is no longer
-> exposed to consumers; project-scope survives only behind the
-> maintainer-only `AGENT_CONFIG_DEV_MODE=1` flag (see
-> [`docs/maintainers/dev-mode.md`](maintainers/dev-mode.md)). The
-> legacy `--global` flag is accepted as a no-op for back-compat.
-> Rationale: [ADR-020](decisions/ADR-020-global-only-consumer-scope.md).
+This page is the install reference: every entry point, what lands where,
+updating and removal. For the short path, start with
+[Getting started](getting-started.md). Why the install is global-only:
+[ADR-020](decisions/ADR-020-global-only-consumer-scope.md).
 
 The install records itself in `~/.event4u/agent-config/installed.lock`
 (schema_version, agent_config_version, installed_at, tools[]; the legacy
@@ -28,55 +24,43 @@ from the global install and only the CLI follows the pin. A re-run of `init` fro
 older than the recorded version is refused with exit code 1 unless you pass
 `--force`.
 
-To commit a specific tool's config into a project repo, use:
-
-```bash
-agent-config export --tool=<id> --output=<path>
-```
-
-(Idempotent; `--force` overrides drift. `--list` enumerates supported
-tool ids. See [`docs/contracts/command-clusters.md`](contracts/command-clusters.md)
-for the export contract.)
-
 ## Per-IDE setup — quick index
 
-Pick your editor, follow the linked page, done. Each page lists its
-own one-liner, verification, and troubleshooting. The mechanisms
-section below this index is reference material for advanced installs
-(Composer, npm, manual, plugin marketplaces).
+Pick your editor and follow its page; each lists what lands where, how to
+verify it and how to fix common problems.
 
 | Surface | One-liner | Per-IDE page |
 |---|---|---|
 | **Claude Code** | `npx @event4u/agent-config init --tools=claude-code` | [`per-ide/claude-code.md`](setup/per-ide/claude-code.md) |
-| **Claude Desktop** | (uses `~/.claude/skills/` from Claude Code global install) | [`per-ide/claude-desktop.md`](setup/per-ide/claude-desktop.md) |
+| **Claude Desktop** | `npx @event4u/agent-config init --tools=claude-desktop` | [`per-ide/claude-desktop.md`](setup/per-ide/claude-desktop.md) |
 | **Cursor** | `npx @event4u/agent-config init --tools=cursor` | [`per-ide/cursor.md`](setup/per-ide/cursor.md) |
 | **Windsurf** | `npx @event4u/agent-config init --tools=windsurf` | [`per-ide/windsurf.md`](setup/per-ide/windsurf.md) |
 | **Cline** | `npx @event4u/agent-config init --tools=cline` | [`per-ide/cline.md`](setup/per-ide/cline.md) |
-| **Aider** | `npx @event4u/agent-config init --tools=aider` | [`per-ide/aider.md`](setup/per-ide/aider.md) |
 | **Codex CLI** | `npx @event4u/agent-config init --tools=codex` | [`per-ide/codex.md`](setup/per-ide/codex.md) |
-| **Gemini CLI** | `npx @event4u/agent-config init --tools=gemini` | [`per-ide/gemini-cli.md`](setup/per-ide/gemini-cli.md) |
-| **GitHub Copilot** | `npx @event4u/agent-config init --tools=copilot` | [`per-ide/copilot.md`](setup/per-ide/copilot.md) |
+| **Gemini CLI** | `npx @event4u/agent-config init --tools=gemini-cli` | [`per-ide/gemini-cli.md`](setup/per-ide/gemini-cli.md) |
 | **Augment Code** | `npx @event4u/agent-config init --tools=augment` | [`per-ide/augment.md`](setup/per-ide/augment.md) |
 | **Roo Code** | `npx @event4u/agent-config init --tools=roocode` | [`per-ide/roocode.md`](setup/per-ide/roocode.md) |
 | **Kilo Code** | `npx @event4u/agent-config init --tools=kilocode` | [`per-ide/kilocode.md`](setup/per-ide/kilocode.md) |
 | **Continue.dev** | `npx @event4u/agent-config init --tools=continue` | [`per-ide/continue.md`](setup/per-ide/continue.md) |
 | **Kiro** | `npx @event4u/agent-config init --tools=kiro` | [`per-ide/kiro.md`](setup/per-ide/kiro.md) |
-| **Zed** | `npx @event4u/agent-config init --tools=zed` | [`per-ide/zed.md`](setup/per-ide/zed.md) |
-| **JetBrains AI** | `npx @event4u/agent-config init --tools=jetbrains --global` | [`per-ide/jetbrains.md`](setup/per-ide/jetbrains.md) |
-| **Qoder** | `npx @event4u/agent-config init --tools=qoder --global` | [`per-ide/qoder.md`](setup/per-ide/qoder.md) |
-| **OpenCode** | `npx @event4u/agent-config init --tools=opencode --global` | [`per-ide/opencode.md`](setup/per-ide/opencode.md) |
-| **Trae** | `npx @event4u/agent-config init --tools=trae --global` | [`per-ide/trae.md`](setup/per-ide/trae.md) |
-| **Antigravity** | `npx @event4u/agent-config init --tools=antigravity --global` | [`per-ide/antigravity.md`](setup/per-ide/antigravity.md) |
-| **CodeBuddy** | `npx @event4u/agent-config init --tools=codebuddy --global` | [`per-ide/codebuddy.md`](setup/per-ide/codebuddy.md) |
-| **Droid (Factory)** | `npx @event4u/agent-config init --tools=droid --global` | [`per-ide/droid.md`](setup/per-ide/droid.md) |
-| **Warp** | `npx @event4u/agent-config init --tools=warp --global` | [`per-ide/warp.md`](setup/per-ide/warp.md) |
-| **All surfaces** | `npx @event4u/agent-config init` (default) | (each page above applies) |
+| **Qoder** | `npx @event4u/agent-config init --tools=qoder` | [`per-ide/qoder.md`](setup/per-ide/qoder.md) |
+| **OpenCode** | `npx @event4u/agent-config init --tools=opencode` | [`per-ide/opencode.md`](setup/per-ide/opencode.md) |
+| **Trae** | `npx @event4u/agent-config init --tools=trae` | [`per-ide/trae.md`](setup/per-ide/trae.md) |
+| **Antigravity** | `npx @event4u/agent-config init --tools=antigravity` | [`per-ide/antigravity.md`](setup/per-ide/antigravity.md) |
+| **CodeBuddy** | `npx @event4u/agent-config init --tools=codebuddy` | [`per-ide/codebuddy.md`](setup/per-ide/codebuddy.md) |
+| **Droid (Factory)** | `npx @event4u/agent-config init --tools=droid` | [`per-ide/droid.md`](setup/per-ide/droid.md) |
+| **Warp** | `npx @event4u/agent-config init --tools=warp` | [`per-ide/warp.md`](setup/per-ide/warp.md) |
+| **GitHub Copilot** (plugin or export) | `copilot plugin install agent-config@event4u-agent-config` | [`per-ide/copilot.md`](setup/per-ide/copilot.md) |
+| **Aider** (export-only) | `agent-config export --tool=aider --output=<path>` | [`per-ide/aider.md`](setup/per-ide/aider.md) |
+| **Zed** (export-only) | `agent-config export --tool=zed --output=<path>` | [`per-ide/zed.md`](setup/per-ide/zed.md) |
+| **JetBrains AI** (export-only) | `agent-config export --tool=jetbrains --output=<path>` | [`per-ide/jetbrains.md`](setup/per-ide/jetbrains.md) |
 
-Combine surfaces by comma-separating: `--tools=claude-code,cursor,windsurf`.
-
-> Looking for **global** (cross-project) install? Each per-IDE page
-> documents its own `npx @event4u/agent-config global --tools=<ide>`
-> command.
+Combine tools by comma-separating: `--tools=claude-code,cursor,windsurf`.
+**Export-only** hosts (Aider, Zed, JetBrains) and Copilot have no user-level
+folder the installer can write to: `init` prints a hint for them and writes
+nothing; `agent-config export`
+writes real files into a path you choose (and you decide whether to commit
+them).
 
 ---
 
@@ -115,337 +99,128 @@ Full contract sketch + the retired `--global` namespace teardown:
 
 ---
 
-## Mechanisms reference
-
-The rest of this page documents the underlying install mechanisms
-(Composer, npm, manual clone, plugin marketplaces). Most users want
-the per-IDE index above.
-
-
-> **Primary installer:** `src/scripts/install` — a small bash orchestrator that
-> runs the two real installer stages in order:
->
-> 1. `src/scripts/install.sh` — payload sync (copy rules, symlink skills and
->    commands, create tool-specific directories).
-> 2. `src/scripts/install.ts` — bridge files (`.agent-settings.yml`, VSCode /
->    Augment / Copilot JSON descriptors). Shipped pre-bundled as
->    `dist/install/install.mjs` and run with plain `node`.
->
-> `npx @event4u/agent-config init` and `setup.sh` (curl-based)
-> are thin wrappers that delegate to `src/scripts/install`. Both underlying
-> stages remain callable directly for advanced use; see their `--help`.
->
-> Python is **not** required — the bridge stage was TypeScript from ADR-200
-> onward, and `no-python-in-src.yml` keeps it that way.
->
-> **Node.js 22.6+** is required for the `agent-config` binary itself.
-> Starting with the TypeScript CLI shell (ADR-012, road
-> `typescript-cli-and-local-gui-foundation`), the published `bin/`
-> entry is the compiled `dist/cli/agent-config.js`; `npx` resolves it
-> through the registry, so consumers do not need to install Node
-> dependencies into their own project. The package's `engines.node`
-> pin is the source of truth.
-
-| Mode | Best for | Scope |
-|---|---|---|
-| **Project-installed** (recommended) | Teams, shared standards | Repository-wide |
-| **Plugin-installed** | Individual users, global use | User-wide |
-
-> **All paths on this page are still supported.** The labels
-> (`advanced` / `experimental` / `staged`) describe how prominent the
-> path is in our recommendation order, not its support status.
-> Composer + npm are the default; everything else stays shipped and
-> tested. Nothing on this page is being removed in 1.15.0 — the
-> reorder simply marks which paths get the most maintenance attention
-> and which we keep as fallbacks. See R9 in
-> [`agents/roadmaps/archive/road-to-post-pr29-optimize.md`](../agents/roadmaps/archive/road-to-post-pr29-optimize.md)
-> for the rationale.
-
-| Label | Meaning | Examples |
-|---|---|---|
-| (no label) | Primary path — first-class, fully supported | Composer, npm, Augment / Claude Code / Copilot CLI plugins |
-| `advanced` | Supported fallback — works, expects familiarity with the toolchain | Git submodule, manual clone, VS Code Git URL |
-| `experimental` | Shipped but evolving — interface may shift between minor releases | Claude.ai Web Skills UI |
-| `staged` | Shipped, narrow surface area — kept for users who already use the platform | Linear AI workspace guidance |
-
----
-
-## Quickstart — one-liner entrypoints
-
-Try `@event4u/agent-config` in any directory in under 30 seconds, without
-adding it as a dev dependency or cloning the repo first. Both
-entrypoints are thin wrappers around `src/scripts/install` — same payload,
-same flags, no extra state.
+## Install commands
 
 ### `npx` (Node ≥ 22.6)
 
 ```bash
-# Pick tools interactively (TTY checkbox prompt)
+# Opens the browser wizard on a desktop
 npx @event4u/agent-config init
 
-# Pick tools explicitly, non-interactive
-npx @event4u/agent-config init --tools=claude-code,cursor --yes
+# No wizard: pick the tools on the command line
+npx @event4u/agent-config init --tools=claude-code,cursor
 
-# Install everything (the default — backward-compatible)
-npx @event4u/agent-config init --tools=all --yes
+# No wizard, no questions (CI, scripts)
+npx @event4u/agent-config init --yes --tools=claude-code
 
 # Test a specific git ref (branch, tag, sha) instead of the latest npm tag
 npx @event4u/agent-config init --ref=main --yes
 ```
 
-`npx @event4u/agent-config init` fetches the latest tarball, runs
-`bash src/scripts/install --target <cwd> …`, and the install script handles
-its own cleanup. The same package exposes every other `agent-config`
-subcommand (`sync`, `validate`, `mcp:render`, `roadmap:progress`, …) —
-see `npx @event4u/agent-config help`.
+`init` opens the install wizard when a display is usable and otherwise runs
+the same installer without it. `--yes`, `--tools=<ids>`, `--no-ui`,
+`--dry-run`, a CI environment, `AGENT_CONFIG_NO_UI=1` or a non-interactive
+terminal all select the path without the wizard. `agent-config install`
+opens the same wizard as `init`; it is not a separate installer. The same
+package exposes every other subcommand — see `npx @event4u/agent-config help`.
 
 ### `curl | bash` (registry-independent)
 
 ```bash
-# Defaults (interactive picker if your terminal is a TTY, else --tools=all)
-curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh | bash
-
-# Explicit tools, non-interactive (same flags as src/scripts/install)
 curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh \
   | bash -s -- --tools=claude-code,cursor --yes
-
-# Install from a specific git ref
-curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh \
-  | bash -s -- --ref=v1.39.0 --tools=cursor --yes
 ```
 
-Requires `bash`, `tar`, `curl` (or `wget`), and **Node ≥ 22.6** on the host
-(`setup.sh` runs `need_cmd node`). Python is **not** required.
-
-This door used to be documented as "no Node required"; that stopped being true
-when the bridge stage moved to a pre-bundled `dist/install/install.mjs` run via
-plain `node`. What it still uniquely provides is different and real: it fetches
-a GitHub tarball and runs a **dependency-inlined** bundle, so it never performs
-npm dependency resolution — which is exactly the failure mode
-[`ETARGET` / `No matching version found`](troubleshooting.md#npm-error-etarget--no-matching-version-found)
-describes on the registry path. Use it when the registry path cannot resolve:
+Requires `bash`, `tar`, `curl` (or `wget`) and **Node ≥ 22.6** (`setup.sh`
+runs `need_cmd node`). It fetches a GitHub tarball and runs a
+dependency-inlined bundle, so it never performs npm dependency resolution —
+use it when the registry path cannot resolve
+([`ETARGET` / `No matching version found`](troubleshooting.md#npm-error-etarget--no-matching-version-found)):
 restricted networks, mirrored or private registries, stale cached metadata.
 
-### Interactive `--tools` picker
-
-When `src/scripts/install` runs without an explicit `--tools` flag in an
-interactive terminal (stdin + stdout both TTYs, `--yes` not passed), it
-prompts for a comma-separated tool selection. In CI / piped invocations
-the picker is skipped and the backward-compatible `all` default is
-used. Pass `--yes` (or `-y`) to force non-interactive mode anywhere.
-
----
-
-## Project-installed mode (recommended for teams)
-
-Install once in the project — available to everyone working on it.
-The package is versioned with the project. Settings are committed once.
-
-### npx (recommended for any project)
-
-```bash
-npx @event4u/agent-config init --tools=claude-code,cursor
-```
-
-`npx` fetches the latest `@event4u/agent-config` tarball and runs
-`src/scripts/install` with the selected tools. Nothing is added to
-`package.json`.
-
-### Global CLI (one install per machine)
+### Global CLI (`agent-config` on `$PATH`)
 
 ```bash
 npm install -g @event4u/agent-config
-agent-config --help
+agent-config init --tools=claude-code
 ```
 
-The global install puts `agent-config` on `$PATH` so the project
-wrapper (`./agent-config`) can fall through to it when no
-`node_modules/@event4u/agent-config/` exists.
+Optional. It puts `agent-config` on `$PATH` so you do not type `npx` each
+time; what `init` installs is the same either way.
 
-### Global CLI + per-project settings (minimal flow)
+### Install flags worth knowing
 
-For teams that want to keep the runtime global (one install per
-machine) but still version a per-project `.agent-settings.yml` and a
-project-local `agents/` folder, use the `--minimal` init:
+- `--dry-run` prints the plan (tools, targets, wizard decision) and exits 0
+  without writing anything.
+- `--no-ui` suppresses the browser wizard (also `AGENT_CONFIG_NO_UI=1`).
+  See [`wizard.md § Auto-launch`](wizard.md#auto-launch-from-npx--init).
+- `--full` keeps this machine's installed rule layer full-bodied: it writes
+  one `user_pin` field into the install receipt
+  (`~/.event4u/agent-config/runtime/carrier.json`), and the package never
+  thins the layer while it is there. It is sticky — a later install or
+  upgrade keeps it — and `agent-config uninstall` removes it.
+- `--enrol` lets a session thin this machine's installed rule layer while
+  the package's own promotion switch is still off. The layer is thinned only
+  when the layer-form decision holds (`agent-config doctor --check
+  layer-form` prints it). `--full` wins over `--enrol`. Meant for maintainer
+  machines; not a setting.
+
+## What lands where
+
+**In your home directory.** The package, its lockfile
+(`~/.event4u/agent-config/installed.lock`) and its runtime live under
+`~/.event4u/agent-config/`. Each selected tool gets its content in its own
+user-level folder — `~/.claude/`, `~/.cursor/`, `~/.codeium/windsurf/`,
+`~/.gemini/` and so on; the per-IDE pages list the exact folders. For Claude
+Code the install also registers its hooks in a managed block of
+`~/.claude/settings.json`.
+
+**In a repository.** Your own changes live in `agents/overrides/`, which you
+commit. The gitignored bookkeeping files are:
+
+- the managed `# event4u/agent-config` block in `.gitignore`;
+- the `./agent-config` wrapper script;
+- the install-mode marker `agents/.agent-state/install-mode.txt`;
+- one pointer file each for the three tools that cannot read a user-level
+  folder: `.windsurf/agent-config.bridge.yml`,
+  `.clinerules/agent-config.bridge.yml` and `.gemini/agent-config.bridge.yml`.
+
+`agent-config init --project` (the same writer as `agent-config refresh
+--project`) creates the `agents/overrides/` folder and the `.gitignore` block
+in the current repository and installs nothing else.
+
+To commit a tool's generated config into a repository on purpose, eject it:
 
 ```bash
-# 1. Install the runtime once per machine
-npm install -g @event4u/agent-config
-
-# 2. Inside the project, write only the per-project shell
-agent-config init --minimal
-# or, without a global install:
-npx @event4u/agent-config init --minimal
+agent-config export --tool=<id> --output=<path>
 ```
 
-`--minimal` writes exactly three files into the project root:
+(Idempotent; `--force` overrides drift; `--list` enumerates the tool ids. The
+export contract is in [`docs/contracts/command-clusters.md`](contracts/command-clusters.md).)
 
-- `.agent-settings.yml` — per-project cost profile, member config,
-  feature flags. Committed.
-- `agents/.gitkeep` — placeholder so the directory is committed
-  before the first roadmap, decision, or council session lands.
-- `./agent-config` — bash wrapper that pins
-  `AGENT_CONFIG_PROJECT_ROOT` to the project root and forwards every
-  subcommand to the globally installed CLI. Committed.
+## Teams
 
-Nothing else — no `.augment/`, no `.claude/`, no `.cursor/`, no
-`AGENTS.md`. The shipped tool payload stays in the user's home (or
-the npx cache) and is shared across every project on the machine.
+Every developer runs `init` once on their own machine; nothing about the
+install is shared through the repository. What a team shares is
+`agents/overrides/` — commit it, and every teammate's agent picks it up. A
+new teammate clones the repository and runs
+`npx @event4u/agent-config init --tools=<their tools>`.
 
-#### Decision table — `--minimal` vs full `init`
-
-| Pick `--minimal` when | Pick full `init` when |
-|---|---|
-| Runtime is already installed globally (`npm i -g`). | First-time setup on a fresh machine. |
-| Team wants one source of truth for skills / rules / commands across every repo (shared via the global install). | Team wants per-repo skills / rules / commands committed alongside the code. |
-| `agents/` content (roadmaps, decisions) is the only per-project state worth committing. | `AGENTS.md`, `GEMINI.md`, or `.github/copilot-instructions.md` need project-specific overrides. |
-| The repo runs in CI and you do not want to vendor the full payload. | The repo cannot rely on a global install (air-gapped, sandboxed CI without npm). |
-| Migrating an existing project from the legacy `.git`-anchored install. | Starting a new project that has never seen `agent-config`. |
-
-Nested-install guard: `init --minimal` refuses to run when an
-ancestor already contains an anchor (`.git`, an `agents/` directory
-with a marker, or another `.agent-settings.yml`). This prevents
-shadow installs inside an existing project. Override with explicit
-`--target <dir>` if the nesting is intentional.
-
-`--minimal` does **not** pin `agent_config_version` — the project
-follows whichever version the global CLI was installed at. Pin
-explicitly by adding `agent_config_version: <semver>` to
-`.agent-settings.yml` when you want a reproducible runtime.
-
-### Installer orchestrator (`src/scripts/install`)
-
-The orchestrator chains payload sync and bridge generation:
-
-```bash
-bash src/scripts/install                  # defaults to rule_loading_tier=balanced
-bash src/scripts/install --profile=minimal
-bash src/scripts/install --force          # overwrite existing bridges
-bash src/scripts/install --skip-bridges   # payload only
-bash src/scripts/install --skip-sync      # bridges only
-bash src/scripts/install --dry-run        # show payload sync plan, skip bridges
-```
-
-Under the hood:
-
-- `src/scripts/install.sh` — payload sync (callable directly for sync-only runs).
-- `src/scripts/install.ts` — bridge files (callable directly for bridge-only runs).
-  Two install.py-specific flags worth knowing:
-  - `--dry-run` prints a plan summary (profile · scope · tools · target ·
-    wizard auto-launch decision) and exits 0 without writing files or
-    spawning subprocesses. Distinct from the bash wrapper's `--dry-run`,
-    which only skips bridges.
-  - `--no-ui` suppresses the post-install browser-wizard auto-launch.
-    Also honored via `AGENT_CONFIG_NO_UI=1`. CI runners (`CI=1`) and
-    non-TTY stdouts auto-suppress regardless. See
-    [`docs/wizard.md § Auto-launch`](wizard.md#auto-launch-from-npx--init).
-  - `--full` keeps this machine's installed rule layer full-bodied: it writes
-    one `user_pin` field into the install receipt
-    (`~/.event4u/agent-config/runtime/carrier.json`), and the package never
-    thins the layer while it is there. It is sticky — a later `install` or
-    upgrade keeps it — and `agent-config uninstall` removes it. It is not a
-    setting and has no settings key.
-  - `--enrol` lets a session thin this machine's installed rule layer while
-    the package's own promotion switch is still off: it writes one
-    `enrolment` field into the same receipt. The layer is thinned only when
-    the layer-form decision holds (`agent-config doctor --check layer-form`
-    prints it), and a missing standing law demotes it as usual. `--full`
-    wins over `--enrol`. Meant for maintainer machines that produce the
-    evidence the default flip waits on; not a setting.
-  - Both reach the receipt through the user-scope install, which is where it
-    lives: `agent-config global --no-ui --full` or
-    `agent-config global --no-ui --enrol`. `agent-config install` opens the
-    browser wizard and takes neither flag.
-
-A full run creates:
-
-- `.agent-settings.yml` — profile configuration (YAML)
-- `.vscode/settings.json` — VS Code / Copilot plugin discovery
-- `.augment/settings.json` — Augment plugin activation
-- `.github/plugin/marketplace.json` — Copilot CLI marketplace
-- `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`, `GEMINI.md`
-- `AGENTS.md`, `.github/copilot-instructions.md` (only if missing)
-
-No Task, no Make, no build tools required. **Python 3** (standard library only)
-is required for bridges — it is pre-installed on macOS 12.3+ and virtually
-every Linux distribution. If Python 3 is missing, the orchestrator warns,
-runs the payload sync anyway, and asks you to re-run `src/scripts/install`
-after installing Python.
-
-### What happens after install
-
-`src/scripts/install` creates project-local content for all supported tools:
-- `.augment/rules/`, `.augment/skills/`, `.augment/commands/` — for Augment
-- `.cursor/rules/` — for Cursor
-- `.clinerules/` — for Cline
-- `.windsurfrules` — for Windsurf
-- `.claude/rules/`, `.claude/skills/` — for Claude Code
-- `AGENTS.md`, `GEMINI.md` — for Copilot and Gemini CLI
-- `.github/copilot-instructions.md` — for GitHub Copilot
-
-This means: **every developer who opens the project gets the same agent behavior,
-regardless of which AI tool they use.** No per-developer plugin installation needed.
-
-### What the team commits
-
-After initial setup, commit these files:
-
-```
-.agent-settings.yml                ← shared profile (e.g., rule_loading_tier: balanced)
-agents/installed-tools.lock        ← AI bill of materials (ADR-008, Phase 3)
-.augment/                          ← rules, skills, commands (symlinks)
-.cursor/rules/                     ← Cursor rules (symlinks)
-.claude/                           ← Claude rules, skills (symlinks)
-AGENTS.md                          ← Copilot/Gemini instructions
-.github/copilot-instructions.md   ← GitHub Copilot instructions
-```
-
-`agents/installed-tools.lock` lists every AI tool the project expects,
-its scope (`global` or `project`), and its bridge marker path. Written
-by `init`, replayed by `sync`, checked by `validate`. Schema and
-workflow: [`docs/guidelines/agent-infra/installed-tools-manifest.md`](guidelines/agent-infra/installed-tools-manifest.md).
-
-### Team onboarding — clone → sync → done
-
-New team members get every AI bridge online with a single command:
-
-```bash
-git clone <repo>
-cd <repo>
-npx @event4u/agent-config sync
-```
-
-`sync` reads `agents/installed-tools.lock` and re-runs the installer
-for every tool whose bridge marker is missing locally. Idempotent —
-re-running after every clone is safe. Tools with markers already in
-place are skipped.
-
-Pair it with a CI gate to catch drift in PRs:
-
-```bash
-npx @event4u/agent-config validate
-```
-
-`validate` is read-only. Exit 1 on any of: marker missing, scope
-divergence (manifest says `project` but marker only exists at the
-global anchor, or vice versa), version drift (manifest's
-`agent_config_version` ≠ installed package). Full drift catalog and
-fix table: [`installed-tools-manifest.md § Drift detection`](guidelines/agent-infra/installed-tools-manifest.md#drift-detection-ci-gate).
+Settings resolve through a cascade that starts in your home directory
+(`~/.event4u/agent-config/settings/`); a project may add its own
+`.agent-settings.yml` on top. `agent-config settings:get <key>` prints a value
+and the file it came from.
 
 ---
 
-## Plugin-installed mode (optional, for individual use)
+## Marketplace plugins
 
-Install directly in your agent for global, cross-project use.
-This is additional to project-installed mode, not a replacement.
+### Claude Code — the plugin is a shim, not a content channel
 
-### Augment CLI
-
-```bash
-auggie plugin install agent-config@event4u-agent-config
-```
-
-### Claude Code — plugin deprecated (single-surface model)
+The Claude Code marketplace plugin carries one pointer skill
+(`install-agent-config`) that tells you to run the npm install; it delivers no
+skills, rules or commands
+([ADR-209](decisions/ADR-209-projection-era-corrections.md)).
 
 **Do not install the marketplace plugin for Claude Code.** The npx/npm
 global install (`npx -y @event4u/agent-config init`) is the single supported
@@ -529,35 +304,17 @@ and the installer's values do not reach a skill the project already sets.
 Whether a project's `skillOverrides` merges per skill or replaces the user's
 whole object was not observed.
 
-### Copilot CLI
+### Augment CLI and Copilot CLI
 
 ```bash
+auggie plugin install agent-config@event4u-agent-config
 copilot plugin install agent-config@event4u-agent-config
 ```
 
-### When to use plugin mode
-
-- You want agent-config behavior in ALL projects (not just one)
-- You want auto-updates via marketplace
-- You want plugin-specific features (hooks, MCP servers)
-
-### Team auto-setup for plugins
-
-To auto-recommend the plugin for your team, add the marketplace to project settings.
-See [`src/templates/consumer-settings/`](../templates/consumer-settings/) for ready-to-use config templates per tool.
-
-For marketplace registration (required once before `plugin install`):
-
-```bash
-# Augment CLI
-auggie marketplace add event4u-app/agent-config
-
-# Claude Code
-claude marketplace add event4u-app/agent-config
-
-# Copilot CLI
-copilot marketplace add event4u-app/agent-config
-```
+Both need the marketplace registered once
+(`auggie marketplace add event4u-app/agent-config`,
+`copilot marketplace add event4u-app/agent-config`). The npm install above is
+the supported path for both tools; see their per-IDE pages.
 
 ---
 
@@ -568,8 +325,8 @@ and Linear AI — the package's local installer cannot run. Instead,
 the package ships pre-built artefacts you upload or paste into the
 hosted platform's own configuration surface.
 
-These channels are **additional** to project- and plugin-installed
-modes; use them when the agent loop runs on the platform's servers,
+These channels are **additional** to the local install;
+use them when the agent loop runs on the platform's servers,
 not on your machine.
 
 > Both cloud channels remain shipped and tested. The labels reflect
@@ -647,38 +404,6 @@ the matching Linear field.
 
 ---
 
-## Alternative install methods — `advanced`
-
-> `advanced` — supported fallbacks for users comfortable driving the
-> orchestrator directly. They share the same `src/scripts/install` entry
-> point as Composer and npm; the only difference is how the package
-> source ends up on disk. Pick these when you cannot use Composer or
-> npm (e.g. a polyglot repo without either, or a CI runner that
-> already vendors the package via submodule).
-
-### Git Submodule
-
-```bash
-git submodule add git@github.com:event4u-app/agent-config.git .agent-config
-bash .agent-config/scripts/install --target .
-```
-
-### Manual
-
-```bash
-bash path/to/agent-config/scripts/install --target /path/to/your/project
-```
-
-### Install from Git URL (VS Code / Copilot)
-
-VS Code can install plugins directly from a Git repository URL.
-Point it to `https://github.com/event4u-app/agent-config`.
-
-> **Note:** `.augment/` content depends on the package manager having been executed.
-> After a fresh clone, run `composer install` or `npm install` first.
-
----
-
 ## After installation: choose a profile
 
 The system works immediately with sensible defaults. Optionally, create `.agent-settings.yml`
@@ -710,109 +435,24 @@ After installation, try these 3 prompts with your agent:
 
 If the agent behaves differently than before — it's working.
 
-**Optional:** Run `task first-run` for a guided walkthrough (requires [Task](https://taskfile.dev/)).
-
 → [Full getting started guide](getting-started.md)
-
----
-
-## How the installer works
-
-### Two-stage pipeline
-
-`src/scripts/install` runs these stages in order:
-
-| Stage | Script | Output |
-|---|---|---|
-| 1. Payload sync | `src/scripts/install.sh` | `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`, `GEMINI.md` |
-| 2. Bridges     | `src/scripts/install.ts` | `.agent-settings.yml`, `.vscode/settings.json`, `.augment/settings.json`, `.github/plugin/marketplace.json` |
-
-Either stage can be skipped (`--skip-sync`, `--skip-bridges`) or invoked
-directly. Stage 2 is gracefully skipped when Python 3 is unavailable.
-
-### Hybrid sync strategy (stage 1)
-
-| Directory | Method | Reason |
-|---|---|---|
-| `.augment/rules/` | **Copy** | Augment Code cannot load symlinked rules |
-| Everything else | **Symlink** | Auto-updates on package update, saves disk |
-
-### What gets created
-
-```
-your-project/
-├── .augment/
-│   ├── rules/          ← copies (Augment Code requirement)
-│   ├── skills/         ← symlinks → package
-│   ├── commands/       ← symlinks → package
-│   ├── guidelines/     ← symlinks → package
-│   ├── templates/      ← symlinks → package
-│   └── contexts/       ← symlinks → package
-├── .claude/
-│   ├── rules/          ← symlinks → .augment/rules/
-│   └── skills/         ← symlinks → .augment/skills/
-├── .cursor/rules/      ← symlinks → .augment/rules/
-├── .clinerules/        ← symlinks → .augment/rules/
-├── .windsurfrules      ← generated (concatenated rules)
-├── GEMINI.md           ← symlink → AGENTS.md
-└── AGENTS.md           ← project-specific (copied if missing)
-```
-
-### CLI options
-
-```
-bash src/scripts/install [OPTIONS]
-
-Options:
-  --source <dir>    Package source directory (default: auto-detect)
-  --target <dir>    Target project root (default: $PROJECT_ROOT or cwd)
-  --profile <name>  Cost profile for bridges (minimal|balanced|full)
-  --force           Overwrite existing bridge files
-  --dry-run         Show payload sync plan; skip bridges
-  --verbose         Detailed payload sync output
-  --quiet           Suppress non-error output
-  --skip-sync       Skip payload sync (install.sh)
-  --skip-bridges    Skip bridge files (install.py)
-  --help, -h        Show this help
-```
-
-The underlying stages keep their own CLI surfaces:
-`bash src/scripts/install.sh --help` and `npx @event4u/agent-config install --help`.
-
----
-
-## Global user-level install — retired
-
-The previous `--global` symlink scheme (kernel rules + curated skills
-copied into `~/.claude/`, `~/.cursor/`, `~/.codeium/windsurf/`, and
-`~/.config/agent-config/` under an `event4u/` namespace) has been
-**retired** under the npx-only distribution model. Run
-`npx @event4u/agent-config init` per project instead; the
-`agent_config_version` pin in `.agent-settings.yml` keeps every
-invocation reproducible. See [`migration/v1-to-v2.md`](migration/v1-to-v2.md)
-for the upgrade path.
 
 ---
 
 ## Updating
 
-When a new version of the package is published:
-
 ```bash
-# npx (one-shot, recommended) — always uses the latest tarball
-npx @event4u/agent-config init --tools=claude-code,cursor
-
-# Global CLI
-npm install -g @event4u/agent-config@latest
-agent-config --help
+agent-config upgrade                   # install the latest package and refresh every tool
+agent-config refresh --global          # re-apply the installed version (no version change)
+npx @event4u/agent-config@latest init  # or: run init again from the latest tarball
 ```
 
-The installer is idempotent — re-running it after an update refreshes
-the symlinks and regenerates derived files (`.windsurfrules`,
-`.github/copilot-instructions.md`). It does **not** overwrite
-`AGENTS.md` or anything in `agents/overrides/`.
+The installer is idempotent. It never overwrites anything in
+`agents/overrides/` or a file you changed after the install; those are kept
+and reported.
 
 ---
+
 
 ## AI Council local state
 
@@ -1047,26 +687,43 @@ cannot validate changes without access to a Windows setup.
 
 ---
 
-## Uninstalling
-
-There is no dedicated uninstall command yet. To remove the package:
+## Uninstall
 
 ```bash
-# 1. Remove the dependency
-composer remove event4u/agent-config
-# or
-npm uninstall @event4u/agent-config
-
-# 2. Remove generated project-local content
-rm -rf .augment .claude .cursor .clinerules .windsurfrules GEMINI.md
-rm -f .agent-settings .agent-settings.yml .agent-settings.backup.key-value
-rm -f .github/copilot-instructions.md
+agent-config uninstall --global --dry-run   # preview: what would be removed
+agent-config uninstall --global --purge     # remove everything the install wrote
 ```
 
-Remove the `# event4u/agent-config` block from `.gitignore` manually.
-Keep `AGENTS.md` if you customized it — it is yours, not the package's.
+`agent-config uninstall --global` removes the install's entries for every tool
+(or only those named with `--tools=<ids>`), the Claude Code hooks block in
+`~/.claude/settings.json`, the listing overrides it wrote and the lockfile.
+Without `--purge` the deployed skills, rules and commands stay in the tools'
+user-level folders; with `--purge` it deletes exactly the files it recorded
+and keeps any you changed since. `--force` proceeds when the lockfile and the
+folders disagree.
+
+**Full removal**, in this order:
+
+1. `agent-config uninstall --global --purge`
+2. Delete the package's own folder: `rm -rf ~/.event4u/agent-config`
+   (deployment ledger, install log, settings state).
+3. In each repository you used it in: delete the
+   `# event4u/agent-config` … `# event4u/agent-config — END` block from
+   `.gitignore`, the `./agent-config` wrapper,
+   `agents/.agent-state/install-mode.txt`, any
+   `.windsurf/agent-config.bridge.yml`, `.clinerules/agent-config.bridge.yml`
+   and `.gemini/agent-config.bridge.yml`, and `agents/overrides/` if you no
+   longer want your overrides.
+4. Remove the npm package if you installed it globally:
+   `npm uninstall -g @event4u/agent-config`.
+5. If you ever installed the Claude Code plugin:
+   `claude plugin uninstall agent-config@event4u-agent-config`.
+
+After these steps no agent-config path remains; a `~/.claude/settings.json`
+the install created stays behind as an empty `{}`.
 
 See also: [docs/troubleshooting.md](troubleshooting.md).
+
 
 ---
 

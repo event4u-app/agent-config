@@ -1,97 +1,74 @@
 # Claude Code Setup
 
-Claude Code is the canonical agent surface for `event4u/agent-config`. It
-reads from `.claude/skills/`, `.claude/commands/`, `CLAUDE.md`,
-`.claude/hooks/`, and project-level MCP servers. Everything in this repo
-projects to those paths during install.
+Claude Code (CLI and IDE extensions) reads user-level skills, commands
+and hooks from `~/.claude/`. The installer deploys the full set there, so
+every repository you open in Claude Code gets it.
+
+> `agent-config init` installs into your home directory — the package under
+> `~/.event4u/agent-config/` and each AI tool's user-level folder such as
+> `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into
+> your repository, which only gets an `agents/overrides/` folder for your own
+> changes plus a few gitignored bookkeeping files; `agent-config init --project`
+> creates just that folder in a repository and nothing else.
 
 ## Prerequisites
 
-- Claude Code installed (CLI or VS Code extension): <https://claude.com/code>.
-- Node.js ≥ 18 (for the `npx` entrypoints).
-- Git working tree (the package is repository-aware).
+- Claude Code installed (CLI or IDE extension): <https://claude.com/code>.
+- Node.js ≥ 22.6 (for the `npx` entrypoint).
 
-## Project install (recommended)
+## Install
 
 ```bash
-# Inside an existing repo:
 npx @event4u/agent-config init --tools=claude-code
-
-# Or with the curl entrypoint:
-curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh \
-  | bash -s -- --tools=claude-code
 ```
 
-Either form populates:
+Populates `~/.claude/`:
 
-- `.claude/skills/`         — symlinks into `dist/agent-src/skills/`
-- `.claude/commands/`       — symlinks into `dist/agent-src/commands/`
-- `CLAUDE.md`               — agent root pointer (auto-loaded by Claude Code)
-- `.agent-settings.yml`     — your per-project knobs (kept out of git)
+- `~/.claude/skills/`   — skills
+- `~/.claude/commands/` — slash commands (nested ones route as `/<cluster>:<sub>`)
+- `~/.claude/rules/`    — kernel + routed rules
+- `~/.claude/personas/` — review-lens personas
+- `~/.claude/settings.json` — the managed hooks are registered here
 
-## Plugin marketplace (Claude Code 2026+)
+## The Claude Code plugin is a shim
 
-Claude Code 2026 supports plugin marketplaces via
-`.claude-plugin/marketplace.json`. The package ships one, so as an
-**additional, optional** surface you can also install the plugin:
+The package also publishes a Claude Code plugin
+(`.claude-plugin/marketplace.json`). It is **not** a content channel and
+not an alternative install: it carries one pointer skill,
+`install-agent-config`, which tells you to run the npm install above. It
+delivers no skills, rules or commands. See
+[Marketplace plugins](../../installation.md#claude-code--the-plugin-is-a-shim-not-a-content-channel).
 
-```bash
-claude plugin marketplace add event4u-app/agent-config
-claude plugin install agent-config@event4u-agent-config
-```
-
-The npm/curl entrypoints above are a full install on their own — the
-file projection carries the complete skill/command set; the plugin adds
-the namespaced `agent-config:*` surface on top. When the plugin is
-installed, `agent-config upgrade` refreshes it automatically (Claude
-Code otherwise pins it to the install-time git SHA); `agent-config
-doctor --check claude-plugin` reports a stale snapshot.
-
-## CLAUDE.md
-
-Auto-loaded by Claude Code from the repo root. The package's `CLAUDE.md`
-points to `AGENTS.md` (single source of truth for all agent surfaces);
-edit `AGENTS.md`, never `CLAUDE.md`.
-
-## Hooks
-
-Claude Code reads `.claude/hooks/` for pre/post tool hooks. The package
-ships a memory-extraction hook (Phase 7 of `road-to-mcp-full-coverage`).
-Local overrides go in `agents/overrides/.claude/hooks/`.
-
-## Skills you'll use most
+## Commands you'll use most
 
 - `/work "<prompt>"` — refine → plan → implement → verify → report loop.
-- `/commit` — Conventional-Commit splitter with confirmation gate.
-- `/create-pr` — opens a structured PR from the current branch.
-- `/review-changes` — seven-judge self-review before requesting human review.
-- `/agent-handoff` — pick a recent session, generate a handoff, auto-seed the fresh session (`--print` for the copy-paste summary).
-
-Full list: `ls .claude/skills/`.
+- `/commit` — Conventional-Commit splitter with a confirmation gate.
+- `/pr:create` — opens a structured PR from the current branch.
+- `/review:changes` — multi-judge self-review before requesting human review.
+- `/agent-handoff` — generate a handoff summary for a fresh session.
 
 ## Verification
 
 ```bash
-ls -la .claude/skills/        # should symlink into dist/agent-src/skills/
-ls -la CLAUDE.md              # exists, points to AGENTS.md
-test -f .agent-settings.yml   # per-project settings rendered
+ls ~/.claude/skills/ | head
+ls ~/.claude/commands/ | head
 ```
 
-In Claude Code itself: type `/` — the slash menu should list `work`,
-`commit`, `create-pr`, etc.
+In Claude Code type `/` — the slash menu should list `work`, `commit`
+and the other commands.
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| `/` menu empty | `ls .claude/skills/` — re-run installer if empty. |
-| Skills look stale after `git pull` | `task sync && task generate-tools`. |
-| Hook never fires | `claude --debug` and inspect hook output. |
-| Memory MCP missing | See `road-to-mcp-full-coverage` — Phase 3 ships read-only tools. |
+| `/` menu missing the commands | `ls ~/.claude/skills/` — re-run `npx @event4u/agent-config init --tools=claude-code` if empty. |
+| Skills look stale after a package update | `agent-config upgrade`, then start a new Claude Code session. |
+| Hook never fires | Run `claude --debug` and check the hooks block in `~/.claude/settings.json`. |
 
 ## Cross-references
 
 - [`docs/installation.md`](../../installation.md) — install matrix index.
-- [`docs/setup/per-ide/claude-desktop.md`](claude-desktop.md) — Desktop +
-  Cowork share the same `~/.claude/skills/` path; install once, both surfaces benefit.
+- [`claude-desktop.md`](claude-desktop.md) — Claude Desktop needs a separate
+  upload step; it does not read `~/.claude/`.
 - [`AGENTS.md`](../../../AGENTS.md) — package self-orientation.
+- [Uninstall](../../installation.md#uninstall) — removing the global install.

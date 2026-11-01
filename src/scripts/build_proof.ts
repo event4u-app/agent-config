@@ -516,6 +516,14 @@ function render(): string {
     L.push('If a claim ever loses its binding, or this page drifts from the ledger,');
     L.push('CI goes red. Reproducibility is the proof.');
     L.push('');
+    L.push('## Related pages');
+    L.push('');
+    L.push('- [Evaluator guide](evaluator.md) — how to check the claims yourself.');
+    L.push('- [Known weaknesses](known-weaknesses.md) — what this package does not do well.');
+    L.push('- [Us vs the category](us-vs-the-category.md) — how it compares.');
+    L.push('- [Showcase](showcase.md) — worked examples.');
+    L.push('- [Governance advantage](governance-advantage.md) — the governance argument in full.');
+    L.push('');
     return L.join('\n');
 }
 

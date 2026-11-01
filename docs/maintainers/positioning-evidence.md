@@ -16,30 +16,30 @@ differentiator.
 
 1. **Machine-checked honest marketing (the Claims-Ledger).** Every public claim
    that carries a `<!-- claim:ID -->` marker must bind to a resolvable evidence
-   pointer in [`CLAIMS.md`](CLAIMS.md), or CI fails. Unbacked claims are logged
+   pointer in [`CLAIMS.md`](../CLAIMS.md), or CI fails. Unbacked claims are logged
    as visible debt rather than hidden. Evidence:
-   [`src/scripts/check_claims.ts`](../src/scripts/check_claims.ts),
-   [`CLAIMS.md`](CLAIMS.md).
-2. **A self-verifying proof page.** [`proof.md`](proof.md) is generated from the
+   [`src/scripts/check_claims.ts`](../../src/scripts/check_claims.ts),
+   [`CLAIMS.md`](../CLAIMS.md).
+2. **A self-verifying proof page.** [`proof.md`](../proof.md) is generated from the
    ledger (claim → evidence table) plus the honest-null benchmark runs
    (*including the nulls*) plus a "verify it yourself" command block a skeptic
    runs on a fresh checkout. Drift-gated in CI. Evidence:
-   [`src/scripts/build_proof.ts`](../src/scripts/build_proof.ts),
-   [`proof.md`](proof.md).
+   [`src/scripts/build_proof.ts`](../../src/scripts/build_proof.ts),
+   [`proof.md`](../proof.md).
 3. **Published honest-nulls.** Measured null results ship rather than hide (e.g.
    a recursive-verification wrapper measured for null lift; an orchestration
    auto-flip held at a documented honest-null). Evidence:
-   [`benchmark.md`](benchmark.md).
+   [`benchmark.md`](../benchmark.md).
 4. **No-runtime, host-agnostic governance.** Rules compile into each tool's
    native format at projection time; the same governance rides on 20 hosts with
    no daemon. Surgical uninstall (JSON-pointer + SHA-256, never a neighbour
    tool's keys). Evidence:
-   [`contracts/no-runtime-boundary.md`](contracts/no-runtime-boundary.md),
-   [`contracts/install-layout.md`](contracts/install-layout.md).
+   [`contracts/no-runtime-boundary.md`](../contracts/no-runtime-boundary.md),
+   [`contracts/install-layout.md`](../contracts/install-layout.md).
 5. **A 30-second wedge.** `production-validator` — a single self-contained Claude
    Code subagent (one `curl` into `.claude/agents/`) that runs the last gate
    before "done": no mock/stub on the shipped path, validated against real
-   systems. Evidence: [`wedge/production-validator/`](wedge/production-validator/).
+   systems. Evidence: [`wedge/production-validator/`](../wedge/production-validator/).
 
 ## Competitive frame
 

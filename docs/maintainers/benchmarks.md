@@ -6,8 +6,8 @@ keep-beta-until: 2026-08-14
 # Benchmark cadence
 
 > **Status:** active · **Owner:** `step-16-telegraph-substance.md` Phase 1 ·
-> **Sources:** [`benchmark-corpus-spec.md`](contracts/benchmark-corpus-spec.md) ·
-> [`benchmark-report-schema.md`](contracts/benchmark-report-schema.md)
+> **Sources:** [`benchmark-corpus-spec.md`](../contracts/benchmark-corpus-spec.md) ·
+> [`benchmark-report-schema.md`](../contracts/benchmark-report-schema.md)
 
 Where the package's benchmark runs live, when they run, and what counts as
 a publishable report. Mirrors the the external runtime `docs/benchmarks/runs/<ISO>.json`
@@ -75,11 +75,11 @@ Cost-touched runs require an `ANTHROPIC_API_KEY` at
 
 ## Cross-references
 
-- [`benchmark-corpus-spec.md`](contracts/benchmark-corpus-spec.md) —
+- [`benchmark-corpus-spec.md`](../contracts/benchmark-corpus-spec.md) —
   per-prompt schema.
-- [`benchmark-report-schema.md`](contracts/benchmark-report-schema.md) —
+- [`benchmark-report-schema.md`](../contracts/benchmark-report-schema.md) —
   per-report JSON / Markdown contract.
-- [`condensation-default-kill-criterion.md`](contracts/condensation-default-kill-criterion.md)
+- [`condensation-default-kill-criterion.md`](../contracts/condensation-default-kill-criterion.md)
   — how a published `telegraph-v<N>` report is read against the kill table.
 - `agents/roadmaps/step-16-telegraph-substance.md` Phase 1 — where the
   telegraph corpus was authored.

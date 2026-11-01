@@ -1,62 +1,59 @@
 # OpenCode Setup
 
-OpenCode (<https://opencode.ai>) reads the Anthropic-shaped markdown
-skill bundle from its user-scope anchor `~/.opencode/`. The package
-deploys via the universal skill convention; project-scope bridge
-is not yet wired (Phase 2.4 anchor).
+OpenCode (<https://opencode.ai>). The installer deploys the skill bundle to its user-level folder `~/.opencode/`.
+
+> `agent-config init` installs into your home directory — the package under
+> `~/.event4u/agent-config/` and each AI tool's user-level folder such as
+> `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into
+> your repository, which only gets an `agents/overrides/` folder for your own
+> changes plus a few gitignored bookkeeping files; `agent-config init --project`
+> creates just that folder in a repository and nothing else.
 
 ## Prerequisites
 
 - OpenCode CLI / IDE: <https://opencode.ai>.
-- Node.js ≥ 18 for the install entrypoints.
+- Node.js >= 22.6 (for `npx`).
 
 ## Install
 
-Global only (canonical scope):
-
 ```bash
-npx @event4u/agent-config init --tools=opencode --global
+npx @event4u/agent-config init --tools=opencode
 ```
 
-Populates:
+## What lands
 
-- `~/.opencode/skills/`   — Anthropic-shaped skill bundle
-- `~/.opencode/rules/`    — kernel + tier-1/2 rules
-- `~/.opencode/personas/` — review-lens personas
+Under `~/.opencode/`:
 
-(Project-scope `--tools=opencode` is rejected with exit code 1 —
-OpenCode has no documented project-discovery convention yet.)
+- `rules/`    — kernel + routed rules
+- `skills/`   — skill bundle
+- `commands/` — slash-command bodies (invoke them by name in chat)
+- `personas/` — review-lens personas
+
+Nothing is written into your repository besides `agents/overrides/` and
+the gitignored bookkeeping files.
 
 ## How to use
 
-- OpenCode reads the skill bundle from `~/.opencode/skills/` on
-  every session — no manual action required.
-- Slash commands (`/work`, `/implement-ticket`, `/commit`,
-  `/create-pr`, …) ship inside the skill bundle as named skills.
-  Invoke them by name in chat.
-- For repository-aware work, run OpenCode from the project root
-  so the agent can locate `AGENTS.md` and the project's own
-  `agents/` overlay.
+- Slash commands (`/work`, `/implement-ticket`, `/commit`, …) are not
+  registered natively — invoke them by name in chat.
+- Run OpenCode from the project root so the agent sees your
+  `agents/overrides/` folder.
 
 ## Verification
 
 ```bash
-test -d ~/.opencode/skills
-test -d ~/.opencode/rules
+ls ~/.opencode/rules/ | head -5
+ls ~/.opencode/skills/ | head -5
 ```
-
-In OpenCode: ask *"What is this repo?"* — the answer should cite
-the AGENTS.md emergency triage block when the workspace is open.
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| Skills not listed | Re-run `npx @event4u/agent-config init --tools=opencode --global --force`. |
-| `--tools=opencode` rejected | Add `--global` (OpenCode has global-only scope). |
-| AGENTS.md not picked up | Run OpenCode from the project root; the agent reads `AGENTS.md` from the workspace. |
+| Directories under `~/.opencode/` missing | Re-run `npx @event4u/agent-config init --tools=opencode`. |
+| You used `--tools=opencode` and nothing changed in the repo | Expected — the install is user-level; check `~/.opencode/`. |
 
 ## Cross-references
 
-- [`AGENTS.md`](../../../AGENTS.md) — canonical agent self-orientation.
 - [`docs/installation.md`](../../installation.md) — install matrix index.
+- [Uninstalling](../../installation.md#uninstall) — removal sequence.

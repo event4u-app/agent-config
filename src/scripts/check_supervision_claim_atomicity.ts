@@ -76,7 +76,7 @@ import { reportScanned } from './_lib/scan_scope.js';
 export const PUBLIC_SURFACES = [
     'README.md',
     'docs/comparison.yaml',
-    'docs/positioning-evidence.md',
+    'docs/maintainers/positioning-evidence.md',
     'docs/proof.md',
     'docs/us-vs-the-category.md',
     'docs/getting-started-by-role.md',

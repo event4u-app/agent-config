@@ -219,7 +219,7 @@ comment."*
       The historical bucket is not drift — a changelog naming a file as it
       existed then is correct. The live bucket is, and it spans **233 doc
       files**. Worst offenders: `docs/decisions/adr-evidence-sweep-2026-08.md`
-      (43), `docs/migration/yaml-roundtrip-spike.md` (25),
+      (43), `docs/maintainers/migration/yaml-roundtrip-spike.md` (25),
       `docs/contracts/install-layout.md` (15), `docs/contracts/STABILITY.md`
       (15), `docs/contracts/hook-architecture-v1.md` (14),
       `docs/architecture.md` (12), `docs/threat-model.md` (12). Most-cited dead

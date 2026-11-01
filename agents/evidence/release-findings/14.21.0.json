@@ -244,8 +244,8 @@
       "severity": "low",
       "kind": "style",
       "title": "PROMPT_BUDGET_CHARS derivation in self-review-gate.md uses stale column name",
-      "detail": "docs/self-review-gate.md:49 table shows 'input tokens reported' but text references 'reported tokens'. The table uses past tense (14.17.0 'exceeded') but text says 'measured diff chars ÷ reported tokens'. Tense and column label should match.",
-      "file": "docs/self-review-gate.md"
+      "detail": "docs/maintainers/self-review-gate.md:49 table shows 'input tokens reported' but text references 'reported tokens'. The table uses past tense (14.17.0 'exceeded') but text says 'measured diff chars ÷ reported tokens'. Tense and column label should match.",
+      "file": "docs/maintainers/self-review-gate.md"
     },
     {
       "finding_id": "68a67b228d37",
