@@ -40,6 +40,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { hasBillingGrant } from './_lib/billing_grant.js';
 import { hostSettingsPaths, readBillingClass, type BillingClassReading } from './_lib/billing_class.js';
+import { coldLine } from './_lib/cold_return.js';
 import { atLeast, describeWindow, planPressure, sessionContextFill } from './_lib/pressure.js';
 import { hashSessionId, quotaStateDir, readQuotaLedger, type QuotaSnapshot } from './_lib/quota_ledger.js';
 import type { EnvMap } from './_lib/user_global_paths.js';
@@ -133,24 +134,37 @@ export function noticeLines(deps: QuotaNoticeDeps): string[] {
                 : 'AC is narrowing its own fan-out; /compact or fewer parallel sessions save the most.';
         lines.push(`AC: ${describeWindow(w)}. ${advice}`);
     }
-    const ctx = sessionContextFill(ledger, session, deps.now);
+    const mine = ledger.filter((x) => x.session === session).reverse();
+    const cache = mine.find((x) => x.cache);
+    // Once per expiry. A host-started turn pays the re-write too, so the line is true there as well.
+    const cold = coldLine(cache, deps.now);
+    if (cold && claimOnce(`cache|${session}|${cache?.cache?.expires_at}`, deps.stateEnv, deps.now)) lines.push(cold);
+    const ctx = sessionContextFill(ledger, session);
     // The snapshot's ts joins the key: a repeated prompt text ("weiter") in a
     // later turn follows a fresh status-line snapshot, so it is not a duplicate.
-    const snap = [...ledger].reverse().find((x) => x.session === session && x.context_used_pct !== undefined);
+    const snap = mine.find((x) => x.context_used_pct !== undefined);
     const pk = deps.promptKey ?? null;
     const key = `context|${session}|${pk ?? ''}|${snap?.ts ?? ''}`;
     if (ctx !== null && ctx >= CONTEXT_NOTICE_PCT && (pk === null || claimOnce(key, deps.stateEnv, deps.now))) {
-        lines.push(contextLine(ctx, snap));
+        const exp = cache?.cache?.expires_at;
+        lines.push(contextLine(ctx, snap, exp !== undefined && deps.now >= exp));
     }
     return lines;
 }
 
-/** Both exits, with the size the status line reported; no size, no absolute figures. */
-function contextLine(pct: number, snap: QuotaSnapshot | undefined): string {
+/**
+ * Both exits, with the size the status line reported; no size, no absolute
+ * figures. On a cold cache `/compact` is no cheap exit: it re-reads the whole
+ * history uncached (host prompt-caching doc, "Compacting the conversation").
+ */
+function contextLine(pct: number, snap: QuotaSnapshot | undefined, cold: boolean): string {
     const size = snap?.context_size;
     const n = (x: number): string => Math.round(x).toLocaleString('en-US');
     const abs = size !== undefined && size > 0 ? ` (${n((pct / 100) * size)} / ${n(size)} tokens)` : '';
-    return `AC: Context ${Math.round(pct)} %${abs} — new task → /clear, same task → /compact.`;
+    const exits = cold
+        ? 'cache cold: /clear, or continue knowingly — /compact now re-reads the full history uncached.'
+        : 'new task → /clear, same task → /compact.';
+    return `AC: Context ${Math.round(pct)} %${abs} — ${exits}`;
 }
 
 export interface AskDeps extends QuotaNoticeDeps {
@@ -274,7 +288,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         }
         const prompt = field(payload, 'prompt');
         const promptKey = field(payload, 'prompt_id') ?? (prompt === null ? null : digest(prompt));
-        const lines = noticeLines({ ...base, promptKey });
+        const lines = noticeLines({
+            ...base,
+            promptKey,
+        });
         if (lines.length > 0) {
             const id = createHash('sha256').update(`${sessionId ?? ''}|${base.now}`).digest('hex').slice(0, 16);
             process.stdout.write(JSON.stringify({ [USER_NOTICE_KEY]: lines.join('\n'), [USER_NOTICE_ID_KEY]: id }));

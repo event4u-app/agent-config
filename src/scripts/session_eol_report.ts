@@ -40,6 +40,7 @@ import {
     type BytesPerToken,
     type DerivedBytes,
 } from './_lib/cc_transcript.js';
+import { COLD_FLOOR_TOKENS } from './_lib/cold_return.js';
 import { emptyCounters, scanEolSlice, type EolCounters } from './_lib/session_eol.js';
 
 export interface SessionSummary {
@@ -47,6 +48,49 @@ export interface SessionSummary {
     bytes: number;
     counters: EolCounters;
     last_ts: string | null;
+    /** `[predicted, actual]` per cold return in this transcript (`coldReturns`). */
+    cold_returns: Array<[number, number]>;
+}
+
+const TTL_MS = { '5m': 5 * 60_000, '1h': 60 * 60_000 } as const;
+
+/**
+ * Cold returns replayed from one transcript (road-to-a-return-that-names-its-price
+ * 4.1): a main-chain response that follows the previous one by more than the
+ * TTL of the newest cache write, with no compaction between. The prediction is
+ * what a transcript can know before the request — the previous response's whole
+ * input plus its output; the actual is the uncached input that request paid
+ * (`input + cache_creation`). The host's own `recache_tokens_if_cold` is not in
+ * a transcript, so its error is a live-host probe, not this replay.
+ */
+export function coldReturns(text: string): Array<[number, number]> {
+    const out: Array<[number, number]> = [];
+    let prev: { at: number; tokens: number } | null = null;
+    let ttl: '5m' | '1h' = '5m';
+    const n = (x: unknown): number => (typeof x === 'number' && Number.isFinite(x) ? x : 0);
+    for (const line of text.split('\n')) {
+        let r: Record<string, unknown>;
+        try {
+            r = JSON.parse(line) as Record<string, unknown>;
+        } catch {
+            continue;
+        }
+        if (r === null || typeof r !== 'object' || r['isSidechain'] === true) continue;
+        if (r['type'] === 'system' && r['subtype'] === 'compact_boundary') {
+            prev = null;
+            continue;
+        }
+        const u = r['type'] === 'assistant' ? (r['message'] as { usage?: Record<string, unknown> } | undefined)?.usage : undefined;
+        const at = typeof r['timestamp'] === 'string' ? Date.parse(r['timestamp']) : NaN;
+        if (u === undefined || !Number.isFinite(at)) continue;
+        const actual = n(u['input_tokens']) + n(u['cache_creation_input_tokens']);
+        if (prev !== null && at - prev.at > TTL_MS[ttl] && actual > 0) out.push([prev.tokens, actual]);
+        const split = (u['cache_creation'] ?? {}) as Record<string, unknown>;
+        if (n(split['ephemeral_1h_input_tokens']) > 0) ttl = '1h';
+        else if (n(split['ephemeral_5m_input_tokens']) > 0) ttl = '5m';
+        prev = { at, tokens: n(u['input_tokens']) + n(u['cache_read_input_tokens']) + n(u['cache_creation_input_tokens']) + n(u['output_tokens']) };
+    }
+    return out;
 }
 
 export interface EolReport {
@@ -121,6 +165,21 @@ export interface EolReport {
         median_final_context: DerivedBytes | null;
     };
     threshold_crossings: Record<string, number>;
+    /**
+     * 4.1 — the transcript-side cold-return prediction against what the request
+     * paid. Two failure modes, reported apart because one number hides both:
+     * `false_cold` — the gap looked cold but the request paid under half the
+     * prediction, i.e. the cache was still read (the transcript cannot see the
+     * TTL the host applied); `relative_error` — `|predicted − actual| / actual`
+     * in percent over the rest, the returns that really were cold.
+     */
+    cold_return: {
+        returns: number;
+        false_cold: number;
+        relative_error: Percentiles | null;
+        /** Really-cold returns whose re-write was under the 50k floor (`COLD_FLOOR_TOKENS`): the notice would stay silent. */
+        below_floor: number;
+    };
 }
 
 export interface Percentiles {
@@ -184,7 +243,7 @@ export function scanSessionFile(file: string): SessionSummary | null {
     let last_ts: string | null = null;
     // cheap: reuse the final assistant stamp; fall back to null.
     last_ts = counters.final_context_at;
-    return { file, bytes, counters, last_ts };
+    return { file, bytes, counters, last_ts, cold_returns: coldReturns(text) };
 }
 
 /** Where `session_eol_hook` persists its per-session state (gitignored). */
@@ -255,6 +314,9 @@ export function buildReport(root: string, now: Date = new Date()): EolReport {
     const byteScan = scanTranscripts({ root, measureBytes: true });
     const bytesFactor = measureBytesPerToken(byteScan.records);
 
+    const returns = sessions.flatMap((s) => s.cold_returns);
+    const cold = returns.filter(([p, a]) => a >= p / 2);
+
     const crossings: Record<string, number> = {};
     for (const thr of [200_000, 400_000, 600_000, 800_000]) {
         crossings[`>=${thr / 1000}k`] = finals.filter((c) => c >= thr).length;
@@ -290,6 +352,12 @@ export function buildReport(root: string, now: Date = new Date()): EolReport {
             median_final_context: derivedBytes(percentiles(finals)?.median ?? 0, finals.length > 0 ? bytesFactor : null),
         },
         threshold_crossings: crossings,
+        cold_return: {
+            returns: returns.length,
+            false_cold: returns.length - cold.length,
+            relative_error: percentiles(cold.map(([p, a]) => (Math.abs(p - a) / a) * 100)),
+            below_floor: cold.filter(([, a]) => a < COLD_FLOOR_TOKENS).length,
+        },
     };
 }
 
@@ -362,6 +430,16 @@ export function renderText(r: EolReport): string {
     for (const [k, v] of Object.entries(r.threshold_crossings)) {
         lines.push(`sessions ending ${k} tokens: ${v}`);
     }
+    const cr = r.cold_return;
+    lines.push(
+        cr.returns === 0
+            ? 'cold returns: none in this store'
+            : `cold returns (transcript replay): ${cr.returns} gaps past the TTL, ${cr.false_cold} still read the cache` +
+                  (cr.relative_error === null
+                      ? ''
+                      : ` · really cold ${cr.relative_error.n} (${cr.below_floor} under the 50k floor), size error ` +
+                        `p50=${cr.relative_error.median.toFixed(1)} % p90=${cr.relative_error.p90.toFixed(1)} %`),
+    );
     return lines.join('\n');
 }
 

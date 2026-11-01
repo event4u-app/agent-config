@@ -105,6 +105,60 @@ describe('context notice', () => {
     });
 });
 
+describe('cold-return notice', () => {
+    const S = hashSessionId('sess-a');
+    function cache(over: Record<string, unknown> = {}, snapOver: Record<string, unknown> = {}): void {
+        appendQuotaSnapshot(
+            { ts: NOW - 30 * 60_000, session: S, cache: { warm: false, ttl: '1h', expires_at: NOW - 23 * 60_000, recache_tokens_if_cold: 182_000, ...over }, ...snapOver },
+            stateEnv,
+        );
+    }
+
+    it('a cold cache names the re-write and the measured /clear start, once per expiry', () => {
+        cache({}, { clear_start: 24_000 });
+        expect(noticeLines(deps({ promptKey: 'p1' }))).toEqual([
+            'AC: prompt cache cold for 23 min (TTL 1h) — this message is re-processing ~182k tokens. A /clear start here is ~24k (+ continuity record ≤ 1.5k).',
+        ]);
+        expect(noticeLines(deps({ promptKey: 'p2' }))).toEqual([]);
+    });
+
+    it('a warm cache says nothing', () => {
+        cache({ warm: true, expires_at: NOW + 10 * 60_000 });
+        expect(noticeLines(deps())).toEqual([]);
+    });
+
+    it('a cold re-write below twice the measured start says nothing', () => {
+        cache({ recache_tokens_if_cold: 40_000 }, { clear_start: 24_000 });
+        expect(noticeLines(deps())).toEqual([]);
+    });
+
+    it('without a measured start the stated floor applies and the start is not guessed', () => {
+        cache({ recache_tokens_if_cold: 49_000 });
+        expect(noticeLines(deps())).toEqual([]);
+        cache({ recache_tokens_if_cold: 60_000, expires_at: NOW - 2 * 60_000, ttl: '5m' });
+        expect(noticeLines(deps())).toEqual([
+            'AC: prompt cache cold for 2 min (TTL 5m) — this message is re-processing ~60k tokens. A /clear start here is not measured yet.',
+        ]);
+    });
+
+    it('another session’s cold cache is not this session’s', () => {
+        appendQuotaSnapshot({ ts: NOW, session: hashSessionId('sess-b'), cache: { expires_at: NOW - 60_000, recache_tokens_if_cold: 900_000 } }, stateEnv);
+        expect(noticeLines(deps())).toEqual([]);
+    });
+
+    it('on a cold cache the context line no longer calls /compact cheap', () => {
+        cache({ recache_tokens_if_cold: 10_000 }, { context_used_pct: 85 });
+        expect(noticeLines(deps({ promptKey: 'p1' }))).toEqual([
+            'AC: Context 85 % — cache cold: /clear, or continue knowingly — /compact now re-reads the full history uncached.',
+        ]);
+    });
+
+    it('the context line survives a long pause: fill is a fact, not a projection', () => {
+        feed([5], { context_used_pct: 85 });
+        expect(noticeLines(deps({ promptKey: 'p1', now: NOW + 30 * 60_000 }))).toEqual([expect.stringMatching(/^AC: Context 85 %/)]);
+    });
+});
+
 describe('metered notice', () => {
     it('a session that may bill per token is told once, naming the source', () => {
         const first = noticeLines(deps({ billing: METERED }));

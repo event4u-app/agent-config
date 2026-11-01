@@ -133,11 +133,11 @@ describe('exhaustedResetAt', () => {
 });
 
 describe('sessionContextFill', () => {
-    it('returns this session’s newest fresh fill only', () => {
+    it('returns this session’s newest fill, whatever its age (road-to-a-return-that-names-its-price 1.3)', () => {
         const ledger = [snap(3, 1, RESET_IN_3H, { context_used_pct: 70 }), snap(1, 1, RESET_IN_3H, { session: 'other', context_used_pct: 99 })];
-        expect(sessionContextFill(ledger, 's1', NOW)).toBe(70);
-        expect(sessionContextFill(ledger, 'nobody', NOW)).toBeNull();
-        expect(sessionContextFill(ledger, 's1', NOW + STALE_AFTER_MS + 4 * MIN)).toBeNull();
+        expect(sessionContextFill(ledger, 's1')).toBe(70);
+        expect(sessionContextFill(ledger, 'nobody')).toBeNull();
+        expect(sessionContextFill([...ledger, snap(0, 1, RESET_IN_3H, { context_used_pct: 72 })], 's1')).toBe(72);
     });
 });
 
