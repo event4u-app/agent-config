@@ -51,6 +51,10 @@ export interface RefreshRecord {
     detail?: string | undefined;
     /** HEAD when the concern spawned a refresh, so a later turn end with the same HEAD can skip. */
     head?: string | undefined;
+    /** The hook slot that ran the concern (`session_start`, `stop`); the file name predates the second slot. */
+    slot?: string | undefined;
+    /** Identifies one spawn attempt, so a failed launch withdraws its own claim and no newer one. */
+    nonce?: string | undefined;
 }
 
 /** One file per side, so the session concern writes without reading or merging anything. */

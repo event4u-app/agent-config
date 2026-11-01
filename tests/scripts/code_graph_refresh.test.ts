@@ -304,14 +304,14 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         const marker = path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.json');
         const optOut = path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.off.json');
         expect(runCli(['auto-refresh', 'status', '--root', tmp]).stdout).toMatch(/auto-refresh: off — the next local build or map turns it on/);
-        const built = runCli(['build', '--root', tmp]);
+        const built = runCli(['build', '--root', tmp], { CI: '' });
         expect(built.status).toBe(0);
-        expect(built.stdout).toMatch(/auto-refresh on — kept current/);
+        expect(built.stdout).toMatch(/auto-refresh on — refreshed/);
         expect(fs.existsSync(marker)).toBe(true);
         expect(runCli(['auto-refresh', 'off', '--root', tmp]).status).toBe(0);
         expect(fs.existsSync(marker)).toBe(false);
         expect(fs.existsSync(optOut)).toBe(true);
-        const again = runCli(['build', '--root', tmp]);
+        const again = runCli(['build', '--root', tmp], { CI: '' });
         expect(again.stdout).not.toMatch(/auto-refresh on/);
         expect(fs.existsSync(marker)).toBe(false);
         expect(runCli(['auto-refresh', 'status', '--root', tmp]).stdout).toMatch(/auto-refresh: off \(opted out\)/);
@@ -322,10 +322,16 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
 
     it('a local map turns auto-refresh on too', () => {
         const marker = path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.json');
-        const r = runCli(['map', '--root', tmp, '--no-verify']);
+        const r = runCli(['map', '--root', tmp, '--no-verify'], { CI: '' });
         expect(r.status).toBe(0);
-        expect(r.stdout).toMatch(/auto-refresh on — kept current/);
+        expect(r.stdout).toMatch(/auto-refresh on — refreshed/);
         expect(fs.existsSync(marker)).toBe(true);
+    });
+
+    it('a build under CI is not consent', () => {
+        const marker = path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.json');
+        expect(runCli(['build', '--root', tmp], { CI: 'true' }).status).toBe(0);
+        expect(fs.existsSync(marker)).toBe(false);
     });
 
     it('a build into a foreign --out path is not consent', () => {

@@ -27,6 +27,9 @@
  * yet) the window alone throttles. The spawn record is written BEFORE the spawn,
  * and a record that cannot be written means no spawn (`record-failed`), so no
  * path admits a spawn per turn (ratification round 1, 2026-11-01, both seats).
+ * Reading and writing that record happen under a short admission mutex, so two
+ * concurrent dispatches cannot both pass the throttle, and a child whose launch
+ * fails withdraws its own claim (round 2).
  *
  * WHEN IT DOES NOTHING — the conditions a ratification round of 2026-10-23
  * (two of two seats, refused the first cut) made load-bearing:
@@ -47,6 +50,7 @@
  * `code-graph auto-refresh status` prints.
  */
 import { execFileSync, spawn } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -77,6 +81,53 @@ export type RefreshOutcome =
 
 /** How long a spawn for one HEAD covers later turn ends; a session start after it re-checks. */
 export const THROTTLE_MS = 10 * 60 * 1000;
+/** An admission mutex older than this was left by a crashed dispatch and may be taken over. */
+export const ADMISSION_STALE_MS = 30 * 1000;
+
+const RECORD = 'code-graph-refresh.session-start.json';
+
+/** Takes the admission mutex (an atomic mkdir); null when another dispatch holds it. */
+function admit(buildDir: string, now: number): (() => void) | null {
+    const dir = path.join(buildDir, 'code-graph-refresh.admission');
+    for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+            fs.mkdirSync(buildDir, { recursive: true });
+            fs.mkdirSync(dir);
+            return () => fs.rmSync(dir, { recursive: true, force: true });
+        } catch (e) {
+            if ((e as NodeJS.ErrnoException).code !== 'EEXIST') return null;
+            try {
+                if (now - fs.statSync(dir).mtimeMs < ADMISSION_STALE_MS) return null;
+                fs.rmSync(dir, { recursive: true, force: true });
+            } catch {
+                return null;
+            }
+        }
+    }
+    return null;
+}
+
+/** Withdraws the spawn claim `nonce` made, unless a newer claim replaced it. */
+function withdraw(buildDir: string, nonce: string): void {
+    try {
+        const file = path.join(buildDir, RECORD);
+        const rec = JSON.parse(fs.readFileSync(file, 'utf-8')) as { nonce?: string };
+        if (rec.nonce === nonce) fs.writeFileSync(file, JSON.stringify({ ...rec, outcome: 'spawn-error' }));
+    } catch {
+        /* nothing to withdraw */
+    }
+}
+
+/** `session_start` / `stop` from either invocation shape, or undefined. */
+export function slotOf(envelope: Record<string, unknown>): string | undefined {
+    const payload = (typeof envelope['payload'] === 'object' && envelope['payload'] !== null ? envelope['payload'] : {}) as Record<string, unknown>;
+    for (const v of [envelope['event'], envelope['native_event'], envelope['hook_event_name'], payload['hook_event_name']]) {
+        if (typeof v !== 'string' || v === '') continue;
+        const raw = v.toLowerCase();
+        return raw === 'sessionstart' ? 'session_start' : raw;
+    }
+    return undefined;
+}
 
 export { resolveCli } from '../code_graph/refresh_cli.js';
 
@@ -121,7 +172,7 @@ function headOf(root: string): string | null {
  */
 function coveredBy(buildDir: string, head: string | null, now: number): boolean {
     try {
-        const rec = JSON.parse(fs.readFileSync(path.join(buildDir, 'code-graph-refresh.session-start.json'), 'utf-8')) as { outcome?: string; head?: string; at?: string };
+        const rec = JSON.parse(fs.readFileSync(path.join(buildDir, RECORD), 'utf-8')) as { outcome?: string; head?: string; at?: string };
         const age = now - Date.parse(rec.at ?? '');
         return rec.outcome === 'spawned' && (rec.head ?? null) === head && Number.isFinite(age) && age >= 0 && age < THROTTLE_MS;
     } catch {
@@ -143,7 +194,8 @@ function anyTracked(root: string, rels: readonly string[]): boolean {
     }
 }
 
-export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn, now: number = Date.now()): RefreshOutcome {
+/** `beforeClaim` runs between the throttle check and the claim — the window the admission mutex closes; tests use it. */
+export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn, now: number = Date.now(), slot?: string, beforeClaim?: () => void): RefreshOutcome {
     if (process.env['AGENT_CONFIG_CODE_GRAPH_REFRESH'] === 'off') return 'disabled';
     if (process.platform === 'win32') return 'unsupported';
     if (is_replay_mode()) return 'replay';
@@ -157,8 +209,28 @@ export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn, now: numb
     if (anyTracked(root, [home.autoRefreshPath, home.cachePath].map((p) => path.relative(root, p)))) return 'tracked';
     const head = headOf(root);
     if (coveredBy(home.buildDir, head, now)) return 'fresh';
+    const release = admit(home.buildDir, now);
+    if (release === null) return 'locked';
+    try {
+        return admitted(root, home, head, now, slot, spawnFn, beforeClaim);
+    } finally {
+        release();
+    }
+}
+
+function admitted(
+    root: string,
+    home: ReturnType<typeof projectBuildPaths>,
+    head: string | null,
+    now: number,
+    slot: string | undefined,
+    spawnFn: typeof spawn,
+    beforeClaim: (() => void) | undefined,
+): RefreshOutcome {
+    // Re-read under the mutex: a dispatch that held it may have just claimed this HEAD.
+    if (coveredBy(home.buildDir, head, now)) return 'fresh';
     const done = (outcome: RefreshOutcome, detail?: string): RefreshOutcome => {
-        recordRefreshIn(home.buildDir, { by: 'session-start', outcome, detail }, now);
+        recordRefreshIn(home.buildDir, { by: 'session-start', outcome, detail, slot }, now);
         return outcome;
     };
     if (!fs.existsSync(home.cachePath)) return done('no-cache');
@@ -166,14 +238,16 @@ export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn, now: numb
     if (fs.existsSync(lock) && !isStale(lock)) return done('locked');
     const verdict = usableCli(root);
     if ('reason' in verdict) return done(verdict.reason, (verdict as { cli?: string }).cli);
-    if (!recordRefreshIn(home.buildDir, { by: 'session-start', outcome: 'spawned', detail: verdict.cli, ...(head !== null ? { head } : {}) }, now)) return 'record-failed';
+    beforeClaim?.();
+    const nonce = randomBytes(8).toString('hex');
+    if (!recordRefreshIn(home.buildDir, { by: 'session-start', outcome: 'spawned', detail: verdict.cli, slot, nonce, ...(head !== null ? { head } : {}) }, now)) return 'record-failed';
     const child = spawnFn(verdict.cli, [...REFRESH_ARGS, '--root', root], {
         cwd: root,
         detached: true,
         stdio: 'ignore',
         env: hardenedSpawnEnv(),
     });
-    child.on('error', () => {});
+    child.on('error', () => withdraw(home.buildDir, nonce));
     child.unref();
     return 'spawned';
 }
@@ -183,7 +257,7 @@ export function main(): number {
         const raw = readHookStdin();
         const envelope = raw.trim() ? (JSON.parse(raw) as Record<string, unknown>) : {};
         const cwd = typeof envelope['cwd'] === 'string' && envelope['cwd'] ? envelope['cwd'] : process.cwd();
-        refreshFor(cwd);
+        refreshFor(cwd, spawn, Date.now(), slotOf(envelope));
     } catch {
         /* a freshness side job never breaks a session start */
     }

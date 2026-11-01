@@ -12,6 +12,7 @@ import {
     refreshFor,
     repoRoot,
     resolveCli,
+    slotOf,
     THROTTLE_MS,
 } from '../../../src/scripts/hooks/code_graph_refresh_hook.js';
 
@@ -293,5 +294,64 @@ describe('turn-end binding — spawn only after HEAD moved (2026-11-01)', () => 
         expect(refreshFor(root, fakeSpawn)).toBe('spawned');
         expect(refreshFor(root, fakeSpawn)).toBe('fresh');
         expect(calls).toHaveLength(1);
+    });
+
+    it('a dispatch finding the admission mutex held does not spawn', () => {
+        optedIn();
+        commit('one');
+        fs.mkdirSync(path.join(root, 'agents', 'map', '.build', 'code-graph-refresh.admission'));
+        expect(refreshFor(root, fakeSpawn)).toBe('locked');
+        expect(calls).toHaveLength(0);
+    });
+
+    it('takes over an admission mutex a crashed dispatch left behind', () => {
+        optedIn();
+        commit('one');
+        const m = path.join(root, 'agents', 'map', '.build', 'code-graph-refresh.admission');
+        fs.mkdirSync(m);
+        const old = (Date.now() - 60_000) / 1000;
+        fs.utimesSync(m, old, old);
+        expect(refreshFor(root, fakeSpawn)).toBe('spawned');
+        expect(fs.existsSync(m)).toBe(false);
+    });
+
+    it('a second dispatch between the first one\'s throttle check and its claim cannot spawn', () => {
+        optedIn();
+        commit('one');
+        let inner: string | null = null;
+        expect(refreshFor(root, fakeSpawn, Date.now(), 'stop', () => {
+            inner = refreshFor(root, fakeSpawn, Date.now(), 'stop');
+        })).toBe('spawned');
+        expect(inner).toBe('locked');
+        expect(calls).toHaveLength(1);
+    });
+
+    it('a launch that errors withdraws its own claim, so the next dispatch spawns', () => {
+        optedIn();
+        commit('one');
+        const errSpawn = ((cmd: string, args: readonly string[], opts: Record<string, unknown>) => {
+            calls.push({ cmd, args, opts });
+            const child = new EventEmitter() as EventEmitter & { unref: () => void };
+            child.unref = () => {};
+            queueMicrotask(() => child.emit('error', new Error('ENOENT')));
+            return child;
+        }) as unknown as typeof spawn;
+        expect(refreshFor(root, errSpawn)).toBe('spawned');
+        return new Promise<void>((resolve) => setTimeout(() => {
+            expect(readRefreshRecords(root)['session-start']?.outcome).toBe('spawn-error');
+            expect(refreshFor(root, fakeSpawn)).toBe('spawned');
+            resolve();
+        }, 10));
+    });
+
+    it('records which slot ran it', () => {
+        optedIn();
+        commit('one');
+        expect(refreshFor(root, fakeSpawn, Date.now(), 'stop')).toBe('spawned');
+        expect(readRefreshRecords(root)['session-start']?.slot).toBe('stop');
+        expect(slotOf({ event: 'stop' })).toBe('stop');
+        expect(slotOf({ hook_event_name: 'SessionStart' })).toBe('session_start');
+        expect(slotOf({ payload: { hook_event_name: 'Stop' } })).toBe('stop');
+        expect(slotOf({})).toBeUndefined();
     });
 });

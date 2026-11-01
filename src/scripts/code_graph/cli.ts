@@ -1176,7 +1176,7 @@ function cmdAutoRefresh(argv: string[]): number {
         fs.rmSync(home.autoRefreshOffPath, { force: true });
         const cli = usableCli(root);
         process.stdout.write(
-            'auto-refresh on — each agent session start, and each turn end after HEAD moved, refreshes the graph\n' +
+            'auto-refresh on — each agent session start, and a turn end once HEAD moved or 10 minutes passed, refreshes the graph\n' +
                 'and agents/map/ when it exists, in the background (POSIX hosts). `code-graph auto-refresh off` stops it.\n' +
                 'The opt-in is per working tree: run it again in each new git worktree.\n' +
                 (fs.existsSync(cacheFor(root)) ? '' : 'No graph yet: `code-graph build` or `code-graph map` creates one.\n'),
@@ -1205,15 +1205,15 @@ function cmdAutoRefresh(argv: string[]): number {
     }
     const cli = usableCli(root);
     const last = readRefreshRecords(root);
-    const line = (r: (typeof last)['refresh']): string => (r ? `${r.outcome} at ${r.at}${r.detail ? ` (${r.detail})` : ''}` : 'never');
+    const line = (r: (typeof last)['refresh']): string => (r ? `${r.outcome}${r.slot ? ` on ${r.slot}` : ''} at ${r.at}${r.detail ? ` (${r.detail})` : ''}` : 'never');
     const mapDir = home.mapDir;
     const gen = graphGeneration(cacheFor(root));
     const drawnFrom = mapGeneration(mapDir);
     const mutex = reclaimMutexPath(home.lockPath);
     process.stdout.write(
-        `auto-refresh: ${fs.existsSync(marker) ? 'on' : fs.existsSync(home.autoRefreshOffPath) ? 'off (opted out)' : 'off — the next local build or map turns it on'}\n` +
+        `auto-refresh: ${fs.existsSync(home.autoRefreshOffPath) ? 'off (opted out)' : fs.existsSync(marker) ? 'on' : 'off — the next local build or map turns it on'}\n` +
             `cli: ${'reason' in cli ? (cli.reason === 'no-cli' ? 'none usable — nothing will run' : `${cli.cli} ${cliPackage(cli.cli)?.version ?? '?'} — too old, nothing will run`) : `${cli.cli} ${cliPackage(cli.cli)?.version ?? '?'}`}\n` +
-            `last session start: ${line(last['session-start'])}\n` +
+            `last concern run (session start or turn end): ${line(last['session-start'])}\n` +
             `last refresh: ${line(last.refresh)}\n` +
             `graph: ${computeVerdict(root, cacheFor(root)).verdict}\n` +
             `map: ${!hasMap(mapDir) ? 'absent' : drawnFrom === null ? 'present (generation unknown — redrawn on the next refresh)' : drawnFrom === gen ? 'present, drawn from the current graph' : 'present, drawn from an older graph'}\n` +
