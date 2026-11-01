@@ -144,7 +144,11 @@ export function exhaustedResetAt(snapshots: readonly QuotaSnapshot[]): number | 
  * The newest context fill this session reported, whatever its age: an idle
  * session's context does not change, and the stale guard that once applied here
  * silenced the line exactly when a returning user needed it. A compaction since
- * is the caller's check (`cold_return.lastResponse`).
+ * that reading is NOT detected here, and no caller checks for it either: the
+ * figure is only as fresh as the status line's last snapshot. Whether the host
+ * writes a fresh snapshot between `/compact` and the next prompt is unmeasured
+ * (release review 19.2.0); until it is, a just-compacted session can read its
+ * pre-compaction fill.
  */
 export function sessionContextFill(snapshots: readonly QuotaSnapshot[], session: string): number | null {
     for (let i = snapshots.length - 1; i >= 0; i--) {
