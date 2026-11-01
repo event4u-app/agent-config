@@ -18,6 +18,8 @@ on:
       # demo map with the root code-graph CLI over its fixtures.
       - "site/docs-manifest.json"
       - "src/scripts/code_graph/**"
+      - "src/cli/help.ts"
+      - "src/cli/registry.ts"
       - "tests/fixtures/code-graph/**"
       - ".github/workflows/deploy-site.yml"
   workflow_dispatch:

@@ -1,0 +1,42 @@
+---
+title: Agent Config for GitHub Copilot
+description: GitHub Copilot has no user-level folder to install into — use the Copilot CLI plugin for discovery, or export Copilot instructions into a repository.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+For GitHub Copilot, `init` writes nothing and prints a hint instead. Pick one of two routes:
+
+<Tabs syncKey="tool">
+  <TabItem label="Copilot CLI plugin">
+```bash
+copilot marketplace add event4u-app/agent-config
+copilot plugin install agent-config@event4u-agent-config
+```
+
+**What it is:** a discovery-only plugin — a read-only MCP server plus one install-pointer skill, with no hooks. It lets Copilot find and read skills; it does not install the rules or the commands.
+
+**Can it block?** No — instructions only.
+
+**Reload:** start a new Copilot CLI session.
+  </TabItem>
+  <TabItem label="Copilot Chat (export)">
+Copilot Chat in VS Code, JetBrains and Neovim reads `.github/copilot-instructions.md` from the repository. Generate it:
+
+```bash
+npx -y @event4u/agent-config init
+agent-config export --tool=copilot-instructions --output=.github/copilot-instructions.md
+agent-config export --tool=agents-md --output=AGENTS.md
+```
+
+**What it is:** a short instructions file that points to `AGENTS.md`. You decide whether to commit both files — this is the one route where files land in a repository, because you put them there.
+
+**Can it block?** No — instructions only.
+
+**Reload:** reopen the chat panel.
+  </TabItem>
+</Tabs>
+
+<Aside type="note">
+Augment also has a plugin channel, but it is not enabled for most accounts; the [full install](/agent-config/tools/full-install/) is the supported route for Augment.
+</Aside>

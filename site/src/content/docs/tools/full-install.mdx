@@ -1,0 +1,123 @@
+---
+title: Full install for Claude Code, Cursor, Windsurf, Codex and more
+description: For most AI coding tools Agent Config writes skills, rules and commands straight into the tool's user-level folder — what lands where, what can block and the reload step per tool.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+For these tools `init` writes everything into the tool's own user-level folder, so every repository you open gets it:
+
+```bash
+npx -y @event4u/agent-config init --yes --global --tools=claude-code,cursor
+```
+
+Use the tool id from the tab below in `--tools`. After installing, reload the tool once so it reads the new files.
+
+<Tabs syncKey="tool">
+  <TabItem label="Claude Code">
+**Id:** `claude-code` · **Folder:** `~/.claude/`
+
+- `~/.claude/skills/` — skills
+- `~/.claude/commands/` — slash commands; grouped ones run as `/group:action`
+- `~/.claude/rules/` — the always-on rules and the rules that load on demand
+- `~/.claude/personas/` — review lenses
+- `~/.claude/settings.json` — the checks that run as hooks are registered here
+
+**Can it block?** Yes — the only tool where a few checks can refuse an action, such as ending a turn on "done" when nothing was run.
+
+**Reload:** start a new Claude Code session. Type `/` and look for `work` and `commit`.
+
+The Claude Code marketplace plugin is only a pointer to this install; it carries no skills of its own.
+  </TabItem>
+  <TabItem label="Cursor">
+**Id:** `cursor` · **Folder:** `~/.cursor/`
+
+- `~/.cursor/rules/` — rules
+- `~/.cursor/commands/` — slash commands
+- `~/.cursor/personas/` — review lenses
+- `~/.cursor/hooks.json` and `~/.cursor/hooks/` — checks that run as hooks
+
+**Can it block?** No — rules are instructions the agent is asked to follow; hooks report, they do not refuse.
+
+**Reload:** reload the Cursor window.
+  </TabItem>
+  <TabItem label="Windsurf">
+**Id:** `windsurf` · **Folder:** `~/.codeium/windsurf/`
+
+- `~/.codeium/windsurf/rules/` — rules
+- `~/.codeium/windsurf/hooks/` — checks that run as hooks
+
+**Can it block?** No — instructions only.
+
+**Reload:** reload the Windsurf window.
+  </TabItem>
+  <TabItem label="Cline">
+**Id:** `cline` · **Folder:** `~/Documents/Cline/Rules/`
+
+- Rules in Cline's global rules folder.
+
+**Can it block?** No — instructions only.
+
+**Reload:** reload the VS Code window.
+  </TabItem>
+  <TabItem label="Codex">
+**Id:** `codex` · **Folder:** `~/.codex/`
+
+- `~/.codex/skills/` — the skill bundle; Codex also reads `AGENTS.md`.
+
+**Can it block?** No — instructions only.
+
+**Reload:** start a new Codex session.
+  </TabItem>
+  <TabItem label="Gemini CLI">
+**Id:** `gemini-cli` · **Folder:** `~/.gemini/`
+
+- The skill bundle and Gemini's settings under `~/.gemini/`.
+
+**Can it block?** No — instructions only.
+
+**Reload:** start a new Gemini CLI session.
+  </TabItem>
+  <TabItem label="Augment">
+**Id:** `augment` · **Folder:** `~/.augment/`
+
+- Skills, rules and commands under `~/.augment/`; checks that run as hooks are opt-in in Augment's settings.
+
+**Can it block?** No — hooks report, they do not refuse.
+
+**Reload:** reload the Augment workspace; skills are indexed on session start.
+  </TabItem>
+  <TabItem label="Other tools">
+| Tool | Id | Folder |
+|---|---|---|
+| Roo Code | `roocode` | `~/.roo/` |
+| Kilo Code | `kilocode` | `~/.kilocode/` |
+| Continue | `continue` | `~/.continue/` |
+| Kiro | `kiro` | `~/.kiro/` |
+| Qoder | `qoder` | `~/.qoder/` |
+| OpenCode | `opencode` | `~/.opencode/` |
+| Trae | `trae` | `~/.trae/` |
+| Antigravity | `antigravity` | `~/.agents/` |
+| CodeBuddy | `codebuddy` | `~/.codebuddy/` |
+| Droid (Factory) | `droid` | `~/.factory/` |
+| Warp | `warp` | `~/.warp/` |
+
+Each gets the skill bundle in its user-level folder. **Can it block?** No — instructions only. **Reload:** start a new session or reload the window.
+  </TabItem>
+</Tabs>
+
+## Check it
+
+```bash
+npx -y @event4u/agent-config doctor
+```
+
+`doctor` compares what was installed with what is on disk and names the command that fixes any difference.
+
+## Remove it
+
+```bash
+npx -y @event4u/agent-config uninstall --global --tools=cursor
+```
+
+See [Uninstall](/agent-config/getting-started/uninstall/).

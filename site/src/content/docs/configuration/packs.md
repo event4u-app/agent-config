@@ -1,42 +1,41 @@
 ---
-title: Packs & Workspaces
-description: How packs and workspaces scope the projected artifact surface, and the discovery frontmatter that drives them.
+title: Skill sets for your role
+description: Agent Config groups its skills into sets for a role or domain — Laravel, React, finance, marketing and more — so your AI tool gets the ones you use, not the whole catalog.
 ---
 
-A **pack** is an opt-in capability bundle — technically a frontmatter *tag* on
-artifacts, not a directory. A **workspace** groups related packs. Install is
-**pack-scoped**: only your active packs are written, not the whole library.
+See which skill sets are active here, and which file switched them on:
 
-```yaml
-# .agent-settings.yml
-projection:
-  mode: legacy-all            # default: project everything
-  rule_packs: []              # opt-in packs when mode: scoped (ADR-040)
+```bash
+npx -y @event4u/agent-config packs:active
 ```
 
-## The vocabularies
+## What a skill set is
 
-- Workspaces: [`src/config/discovery/workspaces.yml`](https://github.com/event4u-app/agent-config/blob/main/src/config/discovery/workspaces.yml)
-  (9 workspaces — engineering, product, finance, founder, gtm, ops, …).
-- Packs: [`src/config/discovery/packs.yml`](https://github.com/event4u-app/agent-config/blob/main/src/config/discovery/packs.yml)
-  (21 packs — e.g. `engineering-base`, `git`, `php`, `laravel`, `symfony`,
-  `finance-basic`, `founder-strategy`).
+Skills, rules and commands are grouped into sets — called **packs** in the settings — for a role or a domain: `engineering-base`, `git`, `laravel`, `react`, `frontend-design`, `product-basic`, `finance-basic`, `gtm-marketing`, `founder-strategy` and others. Your [role profile](/agent-config/getting-started/choose-a-profile/) picks a starting set.
 
-## Discovery frontmatter
+List them all:
 
-Every non-kernel artifact carries five discovery keys: `workspaces:`, `packs:`,
-`lifecycle:`, `trust:`, `install:`. A build step
-(`scripts/build_discovery_manifest`) walks the source, validates the
-frontmatter, and writes `dist/discovery/discovery-manifest.json`. Consumers pick
-packs at install time; the resulting `.agent-settings.yml` records the opted-in
-set.
+```bash
+agent-config packs ls
+```
 
-## Projection modes
+## Why it matters
 
-- `legacy-all` (default) — every tool tree gets the full surface.
-- `scoped` (ADR-040, opt-in) — the projector writes only
-  `profile.packs ∪ runtime.active_packs`, expanded over the `requires`
-  dependency graph.
+On tools without a way to hide skills, a new install ships a reduced, role-scoped skill set instead of the whole catalog; Claude Code and Codex get every skill and show them by visibility instead. <!-- claim:default-install-context-cost --> Fewer skills in front of the agent means less to read on every task.
 
-For the full contract, see
-[`capability-packs.md`](https://github.com/event4u-app/agent-config/blob/main/docs/contracts/capability-packs.md).
+## Add a set for one session
+
+```text
+/profile activate finance
+```
+
+This narrows what is suggested in the current session only. To change the sets you install with, rerun the setup wizard:
+
+```bash
+agent-config setup
+```
+
+## Next
+
+- [The four profiles](/agent-config/configuration/profiles/)
+- [The settings file](/agent-config/configuration/overview/)

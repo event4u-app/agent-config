@@ -53,3 +53,45 @@ th {
   background-color: var(--sl-color-gray-6);
   font-weight: 600;
 }
+
+/* Figures: the info-banner under the hero and the "how it fits" visual. */
+.ac-figure {
+  margin: 1.5rem auto 2rem;
+  max-width: 72rem;
+}
+
+.ac-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgb(0 0 0 / 0.35);
+}
+
+.ac-figure figcaption {
+  margin-top: 0.75rem;
+  font-size: var(--sl-text-sm);
+  color: var(--sl-color-gray-3);
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* Splash: tighten the gap between hero and banner, centre the install command. */
+[data-has-hero] .hero {
+  padding-bottom: 0.5rem;
+}
+
+[data-has-hero] .sl-markdown-content > .expressive-code:first-of-type {
+  max-width: 34rem;
+  margin-inline: auto;
+}
+
+[data-has-hero] .sl-markdown-content > .expressive-code:first-of-type + p {
+  text-align: center;
+}
+
+/* The site logo is a square mark; keep it crisp next to the title. */
+.site-title img {
+  width: 2rem;
+  height: 2rem;
+}

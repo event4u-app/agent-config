@@ -5,6 +5,9 @@
     { "src": "benchmark.md", "route": "benchmark" },
     { "src": "CLAIMS.md", "route": "claims" },
     { "src": "catalog.md", "route": "catalog" },
-    { "src": "guides/works-with-agent-switch.md", "route": "works-with-agent-switch" }
+    { "src": "guides/works-with-agent-switch.md", "route": "works-with-agent-switch" },
+    { "src": "enforcement-by-host.md", "route": "trust/enforcement-by-host", "title": "Enforcement by host" },
+    { "src": "network.md", "route": "trust/network" },
+    { "src": "CONCEPTS.md", "route": "reference/glossary", "title": "Glossary" }
   ]
 }
