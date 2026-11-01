@@ -75,7 +75,7 @@ The compile-and-map corrections that need no decision landed in
 
 - [ ] **3.1 `php.dto_library` setting** next to the `eloquent:` block
       (`src/config/agent-settings.template.yml:376`); default per decision E1.
-      verify: `agent-config settings:get php.dto_library` prints the default and its source layer.
+      verify: `agent-config settings:get php.dto_library` -> /dto_library/
 - [ ] **3.2 One recommendation, above a threshold**, with the same-maintainer
       disclosure; off until the published release is MIT (proposal E2).
       verify: a trigger-eval case with no DTO library recommends once with the disclosure; one with another library does not recommend.

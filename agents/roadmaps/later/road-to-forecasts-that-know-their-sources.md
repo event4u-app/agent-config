@@ -56,7 +56,7 @@ unless blocker `analysis-only-scope` says otherwise.
 - [ ] **1.1 Odds bridge.** A script that de-vigs bookmaker odds, builds a
       weighted consensus and solves the implied λ pair by least squares, feeding
       `poisson_sim` instead of the model's head.
-      verify: `npx vitest run tests/scripts/prediction-pool_odds_bridge.test.ts` -> 0, with a
+      verify: `npx vitest run tests/scripts/prediction-pool_odds_bridge.test.ts` -> 0 — with a
       three-book fixture reproducing the hand-computed λ pair within 0.01.
 - [ ] **1.2 Sports are table rows.** A sport is a row (scoring rule, outcome
       model) in one table, never a new skill.
@@ -71,7 +71,7 @@ unless blocker `analysis-only-scope` says otherwise.
 - [ ] **2.2 Scoring.** Brier, log-loss, calibration buckets and, for betting,
       closing-line value; every report below n=30 resolved forecasts says
       `underpowered` (reuse `_lib/paired_verdict.ts`, `_lib/capture_rate.ts`).
-      verify: `npx vitest run tests/scripts/forecast_ledger_score.test.ts` -> 0, with a 10-row
+      verify: `npx vitest run tests/scripts/forecast_ledger_score.test.ts` -> 0 — with a 10-row
       fixture reporting `underpowered` and a 40-row fixture reporting a Brier score.
 - [ ] **2.3 Backfill (owner-supplied only).** If the owner provides the World Cup
       tip export, it enters as an explicitly retrospective batch.
@@ -105,7 +105,7 @@ unless blocker `analysis-only-scope` says otherwise.
       verify: `npx vitest run tests/scripts/trading_replay.test.ts` -> 0 — a replay below the minimum sample reports `underpowered`.
 - [ ] **4.2 Safety lines**: trading triggers on the finance floor and the
       gambling line from blocker `gambling-safety-line`.
-      verify: `grep -ciE "betting|odds|trading" src/rules/domain-safety-disclaimer.md src/rules/finance-safety-floor.md` -> non-zero in the trigger lists.
+      verify: `cat src/rules/domain-safety-disclaimer.md src/rules/finance-safety-floor.md | grep -ciE "betting|odds|trading"` -> /^[1-9]/
 
 ## Blockers
 

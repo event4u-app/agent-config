@@ -31,11 +31,11 @@ owners, not here.
 
 - [x] **1.1 Dead link in the flows README.** `src/flows/README.md:57` names
       `scripts/lint_flows.py`; only `src/scripts/lint_flows.ts` exists.
-      verify: `grep -n 'lint_flows' src/flows/README.md` shows the `.ts` path only.
+      verify: `grep -c 'lint_flows.py' src/flows/README.md` -> /^0$/
 - [x] **1.2 Stale usage comment.** `src/scripts/prediction-pool/poisson_sim.ts:46`
       shows a `python3 …poisson_sim.py` call; replace with the `npx tsx` call the
       skill documents. The `USAGE` text at `:422`/`:434` is a parity copy and stays.
-      verify: `grep -n 'python3' src/scripts/prediction-pool/poisson_sim.ts` -> no hit outside USAGE.
+      verify: `grep -c 'python3 scripts/prediction-pool' src/scripts/prediction-pool/poisson_sim.ts` -> /^0$/
 - [x] **1.3 Handoff contract says one thing.** `docs/contracts/cross-wing-handoff.md:77`
       names `scripts/lint_handoffs.py` (absent; the linter is `src/scripts/lint_handoffs.ts`);
       `:96` reads SHOULD where `:46` reads MUST. Keep MUST, say it is not linted yet.
@@ -47,7 +47,7 @@ owners, not here.
 - [x] **1.5 Pack description names its own content.** `src/config/discovery/packs.yml:235`
       and `src/packs/finance-advanced/README.md:5` name comp banding, which ships
       in ops-people (`src/skills/comp-banding/SKILL.md:11`).
-      verify: `grep -n -i 'comp' src/config/discovery/packs.yml` hits only the ops-people entry.
+      verify: `grep -c 'scenario modelling, comp banding' src/config/discovery/packs.yml` -> /^0$/
 - [x] **1.6 Floor text names only what it reaches — the two stale statements.**
       `src/rules/finance-safety-floor.md:51` lists `fundraising-narrative`, which
       the strategy floor covers via founder-strategy; drop it there.
@@ -60,16 +60,16 @@ owners, not here.
       `src/packs/{finance-basic,ops-people,founder-strategy,gtm-sales}/` references
       a screenshot under `docs/wizard/screenshots/`, which does not exist. Remove
       the reference.
-      verify: `grep -rn 'screenshots' src/packs/*/FIRST_WIN.md` -> 0.
+      verify: `grep -rlc 'docs/wizard/screenshots' src/packs` -> /^$/
 - [x] **1.8 No advice to spoof a browser.** `src/scripts/_lib/reddit_thread_parse.ts:542`
       tells the reader to send "a real browser UA"; name a descriptive agent string
       instead.
-      verify: `grep -n 'real browser' src/scripts/_lib/reddit_thread_parse.ts` -> 0.
+      verify: `grep -c 'real browser' src/scripts/_lib/reddit_thread_parse.ts` -> /^0$/
 - [x] **1.9 DCF hands workbook output to its owner.** `src/skills/dcf-modeling/SKILL.md`
       never references `spreadsheet-authoring`, whose core rule its markdown tables
       break (`spreadsheet-authoring/SKILL.md:46`). One hand-off line; the output
       contract change is `later/road-to-a-reason-that-is-still-there.md` Phase 3.
-      verify: `grep -c spreadsheet-authoring src/skills/dcf-modeling/SKILL.md` >= 1.
+      verify: `grep -c spreadsheet-authoring src/skills/dcf-modeling/SKILL.md` -> /^[1-9]/
 
 ## Phase 2 — DTO guidance that compiles and maps
 
@@ -93,7 +93,7 @@ This phase fixes only what the gate does not touch.
       `Math::` helper (`laravel-dto/SKILL.md:102`, `dtos.md:188`) are one
       consumer's conventions. Neutralise in these two files; the seven further
       sites of the same pattern are listed in the round disposition for a batched ask.
-      verify: `grep -nE 'bezeichnung|id_equipment|German' src/skills/laravel-dto/SKILL.md docs/guidelines/php/patterns/dtos.md` -> 0.
+      verify: `cat src/skills/laravel-dto/SKILL.md docs/guidelines/php/patterns/dtos.md | grep -cE 'bezeichnung|id_equipment|German'` -> /^0$/
 
 ## Phase 3 — Simulated numbers name their basis
 
@@ -114,7 +114,7 @@ This phase fixes only what the gate does not touch.
       runs. On the fixture all ten seeds then confirm no flip, while the
       unchecked greedy sets regress against the field model on 3 of 10 seeds;
       the test goes red when the unchecked flips are substituted.
-      verify: `npx vitest run tests/scripts/prediction-pool_pool_winsim.test.ts` -> 0, with
+      verify: `npx vitest run tests/scripts/prediction-pool_pool_winsim.test.ts` -> 0 — with
       a test that seeds 1–10 under `--holdout-runs` agree on the flip set or report none,
       and the existing parity cases unchanged.
 - [x] **3.3 The skill uses the held-out draw.** `prediction-pool-optimizer/SKILL.md`
