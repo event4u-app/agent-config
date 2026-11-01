@@ -5,13 +5,13 @@
  * (building or refreshing it first when needed), derive the model, and write
  * one generation of the map folder (ADR-297, ADR-303):
  *
- *   agents/map/index.html             one self-contained offline file
+ *   agents/map/index.html             the offline viewer: local and gitignored, re-rendered from the data below
  *   agents/map/MAP.md                 the same picture in words, budgeted
  *   agents/map/manifest.json          generation, sources and freshness per area
  *   agents/map/code/map.json          the model and the area payloads the pages are rendered from
  *   agents/map/code/areas/<id>.md     one page per code area of five or more files
  *   agents/map/<area>/<area>.json     data, interfaces, runtime, delivery: that area's payload
- *   agents/map/.build/                graph cache, twin, lock, staging — the only gitignored part
+ *   agents/map/.build/                graph cache, twin, lock, staging — gitignored, like index.html
  *
  * Same tree in, same bytes out: nothing written here carries a timestamp, a
  * host path or anything else that differs between two builds of one commit.
@@ -48,7 +48,7 @@ import { attachDomains, domainsOnAreas, mapBranches, mapProvenance } from './map
 import { nodeOwner } from './verify/owner_index.js';
 import { type Overlay, readOverlay } from './verify/overlay.js';
 import { workingChanges } from './verify/paths.js';
-import { lineJson, readManifestAt, storedAreas, storedMeta, storedModel, withManifest } from './map_stored.js';
+import { lineJson, readManifestAt, stampViewer, storedAreas, storedMeta, storedModel, withManifest } from './map_stored.js';
 import { areaProblems, areaSummaryLines, KNOWLEDGE_AREA_IDS, type MapAreas, type MapTour, witnessesOf } from './map_areas.js';
 import { loadGraph } from './query.js';
 import type { CodeGraph } from './types.js';
@@ -518,6 +518,7 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
             }
         }
         swapIn(next, outDir, prev);
+        stampViewer(outDir);
         // The render check described the generation it checked, not this one.
         fs.rmSync(path.join(build, 'map-render.json'), { force: true });
     } finally {
@@ -1391,7 +1392,7 @@ function previousTours(dir: string): MapTour[] {
     }
 }
 
-function readMapAt(dir: string): { meta: MapMeta; model: MapModel } | null {
+export function readMapAt(dir: string): { meta: MapMeta; model: MapModel } | null {
     const p = mapJsonPath(dir);
     try {
         const parsed = JSON.parse(fs.readFileSync(p, 'utf-8')) as { meta?: MapMeta; model?: Partial<MapModel> } | null;
@@ -1415,7 +1416,6 @@ function readMapAt(dir: string): { meta: MapMeta; model: MapModel } | null {
         return null;
     }
 }
-
 
 export interface AreaReport {
     id: string;

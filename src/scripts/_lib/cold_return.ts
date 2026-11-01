@@ -7,10 +7,9 @@
  * included, is itself a request that rewrites the cache, so the host reports a
  * fresh `expires_at` after it and no separate compaction check is needed here.
  *
- * Without the tap there is no reading and the line stays silent. The
- * transcript fallback is carried as a follow-up: it does not fit the
- * `quota_notice` chunk ceiling (`hook-bundle-budget.json`), whose raise is a
- * ratified edit.
+ * Without the tap there is no reading and the line stays silent, on purpose:
+ * a transcript cannot tell cold from warm (46 % false cold in the calibration
+ * replay, `session_eol_report`), so no transcript fallback exists.
  */
 
 import type { QuotaSnapshot } from './quota_ledger.js';
