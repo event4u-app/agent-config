@@ -17,6 +17,22 @@ npx -y @event4u/agent-config code-graph map --open
 
 In your AI tool, `/project:map` draws the same map and points the agent at it.
 
+## What it looks like
+
+All captures below come from the demo map's sample project, not from a real codebase.
+
+![The code graph: areas of the sample project as bubbles; selecting a file lights up every area it reaches; the blast-radius panel counts 60 direct and 480 transitive dependents](/agent-config/media/code-map/demo-graph-blast.webp)
+
+![The data view: an entity-relationship diagram of the saved schema, with one finding selected — a code relation without a foreign key — its evidence and a suggested check](/agent-config/media/code-map/demo-erd.webp)
+
+![The dependency matrix: links between 15 areas of the sample project, one row per area](/agent-config/media/code-map/demo-matrix.webp)
+
+![The knowledge view: one file next to the tests, contracts and decision records that point at it](/agent-config/media/code-map/demo-knowledge.webp)
+
+![A file with no callers: the detail panel shows its commit history, a dead-code marker and a blast radius of 0](/agent-config/media/code-map/demo-history.webp)
+
+<video src="/agent-config/media/code-map/demo-tour.mp4" controls muted playsinline preload="metadata" aria-label="A short tour through the demo map"></video>
+
 ## When to use it
 
 - Before a change you are not sure about: `agent-config code-graph impact --diff main` lists the callers, dependents and test files a diff can break.

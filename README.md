@@ -84,6 +84,8 @@ One install gives the agent you already use a set of skills, agent rules and sla
 
 `agent-config code-graph map --open` draws a local map of your repository: who calls what, which tests cover it, data, interfaces and delivery. Pick a file and every area it reaches lights up. It runs offline and keeps `file:line` for every fact.
 
+![The code map on a sample project: areas as bubbles; selecting a file lights up every area it reaches; the blast-radius panel counts its direct and transitive dependents](docs/media/code-map/demo-graph-blast.webp)
+
 [**Open the demo map →**](https://event4u-app.github.io/agent-config/demo-map/) (sample project, not your code) · [Code map →](https://event4u-app.github.io/agent-config/features/code-map/)
 
 ## Pick your profile

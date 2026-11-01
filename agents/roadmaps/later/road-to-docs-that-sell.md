@@ -406,13 +406,22 @@ The size gate says "replace, do not grow"; depth moves to the site.
 - [x] **9.1 Web-sized images.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Optimised copies (WebP or compressed PNG, at
       most 300 KB each) of the banner and the 0.1 image for README and site;
       originals stay in `.github/assets/`; alt text describes the content.
-- [ ] **9.2 Reproducible map captures.** A Playwright script captures the demo
+- [x] **9.2 Reproducible map captures.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: site/sync-docs.mjs --> A Playwright script captures the demo
       map's graph with blast radius, ERD, history, matrix and knowledge views
       plus a short clip, replacing the five stale self-map screenshots. Each
       embed gets its ADR-125 human confirmation before it ships.
-- [ ] **9.3 Setup wizard strip.** The existing `wizard-browser.spec.ts`
+      **Done 2026-11-01:** `internal/capture/capture-demo-map.mjs` writes the
+      five views and `demo-tour.mp4` to `docs/media/code-map/`. ADR-125
+      confirmation given by the owner in session on 2026-11-01 ("Screenshots
+      sind ok, bette sie ein"); embedded on the code-map feature page, the
+      graph view also in the README. `sync-docs.mjs` now copies media
+      subfolders, which the site needed to serve them.
+- [x] **9.3 Setup wizard strip.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: site/sync-docs.mjs --> The existing `wizard-browser.spec.ts`
       dry-run screenshots are exported behind an env flag into one strip for
       the Install page.
+      **Done 2026-11-01:** `docs/media/install/wizard-strip.webp`, confirmed
+      under ADR-125 in the same owner message, embedded in the desktop-wizard
+      tab of the Install page.
 - [x] **9.4 Social preview.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> A 1280×640 preview from the banner; uploading it
       in the repository settings is an owner step.
 
