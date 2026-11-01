@@ -61,8 +61,8 @@ const ARTEFACT = [
     /index-v1\.sqlite3/,
     /estate-index/,
     /hub\.json/,
-    /NATIVE_CACHE_REL|LOCK_REL|AUTO_REFRESH_REL/,
-    /\.(?:cachePath|buildCachePath|lockPath|autoRefreshPath|mapDir|buildDir)\b|\b(?:sqliteTwinPath|sidecarPath|outcomesPath|graphGeneration)\s*\(/,
+    /NATIVE_CACHE_REL|LOCK_REL|AUTO_REFRESH_(?:OFF_)?REL/,
+    /\.(?:cachePath|buildCachePath|lockPath|autoRefreshPath|autoRefreshOffPath|mapDir|buildDir)\b|\b(?:sqliteTwinPath|sidecarPath|outcomesPath|graphGeneration)\s*\(/,
 ];
 
 /** Locations outside both layouts that a graph artefact was, or could plausibly be, written to. */
@@ -81,7 +81,7 @@ const OUTSIDE = [
  * only inside a layout while these resolve into one. Pre-ADR-303 fallbacks are
  * named `legacy…` and are read, never written, so they are not in these sets.
  */
-const LAYOUT_CONSTANTS = new Set(['MAP_DIR_REL', 'BUILD_DIR_REL', 'NATIVE_CACHE_REL', 'LOCK_REL', 'AUTO_REFRESH_REL']);
+const LAYOUT_CONSTANTS = new Set(['MAP_DIR_REL', 'BUILD_DIR_REL', 'NATIVE_CACHE_REL', 'LOCK_REL', 'AUTO_REFRESH_REL', 'AUTO_REFRESH_OFF_REL']);
 const LAYOUT_RESOLVERS = new Set(['hubDir', 'graphsRoot', 'indexPath', 'estateMapDir', 'outcomesPath']);
 
 export interface WriterFinding {

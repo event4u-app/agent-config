@@ -26,6 +26,8 @@ export const NATIVE_CACHE_REL = path.join(BUILD_DIR_REL, 'code-graph-v1.json');
 export const LOCK_REL = path.join(BUILD_DIR_REL, 'code-graph-refresh.lock');
 /** Written by `code-graph auto-refresh on`; the session concern acts only while it exists. */
 export const AUTO_REFRESH_REL = path.join(BUILD_DIR_REL, 'code-graph-auto-refresh.json');
+/** Written by `code-graph auto-refresh off`; a local `build` or `map` then no longer turns auto-refresh on. */
+export const AUTO_REFRESH_OFF_REL = path.join(BUILD_DIR_REL, 'code-graph-auto-refresh.off.json');
 /** The layout before ADR-303, read as a fallback for one release. */
 export const LEGACY_STATE_DIR_REL = path.join('agents', 'runtime', 'state');
 
@@ -43,6 +45,8 @@ export interface GraphHome {
     mapDir: string;
     lockPath: string;
     autoRefreshPath: string;
+    /** The opt-out marker; current layout only, since no older release wrote one. */
+    autoRefreshOffPath: string;
     /** The directory an older release kept these files in. */
     legacyDir: string;
     repoId: string | null;
@@ -65,6 +69,7 @@ function home(kind: GraphHome['kind'], root: string, dir: string, mapDir: string
         mapDir,
         lockPath: path.join(buildDir, path.basename(LOCK_REL)),
         autoRefreshPath: at(AUTO_REFRESH_REL),
+        autoRefreshOffPath: path.join(buildDir, path.basename(AUTO_REFRESH_OFF_REL)),
         legacyDir,
         repoId: id,
         instance: inst,
@@ -131,10 +136,16 @@ export function projectCachePath(root: string): string {
 }
 
 /** What the session refresh concern reads of a project home, without the rest — its chunk has a byte ceiling. */
-export function projectBuildPaths(root: string): Pick<GraphHome, 'buildDir' | 'cachePath' | 'lockPath' | 'autoRefreshPath'> {
+export function projectBuildPaths(root: string): Pick<GraphHome, 'buildDir' | 'cachePath' | 'lockPath' | 'autoRefreshPath' | 'autoRefreshOffPath'> {
     const b = path.join(root, BUILD_DIR_REL);
     const f = (n: string): string => pick(path.join(b, n), path.join(root, LEGACY_STATE_DIR_REL, n));
-    return { buildDir: b, cachePath: f('code-graph-v1.json'), lockPath: path.join(b, 'code-graph-refresh.lock'), autoRefreshPath: f('code-graph-auto-refresh.json') };
+    return {
+        buildDir: b,
+        cachePath: f('code-graph-v1.json'),
+        lockPath: path.join(b, 'code-graph-refresh.lock'),
+        autoRefreshPath: f('code-graph-auto-refresh.json'),
+        autoRefreshOffPath: path.join(b, path.basename(AUTO_REFRESH_OFF_REL)),
+    };
 }
 
 /** The in-repository home; callers that serve project homes only use this alone. */

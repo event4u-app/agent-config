@@ -4,7 +4,7 @@
     "registered_at": "2026-10-01",
     "owner": "maintainer",
     "review_by": "2027-10-01",
-    "max_bytes": 1560400,
+    "max_bytes": 1562000,
     "max_bytes_derivation": "Measured 1,514,715 bytes on origin/main at 213d87055 (the gate's own reading, APFS-cloned node_modules so no worktree path artefacts). The ceiling is that reading plus ~2.3 % of headroom, rounded to 1,550,000, on the same doctrine as the 2026-10-01 registration: a bundle is rebuilt from source on every run, so an esbuild minor that renames symbols moves the figure by hundreds of bytes with no change to this tree, and a ceiling one byte above the reading would red on that. Composition is healthy at this reading and was checked rather than assumed: one YAML package (258,833 bytes) and 1,238,525 bytes of own source, so the growth is own code, not a re-entered dependency. The 1,564,211-byte pre-swap regression this roadmap closed still cannot reappear under it. RAISED to 1,550,500 on 2026-10-23 for the InstructionsLoaded binding (237 bytes against 51 of headroom); the reasoning and the measured alternative are the `raise_log` entry whose `to` is 1,550,500, so this paragraph describes the 1,550,000 registration and the raise is recorded there rather than restated.",
     "shrink_only": true,
     "shrink_only_note": "A RAISE needs a recorded reason in `raise_log` below naming what was added and why it could not be avoided. Enforced since road-to-a-ratification-fence-that-follows-its-imports 3.2: the gate reads `max_bytes` at the base revision, and a working value above it fails unless `raise_log` gained an entry whose `to` equals the new value. A lowering needs no entry. This file is also on the ratification gate's watched set, so a raise carries a record as well as a log entry.",
@@ -126,6 +126,25 @@
             "what_was_added": "Measured with this gate's own build (APFS-cloned node_modules) on the branch merged with origin/main 14012757d: 1,560,119 B against 1,557,828 B for origin/main itself, so +2,291 B; the ceiling leaves 281 B of headroom, the jitter margin this file's own doctrine names. Per module (metafile bytesInOutput, branch minus base): concern_timings.ts +593 (per-dispatch max RSS and CPU microseconds, read only when the timings sink is armed), stop_snapshot.ts +563 and end_review_nudge_hook.ts +282 (one git numstat / untracked read per Stop dispatch shared by end-review-nudge and obligation-settle, which removes a second `git diff` and `git ls-files` spawn from every Stop), compile_cache.ts +500 and dispatch_entry.ts +114 (node compile cache for the lazy concern chunks, fail-open), host_rate_marker_hook.ts +100 (one set naming which host failure classes park a run). No git-authorization or other guard code changes: an earlier revision of this raise carried a pending-refusal exception there, which the 2026-10-31 council round refused and which was withdrawn.",
             "why_it_could_not_be_avoided": "Room was made first and measured: the first build was +5,050 B, because the park marker's reset time was looked up inside the hook and pulled the quota ledger and pressure model into the bundle; that lookup moved to run_supervise (a CLI, outside the bundle), the marker field became dead code and was removed, the failure-class table became a one-entry set, and the withdrawn git-authorization exception went with its bytes (+5,050 -> +2,291 B). What remains is new behaviour on the dispatch path itself: the Stop memo has to live where both Stop concerns run, the compile cache has to be enabled by the entry that loads the lazy chunks, and the resource sample has to be taken by the process whose usage it reports. The base had 72 B of headroom, so none of it fits without a raise.",
             "what_would_have_caught_it": "This gate, on the first push; it did, and the reduction above is the response."
+        },
+        {
+            "date": "2026-11-01",
+            "chunk": "src/scripts/hooks/code_graph_refresh_hook.ts",
+            "from": 15400,
+            "to": 20500,
+            "by": "agent, feat/map-always-fresh",
+            "what_was_added": "The turn-end binding of the code-graph-refresh concern and the bounds eight ratification rounds required: a `git rev-parse HEAD` probe; a claim file per (HEAD, THROTTLE_MS window) in a per-UTC-day folder, created with O_EXCL right before the spawn after an age check by a fresh clock; a sweep of day folders two or more days old; containment that refuses a claim unless every path component from the repository root down is a real directory (lstat); tracked claim storage refused; the hook slot in the outcome record. Measured 19,741 bytes; ceiling 20,500 leaves about 4 %.",
+            "why_it_could_not_be_avoided": "The owner reported on 2026-11-01 a project map 20 commits behind; bound on session_start alone, a long session never refreshes. Without the throttle a turn-end binding would spawn a node process per turn, which is the waste the 2026-10-23 council kept it off `stop` for. The chunk loads only for this concern, so no other dispatch pays the bytes.",
+            "what_would_have_caught_it": "Nothing earlier: the growth is the feature."
+        },
+        {
+            "date": "2026-11-01",
+            "from": 1560400,
+            "to": 1562000,
+            "by": "agent, feat/map-always-fresh",
+            "what_was_added": "The `code-graph-refresh` row on the `stop` slot of seven platforms in the compiled manifest, and the opt-out marker path in the shared graph-home resolver. Measured 1,561,506 bytes, 1,106 over the 1,560,400 ceiling.",
+            "why_it_could_not_be_avoided": "A binding is a manifest row the dispatch bundle carries; the concern body itself stays in its own chunk. The resolver field is the single place a layout path is chosen (check_graph_writers), so the opt-out cannot live elsewhere.",
+            "what_would_have_caught_it": "Nothing earlier: the growth is the feature."
         }
     ],
     "chunks": [
@@ -155,9 +174,9 @@
         },
         {
             "entry": "src/scripts/hooks/code_graph_refresh_hook.ts",
-            "max_bytes": 15400,
+            "max_bytes": 20500,
             "registered_at": "2026-10-23",
-            "derivation": "Measured 14,284 bytes on 2026-10-24 (the session-start code-graph refresh concern with its opt-in, tracked-file and PATH-trust checks, the CLI capability probe and outcome record of the PR #2604 review follow-up, the refresh-lock staleness check it shares with `code-graph refresh --single-flight`, and the hardened spawn environment). The ceiling is that reading plus about 8 %, rounded, with no growth queued; it was registered at 14,000 against 12,726 B and re-derived in the same PR, before any release carried it. Bound on `session_start` alone; a chunk keeps it off every other dispatch's parse, and the dispatch bundle carries only its `LAZY_CONCERNS` row. Like `chat_history` it carries a concern, so a missing chunk falls back to the spawn path and costs latency, never the refresh."
+            "derivation": "Measured 14,284 bytes on 2026-10-24 (the session-start code-graph refresh concern with its opt-in, tracked-file and PATH-trust checks, the CLI capability probe and outcome record of the PR #2604 review follow-up, the refresh-lock staleness check it shares with `code-graph refresh --single-flight`, and the hardened spawn environment). The ceiling is that reading plus about 8 %, rounded, with no growth queued; it was registered at 14,000 against 12,726 B and re-derived in the same PR, before any release carried it. Bound on `session_start` alone; a chunk keeps it off every other dispatch's parse, and the dispatch bundle carries only its `LAZY_CONCERNS` row. Like `chat_history` it carries a concern, so a missing chunk falls back to the spawn path and costs latency, never the refresh. RAISED to 20,500 on 2026-11-01: the concern is now also bound on `stop`, admitted by an exclusive claim file in a per-day folder whose whole path from the repository root is lstat-contained, with every write it makes contained (19,741 B measured); the `raise_log` entry whose `to` is 20,500 records it."
         },
         {
             "entry": "src/scripts/update_notice_hook.ts",

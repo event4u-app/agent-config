@@ -1,4 +1,5 @@
 import * as fs from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
@@ -277,5 +278,28 @@ describe('delivery DL-4: a deploy word in a name is outweighed by a checking wor
     it('is silent once the deploy needs a test job', () => {
         const root = tree({ '.github/workflows/ship.yml': wf('Ship', job('test', 'test') + job('deploy', 'deploy', '    needs: test\n')) });
         expect(dl4(root)).toEqual([]);
+    });
+});
+
+describe('interfaces: a gitignored build output is not read (agent-switch map, 2026-11-01)', () => {
+    it('reads the tracked client and never the ignored dist-test copy of it', () => {
+        const root = tree({
+            '.gitignore': 'dist-test/\n',
+            'src/api.ts': "export const a = () => fetch('https://api.real-upstream.example.org/v1/profile');\n",
+            'dist-test/src/api.js': "export const a = () => fetch('https://api.only-in-build-output.example.org/v1/profile');\n",
+        });
+        execFileSync('git', ['-C', root, 'init', '-q']);
+        const services = readInterfaces(root)
+            .facts.filter((f) => f.kind === 'service')
+            .map((f) => f.name);
+        expect(services).toEqual(['api.real-upstream.example.org']);
+    });
+
+    it('still reads every file where git cannot answer (no repository)', () => {
+        const root = tree({
+            '.gitignore': 'dist-test/\n',
+            'dist-test/src/api.js': "export const a = () => fetch('https://api.only-in-build-output.example.org/v1/profile');\n",
+        });
+        expect(readInterfaces(root).facts.filter((f) => f.kind === 'service').map((f) => f.name)).toEqual(['api.only-in-build-output.example.org']);
     });
 });
