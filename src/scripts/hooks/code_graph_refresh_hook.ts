@@ -27,11 +27,13 @@
  * gets `fresh` — so at most one launch per HEAD and fixed window, and two may
  * fall either side of a window boundary. There is no lock to take over, nothing
  * to release and no record another process could overwrite (ratification rounds
- * 1-5, 2026-11-01). Only claims two or more windows old are swept, and a
- * dispatch refuses to claim such a window by a clock read at claim time, so a
- * claim is never deleted while its pair can still be won. A failed launch keeps
- * its claim and the pair retries in the next window. A clock set back lands in an
- * older window, which suppresses a refresh for at most one window.
+ * 1-6, 2026-11-01). Claims live in one folder per UTC day; only day folders
+ * two or more days old are swept, while admission refuses windows older than two
+ * (a clock read at claim time), so deletion trails admission by more than a day.
+ * The exactly-once property holds unless a dispatch pauses, or clocks disagree,
+ * by more than a day; then a duplicate launch is absorbed by the single-flight
+ * refresh lock. A failed launch keeps its claim and the pair retries in the next
+ * window.
  *
  * WHEN IT DOES NOTHING — the conditions a ratification round of 2026-10-23
  * (two of two seats, refused the first cut) made load-bearing:
@@ -82,53 +84,59 @@ export type RefreshOutcome =
 
 /** How long a spawn for one HEAD covers later turn ends; a session start after it re-checks. */
 export const THROTTLE_MS = 10 * 60 * 1000;
-/** The claim for one (HEAD, window) pair; its name is the whole protocol. */
+const DAY_MS = 24 * 60 * 60 * 1000;
+/** Day folders this many days older than today are swept; admission refuses windows older than two. */
+export const SWEEP_AFTER_DAYS = 2;
+
+/**
+ * The claim for one (HEAD, window) pair, inside the folder of the UTC day its
+ * window starts on; its path is the whole protocol.
+ */
 export function claimPath(buildDir: string, head: string | null, now: number): string {
-    return path.join(buildDir, `code-graph-refresh.claim-${head ?? 'none'}-${Math.floor(now / THROTTLE_MS)}`);
+    const w = Math.floor(now / THROTTLE_MS);
+    return path.join(buildDir, 'claims', String(Math.floor((w * THROTTLE_MS) / DAY_MS)), `${head ?? 'none'}-${w}`);
 }
 
-const CLAIM_RE = /^code-graph-refresh\.claim-.+-(\d+)$/;
-
-/** The window a claim file names, or null for a name that is not a claim. */
+/** The window a claim path names, or null for a path that is not a claim. */
 function windowOf(file: string): number | null {
-    const m = CLAIM_RE.exec(path.basename(file));
+    const m = /-(\d+)$/.exec(path.basename(file));
     return m ? Number(m[1]) : null;
 }
 
 /**
- * Deletes claims at least two windows older than `current`: no dispatch can
- * name them again (windows only move forward), so deleting one never frees a
- * pair someone could still win. Claims of the current and the previous window —
- * any HEAD — are never touched, so an active claim keeps its owner.
+ * Deletes whole day folders at least SWEEP_AFTER_DAYS older than `today`. The
+ * deletion horizon sits a day behind the admission horizon (two windows), so a
+ * claim can only be deleted after no dispatch can claim its window any more —
+ * unless a dispatch pauses, or clocks disagree, by more than a day. In that case
+ * a second launch for the pair is possible and the single-flight refresh lock
+ * absorbs it: the second refresh backs off.
  */
-function sweepSpent(dir: string, current: number | null): void {
-    if (current === null) return;
+function sweepSpent(claimsDir: string, today: number): void {
     try {
-        for (const f of fs.readdirSync(dir)) {
-            const w = windowOf(f);
-            if (w !== null && w <= current - 2) fs.rmSync(path.join(dir, f), { force: true });
+        for (const d of fs.readdirSync(claimsDir)) {
+            if (/^\d+$/.test(d) && Number(d) <= today - SWEEP_AFTER_DAYS) fs.rmSync(path.join(claimsDir, d), { recursive: true, force: true });
         }
     } catch {
-        /* a spent claim only costs a directory entry */
+        /* a spent day folder only costs disk entries */
     }
 }
 
 /**
  * Creates the claim exclusively: `won`, `taken` (another dispatch holds this
- * pair, or its window is already sweepable) or `failed`. The window is checked
- * against a clock read at claim time, so a dispatch that paused past the sweep
- * horizon cannot re-create a claim the sweep may already have removed.
+ * pair, or its window is past admission by a clock read at claim time) or
+ * `failed`.
  */
 function claim(file: string, clock: () => number): 'won' | 'taken' | 'failed' {
+    const at = clock();
     const w = windowOf(file);
-    if (w !== null && w <= Math.floor(clock() / THROTTLE_MS) - 2) return 'taken';
+    if (w !== null && w <= Math.floor(at / THROTTLE_MS) - 2) return 'taken';
     try {
         fs.mkdirSync(path.dirname(file), { recursive: true });
         fs.writeFileSync(file, '', { flag: 'wx' });
     } catch (e) {
         return (e as NodeJS.ErrnoException).code === 'EEXIST' ? 'taken' : 'failed';
     }
-    sweepSpent(path.dirname(file), windowOf(file));
+    sweepSpent(path.dirname(path.dirname(file)), Math.floor(at / DAY_MS));
     return 'won';
 }
 

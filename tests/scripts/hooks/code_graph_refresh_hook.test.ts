@@ -54,6 +54,12 @@ function writeCli(dir: string, capable = true, version = '99.0.0'): string {
     return cli;
 }
 
+/** Creates a claim file, as another dispatch would. */
+const plant = (f: string): void => {
+    fs.mkdirSync(path.dirname(f), { recursive: true });
+    fs.writeFileSync(f, '', { flag: 'wx' });
+};
+
 const git = (...a: string[]): void => {
     execFileSync('git', ['-C', root, ...a], { stdio: 'ignore' });
 };
@@ -311,15 +317,15 @@ describe('turn-end binding — spawn only after HEAD moved (2026-11-01)', () => 
         }
     });
 
-    it('a win never deletes a claim another pair could still hold, and sweeps only spent windows', () => {
+    it('a win never deletes a claim another pair could still hold, and sweeps only day folders two days old', () => {
         optedIn();
         commit('one');
         const build = path.join(root, 'agents', 'map', '.build');
         const now = Date.now();
         const otherHeadNow = claimPath(build, 'b'.repeat(40), now);
         const otherHeadPrev = claimPath(build, 'b'.repeat(40), now - THROTTLE_MS);
-        const spent = claimPath(build, 'b'.repeat(40), now - 2 * THROTTLE_MS);
-        for (const f of [otherHeadNow, otherHeadPrev, spent]) fs.writeFileSync(f, '');
+        const spent = claimPath(build, 'b'.repeat(40), now - 3 * 24 * 60 * 60 * 1000);
+        for (const f of [otherHeadNow, otherHeadPrev, spent]) plant(f);
         expect(refreshFor(root, fakeSpawn, now)).toBe('spawned');
         expect(fs.existsSync(otherHeadNow)).toBe(true);
         expect(fs.existsSync(otherHeadPrev)).toBe(true);
@@ -333,7 +339,7 @@ describe('turn-end binding — spawn only after HEAD moved (2026-11-01)', () => 
         const now = Date.now();
         const elsewhere = claimPath(build, 'c'.repeat(40), now);
         // Another pair is won between this dispatch's checks and its claim.
-        expect(refreshFor(root, fakeSpawn, now, 'stop', () => fs.writeFileSync(elsewhere, '', { flag: 'wx' }))).toBe('spawned');
+        expect(refreshFor(root, fakeSpawn, now, 'stop', () => plant(elsewhere))).toBe('spawned');
         expect(fs.existsSync(elsewhere)).toBe(true);
         // And this pair stays claimed against a later dispatch.
         expect(refreshFor(root, fakeSpawn, now)).toBe('fresh');
@@ -346,7 +352,7 @@ describe('turn-end binding — spawn only after HEAD moved (2026-11-01)', () => 
         const build = path.join(root, 'agents', 'map', '.build');
         const now = Date.now();
         const future = claimPath(build, 'd'.repeat(40), now + 3 * THROTTLE_MS);
-        fs.writeFileSync(future, '');
+        plant(future);
         expect(refreshFor(root, fakeSpawn, now)).toBe('spawned');
         expect(fs.existsSync(future)).toBe(true);
     });
@@ -386,8 +392,8 @@ describe('turn-end binding — spawn only after HEAD moved (2026-11-01)', () => 
         // Checks ran at `then`; the claim is attempted two windows later.
         expect(refreshFor(root, fakeSpawn, then, 'stop', undefined, () => then + 2 * THROTTLE_MS)).toBe('fresh');
         expect(calls).toHaveLength(0);
-        const claims = fs.readdirSync(path.join(root, 'agents', 'map', '.build')).filter((f) => f.startsWith('code-graph-refresh.claim-'));
-        expect(claims).toEqual([]);
+        const head = execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf-8' }).trim();
+        expect(fs.existsSync(claimPath(path.join(root, 'agents', 'map', '.build'), head, then))).toBe(false);
     });
 
     it('eight concurrent processes released at one instant spawn exactly once', async () => {
@@ -415,4 +421,15 @@ describe('turn-end binding — spawn only after HEAD moved (2026-11-01)', () => 
         expect(codes.every((c) => c === 0)).toBe(true);
         expect(fs.readFileSync(marker, 'utf-8')).toBe('x');
     }, 60_000);
+
+    it('a claim of yesterday survives a win today; deletion trails admission by more than a day', () => {
+        optedIn();
+        commit('one');
+        const build = path.join(root, 'agents', 'map', '.build');
+        const now = Date.now();
+        const yesterday = claimPath(build, 'e'.repeat(40), now - 24 * 60 * 60 * 1000);
+        plant(yesterday);
+        expect(refreshFor(root, fakeSpawn, now)).toBe('spawned');
+        expect(fs.existsSync(yesterday)).toBe(true);
+    });
 });
