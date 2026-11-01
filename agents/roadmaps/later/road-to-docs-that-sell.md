@@ -421,14 +421,14 @@ The size gate says "replace, do not grow"; depth moves to the site.
 - [x] **10.1 Feature pages carry search titles.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: site/sync-docs.mjs --> Each 6.6 page has a
       descriptive title and description (for example "AI code review that
       demands evidence"), so a search for the feature lands on the page.
-- [ ] **10.2 Per-skill ZIPs, if 0.8 allows.** Run the cloud-compatibility audit
+- [x] **10.2 Per-skill ZIPs, if 0.8 allows.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Audit 2026-11-01: `code-review` and `security-audit` are both tier T2 (`audit_cloud_compatibility --details`); ruling 0.8 keeps the ZIPs in the installation reference (`docs/installation.md` § Claude.ai Web), so no feature page links them. Run the cloud-compatibility audit
       for `code-review` and `security-audit`; if eligible and 0.8 says link,
       the Review and Security pages link the release ZIPs, otherwise the
       installation reference keeps them.
 - [x] **10.3 MCP path documented.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: site/sync-docs.mjs --> The Review page shows how to read the
       skill through `agent-config mcp-server` (`read_skill`) without the full
       install, stating that it is read-only.
-- [ ] **10.4 Hand-off to listings.** The listings roadmap gets a note that the
+- [x] **10.4 Hand-off to listings.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> The listings roadmap gets a note that the
       new README and site are in place; no submission happens here.
 
 ## Phase 11 — A newcomer can do it
