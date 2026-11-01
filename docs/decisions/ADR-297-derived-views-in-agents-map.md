@@ -144,6 +144,14 @@ project's page the same way when the project has not rendered one. The cost: a
 repository on a code host carries no viewer; `MAP.md` and the area pages remain
 readable there.
 
+Repositories that already committed the page are migrated by the engine itself,
+not by the root ignore block, which only an update rewrites: every redraw,
+refresh and `open` gives the map folder its own `.gitignore` (`/index.html`,
+`/.build/`, appended to any lines the user keeps there) and removes a tracked
+page from the index with `git rm --cached` — staged, never committed, the file
+kept on disk, and skipped while a merge, rebase, cherry-pick or revert is in
+progress (`map_local.ts`).
+
 ## References
 
 - ADR-124 § 1 — the Class-A row this amends.

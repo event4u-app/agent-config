@@ -13,6 +13,7 @@ import * as path from 'node:path';
 import { write_atomic } from '../_lib/fs_atomic.js';
 import type { MapAreas } from './map_areas.js';
 import { hasMap, mapJsonPath, readMapAt, renderHtml } from './map.js';
+import { keepMapLocal } from './map_local.js';
 import { readManifestAt, stampViewer, viewerIsCurrent } from './map_stored.js';
 
 /** The viewer page for the map in `dir`, from its stored data alone, or null when there is no readable map. */
@@ -37,6 +38,7 @@ export type ViewerOutcome = 'current' | 'rendered' | 'no-map' | 'failed';
 /** Render `index.html` in `dir` from the committed data unless the copy on disk already matches it; never throws. */
 export function ensureViewer(dir: string): ViewerOutcome {
     if (!hasMap(dir)) return 'no-map';
+    keepMapLocal(dir);
     if (viewerIsCurrent(dir)) return 'current';
     const html = viewerFromStored(dir);
     if (html === null) return 'no-map';
