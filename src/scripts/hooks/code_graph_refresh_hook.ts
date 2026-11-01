@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 /**
- * Session-start code-graph refresh — the consumer-side freshness carrier.
+ * Session-start and turn-end code-graph refresh — the consumer-side freshness carrier.
  *
  * WHY THIS EXISTS. The git-hook refresh block lives in `install-hooks.sh`,
  * which only this package's own `prepare` script runs. A consumer project gets
@@ -18,10 +18,18 @@
  * Freshness is eventual: the session's first graph read may still see the old
  * cache, and `code-graph-context` keeps saying so.
  *
+ * WHY IT ALSO RUNS AT TURN END. Bound on `session_start` alone, a long session
+ * that commits twenty times keeps the map it started with (measured 2026-11-01:
+ * a map 20 commits behind). On `stop` it costs one `git rev-parse HEAD`: while
+ * HEAD equals the one the last spawn recorded and that spawn is under
+ * `THROTTLE_MS` old, it returns `fresh` without spawning or recording — the
+ * record it compared against is the one it must keep.
+ *
  * WHEN IT DOES NOTHING — the conditions a ratification round of 2026-10-23
  * (two of two seats, refused the first cut) made load-bearing:
- *   · the project never ran `code-graph auto-refresh on`. An existing cache is
- *     not consent: a repository can commit one.
+ *   · no opt-in marker. `code-graph auto-refresh on` writes one, and so does a
+ *     local `code-graph build` or `map` unless `auto-refresh off` left an
+ *     opt-out. An existing cache alone is not consent: a repository can commit one.
  *   · the opt-in marker or the cache is TRACKED by git. Both live under the
  *     gitignored runtime dir; a tracked copy came from the repository, not
  *     from this developer.
@@ -60,7 +68,11 @@ export type RefreshOutcome =
     | 'locked'
     | 'no-cli'
     | 'cli-too-old'
+    | 'fresh'
     | 'spawned';
+
+/** How long a spawn for one HEAD covers later turn ends; a session start after it re-checks. */
+export const THROTTLE_MS = 10 * 60 * 1000;
 
 export { resolveCli } from '../code_graph/refresh_cli.js';
 
@@ -90,6 +102,26 @@ export function repoRoot(start: string): string | null {
     }
 }
 
+/** HEAD of `root`, or null when git cannot say (no commit yet, not a work tree). */
+function headOf(root: string): string | null {
+    try {
+        return execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'], env: hardenedSpawnEnv() }).trim() || null;
+    } catch {
+        return null;
+    }
+}
+
+/** Whether the last spawn already covers `head`. Unknown head or unreadable record → no. */
+function coveredBy(buildDir: string, head: string | null, now: number): boolean {
+    if (head === null) return false;
+    try {
+        const rec = JSON.parse(fs.readFileSync(path.join(buildDir, 'code-graph-refresh.session-start.json'), 'utf-8')) as { outcome?: string; head?: string; at?: string };
+        return rec.outcome === 'spawned' && rec.head === head && now - Date.parse(rec.at ?? '') < THROTTLE_MS;
+    } catch {
+        return false;
+    }
+}
+
 /** True when git tracks any of `rels` under `root` (or git cannot answer). */
 function anyTracked(root: string, rels: readonly string[]): boolean {
     try {
@@ -104,7 +136,7 @@ function anyTracked(root: string, rels: readonly string[]): boolean {
     }
 }
 
-export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn): RefreshOutcome {
+export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn, now: number = Date.now()): RefreshOutcome {
     if (process.env['AGENT_CONFIG_CODE_GRAPH_REFRESH'] === 'off') return 'disabled';
     if (process.platform === 'win32') return 'unsupported';
     if (is_replay_mode()) return 'replay';
@@ -115,8 +147,10 @@ export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn): RefreshO
     if (!fs.existsSync(home.autoRefreshPath)) return 'not-opted-in';
     // A repository-committed opt-in is refused before anything is written into the tree.
     if (anyTracked(root, [home.autoRefreshPath, home.cachePath].map((p) => path.relative(root, p)))) return 'tracked';
+    const head = headOf(root);
+    if (coveredBy(home.buildDir, head, now)) return 'fresh';
     const done = (outcome: RefreshOutcome, detail?: string): RefreshOutcome => {
-        recordRefreshIn(home.buildDir, { by: 'session-start', outcome, detail });
+        recordRefreshIn(home.buildDir, { by: 'session-start', outcome, detail, ...(outcome === 'spawned' && head !== null ? { head } : {}) });
         return outcome;
     };
     if (!fs.existsSync(home.cachePath)) return done('no-cache');

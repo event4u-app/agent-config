@@ -12,6 +12,7 @@ import {
     refreshFor,
     repoRoot,
     resolveCli,
+    THROTTLE_MS,
 } from '../../../src/scripts/hooks/code_graph_refresh_hook.js';
 
 /**
@@ -211,5 +212,48 @@ describe('code-graph-refresh session concern', () => {
         process.env['AGENT_CONFIG_CODE_GRAPH_REFRESH'] = 'off';
         expect(refreshFor(root, fakeSpawn)).toBe('disabled');
         expect(calls).toHaveLength(0);
+    });
+});
+
+describe('turn-end binding — spawn only after HEAD moved (2026-11-01)', () => {
+    const commit = (msg: string): void => {
+        fs.writeFileSync(path.join(root, `${msg}.txt`), msg);
+        git('add', `${msg}.txt`);
+        execFileSync('git', ['-C', root, '-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', msg], { stdio: 'ignore' });
+    };
+
+    it('skips a second call for the same HEAD, and keeps the spawn record it compared against', () => {
+        optedIn();
+        commit('one');
+        expect(refreshFor(root, fakeSpawn)).toBe('spawned');
+        const first = readRefreshRecords(root)['session-start'];
+        expect(first?.head).toMatch(/^[0-9a-f]{40}$/);
+        expect(refreshFor(root, fakeSpawn)).toBe('fresh');
+        expect(calls).toHaveLength(1);
+        expect(readRefreshRecords(root)['session-start']).toEqual(first);
+    });
+
+    it('spawns again once HEAD moved', () => {
+        optedIn();
+        commit('one');
+        expect(refreshFor(root, fakeSpawn)).toBe('spawned');
+        commit('two');
+        expect(refreshFor(root, fakeSpawn)).toBe('spawned');
+        expect(calls).toHaveLength(2);
+    });
+
+    it('spawns again for the same HEAD once the throttle window passed', () => {
+        optedIn();
+        commit('one');
+        expect(refreshFor(root, fakeSpawn)).toBe('spawned');
+        expect(refreshFor(root, fakeSpawn, Date.now() + THROTTLE_MS + 1000)).toBe('spawned');
+        expect(calls).toHaveLength(2);
+    });
+
+    it('never throttles without a HEAD to compare (no commit yet)', () => {
+        optedIn();
+        expect(refreshFor(root, fakeSpawn)).toBe('spawned');
+        expect(refreshFor(root, fakeSpawn)).toBe('spawned');
+        expect(calls).toHaveLength(2);
     });
 });

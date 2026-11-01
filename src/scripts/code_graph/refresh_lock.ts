@@ -49,6 +49,8 @@ export interface RefreshRecord {
     by: 'session-start' | 'refresh';
     outcome: string;
     detail?: string | undefined;
+    /** HEAD when the concern spawned a refresh, so a later turn end with the same HEAD can skip. */
+    head?: string | undefined;
 }
 
 /** One file per side, so the session concern writes without reading or merging anything. */
