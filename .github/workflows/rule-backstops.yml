@@ -264,6 +264,11 @@ jobs:
       - name: workflow path filters (do they still match anything?)
         run: ./scripts-run src/scripts/lint_workflow_paths
 
+      # `task consistency` regenerates this report before a push; this is the
+      # remote half, so a push that skipped the hook still fails on a stale one.
+      - name: doc path inventory is current
+        run: ./scripts-run src/scripts/report_doc_path_inventory --check
+
       # Rules and skills are capped; the contexts and guidelines they route to
       # were not, which is where the always-loaded budget leaks back in as
       # on-demand bloat. Shrink-only ratchet at 4.
