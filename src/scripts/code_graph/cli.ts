@@ -1440,7 +1440,7 @@ function cmdOutcome(argv: string[]): number {
 export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
     const sub = argv[0];
     try {
-        if (['--help', '-h', 'help'].includes(sub ?? '')) return (process.stdout.write(CODE_GRAPH_HELP), 0); // help, not a verb
+        if (argv.some((a) => ['--help', '-h'].includes(a)) || ['help'].includes(sub ?? '')) return (process.stdout.write(CODE_GRAPH_HELP), 0); // `<verb> --help` must never run the verb
         if (sub === 'build') return await cmdBuild(argv.slice(1));
         if (sub === 'validate') return cmdValidate(argv.slice(1));
         if (sub === 'detect') return cmdDetect(argv.slice(1));
