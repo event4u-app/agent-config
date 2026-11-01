@@ -1,4 +1,4 @@
-<!-- evidence-type: measurement -->
+<!-- evidence-type: analysis -->
 
 # Cold-return calibration — transcript replay, 2026-11-01
 
