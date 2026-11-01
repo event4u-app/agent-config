@@ -62,12 +62,18 @@ export function recordRefresh(root: string, rec: Omit<RefreshRecord, 'at'>): voi
     recordRefreshIn(path.dirname(graphHome(root).lockPath), rec);
 }
 
-/** For the session concern: its chunk must not carry the user-global resolver. */
-export function recordRefreshIn(stateDir: string, rec: Omit<RefreshRecord, 'at'>): void {
+/**
+ * For the session concern: its chunk must not carry the user-global resolver.
+ * Returns whether the record landed — the concern spawns only after it did, so
+ * a record it cannot write can never turn into a spawn per turn.
+ */
+export function recordRefreshIn(stateDir: string, rec: Omit<RefreshRecord, 'at'>, now: number = Date.now()): boolean {
     try {
-        fs.writeFileSync(path.join(stateDir, `code-graph-refresh.${rec.by}.json`), JSON.stringify({ at: new Date().toISOString(), ...rec }));
+        fs.mkdirSync(stateDir, { recursive: true });
+        fs.writeFileSync(path.join(stateDir, `code-graph-refresh.${rec.by}.json`), JSON.stringify({ at: new Date(now).toISOString(), ...rec }));
+        return true;
     } catch {
-        /* never fails a refresh */
+        return false;
     }
 }
 

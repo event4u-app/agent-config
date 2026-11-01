@@ -136,10 +136,16 @@ export function projectCachePath(root: string): string {
 }
 
 /** What the session refresh concern reads of a project home, without the rest — its chunk has a byte ceiling. */
-export function projectBuildPaths(root: string): Pick<GraphHome, 'buildDir' | 'cachePath' | 'lockPath' | 'autoRefreshPath'> {
+export function projectBuildPaths(root: string): Pick<GraphHome, 'buildDir' | 'cachePath' | 'lockPath' | 'autoRefreshPath' | 'autoRefreshOffPath'> {
     const b = path.join(root, BUILD_DIR_REL);
     const f = (n: string): string => pick(path.join(b, n), path.join(root, LEGACY_STATE_DIR_REL, n));
-    return { buildDir: b, cachePath: f('code-graph-v1.json'), lockPath: path.join(b, 'code-graph-refresh.lock'), autoRefreshPath: f('code-graph-auto-refresh.json') };
+    return {
+        buildDir: b,
+        cachePath: f('code-graph-v1.json'),
+        lockPath: path.join(b, 'code-graph-refresh.lock'),
+        autoRefreshPath: f('code-graph-auto-refresh.json'),
+        autoRefreshOffPath: path.join(b, path.basename(AUTO_REFRESH_OFF_REL)),
+    };
 }
 
 /** The in-repository home; callers that serve project homes only use this alone. */

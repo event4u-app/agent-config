@@ -23,7 +23,10 @@
  * a map 20 commits behind). On `stop` it costs one `git rev-parse HEAD`: while
  * HEAD equals the one the last spawn recorded and that spawn is under
  * `THROTTLE_MS` old, it returns `fresh` without spawning or recording — the
- * record it compared against is the one it must keep.
+ * record it compared against is the one it must keep. Without a HEAD (no commit
+ * yet) the window alone throttles. The spawn record is written BEFORE the spawn,
+ * and a record that cannot be written means no spawn (`record-failed`), so no
+ * path admits a spawn per turn (ratification round 1, 2026-11-01, both seats).
  *
  * WHEN IT DOES NOTHING — the conditions a ratification round of 2026-10-23
  * (two of two seats, refused the first cut) made load-bearing:
@@ -69,6 +72,7 @@ export type RefreshOutcome =
     | 'no-cli'
     | 'cli-too-old'
     | 'fresh'
+    | 'record-failed'
     | 'spawned';
 
 /** How long a spawn for one HEAD covers later turn ends; a session start after it re-checks. */
@@ -111,12 +115,15 @@ function headOf(root: string): string | null {
     }
 }
 
-/** Whether the last spawn already covers `head`. Unknown head or unreadable record → no. */
+/**
+ * Whether the last spawn already covers `head` (null: no commit yet, matched by a
+ * record without one). A record dated in the future — a clock set back — never covers.
+ */
 function coveredBy(buildDir: string, head: string | null, now: number): boolean {
-    if (head === null) return false;
     try {
         const rec = JSON.parse(fs.readFileSync(path.join(buildDir, 'code-graph-refresh.session-start.json'), 'utf-8')) as { outcome?: string; head?: string; at?: string };
-        return rec.outcome === 'spawned' && rec.head === head && now - Date.parse(rec.at ?? '') < THROTTLE_MS;
+        const age = now - Date.parse(rec.at ?? '');
+        return rec.outcome === 'spawned' && (rec.head ?? null) === head && Number.isFinite(age) && age >= 0 && age < THROTTLE_MS;
     } catch {
         return false;
     }
@@ -144,13 +151,14 @@ export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn, now: numb
     // `auto-refresh on` refuses a root without a project home (ADR-299).
     if (root === null || !hasProjectHome(root)) return 'not-opted-in';
     const home = projectBuildPaths(root);
-    if (!fs.existsSync(home.autoRefreshPath)) return 'not-opted-in';
+    // The opt-out wins over a marker a concurrent `build` may have written beside it.
+    if (!fs.existsSync(home.autoRefreshPath) || fs.existsSync(home.autoRefreshOffPath)) return 'not-opted-in';
     // A repository-committed opt-in is refused before anything is written into the tree.
     if (anyTracked(root, [home.autoRefreshPath, home.cachePath].map((p) => path.relative(root, p)))) return 'tracked';
     const head = headOf(root);
     if (coveredBy(home.buildDir, head, now)) return 'fresh';
     const done = (outcome: RefreshOutcome, detail?: string): RefreshOutcome => {
-        recordRefreshIn(home.buildDir, { by: 'session-start', outcome, detail, ...(outcome === 'spawned' && head !== null ? { head } : {}) });
+        recordRefreshIn(home.buildDir, { by: 'session-start', outcome, detail }, now);
         return outcome;
     };
     if (!fs.existsSync(home.cachePath)) return done('no-cache');
@@ -158,6 +166,7 @@ export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn, now: numb
     if (fs.existsSync(lock) && !isStale(lock)) return done('locked');
     const verdict = usableCli(root);
     if ('reason' in verdict) return done(verdict.reason, (verdict as { cli?: string }).cli);
+    if (!recordRefreshIn(home.buildDir, { by: 'session-start', outcome: 'spawned', detail: verdict.cli, ...(head !== null ? { head } : {}) }, now)) return 'record-failed';
     const child = spawnFn(verdict.cli, [...REFRESH_ARGS, '--root', root], {
         cwd: root,
         detached: true,
@@ -166,7 +175,7 @@ export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn, now: numb
     });
     child.on('error', () => {});
     child.unref();
-    return done('spawned', verdict.cli);
+    return 'spawned';
 }
 
 export function main(): number {

@@ -250,10 +250,48 @@ describe('turn-end binding — spawn only after HEAD moved (2026-11-01)', () => 
         expect(calls).toHaveLength(2);
     });
 
-    it('never throttles without a HEAD to compare (no commit yet)', () => {
+    it('without a HEAD (no commit yet) the window alone throttles', () => {
         optedIn();
         expect(refreshFor(root, fakeSpawn)).toBe('spawned');
+        expect(refreshFor(root, fakeSpawn)).toBe('fresh');
+        expect(refreshFor(root, fakeSpawn, Date.now() + THROTTLE_MS + 1000)).toBe('spawned');
+        expect(calls).toHaveLength(2);
+    });
+
+    it('a record dated in the future never covers (clock set back)', () => {
+        optedIn();
+        commit('one');
+        expect(refreshFor(root, fakeSpawn, Date.now() + 60_000)).toBe('spawned');
         expect(refreshFor(root, fakeSpawn)).toBe('spawned');
         expect(calls).toHaveLength(2);
+    });
+
+    it('does not spawn when the spawn record cannot be written', () => {
+        optedIn();
+        fs.mkdirSync(path.join(root, 'agents', 'map', '.build', 'code-graph-refresh.session-start.json'));
+        expect(refreshFor(root, fakeSpawn)).toBe('record-failed');
+        expect(refreshFor(root, fakeSpawn)).toBe('record-failed');
+        expect(calls).toHaveLength(0);
+    });
+
+    it('the opt-out wins over a marker written beside it', () => {
+        optedIn();
+        fs.writeFileSync(path.join(root, 'agents', 'map', '.build', 'code-graph-auto-refresh.off.json'), '{}');
+        expect(refreshFor(root, fakeSpawn)).toBe('not-opted-in');
+        expect(calls).toHaveLength(0);
+    });
+
+    it('a legacy-only layout with no build directory still records and throttles', () => {
+        fs.rmSync(path.join(root, 'agents', 'map'), { recursive: true, force: true });
+        const legacy = path.join(root, 'agents', 'runtime', 'state');
+        fs.mkdirSync(legacy, { recursive: true });
+        fs.writeFileSync(path.join(legacy, path.basename(CACHE_REL)), '{}');
+        fs.writeFileSync(path.join(legacy, path.basename(AUTO_REFRESH_REL)), '{}');
+        writeCli(path.join(outside, 'bin'));
+        process.env['PATH'] = [path.join(outside, 'bin'), GIT_DIR].join(path.delimiter);
+        commit('one');
+        expect(refreshFor(root, fakeSpawn)).toBe('spawned');
+        expect(refreshFor(root, fakeSpawn)).toBe('fresh');
+        expect(calls).toHaveLength(1);
     });
 });

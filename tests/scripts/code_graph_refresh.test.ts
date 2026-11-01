@@ -320,6 +320,14 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         expect(fs.existsSync(marker)).toBe(true);
     });
 
+    it('a local map turns auto-refresh on too', () => {
+        const marker = path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.json');
+        const r = runCli(['map', '--root', tmp, '--no-verify']);
+        expect(r.status).toBe(0);
+        expect(r.stdout).toMatch(/auto-refresh on — kept current/);
+        expect(fs.existsSync(marker)).toBe(true);
+    });
+
     it('a build into a foreign --out path is not consent', () => {
         const marker = path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.json');
         expect(runCli(['build', '--root', tmp, '--out', path.join(tmp, 'elsewhere.json')]).status).toBe(0);
