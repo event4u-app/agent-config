@@ -29,26 +29,26 @@ owners, not here.
 
 ## Phase 1 — Prose that matches the tree
 
-- [x] **1.1 Dead link in the flows README.** `src/flows/README.md:57` names
+- [x] **1.1 Dead link in the flows README.** `src/flows/README.md:57` names <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `scripts/lint_flows.py`; only `src/scripts/lint_flows.ts` exists.
       verify: `grep -c 'lint_flows.py' src/flows/README.md` -> /^0$/
-- [x] **1.2 Stale usage comment.** `src/scripts/prediction-pool/poisson_sim.ts:46`
+- [x] **1.2 Stale usage comment.** `src/scripts/prediction-pool/poisson_sim.ts:46` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/prediction-pool/poisson_sim.ts -->
       shows a `python3 …poisson_sim.py` call; replace with the `npx tsx` call the
       skill documents. The `USAGE` text at `:422`/`:434` is a parity copy and stays.
       verify: `grep -c 'python3 scripts/prediction-pool' src/scripts/prediction-pool/poisson_sim.ts` -> /^0$/
-- [x] **1.3 Handoff contract says one thing.** `docs/contracts/cross-wing-handoff.md:77`
+- [x] **1.3 Handoff contract says one thing.** `docs/contracts/cross-wing-handoff.md:77` <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       names `scripts/lint_handoffs.py` (absent; the linter is `src/scripts/lint_handoffs.ts`);
       `:96` reads SHOULD where `:46` reads MUST. Keep MUST, say it is not linted yet.
       verify: no `.py` linter path; `:46` and the input-shape row agree.
-- [x] **1.4 The runway example agrees with itself.** `src/skills/runway-cognition/SKILL.md:144-148`
+- [x] **1.4 The runway example agrees with itself.** `src/skills/runway-cognition/SKILL.md:144-148` <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       labels burn "last 3 quarters" and uses it monthly, and emits `gap=-5mo`
       against a stated gap of 4.5–7.5 months.
       verify: the arithmetic in the example reproduces by hand; the emitted gap is the stated range.
-- [x] **1.5 Pack description names its own content.** `src/config/discovery/packs.yml:235`
+- [x] **1.5 Pack description names its own content.** `src/config/discovery/packs.yml:235` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/discovery/packs.yml -->
       and `src/packs/finance-advanced/README.md:5` name comp banding, which ships
       in ops-people (`src/skills/comp-banding/SKILL.md:11`).
       verify: `grep -c 'scenario modelling, comp banding' src/config/discovery/packs.yml` -> /^0$/
-- [x] **1.6 Floor text names only what it reaches — the two stale statements.**
+- [x] **1.6 Floor text names only what it reaches — the two stale statements.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `src/rules/finance-safety-floor.md:51` lists `fundraising-narrative`, which
       the strategy floor covers via founder-strategy; drop it there.
       `src/rules/engineering-safety-floor.md` says "lives in `core`" against its own
@@ -56,16 +56,16 @@ owners, not here.
       The three skills that reach no floor at all are owner decision E1 in
       `later/road-to-a-reason-that-is-still-there.md`, not this step.
       verify: both statements match the `packs:` frontmatter of the named skills.
-- [x] **1.7 First-win guides point at nothing.** `FIRST_WIN.md` in
+- [x] **1.7 First-win guides point at nothing.** `FIRST_WIN.md` in <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `src/packs/{finance-basic,ops-people,founder-strategy,gtm-sales}/` references
       a screenshot under `docs/wizard/screenshots/`, which does not exist. Remove
       the reference.
       verify: `grep -rlc 'docs/wizard/screenshots' src/packs` -> /^$/
-- [x] **1.8 No advice to spoof a browser.** `src/scripts/_lib/reddit_thread_parse.ts:542`
+- [x] **1.8 No advice to spoof a browser.** `src/scripts/_lib/reddit_thread_parse.ts:542` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/reddit_thread_parse.ts -->
       tells the reader to send "a real browser UA"; name a descriptive agent string
       instead.
       verify: `grep -c 'real browser' src/scripts/_lib/reddit_thread_parse.ts` -> /^0$/
-- [x] **1.9 DCF hands workbook output to its owner.** `src/skills/dcf-modeling/SKILL.md`
+- [x] **1.9 DCF hands workbook output to its owner.** `src/skills/dcf-modeling/SKILL.md` <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       never references `spreadsheet-authoring`, whose core rule its markdown tables
       break (`spreadsheet-authoring/SKILL.md:46`). One hand-off line; the output
       contract change is `later/road-to-a-reason-that-is-still-there.md` Phase 3.
@@ -78,17 +78,17 @@ blocked by the portability gate (`src/scripts/check_portability.ts:112-138`)
 and is owner decision E11 in `later/road-to-a-library-the-agent-can-vouch-for.md`.
 This phase fixes only what the gate does not touch.
 
-- [x] **2.1 Mapping attributes live on the constructor.** `src/skills/laravel-dto/SKILL.md:73-84`
+- [x] **2.1 Mapping attributes live on the constructor.** `src/skills/laravel-dto/SKILL.md:73-84` <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       declares `#[Map]` on properties without a constructor; the library reads
       mapping only from constructor parameters, so the example's mapping is
       silently ignored. Rewrite the example with constructor promotion and add the
       rule.
       verify: the example has a `__construct` carrying every `#[Map]`; a gotcha line states the constructor rule.
-- [x] **2.2 No blanket base-class mandate.** `laravel-dto/SKILL.md:37,108,113`
+- [x] **2.2 No blanket base-class mandate.** `laravel-dto/SKILL.md:37,108,113` <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       and `docs/guidelines/php/patterns/dtos.md:18,113` say "always/must extend",
       contradicting their own `:100` / `:122-125`. Follow the project's convention.
       verify: no "always extend" / "must extend" line remains in either file.
-- [x] **2.3 No consumer-specific doctrine in the generic skill.** German legacy
+- [x] **2.3 No consumer-specific doctrine in the generic skill.** German legacy <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       column names (`laravel-dto/SKILL.md:43`, `dtos.md:40,48`) and a mandatory
       `Math::` helper (`laravel-dto/SKILL.md:102`, `dtos.md:188`) are one
       consumer's conventions. Neutralise in these two files; the seven further
@@ -97,11 +97,11 @@ This phase fixes only what the gate does not touch.
 
 ## Phase 3 — Simulated numbers name their basis
 
-- [x] **3.1 Seed, runs, method on every simulated figure.** `src/skills/prediction-pool-optimizer/SKILL.md`
+- [x] **3.1 Seed, runs, method on every simulated figure.** `src/skills/prediction-pool-optimizer/SKILL.md` <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       never asks for the seed (`grep seed` -> 0) although `poisson_sim.ts:18`
       renders it. One rule next to the executed-numbers block.
       verify: the skill names runs, seed, method and "same seed, same numbers".
-- [x] **3.2 A held-out draw before a flip is recommended.** Reproduced at the pin:
+- [x] **3.2 A held-out draw before a flip is recommended.** Reproduced at the pin: <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/prediction-pool/pool_winsim.ts -->
       `pool_winsim.ts` selects flips and scores them on the same scenarios
       (`:264-267`, `:300-308`) and accepts any strict gain (`:343-344`); seeds 1–10
       at `--runs 4000` gave 10 distinct flip sets. Add opt-in `--holdout-runs N`:
@@ -117,7 +117,7 @@ This phase fixes only what the gate does not touch.
       verify: `npx vitest run tests/scripts/prediction-pool_pool_winsim.test.ts` -> 0 — with
       a test that seeds 1–10 under `--holdout-runs` agree on the flip set or report none,
       and the existing parity cases unchanged.
-- [x] **3.3 The skill uses the held-out draw.** `prediction-pool-optimizer/SKILL.md`
+- [x] **3.3 The skill uses the held-out draw.** `prediction-pool-optimizer/SKILL.md` <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       passes `--holdout-runs` wherever it calls `pool_winsim` and says what an
       empty flip set means.
       verify: every `pool_winsim` invocation in the skill carries the flag.
