@@ -59,13 +59,17 @@
  *    in the anchor and in summed grants."* anthropic preferred defined overlap
  *    rules to a ban but called defined semantics blocking either way, so the
  *    ban satisfies both seats and the permissive variant does not.
- * 2. APPROVAL MUST BE AUTHENTICATED, NOT ASSERTED. Both seats' hardest
- *    pushback: `approved_by` in the pull request that requests the grant is
- *    self-asserted data authenticating nothing. A grant therefore carries an
- *    `approval_event` — a reference to a platform event outside the diff — and
- *    a grant whose approval is unverified is REFUSED rather than honoured.
- *    Verification is the CI step's job (it needs the platform); this module
- *    refuses anything it was not told is verified.
+ * 2. APPROVAL IS THE OWNER'S, AND IT IS CITED, NOT ASSERTED. The 2026-09-11
+ *    rule demanded a platform review by someone other than the author, which a
+ *    single-author repository can never produce; the owner directive of
+ *    2026-10-31 (agents/evidence/owner-directives/2026-10-31-single-author-grant-approval.md)
+ *    replaced it: the owner approves a grant by recording it. What survives of
+ *    both seats' hardest pushback — an approval the requesting diff writes
+ *    about itself authenticates nothing — is that `approval_event` must cite an
+ *    owner-directive file that already exists at the merge-base, so the pull
+ *    request that adds a grant cannot also supply its approval. Verification
+ *    is the CI step's job (it needs git history); this module refuses anything
+ *    it was not told is verified.
  * 3. DELETION CANNOT DISCHARGE DEBT. A removed record is not a repaid one.
  *    Deletion is caught by the base-ref ratchet, which sees a grant that
  *    existed at the base and does not exist at head.
@@ -85,8 +89,8 @@
  * The council accepted that for the gate under prerequisite 3 in these terms:
  * *"the mechanism does not prevent the exploit; it makes the exploit auditable
  * … a forensic control, not a preventive one."* Rules 2 and 3 above are what
- * keep the ledger from being weaker than that — an unverified grant buys
- * nothing, and a deleted one is still owed.
+ * keep the ledger from being weaker than that — a grant whose cited owner
+ * record the same change wrote buys nothing, and a deleted one is still owed.
  *
  * NO NUMERIC CAP IS ENFORCED, AND THAT IS A FINDING RATHER THAN AN OMISSION.
  * Both seats refused to derive one from the 250-PR delta distribution
@@ -186,7 +190,7 @@ export function readExceptions(file: string): ExceptionsFile {
                 errors.push(
                     `${where}: '${k}' must be a non-empty string` +
                         (k === 'approval_event'
-                            ? ". An approval recorded only by the diff requesting it authenticates nothing — name the platform event that authorised it."
+                            ? ". Cite the owner-directive file (agents/evidence/owner-directives/*.md) that approved it; CI honours it only when that file already exists at the merge-base."
                             : ''),
                 );
             }
@@ -309,10 +313,11 @@ export function computeCeiling(opts: CeilingOptions): CeilingReading {
         if (!verified.has(e.id)) {
             violations.push(
                 `standing-payload exception '${e.id}' has no VERIFIED approval. It names ` +
-                    `'${e.approval_event}', and nothing in this run confirmed that event. An approval recorded ` +
-                    'only by the change that requests it is self-asserted data: the same diff can claim the ' +
-                    'grant, the approver and the date. The grant is refused until the platform event is ' +
-                    'checked. This is not a payload problem — do not shrink the change to clear it.',
+                    `'${e.approval_event}', and this run did not confirm it cites an owner-directive file that ` +
+                    'exists at the merge-base. An approval recorded only by the change that requests it is ' +
+                    'self-asserted data: the same diff can claim the grant, the approver and the date. The grant ' +
+                    'is refused until the owner record it cites predates the change. This is not a payload ' +
+                    'problem — do not shrink the change to clear it.',
             );
         }
     }
