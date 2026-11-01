@@ -1,4 +1,5 @@
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -120,5 +121,20 @@ describe('site/docs-manifest.json', () => {
         const committed = sync.parseManifest(fs.readFileSync(path.join(root, 'site', 'docs-manifest.json'), 'utf8'));
         expect(committed.length).toBeGreaterThan(0);
         for (const p of committed) expect(fs.existsSync(path.join(root, 'docs', p.src)), p.src).toBe(true);
+    });
+});
+
+describe('site/sync-docs media copy', () => {
+    it('copies media in subfolders, so docs/media/<dir>/x is served at /media/<dir>/x', () => {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'site-media-'));
+        const src = path.join(tmp, 'src');
+        const out = path.join(tmp, 'out');
+        fs.mkdirSync(path.join(src, 'code-map'), { recursive: true });
+        fs.writeFileSync(path.join(src, 'top.gif'), 'a');
+        fs.writeFileSync(path.join(src, 'code-map', 'demo.webp'), 'b');
+        expect(sync.syncMedia(src, out)).toBe(2);
+        expect(fs.readFileSync(path.join(out, 'top.gif'), 'utf8')).toBe('a');
+        expect(fs.readFileSync(path.join(out, 'code-map', 'demo.webp'), 'utf8')).toBe('b');
+        fs.rmSync(tmp, { recursive: true, force: true });
     });
 });

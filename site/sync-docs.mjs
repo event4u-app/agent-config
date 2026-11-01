@@ -278,15 +278,17 @@ export function renderPage(page, sourceText, ctx) {
   );
 }
 
-/** Copy docs/media/* → site/public/media/* so embedded assets are served. */
-function syncMedia() {
-  if (!fs.existsSync(MEDIA_SRC)) return 0;
-  fs.mkdirSync(MEDIA_OUT, { recursive: true });
+/** Copy docs/media/** → site/public/media/**, subfolders included, so embedded assets are served. */
+export function syncMedia(src = MEDIA_SRC, out = MEDIA_OUT) {
+  if (!fs.existsSync(src)) return 0;
+  fs.mkdirSync(out, { recursive: true });
   let m = 0;
-  for (const name of fs.readdirSync(MEDIA_SRC).sort()) {
-    const from = path.join(MEDIA_SRC, name);
-    if (fs.statSync(from).isFile()) {
-      fs.copyFileSync(from, path.join(MEDIA_OUT, name));
+  for (const name of fs.readdirSync(src).sort()) {
+    const from = path.join(src, name);
+    const stat = fs.statSync(from);
+    if (stat.isDirectory()) m += syncMedia(from, path.join(out, name));
+    else if (stat.isFile()) {
+      fs.copyFileSync(from, path.join(out, name));
       m += 1;
     }
   }
