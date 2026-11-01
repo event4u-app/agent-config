@@ -315,6 +315,8 @@ export interface MapDiff {
 }
 
 const DEFAULT_SEED = 42;
+/** A folder area above this many files is split one folder level deeper. */
+const MAX_FOLDER_AREA = 40;
 
 const round = (n: number): number => Math.round(n * 1000) / 1000;
 
@@ -510,7 +512,8 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
     const keyed = folderGroups(
         sorted.filter((f) => roles[f] !== 'test'),
         paths,
-        Math.max(8, Math.floor(maxShare * total)),
+        // A quarter of a 2,000-file repository is 500 files, no area a reader can scan.
+        Math.max(8, Math.min(Math.floor(maxShare * total), MAX_FOLDER_AREA)),
     );
     // A test joins the group of the file it links to most — a function of its own
     // edges only, so it moves when its imports change, never when others' do.
@@ -986,7 +989,8 @@ export function areaTitles(areas: ReadonlyArray<{ name: string; kind: MapArea['k
 
 /**
  * Files grouped by folder: one group per top-level folder, and a group above
- * `cap` split one folder level deeper, up to four levels. Deterministic, and
+ * `cap` split one folder level deeper, up to six levels; a folder with a single
+ * subfolder is followed into it. Deterministic, and
  * independent of any other file's edges.
  */
 export function folderGroups(nodes: readonly number[], paths: readonly string[], cap: number): Array<[string, number[]]> {
@@ -1003,9 +1007,17 @@ export function folderGroups(nodes: readonly number[], paths: readonly string[],
         return m;
     };
     const split = (key: string, group: number[], depth: number): void => {
-        const sub = group.length > cap && depth < 4 ? bucket(group, depth + 1) : null;
-        if (!sub || sub.size <= 1) {
+        const sub = group.length > cap && depth < 6 ? bucket(group, depth + 1) : null;
+        if (!sub || sub.size === 0) {
             out.push([key, group]);
+            return;
+        }
+        if (sub.size === 1) {
+            // A folder whose files all sit in one subfolder: descend instead of stopping,
+            // or `resources/` holding only `views/` stays one area of every view.
+            const [only] = sub.keys();
+            if (only === key) out.push([key, group]);
+            else split(only as string, group, depth + 1);
             return;
         }
         for (const [k, g] of [...sub.entries()].sort((a, b) => byPath(a[0], b[0]))) split(k, g, depth + 1);

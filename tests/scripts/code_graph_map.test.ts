@@ -116,6 +116,14 @@ describe('the map model (Phase 2)', () => {
         ]);
     });
 
+    it('follows a folder whose files all sit in one subfolder instead of keeping it whole', () => {
+        const paths = [...Array.from({ length: 10 }, (_, i) => `resources/views/a/v${i}.blade.php`), ...Array.from({ length: 10 }, (_, i) => `resources/views/b/v${i}.blade.php`)];
+        expect(folderGroups(paths.map((_, i) => i), paths, 12).map(([k, g]) => [k, g.length])).toEqual([
+            ['resources/views/a', 10],
+            ['resources/views/b', 10],
+        ]);
+    });
+
     it('is a pure function: same graph, same bytes', async () => {
         const { graph } = await buildFromRepo(root, null);
         expect(JSON.stringify(buildMapModel(graph))).toBe(JSON.stringify(buildMapModel(graph)));
