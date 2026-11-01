@@ -58,6 +58,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { containedPath, isRealDir } from '../_lib/contained_write.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { usableCli } from '../code_graph/refresh_cli.js';
 import { hasProjectHome, projectBuildPaths } from '../code_graph/graph_home.js';
@@ -122,38 +123,6 @@ function sweepSpent(claimsDir: string, today: number): void {
     } catch {
         /* a spent day folder only costs disk entries */
     }
-}
-
-/** True for a directory that is not a symlink (lstat never follows the last component). */
-function isRealDir(p: string): boolean {
-    try {
-        const st = fs.lstatSync(p);
-        return st.isDirectory() && !st.isSymbolicLink();
-    } catch {
-        return false;
-    }
-}
-
-/**
- * Whether every component from `root` down to `dir` that exists is a real
- * directory (lstat, never followed). A symlinked `agents/`, `agents/map/`,
- * `.build/`, `claims/` or day folder — or a file planted at one — would let a
- * write or a recursive delete land outside the checkout.
- */
-export function containedPath(root: string, dir: string): boolean {
-    const rel = path.relative(root, dir);
-    if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) return false;
-    let at = root;
-    for (const part of rel.split(path.sep)) {
-        at = path.join(at, part);
-        try {
-            fs.lstatSync(at);
-        } catch {
-            return true; // the rest does not exist yet and will be created as real directories
-        }
-        if (!isRealDir(at)) return false;
-    }
-    return true;
 }
 
 /**
@@ -260,7 +229,7 @@ export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn, now: numb
     // A repository-committed opt-in is refused before anything is written into the tree.
     if (anyTracked(root, [home.autoRefreshPath, home.cachePath, path.join(home.buildDir, 'claims')].map((p) => path.relative(root, p)))) return 'tracked';
     const done = (outcome: RefreshOutcome, detail?: string): RefreshOutcome => {
-        recordRefreshIn(home.buildDir, { by: 'session-start', outcome, detail, slot, ...(head !== null ? { head } : {}) }, now);
+        recordRefreshIn(home.buildDir, { by: 'session-start', outcome, detail, slot, ...(head !== null ? { head } : {}) }, now, root);
         return outcome;
     };
     if (!fs.existsSync(home.cachePath)) return done('no-cache');

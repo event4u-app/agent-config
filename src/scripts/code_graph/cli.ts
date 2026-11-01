@@ -160,6 +160,7 @@ import {
     graphState,
     pickSource,
 } from './detect.js';
+import { writeContained } from '../_lib/contained_write.js';
 import { enableByUse } from './auto_refresh.js';
 import { graphHome } from './graph_home.js';
 import { estateMain } from './estate_cli.js';
@@ -1170,8 +1171,10 @@ function cmdAutoRefresh(argv: string[]): number {
             return 1;
         }
         const now = path.join(home.buildDir, path.basename(marker));
-        fs.mkdirSync(home.buildDir, { recursive: true });
-        fs.writeFileSync(now, `${JSON.stringify({ enabled_at: new Date().toISOString() })}\n`);
+        if (!writeContained(root, now, `${JSON.stringify({ enabled_at: new Date().toISOString() })}\n`)) {
+            process.stderr.write(`code-graph: refusing to write the opt-in — a path component under ${root} is a symlink or not a directory\n`);
+            return 1;
+        }
         if (now !== marker) fs.rmSync(marker, { force: true });
         fs.rmSync(home.autoRefreshOffPath, { force: true });
         const cli = usableCli(root);
@@ -1192,9 +1195,8 @@ function cmdAutoRefresh(argv: string[]): number {
     }
     if (action === 'off') {
         for (const m of new Set([marker, path.join(home.buildDir, path.basename(marker)), path.join(home.legacyDir, path.basename(marker))])) fs.rmSync(m, { force: true });
-        if (home.kind === 'project') {
-            fs.mkdirSync(home.buildDir, { recursive: true });
-            fs.writeFileSync(home.autoRefreshOffPath, `${JSON.stringify({ disabled_at: new Date().toISOString() })}\n`);
+        if (home.kind === 'project' && !writeContained(root, home.autoRefreshOffPath, `${JSON.stringify({ disabled_at: new Date().toISOString() })}\n`)) {
+            process.stderr.write(`code-graph: the opt-in is removed, but the opt-out could not be written — a path component under ${root} is a symlink or not a directory\n`);
         }
         process.stdout.write('auto-refresh off — a later `build` or `map` keeps it off; `auto-refresh on` reverses this\n');
         return 0;

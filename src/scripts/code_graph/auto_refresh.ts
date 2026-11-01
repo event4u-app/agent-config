@@ -4,6 +4,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { writeContained } from '../_lib/contained_write.js';
 import { graphHome } from './graph_home.js';
 
 /**
@@ -24,11 +25,7 @@ export function enableByUse(root: string): string {
     if (process.env['CI'] || process.env['AGENT_CONFIG_CODE_GRAPH_REFRESH'] === 'off') return '';
     const home = graphHome(root);
     if (home.kind !== 'project' || fs.existsSync(home.autoRefreshPath) || fs.existsSync(home.autoRefreshOffPath)) return '';
-    try {
-        fs.mkdirSync(home.buildDir, { recursive: true });
-        fs.writeFileSync(path.join(home.buildDir, path.basename(home.autoRefreshPath)), `${JSON.stringify({ enabled_at: new Date().toISOString(), by: 'use' })}\n`);
-    } catch {
-        return '';
-    }
+    // Contained: a symlink the repository ships under agents/map never redirects the opt-in.
+    if (!writeContained(root, path.join(home.buildDir, path.basename(home.autoRefreshPath)), `${JSON.stringify({ enabled_at: new Date().toISOString(), by: 'use' })}\n`)) return '';
     return '    auto-refresh on — refreshed at session start and at a turn end, at most once per HEAD and 10-minute window; `code-graph auto-refresh off` stops it\n';
 }

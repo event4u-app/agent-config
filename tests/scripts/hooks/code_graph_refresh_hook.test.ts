@@ -482,4 +482,16 @@ describe('turn-end binding — spawn only after HEAD moved (2026-11-01)', () => 
         expect(fs.readdirSync(path.join(outsideMap, '.build', 'claims')).sort()).toEqual(before);
         expect(fs.readFileSync(path.join(outsideMap, '.build', 'claims', '1', 'keep'), 'utf-8')).toBe('x');
     });
+
+    it('never writes its outcome record through a symlinked agents/map (round 9)', () => {
+        const outsideMap = path.join(outside, 'outside-map-record');
+        fs.mkdirSync(path.join(outsideMap, '.build'), { recursive: true });
+        fs.rmSync(path.join(root, 'agents', 'map'), { recursive: true, force: true });
+        fs.symlinkSync(outsideMap, path.join(root, 'agents', 'map'));
+        optedIn();
+        fs.rmSync(path.join(root, CACHE_REL));
+        commit('one');
+        expect(refreshFor(root, fakeSpawn)).toBe('no-cache');
+        expect(fs.readdirSync(path.join(outsideMap, '.build')).filter((f) => f.startsWith('code-graph-refresh.'))).toEqual([]);
+    });
 });

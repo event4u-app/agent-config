@@ -20,6 +20,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { writeContained } from '../_lib/contained_write.js';
 import { graphHome } from './graph_home.js';
 
 export const STALE_LOCK_MS = 5 * 60 * 1000;
@@ -61,17 +62,23 @@ export const refreshRecordPath = (root: string, by: RefreshRecord['by']): string
 
 /** The last outcome of one side, so a refresh that never happens is visible. Best-effort. */
 export function recordRefresh(root: string, rec: Omit<RefreshRecord, 'at'>): void {
-    recordRefreshIn(path.dirname(graphHome(root).lockPath), rec);
+    const home = graphHome(root);
+    recordRefreshIn(path.dirname(home.lockPath), rec, Date.now(), home.kind === 'project' ? root : undefined);
 }
 
 /**
  * For the session concern: its chunk must not carry the user-global resolver.
  * Creates the build directory when missing. Returns whether the record landed.
+ * With `root` (a project home), the write is contained: no component from the
+ * root down may be a symlink, and the record itself is opened with O_NOFOLLOW.
  */
-export function recordRefreshIn(stateDir: string, rec: Omit<RefreshRecord, 'at'>, now: number = Date.now()): boolean {
+export function recordRefreshIn(stateDir: string, rec: Omit<RefreshRecord, 'at'>, now: number = Date.now(), root?: string): boolean {
+    const file = path.join(stateDir, `code-graph-refresh.${rec.by}.json`);
+    const body = JSON.stringify({ at: new Date(now).toISOString(), ...rec });
+    if (root !== undefined) return writeContained(root, file, body);
     try {
         fs.mkdirSync(stateDir, { recursive: true });
-        fs.writeFileSync(path.join(stateDir, `code-graph-refresh.${rec.by}.json`), JSON.stringify({ at: new Date(now).toISOString(), ...rec }));
+        fs.writeFileSync(file, body);
         return true;
     } catch {
         return false;

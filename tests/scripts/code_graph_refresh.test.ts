@@ -328,6 +328,18 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         expect(fs.existsSync(marker)).toBe(true);
     });
 
+    it('a build never writes the opt-in through a symlinked agents/map', () => {
+        const outsideMap = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-outside-map-'));
+        try {
+            fs.symlinkSync(outsideMap, path.join(tmp, 'agents', 'map'));
+            runCli(['build', '--root', tmp, '--out', path.join(tmp, 'cache.json')], { CI: '' });
+            runCli(['auto-refresh', 'on', '--root', tmp], { CI: '' });
+            expect(fs.existsSync(path.join(outsideMap, '.build', 'code-graph-auto-refresh.json'))).toBe(false);
+        } finally {
+            fs.rmSync(outsideMap, { recursive: true, force: true });
+        }
+    });
+
     it('a build under CI is not consent', () => {
         const marker = path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.json');
         expect(runCli(['build', '--root', tmp], { CI: 'true' }).status).toBe(0);
