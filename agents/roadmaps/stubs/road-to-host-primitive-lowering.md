@@ -5,7 +5,7 @@ review_by: 2026-12-03
 
 # Stub: road to host-primitive lowering
 
-> **Arrivals:** 1 — latest `inbox-2026-09-ab` (2026-09-29).
+> **Arrivals:** 2 — latest `inbox-2026-11-a` (2026-11-01): two items below (5, 6). Before it: 1 — `inbox-2026-09-ab` (2026-09-29).
 
 > **Stub — not active work.** Transferred here by the 2026-09-b inbox round from
 > `agents/tmp.old/inbox-2026-09-b/s04/` and `.../s12/`. It is a stub rather than
@@ -18,7 +18,7 @@ review_by: 2026-12-03
 The residue of a thesis that was otherwise entirely overtaken: *this package
 simulates in prose what the host now offers as deterministic frontmatter.*
 Roughly 85 % of the source unit is already shipped or parked with a named owner.
-Three items are verified-open and held by nothing; a fourth, a re-probe spec, was handed over later.
+Three items are verified-open and held by nothing; a fourth, a re-probe spec, was handed over later; items 5 and 6 arrived from round `inbox-2026-11-a`.
 
 ### 1. The emitter drops AC's own tool scoping
 
@@ -69,6 +69,27 @@ refused. What that probe did not test is whether the host refuses only on a
 3. Recorded result either way, dated and pinned to the build: refused with the
    reason shown, or executed. Only a refusal may move the row's `block_exit`
    off `null`; an execution keeps the row `manual-only`.
+
+### 5. `<skills-root>` versus the host's skill-directory variable
+
+Verified at `5a66c1bf19` (round `inbox-2026-11-a`): `<skills-root>` appears 91
+times in 40 files under `src/`; `${CLAUDE_SKILL_DIR}` appears 0 times. The test
+that checks those lines substitutes the placeholder itself
+(`tests/install/skill_script_lines.test.ts:107,122`), so it never sees the
+path a consumer's model has to guess. The archived decision's revisit trigger
+(`agents/roadmaps/archive/road-to-skill-scripts-that-run-where-they-land.md:214`)
+has two conditions — a host documents the variable, **and** this stub is
+promoted; the first now holds, the second is this stub's own promotion. The
+lowering, when promoted: ratchet the count down per skill and make the test
+substitute each skill's own directory.
+
+### 6. Re-probe of three slots recorded as non-blocking
+
+`src/scripts/hooks/host_lowering.yaml:110-111,113` records `post_tool_use`,
+`pre_compact` and `subagent_stop` with `block_exit: null` (answered
+2026-09-29). A round-`inbox-2026-11-a` proposal reports current host docs
+saying they can block; unverifiable offline. Re-probe under the same protocol
+as item 4 — a recorded refusal is the only thing that moves a row off `null`.
 
 ## Why this is a stub and not a roadmap
 
