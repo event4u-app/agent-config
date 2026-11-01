@@ -121,9 +121,9 @@ clustered files if smaller, is split one level deeper, up to six levels; a folde
 holding a single subfolder is followed into it; a flat folder stays whole), each
 test joins the area of the file it links to most, and area ids and page names
 come from the folder (`src/vm` → `src-vm`). The `graphology-communities-louvain`
-row in § Dependency justifications no longer describes a live use; the package
-dependency is left in place for a separate removal. Everything else in this ADR
-stands.
+row in § Dependency justifications no longer describes a live use, and the
+package was removed from the runtime dependencies the same day, with its four
+transitive packages. Everything else in this ADR stands.
 
 ## Amendment 2 (2026-11-01) — the viewer page is local, rendered from the committed data
 
