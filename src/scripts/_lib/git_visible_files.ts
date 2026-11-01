@@ -22,7 +22,47 @@ export interface GitVisible {
     gitlinks: ReadonlySet<string>;
 }
 
+/** Per-root answers while a scope is open; null outside one, where every call asks git. */
+let scope: Map<string, GitVisible | null> | null = null;
+
+/**
+ * Runs `fn` with one `git ls-files` answer per root: a lane run walks the tree
+ * dozens of times and each walk used to spawn three git processes (1.65 s of a
+ * 3.4 s lane run, measured on a 353-file repository). The tree is not expected
+ * to change inside `fn`; nested calls share the outer scope.
+ */
+export function withGitVisibleScope<T>(fn: () => T): T {
+    if (scope !== null) return fn();
+    scope = new Map();
+    try {
+        return fn();
+    } finally {
+        scope = null;
+    }
+}
+
+/**
+ * The same scope around an async `fn`. Only for a caller that already runs
+ * alone in its process (the map redraw is single-writer per process), since any
+ * other code awaiting meanwhile would read the scope's answers too.
+ */
+export async function withGitVisibleScopeAsync<T>(fn: () => Promise<T>): Promise<T> {
+    if (scope !== null) return fn();
+    scope = new Map();
+    try {
+        return await fn();
+    } finally {
+        scope = null;
+    }
+}
+
 export function gitVisibleFiles(root: string): GitVisible | null {
+    if (scope === null) return askGit(root);
+    if (!scope.has(root)) scope.set(root, askGit(root));
+    return scope.get(root) ?? null;
+}
+
+function askGit(root: string): GitVisible | null {
     try {
         if (gitProbe(root, ['rev-parse', '--is-inside-work-tree']).trim() !== 'true') return null;
     } catch {
