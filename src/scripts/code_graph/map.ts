@@ -47,6 +47,7 @@ import { attachDomains, domainsOnAreas, mapBranches, mapProvenance } from './map
 import { nodeOwner } from './verify/owner_index.js';
 import { type Overlay, readOverlay } from './verify/overlay.js';
 import { workingChanges } from './verify/paths.js';
+import { lineJson, readManifestAt, storedAreas, storedMeta, storedModel, withManifest } from './map_stored.js';
 import { areaProblems, areaSummaryLines, KNOWLEDGE_AREA_IDS, type MapAreas, type MapTour, witnessesOf } from './map_areas.js';
 import { loadGraph } from './query.js';
 import type { CodeGraph } from './types.js';
@@ -121,8 +122,8 @@ export function holdsOnlyMapInputs(dir: string): boolean {
 
 /** The generation a drawn map records (manifest first, then an older map's meta), or null. */
 export function mapGeneration(outDir: string): string | null {
-    const man = readManifestAt(outDir);
-    if (typeof man?.generation === 'string' && man.generation) return man.generation;
+    const fromManifest = readManifestAt(outDir)?.generation;
+    if (fromManifest) return fromManifest;
     try {
         const doc = JSON.parse(fs.readFileSync(mapJsonPath(outDir), 'utf-8')) as { meta?: { graph_generation?: unknown } };
         return typeof doc.meta?.graph_generation === 'string' ? doc.meta.graph_generation : null;
@@ -490,11 +491,7 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
             written.push(rel.split(path.sep).join('/'));
             opts._afterWrite?.(rel);
         };
-        // Every tracked file but the manifest is a function of the tree alone: the
-        // commit, the date, the graph generation, the freshness and the drift since
-        // the previous drawing live in `manifest.json` (and the viewer), so a redraw
-        // of an unchanged area writes the same bytes and two branches touching
-        // different areas do not collide on a header line.
+        // Every tracked file but the manifest is a function of the tree alone (map_stored.ts).
         const stored = { meta: storedMeta(meta), model: storedModel(model), areas: storedAreas(areas) };
         write(path.join('code', 'map.json'), `${lineJson(stored)}\n`);
         for (const [i, a] of model.areas.entries()) {
@@ -743,9 +740,7 @@ export function mapMdParts(m: MapModel, meta: MapMeta, areas: MapAreas = {}): { 
     const head = [
         `# ${md(meta.title)}`,
         '',
-        meta.commit
-            ? `> Map built at \`${meta.commit}\`${meta.built ? ` · ${meta.built}` : ''} by \`agent-config code-graph map\` — this describes that commit; compare it with HEAD yourself.`
-            : '> Built by `agent-config code-graph map`; the commit it describes and its freshness are in `manifest.json` — compare that commit with HEAD yourself.',
+        '> Built by `agent-config code-graph map`; the commit it describes and its freshness are in `manifest.json` — compare that commit with HEAD yourself.',
         '> Deterministic, no model call. Rebuild with `agent-config code-graph map`; never edit by hand.',
         '',
         `**${f.length} files · ${m.areas.length} areas · ${m.analyses.trustedEdges} trusted links · guess share ${pct(m.analyses.guessShare)}**`,
@@ -880,7 +875,7 @@ export function mapMdParts(m: MapModel, meta: MapMeta, areas: MapAreas = {}): { 
         [
             '## Areas',
             '',
-            'Files grouped by folder — a folder above a quarter of the files is split one level deeper — and each',
+            'Files grouped by folder — a folder above 40 files (or a quarter of them) is split one level deeper — and each',
             'test joins the area of the file it links to most, so an area changes only when its own files do.',
             "*Outside hub folder* is the share of an area's non-test files whose directory differs from its hub's.",
             '',
@@ -1380,51 +1375,6 @@ export function mapManifest(m: MapModel, meta: MapMeta, areas: MapAreas): MapMan
     return { schema: 1, generation: meta.graph_generation ?? '', commit: meta.commit, ...(meta.built ? { built: meta.built } : {}), built_at_commit: meta.commit, state: meta.state, areas: out };
 }
 
-/** The meta fields a tracked map file keeps: none that change when only the commit does. */
-export function storedMeta(meta: MapMeta): MapMeta {
-    return { title: meta.title, commit: '', state: '', summary: meta.summary, ...(meta.demo ? { demo: true } : {}) };
-}
-
-/**
- * The model without what names the commit (`pin`, `provenance.head`) or depends
- * on the previous drawing (`drift`): the manifest and the viewer carry those.
- */
-function storedModel(model: MapModel): MapModel {
-    const { drift: _drift, pin: _pin, ...rest } = model as MapModel & { pin?: unknown };
-    const prov = (rest as unknown as { provenance?: Record<string, unknown> }).provenance;
-    if (prov && typeof prov === 'object') {
-        const { head: _head, ...p } = prov;
-        (rest as unknown as { provenance?: unknown }).provenance = p;
-    }
-    return rest as MapModel;
-}
-
-/** The knowledge areas without what reads the working diff (`impact`, the agent's diff pack), not the tree. */
-function storedAreas(areas: MapAreas): MapAreas {
-    const { impact: _impact, ...rest } = areas as MapAreas & { impact?: unknown };
-    const agent = (rest as unknown as { agent?: Record<string, unknown> }).agent;
-    if (agent && typeof agent === 'object' && 'contextPack' in agent) {
-        const { contextPack: _pack, ...a } = agent;
-        (rest as unknown as { agent?: unknown }).agent = a;
-    }
-    return rest as MapAreas;
-}
-
-/**
- * JSON with one array element per line and one key per line in the outer two
- * object levels, so git merges edits to different records instead of
- * conflicting on a single line. Deterministic for a deterministic input.
- */
-export function lineJson(v: unknown, depth = 0): string {
-    const pad = ' '.repeat(depth);
-    if (Array.isArray(v)) return v.length === 0 ? '[]' : `[\n${v.map((x) => `${pad} ${JSON.stringify(x ?? null)}`).join(',\n')}\n${pad}]`;
-    if (v !== null && typeof v === 'object' && depth < 2) {
-        const entries = Object.entries(v).filter(([, x]) => x !== undefined);
-        return entries.length === 0 ? '{}' : `{\n${entries.map(([k, x]) => `${pad} ${JSON.stringify(k)}: ${lineJson(x, depth + 1)}`).join(',\n')}\n${pad}}`;
-    }
-    return JSON.stringify(v);
-}
-
 /** The map a previous `code-graph map` wrote, or null when there is none. */
 export function readMap(root: string): { meta: MapMeta; model: MapModel } | null {
     return readMapAt(graphHome(root).mapDir);
@@ -1459,30 +1409,12 @@ function readMapAt(dir: string): { meta: MapMeta; model: MapModel } | null {
         ) {
             return null;
         }
-        // A map since 2026-11 keeps commit, date, generation and freshness in its manifest only.
-        const man = readManifestAt(dir);
-        const built = parsed.meta.built || man?.built;
-        const generation = parsed.meta.graph_generation || man?.generation;
-        const meta: MapMeta = {
-            ...parsed.meta,
-            commit: parsed.meta.commit || man?.commit || '',
-            state: parsed.meta.state || man?.state || '',
-            ...(built ? { built } : {}),
-            ...(generation ? { graph_generation: generation } : {}),
-        };
-        return { meta, model: parsed.model as MapModel };
+        return { meta: withManifest(parsed.meta, readManifestAt(dir)), model: parsed.model as MapModel };
     } catch {
         return null;
     }
 }
 
-function readManifestAt(dir: string): Partial<MapManifest> | null {
-    try {
-        return JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf-8')) as Partial<MapManifest>;
-    } catch {
-        return null;
-    }
-}
 
 export interface AreaReport {
     id: string;

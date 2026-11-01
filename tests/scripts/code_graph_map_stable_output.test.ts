@@ -4,7 +4,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { buildMap, lineJson, mapGeneration, readMap } from '../../src/scripts/code_graph/map.js';
+import { buildMap, mapGeneration, readMap } from '../../src/scripts/code_graph/map.js';
+import { lineJson } from '../../src/scripts/code_graph/map_stored.js';
 
 let root: string;
 
