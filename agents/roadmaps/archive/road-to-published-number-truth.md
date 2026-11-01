@@ -84,7 +84,7 @@ numbers.
 | **D3** | `README.md:89` links `<a href="MIGRATION.md">Upgrade to 6.0</a>` at published version 14.11.0. | `sed -n '89p' README.md`; `npm view @event4u/agent-config version` → 14.11.0 |
 | **D4** | The witness sweep cannot see either carrier shape. `SELF_COUNT` is noun-adjacent and space-separated, so `badge/Skills-299` (hyphen-joined, inside a URL) and `112 Python scripts` (qualifier between the digit and the noun) both pass. `MAGNITUDE`'s unit list is `tokens\|ms\|USD\|KB\|MB\|GB\|chars` and matches neither. | `check_claims.ts:105-107`; grep for the noun-adjacent form in `README.md` returns **zero** lines — every published count lives in a shape the gate is blind to |
 | **D5** | `agents/runtime/metrics/skill-usage.jsonl` was last written **2026-05-16**, 181 lines, final record `ts: 2026-05-15T13:44:17.594Z` — 100 days dead. `compute_skill_tiers.ts:18-22` documents the consequence in its own words: the common case is `fallback: "alphabetical"` and a verdict from it *"is therefore a PREDICTION, not a measurement."* | `ls -la` + `tail -1` + the source comment |
-| **D6** | `docs/maintainers/ONBOARDING.md` carries **37** lines containing the maintainer's home path (`/Users/<maintainer>`). `check_bundle_path_leakage.ts` (landed 2026-08-24 13:24, `0dbf252de`) scans `PUBLISHED_MD_ROOTS` plus eight named files; `docs/maintainers/ONBOARDING.md` is in neither list, and it is absent from `package.json:files[]`, so the gate is correctly scoped to the npm payload and structurally cannot reach a file that is tracked and public on GitHub but not shipped. | `grep -c` + `check_bundle_path_leakage.ts:118-141` + `files[]` |
+| **D6** | `ONBOARDING.md` carries **37** lines containing the maintainer's home path (`/Users/<maintainer>`). `check_bundle_path_leakage.ts` (landed 2026-08-24 13:24, `0dbf252de`) scans `PUBLISHED_MD_ROOTS` plus eight named files; `ONBOARDING.md` is in neither list, and it is absent from `package.json:files[]`, so the gate is correctly scoped to the npm payload and structurally cannot reach a file that is tracked and public on GitHub but not shipped. | `grep -c` + `check_bundle_path_leakage.ts:118-141` + `files[]` |
 | **D7** | No published definition exists for any count. Two analyses of this tree on the same day reported **202** and **102** commands. Both are arithmetically defensible: `dist/agent-src/commands` holds 61 top-level `.md` files and 41 subdirectories, 202 `.md` recursively. Nothing states which the badge means. | `ls`/`find` split above |
 
 **Prevented items — claims from the review that did not survive re-derivation.**
@@ -407,8 +407,8 @@ phase:
       fallback ran and how little the real instrument supplied.
 ## Phase 4 — the file the payload gate cannot reach
 
-- [x] **4.1 Rewrite the 37 absolute paths in `docs/maintainers/ONBOARDING.md` to relative or masked form.**
-      verify: `grep -c '/Users/' docs/maintainers/ONBOARDING.md` is 0, or every survivor sits on
+- [x] **4.1 Rewrite the 37 absolute paths in `ONBOARDING.md` to relative or masked form.**
+      verify: `grep -c '/Users/' ONBOARDING.md` is 0, or every survivor sits on
       the audited allow path with a reason.
 
 
@@ -417,14 +417,14 @@ phase:
       `.../agent-config/src/profiles/` reads `src/profiles/`. No path was masked
       or deleted — the information a reader needs is unchanged.
 
-      verify, met: `grep -c '/Users/' docs/maintainers/ONBOARDING.md` is **0**, with no survivors
+      verify, met: `grep -c '/Users/' ONBOARDING.md` is **0**, with no survivors
       needing the audited allow path.
 - [x] **4.2 Decide whether the leakage gate's scope is `files[]` or `tracked-and-public`, and record the choice.**
       The current scope is defensible — it guards the npm payload — but it was
       derived from `files[]` rather than chosen, and D6 is the gap that produces.
       Widening it is one entry in `PUBLISHED_MD_FILES`; not widening it is a
       recorded decision about what the gate is for.
-      verify: either `docs/maintainers/ONBOARDING.md` appears in `PUBLISHED_MD_FILES` and the gate
+      verify: either `ONBOARDING.md` appears in `PUBLISHED_MD_FILES` and the gate
       runs green over it, or the scope decision is written in the gate's own
       module docstring naming the tracked-but-unshipped class it excludes.
 
@@ -434,10 +434,10 @@ phase:
       preference.**
 
       The gate's unit is the **npm payload**: it exists to stop an absolute home
-      path reaching a consumer's disk. `docs/maintainers/ONBOARDING.md` is tracked and public on
+      path reaching a consumer's disk. `ONBOARDING.md` is tracked and public on
       the forge but is **not** in `package.json` `files[]`, so it is never
       installed — the tracked-but-unshipped class, now named in the docstring
-      with `docs/maintainers/ONBOARDING.md` as its live instance.
+      with `ONBOARDING.md` as its live instance.
 
       **Why not widen, which the step offers as one entry in
       `PUBLISHED_MD_FILES`:**
@@ -513,12 +513,12 @@ phase:
       2026-05-16 → 2026-07-21 gap is permanently unrecoverable, and a successful
       collection would still report 0 active because the collector emits zero
       `mention` records.
-- [x] **AC-6** — `docs/maintainers/ONBOARDING.md` publishes no absolute home path, and the leakage gate's scope is either widened to reach it or documented as deliberately narrower with the excluded class named.
+- [x] **AC-6** — `ONBOARDING.md` publishes no absolute home path, and the leakage gate's scope is either widened to reach it or documented as deliberately narrower with the excluded class named.
 
-      **Met on both halves.** `grep -c '/Users/' docs/maintainers/ONBOARDING.md` is 0, and the
+      **Met on both halves.** `grep -c '/Users/' ONBOARDING.md` is 0, and the
       gate's scope is **documented as deliberately narrower** in its own module
       docstring — the npm payload, not every tracked public file — naming the
-      tracked-but-unshipped class with `docs/maintainers/ONBOARDING.md` as its live instance.
+      tracked-but-unshipped class with `ONBOARDING.md` as its live instance.
       Widening was rejected against the sibling test's own stated principle, and
       the residual (nothing keeps a tracked-unshipped file clean) is stated
       rather than papered over.

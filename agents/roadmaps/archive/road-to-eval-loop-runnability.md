@@ -79,7 +79,7 @@ Duplicating an owned item is the failure this table prevents.
 | D3 tool-scoping | `road-to-inbox-harvest-2026-08-b-dispatch-safety.md` | open at step 1.2 |
 | D4 trigger precision | `road-to-skill-ecosystem-executable-payloads.md` | parked, reason recorded |
 | D5 estate size | `road-to-inbox-harvest-2026-08-b-estate-lifecycle.md` | open |
-| D8 install-friction template | recurring release-review finding | unchanged; `docs/maintainers/install-friction-report.md` still `status: template` |
+| D8 install-friction template | recurring release-review finding | unchanged; `docs/install-friction-report.md` still `status: template` |
 
 ## Gap table
 
@@ -125,7 +125,7 @@ is reported as such rather than as convergence):
   regression by definition".
 
 - [x] **Step 1:** Execute the disposition. `SKILLS_ROOT` resolves through `_lib/agent_src.ts::SRC_SKILLS()`; the header now records the divergence instead of claiming verbatim replication. <!-- verify: ./scripts-run src/scripts/run_skill_evals scaffold code-review -->
-- [x] **Step 2:** Write the ADR-200 § 6 divergence doc (verdict `bug-fix-in-TS`) with the before/after commands as evidence and the spawn-stub scope limit stated. <!-- verify: ls docs/maintainers/migration/divergences/src-scripts-run_skill_evals.md -->
+- [x] **Step 2:** Write the ADR-200 § 6 divergence doc (verdict `bug-fix-in-TS`) with the before/after commands as evidence and the spawn-stub scope limit stated. <!-- verify: ls docs/migration/divergences/src-scripts-run_skill_evals.md -->
 - [x] **Step 3:** Close the ignore gap the repoint opens — `scaffold` writes to `src/skills/<id>/evals/runs/`, covered until now only for the retired container and `dist/`. <!-- verify: git status --short src/skills -->
 
 **Exit criteria:** `run_skill_evals scaffold` resolves a real skill directory,
