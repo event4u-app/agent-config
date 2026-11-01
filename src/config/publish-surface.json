@@ -17,6 +17,8 @@
     "src/shared/",
     "src/install/",
     "src/agent-src/scripts/",
+    "src/cli/python/knowledge_ingest.ts",
+    "src/cli/python/workspace_secrets.ts",
     "src/agent-src/templates/scripts/",
     "src/templates/",
     "src/vendor/grammars/",

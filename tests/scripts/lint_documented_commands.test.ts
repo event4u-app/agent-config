@@ -94,6 +94,44 @@ describe('lint_documented_commands — red/green fixtures', () => {
         expect(r.status).toBe(1);
         expect(r.stdout).toContain('not-a-real-verb-abc');
     });
+
+    it('RED: a sub-command the target CLI does not declare, across a line continuation', () => {
+        writeSkill(tmp, '# fixture\n\n```bash\n./agent-config knowledge \\\n    ingest <path>\n```\n');
+        const r = runLinter(tmp, 'json');
+        expect(r.status).toBe(1);
+        const violations = JSON.parse(r.stdout) as { token: string; line: number }[];
+        expect(violations.map((v) => v.token)).toEqual(['knowledge ingest']);
+    });
+
+    it('RED: an inline span naming an undeclared sub-command', () => {
+        writeSkill(tmp, '# fixture\n\nRun `agent-config knowledge frobnicate` now.\n');
+        const r = runLinter(tmp, 'json');
+        expect(r.status).toBe(1);
+        expect((JSON.parse(r.stdout) as { token: string }[])[0]!.token).toBe('knowledge frobnicate');
+    });
+
+    it('GREEN: declared sub-commands and placeholders resolve', () => {
+        writeSkill(
+            tmp,
+            '# fixture\n\nRun `agent-config knowledge list`, `./agent-config knowledge:local ingest <path>` and `agent-config knowledge --help`.\n',
+        );
+        expect(runLinter(tmp).status).toBe(0);
+    });
+});
+
+describe('lint_documented_commands — registry sub-commands match the CLIs', () => {
+    it('every declared sub-command list equals the choices its CLI accepts', async () => {
+        const registry = fs.readFileSync(path.resolve('src/cli/registry.ts'), 'utf8');
+        const declared = (name: string): string[] => {
+            const line = registry.split('\n').find((l) => l.includes(`name: '${name}'`))!;
+            const m = /subcommands:\s*\[([^\]]*)\]/.exec(line)!;
+            return m[1]!.split(',').map((s) => s.trim().replace(/^'|'$/g, '')).filter(Boolean);
+        };
+        const globalCli = await import('../../src/scripts/knowledge_global_cli.js');
+        const localCli = await import('../../src/cli/python/knowledge_ingest.js');
+        expect(declared('knowledge')).toEqual([...globalCli.KNOWLEDGE_SUBCOMMANDS]);
+        expect(declared('knowledge:local')).toEqual([...localCli.LOCAL_SUBCOMMANDS]);
+    });
 });
 
 describe('lint_documented_commands — current tree', () => {

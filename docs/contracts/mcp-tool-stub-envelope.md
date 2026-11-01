@@ -34,16 +34,29 @@ per-tool `implemented_on` metadata.
   "side_effect": "ro | fs-write | shell",
   "implemented_on": ["stdio"],
   "input_schema": { "type": "object", "...": "JSON Schema draft-7" },
-  "annotations": { "readOnlyHint": true }
+  "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  }
 }
 ```
 
 `implemented_on` lists transports where a real handler is wired;
 missing transports return the envelope. `annotations` is optional and
 present only on implemented entries (Phase 3 of
-road-to-credible-install) — honest MCP tool-behavior hints derived
-from `side_effect`, surfaced on `tools/list` (`readOnlyHint: true` for
-`ro`, `false` for `fs-write` / `shell`). A stub entry's `description`
+road-to-credible-install) — honest MCP tool-behavior hints surfaced
+on `tools/list`, always all four, because an absent `destructiveHint` /
+`openWorldHint` means `true` under the MCP spec. They are derived by
+`tool_annotations` in `scripts/mcp_server/tools.ts`: an `ro` tool is
+`readOnlyHint: true`, `destructiveHint: false`, `idempotentHint: true`;
+an `fs-write` / `shell` tool is `readOnlyHint: false` and must declare an
+`effect_shape` — `additive` (neither destructive nor idempotent),
+`idempotent`, or `destructive` — with a one-line `effect_reason`.
+`openWorldHint` is `true` only where the tool declares `open_world`
+(today: `run_tests`). A tool whose hints cannot be derived fails
+`build_mcp_catalog`. A stub entry's `description`
 always starts with the literal marker `[stub — implemented on
 demand] ` so a client can tell a discovery placeholder from a real
 tool without cross-checking `implemented_on`.

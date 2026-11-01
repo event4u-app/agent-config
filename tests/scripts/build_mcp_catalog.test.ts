@@ -64,7 +64,12 @@ describe('build_mcp_catalog — deterministic content', () => {
                 expect(e.implemented_on).toEqual(['stdio']);
                 expect(e.description.startsWith(STUB_MARKER)).toBe(false);
                 expect(e.annotations).toBeDefined();
-                expect(typeof e.annotations!.readOnlyHint).toBe('boolean');
+                expect(Object.keys(e.annotations!).sort()).toEqual([
+                    'destructiveHint',
+                    'idempotentHint',
+                    'openWorldHint',
+                    'readOnlyHint',
+                ]);
                 expect(e.annotations!.readOnlyHint).toBe(e.side_effect === 'ro');
             }
         }

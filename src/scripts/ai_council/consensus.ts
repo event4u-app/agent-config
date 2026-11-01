@@ -30,6 +30,7 @@
  * - `json.loads` / `isinstance` shape checks mirror Python defensive parsing.
  */
 import { pyRound } from '../_lib/value_ladder.js';
+import { isIncompleteStop, type StopClass } from './stop_class.js';
 
 // Python: re.compile(r"```(?:json)?\s*(\[.*?\])\s*```", re.DOTALL)
 // re.DOTALL → 's'. Python regex is not global; a fresh RegExp per call avoids
@@ -296,8 +297,13 @@ export function bucket_by_threshold(
  * - `parse_failed` — the member said something and no parser could read it. This is the
  *   one that used to be indistinguishable from "found nothing", so an unparseable answer
  *   counted as a clean zero-findings review.
+ * - `truncated` — the provider reported the answer was cut short (`stop_class`
+ *   `truncated` / `context_exceeded`). Whatever the text parses to, it is not the
+ *   member's whole answer, so it yields no findings and is never re-asked or
+ *   continued. Only reachable when the caller passes `stop_class`; the recorded
+ *   fixture corpus carries none, so its pinned outcomes are unchanged.
  */
-export type FindingsParseOutcome = 'parsed' | 'empty' | 'parse_failed';
+export type FindingsParseOutcome = 'parsed' | 'empty' | 'parse_failed' | 'truncated';
 
 export interface FindingsExtraction {
     readonly findings: Finding[];
@@ -329,9 +335,12 @@ export interface FindingsExtraction {
  */
 export function parse_findings_outcome(
     text: string,
-    opts: { source: string },
+    opts: { source: string; stop_class?: StopClass | undefined },
 ): FindingsExtraction {
     const source = opts.source;
+    if (isIncompleteStop(opts.stop_class)) {
+        return { findings: [], outcome: 'truncated', item_count: 0 };
+    }
     if (text.trim() === '') {
         return { findings: [], outcome: 'empty', item_count: 0 };
     }

@@ -43,6 +43,8 @@ export function serializeResponses(responses: CouncilResponse[]): Dict[] {
             cache_read_input_tokens: r.cache_read_input_tokens,
             latency_ms: r.latency_ms,
             error: r.error,
+            // Omitted when unset (every CLI seat), so those records are unchanged.
+            ...(r.stop_class === undefined ? {} : { stop_class: r.stop_class }),
             metadata,
         });
     }
