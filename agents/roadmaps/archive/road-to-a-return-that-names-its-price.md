@@ -70,7 +70,7 @@ starts itself. No new command, no block, no keepalive.
 
 ## Phase 1 — Carry the state
 
-- [x] **1.1 Ledger keeps the cache subset.** `snapshotFromStatusPayload`
+- [x] **1.1 Ledger keeps the cache subset.** `snapshotFromStatusPayload` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/prompt_cache_reading.ts -->
       stores `warm`, `ttl`, `expires_at`, `recache_tokens_if_cold` (numbers
       and enums only).
       verify: `tests/scripts/_lib/quota_ledger.test.ts` case with a `prompt_cache` payload. (corrected-from-reproduction: the draft named `statusline_tap.test.ts`, which does not test the snapshot)
@@ -84,11 +84,11 @@ starts itself. No new command, no block, no keepalive.
       by a ratified edit. The 4.1 replay then showed a transcript-only cold
       reading is wrong on 46 % of returns, so the item needs a decision before
       a raise.
-- [x] **1.3 Facts do not go stale.** Context fill is read from the session's
+- [x] **1.3 Facts do not go stale.** Context fill is read from the session's <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/pressure.ts -->
       last snapshot whatever its age; `STALE_AFTER_MS` keeps guarding only the
       plan-window projection (F2).
       verify: `tests/scripts/quota_notice_hook.test.ts` case 30 min after the last snapshot still prints the context line.
-- [x] **1.4 Measured `/clear` start.** Median first-request tokens over the
+- [x] **1.4 Measured `/clear` start.** Median first-request tokens over the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/prompt_cache_reading.ts -->
       newest 20 transcripts of this project's store, measured by the
       status-line tap at most hourly and carried on the ledger snapshot as
       `clear_start`; the continuity record is named by its cap, not added.
@@ -99,7 +99,7 @@ starts itself. No new command, no block, no keepalive.
 
 ## Phase 2 — Say it when it matters
 
-- [x] **2.1 Cache line on the first cold prompt.** `quota-notice` adds one
+- [x] **2.1 Cache line on the first cold prompt.** `quota-notice` adds one <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cold_return.ts -->
       line when the cache is cold (host `expires_at`, else
       `last_response_at + ttl`), no compaction since the last response, the
       prompt is not synthetic (F7) and D4 holds. Once per
@@ -110,14 +110,14 @@ starts itself. No new command, no block, no keepalive.
       `AC: prompt cache cold for 23 min (TTL 1h) — this message is re-processing ~182k tokens. A /clear start here is ~24k (+ continuity record ≤ 1.5k).`
       Shipped 2026-11-01; tests seen red with the mechanism neutralised.
       verify: `tests/scripts/quota_notice_hook.test.ts` cases warm / cold / below threshold / no measured start / another session → one line only for cold. A compaction rewrites the cache and the host reports a fresh `expires_at`, so no separate compaction case exists on the host path.
-- [x] **2.2 Advice that is true when cold.** Warm → `/compact` is cheap;
+- [x] **2.2 Advice that is true when cold.** Warm → `/compact` is cheap; <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/quota_notice_hook.ts -->
       cold → `/clear`, or continue knowingly; a cold `/compact` is named as
       re-reading the full history (F3).
       verify: snapshot test of both texts.
 - [~] **2.3 Resume says it before the first request.** Bind the notice on <!-- deferred-resolution: carried-to=road-to-a-return-that-names-its-price-carried -->
       claude `session_start` for `source: resume|fork` and read the host's
       four fields (F4). Manifest edit with its ratification artifact.
-      verify: `./scripts-run src/scripts/check_kernel_edit_ratified --base origin/main` -> 0; fixture with `prompt_cache_likely_expired: true` emits the line.
+      verify: `./scripts-run src/scripts/check_kernel_edit_ratified --base origin/main` -> 0, and a fixture with `prompt_cache_likely_expired: true` emits the line.
       Deferred 2026-11-01, blocked-by: resume-binding-ratification
 - [~] **2.4 Money only where money is billed.** For `metered`, append the <!-- deferred-resolution: carried-to=road-to-a-return-that-names-its-price-carried -->
       repriced cache-write amount; plan logins show tokens only (D5).
@@ -129,18 +129,18 @@ starts itself. No new command, no block, no keepalive.
 
 ## Phase 3 — Before you send
 
-- [x] **3.1 One segment.** The tap's AC line gains the cache part:
+- [x] **3.1 One segment.** The tap's AC line gains the cache part: <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/prompt_cache_reading.ts -->
       `AC cache warm until 10:42` → after expiry `AC cache cold · continue ≈182k`,
       shown only when D4 holds; joined to the quota segment with ` · `.
       verify: `tests/scripts/statusline_tap.test.ts` warm and cold cases; one AC line, never two.
-- [x] **3.2 Doctor row.** Folded into `road-to-a-fill-the-session-sees-coming`
+- [x] **3.2 Doctor row.** Folded into `road-to-a-fill-the-session-sees-coming` <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       1.2 (it owns the row): the same row reports
       `cache notice: live | fallback (no tap) | not bound`.
       verify: the fill roadmap's 1.2 names the cache column.
 
 ## Phase 4 — Calibrate
 
-- [x] **4.1 Predicted versus paid.** `session_eol_report` replays every
+- [x] **4.1 Predicted versus paid.** `session_eol_report` replays every <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/session_eol_report.ts -->
       transcript: a gap past the TTL of the newest write is a cold return; it
       prints how many still read the cache (false cold) and the size error on
       the really cold ones. (corrected-from-reproduction: recording at emission
