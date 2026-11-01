@@ -127,7 +127,7 @@ import {
 } from './_lib/release_highlights.js';
 import { canPrompt, promptLine } from './_lib/tty_prompt.js';
 import type { CommitRecord, ImpactTrailers } from './_lib/consumer_impact.js';
-import { COMMIT_LOG_FORMAT, CONSUMER_SURFACE_PATHS, NO_IMPACT_TRAILERS, is_breaking_commit, parse_commit_log, parse_impact_trailers, release_impact_entry, write_impact_map } from './_lib/consumer_impact.js';
+import { COMMIT_LOG_FORMAT, NO_IMPACT_TRAILERS, is_breaking_commit, parse_commit_log, parse_impact_trailers, release_impact_entry, span_touches_consumer_surface, write_impact_map } from './_lib/consumer_impact.js';
 import { span_bump } from './_lib/impact_bump.js';
 import { span_surfaces, type MajorSurface } from './_lib/major_surface.js';
 import { preflightPosition } from './_lib/release_position.js';
@@ -405,14 +405,7 @@ class Plan {
         // patch releases and for minor/major bumps where the era still fits.
         public readonly split_plan: SplitPlan | null = null,
         public readonly surfaces: ReadonlySet<MajorSurface> = new Set(),
-        public readonly consumer_surface_touched: boolean = false,
     ) {}
-}
-
-/** The span `<tag>..HEAD` changed a path a consumer's install reads (`CONSUMER_SURFACE_PATHS`). */
-export function span_touches_consumer_surface(tag: string | null, git: (args: string[]) => string): boolean {
-    if (!tag) return false;
-    return git(['diff', '--name-only', `${tag}..HEAD`, '--', ...CONSUMER_SURFACE_PATHS]).trim() !== '';
 }
 
 // ─── utilities ────────────────────────────────────────────────────────────────
@@ -933,7 +926,7 @@ function execute(
                 total,
                 'Bump package.json + package-lock.json + marketplace manifests + template pin, prepend CHANGELOG',
             );
-            set_package_version(PACKAGE_JSON, plan.target, plan.commits, plan.consumer_surface_touched);
+            set_package_version(PACKAGE_JSON, plan.target, plan.commits, span_touches_consumer_surface(plan.last_tag, (a) => git(a, { capture: true })));
             set_lockfile_version(PACKAGE_LOCK_JSON, plan.target);
             set_marketplace_version(MARKETPLACE_JSON, plan.target);
             set_plugin_manifest_versions(plan.target);
@@ -1479,7 +1472,6 @@ function main(argv: readonly string[] | null = null): number {
     }
 
     const surfaces = span_surfaces(prev, (args) => git(args, { capture: true }));
-    const consumer_surface_touched = span_touches_consumer_surface(prev, (args) => git(args, { capture: true }));
     const bump = resolve_bump(args.bump_override, commits, surfaces);
 
     // An in-flight release is a STATE, never a flag — so the probe runs
@@ -1546,7 +1538,7 @@ function main(argv: readonly string[] | null = null): number {
         measured: measuredSection(REPO_ROOT, prev, today),
     });
     assert_major_migration_section(target, full, { previewOnly: args.dry_run });
-    assert_settings_surface_delta(target, { previewOnly: args.dry_run, impact: release_impact_entry(commits, { consumerSurfaceTouched: consumer_surface_touched }).impact });
+    assert_settings_surface_delta(target, { previewOnly: args.dry_run, impact: release_impact_entry(commits, { consumerSurfaceTouched: span_touches_consumer_surface(prev, (a) => git(a, { capture: true })) }).impact });
 
     // Era-split planning — gate on the POST-release view (2026-07-07 fix).
     // The drift test measures the era AFTER this release's section is
@@ -1576,7 +1568,7 @@ function main(argv: readonly string[] | null = null): number {
     }
     const split: SplitPlan | null = decision.split;
 
-    const plan = new Plan(current, target, bump, commits, prev, body, full, split, surfaces, consumer_surface_touched);
+    const plan = new Plan(current, target, bump, commits, prev, body, full, split, surfaces);
     print_preview(plan);
     if (args.resume) {
         process.stdout.write('(resume) probing existing state — completed steps will be skipped.\n');

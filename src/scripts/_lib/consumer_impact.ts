@@ -195,6 +195,12 @@ export const IMPACT_RANK: Readonly<Record<ConsumerImpact, number>> = Object.free
 /** Paths whose change reaches a consumer's install whatever a commit says about it. */
 export const CONSUMER_SURFACE_PATHS: readonly string[] = ['src/scripts/hook_manifest.yaml', 'src/install'];
 
+/** The span `<tag>..HEAD` changed a path in `CONSUMER_SURFACE_PATHS`; `git` returns one command's stdout. */
+export function span_touches_consumer_surface(tag: string | null, git: (args: string[]) => string): boolean {
+    if (!tag) return false;
+    return git(['diff', '--name-only', `${tag}..HEAD`, '--', ...CONSUMER_SURFACE_PATHS]).trim() !== '';
+}
+
 export interface ImpactSpanFacts {
     /** The span changed a path in `CONSUMER_SURFACE_PATHS`. */
     readonly consumerSurfaceTouched?: boolean;

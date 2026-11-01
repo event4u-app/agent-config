@@ -62,8 +62,7 @@
  * 2. APPROVAL IS THE OWNER'S, AND IT IS CITED, NOT ASSERTED. The 2026-09-11
  *    rule demanded a platform review by someone other than the author, which a
  *    single-author repository can never produce; the owner directive of
- *    2026-10-31 (agents/evidence/owner-directives/2026-10-31-single-author-grant-approval.md)
- *    replaced it: the owner approves a grant by recording it. What survives of
+ *    2026-10-31 replaced it: the owner approves a grant by recording it. What survives of
  *    both seats' hardest pushback — an approval the requesting diff writes
  *    about itself authenticates nothing — is that `approval_event` must cite an
  *    owner-directive file that already exists at the merge-base, so the pull
