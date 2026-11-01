@@ -11,7 +11,7 @@ entry_condition:
 ---
 # Road to a re-verified youtube channel
 
-> **Source:** observed during `feat/map-always-fresh` (2026-11-01), `task ci`
+> Observed during `feat/map-always-fresh` (2026-11-01), `task ci`
 > step `check-reach-staleness`.
 
 ## Defect
