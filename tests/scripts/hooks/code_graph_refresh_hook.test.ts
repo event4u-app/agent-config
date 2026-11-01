@@ -432,4 +432,39 @@ describe('turn-end binding — spawn only after HEAD moved (2026-11-01)', () => 
         expect(refreshFor(root, fakeSpawn, now)).toBe('spawned');
         expect(fs.existsSync(yesterday)).toBe(true);
     });
+
+    it('never claims or sweeps through a symlinked claims folder (round 7)', () => {
+        optedIn();
+        commit('one');
+        const victim = path.join(outside, 'victim');
+        fs.mkdirSync(path.join(victim, '1'), { recursive: true });
+        fs.writeFileSync(path.join(victim, '1', 'keep'), 'x');
+        fs.symlinkSync(victim, path.join(root, 'agents', 'map', '.build', 'claims'));
+        expect(refreshFor(root, fakeSpawn)).toBe('record-failed');
+        expect(calls).toHaveLength(0);
+        expect(fs.readFileSync(path.join(victim, '1', 'keep'), 'utf-8')).toBe('x');
+    });
+
+    it('a symlinked old day folder is skipped by the sweep, never followed', () => {
+        optedIn();
+        commit('one');
+        const victim = path.join(outside, 'victim-day');
+        fs.mkdirSync(victim, { recursive: true });
+        fs.writeFileSync(path.join(victim, 'keep'), 'x');
+        const claims = path.join(root, 'agents', 'map', '.build', 'claims');
+        fs.mkdirSync(claims, { recursive: true });
+        fs.symlinkSync(victim, path.join(claims, '1'));
+        expect(refreshFor(root, fakeSpawn)).toBe('spawned');
+        expect(fs.readFileSync(path.join(victim, 'keep'), 'utf-8')).toBe('x');
+    });
+
+    it('refuses claim storage the repository tracks', () => {
+        optedIn();
+        commit('one');
+        const f = path.join(root, 'agents', 'map', '.build', 'claims', '1', 'x-1');
+        plant(f);
+        git('add', '-f', path.relative(root, f));
+        expect(refreshFor(root, fakeSpawn)).toBe('tracked');
+        expect(calls).toHaveLength(0);
+    });
 });

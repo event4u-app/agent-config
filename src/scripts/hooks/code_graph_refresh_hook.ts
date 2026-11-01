@@ -113,12 +113,35 @@ function windowOf(file: string): number | null {
  */
 function sweepSpent(claimsDir: string, today: number): void {
     try {
+        if (!isRealDir(claimsDir)) return;
         for (const d of fs.readdirSync(claimsDir)) {
-            if (/^\d+$/.test(d) && Number(d) <= today - SWEEP_AFTER_DAYS) fs.rmSync(path.join(claimsDir, d), { recursive: true, force: true });
+            const full = path.join(claimsDir, d);
+            // Only a real directory is removed recursively: a symlink here could point anywhere.
+            if (/^\d+$/.test(d) && Number(d) <= today - SWEEP_AFTER_DAYS && isRealDir(full)) fs.rmSync(full, { recursive: true, force: true });
         }
     } catch {
         /* a spent day folder only costs disk entries */
     }
+}
+
+/** True for a directory that is not a symlink (lstat never follows the last component). */
+function isRealDir(p: string): boolean {
+    try {
+        const st = fs.lstatSync(p);
+        return st.isDirectory() && !st.isSymbolicLink();
+    } catch {
+        return false;
+    }
+}
+
+/** True when `p` exists as anything but a real directory — a symlink or a file planted where a claim folder goes. */
+function blocked(p: string): boolean {
+    try {
+        fs.lstatSync(p);
+    } catch {
+        return false;
+    }
+    return !isRealDir(p);
 }
 
 /**
@@ -130,13 +153,18 @@ function claim(file: string, clock: () => number): 'won' | 'taken' | 'failed' {
     const at = clock();
     const w = windowOf(file);
     if (w !== null && w <= Math.floor(at / THROTTLE_MS) - 2) return 'taken';
+    const day = path.dirname(file);
+    const claims = path.dirname(day);
+    // Claims are created and swept only inside real directories under `.build/`, never through a symlink.
+    if (blocked(path.dirname(claims)) || blocked(claims) || blocked(day)) return 'failed';
     try {
-        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.mkdirSync(day, { recursive: true });
+        if (!isRealDir(claims) || !isRealDir(day)) return 'failed';
         fs.writeFileSync(file, '', { flag: 'wx' });
     } catch (e) {
         return (e as NodeJS.ErrnoException).code === 'EEXIST' ? 'taken' : 'failed';
     }
-    sweepSpent(path.dirname(path.dirname(file)), Math.floor(at / DAY_MS));
+    sweepSpent(claims, Math.floor(at / DAY_MS));
     return 'won';
 }
 
@@ -218,7 +246,7 @@ export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn, now: numb
     const file = claimPath(home.buildDir, head, now);
     if (fs.existsSync(file)) return 'fresh';
     // A repository-committed opt-in is refused before anything is written into the tree.
-    if (anyTracked(root, [home.autoRefreshPath, home.cachePath].map((p) => path.relative(root, p)))) return 'tracked';
+    if (anyTracked(root, [home.autoRefreshPath, home.cachePath, path.join(home.buildDir, 'claims')].map((p) => path.relative(root, p)))) return 'tracked';
     const done = (outcome: RefreshOutcome, detail?: string): RefreshOutcome => {
         recordRefreshIn(home.buildDir, { by: 'session-start', outcome, detail, slot, ...(head !== null ? { head } : {}) }, now);
         return outcome;
