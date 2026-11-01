@@ -3,8 +3,7 @@
 //
 // Three layers: the per-provider mapping (pure), the clients that attach it to
 // `CouncilResponse.stop_class`, and every reader that turns a response into a
-// vote — findings parse, consensus round, post-run quorum. The stance tally is
-// owner-reserved under ADR-268 and is not changed here.
+// vote — stance tally, findings parse, consensus round, post-run quorum.
 
 import { describe, expect, it } from 'vitest';
 
@@ -22,6 +21,7 @@ import { run_consensus_scoring } from '../../../src/scripts/ai_council/consensus
 import { harvest_inline_findings } from '../../../src/scripts/ai_council/inline_findings.js';
 import { _postRunQuorum } from '../../../src/scripts/ai_council/quorum_wiring.js';
 import { serializeResponses } from '../../../src/scripts/ai_council/response_record.js';
+import { render_vote_tally, tallyFromResponses } from '../../../src/scripts/ai_council/stance_tally.js';
 import {
     anthropicStopClass,
     geminiStopClass,
@@ -130,6 +130,25 @@ function resp(provider: string, text: string, stop_class?: 'complete' | 'truncat
 }
 
 describe('stop_class — a truncated parseable answer is not a full vote', () => {
+    it('stance tally: the truncated member backs nothing but still counts in the denominator', () => {
+        const full = tallyFromResponses([resp('a', STANCE, 'complete'), resp('b', STANCE, 'complete')], true)!;
+        expect(full.consensus?.label).toBe('ship');
+        expect(full.options[0]!.backers).toHaveLength(2);
+
+        const cut = tallyFromResponses([resp('a', STANCE, 'complete'), resp('b', STANCE, 'truncated')], true)!;
+        expect(cut.options[0]!.backers.map((b) => b.member)).toEqual(['a:m']);
+        expect(cut.incomplete).toEqual(['b:m']);
+        // Fail-safe direction: the cut-off member raises the bar, it does not vanish.
+        expect(cut.w_total).toBe(2);
+        expect(cut.consensus).toBeNull();
+        expect(render_vote_tally(cut)).toContain('- truncated — 1 member(s) were cut off by the provider (b:m)');
+    });
+
+    it('stance tally: no incomplete key when nothing was cut off (shape unchanged)', () => {
+        const r = tallyFromResponses([resp('a', STANCE), resp('b', STANCE, 'complete')], true)!;
+        expect(Object.keys(r)).not.toContain('incomplete');
+    });
+
     it('findings parse: a valid array from a truncated answer is `truncated`, with no findings', () => {
         const text = '[{"id": "f1", "text": "a finding"}]';
         expect(parse_findings_outcome(text, { source: 's' }).outcome).toBe('parsed');
