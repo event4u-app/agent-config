@@ -144,6 +144,25 @@ describe('stop_class — a truncated parseable answer is not a full vote', () =>
         expect(render_vote_tally(cut)).toContain('- truncated — 1 member(s) were cut off by the provider (b:m)');
     });
 
+    it('stance tally: context_exceeded abstains like truncated; unknown and absent still vote', () => {
+        const ctx = tallyFromResponses([resp('a', STANCE, 'complete'), resp('b', STANCE, 'context_exceeded')], true)!;
+        expect(ctx.incomplete).toEqual(['b:m']);
+        expect(ctx.consensus).toBeNull();
+
+        const unknown = new CouncilResponse({ provider: 'b', model: 'm', text: STANCE, stop_class: 'unknown' });
+        const voted = tallyFromResponses([resp('a', STANCE), unknown], true)!;
+        expect(voted.options[0]!.backers).toHaveLength(2);
+        expect(voted.consensus?.label).toBe('ship');
+        expect(Object.keys(voted)).not.toContain('incomplete');
+    });
+
+    it('stance tally: an errored response is dropped, not counted as incomplete', () => {
+        const errored = new CouncilResponse({ provider: 'b', model: 'm', text: STANCE, error: 'timeout', stop_class: 'truncated' });
+        const r = tallyFromResponses([resp('a', STANCE, 'complete'), errored], true)!;
+        expect(r.w_total).toBe(1);
+        expect(Object.keys(r)).not.toContain('incomplete');
+    });
+
     it('stance tally: no incomplete key when nothing was cut off (shape unchanged)', () => {
         const r = tallyFromResponses([resp('a', STANCE), resp('b', STANCE, 'complete')], true)!;
         expect(Object.keys(r)).not.toContain('incomplete');
