@@ -11,7 +11,8 @@
     {
       "q": "wie viele Monate Runway haben wir noch?",
       "trigger": true,
-      "class": "exemplar"
+      "class": "exemplar",
+      "language": "de"
     },
     {
       "q": "should we raise now or cut costs to extend runway?",
@@ -31,7 +32,8 @@
     {
       "q": "Runway reicht nicht bis zur nächsten Finanzierungsrunde, was tun?",
       "trigger": true,
-      "class": "exemplar"
+      "class": "exemplar",
+      "language": "de"
     },
     {
       "q": "model cut versus grow for our cash position",

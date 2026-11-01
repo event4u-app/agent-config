@@ -11,7 +11,8 @@
     {
       "q": "erstelle ein DTO für die Kunden-Tabelle",
       "trigger": true,
-      "class": "exemplar"
+      "class": "exemplar",
+      "language": "de"
     },
     {
       "q": "map these snake_case DB columns onto a DTO with attributes",
@@ -41,7 +42,8 @@
     {
       "q": "DTO aus den Request-Daten bauen und an den Service geben",
       "trigger": true,
-      "class": "exemplar"
+      "class": "exemplar",
+      "language": "de"
     },
     {
       "q": "add validation rules to this form request",

@@ -16,7 +16,8 @@
     {
       "q": "mach mir eine DCF-Bewertung für das Unternehmen",
       "trigger": true,
-      "class": "exemplar"
+      "class": "exemplar",
+      "language": "de"
     },
     {
       "q": "compute the WACC and terminal value for this valuation",
@@ -41,7 +42,8 @@
     {
       "q": "Unternehmenswert per Discounted Cash Flow mit Sensitivitätsanalyse",
       "trigger": true,
-      "class": "exemplar"
+      "class": "exemplar",
+      "language": "de"
     },
     {
       "q": "how many months of runway do we have at current burn?",
