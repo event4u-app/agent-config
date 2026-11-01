@@ -699,8 +699,34 @@ export function ingest(spec: string, opts: IngestOpts = {}): IngestManifest {
     const ingest_id = uuid7();
     const now = _utc_now();
     const target = path.join(base, ingest_id);
-    const chunks_dir = path.join(target, 'chunks');
+    // Everything is written under `<id>.partial/` and renamed once the manifest
+    // is on disk; readers skip `.partial`, so an abort leaves nothing retrievable.
+    const staging = `${target}.partial`;
+    const chunks_dir = path.join(staging, 'chunks');
     fs.mkdirSync(chunks_dir, { recursive: true });
+    try {
+        const manifest = _write_ingest(staging, chunks_dir, ingest_id, now, source, files, redact_pii, markitdown_bin);
+        fs.renameSync(staging, target);
+        if (base === KNOWLEDGE_ROOT) {
+            _evict_lru(MAX_NAMESPACE_BYTES);
+        }
+        return manifest;
+    } catch (e) {
+        fs.rmSync(staging, { recursive: true, force: true });
+        throw e;
+    }
+}
+
+function _write_ingest(
+    staging: string,
+    chunks_dir: string,
+    ingest_id: string,
+    now: string,
+    source: string,
+    files: string[],
+    redact_pii: boolean,
+    markitdown_bin: string | null,
+): IngestManifest {
 
     const manifest: IngestManifest = {
         ingest_id,
@@ -771,14 +797,9 @@ export function ingest(spec: string, opts: IngestOpts = {}): IngestManifest {
         Object.keys(pii_counters).length > 0 || manifest.secrets_redacted > 0;
 
     fs.writeFileSync(
-        path.join(target, 'manifest.json'),
+        path.join(staging, 'manifest.json'),
         Buffer.from(_jsonDumpsIndentSorted(manifest, 2), 'utf-8'),
     );
-
-    if (base === KNOWLEDGE_ROOT) {
-        _evict_lru(MAX_NAMESPACE_BYTES);
-    }
-
     return manifest;
 }
 
@@ -1001,10 +1022,13 @@ function _format_table(manifests: Array<Record<string, unknown>>): string {
     return lines.join('\n');
 }
 
+/** The sub-commands `knowledge:local` accepts; `src/cli/registry.ts` declares the same list. */
+export const LOCAL_SUBCOMMANDS = ['ingest', 'list', 'forget'] as const;
+
 export function _cli(argv: string[] | null = null): number {
     const args = argv ?? process.argv.slice(2);
     const cmd = args[0];
-    if (cmd === undefined || !['ingest', 'list', 'forget'].includes(cmd)) {
+    if (cmd === undefined || !(LOCAL_SUBCOMMANDS as readonly string[]).includes(cmd)) {
         // argparse: required subcommand missing / unknown → exit 2.
         throw new ArgparseExit(2);
     }

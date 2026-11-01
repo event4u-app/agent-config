@@ -284,6 +284,16 @@ describe('kernel server standing cost — the Phase 0.2 figures', () => {
     // description and its own `default` / `minItems` came out, and the
     // "Read-only" clauses on ten `ro` tools went, since the annotation carries
     // it. After the trim: descriptions 1,922 and payload 4,897, headroom 3.
+    //
+    // RE-MEASURED 2026-11-01 (defect D7, MCP tool annotations): still 29
+    // tools, descriptions unchanged, payload 4,897 -> 5,390. Every implemented
+    // tool now carries all four MCP hints instead of `readOnlyHint` alone,
+    // because an absent `destructiveHint` / `openWorldHint` reads as `true`
+    // under the spec — an append-only tool advertised as destructive, and every
+    // local read advertised as open-world. That is ~17 tokens per tool and is
+    // not trimmable prose: dropping a hint restores the wrong default. The
+    // ceiling is RAISED, not trimmed under, and that is recorded as a budget
+    // decision rather than absorbed. Headroom 10.
     it('has 29 allowlisted tools', () => {
         expect(names.length).toBe(29);
     });
@@ -294,10 +304,10 @@ describe('kernel server standing cost — the Phase 0.2 figures', () => {
         expect(tok).toBeLessThan(2_200);
     });
 
-    it('costs about 4,603 tokens as the payload the host loads — schemas included', () => {
+    it('costs about 5,390 tokens as the payload the host loads — schemas and hints included', () => {
         const tok = Math.round(payloadChars / 4);
-        expect(tok, `kernel tools/list is ${tok} tok`).toBeGreaterThan(4_400);
-        expect(tok).toBeLessThan(4_900);
+        expect(tok, `kernel tools/list is ${tok} tok`).toBeGreaterThan(5_200);
+        expect(tok).toBeLessThan(5_400);
     });
 
     it('stays far below the Tool Search deferral threshold, so it still loads upfront', () => {

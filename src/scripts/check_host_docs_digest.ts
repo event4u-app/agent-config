@@ -35,6 +35,32 @@
  * first fill separated them (digests taken 2026-10-01 against rows read
  * 2026-09-29). One sentence covering both asserted a provenance nobody had.
  *
+ * CLAIM-LEVEL DRIFT — THE DIGEST IS EVIDENCE, NOT THE TRIGGER.
+ * A sha256 over the whole body moves on every cosmetic edit — a reworded
+ * paragraph, a nav rebuild, a new example — and a red that fired on all of them
+ * named no row and no claim, so it was red for a reason nobody could act on.
+ * The digest is still recorded and compared, but when it moves the watcher asks
+ * the narrower question the row actually depends on: are the tokens the ROW
+ * ITSELF claims still on the page?
+ *
+ *   - A lowering row claims its slots' `native` event names (`PreToolUse`,
+ *     `beforeSubmitPrompt`, …) — the identifiers the bridge writes into a host
+ *     config, so a page that no longer names one is the drift that matters. A
+ *     slot carrying its own `docs_url` cites a different page and is excluded.
+ *   - A page row claims its optional `claims:` list (frontmatter keys, paths,
+ *     file names its `why` says this tree reads off the page).
+ *
+ * Tokens come from the row's own data, never from the page, and are matched
+ * case-sensitively on identifier boundaries (`Stop` does not match inside
+ * `SubagentStop`). Presence is a floor, not a reading: it proves the page still
+ * names the identifier, not that it still says the same thing about it.
+ *
+ *   digest equal                          -> `unchanged`  (green)
+ *   digest moved, every claim present     -> `confirmed`  (green, a note)
+ *   digest moved, a claim absent          -> `absent`     (red, names row + token)
+ *   digest moved, the row claims nothing  -> `changed`    (red, as before — there
+ *                                            is nothing to confirm against)
+ *
  * WHAT A CHANGED DIGEST MEANS, AND WHAT IT DELIBERATELY DOES NOT.
  * A changed body is evidence that the page moved, never a reading of what it
  * now says. So the watcher adopts no upstream text, derives no slot, and
@@ -68,15 +94,17 @@
  *                     Touches the network never and exits 0 — it is a report,
  *                     not a gate, so a CI job may run it with no egress.
  *   --fetch           Re-fetch every `docs_url` and compare. Exit 1 if any
- *                     digest CHANGED, 0 otherwise. This is the scheduled job's
+ *                     row is ABSENT, CHANGED with no claims, or GONE; 0
+ *                     otherwise (CONFIRMED is green). This is the scheduled job's
  *                     read-only mode: it NEVER touches the working tree. The
  *                     table is written by exactly one `writeFileSync` call and
  *                     it sits inside `if (doWrite)`, so `--fetch` alone cannot
  *                     reach it; `--write` without `--fetch` is refused outright
  *                     (exit 2) rather than silently doing nothing.
  *   --fetch --write   The same, and write the result back into the YAML: fill a
- *                     null digest, and on a CHANGED digest also pull `expires`
- *                     back to the day before detection.
+ *                     null digest, and on an ABSENT or unclaimed CHANGED row
+ *                     pull `expires` back to the day before detection. A
+ *                     CONFIRMED row writes nothing.
  *   --self-test       Fixture round-trip over the pure functions. No network.
  *
  * A row whose `docs_url` is null is not a gap and is not an error: `cowork`
@@ -108,7 +136,12 @@ import { asOf } from './_lib/as_of.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { sanitize_text } from './_lib/retrieval_sanitize.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
-import { HOST_LOWERING_PATH, parseHostLowering, type HostLowering } from './hooks/host_lowering.js';
+import {
+    HOST_LOWERING_PATH,
+    parseHostLowering,
+    type HostLowering,
+    type SurfaceRow,
+} from './hooks/host_lowering.js';
 import {
     HOST_DOCS_PAGES_PATH,
     PAGES_PSEUDO_HOST,
@@ -125,7 +158,11 @@ export function digestOf(body: string): string {
 export type DigestState =
     /** Row has a digest and the fetched body still hashes to it. */
     | 'unchanged'
-    /** Row had a digest and the body now hashes to something else. */
+    /** The body moved and every token the row claims is still on it. Green. */
+    | 'confirmed'
+    /** The body moved and at least one claimed token is gone from it. Red. */
+    | 'absent'
+    /** The body moved and the row claims no token to confirm against. Red. */
     | 'changed'
     /** Row had no digest; this run establishes the first one. */
     | 'filled'
@@ -157,11 +194,44 @@ export interface DigestFinding {
     readonly now: string | null;
     /** Why a fetch failed, for `unreachable`. */
     readonly detail?: string | undefined;
+    /** The tokens the row claims its page carries (see the module header). */
+    readonly claims?: readonly string[] | undefined;
+    /** For `absent`: the claimed tokens the fetched body no longer carries. */
+    readonly missing?: readonly string[] | undefined;
 }
 
-/** The one state that moves `expires`. */
+/** The states that move `expires` — the red ones that are about the page. */
 export function isDrift(f: DigestFinding): boolean {
-    return f.state === 'changed';
+    return f.state === 'changed' || f.state === 'absent';
+}
+
+/**
+ * The tokens a lowering row claims its `docs_url` carries: every slot's
+ * `native` event name, deduplicated, in table order. A slot with its own
+ * `docs_url` cites a different page and contributes nothing here.
+ */
+export function loweringClaims(row: SurfaceRow): string[] {
+    const out: string[] = [];
+    for (const slot of row.slots.values()) {
+        if (slot.docs_url !== null && slot.docs_url !== undefined) continue;
+        for (const n of slot.native) if (!out.includes(n)) out.push(n);
+    }
+    return out;
+}
+
+/**
+ * Whether `token` occurs in `body` as a whole identifier: case-sensitive, and
+ * not flanked by `[A-Za-z0-9_]`, so `Stop` is not found inside `SubagentStop`
+ * and `description` is not found inside `descriptions`.
+ */
+export function tokenPresent(body: string, token: string): boolean {
+    const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(?<![A-Za-z0-9_])${escaped}(?![A-Za-z0-9_])`).test(body);
+}
+
+/** The claimed tokens `body` does not carry, in claim order. */
+export function missingClaims(body: string, claims: readonly string[]): string[] {
+    return claims.filter((t) => !tokenPresent(body, t));
 }
 
 /** The day before `today`, in ISO form — see the header for why. */
@@ -185,6 +255,7 @@ export function classify(
     recorded: string | null,
     body: string | null,
     detail?: string,
+    claims: readonly string[] = [],
 ): DigestFinding {
     if (url === null) {
         return { host, surface, url, state: 'no-url', was: recorded, now: null };
@@ -199,14 +270,26 @@ export function classify(
     if (recorded === null) {
         return { host, surface, url, state: 'filled', was: null, now };
     }
-    return { host, surface, url, state: recorded === now ? 'unchanged' : 'changed', was: recorded, now };
+    if (recorded === now) return { host, surface, url, state: 'unchanged', was: recorded, now, claims };
+    if (claims.length === 0) return { host, surface, url, state: 'changed', was: recorded, now, claims };
+    const missing = missingClaims(body, claims);
+    return {
+        host,
+        surface,
+        url,
+        state: missing.length === 0 ? 'confirmed' : 'absent',
+        was: recorded,
+        now,
+        claims,
+        missing,
+    };
 }
 
+type WatchRow = { host: string; surface: string; url: string | null; digest: string | null; claims: string[] };
+
 /** Every (host, surface) the table carries, with the URL and digest it records. */
-export function watchable(
-    table: HostLowering,
-): ReadonlyArray<{ host: string; surface: string; url: string | null; digest: string | null }> {
-    const out: Array<{ host: string; surface: string; url: string | null; digest: string | null }> = [];
+export function watchable(table: HostLowering): ReadonlyArray<WatchRow> {
+    const out: WatchRow[] = [];
     for (const [host, surfaces] of table) {
         for (const [surface, row] of surfaces) {
             if (row.verified === null) continue;
@@ -215,6 +298,7 @@ export function watchable(
                 surface,
                 url: row.verified.docs_url,
                 digest: row.verified.docs_digest,
+                claims: loweringClaims(row),
             });
         }
     }
@@ -230,14 +314,13 @@ export function watchable(
  * forced every printer, filter and writer in this file to learn about it, for
  * a distinction that is one row label wide.
  */
-export function watchablePages(
-    pages: ReadonlyMap<string, DocsPage>,
-): ReadonlyArray<{ host: string; surface: string; url: string | null; digest: string | null }> {
+export function watchablePages(pages: ReadonlyMap<string, DocsPage>): ReadonlyArray<WatchRow> {
     return [...pages.values()].map((p) => ({
         host: PAGES_PSEUDO_HOST,
         surface: p.id,
         url: p.docs_url,
         digest: p.docs_digest,
+        claims: [...p.claims],
     }));
 }
 
@@ -274,6 +357,10 @@ export function applyFindings(
         // gone permanently. The module header already promised a `gone` row
         // writes nothing; this is the line that makes the promise true.
         if (f.state === 'no-url' || f.state === 'unreachable' || f.state === 'gone') continue;
+        // `confirmed` writes nothing either: the recorded digest is the body a
+        // human established, and replacing it with one nobody read would assert
+        // an establishment that never happened (see the drift branch below).
+        if (f.state === 'confirmed') continue;
         wanted.set(`${f.host}/${f.surface}`, f);
     }
     if (wanted.size === 0) return { text: yamlText, expired: [], written: [], missed: [] };
@@ -409,6 +496,8 @@ const KNOWN_FLAGS: ReadonlySet<string> = new Set([
 
 const STATE_ICON: Record<DigestState, string> = {
     unchanged: '✅',
+    confirmed: '🟢',
+    absent: '❌',
     changed: '❌',
     filled: '🆕',
     'no-url': '—',
@@ -427,7 +516,19 @@ function selfTest(): number {
     const same = classify('h', 'any', 'u', digestOf('body'), 'body');
     if (same.state !== 'unchanged') problems.push('equal body must be unchanged');
     const moved = classify('h', 'any', 'u', digestOf('body'), 'other');
-    if (moved.state !== 'changed') problems.push('different body must be changed');
+    if (moved.state !== 'changed') problems.push('different body with no claims must be changed');
+    const cosmetic = classify('h', 'any', 'u', digestOf('body'), 'reworded `PreToolUse` page', undefined, ['PreToolUse']);
+    if (cosmetic.state !== 'confirmed') problems.push('moved body with every claim present must be confirmed');
+    const lost = classify('h', 'any', 'u', digestOf('body'), 'only SubagentStop here', undefined, ['Stop']);
+    if (lost.state !== 'absent' || lost.missing?.join() !== 'Stop') {
+        problems.push('a claim found only inside a longer identifier must be absent');
+    }
+    const confirmedWrite = applyFindings(
+        fs.readFileSync(HOST_LOWERING_PATH, 'utf-8'),
+        [{ ...cosmetic, host: 'claude' }],
+        '2026-10-01',
+    );
+    if (confirmedWrite.written.length !== 0) problems.push('a confirmed row must write nothing');
     if (classify('h', 'any', 'u', null, 'body').state !== 'filled') problems.push('null digest must fill');
     if (classify('h', 'any', null, null, null).state !== 'no-url') problems.push('null url must be no-url');
     if (classify('h', 'any', 'u', 'd', null).state !== 'unreachable') problems.push('no body must be unreachable');
@@ -759,7 +860,7 @@ export async function main(argv: readonly string[]): Promise<number> {
             continue;
         }
         const { body, detail } = await fetchBody(r.url, 30_000);
-        findings.push(classify(r.host, r.surface, r.url, r.digest, body, detail));
+        findings.push(classify(r.host, r.surface, r.url, r.digest, body, detail, r.claims));
     }
 
     if (!quiet) {
@@ -774,6 +875,18 @@ export async function main(argv: readonly string[]): Promise<number> {
             // second run: which page, what it hashed to before, what it hashes
             // to now, and when that was seen. A bare "changed" sends the reader
             // back to the terminal to find out what changed about what.
+            if (f.state === 'absent') {
+                process.stdout.write(`       missing: ${(f.missing ?? []).join(', ')}\n`);
+            }
+            if (f.state === 'confirmed') {
+                process.stdout.write(
+                    `       note: body changed, all ${f.claims?.length ?? 0} claimed token(s) still present ` +
+                        `(${(f.claims ?? []).join(', ')}). Digest kept as recorded evidence — not a red.\n`,
+                );
+            }
+            if (f.state === 'changed') {
+                process.stdout.write('       note: this row claims no token, so a moved body cannot be confirmed.\n');
+            }
             if (isDrift(f)) {
                 process.stdout.write(
                     `       url:  ${f.url ?? '(none)'}\n` +
@@ -798,7 +911,7 @@ export async function main(argv: readonly string[]): Promise<number> {
         for (const f of pageFindings) {
             if (f.state === 'filled' && f.now !== null) {
                 pageEdits.push({ id: f.surface, digest: f.now });
-            } else if (f.state === 'changed') {
+            } else if (isDrift(f)) {
                 // Mirrors the sibling exactly: the recorded digest is EVIDENCE
                 // and stays; `expires` is what moves.
                 pageEdits.push({ id: f.surface, expires: dayBefore(today) });
@@ -860,10 +973,26 @@ export async function main(argv: readonly string[]): Promise<number> {
     }
 
     if (drifted.length > 0) {
-        process.stderr.write(
-            `❌  check_host_docs_digest: ${drifted.length} host doc page(s) changed since the row was established: ` +
-                `${drifted.map((f) => f.host).join(', ')}. This is a signal to READ the page, never to adopt it.\n`,
-        );
+        // One line per class, each naming the row — and for ABSENT the token —
+        // so the red says what broke without a second run. The workflow greps
+        // these two phrases to route the red and to title the issue.
+        const absent = drifted.filter((f) => f.state === 'absent');
+        const unclaimed = drifted.filter((f) => f.state === 'changed');
+        if (absent.length > 0) {
+            process.stderr.write(
+                `❌  check_host_docs_digest: ${absent.length} row(s) have claimed token(s) ABSENT from their page: ` +
+                    `${absent.map((f) => `${f.host}/${f.surface} missing ${(f.missing ?? []).join(', ')}`).join('; ')}. ` +
+                    'This is a signal to READ the page, never to adopt it.\n',
+            );
+        }
+        if (unclaimed.length > 0) {
+            process.stderr.write(
+                `❌  check_host_docs_digest: ${unclaimed.length} host doc page(s) changed since the row was established ` +
+                    `and the row claims no token to confirm against: ` +
+                    `${unclaimed.map((f) => `${f.host}/${f.surface}`).join(', ')}. ` +
+                    'This is a signal to READ the page, never to adopt it.\n',
+            );
+        }
         return 1;
     }
     const gone = findings.filter((f) => f.state === 'gone');
@@ -896,6 +1025,7 @@ export async function main(argv: readonly string[]): Promise<number> {
         process.stdout.write(
             `✅  check_host_docs_digest: no host documentation drift ` +
                 `(${findings.filter((f) => f.state === 'unchanged').length} unchanged, ` +
+                `${findings.filter((f) => f.state === 'confirmed').length} confirmed (body moved, claims present), ` +
                 `${filledPhrase}, ${unreachable.length} unreachable).\n`,
         );
     }

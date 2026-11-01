@@ -69,10 +69,19 @@ describe('host-docs-digest workflow routes a drift red to a tracked issue', () =
         for (const [inWorkflow, inChecker] of [
             ['changed since the row was established', 'changed since the row was established'],
             ['are GONE \\(404/410\\)', 'are GONE (404/410)'],
+            ['claimed token(s) ABSENT', 'claimed token(s) ABSENT'],
         ] as const) {
             expect(run, `workflow greps for ${inChecker}`).toContain(inWorkflow);
             expect(checker, `checker prints ${inChecker}`).toContain(inChecker);
         }
+    });
+
+    it('carries the drift class into the issue title, through env and not interpolation', () => {
+        expect(watch.outputs?.drift_class ?? '').toContain('outputs.drift_class');
+        const routeStep = route.steps.find((st) => (st.run ?? '').includes('gh issue create'));
+        expect(routeStep?.run ?? '').toMatch(/title="[^"]*\$\{DRIFT_CLASS\}/);
+        expect(JSON.stringify(routeStep)).toContain('needs.digest-watch.outputs.drift_class');
+        expect(fetchStep()?.run ?? '').toMatch(/drift_class=/);
     });
 
     it('a manual dispatch cannot cancel the scheduled run it would not replace', () => {

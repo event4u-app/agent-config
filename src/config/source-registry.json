@@ -75,7 +75,7 @@
    "readers": ["src/scripts/memory_lookup.ts"],
    "privacy": "project",
    "owner": "project",
-   "delete_path": "agent-config knowledge forget <id>",
+   "delete_path": "agent-config knowledge:local forget <id>",
    "hosts": "all",
    "status": "active"
   },

@@ -183,6 +183,7 @@ import {
     with_chairman_fields,
 } from './ai_council/blind_review.js';
 import { tallyFromResponses } from './ai_council/stance_tally.js';
+import { storedStopClass } from './ai_council/stop_class.js';
 import { buildHandoffFromStanceTally, type HandoffEnvelope } from './ai_council/handoff.js';
 
 // ── argparse-style exit plumbing ────────────────────────────────────
@@ -1805,6 +1806,7 @@ function _deserialise_responses(items: Dict[]): CouncilResponse[] {
                 latency_ms: _pyInt(d['latency_ms'] ?? 0, 0),
                 error: (d['error'] as string | null) ?? null,
                 metadata: (d['metadata'] as Dict) || {},
+                ...storedStopClass(d['stop_class']),
             }),
         );
     }

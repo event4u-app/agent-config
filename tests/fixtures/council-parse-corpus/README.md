@@ -5,6 +5,12 @@ Recorded, verbatim member answers fed to
 three outcomes (`parsed` / `empty` / `parse_failed`) have a fixed population to
 be measured over.
 
+A fourth outcome, `truncated`, exists for answers the provider reports it cut
+short (`CouncilResponse.stop_class` `truncated` / `context_exceeded`, see
+[`stop_class.ts`](../../../src/scripts/ai_council/stop_class.ts)). It depends on
+the provider's stop reason, not on the text, so a file in this corpus can never
+produce it: the files carry text only, and every pinned outcome is unchanged.
+
 **One file, one answer, byte-for-byte.** No file is edited to make a parser
 happy — a fixture rewritten to parse is a fixture that has stopped being
 evidence. `expected.json` records the outcome each file must produce.
