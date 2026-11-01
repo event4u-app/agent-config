@@ -472,6 +472,10 @@ describe('block_no_verify — exec wrappers and config-env forms', () => {
         // Council round 6 (openai): env -S keeps the argument boundaries after it.
         "env -S 'sh -c' 'git commit --no-verify'",
         "env -S 'bash -lc' 'git commit -m x --no-verify'",
+        // Council round 7 (openai): env -S has its own escapes, not shell syntax.
+        "env -S 'git\\_commit\\_--no-verify'",
+        "env -S 'g${X}it commit --no-verify'",
+        "env -S 'git commit \\x2d-no-verify'",
     ];
     for (const cmd of BYPASSED) {
         it(`blocks: ${cmd}`, () => {
@@ -499,6 +503,8 @@ describe('block_no_verify — exec wrappers and config-env forms', () => {
         "env -S 'FOO=1' npm test",
         "stdbuf --output L sh -c 'git status'",
         "env -S 'sh -c' 'git status'",
+        "env -S 'git\\_status'",
+        "env -S 'npm\\_test'",
     ];
     for (const cmd of ALLOWED) {
         it(`allows: ${cmd}`, () => {

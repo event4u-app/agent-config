@@ -285,6 +285,11 @@ const _EXEC_WRAPPERS: ReadonlyMap<string, { readonly withValue: ReadonlySet<stri
         ['xargs', { withValue: new Set(['-a', '-d', '-E', '-I', '-L', '-n', '-P', '-s', '--arg-file', '--delimiter', '--max-args', '--max-procs', '--max-chars', '--process-slot-var']), positional: 0 }],
     ]);
 
+/** `env -S`'s `\_` separates arguments; decode it so the payload parses as env runs it. */
+function _decode_split(raw: string | null): string | null {
+    return raw === null ? null : raw.replace(/\\_/g, ' ');
+}
+
 /** Interpreters whose `-c <payload>` is a command list (`sh -c '…'`). */
 const _SHELL_RE = /^(?:ba|z|k|da|c|tc|fi|pw)?sh$/;
 
@@ -350,17 +355,17 @@ export function _unwrap(tokens: string[]): {
                 // `--split-string[=<s>]` — each consumes its string exactly once.
                 const bundle = opt.startsWith('--') ? null : /^-[a-zA-Z]*S(.*)$/.exec(opt);
                 if (opt.startsWith('--split-string=')) {
-                    splitString = opt.slice('--split-string='.length);
+                    splitString = _decode_split(opt.slice('--split-string='.length));
                     i += 1;
                     continue;
                 }
                 if (opt === '--split-string' || (bundle !== null && bundle[1] === '')) {
-                    splitString = tokens[i + 1] ?? null;
+                    splitString = _decode_split(tokens[i + 1] ?? null);
                     i += 2;
                     continue;
                 }
                 if (bundle !== null) {
-                    splitString = bundle[1] as string;
+                    splitString = _decode_split(bundle[1] as string);
                     i += 1;
                     continue;
                 }
@@ -371,6 +376,16 @@ export function _unwrap(tokens: string[]): {
         i += spec.positional;
     }
     return { start: i, hookspathEnv, wrapped, lookup: false, splitString };
+}
+
+/**
+ * `env -S` has its own syntax, not the shell's (council round 7): `\_` separates
+ * arguments — decoded in `_unwrap` — while `${VAR}` expands and other backslash
+ * escapes rewrite characters. Neither is something this guard can read, so a
+ * split string carrying one is refused rather than guessed at.
+ */
+function _unreadable_split_string(splitString: string): boolean {
+    return /\$/.test(splitString) || /\\/.test(splitString);
 }
 
 function _sh_quote(token: string): string {
@@ -756,7 +771,13 @@ function _check_command(cmd: string, depth = 0): [boolean, string] {
     }
 
     for (const sub of _split_subcommands(tokens)) {
-        const { hookspathEnv } = _unwrap(sub);
+        const { hookspathEnv, splitString } = _unwrap(sub);
+        if (splitString !== null && _unreadable_split_string(splitString)) {
+            return [
+                true,
+                `'env -S' string '${splitString}' uses an expansion or escape this guard cannot read — fail-closed (git-history-discipline). Spell the command out without 'env -S'.`,
+            ];
+        }
         const payload = depth <= 3 ? _shell_payload(sub) : null;
         if (payload !== null) {
             // The assignment is inherited by the payload's git, so the pair is
