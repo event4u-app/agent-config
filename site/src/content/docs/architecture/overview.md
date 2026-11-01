@@ -1,6 +1,6 @@
 ---
 title: Architecture Overview
-description: agent-config as a content + governance layer — the four artifact types, zero runtime, and what it deliberately is not.
+description: agent-config as a content + governance layer — the four artifact types and what it deliberately is not.
 ---
 
 agent-config is a **content + governance layer**, not an agent runtime. The
@@ -32,7 +32,7 @@ during agent operation does not.
 
 ## What it deliberately is *not*
 
-- **No background daemon** — the host runs the loop.
+- **No mandatory or always-on daemon** — the host runs the loop.
 - **No separate state database.**
 - **No self-rewriting memory** — every learned change is human-reviewed.
 - **No auto-build pipeline.**
