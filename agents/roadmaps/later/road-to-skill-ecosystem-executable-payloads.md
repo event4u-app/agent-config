@@ -196,7 +196,7 @@ under automation.
   `inbox-2026-11-a`): S0.1/S0.2 measure reliability and token savings, but the
   case for a money-skill script is correctness — the runway example disagreed
   with its own arithmetic (`src/skills/runway-cognition/SKILL.md:144-148`, fixed
-  in `road-to-numbers-a-skill-can-stand-behind` 1.4). For DCF, runway and
+  in `archive/road-to-numbers-a-skill-can-stand-behind` 1.4). For DCF, runway and
   scenario, 10 prompts each: the share of answers whose figures match a scripted
   computation. *Kill: ≥ 95 % match in prose → no conversion on correctness
   grounds.*

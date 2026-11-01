@@ -48,15 +48,16 @@ unless blocker `analysis-only-scope` says otherwise.
 - No trading skill exists (`ls src/skills | grep -i trad` -> 0); no rule
   mentions gambling or betting; the finance floor has no trading triggers
   (`src/rules/finance-safety-floor.md:5-15`).
-- The held-out draw for `pool_winsim` is active work in
-  `road-to-numbers-a-skill-can-stand-behind` 3.2, not here.
+- `pool_winsim --holdout-runs` (independent draw, field re-drawn, paired
+  sign test) landed in `archive/road-to-numbers-a-skill-can-stand-behind` 3.2.
 
 ## Phase 1 — Odds become numbers in code
 
 - [ ] **1.1 Odds bridge.** A script that de-vigs bookmaker odds, builds a
       weighted consensus and solves the implied λ pair by least squares, feeding
       `poisson_sim` instead of the model's head.
-      verify: a fixture of three books reproduces the hand-computed λ within 0.01.
+      verify: `npx vitest run tests/scripts/prediction-pool_odds_bridge.test.ts` -> 0, with a
+      three-book fixture reproducing the hand-computed λ pair within 0.01.
 - [ ] **1.2 Sports are table rows.** A sport is a row (scoring rule, outcome
       model) in one table, never a new skill.
       verify: adding a second sport touches the table and a test only.
@@ -70,23 +71,29 @@ unless blocker `analysis-only-scope` says otherwise.
 - [ ] **2.2 Scoring.** Brier, log-loss, calibration buckets and, for betting,
       closing-line value; every report below n=30 resolved forecasts says
       `underpowered` (reuse `_lib/paired_verdict.ts`, `_lib/capture_rate.ts`).
-      verify: a 10-row fixture reports `underpowered`; a 40-row one reports a score.
+      verify: `npx vitest run tests/scripts/forecast_ledger_score.test.ts` -> 0, with a 10-row
+      fixture reporting `underpowered` and a 40-row fixture reporting a Brier score.
 - [ ] **2.3 Backfill (owner-supplied only).** If the owner provides the World Cup
       tip export, it enters as an explicitly retrospective batch.
+      verify: every backfilled row carries `retrospective: true` and scores separately.
 
 ## Phase 3 — Sources are cards, and a missing source is learned
 
 - [ ] **3.1 Data-source cards.** A `kind: external` profile under
       `agents/knowledge/`: what it supplies, key needed, rate limit, terms,
       `fetched_at`, last success, fallback.
+      verify: `npx vitest run tests/scripts/source_card_schema.test.ts` -> 0 — a card missing `fetched_at` or terms fails.
 - [ ] **3.2 Source graph.** A deterministic graph over the cards, modelled on
       `discovery_graph` and its confidence scale — not the code graph, whose
       vocabulary is code.
+      verify: `npx vitest run tests/scripts/source_graph.test.ts` -> 0 — the same cards build the same graph byte for byte.
 - [ ] **3.3 Learning loop.** No card fits -> search official and free sources
       first -> prove with one real fetch -> write the card; a source that fails
       is written as a negative fact so the next session does not pay again.
+      verify: `npx vitest run tests/scripts/source_learning_loop.test.ts` -> 0 — a failed fetch writes a negative card and the next lookup skips it.
 - [ ] **3.4 Cross-project sharing** — only after blocker
       `cross-project-source-sharing`.
+      verify: `npx vitest run tests/scripts/knowledge_global.test.ts` -> 0 with a key-free card promoted and a keyed card refused.
 
 ## Phase 4 — Trading analysis (after the domain-adoption gates)
 
@@ -95,8 +102,10 @@ unless blocker `analysis-only-scope` says otherwise.
       check limits, replay whole sessions with a minimum sample and an interval.
       Written fresh in TypeScript (consumers are guaranteed `node` only; a port
       of the references would be a licensed derivative).
+      verify: `npx vitest run tests/scripts/trading_replay.test.ts` -> 0 — a replay below the minimum sample reports `underpowered`.
 - [ ] **4.2 Safety lines**: trading triggers on the finance floor and the
       gambling line from blocker `gambling-safety-line`.
+      verify: `grep -ciE "betting|odds|trading" src/rules/domain-safety-disclaimer.md src/rules/finance-safety-floor.md` -> non-zero in the trigger lists.
 
 ## Blockers
 

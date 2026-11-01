@@ -10,7 +10,7 @@ entry_condition:
 execution:
   mode: phase-checkpoints
 owner: maintainer
-estate_growth_exempt: "Receiver for the owner's own demand in round inbox-2026-11-a (T4 transcript): AC should recommend and integrate the owner's data-helpers library where a PHP project needs DTOs or mapping, know it well, and — since the owner created both — help optimise and extend it. Written to later/ because the namespace fix needs a gate decision; grows open_blockers by two."
+estate_growth_exempt: "Receiver for the owner's own demand in round inbox-2026-11-a (T4 transcript): AC recommends and integrates the owner's data-helpers library where a PHP project needs DTOs or mapping, and — since the owner created both — works on the library itself as co-maintainer. Written to later/ because the namespace fix needs a gate decision; grows open_blockers by two."
 estate_offset_exempt: "Owner search at 5a66c1bf19 (grep -rlF for data-helpers, DataHelpers, dto_library, laravel-dto over agents/roadmaps, later, stubs): road-to-a-graph-that-wins.md:75 names the library only as a benchmark subject dropped on 2026-10-23; skipped/road-to-stronger-skills.md holds a cancelled dto-creator. No owner."
 ---
 # Road to a library the agent can vouch for
@@ -28,8 +28,8 @@ one maintainer; where another DTO library is in use, it does not replace it
 unasked. Inside the library's own repo, AC works as co-maintainer from the
 library's own `agents/` knowledge, not from a copy in AC.
 
-The compile-and-map corrections that need no decision are active work in
-`road-to-numbers-a-skill-can-stand-behind` Phase 2.
+The compile-and-map corrections that need no decision landed in
+`archive/road-to-numbers-a-skill-can-stand-behind` Phase 2.
 
 ## Verified at the pin
 
@@ -55,6 +55,7 @@ The compile-and-map corrections that need no decision are active work in
 ## Phase 1 — Shipped examples resolve
 
 - [ ] **1.1 Real namespace in shipped examples** — per blocker `shipped-namespace`.
+      verify: `grep -rn "Vendor\\\\DataHelpers" src docs` -> 0 and `task check-portability` green.
 - [ ] **1.2 Import-resolution check** in `lint_example_fences.ts` against a
       pinned symbol manifest generated from the library's source.
       verify: a fixture importing `Vendor\DataHelpers\SimpleDto` fails; the real path passes.
@@ -64,6 +65,7 @@ The compile-and-map corrections that need no decision are active work in
 - [ ] **2.1 Detection.** `event4u/data-helpers` in `composer.lock` via
       `readInventory` (`src/scripts/_lib/advisory_inventory.ts:339`); the
       library's own repo detected by its root `composer.json` name (maintain mode).
+      verify: `npx vitest run tests/scripts/advisory_inventory.test.ts` -> 0 with a lockfile fixture detected and the library repo detected as maintain mode.
 - [ ] **2.2 Consumer skill or neutralised `laravel-dto`** with a trigger corpus,
       covering DTOs, DataMapper, DataAccessor, DataMutator, DataFilter,
       DataCollection, validation and serialisation, version-bound to the lockfile.
@@ -73,14 +75,17 @@ The compile-and-map corrections that need no decision are active work in
 
 - [ ] **3.1 `php.dto_library` setting** next to the `eloquent:` block
       (`src/config/agent-settings.template.yml:376`); default per decision E1.
+      verify: `agent-config settings:get php.dto_library` prints the default and its source layer.
 - [ ] **3.2 One recommendation, above a threshold**, with the same-maintainer
       disclosure; off until the published release is MIT (proposal E2).
+      verify: a trigger-eval case with no DTO library recommends once with the disclosure; one with another library does not recommend.
 
 ## Phase 4 — Maintain mode reads the library's own knowledge
 
 - [ ] **4.1 Mode switch only.** In the library's repo AC loads its
       `agents/` map and recipes; AC ships the mechanism, not the content —
       per blocker `maintainer-knowledge-home`.
+      verify: in a fixture repo named like the library, the mode detector returns `maintain` and loads its `agents/` map path.
 
 ## Blockers
 
