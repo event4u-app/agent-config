@@ -696,6 +696,8 @@ judge-survivable-subtlety corpus that breaks the recall ceiling, or (b) a new
 model generation. The worker-via-bundle delegate (roadmap Phase 3 Step 4) stays
 deferred — it re-opened only on a measured review lift, which did not occur.
 
+<a id="honest-null-reach"></a>
+
 ## Internet-reach prescriptions vs host-native web tools (2026-07-24) — HONEST NULL (capability), cost signal unregistered {#honest-null-reach}
 
 **Question (pre-registered before the run):** does a reach-prescription layer —

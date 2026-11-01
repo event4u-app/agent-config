@@ -79,6 +79,44 @@ const URL_DATED = /^https?:\/\/\S+\s*\(\d{4}-\d{2}-\d{2}\)\s*$/;
 const WITNESS_SURFACES = ['README.md', 'CAPABILITIES.yaml'];
 
 /**
+ * The hand-written pages of the docs site (road-to-docs-that-sell 1.4). A number
+ * a newcomer reads on the site is the same public claim as one in README, so it
+ * owes the same witness. Pages projected by `site/sync-docs.mjs` are excluded:
+ * their source under `docs/` is governed where it lives, and those pages are
+ * build output that a fresh checkout does not even contain.
+ */
+const SITE_CONTENT_ROOT = 'site/src/content/docs';
+const SITE_GENERATED_BANNER = /GENERATED from \S+ by site\/sync-docs\.mjs/;
+/** The gitignored subtree `site/sync-docs.mjs` writes into. */
+const SITE_GENERATED_DIR = 'generated';
+
+/**
+ * In `.mdx` an HTML comment is a syntax error, so the marker there is written
+ * `{/* claim:ID *\/}`. Both spellings license a figure; nothing else changes.
+ */
+const WITNESS_MARKER = /(?:<!--|\{\/\*)\s*claim:([A-Za-z0-9._-]+)\s*(?:-->|\*\/\})/g;
+
+function site_witness_surfaces(): string[] {
+    const root = path.join(REPO, SITE_CONTENT_ROOT);
+    if (!fs.existsSync(root)) return [];
+    const out: string[] = [];
+    const walk = (dir: string): void => {
+        for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+            const full = path.join(dir, e.name);
+            if (e.isDirectory()) {
+                if (dir === root && e.name === SITE_GENERATED_DIR) continue;
+                walk(full);
+            } else if (/\.mdx?$/.test(e.name)) {
+                if (SITE_GENERATED_BANNER.test(fs.readFileSync(full, 'utf-8'))) continue;
+                out.push(path.relative(REPO, full).split(path.sep).join('/'));
+            }
+        }
+    };
+    walk(root);
+    return out.sort();
+}
+
+/**
  * The publish-surface set — and the RULE that decides membership.
  *
  * `SURFACE_ROOTS` above is where the package looks for claim MARKERS; this is
@@ -960,7 +998,12 @@ function main(argv: string[] = process.argv.slice(2)): number {
     //    `unverified` annotation. Unmarkered numbers are exactly how an
     //    "84.8%"-style figure spreads across surfaces with no methodology
     //    (the anti-lesson this check encodes). Fenced code blocks are skipped.
-    for (const rel of WITNESS_SURFACES) {
+    // Site findings are collected apart: they meet the ratchet below rather than
+    // failing outright, because the sweep reaching the site REVEALS figures that
+    // were published before any gate looked (road-to-docs-that-sell 1.4).
+    const siteFindings: Finding[] = [];
+    const siteSurfaces = new Set(site_witness_surfaces());
+    for (const rel of [...WITNESS_SURFACES, ...siteSurfaces]) {
         const abs = path.join(REPO, rel);
         let text: string;
         try {
@@ -977,7 +1020,10 @@ function main(argv: string[] = process.argv.slice(2)): number {
                 continue;
             }
             if (inFence) continue;
-            if (!is_quantified_claim(line)) continue;
+            // An inline `style` attribute on a site page carries CSS (`max-width:
+            // 100%`), which is markup and never a claim about this package.
+            const scanned = siteSurfaces.has(rel) ? line.replace(/\bstyle\s*=\s*(?:"[^"]*"|'[^']*'|\{\{.*?\}\})/g, '') : line;
+            if (!is_quantified_claim(scanned)) continue;
             if (/unverified/i.test(line)) continue;
 
             // A marker on the line is not enough — it must be a marker that can
@@ -986,7 +1032,7 @@ function main(argv: string[] = process.argv.slice(2)): number {
             // about having no daemon, and any-marker-exempts-the-line let the
             // unrelated figure ride along on it. A qualitative claim says nothing
             // about a quantity, so only a `kind: quant` entry clears a figure.
-            const markers = [...line.matchAll(/<!--\s*claim:([A-Za-z0-9._-]+)\s*-->/g)].map((m) => m[1] as string);
+            const markers = [...line.matchAll(WITNESS_MARKER)].map((m) => m[1] as string);
             const licensed = markers.some((id) => ledger.get(id)?.kind === 'quant');
             if (licensed) continue;
 
@@ -994,11 +1040,37 @@ function main(argv: string[] = process.argv.slice(2)): number {
                 markers.length > 0
                     ? `figure carried only by non-quantitative claim marker(s) [${markers.join(', ')}] — a \`kind: qual\` claim cannot license a number`
                     : 'quantified claim without a claim marker or \'unverified\' annotation';
-            findings.push({
+            (siteSurfaces.has(rel) ? siteFindings : findings).push({
                 id: '(unmarkered)',
                 file: `${rel}:${i + 1}`,
                 reason: `${why} — ${line.trim().slice(0, 70)}`,
             });
+        }
+    }
+    {
+        // Same anti-silencing shape as the non-inference ratchet further down: a
+        // tree with NO baselines file is a fixture and every site finding fails;
+        // a repository that records baselines fails only when the count rises
+        // above `check_claims:site-witness`. Findings at or under the baseline
+        // are still printed, so the debt stays visible on every run.
+        const baselines = path.join(REPO, 'src', 'config', 'gate-violation-baselines.json');
+        if (!fs.existsSync(baselines)) {
+            findings.push(...siteFindings);
+        } else {
+            const verdict = checkRatchet({
+                gate: 'check_claims:site-witness',
+                actual: siteFindings.length,
+                repoRoot: REPO,
+            });
+            if (!verdict.ok) {
+                findings.push(...siteFindings);
+                findings.push({ id: 'site-witness', file: SITE_CONTENT_ROOT, reason: verdict.message });
+            } else if (siteFindings.length > 0) {
+                process.stderr.write(
+                    `⚠️  check_claims: ${siteFindings.length} unwitnessed site figure(s), within the recorded baseline:\n`,
+                );
+                for (const f of siteFindings) process.stderr.write(`    ${f.file} — ${f.reason}\n`);
+            }
         }
     }
 
