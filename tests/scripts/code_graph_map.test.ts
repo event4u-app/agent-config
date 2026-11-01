@@ -15,7 +15,7 @@ import {
     recordOutcome,
     swapIn,
 } from '../../src/scripts/code_graph/map.js';
-import { areaDrift, buildMapModel, outcomeScores, prOverlap, staticRole } from '../../src/scripts/code_graph/map_model.js';
+import { areaDrift, buildMapModel, folderGroups, outcomeScores, prOverlap, staticRole } from '../../src/scripts/code_graph/map_model.js';
 import { labelProblems, ORB_MAX_CONCENTRATION, orbSpread } from '../../src/scripts/code_graph/map_verify.js';
 
 let root: string;
@@ -100,13 +100,20 @@ describe('the map model (Phase 2)', () => {
         expect(areaOf('tests/billing.test.ts')).toBe(areaOf('src/billing/f0.ts'));
     });
 
-    it('caps every area at a quarter of the clustered files', async () => {
-        const { graph } = await buildFromRepo(root, null);
-        const m = buildMapModel(graph);
-        const clustered = m.files.filter((f) => f.area >= 0).length;
-        for (const a of m.areas.filter((x) => x.kind === 'area')) {
-            expect(a.files.length).toBeLessThanOrEqual(Math.max(8, 0.25 * clustered));
-        }
+    it('splits a folder above a quarter of the files one level deeper, and keeps a flat one whole', () => {
+        const paths = [
+            ...Array.from({ length: 12 }, (_, i) => `src/a/f${i}.ts`),
+            ...Array.from({ length: 12 }, (_, i) => `src/b/f${i}.ts`),
+            ...Array.from({ length: 4 }, (_, i) => `lib/g${i}.ts`),
+            ...Array.from({ length: 30 }, (_, i) => `flat/h${i}.ts`),
+        ];
+        const groups = folderGroups(paths.map((_, i) => i), paths, 14);
+        expect(groups.map(([k, g]) => [k, g.length])).toEqual([
+            ['flat', 30],
+            ['lib', 4],
+            ['src/a', 12],
+            ['src/b', 12],
+        ]);
     });
 
     it('is a pure function: same graph, same bytes', async () => {

@@ -880,9 +880,9 @@ export function mapMdParts(m: MapModel, meta: MapMeta, areas: MapAreas = {}): { 
         [
             '## Areas',
             '',
-            'Files grouped by how they are coupled, not by folder. *Outside hub folder* is the share of an',
-            "area's non-test files whose directory differs from its hub's — where the folder layout and the",
-            'actual dependencies disagree.',
+            'Files grouped by folder — a folder above a quarter of the files is split one level deeper — and each',
+            'test joins the area of the file it links to most, so an area changes only when its own files do.',
+            "*Outside hub folder* is the share of an area's non-test files whose directory differs from its hub's.",
             '',
             '| Area | Named after (hub) | Files | Cohesion | Tests | Outside hub folder | Most used |',
             '|---|---|---|---|---|---|---|',

@@ -105,6 +105,25 @@ upgrades.
 - **Commit the map.** Rejected as a default: it changes on every commit and needed a
   merge driver in the reference tool. Left as a per-project opt-in.
 
+## Amendment 1 (2026-11-01) — areas follow folders, not Louvain communities
+
+**Owner decision, in chat, 2026-11-01** ("1.a und 2.a — also deine vorschläge", <!-- md-language-check: ignore -->
+choosing folder/module boundaries as area identity). The map is now committed in
+consumer projects and refreshed while work happens, and a globally recomputed
+Louvain community moved files between areas — and renumbered area pages
+`a1…aN` — on a one-line change (measured on a 353-file repository: 28 of 28 map
+files changed). A two-provider design council the same day rejected warm-started
+clustering (path-dependent for a deterministic tool) and recommended folder
+boundaries as the primary area identity.
+
+What changes: areas are folders (a folder above a quarter of the clustered files
+is split one level deeper, up to four levels; a flat folder stays whole), each
+test joins the area of the file it links to most, and area ids and page names
+come from the folder (`src/vm` → `src-vm`). The `graphology-communities-louvain`
+row in § Dependency justifications no longer describes a live use; the package
+dependency is left in place for a separate removal. Everything else in this ADR
+stands.
+
 ## References
 
 - ADR-124 § 1 — the Class-A row this amends.

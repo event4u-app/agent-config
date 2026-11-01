@@ -93,6 +93,27 @@ describe('a committed map changes only where the tree did (2026-11-01)', () => {
     });
 });
 
+describe('folder areas keep their names and stay local (owner decision 2026-11-01)', () => {
+    it('a file added in one folder leaves the other folder\'s area page byte-identical', async () => {
+        for (const d of ['alpha', 'beta']) {
+            for (let i = 0; i < 6; i++) write(`src/${d}/m${i}.ts`, `import { v${(i + 1) % 6} } from './m${(i + 1) % 6}.js';\nexport const v${i} = (): number => v${(i + 1) % 6}() + 1;\n`);
+        }
+        git('add', '-A');
+        git('commit', '-qm', 'folders');
+        await buildMap(root);
+        const pages = (): string[] => fs.readdirSync(path.join(root, 'agents', 'map', 'code', 'areas')).sort();
+        const before = pages();
+        const beta = fs.readFileSync(path.join(root, 'agents', 'map', 'code', 'areas', 'src-beta.md'), 'utf-8');
+        write('src/alpha/m6.ts', "import { v0 } from './m0.js';\nexport const v6 = (): number => v0();\n");
+        git('add', '-A');
+        git('commit', '-qm', 'alpha grows');
+        await buildMap(root);
+        expect(pages()).toEqual(before);
+        expect(before).toEqual(expect.arrayContaining(['src-alpha.md', 'src-beta.md']));
+        expect(fs.readFileSync(path.join(root, 'agents', 'map', 'code', 'areas', 'src-beta.md'), 'utf-8')).toBe(beta);
+    });
+});
+
 describe('lineJson', () => {
     it('round-trips and puts one array element per line', () => {
         const v = { meta: { title: 't' }, model: { files: [{ path: 'a' }, { path: 'b' }], n: 1, empty: [] }, skip: undefined };

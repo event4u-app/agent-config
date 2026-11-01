@@ -12,7 +12,7 @@
  * appears by NAME only.
  *
  * `map.json` is `{ meta, model, areas }`; `model.areas` is something else — the
- * Louvain groups of the Code area.
+ * folder groups of the Code area.
  */
 
 /** Area ids in nav order after Overview and Code. */

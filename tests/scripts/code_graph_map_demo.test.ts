@@ -80,7 +80,8 @@ describe('the demo map', () => {
             expect(p?.empty, id).toBeUndefined();
         }
         expect(model.files.length).toBeGreaterThanOrEqual(2000);
-        expect(model.areas.length).toBeGreaterThanOrEqual(120);
+        // Folder areas (2026-11-01): one per folder, a large folder split one level deeper.
+        expect(model.areas.length).toBeGreaterThanOrEqual(50);
         const data = areas.data as unknown as { tables: Array<{ name: string; connection?: string }>; findings: Array<{ id: string }> };
         expect(data.tables.length).toBeGreaterThanOrEqual(60);
         expect(new Set(data.tables.map((t) => t.connection)).size).toBeGreaterThanOrEqual(3);
