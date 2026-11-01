@@ -67,7 +67,7 @@ import {
     VERDICT_LINE_CONTRACT,
 } from './prompts.js';
 import { count_dissenters, dissent_quota_met, is_near_duplicate } from './debate_gates.js';
-import { parse_stance_line, render_vote_tally, stanceMembersFrom, tally_stances } from './stance_tally.js';
+import { parse_stance_line, render_vote_tally, tally_stances } from './stance_tally.js';
 import { MidFlightFallback } from './transport_resolver.js';
 import {
     emitOutcome,
@@ -1795,7 +1795,11 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}): 
         // Phase 1: deterministic option-level tally from the final-round
         // response texts (the STANCE closing lines live IN the texts, so the
         // render is a pure projection — no config or transport needed here).
-        const tally = tally_stances(stanceMembersFrom(responses));
+        const tally = tally_stances(
+            responses
+                .filter((r) => !r.error)
+                .map((r) => ({ member: `${r.provider}:${r.model}`, text: r.text })),
+        );
         blocks.push(render_vote_tally(tally));
         // Phase 2.1: the verdict half of the same projection. A synthesis that
         // states a `VERDICT:` line the tally did not clear is contradicting its
