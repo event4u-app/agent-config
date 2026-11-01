@@ -346,13 +346,23 @@ export function _unwrap(tokens: string[]): {
         while (i < tokens.length && (tokens[i] as string).startsWith('-')) {
             const opt = tokens[i] as string;
             if (head === 'env') {
-                // `-S <s>`, `-S<s>`, a bundle ending in S (`-vS <s>`), or `--split-string[=<s>]`.
-                const bundle = /^-[a-zA-Z]*S(.*)$/.exec(opt);
-                if (opt.startsWith('--split-string=')) splitString = opt.slice('--split-string='.length);
-                else if (opt === '--split-string') splitString = tokens[i + 1] ?? null;
-                else if (bundle !== null && !opt.startsWith('--')) {
-                    splitString = bundle[1] !== '' ? (bundle[1] as string) : (tokens[i + 1] ?? null);
-                    if (bundle[1] === '') i += 1;
+                // `-S <s>`, `-S<s>`, a bundle ending in S (`-vS <s>`), or
+                // `--split-string[=<s>]` — each consumes its string exactly once.
+                const bundle = opt.startsWith('--') ? null : /^-[a-zA-Z]*S(.*)$/.exec(opt);
+                if (opt.startsWith('--split-string=')) {
+                    splitString = opt.slice('--split-string='.length);
+                    i += 1;
+                    continue;
+                }
+                if (opt === '--split-string' || (bundle !== null && bundle[1] === '')) {
+                    splitString = tokens[i + 1] ?? null;
+                    i += 2;
+                    continue;
+                }
+                if (bundle !== null) {
+                    splitString = bundle[1] as string;
+                    i += 1;
+                    continue;
                 }
             }
             i += spec.withValue.has(opt) ? 2 : 1;
@@ -363,20 +373,34 @@ export function _unwrap(tokens: string[]): {
     return { start: i, hookspathEnv, wrapped, lookup: false, splitString };
 }
 
-/** The payload of `sh -c '<payload>'`, `eval <words…>` or `env -S '<payload>'`, or null. */
-export function _shell_payload(tokens: string[]): string | null {
-    const { start, splitString } = _unwrap(tokens);
-    if (splitString !== null) return [splitString, ...tokens.slice(start)].join(' ');
-    const head = _basename(tokens[start] ?? '');
+function _payload_at(tokens: string[], at: number): string | null {
+    const head = _basename(tokens[at] ?? '');
     if (head === 'eval') {
-        const words = tokens.slice(start + 1);
+        const words = tokens.slice(at + 1);
         return words.length > 0 ? words.join(' ') : null;
     }
     if (!_SHELL_RE.test(head)) return null;
-    for (let k = start + 1; k < tokens.length; k += 1) {
+    for (let k = at + 1; k < tokens.length; k += 1) {
         const tok = tokens[k] as string;
         if (!tok.startsWith('-')) return null;
         if (/^-[a-z]*c[a-z]*$/.test(tok)) return tokens[k + 1] ?? null;
+    }
+    return null;
+}
+
+/**
+ * The payload of `sh -c '<payload>'`, `eval <words…>` or `env -S '<payload>'`,
+ * or null. After a wrapper, an interpreter is looked for past an unresolved
+ * head the same way `_git_base` looks for git (council round 4).
+ */
+export function _shell_payload(tokens: string[]): string | null {
+    const { start, splitString, wrapped, lookup } = _unwrap(tokens);
+    if (splitString !== null) return [splitString, ...tokens.slice(start)].join(' ');
+    const direct = _payload_at(tokens, start);
+    if (direct !== null || !wrapped || lookup || _basename(tokens[start] ?? '') === 'git') return direct;
+    for (let k = start + 1; k < tokens.length; k += 1) {
+        const p = _payload_at(tokens, k);
+        if (p !== null) return p;
     }
     return null;
 }

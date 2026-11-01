@@ -460,6 +460,12 @@ describe('block_no_verify — exec wrappers and config-env forms', () => {
         'stdbuf --output L git commit --no-verify',
         'stdbuf --output=L git commit --no-verify',
         'timeout --preserve-status --foreground 5 git commit --no-verify',
+        // Council round 4 (openai): composition after an unresolved head.
+        "env -S 'env' git commit --no-verify",
+        "env -S'env' git commit --no-verify",
+        "stdbuf --output L sh -c 'git commit --no-verify'",
+        "stdbuf --output L eval 'git commit --no-verify'",
+        "HUSKY=0 stdbuf --output L sh -c 'git commit -m x'",
     ];
     for (const cmd of BYPASSED) {
         it(`blocks: ${cmd}`, () => {
@@ -484,6 +490,8 @@ describe('block_no_verify — exec wrappers and config-env forms', () => {
         "HUSKY=0 sh -c 'npm test'",
         'command -pv git',
         'env command -v git commit --no-verify',
+        "env -S 'FOO=1' npm test",
+        "stdbuf --output L sh -c 'git status'",
     ];
     for (const cmd of ALLOWED) {
         it(`allows: ${cmd}`, () => {
