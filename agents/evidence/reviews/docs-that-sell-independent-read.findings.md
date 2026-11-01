@@ -18,7 +18,7 @@ docs landing page at commit `6df8a52cc7`. Line numbers refer to that commit.
 | 6 | The first-screen GIF shows the proof page, not the product | README:17 | fixed — GIF moved to "Prove it" |
 | 7 | The before/after shows a curl'd subagent, "planted cases" is jargon, n=2 not stated plainly | README:38-42 | partly — wording now says "two cases: one with a placeholder left in, one finished"; the sentence that the subagent ships with the install was NOT written, because the install delivers only a persona of that name, not the `.claude/agents/` subagent (`CLAUDE_SKILL_BUNDLE` in `src/install/wizard-plan.ts`) |
 | 8 | No line on what leaves the machine (council sends work to other providers with your own keys) | README:69-75 | fixed — one line naming the daily update check, the daily merged-PR check through your own `gh` login and the opt-in second opinion, linking the network page |
-| 9 | Role profiles vs `--profile minimal | balanced | full` share one word | README:85-98, 176 | fixed — the second is called the rule level |
+| 9 | Role profiles vs `--profile minimal\|balanced\|full` share one word | README:85-98, 176 | fixed — the second is called the rule level |
 | 10 | Repetition of the user-global sentence, the Claude Code caveat and the Introduction link | README:116, 135-140, 164; index.mdx:76 | fixed |
 | 11 | Jargon: hollow, planted, published null, task family, dormant, projection | README:42, 71, 170; index.mdx:80 | fixed where it is user copy |
 | 12 | "Commands 213 … the linked directory holds 63" undercuts credibility | README:170 | fixed — the footnote names where the 213 are listed |

@@ -436,7 +436,7 @@ The size gate says "replace, do not grow"; depth moves to the site.
 - [ ] **11.1 Walkthrough.** A fresh session, given only the site URL, installs
       into a throwaway HOME, runs one task and uninstalls, recording time and
       every point of confusion; each finding is fixed or recorded.
-- [ ] **11.2 Independent read.** A reviewer session that did not write the copy
+- [x] **11.2 Independent read.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Prompt and dispositions: `agents/evidence/reviews/docs-that-sell-independent-read.*`. A reviewer session that did not write the copy
       reads README and landing page with a neutral prompt that states no
       expected outcome; the prompt is committed with its findings.
 - [ ] **11.3 Final sweep.** The README, site, claims, language and link gates
