@@ -155,25 +155,25 @@ it changes a recorded decision) before any phase that depends on it starts.
 
 Every later phase merges through these gates, so they land before any copy.
 
-- [ ] **1.1 Site CI sees docs.** `site.yml` and `deploy-site.yml` trigger on
+- [x] **1.1 Site CI sees docs.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_site_links.ts --> `site.yml` and `deploy-site.yml` trigger on
       every path `sync-docs.mjs` reads (today `docs/**`, `docs/media/**`); the
       missing `docs/guides/works-with-agent-switch.md` filter is the regression
       case. verify: a PR touching only a synced doc runs the site build.
-- [ ] **1.2 Relative links are checked.** `check_site_links` resolves relative
+- [x] **1.2 Relative links are checked.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_site_links.ts --> `check_site_links` resolves relative
       hrefs against the page URL instead of skipping them (`:68`), and checks
       `#fragment` targets on internal pages. verify: a seeded broken relative
       link and a seeded dead fragment both fail its self-test; the current
       build passes or its real breakages are fixed in the same change.
-- [ ] **1.3 README-only PRs run the README gates.** `lint_positioning` and
+- [x] **1.3 README-only PRs run the README gates.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_site_links.ts --> `lint_positioning` and
       `check_claims` run on PRs touching `README.md`, `package.json` or
       `.github/about.yml` (today they ride workflows without those paths).
       verify: workflow path filters list the three files.
-- [ ] **1.4 Numbers on the site need a claim.** The `check_claims` witness
+- [x] **1.4 Numbers on the site need a claim.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_site_links.ts --> The `check_claims` witness
       sweep (ratio, magnitude, self-count) extends to hand-written
       `site/src/content/docs/**`, with the same `claim:` marker escape. verify:
       a seeded "40% fewer bugs" in a site page fails; the existing pages pass or
       are fixed.
-- [ ] **1.5 Hard-coded path inventory.** A committed maintainer report lists
+- [x] **1.5 Hard-coded path inventory.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_site_links.ts --> A committed maintainer report lists
       every doc path named by `src/scripts`, `tests`, `.github` and
       `src/config/gate-coverage.yml` (`update_counts` TARGETS,
       `check_supervision_claim_atomicity` PUBLIC_SURFACES, role-doc links,
@@ -282,20 +282,20 @@ pages that describe the CLI. Each step ships with a test that was red first.
 
 ## Phase 5 — Site engine
 
-- [ ] **5.1 Manifest-driven sync.** `sync-docs.mjs` reads a manifest (or a
+- [x] **5.1 Manifest-driven sync.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: site/sync-docs.mjs --> `sync-docs.mjs` reads a manifest (or a
       `site:` frontmatter key) instead of a five-entry array, writes nested
       routes, and replaces the per-file `.gitignore` lines with one generated
       subtree. verify: adding a page needs one manifest line and nothing else.
-- [ ] **5.2 Link classifier.** Every link is resolved relative to its source
+- [x] **5.2 Link classifier.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: site/sync-docs.mjs --> Every link is resolved relative to its source
       file and classified: synced page → site route; other `docs/` file →
       GitHub blob under `docs/`; anything else → GitHub blob. The build fails on
       any remaining relative `.md` link. Fixes the first-dot-only escape at
       `:53`. verify: unit tests per class plus the 1.2 checker.
-- [ ] **5.3 Synced pages look native.** The first H1 becomes the title and is
+- [x] **5.3 Synced pages look native.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: site/sync-docs.mjs --> The first H1 becomes the title and is
       stripped from the body, the first paragraph becomes the description,
       `editUrl` points at the `docs/` source, and generated pages show a
       visible "generated from … — edit the source" aside.
-- [ ] **5.4 Hosted demo map.** The site build runs `code-graph map --demo` into
+- [x] **5.4 Hosted demo map.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: site/sync-docs.mjs --> The site build runs `code-graph map --demo` into
       `site/public/demo-map/` with a size budget, and the page keeps its
       "sample data" chip. verify: the deployed URL returns 200 and the artefact
       stays under the budget.
@@ -396,14 +396,14 @@ The size gate says "replace, do not grow"; depth moves to the site.
 
 ## Phase 9 — Visual assets
 
-- [ ] **9.0 Re-rendered info-image.** Per 0.1: a new
+- [x] **9.0 Re-rendered info-image.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Per 0.1: a new
       `.github/assets/info-image.png` without the benchmark bar
       ("-58% / +47% / +63%"), without the mock code panel and without the
       review's advice paragraph; remaining labels name only shipped features
       (code review, security audit, code map, cost report, roadmaps, council,
       memory, skills). verify: every label maps to a real command or skill and
       the image carries no number.
-- [ ] **9.1 Web-sized images.** Optimised copies (WebP or compressed PNG, at
+- [x] **9.1 Web-sized images.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Optimised copies (WebP or compressed PNG, at
       most 300 KB each) of the banner and the 0.1 image for README and site;
       originals stay in `.github/assets/`; alt text describes the content.
 - [ ] **9.2 Reproducible map captures.** A Playwright script captures the demo
@@ -413,7 +413,7 @@ The size gate says "replace, do not grow"; depth moves to the site.
 - [ ] **9.3 Setup wizard strip.** The existing `wizard-browser.spec.ts`
       dry-run screenshots are exported behind an env flag into one strip for
       the Install page.
-- [ ] **9.4 Social preview.** A 1280×640 preview from the banner; uploading it
+- [x] **9.4 Social preview.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> A 1280×640 preview from the banner; uploading it
       in the repository settings is an owner step.
 
 ## Phase 10 — Discoverability inside the decisions
