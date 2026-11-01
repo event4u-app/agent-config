@@ -27,10 +27,11 @@
  * gets `fresh` — so at most one launch per HEAD and fixed window, and two may
  * fall either side of a window boundary. There is no lock to take over, nothing
  * to release and no record another process could overwrite (ratification rounds
- * 1-4, 2026-11-01). Only claims two or more windows old are swept, so a claim is
- * never deleted while its pair can still be won; a launch that fails deletes only
- * its own, current-window claim. A clock set back lands in an older window,
- * which suppresses a refresh for at most one window.
+ * 1-5, 2026-11-01). Only claims two or more windows old are swept, and a
+ * dispatch refuses to claim such a window by a clock read at claim time, so a
+ * claim is never deleted while its pair can still be won. A failed launch keeps
+ * its claim and the pair retries in the next window. A clock set back lands in an
+ * older window, which suppresses a refresh for at most one window.
  *
  * WHEN IT DOES NOTHING — the conditions a ratification round of 2026-10-23
  * (two of two seats, refused the first cut) made load-bearing:
@@ -112,8 +113,15 @@ function sweepSpent(dir: string, current: number | null): void {
     }
 }
 
-/** Creates the claim exclusively: `won`, `taken` (another dispatch holds this pair) or `failed`. */
-function claim(file: string): 'won' | 'taken' | 'failed' {
+/**
+ * Creates the claim exclusively: `won`, `taken` (another dispatch holds this
+ * pair, or its window is already sweepable) or `failed`. The window is checked
+ * against a clock read at claim time, so a dispatch that paused past the sweep
+ * horizon cannot re-create a claim the sweep may already have removed.
+ */
+function claim(file: string, clock: () => number): 'won' | 'taken' | 'failed' {
+    const w = windowOf(file);
+    if (w !== null && w <= Math.floor(clock() / THROTTLE_MS) - 2) return 'taken';
     try {
         fs.mkdirSync(path.dirname(file), { recursive: true });
         fs.writeFileSync(file, '', { flag: 'wx' });
@@ -186,8 +194,8 @@ function anyTracked(root: string, rels: readonly string[]): boolean {
     }
 }
 
-/** `beforeClaim` runs right before the claim is created; tests use it to interleave a second dispatch. */
-export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn, now: number = Date.now(), slot?: string, beforeClaim?: () => void): RefreshOutcome {
+/** `beforeClaim` runs right before the claim is created and `clock` is read there; tests use both to interleave and pause a dispatch. */
+export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn, now: number = Date.now(), slot?: string, beforeClaim?: () => void, clock: () => number = Date.now): RefreshOutcome {
     if (process.env['AGENT_CONFIG_CODE_GRAPH_REFRESH'] === 'off') return 'disabled';
     if (process.platform === 'win32') return 'unsupported';
     if (is_replay_mode()) return 'replay';
@@ -197,11 +205,12 @@ export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn, now: numb
     const home = projectBuildPaths(root);
     // The opt-out wins over a marker a concurrent `build` may have written beside it.
     if (!fs.existsSync(home.autoRefreshPath) || fs.existsSync(home.autoRefreshOffPath)) return 'not-opted-in';
-    // A repository-committed opt-in is refused before anything is written into the tree.
-    if (anyTracked(root, [home.autoRefreshPath, home.cachePath].map((p) => path.relative(root, p)))) return 'tracked';
+    // A claimed pair returns before the tracked-file probe: the common turn end costs one git call.
     const head = headOf(root);
     const file = claimPath(home.buildDir, head, now);
     if (fs.existsSync(file)) return 'fresh';
+    // A repository-committed opt-in is refused before anything is written into the tree.
+    if (anyTracked(root, [home.autoRefreshPath, home.cachePath].map((p) => path.relative(root, p)))) return 'tracked';
     const done = (outcome: RefreshOutcome, detail?: string): RefreshOutcome => {
         recordRefreshIn(home.buildDir, { by: 'session-start', outcome, detail, slot, ...(head !== null ? { head } : {}) }, now);
         return outcome;
@@ -212,7 +221,7 @@ export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn, now: numb
     const verdict = usableCli(root);
     if ('reason' in verdict) return done(verdict.reason, (verdict as { cli?: string }).cli);
     beforeClaim?.();
-    const won = claim(file);
+    const won = claim(file, clock);
     if (won === 'taken') return 'fresh';
     if (won === 'failed') return 'record-failed';
     const child = spawnFn(verdict.cli, [...REFRESH_ARGS, '--root', root], {
@@ -221,8 +230,8 @@ export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn, now: numb
         stdio: 'ignore',
         env: hardenedSpawnEnv(),
     });
-    // The claim is this dispatch's alone (created exclusively, never taken over), so deleting it on a failed launch frees exactly this pair.
-    child.on('error', () => fs.rmSync(file, { force: true }));
+    // A failed launch keeps its claim: the pair retries in the next window, and no path is ever deleted by its name.
+    child.on('error', () => {});
     child.unref();
     return done('spawned', verdict.cli);
 }

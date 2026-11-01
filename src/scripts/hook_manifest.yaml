@@ -1452,9 +1452,9 @@ concerns:
   # repository. The council of 2026-10-23 (two of two seats) kept it off `stop`
   # because a spawn per turn is waste; on 2026-11-01 the owner reported a map 20
   # commits behind, so `stop` is bound with a different mechanism: one
-  # `git rev-parse HEAD`, and a spawn only when HEAD moved past the last spawn
-  # or THROTTLE_MS passed. `session_end` stays unbound — it would refresh for a
-  # session that is gone. Silent, exit 0, POSIX only, no hook-token-budget
+  # `git rev-parse HEAD` and an exclusive claim file per HEAD and fixed
+  # THROTTLE_MS window, so at most one launch per HEAD and window.
+  # `session_end` stays unbound — it would refresh for a session that is gone. Silent, exit 0, POSIX only, no hook-token-budget
   # row — it emits nothing. Loaded from its own chunk.
   # Kill switch: `AGENT_CONFIG_CODE_GRAPH_REFRESH=off`.
   code-graph-refresh:

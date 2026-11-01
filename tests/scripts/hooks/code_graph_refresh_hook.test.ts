@@ -362,7 +362,7 @@ describe('turn-end binding — spawn only after HEAD moved (2026-11-01)', () => 
         expect(calls).toHaveLength(1);
     });
 
-    it('a launch that errors deletes its own claim, so the next dispatch spawns', async () => {
+    it('a launch that errors keeps its claim; the pair retries in the next window', async () => {
         optedIn();
         commit('one');
         const errSpawn = ((cmd: string, args: readonly string[], opts: Record<string, unknown>) => {
@@ -372,10 +372,22 @@ describe('turn-end binding — spawn only after HEAD moved (2026-11-01)', () => 
             queueMicrotask(() => child.emit('error', new Error('ENOENT')));
             return child;
         }) as unknown as typeof spawn;
-        expect(refreshFor(root, errSpawn)).toBe('spawned');
+        const now = Date.now();
+        expect(refreshFor(root, errSpawn, now)).toBe('spawned');
         await new Promise((r) => setTimeout(r, 10));
-        expect(refreshFor(root, fakeSpawn)).toBe('spawned');
-        expect(calls).toHaveLength(2);
+        expect(refreshFor(root, fakeSpawn, now)).toBe('fresh');
+        expect(refreshFor(root, fakeSpawn, now + THROTTLE_MS)).toBe('spawned');
+    });
+
+    it('a dispatch paused past the sweep horizon cannot re-create its swept claim', () => {
+        optedIn();
+        commit('one');
+        const then = Date.now();
+        // Checks ran at `then`; the claim is attempted two windows later.
+        expect(refreshFor(root, fakeSpawn, then, 'stop', undefined, () => then + 2 * THROTTLE_MS)).toBe('fresh');
+        expect(calls).toHaveLength(0);
+        const claims = fs.readdirSync(path.join(root, 'agents', 'map', '.build')).filter((f) => f.startsWith('code-graph-refresh.claim-'));
+        expect(claims).toEqual([]);
     });
 
     it('eight concurrent processes released at one instant spawn exactly once', async () => {
