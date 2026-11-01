@@ -65,6 +65,18 @@ describe('collectReferences + render', () => {
         expect(md).toContain('- `docs/real.md` — `tests/contracts/c.test.ts`');
         expect(md).toContain('- `docs/real.md` (3) —');
     });
+
+    it('counts an absent ADR-shaped probe path instead of listing it as a citation', () => {
+        fs.writeFileSync(path.join(tmp, 'src/scripts/probe.ts'), "const P = 'docs/decisions/ADR-901-probe.md';\n");
+        const md = render(collectReferences(tmp, ['src/scripts', 'tests']), {
+            updateCountsTargets: [],
+            supervisionPublicSurfaces: [],
+            roleDocs: [],
+        }, tmp);
+        expect(md).not.toMatch(/ADR-901/);
+        expect(md).toContain('- 1 absent ADR-shaped path(s) named outside tests');
+        expect(md).toContain('- `docs/gone.md` — `src/scripts/a.ts`');
+    });
 });
 
 describe('the committed report', () => {

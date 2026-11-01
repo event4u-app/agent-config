@@ -10,7 +10,8 @@ entry for that page in the same change, then regenerates this file;
 Scanned: `src/scripts/`, `tests/`, `.github/`, `src/config/gate-coverage.yml`.
 
 - 271 existing doc path(s) named
-- 26 absent path(s) named outside tests (listed below; absent paths named only by tests are fixtures and are omitted)
+- 22 absent path(s) named outside tests (listed below; absent paths named only by tests are fixtures and are omitted)
+- 4 absent ADR-shaped path(s) named outside tests — counted, not listed: `adr_cite_check` owns ADR references
 
 ## Hard-coded lists
 
@@ -64,14 +65,10 @@ Owner: `src/scripts/check_role_doc_links.ts`.
 
 - `docs/a-design-note.md` — `src/scripts/check_agent_artifact_location.ts`
 - `docs/a.md` — `src/scripts/check_enforcement_denominator.ts`, `tests/e2e/adversarial-verification-fixtures.test.ts`, `tests/hooks/comment_discipline_hook.test.ts`, `tests/scripts/check_agent_artifact_location.test.ts`, `tests/scripts/check_enforcement_denominator.test.ts`, `tests/scripts/check_test_delta.test.ts`, `tests/scripts/code_graph_map.test.ts`, `tests/scripts/measure_turn_end_gate.test.ts`, `tests/scripts/report_skill_obligation_violations.test.ts`, `tests/scripts/resume_probe.test.ts`, `tests/scripts/site_sync_docs.test.ts`
-- `docs/adr/ADR-1.md` — `src/scripts/grade_target_readiness.ts`, `tests/scripts/code_graph_fact_layer.test.ts`, `tests/scripts/end_review_nudge_hook.test.ts`
 - `docs/contracts/mcp-rate-limit.md` — `src/scripts/_cli/cmd_doctor.ts`
 - `docs/contracts/mcp-telemetry-store.md` — `src/scripts/mcp_telemetry_store.ts`
 - `docs/contracts/rule-loading-tier-defaults.md` — `src/scripts/smoke_quickstart.ts`
 - `docs/contracts/zz-canary-beta-lapse.md` — `src/config/gate-coverage.yml`
-- `docs/decisions/ADR-001-x.md` — `src/scripts/check_enforcement_denominator.ts`, `tests/scripts/adr_cite_check.test.ts`, `tests/scripts/check_adr_frontmatter.test.ts`, `tests/scripts/memory_recall_hook.test.ts`
-- `docs/decisions/ADR-048-x.md` — `src/scripts/adr/evidence_census.ts`
-- `docs/decisions/ADR-901-probe.md` — `src/scripts/check_new_adr_evidence.ts`, `tests/scripts/check_new_adr_evidence.test.ts`
 - `docs/decisions/adr-evidence-sweep-zz-canary-probe.md` — `src/config/gate-coverage.yml`
 - `docs/evidence.md` — `src/scripts/check_claims.ts`, `tests/scripts/check_claims.test.ts`, `tests/scripts/check_claims_retired_phrasings.test.ts`
 - `docs/guidelines/agent-infra/no-roadmap-references.md` — `src/scripts/check_no_roadmap_refs.ts`, `tests/scripts/check_no_roadmap_refs.test.ts`

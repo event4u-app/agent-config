@@ -106,7 +106,12 @@ export function render(refs: Map<string, string[]>, named: NamedLists, repo: str
     const code = (s: string): string => `\`${s}\``;
     const present = [...refs.entries()].filter(([p]) => exists(p));
     const absent = [...refs.entries()].filter(([p]) => !exists(p));
-    const absentLive = absent.filter(([, fs_]) => fs_.some((f) => NON_TEST_ROOTS.some((r) => f.startsWith(r))));
+    const absentNamed = absent.filter(([, fs_]) => fs_.some((f) => NON_TEST_ROOTS.some((r) => f.startsWith(r))));
+    // An absent ADR-shaped path is a probe name inside a gate. Listed here it
+    // would read as an ADR citation to adr_cite_check, which owns ADR references.
+    const isAdrShaped = (p: string): boolean => /^ADR-\d/i.test(path.posix.basename(p));
+    const absentLive = absentNamed.filter(([p]) => !isAdrShaped(p));
+    const absentAdr = absentNamed.length - absentLive.length;
     const contract = present
         .map(([p, fs_]) => [p, fs_.filter((f) => CONTRACT_TEST_ROOTS.some((r) => f.startsWith(r)))] as const)
         .filter(([, fs_]) => fs_.length > 0);
@@ -125,6 +130,7 @@ export function render(refs: Map<string, string[]>, named: NamedLists, repo: str
     L.push('');
     L.push(`- ${present.length} existing doc path(s) named`);
     L.push(`- ${absentLive.length} absent path(s) named outside tests (listed below; absent paths named only by tests are fixtures and are omitted)`);
+    L.push(`- ${absentAdr} absent ADR-shaped path(s) named outside tests — counted, not listed: \`adr_cite_check\` owns ADR references`);
     L.push('');
     L.push('## Hard-coded lists');
     L.push('');
