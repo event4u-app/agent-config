@@ -34,6 +34,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { gitVisibleFiles, type GitVisible, visibleDir } from '../../../_lib/git_visible_files.js';
 import { laravelEngines } from '../../../_lib/schema/readers/laravel_migrations.js';
 import { readSqlSchema } from '../../../_lib/schema/readers/sql_ddl.js';
 import { type Engine, replay } from '../../../_lib/schema/replay.js';
@@ -73,9 +74,11 @@ function posix(rel: string): string {
     return rel.split(path.sep).join('/');
 }
 
+/** `.sql` files git would show: a gitignored dump is local data, never a fact for the map. */
 function sqlFiles(root: string, cap = 5000): string[] {
     const out: string[] = [];
-    const walk = (dir: string): void => {
+    const visible = gitVisibleFiles(root);
+    const walk = (dir: string, v: GitVisible | null): void => {
         if (out.length >= cap) return;
         let entries: fs.Dirent[];
         try {
@@ -84,12 +87,15 @@ function sqlFiles(root: string, cap = 5000): string[] {
             return;
         }
         for (const e of entries) {
+            const rel = posix(path.relative(root, path.join(dir, e.name)));
             if (e.isDirectory()) {
-                if (!SKIP_DIRS.has(e.name)) walk(path.join(dir, e.name));
-            } else if (e.isFile() && e.name.toLowerCase().endsWith('.sql')) out.push(posix(path.relative(root, path.join(dir, e.name))));
+                if (SKIP_DIRS.has(e.name)) continue;
+                const verdict = v ? visibleDir(v, rel) : 'all';
+                if (verdict !== 'skip') walk(path.join(dir, e.name), verdict === 'all' ? null : v);
+            } else if (e.isFile() && e.name.toLowerCase().endsWith('.sql') && (!v || v.files.has(rel))) out.push(rel);
         }
     };
-    walk(root);
+    walk(root, visible);
     return out.sort();
 }
 
