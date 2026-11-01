@@ -67,6 +67,52 @@ describe('runTap', () => {
     });
 });
 
+describe('runTap — prompt cache (road-to-a-return-that-names-its-price 1.1, 1.4, 3.1)', () => {
+    function store(starts: number[]): string {
+        const dir = fs.mkdtempSync(path.join(home, 'store-'));
+        starts.forEach((t, i) => {
+            const first = { type: 'assistant', isSidechain: false, message: { usage: { input_tokens: t - 1000, cache_read_input_tokens: 0, cache_creation_input_tokens: 1000 } } };
+            fs.writeFileSync(path.join(dir, `s${i}.jsonl`), `${JSON.stringify({ type: 'user', message: { content: 'hi' } })}\n${JSON.stringify(first)}\n`);
+        });
+        return dir;
+    }
+    const cachePayload = (dir: string, expires: number, recache = 182_000): string =>
+        JSON.stringify({
+            session_id: 's',
+            transcript_path: path.join(dir, 's0.jsonl'),
+            prompt_cache: { warm: now < expires, ttl: '1h', expires_at: new Date(expires).toISOString(), recache_tokens_if_cold: recache },
+        });
+
+    it('a warm cache above the threshold shows the expiry as a clock, and the ledger keeps the measured start', () => {
+        const dir = store([20_000, 24_000, 30_000]);
+        const out = runTap({ stdin: cachePayload(dir, now + 20 * 60_000), env, now });
+        expect(out).toMatch(/^AC cache warm until \d\d:\d\d$/);
+        const [snap] = readQuotaLedger(env, now);
+        expect(snap?.clear_start).toBe(24_000);
+        expect(snap?.cache?.recache_tokens_if_cold).toBe(182_000);
+    });
+
+    it('a cold cache names what continuing re-processes, on the same single AC line as a warm window', () => {
+        const dir = store([24_000]);
+        const payload = JSON.parse(cachePayload(dir, now - 60_000)) as Record<string, unknown>;
+        payload['rate_limits'] = { five_hour: { used_percentage: 64, resets_at: Math.trunc(now / 1000) + 3600 } };
+        const out = runTap({ stdin: JSON.stringify(payload), env, now });
+        expect(out).toMatch(/^AC 5h window 64 %.* · cache cold · continue ≈182k$/);
+        expect(out.split('\n')).toHaveLength(1);
+    });
+
+    it('below twice the measured start the cache part stays out of the line', () => {
+        const dir = store([100_000]);
+        expect(runTap({ stdin: cachePayload(dir, now - 60_000), env, now })).toBe('');
+    });
+
+    it('a store with no readable session yields no start, never a guess', () => {
+        const dir = fs.mkdtempSync(path.join(home, 'empty-'));
+        runTap({ stdin: cachePayload(dir, now + 60_000), env, now });
+        expect(readQuotaLedger(env, now)[0]?.clear_start).toBeUndefined();
+    });
+});
+
 describe('runTap with a chained status line', () => {
     const warm = JSON.stringify({ rate_limits: { five_hour: { used_percentage: 64, resets_at: Math.trunc(now / 1000) + 3600 } } });
 

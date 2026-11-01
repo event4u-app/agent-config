@@ -18,6 +18,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { write_atomic } from './fs_atomic.js';
+import type { CacheReading } from './prompt_cache_reading.js';
 import { write_target, type EnvMap } from './user_global_paths.js';
 
 /** One plan window as the host reported it: fill in percent, reset as epoch seconds. */
@@ -36,6 +37,10 @@ export interface QuotaSnapshot {
     readonly context_used_pct?: number;
     readonly context_size?: number;
     readonly model?: string;
+    /** Written by the status-line tap only (`prompt_cache_reading.ts`), so the dispatch bundle carries no parser for it. */
+    readonly cache?: CacheReading;
+    /** Median first-request tokens of this project's recent sessions, measured by the tap (`prompt_cache_reading.ts`). */
+    readonly clear_start?: number;
 }
 
 /** Snapshots older than this are dropped on the next prune: a five-hour window is the longest one read for a rate. */

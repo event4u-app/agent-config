@@ -26,7 +26,9 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { write_atomic } from '../_lib/fs_atomic.js';
-import { appendQuotaSnapshot, quotaStateDir, snapshotFromStatusPayload } from '../_lib/quota_ledger.js';
+import { appendQuotaSnapshot, quotaStateDir } from '../_lib/quota_ledger.js';
+import { cacheSegment, snapshotWithCache } from '../_lib/prompt_cache_reading.js';
+import type { QuotaSnapshot } from '../_lib/quota_ledger.js';
 import { quotaSegment, writePressureState } from '../_lib/pressure.js';
 import type { EnvMap } from '../_lib/user_global_paths.js';
 
@@ -97,8 +99,9 @@ function stripControl(text: string): string {
  */
 export function runTap(opts: TapOptions): string {
     const now = opts.now ?? Date.now();
+    let snapshot: QuotaSnapshot | null = null;
     try {
-        const snapshot = snapshotFromStatusPayload(JSON.parse(opts.stdin), now);
+        snapshot = snapshotWithCache(JSON.parse(opts.stdin), now, opts.env);
         if (snapshot !== null) {
             appendQuotaSnapshot(snapshot, opts.env);
             writePressureState(opts.env, now);
@@ -120,9 +123,12 @@ export function runTap(opts: TapOptions): string {
             printed = '';
         }
     }
+    // One AC line (D6): the cache part joins the quota segment, never a second line.
     let segment = '';
     try {
-        segment = stripControl(quotaSegment(opts.env, now));
+        const quota = quotaSegment(opts.env, now);
+        const cache = cacheSegment(snapshot, now);
+        segment = stripControl(quota !== '' && cache !== '' ? `${quota} · ${cache}` : quota || (cache && `AC ${cache}`));
     } catch {
         segment = '';
     }
