@@ -2119,6 +2119,11 @@
     }
     function codeSearchHits(q, hit) {
         var dirs = 0;
+        // An area id is also a folder path, so an exact id match leads, ahead of the folder of the same name.
+        function areaHit(a, i) {
+            hit('area', '◎ ' + a.id + ' · ' + areaTitle(a) + ' · ' + a.name, function () { openArea(i); }, { count: a.files.length, crumb: a.id, kids: function () { return a.files.map(function (f) { return fileHit(f); }); } });
+        }
+        areas.forEach(function (a, i) { if (a.id.toLowerCase() === q) areaHit(a, i); });
         (function walkDirs(node, prefix) {
             Object.keys(node.kids).sort().forEach(function (k) {
                 if (dirs >= 200) return;
@@ -2128,8 +2133,9 @@
             });
         })(tree, '');
         areas.forEach(function (a, i) {
-            if (a.name.toLowerCase().indexOf(q) < 0 && areaTitle(a).toLowerCase().indexOf(q) < 0 && a.id !== q) return;
-            hit('area', '◎ ' + a.id + ' · ' + areaTitle(a) + ' · ' + a.name, function () { openArea(i); }, { count: a.files.length, crumb: a.id, kids: function () { return a.files.map(function (f) { return fileHit(f); }); } });
+            if (a.id.toLowerCase() === q) return;
+            if (a.name.toLowerCase().indexOf(q) < 0 && areaTitle(a).toLowerCase().indexOf(q) < 0) return;
+            areaHit(a, i);
         });
         (an.requestPaths || []).forEach(function (r) { if (r.route.toLowerCase().indexOf(q) >= 0) hit('route', '↳ ' + r.route, function () { openFile(r.handler >= 0 ? r.handler : r.file); }); });
         files.forEach(function (f, i) {

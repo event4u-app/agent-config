@@ -27,6 +27,7 @@ const FX = path.resolve(__dirname, '../fixtures/code-graph');
 const roots: string[] = [];
 let root: string;
 let areas: MapAreas;
+let stored: MapAreas;
 let outDir: string;
 let browser: Browser | undefined;
 
@@ -68,7 +69,10 @@ beforeAll(async () => {
     fs.writeFileSync(mig, fs.readFileSync(mig, 'utf-8').replace("->text('body');", "->text('body')->nullable();"));
     outDir = path.join(tmp('map-out-'), 'map');
     await buildMap(root, { outDir, cachePath: path.join(root, '.g', 'graph.json') });
-    areas = (JSON.parse(fs.readFileSync(path.join(outDir, 'code', 'map.json'), 'utf-8')) as { areas: MapAreas }).areas;
+    // The viewer carries every area; map.json leaves out what reads the working diff (impact, the agent's pack).
+    const html = fs.readFileSync(path.join(outDir, 'index.html'), 'utf-8');
+    areas = (JSON.parse(/<script type="application\/json" id="map-data">([\s\S]*?)<\/script>/.exec(html)?.[1] ?? '{}') as { areas: MapAreas }).areas;
+    stored = (JSON.parse(fs.readFileSync(path.join(outDir, 'code', 'map.json'), 'utf-8')) as { areas: MapAreas }).areas;
 }, 120_000);
 afterAll(async () => {
     await browser?.close();
@@ -79,6 +83,8 @@ describe('every area is drawn from facts, every fact with a witness', () => {
     it('writes a sound areas section with all seven areas', () => {
         expect(areaProblems(areas)).toEqual([]);
         expect(Object.keys(areas).sort()).toEqual(['agent', 'data', 'delivery', 'impact', 'interfaces', 'runtime', 'systems', 'tours']);
+        expect(Object.keys(stored).sort()).toEqual(['agent', 'data', 'delivery', 'interfaces', 'runtime', 'systems', 'tours']);
+        expect((stored.agent as { contextPack?: unknown } | undefined)?.contextPack).toBeUndefined();
     });
 
     it('Data: tables, keys, relations, and DR-1 / DR-3 / DR-4 with witnesses (P1)', () => {

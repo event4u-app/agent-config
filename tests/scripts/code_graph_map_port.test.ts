@@ -118,7 +118,8 @@ describe('the Code Workbench follows the design rail by rail', () => {
         await page.locator('#panel .aentry').first().click();
         await page.click('#tabs button:nth-child(3)');
         const title = (await page.locator('#panel .atitle b').textContent()) ?? '';
-        expect(title).toMatch(/^a\d+ · [A-Z]/);
+        // Area ids are folder slugs since 2026-11-01 (ADR-297 amendment 1).
+        expect(title).toMatch(/^[A-Za-z0-9._-]+ · [A-Z]/);
         expect(title).not.toMatch(/\.ts$/);
         expect(await page.locator('#panel .atitle .mono').textContent()).toMatch(/^Hub: /);
         expect(await page.locator('#panel .atiles .tile').count()).toBe(6);
