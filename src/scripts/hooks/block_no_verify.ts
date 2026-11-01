@@ -761,7 +761,8 @@ function _check_command(cmd: string, depth = 0): [boolean, string] {
             if (blocked) {
                 return [true, reason];
             }
-            continue;
+            // No `continue`: a payload found past an unresolved head may be an
+            // operand of the real command, so git is still checked (council round 5).
         }
         const git_tokens = _git_base(sub);
         if (git_tokens === null) {

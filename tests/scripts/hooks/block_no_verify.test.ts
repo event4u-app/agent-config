@@ -466,6 +466,9 @@ describe('block_no_verify — exec wrappers and config-env forms', () => {
         "stdbuf --output L sh -c 'git commit --no-verify'",
         "stdbuf --output L eval 'git commit --no-verify'",
         "HUSKY=0 stdbuf --output L sh -c 'git commit -m x'",
+        // Council round 5 (openai): a shell-looking operand must not mask git.
+        'stdbuf --output L git commit --no-verify sh -c HEAD',
+        'nohup git commit --no-verify eval x',
     ];
     for (const cmd of BYPASSED) {
         it(`blocks: ${cmd}`, () => {
