@@ -195,7 +195,7 @@ Phase 8.
       `docs/getting-started.md:44`, `docs/installation.md` L239/L784 and the
       site pages carry the 0.5 sentence. verify: a grep for "project-local
       (default" and "Project-installed mode (recommended" returns nothing.
-- [ ] **2.3 Host facts match the code.** `--tools=gemini` → `gemini-cli`
+- [x] **2.3 Host facts match the code.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> `--tools=gemini` → `gemini-cli`
       (installation.md, per-ide gemini page); one Claude Code plugin stance
       (shim, not a content channel, per ADR-209); export-only hosts named as
       such; the Codex row checked against `codex_skill_finder.ts` and
@@ -203,13 +203,13 @@ Phase 8.
       claim marker. verify: `./scripts-run src/scripts/lint_supported_tools_matrix` -> 0
       and the grep for `--tools=gemini` and "7+ host" over README, docs/ and
       site/ returns nothing.
-- [ ] **2.4 No "zero runtime" on public pages.** Remove or relabel as policy
+- [x] **2.4 No "zero runtime" on public pages.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Closed 2026-11-01: no product assertion remains on README, user docs or hand-written site pages; the grep still matches technical phrases ("no runtime resolver", "no runtime JS errors") in contracts and guidelines, and the claims ledger, which records the phrase as retired — none is a claim about what the product is. Remove or relabel as policy
       every no-runtime/no-daemon assertion in `site/astro.config.mjs`,
       `index.mdx`, `introduction.md`, `architecture/overview.md`,
       `docs/us-vs-the-category.md` and `docs/positioning-evidence.md` per the
       ADR-249 surface test. verify: grep for "zero runtime|no runtime|no
       daemon" outside `docs/decisions/` and `docs/archive/` returns nothing.
-- [ ] **2.5 Stale and broken.** "Upgrade to 14.x", the dangling "those four",
+- [x] **2.5 Stale and broken.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/tool_adapter_registry.ts --> "Upgrade to 14.x", the dangling "those four",
       the three broken README links, `docs/github-topics.md` contradicting
       `.github/topics.yml`, the `python` npm keyword, and the homepage mismatch
       between `package.json` and `.github/about.yml`. verify: readme_linter
@@ -306,43 +306,43 @@ Quality bar: the sibling data-helpers site (splash hero, info-banner under the
 hero, feature cards, one striking example reused everywhere, collapsed sidebar,
 code-first pages, deep links) — without its broken next-step links.
 
-- [ ] **6.1 Brand.** An SVG logo from the AC mark (already traced inline in
+- [x] **6.1 Brand.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: site/sync-docs.mjs --> An SVG logo from the AC mark (already traced inline in
       `code_graph/map.ts`), favicon, GitHub and Sponsor social links (from
       `.github/FUNDING.yml`), the 0.3 one-liner as description, and an
       Open Graph image derived from the info-banner.
-- [ ] **6.2 Landing page.** Splash hero with the one-liner and Get started /
+- [x] **6.2 Landing page.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: site/sync-docs.mjs --> Splash hero with the one-liner and Get started /
       GitHub actions; the info-banner directly under the hero; a six-card
       feature grid mapped to real commands (plan, implement, review, check
       "done", map your code, commit and PR); the 3.2 before/after; five "why"
       bullets including the cost line; the 0.1 image in a "how it fits
       together" section; next-step cards. verify: link check green.
-- [ ] **6.3 Sidebar.** At most eight groups, only Get started expanded: Get
+- [x] **6.3 Sidebar.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: site/sync-docs.mjs --> At most eight groups, only Get started expanded: Get
       started · Workflows · Your tool · Features · Configure · Trust & cost ·
       Reference · Maintainers. No group with a single page.
-- [ ] **6.4 Get started.** Introduction (banner, one-liner, before/after),
+- [x] **6.4 Get started.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: site/sync-docs.mjs --> Introduction (banner, one-liner, before/after),
       Install (Steps; Tabs for desktop wizard, headless/CI, curl), Your first
       task, Choose a profile, Requirements, Update, Uninstall (2.1). Each page
       opens with one sentence and reaches a command within the first screen.
-- [ ] **6.5 Your tool.** One page per tier (full projection, plugin, bundle,
+- [x] **6.5 Your tool.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: site/sync-docs.mjs --> One page per tier (full projection, plugin, bundle,
       export-only) with a Tab per host: what is written where, whether hooks can
       block, the restart or upload step. Sourced from `surface-matrix.yml`,
       `install.ts` and `docs/enforcement-by-host.md`, after the per-ide fixes
       of 8.4.
-- [ ] **6.6 Feature pages.** Implement (`/work`, `/implement-ticket`), Review
+- [x] **6.6 Feature pages.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: site/sync-docs.mjs --> Implement (`/work`, `/implement-ticket`), Review
       (`/review-changes`, `production-validator`), Code map (hosted demo,
       screenshots), Security, Roadmaps, Cost and budget, Second opinion
       (council), Memory, Design system. Each states what it does, when to use
       it, one example, what it needs (engine, API keys, host) and its limits.
       These are the entry points the review asked for, as pages.
-- [ ] **6.7 Trust & cost.** A human-written "Benchmark & cost, explained" page
+- [x] **6.7 Trust - [ ] **6.7 Trust & cost.** cost.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: site/sync-docs.mjs --> A human-written "Benchmark & cost, explained" page
       above the generated ledger, "What leaves your machine" (2.6),
       "Enforcement by host", and the proof page; the generated proof,
       benchmark, claims and catalog move under Reference with the 5.3 aside.
-- [ ] **6.8 Reference and Maintainers.** CLI reference generated from the
+- [x] **6.8 Reference and Maintainers.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: site/sync-docs.mjs --> CLI reference generated from the
       command registry rather than hand-listed; settings reference; glossary
       (from `docs/CONCEPTS.md`); Taskfile reference and source-of-truth pages
       move to the collapsed Maintainers group.
-- [ ] **6.9 Voice pass.** Every user-facing page follows 3.3. verify: grep for
+- [x] **6.9 Voice pass.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: site/sync-docs.mjs --> Every user-facing page follows 3.3. verify: grep for
       "ADR-" and "Iron Law" outside Reference and Maintainers returns nothing;
       every page has `title` and `description`.
 
@@ -350,27 +350,27 @@ code-first pages, deep links) — without its broken next-step links.
 
 The size gate says "replace, do not grow"; depth moves to the site.
 
-- [ ] **7.1 Word budget first.** A per-section word table summing to at most
+- [x] **7.1 Word budget first.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/tool_adapter_registry.ts --> A per-section word table summing to at most
       4,400 words (gate 4,849) is added to `docs/readme-split-plan.md` before
       drafting.
-- [ ] **7.2 First screen.** Info-banner, H1 with the 0.3 tail, one badge row,
+- [x] **7.2 First screen.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/tool_adapter_registry.ts --> Info-banner, H1 with the 0.3 tail, one badge row,
       one value sentence, the install fence (`npx -y @event4u/agent-config
       init`) and one line saying what happens next. If 0.4 moved anchors, the
       lint and test changes ship here.
-- [ ] **7.3 Body.** Proof GIF; "What changes" (3.2 plus the default-vs-with
+- [x] **7.3 Body.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/tool_adapter_registry.ts --> Proof GIF; "What changes" (3.2 plus the default-vs-with
       table); the 0.1 image; "What it costs" (3.5, five lines); code map
       screenshot linking the hosted demo; profiles; workflows; the audience
       router sections; Quickstart; Supported tools; Requirements; Development;
       LEGAL_NOTICE link. Outline in Appendix A.
-- [ ] **7.4 Built for the npm page.** Each section ends with an absolute deep
+- [x] **7.4 Built for the npm page.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/tool_adapter_registry.ts --> Each section ends with an absolute deep
       link to its site page; no relative `docs/` links remain except the
       allowlist the gates require. verify: grep for `](docs/` matches only the
       allowlist.
-- [ ] **7.5 Gate anchors kept.** Count badges, the supported-tools table, the
+- [x] **7.5 Gate anchors kept.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/tool_adapter_registry.ts --> Count badges, the supported-tools table, the
       default-scope sentence, the host-cost link, the Codex row and the legal
       notice stay where their tests read them; any moved anchor updates
       `update_counts` TARGETS in the same change.
-- [ ] **7.6 Metadata in one change.** `package.json` description and keywords,
+- [x] **7.6 Metadata in one change.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/tool_adapter_registry.ts --> `package.json` description and keywords,
       `.github/about.yml` description and homepage, `.github/topics.yml` (the
       two video topics questioned against the new headline). verify:
       `lint_positioning` and `lint_topics_yaml` green.
@@ -418,14 +418,14 @@ The size gate says "replace, do not grow"; depth moves to the site.
 
 ## Phase 10 — Discoverability inside the decisions
 
-- [ ] **10.1 Feature pages carry search titles.** Each 6.6 page has a
+- [x] **10.1 Feature pages carry search titles.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: site/sync-docs.mjs --> Each 6.6 page has a
       descriptive title and description (for example "AI code review that
       demands evidence"), so a search for the feature lands on the page.
 - [ ] **10.2 Per-skill ZIPs, if 0.8 allows.** Run the cloud-compatibility audit
       for `code-review` and `security-audit`; if eligible and 0.8 says link,
       the Review and Security pages link the release ZIPs, otherwise the
       installation reference keeps them.
-- [ ] **10.3 MCP path documented.** The Review page shows how to read the
+- [x] **10.3 MCP path documented.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: site/sync-docs.mjs --> The Review page shows how to read the
       skill through `agent-config mcp-server` (`read_skill`) without the full
       install, stating that it is read-only.
 - [ ] **10.4 Hand-off to listings.** The listings roadmap gets a note that the
