@@ -58,7 +58,7 @@ describe('memory_lookup — swallowed input is counted', () => {
         expect(JSON.stringify(out['hits'])).toContain('s1');
     });
 
-    it.skipIf(process.getuid?.() === 0)('an unreadable chunk is counted', () => {
+    it('an unreadable chunk is counted', () => {
         ingest('ing-1', { '0001.md': 'billing notes', '0002.md': 'more billing' });
         chmodSync(join(tmp, 'agents', 'memory', 'knowledge', 'ing-1', 'chunks', '0002.md'), 0o000);
         const out = lookup(['--types', 'knowledge', '--key', 'billing']);

@@ -51,15 +51,15 @@ carry all four annotation hints, and swallowed input is counted.
 
 ## Phase 1 — One implementation behind both surfaces (D1)
 
-- [x] **1.1 Dispatcher resolves the canonical script.** `memory:lookup` and
+- [x] **1.1 Dispatcher resolves the canonical script.** `memory:lookup` and <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_dispatch.bash -->
       `memory:status` resolve `$CONSUMER_ROOT/scripts/<name>` (a real consumer
       override) else `src/scripts/<name>` — the file MCP imports.
       verify: `./agent-config memory:lookup --types ownership --detail index --format json` -> 0
-- [x] **1.2 Parity witness.** A test drives the dispatcher and the MCP handler
+- [x] **1.2 Parity witness.** A test drives the dispatcher and the MCP handler <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/memory_lookup.ts -->
       with the same fixture memory tree and arguments and compares the
       normalised envelopes.
       verify: `npx vitest run tests/scripts/memory_twin_parity.test.ts` -> 0
-- [x] **1.3 Twin divergence ratchet.** Already satisfied at the pin:
+- [x] **1.3 Twin divergence ratchet.** Already satisfied at the pin: <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/memory_lookup.ts -->
       `lint_memory_twin_parity` with `src/config/memory-twin-verdicts.yml` pins
       every pair as `exact` or a shrink-only `bounded` ceiling. The behavioural
       witness of 1.2 also found the MCP wire serialising `confidence` as
@@ -69,36 +69,36 @@ carry all four annotation hints, and swallowed input is counted.
 
 ## Phase 2 — Documented commands resolve (D2, D3, D4)
 
-- [x] **2.1 `knowledge:local` verb.** Dispatcher routes `knowledge:local
+- [x] **2.1 `knowledge:local` verb.** Dispatcher routes `knowledge:local <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=dependency manifest: package.json -->
       {ingest|list|forget}` to `src/cli/python/knowledge_ingest.ts`; the three
       `/knowledge` commands, the guide and the deploy recipe name it.
       verify: `./agent-config knowledge:local list --format json` -> 0
-- [x] **2.2 Sub-command level in `lint_documented_commands`.** A documented
+- [x] **2.2 Sub-command level in `lint_documented_commands`.** A documented <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_documented_commands.ts -->
       `./agent-config <verb> <sub>` is checked against the sub-command choices
       the target CLI declares; `knowledge ingest` fails.
       verify: `npx vitest run tests/scripts/lint_documented_commands.test.ts` -> 0
-- [x] **2.3 Dispatcher targets ship or are declared maintainer-only.** A test
+- [x] **2.3 Dispatcher targets ship or are declared maintainer-only.** A test <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       checks every `resolve_script` target is inside `files[]` or on a
       maintainer-only list naming its reason.
       verify: `npx vitest run tests/scripts/dispatch_targets_shipped.test.ts` -> 0
-- [x] **2.4 Atomic ingest (D4).** Chunks go to `<id>.partial/`, renamed after
+- [x] **2.4 Atomic ingest (D4).** Chunks go to `<id>.partial/`, renamed after <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/python/knowledge_ingest.ts -->
       the manifest; an abort removes `.partial`; lookup ignores `*.partial`.
       verify: `npx vitest run tests/scripts/cli_python/knowledge_ingest.test.ts` -> 0
 
 ## Phase 3 — A truncated answer is not a vote (D5)
 
-- [x] **3.1 `stop_class` on council responses.** Anthropic `stop_reason`
+- [x] **3.1 `stop_class` on council responses.** Anthropic `stop_reason` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/stop_class.ts -->
       (`max_tokens`, `model_context_window_exceeded`), OpenAI-compatible
       `finish_reason === 'length'`, Gemini `finishReason === 'MAX_TOKENS'` map to
       `truncated`/`context_exceeded`; CLI seats report `unknown`, never a guess.
       verify: `npx vitest run tests/scripts/ai_council/stop_class.test.ts` -> 0
-- [x] **3.2 Truncated answers abstain.** A truncated response is recorded as
+- [x] **3.2 Truncated answers abstain.** A truncated response is recorded as <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/consensus.ts -->
       `incomplete` and not counted as a full vote. No auto-continuation.
       verify: `npx vitest run tests/scripts/ai_council/stop_class.test.ts` -> 0
 
 ## Phase 4 — Drift on claims, not on bytes (D6)
 
-- [x] **4.1 Claimed tokens per row.** Each watched row derives the tokens it
+- [x] **4.1 Claimed tokens per row.** Each watched row derives the tokens it <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/host-docs-digest.yml -->
       itself claims (event names, keys); a changed page with every claim present
       is `CONFIRMED` (green, noted), a missing claim is `ABSENT` (red, names row
       and token), fetch failure stays `UNREACHABLE`.
@@ -106,20 +106,20 @@ carry all four annotation hints, and swallowed input is counted.
 
 ## Phase 5 — Honest MCP annotations (D7)
 
-- [x] **5.1 Four hints per tool.** `readOnlyHint`, `destructiveHint`,
+- [x] **5.1 Four hints per tool.** `readOnlyHint`, `destructiveHint`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/mcp_server/annotations.ts -->
       `idempotentHint`, `openWorldHint` derived from `side_effect` plus an
       optional `effect_shape`; additive tools are `destructiveHint: false`.
       verify: `npx vitest run tests/scripts/mcp_server/tool_annotations.test.ts` -> 0
 
 ## Phase 6 — Swallowed input is counted (D8)
 
-- [x] **6.1 `skipped_malformed` / `skipped_unreadable`.** Additive envelope
+- [x] **6.1 `skipped_malformed` / `skipped_unreadable`.** Additive envelope <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/memory_lookup.ts -->
       counters, emitted only when non-zero (default output byte-identical).
       verify: `npx vitest run tests/scripts/memory_lookup_swallowed.test.ts` -> 0
 
 ## Phase 7 — Independent re-check
 
-- [x] **7.1 Re-measure D1–D8 at the final head** with the Phase-4 commands of
+- [x] **7.1 Re-measure D1–D8 at the final head** with the Phase-4 commands of <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       the inbox run; each row flips to fixed or stays named.
       verify: `npx vitest run tests/scripts/memory_twin_parity.test.ts` -> 0
 

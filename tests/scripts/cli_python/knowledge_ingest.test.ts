@@ -411,7 +411,7 @@ describe('knowledge_ingest — forget + pin', () => {
 // ---------------------------------------------------------------------------
 
 describe('knowledge_ingest — atomic write', () => {
-    it.skipIf(process.getuid?.() === 0)('a non-IngestError mid-walk leaves no chunks and no staging dir', async () => {
+    it('a non-IngestError mid-walk leaves no chunks and no staging dir', async () => {
         const { ingest } = await import('../../../src/cli/python/knowledge_ingest.js');
         const src = fs.mkdtempSync(path.join(os.tmpdir(), 'acki-src-'));
         const base = fs.mkdtempSync(path.join(os.tmpdir(), 'acki-base-'));
