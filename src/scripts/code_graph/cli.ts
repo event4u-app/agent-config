@@ -1218,7 +1218,7 @@ function cmdAutoRefresh(argv: string[]): number {
     process.stdout.write(
         `auto-refresh: ${fs.existsSync(home.autoRefreshOffPath) ? 'off (opted out)' : fs.existsSync(marker) ? 'on' : 'off — the next local build or map turns it on'}\n` +
             `cli: ${'reason' in cli ? (cli.reason === 'no-cli' ? 'none usable — nothing will run' : `${cli.cli} ${cliPackage(cli.cli)?.version ?? '?'} — too old, nothing will run`) : `${cli.cli} ${cliPackage(cli.cli)?.version ?? '?'}`}\n` +
-            `last concern run (session start or turn end): ${line(last['session-start'])}\n` +
+            `last concern run (session start or turn end; at most one launch per HEAD and 10-minute window, so each new commit may launch one): ${line(last['session-start'])}\n` +
             `last refresh: ${line(last.refresh)}\n` +
             `graph: ${computeVerdict(root, cacheFor(root)).verdict}\n` +
             `map: ${!hasMap(mapDir) ? 'absent' : drawnFrom === null ? 'present (generation unknown — redrawn on the next refresh)' : drawnFrom === gen ? 'present, drawn from the current graph' : 'present, drawn from an older graph'}\n` +
