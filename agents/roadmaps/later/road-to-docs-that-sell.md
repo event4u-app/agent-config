@@ -433,7 +433,7 @@ The size gate says "replace, do not grow"; depth moves to the site.
 
 ## Phase 11 — A newcomer can do it
 
-- [ ] **11.1 Walkthrough.** A fresh session, given only the site URL, installs
+- [x] **11.1 Walkthrough.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/cmd_doctor.ts --> Findings and dispositions: `docs/maintainers/newcomer-walkthrough-2026-11-01.md`. A fresh session, given only the site URL, installs
       into a throwaway HOME, runs one task and uninstalls, recording time and
       every point of confusion; each finding is fixed or recorded.
 - [x] **11.2 Independent read.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Prompt and dispositions: `agents/evidence/reviews/docs-that-sell-independent-read.*`. A reviewer session that did not write the copy
@@ -455,22 +455,22 @@ The size gate says "replace, do not grow"; depth moves to the site.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — README, `package.json` and `.github/about.yml` carry the same
+- [x] AC-1 — README, `package.json` and `.github/about.yml` carry the same
       one-liner; the README's first screen holds the value sentence and the
       install command; the size, jargon, positioning, supported-tools,
       audience-order and claims gates are green.
-- [ ] AC-2 — The docs site shows a logo and the info-banner on the landing page
+- [x] AC-2 — The docs site shows a logo and the info-banner on the landing page
       and Introduction, has at most eight sidebar groups with only Get started
       expanded, and builds with a link check that covers relative links and
       fragments.
-- [ ] AC-3 — No public page asserts "zero runtime", a wrong tool id, a missing
+- [x] AC-3 — No public page asserts "zero runtime", a wrong tool id, a missing
       uninstall command or an install scope other than the 0.5 sentence.
-- [ ] AC-4 — Every number on README and hand-written site pages carries a claim
+- [x] AC-4 — Every number on README and hand-written site pages carries a claim
       marker resolving to a backed entry, and every embedded image passed its
       0.1/0.2 ruling and, where it shows data, its ADR-125 confirmation.
-- [ ] AC-5 — Each of the ten duplicate clusters has exactly one canonical page;
+- [x] AC-5 — Each of the ten duplicate clusters has exactly one canonical page;
       the scan floors of `update_counts` and the supervision-claim gate hold.
-- [ ] AC-6 — Default `agent-config --help` fits in 60 lines grouped by task, and
+- [x] AC-6 — Default `agent-config --help` fits in 60 lines grouped by task, and
       `doctor` on a fresh HOME exits without a red check and writes nothing.
 - [ ] AC-7 — The 11.1 walkthrough reaches a first task and a clean uninstall
       using only the site, with its findings fixed or recorded.
