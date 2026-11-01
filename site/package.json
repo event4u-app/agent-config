@@ -3,14 +3,15 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Docs + proof site for agent-config (Starlight). Isolated workspace — its deps never touch the package.",
+  "description": "Docs + proof site for agent-config (Starlight). Isolated workspace \u2014 its deps never touch the package.",
   "scripts": {
     "sync": "node sync-docs.mjs",
-    "prebuild": "node sync-docs.mjs",
+    "prebuild": "node sync-docs.mjs && node build-demo-map.mjs",
     "predev": "node sync-docs.mjs",
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "demo-map": "node build-demo-map.mjs"
   },
   "dependencies": {
     "astro": "7.4.1",

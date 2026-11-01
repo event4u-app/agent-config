@@ -1,0 +1,10 @@
+{
+  "$comment": "Pages site/sync-docs.mjs projects from docs/ into the Starlight site. One entry per page: `src` is the path under docs/, `route` the site URL path (nested routes allowed, e.g. reference/proof). Optional `title` overrides the source's first H1. Output lands in the gitignored src/content/docs/generated/ subtree.",
+  "pages": [
+    { "src": "proof.md", "route": "proof" },
+    { "src": "benchmark.md", "route": "benchmark" },
+    { "src": "CLAIMS.md", "route": "claims" },
+    { "src": "catalog.md", "route": "catalog" },
+    { "src": "guides/works-with-agent-switch.md", "route": "works-with-agent-switch" }
+  ]
+}

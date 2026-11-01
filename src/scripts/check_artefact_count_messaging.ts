@@ -63,7 +63,7 @@ export const SURFACES: readonly string[] = [
     // watched this file. Added 2026-07-25 so a hand-typed count here fails CI.
     'docs/distribution/registries.md',
     'site/src/content/docs/index.mdx',
-    // NOT site/src/content/docs/claims.md — it is gitignored generated output
+    // NOT site/src/content/docs/generated/claims.md — it is gitignored generated output
     // (site/sync-docs.mjs copies docs/CLAIMS.md into it), and docs/CLAIMS.md is
     // already checked above. Watching the copy added no coverage and turned a
     // stale LOCAL artefact into a red gate, while CI passed because the file is

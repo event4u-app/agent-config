@@ -7,8 +7,10 @@ import mermaid from 'astro-mermaid';
 // Docs + proof site for agent-config. Two page origins coexist:
 //   • Authored pages under src/content/docs/** (Getting Started, Configuration,
 //     CLI Commands, Agent Commands, Architecture) — the project documentation.
-//   • Synced pages (proof / benchmark / claims / catalog) projected from the
-//     canonical docs/*.md by sync-docs.mjs (prebuild) so they never drift.
+//   • Synced pages listed in docs-manifest.json, projected from the canonical
+//     docs/*.md by sync-docs.mjs (prebuild) into the gitignored
+//     src/content/docs/generated/ subtree; each page's `slug` frontmatter sets
+//     its route and its `editUrl` points at the docs/ source.
 // Visual identity matches the sibling event4u docs (rapide theme + orange
 // accents + banner). IA is overview-first: concise sections that link out to
 // the exhaustive canonical docs for depth. (The earlier ≤5-section proof-site
