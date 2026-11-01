@@ -130,7 +130,7 @@ cheap check that would have caught it.
       Executed both ways: the live `oq-42` grant is approved at `HEAD`; a grant
       citing a directive the same change adds, and one citing none, are not.
       verify: `grep -c 'exists at the merge-base' .github/workflows/standing-payload-delta.yml` -> /^[1-9]/
-- [x] **3.2 The #2754 bypass record says who executed it.** It read "Who <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **3.2 The #2754 bypass record says who executed it.** It read "Who <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       acted: the repository owner", while the owner's quoted words in the
       directive's addendum ("Du mergst selbst …") say the agent merged; the #2768
       record already split decided/executed. Now the same split. Whether the
