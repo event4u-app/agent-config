@@ -37,7 +37,7 @@ class EquipmentDto extends SimpleDto
 {
     public function __construct(
         // Primary Key
-        #[Map('id_equipment')]
+        #[Map('equipment_id')]
         public ?int $id = null,
 
         // Equipment identification
@@ -45,7 +45,7 @@ class EquipmentDto extends SimpleDto
             Length(50)]
         public string $equipmentNumber = '',
 
-        #[Map('bezeichnung'),
+        #[Map('title'),
             Length(250)]
         public string $title = '',
 
@@ -110,7 +110,7 @@ $dtos = EquipmentDto::collection($arrayOfData);
 
 #### Attribute-based DTO rules
 
-- Extend the project's DTO base class
+- Extend the project's DTO base class when it has one
 - Use constructor property promotion with public properties
 - Use `#[Map('column_name')]` to map properties to database/API field names
 - Use validation attributes (`#[Length]`, `#[Decimal]`, `#[Email]`, etc.) for constraints
@@ -185,7 +185,7 @@ final readonly class Money
         }
 
         return new self(
-            amountInCents: Math::add($this->amountInCents, $other->amountInCents),
+            amountInCents: $this->amountInCents + $other->amountInCents,
             currency: $this->currency,
         );
     }

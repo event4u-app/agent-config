@@ -12536,6 +12536,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/dcf-modeling/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/spreadsheet-authoring/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/dcf-modeling/SKILL.md",
       "target": ".agent-src.uncondensed/skills/unit-economics-modeling/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",

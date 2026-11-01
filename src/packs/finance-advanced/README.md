@@ -2,7 +2,7 @@
 
 # Finance Advanced
 
-DCF, scenario modelling, comp banding.
+DCF, scenario modelling.
 
 - **id**: `finance-advanced`
 - **owner**: finance

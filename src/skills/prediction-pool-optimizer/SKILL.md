@@ -61,6 +61,7 @@ more. **Always optimize the pool's points, never the truth of the match.**
   odds or from **actually executed** code. Tournament/outright/award numbers
   come from real markets **or** the executed Poisson helper — never a claimed
   "I ran 10,000 simulations".
+- **Every simulated figure names runs, seed and method** — same seed, same numbers.
 - **Scorelines are computed, not guessed.** The EV-max tip per match comes
   from the executed grid optimiser (`score_ev.ts`, step 4a), never the eye. A
   3:2 / 4:1 / 1:4 in the output is the signature of a skipped computation.
@@ -181,19 +182,21 @@ with the crowd, so it cannot open a gap. Measure it with the executed field
 simulator instead of a "rough Kelly" hand-wave:
 
 ```bash
-npx tsx node_modules/@event4u/agent-config/src/scripts/prediction-pool/pool_winsim.ts pool.json --runs 4000 --max-flips 4
+npx tsx node_modules/@event4u/agent-config/src/scripts/prediction-pool/pool_winsim.ts pool.json --runs 4000 --max-flips 4 --holdout-runs 20000
 ```
 
 It models the field as softmax-EV tippers, reports `P(win)` for the
 EV-max-everywhere baseline, then greedily reports **which few tips to flip**
-off EV-max (and the EV cost + P(win) gain of each). Read the output as the
-field threshold, empirically:
+off EV-max (and the EV cost + P(win) gain of each). Greedy gains are partly
+noise (ten seeds, ten flip sets); `--holdout-runs` keeps only flips a paired
+sign test confirms on independent runs. **Submit only confirmed flips**; none
+confirmed → submit the EV-max set. Read the output as the field threshold:
 
 - Pool **N < 20** → the sim shows flips barely move P(win); maximize EV, ignore
   the field.
 - **20 ≤ N < 100 and you are in the prize positions** → maximize EV.
 - **N ≥ 100, or you are outside the top ~20%** → take the simulator's
-  suggested flips: a handful of higher-variance scorelines on high-consensus
+  confirmed flips: a handful of higher-variance scorelines on high-consensus
   matches lift P(win) most per unit of EV given up. Flip only what the sim says
   pays — variance you don't need is wasted EV.
 
@@ -282,8 +285,7 @@ gate — the skill never enters or submits anything.
   every draw scoreline, so in a close match a 1:1 can beat a 1:0. Let the grid
   decide; the eye tips too few draws.
 - **"Rough Kelly" variance for a large pool.** Don't guess how much to deviate
-  — run `pool_winsim.ts`; it returns the exact flips that raise P(finish 1st)
-  most per unit of EV given up.
+  — run `pool_winsim.ts --holdout-runs 20000` and submit its confirmed flips.
 - **Forgetting to de-vig.** Raw bookmaker odds sum to >100%; treating them
   as probabilities inflates the favourite. Remove the margin **per book**
   before aggregating.

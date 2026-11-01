@@ -1,0 +1,77 @@
+{
+  "skill": "runway-cognition",
+  "last_eval": "2026-11-01",
+  "description": "8 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings of runway, burn, raise-or-cut and burn-multiple questions. Should-not-trigger covers neighbours: valuation, scenario trees, unit economics, fundraising narrative, and an unrelated personal budget.",
+  "queries": [
+    {
+      "q": "how long is our runway at the current burn?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "wie viele Monate Runway haben wir noch?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "should we raise now or cut costs to extend runway?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "our net burn is accelerating, what does that do to our runway?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "is our burn multiple healthy for a series A company?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "Runway reicht nicht bis zur nächsten Finanzierungsrunde, was tun?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "model cut versus grow for our cash position",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "when do we run out of money at this burn rate?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "value this company with a DCF",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "valuation → dcf-modeling"
+    },
+    {
+      "q": "build base, upside and downside scenarios for the market",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "scenario construction → scenario-modeling"
+    },
+    {
+      "q": "what is our CAC payback period?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "unit economics → unit-economics-modeling"
+    },
+    {
+      "q": "write the story for our seed pitch deck",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "narrative → fundraising-narrative"
+    },
+    {
+      "q": "help me plan my household grocery list",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "personal, unrelated to company cash"
+    }
+  ]
+}

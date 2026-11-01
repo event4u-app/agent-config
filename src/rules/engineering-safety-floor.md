@@ -36,7 +36,7 @@ evidence:
 
 # Engineering Safety Floor
 
-Domain safety floor for engineering output that crosses into production, infrastructure, security, or external systems. Restates the Hard-Floor obligations from `non-destructive-by-default` and adds engineering-specific surfacing requirements. Auto-active everywhere (lives in `core`).
+Domain safety floor for engineering output that crosses into production, infrastructure, security, or external systems. Restates the Hard-Floor obligations from `non-destructive-by-default` and adds engineering-specific surfacing requirements. Active wherever the `engineering-base` pack is installed (its `packs:` frontmatter).
 
 ## Iron Law — production, infra, and bulk-destructive moves are never autonomous
 
