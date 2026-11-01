@@ -29,10 +29,10 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 | `evidence.strength` | `E2` | 53 |
 | `evidence.strength` | `E3` | 25 |
 | `evidence.strength` | `E4` | 0 |
-| `provenance.kind` | `human` | 16 |
+| `provenance.kind` | `human` | 17 |
 | `provenance.kind` | `agentic` | 137 |
 | `provenance.kind` | `mixed` | 36 |
-| `provenance.kind` | `unknown` | 61 |
+| `provenance.kind` | `unknown` | 60 |
 | frontmatter | absent | 0 |
 
 ## Per-record proposals
@@ -274,7 +274,7 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 | `docs/decisions/ADR-294-completion-review-round-cap.md` | `mixed` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | owner @ ADR-294-completion-review-round-cap.md:32<br>measurement @ ADR-294-completion-review-round-cap.md:41, ADR-294-completion-review-round-cap.md:49, ADR-294-completion-review-round-cap.md:52, ADR-294-completion-review-round-cap.md:96, ADR-294-completion-review-round-cap.md:109, ADR-294-completion-review-round-cap.md:110<br>council @ ADR-294-completion-review-round-cap.md:42, ADR-294-completion-review-round-cap.md:123, ADR-294-completion-review-round-cap.md:131 | provenance: mixed · evidence: E1 · authority_basis: owner_intent |
 | `docs/decisions/ADR-295-worktree-removal-on-the-proven-set.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: human · evidence: E1 |
 | `docs/decisions/ADR-296-advisory-session-notice-declared.md` | `agentic` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | council @ ADR-296-advisory-session-notice-declared.md:34, ADR-296-advisory-session-notice-declared.md:55, ADR-296-advisory-session-notice-declared.md:99, ADR-296-advisory-session-notice-declared.md:100<br>measurement @ ADR-296-advisory-session-notice-declared.md:92 | provenance: agentic · evidence: E1 |
-| `docs/decisions/ADR-297-derived-views-in-agents-map.md` | `unknown` | `E2` — repeated or comparative measurement | `incomplete` | measurement @ ADR-297-derived-views-in-agents-map.md:51, ADR-297-derived-views-in-agents-map.md:74, ADR-297-derived-views-in-agents-map.md:87<br>repeated @ ADR-297-derived-views-in-agents-map.md:75 | provenance: human · evidence: E1 |
+| `docs/decisions/ADR-297-derived-views-in-agents-map.md` | `human` | `E2` — repeated or comparative measurement | `incomplete` | measurement @ ADR-297-derived-views-in-agents-map.md:51, ADR-297-derived-views-in-agents-map.md:74, ADR-297-derived-views-in-agents-map.md:87, ADR-297-derived-views-in-agents-map.md:114<br>repeated @ ADR-297-derived-views-in-agents-map.md:75<br>owner @ ADR-297-derived-views-in-agents-map.md:110 | provenance: human · evidence: E1 |
 | `docs/decisions/ADR-298-framework-neutral-graph-core.md` | `unknown` | `E1` — one dated local observation | `incomplete` | measurement @ ADR-298-framework-neutral-graph-core.md:67, ADR-298-framework-neutral-graph-core.md:85, ADR-298-framework-neutral-graph-core.md:86 | provenance: human · evidence: E1 |
 | `docs/decisions/ADR-299-a-graph-home-beside-the-project-graph.md` | `unknown` | `E1` — one dated local observation | `incomplete` | measurement @ ADR-299-a-graph-home-beside-the-project-graph.md:66 | provenance: mixed · evidence: E1 |
 | `docs/decisions/ADR-300-consumer-impact-binds-the-bump.md` | `mixed` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | council @ ADR-300-consumer-impact-binds-the-bump.md:39, ADR-300-consumer-impact-binds-the-bump.md:88, ADR-300-consumer-impact-binds-the-bump.md:100<br>measurement @ ADR-300-consumer-impact-binds-the-bump.md:50<br>owner @ ADR-300-consumer-impact-binds-the-bump.md:111, ADR-300-consumer-impact-binds-the-bump.md:112, ADR-300-consumer-impact-binds-the-bump.md:118 | provenance: human · evidence: E1 |
