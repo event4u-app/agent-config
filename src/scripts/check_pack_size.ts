@@ -342,7 +342,7 @@ const BOUND_PAYLOAD_EXCEPTIONS: readonly BoundPayloadException[] = [
     { fingerprint: 'aeffa474df3f805de07cdc9c6960c4918aa8e51e317fa1c30906d2f0267b7a16', path: 'dist/agent-src/templates/hooks/pre-commit-roadmap-progress', size: 3988, why: 'git hook template — same reason' },
     { fingerprint: '914f9c34551c5f4c42a70cd8bb0cd7b73078b0c4e7815b551833a3c64c8476d3', path: 'src/scripts/agent-config', size: 2391, why: 'the CLI entry script; an executable entry point carries no extension by convention' },
     { fingerprint: '0bb1cdd48ac2e9b6a2a56cde25de9fc221d75d42683680284c43118cff796e92', path: 'src/scripts/hooks/shims/php', size: 4439, why: 'shim invoked as the command name `php`; an extension would break the lookup' },
-    { fingerprint: '030944c194bf7a9edcad7c6a75afe0a332e764e36081fcc25aa886da275dcb6d', path: 'src/scripts/install', size: 23660, why: 'the installer entry script; same reason as the CLI entry' },
+    { fingerprint: '8fafd555f82ad88d24ddb746ddd4235562d46577cbe930f76d4e5354419c5f5d', path: 'src/scripts/install', size: 24438, why: 'the installer entry script; same reason as the CLI entry. RE-PINNED 2026-11-01, 23,660 -> 24,438 bytes, on the owner\'s approval in session: road-to-docs-that-sell made a bare install default to the user-global scope and pass --offline/--force/--minimal through. Same path, same reason, measured new size.' },
     { fingerprint: '1fb564019de468368e34941dffd5eb8bc994364313e02f476ff354ac0da464d7', path: 'src/templates/minimal/overrides-gitkeep', size: 164, why: 'placeholder that becomes .gitkeep on install; extensionless on purpose' },
 ];
 
