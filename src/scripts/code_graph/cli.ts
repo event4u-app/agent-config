@@ -21,8 +21,9 @@
  *   confirm <id…> | --from-query <symbol>       re-read the witnesses of facts
  *   pack "<task>" [--diff] [--since <rev>]      a verified context pack
  *   rebuild-diff                                incremental vs cold build
- *   auto-refresh on|off|status [--root P]      opt this project in to the
- *                                               session-start background refresh
+ *   auto-refresh on|off|status [--root P]      turn the background refresh
+ *                                               on or off; a local `build` or
+ *                                               `map` turns it on unless `off`
  *   projects list|add|remove|prune             the user-global registry of
  *                                               projects this machine works in
  *                                               (ADR-299, `projects_cli.ts`)
@@ -159,6 +160,7 @@ import {
     graphState,
     pickSource,
 } from './detect.js';
+import { enableByUse } from './auto_refresh.js';
 import { graphHome } from './graph_home.js';
 import { estateMain } from './estate_cli.js';
 import { estateMapMain } from './estate_map.js';
@@ -252,7 +254,9 @@ async function cmdBuild(argv: string[]): Promise<number> {
     }
     const update = argv.includes('--update');
     const { graph, fileCount, reExtracted, reused, lanes } = await buildFromRepo(root, out, { update, lanes: !argv.includes('--no-lanes') });
-    if (out === buildCacheFor(root)) registerUse(root, graph, git(root, 'rev-parse', 'HEAD'));
+    const ownCache = out === buildCacheFor(root);
+    if (ownCache) registerUse(root, graph, git(root, 'rev-parse', 'HEAD'));
+    const consent = ownCache ? enableByUse(root) : '';
     const c = graph.edge_confidence_counts;
     process.stdout.write(
         `✅  code-graph ${update ? 'updated' : 'built'} — ${fileCount} files · ${graph.nodes.length} nodes · ${graph.edges.length} edges\n` +
@@ -262,6 +266,7 @@ async function cmdBuild(argv: string[]): Promise<number> {
             (update ? `    incremental: ${reExtracted} re-extracted · ${reused} reused\n` : '') +
             (lanes ? laneSummaryLines(lanes) : '') +
             (out ? `    cache: ${shown(root, out)}\n` : '') +
+            consent +
             legacyCacheNotice(root),
     );
     if (argv.includes('--check-fixture-findings')) {
@@ -1145,9 +1150,9 @@ async function cmdRefresh(argv: string[]): Promise<number> {
 }
 
 /**
- * `auto-refresh on|off|status` — the explicit, local, per-project opt-in the
- * `code-graph-refresh` session concern requires before it starts anything
- * (ratification round of 2026-10-23: an existing cache is not consent).
+ * `auto-refresh on|off|status` — the local, per-project switch the
+ * `code-graph-refresh` concern reads before it starts anything. `on` is also
+ * what a local `build` or `map` does (`enableByUse`); `off` is sticky.
  */
 function cmdAutoRefresh(argv: string[]): number {
     const root = resolveRoot(argv);
@@ -1168,10 +1173,11 @@ function cmdAutoRefresh(argv: string[]): number {
         fs.mkdirSync(home.buildDir, { recursive: true });
         fs.writeFileSync(now, `${JSON.stringify({ enabled_at: new Date().toISOString() })}\n`);
         if (now !== marker) fs.rmSync(marker, { force: true });
+        fs.rmSync(home.autoRefreshOffPath, { force: true });
         const cli = usableCli(root);
         process.stdout.write(
-            'auto-refresh on — each agent session start refreshes the graph, and agents/map/ when it exists,\n' +
-                'in the background (POSIX hosts). `code-graph auto-refresh off` stops it.\n' +
+            'auto-refresh on — each agent session start, and each turn end after HEAD moved, refreshes the graph\n' +
+                'and agents/map/ when it exists, in the background (POSIX hosts). `code-graph auto-refresh off` stops it.\n' +
                 'The opt-in is per working tree: run it again in each new git worktree.\n' +
                 (fs.existsSync(cacheFor(root)) ? '' : 'No graph yet: `code-graph build` or `code-graph map` creates one.\n'),
         );
@@ -1186,7 +1192,11 @@ function cmdAutoRefresh(argv: string[]): number {
     }
     if (action === 'off') {
         for (const m of new Set([marker, path.join(home.buildDir, path.basename(marker)), path.join(home.legacyDir, path.basename(marker))])) fs.rmSync(m, { force: true });
-        process.stdout.write('auto-refresh off\n');
+        if (home.kind === 'project') {
+            fs.mkdirSync(home.buildDir, { recursive: true });
+            fs.writeFileSync(home.autoRefreshOffPath, `${JSON.stringify({ disabled_at: new Date().toISOString() })}\n`);
+        }
+        process.stdout.write('auto-refresh off — a later `build` or `map` keeps it off; `auto-refresh on` reverses this\n');
         return 0;
     }
     if (action !== 'status') {
@@ -1201,7 +1211,7 @@ function cmdAutoRefresh(argv: string[]): number {
     const drawnFrom = mapGeneration(mapDir);
     const mutex = reclaimMutexPath(home.lockPath);
     process.stdout.write(
-        `auto-refresh: ${fs.existsSync(marker) ? 'on' : 'off'}\n` +
+        `auto-refresh: ${fs.existsSync(marker) ? 'on' : fs.existsSync(home.autoRefreshOffPath) ? 'off (opted out)' : 'off — the next local build or map turns it on'}\n` +
             `cli: ${'reason' in cli ? (cli.reason === 'no-cli' ? 'none usable — nothing will run' : `${cli.cli} ${cliPackage(cli.cli)?.version ?? '?'} — too old, nothing will run`) : `${cli.cli} ${cliPackage(cli.cli)?.version ?? '?'}`}\n` +
             `last session start: ${line(last['session-start'])}\n` +
             `last refresh: ${line(last.refresh)}\n` +
@@ -1337,9 +1347,7 @@ async function drawMap(argv: string[]): Promise<number> {
                 ? `    diff ${r.model.diff.rev}: ${r.model.diff.changed.length} changed · ${r.model.diff.impacted.length} linked into them · ${r.model.diff.areas.length} area(s) touched\n`
                 : '') +
             `    wrote: ${r.written.length} files under ${rel}/ — open ${path.join(rel, 'index.html')}\n` +
-            (fs.existsSync(graphHome(root).autoRefreshPath)
-                ? ''
-                : '    keep it current at every agent session start: agent-config code-graph auto-refresh on\n'),
+            (out ? '' : enableByUse(root)),
     );
     let rc = 0;
     const renderFile = path.join(r.outDir, '.build', 'map-render.json');
