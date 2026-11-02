@@ -44,24 +44,24 @@ outward, one named defect at a time.
 
 ## Phase 0 — Truth repairs (no new behaviour)
 
-- [x] **0.1 Remove the TMG trap from benchmark fixture v1** (D3). Replace the
+- [x] **0.1 Remove the TMG trap from benchmark fixture v1** (D3). Replace the <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/web-launch-readiness.json -->
       `§ 5 TMG` line in `local-business/impressum.html` with a neutral current
       line and record a pre-freeze amendment in
       `later/road-to-web-launch-readiness-benchmark.md` (trigger 3).
       verify: `npx vitest run tests/scripts/web_launch_benchmark_fixtures.test.ts` -> 0
       with a case asserting the imprint fixture carries no `TMG`.
-- [x] **0.2 Fix the stale config header** (D6): name what reads the file today.
+- [x] **0.2 Fix the stale config header** (D6): name what reads the file today. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/web-launch-readiness.json -->
       verify: `npx vitest run tests/scripts/web_launch_readiness_config.test.ts` -> 0
       with a test that the header does not contain "Nothing reads".
 
 ## Phase 1 — Pre-register the claim, freeze the corpus (before detector code)
 
-- [x] **1.1 Register `claim:third-party-load-finds-planted`** in `docs/CLAIMS.md`,
+- [x] **1.1 Register `claim:third-party-load-finds-planted`** in `docs/CLAIMS.md`, <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       shape of `account-surface-finds-planted`: deterministic, offline,
       read-only; finds every planted defect, flags no safe twin, no decoy.
       verify: entry exists with `status: unbacked`; the registering change holds
       the corpus and no detector.
-- [x] **1.2 Freeze corpus `tests/fixtures/third-party-load/`** — one DE
+- [x] **1.2 Freeze corpus `tests/fixtures/third-party-load/`** — one DE <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       local-business build: planted (1) gfonts `<link stylesheet>`, (2) CSS
       `@import` of gfonts, (3) `preconnect` to `fonts.gstatic.com`, (4) Maps
       iframe, (5) `youtube-nocookie` iframe, (6) imprint citing `§ 5 TMG`,
@@ -77,7 +77,7 @@ outward, one named defect at a time.
 
 Three-state contract throughout: finding / undecided / passed.
 
-- [x] **2.1 `third-party-load-in-markup`** (D1; planted 1–5). Origin extractor
+- [x] **2.1 `third-party-load-in-markup`** (D1; planted 1–5). Origin extractor <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/third-party-origins.json -->
       over loadable contexts only (`<link rel=stylesheet|preconnect|preload|modulepreload>`,
       `<script src>`, `<iframe src>`, media `src`, CSS `@import`, `url()` in
       `@font-face`); anchors, prose and comments excluded. Origins resolved
@@ -87,25 +87,25 @@ Three-state contract throughout: finding / undecided / passed.
       origins. Unknown origin and click-to-load wrapper → undecided.
       verify: planted 1–5 found with `file:line`; twins and decoys silent;
       `dns-prefetch` undecided — `npx vitest run tests/scripts/third_party_load.test.ts` -> 0.
-- [x] **2.2 `superseded-statute-in-legal-page`** (D2; planted 6). A dated
+- [x] **2.2 `superseded-statute-in-legal-page`** (D2; planted 6). A dated <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/third-party-origins.json -->
       supersession table in the config — one row: `TMG § 5 → DDG § 5,
       effective 2024-05-14`, with `authority` + `review_by` — applied to the
       located imprint. Output is a fact, never a verdict.
       verify: planted 6 found; DDG twin silent; a lapsed `review_by` fails the loader.
-- [x] **2.3 `placeholder-in-legal-page`** (planted 7). Bracketed template
+- [x] **2.3 `placeholder-in-legal-page`** (planted 7). Bracketed template <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/third-party-origins.json -->
       tokens and `lorem ipsum` in a located legal page; `[1]` stays silent.
       verify: planted 7 found; decoy silent.
-- [x] **2.4 `privacy-page-provider-coverage`** (planted 8). Each provider 2.1
+- [x] **2.4 `privacy-page-provider-coverage`** (planted 8). Each provider 2.1 <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/third-party-origins.json -->
       found loading must be named in the located privacy page by one of its
       `privacy_tokens`; no privacy text in the build → undecided.
       verify: planted 8 found; twin silent.
-- [x] **2.5 Tiers.** All four rows `situational`; `de` escalation: 2.1/2.4 →
+- [x] **2.5 Tiers.** All four rows `situational`; `de` escalation: 2.1/2.4 → <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/third-party-origins.json -->
       high, 2.2/2.3 → critical, each with `authority` + `review_by`.
       verify: `npx vitest run tests/scripts/web_launch_readiness_config.test.ts` -> 0
 
 ## Phase 3 — Runtime witness without a socket
 
-- [x] **3.1 `--render` arm** on `confinePage`: the build directory served
+- [x] **3.1 `--render` arm** on `confinePage`: the build directory served <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/tests.yml -->
       through the `fulfil` hook under a synthetic origin, scripts on, no
       interaction, no consent click; every other request aborted and recorded.
       Decides 2.1's click-to-load undecided: a wrapper whose URL is never
@@ -113,13 +113,13 @@ Three-state contract throughout: finding / undecided / passed.
       absent → `unverified`, never a pass.
       verify: planted 1, 2, 4, 5 recorded; the twin's URL not; a test asserts
       zero requests continued to a non-synthetic origin.
-- [x] **3.2 State boundary.** Writes nothing, keeps nothing between runs,
+- [x] **3.2 State boundary.** Writes nothing, keeps nothing between runs, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/tests.yml -->
       closes the browser in `finally`.
       verify: test asserts the browser closes on a thrown navigation.
 
 ## Phase 4 — Reach at write time
 
-- [x] **4.1 Extend the blindspots row** (`ai-code-blindspots/SKILL.md`) from
+- [x] **4.1 Extend the blindspots row** (`ai-code-blindspots/SKILL.md`) from <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/design_pass_hook.ts -->
       font/icon/stylesheet to any third-party resource in shipped markup
       including iframes, plus one row: statute names on legal pages come from
       the dated authority, never from model memory.
@@ -139,7 +139,7 @@ Three-state contract throughout: finding / undecided / passed.
       a lazy concern · leave reach to the blindspots row. Verdict: carry, a
       preserving disposition (roadmap-progress-sync table, council-routed row);
       the owner decides the raise. Closes when that roadmap's 1.1 verifies.
-- [x] **4.3 Corpus coherence** (T2 witness slice): the hotlink column in
+- [x] **4.3 Corpus coherence** (T2 witness slice): the hotlink column in <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/design_pass_hook.ts -->
       `design-intelligence/data/font-pairings-reference.csv` is marked opt-in so
       the corpus no longer contradicts the self-host default.
       verify: the skill text naming the column says opt-in.
@@ -149,7 +149,7 @@ Three-state contract throughout: finding / undecided / passed.
 
 ## Phase 5 — Wording floor
 
-- [x] **5.1 Closed output vocabulary** for the four rows: "loads", "requests",
+- [x] **5.1 Closed output vocabulary** for the four rows: "loads", "requests", <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       "cites", "superseded on", "does not name", "undecided"; forbidden
       "compliant", "DSGVO-konform", "rechtssicher", "abmahnsicher", "illegal",
       any damages figure. Enforced by a test over the message templates.
@@ -157,7 +157,7 @@ Three-state contract throughout: finding / undecided / passed.
 
 ## Phase 6 — Side defect: on-screen text in `analyze:post`
 
-- [x] **6.1 Probe top, middle and bottom bands**, report the max, keep the 0.06
+- [x] **6.1 Probe top, middle and bottom bands**, report the max, keep the 0.06 <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/media_bundle.ts -->
       bar, name the rung "on-screen text".
       verify: a centre-text frame is flagged, a subtitle frame still is, a
       text-free frame is not — `npx vitest run tests/scripts/media_bundle.test.ts` -> 0.
