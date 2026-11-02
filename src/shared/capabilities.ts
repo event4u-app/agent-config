@@ -46,6 +46,12 @@ export interface Capabilities {
      */
     configRoot: boolean;
     /**
+     * The `sessions:list --json --schema` version this build serves — an
+     * account tool reads it before asking for the versioned session list.
+     * Contract: `docs/contracts/session-list.md`.
+     */
+    sessionList: number;
+    /**
      * Host-embed contract advertisement — a host reads `embed.supported`
      * + `embed.version` + `embed.features` to decide whether it can render
      * AC's settings surface inside its own window (via `?embed=1`, a
@@ -57,6 +63,7 @@ export interface Capabilities {
 /** The capabilities this build advertises. */
 export const CAPABILITIES: Capabilities = {
     configRoot: true,
+    sessionList: 1,
     embed: { supported: true, version: 1, features: ['theme', 'deepLink'] },
 };
 

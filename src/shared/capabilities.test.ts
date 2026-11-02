@@ -13,6 +13,10 @@ describe('capabilities', () => {
         expect(CAPABILITIES.configRoot).toBe(true);
     });
 
+    it('advertises the versioned session list', () => {
+        expect(CAPABILITIES.sessionList).toBe(1);
+    });
+
     it('advertises the embed contract (reciprocal-ecosystem Phase 3)', () => {
         expect(CAPABILITIES.embed).toEqual({
             supported: true,
@@ -31,6 +35,7 @@ describe('capabilities', () => {
             version: '9.7.0',
             capabilities: {
                 configRoot: true,
+                sessionList: 1,
                 embed: { supported: true, version: 1, features: ['theme', 'deepLink'] },
             },
         });

@@ -520,7 +520,7 @@ async function main(rawArgv: readonly string[]): Promise<number> {
     }
     if (head === '--version' || head === '-V') {
         // `--version --json` is the host-facing capability readout: emits
-        // `{ version, capabilities: { configRoot: true } }` so a spawner
+        // `{ version, capabilities: { configRoot: true, sessionList: 1, … } }` so a spawner
         // can detect support before relying on `--config-root`. Plain
         // `--version` keeps printing just the version string.
         if (argv.includes('--json')) {
