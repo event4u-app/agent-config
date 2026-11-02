@@ -50,40 +50,40 @@ P-9 grep: `grep -rnE "(homedir\(\)|home[A-Za-z]*|HOME'\][^,]*)\s*,\s*'\.(claude|
 
 ## Phase 1 — One resolver, correct detection
 
-- [x] **1.1 One module for provider homes.** `src/scripts/_lib/provider_home.ts`: `claudeHome(env)`, `codexHome(env)`, `geminiHome(env)` with a source (`env` | `default`). `claude_config_dir` and `environment_detector.codexHome` re-export, never redefine.
+- [x] **1.1 One module for provider homes.** `src/scripts/_lib/provider_home.ts`: `claudeHome(env)`, `codexHome(env)`, `geminiHome(env)` with a source (`env` | `default`). `claude_config_dir` and `environment_detector.codexHome` re-export, never redefine. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/provider_home.ts -->
       verify: `tests/scripts/_lib/provider_home.test.ts` (env set / empty / whitespace / `~`).
-- [x] **1.2 P-1 suffixed Keychain service.** Derive the service from the raw `CLAUDE_CONFIG_DIR` (NFC, sha256, 8 hex); unsuffixed only when the variable is empty. Still no `-w`.
+- [x] **1.2 P-1 suffixed Keychain service.** Derive the service from the raw `CLAUDE_CONFIG_DIR` (NFC, sha256, 8 hex); unsuffixed only when the variable is empty. Still no `-w`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/environment_detector.ts -->
       verify: probe stub that only answers the unsuffixed service with env set → no `cli-subscription`; stub that only answers the suffixed one → `cli-subscription`.
-- [x] **1.3 P-4 `handoff` through the resolver.** Defaults at `handoff_sessions.ts:272`, `:419` from 1.1.
+- [x] **1.3 P-4 `handoff` through the resolver.** Defaults at `handoff_sessions.ts:272`, `:419` from 1.1. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/handoff_sessions.ts -->
       verify: fixture Codex store under `$CODEX_HOME/sessions` with env set → session listed.
-- [x] **1.4 P-3 doctor finding.** `CODEX_HOME` set without a directory → "`CODEX_HOME` points at nothing (<path>)", no `codex login` advice.
+- [x] **1.4 P-3 doctor finding.** `CODEX_HOME` set without a directory → "`CODEX_HOME` points at nothing (<path>)", no `codex login` advice. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/cmd_doctor.ts -->
       verify: doctor test with `CODEX_HOME` set to a missing path → the finding, no login advice.
-- [x] **1.5 P-5 one Codex auth reader.** Doctor reuses the detector's reader; return shape stays presence/class/expiry, no field value leaves the module.
-      verify: `grep -c "auth.json" src/scripts/_cli/cmd_doctor.ts` drops to the import site; doctor tests stay green.
-- [x] **1.6 P-2 Gemini hint.** Doctor says "`GEMINI_CLI_HOME` is set and not evaluated yet"; the path formula waits for spike S4 (stub).
+- [x] **1.5 P-5 one Codex auth reader.** Doctor reuses the detector's reader; return shape stays presence/class/expiry, no field value leaves the module. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/codex_auth.ts -->
+      verify: `grep -c "readCodexAuth(" src/scripts/_cli/cmd_doctor.ts` -> /^1$/
+- [x] **1.6 P-2 Gemini hint.** Doctor says "`GEMINI_CLI_HOME` is set and not evaluated yet"; the path formula waits for spike S4 (stub). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/cmd_doctor.ts -->
       verify: doctor test with `GEMINI_CLI_HOME` set → the hint line.
-- [x] **1.7 P-9 runtime sites switched and locked.** Runtime paths only (`src/install/`, `src/scripts/_lib/`, `src/scripts/_cli/`, `src/scripts/hooks/`); maintainer measurement scripts stay. A check forbids new `homedir()` + `'.claude'|'.codex'|'.gemini'` joins there outside `provider_home.ts`, with a baseline of the existing sites.
+- [x] **1.7 P-9 runtime sites switched and locked.** Runtime paths only (`src/install/`, `src/scripts/_lib/`, `src/scripts/_cli/`, `src/scripts/hooks/`); maintainer measurement scripts stay. A check forbids new `homedir()` + `'.claude'|'.codex'|'.gemini'` joins there outside `provider_home.ts`, with a baseline of the existing sites. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/provider-home-joins-baseline.json -->
       verify: the check goes red against an inserted line.
 
 **Acceptance:** under `CLAUDE_CONFIG_DIR=<profile>` and `CODEX_HOME=<profile>` the billing class and `handoff` report the profile's login and sessions; the lock check is wired into CI. **Risk:** low — the Keychain formula is a Claude Code internal; on mismatch the probe degrades to "not found", never to "subscription".
 
 ## Phase 2 — Session signal for the account tool
 
-- [x] **2.1 Profile in the record.** Optional `profile: { provider, name, via: 'agent-switch' | 'env' }` in `SessionRecord`, derived from the environment only. Absent → the record stays byte-identical.
-      verify: `session_register` test with and without a profile.
-- [x] **2.2 Stable JSON contract, additive.** `sessions:list --json --schema 1` always prints `{ schema_version: 1, sessions, … }`. The existing shapes stay unchanged (a scripted screen pins the array form). Contract in `docs/contracts/session-list.md`.
+- [x] **2.1 Profile in the record.** Optional `profile: { provider, name, via: 'agent-switch' | 'env' }` in `SessionRecord`, derived from the environment only. Absent → the record stays byte-identical. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/session_register.ts -->
+      verify: `npx vitest run tests/scripts/session_register.test.ts` -> exit 0
+- [x] **2.2 Stable JSON contract, additive.** `sessions:list --json --schema 1` always prints `{ schema_version: 1, sessions, … }`. The existing shapes stay unchanged (a scripted screen pins the array form). Contract in `docs/contracts/session-list.md`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/sessions_cli.ts -->
       verify: existing `sessions_cli` tests unchanged, new tests for `--schema 1` with and without `--branches`.
-- [x] **2.3 Announce the capability.** `agent-config --version --json` and `/api/v1/ping` name `capabilities.sessionList: 1`, next to `configRoot`.
+- [x] **2.3 Announce the capability.** `agent-config --version --json` and `/api/v1/ping` name `capabilities.sessionList: 1`, next to `configRoot`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/shared/capabilities.ts -->
       verify: version/ping test asserts `capabilities.sessionList === 1`.
 
 **Acceptance:** two sessions under two profiles appear in `sessions:list --json` with `profile`; `--schema 1` gives one object form with and without `--branches`.
 
 ## Phase 3 — Docs
 
-- [x] **3.1** `docs/guides/works-with-agent-switch.md`: "What AC guarantees under a profile" and "What AC never does" (kill register).
-      verify: `task check-refs` green on the guide.
-- [x] **3.2** Remote / Superset: point at the account tool's own CLI as the agent command, no AC snippet.
-      verify: `grep -n 'agent-switch run' docs/guides/works-with-agent-switch.md` hits the new paragraph.
+- [x] **3.1** `docs/guides/works-with-agent-switch.md`: "What AC guarantees under a profile" and "What AC never does" (kill register). <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+      verify: `grep -c '^## What AC never does' docs/guides/works-with-agent-switch.md` -> /^1$/
+- [x] **3.2** Remote / Superset: point at the account tool's own CLI as the agent command, no AC snippet. <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+      verify: `grep -c 'agent-switch run <name>' docs/guides/works-with-agent-switch.md` -> /^1$/
 
 ## Kill register
 
