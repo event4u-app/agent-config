@@ -9,7 +9,10 @@
 # lib/model-capabilities/fal.json and are surfaced via
 # `capability --model <id>`.
 #
-# Lifecycle: stable — promoted 2026-06-10 (maintainer-authorized): 3/3 live
+# Lifecycle: experimental — demoted 2026-11-02 (AI council, owner-delegated):
+# the 180-day trace window closes 2026-12-07 and no re-capture is funded;
+# a fresh maintainer smoke trace restores `stable`. Was stable since
+# 2026-06-10 (maintainer-authorized): 3/3 live
 # renders succeeded — ltx-2 (6.1s, native audio confirmed), wan-2.2 (5.0s),
 # hunyuan (5.4s; ~14.5min render). Manifest entries carry verified:true +
 # smoke_trace refs; raw traces are local-only operator evidence
