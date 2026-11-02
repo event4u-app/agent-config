@@ -19,6 +19,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { parseGateArgs } from './_lib/gate_args.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -76,6 +77,16 @@ export function countsByFile(sites: readonly string[]): Record<string, number> {
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2), root: string = REPO_ROOT): number {
+    const args = parseGateArgs('check_provider_home_joins', argv, {
+        list: { type: 'boolean' },
+        write: { type: 'boolean' },
+    });
+    if (!args.ok) {
+        process.stderr.write(`${args.message}\n`);
+        return 2;
+    }
+    const listMode = args.values.list === true;
+    const writeMode = args.values.write === true;
     try {
         assertScanned({ gate: 'check_provider_home_joins', scanned: runtimeFiles(root).length, units: 'file(s)', roots: RUNTIME_ROOTS });
     } catch (err) {
@@ -86,7 +97,7 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
         throw err;
     }
     const sites = joinSites(root);
-    if (argv.includes('--list')) {
+    if (listMode) {
         for (const s of sites) process.stdout.write(`${s}\n`);
         return 0;
     }
@@ -99,7 +110,7 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
         return 2;
     }
     const live = countsByFile(sites);
-    if (argv.includes('--write')) {
+    if (writeMode) {
         const next: Record<string, number> = {};
         for (const [f, n] of Object.entries(baseline).sort(([a], [b]) => a.localeCompare(b))) {
             const v = Math.min(n, live[f] ?? 0);

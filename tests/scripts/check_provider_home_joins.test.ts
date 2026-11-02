@@ -50,6 +50,12 @@ describe('check_provider_home_joins', () => {
         expect(files).toEqual({ 'src/scripts/_lib/a.ts': 1 });
     });
 
+    it('an unknown flag is refused', () => {
+        baseline({ 'src/scripts/_lib/a.ts': 1 });
+        vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        expect(main(['--wirte'], root)).toBe(2);
+    });
+
     it('missing baseline is a usage error', () => {
         expect(main([], root)).toBe(2);
     });
