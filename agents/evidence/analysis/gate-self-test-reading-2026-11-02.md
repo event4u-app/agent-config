@@ -60,3 +60,11 @@ illegitimate hits). Named here so a CI-only red is traceable:
   It went red in this very change when a roadmap was added before the owned-digest
   was regenerated.
 - `lint_adapter_tier` — "the real tree is green, and its contract block matches".
+
+## 4. Found on the first CI run of the runner
+
+- `check_host_loadability` — "a root carrying no host projection at all is
+  REFUSED" read tool presence from the machine's `$HOME` and `PATH`, so it
+  rejected on a developer laptop and passed (exit 0) on a CI runner with no
+  host tools installed. It had never run in CI before. The case now pins a
+  fixture `HOME` where claude-code is installed.

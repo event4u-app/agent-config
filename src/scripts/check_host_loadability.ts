@@ -11,6 +11,7 @@
  * Run AFTER the projection is generated (CI: the sync-consistency job).
  * Exit 1 on the first malformed artefact, naming it.
  */
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -149,6 +150,8 @@ function reachSelfTest(): number {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'host-reach-selftest-'));
     // A materialised projection — one artefact per host surface — so the accept
     // case never depends on whether this checkout generated its projections.
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'host-reach-home-'));
+    fs.mkdirSync(path.join(home, '.claude'));
     const full = fs.mkdtempSync(path.join(os.tmpdir(), 'host-reach-full-'));
     for (const s of HOST_SURFACES) {
         const rel = s.projections[0]!;
@@ -175,9 +178,19 @@ function reachSelfTest(): number {
             minRejectCases: 1,
             cases: [
                 {
+                    // Presence is read from $HOME, so the case pins a home where
+                    // claude-code IS installed; without it the verdict depended on
+                    // the machine and passed on a CI runner with no host tools.
                     name: 'a root carrying no host projection at all is REFUSED, never passed',
                     expect: 'reject',
-                    run: () => invoke(tmp),
+                    run: () => {
+                        const res = spawnSync(
+                            path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx'),
+                            [path.join(REPO_ROOT, 'src/scripts/check_host_loadability.ts'), '--reach', '--root', tmp],
+                            { cwd: REPO_ROOT, encoding: 'utf-8', env: { ...process.env, HOME: home, USERPROFILE: home, PATH: '' } },
+                        );
+                        return res.status ?? -1;
+                    },
                 },
                 {
                     name: 'an unknown flag is refused, not ignored',
@@ -195,6 +208,7 @@ function reachSelfTest(): number {
     } finally {
         fs.rmSync(tmp, { recursive: true, force: true });
         fs.rmSync(full, { recursive: true, force: true });
+        fs.rmSync(home, { recursive: true, force: true });
     }
 }
 
