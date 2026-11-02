@@ -151,7 +151,7 @@ are not triggers. This half is **prose, not lint** — no gate can read the
 agent's reason for choosing a moment, and claiming otherwise would be the
 coverage inflation this repository's gate discipline exists to refuse.
 
-That invariant is why B is small — **three keys**. It is not a placeholder for a
+That invariant is why B is small — **four keys**. It is not a placeholder for a
 larger set; it is the set that passes both halves.
 
 | Key | Why a just-in-time ask is the right shape | Conservative default |
@@ -159,6 +159,7 @@ larger set; it is the set that passes both halves.
 | `personal.open_edited_files` | it starts running the binary named in `personal.ide` on every edit — the user should say yes once before that begins | `false` |
 | `personal.canary_name` | un-inferrable, and answering arms the session-degradation canary; one keypress to accept the prefill | `""` (canary dark) |
 | `memory.learn_on_session_end` | it turns on automatic memory writes at the end of every session — a standing write the user should authorise | `false` |
+| `security_ops.plan` | only the user knows whether a deployed product should get a containment section; asked when their own `/audit security` or feature plan finds none, then persisted (OQ-60 item 2) | `false` |
 
 ## Class B is a persistence property, not an enforcement claim
 
@@ -248,11 +249,11 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 | Class | Keys |
 |---|---|
 | A — preference | 11 |
-| B — consent | 3 |
+| B — consent | 4 |
 | C — guarded | 101 |
-| **Total** | **115** |
+| **Total** | **116** |
 
-It fell to 115 on 2026-10-25 when `ai_team.max_calls_per_day` stopped shipping in the template (ADR-279 Amendment 1, owner directive 2026-10-22): it stays an optional integer a user may write, unset means counted and never refused, so it is no longer a template leaf this table classifies. It rose to 116 on 2026-10-25 when ADR-301 added `star_ask.mode` and `star_ask.starred` — two A, `consent`: the user's own choice whether a monthly star ask reaches them, and their own statement that they starred. It fell to 114 on 2026-10-24 when step 4.7 removed `projection.mode` (owner answer OQ-1), and to 115 the same day when step 4.9 of `road-to-a-setup-that-decides-itself` removed `projection.rule_packs` (owner directive, D14). It rose to 116 on 2026-10-21 when the advisories council round 3 added `advisories.kev` — one C, `policy`: it decides whether a refresh reads the CISA catalog, the independent switch both seats asked for beside the egress key (evidence `advisory-kev-epss-sources-20261021`).
+It rose to 116 on 2026-11-02 when `security_ops.plan` joined class B (OQ-60 item 2, ADR-304 amendment) — `un-inferrable`: only the user knows whether a deployed product should get a containment section, and their answer is persisted once. It fell to 115 on 2026-10-25 when `ai_team.max_calls_per_day` stopped shipping in the template (ADR-279 Amendment 1, owner directive 2026-10-22): it stays an optional integer a user may write, unset means counted and never refused, so it is no longer a template leaf this table classifies. It rose to 116 on 2026-10-25 when ADR-301 added `star_ask.mode` and `star_ask.starred` — two A, `consent`: the user's own choice whether a monthly star ask reaches them, and their own statement that they starred. It fell to 114 on 2026-10-24 when step 4.7 removed `projection.mode` (owner answer OQ-1), and to 115 the same day when step 4.9 of `road-to-a-setup-that-decides-itself` removed `projection.rule_packs` (owner directive, D14). It rose to 116 on 2026-10-21 when the advisories council round 3 added `advisories.kev` — one C, `policy`: it decides whether a refresh reads the CISA catalog, the independent switch both seats asked for beside the egress key (evidence `advisory-kev-epss-sources-20261021`).
 
 It rose to 115 on 2026-10-21 when `road-to-advisories-heard-the-same-day` step 4.3 added `advisories.mode` and `advisories.egress` — two C. `mode` is `consent`: it adds a line to the first session start of every day, which an install that never asked must not have switched on for it by an agent. `egress` is `policy`: it decides which package names leave the machine, the privacy boundary the roadmap's D4 fixes for private names and this key extends to all of them.
 
@@ -408,10 +409,10 @@ the template, which is the drift this contract exists to prevent.
 | Disposition | Keys |
 |---|---|
 | derivable | 33 |
-| un-inferrable | 10 |
+| un-inferrable | 11 |
 | consent | 53 |
 | policy | 19 |
-| **Total** | **115** |
+| **Total** | **116** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -618,6 +619,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `advisories.mode` | C | `notify` | a notice at every first session start of a day; turning it on for an install that never asked is a flip the agent may not make | consent |
 | `advisories.egress` | C | `query` | decides which package names and versions leave the machine on a refresh | policy |
 | `advisories.kev` | C | `on` | decides whether a refresh reads the CISA known-exploited catalog that raises a tier | policy |
+| `security_ops.plan` | B | `false` | turns a containment finding into a drafted plan without asking again — the user should say yes once (OQ-60) | un-inferrable |
 | `update.mode` | C | `notify` | a standing authorisation to replace the user's global install; `auto` is something they cannot un-see happening | consent |
 | `worktrees.cleanup` | C | `notify` | a standing authorisation to delete worktree directories on the proven-merged set; `auto` removes them unasked (ADR-295) | consent |
 | `legal_review_prep.acknowledged` | C | `false` | the consent gate; the safety floor requires the wizard checkbox | consent |

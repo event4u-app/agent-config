@@ -44,6 +44,36 @@ describe('validateSecurityOps', () => {
         expect(validateSecurityOps(d)).toContain('levers[0] uploads-off: stops the control surface — the operator would be locked out');
     });
 
+    it('accepts automation off and propose — the default and the one opt-in', () => {
+        expect(validateSecurityOps({ ...ok(), automation: 'off' })).toEqual([]);
+        expect(validateSecurityOps({ ...ok(), automation: 'propose' })).toEqual([]);
+    });
+
+    it.each(['auto', 'throw', true, 'on'])('refuses automation %s — no lever is thrown without an operator confirming', (value) => {
+        expect(validateSecurityOps({ ...ok(), automation: value })).toContain(
+            'automation must be off|propose — an advisory may propose a lever, an operator confirms it; nothing throws one unattended (ADR-304)',
+        );
+    });
+
+    it('refuses propose when no lever names the packages an advisory would map to', () => {
+        const d = { ...ok(), automation: 'propose' };
+        for (const l of d.levers) delete (l as Record<string, unknown>)['packages'];
+        expect(validateSecurityOps(d)).toContain(
+            'automation: propose needs at least one lever with packages — otherwise no advisory maps to a lever and there is nothing to propose',
+        );
+    });
+
+    it('propose is not required to name packages when automation is off', () => {
+        const d = ok();
+        for (const l of d.levers) delete (l as Record<string, unknown>)['packages'];
+        expect(validateSecurityOps(d)).toEqual([]);
+    });
+
+    it('the shipped JSON schema allows exactly off and propose for automation', () => {
+        const schema = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../src/scripts/schemas/security-ops.schema.json'), 'utf8'));
+        expect(schema.properties.automation.enum).toEqual(['off', 'propose']);
+    });
+
     it('the shipped JSON schema names the same required lever fields', () => {
         const schema = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../src/scripts/schemas/security-ops.schema.json'), 'utf8'));
         expect(schema.properties.levers.items.required).toEqual(expect.arrayContaining(['id', 'level', 'fail_mode', 'owner', 'release']));

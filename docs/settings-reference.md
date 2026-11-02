@@ -292,6 +292,12 @@ explanation lives now that the file no longer carries it as comments.
 | `screenshots.forbid_terminal_capture` | C | boolean | `true` |  | Consumed by the doc-screenshot-hygiene rule. true (default) = terminal/CLI/IDE screenshots are forbidden (highest leak vector: absolute local paths, env tokens); use text code blocks with text redaction instead. false = allowed, still subject to the data-bearing human gate. |
 | `screenshots.identity_allowlist` | C | array | `[]` |  | Consumed by the doc-screenshot-hygiene rule and screenshot-hygiene skill. Public identity tokens SAFE to show unredacted in a documentation screenshot — the maintainer's own public handles plus well-known fake-data tokens. Not a general fake-data dictionary and not identity-resolution: everything not listed is treated as sensitive by default, and a public handle co-located with a real name does not whitelist the real name. Default [] = nothing auto-allowed. |
 
+## security_ops
+
+| Key | Class | Type | Default | Allowed values | What it does |
+|---|---|---|---|---|---|
+| `security_ops.plan` | B | boolean | `false` |  | The persisted answer to "plan a security & maintenance section?", offered once when /audit security or feature planning finds a deployed project with no lever inventory (ADR-304). true = the agent drafts the section with feature-planning and the control-section blueprint when the finding appears — it plans, never builds or throws a lever. false (default) = not planned; the finding stays in the report and the offer is made once while no answer is recorded (written with --source jit-answer). Prose-only reader: nothing can refuse the plan. |
+
 ## star_ask
 
 | Key | Class | Type | Default | Allowed values | What it does |
