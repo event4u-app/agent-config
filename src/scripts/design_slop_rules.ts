@@ -107,18 +107,31 @@ export interface SlopRule {
 /** Split CSS-ish text into naive `selector { body }` blocks with the line of `{`. */
 export function cssBlocks(content: string): Array<{ selector: string; body: string; line: number }> {
   const blocks: Array<{ selector: string; body: string; line: number }> = [];
-  const re = /([^{}]+)\{([^{}]*)\}/g;
-  // Comments blanked, not removed: line numbers hold.
-  content = content.replace(/\/\*[^]*?\*\//g, (c) => c.replace(/./g, " "));
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(content)) !== null) {
-    // The match starts right after the previous `}`, newline included; the
-    // block's line is where its selector starts.
-    const sel = m[1] ?? "";
-    const line = lineOf(content, m.index + sel.length - sel.trimStart().length);
-    blocks.push({ selector: sel.trim(), body: m[2] ?? "", line });
+  content = blankComments(content);
+  // The blocks `/([^{}]+)\{([^{}]*)\}/g` finds, in one pass over the braces: that
+  // regex restarts at every position of a brace-free run, quadratic on a minified
+  // page, and so was counting lines from the top for every block. A selector
+  // always starts right after the previous brace, newline included; the block's
+  // line is where the selector's text starts.
+  const at = [...content.matchAll(/[{}]/g)].map((m) => m.index);
+  for (let k = 0, line = 1, i = 0; k + 1 < at.length; k++) {
+    const start = k ? at[k - 1]! + 1 : 0;
+    const sel = content.slice(start, at[k]);
+    if (!sel || content[at[k]!] !== "{" || content[at[k + 1]!] !== "}") continue;
+    for (const end = start + sel.length - sel.trimStart().length; i < end; i++) if (content[i] === "\n") line++;
+    blocks.push({ selector: sel.trim(), body: content.slice(at[k]! + 1, at[++k]), line });
   }
   return blocks;
+}
+
+/** Comments blanked, not removed, so line numbers hold. An unclosed opener blanks nothing. */
+function blankComments(s: string): string {
+  let out = "";
+  let from = 0;
+  for (let a, z; (a = s.indexOf("/*", from)) >= 0 && (z = s.indexOf("*/", a + 2)) >= 0; from = z + 2) {
+    out += s.slice(from, a) + s.slice(a, z + 2).replace(/./g, " ");
+  }
+  return out + s.slice(from);
 }
 
 function lineOf(content: string, index: number): number {
