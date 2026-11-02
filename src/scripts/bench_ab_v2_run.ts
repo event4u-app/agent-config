@@ -554,6 +554,7 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
             model: opts.model,
             plugin_dir: neighbour_plugin_dir(spec),
             strict_mcp: spec.isolate_neighbour === true,
+            no_session_persistence: true,
             env: spec.isolate_neighbour ? neighbour_env(fs.mkdtempSync(path.join(os.tmpdir(), 'bench-neighbour-'))) : null,
         }) as unknown as Dict;
     }
