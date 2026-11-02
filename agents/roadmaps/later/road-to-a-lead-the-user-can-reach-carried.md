@@ -51,8 +51,12 @@ closes (WIP cap five, owner directive 2026-10-24).
       existing unbacked `experience-loop-repeated-failure-effect` claim. Honest
       null keeps `learn_on_session_end: false`.
       verify: a pinned report with both arms; the claim's status moves from it.
-- [ ] **2.2 Return-bytes reading.** One week of `return_bytes` from the parent's
-      2.2: p50/p95 per agent type. Only then decide whether compressed return
+- [ ] **2.2 Return bytes: record, then read.** First land the field carried from the
+      parent's 2.2 — `return_bytes` on the `subagent_stop` ledger line, UTF-8 byte
+      length of the final message, `null` when none, `0` when empty, never the text.
+      It costs ~260 B of hook bundle, so it needs a ratified ceiling raise
+      (`agents/evidence/ratifications/`, ADR-268 § 4) or an equal shrink elsewhere
+      first. Then read one week: p50/p95 per agent type. Only then decide whether compressed return
       shapes are worth a design.
       verify: an evidence file with the distribution and the decision.
 - [ ] **2.3 Repeated ad-hoc script reading.** Hash normalised heredoc /

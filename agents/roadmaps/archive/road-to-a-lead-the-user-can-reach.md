@@ -85,7 +85,7 @@ or a default flip.
       `--disable-slash-commands` is deliberately not added (D8c).
       verify: `npx vitest run tests/scripts/bench_ab_task_runner.test.ts` -> 0 — the flag is
       present when asked and absent otherwise.
-- [x] **2.2 The ledger records return bytes.** The `subagent_stop` line carries <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/subagent_ledger_hook.ts -->
+- [~] **2.2 The ledger records return bytes.** The `subagent_stop` line carries <!-- deferred-resolution: carried-to=road-to-a-lead-the-user-can-reach-carried -->
       `return_bytes`: the UTF-8 byte length of the final message, `null` when the host
       sent none. A number, never prose — the file's privacy contract holds.
       verify: `npx vitest run tests/hooks/subagent_ledger.test.ts` -> 0 — a known message
@@ -116,6 +116,7 @@ or a default flip.
 | E4 | Learned-lesson injection A/B? | Parked — measurement over weeks; default stays off | carried |
 | E5 | Own stem or fold? | One active stem for the reachable items, everything else folded or parked | agent |
 | E6 | Publish a head-to-head even at a loss? | Yes, recorded with the carried item | carried |
+| E8 | 2.2 return bytes | Carried to `later/road-to-a-lead-the-user-can-reach-carried` 2.2. Built and green, but the field takes the hook bundle ~180 B past its ceiling (CI read the trunk at 1,561,921 of 1,562,000), and raising `hook-bundle-budget.json` is a gated surface (ADR-268 § 4) whose ratification an agent may not issue for itself. Revisit-if: a ratified ceiling raise, or a bundle shrink of ≥ 300 B lands | agent (carry keeps the item alive) |
 | E7 | Add `--disable-slash-commands` to bench arms? | No — it disables the package arm's skills (D8c) | agent |
 | C1 | Closure scan: `typed-op` on the frontmatter exemption | Not an operation — the estate exemption is a recorded reason the estate gate reads | agent (closure pass) |
 | C2 | Closure scan: `ambiguous-acceptance` on the P1.1 context row | The rule name `improve-before-implement`, not a criterion | agent (closure pass) |
@@ -151,5 +152,5 @@ or a default flip.
 - AC-1 A consumer runs the config audit through `agent-config audit:config` and `/audit config`.
 - AC-2 `--min-grade` exits 1 below the grade, 0 otherwise, 2 on a bad argument.
 - AC-3 No bench claude arm persists its session.
-- AC-4 Every `subagent_stop` ledger line carries `return_bytes` and no prose.
+- AC-4 (carried with 2.2) Every `subagent_stop` ledger line carries `return_bytes` and no prose.
 - AC-5 Every point of both sources has a disposition in the evidence file.

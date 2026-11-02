@@ -92,6 +92,6 @@ unexpected changes"). The claim and a hand-edit fixture are carried (3.2).
 | t2 D8 bench isolation | active 2.1 (`no_session_persistence`) |
 | t2 D11/P7 effort per slice | carried 2.4 |
 | t2 D12/P0.4 repeated scripts | carried 2.3 |
-| t2 D14/P0.5 return bytes | active 2.2 (field) + carried 2.2 (reading) |
+| t2 D14/P0.5 return bytes | carried 2.2 (field + reading) — the field needs a ratified hook-bundle raise |
 | t2 D15 handle contract | confirmed, no work |
 | t1 K1–K12, t2 K1–K17 | kill registers, active roadmap (merged) |
