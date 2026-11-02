@@ -14,17 +14,21 @@ const hosts = (urls: { url: string }[]): string[] => [...new Set(urls.map((u) =>
 const live = chromiumAvailable();
 
 describe('render witness over the frozen corpus (real browser)', () => {
+    // skip-reason: no Playwright Chromium binary installed; the browser witness CI job installs it and runs this file
     it.skipIf(!live)('records planted 1, 2, 4, 5 and lets nothing leave the machine', async () => {
         const w = await renderWitness(path.join(CORPUS, 'planted'));
         expect(w.status).toBe('ok');
+        expect(w.pages).toBe(5);
         expect(hosts(w.requests)).toEqual(['fonts.googleapis.com', 'www.google.com', 'www.youtube-nocookie.com']);
         expect(w.requests.some((q) => q.page === 'css/site.css' || /Lora/.test(q.url))).toBe(true);
         expect(w.continued).toEqual([]);
     }, 60_000);
 
+    // skip-reason: no Playwright Chromium binary installed; the browser witness CI job installs it and runs this file
     it.skipIf(!live)('the click-to-load twins request nothing on first paint', async () => {
         const w = await renderWitness(path.join(CORPUS, 'safe'));
         expect(w.status).toBe('ok');
+        expect(w.pages).toBe(5);
         expect(w.requests).toEqual([]);
         expect(w.continued).toEqual([]);
     }, 60_000);
