@@ -176,11 +176,22 @@ describe('security_ops.plan — the plan offer is asked once per user (OQ-60 ite
         expect(planAnswer(home('security_ops:\n  plan: true\n', stamp('auto-detected')))).toBe('unanswered');
     });
 
-    it('an unparseable settings file or sidecar is unanswered, never yes', () => {
+    it('an unparseable settings file is unanswered, never yes', () => {
         expect(planAnswer(home('security_ops: [\n', stamp('jit-answer')))).toBe('unanswered');
+    });
+
+    it('an unparseable sidecar is unanswered, never yes — unreadable is not absent (council r1)', () => {
         const env = home('security_ops:\n  plan: true\n', null);
         fs.writeFileSync(path.join(env['EVENT4U_CONFIG_HOME']!, 'settings', '.agent-settings.provenance.json'), '{');
-        expect(planAnswer(env)).toBe('yes');
+        expect(planAnswer(env)).toBe('unanswered');
+    });
+
+    it.each([['"yes"'], ['1'], ['null'], ['[]']])('a stamped non-boolean value %s is unanswered, never a recorded no', (raw) => {
+        expect(planAnswer(home(`security_ops:\n  plan: ${raw}\n`, stamp('jit-answer')))).toBe('unanswered');
+    });
+
+    it('a stamped key with the value missing is unanswered', () => {
+        expect(planAnswer(home('security_ops: {}\n', stamp('jit-answer')))).toBe('unanswered');
     });
 
     const detail = (answer: 'unanswered' | 'yes' | 'no') => lens(auditSecurity(seeded(), { planAnswer: answer }), 'contain').findings[0]!.detail;

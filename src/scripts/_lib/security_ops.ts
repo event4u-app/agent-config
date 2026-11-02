@@ -67,11 +67,13 @@ const DECIDING_SOURCES = new Set(['jit-answer', 'manual', 'gui']);
 
 /**
  * `security_ops.plan` as a decision, read from the user-global settings file and
- * its provenance sidecar. The template default `false` carries no stamp, so it
- * reads `unanswered` — only a stamped answer is a recorded no. A `true` with no
- * stamp is a hand edit and counts; a `true` stamped `auto-detected` does not,
- * because the machine may not reach this answer for the user. Anything
- * unreadable is `unanswered`, never `yes`.
+ * its provenance sidecar. Only a boolean value counts; anything else is
+ * `unanswered`. A boolean with a deciding stamp (`jit-answer`, `manual`, `gui`)
+ * is the recorded answer. With NO sidecar entry, a `true` is a hand edit and
+ * counts, while the template default `false` stays `unanswered`. A sidecar that
+ * exists but cannot be read is not the same as an absent one: it is
+ * `unanswered`, as is a stamp of `auto-detected`, because the machine may not
+ * reach this answer for the user. Unreadable is never `yes`.
  */
 export function planAnswer(env: NodeJS.ProcessEnv = process.env): PlanAnswer {
     const root = globalRoot(env);
@@ -83,17 +85,21 @@ export function planAnswer(env: NodeJS.ProcessEnv = process.env): PlanAnswer {
     } catch {
         return 'unanswered';
     }
-    let source: unknown;
+    if (typeof value !== 'boolean') return 'unanswered';
+    const sidecar = provenanceFilePath(root);
+    if (!fs.existsSync(sidecar)) return value ? 'yes' : 'unanswered';
+    let entry: unknown;
     try {
-        const prov = JSON.parse(fs.readFileSync(provenanceFilePath(root), 'utf8')) as unknown;
-        const entry = isObj(prov) ? prov['security_ops.plan'] : undefined;
-        source = isObj(entry) ? entry['source'] : undefined;
+        const prov = JSON.parse(fs.readFileSync(sidecar, 'utf8')) as unknown;
+        if (!isObj(prov)) return 'unanswered';
+        entry = prov['security_ops.plan'];
     } catch {
-        source = undefined;
+        return 'unanswered';
     }
-    if (source === undefined) return value === true ? 'yes' : 'unanswered';
+    if (entry === undefined) return value ? 'yes' : 'unanswered';
+    const source = isObj(entry) ? entry['source'] : undefined;
     if (typeof source !== 'string' || !DECIDING_SOURCES.has(source)) return 'unanswered';
-    return value === true ? 'yes' : 'no';
+    return value ? 'yes' : 'no';
 }
 
 export const LEVELS = ['L0', 'L1', 'L2', 'L3', 'L4'] as const;
