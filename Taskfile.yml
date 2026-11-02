@@ -95,6 +95,9 @@ tasks:
       - task: check-test-delta
       - task: check-test-weakening
       - task: check-gate-coverage
+      # road-to-checks-that-name-their-catch 2.1 / 3.2.
+      - task: gate-self-tests
+      - task: gate-contracts
       - task: check-ci-strict-superset
       - task: counts-check
       - task: check-index
