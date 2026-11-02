@@ -48,10 +48,10 @@ outward, one named defect at a time.
       `§ 5 TMG` line in `local-business/impressum.html` with a neutral current
       line and record a pre-freeze amendment in
       `later/road-to-web-launch-readiness-benchmark.md` (trigger 3).
-      verify: `npx vitest run tests/scripts/web_launch_benchmark_fixtures.test.ts` -> 0.
+      verify: `npx vitest run tests/scripts/web_launch_benchmark_fixtures.test.ts` -> 0
       with a case asserting the imprint fixture carries no `TMG`.
 - [x] **0.2 Fix the stale config header** (D6): name what reads the file today.
-      verify: `npx vitest run tests/scripts/web_launch_readiness_config.test.ts` -> 0.
+      verify: `npx vitest run tests/scripts/web_launch_readiness_config.test.ts` -> 0
       with a test that the header does not contain "Nothing reads".
 
 ## Phase 1 — Pre-register the claim, freeze the corpus (before detector code)
@@ -101,7 +101,7 @@ Three-state contract throughout: finding / undecided / passed.
       verify: planted 8 found; twin silent.
 - [x] **2.5 Tiers.** All four rows `situational`; `de` escalation: 2.1/2.4 →
       high, 2.2/2.3 → critical, each with `authority` + `review_by`.
-      verify: `npx vitest run tests/scripts/web_launch_readiness_config.test.ts` -> 0.
+      verify: `npx vitest run tests/scripts/web_launch_readiness_config.test.ts` -> 0
 
 ## Phase 3 — Runtime witness without a socket
 
