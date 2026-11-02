@@ -32,6 +32,16 @@ import { fileURLToPath } from 'node:url';
 
 import { asOf } from './_lib/as_of.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
+import {
+    type OriginRow,
+    type Supersession,
+    type ThirdPartyCtx,
+    classifyLoads,
+    legalPagePlaceholders,
+    loadRegister,
+    privacyCoverage,
+    supersededStatute,
+} from './web_launch_third_party.js';
 
 const HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(HERE), '..', '..');
@@ -172,7 +182,7 @@ export const STATUTE_RE =
 
 /** A config row that may assert a legal basis: a check, or a region escalation. */
 export interface LegalRow {
-    kind: 'check' | 'escalation';
+    kind: 'check' | 'escalation' | 'supersession';
     id: string;
     why: string;
     authority?: string;
@@ -198,6 +208,7 @@ export function asOfToday(): string {
 export function legalRowsOf(doc: {
     checks?: CheckDef[];
     regions?: { escalations?: Escalation[] };
+    supersessions?: Supersession[];
 }): LegalRow[] {
     const rows: LegalRow[] = [];
     for (const c of doc.checks ?? []) {
@@ -216,6 +227,18 @@ export function legalRowsOf(doc: {
             why: e.why ?? '',
             ...(e.authority === undefined ? {} : { authority: e.authority }),
             ...(e.review_by === undefined ? {} : { review_by: e.review_by }),
+        });
+    }
+    // A supersession row IS a statute claim by construction: it names the
+    // provision a page cites and the one that replaced it. Policed always,
+    // whatever its `why` says.
+    for (const t of doc.supersessions ?? []) {
+        rows.push({
+            kind: 'supersession',
+            id: t.id,
+            why: `${t.cites} -> ${t.replaced_by}`,
+            ...(t.authority === undefined ? {} : { authority: t.authority }),
+            ...(t.review_by === undefined ? {} : { review_by: t.review_by }),
         });
     }
     return rows;
@@ -289,6 +312,7 @@ export function loadConfig(root = REPO_ROOT): {
     siteTypes: SiteType[];
     regions: Region[];
     escalations: Escalation[];
+    supersessions: Supersession[];
 } {
     const abs = path.join(root, CONFIG_REL);
     let raw: string;
@@ -305,6 +329,7 @@ export function loadConfig(root = REPO_ROOT): {
         checks?: CheckDef[];
         site_types?: { values?: SiteType[] };
         regions?: { values?: Region[]; escalations?: Escalation[] };
+        supersessions?: Supersession[];
     };
     const checks = doc.checks ?? [];
     const siteTypes = doc.site_types?.values ?? [];
@@ -332,7 +357,7 @@ export function loadConfig(root = REPO_ROOT): {
             `${CONFIG_REL} ships a legal claim the row cannot back:\n  - ${legal.join('\n  - ')}`,
         );
     }
-    return { checks, siteTypes, regions, escalations };
+    return { checks, siteTypes, regions, escalations, supersessions: doc.supersessions ?? [] };
 }
 
 /**
@@ -483,7 +508,7 @@ export interface SourceFile {
     lines: string[];
 }
 
-const SCANNABLE_RE = /\.(html?|txt|xml|js|jsx|ts|tsx|vue|svelte|astro|md)$/i;
+const SCANNABLE_RE = /\.(html?|css|txt|xml|js|jsx|ts|tsx|vue|svelte|astro|md)$/i;
 
 export function readTree(buildDir: string): SourceFile[] {
     const out: SourceFile[] = [];
@@ -533,7 +558,7 @@ function isPage(f: SourceFile): boolean {
  * `IMPLEMENTED` at all, so it reports as unimplemented instead. That is the one
  * rule keeping the silent-green defect out of this table.
  */
-type Impl = (files: readonly SourceFile[]) => Located[];
+type Impl = (files: readonly SourceFile[], tp?: ThirdPartyCtx) => Located[];
 
 /** `http://` on a host we serve, excluding the XML/DTD namespace URLs. */
 const INSECURE_ASSET_RE =
@@ -866,6 +891,8 @@ export interface UndecideCtx {
     region: Region;
     siteType: SiteType;
     escalations: readonly Escalation[];
+    /** Register + supersession table; loaded from the repository when absent. */
+    thirdParty?: ThirdPartyCtx;
 }
 export type Undecide = (files: readonly SourceFile[], ctx: UndecideCtx) => UndecideHit[];
 
@@ -971,7 +998,53 @@ export const UNDECIDABLE: Readonly<Record<string, Undecide>> = {
         }
         return analyseConsentOrder(files).undecided.map((u) => ({ ...u, reason_class: 'instrument-limit' as const }));
     },
+    'third-party-load-in-markup': (files, ctx) => {
+        if (!files.some((f) => isPage(f) || isStylesheet(f))) {
+            return blind(`${NO_MARKUP}, and no stylesheet either, so a third-party load is invisible here rather than absent.`);
+        }
+        return classifyLoads(files, thirdPartyOf(ctx).register).undecided.map((u) => ({
+            ...u,
+            reason_class: 'instrument-limit' as const,
+        }));
+    },
+    // Blind only where NO page is readable. A build with pages and no imprint
+    // is decidable for these rows: there is nothing cited, and the missing page
+    // is `required-legal-pages`'s finding, not an undecided here.
+    'superseded-statute-in-legal-page': unless(hasPage, `${NO_MARKUP}, so no imprint citation could be read.`),
+    'placeholder-in-legal-page': unless(hasPage, `${NO_MARKUP}, so no legal-page template token could be read.`),
+    'privacy-page-provider-coverage': (files, ctx) => {
+        if (!files.some((f) => isPage(f) || isStylesheet(f))) {
+            return blind(`${NO_MARKUP}, so which providers load could not be read.`);
+        }
+        return privacyCoverage(files, thirdPartyOf(ctx).register).undecided.map((u) => ({
+            ...u,
+            reason_class: 'instrument-limit' as const,
+        }));
+    },
 };
+
+const isStylesheet = (f: SourceFile): boolean => /\.css$/i.test(f.base);
+
+/** The register and supersession table for `root`, cached per root. */
+const TP_CACHE = new Map<string, ThirdPartyCtx>();
+export function thirdPartyFor(root: string): ThirdPartyCtx {
+    // Keyed on the date too: a lapsed register row must fail the run that asks
+    // on the day it lapsed, not be served from a cache filled the day before.
+    const key = `${root}|${asOfToday()}`;
+    const hit = TP_CACHE.get(key);
+    if (hit !== undefined) return hit;
+    let register: OriginRow[];
+    try {
+        register = loadRegister(root, asOfToday());
+    } catch (e) {
+        throw new DeadScopeError('check_web_launch_readiness', (e as Error).message);
+    }
+    const tp: ThirdPartyCtx = { register, supersessions: loadConfig(root).supersessions };
+    TP_CACHE.set(key, tp);
+    return tp;
+}
+const thirdPartyOf = (ctx: UndecideCtx): ThirdPartyCtx => ctx.thirdParty ?? thirdPartyFor(REPO_ROOT);
+const tpOrRepo = (tp?: ThirdPartyCtx): ThirdPartyCtx => tp ?? thirdPartyFor(REPO_ROOT);
 
 /** First line containing `needle`, 1-indexed; 1 when absent (an absence has no line). */
 function lineOf(f: SourceFile, needle: string): number {
@@ -988,6 +1061,10 @@ export const IMPLS: Readonly<Record<string, Impl>> = {
     'canonical-and-sitemap-coherence': canonicalAndSitemap,
     'required-legal-pages': requiredLegalPages,
     'analytics-and-consent-wiring': analyticsAndConsent,
+    'third-party-load-in-markup': (files, tp) => classifyLoads(files, tpOrRepo(tp).register).findings,
+    'superseded-statute-in-legal-page': (files, tp) => supersededStatute(files, tpOrRepo(tp).supersessions),
+    'placeholder-in-legal-page': (files) => legalPagePlaceholders(files),
+    'privacy-page-provider-coverage': (files, tp) => privacyCoverage(files, tpOrRepo(tp).register).findings,
 };
 
 /** Checks with a real implementation. Everything else reports UNIMPLEMENTED. */
@@ -1015,6 +1092,7 @@ export function audit(
     undecidable: Readonly<Record<string, Undecide>> = UNDECIDABLE,
 ): Report {
     const { checks, siteTypes, regions, escalations } = loadConfig(root);
+    const thirdParty = thirdPartyFor(root);
     if (!siteTypes.includes(siteType)) {
         throw new DeadScopeError(
             'check_web_launch_readiness',
@@ -1057,8 +1135,8 @@ export function audit(
         const hits =
             impl === undefined
                 ? scanIndexability(buildDir).hits
-                : impl(files);
-        const undecided = undecidable[c.id]?.(files, { region, siteType, escalations }) ?? [];
+                : impl(files, thirdParty);
+        const undecided = undecidable[c.id]?.(files, { region, siteType, escalations, thirdParty }) ?? [];
         for (const u of undecided) {
             unknown.push({
                 check: c.id,

@@ -77,7 +77,7 @@ outward, one named defect at a time.
 
 Three-state contract throughout: finding / undecided / passed.
 
-- [ ] **2.1 `third-party-load-in-markup`** (D1; planted 1–5). Origin extractor
+- [x] **2.1 `third-party-load-in-markup`** (D1; planted 1–5). Origin extractor
       over loadable contexts only (`<link rel=stylesheet|preconnect|preload|modulepreload>`,
       `<script src>`, `<iframe src>`, media `src`, CSS `@import`, `url()` in
       `@font-face`); anchors, prose and comments excluded. Origins resolved
@@ -87,19 +87,19 @@ Three-state contract throughout: finding / undecided / passed.
       origins. Unknown origin and click-to-load wrapper → undecided.
       verify: planted 1–5 found with `file:line`; twins and decoys silent;
       `dns-prefetch` undecided — `npx vitest run tests/scripts/third_party_load.test.ts` → 0.
-- [ ] **2.2 `superseded-statute-in-legal-page`** (D2; planted 6). A dated
+- [x] **2.2 `superseded-statute-in-legal-page`** (D2; planted 6). A dated
       supersession table in the config — one row: `TMG § 5 → DDG § 5,
       effective 2024-05-14`, with `authority` + `review_by` — applied to the
       located imprint. Output is a fact, never a verdict.
       verify: planted 6 found; DDG twin silent; a lapsed `review_by` fails the loader.
-- [ ] **2.3 `placeholder-in-legal-page`** (planted 7). Bracketed template
+- [x] **2.3 `placeholder-in-legal-page`** (planted 7). Bracketed template
       tokens and `lorem ipsum` in a located legal page; `[1]` stays silent.
       verify: planted 7 found; decoy silent.
-- [ ] **2.4 `privacy-page-provider-coverage`** (planted 8). Each provider 2.1
+- [x] **2.4 `privacy-page-provider-coverage`** (planted 8). Each provider 2.1
       found loading must be named in the located privacy page by one of its
       `privacy_tokens`; no privacy text in the build → undecided.
       verify: planted 8 found; twin silent.
-- [ ] **2.5 Tiers.** All four rows `situational`; `de` escalation: 2.1/2.4 →
+- [x] **2.5 Tiers.** All four rows `situational`; `de` escalation: 2.1/2.4 →
       high, 2.2/2.3 → critical, each with `authority` + `review_by`.
       verify: `npx vitest run tests/scripts/web_launch_readiness_config.test.ts` → 0.
 

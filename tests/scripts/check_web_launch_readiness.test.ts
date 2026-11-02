@@ -227,7 +227,7 @@ describe('2.3 — the region axis escalates a tier, it does not add a check', ()
         const r = audit(path.join(FIX, 'defects-marketing'), 'marketing-site', REPO, 'de');
         const f = r.findings.find((x) => x.check === 'required-legal-pages');
         expect(f?.tier).toBe('critical');
-        expect(r.escalated).toHaveLength(1);
+        expect(r.escalated.filter((e) => e.check === 'required-legal-pages')).toHaveLength(1);
         // The reason travels; the CITATION does not — it sits in `authority`
         // with a review date, per the `ddg-citation-authority` decision.
         expect(r.escalated[0]?.why).toContain('Abmahnung');
@@ -660,7 +660,9 @@ describe('1.1 — no check may PASS on input it cannot see', () => {
             expect([id, dropped.passed.includes(id) || dropped.findings.some((f) => f.check === id)]).toEqual([id, true]);
             reversed += 1;
         }
-        expect(reversed).toBe(7);
+        // 7 markup/route checks plus the four outward rows of
+        // road-to-a-page-that-says-what-it-loads, which read pages and stylesheets.
+        expect(reversed).toBe(11);
     });
 
     it('the two probes that need their OWN tree are blind there and decidable elsewhere', () => {
@@ -860,11 +862,17 @@ describe('2.2 — site type and region resolve from settings, and absence is sta
             path.join(REPO, 'src/config/web-launch-readiness.json'),
             path.join(root, 'src/config/web-launch-readiness.json'),
         );
+        // The provider register is part of the corpus since the outward rows
+        // landed; a root without it is a dead scope, not an empty register.
+        fs.copyFileSync(
+            path.join(REPO, 'src/config/third-party-origins.json'),
+            path.join(root, 'src/config/third-party-origins.json'),
+        );
     });
     afterEach(() => {
         fs.rmSync(root, { recursive: true, force: true });
     });
-    const settings = (body: string): void => {
+    const settings =(body: string): void => {
         fs.writeFileSync(path.join(root, '.agent-settings.yml'), body);
     };
     const capture = (argv: string[]): { rc: number; text: string } => {
