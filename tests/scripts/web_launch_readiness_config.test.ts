@@ -194,3 +194,13 @@ describe('a legal claim carries its own authority and expiry (2.1)', () => {
         expect(rows.filter((r) => r.authority === undefined).length).toBeGreaterThan(0);
     });
 });
+
+describe('the header says what reads this file (road-to-a-page-that-says-what-it-loads 0.2)', () => {
+    const doc = JSON.parse(fs.readFileSync(path.join(REPO, REL), 'utf8')) as { _comment: string };
+
+    it('names its consumers instead of claiming nothing reads it', () => {
+        expect(doc._comment).not.toMatch(/Nothing reads/i);
+        expect(doc._comment).toMatch(/loadConfig\(\)/);
+        expect(doc._comment).toMatch(/production-validator/);
+    });
+});

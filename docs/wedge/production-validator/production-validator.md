@@ -66,8 +66,13 @@ implementation under the test actually exists and ran against a real system.
    the source:
 
    ```bash
-   check_web_launch_readiness --build <build-dir> --site-type <type> [--region <de|eu|us>]
+   check_web_launch_readiness --build <build-dir> --site-type <type> [--region <de|eu|us>] [--render]
    ```
+
+   `--render` adds an offline browser witness: the build is served from disk
+   under a synthetic origin, nothing is clicked, and every third-party request on
+   first paint is recorded and aborted — none leaves the machine. Without a
+   Playwright driver the third-party row reports undecided, never a pass.
 
    `--site-type` and `--region` also resolve from `web_launch_readiness:` in
    `.agent-settings.yml`; a flag overrides the file. The gate is **default-off**

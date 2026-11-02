@@ -191,6 +191,15 @@ bars it equally from parameterising them. The cost is real and is accepted: the
 future evaluator may design a different experiment from the one imagined here,
 and a different experiment is a better outcome than a contaminated one.
 
+**Pre-freeze amendment, 2026-11-02 (trigger 3 fired).** `local-business/impressum.html`
+carried `Angaben gemäß § 5 TMG` in its description while `GROUND-TRUTH.md` scored
+the Impressum as correct, so an arm that reported the superseded statute would have
+been counted a false positive. The line was neutralised by
+`road-to-a-page-that-says-what-it-loads` 0.1; the stale-statute case now lives as a
+planted defect in `tests/fixtures/third-party-load/`. No protocol item was frozen, so
+nothing is invalidated; the session that made the change read the ground truth and
+remains ineligible to freeze.
+
 ## Blockers
 
 ### b-benchmark-independent-execution

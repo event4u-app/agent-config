@@ -1,0 +1,38 @@
+{
+  "$comment": "Frozen ground truth for road-to-a-page-that-says-what-it-loads Phase 1.2, written BEFORE any detector code. One entry per planted defect; the privacy-page row is split per unnamed provider. Safe twins sit under safe/ at the SAME relative paths as the planted files, so a path predicate cannot separate them. Decoys and twins appear in NO finding entry; that absence is what the false-positive figure is measured against. Row 8 carries no line: an absent sentence has no line, and the finding is located on the privacy page itself.",
+  "frozen_at": "2026-11-02",
+  "builds": {
+    "planted": "planted/ — a DE local-business build output carrying every planted defect",
+    "safe": "safe/ — the same site with every defect remediated",
+    "decoys": "decoys/ — shapes that name a keyed origin or token without loading or citing anything"
+  },
+  "findings": [
+    { "id": "1-gfonts-stylesheet", "row": 1, "check": "third-party-load-in-markup", "file": "planted/index.html", "line": 7, "origin": "fonts.googleapis.com" },
+    { "id": "2-gfonts-css-import", "row": 2, "check": "third-party-load-in-markup", "file": "planted/css/site.css", "line": 1, "origin": "fonts.googleapis.com" },
+    { "id": "3-gstatic-preconnect", "row": 3, "check": "third-party-load-in-markup", "file": "planted/index.html", "line": 6, "origin": "fonts.gstatic.com" },
+    { "id": "4-maps-iframe", "row": 4, "check": "third-party-load-in-markup", "file": "planted/kontakt.html", "line": 6, "origin": "www.google.com" },
+    { "id": "5-youtube-nocookie-iframe", "row": 5, "check": "third-party-load-in-markup", "file": "planted/ueber-uns.html", "line": 6, "origin": "www.youtube-nocookie.com" },
+    { "id": "6-superseded-statute", "row": 6, "check": "superseded-statute-in-legal-page", "file": "planted/impressum.html", "line": 6 },
+    { "id": "7-placeholder", "row": 7, "check": "placeholder-in-legal-page", "file": "planted/impressum.html", "line": 7 },
+    { "id": "8a-privacy-silent-maps", "row": 8, "check": "privacy-page-provider-coverage", "file": "planted/datenschutz.html", "provider": "Google Maps" },
+    { "id": "8b-privacy-silent-youtube", "row": 8, "check": "privacy-page-provider-coverage", "file": "planted/datenschutz.html", "provider": "YouTube" }
+  ],
+  "twins": [
+    "safe/index.html",
+    "safe/css/site.css",
+    "safe/kontakt.html",
+    "safe/ueber-uns.html",
+    "safe/impressum.html",
+    "safe/datenschutz.html"
+  ],
+  "decoys": [
+    { "id": "prose-names-origin", "file": "decoys/README.md", "why": "prose is not a load" },
+    { "id": "anchor-is-not-a-load", "file": "decoys/anfahrt.html", "why": "a link is followed by the visitor, not loaded by the page" },
+    { "id": "dns-prefetch", "file": "decoys/anfahrt.html", "why": "a resolver hint, not a provider request — reported undecided, never a finding" },
+    { "id": "next-font-source", "file": "decoys/app/layout.tsx", "why": "next/font/google self-hosts at build; the scan reads build output" },
+    { "id": "footnote-marker", "file": "decoys/impressum.html", "why": "[1] is a footnote, not a template placeholder" }
+  ],
+  "undecided": [
+    { "id": "dns-prefetch", "check": "third-party-load-in-markup", "file": "decoys/anfahrt.html", "line": 6 }
+  ]
+}
