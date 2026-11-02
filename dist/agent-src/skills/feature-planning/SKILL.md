@@ -106,7 +106,8 @@ Discovery → Exploration → Questions → Architecture → Implementation → 
   - Reliability / availability needs
   - Maintenance and ownership expectations
   - Containment — a deployed product gets the security & maintenance offer
-    ([`control-section`](../security-audit/references/control-section.md));
+    ([`control-section`](../security-audit/references/control-section.md)),
+    asked once and persisted as `security_ops.plan`;
     a new public endpoint, job or runtime dependency names the lever that
     switches it off
 - Present all questions in an organized list.

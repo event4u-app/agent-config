@@ -1520,6 +1520,20 @@ advisories:
   egress: query
   kev: on
 
+# --- Security & maintenance section — the plan offer (ADR-304) ---
+#
+# When `/audit security` (or feature planning) finds a deployed project with no
+# lever inventory, it offers once: "plan a security & maintenance section?"
+# Your answer is stored here, user-global, so the offer is not repeated.
+#
+#   false  (default) not planned — the finding stays in the report, and the
+#          offer is made once while no answer is recorded
+#   true   plan it: the agent drafts the section with feature-planning and the
+#          control-section blueprint when the finding appears. It plans; it
+#          never builds a lever or throws one in a deployed product
+security_ops:
+  plan: false
+
 # --- Update install mode ---
 #
 # What the agent may DO about a newer release, as opposed to whether it

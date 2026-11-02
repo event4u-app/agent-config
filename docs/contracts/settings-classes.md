@@ -151,7 +151,7 @@ are not triggers. This half is **prose, not lint** — no gate can read the
 agent's reason for choosing a moment, and claiming otherwise would be the
 coverage inflation this repository's gate discipline exists to refuse.
 
-That invariant is why B is small — **three keys**. It is not a placeholder for a
+That invariant is why B is small — **four keys**. It is not a placeholder for a
 larger set; it is the set that passes both halves.
 
 | Key | Why a just-in-time ask is the right shape | Conservative default |
@@ -159,6 +159,7 @@ larger set; it is the set that passes both halves.
 | `personal.open_edited_files` | it starts running the binary named in `personal.ide` on every edit — the user should say yes once before that begins | `false` |
 | `personal.canary_name` | un-inferrable, and answering arms the session-degradation canary; one keypress to accept the prefill | `""` (canary dark) |
 | `memory.learn_on_session_end` | it turns on automatic memory writes at the end of every session — a standing write the user should authorise | `false` |
+| `security_ops.plan` | only the user knows whether a deployed product should get a containment section; asked when their own `/audit security` or feature plan finds none, then persisted (OQ-60 item 2) | `false` |
 
 ## Class B is a persistence property, not an enforcement claim
 
@@ -618,6 +619,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `advisories.mode` | C | `notify` | a notice at every first session start of a day; turning it on for an install that never asked is a flip the agent may not make | consent |
 | `advisories.egress` | C | `query` | decides which package names and versions leave the machine on a refresh | policy |
 | `advisories.kev` | C | `on` | decides whether a refresh reads the CISA known-exploited catalog that raises a tier | policy |
+| `security_ops.plan` | B | `false` | turns a containment finding into a drafted plan without asking again — the user should say yes once (OQ-60) | un-inferrable |
 | `update.mode` | C | `notify` | a standing authorisation to replace the user's global install; `auto` is something they cannot un-see happening | consent |
 | `worktrees.cleanup` | C | `notify` | a standing authorisation to delete worktree directories on the proven-merged set; `auto` removes them unasked (ADR-295) | consent |
 | `legal_review_prep.acknowledged` | C | `false` | the consent gate; the safety floor requires the wizard checkbox | consent |
