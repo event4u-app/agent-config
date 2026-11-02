@@ -29,8 +29,13 @@ deployed product (ADR-304).
 | SaaS, multi-tenant app, public API, mobile backend | Yes |
 | Health, payment or other regulated data | Yes, and treat L4 and break-glass as required |
 
-Ask once per planning run. After a "no" the `contain` finding stays in the audit
-report; the question is not repeated in that run.
+Ask once per user, not once per run: the answer is persisted as
+`security_ops.plan` (class B, written with `agent-config settings:set
+security_ops.plan <true|false> --source jit-answer`). Read it the way
+`agent-config audit:security`'s `contain` finding reports it — *Offer once*,
+`true` (plan without asking) or `false (answered)` (the finding stays, nothing is
+asked) — whether the offer comes from the audit or from feature planning. Only
+the user's own reply is recorded; a file in the project never supplies it.
 
 ## The lever vocabulary
 
