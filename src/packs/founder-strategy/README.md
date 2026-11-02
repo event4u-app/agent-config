@@ -7,16 +7,17 @@ Vision, fundraising narrative, competitive moat.
 - **id**: `founder-strategy`
 - **owner**: founder
 - **requires**: —
-- **artefacts**: 8
+- **artefacts**: 9
 
 ## Rules (1)
 
 - **`strategy-safety-floor`** — Founder-strategy output (vision, positioning, moats, OKRs) — never a final call; human owns the decision
 
-## Skills (7)
+## Skills (8)
 
 - **`build-buy-partner`** — Use when deciding insource vs outsource vs acquire — integration-cost analysis, dependency-risk, optionality preservation. Triggers on 'should we build', 'buy vs partner'.
-- **`competitive-moat-analysis`** — Use when mapping competitors, naming defensibility, and finding white-space — moat reasoning, where-to-play, where-not-to-play. Triggers on 'who are we competing with', 'what's our moat'.
+- **`competitive-moat-analysis`** — Use when mapping competitors, naming defensibility, and finding white-space — moat reasoning, where-to-play. Triggers on 'who are we competing with', 'what's our moat'.
+- **`founder-idea-interview`** — Use when a founder's hobbies, ideas or daily problems should become a business roadmap.
 - **`fundraising-narrative`** — Use when shaping a capital-raise pitch — why-now / why-us / why-this framing, market-size reasoning, traction-story construction. Triggers on 'tighten the pitch', 'why-now is weak'.
 - **`launch-readiness`** — Use before merging a release-shaped PR — pre-merge checklist, rollout plan, rollback criteria, ops handoff. Triggers on 'ready to ship', 'launch checklist', 'rollout plan for X'.
 - **`market-entry-analysis`** — Use when sequencing market entry — geo / segment / vertical, beachhead selection, regulatory-delta. Triggers on 'should we enter market X', 'which segment first'.

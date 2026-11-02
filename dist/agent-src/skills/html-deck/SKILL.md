@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: html-deck
-description: "Build a slide presentation as one HTML file — fixed 1920×1080 canvas letterboxed to any viewport, layout-system-first, type floors. Use for deck, slides, presentation, or pitch requests."
+description: "Build a slide presentation as one HTML file — fixed 1920×1080 canvas, layout-system-first, type floors. Use for deck, slides, presentation, or pitch requests."
 domain: product
 personas: []
 workspaces:

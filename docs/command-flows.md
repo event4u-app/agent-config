@@ -7,7 +7,7 @@
 
 > Every command is classified in `src/flows/surface-map.yaml` (coverage enforced by `scripts/lint_command_flow_coverage.py`). The four user-work flows carry rich definitions in `src/flows/<flow>.yaml`.
 
-**213 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
+**214 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
 
 ## User-work flows
 
@@ -137,8 +137,9 @@ _Ship it. Commit in logical chunks, open the PR, answer review comments, and pre
 
 _Deliberately-started features — not daily flow members, never buried as skills._
 
-- `challenge-me` — Challenge-me orchestrator — routes to vision, with-docs, closure
+- `challenge-me` — Challenge-me orchestrator — routes to vision, with-docs, closure, founder
 - `challenge-me-closure` — Close every foreseeable decision in a roadmap before execution — detect the open ones, resolve each at the…
+- `challenge-me-founder` — Founder interview — from hobbies, ideas and everyday problems to a researched roadmap, then prototype, busi…
 - `challenge-me-vision` — Stress-test a plan or idea by one-question-at-a-time interview until 95% confidence — emits a copyable Mark…
 - `challenge-me-with-docs` — Doc-aware /challenge-me — 95%-confidence interview with session glossary vs CONTEXT.md, load-bearing claim-…
 - `council` — Council orchestrator — routes to default, pr, design, optimize, analysis, debate

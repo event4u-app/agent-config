@@ -63,7 +63,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { decrypt, encrypt, resolve_keys } from './_lib/link_crypto.js';
-import { shapeHits, shapePathHits, tierFor } from './_lib/source_shape.js';
+import { shapeHits, shapePathHits, tierFor, type ShapeClass } from './_lib/source_shape.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -134,7 +134,7 @@ function scanText(
     text: string,
     anchor: string,
     surface: Surface,
-    tier: 'block' | 'warn',
+    tier: 'block' | 'warn' | ((cls: ShapeClass) => 'block' | 'warn'),
     deny: ReadonlyArray<[string, RegExp]>,
     pathLike = false,
 ): Finding[] {
@@ -145,7 +145,8 @@ function scanText(
         }
     }
     for (const h of pathLike ? shapePathHits(text) : shapeHits(text)) {
-        out.push({ surface, anchor, matcher: 'shape', kind: h.cls, tier, excerpt: h.value });
+        const t = typeof tier === 'function' ? tier(h.cls) : tier;
+        out.push({ surface, anchor, matcher: 'shape', kind: h.cls, tier: t, excerpt: h.value });
     }
     return out;
 }
@@ -169,7 +170,8 @@ function sweepTracked(
     const cueTexts: Array<{ anchor: string; text: string }> = [];
     let read = 0;
     for (const rel of tracked) {
-        const tier = tierFor(rel);
+        // Class-aware: an attribution label under src/ is block tier (OQ-62 E2).
+        const tier = (cls: ShapeClass): 'block' | 'warn' => tierFor(rel, cls);
         findings.push(...scanText(rel, rel, 'path', tier, deny, true));
         const dot = (rel.split('/').pop() as string).lastIndexOf('.');
         const ext = dot > 0 ? (rel.split('/').pop() as string).slice(dot).toLowerCase() : '';

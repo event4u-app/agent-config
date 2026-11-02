@@ -176,6 +176,43 @@ export function _textCorpus(root: string): { text: string; paths: string[] } {
     return { text, paths };
 }
 
+/** A machine-readable API contract or an executable specification, by file name. */
+const _CONTRACT_RE = /^(?:(?:openapi|asyncapi|swagger)\.(?:ya?ml|json)|[^/]+\.feature)$/i;
+const _CONTRACT_MAX_FILES = 50;
+/** A contract inside a fixture tree describes a test input, not the target. */
+const _CONTRACT_SKIP_DIRS = new Set(['fixtures', '__fixtures__', 'testdata']);
+
+/**
+ * Contract files anywhere in the target, bounded like `_textCorpus` — a
+ * feature file lives under `features/` or beside its test, an OpenAPI document
+ * under `api/` or `docs/`, so a root-only probe would miss most real ones.
+ * Pact files count when they sit under a `pacts/` directory.
+ */
+export function _contractFiles(root: string): string[] {
+    const found: string[] = [];
+    let seen = 0;
+    const walk = (dir: string, rel: string): void => {
+        let entries: fs.Dirent[];
+        try {
+            entries = fs.readdirSync(dir, { withFileTypes: true });
+        } catch {
+            return;
+        }
+        for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+            if (found.length >= _CONTRACT_MAX_FILES || seen >= _CORPUS_MAX_FILES * 5) return;
+            const r = rel === '' ? e.name : `${rel}/${e.name}`;
+            if (e.isDirectory()) {
+                if (!_SKIP_DIRS.has(e.name) && !_CONTRACT_SKIP_DIRS.has(e.name)) walk(path.join(dir, e.name), r);
+                continue;
+            }
+            seen += 1;
+            if (_CONTRACT_RE.test(e.name) || (/(^|\/)pacts\/[^/]+\.json$/.test(r))) found.push(r);
+        }
+    };
+    walk(root, '');
+    return found;
+}
+
 /**
  * Is this a Python-primary target?
  *
@@ -346,14 +383,27 @@ export function grade(root: string): Matrix {
 
     const dims: DimensionResult[] = [];
 
-    // 1. behaviour contract
-    const contract = _exists(root, 'AGENTS.md', 'openapi.yaml', 'openapi.yml', 'CONTRACT.md');
+    // 1. behaviour contract — graded on an EXECUTABLE or MACHINE-READABLE
+    // contract, never on a prose file's presence. Until 2026-11-02 an
+    // `AGENTS.md` at the root passed this dimension whatever it said, so almost
+    // every agent-configured repository graded as having a behaviour contract
+    // (owner decision OQ-63 a). Prose files are kept as an observation: their
+    // presence is a real fact, the inference "a contract exists" was not.
+    const specs = _contractFiles(root);
+    const prose = ['AGENTS.md', 'CONTRACT.md'].filter((f) => _exists(root, f));
+    const specRun = specs.length > 0 &&
+        _ciBlocks(ci, 'cucumber', 'behat', 'behave', 'pytest-bdd', 'godog', 'pact', 'schemathesis', 'dredd', 'spectral');
     dims.push({
         id: 'behaviour-contract',
         label: 'behaviour contract',
         knockout: false,
-        grade: _graded(contract, false),
-        evidence: contract ? 'AGENTS.md / OpenAPI / CONTRACT.md present' : 'none found',
+        grade: _graded(specs.length > 0, specRun),
+        observations: prose.length > 0 ? ['prose-contract-file-detected'] : [],
+        evidence: specs.length > 0
+            ? `executable / machine-readable contract: ${specs.slice(0, 3).join(', ')}${specs.length > 3 ? ` (+${specs.length - 3})` : ''}`
+            : prose.length > 0
+                ? `${prose.join(' / ')} present but prose only — no OpenAPI / AsyncAPI document, Gherkin feature or pact file`
+                : 'no OpenAPI / AsyncAPI document, Gherkin feature or pact file',
     });
 
     // 2. test presence & types — KNOCKOUT
