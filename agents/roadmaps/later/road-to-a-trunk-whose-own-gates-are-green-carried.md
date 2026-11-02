@@ -25,8 +25,9 @@ estate_growth_exempt: >-
 > `origin/main` worktree at `44d244dbcb`, nine `ci:` steps are red — check-preamble-payload,
 > check-trigger-evals, lint-eval-freshness, lint-rule-enforcement-declaration,
 > lint-roadmap-blockers, check-gate-completeness (249 vs baseline 214), audit-tokens-budget,
-> lint-user-type-axis, lint-projection-fidelity — plus check-hook-bundle-composition (ratified
-> raise on that branch) and check-reach-staleness (youtube). Before that: `inbox-2026-10-as` (2026-10-25): six gates
+> lint-user-type-axis, lint-projection-fidelity — plus check-reach-staleness (youtube). A
+> hook-bundle overage seen on the way was an artefact of a symlinked `node_modules`
+> in the worktree (esbuild embeds the resolved path), not of main. Before that: `inbox-2026-10-as` (2026-10-25): six gates
 > still red when run singly at `01bb841cbd`, and no workflow runs `task ci`.
 > Steps 2.2–2.4 below do not wait on the legal blocker; any session with a
 > free slot can run them. Earlier: `inbox-2026-10-m` (2026-10-12): a 16.4.0
