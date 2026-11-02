@@ -350,6 +350,7 @@ export function ensure_managed_hooks(
     settings_path: string,
     matrix: ClaudeHookMatrix,
     gated: readonly string[] = [],
+    timeouts: Readonly<Record<string, number>> = {},
 ): EnsureResult {
     return _with_lock(settings_path, () => {
         const settings = _read_settings(settings_path);
@@ -361,8 +362,9 @@ export function ensure_managed_hooks(
         for (const [native, command] of Object.entries(matrix)) {
             const existing = Array.isArray(hooks[native]) ? (hooks[native] as unknown[]) : [];
             const user_groups = existing.filter((g) => !_is_managed_group(g));
+            const timeout = timeouts[native];
             const managed_group: HookGroup = {
-                hooks: [{ type: 'command', command }],
+                hooks: [timeout === undefined ? { type: 'command', command } : { type: 'command', command, timeout }],
             };
             const next = [...user_groups, managed_group];
             if (JSON.stringify(next) !== JSON.stringify(existing)) touched.push(native);
