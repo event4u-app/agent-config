@@ -88,6 +88,63 @@ export interface ViewportCapture {
     styles: string;
     document_scroll_width: number;
     horizontal_overflow: boolean;
+    /**
+     * Phase 4 of road-to-checks-that-name-their-catch. Exactly one of
+     * `settled_ms` (ms after `load` the page stopped changing) or `unsettled`
+     * plus `settle_cap_ms` (still changing when the cap hit) is written; the
+     * styles and the screenshot were both taken after that point.
+     */
+    settled_ms?: number;
+    unsettled?: true;
+    settle_cap_ms?: number;
+    /** Console errors/warnings and uncaught page errors heard during this capture. Never blocking. */
+    console?: ConsoleRow[];
+}
+
+/** One message heard on the page; `text` is truncated to {@link CONSOLE_TEXT_MAX} chars. */
+export interface ConsoleRow {
+    type: 'error' | 'warning' | 'pageerror';
+    text: string;
+}
+
+export const CONSOLE_TEXT_MAX = 500;
+
+/** Defaults for the settle wait: a still window of 250 ms, given up at 5 s. */
+export const SETTLE_QUIET_MS = 250;
+export const SETTLE_CAP_MS = 5_000;
+const SETTLE_POLL_MS = 50;
+
+export interface SettleSample {
+    /** Milliseconds since the settle wait started. */
+    t: number;
+    /** A cheap page signature; any change means the page is still moving. */
+    sig: string;
+}
+
+export type SettleVerdict = { settled_ms: number } | { unsettled: true; cap_ms: number } | { pending: true };
+
+/**
+ * Pure decision over the samples taken so far. Settled when the signature has
+ * been unchanged for `quietMs`; `settled_ms` is when that still run began.
+ * Unsettled when the cap is reached without such a run.
+ */
+export function settleVerdict(
+    samples: ReadonlyArray<SettleSample>,
+    quietMs: number = SETTLE_QUIET_MS,
+    capMs: number = SETTLE_CAP_MS,
+): SettleVerdict {
+    if (samples.length === 0) return { pending: true };
+    const last = samples[samples.length - 1]!;
+    let runStart = last;
+    for (let i = samples.length - 2; i >= 0 && samples[i]!.sig === last.sig; i--) runStart = samples[i]!;
+    if (last.t - runStart.t >= quietMs) return { settled_ms: Math.round(runStart.t) };
+    if (last.t >= capMs) return { unsettled: true, cap_ms: capMs };
+    return { pending: true };
+}
+
+/** Builds a console row, truncating the text so a noisy page cannot bloat the manifest. */
+export function consoleRow(type: ConsoleRow['type'], text: string): ConsoleRow {
+    return { type, text: text.length > CONSOLE_TEXT_MAX ? `${text.slice(0, CONSOLE_TEXT_MAX)}…` : text };
 }
 
 export interface RenderManifest {
@@ -279,6 +336,41 @@ export function collectTypeFamilies(styleRecords: ReadonlyArray<Record<string, s
     return [...out].sort();
 }
 
+type RenderPage = Awaited<ReturnType<Awaited<ReturnType<typeof Chromium.launch>>['newPage']>>;
+
+/**
+ * Waits for `document.fonts.ready`, then polls a cheap signature (body markup
+ * length + running animations) until {@link settleVerdict} says still or the
+ * cap is hit. The fonts wait counts against the same cap.
+ */
+async function settlePage(
+    page: RenderPage,
+    quietMs: number = SETTLE_QUIET_MS,
+    capMs: number = SETTLE_CAP_MS,
+): Promise<{ settled_ms: number } | { unsettled: true; cap_ms: number }> {
+    const start = Date.now();
+    await page.evaluate(
+        (cap: number) =>
+            Promise.race([
+                (document as unknown as { fonts: { ready: Promise<unknown> } }).fonts.ready.then(() => undefined),
+                new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), cap)),
+            ]),
+        capMs,
+    );
+    const samples: SettleSample[] = [];
+    for (;;) {
+        const sig = await page.evaluate(
+            () =>
+                `${document.body ? document.body.innerHTML.length : 0}:` +
+                `${document.getAnimations().filter((a) => a.playState === 'running').length}`,
+        );
+        samples.push({ t: Date.now() - start, sig });
+        const verdict = settleVerdict(samples, quietMs, capMs);
+        if (!('pending' in verdict)) return verdict;
+        await page.waitForTimeout(SETTLE_POLL_MS);
+    }
+}
+
 /** True when a stylesheet the page loads carries a `prefers-color-scheme: dark` rule. */
 async function declaresDarkScheme(
     browser: Awaited<ReturnType<typeof Chromium.launch>>,
@@ -443,14 +535,18 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
             colorScheme: 'light' | 'dark' = 'light',
         ): Promise<void> => {
             const page = await open.newPage({ viewport: { width: vp.width, height: vp.height }, colorScheme });
+            // Registered before `goto` so a message from the first script is heard.
+            const heard: ConsoleRow[] = [];
+            page.on('console', (msg) => {
+                const type = msg.type();
+                if (type === 'error' || type === 'warning') heard.push(consoleRow(type, msg.text()));
+            });
+            page.on('pageerror', (err) => heard.push(consoleRow('pageerror', err.message)));
             await page.goto(isUrl ? abs : `file://${abs}`, { waitUntil: 'load', timeout: 30_000 });
 
-            const shot = path.join(outDir, `${vp.name}.png`);
-            await page.screenshot({ path: shot, fullPage: true });
-
-            const dom = await page.content();
-            const domPath = path.join(outDir, `${vp.name}.dom.html`);
-            fs.writeFileSync(domPath, dom);
+            // Settle → evaluate → screenshot: the style record and the picture
+            // describe one state, and neither is taken while the page still moves.
+            const settle = await settlePage(page);
 
             const styles = await page.evaluate((props: readonly string[]) => {
                 // The family that PAINTED, beside the one declared (step 1.3 of
@@ -539,6 +635,13 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
             const stylePath = path.join(outDir, `${vp.name}.styles.json`);
             fs.writeFileSync(stylePath, `${JSON.stringify(styles, null, 2)}\n`);
 
+            const shot = path.join(outDir, `${vp.name}.png`);
+            await page.screenshot({ path: shot, fullPage: true });
+
+            const dom = await page.content();
+            const domPath = path.join(outDir, `${vp.name}.dom.html`);
+            fs.writeFileSync(domPath, dom);
+
             const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
             await page.close();
 
@@ -551,6 +654,10 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
                 styles: path.relative(projectRoot, stylePath).split(path.sep).join('/'),
                 document_scroll_width: scrollWidth,
                 horizontal_overflow: scrollWidth > vp.width + 1,
+                ...('settled_ms' in settle
+                    ? { settled_ms: settle.settled_ms }
+                    : { unsettled: true as const, settle_cap_ms: settle.cap_ms }),
+                console: heard.slice(),
             });
         };
         for (const vp of VIEWPORTS) await captureAt(vp);

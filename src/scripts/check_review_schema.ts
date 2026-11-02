@@ -65,6 +65,20 @@ function selfTest(): number {
                         mk('1.0.0.json', {
                             ...base,
                             review_independence: 'cross-family',
+                            context_relation: 'fresh',
+                            acceptance_status: 'accepted',
+                            assurance: 'independent',
+                        }),
+                    ),
+            },
+            {
+                name: 'a cross-family ledger declaring accepted with no recorded context relation is rejected — unknown freshness derives provisional',
+                expect: 'reject',
+                run: () =>
+                    run(
+                        mk('1.0.0.json', {
+                            ...base,
+                            review_independence: 'cross-family',
                             acceptance_status: 'accepted',
                             assurance: 'independent',
                         }),

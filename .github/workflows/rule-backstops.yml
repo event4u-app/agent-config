@@ -790,6 +790,23 @@ jobs:
       - name: Graph writers — self-test
         run: ./scripts-run src/scripts/check_graph_writers --self-test
 
+      - name: Every gate self-test runs
+        # Discovered, never listed: any src/scripts/*.ts calling runSelfTest is
+        # run with --self-test. Three self-tests sat red on main for weeks
+        # because nothing executed them (road-to-checks-that-name-their-catch 2.1).
+        run: ./scripts-run src/scripts/run_gate_self_tests
+
+      - name: Gate contracts — unknown flags refused, exit dialects ratcheted
+        # Probes only gates added or changed against origin/main (the full
+        # sweep is `--all`, over a minute of CPU); the permissive list and the
+        # undeclared-dialect count are shrink-only baselines.
+        run: |
+          git fetch --no-tags --depth=1 origin main:refs/remotes/origin/main 2>/dev/null || true
+          ./scripts-run src/scripts/check_gate_contracts --base origin/main
+
+      - name: Gate contracts — self-test
+        run: ./scripts-run src/scripts/check_gate_contracts --self-test
+
       # `check_platform_anchor` is NOT wired here, and the reason is a platform
       # capability rather than a choice.
       #
