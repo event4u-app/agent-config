@@ -39,8 +39,14 @@ review_by: 2027-01-25
 8. **No double review per turn.** When a host plugin already reviews the diff
    at stop, the package does not run its own security diff review there too;
    measure the turn cost with and without.
+9. **Undecidable and look-alike fixtures.** Planted candidates whose correct
+   closure is `needs_validation` (no caller found, build state unknown) and
+   look-alikes that a named control closes, so the bench scores the ledger v2
+   closure fields (`road-to-a-clean-that-says-what-it-checked`), not only the
+   confirmed count. Exit stays: today's single pass does not reach 100 %.
 
-> **Arrivals:** 1 — `inbox-2026-10-as` (2026-10-25) added items 6–8.
+> **Arrivals:** 2 — latest `inbox-2026-11-s` (2026-11-02) added item 9;
+> earlier: `inbox-2026-10-as` (2026-10-25) added items 6–8.
 
 ## Trigger
 
