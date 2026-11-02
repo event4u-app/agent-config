@@ -44,18 +44,18 @@ skills instead of restating them, and it frames, never decides.
 
 ## Phase 1 — The composed skill
 
-- [ ] **1.1 Trigger corpus first.** `src/skills/founder-idea-interview/evals/triggers.json`
+- [x] **1.1 Trigger corpus first.** `src/skills/founder-idea-interview/evals/triggers.json`
       with five exemplars (EN + DE) and five near-misses / counterexamples naming
       the neighbours (`vision-articulation`, `fundraising-narrative`,
       `customer-research`, `/challenge-me vision`, `html-deck`).
       verify: `jq '[.queries[] | select(.trigger==true)] | length' src/skills/founder-idea-interview/evals/triggers.json` -> /^5$/
-- [ ] **1.2 The procedure skill.** `src/skills/founder-idea-interview/SKILL.md`: interview
+- [x] **1.2 The procedure skill.** `src/skills/founder-idea-interview/SKILL.md`: interview
       → self-research (market, competition, willingness to pay) → challenge-me
       grilling → roadmap via `roadmap-writing` + closure → one-at-a-time asks
       prototype → business plan → deck; links the composed skills, carries both
       safety floors.
       verify: `./scripts-run src/scripts/lint_new_skill_gate` -> 0
-- [ ] **1.3 Admission row.** Five answers in `agents/decisions/skill-admissions.jsonl`.
+- [x] **1.3 Admission row.** Five answers in `agents/decisions/skill-admissions.jsonl`.
       verify: `./scripts-run src/scripts/check_skill_admissions` -> 0
 
 ## Phase 2 — The thin sub-command
