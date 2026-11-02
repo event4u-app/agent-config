@@ -318,6 +318,9 @@ jobs:
       - name: Block readable external inspiration/harvest source names
         run: task check-no-external-sources
 
+      - name: Keep provider-home joins resolving through provider_home.ts
+        run: task check-provider-home-joins
+
       - name: Retain the attribution-shape report
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
