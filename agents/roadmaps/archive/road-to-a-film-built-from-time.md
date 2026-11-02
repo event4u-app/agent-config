@@ -48,7 +48,7 @@ Not promised: that the film is *good*. No deterministic witness exists for that.
 ## Phase 1 — A film-motion authority beside the UI one
 
 - [x] **1.1** One scope sentence in `design-patterns.md` § Motion: it governs interactive UI; time-based film goes to the film carrier. No UI value changes. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_motion_authority_drift.ts -->
-  verify: `lint_motion_authority_drift` green and unchanged in verdict.
+  verify: `./scripts-run src/scripts/lint_motion_authority_drift` -> 0
 - [x] **1.2** `src/skills/code-film/references/film-motion.md`: shot-length bands, closed-form spring with overshoot **≤ 5 %**, hold rule (reading time at a stated words-per-second), transitions as continuity of a persisting element, one held accent colour, the flash floor, and the seek contract (§ Build). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_motion_authority_drift.ts -->
   verify: the file states the overshoot bound as a number the 1.3 lint parses.
 - [x] **1.3** `lint_motion_authority_drift` gains a film pair: the overshoot bound is parsed from `film-motion.md`, and every `recipes.csv` row is checked — no elastic/bounce token, stated overshoot within the bound. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_motion_authority_drift.ts -->
@@ -60,7 +60,7 @@ Not promised: that the film is *good*. No deterministic witness exists for that.
   verify: a fixture that tries `fetch`, `WebSocket`, a remote `<img>` and a `file:` read outside the root captures normally and records every blocked attempt.
   reach exempt: the five flagged names (CAPTURED_PROPERTIES, VIEWPORTS, collectPalette, collectTypeFamilies, slugify) are pre-existing page-profile exports of uiRender.ts read only by its own test; this step's code is reached from src/cli/main.ts through runUiRender → runFilmProfile → runFilmRender.
 - [x] **2.2** Seek by form, never by name: `window.__seek(t)` (sync or promise), else `window.render(t)`, else WAAPI/SMIL; no recognised form → `unassessed` with reason. Duration/fps from `window.__videoMeta` or `--duration`/`--fps`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
-  verify: `__seek`, `render(t)` and WAAPI fixtures yield distinct frames at 0 and mid; a form-less page yields `unassessed`, never empty frames.
+  verify: the seek-hook, render-function and Web Animations fixtures yield distinct frames at 0 and mid; a form-less page yields unassessed, never empty frames.
   reach exempt: the five flagged names (CAPTURED_PROPERTIES, VIEWPORTS, collectPalette, collectTypeFamilies, slugify) are pre-existing page-profile exports of uiRender.ts read only by its own test; this step's code is reached from src/cli/main.ts through runUiRender → runFilmProfile → runFilmRender.
 - [x] **2.3** Per-frame manifest (`t`, SHA-256), `distinct_frames`, and a dead-time sweep (identical consecutive frames longer than the declared hold). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: a fixture with a 2 s still in the middle yields exactly one dead-time finding with its window.
@@ -84,7 +84,7 @@ Not promised: that the film is *good*. No deterministic witness exists for that.
   verify: a 6 Hz full-frame black/white fixture fails; a slow fade passes.
   reach exempt: the five flagged names (CAPTURED_PROPERTIES, VIEWPORTS, collectPalette, collectTypeFamilies, slugify) are pre-existing page-profile exports of uiRender.ts read only by its own test; this step's code is reached from src/cli/main.ts through runUiRender → runFilmProfile → runFilmRender.
 - [x] **3.4** W3 contact sheet: one tile per sampled beat/shot (default 12) written as `contact.png` before the full encode. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
-  verify: `contact.png` exists with the declared tile count before `--out` is written.
+  verify: the contact sheet exists with the declared tile count before the encode is written.
   reach exempt: the five flagged names (CAPTURED_PROPERTIES, VIEWPORTS, collectPalette, collectTypeFamilies, slugify) are pre-existing page-profile exports of uiRender.ts read only by its own test; this step's code is reached from src/cli/main.ts through runUiRender → runFilmProfile → runFilmRender.
 
 ## Phase 4 — A measured audio floor (ffmpeg only)
@@ -102,13 +102,13 @@ Not promised: that the film is *good*. No deterministic witness exists for that.
 - [x] **5.1** Skill `code-film` (pack `ai-video`, experimental): procedure — inputs → one concept → bans with alternatives → grid (declared tempo, or `allin1.sh` beats when installed) → build on the seek contract → contact sheet (max three passes) → render through the film profile → report with every check `ran`/`skipped`. Explainers add a claims step: every on-screen figure, name and date has a source or is marked as the user's. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_motion_authority_drift.ts -->
   verify: the skill passes `lint-skills`; the procedure names the film profile and the report vocabulary.
 - [x] **5.2** Corpus on the existing engine: `code-film/data/manifest.json` + `recipes.csv` (13 rows), `tells.csv` (tell, why, ban, alternative, witness), `renderers.csv` (licence, setup, fit — detect-and-route only, nothing bundled). Written fresh; no source prompt text. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_motion_authority_drift.ts -->
-  verify: `ground.mjs validate` passes; drift lint green.
+  verify: `node src/skills/corpus-grounding/scripts/ground.mjs validate --manifest src/skills/code-film/data/manifest.json` -> 0
 - [x] **5.3** Routing: `motion-choreographer` description names `code-film` as the code-rendered sibling; `code-film/evals/triggers.json` with positives and negatives routing to `motion-choreographer` and `fe-design`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_motion_authority_drift.ts -->
   verify: `triggers.json` parses; positives and negatives present for both siblings.
 - [x] **5.4** Maintainer reference lane: one `skills-provenance.yml` entry, `kind: inspired_by`, licence MIT, source fields ENC1. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_motion_authority_drift.ts -->
   verify: no plaintext source in the entry; `check_no_external_sources` holds its baseline.
 - [x] **5.5** Counts, cross-references and projections regenerated (`task sync`, `task generate-tools`). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_motion_authority_drift.ts -->
-  verify: `task sync` leaves no diff on a second run; the count gates are green.
+  verify: `./scripts-run src/scripts/check_artefact_count_messaging` -> 0
 
 ## Phase 6 — Contract and verification
 
