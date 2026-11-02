@@ -47,7 +47,7 @@ export const ASR_MODEL_ENV = 'AGENT_CONFIG_ASR_MODEL';
 export const SCENE_BUFFER = 4;
 const LOCAL_INPUT = ['-protocol_whitelist', 'file,pipe'] as const;
 
-/** Lower-third text band: fraction of strong horizontal edges above which a frame may carry subtitles. */
+/** Text band: fraction of strong horizontal edges in any third above which a frame may carry on-screen text. */
 export const TEXT_BAND_EDGE_RATIO = 0.06;
 const TEXT_PROBE_W = 64;
 const TEXT_PROBE_H = 36;
@@ -112,7 +112,7 @@ export type Rung = 1 | 2 | 3 | 4;
 export const RUNG_NAMES: Readonly<Record<Rung, string>> = {
     1: 'platform captions',
     2: 'local ASR',
-    3: 'burned-in subtitles (readers)',
+    3: 'on-screen text (readers)',
     4: 'none',
 };
 
@@ -243,18 +243,31 @@ export function sheetCount(frames: number, perSheet: number = TILES_PER_SHEET): 
     return Math.ceil(frames / perSheet);
 }
 
-/** Fraction of strong horizontal steps in the bottom third of a small grayscale frame. */
+/**
+ * The highest fraction of strong horizontal steps over the top, middle and
+ * bottom thirds of a small grayscale frame.
+ *
+ * All three bands, not the lower third: a slide-based video puts its headline
+ * at the top and its body in the centre and leaves the bottom band empty, so a
+ * lower-third probe recorded such a video as text-free (replicated on 19 of 19
+ * frames of one, road-to-a-page-that-says-what-it-loads D9). Subtitles still sit
+ * in the bottom band and still trip it.
+ */
 export function textBandRatio(gray: Uint8Array, width: number, height: number): number {
-    const top = Math.floor((height * 2) / 3);
-    let strong = 0;
-    let total = 0;
-    for (let y = top; y < height; y++) {
-        for (let x = 0; x + 1 < width; x++) {
-            total++;
-            if (Math.abs((gray[y * width + x] as number) - (gray[y * width + x + 1] as number)) > 48) strong++;
+    const band = (from: number, to: number): number => {
+        let strong = 0;
+        let total = 0;
+        for (let y = from; y < to; y++) {
+            for (let x = 0; x + 1 < width; x++) {
+                total++;
+                if (Math.abs((gray[y * width + x] as number) - (gray[y * width + x + 1] as number)) > 48) strong++;
+            }
         }
-    }
-    return total === 0 ? 0 : strong / total;
+        return total === 0 ? 0 : strong / total;
+    };
+    const a = Math.floor(height / 3);
+    const b = Math.floor((height * 2) / 3);
+    return Math.max(band(0, a), band(a, b), band(b, height));
 }
 
 export function countWords(text: string): number {

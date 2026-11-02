@@ -148,7 +148,7 @@ Three-state contract throughout: finding / undecided / passed.
 
 ## Phase 6 — Side defect: on-screen text in `analyze:post`
 
-- [ ] **6.1 Probe top, middle and bottom bands**, report the max, keep the 0.06
+- [x] **6.1 Probe top, middle and bottom bands**, report the max, keep the 0.06
       bar, name the rung "on-screen text".
       verify: a centre-text frame is flagged, a subtitle frame still is, a
       text-free frame is not — `npx vitest run tests/scripts/media_bundle.test.ts` → 0.
@@ -187,9 +187,9 @@ Three-state contract throughout: finding / undecided / passed.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 Corpus and claim landed before any detector code.
-- [ ] AC-2 All 8 planted rows found with `file:line`; 0 twins and 0 decoys flagged.
-- [ ] AC-3 Render arm continues zero requests to non-synthetic origins.
-- [ ] AC-4 Fixture v1 carries no superseded statute; amendment recorded.
-- [ ] AC-5 No output string outside the P5 vocabulary.
-- [ ] AC-6 Centre-text frame flagged by the media probe.
+- [x] AC-1 Corpus and claim landed before any detector code.
+- [x] AC-2 All 8 planted rows found with `file:line`; 0 twins and 0 decoys flagged.
+- [x] AC-3 Render arm continues zero requests to non-synthetic origins.
+- [x] AC-4 Fixture v1 carries no superseded statute; amendment recorded.
+- [x] AC-5 No output string outside the P5 vocabulary.
+- [x] AC-6 Centre-text frame flagged by the media probe.
