@@ -61,9 +61,10 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
-          # Astro 7 / Starlight require Node >=22.12 (the site workspace);
-          # the root project + tsx run fine on 22 too.
-          node-version: '22'
+          # A range, not '22': astro 7.4.4 (site/package-lock.json) declares
+          # engines.node >=22.23.4, and '22' resolved to a cached 22.23.3 on
+          # one runner image. Keep in step with deploy-site.yml.
+          node-version: '>=22.23.4 <23'
           cache: 'npm'
 
       # Root deps provide node_modules/.bin/tsx for ./scripts-run.
