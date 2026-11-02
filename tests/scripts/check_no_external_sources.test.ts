@@ -205,6 +205,71 @@ describe('check_no_external_sources — synthetic hits', () => {
     });
 });
 
+// --- OQ-62 E2: an attribution label under src/ fails the gate -------------
+//
+// Zero tolerance, outside the `agents/**` ratchet. The fixture records a
+// generous block baseline on purpose: a label folded into the ratcheted count
+// would then pass, so a green here would prove nothing. The label value is an
+// invented slug absent from the fixture deny list — the SHAPE must catch it.
+
+describe('check_no_external_sources — attribution label under src/ (OQ-62 E2)', () => {
+    let work: string;
+    const LABEL = '- Inspiration: `somevendor/some-suite/skills/grill-me/SKILL.md`';
+
+    beforeEach(() => {
+        work = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cnes-e2-')));
+        fs.mkdirSync(path.join(work, 'src', 'scripts'), { recursive: true });
+        fs.mkdirSync(path.join(work, 'src', 'config'), { recursive: true });
+        fs.writeFileSync(
+            path.join(work, 'src', 'scripts', 'external_sources_denylist.json'),
+            JSON.stringify({
+                deny: ['\\bexample-denied-word\\b'],
+                skip_paths: ['src/scripts/external_sources_denylist.json', 'src/scripts/check_no_external_sources.ts'],
+            }) + '\n',
+            'utf-8',
+        );
+        const today = new Date().toISOString().slice(0, 10);
+        fs.writeFileSync(
+            path.join(work, 'src', 'config', 'gate-violation-baselines.json'),
+            JSON.stringify({ gates: { 'check_no_external_sources:shape-block': { count: 5, landed: today } } }) + '\n',
+            'utf-8',
+        );
+        plantGate(work);
+        spawnSync('git', ['init', '-q'], big(work));
+    });
+
+    afterEach(() => {
+        fs.rmSync(work, { recursive: true, force: true });
+    });
+
+    const run = (): { status: number | null; out: { ok: boolean; shape: Record<string, unknown> } } => {
+        spawnSync('git', ['add', '-A'], big(work));
+        const r = spawnSync(TSX_BIN, [path.join(work, 'src', 'scripts', 'check_no_external_sources.ts'), '--json'], big(work));
+        return { status: r.status, out: JSON.parse(r.stdout as string) as { ok: boolean; shape: Record<string, unknown> } };
+    };
+
+    it('fails on a label under src/, though the block baseline has room', () => {
+        fs.mkdirSync(path.join(work, 'src', 'skills', 'x'), { recursive: true });
+        fs.writeFileSync(path.join(work, 'src', 'skills', 'x', 'SKILL.md'), `# X\n\n${LABEL}\n`, 'utf-8');
+        const r = run();
+        expect(r.status).toBe(1);
+        expect(r.out.ok).toBe(false);
+        expect(r.out.shape.zero_tolerance).toBe(1);
+        // Outside the ratchet: the agents/** count does not absorb it.
+        expect(r.out.shape.block).toBe(0);
+    });
+
+    it('stays a warning for the same label outside src/ — polarity', () => {
+        fs.mkdirSync(path.join(work, 'docs'), { recursive: true });
+        fs.writeFileSync(path.join(work, 'docs', 'x.md'), `# X\n\n${LABEL}\n`, 'utf-8');
+        const r = run();
+        expect(r.status).toBe(0);
+        expect(r.out.ok).toBe(true);
+        expect(r.out.shape.zero_tolerance).toBe(0);
+        expect(r.out.shape.warn).toBe(1);
+    });
+});
+
 // --- Layer 3: the SHIPPED denylist, as properties --------------------------
 //
 // Read from the config at runtime. Three assertions, and the negatives are

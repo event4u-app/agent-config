@@ -33,15 +33,15 @@ stops reviewing a diff that omits the content of every new, not-yet-added file.
 
 ## Phase 1 — E2: an attribution label under `src/` fails the gate
 
-- [ ] **1.1 Tier is class-aware (red first).** `tierFor(rel, cls)` returns
+- [x] **1.1 Tier is class-aware (red first).** `tierFor(rel, cls)` returns
       `block` for `attribution-label` under `src/`; every other class and path
       keeps its tier.
       verify: `npx vitest run tests/scripts/source_attribution_label.test.ts tests/scripts/source_shape.test.ts` -> 0
-- [ ] **1.2 Zero tolerance, outside the ratchet.** Any `attribution-label`
+- [x] **1.2 Zero tolerance, outside the ratchet.** Any `attribution-label`
       finding under `src/` fails the gate on its own; the `agents/**` ratchet
       count is unchanged (148).
       verify: `./scripts-run src/scripts/check_no_external_sources` -> 0
-- [ ] **1.3 Docs match the code.** The gate docstring, the mechanics guideline
+- [x] **1.3 Docs match the code.** The gate docstring, the mechanics guideline
       and the shape-module tier comment name the `src/` label tier.
       verify: `grep -c 'attribution label under .src/.' docs/guidelines/agent-infra/source-confidentiality-mechanics.md` -> /^[1-9]/
 
