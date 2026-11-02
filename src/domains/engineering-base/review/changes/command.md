@@ -78,7 +78,7 @@ would also show every commit the base gained since the branch forked:
 - `git ls-files --others --exclude-standard` — untracked files. **List** them
   and name them in the report; do not diff them by default.
 
-Report "nothing to review" and **stop** only when all four sources are empty.
+Report "nothing to review" and **stop** only when every source above is empty.
 
 ### 3. Resolve the judge model
 

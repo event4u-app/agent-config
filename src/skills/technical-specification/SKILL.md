@@ -27,7 +27,7 @@ Use this skill when:
 
 Do NOT use when:
 - Trivial changes (a good PR description is enough)
-- Implementation work (use `feature-planning` or `php-coder` skill)
+- Implementation work (use `feature-planning` or `php-coder`)
 
 ## Procedure: Write a spec
 
@@ -38,7 +38,7 @@ Do NOT use when:
 
 ### Technical Specification (full)
 
-For complex features or systems. Stored in `agents/features/` or module `agents/features/`.
+For complex features or systems. Stored in `agents/features/` (root or module).
 
 ```markdown
 # Technical Specification: {Title}
@@ -144,7 +144,7 @@ the answer into the section it belongs to. Not a storage section.}
 
 ### Architecture Decision Record (ADR)
 
-For significant technical decisions. Stored where the `adr-create` skill writes them — `docs/decisions/` — so there is one decision-record location, not two.
+For significant technical decisions. Stored in `docs/decisions/`, as `adr-create` does.
 
 ```markdown
 # ADR-{number}: {Title}

@@ -55,19 +55,17 @@ informational steps, phase headings, and acceptance-criteria prose.
 
 ### §2 — One ticket per step, cut as a vertical slice
 
-Each ticket is a **vertical slice**: independently verifiable through every
+Each ticket is a **vertical slice** — verifiable on its own through every
 layer it needs (schema → logic → surface → test), never one layer of a
-feature. Inspect each step against the code it touches before drafting: a
-step that only makes sense once other "layer" tickets land is re-cut before
-emission. Ordering:
+feature. Inspect each step against the code it touches; a step that only works
+once other layer tickets land is re-cut first.
 
-- **Prefactoring tickets first** — the refactor that makes the change easy
-  ships as its own ticket, and the feature tickets `blocked_by` it.
-- **Expand–contract is the one exception** for a wide refactor: an *expand*
-  ticket adds the new shape alongside the old, *batch* tickets migrate callers
-  grouped by blast radius, a *contract* ticket removes the old shape — chained
-  through `blocked_by` (expand → batches → contract). Each ticket still passes
-  its own `acceptance` on its own.
+- **Prefactoring first** — the refactor that makes the change easy is its own
+  ticket; feature tickets are `blocked_by` it.
+- **Expand–contract**, the one exception for a wide refactor: *expand* adds the
+  new shape beside the old, *batch* tickets migrate callers by blast radius,
+  *contract* removes the old shape — chained via `blocked_by`. Each still
+  passes its own `acceptance`.
 
 For each materializable step, draft a ticket YAML:
 
@@ -182,8 +180,6 @@ Tell the user:
 > paste-ready Markdown for a Linear/Jira issue; or create issues via a
 > tracker MCP server. No API export (ADR-102).
 
-Do NOT auto-create tracker issues — paste/MCP is the user's call.
-
 ## Output format
 
 1. `agents/tickets/{slug}/manifest.yml` — bundle manifest (acyclic graph, empty linear_state)
@@ -202,8 +198,6 @@ Do NOT auto-create tracker issues — paste/MCP is the user's call.
 
 ## Gotchas
 
-- **Re-run safety:** before appending `<!-- ticket: T-NNN -->` markers, grep
-  for existing markers so a re-run does not duplicate them.
 - **SHA = pending:** new files not yet committed get `sha: pending`; remind
   the user to re-run after commit to update SHAs.
 - **Split signals:** if a step touches > 5 files or > 200 lines, split it

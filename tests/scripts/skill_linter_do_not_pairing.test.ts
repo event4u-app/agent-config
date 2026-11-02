@@ -5,27 +5,30 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { compute_exit_code, lint_do_not_pairing, lint_file } from '../../src/scripts/skill_linter.js';
+import { lint_do_not_pairing } from '../../src/scripts/_lib/skill_sections.js';
+import { compute_exit_code, lint_file } from '../../src/scripts/skill_linter.js';
 
+// The fixtures are flat `<name>.md` files, not `<name>/SKILL.md`: a file named
+// SKILL.md anywhere in the tree counts as a new skill to lint_new_skill_gate.
 const FIXTURES = path.resolve(import.meta.dirname, '..', 'fixtures', 'skill-linter');
 
 describe('Do NOT pairing hint', () => {
     it('emits an info hint for a Do NOT section with no paired alternative', () => {
-        const result = lint_file(path.join(FIXTURES, 'do-not-unpaired', 'SKILL.md'));
+        const result = lint_file(path.join(FIXTURES, 'do-not-unpaired.md'));
         const hints = result.issues.filter((i) => i.code === 'do_not_unpaired');
         expect(hints).toHaveLength(1);
         expect(hints[0]?.severity).toBe('info');
     });
 
     it('stays additive — no error, no status change, no exit-code change', () => {
-        const result = lint_file(path.join(FIXTURES, 'do-not-unpaired', 'SKILL.md'));
+        const result = lint_file(path.join(FIXTURES, 'do-not-unpaired.md'));
         expect(result.issues.some((i) => i.severity === 'error')).toBe(false);
         const withoutHint = { ...result, issues: result.issues.filter((i) => i.code !== 'do_not_unpaired') };
         expect(compute_exit_code([result], true)).toBe(compute_exit_code([withoutHint], true));
     });
 
     it('is silent once one bullet names the alternative', () => {
-        const result = lint_file(path.join(FIXTURES, 'do-not-paired', 'SKILL.md'));
+        const result = lint_file(path.join(FIXTURES, 'do-not-paired.md'));
         expect(result.issues.some((i) => i.code === 'do_not_unpaired')).toBe(false);
     });
 

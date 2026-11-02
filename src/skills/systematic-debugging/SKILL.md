@@ -221,13 +221,9 @@ entirely — surface on first occurrence; another lap cannot fix them.
 | Is this a known issue? | Search tracker / Sentry / changelog of the dependency |
 | Step through execution | Xdebug — see [`php-debugging`](../php-debugging/SKILL.md) |
 
-Prefer the cheapest tool that resolves the question. A `dd()` at the
-right line beats five minutes of IDE breakpoints.
-
-**Tag every temporary debug line with one unique prefix** — e.g.
-`DEBUG-<slug>:` where `<slug>` names this investigation. Before finishing,
-`grep -rn 'DEBUG-<slug>' .` must return nothing: remove every hit, then re-run
-the grep. An untagged `console.log` is one nobody can find to delete.
+Prefer the cheapest tool: a `dd()` at the right line beats five minutes of
+IDE breakpoints. **Tag temporary debug lines** with one prefix
+(`DEBUG-<slug>:`); before finishing, `grep -rn 'DEBUG-<slug>' .` returns nothing.
 
 **Known failure signature?** If the symptom has a recognisable shape — a
 tool/agent loop, HTTP 429, `ECONNREFUSED`, `ENOENT`, timeout/hang, OOM, flaky
