@@ -21763,6 +21763,11 @@ var settingsSchema = object({
       "Whether a refresh reads the CISA known-exploited catalog. on (default) downloads the whole catalog and matches it locally, so nothing about the project is sent, and a finding in it is raised one tier in a runtime scope; off leaves tiers to the other sources. Runs only where egress is query."
     )
   }).prefault({ mode: "notify", egress: "query", kev: "on" }),
+  security_ops: object({
+    plan: boolean2().default(false).describe(
+      'The persisted answer to "plan a security & maintenance section?", offered once when /audit security or feature planning finds a deployed project with no lever inventory (ADR-304). true = the agent drafts the section with feature-planning and the control-section blueprint when the finding appears \u2014 it plans, never builds or throws a lever. false (default) = not planned; the finding stays in the report and the offer is made once while no answer is recorded (written with --source jit-answer). Prose-only reader: nothing can refuse the plan.'
+    )
+  }).prefault({ plan: false }),
   update: object({
     mode: _enum(["off", "notify", "ask", "auto"]).default("notify").describe(
       "What the agent may do about a newer release. notify tells you and installs nothing (the default, and what an absent key resolves to); ask behaves as notify until the ring-0 exit ships a prompt; auto installs a staged release at a session start when every gate passes and no other session is live; off says nothing at all. Read from the user-global layer only \u2014 a repository cannot set how your global install updates itself."

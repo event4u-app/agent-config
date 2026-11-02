@@ -29,10 +29,10 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 | `evidence.strength` | `E2` | 53 |
 | `evidence.strength` | `E3` | 25 |
 | `evidence.strength` | `E4` | 0 |
-| `provenance.kind` | `human` | 17 |
+| `provenance.kind` | `human` | 18 |
 | `provenance.kind` | `agentic` | 137 |
 | `provenance.kind` | `mixed` | 36 |
-| `provenance.kind` | `unknown` | 61 |
+| `provenance.kind` | `unknown` | 60 |
 | frontmatter | absent | 0 |
 
 ## Per-record proposals
@@ -281,7 +281,7 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 | `docs/decisions/ADR-301-the-star-ask-ships.md` | `mixed` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | owner @ ADR-301-the-star-ask-ships.md:9, ADR-301-the-star-ask-ships.md:17, ADR-301-the-star-ask-ships.md:133<br>measurement @ ADR-301-the-star-ask-ships.md:71, ADR-301-the-star-ask-ships.md:72, ADR-301-the-star-ask-ships.md:78, ADR-301-the-star-ask-ships.md:104<br>council @ ADR-301-the-star-ask-ships.md:78 | provenance: human · evidence: E1 · authority_basis: owner_intent |
 | `docs/decisions/ADR-302-host-owned-module-class.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: agentic · evidence: E1 |
 | `docs/decisions/ADR-303-the-graph-is-an-index-never-the-truth.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: human · evidence: E1 |
-| `docs/decisions/ADR-304-security-operations-guidance-and-read-only-audit.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: agentic · evidence: E1 |
+| `docs/decisions/ADR-304-security-operations-guidance-and-read-only-audit.md` | `human` | `E0` — markers present, none graded: owner (an owner or maintainer declaration is provenance, not evidence) | `incomplete` | owner @ ADR-304-security-operations-guidance-and-read-only-audit.md:91 | provenance: agentic · evidence: E1 |
 | `docs/decisions/ADR-rule-kernel-and-router.md` | `unknown` | `E1` — one dated local observation | `incomplete` | measurement @ ADR-rule-kernel-and-router.md:55, ADR-rule-kernel-and-router.md:107, ADR-rule-kernel-and-router.md:112, ADR-rule-kernel-and-router.md:113, ADR-rule-kernel-and-router.md:117 | provenance: — · evidence: — |
 | `docs/adrs/cost/0001-hard-stop-hook.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: — · evidence: — |
 | `docs/adrs/memory/0001-consumer-side-snapshot.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: — · evidence: — |

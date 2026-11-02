@@ -85,3 +85,24 @@ files, and no containment row in `threat-modeling/data/threats.csv`.
   does not carry.
 - **A top-level `/security` verb** — rejected: ADR-041 fixes the verb list and
   `/audit` already holds the security audits.
+
+## Amendment 2026-11-02 — the owner's answer to OQ-60
+
+Owner ruling (`agents/evidence/owner-directives/2026-11-02-oq-59-60-answers.md`):
+"OQ-60: wie empfohlen". <!-- md-language-check: ignore -->
+The review trigger above did not fire: item 1 was answered **no** by
+default, not yes. Three points change, and § 1 (the suite never throws a lever)
+stands unchanged:
+
+- **Item 1 — `automation: propose`.** The lever inventory may opt into one mode
+  beyond the default `off`: a T0 advisory whose package a lever names becomes an
+  unchecked proposal in the advisory issue, addressed to the lever's owner.
+  The validator refuses every other value, so an unattended throw cannot be
+  declared. The consequence "automatic self-containment stays undecided" now
+  reads: **decided — no, except as a proposal an operator confirms.**
+- **Item 2 — `security_ops.plan`.** Decision 5's "not repeated in that run"
+  becomes "asked once, then persisted": a class-B settings key, default
+  `false`, written with `--source jit-answer` when the user answers.
+- **Item 3 — `/audit` is suggestable in consumer projects.** Its workspace
+  list gains the engineering workspace, so the suggestion layer can offer it
+  outside the maintainer workspace.
