@@ -96,6 +96,7 @@ const LIVE_BROWSER_SUITES = [
     'tests/cli/uiRender_geometry.test.ts',
     'tests/scripts/design_slop_render_bench.test.ts',
     'tests/scripts/ui_conformance_probe_sibling.test.ts',
+    'tests/scripts/web_launch_render_live.test.ts',
 ];
 const BROWSER_SUITES = [
     'tests/cli/ui_render_asset_profile.test.ts',

@@ -42,6 +42,8 @@ import {
     privacyCoverage,
     supersededStatute,
 } from './web_launch_third_party.js';
+import { resolveOrigin } from './web_launch_third_party.js';
+import { type Witness, renderWitness } from './web_launch_render.js';
 
 const HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(HERE), '..', '..');
@@ -1286,6 +1288,108 @@ export function render(r: Report): string {
 }
 
 export function main(argv: string[] = process.argv.slice(2), root = REPO_ROOT): number {
+    const prepared = prepare(argv, root);
+    return typeof prepared === 'number' ? prepared : finish(prepared, argv);
+}
+
+/**
+ * The `--render` path (road-to-a-page-that-says-what-it-loads 3.1): the static
+ * audit, then the offline render witness, reconciled into one report.
+ */
+export async function mainAsync(argv: string[] = process.argv.slice(2), root = REPO_ROOT): Promise<number> {
+    if (!argv.includes('--render')) return main(argv, root);
+    const prepared = prepare(argv, root);
+    if (typeof prepared === 'number') return prepared;
+    const build = argv[argv.indexOf('--build') + 1] ?? '';
+    const witness = await renderWitness(build);
+    return finish(applyRenderWitness(prepared, witness, thirdPartyFor(root).register), argv);
+}
+
+const TPL = 'third-party-load-in-markup';
+
+/**
+ * Fold the render witness into a static report. Pure, so it is tested without a
+ * browser.
+ *
+ * - `unverified` → one undecided for the row, never a pass.
+ * - A static undecided "next to a consent gate" is DECIDED: requested on first
+ *   paint → a finding; never requested → dropped, the gate did its job.
+ * - A registered provider requested at runtime that static reading missed
+ *   (script-injected) → a finding; an unregistered one → undecided.
+ */
+export function applyRenderWitness(r: Report, w: Witness, register: readonly OriginRow[]): Report {
+    const check = loadedRow(r);
+    if (check === null) return r;
+    const tier = check.tier;
+    if (w.status !== 'ok') {
+        return {
+            ...r,
+            passed: r.passed.filter((id) => id !== TPL),
+            unknown: [
+                ...r.unknown,
+                { check: TPL, tier, location: '.:0', reason: `render witness unverified: ${w.reason ?? 'unknown reason'}`, reason_class: 'instrument-limit' },
+            ],
+        };
+    }
+    const requestedHosts = new Set(w.requests.map((q) => new URL(q.url).host.toLowerCase()));
+    const hostOf = (text: string): string | undefined => /`([^`]+)`/.exec(text)?.[1]?.toLowerCase();
+    const findings = [...r.findings];
+    const unknown: Undecided[] = [];
+    for (const u of r.unknown) {
+        const host = u.check === TPL && /consent or click-to-load/.test(u.reason) ? hostOf(u.reason) : undefined;
+        if (host === undefined) {
+            unknown.push(u);
+            continue;
+        }
+        if (requestedHosts.has(host)) {
+            findings.push({
+                check: TPL,
+                tier,
+                location: u.location,
+                evidence: `requests \`${host}\` on first paint with no interaction and no consent given (render witness), although a gate sits in the same file.`,
+                remediation: check.remediation,
+                verification: check.verification,
+            });
+        }
+    }
+    const statedHosts = new Set(
+        [...findings, ...r.unknown].filter((x) => x.check === TPL).map((x) => hostOf('evidence' in x ? x.evidence : x.reason)),
+    );
+    for (const q of w.requests) {
+        const url = new URL(q.url);
+        const host = url.host.toLowerCase();
+        if (statedHosts.has(host)) continue;
+        statedHosts.add(host);
+        const row = resolveOrigin(url, register);
+        if (row === undefined) {
+            unknown.push({ check: TPL, tier, location: `${q.page}:0`, reason: `requests \`${host}\` at runtime, an unknown third party; its provider is undecided.`, reason_class: 'instrument-limit' });
+            continue;
+        }
+        findings.push({
+            check: TPL,
+            tier,
+            location: `${q.page}:0`,
+            evidence: `requests \`${host}\` (${row.provider}) on first paint at runtime (render witness); no static line names it, so a script adds it.`,
+            remediation: check.remediation,
+            verification: check.verification,
+        });
+    }
+    const decided = !findings.some((f) => f.check === TPL) && !unknown.some((u) => u.check === TPL);
+    const passed = r.passed.filter((id) => id !== TPL);
+    return { ...r, findings, unknown, passed: decided ? [...passed, TPL] : passed };
+}
+
+/** The configured row for the third-party check, if it applied to this run. */
+function loadedRow(r: Report): CheckDef | null {
+    if (r.skipped.some((s) => s.check === TPL)) return null;
+    const row = loadConfig().checks.find((c) => c.id === TPL);
+    if (row === undefined) return null;
+    const tier = r.findings.find((f) => f.check === TPL)?.tier ?? r.unknown.find((u) => u.check === TPL)?.tier ??
+        r.escalated.find((e) => e.check === TPL)?.to ?? row.tier;
+    return { ...row, tier };
+}
+
+function prepare(argv: string[], root: string): number | Report {
     const arg = (f: string): string | undefined => {
         const i = argv.indexOf(f);
         return i >= 0 ? argv[i + 1] : undefined;
@@ -1301,7 +1405,7 @@ export function main(argv: string[] = process.argv.slice(2), root = REPO_ROOT): 
     if (build === undefined || siteType === undefined) {
         process.stderr.write(
             'usage: check_web_launch_readiness --build <dir> --site-type <type> ' +
-                '[--region <de|eu|us|unspecified>] [--json]\n' +
+                '[--region <de|eu|us|unspecified>] [--render] [--json]\n' +
                 '  --site-type and --region also resolve from `web_launch_readiness:` in ' +
                 '.agent-settings.yml; a flag overrides the file.\n',
         );
@@ -1335,6 +1439,10 @@ export function main(argv: string[] = process.argv.slice(2), root = REPO_ROOT): 
         }
         throw e;
     }
+    return r;
+}
+
+function finish(r: Report, argv: string[]): number {
     if (argv.includes('--json')) {
         process.stdout.write(`${JSON.stringify(r, null, 2)}\n`);
     } else {
@@ -1349,5 +1457,5 @@ export function main(argv: string[] = process.argv.slice(2), root = REPO_ROOT): 
 }
 
 if (path.resolve(process.argv[1] ?? '') === path.resolve(HERE)) {
-    process.exit(main());
+    void mainAsync().then((code) => process.exit(code));
 }

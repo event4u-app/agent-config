@@ -105,7 +105,7 @@ Three-state contract throughout: finding / undecided / passed.
 
 ## Phase 3 — Runtime witness without a socket
 
-- [ ] **3.1 `--render` arm** on `confinePage`: the build directory served
+- [x] **3.1 `--render` arm** on `confinePage`: the build directory served
       through the `fulfil` hook under a synthetic origin, scripts on, no
       interaction, no consent click; every other request aborted and recorded.
       Decides 2.1's click-to-load undecided: a wrapper whose URL is never
@@ -113,7 +113,7 @@ Three-state contract throughout: finding / undecided / passed.
       absent → `unverified`, never a pass.
       verify: planted 1, 2, 4, 5 recorded; the twin's URL not; a test asserts
       zero requests continued to a non-synthetic origin.
-- [ ] **3.2 State boundary.** Writes nothing, keeps nothing between runs,
+- [x] **3.2 State boundary.** Writes nothing, keeps nothing between runs,
       closes the browser in `finally`.
       verify: test asserts the browser closes on a thrown navigation.
 
