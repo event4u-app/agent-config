@@ -86,9 +86,7 @@ IT IS NEVER HIDDEN IN .harvest-local/ JUST BECAUSE IT MENTIONS A SOURCE.
 The `check-no-external-sources` CI gate
 (`src/scripts/check_no_external_sources.ts` + `external_sources_denylist.json`)
 runs in the package CI pipeline and fails the build on any denied source token
-in a non-carve-out tracked file. It also fails, with zero tolerance, on a
-line-leading attribution label (`Inspiration:`, `Ported from:`, …) that names a
-readable identifier under `src/`. The linter is a deterministic net, not a
+in a non-carve-out tracked file. The linter is a deterministic net, not a
 substitute for not writing the attribution in the first place.
 
 ## Why this rule is not path-scoped
