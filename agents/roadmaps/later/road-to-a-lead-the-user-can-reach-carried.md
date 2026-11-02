@@ -4,6 +4,7 @@ status: parked
 owner: maintainer
 review_by: 2027-01-31
 tree_pin: c183b82358
+parent_roadmap: road-to-a-lead-the-user-can-reach
 estate_growth_exempt: "Carried residue of road-to-a-lead-the-user-can-reach (inbox-2026-11-j): owner-gated, measurement-bound or spend-bearing items that cannot run in the invocation that produced them. Parked rather than dropped so each keeps its trigger."
 relates:
   - slug: archive/road-to-a-lead-the-user-can-reach
