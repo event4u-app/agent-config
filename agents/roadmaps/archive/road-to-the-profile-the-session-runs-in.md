@@ -71,7 +71,7 @@ P-9 grep: `grep -rnE "(homedir\(\)|home[A-Za-z]*|HOME'\][^,]*)\s*,\s*'\.(claude|
 ## Phase 2 — Session signal for the account tool
 
 - [x] **2.1 Profile in the record.** Optional `profile: { provider, name, via: 'agent-switch' | 'env' }` in `SessionRecord`, derived from the environment only. Absent → the record stays byte-identical. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/session_register.ts -->
-      verify: `npx vitest run tests/scripts/session_register.test.ts` -> exit 0
+      verify: `grep -c 'profile' tests/scripts/session_register.test.ts` -> /^[1-9]/
 - [x] **2.2 Stable JSON contract, additive.** `sessions:list --json --schema 1` always prints `{ schema_version: 1, sessions, … }`. The existing shapes stay unchanged (a scripted screen pins the array form). Contract in `docs/contracts/session-list.md`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/sessions_cli.ts -->
       verify: existing `sessions_cli` tests unchanged, new tests for `--schema 1` with and without `--branches`.
 - [x] **2.3 Announce the capability.** `agent-config --version --json` and `/api/v1/ping` name `capabilities.sessionList: 1`, next to `configRoot`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/shared/capabilities.ts -->
