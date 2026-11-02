@@ -17,6 +17,7 @@ import * as path from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
 
+import { parseGateArgs, USAGE_EXIT } from './_lib/gate_args.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { HOST_SURFACES, measureReach } from './_lib/host_projection_reach.js';
@@ -179,6 +180,12 @@ function reachSelfTest(): number {
                     run: () => invoke(tmp),
                 },
                 {
+                    name: 'an unknown flag is refused, not ignored',
+                    expect: 'refuse',
+                    run: () =>
+                        runGateCli(REPO_ROOT, 'src/scripts/check_host_loadability.ts', ['--definitely-not-a-flag'], REPO_ROOT),
+                },
+                {
                     name: 'a root carrying one artefact per host surface accounts for every surface',
                     expect: 'accept',
                     run: () => invoke(full),
@@ -194,12 +201,20 @@ function reachSelfTest(): number {
 const isMain = process.argv[1] !== undefined
     && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname);
 if (isMain) {
-    const rootIdx = process.argv.indexOf('--root');
-    const root = rootIdx !== -1 ? process.argv[rootIdx + 1] ?? '.' : '.';
-    if (process.argv.includes('--self-test')) {
+    const parsed = parseGateArgs('check_host_loadability', process.argv.slice(2), {
+        root: { type: 'string' },
+        reach: { type: 'boolean' },
+        'self-test': { type: 'boolean' },
+    });
+    if (!parsed.ok) {
+        process.stderr.write(`${parsed.message}\n`);
+        process.exit(USAGE_EXIT);
+    }
+    const root = parsed.values.root ?? '.';
+    if (parsed.values['self-test']) {
         process.exit(reachSelfTest());
     }
-    if (process.argv.includes('--reach')) {
+    if (parsed.values.reach) {
         const { failures, scanned } = runReach(root);
         process.stdout.write(`scanned: ${String(scanned)}\n`);
         if (failures.length > 0) {
