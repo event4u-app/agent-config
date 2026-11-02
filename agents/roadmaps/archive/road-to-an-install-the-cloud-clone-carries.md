@@ -57,6 +57,7 @@ hooks an operator seeded into the runner's `~/.claude/`.
       dir and `CLAUDE_CODE_REMOTE=true`, and emits the measurement as JSON.
       verify: run on this repository; the baseline lands in
       `agents/evidence/analysis/cloud-clone-baseline-2026-11-02.json` reading 0 hooks.
+      production entry: src/scripts/cloud_clone_probe.ts
 - [~] **0.3 One real cloud session.** Run `/context` and `/hooks` in a <!-- deferred-resolution: carried-to=road-to-host-inputs-the-installer-honours -->
       claude.ai/code session on this repository and on a consumer fixture; confirm
       (b) Node `>=22.6.0` on the cloud PATH and (c) install time under the cache limit.
