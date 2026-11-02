@@ -16,9 +16,12 @@ entry_condition:
 > **Arrivals:** 3 — latest `analysis/inbox-2026-11-k` (2026-11-02): still 101 days
 > old, `yt-dlp` still absent; earlier: `analysis/inbox-2026-11-f`, `feat/map-always-fresh`.
 >
-> **Owner question (third arrival):** (1) install `yt-dlp==2026.7.4`, run
-> `./agent-config reach:doctor --deep`, commit the fresh date · (2) retire the
-> `youtube` channel · (3) move the gate's floor for `experimental` channels.
+> **Decided 2026-11-02** (AI council, owner-delegated, decision D2): option 1.
+> The channel stays `experimental` and is **not** exempted or retired — a missing
+> verifier is an evidence gap, not proof the channel is useless. `last_verified`
+> moves only after a successful `reach:doctor --deep`. Until then the local gate
+> stays red by design. Revisit-if: the deep check fails, or the yt-dlp path stops
+> being viable — then retire with that evidence.
 
 ## Defect
 
