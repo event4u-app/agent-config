@@ -151,9 +151,9 @@
             "from": 1562000,
             "to": 1563000,
             "by": "agent, analysis/inbox-2026-11-f",
-            "what_was_added": "Nothing from this branch: the bundle measures 1,562,998 bytes with and without its one bundle-adjacent change (install_reach_checks.ts reverted to origin/main, same byte count). The 998 bytes arrived with main merges after the 2026-11-01 raise (b51c393683..44d244dbcb), which touched hook-reachable sources incl. host_docs_pages.yaml (+9 rows), code_graph_refresh_hook.ts and runtime_wiring_checks.ts.",
-            "why_it_could_not_be_avoided": "The overage is on main; this branch cannot shrink code it did not add without a drive-by refactor of another change.",
-            "what_would_have_caught_it": "The composition gate on the merges that grew it; it appears not to run in the remote checks those merges passed."
+            "what_was_added": "Nothing from this branch, measured: the bundle is 1,562,998 bytes with and without its one bundle-adjacent change (install_reach_checks.ts reverted to origin/main gives the same byte count), and the branch's new identifiers have 0 hits in the rebuilt bundle. Inferred, not measured endpoint by endpoint: the 998 bytes arrived with main merges after the 2026-11-01 raise (b51c393683..44d244dbcb), which touched hook-reachable sources incl. host_docs_pages.yaml (+9 rows), code_graph_refresh_hook.ts and runtime_wiring_checks.ts. Headroom after the raise: 2 bytes, deliberately — the next growth is reviewed again.",
+            "why_it_could_not_be_avoided": "Reducing the inherited overage would require unrelated changes to code this branch did not add, outside its scope.",
+            "what_would_have_caught_it": "Nothing remote as wired: check_hook_bundle_composition runs only in the local `task ci` preflight (taskfiles/ci-fast.yml), and no workflow invokes `task ci`, so the merges that grew the bundle passed every remote check. Making it a remote gate is a separate change; until then each branch that runs `task ci` locally inherits the overage."
         }
     ],
     "chunks": [
