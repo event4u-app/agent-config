@@ -126,10 +126,19 @@ Three-state contract throughout: finding / undecided / passed.
       verify: `npx vitest run tests/scripts/ai_code_blindspots_rows.test.ts` → 0
       (no ADR-205 reach test exists in the tree; this one asserts both cells and
       that every checker row they name is configured).
-- [x] **4.2 Wire 2.1 and 2.2 into `design_pass_hook`** for UI files —
+- [~] **4.2 Wire 2.1 and 2.2 into `design_pass_hook`** for UI files —
       advisory, exit 0, register and supersession table as only inputs.
       verify: writing a page with planted 1 or 6 surfaces the finding in the
       hook context; the twin surfaces nothing.
+      carried 2026-11-02 → `later/road-to-a-page-check-at-write-time` (step 1.1),
+      with blocker `hook-bundle-budget-for-web-launch`. Criterion carried verbatim.
+      Delivered here: `writeTimeFindings` (the function the carrier calls) and its
+      test. Blocked because the carrier needs a dispatch-bundle raise of +961
+      bytes, and the ratification council returned one `refused` seat (openai)
+      and one with no final verdict. Options: split into three reviewed changes ·
+      a lazy concern · leave reach to the blindspots row. Verdict: carry, a
+      preserving disposition (roadmap-progress-sync table, council-routed row);
+      the owner decides the raise. Closes when that roadmap's 1.1 verifies.
 - [x] **4.3 Corpus coherence** (T2 witness slice): the hotlink column in
       `design-intelligence/data/font-pairings-reference.csv` is marked opt-in so
       the corpus no longer contradicts the self-host default.
@@ -164,6 +173,7 @@ Three-state contract throughout: finding / undecided / passed.
 | E5 | Default-on report-only for `de\|eu` and `/audit web` | Owner-reserved (consumer-facing default flip) — carried in `stubs/road-to-a-page-check-on-by-default`, trigger: the claim backs on a held-out corpus. |
 | E6 | Render arm classification | Offline, per command, consumer's own build fulfilled from disk, zero egress test-enforced — the `ui:render` Class-A shape; no new class, no ADR amendment. |
 | E7 | Further supersession rows (TTDSG→TDDDG) | Only with a named defect each. |
+| E9 | 4.2's carrier needs a dispatch-bundle raise the ratification council refused | Carried with its blocker to `later/road-to-a-page-check-at-write-time`; the function and its test ship here. |
 | E8 | 4.3 asks to mark the CSV column opt-in, the tree already does | Closed as already-satisfied with the `file:line`; no edit, so the step and its evidence do not contradict. |
 
 ## Kill register
