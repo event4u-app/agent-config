@@ -307,6 +307,9 @@ jobs:
       - name: budget ownership (owner + review date on every gate budget)
         run: ./scripts-run src/scripts/lint_budget_ownership
 
+      - name: provider-home joins (a profile session reads its own config dir)
+        run: ./scripts-run src/scripts/check_provider_home_joins
+
       - name: persona-governance
         run: ./scripts-run src/scripts/lint_persona_governance
 

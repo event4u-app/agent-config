@@ -31,10 +31,11 @@
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { homedir } from 'node:os';
+
+import { claudeHome } from './provider_home.js';
 
 /** Default base directory holding one subdirectory per Claude Code project. */
-export const DEFAULT_PROJECTS_ROOT = path.join(homedir(), '.claude', 'projects');
+export const DEFAULT_PROJECTS_ROOT = path.join(claudeHome(), 'projects');
 
 /**
  * The store directory name Claude Code derives from a working directory.

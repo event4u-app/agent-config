@@ -9,7 +9,7 @@ entry for that page in the same change, then regenerates this file;
 
 Scanned: `src/scripts/`, `tests/`, `.github/`, `src/config/gate-coverage.yml`.
 
-- 270 existing doc path(s) named
+- 271 existing doc path(s) named
 - 23 absent path(s) named outside tests (listed below; absent paths named only by tests are fixtures and are omitted)
 - 4 absent ADR-shaped path(s) named outside tests — counted, not listed: `adr_cite_check` owns ADR references
 
@@ -227,6 +227,7 @@ Owner: `src/scripts/check_role_doc_links.ts`.
 - `docs/contracts/rule-interactions.yml` (3) — `src/scripts/lint_rule_interactions.ts`, `tests/contracts/rule_interactions_behavioural.test.ts`, `tests/scripts/lint_rule_interactions.test.ts`
 - `docs/contracts/rule-router.md` (8) — `src/scripts/_lib/router_match.ts`, `src/scripts/check_rule_projection_integrity.ts`, `src/scripts/compile_router.ts`, `src/scripts/schemas/agent-settings.schema.json`, `src/scripts/schemas/rule.schema.json`, `src/scripts/schemas/skill.schema.json`, `src/scripts/skill_linter.ts`, `tests/fixtures/source-headers/internal-ref.md`
 - `docs/contracts/runtime-persistence-tiers.md` (1) — `src/scripts/_lib/runtime_journal.ts`
+- `docs/contracts/session-list.md` (2) — `src/scripts/sessions_cli.ts`, `tests/scripts/sessions_list_schema.test.ts`
 - `docs/contracts/settings-classes.md` (15) — `src/scripts/_cli/cmd_settings_get.ts`, `src/scripts/_cli/cmd_settings_set.ts`, `src/scripts/_lib/self_repair.ts`, `src/scripts/check_bundle_path_leakage.ts`, `src/scripts/generate_settings_reference.ts`, `src/scripts/hooks/block_config_weakening.ts`, `src/scripts/lint_no_activation_gates.ts`, `src/scripts/lint_settings_classes.ts`, `src/scripts/measure_docs_dead_links.ts`, `src/scripts/memory_learn_hook.ts`, `tests/eval/routing-matrix/settings-ask-protocol.yaml`, `tests/scripts/hooks/block_config_weakening.test.ts`, `tests/scripts/jit_ask_budget.test.ts`, `tests/scripts/memory_learn_hook.test.ts`, `tests/scripts/self_repair_deny_list.test.ts`
 - `docs/contracts/settings-sync-yaml-subset.md` (1) — `src/scripts/_cli/cmd_settings_check.ts`
 - `docs/contracts/skill-bundled-assets.md` (3) — `src/scripts/ai-video/smoke-trace.sh`, `src/scripts/ai-video/stitch.sh`, `src/scripts/media/lib/adapter-common.sh`

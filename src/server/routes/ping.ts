@@ -79,13 +79,15 @@ export const PingResponseSchema = z.object({
     /**
      * Host-facing capability advertisement (reciprocal-ecosystem Phase 2)
      * — a spawner reads `capabilities.configRoot` to detect support for a
-     * host-supplied config root, and `capabilities.embed` to detect the
+     * host-supplied config root, `capabilities.sessionList` for the versioned
+     * `sessions:list` JSON, and `capabilities.embed` to detect the
      * `?embed=1` embed contract, before relying on either. An older server
      * omits this block, so a newer host degrades to "not supported". The
      * shape mirrors `Capabilities` in `src/shared/capabilities.ts`.
      */
     capabilities: z.object({
         configRoot: z.boolean(),
+        sessionList: z.number(),
         embed: z.object({
             supported: z.boolean(),
             version: z.number(),

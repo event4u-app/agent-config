@@ -13,8 +13,9 @@ entry_condition:
 
 > Observed during `feat/map-always-fresh` (2026-11-01), `task ci`
 > step `check-reach-staleness`.
-> **Arrivals:** 3 — latest `analysis/inbox-2026-11-k` (2026-11-02): still 101 days
-> old, `yt-dlp` still absent; earlier: `analysis/inbox-2026-11-f`, `feat/map-always-fresh`.
+> **Arrivals:** 4 — latest `analysis/inbox-2026-11-l` (2026-11-02): still 101 days
+> old, `yt-dlp` still absent; earlier: `analysis/inbox-2026-11-k`,
+> `analysis/inbox-2026-11-f`, `feat/map-always-fresh`.
 >
 > **Decided 2026-11-02** (AI council, owner-delegated, decision D2): option 1.
 > The channel stays `experimental` and is **not** exempted or retired — a missing

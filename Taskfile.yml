@@ -178,6 +178,7 @@ tasks:
       - task: check-argument-hint
       - task: check-inputs-parity
       - task: check-no-external-sources
+      - task: check-provider-home-joins
       - task: check-source-pointer-freshness
       - task: check-module-management-neutral
       - task: check-release-trunk-sync
