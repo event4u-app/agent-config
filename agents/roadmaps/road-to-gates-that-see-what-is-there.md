@@ -33,26 +33,26 @@ stops reviewing a diff that omits the content of every new, not-yet-added file.
 
 ## Phase 1 — E2: an attribution label under `src/` fails the gate
 
-- [x] **1.1 Tier is class-aware (red first).** `tierFor(rel, cls)` returns
+- [x] **1.1 Tier is class-aware (red first).** `tierFor(rel, cls)` returns <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/source_shape.ts -->
       `block` for `attribution-label` under `src/`; every other class and path
       keeps its tier.
       verify: `npx vitest run tests/scripts/source_attribution_label.test.ts tests/scripts/source_shape.test.ts` -> 0
-- [x] **1.2 Zero tolerance, outside the ratchet.** Any `attribution-label`
+- [x] **1.2 Zero tolerance, outside the ratchet.** Any `attribution-label` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/source_shape.ts -->
       finding under `src/` fails the gate on its own; the `agents/**` ratchet
       count is unchanged (148).
       verify: `./scripts-run src/scripts/check_no_external_sources` -> 0
-- [x] **1.3 Docs match the code.** The gate docstring, the mechanics guideline
+- [x] **1.3 Docs match the code.** The gate docstring, the mechanics guideline <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/source_shape.ts -->
       and the shape-module tier comment name the `src/` label tier.
       verify: `grep -c 'attribution label under .src/.' docs/guidelines/agent-infra/source-confidentiality-mechanics.md` -> /^[1-9]/
 
 ## Phase 2 — E9: untracked files are diffed by default
 
-- [x] **2.1 Step 2 diffs untracked files.** `git ls-files --others
+- [x] **2.1 Step 2 diffs untracked files.** `git ls-files --others <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/source_shape.ts -->
       --exclude-standard`, each file shown as an added-file diff via
       `git diff --no-index -- /dev/null <file>`, capped at 100 KB per file;
       binary or over-cap files are listed with the reason.
       verify: `npx vitest run tests/contracts/review_changes_untracked.test.ts` -> 0
-- [x] **2.2 Projections regenerated.**
+- [x] **2.2 Projections regenerated.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/source_shape.ts -->
       verify: `grep -c 'no-index' dist/agent-src/commands/review/changes.md` -> /^[1-9]/
 
 ## Owner decisions — carried, not executed here
