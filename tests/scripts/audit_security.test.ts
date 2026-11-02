@@ -5,6 +5,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { auditSecurity, exitCode, main } from '../../src/scripts/audit_security.js';
+import { planAnswer } from '../../src/scripts/_lib/security_ops.js';
 
 function project(files: Record<string, string>): string {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'audit-security-'));
@@ -140,3 +141,63 @@ describe('audit:security', () => {
     });
 });
 
+
+describe('security_ops.plan — the plan offer is asked once per user (OQ-60 item 2)', () => {
+    const home = (yml: string | null, provenance: Record<string, { source: string; at: string }> | null) => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'audit-security-home-'));
+        fs.mkdirSync(path.join(dir, 'settings'), { recursive: true });
+        if (yml !== null) fs.writeFileSync(path.join(dir, 'settings', '.agent-settings.yml'), yml);
+        if (provenance !== null) fs.writeFileSync(path.join(dir, 'settings', '.agent-settings.provenance.json'), JSON.stringify(provenance));
+        return { EVENT4U_CONFIG_HOME: dir } as NodeJS.ProcessEnv;
+    };
+    const stamp = (source: string) => ({ 'security_ops.plan': { source, at: '2026-11-02T00:00:00Z' } });
+
+    it('no settings at all: unanswered', () => {
+        expect(planAnswer(home(null, null))).toBe('unanswered');
+    });
+
+    it('the template default false with no stamp is unanswered, never a recorded no', () => {
+        expect(planAnswer(home('security_ops:\n  plan: false\n', null))).toBe('unanswered');
+    });
+
+    it.each(['jit-answer', 'manual', 'gui'])('false stamped %s is a recorded no', (source) => {
+        expect(planAnswer(home('security_ops:\n  plan: false\n', stamp(source)))).toBe('no');
+    });
+
+    it('true stamped jit-answer is yes', () => {
+        expect(planAnswer(home('security_ops:\n  plan: true\n', stamp('jit-answer')))).toBe('yes');
+    });
+
+    it('true hand-edited with no stamp is yes — a hand edit is a human decision', () => {
+        expect(planAnswer(home('security_ops:\n  plan: true\n', null))).toBe('yes');
+    });
+
+    it('true stamped auto-detected is not a decision the machine may reach for the user', () => {
+        expect(planAnswer(home('security_ops:\n  plan: true\n', stamp('auto-detected')))).toBe('unanswered');
+    });
+
+    it('an unparseable settings file or sidecar is unanswered, never yes', () => {
+        expect(planAnswer(home('security_ops: [\n', stamp('jit-answer')))).toBe('unanswered');
+        const env = home('security_ops:\n  plan: true\n', null);
+        fs.writeFileSync(path.join(env['EVENT4U_CONFIG_HOME']!, 'settings', '.agent-settings.provenance.json'), '{');
+        expect(planAnswer(env)).toBe('yes');
+    });
+
+    const detail = (answer: 'unanswered' | 'yes' | 'no') => lens(auditSecurity(seeded(), { planAnswer: answer }), 'contain').findings[0]!.detail;
+
+    it('unanswered: the finding offers once and names the command that records the answer', () => {
+        expect(detail('unanswered')).toContain('Offer once: plan a security & maintenance section?');
+        expect(detail('unanswered')).toContain('agent-config settings:set security_ops.plan <true|false> --source jit-answer');
+    });
+
+    it('yes: the finding hands off without a question', () => {
+        expect(detail('yes')).toContain('security_ops.plan: true — hand off to feature-planning');
+        expect(detail('yes')).not.toContain('Offer once');
+    });
+
+    it('no: the finding stays, and nothing is offered', () => {
+        expect(detail('no')).toContain('security_ops.plan: false (answered) — not offered again');
+        expect(detail('no')).not.toContain('Offer once');
+        expect(lens(auditSecurity(seeded(), { planAnswer: 'no' }), 'contain').status).toBe('finding');
+    });
+});

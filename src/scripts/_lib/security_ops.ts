@@ -12,6 +12,8 @@ import * as path from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
 
+import { globalRoot, provenanceFilePath, settingsFilePath } from '../_cli/cmd_settings_set.js';
+
 export const LEVER_INVENTORY = path.join('agents', 'settings', 'security-ops.yml');
 
 /** A file whose presence says the project is deployed, not a library or script. */
@@ -41,6 +43,59 @@ export function readLevers(root: string): Lever[] | null | 'invalid' {
     }
 }
 
+/**
+ * The inventory's `automation` mode, `off` when the inventory is absent or
+ * invalid — a proposal is only ever built from an inventory that validated.
+ */
+export function readAutomation(root: string): Automation {
+    const file = path.join(root, LEVER_INVENTORY);
+    if (!fs.existsSync(file)) return 'off';
+    try {
+        const doc = parseYaml(fs.readFileSync(file, 'utf8')) as unknown;
+        return validateSecurityOps(doc).length === 0 && (doc as SecurityOps).automation === 'propose' ? 'propose' : 'off';
+    } catch {
+        return 'off';
+    }
+}
+
+export type Automation = 'off' | 'propose';
+
+/** The persisted answer to "plan a security & maintenance section?" (OQ-60 item 2). */
+export type PlanAnswer = 'unanswered' | 'yes' | 'no';
+
+const DECIDING_SOURCES = new Set(['jit-answer', 'manual', 'gui']);
+
+/**
+ * `security_ops.plan` as a decision, read from the user-global settings file and
+ * its provenance sidecar. The template default `false` carries no stamp, so it
+ * reads `unanswered` — only a stamped answer is a recorded no. A `true` with no
+ * stamp is a hand edit and counts; a `true` stamped `auto-detected` does not,
+ * because the machine may not reach this answer for the user. Anything
+ * unreadable is `unanswered`, never `yes`.
+ */
+export function planAnswer(env: NodeJS.ProcessEnv = process.env): PlanAnswer {
+    const root = globalRoot(env);
+    let value: unknown;
+    try {
+        const doc = parseYaml(fs.readFileSync(settingsFilePath(root), 'utf8')) as unknown;
+        const section = isObj(doc) ? doc['security_ops'] : undefined;
+        value = isObj(section) ? section['plan'] : undefined;
+    } catch {
+        return 'unanswered';
+    }
+    let source: unknown;
+    try {
+        const prov = JSON.parse(fs.readFileSync(provenanceFilePath(root), 'utf8')) as unknown;
+        const entry = isObj(prov) ? prov['security_ops.plan'] : undefined;
+        source = isObj(entry) ? entry['source'] : undefined;
+    } catch {
+        source = undefined;
+    }
+    if (source === undefined) return value === true ? 'yes' : 'unanswered';
+    if (typeof source !== 'string' || !DECIDING_SOURCES.has(source)) return 'unanswered';
+    return value === true ? 'yes' : 'no';
+}
+
 export const LEVELS = ['L0', 'L1', 'L2', 'L3', 'L4'] as const;
 export const OPERATOR_PATHS = ['sso', 'identity-provider', 'vpn'] as const;
 export const BREAK_GLASS = ['cli', 'edge-rule', 'infra-flag'] as const;
@@ -61,6 +116,12 @@ export interface SecurityOps {
     schema_version: 1;
     /** `separate` (the blueprint, default): the control surface does not share the app's HTTP stack. */
     control_surface?: 'separate' | 'same-app';
+    /**
+     * `off` (default): an advisory names the mapped lever in its report only.
+     * `propose`: the product's own advisory hook may raise a proposal to throw the
+     * mapped lever, which an operator confirms. Nothing throws a lever unattended.
+     */
+    automation?: Automation;
     operator_path: (typeof OPERATOR_PATHS)[number];
     break_glass: (typeof BREAK_GLASS)[number];
     levers: Lever[];
@@ -81,10 +142,17 @@ export function validateSecurityOps(value: unknown): string[] {
     if (!one(BREAK_GLASS, value['break_glass'])) out.push('break_glass must be cli|edge-rule|infra-flag — a path that works without the web UI');
     const surface = value['control_surface'] ?? 'separate';
     if (!one(['separate', 'same-app'], surface)) out.push('control_surface must be separate|same-app');
+    const automation = value['automation'] ?? 'off';
+    if (!one(['off', 'propose'], automation)) {
+        out.push('automation must be off|propose — an advisory may propose a lever, an operator confirms it; nothing throws one unattended (ADR-304)');
+    }
     const levers = value['levers'];
     if (!Array.isArray(levers) || levers.length === 0) {
         out.push('levers must name at least one lever');
         return out;
+    }
+    if (automation === 'propose' && !levers.some((l) => isObj(l) && Array.isArray(l['packages']) && l['packages'].length > 0)) {
+        out.push('automation: propose needs at least one lever with packages — otherwise no advisory maps to a lever and there is nothing to propose');
     }
     levers.forEach((l, i) => {
         if (!isObj(l)) {

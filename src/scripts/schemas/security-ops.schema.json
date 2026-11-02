@@ -9,6 +9,7 @@
     "operator_path": { "enum": ["sso", "identity-provider", "vpn"], "description": "The primary operator path. A URL secret is break-glass at most." },
     "break_glass": { "enum": ["cli", "edge-rule", "infra-flag"], "description": "A path that works without the web UI." },
     "control_surface": { "enum": ["separate", "same-app"], "description": "Default separate (the blueprint). same-app: a lever that stops the app's HTTP or is L3 cannot be released through the control surface." },
+    "automation": { "enum": ["off", "propose"], "description": "Default off. propose: an advisory may raise a proposal to throw the mapped lever, which an operator confirms — never an unattended throw (ADR-304). Needs at least one lever with packages." },
     "levers": {
       "type": "array",
       "minItems": 1,

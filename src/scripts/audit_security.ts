@@ -30,7 +30,7 @@ import { parse as parseYaml } from 'yaml';
 
 import { readInventory, unsupportedLockfiles } from './_lib/advisory_inventory.js';
 import { reportScanned } from './_lib/scan_scope.js';
-import { isDeployed, LEVER_INVENTORY, validateSecurityOps } from './_lib/security_ops.js';
+import { isDeployed, LEVER_INVENTORY, type PlanAnswer, planAnswer, validateSecurityOps } from './_lib/security_ops.js';
 import { scan_workflow } from './lint_workflow_security.js';
 
 export type LensStatus = 'ok' | 'finding' | 'unknown' | 'not-applicable';
@@ -160,7 +160,16 @@ function pipelineLens(root: string, read: { n: number }): LensResult {
     return { lens: 'pipeline', status: 'finding', findings };
 }
 
-function containLens(root: string, deployed: boolean, read: { n: number }): LensResult {
+const BLUEPRINT = 'feature-planning, blueprint security-audit/references/control-section.md';
+
+/** What the finding says about the plan, by the user's recorded answer (OQ-60 item 2). */
+function planOffer(answer: PlanAnswer): string {
+    if (answer === 'yes') return `security_ops.plan: true — hand off to feature-planning (${BLUEPRINT}), no question`;
+    if (answer === 'no') return 'security_ops.plan: false (answered) — not offered again; the finding stays';
+    return `Offer once: plan a security & maintenance section? (${BLUEPRINT}) — record the answer with \`agent-config settings:set security_ops.plan <true|false> --source jit-answer\``;
+}
+
+function containLens(root: string, deployed: boolean, read: { n: number }, answer: PlanAnswer): LensResult {
     if (!exists(root, LEVER_INVENTORY)) {
         if (!deployed) return { lens: 'contain', status: 'not-applicable', reason: 'no deploy signal — a library or script has nothing to switch at runtime', findings: [] };
         return {
@@ -169,7 +178,7 @@ function containLens(root: string, deployed: boolean, read: { n: number }): Lens
             findings: [
                 {
                     where: LEVER_INVENTORY,
-                    detail: 'no lever inventory — could this product be switched off, in part or whole, within minutes, with the operator still able to get in? Offer: plan a security & maintenance section (feature-planning, blueprint security-audit/references/control-section.md)',
+                    detail: `no lever inventory — could this product be switched off, in part or whole, within minutes, with the operator still able to get in? ${planOffer(answer)}`,
                 },
             ],
         };
@@ -203,10 +212,11 @@ function recoverLens(root: string, deployed: boolean, read: { n: number }): Lens
     };
 }
 
-export function auditSecurity(root: string): SecurityAudit {
+export function auditSecurity(root: string, opts: { planAnswer?: PlanAnswer } = {}): SecurityAudit {
     const deployed = isDeployed(root);
     const read = { n: 0 };
-    const lenses = [supplyLens(root, read), pipelineLens(root, read), containLens(root, deployed, read), recoverLens(root, deployed, read)];
+    const answer = opts.planAnswer ?? planAnswer();
+    const lenses = [supplyLens(root, read), pipelineLens(root, read), containLens(root, deployed, read, answer), recoverLens(root, deployed, read)];
     return {
         root,
         deployed,
