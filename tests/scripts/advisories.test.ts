@@ -1135,8 +1135,8 @@ describe('lockfile review fixes (independent review, 2026-11-02)', () => {
         const e = (ecosystem: 'runtime' | 'npm', name: string, version: string) => ({ ecosystem, name, version, range: null, provenance: 'declared' as const, file: 'f', line: 1, private: false, scope: null });
         const { findings, report } = await lifecycle([e('runtime', 'php', '8.0.30'), e('npm', 'react', '16.0.0')], { fetcher, now: new Date('2026-11-02T00:00:00Z') });
         expect(findings.map((f) => f.id)).toEqual(['EOL-php-8.0']);
-        expect(report.status).toBe('partial');
-        expect(report.reason).toMatch(/react/);
+        expect(report.status).toBe('error');
+        expect(report.reason).toMatch(/^partial:.*react/);
     });
 });
 

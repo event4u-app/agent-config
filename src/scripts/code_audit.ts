@@ -50,7 +50,6 @@ const RUN_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 /** Scanner text is data: one line, no control characters, bounded — it can never add a line or a heading to a report. */
 function clean(v: unknown, fallback: string, max = 200): string {
     if (typeof v !== 'string') return fallback;
-    // eslint-disable-next-line no-control-regex
     const t = v.replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
     return t === '' ? fallback : t;
 }

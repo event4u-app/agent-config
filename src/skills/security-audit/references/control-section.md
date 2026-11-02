@@ -10,7 +10,7 @@
 - [What keeps running under every lever](#what-keeps-running-under-every-lever)
 - [The user-facing response](#the-user-facing-response)
 - [Stack notes](#stack-notes)
-- [The lever inventory — agents/settings/security-ops.yml](#the-lever-inventory--agentssettingssecurity-opsyml)
+- [The lever inventory](#the-lever-inventory)
 <!-- reference-toc:end -->
 
 A **security & maintenance section** is what lets a human contain a product
@@ -114,9 +114,10 @@ switch at the CDN or load balancer, not in the app.
 the control routes registered on a separate listener or port, workers reading
 the same store.
 
-## The lever inventory — `agents/settings/security-ops.yml`
+## The lever inventory
 
-The project records its levers so the audit and the advisory loop can map an
+The project records its levers in `agents/settings/security-ops.yml` <!-- ref-ignore -->
+so the audit and the advisory loop can map an
 affected package to the lever that contains it. Shape:
 `src/scripts/schemas/security-ops.schema.json`.
 

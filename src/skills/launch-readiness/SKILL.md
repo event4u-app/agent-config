@@ -61,7 +61,7 @@ Walk the diff with the following gates:
 - Quality gates green (static analysis / linters / type-checks).
 - Migrations are reversible OR the irreversibility is explicit.
 - Feature flag / kill switch named, default off unless intended — a lever in
-  the inventory ([`control-section`](../security-audit/references/control-section.md)).
+  the inventory (blueprint: `security-audit/references/control-section.md`).
 - Doc / changelog / release notes present (hand off to
   [`release-comms`](../release-comms/SKILL.md) for the prose).
 - Rollback path tested at least mentally; named in step 4.

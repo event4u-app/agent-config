@@ -208,7 +208,7 @@ unknown | not-applicable` with `file:line`:
 |---|---|---|
 | `supply` | installed npm packages from every lockfile `audit:deps` reads (npm, pnpm, yarn, text bun): a name one edit from a popular package, and from `package-lock.json` an install script — the intake signals re-checked on what is already installed; a lockfile it could not read makes the lens `unknown` | no npm-family lockfile |
 | `pipeline` | the workflow-security scan over the project's `.github/workflows` | no workflows |
-| `contain` | `agents/settings/security-ops.yml` against its schema: every lever declares `fail_mode`, the operator path is never a URL secret, an L4 lever is never released through the control surface, and with `control_surface: same-app` no L3 or HTTP-stopping lever is either | no deploy signal at the project root (library, script — and a monorepo app below the root is not detected) |
+| `contain` | `agents/settings/security-ops.yml` against its schema: every lever declares `fail_mode`, the operator path is never a URL secret, an L4 lever is never released through the control surface, and with `control_surface: same-app` no L3 or HTTP-stopping lever is either | no deploy signal at the project root (library, script — and a monorepo app below the root is not detected) | <!-- ref-ignore -->
 | `recover` | a file whose name says rollback, runbook, restore, backup or disaster-recovery, under `docs/`, `doc/`, `runbooks/`, `.github/workflows/` or `agents/` — a name, not a tested procedure | no deploy signal |
 
 `run`, `code` and `agents` are not rebuilt: say "for advisories and end-of-life

@@ -584,7 +584,7 @@ export async function lifecycle(
                 line: e.line,
             });
         }
-        return { findings, report: failed.length > 0 ? { source: 'lifecycle', status: 'partial', reason: failed.join(',') } : { source: 'lifecycle', status: 'ok', reason: null } };
+        return { findings, report: failed.length > 0 ? { source: 'lifecycle', status: 'error', reason: `partial:${failed.join(',')}` } : { source: 'lifecycle', status: 'ok', reason: null } };
     } catch (e) {
         return { findings: [], report: { source: 'lifecycle', status: 'unavailable', reason: (e as Error).name === 'TimeoutError' ? 'timeout' : 'network' } };
     }
