@@ -157,3 +157,19 @@ export function assertWatchlistResolves(opts: WatchlistOptions): string[] {
     }
     return resolved;
 }
+
+/**
+ * Run a gate's `main` and turn an escaped {@link DeadScopeError} into a named
+ * refusal (exit 2) instead of an uncaught crash. A crash and a refusal used to
+ * share exit 1, so a self-test could not tell them apart
+ * (road-to-checks-that-name-their-catch, A1).
+ */
+export function exitOnDeadScope(run: () => number, write = process.stderr.write.bind(process.stderr)): number {
+    try {
+        return run();
+    } catch (e) {
+        if (!(e instanceof DeadScopeError)) throw e;
+        write(`❌  ${e.message}\n`);
+        return 2;
+    }
+}

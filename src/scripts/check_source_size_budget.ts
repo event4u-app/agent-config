@@ -70,7 +70,7 @@ import { asOf } from './_lib/as_of.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
-import { reportScanned } from './_lib/scan_scope.js';
+import { reportScanned, exitOnDeadScope } from './_lib/scan_scope.js';
 
 const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REAL_REPO_ROOT = path.dirname(path.dirname(SCRIPTS_DIR));
@@ -274,7 +274,7 @@ export function selfTest(): number {
                 },
                 {
                     name: 'a dead scan root is rejected, not reported as clean',
-                    expect: 'reject',
+                    expect: 'refuse',
                     run: () => run(empty),
                 },
                 {
@@ -425,5 +425,5 @@ function _isCliEntry(): boolean {
 }
 
 if (_isCliEntry() || process.argv[1] === _HERE) {
-    process.exit(main());
+    process.exit(exitOnDeadScope(() => main()));
 }

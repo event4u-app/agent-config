@@ -480,9 +480,22 @@ export function selfTest(): number {
             minRejectCases: 2,
             cases: [
                 {
-                    name: 'a lapsed deadline outside the frozen baseline is rejected',
-                    expect: 'reject',
+                    // Owner decision 2026-09-11 (5c5d87a8c): a passed keep-beta-until is
+                    // reported, never a CI failure. A lookalike of a defect that must pass.
+                    name: 'a lapsed deadline outside the frozen baseline is reported, not rejected (lookalike)',
+                    expect: 'accept',
                     run: () => run(write('lapsed', '---\nstability: beta\nkeep-beta-until: 2020-01-01\n---\n')),
+                },
+                {
+                    name: 'a deadline beyond the forward review window is rejected',
+                    expect: 'reject',
+                    run: () => run(write('far', '---\nstability: beta\nkeep-beta-until: 2999-01-01\n---\n')),
+                },
+                {
+                    name: 'two beta-review markers at once are rejected',
+                    expect: 'reject',
+                    run: () =>
+                        run(write('twomarkers', '---\nstability: beta\npromote-to: stable\nsuperseded-by: x\n---\n')),
                 },
                 {
                     name: 'a beta contract with NO marker at all is rejected',

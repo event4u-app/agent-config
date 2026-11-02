@@ -12,6 +12,7 @@
  * Exit 1 on the first malformed artefact, naming it.
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
@@ -144,7 +145,21 @@ export function runReach(root: string): { failures: string[]; scanned: number } 
  * the live measurement, which reports every surface with its own verdict.
  */
 function reachSelfTest(): number {
-    const tmp = fs.mkdtempSync(path.join(REPO_ROOT, '.host-reach-selftest-'));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'host-reach-selftest-'));
+    // A materialised projection — one artefact per host surface — so the accept
+    // case never depends on whether this checkout generated its projections.
+    const full = fs.mkdtempSync(path.join(os.tmpdir(), 'host-reach-full-'));
+    for (const s of HOST_SURFACES) {
+        const rel = s.projections[0]!;
+        const abs = path.join(full, rel);
+        if (path.extname(rel) !== '') {
+            fs.mkdirSync(path.dirname(abs), { recursive: true });
+            fs.writeFileSync(abs, '# fixture\n');
+        } else {
+            fs.mkdirSync(abs, { recursive: true });
+            fs.writeFileSync(path.join(abs, 'fixture.md'), '# fixture\n');
+        }
+    }
     const invoke = (dir: string): number =>
         runGateCli(
             REPO_ROOT,
@@ -164,14 +179,15 @@ function reachSelfTest(): number {
                     run: () => invoke(tmp),
                 },
                 {
-                    name: 'this repository accounts for every host surface',
+                    name: 'a root carrying one artefact per host surface accounts for every surface',
                     expect: 'accept',
-                    run: () => invoke(REPO_ROOT),
+                    run: () => invoke(full),
                 },
             ],
         });
     } finally {
         fs.rmSync(tmp, { recursive: true, force: true });
+        fs.rmSync(full, { recursive: true, force: true });
     }
 }
 

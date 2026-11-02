@@ -89,3 +89,8 @@ Approved as a Phase-4 documented divergence. Both items are tracked: (1) is
 permanent (cross-library error taxonomy); (2) closes when the Phase-7 memory
 modules are ported and `--shadow-report` can call real `retrieve` /
 `memory_status` twins.
+
+**Update 2026-11-02.** Item (2) is closed by removal: `check_memory` no longer
+accepts `--shadow-report` (its strict parser exits 2), and the
+`task memory:shadow-report` wrapper that still called it was deleted
+(`road-to-checks-that-name-their-catch` step 0.2).

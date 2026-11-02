@@ -49,7 +49,7 @@ import * as yaml from 'js-yaml';
 
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
-import { assertScanned, reportScanned } from './_lib/scan_scope.js';
+import { assertScanned, reportScanned, exitOnDeadScope } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -365,7 +365,7 @@ function selfTest(): number {
         cases: [
             {
                 name: 'an empty corpus is refused, not certified green',
-                expect: 'reject',
+                expect: 'refuse',
                 run: () => run(fs.mkdtempSync(path.join(os.tmpdir(), 'deny-text-empty-'))),
             },
             {
@@ -415,5 +415,5 @@ function selfTest(): number {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
-    process.exit(main(process.argv.slice(2)));
+    process.exit(exitOnDeadScope(() => main(process.argv.slice(2))));
 }
