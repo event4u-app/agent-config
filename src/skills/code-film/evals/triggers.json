@@ -1,0 +1,63 @@
+{
+    "skill": "code-film",
+    "last_eval": "2026-11-02",
+    "description": "5 exemplars + 4 near-misses + 1 counterexample. Authored under road-to-a-film-built-from-time 5.3. Exemplars are films built from code: launch clip, kinetic type, animated chart, brand loop, explainer (German). Near-misses carry the routing the skill must give away: generative-provider prompts (motion-choreographer), UI motion (fe-design), editing footage (/video). The counterexample is a single animated asset (svg-authoring).",
+    "queries": [
+        {
+            "q": "make a 20-second launch video for our app from code, no paid video AI",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "build a kinetic typography film of our manifesto, synced to this track",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "animate this bar chart into a short MP4 that tells the revenue story",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "render a looping brand animation as a 1080x1080 video, frame-exact",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "Mach mir ein kurzes Erklärvideo aus Code, das unseren Prozess zeigt",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "write the Veo motion prompt for the locked hero still",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "generative provider prompt belongs to motion-choreographer"
+        },
+        {
+            "q": "retune scene 3's Kling prompt with a slower dolly",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "generative provider prompt belongs to motion-choreographer"
+        },
+        {
+            "q": "add a hover animation and a scroll reveal to the pricing cards",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "UI motion belongs to fe-design § Motion"
+        },
+        {
+            "q": "cut these three phone clips together and add captions",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "editing existing footage belongs to the /video cluster"
+        },
+        {
+            "q": "draw an animated SVG spinner icon",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a single asset belongs to svg-authoring"
+        }
+    ]
+}

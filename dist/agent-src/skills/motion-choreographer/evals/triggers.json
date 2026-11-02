@@ -58,6 +58,12 @@
             "trigger": false,
             "class": "counterexample",
             "note": "the literal 'choreography' homonym with no video pipeline"
+        },
+        {
+            "q": "make a kinetic typography film from code that renders the same every time",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a film computed from time is code-film, not a provider prompt"
         }
     ]
 }

@@ -133,3 +133,12 @@ prompt-engineering-patterns:
   license_clean: true
   kind: inspired_by
   last_verified: 2026-05-09
+
+code-film:
+  author_enc: ENC1:HqLu+Ha7A6uqdyjP/1bmATripJki7bPGgKAdoIPxlzyImRiS6KwgZ/ZpHxH3cNBGdBqvZL1SKD8wOafqj+PYqZp9mtTm11d/JJEj/q9blGF8fn/hoQI3O1URI38JWT0VMw4cgPO1K0xXRWVFD/nOwhOr
+  source_enc: ENC1:wYlj0/ryp9x9sjz6zpdKcrLD+uZ/a6j88dzss0QulWkM7ll+3XbIlbsCeReVtC2xF9ObxRSEeHG3JDFl1a12yfxfK3/CSPDE2xGtyIeoDZZpvyjXf+nMp0WY
+  notes_enc: ENC1:gs8ZcBmByBMUMk9Y28srCMFiOZtN6Q26aHdY68qPuIqrQRzDxVJTbW0JB4LtZe+y6hmUEsnXtUoimBVxOw3jqDU2rKAgZBFxBjw2hBMwCae0IuC+fCwfqAIP99jdY/9VHkth5Ym6jiyzHNoag98F/3yZWTainV/kxRs18jH+lNENe+2gWJ2gI9uw5Kr7XCn/XzU9nioeKobYsMp/Ix6F5gU9cFwvMoiQQogcL1kPcQ/uLSKB32mmAdKQSLEkFZVidwCOOK6s0KIkmP9fdQEwU7bqeS178n7OA8Q4OKBb2FtiVFmC8x4Pev+w7eeHut2BfCPcVhdDcpWF+36c9rshMBNHntUpZU8ucfDRbqf2Q1/c4pow7NJLXIsnUnW4IEg99Ra0tow50V9/+0wzWU0aemK31ZPbnun/d0qr1UZL2LrrtmJGGBePAlq7MAUW0L2vu+P6y0V9PHvoIZDhBZCAdZSMoJA9cwG3ep1KW/dtBvLHJZI7/rSikQplZOFsBazzZ2RfOZCkt2a5KseQnXOXg+8Iyrl2ceEHpQ4IB2XWPDxDDLSiUYHSpJEVPGpHN64Dsh1jZLstiaMYxkfy1iEviDlohPoUfVTPYBcG7FOLlvGybISniOCL6WW9zQ==
+  license: MIT
+  license_clean: true
+  kind: inspired_by
+  last_verified: 2026-11-02

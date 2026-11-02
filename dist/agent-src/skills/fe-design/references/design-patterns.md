@@ -197,6 +197,12 @@ values below and are checked against them by
 `src/skills/design-intelligence/data/styles.csv`,
 `src/skills/design-intelligence/data/motion.csv`.
 
+Its scope is interactive UI. A time-based film — every frame computed from `t`,
+captured and encoded — has shots that run seconds and springs that may overshoot
+within a bound; those values live in
+[`code-film/references/film-motion.md`](../../code-film/references/film-motion.md),
+and nothing below changes for them.
+
 Before adding any animation to a UI element, run through this decision tree:
 
 **1. Should this animate at all?**
