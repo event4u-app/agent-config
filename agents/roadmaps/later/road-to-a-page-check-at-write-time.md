@@ -30,9 +30,9 @@ turn. The function exists (`writeTimeFindings` in
       for `.html`/`.css` writes, advisory P2, exit 0, with the rows in a
       conditional chunk so the dispatch bundle carries only the call site.
       Blocked by `hook-bundle-budget-for-web-launch`.
-      verify: `npx vitest run tests/hooks/design_pass_web_launch.test.ts` → 0
+      verify: `npx vitest run tests/hooks/design_pass_web_launch.test.ts` -> 0
       with a planted page surfacing its line and a safe twin surfacing nothing,
-      and `./scripts-run src/scripts/check_hook_bundle_composition` → 0.
+      and `./scripts-run src/scripts/check_hook_bundle_composition` -> 0.
 
 ## Blockers
 

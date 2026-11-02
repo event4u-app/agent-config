@@ -36,7 +36,7 @@ outward, one named defect at a time.
 
 | # | Reading | Evidence |
 |---|---|---|
-| D1 | Third-party-load detection knows analytics origins only | `check_web_launch_readiness.ts:715` `ANALYTICS_RE`; `grep -rIl` over `src` for `youtube-nocookie\|maps.googleapis\|recaptcha` → 0 |
+| D1 | Third-party-load detection knows analytics origins only | `check_web_launch_readiness.ts:715` `ANALYTICS_RE`; `grep -rIl` over `src` for `youtube-nocookie\|maps.googleapis\|recaptcha` -> 0 |
 | D2 | `required-legal-pages` matches paths, never page text | `check_web_launch_readiness.ts:686-698` |
 | D3 | The DE benchmark fixture cites `§ 5 TMG` and its ground truth treats the imprint as correct | `tests/fixtures/web-launch-benchmark/local-business/impressum.html:7`; `GROUND-TRUTH.md:41` |
 | D6 | Config header says "Nothing reads this file yet" although the loader and `production-validator` read it | `src/config/web-launch-readiness.json:2` |
@@ -48,10 +48,10 @@ outward, one named defect at a time.
       `§ 5 TMG` line in `local-business/impressum.html` with a neutral current
       line and record a pre-freeze amendment in
       `later/road-to-web-launch-readiness-benchmark.md` (trigger 3).
-      verify: `grep -rn "TMG" tests/fixtures/web-launch-benchmark/` → 0;
-      `npx vitest run tests/scripts/web_launch_benchmark_fixtures.test.ts` → 0.
+      verify: `npx vitest run tests/scripts/web_launch_benchmark_fixtures.test.ts` -> 0,
+      with a case asserting the imprint fixture carries no `TMG`.
 - [x] **0.2 Fix the stale config header** (D6): name what reads the file today.
-      verify: `npx vitest run tests/scripts/web_launch_readiness_config.test.ts` → 0,
+      verify: `npx vitest run tests/scripts/web_launch_readiness_config.test.ts` -> 0,
       with a test that the header does not contain "Nothing reads".
 
 ## Phase 1 — Pre-register the claim, freeze the corpus (before detector code)
@@ -71,7 +71,7 @@ outward, one named defect at a time.
       naming every provider); decoys (README naming `fonts.googleapis.com`,
       `<a href>` to maps, `dns-prefetch` → undecided, footnote `[1]`).
       verify: `ground-truth.json` lists 8 planted rows (9 entries), 6 twins, 5 decoys and
-      `npx vitest run tests/scripts/third_party_load_fixtures.test.ts` → 0.
+      `npx vitest run tests/scripts/third_party_load_fixtures.test.ts` -> 0.
 
 ## Phase 2 — Static rows, each against its named defect
 
@@ -86,7 +86,7 @@ Three-state contract throughout: finding / undecided / passed.
       seeded only with origins the source evidences plus today's analytics
       origins. Unknown origin and click-to-load wrapper → undecided.
       verify: planted 1–5 found with `file:line`; twins and decoys silent;
-      `dns-prefetch` undecided — `npx vitest run tests/scripts/third_party_load.test.ts` → 0.
+      `dns-prefetch` undecided — `npx vitest run tests/scripts/third_party_load.test.ts` -> 0.
 - [x] **2.2 `superseded-statute-in-legal-page`** (D2; planted 6). A dated
       supersession table in the config — one row: `TMG § 5 → DDG § 5,
       effective 2024-05-14`, with `authority` + `review_by` — applied to the
@@ -101,7 +101,7 @@ Three-state contract throughout: finding / undecided / passed.
       verify: planted 8 found; twin silent.
 - [x] **2.5 Tiers.** All four rows `situational`; `de` escalation: 2.1/2.4 →
       high, 2.2/2.3 → critical, each with `authority` + `review_by`.
-      verify: `npx vitest run tests/scripts/web_launch_readiness_config.test.ts` → 0.
+      verify: `npx vitest run tests/scripts/web_launch_readiness_config.test.ts` -> 0.
 
 ## Phase 3 — Runtime witness without a socket
 
@@ -123,7 +123,7 @@ Three-state contract throughout: finding / undecided / passed.
       font/icon/stylesheet to any third-party resource in shipped markup
       including iframes, plus one row: statute names on legal pages come from
       the dated authority, never from model memory.
-      verify: `npx vitest run tests/scripts/ai_code_blindspots_rows.test.ts` → 0
+      verify: `npx vitest run tests/scripts/ai_code_blindspots_rows.test.ts` -> 0
       (no ADR-205 reach test exists in the tree; this one asserts both cells and
       that every checker row they name is configured).
 - [~] **4.2 Wire 2.1 and 2.2 into `design_pass_hook`** for UI files —
@@ -160,7 +160,7 @@ Three-state contract throughout: finding / undecided / passed.
 - [x] **6.1 Probe top, middle and bottom bands**, report the max, keep the 0.06
       bar, name the rung "on-screen text".
       verify: a centre-text frame is flagged, a subtitle frame still is, a
-      text-free frame is not — `npx vitest run tests/scripts/media_bundle.test.ts` → 0.
+      text-free frame is not — `npx vitest run tests/scripts/media_bundle.test.ts` -> 0.
 
 ## Decisions
 
