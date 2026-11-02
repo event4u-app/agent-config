@@ -2,17 +2,26 @@
 // pathological input: a minified single-line page, an unclosed <script>, a page
 // of '<' or '[' with no closer. Ratification round 2 of the write-time carrier
 // found quadratic paths here; each case below reproduced one before the fix.
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
 import { loadConfig } from '../../src/scripts/check_web_launch_readiness';
-import { classifyLoads, loadRegister, visibleText, writeTimeFindings } from '../../src/scripts/web_launch_third_party';
+import { classifyLoads, loadRegister, tagsOf, visibleText, writeTimeFindings } from '../../src/scripts/web_launch_third_party';
 
 const REPO = path.resolve(__dirname, '..', '..');
 const register = loadRegister(REPO, '2026-11-02');
 const table = loadConfig(REPO).supersessions;
 const N = 200_000;
+
+// The hook runs inside one hook event, so a scan of the largest file it reads must
+// fit that event's p95 ceiling; a quadratic scan of the megabyte cases measured 2,562 ms.
+const EVENT_P95_MS: number = (
+    JSON.parse(fs.readFileSync(path.join(REPO, 'src', 'config', 'hook-latency-budget.json'), 'utf8')) as {
+        budgets_ms: { any_hook_event: { p95_ci: number } };
+    }
+).budgets_ms.any_hook_event.p95_ci;
 
 const loads = (rel: string, body: string): string[] =>
     writeTimeFindings(rel, body, register, table).filter((h) => h.check === 'third-party-load-in-markup').map((h) => `${String(h.line)}`);
@@ -36,13 +45,15 @@ describe('linear on pathological input', () => {
     for (const [name, body] of Object.entries(CASES)) {
         it(`${name} (${String(body.length)} chars) finishes fast in an imprint`, () => {
             const ms = timed(() => writeTimeFindings('impressum.html', body, register, table));
-            expect(ms).toBeLessThan(1_000);
+            expect(ms).toBeLessThan(EVENT_P95_MS);
         });
     }
 
     it('visibleText drops an unclosed script to the end, linearly', () => {
         expect(visibleText('<p>a</p><script>x')).toBe('a');
-        expect(timed(() => visibleText('<script>'.repeat(N / 8)))).toBeLessThan(500);
+        expect(visibleText('<p>a</p><style>p{} b')).toBe('a');
+        expect(visibleText('<p>a</p><style>p{}</style><p>b</p>')).toBe('a b');
+        expect(timed(() => visibleText('<script>'.repeat(N / 8)))).toBeLessThan(EVENT_P95_MS);
     });
 
     it('a minified page still reports its statute citation', () => {
@@ -121,13 +132,22 @@ describe('a long tag is read, an unclosed one is never a silent pass (round-5 ra
         const gap = 'x'.repeat(99_990);
         const sparse = Array.from({ length: 10 }, () => `<link href=x${gap}`).join('');
         const dense = '<link '.repeat(166_000);
-        for (const body of [sparse, `${sparse}>`, `<link href=x${'x'.repeat(999_000)}`, dense]) {
-            expect(timed(() => writeTimeFindings('index.html', body, register, table))).toBeLessThan(500);
+        const shapes: [string, number, number][] = [
+            [sparse, 10, 0],
+            [`${sparse}>`, 10, 1],
+            [`<link href=x${'x'.repeat(999_000)}`, 1, 0],
+            [dense, 166_000, 0],
+        ];
+        for (const [body, count, closed] of shapes) {
+            const tags = tagsOf(body);
+            expect([tags.length, tags.filter((t) => t.closed).length]).toEqual([count, closed]);
+            expect(unread('index.html', body)).toEqual(['1']);
+            expect(timed(() => writeTimeFindings('index.html', body, register, table))).toBeLessThan(EVENT_P95_MS);
         }
     });
 
     it('a page of unclosed link tags yields one hit, linearly', () => {
         const body = '<link rel=stylesheet href=x'.repeat(N / 28);
-        expect(timed(() => expect(unread('index.html', body)).toHaveLength(1))).toBeLessThan(1_000);
+        expect(timed(() => expect(unread('index.html', body)).toHaveLength(1))).toBeLessThan(EVENT_P95_MS);
     });
 });
