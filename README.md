@@ -218,6 +218,8 @@ You do not get all of it at once. On tools without a way to hide skills, a new i
 
 **Teams.** Every tool you install is recorded in `agents/installed-tools.lock`; a new team member runs `npx @event4u/agent-config sync` after cloning.
 
+**Cloud sessions.** A Claude Code cloud session (claude.ai/code, `claude --cloud`) starts on a fresh clone and does not see the home-directory install, so it runs without agent-config skills, rules and hooks. See [cloud sessions](docs/setup/cloud-sessions.md).
+
 [Which install do I get? →](https://event4u-app.github.io/agent-config/tools/overview/)
 
 ## Works with agent-switch
