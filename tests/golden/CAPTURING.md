@@ -28,6 +28,10 @@ node node_modules/.bin/tsx tests/golden/capture.ts --scenarios GT-U1
 Omit the flag to recapture every locked GT. A partial run keeps the
 other rows in `summary.json` intact.
 
+When committing a regenerated baseline, add one line per changed scenario
+to a commit message or the PR body — `Golden-Intent: GT-<id> — <reason>` —
+or `check_golden_intent` fails the PR.
+
 ## How to regenerate all scenarios
 
 ```bash
