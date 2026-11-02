@@ -17,10 +17,10 @@ entry_condition:
 
 ## Goal
 
-A user who says "build me a website" gets AC's existing blocks in a fixed,
-inspectable order (brand → research → copy → direction → build → check → live
-→ re-measure), every factual promise on the page traces to an owner input, and
-the check phase runs a reviewer that did not build the page. No new skill and
+A website request runs AC's existing blocks in a fixed order. The order is
+brand → research → copy → direction → build → check → live → re-measure; every
+factual promise on the page traces to an owner input, and the check phase runs a
+reviewer that did not build the page. No new skill and
 no new verb: a mission in the existing container.
 
 ## Verified at the pin

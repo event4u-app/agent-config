@@ -188,7 +188,7 @@ guidelines, personas) are **generated from source and CI-drift-checked**:
 fails the build on any count-shaped prose mention that drifts from the
 source count — or on two different numbers for the same artefact kind.
 
-We also publish our **debt**: 55 claim(s) are logged as
+We also publish our **debt**: 56 claim(s) are logged as
 `unbacked` inventory in the ledger — not yet bound, and therefore not
 allowed to carry a marker in public prose. Hiding them would be the
 opposite of the point.
@@ -370,7 +370,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 
 Undeclared rules (79, of which 9 kernel-denied) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 131 ledger entries · 63 backed · 4 measured-in-repo · 56 unbacked inventory · 8 resolved-null.
+**Axis 2 — evidence form per public claim.** 132 ledger entries · 63 backed · 4 measured-in-repo · 57 unbacked inventory · 8 resolved-null.
 
 | Claim id | Kind | Status | Measured on | Evidence pointer |
 |---|---|---|---|---|
@@ -492,6 +492,7 @@ Undeclared rules (79, of which 9 kernel-denied) carry no row — an honest gap b
 | `surgical-uninstall` | qual | backed | — | `exec:vitest run tests/install/uninstall_shared_host_config_real_install.test.ts tests/lib/json_pointers.test.ts tests/lib/host_hook_merge.test.ts -> 0` |
 | `team-defect-finding-null` | quant | backed | — | `internal/bench/reports/defect-finding.json#honest_null` |
 | `thin-inject-delivery-equivalence` | quant | measured-in-repo | maintainer checkout, project-scope tree, claude-code, widened corpus re-measured 2026-09-08 | `internal/bench/reports/thin-inject-2026-09-08.md#endpoints` |
+| `third-party-load-finds-planted` | quant | unbacked | — | `PRE-REGISTERED 2026-11-02 (road-to-a-page-that-says-what-it-loads Phase 1.1), BEFORE any detector code for its four rows exists -- the registering change carries the frozen corpus and this entry and no detector. SEPARATE from `web-launch-readiness-finds-more` on purpose: that claim compares an LLM arm against a bare prompt and needs a ground-truth-blind freezer; this one generates nothing, so it needs no comparator. BASELINE: zero, by construction -- the only third-party-load detection is `ANALYTICS_RE` in `src/scripts/check_web_launch_readiness.ts`, and `required-legal-pages` matches paths, never page text. CORPUS: `tests/fixtures/third-party-load/`, one DE local-business build with eight planted rows (nine entries: the privacy-page row is split per unnamed provider) -- a Google Fonts stylesheet, a CSS `@import` of it, a `preconnect` to its static origin, a Maps iframe, a `youtube-nocookie` iframe, an imprint citing a superseded statute, an imprint carrying template placeholders, a privacy page silent on two loaded providers; six safe twins at the same relative paths; five decoys (prose naming an origin, an anchor, a `dns-prefetch` that must report undecided, a framework font import in source, a footnote marker). Ground truth at `tests/fixtures/third-party-load/ground-truth.json`, frozen before the detector. BARS, fixed here: every planted entry found at its recorded file (and line where recorded); zero findings on any twin or decoy; the `dns-prefetch` line reported undecided. HARD GATE: a flagged twin or decoy fails the claim regardless of recall. FALSIFICATION: (1) a twin or decoy is flagged; (2) a planted entry is missed; (3) the corpus cannot be scored against its ground truth (UNDERPOWERED, not dropped). SCOPE: one build, one region, lexical rows; generalises to no other framework output, no live site, and no legal conclusion -- the rows state loads and citations, never compliance. Backing needs a held-out corpus written without sight of the detector, because the detector's author has read this one.` |
 | `tier-downshift-limit-relief` | quant | unbacked | — | `agents/evidence/analysis/tier-downshift-paired-run-2026-10-23.md#Verdict **underpowered**` |
 | `tier-downshift-quality-held` | quant | unbacked | — | `agents/evidence/analysis/tier-downshift-paired-run-2026-10-23.md#Verdict **underpowered**` |
 | `touched-file-quality-shadow-to-warn-bar` | quant | unbacked | — | `PRE-REGISTERED 2026-10-07 (`road-to-touched-file-quality-that-says-when-it-did-not-look` step 4.1), BEFORE any reading is taken against it. The only reading that exists is `agents/evidence/analysis/touched-file-quality-readings-2026-Q4.md`, a replay of 30 merged commits, and that corpus is EXCLUDED below — so no number here can have been fitted to a result.` |

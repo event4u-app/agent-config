@@ -36,7 +36,16 @@ export const ROADMAPS = 'agents/roadmaps';
 /** `''` is the active top level. Order is the row order. */
 export const DIRS = ['', 'later', 'stubs'] as const;
 export const MAX_WORDS = 20;
-export const BUDGET_TOKENS = 10_000;
+/**
+ * Raised from 10,000 on 2026-11-02 (AI council, 2/2 anthropic + openai, record
+ * agents/evidence/council/owned-digest-budget-20261102.md): origin/main rendered
+ * just under 10,000, so any new later/ or stubs/ row failed the generator. The
+ * digest is a view, and dropping or truncating rows to fit a round number loses
+ * the owner it exists to show. Revisit when it renders above 10,000 again (5 %
+ * headroom gone), and then split it into an index for triage and a summary for
+ * people rather than raising a second time.
+ */
+export const BUDGET_TOKENS = 10_500;
 
 export type Dir = (typeof DIRS)[number];
 
