@@ -186,7 +186,9 @@ describe('the live tree', () => {
         expect(s.rules - s.skills).toBeGreaterThan(0.3);
     });
 
-    it('measures 107 routed rules and 301 routed skills', () => {
+    it('measures 107 routed rules and 302 routed skills', () => {
+        // 301 -> 302 skills on 2026-11-02: `code-film`, shipped with its own
+        // corpus, so the skills ratio rose across the increase (192/301 -> 193/302).
         // 300 -> 301 skills on 2026-10-18: `type-design`, shipped with its own
         // corpus, so the skills ratio rose across the increase (156/300 -> 157/301).
         // 299 -> 300 skills on 2026-10-11: `svg-authoring`. The first skill-side
@@ -203,7 +205,7 @@ describe('the live tree', () => {
         // move, while the unit count changing means the estate changed, which is
         // a thing a reader should be told about rather than have absorbed.
         expect(measureRules(REPO).units).toBe(107);
-        expect(measureSkills(REPO).units).toBe(301);
+        expect(measureSkills(REPO).units).toBe(302);
     });
 });
 
