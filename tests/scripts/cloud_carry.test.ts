@@ -176,6 +176,19 @@ describe('repairCloudReach', () => {
         expect(repairCloudReach(root, ROOT, '19.2.0').payload['action']).toBe('noop');
     });
 
+    it('doctor glue: JSON to stdout when asked, failure lines to stderr otherwise', () => {
+        const script = (version: string, json: boolean): string =>
+            `import { runCloudReachRepair } from ${JSON.stringify(path.join(ROOT, 'src/scripts/_lib/cloud_carry.ts'))};` +
+            `process.exitCode = runCloudReachRepair(${JSON.stringify(tmp('carry-glue-'))}, ${JSON.stringify(ROOT)}, ${version}, ${json ? '(p) => "JSON:" + p.action' : 'null'});`;
+        const tsx = path.join(ROOT, 'node_modules', '.bin', 'tsx');
+        const ok = spawnSync(tsx, ['-e', script('"19.2.0"', true)], { encoding: 'utf8' });
+        expect([ok.status, ok.stdout.trim(), ok.stderr]).toEqual([0, 'JSON:carried', '']);
+        const bad = spawnSync(tsx, ['-e', script('null', false)], { encoding: 'utf8' });
+        expect(bad.status).toBe(2);
+        expect(bad.stdout).toBe('');
+        expect(bad.stderr).toContain('could not carry hooks');
+    });
+
     it('refuses without a readable version and writes nothing', () => {
         const root = tmp('carry-repair-');
         const r = repairCloudReach(root, ROOT, null);

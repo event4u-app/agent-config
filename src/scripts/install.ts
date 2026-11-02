@@ -935,8 +935,6 @@ function ensure_claude_bridge(project_root: string, force: boolean): Record<stri
     const target = path.join(project_root, '.claude', 'settings.json');
     const healed = _heal_legacy_claude_plugin_ids(target);
     for (const pid of healed) success(`.claude/settings.json: removed stale plugin id \`${pid}\``);
-    // No `enabledPlugins` (owner decision 2026-11-02): the marketplace plugin is deprecated, and a
-    // repo-declared plugin is not installed in a cloud session, so the entry did nothing anywhere.
     const bridge = withHostEnv({}, project_root, success);
     return merge_json_file(target, bridge, force || healed.length > 0, '.claude/settings.json');
 }

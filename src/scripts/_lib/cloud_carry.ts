@@ -113,3 +113,20 @@ export function repairCloudReach(projectRoot: string, packageRoot: string, versi
         ],
     };
 }
+
+/**
+ * The doctor glue, kept here so `cmd_doctor.ts` stays under its size ratchet.
+ * `dumpJson` set → print the payload with it (doctor's ASCII JSON); else print
+ * the lines, to stderr on failure.
+ */
+export function runCloudReachRepair(
+    projectRoot: string,
+    packageRoot: string,
+    version: string | null,
+    dumpJson: ((payload: Record<string, unknown>) => string) | null,
+): number {
+    const r = repairCloudReach(projectRoot, packageRoot, version);
+    const out = (s: string): boolean => (r.code === 0 || dumpJson ? process.stdout : process.stderr).write(s + '\n');
+    for (const line of dumpJson ? [dumpJson(r.payload)] : r.lines) out(line);
+    return r.code;
+}

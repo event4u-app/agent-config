@@ -93,7 +93,7 @@ import { bridgeDriftNoManifest as _check_bridge_drift_no_manifest, memoryMergeUn
 export { INSTALL_MODE_MARKER_RELATIVE, _is_global_only_consumer } from './doctor_install_mode.js';
 import * as claude_plugin from '../_lib/claude_plugin.js';
 import * as claude_settings_hooks from '../_lib/claude_settings_hooks.js';
-import { repairCloudReach } from '../_lib/cloud_carry.js';
+import { runCloudReachRepair } from '../_lib/cloud_carry.js';
 import * as staged_runtime from '../../install/stagedRuntime.js';
 import { _is_source_repo } from './cmd_refresh.js';
 import * as installed_lock from '../_lib/installed_lock.js';
@@ -780,7 +780,6 @@ const MANIFEST_REQUIRED_CHECK_IDS: ReadonlySet<string> = new Set([
     'lockfile-freshness',
     'unsupported-combos',
 ]);
-
 
 /** Repair targets that `--repair <id>` accepts. */
 const REPAIR_IDS = ['wizard-state', 'cloud-reach'] as const;
@@ -3225,17 +3224,9 @@ function _run_repair(opts: Options): number {
         }
         return 0;
     }
-    if (target === 'cloud-reach') return _repair_cloud_reach(opts);
+    if (target === 'cloud-reach') return runCloudReachRepair(_resolve_project_root(opts.project)[0], _package_root(), _current_package_version(), opts.json ? (p) => _jsonDumpsIndentAscii(p, 2) : null);
     eprint(`❌  doctor: unknown repair target ${pyRepr(target)}`);
     return 2;
-}
-
-/** Opt-in carry of the hook matrix into the repo (`_lib/cloud_carry.ts`). */
-function _repair_cloud_reach(opts: Options): number {
-    const r = repairCloudReach(_resolve_project_root(opts.project)[0], _package_root(), _current_package_version());
-    if (opts.json) print(_jsonDumpsIndentAscii(r.payload, 2));
-    else for (const l of r.lines) (r.code === 0 ? print : eprint)(l);
-    return r.code;
 }
 
 function main(argv: string[] | null = null): number {
