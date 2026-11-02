@@ -53,7 +53,9 @@ const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const QUIET = process.argv.slice(2).includes('--quiet');
 
 export const OPTION_LINE_RE = /^\s*>?\s*(\d+)\.\s+\S/;
-export const REC_LINE_RE = /(?:Recommendation|Empfehlung)\s*:\s*(\d+)\b/i;
+export const REC_LINE_RE = /(?:Recommendation|Empfehlung)\s*:\s*(?:\*{1,2}|_{1,2})?\s*(\d+)\b/i;
+/** An indented, non-blank line inside a block is the previous option wrapping, not the block's end. */
+const CONTINUATION_RE = /^(?:\s*>)?\s{2,}\S/;
 export const TAG_RE = /\((?:recommended|rec|empfohlen)\)/i;
 const CODESPAN_RE = /`[^`\n]*`/g;
 const HEADING_RE = /^#{1,6}\s/;
@@ -134,6 +136,8 @@ export function find_option_blocks(text: string): OptionBlock[] {
                 current.endLine = idx + 1;
                 current.numbers.push(num);
             }
+        } else if (current !== null && CONTINUATION_RE.test(lines[idx]!)) {
+            continue;
         } else {
             if (current !== null && current.numbers.length >= 2) {
                 blocks.push(current);
