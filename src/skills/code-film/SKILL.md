@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: code-film
-description: "Build a short motion film from code — launch clip, kinetic type, animated chart, explainer — every frame computed from time, captured, encoded and checked."
+description: "Motion film rendered from code, frame-checked."
 personas:
   - design-director
 domain: product

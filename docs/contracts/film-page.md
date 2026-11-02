@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # Film page contract
 
 A **film page** is an HTML page whose every visible state is a pure function of

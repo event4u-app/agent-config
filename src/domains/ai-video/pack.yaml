@@ -18,9 +18,9 @@ suggests: []
 surface_tier: lab
 token_passport:
   basis: chars/4
-  catalog_tokens: 589
+  catalog_tokens: 546
   commands_tokens: 0
   other_tokens: 0
   rules_tokens: 2913
-  total_tokens: 3502
+  total_tokens: 3459
 trust_level_default: experimental

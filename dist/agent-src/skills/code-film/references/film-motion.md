@@ -2,9 +2,8 @@
 
 This file is the **sole carrier** of motion values for a code-rendered film: a
 page that computes every frame from a timestamp, is captured headless and is
-encoded. Interactive UI motion is governed by
-[`fe-design/references/design-patterns.md`](../../fe-design/references/design-patterns.md)
-§ Motion, and neither carrier borrows the other's numbers. Both are bound by
+encoded. Interactive UI motion is governed by the `fe-design` skill's
+`references/design-patterns.md` § Motion, and neither carrier borrows the other's numbers. Both are bound by
 `src/scripts/lint_motion_authority_drift.ts`: this file's overshoot bound is
 parsed from the line below and every row of `../data/recipes.csv` is checked
 against it.

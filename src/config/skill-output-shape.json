@@ -46,6 +46,7 @@
     "character-consistency": "standing",
     "check-refs": "report",
     "churn-prevention": "standing",
+    "code-film": "standing",
     "code-intelligence": "standing",
     "code-refactoring": "standing",
     "code-review": "report",
