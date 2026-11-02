@@ -142,6 +142,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-residual-interruption-measurement | later | later | Road to the residual-interruption measurement |
 | road-to-roadmaps-finished-before-new-ones-start-carried | later | ready | Every step road-to-roadmaps-finished-before-new-ones-start deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-rule-triggers-and-links-that-hold | later | later | What an installed rule file declares and links to is true on the host that loads it. |
+| road-to-rules-that-say-when-they-reject | later | parked | A rule declared `enforced_by: instruction-only` carries a short Rejected when block — observable conditions a reviewer can cite as `<rule>#R<n>` … |
 | road-to-seats-that-know-why-they-failed | later | later | Every failure of a council seat carries a class before it gets a reaction, and the class picks the reaction: … |
 | road-to-security-guards-that-hold-at-turn-end | later | later | The skill-level fixes are in: a casual security question now gets a scoped answer. |
 | road-to-skill-ecosystem-capability-queue | later | later | Road to the capability queue — everything capability-shaped, waiting on a capacity slot |
