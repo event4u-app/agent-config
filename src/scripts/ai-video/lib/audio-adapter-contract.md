@@ -2,7 +2,7 @@
 
 > Single source of truth for every adapter under
 > `scripts/ai-video/audio-adapters/`. Sibling of the video/image
-> [`adapter-contract.md`](adapter-contract.md) (v2) — deliberately a
+> [`adapter-contract.md`](../../media/lib/adapter-contract.md) (v2) — deliberately a
 > **separate contract**, not a `kind` extension of v2: audio analysis is
 > a synchronous filter (stdin path → stdout JSON), while v2 is an async
 > render queue (submit/poll/fetch). Mixing the two shapes in one
@@ -201,7 +201,7 @@ tests pin its shape. CI never needs ffmpeg, allin1, whisperx, or a key.
 
 ## See also
 
-- [`adapter-contract.md`](adapter-contract.md) — v2 render contract
+- [`adapter-contract.md`](../../media/lib/adapter-contract.md) — v2 render contract
   (lip-sync adapters live there).
 - [`probe-audio.sh`](probe-audio.sh) — the zero-dependency fallback.
 - [`validate-vocal-map.sh`](validate-vocal-map.sh) — downstream
