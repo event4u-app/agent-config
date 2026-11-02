@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Gate self-test and argv reading — 2026-11-02
 
 Measured for `road-to-checks-that-name-their-catch` (steps 0.3, 1.2, 2.1, 3.2)
