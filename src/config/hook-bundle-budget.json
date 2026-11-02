@@ -4,7 +4,7 @@
     "registered_at": "2026-10-01",
     "owner": "maintainer",
     "review_by": "2027-10-01",
-    "max_bytes": 1562000,
+    "max_bytes": 1562300,
     "max_bytes_derivation": "Measured 1,514,715 bytes on origin/main at 213d87055 (the gate's own reading, APFS-cloned node_modules so no worktree path artefacts). The ceiling is that reading plus ~2.3 % of headroom, rounded to 1,550,000, on the same doctrine as the 2026-10-01 registration: a bundle is rebuilt from source on every run, so an esbuild minor that renames symbols moves the figure by hundreds of bytes with no change to this tree, and a ceiling one byte above the reading would red on that. Composition is healthy at this reading and was checked rather than assumed: one YAML package (258,833 bytes) and 1,238,525 bytes of own source, so the growth is own code, not a re-entered dependency. The 1,564,211-byte pre-swap regression this roadmap closed still cannot reappear under it. RAISED to 1,550,500 on 2026-10-23 for the InstructionsLoaded binding (237 bytes against 51 of headroom); the reasoning and the measured alternative are the `raise_log` entry whose `to` is 1,550,500, so this paragraph describes the 1,550,000 registration and the raise is recorded there rather than restated.",
     "shrink_only": true,
     "shrink_only_note": "A RAISE needs a recorded reason in `raise_log` below naming what was added and why it could not be avoided. Enforced since road-to-a-ratification-fence-that-follows-its-imports 3.2: the gate reads `max_bytes` at the base revision, and a working value above it fails unless `raise_log` gained an entry whose `to` equals the new value. A lowering needs no entry. This file is also on the ratification gate's watched set, so a raise carries a record as well as a log entry.",
@@ -145,6 +145,15 @@
             "what_was_added": "The `code-graph-refresh` row on the `stop` slot of seven platforms in the compiled manifest, and the opt-out marker path in the shared graph-home resolver. Measured 1,561,506 bytes, 1,106 over the 1,560,400 ceiling.",
             "why_it_could_not_be_avoided": "A binding is a manifest row the dispatch bundle carries; the concern body itself stays in its own chunk. The resolver field is the single place a layout path is chosen (check_graph_writers), so the opt-out cannot live elsewhere.",
             "what_would_have_caught_it": "Nothing earlier: the growth is the feature."
+        },
+        {
+            "date": "2026-11-02",
+            "from": 1562000,
+            "to": 1562300,
+            "by": "agent, analysis/inbox-2026-11-i (road-to-slices-at-agreed-seams 2.5)",
+            "what_was_added": "check_reply_consistency, bundled through the pending-decision detector of turn_end_gate, now reads a bold recommendation label closed before the number (`**Recommendation:** 1`, the form eight places in src/ use) and keeps an option wrapped onto an indented continuation line in one block. Measured with this gate's own build (APFS-cloned node_modules) on the branch merged with origin/main 939c45757: 1,561,999 B; origin/main itself measured 1,561,921 B, so +78 B.",
+            "why_it_could_not_be_avoided": "Room was made first: the first version was +153 B; inlining the continuation pattern and shortening both patterns brought it to +78 B. The base had 79 B of headroom, which leaves 1 B after the fix, below the jitter margin this file names, so the ceiling moves by 300 B rather than by the 78 B measured.",
+            "what_would_have_caught_it": "This gate, in the pre-push preflight; it did."
         }
     ],
     "chunks": [
