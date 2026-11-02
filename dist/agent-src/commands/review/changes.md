@@ -331,7 +331,9 @@ window back with `./scripts-run src/scripts/review_axis_report`; it reports
   before proceeding
 - If **any** judge returned `revise` → fix 🔴 findings automatically,
   ask before fixing 🟡 findings, report 🟢 as suggestions
-- If all seven returned `apply` → the diff is ready; report and stop
+- If all seven returned `apply` → the diff is ready; report and stop. A
+  security `apply` with a `needs_validation` coverage row reads "clean, with
+  gaps" and names the open row
 
 **Opt-in (never auto-on):** when the `revise` findings are *test-driven*
 (failing checks, not subjective craft) and you want bounded auto-repair

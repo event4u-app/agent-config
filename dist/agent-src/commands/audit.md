@@ -9,10 +9,10 @@ visibility: advanced
 cluster: audit
 skills: [dependency-upgrade, finishing-a-development-branch, using-git-worktrees, authz-review, security-audit]
 description: Security advisories, code and agent actions for this project
-argument-hint: "deps [refresh|show|gaps|fix <id>|accept <id>] | code [diff|full|retest|show|matrix] | agents"
+argument-hint: "deps [refresh|show|gaps|fix <id>|accept <id>] | code [diff|full|retest|show|matrix|import <sarif>] | agents | security"
 suggestion:
   eligible: true
-  trigger_description: "is anything we use vulnerable, check for security updates, which advisories affect this project, fix that CVE"
+  trigger_description: "is anything we use vulnerable, check for security updates, which advisories affect this project, fix that CVE, could we shut the app down if a vulnerability is disclosed"
   trigger_context: "the user asks about security advisories, end-of-life runtimes or a security release for something the project uses"
 workspaces:
   - agent-config-maintainer
@@ -23,7 +23,7 @@ packs:
 # /audit
 ## Instructions
 
-Three audits of the project — all distinct from `/security-audit-config`, which
+Four audits of the project — all distinct from `/security-audit-config`, which
 audits the agent configuration itself:
 
 - `/audit deps` — advisories, malware, end-of-support and pre-announced
@@ -33,6 +33,9 @@ audits the agent configuration itself:
 - `/audit agents` — what an AI agent, bot or MCP server in the project can
   **do**, and which of those actions nobody declared or let a model choose whose
   record it changes (§ 6).
+- `/audit security` — could the project **see, contain, fix and recover** from a
+  vulnerability disclosed tomorrow: supply, pipeline, containment and recovery
+  lenses, routing the rest to the three above (§ 8).
 
 ## Examples
 
@@ -43,6 +46,7 @@ audits the agent configuration itself:
 /audit code full                  # hunters per surface, a verifier per candidate, proof tests
 /audit code show                  # the ledger: open, coverage, unreviewed, rejected
 /audit agents                     # every tool registration vs. agents/settings/contexts/agent-actions.yml
+/audit security                   # supply · pipeline · contain · recover, each ok | finding | unknown | not-applicable
 ```
 
 **Why it works:** (`self-check-loop`) only `refresh` touches the network, and every finding names the
@@ -63,7 +67,7 @@ agent-config audit:deps refresh   # the ONLY step that touches the network
 agent-config audit:deps show      # findings by tier, each with file:line and IDs
 ```
 
-`refresh` reads the lockfiles, declared runtimes, Dockerfiles, compose files and
+`refresh` reads the lockfiles (npm, pnpm, yarn, text bun, composer), declared runtimes, Dockerfiles, compose files and
 CI workflows; sends **public** package names and versions to `api.osv.dev`;
 reads runtime lifecycle data from `endoflife.date` and the PHP and Node release
 feeds; downloads the whole CISA known-exploited catalog from `www.cisa.gov` and
@@ -158,11 +162,12 @@ The procedure is [`security-audit`](../../../skills/security-audit/SKILL.md)
 
 | Mode | Runs | Cost |
 |---|---|---|
-| `diff` | the diff judges over the branch diff (`/review-changes`, security lens) | cheapest — the default per PR |
+| `diff` | the diff judges over the branch diff (`/review-changes`, security lens); a touched guard, policy or middleware adds the callers of it via `agent-config code-graph affected <symbol>` — reported as widened scope, never as full coverage | cheapest — the default per PR |
 | `full` | enumerate → one hunter per surface class → a fresh verifier per candidate → a red proof test per confirmed finding | model calls; before a launch or on request |
 | `retest` | every proof test, `judge-security-auditor` over the fix diff only, and the ledger rows whose source changed | the suite plus one narrow judge |
 | `show` | `agent-config audit:code show` | none |
 | `matrix` | `agent-config audit:code matrix [--skeleton]` | none |
+| `import` | `agent-config audit:code import <file.sarif>` — an external scanner's results as `needs_validation` findings on `model` rows: input for the verifiers, never coverage, never confirmed | none |
 
 ```bash
 agent-config audit:code matrix --root .             # every API route × {anonymous, user A, user B}
@@ -189,3 +194,33 @@ checked", never "no findings".
 its `unreviewed` rows and changed sources — never an identical restart. One run
 by default, `--runs N` on request, and it stops when a run adds no `confirmed`.
 Model spend follows the council's quota ask.
+
+### 8. `/audit security` — could this project contain a vulnerability tomorrow
+
+```bash
+agent-config audit:security [--root <dir>] [--json]
+```
+
+Read-only, offline, no model (ADR-304). Four lenses, each `ok | finding |
+unknown | not-applicable` with `file:line`:
+
+| Lens | Checks | Not applicable when |
+|---|---|---|
+| `supply` | installed npm packages: an install script, a name one edit from a popular package — the intake signals re-checked on what is already installed | no `package-lock.json` |
+| `pipeline` | the workflow-security scan over the project's `.github/workflows` | no workflows |
+| `contain` | `agents/settings/security-ops.yml` against its schema: every lever declares `fail_mode`, the operator path is never a URL secret, no lever locks out its own release | no deploy signal (library, script) |
+| `recover` | a rollback, restore or runbook signal | no deploy signal |
+
+`run`, `code` and `agents` are not rebuilt: say "for advisories and end-of-life
+runtimes see `/audit deps`, for the code see `/audit code`, for agent actions
+`/audit agents`" and offer them. `unknown` is never reported as `ok`, and there is
+no total score. Exit `1` a finding, `3` a lens could not be read, `0` otherwise.
+
+**The offer, never the build.** A `contain` finding ("no lever inventory") ends
+in one question: *plan a security & maintenance section?* — yes hands off to
+[`feature-planning`](../../../skills/feature-planning/SKILL.md) with the
+blueprint [`control-section`](../../../skills/security-audit/references/control-section.md);
+no leaves the finding in the report and the question is not repeated in this run.
+The audit never throws a lever, and a deployed product's levers are the
+operator's (ADR-304).
+

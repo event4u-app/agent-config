@@ -1,12 +1,16 @@
 {
   "command": "audit",
-  "intent": "Check what this project uses for security advisories and carry a finding to a fix",
+  "intent": "Check what this project uses for security advisories, whether it could contain a vulnerability, and carry a finding to a fix",
   "cases": [
     { "prompt": "is anything we use vulnerable right now?", "expected": "audit" },
     { "prompt": "check our dependencies and runtimes for security advisories", "expected": "audit" },
     { "prompt": "fix CVE-2026-0001 in this project", "expected": "audit" },
     { "prompt": "is our PHP version still getting security updates?", "expected": "audit" },
+    { "prompt": "could we shut the app down quickly if a vulnerability in laravel is disclosed?", "expected": "audit" },
+    { "prompt": "run a security audit of this project, including the packages we use", "expected": "audit" },
+    { "prompt": "do we have a maintenance mode and a kill switch we can actually reach in an incident?", "expected": "audit" },
     { "prompt": "the CI run on my PR is red, fix it", "expected": "fix" },
-    { "prompt": "review my changes before I push", "expected": "review" }
+    { "prompt": "review my changes before I push", "expected": "review" },
+    { "prompt": "add a maintenance mode page to the admin panel", "expected": "feature" }
   ]
 }
