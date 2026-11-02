@@ -193,39 +193,24 @@ export function judgeCase(
     output: string | null,
 ): string | null {
     if (exit === HARNESS_ERROR) {
-        return (
-            'harness error — the gate produced no exit status (signal, timeout or spawn ' +
-            'failure). A crash is never a catch.'
-        );
+        return 'harness error: no exit status (signal/timeout) — a crash is never a catch';
     }
     if (output !== null && UNCAUGHT_CRASH.test(output)) {
-        return (
-            'harness error — the gate died on an uncaught exception (see its stack). ' +
-            'A crash is never a catch, even on a reject fixture.'
-        );
+        return 'harness error: uncaught exception — a crash is never a catch';
     }
     let behaved: boolean;
     if (testCase.expect === 'accept') behaved = exit === 0;
     else if (testCase.expect === 'refuse') behaved = exit === (dialect?.cannot_run ?? DEFAULT_CANNOT_RUN);
     else behaved = dialect !== undefined ? exit === dialect.finding : exit !== 0;
     if (!behaved) {
-        const wanted =
-            testCase.expect === 'refuse'
-                ? `refuse (exit ${String(dialect?.cannot_run ?? DEFAULT_CANNOT_RUN)})`
-                : testCase.expect === 'reject' && dialect !== undefined
-                  ? `reject (exit ${String(dialect.finding)})`
-                  : testCase.expect;
-        return (
-            `expected the gate to ${wanted} this fixture, got exit ${String(exit)}. ` +
-            "The gate's detection has stopped firing on a case it is supposed to catch."
-        );
+        return `expected ${testCase.expect}, got exit ${String(exit)}`;
     }
     if (testCase.names !== undefined) {
         if (output === null) {
-            return 'declares `names` but captured no gate output — run the fixture through runGateCli';
+            return '`names` set but no gate output captured';
         }
         if (!testCase.names.test(output)) {
-            return `exited as expected but did not name its catch (${String(testCase.names)} not in the output)`;
+            return `did not name its catch: ${String(testCase.names)}`;
         }
     }
     return null;

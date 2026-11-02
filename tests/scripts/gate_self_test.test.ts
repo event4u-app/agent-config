@@ -38,7 +38,7 @@ describe('judgeCase — a reject names its catch', () => {
         const dialect = { finding: 1, cannot_run: 2 };
         expect(judgeCase({ expect: 'reject' }, 1, dialect, null)).toBeNull();
         // The usage branch firing on a reject fixture is no longer a catch.
-        expect(judgeCase({ expect: 'reject' }, 2, dialect, null)).toMatch(/reject \(exit 1\)/);
+        expect(judgeCase({ expect: 'reject' }, 2, dialect, null)).toMatch(/expected reject, got exit 2/);
     });
 
     it('a refuse case expects cannot_run — declared, or the default', () => {
@@ -51,7 +51,7 @@ describe('judgeCase — a reject names its catch', () => {
         const c = { expect: 'reject' as const, names: /missing intent for GT-7/ };
         expect(judgeCase(c, 1, undefined, '❌ missing intent for GT-7')).toBeNull();
         expect(judgeCase(c, 1, undefined, '❌ something else broke')).toMatch(/did not name its catch/);
-        expect(judgeCase(c, 1, undefined, null)).toMatch(/captured no gate output/);
+        expect(judgeCase(c, 1, undefined, null)).toMatch(/no gate output captured/);
     });
 
     it('accept is unchanged', () => {
