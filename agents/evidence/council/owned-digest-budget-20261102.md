@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Council record — owned-digest token budget (2026-11-02)
 
 **Question:** `agents/runtime/council/owned-digest-budget-20261102.question.md`
