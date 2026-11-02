@@ -140,7 +140,7 @@ Three-state contract throughout: finding / undecided / passed.
 
 ## Phase 5 — Wording floor
 
-- [ ] **5.1 Closed output vocabulary** for the four rows: "loads", "requests",
+- [x] **5.1 Closed output vocabulary** for the four rows: "loads", "requests",
       "cites", "superseded on", "does not name", "undecided"; forbidden
       "compliant", "DSGVO-konform", "rechtssicher", "abmahnsicher", "illegal",
       any damages figure. Enforced by a test over the message templates.
