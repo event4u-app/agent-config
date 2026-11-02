@@ -5,6 +5,7 @@ tree_pin: 03581ff791
 execution:
   mode: phase-checkpoints
 review_by: 2026-12-15
+estate_growth_exempt: "2026-11-02 change: one skill (`code-film`). No existing skill can carry it: `motion-choreographer` writes prompts for paid providers and never renders, and `fe-design` § Motion holds UI values that are wrong for film, so the film procedure, its corpus and its witness need their own trigger (admission row in agents/decisions/skill-admissions.jsonl). The description cost is paid by shortening `motion-choreographer`, so description tokens hold at 11,487."
 estate_offset_exempt: "Created and executed in one change on the owner's instruction of 2026-11-02 (\"danach arbeite die roadmaps ab mit /roadmap:process-full\"); it archives in the same PR, so the active estate does not grow. Owner search at 03581ff791 (grep -rIl -i for 'motion film', 'seek contract', 'code-rendered', 'film profile', 'code-film', 'loudnorm' over agents/roadmaps/*.md, later, stubs) returned nothing."
 relates:
   - slug: later/road-to-svg-witness-provenance
