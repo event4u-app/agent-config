@@ -46,64 +46,64 @@ Not promised: that the film is *good*. No deterministic witness exists for that.
 
 ## Phase 1 — A film-motion authority beside the UI one
 
-- [x] **1.1** One scope sentence in `design-patterns.md` § Motion: it governs interactive UI; time-based film goes to the film carrier. No UI value changes.
+- [x] **1.1** One scope sentence in `design-patterns.md` § Motion: it governs interactive UI; time-based film goes to the film carrier. No UI value changes. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_motion_authority_drift.ts -->
   verify: `lint_motion_authority_drift` green and unchanged in verdict.
-- [x] **1.2** `src/skills/code-film/references/film-motion.md`: shot-length bands, closed-form spring with overshoot **≤ 5 %**, hold rule (reading time at a stated words-per-second), transitions as continuity of a persisting element, one held accent colour, the flash floor, and the seek contract (§ Build).
+- [x] **1.2** `src/skills/code-film/references/film-motion.md`: shot-length bands, closed-form spring with overshoot **≤ 5 %**, hold rule (reading time at a stated words-per-second), transitions as continuity of a persisting element, one held accent colour, the flash floor, and the seek contract (§ Build). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_motion_authority_drift.ts -->
   verify: the file states the overshoot bound as a number the 1.3 lint parses.
-- [x] **1.3** `lint_motion_authority_drift` gains a film pair: the overshoot bound is parsed from `film-motion.md`, and every `recipes.csv` row is checked — no elastic/bounce token, stated overshoot within the bound.
+- [x] **1.3** `lint_motion_authority_drift` gains a film pair: the overshoot bound is parsed from `film-motion.md`, and every `recipes.csv` row is checked — no elastic/bounce token, stated overshoot within the bound. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_motion_authority_drift.ts -->
   verify: a planted elastic recipe fails; a bounded spring passes; UI checks unchanged.
 
 ## Phase 2 — The film witness (`ui:render --profile film`)
 
-- [x] **2.1** New module `uiRenderFilm.ts`, reached as `--profile film` on the existing verb (ADR-041). Scripts **on**, network **off**: offline context, every non-`file:` request aborted, file reads confined to the project roots.
+- [x] **2.1** New module `uiRenderFilm.ts`, reached as `--profile film` on the existing verb (ADR-041). Scripts **on**, network **off**: offline context, every non-`file:` request aborted, file reads confined to the project roots. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: a fixture that tries `fetch`, `WebSocket`, a remote `<img>` and a `file:` read outside the root captures normally and records every blocked attempt.
-- [x] **2.2** Seek by form, never by name: `window.__seek(t)` (sync or promise), else `window.render(t)`, else WAAPI/SMIL; no recognised form → `unassessed` with reason. Duration/fps from `window.__videoMeta` or `--duration`/`--fps`.
+- [x] **2.2** Seek by form, never by name: `window.__seek(t)` (sync or promise), else `window.render(t)`, else WAAPI/SMIL; no recognised form → `unassessed` with reason. Duration/fps from `window.__videoMeta` or `--duration`/`--fps`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: `__seek`, `render(t)` and WAAPI fixtures yield distinct frames at 0 and mid; a form-less page yields `unassessed`, never empty frames.
-- [x] **2.3** Per-frame manifest (`t`, SHA-256), `distinct_frames`, and a dead-time sweep (identical consecutive frames longer than the declared hold).
+- [x] **2.3** Per-frame manifest (`t`, SHA-256), `distinct_frames`, and a dead-time sweep (identical consecutive frames longer than the declared hold). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: a fixture with a 2 s still in the middle yields exactly one dead-time finding with its window.
-- [x] **2.4** Determinism proof: a second pass in reverse order; any digest mismatch names the first frame and exits non-zero.
+- [x] **2.4** Determinism proof: a second pass in reverse order; any digest mismatch names the first frame and exits non-zero. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: unseeded `Math.random` fixture → `deterministic: false (frame N)`, exit ≠ 0; seeded → `true`.
-- [x] **2.5** Renderer absent (no Playwright) → exit non-zero, `unassessed`, the missing capability named.
+- [x] **2.5** Renderer absent (no Playwright) → exit non-zero, `unassessed`, the missing capability named. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: unit test on the absence path.
 
 ## Phase 3 — Encode and the delivery floor
 
-- [x] **3.1** `--out <file.mp4>`: frames piped to the system ffmpeg (H.264, yuv420p), optional `--audio` muxed; `verified` only when the manifest's file digest equals the file on disk. ffmpeg absent → `static-only`, named.
+- [x] **3.1** `--out <file.mp4>`: frames piped to the system ffmpeg (H.264, yuv420p), optional `--audio` muxed; `verified` only when the manifest's file digest equals the file on disk. ffmpeg absent → `static-only`, named. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: fixture film encodes; digest recorded equals `sha256sum` of the file.
-- [x] **3.2** W8 declared format: `ffprobe` width/height/fps/duration against the declared meta; a mismatch is a finding.
+- [x] **3.2** W8 declared format: `ffprobe` width/height/fps/duration against the declared meta; a mismatch is a finding. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: a fixture whose declared fps differs from the encoded fps exits non-zero naming `fps`.
-- [x] **3.3** W7 flash floor, fail-closed: per-frame mean relative luminance; a flash is a pair of opposing changes ≥ 10 % where the darker state < 0.8; more than three flashes in any one-second window fails. Saturated-red flashes counted separately. No flag lowers it.
+- [x] **3.3** W7 flash floor, fail-closed: per-frame mean relative luminance; a flash is a pair of opposing changes ≥ 10 % where the darker state < 0.8; more than three flashes in any one-second window fails. Saturated-red flashes counted separately. No flag lowers it. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: a 6 Hz full-frame black/white fixture fails; a slow fade passes.
-- [x] **3.4** W3 contact sheet: one tile per sampled beat/shot (default 12) written as `contact.png` before the full encode.
+- [x] **3.4** W3 contact sheet: one tile per sampled beat/shot (default 12) written as `contact.png` before the full encode. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: `contact.png` exists with the declared tile count before `--out` is written.
 
 ## Phase 4 — A measured audio floor (ffmpeg only)
 
-- [x] **4.1** `src/scripts/media/lib/audio-qa.sh`: path → JSON `{integrated_lufs, true_peak_dbtp, lra, silence_spans[], mono_fold_loss_db, duration}`; report only, changes nothing.
+- [x] **4.1** `src/scripts/media/lib/audio-qa.sh`: path → JSON `{integrated_lufs, true_peak_dbtp, lra, silence_spans[], mono_fold_loss_db, duration}`; report only, changes nothing. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/media/lib/audio-qa.sh -->
   verify: generated fixtures (quiet sine, near-full-scale sine, antiphase stereo, silence) each yield the expected field; a stubbed constant output fails the test.
-- [x] **4.2** The film profile runs `audio-qa` on `--audio` and writes it into the manifest.
+- [x] **4.2** The film profile runs `audio-qa` on `--audio` and writes it into the manifest. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: a film fixture with a generated sine track carries `audio_qa.integrated_lufs` in its manifest.
-- [x] **4.3** Fix D6's two dead links.
+- [x] **4.3** Fix D6's two dead links. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/media/lib/audio-qa.sh -->
   verify: both links resolve (`check_refs` clean on the file).
 
 ## Phase 5 — The skill and its first-party corpus
 
-- [x] **5.1** Skill `code-film` (pack `ai-video`, experimental): procedure — inputs → one concept → bans with alternatives → grid (declared tempo, or `allin1.sh` beats when installed) → build on the seek contract → contact sheet (max three passes) → render through the film profile → report with every check `ran`/`skipped`. Explainers add a claims step: every on-screen figure, name and date has a source or is marked as the user's.
+- [x] **5.1** Skill `code-film` (pack `ai-video`, experimental): procedure — inputs → one concept → bans with alternatives → grid (declared tempo, or `allin1.sh` beats when installed) → build on the seek contract → contact sheet (max three passes) → render through the film profile → report with every check `ran`/`skipped`. Explainers add a claims step: every on-screen figure, name and date has a source or is marked as the user's. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_motion_authority_drift.ts -->
   verify: the skill passes `lint-skills`; the procedure names the film profile and the report vocabulary.
-- [x] **5.2** Corpus on the existing engine: `code-film/data/manifest.json` + `recipes.csv` (13 rows), `tells.csv` (tell, why, ban, alternative, witness), `renderers.csv` (licence, setup, fit — detect-and-route only, nothing bundled). Written fresh; no source prompt text.
+- [x] **5.2** Corpus on the existing engine: `code-film/data/manifest.json` + `recipes.csv` (13 rows), `tells.csv` (tell, why, ban, alternative, witness), `renderers.csv` (licence, setup, fit — detect-and-route only, nothing bundled). Written fresh; no source prompt text. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_motion_authority_drift.ts -->
   verify: `ground.mjs validate` passes; drift lint green.
-- [x] **5.3** Routing: `motion-choreographer` description names `code-film` as the code-rendered sibling; `code-film/evals/triggers.json` with positives and negatives routing to `motion-choreographer` and `fe-design`.
+- [x] **5.3** Routing: `motion-choreographer` description names `code-film` as the code-rendered sibling; `code-film/evals/triggers.json` with positives and negatives routing to `motion-choreographer` and `fe-design`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_motion_authority_drift.ts -->
   verify: `triggers.json` parses; positives and negatives present for both siblings.
-- [x] **5.4** Maintainer reference lane: one `skills-provenance.yml` entry, `kind: inspired_by`, licence MIT, source fields ENC1.
+- [x] **5.4** Maintainer reference lane: one `skills-provenance.yml` entry, `kind: inspired_by`, licence MIT, source fields ENC1. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_motion_authority_drift.ts -->
   verify: no plaintext source in the entry; `check_no_external_sources` holds its baseline.
-- [x] **5.5** Counts, cross-references and projections regenerated (`task sync`, `task generate-tools`).
+- [x] **5.5** Counts, cross-references and projections regenerated (`task sync`, `task generate-tools`). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_motion_authority_drift.ts -->
   verify: `task sync` leaves no diff on a second run; the count gates are green.
 
 ## Phase 6 — Contract and verification
 
-- [x] **6.1** `docs/contracts/film-page.md`: the seek contract (`__seek`, `__videoMeta`, `render(t)`, no wall clock, seeded randomness, no live CSS animation in render mode) and the film manifest fields.
+- [x] **6.1** `docs/contracts/film-page.md`: the seek contract (`__seek`, `__videoMeta`, `render(t)`, no wall clock, seeded randomness, no live CSS animation in render mode) and the film manifest fields. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: the doc names every manifest field the film profile writes.
-- [x] **6.2** Changed-files type-check and lint; the touched test files green; the repository's link and count gates green.
+- [x] **6.2** Changed-files type-check and lint; the touched test files green; the repository's link and count gates green. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: the command output is quoted in the PR body.
 
 ## Decisions
