@@ -110,6 +110,9 @@ execution:
 - The film profile runs the page's scripts with the network off. A font or image
   fetched from a CDN does not load — ship it next to the page.
 - Determinism is proven per machine; fonts and GPUs differ between machines.
+- A page built on a timeline framework is seen through `window.__timelines`
+  (paused, seekable entries); embedded footage is held at `t − data-start`.
+  Encode footage all-intra (`-g 1`), or a seek lands between keyframes.
 
 ## Do NOT
 

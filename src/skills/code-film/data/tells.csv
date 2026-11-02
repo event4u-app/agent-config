@@ -11,3 +11,7 @@ Stock UI,stock dashboard fake interface,the interface is not the product,no inve
 Corner labels,label caption corner tag,text placed where nobody reads,no decorative corner labels,text where the eye already is,text-integrity
 Unseeded randomness,random jitter noise flicker,preview and render diverge,no Math.random or wall-clock state,a seeded generator and time t only,determinism
 Strobing,strobe flash flicker blink,flashing can trigger seizures,no more than three flashes per second,slow changes in luminance,flash-floor
+Slideshow with captions,slideshow image caption still card full-frame,pictures with text on them are not motion graphics,no shot that is only a full-frame image with a caption,animate the image as a layer and let type and interface move with it,review-only
+Symbol in place of the thing,icon symbol placeholder abstract circle badge,the viewer has to decode a sign instead of seeing the subject,no icon or lettered circle standing in for a file or an interface,show the real thing: a readable page or the rebuilt interface,review-only
+Reused illustration,repeated same image recurring illustration,every scene looks like the last one,no illustration used in more than one scene,give each scene its own visual idea,review-only
+Linear easing,linear easing constant speed mechanical,constant speed reads as a machine moving pixels,no linear easing on anything that starts or stops,an ease-out or a closed-form spring,motion-drift-lint

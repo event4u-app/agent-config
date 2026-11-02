@@ -17,7 +17,9 @@ live in its `references/film-motion.md`.
 |---|---|---|
 | `window.__seek(t)` | one seek form | Sets **all** visible state for time `t` (seconds). May return a promise; the witness awaits it. |
 | `window.render(t)` | — or this | Same meaning, for pages written against that name. |
-| Web Animations / SMIL | — or these | Held at `t` by pausing every animation and setting its current time. |
+| `window.__timelines` | — or this | An object of paused timelines, each with `seek(t)`, `totalTime(t)` or `time(t)` — the registry a timeline framework exposes. Every entry is paused and set to `t`; one unseekable entry and the form is not claimed. |
+| Web Animations / SMIL / `<video>` | — or these | Held at `t` by pausing every animation and setting its current time. |
+| `<video data-start="s">` | in the last two forms | Embedded footage is paused and set to `t − data-start` (clamped inside the clip); the frame is captured only after `seeked`. Encode footage all-intra (`-g 1`) so every seek lands on a keyframe. A `__seek`/`render` page owns its footage. |
 | `window.__videoMeta` | recommended | `{ width, height, duration, fps }`, all positive numbers. Without it the run needs `--duration` and `--fps` (and `--width`/`--height`, default 1280×720). |
 
 Forms are recognised in the order above, by shape, never by a renderer's name.
@@ -55,7 +57,7 @@ captured `frames/` and `contact.png`.
 
 | Field | Meaning |
 |---|---|
-| `form` | `seek`, `render`, `waapi` or `none`. |
+| `form` | `seek`, `render`, `timelines`, `waapi` or `none`. |
 | `meta` | The declared format and whether it came from the `page` or the `flags`. |
 | `frames[]` | `{ index, t, sha256 }` per frame, from the forward capture. |
 | `distinct_frames` | Count of distinct digests. |
