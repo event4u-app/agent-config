@@ -1,11 +1,16 @@
 // road-to-a-page-that-says-what-it-loads 4.2: rows 2.1 and 2.2 reach the agent
 // at write time through design_pass_hook's post_tool_use pass.
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { isPassSurface, webLaunchFindings } from '../../src/scripts/hooks/design_pass_hook';
+import { isPassSurface, webLaunchFindings as viaHook } from '../../src/scripts/hooks/design_pass_hook';
+import { scanWebLaunch } from '../../src/scripts/hooks/web_launch_rows';
+import { WEB_LAUNCH_CHUNK, loadWebLaunchScan } from '../../src/scripts/hooks/web_launch_rows_loader';
+
+const webLaunchFindings = (rel: string, content: string) => viaHook(rel, content, scanWebLaunch);
 
 const CORPUS = path.resolve(__dirname, '..', 'fixtures', 'third-party-load');
 const read = (rel: string): string => fs.readFileSync(path.join(CORPUS, rel), 'utf8');
@@ -42,5 +47,24 @@ describe('design_pass_hook — web-launch rows at write time', () => {
 
     it('a non-markup file is never read for these rows', () => {
         expect(webLaunchFindings('app/layout.tsx', read('decoys/app/layout.tsx'))).toEqual([]);
+    });
+
+    it('unbundled, the loader returns null and the hook stays silent rather than throwing', () => {
+        expect(loadWebLaunchScan(import.meta.url, false)).toBeNull();
+        expect(viaHook('index.html', read('planted/index.html'), null)).toEqual([]);
+    });
+
+    it('bundled, the loader reads scanWebLaunch from the chunk beside it, and null when absent', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wl-chunk-'));
+        try {
+            const self = new URL(`file://${path.join(dir, 'dispatch.js')}`).href;
+            expect(loadWebLaunchScan(self, true)).toBeNull();
+            fs.writeFileSync(path.join(dir, WEB_LAUNCH_CHUNK), 'exports.scanWebLaunch = () => [{ check: "x", file: "f", line: 1, text: "t" }];');
+            const scan = loadWebLaunchScan(self, true);
+            expect(scan).not.toBeNull();
+            expect(scan!('a.html', '')).toHaveLength(1);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
     });
 });

@@ -92,11 +92,9 @@ import { compareInputs } from '../_lib/probe_inputs.js';
 import { trigger_matches, type Trigger } from '../_lib/router_match.js';
 import { HANDOVER_SHAPES, isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
 import { loadDesignContext, scanFile } from '../lint_design_slop.js';
-import { type OriginRow, type Supersession, writeTimeFindings } from '../web_launch_third_party.js';
-import thirdPartyRegister from '../../config/third-party-origins.json';
-import webLaunchConfig from '../../config/web-launch-readiness.json';
 import { readHookStdin } from './hook_stdin.js';
 import { CHUNK_BASENAME, loadSvgScan } from './svg_rules_loader.js';
+import { loadWebLaunchScan } from './web_launch_rows_loader.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
 const SETTINGS_FILE = '.agent-settings.yml';
@@ -628,10 +626,9 @@ export function render(result: PassResult, conformance?: string): string {
 }
 
 /** Rows 2.1 and 2.2 of `check_web_launch_readiness` over one written file. */
-export function webLaunchFindings(rel: string, content: string): Finding[] {
-    const register = (thirdPartyRegister as { origins: OriginRow[] }).origins;
-    const table = (webLaunchConfig as { supersessions?: Supersession[] }).supersessions ?? [];
-    return writeTimeFindings(rel, content, register, table).map((h) => ({
+export function webLaunchFindings(rel: string, content: string, scan = loadWebLaunchScan()): Finding[] {
+    if (scan === null || !/\.(html?|css)$/i.test(rel)) return [];
+    return scan(rel, content).map((h) => ({
         file: rel,
         severity: 'P2' as const,
         catalogId: 'web-launch',
