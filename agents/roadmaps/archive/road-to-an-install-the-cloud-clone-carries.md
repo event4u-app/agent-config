@@ -102,7 +102,7 @@ hooks an operator seeded into the runner's `~/.claude/`.
       (seed `~/.claude` and `~/.event4u/agent-config` into the image), Remote
       Control (local, unaffected). Every host statement carries the doc URL and the
       retrieval date; linked from README § Installation.
-      verify: `grep -c cloud-sessions README.md` -> /^1$/; the reference checker passes.
+      verify: `grep -c cloud-sessions README.md` -> /^1$/ — and the reference checker passes.
 
 ## Kills (carried from the source, all accepted)
 
