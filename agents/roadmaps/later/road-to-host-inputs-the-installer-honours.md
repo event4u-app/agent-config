@@ -148,8 +148,8 @@ repositories or adds a hook-time network call.
   `.claude/settings.json` and a SessionStart bootstrap installing the runtime from npm
   only when `CLAUDE_CODE_REMOTE=true`. Variant A (setup script) is closed for hooks:
   user `~/.claude/settings.json` is not read in a cloud session.
-  verify: `./scripts-run src/scripts/cloud_clone_probe .` -> `managedHooks` >= 3 and
-  `check.status` ok; a local run shows each guard firing exactly once.
+  verify: `./scripts-run src/scripts/cloud_clone_probe .` -> /"status": "ok"/ with
+  `managedHooks` >= 3; a local run shows each guard firing exactly once.
 - [ ] **5.4 Stop writing `enabledPlugins`** for the deprecated plugin in
   `ensure_claude_bridge` (`src/scripts/install.ts`) — inert in the cloud, deprecated locally.
 - [ ] **5.5 Commit a `.claude/settings.json` with hooks for this repository** (after 5.3).

@@ -50,7 +50,7 @@ hooks an operator seeded into the runner's `~/.claude/`.
       counts what a clone carries — tracked files under `.claude/skills|rules|agents|commands`,
       managed hooks in a tracked `.claude/settings.json`, whether that file only
       enables a plugin — read from `git ls-files`, never from the working tree.
-      verify: `npx vitest run tests/scripts/cloud_reach.test.ts` -> exit 0, 10 passed, with an
+      verify: `npx vitest run tests/scripts/cloud_reach.test.ts` -> 0 — with an
       untracked-projection fixture reading 0/0/0/0 and a committed-hook fixture reading 1.
 - [x] **0.2 Clone simulation probe.** `src/scripts/cloud_clone_probe.ts` clones a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cloud_reach.ts -->
       repository locally into a temp dir (no network), sets `HOME` to an empty
@@ -88,7 +88,7 @@ hooks an operator seeded into the runner's `~/.claude/`.
 
 - [x] **3.1 Correct the `.gitignore` comment** that claims `.claude/settings.json` <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       stays tracked (D6, comment only).
-      verify: `git ls-files .claude` -> empty output, matching the corrected comment.
+      verify: `git ls-files .claude` -> /^$/ — empty, matching the corrected comment.
 - [~] **3.2 Stop writing `enabledPlugins` for the deprecated plugin** (D3). <!-- deferred-resolution: carried-to=road-to-host-inputs-the-installer-honours -->
       Deferred: changes what `init` writes into every consumer repo; owner decision,
       same batch as 2.1.
@@ -102,7 +102,7 @@ hooks an operator seeded into the runner's `~/.claude/`.
       (seed `~/.claude` and `~/.event4u/agent-config` into the image), Remote
       Control (local, unaffected). Every host statement carries the doc URL and the
       retrieval date; linked from README § Installation.
-      verify: `grep -c cloud-sessions README.md` -> 1; the reference checker passes.
+      verify: `grep -c cloud-sessions README.md` -> /^1$/; the reference checker passes.
 
 ## Kills (carried from the source, all accepted)
 
