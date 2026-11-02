@@ -44,36 +44,36 @@ skills instead of restating them, and it frames, never decides.
 
 ## Phase 1 — The composed skill
 
-- [x] **1.1 Trigger corpus first.** `src/skills/founder-idea-interview/evals/triggers.json`
+- [x] **1.1 Trigger corpus first.** `src/skills/founder-idea-interview/evals/triggers.json` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/routing-coverage-seed.json -->
       with five exemplars (EN + DE) and five near-misses / counterexamples naming
       the neighbours (`vision-articulation`, `fundraising-narrative`,
       `customer-research`, `/challenge-me vision`, `html-deck`).
       verify: `jq '[.queries[] | select(.trigger==true)] | length' src/skills/founder-idea-interview/evals/triggers.json` -> /^5$/
-- [x] **1.2 The procedure skill.** `src/skills/founder-idea-interview/SKILL.md`: interview
+- [x] **1.2 The procedure skill.** `src/skills/founder-idea-interview/SKILL.md`: interview <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/routing-coverage-seed.json -->
       → self-research (market, competition, willingness to pay) → challenge-me
       grilling → roadmap via `roadmap-writing` + closure → one-at-a-time asks
       prototype → business plan → deck; links the composed skills, carries both
       safety floors.
       verify: `./scripts-run src/scripts/lint_new_skill_gate` -> 0
-- [x] **1.3 Admission row.** Five answers in `agents/decisions/skill-admissions.jsonl`.
+- [x] **1.3 Admission row.** Five answers in `agents/decisions/skill-admissions.jsonl`. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/routing-coverage-seed.json -->
       verify: `./scripts-run src/scripts/check_skill_admissions` -> 0
 
 ## Phase 2 — The thin sub-command
 
-- [x] **2.1 `/challenge-me founder`.** `src/domains/meta/challenge-me/founder/command.md`
+- [x] **2.1 `/challenge-me founder`.** `src/domains/meta/challenge-me/founder/command.md` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/routing-coverage-seed.json -->
       routes to the skill, declares `produces_roadmap: true`, ends in the closure
       pass; the head's table and menu list it.
       verify: `./scripts-run src/scripts/lint_roadmap_producers` -> 0
-- [x] **2.2 Producer count follows.** `tests/scripts/lint_roadmap_producers.test.ts` 8 → 9.
+- [x] **2.2 Producer count follows.** `tests/scripts/lint_roadmap_producers.test.ts` 8 → 9. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/routing-coverage-seed.json -->
       verify: `npx vitest run tests/scripts/lint_roadmap_producers.test.ts` -> 0
 
 ## Phase 3 — Estate, payload and measurements
 
-- [ ] **3.1 Pay back the catalogue line.** Net zero standing payload.
+- [x] **3.1 Pay back the catalogue line.** Net zero standing payload. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/routing-coverage-seed.json -->
       verify: `./scripts-run src/scripts/check_preamble_payload_budget --approved oq-42-image-floor-routes-to` -> 0
-- [ ] **3.2 Projections, counts and pinned measurements.** `task sync`,
+- [x] **3.2 Projections, counts and pinned measurements.** `task sync`, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/routing-coverage-seed.json -->
       `task generate-tools`, count docs, routing-coverage seed and the measurement
       tests a new skill moves — only upward.
       verify: `task check-routing-coverage` -> 0
-- [ ] **3.3 Rotation stays under its ceiling.**
+- [x] **3.3 Rotation stays under its ceiling.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/routing-coverage-seed.json -->
       verify: `npx vitest run tests/scripts/trigger_eval_rotation.test.ts` -> 0
