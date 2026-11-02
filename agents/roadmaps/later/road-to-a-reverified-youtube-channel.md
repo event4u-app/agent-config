@@ -13,8 +13,9 @@ entry_condition:
 
 > Observed during `feat/map-always-fresh` (2026-11-01), `task ci`
 > step `check-reach-staleness`.
-> **Arrivals:** 3 — latest `analysis/inbox-2026-11-k` (2026-11-02): still 101 days
-> old, `yt-dlp` still absent; earlier: `analysis/inbox-2026-11-f`, `feat/map-always-fresh`.
+> **Arrivals:** 4 — latest `analysis/inbox-2026-11-l` (2026-11-02): still 101 days
+> old, `yt-dlp` still absent; earlier: `analysis/inbox-2026-11-k`,
+> `analysis/inbox-2026-11-f`, `feat/map-always-fresh`.
 >
 > **Owner question (third arrival):** (1) install `yt-dlp==2026.7.4`, run
 > `./agent-config reach:doctor --deep`, commit the fresh date · (2) retire the
