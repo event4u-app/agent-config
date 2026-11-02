@@ -53,7 +53,21 @@ informational steps, phase headings, and acceptance-criteria prose.
 
 `agents/tickets/{slug}/` — same slug as the roadmap. Create the directory.
 
-### §2 — One ticket per step
+### §2 — One ticket per step, cut as a vertical slice
+
+Each ticket is a **vertical slice**: independently verifiable through every
+layer it needs (schema → logic → surface → test), never one layer of a
+feature. Inspect each step against the code it touches before drafting: a
+step that only makes sense once other "layer" tickets land is re-cut before
+emission. Ordering:
+
+- **Prefactoring tickets first** — the refactor that makes the change easy
+  ships as its own ticket, and the feature tickets `blocked_by` it.
+- **Expand–contract is the one exception** for a wide refactor: an *expand*
+  ticket adds the new shape alongside the old, *batch* tickets migrate callers
+  grouped by blast radius, a *contract* ticket removes the old shape — chained
+  through `blocked_by` (expand → batches → contract). Each ticket still passes
+  its own `acceptance` on its own.
 
 For each materializable step, draft a ticket YAML:
 

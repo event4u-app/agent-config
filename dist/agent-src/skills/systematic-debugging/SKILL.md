@@ -224,6 +224,11 @@ entirely — surface on first occurrence; another lap cannot fix them.
 Prefer the cheapest tool that resolves the question. A `dd()` at the
 right line beats five minutes of IDE breakpoints.
 
+**Tag every temporary debug line with one unique prefix** — e.g.
+`DEBUG-<slug>:` where `<slug>` names this investigation. Before finishing,
+`grep -rn 'DEBUG-<slug>' .` must return nothing: remove every hit, then re-run
+the grep. An untagged `console.log` is one nobody can find to delete.
+
 **Known failure signature?** If the symptom has a recognisable shape — a
 tool/agent loop, HTTP 429, `ECONNREFUSED`, `ENOENT`, timeout/hang, OOM, flaky
 test, works-locally-fails-in-CI, or repeated attempts at a tool that is not

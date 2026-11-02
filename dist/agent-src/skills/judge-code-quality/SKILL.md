@@ -65,6 +65,13 @@ if the neighbors are unfashionable.
 | **Public surface** | New public API matches module's existing style and is minimal |
 | **Reuse & OO shape** | A new unit reinvents a component/abstraction the codebase already has (should compose/reuse instead); OR encapsulation/composition would genuinely cut complexity here (anemic object mutated from outside; an `if`/`switch` on a type-discriminator that a polymorphic shape would absorb) — flag **only where the duplication/branch is already present** (never "could grow later"), **in the codebase's own paradigm** (don't push a class onto functional code), never speculative abstraction (`minimal-safe-diff` wins on conflict) |
 
+**Named smells as lead words.** *Shotgun surgery* (one change edits many
+files), *divergent change* (one file changes for unrelated reasons), *feature
+envy*, *primitive obsession*, *data clumps*, *long parameter list*. A name is a
+prompt to look, never a verdict: each is always a judgement call, the repo's
+own standard beats this baseline, and a smell a tool already enforces is
+skipped (step 3).
+
 ### 3. Filter out linter-land
 
 If a formatter (prettier, ECS, gofmt, rustfmt), a static analyzer
