@@ -21,6 +21,17 @@ estate_growth_exempt: >-
 > Each step below was `[~]` there and is restated verbatim as open work, so
 > archiving the parent buried nothing. Blockers the steps name moved with them.
 
+> **Decided 2026-11-02** (AI council, owner-delegated, decision D3): one bounded
+> repair pass. First reproduce and classify each of the nine red gates (defect in
+> the tree · stale evaluation · gate that cannot run where it is wired); then fix
+> defects; any baseline raise or gate redesign is a separate, per-entry decision
+> with its reason — never "make green". Its acceptance criteria include
+> reconciling which gates run remotely and which only locally, and a check that a
+> roadmap decision routing work elsewhere names an active destination
+> (`stubs/road-to-unassigned-workflow-items`). It takes the next free active slot
+> before other `later/` work. Revisit-if: a gate demonstrably guards no invariant,
+> or cannot run where it is assigned — redesign that gate explicitly.
+
 > **Arrivals:** 4 counted — latest `analysis/inbox-2026-11-k` (2026-11-02): the same nine
 > `ci:` steps red on a clean `origin/main` worktree at `6233ceedef` (check-gate-completeness 251 vs
 > 214, lint-roadmap-later-disposition wake-condition 20 vs 17 added), plus check-reach-staleness.

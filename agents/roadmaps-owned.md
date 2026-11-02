@@ -317,6 +317,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-token-saving-residue | stubs | — | the token-saving residue E7 did not archive |
 | road-to-two-machine-time-determinism | stubs | — | road to two-machine time determinism |
 | road-to-typed-knowledge-graph-memory | stubs | — | road to typed knowledge-graph memory |
+| road-to-unassigned-workflow-items | stubs | — | road to unassigned workflow items |
 | road-to-youtube-channel-exercise | stubs | — | road to exercising the YouTube transcript channel |
 | standing-rule-delivery-observability | stubs | — | `check_standing_rule_delivery` cannot observe a rule-body diet |
 | the-14-21-0-ledger-is-ingestible | stubs | — | nothing runs the ingest step, so the ledger goes missing once per release |
