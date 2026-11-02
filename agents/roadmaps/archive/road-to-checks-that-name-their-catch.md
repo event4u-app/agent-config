@@ -55,16 +55,16 @@ always-on rule text.
 
 ## Phase 0 — Red today, green on a fresh clone
 
-- [x] **0.1 Repair the three red self-tests (B1).** `check_review_schema`: the
+- [x] **0.1 Repair the three red self-tests (B1).** `check_review_schema`: the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_review_schema.ts -->
       accept fixture declares what the current derivation requires.
       `check_beta_review_markers`: the lapsed case follows the 2026-09-11 owner
       decision (a lapse never reds CI). `check_host_loadability`: the accept
       case runs on a materialised fixture, never on the live tree.
       verify: the three `--self-test` runs exit 0 in a fresh worktree with no
       generated `.claude/` projection.
-- [x] **0.2 Repoint or delete `task memory:shadow-report` (C3).**
+- [x] **0.2 Repoint or delete `task memory:shadow-report` (C3).** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: docs/maintainers/migration/divergences/src-scripts-check_memory.md -->
       verify: the task exits 0, or it is gone and `grep -r shadow-report taskfiles` is empty.
-- [x] **0.3 Commit the reading.** Per-case exit table (A3/A4) and the
+- [x] **0.3 Commit the reading.** Per-case exit table (A3/A4) and the <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       unknown-flag sweep (C1) land under `agents/evidence/analysis/` with the
       command that produced them.
       verify: re-running the recorded command reproduces the counts.
@@ -80,28 +80,28 @@ always-on rule text.
       own change. Options: (1) carry with the blocker, (2) owner ratifies now,
       (3) drop. Verdict: (1), agent rung — the disposition keeps the item alive
       and touches no reserved dimension; closes when the owner ratifies.
-- [x] **1.2 A crash is never a catch.** `runGateCli` distinguishes a signal or
+- [x] **1.2 A crash is never a catch.** `runGateCli` distinguishes a signal or <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/gate_self_test.ts -->
       timeout from an exit; such a case is a **harness error**, never `behaved`.
       `SelfTestCase.expect` gains `refuse` (cannot run: dead scope, bad argv).
       verify: a unit test with a child killed by signal reports a harness error, not ✅.
-- [x] **1.3 Gates may declare their dialect.** Optional `exit: { finding, cannot_run }`
+- [x] **1.3 Gates may declare their dialect.** Optional `exit: { finding, cannot_run }` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/gate-violation-baselines.json -->
       on `runSelfTest`; when present, *reject* must equal `finding` and *refuse*
       must equal `cannot_run`. A shrink-only count of self-test gates without the
       declaration lands in the gate-coverage baselines. No gate's exit code moves (K1).
       verify: a unit test where a reject case exits with the declared `cannot_run` code fails.
-- [x] **1.4 A reject case may say what it caught.** Optional `names: RegExp`
+- [x] **1.4 A reject case may say what it caught.** Optional `names: RegExp` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/gate_self_test.ts -->
       matched against the gate's output.
       verify: a unit test whose `names` does not match the output fails the case.
 
 ## Phase 2 — Every self-test runs
 
-- [x] **2.1 One runner runs every self-test.** `src/scripts/run_gate_self_tests.ts`
+- [x] **2.1 One runner runs every self-test.** `src/scripts/run_gate_self_tests.ts` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       discovers every `src/scripts/*.ts` that calls `runSelfTest` and runs its
       `--self-test` in parallel; no hand-maintained list, so a new self-test is
       covered on arrival. CI: the `rule-backstops` job; locally `task gate-self-tests`.
-      verify: `task gate-self-tests` → 114/114 passed (18 s, 17 jobs); the
-      discovered count equals the files calling `runSelfTest`.
-- [x] **2.2 Hermetic by construction (B5).** The 2.1 CI step runs every
+      verify: `task gate-self-tests` -> /self-test\(s\) passed/ (114/114 at
+      landing, 18 s on 17 jobs).
+- [x] **2.2 Hermetic by construction (B5).** The 2.1 CI step runs every <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       self-test in a fresh checkout with no generated projection, which is the
       hermetic proof AC-1 asks for. The planned lint over `runSelfTest` callers
       is not built (decision E9): the pattern scan found 14 call sites passing
@@ -113,37 +113,40 @@ always-on rule text.
 
 ## Phase 3 — A flag the gate does not know is refused
 
-- [x] **3.1 One strict parser.** `_lib/gate_args.ts` on `node:util`
+- [x] **3.1 One strict parser.** `_lib/gate_args.ts` on `node:util` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/gate_args.ts -->
       `parseArgs({ strict: true })`; an unknown flag exits 2 and names the flag.
       verify: unit tests — unknown flag → exit 2 naming it; `--flag=value` and repeated flags handled.
-- [x] **3.2 Unknown-flag ratchet.** `check_gate_contracts` probes every gate
+- [x] **3.2 Unknown-flag ratchet.** `check_gate_contracts` probes every gate <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/gate-argv-permissive.json -->
       added or changed against `origin/main` with `--definitely-not-a-flag`;
       the 186 gates measured permissive are listed in
       `src/config/gate-argv-permissive.json`, a shrink-only baseline, so a new
       permissive gate cannot land. `--all` re-runs the full sweep. The same gate
       carries the 1.3 undeclared-dialect ratchet.
-      verify: `check_gate_contracts --self-test` 5/5; the recorded sweep is in
-      `agents/evidence/analysis/gate-self-test-reading-2026-11-02.md`.
+      verify: `./scripts-run src/scripts/check_gate_contracts --self-test` -> 0 (the
+      recorded sweep is in `agents/evidence/analysis/gate-self-test-reading-2026-11-02.md`).
 
 ## Phase 4 — The page witness waits and listens
 
-- [x] **4.1 Settle before the picture (D1).** After `load`:
+- [x] **4.1 Settle before the picture (D1).** After `load`: <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
       `document.fonts.ready`, then a short stillness wait, capped. The manifest
       records `settled_ms` per capture, or `unsettled: true` with the cap hit.
       verify: unit test on the settle helper — a page still mutating at the cap reports `unsettled`.
-- [x] **4.2 Record and picture share one state.** The painted-font evaluation
+- [x] **4.2 Record and picture share one state.** The painted-font evaluation <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
       runs on the settled page, and the screenshot is taken after it.
       verify: source order in `uiRender.ts` — settle → evaluate → screenshot; covered by the existing render tests.
-- [x] **4.3 Hear the console (D2b).** `console` error/warning and `pageerror`
+- [x] **4.3 Hear the console (D2b).** `console` error/warning and `pageerror` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
       per capture into the manifest, as rows with no blocking power.
       verify: a fixture calling `console.error` once yields exactly one row (browser test, skipped without Chromium).
-- [x] **4.4 The review reads the fields.** `design-review` cites the manifest's
-      console rows and settle state where it now asks for a look.
-      verify: `task sync` clean; the skill diff touches only that paragraph.
+- [x] **4.4 The review reads the fields.** `design-review`'s <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+      `references/verification-automation.md` tells the reviewer to cite the
+      manifest's console rows and settle state instead of looking. Kept out of
+      `SKILL.md`, whose body sits at its byte budget and whose text feeds the
+      published routing measurement.
+      verify: `npx vitest run tests/scripts/check_skill_body_budget.test.ts tests/scripts/routing_signal_measurement.test.ts` -> 0
 
 ## Phase 5 — A golden change says why
 
-- [x] **5.1 Golden intent per scenario.** A check that, for a diff range,
+- [x] **5.1 Golden intent per scenario.** A check that, for a diff range, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/commit-subjects.yml -->
       requires one `Golden-Intent: GT-<id> — <reason>` line (commit message or
       PR body) per changed scenario under `tests/golden/baseline/`.
       verify: the check's `--self-test` rejects a planted change without the line and accepts it with one.

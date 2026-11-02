@@ -161,7 +161,7 @@ passing says nothing about 320px, which is where a two-column grid or a fixed
 - Grammar and spelling in UI text.
 - Consistent terminology and tone.
 - No placeholder text left in production.
-- Console errors/warnings: read each `ui:render` capture's `console` rows and `settled_ms`/`unsettled` (an `unsettled` capture is not a stable state) instead of looking.
+- Check browser console for JavaScript errors or warnings.
 
 ## Appearance verification — mandatory, and explicitly appearance-only
 

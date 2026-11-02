@@ -22,6 +22,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 
 import { parseGateArgs, USAGE_EXIT } from './_lib/gate_args.js';
+import { asOf } from './_lib/as_of.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
@@ -101,8 +102,8 @@ function selfTest(): number {
         fs.writeFileSync(path.join(dir, PERMISSIVE_REL), JSON.stringify({ gates: opts.permissive }));
         const baselines = {
             gates: {
-                [`${GATE}:permissive-argv`]: { count: 5, landed: new Date().toISOString().slice(0, 10), note: 'fixture' },
-                [`${GATE}:undeclared-exit-dialect`]: { count: 5, landed: new Date().toISOString().slice(0, 10), note: 'fixture' },
+                [`${GATE}:permissive-argv`]: { count: 5, landed: asOf().toISOString().slice(0, 10), note: 'fixture' },
+                [`${GATE}:undeclared-exit-dialect`]: { count: 5, landed: asOf().toISOString().slice(0, 10), note: 'fixture' },
             },
         };
         fs.writeFileSync(path.join(dir, 'src', 'config', 'gate-violation-baselines.json'), JSON.stringify(baselines));
