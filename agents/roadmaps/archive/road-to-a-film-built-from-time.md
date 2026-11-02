@@ -57,25 +57,34 @@ Not promised: that the film is *good*. No deterministic witness exists for that.
 
 - [x] **2.1** New module `uiRenderFilm.ts`, reached as `--profile film` on the existing verb (ADR-041). Scripts **on**, network **off**: offline context, every non-`file:` request aborted, file reads confined to the project roots. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: a fixture that tries `fetch`, `WebSocket`, a remote `<img>` and a `file:` read outside the root captures normally and records every blocked attempt.
+  reach exempt: the five flagged names (CAPTURED_PROPERTIES, VIEWPORTS, collectPalette, collectTypeFamilies, slugify) are pre-existing page-profile exports of uiRender.ts read only by its own test; this step's code is reached from src/cli/main.ts through runUiRender → runFilmProfile → runFilmRender.
 - [x] **2.2** Seek by form, never by name: `window.__seek(t)` (sync or promise), else `window.render(t)`, else WAAPI/SMIL; no recognised form → `unassessed` with reason. Duration/fps from `window.__videoMeta` or `--duration`/`--fps`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: `__seek`, `render(t)` and WAAPI fixtures yield distinct frames at 0 and mid; a form-less page yields `unassessed`, never empty frames.
+  reach exempt: the five flagged names (CAPTURED_PROPERTIES, VIEWPORTS, collectPalette, collectTypeFamilies, slugify) are pre-existing page-profile exports of uiRender.ts read only by its own test; this step's code is reached from src/cli/main.ts through runUiRender → runFilmProfile → runFilmRender.
 - [x] **2.3** Per-frame manifest (`t`, SHA-256), `distinct_frames`, and a dead-time sweep (identical consecutive frames longer than the declared hold). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: a fixture with a 2 s still in the middle yields exactly one dead-time finding with its window.
+  reach exempt: the five flagged names (CAPTURED_PROPERTIES, VIEWPORTS, collectPalette, collectTypeFamilies, slugify) are pre-existing page-profile exports of uiRender.ts read only by its own test; this step's code is reached from src/cli/main.ts through runUiRender → runFilmProfile → runFilmRender.
 - [x] **2.4** Determinism proof: a second pass in reverse order; any digest mismatch names the first frame and exits non-zero. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: unseeded `Math.random` fixture → `deterministic: false (frame N)`, exit ≠ 0; seeded → `true`.
+  reach exempt: the five flagged names (CAPTURED_PROPERTIES, VIEWPORTS, collectPalette, collectTypeFamilies, slugify) are pre-existing page-profile exports of uiRender.ts read only by its own test; this step's code is reached from src/cli/main.ts through runUiRender → runFilmProfile → runFilmRender.
 - [x] **2.5** Renderer absent (no Playwright) → exit non-zero, `unassessed`, the missing capability named. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: unit test on the absence path.
+  reach exempt: the five flagged names (CAPTURED_PROPERTIES, VIEWPORTS, collectPalette, collectTypeFamilies, slugify) are pre-existing page-profile exports of uiRender.ts read only by its own test; this step's code is reached from src/cli/main.ts through runUiRender → runFilmProfile → runFilmRender.
 
 ## Phase 3 — Encode and the delivery floor
 
 - [x] **3.1** `--out <file.mp4>`: frames piped to the system ffmpeg (H.264, yuv420p), optional `--audio` muxed; `verified` only when the manifest's file digest equals the file on disk. ffmpeg absent → `static-only`, named. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: fixture film encodes; digest recorded equals `sha256sum` of the file.
+  reach exempt: the five flagged names (CAPTURED_PROPERTIES, VIEWPORTS, collectPalette, collectTypeFamilies, slugify) are pre-existing page-profile exports of uiRender.ts read only by its own test; this step's code is reached from src/cli/main.ts through runUiRender → runFilmProfile → runFilmRender.
 - [x] **3.2** W8 declared format: `ffprobe` width/height/fps/duration against the declared meta; a mismatch is a finding. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: a fixture whose declared fps differs from the encoded fps exits non-zero naming `fps`.
+  reach exempt: the five flagged names (CAPTURED_PROPERTIES, VIEWPORTS, collectPalette, collectTypeFamilies, slugify) are pre-existing page-profile exports of uiRender.ts read only by its own test; this step's code is reached from src/cli/main.ts through runUiRender → runFilmProfile → runFilmRender.
 - [x] **3.3** W7 flash floor, fail-closed: per-frame mean relative luminance; a flash is a pair of opposing changes ≥ 10 % where the darker state < 0.8; more than three flashes in any one-second window fails. Saturated-red flashes counted separately. No flag lowers it. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: a 6 Hz full-frame black/white fixture fails; a slow fade passes.
+  reach exempt: the five flagged names (CAPTURED_PROPERTIES, VIEWPORTS, collectPalette, collectTypeFamilies, slugify) are pre-existing page-profile exports of uiRender.ts read only by its own test; this step's code is reached from src/cli/main.ts through runUiRender → runFilmProfile → runFilmRender.
 - [x] **3.4** W3 contact sheet: one tile per sampled beat/shot (default 12) written as `contact.png` before the full encode. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: `contact.png` exists with the declared tile count before `--out` is written.
+  reach exempt: the five flagged names (CAPTURED_PROPERTIES, VIEWPORTS, collectPalette, collectTypeFamilies, slugify) are pre-existing page-profile exports of uiRender.ts read only by its own test; this step's code is reached from src/cli/main.ts through runUiRender → runFilmProfile → runFilmRender.
 
 ## Phase 4 — A measured audio floor (ffmpeg only)
 
@@ -83,6 +92,7 @@ Not promised: that the film is *good*. No deterministic witness exists for that.
   verify: generated fixtures (quiet sine, near-full-scale sine, antiphase stereo, silence) each yield the expected field; a stubbed constant output fails the test.
 - [x] **4.2** The film profile runs `audio-qa` on `--audio` and writes it into the manifest. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: a film fixture with a generated sine track carries `audio_qa.integrated_lufs` in its manifest.
+  reach exempt: the five flagged names (CAPTURED_PROPERTIES, VIEWPORTS, collectPalette, collectTypeFamilies, slugify) are pre-existing page-profile exports of uiRender.ts read only by its own test; this step's code is reached from src/cli/main.ts through runUiRender → runFilmProfile → runFilmRender.
 - [x] **4.3** Fix D6's two dead links. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/media/lib/audio-qa.sh -->
   verify: both links resolve (`check_refs` clean on the file).
 
