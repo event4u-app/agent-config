@@ -40,7 +40,7 @@ multi-format relayout); pass 3 read the three roadmaps back against the ledger.
 
 | Demand | Disposition |
 |---|---|
-| Owner (t1): analyse the gallery prompts and take them into the package so a skill can use them | **owner-decision** for verbatim import (it would lower `source-confidentiality` and `content-quoting-floor`); adopted as a first-party corpus built on their structure (5.2) |
+| Owner (t1): analyse the gallery prompts and take them into the package so a skill can use them | **declined by the owner (2026-11-02)**: no verbatim import, since it would lower `source-confidentiality` and `content-quoting-floor`; adopted as a first-party corpus built on their structure (5.2) |
 | Owner (t1): keep the reference searchable, URL stored encrypted | adopted — maintainer lane, ENC1 entry (5.4) |
 | Owner (t1–t3): learn, use and adapt from the material | adopted — three roadmaps |
 
