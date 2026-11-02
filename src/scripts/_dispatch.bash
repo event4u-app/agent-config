@@ -91,7 +91,7 @@ TS-shell native (run via the installed `agent-config` binary):
                              pr-body · mitigate · track · notice · gaps · issue-body.
                              Only `refresh` touches the network.
   audit:code <mode>          Security code audit, deterministic half: matrix · validate ·
-                             show. No model, no network.
+                             show · import <sarif>. No model, no network.
   media:bundle <url|file>    Evidence bundle for a post or video: frames, labelled
                              contact sheets, transcript rung, unavailable evidence.
   worktree:cleanup <mode>    Worktree inventory and removal: inventory · apply · check
