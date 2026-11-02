@@ -43,6 +43,7 @@ const measure = (file: string): Reading => {
     return JSON.parse(r.stdout) as Reading;
 };
 
+// skip-reason: tool absent — ffmpeg and ffprobe are system tools, not dependencies
 describe.skipIf(!CAN_RUN)('audio-qa.sh', () => {
     beforeAll(() => {
         dir = fs.mkdtempSync(path.join(os.tmpdir(), 'audio-qa-'));

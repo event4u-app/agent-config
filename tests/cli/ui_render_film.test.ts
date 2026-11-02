@@ -201,6 +201,7 @@ window.__seek = (t) => { const x = t < 1 ? t * 20 : t < 3.5 ? 20 : 20 + (t - 3.5
         expect(m.findings.filter((f) => f.check === 'dead-time')).toHaveLength(1);
     }, 120_000);
 
+    // skip-reason: tool absent — the flash floor, encode and format checks need ffmpeg
     describe.skipIf(!HAS_FFMPEG)('with ffmpeg', () => {
         it('fails a full-frame strobe on the flash floor and passes a slow fade', async () => {
             const strobe = await render('strobe', canvasPage(`${META(2, 30)}
