@@ -63,16 +63,16 @@ or a default flip.
 
 ## Phase 1 — The consumer-config audit is reachable
 
-- [x] **1.1 `--min-grade <A-F>` fails a CI step.** Below the grade the audit exits 1;
+- [x] **1.1 `--min-grade <A-F>` fails a CI step.** Below the grade the audit exits 1; <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/security_audit_config.ts -->
       without the flag it stays advisory and exits 0.
       verify: `npx vitest run tests/scripts/security_audit_config.test.ts` -> 0 — a fixture
       graded below the floor exits 1, at or above exits 0, an unknown grade exits 2.
-- [x] **1.2 `audit:config` is a CLI verb.** Registered beside `audit:agents`, delegated
+- [x] **1.2 `audit:config` is a CLI verb.** Registered beside `audit:agents`, delegated <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/evaluator-budgets.json -->
       through `_dispatch.bash`, read-only and offline; the CLI budget moves in the same
       change with its reason.
       verify: `npx vitest run tests/cli/registry.test.ts tests/cli/help.test.ts` -> 0 green;
       `bash src/scripts/_dispatch.bash audit:config --root .` prints an overall grade.
-- [x] **1.3 `/audit config` is a mode of the visible `/audit` command.** The maintainer
+- [x] **1.3 `/audit config` is a mode of the visible `/audit` command.** The maintainer <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       command keeps its name and points at the consumer path; no new slash command.
       verify: `grep -c 'audit config' src/domains/engineering-base/audit/command.md` -> /^[1-9]/ —
       the `config` mode is in the hint and has its own section;
@@ -80,12 +80,12 @@ or a default flip.
 
 ## Phase 2 — Measurements read clean data
 
-- [x] **2.1 Bench sessions do not persist.** `live_args` takes `no_session_persistence`;
+- [x] **2.1 Bench sessions do not persist.** `live_args` takes `no_session_persistence`; <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_task_runner.ts -->
       every claude arm of the v2 runner and the delivery pre-flight sets it.
       `--disable-slash-commands` is deliberately not added (D8c).
       verify: `npx vitest run tests/scripts/bench_ab_task_runner.test.ts` -> 0 — the flag is
       present when asked and absent otherwise.
-- [x] **2.2 The ledger records return bytes.** The `subagent_stop` line carries
+- [x] **2.2 The ledger records return bytes.** The `subagent_stop` line carries <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/subagent_ledger_hook.ts -->
       `return_bytes`: the UTF-8 byte length of the final message, `null` when the host
       sent none. A number, never prose — the file's privacy contract holds.
       verify: `npx vitest run tests/hooks/subagent_ledger.test.ts` -> 0 — a known message
@@ -93,15 +93,15 @@ or a default flip.
 
 ## Phase 3 — Findings land on their owners
 
-- [x] **3.1 Record the reading.** The disposition of every point of both sources,
+- [x] **3.1 Record the reading.** The disposition of every point of both sources, <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       the A24 reading and the parity census land under `agents/evidence/analysis/`.
       verify: the file exists and its ledger columns sum to their extracted counts.
-- [x] **3.2 Arrivals on existing owners.** Inline suppressions → arrival on
+- [x] **3.2 Arrivals on existing owners.** Inline suppressions → arrival on <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `later/road-to-adversarial-verification-and-long-runs` 12.2; the ladder re-cut
       (graded corpus, terse arm, cost by cache bucket, difficulty strata) → arrival on
       `stubs/road-to-solution-minimalism-full-tier-run`.
       verify: both files carry an `Arrivals:` line naming `inbox-2026-11-j`.
-- [x] **3.3 The remainder is parked, not dropped.** Owner-gated, measurement-bound and
+- [x] **3.3 The remainder is parked, not dropped.** Owner-gated, measurement-bound and <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       spend-bearing items go to `later/road-to-a-lead-the-user-can-reach-carried` with
       their trigger.
       verify: every row of § Kill register and § Carried exists in exactly one place.
