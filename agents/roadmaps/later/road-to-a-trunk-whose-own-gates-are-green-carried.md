@@ -21,7 +21,10 @@ estate_growth_exempt: >-
 > Each step below was `[~]` there and is restated verbatim as open work, so
 > archiving the parent buried nothing. Blockers the steps name moved with them.
 
-> **Arrivals:** 3 counted — latest `analysis/inbox-2026-11-f` (2026-11-02): run singly on a clean
+> **Arrivals:** 4 counted — latest `analysis/inbox-2026-11-k` (2026-11-02): the same nine
+> `ci:` steps red on a clean `origin/main` worktree at `6233ceedef` (check-gate-completeness 251 vs
+> 214, lint-roadmap-later-disposition wake-condition 20 vs 17 added), plus check-reach-staleness.
+> Earlier, `analysis/inbox-2026-11-f` (2026-11-02): run singly on a clean
 > `origin/main` worktree at `44d244dbcb`, nine `ci:` steps are red — check-preamble-payload,
 > check-trigger-evals, lint-eval-freshness, lint-rule-enforcement-declaration,
 > lint-roadmap-blockers, check-gate-completeness (249 vs baseline 214), audit-tokens-budget,
