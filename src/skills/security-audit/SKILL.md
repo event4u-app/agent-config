@@ -117,7 +117,8 @@ Identify all entry points where untrusted data enters:
 Slice the work by **surface class**, not by file: one hunter per class of
 [`surfaces.csv`](../threat-modeling/data/surfaces.csv) for which the route
 enumeration (`agent-config audit:code matrix`, reading the code graph's `route`
-nodes) found endpoints. Dispatch each with the first line
+nodes) found endpoints; on a diff, the callers of a touched guard join the scope.
+Dispatch each with the first line
 `<!-- dispatch-role: hunter -->` — a hunter searches, it does not judge, so N
 hunters are fan-out and never verdict shopping.
 
@@ -132,9 +133,12 @@ The verifier returns one of three states:
 
 | State | Means | Carries |
 |---|---|---|
-| `confirmed` | full trace and an observed result | severity, `proof: static-trace` or `test` |
+| `confirmed` | full trace and an observed result | severity, `proof: static-trace` or `test`, the counterevidence, what would change the severity |
 | `needs_validation` | one named open fact decides it | the fact — **never a severity** |
-| `rejected` | refuted | the reason |
+| `rejected` | refuted by a named control | the reason and the control's `path:line` + quote |
+
+No callers found, a failed build or an unknown rollout state is
+`needs_validation`, never `rejected`: a rejection without a control is a guess.
 
 Send a random sample of `rejected` to a second verifier; a divergence is
 reported, not resolved — verifiers drop real candidates too.
@@ -242,7 +246,7 @@ open fact instead of Severity):
 - **Impact:** What an attacker could achieve
 - **Evidence:** code reference showing the weakness
 - **Fix:** concrete mitigation
-- **Confidence:** Low / Medium / High
+- **Confidence:** Low / Medium / High — High only with `proof: test`
 - **Proof:** `static-trace` or `test` (with the proof-test path)
 
 Severity is anchored to the demonstrated impact: the overall rating never

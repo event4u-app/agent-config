@@ -80,12 +80,13 @@ escaping is a finding.
 
 | Verdict  | When to return it |
 |---|---|
-| `apply`  | No security issues; trust boundaries intact |
+| `apply`  | No security issues; trust boundaries intact — with ≥1 `Coverage` row |
 | `revise` | Specific findings with file:line and exploit path |
 | `reject` | Design-level security flaw — approach must change |
 
-If the threat model cannot be determined from the diff alone, return
-`revise` with "threat model unclear" as the issue.
+Read an existing `## Threat model` section of the change's plan or roadmap
+first, and amend it rather than re-deriving. Only when none exists and the
+diff alone cannot determine one, return `revise` with "threat model unclear".
 
 ## Validation
 
@@ -103,6 +104,9 @@ Judge:   judge-security-auditor
 Model:   <resolved from subagents.judge_model>
 Target:  <diff summary>
 Verdict: apply | revise | reject
+
+Coverage (every verdict, never empty on apply):
+  <surface> · <closure: confirmed | needs_validation | rejected> · <path:line of the control or finding>
 
 Issues (if revise/reject):
   🔴  path/to/file.ext:LINE — <class>: <one-sentence finding>
@@ -122,7 +126,9 @@ Required fields (ordered):
 2. **Target** — one-line diff summary naming the authenticated/public
    surface
 3. **Verdict** — `apply`, `revise`, or `reject`
-4. **Issues** — every finding names the attacker, the exploit path,
+4. **Coverage** — one row per surface walked; an `apply` without a row is
+   not an apply, it is "not checked"
+5. **Issues** — every finding names the attacker, the exploit path,
    and the missing protection; omit only when verdict is `apply`
 
 If a finding needs runtime confirmation (e.g. reproducing an exploit

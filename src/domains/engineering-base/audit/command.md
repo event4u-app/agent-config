@@ -9,7 +9,7 @@ visibility: advanced
 cluster: audit
 skills: [dependency-upgrade, finishing-a-development-branch, using-git-worktrees, authz-review, security-audit]
 description: Security advisories, code and agent actions for this project
-argument-hint: "deps [refresh|show|gaps|fix <id>|accept <id>] | code [diff|full|retest|show|matrix] | agents"
+argument-hint: "deps [refresh|show|gaps|fix <id>|accept <id>] | code [diff|full|retest|show|matrix|import <sarif>] | agents"
 suggestion:
   eligible: true
   trigger_description: "is anything we use vulnerable, check for security updates, which advisories affect this project, fix that CVE"
@@ -158,11 +158,12 @@ The procedure is [`security-audit`](../../../skills/security-audit/SKILL.md)
 
 | Mode | Runs | Cost |
 |---|---|---|
-| `diff` | the diff judges over the branch diff (`/review-changes`, security lens) | cheapest — the default per PR |
+| `diff` | the diff judges over the branch diff (`/review-changes`, security lens); a touched guard, policy or middleware adds the callers of it via `agent-config code-graph affected <symbol>` — reported as widened scope, never as full coverage | cheapest — the default per PR |
 | `full` | enumerate → one hunter per surface class → a fresh verifier per candidate → a red proof test per confirmed finding | model calls; before a launch or on request |
 | `retest` | every proof test, `judge-security-auditor` over the fix diff only, and the ledger rows whose source changed | the suite plus one narrow judge |
 | `show` | `agent-config audit:code show` | none |
 | `matrix` | `agent-config audit:code matrix [--skeleton]` | none |
+| `import` | `agent-config audit:code import <file.sarif>` — an external scanner's results as `needs_validation` findings on `model` rows: input for the verifiers, never coverage, never confirmed | none |
 
 ```bash
 agent-config audit:code matrix --root .             # every API route × {anonymous, user A, user B}
