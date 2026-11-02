@@ -32,6 +32,6 @@ On 2026-11-02 the owner invoked `/analyze:inbox` on this material with
 "danach arbeite die roadmaps ab mit /roadmap:process-full … erstelle am ende
 einen pr und merge ihn". <!-- md-language-check: ignore -->
 
-Not granted here, and carried as OQ-55: the app disabling itself without a
+Not granted here, and carried as OQ-60: the app disabling itself without a
 human, a persisted settings key for the answer, wider `/audit` visibility, a
 scheduled CI default, a new advisory host, reading a deployed app's inventory.

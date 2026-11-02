@@ -39,7 +39,7 @@ audit. It never throws a production lever itself.
 
 ## Non-goals
 
-Owner-reserved, recorded as OQ-55 and not built here: automatic
+Owner-reserved, recorded as OQ-60 and not built here: automatic
 self-containment in production, a persisted `security_ops.*` settings key,
 widening `/audit` visibility, a scheduled CI cadence default, any new egress
 host, and pulling a deployed app's inventory back into the suite. Not this
@@ -151,7 +151,7 @@ package at all: a Security Center UI, provider adapters, a policy engine.
 |---|---|---|---|
 | 1 | `/audit security`, not a `/security` verb | tree: ADR-041 verb list | the owner wants a top-level verb |
 | 2 | No numeric readiness score | tree: `operational-readiness` has no numeric path | — |
-| 3 | Automatic self-containment, settings key, visibility, cadence, egress → owner | owner-reserved set | OQ-55 answered |
+| 3 | Automatic self-containment, settings key, visibility, cadence, egress → owner | owner-reserved set | OQ-60 answered |
 | 4 | No third-party scanner adapter by default | constraint: no mandatory dependency | a consumer asks for one |
 | 5 | The lever is named in the issue body, not in the session notice | ADR-296 council conditions bound the notice path | ADR-296 is reopened |
 
@@ -160,7 +160,7 @@ package at all: a Security Center UI, provider adapters, a policy engine.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | A false positive takes a product offline | product | An audit or a timer flips a lever on a wrong finding | The suite never flips a lever; release is operator-only; auto-contain is OQ-55 | Phase 1 |
+| 1 | A false positive takes a product offline | product | An audit or a timer flips a lever on a wrong finding | The suite never flips a lever; release is operator-only; auto-contain is OQ-60 | Phase 1 |
 | 2 | The audit reads as a clean bill | implementation | A lens it could not read reports `ok` | `unknown` is never `ok`; fixture test pins it | Phase 3 |
 | 3 | Skill bodies grow past their ceilings | estate | Each touched SKILL.md sits at its byte ceiling | One-line pointers into the reference file; a `raised` entry with its reason where a line must land | Phase 6 |
 

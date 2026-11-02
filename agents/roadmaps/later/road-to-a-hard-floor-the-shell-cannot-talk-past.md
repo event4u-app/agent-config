@@ -39,7 +39,7 @@ estate_offset_exempt: "Adds one active roadmap with nothing to offset: the host-
 > `design_pass_hook.ts` and `turn_end_gate_hook.ts`). Every *(executed)* reading below was
 > re-run offline under `tsx` against the tree's own exported functions.
 >
-> **Arrivals:** 1 — latest `inbox-2026-10-aj` (2026-10-25): the `block-no-verify` bypass forms (`sh -c`, `eval`, `--config-env`, `GIT_CONFIG_*`) still pass at `d2ec783d95`, and `src/scripts/_lib/claude_settings_hooks.ts` plus `hooks/hooks.json` — the generator of the hook carrier — sit outside `check_kernel_edit_ratified`'s plumbing pattern. Widening that pattern is a governance edit and needs a ratification record.
+> **Arrivals:** 2 — latest `inbox-2026-11-d` (2026-11-01): the 19.1.0 and 19.2.0 reviews re-report D6 and add `env git commit --no-verify`, still open at `2ccb435632`. An in-place fix of the old parser went ten two-provider ratification rounds without converging and was withdrawn; its counterexamples are listed under § Inputs from the 2026-11-01 in-place attempt. The count before it read: 1 — latest `inbox-2026-10-aj` (2026-10-25): the `block-no-verify` bypass forms (`sh -c`, `eval`, `--config-env`, `GIT_CONFIG_*`) still pass at `d2ec783d95`, and `src/scripts/_lib/claude_settings_hooks.ts` plus `hooks/hooks.json` — the generator of the hook carrier — sit outside `check_kernel_edit_ratified`'s plumbing pattern. Widening that pattern is a governance edit and needs a ratification record.
 
 ## Goal
 
@@ -229,6 +229,35 @@ sentinel refused only by an unchanged line; and `date` exempt from argument insp
       port and the regex fallback in `block_no_verify.ts` are deleted in the same PR, which is
       also what pays for the new module inside the bundle ceiling.
       verify: `./scripts-run src/scripts/check_hook_bundle_composition` -> 0
+**Inputs from the 2026-11-01 in-place attempt** (round `inbox-2026-11-d`). A
+fix of the existing `block_no_verify.ts` parser — an exec-wrapper table, `sh -c`
+/ `eval` recursion, `env -S` expanded in place, `--config-env`,
+`GIT_CONFIG_KEY_<n>` / `GIT_CONFIG_PARAMETERS` / `HUSKY=0` — went ten
+ratification rounds (`agents/evidence/council/block-no-verify-wrappers-ratification-r1…r10-20261101.question.md`).
+anthropic ratified rounds 1–7 and timed out from round 8; openai refused every
+round with a new counterexample, and the change was withdrawn at the fix-loop
+bound. Its last state is commit `6e30e81d09` on branch `analysis/inbox-2026-11-d`.
+What the rounds established, as rows 1.3, 1.4 and 1.8 should carry them:
+
+- A closed per-wrapper option table cannot find command position on its own:
+  `xargs --replace` / `--max-lines` take optional, attached-only arguments;
+  `stdbuf --output L`, `env -S'…'` / `-vS`, `nice -n5`, `sudo -U` all appeared
+  in turn. The design that held: after a wrapper, an unresolved head falls back
+  to the first later `git` (and interpreter) token — fail-closed, with the false
+  refusals named.
+- `env -S` is env's syntax, not the shell's: the string expands **in place** and
+  parsing continues over it (`-S 'git …' -S echo`, `-S 'sh -c' '…'`,
+  `-S 'HUSKY=0 git' commit`); `\_` separates; `${VAR}` and other escapes are
+  unreadable and refused.
+- A hook-disabling assignment travels into an interpreter payload
+  (`HUSKY=0 sh -c 'git commit'`), and a payload found in an operand must not
+  skip the segment's own git check (`… git commit --no-verify sh -c HEAD`).
+- `command -v` / `-V` runs nothing, judged on `command`'s own options only.
+- A scan that stops (sixteen stacked wrappers) refuses rather than judging a
+  half-read command.
+- Open at withdrawal: interpreter options that take a value hide `-c`
+  (`bash --rcfile /dev/null -c '…'`) — present on `main` before the attempt.
+
 - [~] **1.9 The kernel guard moves onto the segmenter only after the owner crossing.**
       `block_kernel_rule_writes` and `_lib/shell_write_shapes.ts` stay as they are: hardening the
       kernel deny now pre-empts `road-to-typed-grants-that-persist` blocker

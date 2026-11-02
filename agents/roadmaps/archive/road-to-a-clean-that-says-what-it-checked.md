@@ -35,7 +35,7 @@ in it; it builds no dynamic testing runtime.
 ## Non-goals
 
 - No native live/dynamic probe kit, no run-adapter for a third-party tool, no
-  egress guard, no scheduled dynamic scan — owner question OQ-54.
+  egress guard, no scheduled dynamic scan — owner question OQ-59.
 - No mandatory third-party dependency, no new CLI verb (a mode under
   `audit:code` only), no default-on telemetry, no LLM dedup as a gate.
 - The external reference is never named in the tree.
@@ -108,7 +108,7 @@ in it; it builds no dynamic testing runtime.
       verify: `grep -n "agent-config@" src/agent-src/templates/github-workflows/memory-hygiene.yml src/agent-src/templates/github-workflows/roadmap-progress-check.yml` returns both
 - [x] **4.2** A test asserts every `@event4u/agent-config` invocation under
       `src/agent-src/templates/github-workflows/` carries `@<major>` (red on 2
-      files before 4.1). Action SHA pinning stays an owner choice (OQ-54).
+      files before 4.1). Action SHA pinning stays an owner choice (OQ-59).
       verify: `npx vitest run tests/scripts/workflow_templates_pin.test.ts` — red on two files before 4.1, green after
 
 ## Phase 5 — An external scanner's findings enter as input
@@ -140,7 +140,7 @@ in it; it builds no dynamic testing runtime.
 | # | Decision | Rung | Revisit-if |
 |---|---|---|---|
 | 1 | Keep `rejected`/`needs_validation`, add fields under schema v2 rather than renaming states | tree evidence: v1 consumer schema is shipped | a v1 ledger reader outside this package appears |
-| 2 | Dynamic/live testing is not built here; the two source drafts contradict each other on it | owner question OQ-54 | owner answers OQ-54 |
+| 2 | Dynamic/live testing is not built here; the two source drafts contradict each other on it | owner question OQ-59 | owner answers OQ-59 |
 | 3 | SARIF import, not a run-adapter, is the tool-neutral integration | constraint: no mandatory third-party dependency | a consumer needs findings the import cannot carry |
 
 ## Risk Register

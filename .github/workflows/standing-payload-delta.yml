@@ -302,26 +302,49 @@ jobs:
             echo "::warning::the gate at $base predates --repo-root, so this run is NOT base-pinned. Expected exactly once, on the pull request that introduces the flag."
           fi
 
-      # Every live grant in the ledger is honoured. The repository has one
-      # author, and the owner approves a grant by recording it
-      # (agents/evidence/owner-directives/2026-10-31-single-author-grant-approval.md).
+      # The repository has one author, and the owner approves a grant by
+      # recording it (agents/evidence/owner-directives/2026-10-31-single-author-grant-approval.md).
       # No second-person review is required: with a single author it could never
       # exist, so requiring it refused every grant.
+      #
+      # "The owner recorded it" is tied to the owner's words the way
+      # check_new_adr_evidence ties an owner ADR to them: a live grant counts as
+      # approved only when its approval_event cites an owner-directive file that
+      # already exists at the merge-base. A grant a pull request writes into the
+      # ledger together with its own directive file is therefore not approved by
+      # that pull request (release review 19.2.0, D-L / M1).
       - name: Verify exception approvals
         id: approvals
         if: always() && steps.scope.outputs.relevant == 'true'
+        env:
+          MERGE_BASE: ${{ steps.base.outputs.merge_base }}
         run: |
           set -euo pipefail
           ids="$(python3 - <<'PY'
-          import json, os, datetime
+          import json, os, re, subprocess, sys, datetime
           p = 'src/config/preamble-payload-exceptions.json'
+          base = os.environ.get('MERGE_BASE', '')
           today = datetime.date.today().isoformat()
+          directive = re.compile(r'agents/evidence/owner-directives/[A-Za-z0-9._-]+\.md')
           try:
               rows = json.load(open(p)).get('exceptions', [])
           except FileNotFoundError:
               rows = []
-          live = [r['id'] for r in rows
-                  if r.get('repaid_at') is None and str(r.get('expires_at', '')) >= today]
+          def at_base(path):
+              if not base:
+                  return False
+              return subprocess.run(['git', 'cat-file', '-e', f'{base}:{path}'],
+                                    capture_output=True).returncode == 0
+          live = []
+          for r in rows:
+              if r.get('repaid_at') is not None or str(r.get('expires_at', '')) < today:
+                  continue
+              cited = directive.findall(str(r.get('approval_event', '')))
+              if cited and all(at_base(c) for c in cited):
+                  live.append(r['id'])
+              else:
+                  print(f"grant '{r.get('id')}' is not owner-approved: its approval_event must cite an "
+                        "owner-directive file that exists at the merge-base", file=sys.stderr)
           print(' '.join(live))
           PY
           )"

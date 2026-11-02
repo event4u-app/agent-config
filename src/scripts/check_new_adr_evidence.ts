@@ -169,6 +169,61 @@ export function addedAdrRecords(root: string, baseRef: string): string[] {
         .sort();
 }
 
+/** Decision records MODIFIED relative to `baseRef`, where an amendment lands. */
+export function amendedAdrRecords(root: string, baseRef: string): string[] {
+    const out = _git(root, ['diff', '--name-only', '--diff-filter=M', `${baseRef}...HEAD`, '--', ...ADR_PATHSPECS]);
+    return out
+        .split('\n')
+        .map((s) => s.trim())
+        .filter((s) => s !== '' && ADR_PATH_RES.some((re) => re.test(s)))
+        .sort();
+}
+
+const AMENDMENT_HEADING_RE = /^#{2,4}\s+Amendment\b/i;
+const ANY_HEADING_RE = /^#{1,6}\s/;
+const OWNER_CLAIM_RE = /\bowner(?:'s)?\s+(?:decision|ruling|directive|answer|decided)\b|\b(?:decided|ruled|approved)\s+by\s+the\s+owner\b/i;
+const DIRECTIVE_REF_RE = /agents\/evidence\/owner-directives\/[A-Za-z0-9._-]+\.md/g;
+
+/**
+ * Amendment sections a diff ADDS: an added `## Amendment …` heading and the
+ * added lines under it, up to the next heading. Input is `git diff` output.
+ */
+export function addedAmendments(diff: string): string[] {
+    const sections: string[] = [];
+    let current: string[] | null = null;
+    for (const raw of diff.split('\n')) {
+        if (raw.startsWith('+++') || !raw.startsWith('+')) continue;
+        const line = raw.slice(1);
+        if (AMENDMENT_HEADING_RE.test(line)) {
+            if (current !== null) sections.push(current.join('\n'));
+            current = [line];
+        } else if (ANY_HEADING_RE.test(line)) {
+            if (current !== null) sections.push(current.join('\n'));
+            current = null;
+        } else if (current !== null) {
+            current.push(line);
+        }
+    }
+    if (current !== null) sections.push(current.join('\n'));
+    return sections;
+}
+
+/**
+ * ADR-240: "an amendment to an existing record must meet [the floor] as well".
+ * Until 19.2.0 nothing checked it; ADR-297 took two owner-attributed
+ * amendments in one day with no owner record behind either (release review
+ * 19.2.0, M8). An added amendment that says the OWNER decided must cite an
+ * existing owner-directive file, exactly as a new owner record must.
+ */
+export function checkAmendment(root: string, section: string): string | null {
+    if (!OWNER_CLAIM_RE.test(section)) return null;
+    for (const m of section.matchAll(DIRECTIVE_REF_RE)) {
+        if (fs.existsSync(path.join(root, m[0]))) return null;
+    }
+    const heading = section.split('\n')[0]?.trim() ?? 'an amendment';
+    return `${heading} claims an owner decision and cites no existing \`${OWNER_DIRECTIVE_DIR}/*.md\` (${OWNER_REMEDY_TEXT})`;
+}
+
 export interface Finding {
     readonly file: string;
     readonly reason: string;
@@ -199,8 +254,8 @@ const REMEDY =
  */
 export const OWNER_DIRECTIVE_DIR = 'agents/evidence/owner-directives';
 
-const OWNER_REMEDY =
-    'the record claims an owner decision: cite the owner\'s verbatim words, or record it as `agentic`/`mixed`';
+const OWNER_REMEDY_TEXT = "cite the owner's verbatim words, or record it as `agentic`/`mixed`";
+const OWNER_REMEDY = `the record claims an owner decision: ${OWNER_REMEDY_TEXT}`;
 
 /** Does the provenance say the OWNER decided, rather than an agent or a council? */
 export function claimsOwnerDecision(provenance: AdrProvenance | null): boolean {
@@ -318,6 +373,30 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const ledger = new GateLedger('check_new_adr_evidence');
     const result = checkRecords(root, files, ledger);
     ledger.report();
+
+    let amended: string[];
+    try {
+        amended = amendedAdrRecords(root, baseRef);
+    } catch (exc) {
+        process.stderr.write(`check_new_adr_evidence: cannot diff against ${baseRef} — ${String(exc)}\n`);
+        return 2;
+    }
+    const amendmentFindings: Finding[] = [];
+    for (const rel of amended) {
+        const diff = _git(root, ['diff', `${baseRef}...HEAD`, '--', rel]);
+        for (const section of addedAmendments(diff)) {
+            const reason = checkAmendment(root, section);
+            if (reason !== null) amendmentFindings.push({ file: rel, reason });
+        }
+    }
+    if (amendmentFindings.length > 0) {
+        for (const f of amendmentFindings) process.stderr.write(`    ❌ ${f.file}: ${f.reason}\n`);
+        process.stderr.write(
+            `\n❌  check_new_adr_evidence: ${String(amendmentFindings.length)} amendment(s) claim an owner decision ` +
+                'without the owner record ADR-240 requires of an amendment.\n',
+        );
+        return 1;
+    }
 
     // Zero added records is the NORMAL case, so it must exit green — and say so.
     // `assertScanned` throws on a zero count unless a justified `allowEmpty`

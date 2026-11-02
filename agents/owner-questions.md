@@ -8,7 +8,9 @@ and the run that applies it links its PR.
 
 ## Open
 
-### OQ-36 — Where a logging-route answer lives
+### OQ-54 — Where a logging-route answer lives
+
+- **Renumbered 2026-11-01** from OQ-36: the id was issued twice; the observation-provider question kept it.
 
 - **Context:** round `inbox-2026-10-bl`, your turn: the agent may ask at the start
   or on certain errors where logs should go, "und das merken wir uns auch". The
@@ -21,7 +23,9 @@ and the run that applies it links its PR.
   personal wishes out of the repository.
 - **Blocks:** `road-to-a-map-that-knows-what-happened` L.6.
 
-### OQ-37 — When the agent asks about a logging route
+### OQ-55 — When the agent asks about a logging route
+
+- **Renumbered 2026-11-01** from OQ-37: the id was issued twice; the `--verify` question kept it.
 
 - **Context:** same round. Asking at every session start is noise; never asking
   leaves an unrouted error class unrouted.
@@ -81,7 +85,55 @@ and the run that applies it links its PR.
 - **Recommendation:** (a).
 - **Blocks:** nothing executable; it closes a hole in the bypass directive.
 
-### OQ-54 — Does the suite get live/dynamic security testing?
+### OQ-56 — Which bypass text stands: "an agent never runs `--admin`", or your later "Du mergst selbst"?
+
+- **Context:** round `inbox-2026-11-d`. `owner-directives/2026-10-25-standing-pull-request-bypass.md:26`
+  says "an agent never runs `gh pr merge --admin`", and
+  `docs/contracts/ratification-artifact.md` § Emergency use says an agent "never
+  performs" the bypass. The directive's own addendum quotes you for #2754: "Ok,
+  Du mergst selbst über deinen stehenden PR-Bypass", and the #2754 and #2768
+  records now say the agent executed. No hook refuses `--admin`. Raised by five
+  reviewers of 19.2.0.
+- **Options:** (a) your later words stand — line 26 and the contract read "an
+  agent runs it only on your explicit in-session instruction, and the record
+  quotes that instruction"; (b) line 26 stands — the agent never runs it, you do,
+  and the two records are findings; (c) (b) plus a `pre_tool_use` refusal of
+  `gh pr merge --admin`.
+- **Recommendation:** (a) — it is what you have already done twice, and the
+  quote requirement keeps every execution traceable to your words.
+- **Blocks:** nothing executable; the records stay contradictory until answered.
+
+### OQ-57 — The orphan `legal` user type: define it or drop it?
+
+- **Context:** round `inbox-2026-11-d`. `task ci` is red on
+  `audit_user_type_axis`: five legal-review-prep skills declare
+  `recommended_for_user_types: [legal]` and there is no `user-types/legal.yml`;
+  the baseline of 1 has not moved in 91 days (limit 56). Both fixes change
+  shipped pack behaviour, so the gate's own entry says it is your call.
+- **Options:** (a) author `user-types/legal.yml` (tagline, recommended packs,
+  install hint); (b) drop `legal` from the five skills.
+- **Recommendation:** (a) — the pack exists and is consent-gated; giving it a
+  user type makes the recommendation reachable instead of silent.
+- **Blocks:** a green `task ci` (with the 71 stale trigger evals, which need a
+  real eval run, not a date bump).
+
+### OQ-58 — Do workflows that run a required check need a ratification record to change?
+
+- **Context:** round `inbox-2026-11-d`. `d8882a8fa` removed the payload gate's
+  approval criterion inside an unrelated feature PR (#2766), and the gate's
+  workflow ran in that PR's own version. `.github/workflows/*.yml` and the
+  payload ledger are not ratification-gated paths (`gatedFilesOf`). This round
+  tied grant approval to an owner record that predates the change (records
+  roadmap 3.1), which closes the self-approval; it does not stop a pull request
+  from editing the workflow that judges it.
+- **Options:** (a) add the workflows that run required checks, and the payload
+  ledger, to the ratification-gated paths; (b) leave them ungated and rely on
+  review; (c) gate the workflows only.
+- **Recommendation:** (a) — it is a strengthening, but it widens what every
+  later change must ratify, so it is yours to accept.
+- **Blocks:** nothing executable.
+
+### OQ-59 — Does the suite get live/dynamic security testing?
 
 - **Context:** round `inbox-2026-11-s`, topic t2. Your ask: learn from an
   external active-testing tool and let the suite detect, reproduce, fix and
@@ -102,7 +154,7 @@ and the run that applies it links its PR.
   shows the static chain leaves findings a dynamic pass would catch.
 - **Blocks:** nothing executable.
 
-### OQ-55 — How far may the suite go on project containment?
+### OQ-60 — How far may the suite go on project containment?
 
 - **Context:** round `inbox-2026-11-s`, topic t1. Your ask: the suite should
   always recommend and, on request, plan a security & maintenance section with

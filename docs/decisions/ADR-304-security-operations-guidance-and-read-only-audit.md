@@ -20,7 +20,7 @@ evidence:
     - agents/evidence/owner-directives/2026-11-02-security-operations-and-containment.md
     - agents/roadmaps/archive/road-to-a-switch-built-before-it-is-needed.md
 review_trigger: >-
-  Reopened when the owner answers OQ-55 item 1 (self-containment) with yes, when
+  Reopened when the owner answers OQ-60 item 1 (self-containment) with yes, when
   a consumer reports a lever that locked its operator out, or when a lever store
   that fails open is found to be the blueprint's recommendation rather than a
   project's deviation from it.
@@ -68,7 +68,7 @@ design it proposes, the checks it runs, and the questions it asks while planning
 
 - A project the suite plans can be contained by a human within minutes, and the
   audit can say whether it could.
-- Automatic self-containment stays undecided and unbuilt (OQ-55): a false
+- Automatic self-containment stays undecided and unbuilt (OQ-60): a false
   positive would take a product offline with nobody in the loop.
 
 ## Evidence

@@ -30,11 +30,15 @@ estate_offset_exempt: "Owner search run 2026-10-29 for every subject below: grep
 > map-knows Phase 5). What is left here are the drifts no roadmap owns: a record —
 > a rule description, a contract, a shipped skill, a comment — that says one
 > thing while the code or a later decision says another.
+>
+> **Arrivals:** 2 — latest `inbox-2026-11-d` (2026-11-01): the 19.1.0 and
+> 19.2.0 review sets re-verified at `2ccb435632`; eight record drifts with no
+> other owner landed as Phase 3. Earlier: `inbox-2026-10-bk` / `-bl`.
 
 ## Goal
 
-Every item below ends with the record and the code saying the same thing, and a
-check that would have caught the drift where one is cheap.
+Record and code agree. Every item below ends with them saying the same thing,
+and a check that would have caught the drift where one is cheap.
 
 ## Phase 1 — Records a reader acts on
 
@@ -106,6 +110,77 @@ check that would have caught the drift where one is cheap.
       Iron Law fence is unchanged), the decline gains a resolution note.
       verify: `grep -c 'project_registry\|ADR-299' docs/contracts/runtime-persistence-tiers.md` -> /^[1-9]/
 
+## Phase 3 — Records the 19.1.0 and 19.2.0 reviews caught
+
+Round `inbox-2026-11-d`, verified at `2ccb435632`. Each item is a record that
+says one thing while the code or the owner's own words say another, plus the
+cheap check that would have caught it.
+
+- [x] **3.1 "The owner records it" is tied to the owner's words.** The <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/standing-payload-delta.yml -->
+      2026-10-31 directive made a ledger entry the owner's approval, and the
+      approvals step then passed `--approved` for every live grant read from the
+      pull request's own checkout: a grant written with `approval_event: "ok"`
+      approved itself (executed, `computeCeiling`). The step now honours a live
+      grant only when its `approval_event` cites an owner-directive file that
+      already exists at the merge-base — the predicate `check_new_adr_evidence`
+      applies to owner ADRs — so the pull request adding a grant cannot also
+      write its approval, and no second person is added. The module header
+      (rule 2), its error text and the ledger's `entry_shape` / `honest_limit`
+      described the superseded platform-review rule and now describe this one.
+      Executed both ways: the live `oq-42` grant is approved at `HEAD`; a grant
+      citing a directive the same change adds, and one citing none, are not.
+      verify: `grep -c 'exists at the merge-base' .github/workflows/standing-payload-delta.yml` -> /^[1-9]/
+- [x] **3.2 The #2754 bypass record says who executed it.** It read "Who <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+      acted: the repository owner", while the owner's quoted words in the
+      directive's addendum ("Du mergst selbst …") say the agent merged; the #2768
+      record already split decided/executed. Now the same split. Whether the
+      directive's line 26 ("an agent never runs `gh pr merge --admin`") or the
+      addendum stands is the owner's, not a record correction: OQ-56.
+      verify: `grep -c 'Who executed:' agents/evidence/bypass-records/2026-10-29-standing-bypass-2754.md` -> /^1$/
+- [x] **3.3 Owner-question ids are issued once.** OQ-36 and OQ-37 were each <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
+      issued twice (rescore K3). The logging-route pair is renumbered OQ-54/55
+      (its one inbound reference, `road-to-a-map-that-knows-what-happened` L.6,
+      updated); the observation-provider and `--verify` pair keep their ids,
+      which code and the active roadmap cite. A test now refuses a repeated id.
+      verify: `npx vitest run tests/contracts/owner_question_ids_unique.test.ts` -> 0
+- [x] **3.4 A release that touched the installer says so without a trailer.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=dependency manifest: package.json -->
+      19.2.0 carried 0 `Consumer-Impact:` trailers in 187 commits while adding a
+      `stop` binding on seven platforms (`6060f0cb3c`), and shipped as `none`.
+      A span with no recorded trailer that changed `src/scripts/hook_manifest.yaml`
+      or `src/install/` is now floored at `notice`; an explicit declaration,
+      `none` included, still wins. The 19.2.0 entry is added to the impact map
+      as `notice`. A parity reading (v29) found "nothing contradicts `none`"
+      because it spot-checked `src/install` and settings only, not the hook
+      manifest.
+      verify: `npx vitest run tests/lib/consumer_impact.test.ts -t "consumer surface"` -> 0
+- [x] **3.5 ADR-240's amendment clause has a reader.** "An amendment to an <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_new_adr_evidence.ts -->
+      existing record must meet [the floor] as well" was checked by nothing:
+      `check_new_adr_evidence` read added records only. It now reads the
+      amendment sections a diff adds to an existing record; one that claims an
+      owner decision must cite an existing owner-directive file. Replayed against
+      `19.1.0`, it refuses exactly ADR-297's two amendments of 2026-11-01; against
+      `origin/main` it passes. Forward-only, as ADR-240 is: the two existing
+      amendments are not rewritten.
+      verify: `npx vitest run tests/scripts/check_new_adr_evidence.test.ts -t "amendments"` -> 0
+- [x] **3.6 The context-fill comment stops citing a function that does not <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/pressure.ts -->
+      exist.** `sessionContextFill` delegated "a compaction since" to
+      `cold_return.lastResponse`, which exists nowhere and no caller checks. The
+      comment now states the limit: a just-compacted session can read its
+      pre-compaction fill until the status line writes a fresh snapshot, which is
+      unmeasured.
+      verify: `grep -c 'lastResponse' src/scripts/_lib/pressure.ts` -> /^0$/
+- [x] **3.7 `BREAKING_CHANGES.md` states the 2026-10-30 major rule.** Its <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+      "Why majors are frequent" said an installer-path change "legitimately
+      trips a Major"; the owner directive and ADR-300 say only a removed
+      consumer-facing path does, and installer source needs
+      `Consumer-Impact: action`.
+      verify: `grep -c 'removing a consumer-facing installer path' BREAKING_CHANGES.md` -> /^1$/
+- [x] **3.8 A consumer skill stops linking a maintainer-only rule.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+      `react-shadcn-ui` linked `rules/source-confidentiality.md`, which a
+      consumer install does not ship (workspace `agent-config-maintainer`); the
+      sentence now states the policy without the dead link.
+      verify: `grep -c 'rules/source-confidentiality.md' src/skills/react-shadcn-ui/SKILL.md` -> /^0$/
+
 ## Blockers
 
 ### blocker: b-preamble-grant
@@ -131,6 +206,7 @@ check that would have caught the drift where one is cheap.
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Floor widening installs the image rule for consumers who never use images | product | `routes_to` follows six skills; a consumer of one of them now receives the rule | The rule only fires on image work; the skills already depend on it | Phase 1 — Records a reader acts on |
+| 3 | The impact floor over-notifies | product | A span touching `hook_manifest.yaml` only for a maintainer-only concern now reads `notice` to every consumer | An explicit `Consumer-Impact: none` trailer still wins; the floor fires only on a span with no trailer at all | Phase 3 — Records the 19.1.0 and 19.2.0 reviews caught |
 | 2 | `invalid` trailer flips a release | implementation | Reporting a wrapped trailer as invalid could change the computed release class | 1.3 asserts the class is unchanged | Phase 1 — Records a reader acts on |
 
 ## Acceptance Criteria
@@ -138,3 +214,4 @@ check that would have caught the drift where one is cheap.
 - [x] AC-1 — Every Phase 1 verify line passes.
 - [x] AC-2 — Phase 2 items each carry a council record or stay deferred with
       their blocker named.
+- [x] AC-3 — Every Phase 3 verify line passes.

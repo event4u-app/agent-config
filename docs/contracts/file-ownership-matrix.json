@@ -17674,13 +17674,6 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md",
-      "target": ".agent-src.uncondensed/rules/source-confidentiality.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md",
       "target": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
