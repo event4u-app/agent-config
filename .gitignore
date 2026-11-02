@@ -168,7 +168,9 @@ src/scripts/external_sources_denylist.private.json
 /.agents/
 /.codex/
 
-# Claude Code projection — only `.claude/settings.json` stays TRACKED.
+# Claude Code projection — nothing under `.claude/` is tracked in this repo;
+# `.claude/settings.json` is merely not ignored here (see docs/setup/cloud-sessions.md
+# for what that means for a cloud session on a clone).
 # The dirs below are generated projections rebuilt by `task generate-tools`,
 # so they stay ignored like the other tool trees above. The plugin
 # marketplace (`.claude-plugin/marketplace.json`) references the committed

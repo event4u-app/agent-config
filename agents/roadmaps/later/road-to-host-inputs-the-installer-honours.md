@@ -12,6 +12,9 @@ owner: maintainer
 estate_growth_exempt: "One active roadmap, no blocker. Three live wrong-output defects in what the installer and doctor report about the host — a listing override computed without the host's inputs, a hook status that reads bound under a policy that disables it, and no visibility of a foreign gateway."
 estate_offset_exempt: "The nearest owner, road-to-an-installed-layer-that-is-thinned, governs payload size, not whether the override formula matches the host; road-to-placeholders-on-the-wire receives only a criteria amendment (Phase 3.3). Archiving an unrelated finished file to buy the slot would hide the growth."
 relates:
+  - slug: road-to-an-install-the-cloud-clone-carries
+    relation: extends
+    note: "Phase 5 carries that archived roadmap's five deferred cloud-delivery steps."
   - slug: road-to-placeholders-on-the-wire
     relation: extends
     note: "Step 3.3 amends that roadmap's 7.2 probe criteria and 7.6 start check; it builds nothing there."
@@ -24,7 +27,10 @@ relates:
 ---
 # Road to host inputs the installer honours
 
-> **Arrivals:** 2 — latest `inbox-2026-10-av` (2026-10-25): a mods plan names the same
+> **Arrivals:** 3 — latest `inbox-2026-11-f` (2026-11-02): a cloud session (`CLAUDE_CODE_REMOTE=true`)
+> reads neither `~/.claude` nor repo-enabled plugins, so the install reaches it with nothing;
+> measured and documented in `road-to-an-install-the-cloud-clone-carries` (archived), the
+> owner-gated delivery steps are Phase 5 below. Before that: `inbox-2026-10-av` (2026-10-25): a mods plan names the same
 > false green for H2 and adds a third key, `allowManagedModsOnly` (0 hits under `src/`
 > and `docs/` at `c073ca2e5a`); taken into 4.1 below. Earlier: `inbox-2026-10-at` (2026-10-25): a plan reproduced H1 at
 > `main@01bb841cb` (45 of 301 skills keep a description, alphabetically up to
@@ -122,6 +128,31 @@ Claude Code is talking to a foreign gateway.
   `suppressed-by-policy`. Registry and MDM sources are not file-readable: there the result says
   `policy: unknown`, never "ok". No sixth state.
   verify: 1.2 green; a fixture without a policy is unchanged.
+
+## Phase 5 — A delivery the cloud clone carries (from `road-to-an-install-the-cloud-clone-carries`)
+
+Carried verbatim in substance from the archived parent, which shipped the
+`cloud-reach` doctor check, `cloud_clone_probe`, the baseline
+(`agents/evidence/analysis/cloud-clone-baseline-2026-11-02.json`: 0 skills, 0 rules,
+0 hooks) and `docs/setup/cloud-sessions.md`. Blocker for 5.2–5.5:
+`cloud-delivery-owner-decision` (Owner: owner) — each writes into consumer
+repositories or adds a hook-time network call.
+
+- [ ] **5.1 One real cloud session.** `/context` and `/hooks` in a claude.ai/code session
+  on this repository and on a consumer fixture; confirm Node `>=22.6.0` on the cloud
+  PATH and install time under the ~5-minute setup cache limit.
+  verify: the observations recorded beside the baseline, with the host version.
+- [ ] **5.2 Committed SessionStart hook in consumer repos** printing the `cloud-reach`
+  line inside the cloud session itself (owner decision, bundled with 5.3).
+- [ ] **5.3 Variant B, opt-in `init --carry=repo`:** the hook matrix byte-identical in
+  `.claude/settings.json` and a SessionStart bootstrap installing the runtime from npm
+  only when `CLAUDE_CODE_REMOTE=true`. Variant A (setup script) is closed for hooks:
+  user `~/.claude/settings.json` is not read in a cloud session.
+  verify: `./scripts-run src/scripts/cloud_clone_probe .` -> /"status": "ok"/ with
+  `managedHooks` >= 3; a local run shows each guard firing exactly once.
+- [ ] **5.4 Stop writing `enabledPlugins`** for the deprecated plugin in
+  `ensure_claude_bridge` (`src/scripts/install.ts`) — inert in the cloud, deprecated locally.
+- [ ] **5.5 Commit a `.claude/settings.json` with hooks for this repository** (after 5.3).
 
 ## Kill register
 

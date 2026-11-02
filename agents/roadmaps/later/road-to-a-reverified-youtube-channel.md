@@ -13,6 +13,8 @@ entry_condition:
 
 > Observed during `feat/map-always-fresh` (2026-11-01), `task ci`
 > step `check-reach-staleness`.
+> **Arrivals:** 2 — latest `analysis/inbox-2026-11-f` (2026-11-02): 101 days old,
+> `reach:doctor --deep` still reports `yt-dlp` missing on the maintainer machine.
 
 ## Defect
 
