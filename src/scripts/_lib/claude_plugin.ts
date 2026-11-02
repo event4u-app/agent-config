@@ -13,9 +13,10 @@
  */
 
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
 import process from 'node:process';
+
+import { claudeHome } from './provider_home.js';
 
 export const CLAUDE_PLUGIN_ID = 'agent-config';
 export const CLAUDE_MARKETPLACE_NAME = 'event4u-agent-config';
@@ -45,8 +46,7 @@ export const CODEX_PLUGIN_INSTALL_HINT: readonly string[] = [
 
 /** Claude Code config dir — `CLAUDE_CONFIG_DIR` env override, else `~/.claude`. */
 export function claude_config_dir(): string {
-    const env = (process.env['CLAUDE_CONFIG_DIR'] ?? '').trim();
-    return env !== '' ? env : path.join(os.homedir(), '.claude');
+    return claudeHome();
 }
 
 /**

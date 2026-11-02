@@ -1,0 +1,17 @@
+{
+ "note": "Shrink-only. Resolve through src/scripts/_lib/provider_home.ts, then lower with --write.",
+ "files": {
+  "src/install/layerPromotion.ts": 3,
+  "src/scripts/_cli/cmd_doctor.ts": 3,
+  "src/scripts/_cli/cmd_uninstall.ts": 1,
+  "src/scripts/_lib/bench_artifact_isolation.ts": 1,
+  "src/scripts/_lib/claude_hook_scope.ts": 1,
+  "src/scripts/_lib/codex_resident_set.ts": 1,
+  "src/scripts/_lib/host_mod_census.ts": 1,
+  "src/scripts/_lib/layer_overlap_notice.ts": 1,
+  "src/scripts/_lib/neighbour_census.ts": 2,
+  "src/scripts/_lib/rule_layer_overlap.ts": 1,
+  "src/scripts/_lib/runtime_wiring_checks.ts": 1,
+  "src/scripts/_lib/skill_reach.ts": 3
+ }
+}

@@ -1152,6 +1152,11 @@ tasks:
     desc: "What the stdlib-only MCP reader gets from an inputs block equals what a real YAML parser gets. The reader declines forms it cannot model; this is what makes a decline a red gate instead of a wrong argument on the wire."
     cmd: ./scripts-run src/scripts/check_inputs_parity
 
+  check-provider-home-joins:
+    silent: true
+    desc: "Shrink-only ratchet on runtime joins of the home dir with .claude/.codex/.gemini — a profile session (CLAUDE_CONFIG_DIR / CODEX_HOME) must read its own dir, so new code resolves through _lib/provider_home.ts"
+    cmd: ./scripts-run src/scripts/check_provider_home_joins
+
   check-no-external-sources:
     silent: true
     desc: Block readable external inspiration/harvest source names from the tracked tree (source-confidentiality rule + 2026-06-13 sweep); --report retains the warn tier, per the how-loud-the-slug-heuristic-is decision

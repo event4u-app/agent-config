@@ -34,7 +34,7 @@
  * | `hosts[].installed` | `install/toolDetection.ts::detectInstalledTools` (the 23-host signal table) |
  * | `hosts[].binary` | `install/toolDetection.ts::resolveToolBinary` (same table, path-returning) |
  * | `hosts[].version` | `install/agentSwitchDetection.ts::parseVersionOutput` (the first-dotted-number parser) |
- * | `auth` (`openai`, `cli-*`) | `_cli/cmd_doctor.ts`'s read-only `$CODEX_HOME/auth.json` probe — `codexHome()` moved HERE and imported back, so there is one definition |
+ * | `auth` (`openai`, `cli-*`) | `_lib/codex_auth.ts::readCodexAuth` (shared with `cmd_doctor`) and `_lib/provider_home.ts::codexHome` — one reader, one path |
  * | `auth` (`anthropic`, `cli-subscription`) | `_lib/claude_plugin.ts::claude_config_dir` (`CLAUDE_CONFIG_DIR` override incl.) |
  * | `auth` (`key-file`) | `_lib/user_global_paths.ts::resolve_with_fallback` (new namespace, legacy read-fallback) |
  *
@@ -68,7 +68,6 @@
 
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
 
 import {
@@ -78,6 +77,8 @@ import {
 } from '../../install/toolDetection.js';
 import { parseVersionOutput } from '../../install/agentSwitchDetection.js';
 import { claude_config_dir } from './claude_plugin.js';
+import { readCodexAuth } from './codex_auth.js';
+import { claudeKeychainService, codexHome, geminiHome, userHome } from './provider_home.js';
 import { hardenedSpawnEnv } from './spawn_env.js';
 import { resolve_with_fallback, type EnvMap } from './user_global_paths.js';
 
@@ -202,20 +203,11 @@ export function classifyBilling(provider: string, source: AuthSource | null): Bi
     return 'subscription';
 }
 
-/**
- * Codex CLI home — `CODEX_HOME` env override (the codex CLI's own
- * convention), else `~/.codex`. Single definition; `cmd_doctor` imports it.
- */
-export function codexHome(env?: EnvMap | null): string {
-    const map = env ?? process.env;
-    const override = (map['CODEX_HOME'] ?? '').trim();
-    return override !== '' ? override : path.join(homeOf(env), '.codex');
-}
+/** Codex CLI home — single definition in `provider_home.ts`; re-exported for `cmd_doctor`. */
+export { codexHome } from './provider_home.js';
 
 function homeOf(env?: EnvMap | null): string {
-    const map = env ?? process.env;
-    const injected = (map['HOME'] ?? '').trim();
-    return injected !== '' ? injected : os.homedir();
+    return userHome(env);
 }
 
 const VERSION_PROBE_TIMEOUT_MS = 2000;
@@ -248,8 +240,8 @@ export interface DetectEnvironmentOptions {
 /** `(service) => present?` — never returns the secret, only whether it exists. */
 export type KeychainProbe = (service: string) => boolean;
 
-/** Keychain service name Claude Code writes its subscription credential under. */
-export const CLAUDE_KEYCHAIN_SERVICE = 'Claude Code-credentials';
+/** Keychain service name Claude Code uses with no config-dir override. */
+export { CLAUDE_KEYCHAIN_SERVICE } from './provider_home.js';
 
 /**
  * Is the Claude Code subscription credential in the macOS login Keychain?
@@ -321,36 +313,6 @@ function exists(p: string): boolean {
     }
 }
 
-/**
- * Classify a codex `auth.json` by which credential shape it carries.
- *
- * OAuth tokens ⇒ the user logged in with a ChatGPT plan (`cli-subscription`);
- * anything else ⇒ metered (`cli-api-key`). A present-but-unreadable or
- * malformed file also reports `cli-api-key` — the over-gated direction, since
- * assuming a plan would switch the USD gate off on no evidence.
- */
-function classifyCodexAuth(authPath: string): AuthSource {
-    let data: unknown;
-    try {
-        data = JSON.parse(fs.readFileSync(authPath, 'utf-8'));
-    } catch {
-        // Present but unreadable: over-gate (metered) rather than assume a plan.
-        return 'cli-api-key';
-    }
-    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
-        return 'cli-api-key';
-    }
-    const d = data as Record<string, unknown>;
-    const tokens = d['tokens'];
-    const hasOauth =
-        typeof tokens === 'object' &&
-        tokens !== null &&
-        !Array.isArray(tokens) &&
-        Object.keys(tokens as Record<string, unknown>).length > 0;
-    if (hasOauth) return 'cli-subscription';
-    return 'cli-api-key';
-}
-
 /** Provider-specific `cli-subscription` evidence path, or `null` when none applies. */
 function cliSubscriptionEvidence(
     provider: string,
@@ -367,18 +329,22 @@ function cliSubscriptionEvidence(
         }
         // macOS keeps the credential in the Keychain instead of the file above.
         // The evidence string is a locator, never the secret.
-        if (probeKeychain(CLAUDE_KEYCHAIN_SERVICE)) {
-            return { source: 'cli-subscription', evidence: `keychain:${CLAUDE_KEYCHAIN_SERVICE}` };
+        // Under a profile Claude Code suffixes the service; asking the bare one
+        // would report the DEFAULT account's subscription for this profile.
+        const service = claudeKeychainService(env);
+        if (probeKeychain(service)) {
+            return { source: 'cli-subscription', evidence: `keychain:${service}` };
         }
         return null;
     }
     if (provider === 'openai') {
         const p = path.join(codexHome(env), 'auth.json');
-        if (isFile(p)) return { source: classifyCodexAuth(p), evidence: p };
+        const verdict = readCodexAuth(p);
+        if (verdict.present && verdict.class !== null) return { source: verdict.class, evidence: p };
         return null;
     }
     if (provider === 'gemini') {
-        const p = path.join(home, '.gemini', 'oauth_creds.json');
+        const p = path.join(geminiHome({ ...env, HOME: home }), 'oauth_creds.json');
         if (isFile(p)) return { source: 'cli-subscription', evidence: p };
         return null;
     }
