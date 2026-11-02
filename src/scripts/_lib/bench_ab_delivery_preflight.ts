@@ -52,6 +52,7 @@ export function delivery_preflight(
                 model: opts.model,
                 plugin_dir: neighbour_plugin_dir(spec, env),
                 strict_mcp: spec.isolate_neighbour === true,
+                no_session_persistence: true,
                 stream: true,
             });
             const extra = spec.isolate_neighbour ? neighbour_env(path.join(cwd, 'data'), env) : null;

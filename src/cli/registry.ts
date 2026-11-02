@@ -66,6 +66,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'audit:code', disposition: 'delegate', synopsis: 'Security code audit, deterministic half: the two-account route matrix, ledger validation, the derived report, a SARIF import.' },
     { name: 'audit:agents', disposition: 'delegate', synopsis: 'What the AI agents, bots and MCP servers in this project can do, against the declared action inventory.' },
     { name: 'audit:security', disposition: 'delegate', synopsis: 'Security readiness: supply, pipeline, contain and recover lenses — could this project contain a vulnerability disclosed tomorrow.' },
+    { name: 'audit:config', disposition: 'delegate', synopsis: 'A–F security grade of this project\'s assembled agent config (instruction files, MCP, hooks, skills); --min-grade fails a CI step.' },
     { name: 'media:bundle', disposition: 'delegate', synopsis: 'Turn a public post/video URL or a media file into an evidence bundle: frames, contact sheets, transcript rung.' },
     { name: 'worktree:cleanup', disposition: 'delegate', synopsis: 'Worktree inventory and removal of the proven-merged, clean, unused set; never with force.' },
     { name: 'commands', disposition: 'native', synopsis: 'List/explain the command surface from the discovery manifest (ls / explain subcommands); ls --candidates reports surface-reduction signals.' },

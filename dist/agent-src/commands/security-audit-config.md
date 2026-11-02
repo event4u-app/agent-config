@@ -33,7 +33,10 @@ suite's own `lint_agent_security` self-audit gate.
 ./scripts-run src/scripts/security_audit_config --root <repo> --json
 ```
 
-(omit `--root` to audit the current repo). The script reuses the Phase-1
+(omit `--root` to audit the current repo). In a consumer project, where
+`scripts-run` does not exist, the same script is `agent-config audit:config`
+behind the visible `/audit config` mode; `--min-grade A-F` makes it fail a CI
+step. The script reuses the Phase-1
 detection library under the false-positive containment convention
 ([`security-lint-containment`](../guidelines/agent-infra/security-lint-containment.md)),
 so doc/example files do not tank the score. It scans instruction files

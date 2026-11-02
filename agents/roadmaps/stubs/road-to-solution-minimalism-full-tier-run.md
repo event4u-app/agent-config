@@ -13,6 +13,18 @@ review_by: 2026-12-24
 > Three items moved here because the substitute criterion ends in a **paid model
 > sweep**, and no repository change supplies metered model calls.
 
+> **Arrivals:** 1 — `inbox-2026-11-j` (2026-11-02), re-verified at `c183b82358`. A peer
+> comparison proposes re-cutting this run's corpus instead of the ≥ 30 hand-written
+> oracles on a foreign repo: (A) 15–20 seeded stdlib tasks with hidden checks and a
+> `--selftest`, (B) tickets on the already-pinned repo scored by build + existing suite,
+> (C) five bugfix tasks where a repair can reuse an existing unit. Arms add a terse
+> control and a one-line YAGNI arm; the cost line is provider tokens split by input /
+> cache-write / cache-read / output (output alone is a small share of agent-session
+> cost); effort arms report per pre-labelled difficulty stratum. Bench sessions no
+> longer persist into the transcript store (`no_session_persistence`, landed with
+> `road-to-a-lead-the-user-can-reach` 2.1). Any corpus change is a dated
+> pre-registration amendment before a run, never after.
+
 ## Why this stub exists
 
 The parent's blocker `phase3-harness-deltas-9-10` was disposed **A — re-scope,

@@ -29,6 +29,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-graph-that-feeds-the-gate | later | later | The code graph reaches the searches an agent actually runs and feeds a gate decision in shadow. |
 | road-to-a-hard-floor-the-shell-cannot-talk-past | later | later | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |
 | road-to-a-knowledge-atlas | later | later | The Workbench page answers four questions about one selection, not one: how the code is built (done by the parent), … |
+| road-to-a-lead-the-user-can-reach-carried | later | parked | Road to a lead the user can reach — carried |
 | road-to-a-learner-the-measurements-gate | later | later | The open dispatch measurements are run or dated; a PR that moves a policy row without a measurement pinned to … |
 | road-to-a-library-the-agent-can-vouch-for | later | later | In a PHP project that needs DTOs, mapping, accessors or filters, AC writes code against the data-helpers version in the … |
 | road-to-a-map-engine-that-never-writes-through-a-symlink | later | later | Road to a map engine that never writes through a symlink |
