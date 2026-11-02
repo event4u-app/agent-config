@@ -111,6 +111,21 @@ describe('a long tag is read, an unclosed one is never a silent pass (round-5 ra
         expect(c.undecided).toHaveLength(1);
     });
 
+    it('an unclosed tag before a closed one leaves the closed one read', () => {
+        const page = '<link rel="stylesheet" href="https://fonts.googleapis.com/a"\n<script src="https://www.youtube.com/s.js"></script>';
+        expect(loads('index.html', page)).toEqual(['2']);
+        expect(unread('index.html', page)).toEqual(['1']);
+    });
+
+    it('sparse unclosed tags in a megabyte file read the text once, with or without a final closer', () => {
+        const gap = 'x'.repeat(99_990);
+        const sparse = Array.from({ length: 10 }, () => `<link href=x${gap}`).join('');
+        const dense = '<link '.repeat(166_000);
+        for (const body of [sparse, `${sparse}>`, `<link href=x${'x'.repeat(999_000)}`, dense]) {
+            expect(timed(() => writeTimeFindings('index.html', body, register, table))).toBeLessThan(500);
+        }
+    });
+
     it('a page of unclosed link tags yields one hit, linearly', () => {
         const body = '<link rel=stylesheet href=x'.repeat(N / 28);
         expect(timed(() => expect(unread('index.html', body)).toHaveLength(1))).toBeLessThan(1_000);
