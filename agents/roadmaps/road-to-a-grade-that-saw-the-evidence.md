@@ -52,19 +52,32 @@ exactly one roadmap anchor — a number, not a gate.
 
 ## Phase 2 — Report-only acceptance-citation resolver
 
-- [ ] **2.1 Resolver with tests.** `src/scripts/report_acceptance_citations.ts`
+- [x] **2.1 Resolver with tests.** `src/scripts/report_acceptance_citations.ts`
       classifies each cited `AC-n` (explicit `<slug>#AC-n`, or bare with the
       file's named roadmap slugs as candidates) as resolved, ambiguous or
       dangling against the whole roadmap tree. Always exits 0.
       verify: `npx vitest run tests/scripts/report_acceptance_citations.test.ts` -> 0
-- [ ] **2.2 Report-only task, measured number recorded.** A
+- [x] **2.2 Report-only task, measured number recorded.** A
       `report-acceptance-citations` task outside every CI pipeline; the
       measured file counts land in the table below.
       verify: `./scripts-run src/scripts/report_acceptance_citations` -> /resolved/
 
 ## Measurement
 
-Filled by step 2.2.
+Measured 2026-11-02 with `./scripts-run src/scripts/report_acceptance_citations`
+over the tree at `tree_pin`, excluding the resolver's own test file (which adds
+three explicit citations of synthetic slugs).
+
+| Population | Resolved | Ambiguous | Dangling | Total |
+|---|---|---|---|---|
+| Test files (`*.test.*` / `*.spec.*` under `tests/`, fixture trees skipped) citing `AC-n` | 61 | 13 | 41 | 115 |
+
+The source estimate read "55 of 123". The 123 is `grep -rlE '\bAC-[0-9]+' tests`,
+which also counts READMEs, fixtures and helper modules (8 files); restricted to
+test files the population is 115, and resolving each citation against the
+anchors the named roadmaps actually declare — not against "the file names one
+slug" — gives 61. Most dangling files name no roadmap at all: the citation
+carries its context only in a commit message or a neighbouring file.
 
 ## Owner decisions — carried, not executed here
 

@@ -1242,6 +1242,11 @@ tasks:
     desc: "Doc path inventory (road-to-docs-that-sell 1.5) — every docs/README/site-content path named by src/scripts, tests, .github and gate-coverage.yml, regenerated into docs/maintainers/doc-path-inventory.md; pass -- --check to fail on drift"
     cmd: ./scripts-run src/scripts/report_doc_path_inventory {{.CLI_ARGS}}
 
+  report-acceptance-citations:
+    silent: true
+    desc: "Report-only acceptance-citation resolver (road-to-a-grade-that-saw-the-evidence 2.1, owner decision OQ-63 a) — counts test files whose AC-n citations resolve to exactly one roadmap anchor, are ambiguous, or dangle; always exits 0, wired into no pipeline, because a ratchet over these counts is council-reserved; pass -- --list for per-file status"
+    cmd: ./scripts-run src/scripts/report_acceptance_citations {{.CLI_ARGS}}
+
   lint-settings-classes:
     silent: true
     desc: Every settings-template leaf carries an A/B/C class in docs/contracts/settings-classes.md (road-to-zero-ceremony-settings Phase 1)
