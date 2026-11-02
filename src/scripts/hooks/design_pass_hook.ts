@@ -94,6 +94,7 @@ import { HANDOVER_SHAPES, isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
 import { loadDesignContext, scanFile } from '../lint_design_slop.js';
 import { readHookStdin } from './hook_stdin.js';
 import { CHUNK_BASENAME, loadSvgScan } from './svg_rules_loader.js';
+import { loadWebLaunchScan } from './web_launch_rows_loader.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
 const SETTINGS_FILE = '.agent-settings.yml';
@@ -624,6 +625,19 @@ export function render(result: PassResult, conformance?: string): string {
     return lines.join('\n');
 }
 
+/** Rows 2.1 and 2.2 of `check_web_launch_readiness` over one written file, advisory. */
+export function webLaunchFindings(rel: string, content: string, scan = loadWebLaunchScan()): Finding[] {
+    if (scan === null || !/\.(html?|css)$/i.test(rel)) return [];
+    return scan(rel, content).map((h) => ({
+        file: rel,
+        severity: 'P2' as const,
+        catalogId: 'web-launch',
+        rule: h.check,
+        line: h.line,
+        message: h.text,
+    }));
+}
+
 function main(): number {
     const root = process.env['CLAUDE_PROJECT_DIR'] ?? process.cwd();
     if (!enabled(root)) return EXIT_ALLOW;
@@ -674,6 +688,7 @@ function main(): number {
                 if (scan === null) svgRulesUnavailable = true;
                 else findings.push(...svgFindings(scan(content, rel) as SvgRuleFinding[], rel));
             }
+            findings.push(...webLaunchFindings(rel, content));
             for (const f of scanFile(content, rel, ctx)) {
                 findings.push({
                     file: rel,
