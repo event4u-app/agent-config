@@ -35,7 +35,7 @@
   <!-- ============================================================ -->
 
   <provider id="openai-images" kind="image">
-    <lifecycle>stable</lifecycle>
+    <lifecycle>experimental</lifecycle>
     <api-key>sk-REPLACE-ME</api-key>
     <endpoint>https://api.openai.com/v1</endpoint>
     <default-model>gpt-image-1</default-model>
@@ -52,7 +52,7 @@
   <!-- ============================================================ -->
 
   <provider id="higgsfield" kind="image+video">
-    <lifecycle>stable</lifecycle>
+    <lifecycle>experimental</lifecycle>
     <api-key>hf-REPLACE-ME</api-key>
     <endpoint>https://api.higgsfield.ai/v1</endpoint>
     <default-model>higgsfield-soul</default-model>
@@ -66,7 +66,7 @@
   </provider>
 
   <provider id="gemini-veo" kind="video">
-    <lifecycle>stable</lifecycle>
+    <lifecycle>experimental</lifecycle>
     <api-key>AIza-REPLACE-ME</api-key>
     <endpoint>https://generativelanguage.googleapis.com/v1beta</endpoint>
     <default-model>veo-3.0-generate-001</default-model>
@@ -80,7 +80,7 @@
   </provider>
 
   <provider id="kling" kind="video">
-    <lifecycle>stable</lifecycle>
+    <lifecycle>experimental</lifecycle>
     <access-key>kling-access-REPLACE-ME</access-key>
     <secret-key>kling-secret-REPLACE-ME</secret-key>
     <endpoint>https://api.klingai.com/v1</endpoint>
@@ -95,7 +95,7 @@
   </provider>
 
   <provider id="sora" kind="video">
-    <lifecycle>stable</lifecycle>
+    <lifecycle>experimental</lifecycle>
     <api-key>sora-REPLACE-ME</api-key>
     <endpoint>https://api.openai.com/v1</endpoint>
     <default-model>sora-2</default-model>
@@ -118,7 +118,7 @@
   <!-- ============================================================ -->
 
   <provider id="fal" kind="video">
-    <lifecycle>stable</lifecycle>
+    <lifecycle>experimental</lifecycle>
     <enabled>true</enabled>
     <api-key>fal-REPLACE-ME</api-key>
     <endpoint>https://queue.fal.run</endpoint>
@@ -132,7 +132,7 @@
   </provider>
 
   <provider id="replicate" kind="video">
-    <lifecycle>stable</lifecycle>
+    <lifecycle>experimental</lifecycle>
     <enabled>true</enabled>
     <api-key>r8_REPLACE-ME</api-key>
     <endpoint>https://api.replicate.com/v1</endpoint>

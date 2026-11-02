@@ -7,7 +7,10 @@
 # Structural-prompt path informed by upstream `awesome-sora-prompts`
 # (attribution in agents/reference/ai-video/prompts/cinematic-blueprint.md).
 #
-# Lifecycle: stable — promoted 2026-06-10 (maintainer-authorized): live
+# Lifecycle: experimental — demoted 2026-11-02 (AI council, owner-delegated):
+# the 180-day trace window closes 2026-12-07 and no re-capture is funded;
+# a fresh maintainer smoke trace restores `stable`. Was stable since
+# 2026-06-10 (maintainer-authorized): live
 # round-trip validated 1/1 — 4.1s h264 720p with native AAC audio,
 # ~60s render, ~$0.40 (sora-2, 4s). API param enums verified empirically
 # (seconds {4,8,12}, size {720x1280,1280x720,1024x1792,1792x1024}). Raw

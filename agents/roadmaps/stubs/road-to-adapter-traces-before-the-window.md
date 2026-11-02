@@ -1,32 +1,28 @@
 ---
 complexity: lightweight
-review_by: 2026-11-30
+review_by: 2027-02-28
 ---
 
 # Stub: road to adapter traces before the window
 
-> **Stub — not active work.** Found in round `inbox-2026-11-k` (an open
-> video-generation plan, re-verified at `6233ceedef`). It needs an owner
-> decision and possibly paid provider calls, not effort.
+> **Stub — not active work.** Found in round `inbox-2026-11-k`. **Decided
+> 2026-11-02** by the AI council the owner delegated to (decision D1): all
+> seven adapters whose `stable` claim rested on traces from 2026-06-10 —
+> `fal`, `gemini-veo`, `higgsfield`, `kling`, `openai-images`, `replicate`,
+> `sora` — were demoted to `experimental` before the 180-day window closed on
+> 2026-12-07. Demotion is reversible; a council cannot authorize provider
+> spend, so no re-capture was run.
 
-**Trigger:** a date. All seven adapters whose header claims `stable` — `fal`,
-`gemini-veo`, `higgsfield`, `kling`, `openai-images`, `replicate`, `sora` —
-have their freshest reachable trace on 2026-06-10
-(`docs/contracts/provider-lifecycle.md`, generated adapter-tier table).
-`RECHECK_WINDOW_DAYS = 180` (`src/scripts/lint_adapter_tier.ts:97`), and a
-`stable` header past that window is a failure (`lint_adapter_tier.ts:275-282`),
-which CI runs. On **2026-12-07** the trunk turns red without any change.
+**What is left here — the restore path, per adapter:**
 
-**The owner chooses, per adapter, before 2026-12-07:**
+1. a funded maintainer smoke trace (one paid provider call) under
+   `agents/reference/ai-video/smoke-traces/`, recorded in the trace index;
+2. the header back to `stable` in the same commit
+   (`docs/contracts/provider-lifecycle.md` § 2).
 
-1. **Re-capture** a smoke trace (a paid provider call per adapter; spend is
-   owner-reserved), or
-2. **Demote** the header to `experimental` with a reason — the lint never
-   demotes for you, by design.
+`sora` first needs a primary-source read on its upstream status; if it is
+retired, the right tier is `deprecated`, and `motion-choreographer` drops its
+Sora mentions in the same change.
 
-`sora` needs a primary-source read on its upstream status first; if it is
-retired, demotion is the only honest option and `motion-choreographer` drops
-its Sora mentions in the same change.
-
-**Done when:** `lint_adapter_tier` run with the clock set to 2026-12-08 stays
-green.
+**Trigger:** a spend authorization for re-captures, or an adapter needed as a
+silent default again.

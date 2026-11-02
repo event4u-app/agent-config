@@ -11,7 +11,10 @@
 # Provider: top-level <provider id="openai-images" kind="image"> in
 # agents/.ai-video.xml.
 #
-# Lifecycle: stable — promoted 2026-06-10 (maintainer-authorized): live
+# Lifecycle: experimental — demoted 2026-11-02 (AI council, owner-delegated):
+# the 180-day trace window closes 2026-12-07 and no re-capture is funded;
+# a fresh maintainer smoke trace restores `stable`. Was stable since
+# 2026-06-10 (maintainer-authorized): live
 # generation validated 2/2 — real 1536x1024 PNGs (gpt-image), ~$0.15 each.
 # NOTE: synchronous adapter — submit returns the artifact directly (no
 # job_id/poll/fetch); the smoke harness handles this sync shape. Raw

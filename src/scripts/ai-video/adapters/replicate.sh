@@ -27,7 +27,10 @@
 # agents/.ai-video.xml. Kill-switch: <enabled>false</enabled> on the
 # provider block refuses every network subcommand.
 #
-# Lifecycle: stable — promoted 2026-06-10 (maintainer-authorized): 3/3 live
+# Lifecycle: experimental — demoted 2026-11-02 (AI council, owner-delegated):
+# the 180-day trace window closes 2026-12-07 and no re-capture is funded;
+# a fresh maintainer smoke trace restores `stable`. Was stable since
+# 2026-06-10 (maintainer-authorized): 3/3 live
 # renders succeeded — wan-2.2-fast (official route), ltx-video + hunyuan
 # (version route). Manifest entries carry verified:true + smoke_trace refs;
 # raw traces are local-only operator evidence
