@@ -67,6 +67,14 @@ describe('local-business — the seeded rows are actually there', () => {
         const files = fs.readdirSync(path.join(BENCH, 'local-business'));
         expect(files.some((f) => /datenschutz|privacy/i.test(f))).toBe(false);
     });
+
+    it('cites no superseded statute — a correctly flagged one would score as a false positive', () => {
+        // The ground truth treats the Impressum as correct, so a `§ 5 TMG`
+        // line (superseded by § 5 DDG on 2024-05-14) would punish the arm that
+        // reports it. Pre-freeze amendment, road-to-a-page-that-says-what-it-loads 0.1.
+        const text = fs.readFileSync(path.join(BENCH, 'local-business/impressum.html'), 'utf8');
+        expect(text).not.toMatch(/\bTMG\b/);
+    });
 });
 
 describe('saas-app — the decoy fixture', () => {
