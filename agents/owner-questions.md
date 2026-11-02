@@ -81,6 +81,47 @@ and the run that applies it links its PR.
 - **Recommendation:** (a).
 - **Blocks:** nothing executable; it closes a hole in the bypass directive.
 
+### OQ-54 — Does the suite get live/dynamic security testing?
+
+- **Context:** round `inbox-2026-11-s`, topic t2. Your ask: learn from an
+  external active-testing tool and let the suite detect, reproduce, fix and
+  verify natively. That loop already exists for static analysis plus the
+  project's own test suite (`/audit code full|retest`). The two supplied drafts
+  then contradict each other on the rest: one plans a native HTTP probe kit, a
+  run-adapter for the external tool, an egress/DNS guard and scheduled dynamic
+  scans; the other kills any native dynamic runtime. Each of those sends traffic
+  at a running system, adds egress or a third-party dependency — reserved to you.
+  Separately: pin the shipped CI templates' actions to commit SHAs (stricter,
+  but every consumer then carries the bump work).
+- **Options:** (a) none — static plus the project's own tests plus SARIF import
+  (`road-to-a-clean-that-says-what-it-checked` Phase 6) stays the boundary;
+  (b) an opt-in run-adapter for an external tool against a declared
+  local/staging target only, scope from a trusted manifest, never production;
+  (c) a native probe kit under the same scope rule.
+- **Recommendation:** (a) now; (b) only after `stubs/road-to-a-security-chain-measured`
+  shows the static chain leaves findings a dynamic pass would catch.
+- **Blocks:** nothing executable.
+
+### OQ-55 — How far may the suite go on project containment?
+
+- **Context:** round `inbox-2026-11-s`, topic t1. Your ask: the suite should
+  always recommend and, on request, plan a security & maintenance section with
+  shutdown on newly disclosed vulnerabilities, the app possibly disabling
+  itself, the operator always able to get in.
+  `road-to-a-switch-built-before-it-is-needed` ships the guidance, blueprint,
+  schema and a read-only `/audit security`. Left for you: (1) automatic
+  self-containment in a deployed product (a timer or advisory flips a lever with
+  no human); (2) persisting the "plan it?" answer as a settings key
+  (`security_ops.plan`) so it is asked once per user; (3) making `/audit`
+  suggestable outside the maintainer workspace (`visibility: advanced` today);
+  (4) a shipped CI job running the audit on a schedule by default; (5) a new
+  advisory source host; (6) reading a deployed app's inventory back.
+- **Options per item:** yes / no / later.
+- **Recommendation:** (1) no by default — at most an opt-in "propose, operator
+  confirms" mode, since a false positive takes a product offline; (2) yes;
+  (3) yes; (4) no, offered by `audit:deps gaps`; (5) later; (6) no.
+- **Blocks:** nothing executable; the shipped parts run without any answer.
+
 ## Not owner questions — waits, or already settled in the tree
 
 - `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
