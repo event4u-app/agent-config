@@ -128,6 +128,7 @@ commands:
   product:
     - challenge-me
     - challenge-me/closure
+    - challenge-me/founder
     - challenge-me/vision
     - challenge-me/with-docs
     - council
