@@ -42,7 +42,8 @@ import * as yaml from 'js-yaml';
 
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
-import { assertScanned, reportScanned, exitOnDeadScope } from './_lib/scan_scope.js';
+import { assertScanned, reportScanned } from './_lib/scan_scope.js';
+import { exitOnDeadScope } from './_lib/dead_scope_exit.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');

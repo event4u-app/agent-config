@@ -68,6 +68,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-capability-native-execution | later | later | A domain skill states the semantic capability, evidence and policy constraints it needs. |
 | road-to-carrier-layer-convergence | later | later | Converge the two rule-carrier layers so a session receives each governed rule exactly once, with a defined binding text — … |
 | road-to-catalogue-host-fit | later | later | Road to catalogue host fit — a truncated entry is a skill that cannot route |
+| road-to-checks-that-name-their-catch-carried | later | parked | A ledger gate's report line carries `failed=N`, so a self-test can assert "it found exactly this, and nothing else". |
 | road-to-code-graph-refresh-during-a-session | later | later | The code graph and `agents/map/` stay current for the whole length of an agent session, on every host the suite … |
 | road-to-command-structure-followup | later | later | Follow-up to command-structure optimization — deferred cluster items |
 | road-to-composite-dispatch-topology | later | draft | A delegable task whose slices form a partial order — ordered stages containing parallel groups — can be planned as … |

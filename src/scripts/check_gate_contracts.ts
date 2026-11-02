@@ -24,7 +24,8 @@ import process from 'node:process';
 import { parseGateArgs, USAGE_EXIT } from './_lib/gate_args.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
-import { exitOnDeadScope, reportScanned } from './_lib/scan_scope.js';
+import { reportScanned } from './_lib/scan_scope.js';
+import { exitOnDeadScope } from './_lib/dead_scope_exit.js';
 
 const REPO_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
 const GATE = 'check_gate_contracts';

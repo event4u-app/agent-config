@@ -287,9 +287,6 @@ export class GateLedger {
             `scanned=${String(checked)}`,
             `planned=${String(tally.planned)}`,
             `skipped=${String(tally.skipped + tally.out_of_scope)}`,
-            // The one number a self-test can assert "it found exactly this, and
-            // nothing else" against (road-to-checks-that-name-their-catch 1.1).
-            `failed=${String(tally.failed)}`,
         ];
         write(`${this.gate} ledger: ${parts.join(' ')}\n`);
         const codes = Object.keys(tally.skips_by_reason).sort() as GateSkipReason[];

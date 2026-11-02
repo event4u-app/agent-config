@@ -40,7 +40,8 @@ import * as yaml from 'js-yaml';
 
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
-import { assertScanned, reportScanned, exitOnDeadScope } from './_lib/scan_scope.js';
+import { assertScanned, reportScanned } from './_lib/scan_scope.js';
+import { exitOnDeadScope } from './_lib/dead_scope_exit.js';
 import { _frontmatter_text, _parse_inputs, type PromptInput } from './mcp_server/prompts.js';
 
 const _HERE = fileURLToPath(import.meta.url);

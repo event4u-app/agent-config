@@ -29,7 +29,7 @@ exception as a reject (step 1.2):
 - `check_argument_hint`, `check_depth_budget`, `check_input_references`,
   `check_inputs_parity`, `check_source_size_budget`, `lint_deny_text` — the
   dead-scope / empty-corpus case threw `DeadScopeError` uncaught. Now caught by
-  `exitOnDeadScope` (`_lib/scan_scope.ts`) and asserted as a `refuse` (exit 2).
+  `exitOnDeadScope` (`_lib/dead_scope_exit.ts`) and asserted as a `refuse` (exit 2).
 
 ## 2. Unknown flags
 

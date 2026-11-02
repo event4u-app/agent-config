@@ -71,8 +71,15 @@ always-on rule text.
 
 ## Phase 1 — A reject names its catch
 
-- [x] **1.1 The ledger prints `failed=`.** One field in the report line.
+- [~] **1.1 The ledger prints `failed=`.** One field in the report line.
       verify: a ledger gate's report line carries `failed=N`; no exit code changes.
+      **Carried** to `later/road-to-checks-that-name-their-catch-carried.md` —
+      blocker `b-ledger-is-ratification-import`: `_lib/gate_ledger.ts` is an
+      import of `check_kernel_edit_ratified`, so changing it needs an owner
+      ratification artifact (ADR-268 § 4), which an agent may not write for its
+      own change. Options: (1) carry with the blocker, (2) owner ratifies now,
+      (3) drop. Verdict: (1), agent rung — the disposition keeps the item alive
+      and touches no reserved dimension; closes when the owner ratifies.
 - [x] **1.2 A crash is never a catch.** `runGateCli` distinguishes a signal or
       timeout from an exit; such a case is a **harness error**, never `behaved`.
       `SelfTestCase.expect` gains `refuse` (cannot run: dead scope, bad argv).

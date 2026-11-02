@@ -54,7 +54,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
-import { reportScanned, exitOnDeadScope } from './_lib/scan_scope.js';
+import { reportScanned } from './_lib/scan_scope.js';
+import { exitOnDeadScope } from './_lib/dead_scope_exit.js';
 
 const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REAL_REPO_ROOT = path.dirname(path.dirname(SCRIPTS_DIR));
