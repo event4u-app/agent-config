@@ -77,16 +77,19 @@ export function loadRegister(root: string, asOf: string): OriginRow[] {
 const isPage = (f: FileLike): boolean => /\.html?$/i.test(f.base);
 const isCss = (f: FileLike): boolean => /\.css$/i.test(f.base);
 
-/** Past this, a line is a bundler artefact; its contents are reported undecided. */
-const MINIFIED = 400;
-
 /**
  * Loadable contexts only. An anchor is followed by the visitor, prose is not
  * markup, and a `dns-prefetch` hint resolves a name without contacting the
  * provider — it is reported undecided, never as a load.
+ *
+ * Tags are found over the WHOLE file text, not per line, so a tag a formatter
+ * wrapped over several lines and a minified one-line page are both read. Each
+ * tag is closed within MAX_TAG characters of its start or skipped: the window is
+ * what keeps the scan linear on a page of unterminated `<link`, and a tag longer
+ * than that is not one a browser was meant to load.
  */
-const LINK_RE = /<link\b[^>]*>/gi;
-const SRC_TAG_RE = /<(script|iframe|img|video|audio|source|embed)\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>/gi;
+const TAG_START_RE = /<(link|script|iframe|img|video|audio|source|embed)\b/gi;
+const MAX_TAG = 2_000;
 const CSS_IMPORT_RE = /@import\s+(?:url\(\s*)?["']?((?:https?:)?\/\/[^"')\s]+)/gi;
 const CSS_URL_RE = /\burl\(\s*["']?((?:https?:)?\/\/[^"')\s]+)/gi;
 const LOAD_RELS = new Set(['stylesheet', 'preconnect', 'preload', 'modulepreload', 'icon']);
@@ -111,17 +114,48 @@ function absolute(raw: string): URL | null {
     }
 }
 
+/** The attribute itself — preceded by whitespace, so `data-src` is never read as `src`. */
 function attr(tag: string, name: string): string | undefined {
-    return new RegExp(`\\b${name}\\s*=\\s*["']([^"']*)["']`, 'i').exec(tag)?.[1];
+    return new RegExp(`\\s${name}\\s*=\\s*["']([^"']*)["']`, 'i').exec(tag)?.[1];
+}
+
+interface Tag {
+    name: string;
+    tag: string;
+    line: number;
+}
+
+/** Every loadable tag of a page with the 1-based line it starts on. Linear: one window per tag start. */
+export function tagsOf(text: string): Tag[] {
+    const starts: number[] = [0];
+    for (let i = text.indexOf('\n'); i >= 0; i = text.indexOf('\n', i + 1)) starts.push(i + 1);
+    const lineAt = (pos: number): number => {
+        let lo = 0;
+        let hi = starts.length - 1;
+        while (lo < hi) {
+            const mid = (lo + hi + 1) >> 1;
+            if ((starts[mid] ?? 0) <= pos) lo = mid;
+            else hi = mid - 1;
+        }
+        return lo + 1;
+    };
+    const out: Tag[] = [];
+    for (const m of text.matchAll(TAG_START_RE)) {
+        const at = m.index ?? 0;
+        const close = text.slice(at, at + MAX_TAG).indexOf('>');
+        if (close < 0) continue;
+        out.push({ name: (m[1] ?? '').toLowerCase(), tag: text.slice(at, at + close + 1), line: lineAt(at) });
+    }
+    return out;
 }
 
 /** Hosts the build itself claims through rel="canonical" — absolute self-references, not third parties. */
 function ownHosts(files: readonly FileLike[]): Set<string> {
     const out = new Set<string>();
     for (const f of files.filter(isPage)) {
-        for (const tag of f.lines.filter((l) => l.length <= MINIFIED).flatMap((l) => l.match(LINK_RE) ?? [])) {
-            if ((attr(tag, 'rel') ?? '').toLowerCase() !== 'canonical') continue;
-            const u = absolute(attr(tag, 'href') ?? '');
+        for (const t of tagsOf(f.text)) {
+            if (t.name !== 'link' || (attr(t.tag, 'rel') ?? '').toLowerCase() !== 'canonical') continue;
+            const u = absolute(attr(t.tag, 'href') ?? '');
             if (u !== null) out.add(u.host.toLowerCase());
         }
     }
@@ -131,62 +165,53 @@ function ownHosts(files: readonly FileLike[]): Set<string> {
 interface Extracted {
     loads: Load[];
     prefetch: Hit[];
-    minified: Hit[];
 }
 
 export function extractLoads(files: readonly FileLike[]): Extracted {
     const own = ownHosts(files);
     const loads: Load[] = [];
     const prefetch: Hit[] = [];
-    const minified: Hit[] = [];
-    const push = (f: FileLike, i: number, raw: string, how: string): void => {
+    const push = (f: FileLike, line: number, raw: string, how: string): void => {
         const url = absolute(raw);
         if (url === null || own.has(url.host.toLowerCase())) return;
-        loads.push({ file: f.rel, line: i + 1, url, how });
+        loads.push({ file: f.rel, line, url, how });
     };
     for (const f of files) {
         if (!isPage(f) && !isCss(f)) continue;
-        f.lines.forEach((line, i) => {
-            // A line past MINIFIED is never searched for tags: an unclosed tag
-            // matcher over a long line is quadratic. One naming a URL is undecided.
-            if (line.length > MINIFIED) {
-                if (/https?:\/\//i.test(line)) {
-                    minified.push({
-                        file: f.rel,
-                        line: i + 1,
-                        text: `this line is ${String(line.length)} characters (minified); its third-party references are undecided.`,
-                    });
+        if (isPage(f)) {
+            for (const t of tagsOf(f.text)) {
+                if (t.name !== 'link') {
+                    const src = attr(t.tag, 'src');
+                    if (src !== undefined) push(f, t.line, src, `<${t.name} src>`);
+                    continue;
                 }
-                return;
-            }
-            if (isPage(f)) {
-                for (const tag of line.match(LINK_RE) ?? []) {
-                    const rels = (attr(tag, 'rel') ?? '').toLowerCase().split(/\s+/);
-                    const href = attr(tag, 'href') ?? '';
-                    if (rels.includes('dns-prefetch')) {
-                        const u = absolute(href);
-                        if (u !== null && !own.has(u.host.toLowerCase())) {
-                            prefetch.push({
-                                file: f.rel,
-                                line: i + 1,
-                                text: `dns-prefetch for \`${u.host}\` resolves a name without a request to the provider; whether a load follows is undecided.`,
-                            });
-                        }
-                        continue;
+                const rels = (attr(t.tag, 'rel') ?? '').toLowerCase().split(/\s+/);
+                const href = attr(t.tag, 'href') ?? '';
+                if (rels.includes('dns-prefetch')) {
+                    const u = absolute(href);
+                    if (u !== null && !own.has(u.host.toLowerCase())) {
+                        prefetch.push({
+                            file: f.rel,
+                            line: t.line,
+                            text: `dns-prefetch for \`${u.host}\` resolves a name without a request to the provider; whether a load follows is undecided.`,
+                        });
                     }
-                    const rel = rels.find((r) => LOAD_RELS.has(r));
-                    if (rel !== undefined) push(f, i, href, `<link rel="${rel}">`);
+                    continue;
                 }
-                for (const m of line.matchAll(SRC_TAG_RE)) push(f, i, m[2] ?? '', `<${(m[1] ?? '').toLowerCase()} src>`);
+                const rel = rels.find((r) => LOAD_RELS.has(r));
+                if (rel !== undefined) push(f, t.line, href, `<link rel="${rel}">`);
             }
-            // CSS rules, in a stylesheet or an inline <style> block of a page.
-            for (const m of line.matchAll(CSS_IMPORT_RE)) push(f, i, m[1] ?? '', 'CSS @import');
+        }
+        // CSS rules, in a stylesheet or an inline <style> block of a page. Both
+        // patterns start at a literal and hold no nested quantifier: linear.
+        f.lines.forEach((line, i) => {
+            for (const m of line.matchAll(CSS_IMPORT_RE)) push(f, i + 1, m[1] ?? '', 'CSS @import');
             if (!/@import/i.test(line)) {
-                for (const m of line.matchAll(CSS_URL_RE)) push(f, i, m[1] ?? '', 'CSS url()');
+                for (const m of line.matchAll(CSS_URL_RE)) push(f, i + 1, m[1] ?? '', 'CSS url()');
             }
         });
     }
-    return { loads, prefetch, minified };
+    return { loads, prefetch };
 }
 
 export function resolveOrigin(url: URL, register: readonly OriginRow[]): OriginRow | undefined {
@@ -204,10 +229,10 @@ interface Classified {
 
 /** 2.1 — split the loads into findings and undecided, with the providers that load. */
 export function classifyLoads(files: readonly FileLike[], register: readonly OriginRow[]): Classified {
-    const { loads, prefetch, minified } = extractLoads(files);
+    const { loads, prefetch } = extractLoads(files);
     const gated = new Set(files.filter((f) => GATE_RE.test(f.text)).map((f) => f.rel));
     const findings: Hit[] = [];
-    const undecided: Hit[] = [...prefetch, ...minified];
+    const undecided: Hit[] = [...prefetch];
     const loaded = new Map<string, OriginRow>();
     for (const l of loads) {
         const row = resolveOrigin(l.url, register);
