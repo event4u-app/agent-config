@@ -70,7 +70,7 @@ execution:
 6. **Build.** Write the page on the seek contract: `window.__seek(t)`,
    `window.__videoMeta`, no wall clock, seeded randomness, local fonts. Choose
    the renderer from `--domain renderer`; plain HTML is the default and a
-   licensed renderer is suggested only after its licence question is answered.
+   licensed renderer is suggested only after its license question is answered.
 7. **Contact sheet.** Render once, read `contact.png`, fix clutter, overlap and
    off-beat timing. At most three passes.
 8. **Render.**

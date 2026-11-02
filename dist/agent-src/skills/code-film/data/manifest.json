@@ -58,7 +58,7 @@
       ],
       "output_cols": [
         "Renderer",
-        "Licence",
+        "License",
         "Setup Cost",
         "Best Fit",
         "Route"

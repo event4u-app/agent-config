@@ -56,5 +56,5 @@ The page is a pure function of time. Full contract:
 Plain HTML plus the seek contract is the default: it needs nothing beyond the
 headless browser and ffmpeg the film profile already uses. Other renderers are
 detected and routed, never bundled; `../data/renderers.csv` carries each one's
-licence and setup cost. One React-based renderer requires a paid company licence
-above three employees — the licence column is read before it is suggested.
+license and setup cost. One React-based renderer requires a paid company license
+above three employees — the license column is read before it is suggested.

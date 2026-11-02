@@ -1,7 +1,7 @@
-Renderer,Keywords,Licence,Setup Cost,Best Fit,Route
+Renderer,Keywords,License,Setup Cost,Best Fit,Route
 Plain HTML + seek contract,html css svg canvas default browser,none needed,headless browser and ffmpeg (already used by the film profile),"default: UI, type, charts, diagrams, shapes",ui:render --profile film
 HTML timeline framework (Apache-2.0),html framework timeline gsap,Apache-2.0,one npm install in the project,pages already written against a seekable timeline,"detect its page form; capture through the film profile"
-React video framework,react tsx video components,source-available; paid company licence above three employees,one npm install plus a React project,teams already licensed and on React,"suggest only after the licence question is answered"
+React video framework,react tsx video components,source-available; paid company license above three employees,one npm install plus a React project,teams already licensed and on React,"suggest only after the license question is answered"
 three.js,3d webgl scene camera,MIT,one npm install or a local module file,real 3D objects and camera paths,"seek function drives the three.js render; film profile captures"
 Math animation engine,math equations proofs manim,MIT,a Python install,mathematical explainers,out of scope in v1 — named slot only
 3D content creation suite,blender dcc rendering,GPL,a desktop install,offline 3D production,out of scope in v1 — named slot only
