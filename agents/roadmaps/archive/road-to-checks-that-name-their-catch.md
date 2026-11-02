@@ -64,7 +64,7 @@ always-on rule text.
       generated `.claude/` projection.
 - [x] **0.2 Repoint or delete `task memory:shadow-report` (C3).** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: docs/maintainers/migration/divergences/src-scripts-check_memory.md -->
       verify: the task exits 0, or it is gone and `grep -r shadow-report taskfiles` is empty.
-- [x] **0.3 Commit the reading.** Per-case exit table (A3/A4) and the <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **0.3 Commit the reading.** Per-case exit table (A3/A4) and the <!-- receipt: class=R2 · shadow · scope=safe · would-skip=revalidation · bound=raised to R2 from R0 -->
       unknown-flag sweep (C1) land under `agents/evidence/analysis/` with the
       command that produced them.
       verify: re-running the recorded command reproduces the counts.
