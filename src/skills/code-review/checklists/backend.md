@@ -39,6 +39,7 @@ framework specifics to the carve-outs named in the skill body.
 | **Injection** | No raw queries / command lines / template strings with unescaped user input. |
 | **Output encoding** | Template output is escaped by default; raw / unescaped output is intentional and reviewed. |
 | **Sensitive data** | No secrets, tokens, or passwords in code, logs, or error responses. |
+| **Containment** | A new public route, job or webhook can be switched off by a lever, and the lever never locks out the route that releases it — see [`control-section`](../../security-audit/references/control-section.md). |
 
 ## Tests
 

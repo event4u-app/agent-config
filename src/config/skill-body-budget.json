@@ -105,7 +105,7 @@
     "expansion-playbook": 8838,
     "experiment-loop": 7297,
     "fe-design": 17366,
-    "feature-planning": 14676,
+    "feature-planning": 14923,
     "file-editor": 7026,
     "finishing-a-development-branch": 9404,
     "flux": 6022,
@@ -158,7 +158,7 @@
     "laravel-scheduling": 5889,
     "laravel-validation": 3325,
     "laravel-websocket": 2519,
-    "launch-readiness": 9661,
+    "launch-readiness": 9763,
     "learning-to-rule-or-skill": 16477,
     "learning-tutor": 10027,
     "legal-intake-triage": 7217,
@@ -291,7 +291,7 @@
     "standards-from-config": 7915,
     "storybook-workshop": 13536,
     "subagent-orchestration": 19978,
-    "supply-chain-intake": 10527,
+    "supply-chain-intake": 10721,
     "svg-authoring": 17970,
     "symfony-workflow": 10329,
     "systematic-debugging": 17024,
@@ -957,6 +957,24 @@
       "old": 12522,
       "new": 12564,
       "reason": "road-to-a-clean-that-says-what-it-checked 3.3: same correction as authz-review — no dangling rule citation, the negative-test clarification instead."
+    },
+    {
+      "skill": "feature-planning",
+      "old": 14676,
+      "new": 14923,
+      "reason": "road-to-a-switch-built-before-it-is-needed 6.1/6.3: one pointer to the containment blueprint (security-audit/references/control-section.md, ADR-304), so planning, intake and launch ask which lever switches the new surface off."
+    },
+    {
+      "skill": "launch-readiness",
+      "old": 9661,
+      "new": 9763,
+      "reason": "road-to-a-switch-built-before-it-is-needed 6.1/6.3: one pointer to the containment blueprint (security-audit/references/control-section.md, ADR-304), so planning, intake and launch ask which lever switches the new surface off."
+    },
+    {
+      "skill": "supply-chain-intake",
+      "old": 10527,
+      "new": 10721,
+      "reason": "road-to-a-switch-built-before-it-is-needed 6.1/6.3: one pointer to the containment blueprint (security-audit/references/control-section.md, ADR-304), so planning, intake and launch ask which lever switches the new surface off."
     }
   ]
 }

@@ -102,7 +102,9 @@ cite any matching `id` in the analysis so its control or regression test ships
 with the fix.
 
 Capture the analysis output — abuse cases, missing controls, required negative
-tests — and implement against that list.
+tests — and implement against that list. One more question for a deployed
+product: how is this surface switched off, and what happens when the switch's
+store is down? (`security-audit/references/control-section.md`, ADR-304.)
 
 ## When NOT to fire
 
