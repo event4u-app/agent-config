@@ -101,3 +101,63 @@ describe('security_audit_config — _scanMcp / _scanFrontmatter over built Scann
         }
     });
 });
+
+// =====================================================================
+// --min-grade: the audit can fail a consumer CI step (inbox-2026-11-j 1.1)
+// =====================================================================
+
+describe('security_audit_config — --min-grade', () => {
+    let tmp: string;
+    afterEach(() => {
+        if (tmp) fs.rmSync(tmp, { recursive: true, force: true });
+    });
+    function quiet<T>(fn: () => T): T {
+        const out = process.stdout.write;
+        const err = process.stderr.write;
+        process.stdout.write = (() => true) as typeof process.stdout.write;
+        process.stderr.write = (() => true) as typeof process.stderr.write;
+        try {
+            return fn();
+        } finally {
+            process.stdout.write = out;
+            process.stderr.write = err;
+        }
+    }
+    function riskyRoot(): string {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sac-mingrade-'));
+        const body = `{\n  "mcpServers": {\n    "x": {\n      "command": "npx",\n      "args": ["-y", "srv"],\n      "env": { "K": "${SECRET}" },\n      "autoApprove": true\n    }\n  }\n}\n`;
+        fs.writeFileSync(path.join(root, '.mcp.json'), body, 'utf-8');
+        // A secret in two instruction files plus zero-width characters: enough
+        // weight across categories to pull the overall grade below A.
+        fs.writeFileSync(path.join(root, 'CLAUDE.md'), `key ${SECRET}\n`, 'utf-8');
+        fs.writeFileSync(path.join(root, 'AGENTS.md'), `note\u200b\u200b hidden ${SECRET}\n`, 'utf-8');
+        return root;
+    }
+
+    it('gradeMeets orders A best and F worst, inclusive at the floor', () => {
+        expect(sac.gradeMeets('A', 'B')).toBe(true);
+        expect(sac.gradeMeets('B', 'B')).toBe(true);
+        expect(sac.gradeMeets('C', 'B')).toBe(false);
+        expect(sac.gradeMeets('F', 'D')).toBe(false);
+        expect(sac.gradeMeets('F', 'F')).toBe(true);
+    });
+
+    it('exits 1 when the overall grade is below the floor, derived from the report', () => {
+        tmp = riskyRoot();
+        const grade = sac.audit(tmp).overall_grade;
+        expect(grade).not.toBe('A');
+        expect(quiet(() => sac.main(['--root', tmp, '--min-grade', 'A']))).toBe(1);
+        expect(quiet(() => sac.main(['--root', tmp, '--min-grade', grade]))).toBe(0);
+    });
+
+    it('stays advisory (exit 0) without the flag, even on a failing grade', () => {
+        tmp = riskyRoot();
+        expect(quiet(() => sac.main(['--root', tmp]))).toBe(0);
+    });
+
+    it('exits 2 on a grade outside A-F, and accepts lower case', () => {
+        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sac-mingrade-'));
+        expect(quiet(() => sac.main(['--root', tmp, '--min-grade', 'Z']))).toBe(2);
+        expect(quiet(() => sac.main(['--root', tmp, '--min-grade=b']))).toBe(0);
+    });
+});

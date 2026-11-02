@@ -362,21 +362,30 @@ function _print(report: AuditReport): void {
 interface Args {
     root: string;
     json: boolean;
+    min_grade: string | null;
+}
+
+const GRADE_ORDER = ['A', 'B', 'C', 'D', 'F'] as const;
+
+/** True when `actual` is at or above `min` on the A (best) … F (worst) scale. */
+export function gradeMeets(actual: string, min: string): boolean {
+    return GRADE_ORDER.indexOf(actual as (typeof GRADE_ORDER)[number]) <=
+        GRADE_ORDER.indexOf(min as (typeof GRADE_ORDER)[number]);
 }
 
 function _argError(msg: string): never {
-    process.stderr.write('usage: security_audit_config [-h] [--root ROOT] [--json]\n');
+    process.stderr.write('usage: security_audit_config [-h] [--root ROOT] [--json] [--min-grade A-F]\n');
     process.stderr.write(`security_audit_config: error: ${msg}\n`);
     process.exit(2);
 }
 
 function parse_args(argv: readonly string[]): Args {
-    const out: Args = { root: '.', json: false };
+    const out: Args = { root: '.', json: false, min_grade: null };
     const extra: string[] = [];
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i] as string;
         if (a === '-h' || a === '--help') {
-            process.stdout.write('usage: security_audit_config [-h] [--root ROOT] [--json]\n');
+            process.stdout.write('usage: security_audit_config [-h] [--root ROOT] [--json] [--min-grade A-F]\n');
             process.exit(0);
         } else if (a === '--json') {
             out.json = true;
@@ -389,6 +398,15 @@ function parse_args(argv: readonly string[]): Args {
             i += 1;
         } else if (a.startsWith('--root=')) {
             out.root = a.slice('--root='.length);
+        } else if (a === '--min-grade') {
+            const v = argv[i + 1];
+            if (v === undefined) {
+                _argError('argument --min-grade: expected one argument');
+            }
+            out.min_grade = v;
+            i += 1;
+        } else if (a.startsWith('--min-grade=')) {
+            out.min_grade = a.slice('--min-grade='.length);
         } else {
             extra.push(a);
         }
@@ -401,6 +419,11 @@ function parse_args(argv: readonly string[]): Args {
 
 export function main(argv: readonly string[] | null = null): number {
     const args = parse_args(argv ?? process.argv.slice(2));
+    const minGrade = args.min_grade === null ? null : args.min_grade.toUpperCase();
+    if (minGrade !== null && !(GRADE_ORDER as readonly string[]).includes(minGrade)) {
+        process.stderr.write(`security_audit_config: error: --min-grade must be one of ${GRADE_ORDER.join(', ')}\n`);
+        return 2;
+    }
 
     const report = audit(args.root);
     if (args.json) {
@@ -408,7 +431,12 @@ export function main(argv: readonly string[] | null = null): number {
     } else {
         _print(report);
     }
-    // Audit is advisory: always exit 0 (it informs, it does not gate the consumer).
+    // Advisory by default: exit 0 informs. `--min-grade` is the consumer's
+    // explicit opt-in to let a CI step fail on it.
+    if (minGrade !== null && !gradeMeets(report.overall_grade, minGrade)) {
+        process.stderr.write(`security_audit_config: overall grade ${report.overall_grade} is below --min-grade ${minGrade}\n`);
+        return 1;
+    }
     return 0;
 }
 
