@@ -3492,6 +3492,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/security-audit/references/control-section.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/security-maturity-assessment/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -11728,6 +11734,13 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/backend.md",
+      "target": ".agent-src.uncondensed/skills/security-audit/references/control-section.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/skills/code-review/checklists/database.md",
       "target": ".agent-src.uncondensed/skills/code-review/SKILL.md",
       "type": "READ_ONLY",
@@ -14239,6 +14252,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/feature-planning/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/security-audit/references/control-section.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/file-editor/SKILL.md",
@@ -19029,6 +19049,13 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/skills/security-audit/references/control-section.md",
+      "target": ".agent-src.uncondensed/skills/security-audit/references/control-section.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncondensed/skills/security-maturity-assessment/SKILL.md",
       "target": ".agent-src.uncondensed/skills/agent-security-review/SKILL.md",
       "type": "READ_ONLY",
@@ -19877,6 +19904,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/security-audit/references/control-section.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
       "target": ".agent-src.uncondensed/skills/security/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -20347,6 +20381,13 @@
     {
       "source": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
       "target": ".agent-src.uncondensed/skills/security-audit/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/security-audit/references/control-section.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1

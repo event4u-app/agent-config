@@ -119,6 +119,11 @@ const VERSION = /^\d+(?:\.\d+){0,3}(?:[-+][0-9A-Za-z.-]+)?$/;
  */
 export function fixPlan(f: Finding, inventory: InventoryEntry[]): FixPlan {
     if (f.ecosystem === 'runtime') return runtimePlan(f, inventory);
+    if (f.verdict === 'eol' || f.verdict === 'eol-soon') {
+        // A framework past (or near) end of security support has no fixing version
+        // inside its line; the remedy is moving the line, which no mitigation replaces.
+        return { commands: [], edits: [], opsChecklist: [], note: `${f.package} ${f.version ?? ''} is on a release line ${f.verdict === 'eol' ? 'past' : 'near'} end of security support — the remedy is a release-line upgrade (plan it with dependency-upgrade); a mitigation only bridges until then` };
+    }
     if (f.fixed === null) {
         return { commands: [], edits: [], opsChecklist: [], note: 'no fixing version exists — offer a mitigation instead (1.5)' };
     }

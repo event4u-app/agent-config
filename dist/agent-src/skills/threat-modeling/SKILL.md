@@ -140,6 +140,9 @@ Before finalizing the threat model, confirm:
 5. You have NOT proposed offensive testing steps, exploit chains, or bypass ideas
 6. If the change is out of scope for threat modelling (no trust boundary
    crossed), you have said so explicitly and stopped
+7. On a deployed product, every new entry point names the lever that switches it
+   off and what happens when that lever's store is down
+   ([`control-section`](../security-audit/references/control-section.md))
 
 ## Output format
 
@@ -203,7 +206,8 @@ run tests**.
 ## Do NOT
 
 * NEVER produce exploit chains, payloads, or bypass techniques — if the task
-  asks for offensive work, stop and refuse per `never-help-build-offensive-cyber-capability`
+  asks for offensive work, stop and refuse. A negative test against the
+  project's own code in its own suite is not an offensive step
 * NEVER return a threat model out of politeness when no trust boundary is crossed — say so and stop
 * NEVER treat "internal" or "behind the WAF" as a substitute for a control
 * NEVER approve a plan without at least one negative test per 🔴 abuse case

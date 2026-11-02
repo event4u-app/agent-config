@@ -21,7 +21,7 @@
     "architecture-review-lens": 4929,
     "artisan-commands": 2710,
     "async-python-patterns": 8203,
-    "authz-review": 19073,
+    "authz-review": 19124,
     "aws-infrastructure": 7441,
     "blade-ui": 7227,
     "blameless-post-mortem": 7809,
@@ -106,7 +106,7 @@
     "expansion-playbook": 8838,
     "experiment-loop": 7297,
     "fe-design": 17366,
-    "feature-planning": 14676,
+    "feature-planning": 14923,
     "file-editor": 7026,
     "finishing-a-development-branch": 9404,
     "flux": 6022,
@@ -141,9 +141,9 @@
     "judge-bug-hunter": 8560,
     "judge-code-quality": 7722,
     "judge-injection-defense": 6079,
-    "judge-security-auditor": 8246,
+    "judge-security-auditor": 8652,
     "judge-spec-compliance": 7186,
-    "judge-synthesis": 12885,
+    "judge-synthesis": 12957,
     "judge-test-coverage": 7161,
     "laravel": 11631,
     "laravel-api-endpoint": 7252,
@@ -159,7 +159,7 @@
     "laravel-scheduling": 5889,
     "laravel-validation": 3325,
     "laravel-websocket": 2519,
-    "launch-readiness": 9661,
+    "launch-readiness": 9763,
     "learning-to-rule-or-skill": 16477,
     "learning-tutor": 10027,
     "legal-intake-triage": 7217,
@@ -275,7 +275,7 @@
     "script-writing": 9324,
     "secrets-management": 12029,
     "security": 6722,
-    "security-audit": 14550,
+    "security-audit": 14896,
     "security-maturity-assessment": 5819,
     "sentry-integration": 5536,
     "sequential-thinking": 6376,
@@ -292,7 +292,7 @@
     "standards-from-config": 7915,
     "storybook-workshop": 13536,
     "subagent-orchestration": 19978,
-    "supply-chain-intake": 10527,
+    "supply-chain-intake": 10721,
     "svg-authoring": 17970,
     "symfony-workflow": 10329,
     "systematic-debugging": 17024,
@@ -305,7 +305,7 @@
     "test-driven-development": 16352,
     "test-performance": 6376,
     "testing-anti-patterns": 19723,
-    "threat-modeling": 12522,
+    "threat-modeling": 12775,
     "throughput-vs-morale-tradeoff": 13242,
     "token-optimizer": 6275,
     "traefik": 9138,
@@ -922,6 +922,66 @@
       "old": 10795,
       "new": 10812,
       "reason": "The runway example's burn is labelled monthly and its emitted gap is the stated 4.5-7.5 month range instead of a contradicting -5mo. archive/road-to-numbers-a-skill-can-stand-behind 1.4."
+    },
+    {
+      "skill": "security-audit",
+      "old": 14550,
+      "new": 14838,
+      "reason": "road-to-a-clean-that-says-what-it-checked 1.5: a rejected candidate names its closing control, a confirmed one its counterevidence and severity-change condition, and confidence High needs a red test — ledger schema v2."
+    },
+    {
+      "skill": "judge-security-auditor",
+      "old": 8246,
+      "new": 8652,
+      "reason": "road-to-a-clean-that-says-what-it-checked 2.1/3.2: a Coverage block on every verdict (an apply with no row is 'not checked'), and the judge reads and amends an existing threat model instead of re-deriving it."
+    },
+    {
+      "skill": "judge-synthesis",
+      "old": 12885,
+      "new": 12957,
+      "reason": "road-to-a-clean-that-says-what-it-checked 2.2: the security apply line renders its assessed rows and 'clean, with gaps' instead of a bare apply (0)."
+    },
+    {
+      "skill": "security-audit",
+      "old": 14838,
+      "new": 14896,
+      "reason": "road-to-a-clean-that-says-what-it-checked 2.3: on a diff, the callers of a touched guard join the hunters' scope."
+    },
+    {
+      "skill": "authz-review",
+      "old": 19073,
+      "new": 19124,
+      "reason": "road-to-a-clean-that-says-what-it-checked 3.3: dropped a citation of a rule that does not exist in this tree and stated that a negative test against the project's own code is not an offensive step."
+    },
+    {
+      "skill": "threat-modeling",
+      "old": 12522,
+      "new": 12564,
+      "reason": "road-to-a-clean-that-says-what-it-checked 3.3: same correction as authz-review — no dangling rule citation, the negative-test clarification instead."
+    },
+    {
+      "skill": "feature-planning",
+      "old": 14676,
+      "new": 14923,
+      "reason": "road-to-a-switch-built-before-it-is-needed 6.1/6.3: one pointer to the containment blueprint (security-audit/references/control-section.md, ADR-304), so planning, intake and launch ask which lever switches the new surface off."
+    },
+    {
+      "skill": "launch-readiness",
+      "old": 9661,
+      "new": 9763,
+      "reason": "road-to-a-switch-built-before-it-is-needed 6.1/6.3: one pointer to the containment blueprint (security-audit/references/control-section.md, ADR-304), so planning, intake and launch ask which lever switches the new surface off."
+    },
+    {
+      "skill": "supply-chain-intake",
+      "old": 10527,
+      "new": 10721,
+      "reason": "road-to-a-switch-built-before-it-is-needed 6.1/6.3: one pointer to the containment blueprint (security-audit/references/control-section.md, ADR-304), so planning, intake and launch ask which lever switches the new surface off."
+    },
+    {
+      "skill": "threat-modeling",
+      "old": 12564,
+      "new": 12775,
+      "reason": "road-to-a-switch-built-before-it-is-needed 6.2: a validation item asking each new entry point of a deployed product for the lever that switches it off (ADR-304)."
     }
   ]
 }

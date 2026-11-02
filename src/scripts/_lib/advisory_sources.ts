@@ -494,6 +494,32 @@ function smallestFix(vuln: OsvVuln, entry: InventoryEntry): string | null {
 // ---------------------------------------------------------------------------
 
 const EOL_PRODUCT: Record<string, string> = { php: 'php', node: 'nodejs' };
+/**
+ * Frameworks read from the lockfiles, on the same lifecycle host. One package
+ * stands for each framework's release line: `symfony/http-kernel` rather than
+ * every `symfony/*` component, so one line yields one finding.
+ */
+const FRAMEWORK_PRODUCT: Record<string, { product: string; minor: boolean }> = {
+    'Packagist:laravel/framework': { product: 'laravel', minor: false },
+    'Packagist:symfony/http-kernel': { product: 'symfony', minor: true },
+    'npm:react': { product: 'react', minor: false },
+    'npm:next': { product: 'nextjs', minor: false },
+};
+
+/** The lifecycle product and release line an inventory entry is judged on, or null. */
+function lifecycleTarget(e: InventoryEntry): { product: string; line: string } | null {
+    if (e.version === null) return null;
+    if (e.ecosystem === 'runtime') {
+        const product = EOL_PRODUCT[e.name];
+        const line = releaseLine(e.name, e.version);
+        return product === undefined || line === null ? null : { product, line };
+    }
+    const fw = FRAMEWORK_PRODUCT[`${e.ecosystem}:${e.name}`];
+    const m = /^v?(\d+)(?:\.(\d+))?/.exec(e.version);
+    if (fw === undefined || !m) return null;
+    if (fw.minor && m[2] === undefined) return null;
+    return { product: fw.product, line: fw.minor ? `${m[1]}.${m[2]}` : m[1]! };
+}
 /** Days before end of security support that count as `eol-soon`. */
 export const EOL_SOON_DAYS = 90;
 
@@ -515,27 +541,36 @@ export async function lifecycle(
 ): Promise<{ findings: RawFinding[]; report: SourceReport }> {
     const fetcher = opts.fetcher ?? defaultFetcher;
     const now = opts.now ?? new Date();
-    const runtimes = entries.filter((e) => e.ecosystem === 'runtime' && e.version !== null && EOL_PRODUCT[e.name] !== undefined);
-    if (runtimes.length === 0) return { findings: [], report: { source: 'lifecycle', status: 'ok', reason: 'no-runtime' } };
+    const targets = entries.flatMap((e) => {
+        const t = lifecycleTarget(e);
+        return t === null ? [] : [{ e, ...t }];
+    });
+    if (targets.length === 0) return { findings: [], report: { source: 'lifecycle', status: 'ok', reason: 'no-runtime' } };
     const findings: RawFinding[] = [];
     try {
         const tables = new Map<string, Array<{ cycle?: string; eol?: string | boolean }>>();
-        for (const name of new Set(runtimes.map((e) => e.name))) {
-            const res = await fetcher(`https://endoflife.date/api/${EOL_PRODUCT[name]}.json`, { timeoutMs: opts.timeoutMs ?? 8000 });
-            if (res.status !== 200) return { findings: [], report: { source: 'lifecycle', status: 'error', reason: `http-${res.status}` } };
-            tables.set(name, JSON.parse(await res.text()));
+        const failed: string[] = [];
+        for (const product of new Set(targets.map((t) => t.product))) {
+            const res = await fetcher(`https://endoflife.date/api/${product}.json`, { timeoutMs: opts.timeoutMs ?? 8000 });
+            // One product's failure must not drop another's answer: keep the rest, say which was not read.
+            if (res.status !== 200) failed.push(`${product}:http-${res.status}`);
+            else tables.set(product, JSON.parse(await res.text()));
         }
-        for (const e of runtimes) {
-            const line = releaseLine(e.name, e.version!);
-            const row = (tables.get(e.name) ?? []).find((r) => String(r.cycle) === line);
+        if (tables.size === 0) return { findings: [], report: { source: 'lifecycle', status: 'error', reason: failed.join(',') } };
+        const reported = new Set<string>();
+        for (const { e, product, line } of targets) {
+            const row = (tables.get(product) ?? []).find((r) => String(r.cycle) === line);
             if (row === undefined || typeof row.eol !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(row.eol)) continue;
             const days = (Date.parse(`${row.eol}T00:00:00Z`) - now.getTime()) / 86400000;
             if (days > EOL_SOON_DAYS) continue;
+            const id = `EOL-${e.ecosystem === 'runtime' ? e.name : product}-${line}`;
+            if (reported.has(`${id}@${e.file}`)) continue;
+            reported.add(`${id}@${e.file}`);
             findings.push({
-                id: `EOL-${e.name}-${line}`,
+                id,
                 aliases: [],
                 kind: days <= 0 ? 'eol' : 'eol-soon',
-                ecosystem: 'runtime',
+                ecosystem: e.ecosystem,
                 package: e.name,
                 version: e.version,
                 severity: null,
@@ -549,7 +584,7 @@ export async function lifecycle(
                 line: e.line,
             });
         }
-        return { findings, report: { source: 'lifecycle', status: 'ok', reason: null } };
+        return { findings, report: failed.length > 0 ? { source: 'lifecycle', status: 'error', reason: `partial:${failed.join(',')}` } : { source: 'lifecycle', status: 'ok', reason: null } };
     } catch (e) {
         return { findings: [], report: { source: 'lifecycle', status: 'unavailable', reason: (e as Error).name === 'TimeoutError' ? 'timeout' : 'network' } };
     }

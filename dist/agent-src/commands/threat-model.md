@@ -93,7 +93,9 @@ After the report, ask:
 - On **1**: hand off to the implementation flow (e.g., `feature-plan`,
   `bug-fix`, or direct edit) with the required-controls list pinned
 - On **2**: re-gather context and re-dispatch
-- On **3**: save the report as the deliverable, stop
+- On **3**: write the report into the change's plan or roadmap as a
+  `## Threat model` section — the security judge reads it first and amends
+  it — then stop
 
 ## Use this command when
 

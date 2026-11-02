@@ -63,7 +63,7 @@ jobs:
             echo "## Memory hygiene report"
             echo
             echo '```'
-            npx --yes @event4u/agent-config memory:check --path agents/memory
+            npx --yes @event4u/agent-config@19 memory:check --path agents/memory
             exit_code=$?
             echo '```'
           } > staleness.md

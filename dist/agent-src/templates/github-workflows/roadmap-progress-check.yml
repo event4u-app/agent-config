@@ -48,7 +48,7 @@ jobs:
           node-version: "22"
 
       - name: Run roadmap progress check
-        run: npx --yes @event4u/agent-config roadmap:progress-check
+        run: npx --yes @event4u/agent-config@19 roadmap:progress-check
 
       - name: Remediation hint on failure
         if: failure()

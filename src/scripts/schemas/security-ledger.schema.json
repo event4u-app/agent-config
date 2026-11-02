@@ -1,11 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Consumer security-audit ledger",
-  "description": "agents/runtime/state/security/<run>/ledger.json, written by /audit code and read by `agent-config audit:code validate|show`. Validated by src/scripts/_lib/security_ledger.ts::validateLedger, which also enforces the cross-field rules this draft cannot express: needs_validation carries no severity and names its open fact; confirmed carries a severity and a proof; finder = verifier requires review_independence single-member; an unreviewed row names its reason; coverage counts graph|convention rows only.",
+  "description": "agents/runtime/state/security/<run>/ledger.json, written by /audit code and read by `agent-config audit:code validate|show`. Validated by src/scripts/_lib/security_ledger.ts::validateLedger, which also enforces the cross-field rules this draft cannot express: needs_validation carries no severity and names its open fact; confirmed carries a severity and a proof; finder = verifier requires review_independence single-member; an unreviewed row names its reason; coverage counts graph|convention rows only. Under schema_version 2 a rejected finding names its control and a confirmed one its counterevidence and severity_change; confidence high needs proof test at any version.",
   "type": "object",
   "required": ["schema_version", "run", "at", "rows", "findings"],
   "properties": {
-    "schema_version": { "const": 1 },
+    "schema_version": { "enum": [1, 2] },
     "run": { "type": "string", "minLength": 1 },
     "at": { "type": "string", "minLength": 1 },
     "rows": {
@@ -39,7 +39,21 @@
           "proof": { "enum": ["static-trace", "test"] },
           "proof_test": { "type": "string" },
           "open_fact": { "type": "string" },
-          "reason": { "type": "string" }
+          "reason": { "type": "string" },
+          "control": {
+            "type": "object",
+            "required": ["path_line", "quote"],
+            "description": "v2, required on rejected: the control that closes the candidate.",
+            "properties": { "path_line": { "type": "string" }, "quote": { "type": "string" } }
+          },
+          "counterevidence": { "type": "string", "description": "v2, required on confirmed." },
+          "severity_change": { "type": "string", "description": "v2, required on confirmed: what would move the severity." },
+          "confidence": { "enum": ["low", "medium", "high"], "description": "high requires proof: test." },
+          "fix_verification": {
+            "type": "object",
+            "required": ["retrace", "bypass_note", "proof_green"],
+            "properties": { "retrace": { "type": "string" }, "bypass_note": { "type": "string" }, "proof_green": { "type": "boolean" } }
+          }
         }
       }
     }
