@@ -55,10 +55,10 @@
       "projection": "behaviour-contract",
       "state": "degraded",
       "limitations": [
-        "the readiness grader passes the behaviour-contract dimension on file presence alone — an `AGENTS.md` at the root counts as a declared behavioural contract whatever it says (`src/scripts/grade_target_readiness.ts:349-356`), so almost every agent-configured repository grades as having one"
+        "the readiness grader now requires an executable or machine-readable contract — an OpenAPI / AsyncAPI document, a Gherkin feature file or a pact file, found by a bounded walk that skips fixture trees; prose files such as `AGENTS.md` are observed, not graded (`src/scripts/grade_target_readiness.ts`, `_contractFiles`). Presence of the artefact still does not show that it passes or describes current behaviour, and `Enforced-in-CI` is a static workflow reference to a spec runner, not an observed run"
       ],
-      "rationale": "AGENTS.md / openapi.yaml / CONTRACT.md presence is probed as the repository's declared behavioural contract.",
-      "evidence": "tests/scripts/grade_target_readiness.test.ts — graded > 0 in the full fixture, 0 in the python fixture",
+      "rationale": "An OpenAPI / AsyncAPI document, a Gherkin feature or a pact file is probed as the repository's declared behavioural contract; prose-only files no longer count (owner decision OQ-63 a, 2026-11-02).",
+      "evidence": "tests/scripts/grade_target_readiness.test.ts — an `AGENTS.md`-only target grades 0, a feature file or OpenAPI document grades 1, a CI step running the spec grades 2; graded > 0 in the full fixture (features/checkout.feature), 0 in the python fixture",
       "revisit_if": "the contract probe is widened to a form whose absence the fixtures no longer distinguish"
     },
     "test-red-evidence": {

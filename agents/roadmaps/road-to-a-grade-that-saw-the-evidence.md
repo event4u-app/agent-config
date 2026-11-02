@@ -43,11 +43,11 @@ exactly one roadmap anchor — a number, not a gate.
 
 ## Phase 1 — The grader grades evidence
 
-- [ ] **1.1 A prose-only target does not pass (test first).** A target whose
+- [x] **1.1 A prose-only target does not pass (test first).** A target whose
       only candidate is `AGENTS.md` grades 0 on `behaviour-contract`; an
       OpenAPI document or a Gherkin feature file grades above 0.
       verify: `npx vitest run tests/scripts/grade_target_readiness.test.ts` -> 0
-- [ ] **1.2 Registry, fixtures and command doc say the new truth.**
+- [x] **1.2 Registry, fixtures and command doc say the new truth.**
       verify: `jq -r '.capabilities["behavior-spec"].limitations | join(" ")' src/config/assurance-capability-registry.json` -> /executable/
 
 ## Phase 2 — Report-only acceptance-citation resolver
