@@ -47,22 +47,41 @@ and [settings § Settings in cloud sessions](https://code.claude.com/docs/en/set
 
 The session VM sets `CLAUDE_CODE_REMOTE=true`; it is never `true` locally.
 
-**Delivery options — not shipped yet.** Two ways to carry agent-config into the
-clone exist, and neither is built:
+**Carry the hooks into the repository (opt-in).** Run, in the repository:
 
-- *Setup script* (`npm i -g @event4u/agent-config && agent-config init`): runs
-  as root before the session, and the docs confirm a file it writes to
-  `~/.claude/CLAUDE.md` is loaded. It does **not** carry hooks, because user
-  `~/.claude/settings.json` is not read in a cloud session.
-- *Hooks committed to the repository* (`.claude/settings.json`) plus a
-  SessionStart bootstrap that installs the runtime from npm when
-  `CLAUDE_CODE_REMOTE=true`. The default network level (Trusted) allows
-  `registry.npmjs.org`. This is the only path that can carry the guards; it
-  writes into your repository, so it waits for an owner decision.
+```bash
+agent-config doctor --repair cloud-reach
+git add .claude/settings.json && git commit -m "chore: carry agent-config hooks into cloud sessions"
+```
 
-The `enabledPlugins` entry agent-config writes into `.claude/settings.json` has
-no effect in a cloud session (repo-declared plugins are not installed) and
-points at the deprecated marketplace plugin.
+This writes the hook matrix into `.claude/settings.json`, which a cloud session
+loads. What each carried command does:
+
+- **Locally it does nothing.** Every command starts with
+  `[ "$CLAUDE_CODE_REMOTE" = "true" ] || exit 0`, so beside your global install
+  no hook fires twice.
+- **In a cloud session, SessionStart installs agent-config once** —
+  `npm i -g --ignore-scripts @event4u/agent-config@<version>`, the exact version
+  that wrote the file — unless a trusted dispatcher is already there. The
+  default network level (Trusted) allows `registry.npmjs.org`. The entry carries
+  a 300-second timeout because the install can outlast the host's default.
+- **The trust boundary is the local one.** The dispatcher is resolved only from
+  the staged runtime or an absolute `agent-config` outside the project directory,
+  so a repository cannot supply its own. With no dispatcher, a tool call is
+  refused, as it is locally.
+- **If the install fails** (network level `None`, registry unreachable), the
+  session context says so in one line, and every tool call is refused until the
+  network level allows npm or you remove the carried entries.
+
+Limits: hooks load only in a session with **one** repository; the pinned version
+does not follow your global upgrades — re-run the repair after upgrading and
+commit the change. A setup script (`npm i -g … && agent-config init`) is not an
+alternative for the hooks: it writes `~/.claude/settings.json`, which a cloud
+session does not read.
+
+agent-config no longer writes an `enabledPlugins` entry into
+`.claude/settings.json`: repo-declared plugins are not installed in a cloud
+session, and the marketplace plugin is deprecated.
 
 ## Self-hosted runners
 
