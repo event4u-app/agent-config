@@ -75,8 +75,28 @@ would also show every commit the base gained since the branch forked:
   committed changes since `git merge-base HEAD origin/main` (three-dot form)
 - `git diff --cached --stat` + `git diff --cached` — staged changes
 - `git diff --stat` + `git diff` — unstaged changes on top
-- `git ls-files --others --exclude-standard` — untracked files. **List** them
-  and name them in the report; do not diff them by default.
+- `git ls-files --others --exclude-standard` — untracked files, **diffed by
+  default** as added files. A new module nobody ran `git add` on yet is part of
+  the change; a review that only listed it judged a diff without it. Ignored
+  files stay out (`--exclude-standard` honours `.gitignore`). A file over the
+  **100 KB** cap, or a binary, is listed with its reason instead of diffed — the
+  report names every listed file, so the gap stays visible. An untracked file
+  that is not ignored is diffed like any other: if it holds a secret, that is a
+  finding in its own right.
+
+```bash
+git ls-files --others --exclude-standard -z |
+  while IFS= read -r -d '' f; do
+    size=$(wc -c < "$f" | tr -d ' ')
+    if [ "$size" -gt 102400 ]; then
+      echo "untracked, not diffed (over the 100 KB cap, $size bytes): $f"
+    elif [ "$size" -gt 0 ] && ! grep -Iq . "$f"; then
+      echo "untracked, not diffed (binary): $f"
+    else
+      git diff --no-index -- /dev/null "$f" || [ $? -eq 1 ]  # 1 = "differs", the normal case
+    fi
+  done
+```
 
 Report "nothing to review" and **stop** only when every source above is empty.
 

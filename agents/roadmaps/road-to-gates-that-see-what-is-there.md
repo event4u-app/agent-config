@@ -47,12 +47,12 @@ stops reviewing a diff that omits the content of every new, not-yet-added file.
 
 ## Phase 2 — E9: untracked files are diffed by default
 
-- [ ] **2.1 Step 2 diffs untracked files.** `git ls-files --others
+- [x] **2.1 Step 2 diffs untracked files.** `git ls-files --others
       --exclude-standard`, each file shown as an added-file diff via
       `git diff --no-index -- /dev/null <file>`, capped at 100 KB per file;
       binary or over-cap files are listed with the reason.
       verify: `npx vitest run tests/contracts/review_changes_untracked.test.ts` -> 0
-- [ ] **2.2 Projections regenerated.**
+- [x] **2.2 Projections regenerated.**
       verify: `grep -c 'no-index' dist/agent-src/commands/review/changes.md` -> /^[1-9]/
 
 ## Owner decisions — carried, not executed here
