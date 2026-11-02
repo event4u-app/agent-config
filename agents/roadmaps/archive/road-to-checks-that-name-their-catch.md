@@ -130,12 +130,15 @@ always-on rule text.
 - [x] **4.1 Settle before the picture (D1).** After `load`: <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
       `document.fonts.ready`, then a short stillness wait, capped. The manifest
       records `settled_ms` per capture, or `unsettled: true` with the cap hit.
+      production entry: src/cli/commands/uiRender.ts
       verify: unit test on the settle helper — a page still mutating at the cap reports `unsettled`.
 - [x] **4.2 Record and picture share one state.** The painted-font evaluation <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
       runs on the settled page, and the screenshot is taken after it.
+      production entry: src/cli/commands/uiRender.ts
       verify: source order in `uiRender.ts` — settle → evaluate → screenshot; covered by the existing render tests.
 - [x] **4.3 Hear the console (D2b).** `console` error/warning and `pageerror` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
       per capture into the manifest, as rows with no blocking power.
+      production entry: src/cli/commands/uiRender.ts
       verify: a fixture calling `console.error` once yields exactly one row (browser test, skipped without Chromium).
 - [x] **4.4 The review reads the fields.** `design-review`'s <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `references/verification-automation.md` tells the reviewer to cite the

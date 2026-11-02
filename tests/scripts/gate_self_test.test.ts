@@ -7,7 +7,7 @@ import {
     DEFAULT_CANNOT_RUN,
     HARNESS_ERROR,
     judgeCase,
-    lastGateCliOutput,
+    _lastGateCliOutput,
     runGateCli,
     runSelfTest,
 } from '../../src/scripts/_lib/gate_self_test.js';
@@ -74,7 +74,7 @@ describe('runGateCli — a killed child is a harness error', () => {
         const { dir, rel } = fixtureScript("process.stderr.write('found: X1\\n'); process.exit(1);\n");
         try {
             expect(runGateCli(REPO_ROOT, rel, [], dir)).toBe(1);
-            expect(lastGateCliOutput()).toContain('found: X1');
+            expect(_lastGateCliOutput()).toContain('found: X1');
         } finally {
             fs.rmSync(dir, { recursive: true, force: true });
         }

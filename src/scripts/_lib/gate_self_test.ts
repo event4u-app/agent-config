@@ -80,7 +80,7 @@ let lastGateOutput: string | null = null;
 const UNCAUGHT_CRASH = /^Node\.js v\d+\.\d+/m;
 
 /** Combined stdout+stderr of the most recent {@link runGateCli} call, or null. */
-export function lastGateCliOutput(): string | null {
+export function _lastGateCliOutput(): string | null {
     return lastGateOutput;
 }
 
