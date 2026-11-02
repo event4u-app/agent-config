@@ -43,21 +43,21 @@ exactly one roadmap anchor — a number, not a gate.
 
 ## Phase 1 — The grader grades evidence
 
-- [x] **1.1 A prose-only target does not pass (test first).** A target whose
+- [x] **1.1 A prose-only target does not pass (test first).** A target whose <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/assurance-capability-registry.json -->
       only candidate is `AGENTS.md` grades 0 on `behaviour-contract`; an
       OpenAPI document or a Gherkin feature file grades above 0.
       verify: `npx vitest run tests/scripts/grade_target_readiness.test.ts` -> 0
-- [x] **1.2 Registry, fixtures and command doc say the new truth.**
+- [x] **1.2 Registry, fixtures and command doc say the new truth.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/assurance-capability-registry.json -->
       verify: `jq -r '.capabilities["behavior-spec"].limitations | join(" ")' src/config/assurance-capability-registry.json` -> /executable/
 
 ## Phase 2 — Report-only acceptance-citation resolver
 
-- [x] **2.1 Resolver with tests.** `src/scripts/report_acceptance_citations.ts`
+- [x] **2.1 Resolver with tests.** `src/scripts/report_acceptance_citations.ts` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/assurance-capability-registry.json -->
       classifies each cited `AC-n` (explicit `<slug>#AC-n`, or bare with the
       file's named roadmap slugs as candidates) as resolved, ambiguous or
       dangling against the whole roadmap tree. Always exits 0.
       verify: `npx vitest run tests/scripts/report_acceptance_citations.test.ts` -> 0
-- [x] **2.2 Report-only task, measured number recorded.** A
+- [x] **2.2 Report-only task, measured number recorded.** A <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/assurance-capability-registry.json -->
       `report-acceptance-citations` task outside every CI pipeline; the
       measured file counts land in the table below.
       verify: `./scripts-run src/scripts/report_acceptance_citations` -> /resolved/
