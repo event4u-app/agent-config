@@ -57,7 +57,7 @@ hooks an operator seeded into the runner's `~/.claude/`.
       dir and `CLAUDE_CODE_REMOTE=true`, and emits the measurement as JSON.
       verify: run on this repository; the baseline lands in
       `agents/evidence/analysis/cloud-clone-baseline-2026-11-02.json` reading 0 hooks.
-- [~] **0.3 One real cloud session.** Run `/context` and `/hooks` in a <!-- deferred-resolution: carried-to=road-to-an-install-the-cloud-clone-carries-carried -->
+- [~] **0.3 One real cloud session.** Run `/context` and `/hooks` in a <!-- deferred-resolution: carried-to=road-to-host-inputs-the-installer-honours -->
       claude.ai/code session on this repository and on a consumer fixture; confirm
       (b) Node `>=22.6.0` on the cloud PATH and (c) install time under the cache limit.
       Deferred: needs a human in a real cloud session; nothing in this tree can run it.
@@ -69,14 +69,14 @@ hooks an operator seeded into the runner's `~/.claude/`.
       the remedy pointing at `docs/setup/cloud-sessions.md`. Locally: `ok`, stating
       what a clone of this repository would carry.
       verify: the test above asserts both branches and that the check writes nothing.
-- [~] **1.2 Committed SessionStart hook in consumer repos.** A hook that prints the <!-- deferred-resolution: carried-to=road-to-an-install-the-cloud-clone-carries-carried -->
+- [~] **1.2 Committed SessionStart hook in consumer repos.** A hook that prints the <!-- deferred-resolution: carried-to=road-to-host-inputs-the-installer-honours -->
       same line inside the cloud session itself. Deferred: it writes into consumer
       repositories by default — a consumer-facing default change, owner decision
       bundled with 2.1.
 
 ## Phase 2 — A delivery path the clone carries
 
-- [~] **2.1 Choose and build variant B** (`init --carry=repo`, opt-in: the hook <!-- deferred-resolution: carried-to=road-to-an-install-the-cloud-clone-carries-carried -->
+- [~] **2.1 Choose and build variant B** (`init --carry=repo`, opt-in: the hook <!-- deferred-resolution: carried-to=road-to-host-inputs-the-installer-honours -->
       matrix byte-identical in `.claude/settings.json`, a SessionStart bootstrap that
       installs the runtime from npm only when `CLAUDE_CODE_REMOTE=true`). Variant A
       (setup script) is closed by the host docs for hooks. Deferred: owner decision —
@@ -89,10 +89,10 @@ hooks an operator seeded into the runner's `~/.claude/`.
 - [x] **3.1 Correct the `.gitignore` comment** that claims `.claude/settings.json`
       stays tracked (D6, comment only).
       verify: `git ls-files .claude` agrees with the comment.
-- [~] **3.2 Stop writing `enabledPlugins` for the deprecated plugin** (D3). <!-- deferred-resolution: carried-to=road-to-an-install-the-cloud-clone-carries-carried -->
+- [~] **3.2 Stop writing `enabledPlugins` for the deprecated plugin** (D3). <!-- deferred-resolution: carried-to=road-to-host-inputs-the-installer-honours -->
       Deferred: changes what `init` writes into every consumer repo; owner decision,
       same batch as 2.1.
-- [~] **3.3 Commit a `.claude/settings.json` with hooks for this repository** (D6). <!-- deferred-resolution: carried-to=road-to-an-install-the-cloud-clone-carries-carried -->
+- [~] **3.3 Commit a `.claude/settings.json` with hooks for this repository** (D6). <!-- deferred-resolution: carried-to=road-to-host-inputs-the-installer-honours -->
       Deferred: depends on the 2.1 choice.
 
 ## Phase 4 — Documentation per surface
