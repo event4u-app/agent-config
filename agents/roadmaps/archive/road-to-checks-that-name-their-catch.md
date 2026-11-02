@@ -91,7 +91,7 @@ always-on rule text.
 - [x] **2.1 One runner runs every self-test.** `src/scripts/run_gate_self_tests.ts`
       discovers every `src/scripts/*.ts` that calls `runSelfTest` and runs its
       `--self-test` in parallel; no hand-maintained list, so a new self-test is
-      covered on arrival. CI: the `consistency` job; locally `task gate-self-tests`.
+      covered on arrival. CI: the `rule-backstops` job; locally `task gate-self-tests`.
       verify: `task gate-self-tests` → 114/114 passed (18 s, 17 jobs); the
       discovered count equals the files calling `runSelfTest`.
 - [x] **2.2 Hermetic by construction (B5).** The 2.1 CI step runs every
