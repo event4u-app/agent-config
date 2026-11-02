@@ -54,6 +54,15 @@ describe('check_provider_home_joins', () => {
         expect(main([], root)).toBe(2);
     });
 
+    it('a dead scan root is a usage error, never a green', () => {
+        const empty = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-empty-'));
+        try {
+            expect(main([], empty)).toBe(2);
+        } finally {
+            fs.rmSync(empty, { recursive: true, force: true });
+        }
+    });
+
     it('the real tree holds its baseline', () => {
         expect(main([], REPO_ROOT)).toBe(0);
     });

@@ -19,6 +19,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 export const BASELINE_REL = 'src/config/provider-home-joins-baseline.json';
@@ -42,12 +44,17 @@ function walk(dir: string, out: string[]): void {
     }
 }
 
-/** Every counted join as `file:line`, repo-relative, sorted. */
-export function joinSites(root: string): string[] {
+/** The runtime source files the ratchet reads, sorted. */
+export function runtimeFiles(root: string): string[] {
     const files: string[] = [];
     for (const r of RUNTIME_ROOTS) walk(path.join(root, r), files);
+    return files.sort();
+}
+
+/** Every counted join as `file:line`, repo-relative, sorted. */
+export function joinSites(root: string): string[] {
     const out: string[] = [];
-    for (const f of files.sort()) {
+    for (const f of runtimeFiles(root)) {
         const rel = path.relative(root, f).split(path.sep).join('/');
         if (rel === RESOLVER_REL) continue;
         fs.readFileSync(f, 'utf-8')
@@ -69,6 +76,15 @@ export function countsByFile(sites: readonly string[]): Record<string, number> {
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2), root: string = REPO_ROOT): number {
+    try {
+        assertScanned({ gate: 'check_provider_home_joins', scanned: runtimeFiles(root).length, units: 'file(s)', roots: RUNTIME_ROOTS });
+    } catch (err) {
+        if (err instanceof DeadScopeError) {
+            process.stderr.write(`${err.message}\n`);
+            return 2;
+        }
+        throw err;
+    }
     const sites = joinSites(root);
     if (argv.includes('--list')) {
         for (const s of sites) process.stdout.write(`${s}\n`);
