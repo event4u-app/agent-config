@@ -11,7 +11,8 @@ const PAGE = `<!doctype html><html><head><style>
   .card { border: 1px solid #ccc; border-radius: 8px; padding: 16px; box-shadow: 0 2px 6px #0002; }
   .hidden { display: none; }
   @media (prefers-color-scheme: dark) { body { background: #111; color: #eee; } }
-</style></head><body><main><section class="card"><div class="card"><p>Nested</p></div></section><p class="hidden">x</p></main></body></html>`;
+</style></head><body><main><section class="card"><div class="card"><p>Nested</p></div></section><p class="hidden">x</p></main>
+<script>console.error("once"); console.log("not recorded");</script></body></html>`;
 
 describe('ui:render page geometry — live', () => {
     const live = chromiumAvailable();
@@ -35,26 +36,8 @@ describe('ui:render page geometry — live', () => {
         const outerIndex = rows.findIndex((r) => r['class'] === 'card');
         expect(inner['parents']!.split(',')).toContain(String(outerIndex));
         expect(rows.find((r) => r['class'] === 'hidden')!['visible']).toBe('0');
-    }, 120_000);
-});
-
-// road-to-checks-that-name-their-catch 4.1 / 4.3: the settle state and the console rows per capture.
-describe('ui:render page settle and console — live', () => {
-    const live = chromiumAvailable();
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'render-console-'));
-    afterAll(() => fs.rmSync(dir, { recursive: true, force: true }));
-
-    it.skipIf(!live)('records one console row for one console.error, and a settle reading per capture', async () => {
-        fs.writeFileSync(
-            path.join(dir, 'index.html'),
-            '<!doctype html><html><head><meta charset="utf-8"><title>c</title></head><body><p>Hi</p>' +
-                '<script>console.error("once"); console.log("not recorded");</script></body></html>',
-        );
-        const code = await runUiRender({ target: 'index.html', projectRoot: dir, slug: 'console' });
-        expect(code).toBe(0);
-        const manifest = JSON.parse(
-            fs.readFileSync(path.join(dir, 'agents', 'runtime', 'state', 'render', 'console', 'manifest.json'), 'utf8'),
-        );
+        // road-to-checks-that-name-their-catch 4.1 / 4.3: one console row for one
+        // console.error (a console.log is not recorded), and a settle reading per capture.
         for (const c of manifest.captures) {
             expect(c.console).toEqual([{ type: 'error', text: 'once' }]);
             expect(typeof c.settled_ms === 'number' || c.unsettled === true).toBe(true);
