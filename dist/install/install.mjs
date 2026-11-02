@@ -11870,7 +11870,7 @@ function _with_lock(settings_path, fn) {
     fs21.rmSync(lockPath, { force: true });
   }
 }
-function ensure_managed_hooks(settings_path, matrix, gated = []) {
+function ensure_managed_hooks(settings_path, matrix, gated = [], timeouts = {}) {
   return _with_lock(settings_path, () => {
     const settings = _read_settings(settings_path);
     const before = JSON.stringify(settings);
@@ -11879,8 +11879,9 @@ function ensure_managed_hooks(settings_path, matrix, gated = []) {
     for (const [native, command] of Object.entries(matrix)) {
       const existing = Array.isArray(hooks[native]) ? hooks[native] : [];
       const user_groups = existing.filter((g) => !_is_managed_group(g));
+      const timeout = timeouts[native];
       const managed_group = {
-        hooks: [{ type: "command", command }]
+        hooks: [timeout === void 0 ? { type: "command", command } : { type: "command", command, timeout }]
       };
       const next = [...user_groups, managed_group];
       if (JSON.stringify(next) !== JSON.stringify(existing)) touched.push(native);
@@ -23337,7 +23338,6 @@ function ensure_augment_user_hooks(package_root, force) {
     "~/.augment/settings.json"
   );
 }
-var CLAUDE_PLUGIN_ID = "agent-config@event4u-agent-config";
 var CLAUDE_LEGACY_PLUGIN_IDS = [
   "agent-conf@event4u",
   "agent-config@event4u"
@@ -23359,7 +23359,7 @@ function ensure_claude_bridge(project_root, force) {
   const target = path39.join(project_root, ".claude", "settings.json");
   const healed = _heal_legacy_claude_plugin_ids(target);
   for (const pid of healed) success(`.claude/settings.json: removed stale plugin id \`${pid}\``);
-  const bridge = withHostEnv({ enabledPlugins: { [CLAUDE_PLUGIN_ID]: true } }, project_root, success);
+  const bridge = withHostEnv({}, project_root, success);
   return merge_json_file(target, bridge, force || healed.length > 0, ".claude/settings.json");
 }
 var ensure_mcp_bridge = makeEnsureMcpBridge(merge_json_file);

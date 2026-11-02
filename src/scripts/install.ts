@@ -912,7 +912,6 @@ function ensure_augment_user_hooks(package_root: string, force: boolean): Record
     );
 }
 
-const CLAUDE_PLUGIN_ID = 'agent-config@event4u-agent-config';
 const CLAUDE_LEGACY_PLUGIN_IDS: readonly string[] = [
     'agent-conf@event4u',
     'agent-config@event4u',
@@ -936,7 +935,7 @@ function ensure_claude_bridge(project_root: string, force: boolean): Record<stri
     const target = path.join(project_root, '.claude', 'settings.json');
     const healed = _heal_legacy_claude_plugin_ids(target);
     for (const pid of healed) success(`.claude/settings.json: removed stale plugin id \`${pid}\``);
-    const bridge = withHostEnv({ enabledPlugins: { [CLAUDE_PLUGIN_ID]: true } }, project_root, success);
+    const bridge = withHostEnv({}, project_root, success);
     return merge_json_file(target, bridge, force || healed.length > 0, '.claude/settings.json');
 }
 

@@ -99,7 +99,7 @@ export function checkCloudReach(root: string, env: NodeJS.ProcessEnv = process.e
             message:
                 `cloud session (CLAUDE_CODE_REMOTE=true): agent-config hooks, skills and rules from ~/.claude ` +
                 `do not reach it — ${describeReach(m)}`,
-            remedy: `see ${CLOUD_DOC} for what a cloud session receives and the delivery options`,
+            remedy: `agent-config doctor --repair cloud-reach, then commit .claude/settings.json (see ${CLOUD_DOC})`,
         };
     }
     return {
