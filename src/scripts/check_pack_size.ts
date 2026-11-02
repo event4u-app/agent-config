@@ -28,6 +28,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { parseGateArgs } from './_lib/gate_args.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { runSelfTest } from './_lib/gate_self_test.js';
 import {
@@ -966,7 +967,16 @@ function selfTest(): number {
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
-    if (argv.includes('--self-test')) return selfTest();
+    const parsed = parseGateArgs('check_pack_size', argv, {
+        'self-test': { type: 'boolean' },
+        json: { type: 'boolean' },
+        'pack-json': { type: 'string' },
+    });
+    if (!parsed.ok) {
+        process.stderr.write(`${parsed.message}\n`);
+        return 2;
+    }
+    if (parsed.values['self-test']) return selfTest();
     let budget: PackSizeBudget;
     let pack: PackResult;
     try {
