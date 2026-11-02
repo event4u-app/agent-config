@@ -1,6 +1,7 @@
 ---
 complexity: lightweight
 status: parked
+parent_roadmap: road-to-checks-that-name-their-catch
 owner: maintainer
 review_by: 2027-01-31
 estate_offset_exempt: "Carried suffix of road-to-checks-that-name-their-catch (archived 2026-11-02), parked under later/; adds no active roadmap. Preserves step 1.1 instead of dropping it."

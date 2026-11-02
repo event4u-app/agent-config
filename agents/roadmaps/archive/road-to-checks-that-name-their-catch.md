@@ -71,7 +71,7 @@ always-on rule text.
 
 ## Phase 1 — A reject names its catch
 
-- [~] **1.1 The ledger prints `failed=`.** One field in the report line.
+- [~] **1.1 The ledger prints `failed=`.** One field in the report line. <!-- deferred-resolution: carried-to=road-to-checks-that-name-their-catch-carried -->
       verify: a ledger gate's report line carries `failed=N`; no exit code changes.
       **Carried** to `later/road-to-checks-that-name-their-catch-carried.md` —
       blocker `b-ledger-is-ratification-import`: `_lib/gate_ledger.ts` is an
