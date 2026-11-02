@@ -1,6 +1,11 @@
 ---
 complexity: lightweight
-status: ready
+status: later
+entry_condition:
+  what: the owner decides the cloud delivery batch (1.2, 2.1, 3.2, 3.3), blocker cloud-delivery-owner-decision; 0.3 needs one human run in a real claude.ai/code session
+  when: on the owner's answer to the delivery question asked at the close of round inbox-2026-11-f
+  who: owner (decision); then an implementer for 2.1 and its dependents
+review_by: 2026-12-15
 execution:
   mode: phase-checkpoints
 parent_roadmap: road-to-an-install-the-cloud-clone-carries
@@ -8,7 +13,7 @@ parent_roadmap: road-to-an-install-the-cloud-clone-carries
 # Road to an install the cloud clone carries — carried
 
 > **Source:** carried by the archival sweep on 2026-11-02 from
-> [`road-to-an-install-the-cloud-clone-carries`](archive/road-to-an-install-the-cloud-clone-carries.md), which closed every other step.
+> [`road-to-an-install-the-cloud-clone-carries`](../archive/road-to-an-install-the-cloud-clone-carries.md), which closed every other step.
 > Each step below was `[~]` there and is restated verbatim as open work, so
 > archiving the parent buried nothing. Blockers the steps name moved with them.
 

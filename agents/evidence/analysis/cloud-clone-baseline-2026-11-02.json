@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "source_head": "af5ab4dc22",
+  "simulated_env": {
+    "HOME": "empty",
+    "CLAUDE_CODE_REMOTE": "true"
+  },
+  "measurement": {
+    "skills": 0,
+    "rules": 0,
+    "agents": 0,
+    "commands": 0,
+    "managedHooks": 0,
+    "pluginOnly": false
+  },
+  "check": {
+    "status": "warn",
+    "message": "cloud session (CLAUDE_CODE_REMOTE=true): agent-config hooks, skills and rules from ~/.claude do not reach it — a clone carries 0 skill(s), 0 rule file(s), 0 agent(s), 0 command file(s), 0 managed hook(s)"
+  }
+}
