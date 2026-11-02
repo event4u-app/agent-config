@@ -58,13 +58,13 @@ calls a paid provider, adds a hook concern or flips a default.
 
 ## Phase 1 — Film pages the witness can drive
 
-- [x] **1.1** `timelines` seek form: a page exposing `window.__timelines`
+- [x] **1.1** `timelines` seek form: a page exposing `window.__timelines` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRenderFilm.ts -->
   (an object of paused timelines with `seek`, `time` or `totalTime`) is
   detected after `__seek`/`render` and before Web Animations, every timeline is
   paused and set to `t`. `film-page.md` gains the row; `renderers.csv`'s route
   becomes true.
   verify: `tests/cli/ui_render_film_capture.test.ts` — the registry page reports `form` = `timelines`, 4 distinct frames and `deterministic: true`; an unseekable registry reports `none`.
-- [x] **1.2** Embedded footage: in the `waapi` and `timelines` forms every
+- [x] **1.2** Embedded footage: in the `waapi` and `timelines` forms every <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRenderFilm.ts -->
   `<video>` is paused and set to `t − data-start` (clamped to its duration),
   and the capture awaits `seeked`. `__seek`/`render` pages keep owning their
   footage. The contract names the all-intra encode advice.
@@ -72,31 +72,31 @@ calls a paid provider, adds a hook concern or flips a default.
 
 ## Phase 2 — Craft corpus
 
-- [x] **2.1** Four tells in `tells.csv`: image-plus-caption slideshow, symbol
+- [x] **2.1** Four tells in `tells.csv`: image-plus-caption slideshow, symbol <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRenderFilm.ts -->
   in place of the thing, reused illustration, linear easing.
-  verify: `ground.mjs search --domain tell "slideshow caption"` returns the new row.
-- [x] **2.2** Recipe "Vertical explainer short" in `recipes.csv` (split
+  verify: `node src/skills/corpus-grounding/scripts/ground.mjs search --manifest src/skills/code-film/data/manifest.json --domain tell "slideshow caption"` -> /Slideshow with captions/
+- [x] **2.2** Recipe "Vertical explainer short" in `recipes.csv` (split <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRenderFilm.ts -->
   graphic/speaker, few-word captions with one highlighted term, hook within
   1 s, numbered spine, end on the speaker), written fresh — no gallery text.
-  verify: `ground.mjs search "vertical explainer short"` returns the row.
-- [x] **2.3** `motion-choreographer`: a `NEGATIVE LOCKS` block, an optional
+  verify: `node src/skills/corpus-grounding/scripts/ground.mjs search --manifest src/skills/code-film/data/manifest.json "vertical explainer short"` -> /Vertical explainer short/
+- [x] **2.3** `motion-choreographer`: a `NEGATIVE LOCKS` block, an optional <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
   timed-segment block (`0–3 s: …`), and the rule that the prompt is English
   while spoken lines stay verbatim in their own language with a language tag.
   verify: the skill lint passes and the three rules are findable in Steps 3–4.
 
 ## Phase 3 — Drift
 
-- [x] **3.1** `config-presets.md:70,84` cite the TS council entry point.
-  verify: `grep -c council_cli.py docs/contracts/config-presets.md` → 0.
-- [x] **3.2** `voice-cloning.md` names the adapter directory instead of a count.
-  verify: `grep -c "five shipped" agents/settings/policies/media/voice-cloning.md` → 0.
-- [x] **3.3** `supply-chain-intake` gains a host plugin/mod intake section:
+- [x] **3.1** `config-presets.md:70,84` cite the TS council entry point. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+  verify: `grep -c council_cli.py docs/contracts/config-presets.md` -> /^0$/
+- [x] **3.2** `voice-cloning.md` names the adapter directory instead of a count. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+  verify: `grep -c "five shipped" agents/settings/policies/media/voice-cloning.md` -> /^0$/
+- [x] **3.3** `supply-chain-intake` gains a host plugin/mod intake section: <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
   unsandboxed, runs with the user's rights, source read before enable.
   verify: the skill lint passes; the section names plugin and mod.
 
 ## Phase 4 — Arrivals on the owners
 
-- [x] **4.1** Arrival block on `later/road-to-breadth-with-depth`: talking-head
+- [x] **4.1** Arrival block on `later/road-to-breadth-with-depth`: talking-head <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
   operators (last clean take, slip detection, padding by cut type, padding in
   the EDL), word-anchor sync grid, voice-over sub-steps (shortlist with free
   previews, one take, bracket stripping, tempo check, paid-TTS confirmation),
@@ -106,14 +106,14 @@ calls a paid provider, adds a hook concern or flips a default.
   second, licence field per manifest entry, media ingest gate, retry cap,
   media retention, named format presets.
   verify: the block exists under the roadmap's `Source:` header with an `Arrivals:` line.
-- [x] **4.2** Arrival on `stubs/road-to-a-limit-the-host-actually-signals`:
+- [x] **4.2** Arrival on `stubs/road-to-a-limit-the-host-actually-signals`: <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
   attention signal (wait classes, terminal sequence sink, user-command sink
   over stdin with `stdio: ['pipe','ignore','ignore']`), host-event census.
   verify: the stub carries the arrival line and the stdin correction.
-- [x] **4.3** Arrival on `later/road-to-mod-surfaces-that-read-what-ac-knows`:
+- [x] **4.3** Arrival on `later/road-to-mod-surfaces-that-read-what-ac-knows`: <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
   visible compact summary with before/after tokens; cache hit-rate segment.
-  verify: `grep -c inbox-2026-11-k` on that roadmap returns 2 (steps 1.6 and 1.7).
-- [x] **4.4** Stub `stubs/road-to-adapter-traces-before-the-window`: the seven
+  verify: `grep -c inbox-2026-11-k agents/roadmaps/later/road-to-mod-surfaces-that-read-what-ac-knows.md` -> /^2$/
+- [x] **4.4** Stub `stubs/road-to-adapter-traces-before-the-window`: the seven <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
   `stable` adapter traces are dated 2026-06-10; the 180-day window closes on
   2026-12-07 and `lint_adapter_tier` then fails CI. Owner choice: re-capture
   (paid) or demote.

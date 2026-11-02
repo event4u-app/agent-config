@@ -38,7 +38,7 @@
     "character-consistency": 8555,
     "check-refs": 4188,
     "churn-prevention": 8014,
-    "code-film": 5507,
+    "code-film": 5733,
     "code-intelligence": 17334,
     "code-refactoring": 13717,
     "code-review": 16261,
@@ -186,7 +186,7 @@
     "module-detect-on-the-fly": 8738,
     "module-management": 8219,
     "monorepo-workspace": 8228,
-    "motion-choreographer": 8214,
+    "motion-choreographer": 8786,
     "multi-tenancy": 6123,
     "nda-triage": 6984,
     "nextjs-patterns": 10113,
@@ -292,7 +292,7 @@
     "standards-from-config": 7915,
     "storybook-workshop": 13536,
     "subagent-orchestration": 19978,
-    "supply-chain-intake": 10721,
+    "supply-chain-intake": 11688,
     "svg-authoring": 17970,
     "symfony-workflow": 10329,
     "systematic-debugging": 17024,
@@ -982,6 +982,24 @@
       "old": 12564,
       "new": 12775,
       "reason": "road-to-a-switch-built-before-it-is-needed 6.2: a validation item asking each new entry point of a deployed product for the lever that switches it off (ADR-304)."
+    },
+    {
+      "skill": "code-film",
+      "old": 5507,
+      "new": 5733,
+      "reason": "road-to-a-timeline-the-witness-can-seek 1.1/1.2: one gotcha naming the timelines seek form and footage seeking, so a page on a timeline framework or with embedded video is authored to be seekable."
+    },
+    {
+      "skill": "motion-choreographer",
+      "old": 8214,
+      "new": 8786,
+      "reason": "road-to-a-timeline-the-witness-can-seek 2.3: timed segments, negative locks and the rule that spoken lines stay verbatim in their own language."
+    },
+    {
+      "skill": "supply-chain-intake",
+      "old": 10721,
+      "new": 11688,
+      "reason": "road-to-a-timeline-the-witness-can-seek 3.3: a host plugin / mod intake section \u2014 unsandboxed, runs with the user's rights, source read before enable."
     }
   ]
 }
