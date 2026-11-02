@@ -17,6 +17,9 @@ import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { parse as parseYaml } from 'yaml';
+
+
 import { parseCompose } from './infra_files/compose.js';
 import { parseDockerfile } from './infra_files/dockerfile.js';
 import { parsePipeline } from './infra_files/pipeline.js';
@@ -85,6 +88,91 @@ function readNpmLock(rel: string, text: string): InventoryEntry[] {
             private: pkg.link === true || !PUBLIC_NPM.test(resolved),
             scope: pkg.dev === true ? 'dev' : 'runtime',
         });
+    }
+    return out;
+}
+
+/** `name@version` or `@scope/name@version` → its two halves; null when there is no version part. */
+function splitAt(spec: string): { name: string; version: string } | null {
+    const at = spec.lastIndexOf('@');
+    if (at <= 0) return null;
+    return { name: spec.slice(0, at), version: spec.slice(at + 1) };
+}
+
+function lockEntry(rel: string, name: string, version: string, line: number, isPrivate: boolean, scope: 'runtime' | 'dev' | null): InventoryEntry {
+    return { ecosystem: 'npm', name, version, range: null, provenance: 'lockfile', file: rel, line, private: isPrivate, scope };
+}
+
+/** pnpm-lock.yaml v5–v9 — the `packages` map; a non-registry tarball, link or file entry is private. */
+function readPnpmLock(rel: string, text: string): InventoryEntry[] {
+    let doc: { packages?: Record<string, { resolution?: { tarball?: string }; dev?: boolean } | null> };
+    try {
+        doc = (parseYaml(text) ?? {}) as typeof doc;
+    } catch {
+        return [];
+    }
+    const out: InventoryEntry[] = [];
+    for (const [key, pkg] of Object.entries(doc.packages ?? {})) {
+        const bare = key.replace(/^\//, '').replace(/\(.*\)$/, '');
+        let nv = splitAt(bare);
+        // v5 keys are `/name/version`.
+        if (nv === null || nv.name.includes('/') && !nv.name.startsWith('@')) {
+            const m = /^(@[^/]+\/[^/]+|[^/@]+)\/(\d[^/]*)$/.exec(bare);
+            nv = m ? { name: m[1]!, version: m[2]! } : null;
+        }
+        if (nv === null || !/^\d/.test(nv.version)) continue;
+        const tarball = pkg?.resolution?.tarball;
+        const priv = typeof tarball === 'string' ? !PUBLIC_NPM.test(tarball) : /^(link|file):/.test(nv.version);
+        out.push(lockEntry(rel, nv.name, nv.version, lineOf(text, key), priv, pkg?.dev === true ? 'dev' : pkg?.dev === false ? 'runtime' : null));
+    }
+    return out;
+}
+
+const PUBLIC_YARN = /^https:\/\/registry\.(yarnpkg\.com|npmjs\.org)\//;
+
+/** yarn.lock — classic v1 and berry (v2+); a workspace, link or non-registry resolution is private. */
+function readYarnLock(rel: string, text: string): InventoryEntry[] {
+    const out: InventoryEntry[] = [];
+    const lines = text.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+        const head = lines[i]!;
+        if (head === '' || /^\s|^#/.test(head) || !head.endsWith(':') || head.startsWith('__metadata')) continue;
+        const first = head.slice(0, -1).split(',')[0]!.trim().replace(/^"|"$/g, '');
+        const at = first.indexOf('@', 1);
+        if (at < 0) continue;
+        const name = first.slice(0, at);
+        let version: string | null = null;
+        let source = '';
+        for (let j = i + 1; j < lines.length && /^\s/.test(lines[j]!); j++) {
+            const m = /^\s+(version|resolved|resolution):?\s+"?([^"]+)"?\s*$/.exec(lines[j]!);
+            if (m?.[1] === 'version') version = m[2]!;
+            else if (m) source = m[2]!;
+        }
+        if (version === null || !/^\d/.test(version) || /@(workspace|link|portal|file):/.test(first)) continue;
+        const berry = source.includes('@npm:') || first.includes('@npm:');
+        const priv = berry ? !source.includes('@npm:') : !PUBLIC_YARN.test(source);
+        out.push(lockEntry(rel, name, version, i + 1, priv, null));
+    }
+    return out;
+}
+
+/** bun.lock (text, JSONC with trailing commas) — `packages` maps a name to `[spec, registry, meta, integrity]`. */
+function readBunLock(rel: string, text: string): InventoryEntry[] {
+    let doc: { packages?: Record<string, unknown[]> };
+    try {
+        doc = JSON.parse(text.replace(/,(\s*[}\]])/g, '$1')) as typeof doc;
+    } catch {
+        return [];
+    }
+    const out: InventoryEntry[] = [];
+    for (const [key, entry] of Object.entries(doc.packages ?? {})) {
+        const spec = Array.isArray(entry) && typeof entry[0] === 'string' ? entry[0] : null;
+        const nv = spec === null ? null : splitAt(spec);
+        if (nv === null) continue;
+        const registry = Array.isArray(entry) && typeof entry[1] === 'string' ? entry[1] : '';
+        const priv = !/^\d/.test(nv.version) || (registry !== '' && !PUBLIC_NPM.test(registry));
+        if (!/^\d/.test(nv.version)) continue;
+        out.push(lockEntry(rel, nv.name, nv.version, lineOf(text, `"${key}": [`), priv, null));
     }
     return out;
 }
@@ -304,6 +392,9 @@ function sources(root: string): Array<{ rel: string; parse: (rel: string, text: 
         for (const rel of rels) list.push({ rel, parse });
     };
     add(walk(root, (n) => n === 'package-lock.json'), readNpmLock);
+    add(walk(root, (n) => n === 'pnpm-lock.yaml'), readPnpmLock);
+    add(walk(root, (n) => n === 'yarn.lock'), readYarnLock);
+    add(walk(root, (n) => n === 'bun.lock'), readBunLock);
     add(walk(root, (n) => n === 'composer.lock'), readComposerLock);
     add(walk(root, (n) => n === 'composer.json'), readComposerJson);
     add(walk(root, (n) => n === 'package.json'), readPackageJson);
@@ -318,13 +409,14 @@ function sources(root: string): Array<{ rel: string; parse: (rel: string, text: 
 
 /** Read the whole inventory. Unreadable files are skipped, never guessed. */
 /**
- * Lockfiles this inventory cannot read: yarn, pnpm and bun locks, and an npm
- * lock in the v1 format. Their packages are not in the inventory, so a refresh
+ * Lockfiles this inventory cannot read: the binary `bun.lockb`, and an npm lock
+ * in the v1 format (yarn, pnpm and text bun locks are read since
+ * road-to-a-switch-built-before-it-is-needed 4.2). Their packages are not in the inventory, so a refresh
  * must say "not checked" for them — an empty list from a lock nobody read would
  * otherwise read as a clean project.
  */
 export function unsupportedLockfiles(root: string): string[] {
-    const out = walk(root, (n) => n === 'yarn.lock' || n === 'pnpm-lock.yaml' || n === 'bun.lock' || n === 'bun.lockb');
+    const out = walk(root, (n) => n === 'bun.lockb');
     for (const rel of walk(root, (n) => n === 'package-lock.json')) {
         try {
             const v = (JSON.parse(fs.readFileSync(path.join(root, rel), 'utf-8')) as { lockfileVersion?: unknown }).lockfileVersion;
