@@ -20,7 +20,8 @@ of 2026-10-29). Every other required check was green; the one red check was
 `oq-42-image-floor-routes-to` for want of an independent approving review. The
 measurement itself was within the granted ceiling (135,867 = 135,824 + 43).
 
-- **Who acted:** the repository owner, with `gh pr merge 2754 --squash --admin --match-head-commit <head>`.
+- **Who decided:** the repository owner, in session: "Ok, Du mergst selbst über deinen stehenden PR-Bypass" (quoted in the addendum of `agents/evidence/owner-directives/2026-10-25-standing-pull-request-bypass.md`). <!-- md-language-check: ignore -->
+- **Who executed:** the agent, with `gh pr merge 2754 --squash --admin --match-head-commit <head>`. Corrected 2026-11-01: this line read "Who acted: the repository owner", which the owner's own words above contradict (release review 19.2.0).
 - **Subject:** `ratification_subject --files src/rules/image-likeness-and-rights.md dist/agent-src/rules/image-likeness-and-rights.md --rev 4257d0eb --base-ref 4257d0eb^1` — the same digest the council ratified in round 3 (`agents/evidence/ratifications/image-floor-routes-to-20261029.md`), so for the two gated files the bypass let through exactly the ratified content; the other sixteen files are listed below with what reviewed each.
 - **Consequence that stays open:** the grant remains unverified in the gate, so a later pull request whose payload step runs is refused until an independent approving review exists or the grant is repaid (`later/road-to-records-that-match-their-code` 1.7).
 - **What the bypass did not do:** it did not satisfy the grant's approval

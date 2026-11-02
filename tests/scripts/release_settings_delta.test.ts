@@ -672,7 +672,7 @@ describe('release settings delta — the assertion', () => {
 
     it('wired: the planner calls the assertion where it calls the other two', () => {
         const src = fs.readFileSync(path.join(REPO_ROOT, 'src/scripts/release.ts'), 'utf8');
-        expect(src).toContain('assert_settings_surface_delta(target, { previewOnly: args.dry_run, impact: release_impact_entry(commits).impact });');
+        expect(src).toContain('assert_settings_surface_delta(target, { previewOnly: args.dry_run, impact: release_impact_entry(commits, { consumerSurfaceTouched: span_touches_consumer_surface(prev, (a) => git(a, { capture: true })) }).impact });');
         expect(src).toContain('writeReleasedSurface(plan.target);');
         // The committed file is on the release PR's allowlist, or the cut
         // writes a file its own shape step refuses.

@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **641**
-- Edges (incl. self-WRITE): **2445**
+- Edges (incl. self-WRITE): **2444**
 
 ## READ_ONLY edges
 
@@ -1444,7 +1444,6 @@
 | `.agent-src.uncondensed/skills/quality-tools/references/python-tools.md` | `.agent-src.uncondensed/skills/quality-tools/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md` | `.agent-src.uncondensed/rules/lethal-trifecta-guard.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md` | `.agent-src.uncondensed/rules/missing-tool-handling.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md` | `.agent-src.uncondensed/rules/source-confidentiality.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md` | `.agent-src.uncondensed/skills/design-intelligence/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md` | `.agent-src.uncondensed/skills/js-library-packaging/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md` | `.agent-src.uncondensed/skills/mcp/SKILL.md` | `body_link` | 1 |

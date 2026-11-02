@@ -44,6 +44,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-review-that-ends | later | later | A completion review runs at most N rounds, N set by the owner — round 1 over the scope, each … |
 | road-to-a-run-that-knows-its-skills | later | later | A run — a command, a `/work` run, or a roadmap lane — determines its base skills once at its … |
 | road-to-a-runnable-share-ratchet | later | later | A shrink-only bound on the share of `verify:` clauses that can actually fail. |
+| road-to-a-sealed-lineage | later | later | Sealed. |
 | road-to-a-session-start-under-the-host-limit | later | later | A consumer who runs `agent-config upgrade` and nothing else gets a session-start instruction layer whose package-delivered part is at most … |
 | road-to-a-setup-that-decides-itself-carried | later | later | Every step road-to-a-setup-that-decides-itself deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-step-that-costs-what-it-changes-carried | later | later | Every step road-to-a-step-that-costs-what-it-changes deferred is either done here or explicitly disposed of — a step that still cannot run is … |
@@ -133,7 +134,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-reach-reddit-session | later | ready | Reach — logged-in `old.reddit` via a human-exported session cookie |
 | road-to-reach-transcribe | later | ready | Reach — audio transcription when no caption track exists |
 | road-to-reach-twitter-login | later | ready | Reach — Twitter beyond a single tweet (timelines, search, threads) |
-| road-to-records-that-match-their-code | later | ready | Every item below ends with the record and the code saying the same thing, and a check that would have … |
+| road-to-records-that-match-their-code | later | ready | Record and code agree. |
 | road-to-regulatory-radar | later | draft | Answer one question with a number instead of an intuition: when someone asks "what do I have to do as … |
 | road-to-release-holds-that-refuse | later | later | A roadmap declares, in a form one evaluator reads, exactly which of its intermediate tree states must not be published … |
 | road-to-residual-interruption-measurement | later | later | Road to the residual-interruption measurement |

@@ -20,6 +20,8 @@ import {
     checkRecords,
     hasEvidenceSection,
     main,
+    addedAmendments,
+    checkAmendment,
 } from '../../src/scripts/check_new_adr_evidence.js';
 
 const FULL = [
@@ -424,5 +426,38 @@ describe('main — exit codes, and the zero-added case', () => {
         // un-added, and the gate would pass by scanning nothing.
         initRepo();
         expect(inRepo(() => main(['--base', 'refs/heads/does-not-exist']))).toBe(2);
+    });
+});
+
+// ADR-240 binds an amendment to the same floor as a new record. Release review
+// 19.2.0 (M8): ADR-297 took two owner-attributed amendments in one day and no
+// gate read either.
+describe('amendments to an existing record', () => {
+    const root = process.cwd();
+    const diff = (body: string): string =>
+        ['diff --git a/x b/x', '+++ b/docs/decisions/ADR-297-x.md', '@@ -1 +1 @@', ...body.split('\n').map((l) => `+${l}`), ' ## References'].join('\n');
+
+    it('extracts only the added amendment sections', () => {
+        const sections = addedAmendments(diff('## Amendment 2 (2026-11-01) — x\n\nOwner decision, in chat.\n## Other\nnot it'));
+        expect(sections).toHaveLength(1);
+        expect(sections[0]).toContain('Owner decision');
+        expect(sections[0]).not.toContain('not it');
+    });
+
+    it('refuses an owner-attributed amendment with no owner record', () => {
+        const [section] = addedAmendments(diff('## Amendment 1 — x\n\n**Owner decision, in chat, 2026-11-01** ("1.a").'));
+        expect(checkAmendment(root, section as string)).toMatch(/claims an owner decision/);
+    });
+
+    it('accepts it once an existing owner-directive file is cited', () => {
+        const [section] = addedAmendments(
+            diff('## Amendment 1 — x\n\nOwner decision: agents/evidence/owner-directives/2026-11-01-map-auto-refresh.md'),
+        );
+        expect(checkAmendment(root, section as string)).toBeNull();
+    });
+
+    it('leaves an amendment that claims no owner decision alone', () => {
+        const [section] = addedAmendments(diff('## Amendment 3 — typo\n\nA council reading, 2/2.'));
+        expect(checkAmendment(root, section as string)).toBeNull();
     });
 });

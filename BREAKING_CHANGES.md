@@ -10,9 +10,10 @@ This file is a discoverable index, not the policy. The canonical sources are:
 ## Why majors are frequent
 
 `agent-config` is a single-maintainer package under active development, and its **install layout and
-settings keys are part of its public contract**. Under the existing semver policy, an installer-path or
-settings-key change legitimately trips a Major even when the day-to-day skill/rule surface is stable — so
-the cadence reflects an actively-evolving install/runtime surface, not instability in the content you use.
+settings keys are part of its public contract**. A Major means a breaking change and only that (owner
+directive 2026-10-30): removing a consumer-facing installer path or a settings key trips one, while a
+change to installer source code does not unless it is declared `Consumer-Impact: action` — so the cadence
+reflects an actively-evolving install/runtime surface, not instability in the content you use.
 A settings key may be removed or renamed in a minor release only when no consumer project can rely on it —
 default-neutral and derivable, proven by a named test — or, for a rename, when its RENAMED_KEYS alias
 carries the value and the release declares Consumer-Impact: automatic; any other removal or rename ships
