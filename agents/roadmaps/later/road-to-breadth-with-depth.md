@@ -358,6 +358,10 @@ naming and the peer gaps; subsystem-class stages wait on
   follows ADR-280, invokes it as a separate program, is announced, and waits on
   a recorded licence check for any copyleft tool.
   verify: as 5.1.
+- [ ] **5.3a Code-rendered film, stage 2.** Text and sync gates, approvals as
+  digests, grounding ledger, `launch-film`, media-policy delivery to consumers,
+  the sound layer, and a discriminating benchmark — § Code-rendered film below.
+  verify: every item of that section is a step of the 5.3 roadmap or carries a recorded kill.
 - [ ] **5.4 Code intelligence.** Exit criterion: the existing benchmark at or
   above grep's recall. Arrow-function exports, `--root`, a SCIP reader, more
   grammars, impact and ownership queries.
@@ -375,6 +379,91 @@ naming and the peer gaps; subsystem-class stages wait on
   the `projection.mode` enum missing `tiered` (`src/server/schemas/settings.ts:32`)
   — each with its `file:line` and a review trigger.
   verify: both stubs name each defect with its `file:line`.
+
+## Code-rendered film — the follow-on to step 5.3a
+
+> **Source:** `agents/tmp.old/inbox-2026-11-e/` (topics t1, t2, t3).
+> **Arrivals:** 1 — `inbox-2026-11-e` (2026-11-02).
+
+The code-rendered film track shipped its witness, audio floor and skill in
+`archive/road-to-a-film-built-from-time.md` (`ui:render --profile film`,
+`audio-qa.sh`, `code-film`). What it left is carried here because this roadmap
+owns the video domain (5.3); it wakes with 5.3.
+
+
+Film gates, grounding and sound. A code-rendered film whose text is readable, whose cuts sit on the grid, whose
+approvals are digests, and whose every product claim and on-screen number is
+grounded — plus the governance that has to reach the consumer before any of
+that ships. Parked: each phase needs the film manifest of
+`road-to-a-film-built-from-time` first.
+
+### F1 — Text and sync gates
+
+- [ ] **F1.1** Text sidecar `TEXTS(t)` read when present, else measured through a `fillText`/DOM hook.
+- [ ] **F1.2** Reading-time floor, platform safe zones per format, overlap, clipping; `0/0` checked with text present is a fail.
+- [ ] **F1.3** Cuts against the beat grid (locks ±0.15 s, snaps ±0.10 s); plan vs file duration via `ffprobe`.
+- [ ] **F1.4** Poster: best still frame burned in as frame 0 without changing frame count or sync.
+- [ ] **F1.5** Formats re-laid out, not cropped (16:9, 9:16, 1:1).
+
+### F2 — Audio without an ML install
+
+- [ ] **F2.1** Zero-dependency TS beat tracker with `method` reported and a tempo-change warning.
+- [ ] **F2.2** Probe ladder: precomputed cues → installed analyser → 2.1 → energy segmentation → `unavailable`.
+- [ ] **F2.3** TTS by form and an ASR round trip with language passed through (German is the main case).
+
+### F3 — Approvals, styles, grounding
+
+- [ ] **F3.1** Approvals as digest records; a stale board stops the export.
+- [ ] **F3.2** Style catalogue (`proven | studied | sketch`), three first-party seeds; anti-copy treatment with six declared axes before a demo is read.
+- [ ] **F3.3** `launch-film`: project → 15–25 s film; leak rule (no secrets or personal data; real data swapped for stand-ins).
+- [ ] **F3.4** Grounding mechanised: every on-screen string sourced in the project or declared framing; every number has a `FACTS.md` row.
+
+### F4 — Governance that reaches the consumer
+
+- [ ] **F4.1** Media policies ship to consumers (seeded template or read from `dist/`); absence refuses with the path. Today `agents/settings/` is not in the package `files`.
+- [ ] **F4.2** Policies `asset-licences` (music/SFX/fonts with credit lines) and `titles-and-marks`.
+- [ ] **F4.3** Installed renderers consumed by form, with a licence check that covers commercial thresholds, not only copyleft.
+
+### F5 — A benchmark that discriminates
+
+- [ ] **F5.1** Pre-registered three arms (no package, `code-film`, `code-film` + installed renderer) over tasks that discriminate (tempo change, German voice-over, launch film with trap fixtures); honest null valid; VLM judgement advisory only.
+
+### F6 — The sound layer
+
+Cue sheet, source ladder, measured mix, credits and a listen list; the master
+track and the song are never overwritten. Builds on `audio-qa.sh`.
+
+#### 6a — Stop dropping intent silently
+
+
+- [ ] **F6.1.1** Under `audio: none`, the encoder emits `AUDIO DOWNGRADE` for every ambient layer and SYNC CUE no later stage fills (`motion-choreographer/SKILL.md:131-139`).
+- [ ] **F6.1.2** `stitch.sh` and the from-song master mux append `audio-qa` JSON to the run report; handoff mode records `audio: dropped`. The song stays untouched.
+- [ ] **F6.1.3** Opt-in `--loudness <preset>` two-pass linear `loudnorm` on the final mix only; presets in one table (`youtube`, `social` labelled observed practice, `broadcast`).
+
+#### 6b — The cue sheet
+
+- [ ] **F6.2.1** Schema `cue-sheet.v1`: `{t, kind, role, origin, confidence, …}`, `origin ∈ plan|timeline|beat|picture|operator`; unresolved times are listed, never guessed.
+- [ ] **F6.2.2** Producers in priority order: plan (SYNC CUES, manifest durations) → timeline readers → beat → picture (confidence ≤ 0.5).
+- [ ] **F6.2.3** Beat grid checked against the low band before it becomes cut candidates; a grid landing on nothing is `usable: false`.
+- [ ] **F6.2.4** Density defaults in one table marked *starting default*.
+
+#### 6c — Source ladder
+
+- [ ] **F6.3.1** Audio contract v2: classes `sfx-source` and `sfx-synth`, offline deterministic `dry-run`.
+- [ ] **F6.3.2** Adapters: operator library, an open CC library (anonymous, throttle-aware, licence re-checked on fetch), an operator-installed synthesiser (pinned, wrapped).
+- [ ] **F6.3.3** Licence policy closed to `cc0 | pdm | by`; `credits.json` per output.
+- [ ] **F6.3.4** Ladder order is data; a cue no rung fills stays quiet and is listed.
+
+#### 6d — Mix, critique, proof
+
+- [ ] **F6.4.1** `mix-sfx.sh` writes a stem and a new MP4; never `final.mp4`.
+- [ ] **F6.4.2** Rule `you-cannot-hear` (pack-scoped): measured vs text-matched, plus a listen list of at most five moments.
+- [ ] **F6.4.3** Pre-registered blind A/B over six films; honest null recorded.
+- [ ] **F6.4.4** A sound rung for `analyze:post` (onset density, LUFS, voice/music presence), local only.
+
+#### Sound kill register
+
+K1 bundled ML or Python dependencies · K2 video-to-audio models as default (NC weights, EU exclusion) · K3 cloud hearing by default · K4 caption-model scores as QA for sync or loudness · K6 NC/ND/SA licences · K7 overwriting a master.
 
 ## Blockers
 

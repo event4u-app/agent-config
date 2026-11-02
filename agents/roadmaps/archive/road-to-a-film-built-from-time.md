@@ -12,13 +12,7 @@ relates:
     note: "Same witness vocabulary (verified | static-only | unassessed, digest equality as the only road to verified). The film profile is a new module beside the asset profile; no step there changes."
   - slug: later/road-to-breadth-with-depth
     relation: disjoint
-    note: "Owns video EDITING (5.3) incl. export profiles. Loudness measurement lands here first (4.1); 5.3 consumes it instead of building a second one."
-  - slug: later/road-to-a-sound-that-lands-on-its-frame
-    relation: disjoint
-    note: "Cue sheet, source ladder, mix and the you-cannot-hear rule. Builds on 4.1 here."
-  - slug: later/road-to-a-film-the-project-can-ground
-    relation: disjoint
-    note: "Text/sync gates, approvals as digests, launch film, grounding ledger, policy delivery, benchmark."
+    note: "Owns the video domain (5.3). Loudness measurement lands here first (4.1); 5.3 consumes it. The follow-on (gates, grounding, sound layer, benchmark) is carried there as 5.3a."
 ---
 # Road to a film built from time
 
@@ -27,7 +21,7 @@ relates:
 
 ## Goal
 
-A user who asks the agent for a short motion film — launch clip, kinetic type,
+Code-rendered motion film. A user who asks the agent for a short motion film — launch clip, kinetic type,
 animated chart, explainer — gets one built **from time, not played in real
 time**: every frame is a pure function of `t`, the film is captured headless and
 encoded, and every claim about it comes from a check that ran on its frames:
@@ -109,7 +103,7 @@ Not promised: that the film is *good*. No deterministic witness exists for that.
 
 - [x] **6.1** `docs/contracts/film-page.md`: the seek contract (`__seek`, `__videoMeta`, `render(t)`, no wall clock, seeded randomness, no live CSS animation in render mode) and the film manifest fields.
   verify: the doc names every manifest field the film profile writes.
-- [ ] **6.2** Changed-files type-check and lint; the touched test files green; the repository's link and count gates green.
+- [x] **6.2** Changed-files type-check and lint; the touched test files green; the repository's link and count gates green.
   verify: the command output is quoted in the PR body.
 
 ## Decisions
@@ -136,8 +130,8 @@ Not promised: that the film is *good*. No deterministic witness exists for that.
 
 ## Acceptance criteria
 
-- [ ] AC-1 A canvas film is seen by the witness and its network attempts fail visibly. verify: the matching phase fixture.
-- [ ] AC-2 Determinism is proven or the first diverging frame is named. verify: the matching phase fixture.
-- [ ] AC-3 A strobing fixture fails the flash floor; no option lowers it. verify: the matching phase fixture.
-- [ ] AC-4 `audio-qa` reports LUFS and true peak with ffmpeg only. verify: the matching phase fixture.
-- [ ] AC-5 `code-film` validates, routes, and its corpus passes `ground.mjs validate`. verify: the matching phase fixture.
+- [x] AC-1 A canvas film is seen by the witness and its network attempts fail visibly. verify: the matching phase fixture.
+- [x] AC-2 Determinism is proven or the first diverging frame is named. verify: the matching phase fixture.
+- [x] AC-3 A strobing fixture fails the flash floor; no option lowers it. verify: the matching phase fixture.
+- [x] AC-4 `audio-qa` reports LUFS and true peak with ffmpeg only. verify: the matching phase fixture.
+- [x] AC-5 `code-film` validates, routes, and its corpus passes `ground.mjs validate`. verify: the matching phase fixture.
