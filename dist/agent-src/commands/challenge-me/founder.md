@@ -81,6 +81,6 @@ active, run `/challenge-me closure` on the roadmap before the follow-up asks:
 - **Frame, never decide** — per
   [`strategy-safety-floor`](../../rules/strategy-safety-floor.md); business-plan
   figures per [`finance-safety-floor`](../../rules/finance-safety-floor.md).
-- **No execution** — the roadmap is the artefact; building the prototype needs
+- **No execution** — the roadmap is the artifact; building the prototype needs
   an explicit execution verb on a later turn.
 - **Mirror the user's language**; trigger syntax stays literal.

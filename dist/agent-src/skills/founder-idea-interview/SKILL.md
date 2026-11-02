@@ -112,7 +112,7 @@ with that rule's footer.
 After the roadmap lands, one question per turn, in this fixed order. Each ask is
 skippable; a skip moves to the next one, never re-asks.
 
-1. **Prototype** — the cheapest artefact that tests the riskiest assumption,
+1. **Prototype** — the cheapest artifact that tests the riskiest assumption,
    chosen by medium: a **pilot** with one customer, a hand-delivered **offer**,
    a **mock-up** (`wireframe`), a **landing page**, a concierge test — an app
    only when nothing cheaper tests the assumption.
