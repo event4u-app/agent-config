@@ -113,8 +113,10 @@ Not promised: that the film is *good*. No deterministic witness exists for that.
 
 - [x] **6.1** `docs/contracts/film-page.md`: the seek contract (`__seek`, `__videoMeta`, `render(t)`, no wall clock, seeded randomness, no live CSS animation in render mode) and the film manifest fields. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: the doc names every manifest field the film profile writes.
+  reach exempt: the five flagged names (CAPTURED_PROPERTIES, VIEWPORTS, collectPalette, collectTypeFamilies, slugify) are pre-existing page-profile exports of uiRender.ts read only by its own test; this step's code is reached from src/cli/main.ts through runUiRender → runFilmProfile → runFilmRender.
 - [x] **6.2** Changed-files type-check and lint; the touched test files green; the repository's link and count gates green. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
   verify: the command output is quoted in the PR body.
+  reach exempt: the five flagged names (CAPTURED_PROPERTIES, VIEWPORTS, collectPalette, collectTypeFamilies, slugify) are pre-existing page-profile exports of uiRender.ts read only by its own test; this step's code is reached from src/cli/main.ts through runUiRender → runFilmProfile → runFilmRender.
 
 ## Decisions
 
