@@ -269,7 +269,7 @@ Runtime confirmation (e.g. *"reproduce the cross-tenant read against staging"*,
 * NEVER return `clean` out of politeness when gaps exist — list them even if the change "probably works"
 * NEVER silently fall back to generic advice when you cannot locate a stage — mark it `❌ not found` with the file you searched
 * NEVER approve a 🔴 finding without a named required negative test
-* NEVER propose exploit payloads, bypass chains, or offensive verification steps — if asked, stop per `never-help-build-offensive-cyber-capability`
+* NEVER propose exploit payloads, bypass chains, or offensive verification steps — if asked, stop and refuse. A negative test against the project's own code in its own suite is not an offensive step
 * NEVER treat "only admins reach this" as a control without proof the admin gate is enforced at this stage for this request
 * NEVER rubber-stamp authentication middleware as if it enforced per-record authorization
 

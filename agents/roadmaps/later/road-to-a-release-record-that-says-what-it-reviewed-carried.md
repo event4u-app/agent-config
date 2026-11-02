@@ -21,6 +21,9 @@ estate_growth_exempt: >-
 > Each step below was `[~]` there and is restated verbatim as open work, so
 > archiving the parent buried nothing. Blockers the steps name moved with them.
 
+> **Arrivals:** 1 — `inbox-2026-11-s` (2026-11-02) added steps A.1–A.3 (self-review
+> coverage, clustering, commit reachability), unblocked by the two owner blockers.
+
 ## Goal
 
 Every step road-to-a-release-record-that-says-what-it-reviewed deferred is either done here or explicitly disposed
@@ -44,6 +47,20 @@ left to read as finished.
       in-process (`tests/scripts/install.preserve.roundtrip.test.ts`) and is not
       duplicated in the container.
       verify: `grep -rn 'installer-e2e' .github/workflows docs/decisions/ADR-087-installer-e2e-test-strategy.md` -> /installer-e2e/
+- [ ] **A.1 Self-review counts files assessed, not files sent.** The
+      `self_review_gate.ts` reviewer prompt returns, besides findings, the files
+      it assessed; the gate reports `assessed/sent`, never only `sent`.
+      verify: a `tests/scripts/self_review_gate` case where the reviewer
+      assesses 2 of 3 files reports `2/3`
+- [ ] **A.2 Near-duplicate findings are annotated, never merged by a model.**
+      Deterministic clustering (same file, overlapping lines, same class) adds
+      a `cluster` id next to the exact `findingId`; nothing is dropped.
+      verify: a fixture with two near-identical findings yields one cluster id
+      and two findings
+- [ ] **A.3 A commit pin resolves.** `check_finding_dispositions` checks that a
+      cited commit is an ancestor of HEAD (`git merge-base --is-ancestor`);
+      unreachable fails, undecidable (shallow clone) exits 2 and says so.
+      verify: a fixture citing an unreachable SHA fails the check
 
 ## Blockers
 

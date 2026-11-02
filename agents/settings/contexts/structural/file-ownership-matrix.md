@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **641**
-- Edges (incl. self-WRITE): **2444**
+- Files indexed: **642**
+- Edges (incl. self-WRITE): **2449**
 
 ## READ_ONLY edges
 
@@ -839,6 +839,7 @@
 | `.agent-src.uncondensed/skills/code-review/SKILL.md` | `.agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/code-review/SKILL.md` | `.agent-src.uncondensed/skills/symfony-workflow/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/code-review/checklists/backend.md` | `.agent-src.uncondensed/skills/code-review/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/code-review/checklists/backend.md` | `.agent-src.uncondensed/skills/security-audit/references/control-section.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/code-review/checklists/database.md` | `.agent-src.uncondensed/skills/code-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/code-review/checklists/dependency.md` | `.agent-src.uncondensed/skills/code-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/code-review/checklists/dependency.md` | `.agent-src.uncondensed/skills/supply-chain-intake/SKILL.md` | `body_link` | 1 |
@@ -1099,6 +1100,7 @@
 | `.agent-src.uncondensed/skills/fe-design/references/source-led-port.md` | `.agent-src.uncondensed/rules/design-fidelity.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/feature-planning/SKILL.md` | `.agent-src.uncondensed/rules/cross-source-consistency.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/feature-planning/SKILL.md` | `.agent-src.uncondensed/skills/complexity-first-planning/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/feature-planning/SKILL.md` | `.agent-src.uncondensed/skills/security-audit/references/control-section.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/finishing-a-development-branch/SKILL.md` | `.agent-src.uncondensed/skills/conventional-commits-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/finishing-a-development-branch/SKILL.md` | `.agent-src.uncondensed/skills/receiving-code-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/finishing-a-development-branch/SKILL.md` | `.agent-src.uncondensed/skills/requesting-code-review/SKILL.md` | `body_link` | 1 |
@@ -1686,6 +1688,7 @@
 | `.agent-src.uncondensed/skills/supply-chain-intake/SKILL.md` | `.agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/supply-chain-intake/SKILL.md` | `.agent-src.uncondensed/skills/dependency-upgrade/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/supply-chain-intake/SKILL.md` | `.agent-src.uncondensed/skills/secrets-management/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/supply-chain-intake/SKILL.md` | `.agent-src.uncondensed/skills/security-audit/references/control-section.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/supply-chain-intake/SKILL.md` | `.agent-src.uncondensed/skills/security/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncondensed/rules/context-hygiene.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncondensed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
@@ -1740,6 +1743,7 @@
 | `.agent-src.uncondensed/skills/threat-modeling/SKILL.md` | `.agent-src.uncondensed/skills/logging-monitoring/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/threat-modeling/SKILL.md` | `.agent-src.uncondensed/skills/performance/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/threat-modeling/SKILL.md` | `.agent-src.uncondensed/skills/security-audit/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/threat-modeling/SKILL.md` | `.agent-src.uncondensed/skills/security-audit/references/control-section.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/threat-modeling/SKILL.md` | `.agent-src.uncondensed/skills/security/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/threat-modeling/SKILL.md` | `.agent-src.uncondensed/skills/sql-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/throughput-vs-morale-tradeoff/SKILL.md` | `.agent-src.uncondensed/skills/hiring-loop-design/SKILL.md` | `body_link` | 1 |
@@ -1823,5 +1827,5 @@
 | `context` | 79 |
 | `persona` | 36 |
 | `rule` | 122 |
-| `skill` | 404 |
+| `skill` | 405 |
 

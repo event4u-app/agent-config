@@ -105,6 +105,10 @@ Discovery → Exploration → Questions → Architecture → Implementation → 
   - Security / privacy constraints
   - Reliability / availability needs
   - Maintenance and ownership expectations
+  - Containment — a deployed product gets the security & maintenance offer
+    ([`control-section`](../security-audit/references/control-section.md));
+    a new public endpoint, job or runtime dependency names the lever that
+    switches it off
 - Present all questions in an organized list.
 - **Wait for answers before proceeding.**
 

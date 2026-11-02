@@ -71,6 +71,7 @@ PIN IT, LOCK IT, CVE-SCAN IT. NEVER PIPE A REMOTE SCRIPT STRAIGHT TO A SHELL.
    ```
 6. **License** — confirm the license is compatible with the project's declared license before it lands.
 7. **No pipe-to-shell** — never `curl … | bash` an install; download → inspect → execute over pinned HTTPS, or surface it to the user for confirmation.
+8. **Containment** — a runtime dependency of a deployed product names the lever that isolates it if it turns vulnerable ([`control-section`](../security-audit/references/control-section.md)).
 
 ## MCP-server intake — the dependency gate plus two extra checks
 

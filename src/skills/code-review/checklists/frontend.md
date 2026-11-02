@@ -7,6 +7,7 @@ client-side components, templates, or styles.
 |---|---|
 | **Render security** | No `dangerouslySetInnerHTML` / `v-html` / `innerHTML` / Blade `{!! !!}` / Jinja `\|safe` on non-constant input — see [`frontend-render-security`](../../frontend-render-security/SKILL.md). |
 | **Client trust** | No secrets/tokens in client code; no client-only authorization (the server re-checks); no token in `localStorage` where a stricter store fits. |
+| **Containment** | A client-side feature flag is UX only — the server enforces the lever; a maintenance state renders a 503 view, not a blank page. |
 | **Component shape** | Follows the project's component idiom; no prop-drilling where the project has a store; no duplicated component when one exists (audit first). |
 | **State** | No unguarded loading/empty/error states; the spec's states are all handled. |
 | **Contract compatibility** | Consumed API types match the server's current response; a field the server dropped or renamed is not still read, and a new required field is not assumed on old responses. |

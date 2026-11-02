@@ -32,10 +32,19 @@ export interface LedgerFinding {
     proof_test?: string;
     open_fact?: string;
     reason?: string;
+    /** v2: the control that closes a rejected candidate. */
+    control?: { path_line: string; quote: string };
+    /** v2: the strongest evidence against a confirmed finding. */
+    counterevidence?: string;
+    /** v2: what would move a confirmed finding's severity. */
+    severity_change?: string;
+    /** Capped by proof: `high` requires `proof: test`. */
+    confidence?: 'low' | 'medium' | 'high';
+    fix_verification?: { retrace: string; bypass_note: string; proof_green: boolean };
 }
 
 export interface SecurityLedger {
-    schema_version: 1;
+    schema_version: 1 | 2;
     run: string;
     at: string;
     rows: LedgerRow[];
@@ -46,6 +55,7 @@ const ENUMERATIONS: readonly string[] = ['graph', 'convention', 'model'];
 const STATUSES: readonly string[] = ['confirmed', 'needs_validation', 'rejected'];
 const PROOFS: readonly string[] = ['static-trace', 'test'];
 const SEVERITIES: readonly string[] = ['low', 'medium', 'high', 'critical'];
+const CONFIDENCES: readonly string[] = ['low', 'medium', 'high'];
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const str = (v: unknown): v is string => typeof v === 'string' && v.trim() !== '';
@@ -54,7 +64,8 @@ const str = (v: unknown): v is string => typeof v === 'string' && v.trim() !== '
 export function validateLedger(value: unknown): string[] {
     const out: string[] = [];
     if (!isObj(value)) return ['ledger is not an object'];
-    if (value['schema_version'] !== 1) out.push('schema_version must be 1');
+    const version = value['schema_version'];
+    if (version !== 1 && version !== 2) out.push('schema_version must be 1 or 2');
     if (!str(value['run'])) out.push('run is required');
     if (!str(value['at'])) out.push('at is required');
     const rows = value['rows'];
@@ -99,8 +110,30 @@ export function validateLedger(value: unknown): string[] {
             if (!SEVERITIES.includes(String(f['severity']))) out.push(`${at}: confirmed needs a severity`);
             if (!PROOFS.includes(String(f['proof']))) out.push(`${at}: confirmed needs proof static-trace|test`);
             if (f['proof'] === 'test' && !str(f['proof_test'])) out.push(`${at}: proof test needs its path`);
+            if (version === 2) {
+                if (!str(f['counterevidence'])) out.push(`${at}: confirmed names its counterevidence`);
+                if (!str(f['severity_change'])) out.push(`${at}: confirmed names what would change its severity`);
+            }
         }
         if (status === 'rejected' && !str(f['reason'])) out.push(`${at}: rejected names its reason`);
+        if (status === 'rejected' && version === 2) {
+            const c = f['control'];
+            if (!isObj(c) || !str(c['path_line']) || !str(c['quote'])) {
+                out.push(`${at}: rejected names the control that closes it (control.path_line + control.quote)`);
+            }
+        }
+        if (f['confidence'] !== undefined) {
+            if (!CONFIDENCES.includes(String(f['confidence']))) out.push(`${at}: confidence must be low|medium|high`);
+            else if (f['confidence'] === 'high' && f['proof'] !== 'test') {
+                out.push(`${at}: confidence high needs proof test — a static trace is at most medium`);
+            }
+        }
+        if (f['fix_verification'] !== undefined) {
+            const v = f['fix_verification'];
+            if (!isObj(v) || !str(v['retrace']) || !str(v['bypass_note']) || typeof v['proof_green'] !== 'boolean') {
+                out.push(`${at}: fix_verification needs retrace, bypass_note and proof_green`);
+            }
+        }
     });
     return out;
 }
@@ -146,7 +179,7 @@ export function renderLedger(ledger: SecurityLedger | null): string {
     for (const f of open) {
         lines.push(
             f.status === 'confirmed'
-                ? `- [${f.severity}] ${f.id} ${f.title} — ${f.location} · proof ${f.proof}${f.proof_test ? ` ${f.proof_test}` : ''}`
+                ? `- [${f.severity}] ${f.id} ${f.title} — ${f.location} · proof ${f.proof}${f.proof_test ? ` ${f.proof_test}` : ''}${f.counterevidence ? ` · against: ${f.counterevidence}` : ''}`
                 : `- [needs_validation] ${f.id} ${f.title} — ${f.location} · open fact: ${f.open_fact}`,
         );
     }
@@ -159,6 +192,6 @@ export function renderLedger(ledger: SecurityLedger | null): string {
     lines.push('', '## Rejected candidates');
     const rejected = ledger.findings.filter((f) => f.status === 'rejected');
     if (rejected.length === 0) lines.push('none');
-    for (const f of rejected) lines.push(`- ${f.id} ${f.title} — ${f.reason}`);
+    for (const f of rejected) lines.push(`- ${f.id} ${f.title} — ${f.reason}${f.control ? ` · closed by ${f.control.path_line}` : ''}`);
     return `${lines.join('\n')}\n`;
 }

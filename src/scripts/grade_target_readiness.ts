@@ -7,7 +7,7 @@
  * written in a command's markdown cannot be asserted by anything. So the
  * detection is here and the command invokes it; the command keeps the narrative.
  *
- * THE ANTI-VANITY RULE IS STRUCTURAL, NOT A STYLE NOTE. Thirteen dimensions are
+ * THE ANTI-VANITY RULE IS STRUCTURAL, NOT A STYLE NOTE. Fourteen dimensions are
  * graded 0 Absent / 1 Present / 2 Enforced-in-CI / 3 Independent-and-diff-scoped,
  * and the verdict is `min` over the FOUR knockout dimensions, reported as
  * `L<n> — bound by <dimension>`. **No aggregate number is ever emitted** — no
@@ -36,9 +36,12 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { parse as parseYaml } from 'yaml';
+
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
+import { LEVER_INVENTORY, validateSecurityOps } from './_lib/security_ops.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -185,7 +188,7 @@ export function isPythonTarget(root: string): boolean {
     return py && !other;
 }
 
-// ── the thirteen dimensions ──
+// ── the fourteen dimensions ──
 
 /**
  * Grade one dimension. `ci` decides 1 → 2: a thing that exists is `Present`; a
@@ -207,6 +210,25 @@ function _ciBlocks(ci: string, ...needles: string[]): boolean {
     // successor roadmap's problem; stated rather than silently approximated.
     const allSoft = /continue-on-error:\s*true/.test(ci) && !/continue-on-error:\s*false/.test(ci);
     return !allSoft;
+}
+
+/**
+ * Containment: could the target switch off a vulnerable surface within minutes?
+ * 0 no valid lever inventory · 1 a valid one · 2 a blocking CI job runs
+ * `audit:security` over it. Never 3: nothing here sees the lever thrown.
+ */
+function _containment(root: string, ci: string): Scored {
+    const file = path.join(root, LEVER_INVENTORY);
+    if (!fs.existsSync(file)) return { grade: 0, evidence: `no ${LEVER_INVENTORY}` };
+    let problems: string[];
+    try {
+        problems = validateSecurityOps(parseYaml(fs.readFileSync(file, 'utf8')) as unknown);
+    } catch (e) {
+        problems = [`unreadable: ${(e as Error).message.split('\n')[0]}`];
+    }
+    if (problems.length > 0) return { grade: 0, evidence: `${LEVER_INVENTORY} is invalid — ${problems[0]}` };
+    const enforced = _ciBlocks(ci, 'audit:security');
+    return { grade: enforced ? 2 : 1, evidence: enforced ? `${LEVER_INVENTORY} valid; CI runs audit:security` : `${LEVER_INVENTORY} valid; no CI job runs audit:security` };
 }
 
 /* -- Phase 4 dimension ladders --------------------------------------------- */
@@ -510,6 +532,16 @@ export function grade(root: string): Matrix {
         knockout: false,
         grade: privacy.grade,
         evidence: privacy.evidence,
+    });
+
+    // 14. containment — NON-KNOCKOUT (road-to-a-switch-built-before-it-is-needed 6.4, ADR-304)
+    const contain = _containment(root, ci);
+    dims.push({
+        id: 'containment',
+        label: 'containment',
+        knockout: false,
+        grade: contain.grade,
+        evidence: contain.evidence,
     });
 
     // ── the verdict: min over knockouts, undetectable binds at L0 ──────────

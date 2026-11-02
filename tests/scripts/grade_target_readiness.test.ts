@@ -69,9 +69,9 @@ describe('grade_target_readiness — 1.1 detection: presence detected, absence n
         expect(f.get('static-analysis')?.grade).toBe(2);
     });
 
-    it('all thirteen dimensions are always reported, present or not', () => {
+    it('all fourteen dimensions are always reported, present or not', () => {
         for (const root of [full, ciAbsent, python]) {
-            expect(grade(root).dimensions).toHaveLength(13);
+            expect(grade(root).dimensions).toHaveLength(14);
         }
     });
 });
@@ -401,9 +401,9 @@ describe('grade_target_readiness — Phase 4 dimensions', () => {
     const ids = (root: string): string[] => grade(root).dimensions.map((d) => d.id);
     const dim = (root: string, id: string) => grade(root).dimensions.find((d) => d.id === id);
 
-    it('the grader emits thirteen dimension ids, and the three new ones are among them', () => {
+    it('the grader emits fourteen dimension ids, and the three Phase 4 ones are among them', () => {
         for (const root of [full, ciAbsent, python]) {
-            expect(ids(root)).toHaveLength(13);
+            expect(ids(root)).toHaveLength(14);
             for (const id of ['operational-recovery', 'mail-authenticity', 'privacy-obligations']) {
                 expect(ids(root), `${root} is missing ${id}`).toContain(id);
             }
@@ -443,6 +443,24 @@ describe('grade_target_readiness — Phase 4 dimensions', () => {
             '.github/workflows/dr.yml': 'jobs:\n  dr:\n    steps:\n      - run: ./scripts/restore-from-backup.sh\n',
         });
         expect(dim(ci, 'operational-recovery')?.grade).toBe(2);
+    });
+
+    it('containment (road-to-a-switch-built-before-it-is-needed 6.4) is a non-knockout: 0 without a lever inventory, 1 valid, 2 audited in CI', () => {
+        const inv = 'schema_version: 1\noperator_path: sso\nbreak_glass: cli\nlevers:\n  - id: off\n    level: L3\n    fail_mode: closed\n    owner: on-call\n    release: control-surface\n';
+        const bare = _target({ Dockerfile: 'FROM node:22\n' });
+        expect(dim(bare, 'containment')?.knockout).toBe(false);
+        expect(dim(bare, 'containment')?.grade).toBe(0);
+        expect(dim(_target({ Dockerfile: 'FROM node:22\n', 'agents/settings/security-ops.yml': inv }), 'containment')?.grade).toBe(1);
+        const invalid = _target({ Dockerfile: 'FROM node:22\n', 'agents/settings/security-ops.yml': inv.replace('    fail_mode: closed\n', '') });
+        expect(dim(invalid, 'containment')?.grade).toBe(0);
+        expect(dim(invalid, 'containment')?.evidence).toMatch(/fail_mode/);
+        const ci = _target({
+            Dockerfile: 'FROM node:22\n',
+            'agents/settings/security-ops.yml': inv,
+            '.github/workflows/sec.yml': 'jobs:\n  s:\n    steps:\n      - run: npx --yes @event4u/agent-config@19 audit:security\n',
+        });
+        expect(dim(ci, 'containment')?.grade).toBe(2);
+        expect(grade(ci).dimensions.filter((d) => d.knockout)).toHaveLength(4);
     });
 
     it('privacy-obligations reads a privacy notice as Present, and 0 when there is none', () => {

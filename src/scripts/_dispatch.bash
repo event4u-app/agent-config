@@ -91,7 +91,9 @@ TS-shell native (run via the installed `agent-config` binary):
                              pr-body · mitigate · track · notice · gaps · issue-body.
                              Only `refresh` touches the network.
   audit:code <mode>          Security code audit, deterministic half: matrix · validate ·
-                             show. No model, no network.
+                             show · import <sarif>. No model, no network.
+  audit:security             Could this project see, contain, fix and recover? Lenses
+                             supply · pipeline · contain · recover. No model, no network.
   media:bundle <url|file>    Evidence bundle for a post or video: frames, labelled
                              contact sheets, transcript rung, unavailable evidence.
   worktree:cleanup <mode>    Worktree inventory and removal: inventory · apply · check
@@ -889,6 +891,12 @@ cmd_audit_deps() {
 # lives under the consumer's gitignored agents/runtime/state/security/.
 cmd_audit_code() {
   exec_ts "$PACKAGE_ROOT/src/scripts/code_audit.ts" "$@"
+}
+
+# `audit:security` — the deterministic half of `/audit security` (ADR-304);
+# read-only, offline, writes nothing.
+cmd_audit_security() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/audit_security.ts" "$@"
 }
 
 # `media:bundle <url|file>` — `/analyze:post`'s evidence bundle. A URL is
@@ -1691,6 +1699,7 @@ main() {
     ci:settle)               cmd_ci_settle "$@" ;;
     audit:deps)              cmd_audit_deps "$@" ;;
     audit:code)              cmd_audit_code "$@" ;;
+    audit:security)          cmd_audit_security "$@" ;;
     media:bundle)            cmd_media_bundle "$@" ;;
     worktree:cleanup)        cmd_worktree_cleanup "$@" ;;
     roadmap:context)         cmd_roadmap_context "$@" ;;

@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Consumer lever inventory",
+  "description": "agents/settings/security-ops.yml — the levers a deployed product can throw to contain a vulnerability, read by `agent-config audit:security` (contain lens) and the advisory loop. Validated by src/scripts/_lib/security_ops.ts::validateSecurityOps, which also enforces what this draft cannot express: an L4 lever is never released through the control surface it takes offline, no lever stops the control surface, and under control_surface: same-app no L3 or http-stopping lever is released through the control surface. Design: src/skills/security-audit/references/control-section.md; decision: ADR-304.",
+  "type": "object",
+  "required": ["schema_version", "operator_path", "break_glass", "levers"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "operator_path": { "enum": ["sso", "identity-provider", "vpn"], "description": "The primary operator path. A URL secret is break-glass at most." },
+    "break_glass": { "enum": ["cli", "edge-rule", "infra-flag"], "description": "A path that works without the web UI." },
+    "control_surface": { "enum": ["separate", "same-app"], "description": "Default separate (the blueprint). same-app: a lever that stops the app's HTTP or is L3 cannot be released through the control surface." },
+    "levers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "level", "fail_mode", "owner", "release"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "level": { "enum": ["L0", "L1", "L2", "L3", "L4"] },
+          "fail_mode": { "enum": ["open", "closed"], "description": "What the product does when the lever store cannot be read." },
+          "owner": { "type": "string", "minLength": 1 },
+          "release": { "enum": ["control-surface", "cli", "edge-rule", "infra-flag"] },
+          "stops": { "type": "array", "items": { "enum": ["http", "queue", "scheduler", "webhook-in", "webhook-out", "websocket", "mobile"] } },
+          "packages": { "type": "array", "items": { "type": "string" }, "description": "Packages whose advisories this lever contains." }
+        }
+      }
+    }
+  }
+}

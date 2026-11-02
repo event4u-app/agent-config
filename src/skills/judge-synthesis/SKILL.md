@@ -200,7 +200,7 @@ Recommendation: block | revise | proceed
 
 Verdicts:
   judge-bug-hunter          reject    (2 findings)
-  judge-security-auditor    apply     (0)
+  judge-security-auditor    apply     (0 findings · 4 rows: 3 rejected, 1 needs_validation) — clean, with gaps
   judge-artifact-completeness  partial (1)
   ...
 
