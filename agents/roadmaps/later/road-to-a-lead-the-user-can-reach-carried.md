@@ -40,7 +40,7 @@ closes (WIP cap five, owner directive 2026-10-24).
       emits a derived `CODE-SHAPE` span ≤ 2,048 B into the code-writing worker
       templates. Kernel-adjacent edits: own PRs with soak. Gate: a citation
       probe showing workers lose these laws once the installed layer is thinned.
-      verify: `lawText()` (`src/scripts/_lib/rule_law_section.ts`) returns non-null
+      verify: lawText() in `src/scripts/_lib/rule_law_section.ts` returns non-null
       for all four rules; `generate_subagent_floor --check` exits 0 with the span
       ≤ 2,048 B and byte-identical across siblings; `ac-researcher` carries no span.
 

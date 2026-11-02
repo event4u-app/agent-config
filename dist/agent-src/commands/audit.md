@@ -9,7 +9,7 @@ visibility: advanced
 cluster: audit
 skills: [dependency-upgrade, finishing-a-development-branch, using-git-worktrees, authz-review, security-audit]
 description: Security advisories, code and agent actions for this project
-argument-hint: "deps [refresh|show|gaps|fix <id>|accept <id>] | code [diff|full|retest|show|matrix|import <sarif>] | agents | security | config"
+argument-hint: "deps [refresh|show|gaps|fix <id>|accept <id>] | code [diff|full|retest|show|matrix|import] | agents | security | config"
 suggestion:
   eligible: true
   trigger_description: "is anything we use vulnerable, check for security updates, which advisories affect this project, fix that CVE, could we shut the app down if a vulnerability is disclosed"

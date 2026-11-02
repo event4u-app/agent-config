@@ -65,16 +65,17 @@ or a default flip.
 
 - [x] **1.1 `--min-grade <A-F>` fails a CI step.** Below the grade the audit exits 1;
       without the flag it stays advisory and exits 0.
-      verify: `npx vitest run tests/scripts/security_audit_config.test.ts` — a fixture
+      verify: `npx vitest run tests/scripts/security_audit_config.test.ts` -> 0 — a fixture
       graded below the floor exits 1, at or above exits 0, an unknown grade exits 2.
 - [x] **1.2 `audit:config` is a CLI verb.** Registered beside `audit:agents`, delegated
       through `_dispatch.bash`, read-only and offline; the CLI budget moves in the same
       change with its reason.
-      verify: `npx vitest run tests/cli/registry.test.ts tests/cli/help.test.ts` green;
+      verify: `npx vitest run tests/cli/registry.test.ts tests/cli/help.test.ts` -> 0 green;
       `bash src/scripts/_dispatch.bash audit:config --root .` prints an overall grade.
 - [x] **1.3 `/audit config` is a mode of the visible `/audit` command.** The maintainer
       command keeps its name and points at the consumer path; no new slash command.
-      verify: `/audit` lists `config` in its argument hint and has a section for it;
+      verify: `grep -c 'audit config' src/domains/engineering-base/audit/command.md` -> /^[1-9]/ —
+      the `config` mode is in the hint and has its own section;
       `task sync` leaves `dist/` byte-equal to `rewrite(src)`.
 
 ## Phase 2 — Measurements read clean data
@@ -82,12 +83,12 @@ or a default flip.
 - [x] **2.1 Bench sessions do not persist.** `live_args` takes `no_session_persistence`;
       every claude arm of the v2 runner and the delivery pre-flight sets it.
       `--disable-slash-commands` is deliberately not added (D8c).
-      verify: `npx vitest run tests/scripts/bench_ab_task_runner.test.ts` — the flag is
+      verify: `npx vitest run tests/scripts/bench_ab_task_runner.test.ts` -> 0 — the flag is
       present when asked and absent otherwise.
 - [x] **2.2 The ledger records return bytes.** The `subagent_stop` line carries
       `return_bytes`: the UTF-8 byte length of the final message, `null` when the host
       sent none. A number, never prose — the file's privacy contract holds.
-      verify: `npx vitest run tests/hooks/subagent_ledger.test.ts` — a known message
+      verify: `npx vitest run tests/hooks/subagent_ledger.test.ts` -> 0 — a known message
       yields its byte length, an absent one `null`, and no line carries message text.
 
 ## Phase 3 — Findings land on their owners
