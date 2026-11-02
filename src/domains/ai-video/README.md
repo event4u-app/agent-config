@@ -7,7 +7,7 @@ AI video pipeline.
 - **id**: `ai-video`
 - **owner**: small-business
 - **requires**: —
-- **artefacts**: 14
+- **artefacts**: 15
 
 ## Rules (3)
 
@@ -15,13 +15,14 @@ AI video pipeline.
 - **`media-sync-ground-truth`** — Audio-synced video — timing + singer come from the transcribed real audio; sign-off before paid renders
 - **`provider-lifecycle-discipline`** — Editing an AI video/image/audio adapter — declare lifecycle tier; never default to non-stable
 
-## Skills (11)
+## Skills (12)
 
 - **`canvas-design`** — Static visual art — posters, marketing visuals, brand assets, PDF/PNG pieces — on 'design a poster' or 'mach uns ein Visual'.
 - **`character-consistency`** — Use when a character must stay visually identical across AI video scenes — locks identity tokens (silhouette, palette, wardrobe, prop) in JSON. Triggers 'character lock', 'same character'.
+- **`code-film`** — Motion film rendered from code, frame-checked.
 - **`image-analyser`** — Use to analyse a character image down to the smallest mole and diff against a canon — per-feature spec, OCR-reads tattoo text, flags drift. Triggers 'analyse this image', 'match the canon'.
 - **`image-creator`** — Use to generate a character image to spec — max-fidelity reproducible prompt from a Canon Spec, anchors-first, provider/governance-gated. Triggers 'generate this character', 'render to spec'.
-- **`motion-choreographer`** — When turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'.
+- **`motion-choreographer`** — Locked still + blueprint → provider motion prompt: camera, motion, physics, audio sync, for Veo/Kling/Sora. Code film → code-film.
 - **`pixar-storyteller`** — Use when an idea becomes a Pixar-style animation prompt — character sheet, scene, image, video; emotional beat, want, obstacle. Triggers 'Pixar prompt', 'animated scene'. Live-action → video-director.
 - **`prompt-validator`** — Pre-spend contradiction gate for AI-video runs: checks every prompt in the batch, blocks on style / character / physics mismatch. Triggers 'validate the prompts', 'check the storyboard'.
 - **`scene-expander`** — When expanding a one-line idea into the 12-block Cinematic Scene Blueprint — optional dialogue + ambient. Triggers 'expand this scene', 'blueprint for X'. 11-block refine → video-director.

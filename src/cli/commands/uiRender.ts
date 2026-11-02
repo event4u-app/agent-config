@@ -40,6 +40,7 @@ import * as path from 'node:path';
 import type { chromium as Chromium } from '@playwright/test';
 
 import { runAssetRender } from './uiRenderAsset.js';
+import { filmExitCode, runFilmRender, type FilmManifest } from './uiRenderFilm.js';
 import { resolveBrowser } from './browserReach.js';
 import { interactWith, type InteractionReading } from './uiRenderInteract.js';
 import { BASELINE_REL, regionReading, type RegionReading } from './uiRenderRegion.js';
@@ -305,8 +306,18 @@ export interface UiRenderOptions {
     json?: boolean | undefined;
     projectRoot?: string | undefined;
     slug?: string | undefined;
-    /** `page` (the default, unchanged) or `asset` (step 2.1). */
-    profile?: 'page' | 'asset' | undefined;
+    /** `page` (the default, unchanged), `asset` (step 2.1) or `film` (a page computed from time). */
+    profile?: 'page' | 'asset' | 'film' | undefined;
+    /** Film profile: declared length, rate and size when the page sets no `window.__videoMeta`. */
+    duration?: number | undefined;
+    fps?: number | undefined;
+    width?: number | undefined;
+    height?: number | undefined;
+    /** Film profile: encode to this MP4, mux this audio, hold threshold (s), contact-sheet tiles. */
+    out?: string | undefined;
+    audio?: string | undefined;
+    hold?: number | undefined;
+    tiles?: number | undefined;
     assetClass?: AssetClass | undefined;
     delivery?: DeliveryMode | undefined;
     /** A JSON file carrying `fill_ratio_thresholds` / `geometry_tolerances`. */
@@ -339,7 +350,20 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
     const outDir = path.join(projectRoot, RENDER_REL, slug);
     const isAsset = opts.profile === 'asset';
 
+    const isFilm = opts.profile === 'film';
+    if (isFilm && isUrl) {
+        process.stderr.write('[ui:render] --profile film reads a page on disk, not a URL — the network is off by design\n');
+        return 1;
+    }
+
     const reach = await resolveBrowser();
+    if (reach === null && isFilm) {
+        const manifest = absentFilmManifest(opts.target);
+        writeFilmManifest(outDir, manifest);
+        process.stderr.write(`[ui:render] ${manifest.degradation_reason ?? ''}\n`);
+        if (opts.json) process.stdout.write(`${JSON.stringify(manifest, null, 2)}\n`);
+        return EXIT_RENDERER_ABSENT;
+    }
     if (reach === null) {
         // Step 2.3, and the reason the absence path sits ABOVE the profile
         // branch rather than inside either one: both profiles reach it by
@@ -394,6 +418,8 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
               });
 
     fs.mkdirSync(outDir, { recursive: true });
+
+    if (isFilm) return runFilmProfile({ ...opts, projectRoot, abs, outDir }, chromium);
 
     if (isAsset) {
         if (isUrl) {
@@ -713,4 +739,66 @@ async function runAssetProfile(
 function writeManifest(outDir: string, manifest: RenderManifest): void {
     fs.mkdirSync(outDir, { recursive: true });
     fs.writeFileSync(path.join(outDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+}
+
+/** The film manifest when no browser driver is installed: nothing was seen. */
+export function absentFilmManifest(target: string): FilmManifest {
+    const skipped = 'skipped: renderer absent' as const;
+    return {
+        schema: 1, profile: 'film', generated_at: new Date().toISOString(), target,
+        form: 'none', meta: null, frames: [], distinct_frames: 0, dead_time: [],
+        determinism: { deterministic: null, first_diverging_frame: null, scope: 'this machine' },
+        network: { blocked: [] }, flash: null, format: null, contact_sheet: null, audio_qa: null, encode: null,
+        checks: {
+            seek: skipped, determinism: skipped, dead_time: skipped, encode: skipped,
+            format: skipped, flash: skipped, contact_sheet: skipped, audio_qa: skipped,
+        },
+        findings: [], verification: 'unassessed', goal: 'unassessed',
+        degradation_reason:
+            'film profile not assessed: neither @playwright/test nor playwright-core is installed. ' +
+            'Install playwright-core (a system Chrome, Edge or Chromium is then used) and ffmpeg to capture, prove and encode the film.',
+    };
+}
+
+function writeFilmManifest(outDir: string, manifest: FilmManifest): void {
+    fs.mkdirSync(outDir, { recursive: true });
+    fs.writeFileSync(path.join(outDir, 'film-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+}
+
+/** The film profile: same Class-A boundary — the browser closes on every path. */
+async function runFilmProfile(
+    opts: UiRenderOptions & { projectRoot: string; abs: string; outDir: string },
+    chromium: typeof Chromium,
+): Promise<number> {
+    let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null;
+    try {
+        browser = await chromium.launch({ headless: true });
+        const m = await runFilmRender(browser, {
+            file: opts.abs, projectRoot: opts.projectRoot, outDir: opts.outDir, target: opts.target,
+            duration: opts.duration, fps: opts.fps, width: opts.width, height: opts.height,
+            out: opts.out, audio: opts.audio, hold: opts.hold, tiles: opts.tiles,
+        });
+        writeFilmManifest(opts.outDir, m);
+        if (opts.json) process.stdout.write(`${JSON.stringify(m, null, 2)}\n`);
+        else {
+            const icon = m.findings.length > 0 ? '❌' : m.verification === 'verified' ? '✅' : '⚠️ ';
+            process.stdout.write(
+                `${icon}  ui:render --profile film — ${m.verification}, form ${m.form}, ${String(m.frames.length)} frame(s), ` +
+                    `${String(m.distinct_frames)} distinct, ${String(m.findings.length)} finding(s)\n` +
+                    `    ${path.relative(opts.projectRoot, opts.outDir)}/film-manifest.json\n` +
+                    Object.entries(m.checks).map(([k, v]) => `    ${v === 'ran' ? '·' : '?'} ${k}: ${v}\n`).join('') +
+                    m.findings.map((f) => `    ⚠️  ${f.check} — ${f.detail}\n`).join('') +
+                    (m.degradation_reason ? `    ${m.degradation_reason}\n` : ''),
+            );
+        }
+        return filmExitCode(m);
+    } catch (err) {
+        const m = absentFilmManifest(opts.target);
+        m.degradation_reason = `film capture failed: ${String(err)}`;
+        writeFilmManifest(opts.outDir, m);
+        process.stderr.write(`[ui:render] ${m.degradation_reason}\n`);
+        return 1;
+    } finally {
+        await browser?.close();
+    }
 }

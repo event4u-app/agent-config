@@ -252,13 +252,14 @@ describe('the live tree', () => {
         expect(validate(readLedger(REPO), liveSkills(REPO), [])).toEqual([]);
     });
 
-    it('reads 301 live skills, matching the estate metric', () => {
+    it('reads 302 live skills, matching the estate metric', () => {
         // 300 -> 301 on 2026-10-18: `type-design` was admitted.
+        // 301 -> 302 on 2026-11-02: `code-film` was admitted.
         // 299 -> 300 on 2026-10-11: `svg-authoring` was admitted. Re-measured
         // against the tree, and it must stay equal to `skill_estate`'s
         // `skill_count` — two readers of one corpus disagreeing is the defect
         // this assertion exists to catch.
-        expect(liveSkills(REPO).size).toBe(301);
+        expect(liveSkills(REPO).size).toBe(302);
     });
 
     it('DECISIONS is exactly admitted | rejected', () => {

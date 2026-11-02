@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  6437603f75481f40dff8cb13a19afb46b64693bc1959675734b79c5a27427581
+SET-SHA256  c05e0bfba694639beb657c92e162be171c8b1ff854d4129d270376eb6c595af6
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1232,6 +1232,7 @@ open and which this file does not settle.
 | `brand-strategy` | `8a9a7ea586b7de9e0a3b7a8e0b3ffd776ca1260ab79d77b2804ed4c9e6911606` |
 | `brand-to-tokens` | `b4a6926a805c848bf94ee9b6a037b796c0ac416077d0a5474bafcf63f1ded411` |
 | `bug-analyzer` | `c2eb95aada033854401cdb6a951fac9b7cac633b0ee4142f126eece78b1953eb` |
+| `code-film` | `64e99c81fed1f527a1ae5233bef113cd2daced9dfd42476457502ff454d85ea1` |
 | `code-refactoring` | `a6147167bd6c11a4c4f2b0a4bae924f403f54d16aa0334b089b6bba744d66f77` |
 | `code-review` | `68dfc344a28c8d4b7bf79ff57c57642b6904ad25cc3f1815d34a1ab73de99224` |
 | `command-routing` | `8fdb24b80711a22212c9c31913630e2b06a5fade150f9de87b3ecdde6f23d0d4` |
@@ -1302,7 +1303,7 @@ open and which this file does not settle.
 | `migration-architect` | `910b3b176164d69a3a4b59b3cd898fbc3716318f5e731606dc4d7c8e5dffdb55` |
 | `messaging-architecture` | `884739cdfadce5039917772df035f19a4ca8f5863fd1ab57bcb023aa183421b0` |
 | `monorepo-workspace` | `766a958aae4898bd938e493be8597b6d8b9ee38914ed95ab87ed867422e38233` |
-| `motion-choreographer` | `8c252805f97ee03e9ff3513172a8b04d7700e6d4f1ad12b0c9cfaefd326df454` |
+| `motion-choreographer` | `16c90c5c3dc7866a1f7d1bd53ebf76f19dfc96ec983a4f54313703a99cf2f674` |
 | `nda-triage` | `01e4becd20b129780d82d2889099f07a8fe4ee241b31f909d1084af427f4323d` |
 | `operational-readiness` | `da1b223e882ce0a02637befb436d97df4264f96003ce1c55425c75ec62535322` |
 | `pdf-tools` | `3f7814305369b9e2b5d367fa0253caf2448aa93435989e2dfa9f2149241e90bc` |
@@ -2126,6 +2127,36 @@ say it is using a row whose seal is younger than the evaluation.
 guard (**+4.90 pp** against +2.0 pp; was +4.69 pp).
 `delivery-set-measurement-2026-08-31.json`: recall loss **38.55 pp**, the
 ceiling stays **BREACHED**; context cost **231.3** tokens against
+the 500 target, still **MET**. Neither verdict changes in kind.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.
+
+## Growth — 2026-11-02, one new corpus and one edited train corpus; nothing seals
+
+```
+ONE ROW IS NEW AND TRAINS. ONE PRE-EXISTING TRAIN FILE WAS EDITED. NO HOLDOUT
+FILE WAS TOUCHED. BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN AFTER THE EDITS.
+```
+
+**What changed.** `road-to-a-film-built-from-time` added the `code-film` skill with
+its own corpus, and added one near-miss to `motion-choreographer` that routes a film
+computed from code to `code-film`.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `code-film` | train | `0xe8` = 232 ≥ 51 | new |
+| `motion-choreographer` | train | `0x85` = 133 ≥ 51 | edited |
+
+**Nothing seals.** The sealed set stays **43**, the train set moves **149 -> 150**,
+the set **192 -> 193**. AC-6 rests on the same 18 rows.
+`SET-SHA256` moves because it is computed over every row: `6437603f…` → `c05e0bfb…`.
+
+**Both train-side measurements were re-taken on this tree.**
+`routing-body-signal-verdict.json`: still `harmful` on the false-activation
+guard (**+5.28 pp** against +2.0 pp; was +4.90 pp).
+`delivery-set-measurement-2026-08-31.json`: recall loss **38.83 pp** (was
+38.55 pp), the ceiling stays **BREACHED**; context cost **230.5** tokens against
 the 500 target, still **MET**. Neither verdict changes in kind.
 
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`

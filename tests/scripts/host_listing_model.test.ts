@@ -219,17 +219,24 @@ describe('host_listing_model — pinned against the 2026-08-08 observation', () 
     // observation changed; only the corpus did. The entry is moved between the
     // pinned lists rather than dropped from them, so its fate stays asserted in
     // both tests and cannot move again unremarked.
+    // MOVED AGAIN, 2026-11-02, third flip on a corpus change alone. `code-film`
+    // (road-to-a-film-built-from-time) sorts ahead of `composer-packages` under
+    // the alphabetical fallback and takes the characters it had been the last
+    // entry to receive, so `composer-packages` is bare in the model once more —
+    // CONVERGED with the observation, as on 2026-08-24. The sample agrees on five
+    // of eight and three known disagreements remain. Moved between the pinned
+    // lists, not dropped, for the reason the 2026-10-11 note gives.
     const AGREE_SURVIVES = ['accessibility-auditor'] as const;
-    const AGREE_BARE = ['condense-memory', 'contract-review', 'dcf-modeling'] as const;
+    const AGREE_BARE = ['condense-memory', 'contract-review', 'dcf-modeling', 'composer-packages'] as const;
     const DISAGREE_MODEL_SAYS_BARE = ['context-document', 'mcp'] as const;
-    const DISAGREE_MODEL_SAYS_SURVIVES = ['comp-banding', 'composer-packages'] as const;
+    const DISAGREE_MODEL_SAYS_SURVIVES = ['comp-banding'] as const;
 
-    it('agrees with the observation on exactly four of the eight sampled entries', () => {
+    it('agrees with the observation on exactly five of the eight sampled entries', () => {
         for (const name of AGREE_SURVIVES) expect(survived.has(name), name).toBe(true);
         for (const name of AGREE_BARE) expect(survived.has(name), name).toBe(false);
     });
 
-    it('records the four known disagreements so they cannot silently move', () => {
+    it('records the three known disagreements so they cannot silently move', () => {
         for (const name of DISAGREE_MODEL_SAYS_BARE) {
             expect(survived.has(name), `${name} is a KNOWN GAP \u2014 see the block above`).toBe(false);
         }

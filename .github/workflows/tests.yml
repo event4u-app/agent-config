@@ -706,6 +706,7 @@ jobs:
         run: >-
           npm run test:ts --silent --
           tests/cli/ui_render_asset_profile.test.ts
+          tests/cli/ui_render_film_capture.test.ts
           tests/design-artifacts/svg_scenarios.test.ts
           tests/cli/uiRenderInteract.test.ts
           tests/cli/uiRenderRegion.test.ts

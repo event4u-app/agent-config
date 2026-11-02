@@ -99,6 +99,7 @@ const LIVE_BROWSER_SUITES = [
 ];
 const BROWSER_SUITES = [
     'tests/cli/ui_render_asset_profile.test.ts',
+    'tests/cli/ui_render_film_capture.test.ts',
     'tests/design-artifacts/svg_scenarios.test.ts',
     ...LIVE_BROWSER_SUITES,
     ...IMPORTED_BROWSER_SUITES,

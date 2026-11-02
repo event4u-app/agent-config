@@ -71,6 +71,9 @@ const UX_REL = path.join(DATA_DIR, 'ux-guidelines.csv');
 const APP_REL = path.join(DATA_DIR, 'app-interface.csv');
 const STYLES_REL = path.join(DATA_DIR, 'styles.csv');
 const MOTION_REL = path.join(DATA_DIR, 'motion.csv');
+/** The film carrier and its one structured dependent — a second scope, never mixed with the UI pair. */
+const FILM_AUTHORITY_REL = path.join('src', 'skills', 'code-film', 'references', 'film-motion.md');
+const FILM_RECIPES_REL = path.join('src', 'skills', 'code-film', 'data', 'recipes.csv');
 
 export interface Finding {
     readonly target: string;
@@ -503,6 +506,51 @@ export function checkProseCsv(
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * The film carrier states one bound — the spring overshoot — as a line this
+ * gate parses, so the number lives in exactly one file. A film recipe may use a
+ * spring that overshoots within it; elastic, bounce and back curves stay banned
+ * in film as in UI, and an overshoot on a non-spring curve is a contradiction.
+ */
+export function parseFilmOvershootBound(text: string): number | string {
+    const m = /\*\*Spring overshoot bound:\s*(\d+(?:\.\d+)?)\s*%/i.exec(text);
+    if (m === null) return `film carrier states no "Spring overshoot bound: N %" line (${FILM_AUTHORITY_REL})`;
+    return Number(m[1]);
+}
+
+export function checkFilmRecipes(text: string, bound: number): { findings: Finding[]; scanned: number } {
+    const rows = parseCsv(text);
+    const hdr = rows[0] ?? [];
+    const findings: Finding[] = [];
+    let scanned = 0;
+    if (!hdr.includes('Easing') || !hdr.includes('Overshoot')) {
+        return { findings: [{ target: FILM_RECIPES_REL, reason: 'header lacks Easing or Overshoot column' }], scanned: 0 };
+    }
+    for (const row of rows.slice(1)) {
+        if (row.every((c) => c.trim() === '')) continue;
+        scanned++;
+        const name = col(hdr, row, 'Recipe') || `row ${String(scanned)}`;
+        const easing = col(hdr, row, 'Easing').toLowerCase();
+        const over = col(hdr, row, 'Overshoot').trim();
+        if (/elastic|bounce|\bback\b/.test(easing)) {
+            findings.push({ target: `${FILM_RECIPES_REL} · ${name}`, reason: `easing '${easing}' is banned in film; use a spring within ${String(bound)} %` });
+        }
+        const pm = /^(\d+(?:\.\d+)?)\s*%$/.exec(over);
+        if (pm === null) {
+            findings.push({ target: `${FILM_RECIPES_REL} · ${name}`, reason: `overshoot '${over}' is not a percentage` });
+            continue;
+        }
+        const pct = Number(pm[1]);
+        if (pct > bound) {
+            findings.push({ target: `${FILM_RECIPES_REL} · ${name}`, reason: `overshoot ${String(pct)} % exceeds the film bound of ${String(bound)} %` });
+        }
+        if (pct > 0 && easing !== 'spring') {
+            findings.push({ target: `${FILM_RECIPES_REL} · ${name}`, reason: `overshoot ${String(pct)} % on a '${easing}' curve — only a spring may overshoot` });
+        }
+    }
+    return { findings, scanned };
+}
+
 const read = (root: string, rel: string): string | null => {
     const abs = path.join(root, rel);
     return fs.existsSync(abs) ? fs.readFileSync(abs, 'utf-8') : null;
@@ -549,6 +597,30 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         findings.push(...res.findings);
         if (res.findings.length > 0) ledger.fail(rel, res.findings[0]?.reason ?? 'drift');
         else ledger.complete(rel);
+    }
+    // The film pair. Absent together (a tree without the code-film skill) is
+    // not drift; one without the other is.
+    const filmAuth = read(root, FILM_AUTHORITY_REL);
+    const filmRecipes = read(root, FILM_RECIPES_REL);
+    if (filmAuth !== null || filmRecipes !== null) {
+        ledger.plan([FILM_RECIPES_REL]);
+        if (filmAuth === null || filmRecipes === null) {
+            const missing = filmAuth === null ? FILM_AUTHORITY_REL : FILM_RECIPES_REL;
+            findings.push({ target: missing, reason: 'film carrier pair is incomplete — the authority and its recipes ship together' });
+            ledger.fail(FILM_RECIPES_REL, 'missing');
+        } else {
+            const bound = parseFilmOvershootBound(filmAuth);
+            if (typeof bound === 'string') {
+                findings.push({ target: FILM_AUTHORITY_REL, reason: bound });
+                ledger.fail(FILM_RECIPES_REL, 'authority');
+            } else {
+                const res = checkFilmRecipes(filmRecipes, bound);
+                scanned += res.scanned;
+                findings.push(...res.findings);
+                if (res.findings.length > 0) ledger.fail(FILM_RECIPES_REL, res.findings[0]?.reason ?? 'drift');
+                else ledger.complete(FILM_RECIPES_REL);
+            }
+        }
     }
     ledger.report();
 
@@ -628,6 +700,9 @@ function selfTest(): number {
         + '23,Animation,Duration & Easing,animation,iOS,Respect reduced motion,Use ease-out for both enter and exit,Use linear,"Animated.timing(..., { duration: 200, easing: Easing.out(Easing.quad) })",x,Medium\n';
     const CLEAN_STYLES = 'No,Style Category,Type,Keywords,Best For,Effects & Animation,CSS/Technical Keywords,Design System Variables\n'
         + '1,Minimalism,General,"clean, spacious","dashboards","Subtle hover, smooth transitions","display: grid","--radius: 0"\n';
+
+    const FILM_AUTH = '# Film motion\n\n- **Spring overshoot bound: 5 %.** Why: mass.\n';
+    const FILM_RECIPES = 'Recipe,Easing,Overshoot\nKinetic,spring,4%\nChart,ease-in-out,0%\n';
 
     const fixture = (over: Record<string, string>): number => {
         const dir = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'motion-auth-'));
@@ -749,6 +824,32 @@ function selfTest(): number {
             run: () => fixture({
                 [STYLES_REL]: CLEAN_STYLES.replace('"Subtle hover, smooth transitions"', '"instant transitions (no bounce)"'),
             }),
+        },
+        {
+            name: 'a film recipe with a spring inside the bound is accepted',
+            expect: 'accept',
+            run: () => fixture({ [FILM_AUTHORITY_REL]: FILM_AUTH, [FILM_RECIPES_REL]: FILM_RECIPES }),
+        },
+        {
+            name: 'an elastic curve in a film recipe is refused',
+            expect: 'reject',
+            run: () => fixture({
+                [FILM_AUTHORITY_REL]: FILM_AUTH,
+                [FILM_RECIPES_REL]: FILM_RECIPES.replace('Kinetic,spring,4%', 'Kinetic,elastic,4%'),
+            }),
+        },
+        {
+            name: 'a film spring past the overshoot bound is refused',
+            expect: 'reject',
+            run: () => fixture({
+                [FILM_AUTHORITY_REL]: FILM_AUTH,
+                [FILM_RECIPES_REL]: FILM_RECIPES.replace('Kinetic,spring,4%', 'Kinetic,spring,12%'),
+            }),
+        },
+        {
+            name: 'a film carrier without its recipes is refused',
+            expect: 'reject',
+            run: () => fixture({ [FILM_AUTHORITY_REL]: FILM_AUTH }),
         },
         {
             name: 'an authority whose § Motion is gone is a config error, not a pass',

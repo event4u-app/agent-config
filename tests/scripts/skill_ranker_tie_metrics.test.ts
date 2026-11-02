@@ -110,7 +110,8 @@ describe('tie metrics on the committed corpus (keyword-v1)', () => {
         expect(whole.length, 'routing-matrix labelled rows moved since 2026-10-26').toBe(391);
         // 300 -> 301 on 2026-10-18: `type-design` landed. The tie pins below
         // reproduce unchanged at 301 (69/315 tuning, 14/75 sealed).
-        expect(_globSkillMd(SKILLS_DIR).length, 'skill catalogue moved since 2026-10-18').toBe(301);
+        // 301 -> 302 on 2026-11-02: `code-film` landed.
+        expect(_globSkillMd(SKILLS_DIR).length, 'skill catalogue moved since 2026-11-02').toBe(302);
     });
 
     // 67/15 -> 69/14 on 2026-10-13: the TOKENIZER moved, not the corpus and not

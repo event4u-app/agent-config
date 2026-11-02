@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: motion-choreographer
-description: "When turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'."
+description: "Locked still + blueprint → provider motion prompt: camera, motion, physics, audio sync, for Veo/Kling/Sora. Code film → code-film."
 personas:
   - ai-video-technical-director
 domain: product

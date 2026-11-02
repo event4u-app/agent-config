@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **642**
-- Edges (incl. self-WRITE): **2449**
+- Files indexed: **644**
+- Edges (incl. self-WRITE): **2455**
 
 ## READ_ONLY edges
 
@@ -811,6 +811,10 @@
 | `.agent-src.uncondensed/skills/churn-prevention/SKILL.md` | `.agent-src.uncondensed/skills/expansion-playbook/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/churn-prevention/SKILL.md` | `.agent-src.uncondensed/skills/onboarding-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/churn-prevention/SKILL.md` | `.agent-src.uncondensed/skills/retention-loops/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/code-film/SKILL.md` | `.agent-src.uncondensed/skills/code-film/references/film-motion.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/code-film/SKILL.md` | `.agent-src.uncondensed/skills/corpus-grounding/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/code-film/SKILL.md` | `.agent-src.uncondensed/skills/motion-choreographer/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/code-film/SKILL.md` | `.agent-src.uncondensed/skills/svg-authoring/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/code-intelligence/SKILL.md` | `.agent-src.uncondensed/rules/external-code-graph-interop.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/code-intelligence/SKILL.md` | `.agent-src.uncondensed/skills/code-intelligence/references/find-confirm-act-update.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/code-intelligence/SKILL.md` | `.agent-src.uncondensed/skills/code-intelligence/references/systems-provenance-domains-branches.md` | `body_link` | 1 |
@@ -1827,5 +1831,5 @@
 | `context` | 79 |
 | `persona` | 36 |
 | `rule` | 122 |
-| `skill` | 405 |
+| `skill` | 407 |
 

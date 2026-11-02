@@ -11,7 +11,7 @@
 meta:
   generated_by: generate_capabilities_index
   purpose: "Machine-readable coverage index so external reviews stop re-proposing what already ships."
-  skills_total: 301
+  skills_total: 302
   commands_total: 213
   capability_areas: 31
   gaps: 0
@@ -237,9 +237,9 @@ capability_areas:
       description: "AI video pipeline."
       size_class: "large"
       coverage: strong
-      skill_count: 11
+      skill_count: 12
       command_count: 10
-      skills: ["canvas-design", "character-consistency", "image-analyser", "image-creator", "motion-choreographer", "pixar-storyteller", "prompt-validator", "scene-expander", "song-to-script", "svg-authoring", "video-director"]
+      skills: ["canvas-design", "character-consistency", "code-film", "image-analyser", "image-creator", "motion-choreographer", "pixar-storyteller", "prompt-validator", "scene-expander", "song-to-script", "svg-authoring", "video-director"]
       commands: ["image", "image-analyse", "image-create", "image-verify", "video", "video-from-script", "video-from-song", "video-scene", "video-stitch", "video-storyboard"]
   meta:
     - id: analytics
