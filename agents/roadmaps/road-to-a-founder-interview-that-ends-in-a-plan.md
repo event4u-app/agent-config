@@ -60,11 +60,11 @@ skills instead of restating them, and it frames, never decides.
 
 ## Phase 2 — The thin sub-command
 
-- [ ] **2.1 `/challenge-me founder`.** `src/domains/meta/challenge-me/founder/command.md`
+- [x] **2.1 `/challenge-me founder`.** `src/domains/meta/challenge-me/founder/command.md`
       routes to the skill, declares `produces_roadmap: true`, ends in the closure
       pass; the head's table and menu list it.
       verify: `./scripts-run src/scripts/lint_roadmap_producers` -> 0
-- [ ] **2.2 Producer count follows.** `tests/scripts/lint_roadmap_producers.test.ts` 8 → 9.
+- [x] **2.2 Producer count follows.** `tests/scripts/lint_roadmap_producers.test.ts` 8 → 9.
       verify: `npx vitest run tests/scripts/lint_roadmap_producers.test.ts` -> 0
 
 ## Phase 3 — Estate, payload and measurements
