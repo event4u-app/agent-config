@@ -122,6 +122,6 @@ three facts that change the decision surface:
 
 - ADR-116 (superseded clause + tripwire context), ADR-094 (Layer-2 sunset),
   ADR-061 (no engine fork), ADR-124 (embedded-engine doctrine).
-- `agents/roadmaps/road-to-reachable-code-memory.md` § Council convergence
+- `agents/roadmaps/archive/road-to-reachable-code-memory.md` § Council convergence
   (2026-07-27) and Phase 6.
 - Measurement record: `agents/tmp.old/consumer-index.txt` (2026-07-26).

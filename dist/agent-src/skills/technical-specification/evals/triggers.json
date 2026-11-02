@@ -1,0 +1,63 @@
+{
+    "skill": "technical-specification",
+    "last_eval": "2026-11-02",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored when the ADR location fix brought this skill into check_routing_coverage's touched-skill scope. Exemplars cover the four document shapes the skill writes (technical spec, PRD, RFC, ADR) and a German phrasing. Near-misses are the neighbours its Do-NOT-use list names (implementation work, feature planning) plus emitting tickets from a finished plan. Counterexamples guard the word 'spec' in a test-file sense and an unrelated writing task.",
+    "queries": [
+        {
+            "q": "write a technical specification for the new billing export service",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "draft a PRD for the onboarding checklist — users are dropping off at step two",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "we need an RFC on switching the queue backend before the team reviews it",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "document this significant change as a spec with goals and non-goals",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "schreib eine technische Spezifikation für den neuen Import-Service",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "implement the export service described in the spec",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "implementation work, which this skill's Do-NOT-use list routes to feature-planning or php-coder"
+        },
+        {
+            "q": "break this feature into a step-by-step implementation plan",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "planning the build rather than documenting the design → feature-planning"
+        },
+        {
+            "q": "turn the approved spec's roadmap into tickets",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the spec already exists; materialising work items → emit-tickets"
+        },
+        {
+            "q": "fix the failing spec file in tests/Unit/InvoiceSpec.php",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the 'spec' homonym — a test file, not a design document"
+        },
+        {
+            "q": "write a friendly welcome email for new users",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "unrelated writing; guards against triggering on 'write' alone"
+        }
+    ]
+}

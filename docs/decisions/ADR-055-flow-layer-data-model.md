@@ -232,7 +232,7 @@ minimal, rollback-**deferred** unit that satisfies the convergence.
 
 ## References
 
-- `agents/roadmaps/road-to-6.1.0-product-consolidation.md` — Step 8b, AC5.
+- `agents/roadmaps/archive/road-to-6.1.0-product-consolidation.md` — Step 8b, AC5.
 - `src/flows/README.md` — flow-set definition + feedback-6 (`agent-admin` is not
   a flow).
 - `src/scripts/schemas/flow.schema.json` · `src/scripts/lint_flows.py` — the

@@ -12,7 +12,7 @@ type: structural
 # ADR-125 — Doc-screenshot anonymization: human-gated, capture-delegated, detection-as-helper
 
 - **Status:** Accepted (2026-07-23)
-- **Closes:** `agents/roadmaps/road-to-doc-screenshot-anonymization.md`
+- **Closes:** `agents/roadmaps/archive/road-to-doc-screenshot-anonymization.md`
 - **Related:** `src/rules/doc-screenshot-hygiene.md`; `src/skills/screenshot-hygiene/SKILL.md`; `src/rules/non-destructive-by-default.md` (the egress Hard Floor this routes into); `src/rules/domain-safety-pii.md` (text-surface sibling); `src/rules/lethal-trifecta-guard.md`; `src/skills/image-analyser/SKILL.md` (detection helper); `src/skills/readme-writing/SKILL.md` (unrequested-screenshot check).
 
 ## Context
@@ -126,6 +126,6 @@ Build the feature (the maintainer has decided *whether*; the council informed
 ## References
 
 - AI council debate 2026-07-23 (anthropic/claude-sonnet-4-5 + openai/gpt-4o,
-  2 rounds), inlined in `agents/roadmaps/road-to-doc-screenshot-anonymization.md`.
+  2 rounds), inlined in `agents/roadmaps/archive/road-to-doc-screenshot-anonymization.md`.
 - ADR-109 (no-runtime-floor doctrine); `src/rules/non-destructive-by-default.md`;
   `docs/contracts/kernel-membership.md`; `docs/threat-model.md`.

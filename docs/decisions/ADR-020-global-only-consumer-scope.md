@@ -20,7 +20,7 @@ in progress. The ADR locks the decision; the roadmap locks the
 mechanics.
 
 Companion artefacts:
-- Roadmap: [`agents/roadmaps/road-to-global-only-install.md`](../../agents/roadmaps/road-to-global-only-install.md)
+- Roadmap: [`agents/roadmaps/archive/road-to-global-only-install.md`](../../agents/roadmaps/archive/road-to-global-only-install.md)
 - Bridge contract: [`docs/contracts/consumer-bridge.md`](../contracts/consumer-bridge.md)
 - Wizard contract: [`docs/contracts/gui-wizard.md`](../contracts/gui-wizard.md)
 - Predecessor ADR: [`ADR-007`](ADR-007-agent-discovery-scopes.md) — scope precedence, global-default amendment
@@ -208,6 +208,6 @@ decision is unchanged. See [`consumer-bridge`](../contracts/consumer-bridge.md)
 
 - [`ADR-007`](ADR-007-agent-discovery-scopes.md) — discovery scope precedence and the 2026-05-13 global-default amendment.
 - [`ADR-018`](ADR-018-trust-and-safety-layer.md) — trust levels and HRR banner; unchanged by this decision.
-- [`road-to-global-only-install`](../../agents/roadmaps/road-to-global-only-install.md) — phased rollout, cross-phase gates A1-A7.
+- [`road-to-global-only-install`](../../agents/roadmaps/archive/road-to-global-only-install.md) — phased rollout, cross-phase gates A1-A7.
 - [`consumer-bridge`](../contracts/consumer-bridge.md) — bridge marker schema and reader contract.
 - [`gui-wizard § Apply payload`](../contracts/gui-wizard.md#apply-payload--versioning-handshake-road-to-global-only-install-phase-04--d12) — payload discriminator.

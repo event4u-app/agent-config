@@ -14,7 +14,7 @@ type: forward-looking
 ## Status
 
 **Accepted** · 2026-06-01. Implements the install-UX half of
-[`road-to-self-update-and-global-hook-resolution`](../../agents/roadmaps/road-to-self-update-and-global-hook-resolution.md)
+[`road-to-self-update-and-global-hook-resolution`](../../agents/roadmaps/archive/road-to-self-update-and-global-hook-resolution.md)
 (Phase 6). Builds on [`ADR-020`](ADR-020-global-only-consumer-scope.md)
 (global-only consumer scope) and reuses the wizard contract from
 [`gui-wizard`](../contracts/gui-wizard.md).
@@ -103,4 +103,4 @@ explicit `--tools=`), where no wizard launches.
 
 - [`ADR-020`](ADR-020-global-only-consumer-scope.md) — global-only consumer scope.
 - [`gui-wizard`](../contracts/gui-wizard.md) — wizard apply contract.
-- [`road-to-self-update-and-global-hook-resolution`](../../agents/roadmaps/road-to-self-update-and-global-hook-resolution.md) — companion roadmap.
+- [`road-to-self-update-and-global-hook-resolution`](../../agents/roadmaps/archive/road-to-self-update-and-global-hook-resolution.md) — companion roadmap.

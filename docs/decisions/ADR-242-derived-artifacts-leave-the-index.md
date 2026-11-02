@@ -77,7 +77,7 @@ untrack is cheap and the decision to make it stick is the whole problem.
    checkout, and two independent runs are byte-identical.
 
 **Three artifacts pass and are untracked:** `agents/roadmaps-progress.md`,
-`agents/roadmaps/archive/INDEX.md`, `agents/roadmaps/archive/index.json`.
+and `INDEX.md` plus `index.json` under `agents/roadmaps/archive/`.
 
 **Two artifacts fail test 1 and stay tracked:** `src/config/estate-count-budget.json`
 and `src/config/gate-violation-baselines.json`.

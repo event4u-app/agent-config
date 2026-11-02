@@ -37,8 +37,8 @@ That footer is non-negotiable — see [`strategy-safety-floor`](../../dist/agent
 ## What this does **not** do
 
 - Does **not** value your company — that's `pack-finance-advanced` + `dcf-modeling`.
-- Does **not** write the actual deck — narrative only; deck design is a
-  designer's job.
+- Does not build the deck itself — narrative only; turn it into slides with
+  the `html-deck` skill.
 - Does **not** auto-send anything — the memo stays on your disk.
 
 ## Next step

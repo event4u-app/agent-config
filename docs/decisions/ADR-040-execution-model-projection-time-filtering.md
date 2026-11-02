@@ -14,10 +14,10 @@ type: forward-looking
 ## Status
 
 **Accepted** · 2026-06-02. Authored as Phase 0 / Step 1 of
-[`road-to-6.0.0-a-positioning-and-validation`](../../agents/roadmaps/road-to-6.0.0-a-positioning-and-validation.md),
+[`road-to-6.0.0-a-positioning-and-validation`](../../agents/roadmaps/archive/road-to-6.0.0-a-positioning-and-validation.md),
 the de-risking front of the experience-first rebuild. It makes the single
 architectural decision the rest of the rebuild
-([`road-to-6.0.0-b-pack-scoped-projection`](../../agents/roadmaps/road-to-6.0.0-b-pack-scoped-projection.md))
+([`road-to-6.0.0-b-pack-scoped-projection`](../../agents/roadmaps/archive/road-to-6.0.0-b-pack-scoped-projection.md))
 hinges on, **before** any migration code is written. Builds on
 [`ADR-010`](ADR-010-profile-pack-preset-boundary.md) (profile / pack / preset
 boundary), [`ADR-020`](ADR-020-global-only-consumer-scope.md) (global-only
@@ -155,7 +155,7 @@ a live process for "which skills apply right now" — is explicitly **out of sco
 for all of 6.0.0**. It is recorded as a **conditional** later possibility, gated
 on evidence that users actually want mid-session switching (telemetry or
 recruit-session signal). If it ever ships, it is a separate ADR and lives at the
-tail of [`road-to-6.0.0-c-governance-and-evals`](../../agents/roadmaps/road-to-6.0.0-c-governance-and-evals.md)
+tail of [`road-to-6.0.0-c-governance-and-evals`](../../agents/roadmaps/archive/road-to-6.0.0-c-governance-and-evals.md)
 or later — never silently as part of the projection work.
 
 ### Supersedes the README "skill-resolver out of scope" line
@@ -211,7 +211,7 @@ distinction (and a *runtime* resolver remains out of scope per above).
 - 6.0.0-A ships **no** projection-behaviour change — only this decision, the
   positioning rewrite, and the `use` seam. The behavioural flip is 6.0.0-B,
   staged and opt-in (legacy-all default) per the validation-gate note
-  ([Phase 0 / Step 2](../../agents/roadmaps/road-to-6.0.0-a-positioning-and-validation.md)).
+  ([Phase 0 / Step 2](../../agents/roadmaps/archive/road-to-6.0.0-a-positioning-and-validation.md)).
 
 ## Alternatives considered
 
@@ -234,8 +234,8 @@ distinction (and a *runtime* resolver remains out of scope per above).
 
 ## References
 
-- [`road-to-6.0.0-a-positioning-and-validation`](../../agents/roadmaps/road-to-6.0.0-a-positioning-and-validation.md) — this roadmap (Phase 0 / Step 1).
-- [`road-to-6.0.0-b-pack-scoped-projection`](../../agents/roadmaps/road-to-6.0.0-b-pack-scoped-projection.md) — consumes this decision.
+- [`road-to-6.0.0-a-positioning-and-validation`](../../agents/roadmaps/archive/road-to-6.0.0-a-positioning-and-validation.md) — this roadmap (Phase 0 / Step 1).
+- [`road-to-6.0.0-b-pack-scoped-projection`](../../agents/roadmaps/archive/road-to-6.0.0-b-pack-scoped-projection.md) — consumes this decision.
 - [`ADR-010`](ADR-010-profile-pack-preset-boundary.md) — profile / pack / preset boundary.
 - [`ADR-016`](ADR-016-installer-architecture.md) — installer architecture (the projector).
 - [`ADR-018`](ADR-018-trust-and-safety-layer.md) — trust boundary this ADR preserves.

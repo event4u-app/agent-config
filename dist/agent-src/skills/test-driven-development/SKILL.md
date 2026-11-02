@@ -171,6 +171,8 @@ Write the smallest test that expresses the sentence from step 1.
   describe the same single behavior).
 * Real code paths, not mocks — mock only at I/O boundaries (HTTP, DB, time).
 * Use a descriptive name: `it_rejects_empty_email`, not `test_email_1`.
+* Test at the **declared seam** (the boundary the pitch or ticket names);
+  none declared → name the one you chose.
 
 ### 4. Run the test and watch it fail
 
@@ -361,6 +363,7 @@ whole suite is the final gate and never the per-iteration probe, in every row.
 * One test covering "and/and/and" — split per behavior
 * Test that reaches into private state instead of testing observable behavior
 * Test that duplicates the production code's algorithm (tautology)
+* Horizontal slice — every test for one layer before any behavior passes
 
 ## When to hand over to another skill
 

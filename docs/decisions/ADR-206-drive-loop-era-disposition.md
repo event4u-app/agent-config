@@ -117,4 +117,4 @@ standing would invite further investment in a superseded direction.
 - [ADR-069](ADR-069-prompt-renderer.md) — deliberately excluded (shared primitive).
 - [ADR-200](ADR-200-python-to-typescript-migration.md) — the port that kept the code alive.
 - `docs/contracts/daily-workspace.md`, `docs/contracts/host-agent-protocol.md` — banner carriers.
-- `agents/roadmaps/road-to-renewal-adr-hygiene.md` Phase 1 — the authorizing roadmap step.
+- `agents/roadmaps/archive/road-to-renewal-adr-hygiene.md` Phase 1 — the authorizing roadmap step.

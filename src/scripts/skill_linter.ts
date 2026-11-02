@@ -43,6 +43,7 @@ import {
     type YamlValue,
 } from './validate_frontmatter.js';
 import { artefact_roots, resolve_logical } from './_lib/agent_src.js';
+import { escapeRegex, extract_section_block, lint_do_not_pairing } from './_lib/skill_sections.js';
 import { ProbeOverflowError, runCountedProbe } from './_lib/counted_probe.js';
 import { resolveContentLintScope } from './_lib/release_scope.js';
 import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
@@ -650,10 +651,6 @@ function _commandDelegationSignal(text: string, frontmatter: string | null): boo
     return false;
 }
 
-function escapeRegex(s: string): string {
-    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 function _stripMarkdownForCheck(text: string): string {
     let out = text.replace(/```[^\n]*\n[\s\S]*?```/g, '');
     out = out.replace(/`[^`\n]+`/g, '');
@@ -744,15 +741,6 @@ export function classify_status(issues: Issue[]): Status {
         return 'pass_with_warnings';
     }
     return 'pass';
-}
-
-export function extract_section_block(text: string, sectionName: string): string {
-    const pattern = new RegExp(
-        `^##\\s+${escapeRegex(sectionName)}\\s*$([\\s\\S]*?)(?=^##\\s+|$(?![\\s\\S]))`,
-        'm',
-    );
-    const match = pattern.exec(text);
-    return match ? (match[1] as string).trim() : '';
 }
 
 function parseOrderedListItems(text: string): string[] {
@@ -1499,7 +1487,7 @@ function lint_execution_metadata(execution: ExecutionBlock, frontmatter: string,
 }
 
 export function lint_skill(p: string, text: string, absPath: string | null = null): LintResult {
-    const issues: Issue[] = [];
+    const issues: Issue[] = [...lint_do_not_pairing(text)];
     const suggestions: string[] = [];
 
     const sections = extract_sections(text);

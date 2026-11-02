@@ -221,8 +221,9 @@ entirely — surface on first occurrence; another lap cannot fix them.
 | Is this a known issue? | Search tracker / Sentry / changelog of the dependency |
 | Step through execution | Xdebug — see [`php-debugging`](../php-debugging/SKILL.md) |
 
-Prefer the cheapest tool that resolves the question. A `dd()` at the
-right line beats five minutes of IDE breakpoints.
+Prefer the cheapest tool: a `dd()` at the right line beats five minutes of
+IDE breakpoints. **Tag temporary debug lines** with one prefix
+(`DEBUG-<slug>:`); before finishing, `grep -rn 'DEBUG-<slug>' .` returns nothing.
 
 **Known failure signature?** If the symptom has a recognisable shape — a
 tool/agent loop, HTTP 429, `ECONNREFUSED`, `ENOENT`, timeout/hang, OOM, flaky

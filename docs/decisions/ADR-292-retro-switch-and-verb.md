@@ -17,7 +17,7 @@ evidence:
   strength: E1
   basis:
     - agents/evidence/owner-directives/2026-10-12-retro-inbox-2026-10-o.md
-    - agents/roadmaps/road-to-a-retro-the-merge-runs.md
+    - agents/roadmaps/later/road-to-a-retro-the-merge-runs.md
     - docs/contracts/retro-v1.md
     - docs/contracts/settings-classes.md
     - docs/decisions/ADR-041-controlled-command-verbs.md

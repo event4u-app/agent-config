@@ -86,7 +86,7 @@
     "dpa-review": 9595,
     "editorial-calendar": 8391,
     "eloquent": 3439,
-    "emit-tickets": 6454,
+    "emit-tickets": 6947,
     "error-handling-patterns": 9067,
     "estimate-ticket": 7960,
     "evaluate-llm-feature": 8199,
@@ -139,7 +139,7 @@
     "js-library-packaging": 9295,
     "judge-artifact-completeness": 7199,
     "judge-bug-hunter": 8560,
-    "judge-code-quality": 7722,
+    "judge-code-quality": 7986,
     "judge-injection-defense": 6079,
     "judge-security-auditor": 8652,
     "judge-spec-compliance": 7186,
@@ -295,14 +295,14 @@
     "supply-chain-intake": 10721,
     "svg-authoring": 17970,
     "symfony-workflow": 10329,
-    "systematic-debugging": 17024,
+    "systematic-debugging": 17121,
     "tailwind-engineer": 13083,
     "tech-debt-tracker": 5542,
     "technical-specification": 7733,
     "terraform": 8893,
     "terragrunt": 5842,
     "test-case-discovery": 12862,
-    "test-driven-development": 16352,
+    "test-driven-development": 16546,
     "test-performance": 6376,
     "testing-anti-patterns": 19723,
     "threat-modeling": 12775,
@@ -982,6 +982,30 @@
       "old": 12564,
       "new": 12775,
       "reason": "road-to-a-switch-built-before-it-is-needed 6.2: a validation item asking each new entry point of a deployed product for the lever that switches it off (ADR-304)."
+    },
+    {
+      "skill": "emit-tickets",
+      "old": 6454,
+      "new": 6947,
+      "reason": "Section 2 now cuts each ticket as a vertical slice, orders prefactoring tickets first and names expand-contract as the one exception for a wide refactor; the addition was tightened and two duplicated lines (the auto-create repeat, the re-run gotcha) removed, the rest is new procedure."
+    },
+    {
+      "skill": "judge-code-quality",
+      "old": 7722,
+      "new": 7986,
+      "reason": "Five named code smells (shotgun surgery, divergent change, feature envy, primitive obsession, data clumps) added as lead words for the checklist, stated as prompts to look rather than verdicts; tightened to one short paragraph."
+    },
+    {
+      "skill": "systematic-debugging",
+      "old": 17024,
+      "new": 17121,
+      "reason": "Temporary debug lines carry one unique prefix and a final grep for it must return nothing, so no stray debug output survives the investigation; folded into the existing cheapest-tool paragraph."
+    },
+    {
+      "skill": "test-driven-development",
+      "old": 16352,
+      "new": 16546,
+      "reason": "Step 3 names the declared seam a test is written at, and the anti-pattern list gains the horizontal slice (every test for one layer before any behaviour passes); both tightened to one line each."
     }
   ]
 }

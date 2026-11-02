@@ -194,8 +194,16 @@ constraint this unblocks>.
 - 3–4 options total. More than 4 means the question is too broad — split it.
 - "Skip / not relevant" must always be present so the user can prune dead
   branches.
-- Walk the tree depth-first: resolve a branch's children before moving
-  to the next sibling, unless the user explicitly jumps.
+- Ask only from the **frontier**: open branches whose prerequisite
+  decisions are already answered. A branch whose answer depends on an
+  unresolved decision waits until that decision lands, unless the user
+  explicitly jumps. Still one question per turn — pick it from the
+  frontier.
+- Fact lookups the codebase can answer are the agent's job, never a
+  question: run them yourself (in the background where the host allows)
+  and never let one block a turn.
+- Stop asking when the frontier is empty, then check the four 95%
+  conditions above; a condition that fails reopens the branch it names.
 - The `Why it matters` line MUST cite an AC number, a scope boundary, or
   a named hard constraint. "Good to know" / "for context" / "to be safe"
   are placeholders — rewrite or drop the question.
@@ -315,6 +323,12 @@ Output a single fenced Markdown block the user can copy verbatim. Shape:
 2. <observable, testable>
 3. <observable, testable>
 
+**Seams under test:**
+- <seam> — catches: <what> · misses: <what>
+
+**Test decisions:**
+- <decision> — <one-line reason>
+
 **Open assumptions:**
 - assumes: <line>
 
@@ -322,6 +336,11 @@ Output a single fenced Markdown block the user can copy verbatim. Shape:
 "create roadmap with /roadmap-create">.
 ```
 ````
+
+`Seams under test` and `Test decisions` are **declared by the agent, never
+asked** — no approval question. Pick the highest available seam, prefer seams
+the codebase already has over new ones, and state per line what that seam
+catches and what it misses.
 
 The outer fence uses four backticks so the inner triple-backtick stays
 literal when the user copies it.
@@ -455,7 +474,3 @@ If the user wants any other follow-up, they invoke it explicitly. The
   `roadmap-writing`, `/feature:plan`, `/feature:roadmap`) auto-route into
   this interview when their confidence check falls below 95%. Reverse
   pointer only — nothing in this command changes when the gate fires.
-- Inspiration: `mattpocock/skills/skills/productivity/grill-me/SKILL.md`
-  — same spirit (relentless decision-tree interview, one question at a
-  time, recommended answer per question), restructured to our command
-  shape with explicit stop heuristic and copyable pitch contract.
