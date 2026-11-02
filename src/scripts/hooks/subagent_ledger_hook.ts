@@ -178,6 +178,20 @@ function str(payload: JsonObject, ...keys: string[]): string | null {
 }
 
 /**
+ * Byte length of the worker's final message — the size of what a return puts
+ * into the orchestrator's context. A number derived from the prose, never the
+ * prose: the privacy contract above holds. `null` when the host sent no
+ * message at all, `0` for an empty one; the two are different findings.
+ */
+export function returnBytes(payload: JsonObject): number | null {
+    for (const k of ['last_assistant_message', 'lastAssistantMessage']) {
+        const v = payload[k];
+        if (typeof v === 'string') return Buffer.byteLength(v, 'utf8');
+    }
+    return null;
+}
+
+/**
  * The PARENT agent's id, when the payload names one.
  *
  * Two shapes are accepted, and neither is invented: an explicit parent field,
@@ -822,6 +836,7 @@ function handleStop(root: string, payload: JsonObject, nowIso: string, sessionId
         // Beside the count, never instead of it: the count says how wrong the
         // candidate was, this says whether it was aimed at the envelope.
         envelope_field_hits: parse.field_hits,
+        return_bytes: returnBytes(payload),
         concurrent_open: countOpen(root),
         ...stateStamp(payload['cwd']),
     });

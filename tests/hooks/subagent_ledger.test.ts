@@ -466,3 +466,28 @@ describe('subagent-ledger — privacy by construction', () => {
         expect(refFor(HOST_ID)).not.toBe(refFor(`${HOST_ID}x`));
     });
 });
+
+describe('subagent-ledger — return bytes (inbox-2026-11-j 2.2)', () => {
+    it('records the UTF-8 byte length of the final message, never its text', () => {
+        const messages = ['plain ascii return', 'Grüße — ümlaut and em dash', 'x'.repeat(4096)];
+        for (const [i, msg] of messages.entries()) {
+            processEnvelope(envelope('subagent_stop', { agent_id: `agent-bytes-${i}`, last_assistant_message: msg }), root);
+        }
+        const stops = ledgerLines().filter((l) => l.event === 'subagent_stop');
+        expect(stops.map((l) => l.return_bytes)).toEqual(messages.map((m) => Buffer.byteLength(m, 'utf8')));
+        const written = allWrittenBytes();
+        for (const msg of messages) expect(written).not.toContain(msg);
+    });
+
+    it('records null — not 0 — when the host sent no final message', () => {
+        processEnvelope(envelope('subagent_stop', { agent_id: 'agent-silent' }), root);
+        const stop = ledgerLines().find((l) => l.event === 'subagent_stop')!;
+        expect(stop.return_bytes).toBeNull();
+    });
+
+    it('counts an empty message as 0 bytes, distinct from no message', () => {
+        processEnvelope(envelope('subagent_stop', { agent_id: 'agent-empty', last_assistant_message: '' }), root);
+        const stop = ledgerLines().find((l) => l.event === 'subagent_stop')!;
+        expect(stop.return_bytes).toBe(0);
+    });
+});
