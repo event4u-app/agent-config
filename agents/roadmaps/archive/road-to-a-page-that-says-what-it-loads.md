@@ -126,7 +126,7 @@ Three-state contract throughout: finding / undecided / passed.
       verify: `npx vitest run tests/scripts/ai_code_blindspots_rows.test.ts` -> 0
       (no ADR-205 reach test exists in the tree; this one asserts both cells and
       that every checker row they name is configured).
-- [~] **4.2 Wire 2.1 and 2.2 into `design_pass_hook`** for UI files —
+- [~] **4.2 Wire 2.1 and 2.2 into `design_pass_hook`** <!-- deferred-resolution: carried-to=road-to-a-page-check-at-write-time --> for UI files —
       advisory, exit 0, register and supersession table as only inputs.
       verify: writing a page with planted 1 or 6 surfaces the finding in the
       hook context; the twin surfaces nothing.

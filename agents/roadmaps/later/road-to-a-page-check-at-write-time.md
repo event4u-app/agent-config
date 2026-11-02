@@ -1,6 +1,7 @@
 ---
 complexity: lightweight
 status: later
+parent_roadmap: road-to-a-page-that-says-what-it-loads
 tree_pin: af5ab4dc22
 review_by: 2027-01-31
 estate_growth_exempt: "+1 later_roadmaps: carried out of road-to-a-page-that-says-what-it-loads (step 4.2) in the same change, with its blocker, because the ratification council refused the hook-bundle budget raise the step needs (2026-11-02). Carry is the preserving disposition; nothing is dropped."
