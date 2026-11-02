@@ -161,7 +161,11 @@ passing says nothing about 320px, which is where a two-column grid or a fixed
 - Grammar and spelling in UI text.
 - Consistent terminology and tone.
 - No placeholder text left in production.
-- Check browser console for JavaScript errors or warnings.
+- Check browser console for JavaScript errors or warnings. Where a `ui:render`
+  manifest exists, read each capture's `console` rows (error, warning,
+  pageerror) and its `settled_ms` or `unsettled` instead of looking: an
+  `unsettled` capture was still moving at the cap, so its screenshot and styles
+  are not a stable state.
 
 ## Appearance verification — mandatory, and explicitly appearance-only
 
