@@ -5,7 +5,7 @@ import * as path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 
 import { applyRenderWitness, audit } from '../../src/scripts/check_web_launch_readiness';
-import { fileFor } from '../../src/scripts/web_launch_render';
+import { fileFor, renderWitness, routeDecision } from '../../src/scripts/web_launch_render';
 import { loadRegister } from '../../src/scripts/web_launch_third_party';
 
 const REPO = path.resolve(__dirname, '..', '..');
@@ -97,23 +97,33 @@ describe('applyRenderWitness — pure reconciliation', () => {
 describe('state boundary (3.2)', () => {
     it('closes the browser in finally when the context throws', async () => {
         const close = vi.fn(async () => undefined);
-        vi.resetModules();
-        vi.doMock('../../src/cli/commands/browserReach.js', () => ({
-            resolveBrowser: async () => ({
-                source: '@playwright/test',
-                chromium: {
-                    launch: async () => ({
-                        close,
-                        newContext: async () => {
-                            throw new Error('boom');
-                        },
-                    }),
-                },
-            }),
-        }));
-        const mod = await import('../../src/scripts/web_launch_render');
-        await expect(mod.renderWitness(path.join(CORPUS, 'safe'))).rejects.toThrow('boom');
+        const playwright = {
+            chromium: {
+                launch: async () => ({
+                    close,
+                    newContext: async () => {
+                        throw new Error('boom');
+                    },
+                }),
+            },
+        } as never;
+        await expect(renderWitness(path.join(CORPUS, 'safe'), { playwright })).rejects.toThrow('boom');
         expect(close).toHaveBeenCalledTimes(1);
-        vi.doUnmock('../../src/cli/commands/browserReach.js');
+    });
+
+    it('no driver is unverified, never a pass', async () => {
+        const w = await renderWitness(path.join(CORPUS, 'safe'), { playwright: null });
+        expect(w.status).toBe('unverified');
+    });
+});
+
+describe('routeDecision — nothing leaves the machine', () => {
+    it('fulfils the synthetic origin, keeps in-page schemes, records and aborts the network, aborts file:', () => {
+        expect(routeDecision('https://site.invalid/index.html')).toBe('fulfil');
+        expect(routeDecision('data:text/plain,x')).toBe('continue');
+        expect(routeDecision('https://fonts.googleapis.com/css2')).toBe('record-abort');
+        expect(routeDecision('wss://example.com/socket')).toBe('record-abort');
+        expect(routeDecision('file:///etc/passwd')).toBe('abort');
+        expect(routeDecision('https://site.invalid.evil.example/x')).toBe('record-abort');
     });
 });

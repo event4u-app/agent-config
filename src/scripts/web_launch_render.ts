@@ -17,10 +17,9 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type { Route } from '@playwright/test';
+import { createRequire } from 'node:module';
 
-import { resolveBrowser } from '../cli/commands/browserReach.js';
-import { confinePage } from '../cli/commands/uiRenderAssetIsolation.js';
+import type * as PlaywrightTest from '@playwright/test';
 
 export const SYNTHETIC_HOST = 'site.invalid';
 const SYNTHETIC = `https://${SYNTHETIC_HOST}`;
@@ -88,20 +87,41 @@ export function fileFor(buildDir: string, url: string): string | null {
     }
 }
 
-export async function renderWitness(buildDir: string, opts: { settleMs?: number } = {}): Promise<Witness> {
-    const reach = await resolveBrowser();
+/** The consumer's own Playwright, or null. This package declares it and never installs it. */
+function loadPlaywright(): typeof PlaywrightTest | null {
+    try {
+        return createRequire(import.meta.url)('@playwright/test') as typeof PlaywrightTest;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * What the witness page may load: the synthetic origin is fulfilled from disk;
+ * `data:`, `blob:` and `about:` stay in the page; everything else — any network
+ * scheme, and `file:` — is aborted, and a network request is recorded.
+ */
+export function routeDecision(url: string): 'fulfil' | 'continue' | 'record-abort' | 'abort' {
+    if (url.startsWith(`${SYNTHETIC}/`)) return 'fulfil';
+    if (/^(data|blob|about):/i.test(url)) return 'continue';
+    if (/^(https?|wss?):/i.test(url)) return 'record-abort';
+    return 'abort';
+}
+
+export async function renderWitness(
+    buildDir: string,
+    opts: { settleMs?: number; playwright?: Pick<typeof PlaywrightTest, 'chromium'> | null } = {},
+): Promise<Witness> {
+    const pw = opts.playwright === undefined ? loadPlaywright() : opts.playwright;
     const empty = (reason: string): Witness => ({ status: 'unverified', reason, requests: [], continued: [], pages: 0 });
-    if (reach === null) return empty('no Playwright driver is installed; the render witness did not run');
+    if (pw === null) return empty('no Playwright driver is installed; the render witness did not run');
     const pages = htmlPages(buildDir);
     const requests: RecordedRequest[] = [];
     const continued: string[] = [];
-    let browser: Awaited<ReturnType<typeof reach.chromium.launch>> | undefined;
+    let browser: Awaited<ReturnType<typeof pw.chromium.launch>> | undefined;
     try {
         try {
-            browser = await reach.chromium.launch({
-                headless: true,
-                ...(reach.executablePath === undefined ? {} : { executablePath: reach.executablePath }),
-            });
+            browser = await pw.chromium.launch({ headless: true });
         } catch (e) {
             return empty(`the browser could not start: ${(e as Error).message.split('\n')[0] ?? ''}`);
         }
@@ -113,26 +133,26 @@ export async function renderWitness(buildDir: string, opts: { settleMs?: number 
         for (const rel of pages) {
             const page = await context.newPage();
             const blocked: string[] = [];
-            const fulfil = async (route: Route): Promise<boolean> => {
+            await page.route('**/*', async (route) => {
                 const url = route.request().url();
-                if (!url.startsWith(`${SYNTHETIC}/`)) return false;
-                const file = fileFor(buildDir, url);
-                if (file === null) {
-                    await route.fulfill({ status: 404, body: '' });
-                    return true;
+                const decision = routeDecision(url);
+                if (decision === 'continue') return route.continue();
+                if (decision !== 'fulfil') {
+                    if (decision === 'record-abort') blocked.push(url);
+                    return route.abort();
                 }
-                await route.fulfill({
+                const file = fileFor(buildDir, url);
+                if (file === null) return route.fulfill({ status: 404, body: '' });
+                return route.fulfill({
                     status: 200,
                     headers: { 'content-type': TYPES[path.extname(file).toLowerCase()] ?? 'application/octet-stream' },
                     body: fs.readFileSync(file),
                 });
-                return true;
-            };
+            });
             page.on('requestfinished', (req) => {
                 const url = req.url();
                 if (/^https?:/i.test(url) && new URL(url).host !== SYNTHETIC_HOST) continued.push(url);
             });
-            await confinePage(page, blocked, [], fulfil);
             try {
                 await page.goto(`${SYNTHETIC}/${rel}`, { waitUntil: 'load', timeout: 15_000 });
                 await page.waitForLoadState('networkidle', { timeout: opts.settleMs ?? 2_000 }).catch(() => undefined);
