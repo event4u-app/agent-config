@@ -8,7 +8,7 @@ import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { loadConfig } from '../../src/scripts/check_web_launch_readiness';
-import { classifyLoads, loadRegister, tagsOf, visibleText, writeTimeFindings } from '../../src/scripts/web_launch_third_party';
+import { classifyLoads, legalPagePlaceholders, loadRegister, tagsOf, visibleText, writeTimeFindings } from '../../src/scripts/web_launch_third_party';
 
 const REPO = path.resolve(__dirname, '..', '..');
 const register = loadRegister(REPO, '2026-11-02');
@@ -149,5 +149,70 @@ describe('a long tag is read, an unclosed one is never a silent pass (round-5 ra
     it('a page of unclosed link tags yields one hit, linearly', () => {
         const body = '<link rel=stylesheet href=x'.repeat(N / 28);
         expect(timed(() => expect(unread('index.html', body)).toHaveLength(1))).toBeLessThan(EVENT_P95_MS);
+    });
+});
+
+describe('tagsOf line numbers at the edges (round-9 ratification)', () => {
+    const lines = (text: string): number[] => tagsOf(text).map((t) => t.line);
+
+    it('a tag at offset 0 is on line 1', () => {
+        expect(lines('<link href=x>')).toEqual([1]);
+    });
+
+    it('a tag starting right after the last newline is on the last line, and one at EOF unclosed still counts', () => {
+        expect(lines('a\nb\n<script src=x></script>')).toEqual([3]);
+        expect(lines('a\nb\n<img')).toEqual([3]);
+    });
+
+    it('CRLF and lone-LF line endings number the same lines', () => {
+        const lf = '<p>\n<link href=a>\n\n<script src=b></script>\n<img src=c>';
+        expect(lines(lf.replace(/\n/g, '\r\n'))).toEqual(lines(lf));
+        expect(lines(lf)).toEqual([2, 4, 5]);
+    });
+
+    it('every tag of a page with one tag per line lands on its own line, across the binary-search boundaries', () => {
+        for (const n of [1, 2, 3, 4, 7, 8, 9, 16, 17, 1_000]) {
+            const page = Array.from({ length: n }, (_, i) => `${' '.repeat(i % 3)}<link href=${String(i)}>`).join('\n');
+            expect(lines(page), String(n)).toEqual(Array.from({ length: n }, (_, i) => i + 1));
+        }
+    });
+
+    it('blank lines between tags are counted, not skipped', () => {
+        expect(lines('\n\n\n<link href=a>\n\n<img src=b>\n')).toEqual([4, 6]);
+    });
+});
+
+describe('legal-page placeholders: the bounded lookahead (round-9 ratification)', () => {
+    // The pre-bound form, kept here only as the reference the bound must agree with.
+    const UNBOUNDED = /\[(?=[^\]\d]*[A-Za-zÄÖÜäöüß])[^\]\d]{2,40}\]|\blorem\s+ipsum\b/i;
+    const imprint = (text: string) => [{ rel: 'impressum.html', base: 'impressum.html', text, lines: text.split('\n') }];
+    const tokens = (text: string): string[] => legalPagePlaceholders(imprint(text)).map((h) => /`([^`]*)`/.exec(h.text)?.[1] ?? '');
+
+    it('reports a word slot, never a footnote, a one-letter bracket, or a slot longer than 40', () => {
+        expect(tokens('<p>Inhaber: [Firmenname]</p>')).toEqual(['[Firmenname]']);
+        expect(tokens('<p>Quelle [1], Anlage [12a]</p>')).toEqual([]);
+        expect(tokens('<p>[a]</p>')).toEqual([]);
+        expect(tokens(`<p>[${'x'.repeat(41)}]</p>`)).toEqual([]);
+        expect(tokens('<p>Lorem ipsum dolor</p>')).toEqual(['Lorem ipsum']);
+    });
+
+    it('agrees with the unbounded form on every line of a generated corpus', () => {
+        // Deterministic LCG, so a disagreement reproduces.
+        let seed = 7;
+        const rnd = (): number => (seed = (seed * 1_103_515_245 + 12_345) % 2_147_483_648) / 2_147_483_648;
+        const alphabet = ['[', ']', ' ', 'a', 'Z', 'ß', '1', '-', '.'];
+        for (let i = 0; i < 5_000; i++) {
+            const len = 1 + Math.floor(rnd() * 90);
+            const line = Array.from({ length: len }, () => alphabet[Math.floor(rnd() * alphabet.length)]).join('');
+            const page = `<p>${line}</p>`;
+            const want = UNBOUNDED.exec(visibleText(page))?.[0] ?? null;
+            const got = tokens(page)[0] ?? null;
+            expect(got, JSON.stringify(line)).toBe(want);
+        }
+    });
+
+    it('a line of open brackets with no letter finishes within one hook event', () => {
+        const line = '[ '.repeat(N / 2);
+        expect(timed(() => expect(tokens(line)).toEqual([]))).toBeLessThan(EVENT_P95_MS);
     });
 });
