@@ -133,6 +133,17 @@ and the run that applies it links its PR.
   later change must ratify, so it is yours to accept.
 - **Blocks:** nothing executable.
 
+## Not owner questions — waits, or already settled in the tree
+
+- `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
+  `Resolved when` asks for both seats answering a real round. Councils ran 2/2 on
+  2026-10-24, so it looks settled. The agent verifies and closes it.
+- `default-flip-of-the-installed-layer` (installed-layer): waits on a host
+  observation and states itself "not a question".
+- `four-dated-re-checks-are-calendar-bound` (corpus cadence): waits on calendar dates.
+
+## Answered
+
 ### OQ-59 — Does the suite get live/dynamic security testing?
 
 - **Context:** round `inbox-2026-11-s`, topic t2. Your ask: learn from an
@@ -153,6 +164,7 @@ and the run that applies it links its PR.
 - **Recommendation:** (a) now; (b) only after `stubs/road-to-a-security-chain-measured`
   shows the static chain leaves findings a dynamic pass would catch.
 - **Blocks:** nothing executable.
+- **Answered 2026-11-02:** "OQ-59: a" — option (a): no live or dynamic security testing; static analysis plus the project's own tests plus SARIF import stays the boundary, no traffic at a running system, no new egress or third-party runner. The CI-template SHA pinning stays as shipped (major-version pin `@19`). Revisit-if: `stubs/road-to-a-security-chain-measured` shows the static chain misses findings a dynamic pass would catch — then (b) is the next question. Nothing to apply. <!-- md-language-check: ignore -->
 
 ### OQ-60 — How far may the suite go on project containment?
 
@@ -173,17 +185,7 @@ and the run that applies it links its PR.
   confirms" mode, since a false positive takes a product offline; (2) yes;
   (3) yes; (4) no, offered by `audit:deps gaps`; (5) later; (6) no.
 - **Blocks:** nothing executable; the shipped parts run without any answer.
-
-## Not owner questions — waits, or already settled in the tree
-
-- `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
-  `Resolved when` asks for both seats answering a real round. Councils ran 2/2 on
-  2026-10-24, so it looks settled. The agent verifies and closes it.
-- `default-flip-of-the-installed-layer` (installed-layer): waits on a host
-  observation and states itself "not a question".
-- `four-dated-re-checks-are-calendar-bound` (corpus cadence): waits on calendar dates.
-
-## Answered
+- **Answered 2026-11-02:** "OQ-60: wie empfohlen" — the recommendation per item: (1) no automatic self-containment by default, at most an opt-in "propose, operator confirms" mode; (2) yes, persist the plan-it answer as `security_ops.plan`; (3) yes, make `/audit` suggestable outside the maintainer workspace; (4) no shipped scheduled CI job, `audit:deps gaps` keeps offering it; (5) later; (6) no. Applied on `feat/oq-60-containment-follow-up` (ADR-304 amendment, `agents/evidence/owner-directives/2026-11-02-oq-59-60-answers.md`): (1) `automation: propose` in the lever inventory turns a mapped T0 lever into a proposal an operator confirms, every other value refused; (2) class-B key `security_ops.plan`, read by `audit:security`'s contain finding; (3) `/audit` widened to the `engineering` workspace, with `audit:agents` as the CLI verb a consumer can run. <!-- md-language-check: ignore -->
 
 ### OQ-8 — The owner-authority register sits outside this list
 

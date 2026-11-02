@@ -29,8 +29,13 @@ deployed product (ADR-304).
 | SaaS, multi-tenant app, public API, mobile backend | Yes |
 | Health, payment or other regulated data | Yes, and treat L4 and break-glass as required |
 
-Ask once per planning run. After a "no" the `contain` finding stays in the audit
-report; the question is not repeated in that run.
+Ask once per user, not once per run: the answer is persisted as
+`security_ops.plan` (class B, written with `agent-config settings:set
+security_ops.plan <true|false> --source jit-answer`). Read it the way
+`agent-config audit:security`'s `contain` finding reports it — *Offer once*,
+`true` (plan without asking) or `false (answered)` (the finding stays, nothing is
+asked) — whether the offer comes from the audit or from feature planning. Only
+the user's own reply is recorded; a file in the project never supplies it.
 
 ## The lever vocabulary
 
@@ -70,6 +75,13 @@ Every lever declares:
    every instance reads, so a lever thrown once holds on every node.
 6. **Only the operator releases a lever.** A timer, a re-evaluation or a newer
    advisory may *propose* release; none may perform it while the cause is open.
+7. **Only the operator throws a lever, too.** No timer, advisory or score flips
+   one with no human — a false positive takes the product offline. The one
+   opt-in is `automation: propose` in the inventory: a T0 advisory whose package
+   a lever names becomes an unchecked proposal in the advisory issue, addressed
+   to that lever's owner, who checks the advisory applies and throws it through
+   its declared release path. `off` (the default) names the lever in the report
+   only. Anything beyond `propose` is refused by the validator (ADR-304).
 
 ## Surfaces beyond HTTP
 
@@ -127,6 +139,8 @@ operator_path: sso            # sso | identity-provider | vpn — never a URL se
 break_glass: cli               # cli | edge-rule | infra-flag
 control_surface: separate      # separate (default) | same-app — same-app forbids releasing
                                # an L3 or HTTP-stopping lever through the control surface
+automation: off                # off (default) | propose — propose turns a mapped lever into
+                               # a proposal an operator confirms; never an unattended throw
 levers:
   - id: uploads-off
     level: L1

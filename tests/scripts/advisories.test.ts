@@ -1085,6 +1085,32 @@ describe('the advisory loop names the lever (road-to-a-switch-built-before-it-is
         expect(body).not.toContain('unrelated');
         expect(issueBody(t0)).not.toContain('lever');
     });
+
+    it('automation: propose turns a mapped lever into an unchecked proposal an operator confirms, and throws nothing', async () => {
+        const { root } = await run('F1-fastify-hono');
+        const state = readState(root)!;
+        const t0 = { ...state, findings: state.findings.map((f, i) => (i === 0 ? { ...f, tier: 'T0' as const } : f)) };
+        const pkg = t0.findings[0]!.package;
+        const levers = [
+            { id: 'api-off', level: 'L2' as const, fail_mode: 'closed' as const, owner: 'on-call', release: 'control-surface' as const, packages: [pkg] },
+            { id: 'unrelated', level: 'L1' as const, fail_mode: 'closed' as const, owner: 'on-call', release: 'cli' as const, packages: ['left-pad'] },
+        ];
+        const proposed = issueBody(t0, levers, 'propose');
+        expect(proposed).toContain('## Proposed containment — an operator confirms');
+        expect(proposed).toContain(`- [ ] throw \`api-off\` (L2) for ${pkg} — owner on-call, through control-surface`);
+        expect(proposed).toContain('This issue throws nothing');
+        expect(proposed).not.toContain('`unrelated`');
+        expect(issueBody(t0, levers, 'off')).not.toContain('Proposed containment');
+        expect(issueBody(t0, levers)).not.toContain('Proposed containment');
+    });
+
+    it('automation: propose with no mapped lever proposes nothing', async () => {
+        const { root } = await run('F1-fastify-hono');
+        const state = readState(root)!;
+        const t0 = { ...state, findings: state.findings.map((f, i) => (i === 0 ? { ...f, tier: 'T0' as const } : f)) };
+        const levers = [{ id: 'unrelated', level: 'L1' as const, fail_mode: 'closed' as const, owner: 'on-call', release: 'cli' as const, packages: ['left-pad'] }];
+        expect(issueBody(t0, levers, 'propose')).not.toContain('Proposed containment');
+    });
 });
 
 describe('lockfile review fixes (independent review, 2026-11-02)', () => {
