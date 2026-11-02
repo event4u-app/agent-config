@@ -66,6 +66,15 @@ hosts without mods.
       verdict-capable mod is installed. Measure bundle bytes first.
       verify: fixture with a verdict-capable mod prints the line; none prints nothing.
 
+- [ ] **1.6 Compact made visible.** After a compaction, one line with the
+      tokens before and after and where the summary can be read. (Arrival
+      `inbox-2026-11-k`.)
+      verify: a fixture compaction record prints the before/after line; none prints nothing.
+- [ ] **1.7 Cache hit-rate segment.** The share of cached input tokens over the
+      last turns, as a status-line segment beside 1.2's cold-cache hint.
+      (Arrival `inbox-2026-11-k`.)
+      verify: fixture usage records with known cache reads render the expected percentage.
+
 ## Phase 2 — Blast preview as a dispatcher concern
 
 - [ ] **2.1 Concern `blast-preview`.** `pre_tool_use`, Bash matcher, destructive

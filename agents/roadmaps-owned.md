@@ -187,6 +187,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-showcase-the-owner-paid-for | stubs | — | the first paid showcase run |
 | road-to-a-visibility-sync-that-can-write | stubs | — | road to a visibility sync that can actually write |
 | road-to-a-weekly-lineage-watch | stubs | — | a weekly lineage watch on the maintainer's machine |
+| road-to-adapter-traces-before-the-window | stubs | — | road to adapter traces before the window |
 | road-to-adopt-and-reset-flags-with-a-specification | stubs | — | `adopt` and `reset` have a routing and no behaviour |
 | road-to-adr-134-expiry | stubs | — | ADR-134 expires 2026-09-15, and ADR-133's freeze re-arms with it |
 | road-to-adr-number-uniqueness | stubs | — | road to an ADR number that cannot be claimed twice |
