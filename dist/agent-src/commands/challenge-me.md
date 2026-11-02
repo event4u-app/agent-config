@@ -3,8 +3,8 @@ model_tier: medium
 name: challenge-me
 pack: product-reasoning
 visibility: internal
-description: Challenge-me orchestrator — routes to vision, with-docs, closure
-argument-hint: "[vision|with-docs|closure] [flags] [seed]"
+description: Challenge-me orchestrator — routes to vision, with-docs, closure, founder
+argument-hint: "[vision|with-docs|closure|founder] [flags] [seed]"
 cluster: challenge-me
 type: orchestrator
 suggestion:
@@ -35,6 +35,7 @@ enough to emit a copyable Markdown pitch.
 | `/challenge-me vision` | `commands/challenge-me/vision.md` | Standard variant — interrogate a fuzzy plan / idea / ticket draft to 95% confidence, emit a vision pitch |
 | `/challenge-me with-docs` | `commands/challenge-me/with-docs.md` | Doc-aware variant — same flow plus session glossary against `CONTEXT.md`, load-bearing claim-vs-code verification, optional `CONTEXT.md` patch + ADR candidates in the pitch |
 | `/challenge-me closure` | `commands/challenge-me/closure.md` | Plan-closure variant — take a roadmap about to enter execution, detect every open decision, resolve each at the lowest rung that owns it, and write the answers into a `## Decisions` table |
+| `/challenge-me founder` | `commands/challenge-me/founder.md` | Founder variant — interview from hobbies, ideas and everyday problems, research market, competition and willingness to pay, always end in a roadmap, then ask prototype → business plan → deck one at a time |
 
 ## When to pick which
 
@@ -45,6 +46,9 @@ enough to emit a copyable Markdown pitch.
   goal is an execution contract rather than a pitch. Pick it when a plan is
   about to be executed: it closes the decisions a twelve-hour run would
   otherwise meet mid-flight.
+- **`founder`** — there is no plan yet, only a person: a hobby, an idea, an
+  everyday problem. Ends in a roadmap rather than a pitch, and never asks what
+  research can answer.
 - **`with-docs`** — the project has `CONTEXT.md`, an ADR directory
   (`docs/adr/`, `docs/decisions/`, `agents/decisions/`), or the user
   uses domain terms that may already be defined. The variant catches
@@ -63,6 +67,8 @@ enough to emit a copyable Markdown pitch.
    >    ADRs and emits an optional doc patch in the pitch
    > 3. closure — take a roadmap path and close every open decision in it
    >    before execution, recording the answers in `## Decisions`
+   > 4. founder — start from hobbies, ideas or everyday problems, research the
+   >    market, end in a roadmap, then offer prototype, business plan and deck
    >
    > **Recommendation:** 1 — the standard interview fits any seed; switch to
    > `with-docs` only when the project keeps a glossary or ADRs.
