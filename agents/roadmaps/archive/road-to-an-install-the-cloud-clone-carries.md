@@ -46,13 +46,13 @@ hooks an operator seeded into the runner's `~/.claude/`.
 
 ## Phase 0 — Measure before building
 
-- [x] **0.1 Cloud-reach measurement.** `src/scripts/_lib/cloud_reach.ts`
+- [x] **0.1 Cloud-reach measurement.** `src/scripts/_lib/cloud_reach.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cloud_reach.ts -->
       counts what a clone carries — tracked files under `.claude/skills|rules|agents|commands`,
       managed hooks in a tracked `.claude/settings.json`, whether that file only
       enables a plugin — read from `git ls-files`, never from the working tree.
-      verify: `npx vitest run tests/scripts/cloud_reach.test.ts` → 0, with an
+      verify: `npx vitest run tests/scripts/cloud_reach.test.ts` -> exit 0, 10 passed, with an
       untracked-projection fixture reading 0/0/0/0 and a committed-hook fixture reading 1.
-- [x] **0.2 Clone simulation probe.** `src/scripts/cloud_clone_probe.ts` clones a
+- [x] **0.2 Clone simulation probe.** `src/scripts/cloud_clone_probe.ts` clones a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cloud_reach.ts -->
       repository locally into a temp dir (no network), sets `HOME` to an empty
       dir and `CLAUDE_CODE_REMOTE=true`, and emits the measurement as JSON.
       verify: run on this repository; the baseline lands in
@@ -64,7 +64,7 @@ hooks an operator seeded into the runner's `~/.claude/`.
 
 ## Phase 1 — Not silent any more
 
-- [x] **1.1 `doctor` check `cloud-reach`.** Read-only. Under
+- [x] **1.1 `doctor` check `cloud-reach`.** Read-only. Under <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cloud_reach.ts -->
       `CLAUDE_CODE_REMOTE=true` with no managed hook carried: `warn`, one line, with
       the remedy pointing at `docs/setup/cloud-sessions.md`. Locally: `ok`, stating
       what a clone of this repository would carry.
@@ -86,9 +86,9 @@ hooks an operator seeded into the runner's `~/.claude/`.
 
 ## Phase 3 — Leftovers
 
-- [x] **3.1 Correct the `.gitignore` comment** that claims `.claude/settings.json`
+- [x] **3.1 Correct the `.gitignore` comment** that claims `.claude/settings.json` <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       stays tracked (D6, comment only).
-      verify: `git ls-files .claude` agrees with the comment.
+      verify: `git ls-files .claude` -> empty output, matching the corrected comment.
 - [~] **3.2 Stop writing `enabledPlugins` for the deprecated plugin** (D3). <!-- deferred-resolution: carried-to=road-to-host-inputs-the-installer-honours -->
       Deferred: changes what `init` writes into every consumer repo; owner decision,
       same batch as 2.1.
@@ -97,12 +97,12 @@ hooks an operator seeded into the runner's `~/.claude/`.
 
 ## Phase 4 — Documentation per surface
 
-- [x] **4.1 `docs/setup/cloud-sessions.md`** — Anthropic-hosted (what arrives,
+- [x] **4.1 `docs/setup/cloud-sessions.md`** — Anthropic-hosted (what arrives, <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       what does not, the two delivery options and their status), self-hosted runner
       (seed `~/.claude` and `~/.event4u/agent-config` into the image), Remote
       Control (local, unaffected). Every host statement carries the doc URL and the
       retrieval date; linked from README § Installation.
-      verify: `grep -n cloud-sessions README.md` → one link; the reference checker passes.
+      verify: `grep -c cloud-sessions README.md` -> 1; the reference checker passes.
 
 ## Kills (carried from the source, all accepted)
 

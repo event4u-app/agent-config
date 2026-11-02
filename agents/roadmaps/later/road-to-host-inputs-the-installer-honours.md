@@ -12,6 +12,9 @@ owner: maintainer
 estate_growth_exempt: "One active roadmap, no blocker. Three live wrong-output defects in what the installer and doctor report about the host — a listing override computed without the host's inputs, a hook status that reads bound under a policy that disables it, and no visibility of a foreign gateway."
 estate_offset_exempt: "The nearest owner, road-to-an-installed-layer-that-is-thinned, governs payload size, not whether the override formula matches the host; road-to-placeholders-on-the-wire receives only a criteria amendment (Phase 3.3). Archiving an unrelated finished file to buy the slot would hide the growth."
 relates:
+  - slug: road-to-an-install-the-cloud-clone-carries
+    relation: extends
+    note: "Phase 5 carries that archived roadmap's five deferred cloud-delivery steps."
   - slug: road-to-placeholders-on-the-wire
     relation: extends
     note: "Step 3.3 amends that roadmap's 7.2 probe criteria and 7.6 start check; it builds nothing there."
@@ -145,8 +148,8 @@ repositories or adds a hook-time network call.
   `.claude/settings.json` and a SessionStart bootstrap installing the runtime from npm
   only when `CLAUDE_CODE_REMOTE=true`. Variant A (setup script) is closed for hooks:
   user `~/.claude/settings.json` is not read in a cloud session.
-  verify: `cloud_clone_probe` shows the three fail_closed guards active; a local run
-  shows no double fire.
+  verify: `./scripts-run src/scripts/cloud_clone_probe .` -> `managedHooks` >= 3 and
+  `check.status` ok; a local run shows each guard firing exactly once.
 - [ ] **5.4 Stop writing `enabledPlugins`** for the deprecated plugin in
   `ensure_claude_bridge` (`src/scripts/install.ts`) — inert in the cloud, deprecated locally.
 - [ ] **5.5 Commit a `.claude/settings.json` with hooks for this repository** (after 5.3).
