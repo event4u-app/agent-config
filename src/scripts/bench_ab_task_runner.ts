@@ -217,6 +217,13 @@ export interface RunLiveOpts {
     plugin_dir?: string | null;
     /** Load no MCP server from any user or plugin config (`--strict-mcp-config`). */
     strict_mcp?: boolean;
+    /**
+     * Keep the run out of the host's session store (`--no-session-persistence`),
+     * which this package's own transcript census reads. Scoring reads stdout.
+     * `--disable-slash-commands` is deliberately not offered: it removes the
+     * skills and commands the package arm exists to measure.
+     */
+    no_session_persistence?: boolean;
     /** Extra environment for the child process, layered over this process's. */
     env?: Record<string, string> | null;
     /** `--output-format stream-json --verbose`: every event, kept as `stream` on the result for a trace. */
@@ -225,7 +232,7 @@ export interface RunLiveOpts {
 
 /** The claude command line for one run — pure, so the flags each arm passes are tested. */
 export function live_args(prompt: string, opts: RunLiveOpts = {}): string[] {
-    const { sysprompt_file = null, setting_sources = null, max_budget = null, model = null, effort = null, plugin_dir = null, strict_mcp = false } = opts;
+    const { sysprompt_file = null, setting_sources = null, max_budget = null, model = null, effort = null, plugin_dir = null, strict_mcp = false, no_session_persistence = false } = opts;
     // --output-format json yields a `usage` block for token counts. The global
     // plugin is dropped per-arm via --setting-sources (NOT --bare, which kills auth).
     // bypassPermissions on EVERY arm: the clone is a throwaway fixture, and this
@@ -261,6 +268,9 @@ export function live_args(prompt: string, opts: RunLiveOpts = {}): string[] {
     }
     if (strict_mcp) {
         cmd.push('--strict-mcp-config');
+    }
+    if (no_session_persistence) {
+        cmd.push('--no-session-persistence');
     }
     if (sysprompt_file !== null) {
         cmd.push('--append-system-prompt-file', sysprompt_file);

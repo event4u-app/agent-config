@@ -96,6 +96,8 @@ TS-shell native (run via the installed `agent-config` binary):
                              do, against the declared inventory. No model, no network.
   audit:security             Could this project see, contain, fix and recover? Lenses
                              supply · pipeline · contain · recover. No model, no network.
+  audit:config               A–F security grade of this project's agent config: instruction
+                             files, MCP, hooks, skills. --min-grade A-F fails a CI step.
   media:bundle <url|file>    Evidence bundle for a post or video: frames, labelled
                              contact sheets, transcript rung, unavailable evidence.
   worktree:cleanup <mode>    Worktree inventory and removal: inventory · apply · check
@@ -906,6 +908,12 @@ cmd_audit_security() {
   exec_ts "$PACKAGE_ROOT/src/scripts/audit_security.ts" "$@"
 }
 
+# `audit:config` — the deterministic half of `/audit config`; read-only,
+# offline. Advisory exit 0 unless the consumer opts into `--min-grade`.
+cmd_audit_config() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/security_audit_config.ts" "$@"
+}
+
 # `media:bundle <url|file>` — `/analyze:post`'s evidence bundle. A URL is
 # fetched only through a human-installed, pinned yt-dlp.
 cmd_media_bundle() {
@@ -1708,6 +1716,7 @@ main() {
     audit:code)              cmd_audit_code "$@" ;;
     audit:agents)            cmd_audit_agents "$@" ;;
     audit:security)          cmd_audit_security "$@" ;;
+    audit:config)            cmd_audit_config "$@" ;;
     media:bundle)            cmd_media_bundle "$@" ;;
     worktree:cleanup)        cmd_worktree_cleanup "$@" ;;
     roadmap:context)         cmd_roadmap_context "$@" ;;

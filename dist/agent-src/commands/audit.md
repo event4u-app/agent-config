@@ -9,7 +9,7 @@ visibility: advanced
 cluster: audit
 skills: [dependency-upgrade, finishing-a-development-branch, using-git-worktrees, authz-review, security-audit]
 description: Security advisories, code and agent actions for this project
-argument-hint: "deps [refresh|show|gaps|fix <id>|accept <id>] | code [diff|full|retest|show|matrix|import <sarif>] | agents | security"
+argument-hint: "deps [refresh|show|gaps|fix <id>|accept <id>] | code [diff|full|retest|show|matrix|import] | agents | security | config"
 suggestion:
   eligible: true
   trigger_description: "is anything we use vulnerable, check for security updates, which advisories affect this project, fix that CVE, could we shut the app down if a vulnerability is disclosed"
@@ -24,8 +24,7 @@ packs:
 # /audit
 ## Instructions
 
-Four audits of the project — all distinct from `/security-audit-config`, which
-audits the agent configuration itself:
+Five audits of the project:
 
 - `/audit deps` — advisories, malware, end-of-support and pre-announced
   security releases for what the project **uses**.
@@ -37,6 +36,9 @@ audits the agent configuration itself:
 - `/audit security` — could the project **see, contain, fix and recover** from a
   vulnerability disclosed tomorrow: supply, pipeline, containment and recovery
   lenses, routing the rest to the three above (§ 8).
+- `/audit config` — whether the project's **agent configuration** itself is
+  safe to load: instruction files, MCP configs, hooks and installed skills,
+  graded A–F per category (§ 9).
 
 ## Examples
 
@@ -48,6 +50,7 @@ audits the agent configuration itself:
 /audit code show                  # the ledger: open, coverage, unreviewed, rejected
 /audit agents                     # every tool registration vs. agents/settings/contexts/agent-actions.yml
 /audit security                   # supply · pipeline · contain · recover, each ok | finding | unknown | not-applicable
+/audit config                     # A–F per category for CLAUDE.md, .mcp.json, hooks and skills
 ```
 
 **Why it works:** (`self-check-loop`) only `refresh` touches the network, and every finding names the
@@ -230,3 +233,23 @@ with the blueprint [`control-section`](../../../skills/security-audit/references
 The audit never throws a lever, and a deployed product's levers are the
 operator's (ADR-304).
 
+### 9. `/audit config` — is the agent configuration safe to load
+
+```bash
+agent-config audit:config [--root <dir>] [--json] [--min-grade A-F]
+```
+
+Read-only, offline, no model. Scans the instruction files (`CLAUDE.md`,
+`AGENTS.md`, `.cursor/rules`, `.github/copilot-instructions.md`, `.clinerules`,
+`.windsurfrules`), MCP configs, `.claude/settings.json` hooks and installed
+skills for the rules-file backdoor and MCP tool-poisoning classes, and grades
+each category A–F with its OWASP-ASI tag. Lead with the worst category, then the
+HIGH findings, each with `file:line` and the fix (move a secret to
+`${env:VAR}`, pin an MCP server, drop a `bypassPermissions` flag, strip hidden
+Unicode). Never rewrite the configuration without the user's confirmation.
+
+Exit `0` by default — detection is probabilistic and the grade is decision
+support. `--min-grade B` makes it exit `1` when the overall grade is below B, so
+a project can put it in CI; a grade outside A–F exits `2`. A D or F category
+hands off to `judge-security-auditor` over the flagged files; a full adversarial
+review of the configuration is the `agent-security-review` skill.
