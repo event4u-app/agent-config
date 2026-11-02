@@ -56,6 +56,7 @@ P-9 grep: `grep -rnE "(homedir\(\)|home[A-Za-z]*|HOME'\][^,]*)\s*,\s*'\.(claude|
       verify: probe stub that only answers the unsuffixed service with env set → no `cli-subscription`; stub that only answers the suffixed one → `cli-subscription`.
 - [x] **1.3 P-4 `handoff` through the resolver.** Defaults at `handoff_sessions.ts:272`, `:419` from 1.1. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/handoff_sessions.ts -->
       verify: fixture Codex store under `$CODEX_HOME/sessions` with env set → session listed.
+      reach exempt: is_substantive and SUBSTANTIVE_TOKEN_FLOOR are re-exports of _lib/session_eol.ts, which list_handoff_sessions and continuity_writer import by name.
 - [x] **1.4 P-3 doctor finding.** `CODEX_HOME` set without a directory → "`CODEX_HOME` points at nothing (<path>)", no `codex login` advice. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/cmd_doctor.ts -->
       verify: doctor test with `CODEX_HOME` set to a missing path → the finding, no login advice.
 - [x] **1.5 P-5 one Codex auth reader.** Doctor reuses the detector's reader; return shape stays presence/class/expiry, no field value leaves the module. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/codex_auth.ts -->
@@ -75,14 +76,15 @@ P-9 grep: `grep -rnE "(homedir\(\)|home[A-Za-z]*|HOME'\][^,]*)\s*,\s*'\.(claude|
       verify: existing `sessions_cli` tests unchanged, new tests for `--schema 1` with and without `--branches`.
 - [x] **2.3 Announce the capability.** `agent-config --version --json` and `/api/v1/ping` name `capabilities.sessionList: 1`, next to `configRoot`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/shared/capabilities.ts -->
       verify: version/ping test asserts `capabilities.sessionList === 1`.
+      reach exempt: buildVersionReadout is imported by src/cli/main.ts for `--version --json`, the CLI entry itself.
 
 **Acceptance:** two sessions under two profiles appear in `sessions:list --json` with `profile`; `--schema 1` gives one object form with and without `--branches`.
 
 ## Phase 3 — Docs
 
-- [x] **3.1** `docs/guides/works-with-agent-switch.md`: "What AC guarantees under a profile" and "What AC never does" (kill register). <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **3.1** `docs/guides/works-with-agent-switch.md`: "What AC guarantees under a profile" and "What AC never does" (kill register). <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       verify: `grep -c '^## What AC never does' docs/guides/works-with-agent-switch.md` -> /^1$/
-- [x] **3.2** Remote / Superset: point at the account tool's own CLI as the agent command, no AC snippet. <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **3.2** Remote / Superset: point at the account tool's own CLI as the agent command, no AC snippet. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       verify: `grep -c 'agent-switch run <name>' docs/guides/works-with-agent-switch.md` -> /^1$/
 
 ## Kill register
