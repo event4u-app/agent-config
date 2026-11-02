@@ -8,7 +8,7 @@ Installs into your user-level AI tool configuration; your repository only gets a
 
 # Agent Config — teach your AI coding agents to check their work before they say done
 
-[![npm](https://img.shields.io/npm/v/@event4u/agent-config?style=flat-square&label=npm&color=orange)](https://www.npmjs.com/package/@event4u/agent-config) [![downloads](https://img.shields.io/npm/dm/@event4u/agent-config?style=flat-square&label=downloads%2Fmonth&color=orange)](https://www.npmjs.com/package/@event4u/agent-config) [![Smoke](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml) [![Public install smoke (3 OS × 2 Node)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml)
+[![npm](https://img.shields.io/npm/v/@event4u/agent-config?style=flat-square&label=npm&color=orange)](https://www.npmjs.com/package/@event4u/agent-config) [![downloads](https://img.shields.io/npm/dm/@event4u/agent-config?style=flat-square&label=downloads%2Fmonth&color=orange)](https://www.npmjs.com/package/@event4u/agent-config) [![Smoke](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml) [![Public install smoke (3 OS × 2 Node)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml) [![agent-config MCP server](https://glama.ai/mcp/servers/event4u-app/agent-config/badges/score.svg)](https://glama.ai/mcp/servers/event4u-app/agent-config) [![MCP Toplist](https://mcptoplist.com/badge/io.github.event4u-app%2Fagent-config.svg)](https://mcptoplist.com/server/io.github.event4u-app%2Fagent-config)
 
 [![Skills](https://img.shields.io/badge/Skills-302-orange?style=flat-square)](https://github.com/event4u-app/agent-config/tree/main/dist/agent-src/skills) [![Rules](https://img.shields.io/badge/Rules-122-orange?style=flat-square)](https://github.com/event4u-app/agent-config/tree/main/dist/agent-src/rules) [![Commands](https://img.shields.io/badge/Commands-213-orange?style=flat-square)](https://github.com/event4u-app/agent-config/tree/main/dist/agent-src/commands) [![Guidelines](https://img.shields.io/badge/Guidelines-121-orange?style=flat-square)](https://github.com/event4u-app/agent-config/tree/main/docs/guidelines) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](https://github.com/event4u-app/agent-config/tree/main/dist/agent-src/personas) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](https://github.com/event4u-app/agent-config/tree/main/dist/agent-src/personas/advisors) <!-- claim:published-artifact-counts -->
 
@@ -282,8 +282,6 @@ From a source checkout, run the CLI as `./agent-config <command>`; `npx @event4u
 ```bash
 npx -y @event4u/agent-config mcp-server
 ```
-
-[![agent-config MCP server](https://glama.ai/mcp/servers/event4u-app/agent-config/badges/score.svg)](https://glama.ai/mcp/servers/event4u-app/agent-config) [![MCP Toplist](https://mcptoplist.com/badge/io.github.event4u-app%2Fagent-config.svg)](https://mcptoplist.com/server/io.github.event4u-app%2Fagent-config)
 
 [Requirements →](https://event4u-app.github.io/agent-config/getting-started/requirements/)
 

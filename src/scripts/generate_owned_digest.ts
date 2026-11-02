@@ -36,7 +36,12 @@ export const ROADMAPS = 'agents/roadmaps';
 /** `''` is the active top level. Order is the row order. */
 export const DIRS = ['', 'later', 'stubs'] as const;
 export const MAX_WORDS = 20;
-export const BUDGET_TOKENS = 10_000;
+/**
+ * The digest is a view: dropping or truncating a row to fit loses the owner it
+ * exists to show. When it renders above 10,000 again, split it into a triage
+ * index and a human summary rather than raising a second time.
+ */
+export const BUDGET_TOKENS = 10_500;
 
 export type Dir = (typeof DIRS)[number];
 

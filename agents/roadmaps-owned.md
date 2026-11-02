@@ -34,6 +34,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-map-engine-that-never-writes-through-a-symlink | later | later | Road to a map engine that never writes through a symlink |
 | road-to-a-memory-the-consumer-owns | later | later | A consumer's own memories and knowledge pages decide when they are recalled, the profile lives in one file per layer … |
 | road-to-a-menu-whose-precision-is-measured | later | later | Routing precision is a number with an interval on a labelled corpus large enough to carry one (≥ 100 prompts, … |
+| road-to-a-page-check-at-write-time | later | later | A page the agent just wrote that loads a third party on first paint, or whose imprint cites a superseded … |
 | road-to-a-prompt-that-deepens-not-widens-carried | later | later | Every step road-to-a-prompt-that-deepens-not-widens deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-ranker-whose-ties-break-on-signal | later | later | When two skills score the same, the order between them comes from something the ranker measured, not from their names … |
 | road-to-a-reason-that-is-still-there | later | later | A safety floor reaches every skill it names; a pack's first-win guide claims only what exists; a recorded reason for … |
@@ -47,6 +48,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-sealed-lineage | later | later | Sealed. |
 | road-to-a-session-start-under-the-host-limit | later | later | A consumer who runs `agent-config upgrade` and nothing else gets a session-start instruction layer whose package-delivered part is at most … |
 | road-to-a-setup-that-decides-itself-carried | later | later | Every step road-to-a-setup-that-decides-itself deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-a-site-the-owner-can-sign | later | later | A website request runs AC's existing blocks in a fixed order. |
 | road-to-a-step-that-costs-what-it-changes-carried | later | later | Every step road-to-a-step-that-costs-what-it-changes deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-stop-that-holds-carried | later | later | Every step road-to-a-stop-that-holds deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-trunk-whose-own-gates-are-green-carried | later | later | Every step road-to-a-trunk-whose-own-gates-are-green deferred is either done here or explicitly disposed of — a step that still cannot run is … |
@@ -172,6 +174,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-census-that-refuses-a-partial-store | stubs | — | road to a census that refuses to publish from a partial store |
 | road-to-a-limit-the-host-actually-signals | stubs | — | road to a limit the host actually signals |
 | road-to-a-lineage-gate-that-sees-the-folder | stubs | — | road to a lineage gate that sees the whole inbox folder |
+| road-to-a-page-check-on-by-default | stubs | — | road to a page check on by default |
 | road-to-a-path-route-under-delivery | stubs | — | road to a path-activation route under `delivery` |
 | road-to-a-primary-goal-that-is-asked-for | stubs | — | road to a primary goal that is asked for |
 | road-to-a-proposal-that-can-be-adopted | stubs | — | eleven prepared proposals arrived and none was adoptable as written |

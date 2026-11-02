@@ -112,16 +112,27 @@ export function loadSvgScanUncached(
     selfUrl: string = import.meta.url,
     bundled: boolean = isBundled(),
 ): SvgScan | null {
+    let specifier: string;
     try {
-        const specifier = rulesSpecifier(selfUrl, bundled);
+        specifier = rulesSpecifier(selfUrl, bundled);
+    } catch {
+        return null;
+    }
+    return loadChunkExport<SvgScan>(selfUrl, specifier, 'scanSvg', bundled);
+}
+
+/**
+ * Require the function `name` from a conditional chunk, or null. Shared so a
+ * second chunk loader adds no copy of this logic to the dispatch bundle.
+ */
+export function loadChunkExport<T>(selfUrl: string, specifier: string, name: string, bundled: boolean): T | null {
+    try {
         // The chunk runs inside the dispatch process, so it gets the bundle's
         // own integrity check: a mismatch with its sidecar is not executed.
         // No sidecar is `unverifiable` and allowed, as for `dispatch.js`.
         if (bundled && verifyBundle(specifier).state === 'mismatch') return null;
-        const req = createRequire(selfUrl);
-        const mod = req(specifier) as Record<string, unknown>;
-        const scan = mod['scanSvg'];
-        return typeof scan === 'function' ? (scan as SvgScan) : null;
+        const fn = (createRequire(selfUrl)(specifier) as Record<string, unknown>)[name];
+        return typeof fn === 'function' ? (fn as T) : null;
     } catch {
         return null;
     }

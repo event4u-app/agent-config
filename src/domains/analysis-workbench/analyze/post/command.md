@@ -79,8 +79,8 @@ Writes `agents/runtime/analysis/<round-id>/S<n>/` (gitignored): `context.md`
 the pin of § 2a of the reference door.
 
 The transcript comes from exactly one named rung: platform captions →
-a locally installed speech recogniser → **burned-in subtitles** read off the
-frames → none. `unavailable.md` names what is missing; nothing is skipped
+a locally installed speech recogniser → **on-screen text** (subtitles, slide
+headlines and body text, in any third of the frame) read off the frames → none. `unavailable.md` names what is missing; nothing is skipped
 silently. If `media:bundle` reports a missing `yt-dlp`, say the install line it
 printed and offer the upload — never guess the video's content.
 

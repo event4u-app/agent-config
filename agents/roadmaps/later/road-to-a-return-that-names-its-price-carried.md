@@ -71,7 +71,7 @@ left to read as finished.
 - **Owner:** implementer
 - **Blocks:** step 2.4 only
 - **Question:** none — which rows, at which published rates, with a named owner and refresh cadence for the table.
-- **What to do:** add and source the rows, then build 2.4 in the status-line path with its own switch and the suppression rule.
+- **What to do:** add and source the current-generation rows in `src/scripts/ai_council/_default_prices.ts`, then build 2.4 in the status-line path with its own switch and the suppression rule.
 - **Recommendation:** do it together with 2.4, not before; rows nobody reads go stale.
 - **If you do nothing:** metered logins see tokens only, the shipped state.
 - **Resolved when:** the rows exist with a source and 2.4's verify passes.

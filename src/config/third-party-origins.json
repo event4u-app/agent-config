@@ -1,0 +1,21 @@
+{
+  "_comment": "Dated provider register for the web-launch-readiness rows `third-party-load-in-markup` and `privacy-page-provider-coverage` (road-to-a-page-that-says-what-it-loads 2.1). ONE ROW PER EVIDENCED ORIGIN, never an imported tracker list (web-launch-readiness.json `no_import_decision`): a row enters with the defect or the existing detector that evidences it, named in `evidence`. An origin missing here is reported UNDECIDED (`unknown third party`), never green and never red. `privacy_tokens` are the names a privacy page uses for the provider; matching is case-insensitive substring. Every row carries `review_by` because provider names and hosts change, and an undated list rots the way the TMG citation did. `path_prefix` narrows a shared host (www.google.com serves both search and maps).",
+  "schema_version": 1,
+  "registered_at": "2026-11-02",
+  "review_by": "2027-05-02",
+  "categories": ["font", "map", "video", "captcha", "analytics", "advertising", "cdn"],
+  "origins": [
+    { "host": "fonts.googleapis.com", "provider": "Google Fonts", "category": "font", "privacy_tokens": ["Google Fonts"], "evidence": "inbox-2026-11-g S1@00:08; corpus rows 1-2", "review_by": "2027-05-02" },
+    { "host": "fonts.gstatic.com", "provider": "Google Fonts", "category": "font", "privacy_tokens": ["Google Fonts"], "evidence": "inbox-2026-11-g S1@00:08; corpus row 3", "review_by": "2027-05-02" },
+    { "host": "www.google.com", "path_prefix": "/maps", "provider": "Google Maps", "category": "map", "privacy_tokens": ["Google Maps"], "evidence": "inbox-2026-11-g S1@00:42; corpus row 4", "review_by": "2027-05-02" },
+    { "host": "maps.googleapis.com", "provider": "Google Maps", "category": "map", "privacy_tokens": ["Google Maps"], "evidence": "inbox-2026-11-g S1@00:42", "review_by": "2027-05-02" },
+    { "host": "www.youtube.com", "provider": "YouTube", "category": "video", "privacy_tokens": ["YouTube"], "evidence": "inbox-2026-11-g S1@00:42", "review_by": "2027-05-02" },
+    { "host": "www.youtube-nocookie.com", "provider": "YouTube", "category": "video", "privacy_tokens": ["YouTube"], "evidence": "inbox-2026-11-g S1@00:38; corpus row 5 -- still connects to the provider on load", "review_by": "2027-05-02" },
+    { "host": "www.google-analytics.com", "provider": "Google Analytics", "category": "analytics", "privacy_tokens": ["Google Analytics"], "evidence": "inbox-2026-11-g S1@00:42; ANALYTICS_RE", "review_by": "2027-05-02" },
+    { "host": "www.googletagmanager.com", "provider": "Google Tag Manager", "category": "analytics", "privacy_tokens": ["Google Tag Manager", "Google Analytics"], "evidence": "ANALYTICS_RE", "review_by": "2027-05-02" },
+    { "host": "stats.g.doubleclick.net", "provider": "Google DoubleClick", "category": "advertising", "privacy_tokens": ["DoubleClick", "Google Ads"], "evidence": "inbox-2026-11-g S1@00:42", "review_by": "2027-05-02" },
+    { "host": "plausible.io", "provider": "Plausible", "category": "analytics", "privacy_tokens": ["Plausible"], "evidence": "ANALYTICS_RE", "review_by": "2027-05-02" },
+    { "host": "cdn.segment.com", "provider": "Segment", "category": "analytics", "privacy_tokens": ["Segment"], "evidence": "ANALYTICS_RE", "review_by": "2027-05-02" },
+    { "host": "static.hotjar.com", "provider": "Hotjar", "category": "analytics", "privacy_tokens": ["Hotjar"], "evidence": "ANALYTICS_RE", "review_by": "2027-05-02" }
+  ]
+}
