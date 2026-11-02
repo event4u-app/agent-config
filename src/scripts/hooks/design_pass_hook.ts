@@ -92,6 +92,9 @@ import { compareInputs } from '../_lib/probe_inputs.js';
 import { trigger_matches, type Trigger } from '../_lib/router_match.js';
 import { HANDOVER_SHAPES, isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
 import { loadDesignContext, scanFile } from '../lint_design_slop.js';
+import { type OriginRow, type Supersession, writeTimeFindings } from '../web_launch_third_party.js';
+import thirdPartyRegister from '../../config/third-party-origins.json';
+import webLaunchConfig from '../../config/web-launch-readiness.json';
 import { readHookStdin } from './hook_stdin.js';
 import { CHUNK_BASENAME, loadSvgScan } from './svg_rules_loader.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
@@ -624,6 +627,20 @@ export function render(result: PassResult, conformance?: string): string {
     return lines.join('\n');
 }
 
+/** Rows 2.1 and 2.2 of `check_web_launch_readiness` over one written file. */
+export function webLaunchFindings(rel: string, content: string): Finding[] {
+    const register = (thirdPartyRegister as { origins: OriginRow[] }).origins;
+    const table = (webLaunchConfig as { supersessions?: Supersession[] }).supersessions ?? [];
+    return writeTimeFindings(rel, content, register, table).map((h) => ({
+        file: rel,
+        severity: 'P2' as const,
+        catalogId: 'web-launch',
+        rule: h.check,
+        line: h.line,
+        message: h.text,
+    }));
+}
+
 function main(): number {
     const root = process.env['CLAUDE_PROJECT_DIR'] ?? process.cwd();
     if (!enabled(root)) return EXIT_ALLOW;
@@ -674,6 +691,10 @@ function main(): number {
                 if (scan === null) svgRulesUnavailable = true;
                 else findings.push(...svgFindings(scan(content, rel) as SvgRuleFinding[], rel));
             }
+            // The outward web-launch rows, at write time: a third-party load on
+            // first paint and a superseded statute on a legal page. Advisory
+            // (P2), the register and the supersession table as the only inputs.
+            findings.push(...webLaunchFindings(rel, content));
             for (const f of scanFile(content, rel, ctx)) {
                 findings.push({
                     file: rel,

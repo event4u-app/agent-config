@@ -366,3 +366,26 @@ export const MESSAGE_SAMPLES = (): string[] => {
         ...thin.undecided,
     ].map((h) => h.text);
 };
+
+export interface WriteTimeHit extends Hit {
+    check: 'third-party-load-in-markup' | 'superseded-statute-in-legal-page';
+}
+
+/**
+ * The write-time half (road-to-a-page-that-says-what-it-loads 4.2): rows 2.1 and
+ * 2.2 over ONE file the agent just wrote, for `design_pass_hook`. Findings only —
+ * an undecided needs the whole build and is left to the checker.
+ */
+export function writeTimeFindings(
+    rel: string,
+    content: string,
+    register: readonly OriginRow[],
+    supersessions: readonly Supersession[],
+): WriteTimeHit[] {
+    if (!/\.(html?|css)$/i.test(rel)) return [];
+    const file: FileLike = { rel, base: path.basename(rel), text: content, lines: content.split('\n') };
+    return [
+        ...classifyLoads([file], register).findings.map((h) => ({ ...h, check: 'third-party-load-in-markup' as const })),
+        ...supersededStatute([file], supersessions).map((h) => ({ ...h, check: 'superseded-statute-in-legal-page' as const })),
+    ];
+}

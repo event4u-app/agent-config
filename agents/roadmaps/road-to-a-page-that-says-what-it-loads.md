@@ -119,19 +119,24 @@ Three-state contract throughout: finding / undecided / passed.
 
 ## Phase 4 — Reach at write time
 
-- [ ] **4.1 Extend the blindspots row** (`ai-code-blindspots/SKILL.md`) from
+- [x] **4.1 Extend the blindspots row** (`ai-code-blindspots/SKILL.md`) from
       font/icon/stylesheet to any third-party resource in shipped markup
       including iframes, plus one row: statute names on legal pages come from
       the dated authority, never from model memory.
-      verify: both cells present; ADR-205 reach test green.
-- [ ] **4.2 Wire 2.1 and 2.2 into `design_pass_hook`** for UI files —
+      verify: `npx vitest run tests/scripts/ai_code_blindspots_rows.test.ts` → 0
+      (no ADR-205 reach test exists in the tree; this one asserts both cells and
+      that every checker row they name is configured).
+- [x] **4.2 Wire 2.1 and 2.2 into `design_pass_hook`** for UI files —
       advisory, exit 0, register and supersession table as only inputs.
       verify: writing a page with planted 1 or 6 surfaces the finding in the
       hook context; the twin surfaces nothing.
-- [ ] **4.3 Corpus coherence** (T2 witness slice): the hotlink column in
+- [x] **4.3 Corpus coherence** (T2 witness slice): the hotlink column in
       `design-intelligence/data/font-pairings-reference.csv` is marked opt-in so
       the corpus no longer contradicts the self-host default.
       verify: the skill text naming the column says opt-in.
+      done: already satisfied at the pin — `src/skills/design-intelligence/SKILL.md:133`
+      marks the `CSS Import` column **opt-in only** and names `Self-Hosted Route` the
+      default; the source plan's claim predates that table. No edit.
 
 ## Phase 5 — Wording floor
 
