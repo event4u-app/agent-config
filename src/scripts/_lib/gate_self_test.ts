@@ -55,24 +55,79 @@ export function runGateCli(
         // The child must not recurse into its own self-test.
         env: { ...process.env, GATE_SELF_TEST_CHILD: '1' },
     });
-    return res.status ?? 1;
+    lastGateOutput = `${res.stdout ?? ''}${res.stderr ?? ''}`;
+    // A signal, a timeout or a spawn failure leaves `status` null; a signal
+    // that kills the gate under the tsx wrapper surfaces as 128+N instead.
+    // Either is the harness failing, never the gate rejecting — reading it as
+    // exit 1 let a crashed child count as a catch.
+    if (res.status === null || res.status >= SIGNAL_EXIT_BASE) return HARNESS_ERROR;
+    return res.status;
 }
+
+/**
+ * Exit code {@link runGateCli} returns when the child produced no exit status
+ * (killed by a signal, timed out, failed to spawn). Negative so no gate can
+ * ever emit it; {@link runSelfTest} reports it as a harness error.
+ */
+export const HARNESS_ERROR = -1;
+
+/** Shell convention: a process killed by signal N exits 128+N. No gate uses these codes. */
+const SIGNAL_EXIT_BASE = 128;
+
+let lastGateOutput: string | null = null;
+
+/** The trailer Node prints after an uncaught exception's stack. */
+const UNCAUGHT_CRASH = /^Node\.js v\d+\.\d+/m;
+
+/** Combined stdout+stderr of the most recent {@link runGateCli} call, or null. */
+export function lastGateCliOutput(): string | null {
+    return lastGateOutput;
+}
+
+/**
+ * The exit codes a gate means by "found something" and "could not run". Optional:
+ * a gate that declares it lets the harness tell a catch from a usage error.
+ * No gate has to change its codes to declare them.
+ */
+export interface GateExitDialect {
+    finding: number;
+    cannot_run: number;
+}
+
+/** Exit code a `refuse` case expects when the gate declares no dialect. */
+export const DEFAULT_CANNOT_RUN = 2;
 
 export interface SelfTestCase {
     /** Short description, printed per case. */
     name: string;
-    /** `reject` — the gate must fail on this fixture. `accept` — it must pass. */
-    expect: 'reject' | 'accept';
+    /**
+     * `reject` — the gate must report a finding on this fixture. `accept` — it
+     * must pass. `refuse` — it must decline to run (dead scope, bad argv,
+     * unreadable input), which is not the same verdict as a finding.
+     */
+    expect: 'reject' | 'accept' | 'refuse';
     /** Runs the fixture and returns the gate's exit code. */
     run: () => number;
+    /**
+     * What the gate must say it caught. Matched against the output of the
+     * {@link runGateCli} call this case made; a reject that exits non-zero for
+     * another reason no longer counts.
+     */
+    names?: RegExp;
 }
 
 export interface SelfTestOptions {
     gate: string;
     cases: readonly SelfTestCase[];
+    /**
+     * The gate's declared exit dialect. When present, a `reject` case must exit
+     * with `finding` and a `refuse` case with `cannot_run`; when absent, any
+     * non-zero exit is a reject and `refuse` expects {@link DEFAULT_CANNOT_RUN}.
+     */
+    exit?: GateExitDialect;
     /** Minimum total cases. Below this, the run FAILS regardless of results. */
     minCases: number;
-    /** Minimum `reject` cases. A suite that only proves passes proves nothing. */
+    /** Minimum `reject` or `refuse` cases. A suite that only proves passes proves nothing. */
     minRejectCases?: number;
     write?: (chunk: string) => unknown;
 }
@@ -85,7 +140,9 @@ export interface SelfTestOptions {
 export function runSelfTest(opts: SelfTestOptions): number {
     const write = opts.write ?? process.stdout.write.bind(process.stdout);
     const minReject = opts.minRejectCases ?? 1;
-    const rejectCases = opts.cases.filter((c) => c.expect === 'reject').length;
+    // A refusal proves discrimination exactly as a finding does: both are the
+    // gate declining to pass. The floor counts every case that must not pass.
+    const rejectCases = opts.cases.filter((c) => c.expect !== 'accept').length;
 
     if (opts.cases.length < opts.minCases || rejectCases < minReject) {
         write(
@@ -101,6 +158,7 @@ export function runSelfTest(opts: SelfTestOptions): number {
     let failed = 0;
     for (const testCase of opts.cases) {
         let exit: number;
+        lastGateOutput = null;
         try {
             exit = testCase.run();
         } catch (e) {
@@ -108,15 +166,11 @@ export function runSelfTest(opts: SelfTestOptions): number {
             failed += 1;
             continue;
         }
-        const behaved = testCase.expect === 'reject' ? exit !== 0 : exit === 0;
-        if (behaved) {
+        const verdict = judgeCase(testCase, exit, opts.exit, lastGateOutput);
+        if (verdict === null) {
             write(`✅  ${testCase.name} (expected ${testCase.expect}, exit ${String(exit)})\n`);
         } else {
-            write(
-                `❌  ${testCase.name}: expected the gate to ${testCase.expect} this fixture, ` +
-                    `got exit ${String(exit)}. The gate's detection has stopped firing on a case ` +
-                    'it is supposed to catch.\n',
-            );
+            write(`❌  ${testCase.name}: ${verdict}\n`);
             failed += 1;
         }
     }
@@ -126,4 +180,53 @@ export function runSelfTest(opts: SelfTestOptions): number {
             `case(s) behaved (${String(rejectCases)} rejecting, floor ${String(opts.minCases)})\n`,
     );
     return failed > 0 ? 1 : 0;
+}
+
+/**
+ * Decide whether one case behaved. Returns null when it did, otherwise the
+ * reason it did not. Exported for the harness's own tests.
+ */
+export function judgeCase(
+    testCase: Pick<SelfTestCase, 'expect' | 'names'>,
+    exit: number,
+    dialect: GateExitDialect | undefined,
+    output: string | null,
+): string | null {
+    if (exit === HARNESS_ERROR) {
+        return (
+            'harness error — the gate produced no exit status (signal, timeout or spawn ' +
+            'failure). A crash is never a catch.'
+        );
+    }
+    if (output !== null && UNCAUGHT_CRASH.test(output)) {
+        return (
+            'harness error — the gate died on an uncaught exception (see its stack). ' +
+            'A crash is never a catch, even on a reject fixture.'
+        );
+    }
+    let behaved: boolean;
+    if (testCase.expect === 'accept') behaved = exit === 0;
+    else if (testCase.expect === 'refuse') behaved = exit === (dialect?.cannot_run ?? DEFAULT_CANNOT_RUN);
+    else behaved = dialect !== undefined ? exit === dialect.finding : exit !== 0;
+    if (!behaved) {
+        const wanted =
+            testCase.expect === 'refuse'
+                ? `refuse (exit ${String(dialect?.cannot_run ?? DEFAULT_CANNOT_RUN)})`
+                : testCase.expect === 'reject' && dialect !== undefined
+                  ? `reject (exit ${String(dialect.finding)})`
+                  : testCase.expect;
+        return (
+            `expected the gate to ${wanted} this fixture, got exit ${String(exit)}. ` +
+            "The gate's detection has stopped firing on a case it is supposed to catch."
+        );
+    }
+    if (testCase.names !== undefined) {
+        if (output === null) {
+            return 'declares `names` but captured no gate output — run the fixture through runGateCli';
+        }
+        if (!testCase.names.test(output)) {
+            return `exited as expected but did not name its catch (${String(testCase.names)} not in the output)`;
+        }
+    }
+    return null;
 }
