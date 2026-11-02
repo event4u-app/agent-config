@@ -280,6 +280,8 @@ describe('ui:render --profile asset', () => {
             // the output directory, not a reading, so it is normalised too.
             delete a['generated_at'];
             delete b['generated_at'];
+            // `settled_ms` is a per-run timing too (road-to-checks-that-name-their-catch 4.1).
+            for (const m of [a, b]) for (const c of m['captures'] as Array<Record<string, unknown>>) delete c['settled_ms'];
             const normalise = (m: Record<string, unknown>): string =>
                 JSON.stringify(m).split('page-a').join('<slug>').split('page-b').join('<slug>');
             expect(normalise(b)).toBe(normalise(a));

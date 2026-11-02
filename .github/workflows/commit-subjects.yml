@@ -61,3 +61,19 @@ jobs:
             --base "${BASE_SHA}" \
             --head "${HEAD_SHA}" \
             --title "${PR_TITLE}"
+
+      # road-to-checks-that-name-their-catch 5.1: a changed golden scenario
+      # needs a `Golden-Intent: GT-<id> — <reason>` line in a commit of the
+      # range or in the PR body. The body is untrusted text, so it reaches the
+      # gate through `env:` and a file, never an inline expansion.
+      - name: Golden scenarios changed with a stated intent
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          printf '%s' "${PR_BODY}" > "${RUNNER_TEMP}/pr-body.md"
+          ./scripts-run src/scripts/check_golden_intent \
+            --base "${BASE_SHA}" \
+            --head "${HEAD_SHA}" \
+            --pr-body-file "${RUNNER_TEMP}/pr-body.md"

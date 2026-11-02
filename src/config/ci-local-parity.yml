@@ -151,6 +151,8 @@ ci_only:
   # outside a pull request there is no base and no decision to make. Unit-tested
   # (tests/scripts/ci_platform_scope.test.ts) and reachable on demand:
   # `./scripts-run src/scripts/ci_platform_scope --base origin/main`.
+  - id: check_golden_intent
+    reason: reads the PR body for Golden-Intent lines; a local run has no PR body, so it would demand lines the author legitimately put there (road-to-checks-that-name-their-catch 5.1). Reachable by hand as `task check-golden-intent`.
   - id: ci_platform_scope
     class: matrix
     reason: "chooses the tests.yml OS matrix for a pull request from its diff; it has no verdict to give a working tree and nothing to gate locally"

@@ -1719,6 +1719,35 @@ tasks:
         --base "${LINT_BASE:-origin/main}" \
         --head "${LINT_HEAD:-HEAD}" {{.QUIET_FLAG}}
 
+  gate-self-tests:
+    silent: true
+    desc: >-
+      Run every gate's --self-test, discovered from src/scripts (any script
+      calling runSelfTest). A crash or a missing module is a harness error,
+      never a catch (road-to-checks-that-name-their-catch 2.1).
+    cmd: ./scripts-run src/scripts/run_gate_self_tests
+
+  gate-contracts:
+    silent: true
+    desc: >-
+      New or changed gates refuse an unknown flag; the permissive-gate list and
+      the undeclared exit-dialect count only shrink
+      (road-to-checks-that-name-their-catch 1.3, 3.2). `-- --all` probes every gate.
+    cmd: ./scripts-run src/scripts/check_gate_contracts --base "${LINT_BASE:-origin/main}" {{.CLI_ARGS}}
+
+  check-golden-intent:
+    silent: true
+    desc: >-
+      Every golden scenario changed under tests/golden/baseline/GT-*/ in the
+      range carries a `Golden-Intent: GT-<id> — <reason>` line in a commit
+      message or the PR body (road-to-checks-that-name-their-catch 5.1). Not in
+      the `ci` aggregate: a local run has no PR body. No {{.QUIET_FLAG}} — the
+      gate parses strictly and exits 2 on an unknown flag.
+    cmd: |
+      ./scripts-run src/scripts/check_golden_intent \
+        --base "${LINT_BASE:-origin/main}" \
+        --head "${LINT_HEAD:-HEAD}"
+
   lint-eval-specs:
     silent: true
     desc: Gate this package's own measurement inputs — duplicate keys, untracked fixtures, self-disagreeing derivations, graders that enforce nothing (road-to-skill-ecosystem-eval-integrity Phase 1)

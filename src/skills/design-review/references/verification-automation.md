@@ -109,6 +109,14 @@ This is especially useful when the user provides a screenshot or Figma export as
 > artifact. The browser makes it look like an image; the file on disk is rung 1.
 > Take the code path.
 
+### Console and settle — read them from the manifest
+
+A `ui:render` manifest records, per capture, the page's `console` rows
+(`error`, `warning`, `pageerror`) and either `settled_ms` or `unsettled` with
+its cap. Cite those fields for the console check instead of looking. An
+`unsettled` capture was still moving when the cap hit, so its screenshot and
+styles are not a stable state — say so rather than judge the picture.
+
 ## Async-verifier pattern (keep the main context clean)
 
 For a review that needs browser probing, use an **async background verifier**
