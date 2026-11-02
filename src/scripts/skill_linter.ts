@@ -1498,6 +1498,32 @@ function lint_execution_metadata(execution: ExecutionBlock, frontmatter: string,
     return issues;
 }
 
+/**
+ * A `Do NOT` bullet is PAIRED when it names what to do instead. Matched
+ * lexically on purpose: the hint is advisory (`info`, never a status change),
+ * so a cheap, explainable heuristic beats a judgement nobody can reproduce.
+ */
+const DO_NOT_PAIRING_RE = /\binstead\b|→|->|\b(?:use|prefer|rather|route|keep)\b/i;
+
+/**
+ * Info-level hint: a `## Do NOT` section whose bullets list prohibitions only,
+ * none naming the positive alternative. Fires only when EVERY bullet is
+ * unpaired, so one paired bullet is enough to silence it.
+ */
+export function lint_do_not_pairing(text: string): Issue[] {
+    const block = extract_section_block(text, 'Do NOT') || extract_section_block(text, 'Do not');
+    const bullets = splitlines(block).filter((line) => /^\s*[-*+]\s+/.test(line));
+    if (bullets.length === 0) return [];
+    if (bullets.some((b) => DO_NOT_PAIRING_RE.test(b))) return [];
+    return [
+        new Issue(
+            'info',
+            'do_not_unpaired',
+            `\`Do NOT\` section has ${String(bullets.length)} prohibition(s) and none names the alternative — pair at least one with what to do instead (e.g. "… — use X instead")`,
+        ),
+    ];
+}
+
 export function lint_skill(p: string, text: string, absPath: string | null = null): LintResult {
     const issues: Issue[] = [];
     const suggestions: string[] = [];
@@ -1510,6 +1536,8 @@ export function lint_skill(p: string, text: string, absPath: string | null = nul
             issues.push(new Issue('error', 'missing_section', `Missing required section: ${section}`));
         }
     }
+
+    issues.push(...lint_do_not_pairing(text));
 
     // `p` may be a repo-relative DISPLAY path, so it is not resolvable on its own;
     // `absPath` is the path actually read and `lint_file` always supplies it. A
