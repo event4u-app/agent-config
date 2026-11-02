@@ -5,7 +5,8 @@ status: later
 
 # Road to guided journeys & router family — dock the journey pattern onto the existing Flow layer (Source C)
 
-> **Arrivals:** 2 — latest `inbox-2026-10-an` (2026-10-25): two plans ask for a spec
+> **Arrivals:** 3 — latest `inbox-2026-11-i` (2026-11-02): the router / flow topic
+> arrived again; still held by the resume-when note. Before it: `inbox-2026-10-an` (2026-10-25): two plans ask for a spec
 > artefact (objective, commands, boundaries in three tiers, success criteria with stable ids)
 > that `/work`, the test and review commands and the judges read when it exists; a plan stage
 > before `work` in the developer view (`src/profiles/developer.yaml`); and `/work` reading a

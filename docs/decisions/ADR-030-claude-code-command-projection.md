@@ -141,7 +141,7 @@ See § Decision above — Option A (dual projection) and Option C
 ## References
 
 - Roadmap:
-  `agents/roadmaps/road-to-claude-code-global-distribution.md` Phase 3.
+  `agents/roadmaps/archive/road-to-claude-code-global-distribution.md` Phase 3.
 - Council session responses:
   `agents/runtime/council/responses/claude-code-distribution.json`. <!-- council-ref-allowed: ADR decision trace -->
 - Empirical verification: `~/.claude/commands/probe/sub.md` route

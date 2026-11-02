@@ -227,7 +227,7 @@ separate `ADR-014-frontmatter-v2-contract.md`. That split was dropped —
 this ADR remains the single source of truth and absorbed the worked
 examples instead. No ADR-014 issued.
 
-Driven by [`agents/roadmaps/monorepo-phase-1-frontmatter-metadata.md`](../../agents/roadmaps/monorepo-phase-1-frontmatter-metadata.md).
+Driven by [`agents/roadmaps/archive/monorepo-phase-1-frontmatter-metadata.md`](../../agents/roadmaps/archive/monorepo-phase-1-frontmatter-metadata.md).
 
 ### 2026-05-27 — Additive advisory `cluster:` key on packs
 
@@ -241,7 +241,7 @@ be a known pack id (and not self-referential), enforced by
 [`scripts/lint_discovery_vocabulary.py`](../../src/scripts/lint_discovery_vocabulary.ts)
 and emitted into the discovery manifest. Additive, no vocabulary rename.
 
-Driven by [`agents/roadmaps/road-to-wizard-ux-improvements.md`](../../agents/roadmaps/road-to-wizard-ux-improvements.md) § Phase 4 (AI-council-resolved: reuse `packs.yml` as the single source of truth rather than a second mapping file).
+Driven by [`agents/roadmaps/archive/road-to-wizard-ux-improvements.md`](../../agents/roadmaps/archive/road-to-wizard-ux-improvements.md) § Phase 4 (AI-council-resolved: reuse `packs.yml` as the single source of truth rather than a second mapping file).
 
 ### 2026-05-27 — Additive advisory `example_roles:` key on workspaces
 

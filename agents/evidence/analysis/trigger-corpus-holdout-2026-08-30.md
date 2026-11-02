@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  c05e0bfba694639beb657c92e162be171c8b1ff854d4129d270376eb6c595af6
+SET-SHA256  d19cb94f3237719d2ba31c48f5f961d14f9b85d438259d5056bdebd261ffe31e
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1080,6 +1080,7 @@ open and which this file does not settle.
 | `skill-improvement-pipeline` | `67e8594b0bbe6427ec2ad12d46e5910345725dd8ab8436b47a1bfa078a173135` |
 | `systematic-debugging` | `813588ad18ebd0e26a0d203e7e7116487b8fb092e817502ca947f127246ef935` |
 | `tailwind-engineer` | `7b925bfdaca4a4f315bea04c1ae63a9a98a4e6766d7ce951a7c1c56fbd2e5014` |
+| `technical-specification` | `bd01d9c5ac8dd4be9dc849ab64554d5eb00204a5260cda2b60050a1ea720dea0` |
 | `test-performance` | `67d425384f8507688fdbe18d18d8235fa3dcf7fd1e2d4213a8e581f27fd80152` |
 | `testing-anti-patterns` | `66240715be7873af8ae59d00c416bd048e9699672ea00d0a604957fd6b6d8762` |
 | `threat-modeling` | `6bdb1d3b44939ac8f6ba78bb6145ca3bea91adb50991cd44bd700987adf903f2` |
@@ -1259,6 +1260,7 @@ open and which this file does not settle.
 | `docx-authoring` | `75b784449debd2009b332b91edd75116ceccd8ae18866405dd689c48b2e8fb67` |
 | `dpa-review` | `e0ded718f20941ad84a7ce87cb69aa3e1059d68234ca312c4846f5fb601d1279` |
 | `eloquent` | `d61c6ada4b28e29f5e7a97aca87917cf6942e5da7f39741d9f4ef0b7ade27185` |
+| `emit-tickets` | `788affa513d06ba49344293ef12afedb041d120c7ed9bf08b0f759ec8b4790f6` |
 | `estimate-ticket` | `4f882334316f1d694cb605854527736d237f5c21288e18e427601e184d2dfe69` |
 | `evaluate-llm-feature` | `0208ae44de28e4a96ebc116d329250e4a6006b00cbb0b2d638aaf4a005423f13` |
 | `existing-ui-audit` | `1cec11b0fc1696d5186a30c8a73fe3b10efa7ccb9a956d17a995e7415180a35e` |
@@ -2157,6 +2159,41 @@ the set **192 -> 193**. AC-6 rests on the same 18 rows.
 guard (**+5.28 pp** against +2.0 pp; was +4.90 pp).
 `delivery-set-measurement-2026-08-31.json`: recall loss **38.83 pp** (was
 38.55 pp), the ceiling stays **BREACHED**; context cost **230.5** tokens against
+the 500 target, still **MET**. Neither verdict changes in kind.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.
+
+## Growth — 2026-11-02b, two corpora from inbox round 2026-11-i; one seals
+
+```
+TWO ROWS ARE NEW — ONE SEALS, ONE TRAINS. NO PRE-EXISTING HOLDOUT FILE WAS
+EDITED. BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN AFTER THE CORPORA WERE ON DISK.
+```
+
+**What changed.** Inbox round 2026-11-i edited `emit-tickets` (the vertical-slice
+cut) and `technical-specification` (the ADR location), so
+`check_routing_coverage` required their corpora. Each carries five exemplars
+(one German), three near-misses naming the sibling skill that should win, and two
+counterexamples.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `emit-tickets` | train | `0xcd` = 205 ≥ 51 | new |
+| `technical-specification` | holdout | `0x22` = 34 < 51 | new |
+
+**One row seals, and nobody chose it.** The sealed set moves **43 -> 44**, the
+train set **150 -> 151**, the set **193 -> 195**. AC-6 still rests on the same
+18 rows; a proposer evaluated against this holdout must exclude
+`technical-specification` or say it is using a row whose seal is younger than the
+evaluation.
+`SET-SHA256` moves because it is computed over every row: `c05e0bfb…` → `d19cb94f…`.
+
+**Both train-side measurements were re-taken on this tree.**
+`routing-body-signal-verdict.json`: still `harmful` on the false-activation
+guard (**+5.24 pp** against +2.0 pp; was +5.28 pp).
+`delivery-set-measurement-2026-08-31.json`: recall loss **38.57 pp** (was
+38.83 pp), the ceiling stays **BREACHED**; context cost **230.6** tokens against
 the 500 target, still **MET**. Neither verdict changes in kind.
 
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`

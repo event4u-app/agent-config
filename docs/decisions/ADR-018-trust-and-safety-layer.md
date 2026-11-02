@@ -23,7 +23,7 @@ Session: [`agents/runtime/council/responses/phase-5-trust-safety.json`](../../ag
 
 Companion artefacts:
 - Contract: [`docs/contracts/trust-and-safety.md`](../contracts/trust-and-safety.md)
-- Roadmap: [`agents/roadmaps/monorepo-phase-5-trust-safety-layer.md`](../../agents/roadmaps/monorepo-phase-5-trust-safety-layer.md)
+- Roadmap: [`agents/roadmaps/archive/monorepo-phase-5-trust-safety-layer.md`](../../agents/roadmaps/archive/monorepo-phase-5-trust-safety-layer.md)
 - Lint: [`scripts/lint_trust_coherence.py`](../../src/scripts/lint_trust_coherence.ts) + [`tests/test_lint_trust_coherence.py`](../../tests/scripts/lint_trust_coherence.test.ts)
 - Condenseor: [`scripts/condense.py`](../../src/scripts/condense.ts) (`_inject_hrr_banner`)
 - Installer: [`packages/core/installer/src/trust-escalation.ts`](../../packages/core/installer/src/trust-escalation.ts)
@@ -150,7 +150,7 @@ Ship a four-piece trust & safety layer:
 ## References
 
 - Contract: [`docs/contracts/trust-and-safety.md`](../contracts/trust-and-safety.md)
-- Roadmap: [`agents/roadmaps/monorepo-phase-5-trust-safety-layer.md`](../../agents/roadmaps/monorepo-phase-5-trust-safety-layer.md)
+- Roadmap: [`agents/roadmaps/archive/monorepo-phase-5-trust-safety-layer.md`](../../agents/roadmaps/archive/monorepo-phase-5-trust-safety-layer.md)
 - Predecessors: [`ADR-013`](ADR-013-discovery-frontmatter-contract.md)
   · [`ADR-015`](ADR-015-discovery-manifest-contract.md)
   · [`ADR-016`](ADR-016-installer-architecture.md)

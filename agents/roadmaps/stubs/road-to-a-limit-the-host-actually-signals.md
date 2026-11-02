@@ -11,6 +11,8 @@ review_by: 2026-12-31
 > repository, and the manifest admits no alias row before it is observed.
 > The offline half shipped as `road-to-a-quota-signal-that-tells-the-truth`.
 
+> **Arrivals:** 1 — `inbox-2026-11-k` (2026-11-02).
+
 **Trigger:** one observed session on the maintainer machine, recorded per the
 protocol in `src/agent-src/contexts/execution/host-capability-manifest.md`
 (host version, raw payload, what fired), covering a plan-limit hit.
@@ -48,6 +50,15 @@ protocol in `src/agent-src/contexts/execution/host-capability-manifest.md`
 - whether a 1h→5m `prompt_cache.ttl` flip on a plan login coincides with
   usage-credit draw (candidate input for `later/road-to-billing-cliff-detection`,
   not a signal until observed).
+
+- (from round `inbox-2026-11-k`, a voice/attention plan) once `Notification`
+  is observed: an attention signal that says *why* the run waits (permission,
+  question, idle), deduplicated, rendered as a terminal sequence and optionally
+  handed as text to a user-chosen command (`say`, `espeak-ng`) over stdin. A
+  detached child that must read stdin needs `stdio: ['pipe','ignore','ignore']`,
+  a write, then `unref` — `detached` with `stdio: 'ignore'` cannot pass text.
+  Plus a host-event census (native event × aliased / unbound-by-decision /
+  unknown). Nothing here before the observation.
 
 **Kept out regardless:** no credential or token read, no unofficial endpoint,
 no multi-account routing, no hard limit or start refusal, no dynamic subagent

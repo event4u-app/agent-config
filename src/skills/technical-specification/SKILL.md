@@ -27,18 +27,18 @@ Use this skill when:
 
 Do NOT use when:
 - Trivial changes (a good PR description is enough)
-- Implementation work (use `feature-planning` or `php-coder` skill)
+- Implementation work (use `feature-planning` or `php-coder`)
 
 ## Procedure: Write a spec
 
-1. **Inspect existing specs and ADRs** — Read `agents/features/`, `agents/decisions/` (or `docs/adr/`) and any linked tickets to identify prior art, naming, and status conventions.
+1. **Inspect existing specs and ADRs** — Read `agents/features/`, `docs/decisions/` (or `docs/adr/`) and any linked tickets to identify prior art, naming, and status conventions.
 2. **Pick the document shape** — Choose Technical Spec, PRD, RFC, or ADR based on audience (engineering vs. product) and decision irreversibility.
 3. **Draft the document** — Use the template below; fill Status, Summary, Problem, Goals, Non-Goals, Proposed Solution.
 4. **Verify** — Confirm goals are measurable, non-goals are explicit, and at least one reviewer is named before circulating.
 
 ### Technical Specification (full)
 
-For complex features or systems. Stored in `agents/features/` or module `agents/features/`.
+For complex features or systems. Stored in `agents/features/` (root or module).
 
 ```markdown
 # Technical Specification: {Title}
@@ -144,7 +144,7 @@ the answer into the section it belongs to. Not a storage section.}
 
 ### Architecture Decision Record (ADR)
 
-For significant technical decisions. Stored in `agents/decisions/`.
+For significant technical decisions. Stored in `docs/decisions/`, as `adr-create` does.
 
 ```markdown
 # ADR-{number}: {Title}

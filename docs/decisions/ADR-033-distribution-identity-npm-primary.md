@@ -44,7 +44,7 @@ Both lenses converged.
 
 1. **The package is npm-primary.** The canonical install path is `npm install @event4u/agent-config` (and the consumer-facing `npx @event4u/agent-config install` wizard). All release tooling (`scripts/release.py`, `package.json`, `CONTRIBUTING.md § Versioning policy`) already aligns with this surface — this ADR records the policy, no code changes follow from the declaration itself.
 
-2. **Composer / Packagist is deprecated-in-place.** No `composer.json` ships from this repo; no PHP autoload surface is supported; the Packagist `event4u/agent-config` 1.0.4 listing is treated as legacy and gets a deprecation pointer through the only mechanism available to a deleted-composer-json repo: a registry-side claim/archive action by the maintainer. The corresponding human-owner item is surfaced in `docs/distribution/registries.md` (see Phase 2 of the [`road-to-distribution-identity.md`](../../agents/roadmaps/road-to-distribution-identity.md) roadmap).
+2. **Composer / Packagist is deprecated-in-place.** No `composer.json` ships from this repo; no PHP autoload surface is supported; the Packagist `event4u/agent-config` 1.0.4 listing is treated as legacy and gets a deprecation pointer through the only mechanism available to a deleted-composer-json repo: a registry-side claim/archive action by the maintainer. The corresponding human-owner item is surfaced in `docs/distribution/registries.md` (see Phase 2 of the [`road-to-distribution-identity.md`](../../agents/roadmaps/archive/road-to-distribution-identity.md) roadmap).
 
 3. **Breaking-change communication uses `CHANGELOG.md § Breaking`.** ADR-027 locked the auto-generated changelog from Conventional Commits. This ADR adds one consumer-facing affordance — a README / distribution-doc pointer linking that section — so a consumer who sees a major-version bump has a one-click path to *what broke, what to do*. No new `BREAKING_CHANGES.md` file unless the maintainer prefers one.
 
@@ -79,7 +79,7 @@ Both lenses converged.
 
 ## References
 
-- [`agents/roadmaps/road-to-distribution-identity.md`](../../agents/roadmaps/road-to-distribution-identity.md) — the work-item plan this ADR underwrites.
+- [`agents/roadmaps/archive/road-to-distribution-identity.md`](../../agents/roadmaps/archive/road-to-distribution-identity.md) — the work-item plan this ADR underwrites.
 - [`ADR-027-changelog-machine-vs-manual.md`](ADR-027-changelog-machine-vs-manual.md) — the prior decision locking the auto-generated changelog.
 - [`CONTRIBUTING.md § Versioning policy`](../../CONTRIBUTING.md) — the semver discipline this ADR confirms.
 - [`docs/distribution/registries.md`](../distribution/registries.md) — external-registry submission posture; this ADR adds a distribution-channel-identity section to that file.

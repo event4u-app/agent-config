@@ -113,6 +113,9 @@ Two blocks:
    density.
 2. **SECONDARY MOTION** — what the world does (hair, fabric,
    foliage, water, dust, particles, breath). One layer per line.
+3. **TIMED SEGMENTS** (optional, when the clip has more than one
+   beat) — `0–3 s: …`, `3–7 s: …`, covering the whole duration
+   without gaps; each segment names what changes, never a mood.
 
 ### Step 3: Audio direction (conditional)
 
@@ -122,6 +125,9 @@ If adapter capability is `audio: native` AND the blueprint's
 Emit an `AUDIO DIRECTION` block with:
 
 - `DIALOGUE TIMING` — `speaker @ 0.4s: "line"` per dialogue entry.
+  The prompt itself is English; every spoken line stays verbatim in
+  its own language and script, tagged (`[de] "…"`). Never translate
+  a line the user wrote.
 - `AMBIENT LAYERS` — copy from blueprint; one layer per line.
 - `SYNC CUES` — which action beat maps to which audio cue
   (`footstep @ 1.2s`, `door close @ 2.1s`).
@@ -144,6 +150,11 @@ If adapter capability is `audio: none`:
 Emit `PHYSICS` — a short list of what the model must respect:
 gravity direction, contact friction, fluid behavior, hair / cloth
 inertia, lens parallax. Single line per constraint.
+
+Then `NEGATIVE LOCKS` — what must not happen, one line each:
+identity drift, readable text the blueprint did not ask for, extra
+limbs or fingers, a cut the shot list does not contain, a logo that
+is not the user's. Only locks the blueprint gives reason for.
 
 ### Step 5: Emit motion-prompt JSON
 

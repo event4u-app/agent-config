@@ -63,6 +63,9 @@ enough to emit a copyable Markdown pitch.
    >    ADRs and emits an optional doc patch in the pitch
    > 3. closure — take a roadmap path and close every open decision in it
    >    before execution, recording the answers in `## Decisions`
+   >
+   > **Recommendation:** 1 — the standard interview fits any seed; switch to
+   > `with-docs` only when the project keeps a glossary or ADRs.
 
 ## In-interview triggers (both sub-commands)
 

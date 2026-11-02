@@ -12,11 +12,11 @@ type: structural
 # ADR — Rule Kernel and Router (Roadmap Closure)
 
 - **Status:** Accepted (2026-05-06)
-- **Closes:** `agents/roadmaps/road-to-kernel-and-router.md`
+- **Closes:** `agents/roadmaps/archive/road-to-kernel-and-router.md`
 - **Sibling roadmaps closed in the same window:**
-  `agents/roadmaps/road-to-token-optimization.md`
+  `agents/roadmaps/archive/road-to-token-optimization.md`
   (Phase 1 shipped, Phase 2/3 deferred-with-trigger by design),
-  `agents/roadmaps/road-to-package-optimization.md`
+  `agents/roadmaps/archive/road-to-package-optimization.md`
   (closed with null result per P1.1 binary acceptance gate).
 - **Related ADRs:** ADR-001 (kernel-swap deferred), ADR-002
   (kernel-bucket cap raise 25k → 26k, per-rule Iron-Law overrides).

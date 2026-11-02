@@ -19,7 +19,7 @@ evidence:
     - agents/evidence/reports/source-skip-paths-ledger.md
     - src/scripts/external_sources_denylist.json
     - src/rules/source-confidentiality.md
-    - agents/roadmaps/road-to-source-silence.md
+    - agents/roadmaps/archive/road-to-source-silence.md
 review_trigger: >-
   Reopen on either of two observations, each of which falsifies a premise this
   record rests on rather than merely arguing against it. First — a redaction
@@ -149,7 +149,7 @@ can only grow. This is also the status quo, and the status quo is the defect.
 
 ## References
 
-- `agents/roadmaps/road-to-source-silence.md` § Phase 2.3, 2.4 — the steps this
+- `agents/roadmaps/archive/road-to-source-silence.md` § Phase 2.3, 2.4 — the steps this
   record unblocks, and the verbatim council verdict.
 - `agents/evidence/reports/source-skip-paths-ledger.md` — the per-entry
   measurement this record's Context table is drawn from.

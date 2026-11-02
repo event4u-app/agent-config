@@ -149,4 +149,4 @@ but linted as a non-kernel rule file and certified on the same bar.
 - `src/scripts/skill_linter.ts` (`lint_router_frontmatter`) — the escalated gate; dead `trust.level: core` carve-out removed.
 - `src/scripts/schemas/rule.schema.json` — the `self_contained` key.
 - [ADR-127](ADR-127-enforcement-claims-must-resolve.md) — the honesty precedent for dropping the `triggered_by` promise.
-- `agents/roadmaps/road-to-renewal-adr-hygiene.md` Phase 2 — the authorizing step.
+- `agents/roadmaps/archive/road-to-renewal-adr-hygiene.md` Phase 2 — the authorizing step.

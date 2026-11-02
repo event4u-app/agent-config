@@ -136,7 +136,7 @@ symmetric trigger: decide then, do not sit on the date.
 
 - `road-to-feedback-9.8.0-followups.md` — § Council
   convergence (Q7) + Phase 1.
-- `agents/roadmaps/road-to-adoption-without-narrative-debt.md` — the
+- `agents/roadmaps/skipped/road-to-adoption-without-narrative-debt.md` — the
   execution surface once posting is greenlit; its Phase 1 blocker (real
   external participant) is condition 2 here.
 - ADR-133 — freeze contract (condition (d) references this ADR).

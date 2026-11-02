@@ -57,7 +57,7 @@ The projection constraint: source `SKILL.md` is shared across tools via `.agent-
 
 ## References
 
-- `agents/roadmaps/road-to-per-skill-model-autoswitch.md` (charter).
+- `agents/roadmaps/archive/road-to-per-skill-model-autoswitch.md` (charter).
 - `docs/contracts/multi-tool-projection-fidelity.md` (projection map; updated in Phase 3).
 - `contexts/model-recommendations.md` (task→model table; seeds the Phase 5 backfill).
 - Council convergence: anthropic/claude-sonnet-4-5 + openai/gpt-4o, design lens, 2026-05-30.
