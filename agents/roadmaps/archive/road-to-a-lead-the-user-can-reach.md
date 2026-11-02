@@ -93,15 +93,15 @@ or a default flip.
 
 ## Phase 3 — Findings land on their owners
 
-- [x] **3.1 Record the reading.** The disposition of every point of both sources, <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **3.1 Record the reading.** The disposition of every point of both sources, <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       the A24 reading and the parity census land under `agents/evidence/analysis/`.
       verify: the file exists and its ledger columns sum to their extracted counts.
-- [x] **3.2 Arrivals on existing owners.** Inline suppressions → arrival on <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **3.2 Arrivals on existing owners.** Inline suppressions → arrival on <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `later/road-to-adversarial-verification-and-long-runs` 12.2; the ladder re-cut
       (graded corpus, terse arm, cost by cache bucket, difficulty strata) → arrival on
       `stubs/road-to-solution-minimalism-full-tier-run`.
       verify: both files carry an `Arrivals:` line naming `inbox-2026-11-j`.
-- [x] **3.3 The remainder is parked, not dropped.** Owner-gated, measurement-bound and <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **3.3 The remainder is parked, not dropped.** Owner-gated, measurement-bound and <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       spend-bearing items go to `later/road-to-a-lead-the-user-can-reach-carried` with
       their trigger.
       verify: every row of § Kill register and § Carried exists in exactly one place.
