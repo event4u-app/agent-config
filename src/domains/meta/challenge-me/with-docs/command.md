@@ -21,8 +21,8 @@ packs:
 # /challenge-me with-docs
 
 > Same one-question-at-a-time interview as `/challenge-me vision`, plus:
-> a **session glossary** against `CONTEXT.md`, **load-bearing claim-vs-code
-> verification**, and an optional `CONTEXT.md` **patch** + **ADR candidates**
+> a **session glossary** against `GLOSSARY.md` (fallback `CONTEXT.md`),
+> **load-bearing claim-vs-code verification**, and an optional `CONTEXT.md` **patch** + **ADR candidates**
 > appended to the final pitch. `/challenge-me` itself never writes to
 > disk — the in-interview triggers (`!roadmap`, `!ai`) route to
 > `/roadmap:create` and `/council default`, which run under their own
@@ -94,8 +94,10 @@ NEVER WRITE TO DISK IN STEP 0. NEVER ASK WHAT view / grep / code-graph ask ANSWE
 
 1. **Read the seed** (same as `vision`).
 2. **Doc inventory** — read-only:
-   - `view CONTEXT.md` if it exists; init empty **session glossary** in
-     agent state (in-memory only).
+   - `view GLOSSARY.md` if it exists; otherwise fall back to
+     `view CONTEXT.md`. Init empty **session glossary** in agent state
+     (in-memory only). Wherever this command says `CONTEXT.md`, read the
+     file this step loaded — `GLOSSARY.md` when present.
    - `view CONTEXT-MAP.md` if it exists. If the seed touches > 1 listed
      context, **ask once** (numbered options listing each context) which
      to focus on; record the choice, do not re-ask.
@@ -265,9 +267,11 @@ verify. Mismatch → single question block:
 
 > Your seed says X works via Y. The code (`path/to/file:123`) shows
 > it via Z. Which is right?
-> 1. **Code is right, my seed was wrong** — recommended.
+> 1. Code is right, my seed was wrong.
 > 2. Seed is right, code is stale — separate fix needed.
 > 3. Both — they're both real paths.
+>
+> **Recommendation:** 1 — the code is what runs; a stale seed is the cheaper fix.
 
 Non-load-bearing claims (cosmetic, naming, internal style) — agent
 trusts the user's statement, no lookup. This gate keeps verification
@@ -348,7 +352,3 @@ cost O(load-bearing-decisions), not O(every-statement).
   one-question-per-turn Iron Law.
 - [`non-destructive-by-default`](../../rules/non-destructive-by-default.md)
   — why the patches live in the pitch block, not on disk.
-- Inspiration: `mattpocock/skills/skills/engineering/grill-with-docs/SKILL.md`
-  — same intent (interview against domain docs), restructured to honour
-  the project's non-destructive floor (session glossary in-memory,
-  patches emitted as copyable diffs in the pitch).

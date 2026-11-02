@@ -14,7 +14,7 @@ type: forward-looking
 ## Status
 
 **Accepted** · 2026-05-24. Phase 1 of
-[`road-to-internal-ai-os-deployment.md`](../../agents/roadmaps/road-to-internal-ai-os-deployment.md)
+[`road-to-internal-ai-os-deployment.md`](../../agents/roadmaps/archive/road-to-internal-ai-os-deployment.md)
 ships the container image + Compose topology + host binding +
 healthcheck. Phases 2–5 (identity, central policy, team context,
 connectors) are tracked but **not yet implemented**; their ADRs
@@ -22,7 +22,7 @@ connectors) are tracked but **not yet implemented**; their ADRs
 
 Companion artefacts:
 
-- Roadmap: [`agents/roadmaps/road-to-internal-ai-os-deployment.md`](../../agents/roadmaps/road-to-internal-ai-os-deployment.md)
+- Roadmap: [`agents/roadmaps/archive/road-to-internal-ai-os-deployment.md`](../../agents/roadmaps/archive/road-to-internal-ai-os-deployment.md)
 - Artefacts: [`packages/core/deploy/`](../../packages/core/deploy/)
 - Env contract: [`docs/deploy/env-vars.md`](../deploy/env-vars.md)
 - Council question (drafted, not invoked — no keys): [`agents/tmp/council-question-deployment-shape.md`](../../agents/old/council-question-deployment-shape.md)

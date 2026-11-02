@@ -17,7 +17,7 @@ provenance:
 evidence:
   strength: E1
   basis:
-    - agents/roadmaps/road-to-mcp-bridge-integrity-and-reach-truth.md
+    - agents/roadmaps/archive/road-to-mcp-bridge-integrity-and-reach-truth.md
     - docs/mcp-server.md
     - src/cli/mcp/dispatch.ts
     - src/cli/mcp/telemetry.ts
@@ -218,7 +218,7 @@ refusing it was not.
 
 ## References
 
-- `agents/roadmaps/road-to-mcp-bridge-integrity-and-reach-truth.md` — the four blockers.
+- `agents/roadmaps/archive/road-to-mcp-bridge-integrity-and-reach-truth.md` — the four blockers.
 - `docs/contracts/rule-router.md` — the "no runtime resolver" statement ADR-054 backs.
 - `src/cli/mcp/dispatch.ts` — the 400-byte `instructions` cap and the prompt catalogue.
 - `src/cli/mcp/telemetry.ts`, `src/agent-src/templates/scripts/telemetry/mcp_lite.ts` — the Phase 4 instrument and the section that publishes its zero.

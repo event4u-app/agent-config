@@ -26,7 +26,7 @@ phase: post-v2.1.0 · simplicity-and-everywhere
 
 ## Status
 
-**Accepted** · 2026-05-12 · signed off by Matze after Council Round 3 convergence. Implementation tracked in `agents/roadmaps/road-to-global-first-install.md`.
+**Accepted** · 2026-05-12 · signed off by Matze after Council Round 3 convergence. Implementation tracked in `agents/roadmaps/archive/road-to-global-first-install.md`.
 
 Originates from user ask: "Es macht keinen Sinn, das paket nicht  <!-- md-language-check: ignore -->
 global zu installieren." Validated through AI Council (2 + 1 rounds,

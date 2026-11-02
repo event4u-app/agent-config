@@ -18,7 +18,7 @@ phase: v2.4 · namespace-and-claude-desktop
 Claude Desktop deployment gap surfaced in the same turn (the v1
 `marker-only` integration did not actually make any skill visible to
 the Customize → Skills panel). Implementation tracked in
-[`agents/roadmaps/road-to-event4u-namespace-and-claude-desktop.md`](../../agents/roadmaps/road-to-event4u-namespace-and-claude-desktop.md).
+[`agents/roadmaps/archive/road-to-event4u-namespace-and-claude-desktop.md`](../../agents/roadmaps/archive/road-to-event4u-namespace-and-claude-desktop.md).
 
 ## Context
 
@@ -179,7 +179,7 @@ zero-data-loss** by design:
 
 ## References
 
-- [`agents/roadmaps/road-to-event4u-namespace-and-claude-desktop.md`](../../agents/roadmaps/road-to-event4u-namespace-and-claude-desktop.md)
+- [`agents/roadmaps/archive/road-to-event4u-namespace-and-claude-desktop.md`](../../agents/roadmaps/archive/road-to-event4u-namespace-and-claude-desktop.md)
 - [`scripts/_lib/user_global_paths.py`](../../src/scripts/_lib/user_global_paths.ts)
 - [`scripts/_lib/claude_desktop_bundler.py`](../../src/scripts/_lib/claude_desktop_bundler.ts)
 - [`docs/setup/per-ide/claude-desktop.md`](../setup/per-ide/claude-desktop.md)

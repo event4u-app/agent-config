@@ -112,7 +112,7 @@ deprecated upstream.
 
 ## References
 
-- `agents/roadmaps/road-to-model-capability-tiers.md` (charter).
+- `agents/roadmaps/archive/road-to-model-capability-tiers.md` (charter).
 - ADR-034 (superseded) — the concrete-model design this corrects.
 - `docs/contracts/multi-tool-projection-fidelity.md` (updated Phase 3).
 - `contexts/model-recommendations.md` (task→tier table; seeds the migration).

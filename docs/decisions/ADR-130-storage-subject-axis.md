@@ -95,5 +95,5 @@ fork — reads it. The 2026-07-27 council convergence for
 
 - ADR-119, ADR-121 (predecessors), ADR-094 (Layer-2 sunset), ADR-129
   (substrate landing).
-- `agents/roadmaps/road-to-reachable-code-memory.md` Phase 8.
+- `agents/roadmaps/archive/road-to-reachable-code-memory.md` Phase 8.
 - Intake source: `agents/tmp.old/consumer-index.txt` (2026-07-26).

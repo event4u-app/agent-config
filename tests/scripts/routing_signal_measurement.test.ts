@@ -172,7 +172,11 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 42 -> 43 on 2026-11-01: inbox round 2026-11-a edited `laravel-dto`,
         // which then owed a corpus. `laravel-dto` is 0x13 = 19 and seals. The
         // claim's scope moves to 18 of 43.
-        expect(sealed.length).toBe(43);
+        //
+        // 43 -> 44 on 2026-11-02: inbox round 2026-11-i edited
+        // `technical-specification`, which then owed a corpus. It is 0x22 = 34
+        // and seals. The claim's scope moves to 18 of 44.
+        expect(sealed.length).toBe(44);
     });
 
     it('the loader`s partition agrees with every published holdout row', () => {
@@ -392,8 +396,10 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 189 -> 192 on 2026-11-01: inbox round 2026-11-a. `dcf-modeling` (0xbf)
         // and `runway-cognition` (0x9c) train (147 -> 149); `laravel-dto` (0x13) seals (42 -> 43).
         // 192 -> 193 on 2026-11-02: `code-film` (0xe8) trains (149 -> 150).
-        expect(all.length).toBe(193);
-        expect(all.filter((r) => r.partition === 'holdout').length).toBe(43);
+        // 193 -> 195 on 2026-11-02: inbox round 2026-11-i. `emit-tickets` (0xcd)
+        // trains (150 -> 151); `technical-specification` (0x22) seals (43 -> 44).
+        expect(all.length).toBe(195);
+        expect(all.filter((r) => r.partition === 'holdout').length).toBe(44);
     });
 });
 
@@ -470,7 +476,8 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 146 -> 147 on 2026-10-29: `standards-from-config` trains (see the 189 line).
         // 147 -> 149 on 2026-11-01: two train corpora from inbox round 2026-11-a (see the 192 line).
         // 149 -> 150 on 2026-11-02: `code-film` trains (see the 193 line).
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(150);
+        // 150 -> 151 on 2026-11-02: `emit-tickets` trains (see the 195 line).
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(151);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

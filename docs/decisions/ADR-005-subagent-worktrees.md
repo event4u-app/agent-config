@@ -112,7 +112,7 @@ Both conditions must hold. Either alone is insufficient.
 
 ## References
 
-- `agents/roadmaps/road-to-better-skills-and-profiles.md` § A7
+- `agents/roadmaps/archive/road-to-better-skills-and-profiles.md` § A7
   (council iter-1 CC-OQ1 verdict (a))
 - `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` § Mode 7
 - `.agent-src.uncondensed/skills/using-git-worktrees/SKILL.md` (mechanics layer)

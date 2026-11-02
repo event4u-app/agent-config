@@ -53,7 +53,10 @@
       "axis": "target",
       "owner_surface": "src/scripts/grade_target_readiness.ts",
       "projection": "behaviour-contract",
-      "state": "available",
+      "state": "degraded",
+      "limitations": [
+        "the readiness grader passes the behaviour-contract dimension on file presence alone — an `AGENTS.md` at the root counts as a declared behavioural contract whatever it says (`src/scripts/grade_target_readiness.ts:349-356`), so almost every agent-configured repository grades as having one"
+      ],
       "rationale": "AGENTS.md / openapi.yaml / CONTRACT.md presence is probed as the repository's declared behavioural contract.",
       "evidence": "tests/scripts/grade_target_readiness.test.ts — graded > 0 in the full fixture, 0 in the python fixture",
       "revisit_if": "the contract probe is widened to a form whose absence the fixtures no longer distinguish"
@@ -216,7 +219,7 @@
       "projection": null,
       "state": "degraded",
       "limitations": [
-        "adoption is 1 of 25 active roadmaps, and the single declarer is the mechanism's own roadmap",
+        "adoption was 0 declaring over 10 active roadmaps at 2026-11-02 (at the 2026-08-23 council the single declarer was the mechanism's own roadmap); this count is a dated reading, not a live one — re-measure with `./scripts-run src/scripts/check_requirements_trace`",
         "enforcement is parked under two fired falsifiers",
         "demonstrated value is not evaluable — no documented sample exists"
       ],

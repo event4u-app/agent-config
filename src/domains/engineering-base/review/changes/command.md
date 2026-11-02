@@ -67,11 +67,18 @@ above — so the shape was present and simply not applied to the base:
     against a diff nobody asked about, and the reader has no way to see that the
     scope moved. Name the ref that failed.
 
-- `git diff origin/main..HEAD --stat` — overview of changed files
-- `git diff origin/main..HEAD` — full committed-but-not-pushed diff
-- `git diff --stat` + `git diff` — unstaged changes on top
+Diff committed work against the merge-base, the same base step 1 names for
+`git.update_strategy: rebase` — a two-dot diff against a moved `origin/main`
+would also show every commit the base gained since the branch forked:
 
-If both diffs are empty, **stop** — nothing to review.
+- `git diff origin/main...HEAD --stat` + `git diff origin/main...HEAD` —
+  committed changes since `git merge-base HEAD origin/main` (three-dot form)
+- `git diff --cached --stat` + `git diff --cached` — staged changes
+- `git diff --stat` + `git diff` — unstaged changes on top
+- `git ls-files --others --exclude-standard` — untracked files. **List** them
+  and name them in the report; do not diff them by default.
+
+Report "nothing to review" and **stop** only when every source above is empty.
 
 ### 3. Resolve the judge model
 

@@ -1,5 +1,5 @@
 # Flow — scaffolded in 6.0.0-D (Step 15b), activated in 6.1 (Step 8b, ADR-055).
-# Validated on load by scripts/lint_flows.py against scripts/schemas/flow.schema.json:
+# Validated on load by scripts/lint_flows.ts against scripts/schemas/flow.schema.json:
 # every entry_points / default_path / commands entry resolves to a real command and
 # every skill resolves to a real skills/<slug>/SKILL.md. `commands:` is the descriptive
 # seed lifted from the command-classification worksheet `·_flow:delivery_` tags;

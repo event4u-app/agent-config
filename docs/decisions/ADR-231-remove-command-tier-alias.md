@@ -22,7 +22,7 @@ review_trigger: >-
 - **Status:** Accepted (2026-08-14)
 - **Supersedes:** [`ADR-092`](ADR-092-defer-command-tier-alias-removal.md) — the deferral it recorded is discharged by this decision.
 - **Amended by, and built on:** [`ADR-137`](ADR-137-amend-tier-removal-reopen-triggers.md) (withdrew the structurally impossible second re-open trigger, leaving a maintainer-set sunset as the sole gate).
-- **Related:** [`ADR-090`](ADR-090-visibility-command-frontmatter-field.md) (`visibility` as the named field); `agents/roadmaps/road-to-tier-removal.md`; `docs/contracts/command-surface-tiers.md`; `docs/contracts/discovery-manifest.schema.json`.
+- **Related:** [`ADR-090`](ADR-090-visibility-command-frontmatter-field.md) (`visibility` as the named field); `agents/roadmaps/archive/road-to-tier-removal.md`; `docs/contracts/command-surface-tiers.md`; `docs/contracts/discovery-manifest.schema.json`.
 
 ## Context
 

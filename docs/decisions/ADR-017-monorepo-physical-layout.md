@@ -22,7 +22,7 @@ two refinements; this revision folds each into the design before the
 Session: [`agents/runtime/council/responses/phase-4-physical-layout.json`](../../agents/runtime/council/responses/phase-4-physical-layout.json) <!-- council-ref-allowed: ADR decision-trace -->
 
 Companion artefacts:
-- [`agents/roadmaps/monorepo-phase-4-physical-package-layout.md`](../../agents/roadmaps/monorepo-phase-4-physical-package-layout.md)
+- [`agents/roadmaps/archive/monorepo-phase-4-physical-package-layout.md`](../../agents/roadmaps/archive/monorepo-phase-4-physical-package-layout.md)
 - [`dist/migration/move-plan.json`](../../dist/migration/move-plan.json) (94 moves, 432 core, 0 conflicts)
 - [`dist/migration/pre-move-snapshot.json`](../../dist/migration/pre-move-snapshot.json) (744 files hashed)
 - [`scripts/plan_physical_move.py`](../../src/scripts/plan_physical_move.ts) (plan + apply)

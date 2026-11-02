@@ -104,6 +104,6 @@ migrations) so the migration plan reflects the final kernel set.
 
 - `docs/contracts/kernel-membership.md` § 4, § 5.2
 - `agents/runtime/council/sessions/20260506T044941Z-phase1-cross-check-r2.json` <!-- council-ref-allowed: ADR decision trace -->
-- `agents/roadmaps/road-to-kernel-and-router.md` § Decisions, § Phase 2
+- `agents/roadmaps/archive/road-to-kernel-and-router.md` § Decisions, § Phase 2
 - `.agent-src.uncondensed/rules/agent-authority.md` (subject)
 - `.agent-src.uncondensed/rules/autonomous-execution.md` (proposed promotion)

@@ -15,7 +15,7 @@ type: prospective
 
 **Accepted** · 2026-05-20 · in-session council recommendation folded.
 External AI Council pass on the implementing roadmap
-(`agents/roadmaps/unified-setup-and-settings-gui.md`) did not contest
+(`agents/roadmaps/archive/unified-setup-and-settings-gui.md`) did not contest
 the framework choice; it focused on data integrity (atomic writes,
 optimistic locking) which is orthogonal to the rendering layer.
 
@@ -131,6 +131,6 @@ const isDirty = computed(() => /* compare against load-time snapshot */ false);
 
 ## Cross-references
 
-- [Implementing roadmap](../../agents/roadmaps/unified-setup-and-settings-gui.md).
+- [Implementing roadmap](../../agents/roadmaps/archive/unified-setup-and-settings-gui.md).
 - [ADR-012 — TypeScript CLI Shell](ADR-012-typescript-cli-shell.md): the host server that mounts this UI.
 - [ADR-013 — Discovery Frontmatter Contract](ADR-013-discovery-frontmatter-contract.md): the discovery manifest the GUI reads to render workspace / pack pickers in a future phase.

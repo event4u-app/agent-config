@@ -77,6 +77,15 @@ boundaries:                    # ENFORCED by the work_engine boundary guard
 
 `status` is `done` only after the work landed + verification passed.
 
+**Slice shape.** A ticket is a **vertical slice** — independently verifiable
+through every layer it needs, never a single horizontal layer whose
+`acceptance` can only pass once sibling tickets land. Prefactoring tickets come
+first and the tickets they enable name them in `blocked_by`. The one exception
+is a wide refactor cut **expand–contract**: an expand ticket, then batch
+tickets grouped by blast radius, then a contract ticket, chained through
+`blocked_by`. No new field carries this — the existing `blocked_by` edges and
+per-ticket `acceptance` express it.
+
 ## 4. Ticket body doctrine (the build contract)
 
 A lite ticket is autonomous only with this fixed section order:
