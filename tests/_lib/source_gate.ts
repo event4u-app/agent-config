@@ -8,11 +8,10 @@ import { shapeHits, shapePathHits, tierFor } from '../../src/scripts/_lib/source
 export function sourceGateFindings(rel: string, text: string): string[] {
     const deny = _load_config().deny.map((p) => [p, new RegExp(p, 'i')] as const);
     const out: string[] = [];
-    const block = tierFor(rel) === 'block';
-    if (block) for (const h of shapePathHits(rel)) out.push(`path ${h.cls}`);
+    for (const h of shapePathHits(rel)) if (tierFor(rel, h.cls) === 'block') out.push(`path ${h.cls}`);
     text.split('\n').forEach((line, i) => {
         for (const [p, re] of deny) if (re.test(line)) out.push(`${String(i + 1)}: deny ${p}`);
-        if (block) for (const h of shapeHits(line)) out.push(`${String(i + 1)}: ${h.cls}`);
+        for (const h of shapeHits(line)) if (tierFor(rel, h.cls) === 'block') out.push(`${String(i + 1)}: ${h.cls}`);
     });
     return out;
 }

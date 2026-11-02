@@ -37,7 +37,8 @@
  * - **3.2 — an attribution-SHAPE heuristic** (`_lib/source_shape.ts`), which is
  *   independent of any name list. Tiered per the resolved
  *   `how-loud-the-slug-heuristic-is` blocker: **block inside `agents/**`, warn
- *   elsewhere.** The warn tier is written to a machine-readable report
+ *   elsewhere** — except an `attribution-label` under `src/`, which blocks with
+ *   zero tolerance outside the ratchet (owner decision OQ-62, E2). The warn tier is written to a machine-readable report
  *   (`--report`) rather than only printed, which is the council's own
  *   requirement — "warnings must be visible and RETAINED in CI artifacts …
  *   so the warn tier is auditable after the fact".
@@ -51,7 +52,7 @@
  *   stays in force and is NOT deleted.
  *
  * Exit codes: 0 = clean, 1 = at least one denied token in a non-skipped tracked
- * file (or a shape-count regression), 2 = usage / config error, 3 = strict
+ * file (or a shape-count regression, or an attribution label under `src/`), 2 = usage / config error, 3 = strict
  * digest mode requested with no key (`_lib/source_digest.ts`).
  *
  * Usage:
@@ -70,6 +71,7 @@ import { DigestMatcher, digestMode, EXIT_NO_KEY, KEY_ENV, STRICT_ENV } from './_
 import {
     legacySourceHeaderHits,
     shapeHits as shapeHitsOf,
+    isZeroTolerance,
     shapePathHits,
     tierFor,
     type ShapeClass,
@@ -390,7 +392,7 @@ function main(argv: readonly string[]): number {
             }
         }
         for (const h of shapePathHits(rel)) {
-            shapes.push({ file: rel, line: 0, cls: h.cls, tier: tierFor(rel), value: h.value });
+            shapes.push({ file: rel, line: 0, cls: h.cls, tier: tierFor(rel, h.cls), value: h.value });
         }
         if (_SKIP_EXT.has(_suffixLower(rel))) {
             continue;
@@ -431,7 +433,7 @@ function main(argv: readonly string[]): number {
                 }
             }
             for (const h of shapeHitsOf(line)) {
-                shapes.push({ file: rel, line: idx + 1, cls: h.cls, tier, value: h.value });
+                shapes.push({ file: rel, line: idx + 1, cls: h.cls, tier: tierFor(rel, h.cls), value: h.value });
             }
             // SHADOW METRIC, gating nothing. A council condition of the
             // 2026-08-30 narrowing: "keep the old detector shadow-reporting
@@ -446,7 +448,11 @@ function main(argv: readonly string[]): number {
     }
 
     // --- Phase 3.2 + 3.3: tier the shape findings and ratchet the block tier.
-    const blockShapesAll = shapes.filter((s2) => s2.tier === 'block');
+    // OQ-62 E2: an attribution label under src/ is block tier but sits OUTSIDE
+    // the ratchet — zero tolerance, so shrinking agents/** debt never makes
+    // room for it under the baseline.
+    const zeroTolerance = shapes.filter((s2) => s2.tier === 'block' && isZeroTolerance(s2.file, s2.cls));
+    const blockShapesAll = shapes.filter((s2) => s2.tier === 'block' && !isZeroTolerance(s2.file, s2.cls));
     const warnShapes = shapes.filter((s2) => s2.tier === 'warn');
 
     // --- Phase 3.4: provenance-aware deduplication of R2 snapshot mirrors. ----
@@ -517,6 +523,7 @@ function main(argv: readonly string[]): number {
                 digest_mode: { active: mode.active, digests: mode.digests, key_missing: mode.keyMissing },
                 shape: {
                     block: blockShapes.length,
+                    zero_tolerance: zeroTolerance.length,
                     warn: warnShapes.length,
                     baseline: verdict.baseline,
                     status: verdict.status,
@@ -544,13 +551,14 @@ function main(argv: readonly string[]): number {
                     exclusions: excluded,
                 },
                 block_findings: blockShapes,
+                zero_tolerance_findings: zeroTolerance,
                 warn_findings: warnShapes,
             }) + '\n',
             'utf-8',
         );
     }
 
-    const ok = hits.length === 0 && verdict.ok;
+    const ok = hits.length === 0 && verdict.ok && zeroTolerance.length === 0;
 
     if (asJson) {
         // `ok` and `hits` keep their pinned meaning for the name-list scan; the
@@ -561,6 +569,7 @@ function main(argv: readonly string[]): number {
                 hits,
                 shape: {
                     block: blockShapes.length,
+                    zero_tolerance: zeroTolerance.length,
                     warn: warnShapes.length,
                     baseline: verdict.baseline,
                     status: verdict.status,
@@ -594,8 +603,22 @@ function main(argv: readonly string[]): number {
         // when it fails is a count nobody watches shrink.
         process.stdout.write(
             `\nattribution shape — block(agents/**) ${String(blockShapes.length)}` +
-                ` / baseline ${String(verdict.baseline)} · warn(elsewhere) ${String(warnShapes.length)}\n`,
+                ` / baseline ${String(verdict.baseline)} · warn(elsewhere) ${String(warnShapes.length)}` +
+                ` · attribution label under src/ ${String(zeroTolerance.length)} (zero tolerance)\n`,
         );
+        if (zeroTolerance.length > 0) {
+            process.stdout.write(
+                `❌  ${String(zeroTolerance.length)} attribution label(s) under src/ — each fails the gate:\n`,
+            );
+            for (const z of zeroTolerance) {
+                process.stdout.write(`  ${z.file}:${String(z.line)}  [attribution-label]\n`);
+            }
+            process.stdout.write(
+                'A line-leading `Inspiration:` / `Ported from:` / `Adapted from:` label naming a\n' +
+                    'readable identifier ships attribution. Drop the source name or write "an\n' +
+                    'external reference". Not allowlistable, not ratcheted (owner decision OQ-62).\n',
+            );
+        }
         process.stdout.write(
             `legacy source-header shadow — ${String(legacyHeaderShadow)} raw finding(s) under the` +
                 ` PRE-2026-08-30 predicate. Reported, enforces nothing, and NOT` +
