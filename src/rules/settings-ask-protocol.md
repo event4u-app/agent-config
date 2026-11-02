@@ -73,8 +73,8 @@ turn a fence against illegal writes into a source of extra questions.
 
 **Class B — persist once**: `personal.canary_name` ·
 `personal.open_edited_files` · `memory.learn_on_session_end` ·
-`security_ops.plan`. Each ships a conservative default (`""`, `false`, `false`,
-`false`), so absent is indistinguishable from *no* and never from *yes*.
+`security_ops.plan`. Each ships a conservative default (`""` or `false`), so
+absent is indistinguishable from *no* and never from *yes*.
 
 **Class C carrying an `ask` value in its own enum** — a runtime question whose
 answer dies with the run: `subagents.adversarial_council`,
