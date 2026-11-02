@@ -937,7 +937,11 @@ before the record is signed.
 
 ## Phase 12 — The floor in a consumer project
 
-> **Arrivals (consumer floor):** 1 — `inbox-2026-10-an` (2026-10-25), re-verified at
+> **Arrivals (consumer floor):** 2 — latest `inbox-2026-11-j` (2026-11-02): a peer
+> comparison found the same gap — `block_config_weakening.ts` still counts no inline
+> suppression (0 hits for the four families at `c183b82358`), and the peer blocks whole
+> lint-config files instead, which this tree rejects. Warn-first stands for 12.2. Earlier:
+> `inbox-2026-10-an` (2026-10-25), re-verified at
 > `ac73481341`. Phases 1-3 built the floor for this package: `check_test_weakening` and
 > `check_test_delta` run in `ci-fast` and `tests.yml` only. A consumer gets none of it —
 > the turn-end gate lets an `Edit` of an existing test pass unread
