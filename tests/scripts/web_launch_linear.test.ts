@@ -14,6 +14,11 @@ const register = loadRegister(REPO, '2026-11-02');
 const table = loadConfig(REPO).supersessions;
 const N = 200_000;
 
+const loads = (rel: string, body: string): string[] =>
+    writeTimeFindings(rel, body, register, table).filter((h) => h.check === 'third-party-load-in-markup').map((h) => `${String(h.line)}`);
+const unread = (rel: string, body: string): string[] =>
+    writeTimeFindings(rel, body, register, table).filter((h) => h.check === 'third-party-load-unread').map((h) => `${String(h.line)}`);
+
 const timed = (fn: () => unknown): number => {
     const t = performance.now();
     fn();
@@ -47,8 +52,6 @@ describe('linear on pathological input', () => {
 });
 
 describe('tags are found whatever the line layout (round-3 ratification)', () => {
-    const loads = (rel: string, body: string): string[] =>
-        writeTimeFindings(rel, body, register, table).filter((h) => h.check === 'third-party-load-in-markup').map((h) => `${String(h.line)}`);
 
     it('a <link> wrapped over several lines by a formatter is found, on the line it starts', () => {
         const page = '<head>\n  <link\n    rel="stylesheet"\n    href="https://fonts.googleapis.com/css2?family=Inter"\n  />\n</head>';
@@ -75,8 +78,41 @@ describe('tags are found whatever the line layout (round-3 ratification)', () =>
         expect(loads('ueber-uns.html', page)).toEqual([]);
     });
 
-    it('an unterminated tag is skipped, never read to the end of the file', () => {
+    it('an unterminated tag does not hide the next one, and is itself reported as unread', () => {
         const page = `<link rel="stylesheet" href="https://fonts.googleapis.com/a" ${'x'.repeat(5_000)}\n<link rel="stylesheet" href="https://fonts.googleapis.com/b">`;
         expect(loads('index.html', page)).toEqual(['2']);
+        expect(unread('index.html', page)).toEqual(['1']);
+    });
+});
+
+describe('a long tag is read, an unclosed one is never a silent pass (round-5 ratification)', () => {
+    it('a closed tag padded far past any window is still read', () => {
+        const page = `<link data-pad="${'x'.repeat(5_000)}" rel="stylesheet" href="https://fonts.googleapis.com/a">`;
+        expect(loads('index.html', page)).toEqual(['1']);
+    });
+
+    it('an inline base64 image before a load does not hide the load', () => {
+        const page = `<img src="data:image/png;base64,${'A'.repeat(20_000)}">\n<link rel="stylesheet" href="https://fonts.googleapis.com/a">`;
+        expect(loads('index.html', page)).toEqual(['2']);
+        expect(unread('index.html', page)).toEqual([]);
+    });
+
+    it('a loadable tag with no closer at all is reported once per file, with its count', () => {
+        const page = `<p>a</p>\n<link rel="stylesheet" href="https://fonts.googleapis.com/a"\n<script src="https://x.example/a.js"`;
+        const hits = writeTimeFindings('index.html', page, register, table).filter((h) => h.check === 'third-party-load-unread');
+        expect(hits.map((h) => h.line)).toEqual([2]);
+        expect(hits[0]?.text).toMatch(/2 loadable tags/);
+    });
+
+    it('the checker counts the same file undecided, never clean', () => {
+        const page = '<link rel="stylesheet" href="https://fonts.googleapis.com/a"';
+        const c = classifyLoads([{ rel: 'index.html', base: 'index.html', text: page, lines: [page] }], register);
+        expect(c.findings).toEqual([]);
+        expect(c.undecided).toHaveLength(1);
+    });
+
+    it('a page of unclosed link tags yields one hit, linearly', () => {
+        const body = '<link rel=stylesheet href=x'.repeat(N / 28);
+        expect(timed(() => expect(unread('index.html', body)).toHaveLength(1))).toBeLessThan(1_000);
     });
 });

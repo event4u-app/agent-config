@@ -83,13 +83,13 @@ const isCss = (f: FileLike): boolean => /\.css$/i.test(f.base);
  * provider — it is reported undecided, never as a load.
  *
  * Tags are found over the WHOLE file text, not per line, so a tag a formatter
- * wrapped over several lines and a minified one-line page are both read. Each
- * tag is closed within MAX_TAG characters of its start or skipped: the window is
- * what keeps the scan linear on a page of unterminated `<link`, and a tag longer
- * than that is not one a browser was meant to load.
+ * wrapped over several lines and a minified one-line page are both read. A tag
+ * runs to the first `>` after it, of any length, unless another tag start comes
+ * first: then it is unclosed. Each character belongs to at most one tag, which
+ * keeps the scan linear on a page of unterminated `<link`. An unclosed tag is
+ * never dropped silently — the file is reported as carrying unread tags.
  */
 const TAG_START_RE = /<(link|script|iframe|img|video|audio|source|embed)\b/gi;
-const MAX_TAG = 2_000;
 const CSS_IMPORT_RE = /@import\s+(?:url\(\s*)?["']?((?:https?:)?\/\/[^"')\s]+)/gi;
 const CSS_URL_RE = /\burl\(\s*["']?((?:https?:)?\/\/[^"')\s]+)/gi;
 const LOAD_RELS = new Set(['stylesheet', 'preconnect', 'preload', 'modulepreload', 'icon']);
@@ -115,14 +115,22 @@ function absolute(raw: string): URL | null {
 }
 
 /** The attribute itself — preceded by whitespace, so `data-src` is never read as `src`. */
+const ATTR_RE = new Map<string, RegExp>();
 function attr(tag: string, name: string): string | undefined {
-    return new RegExp(`\\s${name}\\s*=\\s*["']([^"']*)["']`, 'i').exec(tag)?.[1];
+    let re = ATTR_RE.get(name);
+    if (re === undefined) {
+        re = new RegExp(`\\s${name}\\s*=\\s*["']([^"']*)["']`, 'i');
+        ATTR_RE.set(name, re);
+    }
+    return re.exec(tag)?.[1];
 }
 
 interface Tag {
     name: string;
+    /** Empty when the tag is unclosed. */
     tag: string;
     line: number;
+    closed: boolean;
 }
 
 /** Every loadable tag of a page with the 1-based line it starts on. Linear: one window per tag start. */
@@ -139,13 +147,18 @@ export function tagsOf(text: string): Tag[] {
         }
         return lo + 1;
     };
+    const found = [...text.matchAll(TAG_START_RE)];
     const out: Tag[] = [];
-    for (const m of text.matchAll(TAG_START_RE)) {
+    // The next `>` only moves forward, so all the searches together read the text once.
+    let gt = -2;
+    found.forEach((m, k) => {
         const at = m.index ?? 0;
-        const close = text.slice(at, at + MAX_TAG).indexOf('>');
-        if (close < 0) continue;
-        out.push({ name: (m[1] ?? '').toLowerCase(), tag: text.slice(at, at + close + 1), line: lineAt(at) });
-    }
+        if (gt !== -1 && gt < at) gt = text.indexOf('>', at);
+        const next = found[k + 1]?.index ?? Number.POSITIVE_INFINITY;
+        const name = (m[1] ?? '').toLowerCase();
+        const closed = gt !== -1 && gt < next;
+        out.push({ name, tag: closed ? text.slice(at, gt + 1) : '', line: lineAt(at), closed });
+    });
     return out;
 }
 
@@ -154,7 +167,7 @@ function ownHosts(files: readonly FileLike[]): Set<string> {
     const out = new Set<string>();
     for (const f of files.filter(isPage)) {
         for (const t of tagsOf(f.text)) {
-            if (t.name !== 'link' || (attr(t.tag, 'rel') ?? '').toLowerCase() !== 'canonical') continue;
+            if (!t.closed || t.name !== 'link' || (attr(t.tag, 'rel') ?? '').toLowerCase() !== 'canonical') continue;
             const u = absolute(attr(t.tag, 'href') ?? '');
             if (u !== null) out.add(u.host.toLowerCase());
         }
@@ -165,12 +178,15 @@ function ownHosts(files: readonly FileLike[]): Set<string> {
 interface Extracted {
     loads: Load[];
     prefetch: Hit[];
+    /** One per page carrying loadable tags that never close. */
+    unread: Hit[];
 }
 
 export function extractLoads(files: readonly FileLike[]): Extracted {
     const own = ownHosts(files);
     const loads: Load[] = [];
     const prefetch: Hit[] = [];
+    const unread: Hit[] = [];
     const push = (f: FileLike, line: number, raw: string, how: string): void => {
         const url = absolute(raw);
         if (url === null || own.has(url.host.toLowerCase())) return;
@@ -179,7 +195,20 @@ export function extractLoads(files: readonly FileLike[]): Extracted {
     for (const f of files) {
         if (!isPage(f) && !isCss(f)) continue;
         if (isPage(f)) {
-            for (const t of tagsOf(f.text)) {
+            const tags = tagsOf(f.text);
+            const unclosed = tags.filter((t) => !t.closed);
+            if (unclosed.length > 0) {
+                const n = unclosed.length;
+                unread.push({
+                    file: f.rel,
+                    line: unclosed[0]?.line ?? 1,
+                    text:
+                        `${String(n)} loadable tag${n === 1 ? '' : 's'} (link, script, iframe, img, video, audio, source, embed) ` +
+                        `never close${n === 1 ? 's' : ''} before the next tag or the end of the file; whether ${n === 1 ? 'it loads' : 'they load'} is undecided.`,
+                });
+            }
+            for (const t of tags) {
+                if (!t.closed) continue;
                 if (t.name !== 'link') {
                     const src = attr(t.tag, 'src');
                     if (src !== undefined) push(f, t.line, src, `<${t.name} src>`);
@@ -211,7 +240,7 @@ export function extractLoads(files: readonly FileLike[]): Extracted {
             }
         });
     }
-    return { loads, prefetch };
+    return { loads, prefetch, unread };
 }
 
 export function resolveOrigin(url: URL, register: readonly OriginRow[]): OriginRow | undefined {
@@ -224,15 +253,17 @@ export function resolveOrigin(url: URL, register: readonly OriginRow[]): OriginR
 interface Classified {
     findings: Hit[];
     undecided: Hit[];
+    /** The unread-tag subset of `undecided`: file-local, so write time reports it too. */
+    unread: Hit[];
     loaded: Map<string, OriginRow>;
 }
 
 /** 2.1 — split the loads into findings and undecided, with the providers that load. */
 export function classifyLoads(files: readonly FileLike[], register: readonly OriginRow[]): Classified {
-    const { loads, prefetch } = extractLoads(files);
+    const { loads, prefetch, unread } = extractLoads(files);
     const gated = new Set(files.filter((f) => GATE_RE.test(f.text)).map((f) => f.rel));
     const findings: Hit[] = [];
-    const undecided: Hit[] = [...prefetch];
+    const undecided: Hit[] = [...prefetch, ...unread];
     const loaded = new Map<string, OriginRow>();
     for (const l of loads) {
         const row = resolveOrigin(l.url, register);
@@ -270,7 +301,7 @@ export function classifyLoads(files: readonly FileLike[], register: readonly Ori
             text: `${l.how} loads \`${l.url.host}\` (${row.provider}, ${row.category}) on first paint, before any visitor interaction${extra}.`,
         });
     }
-    return { findings, undecided, loaded };
+    return { findings, undecided, unread, loaded };
 }
 
 const IMPRINT_RE = /(impressum|imprint|legal-notice)/i;
@@ -415,13 +446,14 @@ export const MESSAGE_SAMPLES = (): string[] => {
 };
 
 export interface WriteTimeHit extends Hit {
-    check: 'third-party-load-in-markup' | 'superseded-statute-in-legal-page';
+    check: 'third-party-load-in-markup' | 'third-party-load-unread' | 'superseded-statute-in-legal-page';
 }
 
 /**
  * The write-time half (road-to-a-page-that-says-what-it-loads 4.2): rows 2.1 and
- * 2.2 over ONE file the agent just wrote, for `design_pass_hook`. Findings only —
- * an undecided needs the whole build and is left to the checker.
+ * 2.2 over ONE file the agent just wrote, for `design_pass_hook`. Findings, plus
+ * unclosed loadable tags — the one undecided a single file settles; every other
+ * undecided needs the whole build and is left to the checker.
  */
 export function writeTimeFindings(
     rel: string,
@@ -432,7 +464,10 @@ export function writeTimeFindings(
     if (!/\.(html?|css)$/i.test(rel)) return [];
     const file: FileLike = { rel, base: path.basename(rel), text: content, lines: content.split('\n') };
     return [
-        ...classifyLoads([file], register).findings.map((h) => ({ ...h, check: 'third-party-load-in-markup' as const })),
+        ...((c) => [
+            ...c.findings.map((h) => ({ ...h, check: 'third-party-load-in-markup' as const })),
+            ...c.unread.map((h) => ({ ...h, check: 'third-party-load-unread' as const })),
+        ])(classifyLoads([file], register)),
         ...supersededStatute([file], supersessions).map((h) => ({ ...h, check: 'superseded-statute-in-legal-page' as const })),
     ];
 }
