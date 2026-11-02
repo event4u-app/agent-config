@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: founder-idea-interview
-description: "Use when a founder's hobbies, ideas or daily problems should become a researched business roadmap."
+description: "Use when a founder's hobbies, ideas or daily problems should become a business roadmap."
 status: active
 domain: product
 context_spine: [product, customer-segment]
