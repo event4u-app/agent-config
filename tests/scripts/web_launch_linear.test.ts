@@ -216,3 +216,39 @@ describe('legal-page placeholders: the bounded lookahead (round-9 ratification)'
         expect(timed(() => expect(tokens(line)).toEqual([]))).toBeLessThan(EVENT_P95_MS);
     });
 });
+
+describe('visibleText agrees with the regex it replaced on well-formed pages (round-9 ratification)', () => {
+    // The pre-change implementation, kept verbatim as the reference. The two are
+    // meant to differ only where a <script>/<style> is left unclosed, which the
+    // round-8 cases above pin; on a page that closes every tag they must agree.
+    const REMOVED = (html: string): string =>
+        html
+            .replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, ' ')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    const pages = (dir: string): string[] =>
+        fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+            const p = path.join(dir, e.name);
+            return e.isDirectory() ? pages(p) : /\.html?$/i.test(e.name) ? [p] : [];
+        });
+    const all = pages(path.join(REPO, 'tests', 'fixtures'));
+
+    it('covers a real corpus, not a handful', () => {
+        expect(all.length).toBeGreaterThanOrEqual(20);
+    });
+
+    it('produces the same text on every fixture page that closes its script and style blocks', () => {
+        const wellFormed = all.filter((p) => {
+            const l = fs.readFileSync(p, 'utf-8').toLowerCase();
+            const n = (re: RegExp): number => (l.match(re) ?? []).length;
+            return n(/<script\b/g) === n(/<\/script/g) && n(/<style\b/g) === n(/<\/style/g);
+        });
+        expect(wellFormed.length).toBeGreaterThanOrEqual(20);
+        for (const p of wellFormed) {
+            const html = fs.readFileSync(p, 'utf-8');
+            expect(visibleText(html), path.relative(REPO, p)).toBe(REMOVED(html));
+        }
+    });
+});

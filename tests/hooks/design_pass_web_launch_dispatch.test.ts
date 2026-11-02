@@ -63,4 +63,18 @@ describe.runIf(fs.existsSync(BUNDLE))('a written page reaches the agent through 
         expect(webLaunchLines(ctx)).toEqual([]);
         expect(ctx).not.toMatch(/web-launch rows not run/);
     });
+
+    it('the cap is inclusive: 1,000,000 characters are scanned, 1,000,001 are reported unchecked', () => {
+        const ws = workspaceWith('site/index.html', 'planted/index.html');
+        const abs = path.join(ws, 'site/index.html');
+        const page = fs.readFileSync(abs, 'utf-8');
+        const padded = (n: number): string => `${page}<!--${'x'.repeat(n - page.length - 7)}-->`;
+        fs.writeFileSync(abs, padded(1_000_000));
+        expect(fs.readFileSync(abs, 'utf-8')).toHaveLength(1_000_000);
+        expect(webLaunchLines(dispatchWrite(ws, 'site/index.html'))).toHaveLength(2);
+        fs.writeFileSync(abs, padded(1_000_001));
+        const over = dispatchWrite(ws, 'site/index.html');
+        expect(webLaunchLines(over)).toEqual([]);
+        expect(over).toMatch(/web-launch rows not run: site\/index\.html/);
+    });
 });
