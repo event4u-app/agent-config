@@ -56,53 +56,53 @@ no new skill, no new always-on rule text.
 
 ## Phase 1 — Nothing reported green that the check did not see
 
-- [ ] **1.1 Remove the two source lines (D1).** Drop the `Inspiration:` bullets
+- [x] **1.1 Remove the two source lines (D1).** Drop the `Inspiration:` bullets
       in `vision/command.md` and `with-docs/command.md`; regenerate projections.
       verify: `grep -c 'Inspiration:' src/domains/meta/challenge-me/vision/command.md src/domains/meta/challenge-me/with-docs/command.md` prints 0 for both.
-- [ ] **1.2 The gate sees the D1 shape.** A `src/` fixture carrying an
+- [x] **1.2 The gate sees the D1 shape.** A `src/` fixture carrying an
       `Inspiration: <owner>/<repo>/…/SKILL.md` line is at least a warn finding of
       `check_no_external_sources`; a test pins it.
       verify: the new test fails with the detection reverted and passes with it.
-- [ ] **1.3 Review diff matrix, committed + staged (D17).** Step 2 of
+- [x] **1.3 Review diff matrix, committed + staged (D17).** Step 2 of
       `/review-changes` diffs against the merge-base (three-dot) and adds
       `git diff --cached`; "empty" only when every source is empty. Untracked
       files are *listed* (never diffed by default — owner decision E9).
       verify: `grep -cE 'diff --cached|merge-base' src/domains/engineering-base/review/changes/command.md` ≥ 2 and the "both empty" wording is gone.
-- [ ] **1.4 Quarantine pointer in `/implement-ticket` (D18).**
+- [x] **1.4 Quarantine pointer in `/implement-ticket` (D18).**
       verify: `grep -c untrusted-input-defense src/domains/engineering-base/implement-ticket/command.md` ≥ 1.
 
 ## Phase 2 — Agree before slicing
 
-- [ ] **2.1 Frontier grilling (D2/D4).** Ask only from the frontier (questions
+- [x] **2.1 Frontier grilling (D2/D4).** Ask only from the frontier (questions
       whose prerequisites are answered); fact lookups never block a turn; stop
       when the frontier is empty, then check the four completion conditions.
       One question per turn stays.
       verify: `grep -ci frontier src/domains/meta/challenge-me/vision/command.md` ≥ 2 and `grep -c depth-first` = 0.
-- [ ] **2.2 Glossary read side (D3).** `with-docs` reads `GLOSSARY.md` first,
+- [x] **2.2 Glossary read side (D3).** `with-docs` reads `GLOSSARY.md` first,
       `CONTEXT.md` as fallback. Writing stays off (owner decision E4).
       verify: `grep -c GLOSSARY.md src/domains/meta/challenge-me/with-docs/command.md` ≥ 1.
-- [ ] **2.3 Seams and test decisions in the pitch (D5).** Declared, never asked.
+- [x] **2.3 Seams and test decisions in the pitch (D5).** Declared, never asked.
       verify: `grep -ci seam src/domains/meta/challenge-me/vision/command.md` ≥ 2.
-- [ ] **2.4 Vertical slices in `emit-tickets` (D6).** Vertical-slice rule,
+- [x] **2.4 Vertical slices in `emit-tickets` (D6).** Vertical-slice rule,
       prefactoring first, expand–contract as the one exception for wide refactors.
       verify: `grep -ciE 'vertical|expand.contract' src/skills/emit-tickets/SKILL.md` ≥ 2.
-- [ ] **2.5 Recommendation lines in the cluster (F3).** Neutral option block plus
+- [x] **2.5 Recommendation lines in the cluster (F3).** Neutral option block plus
       one recommendation line in `with-docs` and under the cluster menu.
       verify: `grep -c -- '— recommended\.' src/domains/meta/challenge-me/with-docs/command.md` = 0 and `grep -c 'Recommendation' src/domains/meta/challenge-me/command.md` ≥ 1.
 
 ## Phase 3 — Build, review and debug at the seams
 
-- [ ] **3.1 Skill deltas (D8–D10).** TDD names the declared seam and horizontal
+- [x] **3.1 Skill deltas (D8–D10).** TDD names the declared seam and horizontal
       slicing as an anti-pattern; the quality judge carries named smells as lead
       words (always a judgement); debugging tags temporary logs with one prefix and
       removes them by grep.
       verify: `grep -ci seam src/skills/test-driven-development/SKILL.md` ≥ 1; `grep -ciE 'shotgun surgery|primitive obsession' src/skills/judge-code-quality/SKILL.md` ≥ 1; `grep -c 'DEBUG-' src/skills/systematic-debugging/SKILL.md` ≥ 1.
-- [ ] **3.2 Flow references point at the real linter (D15b).**
+- [x] **3.2 Flow references point at the real linter (D15b).**
       verify: `grep -rn 'lint_flows.py' src/flows src/scripts/schemas src/scripts/generate_cookbook.ts` prints nothing.
-- [ ] **3.3 `Do NOT` stage 1 (D13).** Additive linter suggestion: a `Do NOT`
+- [x] **3.3 `Do NOT` stage 1 (D13).** Additive linter suggestion: a `Do NOT`
       section with no positive-goal pairing earns an info-level hint, never an error.
       verify: a fixture skill without pairing produces the hint in a test; the existing skill suite stays green.
-- [ ] **3.4 FIRST_WIN names the deck path (F4).**
+- [x] **3.4 FIRST_WIN names the deck path (F4).**
       verify: `grep -c 'not\*\* write the actual deck' src/packs/founder-strategy/FIRST_WIN.md` = 0.
 
 ## Owner decisions — carried, not executed here
