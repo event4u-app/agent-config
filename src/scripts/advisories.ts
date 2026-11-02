@@ -452,8 +452,11 @@ export function gapReport(root: string): string[] {
     if (read(root, 'package-lock.json') !== null && workflows !== '' && !/npm ci\b/.test(workflows)) {
         gaps.push('CI never runs `npm ci` — an unpinned install can resolve a version nobody audited');
     }
-    if (isDeployed(root) && readLevers(root) === null) {
+    const levers = isDeployed(root) ? readLevers(root) : [];
+    if (levers === null) {
         gaps.push(`no lever inventory (\`${LEVER_INVENTORY}\`) — when a T0 lands, nothing says which feature or surface to switch off; \`/audit security\` offers to plan one`);
+    } else if (levers === 'invalid') {
+        gaps.push(`the lever inventory is invalid (\`${LEVER_INVENTORY}\`) — no lever is named in a notice until \`/audit security\` reads it clean`);
     }
     return gaps;
 }

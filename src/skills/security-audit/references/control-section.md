@@ -124,6 +124,8 @@ affected package to the lever that contains it. Shape:
 schema_version: 1
 operator_path: sso            # sso | identity-provider | vpn — never a URL secret
 break_glass: cli               # cli | edge-rule | infra-flag
+control_surface: separate      # separate (default) | same-app — same-app forbids releasing
+                               # an L3 or HTTP-stopping lever through the control surface
 levers:
   - id: uploads-off
     level: L1

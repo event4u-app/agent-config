@@ -167,7 +167,7 @@ The procedure is [`security-audit`](../../../skills/security-audit/SKILL.md)
 | `retest` | every proof test, `judge-security-auditor` over the fix diff only, and the ledger rows whose source changed | the suite plus one narrow judge |
 | `show` | `agent-config audit:code show` | none |
 | `matrix` | `agent-config audit:code matrix [--skeleton]` | none |
-| `import` | `agent-config audit:code import <file.sarif>` — an external scanner's results as `needs_validation` findings on `model` rows: input for the verifiers, never coverage, never confirmed | none |
+| `import` | `agent-config audit:code import <file.sarif> [--run <id>]` — an external scanner's results as `needs_validation` findings on `model` rows in an `import-<id>` run that `show` never reads as the audit and that is never overwritten: input for the verifiers, never coverage, never confirmed | none |
 
 ```bash
 agent-config audit:code matrix --root .             # every API route × {anonymous, user A, user B}
@@ -206,15 +206,16 @@ unknown | not-applicable` with `file:line`:
 
 | Lens | Checks | Not applicable when |
 |---|---|---|
-| `supply` | installed npm packages: an install script, a name one edit from a popular package — the intake signals re-checked on what is already installed | no `package-lock.json` |
+| `supply` | installed npm packages from every lockfile `audit:deps` reads (npm, pnpm, yarn, text bun): a name one edit from a popular package, and from `package-lock.json` an install script — the intake signals re-checked on what is already installed; a lockfile it could not read makes the lens `unknown` | no npm-family lockfile |
 | `pipeline` | the workflow-security scan over the project's `.github/workflows` | no workflows |
-| `contain` | `agents/settings/security-ops.yml` against its schema: every lever declares `fail_mode`, the operator path is never a URL secret, no lever locks out its own release | no deploy signal (library, script) |
-| `recover` | a rollback, restore or runbook signal | no deploy signal |
+| `contain` | `agents/settings/security-ops.yml` against its schema: every lever declares `fail_mode`, the operator path is never a URL secret, an L4 lever is never released through the control surface, and with `control_surface: same-app` no L3 or HTTP-stopping lever is either | no deploy signal at the project root (library, script — and a monorepo app below the root is not detected) |
+| `recover` | a file whose name says rollback, runbook, restore, backup or disaster-recovery, under `docs/`, `doc/`, `runbooks/`, `.github/workflows/` or `agents/` — a name, not a tested procedure | no deploy signal |
 
 `run`, `code` and `agents` are not rebuilt: say "for advisories and end-of-life
 runtimes see `/audit deps`, for the code see `/audit code`, for agent actions
 `/audit agents`" and offer them. `unknown` is never reported as `ok`, and there is
-no total score. Exit `1` a finding, `3` a lens could not be read, `0` otherwise.
+no total score. Every finding names its file, and its line where it has one.
+Exit `1` a finding, `3` a lens could not be read, `0` otherwise.
 
 **The offer, never the build.** A `contain` finding ("no lever inventory") ends
 in one question: *plan a security & maintenance section?* — yes hands off to

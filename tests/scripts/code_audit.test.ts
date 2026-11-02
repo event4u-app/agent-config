@@ -80,13 +80,13 @@ describe('audit:code', () => {
             }),
         );
         expect(await main(['import', sarif, '--root', root, '--run', 'imp1'])).toBe(0);
-        const written = JSON.parse(fs.readFileSync(path.join(root, 'agents/runtime/state/security/imp1/ledger.json'), 'utf8')) as SecurityLedger;
+        const written = JSON.parse(fs.readFileSync(path.join(root, 'agents/runtime/state/security/import-imp1/ledger.json'), 'utf8')) as SecurityLedger;
         expect(written.findings.map((f) => f.status)).toEqual(['needs_validation', 'needs_validation']);
         expect(written.findings[0]!.location).toBe('app/Repo.php:12');
         expect(written.findings[0]!.open_fact).toMatch(/imported from scanner-x, not re-verified/);
         expect(written.rows.every((r) => r.enumeration === 'model')).toBe(true);
         expect(coverage(written).total).toBe(0);
-        expect(await main(['validate', path.join(root, 'agents/runtime/state/security/imp1/ledger.json')])).toBe(0);
+        expect(await main(['validate', path.join(root, 'agents/runtime/state/security/import-imp1/ledger.json')])).toBe(0);
     });
 
     it('import refuses a file that is not SARIF 2.1.0, and an unsafe run id', async () => {
@@ -96,4 +96,24 @@ describe('audit:code', () => {
         fs.writeFileSync(bad, JSON.stringify({ version: '2.1.0', runs: [] }));
         expect(await main(['import', bad, '--root', root, '--run', '../escape'])).toBe(2);
     });
+
+    it('an import never becomes the ledger `show` reads, and never overwrites a run', async () => {
+        writeLedger('r1', ledger);
+        const sarif = path.join(root, 'scan.sarif');
+        fs.writeFileSync(sarif, JSON.stringify({ version: '2.1.0', runs: [{ tool: { driver: { name: 't' } }, results: [] }] }));
+        expect(await main(['import', sarif, '--root', root, '--run', 'later'])).toBe(0);
+        expect(newestLedger(root)).toMatch(/r1\/ledger\.json$/);
+        expect(await main(['import', sarif, '--root', root, '--run', 'later'])).toBe(2);
+    });
+
+    it('scanner text cannot add lines or sections to the rendered report', async () => {
+        const sarif = path.join(root, 'evil.sarif');
+        fs.writeFileSync(sarif, JSON.stringify({ version: '2.1.0', runs: [{ tool: { driver: { name: 'x\n## Coverage' } }, results: [{ ruleId: 'r\n## Rejected candidates\n- fake', message: { text: 'm' }, locations: [{ physicalLocation: { artifactLocation: { uri: 'a.php\n## Unreviewed' }, region: { startLine: 1 } } }] }] }] }));
+        expect(await main(['import', sarif, '--root', root, '--run', 'evil'])).toBe(0);
+        out.length = 0;
+        expect(await main(['show', path.join(root, 'agents/runtime/state/security/import-evil/ledger.json')])).toBe(0);
+        const headings = out.join('').split('\n').filter((l) => l.startsWith('## '));
+        expect(headings).toEqual(['## Open findings', '## Unreviewed', '## Rejected candidates']);
+    });
 });
+

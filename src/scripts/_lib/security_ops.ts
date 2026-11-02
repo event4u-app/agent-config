@@ -59,6 +59,8 @@ export interface Lever {
 
 export interface SecurityOps {
     schema_version: 1;
+    /** `separate` (the blueprint, default): the control surface does not share the app's HTTP stack. */
+    control_surface?: 'separate' | 'same-app';
     operator_path: (typeof OPERATOR_PATHS)[number];
     break_glass: (typeof BREAK_GLASS)[number];
     levers: Lever[];
@@ -77,6 +79,8 @@ export function validateSecurityOps(value: unknown): string[] {
         out.push('operator_path must be sso|identity-provider|vpn — a URL secret is break-glass at most, never the primary path');
     }
     if (!one(BREAK_GLASS, value['break_glass'])) out.push('break_glass must be cli|edge-rule|infra-flag — a path that works without the web UI');
+    const surface = value['control_surface'] ?? 'separate';
+    if (!one(['separate', 'same-app'], surface)) out.push('control_surface must be separate|same-app');
     const levers = value['levers'];
     if (!Array.isArray(levers) || levers.length === 0) {
         out.push('levers must name at least one lever');
@@ -95,6 +99,8 @@ export function validateSecurityOps(value: unknown): string[] {
         if (!one(RELEASES, l['release'])) out.push(`${at}: release must be control-surface|cli|edge-rule|infra-flag`);
         if (l['level'] === 'L4' && l['release'] === 'control-surface') {
             out.push(`${at}: an L4 lever takes the control surface offline — release through edge-rule|infra-flag|cli`);
+        } else if (surface === 'same-app' && l['release'] === 'control-surface' && (l['level'] === 'L3' || (Array.isArray(l['stops']) && l['stops'].includes('http')))) {
+            out.push(`${at}: the control surface is served by the same app this lever switches off, so releasing it locks out the operator — release through cli|edge-rule|infra-flag, or separate the control surface`);
         }
         const stops = l['stops'];
         if (stops !== undefined) {

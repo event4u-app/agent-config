@@ -25,12 +25,20 @@ function rootOf(argv: readonly string[]): string {
     return i >= 0 && argv[i + 1] !== undefined ? (argv[i + 1] as string) : (process.env['AGENT_CONFIG_PROJECT_ROOT'] ?? process.cwd());
 }
 
-/** The newest ledger by run-directory mtime, or null when no run was recorded. */
+/** Imported scanner results live beside the audit runs, never as one of them. */
+export const IMPORT_PREFIX = 'import-';
+
+/**
+ * The newest audit ledger by run-directory mtime, or null when no run was
+ * recorded. An `import-*` run is skipped: it is unverified input, and reading it
+ * as "the" ledger would hide the real one's confirmed findings and coverage.
+ */
 export function newestLedger(root: string): string | null {
     const dir = path.join(root, LEDGER_DIR);
     if (!fs.existsSync(dir)) return null;
     const runs = fs
         .readdirSync(dir)
+        .filter((d) => !d.startsWith(IMPORT_PREFIX))
         .map((d) => path.join(dir, d, 'ledger.json'))
         .filter((p) => fs.existsSync(p))
         .sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
@@ -38,6 +46,14 @@ export function newestLedger(root: string): string | null {
 }
 
 const RUN_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+
+/** Scanner text is data: one line, no control characters, bounded — it can never add a line or a heading to a report. */
+function clean(v: unknown, fallback: string, max = 200): string {
+    if (typeof v !== 'string') return fallback;
+    // eslint-disable-next-line no-control-regex
+    const t = v.replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
+    return t === '' ? fallback : t;
+}
 
 interface SarifResult {
     ruleId?: unknown;
@@ -56,13 +72,13 @@ export function ledgerFromSarif(sarif: unknown, run: string, at: string): Securi
     const rows: LedgerRow[] = [];
     const findings: LedgerFinding[] = [];
     for (const r of doc.runs as Array<{ tool?: { driver?: { name?: unknown } }; results?: unknown }>) {
-        const tool = typeof r.tool?.driver?.name === 'string' && r.tool.driver.name.trim() !== '' ? r.tool.driver.name.trim() : 'unknown-tool';
+        const tool = clean(r.tool?.driver?.name, 'unknown-tool', 80);
         for (const res of (Array.isArray(r.results) ? r.results : []) as SarifResult[]) {
             const loc = res.locations?.[0]?.physicalLocation;
-            const uri = typeof loc?.artifactLocation?.uri === 'string' ? loc.artifactLocation.uri : 'unknown-location';
-            const line = typeof loc?.region?.startLine === 'number' ? `:${loc.region.startLine}` : '';
-            const rule = typeof res.ruleId === 'string' ? res.ruleId : 'unnamed-rule';
-            const text = typeof res.message?.text === 'string' ? res.message.text.replace(/\s+/g, ' ').slice(0, 200) : rule;
+            const uri = clean(loc?.artifactLocation?.uri, 'unknown-location');
+            const line = Number.isInteger(loc?.region?.startLine) ? `:${String(loc!.region!.startLine)}` : '';
+            const rule = clean(res.ruleId, 'unnamed-rule', 120);
+            const text = clean(res.message?.text, rule);
             const id = `I${findings.length + 1}`;
             findings.push({ id, status: 'needs_validation', title: `${rule}: ${text}`, location: `${uri}${line}`, finder: `import:${tool}`, verifier: 'unassigned', open_fact: `imported from ${tool}, not re-verified` });
             rows.push({ surface: 'Imported external scanner result', endpoint: `${uri}${line}`, enumeration: 'model', reviewed: false, reason: `imported from ${tool}` });
@@ -75,8 +91,9 @@ function importMain(rest: readonly string[]): number {
     const file = rest.find((a, i) => !a.startsWith('--') && rest[i - 1] !== '--root' && rest[i - 1] !== '--run');
     const ri = rest.indexOf('--run');
     const at = new Date().toISOString();
-    const run = ri >= 0 ? (rest[ri + 1] ?? '') : `import-${at.replace(/[:.]/g, '-')}`;
-    if (file === undefined || !RUN_ID.test(run)) {
+    const id = ri >= 0 ? (rest[ri + 1] ?? '') : at.replace(/[:.]/g, '-');
+    const run = `${IMPORT_PREFIX}${id}`;
+    if (file === undefined || !RUN_ID.test(id)) {
         process.stderr.write('usage: audit:code import <file.sarif> [--root <dir>] [--run <id: letters, digits, . _ ->]\n');
         return 2;
     }
@@ -91,9 +108,15 @@ function importMain(rest: readonly string[]): number {
         return 2;
     }
     const dir = path.join(rootOf(rest), LEDGER_DIR, run);
+    if (fs.existsSync(path.join(dir, 'ledger.json'))) {
+        process.stderr.write(`${path.join(LEDGER_DIR, run, 'ledger.json')} exists — an import never overwrites a run; pass another --run\n`);
+        return 2;
+    }
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, 'ledger.json'), `${JSON.stringify(ledger, null, 2)}\n`);
-    process.stdout.write(`${ledger.findings.length} imported as needs_validation into ${path.join(LEDGER_DIR, run, 'ledger.json')} — none confirmed, coverage unchanged\n`);
+    process.stdout.write(
+        `${ledger.findings.length} imported as needs_validation into ${path.join(LEDGER_DIR, run, 'ledger.json')} — none confirmed; \`show\` keeps reading the newest audit run, so its coverage is unchanged\n`,
+    );
     return 0;
 }
 

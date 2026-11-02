@@ -4,11 +4,13 @@
  *
  * One question no single audit answers: could this project see, contain, fix
  * and recover from a vulnerability disclosed tomorrow? Four lenses, each
- * `ok | finding | unknown | not-applicable`, every finding with `file:line`:
+ * `ok | finding | unknown | not-applicable`, every finding with the file it
+ * names, and its line where the finding has one:
  *
- *   supply    installed npm packages: an install script, a name one edit away
- *             from a popular package (re-checks what supply-chain-intake only
- *             checks when a dependency is added)
+ *   supply    installed npm packages from every lockfile the advisory inventory
+ *             reads (npm, pnpm, yarn, text bun): a name one edit away from a
+ *             popular package; from package-lock.json also an install script
+ *             (re-checks what supply-chain-intake only checks when one is added)
  *   pipeline  the workflow-security scan over the project's .github/workflows
  *   contain   agents/settings/security-ops.yml against its schema; absent on a
  *             deployed product is a finding carrying the offer to plan it
@@ -26,6 +28,8 @@ import path from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
 
+import { readInventory, unsupportedLockfiles } from './_lib/advisory_inventory.js';
+import { reportScanned } from './_lib/scan_scope.js';
 import { isDeployed, LEVER_INVENTORY, validateSecurityOps } from './_lib/security_ops.js';
 import { scan_workflow } from './lint_workflow_security.js';
 
@@ -43,6 +47,8 @@ export interface LensResult {
 export interface SecurityAudit {
     root: string;
     deployed: boolean;
+    /** Files the lenses read — the scan scope this run actually covered. */
+    filesRead: number;
     lenses: LensResult[];
     routed: string[];
 }
@@ -59,6 +65,8 @@ const POPULAR_NPM = [
 const KNOWN_NEAR_NAMES = new Set(['preact', 'redux', 'vuex', 'pino', 'ws', 'pug', 'jest-cli']);
 
 const RECOVER_SIGNALS = /(rollback|runbook|disaster[-_ ]recovery|restore|backup)/i;
+/** A popular name this short has too many legitimate one-edit neighbours to be a signal. */
+const MIN_TYPO_TARGET = 5;
 
 function editDistanceIsOne(a: string, b: string): boolean {
     if (a === b || Math.abs(a.length - b.length) > 1) return false;
@@ -91,37 +99,53 @@ function exists(root: string, rel: string): boolean {
     return fs.existsSync(path.join(root, rel));
 }
 
-function supplyLens(root: string): LensResult {
-    const rel = 'package-lock.json';
-    if (!exists(root, rel)) return { lens: 'supply', status: 'not-applicable', reason: 'no package-lock.json', findings: [] };
-    const text = fs.readFileSync(path.join(root, rel), 'utf8');
-    let doc: { packages?: Record<string, { hasInstallScript?: boolean; link?: boolean }> };
+function supplyLens(root: string, read: { n: number }): LensResult {
+    let inv;
     try {
-        doc = JSON.parse(text);
+        inv = readInventory(root);
     } catch (e) {
-        return { lens: 'supply', status: 'unknown', reason: `${rel} unreadable: ${(e as Error).message}`, findings: [] };
+        return { lens: 'supply', status: 'unknown', reason: `inventory unreadable: ${(e as Error).message}`, findings: [] };
     }
+    const unread = unsupportedLockfiles(root);
+    const lockEntries = inv.entries.filter((e) => e.ecosystem === 'npm' && e.provenance === 'lockfile');
+    const lockFiles = [...new Set(lockEntries.map((e) => e.file))];
+    read.n += lockFiles.length;
     const findings: LensFinding[] = [];
     const seen = new Set<string>();
-    for (const [key, pkg] of Object.entries(doc.packages ?? {})) {
-        if (key === '' || pkg?.link === true) continue;
-        const name = key.replace(/^.*node_modules\//, '');
-        if (seen.has(name)) continue;
-        seen.add(name);
-        const where = `${rel}:${lineOf(text, `"${key}": {`)}`;
-        if (pkg.hasInstallScript === true) findings.push({ where, detail: `${name} runs an install script — confirm it is expected, or install with --ignore-scripts` });
-        if (!POPULAR_NPM.includes(name) && !KNOWN_NEAR_NAMES.has(name)) {
-            const near = POPULAR_NPM.find((p) => editDistanceIsOne(name, p));
-            if (near !== undefined) findings.push({ where, detail: `${name} is one edit away from ${near} — confirm it is not a typo-squat` });
+    for (const e of lockEntries) {
+        if (seen.has(e.name) || e.private) continue;
+        seen.add(e.name);
+        if (POPULAR_NPM.includes(e.name) || KNOWN_NEAR_NAMES.has(e.name)) continue;
+        const near = POPULAR_NPM.find((p) => p.length >= MIN_TYPO_TARGET && editDistanceIsOne(e.name, p));
+        if (near !== undefined) findings.push({ where: `${e.file}:${e.line}`, detail: `${e.name} is one edit away from ${near} — confirm it is not a typo-squat` });
+    }
+    for (const rel of lockFiles.filter((f) => path.basename(f) === 'package-lock.json')) {
+        const text = fs.readFileSync(path.join(root, rel), 'utf8');
+        let doc: { packages?: Record<string, { hasInstallScript?: boolean; link?: boolean }> } = {};
+        try {
+            doc = JSON.parse(text);
+        } catch {
+            /* the inventory already read it; an unparseable file yields no entries and lands in `unread` */
+        }
+        const scripted = new Set<string>();
+        for (const [key, pkg] of Object.entries(doc.packages ?? {})) {
+            const name = key.replace(/^.*node_modules\//, '');
+            if (key === '' || pkg?.link === true || pkg?.hasInstallScript !== true || scripted.has(name)) continue;
+            scripted.add(name);
+            findings.push({ where: `${rel}:${lineOf(text, `"${key}": {`)}`, detail: `${name} runs an install script — confirm it is expected, or install with --ignore-scripts` });
         }
     }
-    return { lens: 'supply', status: findings.length > 0 ? 'finding' : 'ok', findings };
+    if (findings.length > 0) return { lens: 'supply', status: 'finding', ...(unread.length > 0 ? { reason: `not read: ${unread.join(', ')}` } : {}), findings };
+    if (unread.length > 0) return { lens: 'supply', status: 'unknown', reason: `lockfile not read: ${unread.join(', ')}`, findings };
+    if (lockFiles.length === 0) return { lens: 'supply', status: 'not-applicable', reason: 'no npm-family lockfile', findings };
+    return { lens: 'supply', status: 'ok', findings };
 }
 
-function pipelineLens(root: string): LensResult {
+function pipelineLens(root: string, read: { n: number }): LensResult {
     const dir = path.join(root, '.github', 'workflows');
     if (!fs.existsSync(dir)) return { lens: 'pipeline', status: 'not-applicable', reason: 'no .github/workflows', findings: [] };
     const files = fs.readdirSync(dir).filter((f) => /\.ya?ml$/.test(f)).sort();
+    read.n += files.length;
     const findings: LensFinding[] = [];
     let unreadable = 0;
     for (const f of files) {
@@ -136,7 +160,7 @@ function pipelineLens(root: string): LensResult {
     return { lens: 'pipeline', status: 'finding', findings };
 }
 
-function containLens(root: string, deployed: boolean): LensResult {
+function containLens(root: string, deployed: boolean, read: { n: number }): LensResult {
     if (!exists(root, LEVER_INVENTORY)) {
         if (!deployed) return { lens: 'contain', status: 'not-applicable', reason: 'no deploy signal — a library or script has nothing to switch at runtime', findings: [] };
         return {
@@ -151,6 +175,7 @@ function containLens(root: string, deployed: boolean): LensResult {
         };
     }
     let doc: unknown;
+    read.n += 1;
     try {
         doc = parseYaml(fs.readFileSync(path.join(root, LEVER_INVENTORY), 'utf8'));
     } catch (e) {
@@ -161,7 +186,7 @@ function containLens(root: string, deployed: boolean): LensResult {
     return { lens: 'contain', status: 'finding', findings: problems.map((p) => ({ where: LEVER_INVENTORY, detail: p })) };
 }
 
-function recoverLens(root: string, deployed: boolean): LensResult {
+function recoverLens(root: string, deployed: boolean, read: { n: number }): LensResult {
     if (!deployed) return { lens: 'recover', status: 'not-applicable', reason: 'no deploy signal', findings: [] };
     const candidates: string[] = [];
     for (const dir of ['docs', 'doc', 'runbooks', path.join('docs', 'runbooks'), path.join('.github', 'workflows'), 'agents']) {
@@ -169,17 +194,24 @@ function recoverLens(root: string, deployed: boolean): LensResult {
         if (!fs.existsSync(abs) || !fs.statSync(abs).isDirectory()) continue;
         for (const f of fs.readdirSync(abs)) if (RECOVER_SIGNALS.test(f)) candidates.push(path.join(dir, f));
     }
-    for (const f of fs.readdirSync(root)) if (RECOVER_SIGNALS.test(f)) candidates.push(f);
+    read.n += candidates.length;
     if (candidates.length > 0) return { lens: 'recover', status: 'ok', reason: `found ${candidates.sort()[0]}`, findings: [] };
-    return { lens: 'recover', status: 'finding', findings: [{ where: '.', detail: 'no rollback, restore or runbook signal (a file named rollback / runbook / restore / backup under docs/, runbooks/ or .github/workflows/)' }] };
+    return {
+        lens: 'recover',
+        status: 'finding',
+        findings: [{ where: '.', detail: 'no rollback, restore or runbook signal — a file whose name contains rollback, runbook, restore, backup or disaster-recovery under docs/, doc/, runbooks/, docs/runbooks/, .github/workflows/ or agents/' }],
+    };
 }
 
 export function auditSecurity(root: string): SecurityAudit {
     const deployed = isDeployed(root);
+    const read = { n: 0 };
+    const lenses = [supplyLens(root, read), pipelineLens(root, read), containLens(root, deployed, read), recoverLens(root, deployed, read)];
     return {
         root,
         deployed,
-        lenses: [supplyLens(root), pipelineLens(root), containLens(root, deployed), recoverLens(root, deployed)],
+        filesRead: read.n,
+        lenses,
         routed: ['/audit deps', '/audit code', '/audit agents'],
     };
 }
@@ -191,7 +223,7 @@ export function exitCode(a: SecurityAudit): number {
 }
 
 export function render(a: SecurityAudit): string {
-    const lines = [`Security audit — ${a.deployed ? 'deployed product' : 'no deploy signal'}`, ''];
+    const lines = [`Security audit — ${a.deployed ? 'deployed product' : 'no deploy signal at the root (a monorepo app below it is not detected)'}`, ''];
     for (const l of a.lenses) {
         lines.push(`${l.lens.padEnd(9)} ${l.status}${l.reason ? ` — ${l.reason}` : ''}`);
         for (const f of l.findings) lines.push(`  - ${f.where} · ${f.detail}`);
@@ -202,15 +234,25 @@ export function render(a: SecurityAudit): string {
 }
 
 export function main(argv: readonly string[]): number {
-    const unknownArg = argv.find((a, i) => a.startsWith('--') && a !== '--root' && a !== '--json' && argv[i - 1] !== '--root');
-    if (unknownArg !== undefined) {
-        process.stderr.write('usage: audit:security [--root <dir>] [--json]\n');
-        return 2;
+    let root = process.env['AGENT_CONFIG_PROJECT_ROOT'] ?? process.cwd();
+    let json = false;
+    for (let i = 0; i < argv.length; i++) {
+        const a = argv[i]!;
+        if (a === '--json') json = true;
+        else if (a === '--root' && argv[i + 1] !== undefined && !argv[i + 1]!.startsWith('--')) root = argv[++i]!;
+        else {
+            process.stderr.write(`audit:security: unexpected argument ${JSON.stringify(a)}\nusage: audit:security [--root <dir>] [--json]\n`);
+            return 2;
+        }
     }
-    const i = argv.indexOf('--root');
-    const root = i >= 0 && argv[i + 1] !== undefined ? (argv[i + 1] as string) : (process.env['AGENT_CONFIG_PROJECT_ROOT'] ?? process.cwd());
     const result = auditSecurity(root);
-    process.stdout.write(argv.includes('--json') ? `${JSON.stringify(result, null, 2)}\n` : render(result));
+    process.stdout.write(json ? `${JSON.stringify(result, null, 2)}\n` : render(result));
+    // The scan scope, on stderr under --json so the JSON stays parseable. An empty
+    // project is a legitimate answer: every lens then says not-applicable.
+    reportScanned(
+        { gate: 'audit_security', scanned: result.filesRead, units: 'project file(s)', roots: [root], allowEmpty: 'a project with no lockfile, workflow, lever inventory or recovery file has nothing to read; every lens then reports not-applicable or a finding, never ok' },
+        json ? process.stderr.write.bind(process.stderr) : process.stdout.write.bind(process.stdout),
+    );
     return exitCode(result);
 }
 

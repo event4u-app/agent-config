@@ -1087,3 +1087,66 @@ describe('the advisory loop names the lever (road-to-a-switch-built-before-it-is
     });
 });
 
+describe('lockfile review fixes (independent review, 2026-11-02)', () => {
+    const one = (file: string, text: string) => {
+        const root = path.join(tmp, `r-${Math.random().toString(36).slice(2)}`);
+        fs.mkdirSync(root);
+        fs.writeFileSync(path.join(root, file), text);
+        return root;
+    };
+    const pairs = (root: string) => readInventory(root).entries.filter((e) => e.provenance === 'lockfile').map((e) => `${e.name}@${e.version}`).sort();
+
+    it('a lockfile that yields nothing is named as unread, never counted clean', () => {
+        expect(unsupportedLockfiles(one('pnpm-lock.yaml', 'packages: [: :\n'))).toEqual(['pnpm-lock.yaml']);
+        expect(unsupportedLockfiles(one('bun.lock', '{ "packages": { broken'))).toEqual(['bun.lock']);
+        expect(unsupportedLockfiles(one('yarn.lock', '# yarn lockfile v1\n'))).toEqual(['yarn.lock']);
+    });
+
+    it('a CRLF yarn.lock and a bun.lock with // comments are read', () => {
+        expect(pairs(one('yarn.lock', '# yarn lockfile v1\r\n\r\nexpress@^4.18.2:\r\n  version "4.18.2"\r\n  resolved "https://registry.yarnpkg.com/express/-/express-4.18.2.tgz#d"\r\n'))).toEqual(['express@4.18.2']);
+        expect(pairs(one('bun.lock', '{\n  // generated\n  "packages": {\n    "express": ["express@4.18.2", "", {}, "sha512-b"],\n  },\n}\n'))).toEqual(['express@4.18.2']);
+    });
+
+    it('pnpm v5 peer suffixes are stripped from name and version', () => {
+        const v5 = "lockfileVersion: 5.4\n\npackages:\n\n  /react-dom/17.0.2_react@17.0.2:\n    resolution: {integrity: sha512-a}\n\n  /@testing-library/react/12.1.5_react-dom@17.0.2+react@17.0.2:\n    resolution: {integrity: sha512-b}\n";
+        expect(pairs(one('pnpm-lock.yaml', v5))).toEqual(['@testing-library/react@12.1.5', 'react-dom@17.0.2']);
+    });
+
+    it('a yarn berry alias is inventoried under the real package name', () => {
+        const berry = '__metadata:\n  version: 8\n\n"string-width-cjs@npm:string-width@^4.2.0":\n  version: 4.2.3\n  resolution: "string-width@npm:4.2.3"\n';
+        expect(pairs(one('yarn.lock', berry))).toEqual(['string-width@4.2.3']);
+    });
+
+    it('a scope bound to a private registry in .npmrc or .yarnrc.yml is private for pnpm and berry', () => {
+        const root = one('pnpm-lock.yaml', "lockfileVersion: '9.0'\n\npackages:\n\n  '@acme/core@1.0.0':\n    resolution: {integrity: sha512-a}\n\n  express@4.18.2:\n    resolution: {integrity: sha512-b}\n");
+        fs.writeFileSync(path.join(root, '.npmrc'), '@acme:registry=https://npm.acme.internal/\n');
+        const priv = Object.fromEntries(readInventory(root).entries.filter((e) => e.provenance === 'lockfile').map((e) => [e.name, e.private]));
+        expect(priv).toEqual({ '@acme/core': true, express: false });
+        const berry = one('yarn.lock', '__metadata:\n  version: 8\n\n"@acme/core@npm:^1.0.0":\n  version: 1.0.0\n  resolution: "@acme/core@npm:1.0.0"\n');
+        fs.writeFileSync(path.join(berry, '.yarnrc.yml'), 'npmScopes:\n  acme:\n    npmRegistryServer: "https://npm.acme.internal"\n');
+        expect(readInventory(berry).entries.find((e) => e.name === '@acme/core')?.private).toBe(true);
+    });
+
+    it('one lifecycle product failing keeps the others and marks the source partial', async () => {
+        const fetcher: Fetcher = async (url) =>
+            (url.endsWith('/php.json')
+                ? { status: 200, text: async () => JSON.stringify([{ cycle: '8.0', eol: '2023-11-26' }]) }
+                : { status: 404, text: async () => '' }) as never;
+        const e = (ecosystem: 'runtime' | 'npm', name: string, version: string) => ({ ecosystem, name, version, range: null, provenance: 'declared' as const, file: 'f', line: 1, private: false, scope: null });
+        const { findings, report } = await lifecycle([e('runtime', 'php', '8.0.30'), e('npm', 'react', '16.0.0')], { fetcher, now: new Date('2026-11-02T00:00:00Z') });
+        expect(findings.map((f) => f.id)).toEqual(['EOL-php-8.0']);
+        expect(report.status).toBe('partial');
+        expect(report.reason).toMatch(/react/);
+    });
+});
+
+describe('an unusable lever inventory is a gap too (independent review, 2026-11-02)', () => {
+    it('says the inventory is invalid instead of staying silent', () => {
+        const app = path.join(tmp, 'app2');
+        fs.mkdirSync(path.join(app, 'agents', 'settings'), { recursive: true });
+        fs.writeFileSync(path.join(app, 'Dockerfile'), 'FROM php:8.3\n');
+        fs.writeFileSync(path.join(app, 'agents', 'settings', 'security-ops.yml'), 'schema_version: 1\nlevers: []\n');
+        expect(gapReport(app).some((g) => g.includes('lever inventory is invalid'))).toBe(true);
+    });
+});
+

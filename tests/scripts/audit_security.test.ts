@@ -4,7 +4,7 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { auditSecurity, exitCode } from '../../src/scripts/audit_security.js';
+import { auditSecurity, exitCode, main } from '../../src/scripts/audit_security.js';
 
 function project(files: Record<string, string>): string {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'audit-security-'));
@@ -68,7 +68,9 @@ describe('audit:security', () => {
         const r = auditSecurity(clean());
         for (const l of ['supply', 'pipeline', 'contain', 'recover']) expect([l, lens(r, l).status]).toEqual([l, 'ok']);
         expect(exitCode(r)).toBe(0);
-        for (const l of auditSecurity(seeded()).lenses) for (const f of l.findings) expect(f.where).toMatch(/:\d+$|^[^:]+$/);
+        const seededRun = auditSecurity(seeded());
+        for (const f of lens(seededRun, 'supply').findings) expect(f.where).toMatch(/^package-lock\.json:\d+$/);
+        for (const f of lens(seededRun, 'pipeline').findings) expect(f.where).toMatch(/^\.github\/workflows\/ci\.yml(:\d+)?$/);
     });
 
     it('never reports a lens it could not read as ok', () => {
@@ -105,4 +107,36 @@ describe('audit:security', () => {
         expect(details.join(' ')).not.toMatch(/preact/);
         expect(details.filter((d) => d.startsWith('fsevents'))).toHaveLength(1);
     });
+
+    it('a yarn-only project is read by the supply lens, never reported not-applicable', () => {
+        const root = project({ 'yarn.lock': '# yarn lockfile v1\n\nexpres@^1.0.0:\n  version "1.0.0"\n  resolved "https://registry.yarnpkg.com/expres/-/expres-1.0.0.tgz#a"\n' });
+        const supply = lens(auditSecurity(root), 'supply');
+        expect(supply.status).toBe('finding');
+        expect(supply.findings[0]!.where).toBe('yarn.lock:3');
+    });
+
+    it('a short popular name is not a typo-squat magnet', () => {
+        const supply = lens(auditSecurity(project({ 'package-lock.json': lock({ uid: {}, pq: {}, wss: {} }) })), 'supply');
+        expect(supply.status).toBe('ok');
+    });
+
+    it('rejects a stray argument and a --root without a value', () => {
+        const err = process.stderr.write;
+        process.stderr.write = (() => true) as never;
+        try {
+            expect(main(['--root'])).toBe(2);
+            expect(main(['somewhere'])).toBe(2);
+        } finally {
+            process.stderr.write = err;
+        }
+    });
+
+    it('a lever released through the control surface while stopping http is refused unless the surface is declared separate', () => {
+        const root = clean();
+        fs.writeFileSync(path.join(root, 'agents/settings/security-ops.yml'), 'schema_version: 1\noperator_path: sso\nbreak_glass: cli\nlevers:\n  - id: down\n    level: L3\n    fail_mode: closed\n    owner: on-call\n    release: control-surface\n    stops: [http]\n');
+        expect(lens(auditSecurity(root), 'contain').status).toBe('ok');
+        fs.writeFileSync(path.join(root, 'agents/settings/security-ops.yml'), 'schema_version: 1\noperator_path: sso\nbreak_glass: cli\ncontrol_surface: same-app\nlevers:\n  - id: down\n    level: L3\n    fail_mode: closed\n    owner: on-call\n    release: control-surface\n    stops: [http]\n');
+        expect(lens(auditSecurity(root), 'contain').findings.map((f) => f.detail).join(' ')).toMatch(/locks out/);
+    });
 });
+

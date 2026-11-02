@@ -344,3 +344,13 @@ describe('R2 round 3 fixes (2026-10-21)', () => {
         expect(claimRemediation(all, 'K', 's2').joined).toBe(false);
     });
 });
+
+describe('framework end of support (independent review, 2026-11-02)', () => {
+    it('an EOL framework line is a release-line upgrade, never a mitigation offer', () => {
+        const p = fixPlan(finding({ verdict: 'eol', ecosystem: 'Packagist', package: 'laravel/framework', version: 'v9.52.16', fixed: null }), []);
+        expect(p.note).toMatch(/release-line upgrade/);
+        expect(p.note).not.toMatch(/mitigation instead/);
+        expect(p.commands).toEqual([]);
+    });
+});
+

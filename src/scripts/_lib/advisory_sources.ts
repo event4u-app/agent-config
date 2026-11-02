@@ -549,11 +549,14 @@ export async function lifecycle(
     const findings: RawFinding[] = [];
     try {
         const tables = new Map<string, Array<{ cycle?: string; eol?: string | boolean }>>();
+        const failed: string[] = [];
         for (const product of new Set(targets.map((t) => t.product))) {
             const res = await fetcher(`https://endoflife.date/api/${product}.json`, { timeoutMs: opts.timeoutMs ?? 8000 });
-            if (res.status !== 200) return { findings: [], report: { source: 'lifecycle', status: 'error', reason: `http-${res.status}` } };
-            tables.set(product, JSON.parse(await res.text()));
+            // One product's failure must not drop another's answer: keep the rest, say which was not read.
+            if (res.status !== 200) failed.push(`${product}:http-${res.status}`);
+            else tables.set(product, JSON.parse(await res.text()));
         }
+        if (tables.size === 0) return { findings: [], report: { source: 'lifecycle', status: 'error', reason: failed.join(',') } };
         const reported = new Set<string>();
         for (const { e, product, line } of targets) {
             const row = (tables.get(product) ?? []).find((r) => String(r.cycle) === line);
@@ -581,7 +584,7 @@ export async function lifecycle(
                 line: e.line,
             });
         }
-        return { findings, report: { source: 'lifecycle', status: 'ok', reason: null } };
+        return { findings, report: failed.length > 0 ? { source: 'lifecycle', status: 'partial', reason: failed.join(',') } : { source: 'lifecycle', status: 'ok', reason: null } };
     } catch (e) {
         return { findings: [], report: { source: 'lifecycle', status: 'unavailable', reason: (e as Error).name === 'TimeoutError' ? 'timeout' : 'network' } };
     }
