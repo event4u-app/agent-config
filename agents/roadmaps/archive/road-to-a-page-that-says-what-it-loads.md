@@ -164,6 +164,7 @@ Three-state contract throughout: finding / undecided / passed.
 | E5 | Default-on report-only for `de\|eu` and `/audit web` | Owner-reserved (consumer-facing default flip) — carried in `stubs/road-to-a-page-check-on-by-default`, trigger: the claim backs on a held-out corpus. |
 | E6 | Render arm classification | Offline, per command, consumer's own build fulfilled from disk, zero egress test-enforced — the `ui:render` Class-A shape; no new class, no ADR amendment. |
 | E7 | Further supersession rows (TTDSG→TDDDG) | Only with a named defect each. |
+| E8 | 4.3 asks to mark the CSV column opt-in, the tree already does | Closed as already-satisfied with the `file:line`; no edit, so the step and its evidence do not contradict. |
 
 ## Kill register
 

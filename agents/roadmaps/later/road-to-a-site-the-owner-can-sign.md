@@ -64,6 +64,12 @@ no new verb: a mission in the existing container.
       go-live.
       verify: the mission's last phase writes the query set and a due date.
 
+## Decisions
+
+| # | Question | Resolution |
+|---|---|---|
+| E1 | Does 2.3 deploy anything? | No. It builds the mission step and its Hard-Floor marker; every real deploy, DNS change or test enquiry stays a this-turn owner confirmation at run time, per `non-destructive-by-default`. Nothing to ask now. |
+
 ## Kill register
 
 | # | Killed | Why |
