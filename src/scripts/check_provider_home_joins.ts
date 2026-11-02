@@ -67,6 +67,19 @@ export function joinSites(root: string): string[] {
     return out;
 }
 
+/** `["file:3", …]` → `{ file: 3 }`; a malformed entry throws, so the gate reports a usage error. */
+export function parseHeld(held: readonly string[]): Record<string, number> {
+    if (!Array.isArray(held)) throw new Error('held is not a list');
+    const out: Record<string, number> = {};
+    for (const h of held) {
+        const at = h.lastIndexOf(':');
+        const n = Number(h.slice(at + 1));
+        if (at <= 0 || !Number.isInteger(n) || n <= 0) throw new Error(`malformed entry ${h}`);
+        out[h.slice(0, at)] = n;
+    }
+    return out;
+}
+
 export function countsByFile(sites: readonly string[]): Record<string, number> {
     const counts: Record<string, number> = {};
     for (const s of sites) {
@@ -104,9 +117,9 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
     const file = path.join(root, BASELINE_REL);
     let baseline: Record<string, number>;
     try {
-        baseline = (JSON.parse(fs.readFileSync(file, 'utf-8')) as { files: Record<string, number> }).files;
+        baseline = parseHeld((JSON.parse(fs.readFileSync(file, 'utf-8')) as { held: string[] }).held);
     } catch {
-        process.stderr.write(`check_provider_home_joins: cannot read ${BASELINE_REL}\n`);
+        process.stderr.write(`check_provider_home_joins: cannot read ${BASELINE_REL} (expects { held: ["<file>:<count>", …] })\n`);
         return 2;
     }
     const live = countsByFile(sites);
@@ -116,10 +129,8 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
             const v = Math.min(n, live[f] ?? 0);
             if (v > 0) next[f] = v;
         }
-        fs.writeFileSync(
-            file,
-            `${JSON.stringify({ note: 'Shrink-only. Resolve through src/scripts/_lib/provider_home.ts, then lower with --write.', files: next }, null, 1)}\n`,
-        );
+        const raw = JSON.parse(fs.readFileSync(file, 'utf-8')) as Record<string, unknown>;
+        fs.writeFileSync(file, `${JSON.stringify({ ...raw, held: Object.entries(next).map(([f, n]) => `${f}:${n}`) }, null, 1)}\n`);
         process.stdout.write(`provider-home joins baseline lowered to ${Object.values(next).reduce((a, b) => a + b, 0)}\n`);
         return 0;
     }

@@ -1,5 +1,6 @@
 ---
 stability: beta
+keep-beta-until: 2027-01-31
 ---
 
 # Session List

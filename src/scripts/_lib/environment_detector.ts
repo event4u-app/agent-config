@@ -29,14 +29,10 @@
  * Auth probing already existed in two shapes before this module and a third
  * must not appear. This module composes; it re-implements nothing:
  *
- * | Field | Absorbed from |
- * |---|---|
- * | `hosts[].installed` | `install/toolDetection.ts::detectInstalledTools` (the 23-host signal table) |
- * | `hosts[].binary` | `install/toolDetection.ts::resolveToolBinary` (same table, path-returning) |
- * | `hosts[].version` | `install/agentSwitchDetection.ts::parseVersionOutput` (the first-dotted-number parser) |
- * | `auth` (`openai`, `cli-*`) | `_lib/codex_auth.ts::readCodexAuth` (shared with `cmd_doctor`) and `_lib/provider_home.ts::codexHome` — one reader, one path |
- * | `auth` (`anthropic`, `cli-subscription`) | `_lib/claude_plugin.ts::claude_config_dir` (`CLAUDE_CONFIG_DIR` override incl.) |
- * | `auth` (`key-file`) | `_lib/user_global_paths.ts::resolve_with_fallback` (new namespace, legacy read-fallback) |
+ * - hosts reuse the signal table of `install/toolDetection.ts` and the version
+ *   parser of `install/agentSwitchDetection.ts`;
+ * - auth reuses `_lib/provider_home.ts` for every provider dir, `_lib/codex_auth.ts`
+ *   (shared with `cmd_doctor`) and `_lib/user_global_paths.ts` for key files.
  *
  * The council's TTL'd `AuthCache` (`ai_council/solo_dispatch.ts`) is the third
  * existing shape and is deliberately NOT absorbed: it caches a *liveness*

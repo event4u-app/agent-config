@@ -16,7 +16,8 @@ const put = (rel: string, body: string): void => {
     fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
     fs.writeFileSync(path.join(root, rel), body);
 };
-const baseline = (files: Record<string, number>): void => put(BASELINE_REL, JSON.stringify({ files }));
+const baseline = (files: Record<string, number>): void =>
+    put(BASELINE_REL, JSON.stringify({ held: Object.entries(files).map(([f, n]) => `${f}:${n}`) }));
 
 beforeEach(() => {
     root = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-joins-'));
@@ -46,8 +47,8 @@ describe('check_provider_home_joins', () => {
     it('--write only lowers and drops zeros', () => {
         baseline({ 'src/scripts/_lib/a.ts': 3, 'src/scripts/_lib/gone.ts': 2 });
         expect(main(['--write'], root)).toBe(0);
-        const files = (JSON.parse(fs.readFileSync(path.join(root, BASELINE_REL), 'utf-8')) as { files: Record<string, number> }).files;
-        expect(files).toEqual({ 'src/scripts/_lib/a.ts': 1 });
+        const held = (JSON.parse(fs.readFileSync(path.join(root, BASELINE_REL), 'utf-8')) as { held: string[] }).held;
+        expect(held).toEqual(['src/scripts/_lib/a.ts:1']);
     });
 
     it('an unknown flag is refused', () => {
