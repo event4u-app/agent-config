@@ -25,6 +25,7 @@
  *    identifier, judged by the same grammar as `source-header`. Added because a
  *    `- Inspiration: <owner>/<repo>/skills/<x>/SKILL.md` line shipped under
  *    `src/` with an owner absent from the deny list, and no class saw it.
+ *    Under `src/` this class blocks with zero tolerance (see `tierFor`).
  *
  * ## What this is NOT — a floor, not a proof
  *
@@ -537,7 +538,22 @@ export function shapePathHits(rel: string, allow: SlugAllowlist = DEFAULT_ALLOWL
  * `how-loud-the-slug-heuristic-is` blocker: block inside `agents/**`, warn
  * everywhere else. Attribution is concentrated in `agents/**`; repository slugs
  * are ordinary content in integration code and docs.
+ *
+ * One exception, owner decision OQ-62 (E2, 2026-11-02): an `attribution-label`
+ * under `src/` blocks. A line-leading `Inspiration:` / `Ported from:` label
+ * with a readable identifier is attribution by construction, not integration
+ * content, and `src/` is what ships. Measured 0 such hits at the flip.
  */
-export function tierFor(rel: string): 'block' | 'warn' {
-    return rel.startsWith('agents/') ? 'block' : 'warn';
+export function tierFor(rel: string, cls?: ShapeClass): 'block' | 'warn' {
+    if (rel.startsWith('agents/')) return 'block';
+    return isZeroTolerance(rel, cls) ? 'block' : 'warn';
+}
+
+/**
+ * A block finding that fails the gate on its own, outside the `agents/**`
+ * ratchet. Folding it into the ratcheted count would let it pass whenever the
+ * pre-existing `agents/**` debt shrinks below the baseline.
+ */
+export function isZeroTolerance(rel: string, cls?: ShapeClass): boolean {
+    return cls === 'attribution-label' && rel.startsWith('src/');
 }

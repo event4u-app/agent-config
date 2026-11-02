@@ -47,7 +47,9 @@ It probes the ten readiness dimensions in one pass — test-runner config
 `infection.json*`, `[tool.mutmut]`), property-based libraries, static analysis
 (`phpstan.neon`, `psalm.xml`, `tsconfig.json`), architecture gates
 (`.dependency-cruiser.*`, `deptrac.yaml`), SAST (`.semgrep*`, bandit),
-lockfiles, audit steps, `CODEOWNERS`, decision-record directories — **and
+lockfiles, audit steps, `CODEOWNERS`, decision-record directories, a
+behavior contract (an OpenAPI / AsyncAPI document, a Gherkin feature or a pact
+file — an `AGENTS.md` alone is observed, never graded) — **and
 whether CI actually blocks on each**, which is the 1 → 2 distinction a
 hand-read gets wrong: a job that exists is `Present`, a job that can fail the
 build is `Enforced-in-CI`.

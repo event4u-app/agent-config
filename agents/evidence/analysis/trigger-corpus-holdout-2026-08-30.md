@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  d19cb94f3237719d2ba31c48f5f961d14f9b85d438259d5056bdebd261ffe31e
+SET-SHA256  6719e4aea704b1a2510d2293ff3fdad07aced9b79be2c96666223f725b7354ad
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1270,6 +1270,7 @@ open and which this file does not settle.
 | `flux` | `6af79f646de538883690b4ae485055191d08049df947dd7da4c949b7523dedf4` |
 | `forensics-report` | `ae4a0a37cd21eeb99b798839d99195e580dbd5bdb017642ace5e462db0593234` |
 | `form-handler` | `5e88a2223f79b275411ba720155768414f4fe5bd99d8099a381ed9103e511805` |
+| `founder-idea-interview` | `a215f449b4c89590c397c231aff55a730c86ad492515adf64fc7a34de31c7520` |
 | `frontend-render-security` | `a881e51be1fb62289f71f02ae53177629734e23e5fd5aa3a4a43c972fb23b7f1` |
 | `gated-reach` | `8d39468e75ff725b8e4454fc3a783c2490447ac3f8658ec91e62dbc48352c8a1` |
 | `git-workflow` | `508cdaa8fac1ca9fe1da6934db8a6e1496fc6c46b39dd19ef068b752966b271d` |
@@ -2194,6 +2195,39 @@ evaluation.
 guard (**+5.24 pp** against +2.0 pp; was +5.28 pp).
 `delivery-set-measurement-2026-08-31.json`: recall loss **38.57 pp** (was
 38.83 pp), the ceiling stays **BREACHED**; context cost **230.6** tokens against
+the 500 target, still **MET**. Neither verdict changes in kind.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.
+
+## Growth — 2026-11-02c, one new corpus (founder-idea-interview); nothing seals
+
+```
+ONE ROW IS NEW AND TRAINS. NO PRE-EXISTING CORPUS FILE WAS EDITED. BOTH
+TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN AFTER THE CORPUS WAS ON DISK.
+```
+
+**What changed.** `road-to-a-founder-interview-that-ends-in-a-plan` (owner
+decision OQ-61) added the `founder-idea-interview` skill with its own corpus: five
+exemplars (one German), four near-misses naming the neighbours that should win,
+one hiring counterexample. Three neighbour descriptions were shortened to pay
+back its catalogue line (`html-deck`, `customer-research`,
+`competitive-moat-analysis`); their corpus files are untouched, so no per-file
+row moves.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `founder-idea-interview` | train | `0xb1` = 177 ≥ 51 | new |
+
+**Nothing seals.** The sealed set stays **44**, the train set moves **151 -> 152**,
+the set **195 -> 196**. AC-6 rests on the same 18 rows.
+`SET-SHA256` moves because it is computed over every row: `d19cb94f…` → `6719e4ae…`.
+
+**Both train-side measurements were re-taken on this tree.**
+`routing-body-signal-verdict.json`: still `harmful` on the false-activation
+guard (**+5.48 pp** against +2.0 pp; was +5.24 pp).
+`delivery-set-measurement-2026-08-31.json`: recall loss **38.58 pp** (was
+38.57 pp), the ceiling stays **BREACHED**; context cost **230.1** tokens against
 the 500 target, still **MET**. Neither verdict changes in kind.
 
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`

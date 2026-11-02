@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: customer-research
-description: "Use when shaping a discovery slice — JTBD-framed interview guide, switch-event focus, verbatim quotes not summaries. Triggers on 'talk to users', 'why did they cancel', 'before we build X'."
+description: "Use when shaping a discovery slice — JTBD-framed interview guide, switch-event focus. Triggers on 'talk to users', 'why did they cancel', 'before we build X'."
 status: active
 tier: senior
 domain: product
