@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # inbox-2026-11-e — disposition
 
 Round of three topic sets on code-rendered motion film (t1, t2, t3), each a
