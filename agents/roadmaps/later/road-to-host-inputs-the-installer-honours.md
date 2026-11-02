@@ -134,9 +134,14 @@ Claude Code is talking to a foreign gateway.
 Carried verbatim in substance from the archived parent, which shipped the
 `cloud-reach` doctor check, `cloud_clone_probe`, the baseline
 (`agents/evidence/analysis/cloud-clone-baseline-2026-11-02.json`: 0 skills, 0 rules,
-0 hooks) and `docs/setup/cloud-sessions.md`. Blocker for 5.2–5.5:
-`cloud-delivery-owner-decision` (Owner: owner) — each writes into consumer
-repositories or adds a hook-time network call.
+0 hooks) and `docs/setup/cloud-sessions.md`.
+
+**Owner decision 2026-11-02** (answer "1" to the delivery question at the close of
+round `inbox-2026-11-f`): build variant B and stop the `enabledPlugins` write. Built as
+an opt-in repair, `agent-config doctor --repair cloud-reach`, rather than an
+`init --carry=repo` flag: consumer installs are global-only (ADR-020) and never reach
+the project-bridge path, so a flag on `init` would have needed a scope exception in
+`install.ts`; the repair is where the `cloud-reach` finding already points.
 
 - [ ] **5.1 One real cloud session.** `/context` and `/hooks` in a claude.ai/code session
   on this repository and on a consumer fixture; confirm Node `>=22.6.0` on the cloud
@@ -144,14 +149,19 @@ repositories or adds a hook-time network call.
   verify: the observations recorded beside the baseline, with the host version.
 - [ ] **5.2 Committed SessionStart hook in consumer repos** printing the `cloud-reach`
   line inside the cloud session itself (owner decision, bundled with 5.3).
-- [ ] **5.3 Variant B, opt-in `init --carry=repo`:** the hook matrix byte-identical in
-  `.claude/settings.json` and a SessionStart bootstrap installing the runtime from npm
-  only when `CLAUDE_CODE_REMOTE=true`. Variant A (setup script) is closed for hooks:
-  user `~/.claude/settings.json` is not read in a cloud session.
-  verify: `./scripts-run src/scripts/cloud_clone_probe .` -> /"status": "ok"/ with
-  `managedHooks` >= 3; a local run shows each guard firing exactly once.
-- [ ] **5.4 Stop writing `enabledPlugins`** for the deprecated plugin in
+- [x] **5.3 Variant B, opt-in `doctor --repair cloud-reach`** (`src/scripts/_lib/cloud_carry.ts`): <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/cmd_doctor.ts -->
+  the global hook bodies in `.claude/settings.json`, each gated on
+  `CLAUDE_CODE_REMOTE=true` (no reliance on a host dedupe), SessionStart installing the
+  pinned version with `--ignore-scripts` when no trusted dispatcher is present, 300 s
+  timeout. Variant A (setup script) is closed for hooks.
+  verify: `npx vitest run tests/scripts/cloud_carry.test.ts` -> 0 — the carried commands
+  are executed: silent exit 0 locally, refusal in the cloud with no dispatcher, a loud
+  line on a failed install, dispatch after a successful one, no project-local binary
+  trusted; a committed carry reads `managedHooks` 11 and `ok` in `cloud_clone_probe`.
+  production entry: src/scripts/_cli/cmd_doctor.ts
+- [x] **5.4 Stop writing `enabledPlugins`** for the deprecated plugin in <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/install.ts -->
   `ensure_claude_bridge` (`src/scripts/install.ts`) — inert in the cloud, deprecated locally.
+  verify: a dev-mode project install writes `.claude/settings.json` with only its `env` block.
 - [ ] **5.5 Commit a `.claude/settings.json` with hooks for this repository** (after 5.3).
 
 ## Kill register
