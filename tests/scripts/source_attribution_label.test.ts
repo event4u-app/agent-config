@@ -93,7 +93,8 @@ describe('the gate tier for the D1 shape under src/ (OQ-62 E2)', () => {
         // A projection of src/ is not src/: the src/ hit already fails the gate.
         expect(tierFor('dist/agent-src/commands/x.md', 'attribution-label')).toBe('warn');
         // agents/** stays block, and stays inside the ratchet rather than zero-tolerance.
-        expect(tierFor('agents/roadmaps/x.md', 'attribution-label')).toBe('block');
-        expect(isZeroTolerance('agents/roadmaps/x.md', 'attribution-label')).toBe(false);
+        const agentsPath = 'agents/evidence/x.md'; // code-comment-allow provenance-comment -- fixture path under test, not a citation
+        expect(tierFor(agentsPath, 'attribution-label')).toBe('block');
+        expect(isZeroTolerance(agentsPath, 'attribution-label')).toBe(false);
     });
 });

@@ -44,10 +44,9 @@ below and never restated here.
 
 ### §0 — Inspect what already exists
 
-Check the working directory before the first question: an existing roadmap,
-pitch, notes file or `vision-articulation` output for the same idea is read,
-not re-asked. If the idea lives inside an existing codebase, run
-`validate-feature-fit` on it before §4.
+Before the first question, read what exists for the idea — roadmap, pitch,
+notes, the `product` / `customer-segment` spine slots, `vision-articulation`
+output — never re-ask it. Inside a codebase, run `validate-feature-fit` before §4.
 
 ### §1 — Interview the founder, one question per turn
 
