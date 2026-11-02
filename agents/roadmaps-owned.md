@@ -10,7 +10,6 @@ and keep the full search — this file only adds candidates to it.
 | slug | dir | status | owns |
 |---|---|---|---|
 | road-to-a-fill-the-session-sees-coming | active | ready | The fill state is visible outside the reply too (status line, doctor), and the continuity record no longer depends on … |
-| road-to-a-founder-interview-that-ends-in-a-plan | active | ready | `/challenge-me founder` interviews a founder about hobbies, ideas and everyday problems, researches market, competition and willingness to pay itself instead … |
 | road-to-a-graph-that-wins | active | ready | Register before measuring; measure on repositories in the owner's stack that this repository does not own; publish both directions; and … |
 | road-to-a-map-that-holds-on-the-real-repo | active | ready | On a lane build of this repository in CI, the map states no fixture as product, writes no dangling edge, … |
 | road-to-a-map-that-knows-what-happened | active | ready | The map knows what happened to the code, and the agent gets answers instead of files. |
