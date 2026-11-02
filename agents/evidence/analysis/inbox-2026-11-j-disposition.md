@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # inbox-2026-11-j — disposition
 
 > **Source:** `agents/tmp.old/inbox-2026-11-j/` (`t1/`, `t2/`; true sources in the
