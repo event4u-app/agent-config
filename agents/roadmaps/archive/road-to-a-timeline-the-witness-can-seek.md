@@ -64,11 +64,13 @@ calls a paid provider, adds a hook concern or flips a default.
   paused and set to `t`. `film-page.md` gains the row; `renderers.csv`'s route
   becomes true.
   verify: `tests/cli/ui_render_film_capture.test.ts` — the registry page reports `form` = `timelines`, 4 distinct frames and `deterministic: true`; an unseekable registry reports `none`.
+  production entry: `src/cli/commands/uiRender.ts`
 - [x] **1.2** Embedded footage: in the `waapi` and `timelines` forms every <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRenderFilm.ts -->
   `<video>` is paused and set to `t − data-start` (clamped to its duration),
   and the capture awaits `seeked`. `__seek`/`render` pages keep owning their
   footage. The contract names the all-intra encode advice.
   verify: the footage test in the same suite reports 5 distinct frames (t ≤ 0.5 hold the first clip frame) and `deterministic: true`.
+  production entry: `src/cli/commands/uiRender.ts`
 
 ## Phase 2 — Craft corpus
 
