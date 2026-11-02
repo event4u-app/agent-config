@@ -15,7 +15,7 @@ type: prospective
 
 **Accepted** · 2026-05-19 · in-session council (8 items) +
 external `claude-sonnet-4-5` + `gpt-4o` pass (5 items, cost $0.16) on
-`agents/roadmaps/typescript-cli-and-local-gui-foundation.md`. All 13
+`agents/roadmaps/archive/typescript-cli-and-local-gui-foundation.md`. All 13
 items folded into Phase 0–5a or carved with rationale below.
 
 ## Context

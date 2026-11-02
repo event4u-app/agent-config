@@ -101,4 +101,4 @@ becomes a pre-flip gate, not a blocker.
   convergence inlined above per `no-roadmap-references`).
 - `tests/scripts/_lib_knowledge_global_redaction_adversarial.test.ts` —
   the validation gate.
-- `agents/roadmaps/road-to-opt-decision-flips.md` Phase 1 (execution).
+- `agents/roadmaps/archive/road-to-opt-decision-flips.md` Phase 1 (execution).

@@ -66,8 +66,8 @@ the first draft of this sentence said "in the tree" — an over-claim, caught by
 the completion review.** The reproducing grep restricted itself to
 `*.ts *.yml *.yaml *.json`, so no markdown consumer was ever visible to it, and
 two live parked roadmaps carried the date as a wake trigger. They are repaired in
-the same change (`agents/roadmaps/later/road-to-database-erd-landing.md`,
-`agents/roadmaps/later/road-to-database-relational-modeling.md`): a park whose
+the same change (`agents/roadmaps/archive/road-to-database-erd-landing.md`,
+`agents/roadmaps/archive/road-to-database-relational-modeling.md`): a park whose
 exit condition is an event no code produces is a park with no exit. On 2026-11-10 the workflow would have read
 `grace_ceiling` 138,490 exactly as before, passed it as `--ceiling`, and every
 pull request would have continued to pass. The full reproduction is in

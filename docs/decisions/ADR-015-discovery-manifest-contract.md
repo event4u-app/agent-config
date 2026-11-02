@@ -16,7 +16,7 @@ type: prospective
 **Accepted** · 2026-05-21 · in-session AI Council pass. Folds the Phase-2
 intake invariant (`agents/tmp/refactor-package.txt`, last paragraph) and
 the additive-vs-rewrite call into the schema. Phase-1 prerequisite for
-[`monorepo-phase-2-virtual-packs-discovery`](../../agents/roadmaps/monorepo-phase-2-virtual-packs-discovery.md).
+[`monorepo-phase-2-virtual-packs-discovery`](../../agents/roadmaps/archive/monorepo-phase-2-virtual-packs-discovery.md).
 
 ## Context
 
@@ -142,5 +142,5 @@ when `generated_at` is normalized. Specifically:
   — the locked schema.
 - [`docs/contracts/discovery-manifest.md`](../contracts/discovery-manifest.md)
   — worked examples + consumer guide.
-- [`agents/roadmaps/monorepo-phase-2-virtual-packs-discovery.md`](../../agents/roadmaps/monorepo-phase-2-virtual-packs-discovery.md)
+- [`agents/roadmaps/archive/monorepo-phase-2-virtual-packs-discovery.md`](../../agents/roadmaps/archive/monorepo-phase-2-virtual-packs-discovery.md)
   — the implementing roadmap.
