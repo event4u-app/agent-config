@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **755 public artefacts** shipped by
+Consumer-facing catalog of all **756 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > Auto-generated — do not edit manually.
 
-## Skills (301)
+## Skills (302)
 
 > **Behavioural-eval coverage is measured, not implied.** A skill is
 > behaviourally evaluated only if it ships `evals/evals.json`; most do
@@ -62,6 +62,7 @@ are excluded.
 | skill | [`character-consistency`](../dist/agent-src/skills/character-consistency/SKILL.md) | official | Use when a character must stay visually identical across AI video scenes — locks identity tokens (silhouette, palette, wardrobe, prop) in JSON. Triggers 'character lock', 'same character'. |
 | skill | [`check-refs`](../dist/agent-src/skills/check-refs/SKILL.md) | official | Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions. |
 | skill | [`churn-prevention`](../dist/agent-src/skills/churn-prevention/SKILL.md) | official | Use when designing churn defence — health-score signals, churn-cause split (involuntary / value / relationship / fit), early-warning loop. Triggers on 'why are accounts leaving'. |
+| skill | [`code-film`](../dist/agent-src/skills/code-film/SKILL.md) | official | Build a short motion film from code — launch clip, kinetic type, animated chart, explainer — every frame computed from time, captured, encoded and checked. |
 | skill | [`code-intelligence`](../dist/agent-src/skills/code-intelligence/SKILL.md) | official | Route codebase-structure questions (who calls X, where used, change-impact) to an existing code-graph first: impact, tests-for, dead cheaper, never more precise; grep routine. Also 'call graph'. |
 | skill | [`code-refactoring`](../dist/agent-src/skills/code-refactoring/SKILL.md) | official | When the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, verifies via quality tools. |
 | skill | [`code-review`](../dist/agent-src/skills/code-review/SKILL.md) | official | Use when the user says \"review this\", \"check my code\", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards. |
@@ -197,7 +198,7 @@ are excluded.
 | skill | [`module-detect-on-the-fly`](../dist/agent-src/skills/module-detect-on-the-fly/SKILL.md) | official | When editing a module-shaped path (`Modules/*`, `packages/*`, `apps/*`) while `modules.enabled` is false — asks once to enable it; also the project/stack + task-runner detection reference. |
 | skill | [`module-management`](../dist/agent-src/skills/module-management/SKILL.md) | official | When working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path. |
 | skill | [`monorepo-workspace`](../dist/agent-src/skills/monorepo-workspace/SKILL.md) | official | Use to orient in a monorepo — which package manager, which workspaces, which task runner and its tasks — derived from the repository's own config and the runner's own listing, never guessed. |
-| skill | [`motion-choreographer`](../dist/agent-src/skills/motion-choreographer/SKILL.md) | official | When turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'. |
+| skill | [`motion-choreographer`](../dist/agent-src/skills/motion-choreographer/SKILL.md) | official | Locked still + blueprint → provider-tuned motion prompt: camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'. Film from code → code-film. |
 | skill | [`multi-tenancy`](../dist/agent-src/skills/multi-tenancy/SKILL.md) | official | Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations. |
 | skill | [`nda-triage`](../dist/agent-src/skills/nda-triage/SKILL.md) | official | Use when triaging an inbound NDA fast — GREEN/YELLOW/RED so only the hard ones reach a lawyer. Triggers on 'check this NDA', 'can we sign this NDA', 'is this NDA standard'. |
 | skill | [`nextjs-patterns`](../dist/agent-src/skills/nextjs-patterns/SKILL.md) | official | Writes Next.js App Router code — Server Components, Server Actions, RSC boundaries, route handlers, caching, and streaming — matching framework conventions and project architecture. |
