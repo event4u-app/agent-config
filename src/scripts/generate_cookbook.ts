@@ -10,7 +10,7 @@
  * trailing newline). No behaviour changes — the anti-cargo-cult guard
  * (`BadRecipe` → exit 1 with `❌  generate_cookbook: <msg>`) is replicated, and
  * every ref is validated via the SAME `resolve_logical` primitive
- * `lint_flows.py` uses.
+ * `lint_flows.ts` uses.
  *
  * Renders `docs/cookbook.md` — "10 things you can do in a minute" — from
  * `src/flows/cookbook.yaml` (curated recipe seed) plus the four validated

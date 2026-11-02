@@ -9,7 +9,7 @@
 # Two layers:
 #   * The four USER-WORK flows (discovery / implementation / review / delivery)
 #     carry rich definitions (entry_points / default_path / skills) in
-#     `src/flows/<flow>.yaml`, validated by `scripts/lint_flows.py`.
+#     `src/flows/<flow>.yaml`, validated by `scripts/lint_flows.ts`.
 #   * THIS file is the COMPLETE classification — it additionally covers the
 #     non-user-work platform surfaces (`agent-admin` is the platform/system
 #     surface, NOT a flow — feedback-6; plus `product` features, `session`,
@@ -22,7 +22,7 @@
 #
 # Adding a command → add its ref here (the lint fails the build otherwise).
 # Adding a new user-work flow is an ADR-gated governance decision (the closed
-# set is fixed in lint_flows.py + flow.schema.json).
+# set is fixed in lint_flows.ts + flow.schema.json).
 version: 1
 
 # Closed user-work flow set (rich definitions in src/flows/<flow>.yaml).
