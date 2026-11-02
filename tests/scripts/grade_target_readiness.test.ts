@@ -283,6 +283,51 @@ describe('grade_target_readiness — advanced-testing-signals is observed, never
     });
 });
 
+describe('grade_target_readiness — behaviour-contract grades evidence, not prose presence', () => {
+    // road-to-a-grade-that-saw-the-evidence 1.1 (owner decision OQ-63 a). The
+    // dimension passed on `AGENTS.md` presence alone, so almost every
+    // agent-configured repository graded as having a behaviour contract.
+    const bc = (files: Record<string, string>) =>
+        grade(_target(files)).dimensions.find((d) => d.id === 'behaviour-contract');
+
+    it('a target whose only candidate is AGENTS.md grades 0', () => {
+        const d = bc({ 'package.json': '{"name":"p"}', 'AGENTS.md': '# Agents\n\nBehave.\n' });
+        expect(d?.grade).toBe(0);
+        // The prose file is still a fact about the target — observed, not scored.
+        expect(d?.observations).toContain('prose-contract-file-detected');
+    });
+
+    it('a prose CONTRACT.md alone grades 0 too — prose is not executable', () => {
+        expect(bc({ 'package.json': '{}', 'CONTRACT.md': '# Contract\n' })?.grade).toBe(0);
+    });
+
+    it('an OpenAPI document grades Present, at the root or nested', () => {
+        expect(bc({ 'package.json': '{}', 'openapi.yaml': 'openapi: 3.1.0\n' })?.grade).toBe(1);
+        expect(bc({ 'package.json': '{}', 'api/spec/openapi.json': '{"openapi":"3.1.0"}' })?.grade).toBe(1);
+    });
+
+    it('a Gherkin feature file grades Present', () => {
+        const d = bc({ 'package.json': '{}', 'features/checkout.feature': 'Feature: checkout\n' });
+        expect(d?.grade).toBe(1);
+        expect(d?.evidence).toContain('features/checkout.feature');
+    });
+
+    it('grades Enforced-in-CI only when a blocking CI step runs the specification', () => {
+        const d = bc({
+            'package.json': '{}',
+            'features/checkout.feature': 'Feature: checkout\n',
+            '.github/workflows/ci.yml': 'jobs:\n  a:\n    steps:\n      - run: npx cucumber-js\n',
+        });
+        expect(d?.grade).toBe(2);
+    });
+
+    it('a contract inside a skipped or fixture directory does not count', () => {
+        expect(bc({ 'package.json': '{}', 'node_modules/x/a.feature': 'Feature: x\n' })?.grade).toBe(0);
+        // A contract inside a fixture tree is a test input, not the target's contract.
+        expect(bc({ 'package.json': '{}', 'tests/fixtures/api/openapi.yaml': 'openapi: 3.1.0\n' })?.grade).toBe(0);
+    });
+});
+
 describe('grade_target_readiness — 1.2 no aggregate score, anywhere', () => {
     it('the rendered matrix contains no percentage and no x/100', () => {
         for (const root of [full, ciAbsent, python]) {
