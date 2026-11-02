@@ -7,8 +7,17 @@
  */
 import { origins } from '../../config/third-party-origins.json';
 import { supersessions } from '../../config/web-launch-readiness.json';
-import { type OriginRow, type Supersession, type WriteTimeHit, writeTimeFindings } from '../web_launch_third_party.js';
+import { type OriginRow, type Supersession, writeTimeFindings } from '../web_launch_third_party.js';
+import type { Finding } from './design_pass_hook.js';
 
-export function scanWebLaunch(rel: string, content: string): WriteTimeHit[] {
-    return writeTimeFindings(rel, content, origins as OriginRow[], supersessions as Supersession[]);
+/** Already in the hook's Finding shape, so the dispatch bundle carries no mapping. Advisory P2. */
+export function scanWebLaunch(rel: string, content: string): Finding[] {
+    return writeTimeFindings(rel, content, origins as OriginRow[], supersessions as Supersession[]).map((h) => ({
+        file: rel,
+        severity: 'P2',
+        catalogId: 'web-launch',
+        rule: h.check,
+        line: h.line,
+        message: h.text,
+    }));
 }

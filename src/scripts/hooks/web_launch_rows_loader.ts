@@ -1,16 +1,16 @@
 /**
  * Loads `scanWebLaunch` from its conditional chunk beside the dispatch bundle,
  * through the shared `loadChunkExport`. Unbundled (source) runs return null:
- * the rows are tested through `scanWebLaunch` directly. A failed load loses only
- * these rows, never the pass.
+ * the rows are tested through `scanWebLaunch` directly. A failed bundled load is
+ * reported by the hook as a degraded pass, never as a clean one.
  */
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { WriteTimeHit } from '../web_launch_third_party.js';
+import type { Finding } from './design_pass_hook.js';
 import { isBundled, loadChunkExport } from './svg_rules_loader.js';
 
-export type WebLaunchScan = (rel: string, content: string) => WriteTimeHit[];
+export type WebLaunchScan = (rel: string, content: string) => Finding[];
 
 export const WEB_LAUNCH_CHUNK = 'web_launch_rows.chunk.cjs';
 
