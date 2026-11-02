@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **644**
-- Edges (incl. self-WRITE): **2455**
+- Files indexed: **645**
+- Edges (incl. self-WRITE): **2461**
 
 ## READ_ONLY edges
 
@@ -1125,6 +1125,11 @@
 | `.agent-src.uncondensed/skills/form-handler/SKILL.md` | `.agent-src.uncondensed/skills/fe-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/form-handler/SKILL.md` | `.agent-src.uncondensed/skills/laravel-validation/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/form-handler/SKILL.md` | `.agent-src.uncondensed/skills/tailwind-engineer/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/founder-idea-interview/SKILL.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/founder-idea-interview/SKILL.md` | `.agent-src.uncondensed/rules/finance-safety-floor.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/founder-idea-interview/SKILL.md` | `.agent-src.uncondensed/rules/strategy-safety-floor.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/founder-idea-interview/SKILL.md` | `.agent-src.uncondensed/rules/untrusted-input-defense.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/founder-idea-interview/SKILL.md` | `.agent-src.uncondensed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/frontend-render-security/SKILL.md` | `.agent-src.uncondensed/rules/senior-engineering-discipline.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/frontend-render-security/SKILL.md` | `.agent-src.uncondensed/skills/accessibility-auditor/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/frontend-render-security/SKILL.md` | `.agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md` | `body_link` | 1 |
@@ -1831,5 +1836,5 @@
 | `context` | 79 |
 | `persona` | 36 |
 | `rule` | 122 |
-| `skill` | 407 |
+| `skill` | 408 |
 
