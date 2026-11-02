@@ -383,7 +383,7 @@ naming and the peer gaps; subsystem-class stages wait on
 ## Code-rendered film — the follow-on to step 5.3a
 
 > **Source:** `agents/tmp.old/inbox-2026-11-e/` (topics t1, t2, t3).
-> **Arrivals:** 1 — `inbox-2026-11-e` (2026-11-02).
+> **Arrivals:** 2 — latest `inbox-2026-11-k` (2026-11-02); earlier: `inbox-2026-11-e`.
 
 The code-rendered film track shipped its witness, audio floor and skill in
 `archive/road-to-a-film-built-from-time.md` (`ui:render --profile film`,
@@ -464,6 +464,51 @@ track and the song are never overwritten. Builds on `audio-qa.sh`.
 #### Sound kill register
 
 K1 bundled ML or Python dependencies · K2 video-to-audio models as default (NC weights, EU exclusion) · K3 cloud hearing by default · K4 caption-model scores as QA for sync or loudness · K6 NC/ND/SA licences · K7 overwriting a master.
+
+## Video, voice and creator — arrivals from `inbox-2026-11-k`
+
+> **Source:** `agents/tmp.old/inbox-2026-11-k/` (six topic folders: an owner prompt
+> set on motion video, raw-take editing and interactive training; plans on video
+> editing, a creator studio, an open video-generation engine, a montage pipeline
+> and voice). Verified at `6233ceedef`. The film witness's timeline form and
+> footage seeking shipped in `archive/road-to-a-timeline-the-witness-can-seek.md`.
+> Each item below joins the 5.3 roadmap as a step or carries a recorded kill
+> when that roadmap is written (same rule as 5.3a).
+
+**5.3 stage 1–2, talking-head edit**
+
+- [ ] **V1** Last clean take: on repeated sentences keep the last fluent take; the EDL says which takes were dropped.
+- [ ] **V2** Slip detection before any cut: silence map against word durations; a word whose audio is shorter than its transcript claims is a finding.
+- [ ] **V3** Padding by cut type (sentence end, mid-sentence, breath) with an end tail, recorded as parameters in the EDL — no magic numbers.
+- [ ] **V4** Caption placement by layout (never over the face or the graphic) and contrast behind every cue — extends F1.2.
+- [ ] **V5** Named format presets (16:9, 9:16, 1:1 with size and fps) instead of the 1280×720 fallback — extends F1.5.
+
+**Sync and voice — extends F1.3 and F2.3**
+
+- [ ] **V6** Word-anchor grid: ASR word times become anchors; a named animation event more than 100 ms off its word is a finding.
+- [ ] **V7** Voice-over: a shortlist of three or four voices with free preview links; paid samples only on request; one continuous take; bracketed stage directions stripped before synthesis; tempo correction checked by an ASR round trip; every paid TTS call confirmed like a paid video call.
+- [ ] **V8** Paid-second planner: shot lengths sum to the voice-over length plus at most 1 s; a freeze pad covers the remainder.
+
+**Provider pipeline — 5.3 stage 3**
+
+- [ ] **V9** Still check (ffmpeg `freezedetect`, `max_still_s`) after every image-to-video fetch, and an A/V-offset check (≤ 1 frame) before stitch.
+- [ ] **V10** ffmpeg capability gate for `/video:*`: tool absent → `skipped(capability)`, never pass.
+- [ ] **V11** Adapter inputs: multi-reference image/video/audio, a "keep X, change only Y" edit mode, motion transfer — each gated on a smoke trace.
+- [ ] **V12** Licence `{id, territory_excluded[], checked_at}` on every manifest entry; an entry without it fails `lint_adapter_tier`.
+- [ ] **V13** Cost per *accepted* second as the quote basis next to the modelled estimate (owner decision on display).
+- [ ] **V14** Retry cap per shot inside calibration/stitch: a shot that fails twice stops with one ask.
+- [ ] **V15** Media ingest gate for user-supplied references (type allowlist, bounded probe, re-encode, metadata/EXIF strip, hash) — security-sensitive, threat-model first.
+- [ ] **V16** Media retention: what a production keeps, for how long, and how a consent revocation deletes upstream copies.
+- [ ] **V17** SFX category allowlist next to the licence set — extends F6.3.
+
+**Owner decisions carried (not steps until answered)**
+
+- **O1** Interactive single-file training unit (`/schulung`): education as a domain in 0.4; smallest form a lesson mode on `html-deck`.
+- **O2** Speaker cut-out layouts: need a segmentation model (K1).
+- **O3** Generated music: no rung and no licence path today.
+- **O4** Creator kit (persistent creator image, profile, fixed voice) and publishing adapters (Hard Floor, private/draft first).
+- **O5** Run-level spend envelope replacing per-call confirmation; job ledger with reattach (ADR-059).
+- **O6** D6's target `road-to-a-step-that-costs-what-it-changes` is archived without the workflow-contract and checkpoint items: re-home or decline them.
 
 ## Blockers
 

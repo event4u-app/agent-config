@@ -80,6 +80,24 @@ window.__seek = (t) => { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 64, 36); ctx
         expect(m.determinism.deterministic).toBe(true);
     }, 120_000);
 
+    it('drives a registry of paused timelines (window.__timelines)', async () => {
+        const m = await render('timelines', `<!doctype html><body style="margin:0"><div id="b" style="width:16px;height:16px;background:#000"></div>
+<script>${META(1, 4)}
+const el = document.getElementById('b');
+let now = 0;
+const tl = { paused: false, pause() { this.paused = true; }, seek(t) { now = t; el.style.transform = 'translateX(' + Math.round(t * 40) + 'px)'; } };
+window.__timelines = { main: tl };</script></body>`);
+        expect(m.form).toBe('timelines');
+        expect(m.distinct_frames).toBe(4);
+        expect(m.determinism.deterministic).toBe(true);
+    }, 120_000);
+
+    it('does not claim the timelines form for a registry it cannot seek', async () => {
+        const m = await render('timelines-unseekable', `<!doctype html><body><p>still</p>
+<script>window.__timelines = { main: { play() {} } };</script></body>`, { duration: 1, fps: 4 });
+        expect(m.form).toBe('none');
+    }, 120_000);
+
     it('refuses a page with no seek form instead of capturing empty frames', async () => {
         const m = await render('formless', '<!doctype html><body><p>still</p></body>', { duration: 1, fps: 4 });
         expect(m.form).toBe('none');
@@ -158,6 +176,20 @@ window.__seek = (t) => { ctx.fillStyle = '#123'; ctx.fillRect(0, 0, 64, 36); ctx
             expect(m.findings).toEqual([]);
             expect(m.verification).toBe('verified');
             expect(filmExitCode(m)).toBe(0);
+        }, 180_000);
+
+        it('holds embedded footage at t minus its data-start', async () => {
+            const clip = path.join(root, 'project', 'clip.webm');
+            fs.mkdirSync(path.dirname(clip), { recursive: true });
+            spawnSync('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'testsrc=size=64x36:rate=10:duration=2',
+                '-c:v', 'libvpx', '-g', '1', '-b:v', '400k', clip]);
+            const m = await render('footage', `<!doctype html><body style="margin:0">
+<video src="clip.webm" muted playsinline data-start="0.5" style="display:block;width:64px;height:36px"></video>
+<script>${META(1, 10)}</script></body>`);
+            expect(m.form).toBe('waapi');
+            // t = 0..0.5 all hold the clip's first frame; 0.6..0.9 are four more.
+            expect(m.distinct_frames).toBe(5);
+            expect(m.determinism.deterministic).toBe(true);
         }, 180_000);
 
         it('measures a muxed audio track into the manifest', async () => {

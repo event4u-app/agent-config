@@ -31,7 +31,7 @@ import type { Browser, BrowserContext, Page } from '@playwright/test';
 
 import { confinePage, fileRootsFor } from './uiRenderAssetIsolation.js';
 
-export type SeekForm = 'seek' | 'render' | 'waapi' | 'none';
+export type SeekForm = 'seek' | 'render' | 'timelines' | 'waapi' | 'none';
 export type CheckState = 'ran' | `skipped: ${string}`;
 
 export interface FilmMeta {
@@ -221,6 +221,16 @@ function detectForm(): SeekForm {
     const w = window as unknown as Record<string, unknown>;
     if (typeof w['__seek'] === 'function') return 'seek';
     if (typeof w['render'] === 'function') return 'render';
+    // A registry of paused timelines (`window.__timelines`), the shape a
+    // timeline framework exposes. Each entry must be seekable to count.
+    const reg = w['__timelines'];
+    if (reg !== null && typeof reg === 'object') {
+        const tls = Object.values(reg as Record<string, Record<string, unknown> | null>);
+        const seekable = (tl: Record<string, unknown> | null): boolean =>
+            tl !== null && typeof tl === 'object' && ['seek', 'time', 'totalTime'].some((k) => typeof tl[k] === 'function');
+        if (tls.length > 0 && tls.every(seekable)) return 'timelines';
+    }
+    if (document.querySelector('video') !== null) return 'waapi';
     const smil = document.querySelector('svg animate, svg animateTransform, svg animateMotion, svg set') !== null;
     if (smil || document.getAnimations().length > 0) return 'waapi';
     return 'none';
@@ -239,6 +249,15 @@ async function seekPage(arg: { t: number; form: SeekForm }): Promise<void> {
     if (arg.form === 'seek') await w['__seek']?.(arg.t);
     else if (arg.form === 'render') await w['render']?.(arg.t);
     else {
+        if (arg.form === 'timelines') {
+            const reg = (window as unknown as { __timelines?: Record<string, Record<string, ((...a: unknown[]) => unknown) | undefined>> }).__timelines ?? {};
+            for (const tl of Object.values(reg)) {
+                tl['pause']?.call(tl);
+                if (typeof tl['seek'] === 'function') tl['seek'].call(tl, arg.t, false);
+                else if (typeof tl['totalTime'] === 'function') tl['totalTime'].call(tl, arg.t, true);
+                else tl['time']?.call(tl, arg.t, true);
+            }
+        }
         for (const svg of Array.from(document.querySelectorAll('svg'))) {
             const s = svg as SVGSVGElement;
             if (typeof s.pauseAnimations === 'function') {
@@ -250,6 +269,24 @@ async function seekPage(arg: { t: number; form: SeekForm }): Promise<void> {
             anim.pause();
             anim.currentTime = arg.t * 1000;
         }
+        // Embedded footage: held at `t - data-start`, clamped inside the clip,
+        // and only captured once the decoder reports the seek done.
+        await Promise.all(Array.from(document.querySelectorAll('video')).map(async (v) => {
+            v.pause();
+            const start = Number(v.dataset['start'] ?? 0) || 0;
+            const settle = (ev: string): Promise<void> => new Promise<void>((r) => {
+                v.addEventListener(ev, () => r(), { once: true });
+                v.addEventListener('error', () => r(), { once: true });
+            });
+            if (v.readyState < 1) await settle('loadedmetadata');
+            if (v.error !== null) return;
+            const end = Number.isFinite(v.duration) ? Math.max(0, v.duration - 0.001) : Infinity;
+            const target = Math.min(Math.max(0, arg.t - start), end);
+            if (Math.abs(v.currentTime - target) < 1e-6 && v.readyState >= 2) return;
+            const done = settle('seeked');
+            v.currentTime = target;
+            await done;
+        }));
     }
     await document.fonts.ready;
     // Two animation frames, so a held animation's new time has reached the
@@ -357,7 +394,7 @@ export async function runFilmRender(browser: Browser, opts: FilmOptions): Promis
         m.meta = { ...meta, source: pageMeta !== null ? 'page' : 'flags' };
         if (m.form === 'none') {
             m.checks.seek = 'skipped: no recognised seek form';
-            findings.push({ check: 'seek', detail: 'page exposes neither window.__seek(t), window.render(t), Web Animations nor SMIL' });
+            findings.push({ check: 'seek', detail: 'page exposes neither window.__seek(t), window.render(t), window.__timelines, Web Animations, SMIL nor <video>' });
             m.degradation_reason = 'no seek form';
             return m;
         }

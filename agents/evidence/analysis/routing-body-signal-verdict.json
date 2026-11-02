@@ -11,10 +11,10 @@
   },
   "body_signal": {
     "verdict": "harmful",
-    "reason": "false activation +5.24 pp breaches the +2.0 pp guard",
+    "reason": "false activation +5.10 pp breaches the +2.0 pp guard",
     "k": 5,
     "delta_recall_pp": 1.849,
-    "delta_false_activation_pp": 5.241,
+    "delta_false_activation_pp": 5.103,
     "p_value": 0.3995,
     "discordant_positive_pairs": {
       "gained": 126,
@@ -37,7 +37,7 @@
         "positives": 757,
         "positiveHits": 479,
         "negatives": 725,
-        "negativeHits": 141
+        "negativeHits": 140
       }
     },
     "recall_pp": {
@@ -46,7 +46,7 @@
     },
     "false_activation_pp": {
       "description": 14.207,
-      "description+body": 19.448
+      "description+body": 19.31
     }
   },
   "corpus": {
