@@ -304,7 +304,7 @@
     "test-driven-development": 16352,
     "test-performance": 6376,
     "testing-anti-patterns": 19723,
-    "threat-modeling": 12564,
+    "threat-modeling": 12775,
     "throughput-vs-morale-tradeoff": 13242,
     "token-optimizer": 6275,
     "traefik": 9138,
@@ -975,6 +975,12 @@
       "old": 10527,
       "new": 10721,
       "reason": "road-to-a-switch-built-before-it-is-needed 6.1/6.3: one pointer to the containment blueprint (security-audit/references/control-section.md, ADR-304), so planning, intake and launch ask which lever switches the new surface off."
+    },
+    {
+      "skill": "threat-modeling",
+      "old": 12564,
+      "new": 12775,
+      "reason": "road-to-a-switch-built-before-it-is-needed 6.2: a validation item asking each new entry point of a deployed product for the lever that switches it off (ADR-304)."
     }
   ]
 }

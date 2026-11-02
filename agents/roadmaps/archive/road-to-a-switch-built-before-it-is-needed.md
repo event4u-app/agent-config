@@ -133,9 +133,10 @@ package at all: a Security Center UI, provider adapters, a policy engine.
       security & maintenance offer; a plan adding a public endpoint, a job or
       a runtime dependency names the lever that switches it off.
       verify: `grep -n "control-section" src/skills/feature-planning/SKILL.md` returns the pointer; `check_skill_body_budget` green
-- [x] **6.2** `security-sensitive-stop`: one question — how is this surface
+- [x] **6.2** `threat-modeling` validation (the analysis `security-sensitive-stop`
+      routes to; the rule itself is a ratification-gated surface): one question — how is this surface
       switched off, and what happens when the switch's store is down?
-      verify: `grep -n "switched off" src/rules/security-sensitive-stop.md` returns the question
+      verify: `grep -n "switches it" src/skills/threat-modeling/SKILL.md` returns the question
 - [x] **6.3** `supply-chain-intake`: a new runtime dependency names the lever
       that isolates it. `launch-readiness`: the kill-switch line points at the
       blueprint.
@@ -153,6 +154,7 @@ package at all: a Security Center UI, provider adapters, a policy engine.
 | 2 | No numeric readiness score | tree: `operational-readiness` has no numeric path | — |
 | 3 | Automatic self-containment, settings key, visibility, cadence, egress → owner | owner-reserved set | OQ-60 answered |
 | 4 | No third-party scanner adapter by default | constraint: no mandatory dependency | a consumer asks for one |
+| 6 | The containment question lands in `threat-modeling`, not in `security-sensitive-stop` | the rule is a high-consequence surface needing a council ratification (ADR-268); the rule already routes new features to `threat-modeling` | a ratified edit of the rule is wanted |
 | 5 | The lever is named in the issue body, not in the session notice | ADR-296 council conditions bound the notice path | ADR-296 is reopened |
 
 ## Risk Register

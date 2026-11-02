@@ -140,6 +140,9 @@ Before finalizing the threat model, confirm:
 5. You have NOT proposed offensive testing steps, exploit chains, or bypass ideas
 6. If the change is out of scope for threat modelling (no trust boundary
    crossed), you have said so explicitly and stopped
+7. On a deployed product, every new entry point names the lever that switches it
+   off and what happens when that lever's store is down
+   ([`control-section`](../security-audit/references/control-section.md))
 
 ## Output format
 
