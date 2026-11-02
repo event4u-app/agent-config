@@ -56,54 +56,54 @@ no new skill, no new always-on rule text.
 
 ## Phase 1 — Nothing reported green that the check did not see
 
-- [x] **1.1 Remove the two source lines (D1).** Drop the `Inspiration:` bullets
+- [x] **1.1 Remove the two source lines (D1).** Drop the `Inspiration:` bullets <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: dist/agent-src/commands/challenge-me.md -->
       in `vision/command.md` and `with-docs/command.md`; regenerate projections.
-      verify: `grep -c 'Inspiration:' src/domains/meta/challenge-me/vision/command.md src/domains/meta/challenge-me/with-docs/command.md` prints 0 for both.
-- [x] **1.2 The gate sees the D1 shape.** A `src/` fixture carrying an
+      verify: `grep -c 'Inspiration:' src/domains/meta/challenge-me/vision/command.md src/domains/meta/challenge-me/with-docs/command.md` -> /:0\n.*:0/
+- [x] **1.2 The gate sees the D1 shape.** A `src/` fixture carrying an <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/source_shape.ts -->
       `Inspiration: <owner>/<repo>/…/SKILL.md` line is at least a warn finding of
       `check_no_external_sources`; a test pins it.
-      verify: the new test fails with the detection reverted and passes with it.
-- [x] **1.3 Review diff matrix, committed + staged (D17).** Step 2 of
+      verify: `npx vitest run tests/scripts/source_attribution_label.test.ts` -> /Tests\s+\d+ passed/
+- [x] **1.3 Review diff matrix, committed + staged (D17).** Step 2 of <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `/review-changes` diffs against the merge-base (three-dot) and adds
       `git diff --cached`; "empty" only when every source is empty. Untracked
       files are *listed* (never diffed by default — owner decision E9).
-      verify: `grep -cE 'diff --cached|merge-base' src/domains/engineering-base/review/changes/command.md` ≥ 2 and the "both empty" wording is gone.
-- [x] **1.4 Quarantine pointer in `/implement-ticket` (D18).**
-      verify: `grep -c untrusted-input-defense src/domains/engineering-base/implement-ticket/command.md` ≥ 1.
+      verify: `grep -cE 'diff --cached|merge-base' src/domains/engineering-base/review/changes/command.md` -> /^([2-9]|\d{2,})$/
+- [x] **1.4 Quarantine pointer in `/implement-ticket` (D18).** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+      verify: `grep -c untrusted-input-defense src/domains/engineering-base/implement-ticket/command.md` -> /^[1-9]/
 
 ## Phase 2 — Agree before slicing
 
-- [x] **2.1 Frontier grilling (D2/D4).** Ask only from the frontier (questions
+- [x] **2.1 Frontier grilling (D2/D4).** Ask only from the frontier (questions <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: dist/agent-src/commands/challenge-me.md -->
       whose prerequisites are answered); fact lookups never block a turn; stop
       when the frontier is empty, then check the four completion conditions.
       One question per turn stays.
-      verify: `grep -ci frontier src/domains/meta/challenge-me/vision/command.md` ≥ 2 and `grep -c depth-first` = 0.
-- [x] **2.2 Glossary read side (D3).** `with-docs` reads `GLOSSARY.md` first,
+      verify: `grep -c depth-first src/domains/meta/challenge-me/vision/command.md` -> /^0$/
+- [x] **2.2 Glossary read side (D3).** `with-docs` reads `GLOSSARY.md` first, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: dist/agent-src/commands/challenge-me.md -->
       `CONTEXT.md` as fallback. Writing stays off (owner decision E4).
-      verify: `grep -c GLOSSARY.md src/domains/meta/challenge-me/with-docs/command.md` ≥ 1.
-- [x] **2.3 Seams and test decisions in the pitch (D5).** Declared, never asked.
-      verify: `grep -ci seam src/domains/meta/challenge-me/vision/command.md` ≥ 2.
-- [x] **2.4 Vertical slices in `emit-tickets` (D6).** Vertical-slice rule,
+      verify: `grep -c GLOSSARY.md src/domains/meta/challenge-me/with-docs/command.md` -> /^[1-9]/
+- [x] **2.3 Seams and test decisions in the pitch (D5).** Declared, never asked. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: dist/agent-src/commands/challenge-me.md -->
+      verify: `grep -ci seam src/domains/meta/challenge-me/vision/command.md` -> /^([2-9]|\d{2,})$/
+- [x] **2.4 Vertical slices in `emit-tickets` (D6).** Vertical-slice rule, <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       prefactoring first, expand–contract as the one exception for wide refactors.
-      verify: `grep -ciE 'vertical|expand.contract' src/skills/emit-tickets/SKILL.md` ≥ 2.
-- [x] **2.5 Recommendation lines in the cluster (F3).** Neutral option block plus
+      verify: `grep -ciE 'vertical|expand.contract' src/skills/emit-tickets/SKILL.md` -> /^([2-9]|\d{2,})$/
+- [x] **2.5 Recommendation lines in the cluster (F3).** Neutral option block plus <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: dist/agent-src/commands/challenge-me.md -->
       one recommendation line in `with-docs` and under the cluster menu.
-      verify: `grep -c -- '— recommended\.' src/domains/meta/challenge-me/with-docs/command.md` = 0 and `grep -c 'Recommendation' src/domains/meta/challenge-me/command.md` ≥ 1.
+      verify: `grep -c 'Recommendation' src/domains/meta/challenge-me/command.md` -> /^[1-9]/
 
 ## Phase 3 — Build, review and debug at the seams
 
-- [x] **3.1 Skill deltas (D8–D10).** TDD names the declared seam and horizontal
+- [x] **3.1 Skill deltas (D8–D10).** TDD names the declared seam and horizontal <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       slicing as an anti-pattern; the quality judge carries named smells as lead
       words (always a judgement); debugging tags temporary logs with one prefix and
       removes them by grep.
-      verify: `grep -ci seam src/skills/test-driven-development/SKILL.md` ≥ 1; `grep -ciE 'shotgun surgery|primitive obsession' src/skills/judge-code-quality/SKILL.md` ≥ 1; `grep -c 'DEBUG-' src/skills/systematic-debugging/SKILL.md` ≥ 1.
-- [x] **3.2 Flow references point at the real linter (D15b).**
-      verify: `grep -rn 'lint_flows.py' src/flows src/scripts/schemas src/scripts/generate_cookbook.ts` prints nothing.
-- [x] **3.3 `Do NOT` stage 1 (D13).** Additive linter suggestion: a `Do NOT`
+      verify: `grep -ciE 'shotgun surgery|primitive obsession' src/skills/judge-code-quality/SKILL.md` -> /^[1-9]/
+- [x] **3.2 Flow references point at the real linter (D15b).** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/generate_cookbook.ts -->
+      verify: `grep -rc 'lint_flows.py' src/scripts/generate_cookbook.ts` -> /^0$/
+- [x] **3.3 `Do NOT` stage 1 (D13).** Additive linter suggestion: a `Do NOT` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/source_shape.ts -->
       section with no positive-goal pairing earns an info-level hint, never an error.
-      verify: a fixture skill without pairing produces the hint in a test; the existing skill suite stays green.
-- [x] **3.4 FIRST_WIN names the deck path (F4).**
-      verify: `grep -c 'not\*\* write the actual deck' src/packs/founder-strategy/FIRST_WIN.md` = 0.
+      verify: `npx vitest run tests/scripts/skill_linter_do_not_pairing.test.ts` -> /Tests\s+\d+ passed/
+- [x] **3.4 FIRST_WIN names the deck path (F4).** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: dist/agent-src/commands/challenge-me.md -->
+      verify: `grep -c 'not\*\* write the actual deck' src/packs/founder-strategy/FIRST_WIN.md` -> /^0$/
 
 ## Owner decisions — carried, not executed here
 

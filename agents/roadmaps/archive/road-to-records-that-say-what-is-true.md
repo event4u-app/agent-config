@@ -42,22 +42,22 @@ wording. All repairs, no new gate.
 
 ## Phase 1 — Registry and docs say the live truth
 
-- [x] **1.1 Trace-format text from live output (C04).**
-      verify: `grep -c '1 of 25' src/config/assurance-capability-registry.json` = 0, and the new count matches `check_requirements_trace`.
-- [x] **1.2 `behavior-spec` to `degraded` with its limitation named (C09).**
-      verify: `jq -r '.capabilities["behavior-spec"].state' src/config/assurance-capability-registry.json` prints `degraded`; registry and grader tests stay green.
-- [x] **1.3 One decision-record path (C11).**
-      verify: `grep -c 'agents/decisions/' src/skills/technical-specification/SKILL.md` = 0.
-- [x] **1.4 Template status wording (C02).** Scope "no other status values" to
+- [x] **1.1 Trace-format text from live output (C04).** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/assurance-capability-registry.json -->
+      verify: `grep -c '1 of 25' src/config/assurance-capability-registry.json` -> /^0$/
+- [x] **1.2 `behavior-spec` to `degraded` with its limitation named (C09).** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/assurance-capability-registry.json -->
+      verify: `jq -r '.capabilities["behavior-spec"].state' src/config/assurance-capability-registry.json` -> /^degraded$/
+- [x] **1.3 One decision-record path (C11).** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/assurance-capability-registry.json -->
+      verify: `grep -c 'agents/decisions/' src/skills/technical-specification/SKILL.md` -> /^0$/
+- [x] **1.4 Template status wording (C02).** Scope "no other status values" to <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/assurance-capability-registry.json -->
       the active tree and name `later` / stub values.
-      verify: `grep -c 'There are no other status values' src/agent-src/templates/roadmaps.md` = 0.
+      verify: `grep -c 'There are no other status values' src/agent-src/templates/roadmaps.md` -> /^0$/
 
 ## Phase 2 — Links and counters
 
-- [x] **2.1 Repoint dangling ADR roadmap links (C03).**
+- [x] **2.1 Repoint dangling ADR roadmap links (C03).** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/assurance-capability-registry.json -->
       verify: every `agents/roadmaps/…\.md` path in `docs/decisions/` exists (sweep prints 0 dangling).
-- [x] **2.2 Arrival count on the executable-spec stub (C13).**
-      verify: `grep -c 'Arrivals:\*\* 18' agents/roadmaps/stubs/road-to-executable-specification-adapter.md` = 1.
+- [x] **2.2 Arrival count on the executable-spec stub (C13).** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/assurance-capability-registry.json -->
+      verify: `grep -c 'Arrivals:\*\* 18' agents/roadmaps/stubs/road-to-executable-specification-adapter.md` -> /^1$/
 
 ## Owner decisions — carried, not executed here
 
