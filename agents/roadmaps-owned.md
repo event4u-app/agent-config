@@ -271,6 +271,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-permissions-deny-for-unused-foreign-tools | stubs | — | road to suggesting `permissions.deny` for never-used foreign tools |
 | road-to-point-of-action-carrier | stubs | — | road to the point-of-action delegation carrier |
 | road-to-preamble-transfer-debt-221 | stubs | — | 14 decided declarations the preamble ceiling will not admit |
+| road-to-profile-reach-and-account-spikes | stubs | — | road to profile reach and account spikes |
 | road-to-promotion-bridge-size-and-citation-repairs | stubs | — | Road to the promotion-bridge size split and the topology citation repairs |
 | road-to-provider-leakage-bench-execution | stubs | — | road to running the provider-recognition leakage bench |
 | road-to-public-metadata-redaction | stubs | — | Road to public-metadata redaction — stub |
