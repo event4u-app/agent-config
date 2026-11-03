@@ -404,6 +404,11 @@ export function build_handoff(
 
     const head = branch !== 'unknown' && branch === _current_branch(root) ? _current_head(root) : null;
 
+    // Items the word cap removed, per section title. Rendered, so a section the
+    // cap emptied is never mistaken for one extraction found nothing in.
+    const trimmed = new Map<string, number>();
+    let trimmedTotal = 0;
+
     const render = (): string => {
         const lines: string[] = [
             '# Handoff',
@@ -419,6 +424,7 @@ export function build_handoff(
                 `Privacy floor: [${verbatim.withheldLines + droppedTotal} line(s) withheld by privacy floor]`,
             );
         }
+        if (trimmedTotal > 0) lines.push(`Trimmed: ${String(trimmedTotal)}`);
         for (const s of sections) {
             lines.push('', `## ${s.title}`, '');
             if (s.title === 'Resume pointer') {
@@ -431,8 +437,14 @@ export function build_handoff(
                     '',
                 );
             }
+            const cut = trimmed.get(s.title) ?? 0;
             if (s.items.length === 0) {
-                if (s.verbatim && verbatim.withheldLines > 0) {
+                if (cut > 0) {
+                    lines.push(`- [${String(cut)} trimmed by word cap]`);
+                    if (s.verbatim && verbatim.withheldLines > 0) {
+                        lines.push(`- [${verbatim.withheldLines} line(s) withheld by privacy floor]`);
+                    }
+                } else if (s.verbatim && verbatim.withheldLines > 0) {
                     lines.push(`- [${verbatim.withheldLines} line(s) withheld by privacy floor]`);
                 } else {
                     lines.push('- (none extracted)');
@@ -449,6 +461,7 @@ export function build_handoff(
                     lines.push(`- ${item}`);
                 }
             }
+            if (cut > 0) lines.push(`- [${String(cut)} trimmed by word cap]`);
         }
         lines.push('');
         return lines.join('\n');
@@ -463,6 +476,8 @@ export function build_handoff(
             // verbatim: drop the OLDEST prompt first (shift), keep the latest asks
             if (section.verbatim) section.items.shift();
             else section.items.pop();
+            trimmed.set(title, (trimmed.get(title) ?? 0) + 1);
+            trimmedTotal += 1;
             text = render();
         }
     }

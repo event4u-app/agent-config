@@ -99,7 +99,7 @@ finding disposition names a command but not the outcome it must produce
 
 ## Phase 4 — Session records say what they trimmed or set aside
 
-- [ ] **4.1 The handoff counts its trims.** In
+- [x] **4.1 The handoff counts its trims.** In
       `src/scripts/_cli/handoff_generate.ts` count removed items per section in
       the trim loop (`:457-467`); render an emptied section as
       `- [N trimmed by word cap]` and keep `(none extracted)` only when
