@@ -113,6 +113,7 @@ as a dependency — use zod v4's native export.
       `npx vitest run tests/scripts/mcp_lite_tools.test.ts` -> 0 under the cap.
       Done: SUGGEST_LIMIT_MAX = 20 in the published schema and the handler; limit 100000 returns 20 rows with clamped_from: 100000; dispatch.test.ts -> 0, mcp_lite_tools.test.ts -> 0 at 311 of 600 tokens.
       production entry: `src/cli/mcp/stdio.ts`
+      reach exempt: liteToolsTokenCost, LITE_TOOLS_TOKEN_CAP and INSTRUCTIONS_BYTE_CAP are budget figures only the cap test reads; the clamp itself is in dispatch(), served by src/cli/mcp/stdio.ts
 - [ ] **3.3 `outputSchema` from one zod schema**, kept open.
       verify: every `structuredContent` validates against the shipped schema;
       tools/list stays under the token cap (a raise is a budget decision, not
