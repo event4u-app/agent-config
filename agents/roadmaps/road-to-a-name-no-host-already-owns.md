@@ -75,7 +75,7 @@ sees the user's machine. Nothing is deleted — every fix renames or reports.
 
 ## Phase 2 — Keep it from coming back
 
-- [ ] **2.1 Witnessed reserved names.** Add the current host names missing from
+- [x] **2.1 Witnessed reserved names.** Add the current host names missing from
       `src/scripts/_lib/claude_builtin_names.ts`, each carried by a fixture with
       its witness: `tests/fixtures/host-builtins/session-listing-2026-11-03.json`
       (observed in a Claude Code session skill listing: `update-config`,

@@ -64,7 +64,7 @@
     },
     "user-invocable": {
       "type": "boolean",
-      "description": "Claude Code Agent-Skills extension: false = the skill claims no /name slash command (only the model can load it). REQUIRED (false) when name equals a Claude Code built-in command or bundled skill (see scripts/_lib/claude_builtin_names.ts) so the suite never shadows the host's own /name. Other tools ignore the key."
+      "description": "Claude Code Agent-Skills extension: false = users cannot invoke the skill as /name (only the model can load it). It controls who may invoke, not who owns the name: a skill named after a Claude Code built-in still shadows it, so such a name is rejected outright (scripts/_lib/claude_builtin_names.ts, lint_agent_skill_names). Other tools ignore the key."
     },
     "description": {
       "type": "string",
