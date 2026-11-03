@@ -23,4 +23,11 @@ describe('claude_builtin_names', () => {
         expect(is_claude_builtin_name('Design-Sync')).toBe(true);
         expect(is_claude_builtin_name('design-system')).toBe(false);
     });
+
+    it('normalizes the way the host does: NFKC, no whitespace or format characters, lowercase', () => {
+        expect(is_claude_builtin_name('\uFF4D\uFF43\uFF50')).toBe(true); // full-width
+        expect(is_claude_builtin_name('m\u200Bcp')).toBe(true); // zero-width space
+        expect(is_claude_builtin_name(' MCP ')).toBe(true);
+        expect(is_claude_builtin_name('mcp-tool-use')).toBe(false);
+    });
 });

@@ -99,16 +99,21 @@ function frontmatterNameFromFile(p: string): string | null {
     return _frontmatter_name(fs.readFileSync(p, 'utf-8'));
 }
 
-const USER_INVOCABLE_FALSE_RE = /^user-invocable:\s*false\s*$/m;
-
-/** True when the SKILL.md opts out of slash registration (`user-invocable: false`). */
-export function _opts_out_of_slash(text: string): boolean {
-    if (!text.startsWith('---')) {
-        return false;
+/**
+ * A reserved name is a violation whatever the frontmatter declares: the
+ * `text` is accepted and deliberately not consulted, because
+ * `user-invocable: false` only controls who may invoke the skill — the host
+ * still resolves `/name` to it, so the built-in stays shadowed.
+ */
+export function _reserved_name_violation(dirname: string, _text: string): string | null {
+    if (!is_claude_builtin_name(dirname)) {
+        return null;
     }
-    const end = text.indexOf('\n---', 3);
-    const block = end !== -1 ? text.slice(3, end) : text;
-    return USER_INVOCABLE_FALSE_RE.test(block);
+    return (
+        `\`${dirname}\` is a Claude Code built-in command name — rename the ` +
+        'skill; `user-invocable: false` does not give the name back, and the ' +
+        'suite must never shadow a host built-in'
+    );
 }
 
 export function _spec_violation(name: string): string | null {
@@ -192,21 +197,10 @@ export function check_skills(): string[] {
                     'requires the folder name to match the `name:` field',
             );
         }
-        // Reserved-name floor: a skill named after a Claude Code built-in
-        // command / bundled skill shadows the built-in when projected as
-        // `/name` (e.g. a `mcp` skill hides Claude Code's own /mcp dialog).
-        // Opting out of slash registration (`user-invocable: false`) keeps
-        // the skill model-loadable while the host retains the /name.
         // Reserved set: src/scripts/_lib/claude_builtin_names.ts.
-        if (
-            is_claude_builtin_name(dirname) &&
-            !_opts_out_of_slash(fs.readFileSync(md, 'utf-8'))
-        ) {
-            violations.push(
-                `${rel}: \`${dirname}\` is a Claude Code built-in command name — ` +
-                    'add `user-invocable: false` (model-only invocation) or rename ' +
-                    'the skill; the suite must never shadow a host built-in',
-            );
+        const reserved = _reserved_name_violation(dirname, fs.readFileSync(md, 'utf-8'));
+        if (reserved) {
+            violations.push(`${rel}: ${reserved}`);
         }
     }
     return violations;

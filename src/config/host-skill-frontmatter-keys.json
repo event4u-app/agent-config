@@ -48,7 +48,7 @@
     "name": "The skill or command slug; the host reads it as the invocation name, which is the package's meaning.",
     "description": "The trigger line; the host lists it, which is the package's meaning.",
     "effort": "Declared as a verbatim passthrough to the host's effort knob (skill schema description).",
-    "user-invocable": "Declared as the host's own extension, used to keep a built-in name unshadowed.",
+    "user-invocable": "Declared as the host's own extension; it controls who may invoke, not who owns the name.",
     "compatibility": "Declared as the Agent Skills spec field with the spec's meaning; deprecated in the skill schema.",
     "argument-hint": "Commands project as host skills; the hint is the host's argument hint.",
     "disable-model-invocation": "Commands project as host skills; the flag is the host's own."

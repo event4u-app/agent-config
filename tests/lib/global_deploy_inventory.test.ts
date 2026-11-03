@@ -273,6 +273,52 @@ describe("two-deploy cycle", () => {
   });
 });
 
+// --- reserved-name renames heal existing installs ------------------------
+
+describe("reserved-name renames (road-to-a-name-no-host-already-owns 1.5)", () => {
+  for (const [old_name, new_name] of [
+    ["mcp", "mcp-tool-use"],
+    ["code-review", "code-review-lens"],
+  ] as const) {
+    it(`reaps a recorded skills/${old_name}/ once the package ships skills/${new_name}/`, () => {
+      const anchor = tp("anchor");
+      write_file(path.join(anchor, "skills", old_name, "SKILL.md"), `name: ${old_name}`);
+      write_file(path.join(anchor, "skills", new_name, "SKILL.md"), `name: ${new_name}`);
+      const data = record("claude-code", anchor, [`skills/${old_name}/SKILL.md`]);
+
+      const deleted = inv.reap_stale(
+        "claude-code",
+        anchor,
+        new Set([`skills/${new_name}/SKILL.md`]),
+        data,
+      );
+
+      expect(deleted).toEqual([path.join(fs.realpathSync(anchor), "skills", old_name, "SKILL.md")]);
+      expect(exists(path.join(anchor, "skills", old_name))).toBe(false);
+      expect(exists(path.join(anchor, "skills", new_name, "SKILL.md"))).toBe(true);
+    });
+
+    it(`keeps an unrecorded foreign skills/${old_name}/ under the same anchor`, () => {
+      const anchor = tp("anchor");
+      write_file(path.join(anchor, "skills", old_name, "SKILL.md"), "the user's own skill");
+      write_file(path.join(anchor, "skills", new_name, "SKILL.md"), `name: ${new_name}`);
+      const data = record("claude-code", anchor, [`skills/${new_name}/SKILL.md`]);
+
+      const deleted = inv.reap_stale(
+        "claude-code",
+        anchor,
+        new Set([`skills/${new_name}/SKILL.md`]),
+        data,
+      );
+
+      expect(deleted).toEqual([]);
+      expect(fs.readFileSync(path.join(anchor, "skills", old_name, "SKILL.md"), "utf-8")).toBe(
+        "the user's own skill",
+      );
+    });
+  }
+});
+
 // --- reap_tagged_orphans (marker-based, runs every deploy) ---------------
 
 const TAG = "event4u/agent-config";

@@ -14,10 +14,11 @@
 //      `~/.claude/` deploys neither a skill wrapper nor a flat command file
 //      for a reserved slug (nested `/cluster:sub` commands are unaffected —
 //      built-ins carry no `:`).
-//   3. `lint_agent_skill_names.ts` — a skill in `src/skills/` (or a domain
-//      pack) with a reserved name fails CI unless it opts out of slash
-//      registration with `user-invocable: false` (Claude may still load it
-//      automatically; the built-in keeps the `/name`).
+//   3. `lint_agent_skill_names.ts` — a skill in `src/skills/` with a reserved
+//      name fails CI, with no frontmatter escape: `user-invocable: false`
+//      controls who may invoke a skill, not who owns the name, so the host
+//      still resolves `/name` to the skill and the built-in stays shadowed
+//      (observed 2026-11 for `/mcp` and `/code-review`).
 //
 // Source: https://code.claude.com/docs/en/commands (fetched 2026-07-10), the
 // design family read offline from host 2.1.301 (2026-10-16), plus a small
@@ -147,7 +148,16 @@ export const CLAUDE_CODE_BUILTIN_NAMES: ReadonlySet<string> = new Set<string>([
     ..._LEGACY,
 ]);
 
+/**
+ * The comparison key the host would resolve: NFKC folds compatibility forms
+ * (full-width letters), whitespace and format characters (zero-width joiners,
+ * BOM) are invisible in a slash menu, and the match is case-insensitive.
+ */
+export function normalize_builtin_name(slug: string): string {
+    return slug.normalize('NFKC').replace(/[\s\p{Cf}]/gu, '').toLowerCase();
+}
+
 /** True when `slug` would shadow a Claude Code built-in command or bundled skill. */
 export function is_claude_builtin_name(slug: string): boolean {
-    return CLAUDE_CODE_BUILTIN_NAMES.has(slug.toLowerCase());
+    return CLAUDE_CODE_BUILTIN_NAMES.has(normalize_builtin_name(slug));
 }

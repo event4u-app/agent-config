@@ -55,6 +55,25 @@ describe('lint_agent_skill_names — behavioural spec', () => {
         expect(mod._spec_violation('Foo')).not.toBeNull();
     });
 
+    // --- _reserved_name_violation: no frontmatter escape ---
+    it('flags a reserved skill name even when it opts out of slash registration', () => {
+        const text = '---\nname: mcp\nuser-invocable: false\ndescription: x\n---\nbody';
+        const v = mod._reserved_name_violation('mcp', text);
+        expect(v).not.toBeNull();
+        expect(v).toContain('`mcp`');
+    });
+
+    it('flags a reserved skill name without any opt-out', () => {
+        expect(mod._reserved_name_violation('code-review', '---\nname: code-review\n---\n')).not.toBeNull();
+    });
+
+    it('passes the renamed skills', () => {
+        expect(mod._reserved_name_violation('mcp-tool-use', '---\nname: mcp-tool-use\n---\n')).toBeNull();
+        expect(
+            mod._reserved_name_violation('code-review-lens', '---\nname: code-review-lens\nuser-invocable: false\n---\n'),
+        ).toBeNull();
+    });
+
     // --- check helpers run against the real repo without throwing ---
     it('check_commands + check_skills return arrays on the real repo', () => {
         expect(Array.isArray(mod.check_commands())).toBe(true);

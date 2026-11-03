@@ -49,7 +49,7 @@ sees the user's machine. Nothing is deleted — every fix renames or reports.
       `src/scripts/report_skill_menu_census.ts`, `src/scripts/activation_receipt.ts`,
       `docs/contracts/routing-assurance-floors.json`, the listed tests and fixtures).
       verify: `test ! -e src/skills/code-review && npx vitest run tests/scripts/compile_trigger_evals.test.ts tests/scripts/report_skill_menu_census.test.ts tests/scripts/routing_arms.test.ts tests/contracts/review_spec_axis.test.ts` -> 0 failed
-- [ ] **1.3 Close the escape in the lint.** In `src/scripts/lint_agent_skill_names.ts`
+- [x] **1.3 Close the escape in the lint.** In `src/scripts/lint_agent_skill_names.ts`
       a reserved skill name is a violation whatever the frontmatter says; extract
       the check as an exported pure `_reserved_name_violation(dirname, text)` and
       remove `_opts_out_of_slash` if nothing else uses it. Correct the claim in
@@ -57,18 +57,18 @@ sees the user's machine. Nothing is deleted — every fix renames or reports.
       passthrough reason in `src/config/host-skill-frontmatter-keys.json:51`
       ("controls who may invoke, not who owns the name").
       verify: `npx vitest run tests/scripts/lint_agent_skill_names.test.ts` -> 0 failed, with a new case where `mcp` + `user-invocable: false` returns a violation and `mcp-tool-use` returns none
-- [ ] **1.4 Compare names the way the host does.** `is_claude_builtin_name` in
+- [x] **1.4 Compare names the way the host does.** `is_claude_builtin_name` in
       `src/scripts/_lib/claude_builtin_names.ts` applies NFKC, removes whitespace
       and format characters (`\p{Cf}`), then lowercases.
       verify: `npx vitest run tests/scripts/claude_builtin_names.test.ts` -> 0 failed, with cases for full-width `ｍｃｐ`, `m​cp`, ` MCP ` (all reserved) and `mcp-tool-use` (not reserved)
-- [ ] **1.5 Prove an existing install heals.** A regression case in
+- [x] **1.5 Prove an existing install heals.** A regression case in
       `tests/lib/global_deploy_inventory.test.ts`: an inventory that recorded
       `skills/mcp/SKILL.md` and a current set holding `skills/mcp-tool-use/SKILL.md`
       makes `reap_stale` (`src/scripts/_lib/global_deploy_inventory.ts:397`) delete
       the old directory; an unrecorded foreign `skills/mcp/` under the same anchor
       survives. Same pair for `code-review`.
       verify: `npx vitest run tests/lib/global_deploy_inventory.test.ts` -> 0 failed
-- [ ] **1.6 Tell the user.** One `CHANGELOG.md` `[Unreleased]` entry: after the
+- [x] **1.6 Tell the user.** One `CHANGELOG.md` `[Unreleased]` entry: after the
       update `/mcp` and `/code-review` open Claude Code's own commands again; the
       skills are now `mcp-tool-use` and `code-review-lens`.
       verify: `grep -n 'mcp-tool-use' CHANGELOG.md` -> at least one line under `## [Unreleased]`
