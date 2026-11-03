@@ -124,8 +124,7 @@ stops counting ranges.
       verify: a fixture claim with a newer dated change fails.
       Done: `stale_last_verified` (`src/scripts/_lib/claims_stale_verified.ts`, kept out of `check_claims.ts` to hold the source-size ratchet) + ratchet `check_claims:stale-last-verified` (7 at introduction, `humanizer-tell-reduction` among them, listed as reported findings); `npx vitest run tests/scripts/check_claims.test.ts` 32/32 with the stale fixture exiting 2; `./scripts-run src/scripts/check_claims` exit 0.
       production entry: `src/scripts/check_claims.ts`
-- [~] **3.4 Corpus repair and claim narrowing.** Blocked by
-      `owner-instrument-change` (owner).
+- [~] **3.4 Corpus repair and claim narrowing.** blocked-by: owner-instrument-change (owner). <!-- deferred-resolution: carried-to=road-to-rewrites-that-keep-their-facts-carried -->
       verify: `./scripts-run src/scripts/check_claims` -> 0 after the narrowed row.
        Remove supplied facts from the
       17 after-files as a new epoch, drop "same content" from the judge prompt,
@@ -177,8 +176,8 @@ stops counting ranges.
       `roadmap-writing`.
       verify: `task lint-skills` -> 0 holds.
       Done: release-comms Step 4 carries the four checks plus the `--baseline` pointer; roadmap-writing points to `references/inflation-checklist.md` from Do NOT (SKILL.md held at 400 lines); `task lint-skills` exit 0, both skills PASS.
-- [~] **8.2 Prose-fact clause in `ask-when-uncertain`** — a kernel-rule edit
-      (own PR, 24 h soak). Blocked by `kernel-edit-own-pr` (owner).
+- [~] **8.2 Prose-fact clause in `ask-when-uncertain`** — a kernel-rule edit <!-- deferred-resolution: carried-to=road-to-rewrites-that-keep-their-facts-carried -->
+      (own PR, 24 h soak). blocked-by: kernel-edit-own-pr (owner).
       verify: `task lint-skills` -> 0 in that PR.
 
 ## Not in this roadmap
