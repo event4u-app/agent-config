@@ -207,7 +207,7 @@ item created unless the null broke.
       verify: one real drain session produces at least one candidate, and an
       unconfirmed candidate cannot land.
       production entry: src/scripts/routing_trace_ledger.ts
-- [x] **5.3 Regression states on the frozen 0.2 baseline:** PASSED,
+- [x] **5.3 Regression states on the frozen 0.2 baseline:** PASSED, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/compile_trigger_evals.ts -->
       ROUTING_CHANGED, REGRESSION — only REGRESSION (floor breach) gates.
       verify: three fixtures, one per state.
       production entry: src/scripts/compile_trigger_evals.ts
