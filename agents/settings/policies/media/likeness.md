@@ -16,6 +16,7 @@ The agent consults this policy before proceeding when any of the following fires
 - `/video:*`, `/ghostwriter:*`, or future `/image:*` / `/audio:*` invocation references a named real person, a recognised public figure, or a private individual identifiable from prompt context.
 - `character-consistency`, `scene-expander`, `video-director`, `motion-choreographer`, or `pixar-storyteller` produces a character sheet that names a real person.
 - The prompt contains a verbatim phrase such as *"in the style of [PERSON]"*, *"as [PERSON]"*, *"deepfake of"*, *"replace face with"*, or *"impersonate"*.
+- A supplied reference image shows an identifiable person — including the user's own photo. A reference image is a likeness input even when the prompt names nobody; it takes the same consent record below, never an inference from the request.
 
 ## Required when consent is cited
 

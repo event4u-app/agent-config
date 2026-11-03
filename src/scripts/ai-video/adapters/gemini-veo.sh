@@ -37,8 +37,8 @@
 #
 # Duration: Veo 3 renders fixed-length clips (8s default; durationSeconds
 # 4|6|8 ASSUMED accepted on veo-3.0 GA — stdin `duration` is clamped to
-# that enum and passed best-effort; a rejected parameter surfaces as a
-# submit HTTP error, never silently).
+# that enum, the clamp is announced on stderr, and passed best-effort; a
+# rejected parameter surfaces as a submit HTTP error, never silently).
 #
 # Contract: scripts/media/lib/adapter-contract.md (v2 — trust
 # boundary: downloads via aiv_fetch_url, returned paths via
@@ -103,6 +103,23 @@ _veo_model_rate_usd_per_s() {
 
 # _veo_op_json <operation_name> — GET the long-running operation; echoes
 # the raw body.
+# _veo_duration <json duration|null> — the durationSeconds enum {4,6,8}
+# (clamp, ASSUMED). A requested value off the grid is rendered at the clamped
+# length and said on stderr; null takes the 8s default silently.
+_veo_duration() {
+  local req="${1:-null}" out
+  out="$(jq -rn --argjson d "${req}" '
+    if $d == null then 8
+    elif $d <= 4 then 4
+    elif $d <= 6 then 6
+    else 8 end')"
+  if [ "${req}" != "null" ] && ! jq -en --argjson d "${req}" --argjson o "${out}" '$d == $o' >/dev/null; then
+    printf '%s: requested %ss -> rendered %ss (durationSeconds enum)\n' \
+      "${ADAPTER_ID}" "${req}" "${out}" >&2
+  fi
+  printf '%s' "${out}"
+}
+
 _veo_op_json() {
   local op="${1}" base resp http body
   base="$(_veo_base)"
@@ -133,12 +150,7 @@ aiv_cmd_submit() {
   model="${AIV_MODEL:-veo-3.0-generate-001}"
   base="$(_veo_base)"
 
-  # stdin duration → Veo durationSeconds enum {4,6,8} (clamp, ASSUMED).
-  dur="$(printf '%s' "${stdin_json}" | jq -r '
-    if .duration == null then 8
-    elif .duration <= 4 then 4
-    elif .duration <= 6 then 6
-    else 8 end')"
+  dur="$(_veo_duration "$(printf '%s' "${stdin_json}" | jq -c '.duration')")"
 
   # Contract prompt blocks -> one Veo prompt string. Optional keys map
   # best-effort (negativePrompt, seed: ASSUMED accepted) and are dropped
