@@ -81,9 +81,11 @@ as a dependency — use zod v4's native export.
 
 ## Phase 2 — Checks that say what they rest on
 
-- [ ] **2.1 `basis: {level, ref, checked_at}` on all 13 checks.**
+- [x] **2.1 `basis: {level, ref, checked_at}` on all 13 checks.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/web-launch-readiness.json -->
       verify: `npx vitest run tests/scripts/web_launch_readiness_config.test.ts` -> 0 and
       and the test fails on a check without `basis`.
+      Done: basis {level: official|heuristic|estate, ref, checked_at} on all 15 checks (the 13 plus 2.3's two); official refs cite the page read; loadConfig refuses a check without a usable basis; config test -> 0 and its new case fails on a check without basis.
+      production entry: `src/scripts/check_web_launch_readiness.ts`
 - [x] **2.2 Crawler register.** `src/config/crawler-register.json` (token, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/crawler-register.json -->
       operator, purpose, `affects_search_inclusion`, source URL, `checked_at`,
       `review_by`); a lapsed row reads `unknown`; 1.3 and 1.5 read it.

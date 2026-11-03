@@ -81,6 +81,36 @@ export interface CheckDef {
     authority?: string;
     /** ISO date the citation must be re-read by. A lapsed date FAILS the loader. */
     review_by?: string;
+    /** What the verdict rests on: an operator or standards page, a stated practice, or this estate's own evidence. */
+    basis: Basis;
+}
+
+export const BASIS_LEVELS = ['official', 'heuristic', 'estate'] as const;
+export type BasisLevel = (typeof BASIS_LEVELS)[number];
+export interface Basis {
+    level: BasisLevel;
+    ref: string;
+    checked_at: string;
+}
+
+/** Each check carries a complete `basis`; an `official` one cites a URL a reader can open. Empty = valid. */
+export function basisViolations(checks: readonly { id: string; basis?: Partial<Basis> }[]): string[] {
+    const out: string[] = [];
+    for (const c of checks) {
+        const where = `check "${c.id}"`;
+        const b = c.basis;
+        if (b === undefined) {
+            out.push(`${where}: no \`basis\` — a check says what its verdict rests on`);
+            continue;
+        }
+        if (!BASIS_LEVELS.includes(b.level as BasisLevel)) out.push(`${where}: basis.level "${String(b.level)}" is not one of ${BASIS_LEVELS.join(', ')}`);
+        if (typeof b.ref !== 'string' || b.ref.trim().length < 10) out.push(`${where}: basis.ref is empty or too short to be re-checked`);
+        else if (b.level === 'official' && !/https:\/\/\S+/.test(b.ref)) out.push(`${where}: an official basis.ref must cite an https URL`);
+        if (typeof b.checked_at !== 'string' || !ISO_DATE_RE.test(b.checked_at) || Number.isNaN(Date.parse(b.checked_at))) {
+            out.push(`${where}: basis.checked_at is not a YYYY-MM-DD date`);
+        }
+    }
+    return out;
 }
 
 export interface Finding {
@@ -351,6 +381,10 @@ export function loadConfig(root = REPO_ROOT): {
             `${CONFIG_REL} carries no region axis — a DE site would silently get the ` +
                 'situational tier for a legally owed page.',
         );
+    }
+    const basis = basisViolations(checks);
+    if (basis.length > 0) {
+        throw new DeadScopeError('check_web_launch_readiness', `${CONFIG_REL} carries a check with no usable basis:\n  - ${basis.join('\n  - ')}`);
     }
     const legal = legalRowViolations(legalRowsOf(doc), asOfToday());
     if (legal.length > 0) {
