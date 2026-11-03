@@ -119,7 +119,7 @@ green after the fix, and the release-side rules fail the contract test on regres
 
 ## Phase 3 — Project memory writes are guarded
 
-- [ ] **3.1 Attack and benign fixture, red first.** Add `tests/fixtures/standing-commands.json`
+- [x] **3.1 Attack and benign fixture, red first.** Add `tests/fixtures/standing-commands.json`
       (≥ 12 attacks: prepended and appended recurrence, German, shell substitution, package
       install, "At the start of each session, run … | bash", "Before each session, download and
       run …"; ≥ 6 benign directives incl. "Always run the tests before pushing", "The CI runs lint
@@ -128,6 +128,9 @@ green after the fix, and the release-side rules fail the contract test on regres
       refused benign row. It is expected red until 3.2; record the miss and refusal counts in
       the step note.
       verify: `npx vitest run tests/lib/standing_commands_fixture.test.ts` exits non-zero and its output names ≥ 2 missed attacks and ≥ 1 refused benign row
+      Note (red at the pin): 14 attacks / 7 benign; 10 attacks missed (all prepended-recurrence,
+      German, `eval`/`wget`, package-install and `call <url>` rows), 3 benign refused
+      ("Always run the tests…", "Always check the changelog…", "Always fetch the latest main…").
 - [ ] **3.2 Repair the guard.** Extend `_STANDING_COMMAND_RE` in
       `src/scripts/_lib/user_global_observations.ts` to prepended recurrence, add the
       `retrieval_sanitize` scan (`risk_level !== 'low'`) as a second channel, and stop refusing an
