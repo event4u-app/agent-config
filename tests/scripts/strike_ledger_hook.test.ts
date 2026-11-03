@@ -82,4 +82,22 @@ describe('strike ledger via before_complete_hook', () => {
         bash('s1', RED, 1);
         expect(Object.keys(ledger().entries)).toHaveLength(MAX_ENTRIES);
     });
+
+    it('a streak past the TTL is not revived by a new run of the same failure', () => {
+        bash('s1', RED, 1);
+        edit('s1');
+        bash('s1', RED, 1);
+        expect(only()?.streak).toBe(2);
+        const l = ledger();
+        const old = new Date(Date.now() - 8 * 86_400_000).toISOString();
+        const aged = {
+            ...l,
+            entries: Object.fromEntries(Object.entries(l.entries).map(([k, e]) => [k, { ...e, last_at: old }])),
+            edits: Object.fromEntries(Object.entries(l.edits).map(([k, c]) => [k, { ...c, last_at: old }])),
+        };
+        fs.writeFileSync(path.join(tmp, STRIKE_LEDGER_FILE), JSON.stringify(aged));
+        // No event in between: the run itself must see the expired entry gone.
+        bash('s1', RED, 1);
+        expect(only()).toMatchObject({ streak: 1, verdict: 'NEW' });
+    });
 });

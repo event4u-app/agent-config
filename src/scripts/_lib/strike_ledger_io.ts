@@ -54,7 +54,10 @@ export function observeStrike(
         update_json_under_lock<StrikeLedger>(
             path.join(consumer_root, STRIKE_LEDGER_FILE),
             (loaded) => {
-                let ledger = coerceLedger(loaded);
+                // Expire BEFORE the fold — a streak past the TTL must not be
+                // revived by this event — and cap AFTER it, so what is written
+                // honours the bounds.
+                let ledger = pruneLedger(coerceLedger(loaded), now);
                 if (event.isEdit) ledger = recordEdit(ledger, agent, now);
                 if (run !== null) ledger = observeRun(ledger, run, { agent, now, platform }).ledger;
                 return pruneLedger(ledger, now);

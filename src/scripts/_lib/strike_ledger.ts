@@ -236,8 +236,9 @@ function keepRecent<T extends { readonly last_at: string }>(
 /**
  * Drop entries untouched for longer than the TTL and cap them; then keep every
  * edit counter a surviving entry depends on, and at most MAX_IDLE_AGENTS of the
- * rest, within the TTL. Run on the COMPLETED ledger, after the event's edit and
- * run were folded in, so the bounds hold for what is written.
+ * rest, within the TTL. Run BEFORE an event is folded in, so an expired streak
+ * cannot be revived, and again on the completed ledger, so the bounds hold for
+ * what is written.
  */
 export function pruneLedger(ledger: StrikeLedger, now: string, ttlDays = STRIKE_TTL_DAYS): StrikeLedger {
     const cutoff = Date.parse(now) - ttlDays * 86_400_000;
