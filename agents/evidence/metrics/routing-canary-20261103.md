@@ -45,5 +45,22 @@ ROUTING_CHANGED: `adversarial-review` (0 → 1), `existing-ui-audit` and
   nine regressed units have a `SKILL.md` byte-identical to the baseline's, so the
   skill text is not the first suspect.
 - The instrument to separate noise from regression already exists (6.1, opt-in
-  repetitions): a rerun of the nine units at a repetition count, against floors
-  restated per 6.2, is what turns this into a verdict.
+  repetitions): a rerun of the nine units at a repetition count is what turns
+  this into a verdict — and it ran, below.
+
+## Rerun — the nine REGRESSION units at three runs each
+
+Same host, model and catalogue, `--runs 3`; rows in
+`routing-canary-rerun-20261103.json`. CLI estimate 5.16 USD. No run errored.
+
+| Fired | Units |
+|---|---|
+| 3/3 — noise at n=1 | `ai-council`, `description-assist`, `readme-writing`, `skill-reviewer` |
+| 2/3 | `dependency-upgrade`, `wireframe` |
+| **0/3 — stable** | `project-analysis-core`, `react-shadcn-ui`, `type-design` |
+
+The three stable ones did not change their `description` since the baseline
+(`react-shadcn-ui` changed only a link and a provenance sentence in its body).
+They, and the two 2/3 units, are carried by
+`agents/roadmaps/road-to-three-units-that-stopped-firing.md`, which locates the
+cause — host or catalogue — before any skill is edited.

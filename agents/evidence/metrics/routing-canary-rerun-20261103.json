@@ -1,0 +1,383 @@
+{
+  "schema": "routing-baseline/v1",
+  "captured_at": "2026-11-03T13:27:41.595Z",
+  "commit": "f9054d0f10",
+  "host_version": "2.1.316",
+  "model": "claude-opus-5-5",
+  "protocol": {
+    "path": "agents/evidence/preregistration/routing-baseline-protocol-20261027.md",
+    "sha256": "38326fb3684777b2f31363970dae60605076c7f00441899b53161965d7935c1a"
+  },
+  "catalogue_sha256": "59abaf19024a70d220c0a1977dabb0cb6944fa320041187eb251634d73ffcff5",
+  "cost_usd": 5.1619472,
+  "partial": false,
+  "cases": [
+    {
+      "case": "061-type-design-q5",
+      "skill": "type-design",
+      "query_sha256": "00f4d46883654eb6a64c3d13dceb5e5a9f532744b618ca972f798bcae818f330",
+      "verdict": "not-fired",
+      "cost_usd": 0.14504499999999998,
+      "invoked": [],
+      "id": "q5",
+      "skill_sha256": "a717d21d40274641ec1d1de34fb613e421dd0e5201810ec6048d207a466a0017"
+    },
+    {
+      "case": "061-type-design-q5",
+      "skill": "type-design",
+      "query_sha256": "00f4d46883654eb6a64c3d13dceb5e5a9f532744b618ca972f798bcae818f330",
+      "verdict": "not-fired",
+      "cost_usd": 0.1444034,
+      "invoked": [],
+      "id": "q5",
+      "skill_sha256": "a717d21d40274641ec1d1de34fb613e421dd0e5201810ec6048d207a466a0017"
+    },
+    {
+      "case": "061-type-design-q5",
+      "skill": "type-design",
+      "query_sha256": "00f4d46883654eb6a64c3d13dceb5e5a9f532744b618ca972f798bcae818f330",
+      "verdict": "not-fired",
+      "cost_usd": 0.1335216,
+      "invoked": [],
+      "id": "q5",
+      "skill_sha256": "a717d21d40274641ec1d1de34fb613e421dd0e5201810ec6048d207a466a0017"
+    },
+    {
+      "case": "066-react-shadcn-ui-rsu-e2",
+      "skill": "react-shadcn-ui",
+      "query_sha256": "9f1472e03b44b4560b328ac7d60671d4f905102e52bf60b7d262d532052b43c5",
+      "verdict": "not-fired",
+      "cost_usd": 0.1465306,
+      "invoked": [],
+      "id": "rsu-e2",
+      "skill_sha256": "73756502ecf853f9e540cb95cb4ee4102b7aa3a74a4df274ee7e1c2e1d434ed4"
+    },
+    {
+      "case": "066-react-shadcn-ui-rsu-e2",
+      "skill": "react-shadcn-ui",
+      "query_sha256": "9f1472e03b44b4560b328ac7d60671d4f905102e52bf60b7d262d532052b43c5",
+      "verdict": "not-fired",
+      "cost_usd": 0.145257,
+      "invoked": [],
+      "id": "rsu-e2",
+      "skill_sha256": "73756502ecf853f9e540cb95cb4ee4102b7aa3a74a4df274ee7e1c2e1d434ed4"
+    },
+    {
+      "case": "066-react-shadcn-ui-rsu-e2",
+      "skill": "react-shadcn-ui",
+      "query_sha256": "9f1472e03b44b4560b328ac7d60671d4f905102e52bf60b7d262d532052b43c5",
+      "verdict": "not-fired",
+      "cost_usd": 0.154098,
+      "invoked": [],
+      "id": "rsu-e2",
+      "skill_sha256": "73756502ecf853f9e540cb95cb4ee4102b7aa3a74a4df274ee7e1c2e1d434ed4"
+    },
+    {
+      "case": "070-skill-reviewer-q2",
+      "skill": "skill-reviewer",
+      "query_sha256": "53cfa028a9594338adc393d5d000d1c75209121214950bd0291f855f64422006",
+      "verdict": "fired",
+      "cost_usd": 0.315202,
+      "invoked": [
+        "skill-reviewer"
+      ],
+      "id": "q2",
+      "skill_sha256": "f0e37be3cf34ee8001b7310d07824ef39941054f0756ad9354d7f19e9a14a9e2"
+    },
+    {
+      "case": "070-skill-reviewer-q2",
+      "skill": "skill-reviewer",
+      "query_sha256": "53cfa028a9594338adc393d5d000d1c75209121214950bd0291f855f64422006",
+      "verdict": "fired",
+      "cost_usd": 0.3721368,
+      "invoked": [
+        "skill-reviewer"
+      ],
+      "id": "q2",
+      "skill_sha256": "f0e37be3cf34ee8001b7310d07824ef39941054f0756ad9354d7f19e9a14a9e2"
+    },
+    {
+      "case": "070-skill-reviewer-q2",
+      "skill": "skill-reviewer",
+      "query_sha256": "53cfa028a9594338adc393d5d000d1c75209121214950bd0291f855f64422006",
+      "verdict": "fired",
+      "cost_usd": 0.3593714,
+      "invoked": [
+        "skill-reviewer"
+      ],
+      "id": "q2",
+      "skill_sha256": "f0e37be3cf34ee8001b7310d07824ef39941054f0756ad9354d7f19e9a14a9e2"
+    },
+    {
+      "case": "071-description-assist-q3",
+      "skill": "description-assist",
+      "query_sha256": "33f07055b6fd97a2db16c89afe98e66433780b266162f33fa4f63a20a951dc84",
+      "verdict": "fired",
+      "cost_usd": 0.200525,
+      "invoked": [
+        "description-assist"
+      ],
+      "id": "q3",
+      "skill_sha256": "f7555e15e9bad3d7211d481790075aef1731c1073fe999adcea7ed354f5d9c23"
+    },
+    {
+      "case": "071-description-assist-q3",
+      "skill": "description-assist",
+      "query_sha256": "33f07055b6fd97a2db16c89afe98e66433780b266162f33fa4f63a20a951dc84",
+      "verdict": "fired",
+      "cost_usd": 0.20126860000000002,
+      "invoked": [
+        "description-assist"
+      ],
+      "id": "q3",
+      "skill_sha256": "f7555e15e9bad3d7211d481790075aef1731c1073fe999adcea7ed354f5d9c23"
+    },
+    {
+      "case": "071-description-assist-q3",
+      "skill": "description-assist",
+      "query_sha256": "33f07055b6fd97a2db16c89afe98e66433780b266162f33fa4f63a20a951dc84",
+      "verdict": "fired",
+      "cost_usd": 0.2054244,
+      "invoked": [
+        "description-assist"
+      ],
+      "id": "q3",
+      "skill_sha256": "f7555e15e9bad3d7211d481790075aef1731c1073fe999adcea7ed354f5d9c23"
+    },
+    {
+      "case": "073-ai-council-q3",
+      "skill": "ai-council",
+      "query_sha256": "345daba9bc6d03dac4e407bec46c84c56f99f606efa00e31da7ea1c36e9b4c3b",
+      "verdict": "fired",
+      "cost_usd": 0.20332039999999998,
+      "invoked": [
+        "ai-council"
+      ],
+      "id": "q3",
+      "skill_sha256": "74e05d026777452a1dcdb9a6f016d84e632dc59e204bb717659209c63c72f918"
+    },
+    {
+      "case": "073-ai-council-q3",
+      "skill": "ai-council",
+      "query_sha256": "345daba9bc6d03dac4e407bec46c84c56f99f606efa00e31da7ea1c36e9b4c3b",
+      "verdict": "fired",
+      "cost_usd": 0.2016862,
+      "invoked": [
+        "ai-council"
+      ],
+      "id": "q3",
+      "skill_sha256": "74e05d026777452a1dcdb9a6f016d84e632dc59e204bb717659209c63c72f918"
+    },
+    {
+      "case": "073-ai-council-q3",
+      "skill": "ai-council",
+      "query_sha256": "345daba9bc6d03dac4e407bec46c84c56f99f606efa00e31da7ea1c36e9b4c3b",
+      "verdict": "fired",
+      "cost_usd": 0.2021884,
+      "invoked": [
+        "ai-council"
+      ],
+      "id": "q3",
+      "skill_sha256": "74e05d026777452a1dcdb9a6f016d84e632dc59e204bb717659209c63c72f918"
+    },
+    {
+      "case": "079-dependency-upgrade-q2",
+      "skill": "dependency-upgrade",
+      "query_sha256": "a65abcd1fe88d57848c199e2377abadf079d09cbffead1e3d62763ade3f0321a",
+      "verdict": "not-fired",
+      "cost_usd": 0.16270340000000005,
+      "invoked": [],
+      "id": "q2",
+      "skill_sha256": "8d44c96c58980031b1782659a456e87a68961b4e4cab29a651cbb688a3eb721a"
+    },
+    {
+      "case": "079-dependency-upgrade-q2",
+      "skill": "dependency-upgrade",
+      "query_sha256": "a65abcd1fe88d57848c199e2377abadf079d09cbffead1e3d62763ade3f0321a",
+      "verdict": "fired",
+      "cost_usd": 0.21956320000000001,
+      "invoked": [
+        "dependency-upgrade"
+      ],
+      "id": "q2",
+      "skill_sha256": "8d44c96c58980031b1782659a456e87a68961b4e4cab29a651cbb688a3eb721a"
+    },
+    {
+      "case": "079-dependency-upgrade-q2",
+      "skill": "dependency-upgrade",
+      "query_sha256": "a65abcd1fe88d57848c199e2377abadf079d09cbffead1e3d62763ade3f0321a",
+      "verdict": "fired",
+      "cost_usd": 0.2013444,
+      "invoked": [
+        "dependency-upgrade"
+      ],
+      "id": "q2",
+      "skill_sha256": "8d44c96c58980031b1782659a456e87a68961b4e4cab29a651cbb688a3eb721a"
+    },
+    {
+      "case": "101-readme-writing-q2",
+      "skill": "readme-writing",
+      "query_sha256": "ae33b4513176685f28b80658bf134d140d7bc3cba36cb87a3102bf80c73e0c54",
+      "verdict": "fired",
+      "cost_usd": 0.1817604,
+      "invoked": [
+        "readme-writing"
+      ],
+      "id": "q2",
+      "skill_sha256": "b881cbf960064530750fc0a5c1656030fd4c116aa4ae892da03fc6439fca6339"
+    },
+    {
+      "case": "101-readme-writing-q2",
+      "skill": "readme-writing",
+      "query_sha256": "ae33b4513176685f28b80658bf134d140d7bc3cba36cb87a3102bf80c73e0c54",
+      "verdict": "fired",
+      "cost_usd": 0.18608520000000003,
+      "invoked": [
+        "readme-writing"
+      ],
+      "id": "q2",
+      "skill_sha256": "b881cbf960064530750fc0a5c1656030fd4c116aa4ae892da03fc6439fca6339"
+    },
+    {
+      "case": "101-readme-writing-q2",
+      "skill": "readme-writing",
+      "query_sha256": "ae33b4513176685f28b80658bf134d140d7bc3cba36cb87a3102bf80c73e0c54",
+      "verdict": "fired",
+      "cost_usd": 0.177645,
+      "invoked": [
+        "readme-writing"
+      ],
+      "id": "q2",
+      "skill_sha256": "b881cbf960064530750fc0a5c1656030fd4c116aa4ae892da03fc6439fca6339"
+    },
+    {
+      "case": "122-wireframe-q3",
+      "skill": "wireframe",
+      "query_sha256": "d8dd55807b05c9371d486178b7b13c9a701e1975d715693e12acaf4631576933",
+      "verdict": "fired",
+      "cost_usd": 0.1613954,
+      "invoked": [
+        "wireframe"
+      ],
+      "id": "q3",
+      "skill_sha256": "d8f2301c42cbac5198508c3aec35876a4065b176ec695b71a103d7b6c32219d9"
+    },
+    {
+      "case": "122-wireframe-q3",
+      "skill": "wireframe",
+      "query_sha256": "d8dd55807b05c9371d486178b7b13c9a701e1975d715693e12acaf4631576933",
+      "verdict": "not-fired",
+      "cost_usd": 0.134938,
+      "invoked": [],
+      "id": "q3",
+      "skill_sha256": "d8f2301c42cbac5198508c3aec35876a4065b176ec695b71a103d7b6c32219d9"
+    },
+    {
+      "case": "122-wireframe-q3",
+      "skill": "wireframe",
+      "query_sha256": "d8dd55807b05c9371d486178b7b13c9a701e1975d715693e12acaf4631576933",
+      "verdict": "fired",
+      "cost_usd": 0.1647996,
+      "invoked": [
+        "wireframe"
+      ],
+      "id": "q3",
+      "skill_sha256": "d8f2301c42cbac5198508c3aec35876a4065b176ec695b71a103d7b6c32219d9"
+    },
+    {
+      "case": "147-project-analysis-core-q1",
+      "skill": "project-analysis-core",
+      "query_sha256": "181aa5f3c1f6986f929931ac12127b823ee32262805c7051451011838119c894",
+      "verdict": "not-fired",
+      "cost_usd": 0.1445852,
+      "invoked": [],
+      "id": "q1",
+      "skill_sha256": "0da621b0435546f429b4f6a5aebd20274616d40983f4704bbd0503bd9e5b8d09"
+    },
+    {
+      "case": "147-project-analysis-core-q1",
+      "skill": "project-analysis-core",
+      "query_sha256": "181aa5f3c1f6986f929931ac12127b823ee32262805c7051451011838119c894",
+      "verdict": "not-fired",
+      "cost_usd": 0.14608859999999999,
+      "invoked": [],
+      "id": "q1",
+      "skill_sha256": "0da621b0435546f429b4f6a5aebd20274616d40983f4704bbd0503bd9e5b8d09"
+    },
+    {
+      "case": "147-project-analysis-core-q1",
+      "skill": "project-analysis-core",
+      "query_sha256": "181aa5f3c1f6986f929931ac12127b823ee32262805c7051451011838119c894",
+      "verdict": "not-fired",
+      "cost_usd": 0.15106,
+      "invoked": [],
+      "id": "q1",
+      "skill_sha256": "0da621b0435546f429b4f6a5aebd20274616d40983f4704bbd0503bd9e5b8d09"
+    }
+  ],
+  "units": [
+    {
+      "unit": "ai-council",
+      "n": 3,
+      "fired": 3,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "dependency-upgrade",
+      "n": 3,
+      "fired": 2,
+      "unknown": 0,
+      "recall": 0.6666666666666666
+    },
+    {
+      "unit": "description-assist",
+      "n": 3,
+      "fired": 3,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "project-analysis-core",
+      "n": 3,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "react-shadcn-ui",
+      "n": 3,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "readme-writing",
+      "n": 3,
+      "fired": 3,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "skill-reviewer",
+      "n": 3,
+      "fired": 3,
+      "unknown": 0,
+      "recall": 1
+    },
+    {
+      "unit": "type-design",
+      "n": 3,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "wireframe",
+      "n": 3,
+      "fired": 2,
+      "unknown": 0,
+      "recall": 0.6666666666666666
+    }
+  ]
+}
