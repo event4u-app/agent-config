@@ -477,18 +477,10 @@ function read_json_file(p: string): Record<string, unknown> | null {
     return null;
 }
 
-/**
- * Whole-file JSON write for a host settings file. A pre-existing file leaves a
- * refreshed `.agent-config.bak` and the result is re-read; a mismatch restores
- * the pre-write bytes and returns `false` (warned), never a silent half-write.
- */
 function write_json_file(p: string, data: Record<string, unknown>): boolean {
-    const outcome = writeHostConfig(p, data, { write: write_file });
-    if (outcome.status === 'skipped-readback-mismatch') {
-        warn(`${p}: ${outcome.status} (${outcome.detail ?? ''})`);
-        return false;
-    }
-    return true;
+    const o = writeHostConfig(p, data, { write: write_file });
+    if (o.status === 'skipped-readback-mismatch') warn(`${p}: ${o.status} (${o.detail ?? ''})`);
+    return o.status !== 'skipped-readback-mismatch';
 }
 
 function merge_json_file(
