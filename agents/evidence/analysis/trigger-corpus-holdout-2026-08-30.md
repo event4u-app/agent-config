@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  07721f2a371b821935b2112ff781214cff69ca5ebc216377428dbf178bf96078
+SET-SHA256  0ce528391db7c14e44b02c87d1fe81d5bdbd9435c47126ed341c20164243c214
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1047,7 +1047,7 @@ open and which this file does not settle.
 | `brand` | `43abaf7937a73ea8b041e18d977ce6a080b2226f6c0f49bb55cf59bc4545df36` |
 | `canvas-design` | `63229b3cfc336241f96140baf7c41c695a0f4fdbe8c30c9f1f787cd84ddfe02b` |
 | `code-intelligence` | `350a6d29f264800744fe9b1a4fcc48e9f7acba25cdd325f33df5b3a0aa1aaac2` |
-| `code-review-lens` | `16f88abe0905f862f177f401b59f5db8ff10980419f532ed6f5972200ba3fb82` |
+| `code-review-lens` | `96d7f4c96fb7fa7a7a8456b6c8cf795669e02ab79f9a127cf8639a17081ac8f7` |
 | `competitive-positioning` | `6d1d550d9a2af6b030fb5a30789274a38ab2f2bf5aab4a4b0899c5ee5ff76d46` |
 | `condense-memory` | `2c150c0b67c0a3342edb6429dfb71ef05c010501e8488a88c26a3757108afc93` |
 | `conventional-commits-writing` | `dc33e3a5c2b87ef7b95a4a588c0d12266f023c80e1adca73cbd147a6a59b25e4` |
@@ -2260,7 +2260,9 @@ with their directories, and the partition is derived from the name:
 Six train corpora were re-hashed because a near-miss note or a description
 names the renamed skill: `mcp-builder`, `receiving-code-review`,
 `requesting-code-review`, `skill-reviewer`, `rtk-output-filtering`,
-`description-assist`. Their queries are unchanged. `mcp-tool-use`'s description
+`description-assist`. Their queries are unchanged. `code-review-lens` gained two
+counterexamples and a declared class on every case, which the corpus lint asks of
+a file the diff adds; its six earlier queries are unchanged. `mcp-tool-use`'s description
 was also tightened, to keep the per-spawn catalogue from growing with the longer
 names; the measurements below were taken after that edit. `copilot-config` and
 `github-ci` are new because their skill bodies were touched by the rename, so
@@ -2278,7 +2280,7 @@ none of which is touched.
 
 The sealed set moves **44 -> 45**, the train set **152 -> 153**, the set
 **196 -> 198**. `SET-SHA256` moves because it is computed over every row:
-`6719e4ae…` → `07721f2a…`.
+`6719e4ae…` → `0ce52839…`.
 
 **Both train-side measurements were re-taken on this tree.**
 `routing-body-signal-verdict.json`: still `harmful` on the false-activation
