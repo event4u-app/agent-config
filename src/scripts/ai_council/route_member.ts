@@ -101,6 +101,18 @@ function firstPartyGate(baseUrl: string, model: string, stateRoot: string, now: 
 }
 
 /**
+ * The key a route member's liveness and discovered roster share: the catalog
+ * row id for a catalogued `base_url`, else the member name. Keying by member
+ * name split them, so a retirement never saw the rediscovery that lifts it.
+ */
+export function livenessRouteKey(member: ExternalAIClient): string {
+    const baseUrl = (member as unknown as Record<string, unknown>)['base_url'];
+    if (typeof baseUrl !== 'string' || baseUrl === '') return member.name;
+    const key = routeIdentity(baseUrl);
+    return ROUTE_CATALOG.find((r) => routeIdentity(r.base_url) === key)?.id ?? member.name;
+}
+
+/**
  * Host and path, scheme dropped: an `http` or mixed-case spelling of a
  * catalogued route is the same route to the gate, so it cannot step around it.
  */

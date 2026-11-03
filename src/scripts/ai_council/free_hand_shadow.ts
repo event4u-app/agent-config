@@ -40,6 +40,7 @@ import { buildHandPayload, type HandPayload, type HandSlice } from './hand_paylo
 import { parseHandReturn } from './hand_schemas.js';
 import { routeCandidateFromMember } from './route_chooser.js';
 import { classifyRouteOutcome, recordRouteOutcome, type RouteOutcome } from './route_liveness.js';
+import { livenessRouteKey } from './route_member.js';
 import { isUnpaid, type HandKind, type RouteBilling, type VerifyVerdict } from '../_lib/hand_kinds.js';
 
 /** Decision A5: enough for per-kind rates at the 5 pp margin; spend stays USD 0.00. */
@@ -195,7 +196,7 @@ export async function shadowAsk(slice: HandSlice, opts: ShadowAskOptions): Promi
     opts.exposure?.ledger.record(freeRoute.name, opts.exposure.exposes);
     const [p, f] = await Promise.all([_call(opts.paid, kind, payload), _call(opts.free, kind, payload)]);
     const model = _routeModel(opts.free);
-    if (model !== null) recordRouteOutcome(opts.stateRoot, freeRoute.name, model, f.outcome);
+    if (model !== null) recordRouteOutcome(opts.stateRoot, livenessRouteKey(opts.free), model, f.outcome);
     const row: ShadowRow = {
         ts: (opts.now ?? (() => new Date()))().toISOString(),
         kind,

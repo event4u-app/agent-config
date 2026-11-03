@@ -38,6 +38,9 @@ export const RETIRE_STREAK = 3;
 /** Runtime state beside `council-route-models.json`; gitignored, never committed. */
 export const ROUTE_LIVENESS_RELPATH = path.join('agents', 'runtime', 'state', 'council-route-liveness.json');
 
+/** A structured error code naming the model; a plain 400 (bad parameter) is not one. */
+const _MODEL_CODE = /model_not_found|"code"\s*:\s*"model_/i;
+
 const _QUOTA_TEXT = /insufficient_quota|quota exceeded|exceeded your current quota|usage limit/i;
 
 /** The route's answer as one vocabulary name; `null` / empty means it answered. */
@@ -52,6 +55,7 @@ export function classifyRouteOutcome(error: string | null | undefined): RouteOut
     if (status === 402) return 'billing';
     if (status === 429) return _QUOTA_TEXT.test(body) ? 'quota_exhausted' : 'rate_limited';
     if (status === 410) return 'model_unservable';
+    if ((status === 404 || status === 400) && _MODEL_CODE.test(body)) return 'model_unservable';
     if (status === 404) return /\bmodel\b/i.test(body) ? 'model_unservable' : 'other';
     // 501 and 505 say the route cannot do this at all; retrying is pointless.
     if (status >= 500 && status <= 599 && status !== 501 && status !== 505) return 'server_error';

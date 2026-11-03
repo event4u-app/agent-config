@@ -90,6 +90,26 @@ describe('askOnce with a kind — a return that does not parse is a failed call'
         expect(r!.parsed).toEqual({ label: 'timeout', confidence: 0.8 });
     });
 
+    it('a return that parses but was cut off is not a schema pass', async () => {
+        const dir = path.join(tmp, 'audit-trunc');
+        const truncated = {
+            name: 'anthropic',
+            ask: () =>
+                new CouncilResponse({
+                    provider: 'anthropic',
+                    model: 'test-model',
+                    text: VALID['classify'] as string,
+                    input_tokens: 40,
+                    output_tokens: 10,
+                    stop_class: 'truncated',
+                }),
+        } as unknown as ExternalAIClient;
+        const r = await askOnce('classify: ETIMEDOUT', { members: [truncated], kind: 'classify', auditDir: dir, id: () => 'hand-trunc-1' });
+        expect(r).toBeNull();
+        const o = auditLines(dir)[0]!['orchestration'] as Record<string, unknown>;
+        expect(o['schema_valid']).toBe(false);
+    });
+
     it('returns null and logs a schema-invalid line, never a partial answer', async () => {
         const dir = path.join(tmp, 'audit');
         const r = await askOnce('classify: ETIMEDOUT', {

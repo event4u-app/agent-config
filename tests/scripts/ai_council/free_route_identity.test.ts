@@ -47,6 +47,14 @@ describe('2.4 — identity derived, not declared', () => {
         expect(servedMatches('gpt-oss-120b', 'gpt-oss-20b')).toBe(false);
     });
 
+    it('a served id may not add a parameter size the request did not name', () => {
+        expect(servedMatches('llama-3.1', 'llama-3.1-405b')).toBe(false);
+        expect(servedMatches('llama-3.1', 'meta/llama-3.1-70B-instruct')).toBe(false);
+        expect(servedMatches('gpt-4o', 'gpt-4o-2024-08-06')).toBe(true);
+        expect(servedMatches('llama-3.1-8b', 'llama-3.1-8b-instruct')).toBe(true);
+        expect(servedMatches('llama-3.1', 'llama-3.1-instruct')).toBe(true);
+    });
+
     it('random/auto routers are refused at config time', () => {
         for (const model of ['auto', 'some-router/auto', 'openish/free', 'x/random']) {
             const r = parseRouteFields('hands', { base_url: 'https://route.example.test/v1', model }, false);

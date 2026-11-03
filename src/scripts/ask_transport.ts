@@ -76,6 +76,8 @@ import {
     routeFailureClass,
 } from './ai_council/route_liveness.js';
 import { MidFlightFallback } from './ai_council/transport_resolver.js';
+import { isIncompleteStop } from './ai_council/stop_class.js';
+import { livenessRouteKey } from './ai_council/route_member.js';
 import { isKindFlipped } from './ai_council/kind_flip.js';
 import { shadowAsk, shadowCapCount, SHADOW_CALL_CAP, type HeadVerify, type ShadowOrigin } from './ai_council/free_hand_shadow.js';
 import {
@@ -252,7 +254,7 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
     const routed = members.map((m) => {
         const route = routeCandidateFromMember(m);
         const model = routeModel(m);
-        const retired = stateRoot !== null && model !== null && !isRouteModelLive(stateRoot, route.name, model);
+        const retired = stateRoot !== null && model !== null && !isRouteModelLive(stateRoot, livenessRouteKey(m), model);
         return { member: m, route: retired ? { ...route, live: false } : route };
     });
     const pool = opts.member !== undefined ? routed.filter((r) => r.route.name === opts.member) : routed;
@@ -407,13 +409,15 @@ async function _callRoute(
         const response = pick.ask(system, prompt);
         const r = response instanceof Promise ? await response : response;
         const error = r === null || r === undefined ? 'no response' : r.error;
-        if (stateRoot !== null && model !== null) recordRouteOutcome(stateRoot, provider, model, classifyRouteOutcome(error));
+        if (stateRoot !== null && model !== null) recordRouteOutcome(stateRoot, livenessRouteKey(pick), model, classifyRouteOutcome(error));
         if (r === null || r === undefined) return { done: true, result: null, schemaValid: undefined };
         if (error !== null && error !== undefined && error !== '') return { done: false, error };
         const text = (r.text ?? '').trim();
         if (!text) return { done: true, result: null, schemaValid: undefined };
         let parsed: unknown;
         if (opts.kind !== undefined) {
+            // A cut-off answer can still parse; the provider's stop reason says it is not the whole answer.
+            if (isIncompleteStop(r.stop_class)) return { done: true, result: null, schemaValid: false };
             const p = parseHandReturn(opts.kind, text);
             if (!p.ok) return { done: true, result: null, schemaValid: false };
             parsed = p.value;
