@@ -18,6 +18,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { parseGateArgs } from './_lib/gate_args.js';
+import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
@@ -130,6 +131,15 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     }
 
     const dups = findDuplicateIds(ids);
+    const ledger = new GateLedger('check_owner_question_ids');
+    const duplicated = new Set(dups.map((d) => d.id));
+    for (const { id, line } of ids) {
+        const target = `OQ-${String(id)}@${String(line)}`;
+        ledger.plan(target);
+        if (duplicated.has(id)) ledger.fail(target, 'duplicate id');
+        else ledger.complete(target);
+    }
+    ledger.report();
     if (dups.length === 0) {
         process.stdout.write(`✅  ${String(ids.length)} owner-question id(s), all unique.\n`);
         return 0;

@@ -13,12 +13,12 @@
     "verdict": "harmful",
     "reason": "false activation +4.79 pp breaches the +2.0 pp guard",
     "k": 5,
-    "delta_recall_pp": 0.896,
+    "delta_recall_pp": 1.152,
     "delta_false_activation_pp": 4.787,
-    "p_value": 0.7061,
+    "p_value": 0.6137,
     "discordant_positive_pairs": {
       "gained": 130,
-      "lost": 123
+      "lost": 121
     },
     "bars": {
       "recall_gain_pp": 5,
@@ -35,14 +35,14 @@
       },
       "description+body": {
         "positives": 781,
-        "positiveHits": 489,
+        "positiveHits": 491,
         "negatives": 752,
         "negativeHits": 143
       }
     },
     "recall_pp": {
       "description": 61.716,
-      "description+body": 62.612
+      "description+body": 62.868
     },
     "false_activation_pp": {
       "description": 14.229,

@@ -14,6 +14,10 @@ estate_growth_exempt: "+1 later_roadmaps: receiver of the carried step 1.4 of ro
 > project-scope rules (a lowered base after a rule shrink, or an owner-approved
 > payload grant recorded before the change that spends it).
 
+## Goal
+
+Floor source tags, once payload allows.
+
 ## What was built and taken back
 
 Round `inbox-2026-11-n` added one line to `domain-safety-disclaimer.md` and

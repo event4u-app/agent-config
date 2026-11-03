@@ -114,7 +114,7 @@ claim is cumulative across versions as well as levels: it carries these too.
 | 1.3.4 Orientation | AA | Content works in portrait and landscape unless one is essential | Locked to portrait; a mounted tablet cannot use it |
 | 1.3.5 Identify Input Purpose | AA | Fields collecting the user's own data carry the matching `autocomplete` token | Name/email/address fields lack `autocomplete` |
 | 1.4.10 Reflow | AA | At 320 CSS px width (400 % zoom) content needs no two-dimensional scrolling and loses nothing | A fixed-width layout forces horizontal scroll per line |
-| 1.4.11 Non-text Contrast | AA | UI component boundaries, states and meaningful graphics reach ≥ 3:1 against adjacent colours | A light-grey input border at 1.4:1 — the field is invisible |
+| 1.4.11 Non-text Contrast | AA | UI component boundaries, states and meaningful graphics reach ≥ 3:1 against adjacent colors | A light-gray input border at 1.4:1 — the field is invisible |
 | 1.4.12 Text Spacing | AA | With line-height 1.5, paragraph spacing 2×, letter spacing 0.12em and word spacing 0.16em, nothing is clipped or overlaps | Fixed-height buttons clip their label |
 | 1.4.13 Content on Hover or Focus | AA | A tooltip or popover shown on hover/focus is dismissible (`Esc`), hoverable, and persists until dismissed | A tooltip vanishes when the pointer moves onto it |
 | 4.1.3 Status Messages | AA | A status message (saved, n results, error summary) is announced without moving focus — `role="status"` / `role="alert"` / live region | "Saved" shows; a screen reader hears nothing |

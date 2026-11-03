@@ -14,6 +14,10 @@ review_by: 2026-12-31
 > escape, reserved the witnessed host names, gated new skill/command twins and
 > gave `doctor` a shadow report.
 
+## Goal
+
+Rename leftovers.
+
 ## Items
 
 1. **Reserved names for the other twelve bundle hosts.** The reservation is

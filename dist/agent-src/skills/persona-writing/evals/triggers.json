@@ -1,0 +1,58 @@
+{
+    "skill": "persona-writing",
+    "last_eval": "2026-11-03",
+    "description": "4 exemplars (1 de) + 3 near-misses + 2 counterexamples. Exemplars create or edit a persona under src/agent-src/personas/. Near-misses share the persona vocabulary and route elsewhere: user research personas for a product (customer-research), improving an existing persona from usage evidence (persona-improvement), and a voice and tone guide for product copy (voice-and-tone-design). Counterexamples guard 'persona' and 'voice' in unrelated senses.",
+    "queries": [
+        {
+            "q": "add a reviewer persona for accessibility with its own unique questions",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "create a new specialist persona for database migrations in src/agent-src/personas/",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "edit the security persona so its output expectations name the severity vocabulary",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "leg eine neue Persona für Performance-Reviews an, mit Fokus und Leitfragen",
+            "trigger": true,
+            "class": "exemplar",
+            "note": "de"
+        },
+        {
+            "q": "build three user personas for our onboarding redesign from the interview notes",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "product user research → customer-research"
+        },
+        {
+            "q": "the qa persona keeps missing edge cases in reviews — improve it from these transcripts",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "evidence-driven refinement of an existing persona → persona-improvement"
+        },
+        {
+            "q": "define the voice and tone for our product's error messages",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "product copy voice → voice-and-tone-design"
+        },
+        {
+            "q": "record a voice memo transcription feature for the mobile app",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'voice' as audio"
+        },
+        {
+            "q": "switch the AWS CLI profile to the staging account",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'profile' as a CLI config, not a persona"
+        }
+    ]
+}
