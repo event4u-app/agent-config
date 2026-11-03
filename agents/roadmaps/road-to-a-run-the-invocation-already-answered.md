@@ -67,11 +67,11 @@ rests on attributable data.
 
 ## Phase 2 — A window is not a step
 
-- [ ] **2.1 `isTimeGated` reads relative windows.** Besides a future ISO date, it
+- [x] **2.1 `isTimeGated` reads relative windows.** Besides a future ISO date, it
       also accepts an observation count or a duration beside the wait vocabulary.
       A dotted step id followed by a verb is not a count. The cases live in the test.
       verify: `npx vitest run tests/scripts/roadmap_drain_queue.test.ts` -> 0, both new cases seen red first; drain-queue JSON over the live estate identical before and after.
-- [ ] **2.2 Rule 17c names the relative form.** `src/agent-src/templates/roadmaps.md:151-157`
+- [x] **2.2 Rule 17c names the relative form.** `src/agent-src/templates/roadmaps.md:151-157`
       says a step needs no date to count as a wait, and that the lint still only
       warns (D6).
       verify: `grep -n 'relative window' src/agent-src/templates/roadmaps.md` -> 1 match.
