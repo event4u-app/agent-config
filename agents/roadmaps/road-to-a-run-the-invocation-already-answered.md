@@ -102,11 +102,11 @@ rests on attributable data.
 
 ## Phase 5 — One invocation, at most one delivery PR
 
-- [ ] **5.1 `roadmap_set_manifest`.** `--roadmaps a,b,c` or `--from-pr <N>` (the PR's
+- [x] **5.1 `roadmap_set_manifest`.** `--roadmaps a,b,c` or `--from-pr <N>` (the PR's
       changed roadmap files) resolve to a frozen manifest ordered by `depends`. A
       cycle is refused. A PR's content names candidates and never widens authority.
       verify: `npx vitest run tests/scripts/roadmap_set_manifest.test.ts` -> 0, cycle and order cases seen red first.
-- [ ] **5.2 process-full takes the set.** Add `argument-hint` entries and reword the
+- [x] **5.2 process-full takes the set.** Add `argument-hint` entries and reword the
       Iron Law to "one invocation, at most one delivery PR". The PR body lists each
       member's outcome.
       verify: lane-brief test asserts the reworded law.

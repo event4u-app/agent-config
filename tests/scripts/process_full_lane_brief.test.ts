@@ -57,9 +57,12 @@ describe('process-full lane brief', () => {
 });
 
 describe('process-full finish-first contract', () => {
-    it('states one roadmap, one PR, and finish-before-start in the Iron Law', () => {
+    it('states one invocation, at most one PR, and finish-before-start in the Iron Law', () => {
         const law = section(text, '## Iron Law — Full is Full');
-        expect(law).toMatch(/ONE ROADMAP, ONE PR: NO PUSH, PR OR MERGE OF A ROADMAP BEFORE ITS LAST STEP/);
+        expect(law).toMatch(/ONE INVOCATION, AT MOST ONE DELIVERY PR: NO PUSH, PR OR MERGE BEFORE THE LAST STEP/);
+        expect(law).toMatch(/UNDER `--all`, EACH ROADMAP IS STILL ITS OWN PR/);
+        expect(text).toMatch(/argument-hint: ".*--roadmaps a,b,c.*--from-pr N.*"/);
+        expect(text).toMatch(/roadmap_set_manifest/);
         expect(law).toMatch(/NO PR OF A ROADMAP IS MERGED BEFORE ITS LANE REPORTS `complete`/);
         expect(law).toMatch(/A STARTED ROADMAP THAT CAN STILL MOVE IS FINISHED BEFORE ANY OTHER IS STARTED/);
     });

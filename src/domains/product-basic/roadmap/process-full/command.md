@@ -7,7 +7,7 @@ cluster: roadmap
 sub: process-full
 skills: [agent-docs-writing, ai-council, roadmap-management]
 description: Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries.
-argument-hint: "[roadmap] [--all] [--merge] [--worktree] [--late-artifacts auto-research] [--deferred spawn-follow-up-draft]"
+argument-hint: "[roadmap | --roadmaps a,b,c | --from-pr N] [--all] [--merge] [--worktree] [--late-artifacts auto-research] [--deferred spawn-follow-up-draft]"
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
@@ -58,6 +58,15 @@ with the **scope delta below**.
   `--late-artifacts` / `--deferred` (contract § 2a/§ 2b), and owner answers
   given as `O<n> <decision-id>: <answer>` lines. The latter become dated owner
   rows per contract § 2d, owner answers carried by the invocation.
+- **A set of roadmaps:** `--roadmaps a,b,c` or `--from-pr N` (the roadmap
+  files that PR changed, bound to its head revision) resolve once, before the
+  first edit, through `./scripts-run src/scripts/roadmap_set_manifest`. The
+  printed manifest is frozen and goes into the PR body. Members run in its
+  `order`, which follows their `depends` edges. A depends cycle refuses the set
+  (exit 1). Parked, archived and missing members are listed as excluded and not
+  run, so a PR names candidates and never widens authority. A blocked member
+  blocks only the members that depend on it; the others continue. Each member
+  is claimed when it is reached.
 - **Working set:** every open step across every phase, in document
   order. Phase-internal annotations like `(deferred)` / `(optional)` /
   "gated on Phase N" do not narrow the working set.
@@ -155,9 +164,10 @@ UNDER THE HALT CONDITIONS IS THE ONLY STATEMENT OF WHICH ENDS WHICH.
 WAITING ON REMOTE CI FOR THE DELIVERY LOOP IS PART OF THE RUN. "CI IS
 RUNNING" IS NOT A BOUNDARY, NOT A HALT, AND NOT A REPORT — THE RUN ENDS
 AT A MERGEABLE PR, NEVER AT AN OFFER TO GO CHECK ON ONE.
-ONE ROADMAP, ONE PR: NO PUSH, PR OR MERGE OF A ROADMAP BEFORE ITS LAST STEP
-IS DONE. LOCAL COMMITS IN LOGICAL CHUNKS STAY; DELIVERY FIXES AFTER THE PR
-OPENS ARE PUSHED TO THAT SAME PR.
+ONE INVOCATION, AT MOST ONE DELIVERY PR: NO PUSH, PR OR MERGE BEFORE THE LAST STEP
+OF THE LAST MEMBER IS DONE. ONE ROADMAP IS A SET OF ONE. LOCAL COMMITS IN LOGICAL
+CHUNKS STAY; DELIVERY FIXES AFTER THE PR OPENS ARE PUSHED TO THAT SAME PR.
+UNDER `--all`, EACH ROADMAP IS STILL ITS OWN PR: A LANE IS ITS OWN INVOCATION.
 ONE INVOCATION, ONE DELIVERY: AS A COMPOSED INVOCATION'S LAST STAGE, THIS RUN
 OPENS OR UPDATES THE ONE PR, ONCE, AT ITS END.
 NO PR OF A ROADMAP IS MERGED BEFORE ITS LANE REPORTS `complete`.
