@@ -77,7 +77,8 @@ The same window, with the six defects fixed, against
      sits around the 250 ms budget of `src/config/hook-latency-budget.json`
      for a hook event on this machine, not clearly inside it; that budget is
      enforced on CI runners for a synthetic Read, which a UI write is not.
-     Non-UI writes never load the chunk.
+     This is owner-accepted latency (2026-11-03), not a demonstrated pass of
+     that budget. Non-UI writes never load the chunk.
    - *A false positive.* One advisory line of about 150 characters (about 40
      tokens), never a block: the concern is `severity: advisory`, which the
      dispatcher enforces as a ceiling. Its findings carry `design-pass`'s
@@ -102,6 +103,30 @@ The same window, with the six defects fixed, against
    of 100 or two weeks, and the targeted shape is in it.
 
 All four hold for **consistency-raw-control**, which ships on.
+
+## Second reading, 2026-11-03 — after the family boundary
+
+Ratification round 14 found that the rule inferred which files can render a
+canonical from the file extension alone, so a `.vue` file in a mixed repository
+could be measured against a React `Select`. The role map now records the file
+families (`jsx`, `vue`, `svelte`, `astro`, `blade`) that define or use each
+canonical, and a file outside them is not measured; a map without them is not
+trusted. The window was replayed again with an explicit bound (2026-04-27 to
+2026-10-27) on each repository's current HEAD, once with the family check and
+once with it disabled:
+
+- A: 262 writes in 147 commits, nothing fires. B: 1,443 writes in 239 commits,
+  six firing writes, identical with and without the family check. Both
+  repositories are single-family, so the check removes nothing here; its
+  effect is on mixed repositories, which this window does not contain.
+- The counts differ from the first reading (1,565 writes) because B's HEAD is
+  now another branch: the three `<textarea>` writes are not on it, and two new
+  firing writes are. Of the six: two writes of the login form are real (three
+  raw `<input>`), three writes of the Storybook story are false as before, and
+  one raw `<input>` in a list molecule of the component library, used as a
+  compact position field, is counted false as the worst case. False: at most
+  4 of 1,703 legitimate writes, **0.23 %**. Conditions 1, 2 and 4 still hold
+  on this reading.
 
 ## What this does not establish
 

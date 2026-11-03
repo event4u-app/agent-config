@@ -13,7 +13,7 @@
  * in a local, gitignored path: what is committed is the aggregate
  * (`internal/bench/corpora/design-consistency-shadow-window.md`).
  *
- *   npx tsx internal/bench/design-consistency/run.ts <repo> <label> <out.jsonl> [since=6.months]
+ *   npx tsx internal/bench/design-consistency/run.ts <repo> <label> <out.jsonl> [since=6.months] [until]
  */
 import { execFileSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -22,9 +22,9 @@ import { buildArtefact } from '../../../src/cli/commands/uiAudit.js';
 import { isUiPath, isUiTreePath } from '../../../src/scripts/_lib/ui_surface.js';
 import { consistencyFindings, SHADOW_TOLERANCES_PX } from '../../../src/scripts/lint_design_consistency.js';
 
-const [repo, label, out, since = '6.months'] = process.argv.slice(2);
+const [repo, label, out, since = '6.months', until] = process.argv.slice(2);
 if (!repo || !label || !out) {
-    process.stderr.write('usage: run.ts <repo> <label> <out.jsonl> [since]\n');
+    process.stderr.write('usage: run.ts <repo> <label> <out.jsonl> [since] [until]\n');
     process.exit(1);
 }
 
@@ -75,7 +75,7 @@ function tree(commit: string): Map<string, string> {
 }
 
 const commits: Array<{ sha: string; parent?: string; files: string[] }> = [];
-for (const l of git('log', `--since=${since}`, '--no-merges', '--format=@%H %P', '--name-only', '--diff-filter=AM').split('\n')) {
+for (const l of git('log', `--since=${since}`, ...(until ? [`--until=${until}`] : []), '--no-merges', '--format=@%H %P', '--name-only', '--diff-filter=AM').split('\n')) {
     if (l.startsWith('@')) {
         const [sha, parent] = l.slice(1).split(' ');
         commits.push({ sha: sha!, parent, files: [] });
