@@ -1,0 +1,125 @@
+---
+complexity: standard
+status: ready
+tree_pin: f9054d0f10
+review_by: 2026-12-15
+estate_offset_exempt: "Operator-directed in the invocation (2026-11-03: analyse the round, then process its roadmaps with /roadmap:process-full and merge); archived in the same PR when its open work closes, so the active count at merge is unchanged. Owner search at f9054d0f10 (grep -rlF for fact_diff, bench_humanizer_eval, humanizer-tell-reduction, dashCount, hiring-loop-design over agents/roadmaps/*.md, later, stubs) found no owner; the prior owner road-to-tells-a-near-miss-can-refute is archived with no follow-up for these."
+---
+# Road to rewrites that keep their facts
+
+> **Source:** `agents/tmp.old/inbox-2026-11-u/` (topic T3, supplied plan v3 plus transcript).
+> **Arrivals:** 1 — `inbox-2026-11-u` (2026-11-03).
+
+## Goal
+
+A rewrite may change how something is said, never what is true. The fact diff
+shipped (`src/scripts/_lib/fact_diff.ts`, humanizer step 6) but catches one of
+five mutation classes, false-alarms on German nouns and locale numbers, and the
+corpus behind the humanizer claim fails it: 17 of 20 "after" fixtures add
+numbers absent from their input, and the bench never runs the skill. Done
+means: the witness catches all five classes with zero findings on benign
+controls, the corpus and bench report fact conservation, and the dash counter
+stops counting ranges.
+
+## Verified at the pin (probes under `agents/runtime/tmp/t3/`)
+
+| Claim | Verdict | Evidence |
+|---|---|---|
+| fact preservation is self-report only | partly fixed (`e7bca8680d`) | `src/skills/humanizer/SKILL.md` step 6 |
+| witness catches 1/5 classes | reproduced (new) | status, negation, we→I, number word missed |
+| German nouns read as names; `10,000`/`10.000` flagged | reproduced (new) | `fact_diff` on `de/02-blog-de` |
+| 17/20 after-fixtures add numbers | reproduced | `tests/fixtures/ai-tells/` |
+| bench reads static files, judge prompt says "same content" | still-true | `src/scripts/bench_humanizer_eval.ts:134,151,168` |
+| claim `last_verified` older than its own dated text, gate green | reproduced (new) | `docs/CLAIMS.md:554-559` |
+| dash counter counts ranges | reproduced | `src/scripts/detect_ai_tells.ts:385` |
+| tell register has no cadence | still-true | no `src/skills/humanizer/data/manifest.json` |
+| hiding covered at Unicode level only | still-true | `docs/guidelines/agent-infra/untrusted-input-spotlighting.md:80-104` |
+| `hiring-loop-design` has no AI-screening content | still-true | `src/skills/hiring-loop-design/SKILL.md` |
+
+## Phase 1 — Measure first
+
+- [ ] **1.1 Characterization test of the corpus.**
+      `tests/scripts/humanizer_corpus_fact_conservation.test.ts` asserts the
+      current counts (17 flagged, 16 by `diffFacts`) as a ratchet that may fall,
+      never rise.
+      verify: green now; red when a supplied number is added to a fixture.
+
+## Phase 2 — Complete the witness
+
+- [ ] **2.1 Four new classes in `fact_diff.ts`:** unit-bound EN/DE number words,
+      status/qualifier lexicon, negation and modality, attribution subject.
+      Fixtures under `tests/fixtures/fact-atoms/` (5 mutations, 3 benign).
+      verify: 5/5 mutations caught; benign reorder gives 0 findings.
+- [ ] **2.2 False-alarm fixes:** locale-normalize numbers; drop German
+      sentence-initial and imperative capitalised pairs from names.
+      verify: `de/02` gives 0 name findings; `fact_diff.test.ts` stays green;
+      0 findings on a sentence-reordered copy of each clean-corpus file.
+- [ ] **2.3 Word ↔ digit stays literal** unless the council reopens the earlier
+      "literal on purpose" decision; recorded either way.
+
+## Phase 3 — Skill, bench, claim
+
+- [ ] **3.1 Fixture 4 "fact preservation"** in
+      `src/skills/humanizer/references/fixtures.md` plus an eval case.
+      verify: `lint-skills` green.
+- [ ] **3.2 Fact conservation as a free third bench metric**, per split, no
+      judge call.
+      verify: the objective-only run prints `fact_added_pairs` per split.
+- [ ] **3.3 `check_claims` flags a stale `last_verified`** older than the newest
+      date named in the claim text.
+      verify: a fixture claim with a newer dated change fails.
+- [ ] **3.4 Corpus repair and claim narrowing.** Remove supplied facts from the
+      17 after-files as a new epoch, drop "same content" from the judge prompt,
+      narrow `humanizer-tell-reduction` to what is measured. Changes the
+      instrument behind a backed claim and a judged rerun is billable.
+
+## Phase 4 — Dashes
+
+- [ ] **4.1 Ranges are not dashes** (digit–digit, years, pages, times, quarters)
+      at `detect_ai_tells.ts:385`; epoch line if counts move; DE clean corpus
+      gains Gedankenstrich prose.
+      verify: "Pages 12–14" counts 0, "X – Y" counts 1, metamorphic test green.
+
+## Phase 5 — Register currency
+
+- [ ] **5.1 Humanizer data manifest** in the `refresh_cadence` format so
+      `check_corpus_staleness` covers it; `evidence_tier` and `suppressible`
+      per family with a schema test.
+      verify: `check_corpus_staleness` lists the manifest; schema test green.
+
+## Phase 6 — Document-level hiding
+
+- [ ] **6.1 Rendering-layer hiding and a data-injection class** in
+      `untrusted-input-spotlighting.md` (background-colour text, tiny font,
+      off-page, hidden layers, DOCX `w:vanish`).
+      verify: `check-refs` and `lint-skills` green.
+
+## Phase 7 — Hiring side
+
+- [ ] **7.1 "AI-assisted screening" routing section** in
+      `src/skills/hiring-loop-design/SKILL.md`: route to `legal-practice-profile`,
+      `privacy-review`, `dpa-review`; CVs as untrusted input; name-swap bias
+      probe before any LLM ranking. No dated legal statements without a source.
+      verify: skill linter green.
+
+## Phase 8 — Consumers of the witness
+
+- [ ] **8.1 Four inflation classes** (widened verb, supplied number, smoothed
+      status, absorbed achievement) as checklists in `release-comms` and
+      `roadmap-writing`.
+      verify: `lint-skills` green.
+- [ ] **8.2 Prose-fact clause in `ask-when-uncertain`** — a kernel-rule edit
+      (own PR, 24 h soak).
+
+## Not in this roadmap
+
+- A career / CV domain pack and `career:*` commands — domain-adoption gate, no
+  demand signal or maintainer named; conflicts with ADR-041.
+- A visible-vs-extracted text checker for PDF/DOCX (new dependency).
+
+## Risk Register
+
+| Risk | Mitigation |
+|---|---|
+| new classes false-alarm on real prose | 2.2 benign controls; report-only until 0 FP |
+| 4.1 moves tell counts | epoch line in `prose-tells-epochs.md` |

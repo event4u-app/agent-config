@@ -1,0 +1,119 @@
+---
+complexity: standard
+status: ready
+tree_pin: f9054d0f10
+review_by: 2026-12-15
+estate_offset_exempt: "Operator-directed in the invocation (2026-11-03: analyse the round, then process its roadmaps with /roadmap:process-full and merge); archived in the same PR when its open work closes, so the active count at merge is unchanged. Owner search at f9054d0f10 (grep -rlF for check_web_launch_readiness, NOINDEX_RE, BLANKET_DISALLOW_RE, isError, suggest_skill_for_task over agents/roadmaps/*.md, later, stubs) found no roadmap owning gate correctness or the lite MCP error shape; the SEO recipes land on later/road-to-breadth-with-depth 5.6."
+---
+# Road to verdicts the markup cannot flip
+
+> **Source:** `agents/tmp.old/inbox-2026-11-u/` (topic T2, supplied plan v3 plus transcript).
+> **Arrivals:** 1 — `inbox-2026-11-u` (2026-11-03).
+
+## Goal
+
+A verdict depends on what the input says, never on its form. The web-launch gate
+reads HTML and `robots.txt` with order-dependent regexes, so the same page is a
+critical defect or clean depending on attribute order, and a deliberate AI
+training block reads as a staging leftover. The lite MCP server reports errors
+as success and lets a response grow without bound. Done means: reordered
+attributes give the same verdict, a training-only block is not critical, and an
+error comes back as `isError: true`.
+
+## Verified at the pin (probes under `agents/runtime/tmp/t2-probe/`)
+
+| Claim | Verdict | Evidence |
+|---|---|---|
+| `content="noindex" name="robots"` passes | reproduced (false green) | `src/scripts/check_web_launch_readiness.ts:438` |
+| `content="none"` and `name="googlebot"` pass | reproduced | `:438` |
+| reordered description / canonical read as missing | reproduced (false red) | `:595`, `:686` |
+| second canonical and substring host match pass | reproduced | `:686`, `:692-693` |
+| training-only `Disallow: /` is critical | reproduced | `:441`, `:485` |
+| lite server hard-codes `isError: false` | reproduced | `src/cli/mcp/dispatch.ts:245` |
+| `limit` unbounded (104 rows / 54 KB) | reproduced | `dispatch.ts:197-200,289` |
+| `structuredContent` without `outputSchema` | reproduced | `dispatch.ts:244` |
+| kernel stub calls return success | still-true (code read) | `src/scripts/mcp_server/tools.ts:1785`, `server.ts:405` |
+| `llms.txt` carries no links | reproduced | `src/scripts/generate_catalog.ts:112` |
+
+Already fixed since the source's pin: kernel annotations carry all four hints
+(`src/scripts/mcp_server/annotations.ts:41`). Never true: `zod-to-json-schema`
+as a dependency — use zod v4's native export.
+
+## Phase 1 — One attribute reader, red first
+
+- [ ] **1.1 Form-variant fixtures.** `tests/fixtures/web-launch/form-variants/`
+      with the eight probes, cases in
+      `tests/scripts/check_web_launch_readiness.test.ts`.
+      verify: at the pin the seven defect cases fail and the control passes.
+- [ ] **1.2 Shared reader.** Move `tagsOf` / `attr` from
+      `web_launch_third_party.ts` into `src/scripts/_lib/html_tags.ts`, widen to
+      `meta|link|title`, accept unquoted values.
+      verify: unit tests for order, quotes, case, whitespace, self-closing,
+      unquoted, `data-src` ≠ `src`; third-party tests stay green.
+- [ ] **1.3 Replace the three order-dependent regexes** (robots meta incl.
+      `none` and search-crawler names, description, title).
+      verify: 1.1 cases for these go green; grep for the construct -> 0 sites.
+- [ ] **1.4 Canonical.** Every canonical collected; conflicting or relative ones
+      flagged; hosts compared exactly via `new URL`.
+      verify: the two canonical probes produce their finding; `clean-marketing`
+      stays silent.
+- [ ] **1.5 `robots.txt` groups.** Blanket `Disallow: /` is critical only for
+      `*` or a search crawler; a training-only block never is.
+      verify: the training-block probe yields no critical finding; the staging
+      leftover stays critical.
+- [ ] **1.6 Metamorphic invariance and coverage pairs.** Variants (attribute
+      order, quotes, case, whitespace) of every fixture keep their verdict;
+      every check id has a firing and a silent fixture.
+      verify: the test fails on a missing pair or a flipped verdict.
+
+## Phase 2 — Checks that say what they rest on
+
+- [ ] **2.1 `basis: {level, ref, checked_at}` on all 13 checks.**
+      verify: `web_launch_readiness_config.test.ts` fails without it.
+- [ ] **2.2 Crawler register.** `src/config/crawler-register.json` (token,
+      operator, purpose, `affects_search_inclusion`, source URL, `checked_at`,
+      `review_by`); a lapsed row reads `unknown`; 1.3 and 1.5 read it.
+      verify: schema test rejects a row without source or date; `--as-of` past
+      `review_by` yields `unknown`.
+- [ ] **2.3 `snippet-eligibility` and `structured-data-parses` checks** (no type
+      scoring).
+      verify: firing and silent fixture each, under 1.6.
+
+## Phase 3 — MCP answers that say what happened
+
+- [ ] **3.1 Lite `isError: true`** for `error`, `not_found`, `no_catalogue`;
+      `structuredContent.status` unchanged; CHANGELOG behaviour note.
+      verify: `dispatch.test.ts` asserts each error path.
+- [ ] **3.2 `limit` maximum 20** in schema and server, `clamped_from` reported.
+      verify: `limit: 100000` returns ≤ 20 rows; lite tools stay under
+      `LITE_TOOLS_TOKEN_CAP`.
+- [ ] **3.3 `outputSchema` from one zod schema**, kept open.
+      verify: every `structuredContent` validates against the shipped schema;
+      tools/list stays under the token cap (a raise is a budget decision, not
+      taken here).
+- [ ] **3.4 Kernel stubs answer `isError: true`**, envelope unchanged; amend
+      `docs/contracts/mcp-tool-stub-envelope.md`.
+      verify: the stub case in `tests/scripts/mcp_server_serve.test.ts`.
+
+## Phase 4 — `llms.txt` in its own format
+
+- [ ] **4.1 Render H1, blockquote and `## Skills` with one link per skill.** No
+      visibility claim; serving it from the site is a separate owner step.
+      verify: generator test asserts the structure; consistency CI green.
+
+## Not in this roadmap
+
+- Paid keyword / rank / backlink data, an AI-visibility tracker, an own crawler
+  or Search Console adapter, a new SEO capability family — owner-gated (spend,
+  accounts, domain-adoption gates).
+- SEO recipes and guardrails — `later/road-to-breadth-with-depth` 5.6.
+- `tests/fixtures/web-launch-benchmark/` stays untouched; whoever edits the
+  checks is ineligible to freeze that benchmark's protocol.
+
+## Risk Register
+
+| Risk | Mitigation |
+|---|---|
+| 3.1 is a consumer-visible wire change | `status` unchanged; CHANGELOG entry |
+| 3.3 pushes tools/list over its cap | stop and surface, never raise silently |
+| 1.3 changes verdicts on real sites | that is the fix; 1.6 pins it |

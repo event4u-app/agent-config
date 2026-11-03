@@ -15,6 +15,8 @@ relates:
 
 > **Source:** owner answer to OQ-36 (`agents/owner-questions.md`, 2026-10-29),
 > raised by round `inbox-2026-10-bj`.
+> **Arrivals:** 1 — `inbox-2026-11-u` (2026-11-03): Phase 0, the ledger must be
+> able to say no before a provider observation can close a row.
 
 ## Goal
 
@@ -24,6 +26,28 @@ reverse-engineering MCP server or a device-automation driver — and record that
 evidence against obligation-ledger rows. Nothing is installed by default: with
 no provider configured, the run behaves exactly as at the pin and says in one
 line that runtime evidence was unavailable.
+
+## Phase 0 — A ledger that can say no
+
+At the pin `evaluateLedger` closes a row on a fabricated evidence id with an
+empty verifier and on an authority outside its enum
+(`src/scripts/_lib/reconstruction_ledger.ts:40-73`, reproduced round
+`inbox-2026-11-u`). Step 2.1 would prove nothing on that verdict.
+
+- [ ] **0.1 Resolvable evidence.** `evaluateLedger(rows, ctx: {evidenceIds})`
+      with `ctx` required; a row is `invalid` on an unknown evidence id, an
+      authority outside the enum, or `verified` with an empty verifier.
+      verify: `npx vitest run tests/scripts/reconstruction_ledger.test.ts` -> 0,
+      the fabricated-id case yields `invalid` with three errors, and removing
+      each check turns exactly one case red.
+- [ ] **0.2 A ledger CLI.** `reconstruction_ledger --check <file>`: exit 0
+      closed, 1 open/unknown, 2 invalid or usage; the reference door invokes it
+      from a code fence.
+      verify: a CLI test for each exit code.
+- [ ] **0.3 Step 2.1 speaks the ledger's states.** Rewrite 2.1 as "verdict
+      `unknown` → `closed`" — the row status `unknown` does not exist
+      (`reconstruction_ledger.ts:15`).
+      verify: 2.1 names only states the ledger emits.
 
 ## Phase 1 — The slot
 
