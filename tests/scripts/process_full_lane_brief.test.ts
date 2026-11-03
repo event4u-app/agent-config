@@ -164,8 +164,8 @@ describe('process-full says one thing about who grants the run (inbox-2026-11-v 
     });
 
     it('lets the invocation declare the run-level policy and keeps it across a resume', () => {
-        expect(text).toMatch(/argument-hint: ".*--late-artifacts auto-research.*"/);
-        expect(text).toMatch(/argument-hint: ".*--deferred spawn-follow-up-draft.*"/);
+        expect(text).toMatch(/argument-hint: ".*--late-artifacts.*--deferred.*"/);
+        expect(text).toMatch(/`--late-artifacts` \/ `--deferred` \(contract § 2a\/§ 2b\)/);
         const contract = fs
             .readFileSync(path.resolve(__dirname, '../../src/agent-src/contexts/execution/roadmap-execution-contract.md'), 'utf8')
             .replace(/\s+/g, ' ');

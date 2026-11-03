@@ -7,7 +7,7 @@ cluster: roadmap
 sub: process-full
 skills: [agent-docs-writing, ai-council, roadmap-management]
 description: Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries.
-argument-hint: "[roadmap | --roadmaps a,b,c | --from-pr N] [--all] [--merge] [--worktree] [--late-artifacts auto-research] [--deferred spawn-follow-up-draft]"
+argument-hint: "[roadmap|--roadmaps a,b,c|--from-pr N] [--all] [--merge] [--worktree] [--late-artifacts X] [--deferred X]"
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
