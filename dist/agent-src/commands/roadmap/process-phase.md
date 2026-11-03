@@ -38,11 +38,11 @@ branching, halt conditions, and the archival check.
 
 ## Scope delta
 
-- **Execution mode:** read `execution.mode` from frontmatter; under
-  `autonomous` / `phase-checkpoints` the run-start contract governs
-  the run's grants. `phase-checkpoints` behaves like `autonomous`
-  inside this single phase (its checkpoint prompt fires at the
-  boundary, where this wrapper stops anyway).
+- **Execution mode:** derived per the § 3a ladder. The invocation is the
+  grant (ADR-237 as extended on 2026-11-03): there is no contract screen to
+  accept. `phase-checkpoints` behaves like `autonomous` inside this single
+  phase, because its checkpoint fires at the boundary where this wrapper stops
+  anyway. An explicit `interactive` is still honoured.
 - **Working set:** all open steps in the **first phase with
   `count_open > 0`**. If every phase is closed → report "Roadmap
   already complete." and run the archival check from
@@ -60,15 +60,13 @@ branching, halt conditions, and the archival check.
 
 - **Autonomous within the phase, never beyond.** The user picks
   `process-step` for one step or `process-full` for the whole roadmap.
-- **No commit, push, branch, PR, tag, or bulk-destructive op** without
-  explicit permission this turn **or an accepted run-start execution
-  contract** (whose grants cover exactly: the run's feature branch,
-  chunked commits on it, push to that branch only, PR-open — never
-  merge; see
-  [`roadmap-execution-contract § 3`](../../contexts/execution/roadmap-execution-contract.md)) —
-  see [`commit-policy`](../../rules/commit-policy.md) and
+- **The invocation is the grant** for exactly the run's feature branch,
+  chunked commits on it, a push to that branch only and opening the PR. It
+  never covers a merge, a tag, any other branch or a bulk-destructive op; see
+  [`roadmap-execution-contract § 3`](../../contexts/execution/roadmap-execution-contract.md),
+  [`commit-policy`](../../rules/commit-policy.md) and
   [`scope-control § git-ops`](../../rules/scope-control.md#git-operations--permission-gated).
-  Roadmap-listed commit steps follow the single-upfront-ask flow in
+  An explicit `interactive` run falls back to the single-upfront-ask flow in
   [`roadmap-process-loop § 3`](../../contexts/execution/roadmap-process-loop.md#3-pre-scan--execution-contract-or-commit-step-ask).
 - **Every checkbox edit syncs the dashboard in the same response** per
   [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md).

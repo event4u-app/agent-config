@@ -54,6 +54,22 @@ capability_gap: >-
 
 > **Arrivals (fix-loop counter):** 2 — `inbox-2026-11-m` T1 (2026-10-24) and T2 (2026-10-28) both found the ladder uncounted and `context-hygiene` still mapping a count to an ask; executable work carried by `road-to-a-strike-the-session-keeps`, AC-4's kernel edit stays here.
 
+> **Arrivals (turn-end hold, 8.1):** 3 (at least). Latest: `inbox-2026-11-v`
+> (2026-11-03). Earlier: `inbox-2026-10-bm` T2 (2026-10-31) and the owner request of
+> 2026-10-19. Each asks for a mechanism that keeps an autonomous run from ending
+> early. Council 2/2 on 2026-11-03 (Q2: b,
+> `agents/evidence/council/inbox-2026-11-v-autonomous-runs-20261103.md`): build
+> attribution first, and enable refusal only after an experiment. The attribution
+> part is fixed: the interruption ledger read claims from a path `sessions:claim`
+> stopped writing on 2026-08-19, which left 476 of 479 local rows with
+> `roadmap: null` (`road-to-a-run-the-invocation-already-answered` 6.1). The
+> withdrawn concern's kill criterion was starved by that same blindness rather than
+> refuted. **A refusal gate for 8.1 needs, before it is enabled:** a dated trial
+> window; a completion-improvement threshold fixed in advance; time and spend
+> budgets per run, not only a cap on refusals; a disable switch that works when the
+> run state is corrupt; and preserved cancellation. A refusal that repeats without
+> progress disables the gate.
+
 > **Arrivals (auto-merge setting):** 3 (at least) - latest `inbox-2026-10-e` (2026-10-06): two release reviews again read the live `allow_auto_merge: true` (enabled by #2114) as contrary to the standing instruction; the owner question below is still unanswered. The count before it read: 2 (at least) - latest `inbox-2026-10-a`
 > (2026-10-01), where two of sixteen release reviews read the repository's
 > `allow_auto_merge: true` — enabled by this file's 2026-09-30 run to satisfy

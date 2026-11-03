@@ -7,7 +7,7 @@ cluster: roadmap
 sub: process-full
 skills: [agent-docs-writing, ai-council, roadmap-management]
 description: Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries.
-argument-hint: "[roadmap] [--all] [--merge] [--worktree]"
+argument-hint: "[roadmap|--roadmaps a,b,c|--from-pr N] [--all] [--merge] [--worktree] [--late-artifacts X] [--deferred X]"
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
@@ -46,16 +46,10 @@ with the **scope delta below**.
 
 ## Scope delta
 
-- **Execution mode:** read `execution.mode` from frontmatter. Under
-  `autonomous` / `phase-checkpoints` the loop's § 3 pre-scan derives
-  the run-start **execution contract**
-  ([`roadmap-execution-contract`](../../contexts/execution/roadmap-execution-contract.md));
-  ONE acceptance activates all run grants (feature branch, chunked
-  commits, push to that branch only, PR-open, batched artifact
-  drafting, council auto-enable) — no further asks until a safety
-  floor. `mode: autonomous` is the flagship pairing for this wrapper:
-  full working set + contract = uninterrupted run to the defined end
-  state.
+- **Execution mode:** the invocation is the confirmation (ADR-237): every grant
+  of the [`execution contract`](../../contexts/execution/roadmap-execution-contract.md)
+  is active from it, whatever `execution.mode` says.
+- **Sets, flags, `O<n>` answers** — read [`process-full-delivery`](../../contexts/execution/process-full-delivery.md#what-the-invocation-carries).
 - **Working set:** every open step across every phase, in document
   order. Phase-internal annotations like `(deferred)` / `(optional)` /
   "gated on Phase N" do not narrow the working set.
@@ -153,9 +147,10 @@ UNDER THE HALT CONDITIONS IS THE ONLY STATEMENT OF WHICH ENDS WHICH.
 WAITING ON REMOTE CI FOR THE DELIVERY LOOP IS PART OF THE RUN. "CI IS
 RUNNING" IS NOT A BOUNDARY, NOT A HALT, AND NOT A REPORT — THE RUN ENDS
 AT A MERGEABLE PR, NEVER AT AN OFFER TO GO CHECK ON ONE.
-ONE ROADMAP, ONE PR: NO PUSH, PR OR MERGE OF A ROADMAP BEFORE ITS LAST STEP
-IS DONE. LOCAL COMMITS IN LOGICAL CHUNKS STAY; DELIVERY FIXES AFTER THE PR
-OPENS ARE PUSHED TO THAT SAME PR.
+ONE INVOCATION, AT MOST ONE DELIVERY PR: NO PUSH, PR OR MERGE BEFORE THE LAST STEP
+OF THE LAST MEMBER IS DONE. LOCAL COMMITS IN LOGICAL CHUNKS STAY; DELIVERY
+FIXES AFTER THE PR OPENS ARE PUSHED TO THAT SAME PR.
+UNDER `--all`, EACH ROADMAP IS STILL ITS OWN PR.
 ONE INVOCATION, ONE DELIVERY: AS A COMPOSED INVOCATION'S LAST STAGE, THIS RUN
 OPENS OR UPDATES THE ONE PR, ONCE, AT ITS END.
 NO PR OF A ROADMAP IS MERGED BEFORE ITS LANE REPORTS `complete`.
@@ -283,8 +278,9 @@ NO BATCH FLIP AT THE ARCHIVE COMMIT. NO "I'LL DO IT AT THE END."
 - **No `Class: 3` on an agent-executable action.** Capability before role
   (ADR-237 § 2). A blocker labelled human-only that the agent could have run is
   a defect in the roadmap, and the run fixes the label rather than obeying it.
-- All other rules from
-  [`process-phase § Rules`](process-phase.md#rules) apply unchanged.
+- **Inherited from [`process-phase § Rules`](process-phase.md#rules), only:**
+  dashboard sync, silent council, decline = silence. Its commit permission and
+  ambiguity halt do not apply.
 
 ## See also
 

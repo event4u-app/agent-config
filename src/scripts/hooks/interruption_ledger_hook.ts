@@ -57,6 +57,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { derive_session_tag } from '../_lib/session_tag.js';
+import { ROADMAP_CLAIM_REL, claim_read_paths } from '../session_register_hook.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { HANDBACK, finalParagraph, readTranscriptTail } from './turn_end_gate_hook.js';
@@ -116,21 +117,21 @@ export function classifyReply(reply: string): { kind: ContactKind; class: Contac
 /** The roadmap this session claimed, or null. Never throws. */
 export function readClaimedRoadmap(workspaceRoot: string, sessionId: string): string | null {
     if (!sessionId) return null;
-    try {
-        const file = path.join(
-            workspaceRoot,
-            'agents',
-            'runtime',
-            'state',
-            `roadmap-claim-${sessionId}.json`,
-        );
-        const parsed: unknown = JSON.parse(fs.readFileSync(file, 'utf8'));
-        if (parsed === null || typeof parsed !== 'object') return null;
-        const slug = (parsed as Record<string, unknown>)['slug'];
-        return typeof slug === 'string' && slug.length > 0 ? slug : null;
-    } catch {
-        return null;
+    // The shared per-checkout file is a claim on the checkout, not on this
+    // session; reading it would attribute another session's roadmap to this run.
+    const shared = path.basename(ROADMAP_CLAIM_REL);
+    for (const file of claim_read_paths(workspaceRoot, sessionId)) {
+        if (path.basename(file) === shared) continue;
+        try {
+            const parsed: unknown = JSON.parse(fs.readFileSync(file, 'utf8'));
+            if (parsed === null || typeof parsed !== 'object') continue;
+            const slug = (parsed as Record<string, unknown>)['slug'];
+            if (typeof slug === 'string' && slug.length > 0) return slug;
+        } catch {
+            /* absent or corrupt: try the next location */
+        }
     }
+    return null;
 }
 
 /**

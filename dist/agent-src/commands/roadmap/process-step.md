@@ -31,10 +31,12 @@ with the **scope delta below**.
 
 ## Scope delta
 
-- **Execution mode:** `execution.mode` frontmatter is **ignored by this
-  wrapper** — a single-step run derives no execution contract
-  ([`roadmap-execution-contract`](../../contexts/execution/roadmap-execution-contract.md)
-  stays unloaded); existing per-step behavior applies unchanged.
+- **Execution mode:** derived like the other wrappers (explicit suffix, then
+  frontmatter `execution.mode`, then `autonomous`). The invocation is the
+  confirmation ([`roadmap-execution-contract`](../../contexts/execution/roadmap-execution-contract.md),
+  ADR-237 as extended on 2026-11-03). It grants the run's branch, chunked
+  commits, a push to that branch only and opening the PR, and never a merge.
+  An explicit `interactive` is still honoured.
 - **Working set:** the **first checkbox `[ ]` in document order**
   inside the first phase with `count_open > 0`. If every step is
   closed → report "Roadmap already complete." and run the archival
@@ -56,10 +58,12 @@ with the **scope delta below**.
 
 - **Stop after one step**, even if the next step is trivial. The user
   picks `process-phase` or `process-full` when they want more.
+- **The run never asks.** An open question goes to the council. A step
+  blocked on a prerequisite is reported, and the run never executes other
+  steps to make it runnable.
 - All other rules from
   [`process-phase § Rules`](process-phase.md#rules) apply unchanged:
-  Hard-Floor, no auto-commit, dashboard sync, AI-council silent-when-on,
-  decline = silence.
+  Hard-Floor, dashboard sync, AI-council silent-when-on, decline = silence.
 
 ## See also
 

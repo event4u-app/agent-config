@@ -14,6 +14,7 @@
  *     number, which flatters the change measured against it.
  */
 
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -148,6 +149,26 @@ describe('readClaimedRoadmap', () => {
 
     it('returns null for an empty session id', () => {
         expect(readClaimedRoadmap(tmp, '')).toBeNull();
+    });
+
+    it('reads the claim from the git common dir, where sessions:claim writes it since 2026-08-19', () => {
+        execFileSync('git', ['init', '-q', tmp]);
+        const shared = path.join(tmp, '.git', 'agent-claims');
+        fs.mkdirSync(shared, { recursive: true });
+        fs.writeFileSync(
+            path.join(shared, 'roadmap-claim-s9.json'),
+            JSON.stringify({ slug: 'road-to-y', session_id: 's9' }),
+            'utf8',
+        );
+        expect(readClaimedRoadmap(tmp, 's9')).toBe('road-to-y');
+    });
+
+    it('never attributes the shared per-checkout claim to a session that made none', () => {
+        execFileSync('git', ['init', '-q', tmp]);
+        const shared = path.join(tmp, '.git', 'agent-claims');
+        fs.mkdirSync(shared, { recursive: true });
+        fs.writeFileSync(path.join(shared, 'roadmap-claim.json'), JSON.stringify({ slug: 'road-to-z' }), 'utf8');
+        expect(readClaimedRoadmap(tmp, 's10')).toBeNull();
     });
 });
 
