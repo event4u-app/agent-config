@@ -78,11 +78,50 @@ const EXTRACTORS: Array<[FactKind, RegExp]> = [
   ["currency", /(?:[$€£]\s?\d[\d.,]*\d|\d[\d.,]*\s?(?:€|EUR|USD|GBP)\b|\b\d[\d.,]*\s?(?:dollars|euros?|pounds))/gi],
   ["date", new RegExp(`\\b\\d{4}-\\d{2}-\\d{2}\\b|\\b(?:${MONTHS})\\s+\\d{1,2}(?:,\\s*\\d{4})?\\b|\\b\\d{1,2}\\.\\s*(?:${MONTHS})(?:\\s+\\d{4})?\\b`, "g")],
   ["number", /(?<![\w.])\d+(?:[.,]\d+)*%?/g],
-  ["name", /\b(?:[A-Z][\p{Ll}]+|[A-Z]{2,})(?:\s+(?:[A-Z][\p{Ll}]+|[A-Z]{2,}))+\b/gu],
+  ["name", /\b(?:[A-Z][\p{Ll}]+|[A-Z]{2,})(?:[^\S\n]+(?:[A-Z][\p{Ll}]+|[A-Z]{2,}))+\b/gu],
 ];
 
 /** Capitalised only because it starts the sentence — not part of a name. */
-const LEADING = /^(?:The|A|An|In|On|At|For|And|But|This|That|Our|We|It|Der|Die|Das|Ein|Eine|Im|Am|Und)\s+/;
+const LEADING =
+  /^(?:The|A|An|In|On|At|For|And|But|This|That|Our|We|It|Der|Die|Das|Des|Dem|Den|Ein|Eine|Einer|Eines|Einem|Einen|Jede|Jeder|Jedes|Jeden|Alle|Diese|Dieser|Dieses|Unser|Unsere|Mein|Meine|Kein|Keine|Beide|Zum|Zur|Im|Am|Und)[^\S\n]+/;
+
+/** German formal address: "Lassen Sie", "Prüfen Sie" are imperatives, never names. */
+const ADDRESS = /(?:^|[^\S\n])(?:Sie|Ihnen|Ihr|Ihre|Du|Dich|Dir|Euch)(?=[^\S\n]|$)/;
+
+/** Start of a sentence or a line, past any markup or emoji — where German capitalises any word. */
+const SENTENCE_START = /(?:^|\n|[.!?:;])[^\p{L}\p{N}\n]*$/u;
+
+/** German capitalises every noun, so a sentence-initial word is no evidence of a name there. */
+function looksGerman(text: string): boolean {
+  const de = text.match(/\b(?:der|die|das|und|ist|nicht|mit|für|auf|eine?|wir|sie|ich|zu|von|den|dem|sich|auch)\b/gi)?.length ?? 0;
+  const en = text.match(/\b(?:the|and|is|of|to|with|for|on|an?|we|it|that|this|are)\b/gi)?.length ?? 0;
+  return de > en;
+}
+
+/**
+ * One spelling per number across locales: `10,000` and `10.000` are the same
+ * count, `2,5` and `2.5` the same quantity. A dotted version (`4.2.0`) is not a
+ * grouping and stays literal.
+ */
+function normalizeNumber(raw: string): string {
+  const pct = raw.endsWith("%") ? "%" : "";
+  const n = pct ? raw.slice(0, -1) : raw;
+  const dots = (n.match(/\./g) ?? []).length;
+  const commas = (n.match(/,/g) ?? []).length;
+  let out = n;
+  if (dots && commas) {
+    const dec = n.lastIndexOf(".") > n.lastIndexOf(",") ? "." : ",";
+    out = n.split(dec === "." ? "," : ".").join("").replace(",", ".");
+  } else if (dots + commas > 1) {
+    const sep = dots ? "." : ",";
+    const groups = n.split(sep);
+    if (groups.slice(1).every((g) => g.length === 3)) out = groups.join("");
+  } else if (dots + commas === 1) {
+    const [lead = "", tail = ""] = n.split(/[.,]/);
+    out = tail.length === 3 && lead !== "0" ? lead + tail : `${lead}.${tail}`;
+  }
+  return out + pct;
+}
 
 export function extractFacts(text: string): Fact[] {
   let rest = text;
@@ -99,11 +138,16 @@ export function extractFacts(text: string): Fact[] {
   for (const [value, re] of ATTRIBUTION) {
     if (re.test(rest)) facts.push({ kind: "attribution", value });
   }
+  const german = looksGerman(rest);
   for (const [kind, re] of EXTRACTORS) {
-    rest = rest.replace(re, (hit) => {
+    rest = rest.replace(re, (hit: string, offset: number, whole: string) => {
       let value = hit.trim();
-      if (kind === "number") value = value.replace(/,(?=\d{3}\b)/g, "");
-      if (kind === "name") value = value.replace(LEADING, "");
+      if (kind === "number") value = normalizeNumber(value);
+      if (kind === "name") {
+        if (german && SENTENCE_START.test(whole.slice(0, offset))) value = value.replace(/^\S+[^\S\n]+/, "");
+        value = value.replace(LEADING, "");
+        if (german && ADDRESS.test(value)) value = "";
+      }
       if (kind !== "name" || /\s/.test(value)) facts.push({ kind, value });
       return " ";
     });

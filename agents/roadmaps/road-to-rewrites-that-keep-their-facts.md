@@ -97,11 +97,13 @@ stops counting ranges.
       verify: 5/5 mutations caught; benign reorder gives 0 findings.
       Done: `numword`, `status` (incl. number qualifiers), `negation`/`modality`, `attribution` (presence) added; `npx vitest run tests/scripts/fact_diff.test.ts` 19/19, 5 mutations caught, 3 benign at 0. The 1.1 witness ceiling is scoped to the literal kinds so a stronger witness cannot raise a corpus ratchet.
       production entry: `src/scripts/detect_ai_tells.ts`
-- [ ] **2.2 False-alarm fixes:** locale-normalize numbers; drop German
+- [x] **2.2 False-alarm fixes:** locale-normalize numbers; drop German
       sentence-initial and imperative capitalised pairs from names.
       verify: `npx vitest run tests/scripts/fact_diff.test.ts` -> 0 and `de/02` gives
       0 name findings, and
       0 findings on a sentence-reordered copy of each clean-corpus file.
+      Done: locale-normalized numbers (versions stay literal), German sentence-initial and formal-address pairs dropped, names no longer span a line break; `fact_diff.test.ts` exit 0 (65 with the ratchet), `de/02` 0 name findings, 35 reordered clean files at 0.
+      production entry: `src/scripts/detect_ai_tells.ts`
 - [x] **2.3 Word ↔ digit stays literal.** Decided (D2) at planning; no code. <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       verify: `npx vitest run tests/scripts/fact_diff.test.ts` -> 0 unchanged.
 

@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { diffFacts } from '../../src/scripts/_lib/fact_diff.js';
+import { diffFacts, extractFacts } from '../../src/scripts/_lib/fact_diff.js';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const BEFORE =
@@ -90,6 +90,60 @@ describe('fact-atom fixtures', () => {
         expect(d.lost).toEqual([{ kind: 'numword', value: 'three engineers' }]);
         expect(d.added).toEqual([{ kind: 'number', value: '3' }]);
     });
+});
+
+// road-to-rewrites-that-keep-their-facts 2.2: the witness's own false alarms.
+describe('false-alarm fixes', () => {
+    const CORPUS = path.join(REPO, 'tests', 'fixtures', 'ai-tells');
+    const names = (t: string) => extractFacts(t).filter((f) => f.kind === 'name').map((f) => f.value);
+    const reorder = (t: string) =>
+        t
+            .split(/(?<=[^\d\s][.!?])\s+/)
+            .reverse()
+            .join(' ');
+
+    it('a locale thousands separator is the same number', () => {
+        expect(diffFacts('We served 10,000 users.', 'We served 10.000 users.')).toEqual({ lost: [], added: [] });
+        expect(diffFacts('Wir hatten 1.234,5 Anfragen.', 'Wir hatten 1,234.5 Anfragen.')).toEqual({ lost: [], added: [] });
+    });
+
+    it('a locale decimal comma is the same number', () => {
+        expect(diffFacts('Es dauerte 2,5 Sekunden.', 'Es dauerte 2.5 Sekunden.')).toEqual({ lost: [], added: [] });
+    });
+
+    it('a version string and a changed number stay findings', () => {
+        expect(diffFacts('Version 4.2.0 ships.', 'Version 4.2 ships.').lost).toEqual([{ kind: 'number', value: '4.2.0' }]);
+        expect(diffFacts('We served 10,000 users.', 'We served 1,000 users.').lost).toEqual([{ kind: 'number', value: '10000' }]);
+    });
+
+    it('German imperative and sentence-initial pairs are not names', () => {
+        expect(names('Lassen Sie uns die Schicht prüfen. Jede Schicht hat Regeln. Des Weiteren gilt: Eine Frage bleibt.')).toEqual([]);
+    });
+
+    it('a German mid-sentence name and an English sentence-initial name survive', () => {
+        expect(names('Gestern hat die Deutsche Bahn den Plan bestätigt.')).toEqual(['Deutsche Bahn']);
+        expect(names('Jane Doe signed it off.')).toEqual(['Jane Doe']);
+    });
+
+    it('a name never spans a line break', () => {
+        expect(names('Small Print\n\nOur Payments Team shipped it.')).toEqual(['Small Print', 'Payments Team']);
+    });
+
+    it('de/02-blog-de gives zero name findings', () => {
+        const before = fs.readFileSync(path.join(CORPUS, 'de', '02-blog-de.before.md'), 'utf8');
+        const after = fs.readFileSync(path.join(CORPUS, 'de', '02-blog-de.after.md'), 'utf8');
+        const d = diffFacts(before, after);
+        expect([...d.lost, ...d.added].filter((f) => f.kind === 'name')).toEqual([]);
+    });
+
+    for (const lang of ['en', 'de']) {
+        for (const f of fs.readdirSync(path.join(CORPUS, 'clean', lang)).sort()) {
+            it(`a sentence-reordered copy of clean/${lang}/${f} gives zero findings`, () => {
+                const text = fs.readFileSync(path.join(CORPUS, 'clean', lang, f), 'utf8');
+                expect(diffFacts(text, reorder(text))).toEqual({ lost: [], added: [] });
+            });
+        }
+    }
 });
 
 describe('detect_ai_tells --baseline', () => {
