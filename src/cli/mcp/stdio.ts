@@ -32,6 +32,7 @@ import {
     type ServerIdentity,
 } from './dispatch.js';
 import { HOST_UNKNOWN, normalizeHost, recordLiteCall } from './telemetry.js';
+import { INLINE_TOP_BODY_ENV } from '../../shared/mcpInlineTopBody.js';
 
 export interface StdioOptions {
     input?: Readable;
@@ -44,7 +45,14 @@ export interface StdioOptions {
     consumerRoot?: string;
     /** Settings file the telemetry gate is read from. Defaults to `<cwd>/.agent-settings.yml`. */
     settingsPath?: string;
+    /**
+     * Inline the unique top hit's body in `suggest_skill_for_task` (4.4).
+     * Defaults to `AGENT_CONFIG_MCP_INLINE_TOP_BODY === '1'`, which is unset —
+     * so off — everywhere except a measurement arm that sets it.
+     */
+    inlineTopBody?: boolean;
 }
+
 
 function isNotification(value: unknown): boolean {
     return typeof value === 'object' && value !== null && !('id' in value);
@@ -62,6 +70,7 @@ export function runStdioServer(
 ): Promise<void> {
     const input = opts.input ?? process.stdin;
     const output = opts.output ?? process.stdout;
+    const dispatchOpts = { inlineTopBody: opts.inlineTopBody ?? process.env[INLINE_TOP_BODY_ENV] === '1' };
 
     // The client's own name, learned at `initialize` and resolved onto the
     // closed host vocabulary. A client that calls a tool before initializing
@@ -107,7 +116,7 @@ export function runStdioServer(
                 host = normalizeHost(info.name);
             }
 
-            write(dispatch(tree, identity, req));
+            write(dispatch(tree, identity, req, dispatchOpts));
 
             // Exactly one row per `tools/call` that named a tool. A call with
             // no `name` is a malformed request, not a call to a tool, and has

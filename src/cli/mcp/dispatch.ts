@@ -281,7 +281,24 @@ function tierState(tree: ContentTree): 'unknown' | 'tier-b-only' {
  * at 200 characters per skill by `skill.schema.json`, so the envelope grows by
  * a bounded amount per row and no body is returned at any depth.
  */
-function suggestSkillForTask(tree: ContentTree, params: Record<string, unknown>): Record<string, unknown> {
+/** Bound on an inlined body, so a unique hit cannot turn the answer into a context payload. */
+export const INLINE_BODY_CHAR_CAP = 6000;
+
+/** Server-level switches the impure shell resolves; every one defaults off. */
+export interface DispatchOptions {
+    /**
+     * Inline the top skill's body when its score is strictly above the runner-up
+     * (road-to-routing-assurance-live-floors 4.4). Off until the 4.2 parity gate
+     * passes on it; a tie never inlines, because then the choice is the caller's.
+     */
+    inlineTopBody?: boolean;
+}
+
+function suggestSkillForTask(
+    tree: ContentTree,
+    params: Record<string, unknown>,
+    opts: DispatchOptions = {},
+): Record<string, unknown> {
     const task = typeof params.task === 'string' ? params.task.trim() : '';
     if (!task) return { status: 'error', error: 'params.task is required', suggestions: [] };
     const rawLimit =
@@ -300,7 +317,19 @@ function suggestSkillForTask(tree: ContentTree, params: Record<string, unknown>)
     const filtered = tierA ? all.filter((r) => !tierA.has(r.name)) : all;
     // Never let the tier filter turn a real match into an empty answer.
     const kept = filtered.length > 0 ? filtered : all;
+    const top = kept[0];
+    const runnerUp = kept[1];
+    const topEntry = top === undefined ? undefined : tree.uris[`skill://${top.name}`];
+    const topBody =
+        opts.inlineTopBody === true && top !== undefined && (runnerUp === undefined || top.score > runnerUp.score) && topEntry?.kind === 'skill'
+            ? {
+                  skill: top.name,
+                  body: topEntry.body.slice(0, INLINE_BODY_CHAR_CAP),
+                  truncated: topEntry.body.length > INLINE_BODY_CHAR_CAP,
+              }
+            : undefined;
     return {
+        ...(topBody === undefined ? {} : { top_body: topBody }),
         status: 'ok',
         skills_indexed: skills.length,
         tiers,
@@ -354,6 +383,7 @@ export function dispatch(
     tree: ContentTree,
     identity: ServerIdentity,
     req: JsonRpcRequest,
+    opts: DispatchOptions = {},
 ): JsonRpcResponse {
     const id = req.id ?? null;
     const params = (req.params ?? {}) as Record<string, unknown>;
@@ -405,7 +435,7 @@ export function dispatch(
                 const args = (params.arguments ?? {}) as Record<string, unknown>;
                 const payload =
                     name === 'suggest_skill_for_task'
-                        ? suggestSkillForTask(tree, args)
+                        ? suggestSkillForTask(tree, args, opts)
                         : readSkill(tree, args);
                 return rpcResult(id, toolTextResult(payload));
             }
