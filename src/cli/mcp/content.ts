@@ -40,6 +40,15 @@ export interface ContentEntry {
     personas?: string[];
     /** `triggers[].keyword` + `triggers[].phrase` text. Indexed only on request. */
     trigger_text?: string[];
+    /** Frontmatter `inputs:` — prompts only, and only when at least one is declared. */
+    inputs?: PromptArgument[];
+}
+
+/** One declared prompt argument, in the MCP `prompts/list` shape. */
+export interface PromptArgument {
+    name: string;
+    description: string;
+    required: boolean;
 }
 
 export interface ContentTree {
@@ -105,6 +114,23 @@ function triggerText(v: unknown): string[] {
     return out;
 }
 
+/**
+ * Frontmatter `inputs:` as prompt arguments. Same reading as the kernel's
+ * `_parse_inputs`: an item without a string `name` is skipped, a missing
+ * description is `''`, and only a literal `required: true` is required.
+ */
+function inputList(v: unknown): PromptArgument[] {
+    if (!Array.isArray(v)) return [];
+    const out: PromptArgument[] = [];
+    for (const item of v) {
+        if (!item || typeof item !== 'object') continue;
+        const rec = item as Record<string, unknown>;
+        if (typeof rec.name !== 'string') continue;
+        out.push({ name: rec.name, description: str(rec.description), required: rec.required === true });
+    }
+    return out;
+}
+
 /** Recursively collect `*.md` files under `dir` (empty if `dir` is absent). */
 function walkMd(dir: string): string[] {
     if (!existsSync(dir)) return [];
@@ -139,6 +165,10 @@ function makeEntry(
         kind,
     };
     if (kind === 'rule' || kind === 'guideline') entry.mime_type = MIME_MARKDOWN;
+    if (kind === 'skill' || kind === 'command') {
+        const inputs = inputList(fm.inputs);
+        if (inputs.length > 0) entry.inputs = inputs;
+    }
     // Ranking inputs — only skills are ranked, so only skills carry them.
     if (kind === 'skill') {
         const personas = personaList(fm.personas);
