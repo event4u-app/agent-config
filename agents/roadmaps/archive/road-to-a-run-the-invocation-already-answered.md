@@ -113,13 +113,13 @@ rests on attributable data.
 
 ## Phase 6 — Attribution before enforcement
 
-- [ ] **6.1 The interruption ledger reads the claim where `sessions:claim` writes it.**
+- [x] **6.1 The interruption ledger reads the claim where `sessions:claim` writes it.**
       `interruption_ledger_hook.ts:116-133` reads `agents/runtime/state/roadmap-claim-<id>.json`.
       Since the fix of 2026-08-19, claims live in the git common dir
       (`session_register_hook.ts:137-189`). Measured in the main checkout: 476 of
       479 rows carry `roadmap: null`. Reuse the shared reader.
       verify: `npx vitest run tests/scripts/hooks/interruption_ledger.test.ts` -> 0, the shared-dir case seen red first.
-- [ ] **6.2 Long-runs 8.1 carries the arrival and the experiment bar.** Add an
+- [x] **6.2 Long-runs 8.1 carries the arrival and the experiment bar.** Add an
       Arrivals line, plus the council's criteria for any refusal gate: a dated
       trial, a completion threshold, time and spend budgets, a disable switch that
       works on corrupt state, and cancellation preserved.
@@ -144,7 +144,7 @@ rests on attributable data.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No process command contradicts ADR-237 on who grants the run, enforced by a test.
-- [ ] AC-2 — A step that waits on a count or duration window is classed `time` by the drain queue.
-- [ ] AC-3 — A session that ran `sessions:claim` produces ledger rows naming its roadmap.
-- [ ] AC-4 — `--roadmaps` / `--from-pr` resolve to one ordered, cycle-free manifest.
+- [x] AC-1 — No process command contradicts ADR-237 on who grants the run, enforced by a test. — `tests/scripts/process_full_lane_brief.test.ts`.
+- [x] AC-2 — A step that waits on a count or duration window is classed `time` by the drain queue. — `tests/scripts/roadmap_drain_queue.test.ts` § isTimeGated.
+- [x] AC-3 — A session that ran `sessions:claim` produces ledger rows naming its roadmap. — unit-proven (`interruption_ledger.test.ts`, shared-dir case seen red); live rows follow once the rebuilt dispatcher is installed.
+- [x] AC-4 — `--roadmaps` / `--from-pr` resolve to one ordered, cycle-free manifest. — `tests/scripts/roadmap_set_manifest.test.ts`, sort sensitivity proven by neutralising it.
