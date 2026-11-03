@@ -107,12 +107,22 @@ instrument can say whether a subagent that reported `DONE` wrote anything
       gains a pin.
       verify: `npx vitest run tests/scripts/subagent_contract.test.ts` with a new case that accepts
       `xhigh` and rejects `ultra`.
-- [ ] **3.4 The payload-capture stub stops listing an answered question.** Add one dated line to
+- [x] **3.4 The payload-capture stub stops listing an answered question.** Add one dated line to
       `agents/roadmaps/stubs/road-to-subagent-payload-capture.md` row "Phase 0 Step 4": the
       assertion that `agent_id`/`agent_type` reach tool events inside a subagent is observed at
       `agents/evidence/analysis/host-output-rewrite-probe-2026-10-20.md:351` (n=1, host 2.1.304);
       the verbatim-capture half stays open.
       verify: `grep -c 'host-output-rewrite-probe-2026-10-20.md' agents/roadmaps/stubs/road-to-subagent-payload-capture.md` → ≥ 1.
+
+## Decisions
+
+| Decision | Alternatives | Reason | Revisit if |
+|---|---|---|---|
+| 2.1 — the first entry of an id decides, before the status filter, in both iterators | dedup after the status filter (an excluded first copy lets a later active copy through) | one rule for `_iter_curated_entries` and `_iter_curated_entries_all`, so the hit list and the skipped list never disagree about an id; a bad union merge duplicates blocks verbatim, so the two copies carry the same status | a legitimate flow writes a second, newer entry under an existing id instead of superseding it |
+| 2.1 — the template twin gets the same lines | dev side only | `lint_memory_twin_parity` holds `memory_lookup.ts` to a shrink-only ceiling; changing one side would grow the divergence | the twin becomes `exact` |
+| 3.1 — `targets` counts distinct targets of successful writes only | every attempted target | a failed write changed nothing, and the report's question is what a leg wrote | the return-gate probe needs attempted targets separately |
+| 3.1 — `model` falls back to the leg's last assistant `message.model` when the sidecar has none | `null` | 167 of 400 sampled sidecars carry `model`; the transcript record states which model served the leg | the sidecar starts carrying `model` on every leg |
+| 3.1 — an agent type, model, spawn depth or effort that is not identifier-shaped prints as `other` | print verbatim | the sidecar's fields are host-written but unvalidated, and the output contract is numbers and enums | never |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-03 | reviewer: claude/host -->
@@ -125,10 +135,10 @@ instrument can say whether a subagent that reported `DONE` wrote anything
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A duplicate OQ id fails a check that also runs on `merge_group`.
-- [ ] AC-2 — An all-skipped `Tests result` says "nothing ran"; the pre-cut gate stops on a
+- [x] AC-1 — A duplicate OQ id fails a check that also runs on `merge_group`.
+- [x] AC-2 — An all-skipped `Tests result` says "nothing ran"; the pre-cut gate stops on a
       cancelled or foreign run.
-- [ ] AC-3 — `subagent_return_report` prints write counts, status enum, model and effort per agent
+- [x] AC-3 — `subagent_return_report` prints write counts, status enum, model and effort per agent
       type from fixtures, with no path or id in its output.
 
 ## Non-goals
