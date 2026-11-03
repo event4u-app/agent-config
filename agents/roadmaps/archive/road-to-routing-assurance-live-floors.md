@@ -211,7 +211,7 @@ item created unless the null broke.
       ROUTING_CHANGED, REGRESSION — only REGRESSION (floor breach) gates.
       verify: three fixtures, one per state.
       production entry: src/scripts/compile_trigger_evals.ts
-      Built, not wired (2026-10-27): `classifyRow` and its four fixtures are green, but no rotation or gate calls it yet; it is ticked when the canary run classifies its rows against the frozen baseline.
+      State on 2026-10-27: `classifyRow` and its four fixtures were green, but no rotation or gate called it; the tick waited for a canary run classifying its rows against the frozen baseline.
       Done 2026-11-03: `compile_trigger_evals --classify` calls `classifyRun`, which calls `classifyRow` per unit; a 134-unit canary on host 2.1.316 classified against the frozen baseline — PASSED 122, ROUTING_CHANGED 3, REGRESSION 9, gate red (`agents/evidence/metrics/routing-canary-20261103.md`).
 - [x] **5.4 Proxy-fidelity report:** for prompts appearing in BOTH the trace <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/proxy_fidelity.ts -->
       ledger and the Phase 2 corpus, compare the checker's would-load verdict
