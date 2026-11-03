@@ -55,20 +55,66 @@ export function requestAllowed(url: string, fileRoots: readonly string[]): boole
     return !url.startsWith('file:') || fileRoots.some((root) => fileInside(url, root));
 }
 
+/** What a URL-target probe page may do with one request. */
+export type UrlVerdict = 'allow' | 'aborted' | 'blocked';
+
+/** What a URL-target run refused: writes it aborted, and requests that would have left the origin. */
+export interface NetworkRecord {
+    aborted: string[];
+    blocked: string[];
+}
+
+const READ_METHODS: ReadonlySet<string> = new Set(['GET', 'HEAD']);
+const INERT_SCHEMES = ['data:', 'blob:', 'about:'];
+
+/**
+ * A probe that presses, clicks or submits on a live URL must not be able to
+ * write (road-to-design-inputs-and-pages-read-as-they-are 4.3). Same origin
+ * and GET/HEAD only: a write method on the origin is aborted, any request to
+ * another origin — or another scheme or port of the same host — is blocked.
+ */
+export function urlTargetVerdict(url: string, method: string, origin: string): UrlVerdict {
+    if (INERT_SCHEMES.some((s) => url.startsWith(s))) return 'allow';
+    let at: string;
+    try {
+        at = new URL(url).origin;
+    } catch {
+        return 'blocked';
+    }
+    if (at !== new URL(origin).origin) return 'blocked';
+    return READ_METHODS.has(method.toUpperCase()) ? 'allow' : 'aborted';
+}
+
 /**
  * Route every request of `page` through `requestAllowed`, recording what was
  * refused. One opener for every witness page, so no page confines less than
  * another (16.5.0 review: the comparison pages checked the scheme only).
+ * With `urlTarget`, the page is a live URL and `urlTargetVerdict` decides
+ * instead; refusals land in its `network` record.
  */
 export async function confinePage(
     page: Page,
     blocked: string[],
     fileRoots: readonly string[],
     fulfil?: (route: Route) => Promise<boolean>,
+    urlTarget?: { origin: string; network: NetworkRecord },
 ): Promise<void> {
     await page.route('**/*', async (route: Route) => {
         if (fulfil && (await fulfil(route))) return;
         const url = route.request().url();
+        if (urlTarget !== undefined) {
+            const method = route.request().method();
+            const verdict = urlTargetVerdict(url, method, urlTarget.origin);
+            if (verdict === 'allow') {
+                await route.continue();
+                return;
+            }
+            if (verdict === 'aborted') urlTarget.network.aborted.push(`${method.toUpperCase()} ${url}`);
+            else urlTarget.network.blocked.push(url);
+            blocked.push(url);
+            await route.abort();
+            return;
+        }
         if (!requestAllowed(url, fileRoots)) {
             blocked.push(url);
             await route.abort();

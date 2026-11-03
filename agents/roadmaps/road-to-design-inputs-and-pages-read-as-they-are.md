@@ -122,7 +122,7 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
       (`:363`, `:559`, `:631`) treats a key missing from an older observation as
       `not_available`, never as unchanged.
       verify: `npx vitest run tests/scripts/ui_conformance_probe.test.ts` -> 0 with a pure case where the reference's `active` changes `transform` and the target's does not, reported as lost
-- [ ] **4.2 The render states its denominator and the gap inputs.**
+- [x] **4.2 The render states its denominator and the gap inputs.**
       `src/cli/commands/uiRender.ts`: the style capture (`:593`) records
       `sampled` and `total` element counts in each `*.styles.json` envelope or
       manifest row, and `CAPTURED_PROPERTIES` (`:60-80`) gains
@@ -130,7 +130,7 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
       `display`, `flex-direction`. A reading over a truncated capture carries
       `partial: <sampled>/<total>`.
       verify: `npx vitest run tests/cli/uiRender_geometry.test.ts` -> 0 with assertions on the new keys and on `total > sampled` for a > 1,500-element fixture
-- [ ] **4.3 No probe action on a URL can write.** Add a URL-target predicate
+- [x] **4.3 No probe action on a URL can write.** Add a URL-target predicate
       to `src/cli/commands/uiRenderAssetIsolation.ts` (same origin, GET/HEAD
       only, everything else aborted and recorded) and apply it via
       `confinePage` before every `goto` of a URL target in

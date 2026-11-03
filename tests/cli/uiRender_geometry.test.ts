@@ -43,4 +43,47 @@ describe('ui:render page geometry — live', () => {
             expect(typeof c.settled_ms === 'number' || c.unsettled === true).toBe(true);
         }
     }, 120_000);
+
+    // road-to-design-inputs-and-pages-read-as-they-are 4.2: the denominator and
+    // the gap inputs a sibling-gap reading needs.
+    it.skipIf(!live)('records sampled/total, marks a truncated capture partial, and captures margin/gap/flex', async () => {
+        const cards = Array.from({ length: 1600 }, (_, i) => `<div class="cell" style="margin-top:${i % 3}px">${i}</div>`).join('');
+        fs.writeFileSync(
+            path.join(dir, 'big.html'),
+            `<!doctype html><html><body><main style="display:flex;flex-direction:column;gap:12px;row-gap:12px;column-gap:4px">${cards}</main></body></html>`,
+        );
+        const code = await runUiRender({ target: 'big.html', projectRoot: dir, slug: 'big' });
+        expect(code).toBe(0);
+        const manifest = JSON.parse(
+            fs.readFileSync(path.join(dir, 'agents', 'runtime', 'state', 'render', 'big', 'manifest.json'), 'utf8'),
+        );
+        const desktop = manifest.captures.find((c: { viewport: string }) => c.viewport === 'desktop');
+        expect(desktop.styles_sampled).toBe(1500);
+        expect(desktop.styles_total).toBeGreaterThan(desktop.styles_sampled);
+        expect(desktop.partial).toBe(`${desktop.styles_sampled}/${desktop.styles_total}`);
+        const rows: Array<Record<string, string>> = JSON.parse(fs.readFileSync(path.join(dir, desktop.styles), 'utf8'));
+        const main = rows.find((r) => r['selector'] === 'main')!;
+        expect(main['display']).toBe('flex');
+        expect(main['flex-direction']).toBe('column');
+        expect(main['gap']).toBe('12px 4px');
+        expect(main['row-gap']).toBe('12px');
+        expect(main['column-gap']).toBe('4px');
+        const cell = rows.find((r) => r['class'] === 'cell' && r['margin-top'] === '2px');
+        expect(cell).toBeDefined();
+        for (const k of ['margin-right', 'margin-bottom', 'margin-left']) expect(cell![k]).toBe('0px');
+    }, 180_000);
+
+    it.skipIf(!live)('a capture under the cap is not partial', async () => {
+        fs.writeFileSync(path.join(dir, 'small.html'), PAGE);
+        const code = await runUiRender({ target: 'small.html', projectRoot: dir, slug: 'small' });
+        expect(code).toBe(0);
+        const manifest = JSON.parse(
+            fs.readFileSync(path.join(dir, 'agents', 'runtime', 'state', 'render', 'small', 'manifest.json'), 'utf8'),
+        );
+        for (const c of manifest.captures) {
+            expect(typeof c.styles_total).toBe('number');
+            expect(c.styles_total).toBe(c.styles_sampled);
+            expect(c.partial).toBeUndefined();
+        }
+    }, 120_000);
 });
