@@ -160,8 +160,8 @@
             "from": 1567400,
             "to": 1568700,
             "by": "agent, feat/web-launch-write-time",
-            "what_was_added": "The design_pass_hook call site for the web-launch rows (rows 2.1/2.2 of check_web_launch_readiness at write time): the .html/.css path test, the chunk loader and the degraded-pass reason, plus the envelope read through unwrap() and the one-pass cssBlocks in design_slop_rules.ts. The rows themselves stay in web_launch_rows.chunk.cjs. Measured 1,568,217 bytes by the gate after merging origin/main, 817 over the 1,567,400 ceiling. This replaces the branch-local 1,562,000 -> 1,563,500 raise of 2026-11-02, which collided with the main-side raise from the same base and was dropped in the merge.",
-            "why_it_could_not_be_avoided": "A write-time carrier needs a call site in the dispatch bundle to decide whether to load the chunk; everything else is already in the chunk. cssBlocks was rewritten compactly so its fix needed no bytes of its own. The new ceiling is the reading plus 483 bytes, the same margin as the neighbouring raises, so an esbuild symbol rename does not red the gate.",
+            "what_was_added": "The design_pass_hook call site for the web-launch rows (rows 2.1/2.2 of check_web_launch_readiness at write time): the .html/.css path test, the chunk loader and the degraded-pass reason. The rows themselves stay in web_launch_rows.chunk.cjs. Measured 1,568,217 bytes by the gate against 1,567,283 on origin/main after #2812, a 934-byte delta, 817 over the 1,567,400 ceiling. This replaces the branch-local 1,562,000 -> 1,563,500 raise of 2026-11-02, which collided with the main-side raise from the same base and was dropped in the merge.",
+            "why_it_could_not_be_avoided": "A write-time carrier needs a call site in the dispatch bundle to decide whether to load the chunk; everything else is already in the chunk. The new ceiling is the reading plus 483 bytes, the same margin as the neighbouring raises, so an esbuild symbol rename does not red the gate.",
             "what_would_have_caught_it": "Nothing earlier: the growth is the feature."
         }
     ],
