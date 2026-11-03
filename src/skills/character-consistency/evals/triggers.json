@@ -1,7 +1,7 @@
 {
     "skill": "character-consistency",
     "last_eval": "2026-11-03",
-    "description": "5 exemplars + 4 near-misses + 1 counterexample. Exemplars cover keeping one character visually identical across AI video scenes (character lock, identity tokens). Near-misses are neighbours sharing its vocabulary: single-image generation (image-generation), prompt-only authoring (prompt-engineering-image), checking a found clip for defects (analyze:post) and storyboard planning (video:storyboard). The counterexample is logo work, which shares only the word design.",
+    "description": "6 exemplars (one German) + 4 near-misses + 1 counterexample. Exemplars cover keeping one character visually identical across AI video scenes (character lock, identity tokens). Near-misses are neighbours sharing its vocabulary: single-image generation (image-generation), prompt-only authoring (prompt-engineering-image), checking a found clip for defects (analyze:post) and storyboard planning (video:storyboard). The counterexample is logo work, which shares only the word design.",
     "queries": [
         {
             "q": "keep the same character across all six scenes of my AI music video",
@@ -27,6 +27,12 @@
             "q": "same character in scene 1 and scene 4, please, the hair colour keeps changing",
             "trigger": true,
             "class": "exemplar"
+        },
+        {
+            "q": "die Figur soll in allen Szenen gleich aussehen, Jacke und Ring dürfen sich nicht ändern",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
         },
         {
             "q": "generate one portrait image of a woman in a red jacket",
