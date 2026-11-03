@@ -113,7 +113,7 @@ describe('checkCloudReach', () => {
         const root = repo({}, []);
         const c = checkCloudReach(root, {});
         expect(c.status).toBe('ok');
-        expect(c.message).toMatch(/0 managed hook/);
+        expect(c.message).toMatch(/0 agent-config hook/);
     });
 
     it('treats any value other than "true" as local', () => {

@@ -296,7 +296,7 @@ export function dryRunTargetLines(global: boolean, tools: Iterable<string>, proj
         for (const [, sub] of deploy) out += `          ${sub.length === 0 ? root : `${join(root, sub)}/`}\n`;
     }
     out += '  phases:      project payload sync — skipped (global installs write user-scope paths only)\n';
-    out += '               host projection + managed hooks — would run\n';
+    out += '               host projection + agent-config hooks — would run\n';
     return out;
 }
 

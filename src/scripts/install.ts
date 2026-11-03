@@ -3022,15 +3022,15 @@ function _deploy_global_content(
                 if (!state.QUIET) {
                     if (res.changed) {
                         success(
-                            `claude-code: managed hooks registered in ~/.claude/settings.json ` +
+                            `claude-code: agent-config hooks registered in ~/.claude/settings.json ` +
                                 `(${res.events.length} event(s))`,
                         );
                     } else {
-                        skip('claude-code: managed hooks already registered');
+                        skip('claude-code: agent-config hooks already registered');
                     }
                 }
             } catch (e) {
-                warn(`claude-code: managed-hook registration failed — ${String(e)}`);
+                warn(`claude-code: agent-config hook registration failed — ${String(e)}`);
                 _emit_progress({ type: 'hooks_failed', tool: tool_id, error: String(e) });
             }
         }
