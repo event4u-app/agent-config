@@ -998,3 +998,56 @@ describe('2.3 — no fifth state; the new paths are a reason CLASS', () => {
         expect(members).toContain('declaration-missing');
     });
 });
+
+describe('form variants — the verdict follows what the markup says, never how it is written', () => {
+    const VARIANTS = path.join(FIX, 'form-variants');
+    const verdict = (dir: string) => audit(path.join(VARIANTS, dir), 'marketing-site', REPO);
+    const located = (dir: string, check: string): string[] =>
+        verdict(dir)
+            .findings.filter((f) => f.check === check)
+            .map((f) => f.location)
+            .sort();
+
+    it('reordered description and canonical attributes read as present', () => {
+        expect(verdict('reordered-description-canonical').findings).toEqual([]);
+    });
+
+    it('a robots meta with content before name is a noindex', () => {
+        expect(located('robots-content-first', 'staging-noindex-leftover')).toEqual(['index.html:4']);
+    });
+
+    it('content="none" is a noindex', () => {
+        expect(located('robots-none', 'staging-noindex-leftover')).toEqual(['index.html:4']);
+    });
+
+    it('a search crawler named in the meta (googlebot) is a noindex', () => {
+        expect(located('googlebot-noindex', 'staging-noindex-leftover')).toEqual(['index.html:4']);
+    });
+
+    it('a training-only robots.txt block is not a critical finding', () => {
+        const r = verdict('training-only-block');
+        expect(r.findings.filter((f) => f.tier === 'critical')).toEqual([]);
+        expect(r.findings).toEqual([]);
+    });
+
+    it('a relative canonical and a second, conflicting canonical are findings', () => {
+        const hits = verdict('canonical-relative-and-conflicting').findings.filter(
+            (f) => f.check === 'canonical-and-sitemap-coherence',
+        );
+        expect(hits.map((h) => h.location.split(':')[0])).toContain('index.html');
+        expect(hits.some((h) => /relative/i.test(h.evidence))).toBe(true);
+        expect(hits.some((h) => /conflict/i.test(h.evidence))).toBe(true);
+    });
+
+    it('a sitemap host that merely CONTAINS the canonical host does not match it', () => {
+        const hits = verdict('sitemap-lookalike-host').findings.filter(
+            (f) => f.check === 'canonical-and-sitemap-coherence',
+        );
+        expect(hits.length).toBeGreaterThan(0);
+        expect(hits.every((h) => h.evidence.includes('example.com'))).toBe(true);
+    });
+
+    it('the control — the form the old reader already handled — still fires', () => {
+        expect(located('robots-control', 'staging-noindex-leftover')).toEqual(['index.html:4']);
+    });
+});

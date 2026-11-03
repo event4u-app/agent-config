@@ -42,10 +42,11 @@ as a dependency — use zod v4's native export.
 
 ## Phase 1 — One attribute reader, red first
 
-- [ ] **1.1 Form-variant fixtures.** `tests/fixtures/web-launch/form-variants/`
+- [x] **1.1 Form-variant fixtures.** `tests/fixtures/web-launch/form-variants/`
       with the eight probes, cases in
       `tests/scripts/check_web_launch_readiness.test.ts`.
       verify: at the pin the seven defect cases fail and the control passes.
+      Done: eight fixtures + README checked in; at the pin 7 cases fail, the control passes.
 - [ ] **1.2 Shared reader.** Move `tagsOf` / `attr` from
       `web_launch_third_party.ts` into `src/scripts/_lib/html_tags.ts`, widen to
       `meta|link|title`, accept unquoted values.
