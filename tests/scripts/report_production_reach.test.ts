@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { labelledModules, unreachedModules } from '../../src/scripts/report_production_reach.js';
+import { labelledModules, unreachedFindings, unreachedModules } from '../../src/scripts/report_production_reach.js';
 import { productionReach, worktreeOf, type ReachTree } from '../../src/scripts/_lib/production_reach.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -33,6 +33,18 @@ describe('report_production_reach --unreached', () => {
 
     it('reads a label only where the line says "reference spec, model-carried"', () => {
         expect([...labelledModules(treeOf(FILES)).keys()]).toEqual(['src/scripts/analysis_b.ts']);
+    });
+
+    it('reports a label naming a module the tree does not have as missing, not as reached', () => {
+        const files = {
+            ...FILES,
+            'src/domains/x/door/command.md':
+                FILES['src/domains/x/door/command.md'] + '- `src/scripts/analysis_gone.ts` (`g`) — reference spec, model-carried.\n',
+        };
+        const tree = treeOf(files);
+        const lines = unreachedFindings(tree, productionReach(tree), 'src/scripts/analysis_*.ts');
+        expect(lines).toContainEqual({ bad: true, text: '❌  labelled model-carried but missing: src/scripts/analysis_gone.ts (src/domains/x/door/command.md)' });
+        expect(lines.some((l) => l.text.includes('but reached'))).toBe(false);
     });
 
     it('the unreached analysis modules of this tree are exactly the labelled ones', () => {

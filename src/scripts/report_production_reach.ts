@@ -42,6 +42,38 @@ export function labelledModules(tree: ReachTree): Map<string, string> {
     return new Map([...out].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
 }
 
+export interface UnreachedLine {
+    bad: boolean;
+    text: string;
+}
+
+/**
+ * One line per unreached module and per label that does not hold: a label on a
+ * module the closure reaches, or on a module the tree does not have at all —
+ * that one is `missing`, since a deleted module is not a reached one.
+ */
+export function unreachedFindings(tree: ReachTree, reach: Reach, glob: string): UnreachedLine[] {
+    const re = globToRegExp(glob);
+    const unreached = unreachedModules(tree, reach, glob);
+    const labelled = labelledModules(tree);
+    const out: UnreachedLine[] = [];
+    for (const m of unreached) {
+        const door = labelled.get(m);
+        out.push(
+            door === undefined
+                ? { bad: true, text: `❌  unreached, unlabelled: ${m}` }
+                : { bad: false, text: `   unreached: ${m} — reference spec, model-carried (${door})` },
+        );
+    }
+    for (const [m, door] of labelled) {
+        if (!re.test(m) || unreached.includes(m)) continue;
+        const state = tree.read(m) === null ? 'missing' : 'reached';
+        out.push({ bad: true, text: `❌  labelled model-carried but ${state}: ${m} (${door})` });
+    }
+    out.push({ bad: false, text: `unreached ${glob}: ${unreached.length} · labelled ${unreached.filter((m) => labelled.has(m)).length}` });
+    return out;
+}
+
 export function main(argv: readonly string[]): number {
     const tree = worktreeOf(REPO_ROOT);
     const reach = productionReach(tree);
@@ -63,21 +95,9 @@ export function main(argv: readonly string[]): number {
         process.stderr.write('report_production_reach: --unreached needs a glob\n');
         return 2;
     }
-    const re = globToRegExp(glob);
-    const unreached = unreachedModules(tree, reach, glob);
-    const labelled = labelledModules(tree);
-    let bad = 0;
-    for (const m of unreached) {
-        const door = labelled.get(m);
-        if (door === undefined) bad += 1;
-        process.stdout.write(door === undefined ? `❌  unreached, unlabelled: ${m}\n` : `   unreached: ${m} — reference spec, model-carried (${door})\n`);
-    }
-    for (const [m, door] of labelled) {
-        if (!re.test(m) || unreached.includes(m)) continue;
-        bad += 1;
-        process.stdout.write(`❌  labelled model-carried but reached: ${m} (${door})\n`);
-    }
-    process.stdout.write(`unreached ${glob}: ${unreached.length} · labelled ${unreached.filter((m) => labelled.has(m)).length}\n`);
+    const lines = unreachedFindings(tree, reach, glob);
+    for (const l of lines) process.stdout.write(`${l.text}\n`);
+    const bad = lines.filter((l) => l.bad).length;
     return bad > 0 ? 1 : 0;
 }
 

@@ -216,6 +216,12 @@ jobs:
       - name: step production reach (a ticked step's tested symbols ship)
         run: ./scripts-run src/scripts/check_step_production_reach --base origin/main --enforce
 
+      # An analysis engine module no production entry reaches is either wired or
+      # labelled `reference spec, model-carried` in its door; a label on a module
+      # that is reached, or that no longer exists, is red too. Whole-tree.
+      - name: production reach (unreached analysis modules carry a door label)
+        run: ./scripts-run src/scripts/report_production_reach --unreached 'src/scripts/analysis_*.ts'
+
       # A `[~]` carried to a follow-up is validated once, when the parent is
       # archived, by a sweep that then never sees the pair again — so the
       # receiver could be deleted afterwards with nothing going red. This walks
