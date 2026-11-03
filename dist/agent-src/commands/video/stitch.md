@@ -80,11 +80,33 @@ The stitcher fails loud on the first unresolved clip unless
 `--continue` is set; on `--skip-scene` it drops the named scene from
 the concat list before invoking `ffmpeg`.
 
+### 4b. Finish — a re-stitch is a re-cut, so it is a re-finish
+
+The new `final.mp4` has new bytes: the previous sidecar hash and any C2PA
+signature no longer match it. Run the finish step per
+[`transparency`](../../../agents/settings/policies/media/transparency.md)
+and [`disclosure`](../../../agents/settings/policies/media/disclosure.md).
+Provider and model come from the previous sidecar
+(`<project>/final.mp4.provenance.json` → `.provider`, `.model`,
+`.assertion`) or, when there is none, from the scenes' `prompt.json`. If
+neither resolves, block and ask — never invent a provider:
+
+```bash
+jq -n --arg p "<project>/final.mp4" --arg prov "<video-provider>" \
+  --arg m "<video-model>" \
+  '{artifact_path:$p, provider:$prov, model:$m, assertion:"ai_generated"}' \
+  | scripts/ai-video/lib/embed-provenance.sh finish
+```
+
 ### 5. Report
 
 Print: project slug, scenes stitched, scenes skipped, final MP4 path,
-audio status (per-clip `audio_embedded` flags from `manifest.json`).
-No live cost (no network calls happened). No commit. No push.
+audio status (per-clip `audio_embedded` flags from `manifest.json`), and
+the **finish carriers** from Step 4b (each carrier's status,
+`artifact_sha256`, `provenance_path`; `visible` reported
+`not-applied (rule pending)`, and a required non-removable disclosure
+stated as open, never as met). No live cost (no network calls happened).
+No commit. No push.
 
 ## Rules
 
@@ -93,6 +115,8 @@ No live cost (no network calls happened). No commit. No push.
 - **Block on missing clips** unless `--continue` is explicitly set.
 - **Manifest is source of truth** — never re-order clips by filename
   or timestamp; respect `manifest.json` ordering.
+- **No stitch ships unfinished.** Every new `final.mp4` runs
+  `embed-provenance.sh finish` before the report.
 
 ## See also
 
