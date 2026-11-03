@@ -5,9 +5,13 @@
  * Host settings are often not strict JSON: VS Code reads JSONC, users truncate
  * files, editors leave duplicated keys. Each case ends in a named status, and
  * the file is rewritten only when it parsed as strict JSON — rewriting a JSONC
- * file would drop its comments. An overwrite leaves `<file>.agent-config.bak`
- * (written once, so it keeps the pre-agent-config original) and is re-read
- * afterwards; a mismatch puts the pre-write bytes back.
+ * file would drop its comments. A rewrite re-serialises the whole file from a
+ * strict parse, which keeps only the last of two equal keys, so a duplicate key
+ * ANYWHERE in the file refuses a rewrite, not only one in a container the merge
+ * touches. An overwrite leaves `<file>.agent-config.bak` — refreshed on every
+ * changing write, so it holds the bytes just before the latest write and never
+ * keeps a secret the live file has since dropped — and is re-read afterwards;
+ * a mismatch puts the pre-write bytes back.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -110,27 +114,32 @@ export function mergeHostConfigFile(p, incoming, merge, io = defaultIo) {
     if (parsed.kind === 'invalid')
         return { status: 'skipped-invalid', detail: parsed.reason };
     const touchedKeys = touchedKeyPaths(incoming);
-    const touched = findDuplicateKeys(parsed.kind === 'jsonc' ? stripJsonc(original) : original).filter((d) => touchedKeys.has(keyPath(d.container, d.key)));
-    if (touched.length > 0) {
-        const d = touched[0];
-        return {
-            status: 'skipped-duplicate-key',
-            detail: `"${keyPath(d.container, d.key)}" appears on lines ${String(d.firstLine)} and ${String(d.laterLine)}`,
-        };
-    }
+    const duplicates = findDuplicateKeys(parsed.kind === 'jsonc' ? stripJsonc(original) : original);
+    const refuse = (d, why) => ({
+        status: 'skipped-duplicate-key',
+        detail: `"${keyPath(d.container, d.key)}" appears on lines ${String(d.firstLine)} and ${String(d.laterLine)}${why}`,
+    });
+    // A duplicate the merge reads is ambiguous even when nothing is written.
+    const touched = duplicates.find((d) => touchedKeys.has(keyPath(d.container, d.key)));
+    if (touched !== undefined)
+        return refuse(touched, '');
     const merged = merge(parsed.data, incoming);
     if (jsonEqual(merged, parsed.data))
         return { status: 'unchanged' };
     if (parsed.kind === 'jsonc')
         return { status: 'skipped-jsonc', detail: 'comments would be lost on rewrite' };
+    // Any other duplicate would be collapsed by the whole-file rewrite.
+    if (duplicates[0] !== undefined)
+        return refuse(duplicates[0], ' (a rewrite would keep only the last)');
     return overwriteWithBackup(p, original, merged, io);
 }
 /**
  * Write `data` to `p` as a whole-file overwrite — for callers that already
  * decided the full content (a healed key set, a `--force` rewrite) and so have
- * nothing to merge. The same guarantees as a merge: a pre-existing file leaves
- * `<file>.agent-config.bak` once, and the result is re-read, with the pre-write
- * bytes put back on a mismatch.
+ * nothing to merge. The same backup and readback as a merge: a pre-existing
+ * file leaves a refreshed `<file>.agent-config.bak`, and the result is re-read,
+ * with the pre-write bytes put back on a mismatch. No duplicate-key refusal:
+ * the caller already chose the whole content.
  */
 export function writeHostConfig(p, data, io = defaultIo) {
     if (!fs.existsSync(p)) {
@@ -142,8 +151,7 @@ export function writeHostConfig(p, data, io = defaultIo) {
 }
 function overwriteWithBackup(p, original, data, io) {
     const backup = p + BACKUP_SUFFIX;
-    if (!fs.existsSync(backup))
-        fs.writeFileSync(backup, original, 'utf-8');
+    fs.writeFileSync(backup, original, 'utf-8');
     io.write(p, (io.serialize ?? defaultSerialize)(data));
     const reread = parseObject(fs.readFileSync(p, 'utf-8'));
     if (typeof reread === 'string' || !jsonEqual(reread, data)) {

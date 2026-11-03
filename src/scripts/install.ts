@@ -479,7 +479,7 @@ function read_json_file(p: string): Record<string, unknown> | null {
 
 /**
  * Whole-file JSON write for a host settings file. A pre-existing file leaves a
- * once-only `.agent-config.bak` and the result is re-read; a mismatch restores
+ * refreshed `.agent-config.bak` and the result is re-read; a mismatch restores
  * the pre-write bytes and returns `false` (warned), never a silent half-write.
  */
 function write_json_file(p: string, data: Record<string, unknown>): boolean {

@@ -135,10 +135,25 @@ substituted inline and the root key renamed to `mcpServers`.
 The renderer is one-way: `mcp.json` → tool configs. It merges into an existing
 target rather than replacing it: only the servers named in `mcp.json` are
 written under `mcpServers`, every other server and top-level key in the target
-survives, and an overwrite leaves `<target>.agent-config.bak` (written once, so
-it keeps the pre-agent-config original). Because foreign entries survive,
-removing a server from `mcp.json` does not remove it from the targets — delete
-it from the target by hand.
+survives, and an overwrite leaves `<target>.agent-config.bak`. Because foreign
+entries survive, removing a server from `mcp.json` does not remove it from the
+targets — delete it from the target by hand.
+
+A target is rewritten as a whole from a strict parse, which keeps only the last
+of two equal keys. So a target with a duplicate key **anywhere** — even inside a
+server `mcp.json` does not name — is refused (`skipped-duplicate-key`, both line
+numbers printed, file untouched) whenever a write would be needed.
+
+**Backups and secrets.** Targets such as `.cursor/mcp.json` are often committed,
+and they carry resolved tokens. The backup is refreshed on every changing write,
+so it holds the bytes just before the latest render and never keeps a token the
+live file has since dropped — but it still holds the previous token values. The
+managed `.gitignore` block (`agent-config sync:gitignore`) ignores
+`*.agent-config.bak`; in a project that does not use that block, add the entry by
+hand and do not commit the backup.
+
+**Known cosmetic.** A rewritten target is serialised with sorted keys, so foreign
+keys and servers you wrote by hand may change order. Their values are kept.
 
 Keychain backends (`security`, `secret-tool`, Bitwarden CLI) are **out of
 scope**. The environment is the only secret surface. Pipe from whatever

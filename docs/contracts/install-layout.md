@@ -210,16 +210,17 @@ A file the installer cannot parse as strict JSON is never replaced with `{}`.
 | `unchanged` | our keys already present (strict JSON or JSONC) | untouched |
 | `skipped-jsonc` | parses only after stripping `//` / `/* */` comments and trailing commas, and our keys are missing | untouched — a rewrite would drop the comments; the snippet to add by hand is printed |
 | `skipped-invalid` | not parseable even as JSONC (truncated, top level not an object) | untouched; snippet printed |
-| `skipped-duplicate-key` | a top-level key the merge would touch appears twice (a strict parse silently keeps only the last) | untouched; both line numbers and the snippet printed |
+| `skipped-duplicate-key` | a key appears twice (a strict parse silently keeps only the last) — refused when the merge reads that key, and refused anywhere in the file when a rewrite is needed, since the whole file is re-serialised | untouched; both line numbers and the snippet printed |
 | `skipped-readback-mismatch` | the rewritten file did not re-parse to the merged value | pre-write bytes restored |
 
 A `skipped-*` status records no `merged_keys` entry, since nothing was written.
 
-**Backup.** Before the first overwrite of an existing file the installer writes
-`<file>.agent-config.bak` with the original bytes. It is written once and never
-refreshed, so it keeps the pre-agent-config original across later installs.
-After every overwrite the file is re-read; on a mismatch the bytes read just
-before the write are put back.
+**Backup.** Before every overwrite of an existing file the installer writes
+`<file>.agent-config.bak` with the bytes just before that write. It is refreshed
+on each changing write rather than kept once, so it never preserves a secret the
+live file has since dropped; `*.agent-config.bak` is in the managed `.gitignore`
+block. After every overwrite the file is re-read; on a mismatch the bytes read
+just before the write are put back.
 
 ## Surgical-uninstall pointer schema
 

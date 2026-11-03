@@ -102,8 +102,10 @@ reports the transfer done:
 ```
 
 Exit 0 is `closed`; 1 is `open` or `unknown` (not done); 2 is `invalid` — an
-evidence id the run never recorded, an authority outside the enum, or a
-`verified` row with a blank verifier — or a file it cannot read. Only exit 0
+evidence id missing from the run's recorded list, an authority outside the
+enum, a `verified` row with a blank verifier or a malformed row — or a file it
+cannot read. The check proves the file is consistent with itself, not that the
+evidence exists outside it. Only exit 0
 closes the transfer.
 
 ## Enforced limits

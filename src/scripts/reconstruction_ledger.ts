@@ -6,6 +6,9 @@
  * transfer as done. The file is JSON: `{ "evidence_ids": [...], "obligations": [...] }`
  * — the evidence ids the run recorded, and one row per behavior. A file that
  * records no evidence ids fails closed: no row's evidence can resolve.
+ * The check catches an evidence id the run's recorded list does not contain;
+ * since that list lives in the same file, it does not prove the evidence exists
+ * outside it.
  *
  * Usage: ./scripts-run src/scripts/reconstruction_ledger --check <file>
  *
@@ -15,7 +18,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { evaluateLedger, type Obligation } from './_lib/reconstruction_ledger.js';
+import { evaluateLedger, shapeErrors, type Obligation } from './_lib/reconstruction_ledger.js';
 
 function fail(message: string): number {
     process.stderr.write(`reconstruction_ledger: ${message}\n`);
@@ -39,6 +42,12 @@ export function main(argv: readonly string[]): number {
     }
     if (!Array.isArray(doc.evidence_ids) || !doc.evidence_ids.every((e) => typeof e === 'string')) {
         return fail(`${file}: no \`evidence_ids\` list — without the run's records no evidence id can resolve`);
+    }
+    const malformed = doc.obligations.flatMap((r, i) => shapeErrors(r, i));
+    if (malformed.length > 0) {
+        process.stdout.write('ledger invalid · malformed rows\n');
+        for (const e of malformed) process.stdout.write(`  - ${e}\n`);
+        return 2;
     }
     const verdict = evaluateLedger(doc.obligations as Obligation[], { evidenceIds: new Set(doc.evidence_ids as string[]) });
     const parity = verdict.parity === null ? 'n/a' : `${verdict.verified}/${verdict.counted}`;

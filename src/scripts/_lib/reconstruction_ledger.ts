@@ -10,7 +10,9 @@
  * The ledger can say no: an evidence id the run never recorded, an authority
  * outside the enum, or a `verified` row whose verifier is blank makes the row —
  * and so the ledger — `invalid`. That is why the recorded evidence ids are a
- * required argument: without them any string would close a row.
+ * required argument: without them any string would close a row. The ids come
+ * from the same file the run writes, so this catches dangling or unknown ids,
+ * not evidence that was never produced: it does not look outside that file.
  */
 import { EVIDENCE_AUTHORITIES, type EvidenceAuthority } from '../analysis_ledger.js';
 
@@ -61,6 +63,35 @@ export function validateObligation(o: Obligation): string[] {
         if (o.verifier_authority === 'analyst-inference') errors.push(`${o.id}: verified on analyst-inference alone`);
     }
     if (o.status === 'waived' && (o.waiver_reason ?? '').trim() === '') errors.push(`${o.id}: waived without a waiver_reason`);
+    return errors;
+}
+
+function isStringList(v: unknown): v is string[] {
+    return Array.isArray(v) && v.every((x) => typeof x === 'string');
+}
+
+/**
+ * Shape errors for a row read from an untrusted file. The verdict functions
+ * assume a well-formed `Obligation`; a row missing `evidence` or
+ * `required_cases` would otherwise crash them instead of reading `invalid`.
+ */
+export function shapeErrors(row: unknown, index: number): string[] {
+    if (row === null || typeof row !== 'object' || Array.isArray(row)) return [`row ${index}: not an object`];
+    const r = row as Record<string, unknown>;
+    const id = typeof r['id'] === 'string' && r['id'] !== '' ? r['id'] : `row ${index}`;
+    const errors: string[] = [];
+    if (typeof r['id'] !== 'string' || r['id'] === '') errors.push(`${id}: \`id\` must be a non-empty string`);
+    if (!isStringList(r['required_cases'])) errors.push(`${id}: \`required_cases\` must be a list of strings`);
+    const ev = r['evidence'];
+    if (ev === null || typeof ev !== 'object' || Array.isArray(ev)) {
+        errors.push(`${id}: \`evidence\` must be an object of case → evidence ids`);
+    } else if (!Object.values(ev).every(isStringList)) {
+        errors.push(`${id}: every \`evidence\` entry must be a list of strings`);
+    }
+    for (const key of ['tier', 'status', 'verifier_authority'] as const) {
+        if (typeof r[key] !== 'string') errors.push(`${id}: \`${key}\` must be a string`);
+    }
+    if (r['verifier'] !== undefined && typeof r['verifier'] !== 'string') errors.push(`${id}: \`verifier\` must be a string`);
     return errors;
 }
 

@@ -125,6 +125,27 @@ describe('false-alarm fixes', () => {
         expect(names('Jane Doe signed it off.')).toEqual(['Jane Doe']);
     });
 
+    it('a German sentence-initial multi-word name keeps its first word', () => {
+        const d = diffFacts(
+            'Deutsche Bahn hat die Strecke gesperrt und wir sind nicht schuld.',
+            'Deutsche Post hat die Strecke gesperrt und wir sind nicht schuld.',
+        );
+        expect(d.lost).toEqual([{ kind: 'name', value: 'Deutsche Bahn' }]);
+        expect(d.added).toEqual([{ kind: 'name', value: 'Deutsche Post' }]);
+    });
+
+    it('a German sentence opener before a name is still stripped', () => {
+        expect(names('Gestern Deutsche Bahn und die Post: wir sind nicht schuld.')).toEqual(['Deutsche Bahn']);
+    });
+
+    it('a three-digit tail reads as grouping only when the separator agrees with the language', () => {
+        expect(diffFacts('The test took 2.125 seconds.', 'The test took 2125 seconds.').lost).toEqual([{ kind: 'number', value: '2.125' }]);
+        expect(diffFacts('Es dauerte 2,125 Sekunden und das ist nicht viel.', 'Es dauerte 2125 Sekunden und das ist nicht viel.').lost).toEqual([
+            { kind: 'number', value: '2.125' },
+        ]);
+        expect(diffFacts('Wir hatten 2.125 Anfragen und das ist nicht viel.', 'Wir hatten 2125 Anfragen und das ist nicht viel.')).toEqual({ lost: [], added: [] });
+    });
+
     it('a name never spans a line break', () => {
         expect(names('Small Print\n\nOur Payments Team shipped it.')).toEqual(['Small Print', 'Payments Team']);
     });

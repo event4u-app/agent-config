@@ -10651,19 +10651,17 @@ function mergeHostConfigFile(p, incoming, merge2, io = defaultIo) {
   const parsed = parseHostConfig(original);
   if (parsed.kind === "invalid") return { status: "skipped-invalid", detail: parsed.reason };
   const touchedKeys = touchedKeyPaths(incoming);
-  const touched = findDuplicateKeys(parsed.kind === "jsonc" ? stripJsonc(original) : original).filter(
-    (d) => touchedKeys.has(keyPath(d.container, d.key))
-  );
-  if (touched.length > 0) {
-    const d = touched[0];
-    return {
-      status: "skipped-duplicate-key",
-      detail: `"${keyPath(d.container, d.key)}" appears on lines ${String(d.firstLine)} and ${String(d.laterLine)}`
-    };
-  }
+  const duplicates = findDuplicateKeys(parsed.kind === "jsonc" ? stripJsonc(original) : original);
+  const refuse = (d, why) => ({
+    status: "skipped-duplicate-key",
+    detail: `"${keyPath(d.container, d.key)}" appears on lines ${String(d.firstLine)} and ${String(d.laterLine)}${why}`
+  });
+  const touched = duplicates.find((d) => touchedKeys.has(keyPath(d.container, d.key)));
+  if (touched !== void 0) return refuse(touched, "");
   const merged = merge2(parsed.data, incoming);
   if (jsonEqual(merged, parsed.data)) return { status: "unchanged" };
   if (parsed.kind === "jsonc") return { status: "skipped-jsonc", detail: "comments would be lost on rewrite" };
+  if (duplicates[0] !== void 0) return refuse(duplicates[0], " (a rewrite would keep only the last)");
   return overwriteWithBackup(p, original, merged, io);
 }
 function writeHostConfig(p, data, io = defaultIo) {
@@ -10676,7 +10674,7 @@ function writeHostConfig(p, data, io = defaultIo) {
 }
 function overwriteWithBackup(p, original, data, io) {
   const backup = p + BACKUP_SUFFIX;
-  if (!fs13.existsSync(backup)) fs13.writeFileSync(backup, original, "utf-8");
+  fs13.writeFileSync(backup, original, "utf-8");
   io.write(p, (io.serialize ?? defaultSerialize)(data));
   const reread = parseObject(fs13.readFileSync(p, "utf-8"));
   if (typeof reread === "string" || !jsonEqual(reread, data)) {

@@ -139,17 +139,35 @@ export function reachExemption(block: string): string | undefined {
 
 /** Words that say the call happens in prose — a door, a command body, markdown. */
 const PROSE_CITATION = /\b(?:prose|doors?|commands?|markdown)\b/i;
-/** A `path:line` citation, or a named TypeScript caller (`src/**.ts`). */
-const CALL_CITATION = /[A-Za-z0-9_./-]+\.[A-Za-z]+:\d+|\bsrc\/[A-Za-z0-9_/.-]+\.ts\b/;
+/**
+ * A `file:line` of a command, door or script file (markdown, TypeScript, shell,
+ * a Taskfile), or a named TypeScript caller (`src/**.ts`). Group 1 is the cited
+ * path either way.
+ */
+const CALL_CITATION = /(?<![A-Za-z0-9_./-])([A-Za-z0-9_./-]+\.(?:md|ts|mts|mjs|sh|ya?ml)):\d+\b|(?<![A-Za-z0-9_./-])(src\/[A-Za-z0-9_/.-]+\.ts)\b/g;
+
+/** The tree file a cited path names: itself, or the one file ending in `/<cited>`. */
+function citedFile(tree: ReachTree, cited: string): string | null {
+    if (tree.read(cited) !== null) return cited;
+    const hits = tree.list().filter((f) => f.endsWith(`/${cited}`));
+    return hits.length === 1 ? (hits[0] as string) : null;
+}
 
 /**
  * An exemption that says its caller is prose — a door, a command — must say
  * WHERE: the `file:line` of the invoking command, or the TypeScript module that
  * calls it. "Driven by the doors" with no location is the claim the gate cannot
- * check, and it is the one an unwired module hides behind.
+ * check, and it is the one an unwired module hides behind. The citation must
+ * name a file the tree has, and not one of the step's own subjects — citing the
+ * module under exemption as its own caller is no citation.
  */
-export function exemptionCitesItsCall(reason: string): boolean {
-    return !PROSE_CITATION.test(reason) || CALL_CITATION.test(reason);
+export function exemptionCitesItsCall(reason: string, tree: ReachTree, subjects: readonly string[] = []): boolean {
+    if (!PROSE_CITATION.test(reason)) return true;
+    for (const m of reason.matchAll(CALL_CITATION)) {
+        const file = citedFile(tree, (m[1] ?? m[2]) as string);
+        if (file !== null && !subjects.includes(file) && !/\.test\.ts$/.test(file)) return true;
+    }
+    return false;
 }
 
 /** The exemption line's reason as written, backticks kept. */
@@ -185,7 +203,9 @@ export function checkStep(tree: ReachTree, reach: Reach, file: string, step: str
         if (exempt.length < MIN_EXEMPT_REASON) {
             return { file, step, reason: `\`reach exempt:\` needs a reason of at least ${MIN_EXEMPT_REASON} characters` };
         }
-        if (!exemptionCitesItsCall(rawReachExemption(block) ?? '')) {
+        // The subjects come from the step itself, not from the paths its exemption cites.
+        const own = namedPaths(tree, block.replace(/^[ \t]*reach exempt:.*$/gim, '')).subjects;
+        if (!exemptionCitesItsCall(rawReachExemption(block) ?? '', tree, own)) {
             return {
                 file,
                 step,
