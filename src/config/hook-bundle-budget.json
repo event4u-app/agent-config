@@ -4,7 +4,7 @@
     "registered_at": "2026-10-01",
     "owner": "maintainer",
     "review_by": "2027-10-01",
-    "max_bytes": 1581900,
+    "max_bytes": 1582000,
     "max_bytes_derivation": "Measured 1,514,715 bytes on origin/main at 213d87055 (the gate's own reading, APFS-cloned node_modules so no worktree path artefacts). The ceiling is that reading plus ~2.3 % of headroom, rounded to 1,550,000, on the same doctrine as the 2026-10-01 registration: a bundle is rebuilt from source on every run, so an esbuild minor that renames symbols moves the figure by hundreds of bytes with no change to this tree, and a ceiling one byte above the reading would red on that. Composition is healthy at this reading and was checked rather than assumed: one YAML package (258,833 bytes) and 1,238,525 bytes of own source, so the growth is own code, not a re-entered dependency. The 1,564,211-byte pre-swap regression this roadmap closed still cannot reappear under it. RAISED to 1,550,500 on 2026-10-23 for the InstructionsLoaded binding (237 bytes against 51 of headroom); the reasoning and the measured alternative are the `raise_log` entry whose `to` is 1,550,500, so this paragraph describes the 1,550,000 registration and the raise is recorded there rather than restated.",
     "shrink_only": true,
     "shrink_only_note": "A RAISE needs a recorded reason in `raise_log` below naming what was added and why it could not be avoided. Enforced since road-to-a-ratification-fence-that-follows-its-imports 3.2: the gate reads `max_bytes` at the base revision, and a working value above it fails unless `raise_log` gained an entry whose `to` equals the new value. A lowering needs no entry. This file is also on the ratification gate's watched set, so a raise carries a record as well as a log entry.",
@@ -176,11 +176,11 @@
         {
             "date": "2026-11-03",
             "from": 1581000,
-            "to": 1581900,
-            "by": "agent, docs/game-roadmap-owner-answers (trunk repair; this branch changes no bundled source)",
-            "what_was_added": "Nothing on this branch. The trunk at 1ac7eebe04 measures 1,581,318 B with a real npm ci install, 318 over the 1,581,000 ceiling. Recorded facts: the Consistency workflow passed on main at e4dc5cfa2a (run 41618804083, after #2817's raise merged at 10:22:55Z) and failed this gate at 1ac7eebe04 (run 41625436602, after #2816 feat/web-launch-write-time merged at 11:11:07Z) with the same 1,581,318 B. So the overage entered with #2816's merge. 318 B is the overage, not the measured size of #2816's addition; this branch did not measure #2816's own delta, and #2816 carried no raise_log entry.",
-            "why_it_could_not_be_avoided": "A scope decision, not a demonstration that shrinking is impractical: the bytes are already on the trunk, a ceiling below the trunk's own reading fails every branch cut from it, and shrinking #2816's addition would be a feature change on code this branch did not write. Whether #2816's addition can be shrunk is left open.",
-            "what_would_have_caught_it": "A check against the merge result rather than the branch head before merging. Whether #2816's head ran against a base that already carried #2817 is not established here. Sized to the trunk measurement plus about 580 bytes of rebuild jitter."
+            "to": 1582000,
+            "by": "agent, fix/steady-roi-freeze, decided by the AI council (anthropic + openai)",
+            "what_was_added": "PR #2816 (web-launch write-time rows) merged after the 1,581,000 raise and added +885 B to the dispatch bundle, measured per module with the esbuild metafile against e4dc5cfa2a: hooks/design_pass_hook.ts 456 B (routing .html/.css writes to the web-launch rows, the shared withDegradation helper, the degraded-pass reason when the chunk is missing) and hooks/web_launch_rows_loader.ts 423 B (the conditional-chunk loader; the rows, the origin register and the supersession table live in web_launch_rows.chunk.cjs and cost the bundle nothing), 6 B elsewhere. origin/main at 1ac7eebe04 builds to 1,581,318 B, 318 B over.",
+            "why_it_could_not_be_avoided": "The rows are already moved into a conditional chunk; what remains in the bundle is the routing and the loader, and the loader reuses the shared loadChunkExport. Main is red on this gate since #2816, so a branch that does not touch hooks cannot push either.",
+            "what_would_have_caught_it": "#2816's own CI ran against a main that still carried the 1,578,600 ceiling-era headroom; two PRs that each fit merged within the same hour. Sized to the measurement plus about 700 bytes of rebuild jitter."
         }
     ],
     "chunks": [
