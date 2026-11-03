@@ -233,6 +233,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-executable-specification-adapter | stubs | — | road to an executable specification adapter (and the mutation half) |
 | road-to-f4-full-stop-block | stubs | — | road to the F4-full stop-block continuation |
 | road-to-first-reference-analysis-run | stubs | — | road to the first true reference-analysis run |
+| road-to-floor-source-tags-with-payload-room | stubs | — | source tags in the always-loaded safety floors |
 | road-to-fresh-beta-lapses-2026-09 | stubs | — | six beta contracts lapse fresh between 2026-09-10 and 2026-09-15 |
 | road-to-frontend-power-default-flip | stubs | — | road to the frontend-power default flip |
 | road-to-frontend-power-detector-promotions | stubs | — | road to the frontend-power detector promotions |

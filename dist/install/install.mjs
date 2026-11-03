@@ -12316,13 +12316,15 @@ function applyCodexResidentSet(home, report) {
   }
 }
 
-// src/scripts/_lib/skill_listing_overrides.ts
-var OVERRIDE_KEY = "skillOverrides";
+// src/scripts/_lib/skill_listing_record.ts
 var NAME_ONLY = "name-only";
 var RECORD_BASENAME = "skill-overrides.json";
 function recordPath2(env) {
   return write_target(RECORD_BASENAME, { env: env ?? null });
 }
+
+// src/scripts/_lib/skill_listing_overrides.ts
+var OVERRIDE_KEY = "skillOverrides";
 function ownedSkillNames(currentFiles) {
   const out = /* @__PURE__ */ new Set();
   for (const rel of currentFiles) {
