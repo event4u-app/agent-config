@@ -49,20 +49,24 @@ detected as stack `plain` (`stack/detect.ts:85`) and as project kind `unknown`
       1,498/1,500 lines; move `_dotnet_basis`, `_dotnet_runners`,
       `_dotnet_project_text` to `stack/dotnet.ts` with no behaviour change.
       verify: `npx vitest run tests/scripts/work_engine/stack_runner.test.ts` -> 0
+      reach exempt: the flagged names are pre-existing exports the runner tests import; the moved code runs through resolve_toolchain, which agents invoke as the documented entry in contexts/execution/toolchain-resolver.md
 - [x] **2.2 An engine marker suppresses `dotnet test`.** A Unity <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/templates/scripts/work_engine/stack/dotnet.ts -->
       (`ProjectSettings/ProjectVersion.txt`) or Unreal (`*.uproject`) root
       yields no dotnet runner instead of a wrong one; note the precedence in
       `toolchain-resolver.md`.
       verify: `npx vitest run tests/scripts/work_engine/stack_runner.test.ts` -> 0 with a Unity fixture asserting no `dotnet test`
+      reach exempt: the engine guard runs inside resolve_toolchain, which agents invoke as the documented entry in contexts/execution/toolchain-resolver.md; no TypeScript module imports it
 - [x] **2.3 An engine project is not `plain`.** `detect_stack` returns <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/templates/scripts/work_engine/stack/detect.ts -->
       `UNSUPPORTED_STACK` for an engine marker with no web marker, so the UI
       lane refuses instead of driving a browser at a game.
       verify: `npx vitest run tests/scripts/work_engine/stack_detect.test.ts` -> 0
+      reach exempt: the flagged names are pre-existing exports the detector tests import; the changed detect_stack is reached through work_engine/directives/ui/stack_bundles.ts
 - [x] **2.4 Installer engine kinds.** `ProjectKind` gains `godot`, `unity`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/install/detect.ts -->
       `unreal`, detected from `project.godot`,
       `ProjectSettings/ProjectVersion.txt`, `*.uproject`; the install route's
       enum follows. Not added to the scope-prompt manifests.
       verify: `npx vitest run tests/install/detect.test.ts` -> 0
+      reach exempt: the flagged names are pre-existing exports the installer tests import; the changed detectProjectShape is reached through src/server/routes/install.ts
 
 ## Phase 3 — The code graph skips engine caches
 
