@@ -115,8 +115,11 @@ on:
       - "docs/**"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # A merge_group run gets its own group and is never cancelled: two queue
+  # entries share no ref-level staleness, and cancelling one drops it from
+  # the queue. push and pull_request keep the ref group and cancellation.
+  group: ${{ github.workflow }}-${{ github.event_name == 'merge_group' && github.run_id || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
 
 jobs:
@@ -420,6 +423,13 @@ jobs:
         # The frozen 2026-08-25 baseline of 85 inherited lapses warns and does not
         # fail; a FRESH lapse fails, which is what a pull request needs to see.
         run: ./scripts-run src/scripts/check_beta_review_markers
+      - name: Owner-question ids — one heading per OQ number
+        # road-to-a-green-that-saw-what-it-certifies 1.1. Two branches that each
+        # take the next free OQ number merge without a textual conflict, so git
+        # never sees the duplicate; OQ-36 and OQ-37 reached main twice that way.
+        # No pull_request guard: the step must also run under merge_group, where
+        # the duplicate first exists.
+        run: ./scripts-run src/scripts/check_owner_question_ids
       - name: Cross-skill links resolve in the DELIVERED tree
         # road-to-inbox-harvest-2026-08-f-skill-selection-evidence 2.2.
         # `check_references` already reports a broken path; what it cannot answer

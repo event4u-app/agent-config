@@ -338,6 +338,26 @@ function _pad2(v: string): string {
 }
 
 /**
+ * True for the first entry seen with its `id`, false for every later one.
+ *
+ * A union merge of a flat curated file concatenates both sides per line, so
+ * an entry both branches carried can survive twice. The first occurrence
+ * wins, across both layouts; an entry without an `id` always passes.
+ */
+function _firstOfId(seen: Set<string>, e: Record<string, unknown>): boolean {
+    const id = e['id'];
+    if ((typeof id !== 'string' && typeof id !== 'number') || id === '') {
+        return true;
+    }
+    const key = String(id);
+    if (seen.has(key)) {
+        return false;
+    }
+    seen.add(key);
+    return true;
+}
+
+/**
  * Yield [file, entry] pairs for curated files of `mtype`.
  *
  * Supports both the content-addressed layout (`agents/memory/<type>/
@@ -352,11 +372,12 @@ function _pad2(v: string): string {
 function* _iter_curated_entries(mtype: string): Generator<[string, Record<string, unknown>]> {
     const type_dir = path.join(MEMORY_ROOT, mtype);
     const single_file = path.join(MEMORY_ROOT, `${mtype}.yml`);
+    const seen = new Set<string>();
     if (_isFile(single_file)) {
         const data = _load_yaml(single_file);
         const entries = _isPlainObject(data) ? data['entries'] : null;
         for (const e of Array.isArray(entries) ? entries : []) {
-            if (_isPlainObject(e)) {
+            if (_isPlainObject(e) && _firstOfId(seen, e)) {
                 if (_statusExcluded(e)) {
                     continue;
                 }
@@ -371,14 +392,14 @@ function* _iter_curated_entries(mtype: string): Generator<[string, Record<string
             const entries = _isPlainObject(data) ? data['entries'] : undefined;
             if (Array.isArray(entries)) {
                 for (const e of entries) {
-                    if (_isPlainObject(e)) {
+                    if (_isPlainObject(e) && _firstOfId(seen, e)) {
                         if (_statusExcluded(e)) {
                             continue;
                         }
                         yield [yml, e];
                     }
                 }
-            } else if (_isPlainObject(data) && data['id']) {
+            } else if (_isPlainObject(data) && data['id'] && _firstOfId(seen, data)) {
                 // Flat, one-entry-per-file layout (content-addressed).
                 if (_statusExcluded(data)) {
                     continue;
@@ -397,11 +418,12 @@ function* _iter_curated_entries(mtype: string): Generator<[string, Record<string
 function* _iter_curated_entries_all(mtype: string): Generator<[string, Record<string, unknown>]> {
     const type_dir = path.join(MEMORY_ROOT, mtype);
     const single_file = path.join(MEMORY_ROOT, `${mtype}.yml`);
+    const seen = new Set<string>();
     if (_isFile(single_file)) {
         const data = _load_yaml(single_file);
         const entries = _isPlainObject(data) ? data['entries'] : null;
         for (const e of Array.isArray(entries) ? entries : []) {
-            if (_isPlainObject(e)) {
+            if (_isPlainObject(e) && _firstOfId(seen, e)) {
                 yield [single_file, e];
             }
         }
@@ -413,11 +435,11 @@ function* _iter_curated_entries_all(mtype: string): Generator<[string, Record<st
             const entries = _isPlainObject(data) ? data['entries'] : undefined;
             if (Array.isArray(entries)) {
                 for (const e of entries) {
-                    if (_isPlainObject(e)) {
+                    if (_isPlainObject(e) && _firstOfId(seen, e)) {
                         yield [yml, e];
                     }
                 }
-            } else if (_isPlainObject(data) && data['id']) {
+            } else if (_isPlainObject(data) && data['id'] && _firstOfId(seen, data)) {
                 yield [yml, data];
             }
         }

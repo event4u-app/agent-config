@@ -3519,3 +3519,22 @@ gates:
       scored by the real `score_task_v2` in synthetic arms that did no work and
       in a mutation catalogue (each must pass 0 capability oracles), and its
       reference patch under `internal/bench/ab/oracle-v2/` must pass.
+
+  - id: check_owner_question_ids
+    argv: []
+    min_scanned: 40
+    corpus: "every `OQ-<N>` heading of level 2 to 4 in `agents/owner-questions.md` — 50 on 2026-11-03, open and answered together. The floor is 40 because an answered question moves between sections rather than leaving the file, while a heading pattern that stopped matching would collapse to zero."
+    status: enforced
+    ci_invocation: .github/workflows/consistency.yml
+    no_canary_reason: >-
+      The corpus is one fixed file, not a directory a planted file can join, so
+      a create-only canary is never read and would certify nothing. The only
+      violation is a second heading inside the tracked register, an in-place
+      edit the canary contract forbids. Discrimination is proven by
+      `--self-test` (3 cases, 2 rejecting), which runs the real CLI on a scratch
+      register carrying a duplicate id (exit 1, both lines named), on one with no
+      question heading (exit 1) and on one with distinct ids (exit 0).
+    note: >-
+      road-to-a-green-that-saw-what-it-certifies 1.1. Duplicates of OQ-36 and
+      OQ-37 reached main without a git conflict; the step in consistency.yml
+      carries no pull_request guard so it also runs under merge_group.

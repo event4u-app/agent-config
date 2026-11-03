@@ -334,6 +334,7 @@ tasks:
       - task: lint-versioned-cache
       - task: check-no-local-settings
       - task: check-council-references
+      - task: check-owner-question-ids
       - task: lint-one-off-age
       - task: check-ownership-matrix
       - task: check-settings-reference
