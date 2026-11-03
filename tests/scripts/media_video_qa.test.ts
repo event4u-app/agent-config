@@ -104,6 +104,8 @@ describe.skipIf(!CAN_RUN)('video-qa.sh', () => {
         // The block in the top-left corner is drawn once and never changes; everything else pans.
         fixtures['roi'] = save('roi.mp4', Array.from({ length: 30 }, (_, n) => block(view(field, n * 3), 8, 8, 48, 36, 200)));
         // Same clip, coarser quantiser: the frozen region now carries codec noise, as a CI ffmpeg produced.
+        // The same clip, lossless: the frozen block is bit-identical frame to frame.
+        fixtures['roi-exact'] = encode(Array.from({ length: 30 }, (_, n) => block(view(field, n * 3), 8, 8, 48, 36, 200)), path.join(dir, 'roi-exact.mkv'), { fps: FPS, lossless: true });
         fixtures['roi-noisy'] = save('roi-noisy.mp4', Array.from({ length: 30 }, (_, n) => block(view(field, n * 3), 8, 8, 48, 36, 200)), 8);
         const bg = view(field, 0);
         fixtures['walk'] = save('walk.mp4', Array.from({ length: 40 }, (_, n) => block(bg, 4 + n * 7, 70, 16, 16, 250)));
@@ -152,6 +154,19 @@ describe.skipIf(!CAN_RUN)('video-qa.sh', () => {
         expect(frozen.freezes?.[0]?.start).toBeGreaterThan(0.8);
         expect(frozen.freezes?.[0]?.end).toBeCloseTo(3, 0);
         expect(measure(fixtures['pan']!).freezes).toEqual([]);
+    });
+
+    // skip-reason: tool absent — this ffmpeg build lacks the filter; the filter-missing case below asserts it reads as skipped
+    it.skipIf(!has('freezedetect'))('holds a freeze in a region narrower than the SIMD width, flush against moving pixels', () => {
+        // x 48-56 is the right edge of the frozen block; x 56 onwards pans. ffmpeg's x86
+        // scene SAD runs one full SIMD chunk even when the aligned width is 0, so on an
+        // x86 build a crop narrower than 16 (SSE2), 32 (AVX2) or 64 (AVX-512) bytes reads
+        // the moving pixels beside it and the freeze is lost. This edge makes that read
+        // land on motion on every x86 CPU, not only on the AVX-512 ones; the lossless
+        // clip keeps codec noise out, so a lost freeze can only be the over-read.
+        const r = measure(fixtures['roi-exact']!, ['--roi', '48,8,8,36']);
+        const frozenFor = (r.rois[0]?.freezes ?? []).reduce((sum, f) => sum + f.end - f.start, 0);
+        expect(frozenFor, `rois=${JSON.stringify(r.rois)}`).toBeGreaterThan(0.8 * r.duration);
     });
 
     // skip-reason: tool absent — this ffmpeg build lacks the filter; the filter-missing case below asserts it reads as skipped

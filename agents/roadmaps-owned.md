@@ -193,7 +193,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-security-chain-measured | stubs | — | a security chain that is measured, not asserted |
 | road-to-a-showcase-the-owner-paid-for | stubs | — | the first paid showcase run |
 | road-to-a-stall-the-replay-measures | stubs | — | a stall the replay measures |
-| road-to-a-steady-roi-freeze | stubs | — | A steady ROI freeze test. |
 | road-to-a-strike-that-speaks | stubs | — | a strike that speaks |
 | road-to-a-visibility-sync-that-can-write | stubs | — | road to a visibility sync that can actually write |
 | road-to-a-weekly-lineage-watch | stubs | — | a weekly lineage watch on the maintainer's machine |
