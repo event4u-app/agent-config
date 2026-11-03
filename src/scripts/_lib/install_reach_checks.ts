@@ -40,6 +40,7 @@ import type { WiringCheck } from './runtime_wiring_checks.js';
 import { TOOL_TO_HOST, residualReport } from './mcp_consent_residual.js';
 import { checkSkillReach } from './skill_reach.js';
 import { checkCloudReach } from './cloud_reach.js';
+import { isContained } from './session_index_trust.js';
 
 /**
  * Root agent-instruction files, as a multi-vendor ecosystem convention rather
@@ -217,7 +218,7 @@ export function classifyNamedPath(projectRoot: string, entry: NamedPath): NamedP
     }
     const abs = path.join(projectRoot, rel);
     // A path that escapes the root after joining is unresolvable, not absent.
-    if (!path.resolve(abs).startsWith(path.resolve(projectRoot))) {
+    if (!isContained(path.resolve(abs), path.resolve(projectRoot))) {
         return { ...entry, normalised: rel, outcome: 'unresolvable', reason: 'escapes the repository root' };
     }
     return { ...entry, normalised: rel, outcome: fs.existsSync(abs) ? 'present' : 'dangling' };

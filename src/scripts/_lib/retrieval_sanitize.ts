@@ -197,7 +197,10 @@ export function scan_invisible_findings(s: string): EncodingFinding[] {
             add(typeof classified === 'string' ? classified : 'hidden-instruction', cp);
             continue;
         }
-        if (_isStrippableControl(cp)) {
+        // CR is still stripped by the sanitizer, but CRLF output and progress
+        // bars carry it everywhere; reporting it trains readers to dismiss the
+        // channel that names a real C0/C1 smuggle.
+        if (cp !== 0x0d && _isStrippableControl(cp)) {
             add('control-char', cp);
             continue;
         }

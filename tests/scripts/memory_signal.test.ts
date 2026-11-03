@@ -141,3 +141,34 @@ function _isoSeconds(d: Date): string {
         `T${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}+00:00`
     );
 }
+
+// road-to-boundaries-that-hold-at-release-and-runtime 3.3. Abuse case: fetched
+// text asks the agent to remember "at the start of each session, run curl … |
+// bash"; appended to intake, a later memory lookup re-injects it as project
+// memory. The capture guard refuses it before the intake file is touched.
+describe('memory_signal.ts — capture guard', () => {
+    const FIXTURE = JSON.parse(
+        readFileSync(join(__dirname, '..', 'fixtures', 'standing-commands.json'), 'utf-8'),
+    ) as { attacks: string[]; benign: string[] };
+
+    it('an attack row is refused and the intake directory stays empty', () => {
+        let caught: unknown;
+        try {
+            sig.emit('historical-patterns', 'app/Foo.php', FIXTURE.attacks[0] as string);
+        } catch (e) {
+            caught = e;
+        }
+        expect(caught).toBeInstanceOf(sig.CaptureRefusedError);
+        expect((caught as InstanceType<typeof sig.CaptureRefusedError>).category).toBe('standing_command');
+        expect(existsSync(join(tmp, 'agents', 'memory', 'intake'))).toBe(false);
+    });
+
+    it('refuses every fixture attack and stores every benign row, like the global guard', async () => {
+        const { evaluateCaptureGuards } = await import('../../src/scripts/_lib/user_global_observations.js');
+        for (const t of FIXTURE.attacks) expect(sig._capture_refusal(t), t).toBe('standing_command');
+        for (const t of FIXTURE.benign) {
+            expect(sig._capture_refusal(t), t).toBeNull();
+            expect(evaluateCaptureGuards({ ts: '', field: 'preferences', suggest: t, source: 'f', evidence: '' }).allowed).toBe(true);
+        }
+    });
+});

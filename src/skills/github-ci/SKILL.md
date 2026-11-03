@@ -23,37 +23,16 @@ Use this skill when working with GitHub Actions workflows, CI pipeline configura
 
 ## Workflow overview
 
-### Quality pipeline (`quality-tests.yml`)
+Do not assume a pipeline shape — read `.github/workflows/` and tabulate, per
+workflow, its trigger (`on:`) and the environment or target it reaches:
 
-Triggered on: `pull_request` to `main`, `workflow_dispatch`
-
-Read `.github/workflows/` to discover the actual job matrix. Common patterns:
-
-- PHP version is **extracted from Dockerfile** (`ARG PHP_VERSION`), not hardcoded.
-- Static analysis may run on larger runners for memory.
-- Tests run in **parallel** with a matrix strategy per test suite.
-- Branch comparison for dead code and API docs.
-
-### Deployment workflows
-
-| Workflow | Trigger | Environment |
+| Workflow | Trigger | Environment / target |
 |---|---|---|
-| `deploy-review.yaml` | PR with `review-env` label | Review (ephemeral) |
-| `deploy-sta.yaml` | Push to `main` | Stage |
-| `deploy-pro.yaml` | Tag `release-X.Y.Z` or schedule (Mon 8AM) | Production |
-| `deploy.yml` | After "Static Code Analysis" succeeds on `main` | Envoyer trigger |
-| `module-deploy.yaml` | Reusable workflow (called by others) | Parameterized |
+| *(one row per file you read)* | | |
 
-### Other workflows
-
-| Workflow | Purpose |
-|---|---|
-| `pr-review-gate.yaml` | Points-based review system (see `code-review` skill) |
-| `destroy-review.yaml` | Cleanup ephemeral review environments |
-| `add-labels.yml` | Auto-label PRs |
-| `apply-pr-template.yaml` | Apply PR description template |
-| `validate-deployment-files.yaml` | Validate AWS deployment configs |
-| `template-db-dump.yaml` | Database dump utility |
+Note which jobs are **privileged** — they hold `id-token: write`,
+`contents: write`, or a secret other than `GITHUB_TOKEN` — because the security
+conventions below bind tighter there.
 
 ## Conventions
 
@@ -62,21 +41,28 @@ Read `.github/workflows/` to discover the actual job matrix. Common patterns:
 - Use **pinned action versions** with SHA hashes (not tags): `actions/checkout@<sha> # v6.0.2`
 - Use **concurrency groups** to prevent duplicate runs: `group: ${{ github.workflow }}-${{ github.ref }}`
 - Use **`fail-fast: false`** in matrix strategies for independent job execution.
-- Extract shared logic into **reusable workflows** (`module-deploy.yaml` pattern).
-- **Never interpolate attacker-controlled context into `run:`** — `${{ github.event.issue.title }}`, `${{ github.event.pull_request.body }}`, `${{ github.event.comment.body }}`, `${{ github.head_ref }}` and similar are expanded into the script text before the shell sees it, so a crafted title becomes a command. Pass the value through `env:` (`TITLE: ${{ github.event.issue.title }}`) and reference the quoted variable (`"$TITLE"`) in the script.
+- Extract shared logic into **reusable workflows** (`on: workflow_call`).
+- **Free text reaches a script only through `env:`.** A `${{ }}` reading a
+  free-text context — a `type: string` or untyped input, a release tag/name/body,
+  a PR title/body/head ref, `github.head_ref`, a commit message, a label name —
+  never sits inline in `run:` or a github-script `script:`; set it as a step
+  `env:` variable and read it as `"$VAR"`. Hold a value that later steps
+  re-interpolate (a resolved tag) to a fixed shape. Linter rule:
+  `template-injection`.
+- **Every `actions/checkout` states `persist-credentials`.** `false` by default;
+  `true` only where a later step pushes, with a comment naming that step. Linter
+  rule: `persist-credentials`.
+- **No Actions cache in a privileged job.** A job with `id-token: write`,
+  `contents: write` or a non-default secret does not restore a cache (`cache:`
+  on a `setup-*` action, or `actions/cache`) — a lower-privilege workflow can
+  write the entry it restores. Linter rule: `privileged-job-cache`.
 - A job with **`container:`** MUST run `git config --global --add safe.directory "$GITHUB_WORKSPACE"` immediately after `actions/checkout` — the checkout is owned by a different UID than the container user, so without it every git-backed step dies with `fatal: detected dubious ownership`.
 
-### Composer auth
+### Runtime version
 
-Every workflow that installs dependencies needs:
-1. `COMPOSER_AUTH` secret validation (check if set, validate JSON).
-2. Fallback handling if auth is missing or masked.
-
-### PHP version
-
-- **Never hardcode** the PHP version in workflows.
-- Always extract from Dockerfile: `awk -F= '/^ARG PHP_VERSION/ {print $2}' .docker/Dockerfile`
-- Pass via job outputs to dependent jobs.
+- **Never hardcode** the language runtime version in workflows.
+- Read it from the project's own source of truth (a Dockerfile `ARG`, `.nvmrc`,
+  `engines`, `.tool-versions`) and pass it via job outputs to dependent jobs.
 
 ### Runners
 
@@ -124,7 +110,7 @@ See `commands/fix/ci.md` for the full debugging workflow.
 ## Do NOT
 
 - Do NOT use unpinned action versions (e.g., `actions/checkout@v4`).
-- Do NOT write `${{ github.event.* }}` or `${{ github.head_ref }}` directly inside a `run:` block — route it through `env:` and quote the variable.
-- Do NOT hardcode PHP versions — always extract from Dockerfile.
+- Do NOT hardcode the runtime version — read it from the project's own source.
+- Do NOT interpolate free text into `run:` — pass it through `env:`.
 - Do NOT add new secrets without documenting them.
 - Do NOT change runner types without considering cost and architecture (ARM vs x86).

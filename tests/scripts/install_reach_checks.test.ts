@@ -19,6 +19,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import {
     checkInstructionPaths,
+    classifyNamedPath,
+    type NamedPath,
     checkOverrideSet,
     checkVersionAxis,
     collectOverrideSet,
@@ -325,5 +327,25 @@ describe('wiring — the shape cmd_doctor consumes', () => {
     it('every runner returns its own id', () => {
         const runners = reachRunners({ projectRoot: tree({}), resolvableVersion: null });
         for (const [id, run] of Object.entries(runners)) expect(run().id).toBe(id);
+    });
+});
+
+// road-to-boundaries-that-hold-at-release-and-runtime 1.3. A mid-path `..`
+// that lands in a sibling sharing the root as a string prefix escapes the
+// repository; it must read `unresolvable`, never `dangling`.
+describe('classifyNamedPath — containment by path segment', () => {
+    it('a/../../<root>-evil/x escapes the root', () => {
+        const root = tree({});
+        const evil = `${root}-evil`;
+        tmps.push(evil);
+        fs.mkdirSync(evil, { recursive: true });
+        const out = classifyNamedPath(root, { raw: `a/../../${path.basename(root)}-evil/x` } as NamedPath);
+        expect(out.outcome).toBe('unresolvable');
+    });
+
+    it('<root>/a and <root>/a/..cache stay inside', () => {
+        const root = tree({ 'a/x.md': '', 'a/..cache/y.md': '' });
+        expect(classifyNamedPath(root, { raw: 'a/x.md' } as NamedPath).outcome).toBe('present');
+        expect(classifyNamedPath(root, { raw: 'a/..cache/y.md' } as NamedPath).outcome).toBe('present');
     });
 });

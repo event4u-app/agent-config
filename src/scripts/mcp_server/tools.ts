@@ -620,9 +620,26 @@ async function _memorySignalHandler(
     const memorySignal = await import(
         '../../agent-src/templates/scripts/memory_signal.js'
     );
-    const record = await _withChdir(consumerRoot, () =>
-        memorySignal.emit(entryType, anchorPath, body),
-    );
+    let record: Record<string, unknown> | null;
+    try {
+        record = await _withChdir(consumerRoot, () =>
+            memorySignal.emit(entryType, anchorPath, body),
+        );
+    } catch (e) {
+        // A capture refusal is an answer, not a tool failure: the caller learns
+        // which category refused it and the intake file is untouched.
+        if (e instanceof memorySignal.CaptureRefusedError) {
+            return {
+                recorded: false,
+                refused: true,
+                category: e.category,
+                reason: e.message,
+                entry_type: entryType,
+                path: anchorPath,
+            };
+        }
+        throw e;
+    }
     if (record === null) {
         return {
             recorded: false,
