@@ -111,7 +111,7 @@ source-tag vocabulary into the skills that were meant to carry it.
 
 ## Phase 4 — Projection and gates
 
-- [ ] **4.1 Regenerate and run the touched gates.** `task sync` and `task generate-tools`, then the
+- [x] **4.1 Regenerate and run the touched gates.** `task sync` and `task generate-tools`, then the
       gates for every file changed above.
       verify: `bash src/scripts/condense.sh --changed` lists nothing; `./scripts-run src/scripts/check_references`, `./scripts-run src/scripts/check_rule_evidence_declaration`, `./scripts-run src/scripts/lint_legal_pack` and `./scripts-run src/scripts/check_source_size_budget` exit 0.
 
@@ -130,6 +130,16 @@ source-tag vocabulary into the skills that were meant to carry it.
 - Art. 50 line in `agents/settings/policies/media/disclosure.md` and the "fully synthetic"
   exemption check: needs the Official Journal text.
 - Shipping the media policies to consumers: council re-evaluation of the recorded disposition first.
+
+## Decisions
+
+| Decision | Alternatives | Reason | Revisit-if |
+|---|---|---|---|
+| A `SOURCE_URLS_PENDING` row whose rule is not in `SCOPE` is itself a finding | Ignore stale rows | Shrink-only needs a way to fail a row nobody removed | Scope becomes derived instead of listed |
+| A pending rule is flagged only when it gains URLs, not when it turns `own-analysis` | Flag both | The self-test fixture writes `own-analysis` for every rule not under test; flagging it would fail every case for the wrong reason | A pending rule is reclassified `own-analysis` in the real tree |
+| `source_urls` entries are quoted in `broken-access-control` | Bare YAML scalars | The frontmatter validator read the second bare URL as an object | Never — quoting is harmless |
+| The webhook row gains controls without a tolerance value; `last_checked` unchanged | Re-read a source and move the date | No network in this run; ADR-238 forbids numeric tolerances in the corpus | The corpus is next re-derived |
+| The Later items stay in this file when it archives | Move them to a new follow-up roadmap | Each needs network, spend, a frozen benchmark or a council verdict; none is executable offline. The shrink-only list in `check_rule_evidence_declaration.ts` keeps the main one visible | An owner opens a networked re-verification round |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-03 | reviewer: claude/host -->

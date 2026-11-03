@@ -56,6 +56,13 @@ Uses `/create-pr:description-only` to generate the PR content, then creates the 
   `./scripts-run src/scripts/check_secret_leak`. On a high-confidence hit, STOP —
   do not push; hand to `.augment/rules/secret-vcs-guard.md` (show, ask, offer the
   alternative, rotate-first if already in history). Pushing publishes the secret.
+- **Foreign repo — its AI-contribution policy rides in the same confirmation.** When the
+  target repo is not the user's (a fork PR, or an issue or comment on someone else's
+  repo), read its `AGENTS.md`, `CONTRIBUTING*` and `AI_POLICY*` before pushing, and quote
+  the AI-relevant lines inside the push confirmation below — no extra question. If they
+  forbid AI-authored contributions, do not post: hand the drafted title and body to the
+  user to submit themselves. Never add `Signed-off-by` (or any certification trailer) on
+  the user's behalf; that line is a personal attestation only the user can make.
 - If the branch has not been pushed yet, ask the user (in their language) whether to push.
 
 ### 1b. Freshness gate — MANDATORY before opening any PR

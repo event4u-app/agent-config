@@ -87,7 +87,8 @@ export const SCOPE: ReadonlyArray<{ rule: string; why: string }> = [
  * rules predate that obligation and their primary sources were not fetched when
  * it landed; listing them keeps the gate green without pretending they comply.
  * A listed rule that gains URLs fails until its row is removed, so the list can
- * only get shorter. Emptying it is road-to-floors-that-cite-or-route § Later.
+ * only get shorter. Emptying it needs each primary source fetched and read;
+ * only then does that rule's `verified_on` move.
  */
 export const SOURCE_URLS_PENDING: Readonly<Record<string, string>> = {
     'untrusted-input-defense': 'primary URL not yet fetched',
