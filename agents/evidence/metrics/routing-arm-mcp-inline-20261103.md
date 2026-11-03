@@ -5,7 +5,10 @@
 **Roadmap:** `road-to-routing-assurance-live-floors` 4.4, carried to
 `road-to-routing-assurance-live-floors-carried` 2.1.
 **Protocol:** `agents/evidence/preregistration/routing-inline-arm-protocol-20261103.md`,
-committed before the arm ran.
+committed before the arm ran (`c45936af3b`). The artefact's `protocol.sha256`
+(`fa3d8722…`) is that committed version's; the only later edit is the file's
+`evidence-type` marker (`preregistration` → `analysis`, the lint's vocabulary),
+so `git show c45936af3b:<path> | shasum -a 256` reproduces the recorded hash.
 **Rows:** `routing-arm-mcp-inline-20261103.json`; report
 `routing-arms-inline-report-20261103.json` (`routing_arms --report`).
 

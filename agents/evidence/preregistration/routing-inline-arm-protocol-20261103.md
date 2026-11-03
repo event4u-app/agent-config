@@ -1,4 +1,4 @@
-<!-- evidence-type: preregistration -->
+<!-- evidence-type: analysis -->
 
 # Routing — the inline-top-body MCP arm (4.4), protocol
 
