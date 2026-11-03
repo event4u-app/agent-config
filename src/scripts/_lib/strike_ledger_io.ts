@@ -10,6 +10,7 @@ import path from 'node:path';
 
 import { update_json_under_lock } from '../hooks/state_io.js';
 import {
+    PLATFORM,
     STRIKE_LEDGER_FILE,
     coerceLedger,
     observeRun,
@@ -47,7 +48,7 @@ export function observeStrike(
     if (!event.isEdit && run === null) return;
     const agent = strikeAgent(envelope);
     const rawPlatform = envelope['platform'];
-    const platform = typeof rawPlatform === 'string' && /^[a-z0-9_-]{1,32}$/i.test(rawPlatform) ? rawPlatform : 'unknown';
+    const platform = typeof rawPlatform === 'string' && PLATFORM.test(rawPlatform) ? rawPlatform : 'unknown';
     try {
         // Non-blocking: a held ledger lock skips this observation rather than
         // delaying the recorder. Shadow data may lose a sample; the hook may not wait.

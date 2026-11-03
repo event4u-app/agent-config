@@ -197,15 +197,12 @@ export function observeRun(
 
     let next: StrikeEntry;
     if (outcome === 'green') {
-        if (prev === undefined || prev.sig === null) {
-            next = { ...base, sig: null, streak: 0, verdict: 'FIXED', green_without_edit: false };
-        } else if (!edited) {
-            // Green with nothing changed since the red: the red may come back.
-            // Keep the red's signature and streak so a returning red reads FLAKY.
-            next = { ...base, sig: prev.sig, streak: prev.streak, verdict: 'FIXED', green_without_edit: true };
-        } else {
-            next = { ...base, sig: null, streak: 0, verdict: 'FIXED', green_without_edit: false };
-        }
+        // Green with nothing changed since a red: the red may come back, so its
+        // signature and streak stay and a returning red reads FLAKY.
+        const keep = prev !== undefined && prev.sig !== null && !edited;
+        next = keep
+            ? { ...base, sig: prev.sig, streak: prev.streak, verdict: 'FIXED', green_without_edit: true }
+            : { ...base, sig: null, streak: 0, verdict: 'FIXED', green_without_edit: false };
     } else {
         const sig = failureSignature(run);
         if (prev !== undefined && prev.green_without_edit && !edited && prev.sig === sig) {
@@ -261,7 +258,7 @@ export function pruneLedger(ledger: StrikeLedger, now: string, ttlDays = STRIKE_
 
 const HASH = /^[0-9a-f]{16}$/;
 const VERDICTS: ReadonlySet<string> = new Set(['NEW', 'SAME', 'FIXED', 'FLAKY']);
-const PLATFORM = /^[a-z0-9_-]{1,32}$/i;
+export const PLATFORM = /^[a-z0-9_-]{1,32}$/i;
 const validTime = (v: unknown): v is string =>
     typeof v === 'string' && v.length <= 40 && Number.isFinite(Date.parse(v));
 const count = (v: unknown): number | null =>
