@@ -32,17 +32,17 @@ as failures (`free_hand_shadow.ts:208`), and `servedMatches('llama-3.1','llama-3
 
 ## Phase 1 — The verdict reaches the ledger
 
-- [ ] **1.1 The printed verify command names the kind.** `src/scripts/ask_transport.ts`
+- [x] **1.1 The printed verify command names the kind.** `src/scripts/ask_transport.ts`
       (`:588-591`) appends `--hand-kind <kind>` when the ask was typed.
       verify: `npx vitest run tests/scripts/ask_transport_hand_kinds.test.ts` -> 0, with a new
       case asserting stderr contains `--hand-kind classify`.
-- [ ] **1.2 The flip reader joins by `work_id`.** `src/scripts/ai_council/kind_flip.ts`
+- [x] **1.2 The flip reader joins by `work_id`.** `src/scripts/ai_council/kind_flip.ts`
       `observationsFromAuditLines`: a verify-phase line without `hand_kind` inherits kind and
       billing from the ask line with the same `work_id`; the latest verdict per `work_id` wins;
       an ask with no later verdict stays `skipped` (the pre-registered claim text is unchanged).
       verify: `npx vitest run tests/scripts/ai_council/kind_flip.test.ts` -> 0, with a red-first
       case: 30 ask lines plus 30 head `pass` lines produce no revert.
-- [ ] **1.3 Production shadow rows are tagged and kept out of the flip stats.**
+- [x] **1.3 Production shadow rows are tagged and kept out of the flip stats.**
       `src/scripts/ai_council/free_hand_shadow.ts` rows gain `origin: 'production' | 'bench'`;
       `_runShadow` in `ask_transport.ts` passes `production`; shadow stats and the
       `SHADOW_CALL_CAP` count exclude `production` rows; rows without `origin` keep today's
@@ -100,6 +100,14 @@ as failures (`free_hand_shadow.ts:208`), and `servedMatches('llama-3.1','llama-3
   need each provider's published terms read and dated (network).
 - Jury family from the served id, κ and n_eff in every run report, panel size from measurement —
   needs real jury runs first.
+
+## Decisions
+
+| Decision | Alternatives | Reason | Revisit-if |
+|---|---|---|---|
+| 1.2 joins a `phase: verify` line to the ask line with the same `work_id`; a verify line whose own `hand_kind` or billing contradicts the ask is ignored, and one with no ask line is dropped | count verify lines as their own observations | a verdict is a property of the ask it checks; counting both made every verified flip revert itself | a head verdict is recorded under a different `work_id` than its ask |
+| 1.3 tags a shadow row `bench` when a head verify was injected and `production` otherwise | tag every `_runShadow` row `production` | the bench harness reaches the shadow through the same `askHand` path, so a blanket `production` tag would drop the only evidence the flip reads | a production caller injects a real head verify |
+| 1.3 a bench shadow caps on non-production rows; a production shadow still caps on every row | exclude production rows from every cap count | the step's exclusion is about the evidence budget; letting production shadows run uncapped would loosen an existing bound (E2 owns whether they run at all) | E2 is decided |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-03 | reviewer: claude/host -->

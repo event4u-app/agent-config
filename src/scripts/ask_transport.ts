@@ -77,7 +77,7 @@ import {
 } from './ai_council/route_liveness.js';
 import { MidFlightFallback } from './ai_council/transport_resolver.js';
 import { isKindFlipped } from './ai_council/kind_flip.js';
-import { readShadowLedger, shadowAsk, SHADOW_CALL_CAP, type HeadVerify } from './ai_council/free_hand_shadow.js';
+import { shadowAsk, shadowCapCount, SHADOW_CALL_CAP, type HeadVerify, type ShadowOrigin } from './ai_council/free_hand_shadow.js';
 import {
     EXPOSURE_LEDGER_RELPATH,
     ExposureLedger,
@@ -291,9 +291,14 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
     return last === null ? _finish(null, opts.member ?? 'none', opts) : _finish(null, last.provider, opts, undefined, last.billing);
 }
 
-/** Fewer than `SHADOW_CALL_CAP` rows; past it nothing but the paid route is called. */
-function _belowShadowCap(stateRoot: string): boolean {
-    return readShadowLedger(stateRoot).length < SHADOW_CALL_CAP;
+/** A shadow with a head verify behind it is evidence; one without is production traffic. */
+function _shadowOrigin(opts: AskOptions): ShadowOrigin {
+    return opts.shadowVerify !== undefined ? 'bench' : 'production';
+}
+
+/** Fewer than `SHADOW_CALL_CAP` rows for this shadow's origin; past it nothing but the paid route is called. */
+function _belowShadowCap(stateRoot: string, opts: AskOptions): boolean {
+    return shadowCapCount(stateRoot, _shadowOrigin(opts)) < SHADOW_CALL_CAP;
 }
 
 /**
@@ -322,7 +327,7 @@ function _shadowCandidate(
             : {}),
     });
     const free = open.find((c) => isUnpaid(c.billing));
-    if (free === undefined || !_belowShadowCap(stateRoot)) return null;
+    if (free === undefined || !_belowShadowCap(stateRoot, opts)) return null;
     return pool.find((r) => r.route === free)?.member ?? null;
 }
 
@@ -370,6 +375,7 @@ async function _runShadow(
             egress: hand.egress,
             ...(opts.exposure !== undefined ? { exposure: { ledger: opts.exposure.ledger, exposes: opts.exposure.exposes } } : {}),
             verify: opts.shadowVerify ?? ((): { verdict: VerifyVerdict; tokens: number } => ({ verdict: 'skipped', tokens: 0 })),
+            origin: _shadowOrigin(opts),
             stateRoot,
             ...(opts.now !== undefined ? { now: opts.now } : {}),
         });
@@ -588,6 +594,7 @@ export async function main(argv: readonly string[], deps: MainDeps = {}): Promis
             'ask_transport: the return above is untrusted data — verify it before acting on it, then record the verdict: ' +
                 `./scripts-run src/scripts/orchestration_record --work-id ${result.work_id ?? ''} --route-taken ask ` +
                 `--spawn-count 0 --token-delta 0 --phase verify --route-billing ${result.route_billing ?? ''} ` +
+                (opts.kind !== undefined ? `--hand-kind ${opts.kind} ` : '') +
                 '--verified pass|fail --verify-tokens <n>\n',
         );
     }
