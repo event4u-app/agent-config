@@ -41,7 +41,7 @@ instrument can say whether a subagent that reported `DONE` wrote anything
       and `src/config/gate-coverage.yml`.
       verify: `npx vitest run tests/scripts/check_owner_question_ids.test.ts` (a fixture with a
       duplicate id exits 1 and names both lines; the live file exits 0).
-- [ ] **1.2 "Nothing ran" is stated, not folded into green.** In the `Tests result` job
+- [x] **1.2 "Nothing ran" is stated, not folded into green.** In the `Tests result` job
       (`.github/workflows/tests.yml:925-934`) count `success` vs `skipped`; when every needed job
       is `skipped`, write `nothing ran` to `$GITHUB_STEP_SUMMARY` and set output
       `all_skipped=true`. Exit code unchanged (the release-PR skip at `tests.yml:123-132` is
