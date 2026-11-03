@@ -8,6 +8,7 @@ import { curlJsonPost, type JsonPost } from './api_transport.js';
 import { CouncilResponse, ExternalAIClient } from './clients.js';
 import type { ContentClass } from './content_ceiling.js';
 import { familyOf, servedMatches, type RouteBilling } from './free_route.js';
+import { catalogRouteId } from './free_route_catalog.js';
 import { policyExclusionReason, type PolicyExclusion } from './seat_policy.js';
 import { openAiStopClass } from './stop_class.js';
 
@@ -70,6 +71,8 @@ export class FreeRouteClient extends ExternalAIClient {
                     { role: 'system', content: system_prompt },
                     { role: 'user', content: user_prompt },
                 ],
+                // The aggregator forwards to many providers; this asks it to skip those that keep prompts.
+                ...(catalogRouteId(this.base_url) === 'openrouter' ? { provider: { data_collection: 'deny' } } : {}),
             }) ?? {}) as Record<string, unknown>;
         } catch (exc) {
             const msg = exc instanceof Error ? exc.message : String(exc);

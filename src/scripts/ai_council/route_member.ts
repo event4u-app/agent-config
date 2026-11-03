@@ -11,7 +11,8 @@ import { resolve_api_key } from './config.js';
 import { classifyContentClass, DEFAULT_SEAT_CEILING, type ContentClass } from './content_ceiling.js';
 import type { ExternalAIClient } from './clients.js';
 import { FreeRouteClient } from './free_route_client.js';
-import { readRouteRoster, ROUTE_CATALOG } from './free_route_catalog.js';
+import { catalogRouteId, readRouteRoster, ROUTE_CATALOG, routeIdentity } from './free_route_catalog.js';
+export { routeIdentity } from './free_route_catalog.js';
 import {
     parseRouteFields,
     resolveRouteTransport,
@@ -108,19 +109,6 @@ function firstPartyGate(baseUrl: string, model: string, stateRoot: string, now: 
 export function livenessRouteKey(member: ExternalAIClient): string {
     const baseUrl = (member as unknown as Record<string, unknown>)['base_url'];
     if (typeof baseUrl !== 'string' || baseUrl === '') return member.name;
-    const key = routeIdentity(baseUrl);
-    return ROUTE_CATALOG.find((r) => routeIdentity(r.base_url) === key)?.id ?? member.name;
+    return catalogRouteId(baseUrl) ?? member.name;
 }
 
-/**
- * Host and path, scheme dropped: an `http` or mixed-case spelling of a
- * catalogued route is the same route to the gate, so it cannot step around it.
- */
-export function routeIdentity(url: string): string {
-    try {
-        const u = new URL(url);
-        return `${u.host}${u.pathname.replace(/\/+$/, '')}`;
-    } catch {
-        return url.trim().toLowerCase().replace(/\/+$/, '');
-    }
-}

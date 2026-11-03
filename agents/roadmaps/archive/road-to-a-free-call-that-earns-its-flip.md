@@ -78,14 +78,14 @@ as failures (`free_hand_shadow.ts:208`), and `servedMatches('llama-3.1','llama-3
 
 ## Phase 3 — The wire and the ledger
 
-- [ ] **3.1 The aggregator route asks its providers not to keep prompts.**
+- [x] **3.1 The aggregator route asks its providers not to keep prompts.**
       `src/scripts/ai_council/free_route_client.ts` (`:66`): when `routeIdentity(base_url)` is the
       catalogued `openrouter` row (`free_route_catalog.ts`), the request body carries
       `provider: { data_collection: 'deny' }`.
       verify: `npx vitest run tests/scripts/ai_council/free_route_member.test.ts` -> 0 with a case
       that captures the body through the injected `post` seam and asserts the field, plus a
       non-catalogued route whose body has no `provider` key.
-- [ ] **3.2 The exposure ledger writes atomically.** `src/scripts/ai_council/exposure_ledger.ts`
+- [x] **3.2 The exposure ledger writes atomically.** `src/scripts/ai_council/exposure_ledger.ts`
       (`:89`) writes a temp file and renames it, like `kind_flip.ts` `_write`.
       verify: `grep -n "renameSync" src/scripts/ai_council/exposure_ledger.ts` -> one hit, and
       `npx vitest run tests/scripts/ask_transport.test.ts` -> 0.
@@ -108,6 +108,7 @@ as failures (`free_hand_shadow.ts:208`), and `servedMatches('llama-3.1','llama-3
 | 1.2 joins a `phase: verify` line to the ask line with the same `work_id`; a verify line whose own `hand_kind` or billing contradicts the ask is ignored, and one with no ask line is dropped | count verify lines as their own observations | a verdict is a property of the ask it checks; counting both made every verified flip revert itself | a head verdict is recorded under a different `work_id` than its ask |
 | 1.3 tags a shadow row `bench` when a head verify was injected and `production` otherwise | tag every `_runShadow` row `production` | the bench harness reaches the shadow through the same `askHand` path, so a blanket `production` tag would drop the only evidence the flip reads | a production caller injects a real head verify |
 | 2.3 the shared key is the catalog row whose `routeIdentity(base_url)` equals the member's, via a new `livenessRouteKey` in `route_member.ts` | key by `routeIdentity` host+path | discovery writes the roster under the catalog row id (`readRouteRoster(root, row.id)`), so only that id makes a retirement see its rediscovery | discovery starts keying rosters by something else |
+| 3.1 `routeIdentity` moves to `free_route_catalog.ts` with a new `catalogRouteId`; `route_member.ts` re-exports it | import `routeIdentity` from `route_member.ts` into the client | `route_member.ts` imports `FreeRouteClient`, so importing back would make an import cycle | never |
 | 1.3 a bench shadow caps on non-production rows; a production shadow still caps on every row | exclude production rows from every cap count | the step's exclusion is about the evidence budget; letting production shadows run uncapped would loosen an existing bound (E2 owns whether they run at all) | E2 is decided |
 
 ## Risk Register
@@ -121,10 +122,10 @@ as failures (`free_hand_shadow.ts:208`), and `servedMatches('llama-3.1','llama-3
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — 30 free asks with 30 head `pass` lines do not revert the kind.
-- [ ] AC-2 — No production shadow row moves a kind's free failure rate.
-- [ ] AC-3 — A truncated typed return and a size-substituted served id are never a pass.
-- [ ] AC-4 — A `model_not_found` retires a model on its catalog key, and rediscovery revives it.
+- [x] AC-1 — 30 free asks with 30 head `pass` lines do not revert the kind.
+- [x] AC-2 — No production shadow row moves a kind's free failure rate.
+- [x] AC-3 — A truncated typed return and a size-substituted served id are never a pass.
+- [x] AC-4 — A `model_not_found` retires a model on its catalog key, and rediscovery revives it.
 
 ## Non-goals
 
