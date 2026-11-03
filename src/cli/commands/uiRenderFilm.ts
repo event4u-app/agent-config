@@ -77,8 +77,10 @@ export interface FilmManifest {
     format: { width: number; height: number; fps: number; duration: number } | null;
     contact_sheet: string | null;
     audio_qa: Record<string, unknown> | null;
+    /** `video-qa.sh` over the encoded file: cuts, camera motion, luma jumps, freezes, blur/block. */
+    video_qa: Record<string, unknown> | null;
     encode: { path: string; sha256: string } | null;
-    checks: Record<'seek' | 'determinism' | 'dead_time' | 'encode' | 'format' | 'flash' | 'contact_sheet' | 'audio_qa', CheckState>;
+    checks: Record<'seek' | 'determinism' | 'dead_time' | 'encode' | 'format' | 'flash' | 'contact_sheet' | 'audio_qa' | 'video_qa', CheckState>;
     findings: FilmFinding[];
     verification: 'verified' | 'static-only' | 'unassessed';
     goal: 'unassessed';
@@ -350,6 +352,7 @@ function probe(file: string): { width: number; height: number; fps: number; dura
 }
 
 const AUDIO_QA = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'scripts', 'media', 'lib', 'audio-qa.sh');
+const VIDEO_QA = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'scripts', 'media', 'lib', 'video-qa.sh');
 
 export async function runFilmRender(browser: Browser, opts: FilmOptions): Promise<FilmManifest> {
     const blocked: string[] = [];
@@ -359,11 +362,11 @@ export async function runFilmRender(browser: Browser, opts: FilmOptions): Promis
         schema: 1, profile: 'film', generated_at: new Date().toISOString(), target: opts.target,
         form: 'none', meta: null, frames: [], distinct_frames: 0, dead_time: [],
         determinism: { deterministic: null, first_diverging_frame: null, scope: 'this machine' },
-        network: { blocked }, flash: null, format: null, contact_sheet: null, audio_qa: null, encode: null,
+        network: { blocked }, flash: null, format: null, contact_sheet: null, audio_qa: null, video_qa: null, encode: null,
         checks: {
             seek: 'skipped: not reached', determinism: 'skipped: not reached', dead_time: 'skipped: not reached',
             encode: 'skipped: no --out', format: 'skipped: no --out', flash: 'skipped: not reached',
-            contact_sheet: 'skipped: not reached', audio_qa: 'skipped: no --audio',
+            contact_sheet: 'skipped: not reached', audio_qa: 'skipped: no --audio', video_qa: 'skipped: no --out',
         },
         findings, verification: 'unassessed', goal: 'unassessed',
     };
@@ -436,6 +439,7 @@ export async function runFilmRender(browser: Browser, opts: FilmOptions): Promis
             m.checks.contact_sheet = 'skipped: ffmpeg not on PATH';
             if (opts.out !== undefined) m.checks.encode = 'skipped: ffmpeg not on PATH';
             if (opts.out !== undefined) m.checks.format = 'skipped: ffmpeg not on PATH';
+            if (opts.out !== undefined) m.checks.video_qa = 'skipped: ffmpeg not on PATH';
             if (opts.audio !== undefined) m.checks.audio_qa = 'skipped: ffmpeg not on PATH';
             m.degradation_reason = 'ffmpeg absent — frames captured and hashed; flash floor, encode and format not assessed';
             m.verification = 'static-only';
@@ -498,13 +502,19 @@ export async function runFilmRender(browser: Browser, opts: FilmOptions): Promis
                     m.checks.format = 'ran';
                     findings.push(...formatFindings(meta, probed));
                 }
+                // Recorded as a reading, not turned into findings: the floor measures, the caller judges.
+                const vqa = spawnSync('bash', [VIDEO_QA, outFile], { encoding: 'utf-8' });
+                if (vqa.status === 0) {
+                    m.video_qa = JSON.parse(vqa.stdout) as Record<string, unknown>;
+                    m.checks.video_qa = 'ran';
+                } else m.checks.video_qa = `skipped: video-qa exit ${String(vqa.status)}`;
             }
         }
 
         // `verified` needs every check that applies to have run, and an encode
         // whose recorded digest is the file on disk.
         const pending = Object.entries(m.checks).filter(([k, v]) => v !== 'ran' && !(k === 'audio_qa' && opts.audio === undefined)
-            && !((k === 'encode' || k === 'format') && opts.out === undefined));
+            && !((k === 'encode' || k === 'format' || k === 'video_qa') && opts.out === undefined));
         const encodedMatches = m.encode === null
             || sha(fs.readFileSync(path.resolve(opts.projectRoot, m.encode.path))) === m.encode.sha256;
         m.verification = pending.length === 0 && encodedMatches ? 'verified' : 'static-only';

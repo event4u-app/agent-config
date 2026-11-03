@@ -378,6 +378,50 @@
       "twin": "assets/dark-mark-on-dark.clean.svg",
       "twin_kind": "one-edit",
       "note": "A dark-violet mark on the dark capture falls below 3:1 across most of its painted pixels; the twin is the light variant. Threshold pre-registered as low_contrast_share > 0.5 \u2014 half the mark, never a few anti-aliased edge pixels. Step 4.2."
+    },
+    {
+      "id": "mark-live-text",
+      "asset_class": "mark",
+      "delivery": "inline",
+      "layer": "static",
+      "rule": "mark/live-text",
+      "file": "assets/mark-live-text.svg",
+      "twin": "assets/mark-live-text.clean.svg",
+      "twin_kind": "one-edit",
+      "note": "A master mark carrying its name as a live text element; the twin outlines it as a path. Pre-registered in internal/bench/corpora/svg-mark-PREREG.md (road-to-a-mark-that-survives-16px step 0.2); read only under lint_svg_asset --class mark."
+    },
+    {
+      "id": "mark-near-miss-angle",
+      "asset_class": "mark",
+      "delivery": "inline",
+      "layer": "static",
+      "rule": "mark/near-miss-angle",
+      "file": "assets/mark-near-miss-angle.svg",
+      "twin": "assets/mark-near-miss-angle.clean.svg",
+      "twin_kind": "one-edit",
+      "note": "A 280-unit bar 1.23 degrees off the horizontal on a 480 canvas; the twin levels the endpoint. Pre-registered in internal/bench/corpora/svg-mark-PREREG.md (road-to-a-mark-that-survives-16px step 0.2); read only under lint_svg_asset --class mark."
+    },
+    {
+      "id": "mark-tiny-detail",
+      "asset_class": "mark",
+      "delivery": "inline",
+      "layer": "static",
+      "rule": "mark/tiny-detail",
+      "file": "assets/mark-tiny-detail.svg",
+      "twin": "assets/mark-tiny-detail.clean.svg",
+      "twin_kind": "one-edit",
+      "note": "A 6-unit dot on a 480 canvas, under the 10-unit bound (1/48 of the viewBox); the twin grows it to 24 units. Pre-registered in internal/bench/corpora/svg-mark-PREREG.md (road-to-a-mark-that-survives-16px step 0.2); read only under lint_svg_asset --class mark."
+    },
+    {
+      "id": "mark-colour-count",
+      "asset_class": "mark",
+      "delivery": "inline",
+      "layer": "static",
+      "rule": "mark/colour-count",
+      "file": "assets/mark-colour-count.svg",
+      "twin": "assets/mark-colour-count.clean.svg",
+      "twin_kind": "one-edit",
+      "note": "Six distinct solid paints; the twin collapses them onto three. Report-only: no colour-count threshold was measured, so the reading never changes the exit code. Pre-registered in internal/bench/corpora/svg-mark-PREREG.md (road-to-a-mark-that-survives-16px step 0.2); read only under lint_svg_asset --class mark."
     }
   ],
   "controls": [
@@ -416,6 +460,33 @@
         "geometry/near-white-hole"
       ],
       "note": "The same shape as the near-white-hole row, registered against a source that shows WHITE PAINT in the middle. The owner chose that colour, so the rule must stay silent \u2014 the measured false positive this control exists for fired six times on exactly this shape."
+    },
+    {
+      "id": "mark-one-colour",
+      "file": "assets/mark-one-colour.svg",
+      "must_not_report": [
+        "mark/live-text",
+        "mark/near-miss-angle",
+        "mark/tiny-detail",
+        "mark/colour-count"
+      ],
+      "note": "An intentional one-colour mark. No mark reading may report it (Risk 1 of road-to-a-mark-that-survives-16px)."
+    },
+    {
+      "id": "mark-optical-overshoot",
+      "file": "assets/mark-optical-overshoot.svg",
+      "must_not_report": [
+        "mark/near-miss-angle"
+      ],
+      "note": "A deliberate 0.5 degree optical overshoot declared with data-optical=\"overshoot\" on the element. Inside the near-miss window by construction; the declaration is the discriminator, because geometry cannot tell an intended overshoot from a slip."
+    },
+    {
+      "id": "mark-evenodd-hole",
+      "file": "assets/mark-evenodd-hole.svg",
+      "must_not_report": [
+        "mark/tiny-detail"
+      ],
+      "note": "One evenodd path whose second subpath is a 120-unit counter. The subpath walk must read the hole at its own size."
     }
   ],
   "surgical": [

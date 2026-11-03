@@ -478,3 +478,149 @@ export function pathDataError(d: string): string | null {
     }
     return null;
 }
+
+export interface Segment {
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+}
+
+export interface PathWalk {
+    /** Every straight edge — `L`, `H`, `V`, an implicit lineto after `M`, and the closing `Z`. */
+    segments: Segment[];
+    /**
+     * One box per subpath that draws something. Same conservative bound as
+     * `pathExtent`: control points are included, arcs read their true extremes.
+     */
+    subpaths: Box[];
+}
+
+/**
+ * Straight edges and per-subpath boxes of one `d`, relative commands walked.
+ *
+ * `pathExtent` answers "how big is the whole path"; the mark readings need the
+ * two things it folds away — which edges are straight (an angle is only an
+ * angle on a straight edge), and how big each subpath is on its own (a speck
+ * inside a large path is still a speck). Returns null wherever `pathExtent`
+ * would, so the two never disagree about whether a path is readable.
+ */
+export function pathWalk(d: string): PathWalk | null {
+    const tokens = tokenisePath(d);
+    if (!tokens) return null;
+    const argCount: Record<string, number> = { m: 2, l: 2, t: 2, h: 1, v: 1, c: 6, s: 4, q: 4, a: 7, z: 0 };
+    const segments: Segment[] = [];
+    const subpaths: Box[] = [];
+    let box: Box | null = null;
+    let drew = false;
+    const see = (x: number, y: number): void => {
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+        if (!box) box = { minX: x, minY: y, maxX: x, maxY: y };
+        box.minX = Math.min(box.minX, x);
+        box.maxX = Math.max(box.maxX, x);
+        box.minY = Math.min(box.minY, y);
+        box.maxY = Math.max(box.maxY, y);
+    };
+    const closeSubpath = (): void => {
+        if (box && drew) subpaths.push(box);
+        box = null;
+        drew = false;
+    };
+    const line = (x1: number, y1: number, x2: number, y2: number): void => {
+        if (x1 !== x2 || y1 !== y2) segments.push({ x1, y1, x2, y2 });
+    };
+    let cx = 0;
+    let cy = 0;
+    let sx = 0;
+    let sy = 0;
+    let i = 0;
+    let cmd = '';
+    let rel = false;
+    while (i < tokens.length) {
+        const tok = tokens[i] as string;
+        if (/^[a-zA-Z]$/.test(tok)) {
+            cmd = tok.toLowerCase();
+            rel = tok === tok.toLowerCase();
+            i += 1;
+            if (cmd === 'z') {
+                line(cx, cy, sx, sy);
+                cx = sx;
+                cy = sy;
+                continue;
+            }
+            if (!(cmd in argCount)) return null;
+        } else if (cmd === '' || cmd === 'z') {
+            return null;
+        }
+        const need = argCount[cmd] as number;
+        const args: number[] = [];
+        while (args.length < need && i < tokens.length && !/^[a-zA-Z]$/.test(tokens[i] as string)) {
+            args.push(Number(tokens[i]));
+            i += 1;
+        }
+        if (args.length < need) return null;
+        const px = cx;
+        const py = cy;
+        switch (cmd) {
+            case 'm': {
+                closeSubpath();
+                cx = rel ? cx + (args[0] as number) : (args[0] as number);
+                cy = rel ? cy + (args[1] as number) : (args[1] as number);
+                sx = cx;
+                sy = cy;
+                see(cx, cy);
+                // A repeated `m` argument group is an implicit lineto.
+                cmd = 'l';
+                continue;
+            }
+            case 'l':
+            case 'h':
+            case 'v': {
+                if (cmd === 'h') cx = rel ? cx + (args[0] as number) : (args[0] as number);
+                else if (cmd === 'v') cy = rel ? cy + (args[0] as number) : (args[0] as number);
+                else {
+                    cx = rel ? cx + (args[0] as number) : (args[0] as number);
+                    cy = rel ? cy + (args[1] as number) : (args[1] as number);
+                }
+                line(px, py, cx, cy);
+                break;
+            }
+            case 'a': {
+                const ex = rel ? cx + (args[5] as number) : (args[5] as number);
+                const ey = rel ? cy + (args[6] as number) : (args[6] as number);
+                for (const [ax, ay] of arcExtremes(
+                    cx,
+                    cy,
+                    ex,
+                    ey,
+                    args[0] as number,
+                    args[1] as number,
+                    args[2] as number,
+                    (args[3] as number) !== 0,
+                    (args[4] as number) !== 0,
+                )) {
+                    see(ax, ay);
+                }
+                cx = ex;
+                cy = ey;
+                break;
+            }
+            default: {
+                for (let k = 0; k + 1 < args.length; k += 2) {
+                    const qx = rel ? px + (args[k] as number) : (args[k] as number);
+                    const qy = rel ? py + (args[k + 1] as number) : (args[k + 1] as number);
+                    see(qx, qy);
+                    if (k + 2 >= args.length) {
+                        cx = qx;
+                        cy = qy;
+                    }
+                }
+                break;
+            }
+        }
+        drew = true;
+        see(cx, cy);
+    }
+    closeSubpath();
+    return { segments, subpaths };
+}

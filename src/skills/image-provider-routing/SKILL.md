@@ -74,6 +74,9 @@ the one case that needs one — a glyph the set does not have.
    only until a smoke trace is captured per `provider-lifecycle-discipline`."
 3. **Fallback** — if the primary adapter is unavailable or the smoke trace is
    missing, name the next best provider and what changes.
+4. **Provenance surface** — whether the chosen provider writes native provenance
+   (C2PA or an equivalent) or the delivery needs the `.provenance.json` sidecar
+   fallback, per the media [transparency policy](../../../agents/settings/policies/media/transparency.md).
 
 ## Gotcha
 
@@ -108,3 +111,4 @@ photoreal jobs go to Flux.
 - [`provider-lifecycle-discipline`](../../rules/provider-lifecycle-discipline.md) — read lifecycle tier before any run.
 - `node_modules/@event4u/agent-config/src/scripts/ai-image/adapters/` — the four adapter files and their header comments.
 - [`media-governance-routing`](../../rules/media-governance-routing.md) — rights / likeness policies before generation.
+- [Media transparency policy](../../../agents/settings/policies/media/transparency.md) — the provenance each provider's output must carry, and the sidecar fallback when it carries none.

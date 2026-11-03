@@ -1,17 +1,21 @@
 /**
  * media_anchor.ts — the anchor grammar for a statement taken from a video:
- * `S1@01:05` (source, timestamp) or `S1@01:05 #3` (plus the contact-sheet tile
- * that shows it). Past an hour the form is `S1@1:02:03`; a minute or second
- * field past 59 is not a timestamp and is refused.
+ * `S1@01:05` (source, timestamp), `S1@01:05 #3` (plus the contact-sheet tile
+ * that shows it) or `S1@01:05 f87` (plus the frame's decode index, from a
+ * forensic read's frames.json). A tile and a frame index never appear together:
+ * a tile number is a position on one sheet, a frame index a position in the
+ * source. Past an hour the form is `S1@1:02:03`; a minute or second field past
+ * 59 is not a timestamp and is refused.
  */
 
 export interface MediaAnchor {
     source: number;
     seconds: number;
     tile: number | null;
+    frame: number | null;
 }
 
-const ANCHOR = /^S([1-9]\d*)@(?:(\d+):)?([0-5]\d):([0-5]\d)(?: #([1-9]\d*))?$/;
+const ANCHOR = /^S([1-9]\d*)@(?:(\d+):)?([0-5]\d):([0-5]\d)(?: #([1-9]\d*)| f(0|[1-9]\d*))?$/;
 
 export function parseMediaAnchor(text: string): MediaAnchor | null {
     const m = ANCHOR.exec(text);
@@ -21,6 +25,7 @@ export function parseMediaAnchor(text: string): MediaAnchor | null {
         source: Number(m[1]),
         seconds: hours * 3600 + Number(m[3]) * 60 + Number(m[4]),
         tile: m[5] === undefined ? null : Number(m[5]),
+        frame: m[6] === undefined ? null : Number(m[6]),
     };
 }
 

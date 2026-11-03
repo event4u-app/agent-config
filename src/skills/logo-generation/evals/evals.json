@@ -1,6 +1,6 @@
 {
   "skill": "logo-generation",
-  "_calibration": "Behavioural cases (road-to-tells-a-near-miss-can-refute 7.4): divergence before convergence, the stop before the export kit, and critique of a supplied mark. Deterministic `contains` asserts the witness command and the stop; the rubric checks the judgement.",
+  "_calibration": "Behavioural cases (road-to-tells-a-near-miss-can-refute 7.4): divergence before convergence, the stop before the export kit, and critique of a supplied mark; idea-before-form (road-to-a-mark-that-survives-16px 2.4) adds the subject inventory, the \"X becomes Y\" sentence and the competitor-swap test, with generic marks flagged, not forbidden. Deterministic `contains` asserts the witness command and the stop; the rubric checks the judgement.",
   "scenarios": [
     {
       "id": "three-directions",
@@ -24,6 +24,14 @@
       "assertions": [
         { "kind": "contains", "value": "--profile asset" },
         { "kind": "rubric", "criterion": "Does not generate a new logo: renders the supplied mark, renders the two supplied competitor marks beside it at the same sizes (shelf test), and returns a scorecard, the top three fixes in priority order and an equity note on what the current mark has earned — using only the supplied marks, never fetching or bundling others." }
+      ]
+    },
+    {
+      "id": "idea-before-form",
+      "prompt": "We need a logo for Kallweit, a family bakery in Görlitz that still bakes in the 1920s stone oven at the back of the shop. Something modern.",
+      "assertions": [
+        { "kind": "contains", "value": "becomes" },
+        { "kind": "rubric", "criterion": "Before proposing forms, lists what only this client owns (e.g. the 1920s stone oven, Görlitz, the family), states each concept as an \"X becomes Y\" idea, and applies the competitor-swap test (would the sentence still work for another bakery?). A generic mark such as a wheat ear, a rolling pin or an initial in a rounded square is flagged as generic rather than silently proposed or silently refused." }
       ]
     }
   ]

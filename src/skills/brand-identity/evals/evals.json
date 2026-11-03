@@ -1,0 +1,40 @@
+{
+  "skill": "brand-identity",
+  "_calibration": "Behavioural cases (road-to-a-mark-that-survives-16px 2.1): a confirmed strategy yields the constraint set and stops at the human confirmation (step 7); a draft strategy is refused (step 1); a keep-logo brief leaves the existing mark untouched (step 4); a CSS colour bug is a near miss that must not fire the skill. Deterministic `contains` / `not_contains` pin the shape; the rubric checks the judgement. Uncalibrated: no judge is pinned yet, so every rubric reads pass:null until one is.",
+  "scenarios": [
+    {
+      "id": "confirmed-strategy-stops-at-confirmation",
+      "prompt": "Our brand strategy is confirmed: archetype Caregiver, voice warm and plain-spoken, positioning 'the pharmacy that remembers you', sector community health in small towns. Derive the identity constraint set.",
+      "assertions": [
+        { "kind": "contains", "value": "evidence_gap" },
+        { "kind": "contains", "value": "brand-to-tokens" },
+        { "kind": "rubric", "criterion": "Returns a colour story (roles with direction), a type story as a pairing filter plus heading/body class labels (not concrete type tokens), a logo direction that names the vector requirement, an imagery direction, and the corpus confidence and evidence_gap — then STOPS and asks the user to confirm the constraint set before any downstream step (token emission, logo or asset generation) runs. It does not produce tokens.json, a mark or an asset itself." }
+      ]
+    },
+    {
+      "id": "draft-strategy-refused",
+      "prompt": "We are still deciding between a Rebel and an Explorer archetype for our outdoor gear shop and the positioning is a first draft. Can you already define the colour story and logo direction?",
+      "assertions": [
+        { "kind": "contains", "value": "brand-strategy" },
+        { "kind": "rubric", "criterion": "Refuses to derive the identity constraint set while the strategy is a draft (two candidate archetypes, draft positioning), says why, and routes the user to settle the strategy first (brand-strategy) instead of picking an archetype on their behalf." }
+      ]
+    },
+    {
+      "id": "keep-logo-leaves-asset-unchanged",
+      "prompt": "Strategy is confirmed: archetype Sage, voice precise and calm, positioning 'independent research you can cite', sector academic publishing. We are keeping our existing logo (assets/logo.svg) exactly as it is. Define the rest of the identity.",
+      "assertions": [
+        { "kind": "contains", "value": "keep" },
+        { "kind": "rubric", "criterion": "Records the logo direction as keep — the existing assets/logo.svg named and left unchanged — and proposes no new mark style, form language or redesign of it; the colour, type and imagery directions are derived as usual and are made to work with the kept mark. The constraint set still stops at the human confirmation step." }
+      ]
+    },
+    {
+      "id": "css-colour-bug-does-not-fire",
+      "_why": "Near miss on the trigger surface: the words colour and brand appear, but the task is a CSS defect, not an identity definition. A skill that fires here would answer a bug report with a colour story.",
+      "prompt": "Our primary button shows #1d4ed8 in Chrome but a slightly different blue in Safari. The brand colour is defined as a CSS custom property in tokens.css. Why does it render differently?",
+      "assertions": [
+        { "kind": "not_contains", "value": "evidence_gap" },
+        { "kind": "rubric", "criterion": "Treats the request as a rendering / colour-management bug (e.g. colour profile or display-P3 vs sRGB handling, the property's value or fallback) and does not run the brand-identity procedure: no corpus grounding, no colour story, no logo or imagery direction." }
+      ]
+    }
+  ]
+}

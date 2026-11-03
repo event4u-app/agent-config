@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- PLANTED mark/colour-count (report-only): six distinct solid paints on one mark. Reported, never
+     gated - no colour-count threshold was ever measured. The twin collapses three of the six paints
+     onto the three that remain, in one contiguous edit. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" role="img">
+  <title>Colour-count mark</title>
+  <rect x="40" y="40" width="400" height="400" rx="80" fill="#1d4ed8"/>
+  <circle cx="240" cy="240" r="140" fill="#f8fafc"/>
+  <circle cx="240" cy="240" r="60" fill="#0f172a"/>
+  <rect x="100" y="380" width="80" height="40" fill="#f59e0b"/>
+  <rect x="200" y="380" width="80" height="40" fill="#10b981"/>
+  <rect x="300" y="380" width="80" height="40" fill="#ef4444"/>
+</svg>

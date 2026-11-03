@@ -405,26 +405,34 @@ green artifacts are never auto-deleted.
    ffmpeg -loglevel error -y -i <project>/cut.mp4 -i <song-file> \
      -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -shortest <project>/final.mp4
    ```
-4. **Mandatory AI-generation disclosure (non-removable).** Embed the
-   disclosure metadata into `final.mp4` per
-   [`disclosure`](../../../agents/settings/policies/media/disclosure.md)
-   and, where the container supports it, a provenance tag per
-   [`transparency`](../../../agents/settings/policies/media/transparency.md).
-   The run **cannot complete** without the disclosure — it is not a flag.
-   Mechanically:
+4. **Finish — every provenance carrier, then the disclosure state.** Run
+   the finish step on `final.mp4` per
+   [`transparency`](../../../agents/settings/policies/media/transparency.md)
+   and report the disclosure state per
+   [`disclosure`](../../../agents/settings/policies/media/disclosure.md).
+   The run **cannot complete** without it — it is not a flag. Mechanically:
 
    ```bash
    jq -n --arg p "<project>/final.mp4" --arg prov "<video-provider>" \
      --arg m "<model>" --arg h "<sha256-of-REDACTED-prompt>" \
-     '{artifact_path:$p, provider:$prov, model:$m, prompt_sha256:$h}' \
-     | scripts/ai-video/lib/embed-provenance.sh embed
+     '{artifact_path:$p, provider:$prov, model:$m, prompt_sha256:$h,
+       assertion:"ai_generated"}' \
+     | scripts/ai-video/lib/embed-provenance.sh finish
    ```
 
-   writes the always-on sidecar `final.mp4.provenance.json`, tags the
-   container metadata (ffmpeg stream copy), and embeds a real C2PA
-   manifest when the operator has `c2patool` + signing configured —
-   sidecar-only otherwise (reported, never silent). The report cites
-   the emitted `provenance_path` + `c2pa` surface.
+   `finish` runs the carriers in a fixed order and reports each one:
+   `visible` (reserved — `not-applied (rule pending)`), `embedded`
+   (container `comment` + `description`, wording per the assertion),
+   `sidecar` (`final.mp4.provenance.json` with the sha256 of the final
+   bytes), and C2PA last when the operator has `c2patool` + signing
+   configured (`sidecar-only` otherwise — reported, never silent).
+   Embedded tags, sidecar and C2PA are **removable**; none of them is the
+   non-removable disclosure. Where `disclosure.md` requires a
+   non-removable disclosure (real person, public figure, named style),
+   the report states that obligation as **open** — never as met — until
+   the visible burn-in rule lands. Run `finish` again after any re-cut
+   or re-mux of `final.mp4`: changed bytes invalidate the sidecar hash
+   and the signature.
 
 ### 10. Report
 
@@ -434,8 +442,12 @@ project slug, final MP4 path, song length vs. cut length, probe
 `method`, scenes rendered, scenes skipped, script mode (`brief` | `auto`),
 subject mode (`character` | `style`), provider + lifecycle tier,
 **media-governance gate result** (pass / refused-and-surfaced — the audit
-record), **reconciliation action** taken (Step 9.3), disclosure
-confirmed, actual cost (commit) or summed modeled `cost_estimate`
+record), **reconciliation action** taken (Step 9.3), the **finish
+carriers** from Step 9.4 (each carrier's status, the `artifact_sha256`,
+the `provenance_path`, and — where `disclosure.md` requires one — the
+non-removable disclosure stated as open while `visible` is
+`not-applied (rule pending)`), the note that an external re-encode loses
+the embedded carriers and the C2PA signature, actual cost (commit) or summed modeled `cost_estimate`
 labeled *modeled* (preview). No commit. No push.
 
 ## Rules
@@ -448,8 +460,9 @@ labeled *modeled* (preview). No commit. No push.
   (`AIV_DRYRUN=true`); its costs are modeled, never quotes. The report
   always opens with the resolved mode line.
 - **Media governance is a hard gate.** Input likeness / public-figure /
-  voice checks block before render; the output MP4 always carries a
-  non-removable AI-generation disclosure.
+  voice checks block before render; the output MP4 always runs the
+  finish step (Step 9.4), and a required non-removable disclosure is
+  reported open until the visible carrier exists — never as met.
 - **The song is the master audio track.** Provider-native audio is
   dropped at mux unless `--keep-native-audio` or a lip-sync scene needs
   it (surface the conflict, never silently dub).
@@ -477,7 +490,7 @@ labeled *modeled* (preview). No commit. No push.
   input gate (Step 2).
 - [`disclosure`](../../../agents/settings/policies/media/disclosure.md) ·
   [`transparency`](../../../agents/settings/policies/media/transparency.md) —
-  mandatory output disclosure (Step 9.4).
+  output carriers and disclosure state (Step 9.4).
 
 ## See also
 

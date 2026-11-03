@@ -21,8 +21,10 @@ import type { GeometryComparison } from './uiRenderAssetCompare.js';
 // Declared constants — every one of them pre-registered in step 0.3
 // ---------------------------------------------------------------------------
 
-export const ASSET_CLASSES = ['icon', 'mark', 'illustration', 'diagram', 'animated'] as const;
-export type AssetClass = (typeof ASSET_CLASSES)[number];
+import { ASSET_CLASSES, type AssetClass } from '../../scripts/_lib/asset_classes.js';
+
+export { ASSET_CLASSES };
+export type { AssetClass };
 
 /**
  * Per class, never global. A file is loose BELOW its class threshold.

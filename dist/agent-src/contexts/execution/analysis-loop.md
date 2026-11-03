@@ -116,7 +116,9 @@ only on `complete` coverage — otherwise, and when coverage is missing, it is
 is the `evidence_basis` taxonomy, which grades numbers, not evidence.
 
 A media source (`analyze:post`) anchors as `S1@01:05 #3` — source, timestamp,
-contact-sheet tile — with at most a 15-word quote; `isMediaAnchor()` in
+contact-sheet tile — or, for a frame-exact reading from `--detail forensic`, as
+`S1@00:14 f342` (frame index instead of tile; never both) — with at most a
+15-word quote; `isMediaAnchor()` in
 `src/scripts/_lib/media_anchor.ts` checks the grammar. A tile the run looked at
 is `read`; what the creator says is `claimed`.
 
