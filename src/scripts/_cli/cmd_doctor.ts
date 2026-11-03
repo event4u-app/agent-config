@@ -1086,7 +1086,7 @@ function lstripV(s: string): string {
  * Claude Code plugin state under the single-surface model
  * (road-to-claude-code-single-surface): the `~/.claude/` file projection is
  * THE distribution surface for Claude Code — content, and hooks via the
- * managed settings.json block. An installed marketplace plugin next to the
+ * package's own settings.json hook block. An installed marketplace plugin next to the
  * projection is a **duplicate surface**: every skill/command lists twice
  * and the plugin's SHA snapshot rots silently. That is `fail`, with the
  * uninstall command as the fix (never uninstalled autonomously — the plugin

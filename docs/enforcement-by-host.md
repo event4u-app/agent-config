@@ -769,6 +769,15 @@ The value set is closed and every row carries its date, so a host that renames
 or re-scopes a loop verb makes a row stale and nothing else. Re-derive a row
 from its cited observation rather than trusting the cell.
 
+## Host switches ahead of the hooks — Claude Code
+
+Every `blocking` row above holds only while the host runs the hook. Three host
+inputs can silence or lift it, per the host's documentation and not measured
+here: `disableAllHooks`, a managed `allowManagedHooksOnly`, and a user-installed
+mod that returns a verdict before the package's `PreToolUse` hook. Detail and
+what the package does about it:
+[`harness-expectations` § Class D](contracts/harness-expectations.md#class-d--a-host-mod-overrides-or-skips-a-refusal).
+
 ## Vocabulary — the enforcement ladder (glossary, not a migration)
 
 An external "enforcement-first" architecture proposal (reviewed by AI

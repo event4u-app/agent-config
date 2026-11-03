@@ -2280,7 +2280,7 @@ export function generate_plugin_hooks(): number {
     }
 
     // Single source of truth: the SAME matrix derivation the installer uses
-    // for the managed settings.json block (road-to-claude-code-single-surface
+    // for the package's own settings.json hook block (road-to-claude-code-single-surface
     // Phase 4) — plugin hooks.json and settings hooks cannot drift by
     // construction. Backstop: tests/install/claude_hook_matrix_parity.test.ts.
     const matrix = build_claude_hook_matrix(manifest_path);
