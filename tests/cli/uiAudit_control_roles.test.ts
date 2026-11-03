@@ -44,6 +44,21 @@ describe('control_roles — where the canonical can be rendered', () => {
         expect(roles.select).toMatchObject({ canonical: 'Select', families: ['jsx'] });
     });
 
+    it('a re-export is not a definition; an export list of a local declaration is', () => {
+        const uses = ['app/orders.tsx', 'export const A = () => <><Select name="a" /><Select name="b" /></>;\n'] as [string, string];
+        const reexport = [
+            ['src/ui/select.tsx', 'export { Select } from "@vendor/components";\n'],
+            ['src/ui/index.tsx', 'import { Select } from "@vendor/components";\nexport { Select };\n'],
+            uses,
+        ] as Array<[string, string]>;
+        expect(buildArtefact('.', reexport).control_roles.select).toMatchObject({ canonical: 'Select', families: [] });
+        const local = [
+            ['src/ui/select.tsx', 'function BaseSelect(p) {\n  return <select {...p} />;\n}\nexport { BaseSelect as Select };\n'],
+            uses,
+        ] as Array<[string, string]>;
+        expect(buildArtefact('.', local).control_roles.select).toMatchObject({ canonical: 'Select', families: ['jsx'] });
+    });
+
     it('a single-file component is defined by its file name', () => {
         const roles = buildArtefact('.', [
             ['src/components/Select.vue', '<script setup>\ndefineProps(["modelValue"]);\n</script>\n<template><select><slot /></select></template>\n'],

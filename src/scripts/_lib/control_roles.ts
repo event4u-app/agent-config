@@ -169,10 +169,12 @@ export function definedComponents(rel: string, text: string): string[] {
     }
     for (const m of text.matchAll(/export\s+const\s+([A-Z][A-Za-z0-9_]*)\s*=/g)) out.push(m[1]!);
     // `function Textarea(…) {…}` followed by `export { Textarea }`.
-    for (const m of text.matchAll(/export\s*\{([^}]*)\}/g)) {
+    // Only a name declared in this file: `export { X } from '…'` and an imported `X` are re-exports.
+    for (const m of text.matchAll(/export\s*\{([^}]*)\}(?!\s*from\b)/g)) {
         for (const part of m[1]!.split(',')) {
-            const name = part.trim().split(/\s+as\s+/).pop()!.trim();
-            if (/^[A-Z][A-Za-z0-9_]*$/.test(name)) out.push(name);
+            const [local, exported = local] = part.trim().split(/\s+as\s+/).map((x) => x.trim());
+            const declared = new RegExp(`(?:function|class|const|let|var)\\s+${local}\\b`).test(text);
+            if (declared && /^[A-Z][A-Za-z0-9_]*$/.test(exported!)) out.push(exported!);
         }
     }
     return [...new Set(out)];
