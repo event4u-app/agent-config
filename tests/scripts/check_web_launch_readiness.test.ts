@@ -868,6 +868,10 @@ describe('2.2 — site type and region resolve from settings, and absence is sta
             path.join(REPO, 'src/config/third-party-origins.json'),
             path.join(root, 'src/config/third-party-origins.json'),
         );
+        fs.copyFileSync(
+            path.join(REPO, 'src/config/crawler-register.json'),
+            path.join(root, 'src/config/crawler-register.json'),
+        );
     });
     afterEach(() => {
         fs.rmSync(root, { recursive: true, force: true });

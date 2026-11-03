@@ -44,6 +44,8 @@ import {
 } from './web_launch_third_party.js';
 import { resolveOrigin } from './web_launch_third_party.js';
 import { type Witness, renderWitness } from './web_launch_render.js';
+import { HEAD_TAGS, attr, tagsOf, titleOf } from './_lib/html_tags.js';
+import { type CrawlerRow, indexability, loadCrawlerRegister } from './web_launch_crawlers.js';
 
 const HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(HERE), '..', '..');
@@ -435,61 +437,44 @@ export function enabled(root: string): boolean {
 
 /* -- staging indexability: the check that predates the IMPLS table --------- */
 
-const NOINDEX_RE = /<meta[^>]+name\s*=\s*["']robots["'][^>]*content\s*=\s*["'][^"']*noindex/i;
-const XROBOTS_RE = /x-robots-tag[^\n]*noindex/i;
-/** `Disallow: /` with nothing after it — a blanket block, not a path rule. */
-const BLANKET_DISALLOW_RE = /^\s*Disallow:\s*\/\s*$/im;
-
 export interface Located {
     file: string;
     line: number;
     text: string;
 }
 
+/** The extensions the indexability pass reads: markup, robots.txt, sitemaps and source modules. */
+const INDEXABLE_RE = /\.(html?|txt|xml|js|jsx|ts|tsx|vue|svelte|astro)$/i;
+
+/** The crawler register for `root`, cached per root and day. */
+const CRAWLER_CACHE = new Map<string, CrawlerRow[]>();
+export function crawlersFor(root: string): CrawlerRow[] {
+    const key = `${root}|${asOfToday()}`;
+    const hit = CRAWLER_CACHE.get(key);
+    if (hit !== undefined) return hit;
+    let rows: CrawlerRow[];
+    try {
+        rows = loadCrawlerRegister(root);
+    } catch (e) {
+        throw new DeadScopeError('check_web_launch_readiness', (e as Error).message);
+    }
+    CRAWLER_CACHE.set(key, rows);
+    return rows;
+}
+
 /**
- * Walk a build directory for indexability leftovers.
+ * Indexability leftovers in a build directory, each with a `file:line`.
  *
- * Returns a LOCATION per hit, because the step's verify line asks for a
- * `file:line` and a finding without one cannot be acted on.
+ * `undecided` holds blocks that rest on a crawler-register row past its
+ * `review_by`: whether they hide the site from search is unknown, not clean.
  */
-export function scanIndexability(buildDir: string): { hits: Located[]; files: number } {
-    const hits: Located[] = [];
-    let files = 0;
-    const walk = (dir: string): void => {
-        let entries: fs.Dirent[];
-        try {
-            entries = fs.readdirSync(dir, { withFileTypes: true });
-        } catch {
-            return;
-        }
-        for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
-            const p = path.join(dir, e.name);
-            if (e.isDirectory()) {
-                if (e.name === 'node_modules' || e.name === '.git') continue;
-                walk(p);
-                continue;
-            }
-            if (!/\.(html?|txt|xml|js|jsx|ts|tsx|vue|svelte|astro)$/i.test(e.name)) continue;
-            files += 1;
-            let text: string;
-            try {
-                text = fs.readFileSync(p, 'utf-8');
-            } catch {
-                continue;
-            }
-            const isRobots = path.basename(p).toLowerCase() === 'robots.txt';
-            text.split('\n').forEach((line, i) => {
-                const rel = path.relative(buildDir, p);
-                if (NOINDEX_RE.test(line) || XROBOTS_RE.test(line)) {
-                    hits.push({ file: rel, line: i + 1, text: line.trim().slice(0, 160) });
-                } else if (isRobots && BLANKET_DISALLOW_RE.test(line)) {
-                    hits.push({ file: rel, line: i + 1, text: line.trim().slice(0, 160) });
-                }
-            });
-        }
-    };
-    walk(buildDir);
-    return { hits, files };
+export function scanIndexability(
+    buildDir: string,
+    root = REPO_ROOT,
+): { hits: Located[]; undecided: Located[]; files: number } {
+    const files = readTree(buildDir).filter((f) => INDEXABLE_RE.test(f.base));
+    const r = indexability(files, crawlersFor(root), asOfToday());
+    return { hits: r.hits, undecided: r.undecided, files: files.length };
 }
 
 
@@ -591,8 +576,13 @@ const customErrorRoute: Impl = (files) => {
     return found ? [] : [{ file: '.', line: 0, text: 'no 404.html or not-found page in the build output' }];
 };
 
-const TITLE_RE = /<title[^>]*>\s*([^<]{1,200}?)\s*<\/title>/i;
-const DESC_RE = /<meta[^>]+name\s*=\s*["']description["'][^>]*content\s*=\s*["']\s*([^"']{1,400}?)\s*["']/i;
+/** The first `<meta>` whose `name` is `name`, in any attribute order. */
+function metaNamed(text: string, name: string): string | undefined {
+    for (const t of tagsOf(text, HEAD_TAGS)) {
+        if (t.closed && t.name === 'meta' && (attr(t.tag, 'name') ?? '').trim().toLowerCase() === name) return t.tag;
+    }
+    return undefined;
+}
 
 /**
  * Per-route title and description, and the DUPLICATE case counts.
@@ -607,14 +597,15 @@ const perRouteMetadata: Impl = (files) => {
     const titles = new Map<string, string[]>();
     for (const f of files) {
         if (!isPage(f)) continue;
-        const tm = TITLE_RE.exec(f.text);
-        if (tm === null) {
+        const title = titleOf(f.text);
+        if (title === undefined) {
             hits.push({ file: f.rel, line: lineOf(f, '<title'), text: 'no <title> on this page' });
         } else {
-            const key = (tm[1] ?? '').toLowerCase();
+            const key = title.toLowerCase();
             titles.set(key, [...(titles.get(key) ?? []), f.rel]);
         }
-        if (!DESC_RE.test(f.text)) {
+        const desc = metaNamed(f.text, 'description');
+        if (desc === undefined || (attr(desc, 'content') ?? '').trim() === '') {
             hits.push({
                 file: f.rel,
                 line: lineOf(f, 'name="description"'),
@@ -660,10 +651,10 @@ const documentHeadBasics: Impl = (files) => {
         if (!/<html[^>]+\blang\s*=\s*["'][a-z]/i.test(f.text)) {
             hits.push({ file: f.rel, line: lineOf(f, '<html'), text: 'no lang on <html>' });
         }
-        if (!/<meta[^>]+charset\s*=/i.test(f.text)) {
+        if (!tagsOf(f.text, HEAD_TAGS).some((t) => t.closed && t.name === 'meta' && attr(t.tag, 'charset') !== undefined)) {
             hits.push({ file: f.rel, line: lineOf(f, '<head'), text: 'no <meta charset>' });
         }
-        if (!/<meta[^>]+name\s*=\s*["']viewport["']/i.test(f.text)) {
+        if (metaNamed(f.text, 'viewport') === undefined) {
             hits.push({ file: f.rel, line: lineOf(f, '<head'), text: 'no <meta name="viewport">' });
         }
     }
@@ -681,25 +672,53 @@ const documentHeadBasics: Impl = (files) => {
 const canonicalAndSitemap: Impl = (files) => {
     const hits: Located[] = [];
     const sitemap = files.find((f) => f.base === 'sitemap.xml');
+    const sitemapHosts = new Set<string>();
+    for (const m of sitemap?.text.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi) ?? []) {
+        const u = absoluteUrl(m[1] ?? '');
+        if (u !== null) sitemapHosts.add(u.host.toLowerCase());
+    }
     for (const f of files) {
         if (!isPage(f)) continue;
-        const m = /<link[^>]+rel\s*=\s*["']canonical["'][^>]*href\s*=\s*["']([^"']+)["']/i.exec(f.text);
-        if (m === null) {
+        const canon = tagsOf(f.text, HEAD_TAGS).filter(
+            (t) => t.closed && t.name === 'link' && (attr(t.tag, 'rel') ?? '').toLowerCase().split(/\s+/).includes('canonical'),
+        );
+        if (canon.length === 0) {
             hits.push({ file: f.rel, line: lineOf(f, '<head'), text: 'no rel="canonical"' });
             continue;
         }
-        const href = m[1] ?? '';
-        const host = /^https?:\/\/([^/]+)/i.exec(href)?.[1];
-        if (sitemap !== undefined && host !== undefined && !sitemap.text.includes(host)) {
+        const hrefs = canon.map((t) => ({ href: (attr(t.tag, 'href') ?? '').trim(), line: t.line }));
+        for (const h of hrefs) {
+            if (absoluteUrl(h.href) === null) {
+                hits.push({ file: f.rel, line: h.line, text: `relative canonical "${h.href}" — a canonical must be an absolute URL` });
+            }
+        }
+        const distinct = [...new Set(hrefs.map((h) => h.href))];
+        if (distinct.length > 1) {
             hits.push({
                 file: f.rel,
-                line: lineOf(f, 'rel="canonical"'),
-                text: `canonical host ${host} appears nowhere in sitemap.xml`,
+                line: hrefs[1]?.line ?? 1,
+                text: `conflicting canonicals on one page: ${distinct.join(', ')} — a search engine picks one, or ignores all`,
             });
+        }
+        if (sitemap === undefined) continue;
+        for (const h of hrefs) {
+            const u = absoluteUrl(h.href);
+            if (u === null || sitemapHosts.has(u.host.toLowerCase())) continue;
+            hits.push({ file: f.rel, line: h.line, text: `canonical host ${u.host} appears nowhere in sitemap.xml` });
         }
     }
     return hits;
 };
+
+/** An absolute http(s) URL, or null. Protocol-relative is not absolute for a canonical. */
+function absoluteUrl(raw: string): URL | null {
+    if (!/^https?:\/\//i.test(raw)) return null;
+    try {
+        return new URL(raw);
+    } catch {
+        return null;
+    }
+}
 
 const LEGAL_DE = [/impressum/i, /datenschutz/i];
 const LEGAL_GENERIC = [/privacy/i, /(terms|imprint|legal)/i];
@@ -1134,11 +1153,12 @@ export function audit(
             continue;
         }
         const impl = IMPLS[c.id];
-        const hits =
-            impl === undefined
-                ? scanIndexability(buildDir).hits
-                : impl(files, thirdParty);
-        const undecided = undecidable[c.id]?.(files, { region, siteType, escalations, thirdParty }) ?? [];
+        const index = impl === undefined ? scanIndexability(buildDir, root) : undefined;
+        const hits = index === undefined ? (impl as Impl)(files, thirdParty) : index.hits;
+        const undecided: UndecideHit[] = [
+            ...(undecidable[c.id]?.(files, { region, siteType, escalations, thirdParty }) ?? []),
+            ...(index?.undecided ?? []).map((u) => ({ ...u, reason_class: 'instrument-limit' as const })),
+        ];
         for (const u of undecided) {
             unknown.push({
                 check: c.id,

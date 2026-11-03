@@ -55,17 +55,23 @@ as a dependency — use zod v4's native export.
       unquoted, `data-src` ≠ `src`; third-party tests stay green.
       Done: tagsOf/attr/titleOf live in src/scripts/_lib/html_tags.ts with a tag-set parameter; 12 unit cases + third-party suites green.
       production entry: `src/scripts/check_web_launch_readiness.ts`
-- [ ] **1.3 Replace the three order-dependent regexes** (robots meta incl.
+- [x] **1.3 Replace the three order-dependent regexes** (robots meta incl. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/crawler-register.json -->
       `none` and search-crawler names, description, title).
       verify: 1.1 cases for these go green; grep for the construct -> 0 sites.
-- [ ] **1.4 Canonical.** Every canonical collected; conflicting or relative ones
+      Done: robots meta (incl. none and register search-crawler meta names), description, title, viewport and charset read via the shared reader; the four meta form-variant cases green; grep for `<meta[^>]+` / `<link[^>]+rel` / `<title[^>]*>` in the gate and web_launch_* -> 0 sites.
+      production entry: `src/scripts/check_web_launch_readiness.ts`
+- [x] **1.4 Canonical.** Every canonical collected; conflicting or relative ones <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/crawler-register.json -->
       flagged; hosts compared exactly via `new URL`.
       verify: the two canonical probes produce their finding; `clean-marketing`
       stays silent.
-- [ ] **1.5 `robots.txt` groups.** Blanket `Disallow: /` is critical only for
+      Done: every rel=canonical collected; relative and conflicting canonicals flagged; hosts compared exactly via new URL against sitemap <loc> hosts; both canonical probes fire, clean-marketing silent.
+      production entry: `src/scripts/check_web_launch_readiness.ts`
+- [x] **1.5 `robots.txt` groups.** Blanket `Disallow: /` is critical only for <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/crawler-register.json -->
       `*` or a search crawler; a training-only block never is.
       verify: the training-block probe yields no critical finding; the staging
       leftover stays critical.
+      Done: robots.txt read as user-agent groups; blanket Disallow: / critical only for * or a live search-crawler row; training-block probe clean, staging-leftover still critical (web_launch_crawlers.test.ts, 19 cases).
+      production entry: `src/scripts/check_web_launch_readiness.ts`
 - [ ] **1.6 Metamorphic invariance and coverage pairs.** Variants (attribute
       order, quotes, case, whitespace) of every fixture keep their verdict;
       every check id has a firing and a silent fixture.
@@ -76,11 +82,13 @@ as a dependency — use zod v4's native export.
 - [ ] **2.1 `basis: {level, ref, checked_at}` on all 13 checks.**
       verify: `npx vitest run tests/scripts/web_launch_readiness_config.test.ts` -> 0 and
       and the test fails on a check without `basis`.
-- [ ] **2.2 Crawler register.** `src/config/crawler-register.json` (token,
+- [x] **2.2 Crawler register.** `src/config/crawler-register.json` (token, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/crawler-register.json -->
       operator, purpose, `affects_search_inclusion`, source URL, `checked_at`,
       `review_by`); a lapsed row reads `unknown`; 1.3 and 1.5 read it.
       verify: schema test rejects a row without source or date; `--as-of` past
       `review_by` yields `unknown`.
+      Done: src/config/crawler-register.json with 11 rows, each from the operator's own page read 2026-11-03 (Google, OpenAI, Anthropic, Apple); Bingbot omitted — its official page did not render. Schema test rejects a row without source or date; a spawned run with --as-of past review_by reports unknown.
+      production entry: `src/scripts/check_web_launch_readiness.ts`
 - [ ] **2.3 `snippet-eligibility` and `structured-data-parses` checks** (no type
       scoring).
       verify: firing and silent fixture each, under 1.6.
