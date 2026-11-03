@@ -118,13 +118,22 @@ finding disposition names a command but not the outcome it must produce
       matching `/\.orphaned-[^/]*\.jsonl$/`; expose the skipped count where the
       scan result is built so a report can print `set_aside: n`.
       verify: `npx vitest run tests/scripts/cc_transcript.test.ts` -> 0 — new fixture tree with `s.jsonl` and `s.orphaned-1700000000-ab.jsonl` lists 1 file, set-aside 1.
-- [ ] **4.4 The recall resolver honours `autoMemoryDirectory`, read-only.** In
+- [x] **4.4 The recall resolver honours `autoMemoryDirectory`, read-only.** In
       `resolveMemoryDir` (`src/scripts/hooks/memory_recall_hook.ts:303-325`)
       resolve in order `AGENT_CONFIG_MEMORY_DIR` → host `autoMemoryDirectory`
       (via the existing settings reader in
       `src/scripts/_lib/claude_settings_hooks.ts`) → slug walk. Never write
       host settings; an unreadable settings file falls through silently.
       verify: `npx vitest run tests/scripts/memory_recall_hook.test.ts` -> 0 — new cases: key set with a memory dir → that dir; key absent → resolution identical to today; unreadable settings → slug walk.
+
+## Decisions
+
+| Decision | Alternatives | Reason | Revisit-if |
+|---|---|---|---|
+| 4.4 reads `autoMemoryDirectory` from the host **user** settings file only (sibling of the projects root), not project or local settings | read project `.claude/settings.json` and `.claude/settings.local.json` too, in host precedence order | A checked-in project file redirecting where memory is read from is the riskier direction, and whether the host honours the key at project scope was not establishable from the tree; user-only is the narrower, reversible read | a host capture or host doc in the tree shows the key is honoured at project or local scope |
+| 4.4 treats the configured value as the memory directory itself (no `<slug>/memory` appended); a configured but missing directory resolves to no store, as the env override does | append the slug path; fall through to the slug walk when the directory is missing | The host writes the store where the key points, so a missing directory means no store there; mirroring the env-override branch keeps one rule for an explicit location | a live store shows the host nests per-project directories under the configured path |
+| 4.1 also renders `- [N trimmed by word cap]` under a section the cap shortened but did not empty | mark only emptied sections | Without it the `Trimmed:` total is not attributable to sections, and a partly trimmed section still reads as complete | the marker words measurably crowd out content under the default cap |
+| 2.2 adds a separate `oracle_summary` to the success line instead of changing `disposition_summary` | extend `disposition_summary`'s string | The existing summary is pinned byte-exact by its test and read elsewhere; an additive segment changes no existing reader | — |
 
 ## Later (not active; each needs elapsed time, a host, CI infra, or an owner/council decision)
 
