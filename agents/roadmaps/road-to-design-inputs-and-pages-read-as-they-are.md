@@ -72,7 +72,7 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
 
 ## Phase 2 — Accessibility claims that carry what they say
 
-- [ ] **2.1 The 2.1 register is cumulative, and pointer cancellation is said
+- [x] **2.1 The 2.1 register is cumulative, and pointer cancellation is said
       correctly.** `tests/contracts/accessibility_wcag_version_claim.test.ts`:
       add `CRITERIA_BY_VERSION['2.1']` (A: 2.1.4, 2.5.1, 2.5.2, 2.5.3, 2.5.4;
       AA: 1.3.4, 1.3.5, 1.4.10, 1.4.11, 1.4.12, 1.4.13, 4.1.3; AAA disposition:

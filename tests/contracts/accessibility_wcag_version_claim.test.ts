@@ -33,6 +33,11 @@ const SKILL = path.join(REPO_ROOT, 'src/skills/accessibility-auditor/SKILL.md');
  * (present, or named with their level) — never silently absent.
  */
 const CRITERIA_BY_VERSION: Record<string, { a: string[]; aa: string[]; aaa: string[] }> = {
+    '2.1': {
+        a: ['2.1.4', '2.5.1', '2.5.2', '2.5.3', '2.5.4'],
+        aa: ['1.3.4', '1.3.5', '1.4.10', '1.4.11', '1.4.12', '1.4.13', '4.1.3'],
+        aaa: ['1.3.6', '2.2.6', '2.3.3', '2.5.5', '2.5.6'],
+    },
     '2.2': {
         a: ['3.2.6', '3.3.7'],
         aa: ['2.4.11', '2.5.7', '2.5.8', '3.3.8'],
@@ -57,15 +62,25 @@ export function checkVersionClaim(content: string): { claimed: string | null; le
     }
     const claimed = m[1] as string;
     const level = m[2] as string;
-    const registry = CRITERIA_BY_VERSION[claimed];
     const findings: Finding[] = [];
-    if (!registry) {
+    if (!CRITERIA_BY_VERSION[claimed]) {
         findings.push({
             criterion: '(registry)',
             level: 'AA',
             why: `the skill claims WCAG ${claimed} and CRITERIA_BY_VERSION has no entry for it — add the criterion list that version introduced`,
         });
         return { claimed, level, findings };
+    }
+    // A version claim is cumulative across versions: a 2.2 claim carries what
+    // 2.1 added as well as what 2.2 added. Registered versions at or below the
+    // claim are merged; 2.0 is the baseline this register does not enumerate.
+    const registry = { a: [] as string[], aa: [] as string[], aaa: [] as string[] };
+    for (const [v, r] of Object.entries(CRITERIA_BY_VERSION)) {
+        if (Number(v) <= Number(claimed)) {
+            registry.a.push(...r.a);
+            registry.aa.push(...r.aa);
+            registry.aaa.push(...r.aaa);
+        }
     }
     // An AA claim is cumulative: level A criteria are inside it.
     const required = level === 'A' ? registry.a : [...registry.a, ...registry.aa];
@@ -84,7 +99,7 @@ export function checkVersionClaim(content: string): { claimed: string | null; le
             findings.push({
                 criterion: c,
                 level: 'AAA',
-                why: `WCAG ${claimed} added it at level AAA — name it as an out-of-scope omission rather than leaving it silent`,
+                why: `inside WCAG ${claimed} at level AAA — name it as an out-of-scope omission rather than leaving it silent`,
             });
         }
     }
@@ -112,6 +127,13 @@ describe('accessibility-auditor: claimed WCAG version is carried', () => {
         const mutated = content.replace(/2\.4\.11/g, 'XX');
         const { findings } = checkVersionClaim(mutated);
         expect(findings.some((f) => f.criterion === '2.4.11' && f.level === 'AA')).toBe(true);
+    });
+
+    it('is sensitive — a 2.2 claim also requires what 2.1 added (2.5.2 removed → finding)', () => {
+        const mutated = content.replace(/2\.5\.2(?!\d)/g, 'XX');
+        const { claimed, findings } = checkVersionClaim(mutated);
+        expect(claimed).toBe('2.2');
+        expect(findings.some((f) => f.criterion === '2.5.2' && f.level === 'A')).toBe(true);
     });
 
     it('is sensitive — claiming an unregistered version produces a finding', () => {
