@@ -93,7 +93,7 @@ sees the user's machine. Nothing is deleted — every fix renames or reports.
       with the owner decision that closes them. A ninth twin fails; deleting a
       line from the baseline is the only way it shrinks.
       verify: `npx vitest run tests/scripts/lint_agent_skill_names.test.ts` -> 0 failed, with a fixture twin that is red and the real repo green
-- [ ] **2.3 Doctor sees shadows on the user's machine.** New
+- [x] **2.3 Doctor sees shadows on the user's machine.** New
       `src/scripts/_cli/doctor_reserved_names.ts`, wired into
       `src/scripts/_cli/cmd_doctor.ts`: lists every directory under
       `~/.claude/skills/` and `<project>/.claude/skills/` whose name is reserved,
