@@ -1,4 +1,5 @@
 <!-- evidence-type: analysis -->
+<!-- check-refs: skip -->  (quotes paths of a removed worktree, verbatim)
 
 <!-- The prompt given to the council on 2026-11-03, committed verbatim so the
      verdict can be checked against what was asked (evaluator-independence).
