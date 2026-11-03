@@ -98,3 +98,33 @@ describe('work_engine agent_settings — unit surface', () => {
         expect((result as [string, string])[0]).toBe(tmp);
     });
 });
+
+// road-to-boundaries-that-hold-at-release-and-runtime 1.3. Abuse case: a
+// `root_paths` entry `../<root>-evil` passed a raw string-prefix check, so
+// modules from a sibling directory were enumerated as in-tree.
+describe('enumerate_modules — containment by path segment', () => {
+    function enumerate(root: string, root_paths: string[]) {
+        return ags.enumerate_modules({
+            project_root: root,
+            modules_config: { enabled: true, root_paths, skip_dirs: [], agent_folder: 'agents' },
+        });
+    }
+
+    it('a sibling directory sharing the root as a string prefix enumerates 0 modules', () => {
+        const tmp = make_tmp();
+        fs.mkdirSync(path.join(tmp, '.git'), { recursive: true });
+        const evil = `${tmp}-evil`;
+        tmp_dirs.push(evil);
+        mkdirp(path.join(evil, 'Stolen'));
+        expect(enumerate(tmp, [`../${path.basename(tmp)}-evil`])).toEqual([]);
+    });
+
+    it('<root>/a and <root>/..cache stay contained', () => {
+        const tmp = make_tmp();
+        fs.mkdirSync(path.join(tmp, '.git'), { recursive: true });
+        mkdirp(path.join(tmp, 'a', 'Alpha'));
+        mkdirp(path.join(tmp, '..cache', 'Cached'));
+        const got = enumerate(tmp, ['a', '..cache']).map((m) => `${m.root_path}/${m.name}`);
+        expect(got.sort()).toEqual(['..cache/Cached', 'a/Alpha']);
+    });
+});

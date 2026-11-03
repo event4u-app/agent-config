@@ -54,7 +54,7 @@ green after the fix, and the release-side rules fail the contract test on regres
       to `.claude/settings.local.json` exits 1 with the same Class C reason; `src/foo/settings.local.json`
       stays unfenced (exit 0).
       verify: `npx vitest run tests/scripts/hooks/block_config_weakening.test.ts` → 0
-- [ ] **1.3 One containment helper, three sites.** Use `isContained` from
+- [x] **1.3 One containment helper, three sites.** Use `isContained` from
       `src/scripts/_lib/session_index_trust.ts:147` in `src/scripts/_lib/agent_settings.ts:1122`,
       its twin `src/agent-src/templates/scripts/work_engine/_lib/agent_settings.ts:844`, and
       `src/scripts/_lib/install_reach_checks.ts:220`; delete the "Latent-bug candidate" comments.
@@ -63,6 +63,10 @@ green after the fix, and the release-side rules fail the contract test on regres
       'a/../../<root>-evil/x')` is `unresolvable` (`tests/scripts/install_reach_checks.test.ts`);
       `<root>/a` and `<root>/..cache` stay contained.
       verify: `npx vitest run tests/lib/agent_settings.test.ts tests/scripts/install_reach_checks.test.ts tests/scripts/templates_memory_signal.test.ts` → 0, and `grep -n "startsWith(root)" src/scripts/_lib/agent_settings.ts src/agent-src/templates/scripts/work_engine/_lib/agent_settings.ts` → no match
+      Note: at the pin the sibling `../<root>-evil` already enumerated 0 modules, because
+      `_relative_to` refused it one step later; the same prefix defect in `_relative_to`
+      (`rel.startsWith('..')`) instead refused a contained `..cache` root — that case and
+      `a/../../<root>-evil/x` were red at the pin. `_relative_to` takes the segment check too.
 - [ ] **1.4 Carriage return is not a hidden-instruction signal.** In
       `src/scripts/_lib/retrieval_sanitize.ts`, `scan_invisible_findings` no longer reports
       U+000D as `control-char`; every other C0/C1 control still reports. Tests in
@@ -137,6 +141,7 @@ green after the fix, and the release-side rules fail the contract test on regres
 | Decision | Alternatives | Reason | Revisit-if |
 |---|---|---|---|
 | OD-2, conservative reading: a message forwarded from another session (lead to worker, peer, or framed subagent hand-back) never counts as a human turn, so it never writes a `pr-merge` or any other git grant (1.1) | Let a lead session's message authorize a merge in a worker session | The ledger cannot tell a lead's instruction from a peer that quotes untrusted text; the conservative reading is reversible by deleting one regex test in `humanTypedThisTurn` | The owner answers OD-2 with "a lead may authorize", and a signed or otherwise provenance-checked lead channel exists |
+| The consumer-shipped twin `work_engine/_lib/agent_settings.ts` carries a local `_is_contained` with the same algorithm instead of importing `isContained` (1.3) | Import across the package boundary | That tree ships to consumers self-contained and cannot reach `src/scripts/_lib` | A shared runtime library lands inside the shipped tree |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-03 | reviewer: claude/host -->
