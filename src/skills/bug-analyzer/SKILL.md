@@ -136,16 +136,16 @@ This is especially important for:
 - Form a **single hypothesis** based on evidence from Phase 1 and 2.
 - Test the hypothesis minimally — don't change multiple things at once.
 - If the hypothesis is wrong, go back to Phase 1 with new evidence.
-- **3-Strikes Rule:** If 3+ fix attempts fail, STOP. This signals an architectural problem,
-  not a bug. Discuss with the user before attempting more fixes. Signs:
+- **3-Strikes Rule:** 3 failed fixes signal an architectural problem, not a bug.
+  Shift strategy ([`autonomous-execution`](../../rules/autonomous-execution.md) ladder). Signs:
   - Each fix reveals new shared state or coupling in a different place.
   - Fixes require "massive refactoring" to implement.
   - Each fix creates new symptoms elsewhere.
-- Common root causes in this project:
-  - **Missing validation** on external sync data (CSV, XML, JSON imports).
-  - **Null values** from optional DB columns not handled.
-  - **Type mismatches** between legacy DB columns and PHP code.
-  - **Race conditions** in multi-tenant database switching.
+- Common root causes (project-specific ones come from the Phase 1 `retrieve`):
+  - **Missing validation** on external data (imports, webhooks).
+  - **Null values** from optional fields not handled.
+  - **Type mismatches** between storage and code.
+  - **Race conditions** around shared state.
   - **Missing fallbacks** when external services are unavailable.
 
 ### Phase 4: Implementation
@@ -263,7 +263,7 @@ Focus on the "Bug fixes" attack questions: Is this the root cause or a symptom? 
 | "It's probably X, let me fix that" | "Probably" = guessing. Complete Phase 1 first |
 | "Quick fix for now" | Quick fixes mask root causes and create technical debt |
 | "I'll investigate later" | Later never comes. Investigate now |
-| "One more fix attempt" (after 2+) | 3+ failures = architectural problem. Stop and discuss |
+| "One more fix attempt" (after 2+) | 3 failures = wrong hypothesis. Shift strategy |
 | "Issue is simple, don't need process" | Simple issues have root causes too. Process is fast for simple bugs |
 | "Emergency, no time for process" | Systematic debugging is FASTER than guess-and-check thrashing |
 | "It looks broken" | Pattern-recognition is not analysis — name the concrete trigger or drop it |

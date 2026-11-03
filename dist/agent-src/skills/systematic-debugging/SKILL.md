@@ -158,11 +158,10 @@ to Phase 2, treat the failure as new evidence.
 
 If you have tried **three** fixes and the bug is still present:
 
-* Stop attempting fixes.
-* Re-read phases 1–3 — something about the root cause is wrong.
+* Stop; re-read phases 1–3 — the root cause is wrong.
 * Ask explicitly: is this bug in the code, or in the architecture /
   design that keeps producing this class of bug?
-* Surface the question to the user. Do not attempt fix #4 silently.
+* Fix #4 is a new strategy, not a smaller edit (fix-loop ladder).
 
 ## Debug micro-loop — one test, one fix, one re-run
 
