@@ -217,13 +217,15 @@ rewriting archived `status: ready` (decided 2026-09-04,
       Corpus reading only, not an oracle: the two ADR-288 lines read red and
       `archive/road-to-a-verdict-that-shows-its-frame.md:83` stays green.
       Done: `exemptionCitesItsCall` in `src/scripts/check_step_production_reach.ts` — a reason naming prose, a door, a command or markdown must carry a `file:line` or the calling `src/**.ts` module; `checkStep` reds it otherwise. `npx vitest run tests/scripts/check_step_production_reach.test.ts` -> 0 (21 tests; the red fixture seen red first). Corpus reading over all 51 `reach exempt:` lines: exactly the two ADR-288 lines red, `:83` green.
-- [ ] **2.3 Unreached engine modules get a disposition.** Each module 2.1 leaves
+- [x] **2.3 Unreached engine modules get a disposition.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/report_production_reach.ts --> Each module 2.1 leaves
       unreached is labelled in its door (D3) as "reference spec, model-carried" (precedent:
       `src/domains/analysis-workbench/analyze/inbox/command.md`).
       Decided (D3): label by default; wire a CLI only where the door already
       runs that stage.
       verify: `./scripts-run src/scripts/report_production_reach` -> 0 and its
       unreached analysis modules equal the labelled set.
+      Done: `report_production_reach --unreached <glob>` (`src/scripts/report_production_reach.ts`) lists unreached modules with the door labelling each and exits 1 on an unlabelled unreached module or a labelled reached one; eight modules labelled under "Engine modules the model carries" in the and-optimize (4), pr (3) and inbox (1) doors. `reconstruction_ledger` needed no label: observation-slot 0.2 wired its CLI, the stage the reference door already runs (D3). `./scripts-run src/scripts/report_production_reach --unreached 'src/scripts/analysis_*.ts'` -> 0, `unreached 8 · labelled 8`; `tests/scripts/report_production_reach.test.ts` 3 tests, red first.
+      production entry: `src/scripts/report_production_reach.ts`
 - [x] **2.4 One lens name.** Align "Overbuild & sequencing" at <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `reference/command.md:368,378,504`.
       verify: `grep -c "Overbuild & sequencing" src/domains/analysis-workbench/analyze/reference/command.md` -> /3/ holds.
