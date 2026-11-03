@@ -172,10 +172,11 @@ stops counting ranges.
 
 ## Phase 8 — Consumers of the witness
 
-- [ ] **8.1 Four inflation classes** (widened verb, supplied number, smoothed
+- [x] **8.1 Four inflation classes** (widened verb, supplied number, smoothed
       status, absorbed achievement) as checklists in `release-comms` and
       `roadmap-writing`.
       verify: `task lint-skills` -> 0 holds.
+      Done: release-comms Step 4 carries the four checks plus the `--baseline` pointer; roadmap-writing points to `references/inflation-checklist.md` from Do NOT (SKILL.md held at 400 lines); `task lint-skills` exit 0, both skills PASS.
 - [~] **8.2 Prose-fact clause in `ask-when-uncertain`** — a kernel-rule edit
       (own PR, 24 h soak). Blocked by `kernel-edit-own-pr` (owner).
       verify: `task lint-skills` -> 0 in that PR.
