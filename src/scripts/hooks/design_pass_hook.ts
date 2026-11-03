@@ -92,6 +92,7 @@ import { compareInputs } from '../_lib/probe_inputs.js';
 import { trigger_matches, type Trigger } from '../_lib/router_match.js';
 import { HANDOVER_SHAPES, isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
 import { loadDesignContext, scanFile } from '../lint_design_slop.js';
+import { unwrap } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { CHUNK_BASENAME, loadSvgScan } from './svg_rules_loader.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
@@ -631,12 +632,10 @@ function main(): number {
     const slotArg = process.argv.includes('--slot') ? process.argv[process.argv.indexOf('--slot') + 1] : undefined;
     const slot: PassResult['slot'] = slotArg === 'stop' ? 'stop' : 'post_tool_use';
 
-    let payload: unknown = null;
-    try {
-        payload = JSON.parse(readHookStdin() || 'null');
-    } catch {
-        return EXIT_ALLOW; // fail_closed: false — an unparsable payload is not a block
-    }
+    // Dispatched in-process, stdin is the dispatcher's envelope with the host
+    // payload under `payload`; a direct run gets the host payload itself.
+    // Unparsable stdin yields {}, which names no target: not a block.
+    const [, payload] = unwrap(readHookStdin(), 'claude');
 
     const state = readState(root);
     let targets: string[];
