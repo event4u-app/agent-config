@@ -146,6 +146,26 @@ describe('false-alarm fixes', () => {
     }
 });
 
+// road-to-rewrites-that-keep-their-facts 3.1: the worked fixture's diff is the
+// real function's output, so it cannot drift from the witness it documents.
+describe('humanizer Fixture 4', () => {
+    const doc = fs.readFileSync(path.join(REPO, 'src', 'skills', 'humanizer', 'references', 'fixtures.md'), 'utf8');
+    const section = doc.slice(doc.indexOf('## Fixture 4'));
+    const quotes = [...section.matchAll(/((?:^> .*\n)+)/gm)].map((m) => m[1].replace(/^> /gm, '').replace(/\n/g, ' ').trim());
+    const [before = '', good = '', bad = ''] = quotes;
+    const listed = (section.match(/```\n([\s\S]*?)```/)?.[1] ?? '').trim();
+
+    it('the humanized after keeps every fact', () => {
+        expect(diffFacts(before, good)).toEqual({ lost: [], added: [] });
+    });
+
+    it('the listed diff of the false after is what the witness reports', () => {
+        const d = diffFacts(before, bad);
+        const lines = [...d.lost.map((f) => `lost ${f.kind} ${f.value}`), ...d.added.map((f) => `added ${f.kind} ${f.value}`)];
+        expect(lines.join('\n')).toBe(listed);
+    });
+});
+
 describe('detect_ai_tells --baseline', () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fact-diff-'));
     const run = (after: string) => {
