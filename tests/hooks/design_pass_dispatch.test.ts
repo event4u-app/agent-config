@@ -37,7 +37,7 @@ function dispatchWrite(rel: string, content: string): string {
     return String((JSON.parse(out) as { hookSpecificOutput?: { additionalContext?: string } }).hookSpecificOutput?.additionalContext ?? '');
 }
 
-describe.runIf(fs.existsSync(BUNDLE))('a written stylesheet reaches the design pass through the bundled dispatcher', () => {
+describe('a written stylesheet reaches the design pass through the bundled dispatcher', () => {
     it('gradient text surfaces its rule with file and line', () => {
         expect(dispatchWrite('site/css/site.css', GRADIENT_TEXT)).toMatch(/site\/css\/site\.css:1\b.*C2|C2.*site\/css\/site\.css:1\b/);
     });
