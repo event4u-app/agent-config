@@ -37,7 +37,7 @@ import type * as PlaywrightTest from '@playwright/test';
 import type * as UiRenderAsset from '../../src/cli/commands/uiRenderAsset.js';
 
 import { scanAsset, type DeliveryMode } from '../../src/scripts/lint_svg_asset.js';
-import type { AssetClass } from '../../src/cli/commands/uiRenderAssetTypes.js';
+import type { AssetClass } from '../../src/scripts/_lib/asset_classes.js';
 import { smilVerdict } from '../../src/scripts/_lib/svg_motion.js';
 
 /**

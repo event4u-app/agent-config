@@ -36,7 +36,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { ASSET_CLASSES, type AssetClass } from '../cli/commands/uiRenderAssetTypes.js';
+import { ASSET_CLASSES, type AssetClass } from './_lib/asset_classes.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { scanMark, type AssetFinding } from './_lib/svg_mark_rules.js';
 import {
