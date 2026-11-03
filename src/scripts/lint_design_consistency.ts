@@ -20,7 +20,7 @@
  * evidence of consistency.
  *
  * REPORT-ONLY. Exit 0 whatever it finds; 1 on an internal error, and for
- * --shadow-report also when the evidence is missing or incomplete. It runs in
+ * --shadow-report also when the evidence is missing, empty or incomplete. It runs in
  * shadow (road-to-a-control-that-matches-its-neighbours 3.3) until the
  * activation policy's four conditions hold.
  *
@@ -197,12 +197,15 @@ export function shadowReport(file: string, now: Date, days: number, json: boolea
         else rejected.push({ line: i + 1, reason: defect });
     });
     const w = shadowWindow(rows, now, days);
-    const code = rejected.length > 0 ? 1 : 0;
+    // No write in the window proves the parser, not the recording: never a clean window.
+    const empty = w.writes === 0;
+    const code = rejected.length > 0 || empty ? 1 : 0;
     if (json) {
-        const evidence = code === 0 ? 'complete' : 'incomplete';
+        const evidence = rejected.length > 0 ? 'incomplete' : empty ? 'empty' : 'complete';
         return { out: `${JSON.stringify({ ...w, evidence, rejected_lines: rejected.map((x) => x.line), rejected }, null, 2)}\n`, code };
     }
     let out = `design-consistency shadow, ${w.days} days since ${w.since}: ${w.writes} UI write(s), ${w.firing} firing.\n`;
+    if (empty) out += 'no UI write recorded in the window: no observations, which is not a clean window; check the recording is on.\n';
     if (rejected.length > 0) {
         out += `${rejected.length} row(s) rejected — the window is incomplete; read those rows before classifying:\n`;
         for (const x of rejected) out += `  line ${x.line}: ${x.reason}\n`;

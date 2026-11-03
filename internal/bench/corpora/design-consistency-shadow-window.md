@@ -136,8 +136,8 @@ manual control because classifying a firing write as false takes a reading.
   per finding the line, the message and up to 200 characters of the source
   line around the control. It prints no rate, because it cannot tell a real
   finding from a false one. It exits 1 and says why when the evidence is not
-  whole: no shadow file, an unreadable one, or rows it had to reject (listed
-  by line, with the valid rows still counted). Such a window is read from
+  whole: no shadow file, an unreadable one, no UI write in the window, or
+  rows it had to reject (listed by line, with the valid rows still counted). Such a window is read from
   those rows by hand before it is classified, never taken as clean.
 - **Classification.** Read each firing write from what the row recorded, not
   from the file as it is now, and mark it real (a raw control beside the

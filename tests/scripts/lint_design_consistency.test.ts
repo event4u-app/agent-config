@@ -202,6 +202,17 @@ describe('the shadow report on the file as recorded', () => {
         expect(r.out).not.toContain('0 UI write(s)');
     });
 
+    it('a file with no write in the window is no observation, never a clean window', () => {
+        const old = JSON.stringify({ at: '2026-09-01T00:00:00Z', file: 'app/a.tsx', would_fire: {}, raw_control: 0, deviations_px: [] });
+        for (const text of ['', '  \n\n', `${old}\n`]) {
+            const r = shadowReport(at(text), now, 14, false);
+            expect(r.code).toBe(1);
+            expect(r.out).toContain('no UI write recorded');
+            const j = JSON.parse(shadowReport(at(text), now, 14, true).out) as { evidence: string };
+            expect(j.evidence).toBe('empty');
+        }
+    });
+
     it('an unreadable file is reported, not read as empty', () => {
         const f = at();
         fs.mkdirSync(f);
