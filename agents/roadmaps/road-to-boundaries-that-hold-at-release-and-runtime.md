@@ -76,7 +76,7 @@ green after the fix, and the release-side rules fail the contract test on regres
 
 ## Phase 2 — Release chain
 
-- [ ] **2.1 Template-injection rule, then the ten sites.** Add rule `template-injection` to
+- [x] **2.1 Template-injection rule, then the ten sites.** Add rule `template-injection` to
       `src/scripts/lint_workflow_security.ts`: a `${{ }}` reading a free-text context
       (`inputs.*`/`github.event.inputs.*` of `type: string` or untyped, `github.event.release.*`
       tag/name/body, PR title/body/head ref, `github.head_ref`, commit messages, label names)
@@ -88,7 +88,11 @@ green after the fix, and the release-side rules fail the contract test on regres
       `${{ github.event.pull_request.title }}` in `run:` → 1 HIGH; the same via `env:` → 0;
       `inputs.bump` (choice) → 0.
       verify: `npx vitest run tests/scripts/lint_workflow_security.test.ts` → 0 and `./scripts-run src/scripts/lint_workflow_security --strict` → exit 0
-- [ ] **2.2 No cache in a privileged job.** Add rule `privileged-job-cache` (privileged =
+      Note: the rule found 7 HIGH step groups at the pin, the ten sites plus
+      `release.yml`'s `join(github.event.pull_request.labels.*.name)`. Each resolve step now
+      also holds the resolved tag/version to `[0-9A-Za-z.-]`, because its step output is
+      re-interpolated inline downstream (13 sites) and the rule treats step outputs as fixed-shape.
+- [x] **2.2 No cache in a privileged job.** Add rule `privileged-job-cache` (privileged =
       effective `id-token: write`, `contents: write`, or a `secrets.*` other than
       `GITHUB_TOKEN`, inherited from workflow level unless the job overrides; cache =
       `with.cache` on a `setup-*` action or `actions/cache`). Remove `cache:` from the six jobs:
@@ -142,6 +146,8 @@ green after the fix, and the release-side rules fail the contract test on regres
 |---|---|---|---|
 | OD-2, conservative reading: a message forwarded from another session (lead to worker, peer, or framed subagent hand-back) never counts as a human turn, so it never writes a `pr-merge` or any other git grant (1.1) | Let a lead session's message authorize a merge in a worker session | The ledger cannot tell a lead's instruction from a peer that quotes untrusted text; the conservative reading is reversible by deleting one regex test in `humanTypedThisTurn` | The owner answers OD-2 with "a lead may authorize", and a signed or otherwise provenance-checked lead channel exists |
 | The consumer-shipped twin `work_engine/_lib/agent_settings.ts` carries a local `_is_contained` with the same algorithm instead of importing `isContained` (1.3) | Import across the package boundary | That tree ships to consumers self-contained and cannot reach `src/scripts/_lib` | A shared runtime library lands inside the shipped tree |
+| `privileged-job-cache` ships MEDIUM, `template-injection` HIGH (2.1, 2.2) | Both HIGH | The 2026-06-13 severity model is council-locked; a new HIGH is what 2.1 names explicitly, 2.2 names no tier, so it follows the `persist-credentials` precedent: MEDIUM in the linter, blocking through `tests/contracts/ci_supply_chain.test.ts` | The council re-tiers the model |
+| A resolved release tag/version is held to `[0-9A-Za-z.-]` in the resolve step (2.1) | Move each of the 13 downstream `steps.*.outputs` interpolations to `env:` | One guard per resolve step closes the taint at its source and keeps the rule's "step outputs are fixed-shape" premise true; release tags are plain semver (`release_tag_dispatch.ts:56`, the `on.push.tags` filters) | A release tag format outside that set is introduced |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-03 | reviewer: claude/host -->

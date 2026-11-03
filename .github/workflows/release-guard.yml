@@ -35,12 +35,23 @@ jobs:
     steps:
       - name: Resolve tag name
         id: tag
+        # Free text reaches the shell only through env:, and the resolved name is
+        # held to a release-version shape so every later `steps.tag.outputs.name`
+        # interpolation reads a fixed-shape value (lint rule template-injection).
+        env:
+          TAG_INPUT: ${{ inputs.tag }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "name=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+            tag="$TAG_INPUT"
           else
-            echo "name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            tag="${GITHUB_REF_NAME}"
           fi
+          case "$tag" in
+            *[!0-9A-Za-z.-]*|"")
+              echo "::error::tag '$tag' is not a release version" >&2
+              exit 1 ;;
+          esac
+          echo "name=$tag" >> "$GITHUB_OUTPUT"
 
       - name: Check out tagged commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
