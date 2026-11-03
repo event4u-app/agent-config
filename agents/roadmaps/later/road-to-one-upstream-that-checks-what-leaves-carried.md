@@ -23,7 +23,7 @@ estate_growth_exempt: "later_roadmaps 104 -> 105 with active_roadmaps 20 -> 19, 
 
 ## Goal
 
-Every step road-to-one-upstream-that-checks-what-leaves deferred is either done here or explicitly disposed
+Every step the parent roadmap deferred is either done here or explicitly disposed
 of — a step that still cannot run is re-deferred with its reason, never
 left to read as finished.
 

@@ -30,7 +30,7 @@ estate_growth_exempt: "open_blockers rises by one because step 2.4's hold was di
 
 ## Goal
 
-Every step road-to-host-claims-the-tree-contradicts deferred is either done here or explicitly disposed
+Every step the parent roadmap deferred is either done here or explicitly disposed
 of — a step that still cannot run is re-deferred with its reason, never
 left to read as finished.
 
