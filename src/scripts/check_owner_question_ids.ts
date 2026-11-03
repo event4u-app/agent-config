@@ -17,6 +17,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { parseGateArgs } from './_lib/gate_args.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
@@ -58,11 +59,6 @@ export function findDuplicateIds(ids: readonly IdOccurrence[]): DuplicateId[] {
         .sort((a, b) => a.id - b.id);
 }
 
-function parseArgs(argv: readonly string[]): string {
-    const i = argv.indexOf('--file');
-    if (i >= 0 && argv[i + 1] !== undefined) return path.resolve(argv[i + 1]);
-    return DEFAULT_FILE;
-}
 
 /** `--self-test` — drives the real CLI over synthetic registers. */
 export function selfTest(): number {
@@ -75,6 +71,7 @@ export function selfTest(): number {
     try {
         return runSelfTest({
             gate: 'check_owner_question_ids',
+            exit: { finding: 1, cannot_run: 2 },
             minCases: 3,
             minRejectCases: 2,
             cases: [
@@ -102,11 +99,19 @@ export function selfTest(): number {
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
-    if (argv.includes('--self-test')) return selfTest();
-    const file = parseArgs(argv);
+    const parsed = parseGateArgs('check_owner_question_ids', argv, {
+        'self-test': { type: 'boolean' },
+        file: { type: 'string' },
+    });
+    if (!parsed.ok) {
+        process.stderr.write(`${parsed.message}\n`);
+        return 2;
+    }
+    if (parsed.values['self-test']) return selfTest();
+    const file = parsed.values.file !== undefined ? path.resolve(parsed.values.file) : DEFAULT_FILE;
     if (!fs.existsSync(file)) {
         process.stderr.write(`❌  check_owner_question_ids: ${file} does not exist\n`);
-        return 1;
+        return 2;
     }
     const ids = parseOwnerQuestionIds(fs.readFileSync(file, 'utf-8'));
     try {
