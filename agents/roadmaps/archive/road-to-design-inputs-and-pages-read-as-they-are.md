@@ -106,7 +106,7 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
       matching accepts `s|es` plurals except `views`/`pages` (backend sense);
       `animation` joins `_UI_NOUNS`; `karte`, `kachel`, `animation`, `abstand`
       and `abständ` join `UI_I18N.de.nouns`.
-      verify: `./scripts-run src/scripts/eval_ui_triviality` -> `symptom_ui` PASS, `backend` PASS, `add_control` and `de_ui_recall` PASS; `npx vitest run tests/scripts/work_engine/intent_classify.test.ts` -> 0
+      verify: `./scripts-run src/scripts/eval_ui_triviality` -> 0 -> `symptom_ui` PASS, `backend` PASS, `add_control` and `de_ui_recall` PASS; `npx vitest run tests/scripts/work_engine/intent_classify.test.ts` -> 0
       production entry: src/agent-src/templates/scripts/work_engine/__main__.ts (exec_ts of its dist projection by cmd_implement_ticket and cmd_work in scripts/_dispatch.bash:998, reaching cli.ts, input_builders.ts and populate_routing)
 - [x] **3.3 A bare quality adjective is review-first.** A prompt whose only <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: dist/agent-src/templates/scripts/work_engine/intent/classify.ts -->
       goal is an evaluative adjective (de: hochwertig, edel, schöner, moderner,
@@ -115,7 +115,7 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
       this branch — sets `review_only` in `populate_routing` (`classify.ts:432-452`)
       and halts at the existing `review-before-rebuild`. An adjective beside a
       concrete object or build verb does not (default of owner decision E2).
-      verify: `./scripts-run src/scripts/eval_ui_triviality` -> `adjective_review` PASS and `backend` PASS; `npx vitest run tests/scripts/work_engine/review_before_rebuild.test.ts` -> 0 with a "Mach die Website hochwertiger" case writing nothing
+      verify: `./scripts-run src/scripts/eval_ui_triviality` -> 0 -> `adjective_review` PASS and `backend` PASS; `npx vitest run tests/scripts/work_engine/review_before_rebuild.test.ts` -> 0 with a "Mach die Website hochwertiger" case writing nothing
 
 ## Phase 4 — Instruments that read what they claim
 

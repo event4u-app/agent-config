@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **645**
-- Edges (incl. self-WRITE): **2464**
+- Edges (incl. self-WRITE): **2468**
 
 ## READ_ONLY edges
 
@@ -893,6 +893,7 @@
 | `.agent-src.uncondensed/skills/contract-review/SKILL.md` | `.agent-src.uncondensed/skills/contracts-cognition/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/contract-review/SKILL.md` | `.agent-src.uncondensed/skills/dpa-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/contract-review/SKILL.md` | `.agent-src.uncondensed/skills/legal-intake-triage/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/contract-review/SKILL.md` | `.agent-src.uncondensed/skills/legal-practice-profile/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/contract-review/SKILL.md` | `.agent-src.uncondensed/skills/nda-triage/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/contracts-cognition/SKILL.md` | `.agent-src.uncondensed/skills/build-buy-partner/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/contracts-cognition/SKILL.md` | `.agent-src.uncondensed/skills/data-handling-judgment/SKILL.md` | `body_link` | 1 |
@@ -1027,6 +1028,7 @@
 | `.agent-src.uncondensed/skills/docx-authoring/SKILL.md` | `.agent-src.uncondensed/skills/pdf-tools/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/docx-authoring/SKILL.md` | `.agent-src.uncondensed/skills/spreadsheet-authoring/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/dpa-review/SKILL.md` | `.agent-src.uncondensed/skills/data-handling-judgment/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/dpa-review/SKILL.md` | `.agent-src.uncondensed/skills/legal-practice-profile/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/dpa-review/SKILL.md` | `.agent-src.uncondensed/skills/privacy-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/editorial-calendar/SKILL.md` | `.agent-src.uncondensed/skills/content-funnel-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/editorial-calendar/SKILL.md` | `.agent-src.uncondensed/skills/gtm-launch/SKILL.md` | `body_link` | 1 |
@@ -1290,6 +1292,7 @@
 | `.agent-src.uncondensed/skills/learning-to-rule-or-skill/SKILL.md` | `.agent-src.uncondensed/skills/memory-consolidation/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/legal-intake-triage/SKILL.md` | `.agent-src.uncondensed/skills/contract-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/legal-intake-triage/SKILL.md` | `.agent-src.uncondensed/skills/dpa-review/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/legal-intake-triage/SKILL.md` | `.agent-src.uncondensed/skills/legal-practice-profile/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/legal-intake-triage/SKILL.md` | `.agent-src.uncondensed/skills/nda-triage/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/legal-practice-profile/SKILL.md` | `.agent-src.uncondensed/skills/contract-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/legal-practice-profile/SKILL.md` | `.agent-src.uncondensed/skills/dpa-review/SKILL.md` | `body_link` | 1 |
@@ -1356,6 +1359,7 @@
 | `.agent-src.uncondensed/skills/nda-triage/SKILL.md` | `.agent-src.uncondensed/skills/contract-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/nda-triage/SKILL.md` | `.agent-src.uncondensed/skills/contracts-cognition/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/nda-triage/SKILL.md` | `.agent-src.uncondensed/skills/dpa-review/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/nda-triage/SKILL.md` | `.agent-src.uncondensed/skills/legal-practice-profile/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/okr-tree-modeling/SKILL.md` | `.agent-src.uncondensed/skills/dcf-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/okr-tree-modeling/SKILL.md` | `.agent-src.uncondensed/skills/funnel-analysis/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/okr-tree-modeling/SKILL.md` | `.agent-src.uncondensed/skills/rice-prioritization/SKILL.md` | `body_link` | 1 |

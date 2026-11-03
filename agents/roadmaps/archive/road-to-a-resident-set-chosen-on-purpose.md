@@ -41,7 +41,7 @@ the measured listing-arm baseline its owner requires.
       tie-break inside a band. Pure, no I/O. Add the loader that reads `routes_to:`
       from `src/rules/*.md` and `packs:` from skill frontmatter in a separate
       function so the order stays testable.
-      verify: `npx vitest run tests/scripts/host_listing_model.test.ts` -> 0, with new
+      verify: `npx vitest run tests/scripts/host_listing_model.test.ts` -> 0  with new
       cases written red first: a fixture where a `routes_to` target sorts last
       alphabetically lands first; every permutation of the input yields the same
       output; an empty `routesTo` and empty `packMembers` reproduce the alphabetical
@@ -58,7 +58,7 @@ the measured listing-arm baseline its owner requires.
       reach exempt: a maintainer report, never a gate by the step's own title, run by hand as `./scripts-run scripts/report_resident_set`; nothing shipped invokes it and nothing should
 - [x] **1.3 Mark the parked step.** In `agents/roadmaps/later/road-to-catalogue-host-fit.md` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/host_listing_model.ts -->
       tick 2.2 with a one-line pointer to 1.1 here, leaving its verify text intact.
-      verify: `grep -n "road-to-a-resident-set-chosen-on-purpose" agents/roadmaps/later/road-to-catalogue-host-fit.md` -> one hit.
+      verify: `grep -n "road-to-a-resident-set-chosen-on-purpose" agents/roadmaps/later/road-to-catalogue-host-fit.md` -> /./ 
 
 ## Phase 2 — The hook knows what the installer stripped
 
@@ -69,7 +69,7 @@ the measured listing-arm baseline its owner requires.
       is `claude`. Fail open unchanged: a missing, unreadable or malformed sidecar
       contributes nothing and never turns `null` into a filter on its own; only
       entries whose recorded value is `name-only` count.
-      verify: `npx vitest run tests/hooks/skill_route_hook.test.ts` -> 0, with new cases
+      verify: `npx vitest run tests/hooks/skill_route_hook.test.ts` -> 0  with new cases
       written red first under a scratch `EVENT4U_CONFIG_HOME`: a sidecar marking X
       `name-only` means the pointer never names X on `claude`; the same sidecar on
       another host changes nothing; no sidecar is byte-identical to today; a corrupt
@@ -86,7 +86,7 @@ the measured listing-arm baseline its owner requires.
       frontmatter: `name`, `description`, `required === true`), and map it in
       `listPrompts` in `src/cli/mcp/dispatch.ts` instead of `arguments: []`. An entry
       that declares nothing still serves `[]`.
-      verify: `npx vitest run src/cli/mcp/dispatch.test.ts` -> 0, with a red-first case:
+      verify: `npx vitest run src/cli/mcp/dispatch.test.ts` -> 0  with a red-first case:
       a fixture skill declaring one required input lists exactly that argument, and an
       undeclared one lists `[]`; plus `npx vitest run src/cli/mcp/content.test.ts` -> 0.
       production entry: src/cli/main.ts (loaded by the bin entry agent-config.ts through a dynamic import at line 90, which the reach model does not follow; main.ts:36 imports runMcpServer, which serves content.ts and dispatch.ts over stdio)
@@ -96,18 +96,18 @@ the measured listing-arm baseline its owner requires.
       `src/skills/code-review/checklists/infra.md`: attacker-controlled
       `${{ github.event.* }}` / `github.head_ref` never interpolated into `run:`; pass
       it through `env:` and quote the variable.
-      verify: `grep -n "github.event" src/skills/github-ci/SKILL.md src/skills/code-review/checklists/infra.md` -> at least one hit in each file.
+      verify: `grep -n "github.event" src/skills/github-ci/SKILL.md src/skills/code-review/checklists/infra.md` -> /./ in each file.
       reach exempt: a SKILL.md text edit with no code change; cli/mcp/content.ts is named only by the receipt bound, and the edited skill reaches consumers as content, not as an import
 - [x] **3.3 ReDoS and shell rows.** Two rows in the surface table of <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/mcp/content.ts -->
       `src/skills/ai-code-blindspots/SKILL.md`: **Regex on untrusted input** (no nested
       or overlapping quantifiers, anchored, bounded input length, a must-match and a
       must-not-match test) and **Shell script** (`set -euo pipefail`, every expansion
       quoted, ShellCheck when present).
-      verify: `grep -nE "ReDoS|pipefail" src/skills/ai-code-blindspots/SKILL.md` -> two hits.
+      verify: `grep -nE "ReDoS|pipefail" src/skills/ai-code-blindspots/SKILL.md` -> /./ 
       reach exempt: a SKILL.md text edit with no code change; cli/mcp/content.ts is named only by the receipt bound, and the edited skill reaches consumers as content, not as an import
 - [x] **3.4 Persona template value.** `src/skills/persona-writing/SKILL.md:90` reads <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/mcp/content.ts -->
       `tier: core | specialist`, matching `docs/contracts/persona-schema.md:25`.
-      verify: `grep -c "core | specialty" src/skills/persona-writing/SKILL.md` -> 0, then
+      verify: `grep -c "core | specialty" src/skills/persona-writing/SKILL.md` -> 0  then
       `task sync` and `bash src/scripts/condense.sh --changed` lists nothing.
       reach exempt: a SKILL.md text edit with no code change; cli/mcp/content.ts is named only by the receipt bound, and the edited skill reaches consumers as content, not as an import
 

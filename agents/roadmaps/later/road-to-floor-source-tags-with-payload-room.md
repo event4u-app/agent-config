@@ -44,4 +44,4 @@ tag vocabulary named in the retention rule's Track 1 — with
 ## Phase 1 — Restore the tags
 
 - [ ] **1.1 Tag lines back in the sibling floors.** Re-add the normative-value tag line to `src/rules/domain-safety-disclaimer.md` and `src/rules/finance-safety-floor.md`, and the second OWASP `source_urls` entry to `src/rules/broken-access-control.md`.
-      verify: `./scripts-run src/scripts/check_preamble_payload_budget` -> exit 0 on the same change.
+      verify: `./scripts-run src/scripts/check_preamble_payload_budget` -> 0 on the same change.

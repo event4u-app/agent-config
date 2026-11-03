@@ -62,7 +62,7 @@ green after the fix, and the release-side rules fail the contract test on regres
       enumerates 0 modules (`tests/lib/agent_settings.test.ts`); `classifyNamedPath(root,
       'a/../../<root>-evil/x')` is `unresolvable` (`tests/scripts/install_reach_checks.test.ts`);
       `<root>/a` and `<root>/..cache` stay contained.
-      verify: `npx vitest run tests/lib/agent_settings.test.ts tests/scripts/install_reach_checks.test.ts tests/scripts/templates_memory_signal.test.ts` → 0, and `grep -n "startsWith(root)" src/scripts/_lib/agent_settings.ts src/agent-src/templates/scripts/work_engine/_lib/agent_settings.ts` → no match
+      verify: `npx vitest run tests/lib/agent_settings.test.ts tests/scripts/install_reach_checks.test.ts tests/scripts/templates_memory_signal.test.ts` -> 0  and `grep -n "startsWith(root)" src/scripts/_lib/agent_settings.ts src/agent-src/templates/scripts/work_engine/_lib/agent_settings.ts` → no match
       reach exempt: reached through createRequire, which the reach model does not follow — hot_context_hook.ts (a hook-manifest concern) requires session_memory_index.js at :89, which imports capRows, orderRows and verifyMemoryRoot, and requires _lib/session_index_trust.js at :127 for claimSessionOnce
 - [x] **1.4 Carriage return is not a hidden-instruction signal.** In <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/retrieval_sanitize.ts -->
       `src/scripts/_lib/retrieval_sanitize.ts`, `scan_invisible_findings` no longer reports
@@ -84,7 +84,7 @@ green after the fix, and the release-side rules fail the contract test on regres
       Tests in `tests/scripts/lint_workflow_security.test.ts`: a planted
       `${{ github.event.pull_request.title }}` in `run:` → 1 HIGH; the same via `env:` → 0;
       `inputs.bump` (choice) → 0.
-      verify: `npx vitest run tests/scripts/lint_workflow_security.test.ts` → 0 and `./scripts-run src/scripts/lint_workflow_security --strict` → exit 0
+      verify: `npx vitest run tests/scripts/lint_workflow_security.test.ts` -> 0 and `./scripts-run src/scripts/lint_workflow_security --strict` → exit 0
 - [x] **2.2 No cache in a privileged job.** Add rule `privileged-job-cache` (privileged = <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/cloud-release.yml -->
       effective `id-token: write`, `contents: write`, or a `secrets.*` other than
       `GITHUB_TOKEN`, inherited from workflow level unless the job overrides; cache =
@@ -93,7 +93,7 @@ green after the fix, and the release-side rules fail the contract test on regres
       `deploy-mcp-worker.yml:111`. Do not add `cache-mode`. Tests: a planted cache in a job with
       workflow-level `id-token: write` → finding; the same cache in a job overriding to
       `contents: read` → none (fixture mirrors `deploy-mcp-worker.yml:40-41`).
-      verify: `npx vitest run tests/scripts/lint_workflow_security.test.ts` → 0, `./scripts-run src/scripts/lint_workflow_security --strict` → exit 0, `grep -n "cache:" .github/workflows/publish-npm.yml .github/workflows/deploy-site.yml .github/workflows/cloud-release.yml` → no match
+      verify: `npx vitest run tests/scripts/lint_workflow_security.test.ts` -> 0  `./scripts-run src/scripts/lint_workflow_security --strict` → exit 0, `grep -n "cache:" .github/workflows/publish-npm.yml .github/workflows/deploy-site.yml .github/workflows/cloud-release.yml` → no match
 - [x] **2.3 The shipped templates get the same nets.** Add `persist-credentials: false` to the <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       six checkouts in `src/agent-src/templates/github-workflows/` that lack it (`true` with a
       comment only where a later step pushes); extend `tests/contracts/ci_supply_chain.test.ts`
@@ -120,7 +120,7 @@ green after the fix, and the release-side rules fail the contract test on regres
       (`src/scripts/_lib/user_global_observations.ts:232`) that fails on any missed attack AND any
       refused benign row. It is expected red until 3.2; record the miss and refusal counts in
       the step note.
-      verify: `npx vitest run tests/lib/standing_commands_fixture.test.ts` exits non-zero and its output names ≥ 2 missed attacks and ≥ 1 refused benign row
+      verify: `npx vitest run tests/lib/standing_commands_fixture.test.ts` -> 1 and its output names ≥ 2 missed attacks and ≥ 1 refused benign row
 - [x] **3.2 Repair the guard.** Extend `_STANDING_COMMAND_RE` in <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/user_global_observations.ts -->
       `src/scripts/_lib/user_global_observations.ts` to prepended recurrence, add the
       `retrieval_sanitize` scan (`risk_level !== 'low'`) as a second channel, and stop refusing an

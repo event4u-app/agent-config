@@ -181,7 +181,9 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // `mcp` (0x10, sealed) became `mcp-tool-use` (0x3f, train);
         // `code-review` (0x71, train) became `code-review-lens` (0x26, seals);
         // the new `github-ci` corpus (0x11) seals. The claim's scope moves to 18 of 45.
-        expect(sealed.length).toBe(45);
+        // 45 -> 46 on 2026-11-03: the new `performance-analysis` corpus (0x1a) seals,
+        // authored today, so it predates nothing. The claim's scope moves to 18 of 46.
+        expect(sealed.length).toBe(46);
     });
 
     it('the loader`s partition agrees with every published holdout row', () => {
@@ -408,8 +410,11 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 197 -> 199 on 2026-11-03: the mcp/code-review rename moves one row each way
         // across the seal, `copilot-config` (0x33) trains (153 -> 154) and
         // `github-ci` (0x11) seals (44 -> 45).
-        expect(all.length).toBe(199);
-        expect(all.filter((r) => r.partition === 'holdout').length).toBe(45);
+        // 199 -> 202 on 2026-11-03: three corpora for skills the same round touched;
+        // `performance-analysis` (0x1a) seals (45 -> 46), `data-handling-judgment` (0x5f)
+        // and `persona-writing` (0xe5) train (154 -> 156).
+        expect(all.length).toBe(202);
+        expect(all.filter((r) => r.partition === 'holdout').length).toBe(46);
     });
 });
 
@@ -491,7 +496,9 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 152 -> 153 on 2026-11-03: `character-consistency` trains (see the 197 line).
         // 153 -> 154 on 2026-11-03: `code-review` leaves train, `mcp-tool-use` and
         // `copilot-config` join it (see the 199 line).
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(154);
+        // 154 -> 156 on 2026-11-03: `data-handling-judgment` and `persona-writing` train
+        // (see the 202 line).
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(156);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

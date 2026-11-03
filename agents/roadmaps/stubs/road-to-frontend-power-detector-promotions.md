@@ -253,7 +253,7 @@ adds one ordering constraint inside that protocol rather than a new blocker.
       own analysis, under the same M1 = 0 promotion gate as E3.3. `review_by`
       moves to 2027-01-31 because the render primitive landed and the corpus
       independence did not.
-      verify: `grep -c '\*\*E3.4 ' agents/roadmaps/stubs/road-to-frontend-power-detector-promotions.md` -> 1.
+      verify: `grep -c '\*\*E3.4 ' agents/roadmaps/stubs/road-to-frontend-power-detector-promotions.md` -> 0 -> 1.
 
 Residue 1 above is partly discharged by
 `road-to-design-inputs-and-pages-read-as-they-are` step 4.2: `ui:render` now

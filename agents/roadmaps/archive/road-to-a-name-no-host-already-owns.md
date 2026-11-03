@@ -72,7 +72,7 @@ sees the user's machine. Nothing is deleted — every fix renames or reports.
 - [x] **1.6 Tell the user.** One `CHANGELOG.md` `[Unreleased]` entry: after the <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/host-skill-frontmatter-keys.json -->
       update `/mcp` and `/code-review` open Claude Code's own commands again; the
       skills are now `mcp-tool-use` and `code-review-lens`.
-      verify: `grep -n 'mcp-tool-use' CHANGELOG.md` -> at least one line under `## [Unreleased]`
+      verify: `grep -n 'mcp-tool-use' CHANGELOG.md` -> /./ under `## [Unreleased]`
 
 ## Phase 2 — Keep it from coming back
 

@@ -12224,6 +12224,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/contract-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/legal-practice-profile/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/contract-review/SKILL.md",
       "target": ".agent-src.uncondensed/skills/nda-triage/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -13488,6 +13495,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/dpa-review/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/legal-practice-profile/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/dpa-review/SKILL.md",
@@ -16018,6 +16032,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/legal-intake-triage/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/legal-practice-profile/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/legal-intake-triage/SKILL.md",
       "target": ".agent-src.uncondensed/skills/nda-triage/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -16656,6 +16677,13 @@
     {
       "source": ".agent-src.uncondensed/skills/nda-triage/SKILL.md",
       "target": ".agent-src.uncondensed/skills/dpa-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/nda-triage/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/legal-practice-profile/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1

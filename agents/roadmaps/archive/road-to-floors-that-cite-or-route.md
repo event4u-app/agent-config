@@ -49,22 +49,22 @@ source-tag vocabulary into the skills that were meant to carry it.
       (it moves only in the later re-verification item). Update the `why` string for
       `domain-safety-retention` in `src/scripts/check_rule_evidence_declaration.ts` SCOPE so it no
       longer says the rule cites floors "by jurisdiction".
-      verify: `grep -cE "10 years in DE|7 years from filing|6 in UK" src/rules/domain-safety-retention.md` prints 0 and `grep -c "model knowledge — verify" src/rules/domain-safety-retention.md` ≥ 1.
+      verify: `grep -cE "10 years in DE|7 years from filing|6 in UK" src/rules/domain-safety-retention.md` -> /^0$/ and `grep -c "model knowledge — verify" src/rules/domain-safety-retention.md` ≥ 1.
 - [x] **1.2 Retention floor, Track 2 clock.** In `src/rules/domain-safety-retention.md:62` replace <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_rule_evidence_declaration.ts -->
       "on a DSR clock (typically 30 days under GDPR)" with "on the regime's response clock (for
       GDPR, Art. 12(3) — quote the period from the text, tagged, never from memory)".
-      verify: `grep -c "typically 30 days" src/rules/domain-safety-retention.md` prints 0.
+      verify: `grep -c "typically 30 days" src/rules/domain-safety-retention.md` -> /^0$/ 
 - [x] **1.3 Same defect in a skill example.** `src/skills/data-handling-judgment/SKILL.md:156`: <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_rule_evidence_declaration.ts -->
       "billing-dispute = 7 years (contractual + tax authority)" → "billing-dispute = the longest
       applicable contractual or tax floor for the named jurisdiction, `[model knowledge — verify]`".
       Repair, do not delete the example; `:158` stays.
-      verify: `grep -c "7 years (contractual + tax authority)" src/skills/data-handling-judgment/SKILL.md` prints 0.
+      verify: `grep -c "7 years (contractual + tax authority)" src/skills/data-handling-judgment/SKILL.md` -> /^0$/ 
 - [~] **1.4 The sentence in the two sibling floors.** Carried 2026-11-03 to `later/road-to-floor-source-tags-with-payload-room` (built, then reverted for the standing-payload ratchet; council split, conservative branch). <!-- deferred-resolution: carried-to=road-to-floor-source-tags-with-payload-room --> One line each in <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_rule_evidence_declaration.ts -->
       `src/rules/finance-safety-floor.md` (Assumptions block, `:69`) and
       `src/rules/domain-safety-disclaimer.md`: "A normative value (period, article, threshold, rate)
       carries `[verified — source, date]` from a primary source or `[model knowledge — verify]`;
       never stated from memory as fact."
-      verify: `grep -c "model knowledge — verify" src/rules/finance-safety-floor.md src/rules/domain-safety-disclaimer.md` shows ≥ 1 for each.
+      verify: `grep -c "model knowledge — verify" src/rules/finance-safety-floor.md src/rules/domain-safety-disclaimer.md` -> /[1-9]/ for each.
 
 ## Phase 2 — A stamp names its source; the vocabulary is wired
 
@@ -78,14 +78,14 @@ source-tag vocabulary into the skills that were meant to carry it.
       list the other six with reason "primary URL not yet fetched". Add self-test cases:
       external-standard without URLs and not pending → reject; pending rule with URLs → reject.
       Not report-only.
-      verify: `./scripts-run src/scripts/check_rule_evidence_declaration --self-test` passes with ≥ 8 cases and `./scripts-run src/scripts/check_rule_evidence_declaration` exits 0.
+      verify: `./scripts-run src/scripts/check_rule_evidence_declaration --self-test` -> 0 with ≥ 8 cases and `./scripts-run src/scripts/check_rule_evidence_declaration` exits 0.
 - [x] **2.2 Legal skills point at the vocabulary.** One line in each of <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_legal_pack.ts -->
       `src/skills/{contract-review,nda-triage,dpa-review,legal-intake-triage}/SKILL.md` pointing at
       `legal-practice-profile` § Source-tag + currency vocabulary. Add check 1.4 (presence of the
       pointer, never output content) to `src/scripts/lint_legal_pack.ts`, exempting
       `legal-practice-profile` itself, with a test in `tests/scripts/lint_legal_pack.test.ts` that a
       fixture skill without the pointer fails.
-      verify: `npx vitest run tests/scripts/lint_legal_pack.test.ts` passes and `./scripts-run src/scripts/lint_legal_pack` exits 0.
+      verify: `npx vitest run tests/scripts/lint_legal_pack.test.ts` -> 0 and `./scripts-run src/scripts/lint_legal_pack` exits 0.
 - [x] **2.3 Webhook receiving in the existing corpus row.** Extend <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_legal_pack.ts -->
       `src/skills/threat-modeling/data/threats.csv:30`: Required Controls gain "verify the signature
       over the raw request bytes before any parsing; acknowledge 2xx within the provider timeout and
@@ -93,27 +93,27 @@ source-tag vocabulary into the skills that were meant to carry it.
       rejected". No new skill, no numeric tolerance (ADR-238). Record the extension in
       `src/skills/threat-modeling/data/manifest.json` `sha` note as recalled, not re-read, so
       `last_checked` stays unchanged (existing precedent in that note).
-      verify: `grep -c "raw request bytes" src/skills/threat-modeling/data/threats.csv` ≥ 1 and `./scripts-run src/scripts/check_corpus_staleness` exits 0.
+      verify: `grep -c "raw request bytes" src/skills/threat-modeling/data/threats.csv` -> /[1-9]/ and `./scripts-run src/scripts/check_corpus_staleness` exits 0.
 
 ## Phase 3 — Two small reachability fixes
 
 - [x] **3.1 Dead freshness-gate link.** `src/agent-src/contexts/authority/scope-mechanics.md:121`: <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `../../commands/create-pr.md` → `../../commands/pr/create.md` (target
       `dist/agent-src/commands/pr/create.md` holds Step 1b).
-      verify: `grep -c "commands/create-pr.md" src/agent-src/contexts/authority/scope-mechanics.md` prints 0 and `test -f dist/agent-src/commands/pr/create.md`.
+      verify: `grep -c "commands/create-pr.md" src/agent-src/contexts/authority/scope-mechanics.md` -> /^0$/ and `test -f dist/agent-src/commands/pr/create.md`.
 - [x] **3.2 A foreign repo's AI-contribution policy in the existing confirmation.** One paragraph <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       in `src/domains/git/pr/create/command.md` § 1 Check prerequisites: when the target repo is not
       the user's (fork PR, foreign issue or comment), read its `AGENTS.md`, `CONTRIBUTING*` and
       `AI_POLICY*`, quote the AI-relevant lines inside the existing Hard-Floor confirmation; if they
       forbid AI-authored contributions, hand the draft to the human instead of posting; never add
       `Signed-off-by` on the human's behalf. No new question beyond the existing confirmation.
-      verify: `grep -cE "AI_POLICY|Signed-off-by" src/domains/git/pr/create/command.md` ≥ 2.
+      verify: `grep -cE "AI_POLICY|Signed-off-by" src/domains/git/pr/create/command.md` -> /[1-9]/ 
 
 ## Phase 4 — Projection and gates
 
 - [x] **4.1 Regenerate and run the touched gates.** `task sync` and `task generate-tools`, then the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_rule_evidence_declaration.ts -->
       gates for every file changed above.
-      verify: `bash src/scripts/condense.sh --changed` lists nothing; `./scripts-run src/scripts/check_references`, `./scripts-run src/scripts/check_rule_evidence_declaration`, `./scripts-run src/scripts/lint_legal_pack` and `./scripts-run src/scripts/check_source_size_budget` exit 0.
+      verify: `bash src/scripts/condense.sh --changed` -> /^$/  `./scripts-run src/scripts/check_references`, `./scripts-run src/scripts/check_rule_evidence_declaration`, `./scripts-run src/scripts/lint_legal_pack` and `./scripts-run src/scripts/check_source_size_budget` exit 0.
 
 ## Later (not active — each needs network, spend, a frozen benchmark or a council verdict)
 
