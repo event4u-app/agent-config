@@ -75,7 +75,7 @@ Each iteration:
    command's mode-selection question. Its Auto flow + Finalize stage handle
    everything per comment: apply valid fixes locally, record replies,
    syntax-check, **commit + push** (Conventional Commit, PR branch only),
-   reply, resolve threads.
+   reply, resolve threads, minimize the round's resolved bot review summaries.
 2. **Verify the push** — confirm the working tree is clean and the PR head
    moved (or nothing needed changing). Leftover uncommitted review fixes →
    commit + push them now under the same authorization; anything unrelated to

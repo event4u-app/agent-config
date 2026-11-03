@@ -57,7 +57,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`fix-comments`** — Review the code comments touched by the current branch and simplify, shorten, or remove each one
 - **`fix-commit-messages`** — Measure the repo's commit convention, ask which style to standardise on, then rewrite past commit subjects to it — own commits and full history by default
 - **`fix-portability`** — Find and fix project-specific references in shared .augment/ package files
-- **`fix-pr-comments`** — Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR
+- **`fix-pr-comments`** — Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR, incl. minimizing resolved bot review summaries
 - **`fix-pr-comments-loop`** — Loop /fix pr-comments on a PR — fix, commit+push, re-request Copilot review, repeat until Copilot has no new comments
 - **`fix-quality`** — Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files
 - **`fix-refs`** — Find and fix broken cross-references in .augment/ and agents/ files

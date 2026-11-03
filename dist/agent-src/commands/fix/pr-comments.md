@@ -6,7 +6,7 @@ visibility: internal
 cluster: fix
 sub: pr-comments
 skills: [php-coder, quality-tools]
-description: Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR
+description: Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR, incl. minimizing resolved bot review summaries
 argument-hint: "[pr-url]"
 suggestion:
   eligible: false
@@ -259,7 +259,23 @@ fix must be live on the PR branch *before* its reply claims it.
      `resolveReviewThread(input: {threadId: "<id>"})` mutation. Fetch the thread
      node ids from `repository.pullRequest.reviewThreads` (GraphQL), match each
      thread to the comment you just replied to, and resolve it.
-   - Top-level PR review comments that are not inline threads cannot be resolved
-     — the reply stands, leave them.
+   - **Top-level review bodies have no thread, but they CAN be closed** — mark
+     them resolved with the GraphQL
+     `minimizeComment(input: {subjectId: "<review node id>", classifier: RESOLVED})`
+     mutation (`PullRequestReview` implements `Minimizable`). Fetch the review
+     node ids from `repository.pullRequest.reviews` (fields `id`, `author`,
+     `body`, `isMinimized`, and `comments { nodes { id } }` to map each review to
+     its inline threads). Minimize a review body when ALL of:
+     - the author is a **bot** (e.g. `copilot-pull-request-reviewer`'s overview
+       summary) — a human reviewer's top-level review is never hidden by the
+       agent; reply to it and leave it visible;
+     - the body is non-empty and `isMinimized` is `false`;
+     - every inline thread that belongs to this review is now resolved (after
+       step 4's thread resolves) — a summary whose findings are still open
+       stays visible.
+     Empty-body reviews (your own reply containers) are skipped. Never use
+     `dismissPullRequestReview` for this — dismissing is a reviewer-state
+     change, not a resolve.
 5. **Final summary:** bot comments handled, reviewer comments handled, files
-   modified, the pushed commit sha (if any), and how many threads were resolved.
+   modified, the pushed commit sha (if any), how many threads were resolved, and
+   how many top-level review bodies were minimized as resolved.
