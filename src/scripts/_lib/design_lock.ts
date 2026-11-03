@@ -13,7 +13,12 @@
  * diff or records it in a baseline. A brownfield project records its existing
  * drift once with `--write-baseline`; after that only NEW drift is reported.
  * A Lock line still carrying the template's `[placeholder]` declares nothing.
+ *
+ * A spec-format YAML front matter (`colors`, `rounded`, `spacing`) is a scale,
+ * not a Lock: it is counted and reported, never promoted into one.
  */
+
+import { parse as parseYaml } from 'yaml';
 
 export interface Locks {
     /** Hue ranges in degrees, [centre, tolerance]. Empty = no Colour Lock. */
@@ -114,4 +119,38 @@ export function checkFile(file: string, text: string, locks: Locks): LockFinding
 export function newDrift(findings: LockFinding[], baseline: ReadonlyArray<{ file: string; value: string }>): LockFinding[] {
     const known = new Set(baseline.map((b) => `${b.file}\0${b.value.toLowerCase()}`));
     return findings.filter((f) => !known.has(`${f.file}\0${f.value.toLowerCase()}`));
+}
+
+export interface FrontMatterScale {
+    colors: number;
+    radii: number;
+    spacings: number;
+}
+
+const entryCount = (v: unknown): number =>
+    Array.isArray(v) ? v.length : typeof v === 'object' && v !== null ? Object.keys(v).length : 0;
+
+/** The scale a DESIGN.md YAML front matter declares, or null when it declares none (or does not parse). */
+export function frontMatterScale(designMd: string): FrontMatterScale | null {
+    const m = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/.exec(designMd);
+    if (m === null) return null;
+    let doc: unknown;
+    try {
+        doc = parseYaml(m[1] as string);
+    } catch {
+        return null;
+    }
+    if (typeof doc !== 'object' || doc === null || Array.isArray(doc)) return null;
+    const d = doc as Record<string, unknown>;
+    const scale = { colors: entryCount(d['colors']), radii: entryCount(d['rounded']), spacings: entryCount(d['spacing']) };
+    return scale.colors + scale.radii + scale.spacings > 0 ? scale : null;
+}
+
+/** One line when a front-matter scale exists but no Lock is declared — the scale is read, nothing is checked. */
+export function scaleNotice(designMdName: string, designMd: string): string | null {
+    const scale = frontMatterScale(designMd);
+    if (scale === null) return null;
+    const locks = parseLocks(designMd);
+    if (locks.hues.length > 0 || locks.radius !== null || locks.spacing !== null) return null;
+    return `design_lock: scale read from ${designMdName} front matter (${scale.colors} colours, ${scale.radii} radii, ${scale.spacings} spacings) — no Lock declared, nothing checked`;
 }

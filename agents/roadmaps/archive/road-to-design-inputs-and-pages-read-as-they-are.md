@@ -31,7 +31,7 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
 
 ## Phase 1 — Token files read as written
 
-- [ ] **1.1 A layerless file is read; emptiness is an error.** In
+- [x] **1.1 A layerless file is read; emptiness is an error.** In
       `src/skills/design-tokens/scripts/tokens.ts` `generateCss`: when none of
       `primitive`/`semantic`/`component`/`dark` is present, flatten every
       top-level group the way `semantic` is flattened today; when layers exist
@@ -40,20 +40,20 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
       `tests/fixtures/dtcg-2025-10/`, test in `tests/scripts/dtcg_conformance.test.ts`.
       The starter golden stays byte-identical; the empty-`{}` case stays 0/0.
       verify: `npx vitest run tests/scripts/dtcg_conformance.test.ts tests/scripts/skills_design_tokens_tokens.test.ts` -> 0
-- [ ] **1.2 An unresolvable reference is an error.** `resolveReference`
+- [x] **1.2 An unresolvable reference is an error.** `resolveReference`
       (`tokens.ts:178-197`) throws `TokenValueError` naming the token path and
       the missing target; `generate` exits 1. Rewrite the pinning case at
       `tests/scripts/skills_design_tokens_tokens.test.ts:118` to the new
       expectation (it was the defect, not the guard).
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t "unresolvable"` -> 0
-- [ ] **1.3 `$root` named, `$extends` and spec-form `$ref` never silent.**
+- [x] **1.3 `$root` named, `$extends` and spec-form `$ref` never silent.**
       In `flattenTokens` (`tokens.ts:310-327`): a `$root` key takes the group's
       own name (no `$` in any custom-property name); a group carrying `$extends`
       or a token carrying `$ref` without `$value` raises a named
       `TokenValueError` ("not supported: $extends at <path>") instead of being
       dropped or emitted verbatim. Resolution of both is a later step.
       verify: `npx vitest run tests/scripts/dtcg_conformance.test.ts -t "root|extends|ref"` -> 0
-- [ ] **1.4 Arrays never reach string concatenation.** `tokenValueToCss`
+- [x] **1.4 Arrays never reach string concatenation.** `tokenValueToCss`
       (`tokens.ts:284-305`): `shadow` (object or array) → one `box-shadow`
       value; `cubicBezier` → `cubic-bezier(a, b, c, d)`; a `fontFamily` array →
       a comma list, names with spaces quoted; any other array or a
@@ -62,7 +62,7 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
       `src/skills/design-tokens/scripts/tokens.mjs` from the source. This closes
       the residue of the archived brand roadmap's AC-5.
       verify: `npx vitest run tests/scripts/dtcg_conformance.test.ts -t "array|shadow|cubic"` -> 0 and `grep -c "object Object" tests/scripts/dtcg_conformance.test.ts` shows the assertion is an absence check
-- [ ] **1.5 A front-matter scale is reported, never silent.**
+- [x] **1.5 A front-matter scale is reported, never silent.**
       `src/scripts/_lib/design_lock.ts` and the `src/scripts/design_lock.ts`
       CLI: a DESIGN.md whose YAML front matter declares `colors`, `rounded` or
       `spacing` but has no Lock line prints one line — scale read (n colours,
@@ -72,7 +72,7 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
 
 ## Phase 2 — Accessibility claims that carry what they say
 
-- [ ] **2.1 The 2.1 register is cumulative, and pointer cancellation is said
+- [x] **2.1 The 2.1 register is cumulative, and pointer cancellation is said
       correctly.** `tests/contracts/accessibility_wcag_version_claim.test.ts`:
       add `CRITERIA_BY_VERSION['2.1']` (A: 2.1.4, 2.5.1, 2.5.2, 2.5.3, 2.5.4;
       AA: 1.3.4, 1.3.5, 1.4.10, 1.4.11, 1.4.12, 1.4.13, 4.1.3; AAA disposition:
@@ -88,7 +88,7 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
 
 ## Phase 3 — A symptom or an adjective routes to a review
 
-- [ ] **3.1 Corpus first.** `internal/bench/corpora/ui-triviality-golden.yaml`
+- [x] **3.1 Corpus first.** `internal/bench/corpora/ui-triviality-golden.yaml`
       gains a `symptom` category (≥ 8: "the buttons only react on release",
       "Die Animationen kann man nicht unterbrechen", "Die Abstände zwischen den
       Karten sind ungleich", plural English nouns) and a `quality-adjective`
@@ -99,13 +99,13 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
       gains bars `symptom_ui` (never `backend`) and `adjective_review`
       (always `review_only`). The new bars MISS at this step.
       verify: `npx vitest run tests/scripts/eval_ui_triviality.test.ts` -> 0 and `./scripts-run src/scripts/eval_ui_triviality` prints both new bars
-- [ ] **3.2 Plurals and German symptom nouns.** In
+- [x] **3.2 Plurals and German symptom nouns.** In
       `src/agent-src/templates/scripts/work_engine/intent/classify.ts`: UI-noun
       matching accepts `s|es` plurals except `views`/`pages` (backend sense);
       `animation` joins `_UI_NOUNS`; `karte`, `kachel`, `animation`, `abstand`
       and `abständ` join `UI_I18N.de.nouns`.
       verify: `./scripts-run src/scripts/eval_ui_triviality` -> `symptom_ui` PASS, `backend` PASS, `add_control` and `de_ui_recall` PASS; `npx vitest run tests/scripts/work_engine/intent_classify.test.ts` -> 0
-- [ ] **3.3 A bare quality adjective is review-first.** A prompt whose only
+- [x] **3.3 A bare quality adjective is review-first.** A prompt whose only
       goal is an evaluative adjective (de: hochwertig, edel, schöner, moderner,
       professioneller, aufgeräumter; en: premium, polished, nicer, sleeker,
       more professional) with a UI signal — `site` counts as a UI signal only in
@@ -116,13 +116,13 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
 
 ## Phase 4 — Instruments that read what they claim
 
-- [ ] **4.1 Press feedback is visible to the probe.** Add `transform`,
+- [x] **4.1 Press feedback is visible to the probe.** Add `transform`,
       `box-shadow`, `opacity` and `filter` to `COMPARED_PROPERTIES`
       (`src/scripts/ui_conformance_probe.ts:139-153`); the state comparison
       (`:363`, `:559`, `:631`) treats a key missing from an older observation as
       `not_available`, never as unchanged.
       verify: `npx vitest run tests/scripts/ui_conformance_probe.test.ts` -> 0 with a pure case where the reference's `active` changes `transform` and the target's does not, reported as lost
-- [ ] **4.2 The render states its denominator and the gap inputs.**
+- [x] **4.2 The render states its denominator and the gap inputs.**
       `src/cli/commands/uiRender.ts`: the style capture (`:593`) records
       `sampled` and `total` element counts in each `*.styles.json` envelope or
       manifest row, and `CAPTURED_PROPERTIES` (`:60-80`) gains
@@ -130,14 +130,14 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
       `display`, `flex-direction`. A reading over a truncated capture carries
       `partial: <sampled>/<total>`.
       verify: `npx vitest run tests/cli/uiRender_geometry.test.ts` -> 0 with assertions on the new keys and on `total > sampled` for a > 1,500-element fixture
-- [ ] **4.3 No probe action on a URL can write.** Add a URL-target predicate
+- [x] **4.3 No probe action on a URL can write.** Add a URL-target predicate
       to `src/cli/commands/uiRenderAssetIsolation.ts` (same origin, GET/HEAD
       only, everything else aborted and recorded) and apply it via
       `confinePage` before every `goto` of a URL target in
       `src/cli/commands/uiRender.ts` (`:381`, `:545`, `:673`, `:685`) and in
       `uiRenderInteract.ts`; the manifest records `network: { aborted, blocked }`.
       verify: `npx vitest run tests/cli/ui_render_asset_isolation.test.ts` -> 0 (pure predicate: cross-origin GET, same-origin POST and same-origin GET) and `grep -c "confinePage" src/cli/commands/uiRender.ts src/cli/commands/uiRenderInteract.ts` -> each ≥ 1
-- [ ] **4.4 `consistency-sibling-gap`, shadow only.** In
+- [x] **4.4 `consistency-sibling-gap`, shadow only.** In
       `src/scripts/lint_design_consistency.ts`, an exported pure
       `siblingGapFindings(rows)` over render rows and a `--render <styles.json>`
       mode: ≥ 3 visible, in-flow siblings of one parent with the same tag +
@@ -161,11 +161,29 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No fixture in `tests/fixtures/dtcg-2025-10/` ends with exit 0 and empty CSS, and no emitted name or value contains `{`, `}`, `$` or `[object`.
-- [ ] AC-2 — The WCAG claim test checks 2.1 ∪ 2.2 and is green; no AC text recommends completing a function on `pointerdown`.
-- [ ] AC-3 — `eval_ui_triviality` shows `symptom_ui`, `adjective_review` and `backend` PASS together.
-- [ ] AC-4 — No URL-target render or interact run can send a non-GET request or leave the origin.
-- [ ] AC-5 — `consistency-sibling-gap` writes shadow rows and never affects an exit code.
+- [x] AC-1 — No fixture in `tests/fixtures/dtcg-2025-10/` ends with exit 0 and empty CSS, and no emitted name or value contains `{`, `}`, `$` or `[object`.
+- [x] AC-2 — The WCAG claim test checks 2.1 ∪ 2.2 and is green; no AC text recommends completing a function on `pointerdown`.
+- [x] AC-3 — `eval_ui_triviality` shows `symptom_ui`, `adjective_review` and `backend` PASS together.
+- [x] AC-4 — No URL-target render or interact run can send a non-GET request or leave the origin.
+- [x] AC-5 — `consistency-sibling-gap` writes shadow rows and never affects an exit code.
+
+## Decisions
+
+| Decision | Alternatives | Reason | Revisit-if |
+|---|---|---|---|
+| 3.3 applies review-first only when the adjective is the whole goal (owner decision E2, default) | Review-first for any adjective, including inside a concrete task | A concrete object or build verb already names the change; halting it would block scoped work | The owner answers E2 differently |
+| `site`/`shop`/`store`/`app`/`dashboard` count as a UI surface only beside a quality adjective | Add them to `_UI_NOUNS` | Bare `site` is a data-layer word (corpus uit-060); the adjective branch is the only place it is unambiguous | A corpus probe shows a backend prompt reaching the adjective branch |
+| The layerless flatten also feeds `--format tailwind`; the zero-variable error is CSS-only | Emptiness error on both formats | A Tailwind map with no colour token is legitimate output; a stylesheet with no variable from a file with tokens is not | A consumer reports a layerless file whose Tailwind output is empty unexpectedly |
+| URL targets block every off-origin request, assets included | Allow cross-origin GET for static asset types | The step requires same origin; an asset request can still carry a tracking write. Blocked URLs are listed in `network.blocked` | Renders of live sites need CDN fonts/images to be comparable — then an explicit opt-in flag, never the default |
+| The frozen probe observations were re-captured live to carry the four new properties | Compare the live capture only on the keys the frozen record carries | Projecting away the new keys would stop the live layer checking them; the re-capture changed nothing else | — |
+| A shadow row's `rule` is optional; absent reads as raw-control + sibling-metrics | Rewrite old rows, or a required field | Old rows on disk stay readable without migration | The shadow file gains a third rule |
+| `design_lock --json` writes the front-matter notice to stderr | One stdout line in both modes | `--json` stdout must stay one JSON document | — |
+| The ui-triviality regression test covered only the pre-existing corpus between 3.1 and 3.3, then all five bars | Commit 3.1 with a red test | 3.1's verify requires the test file green while the new bars are pre-registered to MISS | — |
+
+## Owner decisions left open
+
+- **E1** — may a URL review run against production at all? Today it is allowed, with the 4.3 guard. Default if unanswered: allowed with the guard, and the report's first line says it ran against production (that line is not implemented here).
+- **P09 / override** — reopen the archived "no pixel comparison" lock for image-only handovers? Needs the council first, then the owner, because it moves a recorded floor.
 
 ## Non-goals
 

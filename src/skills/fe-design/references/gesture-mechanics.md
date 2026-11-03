@@ -11,6 +11,10 @@ covers what a gesture adds on top.
 - **Feedback on pointer-down.** The pressed state, the lift, the grab cursor
   appear when the pointer goes down. Waiting for `click` or `pointerup` adds
   the whole press duration to the perceived latency.
+- **Feedback on pointer-down, commit on pointer-up.** Only the visual response
+  moves to contact; the action itself completes on release, and is cancelled
+  when the pointer leaves the target before release (WCAG 2.5.2 Pointer
+  Cancellation). Never move an action to `pointerdown` to make it feel faster.
 - **Every millisecond in the input path is a regression.** No debounce, no
   `setTimeout`, no layout read in the `pointermove` handler; write `transform`
   only, and batch through one `requestAnimationFrame`.

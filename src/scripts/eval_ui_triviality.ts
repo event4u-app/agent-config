@@ -19,8 +19,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import {
-    classify_intent,
-    directive_set_for,
+    routing_for,
 } from '../agent-src/templates/scripts/work_engine/intent/classify.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
@@ -31,8 +30,11 @@ export const PREREGISTERED_RECALL = 0.8;
 export const BAR_ADD_CONTROL = 1.0;
 export const BAR_DE_UI_RECALL = 0.8;
 export const BAR_BACKEND = 1.0;
+/** Pre-registered 2026-11-03 in the corpus, before any classifier change. */
+export const BAR_SYMPTOM_UI = 1.0;
+export const BAR_ADJECTIVE_REVIEW = 1.0;
 
-export type Category = 'trivial' | 'add-control' | 'backend' | 'ui-other';
+export type Category = 'trivial' | 'add-control' | 'backend' | 'ui-other' | 'symptom' | 'quality-adjective';
 
 const UI_SETS: ReadonlySet<string> = new Set(['ui', 'ui-trivial', 'mixed']);
 
@@ -53,11 +55,12 @@ export interface EvalRow {
     lang: string;
     intent: string;
     directive_set: string;
+    review_only: boolean;
     hit: boolean; // prediction agrees with the label
 }
 
 export interface Bar {
-    name: 'add_control' | 'de_ui_recall' | 'backend';
+    name: 'add_control' | 'de_ui_recall' | 'backend' | 'symptom_ui' | 'adjective_review';
     threshold: number;
     total: number;
     passed: number;
@@ -120,6 +123,18 @@ export function compute_bars(rows: EvalRow[]): Bar[] {
             rows.filter((r) => r.category === 'backend'),
             (r) => r.directive_set === 'backend',
         ),
+        bar(
+            'symptom_ui',
+            BAR_SYMPTOM_UI,
+            rows.filter((r) => r.category === 'symptom'),
+            (r) => r.directive_set !== 'backend',
+        ),
+        bar(
+            'adjective_review',
+            BAR_ADJECTIVE_REVIEW,
+            rows.filter((r) => r.category === 'quality-adjective'),
+            (r) => r.review_only,
+        ),
     ];
 }
 
@@ -138,8 +153,7 @@ export function load_corpus(p: string): Task[] {
 
 export function run_eval(tasks: Task[]): EvalResult {
     const rows: EvalRow[] = tasks.map((t) => {
-        const intent = classify_intent(t.prompt);
-        const set = directive_set_for(intent);
+        const { intent, directive_set: set, review_only } = routing_for(t.prompt);
         const predicted_trivial = set === 'ui-trivial';
         return {
             id: t.id,
@@ -148,6 +162,7 @@ export function run_eval(tasks: Task[]): EvalResult {
             lang: t.lang ?? 'en',
             intent,
             directive_set: set,
+            review_only,
             hit: predicted_trivial === (t.label === 'trivial'),
         };
     });

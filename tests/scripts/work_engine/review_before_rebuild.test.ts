@@ -4,7 +4,12 @@ import { describe, expect, it } from 'vitest';
 import { DeliveryState } from '../../../src/agent-src/templates/scripts/work_engine/delivery_state.js';
 import { review_selection, run as applyRun } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/apply.js';
 import { run as reviewRun, selection_gaps } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/review.js';
-import { is_review_only } from '../../../src/agent-src/templates/scripts/work_engine/intent/classify.js';
+import {
+    is_quality_adjective_review,
+    is_review_only,
+    populate_routing,
+} from '../../../src/agent-src/templates/scripts/work_engine/intent/classify.js';
+import { Input, WorkState } from '../../../src/agent-src/templates/scripts/work_engine/state.js';
 
 describe('is_review_only — a request to check, not to change', () => {
     it.each([
@@ -57,5 +62,34 @@ describe('ui/review — every selected finding is resolved, nothing unrequested'
         );
         expect(r.outcome).toBe('blocked');
         expect(r.questions.join('\n')).toContain('F1');
+    });
+});
+
+// road-to-design-inputs-and-pages-read-as-they-are 3.3: a bare quality
+// adjective over a surface is review-first (owner decision E2 default: only
+// when the adjective is the whole goal).
+describe('a bare quality adjective is review-first', () => {
+    it.each([
+        ['Mach die Website hochwertiger.', true],
+        ['Make the site feel more premium.', true],
+        ['Mach den Shop schöner.', true],
+        ['Make the landing page nicer.', true],
+        ['Add a filter and make it nicer.', false],
+        ['Mach die Farbe des Buttons schöner.', false],
+        ['Make the billing service more professional with typed errors.', false],
+        ['Mach den Code schöner.', false],
+    ])('%s → %s', (prompt, expected) => {
+        expect(is_quality_adjective_review(prompt)).toBe(expected);
+    });
+
+    it('"Mach die Website hochwertiger" routes review-only and apply writes nothing', () => {
+        const st = new WorkState({ input: new Input('prompt', { raw: 'Mach die Website hochwertiger.' }) });
+        populate_routing(st);
+        expect(st.directive_set).toBe('ui');
+        const data = st.input.data as Record<string, unknown>;
+        expect(data['review_only']).toBe(true);
+        const r = applyRun(state({ review_only: data['review_only'] }));
+        expect(r.outcome).toBe('blocked');
+        expect(r.questions.join('\n')).toContain('review-before-rebuild');
     });
 });

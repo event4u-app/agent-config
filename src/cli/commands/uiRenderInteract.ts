@@ -17,9 +17,10 @@
  */
 import * as path from 'node:path';
 
-import type { Page } from '@playwright/test';
+import type { Browser, Page } from '@playwright/test';
 
 import { roleOfTag, type ControlRole } from '../../scripts/_lib/control_roles.js';
+import { confinePage, type NetworkRecord } from './uiRenderAssetIsolation.js';
 
 export interface PopupReading {
     /** `page` when the popup is DOM the page rendered, `native-os` for a native select, `none` when nothing opened. */
@@ -121,6 +122,24 @@ const READ_BOX = (el: Element) => {
 
 async function popupOpen(page: Page, before: string[], selector: string): Promise<boolean> {
     return (await page.evaluate(READ_POPUP, { before, selector })).popup === 'page';
+}
+
+/**
+ * A fresh page on `url` for one control. Interaction clicks, presses Enter and
+ * clicks outside — on a live URL that can submit or delete, so a URL target is
+ * confined to same-origin GET/HEAD before the page loads
+ * (road-to-design-inputs-and-pages-read-as-they-are 4.3).
+ */
+export async function openForInteraction(
+    browser: Browser,
+    url: string,
+    viewport: { width: number; height: number },
+    urlGuard?: { origin: string; network: NetworkRecord },
+): Promise<Page> {
+    const page = await browser.newPage({ viewport });
+    if (urlGuard !== undefined) await confinePage(page, [], [], undefined, urlGuard);
+    await page.goto(url, { waitUntil: 'load', timeout: 30_000 });
+    return page;
 }
 
 /** Open, read and close one control. Never throws: a failure is a reading with a reason. */

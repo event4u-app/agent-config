@@ -432,3 +432,159 @@ tasks:
     lang: en
     label_criterion: "a multi-site data layer — not a UI task"
     source: inbox-2026-10-az
+  # --- symptom / quality-adjective / counter-probe block --------------------
+  # PRE-REGISTERED 2026-11-03, BEFORE any classifier change
+  # (road-to-design-inputs-and-pages-read-as-they-are step 3.1). Two further
+  # bars, computed by eval_ui_triviality from the `category` field:
+  #   symptom_ui       — every `category: symptom` task (a defect described by
+  #                      what the user sees, no verb) routes to anything but
+  #                      `backend`: share == 1.00.
+  #   adjective_review — every `category: quality-adjective` task (an
+  #                      evaluative adjective as the whole goal) routes with
+  #                      `review_only` set: share == 1.00.
+  # The backend tasks below share the words (plurals, `views`, `pages`,
+  # comparatives) and keep the existing `backend` bar honest.
+  # LABEL PROVENANCE: labelled by the drafting agent against the criterion at
+  # the top of this file; a symptom or a quality judgement over a surface is
+  # never trivial (its fix is not known yet). No council, same directive as
+  # the block above. Re-labelling is one field.
+  - id: uit-061
+    prompt: "The buttons only react on release."
+    label: non-trivial
+    category: symptom
+    lang: en
+    label_criterion: "a reported defect on a surface — the fix is not yet known"
+    source: inbox-2026-11-n
+  - id: uit-062
+    prompt: "Die Animationen kann man nicht unterbrechen."
+    label: non-trivial
+    category: symptom
+    lang: de
+    label_criterion: "a reported defect on a surface — the fix is not yet known"
+    source: inbox-2026-11-n
+  - id: uit-063
+    prompt: "Die Abstände zwischen den Karten sind ungleich."
+    label: non-trivial
+    category: symptom
+    lang: de
+    label_criterion: "a reported defect on a surface — the fix is not yet known"
+    source: inbox-2026-11-n
+  - id: uit-064
+    prompt: "The tabs jump when I click them."
+    label: non-trivial
+    category: symptom
+    lang: en
+    label_criterion: "a reported defect on a surface — the fix is not yet known"
+    source: inbox-2026-11-n
+  - id: uit-065
+    prompt: "The dropdowns close before I can pick an option."
+    label: non-trivial
+    category: symptom
+    lang: en
+    label_criterion: "a reported defect on a surface — the fix is not yet known"
+    source: inbox-2026-11-n
+  - id: uit-066
+    prompt: "The tooltips stay open after the pointer leaves."
+    label: non-trivial
+    category: symptom
+    lang: en
+    label_criterion: "a reported defect on a surface — the fix is not yet known"
+    source: inbox-2026-11-n
+  - id: uit-067
+    prompt: "The modals flicker when they open."
+    label: non-trivial
+    category: symptom
+    lang: en
+    label_criterion: "a reported defect on a surface — the fix is not yet known"
+    source: inbox-2026-11-n
+  - id: uit-068
+    prompt: "Die Kacheln haben unterschiedliche Höhen."
+    label: non-trivial
+    category: symptom
+    lang: de
+    label_criterion: "a reported defect on a surface — the fix is not yet known"
+    source: inbox-2026-11-n
+  - id: uit-069
+    prompt: "Mach die Website hochwertiger."
+    label: non-trivial
+    category: quality-adjective
+    lang: de
+    label_criterion: "a quality judgement as the whole goal — review first, never a silent rebuild"
+    source: inbox-2026-11-n
+  - id: uit-070
+    prompt: "Make the site feel more premium."
+    label: non-trivial
+    category: quality-adjective
+    lang: en
+    label_criterion: "a quality judgement as the whole goal — review first, never a silent rebuild"
+    source: inbox-2026-11-n
+  - id: uit-071
+    prompt: "Mach den Shop schöner."
+    label: non-trivial
+    category: quality-adjective
+    lang: de
+    label_criterion: "a quality judgement as the whole goal — review first, never a silent rebuild"
+    source: inbox-2026-11-n
+  - id: uit-072
+    prompt: "Make the dashboard look more polished."
+    label: non-trivial
+    category: quality-adjective
+    lang: en
+    label_criterion: "a quality judgement as the whole goal — review first, never a silent rebuild"
+    source: inbox-2026-11-n
+  - id: uit-073
+    prompt: "Die Startseite soll edler wirken."
+    label: non-trivial
+    category: quality-adjective
+    lang: de
+    label_criterion: "a quality judgement as the whole goal — review first, never a silent rebuild"
+    source: inbox-2026-11-n
+  - id: uit-074
+    prompt: "Make the landing page nicer."
+    label: non-trivial
+    category: quality-adjective
+    lang: en
+    label_criterion: "a quality judgement as the whole goal — review first, never a silent rebuild"
+    source: inbox-2026-11-n
+  - id: uit-075
+    prompt: "Die App soll professioneller aussehen."
+    label: non-trivial
+    category: quality-adjective
+    lang: de
+    label_criterion: "a quality judgement as the whole goal — review first, never a silent rebuild"
+    source: inbox-2026-11-n
+  - id: uit-076
+    prompt: "Write cleaner code in the order service."
+    label: non-trivial
+    category: backend
+    lang: en
+    label_criterion: "a code-quality task in a service — not a UI task"
+    source: inbox-2026-11-n
+  - id: uit-077
+    prompt: "The pages table needs an index on the slug."
+    label: non-trivial
+    category: backend
+    lang: en
+    label_criterion: "a database index — `pages` is a table name, not a UI noun"
+    source: inbox-2026-11-n
+  - id: uit-078
+    prompt: "Create SQL views for the monthly report."
+    label: non-trivial
+    category: backend
+    lang: en
+    label_criterion: "database views — `views` is a database word here"
+    source: inbox-2026-11-n
+  - id: uit-079
+    prompt: "Make the billing service more professional with typed errors."
+    label: non-trivial
+    category: backend
+    lang: en
+    label_criterion: "a quality adjective over a service — not a UI task"
+    source: inbox-2026-11-n
+  - id: uit-080
+    prompt: "Mach den Code schöner."
+    label: non-trivial
+    category: backend
+    lang: de
+    label_criterion: "a quality adjective over code — not a UI task"
+    source: inbox-2026-11-n
