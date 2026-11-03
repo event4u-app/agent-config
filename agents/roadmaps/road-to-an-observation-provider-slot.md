@@ -47,7 +47,7 @@ empty verifier and on an authority outside its enum
       verify: `npx vitest run tests/scripts/reconstruction_ledger_cli.test.ts` -> 0 and
       one case per exit code.
       Done: `src/scripts/reconstruction_ledger.ts` (`--check <file>`, JSON `{evidence_ids, obligations}`, a file without `evidence_ids` fails closed); the reference door invokes it from a bash fence in § Transfer modes, so the 2.1 entry rule reaches it. `npx vitest run tests/scripts/reconstruction_ledger_cli.test.ts` -> 0 (6 tests covering exit 0, 1 open, 1 unknown, 2 invalid, 2 no-evidence, 2 usage).
-- [x] **0.3 Step 2.1 speaks the ledger's states.** Rewrite 2.1 as "verdict <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **0.3 Step 2.1 speaks the ledger's states.** Rewrite 2.1 as "verdict <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/production-entries.json -->
       `unknown` → `closed`" — the row status `unknown` does not exist
       (`reconstruction_ledger.ts:15`).
       verify: 2.1 names only states the ledger emits.
