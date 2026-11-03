@@ -19,15 +19,20 @@ install:
 
 # prompt-validator
 
-> Deterministic pre-spend gate: collect **every** prompt a video run is
-> about to send (all scenes, all blocks), cross-check them against each
-> other and against the run's locked facts (character lock, vocal map,
-> model capabilities), and **block with a specific error** on
-> contradiction. Skills are deterministic — the failure mode of a
-> multi-scene batch is not drift, it is *contradiction*: two prompts
-> that cannot both be true of the same video (AI-council convergence,
-> 2026-06-06). One blocked batch costs a re-edit; one rendered
-> contradiction costs the whole spend.
+> Pre-spend review the agent performs: collect **every** prompt a video
+> run is about to send (all scenes, all blocks), cross-check them against
+> each other and against the run's locked facts (character lock, vocal
+> map, model capabilities), and **stop the run with a specific error** on
+> contradiction. The failure mode of a multi-scene batch is not drift, it
+> is *contradiction*: two prompts that cannot both be true of the same
+> video (AI-council convergence, 2026-06-06). One stopped batch costs a
+> re-edit; one rendered contradiction costs the whole spend.
+>
+> **What enforces it:** the agent following this skill, nothing else. No
+> script implements these checks and no gate blocks a run the agent did
+> not stop — the "block" below is an instruction, not a mechanism.
+> [`/video:from-song`](../../commands/video/from-song.md) names this skill;
+> `/video:from-script` does not, so there it runs only when invoked.
 
 ## When to use
 
