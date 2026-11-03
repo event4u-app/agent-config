@@ -10571,6 +10571,7 @@ function joinPath(parent, key) {
 }
 
 // src/install/hostConfigMerge.ts
+var defaultSerialize = (data) => jsonDumpsIndent(data, 4) + "\n";
 var defaultIo = {
   write: (p, content) => fs13.writeFileSync(p, content, "utf-8")
 };
@@ -10629,33 +10630,56 @@ function parseHostConfig(text) {
 function manualSnippet(incoming) {
   return jsonDumpsIndent(incoming, 4);
 }
+function keyPath(container, key) {
+  return container === "" ? key : `${container}.${key}`;
+}
+function touchedKeyPaths(incoming, container = "", out = /* @__PURE__ */ new Set()) {
+  for (const [key, value] of Object.entries(incoming)) {
+    const here = keyPath(container, key);
+    out.add(here);
+    if (isPlainObject(value)) touchedKeyPaths(value, here, out);
+  }
+  return out;
+}
 function mergeHostConfigFile(p, incoming, merge2, io = defaultIo) {
   if (!fs13.existsSync(p)) {
     fs13.mkdirSync(path12.dirname(p), { recursive: true });
-    io.write(p, jsonDumpsIndent(incoming, 4) + "\n");
+    io.write(p, (io.serialize ?? defaultSerialize)(incoming));
     return { status: "created" };
   }
   const original = fs13.readFileSync(p, "utf-8");
   const parsed = parseHostConfig(original);
   if (parsed.kind === "invalid") return { status: "skipped-invalid", detail: parsed.reason };
+  const touchedKeys = touchedKeyPaths(incoming);
   const touched = findDuplicateKeys(parsed.kind === "jsonc" ? stripJsonc(original) : original).filter(
-    (d) => d.container === "" && d.key in incoming
+    (d) => touchedKeys.has(keyPath(d.container, d.key))
   );
   if (touched.length > 0) {
     const d = touched[0];
     return {
       status: "skipped-duplicate-key",
-      detail: `"${d.key}" appears on lines ${String(d.firstLine)} and ${String(d.laterLine)}`
+      detail: `"${keyPath(d.container, d.key)}" appears on lines ${String(d.firstLine)} and ${String(d.laterLine)}`
     };
   }
   const merged = merge2(parsed.data, incoming);
   if (jsonEqual(merged, parsed.data)) return { status: "unchanged" };
   if (parsed.kind === "jsonc") return { status: "skipped-jsonc", detail: "comments would be lost on rewrite" };
+  return overwriteWithBackup(p, original, merged, io);
+}
+function writeHostConfig(p, data, io = defaultIo) {
+  if (!fs13.existsSync(p)) {
+    fs13.mkdirSync(path12.dirname(p), { recursive: true });
+    io.write(p, (io.serialize ?? defaultSerialize)(data));
+    return { status: "created" };
+  }
+  return overwriteWithBackup(p, fs13.readFileSync(p, "utf-8"), data, io);
+}
+function overwriteWithBackup(p, original, data, io) {
   const backup = p + BACKUP_SUFFIX;
   if (!fs13.existsSync(backup)) fs13.writeFileSync(backup, original, "utf-8");
-  io.write(p, jsonDumpsIndent(merged, 4) + "\n");
+  io.write(p, (io.serialize ?? defaultSerialize)(data));
   const reread = parseObject(fs13.readFileSync(p, "utf-8"));
-  if (typeof reread === "string" || !jsonEqual(reread, merged)) {
+  if (typeof reread === "string" || !jsonEqual(reread, data)) {
     fs13.writeFileSync(p, original, "utf-8");
     return { status: "skipped-readback-mismatch", detail: "original bytes restored" };
   }
@@ -23030,8 +23054,12 @@ function read_json_file(p) {
   return null;
 }
 function write_json_file(p, data) {
-  const content = jsonDumpsIndent(data, 4) + "\n";
-  write_file(p, content);
+  const outcome = writeHostConfig(p, data, { write: write_file });
+  if (outcome.status === "skipped-readback-mismatch") {
+    warn(`${p}: ${outcome.status} (${outcome.detail ?? ""})`);
+    return false;
+  }
+  return true;
 }
 function merge_json_file(p, new_data, _force, label) {
   const new_entries = build_merge_entries(label, new_data);
@@ -23389,7 +23417,7 @@ function _heal_legacy_claude_plugin_ids(p) {
   for (const pid of removed) {
     delete enabled[pid];
   }
-  write_json_file(p, data);
+  if (!write_json_file(p, data)) return [];
   return removed;
 }
 function ensure_claude_bridge(project_root, force) {
@@ -23655,8 +23683,7 @@ function ensure_copilot_bridge(project_root, force) {
     skip(".github/plugin/marketplace.json already exists");
     return;
   }
-  write_json_file(target, bridge);
-  success(".github/plugin/marketplace.json created");
+  if (write_json_file(target, bridge)) success(".github/plugin/marketplace.json created");
 }
 var ROOCODE_MARKER = `# Agent Config bridge
 
@@ -24177,7 +24204,7 @@ function _suppress_rule_layer(project_root, suppress_dir) {
   const entry = claudeMdExcludesGlob(real_dir);
   const merged = mergeClaudeMdExcludes(existing["claudeMdExcludes"], entry);
   if (JSON.stringify(existing["claudeMdExcludes"] ?? null) === JSON.stringify(merged)) return;
-  write_json_file(target, { ...existing, claudeMdExcludes: merged });
+  if (!write_json_file(target, { ...existing, claudeMdExcludes: merged })) return;
   success(`.claude/settings.local.json: claudeMdExcludes += ${entry}`);
 }
 function _gate_rule_layer_overlap(project_root, layer, dry_run) {
