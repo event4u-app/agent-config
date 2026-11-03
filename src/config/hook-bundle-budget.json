@@ -178,9 +178,9 @@
             "from": 1581000,
             "to": 1581900,
             "by": "agent, docs/game-roadmap-owner-answers (trunk repair; this branch changes no bundled source)",
-            "what_was_added": "Nothing on this branch. The trunk at 1ac7eebe04 measures 1,581,318 B, 318 over the 1,581,000 ceiling: #2816 (feat/web-launch-write-time) and #2817 (analysis/inbox-2026-11-n) each fitted under the ceiling alone and were merged minutes apart, so #2816's dispatch-path growth landed on top of #2817's raise without a raise_log entry of its own. The Consistency run on main for 1ac7eebe04 fails this gate with the same 1,581,318 B.",
-            "why_it_could_not_be_avoided": "The bytes are already on the trunk; a ceiling below the trunk's own reading fails every branch cut from it, the same reasoning the first 2026-11-03 entry used for its base overage. Shrinking #2816's addition would be a feature change on code this branch did not write.",
-            "what_would_have_caught_it": "Measuring the ceiling on the merge result rather than on each branch, as the first raise_log entry already says; two PRs merged in sequence without the second re-running against the first. Sized to the trunk measurement plus about 580 bytes of rebuild jitter."
+            "what_was_added": "Nothing on this branch. The trunk at 1ac7eebe04 measures 1,581,318 B with a real npm ci install, 318 over the 1,581,000 ceiling. Recorded facts: the Consistency workflow passed on main at e4dc5cfa2a (run 41618804083, after #2817's raise merged at 10:22:55Z) and failed this gate at 1ac7eebe04 (run 41625436602, after #2816 feat/web-launch-write-time merged at 11:11:07Z) with the same 1,581,318 B. So the overage entered with #2816's merge. 318 B is the overage, not the measured size of #2816's addition; this branch did not measure #2816's own delta, and #2816 carried no raise_log entry.",
+            "why_it_could_not_be_avoided": "A scope decision, not a demonstration that shrinking is impractical: the bytes are already on the trunk, a ceiling below the trunk's own reading fails every branch cut from it, and shrinking #2816's addition would be a feature change on code this branch did not write. Whether #2816's addition can be shrunk is left open.",
+            "what_would_have_caught_it": "A check against the merge result rather than the branch head before merging. Whether #2816's head ran against a base that already carried #2817 is not established here. Sized to the trunk measurement plus about 580 bytes of rebuild jitter."
         }
     ],
     "chunks": [
