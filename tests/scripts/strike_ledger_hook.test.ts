@@ -9,7 +9,7 @@ import * as path from 'node:path';
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { run } from '../../src/scripts/before_complete_hook.js';
+import { run, statePathFor } from '../../src/scripts/before_complete_hook.js';
 import { MAX_ENTRIES, STRIKE_LEDGER_FILE, type StrikeLedger } from '../../src/scripts/_lib/strike_ledger.js';
 
 let tmp: string;
@@ -113,5 +113,24 @@ describe('strike ledger via before_complete_hook', () => {
         edit('s1');
         run('b.test.ts');
         expect(Object.keys(ledger().entries)).toHaveLength(2);
+    });
+
+    it('a ledger that cannot be written changes nothing the recorder does', () => {
+        // The ledger path is a directory: every write fails. The recorder must
+        // still exit 0 and still record the run in its own state.
+        fs.mkdirSync(path.join(tmp, STRIKE_LEDGER_FILE), { recursive: true });
+        const code = run(
+            JSON.stringify({
+                event: 'post_tool_use',
+                session_id: 's1',
+                platform: 'claude',
+                payload: { tool_name: 'Bash', tool_input: { command: 'npx vitest run' }, tool_response: { stdout: RED, exit_code: 1 } },
+            }),
+            { consumer_root: tmp },
+        );
+        expect(code).toBe(0);
+        const state = JSON.parse(fs.readFileSync(path.join(tmp, statePathFor('s1')), 'utf8')) as { verification_runs: unknown[] };
+        expect(state.verification_runs).toHaveLength(1);
+        expect(fs.statSync(path.join(tmp, STRIKE_LEDGER_FILE)).isDirectory()).toBe(true);
     });
 });
