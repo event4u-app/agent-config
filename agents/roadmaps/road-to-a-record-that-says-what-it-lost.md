@@ -33,7 +33,7 @@ finding disposition names a command but not the outcome it must produce
 
 ## Phase 1 — A review chunk that was not read is not counted as read
 
-- [ ] **1.1 Unparseable answer = unreviewed chunk.** In
+- [x] **1.1 Unparseable answer = unreviewed chunk.** In
       `src/scripts/self_review_gate.ts` add `parseFindingsResult(text)` returning
       `{ findings, parsed }` (`parsed` false when no JSON object is found, it
       does not parse, or `findings` is not an array); keep `parseFindings` as a
@@ -43,14 +43,14 @@ finding disposition names a command but not the outcome it must produce
       `model output not parseable as the findings shape`, mirroring the
       transport-error branch (`:1338-1354`). `{"findings":[]}` stays read.
       verify: `npx vitest run tests/scripts/self_review_unparsed_chunk.test.ts` -> 0 — cases: truncated JSON → `parsed:false`; prose-embedded JSON → parsed, 2 findings; `{"findings":[]}` → `parsed:true`, 0 findings.
-- [ ] **1.2 Findings carry `confidence`.** Extend the prompt schema
+- [x] **1.2 Findings carry `confidence`.** Extend the prompt schema
       (`self_review_gate.ts:602-605`) with
       `"confidence":"confirmed|plausible|unverified"` and the `Finding` type with
       an optional field; `parseFindings` stores a valid value and defaults a
       missing or invalid one to `unverified`, never dropping the finding
       (contract `docs/contracts/adversarial-review-protocol.md:191-208`).
       verify: `npx vitest run tests/scripts/self_review_unparsed_chunk.test.ts` -> 0 — added cases: missing confidence → `unverified`, `"high"` → `unverified`, `"confirmed"` kept.
-- [ ] **1.3 The ceiling drops the cheapest paths first.** Before packing in
+- [x] **1.3 The ceiling drops the cheapest paths first.** Before packing in
       `partitionDiff` (`self_review_gate.ts:750`), stable-sort the input by risk
       tier: 1 `src/scripts/**`, `src/rules/**`, `.github/workflows/**`,
       `src/cli/**`, `src/install/**`; 2 other `src/**`, `docs/contracts/**`;

@@ -51,6 +51,8 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 // ── Finding model ─────────────────────────────────────────────────────
 export type Severity = 'critical' | 'high' | 'medium' | 'low';
 export type FindingKind = 'security' | 'claim' | 'correctness' | 'style';
+/** Vocabulary of `docs/contracts/adversarial-review-protocol.md` § confidence. */
+export type FindingConfidence = 'confirmed' | 'plausible' | 'unverified';
 
 export interface Finding {
     severity: Severity;
@@ -60,6 +62,8 @@ export interface Finding {
     file?: string;
     /** 1-based line, kept out of `file` so a moved line keeps the finding id. */
     line?: number;
+    /** Absent or out-of-vocabulary in the model answer → `unverified`, never dropped. */
+    confidence?: FindingConfidence;
     /** Typed evidence, resolved by `check_finding_exhibits.ts`; never decides a disposition. */
     exhibits?: Exhibit[];
     /**
@@ -602,7 +606,8 @@ function buildSystemPrompt(release?: ReleaseInfo, baseRef?: string): string {
         'two skills below to the supplied PR diff. Return ONLY a JSON object of the',
         'shape {"findings":[{"severity":"critical|high|medium|low",',
         '"kind":"security|claim|correctness|style","title":"...","detail":"...",',
-        '"file":"optional/path"}]}. Use kind="claim" for an unbacked headline number',
+        '"file":"optional/path","confidence":"confirmed|plausible|unverified"}]}.',
+        'Use kind="claim" for an unbacked headline number',
         'or a proof/CLAIMS-affecting statement, kind="security" for an auth/tenant/',
         'secret/egress/injection gap. No prose outside the JSON.',
         '',
@@ -735,11 +740,28 @@ export interface DiffPartition {
     unreviewed: { path: string; reason: string }[];
 }
 
+const RISK_TIERS: readonly (readonly string[])[] = [
+    ['src/scripts/', 'src/rules/', '.github/workflows/', 'src/cli/', 'src/install/'],
+    ['src/', 'docs/contracts/'],
+    ['tests/', 'docs/'],
+];
+
+/** 1 = highest risk; a path matching no tier prefix is tier 4. */
+export function riskTier(path: string): number {
+    const i = RISK_TIERS.findIndex((prefixes) => prefixes.some((p) => path.startsWith(p)));
+    return i < 0 ? RISK_TIERS.length + 1 : i + 1;
+}
+
 /**
  * Pack per-file diffs into as few chunks as fit the budget.
  *
- * Deterministic: input order is preserved and the fill is greedy, so the same
- * span always partitions the same way and a finding's chunk is reproducible.
+ * Files are stable-sorted by `riskTier` first, so when the per-run ceiling
+ * drops chunks it drops the cheapest paths (roadmaps, prose) rather than
+ * whatever happened to sort last in the diff — workflows and scripts included.
+ *
+ * Deterministic: input order is preserved within a tier and the fill is greedy,
+ * so the same span always partitions the same way and a finding's chunk is
+ * reproducible.
  *
  * A single file larger than the whole budget is NOT split. A diff cut at an
  * arbitrary byte offset produces half a hunk, and a reviewer reading half a
@@ -755,8 +777,12 @@ export function partitionDiff(
     const chunks: DiffChunk[] = [];
     const unreviewed: { path: string; reason: string }[] = [];
     let current: DiffChunk = { text: '', files: [] };
+    const ordered = files
+        .map((f, i) => ({ f, i, tier: riskTier(f.path) }))
+        .sort((a, b) => a.tier - b.tier || a.i - b.i)
+        .map((e) => e.f);
 
-    for (const f of files) {
+    for (const f of ordered) {
         if (f.diff.length > budgetChars) {
             unreviewed.push({
                 path: f.path,
@@ -920,21 +946,32 @@ export function buildPlan(baseRef: string, cwd: string = REPO_ROOT, opts: PlanOp
 }
 
 // ── Live review ───────────────────────────────────────────────────────
-export function parseFindings(text: string): Finding[] {
+export interface ParsedFindings {
+    findings: Finding[];
+    /** False when the answer holds no JSON object, it does not parse, or `findings` is not an array. */
+    parsed: boolean;
+}
+
+/**
+ * Parse a model answer and say whether it was readable at all. A truncated or
+ * malformed answer is not the same as `{"findings":[]}`: the first means the
+ * chunk was not reviewed, the second that it was and nothing was found.
+ */
+export function parseFindingsResult(text: string): ParsedFindings {
     const start = text.indexOf('{');
     const end = text.lastIndexOf('}');
-    if (start < 0 || end <= start) return [];
+    if (start < 0 || end <= start) return { findings: [], parsed: false };
     let parsed: unknown;
     try {
         parsed = JSON.parse(text.slice(start, end + 1));
     } catch {
-        return [];
+        return { findings: [], parsed: false };
     }
     const arr = (parsed as { findings?: unknown })?.findings;
-    if (!Array.isArray(arr)) return [];
+    if (!Array.isArray(arr)) return { findings: [], parsed: false };
     const sev = new Set<Severity>(['critical', 'high', 'medium', 'low']);
     const kind = new Set<FindingKind>(['security', 'claim', 'correctness', 'style']);
-    return arr
+    const findings = arr
         .filter((f): f is Record<string, unknown> => typeof f === 'object' && f !== null)
         .filter((f) => sev.has(f.severity as Severity) && kind.has(f.kind as FindingKind))
         .map((f) => {
@@ -952,8 +989,39 @@ export function parseFindings(text: string): Finding[] {
                 ...(split ? { file: split.path } : {}),
                 ...(line !== undefined ? { line } : {}),
                 ...(exhibits.length > 0 ? { exhibits } : {}),
+                confidence: CONFIDENCE.has(f.confidence as FindingConfidence)
+                    ? (f.confidence as FindingConfidence)
+                    : 'unverified',
             };
         });
+    return { findings, parsed: true };
+}
+
+const CONFIDENCE = new Set<FindingConfidence>(['confirmed', 'plausible', 'unverified']);
+
+export function parseFindings(text: string): Finding[] {
+    return parseFindingsResult(text).findings;
+}
+
+export interface ChunkAccounting {
+    findings: Finding[];
+    unreviewed: { path: string; reason: string }[];
+    reviewedChunks: number;
+    filesRead: number;
+}
+
+/** Credit a chunk as read only when its answer parsed; otherwise name its files unreviewed. */
+export function applyChunkAnswer(state: ChunkAccounting, chunk: DiffChunk, text: string): void {
+    const result = parseFindingsResult(text);
+    if (!result.parsed) {
+        for (const path of chunk.files) {
+            state.unreviewed.push({ path, reason: 'model output not parseable as the findings shape' });
+        }
+        return;
+    }
+    state.reviewedChunks += 1;
+    state.filesRead += chunk.files.length;
+    state.findings.push(...result.findings);
 }
 
 /**
@@ -1325,10 +1393,8 @@ export function main(argv: string[]): 0 | 2 {
         // discard the chunks that succeeded: four releases produced no review at
         // all because one failure was the whole review, and a partial review
         // that names its coverage is worth more than another honest null.
-        const findings: Finding[] = [];
         const unreviewed = [...partition.unreviewed];
-        let reviewedChunks = 0;
-        let filesRead = 0;
+        const acct: ChunkAccounting = { findings: [], unreviewed, reviewedChunks: 0, filesRead: 0 };
         for (const [i, chunk] of partition.chunks.entries()) {
             // Facts FIRST, then the partition. The reviewer reads what the
             // range did before it reads the fragment it was given, so "absent
@@ -1352,10 +1418,9 @@ export function main(argv: string[]): 0 | 2 {
                 }
                 continue;
             }
-            reviewedChunks += 1;
-            filesRead += chunk.files.length;
-            findings.push(...parseFindings(resp.text));
+            applyChunkAnswer(acct, chunk, resp.text);
         }
+        const { findings, reviewedChunks, filesRead } = acct;
 
         if (reviewedChunks === 0) {
             process.stdout.write(
