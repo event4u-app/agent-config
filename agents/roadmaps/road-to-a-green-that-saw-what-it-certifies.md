@@ -56,7 +56,7 @@ instrument can say whether a subagent that reported `DONE` wrote anything
       `success`; `cancelled`, missing or still-running is a stop.
       verify: `grep -c -- '--exit-status' docs/release-runbook.md` → 0 and
       `grep -c 'conclusion' docs/release-runbook.md` → ≥ 1.
-- [ ] **1.4 Queue runs never cancel each other.** In `tests.yml:50-52`, `consistency.yml:118-119`
+- [x] **1.4 Queue runs never cancel each other.** In `tests.yml:50-52`, `consistency.yml:118-119`
       and `standing-payload-delta.yml:98-99` make the group unique per run for `merge_group`
       (`${{ github.workflow }}-${{ github.event_name == 'merge_group' && github.run_id || github.ref }}`)
       and set `cancel-in-progress: ${{ github.event_name != 'merge_group' }}`. Behaviour for
