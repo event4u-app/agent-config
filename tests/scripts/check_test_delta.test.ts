@@ -13,6 +13,12 @@
  * roadmap that commissioned it.
  */
 
+import { spawnSync } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { describe, expect, it } from 'vitest';
 
 import { classify, findingFor, labelsFrom } from '../../src/scripts/check_test_delta.js';
@@ -24,6 +30,8 @@ import {
     parseUnifiedDiff,
     weakeningSignal,
 } from '../../src/scripts/_lib/test_delta.js';
+
+const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 describe('path classification', () => {
     it.each([
@@ -94,6 +102,25 @@ describe('check_test_delta — the decision', () => {
         expect(labelsFrom('')).toEqual([]);
         expect(labelsFrom('/definitely/not/a/file.json')).toEqual([]);
     });
+
+    // A PR carrying the owner label runs the self-test with GITHUB_EVENT_PATH
+    // pointing at that labelled event; cases with no explicit event must not
+    // inherit it, or their REJECT expectation silently flips to accept.
+    it('--self-test holds when the ambient CI event carries the owner label', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctd-ambient-'));
+        const event = path.join(dir, 'event.json');
+        fs.writeFileSync(event, JSON.stringify({ pull_request: { labels: [{ name: 'test-delta-acknowledged' }] } }));
+        try {
+            const r = spawnSync(
+                path.join(REPO, 'node_modules', '.bin', 'tsx'),
+                [path.join(REPO, 'src/scripts/check_test_delta.ts'), '--self-test'],
+                { cwd: REPO, env: { ...process.env, GITHUB_EVENT_PATH: event }, encoding: 'utf8' },
+            );
+            expect(r.status, `${r.stdout}\n${r.stderr}`).toBe(0);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    }, 60_000);
 });
 
 describe('check_test_weakening — NET counts, which is the whole gate', () => {

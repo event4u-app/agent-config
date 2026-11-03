@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: later
+status: done
 estate_growth_exempt: "Fix-what-you-see disposition (feat/map-always-fresh, 2026-11-01): `check-reach-staleness` went red on the wall clock, not on that branch's diff, and the fix needs `yt-dlp` installed, which the agent may not do silently. +1 later_roadmaps; no active roadmap is added."
 estate_offset_exempt: "rg -F 'reach-channels' and 'last_verified' over agents/roadmaps found no roadmap owning the reach channel verification dates, so nothing absorbs this item. Parking it in later/ rather than active keeps the active estate unchanged."
 review_by: 2026-11-15
@@ -43,7 +43,14 @@ and bumping the date without a run would be a fabricated verification.
 
 ## Closes when
 
-- [ ] `yt-dlp` installed per the channel's pinned prescription
-- [ ] `./agent-config reach:doctor --deep` reports the youtube channel ready
-- [ ] `last_verified` updated to the run date — or the channel retired
-- [ ] `task check-reach-staleness` green without `AC_AS_OF`
+- [x] `yt-dlp` installed per the channel's pinned prescription — owner chose
+  option 1 on 2026-11-03. Pinned `yt-dlp==2026.7.4` installed into a dedicated
+  venv linked onto `PATH` (the isolation `pipx` provides; `pipx` itself was
+  absent). `yt-dlp --version` → `2026.07.04`.
+- [x] `./agent-config reach:doctor --deep` reports the youtube channel ready —
+  `✅ youtube ok`, js-runtime readiness ready. The backend declares no deep
+  probe, so the doctor prints no date suggestion; the real run was a read-only
+  metadata fetch (`--skip-download --print`) plus `--list-subs` against one
+  public video: title, duration and subtitle tracks returned.
+- [x] `last_verified` updated to the run date — `2026-11-03`.
+- [x] `task check-reach-staleness` green without `AC_AS_OF`
