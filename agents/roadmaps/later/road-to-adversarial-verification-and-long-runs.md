@@ -52,6 +52,8 @@ capability_gap: >-
 ---
 # Road to adversarial verification and long runs
 
+> **Arrivals (fix-loop counter):** 2 — `inbox-2026-11-m` T1 (2026-10-24) and T2 (2026-10-28) both found the ladder uncounted and `context-hygiene` still mapping a count to an ask; executable work carried by `road-to-a-strike-the-session-keeps`, AC-4's kernel edit stays here.
+
 > **Arrivals (auto-merge setting):** 3 (at least) - latest `inbox-2026-10-e` (2026-10-06): two release reviews again read the live `allow_auto_merge: true` (enabled by #2114) as contrary to the standing instruction; the owner question below is still unanswered. The count before it read: 2 (at least) - latest `inbox-2026-10-a`
 > (2026-10-01), where two of sixteen release reviews read the repository's
 > `allow_auto_merge: true` — enabled by this file's 2026-09-30 run to satisfy
