@@ -185,7 +185,7 @@ Copilot and Augment complement each other:
 
 - **File:** `.github/copilot-instructions.md` — Copilot configuration
 - **Command:** `/fix-pr-comments` — fix all review comments (bot + human)
-- **Skill:** `code-review` — PR review process and conventions
+- **Skill:** `code-review-lens` — PR review process and conventions
 
 
 ## Output format

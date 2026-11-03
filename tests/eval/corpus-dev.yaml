@@ -66,7 +66,7 @@ prompts:
     user_type_candidates: [developer]
     language: en
     prompt: "Review this 200-line diff that adds rate-limiting middleware to the public API and surface the top three concerns."
-    expected_skills: [code-review]
+    expected_skills: [code-review-lens]
     rubric:
       must_include: ["concern", "review"]
 

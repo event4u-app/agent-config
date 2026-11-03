@@ -2,7 +2,7 @@
 
 > The procedure behind [`downstream-changes`](../../rules/downstream-changes.md)
 > for one change class its table does not reach: a **closed set** whose member
-> list changed. Cited by `skill:code-review` (the propagation dimension) and
+> list changed. Cited by `skill:code-review-lens` (the propagation dimension) and
 > `skill:code-refactoring` (the reference sweep).
 >
 > It lives here rather than in the rule for a measured reason. Project-scope

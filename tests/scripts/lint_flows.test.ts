@@ -80,7 +80,7 @@ describe('lint_flows — ported pytest suite', () => {
             p,
             fs
                 .readFileSync(p, 'utf-8')
-                .replace('  - code-review\n', '  - code-review\n  - not-a-real-skill\n'),
+                .replace('  - code-review-lens\n', '  - code-review-lens\n  - not-a-real-skill\n'),
         );
         expect(lf.main(['--quiet'])).toBe(1);
     });

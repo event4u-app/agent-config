@@ -18,6 +18,7 @@ dependencies:
   - code-intelligence
   - code-refactoring
   - code-review
+  - code-review-lens
   - command-routing
   - composer
   - conventional-commits-writing
@@ -99,9 +100,9 @@ suggests: []
 surface_tier: core
 token_passport:
   basis: chars/4
-  catalog_tokens: 3649
-  commands_tokens: 267343
+  catalog_tokens: 3651
+  commands_tokens: 267349
   other_tokens: 1304
-  rules_tokens: 63867
-  total_tokens: 336163
+  rules_tokens: 63869
+  total_tokens: 336173
 trust_level_default: core

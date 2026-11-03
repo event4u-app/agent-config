@@ -10,4 +10,4 @@ near_misses:
   - prompt: "Grant the CI runner permission to write the coverage report."
     expected_skills: [github-ci]
   - prompt: "Which MCP servers are configured for this project?"
-    expected_skills: [mcp]
+    expected_skills: [mcp-tool-use]

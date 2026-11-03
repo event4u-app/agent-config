@@ -51,7 +51,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 ## Skills (97)
 
 - **`accessibility-auditor`** — Use when reviewing UI for accessibility — WCAG 2.2 AA, keyboard nav, focus, ARIA, contrast, screen-reader semantics — even on 'is this a11y-OK?' or 'mach das barrierefrei'.
-- **`adversarial-review`** — Adversarial critique — devil's advocate, stress-test, honest teardown ('poke holes', 'be brutal', 'was hältst du davon'); explicit request only. Routine code or design review → code-review.
+- **`adversarial-review`** — Adversarial critique — devil's advocate, stress-test, honest teardown ('poke holes', 'be brutal', 'was hältst du davon'); explicit request only. Routine code or design review → code-review-lens.
 - **`agent-security-review`** — Use for an adversarial red-team / blue-team / auditor review of an AI agent's CONFIG + behaviour (rules, skills, MCP, hooks, permissions) — attack-chain → defensive-gap list, not a code audit.
 - **`ai-code-blindspots`** — Before finishing any code (endpoint, query, migration, render, file, infra, dependency, test) — the senior pre-ship checklist of invisible cross-cutting controls AI omits, with backstop greps
 - **`alerting-doctrine`** — Use when deciding what earns a page — the page, action and info classes stated provider-neutrally, and the rule that a page without an owner, a runbook and a first diagnostic step is malformed.
@@ -64,7 +64,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`blast-radius-analyzer`** — Use BEFORE editing shared code — enumerates every call site, event consumer, queue worker, API client, migration, and test that a planned change will touch, with a file:line citation per dependency.
 - **`bug-analyzer`** — Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis. Also for proactive bug hunting and code audits for hidden bugs.
 - **`code-refactoring`** — When the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, verifies via quality tools.
-- **`code-review`** — Use when the user says "review this", "check my code", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards.
+- **`code-review-lens`** — Use when the user says "review this", "check my code", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards.
 - **`conventional-commits-writing`** — When writing a commit message, branch name or squash title — measure the repo's own convention first, Conventional Commits as fallback — even on a bare 'commit this'.
 - **`corpus-grounding`** — Shared corpus-grounding engine — BM25 + structured filters + decision rules over CSV corpora via a domain manifest. Use when a skill needs grounded pre-action option-space constraints.
 - **`dashboard-design`** — Use when designing monitoring dashboards — visualization selection, layout principles, observability strategies (RED/USE/Golden Signals), and data storytelling.

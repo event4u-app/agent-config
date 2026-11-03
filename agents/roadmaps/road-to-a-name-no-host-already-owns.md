@@ -34,7 +34,7 @@ sees the user's machine. Nothing is deleted — every fix renames or reports.
 
 ## Phase 1 — Give `/mcp` and `/code-review` back
 
-- [ ] **1.1 Rename `mcp` to `mcp-tool-use`.** Move `src/skills/mcp/` to
+- [x] **1.1 Rename `mcp` to `mcp-tool-use`.** Move `src/skills/mcp/` to
       `src/skills/mcp-tool-use/`, set `name: mcp-tool-use`, drop the
       `user-invocable: false` line and the comment above it, and update every
       referrer found by `grep -rlE '(skills/mcp/|^\s*-\s*mcp\s*$|skill:mcp\b|"mcp")' src docs tests`
@@ -42,7 +42,7 @@ sees the user's machine. Nothing is deleted — every fix renames or reports.
       `src/rules/tool-safety.md`, catalog, `docs/contracts/file-ownership-matrix.json`,
       trigger evals, budget configs. Regenerate with `task sync` and `task generate-tools`.
       verify: `test ! -e src/skills/mcp && test -f src/skills/mcp-tool-use/SKILL.md && ./scripts-run src/scripts/check_references && ./scripts-run src/scripts/lint_agent_skill_names --quiet` -> exit 0
-- [ ] **1.2 Rename `code-review` to `code-review-lens`.** Same procedure for
+- [x] **1.2 Rename `code-review` to `code-review-lens`.** Same procedure for
       `src/skills/code-review/` and its referrers (`src/flows/{delivery,implementation,review}.yaml`,
       `src/domains/engineering-base/review/changes/command.md`, `src/config/skill-body-budget.json`,
       `src/config/skill-output-shape.json`, `src/scripts/compile_trigger_evals.ts`,
@@ -108,7 +108,7 @@ sees the user's machine. Nothing is deleted — every fix renames or reports.
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The opt-out was the earlier accepted fix | product | The 2026-07 fix kept the name and relied on `user-invocable: false`; reopening it could look like churn | The lint itself is green with the defect live (`lint_agent_skill_names.ts:195-210`) and the user reports `/mcp` unusable; the fix renames, it removes no capability | Phase 1 — Give `/mcp` and `/code-review` back |
 | 2 | A rename misses a referrer | implementation | Flows, packs, catalog or trigger evals keep the old name and route to nothing | `check_references` plus the named vitest files in 1.1/1.2; the grep in 1.1 is the enumerated set | Phase 1 — Give `/mcp` and `/code-review` back |
-| 3 | The reaper deletes a user's own `mcp` skill | implementation | A same-name skill the user wrote must survive | 1.5 asserts the foreign directory survives; 2.3 only reports | Phase 1 — Give `/mcp` and `/code-review` back |
+| 3 | The reaper deletes a user's own skill named mcp | implementation | A same-name skill the user wrote must survive | 1.5 asserts the foreign directory survives; 2.3 only reports | Phase 1 — Give `/mcp` and `/code-review` back |
 | 4 | Second-hand docs names are wrong | implementation | A name reserved without being a built-in only withholds a package name | No package artefact uses any added name at the pin; the fixture states its witness and date | Phase 2 — Keep it from coming back |
 
 ## Acceptance Criteria

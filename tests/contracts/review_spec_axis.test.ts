@@ -42,7 +42,7 @@ const ROOT = path.join(__dirname, '../..');
 const COMMAND = path.join(ROOT, 'src/domains/engineering-base/review/changes/command.md');
 const SPEC_JUDGE = path.join(ROOT, 'src/skills/judge-spec-compliance/SKILL.md');
 const SYNTHESIS = path.join(ROOT, 'src/skills/judge-synthesis/SKILL.md');
-const EVALS = path.join(ROOT, 'src/skills/code-review/evals/evals.json');
+const EVALS = path.join(ROOT, 'src/skills/code-review-lens/evals/evals.json');
 
 function read(p: string): string {
     return fs.readFileSync(p, 'utf-8');

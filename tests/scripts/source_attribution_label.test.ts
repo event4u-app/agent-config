@@ -80,7 +80,7 @@ describe('the gate tier for the D1 shape under src/ (OQ-62 E2)', () => {
     });
 
     it('keeps the other classes under src/ at warn', () => {
-        const rel = 'src/skills/mcp/SKILL.md';
+        const rel = 'src/skills/mcp-tool-use/SKILL.md';
         for (const cls of ['source-header', 'tmp-quote', 'repo-slug'] as const) {
             expect(tierFor(rel, cls)).toBe('warn');
             expect(isZeroTolerance(rel, cls)).toBe(false);

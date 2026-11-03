@@ -21,7 +21,7 @@ install:
 This skill applies to ALL code generation and editing tasks. Every other skill builds on top of this one.
 
 Do NOT use when:
-- Only reading/reviewing code (use `code-review` skill)
+- Only reading/reviewing code (use `code-review-lens` skill)
 - Only running quality tools (use `quality-tools` skill)
 
 ## Procedure: Before writing code

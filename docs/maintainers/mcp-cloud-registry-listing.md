@@ -61,7 +61,7 @@ R2 archives every release indefinitely under
 - `meta-prompting`
 - `skills`
 - `agent-infrastructure`
-- `code-review`
+- `code-review-lens`
 - `experimental`
 
 ## License & contact

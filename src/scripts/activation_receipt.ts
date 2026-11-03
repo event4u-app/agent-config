@@ -58,7 +58,7 @@ export const EXIT_USAGE = 2;
 const USAGE = `usage: activation_receipt --rule <id> | --skill <id> [options]
 
   --rule ID         a rule artefact, e.g. commit-policy
-  --skill ID        a skill artefact, e.g. code-review
+  --skill ID        a skill artefact, e.g. code-review-lens
   --host DIR        host projection root (default: .claude)
   --root DIR        repository root (default: this checkout)
   --dry-run         observe and print; do NOT append to the audit ledger
@@ -115,7 +115,7 @@ export function selectedIdsFromManifest(manifestPath: string): Set<string> {
  * The artefact id a manifest path names.
  *
  * `src/rules/commit-policy.md` -> `commit-policy`;
- * `src/skills/code-review/SKILL.md` -> `code-review`. Any other path yields its
+ * `src/skills/code-review-lens/SKILL.md` -> `code-review-lens`. Any other path yields its
  * basename without extension, which is not an id anything will match — a
  * deliberate non-match rather than a guess.
  */

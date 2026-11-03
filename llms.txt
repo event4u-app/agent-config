@@ -9,7 +9,7 @@ Catalog: docs/skills-catalog.md
 accessibility-auditor: Use when reviewing UI for accessibility — WCAG 2.2 AA, keyboard nav, focus, ARIA, contrast, screen-reader semantics — even on 'is this a11y-OK?' or 'mach das barrierefrei'.
 activation-design: Use when defining or auditing the activation event — aha-moment selection, retention correlation, falsifiable definition. Triggers on 'what is our aha moment', 'redefine activation'.
 adr-create: Use when capturing an architectural decision — file naming, next ADR number, Status / Context / Decision / Consequences, index regen; fires even without saying 'ADR'.
-adversarial-review: Adversarial critique — devil's advocate, stress-test, honest teardown ('poke holes', 'be brutal', 'was hältst du davon'); explicit request only. Routine code or design review → code-review.
+adversarial-review: Adversarial critique — devil's advocate, stress-test, honest teardown ('poke holes', 'be brutal', 'was hältst du davon'); explicit request only. Routine code or design review → code-review-lens.
 agent-docs-writing: Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure.
 agent-security-review: Use for an adversarial red-team / blue-team / auditor review of an AI agent's CONFIG + behaviour (rules, skills, MCP, hooks, permissions) — attack-chain → defensive-gap list, not a code audit.
 agents-md-thin-root: Use when editing AGENTS.md (package root) or templates/AGENTS.md (consumer) — enforces Thin-Root contract: hard char ceilings, ≥40% pointer ratio, mandatory emergency-triage block.
@@ -44,7 +44,7 @@ churn-prevention: Use when designing churn defence — health-score signals, chu
 code-film: Motion film rendered from code, frame-checked.
 code-intelligence: Route codebase-structure questions (who calls X, where used, change-impact) to an existing code-graph first: impact, tests-for, dead cheaper, never more precise; grep routine. Also 'call graph'.
 code-refactoring: When the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, verifies via quality tools.
-code-review: Use when the user says \"review this\", \"check my code\", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards.
+code-review-lens: Use when the user says \"review this\", \"check my code\", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards.
 command-routing: Use when the user invokes a slash command like /create-pr, /commit, /fix-ci, or pastes command file content — routes to the right command with context inference and GitHub API patterns.
 command-writing: Use when creating or editing a slash command in src/agent-src/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'.
 comp-banding: Use when designing levels, comp bands, equity-vs-cash, geo adjustments, or raise vs promotion vs market correction. Triggers on 'set our comp bands', 'is this raise market'.
@@ -167,8 +167,8 @@ logging-monitoring: Use when establishing what observability a project actually 
 logo-generation: Generate a logo or brand mark — structured prompt, provider routing, and a true-vector path. Use for logo or brand mark generation.
 market-entry-analysis: Use when sequencing market entry — geo / segment / vertical, beachhead selection, regulatory-delta. Triggers on 'should we enter market X', 'which segment first'.
 markitdown: Convert PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown via the markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'.
-mcp: Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows.
 mcp-builder: Use when building an MCP server in Python (FastMCP) or Node/TypeScript (MCP SDK) — agent-centric tool design, input schemas, error handling, and the 10-question evaluation harness.
+mcp-tool-use: Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows.
 md-language-check: Use BEFORE saving any .md under .augment/, dist/agent-src*/, or agents/ — scans umlauts, German function words, and German phrases outside DE:/EN: anchor blocks. Hard gate per language-and-tone.
 memory-consolidation: Use when consolidating session signals into curated memory — four-phase loop ORIENT → GATHER → CONSOLIDATE → PRUNE. Triggers on 'mine my sessions', 'consolidate memory', 'review intake signals'.
 merge-conflicts: Use when the user has merge conflicts or says \"resolve conflicts\". Understands conflict markers, resolution strategies, and verification workflow.

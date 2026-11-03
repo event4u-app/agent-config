@@ -114,7 +114,7 @@ this table is a derived view, kept readable for reviewers.
 
 ### quality (25)
 
-`adversarial-review`, `api-testing`, `authz-review`, `code-review`, `defense-in-depth`, `design-review`, `judge-bug-hunter`, `judge-code-quality`, `judge-security-auditor`, `judge-test-coverage`, `mobile-e2e-strategy`, `pest-testing`, `playwright-testing`, `quality-tools`, `readme-reviewer`, `review-routing`, `security`, `security-audit`, `skill-reviewer`, `test-driven-development`, `test-performance`, `testing-anti-patterns`, `threat-modeling`, `validate-feature-fit`, `verify-completion-evidence`
+`adversarial-review`, `api-testing`, `authz-review`, `code-review-lens`, `defense-in-depth`, `design-review`, `judge-bug-hunter`, `judge-code-quality`, `judge-security-auditor`, `judge-test-coverage`, `mobile-e2e-strategy`, `pest-testing`, `playwright-testing`, `quality-tools`, `readme-reviewer`, `review-routing`, `security`, `security-audit`, `skill-reviewer`, `test-driven-development`, `test-performance`, `testing-anti-patterns`, `threat-modeling`, `validate-feature-fit`, `verify-completion-evidence`
 
 ### devops (13)
 

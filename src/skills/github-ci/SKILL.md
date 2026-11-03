@@ -48,7 +48,7 @@ Read `.github/workflows/` to discover the actual job matrix. Common patterns:
 
 | Workflow | Purpose |
 |---|---|
-| `pr-review-gate.yaml` | Points-based review system (see `code-review` skill) |
+| `pr-review-gate.yaml` | Points-based review system (see `code-review-lens` skill) |
 | `destroy-review.yaml` | Cleanup ephemeral review environments |
 | `add-labels.yml` | Auto-label PRs |
 | `apply-pr-template.yaml` | Apply PR description template |

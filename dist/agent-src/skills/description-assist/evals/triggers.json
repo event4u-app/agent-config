@@ -14,7 +14,7 @@
             "class": "exemplar"
         },
         {
-            "q": "audit_skill_descriptions flagged code-review as too-short — rewrite the description",
+            "q": "audit_skill_descriptions flagged code-review-lens as too-short — rewrite the description",
             "trigger": true,
             "class": "exemplar"
         },

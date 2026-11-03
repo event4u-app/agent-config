@@ -69,7 +69,7 @@ If a skill needs a tool that is not in the registry:
 ## What this rule does NOT cover
 
 - Internal agent capabilities (file reading, code analysis) — these are not external tools
-- MCP server configuration — handled by the `mcp` skill
+- MCP server configuration — handled by the `mcp-tool-use` skill
 - Credential management — handled by environment configuration
 
 ## See also
