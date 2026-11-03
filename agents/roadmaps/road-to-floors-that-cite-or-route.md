@@ -40,7 +40,7 @@ source-tag vocabulary into the skills that were meant to carry it.
 
 ## Phase 1 — Route the numbers instead of carrying them
 
-- [ ] **1.1 Retention floor, Track 1.** In `src/rules/domain-safety-retention.md:55` replace
+- [x] **1.1 Retention floor, Track 1.** In `src/rules/domain-safety-retention.md:55` replace
       "Then provide ranges if known (US-federal-tax: …; EU VAT: … UK post-Brexit)." with:
       "Then state the floor only from a primary source for that jurisdiction, tagged
       `[verified — source, date]`; without one, tag it `[model knowledge — verify]` and ask. Never
@@ -50,16 +50,16 @@ source-tag vocabulary into the skills that were meant to carry it.
       `domain-safety-retention` in `src/scripts/check_rule_evidence_declaration.ts` SCOPE so it no
       longer says the rule cites floors "by jurisdiction".
       verify: `grep -cE "10 years in DE|7 years from filing|6 in UK" src/rules/domain-safety-retention.md` prints 0 and `grep -c "model knowledge — verify" src/rules/domain-safety-retention.md` ≥ 1.
-- [ ] **1.2 Retention floor, Track 2 clock.** In `src/rules/domain-safety-retention.md:62` replace
+- [x] **1.2 Retention floor, Track 2 clock.** In `src/rules/domain-safety-retention.md:62` replace
       "on a DSR clock (typically 30 days under GDPR)" with "on the regime's response clock (for
       GDPR, Art. 12(3) — quote the period from the text, tagged, never from memory)".
       verify: `grep -c "typically 30 days" src/rules/domain-safety-retention.md` prints 0.
-- [ ] **1.3 Same defect in a skill example.** `src/skills/data-handling-judgment/SKILL.md:156`:
+- [x] **1.3 Same defect in a skill example.** `src/skills/data-handling-judgment/SKILL.md:156`:
       "billing-dispute = 7 years (contractual + tax authority)" → "billing-dispute = the longest
       applicable contractual or tax floor for the named jurisdiction, `[model knowledge — verify]`".
       Repair, do not delete the example; `:158` stays.
       verify: `grep -c "7 years (contractual + tax authority)" src/skills/data-handling-judgment/SKILL.md` prints 0.
-- [ ] **1.4 The sentence in the two sibling floors.** One line each in
+- [x] **1.4 The sentence in the two sibling floors.** One line each in
       `src/rules/finance-safety-floor.md` (Assumptions block, `:69`) and
       `src/rules/domain-safety-disclaimer.md`: "A normative value (period, article, threshold, rate)
       carries `[verified — source, date]` from a primary source or `[model knowledge — verify]`;
