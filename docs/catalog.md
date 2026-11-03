@@ -542,7 +542,7 @@ are excluded.
 | command | [`fix-commit-messages`](../dist/agent-src/commands/fix/commit-messages.md) | cluster: fix | Measure the repo's commit convention, ask which style to standardise on, then rewrite past commit subjects to it — own commits and full history by default |
 | command | [`fix-portability`](../dist/agent-src/commands/fix/portability.md) | cluster: fix | Find and fix project-specific references in shared .augment/ package files |
 | command | [`fix-pr-comments-loop`](../dist/agent-src/commands/fix/pr-comments-loop.md) | cluster: fix | Loop /fix pr-comments on a PR — fix, commit+push, re-request Copilot review, repeat until Copilot has no new comments |
-| command | [`fix-pr-comments`](../dist/agent-src/commands/fix/pr-comments.md) | cluster: fix | Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR |
+| command | [`fix-pr-comments`](../dist/agent-src/commands/fix/pr-comments.md) | cluster: fix | Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR, incl. minimizing resolved bot review summaries |
 | command | [`fix-quality`](../dist/agent-src/commands/fix/quality.md) | cluster: fix | Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files |
 | command | [`fix-refs`](../dist/agent-src/commands/fix/refs.md) | cluster: fix | Find and fix broken cross-references in .augment/ and agents/ files |
 | command | [`fix-route`](../dist/agent-src/commands/fix/route.md) | cluster: fix | Classify a vaguely-described problem and dispatch to the right fix sub-command (or name the specialist skill when it is not a fix task) |
