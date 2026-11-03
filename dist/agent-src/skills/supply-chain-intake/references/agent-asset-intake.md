@@ -15,7 +15,7 @@ opposite, on purpose.
 2. **Revision pinned.** A commit or tag, never "latest" or a default branch
    that can move after review.
 3. **Archive pre-checked before extraction.** For a `.zip` / `.skill` bundle:
-   `./scripts-run src/scripts/archive_precheck <file>` reads the archive's
+   `npx tsx node_modules/@event4u/agent-config/src/scripts/archive_precheck.ts <file>` reads the archive's
    directory without extracting and refuses path traversal, absolute paths,
    symlink entries, nested archives and size/ratio bombs, and names every
    executable entry.
