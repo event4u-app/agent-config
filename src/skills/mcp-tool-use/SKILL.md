@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: mcp-tool-use
-description: "Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows."
+description: "Use when calling MCP (Model Context Protocol) server tools — picking, chaining or debugging them in an agent workflow."
 domain: process
 workspaces:
   - agent-config-maintainer

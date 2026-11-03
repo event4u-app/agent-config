@@ -280,8 +280,15 @@ export const SUPPRESSION_INVENTORY: readonly SuppressionSpec[] = [
         file: 'src/config/provider-home-joins-baseline.json',
         listKey: 'held',
         tier: 'string_list',
-        newInThisChange: true,
         what: 'runtime files that join the home dir with a provider dir instead of resolving through provider_home.ts',
+    },
+    {
+        file: 'src/config/name-twin-baseline.json',
+        listKey: 'twins',
+        tier: 'object',
+        keyFields: ['name'],
+        newInThisChange: true,
+        what: 'skill/command same-name twins present when the twin gate landed, each closed by an owner decision',
     },
 ];
 

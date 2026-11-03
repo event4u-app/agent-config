@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **645**
-- Edges (incl. self-WRITE): **2460**
+- Edges (incl. self-WRITE): **2461**
 
 ## READ_ONLY edges
 
@@ -1320,6 +1320,7 @@
 | `.agent-src.uncondensed/skills/market-entry-analysis/SKILL.md` | `.agent-src.uncondensed/skills/funnel-analysis/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/market-entry-analysis/SKILL.md` | `.agent-src.uncondensed/skills/unit-economics-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/mcp-builder/SKILL.md` | `.agent-src.uncondensed/skills/api-design/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/mcp-builder/SKILL.md` | `.agent-src.uncondensed/skills/mcp-tool-use/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/mcp-builder/SKILL.md` | `.agent-src.uncondensed/skills/testing-anti-patterns/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/mcp-tool-use/SKILL.md` | `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/md-language-check/SKILL.md` | `.agent-src.uncondensed/rules/language-and-tone.md` | `body_link` | 1 |

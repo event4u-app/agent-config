@@ -16319,6 +16319,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/mcp-builder/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/mcp-tool-use/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/mcp-builder/SKILL.md",
       "target": ".agent-src.uncondensed/skills/testing-anti-patterns/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",

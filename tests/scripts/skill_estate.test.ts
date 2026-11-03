@@ -185,6 +185,11 @@ describe('the live corpus', () => {
         // (road-to-a-founder-interview-that-ends-in-a-plan, OQ-61); its catalogue
         // line was paid by shortening three neighbour descriptions, so the token
         // total moves by one, 11487 -> 11488.
+        //
+        // 2026-11-03: `adversarial-review`'s description routes to
+        // `code-review-lens`, the renamed `code-review`, and `mcp-tool-use`'s
+        // description was tightened by the same amount, so the total holds at
+        // 11488 (road-to-a-name-no-host-already-owns 1.1/1.2).
         const e = measureSkillEstate(REPO);
         expect(e.skill_count).toBe(303);
         expect(e.skill_description_tokens).toBe(11488);

@@ -291,7 +291,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`llm-provider-knowledge`** — Before stating any specific fact about an LLM provider's product — models, pricing, limits, context windows, SDK/API — for OpenAI, Gemini, Claude & others, verify against official docs, not memory.
 - **`markitdown`** — Convert PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown via the markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'.
 - **`mcp-builder`** — Use when building an MCP server in Python (FastMCP) or Node/TypeScript (MCP SDK) — agent-centric tool design, input schemas, error handling, and the 10-question evaluation harness.
-- **`mcp-tool-use`** — Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows.
+- **`mcp-tool-use`** — Use when calling MCP (Model Context Protocol) server tools — picking, chaining or debugging them in an agent workflow.
 - **`md-language-check`** — Use BEFORE saving any .md under .augment/, dist/agent-src*/, or agents/ — scans umlauts, German function words, and German phrases outside DE:/EN: anchor blocks. Hard gate per language-and-tone.
 - **`memory-consolidation`** — Use when consolidating session signals into curated memory — four-phase loop ORIENT → GATHER → CONSOLIDATE → PRUNE. Triggers on 'mine my sessions', 'consolidate memory', 'review intake signals'.
 - **`module-detect-on-the-fly`** — When editing a module-shaped path (`Modules/*`, `packages/*`, `apps/*`) while `modules.enabled` is false — asks once to enable it; also the project/stack + task-runner detection reference.

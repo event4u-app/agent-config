@@ -6,12 +6,12 @@
     "accessibility-auditor": 11064,
     "activation-design": 8513,
     "adr-create": 17859,
-    "adversarial-review": 7860,
+    "adversarial-review": 7870,
     "agent-docs-writing": 18341,
     "agent-security-review": 6120,
     "agents-md-thin-root": 13319,
     "ai-code-blindspots": 14143,
-    "ai-council": 21694,
+    "ai-council": 21705,
     "alerting-doctrine": 8755,
     "analysis-autonomous-mode": 7380,
     "analysis-skill-router": 4139,
@@ -57,7 +57,7 @@
     "contracts-cognition": 10413,
     "conventional-commits-writing": 20372,
     "copilot-agents-optimization": 11335,
-    "copilot-config": 8377,
+    "copilot-config": 8382,
     "corpus-grounding": 11336,
     "customer-research": 6731,
     "dashboard-design": 5850,
@@ -119,8 +119,8 @@
     "fundraising-narrative": 9878,
     "funnel-analysis": 7203,
     "gated-reach": 9723,
-    "git-workflow": 20699,
-    "github-ci": 4853,
+    "git-workflow": 20704,
+    "github-ci": 4858,
     "grafana": 6477,
     "gtm-launch": 9094,
     "guideline-writing": 7015,
@@ -139,7 +139,7 @@
     "jobs-events": 2756,
     "js-library-packaging": 9295,
     "judge-artifact-completeness": 7199,
-    "judge-bug-hunter": 8560,
+    "judge-bug-hunter": 8565,
     "judge-code-quality": 7986,
     "judge-injection-defense": 6079,
     "judge-security-auditor": 8652,
@@ -177,7 +177,7 @@
     "market-entry-analysis": 10016,
     "markitdown": 14443,
     "mcp-tool-use": 9204,
-    "mcp-builder": 8628,
+    "mcp-builder": 8682,
     "md-language-check": 5084,
     "memory-consolidation": 21606,
     "merge-conflicts": 10878,
@@ -207,7 +207,7 @@
     "persona-improvement": 4018,
     "persona-writing": 5503,
     "pest-testing": 14368,
-    "php-coder": 4966,
+    "php-coder": 4970,
     "php-debugging": 8164,
     "php-service": 3115,
     "pipeline-strategy": 8309,
@@ -1000,7 +1000,7 @@
       "skill": "supply-chain-intake",
       "old": 10721,
       "new": 11688,
-      "reason": "road-to-a-timeline-the-witness-can-seek 3.3: a host plugin / mod intake section \u2014 unsandboxed, runs with the user's rights, source read before enable."
+      "reason": "road-to-a-timeline-the-witness-can-seek 3.3: a host plugin / mod intake section — unsandboxed, runs with the user's rights, source read before enable."
     },
     {
       "skill": "emit-tickets",
@@ -1025,6 +1025,54 @@
       "old": 16352,
       "new": 16546,
       "reason": "Step 3 names the declared seam a test is written at, and the anti-pattern list gains the horizontal slice (every test for one layer before any behaviour passes); both tightened to one line each."
+    },
+    {
+      "skill": "adversarial-review",
+      "old": 7860,
+      "new": 7870,
+      "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
+    },
+    {
+      "skill": "ai-council",
+      "old": 21694,
+      "new": 21705,
+      "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
+    },
+    {
+      "skill": "copilot-config",
+      "old": 8377,
+      "new": 8382,
+      "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
+    },
+    {
+      "skill": "git-workflow",
+      "old": 20699,
+      "new": 20704,
+      "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
+    },
+    {
+      "skill": "github-ci",
+      "old": 4853,
+      "new": 4858,
+      "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
+    },
+    {
+      "skill": "judge-bug-hunter",
+      "old": 8560,
+      "new": 8565,
+      "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
+    },
+    {
+      "skill": "mcp-builder",
+      "old": 8628,
+      "new": 8682,
+      "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
+    },
+    {
+      "skill": "php-coder",
+      "old": 4966,
+      "new": 4970,
+      "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
     }
   ]
 }
