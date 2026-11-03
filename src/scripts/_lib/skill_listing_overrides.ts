@@ -34,7 +34,6 @@ import { atomicWriteFile } from '../../install/atomic.js';
 import { _read_settings, _with_lock } from './claude_settings_hooks.js';
 import * as global_deploy_inventory from './global_deploy_inventory.js';
 import { type CatalogueEntry, modelListingBudget } from './host_listing_model.js';
-import * as user_global_paths from './user_global_paths.js';
 
 // Imported for the one wrapper at the bottom; see its comment for why the
 // branch lives here rather than in the installer.

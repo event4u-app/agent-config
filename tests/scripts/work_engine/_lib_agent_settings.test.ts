@@ -2,20 +2,9 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as ags from '../../../src/agent-src/templates/scripts/work_engine/_lib/agent_settings';
-
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
-const WORK_ENGINE_DIR = path.join(
-    REPO_ROOT,
-    'src',
-    'agent-src',
-    'templates',
-    'scripts',
-    'work_engine',
-);
 
 const tmp_dirs: string[] = [];
 
@@ -36,11 +25,6 @@ function write_file(p: string, body: string): string {
 function mkdirp(p: string): string {
     fs.mkdirSync(p, { recursive: true });
     return p;
-}
-
-/** A user-global path that does not exist (mirrors `tmp_path / "missing.yml"`). */
-function no_global(tmp: string): string {
-    return path.join(tmp, 'no-such-global.yml');
 }
 
 beforeEach(() => {
