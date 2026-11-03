@@ -8,7 +8,6 @@ import { pathToFileURL } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import {
-    WEB_LAUNCH_MAX_CHARS,
     WEB_LAUNCH_RE,
     isPassSurface,
     withDegradation,
@@ -52,10 +51,6 @@ describe('design_pass_hook — web-launch rows at write time', () => {
         for (const rel of ['index.html', 'css/site.css', 'kontakt.html', 'ueber-uns.html', 'impressum.html']) {
             expect(scanWebLaunch(rel, read(`safe/${rel}`)), rel).toEqual([]);
         }
-    });
-
-    it('the input cap is one megabyte of characters', () => {
-        expect(WEB_LAUNCH_MAX_CHARS).toBe(1_000_000);
     });
 });
 

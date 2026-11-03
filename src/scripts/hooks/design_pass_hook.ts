@@ -626,9 +626,8 @@ export function render(result: PassResult, conformance?: string): string {
     return lines.join('\n');
 }
 
-/** The written files the web-launch rows read, and the most they read of one. */
+/** The written files the web-launch rows read. No size cap: the scan is linear, and any cap is a padding bypass. */
 export const WEB_LAUNCH_RE = /\.(html?|css)$/i;
-export const WEB_LAUNCH_MAX_CHARS = 1_000_000;
 
 /** Mark a pass degraded, APPENDING the reason: two degradations are two facts. */
 export function withDegradation(result: PassResult, reason: string): PassResult {
@@ -686,11 +685,11 @@ function main(): number {
                 else findings.push(...svgFindings(scan(content, rel) as SvgRuleFinding[], rel));
             }
             if (WEB_LAUNCH_RE.test(rel)) {
-                // Over the cap, or no chunk in a bundled install: the file is
-                // reported unchecked, never passed as clean.
-                const scan = content.length > WEB_LAUNCH_MAX_CHARS ? null : loadWebLaunchScan();
+                // No chunk in a bundled install: the file is reported unchecked,
+                // never passed as clean.
+                const scan = loadWebLaunchScan();
                 if (scan !== null) findings.push(...scan(rel, content));
-                else if (isBundled() || content.length > WEB_LAUNCH_MAX_CHARS) webLaunchGaps.push(rel);
+                else if (isBundled()) webLaunchGaps.push(rel);
             }
             for (const f of scanFile(content, rel, ctx)) {
                 findings.push({
@@ -740,7 +739,7 @@ function main(): number {
     if (webLaunchGaps.length > 0) {
         result = withDegradation(
             result,
-            `web-launch rows not run: ${webLaunchGaps.join(', ')} (too large, or no ${WEB_LAUNCH_CHUNK})`,
+            `web-launch rows not run: ${webLaunchGaps.join(', ')} (no ${WEB_LAUNCH_CHUNK})`,
         );
     }
 
