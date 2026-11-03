@@ -137,7 +137,7 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
       `src/cli/commands/uiRender.ts` (`:381`, `:545`, `:673`, `:685`) and in
       `uiRenderInteract.ts`; the manifest records `network: { aborted, blocked }`.
       verify: `npx vitest run tests/cli/ui_render_asset_isolation.test.ts` -> 0 (pure predicate: cross-origin GET, same-origin POST and same-origin GET) and `grep -c "confinePage" src/cli/commands/uiRender.ts src/cli/commands/uiRenderInteract.ts` -> each ≥ 1
-- [ ] **4.4 `consistency-sibling-gap`, shadow only.** In
+- [x] **4.4 `consistency-sibling-gap`, shadow only.** In
       `src/scripts/lint_design_consistency.ts`, an exported pure
       `siblingGapFindings(rows)` over render rows and a `--render <styles.json>`
       mode: ≥ 3 visible, in-flow siblings of one parent with the same tag +
