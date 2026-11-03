@@ -105,7 +105,7 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
       `animation` joins `_UI_NOUNS`; `karte`, `kachel`, `animation`, `abstand`
       and `abständ` join `UI_I18N.de.nouns`.
       verify: `./scripts-run src/scripts/eval_ui_triviality` -> `symptom_ui` PASS, `backend` PASS, `add_control` and `de_ui_recall` PASS; `npx vitest run tests/scripts/work_engine/intent_classify.test.ts` -> 0
-- [ ] **3.3 A bare quality adjective is review-first.** A prompt whose only
+- [x] **3.3 A bare quality adjective is review-first.** A prompt whose only
       goal is an evaluative adjective (de: hochwertig, edel, schöner, moderner,
       professioneller, aufgeräumter; en: premium, polished, nicer, sleeker,
       more professional) with a UI signal — `site` counts as a UI signal only in

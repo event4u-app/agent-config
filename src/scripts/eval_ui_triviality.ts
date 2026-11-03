@@ -19,9 +19,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import {
-    classify_intent,
-    directive_set_for,
-    is_review_only,
+    routing_for,
 } from '../agent-src/templates/scripts/work_engine/intent/classify.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
@@ -155,8 +153,7 @@ export function load_corpus(p: string): Task[] {
 
 export function run_eval(tasks: Task[]): EvalResult {
     const rows: EvalRow[] = tasks.map((t) => {
-        const intent = classify_intent(t.prompt);
-        const set = directive_set_for(intent);
+        const { intent, directive_set: set, review_only } = routing_for(t.prompt);
         const predicted_trivial = set === 'ui-trivial';
         return {
             id: t.id,
@@ -165,7 +162,7 @@ export function run_eval(tasks: Task[]): EvalResult {
             lang: t.lang ?? 'en',
             intent,
             directive_set: set,
-            review_only: intent === 'ui-improve' && is_review_only(t.prompt),
+            review_only,
             hit: predicted_trivial === (t.label === 'trivial'),
         };
     });

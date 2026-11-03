@@ -80,11 +80,9 @@ describe('the add-control / German / backend bars (pre-registered 2026-10-26)', 
         expect(byName.de_ui_recall).toMatchObject({ total: 2, passed: 1, verdict: 'MISS', failing: ['uit-914'] });
     });
 
-    // The 2026-11-03 block is pre-registered to MISS until 3.2/3.3 land; until
-    // then the net holds over the corpus that predates it.
-    it('all three bars hold on the golden corpus — the regression net for 1.4', () => {
-        const result = run_eval(CORPUS.filter((t) => t.source !== 'inbox-2026-11-n'));
-        for (const b of result.bars.filter((x) => ['add_control', 'de_ui_recall', 'backend'].includes(x.name))) {
+    it('all five bars hold on the golden corpus — the regression net for 1.4 and 3.2/3.3', () => {
+        const result = run_eval(CORPUS);
+        for (const b of result.bars) {
             expect(b.verdict, `${b.name}: ${b.failing.join(', ')}`).toBe('PASS');
         }
     });

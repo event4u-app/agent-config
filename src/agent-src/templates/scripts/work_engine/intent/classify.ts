@@ -457,14 +457,64 @@ export function populate_routing(state: WorkState): void {
     }
 
     const [text, title] = _extract_text(state);
-    const intent = classify_intent(text, { title });
-    state.intent = intent;
-    state.directive_set = directive_set_for(intent);
-    if (intent === INTENT_UI_IMPROVE && is_review_only(text)) {
+    const routing = routing_for(text, title);
+    state.intent = routing.intent;
+    state.directive_set = routing.directive_set;
+    if (routing.review_only) {
         // Review before rebuild (road-to-a-control-that-matches-its-neighbours
         // 4.1): `ui/apply` writes nothing until the user selected findings.
         (state.input.data as Record<string, unknown>)['review_only'] = true;
     }
+}
+
+/**
+ * The routing a text gets: intent, directive set, and whether `ui/apply` must
+ * halt for a selection. One function so the engine and the corpus eval read
+ * the same answer.
+ */
+export function routing_for(
+    text: string,
+    title: string | null = null,
+): { intent: string; directive_set: string; review_only: boolean } {
+    const intent = classify_intent(text, { title });
+    const joined = [title, text].filter((p): p is string => Boolean(p)).join(' ');
+    if ((intent === INTENT_UI_IMPROVE || intent === INTENT_BACKEND) && is_quality_adjective_review(joined)) {
+        return { intent: INTENT_UI_IMPROVE, directive_set: directive_set_for(INTENT_UI_IMPROVE), review_only: true };
+    }
+    return {
+        intent,
+        directive_set: directive_set_for(intent),
+        review_only: intent === INTENT_UI_IMPROVE && is_review_only(text),
+    };
+}
+
+// Evaluative adjectives (road-to-design-inputs-and-pages-read-as-they-are 3.3).
+const _QUALITY_ADJECTIVE: RegExp =
+    /\b(?:premium|polished|nicer|prettier|sleeker|classier|more\s+(?:professional|elegant|modern|refined))\b|(?<![\p{L}])(?:hochwertig|edl|edel|schöner|moderner|professioneller|aufgeräumter|eleganter)\p{L}*/u;
+
+// Surface words that count as a UI signal ONLY beside a quality adjective:
+// on their own `site`, `shop` and `app` are as often a data layer.
+const _ADJECTIVE_SURFACE: RegExp = /\b(?:site|shop|store|app|dashboard)s?\b/;
+
+// A concrete object turns the adjective into a scoped change, not a review.
+const _CONCRETE_OBJECT: RegExp =
+    /\b(?:colou?rs?|copy|text|labels?|wording|padding|margin|spacing|fonts?|weight|radius|tokens?|icons?|placeholder|heading|title|alignment|borders?|shadows?|typography|contrast)\b/;
+
+/**
+ * True when the whole goal of a prompt is an evaluative adjective over a UI
+ * surface ("Mach die Website hochwertiger", "make the site feel more
+ * premium"): no build or fix verb, no concrete object, no backend signal.
+ * Such a request is reviewed before anything is rebuilt.
+ */
+export function is_quality_adjective_review(raw: string): boolean {
+    const text = pyLower(pyStrip(raw));
+    if (!_QUALITY_ADJECTIVE.test(text)) return false;
+    if (_has_backend_signal(text) || _is_build(text) || _is_fix(text)) return false;
+    if (_CONCRETE_OBJECT.test(text)) return false;
+    for (const table of Object.values(UI_I18N)) {
+        if (_stemRe(table.objects, true).test(text)) return false;
+    }
+    return _has_ui_signal(text) || _ADJECTIVE_SURFACE.test(text);
 }
 
 /**
