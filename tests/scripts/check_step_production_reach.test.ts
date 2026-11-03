@@ -1,7 +1,7 @@
 // road-to-a-tick-the-shipped-path-earns 3.1–3.2.
 import { describe, expect, it } from 'vitest';
 
-import { checkStep, namedPaths, newTicks, stepBlock } from '../../src/scripts/check_step_production_reach.js';
+import { checkStep, exemptionCitesItsCall, namedPaths, newTicks, stepBlock } from '../../src/scripts/check_step_production_reach.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -141,6 +141,28 @@ describe('check_step_production_reach', () => {
 
     it('refuses a ticked step that says built, not wired', () => {
         expect(checkStep(tree, reach, 'r.md', '1.4', '- [x] **1.4 x** built, not wired')).not.toBeNull();
+    });
+
+    it('reds a prose-citing exemption that names no invoking file:line (2.2)', () => {
+        const block =
+            '- [x] **1.5 x** `src/lib.ts`\n  reach exempt: driven by the analysis doors through command prose, no TypeScript caller\n  verify: `tests/lib.test.ts`';
+        expect(checkStep(tree, reach, 'r.md', '1.5', block)?.reason).toContain('file:line');
+    });
+
+    it('passes a prose-citing exemption that names the invoking file:line (2.2)', () => {
+        const block =
+            '- [x] **1.5 x** `src/lib.ts`\n  reach exempt: driven by the door, invoked at `src/domains/a/command.md:90`\n  verify: `tests/lib.test.ts`';
+        expect(checkStep(tree, reach, 'r.md', '1.5', block)).toBeNull();
+    });
+
+    it('reads the corpus as the roadmap expects, without making it an oracle (2.2)', () => {
+        const adr288 =
+            'the analysis ledger is driven by the analysis doors through command prose (ADR-288), with no TypeScript caller — appendLoop, nextLoop and ledgerSummary were already unreached before this step.';
+        const verdict =
+            'isMediaAnchor is consumed by src/scripts/analysis_validate.ts, which the analysis commands run by path from markdown; the production-entry config does not read command bodies, so that edge is invisible here.';
+        expect(exemptionCitesItsCall(adr288)).toBe(false);
+        expect(exemptionCitesItsCall(verdict)).toBe(true);
+        expect(exemptionCitesItsCall('a maintainer bench, never shipped')).toBe(true);
     });
 
     it('maps a named test to its own subject module', () => {

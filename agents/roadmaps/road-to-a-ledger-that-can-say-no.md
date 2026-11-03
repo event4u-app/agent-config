@@ -209,13 +209,14 @@ rewriting archived `status: ready` (decided 2026-09-04,
       verify: fixture tests — prose mention of a `_lib` module is no entry, an
       invoked CLI is, the context-invoked `analysis_validate` is.
       Done: `productionEntries` in `src/scripts/_lib/production_reach.ts` takes a `.md` mention only when `hasMainGuard` holds or the mention follows `./scripts-run` / `node` / `tsx`; `src/config/production-entries.json` adds `src/agent-src/contexts/**/*.md`. Seven fixture tests in `tests/scripts/check_step_production_reach.test.ts` (3 red first), existing ones green, `--self-test` green. `report_production_reach` before: `732 entries · 1615 modules · 13322 reached symbols · digest a02e7069acb216f6`; after the entry rule: `715 entries · 1615 modules · 13342 reached symbols · digest 6e5f64a4b98bb7b1`; after also fixing `usedExports` to read a `...name` spread as a use (it was dropped as a member access, which left `productionEntries` itself unreached): `715 entries · 1615 modules · 13494 reached symbols · digest 801b5dfdaed455b5`.
-- [ ] **2.2 A prose exemption names its call.** A `reach exempt:` reason citing
+- [x] **2.2 A prose exemption names its call.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_step_production_reach.ts --> A `reach exempt:` reason citing
       prose, a door or a command must carry the `file:line` of the invoking
       command.
       verify: `npx vitest run tests/scripts/check_step_production_reach.test.ts` -> 0
       with a prose-citing exemption fixture red and a `file:line`-citing one green.
       Corpus reading only, not an oracle: the two ADR-288 lines read red and
       `archive/road-to-a-verdict-that-shows-its-frame.md:83` stays green.
+      Done: `exemptionCitesItsCall` in `src/scripts/check_step_production_reach.ts` — a reason naming prose, a door, a command or markdown must carry a `file:line` or the calling `src/**.ts` module; `checkStep` reds it otherwise. `npx vitest run tests/scripts/check_step_production_reach.test.ts` -> 0 (21 tests; the red fixture seen red first). Corpus reading over all 51 `reach exempt:` lines: exactly the two ADR-288 lines red, `:83` green.
 - [ ] **2.3 Unreached engine modules get a disposition.** Each module 2.1 leaves
       unreached is labelled in its door (D3) as "reference spec, model-carried" (precedent:
       `src/domains/analysis-workbench/analyze/inbox/command.md`).
