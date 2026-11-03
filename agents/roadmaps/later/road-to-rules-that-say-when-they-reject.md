@@ -3,6 +3,10 @@ complexity: lightweight
 status: parked
 owner: maintainer
 review_by: 2027-01-31
+entry_condition:
+  what: "a reviewer is observed paraphrasing an instruction-only rule where a citable condition would have settled the finding"
+  when: "a kernel-rule PR slot with its soak window is free"
+  who: maintainer
 estate_offset_exempt: "Parked under later/, excluded from the dashboard and /roadmap:process-*; adds no active roadmap. Owner search: grep -rlE 'Rejected when|instruction-only.*block' over agents/roadmaps (whole tree) — no owner."
 relates:
   - slug: road-to-checks-that-name-their-catch
