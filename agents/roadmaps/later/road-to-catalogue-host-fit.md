@@ -244,12 +244,13 @@ This phase unblocks everything else in the file, and it is repo work.
       establish whether the bare threshold actually moves with the entry count.
       `verify:` a scoped install's projected entry count is recorded against the
       smallest recorded limit for that host.
-- [ ] **2.2** Deterministic tie-break for what stays: skills referenced by deployed
+- [x] **2.2** Deterministic tie-break for what stays: skills referenced by deployed <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/host_listing_model.ts -->
       rules' `routes_to:`, then pack membership, then usage evidence — and **never
       alphabetical**, which is the order the degenerate-short-prompt scorer already
       showed to be an accident amplifier.
       `verify:` the tie-break is a pure function with a fixture, and reordering the
       input does not reorder the output.
+      Landed as `residentPriorityOrder` in `road-to-a-resident-set-chosen-on-purpose` step 1.1 (usage evidence absent; installer default unchanged).
 - **AC-2:** on a default consumer install, the capture records no bare entries on
   claude across several consecutive observations, or the assert-no-truncation path
   passes on codex — and the deploy-time warning goes silent **because the condition

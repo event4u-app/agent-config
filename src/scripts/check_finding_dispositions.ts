@@ -53,6 +53,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { VERIFY_ARROW_SOURCE } from '../agent-src/scripts/verify_clause.js';
 import { coverageLabel } from './_lib/review_coverage.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
@@ -433,6 +434,41 @@ export function disposition_summary(t: DispositionTally): string {
         `blocking ${String(t.blockingDispositioned)}/${String(t.blockingTotal)} dispositioned · ` +
         `non-blocking ${String(t.nonBlockingTerminal)}/${String(t.nonBlockingTotal)} carry a terminal status`
     );
+}
+
+const EXPECTATION_RE = new RegExp(VERIFY_ARROW_SOURCE);
+
+/** True when `verified_by` ends in a verify-clause expectation (`-> 0`, `-> /re/`). */
+export function hasExpectation(verifiedBy: string | undefined): boolean {
+    return EXPECTATION_RE.test((verifiedBy ?? '').trim());
+}
+
+/** Rows whose status claims a verdict an oracle could check. */
+const ORACLE_STATUSES: readonly string[] = ['fixed', 'false_positive'];
+
+export interface OracleTally {
+    readonly withExpectation: number;
+    readonly total: number;
+}
+
+/**
+ * How many verdict rows name the outcome their check must produce. A count,
+ * not a refusal — the same stance as {@link disposition_tally}: a command with
+ * no expected outcome can be run but not failed, and the line says how many.
+ */
+export function oracle_tally(findings: readonly LedgerFinding[]): OracleTally {
+    let total = 0;
+    let withExpectation = 0;
+    for (const f of findings) {
+        if (!ORACLE_STATUSES.includes((f.status ?? '').trim())) continue;
+        total++;
+        if (hasExpectation(f.verified_by)) withExpectation++;
+    }
+    return { withExpectation, total };
+}
+
+export function oracle_summary(t: OracleTally): string {
+    return `oracle: ${String(t.withExpectation)}/${String(t.total)} fixed|false_positive rows name an expected outcome`;
 }
 
 /**
@@ -954,7 +990,8 @@ function main(argv: readonly string[]): number {
             n === 0
                 ? `✅  no recorded findings for ${release} (ledger ${fs.existsSync(ledgerPath) ? 'empty' : 'absent'})${suffix}\n`
                 : `✅  ${String(n)} recorded finding(s) for ${release} — ` +
-                      `${disposition_summary(disposition_tally(ledger.findings, release))}${suffix}\n`,
+                      `${disposition_summary(disposition_tally(ledger.findings, release))} · ` +
+                      `${oracle_summary(oracle_tally(ledger.findings))}${suffix}\n`,
         );
         return 0;
     }

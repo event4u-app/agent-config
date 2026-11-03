@@ -19,6 +19,9 @@ import {
     disposition_summary,
     disposition_tally,
     empty_ledger_problem,
+    hasExpectation,
+    oracle_summary,
+    oracle_tally,
     unreviewed_ledger_problem,
     OWNER_DIRECTIVES_DIR,
     isBlocking,
@@ -566,6 +569,37 @@ describe('disposition_tally — blocking and non-blocking counted apart', () => 
     });
 });
 
+describe('hasExpectation — the verify-clause arrow, parsed once', () => {
+    it('an exit-code arrow is an expectation', () => {
+        expect(hasExpectation('grep -c x f -> 1')).toBe(true);
+    });
+
+    it('a quoted word after the arrow is not', () => {
+        expect(hasExpectation('grep -c x f -> "guidelines 121"')).toBe(false);
+    });
+
+    it('a prose sentence is not', () => {
+        expect(hasExpectation('Checked by reading the file; the string is gone.')).toBe(false);
+    });
+
+    it('a regex arrow is an expectation, an absent field is not', () => {
+        expect(hasExpectation('grep -n y f -> /y/')).toBe(true);
+        expect(hasExpectation(undefined)).toBe(false);
+    });
+});
+
+describe('oracle_tally — counted over fixed and false_positive rows only', () => {
+    it('counts rows naming an expected outcome, ignores other statuses', () => {
+        const t = oracle_tally([
+            finding({ status: 'fixed', verified_by: 'grep -c a f -> 0' }),
+            finding({ status: 'false_positive', verified_by: 'read the file' }),
+            finding({ status: 'wontfix', verified_by: 'grep -c a f -> 0' }),
+        ]);
+        expect(t).toEqual({ withExpectation: 1, total: 2 });
+        expect(oracle_summary(t)).toBe('oracle: 1/2 fixed|false_positive rows name an expected outcome');
+    });
+});
+
 describe('the --release success line reports the split', () => {
     it('green, and says 0/1 non-blocking rather than "all"', () => {
         const dir = ledgerDir({
@@ -585,6 +619,7 @@ describe('the --release success line reports the split', () => {
         expect(r.code).toBe(0);
         expect(r.out).toContain('blocking 1/1 dispositioned');
         expect(r.out).toContain('non-blocking 0/1 carry a terminal status');
+        expect(r.out).toContain('oracle:');
         // The sensitivity half: the old line is gone, not merely joined.
         expect(r.out).not.toContain('all 2 recorded');
     });

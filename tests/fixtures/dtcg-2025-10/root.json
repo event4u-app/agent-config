@@ -1,0 +1,10 @@
+{
+  "primitive": {
+    "color": {
+      "blue": {
+        "$root": { "$type": "color", "$value": "#0000ff" },
+        "light": { "$type": "color", "$value": "#8888ff" }
+      }
+    }
+  }
+}

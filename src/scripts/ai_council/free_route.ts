@@ -206,11 +206,19 @@ export function familyOf(servedId: string): string {
     return (last.split(/[^a-zA-Z]+/).find((t) => t !== '') ?? '').toLowerCase();
 }
 
-/** Same model, allowing only a vendor prefix and a dated or variant suffix of the requested id. */
+const _PARAM_SIZE = /\d+(\.\d+)?[bm]\b/i;
+
+/**
+ * Same model, allowing only a vendor prefix and a dated or variant suffix of
+ * the requested id. A suffix that adds a parameter size the request did not
+ * name is a different model, not a variant of it.
+ */
 export function servedMatches(requested: string, served: string): boolean {
     const norm = (s: string): string => (s.trim().split('/').pop() ?? '').toLowerCase();
     const r = norm(requested);
     const s = norm(served);
     if (r === '' || s === '') return false;
-    return s === r || (s.startsWith(`${r}-`) && familyOf(s) === familyOf(r));
+    if (s === r) return true;
+    if (!s.startsWith(`${r}-`) || familyOf(s) !== familyOf(r)) return false;
+    return _PARAM_SIZE.test(r) || !_PARAM_SIZE.test(s.slice(r.length));
 }

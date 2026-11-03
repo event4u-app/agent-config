@@ -54,11 +54,13 @@ agents/memory/intake/*.jsonl merge=union eol=lf
 # NEW entry — the common case — union-merges cleanly (concats both sides).
 # CAVEAT: union merge operates per LINE, not per YAML block. If both branches
 # touch overlapping lines (not pure appends), the result can interleave
-# partial multi-line list items into invalid YAML. The reader
-# (_iter_curated_entries in memory_lookup.ts) does NOT dedup entries by id for
-# this layout, so an exact duplicate block surviving a bad union merge would
-# surface twice. Treat this as a best-effort safety net for the append-only
-# case, not a guarantee — the directory layout below has no such caveat.
+# partial multi-line list items into invalid YAML. An exact duplicate block
+# surviving a bad union merge is harmless to retrieval: the reader
+# (_iter_curated_entries in memory_lookup.ts, both twins) keeps the first entry
+# per id across both layouts, and check_memory still reports the duplicate id.
+# Invalid YAML is not repaired. Treat this as a best-effort safety net for the
+# append-only case, not a guarantee — the directory layout below has no such
+# caveat.
 agents/memory/ownership.yml              merge=union text eol=lf
 agents/memory/historical-patterns.yml    merge=union text eol=lf
 agents/memory/domain-invariants.yml      merge=union text eol=lf

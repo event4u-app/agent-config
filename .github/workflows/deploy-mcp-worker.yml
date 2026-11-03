@@ -46,11 +46,15 @@ jobs:
     steps:
       - name: Resolve target ref
         id: ref
+        # Free text reaches the shell only through env: (lint rule template-injection).
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          TAG_INPUT: ${{ inputs.tag }}
         run: |
           if [ "${{ github.event_name }}" = "release" ]; then
-            echo "ref=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
-          elif [ -n "${{ inputs.tag }}" ]; then
-            echo "ref=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+            echo "ref=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          elif [ -n "$TAG_INPUT" ]; then
+            echo "ref=$TAG_INPUT" >> "$GITHUB_OUTPUT"
           else
             echo "ref=${{ github.ref }}" >> "$GITHUB_OUTPUT"
           fi
@@ -108,8 +112,7 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
           node-version: "22"
-          cache: npm
-          cache-dependency-path: internal/workers/mcp/package-lock.json
+          # Actions cache left off: this job is privileged (lint rule privileged-job-cache).
 
       - name: Install Worker deps
         run: npm ci --no-audit --no-fund --prefer-offline

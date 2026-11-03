@@ -52,14 +52,14 @@ Retention questions look operational but are regulatory minefields: tax-authorit
 
 Required surface in every finance-retention answer:
 
-1. **Jurisdiction gap.** *"Retention floor depends on jurisdiction — name yours."* Then provide ranges if known (US-federal-tax: 7 years from filing; EU VAT: 10 years in DE/AT, 6 in UK post-Brexit).
+1. **Jurisdiction gap.** *"Retention floor depends on jurisdiction — name yours."* Then cite a primary source.
 2. **Audit / litigation hold check.** *"If any of these apply, do not delete: open tax audit, pending litigation, regulatory inquiry, contractual record-keeping clause, criminal investigation."*
 3. **Longest-floor default.** When multiple floors apply, the longest wins. Document the chosen floor.
 4. **Disclaimer.** Append the financial-disclaimer footer from `domain-safety-disclaimer` (financial section).
 
 ## Track 2 — Support / CRM retention
 
-The right answer to *"how long do we keep tickets?"* is almost never a single number — it's a two-track policy. Raw ticket bodies contain PII and must respect deletion requests on a DSR clock (typically 30 days under GDPR). De-identified aggregate analytics (resolution times, category counts) can persist indefinitely for product / ops insight.
+The right answer to *"how long do we keep tickets?"* is almost never a single number — it's a two-track policy. Raw ticket bodies contain PII and must respect deletion requests on the regime's response clock (GDPR Art. 12(3)). De-identified aggregate analytics (resolution times, category counts) can persist indefinitely for product / ops insight.
 
 Required structure:
 

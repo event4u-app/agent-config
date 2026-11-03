@@ -295,11 +295,11 @@ attributed to the host.
 > approach to take) use the council **stance tally** — the Convergence /
 > Divergence summary aggregates member stances across the option set.
 > Finding-level review (is this specific bug/line real) uses the
-> **reasoned validation** in [`code-review`](../code-review/SKILL.md)
+> **reasoned validation** in [`code-review-lens`](../code-review-lens/SKILL.md)
 > (each finding stands on its own traced reason, never a vote count). The
 > two never cross-apply — no resolving a design option by
 > reasoned-validating one member's take, no resolving a bug finding by
-> counting council votes. Mirrored in `code-review` so the boundary is
+> counting council votes. Mirrored in `code-review-lens` so the boundary is
 > grep-checkable from both sides.
 
 

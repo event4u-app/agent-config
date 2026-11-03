@@ -155,6 +155,24 @@ describe('build_handoff', () => {
         expect(words).toBeLessThanOrEqual(150);
         // the verbatim record survives the trim
         expect(text).toContain('- the one real instruction');
+
+        // A section the cap emptied says so, instead of claiming nothing was found.
+        const section = (t: string, title: string): string =>
+            t.split(`## ${title}\n`)[1]?.split('\n## ')[0] ?? '';
+        expect(section(text, 'Key decisions')).not.toContain('(none extracted)');
+        expect(section(text, 'Key decisions')).toMatch(/- \[\d+ trimmed by word cap\]/);
+
+        // The header total equals the items actually removed, measured against an uncapped build.
+        const full = build_handoff(SESSION, { chatHistoryPath: histFile, cwd: tmp, wordCap: 1_000_000 });
+        const items = (t: string): number =>
+            t
+                .split('\n')
+                .filter((l) => l.startsWith('- ') && !/^- \[\d+ (trimmed by word cap|line\(s\) withheld)/.test(l) && l !== '- (none extracted)')
+                .length;
+        const removed = items(full) - items(text);
+        expect(removed).toBeGreaterThan(0);
+        expect(text).toContain(`Trimmed: ${String(removed)}`);
+        expect(full).not.toContain('Trimmed:');
     });
 
     it('throws the clear v1 seam error when --llm is requested', () => {

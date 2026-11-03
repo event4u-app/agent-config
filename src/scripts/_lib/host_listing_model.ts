@@ -197,3 +197,35 @@ export function modelListingBudget(
 
     return { budgetChars, fillOrder, surviving, bare, spentChars, assumptions: ASSUMPTIONS };
 }
+
+/**
+ * A stated fill order for when no invocation history exists — the replacement
+ * candidate for the alphabetical fallback above. Bands, in order:
+ *
+ *   1. skills a rule's `routes_to:` names, more referencing rules first;
+ *   2. `engineering-base` pack members (passed in as `packMembers`);
+ *   3. everything else.
+ *
+ * Name is only the final tie-break inside a band, so with both inputs empty
+ * this is exactly the alphabetical fallback. Names outside the catalogue are
+ * ignored; the output depends only on the set of catalogue names, never on
+ * their input order.
+ *
+ * Feeding this as `usageOrder` is a report today, not the installer default:
+ * that switch waits on a measured listing-arm baseline.
+ */
+export function residentPriorityOrder(
+    catalogue: readonly CatalogueEntry[],
+    routesTo: ReadonlyMap<string, number>,
+    packMembers: ReadonlySet<string>,
+): string[] {
+    const names = [...new Set(catalogue.map((e) => e.name))];
+    const band = (n: string): number => ((routesTo.get(n) ?? 0) > 0 ? 0 : packMembers.has(n) ? 1 : 2);
+    return names.sort((a, b) => {
+        const d = band(a) - band(b);
+        if (d !== 0) return d;
+        const r = (routesTo.get(b) ?? 0) - (routesTo.get(a) ?? 0);
+        if (r !== 0) return r;
+        return a < b ? -1 : a > b ? 1 : 0;
+    });
+}

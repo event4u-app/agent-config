@@ -51,7 +51,7 @@
             "q": "review my PHP service class for bugs",
             "trigger": false,
             "class": "counterexample",
-            "note": "'review' meaning code review → code-review"
+            "note": "'review' meaning code review → code-review-lens"
         },
         {
             "q": "which skills should a senior backend engineer have?",

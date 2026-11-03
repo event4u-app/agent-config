@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { askOnce, main } from '../../src/scripts/ask_transport.js';
 import { CouncilResponse, type ExternalAIClient } from '../../src/scripts/ai_council/clients.js';
@@ -90,6 +90,26 @@ describe('askOnce with a kind — a return that does not parse is a failed call'
         expect(r!.parsed).toEqual({ label: 'timeout', confidence: 0.8 });
     });
 
+    it('a return that parses but was cut off is not a schema pass', async () => {
+        const dir = path.join(tmp, 'audit-trunc');
+        const truncated = {
+            name: 'anthropic',
+            ask: () =>
+                new CouncilResponse({
+                    provider: 'anthropic',
+                    model: 'test-model',
+                    text: VALID['classify'] as string,
+                    input_tokens: 40,
+                    output_tokens: 10,
+                    stop_class: 'truncated',
+                }),
+        } as unknown as ExternalAIClient;
+        const r = await askOnce('classify: ETIMEDOUT', { members: [truncated], kind: 'classify', auditDir: dir, id: () => 'hand-trunc-1' });
+        expect(r).toBeNull();
+        const o = auditLines(dir)[0]!['orchestration'] as Record<string, unknown>;
+        expect(o['schema_valid']).toBe(false);
+    });
+
     it('returns null and logs a schema-invalid line, never a partial answer', async () => {
         const dir = path.join(tmp, 'audit');
         const r = await askOnce('classify: ETIMEDOUT', {
@@ -128,6 +148,25 @@ describe('ask_transport --kind (CLI)', () => {
         const rc = await main(['--kind', 'draft-candidate', '--no-record', '--callee-file', file, 'write c()'], { members: [member] });
         expect(rc).toBe(2);
         expect(calls).toBe(0);
+    });
+
+    it('the printed verify command names the kind, so the head verdict joins the typed ask', async () => {
+        const writes: string[] = [];
+        const spy = vi.spyOn(process.stderr, 'write').mockImplementation((chunk: string | Uint8Array): boolean => {
+            writes.push(String(chunk));
+            return true;
+        });
+        try {
+            const rc = await main(['--kind', 'classify', '--no-record', 'classify: ETIMEDOUT'], {
+                members: [stub(VALID['classify'] as string)],
+            });
+            expect(rc).toBe(0);
+        } finally {
+            spy.mockRestore();
+        }
+        const verify = writes.find((w) => w.includes('orchestration_record'));
+        expect(verify).toBeDefined();
+        expect(verify).toContain('--hand-kind classify');
     });
 
     it('an unknown kind is a usage error (exit 2), not a call', async () => {

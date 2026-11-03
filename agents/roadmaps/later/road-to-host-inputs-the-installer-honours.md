@@ -27,7 +27,12 @@ relates:
 ---
 # Road to host inputs the installer honours
 
-> **Arrivals:** 3 — latest `inbox-2026-11-f` (2026-11-02): a cloud session (`CLAUDE_CODE_REMOTE=true`)
+> **Arrivals:** 4 — latest `inbox-2026-11-n` (2026-11-03): an analysis of an external prompt catalogue
+> reproduced H1 again at `b234d08480` (45 of 303 resident, `systematic-debugging`,
+> `test-driven-development`, `verify-repair-loop`, `sql-writing`, `security-audit` name-only) and
+> adds that the fill order is alphabetical; the priority function now lives in
+> `road-to-a-resident-set-chosen-on-purpose` Phase 1, so 2.1 here only swaps the window input.
+> Before that: `inbox-2026-11-f` (2026-11-02): a cloud session (`CLAUDE_CODE_REMOTE=true`)
 > reads neither `~/.claude` nor repo-enabled plugins, so the install reaches it with nothing;
 > measured and documented in `road-to-an-install-the-cloud-clone-carries` (archived), the
 > owner-gated delivery steps are Phase 5 below. Before that: `inbox-2026-10-av` (2026-10-25): a mods plan names the same

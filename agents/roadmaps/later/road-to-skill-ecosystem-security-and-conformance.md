@@ -14,6 +14,9 @@ status: later
 > open steps and lands in `agents/roadmaps/archive/`. Verify with
 > `./agent-config roadmap:progress`.
 
+> **Arrivals:** 1 — `inbox-2026-11-n` (2026-11-03): Phase 5 steps 7 and 8 (neighbour
+> digests and the package-origin scan skip).
+
 > Give three rules that honestly ship unenforced their first deterministic
 > instantiation, verify that declared tool grants match what the code does in both
 > directions, and review the external domains this package's own text points an
@@ -126,6 +129,8 @@ corpus is documentation-heavy. That is exactly this package's situation.
 - [ ] **Step 4:** Add a handoff-chain bound: carry a visited set, never run the same artifact twice in one chain, and cap automatic handoffs after the originating artifact. The existing budget bounds retries per target and nothing bounds chain depth.
 - [ ] **Step 5:** Add an anti-circumvention clause to the fenced-step rule: at a fenced stop, do not perform the equivalent work by hand in the same turn. The existing rule says deliver and hand back and never forbids satisfying the letter of the fence while doing the work anyway, which is the actual failure mode.
 - [ ] **Step 6:** Add a circular-acceptance check to the roadmap and ticket authoring paths: an acceptance criterion must be satisfiable before the step that produces the evidence it names.
+- [ ] **Step 7:** Digest a neighbour skill's whole directory, not its `SKILL.md` alone. At `b234d08480` the neighbour census hashes only `SKILL.md` (`src/scripts/_lib/neighbour_census.ts:375-376`), so a changed supporting file or script under an unchanged `SKILL.md` keeps its earlier verdict.
+- [ ] **Step 8:** Scan a package-origin skill whose files were modified after install. `src/scripts/skill_tools/score_skill_relevance.ts:414-417` returns `ok` for every `package` origin without a scan, so an edited copy inherits the package's trust.
 
 ## Phase 6: Two review lenses we lack
 

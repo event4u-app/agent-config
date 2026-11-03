@@ -23,7 +23,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-byte-bound-and-a-public-figure | later | later | Two numbers this tree can now produce and cannot yet bound. |
 | road-to-a-canvas-the-code-owns | later | later | The repository is the only store of the design system. |
 | road-to-a-challenge-the-bench-has-measured | later | later | The honesty bench measures both directions of each failure (caving and stubbornness, over-criticism and under-criticism), it has run once on … |
-| road-to-a-cold-start-paid-once-carried | later | later | Every step road-to-a-cold-start-paid-once deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-a-cold-start-paid-once-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-a-control-that-matches-its-neighbours | later | later | Every UI change — including a one-line follow-up with no command — that adds an interactive control uses the project's … |
 | road-to-a-court-at-the-stops | later | later | The deterministic exhibit check runs automatically at the three moments the tree already stops (plan, roadmap, review); a fresh-subagent prosecutor … |
 | road-to-a-game-the-agent-can-playtest | later | later | Playtests prove a game done. |
@@ -38,10 +38,10 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-memory-the-consumer-owns | later | later | A consumer's own memories and knowledge pages decide when they are recalled, the profile lives in one file per layer … |
 | road-to-a-menu-whose-precision-is-measured | later | later | Routing precision is a number with an interval on a labelled corpus large enough to carry one (≥ 100 prompts, … |
 | road-to-a-page-check-at-write-time | later | later | A page the agent just wrote that loads a third party on first paint, or whose imprint cites a superseded … |
-| road-to-a-prompt-that-deepens-not-widens-carried | later | later | Every step road-to-a-prompt-that-deepens-not-widens deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-a-prompt-that-deepens-not-widens-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-a-ranker-whose-ties-break-on-signal | later | later | When two skills score the same, the order between them comes from something the ranker measured, not from their names … |
 | road-to-a-reason-that-is-still-there | later | later | A safety floor reaches every skill it names; a pack's first-win guide claims only what exists; a recorded reason for … |
-| road-to-a-release-record-that-says-what-it-reviewed-carried | later | later | Every step road-to-a-release-record-that-says-what-it-reviewed deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-a-release-record-that-says-what-it-reviewed-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-a-retro-the-merge-runs | later | later | After every merged pull request, and on the first session of every new day, the package examines finished work that … |
 | road-to-a-return-that-names-its-price-carried | later | later | The cold-cache notice speaks on resume before the first request, and metered logins see the amount on the status line. |
 | road-to-a-review-that-ends | later | later | A completion review runs at most N rounds, N set by the owner — round 1 over the scope, each … |
@@ -49,11 +49,11 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-runnable-share-ratchet | later | later | A shrink-only bound on the share of `verify:` clauses that can actually fail. |
 | road-to-a-sealed-lineage | later | later | Sealed. |
 | road-to-a-session-start-under-the-host-limit | later | later | A consumer who runs `agent-config upgrade` and nothing else gets a session-start instruction layer whose package-delivered part is at most … |
-| road-to-a-setup-that-decides-itself-carried | later | later | Every step road-to-a-setup-that-decides-itself deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-a-setup-that-decides-itself-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-a-site-the-owner-can-sign | later | later | A website request runs AC's existing blocks in a fixed order. |
-| road-to-a-step-that-costs-what-it-changes-carried | later | later | Every step road-to-a-step-that-costs-what-it-changes deferred is either done here or explicitly disposed of — a step that still cannot run is … |
-| road-to-a-stop-that-holds-carried | later | later | Every step road-to-a-stop-that-holds deferred is either done here or explicitly disposed of — a step that still cannot run is … |
-| road-to-a-trunk-whose-own-gates-are-green-carried | later | later | Every step road-to-a-trunk-whose-own-gates-are-green deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-a-step-that-costs-what-it-changes-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
+| road-to-a-stop-that-holds-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
+| road-to-a-trunk-whose-own-gates-are-green-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-a-witness-for-made-and-found-media | later | later | The same check layer serves media the suite made and media it was handed: an expectations file from blueprint, character … |
 | road-to-ac-deep-capabilities | later | draft | Three deep capabilities are either proven to earn their cost on the default path, or closed with a recorded terminal … |
 | road-to-adversarial-verification-and-long-runs | later | later | Ask the owner stops being the quality and control loop. |
@@ -65,7 +65,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-an-installed-layer-that-is-thinned | later | later | The layer a Claude install writes under `~/.claude/rules` is the thinned one, first as an opt-in and then as the … |
 | road-to-an-intake-the-queue-can-carry | later | later | A finding that already has an owner lands as a step and an `Arrivals:` line on that owner instead of … |
 | road-to-an-mcp-start-without-npm | later | later | An MCP start in a session with a staged runtime runs the staged node and a bundled turnkey server directly, … |
-| road-to-an-update-that-installs-itself-only-when-it-is-safe-carried | later | later | Every step road-to-an-update-that-installs-itself-only-when-it-is-safe deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-an-update-that-installs-itself-only-when-it-is-safe-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-authority-routing-mechanism | later | later | A passing authorisation record always means the authority that produced it was the authority entitled to produce it: three authorities … |
 | road-to-benchmark-obsolescence-lifecycle | later | later | Road to benchmark-obsolescence lifecycle — detect when the model outgrew the rule |
 | road-to-billing-cliff-detection | later | draft | An autonomous drain that crosses its Claude Code plan quota stops at the next clean boundary and asks, instead of … |
@@ -103,6 +103,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-external-proof-upgrade | later | later | External-Proof Upgrade — recruit sessions, beta promotion, v1.0 activation events |
 | road-to-federation-behind-adr-278 | later | later | Once ADR-278 answers ADR-088 § 3 (`docs/decisions/ADR-088-*.md:95-105`), a neighbour's capability can be invoked through one typed boundary and its result … |
 | road-to-first-reference-analysis-observation | later | later | Spend exactly one of the two remaining observation slots of the pre-registered claim `reference-loop-upgrade-value` (`docs/CLAIMS.md:487`). |
+| road-to-floor-source-tags-with-payload-room | later | later | Floor source tags. |
 | road-to-forecasts-that-know-their-sources | later | later | AC can analyse a market or a match the way a careful analyst does: it knows where each kind of … |
 | road-to-gateway-harvest | later | later | Road to gateway harvest — what the runtime layer could carry, parked behind the freeze (Source B) |
 | road-to-generated-files-and-unattended-asks | later | later | The agent does not hand-edit a file the consumer's toolchain generates, and a run nobody is watching does not wait … |
@@ -112,13 +113,13 @@ and keep the full search — this file only adds candidates to it.
 | road-to-harvest-second-sweep-proposals | later | later | Second-Sweep surfaced proposals (parked) |
 | road-to-hook-guards-that-hold-17-findings | later | later | 17.0.0 is cut only when the three `fail_closed` hook guards hold. |
 | road-to-host-catalogue-contract | later | later | State, from a measurement rather than from this package's model of a host, what projection rule satisfies both: total payload … |
-| road-to-host-claims-the-tree-contradicts-carried | later | later | Every step road-to-host-claims-the-tree-contradicts deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-host-claims-the-tree-contradicts-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-host-inputs-the-installer-honours | later | later | What the installer writes and what `doctor` reports about the host is computed from the inputs the host itself uses. |
 | road-to-inbox-harvest-2026-08-d-llm-distillation-comparison | later | blocked-for-later | Road to a measured answer on model-curated working memory |
 | road-to-install-path-convergence-followup | later | later | Follow-up to install-path convergence — delist decision checkpoint |
 | road-to-kernel-question-triangle | later | later | Road to the kernel question-triangle amendment — one line, human-applied |
 | road-to-language-and-tone-enforcer-claim | later | later | Road to the language-and-tone enforcer claim |
-| road-to-learning-you-can-see-carried | later | later | Every step road-to-learning-you-can-see deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-learning-you-can-see-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-listings-the-owner-submits | later | later | Every target in the parent's register has a ledger row that a live read moved to `accepted`, or a recorded … |
 | road-to-live-app-verdict | later | later | Live-app Playwright as the canonical verdict source (verify-repair-loop) |
 | road-to-mcp-full-power | later | later | MCP Full Power — Glama leverage, coverage expansion, execution bridge |
@@ -127,7 +128,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-mixed-trigger-activation-cost | later | later | Road to mixed-trigger activation cost — the 12.0→12.1 behaviour regression, found and priced |
 | road-to-mod-surfaces-that-read-what-ac-knows | later | later | The one AC module grows surfaces for the state AC already measures, and AC can preview and witness destructive or … |
 | road-to-one-identity-axis | later | later | ADR-010 names `profile.id` as the one answer to "who is the user", and three trees answer it today. |
-| road-to-one-upstream-that-checks-what-leaves-carried | later | later | Every step road-to-one-upstream-that-checks-what-leaves deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-one-upstream-that-checks-what-leaves-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-opencode-runtime-probe | later | later | the opencode runtime probe |
 | road-to-originality-gate-and-contributor-funnel | later | later | Every PR that adds or edits skills runs `lint_originality --changed` as a blocking CI gate, contributors can pre-check locally and … |
 | road-to-per-workspace-license-policy | later | blocked-for-later | Road to per-workspace license policy — heterogeneous monorepos derive per workspace, not per root |
@@ -147,7 +148,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-regulatory-radar | later | draft | Answer one question with a number instead of an intuition: when someone asks "what do I have to do as … |
 | road-to-release-holds-that-refuse | later | later | A roadmap declares, in a form one evaluator reads, exactly which of its intermediate tree states must not be published … |
 | road-to-residual-interruption-measurement | later | later | Road to the residual-interruption measurement |
-| road-to-roadmaps-finished-before-new-ones-start-carried | later | ready | Every step road-to-roadmaps-finished-before-new-ones-start deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-roadmaps-finished-before-new-ones-start-carried | later | ready | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-rule-triggers-and-links-that-hold | later | later | What an installed rule file declares and links to is true on the host that loads it. |
 | road-to-rules-that-say-when-they-reject | later | parked | A rule declared `enforced_by: instruction-only` carries a short Rejected when block — observable conditions a reviewer can cite as `<rule>#R<n>` … |
 | road-to-seats-that-know-why-they-failed | later | later | Every failure of a council seat carries a class before it gets a reaction, and the class picks the reaction: … |
@@ -164,8 +165,8 @@ and keep the full search — this file only adds candidates to it.
 | road-to-supervised-telemetry-collector | later | later | One resident process runs on this machine under a named supervisor, on named platforms, storing a schema whose fields are … |
 | road-to-surface-consolidation | later | later | Cut the proactive command-suggestion surface from ~160 self-suggesting commands to the cluster-head journeys (+ genuine standalone entry points), fold the … |
 | road-to-svg-witness-provenance | later | later | The blocking SVG turn-end obligation is discharged only by a render the hook itself saw succeed. |
-| road-to-ten-across-the-board | later | draft | Every rubric category in the declared manifest of `agents/evidence/ac-capability-scorecard.yaml` reaches `ten`, `measured-null`, or `max-boundary`. |
-| road-to-the-question-only-the-owner-can-answer-carried | later | later | Every step road-to-the-question-only-the-owner-can-answer deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-ten-across-the-board | later | draft | Every declared rubric category reaches `ten`, `measured-null` or `max-boundary`. |
+| road-to-the-question-only-the-owner-can-answer-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-thin-flip-under-anchor-scoring | later | later | Road to a Thin Flip Under Anchor-Scoring |
 | road-to-token-economy-cache-followup | later | later | Close the census-gated remainder of the parent: idempotency gates on the measured top repeat-slot concerns, plus the data-halves of the … |
 | road-to-token-economy-dispatch-followup | later | later | Follow-up to road-to-token-economy-dispatch — the data-window and blocker-gated remainder |
@@ -182,6 +183,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-census-that-refuses-a-partial-store | stubs | — | road to a census that refuses to publish from a partial store |
 | road-to-a-limit-the-host-actually-signals | stubs | — | road to a limit the host actually signals |
 | road-to-a-lineage-gate-that-sees-the-folder | stubs | — | road to a lineage gate that sees the whole inbox folder |
+| road-to-a-name-no-host-already-owns-later | stubs | — | Rename leftovers. |
 | road-to-a-page-check-on-by-default | stubs | — | road to a page check on by default |
 | road-to-a-path-route-under-delivery | stubs | — | road to a path-activation route under `delivery` |
 | road-to-a-primary-goal-that-is-asked-for | stubs | — | road to a primary goal that is asked for |
@@ -191,6 +193,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-security-chain-measured | stubs | — | a security chain that is measured, not asserted |
 | road-to-a-showcase-the-owner-paid-for | stubs | — | the first paid showcase run |
 | road-to-a-stall-the-replay-measures | stubs | — | a stall the replay measures |
+| road-to-a-steady-roi-freeze | stubs | — | A steady ROI freeze test. |
 | road-to-a-strike-that-speaks | stubs | — | a strike that speaks |
 | road-to-a-visibility-sync-that-can-write | stubs | — | road to a visibility sync that can actually write |
 | road-to-a-weekly-lineage-watch | stubs | — | a weekly lineage watch on the maintainer's machine |

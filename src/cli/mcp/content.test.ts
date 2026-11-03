@@ -4,6 +4,9 @@
  * partial dist/ (asserts on what must be present in this repo).
  */
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+
+import { _frontmatter_text, _parse_inputs } from '../../scripts/mcp_server/prompts.js';
 import { loadContentTree, entriesOfKind } from './content.js';
 
 const tree = loadContentTree(process.cwd());
@@ -52,5 +55,28 @@ describe('loadContentTree (real dist/agent-src)', () => {
         // a known nested guideline keeps its directory segment(s)
         const nested = guidelines.find((g) => g.uri.includes('php/patterns/'));
         expect(nested, 'expected a nested php/patterns/ guideline').toBeDefined();
+    });
+});
+
+describe('loadContentTree — declared inputs', () => {
+    it('carries inputs on prompts that declare them and agrees with the kernel reader', () => {
+        const prompts = entriesOfKind(tree, ['skill', 'command']);
+        const declaring = prompts.filter((e) => e.inputs !== undefined);
+        expect(declaring.length).toBeGreaterThan(0);
+        for (const e of prompts) {
+            const file = e.kind === 'skill' ? `dist/agent-src/skills/${e.uri.slice('skill://'.length)}/SKILL.md` : null;
+            if (file === null) continue;
+            let raw: string;
+            try {
+                raw = readFileSync(file, 'utf8');
+            } catch {
+                continue; // frontmatter name differs from the slug
+            }
+            const kernel = _parse_inputs(_frontmatter_text(raw));
+            expect(e.inputs ?? [], e.name).toEqual(kernel);
+        }
+    });
+    it('never sets inputs on a resource', () => {
+        for (const e of entriesOfKind(tree, ['rule', 'guideline'])) expect(e.inputs).toBeUndefined();
     });
 });

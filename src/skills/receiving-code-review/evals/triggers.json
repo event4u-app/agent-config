@@ -1,7 +1,7 @@
 {
     "skill": "receiving-code-review",
     "last_eval": "2026-10-18",
-    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-18 under road-to-steps-the-skill-cannot-skip AC-1, which repaired dead links in this skill's SKILL.md and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover review feedback arriving from a bot, a human reviewer and a pasted block, including the bare 'fix the comments' phrasing the description names and a German variant. Near-misses are the three neighbours this skill's SKILL.md separates itself from: writing a review yourself (code-review), asking for one (requesting-code-review, the sharpest edge), and a linter-decidable style nit (quality-tools). Counterexamples guard the word 'comments' in the code-comment sense and an unrelated review of a contract.",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-18 under road-to-steps-the-skill-cannot-skip AC-1, which repaired dead links in this skill's SKILL.md and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover review feedback arriving from a bot, a human reviewer and a pasted block, including the bare 'fix the comments' phrasing the description names and a German variant. Near-misses are the three neighbours this skill's SKILL.md separates itself from: writing a review yourself (code-review-lens), asking for one (requesting-code-review, the sharpest edge), and a linter-decidable style nit (quality-tools). Counterexamples guard the word 'comments' in the code-comment sense and an unrelated review of a contract.",
     "queries": [
         {
             "q": "Copilot left eleven comments on PR #812 — go through them and fix what's actually right",
@@ -33,7 +33,7 @@
             "q": "review my diff before I push it — anything wrong with the error handling?",
             "trigger": false,
             "class": "near-miss",
-            "note": "the user wants a review written, not feedback processed → code-review; this skill's SKILL.md excludes writing a review yourself"
+            "note": "the user wants a review written, not feedback processed → code-review-lens; this skill's SKILL.md excludes writing a review yourself"
         },
         {
             "q": "this is code-complete, open the PR and write a description with a test plan",

@@ -56,6 +56,7 @@ Uses `/create-pr:description-only` to generate the PR content, then creates the 
   `./scripts-run src/scripts/check_secret_leak`. On a high-confidence hit, STOP —
   do not push; hand to `.augment/rules/secret-vcs-guard.md` (show, ask, offer the
   alternative, rotate-first if already in history). Pushing publishes the secret.
+- **Foreign repo** — quote its `AI_POLICY*` lines in the push confirmation; never add `Signed-off-by`: [`§ Foreign repo`](../../contexts/execution/pr-create-branches-freshness.md#foreign-repo--its-ai-contribution-policy).
 - If the branch has not been pushed yet, ask the user (in their language) whether to push.
 
 ### 1b. Freshness gate — MANDATORY before opening any PR
@@ -88,11 +89,11 @@ Run, in order:
 | exit `0`, prints nothing, `--quiet` given | — | The success case for the preflight invocation. Any non-verifying path would have printed even under `--quiet`. |
 | exit `0`, says `standing on <base> itself` / `detached HEAD` / `no-op in CI` | — | Nothing to check — a branch cannot be behind itself, a detached HEAD has no branch, and in CI the forge owns mergeability. Not a freshness pass; do not cite it as one. |
 
-**1b. Freshness gate — MANDATORY before opening any PR** — on that branch, read [`pr-create-branches-freshness § 1b. Freshness gate — MANDATORY before opening any PR`](../../contexts/execution/pr-create-branches-freshness.md#1b-freshness-gate--mandatory-before-opening-any-pr).
+**1b. Freshness gate — MANDATORY before opening any PR** — on that branch, read [`pr-create-branches-freshness § 1b`](../../contexts/execution/pr-create-branches-freshness.md#1b-freshness-gate--mandatory-before-opening-any-pr).
 
 ### 1b-ii. Update freshness — MANDATORY on EVERY later push to an open PR
 
-**1b-ii. Update freshness — MANDATORY on EVERY later push to an open PR** — on that branch, read [`pr-create-branches-freshness § 1b-ii. Update freshness — MANDATORY on EVERY later push to an open PR`](../../contexts/execution/pr-create-branches-freshness.md#1b-ii-update-freshness--mandatory-on-every-later-push-to-an-open-pr).
+**1b-ii. Update freshness — MANDATORY on EVERY later push to an open PR** — on that branch, read [`pr-create-branches-freshness § 1b-ii`](../../contexts/execution/pr-create-branches-freshness.md#1b-ii-update-freshness--mandatory-on-every-later-push-to-an-open-pr).
 
 ### 1c. PR-gate — archive completed roadmaps (MANDATORY)
 
@@ -106,7 +107,7 @@ Run the deterministic sweep:
 ./agent-config roadmap:archive   # --changed-only (default)
 ```
 
-**1c. PR-gate — archive completed roadmaps (MANDATORY)** — on that branch, read [`pr-create-branches-freshness § 1c. PR-gate — archive completed roadmaps (MANDATORY)`](../../contexts/execution/pr-create-branches-freshness.md#1c-pr-gate--archive-completed-roadmaps-mandatory).
+**1c. PR-gate — archive completed roadmaps (MANDATORY)** — on that branch, read [`pr-create-branches-freshness § 1c`](../../contexts/execution/pr-create-branches-freshness.md#1c-pr-gate--archive-completed-roadmaps-mandatory).
 
 ### 1d. Completion review (Gate R2) — after the sweep, before the PR
 
@@ -149,7 +150,7 @@ This handles: Jira ticket extraction, diff analysis, commit messages, **PR templ
 Read the template file and fill in its sections. If the template does not exist, use the
 fallback structure defined in `/create-pr:description-only`. NEVER invent a custom body structure.
 
-**2. Generate PR content** — on that branch, read [`pr-create-branches-content § 2. Generate PR content`](../../contexts/execution/pr-create-branches-content.md#2-generate-pr-content).
+**2. Generate PR content** — on that branch, read [`pr-create-branches-content § 2`](../../contexts/execution/pr-create-branches-content.md#2-generate-pr-content).
 
 ### 2a. Scope delta — what grew, and why it was the agent's
 
@@ -159,11 +160,11 @@ GROWTH DONE AND NOT RECORDED IS INDISTINGUISHABLE FROM SCOPE CREEP.
 A FOLLOW-UP ARTIFACT IS NAMED HERE TOO — IT IS WHAT THE MISSION DID NOT ABSORB.
 ```
 
-**2a. Scope delta — what grew, and why it was the agent's** — on that branch, read [`pr-create-branches-content § 2a. Scope delta — what grew, and why it was the agent's`](../../contexts/execution/pr-create-branches-content.md#2a-scope-delta--what-grew-and-why-it-was-the-agents).
+**2a. Scope delta — what grew, and why it was the agent's** — on that branch, read [`pr-create-branches-content § 2a`](../../contexts/execution/pr-create-branches-content.md#2a-scope-delta--what-grew-and-why-it-was-the-agents).
 
 ### 2b. Council review — explicitly excluded
 
-**2b. Council review — explicitly excluded** — on that branch, read [`pr-create-branches-content § 2b. Council review — explicitly excluded`](../../contexts/execution/pr-create-branches-content.md#2b-council-review--explicitly-excluded).
+**2b. Council review — explicitly excluded** — on that branch, read [`pr-create-branches-content § 2b`](../../contexts/execution/pr-create-branches-content.md#2b-council-review--explicitly-excluded).
 
 ### 3. Create the PR (draft-vs-ready, verbosity-gated)
 
@@ -187,7 +188,7 @@ POST THE PR WITH ONE github-api CALL.
 NEVER COMPOSE THE BODY THROUGH SHELL, PYTHON, OR TEMP FILES.
 ```
 
-**3a. Tool selection — single-call mandate** — on that branch, read [`pr-create-branches-content § 3a. Tool selection — single-call mandate`](../../contexts/execution/pr-create-branches-content.md#3a-tool-selection--single-call-mandate).
+**3a. Tool selection — single-call mandate** — on that branch, read [`pr-create-branches-content § 3a`](../../contexts/execution/pr-create-branches-content.md#3a-tool-selection--single-call-mandate).
 
 #### 3b. Submit
 
@@ -207,7 +208,7 @@ gh pr view {number} --json isDraft --jq '.isDraft'
 
 #### 4a. Strip attribution footers (mandatory)
 
-**4a. Strip attribution footers (mandatory)** — on that branch, read [`pr-create-branches-content § 4a. Strip attribution footers (mandatory)`](../../contexts/execution/pr-create-branches-content.md#4a-strip-attribution-footers-mandatory).
+**4a. Strip attribution footers (mandatory)** — on that branch, read [`pr-create-branches-content § 4a`](../../contexts/execution/pr-create-branches-content.md#4a-strip-attribution-footers-mandatory).
 
 #### 4b. Show the PR URL
 
@@ -222,7 +223,7 @@ EVERY STATUS CLAIM IN THE REPLY CITES A COMMAND RUN THIS TURN.
 "BLOCKED" IS NEVER PARAPHRASED AS "CI IS STILL RUNNING".
 ```
 
-**4c. Status claims — verified facts only (MANDATORY)** — on that branch, read [`pr-create-branches-content § 4c. Status claims — verified facts only (MANDATORY)`](../../contexts/execution/pr-create-branches-content.md#4c-status-claims--verified-facts-only-mandatory).
+**4c. Status claims — verified facts only (MANDATORY)** — on that branch, read [`pr-create-branches-content § 4c`](../../contexts/execution/pr-create-branches-content.md#4c-status-claims--verified-facts-only-mandatory).
 
 #### 4d. Settle CI before the turn ends (MANDATORY)
 
@@ -232,7 +233,7 @@ NEVER END THE TURN ON "CI IS RUNNING" — WAIT FOR THE VERDICT.
 RED → DIAGNOSE AND FIX IN THE WORKING TREE. NEVER LEAVE A KNOWN FAILURE UNREAD.
 ```
 
-**4d. Settle CI before the turn ends (MANDATORY)** — on that branch, read [`pr-create-branches-content § 4d. Settle CI before the turn ends (MANDATORY)`](../../contexts/execution/pr-create-branches-content.md#4d-settle-ci-before-the-turn-ends-mandatory).
+**4d. Settle CI before the turn ends (MANDATORY)** — on that branch, read [`pr-create-branches-content § 4d`](../../contexts/execution/pr-create-branches-content.md#4d-settle-ci-before-the-turn-ends-mandatory).
 
 **On red** steps 1–4: see the 4d pointer above.
 
@@ -268,7 +269,7 @@ an actual Jira API call succeeded** — never announce "skipped".
 
 #### 4f. Settings short-circuit — single read per run
 
-**4f. Settings short-circuit — single read per run** — on that branch, read [`pr-create-branches-content § 4f. Settings short-circuit — single read per run`](../../contexts/execution/pr-create-branches-content.md#4f-settings-short-circuit--single-read-per-run).
+**4f. Settings short-circuit — single read per run** — on that branch, read [`pr-create-branches-content § 4f`](../../contexts/execution/pr-create-branches-content.md#4f-settings-short-circuit--single-read-per-run).
 
 ### Rules
 

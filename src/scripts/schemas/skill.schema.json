@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/skill.schema.json",
-  "x-schemaVersion": "2.1.0",
+  "x-schemaVersion": "2.2.0",
   "title": "Skill frontmatter",
   "$comment": "Source: agents/reference/docs/frontmatter-contract.md#skills. Keep in sync with inventory_frontmatter.py and the linter's lint_skill().",
   "type": "object",
@@ -64,7 +64,7 @@
     },
     "user-invocable": {
       "type": "boolean",
-      "description": "Claude Code Agent-Skills extension: false = the skill claims no /name slash command (only the model can load it). REQUIRED (false) when name equals a Claude Code built-in command or bundled skill (see scripts/_lib/claude_builtin_names.ts) so the suite never shadows the host's own /name. Other tools ignore the key."
+      "description": "Claude Code Agent-Skills extension: false = users cannot invoke the skill as /name (only the model can load it). It controls who may invoke, not who owns the name: a skill named after a Claude Code built-in still shadows it, so such a name is rejected outright (scripts/_lib/claude_builtin_names.ts, lint_agent_skill_names). Other tools ignore the key."
     },
     "description": {
       "type": "string",
@@ -230,6 +230,7 @@
         "low",
         "medium",
         "high",
+        "xhigh",
         "max"
       ],
       "description": "Optional pinned reasoning-effort level for hosts with an effort knob (Claude Code `--effort` / agent frontmatter). Passthrough: skills project verbatim, so the key reaches Claude Code as-is and is inert on hosts without the knob. The bench harness pins it per run (bench_ab_task_runner `--effort`) so measurements are reproducible. Orthogonal to `model_tier` (capability band) — effort tunes how hard the model thinks, not which model runs. Omit unless the skill measurably needs a non-default effort.",

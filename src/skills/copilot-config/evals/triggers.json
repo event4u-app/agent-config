@@ -1,0 +1,58 @@
+{
+    "skill": "copilot-config",
+    "last_eval": "2026-11-03",
+    "description": "4 exemplars (1 de) + 3 near-misses + 2 counterexamples. Exemplars tune the GitHub Copilot assistant itself: copilot-instructions.md, its PR-review behaviour, answer verbosity. Near-misses share the Copilot or review vocabulary and route elsewhere: the dev environment Copilot runs inside (devcontainer), a code review of a diff (code-review-lens), and CI workflow YAML on GitHub (github-ci). Counterexamples guard the 'instructions' and 'suggestion' vocabulary in unrelated work.",
+    "queries": [
+        {
+            "q": "rewrite our .github/copilot-instructions.md so Copilot stops suggesting deprecated helpers",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "Copilot's PR review comments are too noisy — make it flag only correctness issues",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "tune GitHub Copilot to give shorter answers in chat for this repo",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "passe die Copilot-Instruktionen an, damit Copilot unsere Namenskonventionen beachtet",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "set up a devcontainer.json so Codespaces has PHP 8.3 and the Copilot extension preinstalled",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the environment Copilot runs inside, not Copilot's behaviour → devcontainer"
+        },
+        {
+            "q": "review this pull request for bugs before I merge it",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a review of the diff itself, not configuring Copilot's review → code-review-lens"
+        },
+        {
+            "q": "add a GitHub Actions job that runs the linter on every pull request",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "GitHub vocabulary, but the ask is workflow YAML → github-ci"
+        },
+        {
+            "q": "write installation instructions for the CLI in the README",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'instructions' in the documentation sense"
+        },
+        {
+            "q": "add a search box with autocomplete suggestions to the product page",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'suggestion' as a UI feature"
+        }
+    ]
+}

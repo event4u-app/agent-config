@@ -34,15 +34,14 @@ import { atomicWriteFile } from '../../install/atomic.js';
 import { _read_settings, _with_lock } from './claude_settings_hooks.js';
 import * as global_deploy_inventory from './global_deploy_inventory.js';
 import { type CatalogueEntry, modelListingBudget } from './host_listing_model.js';
-import * as user_global_paths from './user_global_paths.js';
 
 // Imported for the one wrapper at the bottom; see its comment for why the
 // branch lives here rather than in the installer.
 import { applyCodexResidentSet } from './codex_resident_set.js';
 
 export const OVERRIDE_KEY = 'skillOverrides';
-export const NAME_ONLY = 'name-only';
-export const RECORD_BASENAME = 'skill-overrides.json';
+import { NAME_ONLY, RECORD_BASENAME, recordPath } from './skill_listing_record.js';
+export { NAME_ONLY, RECORD_BASENAME, recordPath };
 
 export interface OverrideRecord {
     schema_version: 1;
@@ -67,9 +66,6 @@ export interface RemoveOverridesResult {
     kept_user: string[];
 }
 
-export function recordPath(env?: user_global_paths.EnvMap | null): string {
-    return user_global_paths.write_target(RECORD_BASENAME, { env: env ?? null });
-}
 
 /** Owned skill slugs from a deploy's anchor-relative file set. */
 export function ownedSkillNames(currentFiles: Iterable<string>): string[] {
@@ -85,7 +81,7 @@ export function ownedSkillNames(currentFiles: Iterable<string>): string[] {
  * The owned catalogue as deployed. Not `compute_skill_tiers.readCatalogue`:
  * that module is a CLI whose main-guard fires inside the install bundle.
  */
-function ownedCatalogue(skillsDir: string, owned: readonly string[]): CatalogueEntry[] {
+export function ownedCatalogue(skillsDir: string, owned: readonly string[]): CatalogueEntry[] {
     const out: CatalogueEntry[] = [];
     for (const name of owned) {
         let raw: string;

@@ -3,7 +3,7 @@
   "version": "1.0",
   "artifact_type": "pr-review",
   "description": "Scores a PR review for completeness: evidence quality, actionability, and the four cross-cutting dimensions (risk, tests, migration, maintainability).",
-  "anchors": ["code-review", "requesting-code-review", "receiving-code-review"],
+  "anchors": ["code-review-lens", "requesting-code-review", "receiving-code-review"],
   "scoring": {
     "scale": "0 = absent, 1 = partial (mentioned but vague), weight = fully present and concrete",
     "verdict_thresholds": {

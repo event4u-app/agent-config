@@ -94,7 +94,8 @@
  *     each names the SHAPE of a review rather than merely mentioning the
  *     word), or
  *   - a Skill invocation naming a review/judge skill
- *     (`review-changes`, `judge-*`, `adversarial-review`, `code-review`).
+ *     (`review-changes`, `judge-*`, `adversarial-review`, `code-review-lens`,
+ *     or the host's own `code-review`).
  *
  * What this does NOT observe, stated per `security-sensitive-stop` /
  * `untrusted-input-defense`'s honesty convention rather than left implicit:
@@ -567,7 +568,7 @@ const REVIEW_SHAPED_PROMPT_RE =
 // Skill invocation naming a review/judge skill (hyphen- or colon-separated
 // namespace forms both seen across this suite's skill/command catalogue).
 const REVIEW_SKILL_NAME_RE =
-    /^(review[-:]changes|judge[-:][a-z0-9-]+|adversarial-review|code-review)$/i;
+    /^(review[-:]changes|judge[-:][a-z0-9-]+|adversarial-review|code-review(-lens)?)$/i;
 
 /**
  * True when at least one assistant `tool_use` block in `transcriptText`

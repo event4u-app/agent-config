@@ -150,6 +150,12 @@ export const COMPARED_PROPERTIES = [
     'outline-color',
     'outline-width',
     'transition-duration',
+    // Press feedback (road-to-design-inputs-and-pages-read-as-they-are 4.1):
+    // a scale, a lift, a dim or a blur on `:active` changes none of the above.
+    'transform',
+    'box-shadow',
+    'opacity',
+    'filter',
 ] as const;
 
 /** Widest first. A divergence is attributed to the first width it appears at. */
@@ -329,6 +335,12 @@ export interface ProbeArtefact {
     findings: Finding[];
     declared_suppressed: SuppressedDeviation[];
     /**
+     * Per matched node, every compared property one side does not carry —
+     * read as `not_available`, never as unchanged. Absent where no node pair
+     * was compared at all.
+     */
+    properties_not_available?: PropertyNotAvailable[];
+    /**
      * PRESENT ONLY WHERE THE REFERENCE COLLECTED NO HANDLE. With handles there
      * are five dimensions that can answer about located nodes, and a second,
      * weaker reading beside them would be read as corroboration it is not:
@@ -359,8 +371,33 @@ const isDeclared = (d: readonly Declaration[], probeId: string, dimension: Dimen
     d.find((x) => x.probe_id === probeId && x.dimension === dimension && x.property === property);
 
 /** Did driving this state change anything, relative to the given baseline? */
-function stateDelta(base: StyleMap, state: StyleMap): string[] {
-    return COMPARED_PROPERTIES.filter((p) => base[p] !== state[p]);
+function stateDelta(base: StyleMap, state: StyleMap, props: readonly string[] = COMPARED_PROPERTIES): string[] {
+    return props.filter((p) => base[p] !== state[p]);
+}
+
+/** A compared property one side's observation does not carry: it was captured before the property was. */
+export interface PropertyNotAvailable {
+    probe_id: string;
+    property: string;
+    side: 'reference' | 'target' | 'both';
+}
+
+/**
+ * Split the compared properties for one node pair into those both sides carry
+ * and those one side lacks. A key missing from an older observation is
+ * `not_available`, NEVER "unchanged": `undefined === undefined` would read a
+ * comparison that never happened as a clean one.
+ */
+function comparableProperties(ref: NodeObservation, got: NodeObservation): { props: string[]; missing: PropertyNotAvailable[] } {
+    const props: string[] = [];
+    const missing: PropertyNotAvailable[] = [];
+    for (const p of COMPARED_PROPERTIES) {
+        const r = Object.prototype.hasOwnProperty.call(ref.base, p);
+        const g = Object.prototype.hasOwnProperty.call(got.base, p);
+        if (r && g) props.push(p);
+        else missing.push({ probe_id: ref.probe_id, property: p, side: !r && !g ? 'both' : r ? 'target' : 'reference' });
+    }
+    return { props, missing };
 }
 
 /**
@@ -535,6 +572,7 @@ export function evaluate(
     const findings: Finding[] = [];
     const suppressed: SuppressedDeviation[] = [];
     const unmatched: string[] = [];
+    const notAvailable: PropertyNotAvailable[] = [];
 
     for (const ref of reference.nodes) {
         const got = targetById.get(ref.probe_id);
@@ -555,8 +593,11 @@ export function evaluate(
             continue;
         }
 
+        const { props: comparable, missing } = comparableProperties(ref, got);
+        notAvailable.push(...missing);
+
         // --- computed_style, at the base viewport
-        for (const p of COMPARED_PROPERTIES) {
+        for (const p of comparable) {
             if (ref.base[p] === got.base[p]) continue;
             const declared = isDeclared(declarations, ref.probe_id, 'computed_style', p);
             if (declared) {
@@ -583,8 +624,8 @@ export function evaluate(
         // --- interaction: a state the reference reacts to and the target does not
         for (const state of INTERACTION_STATES) {
             const baseline = STATE_BASELINE[state];
-            const refDelta = stateDelta(baseline === 'hover' ? ref.hover : ref.base, ref[state]);
-            const gotDelta = stateDelta(baseline === 'hover' ? got.hover : got.base, got[state]);
+            const refDelta = stateDelta(baseline === 'hover' ? ref.hover : ref.base, ref[state], comparable);
+            const gotDelta = stateDelta(baseline === 'hover' ? got.hover : got.base, got[state], comparable);
             const lost = refDelta.filter((p) => !gotDelta.includes(p));
             if (!lost.length) continue;
             if (isDeclared(declarations, ref.probe_id, 'interaction', lost[0]!)) continue;
@@ -628,7 +669,7 @@ export function evaluate(
             const refV = ref.viewports[key];
             const gotV = got.viewports[key];
             if (!refV || !gotV) continue;
-            const diverging = COMPARED_PROPERTIES.filter(
+            const diverging = comparable.filter(
                 (p) =>
                     refV[p] !== gotV[p] &&
                     // A divergence already visible at the base viewport is a flat
@@ -658,8 +699,8 @@ export function evaluate(
         }
 
         // --- media_emulation
-        const refMotion = stateDelta(ref.base, ref.reduced_motion);
-        const gotMotion = stateDelta(got.base, got.reduced_motion);
+        const refMotion = stateDelta(ref.base, ref.reduced_motion, comparable);
+        const gotMotion = stateDelta(got.base, got.reduced_motion, comparable);
         const lostMotion = refMotion.filter((p) => !gotMotion.includes(p));
         if (lostMotion.length && !isDeclared(declarations, ref.probe_id, 'media_emulation', lostMotion[0]!)) {
             findings.push({
@@ -729,6 +770,7 @@ export function evaluate(
         dimensions,
         findings,
         declared_suppressed: suppressed,
+        properties_not_available: notAvailable,
     };
 }
 

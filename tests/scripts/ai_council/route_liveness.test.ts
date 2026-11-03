@@ -47,6 +47,9 @@ describe('classifyRouteOutcome — the route HTTP outcome in the shared failure 
         ['HTTP 404: {"error":{"message":"The model `m-1` does not exist"}}', 'model_unservable'],
         ['HTTP 410: gone', 'model_unservable'],
         ['HTTP 404: <html>not here</html>', 'other'],
+        ['HTTP 404: {"error":{"code":"model_not_found","message":"no such id"}}', 'model_unservable'],
+        ['HTTP 400: {"error":{"code":"model_not_found","message":"x is not a valid model ID"}}', 'model_unservable'],
+        ['HTTP 400: {"error":{"message":"invalid temperature"}}', 'other'],
         ['HTTP 503: upstream overloaded', 'server_error'],
         ['HTTP 501: not implemented', 'other'],
         ['policy_unproven_cost: the route answered 402', 'billing'],
@@ -131,5 +134,33 @@ describe('the chooser sees a retired model as not live', () => {
         expect((await askOnce('q', opts))?.member).toBe('free1');
         for (let i = 1; i <= RETIRE_STREAK; i++) recordRouteOutcome(root, 'free1', 'm-1', 'model_unservable', at(i));
         expect((await askOnce('q', opts))?.member).toBe('paid1');
+    });
+
+    it('liveness is keyed by catalog id: a member named groq-x on the groq base URL retires and is revived by rediscovery', async () => {
+        const root = tmpRoot();
+        seedRoster(root, 'groq', ['m-1'], T0);
+        let unservable = true;
+        const free = {
+            name: 'groq-x',
+            model: 'm-1',
+            base_url: 'https://api.groq.com/openai/v1',
+            billing: 'free-quota',
+            billable: false,
+            ask: () =>
+                unservable
+                    ? new CouncilResponse({ provider: 'groq-x', model: 'm-1', text: '', error: 'HTTP 404: {"error":{"code":"model_not_found"}}' })
+                    : new CouncilResponse({ provider: 'groq-x', model: 'm-1', text: '{"label":"x","confidence":0.5}', input_tokens: 1, output_tokens: 1 }),
+        } as unknown as ExternalAIClient;
+        const paid = routeMember('paid1', 'per-token', 'p-1', '{"label":"y","confidence":0.5}');
+        const opts = { members: [free, paid], kind: 'classify' as const, contentClass: 'public-artifact' as const, auditDir: null, stateRoot: root, flips: () => true };
+        for (let i = 0; i < RETIRE_STREAK; i++) await askOnce('q', opts);
+        expect(isRouteModelLive(root, 'groq', 'm-1')).toBe(false);
+        const roster = readRouteRoster(root, 'groq');
+        expect(roster.status === 'known' && roster.models).toEqual([]);
+        expect((await askOnce('q', opts))?.member).toBe('paid1');
+        unservable = false;
+        seedRoster(root, 'groq', ['m-1'], new Date(Date.now() + 60_000).toISOString());
+        expect(isRouteModelLive(root, 'groq', 'm-1')).toBe(true);
+        expect((await askOnce('q', opts))?.member).toBe('groq-x');
     });
 });

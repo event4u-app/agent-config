@@ -2344,6 +2344,11 @@ tasks:
     desc: .agent-settings.local.yml (per-machine override layer) must never be committed
     cmd: ./scripts-run src/scripts/check_no_local_settings_committed
 
+  check-owner-question-ids:
+    silent: true
+    desc: Every OQ-<N> heading in agents/owner-questions.md is unique (a union merge can duplicate one without a conflict)
+    cmd: ./scripts-run src/scripts/check_owner_question_ids
+
   check-council-references:
     silent: true
     desc: Stable artifacts must not link specific files in agents/runtime/council/{questions,responses,sessions}/ (no-transient-references rule, council clause)

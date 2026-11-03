@@ -21,6 +21,13 @@ review_by: 2026-09-25
 > 'pull_request'`) is enforced elsewhere or intentionally PR-only. Measured cost of not having it: every merge
 > re-runs the full `Tests` matrix on `push: main`, and PR jobs queue for macOS p50
 > 5m34s / p90 25m09s (`agents/evidence/analysis/ci-time-to-green-2026-10.md`).
+>
+> **2026-11-03 — condition discharged in-repo:** the eight PR-guarded steps are
+> inventoried with a disposition each in
+> `agents/evidence/analysis/merge-group-pr-only-steps-2026-11.md` (re-derived by
+> `tests/scripts/merge_group_pr_only_inventory.test.ts`), and queue runs no longer
+> cancel each other (`road-to-a-green-that-saw-what-it-certifies` 1.4). The ruleset
+> write stays here.
 
 > **Stub — not active work.** Holds the two repo-admin transfers made out of
 > [`road-to-inbox-harvest-2026-08-b-ci-economy.md`](../road-to-inbox-harvest-2026-08-b-ci-economy.md)

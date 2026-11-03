@@ -64,6 +64,11 @@ describe('the sweep carries bare deferrals, then archives', () => {
         expect(child).toContain('- [ ] **1.2 needs elapsed time.** Wait a month.');
         expect(child).toContain('      verify: the reading exists');
         expect(child).not.toMatch(/^\s*[-*] \[~\]/m);
+        // The goal sentence does not restate the parent slug: the Source line
+        // and `parent_roadmap:` already name it, and the owned digest pays for
+        // every word of a goal's first sentence.
+        const goal = /^## Goal\n\n([^\n]+)/m.exec(child)?.[1] ?? '';
+        expect(goal).toMatch(/^Every step the parent roadmap deferred/);
 
         // The archived parent is annotated, and the pair passes the same
         // validation a hand-written carry has to pass.

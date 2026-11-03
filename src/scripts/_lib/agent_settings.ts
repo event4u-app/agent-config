@@ -50,6 +50,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { resolvePackageRoot } from './package_root.js';
+import { isContained } from './session_index_trust.js';
 
 import * as user_global_paths from './user_global_paths.js';
 import { carveOutKeys } from '../../shared/settingsCarveOut.js';
@@ -1114,12 +1115,7 @@ export function enumerate_modules(
         const root_rel = _strip_slashes(raw.trim());
         const root_abs = _resolve(path.join(root, root_rel));
         try {
-            // Latent-bug candidate (replicated verbatim, see divergence
-            // notes): boundary check uses a raw string prefix match
-            // (`startswith`) rather than a path-component boundary check,
-            // so a sibling like `<root>-evil` would pass. Python does the
-            // same; flagged, not fixed.
-            if (!_is_dir(root_abs) || !root_abs.startsWith(root)) {
+            if (!_is_dir(root_abs) || !isContained(root_abs, root)) {
                 logger.info('enumerate_modules: skipping missing/out-of-tree root %s', root_rel);
                 continue;
             }
@@ -1384,7 +1380,7 @@ function _strip_slashes(s: string): string {
  */
 function _relative_to(child: string, root: string): string {
     const rel = path.relative(root, child);
-    if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) {
+    if (rel === '' || !isContained(child, root)) {
         throw new Error(`${child} is not in the subpath of ${root}`);
     }
     return rel;

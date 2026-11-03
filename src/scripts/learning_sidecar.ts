@@ -55,6 +55,32 @@ export const SCHEMA_VERSION = 1;
 export type Polarity = 'preferred' | 'dead_end';
 export type Verdict = 'preferred' | 'contested' | 'dead_end';
 
+/**
+ * Read side of `buildSidecar`: `<entry_type>\0<anchor path>` → verdict, or null
+ * when the parsed sidecar carries no usable lesson. memory_lookup's display overlay.
+ */
+export function parseVerdictOverlay(parsed: unknown): Map<string, Verdict> | null {
+    const isObj = (v: unknown): v is Record<string, unknown> =>
+        typeof v === 'object' && v !== null && !Array.isArray(v);
+    const lessons = isObj(parsed) ? parsed['lessons'] : null;
+    if (!Array.isArray(lessons)) return null;
+    const map = new Map<string, Verdict>();
+    for (const l of lessons) {
+        if (!isObj(l)) continue;
+        const t = l['entry_type'];
+        const p = l['path'];
+        const v = l['verdict'];
+        if (
+            typeof t === 'string' &&
+            typeof p === 'string' &&
+            (v === 'preferred' || v === 'contested' || v === 'dead_end')
+        ) {
+            map.set(`${t}\0${p}`, v);
+        }
+    }
+    return map.size > 0 ? map : null;
+}
+
 /** The output formats. `status` is the one-screen human view (read-only). */
 export const FORMATS = ['text', 'json', 'status'] as const;
 export type Format = (typeof FORMATS)[number];

@@ -39,7 +39,7 @@ type Tier = number | string;
 
 // Tier assignments mirror agents/roadmaps/road-to-stronger-skills.md.
 const TIERS: Record<string, Tier> = {
-    'adversarial-review': 1, 'authz-review': 1, 'code-review': 1,
+    'adversarial-review': 1, 'authz-review': 1, 'code-review-lens': 1,
     'design-review': 1, 'performance-analysis': 1, 'project-analyzer': 1,
     'readme-reviewer': 1, 'receiving-code-review': 1,
     'requesting-code-review': 1, 'security-audit': 1, 'skill-reviewer': 1,

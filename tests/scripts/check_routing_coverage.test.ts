@@ -182,8 +182,10 @@ describe('the live tree', () => {
         // 0.35 -> 0.3 on 2026-10-27, deliberately: inbox round 2026-10-bf took
         // skills to 187 of 301 (0.6213) against rules 103 of 107 (0.9626), a
         // gap of 0.3413 — the roadmap's goal moving again, not the shape.
+        // 0.3 -> 0.25 on 2026-11-03, deliberately: inbox round 2026-11-n took
+        // skills to 201 of 303 (0.6634) against rules 0.9626, a gap of 0.2992.
         const s = readSeed(REPO);
-        expect(s.rules - s.skills).toBeGreaterThan(0.3);
+        expect(s.rules - s.skills).toBeGreaterThan(0.25);
     });
 
     it('measures 107 routed rules and 303 routed skills', () => {

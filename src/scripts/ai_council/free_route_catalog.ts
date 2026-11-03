@@ -79,6 +79,25 @@ export const ROUTE_CATALOG: readonly CatalogRoute[] = [
     { id: 'nvidia', base_url: 'https://integrate.api.nvidia.com/v1', keyless: false, attestation: null },
 ];
 
+/**
+ * Host and path, scheme dropped: an `http` or mixed-case spelling of a
+ * catalogued route is the same route to the gate, so it cannot step around it.
+ */
+export function routeIdentity(url: string): string {
+    try {
+        const u = new URL(url);
+        return `${u.host}${u.pathname.replace(/\/+$/, '')}`;
+    } catch {
+        return url.trim().toLowerCase().replace(/\/+$/, '');
+    }
+}
+
+/** The catalog row id of a `base_url`, or null for an uncatalogued route. */
+export function catalogRouteId(baseUrl: string): string | null {
+    const key = routeIdentity(baseUrl);
+    return ROUTE_CATALOG.find((r) => routeIdentity(r.base_url) === key)?.id ?? null;
+}
+
 /** Terms drift; an attestation older than this no longer speaks for the route. */
 export const ATTESTATION_MAX_AGE_DAYS = 90;
 

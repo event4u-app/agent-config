@@ -183,10 +183,10 @@ prompts:
 
   - id: tracka-23
     category: skill
-    expected_target: .claude/skills/code-review/SKILL.md
+    expected_target: .claude/skills/code-review-lens/SKILL.md
     expected_keywords: ["review", "diff"]
     prompt: "review my latest PR for issues"
-    notes: "code-review."
+    notes: "code-review-lens."
 
   - id: tracka-24
     category: skill

@@ -109,7 +109,7 @@ skills:
     family: architecture-refactor
     primary_use: 'Use when the user says ''refactor this'', ''rename class'', or ''move method'''
     activation_scope: core
-  code-review:
+  code-review-lens:
     family: review-judging
     primary_use: 'Use when the user says "review this", "check my code", or wants feedback on changes'
     activation_scope: core

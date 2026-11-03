@@ -12,6 +12,8 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { consume_handoff_context } from '../../src/scripts/handoff_context_hook.js';
+
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'handoff_context_hook.ts');
 const TSX_BIN = path.join(
@@ -245,5 +247,58 @@ describe('handoff_context_hook — the procedure position after compaction', () 
     it('procedure-position-on-compact: only the compact source carries the line', () => {
         writeProcedureState('partial');
         expect(runHook('session_start', { source: 'startup' }).stdout.trim()).toBe('');
+    });
+});
+
+describe('handoff_context_hook — drift against the file header (4.2)', () => {
+    let repo: string;
+    let prevEnv: string | undefined;
+
+    beforeEach(() => {
+        repo = fs.mkdtempSync(path.join(os.tmpdir(), 'handoff-drift-'));
+        const git = (...args: string[]): void => {
+            spawnSync('git', ['-c', 'user.email=t@example.com', '-c', 'user.name=t', ...args], { cwd: repo });
+        };
+        git('init', '-q', '-b', 'main');
+        git('commit', '-q', '--allow-empty', '-m', 'init');
+        prevEnv = process.env.AGENT_HANDOFF_CONTEXT_FILE;
+        process.env.AGENT_HANDOFF_CONTEXT_FILE = handoffFile;
+    });
+
+    afterEach(() => {
+        if (prevEnv === undefined) delete process.env.AGENT_HANDOFF_CONTEXT_FILE;
+        else process.env.AGENT_HANDOFF_CONTEXT_FILE = prevEnv;
+        fs.rmSync(repo, { recursive: true, force: true });
+    });
+
+    const stamp = new Date().toISOString();
+    const write = (headerLines: string[]): void => {
+        fs.writeFileSync(
+            handoffFile,
+            ['# Handoff', '', `Generated: ${stamp}`, 'Source-Session: s1', ...headerLines, '', '## Open', '- x', ''].join('\n'),
+            'utf-8',
+        );
+    };
+    const contextOf = (headerLines: string[]): string => {
+        write(headerLines);
+        const d = consume_handoff_context(repo);
+        expect(d.action).toBe('inject');
+        return (d as { context: string }).context;
+    };
+
+    it('a handoff written on another branch carries a drift line', () => {
+        expect(contextOf(['Branch: feat/elsewhere'])).toContain('BRANCH DRIFT');
+    });
+
+    it('a handoff on the same branch is byte-identical to one with no header', () => {
+        const same = contextOf(['Branch: main']);
+        expect(same).not.toContain('DRIFT');
+        // Same text minus the drift lead: the only difference is the header line itself.
+        const none = contextOf([]);
+        expect(same.replace('Branch: main\n', '')).toBe(none);
+    });
+
+    it('a header without Branch: gets no drift line', () => {
+        expect(contextOf(['Last commit: 0000000000000000000000000000000000000000'])).not.toContain('DRIFT');
     });
 });

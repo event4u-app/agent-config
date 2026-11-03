@@ -107,7 +107,7 @@ export function isSyntheticPrompt(prompt: string): boolean {
  * tag, which the bare `<agent-message` case above never matched. Both halves
  * are required so a human quoting the sentence keeps their turn.
  */
-const AGENT_MESSAGE_FRAME =
+export const AGENT_MESSAGE_FRAME =
   /^Another Claude session sent a message:\s*\n\s*<(?:agent-message|cross-session-message)\b/;
 
 /**

@@ -10,6 +10,8 @@ estate_offset_exempt: "Split-out, not authored: every step below is moved verbat
 ---
 # Road to web-launch-readiness — the benchmark and its verdict
 
+> **Resume when:** a ground-truth-blind session or human (one that has not read `GROUND-TRUTH.md`) is available to freeze the protocol and run the arms, or the claim/command is proposed for promotion — at the latest `review_by: 2026-12-31`; owner: maintainer.
+
 > **Parent:** `road-to-web-launch-readiness`, **archived 2026-08-25 by approved
 > rescope** — a second AI council, 2/2, decided the parent may close around
 > these two steps once the maintainer's standing delegation supplied the

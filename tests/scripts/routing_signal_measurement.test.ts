@@ -176,7 +176,14 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 43 -> 44 on 2026-11-02: inbox round 2026-11-i edited
         // `technical-specification`, which then owed a corpus. It is 0x22 = 34
         // and seals. The claim's scope moves to 18 of 44.
-        expect(sealed.length).toBe(44);
+        //
+        // 44 -> 45 on 2026-11-03: the rename of road-to-a-name-no-host-already-owns.
+        // `mcp` (0x10, sealed) became `mcp-tool-use` (0x3f, train);
+        // `code-review` (0x71, train) became `code-review-lens` (0x26, seals);
+        // the new `github-ci` corpus (0x11) seals. The claim's scope moves to 18 of 45.
+        // 45 -> 46 on 2026-11-03: the new `performance-analysis` corpus (0x1a) seals,
+        // authored today, so it predates nothing. The claim's scope moves to 18 of 46.
+        expect(sealed.length).toBe(46);
     });
 
     it('the loader`s partition agrees with every published holdout row', () => {
@@ -401,8 +408,14 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 195 -> 196 on 2026-11-02: `founder-idea-interview` (0xb1) trains (151 -> 152).
         // 196 -> 197 on 2026-11-03: inbox round 2026-11-p. `character-consistency` (0xf7) trains (152 -> 153).
         // 197 -> 198 on 2026-11-03: inbox round 2026-11-r. `song-to-script` (0x89) trains (153 -> 154).
-        expect(all.length).toBe(198);
-        expect(all.filter((r) => r.partition === 'holdout').length).toBe(44);
+        // 198 -> 200 on 2026-11-03: the mcp/code-review rename moves one row each way
+        // across the seal, `copilot-config` (0x33) trains (154 -> 155) and
+        // `github-ci` (0x11) seals (44 -> 45).
+        // 200 -> 202 on 2026-11-03: two corpora for skills the same round touched;
+        // `performance-analysis` (0x1a) seals (45 -> 46), `data-handling-judgment` (0x5f)
+        // trains (155 -> 156).
+        expect(all.length).toBe(202);
+        expect(all.filter((r) => r.partition === 'holdout').length).toBe(46);
     });
 });
 
@@ -483,7 +496,10 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 151 -> 152 on 2026-11-02: `founder-idea-interview` trains (see the 196 line).
         // 152 -> 153 on 2026-11-03: `character-consistency` trains (see the 197 line).
         // 153 -> 154 on 2026-11-03: `song-to-script` trains (see the 198 line).
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(154);
+        // 154 -> 155 on 2026-11-03: `code-review` leaves train, `mcp-tool-use` and
+        // `copilot-config` join it (see the 200 line).
+        // 155 -> 156 on 2026-11-03: `data-handling-judgment` trains (see the 202 line).
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(156);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

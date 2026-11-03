@@ -160,7 +160,7 @@ export function menuFlags(text: string): { userInvocable: boolean | null; disabl
  * The skill names a flow file declares, from its own `skills:` lists.
  *
  * Flows do NOT use the three reference shapes commands use — they carry YAML
- * lists of bare names (`skills: [code-review, adversarial-review]`, or a block
+ * lists of bare names (`skills: [code-review-lens, adversarial-review]`, or a block
  * sequence). Running the command-shaped regex over them returned flow_refs = 0
  * for all 299 skills on the first pass, which was a false zero and is why this
  * parser exists rather than a wider word-boundary match: a bare name is safe

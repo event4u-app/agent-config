@@ -12,7 +12,13 @@
  *   - the paid side must not be a `base_url` route, which counts as paid without being one;
  *   - the payload must be `public-artifact`, the ceiling every free route sits at;
  *   - at most `SHADOW_CALL_CAP` rows (decision A5); past it the paid side still
- *     answers and nothing else is called.
+ *     answers and nothing else is called. A bench shadow counts only non-production
+ *     rows, so production traffic cannot use up the evidence budget; a production
+ *     shadow counts every row, so it is never called more often than before.
+ *
+ * Rows carry `origin`. A production row has no head verify behind it, so its
+ * `skipped` verdicts say nothing about free quality and are kept out of
+ * `shadowReport`; a row without `origin` predates the tag and is counted.
  *
  * Nothing here calls anything on its own: a caller hands in both members and
  * the head's verify. A row holds routes, verdicts and token counts, never the
@@ -34,6 +40,7 @@ import { buildHandPayload, type HandPayload, type HandSlice } from './hand_paylo
 import { parseHandReturn } from './hand_schemas.js';
 import { routeCandidateFromMember } from './route_chooser.js';
 import { classifyRouteOutcome, recordRouteOutcome, type RouteOutcome } from './route_liveness.js';
+import { livenessRouteKey } from './route_member.js';
 import { isUnpaid, type HandKind, type RouteBilling, type VerifyVerdict } from '../_lib/hand_kinds.js';
 
 /** Decision A5: enough for per-kind rates at the 5 pp margin; spend stays USD 0.00. */
@@ -53,9 +60,12 @@ export interface ShadowSide {
     readonly verify_tokens: number;
 }
 
+export type ShadowOrigin = 'production' | 'bench';
+
 export interface ShadowRow {
     readonly ts: string;
     readonly kind: HandKind;
+    readonly origin?: ShadowOrigin;
     readonly paid: ShadowSide;
     readonly free: ShadowSide;
 }
@@ -79,6 +89,8 @@ export interface ShadowAskOptions {
     readonly egress?: CouncilEgress;
     /** Recorded against the free route when, and only when, it is asked. */
     readonly exposure?: { readonly ledger: ExposureLedger; readonly exposes: Exposure };
+    /** Absent writes an untagged row and caps on every row, as before the tag. */
+    readonly origin?: ShadowOrigin;
 }
 
 export type ShadowSkip = 'free-side-metered' | 'paid-side-unpaid' | 'paid-side-route' | 'content-ceiling' | 'cap-reached';
@@ -136,12 +148,23 @@ function _ledgerPath(stateRoot: string): string {
     return path.join(stateRoot, SHADOW_LEDGER_RELPATH);
 }
 
-function _rowCount(stateRoot: string): number {
+function _isProduction(line: string): boolean {
     try {
-        return fs.readFileSync(_ledgerPath(stateRoot), 'utf8').split('\n').filter((l) => l.trim() !== '').length;
+        return (JSON.parse(line) as { origin?: unknown }).origin === 'production';
+    } catch {
+        return false;
+    }
+}
+
+/** Ledger rows the cap of a shadow with this origin counts. */
+export function shadowCapCount(stateRoot: string, origin?: ShadowOrigin): number {
+    let lines: string[];
+    try {
+        lines = fs.readFileSync(_ledgerPath(stateRoot), 'utf8').split('\n').filter((l) => l.trim() !== '');
     } catch {
         return 0;
     }
+    return origin === 'bench' ? lines.filter((l) => !_isProduction(l)).length : lines.length;
 }
 
 function _append(stateRoot: string, row: ShadowRow): void {
@@ -168,15 +191,16 @@ export async function shadowAsk(slice: HandSlice, opts: ShadowAskOptions): Promi
     };
     if (!isUnpaid(freeRoute.billing)) return usePaid('free-side-metered');
     if (!admitsContent(freeRoute.ceiling, opts.contentClass).admitted) return usePaid('content-ceiling');
-    if (_rowCount(opts.stateRoot) >= SHADOW_CALL_CAP) return usePaid('cap-reached');
+    if (shadowCapCount(opts.stateRoot, opts.origin) >= SHADOW_CALL_CAP) return usePaid('cap-reached');
 
     opts.exposure?.ledger.record(freeRoute.name, opts.exposure.exposes);
     const [p, f] = await Promise.all([_call(opts.paid, kind, payload), _call(opts.free, kind, payload)]);
     const model = _routeModel(opts.free);
-    if (model !== null) recordRouteOutcome(opts.stateRoot, freeRoute.name, model, f.outcome);
+    if (model !== null) recordRouteOutcome(opts.stateRoot, livenessRouteKey(opts.free), model, f.outcome);
     const row: ShadowRow = {
         ts: (opts.now ?? (() => new Date()))().toISOString(),
         kind,
+        ...(opts.origin !== undefined ? { origin: opts.origin } : {}),
         paid: await _side(opts.paid, p, kind, 'paid', opts.verify),
         free: await _side(opts.free, f, kind, 'free', opts.verify),
     };
@@ -234,7 +258,10 @@ export interface KindShadowStats {
 
 export function shadowReport(rows: readonly ShadowRow[]): KindShadowStats[] {
     const byKind = new Map<HandKind, ShadowRow[]>();
-    for (const r of rows) byKind.set(r.kind, [...(byKind.get(r.kind) ?? []), r]);
+    for (const r of rows) {
+        if (r.origin === 'production') continue;
+        byKind.set(r.kind, [...(byKind.get(r.kind) ?? []), r]);
+    }
     const out: KindShadowStats[] = [];
     for (const [kind, rs] of [...byKind.entries()].sort(([a], [b]) => a.localeCompare(b))) {
         const weeks = new Map<string, number>();

@@ -166,6 +166,6 @@ Its adoption is the demand test for whether auto-install is ever worth building.
   a demand survey.
 - Official MCP registry `server.json` schema —
   `static.modelcontextprotocol.io/schemas/.../server.schema.json`.
-- `src/skills/mcp/SKILL.md` — existing MCP tool-usage skill.
+- `src/skills/mcp-tool-use/SKILL.md` — existing MCP tool-usage skill.
 - `internal/glama/README.md` — the package's own Glama-indexed MCP server (distinct
   concern: we are *listed*, this ADR is about *consuming* registries).

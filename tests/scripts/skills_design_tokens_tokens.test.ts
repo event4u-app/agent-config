@@ -115,7 +115,9 @@ describe.runIf(runnable)('tokens — generate', () => {
         expectParity(['generate', '--config', cfg, '--format', 'tailwind']);
     });
 
-    it('unresolvable / dangling reference falls back to the literal identically', () => {
+    // road-to-design-inputs-and-pages-read-as-they-are 1.2: this case used to
+    // pin the literal `{…}` reaching CSS at exit 0 — that was the defect.
+    it('unresolvable / dangling reference fails naming the token and the missing target', () => {
         const cfg = path.join(tmp, 'dangling.json');
         fs.writeFileSync(
             cfg,
@@ -126,7 +128,11 @@ describe.runIf(runnable)('tokens — generate', () => {
             }),
             'utf-8',
         );
-        expectParity(['generate', '--config', cfg]);
+        const r = runTs(['generate', '--config', cfg]);
+        expect(r.status).toBe(1);
+        expect(r.stdout).toBe('');
+        expect(r.stderr).toMatch(/token color\.x: reference \{primitive\.color\.nope\.999\} does not resolve/);
+        expect(r.stderr).toMatch(/missing primitive\.color\.nope\.999/);
     });
 
     it('empty / missing top-level sections produce identical empty :root blocks', () => {
@@ -362,7 +368,7 @@ describe('tokens — dtcg-2025 object values', () => {
         ['an alpha above one', { colorSpace: 'srgb', components: [0, 0, 0], alpha: 3 }, /alpha 3 is outside 0-1/],
         ['an unknown unit', { value: 2, unit: 'em' }, /unit "em"/],
         [
-            'a composite (shadow) object, unsupported by design',
+            'a shadow-shaped object typed as colour',
             { color: '#000000', offsetX: { value: 0, unit: 'px' }, offsetY: { value: 1, unit: 'px' }, blur: { value: 2, unit: 'px' } },
             /neither a DTCG colour nor a dimension\/duration/,
         ],
