@@ -1,10 +1,17 @@
 ---
-complexity: standard
+complexity: structural
 status: ready
 tree_pin: b234d08480
 execution:
   mode: phase-checkpoints
 review_by: 2026-12-31
+relates:
+  - slug: road-to-skill-menu-economy
+    relation: disjoint
+    note: "Cites the skill listing files; owns the menu cost, not the name collision."
+  - slug: road-to-a-canvas-the-code-owns
+    relation: disjoint
+    note: "Cites claude_builtin_names.ts; owns the canvas, not the reserved-name gate."
 estate_growth_exempt: "+1 active_roadmaps over the WIP cap of 5, owner-directed 2026-11-03 (agents/evidence/owner-directives/2026-11-03-process-inbox-2026-11-n-roadmaps.md): one of eight roadmaps of round inbox-2026-11-n landed active so /roadmap:process-full executes them in the same run."
 estate_offset_exempt: "Owner search at b234d08480 (grep -rlF for claude_builtin_names, lint_agent_skill_names, user-invocable, 'reserved name', name-no-host-already-owns over agents/roadmaps, later, stubs) found no owner: later/road-to-skill-menu-economy and later/road-to-a-canvas-the-code-owns cite the files but own neither the collision nor the gate; agents/roadmaps-owned.md has no row. No active roadmap is archived to offset it."
 ---
@@ -16,8 +23,7 @@ estate_offset_exempt: "Owner search at b234d08480 (grep -rlF for claude_builtin_
 
 ## Goal
 
-A name this package ships is owned by exactly one of its artefacts and never by
-a host built-in. Today the skill `mcp` takes `/mcp` away from Claude Code and
+Shipped names never collide with a host built-in. Today the skill `mcp` takes `/mcp` away from Claude Code and
 the skill `code-review` takes `/code-review`, while the name lint is green
 because it accepts `user-invocable: false` as an escape
 (`src/scripts/lint_agent_skill_names.ts:195-210`). That key only blocks the user
@@ -102,7 +108,7 @@ sees the user's machine. Nothing is deleted — every fix renames or reports.
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The opt-out was the earlier accepted fix | product | The 2026-07 fix kept the name and relied on `user-invocable: false`; reopening it could look like churn | The lint itself is green with the defect live (`lint_agent_skill_names.ts:195-210`) and the user reports `/mcp` unusable; the fix renames, it removes no capability | Phase 1 — Give `/mcp` and `/code-review` back |
 | 2 | A rename misses a referrer | implementation | Flows, packs, catalog or trigger evals keep the old name and route to nothing | `check_references` plus the named vitest files in 1.1/1.2; the grep in 1.1 is the enumerated set | Phase 1 — Give `/mcp` and `/code-review` back |
-| 3 | The reaper deletes a user's own `mcp` skill | security | A same-name skill the user wrote must survive | 1.5 asserts the foreign directory survives; 2.3 only reports | Phase 1 — Give `/mcp` and `/code-review` back |
+| 3 | The reaper deletes a user's own `mcp` skill | implementation | A same-name skill the user wrote must survive | 1.5 asserts the foreign directory survives; 2.3 only reports | Phase 1 — Give `/mcp` and `/code-review` back |
 | 4 | Second-hand docs names are wrong | implementation | A name reserved without being a built-in only withholds a package name | No package artefact uses any added name at the pin; the fixture states its witness and date | Phase 2 — Keep it from coming back |
 
 ## Acceptance Criteria

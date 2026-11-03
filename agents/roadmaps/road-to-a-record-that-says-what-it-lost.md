@@ -1,5 +1,5 @@
 ---
-complexity: standard
+complexity: structural
 status: ready
 tree_pin: b234d08480
 execution:
@@ -9,7 +9,7 @@ estate_growth_exempt: "+1 active_roadmaps over the WIP cap of 5, owner-directed 
 estate_offset_exempt: "Owner search at b234d08480 (grep -rlF for parseFindings, partitionDiff, 'Low / Medium / High', 'none extracted', cleanupPeriodDays, autoMemoryDirectory, storeWindow, consume_handoff_context, exec_evidence over agents/roadmaps, later, stubs) returned nothing; verified_by hit only stubs/the-14-21-0-ledger-is-ingestible.md (ingest, disjoint); MAX_REVIEW_CHUNKS hit only the later/ ceiling owner, which this roadmap does not touch."
 relates:
   - slug: road-to-a-release-record-that-says-what-it-reviewed-carried
-    relation: overlaps
+    relation: disjoint
     note: "Owns the review ceiling (spend) and A.1 files-assessed-vs-sent. Steps 1.1 and 1.3 here change only what an unparseable chunk and the ceiling cut are recorded as; A.1 composes on top."
   - slug: road-to-compaction-survival-census
     relation: disjoint
@@ -22,8 +22,7 @@ relates:
 
 ## Goal
 
-Every record this package writes about a review or a session says what it
-dropped instead of reporting the loss as an empty result. At the pin, a
+Review and session records say what they dropped. At the pin, a
 self-review chunk whose model answer does not parse counts as read with zero
 findings (`src/scripts/self_review_gate.ts:1356-1357`, `:923-933`); the review
 ceiling drops chunks in diff order, so workflow and script paths can be the
@@ -150,10 +149,10 @@ finding disposition names a command but not the outcome it must produce
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | 1.1 lowers reported coverage | behaviour | Releases that silently lost chunks will now show them unreviewed; looks like a regression | It is the truth the coverage line already claims; changelog line names the cause | Phase 1 |
-| 2 | 1.3 changes which files a capped run reads | behaviour | Same span can now leave docs/agents unread instead of scripts | Intended; ceiling value untouched; determinism test | Phase 1 |
-| 3 | 2.1 edits committed evidence | integrity | Ledgers are records; editing them could look like rewriting history | Only `verified_by` gains an expectation; status, rationale, commit untouched; gate re-run green | Phase 2 |
-| 4 | 4.3 changes transcript report totals | behaviour | Session and usage counts drop where set-aside copies existed | Additive set-aside count printed; no field renamed | Phase 4 |
+| 1 | 1.1 lowers reported coverage | product | Releases that silently lost chunks will now show them unreviewed; looks like a regression | It is the truth the coverage line already claims; changelog line names the cause | Phase 1 |
+| 2 | 1.3 changes which files a capped run reads | product | Same span can now leave docs/agents unread instead of scripts | Intended; ceiling value untouched; determinism test | Phase 1 |
+| 3 | 2.1 edits committed evidence | implementation | Ledgers are records; editing them could look like rewriting history | Only `verified_by` gains an expectation; status, rationale, commit untouched; gate re-run green | Phase 2 |
+| 4 | 4.3 changes transcript report totals | product | Session and usage counts drop where set-aside copies existed | Additive set-aside count printed; no field renamed | Phase 4 |
 
 ## Non-goals
 

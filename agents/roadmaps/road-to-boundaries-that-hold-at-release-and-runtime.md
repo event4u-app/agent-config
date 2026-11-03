@@ -9,7 +9,7 @@ estate_growth_exempt: "+1 active_roadmaps over the WIP cap of 5, owner-directed 
 estate_offset_exempt: "Owner search at b234d08480 (grep -rlF in agents/roadmaps-owned.md, agents/roadmaps/*.md, later/, stubs/ for template-injection, privileged-job-cache, persist-credentials, github-workflows, humanTypedThisTurn, AGENT_MESSAGE_FRAME, settings.local.json, startsWith(root, isContained, Latent-bug, detectStandingCommand, control-char, id-token) returned 0 hits; no active roadmap owns these boundaries, so none is archived to offset this one."
 relates:
   - slug: later/road-to-workflows-that-cannot-exfiltrate
-    relation: overlaps
+    relation: disjoint
     note: "Same linter file, different rule classes: that roadmap owns token scope and the actionlint download pin (its 1.2); this one owns inline-expression injection, caches in privileged jobs and the shipped workflow templates. No shared step."
   - slug: later/road-to-typed-grants-that-persist
     relation: extends
@@ -22,13 +22,12 @@ relates:
 
 > **Source:** `agents/tmp.old/inbox-2026-11-n/` (topic T0, P07, P08).
 > **Arrivals:** 1 — `inbox-2026-11-n` (2026-11-03). The template-injection half is a second
-> arrival of a finding first raised in `agents/tmp.old/infra-structure/` and parked as
+> arrival of a finding first raised in an earlier inbox round and parked as
 > "intentionally deferred" in `src/scripts/lint_workflow_security.ts:35-37` with no owner.
 
 ## Goal
 
-Four places treat something as trusted that is not, and each one is reproduced at the pin:
-a message forwarded from another session counts as a human turn and writes a `pr-merge`
+Four trusted-but-untrusted inputs get a boundary. At the pin: a message forwarded from another session counts as a human turn and writes a `pr-merge`
 grant; `.claude/settings.local.json` is not a settings file for the config guard; three
 containment checks compare raw string prefixes; and three project-memory writers accept a
 standing command the global path refuses. On the release side, ten free-text `${{ }}`
@@ -139,7 +138,7 @@ green after the fix, and the release-side rules fail the contract test on regres
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | A release workflow breaks on the `env:` move | implementation | Publish/deploy jobs cannot be dry-run locally | Mechanical, one variable per site; `release.yml` dispatch with `dry_run: true` is the first post-merge check | Phase 2 |
-| 2 | Removing caches slows release jobs | operational | No local measurement possible | Accepted; a later read-only cache keyed to the default branch is the escape, never disabling the rule | Phase 2 |
+| 2 | Removing caches slows release jobs | implementation | No local measurement possible | Accepted; a later read-only cache keyed to the default branch is the escape, never disabling the rule | Phase 2 |
 | 3 | The peer-frame fix hides a real human turn | implementation | A human pasting the frame | Frame requires the fixed sentence at position 0 AND the tag on the next line; quote vectors stay human | Phase 1 |
 | 4 | Guard repair refuses benign memory | implementation | Over-broad regex | Benign rows fail the fixture run | Phase 3 |
 

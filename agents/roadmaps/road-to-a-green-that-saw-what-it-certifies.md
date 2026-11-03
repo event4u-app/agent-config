@@ -9,10 +9,10 @@ estate_growth_exempt: "+1 active_roadmaps over the WIP cap of 5, owner-directed 
 estate_offset_exempt: "Owner search at b234d08480 — grep -rlF over agents/roadmaps/*.md, agents/roadmaps/later and agents/roadmaps/stubs for check_owner_question, duplicate OQ, needs-rebase, all_skipped, gh run watch, subagent_return_report, spawnDepth, xhigh, ultracode, peer_session returned nothing; agents/roadmaps-owned.md lists no owner. Adjacent stubs (road-to-main-protection-ruleset-changes, road-to-subagent-return-gate, road-to-subagent-payload-capture) are not active work and receive dated lines only."
 relates:
   - slug: stubs/road-to-main-protection-ruleset-changes
-    relation: feeds
+    relation: disjoint
     note: "1.4 and 1.5 discharge its in-repo precondition (queue-ref concurrency, PR-only-step inventory). The ruleset write stays there."
   - slug: stubs/road-to-subagent-return-gate
-    relation: feeds
+    relation: disjoint
     note: "Phase 3 builds the read-only instrument its probe lacks. Nothing here blocks, retries or refuses on the numbers."
   - slug: later/road-to-merge-surface-zero
     relation: disjoint
@@ -25,8 +25,7 @@ relates:
 
 ## Goal
 
-Every pass this repository reports — a required check, a release pre-cut gate, a subagent `DONE`
-— either saw what it certifies or says that it saw nothing. At the pin `Tests result` is green
+Every reported pass saw what it certifies, or says it saw nothing. At the pin `Tests result` is green
 when every job skipped (`.github/workflows/tests.yml:925-934`), the pre-cut gate trusts an exit
 code on a run picked by `--limit 1` (`docs/release-runbook.md:127-136`), owner-question ids have
 no uniqueness gate although duplicates already reached `main` without a git conflict, and no
@@ -121,7 +120,7 @@ instrument can say whether a subagent that reported `DONE` wrote anything
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Concurrency expression breaks workflow parsing | implementation | A malformed `${{ }}` in `concurrency` makes every PR red | Test parses the YAML; keep the expression to `event_name`/`run_id`/`ref` only | Phase 1 — The merge surface reports what it checked |
-| 2 | Report leaks transcript content | security | A path or prompt string reaches stdout | Output schema is numbers and enums; a test asserts the absence | Phase 3 — A subagent return the tree can witness (read-only) |
+| 2 | Report leaks transcript content | implementation | A path or prompt string reaches stdout | Output schema is numbers and enums; a test asserts the absence | Phase 3 — A subagent return the tree can witness (read-only) |
 | 3 | Dedup hides a legitimately repeated id | implementation | Two distinct entries share an id | `check_memory.ts:391-392` already fails on duplicate ids, so first-wins only removes merge debris | Phase 2 — Shared memory does not double an entry |
 
 ## Acceptance Criteria

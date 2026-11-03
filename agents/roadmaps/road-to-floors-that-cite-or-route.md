@@ -31,9 +31,7 @@ relates:
 
 ## Goal
 
-A consumer safety floor never ships a statutory period, article clock or rate as a bare fact:
-it routes the reader to the primary source and tags the value, and a rule whose `evidence:`
-block claims an external source names that source. At the pin
+A consumer floor routes statutory figures to their source instead of stating them. At the pin
 `src/rules/domain-safety-retention.md:55` ships single per-country retention figures under a
 `verified_on: 2026-08-30` stamp, `check_rule_evidence_declaration` is green because it checks
 presence only, and 0 of 122 rules carry `source_urls`. This roadmap removes the figures without
@@ -138,10 +136,10 @@ source-tag vocabulary into the skills that were meant to carry it.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | A corrected figure from memory replaces a wrong one | content | The obvious fix re-creates the defect with new numbers | Steps 1.1–1.3 add no figure; any value only via the later re-verification | Phase 1 — Route the numbers instead of carrying them |
-| 2 | The pending list becomes a permanent allowlist | governance | Six rules stay unsourced indefinitely | Shrink-only, reasons per row, later item owns emptying it | Phase 2 — A stamp names its source; the vocabulary is wired |
-| 3 | `verified_on` now predates a body change | honesty | Schema reads a stale stamp as a signal | Intentional: the stamp moves only after a sourced re-check | Phase 1 |
-| 4 | Source-size ratchet reds on added lines | gate | `check_source_size_budget` tracks a live total | Follow that gate's own recorded procedure in the same PR | Phase 4 — Projection and gates |
+| 1 | A corrected figure from memory replaces a wrong one | product | The obvious fix re-creates the defect with new numbers | Steps 1.1–1.3 add no figure; any value only via the later re-verification | Phase 1 — Route the numbers instead of carrying them |
+| 2 | The pending list becomes a permanent allowlist | product | Six rules stay unsourced indefinitely | Shrink-only, reasons per row, later item owns emptying it | Phase 2 — A stamp names its source; the vocabulary is wired |
+| 3 | `verified_on` now predates a body change | product | Schema reads a stale stamp as a signal | Intentional: the stamp moves only after a sourced re-check | Phase 1 |
+| 4 | Source-size ratchet reds on added lines | implementation | `check_source_size_budget` tracks a live total | Follow that gate's own recorded procedure in the same PR | Phase 4 — Projection and gates |
 
 ## Non-goals
 

@@ -9,7 +9,7 @@ estate_growth_exempt: "+1 active_roadmaps over the WIP cap of 5, owner-directed 
 estate_offset_exempt: "Owner search at b234d08480 (grep -rlF for kind_flip, free_hand_shadow, route_liveness, remaining_quota, data_collection, juryIndependence, free-hands-quality-held, model_not_found, egress_prefixes, servedMatches over agents/roadmaps, later, stubs) returned nothing; only retry-after hit later/road-to-seats-that-know-why-they-failed.md, which owns header parsing and is extended, not duplicated."
 relates:
   - slug: road-to-free-hands-a-paid-head-checks
-    relation: corrects
+    relation: disjoint
     note: "Archived with every box checked; the defects below keep its claims unbacked and its flip unreachable."
   - slug: road-to-seats-that-know-why-they-failed
     relation: disjoint
@@ -25,8 +25,7 @@ relates:
 
 ## Goal
 
-A typed free ask produces a verdict that reaches the flip ledger instead of reverting itself,
-a cut-off or substituted answer is never a pass, and a retired model can come back. Not started
+A free-route verdict reaches the flip ledger and a truncated answer never passes. Not started
 at the pin: the head's `pass` never joins (`kind_flip.ts:66-78`), production shadow rows count
 as failures (`free_hand_shadow.ts:208`), and `servedMatches('llama-3.1','llama-3.1-405b')` is
 `true` (`free_route.ts:210-216`). No step adds a provider, a paid call, or a failure class.
@@ -108,7 +107,7 @@ as failures (`free_hand_shadow.ts:208`), and `servedMatches('llama-3.1','llama-3
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The join flips a kind on stale verdicts | implementation | a `pass` recorded long after the ask could mask a real escalation | latest verdict per `work_id`; unanswered asks stay `skipped`; claim text untouched | Phase 1 |
-| 2 | Excluding production rows hides real failures | evidence | production shadow rows carried signal the bench lacks | rows are tagged, not deleted; the existence question is E2 | Phase 1 |
+| 2 | Excluding production rows hides real failures | product | production shadow rows carried signal the bench lacks | rows are tagged, not deleted; the existence question is E2 | Phase 1 |
 | 3 | The size rule refuses a legitimate variant | implementation | a served id with a size the request implied | only fires when the request names no size; variant suffixes still match | Phase 2 |
 
 ## Acceptance Criteria

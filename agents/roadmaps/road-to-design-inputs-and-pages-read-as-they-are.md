@@ -19,8 +19,7 @@ relates:
 
 ## Goal
 
-A design input AC is handed and a page AC is asked to check are read as they
-are written: no token file ends with exit 0 and empty or broken CSS, a
+Design inputs and checked pages are read as written. No token file ends with exit 0 and empty or broken CSS, a
 front-matter scale is reported instead of silently ignored, the accessibility
 auditor carries every A/AA criterion its claim covers, a symptom or a bare
 quality adjective about a UI routes to the UI track and a review, and every

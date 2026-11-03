@@ -22,9 +22,7 @@ relates:
 
 ## Goal
 
-Which owned skills keep their description in the host listing is decided by a
-stated priority, not by the alphabet, and the skill-route hook never points at a
-skill the installer itself sent to `name-only`. At the pin, 45 of 303 owned skills
+Listing descriptions go to skills by stated priority, not the alphabet. At the pin, 45 of 303 owned skills
 stay described, cut alphabetically after `complexity-first-planning`, so
 `systematic-debugging`, `test-driven-development`, `verify-repair-loop`,
 `sql-writing` and `security-audit` are installed but listed bare
