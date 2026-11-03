@@ -95,7 +95,7 @@ channels:
     tier: zero-config
     lifecycle: experimental
     override_key: reach.channels.youtube.backend
-    last_verified: "2026-07-24"
+    last_verified: "2026-11-03"
     backends:
       - id: yt-dlp
         probe_cmd: yt-dlp
