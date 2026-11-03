@@ -38,7 +38,7 @@ green after the fix, and the release-side rules fail the contract test on regres
 
 ## Phase 1 — Runtime trust boundaries
 
-- [x] **1.1 A forwarded session message is not a human turn.** In
+- [x] **1.1 A forwarded session message is not a human turn.** In <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/machine_wake.ts -->
       `src/scripts/_lib/machine_wake.ts`, `humanTypedThisTurn` returns `false` when the prompt
       matches the host's fixed sentence-then-tag frame; export `AGENT_MESSAGE_FRAME` from
       `src/scripts/_lib/prompt_shape.ts:110-111` and read it in both modules (one constant).
@@ -47,14 +47,14 @@ green after the fix, and the release-side rules fail the contract test on regres
       an agent-message hand-back likewise; the bare sentence without the tag on line 2, and a
       human question quoting the frame, still count as human turns.
       verify: `npx vitest run tests/scripts/git_authorization.test.ts tests/scripts/language_mirror_hook.test.ts tests/scripts/evidence_independence_turn_marker.test.ts` → 0
-- [x] **1.2 `settings.local.json` is fenced like `settings.json`.** Widen the host-directory
+- [x] **1.2 `settings.local.json` is fenced like `settings.json`.** Widen the host-directory <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/block_config_weakening.ts -->
       regex in `src/scripts/hooks/block_config_weakening.ts:264-265` to `settings(\.local)?\.json`
       under the same host directories. Negative tests in
       `tests/scripts/hooks/block_config_weakening.test.ts`: a Write adding `hooks.SessionStart`
       to `.claude/settings.local.json` exits 1 with the same Class C reason; `src/foo/settings.local.json` <!-- ref-ignore -->
       stays unfenced (exit 0).
       verify: `npx vitest run tests/scripts/hooks/block_config_weakening.test.ts` → 0
-- [x] **1.3 One containment helper, three sites.** Use `isContained` from
+- [x] **1.3 One containment helper, three sites.** Use `isContained` from <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: dist/agent-src/templates/scripts/work_engine/_lib/agent_settings.ts -->
       `src/scripts/_lib/session_index_trust.ts:147` in `src/scripts/_lib/agent_settings.ts:1122`,
       its twin `src/agent-src/templates/scripts/work_engine/_lib/agent_settings.ts:844`, and
       `src/scripts/_lib/install_reach_checks.ts:220`; delete the "Latent-bug candidate" comments.
@@ -63,7 +63,7 @@ green after the fix, and the release-side rules fail the contract test on regres
       'a/../../<root>-evil/x')` is `unresolvable` (`tests/scripts/install_reach_checks.test.ts`);
       `<root>/a` and `<root>/..cache` stay contained.
       verify: `npx vitest run tests/lib/agent_settings.test.ts tests/scripts/install_reach_checks.test.ts tests/scripts/templates_memory_signal.test.ts` → 0, and `grep -n "startsWith(root)" src/scripts/_lib/agent_settings.ts src/agent-src/templates/scripts/work_engine/_lib/agent_settings.ts` → no match
-- [x] **1.4 Carriage return is not a hidden-instruction signal.** In
+- [x] **1.4 Carriage return is not a hidden-instruction signal.** In <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/retrieval_sanitize.ts -->
       `src/scripts/_lib/retrieval_sanitize.ts`, `scan_invisible_findings` no longer reports
       U+000D as `control-char`; every other C0/C1 control still reports. Tests in
       `tests/scripts/retrieval_sanitize.test.ts`: CRLF text and `10%\r20%` → no finding;
@@ -72,7 +72,7 @@ green after the fix, and the release-side rules fail the contract test on regres
 
 ## Phase 2 — Release chain
 
-- [x] **2.1 Template-injection rule, then the ten sites.** Add rule `template-injection` to
+- [x] **2.1 Template-injection rule, then the ten sites.** Add rule `template-injection` to <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/cloud-release.yml -->
       `src/scripts/lint_workflow_security.ts`: a `${{ }}` reading a free-text context
       (`inputs.*`/`github.event.inputs.*` of `type: string` or untyped, `github.event.release.*`
       tag/name/body, PR title/body/head ref, `github.head_ref`, commit messages, label names)
@@ -84,7 +84,7 @@ green after the fix, and the release-side rules fail the contract test on regres
       `${{ github.event.pull_request.title }}` in `run:` → 1 HIGH; the same via `env:` → 0;
       `inputs.bump` (choice) → 0.
       verify: `npx vitest run tests/scripts/lint_workflow_security.test.ts` → 0 and `./scripts-run src/scripts/lint_workflow_security --strict` → exit 0
-- [x] **2.2 No cache in a privileged job.** Add rule `privileged-job-cache` (privileged =
+- [x] **2.2 No cache in a privileged job.** Add rule `privileged-job-cache` (privileged = <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/cloud-release.yml -->
       effective `id-token: write`, `contents: write`, or a `secrets.*` other than
       `GITHUB_TOKEN`, inherited from workflow level unless the job overrides; cache =
       `with.cache` on a `setup-*` action or `actions/cache`). Remove `cache:` from the six jobs:
@@ -93,14 +93,14 @@ green after the fix, and the release-side rules fail the contract test on regres
       workflow-level `id-token: write` → finding; the same cache in a job overriding to
       `contents: read` → none (fixture mirrors `deploy-mcp-worker.yml:40-41`).
       verify: `npx vitest run tests/scripts/lint_workflow_security.test.ts` → 0, `./scripts-run src/scripts/lint_workflow_security --strict` → exit 0, `grep -n "cache:" .github/workflows/publish-npm.yml .github/workflows/deploy-site.yml .github/workflows/cloud-release.yml` → no match
-- [x] **2.3 The shipped templates get the same nets.** Add `persist-credentials: false` to the
+- [x] **2.3 The shipped templates get the same nets.** Add `persist-credentials: false` to the <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       six checkouts in `src/agent-src/templates/github-workflows/` that lack it (`true` with a
       comment only where a later step pushes); extend `tests/contracts/ci_supply_chain.test.ts`
       with the template directory as a third root for the `persist-credentials`,
       `template-injection` and `privileged-job-cache` assertions (SHA-pin assertion excluded
       pending owner decision OD-1); regenerate projections with `task sync`.
       verify: `npx vitest run tests/contracts/ci_supply_chain.test.ts` → 0 and `LINT_WORKFLOW_SECURITY_DIR=src/agent-src/templates/github-workflows ./scripts-run src/scripts/lint_workflow_security --strict` → exit 0
-- [x] **2.4 The CI skill teaches the same rules, project-neutral.** In
+- [x] **2.4 The CI skill teaches the same rules, project-neutral.** In <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `src/skills/github-ci/SKILL.md`, add three conventions naming the linter rules
       (free-text `${{ }}` only via `env:`; explicit `persist-credentials` on every checkout;
       no cache in a job with `id-token: write` / `contents: write` / a non-default secret), and
@@ -111,7 +111,7 @@ green after the fix, and the release-side rules fail the contract test on regres
 
 ## Phase 3 — Project memory writes are guarded
 
-- [x] **3.1 Attack and benign fixture, red first.** Add `tests/fixtures/standing-commands.json`
+- [x] **3.1 Attack and benign fixture, red first.** Add `tests/fixtures/standing-commands.json` <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       (≥ 12 attacks: prepended and appended recurrence, German, shell substitution, package
       install, "At the start of each session, run … | bash", "Before each session, download and
       run …"; ≥ 6 benign directives incl. "Always run the tests before pushing", "The CI runs lint
@@ -120,12 +120,12 @@ green after the fix, and the release-side rules fail the contract test on regres
       refused benign row. It is expected red until 3.2; record the miss and refusal counts in
       the step note.
       verify: `npx vitest run tests/lib/standing_commands_fixture.test.ts` exits non-zero and its output names ≥ 2 missed attacks and ≥ 1 refused benign row
-- [x] **3.2 Repair the guard.** Extend `_STANDING_COMMAND_RE` in
+- [x] **3.2 Repair the guard.** Extend `_STANDING_COMMAND_RE` in <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/user_global_observations.ts -->
       `src/scripts/_lib/user_global_observations.ts` to prepended recurrence, add the
       `retrieval_sanitize` scan (`risk_level !== 'low'`) as a second channel, and stop refusing an
       imperative that has no fetch/exec target. No allowlist entries.
       verify: `npx vitest run tests/lib/standing_commands_fixture.test.ts tests/lib/user_global_observations.test.ts` → 0
-- [x] **3.3 The three project writers call it.** `evaluateCaptureGuards` runs in
+- [x] **3.3 The three project writers call it.** `evaluateCaptureGuards` runs in <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: dist/agent-src/templates/scripts/memory_signal.ts -->
       `src/scripts/memory_signal.ts` (and its twin `src/agent-src/templates/scripts/memory_signal.ts`),
       `src/scripts/mine_session.ts` (`commitIntake`) and `src/scripts/retro.ts`
       (`writeIntakeSignals`); a refusal leaves the intake file unchanged and the MCP tool answers

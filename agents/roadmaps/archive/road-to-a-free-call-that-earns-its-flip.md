@@ -32,17 +32,17 @@ as failures (`free_hand_shadow.ts:208`), and `servedMatches('llama-3.1','llama-3
 
 ## Phase 1 — The verdict reaches the ledger
 
-- [x] **1.1 The printed verify command names the kind.** `src/scripts/ask_transport.ts`
+- [x] **1.1 The printed verify command names the kind.** `src/scripts/ask_transport.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/free_hand_shadow.ts -->
       (`:588-591`) appends `--hand-kind <kind>` when the ask was typed.
       verify: `npx vitest run tests/scripts/ask_transport_hand_kinds.test.ts` -> 0, with a new
       case asserting stderr contains `--hand-kind classify`.
-- [x] **1.2 The flip reader joins by `work_id`.** `src/scripts/ai_council/kind_flip.ts`
+- [x] **1.2 The flip reader joins by `work_id`.** `src/scripts/ai_council/kind_flip.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/free_hand_shadow.ts -->
       `observationsFromAuditLines`: a verify-phase line without `hand_kind` inherits kind and
       billing from the ask line with the same `work_id`; the latest verdict per `work_id` wins;
       an ask with no later verdict stays `skipped` (the pre-registered claim text is unchanged).
       verify: `npx vitest run tests/scripts/ai_council/kind_flip.test.ts` -> 0, with a red-first
       case: 30 ask lines plus 30 head `pass` lines produce no revert.
-- [x] **1.3 Production shadow rows are tagged and kept out of the flip stats.**
+- [x] **1.3 Production shadow rows are tagged and kept out of the flip stats.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/free_hand_shadow.ts -->
       `src/scripts/ai_council/free_hand_shadow.ts` rows gain `origin: 'production' | 'bench'`;
       `_runShadow` in `ask_transport.ts` passes `production`; shadow stats and the
       `SHADOW_CALL_CAP` count exclude `production` rows; rows without `origin` keep today's
@@ -52,24 +52,24 @@ as failures (`free_hand_shadow.ts:208`), and `servedMatches('llama-3.1','llama-3
 
 ## Phase 2 — An answer and a failure are read correctly
 
-- [x] **2.1 A truncated typed return is not a schema pass.** `src/scripts/ask_transport.ts`
+- [x] **2.1 A truncated typed return is not a schema pass.** `src/scripts/ask_transport.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/free_hand_shadow.ts -->
       `_callRoute` (`:405-414`): when `opts.kind` is set and `isIncompleteStop(r.stop_class)`
       (`stop_class.ts`), return `schemaValid: false`, never `true`.
       verify: `npx vitest run tests/scripts/ask_transport_hand_kinds.test.ts` -> 0, with a fixture
       whose JSON parses but `stop_class: 'truncated'`.
-- [x] **2.2 `model_not_found` is `model_unservable`.** `src/scripts/ai_council/route_liveness.ts`
+- [x] **2.2 `model_not_found` is `model_unservable`.** `src/scripts/ai_council/route_liveness.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/free_hand_shadow.ts -->
       (`:53-55`): 404 and 400 bodies carrying `model_not_found` or a `"code":"model_…"` field map
       to the existing `model_unservable`; a plain 400 stays `other`. No new class.
       verify: `npx vitest run tests/scripts/ai_council/route_liveness.test.ts` -> 0 with fire rows
       (404 `model_not_found`, 400 `"code":"model_not_found"`) and a near-miss row (400 `invalid temperature` -> `other`).
-- [x] **2.3 Liveness is keyed by catalog id.** `route_liveness.ts` callers
+- [x] **2.3 Liveness is keyed by catalog id.** `route_liveness.ts` callers <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/free_hand_shadow.ts -->
       (`free_hand_shadow.ts:176`, `ask_transport.ts:404`) resolve the member's `base_url` to the
       catalog row id via `routeIdentity` (`route_member.ts`), falling back to the member name for
       an uncatalogued route, so `_retirementStands` reads the same roster discovery writes.
       verify: `npx vitest run tests/scripts/ai_council/route_liveness.test.ts` -> 0 with a member
       named `groq-x` on the `groq` base URL that retires after three strikes and is live again
       after a newer discovered roster lists the model.
-- [x] **2.4 A served id may not add a size.** `src/scripts/ai_council/free_route.ts`
+- [x] **2.4 A served id may not add a size.** `src/scripts/ai_council/free_route.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/free_hand_shadow.ts -->
       `servedMatches` (`:210-216`): when the requested id carries no parameter-size token
       (`\d+(\.\d+)?[bm]\b`, case-insensitive) and the served suffix does, the match is false.
       verify: `npx vitest run tests/scripts/ai_council/free_route_identity.test.ts` -> 0 with
@@ -78,14 +78,14 @@ as failures (`free_hand_shadow.ts:208`), and `servedMatches('llama-3.1','llama-3
 
 ## Phase 3 — The wire and the ledger
 
-- [x] **3.1 The aggregator route asks its providers not to keep prompts.**
+- [x] **3.1 The aggregator route asks its providers not to keep prompts.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/exposure_ledger.ts -->
       `src/scripts/ai_council/free_route_client.ts` (`:66`): when `routeIdentity(base_url)` is the
       catalogued `openrouter` row (`free_route_catalog.ts`), the request body carries
       `provider: { data_collection: 'deny' }`.
       verify: `npx vitest run tests/scripts/ai_council/free_route_member.test.ts` -> 0 with a case
       that captures the body through the injected `post` seam and asserts the field, plus a
       non-catalogued route whose body has no `provider` key.
-- [x] **3.2 The exposure ledger writes atomically.** `src/scripts/ai_council/exposure_ledger.ts`
+- [x] **3.2 The exposure ledger writes atomically.** `src/scripts/ai_council/exposure_ledger.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/exposure_ledger.ts -->
       (`:89`) writes a temp file and renames it, like `kind_flip.ts` `_write`.
       verify: `grep -n "renameSync" src/scripts/ai_council/exposure_ledger.ts` -> one hit, and
       `npx vitest run tests/scripts/ask_transport.test.ts` -> 0.

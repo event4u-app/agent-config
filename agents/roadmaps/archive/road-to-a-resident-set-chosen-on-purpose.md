@@ -34,7 +34,7 @@ the measured listing-arm baseline its owner requires.
 
 ## Phase 1 — The priority order exists and is measured
 
-- [x] **1.1 Pure priority order.** Add `residentPriorityOrder(catalogue, routesTo,
+- [x] **1.1 Pure priority order.** Add `residentPriorityOrder(catalogue, routesTo, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/host_listing_model.ts -->
       packMembers)` to `src/scripts/_lib/host_listing_model.ts`: skills named by a
       deployed rule's `routes_to:` first (more referencing rules first), then
       `engineering-base` pack members, then the rest; name is only the final
@@ -46,7 +46,7 @@ the measured listing-arm baseline its owner requires.
       alphabetically lands first; every permutation of the input yields the same
       output; an empty `routesTo` and empty `packMembers` reproduce the alphabetical
       fallback exactly.
-- [x] **1.2 Resident-set report (report, never a gate).** New
+- [x] **1.2 Resident-set report (report, never a gate).** New <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/host_listing_model.ts -->
       `src/scripts/report_resident_set.ts`: for windows 200,000 and 1,000,000, the
       described/bare split under today's alphabetical fill and under
       `residentPriorityOrder` as `usageOrder`, plus the status of every skill named by a
@@ -55,13 +55,13 @@ the measured listing-arm baseline its owner requires.
       catalogue yields the expected two splits, and a run on the repo tree reports 45
       described at 200,000 alphabetical (the pinned number), failing the test if the
       alphabetical arm stops matching `computeOverrides`.
-- [x] **1.3 Mark the parked step.** In `agents/roadmaps/later/road-to-catalogue-host-fit.md`
+- [x] **1.3 Mark the parked step.** In `agents/roadmaps/later/road-to-catalogue-host-fit.md` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/host_listing_model.ts -->
       tick 2.2 with a one-line pointer to 1.1 here, leaving its verify text intact.
       verify: `grep -n "road-to-a-resident-set-chosen-on-purpose" agents/roadmaps/later/road-to-catalogue-host-fit.md` -> one hit.
 
 ## Phase 2 — The hook knows what the installer stripped
 
-- [x] **2.1 Sidecar as a second bare source.** In
+- [x] **2.1 Sidecar as a second bare source.** In <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/skill_route_hook.ts -->
       `src/scripts/hooks/skill_route_hook.ts`, `knownBareForHost` unions the
       observation-log set with the `name-only` entries of the installer sidecar
       (`recordPath()` from `src/scripts/_lib/skill_listing_overrides.ts`) when the host
@@ -73,14 +73,14 @@ the measured listing-arm baseline its owner requires.
       `name-only` means the pointer never names X on `claude`; the same sidecar on
       another host changes nothing; no sidecar is byte-identical to today; a corrupt
       sidecar is byte-identical to today.
-- [x] **2.2 Cost stays inside the hook budget.** The sidecar read happens inside the
+- [x] **2.2 Cost stays inside the hook budget.** The sidecar read happens inside the <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/skill_route_hook.ts -->
       existing `bareProvider` thunk, so a prompt that ranks nothing reads no file.
       verify: a test in `tests/hooks/skill_route_hook.test.ts` asserts the thunk is not
       called (spy) when the ranker returns no rows.
 
 ## Phase 3 — The turnkey server offers declared arguments, and three content lines
 
-- [x] **3.1 Turnkey `arguments` from `inputs:`.** Add `inputs` to `ContentEntry` in
+- [x] **3.1 Turnkey `arguments` from `inputs:`.** Add `inputs` to `ContentEntry` in <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/mcp/content.ts -->
       `src/cli/mcp/content.ts` (prompts only, read from the already-parsed
       frontmatter: `name`, `description`, `required === true`), and map it in
       `listPrompts` in `src/cli/mcp/dispatch.ts` instead of `arguments: []`. An entry
@@ -88,19 +88,19 @@ the measured listing-arm baseline its owner requires.
       verify: `npx vitest run src/cli/mcp/dispatch.test.ts` -> 0, with a red-first case:
       a fixture skill declaring one required input lists exactly that argument, and an
       undeclared one lists `[]`; plus `npx vitest run src/cli/mcp/content.test.ts` -> 0.
-- [x] **3.2 Expression injection in workflows.** In `src/skills/github-ci/SKILL.md`
+- [x] **3.2 Expression injection in workflows.** In `src/skills/github-ci/SKILL.md` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/mcp/content.ts -->
       (Conventions → Workflow structure, and Do NOT) and
       `src/skills/code-review/checklists/infra.md`: attacker-controlled
       `${{ github.event.* }}` / `github.head_ref` never interpolated into `run:`; pass
       it through `env:` and quote the variable.
       verify: `grep -n "github.event" src/skills/github-ci/SKILL.md src/skills/code-review/checklists/infra.md` -> at least one hit in each file.
-- [x] **3.3 ReDoS and shell rows.** Two rows in the surface table of
+- [x] **3.3 ReDoS and shell rows.** Two rows in the surface table of <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/mcp/content.ts -->
       `src/skills/ai-code-blindspots/SKILL.md`: **Regex on untrusted input** (no nested
       or overlapping quantifiers, anchored, bounded input length, a must-match and a
       must-not-match test) and **Shell script** (`set -euo pipefail`, every expansion
       quoted, ShellCheck when present).
       verify: `grep -nE "ReDoS|pipefail" src/skills/ai-code-blindspots/SKILL.md` -> two hits.
-- [x] **3.4 Persona template value.** `src/skills/persona-writing/SKILL.md:90` reads
+- [x] **3.4 Persona template value.** `src/skills/persona-writing/SKILL.md:90` reads <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/mcp/content.ts -->
       `tier: core | specialist`, matching `docs/contracts/persona-schema.md:25`.
       verify: `grep -c "core | specialty" src/skills/persona-writing/SKILL.md` -> 0, then
       `task sync` and `bash src/scripts/condense.sh --changed` lists nothing.

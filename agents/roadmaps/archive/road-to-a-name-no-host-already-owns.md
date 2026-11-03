@@ -34,7 +34,7 @@ sees the user's machine. Nothing is deleted — every fix renames or reports.
 
 ## Phase 1 — Give `/mcp` and `/code-review` back
 
-- [x] **1.1 Rename `mcp` to `mcp-tool-use`.** Move `src/skills/mcp/` to
+- [x] **1.1 Rename `mcp` to `mcp-tool-use`.** Move `src/skills/mcp/` to <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/skill-body-budget.json -->
       `src/skills/mcp-tool-use/`, set `name: mcp-tool-use`, drop the
       `user-invocable: false` line and the comment above it, and update every
       referrer found by `grep -rlE '(skills/mcp/|^\s*-\s*mcp\s*$|skill:mcp\b|"mcp")' src docs tests`
@@ -42,14 +42,14 @@ sees the user's machine. Nothing is deleted — every fix renames or reports.
       `src/rules/tool-safety.md`, catalog, `docs/contracts/file-ownership-matrix.json`,
       trigger evals, budget configs. Regenerate with `task sync` and `task generate-tools`.
       verify: `test ! -e src/skills/mcp && test -f src/skills/mcp-tool-use/SKILL.md && ./scripts-run src/scripts/check_references && ./scripts-run src/scripts/lint_agent_skill_names --quiet` -> exit 0
-- [x] **1.2 Rename `code-review` to `code-review-lens`.** Same procedure for
+- [x] **1.2 Rename `code-review` to `code-review-lens`.** Same procedure for <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/skill-body-budget.json -->
       `src/skills/code-review/` and its referrers (`src/flows/{delivery,implementation,review}.yaml`,
       `src/domains/engineering-base/review/changes/command.md`, `src/config/skill-body-budget.json`,
       `src/config/skill-output-shape.json`, `src/scripts/compile_trigger_evals.ts`,
       `src/scripts/report_skill_menu_census.ts`, `src/scripts/activation_receipt.ts`,
       `docs/contracts/routing-assurance-floors.json`, the listed tests and fixtures).
       verify: `test ! -e src/skills/code-review && npx vitest run tests/scripts/compile_trigger_evals.test.ts tests/scripts/report_skill_menu_census.test.ts tests/scripts/routing_arms.test.ts tests/contracts/review_spec_axis.test.ts` -> 0 failed
-- [x] **1.3 Close the escape in the lint.** In `src/scripts/lint_agent_skill_names.ts`
+- [x] **1.3 Close the escape in the lint.** In `src/scripts/lint_agent_skill_names.ts` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/host-skill-frontmatter-keys.json -->
       a reserved skill name is a violation whatever the frontmatter says; extract
       the check as an exported pure `_reserved_name_violation(dirname, text)` and
       remove `_opts_out_of_slash` if nothing else uses it. Correct the claim in
@@ -57,25 +57,25 @@ sees the user's machine. Nothing is deleted — every fix renames or reports.
       passthrough reason in `src/config/host-skill-frontmatter-keys.json:51`
       ("controls who may invoke, not who owns the name").
       verify: `npx vitest run tests/scripts/lint_agent_skill_names.test.ts` -> 0 failed, with a new case where `mcp` + `user-invocable: false` returns a violation and `mcp-tool-use` returns none
-- [x] **1.4 Compare names the way the host does.** `is_claude_builtin_name` in
+- [x] **1.4 Compare names the way the host does.** `is_claude_builtin_name` in <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/host-skill-frontmatter-keys.json -->
       `src/scripts/_lib/claude_builtin_names.ts` applies NFKC, removes whitespace
       and format characters (`\p{Cf}`), then lowercases.
       verify: `npx vitest run tests/scripts/claude_builtin_names.test.ts` -> 0 failed, with cases for full-width `ｍｃｐ`, `m​cp`, ` MCP ` (all reserved) and `mcp-tool-use` (not reserved)
-- [x] **1.5 Prove an existing install heals.** A regression case in
+- [x] **1.5 Prove an existing install heals.** A regression case in <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/host-skill-frontmatter-keys.json -->
       `tests/lib/global_deploy_inventory.test.ts`: an inventory that recorded
       `skills/mcp/SKILL.md` and a current set holding `skills/mcp-tool-use/SKILL.md`
       makes `reap_stale` (`src/scripts/_lib/global_deploy_inventory.ts:397`) delete
       the old directory; an unrecorded foreign `skills/mcp/` under the same anchor
       survives. Same pair for `code-review`.
       verify: `npx vitest run tests/lib/global_deploy_inventory.test.ts` -> 0 failed
-- [x] **1.6 Tell the user.** One `CHANGELOG.md` `[Unreleased]` entry: after the
+- [x] **1.6 Tell the user.** One `CHANGELOG.md` `[Unreleased]` entry: after the <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/host-skill-frontmatter-keys.json -->
       update `/mcp` and `/code-review` open Claude Code's own commands again; the
       skills are now `mcp-tool-use` and `code-review-lens`.
       verify: `grep -n 'mcp-tool-use' CHANGELOG.md` -> at least one line under `## [Unreleased]`
 
 ## Phase 2 — Keep it from coming back
 
-- [x] **2.1 Witnessed reserved names.** Add the current host names missing from
+- [x] **2.1 Witnessed reserved names.** Add the current host names missing from <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/claude_builtin_names.ts -->
       `src/scripts/_lib/claude_builtin_names.ts`, each carried by a fixture with
       its witness: `tests/fixtures/host-builtins/session-listing-2026-11-03.json`
       (observed in a Claude Code session skill listing: `update-config`,
@@ -87,13 +87,13 @@ sees the user's machine. Nothing is deleted — every fix renames or reports.
       iterates every fixture in the directory. No current package name is in
       either set (checked at the pin), so nothing new turns red.
       verify: `npx vitest run tests/scripts/claude_builtin_names.test.ts` -> 0 failed and `./scripts-run src/scripts/lint_agent_skill_names --quiet` -> exit 0
-- [x] **2.2 A gate on same-name twins.** `lint_agent_skill_names` fails when a
+- [x] **2.2 A gate on same-name twins.** `lint_agent_skill_names` fails when a <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/name-twin-baseline.json -->
       skill directory name equals a command `name:` slug, except the eight twins
       present at the pin, listed by name in `src/config/name-twin-baseline.json`
       with the owner decision that closes them. A ninth twin fails; deleting a
       line from the baseline is the only way it shrinks.
       verify: `npx vitest run tests/scripts/lint_agent_skill_names.test.ts` -> 0 failed, with a fixture twin that is red and the real repo green
-- [x] **2.3 Doctor sees shadows on the user's machine.** New
+- [x] **2.3 Doctor sees shadows on the user's machine.** New <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/doctor_reserved_names.ts -->
       `src/scripts/_cli/doctor_reserved_names.ts`, wired into
       `src/scripts/_cli/cmd_doctor.ts`: lists every directory under
       `~/.claude/skills/` and `<project>/.claude/skills/` whose name is reserved,
