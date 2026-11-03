@@ -1091,7 +1091,7 @@ export function run(
     );
     observeStrike(consumer_root, envelope, state, {
       isEdit: tool !== null && EDIT_TOOLS.has(tool),
-      recorded: cmd !== null && cmd !== "" && mightBeVerification(cmd),
+      command: cmd !== null && cmd !== "" && mightBeVerification(cmd) ? cmd : null,
     });
   }
 

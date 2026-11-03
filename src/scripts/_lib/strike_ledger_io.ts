@@ -34,36 +34,50 @@ export function strikeAgent(envelope: Dict): string {
     return 'main';
 }
 
-/** The run the recorder appended for this event, if it appended one. */
-function lastRun(state: Dict): RunRecord | null {
+/**
+ * The run the recorder appended for THIS event: the newest record, and only
+ * when it carries this event's command and was written at or after the
+ * recorder's own `checked_at` minus the time one update can take. Anything else
+ * is a run from an earlier event and is never observed twice.
+ */
+export function appendedRun(state: Dict, command: string): RunRecord | null {
     const runs = state['verification_runs'];
     if (!Array.isArray(runs) || runs.length === 0) return null;
     const last = runs[runs.length - 1] as unknown;
     if (typeof last !== 'object' || last === null) return null;
     const r = last as Dict;
-    return typeof r['command'] === 'string' ? (r as unknown as RunRecord) : null;
+    if (r['command'] !== command.slice(0, 512)) return null;
+    const at = typeof r['at'] === 'string' ? Date.parse(r['at']) : NaN;
+    const checked = typeof state['checked_at'] === 'string' ? Date.parse(state['checked_at']) : NaN;
+    if (!Number.isFinite(at) || !Number.isFinite(checked) || checked - at > 5_000 || at > checked) return null;
+    return r as unknown as RunRecord;
 }
 
 export function observeStrike(
     consumer_root: string,
     envelope: Dict,
     state: Dict,
-    event: { readonly isEdit: boolean; readonly recorded: boolean },
+    event: { readonly isEdit: boolean; readonly command: string | null },
     now: string = new Date().toISOString(),
 ): void {
-    if (!event.isEdit && !event.recorded) return;
-    const run = event.recorded ? lastRun(state) : null;
+    const run = event.command !== null ? appendedRun(state, event.command) : null;
     if (!event.isEdit && run === null) return;
-    const platform = typeof envelope['platform'] === 'string' ? envelope['platform'] : 'unknown';
+    const agent = strikeAgent(envelope);
+    const rawPlatform = envelope['platform'];
+    const platform = typeof rawPlatform === 'string' && /^[a-z0-9_-]{1,32}$/i.test(rawPlatform) ? rawPlatform : 'unknown';
     try {
-        update_json_under_lock<StrikeLedger>(path.join(consumer_root, STRIKE_LEDGER_FILE), (loaded) => {
-            let ledger = pruneLedger(coerceLedger(loaded), now);
-            if (event.isEdit) ledger = recordEdit(ledger);
-            if (run !== null) {
-                ledger = observeRun(ledger, run, { agent: strikeAgent(envelope), now, platform }).ledger;
-            }
-            return ledger;
-        });
+        // Non-blocking: a held ledger lock skips this observation rather than
+        // delaying the recorder. Shadow data may lose a sample; the hook may not wait.
+        update_json_under_lock<StrikeLedger>(
+            path.join(consumer_root, STRIKE_LEDGER_FILE),
+            (loaded) => {
+                let ledger = pruneLedger(coerceLedger(loaded), now);
+                if (event.isEdit) ledger = recordEdit(ledger, agent);
+                if (run !== null) ledger = observeRun(ledger, run, { agent, now, platform }).ledger;
+                return ledger;
+            },
+            { blocking: false },
+        );
     } catch {
         // Shadow: a ledger failure is invisible to the recorder by design.
     }

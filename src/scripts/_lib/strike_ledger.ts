@@ -33,7 +33,7 @@ export interface StrikeEntry {
     /** Consecutive attempts — red runs with an edit before them — on one signature. */
     readonly streak: number;
     readonly verdict: StrikeVerdict;
-    /** The ledger's edit counter when this target last ran. */
+    /** This agent's edit counter when this target last ran. */
     readonly at_edit: number;
     /** The last run was green with no edit since the red before it. */
     readonly green_without_edit: boolean;
@@ -41,15 +41,30 @@ export interface StrikeEntry {
     readonly platform: string;
 }
 
+/**
+ * An attempt is an edit the attempting agent made, then a run. Edits are
+ * counted per agent: a parallel subagent's edit in the shared tree may well
+ * change this agent's result, but it is not this agent's attempt, and counting
+ * it would raise a streak on a signature the agent never worked on.
+ */
 export interface StrikeLedger {
     readonly version: 1;
-    /** Monotonic count of edit-tool calls this consumer root has seen. */
-    readonly edits_total: number;
+    /** Monotonic count of edit-tool calls per agent. Keys are agent hashes. */
+    readonly edits: Readonly<Record<string, number>>;
     readonly entries: Readonly<Record<string, StrikeEntry>>;
 }
 
 export function emptyLedger(): StrikeLedger {
-    return { version: 1, edits_total: 0, entries: {} };
+    return { version: 1, edits: {}, entries: {} };
+}
+
+/** The ledger key for an agent — hashed, so no agent id is stored as text. */
+export function agentKey(agent: string): string {
+    return sha(`agent\n${agent}`);
+}
+
+function editsOf(ledger: StrikeLedger, agent: string): number {
+    return ledger.edits[agentKey(agent)] ?? 0;
 }
 
 /** Reasons that mean the run executed and failed, as opposed to an instrument gap. */
@@ -115,9 +130,10 @@ export function targetKey(agent: string, run: RunRecord): string {
     return sha(`${agent}\n${run.command.replace(/\s+/g, ' ').trim()}`);
 }
 
-/** Count one edit-tool call. */
-export function recordEdit(ledger: StrikeLedger): StrikeLedger {
-    return { ...ledger, edits_total: ledger.edits_total + 1 };
+/** Count one edit-tool call by `agent`. */
+export function recordEdit(ledger: StrikeLedger, agent: string): StrikeLedger {
+    const k = agentKey(agent);
+    return { ...ledger, edits: { ...ledger.edits, [k]: (ledger.edits[k] ?? 0) + 1 } };
 }
 
 export interface ObserveContext {
@@ -142,8 +158,9 @@ export function observeRun(
 
     const key = targetKey(ctx.agent, run);
     const prev = ledger.entries[key];
-    const edited = prev === undefined || ledger.edits_total > prev.at_edit;
-    const base = { at_edit: ledger.edits_total, last_at: ctx.now, platform: ctx.platform };
+    const myEdits = editsOf(ledger, ctx.agent);
+    const edited = prev === undefined || myEdits > prev.at_edit;
+    const base = { at_edit: myEdits, last_at: ctx.now, platform: ctx.platform };
 
     let next: StrikeEntry;
     if (outcome === 'green') {
@@ -185,15 +202,65 @@ export function pruneLedger(ledger: StrikeLedger, now: string, ttlDays = STRIKE_
     return { ...ledger, entries };
 }
 
-/** Read whatever is on disk into a ledger, discarding anything malformed. */
+const HASH = /^[0-9a-f]{16}$/;
+const VERDICTS: ReadonlySet<string> = new Set(['NEW', 'SAME', 'FIXED', 'FLAKY']);
+const PLATFORM = /^[a-z0-9_-]{1,32}$/i;
+const count = (v: unknown): number | null =>
+    typeof v === 'number' && Number.isInteger(v) && v >= 0 ? v : null;
+
+/** One persisted entry rebuilt from its allowlisted fields, or null when any is invalid. */
+function coerceEntry(raw: unknown): StrikeEntry | null {
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return null;
+    const r = raw as Record<string, unknown>;
+    const sig = r['sig'];
+    const streak = count(r['streak']);
+    const atEdit = count(r['at_edit']);
+    const verdict = r['verdict'];
+    const lastAt = r['last_at'];
+    const platform = r['platform'];
+    if (!(sig === null || (typeof sig === 'string' && HASH.test(sig)))) return null;
+    if (streak === null || atEdit === null) return null;
+    if (typeof verdict !== 'string' || !VERDICTS.has(verdict)) return null;
+    if (typeof r['green_without_edit'] !== 'boolean') return null;
+    if (typeof lastAt !== 'string' || !Number.isFinite(Date.parse(lastAt)) || lastAt.length > 40) return null;
+    if (typeof platform !== 'string' || !PLATFORM.test(platform)) return null;
+    return {
+        sig,
+        streak,
+        verdict: verdict as StrikeVerdict,
+        at_edit: atEdit,
+        green_without_edit: r['green_without_edit'] as boolean,
+        last_at: lastAt,
+        platform,
+    };
+}
+
+/**
+ * Read whatever is on disk into a ledger. Every entry is REBUILT from its
+ * allowlisted fields and an invalid one is dropped, so a file that gained text
+ * by any route — corruption, a hand edit, a future bug — cannot carry it
+ * forward through the next write.
+ */
 export function coerceLedger(raw: unknown): StrikeLedger {
     if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return emptyLedger();
     const r = raw as Record<string, unknown>;
-    const edits = typeof r['edits_total'] === 'number' && r['edits_total'] >= 0 ? r['edits_total'] : 0;
-    const entries = typeof r['entries'] === 'object' && r['entries'] !== null && !Array.isArray(r['entries'])
-        ? (r['entries'] as Record<string, StrikeEntry>)
-        : {};
-    return { version: 1, edits_total: edits, entries };
+    const edits: Record<string, number> = {};
+    const rawEdits = r['edits'];
+    if (typeof rawEdits === 'object' && rawEdits !== null && !Array.isArray(rawEdits)) {
+        for (const [k, v] of Object.entries(rawEdits)) {
+            const n = count(v);
+            if (HASH.test(k) && n !== null) edits[k] = n;
+        }
+    }
+    const entries: Record<string, StrikeEntry> = {};
+    const rawEntries = r['entries'];
+    if (typeof rawEntries === 'object' && rawEntries !== null && !Array.isArray(rawEntries)) {
+        for (const [k, v] of Object.entries(rawEntries)) {
+            const e = coerceEntry(v);
+            if (HASH.test(k) && e !== null) entries[k] = e;
+        }
+    }
+    return { version: 1, edits, entries };
 }
 
 function sha(text: string): string {
