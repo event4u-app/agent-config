@@ -9,9 +9,13 @@ import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { catalogueHash, type BaselineArtifact } from '../../src/scripts/compile_trigger_evals.js';
+import { INLINE_TOP_BODY_ENV } from '../../src/shared/mcpInlineTopBody.js';
 import {
     MCP_READ_TOOL,
+    MCP_SUGGEST_TOOL,
     buildMcpArm,
+    inlineDelivered,
+    regradeInline,
     buildPressureArm,
     buildTwinArm,
     mcpGraderBody,
@@ -120,6 +124,61 @@ describe('buildMcpArm — 4.1', () => {
         expect(re.test('{"name":"code-review"}')).toBe(true);
         expect(re.test('{"name":"requesting-code-review"}')).toBe(false);
         expect(re.test('{"name":"code-review-twin"}')).toBe(false);
+    });
+});
+
+describe('inline top body arm — 4.4', () => {
+    const traceLine = (o: unknown): string => JSON.stringify(o);
+    const suggestUse = (id: string) => traceLine({ type: 'assistant', message: { content: [{ type: 'tool_use', id, name: MCP_SUGGEST_TOOL, input: { task: 't' } }] } });
+    const suggestResult = (id: string, skill: string) =>
+        traceLine({
+            type: 'user',
+            message: { content: [{ type: 'tool_result', tool_use_id: id, content: [{ type: 'text', text: JSON.stringify({ status: 'ok', top_body: { skill, body: 'B', truncated: false } }) }] }] },
+        });
+
+    it('the inline arm sets the server env switch; the plain arm does not', () => {
+        const { skills, catalogue, art } = fixture();
+        const inline = path.join(tmp(), 'mcp-inline');
+        const plan = buildMcpArm({ art, skillsRoot: skills, catalogueRoot: catalogue, serverCommand: 'node', serverArgs: [], outRoot: inline, inlineTopBody: true });
+        expect(plan.arm).toBe('mcp-inline');
+        expect(JSON.parse(fs.readFileSync(path.join(inline, '.mcp.json'), 'utf8')).mcpServers['agent-config'].env).toEqual({ [INLINE_TOP_BODY_ENV]: '1' });
+        const plain = path.join(tmp(), 'mcp');
+        buildMcpArm({ art, skillsRoot: skills, catalogueRoot: catalogue, serverCommand: 'node', serverArgs: [], outRoot: plain });
+        expect(JSON.parse(fs.readFileSync(path.join(plain, '.mcp.json'), 'utf8')).mcpServers['agent-config'].env).toBeUndefined();
+    });
+
+    it('inlineDelivered reads the suggest RESULT for the unit, matched by tool_use_id', () => {
+        const t = [suggestUse('a1'), suggestResult('a1', 'code-review')].join('\n');
+        expect(inlineDelivered(t, 'code-review')).toBe(true);
+        expect(inlineDelivered(t, 'requesting-code-review')).toBe(false);
+        // A body for the unit on a result that did not answer a suggest call is not delivery.
+        expect(inlineDelivered([suggestUse('a1'), suggestResult('zz', 'code-review')].join('\n'), 'code-review')).toBe(false);
+    });
+
+    it('inlineDelivered reads the payload structurally — pretty-printed, key order and string content all work', () => {
+        const pretty = JSON.stringify({ status: 'ok', top_body: { truncated: false, body: 'B', skill: 'code-review' } }, null, 2);
+        const asArray = traceLine({ type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: 'p1', content: [{ type: 'text', text: pretty }] }] } });
+        const asString = traceLine({ type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: 'p1', content: pretty }] } });
+        expect(inlineDelivered([suggestUse('p1'), asArray].join('\n'), 'code-review')).toBe(true);
+        expect(inlineDelivered([suggestUse('p1'), asString].join('\n'), 'code-review')).toBe(true);
+    });
+
+    it('regradeInline flips only failed, non-errored runs whose trace shows delivery', () => {
+        const dir = tmp();
+        const hit = path.join(dir, 'hit.jsonl');
+        const miss = path.join(dir, 'miss.jsonl');
+        fs.writeFileSync(hit, [suggestUse('x'), suggestResult('x', 'skill-03')].join('\n'));
+        fs.writeFileSync(miss, [suggestUse('x'), suggestResult('x', 'skill-99')].join('\n'));
+        const agg = {
+            cases: [
+                { name: 'c1', arms: { with: [{ passed: false, error: null, tracePath: hit }] } },
+                { name: 'c2', arms: { with: [{ passed: false, error: null, tracePath: miss }] } },
+                { name: 'c3', arms: { with: [{ passed: false, error: 'boom', tracePath: hit }] } },
+            ],
+        };
+        const flipped = regradeInline(agg, () => 'skill-03', (p) => fs.readFileSync(p, 'utf8'));
+        expect(flipped).toBe(1);
+        expect(agg.cases.map((c) => c.arms.with[0]?.passed)).toEqual([true, false, false]);
     });
 });
 
