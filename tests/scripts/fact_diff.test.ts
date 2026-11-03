@@ -45,6 +45,53 @@ describe('diffFacts', () => {
     });
 });
 
+// road-to-rewrites-that-keep-their-facts 2.1: the four classes a reword moves
+// without touching a digit — a supplied unit-bound number word, a smoothed
+// status, a flipped negation or dropped hedge, and an absorbed attribution.
+describe('fact-atom fixtures', () => {
+    const DIR = path.join(REPO, 'tests', 'fixtures', 'fact-atoms');
+    const cases = fs
+        .readdirSync(DIR)
+        .filter((f) => f.endsWith('.json'))
+        .sort()
+        .map((f) => ({ file: f, ...(JSON.parse(fs.readFileSync(path.join(DIR, f), 'utf8')) as { type: string; class?: string; before: string; after: string }) }));
+
+    it('carries five mutations and three benign controls', () => {
+        expect(cases.filter((c) => c.type === 'mutation')).toHaveLength(5);
+        expect(cases.filter((c) => c.type === 'benign')).toHaveLength(3);
+    });
+
+    for (const c of cases.filter((x) => x.type === 'mutation')) {
+        it(`catches ${c.file} as a ${c.class} finding`, () => {
+            const d = diffFacts(c.before, c.after);
+            expect([...d.lost, ...d.added].map((f) => f.kind)).toContain(c.class);
+        });
+    }
+
+    for (const c of cases.filter((x) => x.type === 'benign')) {
+        it(`${c.file} gives zero findings`, () => {
+            expect(diffFacts(c.before, c.after)).toEqual({ lost: [], added: [] });
+        });
+    }
+
+    it('reports the supplied number word with its unit', () => {
+        const d = diffFacts('We fixed it.', 'We fixed it in eleven days.');
+        expect(d.added).toEqual([{ kind: 'numword', value: 'eleven days' }]);
+    });
+
+    it('reports we -> I as a lost plural and an added singular attribution', () => {
+        const d = diffFacts('Our team rebuilt it.', 'I rebuilt it.');
+        expect(d.lost).toEqual([{ kind: 'attribution', value: 'we' }]);
+        expect(d.added).toEqual([{ kind: 'attribution', value: 'I' }]);
+    });
+
+    it('word <-> digit stays a reported difference (D2)', () => {
+        const d = diffFacts('We hired three engineers.', 'We hired 3 engineers.');
+        expect(d.lost).toEqual([{ kind: 'numword', value: 'three engineers' }]);
+        expect(d.added).toEqual([{ kind: 'number', value: '3' }]);
+    });
+});
+
 describe('detect_ai_tells --baseline', () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fact-diff-'));
     const run = (after: string) => {

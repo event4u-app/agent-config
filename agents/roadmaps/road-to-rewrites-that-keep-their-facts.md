@@ -91,10 +91,12 @@ stops counting ranges.
 
 ## Phase 2 — Complete the witness
 
-- [ ] **2.1 Four new classes in `fact_diff.ts`:** unit-bound EN/DE number words,
+- [x] **2.1 Four new classes in `fact_diff.ts`:** unit-bound EN/DE number words,
       status/qualifier lexicon, negation and modality, attribution subject.
       Fixtures under `tests/fixtures/fact-atoms/` (5 mutations, 3 benign).
       verify: 5/5 mutations caught; benign reorder gives 0 findings.
+      Done: `numword`, `status` (incl. number qualifiers), `negation`/`modality`, `attribution` (presence) added; `npx vitest run tests/scripts/fact_diff.test.ts` 19/19, 5 mutations caught, 3 benign at 0. The 1.1 witness ceiling is scoped to the literal kinds so a stronger witness cannot raise a corpus ratchet.
+      production entry: `src/scripts/detect_ai_tells.ts`
 - [ ] **2.2 False-alarm fixes:** locale-normalize numbers; drop German
       sentence-initial and imperative capitalised pairs from names.
       verify: `npx vitest run tests/scripts/fact_diff.test.ts` -> 0 and `de/02` gives

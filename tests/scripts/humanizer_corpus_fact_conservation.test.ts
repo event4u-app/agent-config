@@ -15,8 +15,13 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'f
 
 /** Ceiling: pairs whose after-file supplies a number absent from the before-file. */
 const SUPPLIED_CEILING = 17;
-/** Ceiling: pairs where the fact witness itself reports an added fact. */
+/**
+ * Ceiling: pairs where the fact witness reports an added literal fact. Scoped to
+ * the literal kinds the witness had when this was pinned, so a witness that
+ * learns a new class cannot raise a corpus ratchet.
+ */
 const WITNESS_ADDED_CEILING = 16;
+const LITERAL_KINDS = new Set(['url', 'code', 'currency', 'date', 'number', 'name']);
 
 const DIGITS = /(?<![\w.])\d+(?:[.,]\d+)*/g;
 const UNIT_WORDS =
@@ -56,7 +61,8 @@ function suppliedNumbers(before: string, after: string): string[] {
 }
 
 const supplied = (pairs: Pair[]) => pairs.filter((p) => suppliedNumbers(p.before, p.after).length > 0);
-const witnessAdded = (pairs: Pair[]) => pairs.filter((p) => diffFacts(p.before, p.after).added.length > 0);
+const witnessAdded = (pairs: Pair[]) =>
+    pairs.filter((p) => diffFacts(p.before, p.after).added.some((f) => LITERAL_KINDS.has(f.kind)));
 
 describe('humanizer corpus fact conservation (ratchet)', () => {
     const pairs = loadPairs();
