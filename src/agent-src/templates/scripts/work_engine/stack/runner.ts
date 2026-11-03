@@ -22,7 +22,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { _dotnet_basis, _dotnet_project_text, type DotnetBasis } from './dotnet.js';
+import { _dotnet_basis, _dotnet_project_text, _dotnet_withheld_by, type DotnetBasis } from './dotnet.js';
 
 /**
  * Every test-runner label the resolver can emit.
@@ -226,6 +226,7 @@ export class ToolchainResult {
      * would act on.
      */
     readonly behavior_runners: readonly BehaviorRunnerResult[];
+    readonly refusals: readonly RunnerRefusal[];
 
     constructor(args: {
         ecosystems: readonly string[];
@@ -235,6 +236,7 @@ export class ToolchainResult {
         confidence: string;
         mtime: number;
         behavior_runners?: readonly BehaviorRunnerResult[];
+        refusals?: readonly RunnerRefusal[];
     }) {
         this.ecosystems = args.ecosystems;
         this.runners = args.runners;
@@ -243,6 +245,7 @@ export class ToolchainResult {
         this.confidence = args.confidence;
         this.mtime = args.mtime;
         this.behavior_runners = args.behavior_runners ?? [];
+        this.refusals = args.refusals ?? [];
     }
 
     /**
@@ -278,8 +281,21 @@ export class ToolchainResult {
                 basis: r.basis,
                 conflict: [...r.conflict],
             })),
+            ...(this.refusals.length > 0 ? { refusals: [...this.refusals] } : {}),
         };
     }
+}
+
+/**
+ * A runner row the resolver withheld on purpose, and why — so a missing runner
+ * reads as a decision rather than as nothing found. `to_config` writes
+ * `refusals` only when non-empty, which keeps every existing config
+ * byte-identical.
+ */
+export interface RunnerRefusal {
+    readonly ecosystem: string;
+    readonly runner: string;
+    readonly reason: string;
 }
 
 /**
@@ -354,6 +370,10 @@ export function resolve_toolchain(
     if (dotnet_basis !== null) {
         runners.push(..._dotnet_runners(dotnet_basis));
     }
+    const withheld = dotnet_basis === null ? _dotnet_withheld_by(project_root) : null;
+    const refusals: RunnerRefusal[] = withheld
+        ? [{ ecosystem: 'dotnet', runner: 'dotnet-test', reason: `${withheld} root: .NET files are editor output` }]
+        : [];
 
     const ecosystems = _dictFromKeys(runners.map((r) => r.ecosystem));
     const selected = _apply_guard(runners, { include_slow, include_e2e, php_only });
@@ -371,6 +391,7 @@ export function resolve_toolchain(
         // and the behavior axis need the same list.
         mtime: latest_manifest_mtime(project_root, scopes),
         behavior_runners: resolve_behavior_runners(project_root, scopes),
+        refusals,
     });
 }
 
