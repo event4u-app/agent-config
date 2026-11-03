@@ -36,12 +36,15 @@ as failures (`free_hand_shadow.ts:208`), and `servedMatches('llama-3.1','llama-3
       (`:588-591`) appends `--hand-kind <kind>` when the ask was typed.
       verify: `npx vitest run tests/scripts/ask_transport_hand_kinds.test.ts` -> 0, with a new
       case asserting stderr contains `--hand-kind classify`.
+      production entry: src/scripts/ask_transport.ts (the rung-0.5 CLI the delegation-nudge concern tells the agent to run, `./scripts-run scripts/ask_transport`, at scripts/hooks/delegation_nudge_hook.ts:400, :411, :438)
 - [x] **1.2 The flip reader joins by `work_id`.** `src/scripts/ai_council/kind_flip.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/free_hand_shadow.ts -->
       `observationsFromAuditLines`: a verify-phase line without `hand_kind` inherits kind and
       billing from the ask line with the same `work_id`; the latest verdict per `work_id` wins;
       an ask with no later verdict stays `skipped` (the pre-registered claim text is unchanged).
       verify: `npx vitest run tests/scripts/ai_council/kind_flip.test.ts` -> 0, with a red-first
       case: 30 ask lines plus 30 head `pass` lines produce no revert.
+      production entry: src/scripts/ask_transport.ts (the rung-0.5 CLI the delegation-nudge concern tells the agent to run, `./scripts-run scripts/ask_transport`, at scripts/hooks/delegation_nudge_hook.ts:400, :411, :438)
+      production entry: src/scripts/ai_council/kind_flip.ts (the flip pass an operator runs, `./scripts-run scripts/ai_council/kind_flip --apply`, per docs/contracts/ai-council-config.md:1506; it writes the flip state ask_transport reads)
 - [x] **1.3 Production shadow rows are tagged and kept out of the flip stats.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/free_hand_shadow.ts -->
       `src/scripts/ai_council/free_hand_shadow.ts` rows gain `origin: 'production' | 'bench'`;
       `_runShadow` in `ask_transport.ts` passes `production`; shadow stats and the
@@ -49,6 +52,7 @@ as failures (`free_hand_shadow.ts:208`), and `servedMatches('llama-3.1','llama-3
       behaviour. Whether the production shadow should exist at all is owner decision E2.
       verify: `npx vitest run tests/scripts/ai_council/free_hand_shadow.test.ts tests/scripts/ask_transport_shadow.test.ts` -> 0,
       with a case where production rows with `skipped` leave the kind's free rate unchanged.
+      production entry: src/scripts/ask_transport.ts (the rung-0.5 CLI the delegation-nudge concern tells the agent to run, `./scripts-run scripts/ask_transport`, at scripts/hooks/delegation_nudge_hook.ts:400, :411, :438)
 
 ## Phase 2 — An answer and a failure are read correctly
 
@@ -57,11 +61,13 @@ as failures (`free_hand_shadow.ts:208`), and `servedMatches('llama-3.1','llama-3
       (`stop_class.ts`), return `schemaValid: false`, never `true`.
       verify: `npx vitest run tests/scripts/ask_transport_hand_kinds.test.ts` -> 0, with a fixture
       whose JSON parses but `stop_class: 'truncated'`.
+      production entry: src/scripts/ask_transport.ts (the rung-0.5 CLI the delegation-nudge concern tells the agent to run, `./scripts-run scripts/ask_transport`, at scripts/hooks/delegation_nudge_hook.ts:400, :411, :438)
 - [x] **2.2 `model_not_found` is `model_unservable`.** `src/scripts/ai_council/route_liveness.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/free_hand_shadow.ts -->
       (`:53-55`): 404 and 400 bodies carrying `model_not_found` or a `"code":"model_…"` field map
       to the existing `model_unservable`; a plain 400 stays `other`. No new class.
       verify: `npx vitest run tests/scripts/ai_council/route_liveness.test.ts` -> 0 with fire rows
       (404 `model_not_found`, 400 `"code":"model_not_found"`) and a near-miss row (400 `invalid temperature` -> `other`).
+      production entry: src/scripts/ask_transport.ts (the rung-0.5 CLI the delegation-nudge concern tells the agent to run, `./scripts-run scripts/ask_transport`, at scripts/hooks/delegation_nudge_hook.ts:400, :411, :438)
 - [x] **2.3 Liveness is keyed by catalog id.** `route_liveness.ts` callers <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/free_hand_shadow.ts -->
       (`free_hand_shadow.ts:176`, `ask_transport.ts:404`) resolve the member's `base_url` to the
       catalog row id via `routeIdentity` (`route_member.ts`), falling back to the member name for
@@ -85,10 +91,12 @@ as failures (`free_hand_shadow.ts:208`), and `servedMatches('llama-3.1','llama-3
       verify: `npx vitest run tests/scripts/ai_council/free_route_member.test.ts` -> 0 with a case
       that captures the body through the injected `post` seam and asserts the field, plus a
       non-catalogued route whose body has no `provider` key.
+      production entry: src/scripts/ask_transport.ts (the rung-0.5 CLI the delegation-nudge concern tells the agent to run, `./scripts-run scripts/ask_transport`, at scripts/hooks/delegation_nudge_hook.ts:400, :411, :438)
 - [x] **3.2 The exposure ledger writes atomically.** `src/scripts/ai_council/exposure_ledger.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/exposure_ledger.ts -->
       (`:89`) writes a temp file and renames it, like `kind_flip.ts` `_write`.
       verify: `grep -n "renameSync" src/scripts/ai_council/exposure_ledger.ts` -> one hit, and
       `npx vitest run tests/scripts/ask_transport.test.ts` -> 0.
+      production entry: src/scripts/ask_transport.ts (the rung-0.5 CLI the delegation-nudge concern tells the agent to run, `./scripts-run scripts/ask_transport`, at scripts/hooks/delegation_nudge_hook.ts:400, :411, :438)
 
 ## Later (not active steps)
 

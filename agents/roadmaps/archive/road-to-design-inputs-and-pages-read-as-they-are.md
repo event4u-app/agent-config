@@ -69,6 +69,7 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
       m radii, k spacings), no lock declared, nothing checked; exit code
       unchanged. A scale never becomes a lock silently.
       verify: `npx vitest run tests/scripts/design_lock_carrier.test.ts` -> 0 with a new front-matter case asserting the line
+      production entry: src/scripts/design_lock.ts (the CLI the design-system-capture skill names as the Consistency Lock carrier, skills/design-system-capture/SKILL.md:132)
 
 ## Phase 2 — Accessibility claims that carry what they say
 
@@ -99,12 +100,14 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
       gains bars `symptom_ui` (never `backend`) and `adjective_review`
       (always `review_only`). The new bars MISS at this step.
       verify: `npx vitest run tests/scripts/eval_ui_triviality.test.ts` -> 0 and `./scripts-run src/scripts/eval_ui_triviality` prints both new bars
+      reach exempt: a maintainer eval harness run by hand as this step's verify line shows; it scores classify.ts, which ships through work_engine, while the eval itself is never invoked by a shipped surface
 - [x] **3.2 Plurals and German symptom nouns.** In <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: dist/agent-src/templates/scripts/work_engine/intent/classify.ts -->
       `src/agent-src/templates/scripts/work_engine/intent/classify.ts`: UI-noun
       matching accepts `s|es` plurals except `views`/`pages` (backend sense);
       `animation` joins `_UI_NOUNS`; `karte`, `kachel`, `animation`, `abstand`
       and `abständ` join `UI_I18N.de.nouns`.
       verify: `./scripts-run src/scripts/eval_ui_triviality` -> `symptom_ui` PASS, `backend` PASS, `add_control` and `de_ui_recall` PASS; `npx vitest run tests/scripts/work_engine/intent_classify.test.ts` -> 0
+      production entry: src/agent-src/templates/scripts/work_engine/__main__.ts (exec_ts of its dist projection by cmd_implement_ticket and cmd_work in scripts/_dispatch.bash:998, reaching cli.ts, input_builders.ts and populate_routing)
 - [x] **3.3 A bare quality adjective is review-first.** A prompt whose only <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: dist/agent-src/templates/scripts/work_engine/intent/classify.ts -->
       goal is an evaluative adjective (de: hochwertig, edel, schöner, moderner,
       professioneller, aufgeräumter; en: premium, polished, nicer, sleeker,
@@ -122,6 +125,7 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
       (`:363`, `:559`, `:631`) treats a key missing from an older observation as
       `not_available`, never as unchanged.
       verify: `npx vitest run tests/scripts/ui_conformance_probe.test.ts` -> 0 with a pure case where the reference's `active` changes `transform` and the target's does not, reported as lost
+      production entry: src/scripts/ui_conformance_probe.ts (run as `ui_conformance_probe --target <file> --reference <file>` per the design-pass concern, scripts/hooks/design_pass_hook.ts:272, and skills/design-review/SKILL.md:59)
 - [x] **4.2 The render states its denominator and the gap inputs.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
       `src/cli/commands/uiRender.ts`: the style capture (`:593`) records
       `sampled` and `total` element counts in each `*.styles.json` envelope or
@@ -130,6 +134,8 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
       `display`, `flex-direction`. A reading over a truncated capture carries
       `partial: <sampled>/<total>`.
       verify: `npx vitest run tests/cli/uiRender_geometry.test.ts` -> 0 with assertions on the new keys and on `total > sampled` for a > 1,500-element fixture
+      production entry: src/cli/main.ts (loaded by the bin entry agent-config.ts through a dynamic import at line 90, which the reach model does not follow; main.ts:26 imports runUiRender for the ui:render command)
+      reach exempt: with main.ts declared, runUiRender and the capture constants are reached; the residue slugify is the test-facing alias `export { renderSlug as slugify }` at uiRender.ts:250, and production calls renderSlug under its own name
 - [x] **4.3 No probe action on a URL can write.** Add a URL-target predicate <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/commands/uiRender.ts -->
       to `src/cli/commands/uiRenderAssetIsolation.ts` (same origin, GET/HEAD
       only, everything else aborted and recorded) and apply it via
@@ -137,6 +143,8 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
       `src/cli/commands/uiRender.ts` (`:381`, `:545`, `:673`, `:685`) and in
       `uiRenderInteract.ts`; the manifest records `network: { aborted, blocked }`.
       verify: `npx vitest run tests/cli/ui_render_asset_isolation.test.ts` -> 0 (pure predicate: cross-origin GET, same-origin POST and same-origin GET) and `grep -c "confinePage" src/cli/commands/uiRender.ts src/cli/commands/uiRenderInteract.ts` -> each ≥ 1
+      production entry: src/cli/main.ts (loaded by the bin entry agent-config.ts through a dynamic import at line 90, which the reach model does not follow; main.ts:26 imports runUiRender for the ui:render command)
+      reach exempt: with main.ts declared, runUiRender reaches confinePage, which calls urlTargetVerdict and requestAllowed at uiRenderAssetIsolation.ts:107 and :118; the reach model misses them because its comment stripper reads the '**/*' route glob at :102 as a block-comment opener; slugify is the test alias of renderSlug at uiRender.ts:250
 - [x] **4.4 `consistency-sibling-gap`, shadow only.** In <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_design_consistency.ts -->
       `src/scripts/lint_design_consistency.ts`, an exported pure
       `siblingGapFindings(rows)` over render rows and a `--render <styles.json>`

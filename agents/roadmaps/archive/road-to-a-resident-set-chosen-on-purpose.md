@@ -55,6 +55,7 @@ the measured listing-arm baseline its owner requires.
       catalogue yields the expected two splits, and a run on the repo tree reports 45
       described at 200,000 alphabetical (the pinned number), failing the test if the
       alphabetical arm stops matching `computeOverrides`.
+      reach exempt: a maintainer report, never a gate by the step's own title, run by hand as `./scripts-run scripts/report_resident_set`; nothing shipped invokes it and nothing should
 - [x] **1.3 Mark the parked step.** In `agents/roadmaps/later/road-to-catalogue-host-fit.md` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/host_listing_model.ts -->
       tick 2.2 with a one-line pointer to 1.1 here, leaving its verify text intact.
       verify: `grep -n "road-to-a-resident-set-chosen-on-purpose" agents/roadmaps/later/road-to-catalogue-host-fit.md` -> one hit.
@@ -88,22 +89,27 @@ the measured listing-arm baseline its owner requires.
       verify: `npx vitest run src/cli/mcp/dispatch.test.ts` -> 0, with a red-first case:
       a fixture skill declaring one required input lists exactly that argument, and an
       undeclared one lists `[]`; plus `npx vitest run src/cli/mcp/content.test.ts` -> 0.
+      production entry: src/cli/main.ts (loaded by the bin entry agent-config.ts through a dynamic import at line 90, which the reach model does not follow; main.ts:36 imports runMcpServer, which serves content.ts and dispatch.ts over stdio)
+      reach exempt: with main.ts declared, the inputs-to-arguments path is reached (stdio.ts imports dispatch, which calls listPrompts over entriesOfKind); the residue, liteToolsTokenCost and LITE_TOOLS_TOKEN_CAP, is a test-only budget measurement in dispatch.ts that no production code calls and this step did not touch
 - [x] **3.2 Expression injection in workflows.** In `src/skills/github-ci/SKILL.md` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/mcp/content.ts -->
       (Conventions → Workflow structure, and Do NOT) and
       `src/skills/code-review/checklists/infra.md`: attacker-controlled
       `${{ github.event.* }}` / `github.head_ref` never interpolated into `run:`; pass
       it through `env:` and quote the variable.
       verify: `grep -n "github.event" src/skills/github-ci/SKILL.md src/skills/code-review/checklists/infra.md` -> at least one hit in each file.
+      reach exempt: a SKILL.md text edit with no code change; cli/mcp/content.ts is named only by the receipt bound, and the edited skill reaches consumers as content, not as an import
 - [x] **3.3 ReDoS and shell rows.** Two rows in the surface table of <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/mcp/content.ts -->
       `src/skills/ai-code-blindspots/SKILL.md`: **Regex on untrusted input** (no nested
       or overlapping quantifiers, anchored, bounded input length, a must-match and a
       must-not-match test) and **Shell script** (`set -euo pipefail`, every expansion
       quoted, ShellCheck when present).
       verify: `grep -nE "ReDoS|pipefail" src/skills/ai-code-blindspots/SKILL.md` -> two hits.
+      reach exempt: a SKILL.md text edit with no code change; cli/mcp/content.ts is named only by the receipt bound, and the edited skill reaches consumers as content, not as an import
 - [x] **3.4 Persona template value.** `src/skills/persona-writing/SKILL.md:90` reads <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/mcp/content.ts -->
       `tier: core | specialist`, matching `docs/contracts/persona-schema.md:25`.
       verify: `grep -c "core | specialty" src/skills/persona-writing/SKILL.md` -> 0, then
       `task sync` and `bash src/scripts/condense.sh --changed` lists nothing.
+      reach exempt: a SKILL.md text edit with no code change; cli/mcp/content.ts is named only by the receipt bound, and the edited skill reaches consumers as content, not as an import
 
 ## Decisions
 

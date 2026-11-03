@@ -95,12 +95,14 @@ instrument can say whether a subagent that reported `DONE` wrote anything
       legs (two edits on one file, one failed write, one leg without sidecar) yields
       `writes_attempted 3`, `writes_ok 2`, `targets 1`, `meta_missing 1`; a test asserts no path,
       no host id and no prose string reaches stdout.
+      reach exempt: a maintainer-run measurement report with no shipped invoker by design — step 3.1 says "No Taskfile, gate or hook wiring"; its own main() calls buildReport and statusClaimOf
 - [x] **3.2 Status claim and effort per leg.** In the same script: `status_claim` ∈ {`DONE`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/subagent_return_report.ts -->
       `DONE_WITH_CONCERNS`, `NEEDS_CONTEXT`, `BLOCKED`, `CHECKPOINT`, `none`}, read line-anchored
       from the last assistant text or a final handback message only (a `DONE` inside a Bash input
       is `none`); `effort` from the leg's records, `null` when absent, `mixed` when uneven.
       verify: `npx vitest run tests/scripts/subagent_return_report.test.ts` — one fixture per enum
       value, one with `DONE` in a tool input → `none`, effort present/absent/mixed.
+      reach exempt: a maintainer-run measurement report with no shipped invoker by design — step 3.1 says "No Taskfile, gate or hook wiring"; its own main() calls buildReport and statusClaimOf
 - [x] **3.3 The effort enum covers the host's levels.** Add `xhigh` to `effort.enum` in <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       `src/scripts/schemas/subagent.schema.json:43` and `src/scripts/schemas/skill.schema.json:228-233`
       (`src/scripts/_lib/subagent_native_fields.ts:23` projects verbatim). No shipped definition

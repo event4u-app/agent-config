@@ -49,6 +49,7 @@ sees the user's machine. Nothing is deleted — every fix renames or reports.
       `src/scripts/report_skill_menu_census.ts`, `src/scripts/activation_receipt.ts`,
       `docs/contracts/routing-assurance-floors.json`, the listed tests and fixtures).
       verify: `test ! -e src/skills/code-review && npx vitest run tests/scripts/compile_trigger_evals.test.ts tests/scripts/report_skill_menu_census.test.ts tests/scripts/routing_arms.test.ts tests/contracts/review_spec_axis.test.ts` -> 0 failed
+      reach exempt: a skill rename — these three maintainer bench and report scripts were touched only to rewrite the code-review skill-name literal; the step adds and removes no symbol, so their reach is unchanged and is not this step's subject
 - [x] **1.3 Close the escape in the lint.** In `src/scripts/lint_agent_skill_names.ts` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/host-skill-frontmatter-keys.json -->
       a reserved skill name is a violation whatever the frontmatter says; extract
       the check as an exported pure `_reserved_name_violation(dirname, text)` and
