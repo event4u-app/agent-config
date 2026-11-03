@@ -61,7 +61,7 @@ the measured listing-arm baseline its owner requires.
 
 ## Phase 2 — The hook knows what the installer stripped
 
-- [ ] **2.1 Sidecar as a second bare source.** In
+- [x] **2.1 Sidecar as a second bare source.** In
       `src/scripts/hooks/skill_route_hook.ts`, `knownBareForHost` unions the
       observation-log set with the `name-only` entries of the installer sidecar
       (`recordPath()` from `src/scripts/_lib/skill_listing_overrides.ts`) when the host
@@ -73,7 +73,7 @@ the measured listing-arm baseline its owner requires.
       `name-only` means the pointer never names X on `claude`; the same sidecar on
       another host changes nothing; no sidecar is byte-identical to today; a corrupt
       sidecar is byte-identical to today.
-- [ ] **2.2 Cost stays inside the hook budget.** The sidecar read happens inside the
+- [x] **2.2 Cost stays inside the hook budget.** The sidecar read happens inside the
       existing `bareProvider` thunk, so a prompt that ranks nothing reads no file.
       verify: a test in `tests/hooks/skill_route_hook.test.ts` asserts the thunk is not
       called (spy) when the ranker returns no rows.
@@ -112,6 +112,8 @@ the measured listing-arm baseline its owner requires.
 | The loader lives in `src/scripts/_lib/resident_priority_inputs.ts`, not in `host_listing_model.ts`. | Same file. | `host_listing_model.ts` states "Pure — no I/O"; keeping the read apart keeps that true. | Never — reversible by a move. |
 | `ownedCatalogue` in `skill_listing_overrides.ts` is exported and reused by the report. | A second catalogue reader in the report. | The alphabetical arm must be the installer's own input; a copy could drift silently. | The installer changes its catalogue source. |
 | The repo-tree test asserts the alphabetical arm equals `computeOverrides`, not the literal 45. | Assert `45`. | Parallel work renames skills and their descriptions; the match is the failing condition the step names, and a literal would go red on any description edit. Observed at the run: 45 of 303 described at 200,000 under both arms; 228 at 1,000,000. | The owner wants the count itself pinned. |
+| The sidecar read ignores the record's `settings_path` and reads only `entries` whose value is `name-only`. | Re-validate against `~/.claude/settings.json` like `loadRecord` does. | The hook has no settings path in its envelope; the record is the package's own and is rewritten on every install. A stale record can over-suppress at worst, never invent a pointer. | A stale-record over-suppression is observed. |
+| `routeDecision` returns before the provider when `rank` yields no rows, which is the 2.2 guarantee. | Leave the provider call after an empty rank. | Byte-identical result (an empty ranking produces no pointer either way); the provider was the only file read on that path. | Never. |
 | Finding, recorded not acted on: at 200,000 the priority arm keeps none of `systematic-debugging`, `test-driven-development`, `verify-repair-loop`, `sql-writing`, `security-audit` — the 72 `routes_to:` targets fill the 8,000-char budget first. | Re-weight bands now. | The roadmap fixes the band order; re-weighting is the owner's call together with the default switch. | The listing-arm baseline is measured. |
 
 ## Risk Register

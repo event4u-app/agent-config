@@ -16,6 +16,7 @@ import {
     routePointers,
 } from '../../src/scripts/hooks/skill_route_hook.js';
 import { OBSERVATION_LOG, readObservationLog } from '../../src/scripts/_lib/skill_catalogue.js';
+import { knownBareNames } from '../../src/scripts/_lib/skill_catalogue_series.js';
 import { _tokenize, rank } from '../../src/scripts/skill_tools/score_skill_relevance.js';
 
 /**
@@ -374,5 +375,103 @@ describe('skill-route — the production envelope wiring', () => {
             if (bare === null) continue;
             expect(bare).toBeInstanceOf(Set);
         }
+    });
+});
+
+/**
+ * `road-to-a-resident-set-chosen-on-purpose` Phase 2 — the installer's own
+ * `name-only` record is a second bare source on `claude`. Every case runs under
+ * a scratch `EVENT4U_CONFIG_HOME` and a workspace with no observation log, so
+ * the sidecar is the only signal and a maintainer's real record cannot leak in.
+ */
+describe('skill-route — the installer sidecar as a bare source', () => {
+    const PROMPT = 'review the authorization policy and tenant scope for this endpoint';
+
+    function scratch(sidecar: string | null): { ws: string; home: string; done: () => void } {
+        const ws = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-route-sidecar-ws-'));
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-route-sidecar-home-'));
+        if (sidecar !== null) fs.writeFileSync(path.join(home, 'skill-overrides.json'), sidecar);
+        vi.stubEnv('EVENT4U_CONFIG_HOME', home);
+        return {
+            ws,
+            home,
+            done: () => {
+                vi.unstubAllEnvs();
+                fs.rmSync(ws, { recursive: true, force: true });
+                fs.rmSync(home, { recursive: true, force: true });
+            },
+        };
+    }
+
+    const record = (entries: Record<string, unknown>): string =>
+        JSON.stringify({ schema_version: 1, settings_path: '/x/settings.json', created_key: true, entries });
+
+    it('never names a skill the sidecar recorded name-only, on claude', () => {
+        const unfiltered = routePointers(PROMPT, SKILLS_DIR).map(([n]) => n);
+        expect(unfiltered.length).toBeGreaterThan(0); // vacuity guard
+        const victim = unfiltered[0]!;
+        const s = scratch(record({ [victim]: 'name-only', other: 'on' }));
+        try {
+            const bare = knownBareForHost(s.ws, 'claude');
+            expect(bare).toEqual(new Set([victim]));
+            const filtered = routePointers(PROMPT, SKILLS_DIR, () => knownBareForHost(s.ws, 'claude'));
+            expect(filtered.map(([n]) => n)).not.toContain(victim);
+        } finally {
+            s.done();
+        }
+    });
+
+    it('changes nothing on another host', () => {
+        const s = scratch(record({ 'security-audit': 'name-only' }));
+        try {
+            expect(knownBareForHost(s.ws, 'codex')).toBeNull();
+        } finally {
+            s.done();
+        }
+    });
+
+    it('is identical to the log-only answer when there is no sidecar', () => {
+        const s = scratch(null);
+        try {
+            expect(knownBareForHost(s.ws, 'claude')).toBeNull();
+            const logged = knownBareForHost(process.cwd(), 'claude');
+            const expected = knownBareNames(readObservationLog(path.join(process.cwd(), OBSERVATION_LOG)), 'claude');
+            expect(logged).toEqual(expected);
+        } finally {
+            s.done();
+        }
+    });
+
+    it('is identical to the log-only answer when the sidecar is corrupt or names no name-only entry', () => {
+        for (const body of ['{not json', '[]', 'null', JSON.stringify({ entries: 'x' }), record({ a: 'on' })]) {
+            const s = scratch(body);
+            try {
+                expect(knownBareForHost(s.ws, 'claude')).toBeNull();
+            } finally {
+                s.done();
+            }
+        }
+    });
+
+    it('unions with the observation log rather than replacing it', () => {
+        const s = scratch(record({ 'sidecar-only-skill': 'name-only' }));
+        try {
+            const logged = knownBareNames(readObservationLog(path.join(process.cwd(), OBSERVATION_LOG)), 'claude');
+            const bare = knownBareForHost(process.cwd(), 'claude');
+            expect(bare).not.toBeNull();
+            expect(bare!.has('sidecar-only-skill')).toBe(true);
+            for (const n of logged ?? []) expect(bare!.has(n)).toBe(true);
+        } finally {
+            s.done();
+        }
+    });
+
+    it('never calls the bare provider when the ranker returns no rows', () => {
+        const prompt = 'qwxzplorf zzyvrrrb klompfnarg wubbadubzot';
+        expect(_tokenize(prompt).size).toBeGreaterThanOrEqual(MIN_TASK_TERMS);
+        expect(rank(prompt, SKILLS_DIR)).toEqual([]);
+        const provider = vi.fn(() => new Set<string>());
+        expect(routeDecision(prompt, SKILLS_DIR, provider).rows).toEqual([]);
+        expect(provider).not.toHaveBeenCalled();
     });
 });
