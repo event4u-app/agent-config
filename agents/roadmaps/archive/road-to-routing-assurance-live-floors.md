@@ -168,7 +168,7 @@ item created unless the null broke.
       verify: the table cites the archived roadmap and adds no new claim id.
       production entry: src/scripts/routing_arms.ts
 
-- [~] **4.4 Close the suggest-without-read gap.** On a unique top hit,
+- [~] **4.4 Close the suggest-without-read gap.** On a unique top hit, <!-- deferred-resolution: carried-to=road-to-routing-assurance-live-floors-carried -->
       `suggest_skill_for_task` returns the skill body (or a bounded excerpt with its
       id) so the MCP path needs no second `read_skill` call; default-off until the
       4.2 parity gate passes on it.
