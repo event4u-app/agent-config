@@ -101,7 +101,7 @@ green after the fix, and the release-side rules fail the contract test on regres
       workflow-level `id-token: write` → finding; the same cache in a job overriding to
       `contents: read` → none (fixture mirrors `deploy-mcp-worker.yml:40-41`).
       verify: `npx vitest run tests/scripts/lint_workflow_security.test.ts` → 0, `./scripts-run src/scripts/lint_workflow_security --strict` → exit 0, `grep -n "cache:" .github/workflows/publish-npm.yml .github/workflows/deploy-site.yml .github/workflows/cloud-release.yml` → no match
-- [ ] **2.3 The shipped templates get the same nets.** Add `persist-credentials: false` to the
+- [x] **2.3 The shipped templates get the same nets.** Add `persist-credentials: false` to the
       six checkouts in `src/agent-src/templates/github-workflows/` that lack it (`true` with a
       comment only where a later step pushes); extend `tests/contracts/ci_supply_chain.test.ts`
       with the template directory as a third root for the `persist-credentials`,
