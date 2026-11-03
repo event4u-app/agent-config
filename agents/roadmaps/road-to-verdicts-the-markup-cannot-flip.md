@@ -131,9 +131,11 @@ as a dependency — use zod v4's native export.
 
 ## Phase 4 — `llms.txt` in its own format
 
-- [ ] **4.1 Render H1, blockquote and `## Skills` with one link per skill.** No
+- [x] **4.1 Render H1, blockquote and `## Skills` with one link per skill.** No <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/generate_catalog.ts -->
       visibility claim; serving it from the site is a separate owner step.
       verify: generator test asserts the structure; consistency CI green.
+      Done: render_llms_txt emits one H1, a blockquote summary and ## Skills with one - [name](dist/agent-src/skills/<name>/SKILL.md): description line per skill, no visibility claim; generator test asserts the structure; llms.txt regenerated (docs/skills-catalog.md picked up one stale description); task consistency -> 0. Serving it from the site stays a separate owner step.
+      production entry: `src/scripts/generate_catalog.ts`
 
 ## Not in this roadmap
 
