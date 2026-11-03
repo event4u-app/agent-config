@@ -107,7 +107,7 @@ finding disposition names a command but not the outcome it must produce
       `Trimmed: <total>` when the total is > 0. The header line counts against
       the cap.
       verify: `npx vitest run tests/scripts/handoff_generate.test.ts` -> 0 — the existing cap fixture (`:138-157`) additionally asserts `Key decisions` does not contain `(none extracted)` and the `Trimmed:` total equals the removed count.
-- [ ] **4.2 Handoff-file drift is annotated like the recycle record.** In
+- [x] **4.2 Handoff-file drift is annotated like the recycle record.** In
       `consume_handoff_context` (`src/scripts/handoff_context_hook.ts:99-139`)
       read `Branch:` / `Last commit:` from the file and annotate via
       `describeDrift` (already used at `:303`); never refuse, and a header
