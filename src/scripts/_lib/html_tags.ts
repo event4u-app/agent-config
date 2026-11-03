@@ -25,64 +25,33 @@ export const LOADABLE_TAGS: readonly string[] = ['link', 'script', 'iframe', 'im
 /** Tags whose attributes carry a page's indexing and metadata claims. */
 export const HEAD_TAGS: readonly string[] = ['meta', 'link', 'title'];
 
-const START_RE = new Map<string, RegExp>();
-function startRe(names: readonly string[]): RegExp {
-    const key = names.join('|');
-    let re = START_RE.get(key);
-    if (re === undefined) {
-        // `(?=[\s/>]|$)` rather than `\b`: `\b` lets `<link-x` match `link`.
-        re = new RegExp(`<(${key})(?=[\\s/>]|$)`, 'gi');
-        START_RE.set(key, re);
-    }
-    re.lastIndex = 0;
-    return re;
-}
-
-/** Every tag of `names` in a page, with the 1-based line it starts on. Linear: one window per tag start. */
+/** Every tag of `names` in a page, with the 1-based line it starts on. Linear: tag starts are in order, so lines and `>` searches only move forward. */
 export function tagsOf(text: string, names: readonly string[] = LOADABLE_TAGS): Tag[] {
-    const starts: number[] = [0];
-    for (let i = text.indexOf('\n'); i >= 0; i = text.indexOf('\n', i + 1)) starts.push(i + 1);
-    const lineAt = (pos: number): number => {
-        let lo = 0;
-        let hi = starts.length - 1;
-        while (lo < hi) {
-            const mid = (lo + hi + 1) >> 1;
-            if ((starts[mid] ?? 0) <= pos) lo = mid;
-            else hi = mid - 1;
-        }
-        return lo + 1;
-    };
-    const found = [...text.matchAll(startRe(names))];
+    // `(?=[\s/>]|$)` rather than `\b`: `\b` lets `<link-x` match `link`.
+    const found = [...text.matchAll(new RegExp(`<(${names.join('|')})(?=[\\s/>]|$)`, 'gi'))];
     const out: Tag[] = [];
-    // The next `>` only moves forward, so all the searches together read the text once.
     let gt = -2;
+    let line = 1;
+    let nl = text.indexOf('\n');
     found.forEach((m, k) => {
         const at = m.index ?? 0;
+        for (; nl !== -1 && nl < at; nl = text.indexOf('\n', nl + 1)) line++;
         if (gt !== -1 && gt < at) gt = text.indexOf('>', at);
-        const next = found[k + 1]?.index ?? Number.POSITIVE_INFINITY;
-        const name = (m[1] ?? '').toLowerCase();
-        const closed = gt !== -1 && gt < next;
-        out.push({ name, tag: closed ? text.slice(at, gt + 1) : '', line: lineAt(at), closed, end: closed ? gt : -1 });
+        const closed = gt !== -1 && gt < (found[k + 1]?.index ?? Infinity);
+        out.push({ name: (m[1] ?? '').toLowerCase(), tag: closed ? text.slice(at, gt + 1) : '', line, closed, end: closed ? gt : -1 });
     });
     return out;
 }
 
-const ATTR_RE = new Map<string, RegExp>();
 /**
  * The value of attribute `name` on a start tag — double-quoted, single-quoted or
  * unquoted, any case. The name must follow whitespace, so `data-src` is never
  * read as `src`. An unquoted value stops at whitespace or the tag's `/>`.
  */
 export function attr(tag: string, name: string): string | undefined {
-    let re = ATTR_RE.get(name);
-    if (re === undefined) {
-        const n = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        re = new RegExp(`\\s${n}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'=<>\`]+?)(?=\\s|\\/?>|$))`, 'i');
-        ATTR_RE.set(name, re);
-    }
-    const m = re.exec(tag);
-    if (m === null) return undefined;
-    return m[1] ?? m[2] ?? m[3] ?? '';
+    const n = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const m = new RegExp(`\\s${n}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'=<>\`]+?)(?=\\s|\\/?>|$))`, 'i').exec(tag);
+    return m === null ? undefined : (m[1] ?? m[2] ?? m[3] ?? '');
 }
 
 /** The trimmed text of the first `<title>`, or undefined when there is none or it is empty. */
