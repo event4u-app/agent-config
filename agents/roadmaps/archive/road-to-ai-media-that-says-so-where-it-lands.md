@@ -41,45 +41,45 @@ loop may take lower detectability as an objective.
 
 ## Phase 0 — Red first
 
-- [x] **0.1 `tests/scripts/ai_video_provenance.test.ts`.** Ports the deleted
+- [x] **0.1 `tests/scripts/ai_video_provenance.test.ts`.** Ports the deleted <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai-video/lib/embed-provenance.sh -->
       suite and adds rows: strip removes the comment; `ai_generated` key absent
       after mux; edited wording; `digitalSourceType` for edited input; sidecar
       lacks the artifact hash. The c2patool row skips with a stated reason when
       the tool is absent.
       verify: each row red at the pin for its named reason.
-- [x] **0.2 Reverse-direction fixture for `lint_media_policy_linkage.ts`**
+- [x] **0.2 Reverse-direction fixture for `lint_media_policy_linkage.ts`** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai-video/lib/embed-provenance.sh -->
       (command emits a deliverable medium → listed in both policy trigger lists).
       verify: red at the pin.
 
 ## Phase 1 — One labelling model in the policies
 
-- [x] **1.1 Four carriers** in `agents/settings/policies/media/disclosure.md` and
+- [x] **1.1 Four carriers** in `agents/settings/policies/media/disclosure.md` and <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai-video/lib/embed-provenance.sh -->
       `transparency.md`: `visible`, `embedded`, `sidecar`, `platform-field`;
       "non-removable" applies to `visible` only.
-- [x] **1.2 One vocabulary table** `generated`/`modified` ↔
+- [x] **1.2 One vocabulary table** `generated`/`modified` ↔ <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai-video/lib/embed-provenance.sh -->
       `ai_generated`/`ai_edited` ↔ `trainedAlgorithmicMedia` /
       `compositeWithTrainedAlgorithmicMedia`, shared by label, sidecar and C2PA.
-- [x] **1.3 Two principles as policy text:** provenance and disclosure are
+- [x] **1.3 Two principles as policy text:** provenance and disclosure are <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai-video/lib/embed-provenance.sh -->
       reported, never removed, on production and analysis side; no quality,
       polish or optimisation loop takes detectability as an objective (mirrors
       the text-side rule in `humanizer`).
-- [x] **1.4 Trigger lists rebuilt from the tree**; `/image:*` no longer
+- [x] **1.4 Trigger lists rebuilt from the tree**; `/image:*` no longer <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai-video/lib/embed-provenance.sh -->
       "future"; the README cites the `.ts` lint.
       verify (1.1–1.4): `lint_media_policy_linkage` green; grep for each table.
-- [x] **1.5 Second lint direction** in `src/scripts/lint_media_policy_linkage.ts`.
+- [x] **1.5 Second lint direction** in `src/scripts/lint_media_policy_linkage.ts`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai-video/lib/embed-provenance.sh -->
       verify: 0.2 green after Phase 2.
 
 ## Phase 2 — One finish step for every render end
 
-- [x] **2.1 `embed-provenance.sh finish`**: container tags → sidecar with the
+- [x] **2.1 `embed-provenance.sh finish`**: container tags → sidecar with the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai-video/lib/embed-provenance.sh -->
       sha256 of the final bytes → C2PA last. A visible-label slot is reserved and
       reported `not-applied (rule pending)` until the owner's burn-in rule lands.
-- [x] **2.2 Only keys that survive the muxer** (or `-movflags
+- [x] **2.2 Only keys that survive the muxer** (or `-movflags <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai-video/lib/embed-provenance.sh -->
       use_metadata_tags`); the comment wording follows the assertion.
-- [x] **2.3 `digitalSourceType` follows the assertion.**
-- [x] **2.4 Wire `finish`** into `from-script`, `stitch`, `from-song` (replacing
+- [x] **2.3 `digitalSourceType` follows the assertion.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai-video/lib/embed-provenance.sh -->
+- [x] **2.4 Wire `finish`** into `from-script`, `stitch`, `from-song` (replacing <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai-video/lib/embed-provenance.sh -->
       its step 9.4) and `/image:create` (sidecar for png/jpg).
-- [x] **2.5 Re-cut means re-finish**; `transparency.md` states that an external
+- [x] **2.5 Re-cut means re-finish**; `transparency.md` states that an external <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai-video/lib/embed-provenance.sh -->
       re-encode loses embedded carriers and the signature.
       verify (2.1–2.5): 0.1 green; sidecar hash equals the final file; 0.2 green.
 

@@ -40,12 +40,12 @@ mark with live text, a 1.2° near-miss stroke, 2–3 px dots and six colours;
 
 ## Phase 0 — Pre-register, then red
 
-- [x] **0.1 `internal/bench/corpora/svg-mark-PREREG.md`.** The static readings
+- [x] **0.1 `internal/bench/corpora/svg-mark-PREREG.md`.** The static readings <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/svg_geometry.ts -->
       (live text in master, near-miss angle, tiny detail, colour count as
       report-only), each with its threshold, fixture list and kill criterion —
       the reopen condition the archived roadmap recorded for mark readings.
       verify: file exists and is committed before the rule code.
-- [x] **0.2 Fixtures.** Red plus one-edit `.clean` twin per reading, plus
+- [x] **0.2 Fixtures.** Red plus one-edit `.clean` twin per reading, plus <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/svg_geometry.ts -->
       near-miss controls (an intentional one-colour mark, a deliberate 0.5°
       optical overshoot, a declared `evenodd` hole) under
       `tests/design-artifacts/fixtures/svg-assets/`, rows in its `manifest.json`
@@ -54,36 +54,36 @@ mark with live text, a 1.2° near-miss stroke, 2–3 px dots and six colours;
 
 ## Phase 1 — Static mark family
 
-- [x] **1.1 `lint_svg_asset --class mark`**, reusing the `ASSET_CLASSES`
+- [x] **1.1 `lint_svg_asset --class mark`**, reusing the `ASSET_CLASSES` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/svg_geometry.ts -->
       vocabulary; default output unchanged.
       verify: running without `--class` is byte-identical on the existing corpus.
-- [x] **1.2 Rules** in `src/scripts/_lib/svg_rules.ts`: `svg-mark-live-text`
+- [x] **1.2 Rules** in `src/scripts/_lib/svg_rules.ts`: `svg-mark-live-text` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/svg_geometry.ts -->
       (error), `svg-mark-near-miss-angle` (straight segment ≥ 4 % of the canvas,
       0.3–3° off 0/15/30/45/60/90; warning), `svg-mark-tiny-detail` (subpath
       extent < 1/48 of the viewBox; warning), using `_lib/svg_geometry.ts`.
       verify: each fires on its red fixture, silent on twin and controls; the
       lane probe goes to exit 2.
-- [x] **1.3 `svg-mark-colour-count`** report-only (keeps "reported, never gated").
+- [x] **1.3 `svg-mark-colour-count`** report-only (keeps "reported, never gated"). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/svg_geometry.ts -->
       verify: appears in `--json`, never changes the exit code.
-- [x] **1.4 Wire `logo-generation`** step 5 to run `lint_svg_asset --class mark`
+- [x] **1.4 Wire `logo-generation`** step 5 to run `lint_svg_asset --class mark` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/svg_geometry.ts -->
       beside the existing witness.
       verify: grep in `src/skills/logo-generation/SKILL.md`.
 
 ## Phase 2 — Evals and provenance
 
-- [x] **2.1 `src/skills/brand-identity/evals/evals.json`:** confirmed strategy →
+- [x] **2.1 `src/skills/brand-identity/evals/evals.json`:** confirmed strategy → <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/svg_geometry.ts -->
       constraint set and stop at the confirmation step; draft strategy refused;
       keep-logo brief leaves the asset unchanged; a CSS colour bug does not
       fire the skill.
       verify: the skill-eval scaffold accepts the file.
-- [x] **2.2 Link the media transparency policy** from `logo-generation`,
+- [x] **2.2 Link the media transparency policy** from `logo-generation`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/svg_geometry.ts -->
       `brand-asset-generation` and `image-provider-routing`.
       verify: grep.
-- [x] **2.3 `logo_export_kit.ts` writes `.provenance.json`** (backend `none` for
+- [x] **2.3 `logo_export_kit.ts` writes `.provenance.json`** (backend `none` for <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/svg_geometry.ts -->
       hand-authored, licence, commercial `yes|no|verify`), byte-deterministic.
       verify: `tests/scripts/logo_export_kit.test.ts` stays deterministic and the
       sidecar parses.
-- [x] **2.4 Idea before form.** `logo-generation` step 1b: subject inventory →
+- [x] **2.4 Idea before form.** `logo-generation` step 1b: subject inventory → <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/svg_geometry.ts -->
       "X becomes Y" → competitor-swap test; generic marks flagged, not forbidden.
       verify: a rubric case in the logo evals.
 
