@@ -81,7 +81,7 @@ reaches them in a checkout without git or without an ignore file.
 Evidence (read): `agents/roadmaps/later/road-to-reach-transcribe.md:12` — arrival
 1 only; `src/scripts/media_bundle.ts:512` still probes `whisper-cli`/`whisper` only.
 
-- [x] **4.1 Arrivals lines on existing owners.** `later/road-to-reach-transcribe.md` <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **4.1 Arrivals lines on existing owners.** `later/road-to-reach-transcribe.md` <!-- receipt: class=R2 · shadow · scope=safe · would-skip=revalidation · bound=raised to R2 from R0 -->
       gets arrival 2; `stubs/road-to-mcp-fingerprint-slot-binding.md` gets the
       app-side code-tool shape as arrival 1.
       verify: `grep -c 'inbox-2026-11-q' agents/roadmaps/later/road-to-reach-transcribe.md agents/roadmaps/stubs/road-to-mcp-fingerprint-slot-binding.md` -> 1 each
