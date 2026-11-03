@@ -155,10 +155,11 @@ stops counting ranges.
 
 ## Phase 6 — Document-level hiding
 
-- [ ] **6.1 Rendering-layer hiding and a data-injection class** in
+- [x] **6.1 Rendering-layer hiding and a data-injection class** in
       `untrusted-input-spotlighting.md` (background-colour text, tiny font,
       off-page, hidden layers, DOCX `w:vanish`).
       verify: `task check-refs` -> 0 and `task lint-skills` -> 0 holds.
+      Done: § Document-level hiding (five rendering vectors, model-carried — no visible-vs-extracted gate) and § Data injection; `task check-refs` exit 0, `task lint-skills` exit 0.
 
 ## Phase 7 — Hiring side
 
