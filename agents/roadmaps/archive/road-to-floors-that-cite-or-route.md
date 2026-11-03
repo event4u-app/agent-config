@@ -40,7 +40,7 @@ source-tag vocabulary into the skills that were meant to carry it.
 
 ## Phase 1 — Route the numbers instead of carrying them
 
-- [ ] **1.1 Retention floor, Track 1.** In `src/rules/domain-safety-retention.md:55` replace
+- [x] **1.1 Retention floor, Track 1.** In `src/rules/domain-safety-retention.md:55` replace
       "Then provide ranges if known (US-federal-tax: …; EU VAT: … UK post-Brexit)." with:
       "Then state the floor only from a primary source for that jurisdiction, tagged
       `[verified — source, date]`; without one, tag it `[model knowledge — verify]` and ask. Never
@@ -50,16 +50,16 @@ source-tag vocabulary into the skills that were meant to carry it.
       `domain-safety-retention` in `src/scripts/check_rule_evidence_declaration.ts` SCOPE so it no
       longer says the rule cites floors "by jurisdiction".
       verify: `grep -cE "10 years in DE|7 years from filing|6 in UK" src/rules/domain-safety-retention.md` prints 0 and `grep -c "model knowledge — verify" src/rules/domain-safety-retention.md` ≥ 1.
-- [ ] **1.2 Retention floor, Track 2 clock.** In `src/rules/domain-safety-retention.md:62` replace
+- [x] **1.2 Retention floor, Track 2 clock.** In `src/rules/domain-safety-retention.md:62` replace
       "on a DSR clock (typically 30 days under GDPR)" with "on the regime's response clock (for
       GDPR, Art. 12(3) — quote the period from the text, tagged, never from memory)".
       verify: `grep -c "typically 30 days" src/rules/domain-safety-retention.md` prints 0.
-- [ ] **1.3 Same defect in a skill example.** `src/skills/data-handling-judgment/SKILL.md:156`:
+- [x] **1.3 Same defect in a skill example.** `src/skills/data-handling-judgment/SKILL.md:156`:
       "billing-dispute = 7 years (contractual + tax authority)" → "billing-dispute = the longest
       applicable contractual or tax floor for the named jurisdiction, `[model knowledge — verify]`".
       Repair, do not delete the example; `:158` stays.
       verify: `grep -c "7 years (contractual + tax authority)" src/skills/data-handling-judgment/SKILL.md` prints 0.
-- [ ] **1.4 The sentence in the two sibling floors.** One line each in
+- [x] **1.4 The sentence in the two sibling floors.** One line each in
       `src/rules/finance-safety-floor.md` (Assumptions block, `:69`) and
       `src/rules/domain-safety-disclaimer.md`: "A normative value (period, article, threshold, rate)
       carries `[verified — source, date]` from a primary source or `[model knowledge — verify]`;
@@ -68,7 +68,7 @@ source-tag vocabulary into the skills that were meant to carry it.
 
 ## Phase 2 — A stamp names its source; the vocabulary is wired
 
-- [ ] **2.1 `source_urls` required when a source is claimed.** In
+- [x] **2.1 `source_urls` required when a source is claimed.** In
       `src/scripts/check_rule_evidence_declaration.ts`, a rule whose `source_type` is not
       `own-analysis` must carry ≥ 1 `source_urls` entry, unless it is listed in a new
       `SOURCE_URLS_PENDING` constant (rule → reason), which is shrink-only: a listed rule that now
@@ -79,14 +79,14 @@ source-tag vocabulary into the skills that were meant to carry it.
       external-standard without URLs and not pending → reject; pending rule with URLs → reject.
       Not report-only.
       verify: `./scripts-run src/scripts/check_rule_evidence_declaration --self-test` passes with ≥ 8 cases and `./scripts-run src/scripts/check_rule_evidence_declaration` exits 0.
-- [ ] **2.2 Legal skills point at the vocabulary.** One line in each of
+- [x] **2.2 Legal skills point at the vocabulary.** One line in each of
       `src/skills/{contract-review,nda-triage,dpa-review,legal-intake-triage}/SKILL.md` pointing at
       `legal-practice-profile` § Source-tag + currency vocabulary. Add check 1.4 (presence of the
       pointer, never output content) to `src/scripts/lint_legal_pack.ts`, exempting
       `legal-practice-profile` itself, with a test in `tests/scripts/lint_legal_pack.test.ts` that a
       fixture skill without the pointer fails.
       verify: `npx vitest run tests/scripts/lint_legal_pack.test.ts` passes and `./scripts-run src/scripts/lint_legal_pack` exits 0.
-- [ ] **2.3 Webhook receiving in the existing corpus row.** Extend
+- [x] **2.3 Webhook receiving in the existing corpus row.** Extend
       `src/skills/threat-modeling/data/threats.csv:30`: Required Controls gain "verify the signature
       over the raw request bytes before any parsing; acknowledge 2xx within the provider timeout and
       enqueue the work; 4xx on verification failure"; Negative Tests gain "re-serialised body →
@@ -97,11 +97,11 @@ source-tag vocabulary into the skills that were meant to carry it.
 
 ## Phase 3 — Two small reachability fixes
 
-- [ ] **3.1 Dead freshness-gate link.** `src/agent-src/contexts/authority/scope-mechanics.md:121`:
+- [x] **3.1 Dead freshness-gate link.** `src/agent-src/contexts/authority/scope-mechanics.md:121`:
       `../../commands/create-pr.md` → `../../commands/pr/create.md` (target
       `dist/agent-src/commands/pr/create.md` holds Step 1b).
       verify: `grep -c "commands/create-pr.md" src/agent-src/contexts/authority/scope-mechanics.md` prints 0 and `test -f dist/agent-src/commands/pr/create.md`.
-- [ ] **3.2 A foreign repo's AI-contribution policy in the existing confirmation.** One paragraph
+- [x] **3.2 A foreign repo's AI-contribution policy in the existing confirmation.** One paragraph
       in `src/domains/git/pr/create/command.md` § 1 Check prerequisites: when the target repo is not
       the user's (fork PR, foreign issue or comment), read its `AGENTS.md`, `CONTRIBUTING*` and
       `AI_POLICY*`, quote the AI-relevant lines inside the existing Hard-Floor confirmation; if they
@@ -111,7 +111,7 @@ source-tag vocabulary into the skills that were meant to carry it.
 
 ## Phase 4 — Projection and gates
 
-- [ ] **4.1 Regenerate and run the touched gates.** `task sync` and `task generate-tools`, then the
+- [x] **4.1 Regenerate and run the touched gates.** `task sync` and `task generate-tools`, then the
       gates for every file changed above.
       verify: `bash src/scripts/condense.sh --changed` lists nothing; `./scripts-run src/scripts/check_references`, `./scripts-run src/scripts/check_rule_evidence_declaration`, `./scripts-run src/scripts/lint_legal_pack` and `./scripts-run src/scripts/check_source_size_budget` exit 0.
 
@@ -130,6 +130,16 @@ source-tag vocabulary into the skills that were meant to carry it.
 - Art. 50 line in `agents/settings/policies/media/disclosure.md` and the "fully synthetic"
   exemption check: needs the Official Journal text.
 - Shipping the media policies to consumers: council re-evaluation of the recorded disposition first.
+
+## Decisions
+
+| Decision | Alternatives | Reason | Revisit-if |
+|---|---|---|---|
+| A `SOURCE_URLS_PENDING` row whose rule is not in `SCOPE` is itself a finding | Ignore stale rows | Shrink-only needs a way to fail a row nobody removed | Scope becomes derived instead of listed |
+| A pending rule is flagged only when it gains URLs, not when it turns `own-analysis` | Flag both | The self-test fixture writes `own-analysis` for every rule not under test; flagging it would fail every case for the wrong reason | A pending rule is reclassified `own-analysis` in the real tree |
+| `source_urls` entries are quoted in `broken-access-control` | Bare YAML scalars | The frontmatter validator read the second bare URL as an object | Never — quoting is harmless |
+| The webhook row gains controls without a tolerance value; `last_checked` unchanged | Re-read a source and move the date | No network in this run; ADR-238 forbids numeric tolerances in the corpus | The corpus is next re-derived |
+| The Later items stay in this file when it archives | Move them to a new follow-up roadmap | Each needs network, spend, a frozen benchmark or a council verdict; none is executable offline. The shrink-only list in `check_rule_evidence_declaration.ts` keeps the main one visible | An owner opens a networked re-verification round |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-03 | reviewer: claude/host -->

@@ -69,6 +69,8 @@ The nine are the floor; flag anything beyond them that materially shifts risk (l
 
 Produce `dpa-gap-frame.md` and `open-questions.md`. Each carries the `Jurisdiction:` tag and the attorney-review line. This skill does not opine; it prepares the attorney's review.
 
+Tag every cited authority (statute, article, case, guidance) per [`legal-practice-profile`](../legal-practice-profile/SKILL.md) § Source-tag + currency vocabulary — a cite with no current source is `[model knowledge — verify]`, never stated as settled.
+
 ## Related Skills
 
 **WHEN to use this**

@@ -85,6 +85,7 @@ describe('lint_legal_pack — floor reference gate (D7)', () => {
 });
 
 const tmpDirs: string[] = [];
+const POINTER = 'Tag every cited authority per `legal-practice-profile` § Source-tag + currency vocabulary.';
 
 function makeSkill(root: string, name: string, fm: string, body: string): void {
     const dir = path.join(root, name);
@@ -139,8 +140,23 @@ describe('lint_legal_pack — synthetic fixtures', () => {
     it('passes a compliant legal-pack skill', () => {
         const root = fs.mkdtempSync(path.join(os.tmpdir(), 'legal-lint-'));
         tmpDirs.push(root);
-        makeSkill(root, 'good', 'packs:\n  - legal-review-prep\ncouncil_depth: deep', '# good\nJurisdiction: DE\n> Attorney review required on material use.\n');
+        makeSkill(root, 'good', 'packs:\n  - legal-review-prep\ncouncil_depth: deep', `# good\nJurisdiction: DE\n> Attorney review required on material use.\n${POINTER}\n`);
         expect(lintLegalPack(root)).toEqual([]);
+    });
+
+    it('flags a legal-pack skill that does not point at the source-tag vocabulary', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'legal-lint-'));
+        tmpDirs.push(root);
+        makeSkill(root, 'no-tags', 'packs:\n  - legal-review-prep\ncouncil_depth: deep', '# t\nJurisdiction: EU\n> Attorney review required on material use.\n');
+        const v = lintLegalPack(root);
+        expect(v.some((x) => x.rule === 'source-tag-pointer' && x.file.includes('no-tags'))).toBe(true);
+    });
+
+    it('exempts legal-practice-profile, which owns the vocabulary', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'legal-lint-'));
+        tmpDirs.push(root);
+        makeSkill(root, 'legal-practice-profile', 'packs:\n  - legal-review-prep\ncouncil_depth: deep', '# p\nJurisdiction: EU\n> Attorney review required on material use.\n');
+        expect(lintLegalPack(root).some((x) => x.rule === 'source-tag-pointer')).toBe(false);
     });
 
     it('flags definitive legal language in a skill body', () => {
