@@ -29,6 +29,7 @@ import {
 import { _scan } from './injection_scan_hook.js';
 import { _assert_project_writable } from './memory_signal.js';
 import { derive_session_tag } from './_lib/session_tag.js';
+import { evaluateCaptureGuards } from './_lib/user_global_observations.js';
 import { liveGit, readPrFacts, readSessionFacts, type PrFacts, type SessionFacts } from './retro_facts.js';
 import { liveForgeApi, originUrl, resolveForgeRepo, type ForgeApi } from './_lib/forge_reader.js';
 import {
@@ -289,7 +290,12 @@ export const SIDECAR_OUT_REL = path.join('agents', 'memory');
  * it is written without a question; the project-provenance gate still applies.
  * Returns how many were written.
  */
-export function writeIntakeSignals(root: string, signals: readonly Signal[]): number {
+export function writeIntakeSignals(root: string, all: readonly Signal[]): number {
+    // A signal the capture guards refuse is dropped before the file is opened,
+    // so a refused batch leaves the intake file unchanged.
+    const signals = all.filter(
+        (s) => evaluateCaptureGuards({ ts: s.ts, field: 'preferences', suggest: s.body, source: 'retro', evidence: '' }).allowed,
+    );
     if (signals.length === 0) return 0;
     const dir = path.join(root, INTAKE_REL);
     fs.mkdirSync(dir, { recursive: true });

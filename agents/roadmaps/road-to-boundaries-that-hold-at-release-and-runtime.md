@@ -142,7 +142,7 @@ green after the fix, and the release-side rules fail the contract test on regres
       preferences in `user_global_observations_project_attribution.test.ts`; the fixture's
       `./bootstrap.sh` row became a `bash -c 'curl …'` row and two such preferences joined the
       benign set.
-- [ ] **3.3 The three project writers call it.** `evaluateCaptureGuards` runs in
+- [x] **3.3 The three project writers call it.** `evaluateCaptureGuards` runs in
       `src/scripts/memory_signal.ts` (and its twin `src/agent-src/templates/scripts/memory_signal.ts`),
       `src/scripts/mine_session.ts` (`commitIntake`) and `src/scripts/retro.ts`
       (`writeIntakeSignals`); a refusal leaves the intake file unchanged and the MCP tool answers
@@ -157,6 +157,7 @@ green after the fix, and the release-side rules fail the contract test on regres
 | The consumer-shipped twin `work_engine/_lib/agent_settings.ts` carries a local `_is_contained` with the same algorithm instead of importing `isContained` (1.3) | Import across the package boundary | That tree ships to consumers self-contained and cannot reach `src/scripts/_lib` | A shared runtime library lands inside the shipped tree |
 | `privileged-job-cache` ships MEDIUM, `template-injection` HIGH (2.1, 2.2) | Both HIGH | The 2026-06-13 severity model is council-locked; a new HIGH is what 2.1 names explicitly, 2.2 names no tier, so it follows the `persist-credentials` precedent: MEDIUM in the linter, blocking through `tests/contracts/ci_supply_chain.test.ts` | The council re-tiers the model |
 | A resolved release tag/version is held to `[0-9A-Za-z.-]` in the resolve step (2.1) | Move each of the 13 downstream `steps.*.outputs` interpolations to `env:` | One guard per resolve step closes the taint at its source and keeps the rule's "step outputs are fixed-shape" premise true; release tags are plain semver (`release_tag_dispatch.ts:56`, the `on.push.tags` filters) | A release tag format outside that set is introduced |
+| `memory_signal.ts` and its installed twin carry an inlined capture guard (`_capture_refusal`: recurrence + exec target, plus the injection-hook phrase and exfil patterns) instead of calling `evaluateCaptureGuards`; `mine_session` and `retro` call `evaluateCaptureGuards` directly (3.3) | Import `_lib/user_global_observations` from both twins | The installed template tree has no `_lib/`, and `memory-twin-verdicts.yml` holds the pair at `exact`; dropping to `bounded` would weaken a gate. `tests/scripts/memory_signal.test.ts` drives the shared fixture through both guards | The template tree gains an installed shared library |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-03 | reviewer: claude/host -->

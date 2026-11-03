@@ -256,6 +256,38 @@ export function _assert_project_writable(record: { origin: string; subject?: unk
 }
 
 /**
+ * Capture-time content guard — the project-intake half of the guard
+ * `user_global_observations.evaluateCaptureGuards` runs on the global path.
+ * Inlined because the installed template tree has no `_lib/`; the shared
+ * fixture `tests/fixtures/standing-commands.json` pins both to the same
+ * verdicts. A refusal throws before anything is written, so the intake file is
+ * left unchanged.
+ */
+export class CaptureRefusedError extends Error {
+    readonly category: string;
+    constructor(category: string, message: string) {
+        super(message);
+        this.category = category;
+    }
+}
+
+// Recurrence marker AND fetch/exec target: either alone is an ordinary
+// preference ("always run the tests"), both together a durable injection.
+const _RECURRENCE_RE =
+    /\b(?:always|whenever|from\s+now\s+on|every|each|(?:before|after|at\s+the\s+(?:start|beginning)\s+of)\s+(?:each|every)|immer|ab\s+jetzt|jede[nmrs]?|bei\s+jedem|zu\s+beginn\s+jede[nmrs]?)\b/i;
+const _EXEC_TARGET_RE =
+    /\bhttps?:\/\/\S+|\|\s*(?:ba|z)?sh\b|\$\(|\b(?:curl|wget|eval|iex|invoke-webrequest|invoke-expression|bash\s+-c|sh\s+-c|python\s+-c|node\s+-e)\b|\b(?:npm|pnpm|yarn|pip3?|pipx|gem|brew|cargo|go)\s+(?:install|add|i|get)\b|\bnpx\s+\S|\b(?:download|herunterladen)\b/i;
+const _INJECTION_PHRASE_RE =
+    /<\s*(?:important|system|admin|secret|critical)\s*>|ignore (?:all |the )?(?:previous|prior|above) (?:instructions|prompts|rules)|disregard (?:all |the )?(?:previous|prior|above)|you are now (?:a|an|the)\b|new system prompt|~\/\.ssh\/id_[rd]sa|\/etc\/shadow|\.aws\/credentials|curl[^\n|]*\|\s*(?:ba)?sh|socat|nc -e|\/dev\/tcp\//i;
+
+/** The refusal category for `text`, or null when it may be stored. */
+export function _capture_refusal(text: string): string | null {
+    if (_RECURRENCE_RE.test(text) && _EXEC_TARGET_RE.test(text)) return 'standing_command';
+    if (_INJECTION_PHRASE_RE.test(text)) return 'standing_command';
+    return null;
+}
+
+/**
  * Append a signal entry. Returns the written record, or null when skipped.
  */
 export function emit(
@@ -276,6 +308,14 @@ export function emit(
     }
     if (!p || !body) {
         throw new Error('path and body are required');
+    }
+    const refusal = _capture_refusal(body);
+    if (refusal !== null) {
+        throw new CaptureRefusedError(
+            refusal,
+            'capture guard: reads as a standing fetch/exec command or an injection phrase — ' +
+                'stored as memory it re-fires in every later session. Refused, nothing written.',
+        );
     }
     if (!force && _recently_emitted(entry_type, p, body)) {
         return null;
@@ -440,11 +480,20 @@ export function main(): number {
         }
         extra = parsed;
     }
-    const rec = emit(args.entry_type, args.path, args.body, {
-        extra,
-        origin: args.origin,
-        force: args.force,
-    });
+    let rec: SignalRecord | null;
+    try {
+        rec = emit(args.entry_type, args.path, args.body, {
+            extra,
+            origin: args.origin,
+            force: args.force,
+        });
+    } catch (e) {
+        if (e instanceof CaptureRefusedError) {
+            process.stderr.write(`  ❌  refused (${e.category}): ${e.message}\n`);
+            return 1;
+        }
+        throw e;
+    }
     if (rec === null) {
         process.stdout.write(
             `  ℹ️  skipped (already emitted within ` +
