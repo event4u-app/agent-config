@@ -28,6 +28,7 @@ import {
     type Finding,
 } from '../../src/scripts/hooks/design_pass_hook.js';
 import { collectInputs } from '../../src/scripts/_lib/probe_inputs.js';
+import { unwrap } from '../../src/scripts/hooks/envelope.js';
 import { readDischarged } from '../../src/scripts/_lib/obligations.js';
 
 const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -167,6 +168,13 @@ describe('payload extraction tolerates host key variance', () => {
         [{ tool_input: { target_file: 'd.svelte' } }, 'd.svelte'],
     ])('%j -> %s', (payload, want) => {
         expect(targetPath(payload)).toBe(want);
+    });
+
+    it('reads the path out of the dispatcher envelope an in-process concern receives', () => {
+        const envelope = { schema_version: 1, platform: 'claude', event: 'post_tool_use', payload: { tool_input: { file_path: 'e.html' } } };
+        expect(targetPath(unwrap(JSON.stringify(envelope))[1])).toBe('e.html');
+        // The envelope itself names no path: reading it unwrapped is the defect this pins.
+        expect(targetPath(envelope)).toBeNull();
     });
 
     it('returns null when no path key is present', () => {
