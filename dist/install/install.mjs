@@ -23052,12 +23052,9 @@ function read_json_file(p) {
   return null;
 }
 function write_json_file(p, data) {
-  const outcome = writeHostConfig(p, data, { write: write_file });
-  if (outcome.status === "skipped-readback-mismatch") {
-    warn(`${p}: ${outcome.status} (${outcome.detail ?? ""})`);
-    return false;
-  }
-  return true;
+  const o = writeHostConfig(p, data, { write: write_file });
+  if (o.status === "skipped-readback-mismatch") warn(`${p}: ${o.status} (${o.detail ?? ""})`);
+  return o.status !== "skipped-readback-mismatch";
 }
 function merge_json_file(p, new_data, _force, label) {
   const new_entries = build_merge_entries(label, new_data);
