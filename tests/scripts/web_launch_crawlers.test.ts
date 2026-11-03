@@ -16,6 +16,7 @@ import {
     metaNoindex,
     robotsBlocks,
     robotsGroups,
+    snippetBlocks,
 } from '../../src/scripts/web_launch_crawlers';
 
 const REPO = path.resolve(__dirname, '..', '..');
@@ -96,6 +97,33 @@ describe('robots meta tags are read by meaning', () => {
     it('a crawler meta name whose row lapsed reads undecided', () => {
         const r = meta('<meta name="googlebot" content="noindex">', '2099-01-01');
         expect([r.hits.length, r.undecided.length]).toEqual([0, 1]);
+    });
+});
+
+describe('snippet blocks read a lapsed row the way noindex does', () => {
+    const snip = (html: string, asOf = TODAY) => snippetBlocks('index.html', html, register, asOf);
+
+    it('a live search crawler name and robots fire', () => {
+        expect(snip('<meta name="googlebot" content="nosnippet">').hits).toHaveLength(1);
+        expect(snip('<meta name="robots" content="max-snippet:0">').hits).toHaveLength(1);
+    });
+
+    it('a crawler meta name whose row lapsed reads undecided, never a silent pass', () => {
+        const r = snip('<meta name="googlebot" content="nosnippet">', '2099-01-01');
+        expect([r.hits.length, r.undecided.length]).toEqual([0, 1]);
+        expect(r.undecided[0]?.text).toMatch(/lapsed/);
+    });
+
+    it('robots stays decided whatever the register says', () => {
+        expect(snip('<meta name="robots" content="nosnippet">', '2099-01-01')).toMatchObject({ undecided: [] });
+        expect(snip('<meta name="robots" content="nosnippet">', '2099-01-01').hits).toHaveLength(1);
+    });
+
+    it('a noindex page is no snippet finding; a lapsed noindex leaves the snippet undecided too', () => {
+        expect(snip('<meta name="robots" content="noindex, nosnippet">')).toEqual({ hits: [], undecided: [] });
+        const r = snip('<meta name="googlebot" content="noindex">\n<meta name="robots" content="nosnippet">', '2099-01-01');
+        expect(r.hits).toEqual([]);
+        expect(r.undecided).toHaveLength(1);
     });
 });
 

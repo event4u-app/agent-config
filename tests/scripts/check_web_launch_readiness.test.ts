@@ -1084,4 +1084,29 @@ describe('snippet-eligibility and structured-data-parses', () => {
     it('a noindex page is not also a snippet finding — it is not indexable to begin with', () => {
         expect(at('staging-leftover', 'snippet-eligibility')).toEqual([]);
     });
+
+    it('a nosnippet on a crawler name whose register row lapsed is unknown, not passed', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wl-lapsed-'));
+        fs.mkdirSync(path.join(root, 'src/config'), { recursive: true });
+        for (const f of fs.readdirSync(path.join(REPO, 'src/config')).filter((x) => x.endsWith('.json'))) {
+            fs.copyFileSync(path.join(REPO, 'src/config', f), path.join(root, 'src/config', f));
+        }
+        const regPath = path.join(root, 'src/config/crawler-register.json');
+        const reg = JSON.parse(fs.readFileSync(regPath, 'utf8')) as { rows: { token: string; checked_at: string; review_by: string }[] };
+        for (const r of reg.rows) if (r.token === 'Googlebot') Object.assign(r, { checked_at: '2020-01-01', review_by: '2020-06-01' });
+        fs.writeFileSync(regPath, JSON.stringify(reg));
+        const build = path.join(root, 'build');
+        fs.mkdirSync(build);
+        fs.writeFileSync(
+            path.join(build, 'index.html'),
+            '<!doctype html>\n<html lang="en">\n<head>\n<title>x</title>\n<meta name="googlebot" content="nosnippet">\n</head>\n<body></body>\n</html>\n',
+        );
+        try {
+            const r = audit(build, 'marketing-site', root);
+            expect(r.passed).not.toContain('snippet-eligibility');
+            expect(r.unknown.filter((u) => u.check === 'snippet-eligibility').map((u) => u.location)).toEqual(['index.html:5']);
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
 });

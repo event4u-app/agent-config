@@ -132,17 +132,24 @@ export function metaNoindex(file: string, text: string, register: readonly Crawl
     return out;
 }
 
-/** Robots meta tags addressed to search: `robots`, or a live search crawler's documented meta name. */
-function searchMetaDirectives(text: string, register: readonly CrawlerRow[], asOf: string): { line: number; tag: string; tokens: string[] }[] {
-    const names = new Set(['robots']);
-    for (const r of register) {
-        if (r.meta_name !== undefined && r.affects_search_inclusion && rowState(r, asOf) === 'live') names.add(r.meta_name.toLowerCase());
-    }
-    const out: { line: number; tag: string; tokens: string[] }[] = [];
+interface SearchMeta {
+    line: number;
+    tag: string;
+    tokens: string[];
+    /** The register row behind the meta name; `null` for `robots`, which no row governs. */
+    row: CrawlerRow | null;
+}
+
+/** Robots meta tags addressed to search: `robots`, or a search crawler's documented meta name, live or lapsed. */
+function searchMetaDirectives(text: string, register: readonly CrawlerRow[]): SearchMeta[] {
+    const byName = new Map<string, CrawlerRow | null>([['robots', null]]);
+    for (const r of register) if (r.meta_name !== undefined && r.affects_search_inclusion) byName.set(r.meta_name.toLowerCase(), r);
+    const out: SearchMeta[] = [];
     for (const t of tagsOf(text, HEAD_TAGS)) {
         if (!t.closed || t.name !== 'meta') continue;
-        if (!names.has((attr(t.tag, 'name') ?? '').trim().toLowerCase())) continue;
-        out.push({ line: t.line, tag: t.tag.trim().slice(0, 160), tokens: directives(attr(t.tag, 'content') ?? '') });
+        const row = byName.get((attr(t.tag, 'name') ?? '').trim().toLowerCase());
+        if (row === undefined) continue;
+        out.push({ line: t.line, tag: t.tag.trim().slice(0, 160), tokens: directives(attr(t.tag, 'content') ?? ''), row });
     }
     return out;
 }
@@ -150,13 +157,24 @@ function searchMetaDirectives(text: string, register: readonly CrawlerRow[], asO
 /**
  * `nosnippet` or `max-snippet:0` on a page search may index. A page that is
  * `noindex` is not indexable to begin with, and that is a different finding.
+ * A directive resting on a lapsed register row reads `undecided`, exactly as
+ * `metaNoindex` does — and so does a snippet block on a page whose only
+ * `noindex` rests on one, since whether that page is indexable is unknown.
  */
-export function snippetBlocks(file: string, text: string, register: readonly CrawlerRow[], asOf: string): IndexHit[] {
-    const metas = searchMetaDirectives(text, register, asOf);
-    if (metas.some((m) => m.tokens.some((t) => t === 'noindex' || t === 'none'))) return [];
-    return metas
-        .filter((m) => m.tokens.some((t) => t === 'nosnippet' || /^max-snippet:\s*0$/.test(t)))
-        .map((m) => ({ file, line: m.line, text: m.tag }));
+export function snippetBlocks(file: string, text: string, register: readonly CrawlerRow[], asOf: string): Indexability {
+    const out: Indexability = { hits: [], undecided: [] };
+    const lapsed = (m: SearchMeta): m is SearchMeta & { row: CrawlerRow } => m.row !== null && rowState(m.row, asOf) === 'lapsed';
+    const metas = searchMetaDirectives(text, register);
+    const noindex = metas.filter((m) => m.tokens.some((t) => t === 'noindex' || t === 'none'));
+    if (noindex.some((m) => !lapsed(m))) return out;
+    for (const m of metas) {
+        if (!m.tokens.some((t) => t === 'nosnippet' || /^max-snippet:\s*0$/.test(t))) continue;
+        const hit = { file, line: m.line, text: m.tag };
+        const doubt = lapsed(m) ? m : noindex.find(lapsed);
+        if (doubt === undefined) out.hits.push(hit);
+        else out.undecided.push({ ...hit, text: lapsedText(doubt.row, asOf, hit.text) });
+    }
+    return out;
 }
 
 export interface RobotsGroup {

@@ -758,7 +758,7 @@ function absoluteUrl(raw: string): URL | null {
 const snippetEligibility: Impl = (files, _tp, crawlers) => {
     const rows = crawlers ?? crawlersFor(REPO_ROOT);
     const today = asOfToday();
-    return files.filter(isPage).flatMap((f) => snippetBlocks(f.rel, f.text, rows, today));
+    return files.filter(isPage).flatMap((f) => snippetBlocks(f.rel, f.text, rows, today).hits);
 };
 
 /** Every `<script type="application/ld+json">` parses as JSON. Whether its types are rich or right is not scored. */
@@ -975,6 +975,8 @@ export interface UndecideCtx {
     escalations: readonly Escalation[];
     /** Register + supersession table; loaded from the repository when absent. */
     thirdParty?: ThirdPartyCtx;
+    /** The crawler register; loaded from the repository when absent. */
+    crawlers?: readonly CrawlerRow[];
 }
 export type Undecide = (files: readonly SourceFile[], ctx: UndecideCtx) => UndecideHit[];
 
@@ -1094,7 +1096,16 @@ export const UNDECIDABLE: Readonly<Record<string, Undecide>> = {
     // is `required-legal-pages`'s finding, not an undecided here.
     'superseded-statute-in-legal-page': unless(hasPage, `${NO_MARKUP}, so no imprint citation could be read.`),
     'placeholder-in-legal-page': unless(hasPage, `${NO_MARKUP}, so no legal-page template token could be read.`),
-    'snippet-eligibility': unless(hasPage, `${NO_MARKUP}, and robots meta tags are commonly set by a head manager at runtime.`),
+    // Per location as well: a snippet block resting on a lapsed crawler row is
+    // unknown, never a silent pass (the same reading `metaNoindex` gives it).
+    'snippet-eligibility': (files, ctx) => {
+        if (!hasPage(files)) return blind(`${NO_MARKUP}, and robots meta tags are commonly set by a head manager at runtime.`);
+        const rows = ctx.crawlers ?? crawlersFor(REPO_ROOT);
+        return files
+            .filter(isPage)
+            .flatMap((f) => snippetBlocks(f.rel, f.text, rows, asOfToday()).undecided)
+            .map((u) => ({ ...u, reason_class: 'instrument-limit' as const }));
+    },
     'structured-data-parses': unless(hasPage, `${NO_MARKUP}, so no JSON-LD block could be read.`),
     'privacy-page-provider-coverage': (files, ctx) => {
         if (!files.some((f) => isPage(f) || isStylesheet(f))) {
@@ -1221,7 +1232,7 @@ export function audit(
         const index = impl === undefined ? scanIndexability(buildDir, root) : undefined;
         const hits = index === undefined ? (impl as Impl)(files, thirdParty, crawlersFor(root)) : index.hits;
         const undecided: UndecideHit[] = [
-            ...(undecidable[c.id]?.(files, { region, siteType, escalations, thirdParty }) ?? []),
+            ...(undecidable[c.id]?.(files, { region, siteType, escalations, thirdParty, crawlers: crawlersFor(root) }) ?? []),
             ...(index?.undecided ?? []).map((u) => ({ ...u, reason_class: 'instrument-limit' as const })),
         ];
         for (const u of undecided) {
