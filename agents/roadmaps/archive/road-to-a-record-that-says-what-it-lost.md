@@ -33,7 +33,7 @@ finding disposition names a command but not the outcome it must produce
 
 ## Phase 1 — A review chunk that was not read is not counted as read
 
-- [ ] **1.1 Unparseable answer = unreviewed chunk.** In
+- [x] **1.1 Unparseable answer = unreviewed chunk.** In
       `src/scripts/self_review_gate.ts` add `parseFindingsResult(text)` returning
       `{ findings, parsed }` (`parsed` false when no JSON object is found, it
       does not parse, or `findings` is not an array); keep `parseFindings` as a
@@ -43,14 +43,14 @@ finding disposition names a command but not the outcome it must produce
       `model output not parseable as the findings shape`, mirroring the
       transport-error branch (`:1338-1354`). `{"findings":[]}` stays read.
       verify: `npx vitest run tests/scripts/self_review_unparsed_chunk.test.ts` -> 0 — cases: truncated JSON → `parsed:false`; prose-embedded JSON → parsed, 2 findings; `{"findings":[]}` → `parsed:true`, 0 findings.
-- [ ] **1.2 Findings carry `confidence`.** Extend the prompt schema
+- [x] **1.2 Findings carry `confidence`.** Extend the prompt schema
       (`self_review_gate.ts:602-605`) with
       `"confidence":"confirmed|plausible|unverified"` and the `Finding` type with
       an optional field; `parseFindings` stores a valid value and defaults a
       missing or invalid one to `unverified`, never dropping the finding
       (contract `docs/contracts/adversarial-review-protocol.md:191-208`).
       verify: `npx vitest run tests/scripts/self_review_unparsed_chunk.test.ts` -> 0 — added cases: missing confidence → `unverified`, `"high"` → `unverified`, `"confirmed"` kept.
-- [ ] **1.3 The ceiling drops the cheapest paths first.** Before packing in
+- [x] **1.3 The ceiling drops the cheapest paths first.** Before packing in
       `partitionDiff` (`self_review_gate.ts:750`), stable-sort the input by risk
       tier: 1 `src/scripts/**`, `src/rules/**`, `.github/workflows/**`,
       `src/cli/**`, `src/install/**`; 2 other `src/**`, `docs/contracts/**`;
@@ -61,7 +61,7 @@ finding disposition names a command but not the outcome it must produce
 
 ## Phase 2 — A disposition says what its check must produce
 
-- [ ] **2.1 Rewrite the six replay outliers with an expectation.** Ledger-only
+- [x] **2.1 Rewrite the six replay outliers with an expectation.** Ledger-only
       edits, rationale and status unchanged: `16.2.0.json` `87a5d236cf23`
       append ` -> 1`; `6a8dd0cf9ed5` path → `agents/roadmaps/later/road-to-adversarial-verification-and-long-runs.md`, ` -> 1`;
       `16.3.0.json` `de7e020a458f` and `49c1459b49e9` ` -> 1`; `1b661735687e`
@@ -69,7 +69,7 @@ finding disposition names a command but not the outcome it must produce
       Each expectation follows the finding's claim (a fix that removed a string
       expects 1), never the observed exit alone.
       verify: `./scripts-run src/scripts/check_finding_dispositions --release 16.3.0` -> 0
-- [ ] **2.2 The gate counts the oracle share, without refusing.** In
+- [x] **2.2 The gate counts the oracle share, without refusing.** In
       `src/scripts/check_finding_dispositions.ts` add exported
       `hasExpectation(verifiedBy)` built on `VERIFY_ARROW_SOURCE` from
       `src/agent-src/scripts/verify_clause.ts:85` (no second arrow parser), and
@@ -81,7 +81,7 @@ finding disposition names a command but not the outcome it must produce
 
 ## Phase 3 — One confidence vocabulary; reproduction has a column
 
-- [ ] **3.1 `security-audit` and `performance-analysis` adopt the contract
+- [x] **3.1 `security-audit` and `performance-analysis` adopt the contract
       vocabulary.** Replace `Confidence: Low / Medium / High` in
       `src/skills/security-audit/SKILL.md:249` (keep "confirmed only with
       `proof: test`") and `src/skills/performance-analysis/SKILL.md:107`
@@ -90,7 +90,7 @@ finding disposition names a command but not the outcome it must produce
       `docs/contracts/adversarial-review-protocol.md` § confidence instead of
       restating it.
       verify: `grep -rn 'Confidence:\*\* Low / Medium / High' src/skills` -> 1 — exit 1, no matches; then `task lint-skills` -> 0
-- [ ] **3.2 The review-reply triage records the reproduction.** In
+- [x] **3.2 The review-reply triage records the reproduction.** In
       `src/skills/receiving-code-review/SKILL.md` add a "Reproduced by" column to
       the response table (`:96-102`): a `verify:` clause in the expectation
       grammar or `not reproduced`; an accepted blocking comment without an entry
@@ -99,7 +99,7 @@ finding disposition names a command but not the outcome it must produce
 
 ## Phase 4 — Session records say what they trimmed or set aside
 
-- [ ] **4.1 The handoff counts its trims.** In
+- [x] **4.1 The handoff counts its trims.** In
       `src/scripts/_cli/handoff_generate.ts` count removed items per section in
       the trim loop (`:457-467`); render an emptied section as
       `- [N trimmed by word cap]` and keep `(none extracted)` only when
@@ -107,24 +107,33 @@ finding disposition names a command but not the outcome it must produce
       `Trimmed: <total>` when the total is > 0. The header line counts against
       the cap.
       verify: `npx vitest run tests/scripts/handoff_generate.test.ts` -> 0 — the existing cap fixture (`:138-157`) additionally asserts `Key decisions` does not contain `(none extracted)` and the `Trimmed:` total equals the removed count.
-- [ ] **4.2 Handoff-file drift is annotated like the recycle record.** In
+- [x] **4.2 Handoff-file drift is annotated like the recycle record.** In
       `consume_handoff_context` (`src/scripts/handoff_context_hook.ts:99-139`)
       read `Branch:` / `Last commit:` from the file and annotate via
       `describeDrift` (already used at `:303`); never refuse, and a header
       without `Branch:` gets no drift line.
       verify: `npx vitest run tests/scripts/handoff_context_hook.test.ts` -> 0 — new cases: other branch → drift line present; same branch → output byte-identical; no `Branch:` → no drift line.
-- [ ] **4.3 Set-aside transcript copies are not sessions.** In
+- [x] **4.3 Set-aside transcript copies are not sessions.** In
       `listTranscriptFiles` (`src/scripts/_lib/cc_transcript.ts:284`) skip names
       matching `/\.orphaned-[^/]*\.jsonl$/`; expose the skipped count where the
       scan result is built so a report can print `set_aside: n`.
       verify: `npx vitest run tests/scripts/cc_transcript.test.ts` -> 0 — new fixture tree with `s.jsonl` and `s.orphaned-1700000000-ab.jsonl` lists 1 file, set-aside 1.
-- [ ] **4.4 The recall resolver honours `autoMemoryDirectory`, read-only.** In
+- [x] **4.4 The recall resolver honours `autoMemoryDirectory`, read-only.** In
       `resolveMemoryDir` (`src/scripts/hooks/memory_recall_hook.ts:303-325`)
       resolve in order `AGENT_CONFIG_MEMORY_DIR` → host `autoMemoryDirectory`
       (via the existing settings reader in
       `src/scripts/_lib/claude_settings_hooks.ts`) → slug walk. Never write
       host settings; an unreadable settings file falls through silently.
       verify: `npx vitest run tests/scripts/memory_recall_hook.test.ts` -> 0 — new cases: key set with a memory dir → that dir; key absent → resolution identical to today; unreadable settings → slug walk.
+
+## Decisions
+
+| Decision | Alternatives | Reason | Revisit-if |
+|---|---|---|---|
+| 4.4 reads `autoMemoryDirectory` from the host **user** settings file only (sibling of the projects root), not project or local settings | read project `.claude/settings.json` and `.claude/settings.local.json` too, in host precedence order | A checked-in project file redirecting where memory is read from is the riskier direction, and whether the host honours the key at project scope was not establishable from the tree; user-only is the narrower, reversible read | a host capture or host doc in the tree shows the key is honoured at project or local scope |
+| 4.4 treats the configured value as the memory directory itself (no `<slug>/memory` appended); a configured but missing directory resolves to no store, as the env override does | append the slug path; fall through to the slug walk when the directory is missing | The host writes the store where the key points, so a missing directory means no store there; mirroring the env-override branch keeps one rule for an explicit location | a live store shows the host nests per-project directories under the configured path |
+| 4.1 also renders `- [N trimmed by word cap]` under a section the cap shortened but did not empty | mark only emptied sections | Without it the `Trimmed:` total is not attributable to sections, and a partly trimmed section still reads as complete | the marker words measurably crowd out content under the default cap |
+| 2.2 adds a separate `oracle_summary` to the success line instead of changing `disposition_summary` | extend `disposition_summary`'s string | The existing summary is pinned byte-exact by its test and read elsewhere; an additive segment changes no existing reader | — |
 
 ## Later (not active; each needs elapsed time, a host, CI infra, or an owner/council decision)
 

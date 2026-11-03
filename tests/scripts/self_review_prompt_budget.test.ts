@@ -183,6 +183,43 @@ describe('partitionDiff — the measured spans must fit', () => {
     it('an empty span produces no chunks and no complaint', () => {
         expect(partitionDiff([])).toEqual({ chunks: [], unreviewed: [] });
     });
+
+    it('a capped run reads the highest-risk paths first', () => {
+        // In diff order the ceiling dropped whatever sorted last, which could be
+        // a workflow or a script while roadmap prose was read.
+        const files = [
+            { path: 'agents/x.md', diff: 'a'.repeat(100) },
+            { path: 'src/scripts/y.ts', diff: 'b'.repeat(100) },
+        ];
+        const first = partitionDiff(files, 100, 1);
+        expect(first.chunks.map((c) => c.files)).toEqual([['src/scripts/y.ts']]);
+        expect(first.unreviewed.map((u) => u.path)).toEqual(['agents/x.md']);
+        expect(partitionDiff(files, 100, 1)).toEqual(first);
+    });
+
+    it('orders by tier and keeps input order within a tier', () => {
+        const paths = [
+            'agents/r.md',
+            'tests/a.test.ts',
+            'src/skills/s/SKILL.md',
+            '.github/workflows/ci.yml',
+            'docs/guide.md',
+            'src/rules/r.md',
+            'docs/contracts/c.md',
+            'README.md',
+        ];
+        const { chunks } = partitionDiff(paths.map((path) => ({ path, diff: 'x' })), 1, 100);
+        expect(chunks.map((c) => c.files[0])).toEqual([
+            '.github/workflows/ci.yml',
+            'src/rules/r.md',
+            'src/skills/s/SKILL.md',
+            'docs/contracts/c.md',
+            'tests/a.test.ts',
+            'docs/guide.md',
+            'agents/r.md',
+            'README.md',
+        ]);
+    });
 });
 
 describe('merged findings', () => {

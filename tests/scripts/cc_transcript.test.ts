@@ -24,6 +24,7 @@ import {
     billableInputTokens,
     derivedBytes,
     listTranscriptFiles,
+    listTranscriptFilesCounted,
     measureBytesPerToken,
     measureContentBytes,
     REREAD_ADVISORY,
@@ -264,6 +265,15 @@ describe('listTranscriptFiles — root / projectDir / maxAgeDays', () => {
         const files = listTranscriptFiles({ root, maxAgeDays: 7, now });
         expect(files).not.toContain(staleFile);
         expect(files).toContain(path.join(projectDir, 'session1', 'subagents', 'agent-x.jsonl'));
+    });
+
+    it('a set-aside .orphaned- copy is not a session, and is counted apart', () => {
+        const root = mkTmp();
+        appendJsonl(path.join(root, 'p', 's.jsonl'), [REC_A]);
+        appendJsonl(path.join(root, 'p', 's.orphaned-1700000000-ab.jsonl'), [REC_A]);
+        expect(listTranscriptFiles({ root })).toEqual([path.join(root, 'p', 's.jsonl')]);
+        expect(listTranscriptFilesCounted({ root }).setAside).toBe(1);
+        expect(scanTranscripts({ root }).setAside).toBe(1);
     });
 });
 

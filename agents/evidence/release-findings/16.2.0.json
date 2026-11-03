@@ -139,7 +139,7 @@
       "status": "fixed",
       "commit": "4e803d6204906ce5357808ad2ec146e285249a0b",
       "rationale": "The contradiction is resolved in the direction the finding called the honest one: the level was raised rather than the criterion quietly left wrong. Every provenance marker in both suites now reads `level=L4 | critical=yes` with an `evidence` slug — twelve markers across tests/scripts/forge_reader.test.ts and tests/scripts/doctor_forge_block.test.ts, zero at L1. AC-2 therefore no longer has a closed criterion falsified by the diff that carried it.",
-      "verified_by": "grep -c 'level=L1' tests/scripts/forge_reader.test.ts tests/scripts/doctor_forge_block.test.ts",
+      "verified_by": "grep -c 'level=L1' tests/scripts/forge_reader.test.ts tests/scripts/doctor_forge_block.test.ts -> 1",
       "date": "2026-10-01"
     },
     {
@@ -243,7 +243,7 @@
       "status": "fixed",
       "commit": "4e803d6204906ce5357808ad2ec146e285249a0b",
       "rationale": "The drift-prone count was removed rather than corrected to eight. No \"nine-item\" or \"eight-item\" string survives anywhere in the roadmap; the two remaining occurrences of \"nine\" are the nine-rule kernel, which is a different subject. The AC-6 owner artefact is now introduced without a count, so there is no figure left to go stale — the same structural fix the AC-5 paragraph in the same file applied to its denominators.",
-      "verified_by": "grep -c 'nine-item' agents/roadmaps/road-to-adversarial-verification-and-long-runs.md",
+      "verified_by": "grep -c 'nine-item' agents/roadmaps/later/road-to-adversarial-verification-and-long-runs.md -> 1",
       "date": "2026-10-01"
     },
     {

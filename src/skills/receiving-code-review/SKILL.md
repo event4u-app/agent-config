@@ -93,13 +93,19 @@ For each comment classified as blocking/important:
 
 ### 4. Decide: accept, push back, or escalate
 
-| Situation | Response |
-|---|---|
-| Reviewer is right, fix is local, no caller impact | Implement, reference the comment in the commit message |
-| Reviewer is right but fix affects other callers | Note the downstream effects in the reply, then implement |
-| Reviewer is wrong — based on misreading the code | Reply with evidence (specific line / test / value), do not change code |
-| Reviewer suggests a feature the codebase does not use (YAGNI) | Reply asking whether the feature is actually needed, do not build speculatively |
-| Reviewer and user / architecture disagree | Escalate to the user before implementing either path |
+| Situation | Response | Reproduced by |
+|---|---|---|
+| Reviewer is right, fix is local, no caller impact | Implement, reference the comment in the commit message | `verify: <cmd> -> <exit or /re/>` that was red before the fix |
+| Reviewer is right but fix affects other callers | Note the downstream effects in the reply, then implement | `verify:` clause, as above |
+| Reviewer is wrong — based on misreading the code | Reply with evidence (specific line / test / value), do not change code | `verify:` clause showing the alleged defect absent, or `not reproduced` |
+| Reviewer suggests a feature the codebase does not use (YAGNI) | Reply asking whether the feature is actually needed, do not build speculatively | `not reproduced` |
+| Reviewer and user / architecture disagree | Escalate to the user before implementing either path | `verify:` clause or `not reproduced` |
+
+**Reproduced by** records the step-3 reproduction in the verify-clause
+expectation grammar (`<cmd> -> 0`, `<cmd> -> /regex/`), or the literal
+`not reproduced`. An accepted blocking comment with no entry in that column
+stays open — the fix has nothing showing it addressed the reported defect.
+This is `enforcement: instruction-only`: no gate reads the column.
 
 ### 5. Reply in the right place, with the right tone
 
