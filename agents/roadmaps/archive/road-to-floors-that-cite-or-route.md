@@ -59,7 +59,7 @@ source-tag vocabulary into the skills that were meant to carry it.
       applicable contractual or tax floor for the named jurisdiction, `[model knowledge — verify]`".
       Repair, do not delete the example; `:158` stays.
       verify: `grep -c "7 years (contractual + tax authority)" src/skills/data-handling-judgment/SKILL.md` prints 0.
-- [~] **1.4 The sentence in the two sibling floors.** Carried 2026-11-03 to `stubs/road-to-floor-source-tags-with-payload-room` (built, then reverted for the standing-payload ratchet; council split, conservative branch). One line each in <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_rule_evidence_declaration.ts -->
+- [~] **1.4 The sentence in the two sibling floors.** Carried 2026-11-03 to `later/road-to-floor-source-tags-with-payload-room` (built, then reverted for the standing-payload ratchet; council split, conservative branch). <!-- deferred-resolution: carried-to=road-to-floor-source-tags-with-payload-room --> One line each in <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_rule_evidence_declaration.ts -->
       `src/rules/finance-safety-floor.md` (Assumptions block, `:69`) and
       `src/rules/domain-safety-disclaimer.md`: "A normative value (period, article, threshold, rate)
       carries `[verified — source, date]` from a primary source or `[model knowledge — verify]`;

@@ -1,11 +1,14 @@
 ---
 complexity: lightweight
+status: later
 review_by: 2026-12-31
+parent_roadmap: road-to-floors-that-cite-or-route
+estate_growth_exempt: "+1 later_roadmaps: receiver of the carried step 1.4 of road-to-floors-that-cite-or-route, which was built and then reverted inside this change for the standing-payload ratchet; the archival sweep accepts a carry only into agents/roadmaps/ or later/, so a stub cannot hold it."
 ---
 
-# Stub: source tags in the always-loaded safety floors
+# Road to source tags in the always-loaded safety floors
 
-> **Stub — not active work.** Carried 2026-11-03 from step 1.4 (and the second
+> **Parked — not active work.** Carried 2026-11-03 from step 1.4 (and the second
 > URL of step 2.1) of the archived `road-to-floors-that-cite-or-route`.
 > **Resume when:** the standing-payload ratchet has room for ~110 tokens in the
 > project-scope rules (a lowered base after a rule shrink, or an owner-approved
@@ -37,3 +40,8 @@ the German translations.
 The two tag lines back in the sibling floors, the second OWASP URL, and the
 tag vocabulary named in the retention rule's Track 1 — with
 `check_preamble_payload_budget` green on the same change.
+
+## Phase 1 — Restore the tags
+
+- [ ] **1.1 Tag lines back in the sibling floors.** Re-add the normative-value tag line to `src/rules/domain-safety-disclaimer.md` and `src/rules/finance-safety-floor.md`, and the second OWASP `source_urls` entry to `src/rules/broken-access-control.md`.
+      verify: `./scripts-run src/scripts/check_preamble_payload_budget` -> exit 0 on the same change.
