@@ -61,6 +61,7 @@ const ALLOWED_FLAT_FILES: ReadonlySet<string> = new Set([
 // Entries marked (* consumer) are also allowed in consumer projects.
 // Contract: docs/contracts/agents-layout.md § Directory table.
 const ALLOWED_SOURCE_DIRS: ReadonlySet<string> = new Set([
+    'auto-learnings-1', // owner-directed session-friction analysis + its roadmap, outside the WIP-capped roadmaps/
     'decisions',
     'evidence',
     'features',
