@@ -58,18 +58,8 @@ function _has_dotnet_solution(dir: string): boolean {
     }
 }
 
-/**
- * .NET — the basis string, or `null` when nothing marks a .NET project.
- *
- * Mirrors the PHP gradation, awarding HIGH only for a NAMED runner: HIGH
- * needs a PROJECT file naming a TEST stack (`Microsoft.NET.Test.Sdk`, xunit,
- * nunit, mstest); a bare project or solution is MEDIUM, the analogue of the
- * bare manifest. That stops a bare non-test project raising the WHOLE
- * repository to HIGH, but does NOT keep the row out of `selected` —
- * `_apply_guard` has never read `confidence` — which is why a marker with no
- * project anywhere emits no row.
- */
-export function _dotnet_basis(root: string): DotnetBasis | null {
+/** The root's .NET project or solution file, or `undefined` — files only, sorted. */
+function _dotnet_root_target(root: string): string | undefined {
     let names: string[];
     try {
         // SORTED: the basis names the matched file and is serialised, so an
@@ -89,7 +79,22 @@ export function _dotnet_basis(root: string): DotnetBasis | null {
     // whatever sits below. So the row is gated on this listing, and a scope
     // whose only .NET evidence is an SDK pin gets NO row — confidence does not
     // gate `selected`, so a row here would be a command that cannot run.
-    const target = names.find((n) => _DOTNET_PROJECT_EXTS.includes(path.extname(n).toLowerCase()));
+    return names.find((n) => _DOTNET_PROJECT_EXTS.includes(path.extname(n).toLowerCase()));
+}
+
+/**
+ * .NET — the basis string, or `null` when nothing marks a .NET project.
+ *
+ * Mirrors the PHP gradation, awarding HIGH only for a NAMED runner: HIGH
+ * needs a PROJECT file naming a TEST stack (`Microsoft.NET.Test.Sdk`, xunit,
+ * nunit, mstest); a bare project or solution is MEDIUM, the analogue of the
+ * bare manifest. That stops a bare non-test project raising the WHOLE
+ * repository to HIGH, but does NOT keep the row out of `selected` —
+ * `_apply_guard` has never read `confidence` — which is why a marker with no
+ * project anywhere emits no row.
+ */
+export function _dotnet_basis(root: string): DotnetBasis | null {
+    const target = _dotnet_root_target(root);
     if (target === undefined) {
         return null;
     }
@@ -106,6 +111,15 @@ export function _dotnet_basis(root: string): DotnetBasis | null {
     return _DOTNET_TEST_STACK.test(_dotnet_project_text(root))
         ? { basis: 'test stack named in a .NET project file', test_stack: true }
         : { basis: `${target} present, no test stack named`, test_stack: false };
+}
+
+/**
+ * The engine whose root made `_dotnet_basis` withhold a root .NET target, or
+ * `null` when it withheld nothing — the suppression alone reads like "no .NET".
+ */
+export function _dotnet_withheld_by(root: string): 'unity' | 'unreal' | null {
+    const engine = engine_marker(root);
+    return (engine === 'unity' || engine === 'unreal') && _dotnet_root_target(root) !== undefined ? engine : null;
 }
 
 /**

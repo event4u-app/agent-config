@@ -95,6 +95,10 @@ root, no `dotnet test` row is emitted even when a `.sln` / `*.csproj` sits
 beside it: the engine generates those for the IDE, and its tests run in the
 engine's own runner. No runner is the honest answer; a wrong one is not. A
 marker below the root does not suppress a root target.
+The withheld row is recorded in `result.refusals` (ecosystem, runner,
+reason) and serialised as `refusals` in `toolchain.json`, so a missing
+`dotnet test` reads as a decision. The key is absent when nothing was
+withheld.
 
 Given a root target: HIGH when a PROJECT file names a test stack
 (`Microsoft.NET.Test.Sdk`, xunit, nunit, mstest), MEDIUM otherwise. A root
