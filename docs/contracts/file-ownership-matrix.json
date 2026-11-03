@@ -5713,6 +5713,13 @@
     },
     {
       "source": ".agent-src.uncondensed/contexts/execution/roadmap-process-loop-set.md",
+      "target": ".agent-src.uncondensed/contexts/execution/roadmap-execution-contract-branches.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/roadmap-process-loop-set.md",
       "target": ".agent-src.uncondensed/contexts/execution/roadmap-process-loop-set.md",
       "type": "WRITE",
       "via": "self",
