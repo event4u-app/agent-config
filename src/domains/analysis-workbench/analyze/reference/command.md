@@ -93,6 +93,19 @@ an empty ledger reads `unknown`, a row verified on analyst inference alone is
 refused, and a `visible-only` row never counts toward parity. A conscious
 rebuild is a borrow under `code-provenance`: read, close the source, re-derive.
 
+The run writes the ledger as `{ "evidence_ids": [...], "obligations": [...] }` —
+the evidence ids it actually recorded, and the rows — and checks it before it
+reports the transfer done:
+
+```bash
+./scripts-run src/scripts/reconstruction_ledger --check <run-dir>/obligations.json
+```
+
+Exit 0 is `closed`; 1 is `open` or `unknown` (not done); 2 is `invalid` — an
+evidence id the run never recorded, an authority outside the enum, or a
+`verified` row with a blank verifier — or a file it cannot read. Only exit 0
+closes the transfer.
+
 ## Enforced limits
 
 The frontmatter `limits:` block is the machine-readable pin

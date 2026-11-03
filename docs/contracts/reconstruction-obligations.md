@@ -63,10 +63,22 @@ claims a stricter tier than its rows prove.
    evidence id and `verifier_authority` is not `analyst-inference`. A row that
    claims `verified` without both is refused, and the ledger reads `invalid`
    until it is corrected.
+   A row is also refused — whatever its status — when an evidence id it
+   cites is not among the evidence ids the run recorded, or its
+   `verifier_authority` is outside the enum above; and a `verified` row is
+   refused when its `verifier` is blank. The recorded ids are a required
+   input of the check, so a fabricated id cannot close a row.
 2. A ledger **closes** only when no row is `open` or `visible-only`.
 3. An **empty ledger reads `unknown`** — no rows is no claim, never "done".
 4. **Parity** = verified rows / (all rows − waived rows). `visible-only`,
    `open` and `waived` add nothing to the numerator.
+
+## The check
+
+`./scripts-run src/scripts/reconstruction_ledger --check <file>` reads
+`{ "evidence_ids": [...], "obligations": [...] }` and exits 0 on `closed`, 1 on
+`open` or `unknown`, 2 on `invalid` or a file it cannot read. A file without
+`evidence_ids` is refused rather than read as "no evidence needed".
 
 ## Non-goals
 
