@@ -696,6 +696,38 @@ describe('stack/runner — rspec, junit, dotnet-test', () => {
         expect(labels(tmp)).not.toContain('dotnet-test');
     });
 
+    it.each([
+        ['unity', () => {
+            write('ProjectSettings/ProjectVersion.txt', 'm_EditorVersion: 2022.3.10f1\n');
+            write('Assembly-CSharp.csproj', '<Project><PackageReference Include="nunit" /></Project>');
+        }],
+        ['unreal', () => {
+            write('Shooter.uproject', '{"FileVersion": 3}');
+            write('Shooter.sln', 'Microsoft Visual Studio Solution File\n');
+        }],
+    ] as const)('the withheld dotnet row on a %s root is recorded with its reason', (engine, setup) => {
+        setup();
+        const res = resolve_toolchain(tmp);
+        expect(res.refusals).toEqual([
+            { ecosystem: 'dotnet', runner: 'dotnet-test', reason: expect.stringContaining(engine) },
+        ]);
+        expect(res.to_config()['refusals']).toEqual(res.refusals);
+    });
+
+    it('an engine marker with no root .NET target records no refusal', () => {
+        write('ProjectSettings/ProjectVersion.txt', 'm_EditorVersion: 2022.3.10f1\n');
+        const res = resolve_toolchain(tmp);
+        expect(res.refusals).toEqual([]);
+        expect(res.to_config()).not.toHaveProperty('refusals');
+    });
+
+    it('a plain .NET test project carries no `refusals` key, so its config is unchanged', () => {
+        write('Api.Tests.csproj', '<Project><PackageReference Include="xunit" /></Project>');
+        const res = resolve_toolchain(tmp);
+        expect(res.refusals).toEqual([]);
+        expect(res.to_config()).not.toHaveProperty('refusals');
+    });
+
     it('a Unity marker BELOW the root does not suppress a root .NET target', () => {
         write('Api.Tests.csproj', '<Project><PackageReference Include="xunit" /></Project>');
         write('client/ProjectSettings/ProjectVersion.txt', 'm_EditorVersion: 2022.3.10f1\n');
