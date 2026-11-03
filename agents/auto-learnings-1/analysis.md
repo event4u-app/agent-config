@@ -7,7 +7,8 @@
 > user ran, denied tool calls), then four parallel readers of 25 sessions each,
 > plus deterministic counts over the skeletons. Reader counts are lower bounds;
 > deterministic counts are exact over the skeleton.
-> **Roadmap:** [`roadmap.md`](roadmap.md).
+> **Roadmap:** `road-to-an-agent-the-owner-does-not-drive`, parked under
+> `agents/roadmaps/later/` until the owner promotes it.
 
 ## Hard numbers (deterministic, exact over the skeletons)
 

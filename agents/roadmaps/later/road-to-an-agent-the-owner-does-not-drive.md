@@ -1,17 +1,24 @@
 ---
 complexity: structural
-status: ready
+status: later
 tree_pin: 81788b6e63
+review_by: 2026-12-15
+estate_growth_exempt: "+1 later_roadmaps, owner-directed 2026-11-03 (analyse the last 100 sessions and create a roadmap to work off later): parked rather than active because the active estate is 8, over the WIP cap of 5; extending an existing roadmap was rejected because the matching ones (road-to-user-out-of-the-loop, road-to-gate-autonomy, road-to-worktrees-that-leave-after-the-merge) are archived and their recurrence is the finding itself."
+entry_condition:
+  what: "a slot under the active-roadmap WIP cap of 5 is free, or the owner promotes this roadmap explicitly (the owner asked for it to be worked off later, 2026-11-03)"
+  when: "at the next estate drawdown or on the owner's promote instruction; no date is promised"
+  who: "owner (promotion); any agent run once promoted"
 execution:
   mode: phase-checkpoints
-review_by: 2026-12-15
 ---
 # Road to an agent that does not need the owner to drive it
 
-> **Source:** [`analysis.md`](analysis.md) — 100 sessions, 2026-10-20 → 2026-11-03.
+> **Source:** [`analysis.md`](../../auto-learnings-1/analysis.md) — 100 sessions, 2026-10-20 → 2026-11-03.
 > **Owner directive (2026-11-03):** analyse the last 100 sessions for unwanted
-> questions and manual steps the agent should have done; land the roadmap in
-> `agents/auto-learnings-1/`.
+> questions and manual steps the agent should have done, in
+> `agents/auto-learnings-1/`, to be worked off later. The analysis lives there;
+> this roadmap is parked in `later/` because `check_agent_artifact_location`
+> keeps roadmaps under `agents/roadmaps/` and the active estate is over the WIP cap.
 
 ## Goal
 
