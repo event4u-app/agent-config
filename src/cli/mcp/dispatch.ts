@@ -170,6 +170,8 @@ export const INSTRUCTIONS =
 
 /** Standing-context budget for the two tool definitions, in tokens (chars/4). */
 export const LITE_TOOLS_TOKEN_CAP = 600;
+/** Largest `limit` `suggest_skill_for_task` serves; a larger request is clamped and says so. */
+export const SUGGEST_LIMIT_MAX = 20;
 /** Byte cap on `INSTRUCTIONS`, so the nudge cannot grow into a preamble. */
 export const INSTRUCTIONS_BYTE_CAP = 400;
 
@@ -197,6 +199,7 @@ export const LITE_TOOLS: readonly Record<string, unknown>[] = [
                 limit: {
                     type: 'integer',
                     minimum: 1,
+                    maximum: SUGGEST_LIMIT_MAX,
                     default: DEFAULT_SUGGEST_LIMIT,
                     description: `Max results. Default ${String(DEFAULT_SUGGEST_LIMIT)}.`,
                 },
@@ -237,12 +240,15 @@ export function liteToolsTokenCost(): number {
     return Math.round(JSON.stringify({ tools: LITE_TOOLS }).length / 4);
 }
 
-/** MCP `tools/call` success shape: text content plus the structured result. */
-function toolTextResult(payload: unknown): Record<string, unknown> {
+/** Payload statuses that mean the call failed. The payload keeps its `status`; `isError` says it on the wire. */
+const ERROR_STATUSES: ReadonlySet<string> = new Set(['error', 'not_found', 'no_catalogue']);
+
+/** MCP `tools/call` result: text content plus the structured result, `isError` when the status is a failure. */
+function toolTextResult(payload: Record<string, unknown>): Record<string, unknown> {
     return {
         content: [{ type: 'text', text: JSON.stringify(payload) }],
         structuredContent: payload,
-        isError: false,
+        isError: typeof payload.status === 'string' && ERROR_STATUSES.has(payload.status),
     };
 }
 
@@ -286,7 +292,8 @@ function suggestSkillForTask(tree: ContentTree, params: Record<string, unknown>)
     if (!task) return { status: 'error', error: 'params.task is required', suggestions: [] };
     const rawLimit =
         typeof params.limit === 'number' ? Math.floor(params.limit) : DEFAULT_SUGGEST_LIMIT;
-    const limit = Math.max(1, rawLimit);
+    const limit = Math.min(SUGGEST_LIMIT_MAX, Math.max(1, rawLimit));
+    const clamped = rawLimit > SUGGEST_LIMIT_MAX ? { clamped_from: rawLimit } : {};
     const skills = rankableSkills(tree);
     if (skills.length === 0) {
         return { status: 'no_catalogue', suggestions: [], tiers: 'unknown' };
@@ -305,6 +312,7 @@ function suggestSkillForTask(tree: ContentTree, params: Record<string, unknown>)
         skills_indexed: skills.length,
         tiers,
         ...(tierA && filtered.length === 0 && all.length > 0 ? { tier_filter: 'bypassed-to-avoid-empty' } : {}),
+        ...clamped,
         suggestions: kept.slice(0, limit).map((r) => ({
             skill: r.name,
             score: r.score,

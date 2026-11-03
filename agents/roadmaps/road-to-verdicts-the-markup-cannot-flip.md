@@ -101,14 +101,18 @@ as a dependency — use zod v4's native export.
 
 ## Phase 3 — MCP answers that say what happened
 
-- [ ] **3.1 Lite `isError: true`** for `error`, `not_found`, `no_catalogue`;
+- [x] **3.1 Lite `isError: true`** for `error`, `not_found`, `no_catalogue`; <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/mcp/dispatch.ts -->
       `structuredContent.status` unchanged; CHANGELOG behaviour note.
       verify: `npx vitest run src/cli/mcp/dispatch.test.ts` -> 0 asserting each
       error path.
-- [ ] **3.2 `limit` maximum 20** in schema and server, `clamped_from` reported.
+      Done: toolTextResult sets isError from the payload status (error, not_found, no_catalogue); status unchanged; dispatch.test.ts -> 0 with one case per error path; CHANGELOG sentence handed to the release owner (this branch does not edit CHANGELOG.md).
+      production entry: `src/cli/mcp/stdio.ts`
+- [x] **3.2 `limit` maximum 20** in schema and server, `clamped_from` reported. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/mcp/dispatch.ts -->
       verify: `npx vitest run src/cli/mcp/dispatch.test.ts` -> 0 with a case
       calling limit 100000 and getting ≤ 20 rows, and
       `npx vitest run tests/scripts/mcp_lite_tools.test.ts` -> 0 under the cap.
+      Done: SUGGEST_LIMIT_MAX = 20 in the published schema and the handler; limit 100000 returns 20 rows with clamped_from: 100000; dispatch.test.ts -> 0, mcp_lite_tools.test.ts -> 0 at 311 of 600 tokens.
+      production entry: `src/cli/mcp/stdio.ts`
 - [ ] **3.3 `outputSchema` from one zod schema**, kept open.
       verify: every `structuredContent` validates against the shipped schema;
       tools/list stays under the token cap (a raise is a budget decision, not

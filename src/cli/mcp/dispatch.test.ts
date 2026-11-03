@@ -250,3 +250,57 @@ describe('suggest_skill_for_task — the row a model chooses from', () => {
         expect(liteToolsTokenCost()).toBeLessThanOrEqual(LITE_TOOLS_TOKEN_CAP);
     });
 });
+
+// A failed tool call is an ERROR in the MCP result contract, not a success whose
+// payload happens to say so. `structuredContent.status` stays for readers that use it.
+describe('tools/call — an error path answers isError: true, status unchanged', () => {
+    const MANY: ContentTree = {
+        uris: Object.fromEntries(
+            Array.from({ length: 60 }, (_, i) =>
+                entry({ name: `merge-helper-${String(i)}`, kind: 'skill', description: `merge conflicts helper number ${String(i)}` }),
+            ).map((e) => [e.uri, e]),
+        ),
+    };
+    const result = (tree: ContentTree, name: string, args: Record<string, unknown>) =>
+        ok(dispatch(tree, ID, req('tools/call', { name, arguments: args }))).result as {
+            isError: boolean;
+            structuredContent: Record<string, unknown>;
+        };
+
+    it.each([
+        ['suggest_skill_for_task with no task', TREE, 'suggest_skill_for_task', {}, 'error'],
+        ['read_skill with no name', TREE, 'read_skill', {}, 'error'],
+        ['read_skill with a path separator', TREE, 'read_skill', { name: '../x' }, 'error'],
+        ['read_skill on an unknown name', TREE, 'read_skill', { name: 'nope' }, 'not_found'],
+        ['suggest_skill_for_task on an empty tree', { uris: {} }, 'suggest_skill_for_task', { task: 'x' }, 'no_catalogue'],
+    ] as const)('%s', (_label, tree, name, args, status) => {
+        const r = result(tree as ContentTree, name, args as Record<string, unknown>);
+        expect(r.isError).toBe(true);
+        expect(r.structuredContent.status).toBe(status);
+    });
+
+    it('a successful call stays isError: false', () => {
+        expect(result(TREE, 'read_skill', { name: 'verify-completion-evidence' }).isError).toBe(false);
+        expect(result(MANY, 'suggest_skill_for_task', { task: 'merge conflicts' }).isError).toBe(false);
+    });
+
+    it('limit 100000 returns at most 20 rows and reports what it was clamped from', () => {
+        const out = result(MANY, 'suggest_skill_for_task', { task: 'merge conflicts helper', limit: 100000 }).structuredContent;
+        expect((out.suggestions as unknown[]).length).toBeLessThanOrEqual(20);
+        expect((out.suggestions as unknown[]).length).toBe(20);
+        expect(out.clamped_from).toBe(100000);
+    });
+
+    it('a limit inside the bound is not reported as clamped', () => {
+        const out = result(MANY, 'suggest_skill_for_task', { task: 'merge conflicts helper', limit: 3 }).structuredContent;
+        expect((out.suggestions as unknown[]).length).toBe(3);
+        expect(out).not.toHaveProperty('clamped_from');
+    });
+
+    it('the published schema carries the same maximum the server enforces', () => {
+        const tool = (ok(dispatch(TREE, ID, req('tools/list'))).result as {
+            tools: { name: string; inputSchema: { properties: { limit: { maximum: number } } } }[];
+        }).tools.find((t) => t.name === 'suggest_skill_for_task')!;
+        expect(tool.inputSchema.properties.limit.maximum).toBe(20);
+    });
+});
