@@ -60,6 +60,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-agent-config-next | later | draft | When this roadmap is resumed, the reader can tell — from measurements that already exist rather than from this document's … |
 | road-to-agent-throughput-recovery | later | later | A night run carries more finished, merged work, and the reason it stopped is visible in one reading. |
 | road-to-ai-media-labels-on-the-platform | later | later | What the pipeline renders carries the label the target platform and the law actually read, placed where no platform UI … |
+| road-to-an-agent-the-owner-does-not-drive | later | later | The owner states a goal once; the agent carries it to the end. |
 | road-to-an-installed-layer-that-is-thinned | later | later | The layer a Claude install writes under `~/.claude/rules` is the thinned one, first as an opt-in and then as the … |
 | road-to-an-intake-the-queue-can-carry | later | later | A finding that already has an owner lands as a step and an `Arrivals:` line on that owner instead of … |
 | road-to-an-mcp-start-without-npm | later | later | An MCP start in a session with a staged runtime runs the staged node and a bundled turnkey server directly, … |
