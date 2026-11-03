@@ -80,9 +80,11 @@ describe('the add-control / German / backend bars (pre-registered 2026-10-26)', 
         expect(byName.de_ui_recall).toMatchObject({ total: 2, passed: 1, verdict: 'MISS', failing: ['uit-914'] });
     });
 
+    // The 2026-11-03 block is pre-registered to MISS until 3.2/3.3 land; until
+    // then the net holds over the corpus that predates it.
     it('all three bars hold on the golden corpus — the regression net for 1.4', () => {
-        const result = run_eval(CORPUS);
-        for (const b of result.bars) {
+        const result = run_eval(CORPUS.filter((t) => t.source !== 'inbox-2026-11-n'));
+        for (const b of result.bars.filter((x) => ['add_control', 'de_ui_recall', 'backend'].includes(x.name))) {
             expect(b.verdict, `${b.name}: ${b.failing.join(', ')}`).toBe('PASS');
         }
     });
@@ -90,5 +92,26 @@ describe('the add-control / German / backend bars (pre-registered 2026-10-26)', 
     it('an empty bar reads EMPTY, never PASS', () => {
         const result = run_eval([{ id: 'uit-921', prompt: 'make the button red', label: 'trivial' }]);
         expect(result.bars.every((b) => b.verdict === 'EMPTY')).toBe(true);
+    });
+});
+
+describe('the symptom / quality-adjective bars (pre-registered 2026-11-03)', () => {
+    it('computes symptom_ui (never backend) and adjective_review (review_only) and names the failing ids', () => {
+        const result = run_eval([
+            { id: 'uit-931', prompt: 'The modal flickers when it opens.', label: 'non-trivial', category: 'symptom' },
+            { id: 'uit-932', prompt: 'zzz qqq', label: 'non-trivial', category: 'symptom' },
+            { id: 'uit-933', prompt: 'Review the checkout page for design issues.', label: 'non-trivial', category: 'quality-adjective' },
+            { id: 'uit-934', prompt: 'zzz qqq', label: 'non-trivial', category: 'quality-adjective' },
+        ]);
+        const byName = Object.fromEntries(result.bars.map((b) => [b.name, b]));
+        expect(byName.symptom_ui).toMatchObject({ total: 2, passed: 1, verdict: 'MISS', failing: ['uit-932'] });
+        expect(byName.adjective_review).toMatchObject({ total: 2, passed: 1, verdict: 'MISS', failing: ['uit-934'] });
+    });
+
+    it('the corpus carries >= 8 symptom, >= 6 quality-adjective and >= 4 word-sharing backend tasks', () => {
+        const n = (c: string, src?: string) => CORPUS.filter((t) => t.category === c && (src === undefined || t.source === src)).length;
+        expect(n('symptom')).toBeGreaterThanOrEqual(8);
+        expect(n('quality-adjective')).toBeGreaterThanOrEqual(6);
+        expect(n('backend', 'inbox-2026-11-n')).toBeGreaterThanOrEqual(4);
     });
 });

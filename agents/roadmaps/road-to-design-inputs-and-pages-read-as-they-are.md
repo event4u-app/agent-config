@@ -88,7 +88,7 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
 
 ## Phase 3 — A symptom or an adjective routes to a review
 
-- [ ] **3.1 Corpus first.** `internal/bench/corpora/ui-triviality-golden.yaml`
+- [x] **3.1 Corpus first.** `internal/bench/corpora/ui-triviality-golden.yaml`
       gains a `symptom` category (≥ 8: "the buttons only react on release",
       "Die Animationen kann man nicht unterbrechen", "Die Abstände zwischen den
       Karten sind ungleich", plural English nouns) and a `quality-adjective`
