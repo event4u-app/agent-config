@@ -1094,12 +1094,15 @@ export function run(
   // its own lock, and a failure there never touches this hook's exit code.
   if (event === "post_tool_use") {
     const pl = envelope["payload"];
-    const [tool] = _extract_command(
+    const [tool, cmd] = _extract_command(
       typeof pl === "object" && pl !== null && !Array.isArray(pl) ? (pl as StateDict) : {},
     );
     observeStrike(consumer_root, envelope, {
       isEdit: tool !== null && EDIT_TOOLS.has(tool),
       run: appendedRun,
+      // The full command, not the record's 512-char copy: the ledger keys its
+      // target on what actually ran.
+      command: cmd,
     });
   }
 

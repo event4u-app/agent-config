@@ -100,4 +100,18 @@ describe('strike ledger via before_complete_hook', () => {
         bash('s1', RED, 1);
         expect(only()).toMatchObject({ streak: 1, verdict: 'NEW' });
     });
+
+    it('keys the target on the full command, not the recorder\'s 512-char copy', () => {
+        const long = `npx vitest run ${'tests/x.test.ts '.repeat(40)}`;
+        const run = (tail: string) =>
+            send('s1', 'post_tool_use', {
+                tool_name: 'Bash',
+                tool_input: { command: `${long}${tail}` },
+                tool_response: { stdout: RED, stderr: '', exit_code: 1 },
+            });
+        run('a.test.ts');
+        edit('s1');
+        run('b.test.ts');
+        expect(Object.keys(ledger().entries)).toHaveLength(2);
+    });
 });

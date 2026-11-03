@@ -151,9 +151,13 @@ export function failureSignature(run: RunRecord): string {
     return sha(`${run.runner ?? ''}\n${basis}`);
 }
 
-/** The target a run attempts: agent plus the command with volatile flags kept. */
-export function targetKey(agent: string, run: RunRecord): string {
-    return sha(`${agent}\n${run.command.replace(/\s+/g, ' ').trim()}`);
+/**
+ * The target a run attempts: agent plus the command exactly as it ran. Never
+ * the recorder's 512-char copy and never whitespace-normalised — two commands
+ * that differ only past the cut or inside a quoted argument are two targets.
+ */
+export function targetKey(agent: string, command: string): string {
+    return sha(`${agent}\n${command}`);
 }
 
 /** Count one edit-tool call by `agent`. */
@@ -167,6 +171,8 @@ export interface ObserveContext {
     readonly agent: string;
     readonly now: string;
     readonly platform: string;
+    /** The command as it ran, before any truncation; defaults to the record's. */
+    readonly command?: string;
 }
 
 /**
@@ -183,7 +189,7 @@ export function observeRun(
     const outcome = runOutcome(run);
     if (outcome === null) return { ledger, verdict: null };
 
-    const key = targetKey(ctx.agent, run);
+    const key = targetKey(ctx.agent, ctx.command ?? run.command);
     const prev = ledger.entries[key];
     const myEdits = editsOf(ledger, ctx.agent);
     const edited = prev === undefined || myEdits > prev.at_edit;

@@ -73,14 +73,14 @@ describe('observeRun — the ledger verdicts', () => {
         expect(r.verdict).toBe('NEW');
         r = step(r.ledger, red('adds', '2.0s', 30), 2);
         expect(r.verdict).toBe('SAME');
-        expect(r.ledger.entries[targetKey('main', green)]?.streak).toBe(2);
+        expect(r.ledger.entries[targetKey('main', CMD)]?.streak).toBe(2);
     });
 
     it('a re-run with no edit between is not a new attempt', () => {
         let r = step(emptyLedger(), red('adds'), 1);
         r = step(r.ledger, red('adds'), 2, false);
         expect(r.verdict).toBe('SAME');
-        expect(r.ledger.entries[targetKey('main', green)]?.streak).toBe(1);
+        expect(r.ledger.entries[targetKey('main', CMD)]?.streak).toBe(1);
     });
 
     it('a different failure is NEW and restarts the streak — progress, not looping', () => {
@@ -88,14 +88,14 @@ describe('observeRun — the ledger verdicts', () => {
         r = step(r.ledger, red('adds'), 2);
         r = step(r.ledger, red('subtracts'), 3);
         expect(r.verdict).toBe('NEW');
-        expect(r.ledger.entries[targetKey('main', green)]?.streak).toBe(1);
+        expect(r.ledger.entries[targetKey('main', CMD)]?.streak).toBe(1);
     });
 
     it('red then green after an edit → FIXED, streak 0', () => {
         let r = step(emptyLedger(), red('adds'), 1);
         r = step(r.ledger, green, 2);
         expect(r.verdict).toBe('FIXED');
-        expect(r.ledger.entries[targetKey('main', green)]?.streak).toBe(0);
+        expect(r.ledger.entries[targetKey('main', CMD)]?.streak).toBe(0);
     });
 
     it('red / green / red with no edit → FLAKY, and the streak does not grow', () => {
@@ -103,7 +103,7 @@ describe('observeRun — the ledger verdicts', () => {
         r = step(r.ledger, green, 2, false);
         r = step(r.ledger, red('adds'), 3, false);
         expect(r.verdict).toBe('FLAKY');
-        expect(r.ledger.entries[targetKey('main', green)]?.streak).toBe(1);
+        expect(r.ledger.entries[targetKey('main', CMD)]?.streak).toBe(1);
     });
 
     it('red / green / red WITH an edit before the second red is not FLAKY', () => {
@@ -118,8 +118,8 @@ describe('observeRun — the ledger verdicts', () => {
         l = observeRun(l, red('adds'), { ...ctx(1), agent: 'a' }).ledger;
         l = recordEdit(l, 'b', ctx(1).now);
         l = observeRun(l, red('adds'), { ...ctx(2), agent: 'b' }).ledger;
-        expect(l.entries[targetKey('a', green)]?.streak).toBe(1);
-        expect(l.entries[targetKey('b', green)]?.streak).toBe(1);
+        expect(l.entries[targetKey('a', CMD)]?.streak).toBe(1);
+        expect(l.entries[targetKey('b', CMD)]?.streak).toBe(1);
     });
 
     it("another agent's edit is not this agent's attempt", () => {
@@ -128,7 +128,7 @@ describe('observeRun — the ledger verdicts', () => {
         l = recordEdit(l, 'b', ctx(1).now); // b edits the shared tree; a only re-runs
         const r = observeRun(l, red('adds'), { ...ctx(2), agent: 'a' });
         expect(r.verdict).toBe('SAME');
-        expect(r.ledger.entries[targetKey('a', green)]?.streak).toBe(1);
+        expect(r.ledger.entries[targetKey('a', CMD)]?.streak).toBe(1);
     });
 
     it('an instrument gap leaves the ledger untouched', () => {
@@ -145,7 +145,7 @@ describe('ledger lifetime and shape', () => {
         let r = step(emptyLedger(), red('adds'), 1);
         r = step(r.ledger, red('adds'), 2);
         const later = pruneLedger(r.ledger, '2026-11-08T10:00:00Z');
-        expect(later.entries[targetKey('main', green)]?.streak).toBe(2);
+        expect(later.entries[targetKey('main', CMD)]?.streak).toBe(2);
         expect(pruneLedger(r.ledger, '2026-11-11T10:00:00Z').entries).toEqual({});
     });
 
@@ -192,13 +192,28 @@ describe('ledger lifetime and shape', () => {
         l = recordEdit(l, 'main', '2026-11-09T00:00:01Z');
         const r = observeRun(l, red('adds'), { ...ctx(3), now: '2026-11-09T00:00:02Z' });
         expect(r.verdict).toBe('SAME');
-        expect(r.ledger.entries[targetKey('main', green)]?.streak).toBe(2);
+        expect(r.ledger.entries[targetKey('main', CMD)]?.streak).toBe(2);
     });
 
     it('the first observed red is the baseline strike, without an edit before it', () => {
         const r = observeRun(emptyLedger(), red('adds'), ctx(1));
         expect(r.verdict).toBe('NEW');
-        expect(r.ledger.entries[targetKey('main', green)]?.streak).toBe(1);
+        expect(r.ledger.entries[targetKey('main', CMD)]?.streak).toBe(1);
+    });
+
+    it('commands that differ only past 512 chars or in inner whitespace are separate targets', () => {
+        const long = `npx vitest run ${'tests/x.test.ts '.repeat(40)}`;
+        expect(long.length).toBeGreaterThan(512);
+        expect(targetKey('main', `${long}a.test.ts`)).not.toBe(targetKey('main', `${long}b.test.ts`));
+        expect(targetKey('main', 'npx vitest -t "a  b"')).not.toBe(targetKey('main', 'npx vitest -t "a b"'));
+
+        let l = recordEdit(emptyLedger(), 'main', ctx(0).now);
+        const run = { ...red('adds'), command: long.slice(0, 512) };
+        l = observeRun(l, run, { ...ctx(1), command: `${long}a.test.ts` }).ledger;
+        l = recordEdit(l, 'main', ctx(1).now);
+        const r = observeRun(l, run, { ...ctx(2), command: `${long}b.test.ts` });
+        expect(r.verdict).toBe('NEW');
+        expect(Object.keys(r.ledger.entries)).toHaveLength(2);
     });
 
     it('stores no text from the run', () => {

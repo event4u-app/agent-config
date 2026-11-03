@@ -37,7 +37,7 @@ export function strikeAgent(envelope: Dict): string {
 export function observeStrike(
     consumer_root: string,
     envelope: Dict,
-    event: { readonly isEdit: boolean; readonly run: Dict | null },
+    event: { readonly isEdit: boolean; readonly run: Dict | null; readonly command?: string | null },
     now: string = new Date().toISOString(),
 ): void {
     // `run` is the record the recorder appended for THIS event, handed over by
@@ -59,7 +59,10 @@ export function observeStrike(
                 // honours the bounds.
                 let ledger = pruneLedger(coerceLedger(loaded), now);
                 if (event.isEdit) ledger = recordEdit(ledger, agent, now);
-                if (run !== null) ledger = observeRun(ledger, run, { agent, now, platform }).ledger;
+                if (run !== null) {
+                    const command = event.command ?? undefined;
+                    ledger = observeRun(ledger, run, { agent, now, platform, ...(command ? { command } : {}) }).ledger;
+                }
                 return pruneLedger(ledger, now);
             },
             { blocking: false },
