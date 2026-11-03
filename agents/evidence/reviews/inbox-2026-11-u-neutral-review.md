@@ -1,3 +1,5 @@
+<!-- evidence-type: original-review -->
+
 # Neutral review — round inbox-2026-11-u (2026-11-03)
 
 Independent reviewer: a fresh subagent session (L1: another session, same model)
