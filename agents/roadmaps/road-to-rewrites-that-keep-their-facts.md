@@ -81,11 +81,14 @@ stops counting ranges.
 
 ## Phase 1 — Measure first
 
-- [ ] **1.1 Characterization test of the corpus.**
+- [x] **1.1 Characterization test of the corpus.**
       `tests/scripts/humanizer_corpus_fact_conservation.test.ts` asserts the
       current counts (17 flagged, 16 by `diffFacts`) as a ratchet that may fall,
       never rise.
       verify: green now; red when a supplied number is added to a fixture.
+      Done: ratchet test green (17 supplied, 16 witness-added); appending "It took 37 days." to `en/04` turned both ceilings red.
+      production entry: `src/scripts/detect_ai_tells.ts`
+      <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
 
 ## Phase 2 — Complete the witness
 
@@ -100,6 +103,7 @@ stops counting ranges.
       0 findings on a sentence-reordered copy of each clean-corpus file.
 - [x] **2.3 Word ↔ digit stays literal.** Decided (D2) at planning; no code.
       verify: `npx vitest run tests/scripts/fact_diff.test.ts` -> 0 unchanged.
+      <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 
 ## Phase 3 — Skill, bench, claim
 
