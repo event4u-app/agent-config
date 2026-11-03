@@ -55,7 +55,10 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   the basis it rests on.
 * **humanizer:** `detect_ai_tells --baseline` also reports number words, status
   qualifiers, negation and attribution changes, and no longer reads German
-  sentence openers as names; range dashes ("12–14") are no longer counted.
+  sentence openers as names (a sentence-initial name such as "Deutsche Bahn"
+  stays whole); a three-digit decimal such as "2.125 seconds" is no longer read
+  as a thousands group in English text; range dashes ("12–14") are no longer
+  counted.
 
 Twenty entries that had accumulated here were drained to
 [`docs/archive/CHANGELOG-unreleased-drain-2026-10.md`](docs/archive/CHANGELOG-unreleased-drain-2026-10.md)
