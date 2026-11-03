@@ -319,7 +319,7 @@ export function _render_table(matrix: StatusMatrix): string {
     let head = `${marker}${row.platform.padEnd(9)} ${row.status}`;
     if (row.claude_scope !== undefined) {
       const where = row.claude_scope.registered_in.length > 0 ? row.claude_scope.registered_in.join(" + ") : "neither scope";
-      head += `  (managed hooks in: ${where} — ~/.claude/settings.json and <project>/.claude/settings.json are merged)`;
+      head += `  (agent-config hooks in: ${where} — ~/.claude/settings.json and <project>/.claude/settings.json are merged)`;
     } else if (row.bridge_path) {
       head += `  (${row.bridge_path})`;
     }

@@ -105,6 +105,10 @@ Every emitted scene satisfies
 `verified: false`, say so in the report — the envelope is
 documented-best-effort, not a smoke-traced fact.
 
+Veo (`gemini-veo`) renders clips of exactly 4, 6 or 8 seconds: plan
+scene durations on that grid, because any other length is clamped at
+submit (the adapter says `requested <n>s -> rendered <m>s`).
+
 ### Step 2: Assign mood + action
 
 First decide the **subject mode**:

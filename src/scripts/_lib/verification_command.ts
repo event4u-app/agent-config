@@ -91,6 +91,7 @@ const VERIFY_BINARIES: ReadonlySet<string> = new Set([
     'phpstan',
     'psalm',
     'ecs',
+    'rspec',
 ]);
 
 /** Prefixes that delegate to the real command; dropped before classifying. */
@@ -101,6 +102,9 @@ const DELEGATING_HEADS: ReadonlySet<string> = new Set([
     'time',
     'command',
 ]);
+
+/** A Maven / Gradle goal that runs the test phase, bare or task-path qualified. */
+const JVM_TEST_GOAL = /^(?:[\w.-]*:)*(test|verify|check)$/;
 
 /** Path prefixes a binary is commonly reached through. */
 const PATH_PREFIXES: readonly string[] = [
@@ -260,6 +264,19 @@ function segmentVerifies(rawWords: readonly string[]): boolean {
             const script = arg1 === 'run' ? (rest[1] ?? '') : arg1;
             return NPM_SCRIPT_WORD.test(script);
         }
+        case 'bundle':
+            return arg1 === 'exec' && segmentVerifies(rest.slice(1));
+        case 'dotnet':
+            return arg1 === 'test';
+        case 'mvn':
+        case 'mvnw':
+        case 'gradle':
+        case 'gradlew':
+            return rest.some((a) => !a.startsWith('-') && JVM_TEST_GOAL.test(a));
+        case 'playwright':
+            return arg1 === 'test';
+        case 'cypress':
+            return arg1 === 'run';
         case 'task':
             return VERIFY_WORD.test(arg1) || /^ci([-_:]|$)/i.test(arg1);
         case 'cargo':
@@ -353,7 +370,7 @@ export function isVerificationCommand(command: string): boolean {
  * matches on a token anywhere in the line.
  */
 const _WIDE_CANDIDATE_RE =
-    /\b(test|tests|vitest|jest|pytest|phpunit|pest|tsc|eslint|ruff|mypy|pyright|clippy|phpstan|typecheck|lint[-_:a-z]*|build|ci|preflight|smoke[-_:a-z]*|check[-_:a-z]*|validate[-_:a-z]*)\b|\b(task|npm|pnpm|yarn|composer|cargo|go|make|php artisan|bun)\s+(run\s+)?\S*(test|check|lint|build|ci|typecheck)/i;
+    /\b(test|tests|vitest|jest|pytest|phpunit|pest|rspec|cypress|tsc|eslint|ruff|mypy|pyright|clippy|phpstan|typecheck|lint[-_:a-z]*|build|ci|preflight|smoke[-_:a-z]*|check[-_:a-z]*|validate[-_:a-z]*)\b|\b(task|npm|pnpm|yarn|composer|cargo|go|make|php artisan|bun)\s+(run\s+)?\S*(test|check|lint|build|ci|typecheck)/i;
 
 export function mightBeVerification(command: string): boolean {
     return _WIDE_CANDIDATE_RE.test(command);

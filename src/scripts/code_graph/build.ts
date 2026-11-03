@@ -72,6 +72,23 @@ const IGNORE_DIRS = new Set([
     'target',
 ]);
 
+/**
+ * Engine cache directories, skipped only as children of the engine's own
+ * project root. Never unconditional: `Library`, `Temp`, `Logs` or `Binaries`
+ * are ordinary source directories in a repository with no engine.
+ */
+const UNITY_CACHE_DIRS: ReadonlySet<string> = new Set(['Library', 'Temp', 'Obj', 'Logs', 'UserSettings']);
+const UNREAL_CACHE_DIRS: ReadonlySet<string> = new Set(['Intermediate', 'Saved', 'Binaries', 'DerivedDataCache']);
+
+/** The cache directories to skip directly under `dir`, decided from its own listing. */
+function engineCacheDirs(dir: string, entries: readonly fs.Dirent[]): ReadonlySet<string> {
+    if (entries.some((e) => e.isFile() && e.name.toLowerCase().endsWith('.uproject'))) return UNREAL_CACHE_DIRS;
+    const unity =
+        entries.some((e) => e.isDirectory() && e.name === 'ProjectSettings') &&
+        fs.existsSync(path.join(dir, 'ProjectSettings', 'ProjectVersion.txt'));
+    return unity ? UNITY_CACHE_DIRS : new Set();
+}
+
 export interface SourceFile {
     /** repo-relative POSIX path */
     path: string;
@@ -120,12 +137,13 @@ function walkFiles(root: string, accept: (name: string) => boolean): string[] {
         } catch {
             return;
         }
+        const caches = engineCacheDirs(dir, entries);
         for (const e of entries.sort((a, b) => (a.name < b.name ? -1 : 1))) {
             const full = path.join(dir, e.name);
             if (e.isSymbolicLink()) continue; // never follow symlinks
             const rel = path.relative(abs, full).split(path.sep).join('/');
             if (e.isDirectory()) {
-                if (IGNORE_DIRS.has(e.name) || e.name.startsWith('.')) continue;
+                if (IGNORE_DIRS.has(e.name) || e.name.startsWith('.') || caches.has(e.name)) continue;
                 if (GENERATED_DIRS.has(rel)) continue;
                 const verdict = filtered && visible ? visibleDir(visible, rel) : 'all';
                 if (verdict !== 'skip') walk(full, verdict === 'enter');

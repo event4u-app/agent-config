@@ -176,8 +176,8 @@
         "logo-generation": 9566,
         "market-entry-analysis": 10016,
         "markitdown": 14443,
-        "mcp-tool-use": 9039,
         "mcp-builder": 8682,
+        "mcp-tool-use": 9039,
         "md-language-check": 5084,
         "memory-consolidation": 21606,
         "merge-conflicts": 10878,
@@ -243,7 +243,7 @@
         "prompt-engineering-image": 6147,
         "prompt-engineering-patterns": 7041,
         "prompt-optimizer": 12391,
-        "prompt-validator": 7542,
+        "prompt-validator": 8012,
         "quality-tools": 7516,
         "react-native-setup": 10016,
         "react-shadcn-ui": 20589,
@@ -285,7 +285,7 @@
         "skill-management": 5347,
         "skill-reviewer": 9286,
         "skill-writing": 13374,
-        "song-to-script": 14514,
+        "song-to-script": 14713,
         "source-discovery": 10395,
         "spreadsheet-authoring": 5556,
         "sql-writing": 3715,
@@ -293,7 +293,7 @@
         "standards-from-config": 7915,
         "storybook-workshop": 13536,
         "subagent-orchestration": 19978,
-        "supply-chain-intake": 11688,
+        "supply-chain-intake": 12481,
         "svg-authoring": 17970,
         "symfony-workflow": 10329,
         "systematic-debugging": 17084,
@@ -1027,6 +1027,60 @@
             "reason": "Step 3 names the declared seam a test is written at, and the anti-pattern list gains the horizontal slice (every test for one layer before any behaviour passes); both tightened to one line each."
         },
         {
+            "skill": "brand-asset-generation",
+            "old": 6307,
+            "new": 6818,
+            "reason": "Links the media transparency policy and names the provenance sidecar every generated brand asset carries (road-to-a-mark-that-survives-16px 2.2)."
+        },
+        {
+            "skill": "brand-identity",
+            "old": 5997,
+            "new": 6265,
+            "reason": "Step 4 keeps an existing logo unchanged on a keep-logo brief, the case its new behaviour eval exercises (road-to-a-mark-that-survives-16px 2.1)."
+        },
+        {
+            "skill": "character-consistency",
+            "old": 8555,
+            "new": 9031,
+            "reason": "States that no script compares rendered frames and why a pixel threshold is the wrong measure across poses, replacing a claim of a check that never ran (road-to-a-verdict-that-shows-its-frame 5.1)."
+        },
+        {
+            "skill": "image-provider-routing",
+            "old": 6111,
+            "new": 6569,
+            "reason": "Links the media transparency policy so routed generations record provenance (road-to-a-mark-that-survives-16px 2.2)."
+        },
+        {
+            "skill": "logo-generation",
+            "old": 7830,
+            "new": 9567,
+            "reason": "Runs lint_svg_asset --class mark beside the witness and adds the idea-before-form step (subject inventory, X becomes Y, competitor swap) with its rubric (road-to-a-mark-that-survives-16px 1.4, 2.4)."
+        },
+        {
+            "skill": "prompt-validator",
+            "old": 7198,
+            "new": 7542,
+            "reason": "Names the agent as the only enforcer and says the video command does not invoke it, replacing the deterministic-gate claim (road-to-a-verdict-that-shows-its-frame 5.2)."
+        },
+        {
+            "skill": "prompt-validator",
+            "old": 7542,
+            "new": 8012,
+            "reason": "Step 1 runs the new check-ref-index.sh before the prose checks, and the no-script claim is corrected since one check is now scripted (road-to-host-and-media-steps-that-say-what-ran 3.2)."
+        },
+        {
+            "skill": "song-to-script",
+            "old": 14514,
+            "new": 14713,
+            "reason": "One line telling planners Veo clips are 4, 6 or 8 seconds, so a plan does not rely on the adapter's clamp (road-to-host-and-media-steps-that-say-what-ran 3.1)."
+        },
+        {
+            "skill": "supply-chain-intake",
+            "old": 11688,
+            "new": 12481,
+            "reason": "Third-party agent skills and skill archives join plugins and mods in scope, with an archive step: list before unpack, refuse traversal, absolute, symlink and nested entries, name every script (road-to-host-and-media-steps-that-say-what-ran 2.1)."
+        },
+        {
             "skill": "adversarial-review",
             "old": 7860,
             "new": 7870,
@@ -1073,42 +1127,6 @@
             "old": 4966,
             "new": 4970,
             "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
-        },
-        {
-            "skill": "brand-asset-generation",
-            "old": 6307,
-            "new": 6818,
-            "reason": "Links the media transparency policy and names the provenance sidecar every generated brand asset carries (road-to-a-mark-that-survives-16px 2.2)."
-        },
-        {
-            "skill": "brand-identity",
-            "old": 5997,
-            "new": 6265,
-            "reason": "Step 4 keeps an existing logo unchanged on a keep-logo brief, the case its new behaviour eval exercises (road-to-a-mark-that-survives-16px 2.1)."
-        },
-        {
-            "skill": "character-consistency",
-            "old": 8555,
-            "new": 9031,
-            "reason": "States that no script compares rendered frames and why a pixel threshold is the wrong measure across poses, replacing a claim of a check that never ran (road-to-a-verdict-that-shows-its-frame 5.1)."
-        },
-        {
-            "skill": "image-provider-routing",
-            "old": 6111,
-            "new": 6569,
-            "reason": "Links the media transparency policy so routed generations record provenance (road-to-a-mark-that-survives-16px 2.2)."
-        },
-        {
-            "skill": "logo-generation",
-            "old": 7830,
-            "new": 9567,
-            "reason": "Runs lint_svg_asset --class mark beside the witness and adds the idea-before-form step (subject inventory, X becomes Y, competitor swap) with its rubric (road-to-a-mark-that-survives-16px 1.4, 2.4)."
-        },
-        {
-            "skill": "prompt-validator",
-            "old": 7198,
-            "new": 7542,
-            "reason": "Names the agent as the only enforcer and says the video command does not invoke it, replacing the deterministic-gate claim (road-to-a-verdict-that-shows-its-frame 5.2)."
         },
         {
             "skill": "accessibility-auditor",

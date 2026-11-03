@@ -28,8 +28,9 @@ install:
 > video (AI-council convergence, 2026-06-06). One stopped batch costs a
 > re-edit; one rendered contradiction costs the whole spend.
 >
-> **What enforces it:** the agent following this skill, nothing else. No
-> script implements these checks and no gate blocks a run the agent did
+> **What enforces it:** the agent following this skill. One check is
+> scripted — the reference-index check in step 1 — and the agent still has
+> to run it; the rest are reads, and no gate blocks a run the agent did
 > not stop — the "block" below is an instruction, not a mechanism.
 > [`/video:from-song`](../../commands/video/from-song.md) names this skill;
 > `/video:from-script` does not, so there it runs only when invoked.
@@ -72,6 +73,17 @@ Read every scene's prompt blocks into one table:
 mood, duration, aspect, dialogue/singer}`. A scene whose prompt is
 missing or unparseable → **block**: `scene N: prompt missing/unreadable`
 — an incomplete batch is already a contradiction with the script.
+
+Then, per scene and before any prose check, count its reference images
+and run the reference-index check on its prompt text:
+
+```bash
+scripts/ai-video/lib/check-ref-index.sh <input-count> <prompt-file>
+```
+
+Exit 7 → **block** with the line it names (`reference: scene 3 cites
+Bild 5 but only 2 inputs supplied`) — a prompt that cites an image the
+run does not send renders against nothing.
 
 ### 2. Style consistency
 

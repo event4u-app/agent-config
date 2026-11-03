@@ -14,7 +14,8 @@ entry_condition:
 
 > **Source:** `agents/tmp.old/inbox-2026-11-p/` (topic t1, supplied plan v2
 > Phases 5–11 with the v1 items v2 dropped restored).
-> **Arrivals:** 1 — `inbox-2026-11-p` (2026-11-03).
+> **Arrivals:** 2 — latest `inbox-2026-11-r` (2026-11-03): no video verify and
+> undated model limits (folded as 2.5, 2.6); earlier `inbox-2026-11-p` (2026-11-03).
 
 ## Goal
 
@@ -49,6 +50,20 @@ extra Tool" — the native path is the acceptance floor.
       a dry-run run reports "no pixels judged", never a scorecard.
 - [ ] **2.4 Series matrix** element × image plus colour stats; the character
       lock reference anchors the series.
+- [ ] **2.5 `/video:verify`** (arrival `inbox-2026-11-r`): keyframes at the
+      planned timestamps go through the witness; output is a deviation list and
+      one re-roll line per clip. `src/domains/ai-video/video/` has no `verify`
+      while `image/verify` exists.
+      verify: a fixture clip with a known deviation produces exactly that deviation row
+- [ ] **2.6 Model limits with a date** (arrival `inbox-2026-11-r`): schema v3
+      of `src/scripts/ai-video/lib/model-capabilities/` adds `as_of`, `source`,
+      `allowed_durations` and `cost_unit` (Higgsfield bills credits and carries
+      `cost_per_second_usd: null`); planners read the grid instead of
+      `[min,max]`, and the adapter clamp becomes a refusal once every manifest
+      carries it. Schema v2 is test-pinned, so the bump is ratified first. A
+      live lookup of limits is a suggestion with its source, never an
+      automatic overwrite (egress on a media path).
+      verify: `npx vitest run tests/scripts/ai_video_model_capabilities_schema.test.ts` -> 0 on v3
 
 ## Phase 3 — Found media and the engine
 

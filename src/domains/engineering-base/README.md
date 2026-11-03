@@ -126,7 +126,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`sql-writing`** — Use when writing raw SQL — dialect-aware syntax, parameterization, raw migrations, seeders with `DB::statement`; fires even on a pasted query asking 'why is this slow'.
 - **`standards-from-config`** — Use when you need this project's coding standards (line length, quotes, import order, naming, commit format) — derive them from the REAL tooling config as a pointer + digest, never a guessed claim.
 - **`storybook-workshop`** — Use when a component library needs a workshop — one story per concept, JSDoc summaries the manifest can carry, stories run as tests, and an opt-in MCP channel that replaces guessing with querying.
-- **`supply-chain-intake`** — Before adding/installing any dependency the agent named — verify the package exists (slopsquatting: ~1 in 5 AI suggestions are hallucinated), isn't typo-adjacent, is pinned + locked, and CVE-scanned
+- **`supply-chain-intake`** — Before installing a dependency, MCP server, host plugin/mod or third-party agent skill (npx skills add, .skill/.zip) — verify it is real (slopsquatting), pinned, CVE-scanned, source-read
 - **`svg-authoring`** — Hand-author or edit an SVG — icon, mark, illustration, diagram, animation, raster-to-vector — checked and rendered.
 - **`systematic-debugging`** — Use on a bug, test failure, crash, or unexpected behavior — enforce reproduce → isolate → hypothesize → verify before any fix; fires even on 'this is broken' / 'quick fix'.
 - **`tailwind-engineer`** — Writing or reviewing Tailwind CSS — utility-first, design tokens, no inline-style drift, responsive variants, dark mode — 'style this' or 'mach das hübsch'. Pairs with react-shadcn-ui.

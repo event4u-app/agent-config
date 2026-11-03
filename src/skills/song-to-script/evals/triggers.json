@@ -1,0 +1,46 @@
+{
+    "skill": "song-to-script",
+    "last_eval": "2026-11-03",
+    "description": "4 should-trigger + 3 should-not-trigger queries. Should-trigger covers DE + EN phrasings for cutting a song into a timed `## Scene N` script and re-timing an existing script to the track. Should-not-trigger covers near-miss neighbours (per-scene prompt craft, the pre-spend contradiction gate) and an unrelated audio task.",
+    "queries": [
+        {
+            "q": "make a music video script from this song, one scene per section",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "cut the scenes to the beat of track.mp3 and give me durations",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "the edit drifted from the beat — re-time script.md to the song",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "mach aus dem Song ein Musikvideo-Skript mit Szenen pro Abschnitt",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "write the eight-block video prompt for scene 3",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "per-scene prompt craft → video-director"
+        },
+        {
+            "q": "check the storyboard prompts for contradictions before we render",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "pre-spend batch gate → prompt-validator"
+        },
+        {
+            "q": "convert this wav file to mp3",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "plain audio conversion, no script"
+        }
+    ]
+}

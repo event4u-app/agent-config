@@ -1,6 +1,6 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -98,6 +98,40 @@ describe('detect — filesystem behaviour', () => {
         expect(shape.kind).toBe('cargo');
         expect(shape.manifest).toBe('Cargo.toml');
         expect(shape.root).toBe(root);
+    });
+
+    it.each([
+        ['godot', 'project.godot'],
+        ['unity', join('ProjectSettings', 'ProjectVersion.txt')],
+        ['unreal', 'Shooter.uproject'],
+    ])('detectProjectShape recognises a %s root', (kind, marker) => {
+        // Measured at 81788b6e63: all three were `unknown`.
+        mkdirSync(dirname(join(root, marker)), { recursive: true });
+        writeFileSync(join(root, marker), '');
+        const shape = detectProjectShape(root);
+        expect(shape.kind).toBe(kind);
+        expect(shape.manifest).toBe(marker);
+        expect(shape.kinds).toEqual([kind]);
+    });
+
+    it('an engine marker follows the manifests, so a manifest stays the primary kind', () => {
+        writeFileSync(join(root, 'package.json'), '{}');
+        writeFileSync(join(root, 'project.godot'), '');
+        const shape = detectProjectShape(root);
+        expect(shape.kind).toBe('npm');
+        expect(shape.kinds).toEqual(['npm', 'godot']);
+        expect(shape.manifests).toEqual(['package.json', 'project.godot']);
+    });
+
+    it('an engine marker is not a scope-prompt manifest', () => {
+        writeFileSync(join(root, 'project.godot'), '');
+        mkdirSync(join(root, '.claude'));
+        expect(detectScope(root).scope).toBe('global');
+    });
+
+    it('a directory named like a project file is not an Unreal root', () => {
+        mkdirSync(join(root, 'Shooter.uproject'));
+        expect(detectProjectShape(root).kind).toBe('unknown');
     });
 
     it('detectProjectShape returns "unknown" without manifests', () => {

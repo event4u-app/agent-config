@@ -407,13 +407,14 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // trains (150 -> 151); `technical-specification` (0x22) seals (43 -> 44).
         // 195 -> 196 on 2026-11-02: `founder-idea-interview` (0xb1) trains (151 -> 152).
         // 196 -> 197 on 2026-11-03: inbox round 2026-11-p. `character-consistency` (0xf7) trains (152 -> 153).
-        // 197 -> 199 on 2026-11-03: the mcp/code-review rename moves one row each way
-        // across the seal, `copilot-config` (0x33) trains (153 -> 154) and
+        // 197 -> 198 on 2026-11-03: inbox round 2026-11-r. `song-to-script` (0x89) trains (153 -> 154).
+        // 198 -> 200 on 2026-11-03: the mcp/code-review rename moves one row each way
+        // across the seal, `copilot-config` (0x33) trains (154 -> 155) and
         // `github-ci` (0x11) seals (44 -> 45).
-        // 199 -> 201 on 2026-11-03: two corpora for skills the same round touched;
+        // 200 -> 202 on 2026-11-03: two corpora for skills the same round touched;
         // `performance-analysis` (0x1a) seals (45 -> 46), `data-handling-judgment` (0x5f)
-        // trains (154 -> 155).
-        expect(all.length).toBe(201);
+        // trains (155 -> 156).
+        expect(all.length).toBe(202);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(46);
     });
 });
@@ -494,10 +495,11 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 150 -> 151 on 2026-11-02: `emit-tickets` trains (see the 195 line).
         // 151 -> 152 on 2026-11-02: `founder-idea-interview` trains (see the 196 line).
         // 152 -> 153 on 2026-11-03: `character-consistency` trains (see the 197 line).
-        // 153 -> 154 on 2026-11-03: `code-review` leaves train, `mcp-tool-use` and
-        // `copilot-config` join it (see the 199 line).
-        // 154 -> 155 on 2026-11-03: `data-handling-judgment` trains (see the 201 line).
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(155);
+        // 153 -> 154 on 2026-11-03: `song-to-script` trains (see the 198 line).
+        // 154 -> 155 on 2026-11-03: `code-review` leaves train, `mcp-tool-use` and
+        // `copilot-config` join it (see the 200 line).
+        // 155 -> 156 on 2026-11-03: `data-handling-judgment` trains (see the 202 line).
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(156);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

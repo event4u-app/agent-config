@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  2f04643238e8b68627b672e1fb9e1bfa221480a3ccaafdc1743f56303f6abc98
+SET-SHA256  97ac2153dadddb7afa2409065d0c6e0cd6ccaf1e517dcbdb5428ae731f0ff2ba
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1347,13 +1347,14 @@ open and which this file does not settle.
 | `server-hardening` | `8301bedcbcd9129f8c55d3640e66164baec4753e92a55a8b56df54449e3f3f46` |
 | `skill-reviewer` | `5f01f65bbba0ab86e257a1d9143dca98d122d1e193d9de940ba4e3a51dc34c81` |
 | `skill-writing` | `d2beba3976f5918450cc4fa5c96f7fdae488ef5ffebe1f3b05fe3519acbb8a26` |
+| `song-to-script` | `58f62a4f9b21ffab4c9b13ed4fc3b833042d926d2517195e835c7d6d364ec64b` |
 | `source-discovery` | `e32a41fdd41414cc4734ebf440a253f592775046f603c9daeec6a28f1b05eee3` |
 | `spreadsheet-authoring` | `959466aba0e7f34aae0d8eb69ee427d94049627d905410b322045ac6be0a1599` |
 | `sql-writing` | `3afe3f13210573d0e6f41be15836f3be0b3c01bc7db3a3625a35fb64e64356df` |
 | `standards-from-config` | `b25987153a9a93450f8a94852fe10cf86d83967a74a2b84a9bb3ead89b68c2c1` |
 | `storybook-workshop` | `3aff4c3fddd06e0e265ca4afbb02cdbce16b000dd2d3fd6405504d015a1efd27` |
 | `subagent-orchestration` | `a450b071cba1e1c54bd00c6879165cf4146174dba54de8266e6a4971aa7634c2` |
-| `supply-chain-intake` | `e61b2fcb6409cf0817ea8527a1fda3b1cdabb35e28264146a0d449991e9fe87c` |
+| `supply-chain-intake` | `a3b3a13a999c2d65286647aba48f5f5921fd6c1f1c79ebb8821fe1b368aa80f0` |
 | `svg-authoring` | `3dd3e8463a2f8383a9e86a5ee7785661a0e9b73eda5f09d4aac0669ec66abe9f` |
 | `test-case-discovery` | `563ff838264c39c9e132e1e18206c7b0d52639bd42203f790109f9ec0df2603d` |
 | `test-driven-development` | `9a1ec696c72915adde002efffdc6a887c967b63f5330c616126d07617be7aa0b` |
@@ -2298,9 +2299,8 @@ evaluation, and must treat the `mcp` row's absence as a removed sealed row.
 skill it names was renamed); no query changed. AC-6 rests on the same 18 rows,
 none of which is touched.
 
-The sealed set moves **44 -> 45**, the train set **153 -> 154**, the set
-**197 -> 199**. `SET-SHA256` moves because it is computed over every row:
-`f2bc7323…` → `838eb6c3…`.
+The sealed set moves **44 -> 45**, the train set **154 -> 155**, the set
+**198 -> 200**. `SET-SHA256` moves because it is computed over every row.
 
 **Both train-side measurements were re-taken on this tree.**
 `routing-body-signal-verdict.json`: still `harmful` on the false-activation
@@ -2308,6 +2308,29 @@ guard (**+4.85 pp** against +2.0 pp; was +5.48 pp).
 `delivery-set-measurement-2026-08-31.json`: recall loss **38.16 pp** (was
 38.58 pp), the ceiling stays **BREACHED**; context cost **230.1** tokens against
 the 500 target, still **MET**. Neither verdict changes in kind.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.
+
+## Growth — 2026-11-03, one new corpus (song-to-script), one train corpus edited; nothing seals
+
+```
+ONE ROW IS NEW AND TRAINS. ONE TRAIN ROW WAS EDITED. NO HOLDOUT FILE WAS TOUCHED.
+BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN AFTER THE CORPORA WERE ON DISK.
+```
+
+**What changed.** Round `inbox-2026-11-r` edited the `song-to-script` skill body
+(planners are told the Veo duration grid), which brought it into
+`check_routing_coverage`'s touched-skill scope; its corpus was written then and it
+leaves the grandfather allowlist in the same change. The same round widened
+`supply-chain-intake` to host plugins, mods and third-party agent skills, and its
+existing corpus gained the matching positives and a near-miss for writing a new
+skill.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `song-to-script` | train | `0x89` = 137 ≥ 51 | new |
+| `supply-chain-intake` | train | `0xfa` = 250 ≥ 51 | edited |
 
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
 and `routing_signal_measurement.test.ts` § 5.1.
@@ -2331,11 +2354,11 @@ were written then, and both leave the grandfather allowlist in the same change.
 
 `performance-analysis` seals with content written today, so its row carries no
 earlier exposure. The sealed set moves **45 -> 46**, the train set
-**154 -> 155**, the set **199 -> 201**. `SET-SHA256` moves:
-`838eb6c3…` → `2f046432…`.
+**155 -> 156**, the set **200 -> 202**. `SET-SHA256` moves because it is
+computed over every row.
 
 **Both train-side measurements were re-taken on this tree.**
 `routing-body-signal-verdict.json`: still `harmful` on the false-activation
-guard (**+4.82 pp** against +2.0 pp). `delivery-set-measurement-2026-08-31.json`:
-recall loss **38.22 pp**, the ceiling stays **BREACHED**; context cost **229.9**
+guard (**+4.93 pp** against +2.0 pp). `delivery-set-measurement-2026-08-31.json`:
+recall loss **38.14 pp**, the ceiling stays **BREACHED**; context cost **229.7**
 tokens against the 500 target, still **MET**. Neither verdict changes in kind.

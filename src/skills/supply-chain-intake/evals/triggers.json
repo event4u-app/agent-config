@@ -1,52 +1,85 @@
 {
     "skill": "supply-chain-intake",
-    "last_eval": "2026-07-09",
-    "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for verifying a new third-party dependency before install (existence/slopsquatting, pin+lock, CVE, no curl|bash). Should-not-trigger covers near-miss neighbours (upgrading existing deps, secrets, generic checklist, server auth) whose vocabulary overlaps.",
+    "last_eval": "2026-11-03",
+    "description": "8 should-trigger + 6 should-not-trigger queries. Should-trigger covers DE + EN phrasings for verifying a new third-party dependency before install (existence/slopsquatting, pin+lock, CVE, no curl|bash) and for installing a foreign agent skill, plugin or mod (npx skills add, a repo link, a .skill/.zip archive). Should-not-trigger covers near-miss neighbours (upgrading existing deps, secrets, generic checklist, server auth, writing a new skill of your own) whose vocabulary overlaps.",
     "queries": [
         {
             "q": "add the package the model suggested to package.json and install it",
-            "trigger": true
+            "trigger": true,
+            "class": "exemplar"
         },
         {
             "q": "is this pip package real or a hallucination before I install?",
-            "trigger": true
+            "trigger": true,
+            "class": "exemplar"
         },
         {
             "q": "the install command is a curl piped to bash — is that safe?",
-            "trigger": true
+            "trigger": true,
+            "class": "exemplar"
         },
         {
             "q": "prüf diese neue Abhängigkeit bevor ich sie installiere (existiert sie überhaupt?)",
-            "trigger": true
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
         },
         {
             "q": "should I pin this dependency and commit a lockfile?",
-            "trigger": true
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "install this skill for me: npx skills add some-org/pdf-helper",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "someone sent me a repo link and said install this — it is a Claude plugin with hooks",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "hier ist ein .skill-Archiv aus dem Marketplace, kannst du es installieren?",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
         },
         {
             "q": "upgrade our existing lodash to the latest major and fix breakages",
             "trigger": false,
-            "note": "upgrading an already-trusted dep → dependency-upgrade"
+            "note": "upgrading an already-trusted dep → dependency-upgrade",
+            "class": "near-miss"
         },
         {
             "q": "rotate the API keys stored in our secret manager",
             "trigger": false,
-            "note": "secrets lifecycle → secrets-management"
+            "note": "secrets lifecycle → secrets-management",
+            "class": "near-miss"
         },
         {
             "q": "what cross-cutting controls did I miss across this diff?",
             "trigger": false,
-            "note": "cross-surface checklist → ai-code-blindspots"
+            "note": "cross-surface checklist → ai-code-blindspots",
+            "class": "near-miss"
         },
         {
             "q": "review the authorization on this endpoint",
             "trigger": false,
-            "note": "server-side authz → authz-review"
+            "note": "server-side authz → authz-review",
+            "class": "near-miss"
         },
         {
             "q": "why is my build failing on a type error?",
             "trigger": false,
-            "note": "build/type debugging — not dependency intake"
+            "note": "build/type debugging — not dependency intake",
+            "class": "counterexample"
+        },
+        {
+            "q": "write a new skill that formats our changelog entries",
+            "trigger": false,
+            "note": "authoring our own skill → skill-writing",
+            "class": "near-miss"
         }
     ]
 }
