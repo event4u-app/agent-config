@@ -8,7 +8,7 @@ cluster: analyze
 replaces: [analyze-repo, analyze:repo, analyze-reference-repo, analyze:reference-repo]
 skills: [project-analyzer, learning-to-rule-or-skill]
 description: Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
-argument-hint: "<source>… [--emit-prompts] [--transfer=learn|adapt|rebuild|integrate] [--mode=plan|execute] [--loops=N] [--focus=<area>] [--deep] [--refresh] [--no-roadmap]"
+argument-hint: "<source>… [--transfer=K] [--mode=M] [--loops=N] [--focus=<area>] [--deep] [--refresh] [--no-roadmap] [--emit-prompts]"
 limits:
   mode_default: plan
   max_iterations: 3

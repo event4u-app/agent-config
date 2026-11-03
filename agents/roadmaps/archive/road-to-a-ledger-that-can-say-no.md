@@ -196,7 +196,7 @@ rewriting archived `status: ready` (decided 2026-09-04,
       reach exempt: a pure deletion; the unreached symbols the gate reads (`resolveFileConflict`, `expandBatchChoice`, `CONFLICT_BATCH_THRESHOLD`) are pre-existing tests of untouched code, none added or changed by this step
 - [x] **1.5 `--transfer` in the reference door's argument-hint.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       verify: `grep -c -- --transfer dist/agent-src/commands/analyze/reference.md` -> /[1-9]/ holds.
-      Done: `--transfer=learn|adapt|rebuild|integrate` added to the argument-hint; dist count is 3.
+      Done: `--transfer=K` added to the argument-hint (shortened to the 120-char schema cap; values listed in the body); dist count is 3.
 
 ## Phase 2 — An entry is something that is invoked
 
