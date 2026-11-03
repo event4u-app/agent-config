@@ -75,7 +75,7 @@ tools.
 Evidence (executed): `src/agent-src/templates/scripts/work_engine/intent/classify.ts:188`
 — "build me a game" classified as `backend-coding`.
 
-- [x] **3.1 Game nouns in the classifier** and a vertical-slice step (one level
+- [x] **3.1 Game nouns in the classifier** and a vertical-slice step (one level <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: dist/agent-src/templates/scripts/work_engine/intent/classify.ts -->
       end to end on the target device) before the content ladder.
       verify: `npx vitest run tests/scripts/work_engine/intent_classify.test.ts` -> 0 with the game prompts
 - [ ] **3.2 Runtime budgets declared per project and measured on device** —
