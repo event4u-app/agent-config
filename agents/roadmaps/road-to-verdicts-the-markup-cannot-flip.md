@@ -48,11 +48,13 @@ as a dependency — use zod v4's native export.
       verify: at the pin the seven defect cases fail and the control passes.
       Done: eight fixtures + README checked in; at the pin 7 cases fail, the control passes.
       production entry: `src/scripts/check_web_launch_readiness.ts`
-- [ ] **1.2 Shared reader.** Move `tagsOf` / `attr` from
+- [x] **1.2 Shared reader.** Move `tagsOf` / `attr` from <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/html_tags.ts -->
       `web_launch_third_party.ts` into `src/scripts/_lib/html_tags.ts`, widen to
       `meta|link|title`, accept unquoted values.
       verify: unit tests for order, quotes, case, whitespace, self-closing,
       unquoted, `data-src` ≠ `src`; third-party tests stay green.
+      Done: tagsOf/attr/titleOf live in src/scripts/_lib/html_tags.ts with a tag-set parameter; 12 unit cases + third-party suites green.
+      production entry: `src/scripts/check_web_launch_readiness.ts`
 - [ ] **1.3 Replace the three order-dependent regexes** (robots meta incl.
       `none` and search-crawler names, description, title).
       verify: 1.1 cases for these go green; grep for the construct -> 0 sites.

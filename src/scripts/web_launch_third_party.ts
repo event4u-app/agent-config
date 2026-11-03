@@ -13,6 +13,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { attr, tagsOf } from './_lib/html_tags.js';
+
 export const REGISTER_REL = 'src/config/third-party-origins.json';
 
 export interface FileLike {
@@ -89,7 +91,6 @@ const isCss = (f: FileLike): boolean => /\.css$/i.test(f.base);
  * keeps the scan linear on a page of unterminated `<link`. An unclosed tag is
  * never dropped silently — the file is reported as carrying unread tags.
  */
-const TAG_START_RE = /<(link|script|iframe|img|video|audio|source|embed)\b/gi;
 const CSS_IMPORT_RE = /@import\s+(?:url\(\s*)?["']?((?:https?:)?\/\/[^"')\s]+)/gi;
 const CSS_URL_RE = /\burl\(\s*["']?((?:https?:)?\/\/[^"')\s]+)/gi;
 const LOAD_RELS = new Set(['stylesheet', 'preconnect', 'preload', 'modulepreload', 'icon']);
@@ -114,54 +115,6 @@ function absolute(raw: string): URL | null {
     } catch {
         return null;
     }
-}
-
-/** The attribute itself — preceded by whitespace, so `data-src` is never read as `src`. */
-const ATTR_RE = new Map<string, RegExp>();
-function attr(tag: string, name: string): string | undefined {
-    let re = ATTR_RE.get(name);
-    if (re === undefined) {
-        re = new RegExp(`\\s${name}\\s*=\\s*["']([^"']*)["']`, 'i');
-        ATTR_RE.set(name, re);
-    }
-    return re.exec(tag)?.[1];
-}
-
-interface Tag {
-    name: string;
-    /** Empty when the tag is unclosed. */
-    tag: string;
-    line: number;
-    closed: boolean;
-}
-
-/** Every loadable tag of a page with the 1-based line it starts on. Linear: one window per tag start. */
-export function tagsOf(text: string): Tag[] {
-    const starts: number[] = [0];
-    for (let i = text.indexOf('\n'); i >= 0; i = text.indexOf('\n', i + 1)) starts.push(i + 1);
-    const lineAt = (pos: number): number => {
-        let lo = 0;
-        let hi = starts.length - 1;
-        while (lo < hi) {
-            const mid = (lo + hi + 1) >> 1;
-            if ((starts[mid] ?? 0) <= pos) lo = mid;
-            else hi = mid - 1;
-        }
-        return lo + 1;
-    };
-    const found = [...text.matchAll(TAG_START_RE)];
-    const out: Tag[] = [];
-    // The next `>` only moves forward, so all the searches together read the text once.
-    let gt = -2;
-    found.forEach((m, k) => {
-        const at = m.index ?? 0;
-        if (gt !== -1 && gt < at) gt = text.indexOf('>', at);
-        const next = found[k + 1]?.index ?? Number.POSITIVE_INFINITY;
-        const name = (m[1] ?? '').toLowerCase();
-        const closed = gt !== -1 && gt < next;
-        out.push({ name, tag: closed ? text.slice(at, gt + 1) : '', line: lineAt(at), closed });
-    });
-    return out;
 }
 
 /**
