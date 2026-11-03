@@ -47,7 +47,7 @@ governance. All adapters are scaffold-tier (dry-run) until promoted to `stable`.
    away. Stop there.
 1b. **Idea before form, then diverge** — before drawing anything, list what
    only this client owns (a place, a craft, a founder story, a product
-   behaviour — the subject inventory), and write each candidate idea as one
+   behavior — the subject inventory), and write each candidate idea as one
    sentence of the form "X becomes Y" (the subject → the form it takes). Then
    run the **competitor-swap test**: put the nearest competitor's name into
    the sentence; if it still works, the idea belongs to the category, not to
