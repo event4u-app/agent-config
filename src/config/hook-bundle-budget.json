@@ -4,7 +4,7 @@
     "registered_at": "2026-10-01",
     "owner": "maintainer",
     "review_by": "2027-10-01",
-    "max_bytes": 1563500,
+    "max_bytes": 1568700,
     "max_bytes_derivation": "Measured 1,514,715 bytes on origin/main at 213d87055 (the gate's own reading, APFS-cloned node_modules so no worktree path artefacts). The ceiling is that reading plus ~2.3 % of headroom, rounded to 1,550,000, on the same doctrine as the 2026-10-01 registration: a bundle is rebuilt from source on every run, so an esbuild minor that renames symbols moves the figure by hundreds of bytes with no change to this tree, and a ceiling one byte above the reading would red on that. Composition is healthy at this reading and was checked rather than assumed: one YAML package (258,833 bytes) and 1,238,525 bytes of own source, so the growth is own code, not a re-entered dependency. The 1,564,211-byte pre-swap regression this roadmap closed still cannot reappear under it. RAISED to 1,550,500 on 2026-10-23 for the InstructionsLoaded binding (237 bytes against 51 of headroom); the reasoning and the measured alternative are the `raise_log` entry whose `to` is 1,550,500, so this paragraph describes the 1,550,000 registration and the raise is recorded there rather than restated.",
     "shrink_only": true,
     "shrink_only_note": "A RAISE needs a recorded reason in `raise_log` below naming what was added and why it could not be avoided. Enforced since road-to-a-ratification-fence-that-follows-its-imports 3.2: the gate reads `max_bytes` at the base revision, and a working value above it fails unless `raise_log` gained an entry whose `to` equals the new value. A lowering needs no entry. This file is also on the ratification gate's watched set, so a raise carries a record as well as a log entry.",
@@ -149,11 +149,20 @@
         {
             "date": "2026-11-02",
             "from": 1562000,
-            "to": 1563500,
+            "to": 1567400,
+            "by": "agent, analysis/inbox-2026-11-l (road-to-the-profile-the-session-runs-in 1.1, 2.1)",
+            "what_was_added": "Profile awareness on the session-register path, which runs on session_start: `session_profile` in `_lib/session_register.ts` (reads only the environment) plus `install/agentSwitchProfile.ts` (2,033 B), newly pulled into the bundle so the profile is parsed by the one existing matching rule rather than a second copy; and `_lib/provider_home.ts` (903 B), the single resolver for `CLAUDE_CONFIG_DIR` / `CODEX_HOME` that `claude_plugin.claude_config_dir` now delegates to. Measured 1,566,892 bytes by the gate, 4,892 over the 1,562,000 ceiling; the base sat at 1,561,506.",
+            "why_it_could_not_be_avoided": "Room was looked for first: `sessions_cli.ts` (16,380 B) rides in through `env_session_id` and `other_worktree_branches_detailed`, but extracting those is an unrelated refactor of two hooks and a CLI; the schema-flag code added to it is tree-shaken because the bundled entry never reaches `cmd_list`. Inlining a reduced agent-switch path match would save about 1.5 KB at the cost of a second matching rule that drifts from the first. The profile must be recorded when the session registers, in the hook, because a later reader runs in another process with another environment.",
+            "what_would_have_caught_it": "Nothing earlier: the growth is the feature. Sized to the measurement plus about 500 bytes of rebuild jitter."
+        },
+        {
+            "date": "2026-11-03",
+            "from": 1567400,
+            "to": 1568700,
             "by": "agent, feat/web-launch-write-time",
-            "what_was_added": "The design_pass_hook call site for the web-launch rows (rows 2.1/2.2 of check_web_launch_readiness at write time): the .html/.css path test, the 1,000,000-character cap, the chunk loader and the degraded-pass reason. The rows themselves stay in web_launch_rows.chunk.cjs. Measured 1,562,984 bytes, 984 over the 1,562,000 ceiling; origin/main alone measures 1,561,921.",
-            "why_it_could_not_be_avoided": "A write-time carrier needs a call site in the dispatch bundle to decide whether to load the chunk; the call site is the 1,063-byte delta, everything else is already in the chunk. The new ceiling is the reading plus 516 bytes, the same margin the 2026-11-01 raise left (494), so an esbuild symbol rename does not red the gate.",
-            "what_would_have_caught_it": "Nothing earlier: the growth is the feature. The headroom it was measured against (1,306 B) was consumed on main by the gate self-tests before this landed."
+            "what_was_added": "The design_pass_hook call site for the web-launch rows (rows 2.1/2.2 of check_web_launch_readiness at write time): the .html/.css path test, the chunk loader and the degraded-pass reason, plus the envelope read through unwrap() and the one-pass cssBlocks in design_slop_rules.ts. The rows themselves stay in web_launch_rows.chunk.cjs. Measured 1,568,217 bytes by the gate after merging origin/main, 817 over the 1,567,400 ceiling. This replaces the branch-local 1,562,000 -> 1,563,500 raise of 2026-11-02, which collided with the main-side raise from the same base and was dropped in the merge.",
+            "why_it_could_not_be_avoided": "A write-time carrier needs a call site in the dispatch bundle to decide whether to load the chunk; everything else is already in the chunk. cssBlocks was rewritten compactly so its fix needed no bytes of its own. The new ceiling is the reading plus 483 bytes, the same margin as the neighbouring raises, so an esbuild symbol rename does not red the gate.",
+            "what_would_have_caught_it": "Nothing earlier: the growth is the feature."
         }
     ],
     "chunks": [

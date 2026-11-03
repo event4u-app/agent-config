@@ -1152,6 +1152,11 @@ tasks:
     desc: "What the stdlib-only MCP reader gets from an inputs block equals what a real YAML parser gets. The reader declines forms it cannot model; this is what makes a decline a red gate instead of a wrong argument on the wire."
     cmd: ./scripts-run src/scripts/check_inputs_parity
 
+  check-provider-home-joins:
+    silent: true
+    desc: "Shrink-only ratchet on runtime joins of the home dir with .claude/.codex/.gemini — a profile session (CLAUDE_CONFIG_DIR / CODEX_HOME) must read its own dir, so new code resolves through _lib/provider_home.ts"
+    cmd: ./scripts-run src/scripts/check_provider_home_joins
+
   check-no-external-sources:
     silent: true
     desc: Block readable external inspiration/harvest source names from the tracked tree (source-confidentiality rule + 2026-06-13 sweep); --report retains the warn tier, per the how-loud-the-slug-heuristic-is decision
@@ -1241,6 +1246,11 @@ tasks:
     silent: true
     desc: "Doc path inventory (road-to-docs-that-sell 1.5) — every docs/README/site-content path named by src/scripts, tests, .github and gate-coverage.yml, regenerated into docs/maintainers/doc-path-inventory.md; pass -- --check to fail on drift"
     cmd: ./scripts-run src/scripts/report_doc_path_inventory {{.CLI_ARGS}}
+
+  report-acceptance-citations:
+    silent: true
+    desc: "Report-only acceptance-citation resolver (road-to-a-grade-that-saw-the-evidence 2.1, owner decision OQ-63 a) — counts test files whose AC-n citations resolve to exactly one roadmap anchor, are ambiguous, or dangle; always exits 0, wired into no pipeline, because a ratchet over these counts is council-reserved; pass -- --list for per-file status"
+    cmd: ./scripts-run src/scripts/report_acceptance_citations {{.CLI_ARGS}}
 
   lint-settings-classes:
     silent: true

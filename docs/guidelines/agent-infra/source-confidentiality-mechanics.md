@@ -52,9 +52,11 @@ A deny list can only catch a name somebody already wrote down; the next unknown
 source walks straight through it. `check_no_external_sources` therefore also
 flags attribution by **form** — a `> **Source:**` header whose value is neither
 an opaque round identifier nor an `ENC1:` token, a quoted
-`agents/tmp(.old)/<name>/` directory whose name is not opaque, and an
-un-allowlisted `github.com/<owner>/<repo>` URL — and it matches tracked **paths**
-against the deny set, not only file contents.
+`agents/tmp(.old)/<name>/` directory whose name is not opaque, an
+un-allowlisted `github.com/<owner>/<repo>` URL, and a line-leading attribution
+label (`Inspiration:`, `Ported from:`, `Adapted from:`, …) whose value carries a
+readable identifier — and it matches tracked **paths** against the deny set, not
+only file contents.
 
 Tiering, per the resolved `how-loud-the-slug-heuristic-is` decision (AI council
 2026-08-28, 2/2): **block inside `agents/**`, warn elsewhere** — slugs are
@@ -64,6 +66,15 @@ is written to a retained CI report (`--report <path>`), not merely printed, so
 it stays auditable. Pre-existing occurrences are a **shrink-only count** in
 `src/config/gate-violation-baselines.json`, never an allowlist: nothing is
 excused and a new occurrence fails immediately.
+
+**One exception blocks outside `agents/**`: an attribution label under `src/`.**
+Owner decision OQ-62 (E2, 2026-11-02) — it was a warning before. A label line is
+attribution by construction rather than integration content, and `src/` is what
+ships. It is **zero tolerance and outside the ratchet**: one finding fails the
+gate however much room the `agents/**` baseline has, because a label folded into
+that count would pass whenever the pre-existing debt shrinks. Measured 0 such
+findings at the flip; the same label under `docs/`, `tests/` or a generated
+projection stays a warning, since the `src/` original already fails.
 
 ## Why these four rules are unconditional
 

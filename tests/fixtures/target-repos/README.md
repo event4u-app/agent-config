@@ -12,6 +12,11 @@ command file cannot satisfy.
 | `ci-absent/` | nine dimensions high, **no workflows at all** | `L0 — bound by CI enforcement` (the exact string) |
 | `python/` | Python-primary | `static analysis & types: not detectable — quality-tools has no Python mode`, binding at L0 |
 
+`full/` and `ci-absent/` carry `features/checkout.feature` as their behaviour
+contract. Their `AGENTS.md` is no longer enough on its own: since owner decision
+OQ-63 (a) the grader counts an executable or machine-readable contract (OpenAPI /
+AsyncAPI, Gherkin, pact) and only observes prose files.
+
 **None of these is a pack, a module, or installable.** They live under `tests/`
 and are read only by the grader and its spec.
 

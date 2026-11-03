@@ -8,47 +8,6 @@ and the run that applies it links its PR.
 
 ## Open
 
-### OQ-61 — Build the founder interview as `/challenge-me founder`?
-
-- **Context:** round `inbox-2026-11-i` (t3), your turns: an interview about
-  hobbies, ideas and daily problems that researches market, competition and
-  willingness to pay instead of asking, deepens with challenge-me, always ends in
-  a roadmap, then asks one at a time about prototype, business plan and deck —
-  "es muss auch nicht immer eine app sein". Not in the tree (no `founder` sub).
-  A new procedure skill raises the ratcheted skill count.
-- **Options:** (a) thin sub-command + one composed skill, medium-neutral
-  prototype ask, asks in the order prototype → business plan → deck;
-  (b) same, order business plan → deck → pilot; (c) not now.
-- **Recommendation:** (a) — the order you named; prototype means pilot, offer
-  or mock-up, not only an app.
-- **Blocks:** the founder interview; nothing else.
-
-### OQ-62 — Which follow-ups of the slicing chain go next?
-
-- **Context:** `archive/road-to-slices-at-agreed-seams` closed the reversible
-  repairs. Four items change a default or a gate and stayed yours: E2 the
-  source gate blocks under `src/` (it now warns on attribution labels); E4
-  `with-docs` writes `GLOSSARY.md` lazily; E5 parallel ticket build on disjoint
-  boundaries, one PR, plan-opt-in; E9 untracked files diffed in review by
-  default (size-capped, `.gitignore`-respecting; today they are listed).
-- **Options:** (a) all four; (b) E2 and E9 only; (c) none for now.
-- **Recommendation:** (b) — both close a false-green; E4/E5 have no measured need yet.
-- **Blocks:** nothing executable.
-
-### OQ-63 — Which record-of-truth follow-ups go next?
-
-- **Context:** `archive/road-to-records-that-say-what-is-true` fixed the false
-  records. Open and yours (consumer-visible or a new gate): a `promotes:`
-  receipt at archive time; a `<slug>#AC-n` resolver with ratchet
-  (council-reserved; 55 of 123 citing test files resolve unambiguously); the
-  spec judge on the consumer `/work` path; the readiness grader stops passing on
-  `AGENTS.md` presence; a narrower Doc-Impact `.md` glob; structured partial
-  supersession for 18 ADRs; an optional object form for ticket acceptance.
-- **Options:** (a) grader fix + report-only AC resolver first; (b) the
-  `promotes:` receipt warn-first; (c) none for now.
-- **Recommendation:** (a) — the grader currently reports a pass it did not see.
-- **Blocks:** nothing executable.
-
 ### OQ-54 — Where a logging-route answer lives
 
 - **Renumbered 2026-11-01** from OQ-36: the id was issued twice; the observation-provider question kept it.
@@ -184,6 +143,50 @@ and the run that applies it links its PR.
 - `four-dated-re-checks-are-calendar-bound` (corpus cadence): waits on calendar dates.
 
 ## Answered
+
+### OQ-61 — Build the founder interview as `/challenge-me founder`?
+
+- **Context:** round `inbox-2026-11-i` (t3), your turns: an interview about
+  hobbies, ideas and daily problems that researches market, competition and
+  willingness to pay instead of asking, deepens with challenge-me, always ends in
+  a roadmap, then asks one at a time about prototype, business plan and deck —
+  "es muss auch nicht immer eine app sein". Not in the tree (no `founder` sub).
+  A new procedure skill raises the ratcheted skill count.
+- **Options:** (a) thin sub-command + one composed skill, medium-neutral
+  prototype ask, asks in the order prototype → business plan → deck;
+  (b) same, order business plan → deck → pilot; (c) not now.
+- **Recommendation:** (a) — the order you named; prototype means pilot, offer
+  or mock-up, not only an app.
+- **Blocks:** the founder interview; nothing else.
+- **Answered 2026-11-02:** "OQ-61: a" — build it as a thin `/challenge-me founder` sub-command plus one composed skill; after the roadmap it asks one at a time in the order prototype → business plan → deck, and "prototype" is medium-neutral (pilot, offer or mock-up, not only an app). Unblocks the founder-interview roadmap; the new skill must clear the new-skill gate and carry its trigger corpus. <!-- md-language-check: ignore -->
+
+### OQ-62 — Which follow-ups of the slicing chain go next?
+
+- **Context:** `archive/road-to-slices-at-agreed-seams` closed the reversible
+  repairs. Four items change a default or a gate and stayed yours: E2 the
+  source gate blocks under `src/` (it now warns on attribution labels); E4
+  `with-docs` writes `GLOSSARY.md` lazily; E5 parallel ticket build on disjoint
+  boundaries, one PR, plan-opt-in; E9 untracked files diffed in review by
+  default (size-capped, `.gitignore`-respecting; today they are listed).
+- **Options:** (a) all four; (b) E2 and E9 only; (c) none for now.
+- **Recommendation:** (b) — both close a false-green; E4/E5 have no measured need yet.
+- **Blocks:** nothing executable.
+- **Answered 2026-11-02:** "OQ-62: b" — E2 and E9 only: the source gate blocks attribution labels under `src/` (today a warning), and `/review:changes` diffs untracked files by default, size-capped and `.gitignore`-respecting. E4 (lazy `GLOSSARY.md`) and E5 (parallel ticket build) stay deferred. Revisit-if: a measured need for E4 or E5 arrives. <!-- md-language-check: ignore -->
+
+### OQ-63 — Which record-of-truth follow-ups go next?
+
+- **Context:** `archive/road-to-records-that-say-what-is-true` fixed the false
+  records. Open and yours (consumer-visible or a new gate): a `promotes:`
+  receipt at archive time; a `<slug>#AC-n` resolver with ratchet
+  (council-reserved; 55 of 123 citing test files resolve unambiguously); the
+  spec judge on the consumer `/work` path; the readiness grader stops passing on
+  `AGENTS.md` presence; a narrower Doc-Impact `.md` glob; structured partial
+  supersession for 18 ADRs; an optional object form for ticket acceptance.
+- **Options:** (a) grader fix + report-only AC resolver first; (b) the
+  `promotes:` receipt warn-first; (c) none for now.
+- **Recommendation:** (a) — the grader currently reports a pass it did not see.
+- **Blocks:** nothing executable.
+- **Answered 2026-11-02:** "OQ-63: a" — first the readiness-grader fix (no pass on `AGENTS.md` presence alone), then a report-only `<slug>#AC-n` resolver (no ratchet yet; the ratchet stays council-reserved). The `promotes:` receipt, the consumer spec judge, the Doc-Impact glob, partial supersession and the ticket-acceptance object form stay deferred. <!-- md-language-check: ignore -->
 
 ### OQ-59 — Does the suite get live/dynamic security testing?
 

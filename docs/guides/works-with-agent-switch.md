@@ -65,9 +65,54 @@ such as `CLAUDE_CONFIG_DIR` points into the AS profile tree), AC:
    settings, state, and tokens are profile-scoped instead of colliding
    in the global `~/.event4u/agent-config/`. The capability is
    discoverable — `agent-config --version --json` and
-   `GET /api/v1/ping` advertise `capabilities.configRoot` — so an older
+   `GET /api/v1/ping` advertise `capabilities.configRoot` (and
+   `capabilities.sessionList`, the versioned
+   [`sessions:list --json --schema`](../contracts/session-list.md)) — so an older
    AS against a newer AC (or vice versa) degrades to a clear
    "not supported" instead of silent breakage.
+
+## What AC guarantees under a profile
+
+A profile is a directory behind `CLAUDE_CONFIG_DIR` or `CODEX_HOME`. Whether
+agent-switch set it or you did, AC reads the session's state from that
+directory, resolved in one place (`src/scripts/_lib/provider_home.ts`):
+
+- **The right login.** On macOS, Claude Code keeps a profile's subscription
+  under a suffixed Keychain service (`Claude Code-credentials-<8 hex>`), so
+  AC asks for that one. The default account's subscription is never
+  reported for a profile that has none, so the USD gate stays on.
+- **The profile's sessions.** `agent-config handoff` lists Claude
+  transcripts from `$CLAUDE_CONFIG_DIR/projects` and Codex sessions from
+  `$CODEX_HOME/sessions`.
+- **An honest doctor.** A `CODEX_HOME` that points at a missing directory is
+  reported as such, not as "run `codex login`". A set `GEMINI_CLI_HOME` is
+  named as not evaluated yet; the Gemini login is still read from
+  `~/.gemini`.
+- **A session signal.** Each session record carries
+  `profile: { provider, name, via }`, and `sessions:list --json --schema 1`
+  gives agent-switch one stable shape to read
+  ([contract](../contracts/session-list.md)).
+
+Not yet established: whether AC's user-scope rules reach a profile session.
+AC installs them to `~/.claude/` and `~/.codex/`, and agent-switch shares
+`skills/`, `commands/`, `agents/` and `settings.json` from there, but not
+`rules/`. Whether the host reads `<profile>/rules` needs a run with real
+accounts first.
+
+## What AC never does
+
+- Add, log in, or refresh accounts, or keep an account store.
+- Move a session to another account, switch automatically, or route by
+  limits. Those are agent-switch's orchestrator and session protection.
+- Run a daemon for accounts. AC runs inside a session, not above it.
+- Write into a profile tree or agent-switch's share manifest.
+- Depend on agent-switch. Everything above also holds for variables you
+  set by hand.
+
+**Remote and Superset.** On a server over SSH, or as a Superset agent
+command, start the agent through agent-switch's own CLI
+(`agent-switch run <name> -- <agent args>`). AC needs no snippet of its own
+there: it reads whatever profile that command sets.
 
 ## Boundaries
 

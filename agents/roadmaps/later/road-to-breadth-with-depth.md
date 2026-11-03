@@ -21,9 +21,9 @@ relates:
   - slug: road-to-a-release-that-says-whether-it-needs-you
     relation: disjoint
     note: "Also edits src/scripts/release.ts. Step 0.6 adds one preflight check and lands after, or rebased onto, that roadmap's open release.ts change; it does not re-plan its release decision output."
-  - slug: road-to-a-step-that-costs-what-it-changes
+  - slug: archive/road-to-a-step-that-costs-what-it-changes
     relation: disjoint
-    note: "Owns per-step ceremony depth. The supplied plan's workflow-contract and checkpoint items are routed there or declined (D6)."
+    note: "Archived without the workflow-contract and checkpoint items D6 routed there; they are unassigned and carried in stubs/road-to-unassigned-workflow-items (council 2026-11-02)."
   - slug: road-to-agent-throughput-recovery
     relation: disjoint
     note: "Owns throughput and CI wait. The supplied plan's P0 throughput items are owned there (D6)."
@@ -501,14 +501,14 @@ K1 bundled ML or Python dependencies · K2 video-to-audio models as default (NC 
 - [ ] **V16** Media retention: what a production keeps, for how long, and how a consent revocation deletes upstream copies.
 - [ ] **V17** SFX category allowlist next to the licence set — extends F6.3.
 
-**Owner decisions carried (not steps until answered)**
+**Decided by the AI council** — owner-delegated on 2026-11-02 ("decide all of this without me in the council"); council round of 2026-11-02, two seats (anthropic, openai), quorum 2/2; convergence summarised in each line below.
 
-- **O1** Interactive single-file training unit (`/schulung`): education as a domain in 0.4; smallest form a lesson mode on `html-deck`.
-- **O2** Speaker cut-out layouts: need a segmentation model (K1).
-- **O3** Generated music: no rung and no licence path today.
-- **O4** Creator kit (persistent creator image, profile, fixed voice) and publishing adapters (Hard Floor, private/draft first).
-- **O5** Run-level spend envelope replacing per-call confirmation; job ledger with reattach (ADR-059).
-- **O6** D6's target `road-to-a-step-that-costs-what-it-changes` is archived without the workflow-contract and checkpoint items: re-home or decline them.
+- [ ] **V18 (was O1)** Lesson mode on `html-deck`, opt-in and text-first: curriculum gate before production, varied interactions, offline packaging, size budget measured on the complete encoded HTML. No paid media in the prototype; validate once with representative media, again with final assets. Revisit-if: lessons keep needing deck exceptions, or the prototype misses offline, accessibility or size.
+- [ ] **V19 (was O2)** Speaker cut-out only through the ADR-280 external-tool boundary: a named tool and version, an input/output contract, no network, temp-file cleanup, a plain-layout fallback when it is absent. Revisit-if: the tool's processing or licence cannot be established — then disable it.
+- **O3 parked** Generated music. An external program does not widen the closed output-licence set. Revisit-if: one provider/output workflow has documented rights accepted under project policy.
+- [ ] **V20 (was O4)** Creator identity and publishing staged separately. Identity is a local profile with export and deletion; a voice asset grants no permission. Publishing keeps per-action confirmation bound to account, destination, final content and action (Hard Floor unchanged). Revisit-if: storage, voice-use or publishing needs exceed that contract.
+- **O5 declined for now** Run-level spend grants and job reattach: a suite with no runtime has no component that could enforce a shared balance, revocation or crash-safe reconciliation. Per-call confirmation and ADR-059 stay. A read-only job-status ledger may be planned on its own. Revisit-if: a named enforcing component passes concurrent-session, crash, retry, revocation and unknown-billing tests.
+- **O6 resolved** D6's destination was archived without the items. The delivery-promise contract and risk-adaptive review are **unassigned** and carried in `stubs/road-to-unassigned-workflow-items`; the reference below is corrected.
 
 ## Blockers
 
@@ -551,7 +551,7 @@ K1 bundled ML or Python dependencies · K2 video-to-audio models as default (NC 
 | D3 | reversible-technical | evidence | No new settings key. | Owner directive 2026-10-12 (`road-to-a-setup-that-decides-itself`). | — |
 | D4 | reversible-technical | evidence | Prior cuts and measured nulls are re-dispositioned in the register (2.1), not reversed here. | A measured null stays a fact and becomes a depth target. | — |
 | D5 | reversible-technical | evidence | Peer packages are named in no tracked file. | `source-confidentiality`. | — |
-| D6 | reversible-technical | evidence | The supplied plan's workflow contracts, checkpoints, resume and mission board are not planned here. | Owner scoped the run; owned by `road-to-a-step-that-costs-what-it-changes`, `road-to-agent-throughput-recovery`, `road-to-a-cold-start-paid-once`; the board joins 5.5. | — |
+| D6 | reversible-technical | evidence | The supplied plan's workflow contracts, checkpoints, resume and mission board are not planned here. | Owner scoped the run; owned by `road-to-agent-throughput-recovery`, `road-to-a-cold-start-paid-once`; the board joins 5.5. The workflow-contract items routed to `road-to-a-step-that-costs-what-it-changes` found no step there (archived) — unassigned, carried in `stubs/road-to-unassigned-workflow-items` (council 2026-11-02). | — |
 | D7 | reversible-technical | evidence | Its "video skills in core: reject" and "media pack: later" rows are overturned. | D1. | — |
 | D8 | product-owned | owner | Once 3.1's readings exist, the blocking check charges what a default install delivers per host, with a separate ceiling per host; the source reading stays measured and reported, and maintainability is gated by 3.2b. Rejected alternatives: a dual gate keeping a source token cap (option 2), the source gate unchanged (option 3). | Owner, 2026-10-21, after a two-seat AI council round on the same day split 1 (openai) vs 2 (anthropic); both seats' guards are adopted in 3.1-3.2b. ADR-270 is governance-protected, so the choice is owner-reserved. | A registered host cannot be measured deterministically, or a rollback trigger of 3.2 fires twice. |
 | D9 | reversible-technical | evidence | The release hold covers Phases 0-2, 4 and 5 (authoring); stage-1 capability delivery follows after the release. | Owner turn 7 asks for the corrected decisions before the release and "not all of it"; the council found the earlier hold contradicted the Goal. | The owner asks for a stage-1 capability before the release. |

@@ -11,8 +11,8 @@
 meta:
   generated_by: generate_capabilities_index
   purpose: "Machine-readable coverage index so external reviews stop re-proposing what already ships."
-  skills_total: 302
-  commands_total: 213
+  skills_total: 303
+  commands_total: 214
   capability_areas: 31
   gaps: 0
   coverage_bands: "none(0) thin(1-2) moderate(3-6) strong(7+)"
@@ -179,9 +179,9 @@ capability_areas:
       description: "Vision, fundraising narrative, competitive moat."
       size_class: "medium"
       coverage: strong
-      skill_count: 7
+      skill_count: 8
       command_count: 0
-      skills: ["build-buy-partner", "competitive-moat-analysis", "fundraising-narrative", "launch-readiness", "market-entry-analysis", "okr-tree-modeling", "vision-articulation"]
+      skills: ["build-buy-partner", "competitive-moat-analysis", "founder-idea-interview", "fundraising-narrative", "launch-readiness", "market-entry-analysis", "okr-tree-modeling", "vision-articulation"]
       commands: []
   fun:
     - id: fun
@@ -275,9 +275,9 @@ capability_areas:
       size_class: "medium"
       coverage: strong
       skill_count: 0
-      command_count: 12
+      command_count: 13
       skills: []
-      commands: ["challenge-me", "challenge-me-closure", "challenge-me-vision", "challenge-me-with-docs", "council", "council-analysis", "council-debate", "council-default", "council-design", "council-optimize", "council-pr", "grill-me"]
+      commands: ["challenge-me", "challenge-me-closure", "challenge-me-founder", "challenge-me-vision", "challenge-me-with-docs", "council", "council-analysis", "council-debate", "council-default", "council-design", "council-optimize", "council-pr", "grill-me"]
   ops:
     - id: ops-people
       label: "Operations — People"

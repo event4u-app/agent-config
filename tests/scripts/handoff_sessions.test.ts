@@ -165,6 +165,23 @@ describe('list_handoff_sessions', () => {
         expect(sessions[0]?.id).toBe('cx-match');
     });
 
+    it('reads codex sessions from $CODEX_HOME when no root is injected (a profile session is found)', () => {
+        writeCodexSession('cx-profile', repoDir, '2026-08-01T10:00:00.000Z', '2026/08/01/rollout-p.jsonl');
+        const profileHome = path.join(tmp, 'profile-codex');
+        fs.mkdirSync(profileHome, { recursive: true });
+        fs.renameSync(codexRoot, path.join(profileHome, 'sessions'));
+        const saved = process.env['CODEX_HOME'];
+        process.env['CODEX_HOME'] = profileHome;
+        try {
+            const { codexSessionsRoot: _omit, ...opts } = baseOpts();
+            const sessions = list_handoff_sessions(opts).filter((x) => x.source === 'codex-session');
+            expect(sessions.map((x) => x.id)).toEqual(['cx-profile']);
+        } finally {
+            if (saved === undefined) delete process.env['CODEX_HOME'];
+            else process.env['CODEX_HOME'] = saved;
+        }
+    });
+
     it('lists claude transcripts with branch and prompt summary', () => {
         writeClaudeTranscript('11111111-2222-3333-4444-555555555555', ['do the thing', 'now verify it']);
         const sessions = list_handoff_sessions(baseOpts());

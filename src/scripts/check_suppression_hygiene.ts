@@ -276,6 +276,13 @@ export const SUPPRESSION_INVENTORY: readonly SuppressionSpec[] = [
         // 324969e7e, and the scan reported the stale flag as designed.
         what: 'roadmap steps over the 150-word cap when the cap landed, exempt until split or archived',
     },
+    {
+        file: 'src/config/provider-home-joins-baseline.json',
+        listKey: 'held',
+        tier: 'string_list',
+        newInThisChange: true,
+        what: 'runtime files that join the home dir with a provider dir instead of resolving through provider_home.ts',
+    },
 ];
 
 export interface SuppressionFinding {

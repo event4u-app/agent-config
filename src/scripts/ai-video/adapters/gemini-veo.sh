@@ -7,7 +7,10 @@
 # → fetch. The orchestrator drives all three subcommands; this script
 # never auto-retries.
 #
-# Lifecycle: stable — promoted 2026-06-10 (maintainer-authorized): 10/10 live
+# Lifecycle: experimental — demoted 2026-11-02 (AI council, owner-delegated):
+# the 180-day trace window closes 2026-12-07 and no re-capture is funded;
+# a fresh maintainer smoke trace restores `stable`. Was stable since
+# 2026-06-10 (maintainer-authorized): 10/10 live
 # renders succeeded (veo-3.0-generate-001) at ~$1.60/render (4s × $0.40/s),
 # 4s h264 MP4 with native AAC audio, ~40–70s round-trip. Traces + artifacts
 # are LOCAL-ONLY operator evidence under agents/reference/ai-video/smoke-traces/

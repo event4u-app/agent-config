@@ -122,11 +122,9 @@ import { checkOfflineReadiness, trafficEnvironmentJson } from './doctor_network_
 import { updateVerdictFor } from './doctor_update_verdict.js';
 import * as ai_council_clients from '../ai_council/clients.js';
 import * as ai_council_config from '../ai_council/config.js';
-import {
-    PROVIDER_CLI_META,
-    codexHome,
-    detectEnvironment,
-} from '../_lib/environment_detector.js';
+import { PROVIDER_CLI_META, detectEnvironment } from '../_lib/environment_detector.js';
+import { readCodexAuth } from '../_lib/codex_auth.js';
+import { codexHomeInfo, geminiCliHomeOverride } from '../_lib/provider_home.js';
 import {
     absentCouncilFacts,
     buildDetectionReport,
@@ -2059,16 +2057,6 @@ function pyFloat(value: number): string {
 // ---------------------------------------------------------------------------
 
 /**
- * Codex CLI home — `CODEX_HOME` env override (the codex CLI's own
- * convention), else `~/.codex`. Single definition in
- * `_lib/environment_detector.ts` so the detection report and this check probe
- * the same path; aliased here to keep the existing call sites unchanged.
- */
-function _codex_home(): string {
-    return codexHome();
-}
-
-/**
  * Codex binary name for the team check — REUSES the council probe's binary
  * discovery: when a council config exists and declares an enabled `openai`
  * member whose effective mode is `cli` (pinned) OR `auto` (may resolve to
@@ -2095,79 +2083,6 @@ function _team_codex_binary_name(project_root: string): string {
         return member.binary;
     }
     return default_bin;
-}
-
-/**
- * Decode a JWT payload's `exp` claim (epoch seconds) — base64 decode only,
- * NO signature verification, no network. Non-JWT / undecodable → null.
- */
-function _jwt_exp(token: unknown): number | null {
-    if (typeof token !== 'string') return null;
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    try {
-        const payload: unknown = JSON.parse(
-            Buffer.from(parts[1] as string, 'base64url').toString('utf-8'),
-        );
-        if (typeof payload !== 'object' || payload === null) return null;
-        const exp = (payload as Record<string, unknown>)['exp'];
-        return typeof exp === 'number' && Number.isFinite(exp) && exp > 0 ? exp : null;
-    } catch {
-        return null;
-    }
-}
-
-/** Coerce an explicit expiry field to epoch seconds (number or ISO string). */
-function _epoch_seconds(value: unknown): number | null {
-    if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
-        // Heuristic: values past ~2286 in seconds are epoch milliseconds.
-        return value > 1e12 ? value / 1000 : value;
-    }
-    if (typeof value === 'string' && value.trim() !== '') {
-        const ms = Date.parse(value);
-        return Number.isNaN(ms) ? null : ms / 1000;
-    }
-    return null;
-}
-
-/**
- * Latest locally-derivable expiry (epoch seconds) from a codex `auth.json`,
- * or null when none is derivable. Sources, all offline:
- *
- * - explicit `expires_at` / `expiry` / `exp` fields (top level; numbers in
- *   seconds or ms, or ISO date strings), and
- * - the `exp` claim of JWT tokens under `tokens.{access_token,id_token}`
- *   (or the same keys top-level) — base64 payload decode only, never
- *   signature verification.
- *
- * LATEST wins: the real codex auth.json holds a refresh_token, so an
- * expired id_token sitting next to a live access_token is not an auth
- * failure — WARN only when everything derivable is past.
- */
-function _codex_auth_expiry(auth_path: string): number | null {
-    let data: unknown;
-    try {
-        data = JSON.parse(fs.readFileSync(auth_path, 'utf-8'));
-    } catch {
-        return null;
-    }
-    if (typeof data !== 'object' || data === null) return null;
-    const d = data as Record<string, unknown>;
-    const candidates: number[] = [];
-    for (const key of ['expires_at', 'expiry', 'exp']) {
-        const v = _epoch_seconds(d[key]);
-        if (v !== null) candidates.push(v);
-    }
-    const tokens_raw = d['tokens'];
-    const tokens =
-        typeof tokens_raw === 'object' && tokens_raw !== null && !Array.isArray(tokens_raw)
-            ? (tokens_raw as Record<string, unknown>)
-            : {};
-    for (const key of ['access_token', 'id_token']) {
-        const v = _jwt_exp(tokens[key] ?? d[key]);
-        if (v !== null) candidates.push(v);
-    }
-    return candidates.length > 0 ? Math.max(...candidates) : null;
 }
 
 /** The `ai_team` block from `.agent-settings.yml` — lenient, `{}` when absent. */
@@ -2319,6 +2234,16 @@ function _reset_detection_memo(): void {
  *   member is permitted to run and cannot.
  */
 function _check_detection(project_root: string): Dict {
+    const result = _check_detection_core(project_root);
+    const gemini_override = geminiCliHomeOverride();
+    if (gemini_override === null) return result;
+    return {
+        ...result,
+        message: `${String(result['message'])} · GEMINI_CLI_HOME is set (${gemini_override}) and not evaluated yet — Gemini login is read from ~/.gemini`,
+    };
+}
+
+function _check_detection_core(project_root: string): Dict {
     const report = _detection_report(project_root);
     const detected = report.providers.filter((r) => r.detected);
     const hosts_installed = report.hosts.filter((h) => h.installed).length;
@@ -2398,14 +2323,20 @@ function _check_team(project_root: string): Dict {
 
     // (a, cont.) codex auth — READ-ONLY probe of $CODEX_HOME/auth.json:
     // presence + locally-derivable expiry evidence (no network).
-    const auth_path = path.join(_codex_home(), 'auth.json');
-    const authed = pathExists(auth_path);
+    const codex_home = codexHomeInfo();
+    const auth_path = path.join(codex_home.path, 'auth.json');
+    const verdict = readCodexAuth(auth_path);
+    const authed = verdict.present;
     let auth_str: string;
-    if (!authed) {
+    if (!authed && codex_home.source === 'env' && !pathExists(codex_home.path)) {
+        // A login here would land under a path nothing reads — name the cause.
+        auth_str = `codex auth ❌ — CODEX_HOME points at nothing (${codex_home.path})`;
+        remedies.push(`fix or unset CODEX_HOME: ${codex_home.path} does not exist`);
+    } else if (!authed) {
         auth_str = `codex auth ❌ (${auth_path})`;
         remedies.push('run `codex login`');
     } else {
-        const expiry = _codex_auth_expiry(auth_path);
+        const expiry = verdict.expiresAt;
         if (expiry !== null && expiry * 1000 < Date.now()) {
             auth_str = `codex auth ⚠️ expired (${auth_path})`;
             remedies.push('auth token appears expired — run `codex login`');

@@ -29,6 +29,7 @@ import {
     type DetectEnvironmentOptions,
     type EnvironmentReport,
 } from '../../../src/scripts/_lib/environment_detector.js';
+import { CLAUDE_KEYCHAIN_SERVICE, claudeKeychainService } from '../../../src/scripts/_lib/provider_home.js';
 
 const DETECTOR_SRC = path.join(
     process.cwd(),
@@ -489,6 +490,29 @@ describe('anthropic cli-subscription — Keychain vs credential file', () => {
         const report = detectEnvironment({ ...machine(), probeKeychain: () => false });
         expect(sourcesFor(report, 'anthropic')).toEqual(['key-file']);
         expect(classifyBilling('anthropic', 'key-file')).toBe('per-token');
+    });
+
+    it('under a profile, only the SUFFIXED service counts — the default account must not lend its subscription', () => {
+        const profile = path.join(root, '.agent-switch', 'claude', 'work', 'config');
+        const suffixed = claudeKeychainService({ CLAUDE_CONFIG_DIR: profile });
+        const asked: string[] = [];
+        const onlyDefault = detectEnvironment({
+            ...machine({ CLAUDE_CONFIG_DIR: profile }),
+            probeKeychain: (s) => {
+                asked.push(s);
+                return s === CLAUDE_KEYCHAIN_SERVICE;
+            },
+        });
+        expect(sourcesFor(onlyDefault, 'anthropic')).not.toContain('cli-subscription');
+        expect(asked).toEqual([suffixed]);
+
+        resetEnvironmentCache();
+        const onlyProfile = detectEnvironment({
+            ...machine({ CLAUDE_CONFIG_DIR: profile }),
+            probeKeychain: (s) => s === suffixed,
+        });
+        expect(sourcesFor(onlyProfile, 'anthropic')).toEqual(['cli-subscription']);
+        expect(strongestAuth(onlyProfile, 'anthropic')?.evidence).toBe(`keychain:${suffixed}`);
     });
 
     it('the credential FILE still wins when present — the Keychain is an additional rung, not a replacement', () => {

@@ -73,6 +73,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { detectAgentSwitchProfile } from '../../install/agentSwitchProfile.js';
 import { write_atomic } from './fs_atomic.js';
 import { git_common_dir } from './git_common_dir.js';
 import { type EnvMap, event4u_root } from './user_global_paths.js';
@@ -250,6 +251,54 @@ export interface SessionRecord {
      * unaffected and a diff of two records still shows only what changed.
      */
     owned_paths?: string[];
+    /**
+     * The account profile this session runs under, or absent when none is
+     * detectable.
+     *
+     * Derived from the environment at registration time and nothing else — no
+     * file read, no token, no secret — so an account tool can tell two sessions
+     * under two profiles apart without AC ever touching a profile tree.
+     *
+     * Additive on the same terms as `owned_paths`: a session with no detectable
+     * profile writes the record it wrote before this field existed, byte for byte.
+     */
+    profile?: SessionProfile;
+}
+
+/** Where a session's profile came from, and which one it is. */
+export interface SessionProfile {
+    provider: string;
+    name: string;
+    via: 'agent-switch' | 'env';
+}
+
+/**
+ * The profile implied by `env`, or `null`.
+ *
+ * Order: an agent-switch profile tree wins (`via: 'agent-switch'`); a session
+ * whose env points INTO an agent-switch tree that does not parse to
+ * `<provider>/<name>` gets no profile at all, rather than a basename guessed
+ * from a path the account tool owns. Otherwise a manually set
+ * `CLAUDE_CONFIG_DIR` (then `CODEX_HOME`) names the profile by its directory
+ * basename (`via: 'env'`).
+ */
+export function session_profile(env: NodeJS.ProcessEnv = process.env): SessionProfile | null {
+    const as = detectAgentSwitchProfile(env);
+    if (as.active) {
+        return as.provider !== null && as.profile !== null
+            ? { provider: as.provider, name: as.profile, via: 'agent-switch' }
+            : null;
+    }
+    for (const [provider, key] of [
+        ['claude', 'CLAUDE_CONFIG_DIR'],
+        ['codex', 'CODEX_HOME'],
+    ] as const) {
+        const raw = env[key];
+        if (typeof raw !== 'string' || raw.trim() === '') continue;
+        const name = path.basename(path.resolve(raw.trim()));
+        if (name !== '') return { provider, name, via: 'env' };
+    }
+    return null;
 }
 
 /**

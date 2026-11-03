@@ -26,7 +26,7 @@ function installFetch(): { restore: () => void } {
                 systemUser: 'test',
                 projectSurface: false,
                 devSurfaces: false,
-                capabilities: { configRoot: true, embed: { supported: true, version: 1, features: ['theme', 'deepLink'] } },
+                capabilities: { configRoot: true, sessionList: 1, embed: { supported: true, version: 1, features: ['theme', 'deepLink'] } },
             }), { status: 200 });
         }
         if (path.startsWith('/api/v1/settings')) {

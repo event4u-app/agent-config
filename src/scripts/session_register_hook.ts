@@ -64,6 +64,7 @@ import {
     global_register_dir,
     register_dir,
     safe_stem,
+    session_profile,
     stop_means_session_end,
     ttl_is_measured,
     ttl_seconds_for,
@@ -559,6 +560,7 @@ export function build_record(
     platform: string,
     started_at: string,
     now: Date = new Date(),
+    env: NodeJS.ProcessEnv = process.env,
 ): SessionRecord {
     const claim = resolve_claim(workspace_root, session_id);
     const rec: SessionRecord = {
@@ -589,6 +591,10 @@ export function build_record(
     if (claim?.paths !== undefined && claim.paths.length > 0) {
         rec.owned_paths = [...claim.paths].sort();
     }
+    // Env-only, and absent leaves the record byte-identical, on the same terms
+    // as the two fields above.
+    const profile = session_profile(env);
+    if (profile !== null) rec.profile = profile;
     return rec;
 }
 

@@ -64,6 +64,16 @@ describe('createApp', () => {
         expect(res.json()).toMatchObject({ capabilities: { configRoot: true } });
     });
 
+    it('advertises the sessionList capability next to configRoot', async () => {
+        const res = await app.inject({
+            method: 'GET',
+            url: '/api/v1/ping',
+            headers: { host: HOST, authorization: `Bearer ${TOKEN}` },
+        });
+        expect(res.statusCode).toBe(200);
+        expect(res.json().capabilities.sessionList).toBe(1);
+    });
+
     it('advertises the embed capability block in the ping readout', async () => {
         const res = await app.inject({
             method: 'GET',
