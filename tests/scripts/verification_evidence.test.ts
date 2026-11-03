@@ -410,3 +410,34 @@ describe('readRunEvidence — placement in the turn, step 1.3', () => {
         expect(r.instrumentGap).toBe(false);
     });
 });
+
+describe('classifyRun — a failure the shell discarded is never pass-evidence', () => {
+    // road-to-a-strike-the-session-keeps 2.0. The transcript path already
+    // refuses these (`isVerificationCommand` honours `failureIsDiscarded`); the
+    // record path re-split the line and lost the separator, so exit 0 from
+    // `tsc || true` read as a pass. Each fixture carries real error output.
+    const TSC_ERR = "src/a.ts(1,7): error TS2322: Type 'string' is not assignable to type 'number'.\n";
+    const ESLINT_ERR = '/x/a.ts\n  1:7  error  no-unused-vars\n\n✖ 1 problem (1 error, 0 warnings)\n';
+
+    it.each([
+        ['npx tsc --noEmit || true', TSC_ERR],
+        ['npx tsc --noEmit; true', TSC_ERR],
+        ['npx eslint . || :', ESLINT_ERR],
+    ])('`%s` with exit 0 is not PASS_EVIDENCE_OK', (command, out) => {
+        const v = classifyRun(rec({ command, exit_code: 0, stdout_tail: out }));
+        expect(v.kind).not.toBe('PASS_EVIDENCE_OK');
+        expect(reason(v)).toBe('not_a_verification_command');
+    });
+
+    it('`vitest run || exit 1` propagates the failure and still counts', () => {
+        expect(classifyRun(rec({ command: 'npx vitest run || exit 1', exit_code: 0 })).kind).toBe(
+            'PASS_EVIDENCE_OK',
+        );
+    });
+
+    it('a discarded segment does not hide an undiscarded verification beside it', () => {
+        expect(
+            classifyRun(rec({ command: 'npx eslint . || true; npx tsc --noEmit', exit_code: 0 })).kind,
+        ).toBe('PASS_EVIDENCE_OK');
+    });
+});

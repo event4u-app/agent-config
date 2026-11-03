@@ -222,6 +222,20 @@ function failureIsDiscarded(seg: Segment): boolean {
     return false;
 }
 
+/**
+ * The command's segments whose failure the shell does NOT discard, as text.
+ *
+ * The record path re-splits a command line to skip non-verifying executables,
+ * and a re-split loses the separator that tells `tsc || true` from `tsc`. It
+ * reads these instead, so both paths share the one discard list above.
+ */
+export function undiscardedSegments(command: string): string[] {
+    if (!command) return [];
+    return splitSegments(stripComment(command))
+        .filter((seg) => !failureIsDiscarded(seg))
+        .map((seg) => seg.words.join(' '));
+}
+
 /** Classify one segment on its head. */
 function segmentVerifies(rawWords: readonly string[]): boolean {
     const w = rawWords.filter((x) => x.length > 0);
