@@ -289,7 +289,8 @@ export const SUPPRESSION_INVENTORY: readonly SuppressionSpec[] = [
         listKey: 'twins',
         tier: 'object',
         keyFields: ['name'],
-        newInThisChange: true,
+        // newInThisChange removed 2026-11-03: the baseline landed on main with
+        // PR #2817 and the scan reported the stale flag as designed.
         what: 'skill/command same-name twins present when the twin gate landed, each closed by an owner decision',
     },
 ];
