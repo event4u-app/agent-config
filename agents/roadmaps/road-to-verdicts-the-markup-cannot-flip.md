@@ -4,7 +4,7 @@ status: ready
 tree_pin: f9054d0f10
 review_by: 2026-12-15
 relates: []   # scanned: 1259 roadmap file(s), 0 sibling hits
-estate_offset_exempt: "Operator-directed in the invocation (2026-11-03: analyse the round, then process its roadmaps with /roadmap:process-full and merge); archived in the same PR when its open work closes, so the active count at merge is unchanged. Owner search at f9054d0f10 (grep -rlF for check_web_launch_readiness, NOINDEX_RE, BLANKET_DISALLOW_RE, isError, suggest_skill_for_task over agents/roadmaps/*.md, later, stubs) found no roadmap owning gate correctness or the lite MCP error shape; the SEO recipes land on later/road-to-breadth-with-depth 5.6."
+estate_offset_exempt: "Operator-directed in the invocation (2026-11-03: analyse the round, then process its roadmaps with /roadmap:process-full and land them in one PR); archived in the same PR when its open work closes, so the active count on landing is unchanged. Owner search at f9054d0f10 (grep -rlF for check_web_launch_readiness, NOINDEX_RE, BLANKET_DISALLOW_RE, isError, suggest_skill_for_task over agents/roadmaps/*.md, later, stubs) found no roadmap owning gate correctness or the lite MCP error shape; the SEO recipes land on later/road-to-breadth-with-depth 5.6."
 ---
 # Road to verdicts the markup cannot flip
 
@@ -88,8 +88,9 @@ as a dependency — use zod v4's native export.
       verify: `npx vitest run src/cli/mcp/dispatch.test.ts` -> 0 asserting each
       error path.
 - [ ] **3.2 `limit` maximum 20** in schema and server, `clamped_from` reported.
-      verify: a call with limit 100000 returns ≤ 20 rows; lite tools stay under
-      `LITE_TOOLS_TOKEN_CAP`.
+      verify: `npx vitest run src/cli/mcp/dispatch.test.ts` -> 0 with a case
+      calling limit 100000 and getting ≤ 20 rows, and
+      `npx vitest run tests/scripts/mcp_lite_tools.test.ts` -> 0 under the cap.
 - [ ] **3.3 `outputSchema` from one zod schema**, kept open.
       verify: every `structuredContent` validates against the shipped schema;
       tools/list stays under the token cap (a raise is a budget decision, not
@@ -113,6 +114,14 @@ as a dependency — use zod v4's native export.
 - SEO recipes and guardrails — `later/road-to-breadth-with-depth` 5.6.
 - `tests/fixtures/web-launch-benchmark/` stays untouched; whoever edits the
   checks is ineligible to freeze that benchmark's protocol.
+
+## Decisions
+
+| # | Decision | Alternatives | Reason | Revisit-if |
+|---|---|---|---|---|
+| D1 | The active-estate addition is covered by the invocation and offset by archiving this file in the same PR | park in `later/` | the operator asked for execution in this run | a step cannot close in this PR → carry it |
+| D2 | `isError: true` on error paths ships as a behaviour change with a CHANGELOG line | keep `false`, add a field | the MCP result contract says a failed tool call is an error; `status` stays for readers that use it | a consumer depends on `isError: false` |
+
 
 ## Risk Register
 

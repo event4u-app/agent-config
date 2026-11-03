@@ -46,7 +46,7 @@ relates:
   - slug: road-to-touched-files-that-pass-their-own-tools-carried
     relation: disjoint
     note: "Title-word match only; subject differs (checked 2026-11-03)."
-estate_offset_exempt: "Operator-directed in the invocation (2026-11-03: analyse the round, then process its roadmaps with /roadmap:process-full and merge); archived in the same PR when its open work closes, so the active count at merge is unchanged. Owner search at f9054d0f10 (grep -rlF for fact_diff, bench_humanizer_eval, humanizer-tell-reduction, dashCount, hiring-loop-design over agents/roadmaps/*.md, later, stubs) found no owner; the prior owner road-to-tells-a-near-miss-can-refute is archived with no follow-up for these."
+estate_offset_exempt: "Operator-directed in the invocation (2026-11-03: analyse the round, then process its roadmaps with /roadmap:process-full and land them in one PR); archived in the same PR when its open work closes, so the active count on landing is unchanged. Owner search at f9054d0f10 (grep -rlF for fact_diff, bench_humanizer_eval, humanizer-tell-reduction, dashCount, hiring-loop-design over agents/roadmaps/*.md, later, stubs) found no owner; the prior owner road-to-tells-a-near-miss-can-refute is archived with no follow-up for these."
 ---
 # Road to rewrites that keep their facts
 
@@ -98,8 +98,8 @@ stops counting ranges.
       verify: `npx vitest run tests/scripts/fact_diff.test.ts` -> 0 and `de/02` gives
       0 name findings, and
       0 findings on a sentence-reordered copy of each clean-corpus file.
-- [ ] **2.3 Word ↔ digit stays literal** unless the council reopens the earlier
-      "literal on purpose" decision; recorded either way.
+- [x] **2.3 Word ↔ digit stays literal.** Decided (D2) at planning; no code.
+      verify: `npx vitest run tests/scripts/fact_diff.test.ts` -> 0 unchanged.
 
 ## Phase 3 — Skill, bench, claim
 
@@ -112,7 +112,10 @@ stops counting ranges.
 - [ ] **3.3 `check_claims` flags a stale `last_verified`** older than the newest
       date named in the claim text.
       verify: a fixture claim with a newer dated change fails.
-- [ ] **3.4 Corpus repair and claim narrowing.** Remove supplied facts from the
+- [~] **3.4 Corpus repair and claim narrowing.** Blocked by
+      `owner-instrument-change` (owner).
+      verify: `./scripts-run src/scripts/check_claims` -> 0 after the narrowed row.
+       Remove supplied facts from the
       17 after-files as a new epoch, drop "same content" from the judge prompt,
       narrow `humanizer-tell-reduction` to what is measured. Changes the
       instrument behind a backed claim and a judged rerun is billable.
@@ -122,7 +125,9 @@ stops counting ranges.
 - [ ] **4.1 Ranges are not dashes** (digit–digit, years, pages, times, quarters)
       at `detect_ai_tells.ts:385`; epoch line if counts move; DE clean corpus
       gains Gedankenstrich prose.
-      verify: "Pages 12–14" counts 0, "X – Y" counts 1, metamorphic test green.
+      verify: `npx vitest run tests/scripts/detect_ai_tells.test.ts` -> 0 with
+      "Pages 12–14" counting 0 and "X – Y" counting 1, and
+      `npx vitest run tests/scripts/prose_tells_metamorphic.test.ts` -> 0 holds.
 
 ## Phase 5 — Register currency
 
@@ -153,14 +158,36 @@ stops counting ranges.
       status, absorbed achievement) as checklists in `release-comms` and
       `roadmap-writing`.
       verify: `task lint-skills` -> 0 holds.
-- [ ] **8.2 Prose-fact clause in `ask-when-uncertain`** — a kernel-rule edit
-      (own PR, 24 h soak).
+- [~] **8.2 Prose-fact clause in `ask-when-uncertain`** — a kernel-rule edit
+      (own PR, 24 h soak). Blocked by `kernel-edit-own-pr` (owner).
+      verify: `task lint-skills` -> 0 in that PR.
 
 ## Not in this roadmap
 
 - A career / CV domain pack and `career:*` commands — domain-adoption gate, no
-  demand signal or maintainer named; conflicts with ADR-041.
+  demand signal or maintainer named, and ADR-041 governs command verbs.
 - A visible-vs-extracted text checker for PDF/DOCX (new dependency).
+
+## Decisions
+
+| # | Decision | Alternatives | Reason | Revisit-if |
+|---|---|---|---|---|
+| D1 | The active-estate addition is covered by the invocation and offset by archiving this file in the same PR | park in `later/` | the operator asked for execution in this run | a step cannot close in this PR → carry it |
+| D2 | Word ↔ digit stays a reported difference | treat as benign | the earlier "literal on purpose" decision stands; no new evidence it misfires on real rewrites | a measured false-alarm rate on real humanizer output |
+| D3 | No career/CV domain pack | adopt it | no demand signal, no maintainer, conflicts with ADR-041 | a written consumer request plus a volunteering maintainer |
+
+## Blockers
+
+### blocker: owner-instrument-change
+Owner: user. Changing the corpus and judge prompt behind the backed claim
+`humanizer-tell-reduction`, and a judged rerun, is a pre-registered-instrument
+change plus spend. Question: repair the 17 after-files as a new epoch and narrow
+the claim — yes / no?
+
+### blocker: kernel-edit-own-pr
+Owner: user. `ask-when-uncertain` is a kernel rule; its edits ship in their own
+PR with a 24 h soak (`scope-control` § Kernel-rule edits).
+
 
 ## Risk Register
 

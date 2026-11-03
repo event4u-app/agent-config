@@ -133,7 +133,7 @@ relates:
   - slug: road-to-workflows-that-cannot-exfiltrate
     relation: disjoint
     note: "Title-word match only; subject differs (checked 2026-11-03)."
-estate_offset_exempt: "Operator-directed in the invocation (2026-11-03: analyse the round, then process its roadmaps with /roadmap:process-full and merge); archived in the same PR when its open work closes, so the active count at merge is unchanged. Owner search at f9054d0f10 (grep -rlF for mcp_render, mergeHostConfigFile, productionEntries, reach exempt over agents/roadmaps/*.md, later, stubs) found no roadmap owning the host-config writers or the reach gate's entry rule; the ledger half lands on road-to-an-observation-provider-slot instead."
+estate_offset_exempt: "Operator-directed in the invocation (2026-11-03: analyse the round, then process its roadmaps with /roadmap:process-full and land them in one PR); archived in the same PR when its open work closes, so the active count on landing is unchanged. Owner search at f9054d0f10 (grep -rlF for mcp_render, mergeHostConfigFile, productionEntries, reach exempt over agents/roadmaps/*.md, later, stubs) found no roadmap owning the host-config writers or the reach gate's entry rule; the ledger half lands on road-to-an-observation-provider-slot instead."
 ---
 # Road to a ledger that can say no
 
@@ -174,14 +174,14 @@ rewriting archived `status: ready` (decided 2026-09-04,
 
 ## Phase 1 — Host-config writers keep what they did not write
 
-- [ ] **1.1 `mcp:render` through the merge path.** Route `cmd_render` through
+- [ ] **1.1 `mcp:render` through `mergeHostConfigFile`.** Route `cmd_render` through
       `mergeHostConfigFile` with a merger that replaces only the keys it renders
       under `mcpServers`; `cmd_check` compares only those keys.
       verify: `npx vitest run tests/scripts/mcp_render.test.ts` -> 0 and with a
       fixture keeping a foreign server and a comment, a JSONC file reported as
       skipped, and a `.agent-config.bak` written — each seen red first.
 - [ ] **1.2 Duplicate keys in every merged container.** `hostConfigMerge.ts`
-      checks duplicates in each container the merge touches.
+      checks duplicates in each container `mergeHostConfigFile` touches.
       verify: a nested duplicate fixture returns `skipped-duplicate-key`.
 - [ ] **1.3 Backup and readback on the three install writes**
       (`install.ts:930`, `:1970`, the `--force` overwrite at `:1261`).
@@ -205,13 +205,17 @@ rewriting archived `status: ready` (decided 2026-09-04,
 - [ ] **2.2 A prose exemption names its call.** A `reach exempt:` reason citing
       prose, a door or a command must carry the `file:line` of the invoking
       command.
-      verify: against the estate the two ADR-288 lines read red and
+      verify: `npx vitest run tests/scripts/check_step_production_reach.test.ts` -> 0
+      with a prose-citing exemption fixture red and a `file:line`-citing one green.
+      Corpus reading only, not an oracle: the two ADR-288 lines read red and
       `archive/road-to-a-verdict-that-shows-its-frame.md:83` stays green.
 - [ ] **2.3 Unreached engine modules get a disposition.** Each module 2.1 leaves
-      unreached is either invoked by CLI from its door or labelled in the door
-      as "reference spec, model-carried" (precedent:
+      unreached is labelled in its door (D3) as "reference spec, model-carried" (precedent:
       `src/domains/analysis-workbench/analyze/inbox/command.md`).
-      verify: unreached count after 2.1 equals the labelled count.
+      Decided (D3): label by default; wire a CLI only where the door already
+      runs that stage.
+      verify: `./scripts-run src/scripts/report_production_reach` -> 0 and its
+      unreached analysis modules equal the labelled set.
 - [ ] **2.4 One lens name.** Align "Overbuild & sequencing" at
       `reference/command.md:368,378,504`.
       verify: `grep -c "Overbuild & sequencing" src/domains/analysis-workbench/analyze/reference/command.md` -> /3/ holds.
@@ -223,6 +227,15 @@ rewriting archived `status: ready` (decided 2026-09-04,
   owned by `later/road-to-first-reference-analysis-observation` and
   `later/road-to-17-0-follow-ups`.
 - Any reverse-engineering or app-clone capability (scope boundary of the round).
+
+## Decisions
+
+| # | Decision | Alternatives | Reason | Revisit-if |
+|---|---|---|---|---|
+| D1 | The active-estate addition is covered by the invocation and offset by archiving this file in the same PR | park in `later/` | the operator asked for execution in this run | a step cannot close in this PR → carry it to `later/` |
+| D2 | 1.1/1.2 change user-config writes only in the safer direction (keep foreign keys, write a backup, refuse ambiguity) | owner ask | strengthens a data-handling floor, reversible — council-decidable, not owner-reserved | a consumer reports a lost entry after 1.1 |
+| D3 | Unreached engine modules are labelled "reference spec, model-carried" unless a door already runs that stage | wire every module into a CLI | wiring code no door calls is the overbuild the finding is about | a door starts calling a labelled module |
+
 
 ## Risk Register
 
