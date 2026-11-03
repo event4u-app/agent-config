@@ -24,11 +24,15 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
+import * as os from 'node:os';
+
 import {
     CLAUDE_CODE_LISTING_DEFAULTS,
     modelListingBudget,
+    residentPriorityOrder,
     type CatalogueEntry,
 } from '../../src/scripts/_lib/host_listing_model.js';
+import { loadResidentPriorityInputs } from '../../src/scripts/_lib/resident_priority_inputs.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SKILLS_DIR = path.join(REPO_ROOT, 'src', 'skills');
@@ -257,5 +261,85 @@ describe('host_listing_model — pinned against the 2026-08-08 observation', () 
         expect(before).toBeLessThan(mid);
         expect(mid).toBeLessThan(after);
         expect(survived.has('context-document')).toBe(survived.has('condense-memory'));
+    });
+});
+
+// Phase 1.1 of `road-to-a-resident-set-chosen-on-purpose` — the fill order the
+// installer could use instead of the alphabet. Pure; the loader is tested apart.
+describe('residentPriorityOrder', () => {
+    const cat = (...names: string[]): CatalogueEntry[] => names.map((name) => ({ name, descriptionChars: 10 }));
+
+    it('puts a routes_to target that sorts last alphabetically first', () => {
+        const order = residentPriorityOrder(cat('alpha', 'beta', 'zulu'), new Map([['zulu', 1]]), new Set());
+        expect(order[0]).toBe('zulu');
+        expect(order).toEqual(['zulu', 'alpha', 'beta']);
+    });
+
+    it('orders bands: more referencing rules, then fewer, then pack members, then the rest', () => {
+        const order = residentPriorityOrder(
+            cat('a', 'b', 'c', 'd', 'e', 'f'),
+            new Map([['e', 1], ['f', 3], ['c', 1]]),
+            new Set(['d', 'c']),
+        );
+        expect(order).toEqual(['f', 'c', 'e', 'd', 'a', 'b']);
+    });
+
+    it('ignores routes_to and pack names that are not in the catalogue, and duplicates', () => {
+        const order = residentPriorityOrder(
+            [...cat('b', 'a'), { name: 'a', descriptionChars: 99 }],
+            new Map([['ghost', 5]]),
+            new Set(['phantom']),
+        );
+        expect(order).toEqual(['a', 'b']);
+    });
+
+    it('yields the same output for every permutation of the input', () => {
+        const names = ['m', 'b', 'x', 'a', 'q'];
+        const routes = new Map([['x', 2], ['q', 2], ['a', 1]]);
+        const packs = new Set(['m']);
+        const expected = residentPriorityOrder(cat(...names), routes, packs);
+        const permute = (xs: string[]): string[][] =>
+            xs.length <= 1 ? [xs] : xs.flatMap((x, i) => permute([...xs.slice(0, i), ...xs.slice(i + 1)]).map((p) => [x, ...p]));
+        for (const p of permute(names)) {
+            expect(residentPriorityOrder(cat(...p), routes, packs)).toEqual(expected);
+        }
+        expect(expected).toEqual(['q', 'x', 'a', 'm', 'b']);
+    });
+
+    it('with no routes_to and no pack members reproduces the alphabetical fallback exactly', () => {
+        const catalogue = projectedCatalogue();
+        const order = residentPriorityOrder(catalogue, new Map(), new Set());
+        const fallback = modelListingBudget(catalogue, { contextWindowTokens: 200_000 });
+        const withOrder = modelListingBudget(catalogue, { contextWindowTokens: 200_000, usageOrder: order });
+        expect(withOrder.surviving).toEqual(fallback.surviving);
+        expect(withOrder.bare).toEqual(fallback.bare);
+        expect(withOrder.spentChars).toBe(fallback.spentChars);
+    });
+});
+
+describe('loadResidentPriorityInputs', () => {
+    it('counts skill: routes_to edges per skill and reads pack membership from skill frontmatter', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'resident-priority-'));
+        const rules = path.join(root, 'rules');
+        const skills = path.join(root, 'skills');
+        fs.mkdirSync(rules);
+        for (const s of ['one', 'two', 'three']) fs.mkdirSync(path.join(skills, s), { recursive: true });
+        fs.writeFileSync(path.join(rules, 'r1.md'), '---\nroutes_to:\n  - "skill:one"\n  - "guideline:x"\n---\nbody\n');
+        fs.writeFileSync(path.join(rules, 'r2.md'), '---\nroutes_to: ["skill:one", "skill:two"]\n---\n');
+        fs.writeFileSync(path.join(rules, 'broken.md'), '---\nroutes_to: [unclosed\n---\n');
+        fs.writeFileSync(path.join(rules, 'none.md'), 'no frontmatter\n');
+        fs.writeFileSync(path.join(skills, 'one', 'SKILL.md'), '---\nname: one\npacks:\n  - meta\n---\n');
+        fs.writeFileSync(path.join(skills, 'two', 'SKILL.md'), '---\nname: two\npacks: [engineering-base]\n---\n');
+        fs.writeFileSync(path.join(skills, 'three', 'SKILL.md'), '---\nname: three\npacks:\n  - engineering-base\n---\n');
+        const inputs = loadResidentPriorityInputs(rules, skills);
+        expect([...inputs.routesTo.entries()].sort()).toEqual([['one', 2], ['two', 1]]);
+        expect([...inputs.packMembers].sort()).toEqual(['three', 'two']);
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('returns empty inputs for missing directories', () => {
+        const inputs = loadResidentPriorityInputs('/nonexistent/rules', '/nonexistent/skills');
+        expect(inputs.routesTo.size).toBe(0);
+        expect(inputs.packMembers.size).toBe(0);
     });
 });

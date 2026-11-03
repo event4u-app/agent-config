@@ -34,7 +34,7 @@ the measured listing-arm baseline its owner requires.
 
 ## Phase 1 — The priority order exists and is measured
 
-- [ ] **1.1 Pure priority order.** Add `residentPriorityOrder(catalogue, routesTo,
+- [x] **1.1 Pure priority order.** Add `residentPriorityOrder(catalogue, routesTo,
       packMembers)` to `src/scripts/_lib/host_listing_model.ts`: skills named by a
       deployed rule's `routes_to:` first (more referencing rules first), then
       `engineering-base` pack members, then the rest; name is only the final
@@ -46,7 +46,7 @@ the measured listing-arm baseline its owner requires.
       alphabetically lands first; every permutation of the input yields the same
       output; an empty `routesTo` and empty `packMembers` reproduce the alphabetical
       fallback exactly.
-- [ ] **1.2 Resident-set report (report, never a gate).** New
+- [x] **1.2 Resident-set report (report, never a gate).** New
       `src/scripts/report_resident_set.ts`: for windows 200,000 and 1,000,000, the
       described/bare split under today's alphabetical fill and under
       `residentPriorityOrder` as `usageOrder`, plus the status of every skill named by a
@@ -55,7 +55,7 @@ the measured listing-arm baseline its owner requires.
       catalogue yields the expected two splits, and a run on the repo tree reports 45
       described at 200,000 alphabetical (the pinned number), failing the test if the
       alphabetical arm stops matching `computeOverrides`.
-- [ ] **1.3 Mark the parked step.** In `agents/roadmaps/later/road-to-catalogue-host-fit.md`
+- [x] **1.3 Mark the parked step.** In `agents/roadmaps/later/road-to-catalogue-host-fit.md`
       tick 2.2 with a one-line pointer to 1.1 here, leaving its verify text intact.
       verify: `grep -n "road-to-a-resident-set-chosen-on-purpose" agents/roadmaps/later/road-to-catalogue-host-fit.md` -> one hit.
 
@@ -104,6 +104,15 @@ the measured listing-arm baseline its owner requires.
       `tier: core | specialist`, matching `docs/contracts/persona-schema.md:25`.
       verify: `grep -c "core | specialty" src/skills/persona-writing/SKILL.md` -> 0, then
       `task sync` and `bash src/scripts/condense.sh --changed` lists nothing.
+
+## Decisions
+
+| Decision | Alternatives | Reason | Revisit-if |
+|---|---|---|---|
+| The loader lives in `src/scripts/_lib/resident_priority_inputs.ts`, not in `host_listing_model.ts`. | Same file. | `host_listing_model.ts` states "Pure — no I/O"; keeping the read apart keeps that true. | Never — reversible by a move. |
+| `ownedCatalogue` in `skill_listing_overrides.ts` is exported and reused by the report. | A second catalogue reader in the report. | The alphabetical arm must be the installer's own input; a copy could drift silently. | The installer changes its catalogue source. |
+| The repo-tree test asserts the alphabetical arm equals `computeOverrides`, not the literal 45. | Assert `45`. | Parallel work renames skills and their descriptions; the match is the failing condition the step names, and a literal would go red on any description edit. Observed at the run: 45 of 303 described at 200,000 under both arms; 228 at 1,000,000. | The owner wants the count itself pinned. |
+| Finding, recorded not acted on: at 200,000 the priority arm keeps none of `systematic-debugging`, `test-driven-development`, `verify-repair-loop`, `sql-writing`, `security-audit` — the 72 `routes_to:` targets fill the 8,000-char budget first. | Re-weight bands now. | The roadmap fixes the band order; re-weighting is the owner's call together with the default switch. | The listing-arm baseline is measured. |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-03 | reviewer: claude/host -->

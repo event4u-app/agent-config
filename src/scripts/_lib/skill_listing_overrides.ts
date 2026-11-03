@@ -85,7 +85,7 @@ export function ownedSkillNames(currentFiles: Iterable<string>): string[] {
  * The owned catalogue as deployed. Not `compute_skill_tiers.readCatalogue`:
  * that module is a CLI whose main-guard fires inside the install bundle.
  */
-function ownedCatalogue(skillsDir: string, owned: readonly string[]): CatalogueEntry[] {
+export function ownedCatalogue(skillsDir: string, owned: readonly string[]): CatalogueEntry[] {
     const out: CatalogueEntry[] = [];
     for (const name of owned) {
         let raw: string;
