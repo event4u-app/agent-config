@@ -145,11 +145,13 @@ stops counting ranges.
 
 ## Phase 5 — Register currency
 
-- [ ] **5.1 Humanizer data manifest** in the `refresh_cadence` format so
+- [x] **5.1 Humanizer data manifest** in the `refresh_cadence` format so
       `check_corpus_staleness` covers it; `evidence_tier` and `suppressible`
       per family with a schema test.
       verify: `./scripts-run src/scripts/check_corpus_staleness` -> /humanizer/ and
       the schema test passes.
+      Done: `src/skills/humanizer/data/manifest.json` (quarterly, `last_checked` 2026-11-03, 46 families: 27 `seeded`, 19 `probe`; style group and dash density `suppressible`); the gate now names the corpora it holds to a date and prints `humanizer`, exit 0; `humanizer_register_manifest.test.ts` 5/5 and red on a flipped tier.
+      production entry: `src/scripts/check_corpus_staleness.ts`
 
 ## Phase 6 — Document-level hiding
 

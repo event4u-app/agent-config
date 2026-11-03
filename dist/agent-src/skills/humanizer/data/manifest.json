@@ -1,0 +1,197 @@
+{
+  "$comment": "Register manifest for the humanizer tell families (road-to-rewrites-that-keep-their-facts 5.1). Not a vendored corpus: the register is authored here against model output that changes under it, so it carries a refresh cadence that check_corpus_staleness enforces. evidence_tier: `seeded` = at least one before-fixture in tests/fixtures/ai-tells/ triggers the family; `probe` = measured only by its own positive and negative probe in tests/scripts/tell_family_epochs.test.ts, so a zero on the seeded corpus says nothing about recall. suppressible: whether a captured voice fingerprint may override the family (SKILL.md step 2, voice precedence) — true for the style group and dash density, never for a chat artifact, an inflated claim or a filler. Both fields are checked against the code by tests/scripts/humanizer_register_manifest.test.ts.",
+  "manifest_version": 1,
+  "domain": "humanizer",
+  "owner": "package-maintainer",
+  "refresh_cadence": "quarterly",
+  "upstream": {
+    "source": "this package's own tell register, reviewed against current model output; no vendored data",
+    "last_checked": "2026-11-03"
+  },
+  "families": {
+    "tell-chat-artifact": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-knowledge-cutoff": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-emoji-heading": {
+      "evidence_tier": "seeded",
+      "suppressible": true
+    },
+    "tell-double-hyphen-aside": {
+      "evidence_tier": "seeded",
+      "suppressible": true
+    },
+    "tell-ai-vocabulary": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-copula-avoidance": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-significance-inflation": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-negative-parallelism": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-false-range": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-rule-of-three": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-filler-phrase": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-hedging-stack": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-generic-conclusion": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-signposting": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-authority-trope": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-sycophancy": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-vague-attribution": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-aphorism-formula": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-throat-clearing": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-emphasis-crutch": {
+      "evidence_tier": "seeded",
+      "suppressible": true
+    },
+    "tell-false-agency": {
+      "evidence_tier": "probe",
+      "suppressible": false
+    },
+    "tell-narrator-distance": {
+      "evidence_tier": "probe",
+      "suppressible": false
+    },
+    "tell-vague-declarative": {
+      "evidence_tier": "probe",
+      "suppressible": false
+    },
+    "tell-binary-contrast": {
+      "evidence_tier": "probe",
+      "suppressible": false
+    },
+    "tell-curly-quotes": {
+      "evidence_tier": "probe",
+      "suppressible": true
+    },
+    "tell-bold-header-list": {
+      "evidence_tier": "seeded",
+      "suppressible": true
+    },
+    "tell-staccato-run": {
+      "evidence_tier": "probe",
+      "suppressible": true
+    },
+    "tell-uniform-bullet-run": {
+      "evidence_tier": "probe",
+      "suppressible": true
+    },
+    "tell-title-case-heading": {
+      "evidence_tier": "seeded",
+      "suppressible": true
+    },
+    "tell-heading-echo": {
+      "evidence_tier": "probe",
+      "suppressible": true
+    },
+    "tell-repeated-openings": {
+      "evidence_tier": "probe",
+      "suppressible": true
+    },
+    "tell-repeated-closer": {
+      "evidence_tier": "probe",
+      "suppressible": true
+    },
+    "tell-strawman-preemption": {
+      "evidence_tier": "probe",
+      "suppressible": false
+    },
+    "tell-self-describing-document": {
+      "evidence_tier": "probe",
+      "suppressible": false
+    },
+    "tell-de-filler": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-de-connector-stack": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-de-significance": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-de-negative-parallelism": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-de-throat-clearing": {
+      "evidence_tier": "probe",
+      "suppressible": false
+    },
+    "tell-de-signposting": {
+      "evidence_tier": "probe",
+      "suppressible": false
+    },
+    "tell-de-vague-declarative": {
+      "evidence_tier": "probe",
+      "suppressible": false
+    },
+    "tell-de-generic-conclusion": {
+      "evidence_tier": "seeded",
+      "suppressible": false
+    },
+    "tell-de-emphasis-crutch": {
+      "evidence_tier": "probe",
+      "suppressible": true
+    },
+    "tell-de-false-agency": {
+      "evidence_tier": "probe",
+      "suppressible": false
+    },
+    "tell-de-narrator-distance": {
+      "evidence_tier": "probe",
+      "suppressible": false
+    },
+    "dash-density": {
+      "evidence_tier": "seeded",
+      "suppressible": true
+    }
+  }
+}
