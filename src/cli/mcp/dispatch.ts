@@ -26,6 +26,7 @@
  * Node-only grounds; Phase 1.1 widens what is READ, never what is executed.
  */
 
+import * as z from 'zod';
 import { DEFAULT_SUGGEST_LIMIT, rankSkills, type RankableSkill } from '../../shared/skillRanking.js';
 import type { ContentTree, ContentEntry } from './content.js';
 import { entriesOfKind } from './content.js';
@@ -176,6 +177,47 @@ export const SUGGEST_LIMIT_MAX = 20;
 export const INSTRUCTIONS_BYTE_CAP = 400;
 
 /**
+ * The output contract of each lite tool, ONE zod source apiece. Loose objects,
+ * so the shipped JSON schema never closes the payload: a later field is an
+ * addition a strict client must not reject.
+ */
+export const SUGGEST_OUTPUT = z.looseObject({
+    status: z.enum(['ok', 'error', 'no_catalogue']),
+    suggestions: z.array(
+        z.looseObject({ skill: z.string(), score: z.number(), personas: z.array(z.string()), description: z.string() }),
+    ),
+    skills_indexed: z.number().optional(),
+    tiers: z.enum(['unknown', 'tier-b-only']).optional(),
+    tier_filter: z.string().optional(),
+    clamped_from: z.number().optional(),
+    error: z.string().optional(),
+});
+export const READ_SKILL_OUTPUT = z.looseObject({
+    status: z.enum(['ok', 'error', 'not_found']),
+    name: z.string().optional(),
+    description: z.string().optional(),
+    source: z.string().optional(),
+    body: z.string().optional(),
+    error: z.string().optional(),
+});
+
+/** zod → the JSON schema served as `outputSchema`, minus the `$schema` URI and the no-op `additionalProperties: {}`. */
+function outputSchemaOf(schema: z.ZodType): Record<string, unknown> {
+    const strip = (v: unknown): unknown => {
+        if (Array.isArray(v)) return v.map(strip);
+        if (v === null || typeof v !== 'object') return v;
+        const out: Record<string, unknown> = {};
+        for (const [k, x] of Object.entries(v)) {
+            if (k === '$schema') continue;
+            if (k === 'additionalProperties' && x !== null && typeof x === 'object' && Object.keys(x).length === 0) continue;
+            out[k] = strip(x);
+        }
+        return out;
+    };
+    return strip(z.toJSONSchema(schema, { io: 'output' })) as Record<string, unknown>;
+}
+
+/**
  * The two discovery tools. Read-only, shell-free, and pure over the content
  * tree — `read_skill` resolves a NAME through the tree's uri map and never
  * joins a path, so directory traversal is not merely rejected but unexpressible.
@@ -206,6 +248,7 @@ export const LITE_TOOLS: readonly Record<string, unknown>[] = [
             },
             additionalProperties: false,
         },
+        outputSchema: outputSchemaOf(SUGGEST_OUTPUT),
         annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
     {
@@ -218,6 +261,7 @@ export const LITE_TOOLS: readonly Record<string, unknown>[] = [
             properties: { name: { type: 'string', description: 'Skill name.' } },
             additionalProperties: false,
         },
+        outputSchema: outputSchemaOf(READ_SKILL_OUTPUT),
         annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
 ];

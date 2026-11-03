@@ -5,6 +5,7 @@
  * boundary: tools/list empty, tools/call → not_implemented, unknown method →
  * -32601. Pure — a synthetic tree, no disk.
  */
+import Ajv from 'ajv';
 import { describe, expect, it } from 'vitest';
 import {
     dispatch,
@@ -302,5 +303,61 @@ describe('tools/call — an error path answers isError: true, status unchanged',
             tools: { name: string; inputSchema: { properties: { limit: { maximum: number } } } }[];
         }).tools.find((t) => t.name === 'suggest_skill_for_task')!;
         expect(tool.inputSchema.properties.limit.maximum).toBe(20);
+    });
+});
+
+// The output contract a client can check: one zod source per tool, shipped as
+// `outputSchema`, open so a later field does not break a strict client.
+describe('tools/list — outputSchema, and every structuredContent conforms to it', () => {
+    const tools = (ok(dispatch(TREE, ID, req('tools/list'))).result as {
+        tools: { name: string; outputSchema?: Record<string, unknown> }[];
+    }).tools;
+    const validator = (name: string) => {
+        const schema = tools.find((t) => t.name === name)?.outputSchema;
+        expect(schema, `${name} ships an outputSchema`).toBeDefined();
+        return new Ajv({ allErrors: true }).compile(schema!);
+    };
+    const MANY: ContentTree = {
+        uris: Object.fromEntries(
+            Array.from({ length: 30 }, (_, i) => entry({ name: `merge-helper-${String(i)}`, kind: 'skill' })).map((e) => [e.uri, e]),
+        ),
+    };
+    const sc = (tree: ContentTree, name: string, args: Record<string, unknown>) =>
+        (ok(dispatch(tree, ID, req('tools/call', { name, arguments: args }))).result as { structuredContent: unknown })
+            .structuredContent;
+
+    it('both lite tools ship an object outputSchema that never closes the object', () => {
+        for (const t of tools) {
+            expect([t.name, t.outputSchema?.type]).toEqual([t.name, 'object']);
+            expect(JSON.stringify(t.outputSchema)).not.toContain('"additionalProperties":false');
+        }
+    });
+
+    it.each([
+        ['suggest ok', MANY, 'suggest_skill_for_task', { task: 'merge helper' }],
+        ['suggest clamped', MANY, 'suggest_skill_for_task', { task: 'merge helper', limit: 500 }],
+        ['suggest error', TREE, 'suggest_skill_for_task', {}],
+        ['suggest no_catalogue', { uris: {} }, 'suggest_skill_for_task', { task: 'x' }],
+        ['read ok', TREE, 'read_skill', { name: 'verify-completion-evidence' }],
+        ['read not_found', TREE, 'read_skill', { name: 'nope' }],
+        ['read error', TREE, 'read_skill', { name: '../x' }],
+    ] as const)('%s conforms', (_label, tree, name, args) => {
+        const validate = validator(name);
+        const out = sc(tree as ContentTree, name, args as Record<string, unknown>);
+        expect([validate(out), validate.errors ?? null]).toEqual([true, null]);
+    });
+
+    it('the schema rejects a payload whose field drifts in type', () => {
+        const validate = validator('suggest_skill_for_task');
+        expect(validate({ status: 'ok', suggestions: [{ skill: 'x', score: 'high', personas: [], description: '' }] })).toBe(false);
+        expect(validator('read_skill')({ status: 'maybe' })).toBe(false);
+    });
+
+    it('a field the schema does not name is still accepted — the contract is open', () => {
+        expect(validator('read_skill')({ status: 'ok', name: 'x', later_field: 1 })).toBe(true);
+    });
+
+    it('tools/list stays under its standing token cap with the schemas in it', () => {
+        expect(liteToolsTokenCost()).toBeLessThanOrEqual(LITE_TOOLS_TOKEN_CAP);
     });
 });
