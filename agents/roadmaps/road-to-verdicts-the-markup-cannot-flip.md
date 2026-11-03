@@ -122,10 +122,12 @@ as a dependency — use zod v4's native export.
       Done: SUGGEST_OUTPUT and READ_SKILL_OUTPUT (zod looseObject) shipped as outputSchema via z.toJSONSchema, never additionalProperties: false; ajv validates the structuredContent of all seven success and error paths; tools/list costs 527 of 600 tokens, cap unchanged.
       production entry: `src/cli/mcp/stdio.ts`
       reach exempt: liteToolsTokenCost and LITE_TOOLS_TOKEN_CAP are budget figures only the cap test reads; outputSchema is served by tools/list in dispatch(), reached from src/cli/mcp/stdio.ts
-- [ ] **3.4 Kernel stubs answer `isError: true`**, envelope unchanged; amend
+- [x] **3.4 Kernel stubs answer `isError: true`**, envelope unchanged; amend <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/mcp_server/server.ts -->
       `docs/contracts/mcp-tool-stub-envelope.md`.
       verify: `npx vitest run tests/scripts/mcp_server_serve.test.ts` -> 0 with the
       stub case asserting `isError`.
+      Done: toCallToolResult answers isError: true for a not_implemented envelope, body unchanged; the default stdio registry no longer serves stubs (ADR-132), so a served stub name already failed as an unknown tool — both pinned in mcp_server_serve.test.ts -> 0 (9 cases); contract amended.
+      production entry: `src/scripts/mcp_server/__main__.ts`
 
 ## Phase 4 — `llms.txt` in its own format
 

@@ -80,8 +80,14 @@ discovery-only stubs) — `--strict` fails CI on any drift.
 }
 ```
 
-Stdio returns this as the JSON-RPC `result` (SDK wraps in
-`TextContent`); the Worker returns it as `error.data` alongside
+Stdio returns this as a tool error: a `tools/call` result with
+`isError: true` and the envelope, unchanged, as the JSON text of its single
+`TextContent` block (`toCallToolResult` in `scripts/mcp_server/server.ts`) —
+a stub ran nothing, and the MCP result contract reports that as an error,
+never a success. The default stdio registry no longer registers the stubs
+(ADR-132), so a call to a stub name there fails as an unknown tool, also with
+`isError: true`; the envelope path applies to any registry that carries
+`CATALOG_STUBS`. The Worker returns the envelope as `error.data` alongside
 `code: -32601`. Field invariants: `code` is the frozen literal
 `not_implemented`; `tool` echoes the caller; `transport` is set per
 surface; `install_hint` comes from the catalog's `install_hint_stdio`
@@ -99,6 +105,8 @@ promote unforeseen names.
 
 - Both transports return `code == "not_implemented"` for every
   catalog entry whose `implemented_on` excludes the transport.
+- Neither transport reports a stub call as a success: stdio sets
+  `isError: true`, the Worker returns a JSON-RPC error.
 - Both transports return `code == "unknown_tool"` for any name not in
   the catalog.
 - Schema version bumps on any incompatible field rename; new optional
