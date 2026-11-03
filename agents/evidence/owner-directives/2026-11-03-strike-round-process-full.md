@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Owner directive 2026-11-03 — process round inbox-2026-11-m to a merged PR
 
 Recorded verbatim from the invocation of `/analyze:inbox` on 2026-11-03
