@@ -41,7 +41,7 @@ sees the user's machine. Nothing is deleted — every fix renames or reports.
       that names the skill (not MCP servers in general): flows, `src/domains/meta/pack.yaml`,
       `src/rules/tool-safety.md`, catalog, `docs/contracts/file-ownership-matrix.json`,
       trigger evals, budget configs. Regenerate with `task sync` and `task generate-tools`.
-      verify: `test ! -e src/skills/mcp && test -f src/skills/mcp-tool-use/SKILL.md && ./scripts-run src/scripts/check_references && ./scripts-run src/scripts/lint_agent_skill_names --quiet` -> exit 0
+      verify: `test ! -e src/skills/mcp && test -f src/skills/mcp-tool-use/SKILL.md && ./scripts-run src/scripts/check_references && ./scripts-run src/scripts/lint_agent_skill_names --quiet` -> 0
 - [x] **1.2 Rename `code-review` to `code-review-lens`.** Same procedure for <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/skill-body-budget.json -->
       `src/skills/code-review/` and its referrers (`src/flows/{delivery,implementation,review}.yaml`,
       `src/domains/engineering-base/review/changes/command.md`, `src/config/skill-body-budget.json`,
