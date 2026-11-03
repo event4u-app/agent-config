@@ -200,6 +200,18 @@ describe('the role map is recomputed only when a primitive can have changed', ()
         expect(fs.existsSync(path.join(dir, AUDIT))).toBe(false);
     });
 
+    it('a cached map from before families were recorded is recomputed, not trusted', () => {
+        const w = repo();
+        const cache = path.join(dir, 'agents', 'runtime', 'state', 'design-consistency-roles.json');
+        const c = JSON.parse(fs.readFileSync(cache, 'utf8')) as { control_roles: Record<string, { families?: string[] }> };
+        for (const e of Object.values(c.control_roles)) delete e.families;
+        fs.writeFileSync(cache, JSON.stringify(c));
+        w('app/filters.tsx', 'export const F = () => <select name="status"><option>Open</option></select>;\n');
+        const r = run(dir, 'app/filters.tsx');
+        expect(r.status).toBe(2);
+        expect(fs.existsSync(path.join(dir, AUDIT))).toBe(true);
+    });
+
     it('a primitive file losing its primitive still recomputes', () => {
         const w = repo();
         w('components/ui/select.tsx', 'export function Panel(props) {\n  return <div {...props} />;\n}\n');

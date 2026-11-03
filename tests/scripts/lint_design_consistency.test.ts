@@ -147,7 +147,7 @@ describe('shadow window report', () => {
 
 describe('a shadow row carries what fired', () => {
     it('rule, line, message and the source line of each raw-control finding', () => {
-        const roles = { select: { canonical: 'Select', uses: 2, implementations: { Select: 2 }, outliers: [], defined: ['Select'], box_metrics: null } };
+        const roles = { select: { canonical: 'Select', uses: 2, implementations: { Select: 2 }, outliers: [], defined: ['Select'], families: ['jsx'], box_metrics: null } };
         const text = 'export const F = () => (\n  <select name="status"></select>\n);';
         const r = shadowRecord(text, 'app/f.tsx', roles, new Date(0));
         expect(r.findings).toEqual([
@@ -161,7 +161,7 @@ describe('a shadow row carries what fired', () => {
     });
 
     it('two controls on one long line each get the context around their own position', () => {
-        const roles = { input: { canonical: 'Input', uses: 2, implementations: { Input: 2 }, outliers: [], defined: ['Input'], box_metrics: null } };
+        const roles = { input: { canonical: 'Input', uses: 2, implementations: { Input: 2 }, outliers: [], defined: ['Input'], families: ['jsx'], box_metrics: null } };
         const gap = `<span>${'y '.repeat(200)}</span>`;
         const r = shadowRecord(`<div><input name="first" />${gap}<input name="second" /></div>`, 'app/f.tsx', roles, new Date(0));
         expect(r.findings).toHaveLength(2);
@@ -170,7 +170,7 @@ describe('a shadow row carries what fired', () => {
     });
 
     it('a control deep in a long line stays in the recorded context', () => {
-        const roles = { select: { canonical: 'Select', uses: 2, implementations: { Select: 2 }, outliers: [], defined: ['Select'], box_metrics: null } };
+        const roles = { select: { canonical: 'Select', uses: 2, implementations: { Select: 2 }, outliers: [], defined: ['Select'], families: ['jsx'], box_metrics: null } };
         const pad = `<div className="${'x '.repeat(200)}">`;
         const r = shadowRecord(`${pad}<select name="late"></select></div>`, 'app/f.tsx', roles, new Date(0));
         expect(r.findings![0]!.context).toContain('<select name="late">');
@@ -238,11 +238,13 @@ describe('the shadow report on the file as recorded', () => {
             JSON.stringify({ at: '2026-11-02T00:00:00Z', file: 'app/a.tsx', raw_control: 1 }),
             JSON.stringify({ at: '2026-11-02T00:00:00Z', file: 'app/a.tsx', raw_control: 1, findings: [null] }),
             JSON.stringify({ at: '2026-11-02T00:00:00Z', file: 'app/a.tsx', raw_control: -1 }),
+            JSON.stringify({ at: '2026-11-02T00:00:00Z', file: 'app/a.tsx', raw_control: 1, findings: [{ rule: 'made-up', line: 3, message: 'm', context: 'c' }] }),
+            JSON.stringify({ at: '2026-11-02T00:00:00Z', file: 'app/a.tsx', raw_control: 1, findings: [{ rule: 'consistency-raw-control', line: 0, message: 'm', context: 'c' }] }),
         ];
         const r = shadowReport(at(`${rows.join('\n')}\n`), now, 14, false);
         expect(r.code).toBe(1);
         expect(r.out).toContain('1 UI write(s), 0 firing');
-        expect(r.out).toContain('4 row(s) rejected');
+        expect(r.out).toContain('6 row(s) rejected');
         expect(r.out).toContain('line 2: `at` is not a date');
         expect(r.out).toContain('line 3: a firing row without its findings');
         expect(r.out).toContain('line 4: a finding is malformed');
@@ -261,12 +263,13 @@ describe('the shadow report on the file as recorded', () => {
 // Each case is synthetic in the shape of what fired; each class keeps a
 // positive control so the fix cannot pass by going quiet.
 describe('false alarms from the retroactive shadow window', () => {
-    const entry = (canonical: string): RoleEntry => ({
+    const entry = (canonical: string, families: string[] | undefined = ['jsx']): RoleEntry => ({
         canonical,
         uses: 3,
         implementations: { [canonical]: 3 },
         outliers: [],
         defined: [canonical],
+        families,
         box_metrics: null,
     });
     const ROLES = {
@@ -288,10 +291,32 @@ describe('false alarms from the retroactive shadow window', () => {
     });
 
     it('a Blade component canonical binds Blade views only', () => {
-        const blade = { select: entry('x-select') };
+        const blade = { select: entry('x-select', ['blade']) };
         const select = '<select name="year"></select>';
         expect(rules(select, 'resources/views/orders/index.blade.php', blade)).toEqual(['consistency-raw-control']);
         expect(rules(select, 'resources/js/orders.tsx', blade)).toEqual([]);
+    });
+
+    it('a canonical binds only the file families it is defined or used in', () => {
+        const select = '<select name="year"></select>';
+        const react = { select: entry('Select', ['jsx']) };
+        expect(rules(select, 'app/orders.tsx', react)).toEqual(['consistency-raw-control']);
+        expect(rules(select, 'docs/orders.mdx', react)).toEqual(['consistency-raw-control']);
+        expect(rules(select, 'legacy/Orders.vue', react)).toEqual([]);
+        expect(rules(select, 'widgets/Orders.svelte', react)).toEqual([]);
+        expect(rules(select, 'pages/orders.astro', react)).toEqual([]);
+        const vue = { select: entry('Select', ['vue']) };
+        expect(rules(select, 'legacy/Orders.vue', vue)).toEqual(['consistency-raw-control']);
+        expect(rules(select, 'app/orders.tsx', vue)).toEqual([]);
+        const astro = { select: entry('Select', ['astro', 'jsx']) };
+        expect(rules(select, 'pages/orders.astro', astro)).toEqual(['consistency-raw-control']);
+    });
+
+    it('a role map that does not say where its canonical lives is not measured against', () => {
+        const { families: _, ...noFamilies } = entry('Select');
+        const unknown = { select: noFamilies };
+        expect(rules('<select name="year"></select>', 'app/orders.tsx', unknown)).toEqual([]);
+        expect(rules('<select name="year"></select>', 'app/orders.tsx', { select: entry('Select', []) })).toEqual([]);
     });
 
     it('markup inside a comment is prose, not a control', () => {

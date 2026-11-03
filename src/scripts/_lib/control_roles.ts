@@ -235,9 +235,19 @@ export interface RoleEntry {
     outliers: string[];
     /** Components the project defines for this role, used or not. */
     defined: string[];
+    /** File families that define or use the canonical: where it can be rendered. */
+    families?: string[];
     tie?: string[];
     box_metrics: BoxMetrics | null;
     box_metrics_reason?: string;
+}
+
+/** The component family a file renders with, or null for a kind no canonical binds. */
+export function fileFamily(rel: string): string | null {
+    if (/\.blade\.php$/i.test(rel)) return 'blade';
+    const ext = /\.(jsx|tsx|mdx|vue|svelte|astro)$/i.exec(rel)?.[1]?.toLowerCase();
+    if (ext === undefined) return null;
+    return ext === 'tsx' || ext === 'mdx' ? 'jsx' : ext;
 }
 
 /**
@@ -304,6 +314,12 @@ export function buildControlRoles(
             box_metrics: null,
         };
         if (canonical === null) entry.tie = top;
+        else {
+            const homes = list.filter((o) => o.impl === canonical).map((o) => o.file);
+            const def = defs.get(canonical);
+            if (def !== undefined) homes.push(def);
+            entry.families = [...new Set(homes.map(fileFamily).filter((f): f is string => f !== null))].sort();
+        }
 
         const sample =
             canonical === null

@@ -32,6 +32,18 @@ function pairsOf(caseId: string): Array<[string, string]> {
     return out;
 }
 
+describe('control_roles — where the canonical can be rendered', () => {
+    it('families name the file kinds that define or use the canonical, and nothing else', () => {
+        const roles = buildArtefact('.', [
+            ['src/ui/select.tsx', 'export function Select(p) {\n  return <select {...p} />;\n}\n'],
+            ['app/orders.tsx', 'export const A = () => <Select name="a" />;\n'],
+            ['pages/list.astro', '<Select name="b" />\n'],
+            ['legacy/Orders.vue', '<template><select name="c"></select></template>\n'],
+        ]).control_roles;
+        expect(roles.select).toMatchObject({ canonical: 'Select', families: ['astro', 'jsx'] });
+    });
+});
+
 describe('control_roles — which implementation IS the control', () => {
     it('shadcn: the project Select is canonical for select, Input for input, with box metrics', () => {
         const a = buildArtefact('.', pairsOf('follow-up-select-shadcn'));

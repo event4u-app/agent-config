@@ -38,6 +38,7 @@ import { isHandoverShape } from './_lib/ui_surface.js';
 import {
     boxMetricsFromClasses,
     definedComponents,
+    fileFamily,
     occurrences,
     type BoxMetrics,
     type ControlRole,
@@ -149,6 +150,8 @@ export function shadowWindow(rows: readonly ShadowRecord[], now: Date, days = 14
 export type ControlRoleMap = Partial<Record<ControlRole, RoleEntry>>;
 
 /** Why a parsed row cannot be read as evidence, or null when it can. */
+const SHADOW_RULES: ReadonlySet<string> = new Set<ConsistencyFinding['rule']>(['consistency-raw-control', 'consistency-sibling-metrics']);
+
 function rowDefect(v: unknown): string | null {
     if (typeof v !== 'object' || v === null) return 'not a row';
     const r = v as Partial<ShadowRecord>;
@@ -159,7 +162,7 @@ function rowDefect(v: unknown): string | null {
         if (!Array.isArray(r.findings)) return 'a finding is malformed';
         const ok = (f: unknown) => {
             const x = f as Partial<ShadowFinding> | null;
-            return typeof x === 'object' && x !== null && typeof x.rule === 'string' && Number.isInteger(x.line) && typeof x.message === 'string' && typeof x.context === 'string';
+            return typeof x === 'object' && x !== null && SHADOW_RULES.has(x.rule as string) && Number.isInteger(x.line) && (x.line as number) > 0 && typeof x.message === 'string' && typeof x.context === 'string';
         };
         if (!r.findings.every(ok)) return 'a finding is malformed';
     }
@@ -248,14 +251,14 @@ export function loadControlRoles(artefactPath: string): ControlRoleMap | null {
 }
 
 /**
- * Whether a file of this kind can render the canonical at all. A server
- * template cannot use a JSX `Select`, nor a `.tsx` file a Blade `x-select`;
- * measuring one against the other is a false alarm on every edit to it.
+ * Whether a file of this kind can render the canonical at all: its family must
+ * be one the canonical is defined or used in. A server template cannot use a JSX
+ * `Select`, nor a `.vue` file a React one; a map that does not say is not trusted.
  */
-export function canRender(relPath: string, canonical: string): boolean {
+export function canRender(relPath: string, canonical: string, families: readonly string[] | undefined): boolean {
     if (canonical.startsWith('native:')) return true;
-    if (canonical.startsWith('x-') || canonical.includes(':')) return /\.blade\.php$/i.test(relPath);
-    return /\.(jsx|tsx|vue|svelte|astro|mdx)$/i.test(relPath);
+    const family = fileFamily(relPath);
+    return family !== null && families !== undefined && families.includes(family);
 }
 
 /** A design handover or an agent's reference copy is not the product's UI. */
@@ -286,7 +289,7 @@ export function consistencyFindings(
         // The file that implements a role's primitive is the primitive.
         if (definesRole.has(o.role)) continue;
         const entry = roles[o.role];
-        if (!entry || entry.canonical === null || !canRender(relPath, entry.canonical)) continue;
+        if (!entry || entry.canonical === null || !canRender(relPath, entry.canonical, entry.families)) continue;
 
         if (o.impl.startsWith('native:') && !entry.canonical.startsWith('native:')) {
             out.push({
