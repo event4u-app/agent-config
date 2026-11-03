@@ -72,10 +72,12 @@ as a dependency — use zod v4's native export.
       leftover stays critical.
       Done: robots.txt read as user-agent groups; blanket Disallow: / critical only for * or a live search-crawler row; training-block probe clean, staging-leftover still critical (web_launch_crawlers.test.ts, 19 cases).
       production entry: `src/scripts/check_web_launch_readiness.ts`
-- [ ] **1.6 Metamorphic invariance and coverage pairs.** Variants (attribute
+- [x] **1.6 Metamorphic invariance and coverage pairs.** Variants (attribute <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/web-launch-readiness.json -->
       order, quotes, case, whitespace) of every fixture keep their verdict;
       every check id has a firing and a silent fixture.
       verify: the test fails on a missing pair or a flipped verdict.
+      Done: check_web_launch_readiness_invariance.test.ts rewrites every unit-corpus fixture four ways (attribute order, quotes, case, whitespace) and requires an identical verdict, plus a firing and a silent fixture per check id; run against the pre-fix gate it fails 18 cases.
+      production entry: `src/scripts/check_web_launch_readiness.ts`
 
 ## Phase 2 — Checks that say what they rest on
 
@@ -89,9 +91,11 @@ as a dependency — use zod v4's native export.
       `review_by` yields `unknown`.
       Done: src/config/crawler-register.json with 11 rows, each from the operator's own page read 2026-11-03 (Google, OpenAI, Anthropic, Apple); Bingbot omitted — its official page did not render. Schema test rejects a row without source or date; a spawned run with --as-of past review_by reports unknown.
       production entry: `src/scripts/check_web_launch_readiness.ts`
-- [ ] **2.3 `snippet-eligibility` and `structured-data-parses` checks** (no type
+- [x] **2.3 `snippet-eligibility` and `structured-data-parses` checks** (no type <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/web-launch-readiness.json -->
       scoring).
       verify: firing and silent fixture each, under 1.6.
+      Done: both checks in the config and IMPLS; snippet-blocked/ and structured-data-broken/ fire, clean-marketing (now with valid JSON-LD) is silent; both covered by 1.6's pairs and variants.
+      production entry: `src/scripts/check_web_launch_readiness.ts`
 
 ## Phase 3 — MCP answers that say what happened
 

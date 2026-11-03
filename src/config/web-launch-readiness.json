@@ -200,6 +200,33 @@
       "why": "SITUATIONAL because the privacy page is jurisdictional. The checkable half of a privacy notice is that every provider the page actually loads is named; this row compares the providers `third-party-load-in-markup` found loading with the located privacy page's text, and says nothing about the rest of the notice.",
       "remediation": "Name each listed provider in the privacy page, or stop loading it.",
       "verification": "Re-run this check: every provider found loading appears by one of its register names on the privacy page."
+    },
+    {
+      "id": "snippet-eligibility",
+      "title": "An indexable page forbids its own search snippet (`nosnippet` / `max-snippet:0`)",
+      "applies_to": [
+        "local-business",
+        "marketing-site",
+        "docs"
+      ],
+      "tier": "high",
+      "why": "A page that is indexed but carries `nosnippet` or `max-snippet:0` is shown without a text snippet, and Google's guidance for its generative search features requires a page to be indexed and snippet-eligible. A leftover snippet block costs the listing its description while every presence check stays green.",
+      "remediation": "Remove `nosnippet` and `max-snippet:0` from the robots meta (or the crawler-named meta) of pages meant to appear in search; keep them only on pages whose text must not be quoted, and say so in the source.",
+      "verification": "The rendered HTML of each public page carries no robots or googlebot meta with `nosnippet` or `max-snippet:0`, and `curl -sI <url> | grep -i x-robots-tag` shows neither directive."
+    },
+    {
+      "id": "structured-data-parses",
+      "title": "A JSON-LD block does not parse",
+      "applies_to": [
+        "local-business",
+        "marketing-site",
+        "saas-app",
+        "docs"
+      ],
+      "tier": "medium",
+      "why": "A `<script type=\"application/ld+json\">` block that is not valid JSON is ignored whole by every consumer, so the structured data the page claims to carry is not there. Only parsing is checked; which types a page declares, and how many, is not scored.",
+      "remediation": "Fix the JSON in the block (a trailing comma, an unescaped quote or a template placeholder are the usual causes) or remove the block; validate it with `JSON.parse` in the build.",
+      "verification": "Every `application/ld+json` block on the built pages parses with `JSON.parse`, and Google's Rich Results Test reads the page without a parse error."
     }
   ],
   "not_in_scope": {

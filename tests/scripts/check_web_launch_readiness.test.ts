@@ -86,7 +86,7 @@ describe('conditional, not flat — the skip reason is the site type', () => {
     it('a SaaS app skips the local-business items, naming the type', () => {
         const r = audit(path.join(FIX, 'saas-app'), 'saas-app', REPO);
         const ids = r.skipped.map((s) => s.check).sort();
-        expect(ids).toEqual(['canonical-and-sitemap-coherence', 'per-route-metadata']);
+        expect(ids).toEqual(['canonical-and-sitemap-coherence', 'per-route-metadata', 'snippet-eligibility']);
         for (const s of r.skipped) {
             // 2.3 requires the site type verbatim as the reason.
             expect(s.reason).toBe('site type is saas-app');
@@ -661,8 +661,9 @@ describe('1.1 — no check may PASS on input it cannot see', () => {
             reversed += 1;
         }
         // 7 markup/route checks plus the four outward rows of
-        // road-to-a-page-that-says-what-it-loads, which read pages and stylesheets.
-        expect(reversed).toBe(11);
+        // road-to-a-page-that-says-what-it-loads, which read pages and stylesheets,
+        // plus snippet-eligibility and structured-data-parses, which read pages.
+        expect(reversed).toBe(13);
     });
 
     it('the two probes that need their OWN tree are blind there and decidable elsewhere', () => {
@@ -1053,5 +1054,34 @@ describe('form variants — the verdict follows what the markup says, never how 
 
     it('the control — the form the old reader already handled — still fires', () => {
         expect(located('robots-control', 'staging-noindex-leftover')).toEqual(['index.html:4']);
+    });
+});
+
+describe('snippet-eligibility and structured-data-parses', () => {
+    const run = (dir: string) => audit(path.join(FIX, dir), 'marketing-site', REPO);
+    const at = (dir: string, check: string): string[] =>
+        run(dir)
+            .findings.filter((f) => f.check === check)
+            .map((f) => f.location)
+            .sort();
+
+    it('nosnippet or max-snippet:0 on an indexable page fires, in any attribute order and for a search crawler name', () => {
+        expect(at('snippet-blocked', 'snippet-eligibility')).toEqual(['about.html:5', 'index.html:5']);
+        expect(run('snippet-blocked').findings.find((f) => f.check === 'snippet-eligibility')?.tier).toBe('high');
+    });
+
+    it('a JSON-LD block that does not parse fires with file:line; nothing else about it is scored', () => {
+        expect(at('structured-data-broken', 'structured-data-parses')).toEqual(['about.html:9']);
+    });
+
+    it('the clean fixture carries a valid JSON-LD block and passes both', () => {
+        expect(fs.readFileSync(path.join(FIX, 'clean-marketing/about.html'), 'utf8')).toContain('application/ld+json');
+        const r = run('clean-marketing');
+        expect(r.passed).toContain('snippet-eligibility');
+        expect(r.passed).toContain('structured-data-parses');
+    });
+
+    it('a noindex page is not also a snippet finding — it is not indexable to begin with', () => {
+        expect(at('staging-leftover', 'snippet-eligibility')).toEqual([]);
     });
 });

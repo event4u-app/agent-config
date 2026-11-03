@@ -132,6 +132,33 @@ export function metaNoindex(file: string, text: string, register: readonly Crawl
     return out;
 }
 
+/** Robots meta tags addressed to search: `robots`, or a live search crawler's documented meta name. */
+function searchMetaDirectives(text: string, register: readonly CrawlerRow[], asOf: string): { line: number; tag: string; tokens: string[] }[] {
+    const names = new Set(['robots']);
+    for (const r of register) {
+        if (r.meta_name !== undefined && r.affects_search_inclusion && rowState(r, asOf) === 'live') names.add(r.meta_name.toLowerCase());
+    }
+    const out: { line: number; tag: string; tokens: string[] }[] = [];
+    for (const t of tagsOf(text, HEAD_TAGS)) {
+        if (!t.closed || t.name !== 'meta') continue;
+        if (!names.has((attr(t.tag, 'name') ?? '').trim().toLowerCase())) continue;
+        out.push({ line: t.line, tag: t.tag.trim().slice(0, 160), tokens: directives(attr(t.tag, 'content') ?? '') });
+    }
+    return out;
+}
+
+/**
+ * `nosnippet` or `max-snippet:0` on a page search may index. A page that is
+ * `noindex` is not indexable to begin with, and that is a different finding.
+ */
+export function snippetBlocks(file: string, text: string, register: readonly CrawlerRow[], asOf: string): IndexHit[] {
+    const metas = searchMetaDirectives(text, register, asOf);
+    if (metas.some((m) => m.tokens.some((t) => t === 'noindex' || t === 'none'))) return [];
+    return metas
+        .filter((m) => m.tokens.some((t) => t === 'nosnippet' || /^max-snippet:\s*0$/.test(t)))
+        .map((m) => ({ file, line: m.line, text: m.tag }));
+}
+
 export interface RobotsGroup {
     /** User-agent tokens, as written. */
     agents: string[];

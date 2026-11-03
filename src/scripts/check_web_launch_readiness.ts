@@ -45,7 +45,7 @@ import {
 import { resolveOrigin } from './web_launch_third_party.js';
 import { type Witness, renderWitness } from './web_launch_render.js';
 import { HEAD_TAGS, attr, tagsOf, titleOf } from './_lib/html_tags.js';
-import { type CrawlerRow, indexability, loadCrawlerRegister } from './web_launch_crawlers.js';
+import { type CrawlerRow, indexability, loadCrawlerRegister, snippetBlocks } from './web_launch_crawlers.js';
 
 const HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(HERE), '..', '..');
@@ -545,7 +545,7 @@ function isPage(f: SourceFile): boolean {
  * `IMPLEMENTED` at all, so it reports as unimplemented instead. That is the one
  * rule keeping the silent-green defect out of this table.
  */
-type Impl = (files: readonly SourceFile[], tp?: ThirdPartyCtx) => Located[];
+type Impl = (files: readonly SourceFile[], tp?: ThirdPartyCtx, crawlers?: readonly CrawlerRow[]) => Located[];
 
 /** `http://` on a host we serve, excluding the XML/DTD namespace URLs. */
 const INSECURE_ASSET_RE =
@@ -719,6 +719,33 @@ function absoluteUrl(raw: string): URL | null {
         return null;
     }
 }
+
+/** `nosnippet` / `max-snippet:0` on an indexable page — eligible for search, ineligible for its snippet. */
+const snippetEligibility: Impl = (files, _tp, crawlers) => {
+    const rows = crawlers ?? crawlersFor(REPO_ROOT);
+    const today = asOfToday();
+    return files.filter(isPage).flatMap((f) => snippetBlocks(f.rel, f.text, rows, today));
+};
+
+/** Every `<script type="application/ld+json">` parses as JSON. Whether its types are rich or right is not scored. */
+const structuredDataParses: Impl = (files) => {
+    const hits: Located[] = [];
+    for (const f of files) {
+        if (!isPage(f)) continue;
+        const lower = f.text.toLowerCase();
+        for (const t of tagsOf(f.text, ['script'])) {
+            if (!t.closed || (attr(t.tag, 'type') ?? '').trim().toLowerCase() !== 'application/ld+json') continue;
+            const close = lower.indexOf('</script', t.end + 1);
+            const body = f.text.slice(t.end + 1, close < 0 ? undefined : close);
+            try {
+                JSON.parse(body);
+            } catch (e) {
+                hits.push({ file: f.rel, line: t.line, text: `JSON-LD does not parse: ${(e as Error).message.slice(0, 120)}` });
+            }
+        }
+    }
+    return hits;
+};
 
 const LEGAL_DE = [/impressum/i, /datenschutz/i];
 const LEGAL_GENERIC = [/privacy/i, /(terms|imprint|legal)/i];
@@ -1033,6 +1060,8 @@ export const UNDECIDABLE: Readonly<Record<string, Undecide>> = {
     // is `required-legal-pages`'s finding, not an undecided here.
     'superseded-statute-in-legal-page': unless(hasPage, `${NO_MARKUP}, so no imprint citation could be read.`),
     'placeholder-in-legal-page': unless(hasPage, `${NO_MARKUP}, so no legal-page template token could be read.`),
+    'snippet-eligibility': unless(hasPage, `${NO_MARKUP}, and robots meta tags are commonly set by a head manager at runtime.`),
+    'structured-data-parses': unless(hasPage, `${NO_MARKUP}, so no JSON-LD block could be read.`),
     'privacy-page-provider-coverage': (files, ctx) => {
         if (!files.some((f) => isPage(f) || isStylesheet(f))) {
             return blind(`${NO_MARKUP}, so which providers load could not be read.`);
@@ -1086,6 +1115,8 @@ export const IMPLS: Readonly<Record<string, Impl>> = {
     'superseded-statute-in-legal-page': (files, tp) => supersededStatute(files, tpOrRepo(tp).supersessions),
     'placeholder-in-legal-page': (files) => legalPagePlaceholders(files),
     'privacy-page-provider-coverage': (files, tp) => privacyCoverage(files, tpOrRepo(tp).register).findings,
+    'snippet-eligibility': snippetEligibility,
+    'structured-data-parses': structuredDataParses,
 };
 
 /** Checks with a real implementation. Everything else reports UNIMPLEMENTED. */
@@ -1154,7 +1185,7 @@ export function audit(
         }
         const impl = IMPLS[c.id];
         const index = impl === undefined ? scanIndexability(buildDir, root) : undefined;
-        const hits = index === undefined ? (impl as Impl)(files, thirdParty) : index.hits;
+        const hits = index === undefined ? (impl as Impl)(files, thirdParty, crawlersFor(root)) : index.hits;
         const undecided: UndecideHit[] = [
             ...(undecidable[c.id]?.(files, { region, siteType, escalations, thirdParty }) ?? []),
             ...(index?.undecided ?? []).map((u) => ({ ...u, reason_class: 'instrument-limit' as const })),
