@@ -67,7 +67,6 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { DEFAULT_PROJECTS_ROOT, projectStoreSlug } from '../_lib/cc_transcript.js';
-import { _read_settings } from '../_lib/claude_settings_hooks.js';
 import { EDIT_TOOLS } from '../minimal_safe_diff_hook.js';
 import { COMMAND_TOOLS } from '../before_complete_hook.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
@@ -337,7 +336,9 @@ export function resolveMemoryDir(
 function hostAutoMemoryDirectory(settingsPath: string): string | null {
     let raw: unknown;
     try {
-        raw = _read_settings(settingsPath)['autoMemoryDirectory'];
+        const parsed: unknown = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+        if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null;
+        raw = (parsed as Record<string, unknown>)['autoMemoryDirectory'];
     } catch {
         return null;
     }

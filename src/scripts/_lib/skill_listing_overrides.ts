@@ -41,8 +41,8 @@ import * as user_global_paths from './user_global_paths.js';
 import { applyCodexResidentSet } from './codex_resident_set.js';
 
 export const OVERRIDE_KEY = 'skillOverrides';
-export const NAME_ONLY = 'name-only';
-export const RECORD_BASENAME = 'skill-overrides.json';
+import { NAME_ONLY, RECORD_BASENAME, recordPath } from './skill_listing_record.js';
+export { NAME_ONLY, RECORD_BASENAME, recordPath };
 
 export interface OverrideRecord {
     schema_version: 1;
@@ -67,9 +67,6 @@ export interface RemoveOverridesResult {
     kept_user: string[];
 }
 
-export function recordPath(env?: user_global_paths.EnvMap | null): string {
-    return user_global_paths.write_target(RECORD_BASENAME, { env: env ?? null });
-}
 
 /** Owned skill slugs from a deploy's anchor-relative file set. */
 export function ownedSkillNames(currentFiles: Iterable<string>): string[] {

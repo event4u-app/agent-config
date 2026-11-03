@@ -142,7 +142,7 @@ import { readHookStdin } from "./hook_stdin.js";
 import { isSyntheticPrompt } from "../_lib/prompt_shape.js";
 import { OBSERVATION_LOG, readObservationLog, resolveSkillCatalogueRoots } from "../_lib/skill_catalogue.js";
 import { knownBareNames } from "../_lib/skill_catalogue_series.js";
-import { NAME_ONLY, recordPath } from "../_lib/skill_listing_overrides.js";
+import { NAME_ONLY, recordPath } from "../_lib/skill_listing_record.js";
 import type { EnvMap } from "../_lib/user_global_paths.js";
 import { _tokenize, rank, type RankRow } from "../skill_tools/score_skill_relevance.js";
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
