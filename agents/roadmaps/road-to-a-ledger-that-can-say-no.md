@@ -193,6 +193,7 @@ rewriting archived `status: ready` (decided 2026-09-04,
       `mergeJsonContent` and their test block.
       verify: `grep -rn "parseJsonLenient\|mergeJsonContent" src tests` -> 0 holds.
       Done: both functions and their test block removed from `src/install/conflict.ts` / `tests/install/conflict.test.ts`; the grep returns 0 lines (exit 1, no match).
+      reach exempt: a pure deletion; the unreached symbols the gate reads (`resolveFileConflict`, `expandBatchChoice`, `CONFLICT_BATCH_THRESHOLD`) are pre-existing tests of untouched code, none added or changed by this step
 - [x] **1.5 `--transfer` in the reference door's argument-hint.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       verify: `grep -c -- --transfer dist/agent-src/commands/analyze/reference.md` -> /[1-9]/ holds.
       Done: `--transfer=learn|adapt|rebuild|integrate` added to the argument-hint; dist count is 3.
