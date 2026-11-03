@@ -118,6 +118,25 @@ describe('an entry is something that is invoked (ledger-that-can-say-no 2.1)', (
         expect(hasMainGuard(lib)).toBe(false);
         expect(hasMainGuard('// process.argv[1] in a comment only\nexport const a = 1;\n')).toBe(false);
     });
+
+    it('reads comments string-aware, so a glob literal does not hide a real guard', () => {
+        const src =
+            "const GLOB = 'docs/*.md';\nexport function main() { return 0; }\n" +
+            'if (process.argv[1] !== undefined && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exit(main());\n';
+        expect(hasMainGuard(src)).toBe(true);
+        expect(hasMainGuard("const s = 'process.argv[1] === x';\nexport const a = 1;\n")).toBe(false);
+        expect(hasMainGuard('const re = /a\\/*b/;\nexport function main() { return 0; }\nif (isCliEntry(import.meta.url, "x")) main();\n')).toBe(true);
+    });
+
+    it('counts only call sites of the known guard helpers, not a look-alike or a definition', () => {
+        expect(hasMainGuard('export function check(t: string) { return isDirective(t); }\n')).toBe(false);
+        expect(hasMainGuard('export function walk(p: string) { return fs.statSync(p).isDirectory(); }\n')).toBe(false);
+        expect(hasMainGuard('export function isCliEntry(url: string, name: string): boolean { return false; }\n')).toBe(false);
+        expect(hasMainGuard("export function usage() { return `usage: ${path.basename(process.argv[1] ?? '')}`; }\n")).toBe(false);
+        expect(hasMainGuard("if (isCliEntry(import.meta.url, 'x')) process.exit(main(process.argv.slice(2)));\n")).toBe(true);
+        expect(hasMainGuard('runGateCli(import.meta.url, check);\n')).toBe(true);
+        expect(hasMainGuard('if (import.meta.url === pathToFileURL(path.resolve(process.argv[1] ?? "")).href) run();\n')).toBe(true);
+    });
 });
 
 describe('check_step_production_reach', () => {
