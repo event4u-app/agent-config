@@ -2,7 +2,20 @@
 import { describe, expect, it } from 'vitest';
 
 import { checkStep, namedPaths, newTicks, stepBlock } from '../../src/scripts/check_step_production_reach.js';
-import { importedNames, productionReach, usedExports, type ReachTree } from '../../src/scripts/_lib/production_reach.js';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import {
+    hasMainGuard,
+    importedNames,
+    productionEntries,
+    productionReach,
+    usedExports,
+    type ReachTree,
+} from '../../src/scripts/_lib/production_reach.js';
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 function treeOf(files: Record<string, string>): ReachTree {
     return { list: () => Object.keys(files), read: (rel) => files[rel] ?? null };
@@ -40,6 +53,65 @@ describe('production reach', () => {
         const reach = productionReach(treeOf(files));
         expect(reach.entries.has('src/scripts/tool.ts')).toBe(true);
         expect(reach.symbols.has('src/lib.ts#orphan')).toBe(true);
+    });
+});
+
+describe('an entry is something that is invoked (ledger-that-can-say-no 2.1)', () => {
+    const guarded = "export function main() { return 0; }\nif (process.argv[1] !== undefined) process.exit(main());\n";
+    const lib = 'export function helper() { return 1; }\n';
+
+    it('does not take a prose mention of a library module as an entry', () => {
+        const files = { ...BASE, 'src/scripts/_lib/x.ts': lib, 'docs/use.md': '`helper` (`src/scripts/_lib/x.ts`) does it.\n' };
+        expect(productionEntries(treeOf(files))).not.toContain('src/scripts/_lib/x.ts');
+    });
+
+    it('takes a prose mention of a module with a main guard as an entry', () => {
+        const files = { ...BASE, 'src/scripts/cli.ts': guarded, 'docs/use.md': 'The CLI (`src/scripts/cli.ts`) checks it.\n' };
+        expect(productionEntries(treeOf(files))).toContain('src/scripts/cli.ts');
+    });
+
+    it('takes a command-line mention as an entry even without a main guard', () => {
+        for (const line of ['./scripts-run src/scripts/_lib/x', 'node src/scripts/_lib/x.ts', 'npx tsx src/scripts/_lib/x.ts']) {
+            const files = { ...BASE, 'src/scripts/_lib/x.ts': lib, 'docs/use.md': `\`\`\`bash\n${line} --flag\n\`\`\`\n` };
+            expect(productionEntries(treeOf(files)), line).toContain('src/scripts/_lib/x.ts');
+        }
+    });
+
+    it('keeps reading a non-markdown source by mention', () => {
+        const files = {
+            ...BASE,
+            'src/config/production-entries.json': JSON.stringify({ entries: [], entry_sources: ['Taskfile.yml'] }),
+            'src/scripts/_lib/x.ts': lib,
+            'Taskfile.yml': 'cmds:\n  - src/scripts/_lib/x\n',
+        };
+        expect(productionEntries(treeOf(files))).toContain('src/scripts/_lib/x.ts');
+    });
+
+    it('takes a script a context invokes as an entry', () => {
+        const files = {
+            ...BASE,
+            'src/config/production-entries.json': JSON.stringify({ entries: [], entry_sources: ['src/agent-src/contexts/**/*.md'] }),
+            'src/scripts/analysis_validate.ts': lib,
+            'src/agent-src/contexts/execution/analysis-loop.md':
+                '```bash\n./scripts-run src/scripts/analysis_validate --run <run-dir>\n```\n',
+        };
+        expect(productionEntries(treeOf(files))).toContain('src/scripts/analysis_validate.ts');
+    });
+
+    it('lists contexts as an entry source in the committed config', () => {
+        const cfg = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'src/config/production-entries.json'), 'utf-8')) as {
+            entry_sources: string[];
+        };
+        expect(cfg.entry_sources).toContain('src/agent-src/contexts/**/*.md');
+    });
+
+    it('recognises the main-guard shapes the tree uses, and not a library', () => {
+        expect(hasMainGuard(guarded)).toBe(true);
+        expect(hasMainGuard('function main() {}\nif (isCliEntry()) process.exit(main());\n')).toBe(true);
+        expect(hasMainGuard('function main() {}\nprocess.exit(main());\n')).toBe(true);
+        expect(hasMainGuard('function main() {}\nmain();\n')).toBe(true);
+        expect(hasMainGuard(lib)).toBe(false);
+        expect(hasMainGuard('// process.argv[1] in a comment only\nexport const a = 1;\n')).toBe(false);
     });
 });
 

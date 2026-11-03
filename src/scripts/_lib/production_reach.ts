@@ -115,18 +115,57 @@ export function moduleImports(tree: ReachTree, rel: string): ModuleImport[] {
     return out;
 }
 
-/** Entries from the committed config: the fixed list plus every script an entry source names. */
+function stripComments(source: string): string {
+    return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+}
+
+/**
+ * Does the module run something when executed directly? An `argv[1]` /
+ * `import.meta.main` comparison, an `isCliEntry()`-style helper, `runGateCli`,
+ * or a bare top-level `main()` call. A library module has none of these.
+ */
+export function hasMainGuard(source: string): boolean {
+    const code = stripComments(source);
+    return (
+        /process\.argv\[1\]|import\.meta\.main\b|\bis(?:Cli|Main|Direct)\w*\s*\(|\brunGateCli\s*\(/.test(code) ||
+        /^(?:process\.exit(?:Code\s*=\s*|\s*\(\s*))?(?:await\s+|void\s+)?main\s*\(/m.test(code)
+    );
+}
+
+/** The mention is the argument of a command: `./scripts-run`, `node`, `tsx`. */
+const COMMAND_PREFIX = /(?:\.\/scripts-run|\bnode(?:\s+--?[\w=.-]+)*|\btsx)\s+$/;
+
+/**
+ * Entries from the committed config: the fixed list plus every script an entry
+ * source names. A markdown source is prose, and prose mentions modules it never
+ * runs, so a `.md` mention is an entry only when the module has a main guard or
+ * the mention is a command line. Other sources (Taskfiles, workflows, the
+ * dispatcher, the hook manifest) name only what they run.
+ */
 export function productionEntries(tree: ReachTree): string[] {
     const raw = tree.read(ENTRIES_CONFIG_REL);
     if (raw === null) return [];
     const cfg = JSON.parse(raw) as { entries?: string[]; entry_sources?: string[] };
     const entries = new Set((cfg.entries ?? []).filter((e) => tree.read(e) !== null));
     const sources = (cfg.entry_sources ?? []).map(globToRegExp);
+    const guarded = new Map<string, boolean>();
+    const runnable = (rel: string): boolean => {
+        if (!guarded.has(rel)) guarded.set(rel, hasMainGuard(tree.read(rel) ?? ''));
+        return guarded.get(rel) as boolean;
+    };
     for (const file of tree.list()) {
         if (!sources.some((re) => re.test(file))) continue;
-        for (const m of (tree.read(file) ?? '').matchAll(/(?:src\/)?scripts\/([A-Za-z0-9_/.-]+?)(?:\.ts)?(?![A-Za-z0-9_/.-])/g)) {
+        const prose = file.endsWith('.md');
+        const text = tree.read(file) ?? '';
+        for (const m of text.matchAll(/(?:src\/)?scripts\/([A-Za-z0-9_/.-]+?)(?:\.ts)?(?![A-Za-z0-9_/.-])/g)) {
             const candidate = `src/scripts/${m[1] as string}.ts`;
-            if (tree.read(candidate) !== null) entries.add(candidate);
+            if (tree.read(candidate) === null) continue;
+            if (prose) {
+                const lineStart = text.lastIndexOf('\n', (m.index as number) - 1) + 1;
+                const invoked = COMMAND_PREFIX.test(text.slice(lineStart, m.index));
+                if (!invoked && !runnable(candidate)) continue;
+            }
+            entries.add(candidate);
         }
     }
     return [...entries].sort();

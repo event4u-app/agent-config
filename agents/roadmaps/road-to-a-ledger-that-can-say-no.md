@@ -200,7 +200,7 @@ rewriting archived `status: ready` (decided 2026-09-04,
 
 ## Phase 2 — An entry is something that is invoked
 
-- [ ] **2.1 Entries from invocations, not mentions.** In `productionEntries`, a
+- [x] **2.1 Entries from invocations, not mentions.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/production-entries.json --> In `productionEntries`, a
       `.md` mention is an entry only when the target has a main guard or the
       mention is a command line (`./scripts-run`, `node`, `tsx`); add
       `src/agent-src/contexts/**/*.md` as an entry source. The gate judges new
@@ -208,6 +208,7 @@ rewriting archived `status: ready` (decided 2026-09-04,
       `report_production_reach` digest.
       verify: fixture tests — prose mention of a `_lib` module is no entry, an
       invoked CLI is, the context-invoked `analysis_validate` is.
+      Done: `productionEntries` in `src/scripts/_lib/production_reach.ts` takes a `.md` mention only when `hasMainGuard` holds or the mention follows `./scripts-run` / `node` / `tsx`; `src/config/production-entries.json` adds `src/agent-src/contexts/**/*.md`. Seven fixture tests in `tests/scripts/check_step_production_reach.test.ts` (3 red first), existing ones green, `--self-test` green. `report_production_reach` before: `732 entries · 1615 modules · 13322 reached symbols · digest a02e7069acb216f6`; after: `715 entries · 1615 modules · 13342 reached symbols · digest 6e5f64a4b98bb7b1`.
 - [ ] **2.2 A prose exemption names its call.** A `reach exempt:` reason citing
       prose, a door or a command must carry the `file:line` of the invoking
       command.
