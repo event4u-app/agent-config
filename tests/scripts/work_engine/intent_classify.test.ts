@@ -13,6 +13,7 @@ import {
     INTENT_UI_TRIVIAL,
     KNOWN_INTENTS,
     ValueError,
+    classify_intent,
     directive_set_for,
     populate_routing,
 } from '../../../src/agent-src/templates/scripts/work_engine/intent/classify.js';
@@ -86,4 +87,23 @@ describe('intent/classify — TS-side unit checks', () => {
         expect(st.intent).toBe('backend-coding');
         expect(st.directive_set).toBe('backend');
     });
+});
+
+describe('intent/classify — a game is a build', () => {
+    it.each([
+        'build a full samurai game with missions',
+        'create a 3d action game',
+        'build me a game',
+        'scaffold the puzzle game',
+        'implement a new platformer game',
+    ])('"%s" routes as a full-stack build', (prompt) => {
+        expect(classify_intent(prompt)).toBe(INTENT_MIXED);
+    });
+
+    it.each(['add a log level', 'set the scene for the import', 'game theory of the auction', 'add a plugin hook'])(
+        '"%s" does not',
+        (prompt) => {
+            expect(classify_intent(prompt)).not.toBe(INTENT_MIXED);
+        },
+    );
 });

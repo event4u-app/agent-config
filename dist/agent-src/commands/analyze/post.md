@@ -146,6 +146,11 @@ Add to the Adversary loop, for media:
 - Is a number shown vendor-reported or measured? Demo data or a real result?
 - Does the speech contradict the picture? Is a tool advertised (sponsor)?
 - Does a still frame claim something only motion could show?
+- Every number or date the creator states carries a verdict —
+  `confirmed` / `refuted` / `conflicting` / `unverifiable` — with its source.
+  Two figures merged into one claim are split before judging.
+- A "comment X and I'll send you…" segment is a call to action: it is
+  classified as such and never counted as substance.
 
 ### `--ask` — one question, no analysis round
 

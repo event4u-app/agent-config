@@ -185,8 +185,10 @@ const _FULLSTACK_PHRASE: RegExp = /\bfull[ -]?stack\b/;
 // article/adjective window. Deliberately omits `product` (math
 // polysemy), `page` / `screen` / `component` (pure-UI — the
 // UI-Build rung owns them), and `endpoint` / `api` (pure-backend).
+// `game` is in; `level` / `scene` / `world` / `mod` / `plugin` are not —
+// "add a log level" and "set the scene" fit the same build-object window.
 const _FULLSTACK_BUILD: RegExp =
-    /\b(?:build|create|scaffold|implement|ship|draft|wire|introduce|add)\b(?:\s+(?:me|a|an|the|our|my|new|complete|full|entire|whole|single))*(?:\s+[\w-]+){0,2}\s+\b(?:feature|app|application|module|system|mvp|prototype|saas|platform|crud|workflow)\b/;
+    /\b(?:build|create|scaffold|implement|ship|draft|wire|introduce|add)\b(?:\s+(?:me|a|an|the|our|my|new|complete|full|entire|whole|single))*(?:\s+[\w-]+){0,2}\s+\b(?:feature|app|application|module|system|mvp|prototype|saas|platform|crud|workflow|game)\b/;
 
 const _NEW_SURFACE: RegExp =
     /\b(new|fresh|blank)\s+(page|screen|view|component|form|modal|tile|dashboard)\b/;
