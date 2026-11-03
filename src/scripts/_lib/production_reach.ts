@@ -181,7 +181,8 @@ export function usedExports(source: string): string[] {
     const out: string[] = [];
     for (const m of code.matchAll(/\bexport\s+(?:declare\s+)?(?:async\s+)?(?:function\*?|const|let|class|interface|type|enum)\s+([A-Za-z_$][\w$]*)/g)) {
         const name = m[1] as string;
-        const uses = code.match(new RegExp(`(?<![\\w$.])${name.replace(/\$/g, '\\$')}(?![\\w$])`, 'g'))?.length ?? 0;
+        // A `.name` member access is someone else's property; `...name` is a spread of this one.
+        const uses = code.match(new RegExp(`(?<![\\w$])(?<!(?:^|[^.])\\.)${name.replace(/\$/g, '\\$')}(?![\\w$])`, 'gm'))?.length ?? 0;
         if (uses >= 2) out.push(name);
     }
     return out;

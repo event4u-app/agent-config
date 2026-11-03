@@ -41,6 +41,11 @@ describe('production reach', () => {
         expect(usedExports(BASE['src/lib.ts'])).toEqual(['helper']);
     });
 
+    it('counts an export the module spreads, but not a same-named member access', () => {
+        expect(usedExports('export function list() { return []; }\nconst all = [...list()];\n')).toEqual(['list']);
+        expect(usedExports('export function list() { return []; }\nconst all = other.list();\n')).toEqual([]);
+    });
+
     it('reaches a helper through its module, but not an export nobody imports', () => {
         const reach = productionReach(treeOf(BASE));
         expect(reach.symbols.has('src/lib.ts#helper')).toBe(true);
