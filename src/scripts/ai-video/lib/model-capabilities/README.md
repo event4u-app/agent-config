@@ -55,6 +55,12 @@ field to express.
 
 - `min_duration` / `max_duration` — clip length bounds in **seconds**.
   Equal values mean the model renders fixed-length clips only.
+- `allowed_durations` — optional. The exact set of lengths the model accepts
+  when it is a grid rather than a range: sorted, unique integers inside
+  `min_duration..max_duration`, the last one equal to `max_duration`. A
+  requested `duration` outside it is not rendered as asked — the adapter
+  says what it renders instead (Veo: `requested <n>s -> rendered <m>s`), so a
+  planner keeps scene lengths on the grid. Absent means any value in the range.
 - `audio_sync` — `true` when the model returns a muxed MP4 with
   synchronized audio (`capability --model` then answers
   `audio=native`); `false` → video-only, the orchestrator muxes at
