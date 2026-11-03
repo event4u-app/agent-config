@@ -212,6 +212,6 @@ STANCE: ratified | CONFIDENCE: high | DEALBREAKER: no
 
 - **Owner:** the repository owner, 2026-11-03, in session: chose option 1 (override the split, render this record, merge on green CI) of: override and merge; close `data-src` first and run round 15; park.
 - **What was put to the owner:** round 13 refused unanimously on two grounds — canonical-link trust in `ownHosts()` and the removed `MINIFIED` threshold. The first was fixed (a registered provider's host is never the site itself, test red before the fix); the second was pinned by a test (a >400-character line is read per load). In round 14 the refusing seat accepted both and raised new grounds: `data-src` is not read (pre-existing on main, deliberate for click-to-load), the chunk indirection, advisory-only reporting (true of every design-pass finding), and a quadratic `visibleText` (the quoted loop breaks at the first missing closer).
-- **Carried:** `data-src` as step 2.1 of `agents/roadmaps/later/road-to-a-page-check-at-write-time.md`.
+- **Carried:** `data-src` as step 2.1 of `agents/roadmaps/archive/road-to-a-page-check-at-write-time.md`.
 - **What this record does not change:** the verdict above is the one derived from the seats, `refused`. The decision to land despite it is the owner's, recorded here and not in the header.
 - **Rollback:** revert the merge commit of this PR; the web_launch_rows chunk row goes with it, and design_pass_hook returns to running the design-slop rules alone.
