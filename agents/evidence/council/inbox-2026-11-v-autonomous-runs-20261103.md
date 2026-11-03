@@ -1,4 +1,4 @@
-<!-- evidence-type: council -->
+<!-- evidence-type: analysis -->
 
 # Council record: five design decisions for autonomous roadmap runs (2026-11-03)
 
