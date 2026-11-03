@@ -168,7 +168,7 @@ agent-config doctor neighbours
 
 A `verdict-capable` row is the candidate. Removing or disabling that plugin
 through the host's plugin management, then retrying the call, separates the two
-verdicts. Reports about the mod's behaviour go to its maintainer.
+verdicts. Reports about the mod's behavior go to its maintainer.
 
 ## When in doubt — diagnostic sequence
 
