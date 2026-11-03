@@ -86,7 +86,10 @@ export class ExposureLedger {
         for (const [name, seen] of this.routes) routes[name] = { files: [...seen.files], symbols: [...seen.symbols] };
         try {
             fs.mkdirSync(path.dirname(this.file), { recursive: true });
-            fs.writeFileSync(this.file, `${JSON.stringify({ schema_version: 1, routes })}\n`, 'utf8');
+            // A torn write would read back as an empty ledger and reset every route's exposure.
+            const tmp = `${this.file}.${process.pid}.tmp`;
+            fs.writeFileSync(tmp, `${JSON.stringify({ schema_version: 1, routes })}\n`, 'utf8');
+            fs.renameSync(tmp, this.file);
         } catch {
             /* accounting never blocks the call; the in-memory ledger still holds */
         }

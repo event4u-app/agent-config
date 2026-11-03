@@ -162,6 +162,20 @@ describe('askHand shadows a public-artifact typed ask on a free route (free-hand
         const rows = readShadowLedger(tmp);
         expect(rows[0]!.paid.verified).toBe('skipped');
         expect(rows[0]!.free.verified).toBe('skipped');
+        expect(rows[0]!.origin).toBe('production');
+    });
+
+    it('a shadow with an injected head verify is a bench row; production rows do not use the bench cap', async () => {
+        const file = path.join(tmp, SHADOW_LEDGER_RELPATH);
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        const prod = JSON.stringify({ ts: '2026-10-01T00:00:00Z', kind: 'classify', origin: 'production', paid: {}, free: {} });
+        fs.writeFileSync(file, `${prod}\n`);
+        const paid = paidStub();
+        const free = freeStub();
+        await askHand(SLICE, base([paid.member, free.member]));
+        const rows = readShadowLedger(tmp);
+        expect(rows).toHaveLength(2);
+        expect(rows[1]!.origin).toBe('bench');
     });
 
     it('a never-resolving free route does not hold the paid answer past the shadow wait', async () => {
