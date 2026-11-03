@@ -34,7 +34,7 @@ instrument can say whether a subagent that reported `DONE` wrote anything
 
 ## Phase 1 — The merge surface reports what it checked
 
-- [ ] **1.1 Owner-question ids are unique.** New `src/scripts/check_owner_question_ids.ts`:
+- [x] **1.1 Owner-question ids are unique.** New `src/scripts/check_owner_question_ids.ts`:
       parse `^#{2,4} *OQ-(\d+)` headings in `agents/owner-questions.md`, exit 1 naming each
       duplicate id and its lines, print `scanned: <N>`. Wire it into `taskfiles/ci-fast.yml`, a
       `consistency.yml` step with **no** `pull_request` guard (so it also runs on `merge_group`),
