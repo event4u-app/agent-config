@@ -2,11 +2,14 @@
 /**
  * bench_humanizer_eval — paired eval for the humanizer feature.
  *
- * Two metrics over the before/after corpus in `tests/fixtures/ai-tells/`:
+ * Three metrics over the before/after corpus in `tests/fixtures/ai-tells/`:
  *
  *   1. OBJECTIVE (free, deterministic): AI-tell reduction per pair via
  *      `detect_ai_tells.ts` — hard hits, cluster score/500w, dash density/500w.
- *   2. BLIND PREFERENCE (--judge, billable): an LLM judge sees each pair in
+ *   2. FACT CONSERVATION (free, deterministic): per split, how many pairs the
+ *      fact witness (`_lib/fact_diff.ts`) reports as adding or losing a fact.
+ *      A tell reduction bought by inventing numbers is not a humanize.
+ *   3. BLIND PREFERENCE (--judge, billable): an LLM judge sees each pair in
  *      randomized A/B order (deterministic LCG seed per pair) and picks which
  *      text reads more like a skilled human writer. LENGTH-CONTROLLED: pairs
  *      whose word counts differ by more than ±25% are excluded from the
@@ -31,6 +34,7 @@
 
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { diffFacts } from "./_lib/fact_diff.js";
 import { analyzeText, type TellReport } from "./detect_ai_tells.js";
 
 const ROOT = process.cwd();
@@ -76,7 +80,58 @@ interface PairResult {
   length_controlled: boolean;
   before: Pick<TellReport, "hard_total" | "cluster_score_per_500" | "dash_density_per_500">;
   after: Pick<TellReport, "hard_total" | "cluster_score_per_500" | "dash_density_per_500">;
+  /** Facts the witness reports the rewrite added and lost — the conservation metric. */
+  facts: FactCount;
   judge?: { preferred: "after" | "before"; order: "after-first" | "before-first" };
+}
+
+export interface FactCount {
+  added: number;
+  lost: number;
+}
+
+export interface FactAggregate {
+  pairs: number;
+  fact_added_pairs: number;
+  fact_lost_pairs: number;
+  fact_conserved_pairs: number;
+}
+
+/** How many facts the rewrite added and lost, per the deterministic witness. */
+export function factConservation(pair: { before: string; after: string }): FactCount {
+  const d = diffFacts(pair.before, pair.after);
+  return { added: d.added.length, lost: d.lost.length };
+}
+
+export function factAggregate(rows: ReadonlyArray<{ facts: FactCount }>): FactAggregate {
+  return {
+    pairs: rows.length,
+    fact_added_pairs: rows.filter((r) => r.facts.added > 0).length,
+    fact_lost_pairs: rows.filter((r) => r.facts.lost > 0).length,
+    fact_conserved_pairs: rows.filter((r) => r.facts.added === 0 && r.facts.lost === 0).length,
+  };
+}
+
+/** The fact-conservation section of the report; free, and printed on every run. */
+export function renderFactSection(bySplit: Record<Split, FactAggregate>): string {
+  const row = (s: Split) => {
+    const a = bySplit[s];
+    return `| ${s} | ${a.fact_added_pairs}/${a.pairs} | ${a.fact_lost_pairs}/${a.pairs} | ${a.fact_conserved_pairs}/${a.pairs} |`;
+  };
+  return [
+    "## Fact conservation (deterministic, no judge call)",
+    "",
+    "A humanize pass changes how something is said, never what is true. Counted",
+    "by the fact witness `detect_ai_tells --baseline`: a pair is in `fact_added_pairs`",
+    "when its after-text carries a fact (number, number word, date, amount, name,",
+    "status, negation, hedge or attribution) its before-text lacks.",
+    "",
+    "| Split | fact_added_pairs | fact_lost_pairs | conserved |",
+    "|---|---|---|---|",
+    row("tune"),
+    row("holdout"),
+    "",
+  ].join("\n");
 }
 
 /** before minus after, per rule, keeping only what the pass actually removed. */
@@ -233,6 +288,7 @@ async function main(): Promise<void> {
       length_controlled: controlled,
       before: slim(before),
       after: slim(after),
+      facts: factConservation(p),
     };
     if (runJudge && controlled) {
       row.judge = await judgePair(p, i);
@@ -336,6 +392,10 @@ async function main(): Promise<void> {
     tune: aggregateOver(results.filter((r) => r.split === "tune")),
     holdout: aggregateOver(results.filter((r) => r.split === "holdout")),
   };
+  const factsBySplit: Record<Split, FactAggregate> = {
+    tune: factAggregate(results.filter((r) => r.split === "tune")),
+    holdout: factAggregate(results.filter((r) => r.split === "holdout")),
+  };
   if (runJudge) {
     const { DEFAULT_ANTHROPIC_MODEL } = await import("./ai_council/clients.js");
     agg.judge_model = DEFAULT_ANTHROPIC_MODEL as string;
@@ -349,6 +409,7 @@ async function main(): Promise<void> {
     corpus: "tests/fixtures/ai-tells",
     aggregate: agg,
     by_split: bySplit,
+    fact_conservation: factsBySplit,
     disabled_families: [...excluded].sort(),
     attribution,
     results,
@@ -379,6 +440,7 @@ async function main(): Promise<void> {
       `${show(bySplit.holdout.mean_dash_before)} | ${show(bySplit.holdout.mean_dash_after)} | ` +
       `${show(agg.mean_dash_before)} | ${show(agg.mean_dash_after)} |`,
     "",
+    renderFactSection(factsBySplit),
     "## Blind preference (length-controlled)",
     "",
     agg.judged_pairs > 0
