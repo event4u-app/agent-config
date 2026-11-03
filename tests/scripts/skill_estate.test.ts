@@ -185,9 +185,13 @@ describe('the live corpus', () => {
         // (road-to-a-founder-interview-that-ends-in-a-plan, OQ-61); its catalogue
         // line was paid by shortening three neighbour descriptions, so the token
         // total moves by one, 11487 -> 11488.
+        //
+        // 11488 -> 11487 on 2026-11-03: inbox round 2026-11-r widened the
+        // `supply-chain-intake` description to plugins, mods and agent skills,
+        // one token shorter than before.
         const e = measureSkillEstate(REPO);
         expect(e.skill_count).toBe(303);
-        expect(e.skill_description_tokens).toBe(11488);
+        expect(e.skill_description_tokens).toBe(11487);
         expect(e.deprecated_count).toBe(0);
     });
 

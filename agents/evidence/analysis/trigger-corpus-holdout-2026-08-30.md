@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  f2bc73234c6117ce5dbc0f754f096df54f889bfa52d421fd750825a7516cd6c9
+SET-SHA256  15d88df0f6fceb189be7dc71596475b13377db482e52d258fd8005b37778c6df
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1343,13 +1343,14 @@ open and which this file does not settle.
 | `server-hardening` | `8301bedcbcd9129f8c55d3640e66164baec4753e92a55a8b56df54449e3f3f46` |
 | `skill-reviewer` | `86b4abf170034661be4a9136bdfa51f2f00f5e9a3db0b579d4946c1f091108f7` |
 | `skill-writing` | `d2beba3976f5918450cc4fa5c96f7fdae488ef5ffebe1f3b05fe3519acbb8a26` |
+| `song-to-script` | `58f62a4f9b21ffab4c9b13ed4fc3b833042d926d2517195e835c7d6d364ec64b` |
 | `source-discovery` | `e32a41fdd41414cc4734ebf440a253f592775046f603c9daeec6a28f1b05eee3` |
 | `spreadsheet-authoring` | `959466aba0e7f34aae0d8eb69ee427d94049627d905410b322045ac6be0a1599` |
 | `sql-writing` | `3afe3f13210573d0e6f41be15836f3be0b3c01bc7db3a3625a35fb64e64356df` |
 | `standards-from-config` | `b25987153a9a93450f8a94852fe10cf86d83967a74a2b84a9bb3ead89b68c2c1` |
 | `storybook-workshop` | `3aff4c3fddd06e0e265ca4afbb02cdbce16b000dd2d3fd6405504d015a1efd27` |
 | `subagent-orchestration` | `a450b071cba1e1c54bd00c6879165cf4146174dba54de8266e6a4971aa7634c2` |
-| `supply-chain-intake` | `e61b2fcb6409cf0817ea8527a1fda3b1cdabb35e28264146a0d449991e9fe87c` |
+| `supply-chain-intake` | `a3b3a13a999c2d65286647aba48f5f5921fd6c1f1c79ebb8821fe1b368aa80f0` |
 | `svg-authoring` | `3dd3e8463a2f8383a9e86a5ee7785661a0e9b73eda5f09d4aac0669ec66abe9f` |
 | `test-case-discovery` | `563ff838264c39c9e132e1e18206c7b0d52639bd42203f790109f9ec0df2603d` |
 | `test-driven-development` | `9a1ec696c72915adde002efffdc6a887c967b63f5330c616126d07617be7aa0b` |
@@ -2250,6 +2251,29 @@ neighbours that should win, one logo counterexample. It leaves the grandfather a
 | Row | Partition | `sha256(name)[0:2]` | Now |
 |---|---|---|---|
 | `character-consistency` | train | `0xf7` = 247 ≥ 51 | new |
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.
+
+## Growth — 2026-11-03, one new corpus (song-to-script), one train corpus edited; nothing seals
+
+```
+ONE ROW IS NEW AND TRAINS. ONE TRAIN ROW WAS EDITED. NO HOLDOUT FILE WAS TOUCHED.
+BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN AFTER THE CORPORA WERE ON DISK.
+```
+
+**What changed.** Round `inbox-2026-11-r` edited the `song-to-script` skill body
+(planners are told the Veo duration grid), which brought it into
+`check_routing_coverage`'s touched-skill scope; its corpus was written then and it
+leaves the grandfather allowlist in the same change. The same round widened
+`supply-chain-intake` to host plugins, mods and third-party agent skills, and its
+existing corpus gained the matching positives and a near-miss for writing a new
+skill.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `song-to-script` | train | `0x89` = 137 ≥ 51 | new |
+| `supply-chain-intake` | train | `0xfa` = 250 ≥ 51 | edited |
 
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
 and `routing_signal_measurement.test.ts` § 5.1.
