@@ -46,27 +46,10 @@ with the **scope delta below**.
 
 ## Scope delta
 
-- **Execution mode:** the loop's § 3 pre-scan derives the run-start
-  **execution contract**
-  ([`roadmap-execution-contract`](../../contexts/execution/roadmap-execution-contract.md)),
-  and under this wrapper the invocation is the confirmation (ADR-237): every
-  run grant (feature branch, chunked commits, push to that branch only,
-  PR-open, batched artifact drafting, council auto-enable) is active from the
-  invocation on, whatever `execution.mode` says or omits. There is no
-  acceptance round and no further ask until a safety floor.
-- **What the invocation can carry:** the run-level policy flags
-  `--late-artifacts` / `--deferred` (contract § 2a/§ 2b), and owner answers
-  given as `O<n> <decision-id>: <answer>` lines. The latter become dated owner
-  rows per contract § 2d, owner answers carried by the invocation.
-- **A set of roadmaps:** `--roadmaps a,b,c` or `--from-pr N` (the roadmap
-  files that PR changed, bound to its head revision) resolve once, before the
-  first edit, through `./scripts-run src/scripts/roadmap_set_manifest`. The
-  printed manifest is frozen and goes into the PR body. Members run in its
-  `order`, which follows their `depends` edges. A depends cycle refuses the set
-  (exit 1). Parked, archived and missing members are listed as excluded and not
-  run, so a PR names candidates and never widens authority. A blocked member
-  blocks only the members that depend on it; the others continue. Each member
-  is claimed when it is reached.
+- **Execution mode:** the invocation is the confirmation (ADR-237): every grant
+  of the [`execution contract`](../../contexts/execution/roadmap-execution-contract.md)
+  is active from it, whatever `execution.mode` says.
+- **Sets, flags, `O<n>` answers** — read [`process-full-delivery`](../../contexts/execution/process-full-delivery.md#what-the-invocation-carries).
 - **Working set:** every open step across every phase, in document
   order. Phase-internal annotations like `(deferred)` / `(optional)` /
   "gated on Phase N" do not narrow the working set.
@@ -165,9 +148,9 @@ WAITING ON REMOTE CI FOR THE DELIVERY LOOP IS PART OF THE RUN. "CI IS
 RUNNING" IS NOT A BOUNDARY, NOT A HALT, AND NOT A REPORT — THE RUN ENDS
 AT A MERGEABLE PR, NEVER AT AN OFFER TO GO CHECK ON ONE.
 ONE INVOCATION, AT MOST ONE DELIVERY PR: NO PUSH, PR OR MERGE BEFORE THE LAST STEP
-OF THE LAST MEMBER IS DONE. ONE ROADMAP IS A SET OF ONE. LOCAL COMMITS IN LOGICAL
-CHUNKS STAY; DELIVERY FIXES AFTER THE PR OPENS ARE PUSHED TO THAT SAME PR.
-UNDER `--all`, EACH ROADMAP IS STILL ITS OWN PR: A LANE IS ITS OWN INVOCATION.
+OF THE LAST MEMBER IS DONE. LOCAL COMMITS IN LOGICAL CHUNKS STAY; DELIVERY
+FIXES AFTER THE PR OPENS ARE PUSHED TO THAT SAME PR.
+UNDER `--all`, EACH ROADMAP IS STILL ITS OWN PR.
 ONE INVOCATION, ONE DELIVERY: AS A COMPOSED INVOCATION'S LAST STAGE, THIS RUN
 OPENS OR UPDATES THE ONE PR, ONCE, AT ITS END.
 NO PR OF A ROADMAP IS MERGED BEFORE ITS LANE REPORTS `complete`.
@@ -295,11 +278,9 @@ NO BATCH FLIP AT THE ARCHIVE COMMIT. NO "I'LL DO IT AT THE END."
 - **No `Class: 3` on an agent-executable action.** Capability before role
   (ADR-237 § 2). A blocker labelled human-only that the agent could have run is
   a defect in the roadmap, and the run fixes the label rather than obeying it.
-- **Inherited from [`process-phase § Rules`](process-phase.md#rules), and only
-  these:** every checkbox edit gets a dashboard sync in the same reply, council
-  consultations run silently, and decline = silence. That file's commit
-  permission and its "halt on true ambiguity" do not apply here: the invocation
-  is the grant, and only the five halt conditions above stop the run.
+- **Inherited from [`process-phase § Rules`](process-phase.md#rules), only:**
+  dashboard sync, silent council, decline = silence. Its commit permission and
+  ambiguity halt do not apply.
 
 ## See also
 

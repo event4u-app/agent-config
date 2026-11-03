@@ -155,7 +155,7 @@ describe('process-full says one thing about who grants the run (inbox-2026-11-v 
 
     it('turns owner answers in the invocation into dated owner rows, never council rows', () => {
         const contract = fs
-            .readFileSync(path.resolve(__dirname, '../../src/agent-src/contexts/execution/roadmap-execution-contract.md'), 'utf8')
+            .readFileSync(path.resolve(__dirname, '../../src/agent-src/contexts/execution/roadmap-execution-contract-branches.md'), 'utf8')
             .replace(/\s+/g, ' ');
         expect(contract).toMatch(/### 2d\. Owner answers carried by the invocation/);
         expect(contract).toMatch(/`owner \(invocation, <date>\)`/);
@@ -167,7 +167,7 @@ describe('process-full says one thing about who grants the run (inbox-2026-11-v 
         expect(text).toMatch(/argument-hint: ".*--late-artifacts.*--deferred.*"/);
         expect(text).toMatch(/`--late-artifacts` \/ `--deferred` \(contract § 2a\/§ 2b\)/);
         const contract = fs
-            .readFileSync(path.resolve(__dirname, '../../src/agent-src/contexts/execution/roadmap-execution-contract.md'), 'utf8')
+            .readFileSync(path.resolve(__dirname, '../../src/agent-src/contexts/execution/roadmap-execution-contract-branches.md'), 'utf8')
             .replace(/\s+/g, ' ');
         expect(contract).toMatch(/`--late-artifacts auto-research`/);
         expect(contract).toMatch(/`--deferred spawn-follow-up-draft`/);

@@ -68,6 +68,24 @@ mergeable against base
 SHA `M` says nothing about its state once PR *n−1* advances the base to `M1`.
 Report "mergeable against base `<SHA>`", never "the queue is mergeable".
 
+
+## What the invocation carries
+
+**A set of roadmaps:** `--roadmaps a,b,c` or `--from-pr N` (the roadmap
+files that PR changed, bound to its head revision) resolve once, before the
+first edit, through `./scripts-run src/scripts/roadmap_set_manifest`. The
+printed manifest is frozen and goes into the PR body. Members run in its
+`order`, which follows their `depends` edges. A depends cycle refuses the set
+(exit 1). Parked, archived and missing members are listed as excluded and not
+run, so a PR names candidates and never widens authority. A blocked member
+blocks only the members that depend on it; the others continue. Each member
+is claimed when it is reached.
+
+**What the invocation can carry:** the run-level policy flags
+`--late-artifacts` / `--deferred` (contract § 2a/§ 2b), and owner answers
+given as `O<n> <decision-id>: <answer>` lines. The latter become dated owner
+rows per contract § 2d, owner answers carried by the invocation.
+
 ## Terminal outcomes — `complete`, or a genuine external impossibility
 
 **Rewritten by [ADR-237](../../../../docs/decisions/ADR-237-end-to-end-execution-authority.md),
