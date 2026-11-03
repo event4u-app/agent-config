@@ -109,14 +109,17 @@ All four hold for **consistency-raw-control**, which ships on.
 Ratification round 14 found that the rule inferred which files can render a
 canonical from the file extension alone, so a `.vue` file in a mixed repository
 could be measured against a React `Select`. The role map now records the file
-families (`jsx`, `vue`, `svelte`, `astro`, `blade`) that define or use each
-canonical, and a file outside them is not measured; a map without them is not
-trusted. The window was replayed again with an explicit bound (2026-04-27 to
-2026-10-27) on each repository's current HEAD, once with the family check and
-once with it disabled:
+families (`jsx`, `vue`, `svelte`, `astro`, `blade`) of the files that define
+each canonical (round 15: definitions only, since a same-named use in another
+family may be another component; a single-file component is defined by its
+file name). A file outside them is not measured, nor is a canonical the
+project does not define (a library component), and a map without families is
+not trusted. The window was replayed again with an explicit bound (2026-04-27
+to 2026-10-27) on each repository's current HEAD, with the family check, with
+it disabled, and with definition-only families:
 
 - A: 262 writes in 147 commits, nothing fires. B: 1,443 writes in 239 commits,
-  six firing writes, identical with and without the family check. Both
+  six firing writes, identical in all three replays. Both
   repositories are single-family, so the check removes nothing here; its
   effect is on mixed repositories, which this window does not contain.
 - The counts differ from the first reading (1,565 writes) because B's HEAD is
@@ -143,6 +146,12 @@ once with it disabled:
 - **The reverse trigger is a manual control, not code.** A false positive
   needs a human reading, so no automated evaluator can apply the threshold.
   How it runs is stated below.
+- **The live recorder cannot prove its own coverage.** A row is written only
+  after the role map is computed, and a failure in the check is swallowed so
+  the hook event survives. The report catches a missing file, an empty window
+  and unreadable rows, not a write that left no row. Mixed-framework
+  repositories and library-only canonicals are also outside this window: the
+  first is guarded by families, the second is not measured at all.
 - **Two repositories, one owner.** Neither is a third-party corpus. A third
   repository would widen the sample, not change its kind.
 
