@@ -151,7 +151,7 @@ describe('false-alarm fixes', () => {
 describe('humanizer Fixture 4', () => {
     const doc = fs.readFileSync(path.join(REPO, 'src', 'skills', 'humanizer', 'references', 'fixtures.md'), 'utf8');
     const section = doc.slice(doc.indexOf('## Fixture 4'));
-    const quotes = [...section.matchAll(/((?:^> .*\n)+)/gm)].map((m) => m[1].replace(/^> /gm, '').replace(/\n/g, ' ').trim());
+    const quotes = [...section.matchAll(/((?:^> .*\n)+)/gm)].map((m) => (m[1] ?? '').replace(/^> /gm, '').replace(/\n/g, ' ').trim());
     const [before = '', good = '', bad = ''] = quotes;
     const listed = (section.match(/```\n([\s\S]*?)```/)?.[1] ?? '').trim();
 
