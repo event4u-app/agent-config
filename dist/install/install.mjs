@@ -7804,12 +7804,18 @@ var _CURRENT = [
   "add-dir",
   "advisor",
   "agents",
+  "artifact-capabilities",
+  "artifact-design",
+  "artifact-diagramming",
   "autofix-pr",
   "background",
   "batch",
+  "bg",
   "branch",
   "btw",
   "cd",
+  "checkpoint",
+  "checkup",
   "chrome",
   "claude-api",
   "clear",
@@ -7818,6 +7824,7 @@ var _CURRENT = [
   "compact",
   "config",
   "context",
+  "continue",
   "copy",
   "cost",
   "dataviz",
@@ -7844,11 +7851,14 @@ var _CURRENT = [
   "help",
   "hooks",
   "ide",
+  "import",
   "init",
   "insights",
   "install-github-app",
   "install-slack-app",
   "keybindings",
+  "keybindings-help",
+  "list-agents",
   "login",
   "logout",
   "loop",
@@ -7856,14 +7866,20 @@ var _CURRENT = [
   "memory",
   "mobile",
   "model",
+  "new",
   "passes",
+  "peers",
   "permissions",
   "plan",
   "plugin",
+  "plugin-authoring",
   "powerup",
   "pr-comments",
   "privacy-settings",
+  "proactive",
+  "quit",
   "radio",
+  "rc",
   "recap",
   "release-notes",
   "reload-plugins",
@@ -7871,33 +7887,49 @@ var _CURRENT = [
   "remote-control",
   "remote-env",
   "rename",
+  "reset",
   "resume",
   "review",
   "rewind",
+  "routines",
   "run",
   "run-skill-generator",
   "sandbox",
   "schedule",
   "scroll-speed",
   "security-review",
+  "settings",
   "setup-bedrock",
   "setup-vertex",
+  "share",
   "simplify",
+  "skill-doctor",
   "skills",
   "stats",
   "status",
   "statusline",
   "stickers",
+  "stop",
+  "subtask",
+  "tasks",
+  "team-onboarding",
   "teleport",
   "thinking",
   "trust",
+  "tui",
+  "ultraplan",
+  "ultrareview",
+  "undo",
+  "update-config",
   "upgrade",
   "usage",
   "verify",
   "vim",
+  "voice",
   "web",
   "whats-new",
   "workflow",
+  "workflow-authoring",
   "workflows",
   "worktree"
 ];
@@ -7914,8 +7946,11 @@ var CLAUDE_CODE_BUILTIN_NAMES = /* @__PURE__ */ new Set([
   ..._CURRENT,
   ..._LEGACY
 ]);
+function normalize_builtin_name(slug) {
+  return slug.normalize("NFKC").replace(/[\s\p{Cf}]/gu, "").toLowerCase();
+}
 function is_claude_builtin_name(slug) {
-  return CLAUDE_CODE_BUILTIN_NAMES.has(slug.toLowerCase());
+  return CLAUDE_CODE_BUILTIN_NAMES.has(normalize_builtin_name(slug));
 }
 
 // src/scripts/_lib/installed_lock.ts
@@ -14843,7 +14878,7 @@ function installerThinsHost(_hostId, _opts = {}) {
 
 // src/install/wizard-plan.ts
 import { homedir as homedir15 } from "node:os";
-import { isAbsolute as isAbsolute7, join as join39, resolve as resolve20 } from "node:path";
+import { isAbsolute as isAbsolute6, join as join39, resolve as resolve20 } from "node:path";
 var USER_SCOPE_PATHS = {
   "claude-code": "~/.claude/",
   "claude-desktop": "~/Library/Application Support/Claude/",
@@ -14926,7 +14961,7 @@ function expandAnchor(anchor2, home) {
   const h = home ?? homedir15();
   if (anchor2 === "~") return h;
   if (anchor2.startsWith("~/")) return join39(h, anchor2.slice(2));
-  if (isAbsolute7(anchor2)) return anchor2;
+  if (isAbsolute6(anchor2)) return anchor2;
   return resolve20(anchor2);
 }
 function dryRunTargetLines(global, tools, projectTarget) {
