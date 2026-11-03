@@ -96,6 +96,8 @@ const LOAD_RELS = new Set(['stylesheet', 'preconnect', 'preload', 'modulepreload
 
 /** A file-level marker that a load may sit behind a consent or click-to-load gate. */
 const GATE_RE = /(click-to-load|data-consent|consent|cookiebanner|cookie-banner|cookieconsent|klaro|usercentrics|borlabs|osano)/i;
+/** A file-level marker that a lazy loader fetches `data-src` on viewport entry, without a click. */
+const LAZY_RE = /(lazysizes|lazyload|lozad|IntersectionObserver)/i;
 
 interface Load {
     file: string;
@@ -216,8 +218,11 @@ export function extractLoads(files: readonly FileLike[], register: readonly Orig
             for (const t of tags) {
                 if (!t.closed) continue;
                 if (t.name !== 'link') {
+                    // `data-src` only when no `src`: a load if a lazy loader fetches it, not a click.
                     const src = attr(t.tag, 'src');
+                    const lazy = attr(t.tag, 'data-src');
                     if (src !== undefined) push(f, t.line, src, `<${t.name} src>`);
+                    else if (lazy !== undefined) push(f, t.line, lazy, `<${t.name} data-src>`);
                     continue;
                 }
                 const rels = (attr(t.tag, 'rel') ?? '').toLowerCase().split(/\s+/);
@@ -268,10 +273,17 @@ interface Classified {
 export function classifyLoads(files: readonly FileLike[], register: readonly OriginRow[]): Classified {
     const { loads, prefetch, unread } = extractLoads(files, register);
     const gated = new Set(files.filter((f) => GATE_RE.test(f.text)).map((f) => f.rel));
+    const lazy = new Set(files.filter((f) => LAZY_RE.test(f.text)).map((f) => f.rel));
     const findings: Hit[] = [];
     const undecided: Hit[] = [...prefetch, ...unread];
     const loaded = new Map<string, OriginRow>();
     for (const l of loads) {
+        // Without a lazy loader in its file, a data-src waits for a click when a gate
+        // is there, and for an unseen script otherwise.
+        if (l.how.endsWith('data-src>') && !lazy.has(l.file)) {
+            if (!gated.has(l.file)) undecided.push({ file: l.file, line: l.line, text: `${l.how} names \`${l.url.host}\`; no lazy loader or gate in its file, so a first-paint load is undecided.` });
+            continue;
+        }
         const row = resolveOrigin(l.url, register);
         if (row === undefined) {
             undecided.push({
