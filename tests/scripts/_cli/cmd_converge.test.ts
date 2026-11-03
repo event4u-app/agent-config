@@ -24,7 +24,7 @@ tools:
   claude-code:
     surface: projection
     scope_path: "~/.claude/"
-    hooks: managed-settings-block
+    hooks: ac-owned-settings-block
     duplicate:
       description: plugin snapshot next to the projection
       detect:

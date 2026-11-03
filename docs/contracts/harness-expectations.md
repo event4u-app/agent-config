@@ -158,7 +158,11 @@ fix it. This package's own module is display-only by ADR-302 and decides nothing
 Name it. The census classifies every installed mod by what its source shows
 (verdict-capable, prompt-capable, side-effects, display-only). The scan is
 static and best-effort; a mod that reaches an event through an indirection the
-text does not show is classed by what the text shows.
+text does not show is classed by what the text shows. The deny-row consent
+screen states the same limit next to the rows it writes. Host switches that turn
+the package's hooks off before any mod is involved (`disableAllHooks`, managed
+`allowManagedHooksOnly`) are listed in
+[`enforcement-by-host`](../enforcement-by-host.md).
 
 ### Where to look for the true source
 
