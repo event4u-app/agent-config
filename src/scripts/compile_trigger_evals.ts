@@ -35,6 +35,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
+    classifyRun,
     deriveFloors,
     ingestCases,
     invokedFromTrace,
@@ -42,6 +43,7 @@ import {
     sha256,
     unitRows,
     type CaseRow,
+    type Floor,
     type UnitRow,
 } from './_lib/routing_baseline.js';
 
@@ -490,7 +492,9 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
                 '           [--plugin NAME] [--catalogue DIR]\n' +
                 '       compile_trigger_evals --ingest AGGREGATE.json --plan PLAN.json --protocol PATH \\\n' +
                 '           --model ID --commit SHA --artifact OUT.json\n' +
-                '       compile_trigger_evals --derive-floors BASELINE.json --tolerance T --floors OUT.json\n\n' +
+                '       compile_trigger_evals --derive-floors BASELINE.json --tolerance T --floors OUT.json\n' +
+                '       compile_trigger_evals --classify CURRENT.json --baseline BASELINE.json --floors FLOORS.json \\\n' +
+                '           --out REPORT.json   (exit 1 only on a REGRESSION)\n\n' +
                 'Compiles the trigger corpus into host-shaped eval cases. It never runs them.\n',
         );
         return 0;
@@ -544,6 +548,49 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         );
         process.stdout.write(`compile_trigger_evals: ${String(floors.length)} floor(s) derived -> ${outFile}\n`);
         return 0;
+    }
+
+    const classify = arg(argv, 'classify');
+    if (classify !== null) {
+        const baselineFile = arg(argv, 'baseline');
+        const floorsFile = arg(argv, 'floors');
+        const outFile = arg(argv, 'out');
+        if (baselineFile === null || floorsFile === null || outFile === null) {
+            process.stderr.write('compile_trigger_evals: --classify needs --baseline BASELINE.json --floors FLOORS.json --out REPORT.json\n');
+            return 2;
+        }
+        const baseline = JSON.parse(fs.readFileSync(baselineFile, 'utf8')) as BaselineArtifact;
+        const current = JSON.parse(fs.readFileSync(classify, 'utf8')) as BaselineArtifact;
+        const floorsDoc = JSON.parse(fs.readFileSync(floorsFile, 'utf8')) as { baseline_sha256?: string; floors: Floor[] };
+        const baselineSha = sha256(fs.readFileSync(baselineFile, 'utf8'));
+        if (floorsDoc.baseline_sha256 !== undefined && floorsDoc.baseline_sha256 !== baselineSha) {
+            process.stderr.write('compile_trigger_evals: the floors were derived from a different baseline than --baseline\n');
+            return 2;
+        }
+        const result = classifyRun(baseline, current, floorsDoc.floors);
+        fs.writeFileSync(
+            outFile,
+            JSON.stringify(
+                {
+                    schema: 'routing-regression/v1',
+                    baseline: path.relative(REPO_ROOT, path.resolve(baselineFile)),
+                    baseline_sha256: baselineSha,
+                    current: path.relative(REPO_ROOT, path.resolve(classify)),
+                    current_commit: current.commit,
+                    current_model: current.model,
+                    ...result,
+                },
+                null,
+                2,
+            ) + '\n',
+        );
+        const c = result.counts;
+        process.stdout.write(
+            `compile_trigger_evals: ${String(result.rows.length)} unit(s) classified — PASSED ${String(c.PASSED)}, ` +
+                `ROUTING_CHANGED ${String(c.ROUTING_CHANGED)}, REGRESSION ${String(c.REGRESSION)}, UNKNOWN ${String(c.UNKNOWN)}; ` +
+                `gate ${result.gate} -> ${outFile}\n`,
+        );
+        return result.gate === 'red' ? 1 : 0;
     }
 
     const ingest = arg(argv, 'ingest');

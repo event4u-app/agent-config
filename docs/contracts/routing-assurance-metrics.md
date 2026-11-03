@@ -134,6 +134,23 @@ a 0 floor gates nothing — what one run per unit buys, as the protocol stated i
 advance. `tests/contracts/routing_floors_trace.test.ts` re-derives the file from
 the baseline and fails on any floor that does not trace to a row.
 
+### Regression states against the frozen baseline (5.3)
+
+A later run is classified unit by unit against the baseline row and its floor
+above — PASSED (at or above the floor, nothing moved), ROUTING_CHANGED (at or
+above the floor, but recall or the invoked-skill set moved), REGRESSION (below
+the floor), UNKNOWN (nothing measured). Only REGRESSION gates; a unit without a
+registered floor is listed apart, never compared to an invented one:
+
+```bash
+./scripts-run src/scripts/compile_trigger_evals \
+  --classify <current-artefact.json> \
+  --baseline agents/evidence/metrics/routing-baseline-20261027.json \
+  --floors docs/contracts/routing-assurance-floors.json --out <report.json>
+```
+
+Exit 1 on any REGRESSION, 2 when the floors file names a different baseline.
+
 ### The floors restated as rates (6.2)
 
 A floor compares a **rate**: per unit, the fraction of repeated runs that fired
