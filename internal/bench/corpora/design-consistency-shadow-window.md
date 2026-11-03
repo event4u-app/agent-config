@@ -136,6 +136,13 @@ it disabled, and with definition-only families:
   exported again) was counted as a definition. An export list now names a
   definition only for a name declared in that file. Both replays were rerun
   and are identical.
+- Round 17: a declaration inside a comment, a string or a nested function
+  still made an imported name local. Definitions are now read from the code
+  with comments and string contents blanked, a declaration must sit at module
+  level, and a name an import binds is never local. The first version of that
+  fix also discarded `function Input` beside `import { Input as InputPrimitive }`,
+  which silenced every finding in B; the replay caught it, the import clause
+  is now read by the names it binds, and both replays are identical again.
 
 ## What this does not establish
 
