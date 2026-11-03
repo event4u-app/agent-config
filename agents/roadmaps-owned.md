@@ -177,6 +177,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-census-that-refuses-a-partial-store | stubs | — | road to a census that refuses to publish from a partial store |
 | road-to-a-limit-the-host-actually-signals | stubs | — | road to a limit the host actually signals |
 | road-to-a-lineage-gate-that-sees-the-folder | stubs | — | road to a lineage gate that sees the whole inbox folder |
+| road-to-a-name-no-host-already-owns-later | stubs | — | a name no host already owns — the residue |
 | road-to-a-page-check-on-by-default | stubs | — | road to a page check on by default |
 | road-to-a-path-route-under-delivery | stubs | — | road to a path-activation route under `delivery` |
 | road-to-a-primary-goal-that-is-asked-for | stubs | — | road to a primary goal that is asked for |
