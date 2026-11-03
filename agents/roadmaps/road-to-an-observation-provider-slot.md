@@ -78,11 +78,12 @@ empty verifier and on an authority outside its enum
       an observation id the run never recorded reads `invalid`.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-29 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-11-03 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | A provider observation is taken as parity | implementation | A runtime trace of a screen reads like behavior proof and closes a `visible-only` row | The contract names the tiers a provider may verify; the ledger test pins that a provider alone never lifts `visible-only` | Phase 1 — The slot |
+| 2 | Step 1.2 records a provider as `authority`, which Phase 0 now refuses | implementation | Since 0.1 the ledger marks a row `invalid` on an authority outside its enum, so a provider name written as `authority` never verifies | 1.2 maps each configured provider onto an enum value (or widens the enum in the contract first), with a test that a provider row verifies | Phase 0 — A ledger that can say no |
 
 ## Acceptance Criteria
 
