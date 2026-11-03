@@ -9,7 +9,7 @@ parent_roadmap: road-to-gated-reach
 > The fallback below YouTube captions. Parked behind a blocker that has not been
 > reached, because the layer above it has not even been exercised yet.
 
-> **Arrivals:** 1 — `inbox-2026-10-ao` (2026-10-25): a video task failed at speech recognition (model download refused by a proxy) and was rescued only by burned-in subtitles. That is the resume trigger in its pure form — no caption track, not an install. `road-to-a-post-the-analysis-can-watch` 2.4 builds the ladder this file is rung 2 of.
+> **Arrivals:** 2 — latest `inbox-2026-11-q` (2026-11-03): the same failure a second time — the speech model download was refused by a proxy, no caption track, rescued by burned-in captions; the rung-2 probe still looks for `whisper-cli`/`whisper` only (`src/scripts/media_bundle.ts:512`), so an installed `faster-whisper` with a local model stays invisible. Earlier: `inbox-2026-10-ao` (2026-10-25): a video task failed at speech recognition (model download refused by a proxy) and was rescued only by burned-in subtitles. That is the resume trigger in its pure form — no caption track, not an install. `road-to-a-post-the-analysis-can-watch` 2.4 builds the ladder this file is rung 2 of.
 
 ## Why this is parked, not open
 

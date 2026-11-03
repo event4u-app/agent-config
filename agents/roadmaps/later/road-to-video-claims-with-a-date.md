@@ -42,7 +42,7 @@ exists.
 
 ## Phase 2 — Manifests that say when they were true
 
-Evidence (read): `src/scripts/ai-video/model-capabilities/higgsfield.json` —
+Evidence (read): `src/scripts/ai-video/lib/model-capabilities/higgsfield.json` —
 `cost_per_second_usd: null`; no manifest carries `as_of` or `allowed_durations`;
 schema v2 is pinned by `tests/scripts/ai_video_model_capabilities_schema.test.ts:63`.
 

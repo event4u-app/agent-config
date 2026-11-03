@@ -86,7 +86,10 @@ Evidence (executed): `src/agent-src/templates/scripts/work_engine/intent/classif
       `ai_generated`; store AI-disclosure and consent checks before release.
       verify: a ledger lint refuses an asset row with no licence
 - [ ] **3.4 Engine rows** for GUT, Unity Test Runner and UE Automation in the
-      resolver, once their command strings are doc-pinned.
+      resolver, once their command strings are doc-pinned. Carried from the
+      sibling roadmap: add the engine markers to the detect and runner cache
+      keys, and suppress `dotnet test` for a Godot .NET root and for the
+      behaviour-axis `reqnroll`/`specflow` rows under an engine root.
       verify: resolver tests assert each row on an engine fixture
 
 ## Blockers
