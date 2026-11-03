@@ -79,11 +79,12 @@ describe('humanizer corpus fact conservation (ratchet)', () => {
         expect(witnessAdded(pairs).length).toBeLessThanOrEqual(WITNESS_ADDED_CEILING);
     });
 
-    it('the ratchet is sensitive: a supplied number in a clean pair raises the count', () => {
-        const clean = pairs.find((p) => suppliedNumbers(p.before, p.after).length === 0);
+    it('the ratchet is sensitive: a supplied number in a clean pair raises each count by exactly one', () => {
+        // Clean for BOTH counts, so the mutation is the only thing that can move either one.
+        const clean = pairs.find((p) => supplied([p]).length === 0 && witnessAdded([p]).length === 0);
         expect(clean).toBeDefined();
         const mutated = pairs.map((p) => (p === clean ? { ...p, after: `${p.after}\nIt took 37 days.` } : p));
         expect(supplied(mutated).length).toBe(supplied(pairs).length + 1);
-        expect(witnessAdded(mutated).length).toBeGreaterThanOrEqual(witnessAdded(pairs).length);
+        expect(witnessAdded(mutated).length).toBe(witnessAdded(pairs).length + 1);
     });
 });
