@@ -74,6 +74,15 @@ describe('tags are found whatever the line layout (round-3 ratification)', () =>
         expect(loads('index.html', page)).toEqual(['1', '1']);
     });
 
+    it('a minified line is read per load: a known provider is a finding and an unknown host stays undecided, never silent', () => {
+        const page = `<html><head>${'<meta name="x" content="y">'.repeat(40)}<link rel="stylesheet" href="https://fonts.googleapis.com/css2"><script src="https://cdn.unknown-vendor.example/x.js"></script></head></html>`;
+        const file = { rel: 'index.html', base: 'index.html', text: page, lines: [page] };
+        expect(page.length).toBeGreaterThan(400);
+        const c = classifyLoads([file], register);
+        expect(c.findings.map((h) => h.text)).toEqual([expect.stringContaining('fonts.googleapis.com')]);
+        expect(c.undecided.map((h) => h.text)).toEqual([expect.stringContaining('cdn.unknown-vendor.example')]);
+    });
+
     it('a canonical link wrapped over lines still marks the host as the site itself', () => {
         const page = '<link\n rel="canonical"\n href="https://shop.example/"\n><script src="https://shop.example/app.js"></script>';
         const file = { rel: 'index.html', base: 'index.html', text: page, lines: page.split('\n') };

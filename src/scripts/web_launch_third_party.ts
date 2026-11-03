@@ -162,14 +162,20 @@ export function tagsOf(text: string): Tag[] {
     return out;
 }
 
-/** Hosts the build itself claims through rel="canonical" — absolute self-references, not third parties. */
-function ownHosts(files: readonly FileLike[]): Set<string> {
+/**
+ * Hosts the build itself claims through rel="canonical" — absolute self-references,
+ * not third parties. A registered provider's host is never one: the page that loads
+ * a provider also writes its canonical, so trusting that claim would let one tag
+ * silence the finding.
+ */
+function ownHosts(files: readonly FileLike[], register: readonly OriginRow[]): Set<string> {
+    const providers = new Set(register.map((r) => r.host.toLowerCase()));
     const out = new Set<string>();
     for (const f of files.filter(isPage)) {
         for (const t of tagsOf(f.text)) {
             if (!t.closed || t.name !== 'link' || (attr(t.tag, 'rel') ?? '').toLowerCase() !== 'canonical') continue;
             const u = absolute(attr(t.tag, 'href') ?? '');
-            if (u !== null) out.add(u.host.toLowerCase());
+            if (u !== null && !providers.has(u.host.toLowerCase())) out.add(u.host.toLowerCase());
         }
     }
     return out;
@@ -182,8 +188,8 @@ interface Extracted {
     unread: Hit[];
 }
 
-export function extractLoads(files: readonly FileLike[]): Extracted {
-    const own = ownHosts(files);
+export function extractLoads(files: readonly FileLike[], register: readonly OriginRow[]): Extracted {
+    const own = ownHosts(files, register);
     const loads: Load[] = [];
     const prefetch: Hit[] = [];
     const unread: Hit[] = [];
@@ -260,7 +266,7 @@ interface Classified {
 
 /** 2.1 — split the loads into findings and undecided, with the providers that load. */
 export function classifyLoads(files: readonly FileLike[], register: readonly OriginRow[]): Classified {
-    const { loads, prefetch, unread } = extractLoads(files);
+    const { loads, prefetch, unread } = extractLoads(files, register);
     const gated = new Set(files.filter((f) => GATE_RE.test(f.text)).map((f) => f.rel));
     const findings: Hit[] = [];
     const undecided: Hit[] = [...prefetch, ...unread];
