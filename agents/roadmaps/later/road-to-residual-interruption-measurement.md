@@ -15,6 +15,8 @@ blocker_opened: 2026-09-06
 
 # Road to the residual-interruption measurement
 
+> **Resume when:** `interruption_report --json` reports `window_short: false` (wall-clock axis reaches its n ≥ 20 floor), checked by the maintainer by `review_by: 2026-12-06`.
+
 > **Parked — not active work.** A **drain-run transfer**, created 2026-09-06 when
 > `road-to-authorization-that-reaches-further` was drained. It carries the
 > measurement half of that roadmap's step 3.3. The pre-registration half is
