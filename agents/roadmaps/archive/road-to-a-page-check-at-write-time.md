@@ -55,7 +55,8 @@ turn. The function exists (`writeTimeFindings` in
       `src` is; with neither marker nor gate it is undecided; behind a gate
       without a loader it stays silent. Pinned in
       `tests/scripts/web_launch_write_time.test.ts`; chunk 13,996 / 14,000 B,
-      no raise.
+      no raise. production entry: `src/scripts/check_web_launch_readiness.ts`
+      production entry: `src/scripts/hooks/web_launch_rows.ts`
 
 ## Blockers
 
