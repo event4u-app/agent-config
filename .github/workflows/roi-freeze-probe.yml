@@ -1,0 +1,40 @@
+# TEMPORARY diagnostic for agents/roadmaps/stubs/road-to-a-steady-roi-freeze.md.
+# Removed before merge. Twelve parallel ubuntu-latest runners encode the ROI
+# fixture and print the raw freezedetect output and the per-frame ROI noise.
+name: ROI freeze probe
+on:
+  pull_request:
+    paths: ['.github/workflows/roi-freeze-probe.yml']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        run: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    steps:
+      - run: command -v ffmpeg >/dev/null 2>&1 || { sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg; }
+      - name: Probe
+        run: |
+          grep -m1 'model name' /proc/cpuinfo; nproc
+          grep -o -m1 -w avx512f /proc/cpuinfo || echo no-avx512
+          ffmpeg -version | head -1
+          dpkg -l | awk '/ ffmpeg |libavcodec6|libavfilter/ {print $2, $3, $4}'
+          node -e '
+            const { spawnSync } = require("node:child_process");
+            const W = 320, H = 180;
+            const width = W + 200, data = new Uint8Array(width * H);
+            for (let y = 0; y < H; y++) for (let x = 0; x < width; x++) data[y * width + x] = Math.round(120 + 60 * Math.sin(x / 9) * Math.cos(y / 6) + 40 * Math.sin((x * y) / 500));
+            const frames = [];
+            for (let n = 0; n < 30; n++) { const f = new Uint8Array(W * H); for (let y = 0; y < H; y++) f.set(data.subarray(y * width + n * 3, y * width + n * 3 + W), y * W); for (let y = 8; y < 44; y++) f.fill(200, y * W + 8, y * W + 56); frames.push(f); }
+            const r = spawnSync("ffmpeg", ["-hide_banner","-loglevel","error","-y","-f","rawvideo","-pix_fmt","gray","-s",W+"x"+H,"-r","10","-i","-","-c:v","mpeg4","-q:v","3","-pix_fmt","yuv420p","/tmp/roi.mp4"], { input: Buffer.concat(frames.map((f) => Buffer.from(f))) });
+            process.exit(r.status ?? 1);'
+          md5sum /tmp/roi.mp4
+          echo "--- freezedetect -40dB (raw)"
+          ffmpeg -hide_banner -nostats -i /tmp/roi.mp4 -an -vf "crop=48:36:8:8,freezedetect=n=-40dB:d=0.5" -f null - 2>&1 | grep -i freeze || echo "(no freeze line)"
+          echo "--- per-frame ROI mean abs diff, Y U V"
+          for p in Y U V; do echo -n "$p: "; ffmpeg -hide_banner -nostats -i /tmp/roi.mp4 -an -vf "crop=48:36:8:8,tblend=all_mode=difference,signalstats,metadata=print:key=lavfi.signalstats.${p}AVG:file=-" -f null - 2>/dev/null | awk -F= '/AVG/ {printf "%s ", $2} END {print ""}'; done
+          echo "--- the same with the C code paths forced (-cpuflags 0)"
+          ffmpeg -hide_banner -nostats -cpuflags 0 -i /tmp/roi.mp4 -an -vf "crop=48:36:8:8,freezedetect=n=-40dB:d=0.5" -f null - 2>&1 | grep -i freeze || echo "(no freeze line)"
