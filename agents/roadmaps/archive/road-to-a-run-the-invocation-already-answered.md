@@ -37,8 +37,8 @@ rests on attributable data.
 | D1 | reversible-technical | council 2/2 (Q2: b) | Build attribution first; leave turn-end refusal with long-runs 8.1 | `agents/evidence/council/inbox-2026-11-v-autonomous-runs-20261103.md`; `7c7cc08238` (withdrawal on a kill date the starved data could never meet) | an attributed trial shows premature turn end causes incomplete runs |
 | D2 | reversible-technical | council 2/2 (Q4: a) | process-step and process-phase take process-full's grant model; scope is the only difference; the exclusions stay | same record; owner demand 2026-10-22 | a step run commits work the owner did not want |
 | D3 | reversible-technical | council 2/2 (Q5: a) | One invocation, at most one delivery PR; the manifest is frozen before the first edit; a cycle is refused; a blocked member blocks only its dependents | same record | a set PR cannot be reviewed as one unit |
-| D4 | reversible-technical | council split (Q1: b vs c); convergent subset | Invocation flags may declare `late_artifacts` / `deferred_policy`. Whether process-full changes its **default** stays an owner decision (O-1). | same record; contract § 2a/2b decision of 2026-08-20 | the owner answers O-1 |
-| D5 | owner-reserved | open, O-2 | Whether a decision recorded in the PR body satisfies "`high_impact` / `user_required` always reach the user" under process-full. This is governance self-amendment, and both seats called it a policy decision. Nothing in this file changes it. | same record (Q3); `roadmap-execution-contract.md:65,173` vs `process-full/command.md:281` | the owner answers O-2 |
+| D4 | reversible-technical | council 2/2, owner-delegated 2026-11-03 (O-1) | process-full defaults `late_artifacts` to `auto-research` (cap 3); `deferred_policy` stays `wait` (seats split), the flag still opts in | `agents/evidence/council/inbox-2026-11-v-o1-o2-20261103.md` | a late-artifact discovery widens scope without a halt |
+| D5 | owner-reserved → council (delegated) | council 2/2, owner-delegated 2026-11-03 (O-2) | A PR-body decision is delivery, never consent: the affected step and its semantic dependents stay blocked, the run is reported `partial`, and the closing reply names the PR and the open decisions | `agents/evidence/council/inbox-2026-11-v-o1-o2-20261103.md` | a run acts on an inferred answer or reports `complete` with an open decision |
 | D7 | reversible-technical | council 2/2 (Q4: a) | closure_scan C1 (4.1 typed-op) and C2 (AC-1) are both settled by D2. A push to the run's own branch is confirmed by the invocation this turn, exactly as process-full already is (ADR-237); merge stays excluded. | `closure_scan` at f9054d0f10 | the owner answers O-2 differently for step runs |
 | D6 | reversible-technical | agent | Rule 17c stays a warning. Measured on `later/`: 9 time-classed out of 1149 open steps, several of them ambiguous. That is not yet a failing gate. | Phase 2 probe | a quarter passes with no ambiguous hit |
 
@@ -127,7 +127,7 @@ rests on attributable data.
       works on corrupt state, and cancellation preserved.
       verify: `grep -n 'inbox-2026-11-v' agents/roadmaps/later/road-to-adversarial-verification-and-long-runs.md` -> /inbox-2026-11-v/
 
-## Owner decisions (not executed here)
+## Owner decisions (decided by the council on delegation, 2026-11-03; see D4 and D5)
 
 - **O-1:** Should process-full **default** to `auto-research` / `spawn-follow-up-draft`
   (council seat B), or only accept them as flags (seat A, built in 3.2)?

@@ -169,7 +169,7 @@ preservation test in that rule already splits them the same way:
 | Push to that branch **only** | Push to any other ref = Hard Floor, ask |
 | Open ONE PR (description-only flow) | Acceptance never merges, closes or retargets; merging is § 5's one exception |
 | Batched artifact drafting | The drafting-protocol **Research/overlap pass runs NOW at contract time against current artifact state**; results cached; Understand/Draft phases run non-interactively during the run. Artifacts NOT in the batch still trigger the interactive protocol |
-| Council auto-enable | In-run open questions route to the AI council silently; `high_impact` / `user_required` classifications STILL escalate to the user per [`ask-when-uncertain`](../../rules/ask-when-uncertain.md). **No council configured** → the contract summary says so and in-run true ambiguity halts (never silent guessing) |
+| Council auto-enable | In-run open questions route to the AI council silently; `high_impact` / `user_required` reach the user per [`ask-when-uncertain`](../../rules/ask-when-uncertain.md); `process-full`: PR body (branches). **No council configured** → the contract summary says so and in-run true ambiguity halts (never silent guessing) |
 
 **`process-full` only — added by ADR-237**, because a delegation that ends at
 the PR has to be able to reach one:

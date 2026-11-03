@@ -174,6 +174,33 @@ describe('process-full says one thing about who grants the run (inbox-2026-11-v 
         expect(contract).toMatch(/Decisions table.{0,80}survives a resumed run/i);
     });
 
+    it('O-1 (council, owner-delegated 2026-11-03): process-full defaults late_artifacts to auto-research only', () => {
+        const branches = fs
+            .readFileSync(path.resolve(__dirname, '../../src/agent-src/contexts/execution/roadmap-execution-contract-branches.md'), 'utf8')
+            .replace(/\s+/g, ' ');
+        expect(branches).toMatch(/omitted `late_artifacts` resolves to `auto-research`/);
+        expect(branches).toMatch(/`deferred_policy` stays `wait`/);
+        expect(branches).not.toMatch(/Whether `process-full` should change its default is an owner question/);
+    });
+
+    it('O-2: a PR-body decision is delivery, never consent, and its dependents stay blocked', () => {
+        const branches = fs
+            .readFileSync(path.resolve(__dirname, '../../src/agent-src/contexts/execution/roadmap-execution-contract-branches.md'), 'utf8')
+            .replace(/\s+/g, ' ');
+        expect(branches).toMatch(/### Owner-class decisions under `process-full`/);
+        expect(branches).toMatch(/delivery, never consent/);
+        expect(branches).toMatch(/uncertainty means blocked/i);
+        expect(branches).toMatch(/reported `partial`/);
+        const contract = fs
+            .readFileSync(path.resolve(__dirname, '../../src/agent-src/contexts/execution/roadmap-execution-contract.md'), 'utf8')
+            .replace(/\s+/g, ' ');
+        expect(contract).not.toMatch(/classifications STILL escalate to the user/);
+        const park = fs
+            .readFileSync(path.resolve(__dirname, '../../src/agent-src/contexts/execution/roadmap-process-loop-set.md'), 'utf8')
+            .replace(/\s+/g, ' ');
+        expect(park).toMatch(/Under `process-full` the ask is the PR body/);
+    });
+
     it('records the environment at run start without stopping on it', () => {
         const delivery = fs.readFileSync(
             path.resolve(__dirname, '../../src/agent-src/contexts/execution/process-full-delivery.md'),
