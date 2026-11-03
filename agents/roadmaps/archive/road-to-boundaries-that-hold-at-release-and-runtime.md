@@ -51,7 +51,7 @@ green after the fix, and the release-side rules fail the contract test on regres
       regex in `src/scripts/hooks/block_config_weakening.ts:264-265` to `settings(\.local)?\.json`
       under the same host directories. Negative tests in
       `tests/scripts/hooks/block_config_weakening.test.ts`: a Write adding `hooks.SessionStart`
-      to `.claude/settings.local.json` exits 1 with the same Class C reason; `src/foo/settings.local.json`
+      to `.claude/settings.local.json` exits 1 with the same Class C reason; `src/foo/settings.local.json` <!-- ref-ignore -->
       stays unfenced (exit 0).
       verify: `npx vitest run tests/scripts/hooks/block_config_weakening.test.ts` → 0
 - [x] **1.3 One containment helper, three sites.** Use `isContained` from
@@ -63,10 +63,6 @@ green after the fix, and the release-side rules fail the contract test on regres
       'a/../../<root>-evil/x')` is `unresolvable` (`tests/scripts/install_reach_checks.test.ts`);
       `<root>/a` and `<root>/..cache` stay contained.
       verify: `npx vitest run tests/lib/agent_settings.test.ts tests/scripts/install_reach_checks.test.ts tests/scripts/templates_memory_signal.test.ts` → 0, and `grep -n "startsWith(root)" src/scripts/_lib/agent_settings.ts src/agent-src/templates/scripts/work_engine/_lib/agent_settings.ts` → no match
-      Note: at the pin the sibling `../<root>-evil` already enumerated 0 modules, because
-      `_relative_to` refused it one step later; the same prefix defect in `_relative_to`
-      (`rel.startsWith('..')`) instead refused a contained `..cache` root — that case and
-      `a/../../<root>-evil/x` were red at the pin. `_relative_to` takes the segment check too.
 - [x] **1.4 Carriage return is not a hidden-instruction signal.** In
       `src/scripts/_lib/retrieval_sanitize.ts`, `scan_invisible_findings` no longer reports
       U+000D as `control-char`; every other C0/C1 control still reports. Tests in
@@ -88,10 +84,6 @@ green after the fix, and the release-side rules fail the contract test on regres
       `${{ github.event.pull_request.title }}` in `run:` → 1 HIGH; the same via `env:` → 0;
       `inputs.bump` (choice) → 0.
       verify: `npx vitest run tests/scripts/lint_workflow_security.test.ts` → 0 and `./scripts-run src/scripts/lint_workflow_security --strict` → exit 0
-      Note: the rule found 7 HIGH step groups at the pin, the ten sites plus
-      `release.yml`'s `join(github.event.pull_request.labels.*.name)`. Each resolve step now
-      also holds the resolved tag/version to `[0-9A-Za-z.-]`, because its step output is
-      re-interpolated inline downstream (13 sites) and the rule treats step outputs as fixed-shape.
 - [x] **2.2 No cache in a privileged job.** Add rule `privileged-job-cache` (privileged =
       effective `id-token: write`, `contents: write`, or a `secrets.*` other than
       `GITHUB_TOKEN`, inherited from workflow level unless the job overrides; cache =
@@ -128,26 +120,24 @@ green after the fix, and the release-side rules fail the contract test on regres
       refused benign row. It is expected red until 3.2; record the miss and refusal counts in
       the step note.
       verify: `npx vitest run tests/lib/standing_commands_fixture.test.ts` exits non-zero and its output names ≥ 2 missed attacks and ≥ 1 refused benign row
-      Note (red at the pin): 14 attacks / 7 benign; 10 attacks missed (all prepended-recurrence,
-      German, `eval`/`wget`, package-install and `call <url>` rows), 3 benign refused
-      ("Always run the tests…", "Always check the changelog…", "Always fetch the latest main…").
 - [x] **3.2 Repair the guard.** Extend `_STANDING_COMMAND_RE` in
       `src/scripts/_lib/user_global_observations.ts` to prepended recurrence, add the
       `retrieval_sanitize` scan (`risk_level !== 'low'`) as a second channel, and stop refusing an
       imperative that has no fetch/exec target. No allowlist entries.
       verify: `npx vitest run tests/lib/standing_commands_fixture.test.ts tests/lib/user_global_observations.test.ts` → 0
-      Note: the guard is now recurrence marker AND fetch/exec target (URL, pipe to shell, `$(`,
-      `curl`/`wget`/`eval`/`… -c`, package install, `npx`, download), plus `_scan` as the second
-      channel. A bare script path and a backtick span are not targets — both refused stored
-      preferences in `user_global_observations_project_attribution.test.ts`; the fixture's
-      `./bootstrap.sh` row became a `bash -c 'curl …'` row and two such preferences joined the
-      benign set.
 - [x] **3.3 The three project writers call it.** `evaluateCaptureGuards` runs in
       `src/scripts/memory_signal.ts` (and its twin `src/agent-src/templates/scripts/memory_signal.ts`),
       `src/scripts/mine_session.ts` (`commitIntake`) and `src/scripts/retro.ts`
       (`writeIntakeSignals`); a refusal leaves the intake file unchanged and the MCP tool answers
       `recorded: false` with the category. Negative test per writer with one attack row.
       verify: `npx vitest run tests/scripts/memory_signal.test.ts tests/scripts/templates_memory_signal.test.ts tests/scripts/mine_session.test.ts tests/scripts/retro.test.ts` → 0
+
+## Step notes
+
+- **1.3** — at the pin the sibling `../<root>-evil` already enumerated 0 modules, because `_relative_to` refused it one step later; the same prefix defect in `_relative_to` (`rel.startsWith('..')`) instead refused a contained `..cache` root — that case and `a/../../<root>-evil/x` were red at the pin. `_relative_to` takes the segment check too.
+- **2.1** — the rule found 7 HIGH step groups at the pin, the ten sites plus `release.yml`'s `join(github.event.pull_request.labels.*.name)`. Each resolve step now also holds the resolved tag/version to `[0-9A-Za-z.-]`, because its step output is re-interpolated inline downstream (13 sites) and the rule treats step outputs as fixed-shape.
+- **3.1** — red at the pin: 14 attacks / 7 benign; 10 attacks missed (all prepended-recurrence, German, `eval`/`wget`, package-install and `call <url>` rows), 3 benign refused ("Always run the tests…", "Always check the changelog…", "Always fetch the latest main…").
+- **3.2** — the guard is now recurrence marker AND fetch/exec target (URL, pipe to shell, `$(`, `curl`/`wget`/`eval`/`… -c`, package install, `npx`, download), plus `_scan` as the second channel. A bare script path and a backtick span are not targets — both refused stored preferences in `user_global_observations_project_attribution.test.ts`; the fixture's `./bootstrap.sh` row became a `bash -c 'curl …'` row and two such preferences joined the benign set.
 
 ## Decisions
 
