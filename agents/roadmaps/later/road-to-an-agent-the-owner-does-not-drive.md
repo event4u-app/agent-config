@@ -22,11 +22,8 @@ execution:
 
 ## Goal
 
-The owner gives a goal once ("work the roadmap off", "until merged", "release
-it") and the agent carries it to the end without the owner picking dominant
-options, re-authorising follow-up PRs, typing the resume sentence, running git
-commands by hand, or ordering cleanup. Questions that remain reach the owner
-only when the council cannot answer them.
+The owner states a goal once; the agent carries it to the end. Owner questions
+only when the council cannot answer.
 
 **Success measure** (re-run the analysis of `analysis.md` over the next 100
 sessions; baseline in brackets):
