@@ -761,6 +761,7 @@ function _update(
   envelope: StateDict,
   quality: { runs: QualityRun[]; source: string } | null = null,
   assetRender: AssetRenderRecord | AssetRenderGap | null = null,
+  onRunRecorded: ((run: StateDict) => void) | null = null,
 ): StateDict {
   const session_id = (envelope["session_id"] || state["session_id"] || "") as string;
   if (session_id && session_id !== state["session_id"]) {
@@ -904,7 +905,7 @@ function _update(
       const runs = Array.isArray(state["verification_runs"])
         ? [...(state["verification_runs"] as unknown[])]
         : [];
-      runs.push({
+      const recorded: StateDict = {
         command: cmd.slice(0, 512),
         tool,
         exit_code: exit.code,
@@ -921,7 +922,9 @@ function _update(
         runner: runnerOf(cmd),
         after_edits: _asInt(state["edits_this_turn"]),
         at: _now(),
-      });
+      };
+      runs.push(recorded);
+      onRunRecorded?.(recorded);
       // The NEWEST are kept for detector C, which asks whether a pass follows
       // the last edit. Detector F asks a question the head answers — was there a
       // red before the green — so the cap keeps the FIRST failing record too,
@@ -1029,6 +1032,9 @@ export function run(
   // `state` is captured for the verbose line below; the value that lands is the
   // one computed inside the lock, from state read inside the lock.
   let state: StateDict = {};
+  // The run THIS event appended, handed out by the recorder itself — the
+  // strike ledger observes exactly it and never infers one from the state.
+  let appendedRun: StateDict | null = null;
   // Three-state result (state_io § Three states, not two). This mutator NEVER
   // returns null, so `skipped` is unreachable here — but it is handled with
   // `written` rather than lumped with `failed`, because the two have opposite
@@ -1044,7 +1050,9 @@ export function run(
     // treats a missing counter as 0 and the `=== true` guards treat a missing
     // flag as false, so every assertion would still pass while `schema_version`
     // and an explicit `ci_last: null` vanished from a freshly created file.
-    state = _update({ ..._empty_state(), ...loaded } as StateDict, event, envelope, quality, assetRender);
+    state = _update({ ..._empty_state(), ...loaded } as StateDict, event, envelope, quality, assetRender, (r) => {
+      appendedRun = r;
+    });
     return state;
   });
   if (outcome === "failed") {
@@ -1086,12 +1094,12 @@ export function run(
   // its own lock, and a failure there never touches this hook's exit code.
   if (event === "post_tool_use") {
     const pl = envelope["payload"];
-    const [tool, cmd] = _extract_command(
+    const [tool] = _extract_command(
       typeof pl === "object" && pl !== null && !Array.isArray(pl) ? (pl as StateDict) : {},
     );
-    observeStrike(consumer_root, envelope, state, {
+    observeStrike(consumer_root, envelope, {
       isEdit: tool !== null && EDIT_TOOLS.has(tool),
-      command: cmd !== null && cmd !== "" && mightBeVerification(cmd) ? cmd : null,
+      run: appendedRun,
     });
   }
 

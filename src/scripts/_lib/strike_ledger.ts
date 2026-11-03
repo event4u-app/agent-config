@@ -15,7 +15,12 @@
  * PRIVACY BY SHAPE. An entry holds hashes, counts, a verdict word, a timestamp
  * and a host name. The recorder keeps 4 KiB output tails per run; a file that
  * outlives the session must not inherit them, so no field here can hold text
- * from a run.
+ * from a run. Agent ids and commands are PSEUDONYMISED by a truncated hash, not
+ * anonymised: someone holding a candidate id can recompute its key.
+ *
+ * BOUNDED. Entries and per-agent edit counters both expire after the TTL, and
+ * each map is capped (oldest dropped first), so the file the recorder parses
+ * and rewrites on its hot path cannot grow with the number of subagents.
  */
 import { createHash } from 'node:crypto';
 
@@ -30,7 +35,10 @@ export type StrikeVerdict = 'NEW' | 'SAME' | 'FIXED' | 'FLAKY';
 export interface StrikeEntry {
     /** Failure signature of the last red run, or null after a green one. */
     readonly sig: string | null;
-    /** Consecutive attempts — red runs with an edit before them — on one signature. */
+    /**
+     * Red runs on one signature: the first observed red is the baseline strike
+     * (1), and each later red counts only when this agent edited before it.
+     */
     readonly streak: number;
     readonly verdict: StrikeVerdict;
     /** This agent's edit counter when this target last ran. */
@@ -47,12 +55,21 @@ export interface StrikeEntry {
  * change this agent's result, but it is not this agent's attempt, and counting
  * it would raise a streak on a signature the agent never worked on.
  */
+export interface EditCounter {
+    readonly n: number;
+    readonly last_at: string;
+}
+
 export interface StrikeLedger {
     readonly version: 1;
     /** Monotonic count of edit-tool calls per agent. Keys are agent hashes. */
-    readonly edits: Readonly<Record<string, number>>;
+    readonly edits: Readonly<Record<string, EditCounter>>;
     readonly entries: Readonly<Record<string, StrikeEntry>>;
 }
+
+/** Hard caps on the two maps; the oldest go first. */
+export const MAX_ENTRIES = 256;
+export const MAX_AGENTS = 64;
 
 export function emptyLedger(): StrikeLedger {
     return { version: 1, edits: {}, entries: {} };
@@ -64,7 +81,7 @@ export function agentKey(agent: string): string {
 }
 
 function editsOf(ledger: StrikeLedger, agent: string): number {
-    return ledger.edits[agentKey(agent)] ?? 0;
+    return ledger.edits[agentKey(agent)]?.n ?? 0;
 }
 
 /** Reasons that mean the run executed and failed, as opposed to an instrument gap. */
@@ -131,9 +148,10 @@ export function targetKey(agent: string, run: RunRecord): string {
 }
 
 /** Count one edit-tool call by `agent`. */
-export function recordEdit(ledger: StrikeLedger, agent: string): StrikeLedger {
+export function recordEdit(ledger: StrikeLedger, agent: string, now: string): StrikeLedger {
     const k = agentKey(agent);
-    return { ...ledger, edits: { ...ledger.edits, [k]: (ledger.edits[k] ?? 0) + 1 } };
+    const n = (ledger.edits[k]?.n ?? 0) + 1;
+    return { ...ledger, edits: { ...ledger.edits, [k]: { n, last_at: now } } };
 }
 
 export interface ObserveContext {
@@ -190,21 +208,37 @@ export function observeRun(
     };
 }
 
-/** Drop entries untouched for longer than the TTL. */
+/** The newest `max` of a map keyed by anything with a `last_at`, all within the TTL. */
+function keepRecent<T extends { readonly last_at: string }>(
+    map: Readonly<Record<string, T>>,
+    cutoff: number,
+    max: number,
+): Record<string, T> {
+    return Object.fromEntries(
+        Object.entries(map)
+            .map(([k, v]) => [k, v, Date.parse(v.last_at)] as const)
+            .filter(([, , t]) => Number.isFinite(t) && t >= cutoff)
+            .sort((a, b) => b[2] - a[2])
+            .slice(0, max)
+            .map(([k, v]) => [k, v]),
+    );
+}
+
+/** Drop entries and edit counters untouched for longer than the TTL, then cap both maps. */
 export function pruneLedger(ledger: StrikeLedger, now: string, ttlDays = STRIKE_TTL_DAYS): StrikeLedger {
     const cutoff = Date.parse(now) - ttlDays * 86_400_000;
-    const entries = Object.fromEntries(
-        Object.entries(ledger.entries).filter(([, e]) => {
-            const t = Date.parse(e.last_at);
-            return Number.isFinite(t) && t >= cutoff;
-        }),
-    );
-    return { ...ledger, entries };
+    return {
+        ...ledger,
+        edits: keepRecent(ledger.edits, cutoff, MAX_AGENTS),
+        entries: keepRecent(ledger.entries, cutoff, MAX_ENTRIES),
+    };
 }
 
 const HASH = /^[0-9a-f]{16}$/;
 const VERDICTS: ReadonlySet<string> = new Set(['NEW', 'SAME', 'FIXED', 'FLAKY']);
 const PLATFORM = /^[a-z0-9_-]{1,32}$/i;
+const validTime = (v: unknown): v is string =>
+    typeof v === 'string' && v.length <= 40 && Number.isFinite(Date.parse(v));
 const count = (v: unknown): number | null =>
     typeof v === 'number' && Number.isInteger(v) && v >= 0 ? v : null;
 
@@ -222,7 +256,7 @@ function coerceEntry(raw: unknown): StrikeEntry | null {
     if (streak === null || atEdit === null) return null;
     if (typeof verdict !== 'string' || !VERDICTS.has(verdict)) return null;
     if (typeof r['green_without_edit'] !== 'boolean') return null;
-    if (typeof lastAt !== 'string' || !Number.isFinite(Date.parse(lastAt)) || lastAt.length > 40) return null;
+    if (!validTime(lastAt)) return null;
     if (typeof platform !== 'string' || !PLATFORM.test(platform)) return null;
     return {
         sig,
@@ -244,12 +278,14 @@ function coerceEntry(raw: unknown): StrikeEntry | null {
 export function coerceLedger(raw: unknown): StrikeLedger {
     if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return emptyLedger();
     const r = raw as Record<string, unknown>;
-    const edits: Record<string, number> = {};
+    const edits: Record<string, EditCounter> = {};
     const rawEdits = r['edits'];
     if (typeof rawEdits === 'object' && rawEdits !== null && !Array.isArray(rawEdits)) {
         for (const [k, v] of Object.entries(rawEdits)) {
-            const n = count(v);
-            if (HASH.test(k) && n !== null) edits[k] = n;
+            if (!HASH.test(k) || typeof v !== 'object' || v === null || Array.isArray(v)) continue;
+            const n = count((v as Record<string, unknown>)['n']);
+            const at = (v as Record<string, unknown>)['last_at'];
+            if (n !== null && validTime(at)) edits[k] = { n, last_at: at };
         }
     }
     const entries: Record<string, StrikeEntry> = {};

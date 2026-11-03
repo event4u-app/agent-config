@@ -11,7 +11,6 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { run } from '../../src/scripts/before_complete_hook.js';
 import { STRIKE_LEDGER_FILE, type StrikeLedger } from '../../src/scripts/_lib/strike_ledger.js';
-import { appendedRun } from '../../src/scripts/_lib/strike_ledger_io.js';
 
 let tmp: string;
 beforeEach(() => {
@@ -60,11 +59,13 @@ describe('strike ledger via before_complete_hook', () => {
         expect(fs.existsSync(path.join(tmp, STRIKE_LEDGER_FILE))).toBe(false);
     });
 
-    it('never re-observes a run an earlier event appended', () => {
-        const at = '2026-11-03T10:00:00.000Z';
-        const state = { checked_at: '2026-11-03T10:00:30.000Z', verification_runs: [{ command: 'npx vitest run', exit_code: 1, at }] };
-        expect(appendedRun(state, 'npx vitest run')).toBeNull();
-        expect(appendedRun({ ...state, checked_at: '2026-11-03T10:00:00.010Z' }, 'npx vitest run')).not.toBeNull();
-        expect(appendedRun({ ...state, checked_at: '2026-11-03T10:00:00.010Z' }, 'npx tsc')).toBeNull();
+    it('never re-observes a run an earlier event appended — same command, inside any time window', () => {
+        bash('s1', RED, 1);
+        edit('s1'); // an edit-only event right after: nothing is observed again
+        edit('s1');
+        expect(only()).toMatchObject({ streak: 1, verdict: 'NEW' });
+        // and a non-verifying Bash event does not re-observe the red either
+        send('s1', 'post_tool_use', { tool_name: 'Bash', tool_input: { command: 'ls' }, tool_response: { stdout: 'a', exit_code: 0 } });
+        expect(only()).toMatchObject({ streak: 1, verdict: 'NEW' });
     });
 });

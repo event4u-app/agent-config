@@ -7,6 +7,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    MAX_AGENTS,
+    agentKey,
     coerceLedger,
     emptyLedger,
     failureSignature,
@@ -46,7 +48,7 @@ const green: RunRecord = {
 const ctx = (n: number) => ({ agent: 'main', now: `2026-11-03T10:00:${String(n).padStart(2, '0')}Z`, platform: 'claude' });
 
 function step(l: StrikeLedger, run: RunRecord, n: number, edit = true) {
-    const before = edit ? recordEdit(l, 'main') : l;
+    const before = edit ? recordEdit(l, 'main', ctx(n).now) : l;
     return observeRun(before, run, ctx(n));
 }
 
@@ -112,18 +114,18 @@ describe('observeRun — the ledger verdicts', () => {
     });
 
     it('two agents on the same command keep separate streaks', () => {
-        let l = recordEdit(emptyLedger(), 'a');
+        let l = recordEdit(emptyLedger(), 'a', ctx(0).now);
         l = observeRun(l, red('adds'), { ...ctx(1), agent: 'a' }).ledger;
-        l = recordEdit(l, 'b');
+        l = recordEdit(l, 'b', ctx(1).now);
         l = observeRun(l, red('adds'), { ...ctx(2), agent: 'b' }).ledger;
         expect(l.entries[targetKey('a', green)]?.streak).toBe(1);
         expect(l.entries[targetKey('b', green)]?.streak).toBe(1);
     });
 
     it("another agent's edit is not this agent's attempt", () => {
-        let l = recordEdit(emptyLedger(), 'a');
+        let l = recordEdit(emptyLedger(), 'a', ctx(0).now);
         l = observeRun(l, red('adds'), { ...ctx(1), agent: 'a' }).ledger;
-        l = recordEdit(l, 'b'); // b edits the shared tree; a only re-runs
+        l = recordEdit(l, 'b', ctx(1).now); // b edits the shared tree; a only re-runs
         const r = observeRun(l, red('adds'), { ...ctx(2), agent: 'a' });
         expect(r.verdict).toBe('SAME');
         expect(r.ledger.entries[targetKey('a', green)]?.streak).toBe(1);
@@ -151,7 +153,7 @@ describe('ledger lifetime and shape', () => {
         const good = step(emptyLedger(), red('adds'), 1).ledger;
         const [key, entry] = Object.entries(good.entries)[0] ?? [];
         const raw = {
-            edits: { ...good.edits, notahash: 3, deadbeefdeadbeef: -1 },
+            edits: { ...good.edits, notahash: { n: 3, last_at: '2026-11-03T10:00:00Z' }, deadbeefdeadbeef: { n: -1, last_at: '2026-11-03T10:00:00Z' } },
             entries: {
                 [key as string]: { ...entry, stdout_tail: 'SECRET token=abc' },
                 ffffffffffffffff: null,
@@ -163,6 +165,24 @@ describe('ledger lifetime and shape', () => {
         expect(Object.keys(back.entries)).toEqual([key]);
         expect(JSON.stringify(back)).not.toMatch(/SECRET|notahash|deadbeefdeadbeef/);
         expect(() => pruneLedger(back, '2026-11-04T00:00:00Z')).not.toThrow();
+    });
+
+    it('expires idle edit counters and caps both maps, newest kept', () => {
+        let l = emptyLedger();
+        for (let i = 0; i < MAX_AGENTS + 10; i += 1) {
+            l = recordEdit(l, `sub-${String(i)}`, `2026-11-03T10:${String(Math.floor(i / 60)).padStart(2, '0')}:${String(i % 60).padStart(2, '0')}Z`);
+        }
+        const capped = pruneLedger(l, '2026-11-03T12:00:00Z');
+        expect(Object.keys(capped.edits)).toHaveLength(MAX_AGENTS);
+        expect(capped.edits[agentKey(`sub-${String(MAX_AGENTS + 9)}`)]).toBeDefined();
+        expect(capped.edits[agentKey('sub-0')]).toBeUndefined();
+        expect(pruneLedger(l, '2026-11-20T00:00:00Z').edits).toEqual({});
+    });
+
+    it('the first observed red is the baseline strike, without an edit before it', () => {
+        const r = observeRun(emptyLedger(), red('adds'), ctx(1));
+        expect(r.verdict).toBe('NEW');
+        expect(r.ledger.entries[targetKey('main', green)]?.streak).toBe(1);
     });
 
     it('stores no text from the run', () => {

@@ -34,33 +34,16 @@ export function strikeAgent(envelope: Dict): string {
     return 'main';
 }
 
-/**
- * The run the recorder appended for THIS event: the newest record, and only
- * when it carries this event's command and was written at or after the
- * recorder's own `checked_at` minus the time one update can take. Anything else
- * is a run from an earlier event and is never observed twice.
- */
-export function appendedRun(state: Dict, command: string): RunRecord | null {
-    const runs = state['verification_runs'];
-    if (!Array.isArray(runs) || runs.length === 0) return null;
-    const last = runs[runs.length - 1] as unknown;
-    if (typeof last !== 'object' || last === null) return null;
-    const r = last as Dict;
-    if (r['command'] !== command.slice(0, 512)) return null;
-    const at = typeof r['at'] === 'string' ? Date.parse(r['at']) : NaN;
-    const checked = typeof state['checked_at'] === 'string' ? Date.parse(state['checked_at']) : NaN;
-    if (!Number.isFinite(at) || !Number.isFinite(checked) || checked - at > 5_000 || at > checked) return null;
-    return r as unknown as RunRecord;
-}
-
 export function observeStrike(
     consumer_root: string,
     envelope: Dict,
-    state: Dict,
-    event: { readonly isEdit: boolean; readonly command: string | null },
+    event: { readonly isEdit: boolean; readonly run: Dict | null },
     now: string = new Date().toISOString(),
 ): void {
-    const run = event.command !== null ? appendedRun(state, event.command) : null;
+    // `run` is the record the recorder appended for THIS event, handed over by
+    // the recorder itself — never looked up in its state, where an earlier
+    // event's record of the same command would be indistinguishable.
+    const run = event.run !== null && typeof event.run['command'] === 'string' ? (event.run as unknown as RunRecord) : null;
     if (!event.isEdit && run === null) return;
     const agent = strikeAgent(envelope);
     const rawPlatform = envelope['platform'];
@@ -72,7 +55,7 @@ export function observeStrike(
             path.join(consumer_root, STRIKE_LEDGER_FILE),
             (loaded) => {
                 let ledger = pruneLedger(coerceLedger(loaded), now);
-                if (event.isEdit) ledger = recordEdit(ledger, agent);
+                if (event.isEdit) ledger = recordEdit(ledger, agent, now);
                 if (run !== null) ledger = observeRun(ledger, run, { agent, now, platform }).ledger;
                 return ledger;
             },
