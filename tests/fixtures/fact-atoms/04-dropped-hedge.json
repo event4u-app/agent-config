@@ -1,0 +1,1 @@
+{ "type": "mutation", "class": "modality", "before": "The cache change may cut checkout latency for most users.", "after": "The cache change cuts checkout latency for most users." }

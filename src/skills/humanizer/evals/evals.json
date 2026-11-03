@@ -1,0 +1,18 @@
+{
+  "skill": "humanizer",
+  "_calibration": "Behavioural fixture for references/fixtures.md Fixture 4 (road-to-rewrites-that-keep-their-facts 3.1). The deterministic asserts pin facts the input holds (status, negation, hedge, unit-bound number word) and a number it does not; the rubric covers attribution, which a substring check cannot. The same before/after pair is graded offline by detect_ai_tells --baseline.",
+  "scenarios": [
+    {
+      "id": "fact-preservation",
+      "prompt": "Humanize this paragraph. Return only the rewritten paragraph.\n\nIt is worth noting that our team is excited to share a pivotal update! The new export pipeline is still a draft proposal, and we did not migrate the legacy reports. It may cut report times for three customers in the pilot.",
+      "assertions": [
+        { "kind": "contains", "value": "draft" },
+        { "kind": "contains", "value": "not" },
+        { "kind": "contains", "value": "may" },
+        { "kind": "contains", "value": "three customers" },
+        { "kind": "not_contains", "value": "%" },
+        { "kind": "rubric", "criterion": "Keeps every fact of the input: the pipeline is still a draft proposal, the legacy reports were not migrated, the effect is hedged ('may') and limited to three customers in the pilot, and the work stays attributed to the team (we / our team), not to a single 'I'. Adds no number, date or achievement the input does not hold." }
+      ]
+    }
+  ]
+}

@@ -108,6 +108,24 @@ describe("density + cluster mechanics", () => {
     expect(r.dash_density_per_500).toBeGreaterThan(DEFAULT_MAX_DASH_DENSITY);
   });
 
+  // road-to-rewrites-that-keep-their-facts 4.1: a range is typography, not a dash tell.
+  it("a numeric range is not a dash (pages, years, times, quarters)", () => {
+    expect(analyzeText("Pages 12–14", "en").dash_count).toBe(0);
+    expect(analyzeText("Open 9–17. Data covers 2019–2021, 2022 – 2023, 09:00–17:30 and Q1–Q2.", "en").dash_count).toBe(0);
+    expect(analyzeText("Unser Büro ist von 9–17 Uhr geöffnet, Details auf S. 12–14.", "de").dash_count).toBe(0);
+  });
+
+  it("a spaced dash between words still counts", () => {
+    expect(analyzeText("X – Y", "en").dash_count).toBe(1);
+    expect(analyzeText("Das Ergebnis – und das war uns wichtig – ist klarer.", "de").dash_count).toBe(2);
+    expect(analyzeText("We shipped 3 — then rolled back.", "en").dash_count).toBe(1);
+  });
+
+  it("the German clean file counts its two Gedankenstriche and none of its five ranges", () => {
+    const text = readFileSync(join(__dirname, "..", "fixtures", "ai-tells", "clean", "de", "12-gedankenstrich.md"), "utf8");
+    expect(analyzeText(text, "de").dash_count).toBe(2);
+  });
+
   it("a single em dash in long prose stays under the density cap (no hard-zero)", () => {
     const text = "One dash — used deliberately. " + "plain word filler here. ".repeat(80);
     const r = analyzeText(text, "en");

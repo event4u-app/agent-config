@@ -29,7 +29,7 @@ const SCRIPT_SRC = path.join(REPO_ROOT, 'src', 'scripts', 'check_claims.ts');
 // baselines file is absent (a fixture) and still fails when the file exists
 // with no entry (a repository silencing a gate). This harness exercises the
 // first branch by construction.
-const LIB_SRCS = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts', 'dispatch_policy.ts', 'claims_site_sweep.ts'].map((n) =>
+const LIB_SRCS = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts', 'dispatch_policy.ts', 'claims_site_sweep.ts', 'claims_stale_verified.ts'].map((n) =>
     path.join(REPO_ROOT, 'src', 'scripts', '_lib', n),
 );
 
@@ -489,4 +489,36 @@ describe('check_claims — mechanism', () => {
         expect(r.stderr).toContain("ledger status is 'measured-in-repo', not 'backed'");
     });
 
+});
+
+// road-to-rewrites-that-keep-their-facts 3.3: a last_verified older than a
+// dated change the claim itself names is a stale verification. The ratchet
+// reads the baselines file, so these fixtures write one with no entry — the
+// hard-zero branch.
+describe('check_claims — stale last_verified', () => {
+    const ledger = (claim: string, lastVerified: string) =>
+        ['# Claims Ledger', '', '### claim: dated', `- claim: ${claim}`, '- kind: qual', '- evidence: docs/evidence.md#ANCHOR', '- status: backed', `- last_verified: ${lastVerified}`, ''].join('\n');
+
+    beforeEach(() => {
+        write('src/config/gate-violation-baselines.json', '{ "gates": {} }\n');
+        write('README.md', 'no markers here\n');
+    });
+
+    it('a claim naming a change newer than its last_verified fails', () => {
+        write('docs/CLAIMS.md', ledger('A figure moved on 2026-09-07 under a scoring change.', '2026-07-11'));
+        const r = run();
+        expect(r.code).toBe(2);
+        expect(r.stderr).toContain('stale-last-verified');
+        expect(r.stderr).toContain('dated (2026-07-11 < 2026-09-07)');
+    });
+
+    it('a last_verified on or after the newest named date passes', () => {
+        write('docs/CLAIMS.md', ledger('A figure moved on 2026-09-07 under a scoring change.', '2026-09-07'));
+        expect(run().code).toBe(0);
+    });
+
+    it('a date after today is a plan, not a change', () => {
+        write('docs/CLAIMS.md', ledger('Re-measured before 2099-01-01.', '2026-07-11'));
+        expect(run().code).toBe(0);
+    });
 });

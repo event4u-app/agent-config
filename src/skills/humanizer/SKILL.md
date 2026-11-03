@@ -120,9 +120,12 @@ human voice there; do not inject personality or restructure it.
    re-run over already-clean prose is a **no-op**. Then diff the facts:
    `npx tsx node_modules/@event4u/agent-config/src/scripts/detect_ai_tells.ts --baseline <before> <after>`
    lists every number, date, amount, URL, code span and multi-word name the
-   rewrite lost or added, and exits 1 on any — each is a hard finding to
-   restore, never to reword away. A humanizing pass changes *how* something
-   is said, never *what is true*. Without a runtime, fall back to
+   rewrite lost or added — and every unit-bound number word, status or
+   qualifier, negation, hedge and attribution subject (a "we" turned "I") —
+   and exits 1 on any; each is a hard finding to restore, never to reword
+   away. A humanizing pass changes *how* something is said, never *what is
+   true*. Worked case: [`references/fixtures.md`](references/fixtures.md)
+   Fixture 4; eval: [`evals/evals.json`](evals/evals.json). Without a runtime, fall back to
    `[VERIFY: <original> → <rewritten>]` for every touched number, date,
    name, quantity or claim. **Long-rewrite re-anchor (guards against style
    slippage):** before finishing a long rewrite, re-state the active style

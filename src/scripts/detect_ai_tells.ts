@@ -325,6 +325,9 @@ export interface AnalyzeOptions {
   exclude?: ReadonlySet<string>;
 }
 
+/** A dash whose left neighbour is a digit and right neighbour a number or quarter. */
+const NUMERIC_RANGE_DASH = /(?<=\d)[^\S\n]?[—–][^\S\n]?(?=\d|Q[1-4]\b)/g;
+
 export function analyzeText(
   text: string,
   languageOpt: "en" | "de" | "auto" = "auto",
@@ -382,7 +385,9 @@ export function analyzeText(
 
   const hardTotal = hardHits.reduce((s, h) => s + h.count, 0);
   const clusterScore = clusterHits.reduce((s, h) => s + h.scored_count * h.weight, 0);
-  const dashCount = (forQuotes.match(/[—–]/g) ?? []).length;
+  // A dash between two range endpoints (12–14, 2019–2021, 9:00–17:00, Q1–Q2)
+  // is typography, not the aside-dash tell, and is not counted.
+  const dashCount = (forQuotes.replace(NUMERIC_RANGE_DASH, "").match(/[—–]/g) ?? []).length;
   const densityEvaluated = words >= MIN_DENSITY_WORDS;
   const per500 = (n: number) =>
     densityEvaluated ? Math.round((n / words) * 500 * 100) / 100 : null;
