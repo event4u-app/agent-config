@@ -379,17 +379,18 @@ execution:
 - `interactive` — every gate fires as today. Declare it explicitly if you want
   it: an **absent** field is derived from the invocation form
   (`process-full` → `autonomous`, `roadmap:next` / `process-phase` →
-  `phase-checkpoints`), not defaulted to `interactive`. The contract screen is
-  still shown once either way and still offers "run interactive instead".
+  `phase-checkpoints`), not defaulted to `interactive`. Under any
+  `/roadmap:process-*` wrapper there is no contract screen at all: the
+  invocation is the confirmation (ADR-237). Only `/roadmap:next` still shows it.
 - `phase-checkpoints` — one compact status + continue prompt per phase
   boundary.
 - `autonomous` — at run start the loop derives an **execution
   contract** (feature branch, chunked commits, push to that branch
   only, PR-open — never merge, batched artifact drafting, council
-  auto-enable). ONE acceptance activates all grants for the run; after
+  auto-enable). The invocation activates all grants for the run; after
   that the run is uninterrupted except the safety floors (Hard Floor,
-  security-sensitive-stop, N=3 validation budget, context-hygiene
-  aborts, deferred-`[~]` archival gate).
+  security-sensitive-stop, the `execution.fix_loop_max` validation budget,
+  context-hygiene aborts, deferred-`[~]` archival gate).
 
 The frontmatter field is a declaration of intent, never a permission
 grant — authorization happens only at the run-start contract, derived

@@ -40,3 +40,28 @@ Identity semantics, revision semantics, the three senses of "gate" and the
 [`guideline:agent-infra/traceability-field-mechanics`](../../../../docs/guidelines/agent-infra/traceability-field-mechanics.md).
 They are not optional reading: a slug grammar does not imply a namespace, and
 `evidence_refs` are syntactically safe tokens rather than verified evidence.
+
+### 2a/2b by invocation — declared by `process-full` flags
+
+`process-full` has no
+screen (ADR-237), so neither field above could ever be declared there, and the
+cautious value became inherited rather than chosen. The invocation flags
+`--late-artifacts auto-research` and `--deferred spawn-follow-up-draft` declare
+them instead. The cap of three and the preservation test are unchanged. The run
+writes each declared value into the target roadmap's Decisions table as its
+first act, so the value survives a resumed run rather than living only in the
+session that read the flag. Without a flag, the defaults above still apply.
+Whether `process-full` should change its default is an owner question, recorded
+as O-1 in `road-to-a-run-the-invocation-already-answered`; the 2026-11-03
+council split on it.
+
+### 2d. Owner answers carried by the invocation
+
+An owner may answer a roadmap's open decisions in the invocation itself, one
+per line: `O<n> <decision-id>: <answer>`. Each line becomes a row in the target
+roadmap's Decisions table, resolved by `owner (invocation, <date>)`, with the
+line quoted as its evidence. It is never a council row, because it came from
+the owner, and it settles only the decision it names, never a neighbour by
+analogy. A line naming no existing decision is reported in the PR body and
+otherwise ignored. An answer settles a decision; it never stands in for the
+explicit confirmation a Hard-Floor action needs.

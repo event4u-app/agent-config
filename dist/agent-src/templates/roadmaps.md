@@ -153,8 +153,12 @@ that was never a judgement call.
     needs elapsed time rather than effort — goes into a `stubs/` entry with
     its trigger when the roadmap is authored, not into the roadmap's phases.
     Left inside, it holds a roadmap whose work is done at `count_open > 0`,
-    and a drain can never close it. `lint_roadmap_complexity` warns on an
-    open step whose block pairs a wait word with a date after today.
+    and a drain can never close it. The wait needs no date: a relative window,
+    meaning an observation count or a duration, holds a roadmap open just the
+    same. `lint_roadmap_complexity` warns on an open step whose block pairs a
+    wait word with a date after today or with such a window. It is a warning,
+    not a failure: on `later/`, 9 of 1149 open steps classed this way, several
+    of them ambiguous.
 17. **Follow-up roadmaps from deferred items carry `parent_roadmap`.**
     When a roadmap closes with `[~]` deferred items, the
     [`roadmap-management`](../skills/roadmap-management/SKILL.md) skill

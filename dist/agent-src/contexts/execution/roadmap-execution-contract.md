@@ -34,9 +34,7 @@ declared nothing, which was never the authorization anyway. Waiting for an
 acceptance the user already gave is the mid-run interruption
 `process-full § Final-PR-only` forbids.
 
-For `process-step` and `process-phase` the confirmation round stays: their
-scope is narrow enough that a contract screen costs one line, and neither
-carries ADR-237's end-to-end delegation.
+So does **every `/roadmap:process-*` wrapper**, with § 3 base grants only.
 
 ## 1. Pre-scan — four detection classes
 
@@ -158,6 +156,7 @@ preservation test in that rule already splits them the same way:
      decides. Removing the value later removes an option nobody was obliged to
      use; the default stays `wait` either way. -->
 
+**Invocation flags and `O<n>` owner answers** — read [branches](roadmap-execution-contract-branches.md).
 
 **2c. `traceability` — requirement to acceptance to evidence, OPTIONAL** — on that branch, read [`roadmap-execution-contract-branches § 2c. traceability`](roadmap-execution-contract-branches.md#2c-traceability--requirement-to-acceptance-to-evidence-optional).
 

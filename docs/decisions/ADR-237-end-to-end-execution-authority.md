@@ -247,6 +247,26 @@ without naming any.
 **A per-action spend ceiling instead of per-run.** Rejected: it is trivially
 gamed by splitting, and the split is invisible in any single decision.
 
+## Amendment (2026-11-03) — `process-step` and `process-phase` take the same grant
+
+§ 1 now covers every `/roadmap:process-*` wrapper. For `process-step` and
+`process-phase` the invocation is the confirmation too: no contract screen, no
+commit-step ask. They differ from `process-full` in scope only. They receive the
+base grants of the execution contract (the run's branch, chunked commits, a
+push to that branch only, opening the PR). They do **not** receive the
+`process-full`-only rows: no settings change and no merge. The Hard Floor, the
+excluded list and the security-sensitive stop are unchanged. An explicit
+`interactive` is still honoured. `/roadmap:next` keeps its screen, because there
+the run picks the roadmap.
+
+Basis: a convergent two-seat council (Q4, option a,
+`agents/evidence/council/inbox-2026-11-v-autonomous-runs-20261103.md`) and the
+owner demand of 2026-10-22, now arriving for the second time, that these
+commands "should work just as autonomously". Reversible by restoring the
+confirmation rows in `roadmap-execution-contract` § 1 and the step and phase
+rows of the scope-delta table. Executed in
+`road-to-a-run-the-invocation-already-answered` Phase 4.
+
 ## References
 
 - [ADR-235](ADR-235-process-full-blocked-terminal-outcome.md) — superseded by this record.

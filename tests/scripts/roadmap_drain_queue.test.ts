@@ -271,6 +271,25 @@ describe('isTimeGated', () => {
         expect(isTimeGated('the window opened 2026-10-01', TODAY)).toBe(false);
         expect(isTimeGated('landed 2026-11-13 in a fixture name', TODAY)).toBe(false);
     });
+
+    it('also reads a relative window — a count of observations or a duration — beside a wait word', () => {
+        expect(isTimeGated('wait until the window holds at least 100 Agent calls', TODAY)).toBe(true);
+        expect(isTimeGated('a soak of two weeks after the guard lands', TODAY)).toBe(true);
+        expect(isTimeGated('earliest after 30 resumes over 5 sessions', TODAY)).toBe(true);
+        expect(isTimeGated('the window needs ≥ 333 shadow calls per kind', TODAY)).toBe(true);
+        expect(isTimeGated('wait for 100 Agent-calls or two weeks', TODAY)).toBe(true);
+    });
+
+    it('does not read a duration or count without a wait word as a wait', () => {
+        expect(isTimeGated('Placeholders in the history, originals for 7 days', TODAY)).toBe(false);
+        expect(isTimeGated('run 3 sessions of the bench and publish both directions', TODAY)).toBe(false);
+        expect(isTimeGated('the window renders 12 rows', TODAY)).toBe(false);
+    });
+
+    it('does not read a step number followed by a verb as a count', () => {
+        // road-to-a-graph-that-wins 5.6 at f9054d0f10: a dependency on step 3.5, not a window.
+        expect(isTimeGated('Until 3.5 runs: band only low / medium / high', TODAY)).toBe(false);
+    });
 });
 
 describe('buildQueue — finish before start', () => {
