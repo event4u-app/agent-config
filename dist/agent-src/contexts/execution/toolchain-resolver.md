@@ -89,6 +89,13 @@ are SDK pins, not targets, and confidence does not gate `selected`
 (`_apply_guard` has never read it), so a row emitted on one would be a
 command the repository cannot run.
 
+**A game-engine root outranks the .NET row.** With a Unity marker
+(`ProjectSettings/ProjectVersion.txt`) or an Unreal `*.uproject` in the scope
+root, no `dotnet test` row is emitted even when a `.sln` / `*.csproj` sits
+beside it: the engine generates those for the IDE, and its tests run in the
+engine's own runner. No runner is the honest answer; a wrong one is not. A
+marker below the root does not suppress a root target.
+
 Given a root target: HIGH when a PROJECT file names a test stack
 (`Microsoft.NET.Test.Sdk`, xunit, nunit, mstest), MEDIUM otherwise. A root
 `.sln` IS a valid target even though its own body names no package, so the

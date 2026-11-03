@@ -2,7 +2,8 @@
  * Frontend-stack detection from project manifests.
  *
  * TypeScript twin of `work_engine/stack/detect.py` (ADR-200 py2ts). Leaf
- * module — stdlib only, NO intra-`work_engine` imports — so the public API
+ * module — stdlib plus the leaf `./engine`, no other intra-`work_engine`
+ * import — so the public API
  * names stay snake_case to mirror the Python module 1:1 (per ADR-200: Python
  * style is part of the contract).
  *
@@ -27,7 +28,8 @@
  * 6. `package.json` lists `vue` (any major) → `vue`
  * 7. Either manifest names a recognised-but-unmodelled framework
  *    (Svelte, Angular, Nuxt, Astro, Solid, Qwik, Inertia) → `unknown`
- * 8. Otherwise → `plain`
+ * 8. A Godot / Unity / Unreal root marker and no web marker → `unknown`
+ * 9. Otherwise → `plain`
  *
  * Rules 3, 5 and 7 exist because the earlier table sent three common
  * shapes into `plain`: Laravel+Livewire without Flux failed rule 1's `&&`,
@@ -56,6 +58,8 @@
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+
+import { engine_marker } from './engine.js';
 
 /**
  * All stack labels the detector can return.
@@ -337,6 +341,13 @@ export function detect_stack(project_root: string): StackResult {
         if (scoped !== null) {
             return scoped;
         }
+    }
+
+    // A game-engine root with no web marker anywhere is a recognised project
+    // with no lane here, not a plain web page: `plain` would hand the UI lane
+    // a game and let it drive a browser at it.
+    if (engine_marker(project_root) !== null) {
+        return _r(UNSUPPORTED_STACK);
     }
 
     return _r(DEFAULT_STACK);
