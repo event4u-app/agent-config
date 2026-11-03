@@ -68,6 +68,7 @@ captured `frames/` and `contact.png`.
 | `format` | Width, height, fps and duration read back from the encoded file with `ffprobe`. |
 | `contact_sheet` | Path of the tiled preview. |
 | `audio_qa` | The `audio-qa.sh` reading: integrated LUFS, true peak, loudness range, silence spans, mono-fold loss. |
+| `video_qa` | The `video-qa.sh` reading of the encoded file: cuts, camera motion, luma jumps without a cut, freezes, blur/block; a probed filter that is missing reads `skipped: <filter> unavailable`. Recorded as data, never as a finding; `checks.video_qa` says whether it ran. |
 | `encode` | `{ path, sha256 }` of the encoded file. |
 | `checks` | Per check, `ran` or `skipped: <reason>`. A skipped check is never a pass. |
 | `findings[]` | `{ check, detail }` — determinism, dead-time, flash, red-flash, format, seek, network, encode. |

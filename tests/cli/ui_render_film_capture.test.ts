@@ -173,6 +173,10 @@ window.__seek = (t) => { ctx.fillStyle = '#123'; ctx.fillRect(0, 0, 64, 36); ctx
             expect(m.encode?.sha256).toBe(crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'));
             expect(m.format).toMatchObject({ width: 64, height: 36 });
             expect(m.format?.fps).toBeCloseTo(10, 3);
+            // The video floor reads the encoded file, beside audio-qa.
+            expect(m.checks.video_qa).toBe('ran');
+            expect(m.video_qa?.['frames']).toBe(10);
+            expect(m.video_qa?.['checks']).toBeTypeOf('object');
             expect(m.findings).toEqual([]);
             expect(m.verification).toBe('verified');
             expect(filmExitCode(m)).toBe(0);
@@ -199,6 +203,7 @@ window.__seek = (t) => { ctx.fillStyle = '#123'; ctx.fillRect(0, 0, 64, 36); ctx
 window.__seek = (t) => { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 64, 36); ctx.fillStyle = '#fff'; ctx.fillRect(Math.round(t * 50), 10, 8, 8); };`),
             { out: 'film/audio.mp4', audio: 'tone.wav' });
             expect(m.checks.audio_qa).toBe('ran');
+            expect(m.checks.video_qa).toBe('ran');
             expect(typeof m.audio_qa?.['integrated_lufs']).toBe('number');
         }, 180_000);
     });

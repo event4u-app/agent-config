@@ -36,7 +36,8 @@ import path from 'node:path';
 import type * as PlaywrightTest from '@playwright/test';
 import type * as UiRenderAsset from '../../src/cli/commands/uiRenderAsset.js';
 
-import { scanHostHtml, scanSvg, type DeliveryMode } from '../../src/scripts/lint_svg_asset.js';
+import { scanAsset, type DeliveryMode } from '../../src/scripts/lint_svg_asset.js';
+import type { AssetClass } from '../../src/scripts/_lib/asset_classes.js';
 import { smilVerdict } from '../../src/scripts/_lib/svg_motion.js';
 
 /**
@@ -120,6 +121,10 @@ export const TAXONOMY_TO_RULE: Readonly<Record<string, string>> = {
     'motion/no-reduced-motion-branch': 'svg-motion-no-reduced-motion',
     'motion/smil-css-only-branch': 'svg-motion-smil-css-only',
     'motion/d-morph-command-mismatch': 'svg-motion-d-morph-mismatch',
+    'mark/live-text': 'svg-mark-live-text',
+    'mark/near-miss-angle': 'svg-mark-near-miss-angle',
+    'mark/tiny-detail': 'svg-mark-tiny-detail',
+    'mark/colour-count': 'svg-mark-colour-count',
 };
 
 /**
@@ -149,11 +154,12 @@ function readFile(root: string, rel: string): string {
     return fs.readFileSync(path.join(root, FIXTURE_REL, rel), 'utf-8');
 }
 
-function scanOne(root: string, rel: string, delivery: DeliveryMode): string[] {
-    const content = readFile(root, rel);
-    const findings = /\.svg$/i.test(rel)
-        ? scanSvg(content, rel, { delivery })
-        : scanHostHtml(content, rel, { delivery });
+// Mark rows answer only under `--class mark`, exactly as the linter runs them.
+function scanOne(root: string, rel: string, delivery: DeliveryMode, assetClass: string): string[] {
+    const findings = scanAsset(readFile(root, rel), rel, {
+        delivery,
+        assetClass: assetClass === 'mark' ? ('mark' as AssetClass) : undefined,
+    });
     return findings.map((f) => f.rule);
 }
 
@@ -257,8 +263,8 @@ async function measureRow(root: string, row: Row, browser: EngineBrowser | null)
                 note: 'no linter rule is mapped to this pre-registered taxonomy id',
             };
         }
-        const planted = scanOne(root, row.file, row.delivery);
-        const twin = scanOne(root, row.twin, row.delivery);
+        const planted = scanOne(root, row.file, row.delivery, row.asset_class);
+        const twin = scanOne(root, row.twin, row.delivery, row.asset_class);
         return {
             id: row.id,
             file: row.file,

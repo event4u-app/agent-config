@@ -897,10 +897,10 @@ export function absentFilmManifest(target: string): FilmManifest {
         schema: 1, profile: 'film', generated_at: new Date().toISOString(), target,
         form: 'none', meta: null, frames: [], distinct_frames: 0, dead_time: [],
         determinism: { deterministic: null, first_diverging_frame: null, scope: 'this machine' },
-        network: { blocked: [] }, flash: null, format: null, contact_sheet: null, audio_qa: null, encode: null,
+        network: { blocked: [] }, flash: null, format: null, contact_sheet: null, audio_qa: null, video_qa: null, encode: null,
         checks: {
             seek: skipped, determinism: skipped, dead_time: skipped, encode: skipped,
-            format: skipped, flash: skipped, contact_sheet: skipped, audio_qa: skipped,
+            format: skipped, flash: skipped, contact_sheet: skipped, audio_qa: skipped, video_qa: skipped,
         },
         findings: [], verification: 'unassessed', goal: 'unassessed',
         degradation_reason:

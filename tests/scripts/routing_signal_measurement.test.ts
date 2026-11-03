@@ -404,10 +404,11 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 193 -> 195 on 2026-11-02: inbox round 2026-11-i. `emit-tickets` (0xcd)
         // trains (150 -> 151); `technical-specification` (0x22) seals (43 -> 44).
         // 195 -> 196 on 2026-11-02: `founder-idea-interview` (0xb1) trains (151 -> 152).
-        // 196 -> 198 on 2026-11-03: the mcp/code-review rename moves one row each way
-        // across the seal, `copilot-config` (0x33) trains (152 -> 153) and
+        // 196 -> 197 on 2026-11-03: inbox round 2026-11-p. `character-consistency` (0xf7) trains (152 -> 153).
+        // 197 -> 199 on 2026-11-03: the mcp/code-review rename moves one row each way
+        // across the seal, `copilot-config` (0x33) trains (153 -> 154) and
         // `github-ci` (0x11) seals (44 -> 45).
-        expect(all.length).toBe(198);
+        expect(all.length).toBe(199);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(45);
     });
 });
@@ -487,9 +488,10 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 149 -> 150 on 2026-11-02: `code-film` trains (see the 193 line).
         // 150 -> 151 on 2026-11-02: `emit-tickets` trains (see the 195 line).
         // 151 -> 152 on 2026-11-02: `founder-idea-interview` trains (see the 196 line).
-        // 152 -> 153 on 2026-11-03: `code-review` leaves train, `mcp-tool-use` and
-        // `copilot-config` join it (see the 198 line).
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(153);
+        // 152 -> 153 on 2026-11-03: `character-consistency` trains (see the 197 line).
+        // 153 -> 154 on 2026-11-03: `code-review` leaves train, `mcp-tool-use` and
+        // `copilot-config` join it (see the 199 line).
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(154);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  0ce528391db7c14e44b02c87d1fe81d5bdbd9435c47126ed341c20164243c214
+SET-SHA256  838eb6c3639bdc5a46ed5b721a1ed24d1b57843e4fa545bd885396f5defb3c40
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1234,6 +1234,7 @@ open and which this file does not settle.
 | `brand-strategy` | `8a9a7ea586b7de9e0a3b7a8e0b3ffd776ca1260ab79d77b2804ed4c9e6911606` |
 | `brand-to-tokens` | `b4a6926a805c848bf94ee9b6a037b796c0ac416077d0a5474bafcf63f1ded411` |
 | `bug-analyzer` | `c2eb95aada033854401cdb6a951fac9b7cac633b0ee4142f126eece78b1953eb` |
+| `character-consistency` | `abe2c1d17a1bbe849d64c5fc3a7071ac540111b23f693d3856edf1b55e25c616` |
 | `code-film` | `64e99c81fed1f527a1ae5233bef113cd2daced9dfd42476457502ff454d85ea1` |
 | `code-refactoring` | `a6147167bd6c11a4c4f2b0a4bae924f403f54d16aa0334b089b6bba744d66f77` |
 | `command-routing` | `8fdb24b80711a22212c9c31913630e2b06a5fade150f9de87b3ecdde6f23d0d4` |
@@ -2235,6 +2236,23 @@ the 500 target, still **MET**. Neither verdict changes in kind.
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
 and `routing_signal_measurement.test.ts` § 5.1.
 
+## Growth — 2026-11-03, one new corpus (character-consistency); nothing seals
+
+```
+ONE ROW IS NEW AND TRAINS. NO PRE-EXISTING CORPUS FILE WAS EDITED. BOTH
+TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN AFTER THE CORPUS WAS ON DISK.
+```
+
+**What changed.** Round `inbox-2026-11-p` edited the `character-consistency`
+skill body (it no longer claims a pixel check no script performs), which brought
+the skill into `check_routing_coverage`'s touched-skill scope; its corpus was
+written then: six exemplars (one German), four near-misses naming the
+neighbours that should win, one logo counterexample. It leaves the grandfather allowlist in the same change.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `character-consistency` | train | `0xf7` = 247 ≥ 51 | new |
+
 ## Re-pin — 2026-11-03, a rename moves two rows across the seal
 
 ```
@@ -2278,15 +2296,15 @@ evaluation, and must treat the `mcp` row's absence as a removed sealed row.
 skill it names was renamed); no query changed. AC-6 rests on the same 18 rows,
 none of which is touched.
 
-The sealed set moves **44 -> 45**, the train set **152 -> 153**, the set
-**196 -> 198**. `SET-SHA256` moves because it is computed over every row:
-`6719e4ae…` → `0ce52839…`.
+The sealed set moves **44 -> 45**, the train set **153 -> 154**, the set
+**197 -> 199**. `SET-SHA256` moves because it is computed over every row:
+`f2bc7323…` → `838eb6c3…`.
 
 **Both train-side measurements were re-taken on this tree.**
 `routing-body-signal-verdict.json`: still `harmful` on the false-activation
-guard (**+5.16 pp** against +2.0 pp; was +5.48 pp).
-`delivery-set-measurement-2026-08-31.json`: recall loss **38.33 pp** (was
-38.58 pp), the ceiling stays **BREACHED**; context cost **230.2** tokens against
+guard (**+4.85 pp** against +2.0 pp; was +5.48 pp).
+`delivery-set-measurement-2026-08-31.json`: recall loss **38.16 pp** (was
+38.58 pp), the ceiling stays **BREACHED**; context cost **230.1** tokens against
 the 500 target, still **MET**. Neither verdict changes in kind.
 
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`

@@ -18,25 +18,25 @@
     "token_target": 500
   },
   "metrics": {
-    "precision_at_k": 81.834,
-    "recall_at_k": 61.669,
-    "recall_loss_pp": 38.331,
+    "precision_at_k": 81.99,
+    "recall_at_k": 61.837,
+    "recall_loss_pp": 38.163,
     "ceiling_met": false,
     "recall_curve_pp": {
-      "1": 42.243,
-      "3": 54.368,
-      "5": 61.669,
-      "10": 69.752,
-      "20": 76.271
+      "1": 42.432,
+      "3": 54.592,
+      "5": 61.837,
+      "10": 69.858,
+      "20": 76.326
     },
-    "false_activation_at_k": 14.247,
-    "context_cost_tokens": 230.2,
+    "false_activation_at_k": 14.151,
+    "context_cost_tokens": 230.1,
     "token_target_met": true,
-    "benefit_unconditional": 61.669,
-    "benefit_conditional_on_activation": 81.834,
-    "adjudicated_deliveries": 578,
-    "unadjudicated_deliveries": 6425,
-    "tie_decided_cut_pp": 83.86
+    "benefit_unconditional": 61.837,
+    "benefit_conditional_on_activation": 81.99,
+    "adjudicated_deliveries": 583,
+    "unadjudicated_deliveries": 6467,
+    "tie_decided_cut_pp": 83.845
   },
   "set_compatibility": {
     "shared_prompts": 16,
@@ -161,7 +161,7 @@
   "corpus": {
     "partition": "train",
     "holdout_sealed": true,
-    "cases": 1504,
-    "prompts": 1487
+    "cases": 1515,
+    "prompts": 1498
   }
 }

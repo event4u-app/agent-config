@@ -75,6 +75,8 @@ describe('film witness — pure parts', () => {
         const m = absentFilmManifest('film.html');
         expect(m.verification).toBe('unassessed');
         expect(Object.values(m.checks).every((v) => v.startsWith('skipped'))).toBe(true);
+        expect(m.checks.video_qa).toBe('skipped: renderer absent');
+        expect(m.video_qa).toBeNull();
         expect(m.degradation_reason).toContain('playwright');
         expect(filmExitCode(m)).toBe(1);
     });
