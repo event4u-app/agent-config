@@ -41,60 +41,52 @@ Already fixed at the pin (not planned): the stale `N=3` reference in
 
 ## Phase 1 — One ladder, one wording
 
-- [x] **1.1 `context-hygiene` follows the ladder.** The 3-Failure Rule becomes a
+- [x] **1.1 `context-hygiene` follows the ladder.** The 3-Failure Rule becomes a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/context_hygiene_hook.ts -->
       pointer to the ladder in `autonomous-execution` (three failed strategies →
       new epoch: state dump, fresh context; a count is never a reason to ask).
       Failure identity and the hard-blocker classes stay — hard blockers are the
       one place a surface to the user is right, and they are not a count.
       verify: `grep -cE 'ask for a different approach|new hypothesis, ask|Can.t proceed → ask the user' src/rules/context-hygiene.md` -> /^0$/
-      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/context_hygiene_hook.ts -->
-- [x] **1.2 The rule says what the hook carries.** Hook header drops "the
+- [x] **1.2 The rule says what the hook carries.** Hook header drops "the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/context_hygiene_hook.ts -->
       3-failure stop"; the rule's enforcement header says the hook carries the
       call counter and freshness milestones, and the 3-failure / tool-loop
       clauses are model-carried.
       verify: a test reads the state fields the rule header names and finds each in `_empty_state()`.
-      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/context_hygiene_hook.ts -->
-- [x] **1.3 Skills keep their method, lose the count→ask.**
+- [x] **1.3 Skills keep their method, lose the count→ask.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/context_hygiene_hook.ts -->
       `systematic-debugging` (`:165`) and `bug-analyzer` (`:139-140`, `:266`)
       point at band 2 / band 3 of the ladder instead of "discuss with the user".
       verify: `grep -nE 'Surface the question to the user|Discuss with the user before attempting more fixes|Stop and discuss' src/skills/systematic-debugging/SKILL.md src/skills/bug-analyzer/SKILL.md | wc -l` -> /^\s*0$/
-      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/context_hygiene_hook.ts -->
-- [x] **1.4 `bug-analyzer` ships no project's root causes.** The "in this
+- [x] **1.4 `bug-analyzer` ships no project's root causes.** The "in this <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/context_hygiene_hook.ts -->
       project" list becomes generic categories plus the existing `retrieve`
       step as the source of project-specific causes.
       verify: `grep -c 'in this project' src/skills/bug-analyzer/SKILL.md` -> /^0$/
-      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/context_hygiene_hook.ts -->
-- [x] **1.5 Own-number register.** `fix-loop-ladder.md` lists every surface
+- [x] **1.5 Own-number register.** `fix-loop-ladder.md` lists every surface <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/context_hygiene_hook.ts -->
       that keeps its own retry number (`verify-repair-loop` 3,
       `subagent_steering` 2-consecutive stop, work-engine `SELF_FIX_CEILING` 3)
       with one line on why, so a paraphrase cannot pass as a second ladder.
       verify: each named surface links back to `fix-loop-ladder`.
-      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/context_hygiene_hook.ts -->
-- [x] **1.6 The guard sees paraphrases.** The ladder test scans `src/rules`,
+- [x] **1.6 The guard sees paraphrases.** The ladder test scans `src/rules`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/context_hygiene_hook.ts -->
       `src/skills` and `src/agent-src/contexts` for count→ask phrasings, not
       only the literal in one file; red before 1.1-1.3, green after.
       verify: `npx vitest run tests/e2e/adversarial-verification-fixtures.test.ts` -> 0
-      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/context_hygiene_hook.ts -->
 
 ## Phase 2 — A discarded red is not green
 
-- [x] **2.0 Discard never counts as pass.** `canVerify` consults the same
+- [x] **2.0 Discard never counts as pass.** `canVerify` consults the same <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/verification_command.ts -->
       segment predicate the transcript path uses (export it; no second list).
       verify: `npx vitest run tests/scripts/verification_evidence.test.ts` -> 0
       — fixtures for tsc/eslint with `|| true`, `; true` and `|| :` (exit 0,
       error output) are not pass-evidence; `|| exit 1` still is. Test red
       before the fix.
-      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/verification_command.ts -->
 
 ## Phase 3 — The counter, in shadow
 
-- [x] **3.1 Failure signature.** `failureSignature(run)`: runner + failing
+- [x] **3.1 Failure signature.** `failureSignature(run)`: runner + failing <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json -->
       summary counts + first error line, normalised (durations, timestamps,
       hex addresses, temp paths, line numbers out), hashed.
       verify: same red with a different duration → same signature; a
       different failing test → a different one.
-      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json -->
-- [x] **3.2 Strike ledger.** `agents/state/strike-ledger.json`, written beside
+- [x] **3.2 Strike ledger.** `agents/state/strike-ledger.json`, written beside <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json -->
       the run record from the same capture (one capture, two readers): per
       target `{sig, streak, verdict: SAME|NEW|FIXED|FLAKY, edits_between,
       last_at, platform}` keyed by agent and target. Hashes and counts only —
@@ -103,11 +95,9 @@ Already fixed at the pin (not planned): the stale `N=3` reference in
       verify: red→red with an edit between → `SAME`, streak 2; red→green →
       `FIXED`, streak 0; red/green/red without an edit → `FLAKY`, no strike;
       a second session within 7 days inherits the streak.
-      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json -->
-- [x] **3.3 Shadow posture.** Nothing reaches the model; the ledger is read by
+- [x] **3.3 Shadow posture.** Nothing reaches the model; the ledger is read by <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json -->
       tests and by the stubs below. The rule text says so.
       verify: no emission path references the ledger outside tests and its writer.
-      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json -->
 
 ## Decisions
 
