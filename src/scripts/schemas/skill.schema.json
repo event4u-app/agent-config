@@ -230,6 +230,7 @@
         "low",
         "medium",
         "high",
+        "xhigh",
         "max"
       ],
       "description": "Optional pinned reasoning-effort level for hosts with an effort knob (Claude Code `--effort` / agent frontmatter). Passthrough: skills project verbatim, so the key reaches Claude Code as-is and is inert on hosts without the knob. The bench harness pins it per run (bench_ab_task_runner `--effort`) so measurements are reproducible. Orthogonal to `model_tier` (capability band) — effort tunes how hard the model thinks, not which model runs. Omit unless the skill measurably needs a non-default effort.",

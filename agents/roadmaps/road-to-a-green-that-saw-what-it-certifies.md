@@ -101,7 +101,7 @@ instrument can say whether a subagent that reported `DONE` wrote anything
       is `none`); `effort` from the leg's records, `null` when absent, `mixed` when uneven.
       verify: `npx vitest run tests/scripts/subagent_return_report.test.ts` — one fixture per enum
       value, one with `DONE` in a tool input → `none`, effort present/absent/mixed.
-- [ ] **3.3 The effort enum covers the host's levels.** Add `xhigh` to `effort.enum` in
+- [x] **3.3 The effort enum covers the host's levels.** Add `xhigh` to `effort.enum` in
       `src/scripts/schemas/subagent.schema.json:43` and `src/scripts/schemas/skill.schema.json:228-233`
       (`src/scripts/_lib/subagent_native_fields.ts:23` projects verbatim). No shipped definition
       gains a pin.
