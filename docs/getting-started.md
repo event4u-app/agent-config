@@ -68,7 +68,7 @@ unattended run. In a project that pins `agent_config_version`,
 never moves the pin.
 
 Claude Code is single-surface: the file projection carries content AND the
-managed hooks in `~/.claude/settings.json` — there is no marketplace plugin
+agent-config hooks in `~/.claude/settings.json` — there is no marketplace plugin
 to keep in sync anymore. A leftover plugin from an older install is flagged
 by `doctor` as `claude-plugin: duplicate surface` (fix:
 `claude plugin uninstall agent-config@event4u-agent-config`).

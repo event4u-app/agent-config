@@ -24,6 +24,7 @@ describe('fileFor — the synthetic origin is confined to the build', () => {
 describe('applyRenderWitness — pure reconciliation', () => {
     const register = loadRegister(REPO, '2026-11-02');
     const gatedBuild = (): string => {
+        fs.mkdirSync(path.join(REPO, 'agents', 'runtime'), { recursive: true });
         const dir = fs.mkdtempSync(path.join(REPO, 'agents', 'runtime', 'tmp-render-'));
         fs.writeFileSync(
             path.join(dir, 'kontakt.html'),

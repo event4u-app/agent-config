@@ -21,6 +21,7 @@ import {
     DEFAULT_STACK,
     KNOWN_STACKS,
     StackResult,
+    UNSUPPORTED_STACK,
     detect_stack,
     latest_manifest_mtime,
 } from '../../../src/agent-src/templates/scripts/work_engine/stack/detect.js';
@@ -200,6 +201,28 @@ describe('stack/detect — detection logic', () => {
     it('non-dict dependency section (require is a string) is ignored', () => {
         write('composer.json', JSON.stringify({ require: 'not-a-dict' }));
         expect(detectView(tmp)).toBe('{"frontend":"plain","has_mtime":true}');
+    });
+
+    // Measured at 81788b6e63: both engine fixtures detected as `plain`, which
+    // hands a game the generic web lane and lets it drive a browser at it.
+    it.each([
+        ['godot', 'project.godot', 'config_version=5\n'],
+        ['unity', 'ProjectSettings/ProjectVersion.txt', 'm_EditorVersion: 2022.3.10f1\n'],
+        ['unreal', 'Shooter.uproject', '{"FileVersion": 3}'],
+    ])('a %s root with no web marker is unsupported, not plain', (_engine, marker, body) => {
+        write(marker, body);
+        expect(detect_stack(tmp).frontend).toBe(UNSUPPORTED_STACK);
+    });
+
+    it('an engine marker never overrides a detected web stack', () => {
+        write('project.godot', 'config_version=5\n');
+        write('package.json', JSON.stringify({ dependencies: { react: '^18' } }));
+        expect(detect_stack(tmp).frontend).toBe('react');
+    });
+
+    it('an engine marker below the root is not an engine root', () => {
+        write('game/project.godot', 'config_version=5\n');
+        expect(detect_stack(tmp).frontend).toBe(DEFAULT_STACK);
     });
 
     it('latest_manifest_mtime: marker files count too', () => {

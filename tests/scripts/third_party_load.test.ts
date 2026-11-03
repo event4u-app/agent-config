@@ -98,6 +98,7 @@ describe('the register', () => {
     });
 
     it('removing the gate marker turns the click-to-load twin into a finding — the undecide does the work', () => {
+        fs.mkdirSync(path.join(REPO, 'agents', 'runtime'), { recursive: true });
         const tmp = fs.mkdtempSync(path.join(REPO, 'agents', 'runtime', 'tmp-tpl-'));
         try {
             fs.writeFileSync(

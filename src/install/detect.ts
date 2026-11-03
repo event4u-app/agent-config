@@ -140,6 +140,9 @@ export type ProjectKind =
     | 'pyproject'
     | 'go'
     | 'ruby'
+    | 'godot'
+    | 'unity'
+    | 'unreal'
     | 'unknown';
 
 export interface ProjectShape {
@@ -153,7 +156,8 @@ export interface ProjectShape {
     /** The primary manifest, matching {@link ProjectShape.kind}. */
     readonly manifest: string | null;
     /**
-     * EVERY detected kind, in {@link SCOPE_DETECT_MANIFESTS} order.
+     * EVERY detected kind, in {@link SCOPE_DETECT_MANIFESTS} order, then any
+     * game-engine root marker.
      *
      * Added 2026-08-26 (road-to-internal-estate-fit 2.1). The shape of a
      * repository carrying two manifests is *both*, and the caller can decide
@@ -181,14 +185,42 @@ const MANIFEST_KIND = {
     Gemfile: 'ruby',
 } as const satisfies Record<string, ProjectKind>;
 
+/**
+ * Game-engine root markers. Kinds only — deliberately NOT in
+ * {@link SCOPE_DETECT_MANIFESTS}, so an engine project does not start
+ * prompting for a project-scope install. Unreal's project file has no fixed
+ * name, hence the extension.
+ */
+function engineMarkers(root: string): Array<{ kind: ProjectKind; marker: string }> {
+    const out: Array<{ kind: ProjectKind; marker: string }> = [];
+    if (isFile(join(root, 'project.godot'))) out.push({ kind: 'godot', marker: 'project.godot' });
+    const unity = join('ProjectSettings', 'ProjectVersion.txt');
+    if (isFile(join(root, unity))) out.push({ kind: 'unity', marker: unity });
+    try {
+        const uproject = readdirSync(root, { withFileTypes: true })
+            .filter((e) => e.isFile() && e.name.toLowerCase().endsWith('.uproject'))
+            .map((e) => e.name)
+            .sort()[0];
+        if (uproject !== undefined) out.push({ kind: 'unreal', marker: uproject });
+    } catch {
+        // An unreadable root has no Unreal project we can see.
+    }
+    return out;
+}
+
 export function detectProjectShape(root: string): ProjectShape {
-    const manifests = SCOPE_DETECT_MANIFESTS.filter((m) => existsSync(join(root, m)));
-    if (manifests.length === 0) {
+    const found = [
+        ...SCOPE_DETECT_MANIFESTS.filter((m) => existsSync(join(root, m))).map((m) => ({
+            kind: (MANIFEST_KIND as Record<string, ProjectKind>)[m] ?? 'unknown',
+            marker: m as string,
+        })),
+        ...engineMarkers(root),
+    ];
+    if (found.length === 0) {
         return { kind: 'unknown', root, manifest: null, kinds: [], manifests: [] };
     }
-    const kinds = manifests.map(
-        (m) => (MANIFEST_KIND as Record<string, ProjectKind>)[m] ?? 'unknown',
-    );
+    const kinds = found.map((f) => f.kind);
+    const manifests = found.map((f) => f.marker);
     return {
         kind: kinds[0] as ProjectKind,
         root,
@@ -264,6 +296,14 @@ export function detectPackageRoot(projectRoot: string): string | null {
 /** Classify a package root as `npm` (under node_modules) or `local`. */
 export function detectPackageType(packageRoot: string): 'npm' | 'local' {
     return packageRoot.split(/[\\/]/).includes('node_modules') ? 'npm' : 'local';
+}
+
+function isFile(path: string): boolean {
+    try {
+        return statSync(path).isFile();
+    } catch {
+        return false;
+    }
 }
 
 function isDir(path: string): boolean {

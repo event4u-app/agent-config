@@ -80,7 +80,7 @@ export function measureCloudReach(root: string): CloudReach | null {
 function describeReach(m: CloudReach): string {
     return (
         `a clone carries ${m.skills} skill(s), ${m.rules} rule file(s), ${m.agents} agent(s), ` +
-        `${m.commands} command file(s), ${m.managedHooks} managed hook(s)` +
+        `${m.commands} command file(s), ${m.managedHooks} agent-config hook(s)` +
         (m.pluginOnly ? ' — the committed settings only enable a plugin, which a cloud session does not install' : '')
     );
 }

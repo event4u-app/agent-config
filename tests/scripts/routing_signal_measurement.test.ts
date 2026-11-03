@@ -400,7 +400,8 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // trains (150 -> 151); `technical-specification` (0x22) seals (43 -> 44).
         // 195 -> 196 on 2026-11-02: `founder-idea-interview` (0xb1) trains (151 -> 152).
         // 196 -> 197 on 2026-11-03: inbox round 2026-11-p. `character-consistency` (0xf7) trains (152 -> 153).
-        expect(all.length).toBe(197);
+        // 197 -> 198 on 2026-11-03: inbox round 2026-11-r. `song-to-script` (0x89) trains (153 -> 154).
+        expect(all.length).toBe(198);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(44);
     });
 });
@@ -481,7 +482,8 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 150 -> 151 on 2026-11-02: `emit-tickets` trains (see the 195 line).
         // 151 -> 152 on 2026-11-02: `founder-idea-interview` trains (see the 196 line).
         // 152 -> 153 on 2026-11-03: `character-consistency` trains (see the 197 line).
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(153);
+        // 153 -> 154 on 2026-11-03: `song-to-script` trains (see the 198 line).
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(154);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

@@ -14948,7 +14948,7 @@ function dryRunTargetLines(global, tools, projectTarget) {
 `;
   }
   out += "  phases:      project payload sync \u2014 skipped (global installs write user-scope paths only)\n";
-  out += "               host projection + managed hooks \u2014 would run\n";
+  out += "               host projection + agent-config hooks \u2014 would run\n";
   return out;
 }
 function dryRunBool(v) {
@@ -24868,14 +24868,14 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
         if (!state.QUIET) {
           if (res.changed) {
             success(
-              `claude-code: managed hooks registered in ~/.claude/settings.json (${res.events.length} event(s))`
+              `claude-code: agent-config hooks registered in ~/.claude/settings.json (${res.events.length} event(s))`
             );
           } else {
-            skip("claude-code: managed hooks already registered");
+            skip("claude-code: agent-config hooks already registered");
           }
         }
       } catch (e) {
-        warn(`claude-code: managed-hook registration failed \u2014 ${String(e)}`);
+        warn(`claude-code: agent-config hook registration failed \u2014 ${String(e)}`);
         _emit_progress({ type: "hooks_failed", tool: tool_id, error: String(e) });
       }
     }

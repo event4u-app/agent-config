@@ -416,7 +416,7 @@ export function checkHookWiring(deps: HookWiringDeps): WiringCheck {
         return {
             id: 'hook-wiring',
             status: 'fail',
-            message: `cannot evaluate managed hooks: ${String(e)}`,
+            message: `cannot evaluate agent-config hooks: ${String(e)}`,
             remedy: 'fix ~/.claude/settings.json (invalid JSON?), then agent-config refresh --global',
         };
     }
@@ -425,7 +425,7 @@ export function checkHookWiring(deps: HookWiringDeps): WiringCheck {
         return {
             id: 'hook-wiring',
             status: 'ok',
-            message: 'managed hooks registered in ~/.claude/settings.json; dispatch binary on PATH',
+            message: 'agent-config hooks registered in ~/.claude/settings.json; dispatch binary on PATH',
             remedy: '',
         };
     }
@@ -434,13 +434,13 @@ export function checkHookWiring(deps: HookWiringDeps): WiringCheck {
             id: 'hook-wiring',
             status: 'warn',
             message:
-                `managed hooks missing for: ${missing.join(', ')} — currently carried by the ` +
+                `agent-config hooks missing for: ${missing.join(', ')} — currently carried by the ` +
                 'installed plugin (deprecated surface)',
-            remedy: 'agent-config refresh --global (writes the managed settings.json block)',
+            remedy: "agent-config refresh --global (writes agent-config's own hook block into ~/.claude/settings.json)",
         };
     }
     const parts: string[] = [];
-    if (missing.length > 0) parts.push(`managed hooks missing for: ${missing.join(', ')}`);
+    if (missing.length > 0) parts.push(`agent-config hooks missing for: ${missing.join(', ')}`);
     if (!binary_ok) parts.push('`agent-config` not on PATH (hooks would silently no-op)');
     if (parts.length === 0) {
         // hooks complete, binary missing was the only issue → covered above.

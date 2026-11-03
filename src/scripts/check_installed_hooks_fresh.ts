@@ -265,7 +265,7 @@ function render(report: FreshnessReport, quiet: boolean, write: (s: string) => v
         {
             gate: 'check_installed_hooks_fresh',
             scanned: report.verdicts.length,
-            units: 'managed hook(s)',
+            units: 'agent-config hook(s)',
             roots: [INSTALLER_REL],
         },
         collect,

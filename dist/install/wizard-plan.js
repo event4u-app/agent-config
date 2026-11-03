@@ -264,7 +264,7 @@ export function dryRunTargetLines(global, tools, projectTarget) {
             out += `          ${sub.length === 0 ? root : `${join(root, sub)}/`}\n`;
     }
     out += '  phases:      project payload sync — skipped (global installs write user-scope paths only)\n';
-    out += '               host projection + managed hooks — would run\n';
+    out += '               host projection + agent-config hooks — would run\n';
     return out;
 }
 /** A plan boolean, lowercase — the plan is read by people, not by Python. */

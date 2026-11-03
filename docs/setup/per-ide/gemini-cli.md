@@ -30,7 +30,7 @@ The tool id is `gemini-cli`, not `gemini`.
 Under `~/.gemini/`:
 
 - `rules/`, `skills/`, `commands/`, `personas/` — the skill bundle
-- `settings.json` — managed hooks registered alongside your own settings
+- `settings.json` — agent-config hooks registered alongside your own settings
 
 In the repository, only a gitignored pointer
 `.gemini/agent-config.bridge.yml` is written (plus `agents/overrides/`).
