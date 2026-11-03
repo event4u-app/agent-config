@@ -74,8 +74,9 @@ has no trigger for a supplied reference photo.
       it before the prose check.
       verify: `npx vitest run tests/scripts/ai_video_ref_index.test.ts` -> 0
 - [x] **3.3 A supplied photo of a person is a likeness trigger.** Policy and <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
-      rule name it and route it to the existing consent path.
-      verify: `grep -ci 'reference image' agents/settings/policies/media/likeness.md src/rules/image-likeness-and-rights.md` -> ≥1 each
+      The policy names it; the rule's existing real-person row already routes
+      to that policy.
+      verify: `grep -ci 'reference image' agents/settings/policies/media/likeness.md` -> ≥1
 
 ## Decisions
 
@@ -110,3 +111,9 @@ Every step closed with a test seen red first where behaviour changed.
   grandfather list, and the routing-coverage seed rose (198 of 303).
 - 3.1 announces the clamp on a live submit only; a dry run refuses before the
   duration is computed.
+- 3.3 first added a row to `image-likeness-and-rights` too. The AI council
+  (2 providers) narrowed its wording in round 1 and confirmed it non-expanding
+  in rounds 2–3 (`agents/evidence/council/likeness-reference-photo-inbox-2026-11-q*.question.md`);
+  the policy carries that narrowed wording. The rule row was then withdrawn:
+  it grew the always-loaded rule payload past its zero-growth ceiling, and the
+  rule's existing real-person row already routes to the policy.
