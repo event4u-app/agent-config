@@ -34,12 +34,12 @@ Evidence (read): `src/scripts/_lib/runtime_wiring_checks.ts:428` — "managed ho
 in user-visible doctor text collides with the host's managed-settings tier;
 `docs/contracts/harness-expectations.md:27` lists Classes A–C and no mod case.
 
-- [ ] **1.1 "managed hooks" becomes "agent-config hooks".** User-visible doctor
+- [x] **1.1 "managed hooks" becomes "agent-config hooks".** User-visible doctor
       and installer text only (`runtime_wiring_checks.ts`, `install.ts`); the
       internal enum stays. A test asserts no hook-wiring message says
       "managed"; seen red first.
       verify: `npx vitest run tests/scripts/runtime_wiring_checks.test.ts` -> 0
-- [ ] **1.2 Class D — a host mod can override a refusal.** A section in
+- [x] **1.2 Class D — a host mod can override a refusal.** A section in
       `harness-expectations.md` stating only tree-established facts
       (ADR-302, `host_mod_census.ts`): load order is the host's, per-arm order
       is unmeasured and owned by the mod-surfaces roadmap, diagnose with
@@ -51,7 +51,7 @@ in user-visible doctor text collides with the host's managed-settings tier;
 Evidence (read): `src/skills/supply-chain-intake/SKILL.md:4` — the description
 routes dependencies only; third-party skills and skill archives are uncovered.
 
-- [ ] **2.1 Intake routes plugins, mods and agent skills.** Description and
+- [x] **2.1 Intake routes plugins, mods and agent skills.** Description and
       scope name them; the plugin/mod section gains the archive step (list
       before unpack; refuse `..`, absolute, symlink and nested entries; name
       every script); trigger cases added, with a near-miss for writing a new
@@ -65,15 +65,15 @@ duration is clamped to {4,6,8} with no notice; `src/skills/prompt-validator/`
 has no reference-index check; `agents/settings/policies/media/likeness.md:12`
 has no trigger for a supplied reference photo.
 
-- [ ] **3.1 The Veo clamp says so.** A requested duration outside {4,6,8}
+- [x] **3.1 The Veo clamp says so.** A requested duration outside {4,6,8}
       prints `requested <n>s -> rendered <m>s` on stderr; the song-to-script
       skill tells planners the Veo grid.
       verify: `npx vitest run tests/scripts/ai_video_veo_duration.test.ts` -> 0
-- [ ] **3.2 Reference-index check.** A script refuses a prompt that cites
+- [x] **3.2 Reference-index check.** A script refuses a prompt that cites
       image N when fewer than N inputs are supplied; the validator skill calls
       it before the prose check.
       verify: `npx vitest run tests/scripts/ai_video_ref_index.test.ts` -> 0
-- [ ] **3.3 A supplied photo of a person is a likeness trigger.** Policy and
+- [x] **3.3 A supplied photo of a person is a likeness trigger.** Policy and
       rule name it and route it to the existing consent path.
       verify: `grep -ci 'reference image' agents/settings/policies/media/likeness.md src/rules/image-likeness-and-rights.md` -> ≥1 each
 
@@ -93,3 +93,20 @@ has no trigger for a supplied reference photo.
 | 1 | Doc claims a measured order | product | Class D overstates what is known about mod load order | Only tree-established facts; arm order named as unmeasured | Phase 1 — Host truth in words and docs |
 | 2 | Intake description over-triggers | implementation | Widening the description steals routing from skill-writing | Near-miss trigger case for "write a new skill" | Phase 2 — Foreign agent assets go through intake |
 | 3 | Reference check refuses valid prompts | implementation | A literal "image 2" in prose is read as a reference | Patterns limited to explicit reference forms; tests for pass and fail | Phase 3 — Media steps that do not change silently |
+
+## Outcome (2026-11-03)
+
+Every step closed with a test seen red first where behaviour changed.
+
+- 1.1 sibling sweep: the construct "managed hook(s)" in user-visible text
+  matched 9 further sites outside the two named files (`wizard-plan.ts`,
+  `hooks_status.ts`, `cloud_reach.ts`, `cmd_uninstall.ts` ×2,
+  `check_installed_hooks_fresh.ts`, `docs/getting-started.md`,
+  `docs/setup/per-ide/gemini-cli.md`, one test expectation); all renamed.
+  Code comments and internal ids were left as they are.
+- 2.1 dropped "marketplace" from the description because it grew the
+  description-token estate; it stays in the scope bullet and the body.
+- 3.1 touched `song-to-script`, so it gained its trigger corpus, left the
+  grandfather list, and the routing-coverage seed rose (198 of 303).
+- 3.1 announces the clamp on a live submit only; a dry run refuses before the
+  duration is computed.

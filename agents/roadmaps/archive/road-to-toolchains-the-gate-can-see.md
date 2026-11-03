@@ -31,7 +31,7 @@ Evidence (executed): `src/scripts/_lib/verification_command.ts:240` — a probe 
 `bundle exec rspec`, `./gradlew test`, `mvn test`, `npx playwright test`, all of
 which `resolve_toolchain` itself emits (`toolchain-resolver.md:64-76`).
 
-- [ ] **1.1 Resolver↔gate parity.** `segmentVerifies` accepts `dotnet test`,
+- [x] **1.1 Resolver↔gate parity.** `segmentVerifies` accepts `dotnet test`,
       `rspec` (and `bundle exec` peeled like `npx`), `mvn`/`mvnw` and
       `gradle`/`gradlew` with `test`/`verify`/`check`, and `playwright test`.
       A parity test reads every runner command the resolver documents and
@@ -45,20 +45,20 @@ Evidence (executed): `src/agent-src/templates/scripts/work_engine/stack/runner.t
 detected as stack `plain` (`stack/detect.ts:85`) and as project kind `unknown`
 (`src/install/detect.ts:136`).
 
-- [ ] **2.1 Extract the dotnet basis into a leaf module.** `runner.ts` sits at
+- [x] **2.1 Extract the dotnet basis into a leaf module.** `runner.ts` sits at
       1,498/1,500 lines; move `_dotnet_basis`, `_dotnet_runners`,
       `_dotnet_project_text` to `stack/dotnet.ts` with no behaviour change.
       verify: `npx vitest run tests/scripts/work_engine/stack_runner.test.ts` -> 0
-- [ ] **2.2 An engine marker suppresses `dotnet test`.** A Unity
+- [x] **2.2 An engine marker suppresses `dotnet test`.** A Unity
       (`ProjectSettings/ProjectVersion.txt`) or Unreal (`*.uproject`) root
       yields no dotnet runner instead of a wrong one; note the precedence in
       `toolchain-resolver.md`.
       verify: `npx vitest run tests/scripts/work_engine/stack_runner.test.ts` -> 0 with a Unity fixture asserting no `dotnet test`
-- [ ] **2.3 An engine project is not `plain`.** `detect_stack` returns
+- [x] **2.3 An engine project is not `plain`.** `detect_stack` returns
       `UNSUPPORTED_STACK` for an engine marker with no web marker, so the UI
       lane refuses instead of driving a browser at a game.
       verify: `npx vitest run tests/scripts/work_engine/stack_detect.test.ts` -> 0
-- [ ] **2.4 Installer engine kinds.** `ProjectKind` gains `godot`, `unity`,
+- [x] **2.4 Installer engine kinds.** `ProjectKind` gains `godot`, `unity`,
       `unreal`, detected from `project.godot`,
       `ProjectSettings/ProjectVersion.txt`, `*.uproject`; the install route's
       enum follows. Not added to the scope-prompt manifests.
@@ -70,7 +70,7 @@ Evidence (read): `src/scripts/code_graph/build.ts:59` — `IGNORE_DIRS` holds no
 engine cache directory; since #2808 `.gitignore` is honoured, so the walk only
 reaches them in a checkout without git or without an ignore file.
 
-- [ ] **3.1 Engine cache dirs, conditional on a root marker.** With a Unity
+- [x] **3.1 Engine cache dirs, conditional on a root marker.** With a Unity
       marker skip `Library`, `Temp`, `Obj`, `Logs`, `UserSettings`; with an
       Unreal marker skip `Intermediate`, `Saved`, `Binaries`,
       `DerivedDataCache`. Never unconditional — these names occur elsewhere.
@@ -81,7 +81,7 @@ reaches them in a checkout without git or without an ignore file.
 Evidence (read): `agents/roadmaps/later/road-to-reach-transcribe.md:12` — arrival
 1 only; `src/scripts/media_bundle.ts:512` still probes `whisper-cli`/`whisper` only.
 
-- [ ] **4.1 Arrivals lines on existing owners.** `later/road-to-reach-transcribe.md`
+- [x] **4.1 Arrivals lines on existing owners.** `later/road-to-reach-transcribe.md`
       gets arrival 2; `stubs/road-to-mcp-fingerprint-slot-binding.md` gets the
       app-side code-tool shape as arrival 1.
       verify: `grep -c 'inbox-2026-11-q' agents/roadmaps/later/road-to-reach-transcribe.md agents/roadmaps/stubs/road-to-mcp-fingerprint-slot-binding.md` -> 1 each
@@ -101,3 +101,18 @@ Evidence (read): `agents/roadmaps/later/road-to-reach-transcribe.md:12` — arri
 | 1 | Gate accepts too much | implementation | A broader verify list counts a command that proves nothing | Only runner commands the resolver documents; parity test pins the list both ways | Phase 1 — The gate accepts the resolver's own commands |
 | 2 | Detector regresses a web stack | implementation | An engine marker check changes the verdict of an existing stack | Engine verdict only when no web marker exists; existing fixtures stay green | Phase 2 — An engine project is recognised, not misrouted |
 | 3 | Cache skip hides real code | product | A non-engine repo with a `Library/` dir loses files | Skip only with the engine root marker | Phase 3 — The code graph skips engine caches |
+
+## Outcome (2026-11-03)
+
+Every step closed with a test seen red first. Deviations, recorded rather than
+silent:
+
+- 1.1 also accepts `cypress run`, which the resolver emits, and widens the
+  recorder's candidate net (`mightBeVerification`) for `rspec` and `cypress`;
+  without that the newly accepted runs would never be recorded.
+- 2.1 moved the basis detection, not `_dotnet_runners`: that one builds
+  `RunnerResult` from `runner.ts` constants, and moving it would create an
+  import cycle. `runner.ts` is at 1,354 lines.
+- Not done, carried to `later/road-to-a-game-the-agent-can-playtest.md` 3.4:
+  the engine markers are not in the detect/runner cache keys; a Godot .NET root
+  and the behaviour-axis `reqnroll`/`specflow` rows still yield `dotnet test`.
