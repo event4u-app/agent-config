@@ -52,25 +52,10 @@ undecided ones — so nothing is fixed or dismissed on a single-run number.
       call; default-off until the 4.2 parity gate passes on it.
       verify: `jq -e '.parity.verdict.breached == false' <the --report --out file>` -> 0 (MCP recall ≥ native − 0.05 on the Phase 2 corpus)
 
-      **Carried 2026-11-03 — what the parent measured.** The mechanism is built
-      and default-off (`AGENT_CONFIG_MCP_INLINE_TOP_BODY`, `routing_arms --mcp
-      --inline-top-body`, `--regrade-inline`). One pre-registered arm
-      (`agents/evidence/preregistration/routing-inline-arm-protocol-20261103.md`):
-      native 0.541, MCP-inline 0.437, delta 0.104 > 0.05 — **breached**; the arm
-      without inline bodies had read 0.103. Every run called the suggest tool;
-      85 of 135 answers carried no body (the top score tied), 34 carried the
-      target's body, **16 carried another skill's**.
-
-      **Blocker: `b-inline-arm-independence`.** The session that built the
-      mechanism also wrote the re-grading rule, ran the arm and found the tie
-      diagnosis after the gate failed, so it may not pick the next uniqueness
-      rule. **Closes when** a session that did not author the mechanism
-      pre-registers, before its run: (i) the revised uniqueness rule; (ii) how a
-      wrong-skill body counts — the 85 ties and the 16 wrong bodies are separate
-      failure modes, and a rule that trades the first for the second fails the
-      step's intent; (iii) a fresh native arm on today's host before the revised
-      MCP arm, so the parity compares like with like. The switch stays off until
-      **that** revised arm passes this verify.
+      Carried 2026-11-03: built and default-off, breached once (delta 0.104;
+      85 ties, 16 wrong bodies) — `agents/evidence/metrics/routing-arm-mcp-inline-20261103.md`.
+      Blocked by `b-inline-arm-independence`, whose "Resolved when" names the
+      three pre-registrations the next arm needs.
 
 ## Blockers
 
@@ -80,14 +65,18 @@ undecided ones — so nothing is fixed or dismissed on a single-run number.
 - **Owner:** implementer — a session that did not author the inline-body mechanism.
 - **Blocks:** 2.1.
 - **Recommendation:** start such a session; it writes the three pre-registrations
-  named at 2.1 and commits them before its arm runs.
+  named under "Resolved when" and commits them before its arm runs.
 - **If you do nothing:** the switch stays off and MCP-path parity stays at a
   0.10 deficit; nothing else in this file is affected.
 - **What to do:** run Phase 2 from a session that authored none of
   `src/cli/mcp/dispatch.ts`'s inline path, `routing_arms --regrade-inline` or
   the 2026-11-03 arm.
-- **Resolved when:** a protocol file carrying (i)–(iii) of 2.1 is committed by
-  such a session before its first arm case runs.
+- **Resolved when:** such a session commits, before its first arm case, a
+  protocol fixing (i) the revised uniqueness rule; (ii) how a wrong-skill body
+  counts — the 85 ties and the 16 wrong bodies are separate failure modes, and a
+  rule that trades the first for the second fails the step's intent; (iii) a
+  fresh native arm on today's host before the revised MCP arm. The switch stays
+  off until that revised arm passes 2.1's verify.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-03 | reviewer: claude/host -->
