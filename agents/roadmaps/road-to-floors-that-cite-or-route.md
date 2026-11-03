@@ -68,7 +68,7 @@ source-tag vocabulary into the skills that were meant to carry it.
 
 ## Phase 2 — A stamp names its source; the vocabulary is wired
 
-- [ ] **2.1 `source_urls` required when a source is claimed.** In
+- [x] **2.1 `source_urls` required when a source is claimed.** In
       `src/scripts/check_rule_evidence_declaration.ts`, a rule whose `source_type` is not
       `own-analysis` must carry ≥ 1 `source_urls` entry, unless it is listed in a new
       `SOURCE_URLS_PENDING` constant (rule → reason), which is shrink-only: a listed rule that now
@@ -79,14 +79,14 @@ source-tag vocabulary into the skills that were meant to carry it.
       external-standard without URLs and not pending → reject; pending rule with URLs → reject.
       Not report-only.
       verify: `./scripts-run src/scripts/check_rule_evidence_declaration --self-test` passes with ≥ 8 cases and `./scripts-run src/scripts/check_rule_evidence_declaration` exits 0.
-- [ ] **2.2 Legal skills point at the vocabulary.** One line in each of
+- [x] **2.2 Legal skills point at the vocabulary.** One line in each of
       `src/skills/{contract-review,nda-triage,dpa-review,legal-intake-triage}/SKILL.md` pointing at
       `legal-practice-profile` § Source-tag + currency vocabulary. Add check 1.4 (presence of the
       pointer, never output content) to `src/scripts/lint_legal_pack.ts`, exempting
       `legal-practice-profile` itself, with a test in `tests/scripts/lint_legal_pack.test.ts` that a
       fixture skill without the pointer fails.
       verify: `npx vitest run tests/scripts/lint_legal_pack.test.ts` passes and `./scripts-run src/scripts/lint_legal_pack` exits 0.
-- [ ] **2.3 Webhook receiving in the existing corpus row.** Extend
+- [x] **2.3 Webhook receiving in the existing corpus row.** Extend
       `src/skills/threat-modeling/data/threats.csv:30`: Required Controls gain "verify the signature
       over the raw request bytes before any parsing; acknowledge 2xx within the provider timeout and
       enqueue the work; 4xx on verification failure"; Negative Tests gain "re-serialised body →

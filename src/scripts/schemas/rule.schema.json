@@ -182,7 +182,7 @@
           "type": "array",
           "uniqueItems": true,
           "items": { "type": "string", "minLength": 8 },
-          "description": "Optional. Where the source lives. An `ENC1:` token per `src/rules/source-confidentiality.md` where naming the source in the tracked tree is not permitted. Absent is CORRECT for `own-analysis`, and for an `internal-incident` whose record is a commit or an ADR rather than a URL."
+          "description": "Optional in the schema; required by `check_rule_evidence_declaration` for an in-scope rule that names an external source, unless listed in its shrink-only `SOURCE_URLS_PENDING`. Where the source lives. An `ENC1:` token per `src/rules/source-confidentiality.md` where naming the source in the tracked tree is not permitted. Absent is CORRECT for `own-analysis`, and for an `internal-incident` whose record is a commit or an ADR rather than a URL."
         },
         "verified_on": {
           "type": "string",
