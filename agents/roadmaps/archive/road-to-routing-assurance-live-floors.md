@@ -168,11 +168,27 @@ item created unless the null broke.
       verify: the table cites the archived roadmap and adds no new claim id.
       production entry: src/scripts/routing_arms.ts
 
-- [ ] **4.4 Close the suggest-without-read gap.** On a unique top hit,
+- [~] **4.4 Close the suggest-without-read gap.** On a unique top hit,
       `suggest_skill_for_task` returns the skill body (or a bounded excerpt with its
       id) so the MCP path needs no second `read_skill` call; default-off until the
       4.2 parity gate passes on it.
       verify: `jq -e '.parity.verdict.breached == false' <the --report --out file>` -> 0 (MCP recall ≥ native − 0.05 on the Phase 2 corpus)
+
+      **Carried 2026-11-03 to `road-to-routing-assurance-live-floors-carried` 2.1.**
+      Built, default-off, measured once on a pre-registered arm
+      (`agents/evidence/preregistration/routing-inline-arm-protocol-20261103.md`,
+      rows `agents/evidence/metrics/routing-arm-mcp-inline-20261103.json`): native
+      0.541, MCP-inline 0.437, delta 0.104 — **breached**, so the box cannot be
+      ticked. 85 of 135 answers carried no body (top score tied), 16 carried the
+      wrong skill's. Options put: (a) carry with the measurement into a follow-up
+      run by a non-authoring session, (b) leave open and ship partial, (c) a
+      second uniqueness rule in this session, (d) other. **AI council, 2/2
+      (anthropic + openai), (a):** the session that built the mechanism found the
+      tie diagnosis after the gate failed, so the next rule must come from a
+      session that did not author it. No dissent on the option; one seat added
+      that the 16 wrong bodies are a separate, worse failure mode than the 85
+      ties. Blocker `b-inline-arm-independence` travels with it. Closes when 2.1's
+      verify passes there.
 
 **Exit:** parity table exists for the full Phase 2 corpus on both paths.
 
@@ -383,8 +399,11 @@ Offered by round `inbox-2026-10-at`, same terms:
       degradation.
 - [x] AC-6 — Every floor is restated as a rate in the pre-registration before
       the first rate-gated canary cycle.
-- [ ] AC-7 — CLI first: every live run of this roadmap goes through the host
+- [x] AC-7 — CLI first: every live run of this roadmap goes through the host
       CLI (`claude plugin eval`, or the print-only command of
       `road-to-a-trigger-suite-the-host-grades`), and its record names the CLI
       version. A direct API path is used only for an arm the CLI cannot run,
       the record says why, and only such an arm is held to a USD ceiling.
+      Verified 2026-11-03: every run artefact under `agents/evidence/metrics/routing-*`
+      names `host_version` (2.1.311 for the 2026-10-27 runs, 2.1.316 for the canary,
+      its rerun and the inline arm); no arm used the API.

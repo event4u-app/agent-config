@@ -532,7 +532,7 @@ and the run that applies it links its PR.
 - **Recommendation:** (c) — breadth over per-case confidence, as 6.3 itself
   argues.
 - **Blocks:** steps 6.1 (default 3) and 6.3.
-- **Answered 2026-10-27:** "Und Empfehlung 3 - Aber kläre das gerne im ai council" — the owner recommended (c) and delegated to the AI council, which converged 2/2 (anthropic + openai) on (c). Applied in `agents/roadmaps/road-to-routing-assurance-live-floors.md` (6.1/6.3 restated, blocker `b-rate-canary-ceiling` resolved). <!-- md-language-check: ignore -->
+- **Answered 2026-10-27:** "Und Empfehlung 3 - Aber kläre das gerne im ai council" — the owner recommended (c) and delegated to the AI council, which converged 2/2 (anthropic + openai) on (c). Applied in `agents/roadmaps/archive/road-to-routing-assurance-live-floors.md` (6.1/6.3 restated, blocker `b-rate-canary-ceiling` resolved). <!-- md-language-check: ignore -->
 
 ### OQ-22 — Spend beyond the 25 USD routing pilot
 
@@ -546,7 +546,7 @@ and the run that applies it links its PR.
 - **Recommendation:** (a) — the instrument is fixed and calibrated; the
   remaining cost is runs, not design.
 - **Blocks:** steps 3.1, 3.2, 3.3, 4.1, 4.3.
-- **Answered 2026-10-27:** "1" — option (a): a new ceiling of about 95 USD for Phases 3–4, cumulative on top of the 23.56 USD the pilot spent. Applied in `agents/roadmaps/road-to-routing-assurance-live-floors.md` (blocker `b-live-spend-beyond-pilot` resolved). Narrowed the same day by the owner: "Wir wollen ja aber immer die CLI first nutzen [...] bei CLI brauchen wir keine Budget Frage" — CLI runs need no budget question; the ceiling binds only an arm that must use the API (AC-7 of that roadmap). <!-- md-language-check: ignore -->
+- **Answered 2026-10-27:** "1" — option (a): a new ceiling of about 95 USD for Phases 3–4, cumulative on top of the 23.56 USD the pilot spent. Applied in `agents/roadmaps/archive/road-to-routing-assurance-live-floors.md` (blocker `b-live-spend-beyond-pilot` resolved). Narrowed the same day by the owner: "Wir wollen ja aber immer die CLI first nutzen [...] bei CLI brauchen wir keine Budget Frage" — CLI runs need no budget question; the ceiling binds only an arm that must use the API (AC-7 of that roadmap). <!-- md-language-check: ignore -->
 
 ### OQ-20 — Third-party test data as attributed splits (`external-test-data-licence`)
 
@@ -622,7 +622,7 @@ and the run that applies it links its PR.
 - **Recommendation:** (a) — five rounds have asked the same question, and one
   bounded run answers whether the package hides its own skills.
 - **Blocks:** every step of `later/road-to-routing-assurance-live-floors`.
-- **Answered 2026-10-26:** "Ja, Cap 25 USD (Empfohlen)" — option (a): un-parked into the free active slot with a 25 USD cap for the pilot. Applied: `agents/roadmaps/road-to-routing-assurance-live-floors.md`; directive `agents/evidence/owner-directives/2026-10-26-owner-questions-14-15-16.md`. <!-- md-language-check: ignore -->
+- **Answered 2026-10-26:** "Ja, Cap 25 USD (Empfohlen)" — option (a): un-parked into the free active slot with a 25 USD cap for the pilot. Applied: `agents/roadmaps/archive/road-to-routing-assurance-live-floors.md`; directive `agents/evidence/owner-directives/2026-10-26-owner-questions-14-15-16.md`. <!-- md-language-check: ignore -->
 
 ### OQ-17 — Fund or close the outcome benchmark against S4
 

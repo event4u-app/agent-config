@@ -1,0 +1,15 @@
+{
+  "pressure": {},
+  "null_3_3": null,
+  "parity": {
+    "units": 135,
+    "native": 0.5407,
+    "mcp": 0.437,
+    "epsilon": 0.05,
+    "verdict": {
+      "delta": 0.1037,
+      "breached": true
+    }
+  },
+  "twins": null
+}
