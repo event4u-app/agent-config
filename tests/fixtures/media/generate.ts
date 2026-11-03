@@ -76,10 +76,12 @@ export function gradient(kind: 'ltr' | 'rtl' | 'vee'): Uint8Array {
     return f;
 }
 
-export function encode(frames: Uint8Array[], out: string, extra: { silentAudio?: boolean; fps?: number; quality?: number | undefined } = {}): string {
+export function encode(frames: Uint8Array[], out: string, extra: { silentAudio?: boolean; fps?: number; quality?: number | undefined; lossless?: boolean } = {}): string {
     const args = ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'gray', '-s', `${W}x${H}`, '-r', String(extra.fps ?? FPS), '-i', '-'];
     if (extra.silentAudio === true) args.push('-f', 'lavfi', '-i', 'anullsrc=r=16000:cl=mono', '-shortest', '-c:a', 'aac');
-    args.push('-c:v', 'mpeg4', '-q:v', String(extra.quality ?? 3), '-pix_fmt', 'yuv420p', out);
+    // Lossless gray keeps a frozen region bit-identical, so a reading on it carries no codec noise.
+    if (extra.lossless === true) args.push('-c:v', 'ffv1', '-pix_fmt', 'gray', out);
+    else args.push('-c:v', 'mpeg4', '-q:v', String(extra.quality ?? 3), '-pix_fmt', 'yuv420p', out);
     const res = spawnSync('ffmpeg', args, { input: Buffer.concat(frames.map((f) => Buffer.from(f))) });
     if (res.status !== 0) throw new Error(`fixture ${path.basename(out)}: ffmpeg exited ${String(res.status)}: ${res.stderr.toString('utf8')}`);
     return out;

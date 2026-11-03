@@ -252,7 +252,12 @@ for roi in ${rois[@]+"${rois[@]}"}; do
         # A frozen region of a lossy encode still carries codec noise above -60 dB
         # (measured: a mpeg4 q:v 8 encode hides it); -40 dB holds the freeze and a
         # moving region stays clear even at -30 dB.
-        rfz="$(ffmpeg -hide_banner -nostats "${IN[@]}" -i "$file" -an -vf "${crop},freezedetect=n=-40dB:d=0.5" -f null - 2>&1 </dev/null | freeze_list)"
+        # `-cpuflags 0` keeps freezedetect on its C SAD. The x86 SIMD SAD (FFmpeg
+        # libavfilter/x86/scene_sad_init.c + scene_sad.asm, 8.0.1) passes the width
+        # rounded down to the vector size and its loop runs at least once, so a crop
+        # narrower than 16 / 32 / 64 bytes (SSE2 / AVX2 / AVX-512) reads the pixels
+        # beside it: a frozen ROI next to motion reads as moving, on some CPUs only.
+        rfz="$(ffmpeg -hide_banner -nostats -cpuflags 0 "${IN[@]}" -i "$file" -an -vf "${crop},freezedetect=n=-40dB:d=0.5" -f null - 2>&1 </dev/null | freeze_list)"
     fi
     roi_json+=("{\"roi\":\"$roi\",\"ssim_min\":$smin,\"ssim_min_frame\":$sframe,\"freezes\":$rfz}")
 done
