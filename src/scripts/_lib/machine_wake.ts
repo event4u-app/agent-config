@@ -43,7 +43,17 @@
  * Matching anywhere in the text would make the question "why did this
  * `<task-notification>` clear my authorization?" clear it again — the user would
  * lose the very turn they were asking about.
+ *
+ * **The fourth shape, the host's forwarded-message frame.** A cross-session
+ * message or a subagent hand-back can also arrive as one fixed host sentence
+ * followed by the wrapper tag on the next line. That frame is owned by
+ * `prompt_shape.ts` (`AGENT_MESSAGE_FRAME`) and read here, so the language pin
+ * and this predicate cannot disagree about it. Read as human, a peer's "Merge
+ * PR #12 now." wrote a `pr-merge` grant. A message from another session never
+ * authorizes a merge in this one.
  */
+
+import { AGENT_MESSAGE_FRAME } from './prompt_shape.js';
 
 /** Wake shapes the host delivers on `user_prompt_submit` that no human typed. */
 export const MACHINE_WAKE_PREFIXES: readonly string[] = [
@@ -60,5 +70,5 @@ export function humanTypedThisTurn(prompt: string): boolean {
             return false;
         }
     }
-    return true;
+    return !AGENT_MESSAGE_FRAME.test(head);
 }

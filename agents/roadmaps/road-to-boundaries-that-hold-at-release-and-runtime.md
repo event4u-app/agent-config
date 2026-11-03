@@ -38,7 +38,7 @@ green after the fix, and the release-side rules fail the contract test on regres
 
 ## Phase 1 — Runtime trust boundaries
 
-- [ ] **1.1 A forwarded session message is not a human turn.** In
+- [x] **1.1 A forwarded session message is not a human turn.** In
       `src/scripts/_lib/machine_wake.ts`, `humanTypedThisTurn` returns `false` when the prompt
       matches the host's fixed sentence-then-tag frame; export `AGENT_MESSAGE_FRAME` from
       `src/scripts/_lib/prompt_shape.ts:110-111` and read it in both modules (one constant).
@@ -131,6 +131,12 @@ green after the fix, and the release-side rules fail the contract test on regres
       (`writeIntakeSignals`); a refusal leaves the intake file unchanged and the MCP tool answers
       `recorded: false` with the category. Negative test per writer with one attack row.
       verify: `npx vitest run tests/scripts/memory_signal.test.ts tests/scripts/templates_memory_signal.test.ts tests/scripts/mine_session.test.ts tests/scripts/retro.test.ts` → 0
+
+## Decisions
+
+| Decision | Alternatives | Reason | Revisit-if |
+|---|---|---|---|
+| OD-2, conservative reading: a message forwarded from another session (lead to worker, peer, or framed subagent hand-back) never counts as a human turn, so it never writes a `pr-merge` or any other git grant (1.1) | Let a lead session's message authorize a merge in a worker session | The ledger cannot tell a lead's instruction from a peer that quotes untrusted text; the conservative reading is reversible by deleting one regex test in `humanTypedThisTurn` | The owner answers OD-2 with "a lead may authorize", and a signed or otherwise provenance-checked lead channel exists |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-03 | reviewer: claude/host -->
