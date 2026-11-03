@@ -61,7 +61,7 @@ finding disposition names a command but not the outcome it must produce
 
 ## Phase 2 — A disposition says what its check must produce
 
-- [ ] **2.1 Rewrite the six replay outliers with an expectation.** Ledger-only
+- [x] **2.1 Rewrite the six replay outliers with an expectation.** Ledger-only
       edits, rationale and status unchanged: `16.2.0.json` `87a5d236cf23`
       append ` -> 1`; `6a8dd0cf9ed5` path → `agents/roadmaps/later/road-to-adversarial-verification-and-long-runs.md`, ` -> 1`;
       `16.3.0.json` `de7e020a458f` and `49c1459b49e9` ` -> 1`; `1b661735687e`
