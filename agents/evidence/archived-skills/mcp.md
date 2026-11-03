@@ -8,6 +8,8 @@ last_known_callers:
   - "none detected — every reference in src/ was moved to mcp-tool-use in the same change"
 ---
 
+<!-- evidence-type: analysis -->
+
 # mcp
 
 ## Why archived

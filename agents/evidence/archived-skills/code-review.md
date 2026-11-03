@@ -8,6 +8,8 @@ last_known_callers:
   - "none detected — every reference in src/ was moved to code-review-lens in the same change"
 ---
 
+<!-- evidence-type: analysis -->
+
 # code-review
 
 ## Why archived
