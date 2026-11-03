@@ -212,6 +212,21 @@ describe('the role map is recomputed only when a primitive can have changed', ()
         expect(fs.existsSync(path.join(dir, AUDIT))).toBe(true);
     });
 
+    it('a usage-only edit in another family leaves that family unmeasured', () => {
+        const w = repo();
+        w('legacy/Orders.vue', '<template><Select name="a" /><select name="b"></select></template>\n');
+        expect(run(dir, 'legacy/Orders.vue').status).toBe(0);
+    });
+
+    it('a new definition in another family recomputes and makes that family measured', () => {
+        const w = repo();
+        w('legacy/Select.vue', '<script>\nexport default { name: "Select" };\n</script>\n<template><div><slot /></div></template>\n');
+        w('legacy/Orders.vue', '<template><select name="b"></select></template>\n');
+        const r = run(dir, 'legacy/Orders.vue');
+        expect(fs.existsSync(path.join(dir, AUDIT))).toBe(true);
+        expect(r.status).toBe(2);
+    });
+
     it('a primitive file losing its primitive still recomputes', () => {
         const w = repo();
         w('components/ui/select.tsx', 'export function Panel(props) {\n  return <div {...props} />;\n}\n');

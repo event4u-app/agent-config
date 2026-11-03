@@ -252,7 +252,7 @@ export function loadControlRoles(artefactPath: string): ControlRoleMap | null {
 
 /**
  * Whether a file of this kind can render the canonical at all: its family must
- * be one the canonical is defined or used in. A server template cannot use a JSX
+ * be one the project defines the canonical in. A server template cannot use a JSX
  * `Select`, nor a `.vue` file a React one; a map that does not say is not trusted.
  */
 export function canRender(relPath: string, canonical: string, families: readonly string[] | undefined): boolean {

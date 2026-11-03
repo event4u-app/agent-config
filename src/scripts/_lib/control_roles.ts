@@ -161,6 +161,9 @@ export function definedComponents(rel: string, text: string): string[] {
     const out: string[] = [];
     const blade = /resources\/views\/components\/(.+)\.blade\.php$/.exec(rel);
     if (blade) out.push(`x-${blade[1]!.replace(/\//g, '.')}`);
+    // A single-file component is named by its file.
+    const sfc = /(?:^|\/)([A-Z][A-Za-z0-9_]*)\.(?:vue|svelte|astro)$/.exec(rel);
+    if (sfc) out.push(sfc[1]!);
     for (const m of text.matchAll(/export\s+(?:default\s+)?(?:function|const|class)\s+([A-Z][A-Za-z0-9_]*)/g)) {
         out.push(m[1]!);
     }
@@ -235,7 +238,7 @@ export interface RoleEntry {
     outliers: string[];
     /** Components the project defines for this role, used or not. */
     defined: string[];
-    /** File families that define or use the canonical: where it can be rendered. */
+    /** File families of the files that define the canonical: where it can be rendered. */
     families?: string[];
     tie?: string[];
     box_metrics: BoxMetrics | null;
@@ -261,7 +264,13 @@ export function buildControlRoles(
     systemPaths: ReadonlyArray<string> = [],
 ): Partial<Record<ControlRole, RoleEntry>> {
     const defs = new Map<string, string>(); // component tag -> defining file
-    for (const [rel, text] of files) for (const c of definedComponents(rel, text)) defs.set(c, rel);
+    const defFamilies = new Map<string, Set<string>>(); // component tag -> families of every defining file
+    for (const [rel, text] of files)
+        for (const c of definedComponents(rel, text)) {
+            defs.set(c, rel);
+            const f = fileFamily(rel);
+            if (f !== null) defFamilies.set(c, (defFamilies.get(c) ?? new Set()).add(f));
+        }
     const defRoles = new Map<string, ControlRole>();
     for (const tag of defs.keys()) {
         const r = roleOfTag(tag, '');
@@ -314,12 +323,8 @@ export function buildControlRoles(
             box_metrics: null,
         };
         if (canonical === null) entry.tie = top;
-        else {
-            const homes = list.filter((o) => o.impl === canonical).map((o) => o.file);
-            const def = defs.get(canonical);
-            if (def !== undefined) homes.push(def);
-            entry.families = [...new Set(homes.map(fileFamily).filter((f): f is string => f !== null))].sort();
-        }
+        // From definitions only: a same-named use in another family may be another component.
+        else entry.families = [...(defFamilies.get(canonical) ?? [])].sort();
 
         const sample =
             canonical === null
