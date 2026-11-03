@@ -280,7 +280,6 @@ export const SUPPRESSION_INVENTORY: readonly SuppressionSpec[] = [
         file: 'src/config/provider-home-joins-baseline.json',
         listKey: 'held',
         tier: 'string_list',
-        newInThisChange: true,
         what: 'runtime files that join the home dir with a provider dir instead of resolving through provider_home.ts',
     },
 ];

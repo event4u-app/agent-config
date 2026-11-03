@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **645**
-- Edges (incl. self-WRITE): **2461**
+- Edges (incl. self-WRITE): **2465**
 
 ## READ_ONLY edges
 
@@ -112,6 +112,7 @@
 | `.agent-src.uncondensed/contexts/execution/evidence-discipline.md` | `.agent-src.uncondensed/skills/context-document/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/evidence-discipline.md` | `.agent-src.uncondensed/skills/source-discovery/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/fix-loop-ladder.md` | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/fix-loop-ladder.md` | `.agent-src.uncondensed/contexts/execution/subagent-steering.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/fix-loop-ladder.md` | `.agent-src.uncondensed/contexts/execution/terminal-states.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/host-capability-manifest.md` | `.agent-src.uncondensed/contexts/execution/auto-dispatch-classification.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/host-capability-manifest.md` | `.agent-src.uncondensed/contexts/execution/orchestration-telemetry.md` | `body_link` | 1 |
@@ -373,6 +374,7 @@
 | `.agent-src.uncondensed/rules/content-quoting-floor.md` | `.agent-src.uncondensed/rules/domain-safety-disclaimer.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/content-quoting-floor.md` | `.agent-src.uncondensed/rules/source-confidentiality.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/content-quoting-floor.md` | `.agent-src.uncondensed/rules/untrusted-input-defense.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/rules/context-hygiene.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/context-hygiene.md` | `.agent-src.uncondensed/rules/downstream-changes.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/context-hygiene.md` | `.agent-src.uncondensed/rules/token-efficiency.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/context-hygiene.md` | `.agent-src.uncondensed/skills/systematic-debugging/SKILL.md` | `body_link` | 1 |
@@ -789,6 +791,7 @@
 | `.agent-src.uncondensed/skills/brand/SKILL.md` | `.agent-src.uncondensed/skills/design-intelligence/ATTRIBUTION.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand/SKILL.md` | `.agent-src.uncondensed/skills/design-intelligence/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand/SKILL.md` | `.agent-src.uncondensed/skills/typography-system/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/bug-analyzer/SKILL.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/bug-analyzer/SKILL.md` | `.agent-src.uncondensed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/bug-analyzer/SKILL.md` | `.agent-src.uncondensed/skills/code-refactoring/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/bug-analyzer/SKILL.md` | `.agent-src.uncondensed/skills/data-flow-mapper/SKILL.md` | `body_link` | 1 |
@@ -1699,6 +1702,7 @@
 | `.agent-src.uncondensed/skills/supply-chain-intake/SKILL.md` | `.agent-src.uncondensed/skills/secrets-management/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/supply-chain-intake/SKILL.md` | `.agent-src.uncondensed/skills/security-audit/references/control-section.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/supply-chain-intake/SKILL.md` | `.agent-src.uncondensed/skills/security/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncondensed/rules/context-hygiene.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncondensed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncondensed/skills/data-flow-mapper/SKILL.md` | `body_link` | 1 |

@@ -4867,6 +4867,13 @@
     },
     {
       "source": ".agent-src.uncondensed/contexts/execution/fix-loop-ladder.md",
+      "target": ".agent-src.uncondensed/contexts/execution/subagent-steering.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/fix-loop-ladder.md",
       "target": ".agent-src.uncondensed/contexts/execution/terminal-states.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -7388,6 +7395,13 @@
     {
       "source": ".agent-src.uncondensed/rules/content-quoting-floor.md",
       "target": ".agent-src.uncondensed/rules/untrusted-input-defense.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/context-hygiene.md",
+      "target": ".agent-src.uncondensed/rules/autonomous-execution.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -11259,6 +11273,13 @@
     {
       "source": ".agent-src.uncondensed/skills/brand/SKILL.md",
       "target": ".agent-src.uncondensed/skills/typography-system/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/bug-analyzer/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/autonomous-execution.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -19984,6 +20005,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/systematic-debugging/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/autonomous-execution.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/systematic-debugging/SKILL.md",
