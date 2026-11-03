@@ -7,7 +7,7 @@ verdict: ratified
 seats:
   anthropic: ratified
   openai: ratified
-subject: 0000000000000000000000000000000000000000000000000000000000000000
+subject: 078da6eee89af361c118e0ef020c33c357c58d7799f357ec22920df10221d3d8
 effective_after: merge
 ---
 
